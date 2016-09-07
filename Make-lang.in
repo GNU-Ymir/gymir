@@ -1,0 +1,75 @@
+GYMIR_INSTALL_NAME := $(shell echo gymir|sed '$(program_transform_name)')
+GYMIR_TARGET_INSTALL_NAME := $(target_noncanonical)-$(shell echo gymir|sed '$(program_transform_name)')
+ 
+ymir: ymir1$(exeext)
+ 
+.PHONY: ymir
+ 
+# Driver
+ 
+GYMIR_OBJS = \
+   $(GCC_OBJS) \
+   ymir/ymirspec.o \
+   $(END)
+ 
+gymir$(exeext): $(GYMIR_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
+	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
+	  $(GYMIR_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a \
+	  $(EXTRA_GCC_LIBS) $(LIBS)
+ 
+# The compiler proper
+ 
+ymir_OBJS = \
+    ymir/ymir1.o \
+    $(END)
+ 
+ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
+	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
+	      attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS)
+ 
+ymir.all.cross:
+ 
+ymir.start.encap: gymir$(exeext)
+ymir.rest.encap:
+ 
+ymir.install-common: installdirs
+	-rm -f $(DESTDIR)$(bindir)/$(GYMIR_INSTALL_NAME)$(exeext)
+	$(INSTALL_PROGRAM) gymir$(exeext) $(DESTDIR)$(bindir)/$(GYMIR_INSTALL_NAME)$(exeext)
+	rm -f $(DESTDIR)$(bindir)/$(GYMIR_TARGET_INSTALL_NAME)$(exeext); \
+	( cd $(DESTDIR)$(bindir) && \
+      $(LN) $(GYMIR_INSTALL_NAME)$(exeext) $(GYMIR_TARGET_INSTALL_NAME)$(exeext) ); \
+ 
+# Required goals, they still do nothing
+ymir.install-man:
+ymir.install-info:
+ymir.install-pdf:
+ymir.install-plugin:
+ymir.install-html:
+ymir.info:
+ymir.dvi:
+ymir.pdf:
+ymir.html:
+ymir.man:
+ymir.mostlyclean:
+ymir.clean:
+ymir.distclean:
+ymir.maintainer-clean:
+ 
+# make uninstall
+ymir.uninstall:
+	-rm -f gymir$(exeext) ymir1$(exeext)
+	-rm -f $(ymir_OBJS)
+ 
+# Used for handling bootstrap
+ymir.stage1: stage1-start
+	-mv ymir/*$(objext) stage1/ymir
+ymir.stage2: stage2-start
+	-mv ymir/*$(objext) stage2/ymir
+ymir.stage3: stage3-start
+	-mv ymir/*$(objext) stage3/ymir
+ymir.stage4: stage4-start
+	-mv ymir/*$(objext) stage4/ymir
+ymir.stageprofile: stageprofile-start
+	-mv ymir/*$(objext) stageprofile/ymir
+ymir.stagefeedback: stagefeedback-start
+	-mv ymir/*$(objext) stagefeedback/ymir
