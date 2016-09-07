@@ -21,6 +21,7 @@ gymir$(exeext): $(GYMIR_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
  
 ymir_OBJS = \
     ymir/ymir1.o \
+    ymir/Token.o \
     $(END)
  
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

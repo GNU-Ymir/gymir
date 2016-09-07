@@ -63,7 +63,7 @@ ymir_langhook_init (void)
   /* NOTE: Newer versions of GCC use only:
            build_common_tree_nodes (false);
      See Eugene's comment in the comments section. */
-  build_common_tree_nodes (false);
+  build_common_tree_nodes (false, false);
  
   /* I don't know why this has to be done explicitly.  */
   void_list_node = build_tree_list (NULL_TREE, void_type_node);
