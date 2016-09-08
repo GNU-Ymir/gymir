@@ -3,27 +3,13 @@
 #include "config.h"
 #include "system.h"
 #include "input.h"
-#include "coretypes.h"
-#include "target.h"
-#include "tree.h"
-#include "gimple-expr.h"
-#include "diagnostic.h"
-#include "opts.h"
-#include "fold-const.h"
-#include "gimplify.h"
-#include "stor-layout.h"
-#include "debug.h"
-#include "convert.h"
-#include "langhooks.h"
-#include "langhooks-def.h"
-#include "common/common-target.h"
 
 #include <string>
 #include <tr1/memory>
 
 #define YMIR_TOKEN_LIST					\
   YMIR_TOKEN (FIRST_TOKEN, "<first-token-marker>")	\
-  YMIR_TOKEN (END_OF_FILE, "end of file")		\
+  YMIR_TOKEN (END_OF, "end of file")		\
   YMIR_TOKEN (MAIN, "main")				\
   YMIR_TOKEN (STD, "std")				\
   YMIR_TOKEN (IMPORT, "import")				\
@@ -107,9 +93,10 @@
   YMIR_TOKEN (DOLLAR, "$")				\
   YMIR_TOKEN (CAST, "cast")				\
   YMIR_TOKEN (FUNCTION, "function")			\
+  YMIR_TOKEN (OTHER, "")				\
   YMIR_TOKEN (LAST, "<last-token-marker>")
 
-namespace Lexer {
+namespace Lexical {
 
   enum TokenId {
 #define YMIR_TOKEN(name, _) name,
@@ -127,6 +114,18 @@ namespace Lexer {
 
     static TokenPtr make (TokenId token_id, location_t locus) {
       return TokenPtr (new Token (token_id, locus));
+    }
+
+    static TokenPtr makeEof () {
+      return eof;
+    }
+    
+    static TokenId EOF_TOKEN () {
+      return END_OF;
+    }
+
+    static TokenPtr make (const std::string & value, location_t locus) {
+      return TokenPtr (new Token (OTHER, locus, value));
     }
 
     TokenId getId () const {
@@ -150,20 +149,22 @@ namespace Lexer {
     location_t locus;
     std::string * str;
 
+    static TokenPtr eof;
+    
   private:
 
     
     Token (TokenId token_id, location_t locus);
-    Token (TokenId token_id, location_t locus, const std::string & str_);
+    Token (TokenId token_id, location_t locus, const std::string & str);
     Token ();
 
     Token (const Token &);
     Token & operator = (const Token &);
-    
-    
+        
   };
 
-  const char * token_id_to_str (TokenId tid);
-  const char * get_token_description (TokenId tid);
+  const char * tokenIdToStr (TokenId tid);
+  const char * getTokenDescription (TokenId tid);
+  TokenId getFromStr (const std::string &);
   
 };

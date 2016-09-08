@@ -1,8 +1,10 @@
 
 #include "Token.hh"
 
-namespace Lexer {
+namespace Lexical {
 
+  TokenPtr Token::eof = TokenPtr (new Token (END_OF, UNKNOWN_LOCATION));
+  
   Token::Token (TokenId token_id, location_t locus)
     : token_id(token_id),
       locus (locus),
@@ -20,32 +22,42 @@ namespace Lexer {
   }
 
 
-  const char * token_id_to_str (TokenId tid) {
+  const char * tokenIdToStr (TokenId tid) {
     switch (tid) {
 #define YMIR_TOKEN(name, _)			\
-    case name:					\
-      return #name;
+      case name:				\
+	return #name;
 #define YMIR_TOKEN_KEYWORD(x, y) YMIR_TOKEN(x, y)
       YMIR_TOKEN_LIST
 #undef YMIR_TOKEN_KEYWORD
 #undef YMIR_TOKEN
-    default : gcc_unreachable ();
+    default : return NULL;
     }
   }
 
-
-  const char * get_token_description (TokenId tid) {
+  TokenId getFromStr (const std::string & name_str) {
+#define YMIR_TOKEN(name, descr)			\
+    if (name_str == descr) return name;
+#define YMIR_TOKEN_KEYWORD(x, y) YMIR_TOKEN(x, y)
+    YMIR_TOKEN_LIST
+#undef YMIR_TOKEN_KEYWORD
+#undef YMIR_TOKEN
+      return OTHER;
+  }
+  
+  const char * getTokenDescription (TokenId tid) {
     switch (tid)
       {
-#define YMIR_TOKEN(name, descr)						\
-	case name:							\
+#define YMIR_TOKEN(name, descr)			\
+	case name:				\
 	  return descr;
 #define YMIR_TOKEN_KEYWORD(x, y) YMIR_TOKEN (x, y)
 	YMIR_TOKEN_LIST
 #undef YMIR_TOKEN_KEYWORD
 #undef YMIR_TOKEN
       default:
-	gcc_unreachable ();
+	return NULL;
       } 
   }
+  
 };
