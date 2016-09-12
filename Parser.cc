@@ -23,12 +23,12 @@
 namespace Ymir {
 
     void Parser::parse_program () {
-	Syntax::Ast synt_ast = this -> syntax_analyse ();
+	Syntax::AstPtr synt_ast = this -> syntax_analyse ();
 	Semantic::Ast sem_ast = this -> semantic_analyse (synt_ast);
 	this -> define_gcc_symbols ();
     }
 
-    Syntax::Ast Parser::syntax_analyse () {
+    Syntax::AstPtr Parser::syntax_analyse () {
 	lexer.setKeys ({":", ";", "|", "[", "]", "?", "'", " ", "\n", "\t", "<->",
 		    "<-", "=", "+=", "*=", "-=", "/=", "&&", "||", "<", ">", "==", ">=", "<=", "!=", "++", "--",
 		    "+", "-", "|", "<<", ">>", "^", "*", "/", "&", "%", "!",
@@ -39,11 +39,11 @@ namespace Ymir {
 		    });
 	
 	lexer.setSkip ({" ", "\n", "\r", "\t"});
-	Lexical::Visitor visitor (lexer);
+	Syntax::Visitor visitor (lexer);
 	return visitor.visit ();
     }
 
-    Semantic::Ast Parser::semantic_analyse (Syntax::Ast &ast) {
+    Semantic::Ast Parser::semantic_analyse (Syntax::AstPtr &ast) {
 	return Semantic::empty ();
     }
 

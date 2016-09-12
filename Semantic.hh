@@ -9,8 +9,6 @@ namespace Semantic {
 	Ast (Lexical::TokenPtr token) : token (token) {}
     };
 
-    Ast empty () {
-	return Ast (Lexical::Token::makeEof ());
-    }
+    Ast empty ();
     
 };

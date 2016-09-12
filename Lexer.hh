@@ -1,4 +1,4 @@
-#pragma once
+o#pragma once
 
 #include "config.h"
 #include "system.h"

@@ -20,9 +20,9 @@ namespace Ymir {
 	
     private:
 
-	Syntax::Ast syntax_analyse ();
+	Syntax::AstPtr syntax_analyse ();
 
-	Semantic::Ast semantic_analyse (Syntax::Ast &);
+	Semantic::Ast semantic_analyse (Syntax::AstPtr &);
 
 	void define_gcc_symbols ();
 	

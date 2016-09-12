@@ -142,7 +142,7 @@ namespace Lexical {
 	if (info == "\n" || info == "\r") {
 	    this -> currentLine++;
 	    this -> currentColumn = 1;
-	    linemap_line_start (::line_table, currentLine, max_column_hint);
+	    linemap_line_start (::line_table, currentLine, maxColumnHint);
 	} else this->currentColumn += info.length ();
 	fseek (input, pos, SEEK_SET);
     }
