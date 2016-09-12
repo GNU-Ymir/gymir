@@ -11,7 +11,7 @@ namespace Syntax {
 	Declaration (Lexical::TokenPtr ptr) : Ast(ptr) {}
     };
 
-    typedef std::tr1::shared_ptr<Declaration> DeclarationPtr;
+    typedef Declaration * DeclarationPtr;
     
     struct Function : Declaration {
 

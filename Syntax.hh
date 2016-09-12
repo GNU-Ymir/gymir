@@ -1,15 +1,15 @@
 #pragma once
 
 #include "Token.hh"
+#include <list>
 
 namespace Syntax {
 
-
+    
     struct Ast {	
 	Lexical::TokenPtr token;
-	Ast (Lexical::TokenPtr token) : token (token) {}				
+	Ast (Lexical::TokenPtr token);
     };
-
 
     struct AstGC {
 
@@ -19,6 +19,9 @@ namespace Syntax {
 	    return *inst;
 	}
 
+	void addInfo (Ast*);
+	void empty ();
+	
     private:
 
 	AstGC () {}
@@ -26,7 +29,8 @@ namespace Syntax {
 	AstGC & operator=(const AstGC &);
 	
     private:
-	
+
+	std::list <Ast*> table;
 	static AstGC * inst;
 	
     };

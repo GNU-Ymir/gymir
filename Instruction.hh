@@ -9,7 +9,7 @@ namespace Syntax {
 	Instruction (Lexical::TokenPtr ptr) : Ast (ptr) {}
     };
 
-    typedef std::tr1::shared_ptr<Instruction> InstructionPtr;
+    typedef Instruction* InstructionPtr;
 
     struct Block : Instruction {
 	std::vector <InstructionPtr> instructions;
@@ -19,7 +19,7 @@ namespace Syntax {
 	      instructions (insts) {}
     };
     
-    typedef std::tr1::shared_ptr<Block> BlockPtr;
+    typedef Block* BlockPtr;
     
     
 };
