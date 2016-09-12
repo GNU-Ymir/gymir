@@ -5,13 +5,32 @@
 namespace Syntax {
 
 
-    struct Ast {
-	
+    struct Ast {	
 	Lexical::TokenPtr token;
-	Ast (Lexical::TokenPtr token) : token (token) {}			
+	Ast (Lexical::TokenPtr token) : token (token) {}				
+    };
+
+
+    struct AstGC {
+
+    public:
+	static AstGC & instance () {
+	    if (inst == NULL) inst = new AstGC ();
+	    return *inst;
+	}
+
+    private:
+
+	AstGC () {}
+	AstGC (const AstGC &);
+	AstGC & operator=(const AstGC &);
+	
+    private:
+	
+	static AstGC * inst;
 	
     };
     
-    typedef std::tr1::shared_ptr<Ast> AstPtr;	           
+    typedef Ast* AstPtr;	           
 
 }
