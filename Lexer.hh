@@ -4,57 +4,67 @@
 #include "system.h"
 #include "input.h"
 
+#include "YTypes.hh"
 #include "Token.hh"
 #include <vector>
 #include <map>
 
 namespace Lexical {
 
-  /**
-     Cette classe permet d'analyser un fichier et de renvoyer le Token associe a chaque element
-     Elle est l'element principale de l'analyse lexical
-   */
-  struct Lexer {
+    /**
+       Cette classe permet d'analyser un fichier et de renvoyer le Token associe a chaque element
+       Elle est l'element principale de l'analyse lexical
+    */
+    struct Lexer {
 
-    Lexer (const char * filename, FILE * input);
+	Lexer (const char * filename, FILE * input);
 
-    TokenPtr next ();
+	TokenPtr next ();
 
-    void rewind (unsigned long nb = 1);
+	void rewind (unsigned long nb = 1);
 
-    void setSkip (std::vector<std::string> skip);
+	void setKeys (std::vector<std::string> keys);
+	
+	void setSkip (std::vector<std::string> skip);
 
-    void setComments (std::vector <std::pair<std::string, std::string> > comments);
+	void setComments (std::vector <std::pair<std::string, std::string> > comments);
 
-    void setComments (bool on);
+	void setComments (bool on);
     
-    ~Lexer ();
+	~Lexer ();
 
-  private:
+    private:
 
-    TokenPtr get ();
+	TokenPtr get ();
     
-    location_t getCurrentLocation ();
+	location_t getCurrentLocation ();
 
-    TokenId isComment (TokenPtr);
+	TokenId isComment (TokenPtr);
 
-    bool isSkip (TokenPtr);
+	bool isSkip (TokenPtr);
+      
+	std::string readln (FILE *);
 
-    std::string readln ();
+	void seek (const std::string & info, long pos);
+
+	long tellg ();
+
+	bool eof ();
+	
+    private:
+
+	static const int maxColumnHint = 80;
+	int currentLine, currentColumn;    
+	bool commentOn = true;
+	std::vector <std::string> skip;
+	std::vector <std::string> keys;
+	std::vector <std::pair <std::string, std::string> > comments;
+	std::vector <TokenPtr> read;
+	unsigned long currentWord;
+	FILE * input;
+
+	const struct line_map * line_map;
     
-  private:
-
-    static const int maxColumnHint = 80;
-    int currentLine, currentColumn;    
-    bool commentOn = true;
-    std::vector <std::string> skip;
-    std::vector <std::pair <std::string, std::string> > comments;
-    std::vector <TokenPtr> read;
-    unsigned long currentWord;
-    FILE * input;
-
-    const struct line_map * line_map;
-    
-  };
+    };
   
 };

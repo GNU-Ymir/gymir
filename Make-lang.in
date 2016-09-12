@@ -1,6 +1,7 @@
 GYMIR_INSTALL_NAME := $(shell echo gymir|sed '$(program_transform_name)')
 GYMIR_TARGET_INSTALL_NAME := $(target_noncanonical)-$(shell echo gymir|sed '$(program_transform_name)')
- 
+
+
 ymir: ymir1$(exeext)
  
 .PHONY: ymir
@@ -21,8 +22,9 @@ gymir$(exeext): $(GYMIR_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
  
 ymir_OBJS = \
 	ymir/ymir1.o \
-	ymir/Token.o \
+	ymir/Token.o\
 	ymir/Lexer.o \
+	ymir/Parser.o\	
     $(END)
  
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

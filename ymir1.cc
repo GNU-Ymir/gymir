@@ -14,7 +14,8 @@
 #include "langhooks.h"
 #include "langhooks-def.h"
 #include "common/common-target.h"
- 
+#include "Parser.hh"
+
 /* Language-dependent contents of a type.  */
  
 struct GTY (()) lang_type
@@ -73,18 +74,6 @@ ymir_langhook_init (void)
   return true;
 }
 
-static void
-ymir_parse_file (const char * filename) {
-  FILE * file = fopen (filename, "r");
-  if (file == NULL) fatal_error (UNKNOWN_LOCATION, "cannot open filename %s: %m", filename);
-  fclose (file);
-}
-
-static void
-ymir_parse_files (int num_files, const char ** files) {
-  for (int i = 0; i < num_files; i++)
-    ymir_parse_file (files[i]);
-}
 
 static void
 ymir_langhook_parse_file (void)
