@@ -64,6 +64,10 @@ namespace Lexical {
 	return this->token_id == other;
     }
 
+    void Token::print () {
+	printf (":%s (%s -> %i, %i)", getCstr(), LOCATION_FILE (getLocus()), LOCATION_LINE (getLocus()), LOCATION_COLUMN (getLocus()));
+    }
+    
     
 };
 

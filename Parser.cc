@@ -24,6 +24,7 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	Syntax::AstPtr synt_ast = this -> syntax_analyse ();
+	synt_ast -> print ();
 	Semantic::Ast sem_ast = this -> semantic_analyse (synt_ast);
 	this -> define_gcc_symbols ();
     }
@@ -43,7 +44,7 @@ namespace Ymir {
 	return visitor.visit ();
     }
 
-    Semantic::Ast Parser::semantic_analyse (Syntax::AstPtr &ast) {
+    Semantic::Ast Parser::semantic_analyse (Syntax::AstPtr&) {
 	return Semantic::empty ();
     }
 

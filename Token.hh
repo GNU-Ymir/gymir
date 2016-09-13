@@ -106,6 +106,10 @@ namespace Lexical {
 #undef YMIR_TOKEN_KEYWORD       
     };
 
+    const char * tokenIdToStr (TokenId tid);
+    const char * getTokenDescription (TokenId tid);
+    TokenId getFromStr (const std::string &);
+    
     struct Token;
     typedef std::tr1::shared_ptr<Token> TokenPtr;
     typedef std::tr1::shared_ptr<const Token> const_TokenPtr;
@@ -113,7 +117,7 @@ namespace Lexical {
     struct Token {
 
 	static TokenPtr make (TokenId token_id, location_t locus) {
-	    return TokenPtr (new Token (token_id, locus));
+	    return TokenPtr (new Token (token_id, locus, getTokenDescription (token_id)));
 	}
 
 	static TokenPtr makeEof () {
@@ -140,11 +144,18 @@ namespace Lexical {
 	    gcc_assert (str != NULL);
 	    return *str;
 	}
-    
-	bool operator == (TokenId other);
 
+	const char * getCstr () const {
+	    gcc_assert(str != NULL);
+	    return str->c_str ();
+	}
+	
+	bool operator == (TokenId other); 
+
+	void print ();
+	
 	~Token ();
-    
+	
     private:
 
 	TokenId token_id;
@@ -164,9 +175,5 @@ namespace Lexical {
 	Token & operator = (const Token &);
         
     };
-
-    const char * tokenIdToStr (TokenId tid);
-    const char * getTokenDescription (TokenId tid);
-    TokenId getFromStr (const std::string &);
   
 };

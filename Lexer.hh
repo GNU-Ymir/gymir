@@ -1,4 +1,4 @@
-o#pragma once
+#pragma once
 
 #include "config.h"
 #include "system.h"
@@ -27,6 +27,10 @@ namespace Lexical {
 	
 	void setSkip (std::vector<std::string> skip);
 
+	void removeSkip (std::string elem);
+
+	void addSkip (std::string elem);
+	
 	void setComments (std::vector <std::pair<std::string, std::string> > comments);
 
 	void setComments (bool on);

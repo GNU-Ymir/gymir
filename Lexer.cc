@@ -74,6 +74,18 @@ namespace Lexical {
 	this->skip = skip;
     }
 
+    void Lexer::removeSkip (std::string elem) {
+	std::vector <std::string> aux;
+	for (auto & it : skip) {
+	    if (it != elem) aux.push_back (it);
+	}
+	skip = aux;
+    }
+
+    void Lexer::addSkip (std::string elem) {
+	skip.push_back (elem);
+    }
+    
     void Lexer::setKeys (std::vector <std::string> keys) {
 	this->keys = keys;
     }
