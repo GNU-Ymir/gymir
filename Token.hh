@@ -6,11 +6,12 @@
 
 #include <string>
 #include <tr1/memory>
+#include <curses.h>
+#include <stdlib.h>
 
 #define YMIR_TOKEN_LIST					\
     YMIR_TOKEN (FIRST_TOKEN, "<first-token-marker>")	\
     YMIR_TOKEN (END_OF, "end of file")			\
-    YMIR_TOKEN (MAIN, "main")				\
     YMIR_TOKEN (STD, "std")				\
     YMIR_TOKEN (IMPORT, "import")			\
     YMIR_TOKEN (DEF, "def")				\
@@ -78,14 +79,14 @@
     YMIR_TOKEN (PRE_RETOUR, "\r")			\
     YMIR_TOKEN (PAR_G, "(")				\
     YMIR_TOKEN (PAR_D, ")")				\
-    YMIR_TOKEN (ACC_G, "[")				\
-    YMIR_TOKEN (ACC_D, "]")				\
+    YMIR_TOKEN (ACC_G, "{")				\
+    YMIR_TOKEN (ACC_D, "}")				\
     YMIR_TOKEN (POINT_POINT, "..")			\
     YMIR_TOKEN (COME_DEB, "/*")				\
     YMIR_TOKEN (COME_END, "*/")				\
     YMIR_TOKEN (UNDER_SCORE, "_")			\
-    YMIR_TOKEN (ZERO, "0")				\
-    YMIR_TOKEN (NEUF, "9")				\
+    YMIR_TOKEN (ZERO, "0_")				\
+    YMIR_TOKEN (NEUF, "9_")				\
     YMIR_TOKEN (ANTI, "\\")				\
     YMIR_TOKEN (LX, "x")				\
     YMIR_TOKEN (VOID, "void")				\
@@ -116,10 +117,6 @@ namespace Lexical {
   
     struct Token {
 
-	static TokenPtr make (TokenId token_id, location_t locus) {
-	    return TokenPtr (new Token (token_id, locus, getTokenDescription (token_id)));
-	}
-
 	static TokenPtr makeEof () {
 	    return eof;
 	}
@@ -129,7 +126,8 @@ namespace Lexical {
 	}
 
 	static TokenPtr make (const std::string & value, location_t locus) {
-	    return TokenPtr (new Token (OTHER, locus, value));
+	    auto tok = getFromStr (value);
+	    return TokenPtr (new Token (tok, locus, value));
 	}
 
 	TokenId getId () const {
@@ -158,6 +156,7 @@ namespace Lexical {
 	
     private:
 
+	
 	TokenId token_id;
 	location_t locus;
 	std::string * str;

@@ -64,7 +64,7 @@ namespace Lexical {
 	std::vector <std::string> keys;
 	std::vector <std::pair <std::string, std::string> > comments;
 	std::vector <TokenPtr> read;
-	unsigned long currentWord;
+	long currentWord;
 	FILE * input;
 
 	const struct line_map * line_map;

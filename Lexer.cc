@@ -11,7 +11,7 @@ namespace Lexical {
     Lexer :: Lexer (const char * filename, FILE * input)
 	: currentLine(1),
 	  currentColumn (1),
-	  currentWord (0),
+	  currentWord (-1),
 	  line_map (NULL)
     {
 	line_map = ::linemap_add (::line_table, ::LC_ENTER,
@@ -32,7 +32,7 @@ namespace Lexical {
     }
 
     TokenPtr Lexer::next () {
-	if (this->currentWord >= read.size () - 1) {
+	if (this->currentWord >= (long)read.size () - 1) {
 	    TokenPtr ret;
 	    do {
 		ret = Token::makeEof();
@@ -45,8 +45,10 @@ namespace Lexical {
 		    } while (ret->getId () != com && ret->getId () != Token::EOF_TOKEN());
 		}
 	    } while (isSkip (ret) && ret->getId () != Token::EOF_TOKEN());
+	    currentWord ++;
+	    read.push_back (ret);
 	    return ret;
-	} else {
+	} else {	    
 	    this->currentWord ++;
 	    return read [currentWord];
 	}
@@ -62,10 +64,9 @@ namespace Lexical {
 	return Token::EOF_TOKEN ();
     }
 
-    bool Lexer::isSkip (TokenPtr tok) {
-	auto val = tokenIdToStr (tok->getId ());
+    bool Lexer::isSkip (TokenPtr tok) {       
 	for (auto & it : skip) {
-	    if (it == val) return true;
+	    if (it == tok->getStr()) return true;
 	}
 	return false;
     }
@@ -92,7 +93,7 @@ namespace Lexical {
     
     void Lexer::rewind (unsigned long nb) {
 	auto re = (long)this->currentWord - (long)nb;
-	if (re < 0) currentWord = 0;
+	if (re < 0) currentWord = -1;
 	else currentWord = re;
     }
   
@@ -139,7 +140,7 @@ namespace Lexical {
 	    this->seek (line, where + line.length());
 	} else if (beg == 0) {
 	    std::string info = line.substr (0, max);
-	    token = Token::make (getFromStr (info), this->getCurrentLocation());	    
+	    token = Token::make (info, this->getCurrentLocation());	    
 	    this->seek (info, where + max);
 	} else if (beg > 0) {
 	    std::string info = line.substr (0, beg);

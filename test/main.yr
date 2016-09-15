@@ -1,1 +1,4 @@
-def main () {}
+
+
+def main (a, b:char) :ptr!int {
+}

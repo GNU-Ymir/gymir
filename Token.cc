@@ -3,7 +3,7 @@
 
 namespace Lexical {
 
-    TokenPtr Token::eof = TokenPtr (new Token (END_OF, UNKNOWN_LOCATION));
+    TokenPtr Token::eof = Token::make ("end of file", UNKNOWN_LOCATION);
   
     Token::Token (TokenId token_id, location_t locus)
 	: token_id(token_id),
@@ -65,7 +65,33 @@ namespace Lexical {
     }
 
     void Token::print () {
-	printf (":%s (%s -> %i, %i)", getCstr(), LOCATION_FILE (getLocus()), LOCATION_LINE (getLocus()), LOCATION_COLUMN (getLocus()));
+	auto reset = "\u001B[0m";
+	auto purple = "\u001B[36m";
+	auto green = "\u001B[32m";
+	if (token_id == OTHER)	    
+	    printf (":%s%s%s (%s -> %s%i%s, %s%i%s)",
+		    green,
+		    getCstr(),
+		    reset,
+		    LOCATION_FILE (getLocus()),
+		    purple,
+		    LOCATION_LINE (getLocus()),
+		    reset,
+		    purple,
+		    LOCATION_COLUMN (getLocus()), reset);
+	
+	else
+	    printf (":%s%s%s (%s -> %s%i%s, %s%i%s)",
+		    green,
+		    tokenIdToStr(token_id),
+		    reset,
+		    LOCATION_FILE (getLocus()),
+		    purple,
+		    LOCATION_LINE (getLocus()),
+		    reset,
+		    purple,
+		    LOCATION_COLUMN (getLocus()), reset);
+
     }
     
     

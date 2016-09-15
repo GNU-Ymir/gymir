@@ -21,7 +21,7 @@ namespace Syntax {
 	while (token->getId() != Token::EOF_TOKEN()) {
 	    if (token->getId() == DEF) decls.push_back(visit_def (lexer));
 	    else if (token->getId() == IMPORT) decls.push_back (visit_import (lexer));
-	    else error_at (token->getLocus (),
+	    else fatal_error (token->getLocus (),
 			   "[%s, %s] attendues, mais %s trouvé\n",
 			   getTokenDescription(DEF),
 			   getTokenDescription(IMPORT),
@@ -39,20 +39,20 @@ namespace Syntax {
     Syntax::DeclarationPtr visit_def (Lexer & lexer) {
 	TokenPtr name = visit_identifiant (lexer);
 	std::vector <Syntax::VarPtr> exps;
-	TokenPtr word = lexer.next ();
-	if (word->getId() != PAR_G) error_at (word->getLocus (),
+	TokenPtr word = lexer.next ();	
+	if (word->getId() != PAR_G) fatal_error (word->getLocus (),
 					 "%s attendue, mais %s trouvé\n",
 					 getTokenDescription(PAR_G),
 					 getTokenDescription(word->getId ()));
-	word = lexer.next ();
-	if (word->getId() == PAR_D) {
+	word = lexer.next ();	
+	if (word->getId () != PAR_D) {
 	    lexer.rewind ();
 	    while (1) {
 		exps.push_back (visit_var_declaration (lexer));
 		word = lexer.next ();
 		if (word->getId() == PAR_D) break;
-		else if (word->getId () == VIRGULE)
-		    error_at (word->getLocus (),
+		else if (word->getId () != VIRGULE)
+		    fatal_error (word->getLocus (),
 			      "[%s, %s] attendue, mais %s trouvé\n",
 			      getTokenDescription(PAR_D),
 			      getTokenDescription(VIRGULE),
@@ -88,7 +88,7 @@ namespace Syntax {
 	if (next->getId () == DEUX_POINT) {
 	    auto type = visit_type (lexer);
 	    return (new TypedVar (token, type));
-	} else error_at (next->getLocus (),
+	} else fatal_error (next->getLocus (),
 			 "%s attendus, mais %s trouvé",
 			 getTokenDescription (DEUX_POINT),
 			 getTokenDescription (next->getId ()));
@@ -107,7 +107,7 @@ namespace Syntax {
 		    next = lexer.next ();
 		    if (next->getId () == PAR_D) break;
 		    else if (next->getId () != VIRGULE)
-			error_at (next->getLocus (),
+			fatal_error (next->getLocus (),
 				  "[%s, %s] attendues, mais %s trouvé",
 				  getTokenDescription(VIRGULE),
 				  getTokenDescription (PAR_D),
@@ -126,13 +126,13 @@ namespace Syntax {
 	TokenPtr token = lexer.next ();
 	if (token->getId() == OTHER) {
 	    return token;
-	} else error_at (token->getLocus (), "Un identifiant est attendue, mais %s trouvé", getTokenDescription(token->getId()));
+	} else fatal_error (token->getLocus (), "Un identifiant est attendue, mais %s trouvé", getTokenDescription(token->getId()));
 	return Token::makeEof ();
     }
     
     BlockPtr visit_block (Lexer & lexer) {
 	TokenPtr begin = lexer.next ();
-	if (begin ->getId () == ACC_G) {
+	if (begin -> getId () == ACC_G) {
 	    std::vector <DeclarationPtr> decls;
 	    std::vector <InstructionPtr> insts;
 	    while (1)  {
@@ -145,7 +145,8 @@ namespace Syntax {
 		else insts.push_back (visit_instruction (lexer, next));		
 	    }
 	    return new Block (begin, decls, insts);
-	} else return new Block (begin, {}, {visit_instruction (lexer, begin)});
+	} else lexer.rewind ();
+	return new Block (begin, {}, {visit_instruction (lexer, begin)});
     }
 
     InstructionPtr visit_instruction (Lexer & lexer, TokenPtr token) {
@@ -167,7 +168,7 @@ namespace Syntax {
 	    auto retour = (InstructionPtr)visit_expression_ult (lexer);
 	    TokenPtr next = lexer.next ();
 	    if (next -> getId () != POINT_VIG)
-		error_at (next->getLocus (),
+		fatal_error (next->getLocus (),
 			  "%s attendue, mais %s trouvé",
 			  getTokenDescription(POINT_VIG),
 			  next->getCstr ());
@@ -269,7 +270,7 @@ namespace Syntax {
 	ExpressionPtr left = visit_pth (lexer);
 	TokenPtr token = lexer.next ();       
 	if (find (token->getId () ,
-		  {MUL, DIV, AND_BIT, MODULO, POINT_POINT, IN})) {
+		  {STAR, DIV, AND_BIT, MODULO, POINT_POINT, IN})) {
 	    ExpressionPtr right = visit_pth (lexer);
 	    return visit_high (lexer, new Binary (token, left, right));
 	} else lexer.rewind();
@@ -279,7 +280,7 @@ namespace Syntax {
     ExpressionPtr visit_high (Lexer & lexer, ExpressionPtr left) {
 	TokenPtr token = lexer.next ();       
 	if (find (token->getId () ,
-		  {MUL, DIV, AND_BIT, MODULO, POINT_POINT, IN})) {
+		  {STAR, DIV, AND_BIT, MODULO, POINT_POINT, IN})) {
 	    ExpressionPtr right = visit_pth (lexer);
 	    return visit_high (lexer, new Binary (token, left, right));
 	} else lexer.rewind();
@@ -303,7 +304,7 @@ namespace Syntax {
 	auto exp = visit_expression_ult (lexer);
 	TokenPtr token = lexer.next ();
 	if (token->getId () != PAR_D)
-	    error_at (token->getLocus(),
+	    fatal_error (token->getLocus(),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_D),
 		      token->getCstr());
@@ -320,13 +321,13 @@ namespace Syntax {
 	if (token->getId() == OTHER
 	    && token->getStr ().length() > 0
 	    && token->getStr()[0] >= getTokenDescription (ZERO)[0]
-	    && token->getStr()[0] >= getTokenDescription (NEUF)[0])
+	    && token->getStr()[0] <= getTokenDescription (NEUF)[0])
 	    return visit_numeric (lexer, token);
 	else if (token->getId() == DOT)
 	    return visit_flottant (lexer);
 	else if (token->getId() == APOS || token->getId () == GUILL)
 	    return visit_chaine (lexer, token);
-	else if (token->getId() == FALSE || token->getId() == TRUE)
+	else if (token->getId() == FALSE_T || token->getId() == TRUE_T)
 	    return new Bool (token);
 	else if (token->getId () == NULL_T)
 	    return new Null (token);
@@ -339,7 +340,7 @@ namespace Syntax {
 	auto neuf = getTokenDescription(NEUF)[0];
 	for (int i = 0; i < (int)token->getStr ().length(); i++) {
 	    if (token->getStr ()[i] < zero || token->getStr ()[i] > neuf)
-		error_at (token->getLocus (),
+		fatal_error (token->getLocus (),
 			  "erreur de syntaxe '%s'",
 			  token->getCstr ());	   
 	}
@@ -347,8 +348,10 @@ namespace Syntax {
 	if (next->getId () == DOT) {
 	    next = lexer.next ();
 	    std::string suite = next->getStr ();
-	    if (next->getId() != OTHER) suite = "0";
-	    else {
+	    if (next->getId() != OTHER) {
+		suite = "0";
+		lexer.rewind ();
+	    } else {
 		for (int i = 0; i < (int)next->getStr().length (); i++) {
 		    if (next->getStr () [i] < zero || next->getStr ()[i] > neuf) {
 			suite = "0";
@@ -367,13 +370,13 @@ namespace Syntax {
 	auto zero = getTokenDescription(ZERO)[0];
 	auto neuf = getTokenDescription(NEUF)[0];
 	if (next->getId () != OTHER)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "erreur de syntaxe %s",
 		      next->getCstr());
 	
 	for (int i = 0; i < (int)next->getStr().length() ; i++) {
-	    if (next->getStr () [i] < zero || next->getStr () [i] < neuf)
-		error_at (next->getLocus (),
+	    if (next->getStr () [i] < zero || next->getStr () [i] > neuf)
+		fatal_error (next->getLocus (),
 			  "erreur de syntaxe %s",
 			  next->getCstr());
 	}
@@ -410,7 +413,7 @@ namespace Syntax {
 	std::string val = "";
 	while (1) {
 	    next = lexer.next ();
-	    if (next->getId () == EOF) error_at (next->getLocus (),
+	    if (next->getId () == EOF) fatal_error (next->getLocus (),
 						 "Fin de fichier inattendue");
 	    else if (next->getId () == token -> getId ()) break;
 	    else val += next->getStr ();		
@@ -456,21 +459,21 @@ namespace Syntax {
 	TokenPtr begin = lexer.next ();
 	TokenPtr next = lexer.next ();
 	if (next->getId () == PAR_G)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_G),
 		      next -> getCstr ());
 	ExpressionPtr test = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () == PAR_D)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_D),
 		      next -> getCstr ());
 	ExpressionPtr if_bl = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () == ELSE)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (ELSE),
 		      next -> getCstr ());
@@ -484,7 +487,7 @@ namespace Syntax {
 	else if (token->getId () == CROCHET_G) return visit_access (lexer, left);
 	else if (token->getId () == DOT) return visit_dot (lexer, left);
 	else
-	    error_at (token->getLocus (),
+	    fatal_error (token->getLocus (),
 		      "Erreur de syntaxe %s",
 		      token->getCstr());
 	return NULL;
@@ -502,7 +505,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next -> getId () == PAR_D) break;
 		else if (next -> getId () != VIRGULE)
-		    error_at (next->getLocus (),
+		    fatal_error (next->getLocus (),
 			      "[%s, %s] attendues, mais %s trouvé",
 			      getTokenDescription (PAR_D),
 			      getTokenDescription (VIRGULE),
@@ -529,7 +532,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next->getId () == CROCHET_D) break;
 		else if (next->getId () != VIRGULE)
-		    error_at (next->getLocus (),
+		    fatal_error (next->getLocus (),
 			      "[%s, %s] attendues, mais %s trouvé",
 			      getTokenDescription (CROCHET_D),
 			      getTokenDescription (VIRGULE),
@@ -567,21 +570,21 @@ namespace Syntax {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next(), suite = lexer.next ();
 	if (suite->getId () != PAR_G)
-	    error_at (suite->getLocus (),
+	    fatal_error (suite->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_G),
 		      suite->getCstr ());
 	ExpressionPtr var = visit_var (lexer);
 	suite = lexer.next ();
 	if (suite->getId () != IN)
-	    error_at (suite->getLocus (),
+	    fatal_error (suite->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (IN),
 		      suite->getCstr ());
 	ExpressionPtr iter = visit_expression (lexer);
 	suite = lexer.next ();
 	if (suite->getId () != PAR_D)
-	    error_at (suite->getLocus (),
+	    fatal_error (suite->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_D),
 		      suite->getCstr ());
@@ -599,7 +602,7 @@ namespace Syntax {
 	    size = visit_expression (lexer);
 	    next = lexer.next ();
 	    if (next->getId () != CROCHET_D)
-		error_at (next->getLocus (),
+		fatal_error (next->getLocus (),
 			  "%s attendue, mais %s trouvé",
 			  getTokenDescription (CROCHET_D),
 			  next->getCstr ());	    
@@ -610,7 +613,7 @@ namespace Syntax {
     ExpressionPtr visit_cast (Lexer & lexer) {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next (), next = lexer.next ();
-	if (next->getId () != DEUX_POINT)    error_at (next->getLocus (),
+	if (next->getId () != DEUX_POINT)    fatal_error (next->getLocus (),
 						       "%s attendue, mais %s trouvé",
 						       getTokenDescription (DEUX_POINT),
 						       next->getCstr ());
@@ -619,7 +622,7 @@ namespace Syntax {
 	if(next->getId () == PAR_G) {
 	    type = visit_type (lexer);
 	    next = lexer.next ();
-	    if (next->getId () != PAR_D)	error_at (next->getLocus (),
+	    if (next->getId () != PAR_D)	fatal_error (next->getLocus (),
 							  "%s attendue, mais %s trouvé",
 							  getTokenDescription (PAR_D),
 							  next->getCstr ());
@@ -629,13 +632,13 @@ namespace Syntax {
 	    type = new Var (name);
 	}
 	next = lexer.next ();
-	if (next->getId () != PAR_G)	    error_at (next->getLocus (),
+	if (next->getId () != PAR_G)	    fatal_error (next->getLocus (),
 						      "%s attendue, mais %s trouvé",
 						      getTokenDescription (PAR_G),
 						      next->getCstr ());
 	ExpressionPtr inside = visit_expression (lexer);
 	next = lexer.next ();
-	if (next->getId () != PAR_D) 	    error_at (next->getLocus (),
+	if (next->getId () != PAR_D) 	    fatal_error (next->getLocus (),
 						      "%s attendue, mais %s trouvé",
 						      getTokenDescription (PAR_D),
 						      next->getCstr ());
@@ -673,7 +676,7 @@ namespace Syntax {
 	ExpressionPtr exp = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next -> getCstr ());
@@ -683,7 +686,7 @@ namespace Syntax {
     InstructionPtr visit_for (Lexer & lexer) {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next(), next = lexer.next ();
-	if (next->getId () != PAR_G) error_at (next->getLocus (),
+	if (next->getId () != PAR_G) fatal_error (next->getLocus (),
 					       "%s attendue, mais %s trouvé",
 					       getTokenDescription (PAR_G),
 					       next->getCstr());
@@ -696,7 +699,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next->getId () == POINT_VIG) break;
 		else if (next->getId () != VIRGULE)
-		    error_at (next->getLocus (),
+		    fatal_error (next->getLocus (),
 			      "[%s, %s] attendues, mais %s trouvé",
 			      getTokenDescription(VIRGULE),
 			      getTokenDescription(POINT_VIG),
@@ -707,7 +710,7 @@ namespace Syntax {
 	ExpressionPtr test = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next->getCstr ());
@@ -721,7 +724,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next->getId () == PAR_D) break;
 		else if (next->getId () != VIRGULE)
-		    error_at (next->getLocus (),
+		    fatal_error (next->getLocus (),
 			      "[%s, %s] attendue, mais %s trouvé",
 			      getTokenDescription(VIRGULE),
 			      getTokenDescription(PAR_D),
@@ -742,7 +745,7 @@ namespace Syntax {
 	ExpressionPtr var = visit_var (lexer);
 	next = lexer.next ();
 	if (next->getId () != IN)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription(IN),
 		      next->getCstr ());
@@ -750,7 +753,7 @@ namespace Syntax {
 	if (has_par) {
 	    next = lexer.next ();
 	    if (next ->getId() != PAR_D)
-		error_at (next->getLocus (),
+		fatal_error (next->getLocus (),
 			  "%s attendue, mais %s trouvé",
 			  getTokenDescription (PAR_D),
 			  next->getCstr ());
@@ -769,7 +772,7 @@ namespace Syntax {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next (), next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next->getCstr ());
@@ -783,7 +786,7 @@ namespace Syntax {
 	ExpressionPtr left = visit_expression (lexer);
 	TokenPtr next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    error_at (next->getLocus (),
+	    fatal_error (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next->getCstr ());
