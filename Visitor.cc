@@ -142,14 +142,18 @@ namespace Syntax {
 		else if (next->getId () == ACC_G) insts.push_back ((InstructionPtr)visit_block (lexer));
 		else if (next->getId () == POINT_VIG) {}
 		else if (next->getId () == ACC_D) break;
-		else insts.push_back (visit_instruction (lexer, next));		
+		else {
+		    lexer.rewind ();
+		    insts.push_back (visit_instruction (lexer));
+		}
 	    }
 	    return new Block (begin, decls, insts);
 	} else lexer.rewind ();
-	return new Block (begin, {}, {visit_instruction (lexer, begin)});
+	return new Block (begin, {}, {visit_instruction (lexer)});
     }
 
-    InstructionPtr visit_instruction (Lexer & lexer, TokenPtr token) {
+    InstructionPtr visit_instruction (Lexer & lexer) {
+	TokenPtr token = lexer.next ();
 	if (token->getId () == IF) return visit_if (lexer);
 	else if (token->getId () == RETURN) return visit_return (lexer);
 	else if (token->getId () == FOR) return visit_for (lexer);

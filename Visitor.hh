@@ -56,7 +56,7 @@ namespace Syntax {
     ExpressionPtr visit_left_op (Lexical::Lexer&);
     ExpressionPtr visit_after (Lexical::Lexer&, Lexical::TokenPtr, ExpressionPtr);
     ExpressionPtr visit_before_pth (Lexical::Lexer&, Lexical::TokenPtr);
-    InstructionPtr visit_instruction (Lexical::Lexer&, Lexical::TokenPtr);
+    InstructionPtr visit_instruction (Lexical::Lexer&);
     InstructionPtr visit_if (Lexical::Lexer&);
     InstructionPtr visit_else (Lexical::Lexer&);
     InstructionPtr visit_return (Lexical::Lexer&);

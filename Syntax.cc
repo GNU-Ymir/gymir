@@ -45,11 +45,13 @@ namespace Syntax {
 	    printf ("!(");
 	    for (int i = 0; i < (int)templates.size (); i++) {
 		if (templates[i] != NULL)
-		    templates[i]->print ();
+		    templates[i]->print (-1);
 		if (i < (int)templates.size () - 1) printf(", ");
 	    }
 	    printf (")");
 	}
+	if (nb != -1)
+	    printf ("\n");
     }
 
     void TypedVar::print (int nb) {
@@ -314,7 +316,7 @@ namespace Syntax {
 	printf("<Function> ");
 	token -> print ();	
 	if (type != NULL)
-	    type -> print ();
+	    type -> print (-1);
 	printf ("\n");
 	for (auto it : params)
 	    if (it != NULL) it -> print (nb + 4);

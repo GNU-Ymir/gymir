@@ -106,7 +106,7 @@ namespace Lexical {
     }
   
     std::string Lexer::readln (FILE * i) {
-	unsigned long max = 10;
+	unsigned long max = 255;
 	std::string final = "";
 	while (1) {
 	    char * buf = new char[max];

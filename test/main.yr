@@ -1,4 +1,7 @@
 
 
-def main (a, b:char) :ptr!int {
+def test () {
 }
+
+def main (a, b:char) :ptr!int 
+test (null);
