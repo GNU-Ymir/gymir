@@ -2,6 +2,7 @@
 
 #include "Lexer.hh"
 #include "Syntax.hh"
+#include "ast.hh"
 
 namespace Syntax {
 

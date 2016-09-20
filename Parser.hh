@@ -3,7 +3,7 @@
 #include "Lexer.hh"
 #include "Token.hh"
 #include "Syntax.hh"
-#include "Semantic.hh"
+#include "ast.hh"
 
 /**
    Fonction appele par gcc
@@ -22,7 +22,7 @@ namespace Ymir {
 
 	Syntax::AstPtr syntax_analyse ();
 
-	Semantic::Ast semantic_analyse (Syntax::AstPtr &);
+	Syntax::AstPtr semantic_analyse (Syntax::AstPtr &);
 
 	void define_gcc_symbols ();
 	

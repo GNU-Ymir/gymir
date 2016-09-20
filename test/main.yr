@@ -3,5 +3,8 @@
 def test () {
 }
 
-def main (a, b:char) :ptr!int 
-test (null);
+def main (a, b:char) :ptr!int  {
+    while (true);
+	
+    
+}

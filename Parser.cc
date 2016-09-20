@@ -2,6 +2,7 @@
 #include "Lexer.hh"
 #include "Parser.hh"
 #include "Visitor.hh"
+#include "AstGC.hh"
 
 #include "config.h"
 #include "system.h"
@@ -24,9 +25,9 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	Syntax::AstPtr synt_ast = this -> syntax_analyse ();
-	synt_ast -> print ();
-	Semantic::Ast sem_ast = this -> semantic_analyse (synt_ast);
+	Syntax::AstPtr sem_ast = this -> semantic_analyse (synt_ast);
 	this -> define_gcc_symbols ();
+	Syntax::AstGC::instance().clean ();
     }
 
     Syntax::AstPtr Parser::syntax_analyse () {
@@ -45,8 +46,8 @@ namespace Ymir {
 	return visitor.visit ();
     }
 
-    Semantic::Ast Parser::semantic_analyse (Syntax::AstPtr&) {
-	return Semantic::empty ();
+    Syntax::AstPtr Parser::semantic_analyse (Syntax::AstPtr& ast) {
+	return NULL;
     }
 
     void Parser::define_gcc_symbols () {	
