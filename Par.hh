@@ -5,8 +5,10 @@
 namespace Syntax {
 
     struct Par : Expression {
+
 	ExpressionPtr left;
 	ExpressionPtr right;
+	
 	Par (Lexical::TokenPtr token, ExpressionPtr left, ExpressionPtr right)
 	    : Expression (token, AstEnums::PAR),
 	      left (left),

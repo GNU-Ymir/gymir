@@ -3,6 +3,8 @@
 #include "Parser.hh"
 #include "Visitor.hh"
 #include "AstGC.hh"
+#include "Tree.hh"
+#include "TypeInfo.hh"
 
 #include "config.h"
 #include "system.h"
@@ -27,7 +29,10 @@ namespace Ymir {
 	Syntax::AstPtr synt_ast = this -> syntax_analyse ();
 	Syntax::AstPtr sem_ast = this -> semantic_analyse (synt_ast);
 	this -> define_gcc_symbols ();
+	
+	//Vidange memoire
 	Syntax::AstGC::instance().clean ();
+	Semantic::TypeInfo::clear ();
     }
 
     Syntax::AstPtr Parser::syntax_analyse () {
@@ -52,8 +57,6 @@ namespace Ymir {
 
     void Parser::define_gcc_symbols () {	
     }
-    
-    
 };
 
 
