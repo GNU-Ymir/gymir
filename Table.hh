@@ -30,6 +30,8 @@ namespace Semantic {
 	Symbol &get (const std::string &name);	
 
 	std::string space () const;
+
+	bool alreadyReturned () const;
 	
     private:
 	

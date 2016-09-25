@@ -1,5 +1,6 @@
 #include "TypeInfo.hh"
 #include "Expression.hh"
+#include "IntInfo.hh"
 
 using namespace Ymir;
 

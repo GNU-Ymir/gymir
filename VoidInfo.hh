@@ -31,6 +31,21 @@ namespace Semantic {
 	virtual TypeInfo * multOp (Lexical::TokenPtr, Syntax::Expression*) {
 	    return NULL;
 	}
+
+	static TypeInfo * create (std::vector<Syntax::Expression*>) {
+	    return new VoidInfo;
+	}
+	
+    private:
+	
+	//Constructeur static
+	static class _init {
+	public :
+	    _init () {
+		TypeInfo::creators["void"] = &VoidInfo::create;
+	    }
+	} _initializer;
+
 	
     };
     

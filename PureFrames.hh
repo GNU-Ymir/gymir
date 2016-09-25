@@ -15,7 +15,8 @@ namespace Semantic {
 	void validate ();	
 
 	void verifyReturn ();
-	
+
+	void setMainParams (std::vector<Syntax::VarPtr> &vars);
     };
 
     struct FinalFrame : Frame {

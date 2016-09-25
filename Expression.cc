@@ -1,9 +1,5 @@
 #include "Expression.hh"
-#include "config.h"
-#include "coretypes.h"
-#include "input.h"
-#include "diagnostic.h"
-
+#include "Error.hh"
 
 namespace Syntax {
     
@@ -13,8 +9,12 @@ namespace Syntax {
 	printf ("\n");
     }
 
+    InstructionPtr Expression::instruction () {
+	return this-> expression ();
+    }
+    
     ExpressionPtr Expression::expression() {
-	fatal_error (this->token->getLocus (),
+	Ymir::Error::append (this->token->getLocus (),
 		     "Erreur interne");
     }
     

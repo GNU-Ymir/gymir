@@ -1,4 +1,6 @@
 #include "Block.hh"
+#include "Error.hh"
+#include "Table.hh"
 
 namespace Syntax {
 
@@ -18,7 +20,18 @@ namespace Syntax {
 
     Instruction * Block::instruction () {
 	
-    }
+	for (auto it : this->decls) {
+	    it->declare ();
+	}
 
+	std::vector<InstructionPtr> insts;
+	for (auto it : this->instructions) {	    
+	    if (Semantic::Table::instance ().alreadyReturned ())
+		Ymir::Error::append (it->token->getLocus(),
+			     "Instruction non-atteignable");
+	    else 
+		insts.push_back (it->instruction ());				
+	}       
+    }
     
 };

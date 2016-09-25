@@ -10,9 +10,17 @@ namespace Syntax {
 	AstEnums::AstEnum type;
 	
 	Ast (Lexical::TokenPtr token, AstEnums::AstEnum type);
-	virtual void print (int nb = 0) = 0;
+	virtual void print (int nb = 0) = 0;	
 	virtual void semantic () {}
-	virtual ~Ast() {}    
+
+	void free ();
+	
+	virtual ~Ast() {}
+
+    private:
+	
+	unsigned long id;	
+	
     };
     
     typedef Ast* AstPtr;

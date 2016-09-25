@@ -5,14 +5,20 @@ namespace Syntax {
 
     AstGC AstGC::inst;
     
-    void AstGC::addInfo (Ast * elem) {
+    unsigned long AstGC::addInfo (Ast * elem) {
 	this->table.push_back (elem);
+	return this-> table.size () - 1;
     }
 
+    void AstGC::free (unsigned long id) {
+	delete this-> table [id];
+	this-> table [id] = NULL;
+    }
     
     void AstGC::clean () {
 	for (auto & it : this->table) {
-	    delete it;
+	    if (it != NULL)
+		delete it;
 	}
 	this->table.clear();
     }

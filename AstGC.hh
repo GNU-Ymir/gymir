@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ast.hh"
+#include <vector>
 
 namespace Syntax {
     struct AstGC {
@@ -10,7 +11,10 @@ namespace Syntax {
 	    return inst;
 	}
 
-	void addInfo (Ast*);
+	unsigned long addInfo (Ast*);
+
+	void free (unsigned long id);
+	
 	void clean ();
 	
     private:
@@ -21,7 +25,7 @@ namespace Syntax {
 	
     private:
 
-	std::list <Ast*> table;
+	std::vector <Ast*> table;
 	static AstGC inst;
 	
     };

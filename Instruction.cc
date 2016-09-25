@@ -1,4 +1,5 @@
 #include "Instruction.hh"
+#include "Error.hh"
 
 namespace Syntax {
     
@@ -9,7 +10,8 @@ namespace Syntax {
     }
 
     Instruction * Instruction::instruction () {
-	return this;
+	Ymir::Error::append (this->token->getLocus (),
+			     "Erreur interne, pas implemente");
     }
     
 };

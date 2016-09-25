@@ -7,7 +7,12 @@ namespace Syntax {
 	: token (token),
 	  type (type)
     {
-	AstGC::instance().addInfo (this);
+	this->id = AstGC::instance().addInfo (this);
     }
+
+    void Ast::free () {
+	AstGC::instance ().free (id);
+    }
+    
 };
 

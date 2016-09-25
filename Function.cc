@@ -31,7 +31,7 @@ namespace Syntax {
 	    PureFrames::insertPure (PureFrame (this, ""));
 	} else {
 	    this->space = Table::instance ().space ();
-	    auto it = Table::instance().get (this->token->getStr());
+	    auto it = Table::instance().get (this->token->getStr ());
 	    if (it.isVoid ()) {
 		FunctionInfo * fun = new FunctionInfo (this->token->getStr());
 		fun->insert (Frame (this, space));

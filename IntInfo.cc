@@ -4,6 +4,11 @@
 
 namespace Semantic {
 
+    IntInfo::_init IntInfo::_initializer;
+    
+
+    IntInfo::IntInfo () {}
+    
     IntInfo::IntInfo (TypeInfo::BinopLint lint) {
 	this->binopFoo = lint;
     }

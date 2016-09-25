@@ -56,5 +56,9 @@ namespace Semantic {
     TypeInfo *& Table::return_type () {
 	return return_types.front ();
     }
+
+    bool Table::alreadyReturned () const {
+	return false;
+    }
     
 }

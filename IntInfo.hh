@@ -2,11 +2,12 @@
 
 #include "TypeInfo.hh"
 
-
 namespace Semantic {
 
     struct IntInfo : TypeInfo {
 
+	IntInfo ();
+	
 	IntInfo (TypeInfo::BinopLint lint);
 
 	IntInfo (TypeInfo::UnopLint lint);
@@ -23,6 +24,20 @@ namespace Semantic {
 
 	std::string typeToString () const;
 	
+	static TypeInfo* create (std::vector<Syntax::Expression*>) {
+	    return new IntInfo ();
+	}
+
+    private:
+
+	//Constructeur static
+	static class _init {
+	public :
+	    _init () {
+		TypeInfo::creators["int"] = &IntInfo::create;
+	    }
+	} _initializer;
+
     private:
 	
 	TypeInfo * Affect (TypeInfo*);

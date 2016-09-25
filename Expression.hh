@@ -18,6 +18,8 @@ namespace Syntax {
 	    return this->info;
 	}
 	
+	Instruction * instruction () final;
+
 	virtual Expression * expression ();
 	
 	virtual void print (int nb = 0);

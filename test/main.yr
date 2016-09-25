@@ -1,13 +1,7 @@
 
 
-def test () {
-}
-
-def test (a : int) {
-}
 
 
-def main (a, b:char) : void   {
-    while (true)
-    	  ;
+def main ()  {
+    a + 10;
 }

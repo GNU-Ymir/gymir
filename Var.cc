@@ -1,9 +1,6 @@
 #include "Var.hh"
 #include "Table.hh"
-#include "config.h"
-#include "coretypes.h"
-#include "input.h"
-#include "diagnostic.h"
+#include "Error.hh"
 #include "UndefInfo.hh"
 
 namespace Syntax {
@@ -35,18 +32,18 @@ namespace Syntax {
     VarPtr Var::asType () {
 	auto info = Table::instance ().get (this->token->getStr ());
 	if (!info.isVoid() && !info.type->Is(STRUCT)) {
-	    error_at (this->token->getLocus (),
+	    Ymir::Error::append (this->token->getLocus (),
 		      "%s n'est pas un type",
 		      this->token->getCstr());
 	    return this;
 	} else if (info.isVoid ()) {
 	    std::vector<ExpressionPtr> tpls;
-	    for (int i = 0; i < this->templates.size (); i++) {
+	    for (int i = 0; i < (int)this->templates.size (); i++) {
 		tpls.push_back (this->templates [i] -> expression ());
 	    }
 	    auto t_info = TypeInfo::create_type (this->token, tpls);
 	    if (t_info == NULL) {
-		error_at (this->token->getLocus (),
+		Ymir::Error::append (this->token->getLocus (),
 			  "Type inconnu %s",
 			  this->token->getCstr());
 		return NULL;
@@ -80,10 +77,14 @@ namespace Syntax {
     VarPtr TypedVar::declare (const char * funName) {
 	auto it = Table::instance().get (this->token->getStr ());
 	if (it.isVoid()) {
-	    this->info = this->type->asType () -> getType ();
-	    Table::instance ().insert (this->token->getStr(), Symbol (this->token, this->info));
+	    auto type = this->type->asType ();
+	    if (type == NULL) return NULL;
+	    else this->info = type-> getType ();
+	    
+	    Table::instance ().insert (this->token->getStr (), Symbol (this->token, this->info));
+	    return this;
 	} else {
-	    error_at (this->token->getLocus(),
+	    Ymir::Error::append (this->token->getLocus(),
 		      "Redefinition du parametre %s.%s",
 		      funName, 
 		      this->token->getStr().c_str());		      

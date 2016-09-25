@@ -12,10 +12,27 @@ namespace Syntax {
 	Binary (Lexical::TokenPtr token, ExpressionPtr left, ExpressionPtr right)
 	    : Expression (token, AstEnums::BINARY),
 	      left (left),
-	      right (right)
+	      right (right),
+	      isRight (false)
 	{}
 	
-	virtual void print (int nb = 0);	
+	virtual void print (int nb = 0);
+	
+	ExpressionPtr expression ();
+
+    private:
+
+	ExpressionPtr affect ();
+	
+	ExpressionPtr normal ();
+
+	ExpressionPtr  opUndef (Binary*);
+	ExpressionPtr varUndef (ExpressionPtr);
+
+    private:
+
+	bool isRight;
+	
     };
 
     

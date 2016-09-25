@@ -5,6 +5,7 @@
 #include "AstGC.hh"
 #include "Tree.hh"
 #include "TypeInfo.hh"
+#include "Error.hh"
 
 #include "config.h"
 #include "system.h"
@@ -24,12 +25,22 @@
 #include "fold-const.h"
 
 namespace Ymir {
+       
+    void stop () {
+	Syntax::AstGC::instance().clean ();
+	Semantic::TypeInfo::clear ();
+	fatal_error (UNKNOWN_LOCATION,
+		     "Trop d'erreur la compilation a du terminer");
+    }
 
     void Parser::parse_program () {
 	Syntax::AstPtr synt_ast = this -> syntax_analyse ();
+	if (Ymir::Error::nb_errors > 0) stop ();
 	this -> semantic_analyse (synt_ast);
+	if (Ymir::Error::nb_errors > 0) stop ();
 	this -> define_gcc_symbols ();
-	
+	if (Ymir::Error::nb_errors > 0) stop ();
+			
 	//Vidange memoire
 	Syntax::AstGC::instance().clean ();
 	Semantic::TypeInfo::clear ();
@@ -52,7 +63,7 @@ namespace Ymir {
     }
 
     void Parser::semantic_analyse (Syntax::AstPtr& ast) {
-	ast->semantic ();
+	ast -> semantic ();
     }
 
     void Parser::define_gcc_symbols () {	

@@ -36,7 +36,7 @@ namespace Syntax {
 	
 	VarPtr asType ();
 	
-	virtual void print (int nb = 0);
+	virtual void print (int nb = 0);	
 	
     };
     

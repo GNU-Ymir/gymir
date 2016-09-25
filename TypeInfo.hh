@@ -39,7 +39,7 @@ namespace Semantic {
 	
 	static TypeInfo* create_type (Lexical::TokenPtr tok, std::vector <Syntax::Expression*> tpls) {
 	    auto it = creators.find (tok->getStr ());
-	    if (it != creators.end ()) return it->second (tok, tpls);
+	    if (it != creators.end ()) return it->second (tpls);
 	    return NULL;
 	}
 	
@@ -67,14 +67,14 @@ namespace Semantic {
 	typedef Ymir::Tree (*BinopLint) (Syntax::Expression*, Syntax::Expression*);
 	typedef Ymir::Tree (*UnopLint) (Syntax::Expression*);
 
-	typedef TypeInfo* (*TypeCreator) (Lexical::TokenPtr, std::vector<Syntax::Expression*>);
+	typedef TypeInfo* (*TypeCreator) (std::vector<Syntax::Expression*>);
 	
 	static std::map <std::string, TypeCreator> creators;
 	
 	BinopLint binopFoo;
 	UnopLint unopFoo;
 	BinopLint multFoo;
-
+	
     private:
 
 	ulong id;	
