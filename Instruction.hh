@@ -13,8 +13,12 @@ namespace Syntax {
 	Instruction (Lexical::TokenPtr ptr)
 	    : Ast (ptr, AstEnums::INSTRUCTION)
 	{}
+
+	virtual Instruction* instruction();
 	
 	virtual void print (int nb = 0);
+	
+	virtual ~Instruction () {}
     };    
 
     typedef Instruction* InstructionPtr;

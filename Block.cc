@@ -16,4 +16,9 @@ namespace Syntax {
 	}	
     }    
 
+    Instruction * Block::instruction () {
+	
+    }
+
+    
 };

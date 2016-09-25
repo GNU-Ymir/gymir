@@ -89,7 +89,6 @@
     YMIR_TOKEN (NEUF, "9_")				\
     YMIR_TOKEN (ANTI, "\\")				\
     YMIR_TOKEN (LX, "x")				\
-    YMIR_TOKEN (VOID, "void")				\
     YMIR_TOKEN (SYS, "sys")				\
     YMIR_TOKEN (DOLLAR, "$")				\
     YMIR_TOKEN (CAST, "cast")				\
@@ -138,6 +137,9 @@ namespace Lexical {
 	    return locus;
 	}
 
+	std::string locusToString () const;
+	    	
+	
 	const std::string & getStr () const {
 	    gcc_assert (str != NULL);
 	    return *str;

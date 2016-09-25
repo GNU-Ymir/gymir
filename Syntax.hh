@@ -15,6 +15,7 @@ namespace Syntax {
 	    PROGRAM,
 	    VAR,
 	    TYPEDVAR,
+	    TYPE,
 	    BINARY,
 	    AFUNARY,
 	    BEFUNARY,

@@ -1,4 +1,5 @@
 #include "Program.hh"
+#include "PureFrames.hh"
 
 namespace Syntax {
     
@@ -12,4 +13,16 @@ namespace Syntax {
 	}
     }
 
+    void Program::semantic () {
+	for (auto it : elems) {
+	    it -> declare ();
+	}
+
+	for (auto & it : Semantic::PureFrames::allPure ()) {
+	    printf ("%s\n", it.name ().c_str());
+	    it.validate ();
+	}	
+    }
+
+    
 };

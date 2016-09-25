@@ -6,6 +6,7 @@ using namespace Ymir;
 namespace Semantic {
 
     std::vector<TypeInfo*> TypeInfo::all;
+    std::map<std::string, TypeInfo::TypeCreator> TypeInfo::creators;
     
     TypeInfo::TypeInfo () {
 	id = all.size ();

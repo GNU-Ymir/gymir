@@ -27,7 +27,7 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	Syntax::AstPtr synt_ast = this -> syntax_analyse ();
-	Syntax::AstPtr sem_ast = this -> semantic_analyse (synt_ast);
+	this -> semantic_analyse (synt_ast);
 	this -> define_gcc_symbols ();
 	
 	//Vidange memoire
@@ -39,7 +39,7 @@ namespace Ymir {
 	lexer.setKeys ({":", ";", "|", "[", "]", "?", "'", " ", "\n", "\t", "<->",
 		    "<-", "=", "+=", "*=", "-=", "/=", "&&", "||", "<", ">", "==", ">=", "<=", "!=", "++", "--",
 		    "+", "-", "|", "<<", ">>", "^", "*", "/", "&", "%", "!",
-					  "\r", "(", ")", "{", "}", ",", ".", "'", "\"", "..", "*#", "#*", "#", "\\", "$", "//", "/*", "*/"});
+		    "\r", "(", ")", "{", "}", ",", ".", "'", "\"", "..", "*#", "#*", "#", "\\", "$", "//", "/*", "*/"});
 	
 	lexer.setComments ({std::pair<std::string, std::string> ("#", "\n"),
 		    std::pair<std::string, std::string> ("/*", "*/"),
@@ -51,8 +51,8 @@ namespace Ymir {
 	return visitor.visit ();
     }
 
-    Syntax::AstPtr Parser::semantic_analyse (Syntax::AstPtr& ast) {
-	return NULL;
+    void Parser::semantic_analyse (Syntax::AstPtr& ast) {
+	ast->semantic ();
     }
 
     void Parser::define_gcc_symbols () {	

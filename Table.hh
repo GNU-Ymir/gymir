@@ -1,5 +1,9 @@
 #pragma once
 
+#include "FrameScope.hh"
+#include <list>
+#include <vector>
+#include "TypeInfo.hh"
 
 namespace Semantic {
 
@@ -13,16 +17,20 @@ namespace Semantic {
 
 	void quitBlock ();
 
-	void enterFrame ();
+	void enterFrame (const std::string&);
 
 	void quitFrame ();
+
+	TypeInfo *& return_type ();
 	
-	void addImport (Package pck);
+	void addImport (Package * pck);
 
-	void insert (std::string name, Symbol sym);
+	void insert (const std::string &name, Symbol sym);
 
-	Symbol get (std::string name);	
+	Symbol &get (const std::string &name);	
 
+	std::string space () const;
+	
     private:
 	
 	Table () {}
@@ -30,9 +38,9 @@ namespace Semantic {
 	Table & operator = (const Table &);
 	
 	static Table inst;
-	Package imported;       	
-	Scope global_scope;
+	Scope globalScope;
 	std::list <FrameScope> frameTable;
+	std::list <TypeInfo*> return_types;
 	
     };
        

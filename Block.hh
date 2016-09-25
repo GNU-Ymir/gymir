@@ -14,6 +14,8 @@ namespace Syntax {
 	      instructions (insts)
 	{}
 	
+	Instruction * instruction () override;
+
 	virtual void print (int nb = 0);
     };
     

@@ -18,7 +18,11 @@ namespace Syntax {
 	    return this->info;
 	}
 	
-	virtual void print (int nb = 0);	
+	virtual Expression * expression ();
+	
+	virtual void print (int nb = 0);
+
+	virtual ~Expression () {}
 	
     protected:
 	

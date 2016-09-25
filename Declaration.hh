@@ -14,6 +14,7 @@ namespace Syntax {
 	    : Ast(ptr, AstEnums::DECLARATION)
 	{}
 	
+	virtual void declare () = 0;
 	virtual void print (int nb = 0);
     };
 

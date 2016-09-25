@@ -62,6 +62,12 @@ ymir_OBJS = \
 	ymir/While.o \
 	ymir/TypeInfo.o \
 	ymir/IntInfo.o \
+	ymir/FrameScope.o \
+	ymir/Scope.o \
+	ymir/Table.o \
+	ymir/FunctionInfo.o \
+	ymir/Symbol.o \
+	ymir/PureFrames.o \
     $(END)
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

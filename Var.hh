@@ -7,7 +7,7 @@ namespace Syntax {
     struct Var;
 
     typedef Var * VarPtr;
-    
+        
     struct Var : Expression {
 	std::vector<ExpressionPtr> templates;
 
@@ -28,6 +28,14 @@ namespace Syntax {
 	    return VarPtr ();
 	}
 	
+	virtual VarPtr declare (const char*);
+
+	virtual VarPtr expression ();
+
+	bool isType ();
+	
+	VarPtr asType ();
+	
 	virtual void print (int nb = 0);
 	
     };
@@ -39,9 +47,20 @@ namespace Syntax {
 	    : Var (token, AstEnums::TYPEDVAR),
 	      type (type)
 	{}
+
+	virtual VarPtr declare (const char*);
 	
 	virtual void print (int nb = 0);	
     };
 
+    struct Type : Var {
+
+	Type (Lexical::TokenPtr ptr, Semantic::TypeInfo * info)
+	    : Var (ptr, AstEnums::TYPE)
+	{
+	    this->info = info;
+	}	
+	
+    };
 
 };

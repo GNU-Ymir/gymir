@@ -11,8 +11,8 @@ namespace Syntax {
 	
 	Ast (Lexical::TokenPtr token, AstEnums::AstEnum type);
 	virtual void print (int nb = 0) = 0;
-	virtual ~Ast() {
-	}    
+	virtual void semantic () {}
+	virtual ~Ast() {}    
     };
     
     typedef Ast* AstPtr;

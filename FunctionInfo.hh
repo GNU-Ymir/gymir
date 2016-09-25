@@ -1,15 +1,13 @@
 #pragma once
 
 #include "TypeInfo.hh"
-
+#include "Frame.hh"
 
 namespace Semantic {
 
-    struct IntInfo : TypeInfo {
+    struct FunctionInfo : TypeInfo {
 
-	IntInfo (TypeInfo::BinopLint lint);
-
-	IntInfo (TypeInfo::UnopLint lint);
+	FunctionInfo (const std::string & name);
 	
 	TypeInfo * binaryOp (Lexical::TokenPtr, Syntax::Expression*) override;
 	
@@ -23,11 +21,13 @@ namespace Semantic {
 
 	std::string typeToString () const;
 	
+	void insert (Frame fr);
+
     private:
 	
-	TypeInfo * Affect (TypeInfo*);
+	std::string name;	
+	std::vector <Frame> frames;
 	
     };
     
-
 }

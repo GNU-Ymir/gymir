@@ -22,7 +22,7 @@ namespace Ymir {
 
 	Syntax::AstPtr syntax_analyse ();
 
-	Syntax::AstPtr semantic_analyse (Syntax::AstPtr &);
+	void semantic_analyse (Syntax::AstPtr &);
 
 	void define_gcc_symbols ();
 	

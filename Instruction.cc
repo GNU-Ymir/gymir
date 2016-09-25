@@ -7,5 +7,9 @@ namespace Syntax {
 	token->print();
 	printf ("\n");
     }
+
+    Instruction * Instruction::instruction () {
+	return this;
+    }
     
 };

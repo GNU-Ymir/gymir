@@ -1,11 +1,14 @@
 #pragma once
 
+#include <map>
+#include "Symbol.hh"
 
 namespace Semantic {
 
     struct Package {
 
 	std::string filename;	
+
 	std::map <std::string, Symbol> global_declarations;	
 	
 	Package (std::string filename) : filename (filename) {}

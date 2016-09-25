@@ -58,6 +58,10 @@ namespace Semantic {
 	else return NULL;
     }
 
+    std::string IntInfo::typeToString () const {
+	return "int";
+    }
+    
     bool IntInfo::Is (TypeEnum info) {
 	return info == INT;
     }

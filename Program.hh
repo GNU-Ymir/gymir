@@ -13,7 +13,10 @@ namespace Syntax {
 	      elems (elems)
 	{}
 	
+	void semantic ();
+	
 	virtual void print (int nb = 0);
+		
     };
 
 };

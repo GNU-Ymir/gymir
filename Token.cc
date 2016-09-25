@@ -93,6 +93,13 @@ namespace Lexical {
 		    LOCATION_COLUMN (getLocus()), reset);
 
     }
+
+    std::string Token::locusToString () const {
+	std::string s(LOCATION_FILE (getLocus()));
+	s += ":" + LOCATION_LINE (getLocus());
+	s += ":" + LOCATION_COLUMN (getLocus());
+	return s;
+    }
     
     
 };
