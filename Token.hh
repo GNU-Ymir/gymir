@@ -25,7 +25,7 @@
     YMIR_TOKEN (BREAK, "break")				\
     YMIR_TOKEN (THROW, "throw")				\
     YMIR_TOKEN (TRY, "try")				\
-	YMIR_TOKEN (SWITCH, "switch")			\
+    YMIR_TOKEN (SWITCH, "switch")			\
     YMIR_TOKEN (DEFAULT, "default")			\
     YMIR_TOKEN (IN, "in")				\
     YMIR_TOKEN (ELSE, "else")				\

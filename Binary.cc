@@ -1,5 +1,6 @@
 #include "Binary.hh"
 #include "Error.hh"
+#include <stdio.h>
 
 namespace Syntax {
 
@@ -18,11 +19,12 @@ namespace Syntax {
 	    return affect ();
 	else return normal ();
     }
-
+    
     ExpressionPtr Binary::normal () {
 	auto aux = new Binary (this->token, this->left, this->right);
 	aux-> left = aux-> left-> expression ();
 	aux-> right = aux-> right-> expression ();
+	
 	if (aux-> left-> type == AstEnums::TYPE) return varUndef (aux-> left);
 	if (aux-> right-> type == AstEnums::TYPE) return varUndef (aux-> right);
 	

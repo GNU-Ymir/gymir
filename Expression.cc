@@ -14,8 +14,9 @@ namespace Syntax {
     }
     
     ExpressionPtr Expression::expression() {
-	Ymir::Error::append (this->token->getLocus (),
-		     "Erreur interne");
+	Ymir::Error::fatal (this->token->getLocus (),
+			     "Erreur interne ~> %s.expression ()",
+			     AstEnums::toString(this->type));
     }
     
 };

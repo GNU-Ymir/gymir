@@ -8,6 +8,8 @@ namespace Syntax {
 	Int (Lexical::TokenPtr token)
 	    : Expression (token, AstEnums::INT)
 	{}
+
+	ExpressionPtr expression ();
 	
 	virtual void print (int nb = 0);
     };

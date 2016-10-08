@@ -62,6 +62,7 @@ ymir_OBJS = \
 	ymir/While.o \
 	ymir/TypeInfo.o \
 	ymir/IntInfo.o \
+	ymir/BoolInfo.o \
 	ymir/FrameScope.o \
 	ymir/Scope.o \
 	ymir/Table.o \

@@ -49,9 +49,8 @@ namespace Syntax {
 			      it.token->locusToString().c_str());
 		}
 	    }
-	}
-	
-	verifyPure ();	
+	    verifyPure ();	
+	}	
     }
     
     void Function::verifyPure () {

@@ -41,7 +41,26 @@ namespace Semantic {
     private:
 	
 	TypeInfo * Affect (TypeInfo*);
-	
+	TypeInfo * PlusAff (TypeInfo*);
+	TypeInfo * SubAff (TypeInfo*);
+	TypeInfo * MulAff (TypeInfo*);	
+	TypeInfo * DivAff (TypeInfo*);
+	TypeInfo * Inf (TypeInfo*);
+	TypeInfo * Sup (TypeInfo*);
+	TypeInfo * Equals (TypeInfo*);
+	TypeInfo * SupEquals (TypeInfo*);
+	TypeInfo * InfEquals (TypeInfo*);
+	TypeInfo * NotEquals (TypeInfo*);
+	TypeInfo * Plus (TypeInfo*);
+	TypeInfo * Sub (TypeInfo*);
+	TypeInfo * OrBit (TypeInfo*);
+	TypeInfo * LeftBit (TypeInfo*);
+	TypeInfo * RightBit (TypeInfo*);
+	TypeInfo * Xor (TypeInfo*);
+	TypeInfo * Mul (TypeInfo*);
+	TypeInfo * Div (TypeInfo*);
+	TypeInfo * AndBit (TypeInfo*);
+	TypeInfo * Modulo (TypeInfo*);	
     };
     
 

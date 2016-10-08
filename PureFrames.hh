@@ -24,6 +24,8 @@ namespace Semantic {
 	FinalFrame (Syntax::Function * fun, const std::string & space)
 	    : Frame (fun, space)
 	{}
+
+	void finalize ();
 	
     };
     

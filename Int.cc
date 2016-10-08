@@ -1,4 +1,6 @@
 #include "Int.hh"
+#include <stdio.h>
+#include "IntInfo.hh"
 
 namespace Syntax {
     
@@ -8,4 +10,9 @@ namespace Syntax {
 	printf ("\n");	
     }
 
+    ExpressionPtr Int::expression () {
+	auto aux = new Int (this->token);
+	aux-> info = new Semantic::IntInfo ();
+	return aux;
+    }    
 };

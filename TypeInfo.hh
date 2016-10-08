@@ -15,6 +15,7 @@ namespace Semantic {
 	INT,
 	FLOAT,
 	CHAR,
+	BOOL,
 	FUNCTION,
 	UNDEF,
 	VOID,

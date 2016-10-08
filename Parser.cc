@@ -23,6 +23,7 @@
 #include "print-tree.h"
 #include "stor-layout.h"
 #include "fold-const.h"
+#include "PureFrames.hh"
 
 namespace Ymir {
        
@@ -67,7 +68,11 @@ namespace Ymir {
     }
 
     void Parser::define_gcc_symbols () {	
+	for (auto & it : Semantic::PureFrames::allFinal ()) {
+	    it.finalize ();
+	}
     }
+    
 };
 
 
