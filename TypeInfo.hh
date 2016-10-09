@@ -37,6 +37,9 @@ namespace Semantic {
 	virtual TypeInfo * binaryOpRight (Lexical::TokenPtr tok, Syntax::Expression*) = 0;
 	virtual TypeInfo * unaryOp (Lexical::TokenPtr tok) = 0;
 	virtual TypeInfo * multOp (Lexical::TokenPtr tok, Syntax::Expression*) = 0;
+	virtual TypeInfo * typeOp (Syntax::Expression*);
+
+	virtual TypeInfo* clone () = 0;
 	
 	static TypeInfo* create_type (Lexical::TokenPtr tok, std::vector <Syntax::Expression*> tpls) {
 	    auto it = creators.find (tok->getStr ());

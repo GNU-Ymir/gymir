@@ -17,6 +17,8 @@ namespace Semantic {
 	
 	TypeInfo * multOp (Lexical::TokenPtr tok, Syntax::Expression*) override;
 
+	TypeInfo * clone () override;
+	
 	bool Is (TypeEnum) override;
 
 	std::string typeToString () const;

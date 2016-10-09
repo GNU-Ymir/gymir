@@ -2,6 +2,7 @@
 
 #include "Instruction.hh"
 #include "Declaration.hh"
+#include "Tree.hh"
 
 namespace Syntax {
        
@@ -16,7 +17,13 @@ namespace Syntax {
 	{}
 	
 	Instruction * instruction () override;
+
+	Ymir::Tree block ();
+	
 	virtual void print (int nb = 0);
+
+	Ymir::TreeStmtList stackStmtList;
+	
     };
     
     typedef Block* BlockPtr;

@@ -56,9 +56,9 @@ namespace Semantic {
 	    
 	Syntax::BlockPtr block = (Syntax::BlockPtr)fun-> block-> instruction ();
 	    
-	auto info = Table::instance().return_type ();
+	auto info = Table::instance ().return_type ();
 	Table::instance ().quitFrame ();
-	if (info == NULL || info->Is (UNDEF)) {
+	if (info == NULL || info-> Is (UNDEF)) {
 	    info = new VoidInfo;
 	    //TODO verifier l'existance du type de retour
 	} else verifyReturn ();
@@ -71,20 +71,6 @@ namespace Semantic {
     }
 
     void FinalFrame::finalize () {
-	tree type[] = {integer_type_node,
-		       build_pointer_type (build_pointer_type (char_type_node))};
-	tree fun_type = build_function_type_array (integer_type_node, 2, type);
-	
-	tree funcdl = build_fn_decl (this-> fun-> token-> getCstr(),
-				     fun_type);
-	Ymir::Tree block = Ymir::Tree ();
-	BLOCK_SUPERCONTEXT (block.getTree ()) = funcdl;
-	DECL_INITIAL (funcdl) = block.getTree ();
-	DECL_EXTERNAL (funcdl) = 0;
-	DECL_PRESERVE_P (funcdl) = 1;
-	gimplify_function_tree (funcdl);
-	
-	cgraph_node::finalize_function (funcdl, true);
     }
     
     

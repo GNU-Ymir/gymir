@@ -10,8 +10,17 @@ namespace Syntax {
     }
 
     Instruction * Instruction::instruction () {
-	Ymir::Error::append (this->token->getLocus (),
-			     "Erreur interne, pas implemente");
+	Ymir::Error::fatal (this->token->getLocus (),
+			    "Erreur interne ~> %s.instruction ()",
+			     AstEnums::toString(this->type));
+	return NULL;
+    }
+
+    Ymir::Tree Instruction::statement () {
+	Ymir::Error::fatal (this->token->getLocus (),
+			    "Erreur interne ~> %s.statement ()",
+			    AstEnums::toString(this->type));
+	return Ymir::Tree ();
     }
     
 };

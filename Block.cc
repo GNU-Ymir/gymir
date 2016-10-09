@@ -18,8 +18,7 @@ namespace Syntax {
 	}	
     }    
 
-    Instruction * Block::instruction () {
-	
+    Instruction * Block::instruction () {	
 	for (auto it : this->decls) {
 	    it->declare ();
 	}
@@ -31,7 +30,14 @@ namespace Syntax {
 			     "Instruction non-atteignable");
 	    else 
 		insts.push_back (it->instruction ());				
-	}       
+	}
+	return new Block (this-> token, {}, insts);
+    }
+
+    Ymir::Tree Block::block () {
+	for (auto it : this-> instructions) {
+	    stackStmtList.append (it-> statement ());
+	}
     }
     
 };

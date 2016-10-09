@@ -56,6 +56,10 @@ namespace Semantic {
     TypeInfo * IntInfo::multOp (Lexical::TokenPtr, Syntax::Expression *) {
 	return NULL;
     }
+
+    TypeInfo * IntInfo::clone () {
+	return new IntInfo ();
+    }
     
     TypeInfo * IntInfo::Affect (TypeInfo * right) {
 	if (right->Is(INT)) return new IntInfo (&IntUtils::InstAffInt);

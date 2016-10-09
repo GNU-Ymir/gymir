@@ -30,6 +30,10 @@ namespace Semantic {
 	return NULL;
     }
 
+    TypeInfo * BoolInfo::clone () {
+	return new BoolInfo ();
+    }
+    
     std::string BoolInfo::typeToString () const {
 	return "bool";
     }

@@ -32,6 +32,10 @@ namespace Semantic {
 	    return NULL;
 	}
 
+	virtual TypeInfo * clone () override {
+	    return new VoidInfo ();
+	}
+	
 	static TypeInfo * create (std::vector<Syntax::Expression*>) {
 	    return new VoidInfo;
 	}

@@ -21,6 +21,10 @@ namespace Semantic {
     TypeInfo * FunctionInfo::multOp (Lexical::TokenPtr, Syntax::Expression*) {
 	return NULL;
     }
+
+    TypeInfo * FunctionInfo::clone () {
+	return this;
+    }
     
     bool FunctionInfo::Is (TypeEnum type) {
 	return type == FUNCTION;

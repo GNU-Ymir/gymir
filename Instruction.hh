@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Ast.hh"
+#include "Tree.hh"
 
 namespace Syntax {
 
@@ -15,6 +16,8 @@ namespace Syntax {
 	{}
 
 	virtual Instruction* instruction();
+
+	virtual Ymir::Tree statement ();
 	
 	virtual void print (int nb = 0);
 	

@@ -18,5 +18,11 @@ namespace Syntax {
 			     "Erreur interne ~> %s.expression ()",
 			     AstEnums::toString(this->type));
     }
+
+    Ymir::Tree Expression::statement () {
+	Ymir::Error::append (this-> token-> getLocus (),
+			    "n'est pas une instruction");
+	return Ymir::Tree ();
+    }
     
 };

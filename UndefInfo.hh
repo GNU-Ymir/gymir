@@ -31,6 +31,10 @@ namespace Semantic {
 	virtual TypeInfo * multOp (Lexical::TokenPtr, Syntax::Expression*) {
 	    return NULL;
 	}
+
+	virtual TypeInfo * clone () override {
+	    return new UndefInfo ();
+	}
 	
     };
     
