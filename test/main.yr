@@ -1,4 +1,7 @@
 
+def test () {
+}
+
 def main ()  {
-    a = 10;
+    let test;
 }

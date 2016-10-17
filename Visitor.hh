@@ -26,6 +26,7 @@ namespace Syntax {
     VarPtr visit_type (Lexical::Lexer&);
     Lexical::TokenPtr visit_identifiant (Lexical::Lexer&);
     BlockPtr visit_block (Lexical::Lexer&);
+    ExpressionPtr visit_let (Lexical::Lexer&);
     ExpressionPtr visit_expression_ult (Lexical::Lexer&);
     ExpressionPtr visit_expression_ult (Lexical::Lexer&, ExpressionPtr);
     ExpressionPtr visit_expression (Lexical::Lexer&);

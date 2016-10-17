@@ -2,11 +2,10 @@
 
 #include "config.h"
 #include "system.h"
-#include "input.h"
+#include "coretypes.h"
 
 #include <string>
 #include <tr1/memory>
-#include <curses.h>
 #include <stdlib.h>
 
 #define YMIR_TOKEN_LIST					\
@@ -14,6 +13,7 @@
     YMIR_TOKEN (END_OF, "end of file")			\
     YMIR_TOKEN (STD, "std")				\
     YMIR_TOKEN (IMPORT, "import")			\
+    YMIR_TOKEN (LET, "let")				\
     YMIR_TOKEN (DEF, "def")				\
     YMIR_TOKEN (NEW, "new")				\
     YMIR_TOKEN (DELETE, "delete")			\

@@ -33,3 +33,4 @@
 #include "Unary.hh"
 #include "Var.hh"
 #include "While.hh"
+#include "VarDecl.hh"

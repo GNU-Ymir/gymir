@@ -24,6 +24,7 @@ namespace Syntax {
 	auto aux = new Binary (this->token, this->left, this->right);
 	aux-> left = aux-> left-> expression ();
 	aux-> right = aux-> right-> expression ();
+	if (aux-> left == NULL || aux-> right == NULL) return NULL;
 	
 	if (aux-> left-> type == AstEnums::TYPE) return varUndef (aux-> left);
 	if (aux-> right-> type == AstEnums::TYPE) return varUndef (aux-> right);
@@ -46,6 +47,7 @@ namespace Syntax {
 	auto aux = new Binary (this->token, this->left, this->right);
 	aux-> left = aux-> left-> expression ();
 	aux-> right = aux-> right-> expression ();
+	if (aux-> left == NULL || aux-> right == NULL) return NULL;
 
 	if (aux-> left-> type == AstEnums::TYPE) return varUndef (aux-> left);
 	if (aux-> right-> info-> Is(Semantic::UNDEF)) return varUndef (aux-> right);
@@ -109,6 +111,9 @@ namespace Syntax {
 	return NULL;			     
     }
     
-
+    Ymir::Tree Binary::treeExpr () {
+	return Ymir::Tree ();
+    }
+       
     
 };

@@ -27,5 +27,9 @@ namespace Semantic {
     }
         
     
+    TypeInfo * TypeInfo::typeOp (Syntax::Expression *) {
+	return NULL;
+    }
+
 
 }

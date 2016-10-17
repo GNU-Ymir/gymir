@@ -1,4 +1,5 @@
 #include "Visitor.hh"
+#include "Token.hh"
 #include "Error.hh"
 #include <map>
 #include <vector>
@@ -184,9 +185,21 @@ namespace Syntax {
 	return false;
     }
 
-    Syntax::ExpressionPtr visit_expression_ult (Lexer & lexer) {
-	ExpressionPtr left = visit_expression (lexer);
+    Syntax::ExpressionPtr visit_let (Lexer & lexer) {
+	lexer.rewind ();
 	TokenPtr token = lexer.next ();
+	return new VarDecl (token, visit_var (lexer));
+    }
+
+    Syntax::ExpressionPtr visit_expression_ult (Lexer & lexer) {
+	TokenPtr token = lexer.next ();
+	ExpressionPtr left;
+	if (token-> getId () == LET) left = visit_let (lexer);
+	else {
+	    lexer.rewind ();
+	    left = visit_expression (lexer);
+	}
+	token = lexer.next ();
 	if (find (token->getId (),
 		  {AFFECT, PLUS_AFF, MUL_AFF, SUB_AFF, DIV_AFF})) {
 	    ExpressionPtr right = visit_expression (lexer);

@@ -17,11 +17,19 @@ namespace Syntax {
 	Ymir::Error::fatal (this->token->getLocus (),
 			     "Erreur interne ~> %s.expression ()",
 			     AstEnums::toString(this->type));
+	return NULL;
     }
 
     Ymir::Tree Expression::statement () {
 	Ymir::Error::append (this-> token-> getLocus (),
 			    "n'est pas une instruction");
+	return Ymir::Tree ();
+    }
+
+    Ymir::Tree Expression::treeExpr () {
+	Ymir::Error::fatal (this->token->getLocus (),
+			    "Erreur interne ~> %s.treeExpr ()",
+			    AstEnums::toString (this->type));
 	return Ymir::Tree ();
     }
     

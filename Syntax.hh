@@ -40,7 +40,9 @@
     AST_ENUM (WHILE, "While")			\
     AST_ENUM (BREAK, "Break")			\
     AST_ENUM (DELETE, "Delete")			\
-    AST_ENUM (FUNCTION, "Function")			
+    AST_ENUM (FUNCTION, "Function")		\
+    AST_ENUM (VAR_DECL, "VarDecl")			
+
 
 
 namespace Syntax {

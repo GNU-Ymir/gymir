@@ -51,6 +51,10 @@ namespace Syntax {
 	    return new Type (this->token, t_info);
 	} else {	    
 	    //TODO, structure
+	    Ymir::Error::fatal (this-> token-> getLocus (),
+				"Erreur interne, non iplemente %s.asType ()",
+				AstEnums::toString (this-> type));
+	    return NULL;
 	}
     }
 
@@ -59,9 +63,12 @@ namespace Syntax {
 	    auto aux = new Var (this->token);
 	    auto info = Table::instance ().get (this->token->getStr());
 	    if (info.isVoid ()) {
-		this->info = new UndefInfo ();
-		Table::instance ().insert (this->token->getStr(), Symbol (this->token, this->info));
+		Ymir::Error::append (this-> token-> getLocus (),
+				     "Variable inconnu '%s'",
+				     this-> token-> getCstr ());
+		return NULL;
 	    }
+
 	    aux->info = info.type;
 	    return aux;
 	} else return this->asType ();

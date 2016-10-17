@@ -2,7 +2,7 @@
 
 #include "config.h"
 #include "system.h"
-#include "input.h"
+#include "coretypes.h"
 
 #include "YTypes.hh"
 #include "Token.hh"

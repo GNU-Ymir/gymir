@@ -22,6 +22,11 @@ namespace Ymir {
 	    nb_errors ++;
 	}
 
+	template <typename ... TArgs>
+	static void note (location_t locus, const char * format, TArgs ... args) {
+	    inform (locus, format, args...);
+	}
+
 	static unsigned long nb_errors;
 	
     };
