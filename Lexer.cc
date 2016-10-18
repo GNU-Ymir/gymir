@@ -40,6 +40,7 @@ namespace Lexical {
 		TokenId com;
 		if ((com = isComment (ret)) != Token::EOF_TOKEN () && commentOn) {
 		    do {
+
 			ret = Token::makeEof ();
 			ret = get ();	    
 		    } while (ret->getId () != com && ret->getId () != Token::EOF_TOKEN());
