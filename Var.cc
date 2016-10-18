@@ -31,12 +31,12 @@ namespace Syntax {
     
     VarPtr Var::asType () {
 	auto info = Table::instance ().get (this->token->getStr ());
-	if (!info.isVoid() && !info.type->Is(STRUCT)) {
+	if (!info-> isVoid() && !info-> type->Is(STRUCT)) {
 	    Ymir::Error::append (this->token->getLocus (),
 		      "%s n'est pas un type",
 		      this->token->getCstr());
 	    return this;
-	} else if (info.isVoid ()) {
+	} else if (info-> isVoid ()) {
 	    std::vector<ExpressionPtr> tpls;
 	    for (int i = 0; i < (int)this->templates.size (); i++) {
 		tpls.push_back (this->templates [i] -> expression ());
@@ -48,7 +48,7 @@ namespace Syntax {
 			  this->token->getCstr());
 		return NULL;
 	    }
-	    return new Type (this->token, t_info);
+	    return new Type (this->token, Semantic::SymbolPtr (new Semantic::Symbol (this-> token, t_info)));
 	} else {	    
 	    //TODO, structure
 	    Ymir::Error::fatal (this-> token-> getLocus (),
@@ -59,36 +59,36 @@ namespace Syntax {
     }
 
     VarPtr Var::expression () {
-	if (!this->isType () && this->templates.size () == 0) {
+	if (!this-> isType () && this->templates.size () == 0) {
 	    auto aux = new Var (this->token);
 	    auto info = Table::instance ().get (this->token->getStr());
-	    if (info.isVoid ()) {
+	    if (info-> isVoid ()) {
 		Ymir::Error::append (this-> token-> getLocus (),
 				     "Variable inconnu '%s'",
 				     this-> token-> getCstr ());
 		return NULL;
 	    }
 
-	    aux->info = info.type;
+	    aux-> sym = info;
 	    return aux;
-	} else return this->asType ();
+	} else return this-> asType ();
     }
 
     bool Var::isType () {
 	auto info = Table::instance ().get (this->token->getStr ());
-	if (info.isVoid ()) {
+	if (info-> isVoid ()) {
 	    return TypeInfo::exist_type (this->token);
-	} else return info.type->Is(STRUCT);
+	} else return info-> type->Is(STRUCT);
     }
     
     VarPtr TypedVar::declare (const char * funName) {
 	auto it = Table::instance().get (this->token->getStr ());
-	if (it.isVoid()) {
+	if (it-> isVoid()) {
 	    auto type = this->type->asType ();
 	    if (type == NULL) return NULL;
-	    else this->info = type-> getType ();
+	    else this-> sym = Semantic::SymbolPtr (new Symbol (this-> token, type-> getType ()-> type));
 	    
-	    Table::instance ().insert (this->token->getStr (), Symbol (this->token, this->info));
+	    Table::instance ().insert (this->token->getStr (), this-> sym);
 	    return this;
 	} else {
 	    Ymir::Error::append (this->token->getLocus(),

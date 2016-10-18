@@ -28,7 +28,7 @@ namespace Semantic {
 	globalScope.addImport (pck);
     }
 
-    void Table::insert (const std::string & name, Symbol sym) {
+    void Table::insert (const std::string & name, SymbolPtr sym) {
 	if (frameTable.empty ()) {
 	    globalScope.insert (name, sym);
 	} else {
@@ -36,12 +36,12 @@ namespace Semantic {
 	}
     }
 
-    Symbol &Table::get (const std::string & name) {
+    SymbolPtr Table::get (const std::string & name) {
 	if (frameTable.empty()) {
 	    return globalScope.get (name);
 	} else {
-	    auto &it = frameTable.front ().get (name);
-	    if (it.isVoid ())
+	    auto it = frameTable.front ().get (name);
+	    if (it-> isVoid ())
 		return globalScope.get (name);
 	    else return it;
 	}

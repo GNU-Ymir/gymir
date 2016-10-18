@@ -20,27 +20,27 @@ namespace Semantic {
     
     TypeInfo* IntInfo::binaryOp (Lexical::TokenPtr tok, Syntax::Expression* right) {
 	switch (tok->getId ()) {
-	case Lexical::AFFECT : return Affect (right-> getType ());
-	case Lexical::PLUS_AFF : return PlusAff (right-> getType ());
-	case Lexical::MUL_AFF : return MulAff (right-> getType ());
-	case Lexical::SUB_AFF : return SubAff (right-> getType ());
-	case Lexical::DIV_AFF : return DivAff (right-> getType ());
-	case Lexical::INF : return Inf (right-> getType ());
-	case Lexical::SUP : return Sup (right-> getType ());
-	case Lexical::EQUALS : return Equals (right-> getType ());
-	case Lexical::SUP_EQUALS : return SupEquals (right-> getType ());
-	case Lexical::INF_EQUALS : return InfEquals (right-> getType ());
-	case Lexical::NOT_EQUALS : return NotEquals (right-> getType ());
-	case Lexical::PLUS : return Plus (right-> getType ());
-	case Lexical::SUB : return Sub (right-> getType ());
-	case Lexical::OR_BIT : return OrBit (right-> getType ());
-	case Lexical::LEFT_BIT : return LeftBit (right-> getType ());
-	case Lexical::RIGHT_BIT : return RightBit (right-> getType ());
-	case Lexical::XOR : return Xor (right-> getType ());
-	case Lexical::MUL : return Mul (right-> getType ());
-	case Lexical::DIV : return Div (right-> getType ());
-	case Lexical::AND_BIT : return AndBit (right-> getType ());
-	case Lexical::MODULO : return Modulo (right-> getType ());
+	case Lexical::AFFECT : return Affect (right-> getType ()-> type);
+	case Lexical::PLUS_AFF : return PlusAff (right-> getType ()-> type);
+	case Lexical::MUL_AFF : return MulAff (right-> getType ()-> type);
+	case Lexical::SUB_AFF : return SubAff (right-> getType ()-> type);
+	case Lexical::DIV_AFF : return DivAff (right-> getType ()-> type);
+	case Lexical::INF : return Inf (right-> getType ()-> type);
+	case Lexical::SUP : return Sup (right-> getType ()-> type);
+	case Lexical::EQUALS : return Equals (right-> getType ()-> type);
+	case Lexical::SUP_EQUALS : return SupEquals (right-> getType ()-> type);
+	case Lexical::INF_EQUALS : return InfEquals (right-> getType ()-> type);
+	case Lexical::NOT_EQUALS : return NotEquals (right-> getType ()-> type);
+	case Lexical::PLUS : return Plus (right-> getType ()-> type);
+	case Lexical::SUB : return Sub (right-> getType ()-> type);
+	case Lexical::OR_BIT : return OrBit (right-> getType ()-> type);
+	case Lexical::LEFT_BIT : return LeftBit (right-> getType ()-> type);
+	case Lexical::RIGHT_BIT : return RightBit (right-> getType ()-> type);
+	case Lexical::XOR : return Xor (right-> getType ()-> type);
+	case Lexical::MUL : return Mul (right-> getType ()-> type);
+	case Lexical::DIV : return Div (right-> getType ()-> type);
+	case Lexical::AND_BIT : return AndBit (right-> getType ()-> type);
+	case Lexical::MODULO : return Modulo (right-> getType ()-> type);
 	default : return NULL;
 	}
     }

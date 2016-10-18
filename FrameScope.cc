@@ -20,14 +20,14 @@ namespace Semantic {
 	this->local.front ().addImport(pck);
     }
 
-    void FrameScope::insert (const std::string & name, Symbol sym) {
+    void FrameScope::insert (const std::string & name, SymbolPtr sym) {
 	this->local.front ().insert (name, sym);
     }
     
-    Symbol & FrameScope::get (const std::string & name) {
+    SymbolPtr FrameScope::get (const std::string & name) {
 	for (auto &it : local) {
-	    auto &is = it.get (name);
-	    if (!is.isVoid ()) return is;
+	    auto is = it.get (name);
+	    if (!is-> isVoid ()) return is;
 	}
 	return Symbol::empty ();
     }

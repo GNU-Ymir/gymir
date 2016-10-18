@@ -19,7 +19,7 @@ namespace Syntax {
 	while (token->getId() != Token::EOF_TOKEN()) {
 	    if (token->getId() == DEF) decls.push_back(visit_def (lexer));
 	    else if (token->getId() == IMPORT) decls.push_back (visit_import (lexer));
-	    else Ymir::Error::append (token->getLocus (),
+	    else Ymir::Error::fatal (token->getLocus (),
 			   "[%s, %s] attendues, mais %s trouvé\n",
 			   getTokenDescription(DEF),
 			   getTokenDescription(IMPORT),
@@ -38,7 +38,7 @@ namespace Syntax {
 	TokenPtr name = visit_identifiant (lexer);
 	std::vector <Syntax::VarPtr> exps;
 	TokenPtr word = lexer.next ();	
-	if (word->getId() != PAR_G) Ymir::Error::append (word->getLocus (),
+	if (word->getId() != PAR_G) Ymir::Error::fatal (word->getLocus (),
 					 "%s attendue, mais %s trouvé\n",
 					 getTokenDescription(PAR_G),
 					 getTokenDescription(word->getId ()));
@@ -50,7 +50,7 @@ namespace Syntax {
 		word = lexer.next ();
 		if (word->getId() == PAR_D) break;
 		else if (word->getId () != VIRGULE)
-		    Ymir::Error::append (word->getLocus (),
+		    Ymir::Error::fatal (word->getLocus (),
 			      "[%s, %s] attendue, mais %s trouvé\n",
 			      getTokenDescription(PAR_D),
 			      getTokenDescription(VIRGULE),
@@ -86,7 +86,7 @@ namespace Syntax {
 	if (next->getId () == DEUX_POINT) {
 	    auto type = visit_type (lexer);
 	    return (new TypedVar (token, type));
-	} else Ymir::Error::append (next->getLocus (),
+	} else Ymir::Error::fatal (next->getLocus (),
 			 "%s attendus, mais %s trouvé",
 			 getTokenDescription (DEUX_POINT),
 			 getTokenDescription (next->getId ()));
@@ -105,7 +105,7 @@ namespace Syntax {
 		    next = lexer.next ();
 		    if (next->getId () == PAR_D) break;
 		    else if (next->getId () != VIRGULE)
-			Ymir::Error::append (next->getLocus (),
+			Ymir::Error::fatal (next->getLocus (),
 				  "[%s, %s] attendues, mais %s trouvé",
 				  getTokenDescription(VIRGULE),
 				  getTokenDescription (PAR_D),
@@ -124,7 +124,7 @@ namespace Syntax {
 	TokenPtr token = lexer.next ();
 	if (token->getId() == OTHER) {
 	    return token;
-	} else Ymir::Error::append (token->getLocus (), "Un identifiant est attendue, mais %s trouvé", getTokenDescription(token->getId()));
+	} else Ymir::Error::fatal (token->getLocus (), "Un identifiant est attendue, mais %s trouvé", getTokenDescription(token->getId()));
 	return Token::makeEof ();
     }
     
@@ -152,13 +152,14 @@ namespace Syntax {
 
     InstructionPtr visit_instruction (Lexer & lexer) {
 	TokenPtr token = lexer.next ();
-	if (token->getId () == IF) return visit_if (lexer);
-	else if (token->getId () == RETURN) return visit_return (lexer);
-	else if (token->getId () == FOR) return visit_for (lexer);
-	else if (token->getId () == FOREACH) return visit_foreach (lexer);
-	else if (token->getId () == WHILE) return visit_while (lexer);
-	else if (token->getId () == BREAK) return visit_break (lexer);
-	else if (token->getId () == DELETE) return visit_delete (lexer);
+	if (token-> getId () == IF) return visit_if (lexer);
+	else if (token-> getId () == RETURN) return visit_return (lexer);
+	else if (token-> getId () == FOR) return visit_for (lexer);
+	else if (token-> getId () == FOREACH) return visit_foreach (lexer);
+	else if (token-> getId () == WHILE) return visit_while (lexer);
+	else if (token-> getId () == BREAK) return visit_break (lexer);
+	else if (token-> getId () == DELETE) return visit_delete (lexer);
+	else if (token-> getId () == LET) return visit_let (lexer);
 	else if (token->getId () == POINT_VIG) {
 	    warning_at (token->getLocus (), 0,
 			"Utilisez {} pour une instruction vide pas %s",
@@ -170,7 +171,7 @@ namespace Syntax {
 	    auto retour = (InstructionPtr)visit_expression_ult (lexer);
 	    TokenPtr next = lexer.next ();
 	    if (next -> getId () != POINT_VIG)
-		Ymir::Error::append (next->getLocus (),
+		Ymir::Error::fatal (next->getLocus (),
 			  "%s attendue, mais %s trouvé",
 			  getTokenDescription(POINT_VIG),
 			  next->getCstr ());
@@ -185,21 +186,33 @@ namespace Syntax {
 	return false;
     }
 
-    Syntax::ExpressionPtr visit_let (Lexer & lexer) {
+    Syntax::InstructionPtr visit_let (Lexer & lexer) {
 	lexer.rewind ();
 	TokenPtr token = lexer.next ();
-	return new VarDecl (token, visit_var (lexer));
+	std::vector <VarPtr> decls;
+	std::vector <ExpressionPtr> insts;
+	while (1) {
+	    auto var = visit_var (lexer);
+	    decls.push_back (var);
+	    auto next = visit_expression_ult (lexer, var);
+	    if (next != var) {
+		insts.push_back (next);
+	    }
+	    auto tok = lexer.next ();
+	    if (tok-> getId () == POINT_VIG) break;
+	    else if (tok-> getId () != VIRGULE) 
+		Ymir::Error::fatal (tok-> getLocus (),
+				     "{%s, %s} attendue, mais %s trouvé",
+				     getTokenDescription (POINT_VIG),
+				     getTokenDescription (VIRGULE),
+				     tok-> getCstr ());
+	}
+	return new VarDecl (token, decls, insts);
     }
 
     Syntax::ExpressionPtr visit_expression_ult (Lexer & lexer) {
-	TokenPtr token = lexer.next ();
-	ExpressionPtr left;
-	if (token-> getId () == LET) left = visit_let (lexer);
-	else {
-	    lexer.rewind ();
-	    left = visit_expression (lexer);
-	}
-	token = lexer.next ();
+	ExpressionPtr left = visit_expression (lexer);	
+	auto token = lexer.next ();
 	if (find (token->getId (),
 		  {AFFECT, PLUS_AFF, MUL_AFF, SUB_AFF, DIV_AFF})) {
 	    ExpressionPtr right = visit_expression (lexer);
@@ -242,20 +255,38 @@ namespace Syntax {
 	ExpressionPtr left = visit_low (lexer);
 	TokenPtr token = lexer.next ();       
 	if (find (token->getId () ,
-		  {INF, SUP, EQUALS, SUP_EQUALS, INF_EQUALS, NOT_EQUALS, IS, NOT})) {
+		  {INF, SUP, EQUALS, SUP_EQUALS, INF_EQUALS, NOT_EQUALS, IS})) {
 	    ExpressionPtr right = visit_low (lexer);
 	    return visit_ulow (lexer, new Binary (token, left, right));
-	} else lexer.rewind();
+	} else {
+	    if (token->getId () == NOT) {
+		token = lexer.next ();
+		if (token-> getStr () == "is") {
+		    ExpressionPtr right = visit_low (lexer);
+		    return visit_ulow (lexer, new Binary (Token::make("!is", token-> getLocus ()), left, right));
+		} else lexer.rewind ();	    
+	    } 
+	    lexer.rewind();
+	}
 	return left;	
     }
 
     ExpressionPtr visit_ulow (Lexer & lexer, ExpressionPtr left) {
 	TokenPtr token = lexer.next ();       
 	if (find (token->getId () ,
-		  {INF, SUP, EQUALS, SUP_EQUALS, INF_EQUALS, NOT_EQUALS, IS, NOT})) {
+		  {INF, SUP, EQUALS, SUP_EQUALS, INF_EQUALS, NOT_EQUALS, IS})) {
 	    ExpressionPtr right = visit_low (lexer);
 	    return visit_ulow (lexer, new Binary (token, left, right));
-	} else lexer.rewind();
+	} else {
+	    if (token->getId () == NOT) {
+		token = lexer.next ();
+		if (token-> getStr () == "is") {
+		    ExpressionPtr right = visit_low (lexer);
+		    return visit_ulow (lexer, new Binary (Token::make("!is", token-> getLocus ()), left, right));
+		} else lexer.rewind ();	    
+	    } 
+	    lexer.rewind();
+	}
 	return left;	
     }
 
@@ -273,7 +304,7 @@ namespace Syntax {
     ExpressionPtr visit_low (Lexer & lexer, ExpressionPtr left) {
 	TokenPtr token = lexer.next ();       
 	if (find (token->getId () ,
-		  {MUL, DIV, AND_BIT, MODULO, POINT_POINT, IN})) {
+		  {MUL, DIV, OR_BIT, MODULO, POINT_POINT, IN})) {
 	    ExpressionPtr right = visit_high (lexer);
 	    return visit_low (lexer, new Binary (token, left, right));
 	} else lexer.rewind();
@@ -304,7 +335,7 @@ namespace Syntax {
     ExpressionPtr visit_pth (Lexer & lexer) {
 	TokenPtr token = lexer.next ();
 	if (find (token->getId (),
-		  {STAR, S_AND, MINUS, NOT})) {
+		  {STAR, AND_BIT, SUB, NOT})) {
 	    return visit_before_pth (lexer, token);
 	} else {
 	    if (token->getId() == PAR_G)
@@ -318,7 +349,7 @@ namespace Syntax {
 	auto exp = visit_expression_ult (lexer);
 	TokenPtr token = lexer.next ();
 	if (token->getId () != PAR_D)
-	    Ymir::Error::append (token->getLocus(),
+	    Ymir::Error::fatal (token->getLocus(),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_D),
 		      token->getCstr());
@@ -326,6 +357,9 @@ namespace Syntax {
 	if (find (token->getId (),
 		  {CROCHET_G, PAR_G, DOT})) {
 	    return visit_suite (lexer, token, exp);
+	} else if (find (token->getId (),
+			 {PPLUS, SSUB, NOT})) {
+	    return visit_after (lexer, token, exp);
 	} else lexer.rewind ();
 	return exp;
     }
@@ -354,7 +388,7 @@ namespace Syntax {
 	auto neuf = getTokenDescription(NEUF)[0];
 	for (int i = 0; i < (int)token->getStr ().length(); i++) {
 	    if (token->getStr ()[i] < zero || token->getStr ()[i] > neuf)
-		Ymir::Error::append (token->getLocus (),
+		Ymir::Error::fatal (token->getLocus (),
 			  "erreur de syntaxe '%s'",
 			  token->getCstr ());	   
 	}
@@ -384,13 +418,13 @@ namespace Syntax {
 	auto zero = getTokenDescription(ZERO)[0];
 	auto neuf = getTokenDescription(NEUF)[0];
 	if (next->getId () != OTHER)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "erreur de syntaxe %s",
 		      next->getCstr());
 	
 	for (int i = 0; i < (int)next->getStr().length() ; i++) {
 	    if (next->getStr () [i] < zero || next->getStr () [i] > neuf)
-		Ymir::Error::append (next->getLocus (),
+		Ymir::Error::fatal (next->getLocus (),
 			  "erreur de syntaxe %s",
 			  next->getCstr());
 	}
@@ -427,7 +461,7 @@ namespace Syntax {
 	std::string val = "";
 	while (1) {
 	    next = lexer.next ();
-	    if (next->getId () == EOF) Ymir::Error::append (next->getLocus (),
+	    if (next->getId () == EOF) Ymir::Error::fatal (next->getLocus (),
 						 "Fin de fichier inattendue");
 	    else if (next->getId () == token -> getId ()) break;
 	    else val += next->getStr ();		
@@ -452,7 +486,7 @@ namespace Syntax {
 	    if (constante != NULL) return constante;
 	    ExpressionPtr left = visit_left_op (lexer);
 	    token = lexer.next ();
-	    if (find (token->getId(),
+	    if (find (token-> getId(),
 		      {PPLUS, SSUB})) {
 		return visit_after (lexer, token, left);
 	    } else lexer.rewind ();
@@ -473,21 +507,21 @@ namespace Syntax {
 	TokenPtr begin = lexer.next ();
 	TokenPtr next = lexer.next ();
 	if (next->getId () == PAR_G)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_G),
 		      next -> getCstr ());
 	ExpressionPtr test = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () == PAR_D)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_D),
 		      next -> getCstr ());
 	ExpressionPtr if_bl = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () == ELSE)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (ELSE),
 		      next -> getCstr ());
@@ -501,7 +535,7 @@ namespace Syntax {
 	else if (token->getId () == CROCHET_G) return visit_access (lexer, left);
 	else if (token->getId () == DOT) return visit_dot (lexer, left);
 	else
-	    Ymir::Error::append (token->getLocus (),
+	    Ymir::Error::fatal (token->getLocus (),
 		      "Erreur de syntaxe %s",
 		      token->getCstr());
 	return NULL;
@@ -519,7 +553,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next -> getId () == PAR_D) break;
 		else if (next -> getId () != VIRGULE)
-		    Ymir::Error::append (next->getLocus (),
+		    Ymir::Error::fatal (next->getLocus (),
 			      "[%s, %s] attendues, mais %s trouvé",
 			      getTokenDescription (PAR_D),
 			      getTokenDescription (VIRGULE),
@@ -529,6 +563,7 @@ namespace Syntax {
 	ExpressionPtr retour = new Par (begin, left, new ParamList (suite, params));
 	next = lexer.next ();
 	if (find (next->getId (), {PAR_G, CROCHET_G, DOT})) return visit_suite (lexer, next, retour);
+	else if (find (next-> getId (), {PPLUS, SSUB})) return visit_after (lexer, next, retour);
 	lexer.rewind ();
 	return retour;			
     }
@@ -546,7 +581,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next->getId () == CROCHET_D) break;
 		else if (next->getId () != VIRGULE)
-		    Ymir::Error::append (next->getLocus (),
+		    Ymir::Error::fatal (next->getLocus (),
 			      "[%s, %s] attendues, mais %s trouvé",
 			      getTokenDescription (CROCHET_D),
 			      getTokenDescription (VIRGULE),
@@ -556,6 +591,7 @@ namespace Syntax {
 	ExpressionPtr retour = new Access (begin, left, new ParamList (next, params));
 	next = lexer.next ();
 	if (find (next->getId (), {PAR_G, CROCHET_G, DOT})) return visit_suite (lexer, next, retour);
+	else if (find (next-> getId (), {PPLUS, SSUB})) return visit_after (lexer, next, retour);
 	lexer.rewind ();
 	return retour;
     }
@@ -567,6 +603,7 @@ namespace Syntax {
 	ExpressionPtr retour = new Dot (begin, left, right);
 	TokenPtr next = lexer.next ();
 	if(find (next->getId(), {PAR_G, CROCHET_G, DOT})) return visit_suite (lexer, next, retour);
+	else if (find (next-> getId (), {PPLUS, SSUB})) return visit_after (lexer, next, retour);
 	lexer.rewind ();
 	return retour;
     }
@@ -584,21 +621,21 @@ namespace Syntax {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next(), suite = lexer.next ();
 	if (suite->getId () != PAR_G)
-	    Ymir::Error::append (suite->getLocus (),
+	    Ymir::Error::fatal (suite->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_G),
 		      suite->getCstr ());
 	ExpressionPtr var = visit_var (lexer);
 	suite = lexer.next ();
 	if (suite->getId () != IN)
-	    Ymir::Error::append (suite->getLocus (),
+	    Ymir::Error::fatal (suite->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (IN),
 		      suite->getCstr ());
 	ExpressionPtr iter = visit_expression (lexer);
 	suite = lexer.next ();
 	if (suite->getId () != PAR_D)
-	    Ymir::Error::append (suite->getLocus (),
+	    Ymir::Error::fatal (suite->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (PAR_D),
 		      suite->getCstr ());
@@ -616,7 +653,7 @@ namespace Syntax {
 	    size = visit_expression (lexer);
 	    next = lexer.next ();
 	    if (next->getId () != CROCHET_D)
-		Ymir::Error::append (next->getLocus (),
+		Ymir::Error::fatal (next->getLocus (),
 			  "%s attendue, mais %s trouvé",
 			  getTokenDescription (CROCHET_D),
 			  next->getCstr ());	    
@@ -627,7 +664,7 @@ namespace Syntax {
     ExpressionPtr visit_cast (Lexer & lexer) {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next (), next = lexer.next ();
-	if (next->getId () != DEUX_POINT)    Ymir::Error::append (next->getLocus (),
+	if (next->getId () != DEUX_POINT)    Ymir::Error::fatal (next->getLocus (),
 						       "%s attendue, mais %s trouvé",
 						       getTokenDescription (DEUX_POINT),
 						       next->getCstr ());
@@ -636,7 +673,7 @@ namespace Syntax {
 	if(next->getId () == PAR_G) {
 	    type = visit_type (lexer);
 	    next = lexer.next ();
-	    if (next->getId () != PAR_D)	Ymir::Error::append (next->getLocus (),
+	    if (next->getId () != PAR_D)	Ymir::Error::fatal (next->getLocus (),
 							  "%s attendue, mais %s trouvé",
 							  getTokenDescription (PAR_D),
 							  next->getCstr ());
@@ -646,13 +683,13 @@ namespace Syntax {
 	    type = new Var (name);
 	}
 	next = lexer.next ();
-	if (next->getId () != PAR_G)	    Ymir::Error::append (next->getLocus (),
+	if (next->getId () != PAR_G)	    Ymir::Error::fatal (next->getLocus (),
 						      "%s attendue, mais %s trouvé",
 						      getTokenDescription (PAR_G),
 						      next->getCstr ());
 	ExpressionPtr inside = visit_expression (lexer);
 	next = lexer.next ();
-	if (next->getId () != PAR_D) 	    Ymir::Error::append (next->getLocus (),
+	if (next->getId () != PAR_D) 	    Ymir::Error::fatal (next->getLocus (),
 						      "%s attendue, mais %s trouvé",
 						      getTokenDescription (PAR_D),
 						      next->getCstr ());
@@ -690,7 +727,7 @@ namespace Syntax {
 	ExpressionPtr exp = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next -> getCstr ());
@@ -700,7 +737,7 @@ namespace Syntax {
     InstructionPtr visit_for (Lexer & lexer) {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next(), next = lexer.next ();
-	if (next->getId () != PAR_G) Ymir::Error::append (next->getLocus (),
+	if (next->getId () != PAR_G) Ymir::Error::fatal (next->getLocus (),
 					       "%s attendue, mais %s trouvé",
 					       getTokenDescription (PAR_G),
 					       next->getCstr());
@@ -713,7 +750,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next->getId () == POINT_VIG) break;
 		else if (next->getId () != VIRGULE)
-		    Ymir::Error::append (next->getLocus (),
+		    Ymir::Error::fatal (next->getLocus (),
 			      "[%s, %s] attendues, mais %s trouvé",
 			      getTokenDescription(VIRGULE),
 			      getTokenDescription(POINT_VIG),
@@ -724,7 +761,7 @@ namespace Syntax {
 	ExpressionPtr test = visit_expression (lexer);
 	next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next->getCstr ());
@@ -738,7 +775,7 @@ namespace Syntax {
 		next = lexer.next ();
 		if (next->getId () == PAR_D) break;
 		else if (next->getId () != VIRGULE)
-		    Ymir::Error::append (next->getLocus (),
+		    Ymir::Error::fatal (next->getLocus (),
 			      "[%s, %s] attendue, mais %s trouvé",
 			      getTokenDescription(VIRGULE),
 			      getTokenDescription(PAR_D),
@@ -759,7 +796,7 @@ namespace Syntax {
 	ExpressionPtr var = visit_var (lexer);
 	next = lexer.next ();
 	if (next->getId () != IN)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription(IN),
 		      next->getCstr ());
@@ -767,7 +804,7 @@ namespace Syntax {
 	if (has_par) {
 	    next = lexer.next ();
 	    if (next ->getId() != PAR_D)
-		Ymir::Error::append (next->getLocus (),
+		Ymir::Error::fatal (next->getLocus (),
 			  "%s attendue, mais %s trouvé",
 			  getTokenDescription (PAR_D),
 			  next->getCstr ());
@@ -786,7 +823,7 @@ namespace Syntax {
 	lexer.rewind ();
 	TokenPtr begin = lexer.next (), next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next->getCstr ());
@@ -800,7 +837,7 @@ namespace Syntax {
 	ExpressionPtr left = visit_expression (lexer);
 	TokenPtr next = lexer.next ();
 	if (next->getId () != POINT_VIG)
-	    Ymir::Error::append (next->getLocus (),
+	    Ymir::Error::fatal (next->getLocus (),
 		      "%s attendue, mais %s trouvé",
 		      getTokenDescription (POINT_VIG),
 		      next->getCstr ());

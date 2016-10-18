@@ -12,7 +12,7 @@ namespace Syntax {
 
     ExpressionPtr Int::expression () {
 	auto aux = new Int (this->token);
-	aux-> info = new Semantic::IntInfo ();
+	aux-> sym = Semantic::SymbolPtr (new Semantic::Symbol (aux-> token, new Semantic::IntInfo ()));
 	return aux;
     }    
 };

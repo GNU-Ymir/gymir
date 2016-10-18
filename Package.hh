@@ -9,7 +9,7 @@ namespace Semantic {
 
 	std::string filename;	
 
-	std::map <std::string, Symbol> global_declarations;	
+	std::map <std::string, SymbolPtr> global_declarations;	
 	
 	Package (std::string filename) : filename (filename) {}
 

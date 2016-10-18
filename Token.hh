@@ -49,7 +49,6 @@
     YMIR_TOKEN (MUL_AFF, "*=")				\
     YMIR_TOKEN (SUB_AFF, "-=")				\
     YMIR_TOKEN (DIV_AFF, "/=")				\
-    YMIR_TOKEN (S_AND, "&")				\
     YMIR_TOKEN (STAR, "*")				\
     YMIR_TOKEN (AND, "&&")				\
     YMIR_TOKEN (OR, "||")				\

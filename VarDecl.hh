@@ -2,25 +2,29 @@
 
 #include "Expression.hh"
 #include "Var.hh"
-
+#include "Instruction.hh"
+#include <vector>
 
 namespace Syntax {
 
-    struct VarDecl : Expression {
+    struct VarDecl : Instruction {
 
-	VarPtr var;       
+	std::vector <VarPtr> decls;
+	std::vector <ExpressionPtr> affects;
 	
-	VarDecl (Lexical::TokenPtr ptr, VarPtr var) 
-	    : Expression (ptr, AstEnums::VAR_DECL),
-	      var (var)
+	VarDecl (Lexical::TokenPtr ptr, std::vector<VarPtr> decls, std::vector<ExpressionPtr> insts) 
+	    : Instruction (ptr, AstEnums::VAR_DECL),
+	      decls (decls),
+	      affects (insts)
 	{}
 
 	VarDecl (VarDecl * other) 
-	    : Expression (other-> token, AstEnums::VAR_DECL),
-	      var (new Var (other-> var-> token)) 
+	    : Instruction (other-> token, AstEnums::VAR_DECL),
+	      decls (other-> decls),
+	      affects (other-> affects)
 	{}
 
-	virtual ExpressionPtr expression ();
+	virtual InstructionPtr instruction ();
 
 	virtual void print (int nb = 0);		
 

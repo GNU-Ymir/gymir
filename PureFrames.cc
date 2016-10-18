@@ -51,7 +51,7 @@ namespace Semantic {
 	    auto type = fun-> type-> asType ();
 	    if (type == NULL) return;
 	    else 
-		Table::instance().return_type () = type-> getType ();
+		Table::instance().return_type () = type-> getType ()-> type;
 	}
 	    
 	Syntax::BlockPtr block = (Syntax::BlockPtr)fun-> block-> instruction ();

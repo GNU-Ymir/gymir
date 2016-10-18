@@ -1,7 +1,6 @@
 
-def test () {
-}
 
-def main ()  {
-    let test;
-}
+def main () {
+    let a, b = 78;
+    a = a[4] !;
+} 

@@ -55,10 +55,10 @@ namespace Syntax {
 
     struct Type : Var {
 
-	Type (Lexical::TokenPtr ptr, Semantic::TypeInfo * info)
+	Type (Lexical::TokenPtr ptr, Semantic::SymbolPtr info)
 	    : Var (ptr, AstEnums::TYPE)
 	{
-	    this->info = info;
+	    this-> sym = info;
 	}	
 	
     };

@@ -1,5 +1,6 @@
 #include "Binary.hh"
 #include "Error.hh"
+#include "Symbol.hh"
 #include <stdio.h>
 
 namespace Syntax {
@@ -28,17 +29,17 @@ namespace Syntax {
 	
 	if (aux-> left-> type == AstEnums::TYPE) return varUndef (aux-> left);
 	if (aux-> right-> type == AstEnums::TYPE) return varUndef (aux-> right);
-	
-	if (aux-> right-> getType ()-> Is (Semantic::UNDEF)) return varUndef (aux-> right);
-	else if (aux-> left-> getType ()-> Is (Semantic::UNDEF)) return varUndef (aux-> left);
+
+	if (aux-> right-> getType ()-> type-> Is (Semantic::UNDEF)) return varUndef (aux-> right);
+	else if (aux-> left-> getType ()-> type-> Is (Semantic::UNDEF)) return varUndef (aux-> left);
 	else {
-	    auto type = aux-> left-> getType ()-> binaryOp(aux-> token, aux-> right);
+	    auto type = aux-> left-> getType ()-> type-> binaryOp(aux-> token, aux-> right);
 	    if (type == NULL) {
-		type = aux-> right-> getType ()-> binaryOpRight (aux-> token, aux-> left);
+		type = aux-> right-> getType ()-> type-> binaryOpRight (aux-> token, aux-> left);
 		if (type == NULL) return opUndef (aux);
 		else aux-> isRight = true;
 	    }
-	    aux-> info = type;
+	    aux-> sym = Semantic::SymbolPtr (new Semantic::Symbol(aux-> token, type));
 	}
 	return aux;	
     }
@@ -50,35 +51,36 @@ namespace Syntax {
 	if (aux-> left == NULL || aux-> right == NULL) return NULL;
 
 	if (aux-> left-> type == AstEnums::TYPE) return varUndef (aux-> left);
-	if (aux-> right-> info-> Is(Semantic::UNDEF)) return varUndef (aux-> right);
+	if (aux-> right-> sym-> type-> Is(Semantic::UNDEF)) return varUndef (aux-> right);
 	else if (aux-> right-> type == AstEnums::TYPE
-		 && aux-> left-> info-> Is (Semantic::UNDEF)) {
+		 && aux-> left-> sym-> type-> Is (Semantic::UNDEF)) {
 	    this-> declaration = true;
-	    auto type = aux-> left-> info-> typeOp (aux-> right);
+	    auto type = aux-> left-> sym-> type-> typeOp (aux-> right);
 	    if (type == NULL) {
 		return opUndef (aux);
-	    } else aux-> info = type;	    		
-	} else if (aux-> left-> info-> Is (Semantic::UNDEF)) {
+	    } else aux-> sym = Semantic::SymbolPtr (new Semantic::Symbol (aux-> token, type));	 
+   		
+	} else if (aux-> left-> sym-> type-> Is (Semantic::UNDEF)) {
 	    this-> declaration = true;
-	    aux-> left-> info = aux-> right-> info-> clone ();
+	    aux-> left-> sym-> type = (aux-> right-> sym-> type-> clone ());
 	}
 
-	auto type = aux-> left-> info-> binaryOp (this-> token, aux-> right);
+	auto type = aux-> left-> sym-> type-> binaryOp (this-> token, aux-> right);
 	if (type == NULL) {
 	    return opUndef (aux);
-	} else aux-> info = type;
+	} else aux-> sym = Semantic::SymbolPtr (new Semantic::Symbol (aux-> token, type));
 	return aux;
     }
 
     
     Ymir::Tree Binary::statement () {
 	if (this-> isInstruction ()) {
-	    if (this-> info == NULL) {
+	    if (this-> sym-> isVoid ()) {
 		Ymir::Error::fatal (this-> token-> getLocus (),
 				    "Erreur interne");
 		return Ymir::Tree ();
 	    } else {
-		return this-> info-> buildBinaryOp (this-> left, this-> right);
+		return this-> sym-> type-> buildBinaryOp (this-> left, this-> right);
 	    }
 	} else {
 	    Expression::statement ();
@@ -96,7 +98,7 @@ namespace Syntax {
         
     ExpressionPtr Binary::varUndef (ExpressionPtr exp) {
 	Ymir::Error::append (exp-> token-> getLocus (),
-			     "Variable non definis '%s'",
+			     "Type de la variable non definis '%s'",
 			     exp-> token-> getCstr ());
 	return NULL;
     }
@@ -105,8 +107,8 @@ namespace Syntax {
 	Ymir::Error::append (elem-> token-> getLocus (),
 			     "Operateur '%s', non definis entre les types '%s' et '%s'",
 			     elem-> token-> getCstr (),
-			     elem-> left-> getType ()-> typeToString ().c_str (),
-			     elem-> right-> getType ()-> typeToString ().c_str ());
+			     elem-> left-> getType ()-> type-> typeToString ().c_str (),
+			     elem-> right-> getType ()-> type-> typeToString ().c_str ());
 
 	return NULL;			     
     }

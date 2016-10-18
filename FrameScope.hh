@@ -16,9 +16,9 @@ namespace Semantic {
 	
 	void addImport (Package * pck);
 	
-	void insert (const std::string & name, Symbol symbol);
+	void insert (const std::string & name, SymbolPtr symbol);
 	
-	Symbol & get (const std::string & name);
+	SymbolPtr get (const std::string & name);
 
 	std::string space () const;
 	

@@ -2,7 +2,7 @@
 
 namespace Semantic {
     
-    Symbol & Scope::get (const std::string & name) {
+    SymbolPtr Scope::get (const std::string & name) {
 	auto it = local.find (name);
 	if (it == local.end ()) {
 	    return Symbol::empty ();
@@ -11,8 +11,8 @@ namespace Semantic {
 	}
     }
 
-    void Scope::insert (const std::string & name, Symbol sym) {
-	this->local.insert( std::pair < std::string, Symbol > (name, sym));
+    void Scope::insert (const std::string & name, SymbolPtr sym) {
+	this->local.insert( std::pair < std::string, SymbolPtr > (name, sym));
     }
 
     void Scope::addImport (Package * pck) {

@@ -43,6 +43,7 @@ namespace Lexical {
 			ret = Token::makeEof ();
 			ret = get ();	    
 		    } while (ret->getId () != com && ret->getId () != Token::EOF_TOKEN());
+		    ret = get ();
 		}
 	    } while (isSkip (ret) && ret->getId () != Token::EOF_TOKEN());
 	    currentWord ++;
@@ -55,7 +56,7 @@ namespace Lexical {
     }
 
     TokenId Lexer::isComment (TokenPtr tok) {
-	auto val = tokenIdToStr (tok->getId ());
+	auto val = tok-> getStr ();
 	for (auto & it : comments) {
 	    if (it.first == val) {
 		return (getFromStr (it.second));

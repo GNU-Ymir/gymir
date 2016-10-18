@@ -7,39 +7,54 @@ namespace Syntax {
 
     using namespace Semantic;
 
-    ExpressionPtr VarDecl::expression () {
-	if (this-> var-> isType ()) {
-	    Ymir::Error::append (var-> token-> getLocus (), 
-				 "Definition d'une variable qui est un type '%s'",
-				 var-> token-> getCstr ());
-	    return NULL;
-	} else if (this-> var-> templates.size () > 0) {
-	    Ymir::Error::append (var-> token-> getLocus (),
-				 "Template sur la definition d'une variable impossible '%s'",
-				 var-> token-> getCstr ());
-	    return NULL;
-	}
-	auto aux = new VarDecl (this);
-	auto info = Table::instance ().get (aux-> var-> token-> getStr ());
-	if (!info.isVoid ()) {
-	    Ymir::Error::append (var-> token-> getLocus (),
-				 "Redefinition de la variable '%s'",
-				 var-> token-> getCstr ());
+    InstructionPtr VarDecl::instruction () {
+	std::vector<VarPtr> toDecl;
+	std::vector<ExpressionPtr> toAffects;
+	for (auto var : this-> decls) {
+	    if (var-> isType ()) {
+		Ymir::Error::append (var-> token-> getLocus (), 
+				     "Definition d'une variable qui est un type '%s'",
+				     var-> token-> getCstr ());
+		return NULL;
+	    } else if (var-> templates.size () > 0) {
+		Ymir::Error::append (var-> token-> getLocus (),
+				     "Template sur la definition d'une variable impossible '%s'",
+				     var-> token-> getCstr ());
+		return NULL;
+	    }
 
-	    Ymir::Error::note (info.token-> getLocus (),
-			       "Definis la premiere fois ici");
-	    return NULL;
-	} 
-	aux-> info = new UndefInfo ();
-	Table::instance ().insert (aux-> var-> token-> getStr (), Symbol (aux-> var-> token, aux-> info));
-	aux-> info = info.type;
-	aux-> var-> info = info.type;
-	return aux;	    
+	    auto aux = new Var (var-> token);
+	    auto info = Table::instance ().get (var-> token-> getStr ());	    
+	    if (!info-> isVoid ()) {
+		Ymir::Error::append (var-> token-> getLocus (),
+				     "Redefinition de la variable '%s'",
+				     var-> token-> getCstr ());
+		
+		Ymir::Error::note (info-> token-> getLocus (),
+				   "Definis la premiere fois ici");
+		return NULL;
+	    } 
+
+	    aux-> sym = SymbolPtr (new Symbol (aux-> token, new UndefInfo ()));
+	    Table::instance ().insert (aux-> token-> getStr (), aux-> sym);
+	}
+
+	for (auto aff : this-> affects) {
+	    toAffects.push_back (aff-> expression ());
+	}	
+		
+	return new VarDecl (this-> token, toDecl, toAffects);	    
     }
 
     void VarDecl::print (int nb) {
 	printf ("%*c<VarDecl> ", nb, ' ');
-	var-> print (nb + 4);
+	for (auto var : this-> decls) {
+	    var-> print (nb + 4);
+	}
+
+	for (auto aff : this-> affects) {
+	    aff-> print (nb + 4);
+	}
     }
 
 

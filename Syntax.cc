@@ -26,13 +26,15 @@ namespace Syntax {
     namespace AstEnums {
 	const char * toString (AstEnum elem) {
 	    switch (elem) {
-#define AST_ENUM (name, descr)			\
+#define AST_ENUM(name, descr)			\
 	    case name:				\
 		return descr;
-#define AST_ENUM_KEYWORD (x, y) AST_ENUM (x, y)
+#define AST_ENUM_KEYWORD(x, y) AST_ENUM (x, y)
+		AST_ENUM_LIST
 #undef AST_ENUM_KEYWORD
 #undef AST_ENUM
-	    default: return NULL;
+	    default: 
+		return "";
 	    }
 	}
     }

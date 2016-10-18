@@ -2,8 +2,13 @@
 
 #include "Token.hh"
 #include "TypeInfo.hh"
+#include <tr1/memory>
 
 namespace Semantic {
+
+    struct Symbol;
+
+    typedef std::tr1::shared_ptr <Symbol> SymbolPtr;
 
     struct Symbol {
 	Lexical::TokenPtr token;
@@ -14,18 +19,17 @@ namespace Semantic {
 	      type (info)
 	{}
 
-	static Symbol & empty () {
-	    return empty_sym;
+	bool isVoid () {
+	    return this-> type == NULL;
 	}
 	
-	bool isVoid () {
-	    return type == NULL && token->getId() == Lexical::Token::EOF_TOKEN();
+	static SymbolPtr empty () {
+	    return _empty;
 	}
 
     private:
-	
-	static Symbol empty_sym;
-	
+	static SymbolPtr _empty;
     };
+
     
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Instruction.hh"
-#include "TypeInfo.hh"
+#include "Symbol.hh"
 #include "Tree.hh"
 
 namespace Syntax {
@@ -15,8 +15,8 @@ namespace Syntax {
 	    : Instruction (ptr, AstEnums::EXPRESSION)
 	{}
 
-	Semantic::TypeInfo * getType () const {
-	    return this->info;
+	Semantic::SymbolPtr getType () const {
+	    return this-> sym;
 	}
 	
 	Instruction * instruction () final;
@@ -31,7 +31,7 @@ namespace Syntax {
 
 	virtual ~Expression () {}
 
-	Semantic::TypeInfo * info = NULL;
+	Semantic::SymbolPtr sym = Semantic::Symbol::empty ();
 	
     protected:
 			

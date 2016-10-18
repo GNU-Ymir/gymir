@@ -7,6 +7,7 @@
 #define AST_ENUM_LIST				\
     AST_ENUM (AST, "Ast")			\
     AST_ENUM (INSTRUCTION, "Instruction")	\
+    AST_ENUM (VAR_DECL, "VarDecl")		\
     AST_ENUM (EXPRESSION, "Expression")		\
     AST_ENUM (DECLARATION, "Declaration")	\
     AST_ENUM (PROGRAM, "Program")		\
@@ -40,8 +41,7 @@
     AST_ENUM (WHILE, "While")			\
     AST_ENUM (BREAK, "Break")			\
     AST_ENUM (DELETE, "Delete")			\
-    AST_ENUM (FUNCTION, "Function")		\
-    AST_ENUM (VAR_DECL, "VarDecl")			
+    AST_ENUM (FUNCTION, "Function")		
 
 
 

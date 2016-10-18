@@ -9,16 +9,16 @@ namespace Semantic {
 
     struct Scope {
 
-	Symbol & get (const std::string &);
+	SymbolPtr get (const std::string &);
 
-	void insert (const std::string &, Symbol);
+	void insert (const std::string &, SymbolPtr);
 
 	void addImport (Package * pck);
 	
 	
     private:
 
-	std::map<std::string, Symbol> local;
+	std::map<std::string, SymbolPtr> local;
 	std::vector <Package*> imported;
 	
     };
