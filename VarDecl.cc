@@ -35,8 +35,9 @@ namespace Syntax {
 		return NULL;
 	    } 
 
-	    aux-> sym = SymbolPtr (new Symbol (aux-> token, new UndefInfo ()));
+	    aux-> sym = new Symbol (aux-> token, new UndefInfo ());
 	    Table::instance ().insert (aux-> token-> getStr (), aux-> sym);
+	    toDecl.push_back (aux);
 	}
 
 	for (auto aff : this-> affects) {
@@ -49,24 +50,24 @@ namespace Syntax {
 
     Ymir::Tree VarDecl::statement () {
 	Ymir::TreeStmtList list;
-	for (int i = 0 ; i < this->decls.size () ; i++) {
+	for (int i = 0 ; i < (int) this->decls.size () ; i++) {
 	    auto var = this->decls [i];
 	    auto aff = this->affects [i];
 	    auto type_tree = var-> getType ()->  type-> toGeneric ();
 	    Ymir::Tree decl = build_decl (
-		var->token->getLocus (),
+		var-> token-> getLocus (),
 		VAR_DECL,
-		get_identifier (var->token->getStr ().c_str ()),
+		get_identifier (var-> token-> getStr ().c_str ()),
 		type_tree.getTree ()
 	    );
 
-	    var-> getType ()-> treeDecl () = decl;
+	    var-> sym-> treeDecl (decl);
 	    
 	    Ymir::getStackVarDeclChain ().back ().append (decl);
 	    list.append (buildTree (DECL_EXPR, var-> token-> getLocus (), void_type_node, decl));
 
 	    if (aff != NULL) {
-		list.append (aff-> treeExpr ());
+	    	list.append (aff-> treeExpr ());
 	    }
 	}
 	return list.getTree ();

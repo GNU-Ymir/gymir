@@ -2,7 +2,7 @@
 
 #include "Lexer.hh"
 #include "Syntax.hh"
-
+#include <iostream>
 #include <gc/gc_cpp.h>
 
 namespace Syntax {

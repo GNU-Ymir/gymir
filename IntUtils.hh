@@ -3,15 +3,17 @@
 #include "Expression.hh"
 #include "Tree.hh"
 #include <iostream>
+#include "tree-pretty-print.h"
 
 namespace Semantic {
 
     struct IntUtils {
 
 	static Ymir::Tree InstAffInt (location_t locus, Syntax::ExpressionPtr lexp , Syntax::ExpressionPtr rexp ) {
+
 	    auto left = lexp-> treeExpr ();
 	    auto right = rexp-> treeExpr ();
-
+	    
 	    return Ymir::buildTree (
 		MODIFY_EXPR, locus, void_type_node, left, right
 	    );	    

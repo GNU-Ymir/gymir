@@ -18,11 +18,9 @@ namespace Syntax {
 	
 	Instruction * instruction () override;
 
-	Ymir::Tree toGeneric ();
+	Ymir::Tree toGeneric (bool);
 	       
 	virtual void print (int nb = 0);
-
-	Ymir::TreeStmtList stackStmtList;
 	
     };
     

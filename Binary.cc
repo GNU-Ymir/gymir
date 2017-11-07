@@ -2,6 +2,7 @@
 #include "Error.hh"
 #include "Symbol.hh"
 #include <stdio.h>
+#include <iostream>
 
 namespace Syntax {
 
@@ -75,18 +76,9 @@ namespace Syntax {
     
     Ymir::Tree Binary::statement () {
 	if (this-> isInstruction ()) {
-	    if (this-> sym-> isVoid ()) {
-		Ymir::Error::fatal (this-> token-> getLocus (),
-				    "Erreur interne");
-		return Ymir::Tree ();
-	    } else {
-		return this-> sym-> type-> buildBinaryOp (
-		    this-> token-> getLocus (),
-		    this-> left, this-> right
-		);
-	    }
+	    return this-> treeExpr ();
 	} else {
-	    Expression::statement ();
+	    Expression::treeExpr ();
 	    return Ymir::Tree ();
 	}
     }
@@ -117,26 +109,10 @@ namespace Syntax {
     }
     
     Ymir::Tree Binary::treeExpr () {
-	auto elem = this-> sym-> type-> buildBinaryOp (
+	return this-> sym-> type-> buildBinaryOp (
 	    this-> token-> getLocus (),
 	    this-> left,
 	    this-> right
-	);
-	Ymir::getStackStmtList ().back ().append (elem);
-	auto l = this-> left-> treeExpr ();
-
-	auto str = "%d\n";
-	
-	tree args[] = {
-	    build_string_literal (strlen (str) + 1, str),
-	    l.getTree ()
-	};
-
-	auto print = Ymir::getPrintfAddr ();
-		
-	return build_call_array_loc (
-	    this-> token-> getLocus (),
-	    integer_type_node, print.getTree (), 2, args
 	);
     }
        

@@ -79,32 +79,34 @@ namespace Semantic {
 	tree fntype = build_function_type_array (integer_type_node, 0, main_fndecl_type_params);
 	tree fn_decl = build_decl (BUILTINS_LOCATION, FUNCTION_DECL, ident, fntype);
 
-
-	DECL_EXTERNAL (fn_decl) = 0;
-	TREE_PUBLIC (fn_decl) = 1;
-	TREE_STATIC (fn_decl) = 1;
-	
 	Ymir::enterBlock ();
-
-	this-> fun-> block-> toGeneric ();
+	
+	this-> fun-> block-> toGeneric (false);
 	
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
 				       NULL_TREE, integer_type_node);
-
+	
 	DECL_RESULT (fn_decl) = result_decl;
-
+	
 	tree set_result = build2 (INIT_EXPR, void_type_node, DECL_RESULT (fn_decl),
 				  build_int_cst_type (integer_type_node, 0));
+	
 	tree return_stmt = build1 (RETURN_EXPR, void_type_node, set_result);
-
+	
 	Ymir::getStackStmtList ().back ().append (return_stmt);      
-
+	
 	auto fnTreeBlock = Ymir::leaveBlock ();
 	auto fnBlock = fnTreeBlock.block;
 
 	BLOCK_SUPERCONTEXT (fnBlock.getTree ()) = fn_decl;
 	DECL_INITIAL (fn_decl) = fnBlock.getTree ();
 	DECL_SAVED_TREE (fn_decl) = fnTreeBlock.bind_expr.getTree ();
+
+	DECL_EXTERNAL (fn_decl) = 0;
+	DECL_PRESERVE_P (fn_decl) = 1;
+	
+	TREE_PUBLIC (fn_decl) = 1;
+	TREE_STATIC (fn_decl) = 1;
 	
 	gimplify_function_tree (fn_decl);
 	cgraph_node::finalize_function (fn_decl, true);

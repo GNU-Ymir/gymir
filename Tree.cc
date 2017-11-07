@@ -1,4 +1,5 @@
 #include "Tree.hh"
+#include <iostream>
 
 namespace Ymir {
 
@@ -38,6 +39,7 @@ namespace Ymir {
 	    BIND_EXPR, void_type_node, var_decl_chain.first.getTree (),
 	    current.getTree (), new_block
 	);
+	
 	return TreeSymbolMapping (bind_expr, new_block);
     }
 

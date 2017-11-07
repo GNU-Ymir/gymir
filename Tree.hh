@@ -17,6 +17,7 @@
 #include "print-tree.h"
 #include "stor-layout.h"
 #include "fold-const.h"
+#include "tree-pretty-print.h"
 
 #include <vector>
 

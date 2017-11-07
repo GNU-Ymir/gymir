@@ -35,13 +35,14 @@ namespace Syntax {
 	return new Block (this-> token, {}, insts);
     }
 
-    Ymir::Tree Block::toGeneric () {
-	Ymir::enterBlock ();
-	for (auto it : this-> instructions) {
-	    Ymir::getStackStmtList ().back ().append (it-> statement ());
-	}
-	auto treeBlock = Ymir::leaveBlock ();
-	return treeBlock.block;
+    Ymir::Tree Block::toGeneric (bool enter) {
+	if (enter) Ymir::enterBlock ();
+	
+	for (auto it : this-> instructions) 
+	    Ymir::getStackStmtList ().back ().append (it-> statement ());	
+	
+	if (enter) return Ymir::leaveBlock ().block;
+	return Ymir::Tree ();
     }
     
 };

@@ -2,6 +2,8 @@
 #include "Table.hh"
 #include "Error.hh"
 #include "UndefInfo.hh"
+#include <iostream>
+#include "tree-pretty-print.h"
 
 namespace Syntax {
     

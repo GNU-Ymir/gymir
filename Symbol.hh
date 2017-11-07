@@ -3,14 +3,11 @@
 #include "Token.hh"
 #include "TypeInfo.hh"
 #include <tr1/memory>
+#include <gc/gc_cpp.h>
 
 namespace Semantic {
-
-    struct Symbol;
-
-    typedef std::tr1::shared_ptr <Symbol> SymbolPtr;
-
-    struct Symbol {
+    
+    struct Symbol : gc {
 	Lexical::TokenPtr token;
 	TypeInfo * type;
 
@@ -23,19 +20,29 @@ namespace Semantic {
 	    return this-> type == NULL;
 	}
 
-	Ymir::Tree& treeDecl () {
+	Ymir::Tree treeDecl () {
 	    return this-> decl;
 	}
 
-	static SymbolPtr empty () {
+	void treeDecl (Ymir::Tree t) {
+	    this-> decl = t;
+	}
+
+	static Symbol* empty () {
 	    return _empty;
 	}
 
+	std::string toString () {
+	    return std::string ("Sym (") + this-> token-> getStr () + ")";
+	}
+	
     private:
-	static SymbolPtr _empty;
+	static Symbol* _empty;
 	
 	Ymir::Tree decl;
     };
 
+    typedef Symbol* SymbolPtr;
+    
     
 }
