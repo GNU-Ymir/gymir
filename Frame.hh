@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Function.hh"
+
 #include <gc/gc_cpp.h>
 
 namespace Semantic {

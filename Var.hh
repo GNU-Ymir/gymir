@@ -31,10 +31,12 @@ namespace Syntax {
 	virtual VarPtr declare (const char*);
 
 	virtual VarPtr expression ();
-	       	
+
 	bool isType ();
-	
+		
 	VarPtr asType ();
+
+	Ymir::Tree treeExpr () override;
 	
 	virtual void print (int nb = 0);	
 	

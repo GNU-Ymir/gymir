@@ -98,6 +98,10 @@ namespace Syntax {
 	}
     }
     
+    Ymir::Tree Var::treeExpr () {
+	return this-> sym-> treeDecl ();
+    }
+
     void TypedVar::print (int nb) {
 	printf("%*c<TypedVar> ", nb, ' ');
 	token -> print ();

@@ -1,6 +1,7 @@
 #include "Block.hh"
 #include "Error.hh"
 #include "Table.hh"
+#include <iostream>
 
 namespace Syntax {
 
@@ -34,10 +35,13 @@ namespace Syntax {
 	return new Block (this-> token, {}, insts);
     }
 
-    Ymir::Tree Block::block () {
+    Ymir::Tree Block::toGeneric () {
+	Ymir::enterBlock ();
 	for (auto it : this-> instructions) {
-	    stackStmtList.append (it-> statement ());
+	    Ymir::getStackStmtList ().back ().append (it-> statement ());
 	}
+	auto treeBlock = Ymir::leaveBlock ();
+	return treeBlock.block;
     }
     
 };

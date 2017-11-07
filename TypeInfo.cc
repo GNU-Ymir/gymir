@@ -14,16 +14,16 @@ namespace Semantic {
 	all.push_back (this);
     }
     
-    Tree TypeInfo::buildBinaryOp (Syntax::Expression* left, Syntax::Expression* right) {
-	return this->binopFoo (left, right);
+    Tree TypeInfo::buildBinaryOp (location_t locus, Syntax::Expression* left, Syntax::Expression* right) {
+	return this->binopFoo (locus, left, right);
     }
 
     Tree TypeInfo::buildUnaryOp (Syntax::Expression* elem) {
 	return this->unopFoo (elem);
     }
 
-    Tree TypeInfo::buildMultOp (Syntax::Expression* left, Syntax::Expression* rights) {
-	return this->multFoo (left, rights);
+    Tree TypeInfo::buildMultOp (location_t locus, Syntax::Expression* left, Syntax::Expression* rights) {
+	return this->multFoo (locus, left, rights);
     }
         
     

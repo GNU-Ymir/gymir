@@ -22,13 +22,19 @@ namespace Semantic {
 	bool isVoid () {
 	    return this-> type == NULL;
 	}
-	
+
+	Ymir::Tree& treeDecl () {
+	    return this-> decl;
+	}
+
 	static SymbolPtr empty () {
 	    return _empty;
 	}
 
     private:
 	static SymbolPtr _empty;
+	
+	Ymir::Tree decl;
     };
 
     

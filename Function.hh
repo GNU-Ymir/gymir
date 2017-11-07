@@ -36,7 +36,8 @@ namespace Syntax {
 	void declare () override;
 
 	void verifyPure ();
-	
+			
+
     private:
 	
 	static const char * MAIN;	

@@ -7,12 +7,12 @@ ymir: ymir1$(exeext)
 .PHONY: ymir
  
 # Driver
-
 GYC_OBJS = \
    $(GCC_OBJS) \
    ymir/ymirspec.o \
    $(END)
  
+
 gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -I/usr/local/include/ -o $@ \
 	  $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a \
@@ -109,6 +109,7 @@ ymir.maintainer-clean:
  
 # make uninstall
 ymir.uninstall:
+
 	-rm -f gyc$(exeext) ymir1$(exeext)
 	-rm -f $(ymir_OBJS)
  

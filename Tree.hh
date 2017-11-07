@@ -3,6 +3,7 @@
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
+
 #include "target.h"
 #include "tree.h"
 #include "tree-iterator.h"
@@ -165,6 +166,7 @@ namespace Ymir {
 	}
     };
 
+
     struct block_chain_append {
 	void operator () (Tree t, Tree a) {
 	    BLOCK_CHAIN (t.getTree ()) = a.getTree ();
@@ -191,4 +193,7 @@ namespace Ymir {
     
     void enterBlock ();
     TreeSymbolMapping leaveBlock ();    
+
+    Tree getPrintfAddr ();
+    
 };

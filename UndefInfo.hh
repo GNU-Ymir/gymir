@@ -36,6 +36,7 @@ namespace Semantic {
 	    return new UndefInfo ();
 	}
 
+
 	Ymir::Tree toGeneric () override {
 	    return void_type_node;
 	}	

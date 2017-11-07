@@ -2,6 +2,7 @@
 
 #include "Lexer.hh"
 #include "Syntax.hh"
+
 #include <gc/gc_cpp.h>
 
 namespace Syntax {
@@ -12,8 +13,7 @@ namespace Syntax {
 	
 	Ast (Lexical::TokenPtr token, AstEnums::AstEnum type);
 	virtual void print (int nb = 0) = 0;	
-	virtual void semantic () {}
-	
+	virtual void semantic () {}	
 	virtual ~Ast() {}
 
     private:

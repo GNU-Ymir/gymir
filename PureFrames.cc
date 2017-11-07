@@ -71,6 +71,7 @@ namespace Semantic {
     }
 
     void FinalFrame::finalize () {
+
 	tree main_fndecl_type_params [] = {
 	};
 	
@@ -84,6 +85,8 @@ namespace Semantic {
 	TREE_STATIC (fn_decl) = 1;
 	
 	Ymir::enterBlock ();
+
+	this-> fun-> block-> toGeneric ();
 	
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
 				       NULL_TREE, integer_type_node);

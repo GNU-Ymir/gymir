@@ -12,6 +12,9 @@ namespace Syntax {
 	ExpressionPtr expression ();
 	
 	virtual void print (int nb = 0);
+
+	Ymir::Tree treeExpr () override;
+	
     };
     
 };

@@ -26,9 +26,9 @@ namespace Semantic {
 
 	TypeInfo ();
 	
-	Ymir::Tree buildBinaryOp (Syntax::Expression* left, Syntax::Expression* right);	
+	Ymir::Tree buildBinaryOp (location_t, Syntax::Expression* left, Syntax::Expression* right);	
 	Ymir::Tree buildUnaryOp (Syntax::Expression* elem);
-	Ymir::Tree buildMultOp (Syntax::Expression* left, Syntax::Expression* rights);
+	Ymir::Tree buildMultOp (location_t, Syntax::Expression* left, Syntax::Expression* rights);
 
 
 	virtual std::string typeToString () const = 0;
@@ -53,6 +53,7 @@ namespace Semantic {
 	    return false;
 	}
 
+
 	virtual Ymir::Tree toGeneric () = 0;
 	
 	virtual ~TypeInfo () {
@@ -68,7 +69,7 @@ namespace Semantic {
 	
     protected:
 
-	typedef Ymir::Tree (*BinopLint) (Syntax::Expression*, Syntax::Expression*);
+	typedef Ymir::Tree (*BinopLint) (location_t locus, Syntax::Expression*, Syntax::Expression*);
 	typedef Ymir::Tree (*UnopLint) (Syntax::Expression*);
 
 	typedef TypeInfo* (*TypeCreator) (std::vector<Syntax::Expression*>);

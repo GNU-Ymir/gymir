@@ -111,6 +111,7 @@ namespace Lexical {
     TokenId getFromStr (const std::string &);
     
     struct Token;
+
     typedef Token* TokenPtr;
     typedef const Token* const_TokenPtr;
   

@@ -14,5 +14,13 @@ namespace Syntax {
 	auto aux = new Int (this->token);
 	aux-> sym = Semantic::SymbolPtr (new Semantic::Symbol (aux-> token, new Semantic::IntInfo ()));
 	return aux;
-    }    
+    }
+
+    Ymir::Tree Int::treeExpr () {
+	return build_int_cst_type (
+	    integer_type_node,
+	    atoi (this-> token-> getStr ().c_str ())
+	);
+    }
+    
 };

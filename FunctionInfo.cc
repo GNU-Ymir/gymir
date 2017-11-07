@@ -1,4 +1,5 @@
 #include "FunctionInfo.hh"
+
 #include "Error.hh"
 
 namespace Semantic {
@@ -39,10 +40,12 @@ namespace Semantic {
 	this->frames.push_back (fr);
     }
     
+
     Ymir::Tree FunctionInfo::toGeneric () {
 	Ymir::Error::fatal (UNKNOWN_LOCATION, "Erreur interne ");
 	return Ymir::Tree ();
     }
     
+
 
 }

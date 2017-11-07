@@ -46,6 +46,7 @@ namespace Syntax {
 	return new VarDecl (this-> token, toDecl, toAffects);	    
     }
 
+
     Ymir::Tree VarDecl::statement () {
 	Ymir::TreeStmtList list;
 	for (int i = 0 ; i < this->decls.size () ; i++) {
@@ -59,14 +60,21 @@ namespace Syntax {
 		type_tree.getTree ()
 	    );
 
+	    var-> getType ()-> treeDecl () = decl;
+	    
 	    Ymir::getStackVarDeclChain ().back ().append (decl);
 	    list.append (buildTree (DECL_EXPR, var-> token-> getLocus (), void_type_node, decl));
+
+	    if (aff != NULL) {
+		list.append (aff-> treeExpr ());
+	    }
 	}
 	return list.getTree ();
     }
     
     void VarDecl::print (int nb) {
 	printf ("%*c<VarDecl> \n", nb, ' ');
+
 	for (auto var : this-> decls) {
 	    var-> print (nb + 4);
 	}

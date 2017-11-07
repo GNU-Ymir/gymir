@@ -41,6 +41,23 @@ namespace Ymir {
 	return TreeSymbolMapping (bind_expr, new_block);
     }
 
+    Ymir::Tree getPrintfAddr () {
+	static Tree print_fn;
+	if (print_fn.isNull ()) {
+	    tree fn_decl_type_params [] = {
+		build_pointer_type (
+		    build_qualified_type (char_type_node, TYPE_QUAL_CONST)
+		)
+	    };
+
+	    tree fndecl_type = build_varargs_function_type_array (integer_type_node, 1, fn_decl_type_params);
+	    tree printf_fn_decl = build_fn_decl ("printf", fndecl_type);
+	    DECL_EXTERNAL (printf_fn_decl) = 1;
+	    print_fn = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), printf_fn_decl);
+	}
+	return print_fn;
+    }
+    
     std::vector <TreeChain>& getStackVarDeclChain () {
 	return stack_var_decl_chain;
     }

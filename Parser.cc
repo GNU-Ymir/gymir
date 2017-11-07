@@ -2,6 +2,7 @@
 #include "Lexer.hh"
 #include "Parser.hh"
 #include "Visitor.hh"
+
 #include "Tree.hh"
 #include "TypeInfo.hh"
 #include "Error.hh"
@@ -34,7 +35,6 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	Syntax::AstPtr synt_ast = this -> syntax_analyse ();
-
 	if (Ymir::Error::nb_errors > 0) stop ();
 	this -> semantic_analyse (synt_ast);
 	if (Ymir::Error::nb_errors > 0) stop ();

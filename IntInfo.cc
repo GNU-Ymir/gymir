@@ -196,6 +196,7 @@ namespace Semantic {
 	return info == INT;
     }
 
+
     Ymir::Tree IntInfo::toGeneric () {
 	return integer_type_node;
     }
