@@ -1,0 +1,10 @@
+language="ymir"
+
+compilers="ymir1\$(exeext)"
+
+target_libs=""
+
+gtfiles="\$(srcdir)/ymir/ymir1.cc"
+
+lang_requires_bool_languages=c++
+build_by_default="no"

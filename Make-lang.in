@@ -1,0 +1,127 @@
+GYC_INSTALL_NAME := $(shell echo gyc|sed '$(program_transform_name)')
+GYC_TARGET_INSTALL_NAME := $(target_noncanonical)-$(shell echo gyc|sed '$(program_transform_name)')
+
+
+ymir: ymir1$(exeext)
+ 
+.PHONY: ymir
+ 
+# Driver
+
+GYC_OBJS = \
+   $(GCC_OBJS) \
+   ymir/ymirspec.o \
+   $(END)
+ 
+gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
+	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -I/usr/local/include/ -o $@ \
+	  $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a \
+	  $(EXTRA_GCC_LIBS) $(LIBS) -lgc -lpthread
+ 
+# The compiler proper
+ 
+ymir_OBJS = \
+	ymir/ymir1.o \
+	ymir/Token.o \
+	ymir/Lexer.o \
+	ymir/Parser.o \
+	ymir/Visitor.o \
+	ymir/Syntax.o \
+	ymir/Access.o \
+	ymir/Ast.o \
+	ymir/Binary.o \
+	ymir/Block.o \
+	ymir/Bool.o \
+	ymir/Break.o \
+	ymir/Cast.o \
+	ymir/Char.o \
+	ymir/Declaration.o \
+	ymir/Delete.o \
+	ymir/Dot.o \
+	ymir/Else.o \
+	ymir/ElseIf.o \
+	ymir/Expression.o \
+	ymir/Float.o \
+	ymir/Foreach.o \
+	ymir/For.o \
+	ymir/Function.o \
+	ymir/If.o \
+	ymir/InsideIf.o \
+	ymir/InsideFor.o \
+	ymir/Instruction.o \
+	ymir/Int.o \
+	ymir/New.o \
+	ymir/Null.o \
+	ymir/ParamList.o \
+	ymir/Par.o \
+	ymir/Program.o \
+	ymir/Return.o \
+	ymir/String.o \
+	ymir/Unary.o \
+	ymir/Var.o \
+	ymir/While.o \
+	ymir/TypeInfo.o \
+	ymir/IntInfo.o \
+	ymir/BoolInfo.o \
+	ymir/FrameScope.o \
+	ymir/Scope.o \
+	ymir/Table.o \
+	ymir/FunctionInfo.o \
+	ymir/Symbol.o \
+	ymir/PureFrames.o \
+	ymir/Error.o \
+	ymir/VoidInfo.o \
+	ymir/VarDecl.o \
+	ymir/Tree.o \
+    $(END)
+
+ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
+	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -I/usr/local/include/gc/ -o $@ \
+	      attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) -lgc -lpthread 
+ 
+ymir.all.cross:
+ 
+ymir.start.encap: gyc$(exeext)
+ymir.rest.encap:
+ 
+ymir.install-common: installdirs
+	-rm -f $(DESTDIR)$(bindir)/$(GYC_INSTALL_NAME)$(exeext)
+	$(INSTALL_PROGRAM) gyc$(exeext) $(DESTDIR)$(bindir)/$(GYC_INSTALL_NAME)$(exeext)
+	rm -f $(DESTDIR)$(bindir)/$(GYC_TARGET_INSTALL_NAME)$(exeext); \
+	( cd $(DESTDIR)$(bindir) && \
+      $(LN) $(GYC_INSTALL_NAME)$(exeext) $(GYC_TARGET_INSTALL_NAME)$(exeext) ); \
+ 
+# Required goals, they still do nothing
+ymir.install-man:
+ymir.install-info:
+ymir.install-pdf:
+ymir.install-plugin:
+ymir.install-html:
+ymir.info:
+ymir.dvi:
+ymir.pdf:
+ymir.html:
+ymir.man:
+ymir.mostlyclean:
+ymir.clean:
+ymir.distclean:
+ymir.maintainer-clean:
+ 
+# make uninstall
+ymir.uninstall:
+	-rm -f gyc$(exeext) ymir1$(exeext)
+	-rm -f $(ymir_OBJS)
+ 
+# Used for handling bootstrap
+ymir.stage1: stage1-start
+	-mv ymir/*$(objext) stage1/ymir
+ymir.stage2: stage2-start
+	-mv ymir/*$(objext) stage2/ymir
+ymir.stage3: stage3-start
+	-mv ymir/*$(objext) stage3/ymir
+ymir.stage4: stage4-start
+	-mv ymir/*$(objext) stage4/ymir
+ymir.stageprofile: stageprofile-start
+	-mv ymir/*$(objext) stageprofile/ymir
+ymir.stagefeedback: stagefeedback-start
+	-mv ymir/*$(objext) stagefeedback/ymir
