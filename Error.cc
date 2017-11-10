@@ -1,4 +1,4 @@
-#include "Error.hh"
+#include "errors/Error.hh"
 
 namespace Ymir {
 

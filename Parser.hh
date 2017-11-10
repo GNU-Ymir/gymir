@@ -1,9 +1,7 @@
 #pragma once
 
-#include "Lexer.hh"
-#include "Token.hh"
-#include "Syntax.hh"
-#include "ast.hh"
+#include "syntax/_.hh"
+#include <stdio.h>
 
 /**
    Fonction appele par gcc
@@ -14,21 +12,21 @@ namespace Ymir {
     
     struct Parser {
 
-	Parser (Lexical::Lexer & file) : lexer (file) {}
+	Parser (const char *, FILE *);
 	
 	void parse_program ();
 	
     private:
 
-	Syntax::AstPtr syntax_analyse ();
+	syntax::Program syntax_analyse ();
 
-	void semantic_analyse (Syntax::AstPtr &);
+	void semantic_analyse (syntax::Program &);
 
 	void define_gcc_symbols ();
 	
     private:
 	
-	Lexical::Lexer & lexer;
+	lexical::Lexer lexer;
 	
     };
     

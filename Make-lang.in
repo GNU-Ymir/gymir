@@ -5,7 +5,9 @@ GYC_TARGET_INSTALL_NAME := $(target_noncanonical)-$(shell echo gyc|sed '$(progra
 ymir: ymir1$(exeext)
  
 .PHONY: ymir
- 
+
+GYC_INCLUDES = -I$(srcdir)/include -I$(srcdir)/
+
 # Driver
 GYC_OBJS = \
    $(GCC_OBJS) \
@@ -14,7 +16,7 @@ GYC_OBJS = \
  
 
 gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
-	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -I/usr/local/include/ -o $@ \
+	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GYC_INCLUDES) -o $@ \
 	  $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a \
 	  $(EXTRA_GCC_LIBS) $(LIBS) -lgc -lpthread
  
@@ -26,57 +28,15 @@ ymir_OBJS = \
 	ymir/Lexer.o \
 	ymir/Parser.o \
 	ymir/Visitor.o \
-	ymir/Syntax.o \
-	ymir/Access.o \
-	ymir/Ast.o \
-	ymir/Binary.o \
-	ymir/Block.o \
-	ymir/Bool.o \
-	ymir/Break.o \
-	ymir/Cast.o \
-	ymir/Char.o \
-	ymir/Declaration.o \
-	ymir/Delete.o \
-	ymir/Dot.o \
-	ymir/Else.o \
-	ymir/ElseIf.o \
-	ymir/Expression.o \
-	ymir/Float.o \
-	ymir/Foreach.o \
-	ymir/For.o \
-	ymir/Function.o \
-	ymir/If.o \
-	ymir/InsideIf.o \
-	ymir/InsideFor.o \
-	ymir/Instruction.o \
-	ymir/Int.o \
-	ymir/New.o \
-	ymir/Null.o \
-	ymir/ParamList.o \
-	ymir/Par.o \
-	ymir/Program.o \
-	ymir/Return.o \
-	ymir/String.o \
-	ymir/Unary.o \
-	ymir/Var.o \
-	ymir/While.o \
-	ymir/TypeInfo.o \
-	ymir/IntInfo.o \
-	ymir/BoolInfo.o \
-	ymir/FrameScope.o \
-	ymir/Scope.o \
-	ymir/Table.o \
-	ymir/FunctionInfo.o \
-	ymir/Symbol.o \
-	ymir/PureFrames.o \
 	ymir/Error.o \
-	ymir/VoidInfo.o \
+	ymir/Impl.o \
 	ymir/VarDecl.o \
-	ymir/Tree.o \
+	ymir/Block.o \
+	ymir/Keys.o
     $(END)
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
-	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -I/usr/local/include/gc/ -o $@ \
+	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
 	      attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) -lgc -lpthread 
  
 ymir.all.cross:

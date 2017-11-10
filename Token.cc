@@ -1,105 +1,74 @@
-#include "Token.hh"
+#include "syntax/Token.hh"
 
-namespace Lexical {
-
-    TokenPtr Token::eof = Token::make ("end of file", UNKNOWN_LOCATION);
-  
-    Token::Token (TokenId token_id, location_t locus)
-	: token_id(token_id),
-	  locus (locus),
-	  str (NULL)
-    {}
-
-    Token::Token (TokenId token_id, location_t locus, const std::string & str)
-	: token_id (token_id),
-	  locus (locus),
-	  str (new std::string (str))
-    {}
-  
-    Token::~Token () {
-	delete str;
-    }
-
-
-    const char * tokenIdToStr (TokenId tid) {
-	switch (tid) {
-#define YMIR_TOKEN(name, _)			\
-	    case name:				\
-		return #name;
-#define YMIR_TOKEN_KEYWORD(x, y) YMIR_TOKEN(x, y)
-	    YMIR_TOKEN_LIST
-#undef YMIR_TOKEN_KEYWORD
-#undef YMIR_TOKEN
-	default : return NULL;
-	}
-    }
-
-    TokenId getFromStr (const std::string & name_str) {
-#define YMIR_TOKEN(name, descr)			\
-	if (name_str == descr) return name;
-#define YMIR_TOKEN_KEYWORD(x, y) YMIR_TOKEN(x, y)
-	YMIR_TOKEN_LIST
-#undef YMIR_TOKEN_KEYWORD
-#undef YMIR_TOKEN
-	    return OTHER;
-    }
-  
-    const char * getTokenDescription (TokenId tid) {
-	switch (tid)
-	    {
-#define YMIR_TOKEN(name, descr)			\
-		case name:			\
-		    return descr;
-#define YMIR_TOKEN_KEYWORD(x, y) YMIR_TOKEN (x, y)
-		YMIR_TOKEN_LIST
-#undef YMIR_TOKEN_KEYWORD
-#undef YMIR_TOKEN
-	    default:
-		return NULL;
-	    } 
-    }
-
-    bool Token::operator==(TokenId other) {
-	return this->token_id == other;
-    }
-
-    void Token::print () {
-	auto reset = "\u001B[0m";
-	auto purple = "\u001B[36m";
-	auto green = "\u001B[32m";
-	if (token_id == OTHER)	    
-	    printf (":%s%s%s (%s -> %s%i%s, %s%i%s)",
-		    green,
-		    getCstr(),
-		    reset,
-		    LOCATION_FILE (getLocus()),
-		    purple,
-		    LOCATION_LINE (getLocus()),
-		    reset,
-		    purple,
-		    LOCATION_COLUMN (getLocus()), reset);
-	
-	else
-	    printf (":%s%s%s (%s -> %s%i%s, %s%i%s)",
-		    green,
-		    tokenIdToStr(token_id),
-		    reset,
-		    LOCATION_FILE (getLocus()),
-		    purple,
-		    LOCATION_LINE (getLocus()),
-		    reset,
-		    purple,
-		    LOCATION_COLUMN (getLocus()), reset);
-
-    }
-
-    std::string Token::locusToString () const {
-	std::string s(LOCATION_FILE (getLocus()));
-	s += ":" + LOCATION_LINE (getLocus());
-	s += ":" + LOCATION_COLUMN (getLocus());
-	return s;
-    }
-    
-    
-};
-
+std::string Token::DIV = "/";
+std::string Token::DIV_AFF = "/=";
+std::string Token::DOT = ".";
+std::string Token::DDOT = "..";
+std::string Token::TDOT = "...";
+std::string Token::AND = "&";
+std::string Token::AND_AFF = "&=";
+std::string Token::DAND = "&&";
+std::string Token::PIPE = "|";
+std::string Token::PIPE_EQUAL = "|=";
+std::string Token::DPIPE = "||";
+std::string Token::MINUS = "-";
+std::string Token::MINUS_AFF = "-=";
+std::string Token::DMINUS = "--";
+std::string Token::PLUS = "+";
+std::string Token::PLUS_AFF = "+=";
+std::string Token::DPLUS = "++";
+std::string Token::INF = "<";
+std::string Token::INF_EQUAL = "<";
+std::string Token::LEFTD = "<<";
+std::string Token::LEFTD_AFF = "<<=";
+std::string Token::SUP = "<";
+std::string Token::SUP_EQUAL = "<=";
+std::string Token::RIGHTD = ">>";
+std::string Token::RIGHTD_AFF = ">>=";
+std::string Token::NOT = "!";
+std::string Token::NOT_EQUAL = "!=";
+std::string Token::NOT_INF = "!<";
+std::string Token::NOT_INF_EQUAL = "!<=";
+std::string Token::NOT_SUP = "!>";
+std::string Token::NOT_SUP_EQUAL = "!>=";
+std::string Token::LPAR = "(";
+std::string Token::RPAR = ")";
+std::string Token::LCRO = "[";
+std::string Token::RCRO = "]";
+std::string Token::LACC = "{";
+std::string Token::RACC = "}";
+std::string Token::INTEG = "?";
+std::string Token::COMA = ",";
+std::string Token::SEMI_COLON = ";";
+std::string Token::COLON = ":";
+std::string Token::DOLLAR = "$";
+std::string Token::EQUAL = "=";
+std::string Token::DEQUAL = "==";
+std::string Token::STAR = "*";
+std::string Token::STAR_EQUAL = "*=";
+std::string Token::PERCENT = "%";
+std::string Token::PERCENT_EQUAL = "%=";
+std::string Token::XOR = "^";
+std::string Token::XOR_EQUAL = "^=";
+std::string Token::DXOR = "^^";
+std::string Token::DXOR_EQUAL = "^^=";
+std::string Token::TILDE = "~";
+std::string Token::TILDE_EQUAL = "~=";
+std::string Token::AT = "@";
+std::string Token::DARROW = "=>";
+std::string Token::SHARP = "#";
+std::string Token::SPACE = " ";
+std::string Token::RETURN = "\n";
+std::string Token::RRETURN = "\r";
+std::string Token::LCOMM1 = "#*";
+std::string Token::RCOMM1 = "*#";
+std::string Token::LCOMM2 = "//";
+std::string Token::LCOMM3 = "/*";
+std::string Token::RCOMM3 = "*/";
+std::string Token::GUILL = "\"";
+std::string Token::APOS = "'";
+std::string Token::TAB = "\t";
+std::string Token::ARROW = "->";
+std::string Token::BSTRING = "(_{";
+std::string Token::ESTRING = "}_)";
+std::string Token::DCOLON = "::";

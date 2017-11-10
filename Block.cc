@@ -1,48 +1,19 @@
-#include "Block.hh"
-#include "Error.hh"
-#include "Table.hh"
-#include <iostream>
+#include "ast/Block.hh"
+#include "ast/Declaration.hh"
 
-namespace Syntax {
+namespace syntax {
 
-    void Block::print (int nb) {
-	printf("%*c<Block> ", nb, ' ');
-	token -> print ();
-	printf ("\n");	
-	for (auto & it : decls) {
-	    if (it != NULL)
-		it -> print (nb + 4);
-	}
-	for (auto & it : instructions) {
-	    if (it != NULL)
-		it -> print (nb + 4);
-	}	
-    }    
-
-    Instruction * Block::instruction () {	
-	for (auto it : this->decls) {
-	    it->declare ();
-	}
-
-	std::vector<InstructionPtr> insts;
-	for (auto it : this->instructions) {	    
-	    if (Semantic::Table::instance ().alreadyReturned ())
-		Ymir::Error::append (it->token->getLocus(),
-			     "Instruction non-atteignable");
-	    else 
-		insts.push_back (it->instruction ());				
-	}
-	return new Block (this-> token, {}, insts);
-    }
-
-    Ymir::Tree Block::toGeneric (bool enter) {
-	if (enter) Ymir::enterBlock ();
+    void IBlock::print (int nb) {
+	printf ("\n%*c<Block> : %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
 	
-	for (auto it : this-> instructions) 
-	    Ymir::getStackStmtList ().back ().append (it-> statement ());	
+	for (auto it : this-> decls)
+	    it-> print (nb + 4);
 	
-	if (enter) return Ymir::leaveBlock ().block;
-	return Ymir::Tree ();
+	for (auto it : this-> insts)
+	    it-> print (nb + 4);	
     }
     
-};
+}
