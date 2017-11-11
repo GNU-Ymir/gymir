@@ -7,7 +7,7 @@
 
 namespace syntax {
 
-    class IProto : IDeclaration {
+    class IProto : public IDeclaration {
 
 	Word ident;
 	Var type;
@@ -16,6 +16,8 @@ namespace syntax {
 	bool isVariadic;
 	
     public:
+
+	std::string from;
 	
 	IProto (Word ident, std::vector <Var> params, bool isVariadic) :
 	    ident (ident),

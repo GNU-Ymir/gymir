@@ -7,6 +7,29 @@
 
 namespace syntax {
 
+    struct IMatchPair : public IExpression {
+	Expression left, right;
+
+    public:
+
+	IMatchPair (Word token, Expression left, Expression right) :
+	    IExpression (token),
+	    left (left),
+	    right (right) {
+	}
+
+	void print (int nb = 0) override {
+	    printf ("\n%*c<MatchPair> %s",
+		    nb, ' ',
+		    this-> token.toString ().c_str ()
+	    );
+	    
+	    this-> left-> print (nb + 4);
+	    this-> right-> print (nb + 4);
+	}
+	
+    };
+    
     class IMatch : public IExpression {
 	Expression expr;
 	std::vector<Expression> values;
@@ -26,6 +49,14 @@ namespace syntax {
 	    default_ (def)	    
 	{}
 
+	static ulong id () {
+	    return 1;
+	}
+	
+	ulong getId () override {
+	    return IMatch::id ();
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Match> %s", 
 		    nb, ' ',

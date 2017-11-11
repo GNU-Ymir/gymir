@@ -63,6 +63,10 @@ namespace syntax {
 
     public:
 
+	IFloat (Word word) : IExpression (word) {
+	    this-> totale = "." + this-> token.getStr ();
+	}
+	
 	IFloat (Word word, std::string suite) :
 	    IExpression (word),
 	    suite (suite) {
@@ -147,6 +151,8 @@ namespace syntax {
 	    }
 	    return -1;
 	}
+
+    public:
 	
 	static short isChar (std::string &current, ulong &index) {
 	    static char escape[] = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '"', '?', '\0'};

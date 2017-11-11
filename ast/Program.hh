@@ -26,7 +26,8 @@ namespace syntax {
 	    );
 	    
 	    for (auto it : this-> decls)
-		it-> print (nb + 4);	    
+		it-> print (nb + 4);
+	    printf ("\n");
 	}	
     };
 

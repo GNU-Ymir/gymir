@@ -5,6 +5,8 @@
 #include "input.h"
 #include "diagnostic.h"
 #include "safe-ctype.h"
+#include <sstream>
+#include "errors/_.hh"
 
 namespace lexical {
 
@@ -50,9 +52,7 @@ namespace lexical {
 	::linemap_add (::line_table, ::LC_LEAVE,
 		       /* sysp */ 0,
 		       /* filename */ NULL,
-		       /* to_line */0);
-	
-	fclose (this-> file);
+		       /* to_line */0);       
     }
 
     location_t Lexer::getCurrentLocation () {
@@ -87,13 +87,30 @@ namespace lexical {
 	return word;
     }
 
+
+    std::string join (std::vector <std::string> elems) {
+	std::stringstream ss;
+	int i = 0;
+	for (auto it : elems) {
+	    ss << it << (i == (int) elems.size () - 1 ? "" : ", ");
+	    i++;
+	}
+	return ss.str ();
+    }
+    
     Word Lexer::next (std::vector <std::string> mandatories) {
 	Word word;
 	this-> next (word);
 	for (auto it : mandatories) {
 	    if (it == word.getStr ()) return word;
 	}
-	//TODO error
+
+	Ymir::Error::fatal (word.getLocus (),
+			    "[%s] attendues, mais %s trouvé\n",
+			    join (mandatories),
+			    word.getStr ()	
+	);
+	
 	return Word::eof ();
     }
 

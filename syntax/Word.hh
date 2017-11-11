@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <gc/gc_cpp.h>
 #include <sstream>
+#include <algorithm>
+#include "Token.hh"
 
 struct Word {
 private:
@@ -67,6 +69,11 @@ public:
 	this-> str = "";
     }
 
+    bool isToken () {
+	auto mem = Token::members ();
+	return std::find (mem.begin (), mem.end (), this-> str) != mem.end ();
+    }
+    
     friend bool operator== (Word elem, std::string sec) {
 	return elem.getStr () == sec;
     }

@@ -1,6 +1,7 @@
 #include "Parser.hh"
 #include "syntax/Lexer.hh"
 #include "syntax/Token.hh"
+#include "syntax/Visitor.hh"
 
 #include "errors/Error.hh"
 #include "ast/_.hh"
@@ -37,6 +38,7 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	auto prg = this-> syntax_analyse ();
+	prg-> print ();
 	// if (Ymir::Error::nb_errors > 0) stop ();
 	// this -> semantic_analyse (synt_ast);
 	// if (Ymir::Error::nb_errors > 0) stop ();
@@ -48,12 +50,8 @@ namespace Ymir {
     }
 
     syntax::Program Parser::syntax_analyse () {
-	Word word;
-	do {
-	    word = this-> lexer.next ();
-	    printf ("%s\n", word.toString ().c_str ());
-	} while (!word.isEof ());
-	return NULL;
+	auto visitor = syntax::Visitor (lexer);
+	return visitor.visit ();
     }
     
 };

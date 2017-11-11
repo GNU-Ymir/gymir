@@ -31,7 +31,7 @@ namespace lexical {
 	Word next ();
 
 	Word next (std::vector <std::string> mandatories);
-
+	
 	Lexer& rewind (ulong nb = 1);
 
 	ulong tell ();

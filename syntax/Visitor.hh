@@ -1,26 +1,111 @@
 #pragma once
 
-#include "_.hh"
+#include "Lexer.hh"
 #include "ast/_.hh"
 
 namespace syntax {
 
     struct Visitor {
 
-	Visitor (lexical::Lexer & lexer) : lexer (lexer) {}
+	Visitor (lexical::Lexer & lexer);
 
 	Program visit ();
 	
     private:
 
 
-	Program visit_program ();
-	std::vector<Declaration> visit_public_block ();
-	std::vector<Declaration> visit_private_block ();
+	Program visitProgram ();
+	std::vector<Declaration> visitPublicBlock ();
+	std::vector<Declaration> visitPrivateBlock ();
+	Declaration visitDeclaration (bool);
 
-	Declaration visit_declaration (bool);
+	Impl visitImpl ();
+	Constructor visitConstructor ();
+	Declaration visitFunctionImpl (bool &);
+	Self visitSelf ();
+	Global visitGlobal ();
+	std::string visitSpace ();
+	Import visitImport ();
+	std::vector <Expression> visitTemplateStruct ();
+	Struct visitStruct ();
+	Enum visitEnum ();
+	Expression visitIfFunction ();
+	Function visitFunction ();
+	Proto visitExtern ();
+	Var visitVar ();
+	Expression visitOf ();
+	Var visitVarDeclaration ();
+	TypedVar visitStructVarDeclaration ();
+	TypedVar visitTypedVarDeclaration ();
+	bool canVisitVarDeclaration ();
+	Var visitType ();
+	Word visitIdentifiant ();
+	bool canVisitIdentifiant ();
+	Block visitBlockOutSide ();
+	Block visitBlock ();
+	Instruction visitInstruction ();
+	Instruction visitLet ();
+	Instruction visitLetDestruct (Word begin);
+	Expression visitExpressionOutSide ();
+	Expression visitExpressionUlt ();
+	Expression visitExpressionUlt (Expression left);
+	Expression visitExpression ();
+	Expression visitExpression (Expression left);
+	Expression visitUlow ();
+	Expression visitUlow (Expression left);
+	Expression visitLow ();
+	Expression visitLow (Expression left);
+	Expression visitHigh ();
+	Expression visitHigh (Expression left);
+	Expression visitPth ();
+	Expression visitPthPar (Word token);
+	Expression visitConstante ();
+	Expression visitExpand ();
+	Expression visitTypeOf ();
+	Expression visitIs ();
+	Expression visitNumeric (Word begin);
+	Expression visitFloat (Word begin);
+	Expression visitString (Word word);
+	Expression visitPthWPar (Word tok);
+	Expression visitLeftOp ();
+	Expression visitConstArray ();
+	Expression visitCast ();
+	Expression visitFuncPtrSimple ();
+	Expression visitFuncPtr ();
+	Expression visitLambdaEmpty ();
+	Expression visitLambda ();
+	Expression visitSuite (Word token, Expression left);
+	Expression visitPar (Expression left);
+	Expression visitAccess (Expression left);
+	Expression visitDot (Expression left);
+	Expression visitDColon (Expression left);
+	Expression visitMixin ();
+	Expression visitMatch ();
+	Expression visitAfter (Word word, Expression left);
+	Expression visitBeforePth (Word word);
+	Instruction visitIf ();
+	If visitElse ();
+	Assert visitAssert ();
+	Instruction visitReturn ();
+	Instruction visitBreak ();
+	Instruction visitWhile ();
+	Instruction visitFor ();
 	
-	lexical::Lexer & lexer;
+    private:
+	
+	std::vector <std::string> ultimeOp;
+	std::vector <std::string> expOp;
+	std::vector <std::string> ulowOp;
+	std::vector <std::string> lowOp;
+	std::vector <std::string> highOp;
+	std::vector <std::string> befUnary;
+	std::vector <std::string> afUnary;
+	std::vector <std::string> suiteElem;
+	std::vector <std::string> forbiddenIds;
+	std::vector <std::string> decoKeys;
+	bool lambdaPossible;
+	
+	lexical::Lexer & lex;
 
     };
 

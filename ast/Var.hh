@@ -12,9 +12,10 @@ namespace syntax {
     protected :
 	
 	std::vector <Expression> templates;
-	Word deco;
 
     public :
+
+	Word deco;
 
 	IVar (Word ident) : IExpression (ident) {}
 	IVar (Word ident, Word deco) :
@@ -22,6 +23,11 @@ namespace syntax {
 	    deco (deco)
 	{}
 
+	IVar (Word ident, std::vector <Expression> tmps) :
+	    IExpression (ident),
+	    templates (tmps)
+	{}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Var> %s",
 		    nb, ' ',

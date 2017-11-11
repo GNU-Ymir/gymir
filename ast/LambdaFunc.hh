@@ -26,6 +26,13 @@ namespace syntax {
 	    block (block)
 	{}
 
+	ILambdaFunc (Word begin, std::vector <Var> params, Block block) : 
+	    IExpression (begin),
+	    params (params),
+	    ret (NULL),
+	    block (block)
+	{}
+	
 	ILambdaFunc (Word begin, std::vector <Var> params, Expression ret) :
 	    IExpression (begin),
 	    params (params),
