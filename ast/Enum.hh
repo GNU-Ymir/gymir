@@ -29,7 +29,7 @@ namespace syntax {
 	    );
 
 	    for (int i = 0 ; i < (int) this-> names.size (); i++) {
-		printf ("%*c%s ", nb + 4, ' ',
+		printf ("\n%*c%s ", nb + 4, ' ',
 			this-> names [i].toString ().c_str ());
 		
 		this-> values [i]-> print (nb + 8);

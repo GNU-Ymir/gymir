@@ -48,9 +48,10 @@ namespace syntax {
 	}
 
 	void print (int nb = 0) override {
-	    printf ("\n%*c<Char> %s",
+	    printf ("\n%*c<Char> %s %d:(%c)",
 		    nb, ' ',
-		    this-> token.toString ().c_str ()
+		    this-> token.toString ().c_str (),
+		    this-> code, (char) (this-> code)
 	    );
 	}
 	
@@ -64,18 +65,19 @@ namespace syntax {
     public:
 
 	IFloat (Word word) : IExpression (word) {
-	    this-> totale = "." + this-> token.getStr ();
+	    this-> totale = "0." + this-> token.getStr ();
 	}
 	
 	IFloat (Word word, std::string suite) :
 	    IExpression (word),
 	    suite (suite) {
-	    this-> totale = this-> token.getStr () + suite;
+	    this-> totale = this-> token.getStr () + "." + suite;
 	}
 
 	void print (int nb = 0) override {
-	    printf ("\n%*c<Float> %s",
-		    nb, ' ', this-> token.toString ().c_str ()
+	    printf ("\n%*c<Float> %s [%s]",
+		    nb, ' ', this-> token.toString ().c_str (),
+		    this-> totale.c_str ()
 	    );
 	}
 	
@@ -91,9 +93,7 @@ namespace syntax {
 	IString (Word word, std::string content) :
 	    IExpression (word),
 	    content (content)
-	{
-	    this-> content = validate (this-> token, this-> content);
-	}
+	{}
 
 	void print (int nb = 0) override {
 	    printf ("\n%*c<String> %s : [%s]",
@@ -105,7 +105,10 @@ namespace syntax {
 	
     private:
 
-	static short getFromOc (std::string elem, char fst, ulong & index) {
+	static short getFromOc (std::string elem, ulong & index) {
+	    auto fst = elem [index + 1];
+	    index += 2;
+	    printf ("%c\n", fst);
 	    if (fst < '0' || fst > '7') return -1;
 	    int size = 1;
 	    for (int i = index ; i < (int) elem.size (); i++) {
@@ -116,25 +119,30 @@ namespace syntax {
 
 	    short total = 0;
 	    int current = size - 1;	    
-	    for (int i = index - 1 ; i < (int) (index + size) ; i ++, current --) {
+	    for (int i = index - 1 ; i < (int) (index + size - 1) ; i ++, current --) {
 		total += pow (8, current) * (elem [i] - '0');
 	    }
+
+	    index += size - 1;
 	    return total;
 	}
 
 	static short getFromLX (std::string elem, ulong & index) {
+	    index += 2;
 	    int size = 0;
 	    for (int i = index ; i < (int) elem.size (); i++) {
-		if (elem [i] < '0' ||  elem [i] > '7') break;
+		if ((elem [i] < '0' ||  elem [i] > '9') &&
+		    (elem [i] < 'a' || elem [i] > 'f')
+		) break;
 		else size ++;
 	    }
+	    
 	    size = size > 2 ? 2 : size;
-
 	    short total = 0;
 	    int current = size - 1;	    
 	    for (int i = index ; i < (int) (index + size) ; i ++, current --) {
 		if (elem [i] > 'a')
-		    total += pow (16, current) * (elem [i] - 'a');
+		    total += pow (16, current) * (elem [i] - 'a' + 10);
 		else
 		    total += pow (16, current) * (elem [i] - '0');
 	    }
@@ -169,7 +177,7 @@ namespace syntax {
 		    return values [p];
 		} else if (next == 'x') {
 		    return getFromLX (current, index);		    
-		} else return getFromOc (current, next, index);
+		} else return getFromOc (current, index);
 	    }
 	}
 	

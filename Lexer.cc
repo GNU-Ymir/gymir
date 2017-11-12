@@ -107,8 +107,8 @@ namespace lexical {
 
 	Ymir::Error::fatal (word.getLocus (),
 			    "[%s] attendues, mais %s trouvé\n",
-			    join (mandatories),
-			    word.getStr ()	
+			    join (mandatories).c_str (),
+			    word.getStr ().c_str ()	
 	);
 	
 	return Word::eof ();

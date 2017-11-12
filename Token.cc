@@ -60,6 +60,7 @@ std::string Token::SHARP = "#";
 std::string Token::SPACE = " ";
 std::string Token::RETURN = "\n";
 std::string Token::RRETURN = "\r";
+std::string Token::ANTI = "\\";
 std::string Token::LCOMM1 = "#*";
 std::string Token::RCOMM1 = "*#";
 std::string Token::LCOMM2 = "//";

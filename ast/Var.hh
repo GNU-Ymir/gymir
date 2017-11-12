@@ -27,6 +27,15 @@ namespace syntax {
 	    IExpression (ident),
 	    templates (tmps)
 	{}
+
+
+	static ulong id () {
+	    return 2;
+	}
+	
+	ulong getId () override {
+	    return IVar::id ();
+	}
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Var> %s",

@@ -54,10 +54,12 @@ namespace syntax {
 		    nb, ' ',
 		    this-> ret ? "->" : "=>"
 	    );
-
+	    
 	    if (this-> ret) {
 		this-> ret-> print (nb + 4);
 		this-> block-> print (nb + 8);
+	    } else if (this-> block) {
+		this-> block-> print (nb + 4);
 	    } else {
 		this-> expr-> print (nb + 8);
 	    }	    		    

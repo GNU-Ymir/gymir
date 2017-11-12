@@ -26,15 +26,15 @@ namespace syntax {
     void syntaxError (Word token, std::vector <std::string> mandatories) {
 	Ymir::Error::fatal (token.getLocus (),
 			    "[%s] attendues, mais %s trouvé\n",
-			    join (mandatories),
-			    token.getStr ()	
+			    join (mandatories).c_str (),
+			    token.getStr ().c_str ()	
 	);	
     }
 
     void syntaxError (Word token) {
 	Ymir::Error::fatal (token.getLocus (),
 			    "%s inattendues\n",
-			    token.getStr ()	
+			    token.getStr ().c_str ()	
 	);	
     }
 
@@ -99,9 +99,9 @@ namespace syntax {
     */
     Program Visitor::visitProgram () {	
 	auto token = this-> lex.next ();
+	this-> lex.rewind ();
 	std::vector<Declaration> decls;
-	while (token.isEof ()) {
-	    this-> lex.rewind ();
+	while (!token.isEof ()) {
 	    auto decl = visitDeclaration (false);
 	    if (decl != NULL) decls.push_back (decl);
 	    else if (token == Keys::PUBLIC) {
@@ -110,7 +110,9 @@ namespace syntax {
 	    } else if (token == Keys::PRIVATE) {
 		auto prv_decls = visitPrivateBlock ();
 		for (auto it : prv_decls) decls.push_back (it);
-	    } 
+	    }
+	    token = this-> lex.next ();
+	    this-> lex.rewind ();
 	}
 	return new IProgram (Word::eof (), decls);
     }
@@ -119,6 +121,7 @@ namespace syntax {
        public := 'public' (declaration | ('{' declaration* '}'))
     */
     std::vector<Declaration> Visitor::visitPublicBlock () {
+	auto begin = this-> lex.next ();
     	auto next = this-> lex.next ();
 	std::vector <Declaration> decls;
     	if (next == Token::LACC) {
@@ -140,6 +143,7 @@ namespace syntax {
     		}
     	    }
     	} else {
+	    this-> lex.rewind ();
     	    decls.push_back (visitDeclaration (true));
     	    decls.back ()-> is_public (true);
     	}
@@ -150,6 +154,7 @@ namespace syntax {
        private := 'private' (declaration | ('{' declaration* '}'))
     */
     std::vector<Declaration> Visitor::visitPrivateBlock () {
+	auto begin = this-> lex.next ();
     	auto next = this-> lex.next ();
 	std::vector <Declaration> decls;
     	if (next == Token::LACC) {
@@ -171,6 +176,7 @@ namespace syntax {
     		}
     	    }
     	} else {
+	    this-> lex.rewind ();
     	    decls.push_back (visitDeclaration (true));
     	    decls.back ()-> is_public (false);
     	}
@@ -191,7 +197,6 @@ namespace syntax {
     */
     Declaration Visitor::visitDeclaration (bool fatal) {
     	auto token = this-> lex.next ();
-	printf ("%s", token.toString ().c_str ());
     	if (token == Keys::DEF) return visitFunction ();
     	else if (token == Keys::IMPORT) return visitImport ();
     	else if (token == Keys::EXTERN) return visitExtern ();
@@ -248,7 +253,7 @@ namespace syntax {
 	
 	if (what.isEof ())
 	    return new IImpl (ident, methods, csts);
-	else return new IImpl (what, ident, methods, herit, csts);	
+	else return new IImpl (ident, what, methods, herit, csts);	
     }
 
     /**
@@ -516,7 +521,7 @@ namespace syntax {
 	this-> lex.next (word);
 	if (word != Token::RPAR) {
 	    this-> lex.rewind ();
-	    while (1) {
+	    while (true) {
 		auto constante = visitConstante ();
 		if (constante == NULL) 
 		    temps.push_back (visitOf ());
@@ -526,11 +531,13 @@ namespace syntax {
 		}
 		this-> lex.next (word);
 		if (word == Token::RPAR) break;
-		else if (word != Token::COMA)
+		else if (word != Token::COMA) {
 		    syntaxError (word, {Token::RPAR, Token::COMA});
+		    break;
+		}
 	    }
 	}
-	
+
 	this-> lex.next (word);
 	if (word == Token::LPAR) {
 	    this-> lex.next (word);
@@ -552,7 +559,7 @@ namespace syntax {
 	    for (auto it : temps) exps.push_back ((Var) it);
 	    temps.clear ();
 	} else syntaxError (word, {Token::RPAR});
-	
+
 	if (word == Token::COLON) {
 	    auto deco = this-> lex.next ();
 	    if (deco != Keys::REF) {
@@ -1151,7 +1158,7 @@ namespace syntax {
 	std::vector <Expression> params;
 	Expression exp;
 	Word tok, next;
-	bool isTuple = false;
+	bool isTuple = false, isLambda = false;
 	if (this-> lambdaPossible && canVisitVarDeclaration ()) return visitLambda ();
 	tok = this-> lex.next ();	
 	if (tok == Token::RPAR) {
@@ -1163,7 +1170,12 @@ namespace syntax {
 	} else {
 	    this-> lex.rewind ();
 	    while (true) {
-		params.push_back (visitExpressionUlt ());
+		if (isLambda || canVisitVarDeclaration ()) {
+		    isLambda = true;
+		    params.push_back (visitVarDeclaration ());
+		} else {
+		    params.push_back (visitExpressionUlt ());
+		}
 		tok = this-> lex.next ({Token::RPAR, Token::COMA});
 		if (tok == Token::RPAR) break;
 		else {
@@ -1171,8 +1183,25 @@ namespace syntax {
 		    next = this-> lex.next ();
 		    if (next == Token::RPAR) break;
 		    else this-> lex.rewind ();
-		}
+		}	    
 	    }
+	    next = this-> lex.next ();
+	    if (next == Token::DARROW || next == Token::LACC) {
+		std::vector <Var> realParams;
+		for (auto it : params) {
+		    if (!it-> is<IVar> ()) syntaxError (next);
+		    else realParams.push_back ((Var) it);
+		}
+		
+		if (next == Token::DARROW) {
+		    return new ILambdaFunc (tok, realParams, visitExpressionUlt ());
+		} else {
+		    this-> lex.rewind ();
+		    return new ILambdaFunc (tok, realParams, visitBlock ());
+		}
+	    } else if (isLambda) {
+		syntaxError (next, {Token::LACC, Token::DARROW});
+	    } else this-> lex.rewind ();
 	}
 		
 	if (params.size () != 1 || isTuple) exp = new IConstTuple (token, tok, params);
@@ -1309,13 +1338,14 @@ namespace syntax {
 	}
 	
 	Word next, beg;
-	string val = ""; bool anti = false;	
+	string val = ""; bool anti = false;
+	auto loc = this-> lex.tell ();
 	while (1) {
 	    next = this-> lex.next ();
 	    if (next.isEof ()) syntaxError (next);	    
 	    else if (next.getStr () == word.getStr () && !anti) break;
 	    else val += next.getStr ();
-	    if (next == Keys::ANTI) anti = true;
+	    if (next == Keys::ANTI) anti = !anti;
 	    else anti = false;
 	}
 	
@@ -1324,19 +1354,24 @@ namespace syntax {
 	this-> lex.skipEnable (Token::RRETURN);	
 	this-> lex.skipEnable (Token::TAB);
 	this-> lex.commentEnable ();
-	
+
 	std::stringstream ss;
 	for (ulong i = 0 ; i < val.length () ;) {
 	    auto c = IString::isChar (val, i);
 	    if (c != -1) ss << (char) c;
-	    else escapeError (beg);
+	    else {
+		this-> lex.seek (loc + i);
+		auto get = this-> lex.next ();
+		escapeError (get);
+	    }
 	}
-	auto res = ss.str ();
 	
+	auto res = ss.str ();	
 	if (word == Token::APOS) {
 	    if (res.length () == 1) 
 		return new IChar (word, (ubyte) res [0]);
 	}
+	
 	return new IString (word, res);
     }
 

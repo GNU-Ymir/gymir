@@ -39,7 +39,7 @@ namespace syntax {
 	}
 	
 	void print (int nb = 0) override {
-	    printf ("%*c<TypedVar> %s%s",
+	    printf ("\n%*c<TypedVar> %s%s",
 		    nb, ' ',
 		    this-> deco.isEof () ? "" : this-> deco.getStr ().c_str (),
 		    this-> token.toString ().c_str ()

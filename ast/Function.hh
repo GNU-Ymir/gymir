@@ -58,7 +58,7 @@ namespace syntax {
 		printf ("\n%*c )", nb + 2, ' ');
 	    }
 	    
-	    printf ("\n%*c !(", nb + 2, ' ');
+	    printf ("\n%*c !( ", nb + 2, ' ');
 	    for (auto it : this-> tmps) {
 		it-> print (nb + 4);
 	    }

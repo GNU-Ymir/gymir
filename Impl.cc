@@ -4,7 +4,7 @@
 namespace syntax {
 
     void IImpl::print (int nb) {
-	printf ("%*c<Impl> %s : %s",
+	printf ("\n%*c<Impl> %s : %s",
 		nb, ' ',
 		this-> what.toString ().c_str (),
 		this-> who.isEof () ? "object" : this-> who.toString ().c_str ()
