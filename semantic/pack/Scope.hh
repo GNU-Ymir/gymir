@@ -20,7 +20,7 @@ namespace semantic {
 
 	Symbol operator [] (std::string name) const;
 	
-	Symbol& operator [] (std::string name);
+	void assign (std::string name, Symbol sym);
 
 	std::vector <Symbol> getAll (std::string name);
 

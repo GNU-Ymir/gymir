@@ -55,7 +55,7 @@ namespace semantic {
 
 	virtual bool& isInternal ();
 
-	virtual bool isVariadic ();
+	virtual bool isVariadic () const;
 
 	virtual void isVariadic (bool isVariadic);
 

@@ -51,7 +51,7 @@ namespace semantic {
 
 	std::string name ();
 
-	bool isVariadic () override;
+	bool isVariadic () const override;
 	
     private:
 

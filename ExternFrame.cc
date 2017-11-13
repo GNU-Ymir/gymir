@@ -4,6 +4,8 @@
 
 namespace semantic {
 
+    std::vector <ExternFrame> IExternFrame::__extFrames__;
+    
     IExternFrame::IExternFrame (Namespace space, std::string from, syntax::Proto func) :
 	IFrame (space, NULL),
 	_fr (NULL),
@@ -40,7 +42,7 @@ namespace semantic {
     std::string IExternFrame::name () {
     }
 
-    bool IExternFrame::isVariadic () {
+    bool IExternFrame::isVariadic () const {
     }
 
     FrameProto IExternFrame::validateFunc () {

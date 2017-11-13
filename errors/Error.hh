@@ -26,7 +26,12 @@ namespace Ymir {
 	static void note (location_t locus, const char * format, TArgs ... args) {
 	    inform (locus, format, args...);
 	}
-
+	
+	template <typename ... TArgs>
+	static void assert (const char * format, TArgs ... args) {
+	    fatal_error (UNKNOWN_LOCATION, format, args...);
+	}
+	
 	static unsigned long nb_errors;
 	
     };

@@ -18,19 +18,12 @@ namespace semantic {
 
 	Namespace (Namespace space, std::string name);
 
-	friend bool operator== (Namespace &self, Namespace &other);
+	friend bool operator== (const Namespace &self, const Namespace &other);
 
 	bool isSubOf (Namespace other);
 
 	bool isAbsSubOf (Namespace other);
 
-	Namespace addSuffix (std::string suff);
-
-	std::string directory ();
-
-	std::string asFile (std::string ext);
-
-	std::string toString ();
     };
     
 }

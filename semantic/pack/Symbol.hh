@@ -14,11 +14,11 @@ namespace semantic {
 	// InfoType type;
 	bool _static;
 
-    private:
+    public:
 
 	ISymbol (Word word /*, InfoType */);
 	
-	bool isConst ();
+	//bool isConst ();
 
 	bool& isPublic ();
 
