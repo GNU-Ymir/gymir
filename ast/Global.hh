@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Declaration.hh"
+#include "Expression.hh"
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"

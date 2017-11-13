@@ -2,7 +2,6 @@
 
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
-#include "../syntax/Word.hh"
 #include <gc/gc_cpp.h>
 
 namespace syntax {
