@@ -108,7 +108,6 @@ namespace syntax {
 	static short getFromOc (std::string elem, ulong & index) {
 	    auto fst = elem [index + 1];
 	    index += 2;
-	    printf ("%c\n", fst);
 	    if (fst < '0' || fst > '7') return -1;
 	    int size = 1;
 	    for (int i = index ; i < (int) elem.size (); i++) {

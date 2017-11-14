@@ -17,29 +17,33 @@ namespace syntax {
 	stringstream ss;
 	int i = 0;
 	for (auto it : elems) {
-	    ss << it << (i == (int) elems.size () - 1 ? "" : ", ");
+	    ss << "'" << Ymir::Error::BLUE << it << Ymir::Error::RESET << "'" << (i == (int) elems.size () - 1 ? "" : " ");
 	    i++;
 	}
 	return ss.str ();
     }
     
     void syntaxError (Word token, std::vector <std::string> mandatories) {
-	Ymir::Error::fatal (token.getLocus (),
-			    "[%s] attendues, mais %s trouvé\n",
+	Ymir::Error::fatal (token,
+			    "[%s] attendues, mais %s%s%s trouvé\n",
 			    join (mandatories).c_str (),
-			    token.getStr ().c_str ()	
+			    Ymir::Error::YELLOW,
+			    token.getStr ().c_str (),
+			    Ymir::Error::RESET
 	);	
     }
 
     void syntaxError (Word token) {
-	Ymir::Error::fatal (token.getLocus (),
-			    "%s inattendues\n",
-			    token.getStr ().c_str ()	
+	Ymir::Error::fatal (token,
+			    "'%s%s%s' inattendues\n",
+			    Ymir::Error::YELLOW,
+			    token.getStr ().c_str (),
+			    Ymir::Error::RESET
 	);	
     }
 
     void escapeError (Word token) {
-	Ymir::Error::fatal (token.getLocus (),
+	Ymir::Error::fatal (token,
 			    "caractère d'échappement inconnu\n"
 	);	
     }
@@ -133,7 +137,7 @@ namespace syntax {
     		} else {
     		    auto tok = this-> lex.next ();
     		    if (tok != Token::RACC)
-    			Ymir::Error::fatal (tok.getLocus (),
+    			Ymir::Error::fatal (tok,
     					    "[%s] attendues, mais %s trouvé\n",
 					    join ({Keys::DEF, Keys::IMPORT, Keys::EXTERN, Keys::STRUCT, Keys::ENUM,
 							Keys::STATIC, Keys::SELF, Keys::TRAIT, Keys::IMPL }),
@@ -166,7 +170,7 @@ namespace syntax {
     		} else {
     		    auto tok = this-> lex.next ();
     		    if (tok != Token::RACC)
-    			Ymir::Error::fatal (tok.getLocus (),
+    			Ymir::Error::fatal (tok,
     					    "[%s] attendues, mais %s trouvé\n",
 					    join ({Keys::DEF, Keys::IMPORT, Keys::EXTERN, Keys::STRUCT, Keys::ENUM,
 							Keys::STATIC, Keys::SELF, Keys::TRAIT, Keys::IMPL }),
@@ -1340,11 +1344,15 @@ namespace syntax {
 	Word next, beg;
 	string val = ""; bool anti = false;
 	auto loc = this-> lex.tell ();
+	std::vector <int> positions;
 	while (1) {
 	    next = this-> lex.next ();
 	    if (next.isEof ()) syntaxError (next);	    
 	    else if (next.getStr () == word.getStr () && !anti) break;
-	    else val += next.getStr ();
+	    else {
+		positions.push_back (val.length ());
+		val += next.getStr ();
+	    }
 	    if (next == Keys::ANTI) anti = !anti;
 	    else anti = false;
 	}
@@ -1357,10 +1365,14 @@ namespace syntax {
 
 	std::stringstream ss;
 	for (ulong i = 0 ; i < val.length () ;) {
-	    auto c = IString::isChar (val, i);
+	    auto c = IString::isChar (val, i);	    
 	    if (c != -1) ss << (char) c;
 	    else {
-		this-> lex.seek (loc + i);
+		auto nb = 0;
+		for (int j = 0 ; j < positions.size (); j++) {
+		    if (i > positions [j]) nb ++;
+		}
+		this-> lex.seek (loc + nb - 2);
 		auto get = this-> lex.next ();
 		escapeError (get);
 	    }

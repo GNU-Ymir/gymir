@@ -38,8 +38,11 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	auto prg = this-> syntax_analyse ();
-	prg-> print ();
-	// if (Ymir::Error::nb_errors > 0) stop ();
+	printf ("%d\n", Ymir::Error::nb_errors);
+	if (Ymir::Error::nb_errors > 0) {
+	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
+	}
+	prg-> print ();	
 	// this -> semantic_analyse (synt_ast);
 	// if (Ymir::Error::nb_errors > 0) stop ();
 	// this -> define_gcc_symbols ();

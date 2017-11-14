@@ -92,7 +92,7 @@ namespace lexical {
 	std::stringstream ss;
 	int i = 0;
 	for (auto it : elems) {
-	    ss << it << (i == (int) elems.size () - 1 ? "" : ", ");
+	    ss << "'" << it << "'" << (i == (int) elems.size () - 1 ? "" : " ");
 	    i++;
 	}
 	return ss.str ();
@@ -105,10 +105,12 @@ namespace lexical {
 	    if (it == word.getStr ()) return word;
 	}
 
-	Ymir::Error::fatal (word.getLocus (),
-			    "[%s] attendues, mais %s trouvé\n",
+	Ymir::Error::fatal (word,
+			    "[%s] attendues, mais '%s%s%s' trouvé\n",
 			    join (mandatories).c_str (),
-			    word.getStr ().c_str ()	
+			    Ymir::Error::YELLOW,
+			    word.getStr ().c_str (),
+			    Ymir::Error::RESET
 	);
 	
 	return Word::eof ();
