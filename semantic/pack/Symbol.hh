@@ -6,19 +6,22 @@
 
 namespace semantic {
 
+    class IInfoType;
+    typedef IInfoType* InfoType;
+    
     class ISymbol : public gc {
 
 	bool scoped;
 	bool _public;
 	Word _sym;
-	// InfoType type;
+	InfoType _type;
 	bool _static;
 
     public:
 
-	ISymbol (Word word /*, InfoType */);
+	ISymbol (Word word, InfoType);
 	
-	//bool isConst ();
+	bool isConst ();
 
 	bool& isPublic ();
 

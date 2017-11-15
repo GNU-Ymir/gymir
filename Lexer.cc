@@ -106,7 +106,7 @@ namespace lexical {
 	}
 
 	Ymir::Error::fatal (word,
-			    "[%s] attendues, mais '%s%s%s' trouvé\n",
+			    Ymir::SyntaxError,
 			    join (mandatories).c_str (),
 			    Ymir::Error::YELLOW,
 			    word.getStr ().c_str (),

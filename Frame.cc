@@ -4,7 +4,7 @@
 
 namespace semantic {
 
-    IFrame::IFrame (Namespace space, syntax::Function func) :
+    IFrame::IFrame (Namespace space, ::syntax::Function func) :
 	_space (space),
 	_function (func)
     {}
@@ -14,7 +14,7 @@ namespace semantic {
 	return NULL;
     }
 
-    FrameProto IFrame::validate (syntax::ParamList) {
+    FrameProto IFrame::validate (::syntax::ParamList) {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }
@@ -42,7 +42,7 @@ namespace semantic {
     void IFrame::verifyReturn (Word token, Symbol ret, FrameReturnInfo infos) {
     }
 
-    syntax::Function IFrame::func () {
+    ::syntax::Function IFrame::func () {
 	return this-> _function;
     }
 

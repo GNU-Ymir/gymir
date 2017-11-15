@@ -6,7 +6,7 @@ namespace semantic {
 
     std::vector <ExternFrame> IExternFrame::__extFrames__;
     
-    IExternFrame::IExternFrame (Namespace space, std::string from, syntax::Proto func) :
+    IExternFrame::IExternFrame (Namespace space, std::string from, ::syntax::Proto func) :
 	IFrame (space, NULL),
 	_fr (NULL),
 	_proto (func)
@@ -14,7 +14,7 @@ namespace semantic {
 	__extFrames__.push_back (this);
     }
 
-    IExternFrame::IExternFrame (Namespace space, syntax::Function func) :
+    IExternFrame::IExternFrame (Namespace space, ::syntax::Function func) :
 	IFrame (space, func),
 	_fr (NULL),
 	_proto (NULL)
@@ -25,7 +25,7 @@ namespace semantic {
     FrameProto IExternFrame::validate () {
     }
 
-    FrameProto IExternFrame::validate (syntax::ParamList) {
+    FrameProto IExternFrame::validate (::syntax::ParamList) {
     }
 
     Word IExternFrame::ident () {

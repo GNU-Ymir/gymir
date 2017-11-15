@@ -10,8 +10,24 @@
 #define INCLUDE_STRING
 
 namespace Ymir {
-    	
+    	    
+    enum ErrorType {
+	NotATemplate,
+	SyntaxError,
+       	SyntaxError2,
+	EscapeChar,
+	EndOfFile,
+	Unterminated
+    };
+
+    enum Language {
+	FR,
+	EN
+    };
+    
     std::string addLine (std::string, Word word);
+    
+    const char * getString (ErrorType, Language ln = EN);
     
     template <typename ... T> 
     std::string format (std::string left, T... params) {
@@ -52,6 +68,11 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
+	static void fatal (Word word, ErrorType type, TArgs ... args) {
+	    __instance__.fatal_ (word, getString (type), args...);
+	}	
+	
+	template <typename ... TArgs>
 	void append_ (Word word, const char * format_, TArgs ... args) {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
@@ -63,6 +84,11 @@ namespace Ymir {
 	template <typename ... TArgs>
 	static void append (Word word, const char * format_, TArgs ... args) {
 	    __instance__.append_ (word, format_, args...);
+	}
+
+	template <typename ... TArgs>
+	static void append (Word word, ErrorType type, TArgs ... args) {
+	    __instance__.append_ (word, getString (type), args...);
 	}
 	
 	template <typename ... TArgs>
@@ -76,7 +102,12 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
-	static void assert (Word word, const char * format_, TArgs ... args) {
+	static void note (Word word, ErrorType type, TArgs ... args) {
+	    __instance__.note_ (word, getString (type), args...);
+	}
+
+	template <typename ... TArgs>
+	static void note (Word word, const char * format_, TArgs ... args) {
 	    __instance__.note_ (word, format_, args...);
 	}
 	

@@ -25,7 +25,7 @@ namespace syntax {
     
     void syntaxError (Word token, std::vector <std::string> mandatories) {
 	Ymir::Error::fatal (token,
-			    "[%s] attendues, mais %s%s%s trouvé\n",
+			    Ymir::SyntaxError,
 			    join (mandatories).c_str (),
 			    Ymir::Error::YELLOW,
 			    token.getStr ().c_str (),
@@ -33,9 +33,18 @@ namespace syntax {
 	);	
     }
 
+    void unterminated (Word token) {
+	Ymir::Error::fatal (token,
+			    Ymir::Unterminated,
+			    Ymir::Error::YELLOW,
+			    token.getStr ().c_str (),
+			    Ymir::Error::RESET
+	);	
+    }
+    
     void syntaxError (Word token) {
 	Ymir::Error::fatal (token,
-			    "'%s%s%s' inattendues\n",
+			    Ymir::SyntaxError2,
 			    Ymir::Error::YELLOW,
 			    token.getStr ().c_str (),
 			    Ymir::Error::RESET
@@ -44,7 +53,7 @@ namespace syntax {
 
     void escapeError (Word token) {
 	Ymir::Error::fatal (token,
-			    "caractère d'échappement inconnu\n"
+			    Ymir::EscapeChar
 	);	
     }
 
@@ -1347,7 +1356,7 @@ namespace syntax {
 	std::vector <int> positions;
 	while (1) {
 	    next = this-> lex.next ();
-	    if (next.isEof ()) syntaxError (next);	    
+	    if (next.isEof ()) unterminated (word);	    
 	    else if (next.getStr () == word.getStr () && !anti) break;
 	    else {
 		positions.push_back (val.length ());

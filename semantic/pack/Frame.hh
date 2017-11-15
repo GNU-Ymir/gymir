@@ -7,24 +7,24 @@
 
 #include <string>
 
+
+namespace syntax {
+    class IExpression;
+    typedef IExpression* Expression;
+
+    class IParamList;
+    typedef IParamList* ParamList;
+
+    class IFunction;
+    typedef IFunction* Function;
+}
+
 namespace semantic {
-
-
-    namespace syntax {
-	class IExpression;
-	typedef IExpression* Expression;
-
-	class IParamList;
-	typedef IParamList* ParamList;
-
-	class IFunction;
-	typedef IFunction* Function;
-    }
     
     class IFrame : public gc {
     protected:
 	
-	syntax::Function _function;
+	::syntax::Function _function;
 	Namespace _space;
 	std::string _imutSpace;
 
@@ -39,15 +39,15 @@ namespace semantic {
 	bool _isPrivate = false;
 	bool _isVariadic = false;
 
-	std::vector <syntax::Expression> tempParams;
+	std::vector <::syntax::Expression> tempParams;
 
     public:
 
-	IFrame (Namespace space, syntax::Function func);
+	IFrame (Namespace space, ::syntax::Function func);
 	    
 	virtual FrameProto validate ();
 
-	virtual FrameProto validate (syntax::ParamList);
+	virtual FrameProto validate (::syntax::ParamList);
 
 	virtual Namespace& space ();
 
@@ -63,7 +63,7 @@ namespace semantic {
 
 	//virtual ApplicationScore isApplicable (ParamList params);
 
-	syntax::Function func ();
+	::syntax::Function func ();
 
 	virtual Word ident ();
 	

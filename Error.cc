@@ -1,4 +1,5 @@
 #include "errors/Error.hh"
+#include "errors/Languages.hh"
 #include <sstream>
 #include <iostream>
 #include <string>
@@ -81,7 +82,7 @@ namespace Ymir {
 	if (line.length () > 0) {
 	    std::string leftLine = center (format ("%d", LOCATION_LINE (locus)), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
-	    ss << format ("%s --> %s:(%d,%d)%s\n%s%s | %s\n", 
+	    ss << format ("\n%s --> %s:(%d,%d)%s\n%s%s | %s\n", 
 			  Error::BOLD,
 			  LOCATION_FILE (locus),
 			  LOCATION_LINE (locus),
@@ -118,7 +119,11 @@ namespace Ymir {
 	    ss << rightJustify ("", word.getStr ().length (), '^');
 	    ss << "\n";
 	} else {
-	    ss << "Fin de fichier inattendue";
+	    ss << format ("\n%sError%s : %s\n",
+			  Error::RED,
+			  Error::RESET,
+			  getString (EndOfFile)
+	    );
 	}
     }
 
@@ -132,5 +137,13 @@ namespace Ymir {
 	addLine (ss, word);
 	return ss.str ();
     }    
+
+
+    const char * getString (ErrorType type, Language ln) {
+	auto strings = Languages::getLanguage (ln);
+	return strings [type];	
+    }
+    
+
     
 }

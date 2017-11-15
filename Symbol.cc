@@ -1,11 +1,17 @@
 #include "semantic/pack/Symbol.hh"
+#include "semantic/types/InfoType.hh"
 
 namespace semantic {
 
-    ISymbol::ISymbol (Word word) :
-	_sym (word)
+    ISymbol::ISymbol (Word word, InfoType type) :
+	_sym (word),
+	_type (type)
     {}
     
+    bool ISymbol::isConst () {
+	return this-> _type-> isConst ();
+    }
+
     bool& ISymbol::isStatic () {
 	return this-> _static;
     }
@@ -22,7 +28,7 @@ namespace semantic {
 	return false;
     }
 
-    void ISymbol::quit (Namespace space) {
+    void ISymbol::quit (Namespace) {
     }
 
     std::string ISymbol::typeString () {

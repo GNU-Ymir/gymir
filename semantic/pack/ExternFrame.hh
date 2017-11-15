@@ -7,17 +7,17 @@
 #include <string>
 #include <vector>
 
+namespace syntax {
+    class IProto;
+    typedef IProto* Proto;
+}
+    
 namespace semantic {
-
-    namespace syntax {
-	class IProto;
-	typedef IProto* Proto;
-    }
     
     class IExternFrame : public IFrame {
 
 	std::string _name;
-	syntax::Proto _proto;
+	::syntax::Proto _proto;
 	std::string _from;	
 	FrameProto _fr;
 
@@ -25,15 +25,15 @@ namespace semantic {
 	
     public:
 
-	IExternFrame (Namespace space, std::string from, syntax::Proto func);
+	IExternFrame (Namespace space, std::string from, ::syntax::Proto func);
 
-	IExternFrame (Namespace space, syntax::Function func);
+	IExternFrame (Namespace space, ::syntax::Function func);
 
 	//ApplicationScore isApplicable  (ParamList params) override;
 
 	FrameProto validate () override ;
 
-	FrameProto validate (syntax::ParamList) override;
+	FrameProto validate (::syntax::ParamList) override;
 
 	static std::vector <IExternFrame*> frames () {
 	    return __extFrames__;

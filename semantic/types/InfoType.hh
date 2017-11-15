@@ -1,10 +1,19 @@
 #pragma once
 
 #include <gc/gc_cpp.h>
-#include "../../syntax/Word.hh"
-#include "../pack/Frame.hh"
-#include "../../errors/Error.hh"
+#include <ymir/errors/Error.hh>
+#include "Creators.hh"
 #include <vector>
+#include <ymir/syntax/Word.hh>
+#include "../pack/Frame.hh"
+
+namespace syntax {
+    class IExpression;
+    typedef IExpression* Expression;
+
+    class IVar;
+    typedef IVar* Var;
+}
 
 namespace semantic {
 
@@ -13,15 +22,15 @@ namespace semantic {
     // typedef Tree (InstCompMult*)(Tree, std::vector <Tree>);
     // typedef Tree (InstCompS*)(Tree);
     // typedef Tree (InstPreTreatment*)(InfoType, Expression, Expression);
-    
+        
     class IInfoType;
     typedef IInfoType* InfoType;
     
     class IApplicationScore : public gc {
     public:
 
-	ApplicationScore ();
-	ApplicationScore (Word, bool);
+	IApplicationScore ();
+	IApplicationScore (Word, bool isVariadic = false);
 
 	long score;
 	Word token;
@@ -30,14 +39,14 @@ namespace semantic {
 	InfoType left;
 	InfoType ret;
 	std::vector <InfoType> treat;
-	std::map <std::string, Expression> tmps;
+	std::map <std::string, syntax::Expression> tmps;
 	bool isVariadic;
 	bool isTemplate;
 	Frame toValidate;
     };
 
     typedef IApplicationScore* ApplicationScore;
-
+    
     class IInfoType : public gc {
 
 	bool _isConst = false;
@@ -46,28 +55,143 @@ namespace semantic {
 
 	//Value _value;
 
-	static std::map<std::string, IInfoType*> alias;
+	static std::map<std::string, InfoType> __alias__;
 	
     protected:
 
 	bool _isType = false;
 
-
     public:
 
 	IInfoType (bool isConst);
 
-	static InfoType factory (Word word, std::vector <Expression> templates) {
-	    auto it = Creators::instance ().find (word.getStr ());
+	static InfoType factory (Word word, std::vector <syntax::Expression> templates) {
+	    auto it = (InfoType (*)(Word, std::vector<syntax::Expression>)) (
+		Creators::instance ().find (word.getStr ())
+	    );
 	    if (it != NULL) {
 		return (*it) (word, templates);
 	    }
-	    auto _it_ = this-> alias.find (word.getStr ());
-	    if (_it_ != NULL) return _it_-> clone ();
-	    Ymir::Error::append ("Type inconnu '%s%s%s'",
+	    auto _it_ = __alias__.find (word.getStr ());
+	    if (_it_ != __alias__.end ()) return _it_-> second-> clone ();
+	    Ymir::Error::append (word,
+				 "Type inconnu '%s%s%s'",
 				 Ymir::Error::YELLOW,
 				 word.getStr ().c_str (),
 				 Ymir::Error::RESET);
+	    return NULL;
+	}
+
+	static ulong id () {
+	    return 0;
+	}
+
+	virtual ulong getId () = 0;
+	
+	// static void addCreator (std::string name) {
+	//     Creators::instance ().add (name) = StructCstInfo::create;
+	// }
+
+	static void addAlias (std::string name, InfoType alias) {
+	    __alias__ [name] = alias;
+	}
+
+	static void removeAlias (std::string name) {
+	    __alias__.erase (name);
+	}
+
+	static bool exists (std::string name) {
+	    return Creators::instance ().find (name) ||
+		(__alias__.find (name) != __alias__.end ());
+	}
+
+	ulong& toGet ();
+
+	bool& isConst ();
+
+	bool& isStatic ();
+
+	virtual bool isScopable ();
+	
+	virtual bool isType ();
+	
+	virtual void isType (bool);
+
+	//Value& value ();
+
+	std::string typeString ();
+
+	virtual std::string innerTypeString () = 0;
+	
+	virtual std::string simpleTypeString () = 0;
+
+	virtual bool isSame (InfoType) = 0;
+
+	virtual InfoType BinaryOp (Word, syntax::Expression);
+	
+	InfoType BinaryOp (Word, InfoType);
+
+	virtual InfoType BinaryOpRight (Word, syntax::Expression);
+
+	virtual ApplicationScore CallOp (Word, syntax::ParamList);
+
+	virtual InfoType ApplyOp (std::vector<::syntax::Var>);
+
+	virtual InfoType UnaryOp (Word);
+
+	virtual InfoType AccessOp (Word, syntax::ParamList);
+
+	virtual InfoType CastOp (InfoType);
+
+	virtual InfoType CompOp (InfoType);
+
+	virtual InfoType ConstVerif (InfoType);
+
+	virtual InfoType CastTo (InfoType);
+
+	virtual InfoType DotOp (::syntax::Var);
+
+	virtual InfoType DotExpOp (syntax::Expression);
+
+	virtual InfoType DColonOp (::syntax::Var);
+
+	InfoType DotOp (std::string);
+
+	virtual InfoType TempOp ();
+
+	virtual InfoType clone () = 0;
+
+	InfoType cloneOnExit ();
+
+	virtual InfoType getTemplate (ulong);
+
+	/**
+	   Retourne les paramètre templates sur un range (pour les variadics templates).
+	   Params:
+	   begin = le nombre de templates avant
+	   end = le nombre de templates après.
+	   Example:
+	   --------
+	   def foo (T ...) (a : t!(int, T, int)) {
+	   }
+
+	   foo ((1, "r", 't', 7.4, 2));
+	   // getTemplate (1, 1) -> [string, char, float];
+	   --------
+	   Returns: this.templates [begin .. end]
+	*/	
+	virtual std::vector <InfoType> getTemplate (ulong bef, ulong af);
+
+	template <typename T>
+	bool is () {
+	    return this-> getId () == T::id ();
+	}
+	
+	template <typename T>
+	T cast () {
+	    if (this-> getId () == T::id ()) {
+		return (T) this;
+	    } else return NULL;
 	}
 	
     };    
