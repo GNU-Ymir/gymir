@@ -2,8 +2,8 @@
 
 #include "Frame.hh"
 #include "FrameProto.hh"
-#include "../../ast/Function.hh"
-#include "../../ast/ParamList.hh"
+#include <ymir/ast/Function.hh>
+#include <ymir/ast/ParamList.hh>
 
 namespace semantic {
 
@@ -15,12 +15,18 @@ namespace semantic {
 
     public:
 
-	IPureFrame (Namespace space, Function fun);
+	IPureFrame (Namespace space, syntax::Function fun);
 
-	FrameProto validate (ParamList) override ;
+	FrameProto validate (syntax::ParamList) override ;
 
 	FrameProto validate () override ;
 
+	static const char* id () {
+	    return "IPureFrame";
+	}
+
+	virtual const char* getId ();
+	
     private:
 	
 	FrameProto validateMain ();

@@ -49,11 +49,11 @@ namespace syntax {
 	    default_ (def)	    
 	{}
 
-	static ulong id () {
-	    return 1;
+	static const char* id () {
+	    return "IMatch";
 	}
 	
-	ulong getId () override {
+	const char* getId () override {
 	    return IMatch::id ();
 	}
 	

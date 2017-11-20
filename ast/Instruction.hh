@@ -28,17 +28,17 @@ namespace syntax {
 	    this-> isStatic = is;
 	}
 
-	static ulong id () {
-	    return 0;
+	static const char* id () {
+	    return "IInstruction";
 	}
 	
-	virtual ulong getId () {
+	virtual const char* getId () {
 	    return IInstruction:: id ();
 	};
-	
+
 	template <typename T>
 	bool is () {
-	    return this-> getId () == T::id ();
+	    return strcmp (this-> getId (), T::id ()) == 0;
 	}
 	
     };

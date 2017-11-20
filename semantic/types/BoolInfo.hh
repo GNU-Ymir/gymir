@@ -4,14 +4,14 @@
 
 namespace semantic {
 
-    class IBoolInfo : IInfoType {
+    class IBoolInfo : public IInfoType {
     public:
 	
 	IBoolInfo (bool isConst); 
 
 	static InfoType create (Word w, std::vector <::syntax::Expression> tmps) {
 	    if (tmps.size () != 0) {
-		Ymir::Error::append (w, Ymir::Error::NotATemplate);
+		Ymir::Error::append (w, Ymir::NotATemplate);
 		return NULL;
 	    } else return new IBoolInfo (false);
 	}

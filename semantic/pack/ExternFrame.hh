@@ -52,6 +52,12 @@ namespace semantic {
 	std::string name ();
 
 	bool isVariadic () const override;
+
+	static const char* id () {
+	    return "IExternFrame";
+	}
+
+	virtual const char* getId ();
 	
     private:
 

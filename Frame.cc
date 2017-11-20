@@ -1,4 +1,5 @@
 #include "semantic/pack/Frame.hh"
+#include <ymir/semantic/types/InfoType.hh>
 #include "ast/ParamList.hh"
 #include "errors/Error.hh"
 

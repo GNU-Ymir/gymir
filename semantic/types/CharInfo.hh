@@ -4,7 +4,7 @@
 
 namespace semantic {
 
-    class ICharInfo : IInfoType {
+    class ICharInfo : public IInfoType {
     public:
 	
 	ICharInfo (bool isConst); 

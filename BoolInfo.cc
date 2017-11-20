@@ -24,7 +24,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IBoolInfo::UnaryOp (Word) {
+    InfoType IBoolInfo::UnaryOp (Word op) {
 	if (op == Token::NOT) {
 	    auto ret = new IBoolInfo (true);
 	    //ret-> lintInstS.push_back (BoolUtils::InstXor);
@@ -42,7 +42,7 @@ namespace semantic {
 	return std::string ("b");
     }
 
-    InfoType IBoolInfo::DotOp (syntax::Var) {
+    InfoType IBoolInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token.getStr () == "init") return Init ();
 	if (var-> token.getStr () == "sizeof") return SizeOf ();
@@ -54,13 +54,13 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IBoolInfo::CompOp (InfoType) {
+    InfoType IBoolInfo::CompOp (InfoType other) {
 	if (other-> is<IBoolInfo> () || other-> is<IUndefInfo> ()) {
 	    auto bl = new IBoolInfo (this-> isConst ());
 	    //bl-> lintInst = BoolUtils::InstAffect;
 	    return bl;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
-	    return this-> CompOp (en-> content);
+	    return this-> CompOp (en-> content ());
 	}
 	return NULL;
     }

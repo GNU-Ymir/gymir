@@ -18,7 +18,10 @@ namespace Ymir {
        	SyntaxError2,
 	EscapeChar,
 	EndOfFile,
-	Unterminated
+	Unterminated,
+	TemplateSpecialisation,
+	TemplateCreation,
+	And
     };
 
     enum Language {
@@ -122,6 +125,10 @@ namespace Ymir {
 	    return __instance__.assert_ (format_, args...);
 	}
 	
+	static bool thrown () {
+	    return nb_errors != 0;
+	}
+
 	static Error instance () {
 	    return __instance__;
 	}	

@@ -10,11 +10,10 @@
 namespace syntax {
 
     class IExpression : public IInstruction {
-    protected:
-	
-	::semantic::Symbol _info;
-	
     public:
+	
+	::semantic::Symbol info;
+	
 	Instruction inside;
 
 	IExpression (Word word) :
@@ -22,10 +21,6 @@ namespace syntax {
 	{}
 
 	virtual void print (int) override {}
-
-	::semantic::Symbol& info () {
-	    return this-> _info;
-	}
 	
     };
 

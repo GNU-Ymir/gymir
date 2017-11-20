@@ -1,13 +1,14 @@
 #pragma once
 
 #include <ymir/semantic/types/InfoType.hh>
-
+#include <ymir/ast/Expression.hh>
+#include <ymir/ast/Type.hh>
 
 namespace semantic {
     
     class IArrayInfo : public IInfoType {
 
-	InfoType content;
+	InfoType _content;
 
     public:
 
@@ -18,7 +19,7 @@ namespace semantic {
 	bool isSame (InfoType other) override;
 
 	static InfoType create (Word token, std::vector <syntax::Expression> templates) {
-	    if (templates.size () != 1 || !(templates [0]-> is<Type> ())) {
+	    if (templates.size () != 1 || !(templates [0]-> is<syntax::IType> ())) {
 		// if (auto cst = templates [0]-> info-> type-> to<StructCstInfo> ()) {}
 		Ymir::Error::append (token,
 				     Ymir::TakeAType,
@@ -61,11 +62,13 @@ namespace semantic {
 
     private:
 	
-	InfoType Is (Expression);
+	InfoType Is (syntax::Expression);
 
-	InfoType NotIs (Expression);
+	InfoType NotIs (syntax::Expression);
 
-	InfoType Affect (Expression);
+	InfoType Affect (syntax::Expression);
+
+	InfoType AffectRight (syntax::Expression);
 
 	InfoType Ptr ();
 

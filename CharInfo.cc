@@ -22,7 +22,7 @@ namespace semantic {
 	if (op == Token::NOT_EQUAL) return opTest (op, right);
 	if (op == Token::PLUS) return opNorm (op, right);
 	if (op == Token::MINUS) return opNorm (op, right);
-	return NLL;
+	return NULL;
     }
 
     InfoType ICharInfo::BinaryOpRight (Word op, syntax::Expression left) {
@@ -53,7 +53,7 @@ namespace semantic {
 	if (var-> token.getStr () == "typeid") return StringOf ();
     }
 
-    InfoType ICharInfo::CastOp (InfoType ot) {
+    InfoType ICharInfo::CastOp (InfoType other) {
 	if (other-> is<ICharInfo> ()) return this;
 	if (auto ot = other-> to<IFixedInfo> ()) {
 	    auto aux = ot-> clone ();
@@ -63,9 +63,9 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType ICharInfo::CompOp (InfoType) {
+    InfoType ICharInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || other-> is<ICharInfo> ()) {
-	    auto ch = new CharInfo (this-> isConst ());
+	    auto ch = new ICharInfo (this-> isConst ());
 	    //TODO
 	    return ch;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
@@ -84,7 +84,7 @@ namespace semantic {
 	return ICharInfo::id ();
     }
 
-    InfoType ICharInfo::Affect (syntax::Expression) {
+    InfoType ICharInfo::Affect (syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
 	    auto ch = new ICharInfo (this-> isConst ());
 	    //ch-> lintInst = CharUtils::InstAffect;
@@ -93,7 +93,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType ICharInfo::AffectRight (syntax::Expression) {
+    InfoType ICharInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto ch = new ICharInfo (this-> isConst ());
 	    //ch-> lintInst = CharUtils::InstAffect;

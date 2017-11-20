@@ -29,11 +29,11 @@ namespace syntax {
 	{}
 
 
-	static ulong id () {
-	    return 2;
+	static const char* id () {
+	    return "IVar";
 	}
 	
-	ulong getId () override {
+	const char* getId () override {
 	    return IVar::id ();
 	}
 	

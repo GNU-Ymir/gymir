@@ -48,4 +48,8 @@ namespace semantic {
     FrameProto IExternFrame::validateFunc () {
     }
 
+    const char* IExternFrame::getId () {
+	return IExternFrame::id ();
+    }
+    
 }

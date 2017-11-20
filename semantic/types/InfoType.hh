@@ -135,6 +135,8 @@ namespace semantic {
 
 	virtual ApplicationScore CallOp (Word, syntax::ParamList);
 
+	virtual ApplicationScore CallOp (Word, std::vector <IInfoType*>);
+
 	virtual InfoType ApplyOp (std::vector<::syntax::Var>);
 
 	virtual InfoType UnaryOp (Word);
@@ -163,6 +165,8 @@ namespace semantic {
 
 	InfoType cloneOnExit ();
 
+	InfoType cloneConst ();
+
 	virtual InfoType getTemplate (ulong);
 
 	/**
@@ -188,8 +192,8 @@ namespace semantic {
 	}
 	
 	template <typename T>
-	T to () {
-	    if (this-> getId () == T::id ()) {
+	T* to () {
+	    if (strcmp (this-> getId (), T::id ()) == 0) {
 		return (T*) this;
 	    } else return NULL;
 	}

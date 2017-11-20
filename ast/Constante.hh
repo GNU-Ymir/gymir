@@ -9,10 +9,15 @@
 
 enum class FixedConst {
     BYTE, UBYTE,
-	SHORT, USHORT,
-	INT, UINT,
-	LONG, ULONG
-	};
+    SHORT, USHORT,
+    INT, UINT,
+    LONG, ULONG
+};
+
+enum class FloatConst {
+    FLOAT,
+    DOUBLE
+};
 
 namespace syntax {
 
@@ -66,16 +71,19 @@ namespace syntax {
 
 	std::string suite;
 	std::string totale;
-
+	FloatConst _type;
+	
     public:
 
-	IFloat (Word word) : IExpression (word) {
+	IFloat (Word word) : IExpression (word), _type (FloatConst::DOUBLE) {
 	    this-> totale = "0." + this-> token.getStr ();
 	}
 	
 	IFloat (Word word, std::string suite) :
 	    IExpression (word),
-	    suite (suite) {
+	    suite (suite),
+	    _type (FloatConst::DOUBLE)
+	{
 	    this-> totale = this-> token.getStr () + "." + suite;
 	}
 
@@ -183,19 +191,7 @@ namespace syntax {
 		    return getFromLX (current, index);		    
 		} else return getFromOc (current, index);
 	    }
-	}
-	
-	static std::string validate (Word, std::string content) {
-	    std::stringstream buf;
-	    for (ulong i = 0 ; i < content.size ();) {
-		auto c = isChar (content, i);
-		if (c != -1) buf << (char) c;
-		else {
-		    //TODO error
-		}
-	    }
-	    return buf.str ();	    
-	}
+	}	
 	
     };
         

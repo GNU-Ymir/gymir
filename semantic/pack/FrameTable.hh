@@ -10,7 +10,7 @@ namespace semantic {
 
 	std::vector <Frame> pures;
 	std::vector <FinalFrame> finals;
-	std::vector <FinalFrames> finalTemplates;
+	std::vector <FinalFrame> finalTemplates;
 	std::vector <FrameProto> protos;
 	//std::vector <StructCstInfo> structs;
 	//std::vector <ObjectCstInfo> objects;

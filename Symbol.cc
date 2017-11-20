@@ -4,12 +4,12 @@
 namespace semantic {
 
     ISymbol::ISymbol (Word word, InfoType type) :
-	_sym (word),
-	_type (type)
+	sym (word),
+	type (type)
     {}
     
     bool ISymbol::isConst () {
-	return this-> _type-> isConst ();
+	return this-> type-> isConst ();
     }
 
     bool& ISymbol::isStatic () {
@@ -33,10 +33,6 @@ namespace semantic {
 
     std::string ISymbol::typeString () {
 	return "";
-    }
-
-    Word& ISymbol::sym () {
-	return this-> _sym;
     }
     
 }

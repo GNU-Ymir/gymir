@@ -1,25 +1,29 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/ast/ParamList.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace semantic {
 
+    using namespace syntax;
+    
     IArrayInfo::IArrayInfo (bool isConst, InfoType content) :
 	IInfoType (isConst),
-	content (content)
+	_content (content)
     {
-	if (this-> content)
-	    this-> content-> isConst () = this-> isConst ();
+	if (this-> _content)
+	    this-> _content-> isConst () = this-> isConst ();
     }
 
     
     InfoType IArrayInfo::content () {
-	return this-> content;
+	return this-> _content;
     }
 
     bool IArrayInfo::isSame (InfoType other) {
-	auto arr = other-> to<ArrayInfo> ();
+	auto arr = other-> to<IArrayInfo> ();
 	if (arr == NULL) return NULL;
-	if (this-> content == arr-> content) return true;
-	return this-> content-> isSame (arr-> content);
+	if (this-> _content == arr-> _content) return true;
+	return this-> _content-> isSame (arr-> _content);
     }
 
     InfoType IArrayInfo::Is (Expression right) {
@@ -50,19 +54,29 @@ namespace semantic {
 
     InfoType IArrayInfo::Affect (Expression right) {
 	auto type = right-> info-> type-> to<IArrayInfo> ();
-	if (type && type-> content-> isSame (this-> content)) {
+	if (type && type-> _content-> isSame (this-> _content)) {
 	    auto ret = this-> clone ();
 	    //ret-> lintInst = ArrayUtils::InstAffect;
 	    return ret;
-	} else if (type && this-> content-> is<IVoidInfo> ()) {
-	    this-> content = type-> content-> clone ();
+	} else if (type && this-> _content-> is<IVoidInfo> ()) {
+	    this-> _content = type-> _content-> clone ();
 	    auto ret = this-> clone ();
 	    //ret-> lintInst = ArrayUtils::InstAffect;
 	    return ret;
-	} else if (left-> info-> type-> is<INullInfo> ()) {
+	} else if (right-> info-> type-> is<INullInfo> ()) {
 	    auto ret = this-> clone ();
 	    //ret-> lintInst = ArrayUtils::InstAffectNull;
 	    return ret;
+	}
+	return NULL;
+    }
+
+    InfoType IArrayInfo::AffectRight (Expression left) {
+	if (left-> info-> type-> is<IUndefInfo> ()) {
+	    auto arr = this-> clone ();
+	    arr-> isConst () = false;
+	    //TODO
+	    return arr;
 	}
 	return NULL;
     }
@@ -83,9 +97,9 @@ namespace semantic {
     InfoType IArrayInfo::ApplyOp (std::vector <syntax::Var> vars) {
 	if (vars.size () != 1) return NULL;
 	if (this-> isConst ()) {
-	    vars [0]-> info-> type = this-> content-> clone ();
+	    vars [0]-> info-> type = this-> _content-> clone ();
 	} else {
-	    vars [0]-> info-> type = new IRefInfo (false, this-> content-> clone ());
+	    vars [0]-> info-> type = new IRefInfo (false, this-> _content-> clone ());
 	}
 	auto ret = this-> clone ();
 	// TODO
@@ -100,23 +114,23 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IArrayInfo::DotOp (syntax::Var) {
+    InfoType IArrayInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
-	if (var-> token.getStr () == "len") return Length ();
-	if (var-> token.getStr () == "typeid") return TypeId ();
-	if (var-> token.getStr () == "ptr") return Ptr ();
-	if (var-> token.getStr () == "tupleof") return TupleOf ();
+	if (var-> token == "len") return Length ();
+	if (var-> token == "typeid") return TypeId ();
+	if (var-> token == "ptr") return Ptr ();
+	//if (var-> token == "tupleof") return TupleOf ();
 	return NULL;
     }
 
     InfoType IArrayInfo::Ptr () {
-	auto ret = new IPtrInfo (this-> isConst (), this-> content-> clone ());
+	auto ret = new IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	//ret-> lintInst = ArrayUtils::InstPtr;
 	return ret;
     }
 
     InfoType IArrayInfo::Length () {
-	if (this-> content-> is<IVoidInfo> ()) return NULL;
+	if (this-> _content-> is<IVoidInfo> ()) return NULL;
 	auto elem = new IFixedInfo (true, FixedConst::ULONG);
 	//elem-> lintInst = ArrayUtils::InstLength;
 	return elem;
@@ -128,18 +142,18 @@ namespace semantic {
 	return str;
     }
 
-    InfoType IArrayInfo::TupleOf () {
-	auto t = new ITupleInfo (this-> isConst ());
-	t-> params = {new IFixedInfo (this-> isConst (), FixedConst::ULONG),
-		      new IPtrInfo (this-> isConst (), this-> content-> clone ())
-	}
-	//t-> lintInst = ArrayUtils::InstCastTuple;
-	return t;
-    }    
+    // InfoType IArrayInfo::TupleOf () {
+    // 	auto t = new ITupleInfo (this-> isConst ());
+    // 	t-> params = {new IFixedInfo (this-> isConst (), FixedConst::ULONG),
+    // 		      new IPtrInfo (this-> isConst (), this-> _content-> clone ())
+    // 	}
+    // 	//t-> lintInst = ArrayUtils::InstCastTuple;
+    // 	return t;
+    // }    
 
     InfoType IArrayInfo::Access (syntax::Expression expr) {
 	if (auto ot = expr-> info-> type-> to<IFixedInfo> ()) {
-	    auto ch = this-> content-> clone ();
+	    auto ch = this-> _content-> clone ();
 	    //TODO
 	    return ch;
 	}
@@ -147,16 +161,16 @@ namespace semantic {
     }
     
     InfoType IArrayInfo::clone () {
-	auto ret = new IArrayInfo (this-> isConst (), this-> content-> clone ());
+	auto ret = new IArrayInfo (this-> isConst (), this-> _content-> clone ());
 	//ret-> value = this-> value;
 	return ret;
     }
 
     InfoType IArrayInfo::CastOp (InfoType other) {
 	auto type = other-> to<IArrayInfo> ();
-	if (type && type-> content-> isSame (this-> content)) {
+	if (type && type-> _content-> isSame (this-> _content)) {
 	    return this;
-	} else if (other-> is<IStringInfo> () && this-> content-> is<ICharInfo> ()) {
+	} else if (other-> is<IStringInfo> () && this-> _content-> is<ICharInfo> ()) {
 	    auto other_ = new IStringInfo (this-> isConst ());
 	    //other_-> lintInstS.push_back (ArrayUtils::InstCastString);
 	    return other_;
@@ -166,33 +180,33 @@ namespace semantic {
 
     InfoType IArrayInfo::CompOp (InfoType other) {
 	auto type = other-> to<IArrayInfo> ();
-	if ((type && type-> content-> isSame (this-> content)) ||
+	if ((type && type-> _content-> isSame (this-> _content)) ||
 	    other-> is<IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    //ret-> lintInst = ArrayUtils::InstAffectRight;
 	    return ret;
-	} else if (type && this-> content-> is<IVoidInfo> ()) {
+	} else if (type && this-> _content-> is<IVoidInfo> ()) {
 	    auto ret = this-> clone ();
 	    // ret-> leftTreatment = ArrayUtils::InstCastFromNull;
 	    // ret-> lintInst = ArrayUtils::InstAffectRight;
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
-	    if (auto arr = ref-> content-> to<IArrayInfo> ()) {
-		if (arr-> content-> isSame (this-> content) && !this-> isConst ()) {
+	    if (auto arr = ref-> content ()-> to<IArrayInfo> ()) {
+		if (arr-> _content-> isSame (this-> _content) && !this-> isConst ()) {
 		    auto aux = new IRefInfo (this-> clone ());
-		    aux-> lintInstS.push_back (&ArrayUtils::InstAddr);
+		    //aux-> lintInstS.push_back (&ArrayUtils::InstAddr);
 		    return aux;
 		}
 	    }
 	} else if (auto en = other-> to<IEnumInfo> ()) {
-	    return this-> CompOp (en-> content);
+	    return this-> CompOp (en-> content ());
 	} else if (other-> is<INullInfo> ()) {
 	    return this-> clone ();	    
 	}	    
 	return NULL;
     }
 
-    InfoType IArrayInfo::ConstVerif (InfoType) {
+    InfoType IArrayInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
 	else if (!this-> isConst ()&& other-> isConst ()) {
 	    this-> isConst ()= false;
@@ -201,16 +215,16 @@ namespace semantic {
     }
 
     std::string IArrayInfo::innerTypeString () {
-	return std::string ("[") + this-> content-> innerTypeString () + "]";
+	return std::string ("[") + this-> _content-> innerTypeString () + "]";
     }
 
     std::string IArrayInfo::simpleTypeString () {
-	if (this-> isConst ()) return std::string ("cA") + this-> content-> simpleTypeString ();
-	else return std::string ("A") + this-> content-> simpleTypeString ();
+	if (this-> isConst ()) return std::string ("cA") + this-> _content-> simpleTypeString ();
+	else return std::string ("A") + this-> _content-> simpleTypeString ();
     }
 
     InfoType IArrayInfo::getTemplate (ulong i) {
-	if (i == 0) return this-> content;
+	if (i == 0) return this-> _content;
 	else return NULL;
     }
     

@@ -2,6 +2,8 @@
 
 namespace semantic {
 
+    using namespace syntax;
+    
     IFixedInfo::IFixedInfo (bool isConst, FixedConst type) :
 	IInfoType (isConst),
 	_type (type)
@@ -75,7 +77,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IFixedInfo::CastOp (InfoType) {
+    InfoType IFixedInfo::CastOp (InfoType other) {
 	if (this-> isSame (other)) return this;
 	if (other-> is<IBoolInfo> ()) {
 	    auto aux = new IBoolInfo (this-> isConst ());
@@ -85,12 +87,12 @@ namespace semantic {
 	    auto aux = new ICharInfo (this-> isConst ());
 	    //TODO
 	    return aux;
-	} else if (other-> is<IFloatInfo> ()) {
-	    auto aux = new IFloatInfo (this-> isConst ());
+	} else if (auto ot = other-> to<IFloatInfo> ()) {
+	    auto aux = new IFloatInfo (this-> isConst (), ot-> type ());
 	    //TODO
 	    return aux;
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
-	    auto ret = new other-> clone ();
+	    auto ret = ot-> clone ();
 	    ret-> isConst () = this-> isConst ();
 	    //TODO
 	    return ret;
@@ -98,27 +100,23 @@ namespace semantic {
 	return NULL;
     }
 	
-    InfoType IFixedInfo::CompOp (InfoType) {
+    InfoType IFixedInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
 	    auto ret = this-> clone ();
 	    //TODO
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
-	    if (!this-> isConst () && this-> isSame (ref-> content)) {
+	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
 		auto aux = new IRefInfo (this-> clone ());
 		//TODO
 		return aux;
 	    }
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
-	    if (syntax::isSigned (this->_type) &&
-		syntax::isSigned (ot-> type ()) &&
-		syntax::isInf (this-> _type, ot-> type ())) {
+	    if (this-> isSigned () && ot-> isSigned () && ot-> isSup (this)) {
 		auto ret = this-> clone ();
 		//TODO;
 		return ret;
-	    } else if (!syntax::isSigned (this->_type) &&
-		       !syntax::isSigned (ot-> type ()) &&
-		       syntax::isInf (this-> _type, ot-> type ())) {
+	    } else if (!this-> isSigned () && !ot-> isSigned () && ot-> isSup (this)) {
 		auto ret = this-> clone ();
 		//TODO;
 		return ret;
@@ -130,7 +128,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::DotOp (syntax::Var var) {
-	if (var.hasTemplate ()) return NULL;
+	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "init") return Init ();
 	if (var-> token == "max") return Max ();
 	if (var-> token == "min") return Min ();
@@ -171,28 +169,155 @@ namespace semantic {
 	return ret;
     }
 
-    InfoType IFixedInfo::Affect (syntax::Expression) {
-	
+    InfoType IFixedInfo::Affect (syntax::Expression right) {
+	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
+		auto ret = this-> clone ();
+		//TODO
+		return ret;
+	    } else if (!this-> isSigned () && !ot-> isSigned () && this-> isSup (ot)) {
+		auto ret = this-> clone ();
+		//TODO
+		return ret;
+	    } else if (this-> _type == ot-> type ()) {
+		auto ret = this-> clone ();
+		//TODO
+		return ret;
+	    }
+	}
+	return NULL;
     }
 
-    InfoType AffectRight (syntax::Expression) {}
+    InfoType IFixedInfo::AffectRight (syntax::Expression left) {
+	if (left-> info-> type-> is<IUndefInfo> ()) {
+	    auto i = new IFixedInfo (false, this-> _type);
+	    //TODO;
+	    return i;
+	}
+	return NULL;
+    }
 
-    InfoType opAff (Word op, syntax::Expression) {}
+    InfoType IFixedInfo::opAff (Word op, syntax::Expression right) {
+	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
+		auto ret = this-> clone ();
+		//TODO
+		return ret;
+	    } else if (!this-> isSigned () && !ot-> isSigned () && this-> isSup (ot)) {
+		auto ret = this-> clone ();
+		//TODO
+		return ret;
+	    } else if (this-> _type == ot-> type ()) {
+		auto ret = this-> clone ();
+		//TODO
+		return ret;
+	    }
+	}
+	return NULL;
+    }
 	
-    InfoType opTest (Word op, syntax::Expression) {}
+    InfoType IFixedInfo::opTest (Word op, syntax::Expression right) {
+	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	    if (this-> _type == ot-> type ()) {
+		auto ret = new IBoolInfo (true);
+		//TODO
+		return ret;	    
+	    } else if (this-> isSigned () && ot-> isSigned ()) {
+		if (this-> isSup (ot)) {
+		    auto ret = new IBoolInfo (true);
+		    //TODO
+		    return ret;
+		} else {
+		    auto ret = new IBoolInfo (true);
+		    //TODO
+		    return ret;
+		}
+	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
+		if (this-> isSup (ot)) {
+		    auto ret = new IBoolInfo (true);
+		    //TODO
+		    return ret;
+		} else {
+		    auto ret = new IBoolInfo (true);
+		    //TODO
+		    return ret;
+		}
+	    }
+	} else if (auto ot = right-> info-> type-> to<ICharInfo> ()) {
+	    if (this-> _type == FixedConst::UBYTE) {
+		auto ret = new IBoolInfo (true);
+		//TODO
+		return ret;
+	    }
+	}
+	return NULL;
+    }
 
-    InfoType opNorm (Word op, syntax::Expression) {}
+    InfoType IFixedInfo::opNorm (Word op, syntax::Expression right) {
+	if (this-> isSame (right-> info-> type)) {
+	    auto ret = this-> clone ();
+	    //TODO
+	    return ret;
+	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	    if (this-> isSigned () && ot-> isSigned ()) {
+		if (this-> isSup (ot)) {
+		    auto ret = this-> clone ();
+		    //TODO
+		    return ret;
+		} else {
+		    auto ret = ot-> clone ();
+		    //TODO
+		    return ret;
+		}		    
+	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
+		if (this-> isSup (ot)) {
+		    auto ret = this-> clone ();
+		    return ret;
+		} else {
+		    auto ret = ot-> clone ();
+		    return ret;
+		}
+	    }
+	}
+	return NULL;
+    }
 
-    InfoType Init () {}
+    InfoType IFixedInfo::Init () {
+	auto ret = new IFixedInfo (true, this-> _type);
+	//TODO
+	return ret;	
+    }
 
-    InfoType Max () {}
+    InfoType IFixedInfo::Max () {
+	auto ret = new IFixedInfo (true, this-> _type);
+	//TODO
+	return ret;	
+    }
 
-    InfoType Min () {}
+    InfoType IFixedInfo::Min () {
+	auto ret = new IFixedInfo (true, this-> _type);
+	//TODO
+	return ret;	
+    }
 
-    InfoType SizeOf () {}
+    InfoType IFixedInfo::SizeOf () {
+	auto ret = new IFixedInfo (true, FixedConst::UBYTE);
+	//TODO
+	return ret;	
+    }
 
-    InfoType StringOf () {}	
+    InfoType IFixedInfo::StringOf () {
+	auto str = new IStringInfo (true);
+	return str;
+    }	
+
+    bool IFixedInfo::isSigned () {
+	return syntax::isSigned (this-> _type);
+    }
     
+    bool IFixedInfo::isSup (FixedInfo fx) {
+	return this-> _type > fx-> _type;
+    }
     
 
 }

@@ -1,5 +1,6 @@
 #include "semantic/pack/Namespace.hh"
 #include "utils/Mangler.hh"
+#include <sstream>
 
 namespace semantic {
 
@@ -61,5 +62,14 @@ namespace semantic {
 	}
 	return false;
     }
-        
+
+    std::string Namespace::toString () {
+	std::ostringstream ss;
+	for (auto it = 0 ; it < this-> names.size () ; it ++) {
+	    ss << it;
+	    if (it != this-> names.size () - 1) ss << ".";
+	}
+	return ss.str ();
+    }
+    
 }

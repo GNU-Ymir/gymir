@@ -13,11 +13,12 @@ namespace semantic {
 
 	bool scoped;
 	bool _public;
-	Word _sym;
-	InfoType _type;
 	bool _static;
 
     public:
+
+	Word sym;
+	InfoType type;
 
 	ISymbol (Word word, InfoType);
 	
@@ -36,8 +37,6 @@ namespace semantic {
 	void quit (Namespace space);
 
 	std::string typeString ();
-
-	Word& sym ();
 	
     };
     

@@ -17,7 +17,7 @@ namespace semantic {
 
 	static InfoType create (Word token, std::vector <syntax::Expression> templates) {
 	    if (templates.size () != 0)
-		Ymir::Error::append (w, Ymir::NotATemplate);
+		Ymir::Error::append (token, Ymir::NotATemplate);
 
 	    if (token == "byte") return new IFixedInfo (false, FixedConst::BYTE);
 	    if (token == "ubyte") return new IFixedInfo (false, FixedConst::UBYTE);
@@ -56,6 +56,8 @@ namespace semantic {
 	}
 
 	const char* getId () override;
+
+	bool isSigned ();
 	
     private:
 
@@ -84,6 +86,8 @@ namespace semantic {
 	InfoType SizeOf ();
 
 	InfoType StringOf ();	
+
+	bool isSup (IFixedInfo*);
 	
     };
 

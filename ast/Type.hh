@@ -14,6 +14,14 @@ namespace syntax {
 	    IVar (token)
 	{}
 
+	static const char * id () {
+	    return "IType";
+	}
+	
+	const char * getId () override {
+	    return IType::id ();
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Type> %s",
 		    nb, ' ',

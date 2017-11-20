@@ -16,6 +16,9 @@ namespace Ymir {
 		phrases [EndOfFile] = "Fin de fichier inattendue";
 		phrases [Unterminated] = "caractère de fin de chaîne '%s%s%s' manquant";
 		phrases [TakeAType] = "Prend %s %s en template%s";
+		phrases [TemplateSpecialisation] = "La specialisation de template fonctionne avec '%s%s%s'";
+		phrases [TemplateCreation] = "Création de template";
+		phrases [And] = "Et";
 		init = true;
 	    } 
 	    return phrases;
@@ -32,6 +35,9 @@ namespace Ymir {
 		phrases [EndOfFile] = "unexpected end of file";
 		phrases [Unterminated] = "missing terminating '%s%s%s' character";
 		phrases [TakeAType] = "take %s %s as template argument%s";
+		phrases [TemplateSpecialisation] = "Template specialisation works with both";
+		phrases [TemplateCreation] = "Template creation";
+		phrases [And] = "And";
 		init = true;
 	    } 
 	    return phrases;

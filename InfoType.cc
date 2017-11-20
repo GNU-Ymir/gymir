@@ -51,7 +51,7 @@ namespace semantic {
 
     InfoType IInfoType::BinaryOp (Word w, InfoType info) {
 	auto expr = new syntax::IExpression (w);
-	expr-> info () = new ISymbol (w, info);
+	expr-> info = new ISymbol (w, info);
 	return this-> BinaryOp (w, expr);
     }
     
@@ -67,6 +67,10 @@ namespace semantic {
 	return NULL;
     }
 
+    ApplicationScore IInfoType::CallOp (Word, std::vector <InfoType>) {
+	return NULL;
+    }
+    
     InfoType IInfoType::ApplyOp (std::vector <::syntax::Var>) {
 	return NULL;
     }
@@ -118,6 +122,12 @@ namespace semantic {
     InfoType IInfoType::cloneOnExit () {
 	auto ret = this-> clone ();
 	//if (ret) ret-> _value = NULL;
+	return ret;
+    }
+
+    InfoType IInfoType::cloneConst () {
+	auto ret = this-> clone ();
+	ret-> isConst () = true;
 	return ret;
     }
 
