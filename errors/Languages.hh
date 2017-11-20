@@ -15,6 +15,7 @@ namespace Ymir {
 		phrases [NotATemplate] = "L'élément '%s%s%s' n'est pas un template";
 		phrases [EndOfFile] = "Fin de fichier inattendue";
 		phrases [Unterminated] = "caractère de fin de chaîne '%s%s%s' manquant";
+		phrases [TakeAType] = "Prend %s %s en template%s";
 		init = true;
 	    } 
 	    return phrases;
@@ -30,6 +31,7 @@ namespace Ymir {
 		phrases [NotATemplate] = "'%s%s%s' element is not a template";
 		phrases [EndOfFile] = "unexpected end of file";
 		phrases [Unterminated] = "missing terminating '%s%s%s' character";
+		phrases [TakeAType] = "take %s %s as template argument%s";
 		init = true;
 	    } 
 	    return phrases;

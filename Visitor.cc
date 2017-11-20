@@ -52,7 +52,7 @@ namespace syntax {
     }
 
     void escapeError (Word token) {
-	Ymir::Error::fatal (token,
+	Ymir::Error::append (token,
 			    Ymir::EscapeChar
 	);	
     }
@@ -123,6 +123,15 @@ namespace syntax {
 	    } else if (token == Keys::PRIVATE) {
 		auto prv_decls = visitPrivateBlock ();
 		for (auto it : prv_decls) decls.push_back (it);
+	    } else {
+		this-> lex.next ();
+		syntaxError (token,
+			     {Keys::DEF, Keys::IMPORT, Keys::EXTERN,
+				     Keys::STRUCT, Keys::ENUM, Keys::STATIC,
+				     Keys::SELF, Keys::TRAIT, Keys::IMPL,
+				     Keys::PUBLIC, Keys::PRIVATE
+				     }
+		);
 	    }
 	    token = this-> lex.next ();
 	    this-> lex.rewind ();

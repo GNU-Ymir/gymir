@@ -12,12 +12,14 @@ namespace syntax {
     
     class IInstruction : public gc {
     protected:
-	Word token;
+
 	Block parent;	
 	bool isStatic;
 
     public:
 
+	Word token;
+	
 	IInstruction (Word token) : token (token) {}
 
 	virtual void print (int nb = 0) = 0;

@@ -4,16 +4,16 @@
 
 namespace semantic {
 
-    class IBoolInfo : IInfoType {
+    class ICharInfo : IInfoType {
     public:
 	
-	IBoolInfo (bool isConst); 
+	ICharInfo (bool isConst); 
 
 	static InfoType create (Word w, std::vector <::syntax::Expression> tmps) {
 	    if (tmps.size () != 0) {
-		Ymir::Error::append (w, Ymir::Error::NotATemplate);
+		Ymir::Error::append (w, Ymir::NotATemplate);
 		return NULL;
-	    } else return new IBoolInfo (false);
+	    } else return new ICharInfo (false);
 	}
 
 	bool isSame (InfoType) override;
@@ -21,8 +21,6 @@ namespace semantic {
 	InfoType BinaryOp (Word, syntax::Expression) override;
 
 	InfoType BinaryOpRight (Word, syntax::Expression) override;
-
-	InfoType UnaryOp (Word) override;
 
 	std::string innerTypeString () override;
 
@@ -37,21 +35,26 @@ namespace semantic {
 	InfoType clone () override;
 		
 	static const char* id () {
-	    return "IBoolInfo";
+	    return "ICharInfo";
 	}
 
 	const char* getId () override;
-	   
-	
+
     private:
 
-	InfoType Ptr ();
+	InfoType Affect (syntax::Expression);
 
-	InfoType Affect (syntax::Expression );
+	InfoType AffectRight (syntax::Expression);
 
-	InfoType AffectRight (syntax::Expression );
+	InfoType opTest (Word, syntax::Expression);
 
-	InfoType opNorm (Word, syntax::Expression);
+	InfoType opTestRight (Word, syntax::Expression);
+
+	InfoType opAff (Word op, syntax::Expression);
+
+	InfoType opNorm (Word op, syntax::Expression);
+
+	InfoType opNormRight (Word op, syntax::Expression);
 
 	InfoType Init ();
 
@@ -61,6 +64,6 @@ namespace semantic {
 	
     };
 
-    typedef IBoolInfo* BoolInfo;
-        
+    typedef ICharInfo* CharInfo;
+
 }

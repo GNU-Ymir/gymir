@@ -13,6 +13,7 @@ namespace Ymir {
     	    
     enum ErrorType {
 	NotATemplate,
+	TakeAType,
 	SyntaxError,
        	SyntaxError2,
 	EscapeChar,

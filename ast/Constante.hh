@@ -6,16 +6,21 @@
 #include "../syntax/Word.hh"
 #include <cmath>
 
-namespace syntax {
 
-    enum class FixedConst {
-	BYTE, UBYTE,
+enum class FixedConst {
+    BYTE, UBYTE,
 	SHORT, USHORT,
 	INT, UINT,
 	LONG, ULONG
-    };
+	};
+
+namespace syntax {
 
     bool isSigned (FixedConst ct);
+
+    std::string name (FixedConst ct);
+
+    std::string sname (FixedConst ct);
     
     class IFixed : public IExpression {
 	FixedConst type;

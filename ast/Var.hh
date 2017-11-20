@@ -37,6 +37,10 @@ namespace syntax {
 	    return IVar::id ();
 	}
 	
+	bool hasTemplate () {
+	    return this-> templates.size () != 0;
+	}
+
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Var> %s",
 		    nb, ' ',

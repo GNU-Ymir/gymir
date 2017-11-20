@@ -82,11 +82,11 @@ namespace semantic {
 	    return NULL;
 	}
 
-	static ulong id () {
-	    return 0;
+	static const char* id () {
+	    return "IInfoType";
 	}
 
-	virtual ulong getId () = 0;
+	virtual const char* getId () = 0;
 	
 	// static void addCreator (std::string name) {
 	//     Creators::instance ().add (name) = StructCstInfo::create;
@@ -184,13 +184,13 @@ namespace semantic {
 
 	template <typename T>
 	bool is () {
-	    return this-> getId () == T::id ();
+	    return strcmp (this-> getId (), T::id ()) == 0;
 	}
 	
 	template <typename T>
-	T cast () {
+	T to () {
 	    if (this-> getId () == T::id ()) {
-		return (T) this;
+		return (T*) this;
 	    } else return NULL;
 	}
 	
