@@ -2,7 +2,7 @@
 #include "syntax/Word.hh"
 #include "ast/Expression.hh"
 #include "ast/Var.hh"
-
+#include "errors/Error.hh"
 
 namespace semantic {
 
@@ -17,6 +17,27 @@ namespace semantic {
 	token (tok),
 	isVariadic (isVariadic)
     {}
+        
+    IInfoType::IInfoType (bool isConst) :
+	_isConst (isConst)
+    {}   
+
+    InfoType IInfoType::factory (Word word, std::vector <syntax::Expression> templates) {
+	auto it = (InfoType (*)(Word, std::vector<syntax::Expression>)) (
+	    Creators::instance ().find (word.getStr ())
+	);
+	if (it != NULL) {
+	    return (*it) (word, templates);
+	}
+	auto _it_ = __alias__.find (word.getStr ());
+	if (_it_ != __alias__.end ()) return _it_-> second-> clone ();
+	Ymir::Error::append (word,
+			     "Type inconnu '%s%s%s'",
+			     Ymir::Error::YELLOW,
+			     word.getStr ().c_str (),
+			     Ymir::Error::RESET);
+	return NULL;
+    }
 
     
     ulong& IInfoType::toGet () {

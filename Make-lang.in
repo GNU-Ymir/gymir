@@ -25,42 +25,45 @@ gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 # The compiler proper
  
 ymir_OBJS = \
-	  ymir/FunctionInfo.o \
-	  ymir/CharInfo.o \
-	  ymir/Parser.o \
-	  ymir/EnumInfo.o \
-	  ymir/Table.o \
-	  ymir/InfoType.o \
-	  ymir/Error.o \
-	  ymir/Block.o \
-ymir/FloatInfo.o \
-ymir/PtrFuncInfo.o \
-ymir/Visitor.o \
-ymir/PtrInfo.o \
-ymir/ymirspec.o \
-ymir/VarDecl.o \
-ymir/Symbol.o \
-ymir/Scope.o \
-ymir/Namespace.o \
-ymir/BoolInfo.o \
-ymir/UndefInfo.o \
-ymir/NullInfo.o \
-ymir/RangeInfo.o \
-ymir/ExternFrame.o \
-ymir/Mangler.o \
-ymir/Word.o \
-ymir/FixedInfo.o \
-ymir/Impl.o \
-ymir/Token.o \
-ymir/Creators.o \
-ymir/VoidInfo.o \
-ymir/Lexer.o \
-ymir/Keys.o \
-ymir/ymir1.o \
-ymir/ArrayInfo.o \
-ymir/Constante.o \
-ymir/Frame.o \
-ymir/FrameTable.o \
+	ymir/FunctionInfo.o \
+	ymir/CharInfo.o \
+	ymir/Parser.o \
+	ymir/EnumInfo.o \
+	ymir/Table.o \
+	ymir/InfoType.o \
+	ymir/Error.o \
+	ymir/Block.o \
+	ymir/FloatInfo.o \
+	ymir/PtrFuncInfo.o \
+	ymir/Visitor.o \
+	ymir/PtrInfo.o \
+	ymir/ymirspec.o \
+	ymir/VarDecl.o \
+	ymir/Symbol.o \
+	ymir/Scope.o \
+	ymir/Namespace.o \
+	ymir/BoolInfo.o \
+	ymir/UndefInfo.o \
+	ymir/NullInfo.o \
+	ymir/RangeInfo.o \
+	ymir/ExternFrame.o \
+	ymir/Mangler.o \
+	ymir/Word.o \
+	ymir/FixedInfo.o \
+	ymir/Impl.o \
+	ymir/Token.o \
+	ymir/Creators.o \
+	ymir/VoidInfo.o \
+	ymir/Lexer.o \
+	ymir/Keys.o \
+	ymir/ymir1.o \
+	ymir/ArrayInfo.o \
+	ymir/Constante.o \
+	ymir/Frame.o \
+	ymir/FrameTable.o \
+	ymir/StringInfo.o \
+	ymir/OutBuffer.o \
+	ymir/RefInfo.o
 $(END)
     
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

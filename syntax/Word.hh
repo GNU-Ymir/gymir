@@ -8,7 +8,6 @@
 #include <tr1/memory>
 #include <stdlib.h>
 #include <gc/gc_cpp.h>
-#include <algorithm>
 #include "Token.hh"
 
 struct Word {
@@ -68,10 +67,7 @@ public:
 	this-> str = "";
     }
 
-    bool isToken () {
-	auto mem = Token::members ();
-	return std::find (mem.begin (), mem.end (), this-> str) != mem.end ();
-    }
+    bool isToken ();
     
     friend bool operator== (Word elem, std::string sec) {
 	return elem.getStr () == sec;

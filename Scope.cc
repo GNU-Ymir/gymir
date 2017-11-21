@@ -1,5 +1,7 @@
 #include "semantic/pack/Scope.hh"
 #include "semantic/pack/Table.hh"
+#include <algorithm>
+#include <cmath>
 
 namespace semantic {
 

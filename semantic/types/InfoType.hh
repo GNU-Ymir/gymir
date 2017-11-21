@@ -1,11 +1,11 @@
 #pragma once
 
 #include <gc/gc_cpp.h>
-#include <ymir/errors/Error.hh>
-#include "Creators.hh"
+//#include <ymir/errors/Error.hh>
+#include <ymir/semantic/types/Creators.hh>
 #include <vector>
 #include <ymir/syntax/Word.hh>
-#include "../pack/Frame.hh"
+#include <ymir/semantic/pack/Frame.hh>
 
 namespace syntax {
     class IExpression;
@@ -65,23 +65,8 @@ namespace semantic {
 
 	IInfoType (bool isConst);
 
-	static InfoType factory (Word word, std::vector <syntax::Expression> templates) {
-	    auto it = (InfoType (*)(Word, std::vector<syntax::Expression>)) (
-		Creators::instance ().find (word.getStr ())
-	    );
-	    if (it != NULL) {
-		return (*it) (word, templates);
-	    }
-	    auto _it_ = __alias__.find (word.getStr ());
-	    if (_it_ != __alias__.end ()) return _it_-> second-> clone ();
-	    Ymir::Error::append (word,
-				 "Type inconnu '%s%s%s'",
-				 Ymir::Error::YELLOW,
-				 word.getStr ().c_str (),
-				 Ymir::Error::RESET);
-	    return NULL;
-	}
-
+	static InfoType factory (Word word, std::vector <syntax::Expression> templates);
+	
 	static const char* id () {
 	    return "IInfoType";
 	}

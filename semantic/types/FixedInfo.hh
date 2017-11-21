@@ -43,7 +43,7 @@ namespace semantic {
 	
 	InfoType CompOp (InfoType) override;
 
-	InfoType CastTo (InfoType) override;
+	//InfoType CastTo (InfoType) override;
 
 	InfoType DotOp (syntax::Var) override;
 

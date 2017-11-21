@@ -64,7 +64,7 @@ namespace semantic {
     Symbol Table::get (std::string name) {
     }
 
-    std::vector <Symbol> getAll (std::string name) {
+    std::vector <Symbol> Table::getAll (std::string name) {
     }
 
     Symbol Table::getLocal (std::string name) {

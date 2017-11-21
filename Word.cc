@@ -1,6 +1,6 @@
 #include "syntax/Word.hh"
 #include <sstream>
-
+#include <algorithm>
 
 std::string Word::toString () {
     if (this-> isEof ()) return ":\u001B[32meof\u001B[0m()";
@@ -17,3 +17,7 @@ std::string Word::toString () {
 }
 
    
+bool Word::isToken () {
+    auto mem = Token::members ();
+    return std::find (mem.begin (), mem.end (), this-> str) != mem.end ();
+}

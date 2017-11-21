@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 
 namespace semantic {
@@ -15,5 +16,11 @@ namespace Mangler {
     std::string mangle_function (std::string&, ::semantic::FrameProto);
 
     std::string mangle_functionv (std::string&, ::semantic::FrameProto);
+
+    std::string mangle_type (std::string);
+
+    std::string mangle_namespace (std::string);
+
+    std::string mangle_var (std::string);
     
 }

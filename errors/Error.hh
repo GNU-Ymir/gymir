@@ -7,6 +7,7 @@
 #include "diagnostic.h"
 #include "../syntax/Word.hh"
 #include <cmath>
+
 #define INCLUDE_STRING
 
 namespace Ymir {

@@ -10,12 +10,27 @@ namespace semantic {
 	_function (func)
     {}
 
+    ApplicationScore IFrame::isApplicable (::syntax::ParamList) {
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }
+    
+    ApplicationScore IFrame::isApplicable (std::vector <InfoType>) {
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }
+
     FrameProto IFrame::validate () {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }
 
     FrameProto IFrame::validate (::syntax::ParamList) {
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }
+
+    FrameProto IFrame::validate (ApplicationScore, std::vector <InfoType>) {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }

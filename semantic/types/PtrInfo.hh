@@ -5,7 +5,6 @@
 
 namespace semantic {
 
-
     class IPtrInfo : public IInfoType {
 
 	InfoType _content = NULL;
