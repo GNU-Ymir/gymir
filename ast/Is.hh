@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ymir/utils/Array.hh>
 #include "Expression.hh"
 #include "../errors/_.hh"
 #include "../semantic/_.hh"

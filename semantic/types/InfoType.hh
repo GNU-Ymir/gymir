@@ -6,6 +6,7 @@
 #include <vector>
 #include <ymir/syntax/Word.hh>
 #include <ymir/semantic/pack/Frame.hh>
+#include <vector>
 
 namespace syntax {
     class IExpression;

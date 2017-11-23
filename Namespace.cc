@@ -18,7 +18,7 @@ namespace semantic {
     
     Namespace::Namespace (Namespace space_, std::string name) {
 	auto space = Mangler::mangle_file (name);
-	auto index = space.find (".");
+	auto index =  space.find (".");
 	while (index != -1) {
 	    auto str = space.substr (0, index);
 	    space = space.substr (index + 1, space.length ());
@@ -28,11 +28,16 @@ namespace semantic {
 	this-> names.push_back (space);
 	
 
-	this-> names.insert (this-> names.begin (),
+	this-> names.insert (this-> names.end (),
 			     space_.names.begin (),
-			     space_.names.end ());	
+			     space_.names.end ()
+	);	
     }
 
+    bool operator!= (const Namespace &fst, const Namespace &scd) {
+	return !(fst == scd);
+    }
+    
     bool operator== (const Namespace &fst, const Namespace &scd) {
 	if (fst.names.size () != scd.names.size ()) return false;
 	for (int i = 0 ; i < fst.names.size () ; i++) {

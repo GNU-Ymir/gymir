@@ -17,11 +17,11 @@ namespace semantic {
     public:
 
 	Scope ();
-
-	Symbol operator [] (std::string name) const;
 	
-	void assign (std::string name, Symbol sym);
+	void set (std::string name, Symbol sym);
 
+	Symbol get (std::string name);
+	
 	std::vector <Symbol> getAll (std::string name);
 
 	void addOpen (Namespace space);

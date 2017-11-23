@@ -3,6 +3,7 @@
 #include <ymir/semantic/types/InfoType.hh>
 #include <string>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Array.hh>
 
 namespace Mangler {
     using namespace Ymir;
@@ -78,24 +79,24 @@ namespace Mangler {
     }
     
     std::string mangle_function (std::string& name, ::semantic::FrameProto frame) {
-	auto space = frame-> space.toString ();
+	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
-	for (auto it : frame-> vars) {
-	    ss.write (mangle_type (it-> info-> type-> simpleTypeString ()));
+	for (auto it : frame-> vars ()) {
+	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
 	}
-	ss.write ("Z", mangle_type (frame-> type-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
 
     std::string mangle_functionv (std::string& name, ::semantic::FrameProto frame) {
-	auto space = frame-> space.toString ();
+	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write  ("_Y", mangle_namespace (space), mangle_namespace (name), "VF");
-	for (auto it : frame-> vars) {
-	    ss.write (mangle_type (it-> info-> type-> simpleTypeString ()));
+	for (auto it : frame-> vars ()) {
+	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
 	}
-	ss.write ("Z", mangle_type (frame-> type-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
 

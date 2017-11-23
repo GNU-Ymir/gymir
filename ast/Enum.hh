@@ -4,6 +4,7 @@
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
+#include <ymir/utils/Array.hh>
 
 namespace syntax {
 
@@ -22,6 +23,8 @@ namespace syntax {
 	    values (values)
 	{}
 
+	void declare () override {}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Enum> %s",
 		    nb, ' ',

@@ -38,13 +38,14 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	auto prg = this-> syntax_analyse ();
-	printf ("%d\n", Ymir::Error::nb_errors);
 	if (Ymir::Error::nb_errors > 0) {
 	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
 	}
-	prg-> print ();	
-	// this -> semantic_analyse (synt_ast);
-	// if (Ymir::Error::nb_errors > 0) stop ();
+
+	prg-> declare ();
+	if (Ymir::Error::nb_errors > 0)
+	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
+	
 	// this -> define_gcc_symbols ();
 	// if (Ymir::Error::nb_errors > 0) stop ();
 			
@@ -69,6 +70,7 @@ void ymir_parse_files (int num_files, const char ** files) {
 
 static void ymir_parse_file (const char * filename) {
     FILE * file = fopen (filename, "r");
+
     if (file == NULL) 
 	fatal_error (UNKNOWN_LOCATION, "cannot open filename %s: %m", filename);
 

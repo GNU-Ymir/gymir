@@ -3,6 +3,8 @@
 
 namespace syntax {
 
+    void IImpl::declare () {}
+    
     void IImpl::print (int nb) {
 	printf ("\n%*c<Impl> %s : %s",
 		nb, ' ',

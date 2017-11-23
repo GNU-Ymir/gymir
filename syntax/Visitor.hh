@@ -2,6 +2,7 @@
 
 #include "Lexer.hh"
 #include "ast/_.hh"
+#include <ymir/utils/Array.hh>
 
 namespace syntax {
 

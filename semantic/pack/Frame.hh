@@ -6,7 +6,7 @@
 #include "FrameScope.hh"
 
 #include <string>
-
+#include <ymir/utils/Array.hh>
 
 namespace syntax {
     class IExpression;

@@ -19,6 +19,8 @@ namespace syntax {
 	    block (block)
 	{}
 
+	void declare () override {}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Self> %s",
 		    nb, ' ',

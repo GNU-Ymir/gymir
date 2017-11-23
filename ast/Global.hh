@@ -21,6 +21,8 @@ namespace syntax {
 	    type (type)
 	{}
 
+	void declare () override {}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Global> %s",
 		    nb, ' ',

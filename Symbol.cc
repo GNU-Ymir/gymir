@@ -32,7 +32,13 @@ namespace semantic {
     }
 
     std::string ISymbol::typeString () {
-	return "";
+	return this-> type-> typeString ();
+    }
+
+    std::string ISymbol::simpleTypeString () {
+	if (this-> type-> isConst ())
+	    return std::string ("c") + this-> type-> simpleTypeString ();
+	return this-> type-> simpleTypeString ();
     }
     
 }

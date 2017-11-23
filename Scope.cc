@@ -7,14 +7,14 @@ namespace semantic {
 
     Scope::Scope () {}
 
-    Symbol Scope::operator[] (std::string name) const {
+    Symbol Scope::get (std::string name) {
 	auto it = this-> local.find (name);
 	if (it != this-> local.end ()) {
 	    return it-> second [0];
 	} else return NULL;
     }    
 
-    void Scope::assign (std::string name, Symbol sym) {
+    void Scope::set (std::string name, Symbol sym) {
 	auto it = this-> local.find (name);
 	if (it != this-> local.end ()) {
 	    it-> second [0] = (sym);

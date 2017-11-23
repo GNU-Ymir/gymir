@@ -38,6 +38,14 @@ namespace syntax {
 	    this-> deco = deco;
 	}
 	
+	static const char * id () {
+	    return "ITypedVar";
+	}
+
+	const char * getId () override {
+	    return ITypedVar::id ();
+	}
+
 	void print (int nb = 0) override {
 	    printf ("\n%*c<TypedVar> %s%s",
 		    nb, ' ',

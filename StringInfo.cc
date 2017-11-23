@@ -16,8 +16,7 @@ namespace semantic {
     }
 
     std::string IStringInfo::simpleTypeString () {
-	if (this-> isConst ()) return "cs";
-	else return "s";
+	return "s";
     }
 
     InfoType IStringInfo::clone () {

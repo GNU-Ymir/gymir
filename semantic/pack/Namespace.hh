@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <ymir/utils/Array.hh>
 #include <string>
 
 namespace semantic {
@@ -19,6 +19,8 @@ namespace semantic {
 	Namespace (Namespace space, std::string name);
 
 	friend bool operator== (const Namespace &self, const Namespace &other);
+
+	friend bool operator!= (const Namespace &self, const Namespace &other);
 
 	bool isSubOf (Namespace other);
 

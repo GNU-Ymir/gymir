@@ -16,13 +16,13 @@ namespace Ymir {
 
 	template <typename F, typename ... T>
 	void write (F f, T ... args) {
-	    write (f);
+	    write_ (f);
 	    write (args...);
 	}
 
 	template <typename F, typename ... T>
 	void writeln (F f, T ... args) {
-	    write (f);
+	    write_ (f);
 	    write (args...);
 	    write ('\n');
 	}
@@ -33,21 +33,29 @@ namespace Ymir {
 	    write ('\n');
 	}
 	
-	void write ();
-	
-	void write (std::string);
-	
-	void write (long);
 
-	void write (ulong);
-
-	void write (char);
-
-	void write (double);
-	
 	std::string str () {
 	    return std::string (current, len);
 	}
+
+    private :
+
+	void write ();
+
+	void write_ (const char * str);
+	
+	void write_ (std::string);
+
+	void write_ (int);
+	
+	void write_ (long);
+
+	void write_ (ulong);
+
+	void write_ (char);
+
+	void write_ (double);
+	
 	
     private:
 

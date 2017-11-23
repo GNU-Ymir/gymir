@@ -7,6 +7,7 @@
 #include "../../ast/Instruction.hh"
 #include "../../ast/Global.hh"
 
+#include <ymir/utils/Array.hh>
 #include <list>
 
 namespace semantic {
@@ -35,9 +36,7 @@ namespace semantic {
 
 	void quitBlock ();
 
-	void setCurrentSpace (Namespace space, std::string name);
-
-	void resetCurrentSpace (Namespace space);
+	void setCurrentSpace (Namespace space);
 
 	void addCall (Word sym);
 
@@ -81,6 +80,8 @@ namespace semantic {
 	
 	Module addModule (Namespace space);
 
+	Module getModule (Namespace space);
+	
 	void addForeignModule (Namespace space);
 
 	std::vector <Module> getAllMod (Namespace space);

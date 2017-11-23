@@ -6,7 +6,7 @@ namespace Ymir {
     namespace Languages {
 
 	const char** fr () {
-	    static const char* phrases [4];
+	    static const char* phrases [Ymir::LAST_ERROR];
 	    static bool init = false;
 	    if (!init) {
 		phrases [SyntaxError] = "[%s] attendues, mais %s%s%s trouvé";
@@ -19,13 +19,16 @@ namespace Ymir {
 		phrases [TemplateSpecialisation] = "La specialisation de template fonctionne avec '%s%s%s'";
 		phrases [TemplateCreation] = "Création de template";
 		phrases [And] = "Et";
+		phrases [Here] = "Ici";
+		phrases [MultipleLoopName] = "L'identifiant de boucle '%s%s%s' est déjà définis";
+		phrases [ShadowingVar] = "L'identifiant de boucle '%s%s%s' est déjà définis";
 		init = true;
 	    } 
 	    return phrases;
 	}
 
 	const char** en () {
-	    static const char* phrases [4];
+	    static const char* phrases [Ymir::LAST_ERROR];
 	    static bool init = false;
 	    if (!init) {
 		phrases [SyntaxError] = "[%s] expected, when %s%s%s found";
@@ -38,6 +41,8 @@ namespace Ymir {
 		phrases [TemplateSpecialisation] = "Template specialisation works with both";
 		phrases [TemplateCreation] = "Template creation";
 		phrases [And] = "And";
+		phrases [Here] = "Here";
+		phrases [MultipleLoopName] = "Loop identifier '%s%s%s' is already used";
 		init = true;
 	    } 
 	    return phrases;

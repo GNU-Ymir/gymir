@@ -3,7 +3,7 @@
 
 #include "Var.hh"
 #include "Declaration.hh"
-
+#include <ymir/utils/Array.hh>
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
@@ -38,6 +38,8 @@ namespace syntax {
 	    isVariadic (isVariadic)
 	{}
 
+	void declare () override {}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Proto> %s%s",
 		    nb, ' ',

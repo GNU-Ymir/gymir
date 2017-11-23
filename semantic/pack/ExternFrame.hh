@@ -5,7 +5,7 @@
 #include "Namespace.hh"
 
 #include <string>
-#include <vector>
+#include <ymir/utils/Array.hh>
 
 namespace syntax {
     class IProto;

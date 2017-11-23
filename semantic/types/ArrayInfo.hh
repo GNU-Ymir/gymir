@@ -3,6 +3,7 @@
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/ast/Expression.hh>
 #include <ymir/ast/Type.hh>
+#include <ymir/utils/Array.hh>
 
 namespace semantic {
     

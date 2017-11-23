@@ -5,6 +5,7 @@
 #include <ymir/semantic/pack/Namespace.hh>
 #include <vector>
 #include <map>
+#include <ymir/utils/Array.hh>
 
 namespace semantic {
 

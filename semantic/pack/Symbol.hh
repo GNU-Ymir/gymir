@@ -37,6 +37,8 @@ namespace semantic {
 	void quit (Namespace space);
 
 	std::string typeString ();
+
+	std::string simpleTypeString ();
 	
     };
     

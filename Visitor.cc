@@ -136,7 +136,8 @@ namespace syntax {
 	    token = this-> lex.next ();
 	    this-> lex.rewind ();
 	}
-	return new IProgram (Word::eof (), decls);
+	auto last = this-> lex.fileLocus ();
+	return new IProgram (last, decls);
     }
     
     /**

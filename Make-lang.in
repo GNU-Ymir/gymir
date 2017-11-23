@@ -63,7 +63,15 @@ ymir_OBJS = \
 	ymir/FrameTable.o \
 	ymir/StringInfo.o \
 	ymir/OutBuffer.o \
-	ymir/RefInfo.o
+	ymir/RefInfo.o \
+	ymir/Program.o \
+	ymir/FrameScope.o \
+	ymir/Module.o \
+	ymir/Range.o \
+	ymir/Function.o \
+	ymir/FinalFrame.o \
+	ymir/FrameProto.o \
+	ymir/PureFrame.o
 $(END)
     
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

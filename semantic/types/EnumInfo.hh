@@ -2,6 +2,7 @@
 
 #include <ymir/semantic/types/InfoType.hh>
 #include <vector>
+#include <ymir/utils/Array.hh>
 
 namespace semantic {
 

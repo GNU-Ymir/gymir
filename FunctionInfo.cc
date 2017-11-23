@@ -89,13 +89,13 @@ namespace semantic {
 	FrameProto info;
 	if (right-> toValidate) {
 	    info = right-> toValidate-> validate (right, right-> treat);
-	    right-> name = Mangler::mangle_functionv (info-> name, info);
+	    right-> name = Mangler::mangle_functionv (info-> name (), info);
 	} else {
 	    info = goods [0]-> validate (right, right-> treat);
-	    right-> name = Mangler::mangle_function (info-> name, info);
+	    right-> name = Mangler::mangle_function (info-> name (), info);
 	}
 
-	right-> ret = info-> type-> cloneConst ();
+	right-> ret = info-> type ()-> type-> cloneConst ();
 	// TODO clone value
 	if (right-> ret-> is<IRefInfo> ())
 	    right-> ret-> isConst () = false;
@@ -144,13 +144,13 @@ namespace semantic {
 	FrameProto info;
 	if (right-> toValidate) {
 	    info = right-> toValidate-> validate (right, right-> treat);
-	    right-> name = Mangler::mangle_functionv (info-> name, info);
+	    right-> name = Mangler::mangle_functionv (info-> name (), info);
 	} else {
 	    info = goods [0]-> validate (right, right-> treat);
-	    right-> name = Mangler::mangle_function (info-> name, info);
+	    right-> name = Mangler::mangle_function (info-> name (), info);
 	}
 
-	right-> ret = info-> type-> cloneConst ();
+	right-> ret = info-> type ()-> type-> cloneConst ();
 	// TODO clone value
 	if (right-> ret-> is<IRefInfo> ())
 	    right-> ret-> isConst () = false;

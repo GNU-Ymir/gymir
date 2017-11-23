@@ -13,7 +13,7 @@
 namespace Ymir {
     	    
     enum ErrorType {
-	NotATemplate,
+	NotATemplate = 1,
 	TakeAType,
 	SyntaxError,
        	SyntaxError2,
@@ -22,7 +22,12 @@ namespace Ymir {
 	Unterminated,
 	TemplateSpecialisation,
 	TemplateCreation,
-	And
+	And,
+	Here,
+	RecursiveExpansion,
+	MultipleLoopName,
+	ShadowingVar,
+	LAST_ERROR
     };
 
     enum Language {

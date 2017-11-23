@@ -20,6 +20,8 @@ namespace syntax {
 	void is_public (bool isPublic) {
 	    this-> isPublic = isPublic;
 	}
+
+	virtual void declare () = 0;
 	
 	virtual void print (int nb = 0) = 0;	
 	

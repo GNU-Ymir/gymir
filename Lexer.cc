@@ -59,6 +59,10 @@ namespace lexical {
 	return linemap_position_for_column (::line_table, this-> column);
     }
 
+    Word Lexer::fileLocus () {
+	return Word (getCurrentLocation (), "");
+    }
+
     std::string Lexer::getFilename () const {
 	return this-> filename;
     }

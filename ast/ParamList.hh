@@ -5,6 +5,7 @@
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
+#include <ymir/utils/Array.hh>
 
 namespace syntax {
 

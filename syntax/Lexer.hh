@@ -38,6 +38,8 @@ namespace lexical {
 
 	void seek (ulong);
        	
+	Word fileLocus ();
+	
 	~Lexer ();
 
     protected:

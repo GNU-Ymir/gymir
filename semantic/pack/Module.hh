@@ -4,6 +4,7 @@
 #include "Namespace.hh"
 #include "Scope.hh"
 #include "Symbol.hh"
+#include <ymir/utils/Array.hh>
 
 namespace semantic {
 
@@ -11,7 +12,7 @@ namespace semantic {
 
 	Namespace _space;
 	std::vector <Namespace> _opens;
-	std::vector <Namespace> _publicOpens;
+	std::vector <Namespace> publicOpens;
 	Scope globalScope;
 	
     public:
@@ -20,7 +21,7 @@ namespace semantic {
 
 	Symbol get (std::string name);
 
-	Symbol getAll (std::string name);
+	std::vector <Symbol> getAll (std::string name);
 
 	void insert (Symbol sym);
 
@@ -32,11 +33,15 @@ namespace semantic {
 
 	std::vector <Namespace> opens ();
 
-	std::vector <Namespace> publicOpens ();
+	std::vector <Namespace> accessible ();
 
-	bool authorized (Namespace space);
+	bool authorized (Namespace);
 
 	Namespace space ();
+
+    private:
+
+	std::vector <Namespace> accessible (std::vector <Namespace>);
 	
     };
 
