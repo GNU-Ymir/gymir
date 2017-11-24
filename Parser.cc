@@ -5,6 +5,8 @@
 
 #include "errors/Error.hh"
 #include "ast/_.hh"
+#include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/pack/FrameTable.hh>
 
 #include "config.h"
 #include "system.h"
@@ -25,6 +27,8 @@
 
 namespace Ymir {
 
+    using namespace semantic;
+    
     Parser::Parser (const char * filename, FILE * file) :
 	lexer (filename, file,
 	       {Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB},
@@ -38,24 +42,31 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	auto prg = this-> syntax_analyse ();
-	if (Ymir::Error::nb_errors > 0) {
-	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
-	}
-
-	prg-> declare ();
-	if (Ymir::Error::nb_errors > 0)
-	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
-	
-	// this -> define_gcc_symbols ();
-	// if (Ymir::Error::nb_errors > 0) stop ();
-			
-	// //Vidange memoire
-	// Semantic::TypeInfo::clear ();
+	this-> semantic_time (prg);	
     }
 
     syntax::Program Parser::syntax_analyse () {
 	auto visitor = syntax::Visitor (lexer);
-	return visitor.visit ();
+	auto ret = visitor.visit ();
+	if (Ymir::Error::nb_errors > 0) {
+	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
+	}
+	return ret;
+    }
+
+    void Parser::semantic_time (syntax::Program prg) {
+	Table::instance ().purge ();
+	FrameTable::instance ().purge ();
+
+	prg-> declare ();
+
+	for (auto it : FrameTable::instance ().pures ()) {
+	    it-> validate ();
+	}
+
+	if (Ymir::Error::nb_errors > 0)
+	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
+	
     }
     
 };

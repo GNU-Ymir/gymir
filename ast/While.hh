@@ -29,6 +29,10 @@ namespace syntax {
 	    block (block)
 	{}
 
+	Instruction instruction () override {
+	    Ymir::Error::assert ("TODO");
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<While> %s:%s",
 		    nb, ' ',

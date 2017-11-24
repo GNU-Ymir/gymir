@@ -23,6 +23,10 @@ namespace syntax {
 	    ident (ident) {
 	}
 
+	Instruction instruction () override {
+	    Ymir::Error::assert ("TODO");
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Break> %s",
 		      nb, ' ',

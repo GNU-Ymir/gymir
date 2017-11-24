@@ -20,6 +20,11 @@ namespace syntax {
 	    elem (elem)
 	{}
 
+	Instruction instruction () override {
+	    Ymir::Error::assert ("TODO");
+	}
+
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Return> %s",
 		    nb, ' ',

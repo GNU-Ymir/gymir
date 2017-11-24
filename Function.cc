@@ -33,6 +33,22 @@ namespace syntax {
     Word IFunction::getIdent () {
 	return this-> ident;
     }
+
+    std::vector <Var> IFunction::getParams () {
+	return this-> params;
+    }
+
+    Var IFunction::getType () {
+	return this-> type;
+    }
+
+    std::string IFunction::name () {
+	return this-> ident.getStr ();
+    }
+    
+    Block IFunction::getBlock () {
+	return this-> block;
+    }
     
     void IFunction::declare ()  {
 	if (this-> ident == Keys::MAIN) {

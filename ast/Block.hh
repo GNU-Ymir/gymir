@@ -27,6 +27,14 @@ namespace syntax {
 	{
 	    this-> ident.setEof ();
 	}
+
+	Word& getIdent ();
+
+	Instruction instruction () override;
+	
+	IBlock* block ();
+
+	IBlock* blockWithoutEnter ();
 	
 	void print (int nb = 0) override; 	
     };

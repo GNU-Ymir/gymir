@@ -32,6 +32,14 @@ namespace syntax {
 
 	Word getIdent ();	
 	
+	std::string name ();
+
+	std::vector <Var> getParams ();
+
+	Var getType ();
+
+	Block getBlock ();
+	
 	void declare () override;
 	
 	void print (int nb = 0) override;

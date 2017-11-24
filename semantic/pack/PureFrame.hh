@@ -10,7 +10,7 @@ namespace semantic {
     class IPureFrame : public IFrame {
 	std::string name;
 	FrameProto proto = NULL;
-	bool isValide = false;
+	bool isValid = false;
 	bool pass = false;
 
     public:

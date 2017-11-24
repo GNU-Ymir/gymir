@@ -14,26 +14,13 @@ namespace syntax {
 	std::vector <Expression> params;
 
     public :
-	IParamList (Word ident, std::vector <Expression> params) :
-	    IExpression (ident),
-	    params (params)
-	{}
+	IParamList (Word ident, std::vector <Expression> params);
 
+	std::vector <Expression> getParams ();
 
-	std::vector <Expression> getParams () {
-	    return this-> params;
-	}
+	std::vector <semantic::InfoType> getParamTypes ();
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<ParamList> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-
-	    for (auto it : this-> params) {
-		it-> print (nb + 4);
-	    }	    
-	}
+	void print (int nb = 0) override;
     };
 
     typedef IParamList* ParamList;

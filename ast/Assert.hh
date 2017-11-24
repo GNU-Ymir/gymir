@@ -25,7 +25,10 @@ namespace syntax {
 		this-> msg-> inside = this;
 	    this-> isStatic = isStatic;
 	}
-
+	
+	Instruction instruction () override {
+	    Ymir::Error::assert ("TODO");
+	}
 
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Assert> %s",

@@ -53,9 +53,17 @@ namespace semantic {
 	    
 	virtual FrameProto validate ();
 
+	virtual FrameProto validate (std::vector <InfoType>);
+	
+	virtual FrameProto validate (std::vector <::syntax::Var>);
+	
 	virtual FrameProto validate (::syntax::ParamList);
 
 	virtual FrameProto validate (ApplicationScore, std::vector <InfoType>);
+
+	static std::vector <::syntax::Var> computeParams (std::vector<::syntax::Var>, std::vector<InfoType>);
+
+	static std::vector <::syntax::Var> computeParams (std::vector<::syntax::Var>);
 
 	virtual Namespace& space ();
 
@@ -95,6 +103,11 @@ namespace semantic {
 
 	virtual const char* getId () = 0;
 
+    protected:
+
+	ApplicationScore getScore (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
+
+	ApplicationScore isApplicable (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
 	
     };
 

@@ -14,49 +14,21 @@ namespace syntax {
 
     public:
 
-	ITypedVar (Word ident, Var type) :
-	    IVar (ident),
-	    type (type)
-	{}
+	ITypedVar (Word ident, Var type);
 
-	ITypedVar (Word ident, Var type, Word deco) :
-	    IVar (ident),
-	    type (type)
-	{
-	    this-> deco = deco;
-	}
+	ITypedVar (Word ident, Var type, Word deco);
 
-	ITypedVar (Word ident, Expression type) :
-	    IVar (ident),
-	    expType (type)
-	{}
+	ITypedVar (Word ident, Expression type);
 
-	ITypedVar (Word ident, Expression type, Word deco) :
-	    IVar (ident),
-	    expType (type)
-	{
-	    this-> deco = deco;
-	}
+	ITypedVar (Word ident, Expression type, Word deco);
 	
-	static const char * id () {
-	    return "ITypedVar";
-	}
+	static const char * id ();
 
-	const char * getId () override {
-	    return ITypedVar::id ();
-	}
+	const char * getId () override;
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<TypedVar> %s%s",
-		    nb, ' ',
-		    this-> deco.isEof () ? "" : this-> deco.getStr ().c_str (),
-		    this-> token.toString ().c_str ()
-	    );
-	    if (this-> type) 
-		this-> type-> print (nb + 4);
-	    else this-> expType-> print (nb + 4);
-	}
+	semantic::InfoType getType ();
 	
+	void print (int nb = 0) override;	
     };
 
     typedef ITypedVar* TypedVar;

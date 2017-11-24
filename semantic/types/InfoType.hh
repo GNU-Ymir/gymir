@@ -145,7 +145,7 @@ namespace semantic {
 
 	InfoType DotOp (std::string);
 
-	virtual InfoType TempOp ();
+	virtual InfoType TempOp (std::vector <::syntax::Expression>);
 
 	virtual InfoType clone () = 0;
 

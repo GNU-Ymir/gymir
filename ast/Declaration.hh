@@ -22,6 +22,10 @@ namespace syntax {
 	}
 
 	virtual void declare () = 0;
+
+	virtual void declareAsInternal () {
+	    return this-> declare ();
+	}
 	
 	virtual void print (int nb = 0) = 0;	
 	

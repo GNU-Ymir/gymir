@@ -136,7 +136,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IInfoType::TempOp () {
+    InfoType IInfoType::TempOp (std::vector <syntax::Expression>) {
 	return NULL;
     }
 

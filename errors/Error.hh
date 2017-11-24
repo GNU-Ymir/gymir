@@ -122,10 +122,16 @@ namespace Ymir {
 	}
 	
 	template <typename ... TArgs>
-	void assert_ (const char * format_, TArgs ... args) {
-	    fatal_error (UNKNOWN_LOCATION, format_, args...);
+	void assert_ (const char * format_, TArgs ... args) {	    
+	    printf ("%sAssert%s : %s\n", RED, RESET, format (format_, args...).c_str ());
+	    raise (SIGSEGV);
 	}
 
+	template <typename ... TArgs>
+	static void fail (const char * format_, TArgs ... args) {	    
+	    fatal_error (UNKNOWN_LOCATION, format_, args...);
+	}
+	
 	template <typename ... TArgs>
 	static void assert (const char * format_, TArgs ... args) {
 	    return __instance__.assert_ (format_, args...);

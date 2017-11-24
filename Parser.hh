@@ -20,7 +20,7 @@ namespace Ymir {
 
 	syntax::Program syntax_analyse ();
 
-	void semantic_analyse (syntax::Program &);
+	void semantic_time (syntax::Program);
 
 	void define_gcc_symbols ();
 	

@@ -27,6 +27,8 @@ namespace syntax {
 	    decos (decos)
 	{}
 
+	Instruction instruction () override;	
+	
 	void print (int nb = 0) override;	
     };
 

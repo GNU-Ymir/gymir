@@ -42,6 +42,11 @@ namespace syntax {
 		this-> else_-> isStatic = isStatic;
 	}
 
+	Instruction instruction () override {
+	    Ymir::Error::assert ("TODO");
+	}
+
+	
 	void print (int nb = 0) override {
 	    if (this-> test) {
 		printf ("\n%*c<%sIf> %s",			

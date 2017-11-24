@@ -5,7 +5,15 @@
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
-#include "../semantic/pack/Symbol.hh"
+
+
+namespace semantic {
+    class ISymbol;
+    typedef ISymbol* Symbol;
+
+    class IInfoType;
+    typedef IInfoType* InfoType;
+}
 
 namespace syntax {
 
@@ -20,6 +28,14 @@ namespace syntax {
 	    IInstruction (word)
 	{}
 
+	Instruction instruction () {
+	    return this-> expression ();
+	}
+	
+	virtual IExpression* expression () {
+	    Ymir::Error::assert ("TODO");
+	}
+	
 	virtual void print (int) override {}
 	
     };

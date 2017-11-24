@@ -8,27 +8,20 @@
 namespace syntax {
 
     class IType : public IVar {
+
+	semantic::InfoType _type;
+	
     public:
 
-	IType (Word token/*, InfoType type*/) :
-	    IVar (token)
-	{}
+	IType (Word token, semantic::InfoType type);
 
-	static const char * id () {
-	    return "IType";
-	}
+	static const char * id ();
 	
-	const char * getId () override {
-	    return IType::id ();
-	}
+	const char * getId () override;
+
+	semantic::InfoType type ();	
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Type> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	}
-	
+	void print (int nb = 0) override;	
     };
 
     typedef IType* Type;

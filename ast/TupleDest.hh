@@ -30,6 +30,10 @@ namespace syntax {
 	    right (right),
 	    isVariadic (false)
 	{}
+
+	Instruction instruction () override {
+	    Ymir::Error::assert ("TODO");
+	}
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<TupleDest> %s",

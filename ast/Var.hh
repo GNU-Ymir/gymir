@@ -8,6 +8,12 @@
 
 namespace syntax {
 
+    class ITypedVar;
+    typedef ITypedVar* TypedVar;
+
+    class IType;
+    typedef IType* Type;
+    
     class IVar : public IExpression {
     protected :
 	
@@ -17,41 +23,33 @@ namespace syntax {
 
 	Word deco;
 
-	IVar (Word ident) : IExpression (ident) {}
-	IVar (Word ident, Word deco) :
-	    IExpression (ident),
-	    deco (deco)
-	{}
+	IVar (Word ident);
+	IVar (Word ident, Word deco);
+	IVar (Word ident, std::vector <Expression> tmps);
 
-	IVar (Word ident, std::vector <Expression> tmps) :
-	    IExpression (ident),
-	    templates (tmps)
-	{}
-
-
-	static const char* id () {
-	    return "IVar";
-	}
+	static const char* id ();
 	
-	const char* getId () override {
-	    return IVar::id ();
-	}
+	const char* getId () override;
 	
-	bool hasTemplate () {
-	    return this-> templates.size () != 0;
-	}
+	bool hasTemplate ();
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Var> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    
-	    for(auto it : this-> templates) {
-		it-> print (nb + 4);
-	    }
-	    
-	}	
+	Expression expression () override;
+
+	IVar* var ();
+
+	Type asType ();
+
+	bool isType ();
+
+	std::vector<Expression>& getTemplates ();
+
+	Word& getDeco ();
+	
+	TypedVar setType (::semantic::Symbol info);
+
+	TypedVar setType (::semantic::InfoType info);
+
+	void print (int nb = 0) override;
     };
 
     class IArrayVar : public IVar {

@@ -28,6 +28,10 @@ namespace syntax {
 	    this-> iter-> inside = this;
 	}
 
+	Instruction instruction () override {
+	    Ymir::Error::assert ("TODO");
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<For> %s",
 		    nb, ' ',
