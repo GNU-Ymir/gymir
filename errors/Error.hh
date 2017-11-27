@@ -43,6 +43,13 @@ namespace Ymir {
 	    RecursiveExpansion,
 	    MultipleLoopName,
 	    ShadowingVar,
+	    UnknownType,
+	    UndefVar,
+	    UndefVar2,
+	    UninitVar,
+	    UndefinedOp,
+	    UndefinedOpMult,
+	    UseAsVar,
 	    LAST_ERROR
 	};
 
@@ -78,7 +85,7 @@ namespace Ymir {
     struct ErrorMsg {
 	std::string msg;
 	bool isFatal;
-	bool isWarning;
+	bool isWarning;       	
     };
     
     struct Error {
@@ -115,7 +122,7 @@ namespace Ymir {
 
 	static void recursiveExpansion (Word);
 
-	static void unknowType (Word);
+	static void unknownType (Word);
 
 	static void multipleLoopName (Word, Word);
 
@@ -133,7 +140,7 @@ namespace Ymir {
 
 	static void activeError (bool);
 
-	static std::vector <ErrorMsg> caught ();
+	static std::vector <ErrorMsg>& caught ();
 	
 	template <typename ... TArgs>
 	static void assert (const char * format_, TArgs ... args) {

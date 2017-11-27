@@ -35,6 +35,12 @@ namespace semantic {
 	return this-> type-> typeString ();
     }
 
+    bool ISymbol::isType () {
+	if (this-> type)
+	    return this-> type-> isType ();
+	return false;
+    }
+    
     std::string ISymbol::simpleTypeString () {
 	if (this-> type-> isConst ())
 	    return std::string ("c") + this-> type-> simpleTypeString ();

@@ -22,7 +22,14 @@ namespace Ymir {
 		phrases [And] = "Et";
 		phrases [Here] = "Ici";
 		phrases [MultipleLoopName] = "L'identifiant de boucle '%s%s%s' est déjà définis";
-		phrases [ShadowingVar] = "L'identifiant de boucle '%s%s%s' est déjà définis";
+		phrases [ShadowingVar] = "'%s%s%s' est déjà définis";
+		phrases [RecursiveExpansion] = "Nombre maximum d'expansions récursives atteint";		
+		phrases [UnknownType] = "Le type '%s%s%s' n'existe pas";
+		phrases [UndefVar] = "Identifiant '%s%s%s' inconnu";
+		phrases [UndefVar2] = "Identifiant '%s%s%s' inconnu, peut être '%s%s%s'";
+		phrases [UninitVar] = "Utilisation d'une variable sans type, '%s%s%s'";
+		phrases [UseAsVar] = "'%s%s%s' n'identifie pas une variable";
+		phrases [UndefinedOpMult] = "L'operateur '%s%s%s%s' est indéfinis pour le type '%s%s%s' et (%s)";
 		init = true;
 	    } 
 	    return phrases;
@@ -44,6 +51,15 @@ namespace Ymir {
 		phrases [And] = "And";
 		phrases [Here] = "Here";
 		phrases [MultipleLoopName] = "Loop identifier '%s%s%s' is already used";
+
+		phrases [ShadowingVar] = "Identifier '%s%s%s' is already used";
+		phrases [UnknownType] = "There is no type called '%s%s%s'";
+		phrases [RecursiveExpansion] = "Maximum number of recursive expansions reached";
+		phrases [UndefVar] = "Undefined identifier '%s%s%s'";
+		phrases [UndefVar2] = "Undefined identifier '%s%s%s', maybe '%s%s%s' was meant";
+		phrases [UninitVar] = "Variable '%s%s%s' has no type";
+		phrases [UseAsVar] = "'%s%s%s' do not identify a variable";
+		phrases [UndefinedOpMult] = "Operateur '%s%s%s%s' is undefined for type '%s%s%s' and (%s)";
 		init = true;
 	    } 
 	    return phrases;

@@ -35,8 +35,11 @@ namespace syntax {
 		Ymir::Error::assert ("TODO");
 	    }
 	    if (!it-> is<INone> ()) {
-		insts.push_back (it-> instruction ());
-		insts.back ()-> father () = bl;
+		auto inst = it-> instruction ();
+		if (inst != NULL) {
+		    insts.push_back (inst);
+		    insts.back ()-> father () = bl;
+		}
 	    }	    	    
 	}
 	
@@ -51,9 +54,10 @@ namespace syntax {
 	for (auto it : this-> decls) {
 	    auto aux = new IVar (it-> token);
 	    auto info = Table::instance ().get (it-> token.getStr ());
-	    if (info && Table::instance ().sameFrame (info))
-		Ymir::Error::assert ("TODO, Shadowing");
-
+	    if (info && Table::instance ().sameFrame (info)) {
+		Ymir::Error::shadowingVar (it-> token, info-> sym);
+		return NULL;
+	    }
 
 	    if (this-> decos [id] == Keys::IMMUTABLE) {
 		Ymir::Error::assert ("TODO, Immut");

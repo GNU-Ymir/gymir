@@ -209,6 +209,17 @@ namespace semantic {
 	return ret;
     }
 
+    Symbol Table::getAlike (std::string name) {
+	for (auto it : this-> _frameTable) {
+	    if (it.space ().isSubOf (this-> _space)) {
+		auto ret = it.getAlike (name);
+		if (ret) return ret;
+	    }
+	}
+	return this-> _globalScope.getAlike (name);
+    }
+	
+    
     bool Table::sameFrame (Symbol sym) {
 	if (this-> _frameTable.empty ()) return true;
 	auto ret =this-> _frameTable.front ().get (sym-> sym.getStr ());
@@ -259,7 +270,7 @@ namespace semantic {
 	}
 	return alls;
     }
-
+    
     bool Table::isModule (Namespace space) {
 	for (auto it : this-> _foreigns) {
 	    if (it == space) return true;
