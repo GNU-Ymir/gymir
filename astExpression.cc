@@ -1,41 +1,59 @@
-#include <ymir/ast/Var.hh>
-#include <ymir/syntax/Keys.hh>
-#include <ymir/ast/TypedVar.hh>
-#include <ymir/ast/Par.hh>
-#include <ymir/ast/Dot.hh>
+#include <ymir/ast/_.hh>
 #include <ymir/semantic/types/_.hh>
-#include <ymir/semantic/pack/Table.hh>
-
-#include <ymir/semantic/pack/Symbol.hh>
-#include <ymir/semantic/types/InfoType.hh>
+#include <ymir/semantic/pack/_.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace syntax {
-
     using namespace semantic;
     
-    IVar::IVar (Word ident) : IExpression (ident) {}
+    Expression IAccess::expression () {
+	auto aux = new IAccess (this-> token, this-> end);
+	aux-> params = (ParamList) this-> params-> expression ();
+	aux-> left = this-> left-> expression ();
+	if (aux-> left-> is<IType> ())
+	    Ymir::Error::undefVar (aux-> left-> token,
+				   Table::instance ().getAlike (aux-> left-> token.getStr ())
+	    );
 
-    IVar::IVar (Word ident, Word deco) :
-	IExpression (ident),
-	deco (deco)
-    {}
+	else if (aux-> left-> info-> type-> is <IUndefInfo> ())
+	    Ymir::Error::uninitVar (aux-> left-> token);
+	else if (aux-> left-> info-> isType ())
+	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
 
-    IVar::IVar (Word ident, std::vector <Expression> tmps) :
-	IExpression (ident),
-	templates (tmps)
-    {}
-
-    const char* IVar::id () {
-	return "IVar";
+	auto type = aux-> left-> info-> type-> AccessOp (aux-> left-> token,
+							 aux-> params);
+	if (type == NULL) {
+	    auto call = findOpAccess ();
+	    if (call == NULL) {
+		Ymir::Error::undefinedOp (this-> token, this-> end,
+					  aux-> left-> info, aux-> params);
+	    } else {
+		return call;
+	    }
+	}
+	aux-> info = new ISymbol (this-> token, type);
+	return aux;
     }
+
+
+    Expression IAccess::findOpAccess () {
+	Ymir::Error::activeError (false);
+	Word word (this-> token.getLocus (), Keys::OPACCESS);
+	auto var = new IVar (word);
+	std::vector <Expression> params = {this-> left};
+	params.insert (params.begin (), this-> params-> getParams ().begin (),
+		       this-> params-> getParams ().end ());
+	auto finalParams = new IParamList (this-> token, params);
+	auto call = IPar (this-> token, this-> token, var, finalParams, true);
+
+	auto errors = Ymir::Error::caught ();
+	Ymir::Error::activeError (true);
 	
-    const char* IVar::getId () {
-	return IVar::id ();
+	if (errors.size () != 0) return NULL;
+	else return call.expression ();	
     }
-	
-    bool IVar::hasTemplate () {
-	return this-> templates.size () != 0;
-    }
+
+    
     
     Expression IVar::expression () {
 	if (this-> info && this-> info-> isImmutable ()) {
@@ -143,83 +161,7 @@ namespace syntax {
 	return false;	
     }
 
-    std::vector <Expression>& IVar::getTemplates () {
-	return this-> templates;
-    }
-
-    Word& IVar::getDeco () {
-	return this-> deco;
-    }
-
-    void IVar::print (int nb) {
-	printf ("\n%*c<Var> %s",
-		nb, ' ',
-		this-> token.toString ().c_str ()
-	);
-	    
-	for(auto it : this-> templates) {
-	    it-> print (nb + 4);
-	}
-	    
-    }	
-
-    IType::IType (Word token, InfoType type) :
-	IVar (token),
-	_type (type)
-    {}    
-
-    InfoType IType::type () {
-	return this-> _type;
-    }
-
-    const char * IType::id () {
-	return "IType";
-    }
     
-    const char * IType::getId () {
-	return IType::id ();
-    }
-    
-    void IType::print (int nb) {
-	printf ("\n%*c<Type> %s",
-		nb, ' ',
-		this-> token.toString ().c_str ()
-	);
-    }
-
-
-    ITypedVar::ITypedVar (Word ident, Var type) :
-	IVar (ident),
-	type (type)
-    {}
-
-    ITypedVar::ITypedVar (Word ident, Var type, Word deco) :
-	IVar (ident),
-	type (type)
-    {
-	this-> deco = deco;
-    }
-
-    ITypedVar::ITypedVar (Word ident, Expression type) :
-	IVar (ident),
-	expType (type)
-    {}
-
-    ITypedVar::ITypedVar (Word ident, Expression type, Word deco) :
-	IVar (ident),
-	expType (type)
-    {
-	this-> deco = deco;
-    }
-	
-    const char * ITypedVar::id () {
-	return "ITypedVar";
-    }
-
-    const char * ITypedVar::getId () {
-	return ITypedVar::id ();
-    }
-
     semantic::InfoType ITypedVar::getType () {
 	if (this-> type) {
 	    auto type = this-> type-> asType ();
@@ -244,17 +186,36 @@ namespace syntax {
 	    return type-> info-> type;	    
 	}
     }
+
+    Expression ITypedVar::expression () {
+	TypedVar aux;
+	if (this-> type) {
+	    aux = new ITypedVar (this-> token, this-> type-> asType ());
+	} else {
+	    auto ptr = this-> expType-> expression ()-> to<IFuncPtr> ();
+	    if (ptr) {
+		aux = new ITypedVar (this-> token, new IType (ptr-> token, ptr-> info-> type));
+	    } else Ymir::Error::assert ("????!!!!");	
+	}
 	
-    void ITypedVar::print (int nb) {
-	printf ("\n%*c<TypedVar> %s%s",
-		nb, ' ',
-		this-> deco.isEof () ? "" : this-> deco.getStr ().c_str (),
-		this-> token.toString ().c_str ()
-	);
-	if (this-> type) 
-	    this-> type-> print (nb + 4);
-	else this-> expType-> print (nb + 4);
+	if (this-> deco == Keys::REF) {
+	    aux-> info = new ISymbol (this-> token, new IRefInfo (aux-> type-> info-> type));
+	} else {
+	    aux -> info = new ISymbol (this-> token, aux-> type-> info-> type);
+	    aux-> info-> type-> isConst () = (this-> deco == Keys::CONST);
+	}
+	Table::instance ().insert (aux-> info);
+	return aux;    
     }
+    
+    Var ITypedVar::var () {
+	return (Var) this-> expression ();
+    }
+    
+    
 
     
+
+    
+
 }

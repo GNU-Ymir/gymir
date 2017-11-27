@@ -31,11 +31,7 @@ namespace semantic {
 	}
 	auto _it_ = __alias__.find (word.getStr ());
 	if (_it_ != __alias__.end ()) return _it_-> second-> clone ();
-	Ymir::Error::append (word,
-			     "Type inconnu '%s%s%s'",
-			     Ymir::Error::YELLOW,
-			     word.getStr ().c_str (),
-			     Ymir::Error::RESET);
+	Ymir::Error::unknowType (word);
 	return NULL;
     }
 

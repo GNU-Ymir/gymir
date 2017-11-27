@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Expression.hh"
-#include "../errors/_.hh"
-#include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 #include <cmath>
 

@@ -22,10 +22,7 @@ namespace semantic {
 	static InfoType create (Word token, std::vector <syntax::Expression> templates) {
 	    if (templates.size () != 1 || !(templates [0]-> is<syntax::IType> ())) {
 		// if (auto cst = templates [0]-> info-> type-> to<StructCstInfo> ()) {}
-		Ymir::Error::append (token,
-				     Ymir::TakeAType,
-				     "un", "type", ""
-		);
+		Ymir::Error::takeATypeAsTemplate (token);		
 	    } else {
 		return new IArrayInfo (false, templates [0]-> info-> type);
 	    }

@@ -4,7 +4,6 @@
 #include <ymir/utils/Array.hh>
 #include <stdio.h>
 #include "../errors/_.hh"
-#include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 
 namespace syntax {

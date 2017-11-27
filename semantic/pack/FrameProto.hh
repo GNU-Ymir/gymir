@@ -1,14 +1,31 @@
 #pragma once
 
 #include <gc/gc_cpp.h>
-#include <ymir/ast/Var.hh>
 #include <ymir/semantic/pack/Namespace.hh>
 #include <ymir/utils/Array.hh>
+
+namespace syntax {
+    class IExpression;
+    typedef IExpression* Expression;
+
+    class IParamList;
+    typedef IParamList* ParamList;
+
+    class IFunction;
+    typedef IFunction* Function;
+
+    class IVar;
+    typedef IVar* Var;    
+}
+
 
 namespace semantic {
 
     class IInfoType;
     typedef IInfoType* InfoType;
+
+    class ISymbol;
+    typedef ISymbol* Symbol;
     
     class IFrameProto : public gc {
     private:

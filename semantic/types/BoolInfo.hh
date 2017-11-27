@@ -11,7 +11,7 @@ namespace semantic {
 
 	static InfoType create (Word w, std::vector <::syntax::Expression> tmps) {
 	    if (tmps.size () != 0) {
-		Ymir::Error::append (w, Ymir::NotATemplate);
+		Ymir::Error::notATemplate (w);
 		return NULL;
 	    } else return new IBoolInfo (false);
 	}

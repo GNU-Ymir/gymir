@@ -87,7 +87,7 @@ namespace semantic {
 	}
 
 	static bool exists (std::string name) {
-	    return Creators::instance ().find (name) ||
+	    return (Creators::instance ().find (name) != NULL) ||
 		(__alias__.find (name) != __alias__.end ());
 	}
 

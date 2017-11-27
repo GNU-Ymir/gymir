@@ -109,13 +109,7 @@ namespace lexical {
 	    if (it == word.getStr ()) return word;
 	}
 
-	Ymir::Error::fatal (word,
-			    Ymir::SyntaxError,
-			    join (mandatories).c_str (),
-			    Ymir::Error::YELLOW,
-			    word.getStr ().c_str (),
-			    Ymir::Error::RESET
-	);
+	Ymir::Error::syntaxError (word, join (mandatories).c_str ());
 	
 	return Word::eof ();
     }

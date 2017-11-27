@@ -5,7 +5,8 @@
 #include <string>
 
 namespace Ymir {    	
-
+    using namespace Private;
+    
     const char* Error::RESET = "\u001B[0m";
     const char* Error::PURPLE = "\u001B[1;35m";
     const char* Error::BLUE = "\u001B[1;36m";
@@ -139,10 +140,137 @@ namespace Ymir {
     }    
 
 
-    const char * getString (ErrorType type, Language ln) {
-	auto strings = Languages::getLanguage (ln);
-	return strings [type];	
+    namespace Private {
+	const char * getString (ErrorType type, Language ln) {
+	    auto strings = Languages::getLanguage (ln);
+	    return strings [type];	
+	}
     }
+    
+
+    void Error::activeError (bool isActive) {
+	__isEnable__ = isActive;
+	if (isActive) {
+	    __caught__.clear ();
+	}
+    }
+
+    void Error::notATemplate (Word word) {
+	auto str = getString (NotATemplate);
+	std::string msg = format (str, YELLOW, word.getStr ().c_str, RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
+    void Error::takeATypeAsTemplate (Word word) {
+	auto msg = getString (TakeAType);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::syntaxError (Word word) {
+	auto str = getString (SyntaxError2);
+	auto msg = format (str, YELLOW, word.getStr ().c_str, RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::syntaxError (Word word, const char * expected) {
+	auto str = getString (SyntaxError);
+	auto msg = format (str, expected, YELLOW, word.getStr ().c_str, RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::syntaxError (Word word, Word word2) {
+	auto str = getString (SyntaxError);
+	auto msg = format (str, word2.getStr().c_str (),
+			   YELLOW, word.getStr ().c_str, RESET);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
+    void Error::escapeError (Word word) {
+	auto msg = std::string (getString (EscapeChar));	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
+    void Error::endOfFile () {
+	auto msg = std::string (getString (EndOfFile));
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+   
+    void Error::unterminated (Word word) {
+	auto str = getString (Unterminated);
+	auto msg = format (str, YELLOW, word.getStr ().c_str, RESET);	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg (msg, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::templateSpecialisation (Word word, Word word2) {
+	auto str = getString (TemplateSpecialisation);
+	auto msg = format (str, YELLOW, word.getStr ().c_str, RESET);	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+
+	auto msg2 = std::string (getString (And));
+	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : " + aux;
+	aux = addLine (aux, word2);
+	
+	ErrorMsg errorMsg (msg + aux, false, false);
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+
+    
+    
     
 
     

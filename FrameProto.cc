@@ -2,6 +2,8 @@
 #include <ymir/errors/Error.hh>
 #include <ymir/utils/Range.hh>
 #include <ymir/semantic/types/InfoType.hh>
+#include <ymir/semantic/pack/Symbol.hh>
+#include <ymir/ast/Var.hh>
 
 namespace semantic {
 

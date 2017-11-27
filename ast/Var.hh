@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Expression.hh"
-#include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 
 #include <vector>
@@ -35,7 +34,7 @@ namespace syntax {
 
 	Expression expression () override;
 
-	IVar* var ();
+	virtual IVar* var ();
 
 	Type asType ();
 

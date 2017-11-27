@@ -21,7 +21,7 @@ namespace semantic {
 
 	static InfoType create (Word tok, std::vector<syntax::Expression> tmps) {
 	    if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
-		Ymir::Error::append (tok, Ymir::TakeAType);
+		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
 		return new IRefInfo (false, tmps [0]-> info-> type);

@@ -4,9 +4,10 @@
 namespace Ymir {
 
     namespace Languages {
-
+	using namespace Private;
+	
 	const char** fr () {
-	    static const char* phrases [Ymir::LAST_ERROR];
+	    static const char* phrases [Ymir::Private::LAST_ERROR];
 	    static bool init = false;
 	    if (!init) {
 		phrases [SyntaxError] = "[%s] attendues, mais %s%s%s trouvé";
@@ -15,7 +16,7 @@ namespace Ymir {
 		phrases [NotATemplate] = "L'élément '%s%s%s' n'est pas un template";
 		phrases [EndOfFile] = "Fin de fichier inattendue";
 		phrases [Unterminated] = "caractère de fin de chaîne '%s%s%s' manquant";
-		phrases [TakeAType] = "Prend %s %s en template%s";
+		phrases [TakeAType] = "Prend un type en template";
 		phrases [TemplateSpecialisation] = "La specialisation de template fonctionne avec '%s%s%s'";
 		phrases [TemplateCreation] = "Création de template";
 		phrases [And] = "Et";
@@ -28,7 +29,7 @@ namespace Ymir {
 	}
 
 	const char** en () {
-	    static const char* phrases [Ymir::LAST_ERROR];
+	    static const char* phrases [Ymir::Private::LAST_ERROR];
 	    static bool init = false;
 	    if (!init) {
 		phrases [SyntaxError] = "[%s] expected, when %s%s%s found";
@@ -37,7 +38,7 @@ namespace Ymir {
 		phrases [NotATemplate] = "'%s%s%s' element is not a template";
 		phrases [EndOfFile] = "unexpected end of file";
 		phrases [Unterminated] = "missing terminating '%s%s%s' character";
-		phrases [TakeAType] = "take %s %s as template argument%s";
+		phrases [TakeAType] = "take a type as template argument";
 		phrases [TemplateSpecialisation] = "Template specialisation works with both";
 		phrases [TemplateCreation] = "Template creation";
 		phrases [And] = "And";

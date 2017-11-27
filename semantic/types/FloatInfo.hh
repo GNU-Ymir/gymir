@@ -17,7 +17,7 @@ namespace semantic {
 	
 	static InfoType create (Word token, std::vector <syntax::Expression> tmps) {
 	    if (tmps.size () != 0)
-		Ymir::Error::append (token, Ymir::NotATemplate);
+		Ymir::Error::notATemplate (token);
 
 	    if (token == "float") return new IFloatInfo (false, FloatConst::FLOAT);
 	    else if (token == "double") return new IFloatInfo (false, FloatConst::DOUBLE);

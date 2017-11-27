@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Frame.hh"
-#include "FrameProto.hh"
 #include "Namespace.hh"
 
 #include <string>
@@ -13,6 +12,12 @@ namespace syntax {
 }
     
 namespace semantic {
+
+    class IFrame;
+    typedef IFrame* Frame;
+
+    class IFrameProto;
+    typedef IFrameProto* FrameProto;
     
     class IExternFrame : public IFrame {
 

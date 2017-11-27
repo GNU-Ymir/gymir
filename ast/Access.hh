@@ -35,36 +35,7 @@ namespace syntax {
 	{
 	}
 
-	// Expression expression () override {
-	//     auto aux = new IAccess (this-> token, this-> end);
-	//     aux-> params = (ParamList) this-> params-> expression ();
-	//     aux-> left = this-> left-> expression ();
-	//     if (is<Type> (aux-> left))
-	// 	Ymir::Error::undefVar (aux-> left-> token,
-	// 			       TABLE.getAlike (aux-> left-> token-> getStr ())
-	// 	);
-
-	//     else if (is <UndefInfo> (aux-> left-> info-> type))
-	// 	Ymir::Error::uninitVar (aux-> left-> token);
-	//     else if (aux-> left-> info-> isType ())
-	// 	Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
-
-	//     auto type = aux-> left-> info-> type-> AccessOp (aux-> left-> token,
-	// 						     aux-> params);
-	//     if (type == NULL) {
-	// 	delete aux;
-	// 	auto call = findOpAccess ();
-	// 	if (call == NULL) {
-	// 	    Ymir::Error::undefinedOp (this-> token, this-> end,
-	// 				      aux-> left-> info, aux-> params);
-	// 	} else {
-	// 	    return call;
-	// 	}
-	//     }
-	//     aux-> info = new ISymbol (this-> token, type);
-	//     return aux;
-	// }
-
+	Expression expression () override;
 
 	// Expression templateExpReplace (std::map<std::string, Expression> values)
 	//     override {
@@ -102,20 +73,7 @@ namespace syntax {
 	
     private:
 	
-	// Expression findOpAccess () {
-	//     try {
-	// 	auto word = Word (this-> token.locus, Keys::OPACCESS.descr, true);
-	// 	auto var = new IVar (word);
-	// 	std::vector <Expression> params = {this-> left};
-	// 	params.insert (params.begin (), this-> params-> params.begin (),
-	// 		       this-> params-> params.end ());
-	// 	auto params = new IParamList (this-> token, params);
-	// 	auto call = IPar (this-> token, this-> token, var, params, true);
-	// 	return call.expression ();
-	//     } catch (YmirException tmp) {
-	// 	return NULL;
-	//     }
-	// }
+	Expression findOpAccess ();
 	
     };
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Array.hh>
+#include <ymir/ast/Var.hh>
 
 namespace Mangler {
     using namespace Ymir;

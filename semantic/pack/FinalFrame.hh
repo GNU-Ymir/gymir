@@ -3,9 +3,20 @@
 #include <gc/gc_cpp.h>
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/semantic/pack/Namespace.hh>
-#include <ymir/ast/Var.hh>
+
 #include <vector>
 #include <string>
+
+namespace syntax {
+    class IVar;
+    typedef IVar* Var;
+
+    class IExpression;
+    typedef IExpression* Expression;
+
+    class IBlock;
+    typedef IBlock* Block;
+}
 
 namespace semantic {
 

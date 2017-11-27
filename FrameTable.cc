@@ -1,4 +1,6 @@
 #include "semantic/pack/FrameTable.hh"
+#include <ymir/semantic/pack/Frame.hh>
+#include <ymir/semantic/pack/FinalFrame.hh>
 
 namespace semantic {
     

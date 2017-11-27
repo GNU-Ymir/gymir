@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../errors/_.hh"
-#include "../semantic/_.hh"
 #include <gc/gc_cpp.h>
 
 namespace syntax {

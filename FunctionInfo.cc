@@ -80,8 +80,9 @@ namespace semantic {
 
 	if (goods.size () == 0) return NULL;
 	else if (goods.size () != 1) {
-	    Ymir::Error::append (goods [0]-> ident (), Ymir::TemplateSpecialisation);
-	    Ymir::Error::note (goods [1]-> ident (), Ymir::And);
+	    Ymir::Error::templateSpecialisation (goods [0]-> ident (),
+						 goods [1]-> ident ()
+	    );
 	    return NULL;
 	}
 
@@ -101,7 +102,7 @@ namespace semantic {
 	    right-> ret-> isConst () = false;
 
 	if (Ymir::Error::thrown ()) {
-	    Ymir::Error::note (tok, Ymir::TemplateCreation);
+	    Ymir::Error::templateCreation (tok);
 	    return NULL;
 	}
 	
@@ -135,8 +136,9 @@ namespace semantic {
 
 	if (goods.size () == 0) return NULL;
 	else if (goods.size () != 1) {
-	    Ymir::Error::append (goods [0]-> ident (), Ymir::TemplateSpecialisation);
-	    Ymir::Error::note (goods [1]-> ident (), Ymir::And);
+	    Ymir::Error::templateSpecialisation (goods [0]-> ident (),
+						 goods [1]-> ident ()
+	    );
 	    return NULL;
 	}
 
@@ -156,7 +158,7 @@ namespace semantic {
 	    right-> ret-> isConst () = false;
 
 	if (Ymir::Error::thrown ()) {
-	    Ymir::Error::note (tok, Ymir::TemplateCreation);
+	    Ymir::Error::templateCreation (tok);
 	    return NULL;
 	}
 	

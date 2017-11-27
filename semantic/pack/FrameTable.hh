@@ -1,10 +1,17 @@
 #pragma once
 
-#include "Frame.hh"
-#include "FinalFrame.hh"
 #include <ymir/utils/Array.hh>
 
 namespace semantic {
+
+    class IFrame;
+    typedef IFrame* Frame;
+
+    class IFinalFrame;
+    typedef IFinalFrame* FinalFrame;
+
+    class IFrameProto;
+    typedef IFrameProto* FrameProto;
 
     class FrameTable {
 

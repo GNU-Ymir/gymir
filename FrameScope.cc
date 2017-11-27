@@ -21,15 +21,7 @@ namespace semantic {
     void ITreeInfo::ident (Word name) {
 	auto ex = this-> exists (name.getStr ());
 	if (!ex.isEof ()) {
-	    Ymir::Error::append (name,
-				 Ymir::MultipleLoopName,
-				 Ymir::Error::YELLOW,
-				 name.getStr ().c_str (),
-				 Ymir::Error::RESET
-	    );
-	    Ymir::Error::note (ex,
-			       Ymir::Here
-	    );
+	    Ymir::Error::multipleLoopName (name, ex);
 	}
 	this-> ident () = name;
     }

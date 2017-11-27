@@ -1,4 +1,4 @@
-#include "semantic/pack/ExternFrame.hh"
+#include <ymir/semantic/pack/_.hh>
 #include "ast/Proto.hh"
 #include "ast/ParamList.hh"
 

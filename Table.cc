@@ -35,9 +35,7 @@ namespace semantic {
 
     void Table::addCall (Word sym) {
 	if (this-> _nbFrame > __maxNbRec__) {
-	    Ymir::Error::fatal (sym,
-				Ymir::RecursiveExpansion
-	    );
+	    Ymir::Error::recursiveExpansion (sym);
 	}
     }
 

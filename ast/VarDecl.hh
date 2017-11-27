@@ -20,16 +20,16 @@ namespace syntax {
 
     public:
 
-	IVarDecl (Word word, std::vector <Word> decos, std::vector <Var> decls, std::vector <Expression> insts) :
-	    IInstruction (word),
-	    decls (decls),
-	    insts (insts),
-	    decos (decos)
-	{}
-
+	IVarDecl (Word word, std::vector <Word> decos, std::vector <Var> decls, std::vector <Expression> insts);
+	
 	Instruction instruction () override;	
 	
-	void print (int nb = 0) override;	
+	void print (int nb = 0) override;
+
+    private:
+
+	IVarDecl (Word word);
+	
     };
 
     typedef IVarDecl* VarDecl;

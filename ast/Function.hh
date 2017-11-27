@@ -5,8 +5,6 @@
 #include "Expression.hh"
 #include "Block.hh"
 #include <vector>
-#include "../errors/_.hh"
-#include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 #include <ymir/utils/Array.hh>
 #include <ymir/semantic/pack/Frame.hh>

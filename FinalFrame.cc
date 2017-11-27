@@ -1,4 +1,6 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
+#include <ymir/ast/Var.hh>
+#include <ymir/ast/Expression.hh>
 
 namespace semantic {
     IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, std::vector <syntax::Var> vars, syntax::Block bl, std::vector <syntax::Expression> tmps) :

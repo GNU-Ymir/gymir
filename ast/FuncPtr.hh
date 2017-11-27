@@ -29,6 +29,14 @@ namespace syntax {
 		this-> expr-> inside = this;
 	}
 
+	static const char* id () {
+	    return "IFuncPtr";
+	}
+
+	const char* getId () override {
+	    return IFuncPtr::id ();
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<FuncPtr> %s",
 		    nb, ' ',

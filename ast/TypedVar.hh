@@ -27,6 +27,10 @@ namespace syntax {
 	const char * getId () override;
 
 	semantic::InfoType getType ();
+
+	Expression expression ();
+
+	Var var () override;
 	
 	void print (int nb = 0) override;	
     };

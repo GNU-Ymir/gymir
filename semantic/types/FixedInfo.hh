@@ -17,7 +17,7 @@ namespace semantic {
 
 	static InfoType create (Word token, std::vector <syntax::Expression> templates) {
 	    if (templates.size () != 0)
-		Ymir::Error::append (token, Ymir::NotATemplate);
+		Ymir::Error::notATemplate (token);
 
 	    if (token == "byte") return new IFixedInfo (false, FixedConst::BYTE);
 	    if (token == "ubyte") return new IFixedInfo (false, FixedConst::UBYTE);

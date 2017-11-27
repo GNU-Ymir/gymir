@@ -24,37 +24,19 @@ namespace syntax {
     }
     
     void syntaxError (Word token, std::vector <std::string> mandatories) {
-	Ymir::Error::fatal (token,
-			    Ymir::SyntaxError,
-			    join (mandatories).c_str (),
-			    Ymir::Error::YELLOW,
-			    token.getStr ().c_str (),
-			    Ymir::Error::RESET
-	);	
+	Ymir::Error::syntaxError (token,  join (mandatories).c_str ());
     }
 
     void unterminated (Word token) {
-	Ymir::Error::fatal (token,
-			    Ymir::Unterminated,
-			    Ymir::Error::YELLOW,
-			    token.getStr ().c_str (),
-			    Ymir::Error::RESET
-	);	
+	Ymir::Error::unterminated (token);
     }
     
     void syntaxError (Word token) {
-	Ymir::Error::fatal (token,
-			    Ymir::SyntaxError2,
-			    Ymir::Error::YELLOW,
-			    token.getStr ().c_str (),
-			    Ymir::Error::RESET
-	);	
+	Ymir::Error::syntaxError (token);
     }
 
     void escapeError (Word token) {
-	Ymir::Error::append (token,
-			    Ymir::EscapeChar
-	);	
+	Ymir::Error::escapeError (token);
     }
 
     bool find (std::vector <std::string> vec, std::string elem) {
@@ -156,11 +138,12 @@ namespace syntax {
     		} else {
     		    auto tok = this-> lex.next ();
     		    if (tok != Token::RACC)
-    			Ymir::Error::fatal (tok,
-    					    "[%s] attendues, mais %s trouvé\n",
-					    join ({Keys::DEF, Keys::IMPORT, Keys::EXTERN, Keys::STRUCT, Keys::ENUM,
-							Keys::STATIC, Keys::SELF, Keys::TRAIT, Keys::IMPL }),
-					    tok.getStr ()
+			syntaxError (tok,
+				     {Keys::DEF, Keys::IMPORT,
+					     Keys::EXTERN,
+					     Keys::STRUCT, Keys::ENUM,
+					     Keys::STATIC, Keys::SELF,
+					     Keys::TRAIT, Keys::IMPL }
 			);
     		    break;
     		}
@@ -189,12 +172,11 @@ namespace syntax {
     		} else {
     		    auto tok = this-> lex.next ();
     		    if (tok != Token::RACC)
-    			Ymir::Error::fatal (tok,
-    					    "[%s] attendues, mais %s trouvé\n",
-					    join ({Keys::DEF, Keys::IMPORT, Keys::EXTERN, Keys::STRUCT, Keys::ENUM,
-							Keys::STATIC, Keys::SELF, Keys::TRAIT, Keys::IMPL }),
-					    tok.getStr ()
-			);
+			syntaxError (tok, {Keys::DEF, Keys::IMPORT,
+				    Keys::EXTERN, Keys::STRUCT,
+				    Keys::ENUM,   Keys::STATIC,
+				    Keys::SELF, Keys::TRAIT, Keys::IMPL }
+			);			
     		    break;
     		}
     	    }

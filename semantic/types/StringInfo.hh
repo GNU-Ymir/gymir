@@ -15,7 +15,7 @@ namespace semantic {
 
 	static InfoType create (Word tok, std::vector<syntax::Expression> tmps) {
 	    if (tmps.size () != 0) {
-		Ymir::Error::append (tok, Ymir::NotATemplate);
+		Ymir::Error::notATemplate (tok);
 		return NULL;
 	    } else {
 		return new IStringInfo (false);

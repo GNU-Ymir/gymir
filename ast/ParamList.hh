@@ -3,7 +3,6 @@
 #include "Expression.hh"
 #include <vector>
 #include "../errors/_.hh"
-#include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 #include <ymir/utils/Array.hh>
 
@@ -16,7 +15,7 @@ namespace syntax {
     public :
 	IParamList (Word ident, std::vector <Expression> params);
 
-	std::vector <Expression> getParams ();
+	std::vector <Expression>& getParams ();
 
 	std::vector <semantic::InfoType> getParamTypes ();
 	

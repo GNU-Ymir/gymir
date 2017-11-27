@@ -10,34 +10,47 @@
 
 #define INCLUDE_STRING
 
+namespace semantic {
+    class ISymbol;
+    typedef ISymbol* Symbol;
+}
+
+namespace syntax {
+    class IParamList;
+    typedef IParamList* ParamList;
+}
+
 namespace Ymir {
-    	    
-    enum ErrorType {
-	NotATemplate = 1,
-	TakeAType,
-	SyntaxError,
-       	SyntaxError2,
-	EscapeChar,
-	EndOfFile,
-	Unterminated,
-	TemplateSpecialisation,
-	TemplateCreation,
-	And,
-	Here,
-	RecursiveExpansion,
-	MultipleLoopName,
-	ShadowingVar,
-	LAST_ERROR
-    };
 
     enum Language {
 	FR,
 	EN
     };
     
-    std::string addLine (std::string, Word word);
+    namespace Private {
+	enum ErrorType {
+	    NotATemplate = 1,
+	    TakeAType,
+	    SyntaxError,
+	    SyntaxError2,
+	    EscapeChar,
+	    EndOfFile,
+	    Unterminated,
+	    TemplateSpecialisation,
+	    TemplateCreation,
+	    And,
+	    Here,
+	    RecursiveExpansion,
+	    MultipleLoopName,
+	    ShadowingVar,
+	    LAST_ERROR
+	};
+
+	const char * getString (ErrorType, Language ln = EN);
+    };
+
     
-    const char * getString (ErrorType, Language ln = EN);
+    std::string addLine (std::string, Word word);    
     
     template <typename ... T> 
     std::string format (std::string left, T... params) {
@@ -49,7 +62,25 @@ namespace Ymir {
 	free (aux);
 	return ret;
     }
+    
+    template <typename ... T> 
+    std::string format (const char* left, T... params) {
+	auto len = snprintf (NULL, 0, left, params...);
+	auto aux = new char [len + 1];
+	sprintf (aux, left, params...);
+	aux [len] = '\0';
+	std::string ret = std::string (aux);
+	free (aux);
+	return ret;
+    }
 
+    
+    struct ErrorMsg {
+	std::string msg;
+	bool isFatal;
+	bool isWarning;
+    };
+    
     struct Error {
 
 	static const char*	RESET;	//= "\u001B[0m";
@@ -61,7 +92,69 @@ namespace Ymir {
 	static const char*	BOLD;	// = "\u001B[1;50m";
 	
 	static unsigned long nb_errors;// (0);
-       	
+
+	static void notATemplate (Word);
+
+	static void takeATypeAsTemplate (Word);
+
+	static void syntaxError (Word);
+
+	static void syntaxError (Word, const char*);
+
+	static void syntaxError (Word, Word);
+
+	static void escapeError (Word);
+
+	static void endOfFile ();
+
+	static void unterminated (Word);
+
+	static void templateSpecialisation (Word, Word);
+	
+	static void templateCreation (Word);
+
+	static void recursiveExpansion (Word);
+
+	static void unknowType (Word);
+
+	static void multipleLoopName (Word, Word);
+
+	static void shadowingVar (Word, Word);
+
+	static void undefVar (Word, semantic::Symbol);
+
+	static void uninitVar (Word);
+
+	static void useAsVar (Word, semantic::Symbol);
+
+	static void undefinedOp (Word, Word, semantic::Symbol, syntax::ParamList);
+
+	static void undefinedOp (Word, semantic::Symbol, semantic::Symbol);
+
+	static void activeError (bool);
+
+	static std::vector <ErrorMsg> caught ();
+	
+	template <typename ... TArgs>
+	static void assert (const char * format_, TArgs ... args) {
+	    return __instance__.assert_ (format_, args...);
+	}
+
+	template <typename ... TArgs>
+	static void fail (const char * format_, TArgs ... args) {	    
+	    fatal_error (UNKNOWN_LOCATION, format_, args...);
+	}
+	
+	static bool thrown () {
+	    return nb_errors != 0;
+	}
+
+	static Error instance () {
+	    return __instance__;
+	}	
+	    
+    private:
+	
 	template <typename ... TArgs>
 	void fatal_ (Word word, const char * format_, TArgs ... args) {
 	    std::string aux = format (format_, args...);
@@ -78,11 +171,6 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
-	static void fatal (Word word, ErrorType type, TArgs ... args) {
-	    __instance__.fatal_ (word, getString (type), args...);
-	}	
-	
-	template <typename ... TArgs>
 	void append_ (Word word, const char * format_, TArgs ... args) {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
@@ -94,11 +182,6 @@ namespace Ymir {
 	template <typename ... TArgs>
 	static void append (Word word, const char * format_, TArgs ... args) {
 	    __instance__.append_ (word, format_, args...);
-	}
-
-	template <typename ... TArgs>
-	static void append (Word word, ErrorType type, TArgs ... args) {
-	    __instance__.append_ (word, getString (type), args...);
 	}
 	
 	template <typename ... TArgs>
@@ -112,11 +195,6 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
-	static void note (Word word, ErrorType type, TArgs ... args) {
-	    __instance__.note_ (word, getString (type), args...);
-	}
-
-	template <typename ... TArgs>
 	static void note (Word word, const char * format_, TArgs ... args) {
 	    __instance__.note_ (word, format_, args...);
 	}
@@ -125,28 +203,12 @@ namespace Ymir {
 	void assert_ (const char * format_, TArgs ... args) {	    
 	    printf ("%sAssert%s : %s\n", RED, RESET, format (format_, args...).c_str ());
 	    raise (SIGSEGV);
-	}
-
-	template <typename ... TArgs>
-	static void fail (const char * format_, TArgs ... args) {	    
-	    fatal_error (UNKNOWN_LOCATION, format_, args...);
-	}
-	
-	template <typename ... TArgs>
-	static void assert (const char * format_, TArgs ... args) {
-	    return __instance__.assert_ (format_, args...);
-	}
-	
-	static bool thrown () {
-	    return nb_errors != 0;
-	}
-
-	static Error instance () {
-	    return __instance__;
 	}	
 	
     private:
 
+	static bool __isEnable__;
+	static std::vector <ErrorMsg> __caught__;
 	static Error __instance__;
 	
     };
