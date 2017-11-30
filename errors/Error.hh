@@ -13,6 +13,9 @@
 namespace semantic {
     class ISymbol;
     typedef ISymbol* Symbol;
+
+    class IInfoType;
+    typedef IInfoType* InfoType;
 }
 
 namespace syntax {
@@ -50,6 +53,8 @@ namespace Ymir {
 	    UndefinedOp,
 	    UndefinedOpMult,
 	    UseAsVar,
+	    UseAsType,
+	    IncompatibleTypes,
 	    LAST_ERROR
 	};
 
@@ -134,10 +139,15 @@ namespace Ymir {
 
 	static void useAsVar (Word, semantic::Symbol);
 
+	static void useAsType (Word);
+	
 	static void undefinedOp (Word, Word, semantic::Symbol, syntax::ParamList);
 
 	static void undefinedOp (Word, semantic::Symbol, semantic::Symbol);
 
+	static void undefinedOp (Word, semantic::Symbol, semantic::InfoType);
+
+	static void incompatibleTypes (Word, semantic::Symbol, semantic::InfoType);	
 	static void activeError (bool);
 
 	static std::vector <ErrorMsg>& caught ();

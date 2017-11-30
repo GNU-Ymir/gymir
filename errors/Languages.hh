@@ -30,6 +30,8 @@ namespace Ymir {
 		phrases [UninitVar] = "Utilisation d'une variable sans type, '%s%s%s'";
 		phrases [UseAsVar] = "'%s%s%s' n'identifie pas une variable";
 		phrases [UndefinedOpMult] = "L'operateur '%s%s%s%s' est indéfinis pour le type '%s%s%s' et (%s)";
+		phrases [UndefinedOp] = "L'operateur '%s%s%s' entre les types '%s%s%s' et '%s%s%s' n'existe pas";
+		phrases [IncompatibleTypes] = "Types incompatibles '%s%s%s' et '%s%s%s'";
 		init = true;
 	    } 
 	    return phrases;
@@ -59,7 +61,9 @@ namespace Ymir {
 		phrases [UndefVar2] = "Undefined identifier '%s%s%s', maybe '%s%s%s' was meant";
 		phrases [UninitVar] = "Variable '%s%s%s' has no type";
 		phrases [UseAsVar] = "'%s%s%s' do not identify a variable";
-		phrases [UndefinedOpMult] = "Operateur '%s%s%s%s' is undefined for type '%s%s%s' and (%s)";
+		phrases [UndefinedOpMult] = "Operator '%s%s%s%s' is undefined for type '%s%s%s' and (%s)";
+		phrases [UndefinedOp] = "Operator '%s%s%s' between types '%s%s%s' and '%s%s%s' doesn't exist";
+		phrases [IncompatibleTypes] = "Incompatible types '%s%s%s' and '%s%s%s'";
 		init = true;
 	    } 
 	    return phrases;

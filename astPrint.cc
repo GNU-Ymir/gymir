@@ -124,6 +124,69 @@ namespace syntax {
 	}	    
     }    
 
+    void IArrayAlloc::print (int nb) {
+	printf ("\n%*c<ArrayAlloc> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	    
+	if (this-> type)
+	    this-> type-> print (nb + 4);
+	this-> size-> print (nb + 4);
+    }	
+
     
+
+    void IAssert::print (int nb) {
+	printf ("\n%*c<Assert> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	    
+	this-> expr-> print (nb + 4);
+	if (this-> msg) this-> msg-> print (nb + 4);
+    }	
+
+    void IBinary::print (int nb) {
+	printf ("\n%*c<Binary> : %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);	
+
+	if (this-> info) printf (" -> %s", this-> info-> typeString ().c_str ());	
+	this-> left-> print (nb + 4);
+	this-> right-> print (nb + 4);
+    }	
+
+    void IFixed::print (int nb) {
+	printf ("\n%*c<Fixed> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);	    
+    }	
+    
+    void IChar::print (int nb) {
+	printf ("\n%*c<Char> %s %d:(%c)",
+		nb, ' ',
+		this-> token.toString ().c_str (),
+		this-> code, (char) (this-> code)
+	);
+    }
+
+
+    void IFloat::print (int nb) {
+	printf ("\n%*c<Float> %s [%s]",
+		nb, ' ', this-> token.toString ().c_str (),
+		this-> totale.c_str ()
+	);
+    }
+    
+    void IString::print (int nb) {
+	printf ("\n%*c<String> %s : [%s]",
+		nb, ' ',
+		this-> token.toString ().c_str (),
+		this-> content.c_str ()
+	);	    
+    }    
     
 }

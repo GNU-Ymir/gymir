@@ -71,6 +71,7 @@ ymir_OBJS = \
 	ymir/FrameScope.o \
 	ymir/Mangler.o \
 	ymir/Keys.o \
+	ymir/Value.o \
 	$(END)
     
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

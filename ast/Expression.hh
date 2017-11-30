@@ -32,7 +32,8 @@ namespace syntax {
 	}
 	
 	virtual IExpression* expression () {
-	    Ymir::Error::assert ("TODO");
+	    this-> print (0);
+	    Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
 	}
 	
 	virtual void print (int) override {}

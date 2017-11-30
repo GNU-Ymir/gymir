@@ -15,24 +15,32 @@ namespace syntax {
 
     public :
 
-	IBinary (Word word, Expression left, Expression right) :
-	    IExpression (word),
-	    left (left),
-	    right (right)
-	{
-	    if (this-> left) this-> left-> inside = this;
-	    if (this-> right) this-> right-> inside = this;	    
-	}
+	IBinary (Word word, Expression left, Expression right);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Binary> : %s",
-		      nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );	
-	    
-	    this-> left-> print (nb + 4);
-	    this-> right-> print (nb + 4);
-	}	
+	Expression expression () override;
+	
+	void print (int nb = 0) override;
+
+	const char* getId () override;
+
+	static const char* id () {
+	    return "IBinary";
+	}
+	
+    private:
+
+	Expression affect ();
+	Expression reaff ();
+	Expression normal ();
+	bool simpleVerif (IBinary*);
+
+	Expression findOpBinary (IBinary*);
+	Expression findOpAssign (IBinary*);
+	Expression findOpTest (IBinary*);
+	Expression findOpEqual (IBinary*);
+
+	bool isTest (Word);
+	bool isEq (Word);
 	
     };
 

@@ -5,7 +5,8 @@ namespace semantic {
 
     ISymbol::ISymbol (Word word, InfoType type) :
 	sym (word),
-	type (type)
+	type (type),
+	value (NULL)
     {}
     
     bool ISymbol::isConst () {
@@ -25,7 +26,7 @@ namespace semantic {
     }
 
     bool ISymbol::isImmutable () {
-	return false;
+	return this-> value != NULL;
     }
 
     void ISymbol::quit (Namespace) {

@@ -30,17 +30,11 @@ namespace syntax {
 	
     public:
 	
-	IFixed (Word word, FixedConst type) :
-	    IExpression (word),
-	    type (type)
-	{}
+	IFixed (Word word, FixedConst type);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Fixed> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );	    
-	}	
+	Expression expression () override;
+	
+	void print (int nb = 0) override;
     };
 
     typedef unsigned char ubyte;
@@ -50,19 +44,11 @@ namespace syntax {
 
     public:
 
-	IChar (Word word, ubyte code) :
-	    IExpression (word),
-	    code (code) {
-	}
+	IChar (Word word, ubyte code);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Char> %s %d:(%c)",
-		    nb, ' ',
-		    this-> token.toString ().c_str (),
-		    this-> code, (char) (this-> code)
-	    );
-	}
+	Expression expression () override;
 	
+	void print (int nb = 0) override;	
     };
 
     class IFloat : public IExpression {
@@ -73,24 +59,13 @@ namespace syntax {
 	
     public:
 
-	IFloat (Word word) : IExpression (word), _type (FloatConst::DOUBLE) {
-	    this-> totale = "0." + this-> token.getStr ();
-	}
+	IFloat (Word word);
 	
-	IFloat (Word word, std::string suite) :
-	    IExpression (word),
-	    suite (suite),
-	    _type (FloatConst::DOUBLE)
-	{
-	    this-> totale = this-> token.getStr () + "." + suite;
-	}
+	IFloat (Word word, std::string suite);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Float> %s [%s]",
-		    nb, ' ', this-> token.toString ().c_str (),
-		    this-> totale.c_str ()
-	    );
-	}
+	Expression expression () override;
+	
+	void print (int nb = 0) override;
 	
     };
 
@@ -101,18 +76,11 @@ namespace syntax {
 
     public :
 
-	IString (Word word, std::string content) :
-	    IExpression (word),
-	    content (content)
-	{}
+	IString (Word word, std::string content);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<String> %s : [%s]",
-		    nb, ' ',
-		    this-> token.toString ().c_str (),
-		    this-> content.c_str ()
-	    );	    
-	}
+	Expression expression () override;
+	
+	void print (int nb = 0) override;
 	
     private:
 

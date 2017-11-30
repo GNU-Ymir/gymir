@@ -359,6 +359,34 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::incompatibleTypes (Word where, semantic::Symbol type, semantic::InfoType other) {
+	auto str = getString (IncompatibleTypes);
+	auto msg = format (str, YELLOW, type-> type-> typeString ().c_str (), RESET,
+			   YELLOW, other-> typeString (), RESET
+	);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, where);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    
+    void Error::useAsType (Word word) {
+	auto str = getString (UseAsType);
+	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::undefinedOp (Word begin, Word end, semantic::Symbol elem, syntax::ParamList params) {
 	auto str = getString (UndefinedOpMult);
 	OutBuffer buf;
@@ -379,6 +407,41 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
+    void Error::undefinedOp (Word op, semantic::Symbol left, semantic::Symbol right) {
+	auto str = getString (UndefinedOp);
+	auto msg = format (str,
+			   YELLOW, op.getStr ().c_str (), RESET,
+			   YELLOW, left-> type-> typeString ().c_str (), RESET,
+			   YELLOW, right-> type-> typeString (), RESET
+	);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, op);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }	
+
+    void Error::undefinedOp (Word op, semantic::Symbol left, semantic::InfoType right) {
+	auto str = getString (UndefinedOp);
+	auto msg = format (str,
+			   YELLOW, op.getStr ().c_str (), RESET,
+			   YELLOW, left-> type-> typeString ().c_str (), RESET,
+			   YELLOW, right-> typeString (), RESET
+	);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, op);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }	
+
     
     void Error::templateSpecialisation (Word word, Word word2) {
 	auto str = getString (TemplateSpecialisation);

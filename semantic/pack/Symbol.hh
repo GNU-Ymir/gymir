@@ -8,18 +8,22 @@ namespace semantic {
 
     class IInfoType;
     typedef IInfoType* InfoType;
+
+    class IValue;
+    typedef IValue* Value;
     
     class ISymbol : public gc {
 
 	bool scoped;
 	bool _public;
 	bool _static;
-
+	
     public:
 
 	Word sym;
 	InfoType type;
-
+	Value value;
+	
 	ISymbol (Word word, InfoType);
 	
 	bool isConst ();

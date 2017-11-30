@@ -1,6 +1,7 @@
 #include <ymir/ast/_.hh>
 #include <ymir/semantic/pack/_.hh>
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/value/_.hh>
 #include <ymir/syntax/Keys.hh>
 
 namespace syntax {
@@ -79,6 +80,40 @@ namespace syntax {
 	return auxDecl;
     }
 
+    Instruction IAssert::instruction () {
+	auto expr = this-> expr-> expression ();
+	if (!expr-> info-> type-> isSame (new IBoolInfo (true))) {
+	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new IBoolInfo (true));
+	    return NULL;
+	}
+
+	Expression msg;
+	if (this-> msg) {
+	    msg = this-> msg-> expression ();
+	    if (!msg-> info-> type-> isSame (new IStringInfo (true))) {
+		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new IStringInfo (true));
+		return NULL;
+	    }
+	}
+
+	if (this-> isStatic) {
+	    if (msg && !msg-> info-> isImmutable ()) {
+		Ymir::Error::assert ("TODO");
+	    }
+
+	    if (!expr-> info-> isImmutable ()) {
+		Ymir::Error::assert ("TODO");
+	    } else if (!(expr-> info-> value-> to<IBoolValue> ()-> isTrue ())) {
+		Ymir::Error::assert ("TODO");
+	    }
+	} else if (expr-> info-> isImmutable ()) {
+	    if (expr-> info-> value-> to<IBoolValue> ()-> isTrue ())
+		Table::instance ().retInfo ().returned ();
+	}
+	return new IAssert (this-> token, expr, msg, this-> isStatic);
+    }
     
+
+
 }
 

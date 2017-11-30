@@ -15,30 +15,11 @@ namespace syntax {
 
     public :
 
-	IAssert (Word token, Expression test, Expression msg, bool isStatic = false) :
-	    IInstruction (token),
-	    expr (test),
-	    msg (msg)
-	{
-	    this-> expr-> inside = this;
-	    if (this-> msg)
-		this-> msg-> inside = this;
-	    this-> isStatic = isStatic;
-	}
-	
-	Instruction instruction () override {
-	    Ymir::Error::assert ("TODO");
-	}
+	IAssert (Word token, Expression test, Expression msg, bool isStatic = false);	
+	Instruction instruction () override;
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Assert> %s",
-		      nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    
-	    this-> expr-> print (nb + 4);
-	    if (this-> msg) this-> msg-> print (nb + 4);
-	}	
+	void print (int nb = 0) override;
+	
     };
 
     typedef IAssert* Assert;

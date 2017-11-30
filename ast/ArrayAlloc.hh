@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Expression.hh"
-#include "../errors/_.hh"
-#include "../semantic/_.hh"
+#include "../semantic/types/InfoType.hh"
 #include "../syntax/Word.hh"
 
 namespace syntax {
@@ -13,30 +12,15 @@ namespace syntax {
 	
 	Expression size;
 	
-	//Semantic::InfoType cster;
+	semantic::InfoType cster;
 
     public:
 
-	IArrayAlloc (Word token, Expression type, Expression size) :
-	    IExpression (token),
-	    type (type),
-	    size (size)
-	{
-	    this-> size-> inside = this;
-	    if (this-> type)
-		this-> type-> inside = this;
-	}
+	IArrayAlloc (Word token, Expression type, Expression size);
     
-	void print (int nb = 0) override {
-	    printf ("\n%*c<ArrayAlloc> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    
-	    if (this-> type)
-		this-> type-> print (nb + 4);
-	    this-> size-> print (nb + 4);
-	}	
+	Expression expression () override;
+
+	void print (int nb = 0) override;
     };
 
     typedef IArrayAlloc* ArrayAlloc;

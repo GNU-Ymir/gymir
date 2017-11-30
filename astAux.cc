@@ -81,9 +81,7 @@ namespace syntax {
     Block IFunction::getBlock () {
 	return this-> block;
     }
-
-
-    
+       
     IParamList::IParamList (Word ident, std::vector <Expression> params) :
 	IExpression (ident),
 	params (params)
@@ -201,8 +199,71 @@ namespace syntax {
     IVarDecl::IVarDecl (Word word) :
 	IInstruction (word)
     {}
+       
+    IArrayAlloc::IArrayAlloc (Word token, Expression type, Expression size) :
+	IExpression (token),
+	type (type),
+	size (size)
+    {
+	this-> size-> inside = this;
+	if (this-> type)
+	    this-> type-> inside = this;
+    }    
+
+    IAssert::IAssert (Word token, Expression test, Expression msg, bool isStatic) :
+	IInstruction (token),
+	expr (test),
+	msg (msg)
+    {
+	this-> expr-> inside = this;
+	if (this-> msg)
+	    this-> msg-> inside = this;
+	this-> isStatic = isStatic;
+    }
+            
+    IBinary::IBinary (Word word, Expression left, Expression right) :
+	IExpression (word),
+	left (left),
+	right (right)
+    {
+	if (this-> left) this-> left-> inside = this;
+	if (this-> right) this-> right-> inside = this;	    
+    }
+
+    const char* IBinary::getId () {
+	return IBinary::id ();
+    }
+
+    IFixed::IFixed (Word word, FixedConst type) :
+	IExpression (word),
+	type (type)
+    {}
+
+    
+    IChar::IChar (Word word, ubyte code) :
+	IExpression (word),
+	code (code) {
+    }
+
+    
+    IFloat::IFloat (Word word) : IExpression (word), _type (FloatConst::DOUBLE) {
+	this-> totale = "0." + this-> token.getStr ();
+    }
+    
+    IFloat::IFloat (Word word, std::string suite) :
+	IExpression (word),
+	suite (suite),
+	_type (FloatConst::DOUBLE)
+    {
+	this-> totale = this-> token.getStr () + "." + suite;
+    }
+
+    
+    IString::IString (Word word, std::string content) :
+	IExpression (word),
+	content (content)
+    {}
 
     
     
-
 }
