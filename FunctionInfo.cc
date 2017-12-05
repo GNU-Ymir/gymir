@@ -114,8 +114,9 @@ namespace semantic {
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
 
-	for (auto it : frames)
+	for (auto it : frames) {
 	    total.push_back (it-> isApplicable (params));
+	}
 
 	std::vector <Frame> goods;
 	ApplicationScore right = new IApplicationScore ();

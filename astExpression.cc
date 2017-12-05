@@ -63,7 +63,8 @@ namespace syntax {
 	    auto aux = new IVar (this-> token);
 	    aux-> info = Table::instance ().get (this-> token.getStr ());
 	    if (aux-> info == NULL) {
-		Ymir::Error::assert ("TODO, gerer l'erreur");
+		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
+		return NULL;
 	    }
 
 	    if (this-> templates.size () != 0) {
@@ -157,7 +158,10 @@ namespace syntax {
 	if (IInfoType::exists (this-> token.getStr ())) return true;
 	else {
 	    auto info = Table::instance ().get (this-> token.getStr ());
-	    if (info) Ymir::Error::assert ("TODO");
+	    if (info) {
+		//if (info-> type-> is<IStructCstInfo> ()) return true;
+		return false;
+	    }
 	}
 	return false;	
     }
@@ -444,5 +448,303 @@ namespace syntax {
 	//TODO
 	return aux;
     }
+    
+    Expression ICast::expression () {
+	Expression type;
+	if (auto v = this-> type-> to<IVar> ()) {
+	    type = v-> asType ();
+	} else type = this-> type-> expression ();
+
+	auto expr = this-> expr-> expression ();
+	if (!type || !expr) return NULL;
+	else if (expr-> is<IType> ()) {
+	    Ymir::Error::useAsVar (expr-> token, expr-> info);
+	    return NULL;
+	} else if (!type-> is <IType> () && !type-> is<IFuncPtr> ()) {
+	    Ymir::Error::assert ("TODO");
+	}
+
+	if (expr-> info-> type-> isSame (type-> info-> type)) {
+	    return expr;
+	} else {
+	    auto info = expr-> info-> type-> CastOp (type-> info-> type);
+	    if (info == NULL) {
+		info = expr-> info-> type-> CompOp (type-> info-> type);
+		if (info == NULL) {
+		    Ymir::Error::undefinedOp (this-> token, expr-> info, type-> info-> type);
+		    return NULL;
+		}
+	    }
+
+	    type-> info-> type-> isConst () = expr-> info-> isConst ();
+	    auto aux = new ICast (this-> token, type, expr);
+	    aux-> info = new ISymbol (this-> token, info);
+	    aux-> info-> type-> isConst () = expr-> info-> isConst ();
+	    return aux;
+	}	    
+    }
+
+    Expression IConstArray::expression () {
+	auto aux = new IConstArray (this-> token, {});
+	if (this-> params.size () == 0) {
+	    aux-> info = new ISymbol (aux-> token, new IArrayInfo (true, new IVoidInfo ()));	    
+	} else {
+	    InfoType last = NULL;
+	    for (int i = 0 ; i < this-> params.size (); i++) {
+		auto expr = this-> params [i]-> expression ();
+		if (expr == NULL) return NULL;
+
+		if (auto par = expr-> to<IParamList> ()) {
+		    for (auto it : par-> getParams ())
+			aux-> params.push_back (it);
+		} else aux-> params.push_back (expr);
+	    }
+
+
+	    if (aux-> params.size () == 1)  {
+		auto type = aux-> params [0]-> to<IType> ();
+		if (type) {
+		    Word tok (this-> token.getLocus (),
+			      this-> token.getStr () + type-> token.getStr () + "]"
+		    );
+		    return new IType (tok, new IArrayInfo (true, type-> info-> type));
+		}
+	    }
+
+	    auto begin = new ISymbol (this-> token, new IUndefInfo ());
+	    for (auto fst : Ymir::r (0, aux-> params.size ())) {
+		if (aux-> params [fst]-> is<IType> ()) {
+		    Ymir::Error::useAsVar (aux-> params [fst]-> token,
+					   aux-> params [fst]-> info);
+		    return NULL;
+		}
+
+		auto cmp = aux-> params [fst]-> info-> type-> CompOp (begin-> type);
+		aux-> casters.push_back (cmp);
+		if (cmp == NULL) {
+		    Ymir::Error::incompatibleTypes (this-> token, aux-> params [fst]-> info, begin-> type);
+		    break;
+		}
+		if (fst == 0) begin-> type = cmp;
+	    }
+	    aux-> info = new ISymbol (aux-> token, new IArrayInfo (true, begin-> type-> clone ()));
+	}
+	return aux;
+    }
+
+    Expression IConstRange::expression () {
+	auto aux = new IConstRange (this-> token, this-> left-> expression (), this-> right-> expression ());
+	if (!aux-> left || !aux-> right) return NULL;
+	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
+	if (type == NULL) {
+	    auto call = findOpRange (aux);
+	    if (!call) {
+		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		return NULL;
+	    } else {
+		return call;
+	    }
+	}
+
+	aux-> info = new ISymbol (aux-> token, new IRangeInfo (true, type));
+	//TODO Immutable
+	return aux;
+    }
+
+    Expression IConstRange::findOpRange (ConstRange aux) {
+	Ymir::Error::activeError (false);
+	Word word (this-> token.getLocus (), Keys::OPRANGE);
+	auto var = new IVar (word);
+	auto params = new IParamList (this-> token, {aux-> left, aux-> right});
+	
+	auto call = new IPar (this-> token, this-> token, var, params, false);
+
+	auto res = call-> expression ();
+	auto errors = Ymir::Error::caught ();
+	Ymir::Error::activeError (true);
+	
+	if (errors.size () != 0) return NULL;
+	else return res;	
+    }
+    
+    Expression IDColon::expression () {
+	auto aux = new IDColon (this-> token, this-> left-> expression (), this-> right);
+	if (aux-> left == NULL) return NULL;
+	if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+	    Ymir::Error::uninitVar (aux-> left-> token);
+	    return NULL;
+	} else if (!aux-> right-> is<IVar> ()) {
+	    Ymir::Error::useAsVar (aux-> right-> token, aux-> right-> expression ()-> info);
+	    return NULL;
+	}
+	
+	auto var = aux-> right-> to<IVar> ();
+	auto type = aux-> left-> info-> type-> DColonOp (var);
+	if (type == NULL) {
+	    Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
+	    return NULL;
+	}
+	aux-> info = new ISymbol (aux-> token, type);
+	return aux;	
+    }
+
+    Expression IDot::expression () {
+	auto aux = new IDot (this-> token, this-> left-> expression (), this-> right);
+	if (aux-> left == NULL) return NULL;
+	else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+	    Ymir::Error::uninitVar (aux-> left-> token);
+	    return NULL;
+	} else if (auto var = aux-> right-> to<IVar> ()) {
+	    auto type = aux-> left-> info-> type-> DotOp (var);
+	    if (type == NULL) {
+		Ymir::Error::activeError (false);
+		auto call = var-> expression ();
+		Ymir::Error::activeError (true);	       
+		if (call == NULL || call-> is<IType> () || call-> info-> type-> is<IUndefInfo> ()) {
+		    Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
+		    return NULL;
+		}
+		return (new IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
+	    } else if (type-> is<IPtrFuncInfo> ()) {
+		auto call = new IVar (var-> token);
+		call-> info = new ISymbol (call-> token, type);
+		return (new IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
+	    }
+	    aux-> info = new ISymbol (aux-> token, type);
+	    return aux;
+	} else {
+	    aux-> right = aux-> right-> expression ();
+	    if (aux-> right == NULL) return NULL;
+	    auto type = aux-> left-> info-> type-> DotExpOp (aux-> right);
+	    if (type == NULL) {
+		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		return NULL;
+	    }
+	    aux-> info = new ISymbol (aux-> token, type);
+	    return aux;
+	}
+    }
+
+    Expression IDotCall::expression () {
+	if (!this-> inside-> is<IPar> ()) {
+	    auto aux = new IPar (this-> token, this-> token);
+	    aux-> dotCall () = this;
+	    Word word (this-> token.getLocus (), Keys::DPAR);
+	    aux-> paramList () = new IParamList (this-> token, {this-> _firstPar});
+	    aux-> left () = this-> _call;
+	    auto type = aux-> left ()-> info-> type-> CallOp (aux-> left ()-> token, aux-> paramList ());
+	    if (type == NULL) {
+		Ymir::Error::undefinedOp (word, aux-> left ()-> info, aux-> paramList ());
+		return NULL;
+	    }
+
+	    aux-> score () = type;
+	    aux-> info = new ISymbol (this-> token, type-> ret);
+	    if (type-> ret-> is <IUndefInfo> ()) {
+		Ymir::Error::templateInferType (aux-> left ()-> token, aux-> score ()-> token);
+		return NULL;
+	    }
+	    return aux;
+	} else {
+	    return this;
+	}
+    }
+    
+    bool IPar::simpleVerif (Par& aux) {
+	if (aux-> _left == NULL || aux-> params == NULL) {
+	    return true;
+	}
+	aux-> _left-> inside = this;
+	
+	if (aux-> _left-> is<IType> ()) {
+	    Ymir::Error::useAsVar (aux-> _left-> token, aux-> _left-> info);
+	    return true;
+	} else if (aux-> _left-> info-> type-> is<IUndefInfo> ()) {
+	    Ymir::Error::uninitVar (aux-> _left-> token);
+	    return true;
+	} else if (aux-> _left-> info != NULL && aux-> _left-> info-> isType ()) {
+	    //if (!aux-> _left-> info-> type-> is<IStructCstInfo> ()) {
+	    Ymir::Error::useAsVar (aux-> _left-> token, aux-> _left-> info);
+	    return true;
+	}
+	return false;
+    }
+
+    Expression IPar::expression () {
+	auto aux = new IPar (this-> token, this-> end);
+	if (this-> info == NULL) {
+	    if (auto p = this-> params-> expression ()) 
+		aux-> params = p-> to<IParamList> ();
+	    else return NULL;
+	    
+	    aux-> _left = this-> _left-> expression ();
+	    if (simpleVerif (aux)) return NULL;
+
+	    bool dotCall = false;
+	    if (auto dcall = aux-> _left-> to<IDotCall> ()) {
+		dotCall = true;
+		aux-> _left = dcall-> call ();
+		aux-> params-> getParams ().insert (aux-> params-> getParams ().begin (), dcall-> firstPar ());
+		aux-> _dotCall = dcall;
+	    }
+
+	    if (Ymir::isVerbose ()) {
+		printf ("Calling Symbol : %s\n", aux-> _left-> info-> type-> typeString ().c_str ());
+	    }
+	    
+	    auto type = aux-> _left-> info-> type-> CallOp (aux-> _left-> token, aux-> params);
+	    
+	    if (Ymir::isVerbose ())
+		printf ("Ret of Symbol : %s\n", type == NULL ? "null" : type-> ret-> typeString ().c_str ());
+
+
+	    if (type == NULL) {
+		//TODO findOpCall
+		Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
+		return NULL;
+	    }
+
+	    if (type-> treat.size () != aux-> params-> getParams ().size ())
+		Ymir::Error::assert ("TODO, tupling");
+
+	    aux-> _score = type;
+	    aux-> info = new ISymbol (this-> token, type-> ret);
+	    if (type-> ret-> is<IUndefInfo> () && this-> inside != NULL) {
+		Ymir::Error::templateInferType (aux-> _left-> token, aux-> _score-> token);
+		return NULL;
+	    }
+
+	    if (!aux-> info-> isImmutable ()) Table::instance ().retInfo ().changed () = true;
+	    return aux;	    
+	} else {
+	    aux-> info = this-> info;
+	    return aux;
+	}
+    }
+    
+    Expression IParamList::expression () {
+	auto aux = new IParamList (this-> token, {});
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    Expression ex_it = this-> params [it]-> expression ();
+	    if (auto ex = ex_it-> to<IParamList> ()) {
+		for (auto it : ex-> params) {
+		    aux-> params.push_back (it);
+		    if (aux-> params.back ()-> info-> type-> is<IUndefInfo> ()) {
+			Ymir::Error::uninitVar (aux-> params.back ()-> token);
+			return NULL;
+		    }
+		}
+	    } else {
+		aux-> params.push_back (ex_it);
+		if (ex_it-> info-> type-> is<IUndefInfo> ()) {
+		    Ymir::Error::uninitVar (ex_it-> token);
+		    return NULL;
+		} else if (ex_it-> is<IType> () || ex_it-> info-> isType ()) {
+		    Ymir::Error::useAsVar (ex_it-> token, ex_it-> info);
+		} 
+	    }
+	}
+	return aux;
+    }   
     
 }

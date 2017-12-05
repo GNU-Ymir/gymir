@@ -16,7 +16,7 @@ namespace syntax {
 	    IExpression (begin),
 	    expr (expr)
 	{}
-
+	
 	void print (int nb = 0) override {
 	    printf("\n%*c<Expand> %s",
 		   nb, ' ',

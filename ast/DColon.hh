@@ -13,20 +13,11 @@ namespace syntax {
 
     public:
 
-	IDColon (Word token, Expression left, Expression right) :
-	    IExpression (token),
-	    left (left),
-	    right (right)
-	{}
+	IDColon (Word token, Expression left, Expression right);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<DColon> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    this-> left-> print (nb + 4);
-	    this-> right-> print (nb + 4);
-	}
+	Expression expression () override;
+
+	void print (int nb = 0) override;
 
     };
     

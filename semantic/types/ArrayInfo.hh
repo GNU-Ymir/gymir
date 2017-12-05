@@ -51,7 +51,7 @@ namespace semantic {
 	std::string simpleTypeString () override;
 
 	InfoType getTemplate (ulong) override;
-
+       	
 	static const char* id () {
 	    return "IArrayInfo";
 	}

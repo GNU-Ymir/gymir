@@ -1,4 +1,6 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/tree/Tree.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 
 namespace semantic {
 
@@ -173,15 +175,15 @@ namespace semantic {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstAffInt;
 		return ret;
 	    } else if (!this-> isSigned () && !ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstAffInt;
 		return ret;
 	    } else if (this-> _type == ot-> type ()) {
 		auto ret = this-> clone ();
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstAffInt;
 		return ret;
 	    }
 	}
@@ -191,7 +193,7 @@ namespace semantic {
     InfoType IFixedInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto i = new IFixedInfo (false, this-> _type);
-	    //TODO;
+	    i-> binopFoo = &FixedUtils::InstAffInt;
 	    return i;
 	}
 	return NULL;
@@ -318,6 +320,34 @@ namespace semantic {
     bool IFixedInfo::isSup (FixedInfo fx) {
 	return this-> _type > fx-> _type;
     }
-    
 
+    Ymir::Tree IFixedInfo::toGeneric () {
+	switch (this-> _type) {
+	case FixedConst::BYTE : return signed_char_type_node;
+	case FixedConst::UBYTE : return unsigned_char_type_node;
+	case FixedConst::SHORT : return short_integer_type_node;
+	case FixedConst::USHORT : return short_unsigned_type_node;
+	case FixedConst::INT : return integer_type_node;
+	case FixedConst::UINT : return unsigned_type_node;
+	case FixedConst::LONG : return long_integer_type_node;
+	case FixedConst::ULONG : return long_unsigned_type_node ;
+	}
+	return integer_type_node;
+    }
+
+    namespace FixedUtils {
+	
+	Ymir::Tree InstAffInt (Word locus, syntax::Expression left, syntax::Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = right-> toGeneric ();
+	    auto typeTree = left-> info-> type-> toGeneric ();
+	    
+	    return Ymir::buildTree (
+		MODIFY_EXPR, locus.getLocus (), typeTree.getTree (), ltree, rtree
+	    );
+	}
+
+    }
+
+    
 }

@@ -3,6 +3,10 @@
 #include "../syntax/Word.hh"
 #include <gc/gc_cpp.h>
 
+namespace Ymir {
+    struct Tree;    
+}
+
 namespace syntax {
     
     class IBlock;
@@ -39,7 +43,9 @@ namespace syntax {
 	};
 
 	virtual IInstruction* instruction () = 0;	   
-	
+
+	virtual Ymir::Tree toGeneric ();
+		
 	template <typename T>
 	bool is () {
 	    return strcmp (this-> getId (), T::id ()) == 0;

@@ -7,10 +7,17 @@
 #include "ast/ParamList.hh"
 #include "errors/Error.hh"
 #include <ymir/ast/Function.hh>
+#include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/pack/FrameTable.hh>
 
 namespace semantic {
     using namespace syntax;
+
+    const long IFrame::CONST_SAME = 18;
+    const long IFrame::SAME = 20;
+    const long IFrame::CONST_AFF = 8;    
+    const long IFrame::AFF = 10;
+    const long IFrame::CHANGE = 14;			       
     
     IFrame::IFrame (Namespace space, ::syntax::Function func) :
 	_space (space),
@@ -32,7 +39,50 @@ namespace semantic {
     }
     
     ApplicationScore IFrame::getScore (Word ident, std::vector <Var> attrs, std::vector <InfoType> args) {
-	Ymir::Error::assert ("TODO");
+	auto score = new IApplicationScore (ident);
+	if (attrs.size () == 0 && args.size () == 0) {
+	    score-> score = AFF;
+	    score-> score += this-> currentScore ();
+	    return score;
+	} else if (attrs.size () == args.size ()) {
+	    for (auto it : Ymir::r (0, args.size ())) {
+		InfoType info = NULL;
+		auto param = attrs [it];
+		if (auto tvar = param-> to<ITypedVar> ()) {
+		    info = tvar-> getType ()-> clone ();
+		    auto type = args [it]-> CompOp (info);
+		    if (type != NULL) type = type-> ConstVerif (info);
+		    else return NULL;
+		    if (type && type-> isSame (info)) {
+			if (args [it]-> isConst () != info-> isConst ())
+			    score-> score += CONST_SAME;
+			else score-> score += SAME;
+			score-> treat.push_back (type);
+		    } else if (type != NULL) {
+			if (args [it]-> isConst () != info-> isConst ())
+			    score-> score += CONST_AFF;
+			else score-> score += AFF;
+			score-> treat.push_back (type);
+		    } else return NULL;
+		} else {
+		    if (args [it]-> is<IFunctionInfo> ())
+			Ymir::Error::assert ("TODO, passage function en param");
+		    auto var = attrs [it]-> to<IVar> ();
+		    if (var-> deco == Keys::REF && !args [it]-> is<IRefInfo> ()) {
+			auto type = args [it]-> CompOp (new IRefInfo (args [it]-> clone ()));
+			if (type == NULL) return NULL;
+			score-> treat.push_back (type);
+		    } else if (var-> deco == Keys::CONST) {
+			score-> treat.push_back (args [it]-> cloneConst ());
+		    } else {
+			score-> treat.push_back (args [it]-> clone ());
+		    }
+		    score-> score += CHANGE;
+		}
+	    }
+	    score-> score += this-> currentScore ();
+	    return score;
+	}
 	return NULL;
     }
     
@@ -43,6 +93,7 @@ namespace semantic {
 
 	auto globSpace = Table::instance ().space ();
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, ident.getStr ()));
+
 	auto score = getScore (ident, attrs, args);
 	Table::instance ().setCurrentSpace (globSpace);
 	return score;

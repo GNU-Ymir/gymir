@@ -3,6 +3,7 @@
 #include <gc/gc_cpp.h>
 #include "../../syntax/Word.hh"
 #include "Namespace.hh"
+#include <ymir/semantic/tree/Tree.hh>
 
 namespace semantic {
 
@@ -17,6 +18,7 @@ namespace semantic {
 	bool scoped;
 	bool _public;
 	bool _static;
+	Ymir::Tree decl;
 	
     public:
 
@@ -40,6 +42,10 @@ namespace semantic {
 
 	void quit (Namespace space);
 
+	Ymir::Tree treeDecl ();
+
+	void treeDecl (Ymir::Tree tree);
+	
 	std::string typeString ();
 
 	std::string simpleTypeString ();

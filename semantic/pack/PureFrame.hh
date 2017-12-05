@@ -19,6 +19,8 @@ namespace semantic {
 
 	FrameProto validate (syntax::ParamList) override ;
 
+	FrameProto validate (std::vector<InfoType>) override ;
+	
 	FrameProto validate () override ;
 
 	static const char* id () {

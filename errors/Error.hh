@@ -21,6 +21,9 @@ namespace semantic {
 namespace syntax {
     class IParamList;
     typedef IParamList* ParamList;
+
+    class IVar;
+    typedef IVar* Var;    
 }
 
 namespace Ymir {
@@ -55,6 +58,11 @@ namespace Ymir {
 	    UseAsVar,
 	    UseAsType,
 	    IncompatibleTypes,
+	    BreakOutSide,
+	    BreakRefUndef,
+	    UndefinedAttr,
+	    TemplateInferType,
+	    TemplateInferTypeNote,
 	    LAST_ERROR
 	};
 
@@ -63,6 +71,7 @@ namespace Ymir {
 
     
     std::string addLine (std::string, Word word);    
+    bool isVerbose ();
     
     template <typename ... T> 
     std::string format (std::string left, T... params) {
@@ -85,8 +94,7 @@ namespace Ymir {
 	free (aux);
 	return ret;
     }
-
-    
+      
     struct ErrorMsg {
 	std::string msg;
 	bool isFatal;
@@ -135,21 +143,32 @@ namespace Ymir {
 
 	static void undefVar (Word, semantic::Symbol);
 
+	static void undefAttr (Word, semantic::Symbol, syntax::Var);
+	
 	static void uninitVar (Word);
 
 	static void useAsVar (Word, semantic::Symbol);
 
+	static void breakRefUndef (Word);
+
+	static void breakOutSide (Word);
+	
 	static void useAsType (Word);
 	
 	static void undefinedOp (Word, Word, semantic::Symbol, syntax::ParamList);
+
+	static void undefinedOp (Word, semantic::Symbol, syntax::ParamList);
 
 	static void undefinedOp (Word, semantic::Symbol, semantic::Symbol);
 
 	static void undefinedOp (Word, semantic::Symbol, semantic::InfoType);
 
-	static void incompatibleTypes (Word, semantic::Symbol, semantic::InfoType);	
-	static void activeError (bool);
+	static void incompatibleTypes (Word, semantic::Symbol, semantic::InfoType);
 
+	static void templateInferType (Word, Word);
+
+	static void activeError (bool);	
+	
 	static std::vector <ErrorMsg>& caught ();
 	
 	template <typename ... TArgs>

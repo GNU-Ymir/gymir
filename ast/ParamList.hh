@@ -14,12 +14,18 @@ namespace syntax {
 
     public :
 	IParamList (Word ident, std::vector <Expression> params);
-
+	
 	std::vector <Expression>& getParams ();
 
 	std::vector <semantic::InfoType> getParamTypes ();
+
+	Expression expression () override;
 	
 	void print (int nb = 0) override;
+
+	const char* getId () override;
+	
+	static const char * id ();
     };
 
     typedef IParamList* ParamList;

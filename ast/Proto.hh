@@ -12,48 +12,29 @@ namespace syntax {
 
     class IProto : public IDeclaration {
 
-	Word ident;
-	Var type;
-	std::vector <Var> params;
+	Var _type;
+	std::vector <Var> _params;
 	std::string space;
-	bool isVariadic;
+	bool _isVariadic;
 	
     public:
 
+	Word ident;
 	std::string from;
 	
-	IProto (Word ident, std::vector <Var> params, bool isVariadic) :
-	    ident (ident),
-	    type (NULL),
-	    params (params),
-	    space (""),
-	    isVariadic (isVariadic)
-	{}
+	IProto (Word ident, std::vector <Var> params, bool isVariadic);
 
-	IProto (Word ident, Var type, std::vector <Var> params, std::string space, bool isVariadic) :
-	    ident (ident),
-	    type (type),
-	    params (params),
-	    space (space),
-	    isVariadic (isVariadic)
-	{}
+	IProto (Word ident, Var type, std::vector <Var> params, std::string space, bool isVariadic);
 
-	void declare () override {}
+	void declare () override;
+
+	Var& type ();
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Proto> %s%s",
-		    nb, ' ',
-		    this-> space.c_str (),
-		    this-> ident.toString ().c_str ()
-	    );
-	    
-	    for (auto it : this-> params) {
-		it-> print (nb + 4);
-	    }
+	bool& isVariadic ();
 
-	    if (this-> type)
-		this-> type-> print (nb + 6);
-	}
+	std::vector <Var>& params ();
+	
+	void print (int nb = 0) override;
 	
     };
 

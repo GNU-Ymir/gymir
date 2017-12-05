@@ -1,5 +1,6 @@
 #include "semantic/pack/Symbol.hh"
 #include "semantic/types/InfoType.hh"
+#include <ymir/semantic/tree/Tree.hh>
 
 namespace semantic {
 
@@ -36,6 +37,14 @@ namespace semantic {
 	return this-> type-> typeString ();
     }
 
+    void ISymbol::treeDecl (Ymir::Tree tree) {
+	this-> decl = tree;
+    }
+
+    Ymir::Tree ISymbol::treeDecl () {
+	return this-> decl;
+    }
+    
     bool ISymbol::isType () {
 	if (this-> type)
 	    return this-> type-> isType ();

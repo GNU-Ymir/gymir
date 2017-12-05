@@ -15,19 +15,11 @@ namespace syntax {
 
     public:
 
-	ICast (Word begin, Expression type, Expression expr) :
-	    IExpression (begin),
-	    type (type),
-	    expr (expr) {
-	    this-> type-> inside = this;
-	    this-> expr-> inside = this;
-	}
+	ICast (Word begin, Expression type, Expression expr);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Cast> %s", nb, ' ', this-> token.toString ().c_str ());
-	    this-> type-> print (nb + 4);
-	    this-> expr-> print (nb + 4);
-	}
+	Expression expression () override;
+		
+	void print (int nb = 0) override;
 	
     };
 

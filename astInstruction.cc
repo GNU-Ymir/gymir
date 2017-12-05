@@ -113,7 +113,26 @@ namespace syntax {
 	return new IAssert (this-> token, expr, msg, this-> isStatic);
     }
     
-
+    Instruction IBreak::instruction () {
+	auto aux = new IBreak (this-> token, this-> ident);
+	Table::instance ().retInfo ().breaked ();
+	if (this-> ident.isEof ()) {
+	    auto nb = Table::instance ().retInfo ().rewind (std::vector <std::string> {"while", "for"});
+	    if (nb == -1) {
+		Ymir::Error::breakOutSide (this-> token);
+		return NULL;
+	    } else {
+		aux-> nbBlock = nb;
+	    }
+	} else {
+	    auto nb = Table::instance ().retInfo ().rewind (this-> ident.getStr ());
+	    if (nb == -1) {
+		Ymir::Error::breakRefUndef (this-> ident);
+		return NULL;
+	    } else aux-> nbBlock = nb;
+	}
+	return aux;
+    }    
 
 }
 

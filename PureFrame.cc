@@ -22,6 +22,10 @@ namespace semantic {
 	return this-> validate ();
     }
 
+    FrameProto IPureFrame::validate (std::vector <InfoType>) {
+	return this-> validate ();
+    }    
+    
     FrameProto IPureFrame::validate () {
 	if (this-> proto) return this-> proto;
 	else if (this-> name == Keys::MAIN && !this-> pass)

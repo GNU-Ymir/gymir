@@ -98,7 +98,14 @@ namespace syntax {
 	}
 	return paramTypes;
     }
+    
+    const char* IParamList::getId () {
+	return IParamList::id ();
+    }
 
+    const char * IParamList::id () {
+	return "IParamList";
+    }
     
     IVar::IVar (Word ident) : IExpression (ident) {}
 
@@ -263,7 +270,135 @@ namespace syntax {
 	IExpression (word),
 	content (content)
     {}
+    
+    IBreak::IBreak (Word token) : IInstruction (token) {
+	this-> ident.setEof ();
+    }
+
+    IBreak::IBreak (Word token, Word ident) :
+	IInstruction (token),
+	ident (ident) {
+    }
+    
+    ICast::ICast (Word begin, Expression type, Expression expr) :
+	IExpression (begin),
+	type (type),
+	expr (expr) {
+	this-> type-> inside = this;
+	this-> expr-> inside = this;
+    }
+
+    IConstArray::IConstArray (Word token, std::vector <Expression> params) :
+	IExpression (token),
+	params (params)
+    {}
+    
+	
+    IConstRange::IConstRange (Word token, Expression left, Expression right) :
+	IExpression (token),
+	left (left),
+	right (right)
+    {
+	this-> left-> inside = this;
+	this-> right-> inside = this;
+    }
+
+    IDColon::IDColon (Word token, Expression left, Expression right) :
+	IExpression (token),
+	left (left),
+	right (right)
+    {}
 
     
+    IDot::IDot (Word word, Expression left, Expression right) :
+	IExpression (word),
+	left (left),
+	right (right)
+    {}
+
+    
+    IDotCall::IDotCall (Instruction inside, Word token, Expression call, Expression firstPar) :
+	IExpression (token),
+	_call (call),
+	_firstPar (firstPar)
+    {
+	this-> inside = inside;
+	this-> info = call-> info;
+    }
+
+    Expression& IDotCall::call () {
+	return this->_call;
+    }
+
+    Expression& IDotCall::firstPar () {
+	return this-> _firstPar;
+    }
+    
+    IPar::IPar (Word word, Word end) :
+	IExpression (word),
+	end (end),
+	params (NULL),
+	_left (NULL),
+	_dotCall (NULL),
+	_opCall (false),
+	_score (NULL)
+    {}
+
+    IPar::IPar (Word word, Word end, Expression left, ParamList params, bool fromOpCall) :
+	IExpression (word),
+	end (end),
+	params (params),
+	_left (left),
+	_dotCall (NULL),
+	_opCall (fromOpCall),
+	_score (NULL)
+    {
+	this-> _left-> inside = this;
+	this-> params-> inside = this;	    	    
+    }
+    
+    ParamList& IPar::paramList () {
+	return this-> params;
+    }
+    
+    Expression& IPar::left () {
+	return this-> _left;
+    }
+    
+    semantic::ApplicationScore& IPar::score () {
+	return this-> _score;
+    }
+    
+    IDotCall*& IPar::dotCall () {
+	return this-> _dotCall;
+    }
+        
+    IProto::IProto (Word ident, std::vector <Var> params, bool isVariadic) :
+	ident (ident),
+	_type (NULL),
+	_params (params),
+	space (""),
+	_isVariadic (isVariadic)
+    {}
+
+    IProto::IProto (Word ident, Var type, std::vector <Var> params, std::string space, bool isVariadic) :
+	ident (ident),
+	_type (type),
+	_params (params),
+	space (space),
+	_isVariadic (isVariadic)
+    {}
+
+    bool& IProto::isVariadic () {
+	return this-> _isVariadic;
+    }
+    
+    std::vector <Var>& IProto::params () {
+	return this-> _params;
+    }
+
+    Var& IProto::type () {
+	return this-> _type;
+    }
     
 }

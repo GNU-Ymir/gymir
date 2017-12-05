@@ -18,9 +18,11 @@ namespace syntax {
 	IBinary (Word word, Expression left, Expression right);
 
 	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
-
+	
 	const char* getId () override;
 
 	static const char* id () {

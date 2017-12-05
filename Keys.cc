@@ -53,3 +53,4 @@ std::string     Keys::TUPLE	= "tuple";
 std::string     Keys::OVER	= "over";
 std::string     Keys::FROM	= "from";
 std::string     Keys::DLANG	= "D";
+std::string     Keys::DPAR      = "()";

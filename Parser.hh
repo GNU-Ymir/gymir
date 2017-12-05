@@ -22,6 +22,8 @@ namespace Ymir {
 
 	void semantic_time (syntax::Program);
 
+	void lint_time ();
+	
 	void define_gcc_symbols ();
 	
     private:

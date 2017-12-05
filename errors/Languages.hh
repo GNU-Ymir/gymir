@@ -31,6 +31,11 @@ namespace Ymir {
 		phrases [UseAsVar] = "'%s%s%s' n'identifie pas une variable";
 		phrases [UndefinedOpMult] = "L'operateur '%s%s%s%s' est indéfinis pour le type '%s%s%s' et (%s)";
 		phrases [UndefinedOp] = "L'operateur '%s%s%s' entre les types '%s%s%s' et '%s%s%s' n'existe pas";
+		phrases [BreakOutSide] = "Break en dehors d'un élements breakable";
+		phrases [BreakRefUndef] = "L'identifiant de boucle '%s%s%s' n'existe pas";
+		phrases [UndefinedAttr] = "Pas de propriété '%s%s%s' pour le type '%s%s%s'";
+		phrases [TemplateInferType] = "Réference vers un type de retour déduis pour l'appel";
+		phrases [TemplateInferTypeNote] = "Type déduis de la fonction";
 		phrases [IncompatibleTypes] = "Types incompatibles '%s%s%s' et '%s%s%s'";
 		init = true;
 	    } 
@@ -64,6 +69,11 @@ namespace Ymir {
 		phrases [UndefinedOpMult] = "Operator '%s%s%s%s' is undefined for type '%s%s%s' and (%s)";
 		phrases [UndefinedOp] = "Operator '%s%s%s' between types '%s%s%s' and '%s%s%s' doesn't exist";
 		phrases [IncompatibleTypes] = "Incompatible types '%s%s%s' and '%s%s%s'";
+		phrases [BreakOutSide] = "Break outside of a breakable scope";
+		phrases [UndefinedAttr] = "No property '%s%s%s' for type '%s%s%s'";
+		phrases [TemplateInferType] = "Forward reference to inferred return type of function call";
+		phrases [TemplateInferTypeNote] = "Inferred from";
+		phrases [BreakRefUndef] = "Loop identifier '%s%s%s' doesn't exist";
 		init = true;
 	    } 
 	    return phrases;

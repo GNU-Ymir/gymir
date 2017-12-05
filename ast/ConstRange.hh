@@ -17,23 +17,16 @@ namespace syntax {
 
     public:
 	
-	IConstRange (Word token, Expression left, Expression right) :
-	    IExpression (token),
-	    left (left),
-	    right (right)
-	{
-	    this-> left-> inside = this;
-	    this-> right-> inside = this;
-	}
+	IConstRange (Word token, Expression left, Expression right);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<ConstRange> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    this-> left-> print (nb + 4);
-	    this-> right-> print (nb + 4);
-	}
+	Expression expression () override;
+		
+	void print (int nb = 0) override;
+	
+    private:
+
+	Expression findOpRange (IConstRange*);
+
     };
 
     typedef IConstRange* ConstRange;

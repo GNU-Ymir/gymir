@@ -13,22 +13,36 @@ namespace syntax {
 
     public:
 
-	IDot (Word word, Expression left, Expression right) :
-	    IExpression (word),
-	    left (left),
-	    right (right)
-	{}
+	IDot (Word word, Expression left, Expression right);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Dot> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    this-> left-> print (nb + 4);
-	    this-> right-> print (nb + 4);
-	}
+	Expression expression () override;
+	
+	void print (int nb = 0) override;
 	
     };
 
+
+    class IDotCall : public IExpression {
+    private:
+
+	Expression _call;
+	Expression _firstPar;
+	bool dyn;
+	
+    public:
+
+	IDotCall (Instruction inside, Word token, Expression call, Expression firstPar);
+
+	Expression expression () override;
+
+	Expression& call ();
+
+	Expression& firstPar ();
+	
+	void print (int nb = 0) override;
+	
+    };
+
+    
     typedef IDot* Dot;
 }

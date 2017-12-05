@@ -34,11 +34,13 @@ namespace semantic {
 
 	IExternFrame (Namespace space, ::syntax::Function func);
 
-	//ApplicationScore isApplicable  (ParamList params) override;
+	ApplicationScore isApplicable  (::syntax::ParamList params) override;
 
 	FrameProto validate () override ;
 
 	FrameProto validate (::syntax::ParamList) override;
+	
+	FrameProto validate (std::vector <InfoType>) override;
 
 	static std::vector <IExternFrame*> frames () {
 	    return __extFrames__;
@@ -68,7 +70,7 @@ namespace semantic {
 
 	FrameProto validateFunc ();
 	
-	//ApplicationScore isApplicableVariadic  (ParamList params) ;
+	ApplicationScore isApplicableVariadic  (::syntax::ParamList params) ;
 	
     };
 

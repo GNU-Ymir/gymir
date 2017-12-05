@@ -49,23 +49,34 @@ namespace semantic {
     typedef IApplicationScore* ApplicationScore;
     
     class IInfoType : public gc {
+	
+	typedef Ymir::Tree (*BinopLint) (Word, syntax::Expression, syntax::Expression);
+	typedef Ymir::Tree (*UnopLint) (Word, syntax::Expression);
 
+	
 	bool _isConst = false;
 	bool _isStatic = false;
 	ulong _toGet;
 
 	//Value _value;
-
+	
 	static std::map<std::string, InfoType> __alias__;
 	
     protected:
 
 	bool _isType = false;
+	
 
     public:
 
 	IInfoType (bool isConst);
 
+	Ymir::Tree buildBinaryOp (Word word, syntax::Expression left, syntax::Expression right);
+	
+	Ymir::Tree buildUnaryOp (Word word, syntax::Expression elem);
+
+	Ymir::Tree buildMultOp (Word word, syntax::Expression elem, syntax::Expression rights);
+	
 	static InfoType factory (Word word, std::vector <syntax::Expression> templates);
 	
 	static const char* id () {
@@ -153,6 +164,8 @@ namespace semantic {
 
 	InfoType cloneConst ();
 
+	virtual Ymir::Tree toGeneric ();
+	
 	virtual InfoType getTemplate (ulong);
 
 	/**
@@ -183,6 +196,10 @@ namespace semantic {
 		return (T*) this;
 	    } else return NULL;
 	}
+
+	BinopLint binopFoo;
+	UnopLint unopFoo;
+	BinopLint multFoo;
 	
     };    
 

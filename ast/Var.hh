@@ -34,6 +34,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Ymir::Tree toGeneric () override;
+	
 	virtual IVar* var ();
 
 	Type asType ();

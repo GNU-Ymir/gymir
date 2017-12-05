@@ -56,10 +56,7 @@ namespace syntax {
 	return fr;
     }
     
-
     void IImpl::declare () {}
-
-
     
     void IProgram::declare () {
 	std::string name = LOCATION_FILE (this-> locus.getLocus ());
@@ -78,5 +75,21 @@ namespace syntax {
 	
     }    
 
+    void IProto::declare () {       
+	Namespace space (this-> space != "" ? this-> space : Table::instance ().space ());
+	
+	for (auto it : Ymir::r (0, this-> _params.size ())) {
+	    if (!this-> _params [it]-> is<ITypedVar> ()) {
+		this-> _params [it] = new ITypedVar (Word (this-> _params [it]-> token.getLocus (), "_"), this-> _params [it]);
+	    }
+	}
+	
+
+	auto fr = new IExternFrame (space, this-> from, this);
+	auto fun = new IFunctionInfo (space, this-> ident.getStr ());
+	fun-> set (fr);
+	Table::instance ().insert (new ISymbol (this-> ident, fun));
+    }
+    
     
 }

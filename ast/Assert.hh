@@ -17,7 +17,7 @@ namespace syntax {
 
 	IAssert (Word token, Expression test, Expression msg, bool isStatic = false);	
 	Instruction instruction () override;
-
+	
 	void print (int nb = 0) override;
 	
     };

@@ -15,6 +15,11 @@ namespace semantic {
 	this-> creators ["ubyte"] = (void*) &IFixedInfo::create;
 	this-> creators ["long"] = (void*) &IFixedInfo::create;
 	this-> creators ["ulong"] = (void*) &IFixedInfo::create;
+	this-> creators ["char"] = (void*) &ICharInfo::create;
+	this-> creators ["float"] = (void*) &IFloatInfo::create;
+	this-> creators ["double"] = (void*) &IFloatInfo::create;
+	this-> creators ["string"] = (void*) &IStringInfo::create;
+	this-> creators ["p"] = (void*) &IPtrInfo::create;
     }
 
     void* Creators::find (const std::string & elem) {

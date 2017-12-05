@@ -2,29 +2,27 @@
 
 #include "Expression.hh"
 #include "../errors/_.hh"
-#include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 #include <ymir/utils/Array.hh>
+
+namespace semantic {
+    class IInfoType;
+    typedef IInfoType* InfoType;
+}
 
 namespace syntax {
 
     class IConstArray : public IExpression {
 	std::vector <Expression> params;
-	//std::vector <InfoType> casters;
+	std::vector <semantic::InfoType> casters;
 
     public:
 
-	IConstArray (Word token, std::vector <Expression> params) :
-	    IExpression (token),
-	    params (params)
-	{}
+	IConstArray (Word token, std::vector <Expression> params);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<ConstArray> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	}	
+	Expression expression () override;
+	
+	void print (int nb = 0) override;
     };
     
     typedef IConstArray* ConstArray;

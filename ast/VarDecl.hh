@@ -23,6 +23,8 @@ namespace syntax {
 	IVarDecl (Word word, std::vector <Word> decos, std::vector <Var> decls, std::vector <Expression> insts);
 	
 	Instruction instruction () override;	
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
 

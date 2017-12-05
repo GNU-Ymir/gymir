@@ -87,6 +87,8 @@ namespace semantic {
 
 	InfoType StringOf ();	
 
+	Ymir::Tree toGeneric () override;
+	
 	bool isSup (IFixedInfo*);
 	
     };

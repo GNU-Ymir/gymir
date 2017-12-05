@@ -42,7 +42,8 @@ namespace Ymir {
 
     void Parser::parse_program () {
 	auto prg = this-> syntax_analyse ();
-	this-> semantic_time (prg);	
+	this-> semantic_time (prg);
+	this-> lint_time ();
     }
 
     syntax::Program Parser::syntax_analyse () {
@@ -50,7 +51,7 @@ namespace Ymir {
 	auto ret = visitor.visit ();
 	if (Ymir::Error::nb_errors > 0) {
 	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
-	}
+	}	
 	return ret;
     }
 
@@ -63,11 +64,21 @@ namespace Ymir {
 	for (auto it : FrameTable::instance ().pures ()) {
 	    it-> validate ();
 	}
-
+	
 	if (Ymir::Error::nb_errors > 0)
 	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
 	
     }
+
+    void Parser::lint_time () {
+	for (auto it : FrameTable::instance ().finals ()) {
+	    it-> finalize ();
+	}
+
+	if (Ymir::Error::nb_errors > 0) // Ne doit pas arriver
+	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
+    }
+
     
 };
 

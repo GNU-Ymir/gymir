@@ -188,5 +188,89 @@ namespace syntax {
 		this-> content.c_str ()
 	);	    
     }    
+    	
+    void IBreak::print (int nb) {
+	printf ("\n%*c<Break> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);		  	    
+    }
+
+    void ICast::print (int nb) {
+	printf ("\n%*c<Cast> %s", nb, ' ', this-> token.toString ().c_str ());
+	this-> type-> print (nb + 4);
+	this-> expr-> print (nb + 4);	
+    }
+
+    void IConstArray::print (int nb) {
+	printf ("\n%*c<ConstArray> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+    }	
+    
+    void IConstRange::print (int nb) {
+	printf ("\n%*c<ConstRange> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	this-> left-> print (nb + 4);
+	this-> right-> print (nb + 4);
+    }
+    
+
+    void IDColon::print (int nb) {
+	printf ("\n%*c<DColon> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	this-> left-> print (nb + 4);
+	this-> right-> print (nb + 4);
+    }
+
+    
+    void IDot::print (int nb) {
+	printf ("\n%*c<Dot> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	this-> left-> print (nb + 4);
+	this-> right-> print (nb + 4);
+    }
+
+    void IDotCall::print (int nb) {
+	printf ("\n%*c<DotCall> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	
+	this-> _firstPar-> print (nb + 4);
+	this-> _call-> print (nb + 4);
+    }
+
+    void IPar::print (int nb) {
+	printf ("\n%*c<Par> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	
+	this-> _left-> print (nb + 4);
+	this-> params-> print (nb + 4);
+    }
+
+    void IProto::print (int nb) {
+	printf ("\n%*c<Proto> %s%s",
+		nb, ' ',
+		this-> space.c_str (),
+		this-> ident.toString ().c_str ()
+	);
+	
+	for (auto it : this-> _params) {
+	    it-> print (nb + 4);
+	}
+	
+	if (this-> _type)
+	    this-> _type-> print (nb + 6);
+    }
     
 }

@@ -51,6 +51,8 @@ namespace semantic {
 	std::vector <syntax::Expression> tmps ();
 
 	syntax::Block block ();	
+
+	void finalize ();
 	
     };
 

@@ -33,6 +33,8 @@ namespace syntax {
 	IFixed (Word word, FixedConst type);
 
 	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
     };

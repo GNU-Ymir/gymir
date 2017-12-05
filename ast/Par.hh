@@ -1,43 +1,50 @@
 #pragma once
 
 #include "Expression.hh"
-#include "ParamList.hh"
 #include "../errors/_.hh"
-#include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 
-namespace syntax {
+namespace semantic {
+    class IApplicationScore;
+    typedef IApplicationScore* ApplicationScore;
+}
 
+namespace syntax {
+    
+    class IDotCall;
+    class IParamList;
+    typedef IParamList* ParamList;
+    
     class IPar : public IExpression {
 	Word end;
 	ParamList params;
-	Expression left;
-	//DotCall dotCall;
-	bool opCall = false;
-	// ApplicationScore score;
+	Expression _left;
+	IDotCall* _dotCall;
+	bool _opCall = false;
+	semantic::ApplicationScore _score;
 
     public :
 
-	IPar (Word word, Word end, Expression left, ParamList params, bool fromOpCall = false) :
-	    IExpression (word),
-	    end (end),
-	    params (params),
-	    left (left),
-	    opCall (fromOpCall)
-	{
-	    this-> left-> inside = this;
-	    this-> params-> inside = this;	    	    
-	}
+	IPar (Word word, Word end);
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Par> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
+	IPar (Word word, Word end, Expression left, ParamList params, bool fromOpCall = false);
 
-	    this-> left-> print (nb + 4);
-	    this-> params-> print (nb + 4);
-	}
+	ParamList& paramList ();	
+
+	Expression& left ();
+
+	semantic::ApplicationScore& score ();
+	
+	IDotCall*& dotCall (); 
+
+	Expression expression () override;
+	
+	void print (int nb = 0) override;
+
+
+    private:
+
+	bool simpleVerif (IPar*&);
 	
     };
 

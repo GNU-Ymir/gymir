@@ -14,26 +14,13 @@ namespace syntax {
 
     public:
 	
-	IBreak (Word token) : IInstruction (token) {
-	    this-> ident.setEof ();
-	}
+	IBreak (Word token);
 
-	IBreak (Word token, Word ident) :
-	    IInstruction (token),
-	    ident (ident) {
-	}
+	IBreak (Word token, Word ident);
 
-	Instruction instruction () override {
-	    Ymir::Error::assert ("TODO");
-	}
+	Instruction instruction () override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Break> %s",
-		      nb, ' ',
-		      this-> token.toString ().c_str ()
-	    );		  	    
-	}
-	
+	void print (int nb = 0) override;	
     };
 
     typedef IBreak* Break;

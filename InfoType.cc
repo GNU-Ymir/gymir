@@ -1,3 +1,4 @@
+#include <ymir/semantic/tree/Tree.hh>
 #include "semantic/types/InfoType.hh"
 #include "syntax/Word.hh"
 #include "ast/Expression.hh"
@@ -22,6 +23,20 @@ namespace semantic {
 	_isConst (isConst)
     {}   
 
+
+    Ymir::Tree IInfoType::buildBinaryOp (Word locus, syntax::Expression left, syntax::Expression right) {
+	return this-> binopFoo (locus, left, right);
+    }
+
+    Ymir::Tree IInfoType::buildUnaryOp (Word locus, syntax::Expression elem) {
+	return this-> unopFoo (locus, elem);
+    }
+
+    Ymir::Tree IInfoType::buildMultOp (Word locus, syntax::Expression left, syntax::Expression rights) {
+	return this-> multFoo (locus, left, rights);
+    }
+
+    
     InfoType IInfoType::factory (Word word, std::vector <syntax::Expression> templates) {
 	auto it = (InfoType (*)(Word, std::vector<syntax::Expression>)) (
 	    Creators::instance ().find (word.getStr ())
@@ -109,7 +124,7 @@ namespace semantic {
     }
 
     InfoType IInfoType::ConstVerif (InfoType) {
-	return NULL;
+	return this;
     }
 
     InfoType IInfoType::CastTo (InfoType) {
@@ -152,6 +167,10 @@ namespace semantic {
 	return NULL;
     }
 
+    Ymir::Tree IInfoType::toGeneric () {
+	Ymir::Error::assert ("TODO");
+    }
+    
     std::vector <InfoType> IInfoType::getTemplate (ulong bef, ulong) {
 	return {this-> getTemplate (bef)};
     }

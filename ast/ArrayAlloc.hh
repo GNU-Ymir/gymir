@@ -19,7 +19,7 @@ namespace syntax {
 	IArrayAlloc (Word token, Expression type, Expression size);
     
 	Expression expression () override;
-
+	
 	void print (int nb = 0) override;
     };
 

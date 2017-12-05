@@ -5,13 +5,12 @@
 #include "../errors/_.hh"
 #include "../syntax/Word.hh"
 
-
 namespace semantic {
     class ISymbol;
     typedef ISymbol* Symbol;
 
     class IInfoType;
-    typedef IInfoType* InfoType;
+    typedef IInfoType* InfoType;    
 }
 
 namespace syntax {

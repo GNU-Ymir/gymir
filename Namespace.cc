@@ -71,7 +71,7 @@ namespace semantic {
     std::string Namespace::toString () {
 	std::ostringstream ss;
 	for (auto it = 0 ; it < this-> names.size () ; it ++) {
-	    ss << it;
+	    ss << this-> names [it];
 	    if (it != this-> names.size () - 1) ss << ".";
 	}
 	return ss.str ();
