@@ -44,6 +44,7 @@ namespace semantic {
 	bool isVariadic;
 	bool isTemplate;
 	Frame toValidate;
+	FrameProto proto;
     };
 
     typedef IApplicationScore* ApplicationScore;

@@ -244,8 +244,18 @@ namespace syntax {
     IFixed::IFixed (Word word, FixedConst type) :
 	IExpression (word),
 	type (type)
-    {}
+    {
+	if (isSigned (this-> type)) this-> value = std::strtol (this-> token.getStr ().c_str (), NULL, 0);
+	else this-> uvalue = std::strtoul (this-> token.getStr ().c_str (), NULL, 0);		
+    }
 
+    void IFixed::setUValue (ulong val) {
+	this-> uvalue = val;
+    }
+
+    void IFixed::setValue (long val) {
+	this-> value = val;
+    }
     
     IChar::IChar (Word word, ubyte code) :
 	IExpression (word),
@@ -270,6 +280,18 @@ namespace syntax {
 	IExpression (word),
 	content (content)
     {}
+
+    const char* IString::id () {
+	return "IString";
+    }
+
+    std::string IString::getStr () {
+	return this-> content;
+    }
+    
+    const char* IString::getId () {
+	return IString::id ();
+    }
     
     IBreak::IBreak (Word token) : IInstruction (token) {
 	this-> ident.setEof ();
@@ -399,6 +421,10 @@ namespace syntax {
 
     Var& IProto::type () {
 	return this-> _type;
+    }
+
+    std::string IProto::name () {
+	return this-> ident.getStr ();
     }
     
 }

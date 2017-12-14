@@ -28,6 +28,8 @@ namespace syntax {
 
 	void declare () override;
 
+	std::string name ();
+	
 	Var& type ();
 	
 	bool& isVariadic ();

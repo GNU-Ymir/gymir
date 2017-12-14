@@ -5,6 +5,10 @@
 namespace semantic {
 
     class IStringInfo : public IInfoType {
+    private:
+
+	static bool __initStringTypeNode__;
+
     public:
 
 	IStringInfo (bool);
@@ -22,11 +26,21 @@ namespace semantic {
 	    }
 	}
 
+	InfoType BinaryOpRight (Word tok, syntax::Expression left) override;
+	
 	std::string innerTypeString () override;
 
 	std::string simpleTypeString () override;
 
 	InfoType clone () override;
+
+	InfoType DotOp (syntax::Var) override;
+	
+	InfoType CompOp (InfoType) override;
+
+	Ymir::Tree toGeneric () override;
+
+	static Ymir::Tree toGenericStatic ();
 	
 	static const char* id () {
 	    return "IStringInfo";
@@ -35,6 +49,12 @@ namespace semantic {
 	const char* getId () override;
 
 	//TODO
+    private:
+
+	InfoType Ptr ();
+	InfoType Length ();
+
+	InfoType AffectRight (syntax::Expression);
 	
     };
 

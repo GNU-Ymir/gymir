@@ -425,6 +425,8 @@ namespace syntax {
 	auto aux = new IFixed (this-> token, this-> type);
 	aux-> info = new ISymbol (this-> token, new IFixedInfo (true, this-> type));
 	aux-> info-> value = new IFixedValue (this-> token.getStr ());
+	aux-> uvalue = this-> uvalue;
+	aux-> value = this-> value;
 	return aux;
     }
     
@@ -726,6 +728,7 @@ namespace syntax {
 	auto aux = new IParamList (this-> token, {});
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    Expression ex_it = this-> params [it]-> expression ();
+	    if (ex_it == NULL) return NULL;
 	    if (auto ex = ex_it-> to<IParamList> ()) {
 		for (auto it : ex-> params) {
 		    aux-> params.push_back (it);

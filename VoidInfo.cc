@@ -22,6 +22,10 @@ namespace semantic {
 	}
     }
 
+    Ymir::Tree IVoidInfo::toGeneric () {
+	return void_type_node;
+    }    
+    
     std::string IVoidInfo::innerTypeString () {
 	return "undef";
     }

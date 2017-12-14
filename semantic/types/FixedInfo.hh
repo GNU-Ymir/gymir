@@ -59,6 +59,8 @@ namespace semantic {
 
 	bool isSigned ();
 	
+	Ymir::Tree toGeneric () override;
+
     private:
 
 	InfoType toPtr ();
@@ -86,8 +88,6 @@ namespace semantic {
 	InfoType SizeOf ();
 
 	InfoType StringOf ();	
-
-	Ymir::Tree toGeneric () override;
 	
 	bool isSup (IFixedInfo*);
 	

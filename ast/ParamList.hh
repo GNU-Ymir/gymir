@@ -21,6 +21,8 @@ namespace syntax {
 
 	Expression expression () override;
 	
+	std::vector <tree> toGenericParams (std::vector <semantic::InfoType>);
+
 	void print (int nb = 0) override;
 
 	const char* getId () override;

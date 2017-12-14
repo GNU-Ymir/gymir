@@ -13,6 +13,7 @@ namespace semantic {
 	_proto (func)
     {
 	__extFrames__.push_back (this);
+	this-> _name = func-> name ();
     }
 
     IExternFrame::IExternFrame (Namespace space, ::syntax::Function func) :
@@ -21,6 +22,7 @@ namespace semantic {
 	_proto (NULL)
     {
 	__extFrames__.push_back (this);
+	this-> _name = func-> name ();
     }
 
     ApplicationScore IExternFrame::isApplicable (ParamList params) {
@@ -61,7 +63,9 @@ namespace semantic {
 	}
 
 	this-> _fr = new IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+
 	this-> _fr-> externName () = this-> _from;
+	this-> _fr-> isCVariadic () = this-> isVariadic ();
 	Table::instance ().quitFrame ();
 	Table::instance ().programNamespace () = ancSpace;
 	return this-> _fr;

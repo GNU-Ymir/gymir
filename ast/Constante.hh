@@ -27,6 +27,9 @@ namespace syntax {
     
     class IFixed : public IExpression {
 	FixedConst type;
+
+	ulong uvalue;
+	ulong value;
 	
     public:
 	
@@ -35,6 +38,10 @@ namespace syntax {
 	Expression expression () override;
 
 	Ymir::Tree toGeneric () override;
+
+	void setUValue (ulong val);
+
+	void setValue (long val);
 	
 	void print (int nb = 0) override;
     };
@@ -81,8 +88,16 @@ namespace syntax {
 	IString (Word word, std::string content);
 
 	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
+
+	std::string getStr ();
+	
+	static const char* id ();
+
+	const char* getId () override;
 	
     private:
 

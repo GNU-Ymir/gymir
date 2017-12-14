@@ -43,7 +43,7 @@ namespace semantic {
 	}
 	return false;
     }
-
+    
     //StructCstInfo existsStruct (std::string);
 
     std::vector <Frame> & FrameTable::pures () {

@@ -3,6 +3,7 @@
 #include <ymir/ast/Block.hh>
 #include <ymir/ast/Expression.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/semantic/types/InfoType.hh>
 
 #include "config.h"
 #include "system.h"
@@ -20,8 +21,14 @@
 #include "print-tree.h"
 #include "stor-layout.h"
 #include "fold-const.h"
+#include "print-tree.h"
 
 namespace semantic {
+
+    Ymir::Tree IFinalFrame::__fn_decl__;
+    std::vector <std::string> IFinalFrame::__declared__;
+    std::vector <Ymir::Tree> IFinalFrame::__contextToAdd__;
+
     IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, std::vector <syntax::Var> vars, syntax::Block bl, std::vector <syntax::Expression> tmps) :
 	_type (type),
 	_file (""),
@@ -64,21 +71,98 @@ namespace semantic {
     syntax::Block IFinalFrame::block () {
     	return this-> _block;
     }
+    
+    Ymir::Tree IFinalFrame::currentFrame () {
+	return __fn_decl__;
+    }
+    
+    void IFinalFrame::declareType (std::string &name, Ymir::Tree type) {
+	if (std::find (__declared__.begin (), __declared__.end (), name) ==
+	    __declared__.end ()) {
+	    Ymir::Tree decl = build_decl (BUILTINS_LOCATION, TYPE_DECL,
+					  get_identifier (name.c_str ()),
+					  type.getTree ()
+	    );
+
+	    if (__fn_decl__.isNull ()) {
+		__contextToAdd__.push_back (decl);
+	    } else {
+		DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();
+		Ymir::getStackVarDeclChain ().back ().append (decl);
+	    }
+	    
+	    __declared__.push_back (name);
+	}	    
+    }
+
+    void IFinalFrame::declareType (const char* name, Ymir::Tree type) {
+	if (std::find (__declared__.begin (), __declared__.end (), name) ==
+	    __declared__.end ()) {
+	    Ymir::Tree decl = build_decl (BUILTINS_LOCATION, TYPE_DECL,
+					  get_identifier (name),
+					  type.getTree ()
+	    );
+
+
+	    if (__fn_decl__.isNull ()) {
+		__contextToAdd__.push_back (decl);
+	    } else {
+		DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();
+		Ymir::getStackVarDeclChain ().back ().append (decl);
+	    }
+	   	    
+	    __declared__.push_back (name);
+	}	    
+    }
+
+    void IFinalFrame::declArguments () {
+	Ymir::Tree arglist;
+	for (auto var : this-> _vars) {
+	    Ymir::Tree decl = build_decl (
+		var-> token.getLocus (),
+		PARM_DECL,
+		get_identifier (var-> token.getStr ().c_str ()),
+		var-> info-> type-> toGeneric ().getTree ()
+	    );
+
+	    DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();
+	    DECL_ARG_TYPE (decl.getTree ()) = TREE_VALUE (TYPE_ARG_TYPES (TREE_TYPE (__fn_decl__.getTree ())));
+	    
+	    arglist = chainon (arglist.getTree (), decl.getTree ());
+	    TREE_USED (decl.getTree ()) = 1;
+	    var-> info-> treeDecl (decl);
+	}
+	DECL_ARGUMENTS (__fn_decl__.getTree ()) = arglist.getTree ();	
+    }
 
     void IFinalFrame::finalize () {
-	tree fndecl_type_params [] = {
-	};
+	ISymbol::resetNbTmp ();
+	__declared__.clear ();
+	__contextToAdd__.clear ();
+	
+	std::vector <tree> args (this-> _vars.size ());
+	for (int i = 0 ; i < this-> _vars.size () ; i++)
+	    args [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
 
+	tree ret = this-> _type-> type-> toGeneric ().getTree ();
+	
 	tree ident = get_identifier (this-> _name.c_str ());
-	tree fntype = build_function_type_array (void_type_node, 0, fndecl_type_params);
+	tree fntype = build_function_type_array (ret, args.size (), args.data ());
 	tree fn_decl = build_decl (BUILTINS_LOCATION, FUNCTION_DECL, ident, fntype);
 
+	Ymir::currentContext () = fn_decl;
+	__fn_decl__ = fn_decl;
+
+	this-> declArguments ();
+	
 	Ymir::enterBlock ();
+       	
 	this-> _block-> toGenericNoEntry ();
+
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
 				       NULL_TREE, void_type_node);
 	DECL_RESULT (fn_decl) = result_decl;
-
+	
 	auto fnTreeBlock = Ymir::leaveBlock ();
 	auto fnBlock = fnTreeBlock.block;
 

@@ -18,6 +18,7 @@ namespace semantic {
 	bool scoped;
 	bool _public;
 	bool _static;
+	static ulong __nbTmp__;
 	Ymir::Tree decl;
 	
     public:
@@ -49,6 +50,10 @@ namespace semantic {
 	std::string typeString ();
 
 	std::string simpleTypeString ();
+
+	static ulong getLastTmp ();
+
+	static void resetNbTmp ();
 	
     };
     

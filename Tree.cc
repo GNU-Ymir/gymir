@@ -55,4 +55,9 @@ namespace Ymir {
 	return stack_block_chain;
     }
     
+    Tree& currentContext () {
+	static Tree ctx;
+	return ctx;
+    }
+
 }

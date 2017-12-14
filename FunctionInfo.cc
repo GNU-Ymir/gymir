@@ -91,9 +91,11 @@ namespace semantic {
 	if (right-> toValidate) {
 	    info = right-> toValidate-> validate (right, right-> treat);
 	    right-> name = Mangler::mangle_functionv (info-> name (), info);
+	    right-> proto = info;
 	} else {
 	    info = goods [0]-> validate (right, right-> treat);
 	    right-> name = Mangler::mangle_function (info-> name (), info);
+	    right-> proto = info;
 	}
 
 	right-> ret = info-> type ()-> type-> cloneConst ();
@@ -148,9 +150,11 @@ namespace semantic {
 	if (right-> toValidate) {
 	    info = right-> toValidate-> validate (right, right-> treat);
 	    right-> name = Mangler::mangle_functionv (info-> name (), info);
+	    right-> proto = info;
 	} else {
 	    info = goods [0]-> validate (right, right-> treat);
 	    right-> name = Mangler::mangle_function (info-> name (), info);
+	    right-> proto = info;
 	}
 
 	right-> ret = info-> type ()-> type-> cloneConst ();

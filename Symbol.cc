@@ -4,6 +4,8 @@
 
 namespace semantic {
 
+    ulong ISymbol::__nbTmp__ = 0;
+    
     ISymbol::ISymbol (Word word, InfoType type) :
 	sym (word),
 	type (type),
@@ -55,6 +57,15 @@ namespace semantic {
 	if (this-> type-> isConst ())
 	    return std::string ("c") + this-> type-> simpleTypeString ();
 	return this-> type-> simpleTypeString ();
+    }
+
+    void ISymbol::resetNbTmp () {
+	__nbTmp__ = 0;
+    }
+
+    ulong ISymbol::getLastTmp () {
+	__nbTmp__ ++;
+	return __nbTmp__;
     }
     
 }

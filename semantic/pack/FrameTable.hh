@@ -47,7 +47,7 @@ namespace semantic {
 	std::vector <FinalFrame>& finals ();
 
 	std::vector <FinalFrame>& templates ();
-
+	
 	void purge ();
 	
     private:

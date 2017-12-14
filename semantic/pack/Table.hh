@@ -25,7 +25,7 @@ namespace semantic {
 	ulong _nbFrame = 0;
 	static const int __maxNbRec__ = 300;
 	std::vector <syntax::Instruction> _staticInits;
-      	
+	
     public:
 	
 	static Table& instance () {

@@ -191,4 +191,8 @@ namespace semantic {
 	return str;
     }
 
+    Ymir::Tree ICharInfo::toGeneric () {
+	return char_type_node;
+    }
+    
 }

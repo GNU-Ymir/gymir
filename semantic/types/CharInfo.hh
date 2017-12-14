@@ -33,7 +33,9 @@ namespace semantic {
 	InfoType CompOp (InfoType) override;
 
 	InfoType clone () override;
-		
+
+	Ymir::Tree toGeneric () override;
+	
 	static const char* id () {
 	    return "ICharInfo";
 	}

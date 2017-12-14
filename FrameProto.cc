@@ -4,6 +4,7 @@
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/ast/Var.hh>
+#include <ymir/semantic/tree/Tree.hh>
 
 namespace semantic {
 
@@ -13,7 +14,8 @@ namespace semantic {
 	_type (type),
 	_vars (vars),
 	_tmps (tmps),
-	_extern ("")
+	_extern (""),
+	_fn ()
     {}
 
     std::string& IFrameProto::name () {
@@ -36,6 +38,10 @@ namespace semantic {
 	return this-> _extern;
     }
 
+    bool& IFrameProto::isCVariadic () {
+	return this-> _isCVariadic;
+    }
+    
     bool IFrameProto::equals (IFrameProto* scd) {
 	if (scd) {
 	    if (this-> _space != scd-> _space) return false;
@@ -56,8 +62,32 @@ namespace semantic {
 	}
 	return false;
     }
-    
 
-    
+    Ymir::Tree IFrameProto::toGeneric () {
+	if (this-> _fn.isNull ()) {
+	    std::vector <tree> fndecl_type_params (this-> _vars.size ());
+	    for (int i = 0 ; i < this-> _vars.size () ; i++) {
+		fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
+	    }
+
+
+	    //tree fn_decl_type = build_varargs_function_type_array (
+	    tree ret = this-> _type-> type-> toGeneric ().getTree ();
+	    tree fndecl_type;
+	    if (this-> isCVariadic ())
+		fndecl_type = build_varargs_function_type_array (ret, 0, fndecl_type_params.data ());
+	    else 
+		 fndecl_type = build_function_type_array (ret, 0, fndecl_type_params.data ());
+	    
+	    tree fndecl = build_fn_decl (this-> _name.c_str (), fndecl_type);
+
+	    if (this->_extern != "") {
+		DECL_EXTERNAL (fndecl) = 1;
+	    }
+	
+	    this-> _fn =  build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	}
+	return this-> _fn;
+    }        
 
 }

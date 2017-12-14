@@ -18,6 +18,7 @@
 #include "stor-layout.h"
 #include "fold-const.h"
 #include "tree-pretty-print.h"
+#include "print-tree.h"
 
 #include <vector>
 
@@ -194,5 +195,5 @@ namespace Ymir {
     
     void enterBlock ();
     TreeSymbolMapping leaveBlock ();    
-    
+    Tree& currentContext ();
 };

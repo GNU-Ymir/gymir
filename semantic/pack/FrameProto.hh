@@ -3,6 +3,7 @@
 #include <gc/gc_cpp.h>
 #include <ymir/semantic/pack/Namespace.hh>
 #include <ymir/utils/Array.hh>
+#include <ymir/semantic/tree/Tree.hh>
 
 namespace syntax {
     class IExpression;
@@ -36,6 +37,8 @@ namespace semantic {
 	std::vector <::syntax::Var> _vars;
 	std::vector <::syntax::Expression> _tmps;
 	std::string _extern;
+	Ymir::Tree _fn;
+	bool _isCVariadic;
 	
     public:
 
@@ -52,7 +55,11 @@ namespace semantic {
 	std::string& externName (); 
 	
 	bool equals (IFrameProto* scd);
-		
+
+	bool& isCVariadic ();
+	
+	Ymir::Tree toGeneric ();
+	
     };
 
     typedef IFrameProto* FrameProto;

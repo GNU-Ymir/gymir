@@ -168,7 +168,7 @@ namespace semantic {
     }
 
     Ymir::Tree IInfoType::toGeneric () {
-	Ymir::Error::assert ("TODO");
+	Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
     }
     
     std::vector <InfoType> IInfoType::getTemplate (ulong bef, ulong) {
