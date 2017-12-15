@@ -42,6 +42,7 @@
 #include "Return.hh"
 #include "Self.hh"
 #include "Struct.hh"
+#include "TreeExpression.hh"
 #include "TupleDest.hh"
 #include "Tuple.hh"
 #include "TypedVar.hh"

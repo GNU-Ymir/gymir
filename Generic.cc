@@ -1,6 +1,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/errors/Error.hh>
+#include <ymir/semantic/pack/FinalFrame.hh>
 
 using namespace semantic;
 
@@ -92,5 +93,51 @@ namespace Ymir {
 				Tree ()
 	);
     }
+
+    Ymir::Tree makeAuxVar (location_t locus, ulong id, Ymir::Tree type) {
+	OutBuffer buf ;
+	buf.write ("_", id);
+	Ymir::Tree decl = build_decl (
+	    locus,
+	    VAR_DECL,	    
+	    get_identifier (buf.str ().c_str ()),
+	    type.getTree ()
+	);
+
+	DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
+	Ymir::getStackVarDeclChain ().back ().append (decl);
+	Ymir::getStackStmtList ().back ().append (buildTree (DECL_EXPR, locus, void_type_node, decl));
+	return decl;
+							     
+    }
+
+    Tree getArrayRef (location_t locus, Tree array, Tree inner, ulong index) {
+	Tree it = build_int_cst_type (long_unsigned_type_node, index);
+	return buildTree (ARRAY_REF, locus, inner, array, it, Tree (), Tree ());
+    }
+
+    Tree getPointerUnref (location_t loc, Tree ptr, Tree inner, ulong index) {
+	Tree it = build_int_cst_type (long_unsigned_type_node, index);
+	return getPointerUnref (loc, ptr, inner, it);
+    }
+
+    Tree getArrayRef (location_t locus, Tree array, Tree inner, Tree index) {
+	return buildTree (ARRAY_REF, locus, inner, array, index, Tree (), Tree ());
+    }
+
+    Tree getPointerUnref (location_t loc, Tree ptr, Tree inner, Tree index) {
+	tree ptype = build_pointer_type (inner.getTree ());
+	tree element_size = TYPE_SIZE_UNIT (inner.getTree ());
+	index = fold_convert_loc (loc, size_type_node, index.getTree ());
+	tree offset = fold_build2_loc (loc, MULT_EXPR, size_type_node, index.getTree (), element_size);
+	
+	tree it = convert_to_ptrofftype (offset);
+	tree addr = build2 (POINTER_PLUS_EXPR, TREE_TYPE (ptr.getTree ()), ptr.getTree (), it);
+	return build2 (MEM_REF, inner.getTree (), addr, build_int_cst (ptype, 0));
+    }
+    
+    
+
+
     
 }

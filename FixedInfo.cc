@@ -105,7 +105,7 @@ namespace semantic {
     InfoType IFixedInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
 	    auto ret = this-> clone ();
-	    //TODO
+	    ret-> binopFoo = &FixedUtils::InstAffInt;
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {

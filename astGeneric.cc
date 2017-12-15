@@ -82,6 +82,22 @@ namespace syntax {
 	);
     }
 
+    Ymir::Tree IAccess::toGeneric () {
+	if (this-> info-> type-> binopFoo) {
+	    return this-> info-> type-> buildBinaryOp (
+		this-> token,
+		this-> left,
+		this-> params-> getParams () [0]
+	    );
+	} else {
+	    return this-> info-> type-> buildMultOp (
+		this-> token,
+		this-> left,
+		this-> params
+	    );
+	}
+    }
+    
     std::vector <tree> IParamList::toGenericParams (std::vector <semantic::InfoType> treat) {
 	std::vector <tree> params (this-> params.size ());
 	for (int i = 0 ; i < this-> params.size () ; i++) {
@@ -112,6 +128,37 @@ namespace syntax {
 	return build_string_literal (this-> content.length () + 1, this-> content.c_str ());       
     }
 
+    Ymir::Tree IConstArray::toGeneric () {
+	ArrayInfo info = this-> info-> type-> to<IArrayInfo> ();
+	Ymir::Tree innerType = info-> content ()-> toGeneric ();
+	auto intExpr = new IFixed (this-> token, FixedConst::ULONG);
+	intExpr-> setUValue (this-> params.size () - 1);
+	auto lenExpr = intExpr-> expression ();			
+	auto len = lenExpr-> toGeneric ();
+	intExpr-> setUValue (0);
+	auto begin = intExpr-> toGeneric ();
+	
+	Ymir::TreeStmtList list;
+
+	Ymir::Tree range_type = build_range_type (integer_type_node, fold (begin.getTree ()), fold (len.getTree ()));
+	Ymir::Tree array_type = build_array_type (innerType.getTree (), range_type.getTree ());
+	
+	Ymir::Tree aux = Ymir::makeAuxVar (this-> token.getLocus (),
+					   ISymbol::getLastTmp (),
+					   array_type
+	);
+	
+	for (int i = 0 ; i < this-> params.size () ; i++) {
+	    Ymir::Tree ref = Ymir::getArrayRef (this-> token.getLocus (), aux, innerType, i);
+	    auto left = new ITreeExpression (this-> token, ref);
+	    left-> info = new ISymbol (this-> token, info-> content ());
+	    list.append (this-> casters [i]-> buildBinaryOp (this-> token, left, this-> params [i]));
+	}
+
+	Ymir::getStackStmtList ().back ().append (list.getTree ());
+	return aux;
+    }
+
     Ymir::Tree IDot::toGeneric () {
 	if (this-> right-> is<IVar> ()) {
 	    return this-> info-> type-> buildUnaryOp (
@@ -126,7 +173,11 @@ namespace syntax {
 	    );
 	}
     }    
-    
+
+    Ymir::Tree ITreeExpression::toGeneric () {
+	return this-> _content;
+    }
+
 }
 
 

@@ -25,7 +25,7 @@ namespace semantic {
     std::string IStringInfo::simpleTypeString () {
 	return "s";
     }
-
+    
     InfoType IStringInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (op == Token::EQUAL) return AffectRight (left);
 	return NULL;
@@ -49,7 +49,7 @@ namespace semantic {
 	return NULL;
     }
     
-    InfoType IStringInfo::Ptr () {
+    InfoType IStringInfo::Ptr () {	
 	auto ret = new IPtrInfo (this-> isConst (), new ICharInfo (this-> isConst ()));
 	ret-> unopFoo = &StringUtils::InstPtr;
 	return ret;

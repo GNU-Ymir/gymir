@@ -1,7 +1,12 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/ast/ParamList.hh>
+#include <ymir/ast/ConstArray.hh>
 #include <ymir/syntax/Keys.hh>
-//#include <ymir/utils/Array.hh>
+#include <ymir/semantic/pack/FinalFrame.hh>
+#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/utils/ArrayUtils.hh>
+#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/pack/InternalFunction.hh>
 
 namespace semantic {
 
@@ -57,16 +62,16 @@ namespace semantic {
 	auto type = right-> info-> type-> to<IArrayInfo> ();
 	if (type && type-> _content-> isSame (this-> _content)) {
 	    auto ret = this-> clone ();
-	    //ret-> lintInst = ArrayUtils::InstAffect;
+	    ret-> binopFoo = ArrayUtils::InstAffect;
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
 	    this-> _content = type-> _content-> clone ();
 	    auto ret = this-> clone ();
-	    //ret-> lintInst = ArrayUtils::InstAffect;
+	    ret-> binopFoo = ArrayUtils::InstAffect;
 	    return ret;
 	} else if (right-> info-> type-> is<INullInfo> ()) {
 	    auto ret = this-> clone ();
-	    //ret-> lintInst = ArrayUtils::InstAffectNull;
+	    ret-> binopFoo = ArrayUtils::InstAffect;
 	    return ret;
 	}
 	return NULL;
@@ -76,7 +81,7 @@ namespace semantic {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto arr = this-> clone ();
 	    arr-> isConst () = false;
-	    //TODO
+	    arr-> binopFoo = ArrayUtils::InstAffect;
 	    return arr;
 	}
 	return NULL;
@@ -155,7 +160,7 @@ namespace semantic {
     InfoType IArrayInfo::Access (syntax::Expression expr) {
 	if (auto ot = expr-> info-> type-> to<IFixedInfo> ()) {
 	    auto ch = this-> _content-> clone ();
-	    //TODO
+	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
 	}
 	return NULL;
@@ -215,6 +220,18 @@ namespace semantic {
 	return this;
     }
 
+    Ymir::Tree IArrayInfo::toGeneric () {
+	std::string name = this-> _content-> typeString () + "[]";
+	Ymir::Tree array_type_node = Ymir::makeStructType (name, 2,
+							   get_identifier ("len"),
+							   (new IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+							   get_identifier ("ptr"),
+							   (new IPtrInfo (true, this-> _content-> clone ()))-> toGeneric ().getTree ()
+	).getTree ();
+	IFinalFrame::declareType (name, array_type_node);
+	return array_type_node;
+    }
+    
     std::string IArrayInfo::innerTypeString () {
 	return std::string ("[") + this-> _content-> innerTypeString () + "]";
     }
@@ -233,4 +250,97 @@ namespace semantic {
 	return IArrayInfo::id ();
     }
     
+    namespace ArrayUtils {
+
+	using namespace syntax;
+	using namespace Ymir;
+
+	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, ConstArray cst) {
+	    Ymir::TreeStmtList list;
+	    ArrayInfo arrayInfo = cst-> info-> type-> to<IArrayInfo> ();
+	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
+	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
+	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
+	    Tree fn = InternalFunction::getMalloc ();
+	    auto intExpr = new IFixed (cst-> token, FixedConst::ULONG);
+	    intExpr-> setUValue (cst-> nbParams ());
+	    auto lenExpr = (Fixed) intExpr-> expression ();			
+	    auto len = lenExpr-> toGeneric ();
+
+	    tree args [] = {len.getTree ()};
+	    
+	    auto allocRet = build_call_array_loc (loc, build_pointer_type (void_type_node), fn.getTree (), 1, args);
+	    
+	    list.append (Ymir::buildTree (
+		MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
+	    ));
+	    
+	    for (int i = 0 ; i < cst-> nbParams () ; i++) {
+		
+		auto left = getPointerUnref (loc, ptrl, inner, i);
+		auto ref = getArrayRef (loc, rexp, inner, i);
+		
+		list.append (build2 (MODIFY_EXPR,
+				     TREE_TYPE (left.getTree ()),
+				     left.getTree (),
+				     ref.getTree ()
+		));
+	    }
+	    
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    return lexp;
+	}
+
+	Ymir::Tree InstAffect (Word word, Expression left, Expression right) {
+	    location_t loc = word.getLocus ();
+	    Ymir::Tree array_type_node = left-> info-> type-> toGeneric ();
+	    auto lexp = left-> toGeneric ();
+	    auto rexp = right-> toGeneric ();
+	    if (auto cst = right-> to<IConstArray> ())
+		return buildDup (loc, lexp, rexp, cst);
+				 
+	    Ymir::TreeStmtList list;
+	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
+	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
+
+	    auto lenr = Ymir::getField (loc, rexp, "len");
+	    auto ptrr = Ymir::getField (loc, rexp, "ptr");
+
+	    list.append (Ymir::buildTree (
+		MODIFY_EXPR, loc,
+		void_type_node,
+		lenl.getTree (),
+		lenr.getTree ()
+	    ).getTree ());
+		
+	    list.append (Ymir::buildTree (
+		MODIFY_EXPR, loc,
+		void_type_node,
+		ptrl.getTree (),
+		ptrr.getTree ()
+	    ).getTree ());
+			     
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());		
+	    return lexp;			    	    
+	    
+	}	
+	
+	Ymir::Tree InstAccessInt (Word word, Expression left, Expression right) {
+	    location_t loc = word.getLocus ();
+	    Ymir::Tree array_type_node = left-> info-> type-> toGeneric ();
+	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
+	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
+	    auto lexp = left-> toGeneric ();
+	    auto rexp = right-> toGeneric ();
+	    if (auto cst = left-> to<IConstArray> ()) {
+		return getArrayRef (loc, rexp, inner, rexp);
+	    } else {
+		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");
+		return getPointerUnref (loc, ptrl, inner, rexp);
+	    }
+	}
+	
+	
+    }
+
 }

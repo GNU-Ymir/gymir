@@ -50,6 +50,8 @@ namespace semantic {
 
 	std::string simpleTypeString () override;
 
+	Ymir::Tree toGeneric () override;
+	
 	InfoType getTemplate (ulong) override;
        	
 	static const char* id () {

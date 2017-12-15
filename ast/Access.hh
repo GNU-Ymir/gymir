@@ -53,7 +53,10 @@ namespace syntax {
 	std::vector <Expression> getParams () {
 	    return this-> params-> getParams ();
 	}
-	    
+
+
+	Ymir::Tree toGeneric () override;
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Access> %s",
 		    nb, ' ',

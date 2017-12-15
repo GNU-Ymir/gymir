@@ -21,6 +21,14 @@ namespace syntax {
 	IConstArray (Word token, std::vector <Expression> params);
 
 	Expression expression () override;
+
+	int nbParams ();
+	
+	static const char * id ();
+
+	const char * getId () override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
     };

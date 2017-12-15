@@ -13,6 +13,7 @@ namespace syntax {
 	auto aux = new IAccess (this-> token, this-> end);
 	aux-> params = (ParamList) this-> params-> expression ();
 	aux-> left = this-> left-> expression ();
+	if (aux-> left == NULL) return NULL;
 	if (aux-> left-> is<IType> ())
 	    Ymir::Error::undefVar (aux-> left-> token,
 				   Table::instance ().getAlike (aux-> left-> token.getStr ())
@@ -292,7 +293,6 @@ namespace syntax {
 		}
 
 		aux-> left-> info-> type = type;
-		aux-> left-> info-> type-> isConst () = false;
 		aux-> isRight = true;
 	    } else {
 		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);

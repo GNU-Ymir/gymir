@@ -314,7 +314,10 @@ namespace syntax {
 	IExpression (token),
 	params (params)
     {}
-    
+
+    int IConstArray::nbParams () {
+	return this-> params.size ();
+    }    
 	
     IConstRange::IConstRange (Word token, Expression left, Expression right) :
 	IExpression (token),
@@ -426,5 +429,20 @@ namespace syntax {
     std::string IProto::name () {
 	return this-> ident.getStr ();
     }
+
+    const char* IConstArray::id () {
+	return "IConstArray";
+    }
+
+    const char * IConstArray::getId () {
+	return IConstArray::id ();
+    }
+
+    ITreeExpression::ITreeExpression (Word locus, Ymir::Tree content) :
+	IExpression (locus),
+	_content (content)
+    {}
+
+    void ITreeExpression::print (int id) {}
     
 }
