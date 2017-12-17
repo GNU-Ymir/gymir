@@ -5,6 +5,11 @@
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 
+namespace semantic {
+    class IInfoType;
+    typedef IInfoType* InfoType;
+}
+
 namespace syntax {
 
     class IIf;
@@ -15,58 +20,18 @@ namespace syntax {
 	Expression test;
 	Block block;
 	If else_;
-
+	semantic::InfoType info;
+	
     public:
 
-	IIf (Word word, Expression test, Block block, bool isStatic = false) :
-	    IInstruction (word),
-	    test (test),
-	    block (block),
-	    else_ (NULL)
-	{
-	    if (this-> test)
-		this-> test-> inside = this;
-	    this-> isStatic = isStatic;
-	}
-
-	IIf (Word word, Expression test, Block block, If else_, bool isStatic = false) : 
-	    IInstruction (word),
-	    test (test),
-	    block (block),
-	    else_ (else_)
-	{
-	    if (this-> test)
-		this-> test-> inside = this;
-	    this-> isStatic = isStatic;
-	    if (this-> else_)
-		this-> else_-> isStatic = isStatic;
-	}
-
-	Instruction instruction () override {
-	    Ymir::Error::assert ("TODO");
-	}
-
+	IIf (Word word, Expression test, Block block, bool isStatic = false);
 	
-	void print (int nb = 0) override {
-	    if (this-> test) {
-		printf ("\n%*c<%sIf> %s",			
-			nb, ' ',
-			this-> isStatic ? "static_" : "",
-			this-> token.toString ().c_str ()
-		);		
-		this-> test-> print (nb + 4);		
-	    } else {
-		printf ("\n%*c<%sElse> %s",
-			nb, ' ',
-			this-> isStatic ? "static_" : "",
-			this-> token.toString ().c_str ()
-		);
-	    }
+	IIf (Word word, Expression test, Block block, If else_, bool isStatic = false);
+	Instruction instruction () override;	
 
-	    this-> block-> print (nb + 4);
-	    if (this-> else_)
-		this-> else_-> print (nb + 8);	    
-	}
+	Ymir::Tree toGeneric () override;
+	
+	void print (int nb = 0) override;
 	       
     };
     

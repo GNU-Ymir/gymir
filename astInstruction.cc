@@ -134,5 +134,37 @@ namespace syntax {
 	return aux;
     }    
 
+    Instruction IIf::instruction () {
+	if (this-> test != NULL) {
+	    auto expr = this-> test-> expression ();
+	    if (expr == NULL) return NULL;
+	    auto type = expr-> info-> type-> CompOp (new IBoolInfo (true));
+	    
+	    if (type == NULL) {
+		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new IBoolInfo (true));
+		return NULL;
+	    }
+	    
+	    Table::instance ().retInfo ().currentBlock () = "if";
+	    Table::instance ().retInfo ().changed () = true;
+	    Block bl = this-> block-> block ();
+	    If _if;
+	    if (this-> else_ != NULL) {
+		_if = new IIf (this-> token, expr, bl, (If) this-> else_-> instruction ());
+		_if-> info = type;
+	    } else {
+		_if = new IIf (this-> token, expr, bl);
+		_if-> info = type;
+	    }
+	    return _if;
+	} else {
+	    Table::instance ().retInfo ().currentBlock () = "if";
+	    Table::instance ().retInfo ().changed () = true;
+	    Block bl = this-> block-> block ();
+	    If _if = new IIf (this-> token, NULL, bl);
+	    return _if;
+	}
+    }
+    
 }
 

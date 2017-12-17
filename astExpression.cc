@@ -194,7 +194,7 @@ namespace syntax {
     }
 
     Expression ITypedVar::expression () {
-	TypedVar aux;
+	TypedVar aux = NULL;
 	if (this-> type) {
 	    aux = new ITypedVar (this-> token, this-> type-> asType ());
 	} else {
@@ -749,5 +749,18 @@ namespace syntax {
 	}
 	return aux;
     }   
+    
+    Expression IBool::expression () {
+	auto aux = new IBool (this-> token);
+	aux-> info = new ISymbol (this-> token, new IBoolInfo (this-> token == Keys::TRUE_));
+	aux-> info-> value = new IBoolValue (this-> token == Keys::TRUE_);
+	return aux;
+    }
+
+    Expression INull::expression () {
+	auto aux = new INull (this-> token);
+	aux-> info = new ISymbol (this-> token, new INullInfo ());
+	return aux;
+    }
     
 }

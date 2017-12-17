@@ -4,6 +4,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
+#include "print-tree.h"
 
 namespace syntax {
     using namespace semantic;
@@ -13,10 +14,11 @@ namespace syntax {
     }
     
     Ymir::Tree IBlock::toGenericNoEntry () {
+	Ymir::TreeStmtList list;
 	for (auto it : this-> insts) {
-	    Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
+	    list.append (it-> toGeneric ());
 	}
-	return Ymir::Tree ();
+	return list.getTree ();
     }
     
     Ymir::Tree IBlock::toGeneric () {
@@ -24,7 +26,7 @@ namespace syntax {
 	for (auto it : this-> insts) {
 	    Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
 	}
-	return Ymir::leaveBlock ().block;
+	return Ymir::leaveBlock ().bind_expr;
     }
 
     Ymir::Tree IVarDecl::toGeneric () {
@@ -178,6 +180,55 @@ namespace syntax {
 	return this-> _content;
     }
 
+    Ymir::Tree INull::toGeneric () {
+	return build_int_cst_type (long_unsigned_type_node, 0);
+    }
+
+    Ymir::Tree IIf::toGeneric () {
+	if (this-> test != NULL) {
+	    Ymir::Tree bool_expr = this-> test-> toGeneric ();
+	    Ymir::Tree thenLabel = Ymir::makeLabel (this-> token.getLocus (), "then");
+	    Ymir::Tree endLabel  = Ymir::makeLabel (this-> token.getLocus (), "end_if");
+	    Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, thenLabel);
+	    Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, endLabel);
+	    Ymir::Tree goto_else, elseLabel;
+	    
+	    if (this-> else_) {
+		elseLabel = Ymir::makeLabel (this-> token.getLocus (), "else");
+		goto_else = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, elseLabel);
+	    } else {
+		goto_else = goto_end;
+	    }
+	    
+	    Ymir::TreeStmtList list;
+	    Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, this-> test-> token.getLocus (), void_type_node, bool_expr, goto_then, goto_else);
+	    list.append (cond_expr);
+	    
+	    Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, this-> block-> token.getLocus (), void_type_node, thenLabel);
+
+	    list.append (then_label_expr);
+	    Ymir::Tree then_part = this-> block-> toGeneric ();
+	    list.append (then_part);
+	    list.append (goto_end);
+	    
+	    if (this-> else_) {		
+		Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, this-> else_-> token.getLocus (), void_type_node, elseLabel);
+		list.append (else_label_expr);
+		Ymir::Tree else_part = this-> else_-> toGeneric ();
+		list.append (else_part);
+		list.append (goto_end);
+	    }
+
+	    Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, this-> token.getLocus (), void_type_node, endLabel);
+	    list.append (endif_label_expr);
+
+	    return  list.getTree ();
+	} else {
+	    return this-> block-> toGeneric ();
+	}
+    }
+
+    
 }
 
 

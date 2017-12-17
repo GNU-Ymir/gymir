@@ -41,7 +41,8 @@ namespace semantic {
 	}
 
 	const char* getId () override;
-	   
+
+	Ymir::Tree toGeneric () override;
 	
     private:
 

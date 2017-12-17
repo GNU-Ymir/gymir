@@ -35,11 +35,11 @@ namespace semantic {
     InfoType IArrayInfo::Is (Expression right) {
 	if (auto ptr = right-> info-> type-> to<INullInfo> ()) {
 	    auto ret = new IBoolInfo (true);
-	    //ret-> lintInst = ArrayUtils::InstIsNull;
+	    ret-> binopFoo = ArrayUtils::InstIs;
 	    return ret;
 	} else if (this-> isSame (right-> info-> type)) {
 	    auto ret = new IBoolInfo (true);
-	    //ret-> lintInst = ArrayUtils::InstIs;
+	    ret-> binopFoo = ArrayUtils::InstIs;
 	    return ret;
 	}
 	return NULL;
@@ -340,6 +340,64 @@ namespace semantic {
 	    }
 	}
 	
+	Ymir::Tree InstIs (Word word, Expression left, Expression right) {
+	    location_t loc = word.getLocus ();
+	    if (auto cst = left-> to <IConstArray> ()) {
+		return build_int_cst_type (boolean_type_node, 0);
+	    } else {
+		auto lexp = left-> toGeneric ();		
+		auto rexp = right-> toGeneric ();
+		if (!left-> info-> type-> is <INullInfo> ()) {
+		    lexp = fold_convert_loc (loc,
+					     long_unsigned_type_node,
+					     Ymir::getField (loc, lexp, "ptr").getTree ()
+		    );
+		}
+		
+		if (!right-> info-> type-> is <INullInfo> ()) {
+		    rexp = fold_convert_loc (loc,
+					     long_unsigned_type_node,
+					     Ymir::getField (loc, rexp, "ptr").getTree ()
+		    );
+		}
+		
+		return Ymir::buildTree (EQ_EXPR, loc,
+					    boolean_type_node,
+					    lexp.getTree (),
+					    rexp.getTree ()
+		);
+	    }
+	}
+
+	Ymir::Tree InstNotIs (Word word, Expression left, Expression right) {
+	    location_t loc = word.getLocus ();
+	    if (auto cst = left-> to <IConstArray> ()) {
+		return build_int_cst_type (boolean_type_node, 1);
+	    } else {
+		auto lexp = left-> toGeneric ();
+		auto rexp = right-> toGeneric ();
+		if (!left-> info-> type-> is <INullInfo> ()) {
+		    lexp = fold_convert_loc (loc,
+					     long_unsigned_type_node,
+					     Ymir::getField (loc, lexp, "ptr").getTree ()
+		    );
+		}
+		
+		if (!right-> info-> type-> is <INullInfo> ()) {
+		    rexp = fold_convert_loc (loc,
+					     long_unsigned_type_node,
+					     Ymir::getField (loc, rexp, "ptr").getTree ()
+		    );
+		}
+		
+		return Ymir::buildTree (NE_EXPR, loc,
+					    boolean_type_node,
+					    lexp.getTree (),
+					    rexp.getTree ()
+		);
+	    }
+	}
+
 	
     }
 

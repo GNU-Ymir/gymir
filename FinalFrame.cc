@@ -157,7 +157,7 @@ namespace semantic {
 	
 	Ymir::enterBlock ();
        	
-	this-> _block-> toGenericNoEntry ();
+	Ymir::getStackStmtList ().back ().append (this-> _block-> toGeneric ());
 
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
 				       NULL_TREE, void_type_node);

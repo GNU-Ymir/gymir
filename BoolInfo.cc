@@ -1,4 +1,6 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/utils/BoolUtils.hh>
+#include "print-tree.h"
 
 namespace semantic {
 
@@ -78,7 +80,7 @@ namespace semantic {
     InfoType IBoolInfo::Affect (syntax::Expression right) {
 	if (right-> info-> type-> is<IBoolInfo> ()) {
 	    auto b = new IBoolInfo (this-> isConst ());
-	    //b-> lintInst = BoolUtils::InstAffect;
+	    b-> binopFoo = BoolUtils::InstAffect;
 	    return b;
 	}
 	return NULL;
@@ -87,7 +89,7 @@ namespace semantic {
     InfoType IBoolInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto b = new IBoolInfo (this-> isConst ());
-	    //b-> lintInst = BoolUtils::InstAffect;
+	    b-> binopFoo = BoolUtils::InstAffect;
 	    return b;
 	}
 	return NULL;
@@ -119,6 +121,26 @@ namespace semantic {
     
     const char* IBoolInfo::getId () {
 	return IBoolInfo::id ();
+    }
+
+    Ymir::Tree IBoolInfo::toGeneric () {
+	return boolean_type_node;
+    }
+    
+    namespace BoolUtils {
+	using namespace syntax;
+	using namespace Ymir;
+	
+	Tree InstAffect (Word locus, Expression left, Expression right) {
+	    auto lexp = left-> toGeneric ();
+	    auto rexp = right-> toGeneric ();
+	    auto typeTree = left-> info-> type-> toGeneric ();
+	    return buildTree (
+		MODIFY_EXPR, locus.getLocus (),
+		typeTree, lexp, rexp
+	    );
+	}	
+
     }
 
     

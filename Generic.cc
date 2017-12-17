@@ -137,7 +137,18 @@ namespace Ymir {
     }
     
     
+    Tree makeLabel (location_t loc, std::string & name) {
+	tree decl = build_decl (loc, LABEL_DECL, get_identifier (name.c_str ()), void_type_node);
+	DECL_CONTEXT (decl) = IFinalFrame::currentFrame ().getTree ();
+	return decl;
+    }
 
+    Tree makeLabel (location_t loc, const char* name) {
+	tree decl = build_decl (loc, LABEL_DECL, get_identifier (name), void_type_node);
+	DECL_CONTEXT (decl) = IFinalFrame::currentFrame ().getTree ();
+	return decl;
+    }
 
+    
     
 }

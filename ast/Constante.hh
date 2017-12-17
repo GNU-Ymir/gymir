@@ -183,6 +183,8 @@ namespace syntax {
 	IBool (Word token) : IExpression (token) {
 	}
 
+	Expression expression () override;
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Bool> %s",
 		    nb, ' ',
@@ -197,6 +199,10 @@ namespace syntax {
 	INull (Word token) : IExpression (token) {
 	}
 
+	Expression expression () override;	
+	
+	Ymir::Tree toGeneric () override;
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Null> %s",
 		    nb, ' ',

@@ -445,4 +445,49 @@ namespace syntax {
 
     void ITreeExpression::print (int id) {}
     
+    IIf::IIf (Word word, Expression test, Block block, bool isStatic) :
+	IInstruction (word),
+	test (test),
+	block (block),
+	else_ (NULL)
+    {
+	if (this-> test)
+	    this-> test-> inside = this;
+	this-> isStatic = isStatic;
+    }
+        
+    IIf::IIf (Word word, Expression test, Block block, If else_, bool isStatic) : 
+	IInstruction (word),
+	test (test),
+	block (block),
+	else_ (else_)
+    {
+	if (this-> test)
+	    this-> test-> inside = this;
+	this-> isStatic = isStatic;
+	if (this-> else_)
+	    this-> else_-> isStatic = isStatic;
+    }
+    
+    void IIf::print (int nb) {
+	if (this-> test) {
+	    printf ("\n%*c<%sIf> %s",			
+		    nb, ' ',
+		    this-> isStatic ? "static_" : "",
+		    this-> token.toString ().c_str ()
+	    );		
+	    this-> test-> print (nb + 4);		
+	} else {
+	    printf ("\n%*c<%sElse> %s",
+		    nb, ' ',
+		    this-> isStatic ? "static_" : "",
+		    this-> token.toString ().c_str ()
+	    );
+	}
+
+	this-> block-> print (nb + 4);
+	if (this-> else_)
+	    this-> else_-> print (nb + 8);	    
+    }
+
 }

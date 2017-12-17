@@ -20,6 +20,10 @@ namespace Ymir {
     
     Tree makeAuxVar (location_t locus, ulong id, Ymir::Tree type);
 
+    Tree makeLabel (location_t loc, std::string &name);
+
+    Tree makeLabel (location_t loc, const char* name);
+
     Tree getArrayRef (location_t, Tree array, Tree inner, ulong index);
 
     Tree getPointerUnref (location_t, Tree ptr, Tree inner, ulong index);
