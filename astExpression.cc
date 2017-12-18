@@ -239,6 +239,21 @@ namespace syntax {
 	return aux;
     }
     
+    Expression IUnary::expression () {
+	auto elem = this-> elem-> expression ();
+	if (elem == NULL) return NULL;
+
+	auto type = elem-> info-> type-> UnaryOp (this-> token);
+	if (type == NULL) {
+	    Ymir::Error::undefinedOp (this-> token, elem-> info);
+	    return NULL;
+	}
+	
+	Unary unary = new (GC) IUnary (this-> token, elem);
+	unary-> info = new ISymbol (this-> token, type);
+	return unary;
+    }
+
     Expression IBinary::expression () {
 	if (this-> token == Token::EQUAL) {
 	    return affect ();

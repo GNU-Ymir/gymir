@@ -166,5 +166,27 @@ namespace syntax {
 	}
     }
     
+    Instruction IFor::instruction () {
+	Ymir::Error::assert ("TODO For");
+    }
+    
+    Instruction IWhile::instruction () {
+	auto expr = this-> test-> expression ();
+	if (expr == NULL) return NULL;
+	auto type = expr-> info-> type-> CompOp (new IBoolInfo (true));
+
+	if (type == NULL) {
+	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new IBoolInfo (true));
+	}
+
+	Table::instance ().retInfo ().currentBlock () = "while";
+	Table::instance ().retInfo ().changed () = true;
+	Block bl = this-> block-> block ();
+
+	return new IWhile (this-> token, expr, bl);		
+    }
+
+
+
 }
 

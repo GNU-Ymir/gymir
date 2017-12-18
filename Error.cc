@@ -533,6 +533,22 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }	
 
+    void Error::undefinedOp (Word op, semantic::Symbol left) {
+	auto str = getString (UndefinedOpUnary);
+	auto msg = format (str,
+			   YELLOW, op.getStr ().c_str (), RESET,
+			   YELLOW, left-> type-> typeString ().c_str (), RESET
+	);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, op);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }	
+    
     void Error::undefinedOp (Word op, semantic::Symbol left, semantic::InfoType right) {
 	auto str = getString (UndefinedOp);
 	auto msg = format (str,

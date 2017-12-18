@@ -84,6 +84,13 @@ namespace syntax {
 	);
     }
 
+    Ymir::Tree IUnary::toGeneric () {
+	return this-> info-> type-> buildUnaryOp (
+	    this-> token,
+	    this-> elem
+	);
+    }
+    
     Ymir::Tree IAccess::toGeneric () {
 	if (this-> info-> type-> binopFoo) {
 	    return this-> info-> type-> buildBinaryOp (
@@ -228,6 +235,34 @@ namespace syntax {
 	}
     }
 
+    Ymir::Tree IWhile::toGeneric () {
+	Ymir::TreeStmtList list;
+	Ymir::Tree bool_expr = this-> test-> toGeneric ();
+	Ymir::Tree test_label = Ymir::makeLabel (this-> token.getLocus (), "test");
+	Ymir::Tree begin_label = Ymir::makeLabel (this-> token.getLocus (), "begin");
+	Ymir::Tree end_label = Ymir::makeLabel (this-> token.getLocus (), "end");
+
+	Ymir::Tree goto_test = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, test_label);
+	Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, end_label);
+	Ymir::Tree goto_begin = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, begin_label);
+	
+	Ymir::Tree test_expr = Ymir::buildTree (COND_EXPR, this-> test-> token.getLocus (), void_type_node, bool_expr, goto_begin, goto_end);
+	Ymir::Tree begin_label_expr = Ymir::buildTree (LABEL_EXPR, this-> block-> token.getLocus (), void_type_node, begin_label);
+	list.append (goto_test);
+	list.append (begin_label_expr);
+	Ymir::Tree begin_part = this-> block-> toGeneric ();
+	list.append (begin_part);
+	list.append (goto_test);
+
+	Ymir::Tree test_label_expr = Ymir::buildTree (LABEL_EXPR, this-> test-> token.getLocus (), void_type_node, test_label);
+	list.append (test_label_expr);
+	list.append (test_expr);
+
+	Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, this-> test-> token.getLocus (), void_type_node, end_label);	
+	list.append (end_expr);
+	
+	return list.getTree ();	
+    }
     
 }
 

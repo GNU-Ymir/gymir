@@ -54,6 +54,7 @@ namespace Ymir {
 	    UndefVar2,
 	    UninitVar,
 	    UndefinedOp,
+	    UndefinedOpUnary,
 	    UndefinedOpMult,
 	    UseAsVar,
 	    UseAsType,
@@ -162,6 +163,8 @@ namespace Ymir {
 	static void undefinedOp (Word, semantic::Symbol, semantic::Symbol);
 
 	static void undefinedOp (Word, semantic::Symbol, semantic::InfoType);
+	
+	static void undefinedOp (Word, semantic::Symbol);
 
 	static void incompatibleTypes (Word, semantic::Symbol, semantic::InfoType);
 

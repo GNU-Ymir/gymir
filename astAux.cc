@@ -490,4 +490,69 @@ namespace syntax {
 	    this-> else_-> print (nb + 8);	    
     }
 
+    IFor::IFor (Word token, Word id, std::vector <Var> var, Expression iter, Block bl) :
+	IInstruction (token),
+	id (id),
+	var (var),
+	iter (iter),
+	block (bl)
+    {
+	this-> iter-> inside = this;
+    }
+    
+    void IFor::print (int nb) {
+	printf ("\n%*c<For> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	for (auto it : this-> var) {
+	    it-> print (nb + 4);
+	}
+
+	this-> iter-> print (nb + 5);
+	this-> block-> print (nb + 4);
+    }
+
+
+    IWhile::IWhile (Word token, Word name, Expression test, Block block) :
+	IInstruction (token),
+	name (name),
+	test (test),
+	block (block)
+    {}
+    
+    IWhile::IWhile (Word token, Expression test, Block block) :
+	IInstruction (token),
+	test (test),
+	block (block)
+    {}
+    	
+    void IWhile::print (int nb) {
+	printf ("\n%*c<While> %s:%s",
+		nb, ' ',
+		this-> name.isEof () ? "_" : this-> name.getStr ().c_str (),
+		this-> token.toString ().c_str ()
+	);
+
+	this-> test-> print (nb + 4);
+	this-> block-> print (nb + 4);	    
+    }
+
+    IUnary::IUnary (Word word, Expression elem) :
+	IExpression (word),
+	elem (elem)
+    {
+	this-> elem-> inside = this;
+    }
+
+
+    void IUnary::print (int nb) {
+	printf ("\n%*c<Unary> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	this-> elem-> print (nb + 4);
+    }
+
+    
 }

@@ -5,28 +5,26 @@
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 
+namespace semantic {
+    class IInfoType;
+    typedef IInfoType* InfoType;
+}
+
 namespace syntax {
 
     class IUnary : public IExpression {
 	Expression elem;
-
+	semantic::InfoType type;
+	
     public:
 
-	IUnary (Word word, Expression elem) :
-	    IExpression (word),
-	    elem (elem)
-	{
-	    this-> elem-> inside = this;
-	}
+	IUnary (Word word, Expression elem);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Unary> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    this-> elem-> print (nb + 4);
-	}
+	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
 	
+	void print (int nb = 0) override;	
     };
 
     typedef IUnary* Unary;

@@ -16,34 +16,15 @@ namespace syntax {
 
     public:
 
-	IWhile (Word token, Word name, Expression test, Block block) :
-	    IInstruction (token),
-	    name (name),
-	    test (test),
-	    block (block)
-	{}
+	IWhile (Word token, Word name, Expression test, Block block);
 
-	IWhile (Word token, Expression test, Block block) :
-	    IInstruction (token),
-	    test (test),
-	    block (block)
-	{}
+	IWhile (Word token, Expression test, Block block);
 
-	Instruction instruction () override {
-	    Ymir::Error::assert ("TODO");
-	}
+	Instruction instruction () override;
+
+	Ymir::Tree toGeneric () override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<While> %s:%s",
-		    nb, ' ',
-		    this-> name.isEof () ? "_" : this-> name.getStr ().c_str (),
-		    this-> token.toString ().c_str ()
-	    );
-
-	    this-> test-> print (nb + 4);
-	    this-> block-> print (nb + 4);	    
-	}
-	
+	void print (int nb = 0) override;	
     };
 
     typedef IWhile* While;

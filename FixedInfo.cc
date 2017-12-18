@@ -72,7 +72,7 @@ namespace semantic {
     InfoType IFixedInfo::UnaryOp (Word op) {
 	if (op == Token::MINUS) {
 	    auto ret = new IFixedInfo (true, this-> type ());
-	    //TODO
+	    ret-> unopFoo = FixedUtils::UnaryMinus;
 	    return ret;
 	} else if (op == Token::AND && !this-> isConst ())
 	    return toPtr ();
@@ -336,6 +336,7 @@ namespace semantic {
     }
 
     namespace FixedUtils {
+	using namespace syntax;
 	
 	Ymir::Tree InstAffInt (Word locus, syntax::Expression left, syntax::Expression right) {
 	    auto ltree = left-> toGeneric ();
@@ -347,6 +348,14 @@ namespace semantic {
 	    );
 	}
 
+	Ymir::Tree UnaryMinus (Word locus, Expression elem) {
+	    auto lexp = elem-> toGeneric ();
+	    return Ymir::buildTree (
+		NEGATE_EXPR, locus.getLocus (), lexp.getType (), lexp
+	    );
+	}
+
+	
     }
 
     

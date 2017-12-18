@@ -18,33 +18,11 @@ namespace syntax {
 	
     public:
 
-	IFor (Word token, Word id, std::vector <Var> var, Expression iter, Block bl) :
-	    IInstruction (token),
-	    id (id),
-	    var (var),
-	    iter (iter),
-	    block (bl)
-	{
-	    this-> iter-> inside = this;
-	}
+	IFor (Word token, Word id, std::vector <Var> var, Expression iter, Block bl);
 
-	Instruction instruction () override {
-	    Ymir::Error::assert ("TODO");
-	}
+	Instruction instruction () override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<For> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    for (auto it : this-> var) {
-		it-> print (nb + 4);
-	    }
-
-	    this-> iter-> print (nb + 5);
-	    this-> block-> print (nb + 4);
-	}
-		
+	void print (int nb = 0) override;		
     };
 
     typedef IFor* For;

@@ -119,7 +119,7 @@ namespace syntax {
 	    this-> lex.rewind ();
 	}
 	auto last = this-> lex.fileLocus ();
-	return new IProgram (last, decls);
+	return new (GC) IProgram (last, decls);
     }
     
     /**
@@ -257,8 +257,8 @@ namespace syntax {
 	}
 	
 	if (what.isEof ())
-	    return new IImpl (ident, methods, csts);
-	else return new IImpl (ident, what, methods, herit, csts);	
+	    return new (GC) IImpl (ident, methods, csts);
+	else return new (GC) IImpl (ident, what, methods, herit, csts);	
     }
 
     /**
@@ -275,7 +275,7 @@ namespace syntax {
 		params.push_back (visitVarDeclaration ());		
 	    }
 	}
-	return new IConstructor (begin, params, visitBlock ());
+	return new (GC) IConstructor (begin, params, visitBlock ());
     }
 
     /**
@@ -300,7 +300,7 @@ namespace syntax {
 		if (params.size () == 0) {
 		    next = this-> lex.next ();
 		    if (next == Keys::SELF)
-			params.push_back (new IVar (next));
+			params.push_back (new (GC) IVar (next));
 		    else {
 			this-> lex.rewind ();
 			params.push_back (visitVarDeclaration ());
@@ -323,7 +323,7 @@ namespace syntax {
 	    type = visitType ();
 	    type-> deco = deco;
 	} else this-> lex.rewind ();
-	return new IFunction (ident, params, {}, NULL, visitBlock ());
+	return new (GC) IFunction (ident, params, {}, NULL, visitBlock ());
     }
 
 
@@ -334,7 +334,7 @@ namespace syntax {
 	auto begin = this->lex.rewind ().next ();
 	this-> lex.next ({Token::LPAR});
 	this-> lex.next ({Token::RPAR});
-	return new ISelf (begin, visitBlock ());
+	return new (GC) ISelf (begin, visitBlock ());
     }
 
     /**
@@ -347,7 +347,7 @@ namespace syntax {
 	if (next == Token::EQUAL) {
 	    auto expr = visitExpression ();
 	    this-> lex.next ({Token::SEMI_COLON});
-	    return new IGlobal (ident, expr);
+	    return new (GC) IGlobal (ident, expr);
 	} else {
 	    Expression type;
 	    next = this-> lex.next ();
@@ -357,7 +357,7 @@ namespace syntax {
 		type = visitType ();
 	    }
 	    this-> lex.next ({Token::SEMI_COLON});
-	    return new IGlobal (ident, NULL, type);
+	    return new (GC) IGlobal (ident, NULL, type);
 	}
     }
     
@@ -402,7 +402,7 @@ namespace syntax {
 		else break;
 	    }
 	}
-	return new IImport (begin, idents);
+	return new (GC) IImport (begin, idents);
     }
 
     std::vector <Expression> Visitor::visitTemplateStruct () {
@@ -457,7 +457,7 @@ namespace syntax {
 	    visitIdentifiant ();
 	    this-> lex.next ({Token::COMA});    
 	}
-	return new IStruct (ident, temps, exps);
+	return new (GC) IStruct (ident, temps, exps);
     }
 
     Enum Visitor::visitEnum () {
@@ -493,7 +493,7 @@ namespace syntax {
 	    ident = visitIdentifiant ();       	    
 	    word = this-> lex.next ({Token::SEMI_COLON});
 	}
-	return new IEnum (ident, type, names, values);
+	return new (GC) IEnum (ident, type, names, values);
     }
 
     
@@ -573,9 +573,9 @@ namespace syntax {
 	    }
 	    auto type = visitType ();
 	    type-> deco = deco;
-	    return new IFunction (ident, type, exps, temps, test, visitBlock ());
+	    return new (GC) IFunction (ident, type, exps, temps, test, visitBlock ());
 	} else this-> lex.rewind ();	
-	return new IFunction (ident, exps, temps, test, visitBlock ());
+	return new (GC) IFunction (ident, exps, temps, test, visitBlock ());
     }
 
     Proto Visitor::visitExtern () {
@@ -622,7 +622,7 @@ namespace syntax {
 	    word = this-> lex.next ({Token::SEMI_COLON});
 	}
 	
-	auto ret = new IProto (ident, type, exps, space, isVariadic);
+	auto ret = new (GC) IProto (ident, type, exps, space, isVariadic);
 	ret-> from = from.getStr ();
 	return ret;
     }
@@ -647,19 +647,19 @@ namespace syntax {
 	    next = this-> lex.next ();
 	    if (next == Keys::FUNCTION) {
 		auto type = visitFuncPtrSimple ();
-		return new ITypedVar (ident, type, deco);
+		return new (GC) ITypedVar (ident, type, deco);
 	    } else {
 		this-> lex.rewind ();
 		auto type = visitType ();
-		return new ITypedVar (ident, type, deco);
+		return new (GC) ITypedVar (ident, type, deco);
 	    }
 	} else if (next == Keys::OF && deco.isEof ()) {
 	    auto type = visitType ();
-	    return new IOfVar (ident, type);	    
+	    return new (GC) IOfVar (ident, type);	    
 	} else if (next == Token::TDOT) {
 	    return new IVariadicVar (ident);
 	} else this-> lex.rewind ();
-	return new IVar (ident, deco);
+	return new (GC) IVar (ident, deco);
     }
         
     /**
@@ -677,14 +677,14 @@ namespace syntax {
 	    next = this-> lex.next ();
 	    if (next == Keys::FUNCTION) {
 		auto type = visitFuncPtrSimple ();
-		return new ITypedVar (ident, type, deco);
+		return new (GC) ITypedVar (ident, type, deco);
 	    } else {
 		this-> lex.rewind ();
 		auto type = visitType ();
-		return new ITypedVar (ident, type, deco);
+		return new (GC) ITypedVar (ident, type, deco);
 	    }
 	} else this-> lex.rewind ();
-	return new IVar (ident, deco);
+	return new (GC) IVar (ident, deco);
     }
     
     TypedVar Visitor::visitStructVarDeclaration () {
@@ -693,7 +693,7 @@ namespace syntax {
 	next = this-> lex.next ();
 	if (next == Keys::FUNCTION) {
 	    auto type = visitFuncPtrSimple ();
-	    return new ITypedVar (ident, type, Word::eof ());
+	    return new (GC) ITypedVar (ident, type, Word::eof ());
 	} else if (next == Token::LCRO) {
 	    auto begin = next;
 	    next = this-> lex.next ();
@@ -707,12 +707,12 @@ namespace syntax {
 	    if (next == Token::SEMI_COLON) {
 		auto len = visitNumeric (this-> lex.next ());
 		this-> lex.next ({Token::RCRO});
-		return new ITypedVar (ident, new IArrayAlloc (begin, type, len), Word::eof ());
-	    } else return new ITypedVar (ident, new IArrayVar (begin, type), Word::eof ());
+		return new (GC) ITypedVar (ident, new (GC) IArrayAlloc (begin, type, len), Word::eof ());
+	    } else return new (GC) ITypedVar (ident, new (GC) IArrayVar (begin, type), Word::eof ());
 	} else {
 	    this-> lex.rewind ();
 	    auto type = visitType ();
-	    return new ITypedVar (ident, type, Word::eof ());
+	    return new (GC) ITypedVar (ident, type, Word::eof ());
 	}
     }
 
@@ -730,11 +730,11 @@ namespace syntax {
 	    next = this-> lex.next ();
 	    if (next == Keys::FUNCTION) {
 		auto type = visitFuncPtrSimple ();
-		return new ITypedVar (ident, type, deco);
+		return new (GC) ITypedVar (ident, type, deco);
 	    } else {
 		this-> lex.rewind ();
 		auto type = visitType ();
-		return new ITypedVar (ident, type, deco);
+		return new (GC) ITypedVar (ident, type, deco);
 	    }
 	}
 	syntaxError (next, {Token::COLON});
@@ -782,7 +782,7 @@ namespace syntax {
 	    
 	    auto end = this-> lex.next ();
 	    if (end != Token::RCRO) syntaxError (end, {Token::RCRO});
-	    return new IArrayVar (begin, type);
+	    return new (GC) IArrayVar (begin, type);
 	} else this-> lex.rewind ();
 	auto ident = visitIdentifiant ();
 	auto next = this-> lex.next ();
@@ -806,12 +806,12 @@ namespace syntax {
 		    params.push_back (constante);
 		else {
 		    auto ident_ = visitIdentifiant ();
-		    params.push_back (new IVar (ident_));
+		    params.push_back (new (GC) IVar (ident_));
 		}
 	    } else this-> lex.rewind (2);
-	    return new IVar (ident, params);
+	    return new (GC) IVar (ident, params);
 	} else this-> lex.rewind ();
-	return new IVar (ident);
+	return new (GC) IVar (ident);
     }
 
         
@@ -916,9 +916,9 @@ namespace syntax {
 		    insts.push_back (visitInstruction ());
 		}
 	    }
-	    return new IBlock (begin, decls, insts);
+	    return new (GC) IBlock (begin, decls, insts);
 	} else this-> lex.rewind ();
-	return new IBlock (begin, {}, {visitInstruction ()});
+	return new (GC) IBlock (begin, {}, {visitInstruction ()});
     }
 
     Instruction Visitor::visitInstruction () {
@@ -944,7 +944,7 @@ namespace syntax {
 	}
 	else if (tok == Token::SEMI_COLON) {
 	    // TODO warn
-	    return new INone (tok);
+	    return new (GC) INone (tok);
 	} else {
 	    this-> lex.rewind ();
 	    auto retour = (Instruction) visitExpressionUlt ();
@@ -994,7 +994,7 @@ namespace syntax {
 	    }
 	    
 	}
-	return new IVarDecl (tok, decos, decls, insts);
+	return new (GC) IVarDecl (tok, decos, decls, insts);
     }
    
     Instruction Visitor::visitLetDestruct (Word begin) {
@@ -1014,7 +1014,7 @@ namespace syntax {
 	auto next = this-> lex.next ({Token::EQUAL});
 	auto right = visitExpressionUlt ();
 	this-> lex.next ({Token::SEMI_COLON});
-	return new ITupleDest (begin, isVariadic, decls, right);
+	return new (GC) ITupleDest (begin, isVariadic, decls, right);
     }    
     
     Expression Visitor::visitExpressionOutSide () {
@@ -1026,7 +1026,7 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (ultimeOp, tok)) {
 	    auto right = visitExpressionUlt ();
-	    return visitExpressionUlt (new IBinary (tok, left, right));
+	    return visitExpressionUlt (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
 	return left;
     }    
@@ -1035,7 +1035,7 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (ultimeOp, tok)) {
 	    auto right = visitExpressionUlt ();
-	    return visitExpressionUlt (new IBinary (tok, left, right));
+	    return visitExpressionUlt (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1045,7 +1045,7 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (expOp, tok)) {
 	    auto right = visitUlow ();
-	    return visitExpression (new IBinary (tok, left, right));
+	    return visitExpression (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1054,7 +1054,7 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (expOp, tok)) {
 	    auto right = visitUlow ();
-	    return visitExpression (new IBinary (tok, left, right));
+	    return visitExpression (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1064,18 +1064,18 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (ulowOp, tok) || tok == Keys::IS) {
 	    auto right = visitLow ();
-	    return visitUlow (new IBinary (tok, left, right));
+	    return visitUlow (new (GC) IBinary (tok, left, right));
 	} else {
 	    if (tok == Token::NOT) {
 		auto suite = this-> lex.next ();
 		if (suite == Keys::IS) {
 		    auto right = visitLow ();
 		    tok.setStr (Keys::NOT_IS);
-		    return visitUlow (new IBinary (tok, left, right));
+		    return visitUlow (new (GC) IBinary (tok, left, right));
 		} else this-> lex.rewind ();
 	    } else if (tok == Token::DDOT) {
 		auto right = visitLow ();
-		return visitUlow (new IConstRange (tok, left, right));
+		return visitUlow (new (GC) IConstRange (tok, left, right));
 	    } 
 	    this-> lex.rewind ();
 	}
@@ -1086,18 +1086,18 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (ulowOp, tok) || tok == Keys::IS) {
 	    auto right = visitLow ();
-	    return visitUlow (new IBinary (tok, left, right));
+	    return visitUlow (new (GC) IBinary (tok, left, right));
 	} else {
 	    if (tok == Token::NOT) {
 		auto suite = this-> lex.next ();
 		if (suite == Keys::IS) {
 		    auto right = visitLow ();
 		    tok.setStr (Keys::NOT_IS);
-		    return visitUlow (new IBinary (tok, left, right));
+		    return visitUlow (new (GC) IBinary (tok, left, right));
 		} else this-> lex.rewind ();
 	    } else if (tok == Token::DDOT) {
 		auto right = visitLow ();
-		return visitHigh (new IConstRange (tok, left, right));
+		return visitHigh (new (GC) IConstRange (tok, left, right));
 	    } 
 	    this-> lex.rewind ();
 	}
@@ -1109,7 +1109,7 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (lowOp, tok)) {
 	    auto right = visitHigh ();
-	    return visitLow (new IBinary (tok, left, right));
+	    return visitLow (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1118,7 +1118,7 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (lowOp, tok)) {
 	    auto right = visitHigh ();
-	    return visitLow (new IBinary (tok, left, right));
+	    return visitLow (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1128,10 +1128,10 @@ namespace syntax {
     	auto tok = this-> lex.next ();
     	if (find (highOp, tok)) {
     	    auto right = visitPth ();
-    	    return visitHigh (new IBinary (tok, left, right));
+    	    return visitHigh (new (GC) IBinary (tok, left, right));
     	} else if (tok == Keys::IN) {
 	    auto right = visitPth ();
-	    return visitHigh (new IBinary (tok, left, right));
+	    return visitHigh (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
     	return left;
     }
@@ -1140,10 +1140,10 @@ namespace syntax {
 	auto tok = this-> lex.next ();
 	if (find (highOp, tok)) {
 	    auto right = visitPth ();
-	    return visitHigh (new IBinary (tok, left, right));
+	    return visitHigh (new (GC) IBinary (tok, left, right));
 	} else if (tok == Keys::IN) {
 	    auto right = visitPth ();
-	    return visitHigh (new IBinary (tok, left, right));
+	    return visitHigh (new (GC) IBinary (tok, left, right));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1199,17 +1199,17 @@ namespace syntax {
 		}
 		
 		if (next == Token::DARROW) {
-		    return new ILambdaFunc (tok, realParams, visitExpressionUlt ());
+		    return new (GC) ILambdaFunc (tok, realParams, visitExpressionUlt ());
 		} else {
 		    this-> lex.rewind ();
-		    return new ILambdaFunc (tok, realParams, visitBlock ());
+		    return new (GC) ILambdaFunc (tok, realParams, visitBlock ());
 		}
 	    } else if (isLambda) {
 		syntaxError (next, {Token::LACC, Token::DARROW});
 	    } else this-> lex.rewind ();
 	}
 		
-	if (params.size () != 1 || isTuple) exp = new IConstTuple (token, tok, params);
+	if (params.size () != 1 || isTuple) exp = new (GC) IConstTuple (token, tok, params);
 	else exp = params [0];
 	
 	tok = this-> lex.next ();
@@ -1231,9 +1231,9 @@ namespace syntax {
 	else if (tok == Token::APOS || tok == Token::GUILL || tok == Token::BSTRING)
 	    return visitString (tok);
 	else if (tok == Keys::TRUE_ || tok == Keys::FALSE_)
-	    return new IBool (tok);
+	    return new (GC) IBool (tok);
 	else if (tok == Keys::NULL_)
-	    return new INull (tok);
+	    return new (GC) INull (tok);
 	else if (tok == Keys::EXPAND)
 	    return visitExpand ();
 	else if (tok == Keys::IS) 
@@ -1250,7 +1250,7 @@ namespace syntax {
 	auto next = this-> lex.next ({Token::LPAR});
 	auto expr = visitExpression ();
 	next = this-> lex.next ({Token::RPAR});
-	return new IExpand (begin, expr);
+	return new (GC) IExpand (begin, expr);
     }
 
     Expression Visitor::visitTypeOf () {
@@ -1259,7 +1259,7 @@ namespace syntax {
 	auto next = this-> lex.next ({Token::LPAR});
 	auto expr = visitExpression ();
 	next = this-> lex.next ({Token::RPAR});
-	return new ITypeOf (begin, expr);
+	return new (GC) ITypeOf (begin, expr);
     }
     
     Expression Visitor::visitIs () {
@@ -1274,12 +1274,12 @@ namespace syntax {
 	if (next == Keys::FUNCTION || next == Keys::STRUCT || next == Keys::TUPLE) {
 	    auto expType = next;
 	    next = this-> lex.next ({Token::RPAR});
-	    return new IIs (begin, expr, expType);
+	    return new (GC) IIs (begin, expr, expType);
 	} else {
 	    this-> lex.rewind ();
 	    auto type = visitType ();
 	    next = this-> lex.next ({Token::RPAR});
-	    return new IIs (begin, expr, type);
+	    return new (GC) IIs (begin, expr, type);
 	}
     }
 
@@ -1287,19 +1287,19 @@ namespace syntax {
 	for (int it = 0 ; it < (int) begin.getStr ().length (); it++) {
 	    if (begin.getStr () [it] < '0' || begin.getStr() [it] > '9') {		
 		if (begin.getStr () .substr (it, begin.getStr ().length ()) == "ub" || begin.getStr () .substr (it, begin.getStr ().length ()) == "UB")
-		    return new IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UBYTE);
+		    return new (GC) IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UBYTE);
 		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "b" || begin.getStr () .substr (it, begin.getStr ().length ()) == "B")
-		    return new IFixed ({begin.getLocus (), begin.getStr ().substr (0, it)}, FixedConst::BYTE);
+		    return new (GC) IFixed ({begin.getLocus (), begin.getStr ().substr (0, it)}, FixedConst::BYTE);
 		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "s" || begin.getStr () .substr (it, begin.getStr ().length ()) == "S")
-		    return new IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::SHORT);
+		    return new (GC) IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::SHORT);
 		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "us" || begin.getStr () .substr (it, begin.getStr ().length ()) == "US")
-		    return new IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::USHORT);
+		    return new (GC) IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::USHORT);
 		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "u" || begin.getStr () .substr (it, begin.getStr ().length ()) == "U")
-		    return new IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UINT);
+		    return new (GC) IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UINT);
 		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "ul" || begin.getStr () .substr (it, begin.getStr ().length ()) == "UL")
-		    return new IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::ULONG);
+		    return new (GC) IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::ULONG);
 		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "l" || begin.getStr () .substr (it, begin.getStr ().length ()) == "L")
-		    return new IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::LONG);
+		    return new (GC) IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::LONG);
 		else {
 		    syntaxError (begin);
 		    return NULL;
@@ -1318,9 +1318,9 @@ namespace syntax {
 		    break;
 		}		    
 	    }
-	    return new IFloat (begin, suite);
+	    return new (GC) IFloat (begin, suite);
 	} else this-> lex.rewind ();
-	return new IFixed (begin, FixedConst::INT);
+	return new (GC) IFixed (begin, FixedConst::INT);
     }    
     
     Expression Visitor::visitFloat (Word) {
@@ -1329,7 +1329,7 @@ namespace syntax {
 	    if (it < '0' || it > '9') 
 		syntaxError (next);	    
 	}
-	return new IFloat (next);
+	return new (GC) IFloat (next);
     }
 
     Expression Visitor::visitString (Word word) {
@@ -1382,10 +1382,10 @@ namespace syntax {
 	auto res = ss.str ();	
 	if (word == Token::APOS) {
 	    if (res.length () == 1) 
-		return new IChar (word, (ubyte) res [0]);
+		return new (GC) IChar (word, (ubyte) res [0]);
 	}
 	
-	return new IString (word, res);
+	return new (GC) IString (word, res);
     }
 
     Expression Visitor::visitPthWPar (Word tok) {
@@ -1439,7 +1439,7 @@ namespace syntax {
 	    if (next == Token::SEMI_COLON) {
 		auto size = visitExpression ();
 		next = this-> lex.next ({Token::RCRO});
-		return new IArrayAlloc (begin, fst, size);
+		return new (GC) IArrayAlloc (begin, fst, size);
 	    } else {
 		params.push_back (fst);
 		this-> lex.rewind ();
@@ -1450,7 +1450,7 @@ namespace syntax {
 		}
 	    }
 	}
-	return new IConstArray (begin, params);
+	return new (GC) IConstArray (begin, params);
     }
 
         
@@ -1472,7 +1472,7 @@ namespace syntax {
 	word = this-> lex.next ({Token::LPAR});
 	auto expr = visitExpression ();
 	word = this-> lex.next ({Token::RPAR});
-	return new ICast (begin, type, expr);	
+	return new (GC) ICast (begin, type, expr);	
     }
     
 
@@ -1492,7 +1492,7 @@ namespace syntax {
 	}
 	word = this-> lex.next ({Token::ARROW});
 	auto ret = visitType ();
-	return new IFuncPtr (begin, params, ret);
+	return new (GC) IFuncPtr (begin, params, ret);
     }
 
     Expression Visitor::visitFuncPtr () {
@@ -1516,19 +1516,19 @@ namespace syntax {
 	if (word == Token::LPAR) {
 	    auto expr = visitExpression ();
 	    word = this-> lex.next ({Token::RPAR});
-	    return new IFuncPtr (begin, params, ret, expr);
+	    return new (GC) IFuncPtr (begin, params, ret, expr);
 	} else this-> lex.rewind ();
-	return new IFuncPtr (begin, params, ret);
+	return new (GC) IFuncPtr (begin, params, ret);
     }
 
     Expression Visitor::visitLambdaEmpty () {
 	auto next = this-> lex.next ({Token::DARROW, Token::LACC});
 	if (next == Token::DARROW) {
 	    auto expr = visitExpressionUlt ();
-	    return new ILambdaFunc (next, {}, expr);
+	    return new (GC) ILambdaFunc (next, {}, expr);
 	} else if (next == Token::LACC) {
 	    this-> lex.rewind ();
-	    return new ILambdaFunc (next, {}, visitBlock ());
+	    return new (GC) ILambdaFunc (next, {}, visitBlock ());
 	} else return NULL;
     }
     
@@ -1545,11 +1545,11 @@ namespace syntax {
 	auto next = this-> lex.next ({Token::DARROW, Token::LACC});
 	if (next == Token::DARROW) {
 	    auto expr = visitExpressionUlt ();
-	    return new ILambdaFunc (begin, params, expr);
+	    return new (GC) ILambdaFunc (begin, params, expr);
 	} else if (next == Token::LACC) {
 	    this-> lex.rewind ();
 	    auto block = visitBlock ();
-	    return new ILambdaFunc (begin, params, block);
+	    return new (GC) ILambdaFunc (begin, params, block);
 	} else return NULL;
     }    
     
@@ -1578,7 +1578,7 @@ namespace syntax {
 		if (next == Token::RPAR) break;
 	    }
 	}
-	auto retour = new IPar (beg, next, left, new IParamList (suite, params));
+	auto retour = new (GC) IPar (beg, next, left, new (GC) IParamList (suite, params));
 	next = this-> lex.next ();
 	if (find (suiteElem, next))
 	    return visitSuite (next, retour);
@@ -1605,7 +1605,7 @@ namespace syntax {
 	    }
 	}
 	
-	auto retour = new IAccess (beg, next, left, new IParamList (suite, params));
+	auto retour = new (GC) IAccess (beg, next, left, new (GC) IParamList (suite, params));
 	next = this-> lex.next ();
 	if (find (suiteElem, next))
 	    return visitSuite (next, retour);
@@ -1622,14 +1622,14 @@ namespace syntax {
 	auto next = this-> lex.next ();
 	Expression retour;
 	if (next == Keys::EXPAND) {
-	    retour = new IExpand (next, left);
+	    retour = new (GC) IExpand (next, left);
 	} else if (next == Keys::TYPEOF) {
-	    retour = new ITypeOf (next, left);
+	    retour = new (GC) ITypeOf (next, left);
 	} else {
 	    this-> lex.rewind ();
 	    Expression right = visitConstante ();
 	    if (right == NULL) right = visitVar ();
-	    retour = new IDot (begin, left, right);
+	    retour = new (GC) IDot (begin, left, right);
 	}
 	
 	next = this-> lex.next ();
@@ -1645,7 +1645,7 @@ namespace syntax {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
 	auto right = visitVar ();
-	auto retour = new IDColon (begin, left, right);
+	auto retour = new (GC) IDColon (begin, left, right);
 	auto next = this-> lex.next ();
 	if (find (suiteElem, next))
 	    return visitSuite (next, retour);
@@ -1659,7 +1659,7 @@ namespace syntax {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
 	auto expr = visitPth ();
-	return new IMixin (begin, expr);
+	return new (GC) IMixin (begin, expr);
     }
 
     Expression Visitor::visitMatch () {
@@ -1679,7 +1679,7 @@ namespace syntax {
 		values.push_back (visitExpression ());
 		next = this-> lex.next ({Token::DARROW, Token::TDOT});
 		if (next == Token::TDOT) {
-		    values.back () = new IMatchPair (next, values.back (), visitExpression ());
+		    values.back () = new (GC) IMatchPair (next, values.back (), visitExpression ());
 		    next = this-> lex.next ({Token::DARROW});
 		}
 		
@@ -1695,16 +1695,16 @@ namespace syntax {
 	    }
 	}
 	
-	return new IMatch (begin, expr, values, insts, defaultInsts);
+	return new (GC) IMatch (begin, expr, values, insts, defaultInsts);
     }
     
     Expression Visitor::visitAfter (Word word, Expression left) {
-	return new IUnary (word, left);
+	return new (GC) IUnary (word, left);
     }
     
     Expression Visitor::visitBeforePth (Word word) {
 	auto elem = visitPth ();
-	return new IUnary (word, elem);
+	return new (GC) IUnary (word, elem);
     }
         
     Instruction Visitor::visitIf () {
@@ -1714,9 +1714,9 @@ namespace syntax {
 	auto block = visitBlock ();
 	auto next = this-> lex.next ();
 	if (next == Keys::ELSE) {
-	    return new IIf (begin, test, block, visitElse ()); 
+	    return new (GC) IIf (begin, test, block, visitElse ()); 
 	} else this-> lex.rewind ();
-	return new IIf (begin, test, block);
+	return new (GC) IIf (begin, test, block);
     }
         
     If Visitor::visitElse () {
@@ -1727,11 +1727,11 @@ namespace syntax {
 	    auto block = visitBlock ();
 	    next = this-> lex.next ();
 	    if (next == Keys::ELSE) {
-		return new IIf (begin, test, block, visitElse ());
+		return new (GC) IIf (begin, test, block, visitElse ());
 	    } else this-> lex.rewind ();
-	    return new IIf (begin, test, block);
+	    return new (GC) IIf (begin, test, block);
 	} else this-> lex.rewind ();
-	return new IIf (begin, NULL, visitBlock ());
+	return new (GC) IIf (begin, NULL, visitBlock ());
     }
     
     Assert Visitor::visitAssert () {
@@ -1746,18 +1746,18 @@ namespace syntax {
 	}
 	
 	next = this-> lex.next ({Token::SEMI_COLON});
-	return new IAssert (begin, expr, msg);
+	return new (GC) IAssert (begin, expr, msg);
     }
         
     Instruction Visitor::visitReturn () {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next (), next = this-> lex.next ();
 	if (next == Token::SEMI_COLON) 
-	    return new IReturn (begin);
+	    return new (GC) IReturn (begin);
 	else this-> lex.rewind ();
 	auto exp = visitExpression ();
 	next = this-> lex.next ({Token::SEMI_COLON});
-	return new IReturn (begin, exp);	
+	return new (GC) IReturn (begin, exp);	
     }
     
     
@@ -1765,11 +1765,11 @@ namespace syntax {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next (), next = this-> lex.next ();
 	if (next == Token::SEMI_COLON) {
-	    return new IBreak (begin);
+	    return new (GC) IBreak (begin);
 	} else this-> lex.rewind ();
 	auto id = visitIdentifiant ();
 	next = this-> lex.next ({Token::SEMI_COLON});
-	return new IBreak (begin, id);
+	return new (GC) IBreak (begin, id);
     }
 
     Instruction Visitor::visitWhile () {
@@ -1781,11 +1781,11 @@ namespace syntax {
 	    next = this-> lex.next ({Token::LPAR});
 	    auto test = visitExpression ();
 	    next = this-> lex.next ({Token::RPAR});
-	    return new IWhile (begin, id, test, visitBlock ());
+	    return new (GC) IWhile (begin, id, test, visitBlock ());
 	} else {
 	    this-> lex.rewind ();
 	    auto test = visitExpression ();
-	    return new IWhile (begin, test, visitBlock ());
+	    return new (GC) IWhile (begin, test, visitBlock ());
 	}
     }
 
@@ -1813,7 +1813,7 @@ namespace syntax {
 	if (need) {
 	    next = this-> lex.next ({Token::RPAR});
 	}
-	return new IFor (begin, id, vars, iter, visitBlock ());
+	return new (GC) IFor (begin, id, vars, iter, visitBlock ());
     }       
     
 };
