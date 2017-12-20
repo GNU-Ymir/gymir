@@ -21,6 +21,7 @@ namespace semantic {
 
 	    if (token == "float") return new IFloatInfo (false, FloatConst::FLOAT);
 	    else if (token == "double") return new IFloatInfo (false, FloatConst::DOUBLE);
+	    return NULL;
 	}
 
 	bool isSame (InfoType) override;

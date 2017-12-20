@@ -20,6 +20,7 @@ namespace semantic {
 	    //TODO
 	    return new IStringInfo (true);
 	}
+	return NULL;
     }
 
     InfoType INullInfo::CompOp (InfoType other) {

@@ -6,7 +6,7 @@ namespace semantic {
 	IInfoType (true)
     {}
 
-    bool IVoidInfo::isSame (InfoType other) {
+    bool IVoidInfo::isSame (InfoType) {
 	return false;
     }
 
@@ -20,6 +20,7 @@ namespace semantic {
 	    //TODO
 	    return new IStringInfo (true);
 	}
+	return NULL;
     }
 
     Ymir::Tree IVoidInfo::toGeneric () {

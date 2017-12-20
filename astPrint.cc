@@ -115,7 +115,7 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 
-	for (int it = 0 ; it < this-> decls.size () ; it ++) {
+	for (uint it = 0 ; it < this-> decls.size () ; it ++) {
 	    
 	    this-> decls [it]-> print (nb + 4);
 	    if (this-> insts [it]) {

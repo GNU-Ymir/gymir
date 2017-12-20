@@ -10,7 +10,7 @@ namespace Ymir {
 	    resize (len + cslen);
 	}
 
-	for (int i = len, j = 0 ; j < cslen ; i++, j++) {
+	for (uint i = len, j = 0 ; j < cslen ; i++, j++) {
 	    this-> current [i] = cs [j]; 
 	}
 	
@@ -23,7 +23,7 @@ namespace Ymir {
 	    resize (len + cs.length ());
 	}
 	
-	for (int i = len, j = 0 ; j < cs.length () ; i++, j++) {
+	for (uint i = len, j = 0 ; j < cs.length () ; i++, j++) {
 	    this-> current [i] = cs [j]; 
 	}
 	
@@ -88,7 +88,7 @@ namespace Ymir {
 	
 	auto aux = new char [capacity];
 
-	for (int i = 0 ; i < this-> len ; i ++)
+	for (uint i = 0 ; i < this-> len ; i ++)
 	    aux [i] = this-> current [i];
 	
 	delete[] this-> current;
@@ -98,4 +98,8 @@ namespace Ymir {
 
     void OutBuffer::write () {}
 
+    void OutBuffer::throwError () {
+	Ymir::Error::assert ("error");
+    }
+    
 }

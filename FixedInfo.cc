@@ -1,5 +1,7 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 
 namespace semantic {
@@ -46,10 +48,6 @@ namespace semantic {
 	if (op == Token::INF_EQUAL) return opTest (op, right);
 	if (op == Token::SUP_EQUAL) return opTest (op, right);
 	if (op == Token::NOT_EQUAL) return opTest(op, right);
-	if (op == Token::NOT_INF) return opTest(op, right);
-	if (op == Token::NOT_INF_EQUAL) return opTest(op, right);
-	if (op == Token::NOT_SUP) return opTest(op, right);
-	if (op == Token::NOT_SUP_EQUAL) return opTest(op, right);
 	if (op == Token::DEQUAL) return opTest(op, right);
 	if (op == Token::PLUS) return opNorm (op, right);
 	if (op == Token::MINUS) return opNorm (op, right);
@@ -83,20 +81,20 @@ namespace semantic {
 	if (this-> isSame (other)) return this;
 	if (other-> is<IBoolInfo> ()) {
 	    auto aux = new IBoolInfo (this-> isConst ());
-	    //TODO
+	    aux-> binopFoo = FixedUtils::InstCast;
 	    return aux;
 	} else if (other-> is<ICharInfo> ()) {
 	    auto aux = new ICharInfo (this-> isConst ());
-	    //TODO
+	    aux-> binopFoo = FixedUtils::InstCast;
 	    return aux;
 	} else if (auto ot = other-> to<IFloatInfo> ()) {
 	    auto aux = new IFloatInfo (this-> isConst (), ot-> type ());
-	    //TODO
+	    aux-> binopFoo = FixedUtils::InstCast;
 	    return aux;
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
 	    auto ret = ot-> clone ();
 	    ret-> isConst () = this-> isConst ();
-	    //TODO
+	    ret-> binopFoo = FixedUtils::InstCast;
 	    return ret;
 	}
 	return NULL;
@@ -105,22 +103,22 @@ namespace semantic {
     InfoType IFixedInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
 	    auto ret = this-> clone ();
-	    ret-> binopFoo = &FixedUtils::InstAffInt;
+	    ret-> binopFoo = &FixedUtils::InstCast;
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
 		auto aux = new IRefInfo (this-> clone ());
-		//TODO
+		aux-> binopFoo = FixedUtils::InstAddr;
 		return aux;
 	    }
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && ot-> isSup (this)) {
 		auto ret = this-> clone ();
-		//TODO;
+		ret-> binopFoo = FixedUtils::InstCast;
 		return ret;
 	    } else if (!this-> isSigned () && !ot-> isSigned () && ot-> isSup (this)) {
 		auto ret = this-> clone ();
-		//TODO;
+		ret-> binopFoo = FixedUtils::InstCast;
 		return ret;
 	    }
 	} else if (auto ot = other-> to<IEnumInfo> ()) {
@@ -155,19 +153,19 @@ namespace semantic {
 	
     InfoType IFixedInfo::toPtr () {
 	auto ret = new IPtrInfo (this-> isConst (), this-> clone ());
-	//TODO
+	ret-> binopFoo = &FixedUtils::InstAddr;
 	return ret;
     }
 
     InfoType IFixedInfo::pplus () {
 	auto ret = this-> clone ();
-	//TODO
+	ret-> unopFoo = &FixedUtils::InstPPlus;
 	return ret;
     }
 
     InfoType IFixedInfo::ssub () {
 	auto ret = this-> clone ();
-	//TODO
+	ret-> unopFoo = &FixedUtils::InstSSub;
 	return ret;
     }
 
@@ -175,15 +173,15 @@ namespace semantic {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
-		ret-> binopFoo = &FixedUtils::InstAffInt;
+		ret-> binopFoo = &FixedUtils::InstAffect;
 		return ret;
 	    } else if (!this-> isSigned () && !ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
-		ret-> binopFoo = &FixedUtils::InstAffInt;
+		ret-> binopFoo = &FixedUtils::InstAffect;
 		return ret;
 	    } else if (this-> _type == ot-> type ()) {
 		auto ret = this-> clone ();
-		ret-> binopFoo = &FixedUtils::InstAffInt;
+		ret-> binopFoo = &FixedUtils::InstAffect;
 		return ret;
 	    }
 	}
@@ -193,90 +191,80 @@ namespace semantic {
     InfoType IFixedInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto i = new IFixedInfo (false, this-> _type);
-	    i-> binopFoo = &FixedUtils::InstAffInt;
+	    i-> binopFoo = &FixedUtils::InstAffect;
 	    return i;
 	}
 	return NULL;
     }
 
-    InfoType IFixedInfo::opAff (Word op, syntax::Expression right) {
+    InfoType IFixedInfo::opAff (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstAffect;
 		return ret;
 	    } else if (!this-> isSigned () && !ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstAffect;
 		return ret;
 	    } else if (this-> _type == ot-> type ()) {
 		auto ret = this-> clone ();
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstAffect;
 		return ret;
 	    }
 	}
 	return NULL;
     }
 	
-    InfoType IFixedInfo::opTest (Word op, syntax::Expression right) {
+    InfoType IFixedInfo::opTest (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> _type == ot-> type ()) {
 		auto ret = new IBoolInfo (true);
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstNormal;
 		return ret;	    
-	    } else if (this-> isSigned () && ot-> isSigned ()) {
-		if (this-> isSup (ot)) {
-		    auto ret = new IBoolInfo (true);
-		    //TODO
-		    return ret;
-		} else {
-		    auto ret = new IBoolInfo (true);
-		    //TODO
-		    return ret;
-		}
-	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
-		if (this-> isSup (ot)) {
-		    auto ret = new IBoolInfo (true);
-		    //TODO
-		    return ret;
-		} else {
-		    auto ret = new IBoolInfo (true);
-		    //TODO
-		    return ret;
-		}
-	    }
-	} else if (auto ot = right-> info-> type-> to<ICharInfo> ()) {
+	    } else if (this-> isSup (ot)) {
+		auto ret = new IBoolInfo (true);
+		ret-> binopFoo = &FixedUtils::InstNormal;
+		return ret;
+	    } else {
+		auto ret = new IBoolInfo (true);
+		ret-> binopFoo = &FixedUtils::InstNormalRight;
+		return ret;
+	    }	    
+	} else if (right-> info-> type-> is<ICharInfo> ()) {
 	    if (this-> _type == FixedConst::UBYTE) {
 		auto ret = new IBoolInfo (true);
-		//TODO
+		ret-> binopFoo = &FixedUtils::InstNormal;
 		return ret;
 	    }
 	}
 	return NULL;
     }
 
-    InfoType IFixedInfo::opNorm (Word op, syntax::Expression right) {
+    InfoType IFixedInfo::opNorm (Word, syntax::Expression right) {
 	if (this-> isSame (right-> info-> type)) {
 	    auto ret = this-> clone ();
-	    //TODO
+	    ret-> binopFoo = &FixedUtils::InstNormal;
 	    return ret;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
 		    auto ret = this-> clone ();
-		    //TODO
+		    ret-> binopFoo = &FixedUtils::InstNormal;
 		    return ret;
 		} else {
 		    auto ret = ot-> clone ();
-		    //TODO
+		    ret-> binopFoo = &FixedUtils::InstNormalRight;
 		    return ret;
 		}		    
 	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
 		    auto ret = this-> clone ();
+		    ret-> binopFoo = &FixedUtils::InstNormal;
 		    return ret;
 		} else {
 		    auto ret = ot-> clone ();
+		    ret-> binopFoo = &FixedUtils::InstNormalRight;
 		    return ret;
 		}
 	    }
@@ -335,19 +323,42 @@ namespace semantic {
 	return integer_type_node;
     }
 
+    Ymir::Tree IFixedInfo::getInitFnPtr () {
+	if (this-> _type == FixedConst::INT) return InternalFunction::getYInitInt ();
+	else return IInfoType::getInitFnPtr ();
+    }
+    
     namespace FixedUtils {
 	using namespace syntax;
 	
-	Ymir::Tree InstAffInt (Word locus, syntax::Expression left, syntax::Expression right) {
+	Ymir::Tree InstAffect (Word locus, syntax::Expression left, syntax::Expression right) {
 	    auto ltree = left-> toGeneric ();
-	    auto rtree = right-> toGeneric ();
-	    auto typeTree = left-> info-> type-> toGeneric ();
+	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    
 	    return Ymir::buildTree (
-		MODIFY_EXPR, locus.getLocus (), typeTree.getTree (), ltree, rtree
+		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree, rtree
 	    );
 	}
 
+	Ymir::Tree InstNormal (Word locus, Expression left, Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    tree_code code = OperatorUtils::toGeneric (locus);
+	    return Ymir::buildTree (
+		code, locus.getLocus (), ltree.getType (), ltree, rtree
+	    );
+	}
+
+	Ymir::Tree InstNormalRight (Word locus, Expression left, Expression right) {
+	    auto rtree = right-> toGeneric ();
+	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
+
+	    tree_code code = OperatorUtils::toGeneric (locus);
+	    return Ymir::buildTree (
+		code, locus.getLocus (), ltree.getType (), ltree, rtree
+	    );
+	}
+	
 	Ymir::Tree UnaryMinus (Word locus, Expression elem) {
 	    auto lexp = elem-> toGeneric ();
 	    return Ymir::buildTree (
@@ -355,6 +366,29 @@ namespace semantic {
 	    );
 	}
 
+	Ymir::Tree InstSSub (Word locus, Expression elem) {
+	    auto lexp = elem-> toGeneric ();
+	    return Ymir::buildTree (
+		PREDECREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
+	    );
+	}
+	
+	Ymir::Tree InstPPlus (Word locus, Expression elem) {
+	    auto lexp = elem-> toGeneric ();
+	    return Ymir::buildTree (
+		PREINCREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
+	    );
+	}
+	
+	Ymir::Tree InstCast (Word locus, Expression elem, Expression typeExpr) {
+	    auto type = typeExpr-> info-> type-> toGeneric ();
+	    auto lexp = elem-> toGeneric ();
+	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
+	}
+	
+	Ymir::Tree InstAddr (Word locus, Expression elem, Expression) {
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}
 	
     }
 

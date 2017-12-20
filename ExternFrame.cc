@@ -9,8 +9,9 @@ namespace semantic {
     
     IExternFrame::IExternFrame (Namespace space, std::string from, ::syntax::Proto func) :
 	IFrame (space, NULL),
-	_fr (NULL),
-	_proto (func)
+	_proto (func),
+	_from (from),
+	_fr (NULL)	
     {
 	__extFrames__.push_back (this);
 	this-> _name = func-> name ();
@@ -18,8 +19,8 @@ namespace semantic {
 
     IExternFrame::IExternFrame (Namespace space, ::syntax::Function func) :
 	IFrame (space, func),
-	_fr (NULL),
-	_proto (NULL)
+	_proto (NULL),
+	_fr (NULL)
     {
 	__extFrames__.push_back (this);
 	this-> _name = func-> name ();
@@ -40,7 +41,7 @@ namespace semantic {
 	auto ret = IFrame::isApplicable (this-> _proto-> ident, this-> _proto-> params (), types);
 	
 	if (ret != NULL) {
-	    for (auto  it : Ymir::r (this-> _proto-> params ().size (), ftypes.size ())) {
+	    for (auto it __attribute__((unused)) : Ymir::r (this-> _proto-> params ().size (), ftypes.size ())) {
 		ret-> score += SAME;
 		ret-> treat.push_back (NULL);
 	    }
@@ -97,9 +98,12 @@ namespace semantic {
     }
 
     bool IExternFrame::isVariadic () const {
+	return this-> _proto && this-> _proto-> isVariadic ();
     }
 
     FrameProto IExternFrame::validateFunc () {
+	Ymir::Error::assert ("TODO");
+	return NULL;
     }
 
     const char* IExternFrame::getId () {

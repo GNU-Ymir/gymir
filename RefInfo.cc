@@ -24,9 +24,11 @@ namespace semantic {
     }
 
     std::string IRefInfo::innerTypeString () {
+	return std::string ("ref(") + this-> _content-> innerTypeString () + ")";
     }
 
     std::string IRefInfo::simpleTypeString () {
+	return std::string ("R") + this-> _content-> simpleTypeString ();
     }
 
     InfoType IRefInfo::clone () {

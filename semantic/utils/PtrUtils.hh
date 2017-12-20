@@ -8,6 +8,8 @@ namespace semantic {
 
 	Ymir::Tree InstAffect (Word locus, syntax::Expression left, syntax::Expression right);	
 
+	Ymir::Tree InstCast (Word locus, syntax::Expression elem, syntax::Expression typeExpr);
+	
     }
 
 }

@@ -51,8 +51,9 @@ namespace semantic {
 	if (var-> token.getStr () == "init") return Init ();
 	if (var-> token.getStr () == "sizeof") return SizeOf ();
 	if (var-> token.getStr () == "typeid") return StringOf ();
+	return NULL;
     }
-
+    
     InfoType ICharInfo::CastOp (InfoType other) {
 	if (other-> is<ICharInfo> ()) return this;
 	if (auto ot = other-> to<IFixedInfo> ()) {
@@ -102,12 +103,13 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType ICharInfo::opTest (Word op, syntax::Expression right) {
+    InfoType ICharInfo::opTest (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
-	    auto bl = new IBoolInfo (true);
+	    auto bl = new IBoolInfo (true);	    
 	    //TODO
 	    // if (this-> value)
 	    //    ch-> value = this-> value-> BinaryOp (op, right-> info-> type-> value);
+	    return bl;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
 		auto ch = new IBoolInfo (true);
@@ -119,8 +121,8 @@ namespace semantic {
 	}
 	return NULL;
     }
-
-    InfoType ICharInfo::opTestRight (Word op, syntax::Expression left) {
+    
+    InfoType ICharInfo::opTestRight (Word, syntax::Expression left) {
 	if (auto ot = left-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
 		auto ch = new IBoolInfo (true);
@@ -132,8 +134,8 @@ namespace semantic {
 	}
 	return NULL;
     }
-
-    InfoType ICharInfo::opAff (Word op, syntax::Expression right) {
+    
+    InfoType ICharInfo::opAff (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
 	    auto ch = new ICharInfo (false);
 	    //TODO ch-> lintInst = CharUtils::InstOpAff ();
@@ -148,7 +150,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType ICharInfo::opNorm (Word op, syntax::Expression right) {
+    InfoType ICharInfo::opNorm (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
 	    auto ch = new ICharInfo (true);
 	    //TODO
@@ -162,7 +164,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType ICharInfo::opNormRight (Word op, syntax::Expression left) {
+    InfoType ICharInfo::opNormRight (Word, syntax::Expression left) {
 	if (auto ot = left-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
 		auto ch = new ICharInfo (true);

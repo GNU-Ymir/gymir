@@ -47,7 +47,8 @@ namespace syntax {
 	    expr (expr),
 	    values (values),
 	    block (block),
-	    default_ (def)	    
+	    default_ (def),
+	    defaultResult (NULL)
 	{}
 
 	static const char* id () {

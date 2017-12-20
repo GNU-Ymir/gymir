@@ -2,6 +2,7 @@
 
 #include <gc/gc_cpp.h>
 //#include <ymir/errors/Error.hh>
+#include <ymir/semantic/utils/OperatorUtils.hh>
 #include <ymir/semantic/types/Creators.hh>
 #include <vector>
 #include <ymir/syntax/Word.hh>
@@ -166,6 +167,8 @@ namespace semantic {
 	InfoType cloneConst ();
 
 	virtual Ymir::Tree toGeneric ();
+
+	virtual Ymir::Tree getInitFnPtr ();	    
 	
 	virtual InfoType getTemplate (ulong);
 

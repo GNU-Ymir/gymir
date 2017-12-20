@@ -19,6 +19,12 @@ namespace syntax {
 	IArrayAlloc (Word token, Expression type, Expression size);
     
 	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
+
+	static const char * id ();
+
+	const char * getId () override;
 	
 	void print (int nb = 0) override;
     };

@@ -7,7 +7,7 @@ namespace semantic {
     Namespace::Namespace (std::string name) {
 	auto space = Mangler::mangle_file (name);
 	auto index = space.find (".");
-	while (index != -1) {
+	while (index != std::string::npos) {
 	    auto str = space.substr (0, index);
 	    space = space.substr (index + 1, space.length ());
 	    this-> names.push_back (str);
@@ -19,7 +19,7 @@ namespace semantic {
     Namespace::Namespace (Namespace space_, std::string name) {
 	auto space = Mangler::mangle_file (name);
 	auto index =  space.find (".");
-	while (index != -1) {
+	while (index != std::string::npos) {
 	    auto str = space.substr (0, index);
 	    space = space.substr (index + 1, space.length ());
 	    this-> names.push_back (str);
@@ -40,7 +40,7 @@ namespace semantic {
     
     bool operator== (const Namespace &fst, const Namespace &scd) {
 	if (fst.names.size () != scd.names.size ()) return false;
-	for (int i = 0 ; i < fst.names.size () ; i++) {
+	for (uint i = 0 ; i < fst.names.size () ; i++) {
 	    if (fst.names [i] != scd.names [i]) return false;
 	}
 	return true;
@@ -70,7 +70,7 @@ namespace semantic {
 
     std::string Namespace::toString () {
 	std::ostringstream ss;
-	for (auto it = 0 ; it < this-> names.size () ; it ++) {
+	for (uint it = 0 ; it < this-> names.size () ; it ++) {
 	    ss << this-> names [it];
 	    if (it != this-> names.size () - 1) ss << ".";
 	}

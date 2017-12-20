@@ -19,7 +19,7 @@ namespace Ymir {
 	return field_decl;
     }
     
-    Tree makeStructType (std::string name, int nbfields, ...) {
+    Tree makeStructType (std::string, int nbfields, ...) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	va_list ap;
 	tree record_type = make_node (RECORD_TYPE);
@@ -52,11 +52,11 @@ namespace Ymir {
 	return record_type;
     }
 
-    Tree makeTuple (std::string name, std::vector <InfoType> types, std::vector <std::string> attrs) {
+    Tree makeTuple (std::string, std::vector <InfoType> types, std::vector <std::string> attrs) {
 	Tree field_last;
 	Tree record_type = make_node (RECORD_TYPE);
 	
-	for (int i = 0 ; i < types.size () ; i++) {
+	for (int i = 0 ; i < (int) types.size () ; i++) {
 	    Tree field_decl = makeField (types [i], attrs [i]);
 	    DECL_CONTEXT (field_decl.getTree ()) = record_type.getTree ();
 	    TREE_PUBLIC (field_decl.getTree ()) = 1;
@@ -136,7 +136,14 @@ namespace Ymir {
 	return build2 (MEM_REF, inner.getTree (), addr, build_int_cst (ptype, 0));
     }
     
-    
+    Tree getAddr (Tree elem) {
+	return buildTree (ADDR_EXPR, UNKNOWN_LOCATION, build_pointer_type (elem.getType ().getTree ()), elem);
+    }
+
+    Tree getAddr (location_t loc, Tree elem) {
+	return buildTree (ADDR_EXPR, loc, build_pointer_type (elem.getType ().getTree ()), elem);
+    }
+   
     Tree makeLabel (location_t loc, std::string & name) {
 	tree decl = build_decl (loc, LABEL_DECL, get_identifier (name.c_str ()), void_type_node);
 	DECL_CONTEXT (decl) = IFinalFrame::currentFrame ().getTree ();

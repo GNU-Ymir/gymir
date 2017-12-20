@@ -20,8 +20,9 @@ namespace semantic {
 	return false;
     }
     
-    InfoType IRangeInfo::ConstVerif (InfoType other) {
+    InfoType IRangeInfo::ConstVerif (InfoType) {
 	Ymir::Error::assert ("TODO");
+	return NULL;
     }
     
     InfoType IRangeInfo::clone () {

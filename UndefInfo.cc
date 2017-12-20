@@ -6,7 +6,7 @@ namespace semantic {
 	IInfoType (true)
     {}
 
-    bool IUndefInfo::isSame (InfoType other) {
+    bool IUndefInfo::isSame (InfoType) {
 	return false;
     }
 
@@ -20,6 +20,7 @@ namespace semantic {
 	    //TODO
 	    return new IStringInfo (true);
 	}
+	return NULL;
     }
 
     std::string IUndefInfo::innerTypeString () {

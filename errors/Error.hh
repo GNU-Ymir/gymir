@@ -7,6 +7,7 @@
 #include "diagnostic.h"
 #include "../syntax/Word.hh"
 #include <cmath>
+#include <ymir/utils/OutBuffer.hh>
 
 #define INCLUDE_STRING
 
@@ -76,24 +77,16 @@ namespace Ymir {
     
     template <typename ... T> 
     std::string format (std::string left, T... params) {
-	auto len = snprintf (NULL, 0, left.c_str (), params...);
-	auto aux = new char [len + 1];
-	sprintf (aux, left.c_str (), params...);
-	aux [len] = '\0';
-	std::string ret = std::string (aux);
-	free (aux);
-	return ret;
+	OutBuffer buf;
+	buf.writef (left.c_str (), params...);
+	return buf.str ();
     }
     
     template <typename ... T> 
     std::string format (const char* left, T... params) {
-	auto len = snprintf (NULL, 0, left, params...);
-	auto aux = new char [len + 1];
-	sprintf (aux, left, params...);
-	aux [len] = '\0';
-	std::string ret = std::string (aux);
-	free (aux);
-	return ret;
+	OutBuffer buf;
+	buf.writef (left, params...);
+	return buf.str ();
     }
       
     struct ErrorMsg {
@@ -173,6 +166,8 @@ namespace Ymir {
 	static void activeError (bool);	
 	
 	static std::vector <ErrorMsg>& caught ();
+
+	static void assert (const char* format);
 	
 	template <typename ... TArgs>
 	static void assert (const char * format_, TArgs ... args) {

@@ -134,14 +134,14 @@ namespace semantic {
 
     void ITreeInfo::print (int i) {
 	printf ("%*c%s, %s {%s",
-		i, " ",
+		i, ' ',
 		this-> _name.c_str (), this-> _ident.getStr ().c_str (),
 		this-> _returned ? ":true" : ""
 	);
 
 	for (auto it : this-> _infos)
 	    it-> print (i + 4);
-	printf ("%*c}", i, " ");
+	printf ("%*c}", i, ' ');
     }
 
     FrameReturnInfo& FrameReturnInfo::empty () {

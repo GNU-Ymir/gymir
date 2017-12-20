@@ -136,6 +136,7 @@ namespace semantic {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
 	    auto rf = this-> clone ();
 	    auto ret = this-> _content-> CompOp (this-> _content);
+	    rf-> binopFoo = ret-> binopFoo;
 	    //TODO
 	    return rf;
 	} else

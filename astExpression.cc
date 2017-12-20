@@ -71,7 +71,7 @@ namespace syntax {
 	    if (this-> templates.size () != 0) {
 		if (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> ()) {
 		    Ymir::Error::assert ("TODO");
-		} else if (auto dt = this-> inside-> to<IDot> ()) {
+		} else if (this-> inside-> is<IDot> ()) {
 		    Ymir::Error::assert ("TODO");
 		}
 		
@@ -145,6 +145,7 @@ namespace syntax {
 	
 	if (!IInfoType::exists (this-> token.getStr ())) {	    
 	    Ymir::Error::assert ("TODO");
+	    return NULL;
 	} else {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
 	    if (this-> deco == Keys::REF)
@@ -201,7 +202,7 @@ namespace syntax {
 	    auto ptr = this-> expType-> expression ()-> to<IFuncPtr> ();
 	    if (ptr) {
 		aux = new ITypedVar (this-> token, new IType (ptr-> token, ptr-> info-> type));
-	    } else Ymir::Error::assert ("????!!!!");	
+	    } else Ymir::Error::assert ("Error");	
 	}
 	
 	if (this-> deco == Keys::REF) {
@@ -228,7 +229,7 @@ namespace syntax {
 	// if (auto type = aux-> type-> info-> type-> to<IStructCstInfo> ()) {
 	//     Ymir::Error::assert ("TODO");
 	// }
-
+	
 	auto ul = new ISymbol (this-> token, new IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
 	if (cmp == NULL) {
@@ -420,12 +421,14 @@ namespace syntax {
 	return res;
     }
 
-    Expression IBinary::findOpTest (Binary aux) {
+    Expression IBinary::findOpTest (Binary) {
 	Ymir::Error::assert ("TODO");
+	return NULL;
     }
     
-    Expression IBinary::findOpEqual (Binary aux) {
+    Expression IBinary::findOpEqual (Binary) {
 	Ymir::Error::assert ("TODO");
+	return NULL;
     }
     
     bool IBinary::isTest (Word elem) {
@@ -506,8 +509,7 @@ namespace syntax {
 	if (this-> params.size () == 0) {
 	    aux-> info = new ISymbol (aux-> token, new IArrayInfo (true, new IVoidInfo ()));	    
 	} else {
-	    InfoType last = NULL;
-	    for (int i = 0 ; i < this-> params.size (); i++) {
+	    for (uint i = 0 ; i < this-> params.size (); i++) {
 		auto expr = this-> params [i]-> expression ();
 		if (expr == NULL) return NULL;
 
@@ -697,26 +699,15 @@ namespace syntax {
 	    aux-> _left = this-> _left-> expression ();
 	    if (simpleVerif (aux)) return NULL;
 
-	    bool dotCall = false;
 	    if (auto dcall = aux-> _left-> to<IDotCall> ()) {
-		dotCall = true;
 		aux-> _left = dcall-> call ();
 		aux-> params-> getParams ().insert (aux-> params-> getParams ().begin (), dcall-> firstPar ());
 		aux-> _dotCall = dcall;
 	    }
-
-	    if (Ymir::isVerbose ()) {
-		printf ("Calling Symbol : %s\n", aux-> _left-> info-> type-> typeString ().c_str ());
-	    }
 	    
-	    auto type = aux-> _left-> info-> type-> CallOp (aux-> _left-> token, aux-> params);
-	    
-	    if (Ymir::isVerbose ())
-		printf ("Ret of Symbol : %s\n", type == NULL ? "null" : type-> ret-> typeString ().c_str ());
-
+	    auto type = aux-> _left-> info-> type-> CallOp (aux-> _left-> token, aux-> params);	    
 
 	    if (type == NULL) {
-		//TODO findOpCall
 		Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
 		return NULL;
 	    }

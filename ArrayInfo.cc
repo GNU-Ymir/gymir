@@ -33,7 +33,7 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::Is (Expression right) {
-	if (auto ptr = right-> info-> type-> to<INullInfo> ()) {
+	if (right-> info-> type-> is<INullInfo> ()) {
 	    auto ret = new (GC) IBoolInfo (true);
 	    ret-> binopFoo = ArrayUtils::InstIs;
 	    return ret;
@@ -46,7 +46,7 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::NotIs (Expression right) {
-	if (auto ptr = right-> info-> type-> to<INullInfo> ()) {
+	if (right-> info-> type-> is<INullInfo> ()) {
 	    auto ret = new (GC) IBoolInfo (true);
 	    ret-> binopFoo = ArrayUtils::InstNotIs;
 	    return ret;
@@ -158,7 +158,7 @@ namespace semantic {
     // }    
 
     InfoType IArrayInfo::Access (syntax::Expression expr) {
-	if (auto ot = expr-> info-> type-> to<IFixedInfo> ()) {
+	if (expr-> info-> type-> is<IFixedInfo> ()) {
 	    auto ch = this-> _content-> clone ();
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
@@ -267,25 +267,26 @@ namespace semantic {
 	    auto lenExpr = (Fixed) intExpr-> expression ();			
 	    auto len = lenExpr-> toGeneric ();
 
-	    tree args [] = {len.getTree ()};
+	    auto byteLen = buildTree (
+		MULT_EXPR, loc,
+		size_type_node,
+		fold_convert (size_type_node, len.getTree ()),
+		TYPE_SIZE_UNIT (inner.getTree ())
+	    );
 	    
+	    tree args [] = {byteLen.getTree ()};	    
 	    auto allocRet = build_call_array_loc (loc, build_pointer_type (void_type_node), fn.getTree (), 1, args);
+
+	    list.append (Ymir::buildTree (
+		MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
+	    ));
 	    
 	    list.append (Ymir::buildTree (
 		MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
 	    ));
-	    
-	    for (int i = 0 ; i < cst-> nbParams () ; i++) {
-		
-		auto left = getPointerUnref (loc, ptrl, inner, i);
-		auto ref = getArrayRef (loc, rexp, inner, i);
-		
-		list.append (build2 (MODIFY_EXPR,
-				     TREE_TYPE (left.getTree ()),
-				     left.getTree (),
-				     ref.getTree ()
-		));
-	    }
+	    	    	    
+	    tree argsMemcpy [] = {ptrl.getTree (), Ymir::getAddr (rexp.getTree ()).getTree (), byteLen.getTree ()};
+	    list.append (build_call_array_loc (loc, void_type_node, InternalFunction::getYMemcpy ().getTree (), 3, argsMemcpy));
 	    
 	    Ymir::getStackStmtList ().back ().append (list.getTree ());
 	    return lexp;
@@ -293,7 +294,6 @@ namespace semantic {
 
 	Ymir::Tree InstAffect (Word word, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
-	    Ymir::Tree array_type_node = left-> info-> type-> toGeneric ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
 	    if (auto cst = right-> to<IConstArray> ())
@@ -327,12 +327,11 @@ namespace semantic {
 	
 	Ymir::Tree InstAccessInt (Word word, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
-	    Ymir::Tree array_type_node = left-> info-> type-> toGeneric ();
 	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
 	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
-	    if (auto cst = left-> to<IConstArray> ()) {
+	    if (left-> is<IConstArray> ()) {
 		return getArrayRef (loc, rexp, inner, rexp);
 	    } else {
 		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");
@@ -343,7 +342,7 @@ namespace semantic {
 	Ymir::Tree InstIs (Word word, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
 	    if (auto cst = left-> to <IConstArray> ()) {
-		return build_int_cst_type (boolean_type_node, 0);
+		return build_int_cst_type (boolean_type_node, cst-> nbParams () != 0);
 	    } else {
 		auto lexp = left-> toGeneric ();		
 		auto rexp = right-> toGeneric ();
@@ -371,7 +370,7 @@ namespace semantic {
 
 	Ymir::Tree InstNotIs (Word word, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
-	    if (auto cst = left-> to <IConstArray> ()) {
+	    if (left-> is <IConstArray> ()) {
 		return build_int_cst_type (boolean_type_node, 1);
 	    } else {
 		auto lexp = left-> toGeneric ();

@@ -91,9 +91,9 @@ namespace Ymir {
 	auto locus = word.getLocus ();
 	auto line = getLine (locus);
 	if (line.length () > 0) {
-	    std::string leftLine = center (format ("%d", LOCATION_LINE (locus)), 3, ' ');
+	    std::string leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
-	    ss << format ("\n%s --> %s:(%d,%d)%s\n%s%s | %s\n", 
+	    ss << format ("\n% --> %:(%,%)%\n%% | %\n", 
 			  Error::BOLD,
 			  LOCATION_FILE (locus),
 			  LOCATION_LINE (locus),
@@ -105,7 +105,7 @@ namespace Ymir {
 	    );
 
 	    auto column = LOCATION_COLUMN (locus);
-	    ss << format ("%s%s | %s%s%s%s%s%s",
+	    ss << format ("%% | %%%%%%",
 			  Error::BOLD,
 			  leftLine.c_str (),
 			  Error::RESET,
@@ -117,7 +117,7 @@ namespace Ymir {
 	    );
 
 	    if (line [line.length () - 1] != '\n') ss << "\n";	    	    
-	    ss << format ("%s%s | %s",
+	    ss << format ("%% | %",
 			  Error::BOLD,
 			  padd.c_str (),
 			  Error::RESET
@@ -130,7 +130,7 @@ namespace Ymir {
 	    ss << rightJustify ("", word.getStr ().length (), '^');
 	    ss << "\n";
 	} else {
-	    ss << format ("\n%sError%s : %s\n",
+	    ss << format ("\n%Error% : %\n",
 			  Error::RED,
 			  Error::RESET,
 			  getString (EndOfFile)
@@ -142,10 +142,9 @@ namespace Ymir {
 	auto locus = word.getLocus (), locus2 = word2.getLocus ();
 	auto line = getLine (locus);
 	if (line.size () > 0) {
-	    auto j = 0;
-	    auto leftLine = center (format ("%d", LOCATION_LINE (locus)), 3, ' ');
+	    auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
 	    auto padd = center ("", leftLine.size (), ' ');
-	    ss << format ("\n%s --> %s:(%d,%d)%s\n%s%s | %s\n",
+	    ss << format ("\n% --> %:(%,%)%\n%% | %\n",
 			  Error::BOLD, LOCATION_FILE (locus),  LOCATION_LINE (locus), LOCATION_COLUMN (locus),
 			  Error::RESET, Error::BOLD,
 			  padd.c_str (),
@@ -157,7 +156,7 @@ namespace Ymir {
 	    auto end1 = computeMid (mid, word.getStr (), line, locCol1 - 1, locCol1 + word.getStr ().size () - 1);
 	    auto end2 = computeMid (mid2, word2.getStr (), line, locCol2 - 1, locCol2 + word2.getStr ().size () - 1);
 
-	    ss << format ("%s%s | %s%s%s%s%s%s%s%s%s%s",
+	    ss << format ("%% | %%%%%%%%%%",
 			  Error::BOLD,
 			  leftLine.c_str (),
 			  Error::RESET,
@@ -173,7 +172,7 @@ namespace Ymir {
 	    );
 
 	    if (line [line.size () - 1] != '\n') ss << '\n';
-	    ss << format ("%s%s | %s",
+	    ss << format ("%% | %",
 			  Error::BOLD,
 			  padd.c_str (),
 			  Error::RESET
@@ -191,7 +190,7 @@ namespace Ymir {
 	    }
 	    ss << rightJustify ("", end2 - locCol2 + 1, '^') << "\n";
 	} else {
-	    ss << format ("\n%sError%s : %s\n",
+	    ss << format ("\n%Error% : %\n",
 			  Error::RED,
 			  Error::RESET,
 			  getString (EndOfFile)
@@ -199,8 +198,8 @@ namespace Ymir {
 	}
     }
 
-    void addLine (std::ostream &ss, Word word, ulong index, ulong index2) {}
-
+    void addLine (std::ostream &, Word, ulong, ulong) {}
+    
     std::string addLine (std::string in, Word word) {
 	std::ostringstream ss;
 	ss << in;
@@ -631,8 +630,9 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    
-    
+    void Error::assert (const char* msg) {
+	return __instance__.assert_ (msg);
+    }
     
     std::vector <ErrorMsg>& Error::caught () {
 	return __caught__;

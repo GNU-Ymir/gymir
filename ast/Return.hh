@@ -22,6 +22,7 @@ namespace syntax {
 
 	Instruction instruction () override {
 	    Ymir::Error::assert ("TODO");
+	    return NULL;
 	}
 
 	

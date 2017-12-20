@@ -196,7 +196,7 @@ namespace semantic {
     InfoType IPtrInfo::CompOp (InfoType other) {
 	if (other-> isSame (this) || other-> is<IUndefInfo> ()) {
 	    auto ptr = this-> clone ();
-	    ptr-> binopFoo = &PtrUtils::InstAffect;
+	    ptr-> binopFoo = &PtrUtils::InstCast;
 	    return ptr;
 	}
 	return NULL;
@@ -237,14 +237,21 @@ namespace semantic {
 
 
     namespace PtrUtils {
-
-	Ymir::Tree InstAffect (Word locus, syntax::Expression left, syntax::Expression right) {
+	using namespace syntax;
+	
+	Ymir::Tree InstAffect (Word locus, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();
 	    auto typeTree = left-> info-> type-> toGeneric ();
 	    return Ymir::buildTree (
 		MODIFY_EXPR, locus.getLocus (), typeTree.getTree (), ltree, rtree
 	    );	    
+	}
+	
+	Ymir::Tree InstCast (Word locus, Expression elem, Expression typeExpr) {
+	    auto type = typeExpr-> info-> type-> toGeneric ();
+	    auto lexp = elem-> toGeneric ();
+	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
 	}
 	
     }

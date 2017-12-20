@@ -465,7 +465,7 @@ namespace syntax {
 	std::vector<Expression> values;
 	auto word = this-> lex.next ();
 	Word ident;
-	Var type;
+	Var type = NULL;
 	if (word == Token::COLON) type = visitType ();
 	else this-> lex.rewind ();
 	word = this-> lex.next ();
@@ -1370,8 +1370,8 @@ namespace syntax {
 	    if (c != -1) ss << (char) c;
 	    else {
 		auto nb = 0;
-		for (int j = 0 ; j < positions.size (); j++) {
-		    if (i > positions [j]) nb ++;
+		for (uint j = 0 ; j < positions.size (); j++) {
+		    if (i > (ulong) positions [j]) nb ++;
 		}
 		this-> lex.seek (loc + nb - 2);
 		auto get = this-> lex.next ();
@@ -1665,7 +1665,7 @@ namespace syntax {
     Expression Visitor::visitMatch () {
 	std::vector <Expression> values;
 	std::vector <Block> insts;
-	Block defaultInsts;
+	Block defaultInsts = NULL;
 	
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
@@ -1738,7 +1738,7 @@ namespace syntax {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next (), next = this-> lex.next ({Token::LPAR});
 	auto expr = visitExpression ();
-	Expression msg;
+	Expression msg = NULL;
 	next = this-> lex.next ({Token::COMA, Token::RPAR});
 	if (next == Token::COMA) {
 	    msg = visitExpression ();

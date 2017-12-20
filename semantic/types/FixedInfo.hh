@@ -27,6 +27,7 @@ namespace semantic {
 	    if (token == "uint") return new IFixedInfo (false, FixedConst::UINT);
 	    if (token == "long") return new IFixedInfo (false, FixedConst::LONG);
 	    if (token == "ulong") return new IFixedInfo (false, FixedConst::ULONG);
+	    return NULL;
 	}
 
 	std::string innerTypeString () override;
@@ -61,6 +62,8 @@ namespace semantic {
 	
 	Ymir::Tree toGeneric () override;
 
+	Ymir::Tree getInitFnPtr () override;
+	
     private:
 
 	InfoType toPtr ();

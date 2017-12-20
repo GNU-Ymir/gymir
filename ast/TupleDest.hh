@@ -33,6 +33,7 @@ namespace syntax {
 
 	Instruction instruction () override {
 	    Ymir::Error::assert ("TODO");
+	    return NULL;
 	}
 	
 	void print (int nb = 0) override {

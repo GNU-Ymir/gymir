@@ -27,6 +27,7 @@ namespace syntax {
 	case FixedConst::LONG : return "long";
 	case FixedConst::ULONG : return "ulong";
 	}
+	return "none";
     }
 
     std::string sname (FixedConst ct) {
@@ -40,6 +41,7 @@ namespace syntax {
 	case FixedConst::LONG : return "l";
 	case FixedConst::ULONG : return "m";
 	}
+	return "none";
     }
     
     
@@ -217,6 +219,14 @@ namespace syntax {
 	    this-> type-> inside = this;
     }    
 
+    const char * IArrayAlloc::id () {
+	return "IArrayAlloc";
+    }
+
+    const char* IArrayAlloc::getId () {
+	return "IArrayAlloc";
+    }
+    
     IAssert::IAssert (Word token, Expression test, Expression msg, bool isStatic) :
 	IInstruction (token),
 	expr (test),
@@ -399,19 +409,19 @@ namespace syntax {
     }
         
     IProto::IProto (Word ident, std::vector <Var> params, bool isVariadic) :
-	ident (ident),
 	_type (NULL),
 	_params (params),
 	space (""),
-	_isVariadic (isVariadic)
+	_isVariadic (isVariadic),
+	ident (ident)
     {}
 
     IProto::IProto (Word ident, Var type, std::vector <Var> params, std::string space, bool isVariadic) :
-	ident (ident),
 	_type (type),
 	_params (params),
 	space (space),
-	_isVariadic (isVariadic)
+	_isVariadic (isVariadic),
+	ident (ident)
     {}
 
     bool& IProto::isVariadic () {
@@ -438,12 +448,14 @@ namespace syntax {
 	return IConstArray::id ();
     }
 
-    ITreeExpression::ITreeExpression (Word locus, Ymir::Tree content) :
-	IExpression (locus),
+    ITreeExpression::ITreeExpression (Word locus, semantic::InfoType info, Ymir::Tree content) :
+	IExpression (locus),	
 	_content (content)
-    {}
+    {
+	this-> info = new ISymbol (locus, info);
+    }
 
-    void ITreeExpression::print (int id) {}
+    void ITreeExpression::print (int) {}
     
     IIf::IIf (Word word, Expression test, Block block, bool isStatic) :
 	IInstruction (word),
@@ -553,6 +565,43 @@ namespace syntax {
 	);
 	this-> elem-> print (nb + 4);
     }
+       
+    IAccess::IAccess (Word word, Word end, Expression left, ParamList params) :
+	IExpression (word),
+	end (end),
+	params (params),
+	left (left)	    
+    {
+	this-> left-> inside = this;
+	this-> params-> inside = this;
+    }
+	
+    IAccess::IAccess (Word word, Word end) :
+	IExpression (word),
+	end (end)
+    {
+    }
+
+    Expression IAccess::getLeft () {
+	return this-> left;
+    }
+    
+    std::vector <Expression> IAccess::getParams () {
+	return this-> params-> getParams ();
+    }
+    	
+    void IAccess::print (int nb) {
+	printf ("\n%*c<Access> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	this-> left-> print (nb + 4);
+	this-> params-> print (nb + 4);
+    }
+
+    
+    
+
 
     
 }

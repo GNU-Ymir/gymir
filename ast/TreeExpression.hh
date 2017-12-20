@@ -8,10 +8,10 @@ namespace syntax {
     class ITreeExpression : public IExpression {
 	
 	Ymir::Tree _content;
-
+	
     public:
 
-	ITreeExpression (Word locus, Ymir::Tree content);
+	ITreeExpression (Word locus, semantic::InfoType info, Ymir::Tree content);
 
 	Ymir::Tree toGeneric () override;
 	

@@ -49,6 +49,7 @@ namespace semantic {
 	if (var-> token.getStr () == "init") return Init ();
 	if (var-> token.getStr () == "sizeof") return SizeOf ();
 	if (var-> token.getStr () == "typeid") return StringOf ();
+	return NULL;
     }
 
     InfoType IBoolInfo::CastOp (InfoType) {
@@ -95,7 +96,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IBoolInfo::opNorm (Word op, syntax::Expression right) {
+    InfoType IBoolInfo::opNorm (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<IBoolInfo> ()) {
 	    auto b = new IBoolInfo (true);
 	    //TODO

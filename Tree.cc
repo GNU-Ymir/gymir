@@ -1,5 +1,7 @@
 #include <ymir/semantic/tree/Tree.hh>
+#include "print-tree.h"
 #include <iostream>
+
 
 namespace Ymir {
 
@@ -14,6 +16,7 @@ namespace Ymir {
     }
 
     TreeSymbolMapping leaveBlock () {
+	printf ("leave\n");
 	TreeStmtList current = stack_stmt_list.back ();
 	stack_stmt_list.pop_back ();
 
@@ -25,7 +28,8 @@ namespace Ymir {
 
 	tree new_block = build_block (var_decl_chain.first.getTree (),
 				      subblocks.first.getTree (),
-				      NULL_TREE, NULL_TREE);
+				      NULL_TREE, NULL_TREE
+	);
 
 	if (!stack_block_chain.empty ()) {
 	    stack_block_chain.back().append (new_block);
@@ -34,7 +38,7 @@ namespace Ymir {
 	for (tree it = subblocks.first.getTree (); it != NULL_TREE ; it = BLOCK_CHAIN (it)) {
 	    BLOCK_SUPERCONTEXT (it) = new_block;
 	}
-	
+
 	tree bind_expr = build3 (
 	    BIND_EXPR, void_type_node, var_decl_chain.first.getTree (),
 	    current.getTree (), new_block

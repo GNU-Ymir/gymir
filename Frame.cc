@@ -20,8 +20,8 @@ namespace semantic {
     const long IFrame::CHANGE = 14;			       
     
     IFrame::IFrame (Namespace space, ::syntax::Function func) :
-	_space (space),
-	_function (func)
+	_function (func),
+	_space (space)
     {}
     
     ApplicationScore IFrame::isApplicable (::syntax::ParamList params) {
@@ -58,7 +58,7 @@ namespace semantic {
 			if (args [it]-> isConst () != info-> isConst ())
 			    score-> score += CONST_SAME;
 			else score-> score += SAME;
-			score-> treat.push_back (type);
+			score-> treat.push_back (NULL);
 		    } else if (type != NULL) {
 			if (args [it]-> isConst () != info-> isConst ())
 			    score-> score += CONST_AFF;
@@ -165,7 +165,7 @@ namespace semantic {
     }
 
 
-    void IFrame::verifyReturn (Word token, Symbol ret, FrameReturnInfo info) {
+    void IFrame::verifyReturn (Word, Symbol ret, FrameReturnInfo info) {
 	if (!ret-> type-> is<IVoidInfo> () && !ret-> type-> is<IUndefInfo> ()) {
 	    if (!info.retract ()) {
 		Ymir::Error::assert ("TODO, gerer l'erreur");
@@ -220,7 +220,7 @@ namespace semantic {
     }
 
     Word IFrame::ident () {
-	
+	return this-> _function-> getIdent ();
     }
     
 

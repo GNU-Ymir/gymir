@@ -31,5 +31,9 @@ namespace Ymir {
     Tree getArrayRef (location_t, Tree array, Tree inner, Tree index);
 
     Tree getPointerUnref (location_t, Tree ptr, Tree inner, Tree index);
+
+    Tree getAddr (Tree elem);
+
+    Tree getAddr (location_t, Tree elem);
     
 }

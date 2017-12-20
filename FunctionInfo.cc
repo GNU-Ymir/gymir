@@ -8,8 +8,8 @@ namespace semantic {
 
     IFunctionInfo::IFunctionInfo (Namespace space, std::string name) :
 	IInfoType (true),
-	_space (space),
 	_name (name),
+	_space (space),
 	_info (NULL)
     {}
 
@@ -54,7 +54,6 @@ namespace semantic {
     }
 
     ApplicationScore IFunctionInfo::CallOp (Word tok, std::vector <InfoType> params) {
-	ulong id = 0;
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
 
@@ -63,7 +62,7 @@ namespace semantic {
 
 	std::vector <Frame> goods;
 	ApplicationScore right = new IApplicationScore ();
-	for (auto it = 0; it < total.size () ; it++) {
+	for (uint it = 0; it < total.size () ; it++) {
 	    if (total [it]) {
 		if (goods.size () == 0 && total [it]-> score != 0) {
 		    right = total [it];
@@ -112,7 +111,6 @@ namespace semantic {
     }
 
     ApplicationScore IFunctionInfo::CallOp (Word tok, syntax::ParamList params) {
-	ulong id = 0;
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
 
@@ -122,7 +120,7 @@ namespace semantic {
 
 	std::vector <Frame> goods;
 	ApplicationScore right = new IApplicationScore ();
-	for (auto it = 0; it < total.size () ; it++) {
+	for (uint it = 0; it < total.size () ; it++) {
 	    if (total [it]) {
 		if (goods.size () == 0 && total [it]-> score != 0) {
 		    right = total [it];
@@ -175,7 +173,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IFunctionInfo::TempOp (std::vector<syntax::Expression> params) {
+    InfoType IFunctionInfo::TempOp (std::vector<syntax::Expression>) {
 	//TODO
 	// auto frames = getFrames ();
 	// std::vector <Frame> ret;
@@ -211,7 +209,7 @@ namespace semantic {
     InfoType IFunctionInfo::toPtr () {
 	auto frames = getFrames ();
 	if (frames.size () == 1) {
-	    if (auto fr = frames [0]-> to<IPureFrame> ()) {
+	    if (frames [0]-> is<IPureFrame> ()) {
 		//TODO
 		// auto proto = fr.validate ();
 		// std::vector <InfoType> params;
@@ -232,10 +230,10 @@ namespace semantic {
     std::map<Word, std::string> IFunctionInfo::candidates () {
 	std::map <Word, std::string> rets;
 	auto frames = this-> getFrames ();
-	for (auto it : frames) {
+	/*for (auto : frames) {
 	    // TODO
 	    //ret [it-> ident] = it-> protoString ();
-	}
+	    }*/
 	return rets;
     }
 

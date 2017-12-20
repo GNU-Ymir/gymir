@@ -4,13 +4,15 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
+#include <ymir/semantic/pack/InternalFunction.hh>
 #include "print-tree.h"
 
 namespace syntax {
     using namespace semantic;
     
     Ymir::Tree IInstruction::toGeneric () {
-	Ymir::Error::assert ((std::string ("TODO ") + this-> getId ()).c_str  ());
+	Ymir::Error::assert ((std::string ("TODO generic") + this-> getId ()).c_str  ());
+	return NULL;
     }
     
     Ymir::Tree IBlock::toGenericNoEntry () {
@@ -23,10 +25,12 @@ namespace syntax {
     
     Ymir::Tree IBlock::toGeneric () {
 	Ymir::enterBlock ();
-	for (auto it : this-> insts) {
-	    Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
+	for (auto it : this-> insts) {	    
+	    Ymir::getStackStmtList ().back ().append (it-> toGeneric ());    
 	}
-	return Ymir::leaveBlock ().bind_expr;
+	
+	auto ret = Ymir::leaveBlock ();
+	return ret.bind_expr;
     }
 
     Ymir::Tree IVarDecl::toGeneric () {
@@ -85,10 +89,18 @@ namespace syntax {
     }
 
     Ymir::Tree IUnary::toGeneric () {
-	return this-> info-> type-> buildUnaryOp (
-	    this-> token,
-	    this-> elem
-	);
+	if (this-> info-> type-> unopFoo) {
+	    return this-> info-> type-> buildUnaryOp (
+		this-> token,
+		this-> elem
+	    );
+	} else {
+	    return this-> info-> type-> buildBinaryOp (
+		this-> token,
+		this-> elem,
+		new (GC) ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+	    );
+	}
     }
     
     Ymir::Tree IAccess::toGeneric () {
@@ -109,11 +121,16 @@ namespace syntax {
     
     std::vector <tree> IParamList::toGenericParams (std::vector <semantic::InfoType> treat) {
 	std::vector <tree> params (this-> params.size ());
-	for (int i = 0 ; i < this-> params.size () ; i++) {
+	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree elist = this-> params [i]-> toGeneric ();
-	    if (treat [i]) {
-		//for (long nb = treat [i
-	    }
+	    if (treat [i]) {		
+		elist = treat [i]-> buildBinaryOp (
+		    this-> params [i]-> token,
+		    new (GC) ITreeExpression (this-> params [i]-> token, this-> params [i]-> info-> type, elist),
+		    new (GC) ITreeExpression (this-> params [i]-> token, treat [i], Ymir::Tree ())
+		);
+		debug_tree (elist.getTree ());
+	    }	   
 	    params [i] = elist.getTree ();
 	}
 	return params;
@@ -157,11 +174,14 @@ namespace syntax {
 					   array_type
 	);
 	
-	for (int i = 0 ; i < this-> params.size () ; i++) {
+	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree ref = Ymir::getArrayRef (this-> token.getLocus (), aux, innerType, i);
-	    auto left = new ITreeExpression (this-> token, ref);
-	    left-> info = new ISymbol (this-> token, info-> content ());
-	    list.append (this-> casters [i]-> buildBinaryOp (this-> token, left, this-> params [i]));
+	    auto left = new ITreeExpression (this-> token, info-> content (), ref);
+	    list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
+					  void_type_node,
+					  ref, 
+					  this-> casters [i]-> buildBinaryOp (this-> token, this-> params [i], left)
+	    ));
 	}
 
 	Ymir::getStackStmtList ().back ().append (list.getTree ());
@@ -262,7 +282,47 @@ namespace syntax {
 	list.append (end_expr);
 	
 	return list.getTree ();	
+    }    
+
+    Ymir::Tree IArrayAlloc::toGeneric () {
+	Ymir::TreeStmtList list;
+	ArrayInfo info = this-> info-> type-> to <IArrayInfo> ();
+	Ymir::Tree innerType = info-> content ()-> toGeneric ();
+	Ymir::Tree array_type = info-> toGeneric ();
+	auto lenr = this-> size-> toGeneric ();
+	std::vector <tree> args = {fold_convert (build_pointer_type (void_type_node), info-> content ()-> getInitFnPtr ().getTree ()), lenr.getTree ()};
+	
+	auto ptrr = build_call_array (
+	    build_pointer_type (void_type_node),
+	    semantic::InternalFunction::getYNewArray ().getTree (),
+	    args.size (), args.data ()
+	);				      
+
+	Ymir::Tree aux = Ymir::makeAuxVar (this-> token.getLocus (),
+					   ISymbol::getLastTmp (),
+					   array_type
+	);
+	
+	Ymir::Tree lenl = Ymir::getField (this-> token.getLocus (), aux, "len");
+	Ymir::Tree ptrl = Ymir::getField (this-> token.getLocus (), aux, "ptr");
+	
+	list.append (Ymir::buildTree (
+	    MODIFY_EXPR, this-> token.getLocus (),
+	    void_type_node,
+	    lenl, fold_convert (long_unsigned_type_node, lenr.getTree ())
+	));
+
+	list.append (Ymir::buildTree (
+	    MODIFY_EXPR, this-> token.getLocus (),
+	    void_type_node,
+	    ptrl,
+	    fold_convert (build_pointer_type (innerType.getTree ()), ptrr)
+	));
+
+	Ymir::getStackStmtList ().back ().append (list.getTree ());
+	return aux;
     }
+    
     
 }
 

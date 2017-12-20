@@ -73,6 +73,7 @@ namespace semantic {
 	if (var-> token == "min_exp") return MinExp ();
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "sqrt") return Sqrt ();
+	return NULL;
     }
 	
     InfoType IFloatInfo::CastOp (InfoType other) {
@@ -86,6 +87,7 @@ namespace semantic {
 	    //TODO
 	    return ot-> clone ();
 	}
+	return NULL;
     }
 
     InfoType IFloatInfo::CompOp (InfoType other) {
@@ -97,7 +99,7 @@ namespace semantic {
 		//TODO
 		return this-> clone ();	       
 	    }
-	} else if (auto ref = other-> to<IRefInfo> ()) {
+	} else if (other-> is<IRefInfo> ()) {
 	    auto aux = new IRefInfo (this-> clone ());
 	    //TODO
 	    return aux;
@@ -224,7 +226,7 @@ namespace semantic {
 	return new IStringInfo (true);
     }    
 
-    InfoType IFloatInfo::opAff (Word op, syntax::Expression right) {
+    InfoType IFloatInfo::opAff (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (ot-> _type <= this-> _type) {
 		//TODO
@@ -234,13 +236,13 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IFloatInfo::opNorm (Word op, syntax::Expression right) {
+    InfoType IFloatInfo::opNorm (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot->_type) {
 		//TODO
 		return this-> cloneConst ();
 	    } else return ot-> cloneConst ();
-	} else if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	} else if (right-> info-> type-> is<IFloatInfo> ()) {
 	    auto fl = this-> cloneConst ();
 	    return fl;
 	}
@@ -248,16 +250,16 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::opTest (Word, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	if (right-> info-> type-> is<IFloatInfo> ()) {
 	    return new IBoolInfo (true);
-	} else if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	} else if (right-> info-> type-> is<IFloatInfo> ()) {
 	    return new IBoolInfo (true);
 	}
 	return NULL;
     }
 
     InfoType IFloatInfo::opNormRight (Word, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	if (right-> info-> type-> is<IFloatInfo> ()) {
 	    auto fl = this-> cloneConst ();
 	    return fl;
 	}
@@ -265,7 +267,7 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::opTestRight (Word, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	if (right-> info-> type-> is<IFloatInfo> ()) {
 	    return new IBoolInfo (true);
 	}
 	return NULL;

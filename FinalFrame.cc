@@ -141,7 +141,7 @@ namespace semantic {
 	__contextToAdd__.clear ();
 	
 	std::vector <tree> args (this-> _vars.size ());
-	for (int i = 0 ; i < this-> _vars.size () ; i++)
+	for (uint i = 0 ; i < this-> _vars.size () ; i++)
 	    args [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
 
 	tree ret = this-> _type-> type-> toGeneric ().getTree ();
@@ -156,9 +156,9 @@ namespace semantic {
 	this-> declArguments ();
 	
 	Ymir::enterBlock ();
-       	
-	Ymir::getStackStmtList ().back ().append (this-> _block-> toGeneric ());
-
+	Ymir::Tree inside = this-> _block-> toGenericNoEntry ();	
+	Ymir::getStackStmtList ().back ().append (inside);
+	
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
 				       NULL_TREE, void_type_node);
 	DECL_RESULT (fn_decl) = result_decl;

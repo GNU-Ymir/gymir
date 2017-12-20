@@ -5,23 +5,23 @@
 namespace semantic {
     using namespace syntax;
     
-    Value IValue::BinaryOp (Word token, Value right) { return NULL; }
+    Value IValue::BinaryOp (Word , Value ) { return NULL; }
 
-    Value IValue::BinaryOpRight (Word token, Value left) { return NULL; }
+    Value IValue::BinaryOpRight (Word , Value) { return NULL; }
 
-    Value IValue::UnaryOp (Word token) { return NULL; }
+    Value IValue::UnaryOp (Word ) { return NULL; }
 
-    Value IValue::AccessOp (ParamList params) { return NULL; } 
+    Value IValue::AccessOp (ParamList ) { return NULL; } 
     
-    Value IValue::AccessOp (Expression expr) { return NULL; }
+    Value IValue::AccessOp (Expression) { return NULL; }
 
-    Value IValue::CastOp (InfoType type) { return NULL; }
+    Value IValue::CastOp (InfoType ) { return NULL; }
 
-    Value IValue::CompOp (InfoType type) { return NULL; }
+    Value IValue::CompOp (InfoType ) { return NULL; }
 
-    Value IValue::CastTo (InfoType type) { return NULL; }
+    Value IValue::CastTo (InfoType ) { return NULL; }
 
-    Value IValue::DotOp (Var attr) { return NULL; }
+    Value IValue::DotOp (Var ) { return NULL; }
 
 
     IBoolValue::IBoolValue (bool value) :

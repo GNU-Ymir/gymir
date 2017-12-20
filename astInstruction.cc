@@ -87,7 +87,7 @@ namespace syntax {
 	    return NULL;
 	}
 
-	Expression msg;
+	Expression msg = NULL;
 	if (this-> msg) {
 	    msg = this-> msg-> expression ();
 	    if (!msg-> info-> type-> isSame (new IStringInfo (true))) {
@@ -168,6 +168,7 @@ namespace syntax {
     
     Instruction IFor::instruction () {
 	Ymir::Error::assert ("TODO For");
+	return NULL;
     }
     
     Instruction IWhile::instruction () {

@@ -49,7 +49,7 @@ namespace semantic {
 	    if (this-> _tmps.size () != scd-> _tmps.size () ||
 		this-> _vars.size () != scd-> _vars.size ()) return false;
 	    
-	    for (auto it : Ymir::r (0, this-> _tmps.size ())) {
+	    for (auto it __attribute__ ((unused)) : Ymir::r (0, this-> _tmps.size ())) {
 		Ymir::Error::assert ("TODO");
 	    }
 
@@ -66,7 +66,7 @@ namespace semantic {
     Ymir::Tree IFrameProto::toGeneric () {
 	if (this-> _fn.isNull ()) {
 	    std::vector <tree> fndecl_type_params (this-> _vars.size ());
-	    for (int i = 0 ; i < this-> _vars.size () ; i++) {
+	    for (uint i = 0 ; i < this-> _vars.size () ; i++) {
 		fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
 	    }
 

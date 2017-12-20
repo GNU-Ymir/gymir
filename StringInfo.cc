@@ -6,8 +6,6 @@
 
 namespace semantic {
 
-    static GTY (()) tree string_type_node;
-
     bool IStringInfo::__initStringTypeNode__ = false;
     
     IStringInfo::IStringInfo (bool isConst) :
@@ -86,7 +84,7 @@ namespace semantic {
     }
     
     Ymir::Tree IStringInfo::toGenericStatic () {
-	string_type_node = Ymir::makeStructType ("string", 2,
+	Ymir::Tree string_type_node = Ymir::makeStructType ("string", 2,
 						 get_identifier ("len"),
 						 (new IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
 						 get_identifier ("ptr"),
@@ -101,9 +99,7 @@ namespace semantic {
 	using namespace syntax;
 	
 	Ymir::Tree InstAff (Word word, Expression left, Expression right) {
-	    location_t loc = word.getLocus ();
-	    
-	    Ymir::Tree string_type_node = IStringInfo::toGenericStatic ();
+	    location_t loc = word.getLocus ();	   
 	    auto lexp = left-> toGeneric ();
 	    Ymir::TreeStmtList list;
 
@@ -150,10 +146,9 @@ namespace semantic {
 	    location_t loc = locus.getLocus ();
 	    Ymir::TreeStmtList list;
 
-	    if (auto str = expr-> to<IString> ()) {
+	    if (expr-> is<IString> ()) {
 		return expr-> toGeneric ();
 	    } else {
-		Ymir::Tree string_type_node = IStringInfo::toGenericStatic ();
 		auto lexp = expr-> toGeneric ();
 		return Ymir::getField (loc, lexp, "ptr");
 	    }
