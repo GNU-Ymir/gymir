@@ -315,6 +315,29 @@ namespace semantic {
 
 	}
 	
+
+	Tree copyArray (location_t loc, Tree dst, Tree src, Tree len, Tree begin, Tree type) {
+	    auto byteBegin = buildTree (
+		MULT_EXPR, loc,
+		size_type_node,
+		fold_convert (size_type_node, begin.getTree ()),
+		TYPE_SIZE_UNIT (type.getTree ())
+	    );
+
+	    auto byteLen = buildTree (
+		MULT_EXPR, loc,
+		size_type_node,
+		fold_convert (size_type_node, len.getTree ()),
+		TYPE_SIZE_UNIT (type.getTree ())
+	    );
+
+	    dst = buildTree (POINTER_PLUS_EXPR, loc, dst.getType (), dst, byteBegin);
+	    
+	    tree argsMemcpy [] = {dst.getTree (), src.getTree (), byteLen.getTree ()};
+	    return build_call_array_loc (loc, void_type_node, InternalFunction::getYMemcpy ().getTree (), 3, argsMemcpy);	    
+
+	}
+	
 	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, ConstArray cst) {
 	    Ymir::TreeStmtList list;
 	    ArrayInfo arrayInfo = cst-> info-> type-> to<IArrayInfo> ();
@@ -479,10 +502,7 @@ namespace semantic {
 	    ));
 
 	    list.append (copyArray (loc, auxPtr, ptrl, lenl, inner));
-	    list.append (copyArray (loc, build2 (POINTER_PLUS_EXPR, auxPtr.getType ().getTree (),
-						 auxPtr.getTree (), convert_to_ptrofftype (lenl.getTree ())),
-				    ptrr, lenr, inner)
-	    );
+	    list.append (copyArray (loc, auxPtr, ptrr, lenr, lenl, inner));	    
 	    
 	    Ymir::getStackStmtList ().back ().append (list.getTree ());
 	    return aux;
