@@ -31,16 +31,16 @@ namespace semantic {
 	
     InfoType IFixedInfo::BinaryOp (Word op, syntax::Expression right) {
 	if (op == Token::EQUAL) return Affect (right);
-	if (op == Token::DIV_AFF) return opAff (op, right);
-	if (op == Token::AND_AFF) return opAff (op, right);
-	if (op == Token::PIPE_EQUAL) return opAff (op, right);
-	if (op == Token::MINUS_AFF) return opAff (op, right);
-	if (op == Token::PLUS_AFF) return opAff (op, right);
-	if (op == Token::LEFTD_AFF) return opAff (op, right);
-	if (op == Token::RIGHTD_AFF) return opAff (op, right);
-	if (op == Token::STAR_EQUAL) return opAff (op, right);
-	if (op == Token::PERCENT_EQUAL) return opAff (op, right);
-	if (op == Token::XOR_EQUAL) return opAff (op, right);
+	if (op == Token::DIV_AFF) return opReaff (op, right);
+	if (op == Token::AND_AFF) return opReaff (op, right);
+	if (op == Token::PIPE_EQUAL) return opReaff (op, right);
+	if (op == Token::MINUS_AFF) return opReaff (op, right);
+	if (op == Token::PLUS_AFF) return opReaff (op, right);
+	if (op == Token::LEFTD_AFF) return opReaff (op, right);
+	if (op == Token::RIGHTD_AFF) return opReaff (op, right);
+	if (op == Token::STAR_EQUAL) return opReaff (op, right);
+	if (op == Token::PERCENT_EQUAL) return opReaff (op, right);
+	if (op == Token::XOR_EQUAL) return opReaff (op, right);
 	if (op == Token::DAND) return opNorm (op, right);
 	if (op == Token::DPIPE) return opNorm (op, right);
 	if (op == Token::INF) return opTest (op, right);
@@ -215,7 +215,26 @@ namespace semantic {
 	}
 	return NULL;
     }
-	
+
+    InfoType IFixedInfo::opReaff (Word, syntax::Expression right) {
+	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
+		auto ret = this-> clone ();
+		ret-> binopFoo = &FixedUtils::InstReaff;
+		return ret;
+	    } else if (!this-> isSigned () && !ot-> isSigned () && this-> isSup (ot)) {
+		auto ret = this-> clone ();
+		ret-> binopFoo = &FixedUtils::InstReaff;
+		return ret;
+	    } else if (this-> _type == ot-> type ()) {
+		auto ret = this-> clone ();
+		ret-> binopFoo = &FixedUtils::InstReaff;
+		return ret;
+	    }
+	}
+	return NULL;
+    }
+    
     InfoType IFixedInfo::opTest (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> _type == ot-> type ()) {
@@ -340,6 +359,18 @@ namespace semantic {
 	    );
 	}
 
+	Ymir::Tree InstReaff (Word locus, Expression left, Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    tree_code code = OperatorUtils::toGeneric (locus);
+	    return Ymir::buildTree (
+		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree,
+		Ymir::buildTree (
+		    code, locus.getLocus (), ltree.getType (), ltree, rtree
+		)
+	    );		
+	}
+	
 	Ymir::Tree InstNormal (Word locus, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());

@@ -1,4 +1,5 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 
 namespace semantic {
 
@@ -88,7 +89,7 @@ namespace semantic {
     InfoType ICharInfo::Affect (syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
 	    auto ch = new ICharInfo (this-> isConst ());
-	    //ch-> lintInst = CharUtils::InstAffect;
+	    ch-> binopFoo = &FixedUtils::InstAffect;
 	    return ch;
 	}
 	return NULL;
@@ -97,7 +98,7 @@ namespace semantic {
     InfoType ICharInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto ch = new ICharInfo (this-> isConst ());
-	    //ch-> lintInst = CharUtils::InstAffect;
+	    ch-> binopFoo = &FixedUtils::InstAffect;
 	    return ch;
 	}
 	return NULL;

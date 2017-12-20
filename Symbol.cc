@@ -12,7 +12,7 @@ namespace semantic {
 	value (NULL)
     {}
     
-    bool ISymbol::isConst () {
+    bool& ISymbol::isConst () {
 	return this-> type-> isConst ();
     }
 

@@ -65,6 +65,8 @@ namespace Ymir {
 	    UndefinedAttr,
 	    TemplateInferType,
 	    TemplateInferTypeNote,
+	    ConstNoInit,
+	    NotLValue,
 	    LAST_ERROR
 	};
 
@@ -135,6 +137,10 @@ namespace Ymir {
 
 	static void shadowingVar (Word, Word);
 
+	static void constNoInit (Word);
+
+	static void notLValue (Word);
+	
 	static void undefVar (Word, semantic::Symbol);
 
 	static void undefAttr (Word, semantic::Symbol, syntax::Var);

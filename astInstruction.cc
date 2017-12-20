@@ -64,11 +64,21 @@ namespace syntax {
 		Ymir::Error::assert ("TODO, Immut");
 	    } else if (this-> decos [id] == Keys::CONST) {
 		aux-> info = new ISymbol (aux-> token, new IUndefInfo ());
+		aux-> info-> isConst () = false;
 		Table::instance ().insert (aux-> info);
+		if (this-> insts [id] == NULL) {
+		    Ymir::Error::constNoInit (it-> token);
+		    return NULL;
+		} else {
+		    auxDecl-> decls.push_back (aux);
+		    auxDecl-> insts.push_back (this-> insts [id]-> expression ());
+		    aux-> info-> isConst () = true;
+		}
 	    } else if (this-> decos [id] == Keys::STATIC) {
 		Ymir::Error::assert ("TODO, static");
 	    } else {
 		aux-> info = new ISymbol (aux-> token, new IUndefInfo ());
+		aux-> info-> isConst () = false;
 		Table::instance ().insert (aux-> info);
 		auxDecl-> decls.push_back (aux);
 		if (this-> insts [id]) 

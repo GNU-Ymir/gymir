@@ -80,6 +80,10 @@ namespace semantic {
 
 	InfoType Access (syntax::Expression);
 	
+	InfoType Concat (syntax::Expression);
+
+	InfoType ConcatAff (syntax::Expression);
+
     };
 
     typedef IArrayInfo* ArrayInfo;

@@ -58,7 +58,7 @@ namespace semantic {
 			if (args [it]-> isConst () != info-> isConst ())
 			    score-> score += CONST_SAME;
 			else score-> score += SAME;
-			score-> treat.push_back (NULL);
+			score-> treat.push_back (type);
 		    } else if (type != NULL) {
 			if (args [it]-> isConst () != info-> isConst ())
 			    score-> score += CONST_AFF;

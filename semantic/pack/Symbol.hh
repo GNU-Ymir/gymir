@@ -29,7 +29,7 @@ namespace semantic {
 	
 	ISymbol (Word word, InfoType);
 	
-	bool isConst ();
+	bool& isConst ();
 
 	bool& isPublic ();
 

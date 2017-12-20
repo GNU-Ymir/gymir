@@ -96,7 +96,7 @@ namespace Ymir {
 
     Ymir::Tree makeAuxVar (location_t locus, ulong id, Ymir::Tree type) {
 	OutBuffer buf ;
-	buf.write ("_", id);
+	buf.write ("_", id, "_");
 	Ymir::Tree decl = build_decl (
 	    locus,
 	    VAR_DECL,	    

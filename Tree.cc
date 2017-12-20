@@ -16,7 +16,6 @@ namespace Ymir {
     }
 
     TreeSymbolMapping leaveBlock () {
-	printf ("leave\n");
 	TreeStmtList current = stack_stmt_list.back ();
 	stack_stmt_list.pop_back ();
 

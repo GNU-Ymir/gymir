@@ -29,6 +29,10 @@ namespace semantic {
 	return this-> binopFoo (locus, left, right);
     }
 
+    Ymir::Tree IInfoType::buildCastOp (Word locus, syntax::Expression elem, syntax::Expression type) {
+	return this-> binopFoo (locus, elem, type);
+    }
+    
     Ymir::Tree IInfoType::buildUnaryOp (Word locus, syntax::Expression elem) {
 	return this-> unopFoo (locus, elem);
     }

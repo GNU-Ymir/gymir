@@ -26,6 +26,7 @@ namespace Ymir {
     Error Error::__instance__;
 
     std::string substr (std::string& x, ulong beg, ulong end) {
+	if (end - beg > x.length ()) return "";
 	return x.substr (beg, end - beg);
     }
     
@@ -429,6 +430,30 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::constNoInit (Word word) {
+	auto str = getString (ConstNoInit);
+	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg erroMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", erroMsg.msg.c_str ());
+	} else __caught__.push_back (erroMsg);
+    }
+    
+    void Error::notLValue (Word word) {
+	auto str = getString (NotLValue);
+	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg erroMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", erroMsg.msg.c_str ());
+	} else __caught__.push_back (erroMsg);
+    }
+    
     void Error::breakOutSide (Word word) {
 	auto msg = std::string (getString (BreakOutSide));
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

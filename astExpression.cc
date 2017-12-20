@@ -298,6 +298,11 @@ namespace syntax {
     Expression IBinary::affect () {
 	auto aux = new IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());	
 	if (simpleVerif (aux)) return NULL;
+
+	if (aux-> left-> info-> isConst ()) {
+	    Ymir::Error::notLValue (aux-> left-> token);
+	    return NULL;
+	}
 	
 	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
 	if (type == NULL) {
@@ -734,7 +739,7 @@ namespace syntax {
 	auto aux = new IParamList (this-> token, {});
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    Expression ex_it = this-> params [it]-> expression ();
-	    if (ex_it == NULL) return NULL;
+	    if (ex_it == NULL || ex_it-> info == NULL || ex_it-> info-> type == NULL) return NULL;
 	    if (auto ex = ex_it-> to<IParamList> ()) {
 		for (auto it : ex-> params) {
 		    aux-> params.push_back (it);

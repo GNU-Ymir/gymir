@@ -78,6 +78,8 @@ namespace semantic {
 
 	InfoType opAff (Word, syntax::Expression);
 	
+	InfoType opReaff (Word, syntax::Expression);
+
 	InfoType opTest (Word op, syntax::Expression);
 
 	InfoType opNorm (Word op, syntax::Expression);

@@ -56,6 +56,8 @@ namespace syntax {
 	IChar (Word word, ubyte code);
 
 	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;	
     };

@@ -15,6 +15,7 @@ namespace semantic {
 	Ymir::Tree InstCast (Word locus, syntax::Expression elem, syntax::Expression type);
 
 	Ymir::Tree InstAddr (Word locus, syntax::Expression elem, syntax::Expression);
+	Ymir::Tree InstReaff (Word locus, syntax::Expression elem, syntax::Expression);
 	Ymir::Tree InstNormal (Word locus, syntax::Expression elem, syntax::Expression);
 	Ymir::Tree InstNormalRight (Word locus, syntax::Expression elem, syntax::Expression);
 	

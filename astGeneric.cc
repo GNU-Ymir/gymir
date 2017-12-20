@@ -45,9 +45,8 @@ namespace syntax {
 		get_identifier (var-> token.getStr ().c_str ()),
 		type_tree.getTree ()
 	    );
-
-	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
 	    
+	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();	    
 	    var-> info-> treeDecl (decl);
 	    Ymir::getStackVarDeclChain ().back ().append (decl);
 	    list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
@@ -74,6 +73,10 @@ namespace syntax {
 	}
 	
 	return Ymir::Tree ();
+    }
+
+    Ymir::Tree IChar::toGeneric () {
+	return build_int_cst_type (unsigned_char_type_node, this-> code);
     }
     
     Ymir::Tree IVar::toGeneric () {
@@ -122,15 +125,16 @@ namespace syntax {
     std::vector <tree> IParamList::toGenericParams (std::vector <semantic::InfoType> treat) {
 	std::vector <tree> params (this-> params.size ());
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
-	    Ymir::Tree elist = this-> params [i]-> toGeneric ();
-	    if (treat [i]) {		
-		elist = treat [i]-> buildBinaryOp (
+	    Ymir::Tree elist;
+	    if (treat [i] && treat [i]-> binopFoo) {		
+		elist = treat [i]-> buildCastOp (
 		    this-> params [i]-> token,
-		    new (GC) ITreeExpression (this-> params [i]-> token, this-> params [i]-> info-> type, elist),
+		    this-> params [i],
 		    new (GC) ITreeExpression (this-> params [i]-> token, treat [i], Ymir::Tree ())
 		);
-		debug_tree (elist.getTree ());
-	    }	   
+	    } else {
+		elist = this-> params [i]-> toGeneric ();
+	    }
 	    params [i] = elist.getTree ();
 	}
 	return params;
@@ -180,7 +184,7 @@ namespace syntax {
 	    list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
 					  void_type_node,
 					  ref, 
-					  this-> casters [i]-> buildBinaryOp (this-> token, this-> params [i], left)
+					  this-> casters [i]-> buildCastOp (this-> token, this-> params [i], left)
 	    ));
 	}
 

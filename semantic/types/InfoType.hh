@@ -74,6 +74,8 @@ namespace semantic {
 	IInfoType (bool isConst);
 
 	Ymir::Tree buildBinaryOp (Word word, syntax::Expression left, syntax::Expression right);
+
+	Ymir::Tree buildCastOp (Word word, syntax::Expression left, syntax::Expression right);
 	
 	Ymir::Tree buildUnaryOp (Word word, syntax::Expression elem);
 

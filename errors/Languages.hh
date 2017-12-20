@@ -38,7 +38,9 @@ namespace Ymir {
 		phrases [TemplateInferType] = "Réference vers un type de retour déduis pour l'appel";
 		phrases [TemplateInferTypeNote] = "Type déduis de la fonction";
 		phrases [IncompatibleTypes] = "Types incompatibles '%%%' et '%%%'";
-		init = true;
+		phrases [ConstNoInit] = "Declaration constante '%%%' sans valeur d'initialisation";
+		phrases [NotLValue] = "'%%%' n'est pas une lvalue";
+		init = true;		
 	    } 
 	    return phrases;
 	}
@@ -76,6 +78,8 @@ namespace Ymir {
 		phrases [TemplateInferType] = "Forward reference to inferred return type of function call";
 		phrases [TemplateInferTypeNote] = "Inferred from";
 		phrases [BreakRefUndef] = "Loop identifier '%%%' doesn't exist";
+		phrases [ConstNoInit] = "Const declaration '%%%' with no initial value";
+		phrases [NotLValue] = "'%%%' is not a lvalue";
 		init = true;
 	    } 
 	    return phrases;

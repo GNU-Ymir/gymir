@@ -54,6 +54,7 @@ namespace semantic {
     }
 
     ApplicationScore IFunctionInfo::CallOp (Word tok, std::vector <InfoType> params) {
+	ulong nbErrorBeg = Ymir::Error::nb_errors;
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
 
@@ -102,7 +103,8 @@ namespace semantic {
 	if (right-> ret-> is<IRefInfo> ())
 	    right-> ret-> isConst () = false;
 
-	if (Ymir::Error::thrown ()) {
+
+	if (Ymir::Error::nb_errors - nbErrorBeg) {
 	    Ymir::Error::templateCreation (tok);
 	    return NULL;
 	}
@@ -111,6 +113,7 @@ namespace semantic {
     }
 
     ApplicationScore IFunctionInfo::CallOp (Word tok, syntax::ParamList params) {
+	ulong nbErrorBeg = Ymir::Error::nb_errors;
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
 
@@ -134,7 +137,7 @@ namespace semantic {
 		}
 	    }
 	}
-
+	
 	if (goods.size () == 0) return NULL;
 	else if (goods.size () != 1) {
 	    Ymir::Error::templateSpecialisation (goods [0]-> ident (),
@@ -160,7 +163,7 @@ namespace semantic {
 	if (right-> ret-> is<IRefInfo> ())
 	    right-> ret-> isConst () = false;
 
-	if (Ymir::Error::thrown ()) {
+	if (Ymir::Error::nb_errors - nbErrorBeg) {
 	    Ymir::Error::templateCreation (tok);
 	    return NULL;
 	}
@@ -188,7 +191,7 @@ namespace semantic {
     }
 
     std::string IFunctionInfo::innerTypeString () {	
-	return Ymir::format ("function <%s.%s>",
+	return Ymir::format ("function <%.%>",
 			     this-> _space.toString ().c_str (),
 			     this-> _name.c_str ()
 	);

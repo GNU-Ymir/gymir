@@ -26,7 +26,11 @@ namespace semantic {
 	    }
 	}
 
+	InfoType BinaryOp (Word tok, syntax::Expression right) override;
+	
 	InfoType BinaryOpRight (Word tok, syntax::Expression left) override;
+
+	InfoType AccessOp (Word, syntax::ParamList) override;
 	
 	std::string innerTypeString () override;
 
@@ -52,10 +56,19 @@ namespace semantic {
     private:
 
 	InfoType Ptr ();
+	
 	InfoType Length ();
 
 	InfoType AffectRight (syntax::Expression);
+
+	InfoType Affect (syntax::Expression);
+
+	InfoType Access (syntax::Expression);
 	
+	InfoType Concat (syntax::Expression);
+	
+	InfoType ConcatAff (syntax::Expression);
+
     };
 
     typedef IStringInfo* StringInfo;
