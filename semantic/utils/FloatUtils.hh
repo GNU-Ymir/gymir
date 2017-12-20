@@ -4,7 +4,7 @@
 
 namespace semantic {
 
-    namespace FixedUtils {
+    namespace FloatUtils {
 
 	Ymir::Tree InstAffect (Word locus, syntax::Expression left, syntax::Expression right);	
 
@@ -21,6 +21,7 @@ namespace semantic {
 
 	Ymir::Tree InstTest (Word locus, syntax::Expression elem, syntax::Expression);
 	Ymir::Tree InstTestRight (Word locus, syntax::Expression elem, syntax::Expression);
+
 	
     }
 

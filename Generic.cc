@@ -6,7 +6,7 @@
 using namespace semantic;
 
 namespace Ymir {
-
+    
     Tree makeField (InfoType type, std::string name) {
 	Tree t_decl = type-> toGeneric ();
 	Tree field_decl = build_decl (BUILTINS_LOCATION, FIELD_DECL,
@@ -155,7 +155,5 @@ namespace Ymir {
 	DECL_CONTEXT (decl) = IFinalFrame::currentFrame ().getTree ();
 	return decl;
     }
-
-    
     
 }

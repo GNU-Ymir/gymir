@@ -1,3 +1,4 @@
+#include <ymir/syntax/Keys.hh>
 #include <ymir/ast/_.hh>
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/tree/Generic.hh>
@@ -77,6 +78,17 @@ namespace syntax {
 
     Ymir::Tree IChar::toGeneric () {
 	return build_int_cst_type (unsigned_char_type_node, this-> code);
+    }
+    
+    Ymir::Tree IBool::toGeneric () {
+	return build_int_cst_type (unsigned_char_type_node, this-> token == Keys::TRUE_);
+    }
+
+    Ymir::Tree IFloat::toGeneric () {
+	REAL_VALUE_TYPE real_value;
+	Ymir::Tree type = this-> info-> type-> toGeneric ();
+	real_from_string3 (&real_value, this-> totale.c_str (), TYPE_MODE (type.getTree ()));
+	return build_real (type.getTree (), real_value);
     }
     
     Ymir::Tree IVar::toGeneric () {

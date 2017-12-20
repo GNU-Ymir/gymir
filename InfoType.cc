@@ -220,6 +220,27 @@ namespace semantic {
 	    if (op == Token::PERCENT) return TRUNC_MOD_EXPR;
 	    return NOP_EXPR;
 	}
+	
+	tree_code toGenericReal (Word op) {
+	    if (op == Token::EQUAL) return MODIFY_EXPR;
+	    if (op == Token::DIV_AFF) return RDIV_EXPR;
+	    if (op == Token::MINUS_AFF) return MINUS_EXPR;
+	    if (op == Token::PLUS_AFF) return PLUS_EXPR;
+	    if (op == Token::STAR_EQUAL) return MULT_EXPR;
+	    if (op == Token::DAND) return TRUTH_ANDIF_EXPR;
+	    if (op == Token::DPIPE) return TRUTH_ORIF_EXPR;
+	    if (op == Token::INF) return LT_EXPR;
+	    if (op == Token::SUP) return GT_EXPR;
+	    if (op == Token::INF_EQUAL) return LE_EXPR;
+	    if (op == Token::SUP_EQUAL) return GE_EXPR;
+	    if (op == Token::NOT_EQUAL) return NE_EXPR;
+	    if (op == Token::DEQUAL) return EQ_EXPR;
+	    if (op == Token::PLUS) return PLUS_EXPR;
+	    if (op == Token::MINUS) return MINUS_EXPR;
+	    if (op == Token::DIV) return RDIV_EXPR;
+	    if (op == Token::STAR) return MULT_EXPR;
+	    return NOP_EXPR;
+	}
     
     }
 }

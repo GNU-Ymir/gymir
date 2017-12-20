@@ -44,6 +44,8 @@ namespace semantic {
 
 	InfoType clone () override;
 
+	Ymir::Tree toGeneric () override;
+	
 	static const char* id () {
 	    return "IFloatInfo";
 	}

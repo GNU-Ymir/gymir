@@ -35,5 +35,9 @@ namespace Ymir {
     Tree getAddr (Tree elem);
 
     Tree getAddr (location_t, Tree elem);
+
+    real_value makeRealValue (float elem);
+
+    real_value makeRealValue (double elem);
     
 }

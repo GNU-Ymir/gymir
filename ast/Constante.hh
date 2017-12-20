@@ -76,6 +76,8 @@ namespace syntax {
 
 	Expression expression () override;
 	
+	Ymir::Tree toGeneric () override;
+	
 	void print (int nb = 0) override;
 	
     };
@@ -186,6 +188,8 @@ namespace syntax {
 	}
 
 	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Bool> %s",

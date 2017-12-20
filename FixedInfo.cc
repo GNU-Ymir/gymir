@@ -239,21 +239,21 @@ namespace semantic {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> _type == ot-> type ()) {
 		auto ret = new IBoolInfo (true);
-		ret-> binopFoo = &FixedUtils::InstNormal;
+		ret-> binopFoo = &FixedUtils::InstTest;
 		return ret;	    
 	    } else if (this-> isSup (ot)) {
 		auto ret = new IBoolInfo (true);
-		ret-> binopFoo = &FixedUtils::InstNormal;
+		ret-> binopFoo = &FixedUtils::InstTest;
 		return ret;
 	    } else {
 		auto ret = new IBoolInfo (true);
-		ret-> binopFoo = &FixedUtils::InstNormalRight;
+		ret-> binopFoo = &FixedUtils::InstTestRight;
 		return ret;
 	    }	    
 	} else if (right-> info-> type-> is<ICharInfo> ()) {
 	    if (this-> _type == FixedConst::UBYTE) {
 		auto ret = new IBoolInfo (true);
-		ret-> binopFoo = &FixedUtils::InstNormal;
+		ret-> binopFoo = &FixedUtils::InstTest;
 		return ret;
 	    }
 	}
@@ -389,6 +389,27 @@ namespace semantic {
 		code, locus.getLocus (), ltree.getType (), ltree, rtree
 	    );
 	}
+
+
+	Ymir::Tree InstTest (Word locus, Expression left, Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    tree_code code = OperatorUtils::toGeneric (locus);
+	    return Ymir::buildTree (
+		code, locus.getLocus (), boolean_type_node, ltree, rtree
+	    );
+	}
+
+	Ymir::Tree InstTestRight (Word locus, Expression left, Expression right) {
+	    auto rtree = right-> toGeneric ();
+	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
+
+	    tree_code code = OperatorUtils::toGeneric (locus);
+	    return Ymir::buildTree (
+		code, locus.getLocus (), boolean_type_node, ltree, rtree
+	    );
+	}
+
 	
 	Ymir::Tree UnaryMinus (Word locus, Expression elem) {
 	    auto lexp = elem-> toGeneric ();

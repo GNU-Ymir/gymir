@@ -9,6 +9,7 @@ namespace semantic {
     namespace OperatorUtils {
 
 	tree_code toGeneric (Word token);
+	tree_code toGenericReal (Word token);
 	
     }
     
