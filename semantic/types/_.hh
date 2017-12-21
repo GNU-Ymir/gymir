@@ -17,3 +17,4 @@
 #include "VoidInfo.hh"
 #include "StringInfo.hh"
 #include "RangeInfo.hh"
+#include "TupleInfo.hh"

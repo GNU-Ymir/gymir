@@ -10,7 +10,10 @@ namespace semantic {
 
 	tree_code toGeneric (Word token);
 	tree_code toGenericReal (Word token);
-	
+
+	tree_code toGeneric (std::string &token);
+	tree_code toGenericReal (std::string &token);
+		
     }
     
 }

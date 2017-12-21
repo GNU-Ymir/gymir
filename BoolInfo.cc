@@ -132,7 +132,7 @@ namespace semantic {
 	using namespace syntax;
 	using namespace Ymir;
 	
-	Tree InstAffect (Word locus, Expression left, Expression right) {
+	Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
 	    auto typeTree = left-> info-> type-> toGeneric ();

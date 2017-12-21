@@ -217,7 +217,7 @@ namespace semantic {
     InfoType IPtrInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
 	else if (!this-> isConst () && other-> isConst ())
-	    this-> isConst () = true;
+	    this-> isConst (true);
 	return this;
     }
 
@@ -239,7 +239,7 @@ namespace semantic {
     namespace PtrUtils {
 	using namespace syntax;
 	
-	Ymir::Tree InstAffect (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();
 	    auto typeTree = left-> info-> type-> toGeneric ();
@@ -248,7 +248,7 @@ namespace semantic {
 	    );	    
 	}
 	
-	Ymir::Tree InstCast (Word locus, Expression elem, Expression typeExpr) {
+	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
 	    auto type = typeExpr-> info-> type-> toGeneric ();
 	    auto lexp = elem-> toGeneric ();
 	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());

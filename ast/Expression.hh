@@ -25,7 +25,7 @@ namespace syntax {
 	IExpression (Word word) :
 	    IInstruction (word)
 	{}
-
+	
 	Instruction instruction () {
 	    return this-> expression ();
 	}

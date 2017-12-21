@@ -4,10 +4,12 @@
 
 namespace semantic {
 
-    namespace BoolUtils {
+    namespace TupleUtils {
 
 	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
+	Ymir::Tree InstCast (Word locus, InfoType, syntax::Expression elem, syntax::Expression typeExpr);
+	
     }
 
 }

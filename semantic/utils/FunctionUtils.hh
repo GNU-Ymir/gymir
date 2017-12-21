@@ -6,7 +6,7 @@ namespace semantic {
 
     namespace FunctionUtils {
 
-	Ymir::Tree InstCall (Word locus, ApplicationScore score, syntax::Expression left, std::vector <syntax::Expression> & right);	
+	Ymir::Tree InstCall (Word locus, InfoType, ApplicationScore score, syntax::Expression left, std::vector <syntax::Expression> & right);	
 
     }
 

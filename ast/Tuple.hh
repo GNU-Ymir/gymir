@@ -12,24 +12,21 @@ namespace syntax {
 
 	Word end;
 	std::vector <Expression> params;
-
+	std::vector <semantic::InfoType> casters;
+	
     public:
 
-	IConstTuple (Word word, Word end, std::vector <Expression> params) :
-	    IExpression (word),
-	    end (end),
-	    params (params)
-	{}
+	IConstTuple (Word word, Word end, std::vector <Expression> params);
 
-	void print (int nb = 0) override {
-	    printf ("\n%*c<ConstTuple> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
+	Expression expression () override;
 
-	    for (auto it : this-> params)
-		it-> print (nb + 4);	    
-	}
+	Ymir::Tree toGeneric () override;
+
+	static const char * id ();
+
+	const char * getId () override;
+	
+	void print (int nb = 0) override;
 	
     };
 

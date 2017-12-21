@@ -321,7 +321,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    fail ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -333,7 +333,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, true, false};
 	if (__isEnable__) {	    
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    fail("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -341,6 +341,22 @@ namespace Ymir {
 	auto str = getString (SyntaxError);
 	auto msg = format (str, word2.getStr().c_str (),
 			   YELLOW, word.getStr ().c_str (), RESET);
+	
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    fail ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+
+    void Error::syntaxErrorFor (Word word, Word word2) {
+	auto str = getString (SyntaxErrorFor);
+	auto msg = format (str,
+			   YELLOW, word.getStr ().c_str (), RESET,
+			   YELLOW, word2.getStr ().c_str (), RESET
+	);
 	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};

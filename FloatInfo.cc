@@ -308,7 +308,7 @@ namespace semantic {
 	using namespace Ymir;
 	using namespace syntax;
 
-	Tree InstAffect (Word locus, Expression left, Expression right) {
+	Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    
@@ -317,7 +317,7 @@ namespace semantic {
 	    );
 	}
 	
-	Tree InstReaff (Word locus, Expression left, Expression right) {
+	Tree InstReaff (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGenericReal (locus);
@@ -329,7 +329,7 @@ namespace semantic {
 	    );		
 	}
 	
-	Ymir::Tree InstNormal (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstNormal (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGenericReal (locus);
@@ -338,7 +338,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstNormalRight (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstNormalRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
 	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 
@@ -348,7 +348,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstTest (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstTest (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGenericReal (locus);
@@ -357,7 +357,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstTestRight (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstTestRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
 	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 
@@ -367,34 +367,34 @@ namespace semantic {
 	    );
 	}
 	
-	Ymir::Tree UnaryMinus (Word locus, Expression elem) {
+	Ymir::Tree UnaryMinus (Word locus, InfoType, Expression elem) {
 	    auto lexp = elem-> toGeneric ();
 	    return Ymir::buildTree (
 		NEGATE_EXPR, locus.getLocus (), lexp.getType (), lexp
 	    );
 	}
 
-	Ymir::Tree InstSSub (Word locus, Expression elem) {
+	Ymir::Tree InstSSub (Word locus, InfoType, Expression elem) {
 	    auto lexp = elem-> toGeneric ();
 	    return Ymir::buildTree (
 		PREDECREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
 	    );
 	}
 	
-	Ymir::Tree InstPPlus (Word locus, Expression elem) {
+	Ymir::Tree InstPPlus (Word locus, InfoType, Expression elem) {
 	    auto lexp = elem-> toGeneric ();
 	    return Ymir::buildTree (
 		PREINCREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
 	    );
 	}
 
-	Ymir::Tree InstCast (Word locus, Expression elem, Expression typeExpr) {
+	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
 	    auto type = typeExpr-> info-> type-> toGeneric ();
 	    auto lexp = elem-> toGeneric ();
 	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
 	}
 	
-	Ymir::Tree InstAddr (Word locus, Expression elem, Expression) {
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
 		

@@ -589,7 +589,7 @@ namespace syntax {
     std::vector <Expression> IAccess::getParams () {
 	return this-> params-> getParams ();
     }
-    	
+       
     void IAccess::print (int nb) {
 	printf ("\n%*c<Access> %s",
 		nb, ' ',
@@ -598,10 +598,29 @@ namespace syntax {
 	this-> left-> print (nb + 4);
 	this-> params-> print (nb + 4);
     }
-
+          
+    IConstTuple::IConstTuple (Word word, Word end, std::vector <Expression> params) :
+	IExpression (word),
+	end (end),
+	params (params)
+    {}
     
-    
+    const char * IConstTuple::id () {
+	return "IConstTuple";
+    }
 
+    const char * IConstTuple::getId () {
+	return IConstTuple::id ();
+    }
 
+    void IConstTuple::print (int nb) {
+	printf ("\n%*c<ConstTuple> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	
+	for (auto it : this-> params)
+	    it-> print (nb + 4);	    
+    }        
     
 }

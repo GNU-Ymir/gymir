@@ -12,6 +12,7 @@ namespace Ymir {
 	    if (!init) {
 		phrases [SyntaxError] = "[%] attendues, mais %%% trouvé";
 		phrases [SyntaxError2] = "%%% inattendue";
+		phrases [SyntaxErrorFor] = "%%% inattendue pour l'expression %%%";
 		phrases [EscapeChar] = "caractère d'échappement inconnu";
 		phrases [NotATemplate] = "L'élément '%%%' n'est pas un template";
 		phrases [EndOfFile] = "Fin de fichier inattendue";
@@ -51,6 +52,7 @@ namespace Ymir {
 	    if (!init) {
 		phrases [SyntaxError] = "[%] expected, when %%% found";
 		phrases [SyntaxError2] = "%%% unexpected";
+		phrases [SyntaxErrorFor] = "%%% unexpected when analysing expression %%%";
 		phrases [EscapeChar] = "unknown escape character";
 		phrases [NotATemplate] = "'%%%' element is not a template";
 		phrases [EndOfFile] = "unexpected end of file";

@@ -39,6 +39,7 @@ namespace Ymir {
 	    NotATemplate = 1,
 	    TakeAType,
 	    SyntaxError,
+	    SyntaxErrorFor,
 	    SyntaxError2,
 	    EscapeChar,
 	    EndOfFile,
@@ -114,6 +115,8 @@ namespace Ymir {
 	static void takeATypeAsTemplate (Word);
 
 	static void syntaxError (Word);
+
+	static void syntaxErrorFor (Word, Word);
 
 	static void syntaxError (Word, const char*);
 

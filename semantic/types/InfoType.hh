@@ -52,8 +52,8 @@ namespace semantic {
     
     class IInfoType : public gc {
 	
-	typedef Ymir::Tree (*BinopLint) (Word, syntax::Expression, syntax::Expression);
-	typedef Ymir::Tree (*UnopLint) (Word, syntax::Expression);
+	typedef Ymir::Tree (*BinopLint) (Word, IInfoType*, syntax::Expression, syntax::Expression);
+	typedef Ymir::Tree (*UnopLint) (Word, IInfoType*, syntax::Expression);
 
 	
 	bool _isConst = false;
@@ -73,13 +73,13 @@ namespace semantic {
 
 	IInfoType (bool isConst);
 
-	Ymir::Tree buildBinaryOp (Word word, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree buildBinaryOp (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree buildCastOp (Word word, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree buildCastOp (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 	
-	Ymir::Tree buildUnaryOp (Word word, syntax::Expression elem);
+	Ymir::Tree buildUnaryOp (Word word, InfoType, syntax::Expression elem);
 
-	Ymir::Tree buildMultOp (Word word, syntax::Expression elem, syntax::Expression rights);
+	Ymir::Tree buildMultOp (Word word, InfoType, syntax::Expression elem, syntax::Expression rights);
 	
 	static InfoType factory (Word word, std::vector <syntax::Expression> templates);
 	
@@ -108,8 +108,10 @@ namespace semantic {
 
 	ulong& toGet ();
 
-	bool& isConst ();
+	bool isConst ();
 
+	virtual void isConst (bool isConst);
+	
 	bool& isStatic ();
 
 	virtual bool isScopable ();

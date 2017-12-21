@@ -6,17 +6,17 @@ namespace semantic {
 
     namespace StringUtils {
 
-	Ymir::Tree InstAff (Word locus, syntax::Expression left, syntax::Expression right);	
+	Ymir::Tree InstAff (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
-	Ymir::Tree InstPtr (Word locus, syntax::Expression left);
+	Ymir::Tree InstPtr (Word locus, InfoType, syntax::Expression left);
 
-	Ymir::Tree InstToString (Word locus, syntax::Expression elem, syntax::Expression type);
+	Ymir::Tree InstToString (Word locus, InfoType, syntax::Expression elem, syntax::Expression type);
 
-	Ymir::Tree InstConcat (Word locus, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree InstConcat (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstConcatAff (Word locus, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree InstConcatAff (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
 	
-	Ymir::Tree InstAccessInt (Word word, syntax::Expression left, syntax::Expression right);	
+	Ymir::Tree InstAccessInt (Word word, InfoType, syntax::Expression left, syntax::Expression right);	
 
     }
 

@@ -2,7 +2,7 @@ language="ymir"
 
 compilers="ymir1\$(exeext)"
 
-target_libs=""
+target_libs="target-libmidgard"
 
 gtfiles="\$(srcdir)/ymir/ymir1.cc"
 

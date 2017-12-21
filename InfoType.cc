@@ -25,20 +25,20 @@ namespace semantic {
     {}   
 
 
-    Ymir::Tree IInfoType::buildBinaryOp (Word locus, syntax::Expression left, syntax::Expression right) {
-	return this-> binopFoo (locus, left, right);
+    Ymir::Tree IInfoType::buildBinaryOp (Word locus, InfoType type, syntax::Expression left, syntax::Expression right) {
+	return this-> binopFoo (locus, type, left, right);
     }
 
-    Ymir::Tree IInfoType::buildCastOp (Word locus, syntax::Expression elem, syntax::Expression type) {
-	return this-> binopFoo (locus, elem, type);
+    Ymir::Tree IInfoType::buildCastOp (Word locus, InfoType _type, syntax::Expression elem, syntax::Expression type) {
+	return this-> binopFoo (locus, _type, elem, type);
     }
     
-    Ymir::Tree IInfoType::buildUnaryOp (Word locus, syntax::Expression elem) {
-	return this-> unopFoo (locus, elem);
+    Ymir::Tree IInfoType::buildUnaryOp (Word locus, InfoType _type, syntax::Expression elem) {
+	return this-> unopFoo (locus, _type, elem);
     }
 
-    Ymir::Tree IInfoType::buildMultOp (Word locus, syntax::Expression left, syntax::Expression rights) {
-	return this-> multFoo (locus, left, rights);
+    Ymir::Tree IInfoType::buildMultOp (Word locus, InfoType type, syntax::Expression left, syntax::Expression rights) {
+	return this-> multFoo (locus, type, left, rights);
     }
 
     
@@ -60,10 +60,14 @@ namespace semantic {
 	return this-> _toGet;
     }
     
-    bool& IInfoType::isConst () {
+    bool IInfoType::isConst () {
 	return this-> _isConst;
     }
 
+    void IInfoType::isConst (bool is) {
+	this-> _isConst = is;
+    }
+    
     bool& IInfoType::isStatic () {
 	return this-> _isStatic;
     }
@@ -164,7 +168,7 @@ namespace semantic {
 
     InfoType IInfoType::cloneConst () {
 	auto ret = this-> clone ();
-	ret-> isConst () = true;
+	ret-> isConst (true);
 	return ret;
     }
 
@@ -241,6 +245,60 @@ namespace semantic {
 	    if (op == Token::STAR) return MULT_EXPR;
 	    return NOP_EXPR;
 	}
-    
+	
+	tree_code toGeneric (std::string& op) {
+	    if (op == Token::EQUAL) return MODIFY_EXPR;
+	    if (op == Token::DIV_AFF) return TRUNC_DIV_EXPR;
+	    if (op == Token::AND_AFF) return BIT_AND_EXPR;
+	    if (op == Token::PIPE_EQUAL) return BIT_IOR_EXPR;
+	    if (op == Token::MINUS_AFF) return MINUS_EXPR;
+	    if (op == Token::PLUS_AFF) return PLUS_EXPR;
+	    if (op == Token::LEFTD_AFF) return LSHIFT_EXPR;
+	    if (op == Token::RIGHTD_AFF) return RSHIFT_EXPR;
+	    if (op == Token::STAR_EQUAL) return MULT_EXPR;
+	    if (op == Token::PERCENT_EQUAL) return TRUNC_MOD_EXPR;
+	    if (op == Token::XOR_EQUAL) return BIT_XOR_EXPR;
+	    if (op == Token::DAND) return TRUTH_ANDIF_EXPR;
+	    if (op == Token::DPIPE) return TRUTH_ORIF_EXPR;
+	    if (op == Token::INF) return LT_EXPR;
+	    if (op == Token::SUP) return GT_EXPR;
+	    if (op == Token::INF_EQUAL) return LE_EXPR;
+	    if (op == Token::SUP_EQUAL) return GE_EXPR;
+	    if (op == Token::NOT_EQUAL) return NE_EXPR;
+	    if (op == Token::DEQUAL) return EQ_EXPR;
+	    if (op == Token::PLUS) return PLUS_EXPR;
+	    if (op == Token::MINUS) return MINUS_EXPR;
+	    if (op == Token::DIV) return TRUNC_DIV_EXPR;
+	    if (op == Token::STAR) return MULT_EXPR;
+	    if (op == Token::PIPE) return BIT_IOR_EXPR;
+	    if (op == Token::AND) return BIT_AND_EXPR;
+	    if (op == Token::LEFTD) return LSHIFT_EXPR;
+	    if (op == Token::XOR) return BIT_XOR_EXPR;
+	    if (op == Token::RIGHTD) return RSHIFT_EXPR;
+	    if (op == Token::PERCENT) return TRUNC_MOD_EXPR;
+	    return NOP_EXPR;
+	}
+	
+	tree_code toGenericReal (std::string& op) {
+	    if (op == Token::EQUAL) return MODIFY_EXPR;
+	    if (op == Token::DIV_AFF) return RDIV_EXPR;
+	    if (op == Token::MINUS_AFF) return MINUS_EXPR;
+	    if (op == Token::PLUS_AFF) return PLUS_EXPR;
+	    if (op == Token::STAR_EQUAL) return MULT_EXPR;
+	    if (op == Token::DAND) return TRUTH_ANDIF_EXPR;
+	    if (op == Token::DPIPE) return TRUTH_ORIF_EXPR;
+	    if (op == Token::INF) return LT_EXPR;
+	    if (op == Token::SUP) return GT_EXPR;
+	    if (op == Token::INF_EQUAL) return LE_EXPR;
+	    if (op == Token::SUP_EQUAL) return GE_EXPR;
+	    if (op == Token::NOT_EQUAL) return NE_EXPR;
+	    if (op == Token::DEQUAL) return EQ_EXPR;
+	    if (op == Token::PLUS) return PLUS_EXPR;
+	    if (op == Token::MINUS) return MINUS_EXPR;
+	    if (op == Token::DIV) return RDIV_EXPR;
+	    if (op == Token::STAR) return MULT_EXPR;
+	    return NOP_EXPR;
+	}
+
     }
 }

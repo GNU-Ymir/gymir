@@ -89,7 +89,7 @@ namespace semantic {
     InfoType IStringInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto i = this-> clone ();
-	    i-> isConst () = false;
+	    i-> isConst (false);
 	    i-> binopFoo = StringUtils::InstAff;
 	    return i;
 	}
@@ -108,7 +108,7 @@ namespace semantic {
     InfoType IStringInfo::Concat (syntax::Expression right) {
 	if (right-> info-> type-> is <IStringInfo> ()) {
 	    auto i = this-> clone ();
-	    i-> isConst () = false;
+	    i-> isConst (false);
 	    i-> binopFoo = &StringUtils::InstConcat;
 	    return i;
 	}
@@ -119,7 +119,7 @@ namespace semantic {
 	if (this-> isConst ()) return NULL;
 	if (right-> info-> type-> is <IStringInfo> ()) {
 	    auto i = this-> clone ();
-	    i-> isConst () = false;
+	    i-> isConst (false);
 	    i-> binopFoo = &StringUtils::InstConcatAff;
 	    return i;
 	}
@@ -133,7 +133,7 @@ namespace semantic {
     InfoType IStringInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
 	else if (!this-> isConst () && other-> isConst ()) {
-	    this-> isConst () = true;
+	    this-> isConst (true);
 	}
 	return this;	
     }
@@ -224,7 +224,7 @@ namespace semantic {
 	    return lexp;
 	}
 	
-	Tree InstAff (Word word, Expression left, Expression right) {
+	Tree InstAff (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();	   
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
@@ -253,7 +253,7 @@ namespace semantic {
 	    return lexp;			    
 	}
 	
-	Tree InstPtr (Word locus, Expression expr) {
+	Tree InstPtr (Word locus, InfoType, Expression expr) {
 	    location_t loc = locus.getLocus ();
 	    if (expr-> is<IString> ()) {
 		return expr-> toGeneric ();
@@ -263,7 +263,7 @@ namespace semantic {
 	    }
 	}
 
-	Tree InstToString (Word locus, Expression elem, Expression type) {
+	Tree InstToString (Word locus, InfoType, Expression elem, Expression type) {
 	    auto rexp = elem-> toGeneric ();
 	    if (auto str = elem-> to <IString> ()) {
 		location_t loc = locus.getLocus ();
@@ -295,7 +295,7 @@ namespace semantic {
 	    }
 	}
 	
-	Tree InstConcat (Word locus, Expression left, Expression right) {
+	Tree InstConcat (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    Ymir::TreeStmtList list; 
 	    auto lexp = left-> toGeneric ();
@@ -331,10 +331,10 @@ namespace semantic {
 	    return aux;
 	}
 
-	Tree InstConcatAff (Word locus, Expression left, Expression right) {
+	Tree InstConcatAff (Word locus, InfoType type, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    auto lexp = left-> toGeneric ();
-	    auto aux = InstConcat (locus, new ITreeExpression (left-> token, left-> info-> type, lexp), right);
+	    auto aux = InstConcat (locus, type, new (GC) ITreeExpression (left-> token, left-> info-> type, lexp), right);
 	    Ymir::TreeStmtList list;
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getField (loc, aux, "len");
@@ -354,7 +354,7 @@ namespace semantic {
 	    return lexp;
 	}
 
-	Ymir::Tree InstAccessInt (Word word, Expression left, Expression right) {
+	Ymir::Tree InstAccessInt (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();

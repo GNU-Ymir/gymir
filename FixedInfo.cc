@@ -14,7 +14,7 @@ namespace semantic {
     {}
 
     bool IFixedInfo::isSame (InfoType other) {
-	auto	ot		= other-> to<IFixedInfo> ();
+	auto ot	= other-> to<IFixedInfo> ();
 	if (ot && ot-> type () == this-> type ()) {
 	    return true;
 	}
@@ -59,6 +59,7 @@ namespace semantic {
 	if (op == Token::XOR) return opNorm(op, right);
 	if (op == Token::RIGHTD) return opNorm(op, right);
 	if (op == Token::PERCENT) return opNorm(op, right);
+	if (op == Token::DDOT) return opRange (op, right);
 	return NULL;
     }
 
@@ -93,7 +94,7 @@ namespace semantic {
 	    return aux;
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
 	    auto ret = ot-> clone ();
-	    ret-> isConst () = this-> isConst ();
+	    ret-> isConst (this-> isConst ());
 	    ret-> binopFoo = FixedUtils::InstCast;
 	    return ret;
 	}
@@ -142,8 +143,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::clone () {
-	auto ret = new IFixedInfo (this-> isConst (), this-> _type);
-	//TODO
+	auto ret = new IFixedInfo (this-> isConst (), this-> _type);	
 	return ret;
     }
 
@@ -260,6 +260,37 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IFixedInfo::opRange (Word, syntax::Expression right) {
+	if (this-> isSame (right-> info-> type)) {
+	    auto ret = new IRangeInfo (true, this-> clone ());
+	    ret-> binopFoo = &FixedUtils::InstRange;
+	    return ret;
+	} else if (auto ot = right-> info-> type-> to <IFixedInfo> ()) {
+	    if (this-> isSigned () && ot-> isSigned ()) {
+		if (this-> isSup (ot)) {
+		    auto ret = new IRangeInfo (true, this-> clone ());
+		    ret-> binopFoo = &FixedUtils::InstRange;
+		    return ret;
+		} else {
+		    auto ret = new IRangeInfo (true, ot-> clone ());
+		    ret-> binopFoo = &FixedUtils::InstRangeRight;
+		    return ret;
+		}
+	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
+		if (this-> isSup (ot)) {
+		    auto ret = new IRangeInfo (true, this-> clone ());
+		    ret-> binopFoo = &FixedUtils::InstRange;
+		    return ret;
+		} else {
+		    auto ret = new IRangeInfo (true, ot-> clone ());
+		    ret-> binopFoo = &FixedUtils::InstRangeRight;
+		    return ret;
+		}
+	    }
+	}
+	return NULL;
+    }
+    
     InfoType IFixedInfo::opNorm (Word, syntax::Expression right) {
 	if (this-> isSame (right-> info-> type)) {
 	    auto ret = this-> clone ();
@@ -349,8 +380,9 @@ namespace semantic {
     
     namespace FixedUtils {
 	using namespace syntax;
+	using namespace Ymir;
 	
-	Ymir::Tree InstAffect (Word locus, syntax::Expression left, syntax::Expression right) {
+	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    
@@ -359,7 +391,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstReaff (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstReaff (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGeneric (locus);
@@ -371,7 +403,7 @@ namespace semantic {
 	    );		
 	}
 	
-	Ymir::Tree InstNormal (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstNormal (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGeneric (locus);
@@ -380,7 +412,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstNormalRight (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstNormalRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
 	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 
@@ -390,8 +422,7 @@ namespace semantic {
 	    );
 	}
 
-
-	Ymir::Tree InstTest (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstTest (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGeneric (locus);
@@ -400,7 +431,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstTestRight (Word locus, Expression left, Expression right) {
+	Ymir::Tree InstTestRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
 	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 
@@ -408,37 +439,82 @@ namespace semantic {
 	    return Ymir::buildTree (
 		code, locus.getLocus (), boolean_type_node, ltree, rtree
 	    );
+	}
+
+	Ymir::Tree InstRange (Word locus, InfoType, Expression left, Expression right) {
+	    location_t loc = locus.getLocus ();
+	    TreeStmtList list;
+	    auto ltree = left-> toGeneric ();
+	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    auto type = IRangeInfo::toGenericStatic (left-> info-> type-> simpleTypeString (), left-> info-> type-> toGeneric ());
+	    	    
+	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), type);
+	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, fst, ltree
+	    ));
+
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, scd, rtree
+	    ));
+
+	    getStackStmtList ().back ().append (list.getTree ());
+	    return aux;
 	}
 
 	
-	Ymir::Tree UnaryMinus (Word locus, Expression elem) {
+	Ymir::Tree InstRangeRight (Word locus, InfoType, Expression left, Expression right) {
+	    location_t loc = locus.getLocus ();
+	    TreeStmtList list;
+	    auto rtree = right-> toGeneric ();
+	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
+	    	    
+	    auto type = IRangeInfo::toGenericStatic (right-> info-> type-> simpleTypeString (), right-> info-> type-> toGeneric ());
+	    	    
+	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), type);
+	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
+	    
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, fst, ltree
+	    ));
+
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, scd, rtree
+	    ));
+
+	    getStackStmtList ().back ().append (list.getTree ());
+	    return aux;
+	}
+
+	
+	Ymir::Tree UnaryMinus (Word locus, InfoType, Expression elem) {
 	    auto lexp = elem-> toGeneric ();
 	    return Ymir::buildTree (
 		NEGATE_EXPR, locus.getLocus (), lexp.getType (), lexp
 	    );
 	}
 
-	Ymir::Tree InstSSub (Word locus, Expression elem) {
+	Ymir::Tree InstSSub (Word locus, InfoType, Expression elem) {
 	    auto lexp = elem-> toGeneric ();
 	    return Ymir::buildTree (
 		PREDECREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
 	    );
 	}
 	
-	Ymir::Tree InstPPlus (Word locus, Expression elem) {
+	Ymir::Tree InstPPlus (Word locus, InfoType, Expression elem) {
 	    auto lexp = elem-> toGeneric ();
 	    return Ymir::buildTree (
 		PREINCREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
 	    );
 	}
 	
-	Ymir::Tree InstCast (Word locus, Expression elem, Expression typeExpr) {
+	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
 	    auto type = typeExpr-> info-> type-> toGeneric ();
 	    auto lexp = elem-> toGeneric ();
 	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
 	}
 	
-	Ymir::Tree InstAddr (Word locus, Expression elem, Expression) {
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
 	

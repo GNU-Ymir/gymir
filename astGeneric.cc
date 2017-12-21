@@ -98,6 +98,7 @@ namespace syntax {
     Ymir::Tree IBinary::toGeneric () {
 	return this-> info-> type-> buildBinaryOp (
 	    this-> token,
+	    this-> info-> type,
 	    this-> left,
 	    this-> right
 	);
@@ -107,11 +108,13 @@ namespace syntax {
 	if (this-> info-> type-> unopFoo) {
 	    return this-> info-> type-> buildUnaryOp (
 		this-> token,
+		this-> info-> type,
 		this-> elem
 	    );
 	} else {
 	    return this-> info-> type-> buildBinaryOp (
 		this-> token,
+		this-> info-> type,
 		this-> elem,
 		new (GC) ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
 	    );
@@ -122,12 +125,14 @@ namespace syntax {
 	if (this-> info-> type-> binopFoo) {
 	    return this-> info-> type-> buildBinaryOp (
 		this-> token,
+		this-> info-> type,
 		this-> left,
 		this-> params-> getParams () [0]
 	    );
 	} else {
 	    return this-> info-> type-> buildMultOp (
 		this-> token,
+		this-> info-> type,
 		this-> left,
 		this-> params
 	    );
@@ -141,6 +146,7 @@ namespace syntax {
 	    if (treat [i] && treat [i]-> binopFoo) {		
 		elist = treat [i]-> buildCastOp (
 		    this-> params [i]-> token,
+		    treat [i],
 		    this-> params [i],
 		    new (GC) ITreeExpression (this-> params [i]-> token, treat [i], Ymir::Tree ())
 		);
@@ -196,7 +202,7 @@ namespace syntax {
 	    list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
 					  void_type_node,
 					  ref, 
-					  this-> casters [i]-> buildCastOp (this-> token, this-> params [i], left)
+					  this-> casters [i]-> buildCastOp (this-> token, this-> casters [i], this-> params [i], left)
 	    ));
 	}
 
@@ -208,11 +214,13 @@ namespace syntax {
 	if (this-> right-> is<IVar> ()) {
 	    return this-> info-> type-> buildUnaryOp (
 		this-> token,
+		this-> info-> type,
 		this-> left
 	    );
 	} else {
 	    return this-> info-> type-> buildBinaryOp (
 		this-> token,
+		this-> info-> type,
 		this-> left,
 		this-> right
 	    );
@@ -339,6 +347,24 @@ namespace syntax {
 	return aux;
     }
     
+    Ymir::Tree IConstTuple::toGeneric () {
+	location_t loc = this-> token.getLocus ();
+	auto tuple_type = this-> info-> type-> toGeneric ();
+	std::vector <InfoType> type_inner = this-> info-> type-> to <ITupleInfo> ()-> getParams ();
+	Ymir::TreeStmtList list;
+	auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), tuple_type);
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    auto field = Ymir::getField (loc, aux, it);
+	    list.append (this-> casters [it]-> buildBinaryOp (
+		this-> params [it]-> token,
+		this-> casters [it],
+		new ITreeExpression (this-> token, type_inner [it], field),
+		this-> params [it]
+	    ));
+	}
+	Ymir::getStackStmtList ().back ().append (list.getTree ());
+	return aux;
+    }
     
 }
 

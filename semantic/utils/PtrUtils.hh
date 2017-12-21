@@ -6,9 +6,9 @@ namespace semantic {
 
     namespace PtrUtils {
 
-	Ymir::Tree InstAffect (Word locus, syntax::Expression left, syntax::Expression right);	
+	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
-	Ymir::Tree InstCast (Word locus, syntax::Expression elem, syntax::Expression typeExpr);
+	Ymir::Tree InstCast (Word locus, InfoType, syntax::Expression elem, syntax::Expression typeExpr);
 	
     }
 

@@ -12,8 +12,12 @@ namespace semantic {
 	value (NULL)
     {}
     
-    bool& ISymbol::isConst () {
+    bool ISymbol::isConst () {
 	return this-> type-> isConst ();
+    }
+
+    void ISymbol::isConst (bool is) {
+	this-> type-> isConst (is);
     }
 
     bool& ISymbol::isStatic () {

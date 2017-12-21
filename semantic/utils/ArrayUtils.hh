@@ -6,25 +6,25 @@ namespace semantic {
 
     namespace ArrayUtils {
 
-	Ymir::Tree InstAffect (Word locus, syntax::Expression left, syntax::Expression right);	
+	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
-	Ymir::Tree InstPtr (Word locus, syntax::Expression left);
+	Ymir::Tree InstPtr (Word locus, InfoType, syntax::Expression left);
 
-	Ymir::Tree InstAccessInt (Word word, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree InstAccessInt (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstIs (Word word, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree InstIs (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstNotIs (Word word, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree InstNotIs (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstLen (Word loc, syntax::Expression elem);
+	Ymir::Tree InstLen (Word word, InfoType, syntax::Expression elem);
 
-	Ymir::Tree InstPtr (Word loc, syntax::Expression elem);
+	Ymir::Tree InstPtr (Word word, InfoType, syntax::Expression elem);
 
-	Ymir::Tree InstConcat (Word loc, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree InstConcat (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstConcatAff (Word loc, syntax::Expression left, syntax::Expression right);
+	Ymir::Tree InstConcatAff (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstCastToArray (Word loc, syntax::Expression elem, syntax::Expression type);
+	Ymir::Tree InstCastToArray (Word word, InfoType, syntax::Expression elem, syntax::Expression type);
 	
     }
 

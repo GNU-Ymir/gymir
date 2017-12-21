@@ -150,8 +150,8 @@ namespace syntax {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
 	    if (this-> deco == Keys::REF)
 		t_info = new IRefInfo (t_info);
-	    else if (this-> deco == Keys::CONST) t_info-> isConst () = true;
-	    else t_info-> isConst () = false;
+	    else if (this-> deco == Keys::CONST) t_info-> isConst (true);
+	    else t_info-> isConst (false);
 	    return new IType (this-> token, t_info);
 	}
     }
@@ -177,8 +177,8 @@ namespace syntax {
 		    Ymir::Error::assert ("TODO");
 		return new IRefInfo (type-> info-> type);
 	    } else if (this-> deco == Keys::CONST) {
-		type-> info-> type-> isConst () = true;
-	    } else type-> info-> type-> isConst () = false;
+		type-> info-> type-> isConst (true);
+	    } else type-> info-> type-> isConst (false);
 	    return type-> info-> type;	    
 	} else {
 	    this-> expType = this-> expType-> expression ();
@@ -188,8 +188,8 @@ namespace syntax {
 		    Ymir::Error::assert ("TODO");
 		return new IRefInfo (type-> info-> type);
 	    } else if (this-> deco == Keys::CONST) {
-		type-> info-> type-> isConst () = true;
-	    } else type-> info-> type-> isConst () = false;
+		type-> info-> type-> isConst (true);
+	    } else type-> info-> type-> isConst (false);
 	    return type-> info-> type;	    
 	}
     }
@@ -209,7 +209,7 @@ namespace syntax {
 	    aux-> info = new ISymbol (this-> token, new IRefInfo (aux-> type-> info-> type));
 	} else {
 	    aux -> info = new ISymbol (this-> token, aux-> type-> info-> type);
-	    aux-> info-> type-> isConst () = (this-> deco == Keys::CONST);
+	    aux-> info-> type-> isConst (this-> deco == Keys::CONST);
 	}
 	Table::instance ().insert (aux-> info);
 	return aux;    
@@ -501,10 +501,10 @@ namespace syntax {
 		}
 	    }
 
-	    type-> info-> type-> isConst () = expr-> info-> isConst ();
+	    type-> info-> type-> isConst (expr-> info-> isConst ());
 	    auto aux = new ICast (this-> token, type, expr);
 	    aux-> info = new ISymbol (this-> token, info);
-	    aux-> info-> type-> isConst () = expr-> info-> isConst ();
+	    aux-> info-> type-> isConst (expr-> info-> isConst ());
 	    return aux;
 	}	    
     }
@@ -774,4 +774,28 @@ namespace syntax {
 	return aux;
     }
     
+    Expression IConstTuple::expression () {
+	auto aux = new IConstTuple (this-> token, this-> end, {});
+	auto type = new ITupleInfo (true);
+	Word op (this-> token.getLocus (), Token::EQUAL);
+	auto undefExpr = new (GC) ITreeExpression (this-> token, new IUndefInfo (), Ymir::Tree ());
+	for (auto it : this-> params) {
+	    auto expr = it-> expression ();
+	    if (expr == NULL) return NULL;
+	    if (auto par = expr-> to <IParamList> ()) {
+		for (auto exp_it : par-> getParams ()) {
+		    aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
+		    aux-> params.push_back (exp_it);
+		    type-> addParam (exp_it-> info-> type);
+		}
+	    } else {
+		aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
+		aux-> params.push_back (expr);
+		type-> addParam (expr-> info-> type);
+	    }
+	}
+	aux-> info = new ISymbol (this-> token, type);
+	return aux;
+    }
+
 }

@@ -35,6 +35,10 @@ namespace syntax {
 	Ymir::Error::syntaxError (token);
     }
 
+    void syntaxErrorFor (Word token, Word tok2) {
+	Ymir::Error::syntaxErrorFor (token, tok2);
+    }
+
     void escapeError (Word token) {
 	Ymir::Error::escapeError (token);
     }
@@ -56,10 +60,12 @@ namespace syntax {
 
 	this-> expOp = {Token::DPIPE, Token::DAND};
 		
-	this-> ulowOp = {Token::INF, Token::SUP, Token::INF_EQUAL,
-			 Token::SUP_EQUAL, Token::NOT_EQUAL, Token::NOT_INF,
-			 Token::NOT_INF_EQUAL, Token::NOT_SUP,
-			 Token::NOT_SUP_EQUAL, Token::DEQUAL};
+	this-> ulowOp = {
+	    Token::INF, Token::SUP, Token::INF_EQUAL,
+	    Token::SUP_EQUAL, Token::NOT_EQUAL, Token::NOT_INF,
+	    Token::NOT_INF_EQUAL, Token::NOT_SUP,
+	    Token::NOT_SUP_EQUAL, Token::DEQUAL, Token::DDOT
+	};
 
 	this-> lowOp = {Token::PLUS, Token::PIPE, Token::LEFTD,
 			Token::XOR, Token::TILDE, Token::MINUS,
@@ -1073,10 +1079,7 @@ namespace syntax {
 		    tok.setStr (Keys::NOT_IS);
 		    return visitUlow (new (GC) IBinary (tok, left, right));
 		} else this-> lex.rewind ();
-	    } else if (tok == Token::DDOT) {
-		auto right = visitLow ();
-		return visitUlow (new (GC) IConstRange (tok, left, right));
-	    } 
+	    }
 	    this-> lex.rewind ();
 	}
 	return left;
@@ -1190,20 +1193,28 @@ namespace syntax {
 		    else this-> lex.rewind ();
 		}	    
 	    }
+	    
 	    next = this-> lex.next ();
 	    if (next == Token::DARROW || next == Token::LACC) {
+		isLambda = true;
 		std::vector <Var> realParams;
 		for (auto it : params) {
-		    if (!it-> is<IVar> ()) syntaxError (next);
+		    if (!it-> is<IVar> ())
+			if (next == Token::DARROW) syntaxErrorFor (it-> token, next);
+			else {
+			    isLambda = false;
+			    break;
+			}
 		    else realParams.push_back ((Var) it);
 		}
-		
-		if (next == Token::DARROW) {
-		    return new (GC) ILambdaFunc (tok, realParams, visitExpressionUlt ());
-		} else {
-		    this-> lex.rewind ();
-		    return new (GC) ILambdaFunc (tok, realParams, visitBlock ());
-		}
+		if (isLambda) {
+		    if (next == Token::DARROW) {
+			return new (GC) ILambdaFunc (tok, realParams, visitExpressionUlt ());
+		    } else {
+			this-> lex.rewind ();
+			return new (GC) ILambdaFunc (tok, realParams, visitBlock ());
+		    }
+		} else this-> lex.rewind ();
 	    } else if (isLambda) {
 		syntaxError (next, {Token::LACC, Token::DARROW});
 	    } else this-> lex.rewind ();

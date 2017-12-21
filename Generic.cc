@@ -53,28 +53,52 @@ namespace Ymir {
     }
 
     Tree makeTuple (std::string, std::vector <InfoType> types, std::vector <std::string> attrs) {
-	Tree field_last;
-	Tree record_type = make_node (RECORD_TYPE);
-	
-	for (int i = 0 ; i < (int) types.size () ; i++) {
-	    Tree field_decl = makeField (types [i], attrs [i]);
-	    DECL_CONTEXT (field_decl.getTree ()) = record_type.getTree ();
-	    TREE_PUBLIC (field_decl.getTree ()) = 1;
-	    TREE_CHAIN (field_decl.getTree ()) = field_last.getTree ();	    
-	    field_last = field_decl;
+	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
+	tree record_type = make_node (RECORD_TYPE);
+
+	for (uint i = 0 ; i < types.size () ; i++) {
+	    tree ident = get_identifier (attrs [i].c_str ());
+	    tree type = types [i]-> toGeneric ().getTree ();
+	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
+	    DECL_CONTEXT (field) = record_type;
+
+	    if (fields_begin == NULL) fields_begin = field;
+	    if (fields_last != NULL) TREE_CHAIN (fields_last) = field;
+	    fields_last = field;
 	}
-	
-	TYPE_FIELDS (record_type.getTree ()) = field_last.getTree ();
-	
-	//layout_type (record_type.getTree ());
+	TREE_CHAIN (fields_last) = NULL_TREE;
+	TYPE_FIELDS (record_type) = fields_begin;
+	layout_type (record_type);
 	return record_type;
     }
 
+    Tree makeTuple (std::string, std::vector <InfoType> types) {
+	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
+	tree record_type = make_node (RECORD_TYPE);
+	
+	for (uint i = 0 ; i < types.size () ; i++) {
+	    OutBuffer buf;
+	    buf.write ("_", (int) i);
+	    tree ident = get_identifier (buf.str ().c_str ());
+	    tree type = types [i]-> toGeneric ().getTree ();
+	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
+	    DECL_CONTEXT (field) = record_type;
+
+	    if (fields_begin == NULL) fields_begin = field;
+	    if (fields_last != NULL) TREE_CHAIN (fields_last) = field;
+	    fields_last = field;
+	}
+	TREE_CHAIN (fields_last) = NULL_TREE;
+	TYPE_FIELDS (record_type) = fields_begin;
+	layout_type (record_type);
+	return record_type;
+    }
+
+    
     Tree getField (location_t loc, Tree obj, std::string name) {
 	Tree field_decl = TYPE_FIELDS (TREE_TYPE (obj.getTree ()));
 
 	while (!field_decl.isNull ()) {
-	    //DECL_CONTEXT (field_decl.getTree ()) = obj.getTree ();
 	    Tree decl_name = DECL_NAME (field_decl.getTree ());
 	    std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));
 
@@ -94,6 +118,28 @@ namespace Ymir {
 	);
     }
 
+
+    Tree getField (location_t loc, Tree obj, ulong it) {
+	Tree field_decl = TYPE_FIELDS (TREE_TYPE (obj.getTree ()));
+
+	for (auto it __attribute__((unused)) : Ymir::r (0, it)) {
+	    Tree decl_name = DECL_NAME (field_decl.getTree ());
+	    std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));	   
+	    field_decl = TREE_CHAIN (field_decl.getTree ());
+	}
+
+	if (field_decl.isNull ())
+	    Ymir::Error::assert ("");
+	
+	return Ymir::buildTree (COMPONENT_REF, loc,
+				TREE_TYPE (field_decl.getTree ()),
+				obj,
+				field_decl,
+				Tree ()
+	);
+
+    }
+    
     Ymir::Tree makeAuxVar (location_t locus, ulong id, Ymir::Tree type) {
 	OutBuffer buf ;
 	buf.write ("_", id, "_");

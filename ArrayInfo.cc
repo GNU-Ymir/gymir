@@ -18,7 +18,7 @@ namespace semantic {
 	_content (content)
     {
 	if (this-> _content)
-	    this-> _content-> isConst () = this-> isConst ();
+	    this-> _content-> isConst (this-> isConst ());
     }
 
     
@@ -81,7 +81,7 @@ namespace semantic {
     InfoType IArrayInfo::AffectRight (Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    auto arr = this-> clone ();
-	    arr-> isConst () = false;
+	    arr-> isConst (false);
 	    arr-> binopFoo = ArrayUtils::InstAffect;
 	    return arr;
 	}
@@ -112,7 +112,7 @@ namespace semantic {
 	}
 	auto ret = this-> clone ();
 	// TODO
-	ret-> isConst ()= this-> isConst ();
+	ret-> isConst (this-> isConst ());
 	return ret;
     }
 	
@@ -154,7 +154,7 @@ namespace semantic {
     InfoType IArrayInfo::Concat (syntax::Expression right) {
 	if (right-> info-> type-> isSame (this)) {
 	    auto i = this-> clone ();
-	    i-> isConst () = false;
+	    i-> isConst (false);
 	    i-> binopFoo = &ArrayUtils::InstConcat;
 	    return i;
 	}
@@ -165,7 +165,7 @@ namespace semantic {
 	if (this-> isConst ()) return NULL;
 	if (right-> info-> type-> isSame (this)) {
 	    auto i = this-> clone ();
-	    i-> isConst () = false;
+	    i-> isConst (false);
 	    i-> binopFoo = &ArrayUtils::InstConcatAff;
 	    return i;
 	}
@@ -230,7 +230,7 @@ namespace semantic {
     InfoType IArrayInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
 	else if (!this-> isConst ()&& other-> isConst ()) {
-	    this-> isConst ()= false;
+	    this-> isConst (false);
 	}
 	return this;
     }
@@ -363,7 +363,7 @@ namespace semantic {
 	    return lexp;
 	}
 
-	Ymir::Tree InstAffect (Word word, Expression left, Expression right) {
+	Ymir::Tree InstAffect (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
@@ -389,7 +389,7 @@ namespace semantic {
 	    return lexp;			    	    	    
 	}	
 	
-	Ymir::Tree InstAccessInt (Word word, Expression left, Expression right) {
+	Ymir::Tree InstAccessInt (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
 	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
 	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
@@ -403,7 +403,7 @@ namespace semantic {
 	    }
 	}
 	
-	Ymir::Tree InstIs (Word word, Expression left, Expression right) {
+	Ymir::Tree InstIs (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
 	    if (auto cst = left-> to <IConstArray> ()) {
 		return build_int_cst_type (boolean_type_node, cst-> nbParams () != 0);
@@ -432,7 +432,7 @@ namespace semantic {
 	    }
 	}
 
-	Ymir::Tree InstNotIs (Word word, Expression left, Expression right) {
+	Ymir::Tree InstNotIs (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
 	    if (left-> is <IConstArray> ()) {
 		return build_int_cst_type (boolean_type_node, 1);
@@ -461,19 +461,19 @@ namespace semantic {
 	    }
 	}
 
-	Tree InstPtr (Word locus, Expression expr) {
+	Tree InstPtr (Word locus, InfoType, Expression expr) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = expr-> toGeneric ();
 	    return getPtr (loc, expr, ltree);
 	}
 
-	Tree InstLen (Word locus, Expression expr) {
+	Tree InstLen (Word locus, InfoType, Expression expr) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = expr-> toGeneric ();
 	    return getLen (loc, expr, ltree);
 	}
 
-	Tree InstConcat (Word locus, Expression left, Expression right) {
+	Tree InstConcat (Word locus, InfoType, Expression left, Expression right) {
 	    ArrayInfo info = left-> info-> type-> to <IArrayInfo> ();
 	    Ymir::Tree inner = info-> content ()-> toGeneric ();
 	    location_t loc = locus.getLocus ();
@@ -508,10 +508,10 @@ namespace semantic {
 	    return aux;
 	}
 	
-	Tree InstConcatAff (Word locus, Expression left, Expression right) {
+	Tree InstConcatAff (Word locus, InfoType type, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    auto lexp = left-> toGeneric ();
-	    auto aux = InstConcat (locus, new ITreeExpression (left-> token, left-> info-> type, lexp), right);
+	    auto aux = InstConcat (locus, type, new (GC) ITreeExpression (left-> token, left-> info-> type, lexp), right);
 	    Ymir::TreeStmtList list;
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getField (loc, aux, "len");
@@ -531,7 +531,7 @@ namespace semantic {
 	    return lexp;
 	}
 
-	Tree InstToArray (Word locus, Expression elem, Expression type) {
+	Tree InstToArray (Word locus, InfoType, Expression elem, Expression type) {
 	    auto rexp = elem-> toGeneric ();
 	    if (auto cst = elem-> to<IConstArray> ()) {
 		location_t loc = locus.getLocus ();

@@ -101,7 +101,7 @@ namespace semantic {
 	right-> ret = info-> type ()-> type-> cloneConst ();
 	// TODO clone value
 	if (right-> ret-> is<IRefInfo> ())
-	    right-> ret-> isConst () = false;
+	    right-> ret-> isConst (false);
 
 
 	if (Ymir::Error::nb_errors - nbErrorBeg) {
@@ -161,7 +161,7 @@ namespace semantic {
 	right-> ret = info-> type ()-> type-> cloneConst ();
 	// TODO clone value
 	if (right-> ret-> is<IRefInfo> ())
-	    right-> ret-> isConst () = false;
+	    right-> ret-> isConst (false);
 
 	if (Ymir::Error::nb_errors - nbErrorBeg) {
 	    Ymir::Error::templateCreation (tok);

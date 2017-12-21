@@ -178,7 +178,8 @@ namespace semantic {
 	
 	gimplify_function_tree (fn_decl);
 	cgraph_node::finalize_function (fn_decl, true);
-	fn_decl = NULL_TREE;	
+	fn_decl = NULL_TREE;
+	__fn_decl__ = NULL_TREE;
     }
     
     

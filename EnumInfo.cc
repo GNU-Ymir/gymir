@@ -87,7 +87,7 @@ namespace semantic {
 	_name (name),
 	_content (type)
     {
-	this-> _content-> isConst () = this-> isConst ();
+	this-> _content-> isConst (this-> isConst ());
     }
 
     std::string IEnumInfo::name () {

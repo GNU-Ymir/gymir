@@ -13,8 +13,12 @@ namespace Ymir {
     Tree makeField (semantic::InfoType type, std::string name);
     
     Tree getField (location_t locus, Tree obj, std::string name);
+
+    Tree getField (location_t locus, Tree obj, ulong it);
     
     Tree makeTuple (std::string name, std::vector <semantic::InfoType> types, std::vector<std::string> attrs);
+
+    Tree makeTuple (std::string name, std::vector <semantic::InfoType> types);
 
     Tree makeStructType (std::string name, int nbFields, ...);
     
