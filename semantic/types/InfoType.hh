@@ -59,8 +59,8 @@ namespace semantic {
 	bool _isConst = false;
 	bool _isStatic = false;
 	ulong _toGet;
-
-	//Value _value;
+	
+	Value _value = NULL;
 	
 	static std::map<std::string, InfoType> __alias__;
 	
@@ -120,7 +120,7 @@ namespace semantic {
 	
 	virtual void isType (bool);
 
-	//Value& value ();
+	Value& value ();
 
 	std::string typeString ();
 

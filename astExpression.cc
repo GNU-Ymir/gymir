@@ -447,7 +447,7 @@ namespace syntax {
     Expression IFixed::expression () {
 	auto aux = new IFixed (this-> token, this-> type);
 	aux-> info = new ISymbol (this-> token, new IFixedInfo (true, this-> type));
-	aux-> info-> value = new IFixedValue (this-> token.getStr ());
+	aux-> info-> value () = new IFixedValue (this-> type, this-> uvalue, this->value);
 	aux-> uvalue = this-> uvalue;
 	aux-> value = this-> value;
 	return aux;
@@ -456,7 +456,7 @@ namespace syntax {
     Expression IChar::expression () {
 	auto aux = new IChar (this-> token, this-> code);
 	aux-> info = new ISymbol (this-> token, new ICharInfo (true));
-	aux-> info-> value = new ICharValue (this-> code);
+	aux-> info-> value () = new ICharValue (this-> code);
 	return aux;
     }
 
@@ -764,7 +764,7 @@ namespace syntax {
     Expression IBool::expression () {
 	auto aux = new IBool (this-> token);
 	aux-> info = new ISymbol (this-> token, new IBoolInfo (this-> token == Keys::TRUE_));
-	aux-> info-> value = new IBoolValue (this-> token == Keys::TRUE_);
+	aux-> info-> value () = new IBoolValue (this-> token == Keys::TRUE_);
 	return aux;
     }
 

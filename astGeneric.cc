@@ -104,6 +104,23 @@ namespace syntax {
 	);
     }
 
+    Ymir::Tree ICast::toGeneric () {
+	if (this-> info-> type-> unopFoo) {
+	    return this-> info-> type-> buildUnaryOp (
+		this-> token,
+		this-> info-> type,
+		this-> expr
+	    );
+	} else {
+	    return this-> info-> type-> buildBinaryOp (
+		this-> token,
+		this-> info-> type,
+		this-> expr,
+		new (GC) ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+	    );
+	}
+    }
+    
     Ymir::Tree IUnary::toGeneric () {
 	if (this-> info-> type-> unopFoo) {
 	    return this-> info-> type-> buildUnaryOp (

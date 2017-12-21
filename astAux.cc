@@ -623,4 +623,19 @@ namespace syntax {
 	    it-> print (nb + 4);	    
     }        
     
+
+    IExpand::IExpand (Word begin, Expression expr) :
+	IExpression (begin),
+	expr (expr)
+    {}
+	
+    void IExpand::print (int nb) {
+	printf("\n%*c<Expand> %s",
+	       nb, ' ',
+	       this-> token.toString ().c_str ()
+	);
+	this-> expr-> print (nb + 4);
+    }
+
+
 }

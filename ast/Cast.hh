@@ -18,7 +18,9 @@ namespace syntax {
 	ICast (Word begin, Expression type, Expression expr);
 
 	Expression expression () override;
-		
+
+	Ymir::Tree toGeneric () override;
+	
 	void print (int nb = 0) override;
 	
     };

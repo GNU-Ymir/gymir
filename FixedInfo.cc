@@ -3,6 +3,7 @@
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
+#include <ymir/semantic/value/_.hh>
 
 namespace semantic {
 
@@ -518,6 +519,25 @@ namespace semantic {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
 	
+    }
+
+    IFixedValue::IFixedValue (FixedConst type, ulong ul, long l) {
+	this-> type = type;
+	if (!isSigned (this-> type)) {
+	    this-> value.ul = ul;	    
+	} else this-> value.l = l;
+    }
+    
+    long IFixedValue::getValue () {
+	return this-> value.l;
+    }
+
+    ulong IFixedValue::getUValue () {
+	return this-> value.ul;
+    }
+    
+    const char * IFixedValue::getId () {
+	return IFixedValue::id ();
     }
 
     

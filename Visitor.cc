@@ -1254,7 +1254,29 @@ namespace syntax {
 	else this-> lex.rewind ();
 	return NULL;
     }
-        
+
+    Expression Visitor::visitConstanteSimple () {       
+	auto tok = this-> lex.next ();
+	if (tok.isEof ()) return NULL;
+	if (tok.getStr () [0] >= '0'&& tok.getStr () [0] <= '9')
+	    return visitNumeric (tok, false);
+	else if (tok == Token::APOS || tok == Token::GUILL || tok == Token::BSTRING)
+	    return visitString (tok);
+	else if (tok == Keys::TRUE_ || tok == Keys::FALSE_)
+	    return new (GC) IBool (tok);
+	else if (tok == Keys::NULL_)
+	    return new (GC) INull (tok);
+	else if (tok == Keys::EXPAND)
+	    return visitExpand ();
+	else if (tok == Keys::IS) 
+	    return visitIs ();
+	else if (tok == Keys::TYPEOF)
+	    return visitTypeOf ();
+	else this-> lex.rewind ();
+	return NULL;
+    }
+
+    
     Expression Visitor::visitExpand () {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
@@ -1294,7 +1316,7 @@ namespace syntax {
 	}
     }
 
-    Expression Visitor::visitNumeric (Word begin) {
+    Expression Visitor::visitNumeric (Word begin, bool abrev) {
 	for (int it = 0 ; it < (int) begin.getStr ().length (); it++) {
 	    if (begin.getStr () [it] < '0' || begin.getStr() [it] > '9') {		
 		if (begin.getStr () .substr (it, begin.getStr ().length ()) == "ub" || begin.getStr () .substr (it, begin.getStr ().length ()) == "UB")
@@ -1318,19 +1340,21 @@ namespace syntax {
 	    }
 	}
 	
-	auto next = this->lex.next ();
-	if (next == Token::DOT) {
-	    next = this-> lex.next ();
-	    auto suite = next.getStr ();
-	    for (auto it : next.getStr ()) {		
-		if (it < '0' || it > '9') {
-		    suite = "0";
-		    this-> lex.rewind ();
-		    break;
-		}		    
-	    }
-	    return new (GC) IFloat (begin, suite);
-	} else this-> lex.rewind ();
+	if (abrev) {
+	    auto next = this->lex.next ();
+	    if (next == Token::DOT) {
+		next = this-> lex.next ();
+		auto suite = next.getStr ();
+		for (auto it : next.getStr ()) {		
+		    if (it < '0' || it > '9') {
+			suite = "0";
+			this-> lex.rewind ();
+			break;
+		    }		    
+		}
+		return new (GC) IFloat (begin, suite);
+	    } else this-> lex.rewind ();
+	}
 	return new (GC) IFixed (begin, FixedConst::INT);
     }    
     
@@ -1472,14 +1496,21 @@ namespace syntax {
 	this-> lex.rewind ();
 	Expression type;
 	auto begin = this-> lex.next ();
-	auto word = this-> lex.next ({Token::COLON});
+	auto word = this-> lex.next ({Token::NOT});
 	auto next = this-> lex.next ();
 	if (next == Keys::FUNCTION) {
 	    type = visitFuncPtrSimple ();	    
 	} else {
-	    this-> lex.rewind ();
+	    bool needClose = false;
+	    if (next == Token::LPAR) 
+		needClose = true;
+	    else 
+		this-> lex.rewind ();
+	    
 	    type = visitType ();
+	    if (needClose) this-> lex.next ({Token::RPAR});
 	}
+	
 	word = this-> lex.next ({Token::LPAR});
 	auto expr = visitExpression ();
 	word = this-> lex.next ({Token::RPAR});
@@ -1638,7 +1669,7 @@ namespace syntax {
 	    retour = new (GC) ITypeOf (next, left);
 	} else {
 	    this-> lex.rewind ();
-	    Expression right = visitConstante ();
+	    Expression right = visitConstanteSimple ();
 	    if (right == NULL) right = visitVar ();
 	    retour = new (GC) IDot (begin, left, right);
 	}

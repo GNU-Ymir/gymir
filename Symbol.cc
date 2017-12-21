@@ -8,8 +8,7 @@ namespace semantic {
     
     ISymbol::ISymbol (Word word, InfoType type) :
 	sym (word),
-	type (type),
-	value (NULL)
+	type (type)
     {}
     
     bool ISymbol::isConst () {
@@ -33,7 +32,7 @@ namespace semantic {
     }
 
     bool ISymbol::isImmutable () {
-	return this-> value != NULL;
+	return this-> type && this-> type-> value () != NULL;
     }
 
     void ISymbol::quit (Namespace) {
@@ -55,6 +54,10 @@ namespace semantic {
 	if (this-> type)
 	    return this-> type-> isType ();
 	return false;
+    }
+
+    Value& ISymbol::value () {
+	return this-> type-> value ();
     }
     
     std::string ISymbol::simpleTypeString () {

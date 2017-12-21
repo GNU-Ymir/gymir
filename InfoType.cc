@@ -84,6 +84,10 @@ namespace semantic {
 	this-> _isType = is;
     }
 
+    Value& IInfoType::value () {
+	return this-> _value;
+    }
+    
     std::string IInfoType::typeString () {
 	if (this-> isConst ()) {
 	    return std::string ("const(") + this-> innerTypeString () + ")";

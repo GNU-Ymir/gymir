@@ -36,14 +36,6 @@ namespace semantic {
 	return IBoolValue::id ();
     }
     
-    IFixedValue::IFixedValue (std::string value) :
-	value (value)
-    {}    
-    
-    const char* IFixedValue::getId ()  {
-	return IFixedValue::id ();
-    }
-
     ICharValue::ICharValue (char code) :
 	code (code)
     {}

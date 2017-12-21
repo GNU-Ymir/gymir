@@ -7,6 +7,7 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/ast/TreeExpression.hh>
+#include <ymir/semantic/value/_.hh>
 using namespace syntax;
 
 namespace semantic {
@@ -95,8 +96,15 @@ namespace semantic {
     } 
 
     InfoType ITupleInfo::DotExpOp (syntax::Expression right) {
-	if (right-> info-> type-> is <IFixedInfo> ()) {
-	    Ymir::Error::assert ("NEED Values");
+	if (!right-> info-> isImmutable ()) return NULL;
+	if (right-> info-> value ()-> is <IFixedValue> ()) {
+	    auto value = right-> info-> value ()-> to<IFixedValue> ()-> getValue ();
+	    if (value >= (int) this-> params.size ()) return NULL;
+	    else {
+		auto ret = this-> params [value]-> clone ();
+		ret-> binopFoo = &TupleUtils::InstGet;
+		return ret;
+	    }
 	}
 	return NULL;
     }
@@ -172,6 +180,11 @@ namespace semantic {
     
     void ITupleInfo::addParam (InfoType type) {
 	this-> params.push_back (type-> clone ());
+	if (this-> params.back ()-> isConst ())
+	    this-> isConst (true);
+	else if (IInfoType::isConst ()) {
+	    this-> params.back ()-> isConst (true);
+	}
     }
 
     std::vector<InfoType> & ITupleInfo::getParams () {
@@ -211,8 +224,33 @@ namespace semantic {
 	    return ltree;
 	}
 
-	Tree InstCast (Word, InfoType, Expression elem, Expression) {
-	    return elem-> toGeneric ();
+	Tree InstCast (Word locus, InfoType type, Expression elem, Expression) {
+	    location_t loc = locus.getLocus ();
+	    TupleInfo info = type-> to<ITupleInfo> ();
+	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
+	    auto rtree = elem-> toGeneric ();	    
+	    Ymir::TreeStmtList list;
+	    
+	    for (auto it : Ymir::r (0, info-> nbParams ())) {
+		auto laux = getField (loc, ltree, it);
+		auto raux = getField (loc, rtree, it);
+		list.append (info-> getParams () [it]-> buildBinaryOp (
+		    locus,
+		    info-> getParams () [it],
+		    new (GC) ITreeExpression (locus, info-> getParams () [it], laux),
+		    new (GC) ITreeExpression (locus, info-> getParams () [it], raux)
+		));		
+	    }
+	    
+	    getStackStmtList ().back ().append (list.getTree ());
+	    return ltree;
+	}
+
+	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {
+	    location_t loc = locus.getLocus ();
+	    auto ltree = left-> toGeneric ();
+	    auto value = index-> info-> value ()-> to <IFixedValue> ()-> getValue ();
+	    return getField (loc, ltree, value);
 	}
 	
     }

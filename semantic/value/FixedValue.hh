@@ -1,18 +1,28 @@
 #pragma once
 
 #include <ymir/semantic/value/Value.hh>
-#include <ymir/utils/BigInt.hh>
+#include <ymir/ast/Constante.hh>
 
 namespace semantic {
 
+    union signedun {
+	long l;
+	ulong ul;
+    };
+    
     class IFixedValue : public IValue {
 
-	Ymir::BigInt value;
+	signedun value;
+	FixedConst type;
 	
     public:
 
-	IFixedValue (std::string value);
+	IFixedValue (FixedConst cst, ulong ul, long l);
 
+	ulong getUValue ();
+
+	long getValue ();
+	
 	const char* getId () override;
 
 	static const char* id () {

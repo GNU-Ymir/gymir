@@ -76,7 +76,7 @@ namespace Ymir {
 	static Tree error () {
 	    return Tree (error_mark_node);
 	}
-
+		
 	Tree getType () const {
 	    return TREE_TYPE (t);
 	}

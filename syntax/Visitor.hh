@@ -61,10 +61,11 @@ namespace syntax {
 	Expression visitPth ();
 	Expression visitPthPar (Word token);
 	Expression visitConstante ();
+	Expression visitConstanteSimple ();
 	Expression visitExpand ();
 	Expression visitTypeOf ();
 	Expression visitIs ();
-	Expression visitNumeric (Word begin);
+	Expression visitNumeric (Word begin, bool abrev = true);
 	Expression visitFloat (Word begin);
 	Expression visitString (Word word);
 	Expression visitPthWPar (Word tok);

@@ -113,11 +113,11 @@ namespace syntax {
 
 	    if (!expr-> info-> isImmutable ()) {
 		Ymir::Error::assert ("TODO");
-	    } else if (!(expr-> info-> value-> to<IBoolValue> ()-> isTrue ())) {
+	    } else if (!(expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ())) {
 		Ymir::Error::assert ("TODO");
 	    }
 	} else if (expr-> info-> isImmutable ()) {
-	    if (expr-> info-> value-> to<IBoolValue> ()-> isTrue ())
+	    if (expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ())
 		Table::instance ().retInfo ().returned ();
 	}
 	return new IAssert (this-> token, expr, msg, this-> isStatic);

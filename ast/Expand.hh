@@ -12,19 +12,13 @@ namespace syntax {
 
     public :
 
-	IExpand (Word begin, Expression expr) :
-	    IExpression (begin),
-	    expr (expr)
-	{}
+	IExpand (Word begin, Expression expr);
+
+	Expression expression () override;
+
+	Ymir::Tree toGeneric () override;
 	
-	void print (int nb = 0) override {
-	    printf("\n%*c<Expand> %s",
-		   nb, ' ',
-		   this-> token.toString ().c_str ()
-	    );
-	    this-> expr-> print (nb + 4);
-	}
-		
+	void print (int nb = 0) override;		
     };
 
     typedef IExpand* Expand;

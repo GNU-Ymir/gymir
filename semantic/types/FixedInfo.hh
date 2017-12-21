@@ -48,8 +48,8 @@ namespace semantic {
 
 	InfoType DotOp (syntax::Var) override;
 
-	FixedConst type ();
-
+	FixedConst type ();	   
+	
 	InfoType clone () override;
 		
 	static const char* id () {

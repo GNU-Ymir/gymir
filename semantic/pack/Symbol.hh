@@ -25,7 +25,6 @@ namespace semantic {
 
 	Word sym;
 	InfoType type;
-	Value value;
 	
 	ISymbol (Word word, InfoType);
 	
@@ -36,7 +35,9 @@ namespace semantic {
 	bool& isPublic ();
 
 	bool& isStatic ();
-
+	
+	Value & value ();
+	
 	bool isType ();
 
 	bool isScoped ();

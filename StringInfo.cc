@@ -170,8 +170,8 @@ namespace semantic {
 	    }
 	}
 
-	Tree getPtr (location_t loc, Expression expr, Tree tree) {
-	    if (expr-> to <IString> ()) {
+	Tree getPtr (location_t loc, Expression, Tree tree) {
+	    if (tree.getType ().getTreeCode () != RECORD_TYPE) {
 		return tree;
 	    } else {
 		return getField (loc, tree, "ptr");
@@ -203,34 +203,35 @@ namespace semantic {
 	    return build_call_array_loc (loc, void_type_node, InternalFunction::getYMemcpy ().getTree (), 3, argsMemcpy);	    
 	}
 	
-	Tree buildDup (location_t loc, Tree lexp, Tree rexp, String cst) {
+	Tree buildDup (location_t loc, Tree lexp, Tree rexp, Expression cst) {
 	    TreeStmtList list;	    
-
+	    
 	    Tree lenl = getField (loc, lexp, "len");	    
 	    Tree ptrl = getField (loc, lexp, "ptr");	
 	    auto len = getLen (loc, cst, rexp);
-
+	    auto ptrr = getPtr (loc, cst, rexp);
+	    
 	    auto allocRet = buildString (loc, len);
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
 	    ));
-	    
+		
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
 	    ));
-	    	    	    
-	    list.append (copyString (loc, ptrl, rexp, len));
+	    
+	    list.append (copyString (loc, ptrl, ptrr, len));
 	    getStackStmtList ().back ().append (list.getTree ());
-	    return lexp;
+	    return lexp;	    
 	}
 	
 	Tree InstAff (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();	   
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
-	    if (auto str = right-> to<IString> ()) {
+	    if (right-> info-> isConst ()) {
 		if (!left-> info-> isConst ())
-		    return buildDup (loc, lexp, rexp, str);
+		    return buildDup (loc, lexp, rexp, right);
 	    }
 	    
 	    TreeStmtList list;
@@ -265,11 +266,11 @@ namespace semantic {
 
 	Tree InstToString (Word locus, InfoType, Expression elem, Expression type) {
 	    auto rexp = elem-> toGeneric ();
-	    if (auto str = elem-> to <IString> ()) {
+	    if (elem-> info-> isConst ()) {
 		location_t loc = locus.getLocus ();
 		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
 		if (!type-> info-> isConst ()) {
-		    return buildDup (loc, auxVar, rexp, str);
+		    return buildDup (loc, auxVar, rexp, elem);
 		} else {
 		    TreeStmtList list;
 		    Tree lenr = getLen (loc, elem, rexp);
