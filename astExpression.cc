@@ -786,11 +786,13 @@ namespace syntax {
 		for (auto exp_it : par-> getParams ()) {
 		    aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
 		    aux-> params.push_back (exp_it);
+		    exp_it-> info-> type-> isConst (true);
 		    type-> addParam (exp_it-> info-> type);
 		}
 	    } else {
 		aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
 		aux-> params.push_back (expr);
+		expr-> info-> type-> isConst (true);
 		type-> addParam (expr-> info-> type);
 	    }
 	}
@@ -798,4 +800,9 @@ namespace syntax {
 	return aux;
     }
 
+
+    Expression IExpand::expression () {
+	return NULL;
+    }
+    
 }

@@ -383,6 +383,10 @@ namespace syntax {
 	return aux;
     }
     
+    Ymir::Tree IExpand::toGeneric () {
+	return Ymir::Tree ();
+    }
+
 }
 
 

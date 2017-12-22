@@ -55,7 +55,7 @@ namespace semantic {
 
 	    tree ret = build_pointer_type (void_type_node);
 	    tree fndecl_type = build_function_type_array (ret, 2, fndecl_type_params);
-	    tree fndecl = build_fn_decl ("_y_memcpy", fndecl_type);
+	    tree fndecl = build_fn_decl ("memcpy", fndecl_type);
 	    DECL_EXTERNAL (fndecl) = 1;
 
 	    __y_newArray__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);

@@ -88,8 +88,10 @@ namespace semantic {
 		
     InfoType ITupleInfo::clone () {
 	auto tu = new ITupleInfo (IInfoType::isConst ());
-	for (auto it : this-> params)
+	for (auto it : this-> params) {
 	    tu-> params.push_back (it-> clone ());
+	    tu-> params.back ()-> isConst (IInfoType::isConst ()); 
+	}
 	//tu-> value = this-> value;
 	tu-> isType (this-> isType ());
 	return tu;
@@ -169,6 +171,7 @@ namespace semantic {
 	    auto ret = new ITupleInfo (false);
 	    for (auto it : this-> params) {
 		ret-> params.push_back (it-> BinaryOp (tok, it));
+		ret-> params.back ()-> isConst (false);
 		//TODO ret-> params.back ()-> value = NULL;
 	    }
 
@@ -180,11 +183,7 @@ namespace semantic {
     
     void ITupleInfo::addParam (InfoType type) {
 	this-> params.push_back (type-> clone ());
-	if (this-> params.back ()-> isConst ())
-	    this-> isConst (true);
-	else if (IInfoType::isConst ()) {
-	    this-> params.back ()-> isConst (true);
-	}
+	this-> params.back ()-> isConst (IInfoType::isConst ());	
     }
 
     std::vector<InfoType> & ITupleInfo::getParams () {
@@ -207,6 +206,7 @@ namespace semantic {
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();	    
 	    TupleInfo info = type-> to<ITupleInfo> ();
+	    auto rtype = right-> info-> type-> to <ITupleInfo> ();
 	    Ymir::TreeStmtList list;
 	    
 	    for (auto it : Ymir::r (0, info-> nbParams ())) {
@@ -216,7 +216,7 @@ namespace semantic {
 		    locus,
 		    info-> getParams () [it],
 		    new (GC) ITreeExpression (locus, info-> getParams () [it], laux),
-		    new (GC) ITreeExpression (locus, info-> getParams () [it], raux)
+		    new (GC) ITreeExpression (locus, rtype-> getParams () [it], raux)
 		));		
 	    }
 	    
@@ -227,6 +227,7 @@ namespace semantic {
 	Tree InstCast (Word locus, InfoType type, Expression elem, Expression) {
 	    location_t loc = locus.getLocus ();
 	    TupleInfo info = type-> to<ITupleInfo> ();
+	    auto rtype = elem-> info-> type-> to <ITupleInfo> ();
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
 	    auto rtree = elem-> toGeneric ();	    
 	    Ymir::TreeStmtList list;
@@ -238,7 +239,7 @@ namespace semantic {
 		    locus,
 		    info-> getParams () [it],
 		    new (GC) ITreeExpression (locus, info-> getParams () [it], laux),
-		    new (GC) ITreeExpression (locus, info-> getParams () [it], raux)
+		    new (GC) ITreeExpression (locus, rtype-> getParams () [it], raux)
 		));		
 	    }
 	    
