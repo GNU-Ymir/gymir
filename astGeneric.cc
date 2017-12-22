@@ -384,7 +384,9 @@ namespace syntax {
     }
     
     Ymir::Tree IExpand::toGeneric () {
-	return Ymir::Tree ();
+	location_t loc = this-> token.getLocus ();
+	auto elemTree = this-> expr-> toGeneric ();
+	return getField (loc, elemTree, this-> it);
     }
 
 }

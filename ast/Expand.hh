@@ -9,11 +9,14 @@ namespace syntax {
 
     class IExpand : public IExpression {
 	Expression expr;
+	ulong it;
 
     public :
 
 	IExpand (Word begin, Expression expr);
 
+	IExpand (Word begin, Expression expr, ulong it);
+	
 	Expression expression () override;
 
 	Ymir::Tree toGeneric () override;

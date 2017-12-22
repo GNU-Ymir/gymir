@@ -51,6 +51,10 @@ namespace semantic {
 	    it-> isConst (is);
 	}
     }
+
+    bool ITupleInfo::isConst () {
+	return IInfoType::isConst ();
+    }
     
     InfoType ITupleInfo::create (Word, std::vector <syntax::Expression> templates) {
 	auto tuple = new ITupleInfo (false);
@@ -246,7 +250,7 @@ namespace semantic {
 	    getStackStmtList ().back ().append (list.getTree ());
 	    return ltree;
 	}
-
+	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();

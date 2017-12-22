@@ -629,6 +629,12 @@ namespace syntax {
 	expr (expr)
     {}
 	
+    IExpand::IExpand (Word begin, Expression expr, ulong it) :
+	IExpression (begin),
+	expr (expr),
+	it (it)
+    {}
+
     void IExpand::print (int nb) {
 	printf("\n%*c<Expand> %s",
 	       nb, ' ',

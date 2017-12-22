@@ -108,7 +108,7 @@ namespace semantic {
 
 	ulong& toGet ();
 
-	bool isConst ();
+	virtual bool isConst ();
 
 	virtual void isConst (bool isConst);
 	

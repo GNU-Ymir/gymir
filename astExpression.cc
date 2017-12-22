@@ -802,7 +802,28 @@ namespace syntax {
 
 
     Expression IExpand::expression () {
-	return NULL;
+	auto expr = this-> expr-> expression ();
+	if (expr == NULL) return NULL;
+	if (expr-> is <IType> () || expr-> info-> isType ()) {
+	    Ymir::Error::useAsVar (expr-> token, expr-> info);
+	    return NULL;
+	}
+
+	if (auto tuple = expr-> info-> type-> to <ITupleInfo> ()) {
+	    std::vector <Expression> params;
+	    for (auto it : Ymir::r (0, tuple-> getParams ().size ())) {
+		auto exp = new (GC) IExpand (this-> token, expr, it);
+		exp-> info = new (GC) ISymbol (exp-> token, tuple-> getParams () [it]-> clone ());
+		exp-> info-> isConst (tuple-> isConst ());
+		params.push_back (exp);
+	    }
+
+	    auto aux = new (GC) IParamList (this-> token, params);
+	    aux-> info = new (GC) ISymbol (this-> token, new (GC) IUndefInfo ());
+	    return aux;
+	} else {
+	    return expr;
+	}	
     }
     
 }

@@ -44,6 +44,8 @@ namespace semantic {
 	std::vector <InfoType> &getParams ();
 
 	void isConst (bool is) override;
+
+	bool isConst () override;
 	
 	static const char* id () {
 	    return "ITupleInfo";
