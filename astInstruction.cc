@@ -83,7 +83,7 @@ namespace syntax {
 		auxDecl-> decls.push_back (aux);
 		if (this-> insts [id]) 
 		    auxDecl-> insts.push_back (this-> insts [id]-> expression ());
-		else auxDecl-> insts.push_back (NULL);
+		else auxDecl-> insts.push_back (NULL);		
 	    }
 	}
 	

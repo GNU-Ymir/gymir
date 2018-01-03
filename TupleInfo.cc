@@ -44,17 +44,6 @@ namespace semantic {
 	}
 	return false;
     }
-
-    void ITupleInfo::isConst (bool is) {
-	IInfoType::isConst (is);
-	for (auto it : this-> params) {
-	    it-> isConst (is);
-	}
-    }
-
-    bool ITupleInfo::isConst () {
-	return IInfoType::isConst ();
-    }
     
     InfoType ITupleInfo::create (Word, std::vector <syntax::Expression> templates) {
 	auto tuple = new ITupleInfo (false);
@@ -94,7 +83,6 @@ namespace semantic {
 	auto tu = new ITupleInfo (IInfoType::isConst ());
 	for (auto it : this-> params) {
 	    tu-> params.push_back (it-> clone ());
-	    tu-> params.back ()-> isConst (IInfoType::isConst ()); 
 	}
 	//tu-> value = this-> value;
 	tu-> isType (this-> isType ());
@@ -174,8 +162,7 @@ namespace semantic {
 	if (left-> info-> type-> is <IUndefInfo> ()) {
 	    auto ret = new ITupleInfo (false);
 	    for (auto it : this-> params) {
-		ret-> params.push_back (it-> BinaryOp (tok, it));
-		ret-> params.back ()-> isConst (false);
+		ret-> params.push_back (it-> BinaryOpRight (tok, left));
 		//TODO ret-> params.back ()-> value = NULL;
 	    }
 
@@ -187,7 +174,6 @@ namespace semantic {
     
     void ITupleInfo::addParam (InfoType type) {
 	this-> params.push_back (type-> clone ());
-	this-> params.back ()-> isConst (IInfoType::isConst ());	
     }
 
     std::vector<InfoType> & ITupleInfo::getParams () {

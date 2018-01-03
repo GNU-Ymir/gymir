@@ -319,6 +319,7 @@ namespace syntax {
 		}
 
 		aux-> left-> info-> type = type;
+		aux-> left-> info-> type-> isConst (false);
 		aux-> isRight = true;
 	    } else {
 		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
@@ -506,10 +507,13 @@ namespace syntax {
 		}
 	    }
 
-	    type-> info-> type-> isConst (expr-> info-> isConst ());
+	    info = info-> ConstVerif (type-> info-> type);
+	    if (info == NULL)
+		Ymir::Error::undefinedOp (this-> token, expr-> info, type-> info-> type);
+
 	    auto aux = new ICast (this-> token, type, expr);
 	    aux-> info = new ISymbol (this-> token, info);
-	    aux-> info-> type-> isConst (expr-> info-> isConst ());
+	    aux-> info-> type-> isConst (type-> info-> isConst ());
 	    return aux;
 	}	    
     }
@@ -791,13 +795,11 @@ namespace syntax {
 		for (auto exp_it : par-> getParams ()) {
 		    aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
 		    aux-> params.push_back (exp_it);
-		    //exp_it-> info-> type-> isConst (true);
 		    type-> addParam (exp_it-> info-> type);
 		}
 	    } else {
 		aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
 		aux-> params.push_back (expr);
-		//expr-> info-> type-> isConst (true);
 		type-> addParam (expr-> info-> type);
 	    }
 	}
@@ -819,7 +821,6 @@ namespace syntax {
 	    for (auto it : Ymir::r (0, tuple-> getParams ().size ())) {
 		auto exp = new (GC) IExpand (this-> token, expr, it);
 		exp-> info = new (GC) ISymbol (exp-> token, tuple-> getParams () [it]-> clone ());
-		exp-> info-> isConst (tuple-> isConst ());
 		params.push_back (exp);
 	    }
 

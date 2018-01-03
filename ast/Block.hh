@@ -34,8 +34,6 @@ namespace syntax {
 	IBlock* block ();
 
 	IBlock* blockWithoutEnter ();
-
-	Ymir::Tree toGenericNoEntry ();
 	
 	Ymir::Tree toGeneric () override;
 	

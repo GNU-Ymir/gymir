@@ -15,16 +15,7 @@ namespace syntax {
 	Ymir::Error::assert ((std::string ("TODO generic") + this-> getId ()).c_str  ());
 	return NULL;
     }
-    
-    Ymir::Tree IBlock::toGenericNoEntry () {
-	Ymir::TreeStmtList list;
-	for (auto it : this-> insts) {
-	    auto inst = it-> toGeneric ();
-	    list.append (inst);
-	}
-	return list.getTree ();
-    }
-    
+        
     Ymir::Tree IBlock::toGeneric () {
 	Ymir::enterBlock ();
 	for (auto it : this-> insts) {
