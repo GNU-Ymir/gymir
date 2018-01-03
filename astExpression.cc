@@ -149,9 +149,8 @@ namespace syntax {
 	} else {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
 	    if (this-> deco == Keys::REF)
-		t_info = new IRefInfo (t_info);
+		t_info = new IRefInfo (false, t_info);
 	    else if (this-> deco == Keys::CONST) t_info-> isConst (true);
-	    else t_info-> isConst (false);
 	    return new IType (this-> token, t_info);
 	}
     }
@@ -175,10 +174,10 @@ namespace syntax {
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
 		    Ymir::Error::assert ("TODO");
-		return new IRefInfo (type-> info-> type);
+		return new IRefInfo (false, type-> info-> type);
 	    } else if (this-> deco == Keys::CONST) {
 		type-> info-> type-> isConst (true);
-	    } else type-> info-> type-> isConst (false);
+	    }
 	    return type-> info-> type;	    
 	} else {
 	    this-> expType = this-> expType-> expression ();
@@ -186,16 +185,21 @@ namespace syntax {
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
 		    Ymir::Error::assert ("TODO");
-		return new IRefInfo (type-> info-> type);
+		return new IRefInfo (false, type-> info-> type);
 	    } else if (this-> deco == Keys::CONST) {
 		type-> info-> type-> isConst (true);
-	    } else type-> info-> type-> isConst (false);
+	    }
 	    return type-> info-> type;	    
 	}
     }
 
     Expression ITypedVar::expression () {
 	TypedVar aux = NULL;
+	auto info = Table::instance ().get (this-> token.getStr ());
+	if (info && Table::instance ().sameFrame (info)) {
+	    Ymir::Error::shadowingVar (this-> token, info-> sym);
+	}
+	
 	if (this-> type) {
 	    aux = new ITypedVar (this-> token, this-> type-> asType ());
 	} else {
@@ -206,10 +210,11 @@ namespace syntax {
 	}
 	
 	if (this-> deco == Keys::REF) {
-	    aux-> info = new ISymbol (this-> token, new IRefInfo (aux-> type-> info-> type));
+	    aux-> info = new ISymbol (this-> token, new IRefInfo (false, aux-> type-> info-> type));
 	} else {
 	    aux -> info = new ISymbol (this-> token, aux-> type-> info-> type);
-	    aux-> info-> type-> isConst (this-> deco == Keys::CONST);
+	    if (this-> deco == Keys::CONST) 
+		aux-> info-> type-> isConst (true);
 	}
 	Table::instance ().insert (aux-> info);
 	return aux;    
@@ -786,13 +791,13 @@ namespace syntax {
 		for (auto exp_it : par-> getParams ()) {
 		    aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
 		    aux-> params.push_back (exp_it);
-		    exp_it-> info-> type-> isConst (true);
+		    //exp_it-> info-> type-> isConst (true);
 		    type-> addParam (exp_it-> info-> type);
 		}
 	    } else {
 		aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
 		aux-> params.push_back (expr);
-		expr-> info-> type-> isConst (true);
+		//expr-> info-> type-> isConst (true);
 		type-> addParam (expr-> info-> type);
 	    }
 	}

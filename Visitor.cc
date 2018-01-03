@@ -84,7 +84,7 @@ namespace syntax {
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-			       Keys::CONST, Keys::REF, Keys::TRAIT
+			       Keys::TRAIT
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -792,7 +792,8 @@ namespace syntax {
 	} else this-> lex.rewind ();
 	auto ident = visitIdentifiant ();
 	auto next = this-> lex.next ();
-	if (next == Token::NOT) {
+	if (next == Token::NOT || ident == Keys::CONST || ident == Keys::REF) {
+	    if (!(next == Token::NOT)) this-> lex.rewind ();
 	    std::vector <Expression> params;
 	    next = this-> lex.next ();
 	    if (next == Token::LPAR) {

@@ -66,8 +66,7 @@ namespace Ymir {
 	}
 	
 	if (Ymir::Error::nb_errors > 0)
-	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
-	
+	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);	
     }
 
     void Parser::lint_time () {

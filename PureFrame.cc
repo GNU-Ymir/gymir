@@ -30,10 +30,11 @@ namespace semantic {
 	if (this-> proto) return this-> proto;
 	else if (this-> name == Keys::MAIN && !this-> pass)
 	    return validateMain ();
-
+	
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> isInternal ());
 	Table::instance ().enterBlock ();
 	std::vector <Var> finalParam = IFrame::computeParams (this-> _function-> getParams ());
+	
 	this-> proto = IFrame::validate (finalParam);
 	return this-> proto;
     }

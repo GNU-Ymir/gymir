@@ -388,7 +388,7 @@ namespace semantic {
 	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    
 	    return Ymir::buildTree (
-		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree, rtree
+		MODIFY_EXPR, locus.getLocus (), void_type_node, ltree, rtree
 	    );
 	}
 

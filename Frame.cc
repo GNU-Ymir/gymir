@@ -181,7 +181,7 @@ namespace semantic {
 		finalParams.push_back ((Var) var-> expression ());
 	    } else {
 		finalParams.push_back (attr [it]-> var ());
-	    }	    
+	    }
 	}
 	return finalParams;
     }

@@ -19,15 +19,17 @@ namespace syntax {
     Ymir::Tree IBlock::toGenericNoEntry () {
 	Ymir::TreeStmtList list;
 	for (auto it : this-> insts) {
-	    list.append (it-> toGeneric ());
+	    auto inst = it-> toGeneric ();
+	    list.append (inst);
 	}
 	return list.getTree ();
     }
     
     Ymir::Tree IBlock::toGeneric () {
 	Ymir::enterBlock ();
-	for (auto it : this-> insts) {	    
-	    Ymir::getStackStmtList ().back ().append (it-> toGeneric ());    
+	for (auto it : this-> insts) {
+	    auto inst = it-> toGeneric ();
+	    Ymir::getStackStmtList ().back ().append (inst);    
 	}
 	
 	auto ret = Ymir::leaveBlock ();
@@ -372,12 +374,13 @@ namespace syntax {
 	auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), tuple_type);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    auto field = Ymir::getField (loc, aux, it);
-	    list.append (this-> casters [it]-> buildBinaryOp (
+	    auto ret = this-> casters [it]-> buildBinaryOp (
 		this-> params [it]-> token,
 		this-> casters [it],
 		new ITreeExpression (this-> token, type_inner [it], field),
 		this-> params [it]
-	    ));
+	    );
+	    list.append (ret);
 	}
 	Ymir::getStackStmtList ().back ().append (list.getTree ());
 	return aux;

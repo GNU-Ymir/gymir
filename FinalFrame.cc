@@ -125,8 +125,8 @@ namespace semantic {
 		var-> info-> type-> toGeneric ().getTree ()
 	    );
 
-	    DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();
-	    DECL_ARG_TYPE (decl.getTree ()) = TREE_VALUE (TYPE_ARG_TYPES (TREE_TYPE (__fn_decl__.getTree ())));
+	    DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();	    
+	    DECL_ARG_TYPE (decl.getTree ()) = TREE_TYPE (decl.getTree ());
 	    
 	    arglist = chainon (arglist.getTree (), decl.getTree ());
 	    TREE_USED (decl.getTree ()) = 1;
@@ -156,7 +156,7 @@ namespace semantic {
 	this-> declArguments ();
 	
 	Ymir::enterBlock ();
-	Ymir::Tree inside = this-> _block-> toGenericNoEntry ();	
+	Ymir::Tree inside = this-> _block-> toGeneric ();	
 	Ymir::getStackStmtList ().back ().append (inside);
 	
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,

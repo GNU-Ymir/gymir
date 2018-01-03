@@ -216,12 +216,13 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, info-> nbParams ())) {
 		auto laux = getField (loc, ltree, it);
 		auto raux = getField (loc, rtree, it);
-		list.append (info-> getParams () [it]-> buildBinaryOp (
+		auto ret = info-> getParams () [it]-> buildBinaryOp (
 		    locus,
 		    info-> getParams () [it],
 		    new (GC) ITreeExpression (locus, info-> getParams () [it], laux),
 		    new (GC) ITreeExpression (locus, rtype-> getParams () [it], raux)
-		));		
+		);
+		list.append (ret);		
 	    }
 	    
 	    getStackStmtList ().back ().append (list.getTree ());
@@ -239,12 +240,13 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, info-> nbParams ())) {
 		auto laux = getField (loc, ltree, it);
 		auto raux = getField (loc, rtree, it);
-		list.append (info-> getParams () [it]-> buildBinaryOp (
+		auto ret = info-> getParams () [it]-> buildBinaryOp (
 		    locus,
 		    info-> getParams () [it],
 		    new (GC) ITreeExpression (locus, info-> getParams () [it], laux),
 		    new (GC) ITreeExpression (locus, rtype-> getParams () [it], raux)
-		));		
+		);
+		list.append (ret);		
 	    }
 	    
 	    getStackStmtList ().back ().append (list.getTree ());
