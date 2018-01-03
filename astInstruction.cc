@@ -33,7 +33,8 @@ namespace syntax {
 	for (auto it : this-> insts) {
 	    if (Table::instance ().retInfo ().hasReturned () ||
 		Table::instance ().retInfo ().hasBreaked ()) {
-		Ymir::Error::assert ("TODO");
+		Ymir::Error::unreachableStmt (it-> token);
+		break;
 	    }
 	    if (!it-> is<INone> ()) {
 		auto inst = it-> instruction ();
@@ -168,7 +169,7 @@ namespace syntax {
 	    }
 	    return _if;
 	} else {
-	    Table::instance ().retInfo ().currentBlock () = "if";
+	    Table::instance ().retInfo ().currentBlock () = "else";
 	    Table::instance ().retInfo ().changed () = true;
 	    Block bl = this-> block-> block ();
 	    If _if = new IIf (this-> token, NULL, bl);
@@ -197,6 +198,39 @@ namespace syntax {
 	return new IWhile (this-> token, expr, bl);		
     }
 
+
+    Instruction IReturn::instruction () {
+	auto aux = new IReturn (this-> token);
+	Table::instance ().retInfo ().returned ();
+	if (this-> elem != NULL) {
+	    aux-> elem = this-> elem-> expression ();
+	    if (aux-> elem-> info-> type-> is <IVoidInfo> ()) {
+		Ymir::Error::returnVoid (this-> token, aux-> elem-> info);
+	    }
+	    
+	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ()) {
+		Table::instance ().retInfo ().info-> type = aux-> elem-> info-> type-> clone ();
+		if (!Table::instance ().retInfo ().changed ())
+		    Table::instance ().retInfo ().changed () = true;
+		//else TODO  Table::instance ().retInfo ().info->type-> value = NULL;
+	    } else {
+		auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
+		aux-> caster = type;		
+		if (type == NULL) {
+		    Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
+		} else if (type-> isSame (aux-> elem-> info-> type)) {
+		    //if (!Table::instance () TODO immutable
+		}
+	    }
+	} else {
+	    if (!Table::instance ().retInfo ().info-> type-> is<IUndefInfo> () &&
+		!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> ())
+		Ymir::Error::noValueNonVoidFunction (this-> token);
+	    else
+		Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
+	}
+	return aux;
+    }
 
 
 }

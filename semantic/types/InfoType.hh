@@ -122,7 +122,7 @@ namespace semantic {
 
 	Value& value ();
 
-	std::string typeString ();
+	virtual std::string typeString ();
 
 	virtual std::string innerTypeString () = 0;
 	

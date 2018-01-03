@@ -34,6 +34,7 @@ namespace semantic {
 	this-> creators ["t"] = (void*) &ITupleInfo::create;
 	this-> creators ["const"] = (void*) &createConst;
 	this-> creators ["ref"] = (void*) &IRefInfo::create;
+	this-> creators ["void"] = (void*) &IVoidInfo::create;
     }
 
     void* Creators::find (const std::string & elem) {

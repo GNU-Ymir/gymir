@@ -68,6 +68,10 @@ namespace Ymir {
 	    TemplateInferTypeNote,
 	    ConstNoInit,
 	    NotLValue,
+	    NoValueNonVoid,
+	    ReturnVoid,
+	    UnreachableStmt,
+	    MissingReturn,
 	    LAST_ERROR
 	};
 
@@ -173,6 +177,14 @@ namespace Ymir {
 	static void templateInferType (Word, Word);
 
 	static void activeError (bool);	
+
+	static void returnVoid (Word, semantic::Symbol);
+
+	static void missingReturn (Word, semantic::Symbol);
+	
+	static void unreachableStmt (Word);
+	
+	static void noValueNonVoidFunction (Word);
 	
 	static std::vector <ErrorMsg>& caught ();
 

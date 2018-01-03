@@ -165,10 +165,10 @@ namespace semantic {
     }
 
 
-    void IFrame::verifyReturn (Word, Symbol ret, FrameReturnInfo info) {
+    void IFrame::verifyReturn (Word loc, Symbol ret, FrameReturnInfo info) {
 	if (!ret-> type-> is<IVoidInfo> () && !ret-> type-> is<IUndefInfo> ()) {
 	    if (!info.retract ()) {
-		Ymir::Error::assert ("TODO, gerer l'erreur");
+		Ymir::Error::missingReturn (loc, ret);
 	    }
 	}
     }

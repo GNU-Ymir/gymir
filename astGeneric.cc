@@ -383,6 +383,33 @@ namespace syntax {
 	return getField (loc, elemTree, this-> it);
     }
 
+    Ymir::Tree IReturn::toGeneric () {
+	Ymir::Tree res;
+	if (this-> caster) {
+	    if (this-> caster-> unopFoo) {
+		res = this-> caster-> buildUnaryOp (
+		    this-> token,
+		    this-> caster,
+		    this-> elem
+		);
+	    } else {
+		res = this-> caster-> buildBinaryOp (
+		    this-> token,
+		    this-> caster,
+		    this-> elem,
+		    new (GC) ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
+		);
+	    }
+	} else {
+	    res = this-> elem-> toGeneric ();
+	}
+
+	auto set_result = build2 (INIT_EXPR, void_type_node,
+				  DECL_RESULT (IFinalFrame::currentFrame ().getTree ()), res.getTree ());
+	
+	return build1 (RETURN_EXPR, void_type_node, set_result);
+    }
+
 }
 
 

@@ -88,7 +88,7 @@ namespace semantic {
 	    } else if (it-> _returned && it-> _name == "if") {
 		nb ++;
 		allNeed = false;
-		need = "true";
+		need = "else";
 	    } else if (it-> _returned && it-> _name != "while" && it-> _name != "for") {
 		nb ++;
 	    }

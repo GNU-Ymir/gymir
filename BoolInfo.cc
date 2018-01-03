@@ -125,7 +125,7 @@ namespace semantic {
     }
 
     Ymir::Tree IBoolInfo::toGeneric () {
-	return boolean_type_node;
+	return unsigned_char_type_node;
     }
     
     namespace BoolUtils {

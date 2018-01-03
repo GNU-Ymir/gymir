@@ -10,31 +10,19 @@ namespace syntax {
     class IReturn : public IInstruction {
 
 	Expression elem;
-
+	semantic::InfoType caster;
+	
     public:
 
-	IReturn (Word ident) : IInstruction (ident), elem (NULL) {}
+	IReturn (Word ident);
 	
-	IReturn (Word ident, Expression elem) :
-	    IInstruction (ident),
-	    elem (elem)
-	{}
+	IReturn (Word ident, Expression elem);
 
-	Instruction instruction () override {
-	    Ymir::Error::assert ("TODO");
-	    return NULL;
-	}
+	Instruction instruction () override;
 
+	Ymir::Tree toGeneric () override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Return> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    
-	    if (this-> elem)
-		this-> elem-> print (nb + 4);
-	}
+	void print (int nb = 0) override;
 	
     };
     

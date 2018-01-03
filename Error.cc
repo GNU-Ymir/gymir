@@ -243,6 +243,18 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
+    void Error::noValueNonVoidFunction (Word word) {
+	auto str = getString (NoValueNonVoid);
+	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
     
     void Error::takeATypeAsTemplate (Word word) {
 	std::string msg = getString (TakeAType);
@@ -480,7 +492,40 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
-        
+
+    void Error::unreachableStmt (Word word) {
+	auto msg = std::string (getString (UnreachableStmt));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::missingReturn (Word word, semantic::Symbol type) {
+	auto msg = format (getString (MissingReturn), YELLOW, word.getStr (), RESET, YELLOW, type-> typeString (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
+    void Error::returnVoid (Word word, semantic::Symbol type) {
+	auto msg = format (getString (ReturnVoid), YELLOW, type-> type-> typeString ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }    
+    
     void Error::incompatibleTypes (Word where, semantic::Symbol type, semantic::InfoType other) {
 	auto str = getString (IncompatibleTypes);
 	auto msg = format (str, YELLOW, type-> type-> typeString ().c_str (), RESET,

@@ -204,7 +204,7 @@ namespace syntax {
 	insts (insts),
 	decos (decos)
     {}
-
+    
     IVarDecl::IVarDecl (Word word) :
 	IInstruction (word)
     {}
@@ -642,6 +642,23 @@ namespace syntax {
 	);
 	this-> expr-> print (nb + 4);
     }
+   
+    IReturn::IReturn (Word ident) : IInstruction (ident), elem (NULL), caster (NULL) {}
+    
+    IReturn::IReturn (Word ident, Expression elem) :
+	IInstruction (ident),	
+	elem (elem),
+	caster (NULL)
+    {}
 
-
+    void IReturn::print (int nb) {
+	printf ("\n%*c<Return> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	
+	if (this-> elem)
+	    this-> elem-> print (nb + 4);
+    }    
+    
 }

@@ -11,10 +11,18 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
+	static InfoType create (Word tok, std::vector <syntax::Expression> tmps) {
+	    if (tmps.size () != 0) 
+		Ymir::Error::notATemplate (tok);
+	    return new (GC) IVoidInfo ();
+	}
+	
 	InfoType clone () override;
 
 	InfoType DotOp (syntax::Var) override;
 
+	std::string typeString () override;
+	
 	std::string innerTypeString () override;
 
 	std::string simpleTypeString () override;

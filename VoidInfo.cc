@@ -3,7 +3,7 @@
 namespace semantic {
 
     IVoidInfo::IVoidInfo () :
-	IInfoType (true)
+	IInfoType (false)
     {}
 
     bool IVoidInfo::isSame (InfoType) {
@@ -27,12 +27,16 @@ namespace semantic {
 	return void_type_node;
     }    
     
+    std::string IVoidInfo::typeString () {
+	return "void";
+    }
+
     std::string IVoidInfo::innerTypeString () {
-	return "undef";
+	return "void";
     }
 
     std::string IVoidInfo::simpleTypeString () {
-	return "undef";
+	return "v";
     }
 
     const char * IVoidInfo::getId () {

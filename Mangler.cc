@@ -1,10 +1,12 @@
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/pack/FrameProto.hh>
+#include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/types/InfoType.hh>
 #include <string>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Array.hh>
 #include <ymir/ast/Var.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace Mangler {
     using namespace Ymir;
@@ -21,11 +23,15 @@ namespace Mangler {
     std::string replace (std::string ph, std::vector <char> from, std::vector <char> to) {
 	OutBuffer buf;
 	for (ulong i = 0 ; i < ph.length () ; i++) {
+	    bool towrite = true;
 	    for (ulong j = 0 ; j < from.size () ; j++) {
 		if (ph [i] == from [j]) {
 		    buf.write (to [j]);
-		} else buf.write (ph [i]);
+		    towrite = false;
+		    break;
+		} 
 	    }
+	    if (towrite) buf.write (ph [i]);
 	}
 	return buf.str ();
     }
@@ -80,6 +86,7 @@ namespace Mangler {
     }
     
     std::string mangle_function (std::string& name, ::semantic::FrameProto frame) {
+	if (name == Keys::MAIN) return name;
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
@@ -90,6 +97,18 @@ namespace Mangler {
 	return ss.str ();
     }
 
+    std::string mangle_function (std::string & name, ::semantic::FinalFrame frame) {
+	if (name == Keys::MAIN) return name;
+	auto space = frame-> space ().toString ();
+	OutBuffer ss;
+	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
+	for (auto it : frame-> vars ()) {
+	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
+	}
+	ss.write ("Z", mangle_type (frame-> type ()-> simpleTypeString ()));
+	return ss.str ();
+    }
+    
     std::string mangle_functionv (std::string& name, ::semantic::FrameProto frame) {
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;

@@ -571,7 +571,7 @@ namespace syntax {
 	    temps.clear ();
 	} else syntaxError (word, {Token::RPAR});
 
-	if (word == Token::COLON) {
+	if (word == Token::ARROW) {
 	    auto deco = this-> lex.next ();
 	    if (deco != Keys::REF) {
 		deco = Word::eof ();
@@ -621,9 +621,9 @@ namespace syntax {
 		    syntaxError (word, {Token::RPAR, Token::COMA});
 	    }
 	}
-	word = this-> lex.next ({Token::COLON, Token::SEMI_COLON});
+	word = this-> lex.next ({Token::ARROW, Token::SEMI_COLON});
 	Var type = NULL;
-	if (word == Token::COLON) {
+	if (word == Token::ARROW) {
 	    type = visitType ();
 	    word = this-> lex.next ({Token::SEMI_COLON});
 	}
@@ -1752,8 +1752,13 @@ namespace syntax {
         
     Instruction Visitor::visitIf () {
 	this-> lex.rewind ();
+	bool needClose = false;
 	auto begin = this-> lex.next ();
+	auto par = this-> lex.next ();
+	if (par == Token::LPAR) needClose = true;
+	else this-> lex.rewind ();
 	auto test = visitExpression ();
+	if (needClose) this-> lex.next ({Token::RPAR});
 	auto block = visitBlock ();
 	auto next = this-> lex.next ();
 	if (next == Keys::ELSE) {

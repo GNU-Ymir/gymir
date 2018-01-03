@@ -5,6 +5,7 @@
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/ast/Var.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/utils/Mangler.hh>
 
 namespace semantic {
 
@@ -70,16 +71,21 @@ namespace semantic {
 		fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
 	    }
 
-
-	    //tree fn_decl_type = build_varargs_function_type_array (
+	    std::string ident;		
 	    tree ret = this-> _type-> type-> toGeneric ().getTree ();
 	    tree fndecl_type;
-	    if (this-> isCVariadic ())
+	    if (this-> isCVariadic ()) {
+		ident = this-> _name;
 		fndecl_type = build_varargs_function_type_array (ret, 0, fndecl_type_params.data ());
-	    else 
-		 fndecl_type = build_function_type_array (ret, 0, fndecl_type_params.data ());
-	    
-	    tree fndecl = build_fn_decl (this-> _name.c_str (), fndecl_type);
+	    } else {
+		if (this-> _extern == "C") ident = this-> _name;		
+		else if (this-> _extern == "") ident = Mangler::mangle_function (this-> _name, this);
+		else Ymir::Error::assert ("TODO");
+		
+		fndecl_type = build_function_type_array (ret, 0, fndecl_type_params.data ());
+	    }
+
+	    tree fndecl = build_fn_decl (ident.c_str (), fndecl_type);
 
 	    if (this->_extern != "") {
 		DECL_EXTERNAL (fndecl) = 1;

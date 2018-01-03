@@ -41,6 +41,10 @@ namespace Ymir {
 		phrases [IncompatibleTypes] = "Types incompatibles '%%%' et '%%%'";
 		phrases [ConstNoInit] = "Declaration constante '%%%' sans valeur d'initialisation";
 		phrases [NotLValue] = "'%%%' n'est pas une lvalue";
+		phrases [NoValueNonVoid] = "retour de fonction sans valeur dans une fonction ne retournant pas void";
+		phrases [ReturnVoid] = "retour d'un élèment de type '%%%'";
+		phrases [UnreachableStmt] = "Instruction inatteigable";
+		phrases [MissingReturn] = "Il manque une instruction de retour pour la fonction '%%%' qui retourne '%%%'";
 		init = true;		
 	    } 
 	    return phrases;
@@ -82,6 +86,11 @@ namespace Ymir {
 		phrases [BreakRefUndef] = "Loop identifier '%%%' doesn't exist";
 		phrases [ConstNoInit] = "Const declaration '%%%' with no initial value";
 		phrases [NotLValue] = "'%%%' is not a lvalue";
+		phrases [NoValueNonVoid] = "Function exit without value in a non void function";
+
+		phrases [ReturnVoid] = "Cannot return a '%%%' element";
+		phrases [UnreachableStmt] = "Unreachable statement";
+		phrases [MissingReturn] = "Missing return statement for function '%%%' expecting a value of type '%%%'";
 		init = true;
 	    } 
 	    return phrases;

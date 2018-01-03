@@ -4,6 +4,7 @@
 #include <ymir/ast/Expression.hh>
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/types/InfoType.hh>
+#include <ymir/utils/Mangler.hh>
 
 #include "config.h"
 #include "system.h"
@@ -145,23 +146,26 @@ namespace semantic {
 	    args [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
 
 	tree ret = this-> _type-> type-> toGeneric ().getTree ();
+		
+	//tree ident = get_identifier (this-> _name.c_str ());
+	tree ident = get_identifier (Mangler::mangle_function (this-> _name, this).c_str ());
 	
-	tree ident = get_identifier (this-> _name.c_str ());
 	tree fntype = build_function_type_array (ret, args.size (), args.data ());
-	tree fn_decl = build_decl (BUILTINS_LOCATION, FUNCTION_DECL, ident, fntype);
-
+	tree fn_decl = build_decl (BUILTINS_LOCATION, FUNCTION_DECL, ident, fntype);	
+	//DECL_ASSEMBLER_NAME (fn_decl) = asmIdent;
+	
 	Ymir::currentContext () = fn_decl;
 	__fn_decl__ = fn_decl;
 
 	this-> declArguments ();
 	
 	Ymir::enterBlock ();
-	Ymir::Tree inside = this-> _block-> toGeneric ();	
-	Ymir::getStackStmtList ().back ().append (inside);
-	
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
-				       NULL_TREE, void_type_node);
+				       NULL_TREE, ret);
 	DECL_RESULT (fn_decl) = result_decl;
+	
+	Ymir::Tree inside = this-> _block-> toGeneric ();	
+	Ymir::getStackStmtList ().back ().append (inside);	
 	
 	auto fnTreeBlock = Ymir::leaveBlock ();
 	auto fnBlock = fnTreeBlock.block;
