@@ -204,10 +204,14 @@ namespace semantic {
 		return (T*) this;
 	    } else return NULL;
 	}
-
+	
 	BinopLint binopFoo;
 	UnopLint unopFoo;
 	BinopLint multFoo;
+
+	std::list <BinopLint> nextBinop;
+	std::list <UnopLint> nextUnop;
+	std::list <BinopLint> nextMult;
 	
     };    
 

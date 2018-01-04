@@ -53,8 +53,8 @@ namespace semantic {
 		    auto type = args [it]-> CompOp (info);
 		    if (type != NULL) type = type-> ConstVerif (info);
 		    else return NULL;
-
-		    if (type && type-> isSame (info)) {
+		    
+		    if (type && type-> isSame (args [it])) {
 			if (args [it]-> isConst () != info-> isConst ())
 			    score-> score += CONST_SAME;
 			else score-> score += SAME;

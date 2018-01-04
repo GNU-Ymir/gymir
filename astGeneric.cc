@@ -85,7 +85,15 @@ namespace syntax {
     }
     
     Ymir::Tree IVar::toGeneric () {
-	return this-> info-> treeDecl ();
+	if (this-> info-> type-> unopFoo) {
+	    return this-> info-> type-> buildUnaryOp (
+		this-> token,
+		this-> info-> type,
+		this
+	    );
+	} else {
+	    return this-> info-> treeDecl ();
+	}
     }
 
     Ymir::Tree IBinary::toGeneric () {
@@ -153,6 +161,8 @@ namespace syntax {
 	std::vector <tree> params (this-> params.size ());
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree elist;
+	    this-> params [i]-> print (0);
+	    printf ("%d\n", treat [i]);
 	    if (treat [i] && treat [i]-> binopFoo) {		
 		elist = treat [i]-> buildCastOp (
 		    this-> params [i]-> token,

@@ -28,6 +28,32 @@ namespace semantic {
 	    }
 	}
 
+	InfoType BinaryOp (Word token, syntax::Expression right) override;
+
+	InfoType BinaryOpRight (Word token, syntax::Expression left) override;
+
+	InfoType AccessOp (Word token, syntax::ParamList params) override;
+
+	InfoType DotOp (syntax::Var var) override;
+
+	InfoType DotExpOp (syntax::Expression elem) override;
+
+	InfoType DColonOp (syntax::Var var) override;
+
+	InfoType UnaryOp (Word op) override;
+
+	InfoType CastOp (InfoType other) override;
+
+	InfoType CompOp (InfoType other) override;
+
+	//InfoType ApplyOp (std::vector <syntax::Var> vars) override;
+
+	ApplicationScore CallOp (Word op, syntax::ParamList params) override;
+
+	bool isConst () override;
+
+	void isConst (bool set) override;
+	
 	std::string innerTypeString () override;
 
 	std::string simpleTypeString () override;
@@ -38,11 +64,17 @@ namespace semantic {
 	    return "IRefInfo";
 	}
 
+	Ymir::Tree toGeneric () override;
+	
 	const char* getId () override;
 
 	InfoType content ();
-	
-	//TODO
+
+    private:
+
+	InfoType Unref ();	
+
+	InfoType addUnref (InfoType elem);
 	
     };
 

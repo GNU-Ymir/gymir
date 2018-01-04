@@ -109,8 +109,8 @@ namespace semantic {
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
-		auto aux = new IRefInfo (this-> clone ());
-		aux-> binopFoo = FixedUtils::InstAddr;
+		auto aux = new (GC) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAddr;
 		return aux;
 	    }
 	} else if (auto ot = other-> to<IFixedInfo> ()) {

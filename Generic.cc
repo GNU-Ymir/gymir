@@ -183,10 +183,12 @@ namespace Ymir {
     }
     
     Tree getAddr (Tree elem) {
+	TREE_ADDRESSABLE (elem.getTree ()) = 1;
 	return buildTree (ADDR_EXPR, UNKNOWN_LOCATION, build_pointer_type (elem.getType ().getTree ()), elem);
     }
 
     Tree getAddr (location_t loc, Tree elem) {
+	TREE_ADDRESSABLE (elem.getTree ()) = 1;
 	return buildTree (ADDR_EXPR, loc, build_pointer_type (elem.getType ().getTree ()), elem);
     }
    
