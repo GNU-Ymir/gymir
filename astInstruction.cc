@@ -204,6 +204,7 @@ namespace syntax {
 	Table::instance ().retInfo ().returned ();
 	if (this-> elem != NULL) {
 	    aux-> elem = this-> elem-> expression ();
+	    if (aux-> elem == NULL) return NULL;
 	    if (aux-> elem-> info-> type-> is <IVoidInfo> ()) {
 		Ymir::Error::returnVoid (this-> token, aux-> elem-> info);
 	    }

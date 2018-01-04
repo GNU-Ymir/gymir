@@ -116,9 +116,9 @@ namespace semantic {
 	return ret;
     }
 	
-    InfoType IArrayInfo::AccessOp (Word, syntax::ParamList params) {
+    InfoType IArrayInfo::AccessOp (Word, syntax::ParamList params, std::vector <InfoType> & treats) {
 	if (params-> getParams ().size () == 1) {
-	    return Access (params-> getParams () [0]);
+	    return Access (params-> getParams () [0], treats [0]);
 	}
 	return NULL;
     }
@@ -172,8 +172,13 @@ namespace semantic {
 	return NULL;
     }
     
-    InfoType IArrayInfo::Access (syntax::Expression expr) {
-	if (expr-> info-> type-> is<IFixedInfo> ()) {
+    InfoType IArrayInfo::Access (syntax::Expression expr, InfoType& treat) {
+	treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::LONG));
+	if (treat == NULL) {
+	    treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::ULONG));
+	}
+	
+	if (treat) {
 	    auto ch = this-> _content-> clone ();
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;

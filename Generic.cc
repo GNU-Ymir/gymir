@@ -157,14 +157,19 @@ namespace Ymir {
 							     
     }
 
-    Tree getArrayRef (location_t locus, Tree array, Tree inner, ulong index) {
-	Tree it = build_int_cst_type (long_unsigned_type_node, index);
+    Tree getArrayRef (location_t locus, Tree array, Tree inner, ulong index) {	
+	Tree it = build_int_cst_type (long_unsigned_type_node, index);	
 	return buildTree (ARRAY_REF, locus, inner, array, it, Tree (), Tree ());
     }
 
     Tree getPointerUnref (location_t loc, Tree ptr, Tree inner, ulong index) {
-	Tree it = build_int_cst_type (long_unsigned_type_node, index);
-	return getPointerUnref (loc, ptr, inner, it);
+	if (index != 0) {
+	    Tree it = build_int_cst_type (long_unsigned_type_node, index);
+	    return getPointerUnref (loc, ptr, inner, it);
+	} else {
+	    auto ptype = build_pointer_type (inner.getTree ());
+	    return build2 (MEM_REF, inner.getTree (), ptr.getTree (), build_int_cst (ptype, 0));
+	}
     }
 
     Tree getArrayRef (location_t locus, Tree array, Tree inner, Tree index) {

@@ -107,8 +107,8 @@ namespace semantic {
 	    return left-> info-> type-> BinaryOp (op, this-> _content);
     }
 
-    InfoType IEnumInfo::AccessOp (Word op, syntax::ParamList params) {
-	return this-> _content-> AccessOp (op, params);
+    InfoType IEnumInfo::AccessOp (Word op, syntax::ParamList params, std::vector <InfoType> & treats) {
+	return this-> _content-> AccessOp (op, params, treats);
     }
 
     InfoType IEnumInfo::DotOp (syntax::Var var) {

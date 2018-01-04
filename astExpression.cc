@@ -23,9 +23,12 @@ namespace syntax {
 	    Ymir::Error::uninitVar (aux-> left-> token);
 	else if (aux-> left-> info-> isType ())
 	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
-
+	
+	std::vector <InfoType> treats (aux-> params-> getParams ().size ());
 	auto type = aux-> left-> info-> type-> AccessOp (aux-> left-> token,
-							 aux-> params);
+							 aux-> params,
+							 treats
+	);
 	if (type == NULL) {
 	    auto call = findOpAccess ();
 	    if (call == NULL) {
@@ -35,6 +38,8 @@ namespace syntax {
 		return call;
 	    }
 	}
+	
+	aux-> treats = treats;
 	aux-> info = new ISymbol (this-> token, type);
 	return aux;
     }
@@ -296,7 +301,7 @@ namespace syntax {
 	} else if (aux-> right-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> right-> token);
 	    return true;
-	}
+	} else if (aux-> left-> info-> type == NULL || aux-> right-> info-> type == NULL) return true;
 	return false;
     }
     
@@ -311,8 +316,8 @@ namespace syntax {
 	
 	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
 	if (type == NULL) {
+	    type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
 	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
 		if (type == NULL) {
 		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
 		    return NULL;
@@ -320,11 +325,11 @@ namespace syntax {
 
 		aux-> left-> info-> type = type;
 		aux-> left-> info-> type-> isConst (false);
-		aux-> isRight = true;
-	    } else {
+	    } else if (type == NULL) {
 		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
 		return NULL;
 	    }
+	    aux-> isRight = true;
 	}
 
 	aux-> info = new ISymbol (aux-> token, type);

@@ -39,15 +39,20 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IStringInfo::AccessOp (Word, syntax::ParamList left) {
+    InfoType IStringInfo::AccessOp (Word, syntax::ParamList left, std::vector <InfoType> & treats) {
 	if (left-> getParams ().size () == 1) {
-	    return Access (left-> getParams () [0]);
+	    return Access (left-> getParams () [0], treats [0]);
 	}
 	return NULL;
     }
     
-    InfoType IStringInfo::Access (syntax::Expression expr) {
-	if (expr-> info-> type-> is <IFixedInfo> ()) {
+    InfoType IStringInfo::Access (syntax::Expression expr, InfoType& treat) {
+	treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::LONG));
+	if (treat == NULL) {
+	    treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::ULONG));
+	}
+	
+	if (treat) {	    
 	    auto ch = new ICharInfo (this-> isConst ());
 	    ch-> binopFoo = &StringUtils::InstAccessInt;
 	    return ch;
@@ -71,6 +76,12 @@ namespace semantic {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StringUtils::InstToString;
 	    return ret;
+	} else if (auto ref = other-> to<IRefInfo> ()) {
+	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
+		auto ret = new (GC) IRefInfo (false, this-> clone ());
+		ret-> binopFoo = &StringUtils::InstAddr;
+		return ret;
+	    }
 	}
 	return NULL;
     }
@@ -366,7 +377,12 @@ namespace semantic {
 		return getPointerUnref (loc, ptrl, char_type_node, rexp);
 	    }
 	}
-	
+
+
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}	
+
     }
 
     

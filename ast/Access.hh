@@ -17,6 +17,8 @@ namespace syntax {
 
 	Expression left;
 
+	std::vector <semantic::InfoType> treats;	
+	
     public:
 
 	IAccess (Word word, Word end, Expression left, ParamList params);

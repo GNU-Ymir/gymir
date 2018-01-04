@@ -30,7 +30,7 @@ namespace semantic {
 	
 	InfoType BinaryOpRight (Word tok, syntax::Expression left) override;
 
-	InfoType AccessOp (Word, syntax::ParamList) override;
+	InfoType AccessOp (Word, syntax::ParamList, std::vector <InfoType> &) override;
 	
 	std::string innerTypeString () override;
 
@@ -63,7 +63,7 @@ namespace semantic {
 
 	InfoType Affect (syntax::Expression);
 
-	InfoType Access (syntax::Expression);
+	InfoType Access (syntax::Expression, InfoType&);
 	
 	InfoType Concat (syntax::Expression);
 	

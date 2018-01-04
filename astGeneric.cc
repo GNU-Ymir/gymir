@@ -140,19 +140,26 @@ namespace syntax {
     }
     
     Ymir::Tree IAccess::toGeneric () {
+	std::vector <tree> args = this-> params-> toGenericParams (this-> treats);
 	if (this-> info-> type-> binopFoo) {
 	    return this-> info-> type-> buildBinaryOp (
 		this-> token,
 		this-> info-> type,
 		this-> left,
-		this-> params-> getParams () [0]
+		new (GC) ITreeExpression (this-> params-> getParams ()[0]-> token, this-> params-> getParams () [0]-> info-> type, args [0])
 	    );
 	} else {
+	    IParamList params (this-> params-> token, {});
+	    for (auto it : Ymir::r (0, args.size ())) {
+		params.getParams ().push_back (new (GC) ITreeExpression (this-> params-> getParams () [it]-> token,
+									 this-> params-> getParams () [it]-> info-> type,
+									 args [it]));
+	    }
 	    return this-> info-> type-> buildMultOp (
 		this-> token,
 		this-> info-> type,
 		this-> left,
-		this-> params
+		&params
 	    );
 	}
     }
@@ -161,8 +168,6 @@ namespace syntax {
 	std::vector <tree> params (this-> params.size ());
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree elist;
-	    this-> params [i]-> print (0);
-	    printf ("%d\n", treat [i]);
 	    if (treat [i] && treat [i]-> binopFoo) {		
 		elist = treat [i]-> buildCastOp (
 		    this-> params [i]-> token,

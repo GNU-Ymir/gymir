@@ -570,7 +570,8 @@ namespace Ymir {
 			   YELLOW, begin.getStr().c_str (), RESET,
 			   YELLOW, elem-> typeString ().c_str (), RESET,
 			   buf.str ().c_str ());
-	
+
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, begin);
 	
 	ErrorMsg errorMsg = {msg, false, false};
@@ -592,6 +593,7 @@ namespace Ymir {
 	}
 	
 	auto msg = format (str, YELLOW, begin.getStr().c_str (), end.getStr ().c_str (), RESET, YELLOW, elem-> typeString ().c_str (), RESET, buf.str ().c_str ());
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, begin, end);
 	
 	ErrorMsg errorMsg = {msg, false, false};

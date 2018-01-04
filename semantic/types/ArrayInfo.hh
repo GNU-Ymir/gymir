@@ -34,7 +34,7 @@ namespace semantic {
 
 	InfoType ApplyOp (std::vector <syntax::Var> vars) override;
 	
-	InfoType AccessOp (Word, syntax::ParamList) override;
+	InfoType AccessOp (Word, syntax::ParamList, std::vector <InfoType> &) override;
 
 	InfoType DotOp (syntax::Var) override;
 
@@ -78,7 +78,7 @@ namespace semantic {
 
 	InfoType TupleOf ();
 
-	InfoType Access (syntax::Expression);
+	InfoType Access (syntax::Expression, InfoType&);
 	
 	InfoType Concat (syntax::Expression);
 

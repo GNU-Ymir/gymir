@@ -124,7 +124,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IInfoType::AccessOp (Word, syntax::ParamList) {
+    InfoType IInfoType::AccessOp (Word, syntax::ParamList, std::vector <InfoType> &) {
 	return NULL;
     }
 

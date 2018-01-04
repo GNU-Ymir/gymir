@@ -144,7 +144,7 @@ namespace semantic {
 
 	virtual InfoType UnaryOp (Word);
 
-	virtual InfoType AccessOp (Word, syntax::ParamList);
+	virtual InfoType AccessOp (Word, syntax::ParamList, std::vector <IInfoType*> &);
 
 	virtual InfoType CastOp (InfoType);
 

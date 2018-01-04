@@ -3,6 +3,7 @@
 #include <ymir/semantic/pack/Frame.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/pack/PureFrame.hh>
+#include <ymir/utils/OutBuffer.hh>
 
 namespace semantic {
 
@@ -190,13 +191,38 @@ namespace semantic {
 	return NULL;
     }
 
-    std::string IFunctionInfo::innerTypeString () {	
-	return Ymir::format ("function <%.%>",
-			     this-> _space.toString ().c_str (),
-			     this-> _name.c_str ()
-	);
+    std::string IFunctionInfo::innerTypeString () {
+	auto frames = getFrames ();
+	if (frames.size () == 1) {
+	    Ymir::OutBuffer buf;
+	    buf.write (Ymir::format ("function <%.%> (",
+				 this-> _space.toString ().c_str (),
+				 this-> _name.c_str ()
+	    ));
+	    
+	    for (auto it : Ymir::r (0, this-> _info-> func ()-> getParams ().size ())) {
+		auto var = this-> _info-> func ()-> getParams () [it];
+		buf.write (var-> prettyPrint ());
+		if (it < this-> _info-> func ()-> getParams ().size () - 1)
+		    buf.write (", ");
+	    }
+	    
+	    buf.write (")");
+	    if (auto t = this-> _info-> func ()-> getType ())
+		buf.write ("-> ", t-> prettyPrint ());
+	    return buf.str ();
+	} else {
+	    return Ymir::format ("function <%.%>",
+				 this-> _space.toString ().c_str (),
+				 this-> _name.c_str ()
+	    );
+	}
     }
 
+    std::string IFunctionInfo::typeString () {
+	return innerTypeString ();
+    }
+    
     std::string IFunctionInfo::simpleTypeString () {
 	return "F";
     }

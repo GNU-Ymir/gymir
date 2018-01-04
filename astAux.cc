@@ -129,7 +129,9 @@ namespace syntax {
 	return IVar::id ();
     }
 	
-
+    std::string IVar::prettyPrint () {
+	return this-> token.getStr ();
+    }    
 
     ITypedVar::ITypedVar (Word ident, Var type) :
 	IVar (ident),
@@ -163,6 +165,18 @@ namespace syntax {
 	return ITypedVar::id ();
     }
 
+    std::string ITypedVar::prettyPrint () {
+	if (this-> type) {
+	    return Ymir::format ("% : %",
+				 this-> token.getStr ().c_str (),
+				 this-> type-> prettyPrint ().c_str ());
+	} else {
+	    return Ymir::format ("% : %",
+				 this-> token.getStr ().c_str (),
+				 this-> expType-> info-> type-> typeString ().c_str ());
+	}
+    }
+    
     bool IVar::hasTemplate () {
 	return this-> templates.size () != 0;
     }
@@ -188,7 +202,11 @@ namespace syntax {
 	return IType::id ();
     }
 
+    std::string IType::prettyPrint () {
+	return this-> info-> type-> typeString ();
+    }
 
+    
     std::vector <Expression>& IVar::getTemplates () {
 	return this-> templates;
     }

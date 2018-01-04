@@ -51,6 +51,8 @@ namespace syntax {
 	TypedVar setType (::semantic::InfoType info);
 
 	void print (int nb = 0) override;
+
+	virtual std::string prettyPrint ();
     };
 
     class IArrayVar : public IVar {

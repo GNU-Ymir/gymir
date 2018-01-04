@@ -75,6 +75,12 @@ namespace semantic {
 	    
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
+	} else if (auto ot = other->to <IRefInfo> ()) {
+	    if (!this-> isConst () && ot-> content ()-> isSame (this)) {
+		auto aux = new (GC) IRefInfo (false, this-> clone ());
+		aux-> binopFoo = &TupleUtils::InstAddr;
+		return aux;
+	    }
 	}
 	return NULL;
     }
@@ -245,7 +251,10 @@ namespace semantic {
 	    auto value = index-> info-> value ()-> to <IFixedValue> ()-> getValue ();
 	    return getField (loc, ltree, value);
 	}
-	
+
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}	
     }
     
 

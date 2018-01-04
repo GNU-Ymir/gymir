@@ -1,6 +1,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
+#include <ymir/semantic/tree/Generic.hh>
 
 namespace semantic {
 
@@ -141,7 +142,7 @@ namespace semantic {
 	if (this-> _content-> is<IUndefInfo> ()) return NULL;
 	else if (this-> _content-> is <IVoidInfo> ()) return NULL;
 	auto ret = this-> _content-> clone ();
-	//ret-> unopFoo = &PtrUtils::InstUnref;
+	ret-> unopFoo = &PtrUtils::InstUnref;
 	return ret;
     }
 
@@ -252,6 +253,11 @@ namespace semantic {
 	    auto type = typeExpr-> info-> type-> toGeneric ();
 	    auto lexp = elem-> toGeneric ();
 	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
+	}
+
+	Ymir::Tree InstUnref (Word locus, InfoType type, Expression elem) {
+	    auto inner = type-> toGeneric ();
+	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
 	}
 	
     }

@@ -45,6 +45,8 @@ namespace semantic {
 
 	std::string innerTypeString () override;
 
+	std::string typeString () override;
+
 	std::string simpleTypeString () override;
 
 	bool& alone ();

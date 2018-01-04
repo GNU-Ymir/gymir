@@ -32,7 +32,9 @@ namespace syntax {
 
 	Var var () override;
 	
-	void print (int nb = 0) override;	
+	void print (int nb = 0) override;
+
+	std::string prettyPrint () override;
     };
 
     typedef ITypedVar* TypedVar;

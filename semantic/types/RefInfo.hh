@@ -32,7 +32,7 @@ namespace semantic {
 
 	InfoType BinaryOpRight (Word token, syntax::Expression left) override;
 
-	InfoType AccessOp (Word token, syntax::ParamList params) override;
+	InfoType AccessOp (Word token, syntax::ParamList params, std::vector <InfoType> &) override;
 
 	InfoType DotOp (syntax::Var var) override;
 
@@ -75,6 +75,10 @@ namespace semantic {
 	InfoType Unref ();	
 
 	InfoType addUnref (InfoType elem);
+
+	InfoType addUnrefRight (InfoType elem);
+
+	InfoType addUnrefDouble (InfoType elem);
 	
     };
 

@@ -20,6 +20,9 @@ namespace syntax {
 	semantic::InfoType type ();	
 	
 	void print (int nb = 0) override;	
+
+	std::string prettyPrint () override;
+	
     };
 
     typedef IType* Type;

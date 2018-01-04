@@ -65,7 +65,7 @@ namespace semantic {
 
 	InfoType BinaryOpRight (Word, syntax::Expression) override;
 
-	InfoType AccessOp (Word, syntax::ParamList) override;
+	InfoType AccessOp (Word, syntax::ParamList, std::vector<InfoType>&) override;
 
 	InfoType DotOp (syntax::Var) override;
 

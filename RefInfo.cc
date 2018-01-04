@@ -1,6 +1,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/utils/PtrUtils.hh>
 
 namespace semantic {
 
@@ -14,16 +15,44 @@ namespace semantic {
 	    list.pop_back ();
 	    return last;
 	}
+
+	Ymir::Tree InstUnrefBinRight (Word locus, InfoType type, Expression left, Expression right) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+	    
+	    auto inner = right-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();	    
+	    auto rightExp = right-> toGeneric ();
+	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
+	    
+	    if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus,
+		    type,
+		    left,
+		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		);
+	    } else {
+		return type-> buildMultOp (
+		    locus,
+		    type,
+		    left,
+		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		);
+	    }	    
+	    
+	}
 		
 	Ymir::Tree InstUnrefBin (Word locus, InfoType type, Expression left, Expression right) {
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
-	    auto inner = type-> toGeneric ();
+	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
 	    
 	    auto leftExp = left-> toGeneric ();
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
+	    
 	    if (type-> binopFoo) {
 		return type-> buildBinaryOp (
 		    locus,
@@ -31,34 +60,75 @@ namespace semantic {
 		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
 		    right
 		);
-	    } else {
+	    } else if (type-> multFoo) {
 		return type-> buildMultOp (
 		    locus,
 		    type,
 		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
 		    right
 		);
-	    }	    
+	    } else if (type-> unopFoo) {
+		return type-> buildUnaryOp (
+		    locus,
+		    type,
+		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp)
+		);
+	    }
+	    return leftExp;
 	}
 
-	Ymir::Tree InstUnrefUn (Word locus, InfoType type, Expression left) {
-	    left-> info-> type-> binopFoo = getAndRemoveBack (left-> info-> type-> nextBinop);
-	    auto store = getAndRemoveBack (left-> info-> type-> nextUnop);
-	    if (!left-> info-> type-> nextUnop.empty ())
-		left-> info-> type-> unopFoo = getAndRemoveBack (left-> info-> type-> nextUnop);
-	    else left-> info-> type-> unopFoo = NULL;
-	    
-	    left-> info-> type-> multFoo = getAndRemoveBack (left-> info-> type-> nextMult);
+	Ymir::Tree InstUnrefBinDouble (Word locus, InfoType type, Expression left, Expression right) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
-	    auto inner = type-> toGeneric ();
+	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
+	    auto leftExp = left-> toGeneric ();
+	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
+
+	    inner = right-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
+	    auto rightExp = right-> toGeneric ();
+	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
+	    
+	    if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus,
+		    type,
+		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		);
+	    } else {
+		return type-> buildMultOp (
+		    locus,
+		    type,
+		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		);
+	    }	    
+	}
+	
+	Ymir::Tree InstUnrefUn (Word locus, InfoType type, Expression left) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+	    
+	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
 	    
 	    auto leftExp = left-> toGeneric ();
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
-	    if (store) {
-		return store (
+
+	    if (type-> unopFoo) {
+		return type-> buildUnaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, Ymir::Tree ())
+		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp)
+		);
+	    } else if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus,
+		    type,
+		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (GC) ITreeExpression (locus, type, Ymir::Tree ())
 		);
 	    } else {
 		return leftExp;
@@ -103,30 +173,49 @@ namespace semantic {
 	    refRight = type-> _content;	    
 	} else aux = this-> _content-> BinaryOp (token, right);
 	if (aux != NULL) {
-	    aux = addUnref (aux);
-	    if (refRight != NULL) aux = addUnref (aux);
+	    if (refRight != NULL) aux = addUnrefDouble (aux);
+	    else aux = addUnref (aux);
 	    return aux;
 	}
 	return NULL;
     }
 
     InfoType IRefInfo::BinaryOpRight (Word token, syntax::Expression left) {
+	auto aux = this-> _content-> BinaryOpRight (token, left);
+	if (aux != NULL) {
+	    return addUnrefRight (aux);
+	} else {
+	    aux = left-> info-> type-> BinaryOp (token, this-> _content);    
+	    if (aux != NULL) return addUnrefRight (aux);
+	}
 	return NULL;
     }
 
-    InfoType IRefInfo::AccessOp (Word token, syntax::ParamList params) {
+    InfoType IRefInfo::AccessOp (Word token, syntax::ParamList params, std::vector <InfoType> & treats) {
+	auto aux = this-> _content-> AccessOp (token, params, treats);
+	if (aux != NULL)
+	    return addUnref (aux);
 	return NULL;
     }
 
     InfoType IRefInfo::DotOp (syntax::Var var) {
+	auto aux = this-> _content-> DotOp (var);
+	if (aux != NULL)
+	    return addUnref (aux);
 	return NULL;
     }
 
     InfoType IRefInfo::DotExpOp (syntax::Expression elem) {
+	auto aux = this-> _content-> DotExpOp (elem);
+	if (aux != NULL)
+	    return addUnref (aux);
 	return NULL;
     }
 
     InfoType IRefInfo::DColonOp (syntax::Var var) {
+	auto aux = this-> _content-> DColonOp (var);
+	if (aux != NULL)
+	    return addUnref (aux);
 	return NULL;
     }
 
@@ -136,13 +225,40 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IRefInfo::CastOp (InfoType other) {}
+    InfoType IRefInfo::CastOp (InfoType other) {
+	auto ptr = other-> to <IRefInfo> ();
+	if (ptr && ptr-> _content-> isSame (this-> _content)) {
+	    auto rf = this-> clone ();
+	    rf-> binopFoo = &PtrUtils::InstAffect;
+	    return rf;
+	} else {
+	    auto aux = this-> _content-> CastOp (other);
+	    if (aux) return addUnref (aux);
+	}
+	return NULL;
+    }
 
-    InfoType IRefInfo::CompOp (InfoType other) {}
+    InfoType IRefInfo::CompOp (InfoType other) {
+	auto ptr = other-> to <IRefInfo> ();
+	if (other-> is <IUndefInfo> () || (ptr && ptr-> _content-> isSame (this-> _content))) {
+	    auto rf = this-> clone ();
+	    rf-> binopFoo = &PtrUtils::InstAffect;
+	    return rf;
+	} else {
+	    auto aux = this-> _content-> CastOp (other);
+	    if (aux) return addUnref (aux);
+	}
+	return NULL;
+    }
 
     //InfoType IRefInfo::ApplyOp (std::vector <syntax::Var> vars) {}
 
     ApplicationScore IRefInfo::CallOp (Word op, syntax::ParamList params) {
+	auto ret = this-> _content-> CallOp (op, params);
+	if (ret && ret-> dyn) {
+	    ret-> left = addUnref (this-> _content-> cloneOnExit ());
+	}
+	return ret;
     }
 
     bool IRefInfo::isConst () {
@@ -188,6 +304,28 @@ namespace semantic {
 	elem-> binopFoo = &RefUtils::InstUnrefBin;
 	elem-> unopFoo = &RefUtils::InstUnrefUn;
 	elem-> multFoo = &RefUtils::InstUnrefBin;
+	return elem;
+    }
+    
+    InfoType IRefInfo::addUnrefDouble (InfoType elem) {
+	elem-> nextBinop.push_back (elem-> binopFoo);
+	elem-> nextUnop.push_back (elem-> unopFoo);
+	elem-> nextMult.push_back (elem-> multFoo);
+
+	elem-> binopFoo = &RefUtils::InstUnrefBinDouble;
+	elem-> unopFoo = &RefUtils::InstUnrefUn;
+	elem-> multFoo = &RefUtils::InstUnrefBinDouble;
+	return elem;
+    }
+    
+    InfoType IRefInfo::addUnrefRight (InfoType elem) {
+	elem-> nextBinop.push_back (elem-> binopFoo);
+	elem-> nextUnop.push_back (elem-> unopFoo);
+	elem-> nextMult.push_back (elem-> multFoo);
+
+	elem-> binopFoo = &RefUtils::InstUnrefBinRight;
+	elem-> unopFoo = &RefUtils::InstUnrefUn;
+	elem-> multFoo = &RefUtils::InstUnrefBinRight;
 	return elem;
     }
 
