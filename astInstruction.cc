@@ -216,13 +216,18 @@ namespace syntax {
 		//else TODO  Table::instance ().retInfo ().info->type-> value = NULL;
 	    } else {
 		auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
-		aux-> caster = type;		
 		if (type == NULL) {
 		    Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
 		} else if (type-> isSame (aux-> elem-> info-> type)) {
 		    //if (!Table::instance () TODO immutable
 		}
 	    }
+
+	    Word word (this-> token.getLocus (), Token::EQUAL);
+	    aux-> caster = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
+	    if (!Table::instance ().retInfo ().info-> type-> is <IRefInfo> ())
+		aux-> caster-> isConst (true);
+	    
 	} else {
 	    if (!Table::instance ().retInfo ().info-> type-> is<IUndefInfo> () &&
 		!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> ())

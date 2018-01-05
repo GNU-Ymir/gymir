@@ -154,14 +154,16 @@ namespace semantic {
     }
     
     Ymir::Tree IStringInfo::toGenericStatic () {
-	Ymir::Tree string_type_node = Ymir::makeStructType ("string", 2,
-						 get_identifier ("len"),
-						 (new IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
-						 get_identifier ("ptr"),
-						 (new IPtrInfo (true, new ICharInfo (true)))-> toGeneric ().getTree ()
-	).getTree ();
-		
-	IFinalFrame::declareType ("string", string_type_node);
+	auto string_type_node = IFinalFrame::getDeclaredType ("string");
+	if (string_type_node.isNull ()) {
+	    string_type_node = Ymir::makeStructType ("string", 2,
+						     get_identifier ("len"),
+						     (new IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+						     get_identifier ("ptr"),
+						     (new IPtrInfo (true, new ICharInfo (true)))-> toGeneric ().getTree ()
+	    ).getTree ();
+	    IFinalFrame::declareType ("string", string_type_node);	    
+	}
 	return string_type_node;
     }
 
@@ -216,12 +218,23 @@ namespace semantic {
 	
 	Tree buildDup (location_t loc, Tree lexp, Tree rexp, Expression cst) {
 	    TreeStmtList list;	    
-	    
 	    Tree lenl = getField (loc, lexp, "len");	    
-	    Tree ptrl = getField (loc, lexp, "ptr");	
-	    auto len = getLen (loc, cst, rexp);
-	    auto ptrr = getPtr (loc, cst, rexp);
-	    
+	    Tree ptrl = getField (loc, lexp, "ptr");
+	    Tree len, ptrr;
+
+	    if (rexp.getTreeCode () != CALL_EXPR) {
+		len = getLen (loc, cst, rexp);
+		ptrr = getPtr (loc, cst, rexp);		
+	    } else {
+		auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), lexp.getType ());
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, aux, rexp
+		));
+		
+		len = getField (loc, aux, "len");	    
+		ptrr = getField (loc, aux, "ptr");
+	    }
+
 	    auto allocRet = buildString (loc, len);
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
@@ -230,8 +243,9 @@ namespace semantic {
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
 	    ));
-	    
+		
 	    list.append (copyString (loc, ptrl, ptrr, len));
+	    
 	    getStackStmtList ().back ().append (list.getTree ());
 	    return lexp;	    
 	}
@@ -239,19 +253,26 @@ namespace semantic {
 	Tree InstAff (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();	   
 	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();
+	    auto rexp = right-> toGeneric ();	    
 	    if (right-> info-> isConst ()) {
 		if (!left-> info-> isConst ())
 		    return buildDup (loc, lexp, rexp, right);
 	    }
-	    
+
+	    if (rexp.getTreeCode () != STRING_CST) {
+		getStackStmtList ().back ().append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, lexp, rexp
+		));
+		return lexp;
+	    }
+
 	    TreeStmtList list;
 	    Tree lenl = getField (loc, lexp, "len");
 	    Tree ptrl = getField (loc, lexp, "ptr");	
 	    
 	    auto lenr = getLen (loc, right, rexp);
 	    auto ptrr = getPtr (loc, right, rexp);	    
-	    		
+	    
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, void_type_node, lenl, lenr)
 	    );
@@ -277,6 +298,9 @@ namespace semantic {
 
 	Tree InstToString (Word locus, InfoType, Expression elem, Expression type) {
 	    auto rexp = elem-> toGeneric ();
+	    if (rexp.getTreeCode () == CALL_EXPR)
+		return rexp;
+	    
 	    if (elem-> info-> isConst ()) {
 		location_t loc = locus.getLocus ();
 		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());

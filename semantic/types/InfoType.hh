@@ -136,6 +136,8 @@ namespace semantic {
 
 	virtual InfoType BinaryOpRight (Word, syntax::Expression);
 
+	InfoType BinaryOpRight (Word, InfoType);
+
 	virtual ApplicationScore CallOp (Word, syntax::ParamList);
 
 	virtual ApplicationScore CallOp (Word, std::vector <IInfoType*>);

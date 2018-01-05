@@ -203,7 +203,7 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, this-> _info-> func ()-> getParams ().size ())) {
 		auto var = this-> _info-> func ()-> getParams () [it];
 		buf.write (var-> prettyPrint ());
-		if (it < this-> _info-> func ()-> getParams ().size () - 1)
+		if (it < (int) this-> _info-> func ()-> getParams ().size () - 1)
 		    buf.write (", ");
 	    }
 	    

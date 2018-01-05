@@ -19,7 +19,7 @@ namespace Ymir {
 	return field_decl;
     }
     
-    Tree makeStructType (std::string, int nbfields, ...) {
+    Tree makeStructType (std::string name, int nbfields, ...) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	va_list ap;
 	tree record_type = make_node (RECORD_TYPE);
@@ -43,6 +43,7 @@ namespace Ymir {
 	
 	va_end (ap);
 
+	TYPE_NAME (record_type) = get_identifier (name.c_str ());
 	TREE_CHAIN (fields_last) = NULL_TREE;
 	
 	TYPE_FIELDS (record_type) = fields_begin;
@@ -52,7 +53,7 @@ namespace Ymir {
 	return record_type;
     }
 
-    Tree makeTuple (std::string, std::vector <InfoType> types, std::vector <std::string> attrs) {
+    Tree makeTuple (std::string name, std::vector <InfoType> types, std::vector <std::string> attrs) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);
 
@@ -66,13 +67,15 @@ namespace Ymir {
 	    if (fields_last != NULL) TREE_CHAIN (fields_last) = field;
 	    fields_last = field;
 	}
+
+	TYPE_NAME (record_type) = get_identifier (name.c_str ());
 	TREE_CHAIN (fields_last) = NULL_TREE;
 	TYPE_FIELDS (record_type) = fields_begin;
 	layout_type (record_type);
 	return record_type;
     }
 
-    Tree makeTuple (std::string, std::vector <InfoType> types) {
+    Tree makeTuple (std::string name, std::vector <InfoType> types) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);
 	
@@ -88,6 +91,8 @@ namespace Ymir {
 	    if (fields_last != NULL) TREE_CHAIN (fields_last) = field;
 	    fields_last = field;
 	}
+	
+	TYPE_NAME (record_type) = get_identifier (name.c_str ());
 	TREE_CHAIN (fields_last) = NULL_TREE;
 	TYPE_FIELDS (record_type) = fields_begin;
 	layout_type (record_type);

@@ -104,6 +104,12 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IInfoType::BinaryOpRight (Word w, InfoType info) {
+	auto expr = new syntax::IExpression (w);
+	expr-> info = new ISymbol (w, info);
+	return this-> BinaryOpRight (w, expr);
+    }
+    
     InfoType IInfoType::BinaryOpRight (Word, syntax::Expression) {
 	return NULL;
     }

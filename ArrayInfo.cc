@@ -242,13 +242,16 @@ namespace semantic {
 
     Ymir::Tree IArrayInfo::toGeneric () {
 	std::string name = this-> _content-> typeString () + "[]";
-	Ymir::Tree array_type_node = Ymir::makeStructType (name, 2,
-							   get_identifier ("len"),
-							   (new (GC) IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
-							   get_identifier ("ptr"),
-							   (new (GC) IPtrInfo (true, this-> _content-> clone ()))-> toGeneric ().getTree ()
-	).getTree ();
-	IFinalFrame::declareType (name, array_type_node);
+	auto array_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	if (array_type_node.isNull ()) {
+	    array_type_node = Ymir::makeStructType (name, 2,
+						    get_identifier ("len"),
+						    (new (GC) IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+						    get_identifier ("ptr"),
+						    (new (GC) IPtrInfo (true, this-> _content-> clone ()))-> toGeneric ().getTree ()
+	    ).getTree ();
+	    IFinalFrame::declareType (name, array_type_node);
+	}
 	return array_type_node;
     }
     
@@ -350,10 +353,22 @@ namespace semantic {
 
 	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
 	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
-	    Ymir::Tree len = getLen (loc, cst, rexp);
+	    Ymir::Tree len, ptrr;
 
-	    auto allocRet = buildArray (loc, len, inner);
+	    if (rexp.getTreeCode () != CALL_EXPR) {
+		len = getLen (loc, cst, rexp);
+		ptrr = getPtr (loc, cst, rexp);
+	    } else {
+		auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), lexp.getType ());
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, aux, rexp
+		));
+		
+		len = getField (loc, aux, "len");	    
+		ptrr = getField (loc, aux, "ptr");
+	    }
 	    
+	    auto allocRet = buildArray (loc, len, inner);	    
 	    list.append (Ymir::buildTree (
 		MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
 	    ));
@@ -362,8 +377,7 @@ namespace semantic {
 		MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
 	    ));
 	    	    	    
-	    list.append (copyArray (loc, ptrl, getAddr (rexp), len, inner));
-	    
+	    list.append (copyArray (loc, ptrl, ptrr, len, inner));	    
 	    Ymir::getStackStmtList ().back ().append (list.getTree ());
 	    return lexp;
 	}

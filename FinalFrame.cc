@@ -27,7 +27,7 @@
 namespace semantic {
 
     Ymir::Tree IFinalFrame::__fn_decl__;
-    std::vector <std::string> IFinalFrame::__declared__;
+    std::map <std::string, Ymir::Tree> IFinalFrame::__declared__;
     std::vector <Ymir::Tree> IFinalFrame::__contextToAdd__;
 
     IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, std::vector <syntax::Var> vars, syntax::Block bl, std::vector <syntax::Expression> tmps) :
@@ -76,10 +76,15 @@ namespace semantic {
     Ymir::Tree IFinalFrame::currentFrame () {
 	return __fn_decl__;
     }
+
+    Ymir::Tree IFinalFrame::getDeclaredType (const char* name) {
+	auto type = __declared__.find (name);
+	if (type == __declared__.end ()) return Ymir::Tree ();
+	return type-> second;
+    }
     
     void IFinalFrame::declareType (std::string &name, Ymir::Tree type) {
-	if (std::find (__declared__.begin (), __declared__.end (), name) ==
-	    __declared__.end ()) {
+	if (__declared__.find (name) == __declared__.end ()) {
 	    Ymir::Tree decl = build_decl (BUILTINS_LOCATION, TYPE_DECL,
 					  get_identifier (name.c_str ()),
 					  type.getTree ()
@@ -92,13 +97,12 @@ namespace semantic {
 		Ymir::getStackVarDeclChain ().back ().append (decl);
 	    }
 	    
-	    __declared__.push_back (name);
+	    __declared__ [name] = type;
 	}	    
     }
 
     void IFinalFrame::declareType (const char* name, Ymir::Tree type) {
-	if (std::find (__declared__.begin (), __declared__.end (), name) ==
-	    __declared__.end ()) {
+	if (__declared__.find (name) == __declared__.end ()) {
 	    Ymir::Tree decl = build_decl (BUILTINS_LOCATION, TYPE_DECL,
 					  get_identifier (name),
 					  type.getTree ()
@@ -112,7 +116,7 @@ namespace semantic {
 		Ymir::getStackVarDeclChain ().back ().append (decl);
 	    }
 	   	    
-	    __declared__.push_back (name);
+	    __declared__ [name] = type;
 	}	    
     }
 
@@ -162,6 +166,7 @@ namespace semantic {
 	Ymir::enterBlock ();
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
 				       NULL_TREE, ret);
+	
 	DECL_RESULT (fn_decl) = result_decl;
 	
 	Ymir::Tree inside = this-> _block-> toGeneric ();	

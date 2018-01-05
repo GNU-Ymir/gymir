@@ -4,6 +4,7 @@
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/semantic/pack/Namespace.hh>
 
+#include <map>
 #include <vector>
 #include <string>
 
@@ -32,7 +33,7 @@ namespace semantic {
 	bool _isVariadic;
 	syntax::Block _block;
 
-	static std::vector <std::string> __declared__;
+	static std::map <std::string, Ymir::Tree> __declared__;
 	static std::vector <Ymir::Tree> __contextToAdd__;
 	static Ymir::Tree __fn_decl__;
 	
@@ -60,6 +61,8 @@ namespace semantic {
 	
 	static Ymir::Tree currentFrame ();
 
+	static Ymir::Tree getDeclaredType (const char * name);
+	
 	static void declareType (std::string &name, Ymir::Tree type);
 
 	static void declareType (const char * name, Ymir::Tree type);	

@@ -197,7 +197,7 @@ namespace syntax {
 	);
     }
     
-    Ymir::Tree IString::toGeneric () {
+    Ymir::Tree IString::toGeneric () {	
 	return build_string_literal (this-> content.length () + 1, this-> content.c_str ());       
     }
 
@@ -400,29 +400,25 @@ namespace syntax {
 
     Ymir::Tree IReturn::toGeneric () {
 	Ymir::Tree res;
-	if (this-> caster) {
-	    if (this-> caster-> unopFoo) {
-		res = this-> caster-> buildUnaryOp (
-		    this-> token,
-		    this-> caster,
-		    this-> elem
-		);
-	    } else {
-		res = this-> caster-> buildBinaryOp (
-		    this-> token,
-		    this-> caster,
-		    this-> elem,
-		    new (GC) ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
-		);
-	    }
-	} else {
-	    res = this-> elem-> toGeneric ();
-	}
+	auto tlvalue = DECL_RESULT (IFinalFrame::currentFrame ().getTree ());
 
-	auto set_result = build2 (INIT_EXPR, void_type_node,
-				  DECL_RESULT (IFinalFrame::currentFrame ().getTree ()), res.getTree ());
+	if (this-> caster-> unopFoo) {
+	    res = this-> caster-> buildUnaryOp (
+		this-> token,
+		this-> caster,
+		this-> elem
+	    );
+	} else {
+	    res = this-> caster-> buildBinaryOp (
+		this-> token,
+		this-> caster,
+		this-> elem,
+		new (GC) ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
+	    );
+	}
 	
-	return build1 (RETURN_EXPR, void_type_node, set_result);
+	auto set_result = buildTree (MODIFY_EXPR, this-> token.getLocus (), void_type_node, tlvalue, res);	
+	return Ymir::buildTree (RETURN_EXPR, this-> token.getLocus (), void_type_node, set_result);
     }
 
 }
