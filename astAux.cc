@@ -678,5 +678,17 @@ namespace syntax {
 	if (this-> elem)
 	    this-> elem-> print (nb + 4);
     }    
+
+    IArrayVar::IArrayVar (Word token, Expression content) :
+	IVar (token),
+	content (content)
+    {}
+	
+    void IArrayVar::print (int nb) {
+	printf ("\n%*c <ArrayVar> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);	
+    }
     
 }

@@ -24,7 +24,7 @@ namespace semantic {
 
 	Ymir::Tree InstConcatAff (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstCastToArray (Word word, InfoType, syntax::Expression elem, syntax::Expression type);
+	Ymir::Tree InstToArray (Word word, InfoType, syntax::Expression elem, syntax::Expression type);
 	
     }
 

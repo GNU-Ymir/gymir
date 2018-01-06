@@ -37,10 +37,10 @@ namespace syntax {
 	Ymir::Tree toGeneric () override;
 	
 	virtual IVar* var ();
+		
+	virtual Type asType ();
 
-	Type asType ();
-
-	bool isType ();
+	virtual bool isType ();
 
 	std::vector<Expression>& getTemplates ();
 
@@ -59,19 +59,19 @@ namespace syntax {
 	Expression content;
 
     public: 
-	IArrayVar (Word token, Expression content) :
-	    IVar (token),
-	    content (content)
-	{}
+	IArrayVar (Word token, Expression content);
+
+	IVar* var () override;
+
+	Expression expression () override;
+
+	Type asType () override;
+
+	bool isType () override;
+
+	std::string prettyPrint () override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c <ArrayVar> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-		    
-	}
-	
+	void print (int nb = 0) override;	
     };
     
     typedef IVar* Var;    

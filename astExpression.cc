@@ -149,7 +149,7 @@ namespace syntax {
 	    tmps.push_back (it-> expression ());
 	
 	if (!IInfoType::exists (this-> token.getStr ())) {	    
-	    Ymir::Error::assert ("TODO");
+	    Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
 	    return NULL;
 	} else {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
@@ -172,6 +172,39 @@ namespace syntax {
 	return false;	
     }
 
+    Expression IArrayVar::expression () {
+	if (auto var = this-> content-> to <IVar> ()) {
+	    auto content = var-> asType ();
+	    Word tok (this-> token.getLocus (), "");
+	    auto type = new (GC) IArrayInfo (false, content-> info-> type);
+	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");
+	    return new (GC) IType (tok, type);
+	} else {
+	    Ymir::Error::assert ("TODO");
+	    return NULL;
+	}
+    }
+
+    Var IArrayVar::var () {
+	return this-> expression ()-> to <IVar> ();
+    }
+
+    Type IArrayVar::asType () {
+	return this-> expression ()-> to <IType> ();
+    }
+
+    bool IArrayVar::isType () {
+	return true;
+    }
+
+    std::string IArrayVar::prettyPrint () {
+	if (auto v = this-> content-> to <IVar> ()) {
+	    return Ymir::format ("[%]", v-> prettyPrint ().c_str ());
+	} else {
+	    Ymir::Error::assert ("TODO");
+	    return "";
+	}
+    }
     
     semantic::InfoType ITypedVar::getType () {
 	if (this-> type) {
@@ -341,7 +374,10 @@ namespace syntax {
 	auto aux = new IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 
 	if (simpleVerif (aux)) return NULL;
-	else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+	else if (aux-> left-> info-> isConst ()) {
+	    Ymir::Error::notLValue (aux-> left-> token);
+	    return NULL;
+	} else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token);
 	    return NULL;
 	}

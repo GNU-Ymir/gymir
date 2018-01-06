@@ -259,7 +259,7 @@ namespace semantic {
 		    return buildDup (loc, lexp, rexp, right);
 	    }
 
-	    if (rexp.getTreeCode () != STRING_CST) {
+	    if (!right-> is <IString> ()) {
 		getStackStmtList ().back ().append (buildTree (
 		    MODIFY_EXPR, loc, void_type_node, lexp, rexp
 		));

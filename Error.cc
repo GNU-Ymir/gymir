@@ -686,7 +686,7 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
-
+        
     void Error::undefAttr (Word word, semantic::Symbol type, syntax::Var attr) {
 	std::string msg = format (getString (UndefinedAttr),
 				  YELLOW, attr-> token.getStr ().c_str (), RESET,

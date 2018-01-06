@@ -154,7 +154,7 @@ namespace semantic {
     InfoType IArrayInfo::Concat (syntax::Expression right) {
 	if (right-> info-> type-> isSame (this)) {
 	    auto i = this-> clone ();
-	    i-> isConst (false);
+	    i-> isConst (true);
 	    i-> binopFoo = &ArrayUtils::InstConcat;
 	    return i;
 	}
@@ -209,6 +209,7 @@ namespace semantic {
 	if ((type && type-> _content-> isSame (this-> _content)) ||
 	    other-> is<IUndefInfo> ()) {
 	    auto ret = this-> clone ();
+	    ret-> binopFoo = ArrayUtils::InstToArray;
 	    //ret-> lintInst = ArrayUtils::InstAffectRight;
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
@@ -555,9 +556,27 @@ namespace semantic {
 	    if (auto cst = elem-> to<IConstArray> ()) {
 		location_t loc = locus.getLocus ();
 		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
-		return buildDup (loc, auxVar, rexp, cst);
+		if (!type-> info-> isConst ()) {
+		    return buildDup (loc, auxVar, rexp, cst);
+		} else {
+		    auto lenr = getLen (loc, elem, rexp);
+		    auto ptrr = getPtr (loc, elem, rexp);
+		    auto ptrl = getField (loc, auxVar, "ptr");
+		    auto lenl = getField (loc, auxVar, "len");
+		    TreeStmtList list;
+
+		    list.append (buildTree (
+			MODIFY_EXPR, loc, void_type_node, lenl, lenr
+		    ));
+	    
+		    list.append (buildTree (
+			MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
+		    ));
+		    Ymir::getStackStmtList ().back ().append (list.getTree ());
+		    return auxVar;
+		}
 	    } else {
-		return elem-> toGeneric ();
+		return rexp;
 	    }
 	}
 
