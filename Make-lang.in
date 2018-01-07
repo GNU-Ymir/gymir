@@ -77,6 +77,7 @@ ymir_OBJS = \
 	ymir/Generic.o \
 	ymir/InternalFunction.o \
 	ymir/TupleInfo.o \
+	ymir/UnPureFrame.o \
 	$(END)
     
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

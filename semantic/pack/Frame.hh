@@ -7,6 +7,7 @@
 
 #include <string>
 #include <ymir/utils/Array.hh>
+#include <ymir/ast/Block.hh>
 
 namespace syntax {
     class IExpression;
@@ -108,6 +109,10 @@ namespace semantic {
 	ApplicationScore getScore (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
 
 	ApplicationScore isApplicable (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
+
+	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, std::vector <syntax::Var> finalParams, syntax::Block block, std::vector <syntax::Expression> tmps, bool isVariadic);
+		
+	FrameProto validate (Namespace space, Namespace from, std::vector <syntax::Var> finalParams, bool isVariadic);
 	
     };
 

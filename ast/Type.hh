@@ -17,6 +17,8 @@ namespace syntax {
 	
 	const char * getId () override;
 
+	Type asType () override;
+	
 	semantic::InfoType type ();	
 	
 	void print (int nb = 0) override;	

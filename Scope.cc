@@ -17,7 +17,7 @@ namespace semantic {
     void Scope::set (std::string name, Symbol sym) {
 	auto it = this-> local.find (name);
 	if (it != this-> local.end ()) {
-	    it-> second [0] = (sym);
+	    it-> second.push_back (sym);
 	} else this-> local [name] = {sym};
     }   
     

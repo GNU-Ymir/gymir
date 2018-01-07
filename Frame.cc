@@ -46,40 +46,34 @@ namespace semantic {
 	    return score;
 	} else if (attrs.size () == args.size ()) {
 	    for (auto it : Ymir::r (0, args.size ())) {
+		auto CONST_SAME = this-> CONST_SAME;
+		auto SAME = this-> SAME;
 		InfoType info = NULL;
 		auto param = attrs [it];
 		if (auto tvar = param-> to<ITypedVar> ()) {
 		    info = tvar-> getType ()-> clone ();
-		    auto type = args [it]-> CompOp (info);
-		    if (type != NULL) type = type-> ConstVerif (info);
-		    else return NULL;
-		    
-		    if (type && type-> isSame (args [it])) {
-			if (args [it]-> isConst () != info-> isConst ())
-			    score-> score += CONST_SAME;
-			else score-> score += SAME;
-			score-> treat.push_back (type);
-		    } else if (type != NULL) {
-			if (args [it]-> isConst () != info-> isConst ())
-			    score-> score += CONST_AFF;
-			else score-> score += AFF;
-			score-> treat.push_back (type);
-		    } else return NULL;
 		} else {
-		    if (args [it]-> is<IFunctionInfo> ())
-			Ymir::Error::assert ("TODO, passage function en param");
-		    auto var = attrs [it]-> to<IVar> ();
-		    if (var-> deco == Keys::REF && !args [it]-> is<IRefInfo> ()) {
-			auto type = args [it]-> CompOp (new IRefInfo (args [it]-> clone ()));
-			if (type == NULL) return NULL;
-			score-> treat.push_back (type);
-		    } else if (var-> deco == Keys::CONST) {
-			score-> treat.push_back (args [it]-> cloneConst ());
-		    } else {
-			score-> treat.push_back (args [it]-> clone ());
-		    }
-		    score-> score += CHANGE;
+		    tvar = param-> setType (new (GC) IUndefInfo ());
+		    info = tvar-> getType ()-> clone ();
+		    CONST_SAME = this-> CONST_AFF;
+		    SAME = this-> AFF;
 		}
+
+		auto type = args [it]-> CompOp (info);
+		if (type != NULL) type = type-> ConstVerif (info);
+		else return NULL;
+		
+		if (type && type-> isSame (args [it])) {
+		    if (args [it]-> isConst () != info-> isConst ())
+			score-> score += CONST_SAME;
+		    else score-> score += SAME;
+		    score-> treat.push_back (type);
+		} else if (type != NULL) {
+		    if (args [it]-> isConst () != info-> isConst ())
+			score-> score += CONST_AFF;
+		    else score-> score += AFF;
+		    score-> treat.push_back (type);
+		} else return NULL;		
 	    }
 	    score-> score += this-> currentScore ();
 	    return score;
@@ -176,11 +170,11 @@ namespace semantic {
     std::vector <::syntax::Var> IFrame::computeParams (std::vector<Var> attr, std::vector<InfoType> params) {
 	std::vector <Var> finalParams;
 	for (auto it : Ymir::r (0, attr.size ())) {
-	    if (!attr [it] -> is<ITypedVar> ()) {
-		auto var = attr [it]-> setType (params [it]);
-		finalParams.push_back ((Var) var-> expression ());
-	    } else {
-		finalParams.push_back (attr [it]-> var ());
+	    if (auto var = attr [it] -> to<ITypedVar> ()) {
+		finalParams.push_back (var-> var ());
+	    } else {		
+		auto v = attr [it]-> setType (params [it]);
+		finalParams.push_back (v-> var ());
 	    }
 	}
 	return finalParams;
@@ -195,6 +189,120 @@ namespace semantic {
 	return finalParams;
     }
 
+    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, std::vector <Var> params, Block block, std::vector <Expression> tmps, bool isVariadic) {
+	Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
+	struct Exit {
+	    Namespace last;
+
+	    Exit () : last (Table::instance ().templateNamespace ()) {
+	    }
+	    
+	    FrameProto operator () (Word name, Namespace from, Symbol ret, std::vector <Var> params, Block block, std::vector <Expression> tmps, bool isVariadic) {
+		Table::instance ().templateNamespace () = from;
+		if (ret == NULL) 
+		    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
+		else
+		    Table::instance ().retInfo ().info = ret;
+
+		auto proto = new (GC) IFrameProto (name.getStr (), from, Table::instance ().retInfo ().info, params, tmps);
+		if (!FrameTable::instance ().existsProto (proto)) {
+		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+			Table::instance ().retInfo ().isImmutable () = true;
+		    
+		    FrameTable::instance ().insert (proto);
+		    Table::instance ().retInfo ().currentBlock () = "true";
+		    block = block-> block ();
+
+		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+			Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
+
+		    auto finFrame = new (GC) IFinalFrame (Table::instance ().retInfo ().info,
+							  from, name.getStr (),
+							  params, block, tmps);
+
+		    finFrame-> isVariadic () = isVariadic;
+		    proto-> type () = Table::instance ().retInfo ().info;
+		    FrameTable::instance ().insert (finFrame);
+
+		    finFrame-> file () = name.getFile ();
+		    Table::instance ().quitBlock ();
+		    verifyReturn (name, proto-> type (), Table::instance ().retInfo ());
+		    Table::instance ().quitFrame ();
+		    return proto;
+		}
+		Table::instance ().quitBlock ();
+		Table::instance ().quitFrame ();
+		return proto;
+	    }
+
+	    ~Exit () {
+		Table::instance ().templateNamespace () = last;
+	    }
+	    
+	};
+
+	Exit ex;
+	return ex (name, from, ret, params, block, tmps, isVariadic);	
+    }
+
+    FrameProto IFrame::validate (Namespace space, Namespace from, std::vector <Var> params, bool isVariadic) {
+	Table::instance ().setCurrentSpace (Namespace (space, this-> _function-> getIdent ().getStr ()));
+	struct Exit {
+	    Namespace last;
+	    Frame self;
+
+	    Exit (Frame self) : last (Table::instance ().templateNamespace ()), self (self) {
+	    }
+
+	    FrameProto operator () (Namespace from, std::vector <Var> params, bool isVariadic) {		
+		if (self-> _function-> getType () == NULL) 
+		    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
+		else
+		    Table::instance ().retInfo ().info = self-> _function-> getType ()-> asType ()-> info;
+
+		auto proto = new (GC) IFrameProto (self-> _function-> getIdent ().getStr (), from, Table::instance ().retInfo ().info, params, self-> tempParams);
+		
+		if (!FrameTable::instance ().existsProto (proto)) {
+		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+			Table::instance ().retInfo ().isImmutable () = true;
+
+		    FrameTable::instance ().insert (proto);
+		    Table::instance ().retInfo ().currentBlock () = "true";
+		    auto block = self-> _function-> getBlock ()-> block ();
+
+		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+			Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
+
+		    auto finFrame = new (GC) IFinalFrame (Table::instance ().retInfo ().info,
+							  from, self-> _function-> getIdent ().getStr (),
+							  params, block, self-> tempParams);
+
+		    finFrame-> isVariadic () = isVariadic;
+		    proto-> type () = Table::instance ().retInfo ().info;
+		    FrameTable::instance ().insert (finFrame);
+
+		    finFrame-> file () = self-> _function-> getIdent ().getFile ();
+		    Table::instance ().quitBlock ();
+		    verifyReturn (self-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
+		    Table::instance ().quitFrame ();
+		    return proto;
+		}
+		Table::instance ().quitBlock ();
+		Table::instance ().quitFrame ();
+		return proto;		
+	    }
+	    
+	    ~Exit () {
+		Table::instance ().templateNamespace () = last;
+	    }
+	    
+	};
+	Exit ex (this);
+	return ex (from, params, isVariadic);
+    }
+    
+    
+    
     Namespace& IFrame::space () {
 	return this-> _space;
     }

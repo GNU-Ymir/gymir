@@ -30,8 +30,6 @@ namespace syntax {
 
     Frame IFunction::verifyPure (Namespace space) {
 	if (this-> tmps.size () != 0) {
-	    Ymir::Error::assert ("TODO");
-	    return NULL;//
 	    // auto isPure = verifyTemplates ();
 	    // auto ret = new TemplateFrame (space, this);
 	    // if (!isPure) return ret;
@@ -46,11 +44,10 @@ namespace syntax {
 
 	for (auto it : this-> params) {
 	    if (!it-> is<ITypedVar> ()) {
-		Ymir::Error::assert ("TODO");
-		return NULL;//new IUnPureFrame (space, this);
+		return new IUnPureFrame (space, this);
 	    }
 	}
-	
+
 	auto fr = new IPureFrame (space, this);
 	FrameTable::instance ().insert (fr);
 	return fr;

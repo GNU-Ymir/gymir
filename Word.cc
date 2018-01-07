@@ -16,7 +16,10 @@ std::string Word::toString () {
     return out.str ();
 }
 
-   
+std::string Word::getFile () {
+    return LOCATION_FILE (this-> locus);
+}
+
 bool Word::isToken () {
     auto mem = Token::members ();
     return std::find (mem.begin (), mem.end (), this-> str) != mem.end ();

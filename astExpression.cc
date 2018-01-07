@@ -159,7 +159,7 @@ namespace syntax {
 	    return new IType (this-> token, t_info);
 	}
     }
-
+    
     bool IVar::isType () {
 	if (IInfoType::exists (this-> token.getStr ())) return true;
 	else {
@@ -171,7 +171,11 @@ namespace syntax {
 	}
 	return false;	
     }
-
+    
+    Type IType::asType () {
+	return this;
+    }
+    
     Expression IArrayVar::expression () {
 	if (auto var = this-> content-> to <IVar> ()) {
 	    auto content = var-> asType ();

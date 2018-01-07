@@ -55,15 +55,15 @@ namespace semantic {
 	    }
 
 	    for (auto it : Ymir::r (0, this-> _vars.size ())) {
-		if (this-> _vars [it]-> info-> type-> simpleTypeString () !=
-		    scd-> _vars  [it]-> info-> type-> simpleTypeString ())
+		if (!(this-> _vars [it]-> info-> type-> isSame (scd-> _vars  [it]-> info-> type)) ||
+		    this-> _vars [it]-> info-> isConst () != scd-> _vars  [it]-> info-> type-> isConst ())
 		    return false;
 	    }
 	    return true;
 	}
 	return false;
     }
-
+    
     Ymir::Tree IFrameProto::toGeneric () {
 	if (this-> _fn.isNull ()) {
 	    std::vector <tree> fndecl_type_params (this-> _vars.size ());

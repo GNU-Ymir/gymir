@@ -7,6 +7,7 @@
 #include "ast/_.hh"
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/pack/FrameTable.hh>
+#include <ymir/utils/Mangler.hh>
 
 #include "config.h"
 #include "system.h"

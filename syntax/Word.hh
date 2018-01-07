@@ -54,6 +54,8 @@ public:
 	this-> str = other;	
     }
 
+    std::string getFile ();  
+    
     static Word eof () {
 	return Word (UNKNOWN_LOCATION, "");
     }

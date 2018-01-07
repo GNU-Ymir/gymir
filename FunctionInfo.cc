@@ -11,14 +11,16 @@ namespace semantic {
 	IInfoType (true),
 	_name (name),
 	_space (space),
-	_info (NULL)
+	_info (NULL),
+	_alone (false)
     {}
 
     IFunctionInfo::IFunctionInfo (Namespace space, std::string name, std::vector<Frame> infos) :
 	IInfoType (true),
 	_name (name),
 	_space (space),
-	_fromTemplates (infos)
+	_fromTemplates (infos),
+	_alone (false)
     {}
 
     bool IFunctionInfo::isSame (InfoType) {
@@ -119,7 +121,7 @@ namespace semantic {
 	std::vector <Frame> frames = getFrames ();
 
 	for (auto it : frames) {
-	    total.push_back (it-> isApplicable (params));
+	    total.push_back (it-> isApplicable (params));	    
 	}
 
 	std::vector <Frame> goods;
