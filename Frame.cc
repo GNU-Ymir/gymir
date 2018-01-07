@@ -17,7 +17,8 @@ namespace semantic {
     const long IFrame::SAME = 20;
     const long IFrame::CONST_AFF = 8;    
     const long IFrame::AFF = 10;
-    const long IFrame::CHANGE = 14;			       
+    const long IFrame::CHANGE = 14;
+    const long IFrame::CONST_CHANGE = 12;			       
     
     IFrame::IFrame (Namespace space, ::syntax::Function func) :
 	_function (func),
@@ -55,8 +56,8 @@ namespace semantic {
 		} else {
 		    tvar = param-> setType (new (GC) IUndefInfo ());
 		    info = tvar-> getType ()-> clone ();
-		    CONST_SAME = this-> CONST_AFF;
-		    SAME = this-> AFF;
+		    CONST_SAME = this-> CONST_CHANGE;
+		    SAME = this-> CHANGE;
 		}
 
 		auto type = args [it]-> CompOp (info);

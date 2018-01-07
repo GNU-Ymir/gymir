@@ -39,7 +39,8 @@ namespace semantic {
 	static const long SAME;// = 20;
 	static const long CONST_AFF;// = 8;    
 	static const long AFF;// = 10;
-	static const long CHANGE;// = 14;			       
+	static const long CHANGE;// = 14;
+	static const long CONST_CHANGE; // = 12
 
 	int _currentScore;        
 	bool _isInternal = false;	
