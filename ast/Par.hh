@@ -40,6 +40,16 @@ namespace syntax {
 	Expression expression () override;
 
 	Ymir::Tree toGeneric () override;
+
+	static const char * id () {
+	    return TYPEID (IPar);
+	}
+
+	std::vector <std::string> getIds () {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID(IPar));
+	    return ret;
+	}
 	
 	void print (int nb = 0) override;
 

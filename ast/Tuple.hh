@@ -21,10 +21,12 @@ namespace syntax {
 	Expression expression () override;
 
 	Ymir::Tree toGeneric () override;
-
-	static const char * id ();
-
-	const char * getId () override;
+       
+	static const char * id () {
+	    return TYPEID (IConstTuple);
+	}
+	
+	std::vector <std::string> getIds () override;
 	
 	void print (int nb = 0) override;
 	

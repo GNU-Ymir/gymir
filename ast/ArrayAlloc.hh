@@ -22,9 +22,11 @@ namespace syntax {
 
 	Ymir::Tree toGeneric () override;
 
-	static const char * id ();
-
-	const char * getId () override;
+	static const char * id () {
+	    return TYPEID (IArrayAlloc);
+	}
+	
+	virtual std::vector <std::string> getIds ();
 	
 	void print (int nb = 0) override;
     };

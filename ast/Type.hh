@@ -12,10 +12,12 @@ namespace syntax {
     public:
 
 	IType (Word token, semantic::InfoType type);
-
-	static const char * id ();
 	
-	const char * getId () override;
+	static const char * id () {
+	    return TYPEID (IType);
+	}
+
+	std::vector <std::string> getIds () override;
 
 	Type asType () override;
 	

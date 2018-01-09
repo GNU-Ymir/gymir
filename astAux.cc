@@ -68,8 +68,12 @@ namespace syntax {
 	return this-> ident;
     }
 
-    std::vector <Var> IFunction::getParams () {
+    std::vector <Var>& IFunction::getParams () {
 	return this-> params;
+    }
+    
+    std::vector <Expression>& IFunction::getTemplates () {
+	return this-> tmps;
     }
 
     Var IFunction::getType () {
@@ -101,12 +105,10 @@ namespace syntax {
 	return paramTypes;
     }
     
-    const char* IParamList::getId () {
-	return IParamList::id ();
-    }
-
-    const char * IParamList::id () {
-	return "IParamList";
+    std::vector <std::string> IParamList::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IParamList));
+	return ret;
     }
     
     IVar::IVar (Word ident) : IExpression (ident) {}
@@ -120,14 +122,18 @@ namespace syntax {
 	IExpression (ident),
 	templates (tmps)
     {}
-
-    const char* IVar::id () {
-	return "IVar";
-    }
 	
-    const char* IVar::getId () {
-	return IVar::id ();
+    std::vector <std::string> IVar::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IVar));
+	return ret;
     }
+    	
+    std::vector <std::string> IArrayVar::getIds () {
+	auto ret = IVar::getIds ();
+	ret.push_back (TYPEID (IArrayVar));
+	return ret;
+    }     
 	
     std::string IVar::prettyPrint () {
 	return this-> token.getStr ();
@@ -157,12 +163,18 @@ namespace syntax {
 	this-> deco = deco;
     }
 	
-    const char * ITypedVar::id () {
-	return "ITypedVar";
+    Var ITypedVar::typeVar () {
+	return this-> type;
     }
 
-    const char * ITypedVar::getId () {
-	return ITypedVar::id ();
+    Expression ITypedVar::typeExp () {
+	return this-> expType;
+    }
+
+    std::vector <std::string> ITypedVar::getIds () {
+	auto ret = IVar::getIds ();
+	ret.push_back (TYPEID (ITypedVar));
+	return ret;
     }
 
     std::string ITypedVar::prettyPrint () {
@@ -193,13 +205,11 @@ namespace syntax {
     InfoType IType::type () {
 	return this-> _type;
     }
-
-    const char * IType::id () {
-	return "IType";
-    }
     
-    const char * IType::getId () {
-	return IType::id ();
+    std::vector <std::string> IType::getIds () {
+	auto ret = IVar::getIds ();
+	ret.push_back (TYPEID (IType));
+	return ret;
     }
 
     std::string IType::prettyPrint () {
@@ -237,12 +247,10 @@ namespace syntax {
 	    this-> type-> inside = this;
     }    
 
-    const char * IArrayAlloc::id () {
-	return "IArrayAlloc";
-    }
-
-    const char* IArrayAlloc::getId () {
-	return "IArrayAlloc";
+    std::vector <std::string> IArrayAlloc::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID(IArrayAlloc));
+	return ret;
     }
     
     IAssert::IAssert (Word token, Expression test, Expression msg, bool isStatic) :
@@ -265,8 +273,10 @@ namespace syntax {
 	if (this-> right) this-> right-> inside = this;	    
     }
 
-    const char* IBinary::getId () {
-	return IBinary::id ();
+    std::vector <std::string> IBinary::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID(IBinary));
+	return ret;
     }
 
     IFixed::IFixed (Word word, FixedConst type) :
@@ -309,16 +319,14 @@ namespace syntax {
 	content (content)
     {}
 
-    const char* IString::id () {
-	return "IString";
-    }
-
     std::string IString::getStr () {
 	return this-> content;
     }
     
-    const char* IString::getId () {
-	return IString::id ();
+    std::vector <std::string> IString::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IString));
+	return ret;
     }
     
     IBreak::IBreak (Word token) : IInstruction (token) {
@@ -385,6 +393,12 @@ namespace syntax {
 
     Expression& IDotCall::firstPar () {
 	return this-> _firstPar;
+    }
+
+    std::vector <std::string> IDotCall::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IDotCall));
+	return ret;
     }
     
     IPar::IPar (Word word, Word end) :
@@ -458,12 +472,10 @@ namespace syntax {
 	return this-> ident.getStr ();
     }
 
-    const char* IConstArray::id () {
-	return "IConstArray";
-    }
-
-    const char * IConstArray::getId () {
-	return IConstArray::id ();
+    std::vector <std::string> IConstArray::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IConstArray));
+	return ret;
     }
 
     ITreeExpression::ITreeExpression (Word locus, semantic::InfoType info, Ymir::Tree content) :
@@ -623,12 +635,10 @@ namespace syntax {
 	params (params)
     {}
     
-    const char * IConstTuple::id () {
-	return "IConstTuple";
-    }
-
-    const char * IConstTuple::getId () {
-	return IConstTuple::id ();
+    std::vector <std::string> IConstTuple::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IConstTuple));
+	return ret;
     }
 
     void IConstTuple::print (int nb) {
@@ -683,12 +693,31 @@ namespace syntax {
 	IVar (token),
 	content (content)
     {}
-	
+
+    Expression IArrayVar::contentExp () {
+	return this-> content;
+    }
+    
     void IArrayVar::print (int nb) {
 	printf ("\n%*c <ArrayVar> %s",
 		nb, ' ',
 		this-> token.toString ().c_str ()
 	);	
     }
+
+    IExpression* IExpression::clone () {
+	auto ret = this-> onClone ();
+	if (this-> info && ret != this) 
+	    ret-> info = new (GC) ISymbol (this-> info-> sym, this-> info-> type ? this-> info-> type-> clone () : NULL);
+	return ret;
+    }
+
+    Expression IExpression::templateExpReplace (std::map <std::string, Expression>) {
+	this-> print (0);
+	Ymir::Error::assert ((std::string ("TODO") + this-> getIds ().back ()).c_str ());
+	return NULL;	    
+    }
+
+
     
 }

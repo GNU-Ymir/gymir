@@ -663,7 +663,7 @@ namespace syntax {
 	    auto type = visitType ();
 	    return new (GC) IOfVar (ident, type);	    
 	} else if (next == Token::TDOT) {
-	    return new IVariadicVar (ident);
+	    return new (GC) IVariadicVar (ident);
 	} else this-> lex.rewind ();
 	return new (GC) IVar (ident, deco);
     }

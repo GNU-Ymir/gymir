@@ -26,9 +26,11 @@ namespace syntax {
 	IVar (Word ident, Word deco);
 	IVar (Word ident, std::vector <Expression> tmps);
 
-	static const char* id ();
+	static const char * id () {
+	    return TYPEID (IVar);
+	}
 	
-	const char* getId () override;
+	std::vector <std::string> getIds () override;
 	
 	bool hasTemplate ();
 
@@ -65,11 +67,19 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression contentExp ();
+	
 	Type asType () override;
 
 	bool isType () override;
 
 	std::string prettyPrint () override;
+
+	static const char * id () {
+	    return TYPEID (IArrayVar);
+	}
+	
+	std::vector <std::string> getIds () override;
 	
 	void print (int nb = 0) override;	
     };

@@ -32,8 +32,10 @@ namespace syntax {
 	
 	std::string name ();
 
-	std::vector <Var> getParams ();
+	std::vector <Var>& getParams ();
 
+	std::vector <Expression>& getTemplates ();
+	
 	Var getType ();
 
 	Block getBlock ();

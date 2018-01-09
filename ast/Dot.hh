@@ -18,6 +18,18 @@ namespace syntax {
 	Expression expression () override;
 
 	Ymir::Tree toGeneric () override;
+
+
+	static const char * id () {
+	    return TYPEID (IDot);
+	}
+	
+	std::vector <std::string> getIds () {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IDot));
+	    return ret;
+	}
+	
 	
 	void print (int nb = 0) override;
 		
@@ -40,6 +52,12 @@ namespace syntax {
 	Expression& call ();
 
 	Expression& firstPar ();
+
+	static const char * id () {
+	    return TYPEID (IDotCall);
+	}
+	
+	std::vector <std::string> getIds ();
 	
 	void print (int nb = 0) override;
 	

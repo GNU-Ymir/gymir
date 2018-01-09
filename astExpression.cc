@@ -243,7 +243,9 @@ namespace syntax {
 	}
 	
 	if (this-> type) {
-	    aux = new (GC) ITypedVar (this-> token, this-> type-> asType ());
+	    auto type = this-> type-> asType ();
+	    if (type == NULL) return NULL;
+	    aux = new (GC) ITypedVar (this-> token, type);
 	} else {
 	    auto ptr = this-> expType-> expression ()-> to<IFuncPtr> ();
 	    if (ptr) {
@@ -755,7 +757,7 @@ namespace syntax {
 		aux-> params = p-> to<IParamList> ();
 	    else return NULL;
 	    
-	    aux-> _left = this-> _left-> expression ();
+	    aux-> _left = this-> _left-> expression ();	    
 	    if (simpleVerif (aux)) return NULL;
 
 	    if (auto dcall = aux-> _left-> to<IDotCall> ()) {
@@ -763,7 +765,7 @@ namespace syntax {
 		aux-> params-> getParams ().insert (aux-> params-> getParams ().begin (), dcall-> firstPar ());
 		aux-> _dotCall = dcall;
 	    }
-	    
+
 	    auto type = aux-> _left-> info-> type-> CallOp (aux-> _left-> token, aux-> params);	    
 
 	    if (type == NULL) {

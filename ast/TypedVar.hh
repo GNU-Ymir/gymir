@@ -22,12 +22,17 @@ namespace syntax {
 
 	ITypedVar (Word ident, Expression type, Word deco);
 	
-	static const char * id ();
-
-	const char * getId () override;
+	static const char * id () {
+	    return TYPEID (ITypedVar);
+	}	
+	std::vector <std::string> getIds () override;
 
 	semantic::InfoType getType ();
 
+	Var typeVar ();
+	
+	Expression typeExp ();
+	
 	Expression expression ();
 
 	Var var () override;

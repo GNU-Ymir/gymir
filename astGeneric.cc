@@ -12,7 +12,7 @@ namespace syntax {
     using namespace semantic;
     
     Ymir::Tree IInstruction::toGeneric () {
-	Ymir::Error::assert ((std::string ("TODO generic") + this-> getId ()).c_str  ());
+	Ymir::Error::assert ((std::string ("TODO generic") + this-> getIds ().back ()).c_str  ());
 	return NULL;
     }
         

@@ -23,10 +23,12 @@ namespace syntax {
 	Expression expression () override;
 
 	int nbParams ();
-	
-	static const char * id ();
 
-	const char * getId () override;
+	static const char * id () {
+	    return TYPEID (IConstArray);
+	}
+	
+	std::vector <std::string> getIds () override;
 
 	Ymir::Tree toGeneric () override;
 	

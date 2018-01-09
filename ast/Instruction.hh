@@ -2,9 +2,20 @@
 
 #include "../syntax/Word.hh"
 #include <gc/gc_cpp.h>
+#include <algorithm>
 
 namespace Ymir {
     struct Tree;    
+}
+
+#define TYPEID(x) #x
+
+//const char* getTypeid 
+
+template <typename T>
+const char* valueof (const char* in) {
+    printf ("%s\n", in);
+    return in;
 }
 
 namespace syntax {
@@ -33,14 +44,10 @@ namespace syntax {
 	void setStatic (bool is) {
 	    this-> isStatic = is;
 	}
-
-	static const char* id () {
-	    return "IInstruction";
-	}
 	
-	virtual const char* getId () {
-	    return IInstruction:: id ();
-	};
+	virtual std::vector <std::string> getIds () {
+	    return {TYPEID (IInstruction)};
+	}
 
 	virtual IInstruction* instruction () = 0;	   
 
@@ -48,12 +55,13 @@ namespace syntax {
 		
 	template <typename T>
 	bool is () {
-	    return strcmp (this-> getId (), T::id ()) == 0;
+	    return this-> to<T> () != NULL;
 	}
 
 	template <typename T>
 	T* to () {
-	    if (strcmp (this-> getId (), T::id ()) == 0)
+	    auto ids = this-> getIds ();
+	    if (std::find (ids.begin (), ids.end (), T::id ()) != ids.end ())
 		return (T*) this;
 	    return NULL;
 	}
@@ -75,8 +83,10 @@ namespace syntax {
 	    return "INone";
 	}
 
-	const char* getId () override {
-	    return INone::id ();
+	std::vector <std::string> getIds () override {
+	    auto ret = IInstruction::getIds ();
+	    ret.push_back (INone::id ());
+	    return ret;
 	}
 	
 	void print (int nb = 0) override {

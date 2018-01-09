@@ -25,9 +25,12 @@ namespace syntax {
 
 	void print (int nb = 0) override;
 
-	const char* getId () override;
+	static const char * id () {
+	    return TYPEID (IParamList);
+	}
 	
-	static const char * id ();
+	std::vector <std::string> getIds () override;
+	
     };
 
     typedef IParamList* ParamList;

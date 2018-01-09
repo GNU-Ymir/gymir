@@ -38,6 +38,10 @@ namespace semantic {
 				    params
 	);
     }
+
+    Frame IFrame::TempOp (std::vector <syntax::Expression>) {
+	return NULL;
+    }
     
     ApplicationScore IFrame::getScore (Word ident, std::vector <Var> attrs, std::vector <InfoType> args) {
 	auto score = new IApplicationScore (ident);

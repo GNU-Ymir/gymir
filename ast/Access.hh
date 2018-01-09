@@ -34,7 +34,17 @@ namespace syntax {
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
-	    	
+
+	static const char * id () {
+	    return TYPEID (IAccess);
+	}
+	
+	std::vector <std::string> getIds () override {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IAccess));
+	    return ret;
+	}
+	
     private:
 	
 	Expression findOpAccess ();

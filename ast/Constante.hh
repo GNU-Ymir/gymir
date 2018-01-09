@@ -99,9 +99,11 @@ namespace syntax {
 
 	std::string getStr ();
 	
-	static const char* id ();
-
-	const char* getId () override;
+	static const char * id () {
+	    return TYPEID (IString);
+	}
+	
+	std::vector <std::string> getIds () override;
 	
     private:
 
