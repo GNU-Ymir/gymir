@@ -217,6 +217,23 @@ namespace syntax {
 	}
 	
     };
+
+    class IIgnore : public IExpression {
+    public:
+	IIgnore (Word token)
+	    : IExpression (token)
+	{}
+
+	Expression expression () override;
+
+	void print (int nb = 0) override {
+	    printf ("\n%*c<Ignore> %s",
+		    nb, ' ',
+		    this-> token.toString ().c_str ()
+	    );
+	}
+	
+    };
     
     typedef IFixed* Fixed;
     typedef IChar* Char;

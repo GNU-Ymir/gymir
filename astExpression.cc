@@ -10,7 +10,7 @@ namespace syntax {
     using namespace semantic;
     
     Expression IAccess::expression () {
-	auto aux = new IAccess (this-> token, this-> end);
+	auto aux = new (GC) IAccess (this-> token, this-> end);
 	aux-> params = (ParamList) this-> params-> expression ();
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
@@ -40,19 +40,19 @@ namespace syntax {
 	}
 	
 	aux-> treats = treats;
-	aux-> info = new ISymbol (this-> token, type);
+	aux-> info = new (GC) ISymbol (this-> token, type);
 	return aux;
     }
 
     Expression IAccess::findOpAccess () {
 	Ymir::Error::activeError (false);
 	Word word (this-> token.getLocus (), Keys::OPACCESS);
-	auto var = new IVar (word);
+	auto var = new (GC) IVar (word);
 	std::vector <Expression> params = {this-> left};
 	params.insert (params.begin (), this-> params-> getParams ().begin (),
 		       this-> params-> getParams ().end ());
-	auto finalParams = new IParamList (this-> token, params);
-	auto call = new IPar (this-> token, this-> token, var, finalParams, true);
+	auto finalParams = new (GC) IParamList (this-> token, params);
+	auto call = new (GC) IPar (this-> token, this-> token, var, finalParams, true);
 
 	auto res = call-> expression ();
 	auto errors = Ymir::Error::caught ();
@@ -66,7 +66,7 @@ namespace syntax {
 	if (this-> info && this-> info-> isImmutable ()) {
 	    return this;	    
 	} else if (!this-> isType ()) {
-	    auto aux = new IVar (this-> token);
+	    auto aux = new (GC) IVar (this-> token);
 	    aux-> info = Table::instance ().get (this-> token.getStr ());
 	    if (aux-> info == NULL) {
 		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
@@ -90,7 +90,7 @@ namespace syntax {
 		    Ymir::Error::assert ("TODO, gerer l'erreur");
 		}
 		aux-> templates = tmps;
-		aux-> info = new ISymbol (aux-> info-> sym, type);
+		aux-> info = new (GC) ISymbol (aux-> info-> sym, type);
 	    }
 	    return aux;
 	} else return asType ();	
@@ -100,7 +100,7 @@ namespace syntax {
 	if (this-> info && this-> info-> isImmutable ()) {
 	    return this;	    
 	} else if (!this-> isType ()) {
-	    auto aux = new IVar (this-> token);
+	    auto aux = new (GC) IVar (this-> token);
 	    aux-> info = Table::instance ().get (this-> token.getStr ());
 	    if (aux-> info == NULL) {
 		Ymir::Error::assert ("TODO, gerer l'erreur");
@@ -117,7 +117,7 @@ namespace syntax {
 		    Ymir::Error::assert ("TODO, gerer l'erreur");
 		}
 		aux-> templates = tmps;
-		aux-> info = new ISymbol (aux-> info-> sym, type);
+		aux-> info = new (GC) ISymbol (aux-> info-> sym, type);
 	    }
 	    return aux;
 	} else return asType ();
@@ -125,21 +125,21 @@ namespace syntax {
     
     TypedVar IVar::setType (Symbol info) {
 	if (this-> deco == Keys::REF) {
-	    auto type = new IType (info-> sym, info-> type-> cloneOnExit ());
-	    return new ITypedVar (this-> token, type);
+	    auto type = new (GC) IType (info-> sym, info-> type-> cloneOnExit ());
+	    return new (GC) ITypedVar (this-> token, type);
 	} else {
-	    auto type = new IType (info-> sym, info-> type-> cloneOnExit ());
-	    return new ITypedVar (this-> token, type, this-> deco);
+	    auto type = new (GC) IType (info-> sym, info-> type-> cloneOnExit ());
+	    return new (GC) ITypedVar (this-> token, type, this-> deco);
 	}
     }
 
     TypedVar IVar::setType (InfoType info) {
 	if (this-> deco == Keys::REF) {
-	    auto type = new IType (this-> token, info-> cloneOnExit ());
-	    return new ITypedVar (this-> token, type);
+	    auto type = new (GC) IType (this-> token, info-> cloneOnExit ());
+	    return new (GC) ITypedVar (this-> token, type);
 	} else {
-	    auto type = new IType (this-> token, info-> cloneOnExit ());
-	    return new ITypedVar (this-> token, type, this-> deco);
+	    auto type = new (GC) IType (this-> token, info-> cloneOnExit ());
+	    return new (GC) ITypedVar (this-> token, type, this-> deco);
 	}
     }
 
@@ -154,9 +154,9 @@ namespace syntax {
 	} else {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
 	    if (this-> deco == Keys::REF)
-		t_info = new IRefInfo (false, t_info);
+		t_info = new (GC) IRefInfo (false, t_info);
 	    else if (this-> deco == Keys::CONST) t_info-> isConst (true);
-	    return new IType (this-> token, t_info);
+	    return new (GC) IType (this-> token, t_info);
 	}
     }
     
@@ -216,7 +216,7 @@ namespace syntax {
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
 		    Ymir::Error::assert ("TODO");
-		return new IRefInfo (false, type-> info-> type);
+		return new (GC) IRefInfo (false, type-> info-> type);
 	    } else if (this-> deco == Keys::CONST) {
 		type-> info-> type-> isConst (true);
 	    }
@@ -227,7 +227,7 @@ namespace syntax {
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
 		    Ymir::Error::assert ("TODO");
-		return new IRefInfo (false, type-> info-> type);
+		return new (GC) IRefInfo (false, type-> info-> type);
 	    } else if (this-> deco == Keys::CONST) {
 		type-> info-> type-> isConst (true);
 	    }
@@ -243,18 +243,18 @@ namespace syntax {
 	}
 	
 	if (this-> type) {
-	    aux = new ITypedVar (this-> token, this-> type-> asType ());
+	    aux = new (GC) ITypedVar (this-> token, this-> type-> asType ());
 	} else {
 	    auto ptr = this-> expType-> expression ()-> to<IFuncPtr> ();
 	    if (ptr) {
-		aux = new ITypedVar (this-> token, new IType (ptr-> token, ptr-> info-> type));
+		aux = new (GC) ITypedVar (this-> token, new (GC) IType (ptr-> token, ptr-> info-> type));
 	    } else Ymir::Error::assert ("Error");	
 	}
 	
 	if (this-> deco == Keys::REF) {
-	    aux-> info = new ISymbol (this-> token, new IRefInfo (false, aux-> type-> info-> type));
+	    aux-> info = new (GC) ISymbol (this-> token, new (GC) IRefInfo (false, aux-> type-> info-> type));
 	} else {
-	    aux -> info = new ISymbol (this-> token, aux-> type-> info-> type);
+	    aux -> info = new (GC) ISymbol (this-> token, aux-> type-> info-> type);
 	    if (this-> deco == Keys::CONST) 
 		aux-> info-> type-> isConst (true);
 	}
@@ -268,7 +268,7 @@ namespace syntax {
     
     
     Expression IArrayAlloc::expression () {
-	auto aux = new IArrayAlloc (this-> token, NULL, this-> size-> expression ());
+	auto aux = new (GC) IArrayAlloc (this-> token, NULL, this-> size-> expression ());
 	if (auto fn = this-> type-> to<IFuncPtr> ()) aux-> type = fn-> expression ();
 	else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
 	else Ymir::Error::useAsType (this-> type-> token);
@@ -277,13 +277,13 @@ namespace syntax {
 	//     Ymir::Error::assert ("TODO");
 	// }
 	
-	auto ul = new ISymbol (this-> token, new IFixedInfo (true, FixedConst::ULONG));
+	auto ul = new (GC) ISymbol (this-> token, new (GC) IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
 	if (cmp == NULL) {
 	    Ymir::Error::assert ("TODO");
 	}
 	aux-> cster = cmp;
-	aux-> info = new ISymbol (this-> token, new IArrayInfo (false, aux-> type-> info-> type-> clone ()));
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) IArrayInfo (false, aux-> type-> info-> type-> clone ()));
 	return aux;
     }
     
@@ -298,7 +298,7 @@ namespace syntax {
 	}
 	
 	Unary unary = new (GC) IUnary (this-> token, elem);
-	unary-> info = new ISymbol (this-> token, type);
+	unary-> info = new (GC) ISymbol (this-> token, type);
 	return unary;
     }
 
@@ -324,7 +324,7 @@ namespace syntax {
 	    Ymir::Error::useAsVar (aux-> right-> token, aux-> right-> info);
 	    return true;
 	} else if (aux-> right-> info == NULL) {
-	    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, new IVoidInfo ());
+	    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, new (GC) IVoidInfo ());
 	    return true;
 	} else if (aux-> right-> info-> isType ()) {
 	    Ymir::Error::useAsVar (aux-> right-> token, aux-> right-> info);
@@ -343,7 +343,7 @@ namespace syntax {
     }
     
     Expression IBinary::affect () {
-	auto aux = new IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());	
+	auto aux = new (GC) IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());	
 	if (simpleVerif (aux)) return NULL;
 
 	if (aux-> left-> info-> isConst ()) {
@@ -369,13 +369,13 @@ namespace syntax {
 	    aux-> isRight = true;
 	}
 
-	aux-> info = new ISymbol (aux-> token, type);
+	aux-> info = new (GC) ISymbol (aux-> token, type);
 	Table::instance ().retInfo ().changed () = true;
 	return aux;	
     }
 
     Expression IBinary::reaff () {
-	auto aux = new IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
+	auto aux = new (GC) IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 
 	if (simpleVerif (aux)) return NULL;
 	else if (aux-> left-> info-> isConst ()) {
@@ -396,14 +396,14 @@ namespace syntax {
 	    return call;	    
 	}
 
-	aux-> info = new ISymbol (aux-> token, type);
+	aux-> info = new (GC) ISymbol (aux-> token, type);
 	Table::instance ().retInfo ().changed () = true;
 	return aux;	
     }
 
     Expression IBinary::normal () {	
 	if (!this-> info) {
-	    auto aux = new IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
+	    auto aux = new (GC) IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 	    if (simpleVerif (aux)) return NULL;
 	    else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 		Ymir::Error::uninitVar (aux-> left-> token);
@@ -424,10 +424,10 @@ namespace syntax {
 		aux-> isRight = true;		
 	    }
 
-	    aux-> info = new ISymbol (aux-> token, type);
+	    aux-> info = new (GC) ISymbol (aux-> token, type);
 	    return aux;
 	} else {
-	    auto aux = new IBinary (this-> token, NULL, NULL);
+	    auto aux = new (GC) IBinary (this-> token, NULL, NULL);
 	    aux-> info = this-> info;
 	    return aux;
 	}	
@@ -436,9 +436,9 @@ namespace syntax {
     Expression IBinary::findOpAssign (Binary aux) {
 	Ymir::Error::activeError (false);
 	Word word (this-> token.getLocus (), Keys::OPASSIGN);
-	auto var = new IVar (word, {new IString (this-> token, this-> token.getStr ())});
-	auto params = new IParamList (this-> token, {aux-> left, aux-> right});
-	auto call = new IPar (this-> token, this-> token, var, params, false);
+	auto var = new (GC) IVar (word, {new (GC) IString (this-> token, this-> token.getStr ())});
+	auto params = new (GC) IParamList (this-> token, {aux-> left, aux-> right});
+	auto call = new (GC) IPar (this-> token, this-> token, var, params, false);
 	
 	auto res = call-> expression ();
 	auto errors = Ymir::Error::caught ();
@@ -454,10 +454,10 @@ namespace syntax {
 	Ymir::Error::activeError (false);
 
 	Word word (this-> token.getLocus (), Keys::OPBINARY);
-	auto var = new IVar (word, {new IString (this-> token, this-> token.getStr ())});
-	auto params = new IParamList (this-> token, {aux-> left, aux-> right});
+	auto var = new (GC) IVar (word, {new (GC) IString (this-> token, this-> token.getStr ())});
+	auto params = new (GC) IParamList (this-> token, {aux-> left, aux-> right});
 
-	auto call = new IPar (this-> token, this-> token, var, params, false);
+	auto call = new (GC) IPar (this-> token, this-> token, var, params, false);
 	auto res = call-> expression ();	
 	auto errors = Ymir::Error::caught ();
 	Ymir::Error::activeError (true);
@@ -465,9 +465,9 @@ namespace syntax {
 	if (errors.size () != 0) {
 	    Ymir::Error::activeError (false);
 	    word = Word (this-> token.getLocus (), Keys::OPBINARYR);
-	    var = new IVar (word, {new IString (this-> token, this-> token.getStr ())});
-	    params = new IParamList (this-> token, {aux-> right, aux-> left});
-	    call = new IPar (this-> token, this-> token, var, params, false);
+	    var = new (GC) IVar (word, {new (GC) IString (this-> token, this-> token.getStr ())});
+	    params = new (GC) IParamList (this-> token, {aux-> right, aux-> left});
+	    call = new (GC) IPar (this-> token, this-> token, var, params, false);
 	    res = call-> expression ();
 	    errors = Ymir::Error::caught ();
 	    Ymir::Error::activeError (true);
@@ -496,31 +496,31 @@ namespace syntax {
     }
 
     Expression IFixed::expression () {
-	auto aux = new IFixed (this-> token, this-> type);
-	aux-> info = new ISymbol (this-> token, new IFixedInfo (true, this-> type));
-	aux-> info-> value () = new IFixedValue (this-> type, this-> uvalue, this->value);
+	auto aux = new (GC) IFixed (this-> token, this-> type);
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) IFixedInfo (true, this-> type));
+	aux-> info-> value () = new (GC) IFixedValue (this-> type, this-> uvalue, this->value);
 	aux-> uvalue = this-> uvalue;
 	aux-> value = this-> value;
 	return aux;
     }
     
     Expression IChar::expression () {
-	auto aux = new IChar (this-> token, this-> code);
-	aux-> info = new ISymbol (this-> token, new ICharInfo (true));
-	aux-> info-> value () = new ICharValue (this-> code);
+	auto aux = new (GC) IChar (this-> token, this-> code);
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) ICharInfo (true));
+	aux-> info-> value () = new (GC) ICharValue (this-> code);
 	return aux;
     }
 
     Expression IFloat::expression () {
-	auto aux = new IFloat (this-> token, this-> suite);
-	aux-> info = new ISymbol (this-> token, new IFloatInfo (true, this-> _type));
+	auto aux = new (GC) IFloat (this-> token, this-> suite);
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) IFloatInfo (true, this-> _type));
 	//TODO
 	return aux;
     }
 
     Expression IString::expression () {
-	auto aux = new IString (this-> token, this-> content);
-	aux-> info = new ISymbol (this-> token, new IStringInfo (true));
+	auto aux = new (GC) IString (this-> token, this-> content);
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) IStringInfo (true));
 	//TODO
 	return aux;
     }
@@ -556,17 +556,17 @@ namespace syntax {
 	    if (info == NULL)
 		Ymir::Error::undefinedOp (this-> token, expr-> info, type-> info-> type);
 
-	    auto aux = new ICast (this-> token, type, expr);
-	    aux-> info = new ISymbol (this-> token, info);
+	    auto aux = new (GC) ICast (this-> token, type, expr);
+	    aux-> info = new (GC) ISymbol (this-> token, info);
 	    aux-> info-> type-> isConst (type-> info-> isConst ());
 	    return aux;
 	}	    
     }
 
     Expression IConstArray::expression () {
-	auto aux = new IConstArray (this-> token, {});
+	auto aux = new (GC) IConstArray (this-> token, {});
 	if (this-> params.size () == 0) {
-	    aux-> info = new ISymbol (aux-> token, new IArrayInfo (true, new IVoidInfo ()));	    
+	    aux-> info = new (GC) ISymbol (aux-> token, new (GC) IArrayInfo (true, new (GC) IVoidInfo ()));	    
 	} else {
 	    for (uint i = 0 ; i < this-> params.size (); i++) {
 		auto expr = this-> params [i]-> expression ();
@@ -585,11 +585,11 @@ namespace syntax {
 		    Word tok (this-> token.getLocus (),
 			      this-> token.getStr () + type-> token.getStr () + "]"
 		    );
-		    return new IType (tok, new IArrayInfo (true, type-> info-> type));
+		    return new (GC) IType (tok, new (GC) IArrayInfo (true, type-> info-> type));
 		}
 	    }
 
-	    auto begin = new ISymbol (this-> token, new IUndefInfo ());
+	    auto begin = new (GC) ISymbol (this-> token, new (GC) IUndefInfo ());
 	    for (auto fst : Ymir::r (0, aux-> params.size ())) {
 		if (aux-> params [fst]-> is<IType> ()) {
 		    Ymir::Error::useAsVar (aux-> params [fst]-> token,
@@ -605,13 +605,13 @@ namespace syntax {
 		}
 		if (fst == 0) begin-> type = cmp;
 	    }
-	    aux-> info = new ISymbol (aux-> token, new IArrayInfo (true, begin-> type-> clone ()));
+	    aux-> info = new (GC) ISymbol (aux-> token, new (GC) IArrayInfo (true, begin-> type-> clone ()));
 	}
 	return aux;
     }
 
     Expression IConstRange::expression () {
-	auto aux = new IConstRange (this-> token, this-> left-> expression (), this-> right-> expression ());
+	auto aux = new (GC) IConstRange (this-> token, this-> left-> expression (), this-> right-> expression ());
 	if (!aux-> left || !aux-> right) return NULL;
 	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
 	if (type == NULL) {
@@ -624,7 +624,7 @@ namespace syntax {
 	    }
 	}
 
-	aux-> info = new ISymbol (aux-> token, new IRangeInfo (true, type));
+	aux-> info = new (GC) ISymbol (aux-> token, new (GC) IRangeInfo (true, type));
 	//TODO Immutable
 	return aux;
     }
@@ -632,10 +632,10 @@ namespace syntax {
     Expression IConstRange::findOpRange (ConstRange aux) {
 	Ymir::Error::activeError (false);
 	Word word (this-> token.getLocus (), Keys::OPRANGE);
-	auto var = new IVar (word);
-	auto params = new IParamList (this-> token, {aux-> left, aux-> right});
+	auto var = new (GC) IVar (word);
+	auto params = new (GC) IParamList (this-> token, {aux-> left, aux-> right});
 	
-	auto call = new IPar (this-> token, this-> token, var, params, false);
+	auto call = new (GC) IPar (this-> token, this-> token, var, params, false);
 
 	auto res = call-> expression ();
 	auto errors = Ymir::Error::caught ();
@@ -646,7 +646,7 @@ namespace syntax {
     }
     
     Expression IDColon::expression () {
-	auto aux = new IDColon (this-> token, this-> left-> expression (), this-> right);
+	auto aux = new (GC) IDColon (this-> token, this-> left-> expression (), this-> right);
 	if (aux-> left == NULL) return NULL;
 	if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token);
@@ -662,12 +662,12 @@ namespace syntax {
 	    Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
 	    return NULL;
 	}
-	aux-> info = new ISymbol (aux-> token, type);
+	aux-> info = new (GC) ISymbol (aux-> token, type);
 	return aux;	
     }
 
     Expression IDot::expression () {
-	auto aux = new IDot (this-> token, this-> left-> expression (), this-> right);
+	auto aux = new (GC) IDot (this-> token, this-> left-> expression (), this-> right);
 	if (aux-> left == NULL) return NULL;
 	else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token);
@@ -682,13 +682,13 @@ namespace syntax {
 		    Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
 		    return NULL;
 		}
-		return (new IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
+		return (new (GC) IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
 	    } else if (type-> is<IPtrFuncInfo> ()) {
-		auto call = new IVar (var-> token);
-		call-> info = new ISymbol (call-> token, type);
-		return (new IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
+		auto call = new (GC) IVar (var-> token);
+		call-> info = new (GC) ISymbol (call-> token, type);
+		return (new (GC) IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
 	    }
-	    aux-> info = new ISymbol (aux-> token, type);
+	    aux-> info = new (GC) ISymbol (aux-> token, type);
 	    return aux;
 	} else {
 	    aux-> right = aux-> right-> expression ();
@@ -698,17 +698,17 @@ namespace syntax {
 		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
 		return NULL;
 	    }
-	    aux-> info = new ISymbol (aux-> token, type);
+	    aux-> info = new (GC) ISymbol (aux-> token, type);
 	    return aux;
 	}
     }
 
     Expression IDotCall::expression () {
 	if (!this-> inside-> is<IPar> ()) {
-	    auto aux = new IPar (this-> token, this-> token);
+	    auto aux = new (GC) IPar (this-> token, this-> token);
 	    aux-> dotCall () = this;
 	    Word word (this-> token.getLocus (), Keys::DPAR);
-	    aux-> paramList () = new IParamList (this-> token, {this-> _firstPar});
+	    aux-> paramList () = new (GC) IParamList (this-> token, {this-> _firstPar});
 	    aux-> left () = this-> _call;
 	    auto type = aux-> left ()-> info-> type-> CallOp (aux-> left ()-> token, aux-> paramList ());
 	    if (type == NULL) {
@@ -717,7 +717,7 @@ namespace syntax {
 	    }
 
 	    aux-> score () = type;
-	    aux-> info = new ISymbol (this-> token, type-> ret);
+	    aux-> info = new (GC) ISymbol (this-> token, type-> ret);
 	    if (type-> ret-> is <IUndefInfo> ()) {
 		Ymir::Error::templateInferType (aux-> left ()-> token, aux-> score ()-> token);
 		return NULL;
@@ -749,7 +749,7 @@ namespace syntax {
     }
 
     Expression IPar::expression () {
-	auto aux = new IPar (this-> token, this-> end);
+	auto aux = new (GC) IPar (this-> token, this-> end);
 	if (this-> info == NULL) {
 	    if (auto p = this-> params-> expression ()) 
 		aux-> params = p-> to<IParamList> ();
@@ -775,7 +775,7 @@ namespace syntax {
 		Ymir::Error::assert ("TODO, tupling");
 
 	    aux-> _score = type;
-	    aux-> info = new ISymbol (this-> token, type-> ret);
+	    aux-> info = new (GC) ISymbol (this-> token, type-> ret);
 	    if (type-> ret-> is<IUndefInfo> () && this-> inside != NULL) {
 		Ymir::Error::templateInferType (aux-> _left-> token, aux-> _score-> token);
 		return NULL;
@@ -790,7 +790,7 @@ namespace syntax {
     }
     
     Expression IParamList::expression () {
-	auto aux = new IParamList (this-> token, {});
+	auto aux = new (GC) IParamList (this-> token, {});
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    Expression ex_it = this-> params [it]-> expression ();
 	    if (ex_it == NULL || ex_it-> info == NULL || ex_it-> info-> type == NULL) return NULL;
@@ -816,39 +816,55 @@ namespace syntax {
     }   
     
     Expression IBool::expression () {
-	auto aux = new IBool (this-> token);
-	aux-> info = new ISymbol (this-> token, new IBoolInfo (this-> token == Keys::TRUE_));
-	aux-> info-> value () = new IBoolValue (this-> token == Keys::TRUE_);
+	auto aux = new (GC) IBool (this-> token);
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) IBoolInfo (this-> token == Keys::TRUE_));
+	aux-> info-> value () = new (GC) IBoolValue (this-> token == Keys::TRUE_);
 	return aux;
     }
 
     Expression INull::expression () {
-	auto aux = new INull (this-> token);
-	aux-> info = new ISymbol (this-> token, new INullInfo ());
+	auto aux = new (GC) INull (this-> token);
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) INullInfo ());
+	return aux;
+    }
+
+    Expression IIgnore::expression () {
+	auto aux = new (GC) IIgnore (this-> token);
+	aux-> info = new (GC) ISymbol (this-> token, new (GC) IIgnoreInfo ());
 	return aux;
     }
     
     Expression IConstTuple::expression () {
-	auto aux = new IConstTuple (this-> token, this-> end, {});
-	auto type = new ITupleInfo (true);
+	auto aux = new (GC) IConstTuple (this-> token, this-> end, {});
+	auto type = new (GC) ITupleInfo (true);
 	Word op (this-> token.getLocus (), Token::EQUAL);
-	auto undefExpr = new (GC) ITreeExpression (this-> token, new IUndefInfo (), Ymir::Tree ());
+	auto undefExpr = new (GC) ITreeExpression (this-> token, new (GC) IUndefInfo (), Ymir::Tree ());
 	for (auto it : this-> params) {
 	    auto expr = it-> expression ();
 	    if (expr == NULL) return NULL;
 	    if (auto par = expr-> to <IParamList> ()) {
 		for (auto exp_it : par-> getParams ()) {
 		    aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
+		    if (aux-> casters.back () == NULL) {
+			op.setLocus (expr-> token.getLocus ());
+			Ymir::Error::undefinedOp (op, undefExpr-> info, expr-> info);
+			return NULL;
+		    }
 		    aux-> params.push_back (exp_it);
 		    type-> addParam (exp_it-> info-> type);
 		}
 	    } else {
 		aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
+		if (aux-> casters.back () == NULL) {
+		    op.setLocus (expr-> token.getLocus ());
+		    Ymir::Error::undefinedOp (op, undefExpr-> info, expr-> info);
+		    return NULL;
+		}
 		aux-> params.push_back (expr);
 		type-> addParam (expr-> info-> type);
 	    }
 	}
-	aux-> info = new ISymbol (this-> token, type);
+	aux-> info = new (GC) ISymbol (this-> token, type);
 	return aux;
     }
 

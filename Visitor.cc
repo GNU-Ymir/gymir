@@ -1196,7 +1196,7 @@ namespace syntax {
 	    }
 	    
 	    next = this-> lex.next ();
-	    if (next == Token::DARROW || next == Token::LACC) {
+	    if ((next == Token::DARROW || next == Token::LACC) && this-> lambdaPossible) {
 		isLambda = true;
 		std::vector <Var> realParams;
 		for (auto it : params) {
@@ -1252,6 +1252,8 @@ namespace syntax {
 	    return visitIs ();
 	else if (tok == Keys::TYPEOF)
 	    return visitTypeOf ();
+	else if (tok == Keys::UNDER)
+	    return new (GC) IIgnore (tok);
 	else this-> lex.rewind ();
 	return NULL;
     }
@@ -1715,6 +1717,7 @@ namespace syntax {
 	auto expr = visitExpression ();
 	
 	auto next = this-> lex.next ({Token::LACC});
+	this-> lambdaPossible = false;
 	while (true) {
 	    next = this-> lex.next ();
 	    if (next != Keys::UNDER) {
@@ -1738,6 +1741,7 @@ namespace syntax {
 	    }
 	}
 	
+	this-> lambdaPossible = true;
 	return new (GC) IMatch (begin, expr, values, insts, defaultInsts);
     }
     
