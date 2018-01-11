@@ -18,7 +18,7 @@ namespace syntax {
 	    left (left),
 	    right (right) {
 	}
-
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<MatchPair> %s",
 		    nb, ' ',
@@ -51,7 +51,8 @@ namespace syntax {
 	    defaultResult (NULL)
 	{}
 
-
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	static const char * id () {
 	    return TYPEID (IMatch);
 	}

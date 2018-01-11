@@ -29,6 +29,8 @@ namespace syntax {
 		this-> expr-> inside = this;
 	}
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	static const char * id () {
 	    return TYPEID (IFuncPtr);
 	}

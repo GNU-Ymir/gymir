@@ -20,7 +20,9 @@ namespace syntax {
 	IConstRange (Word token, Expression left, Expression right);
 
 	Expression expression () override;
-		
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	void print (int nb = 0) override;
 	
     private:

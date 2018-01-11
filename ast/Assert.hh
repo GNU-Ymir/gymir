@@ -15,9 +15,11 @@ namespace syntax {
 
     public :
 
-	IAssert (Word token, Expression test, Expression msg, bool isStatic = false);	
-
+	IAssert (Word token, Expression test, Expression msg, bool isStatic = false);
+	
 	Instruction instruction () override;
+
+	Instruction templateReplace (std::map <std::string, Expression>) override;
 	
 	void print (int nb = 0) override;
 	

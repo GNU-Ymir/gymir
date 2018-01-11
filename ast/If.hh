@@ -27,8 +27,11 @@ namespace syntax {
 	IIf (Word word, Expression test, Block block, bool isStatic = false);
 	
 	IIf (Word word, Expression test, Block block, If else_, bool isStatic = false);
+
 	Instruction instruction () override;	
 
+	Instruction templateReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;

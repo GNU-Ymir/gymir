@@ -12,7 +12,7 @@ namespace syntax {
     public:
 
 	ITreeExpression (Word locus, semantic::InfoType info, Ymir::Tree content);
-
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int id = 0) override;		

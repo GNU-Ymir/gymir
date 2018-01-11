@@ -4,6 +4,9 @@
 
 namespace syntax {
 
+    class IExpression;
+    typedef IExpression* Expression;
+    
     class IDeclaration : public gc {
     protected :
 	
@@ -24,6 +27,8 @@ namespace syntax {
 	virtual void declareAsInternal () {
 	    return this-> declare ();
 	}
+
+	virtual IDeclaration* templateDeclReplace (std::map <std::string, Expression>);
 	
 	virtual void print (int nb = 0) = 0;	
 	

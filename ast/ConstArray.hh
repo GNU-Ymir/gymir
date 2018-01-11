@@ -21,7 +21,8 @@ namespace syntax {
 	IConstArray (Word token, std::vector <Expression> params);
 
 	Expression expression () override;
-
+	
+	Expression templateExpReplace (std::map <std::string, Expression>) override;	
 	int nbParams ();
 
 	static const char * id () {

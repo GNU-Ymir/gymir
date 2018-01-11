@@ -35,6 +35,8 @@ namespace syntax {
 	
 	Expression expression ();
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;	
+	
 	Var var () override;
 	
 	void print (int nb = 0) override;

@@ -175,6 +175,10 @@ namespace syntax {
     Type IType::asType () {
 	return this;
     }
+
+    Expression IType::expression () {
+	return this;
+    }
     
     Expression IArrayVar::expression () {
 	if (auto var = this-> content-> to <IVar> ()) {

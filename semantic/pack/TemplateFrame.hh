@@ -48,6 +48,8 @@ namespace semantic {
 	FrameProto validate () override;
 
 	Frame TempOp (std::vector <syntax::Expression> params) override;
+
+	const char * getId () override;
 	
     private : 
 

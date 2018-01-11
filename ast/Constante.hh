@@ -37,6 +37,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 
 	void setUValue (ulong val);
@@ -57,6 +59,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;	
@@ -75,6 +79,8 @@ namespace syntax {
 	IFloat (Word word, std::string suite);
 
 	Expression expression () override;
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
 	
 	Ymir::Tree toGeneric () override;
 	
@@ -93,6 +99,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
@@ -191,6 +199,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override {
@@ -209,6 +219,8 @@ namespace syntax {
 
 	Expression expression () override;	
 	
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override {
@@ -228,6 +240,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Ignore> %s",
 		    nb, ' ',
@@ -243,4 +257,5 @@ namespace syntax {
     typedef IString* String;
     typedef IBool* Bool;
     typedef INull* Null;
+    typedef IIgnore* Ignore;
 }

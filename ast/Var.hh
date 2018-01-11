@@ -36,6 +36,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;	
+	
 	Ymir::Tree toGeneric () override;
 	
 	virtual IVar* var ();
@@ -67,6 +69,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;	
+	
 	Expression contentExp ();
 	
 	Type asType () override;

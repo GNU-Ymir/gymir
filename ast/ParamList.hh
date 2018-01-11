@@ -20,6 +20,8 @@ namespace syntax {
 	std::vector <semantic::InfoType> getParamTypes ();
 
 	Expression expression () override;
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
 	
 	std::vector <tree> toGenericParams (std::vector <semantic::InfoType>);
 

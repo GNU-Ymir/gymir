@@ -235,7 +235,11 @@ namespace semantic {
 	    inner.getTree ()
 	);
     }
-
+    
+    InfoType IPtrInfo::getTemplate (ulong nb) {
+	if (nb == 0) return this-> _content;
+	return NULL;
+    }
 
     namespace PtrUtils {
 	using namespace syntax;

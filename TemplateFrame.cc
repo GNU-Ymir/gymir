@@ -1,6 +1,8 @@
 #include <ymir/semantic/pack/TemplateFrame.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/TypedVar.hh>
+#include <ymir/utils/OutBuffer.hh>
+#include <ymir/semantic/value/Value.hh>
 
 namespace semantic {
     using namespace std;
@@ -34,22 +36,53 @@ namespace semantic {
     }
 
     ApplicationScore ITemplateFrame::isApplicable (ParamList params)  {
-	
+	return this-> isApplicable (this-> _function-> getIdent (), this-> _function-> getParams (), params-> getParamTypes ());
     }
 
-    ApplicationScore ITemplateFrame::isApplicable (vector <InfoType> params)  {}
+    ApplicationScore ITemplateFrame::isApplicable (vector <InfoType> params)  {
+	return this-> isApplicable (this-> _function-> getIdent (), this-> _function-> getParams (), params);
+    }
 
-    FrameProto ITemplateFrame::validate (vector <InfoType> params)  {}
+    FrameProto ITemplateFrame::validate (vector <InfoType>)  {
+	return NULL;
+    }
 
-    FrameProto ITemplateFrame::validate (ParamList params)  {}
+    FrameProto ITemplateFrame::validate (ParamList)  {
+	return NULL;
+    }
 
-    FrameProto ITemplateFrame::validate (ApplicationScore score, vector <InfoType> params)  {}
+    template <typename K, typename V>
+    vector <V> getValues (map <K, V> dico) {
+	vector <V> vec;
+	for (auto it : dico)
+	    vec.push_back (it.second);
+	return vec;
+    }
+    
+    FrameProto ITemplateFrame::validate (ApplicationScore score, vector <InfoType> params)  {
+	if (this-> _isExtern) return validateExtern ();
+	else if (this-> _isPure) return validate ();
+	Table::instance ().enterFrame (this-> _space, this-> name, this-> _isInternal);
+	Table::instance ().enterBlock ();
+	auto func = this-> _function-> templateReplace (score-> tmps);
+	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 
-    FrameProto ITemplateFrame::validate ()  {}
+	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;
+	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, Table::instance ().globalNamespace (), ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
+	return proto;
+    }
 
-    Frame ITemplateFrame::TempOp (vector <Expression> params)  {}
+    FrameProto ITemplateFrame::validate ()  {
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }
+
+    Frame ITemplateFrame::TempOp (vector <Expression>)  {
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }
 	
-    ApplicationScore ITemplateFrame::isApplicableVariadic (Word ident, vector <Var> attrs, vector <InfoType> params) {
+    ApplicationScore ITemplateFrame::isApplicableVariadic (Word , vector <Var> , vector <InfoType> ) {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }
@@ -108,6 +141,7 @@ namespace semantic {
 	    score-> tmps = tmps;
 	    return score;
 	}
+	return NULL;
     }
     
     ApplicationScore ITemplateFrame::isApplicableSimple (Word ident, vector <Var> attrs, vector <InfoType> args) {
@@ -122,8 +156,29 @@ namespace semantic {
 	return score;
     }
 
-    string ITemplateFrame::computeName (string name) {}
+    string ITemplateFrame::computeName (string name) {
+	Ymir::OutBuffer buf;
+	buf.write (name, "(");
+	int i = 0;
+	for (auto it : this-> _function-> getTemplates ()) {
+	    if (auto _val = it-> expression ()-> info-> value ())
+		buf.write (_val-> toString ());
+	    else buf.write (it-> info-> typeString ());
+	    if (i < (int) this-> _function-> getTemplates ().size () - 1)
+		buf.write (", ");
+	    i = i + 1;
+	}
+	buf.write (")");
+	return buf.str ();
+    }
 
-    FrameProto ITemplateFrame::validateExtern () {}       
+    FrameProto ITemplateFrame::validateExtern () {
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }       
 
+    const char * ITemplateFrame::getId () {
+	return "ITemplateFrame";
+    }
+    
 }

@@ -49,6 +49,8 @@ namespace semantic {
 	Ymir::Tree toGeneric () override;
 
 	InfoType& content ();
+
+	InfoType getTemplate (ulong) override;
 	
 	static const char* id () {
 	    return "IPtrInfo";

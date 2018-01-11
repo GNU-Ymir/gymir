@@ -194,6 +194,12 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType ITupleInfo::getTemplate (ulong nb) {
+	if (nb < this-> params.size ())
+	    return this-> params [nb];
+	return NULL;
+    }
+    
     namespace TupleUtils {
 	using namespace Ymir;
 	

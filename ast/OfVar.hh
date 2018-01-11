@@ -18,7 +18,8 @@ namespace syntax {
 	    type (type)
 	{}
 
-
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	static const char * id () {
 	    return TYPEID (IOfVar);
 	}

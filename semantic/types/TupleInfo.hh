@@ -42,6 +42,8 @@ namespace semantic {
 	ulong nbParams ();
 
 	std::vector <InfoType> &getParams ();
+
+	InfoType getTemplate (ulong) override;
 	
 	static const char* id () {
 	    return "ITupleInfo";

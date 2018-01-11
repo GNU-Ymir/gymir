@@ -6,7 +6,14 @@
 namespace semantic {
     using namespace syntax;
     using namespace std;
-    
+
+    void print (vector <Expression> vec) {
+	printf ("[");
+	for (auto it : vec)
+	    printf ("[%s], ", it-> token.getStr ().c_str ());
+	printf ("]\n");	
+    }
+
     TemplateSolver TemplateSolver::__instance__;
     
     TemplateSolver& TemplateSolver::instance () {
@@ -58,11 +65,11 @@ namespace semantic {
 	    } else {
 		vector <Expression> types;
 		TemplateSolution soluce (0, true);
-		for (auto it : Ymir::r (0, param-> getTemplates ().size ())) {
-		    if (auto var = param-> getTemplates () [it]-> to <IVar> ()) {
+		for (auto it : Ymir::r (0, tvar-> typeVar ()-> getTemplates ().size ())) {
+		    if (auto var = tvar-> typeVar ()-> getTemplates () [it]-> to <IVar> ()) {
 			if (!type-> getTemplate (it)) return TemplateSolution (0, false);
-			auto typeTemplates = type-> getTemplate (it, param-> getTemplates ().size () - (it + 1));
-			auto res = this-> solveInside (tmps, var, typeTemplates);
+			auto typeTemplates = type-> getTemplate (it, tvar-> typeVar ()-> getTemplates ().size () - (it + 1));
+			auto res = this-> solveInside (tmps, var, typeTemplates);			
 			if (!res.valid || !merge (soluce.score, soluce.elements, res))
 			    return TemplateSolution (0, false);
 			if (res.type)
@@ -71,10 +78,10 @@ namespace semantic {
 			    return TemplateSolution (0, false);			
 		    }
 		}
-
+		
 		for (auto it : tmps) {
 		    if (auto var = it-> to <IVar> ()) {
-			if (param-> token.getStr () == var-> token.getStr ()) {
+			if (tvar-> typeVar ()-> token.getStr () == var-> token.getStr ()) {
 			    TemplateSolution res (0, true);
 			    if (auto of = var-> to<IOfVar> ())
 				res = solve (tmps, of, tvar, type);
@@ -90,8 +97,9 @@ namespace semantic {
 			}
 		    }		
 		}
-	    	    
-		soluce.type = (IVar (param-> token, types)).asType ()-> info-> type;
+
+		auto var = IVar (tvar-> typeVar ()-> token, types);
+		soluce.type = (var).asType ()-> info-> type;
 		soluce.score += __VAR__;
 		return soluce;
 	    }

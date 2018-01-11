@@ -17,6 +17,8 @@ namespace syntax {
 	    inside (inside)
 	{}
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Mixin> %s",
 		    nb, ' ',

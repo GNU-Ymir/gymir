@@ -20,8 +20,12 @@ namespace syntax {
 	std::vector <std::string> getIds () override;
 
 	Type asType () override;
+
+	Expression expression () override;
 	
 	semantic::InfoType type ();	
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;	
 	
 	void print (int nb = 0) override;	
 

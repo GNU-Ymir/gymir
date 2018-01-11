@@ -26,7 +26,9 @@ namespace syntax {
 	IAccess (Word word, Word end);
 
 	Expression expression () override;
-		    
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Expression getLeft ();
 
 	std::vector <Expression> getParams ();

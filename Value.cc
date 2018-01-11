@@ -43,4 +43,9 @@ namespace semantic {
     const char* ICharValue::getId () {
 	return ICharValue::id ();
     }
+
+    std::string IValue::toString () {
+	Ymir::Error::assert ("TODO");
+	return "";
+    }
 }

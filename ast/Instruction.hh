@@ -3,6 +3,8 @@
 #include "../syntax/Word.hh"
 #include <gc/gc_cpp.h>
 #include <algorithm>
+#include <map>
+#include <string>
 
 namespace Ymir {
     struct Tree;    
@@ -23,6 +25,9 @@ namespace syntax {
     class IBlock;
     typedef IBlock* Block;
     
+    class IExpression;
+    typedef IExpression* Expression;
+
     class IInstruction : public gc {
     protected:
 
@@ -51,6 +56,8 @@ namespace syntax {
 
 	virtual IInstruction* instruction () = 0;	   
 
+	virtual IInstruction* templateReplace (std::map <std::string, Expression> tmps) = 0;
+	
 	virtual Ymir::Tree toGeneric ();
 		
 	template <typename T>
@@ -83,6 +90,10 @@ namespace syntax {
 	    return "INone";
 	}
 
+	IInstruction* templateReplace (std::map <std::string, Expression>) override {
+	    return this;    
+	}
+	
 	std::vector <std::string> getIds () override {
 	    auto ret = IInstruction::getIds ();
 	    ret.push_back (INone::id ());
