@@ -84,6 +84,8 @@ namespace semantic {
 	virtual ApplicationScore isApplicable (std::vector <InfoType> params);
 
 	virtual IFrame* TempOp (std::vector <syntax::Expression> params);
+
+	virtual std::string toString ();
 	
 	::syntax::Function func ();
 

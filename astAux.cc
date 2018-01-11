@@ -136,7 +136,20 @@ namespace syntax {
     }     
 	
     std::string IVar::prettyPrint () {
-	return this-> token.getStr ();
+	Ymir::OutBuffer buf;
+	buf.write (this-> token.getStr ());
+	if (this-> templates.size () != 0) {
+	    buf.write ("!(");
+	    int i = 0;	
+	    for (auto it : this-> templates) {
+		buf.write ("_");
+		if (i < this-> templates.size () - 1)
+		    buf.write (", ");
+		i = i + 1;
+	    }
+	    buf.write (")");
+	}
+	return buf.str ();
     }    
 
     ITypedVar::ITypedVar (Word ident, Var type) :

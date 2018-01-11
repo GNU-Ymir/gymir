@@ -335,6 +335,23 @@ namespace semantic {
     Word IFrame::ident () {
 	return this-> _function-> getIdent ();
     }
+
+    std::string IFrame::toString () {
+	Ymir::OutBuffer buf;
+	buf.write ("(");
+	for (auto it : Ymir::r (0, this-> _function-> getParams ().size ())) {
+	    auto var = this-> _function-> getParams () [it];
+	    buf.write (var-> prettyPrint ());
+	    if (it < (int) this-> _function-> getParams ().size () - 1)
+		buf.write (", ");
+	}
+	
+	buf.write (")");
+	
+	if (auto t = this-> _function-> getType ())
+	    buf.write ("-> ", t-> prettyPrint ());
+	return buf.str ();
+    }
     
 
 }

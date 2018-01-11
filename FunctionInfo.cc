@@ -197,21 +197,12 @@ namespace semantic {
 	auto frames = getFrames ();
 	if (frames.size () == 1) {
 	    Ymir::OutBuffer buf;
-	    buf.write (Ymir::format ("function <%.%> (",
-				 this-> _space.toString ().c_str (),
-				 this-> _name.c_str ()
+	    buf.write (Ymir::format ("function <%.%> %",
+				     this-> _space.toString ().c_str (),
+				     this-> _name.c_str (),				     
+				     this-> _info-> toString ().c_str ()
 	    ));
-	    
-	    for (auto it : Ymir::r (0, this-> _info-> func ()-> getParams ().size ())) {
-		auto var = this-> _info-> func ()-> getParams () [it];
-		buf.write (var-> prettyPrint ());
-		if (it < (int) this-> _info-> func ()-> getParams ().size () - 1)
-		    buf.write (", ");
-	    }
-	    
-	    buf.write (")");
-	    if (auto t = this-> _info-> func ()-> getType ())
-		buf.write ("-> ", t-> prettyPrint ());
+
 	    return buf.str ();
 	} else {
 	    return Ymir::format ("function <%.%>",
