@@ -58,7 +58,10 @@ namespace semantic {
     InfoType IArrayInfo::Affect (Expression right) {
 	auto type = right-> info-> type-> to<IArrayInfo> ();
 	if (type && type-> _content-> isSame (this-> _content)) {
-	    auto ret = this-> clone ();
+	    auto ret = type-> clone ();
+	    if (type-> _content-> ConstVerif (this-> _content) == NULL)
+		return NULL;
+	    
 	    ret-> binopFoo = ArrayUtils::InstAffect;
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
@@ -176,6 +179,7 @@ namespace semantic {
 	
 	if (treat) {
 	    auto ch = this-> _content-> clone ();
+	    ch-> isConst (this-> isConst ());
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
 	}
