@@ -20,6 +20,8 @@ namespace semantic {
 
 	Ymir::Tree InstPtr (Word word, InfoType, syntax::Expression elem);
 
+	Ymir::Tree InstAddr (Word word, InfoType, syntax::Expression elem, syntax::Expression);
+
 	Ymir::Tree InstConcat (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
 	Ymir::Tree InstConcatAff (Word word, InfoType, syntax::Expression left, syntax::Expression right);

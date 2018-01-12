@@ -130,7 +130,7 @@ namespace semantic {
 
     InfoType IArrayInfo::Ptr () {
 	auto ret = new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	ret-> unopFoo = ArrayUtils::InstLen;
+	ret-> unopFoo = ArrayUtils::InstPtr;
 	return ret;
     }
 
@@ -213,10 +213,11 @@ namespace semantic {
 	    // ret-> leftTreatment = ArrayUtils::InstCastFromNull;
 	    // ret-> lintInst = ArrayUtils::InstAffectRight;
 	    return ret;
-	} else if (auto ref = other-> to<IRefInfo> ()) {	    
+	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (auto arr = ref-> content ()-> to<IArrayInfo> ()) {
 		if (arr-> _content-> isSame (this-> _content) && !this-> isConst ()) {
-		    auto aux = new (GC) IRefInfo (this-> clone ());
+		    auto aux = new (GC) IRefInfo (false, this-> clone ());
+		    aux-> binopFoo = &ArrayUtils::InstAddr;
 		    //aux-> lintInstS.push_back (&ArrayUtils::InstAddr);
 		    return aux;
 		}
@@ -410,10 +411,11 @@ namespace semantic {
 	
 	Ymir::Tree InstAccessInt (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
-	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
-	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
+
+	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
+	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    if (left-> is<IConstArray> ()) {
 		return getArrayRef (loc, rexp, inner, rexp);
 	    } else {
@@ -492,13 +494,18 @@ namespace semantic {
 	    return getLen (loc, expr, ltree);
 	}
 
+	Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}
+	
 	Tree InstConcat (Word locus, InfoType, Expression left, Expression right) {
+	    auto lexp = left-> toGeneric ();
+	    auto rexp = right-> toGeneric ();
+	    
 	    ArrayInfo info = left-> info-> type-> to <IArrayInfo> ();
 	    Ymir::Tree inner = info-> content ()-> toGeneric ();
 	    location_t loc = locus.getLocus ();
 	    Ymir::TreeStmtList list; 
-	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();
 
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getLen (loc, right, rexp);

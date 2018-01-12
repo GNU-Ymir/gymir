@@ -94,6 +94,7 @@ namespace semantic {
 
     InfoType IStringInfo::Length () {
 	auto ret = new IFixedInfo (true, FixedConst::ULONG);
+	ret-> unopFoo = &StringUtils::InstLen;
 	return ret;
     }
     
@@ -288,14 +289,14 @@ namespace semantic {
 	
 	Tree InstPtr (Word locus, InfoType, Expression expr) {
 	    location_t loc = locus.getLocus ();
-	    if (expr-> is<IString> ()) {
-		return expr-> toGeneric ();
-	    } else {
-		auto lexp = expr-> toGeneric ();
-		return getField (loc, lexp, "ptr");
-	    }
+	    return getPtr (loc, expr, expr-> toGeneric ());
 	}
 
+	Tree InstLen (Word locus, InfoType, Expression expr) {
+	    location_t loc = locus.getLocus ();
+	    return getLen (loc, expr, expr-> toGeneric ());
+	}
+	
 	Tree InstToString (Word locus, InfoType, Expression elem, Expression type) {
 	    auto rexp = elem-> toGeneric ();
 	    if (rexp.getTreeCode () == CALL_EXPR)

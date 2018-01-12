@@ -103,15 +103,16 @@ namespace semantic {
 			return NULL;
 
 		    info = res.type;
-		    if (tvar-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
-			info = new (GC) IRefInfo (info);
 		    if (tvar-> getDeco () == Keys::CONST) info-> isConst (true);
 		} else {
 		    tvar = param-> setType (new (GC) IUndefInfo ());
 		    info = tvar-> getType ()-> clone ();
 		    CONST_SAME_TMP = this-> CONST_CHANGE;
 		    SAME_TMP = this-> CHANGE;
-		}	       
+		}
+
+		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
+		    info = new (GC) IRefInfo (false, info);
 		
 		auto type = args [it]-> CompOp (info);
 		if (type) type = type-> ConstVerif (info);

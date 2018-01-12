@@ -233,9 +233,10 @@ namespace semantic {
 	Tree InstCast (Word locus, InfoType type, Expression elem, Expression) {
 	    location_t loc = locus.getLocus ();
 	    TupleInfo info = type-> to<ITupleInfo> ();
+	    auto rtree = elem-> toGeneric ();
+	    
 	    auto rtype = elem-> info-> type-> to <ITupleInfo> ();
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
-	    auto rtree = elem-> toGeneric ();	    
 	    Ymir::TreeStmtList list;
 	    
 	    for (auto it : Ymir::r (0, info-> nbParams ())) {

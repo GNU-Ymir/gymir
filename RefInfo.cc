@@ -20,8 +20,9 @@ namespace semantic {
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
-	    
-	    auto inner = right-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();	    
+
+	    auto innerType = left-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto inner = innerType-> toGeneric ();	    
 	    auto rightExp = right-> toGeneric ();
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
 	    
@@ -30,14 +31,14 @@ namespace semantic {
 		    locus,
 		    type,
 		    left,
-		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		    new (GC) ITreeExpression (right-> token, innerType, rightExp)
 		);
 	    } else {
 		return type-> buildMultOp (
 		    locus,
 		    type,
 		    left,
-		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		    new (GC) ITreeExpression (right-> token, innerType, rightExp)
 		);
 	    }	    
 	    
@@ -48,8 +49,8 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
-	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
-	    
+	    auto innerType = left-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto inner = innerType-> toGeneric ();	    
 	    auto leftExp = left-> toGeneric ();
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 	    
@@ -57,21 +58,21 @@ namespace semantic {
 		return type-> buildBinaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (GC) ITreeExpression (left-> token, innerType, leftExp),
 		    right
 		);
 	    } else if (type-> multFoo) {
 		return type-> buildMultOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (GC) ITreeExpression (left-> token, innerType, leftExp),
 		    right
 		);
 	    } else if (type-> unopFoo) {
 		return type-> buildUnaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp)
+		    new (GC) ITreeExpression (left-> token, innerType, leftExp)
 		);
 	    }
 	    return leftExp;
@@ -82,11 +83,13 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
-	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
+	    auto innerLeft = left-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto inner = innerLeft-> toGeneric ();
 	    auto leftExp = left-> toGeneric ();
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 
-	    inner = right-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
+	    auto innerRight = right-> info-> type-> to<IRefInfo> ()-> content ();
+	    inner = innerRight-> toGeneric ();
 	    auto rightExp = right-> toGeneric ();
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
 	    
@@ -94,15 +97,15 @@ namespace semantic {
 		return type-> buildBinaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
-		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		    new (GC) ITreeExpression (left-> token, innerLeft, leftExp),
+		    new (GC) ITreeExpression (right-> token, innerRight, rightExp)
 		);
 	    } else {
 		return type-> buildMultOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
-		    new (GC) ITreeExpression (right-> token, right-> info-> type, rightExp)
+		    new (GC) ITreeExpression (left-> token, innerLeft, leftExp),
+		    new (GC) ITreeExpression (right-> token, innerRight, rightExp)
 		);
 	    }	    
 	}
