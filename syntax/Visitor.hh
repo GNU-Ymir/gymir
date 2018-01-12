@@ -39,6 +39,7 @@ namespace syntax {
 	TypedVar visitStructVarDeclaration ();
 	TypedVar visitTypedVarDeclaration ();
 	bool canVisitVarDeclaration ();
+	Var visitDecoType (Word);
 	Var visitType ();
 	Word visitIdentifiant ();
 	bool canVisitIdentifiant ();

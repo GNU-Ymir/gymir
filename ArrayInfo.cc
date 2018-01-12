@@ -16,11 +16,7 @@ namespace semantic {
     IArrayInfo::IArrayInfo (bool isConst, InfoType content) :
 	IInfoType (isConst),
 	_content (content)
-    {
-	if (this-> _content)
-	    this-> _content-> isConst (this-> isConst ());
-    }
-
+    {}
     
     InfoType IArrayInfo::content () {
 	return this-> _content;
@@ -217,7 +213,7 @@ namespace semantic {
 	    // ret-> leftTreatment = ArrayUtils::InstCastFromNull;
 	    // ret-> lintInst = ArrayUtils::InstAffectRight;
 	    return ret;
-	} else if (auto ref = other-> to<IRefInfo> ()) {
+	} else if (auto ref = other-> to<IRefInfo> ()) {	    
 	    if (auto arr = ref-> content ()-> to<IArrayInfo> ()) {
 		if (arr-> _content-> isSame (this-> _content) && !this-> isConst ()) {
 		    auto aux = new (GC) IRefInfo (this-> clone ());
@@ -235,10 +231,13 @@ namespace semantic {
 
     InfoType IArrayInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
-	else if (!this-> isConst ()&& other-> isConst ()) {
-	    this-> isConst (false);
-	}
-	return this;
+	if (auto ot = other-> to<IArrayInfo> ()) {
+	    if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
+	    if (!this-> isConst ()&& other-> isConst ()) {
+		this-> isConst (false);
+	    }
+	    return this;
+	} else return NULL;
     }
 
     Ymir::Tree IArrayInfo::toGeneric () {
@@ -257,7 +256,7 @@ namespace semantic {
     }
     
     std::string IArrayInfo::innerTypeString () {
-	return std::string ("[") + this-> _content-> innerTypeString () + "]";
+	return std::string ("[") + this-> _content-> typeString () + "]";
     }
 
     std::string IArrayInfo::simpleTypeString () {

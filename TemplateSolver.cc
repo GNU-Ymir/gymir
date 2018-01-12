@@ -54,21 +54,28 @@ namespace semantic {
     }
     
     TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, Var param, InfoType type) {
-	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
+	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();	
 	if (auto tvar = param-> to <ITypedVar> ()) {
-	    if (tvar-> typeExp ()) {
-		return solve (tmps, tvar-> typeExp (), type);
-	    } else if (auto arr = tvar-> typeVar ()-> to <IArrayVar> ()) {
-		return solve (tmps, arr, type);
-	    } else if (tvar-> typeVar ()-> is <IType> ()) {
+	    if (tvar-> typeExp ()) return solve (tmps, tvar-> typeExp (), type);
+
+	    bool isConst = false;				
+	    auto typeVar = tvar-> typeVar ();
+	    while (typeVar-> token == Keys::CONST) {
+		isConst = true;
+		typeVar = typeVar-> getTemplates () [0]-> to <IVar> ();
+	    }
+
+	    if (auto arr = typeVar-> to <IArrayVar> ()) {
+		return solve (tmps, arr, type, isConst);
+	    } else if (typeVar-> is <IType> ()) {
 		return TemplateSolution (0, true, tvar-> typeVar ()-> info-> type);
 	    } else {
 		vector <Expression> types;
 		TemplateSolution soluce (0, true);
-		for (auto it : Ymir::r (0, tvar-> typeVar ()-> getTemplates ().size ())) {
-		    if (auto var = tvar-> typeVar ()-> getTemplates () [it]-> to <IVar> ()) {
+		for (auto it : Ymir::r (0, typeVar-> getTemplates ().size ())) {
+		    if (auto var = typeVar-> getTemplates () [it]-> to <IVar> ()) {
 			if (!type-> getTemplate (it)) return TemplateSolution (0, false);
-			auto typeTemplates = type-> getTemplate (it, tvar-> typeVar ()-> getTemplates ().size () - (it + 1));
+			auto typeTemplates = type-> getTemplate (it, typeVar-> getTemplates ().size () - (it + 1));
 			auto res = this-> solveInside (tmps, var, typeTemplates);			
 			if (!res.valid || !merge (soluce.score, soluce.elements, res))
 			    return TemplateSolution (0, false);
@@ -78,16 +85,16 @@ namespace semantic {
 			    return TemplateSolution (0, false);			
 		    }
 		}
-		
+
 		for (auto it : tmps) {
 		    if (auto var = it-> to <IVar> ()) {
-			if (tvar-> typeVar ()-> token.getStr () == var-> token.getStr ()) {
+			if (typeVar-> token.getStr () == var-> token.getStr ()) {
 			    TemplateSolution res (0, true);
 			    if (auto of = var-> to<IOfVar> ())
-				res = solve (tmps, of, tvar, type);
+				res = solve (tmps, of, tvar, type, isConst);
 			    else
-				res = solve (var, tvar, type);
-			
+				res = solve (var, tvar, type, isConst);
+			    
 			    if (!res.valid || !merge (soluce.score, soluce.elements, res))
 				return TemplateSolution (0, false);
 			    else {
@@ -97,8 +104,8 @@ namespace semantic {
 			}
 		    }		
 		}
-
-		auto var = IVar (tvar-> typeVar ()-> token, types);
+		
+		auto var = IVar (typeVar-> token, types);
 		soluce.type = (var).asType ()-> info-> type;
 		soluce.score += __VAR__;
 		return soluce;
@@ -109,8 +116,14 @@ namespace semantic {
     
     TemplateSolution TemplateSolver::solveInside (vector <Expression> &tmps, Var param, InfoType type) {
 	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
+	bool isConst = false;	    
+	while (param-> token == Keys::CONST) {
+	    isConst = true;
+	    param = param-> getTemplates () [0]-> to <IVar> ();
+	}		
+
 	if (auto arr = param-> to <IArrayVar> ()) {
-	    return solve (tmps, arr, type);
+	    return solve (tmps, arr, type, isConst);
 	} else {
 	    vector <Expression> types;
 	    TemplateSolution soluce (0, true);
@@ -133,9 +146,9 @@ namespace semantic {
 		    if (param-> token.getStr () == var-> token.getStr ()) {
 			TemplateSolution res (0, true);
 			if (auto of = var-> to<IOfVar> ())
-			    res = solve (tmps, of, param, type);
+			    res = solve (tmps, of, param, type, isConst);
 			else
-			    res = solve (var, param, type);
+			    res = solve (var, param, type, isConst);
 			
 			if (!res.valid || !merge (soluce.score, soluce.elements, res))
 			    return TemplateSolution (0, false);
@@ -146,8 +159,9 @@ namespace semantic {
 		    }
 		}		
 	    }
-	    	    
-	    soluce.type = (IVar (param-> token, types)).asType ()-> info-> type;
+	    auto var = IVar (param-> token, types).asType ();
+	    if (var == NULL) return TemplateSolution (0, false);
+	    soluce.type = var-> info-> type;
 	    soluce.score += __VAR__;
 	    return soluce;
 	}    
@@ -161,7 +175,7 @@ namespace semantic {
 	}
     }
 
-    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, ArrayVar param, InfoType type) {
+    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, ArrayVar param, InfoType type, bool isConst) {
 	if (!type-> is <IArrayInfo> ()) {
 	    if (auto ptr = type-> to <IRefInfo> ()) {
 		if (!ptr-> content ()-> is <IArrayInfo> ())
@@ -179,8 +193,11 @@ namespace semantic {
 	    res = this-> solveInside (tmps, var, type_);
 	else
 	    res = this-> solveInside (tmps, content-> to<IFuncPtr> (), type_);
-	if (res.valid)
-	    return TemplateSolution (res.score, true, type-> cloneOnExit (), res.elements);
+	
+	if (res.valid) {
+	    auto type_ = new (GC) IArrayInfo (isConst, res.type-> cloneOnExit ());
+	    return TemplateSolution (res.score, true, type_, res.elements);
+	}
 	return TemplateSolution (0, false);	
     }
 
@@ -194,45 +211,61 @@ namespace semantic {
 	return TemplateSolution (0, false);
     }
 
-    TemplateSolution TemplateSolver::solve (Var elem, Var param, InfoType type) {
+    TemplateSolution TemplateSolver::solve (Var elem, Var param, InfoType type, bool isConst) {
 	if (elem-> is<ITypedVar> ()) return TemplateSolution (0, false);
 	else if (elem-> is<IArrayVar> ()) return TemplateSolution (0, false);
+
+	if (elem-> token == Keys::CONST) {
+	    return solve (elem-> getTemplates () [0]-> to<IVar> (), param, type, true);	    
+	} else if (elem-> getDeco () == Keys::CONST)
+	    isConst = true;
+	
 	auto type_ = type-> cloneOnExit ();
+	type_-> isConst (isConst);
+	
 	map <string, Expression> ret;
-	ret [elem-> token.getStr ()] = new (GC) IType (param-> token, type_);
+	ret [elem-> token.getStr ()] = new (GC) IType (param-> token, type_);	
 	return TemplateSolution (__VAR__, true, type_, ret);
     }
 
-    TemplateSolution TemplateSolver::solve (Var elem, TypedVar param, InfoType type) {
+    TemplateSolution TemplateSolver::solve (Var elem, TypedVar param, InfoType type, bool isConst) {
 	if (elem-> is<ITypedVar> ()) return TemplateSolution (0, false);
 	else if (elem-> is<IArrayVar> ()) return TemplateSolution (0, false);
 	else if (type-> is<IFunctionInfo> ()) return TemplateSolution (0, false);
 	// TODO Object, Struct
+
+	if (elem-> token == Keys::CONST) {
+	    return solve (elem-> getTemplates () [0]-> to <IVar> (), param, type, true);	    
+	} else if (elem-> getDeco () == Keys::CONST)
+	    isConst = true;
 	
 	auto type_ = type-> cloneOnExit ();
-	map <string, Expression> ret;
+	type_-> isConst (isConst);
+	
+	map <string, Expression> ret;	
 	ret [elem-> token.getStr ()] = new (GC) IType (param-> token, type_);
 	return TemplateSolution (__VAR__, true, type_, ret);
     }
 
-    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, OfVar elem, Var param, InfoType type) {
+    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, OfVar elem, Var param, InfoType type, bool isConst) {
 	Var typeVar;
 	auto typedParam = param-> to <ITypedVar> ();
 	if (typedParam) typeVar = typedParam-> typeVar ();
 	else typeVar = param;
-
+		
 	auto res = this-> solveInside (tmps, elem-> typeVar (), type);
 	if (res.valid) {
-	    if (typedParam && typedParam-> getDeco () == Keys::CONST)
-		res.type-> isConst (true);
-	    else res.type-> isConst (false);
+	    if ((typedParam && typedParam-> getDeco () == Keys::CONST) || res.type-> isConst ())
+		isConst = true;
+	    res.type-> isConst (isConst);
 	}
 	
 	if (!res.valid || !type-> CompOp (res.type))
 	    return TemplateSolution (0, false);
 	else {
-	    res.type = type;
-	    map<string, Expression> ret = {{elem-> token.getStr (), new (GC) IType (typeVar-> token, type-> cloneOnExit ())}};
+	    auto type_ = res.type;//type-> cloneOnExit ();	    
+	    type_-> isConst (isConst);
+	    map<string, Expression> ret = {{elem-> token.getStr (), new (GC) IType (typeVar-> token, type_)}};
 	    if (!merge (res.score, res.elements, ret))
 		return TemplateSolution (0, false);
 	    res.score += __VAR__;

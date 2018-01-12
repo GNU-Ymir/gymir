@@ -100,7 +100,7 @@ namespace semantic {
 	   type = Le type du paramètre
 	   Returns: une solution template
 	*/
-	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::ArrayVar param, InfoType type);
+	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::ArrayVar param, InfoType type, bool isConst = false);
 
 	/**
 	   Résoud un paramètre template de type fonction
@@ -133,7 +133,7 @@ namespace semantic {
 	   type = le type du paramètre passé 
 	   Returns: le tableau associatif des nouvelles expressions
 	*/
-	TemplateSolution solve (syntax::Var elem, syntax::Var param, InfoType type);
+	TemplateSolution solve (syntax::Var elem, syntax::Var param, InfoType type, bool isConst = false);
 
 	/**
 	   Résoud un paramètre template
@@ -143,7 +143,7 @@ namespace semantic {
 	   type = le type du paramètre passé 
 	   Returns: le tableau associatif des nouvelles expressions
 	*/
-	TemplateSolution solve (syntax::Var elem, syntax::TypedVar param, InfoType type);
+	TemplateSolution solve (syntax::Var elem, syntax::TypedVar param, InfoType type, bool isConst = false);
 
 	/**
 	   Résoud un paramètre templates de type of
@@ -159,7 +159,7 @@ namespace semantic {
 	   type = le type du paramètre passé à la fonction
 	   Returns: une solution template
 	*/
-	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::OfVar elem, syntax::Var param, InfoType type);
+	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::OfVar elem, syntax::Var param, InfoType type, bool isConst = false);
 
 	/**
 	   résolution des paramètre templates.

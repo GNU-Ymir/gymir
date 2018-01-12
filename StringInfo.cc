@@ -72,7 +72,7 @@ namespace semantic {
     }
 
     InfoType IStringInfo::CompOp (InfoType other) {
-	if (this-> isSame (other)) {
+	if (other-> is <IUndefInfo> () || this-> isSame (other)) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StringUtils::InstToString;
 	    return ret;

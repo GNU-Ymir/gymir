@@ -143,7 +143,7 @@ namespace syntax {
 	    int i = 0;	
 	    for (auto it : this-> templates) {
 		buf.write ("_");
-		if (i < this-> templates.size () - 1)
+		if (i < (int) this-> templates.size () - 1)
 		    buf.write (", ");
 		i = i + 1;
 	    }

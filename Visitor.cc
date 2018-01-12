@@ -84,7 +84,7 @@ namespace syntax {
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-			       Keys::TRAIT
+			       Keys::TRAIT, Keys::REF, Keys::CONST
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -771,6 +771,28 @@ namespace syntax {
 	return ret;
     }
 
+    Var Visitor::visitDecoType (Word begin) {
+	auto next = this-> lex.next ();
+	Var type = NULL;
+	if (next == Token::NOT) {
+	    next = this-> lex.next ();
+	    if (next == Token::LPAR) {
+		type = visitType ();
+		this-> lex.next ({Token::RPAR});
+	    } else {
+		this-> lex.rewind ();
+		type = visitType ();
+	    }
+	} else if (next == Token::LPAR) {
+	    type = visitType ();
+	    this-> lex.next ({Token::RPAR});
+	} else {
+	    this-> lex.rewind ();
+	    type = visitType ();
+	}
+	return new (GC) IVar (begin, {type});
+    }
+    
     /**
        type := Identifiant ('!' (('(' expression (',' expression)* ')') | expression ) 
     */
@@ -789,10 +811,13 @@ namespace syntax {
 	    auto end = this-> lex.next ();
 	    if (end != Token::RCRO) syntaxError (end, {Token::RCRO});
 	    return new (GC) IArrayVar (begin, type);
-	} else this-> lex.rewind ();
+	} else if (begin == Keys::CONST)
+	    return visitDecoType (begin);	
+	else this-> lex.rewind ();
+	
 	auto ident = visitIdentifiant ();
 	auto next = this-> lex.next ();
-	if (next == Token::NOT || ident == Keys::CONST || ident == Keys::REF) {
+	if (next == Token::NOT) {
 	    if (!(next == Token::NOT)) this-> lex.rewind ();
 	    std::vector <Expression> params;
 	    next = this-> lex.next ();

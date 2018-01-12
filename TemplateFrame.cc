@@ -106,7 +106,6 @@ namespace semantic {
 		    if (tvar-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
 			info = new (GC) IRefInfo (info);
 		    if (tvar-> getDeco () == Keys::CONST) info-> isConst (true);
-		    else info-> isConst (false);
 		} else {
 		    tvar = param-> setType (new (GC) IUndefInfo ());
 		    info = tvar-> getType ()-> clone ();
