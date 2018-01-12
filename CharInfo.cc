@@ -43,7 +43,7 @@ namespace semantic {
 	return "char";
     }
 
-    std::string ICharInfo::simpleTypeString () {
+    std::string ICharInfo::innerSimpleTypeString () {
 	return "a";
     }
 

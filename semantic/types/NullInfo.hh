@@ -19,7 +19,7 @@ namespace semantic {
 
 	std::string innerTypeString () override;
 
-	std::string simpleTypeString () override;
+	std::string innerSimpleTypeString () override;
 
 	static const char* id () {
 	    return "INullInfo";

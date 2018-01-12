@@ -23,7 +23,7 @@ namespace semantic {
 	return "string";
     }
 
-    std::string IStringInfo::simpleTypeString () {
+    std::string IStringInfo::innerSimpleTypeString () {
 	return "s";
     }
 

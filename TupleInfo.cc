@@ -127,7 +127,7 @@ namespace semantic {
 	return buf.str ();
     }
 
-    std::string ITupleInfo::simpleTypeString () {
+    std::string ITupleInfo::innerSimpleTypeString () {
 	Ymir::OutBuffer buf;
 	buf.write ("T");
 	for (auto it : this-> params) {

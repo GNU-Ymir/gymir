@@ -35,7 +35,7 @@ namespace semantic {
 	return "void";
     }
 
-    std::string IVoidInfo::simpleTypeString () {
+    std::string IVoidInfo::innerSimpleTypeString () {
 	return "v";
     }
 

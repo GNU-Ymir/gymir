@@ -46,7 +46,7 @@ namespace semantic {
 	return "null";
     }
 
-    std::string INullInfo::simpleTypeString () {
+    std::string INullInfo::innerSimpleTypeString () {
 	return "n";
     }
 

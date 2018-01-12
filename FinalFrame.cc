@@ -61,11 +61,11 @@ namespace semantic {
 	return this-> _isVariadic;
     }
 
-    std::vector<syntax::Var> IFinalFrame::vars () {
+    std::vector<syntax::Var>& IFinalFrame::vars () {
 	return this-> _vars;
     }
 
-    std::vector <syntax::Expression> IFinalFrame::tmps () {
+    std::vector <syntax::Expression>& IFinalFrame::tmps () {
 	return this-> _tmps;
     }
 

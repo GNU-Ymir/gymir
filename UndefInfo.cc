@@ -27,7 +27,7 @@ namespace semantic {
 	return "undef";
     }
 
-    std::string IUndefInfo::simpleTypeString () {
+    std::string IUndefInfo::innerSimpleTypeString () {
 	return "undef";
     }
 

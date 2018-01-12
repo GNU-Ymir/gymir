@@ -63,7 +63,7 @@ namespace semantic {
 	return "range!" + this-> _content-> innerTypeString ();
     }
 
-    std::string IRangeInfo::simpleTypeString () {
+    std::string IRangeInfo::innerSimpleTypeString () {
 	return "R_" + this-> _content-> simpleTypeString ();
     }
 

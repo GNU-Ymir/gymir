@@ -94,6 +94,12 @@ namespace semantic {
 	} else return this-> innerTypeString ();
     }
 
+    std::string IInfoType::simpleTypeString () {
+	if (this-> isConst ()) {
+	    return std::string ("C") + this-> innerSimpleTypeString ();
+	} else return this-> innerSimpleTypeString ();
+    }
+    
     InfoType IInfoType::BinaryOp (Word w, InfoType info) {
 	auto expr = new syntax::IExpression (w);
 	expr-> info = new ISymbol (w, info);

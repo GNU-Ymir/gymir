@@ -45,7 +45,7 @@ namespace semantic {
 	return "void";
     }
 
-    std::string IIgnoreInfo::simpleTypeString () {
+    std::string IIgnoreInfo::innerSimpleTypeString () {
 	return "v";
     }
 

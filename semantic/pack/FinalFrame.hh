@@ -51,9 +51,9 @@ namespace semantic {
 
 	bool& isVariadic ();
 
-	std::vector<syntax::Var> vars ();
+	std::vector<syntax::Var> &vars ();
 
-	std::vector <syntax::Expression> tmps ();
+	std::vector <syntax::Expression> &tmps ();
 
 	syntax::Block block ();	
 

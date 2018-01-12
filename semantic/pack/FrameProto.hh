@@ -52,6 +52,8 @@ namespace semantic {
 
 	std::vector <syntax::Var>& vars ();
 
+	std::vector <syntax::Expression>& tmps ();
+	
 	std::string& externName (); 
 	
 	bool equals (IFrameProto* scd);

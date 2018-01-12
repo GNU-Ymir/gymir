@@ -59,6 +59,7 @@ namespace semantic {
 	auto type = right-> info-> type-> to<IArrayInfo> ();
 	if (type && type-> _content-> isSame (this-> _content)) {
 	    auto ret = type-> clone ();
+	    ret-> isConst (this-> isConst ());
 	    if (type-> _content-> ConstVerif (this-> _content) == NULL)
 		return NULL;
 	    
@@ -178,8 +179,7 @@ namespace semantic {
 	}
 	
 	if (treat) {
-	    auto ch = this-> _content-> clone ();
-	    ch-> isConst (this-> isConst ());
+	    auto ch = new (GC) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
 	}
@@ -206,8 +206,14 @@ namespace semantic {
 
     InfoType IArrayInfo::CompOp (InfoType other) {
 	auto type = other-> to<IArrayInfo> ();
-	if ((type && type-> _content-> isSame (this-> _content)) ||
-	    other-> is<IUndefInfo> ()) {
+	if (type && type-> _content-> isSame (this-> _content)) {
+	    auto ret = type-> clone ();
+	    ret-> isConst (this-> isConst ());
+	    if (this-> _content-> ConstVerif (type-> _content) == NULL)
+		return NULL;	    
+	    ret-> binopFoo = ArrayUtils::InstToArray;
+	    return ret;	    
+	} else if (other-> is<IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = ArrayUtils::InstToArray;
 	    //ret-> lintInst = ArrayUtils::InstAffectRight;
@@ -264,9 +270,8 @@ namespace semantic {
 	return std::string ("[") + this-> _content-> typeString () + "]";
     }
 
-    std::string IArrayInfo::simpleTypeString () {
-	if (this-> isConst ()) return std::string ("cA") + this-> _content-> simpleTypeString ();
-	else return std::string ("A") + this-> _content-> simpleTypeString ();
+    std::string IArrayInfo::innerSimpleTypeString () {	
+	return std::string ("A") + this-> _content-> simpleTypeString ();
     }
 
     InfoType IArrayInfo::getTemplate (ulong i) {

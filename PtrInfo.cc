@@ -207,7 +207,7 @@ namespace semantic {
 	return "ptr!" + this-> _content-> innerTypeString ();
     }
 
-    std::string IPtrInfo::simpleTypeString () {
+    std::string IPtrInfo::innerSimpleTypeString () {
 	return "P" + this-> _content-> simpleTypeString ();
     }
 

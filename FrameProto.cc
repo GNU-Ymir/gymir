@@ -35,6 +35,10 @@ namespace semantic {
 	return this-> _vars;
     }
 
+    std::vector <syntax::Expression>& IFrameProto::tmps () {
+	return this-> _tmps;
+    }
+
     std::string& IFrameProto::externName () {
 	return this-> _extern;
     }
@@ -50,8 +54,13 @@ namespace semantic {
 	    if (this-> _tmps.size () != scd-> _tmps.size () ||
 		this-> _vars.size () != scd-> _vars.size ()) return false;
 	    
-	    for (auto it __attribute__ ((unused)) : Ymir::r (0, this-> _tmps.size ())) {
-		Ymir::Error::assert ("TODO");
+	    for (auto it : Ymir::r (0, this-> _tmps.size ())) {
+		if (this-> _tmps [it]-> info-> isImmutable () != scd-> _tmps [it]-> info-> isImmutable ()) {
+		    return false;
+		} else if (this-> _tmps [it]-> info-> isImmutable ())
+		    Ymir::Error::assert ("TODO");
+		else if (!(this-> _tmps [it]-> info-> type-> isSame (scd-> _tmps [it]-> info-> type)))
+		    return false;
 	    }
 
 	    for (auto it : Ymir::r (0, this-> _vars.size ())) {

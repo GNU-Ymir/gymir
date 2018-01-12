@@ -216,7 +216,7 @@ namespace semantic {
 	return innerTypeString ();
     }
     
-    std::string IFunctionInfo::simpleTypeString () {
+    std::string IFunctionInfo::innerSimpleTypeString () {
 	return "F";
     }
 

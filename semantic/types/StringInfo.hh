@@ -34,7 +34,7 @@ namespace semantic {
 	
 	std::string innerTypeString () override;
 
-	std::string simpleTypeString () override;
+	std::string innerSimpleTypeString () override;
 
 	InfoType clone () override;
 

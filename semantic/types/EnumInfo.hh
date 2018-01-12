@@ -29,7 +29,7 @@ namespace semantic {
 
 	InfoType create ();
 
-	std::string simpleTypeString () override;
+	std::string innerSimpleTypeString () override;
 
 	std::string innerTypeString () override;
 
@@ -81,7 +81,7 @@ namespace semantic {
 
 	InfoType ApplyOp (std::vector <syntax::Var>) override;
 
-	std::string simpleTypeString () override;
+	std::string innerSimpleTypeString () override;
 
 	std::string innerTypeString () override;
 

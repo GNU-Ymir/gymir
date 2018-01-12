@@ -19,3 +19,4 @@
 #include "RangeInfo.hh"
 #include "TupleInfo.hh"
 #include "IgnoreInfo.hh"
+#include "ArrayRefInfo.hh"

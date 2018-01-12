@@ -3,6 +3,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
 
+
 namespace semantic {
 
     namespace RefUtils {
@@ -15,7 +16,7 @@ namespace semantic {
 	    list.pop_back ();
 	    return last;
 	}
-
+	
 	Ymir::Tree InstUnrefBinRight (Word locus, InfoType type, Expression left, Expression right) {
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
@@ -276,7 +277,7 @@ namespace semantic {
 	return std::string ("ref(") + this-> _content-> innerTypeString () + ")";
     }
 
-    std::string IRefInfo::simpleTypeString () {
+    std::string IRefInfo::innerSimpleTypeString () {
 	return std::string ("R") + this-> _content-> simpleTypeString ();
     }
 
@@ -333,5 +334,90 @@ namespace semantic {
     }
 
     
+    IArrayRefInfo::IArrayRefInfo (bool isConst) :
+	IInfoType (isConst),
+	_content (NULL)
+    {}
+
+    IArrayRefInfo::IArrayRefInfo (bool isConst, InfoType content) :
+	IInfoType (isConst),
+	_content (content)
+    {}
+
+    bool IArrayRefInfo::isSame (InfoType type) {
+	return this-> _content-> isSame (type);	
+    }
+
+    InfoType IArrayRefInfo::ConstVerif (InfoType type) {
+	return this-> _content-> ConstVerif (type);	
+    }
+
+    InfoType IArrayRefInfo::BinaryOp (Word token, syntax::Expression right) {
+	return this-> _content-> BinaryOp (token, right);
+    }
+
+    InfoType IArrayRefInfo::BinaryOpRight (Word token, syntax::Expression left) {
+	return this-> _content-> BinaryOpRight (token, left);
+    }
+
+    InfoType IArrayRefInfo::AccessOp (Word token, syntax::ParamList params, std::vector <InfoType> & treats) {
+	return this-> _content-> AccessOp (token, params, treats);
+    }
+
+    InfoType IArrayRefInfo::DotOp (syntax::Var var) {
+	return this-> _content-> DotOp (var);
+    }
+
+    InfoType IArrayRefInfo::DotExpOp (syntax::Expression elem) {
+	return this-> _content-> DotExpOp (elem);
+    }
+
+    InfoType IArrayRefInfo::DColonOp (syntax::Var var) {
+	return this-> _content-> DColonOp (var);
+    }
+
+    InfoType IArrayRefInfo::UnaryOp (Word op) {
+	return this-> _content-> UnaryOp (op);
+    }
+
+    InfoType IArrayRefInfo::CastOp (InfoType other) {
+	return this-> _content-> CastOp (other);
+    }
+
+    InfoType IArrayRefInfo::CompOp (InfoType other) {
+	return this-> _content-> CompOp (other);
+    }
+
+    //InfoType IArrayRefInfo::ApplyOp (std::vector <syntax::Var> vars) {}
+
+    ApplicationScore IArrayRefInfo::CallOp (Word op, syntax::ParamList params) {
+	return this-> _content-> CallOp (op, params);
+    }
+        
+    std::string IArrayRefInfo::innerTypeString () {
+	return this-> _content-> innerTypeString ();
+    }
+
+    std::string IArrayRefInfo::innerSimpleTypeString () {
+	return this-> _content-> innerSimpleTypeString ();
+    }
+
+    InfoType IArrayRefInfo::clone () {
+	return new (GC) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
+    }
+
+    const char* IArrayRefInfo::getId () {
+	return IArrayRefInfo::id ();
+    }
+
+    InfoType IArrayRefInfo::content () {
+	return this-> _content;
+    }
+
+    Ymir::Tree IArrayRefInfo::toGeneric () {
+	return this-> _content-> toGeneric ();
+    }
+
+
     
 }
