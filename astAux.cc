@@ -32,14 +32,14 @@ namespace syntax {
 
     std::string sname (FixedConst ct) {
 	switch (ct) {
-	case FixedConst::BYTE : return "g";
-	case FixedConst::UBYTE : return "h";
-	case FixedConst::SHORT : return "s";
-	case FixedConst::USHORT: return "t";
-	case FixedConst::INT : return "i";
-	case FixedConst::UINT : return "k";
+	case FixedConst::BYTE : return "b";
+	case FixedConst::UBYTE : return "bu";
+	case FixedConst::SHORT : return "h";
+	case FixedConst::USHORT: return "hu";
+	case FixedConst::INT : return "d";
+	case FixedConst::UINT : return "du";
 	case FixedConst::LONG : return "l";
-	case FixedConst::ULONG : return "m";
+	case FixedConst::ULONG : return "lu";
 	}
 	return "none";
     }

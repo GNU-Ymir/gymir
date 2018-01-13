@@ -78,7 +78,7 @@ namespace semantic {
 	Symbol ret = NULL;
 	for (auto& it : this-> local) {
 	    auto diff = levenshteinDistance (it.first.c_str (), it.first.length (), name.c_str (), name.length ());
-	    if (diff < min) {
+	    if (diff < min && diff < name.length ()) {
 		ret = it.second [0];
 		min = diff;
 	    }

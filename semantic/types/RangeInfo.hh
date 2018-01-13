@@ -49,6 +49,8 @@ namespace semantic {
 	Ymir::Tree toGeneric () override;
 
 	static Ymir::Tree toGenericStatic (std::string name, Ymir::Tree);
+
+	InfoType getTemplate (ulong);
 	
 	InfoType clone () override;
 

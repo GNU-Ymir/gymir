@@ -97,9 +97,9 @@ namespace semantic {
 	    //TODO
 	    return this-> clone ();
 	} else if (auto ot = other-> to<IFloatInfo> ()) {
-	    if (this-> _type >= ot-> _type) {
+	    if (ot-> _type >= this-> _type) {
 		//TODO
-		return this-> clone ();	       
+		return ot-> clone ();	       
 	    }
 	} else if (other-> is<IRefInfo> ()) {
 	    auto aux = new IRefInfo (this-> clone ());

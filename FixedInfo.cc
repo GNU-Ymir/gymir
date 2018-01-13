@@ -115,16 +115,16 @@ namespace semantic {
 	    }
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && ot-> isSup (this)) {
-		auto ret = this-> clone ();
+		auto ret = ot-> clone ();
 		ret-> binopFoo = FixedUtils::InstCast;
 		return ret;
 	    } else if (!this-> isSigned () && !ot-> isSigned () && ot-> isSup (this)) {
-		auto ret = this-> clone ();
+		auto ret = ot-> clone ();
 		ret-> binopFoo = FixedUtils::InstCast;
 		return ret;
 	    }
 	} else if (auto ot = other-> to<IEnumInfo> ()) {
-	    return this->CompOp (ot-> content ());
+	    return this-> CompOp (ot-> content ());
 	}
 	return NULL;
     }

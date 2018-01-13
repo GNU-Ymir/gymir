@@ -60,7 +60,7 @@ namespace semantic {
     }
     
     std::string IRangeInfo::innerTypeString () {
-	return "range!" + this-> _content-> innerTypeString ();
+	return "r!" + this-> _content-> innerTypeString ();
     }
 
     std::string IRangeInfo::innerSimpleTypeString () {
@@ -114,33 +114,42 @@ namespace semantic {
 
     Ymir::Tree IRangeInfo::toGenericStatic (std::string innerName, Ymir::Tree inner) {
 	std::string name = simpleTypeStringStatic (innerName);
-	Ymir::Tree range_type_node =
-	    Ymir::makeStructType (name, 2,
-				  get_identifier ("fst"),
-				  inner.getTree (),				      
-				  get_identifier ("scd"),
-				  inner.getTree ()
+	Ymir::Tree range_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	if (range_type_node.isNull ()) {
+	    range_type_node = Ymir::makeStructType (name, 2,
+						    get_identifier ("fst"),
+						    inner.getTree (),				      
+						    get_identifier ("scd"),
+						    inner.getTree ()
 	    );
-	
-	IFinalFrame::declareType (name, range_type_node);
+	    
+	    IFinalFrame::declareType (name, range_type_node);
+	}
 	return range_type_node;
     }
     
     Ymir::Tree IRangeInfo::toGeneric () {
 	Ymir::Tree inner = this-> _content-> toGeneric ();
 	std::string name = this-> simpleTypeString ();
-	Ymir::Tree range_type_node =
-	    Ymir::makeStructType (name, 2,
-				  get_identifier ("fst"),
-				  inner.getTree (),				      
-				  get_identifier ("scd"),
-				  inner.getTree ()
+	Ymir::Tree range_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	if (range_type_node.isNull ()) {
+	    range_type_node = Ymir::makeStructType (name, 2,
+						    get_identifier ("fst"),
+						    inner.getTree (),				      
+						    get_identifier ("scd"),
+						    inner.getTree ()
 	    );
-	
-	IFinalFrame::declareType (name, range_type_node);
+	    
+	    IFinalFrame::declareType (name, range_type_node);
+	}
 	return range_type_node;
     }
 
+    InfoType IRangeInfo::getTemplate (ulong i) {
+	if (i == 0) return this-> _content;
+	return NULL;
+    }
+    
     namespace RangeUtils {
 	using namespace syntax;
 	using namespace Ymir;
