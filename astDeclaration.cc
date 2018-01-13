@@ -30,16 +30,16 @@ namespace syntax {
 
     Frame IFunction::verifyPure (Namespace space) {
 	if (this-> tmps.size () != 0) {
-	    // auto isPure = verifyTemplates ();
-	    // auto ret = new TemplateFrame (space, this);
-	    // if (!isPure) return ret;
-	    // for (auto it : this-> params) {
-	    // 	if (!it-> is<ITypedVar> ()) return ret;
-	    // }
+	    auto isPure = verifyTemplates ();
+	    auto ret = new (GC) ITemplateFrame (space, this);
+	    if (!isPure) return ret;
+	    for (auto it : this-> params) {
+	    	if (!it-> is<ITypedVar> ()) return ret;
+	    }
 
-	    // ret-> isPure = true;
-	    // FrameTable::instance ().insert (ret);
-	    // return ret;
+	    ret-> isPure () = true;
+	    FrameTable::instance ().insert (ret);
+	    return ret;
 	}
 
 	for (auto it : this-> params) {
@@ -51,6 +51,19 @@ namespace syntax {
 	auto fr = new IPureFrame (space, this);
 	FrameTable::instance ().insert (fr);
 	return fr;
+    }
+
+    bool IFunction::verifyTemplates () {		
+	//TODO;
+	// for (auto it : this-> tmps) {
+	//     if (auto tvar = it-> to<ITypedVar> ()) {
+	// 	for (auto it : this-> params) {
+	// 	    if (auto _tvar_ = it_-> <ITypedVar> it_)
+
+	// 	}
+	//     }
+	// }
+	return false;
     }
     
     void IImpl::declare () {}

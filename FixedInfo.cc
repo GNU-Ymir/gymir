@@ -26,7 +26,7 @@ namespace semantic {
 	return syntax::name (this-> _type);
     }
 
-    std::string IFixedInfo::simpleTypeString () {
+    std::string IFixedInfo::innerSimpleTypeString () {
 	return syntax::sname (this-> _type);
     }
 	

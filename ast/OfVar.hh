@@ -18,6 +18,22 @@ namespace syntax {
 	    type (type)
 	{}
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
+	static const char * id () {
+	    return TYPEID (IOfVar);
+	}
+	
+	std::vector <std::string> getIds () {
+	    auto ret = IVar::getIds ();
+	    ret.push_back (TYPEID (IOfVar));
+	    return ret;
+	}
+
+	Var typeVar () {
+	    return this-> type;
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<OfVar> %s",
 		    nb, ' ',
@@ -34,6 +50,16 @@ namespace syntax {
 
 	IVariadicVar (Word ident) : IVar (ident) {}
 
+	static const char * id () {
+	    return TYPEID (IVariadicVar);
+	}
+	
+	std::vector <std::string> getIds () {
+	    auto ret = IVar::getIds ();
+	    ret.push_back (TYPEID (IVariadicVar));
+	    return ret;
+	}
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<VariadicVar> %s",
 		    nb, ' ',

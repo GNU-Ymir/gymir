@@ -127,7 +127,7 @@ namespace semantic {
 	return buf.str ();
     }
 
-    std::string ITupleInfo::simpleTypeString () {
+    std::string ITupleInfo::innerSimpleTypeString () {
 	Ymir::OutBuffer buf;
 	buf.write ("T");
 	for (auto it : this-> params) {
@@ -138,8 +138,11 @@ namespace semantic {
     
     Ymir::Tree ITupleInfo::toGeneric () {
 	auto name = this-> simpleTypeString ();
-	auto tuple_type_node = Ymir::makeTuple (name, this-> params);
-	IFinalFrame::declareType (name, tuple_type_node);
+	auto tuple_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	if (tuple_type_node.isNull ()) {
+	    tuple_type_node = Ymir::makeTuple (name, this-> params);	
+	    IFinalFrame::declareType (name, tuple_type_node);
+	}
 	return tuple_type_node;
     }
 	    
@@ -194,6 +197,12 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType ITupleInfo::getTemplate (ulong nb) {
+	if (nb < this-> params.size ())
+	    return this-> params [nb];
+	return NULL;
+    }
+    
     namespace TupleUtils {
 	using namespace Ymir;
 	
@@ -224,9 +233,10 @@ namespace semantic {
 	Tree InstCast (Word locus, InfoType type, Expression elem, Expression) {
 	    location_t loc = locus.getLocus ();
 	    TupleInfo info = type-> to<ITupleInfo> ();
+	    auto rtree = elem-> toGeneric ();
+	    
 	    auto rtype = elem-> info-> type-> to <ITupleInfo> ();
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
-	    auto rtree = elem-> toGeneric ();	    
 	    Ymir::TreeStmtList list;
 	    
 	    for (auto it : Ymir::r (0, info-> nbParams ())) {

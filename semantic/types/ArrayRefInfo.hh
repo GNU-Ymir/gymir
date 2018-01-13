@@ -5,28 +5,19 @@
 
 namespace semantic {
 
-    class IRefInfo : public IInfoType {
+    class IArrayRefInfo : public IInfoType {
 
 	InfoType _content = NULL;
 
     public:
 
-	IRefInfo (bool);
+	IArrayRefInfo (bool);
 
-	IRefInfo (bool, InfoType);
+	IArrayRefInfo (bool, InfoType);
 
 	bool isSame (InfoType) override;
 
 	InfoType ConstVerif (InfoType) override;
-
-	static InfoType create (Word tok, std::vector<syntax::Expression> tmps) {
-	    if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
-		Ymir::Error::takeATypeAsTemplate (tok);
-		return NULL;
-	    } else {
-		return new IRefInfo (false, tmps [0]-> info-> type);
-	    }
-	}
 
 	InfoType BinaryOp (Word token, syntax::Expression right) override;
 
@@ -49,19 +40,15 @@ namespace semantic {
 	//InfoType ApplyOp (std::vector <syntax::Var> vars) override;
 
 	ApplicationScore CallOp (Word op, syntax::ParamList params) override;
-
-	bool isConst () override;
-
-	void isConst (bool set) override;
 	
 	std::string innerTypeString () override;
-
+	
 	std::string innerSimpleTypeString () override;
 	
 	InfoType clone () override;
 	
 	static const char* id () {
-	    return "IRefInfo";
+	    return "IArrayRefInfo";
 	}
 
 	Ymir::Tree toGeneric () override;
@@ -69,20 +56,10 @@ namespace semantic {
 	const char* getId () override;
 
 	InfoType content ();
-
-    private:
-
-	InfoType Unref ();	
-
-	InfoType addUnref (InfoType elem);
-
-	InfoType addUnrefRight (InfoType elem);
-
-	InfoType addUnrefDouble (InfoType elem);
 	
     };
 
-    typedef IRefInfo* RefInfo;
+    typedef IArrayRefInfo* ArrayRefInfo;
     
     
 }

@@ -19,6 +19,8 @@ namespace syntax {
 	IBreak (Word token, Word ident);
 
 	Instruction instruction () override;
+
+	Instruction templateReplace (std::map <std::string, Expression>) override;
 	
 	void print (int nb = 0) override;	
     };

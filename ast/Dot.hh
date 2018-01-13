@@ -17,7 +17,20 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
+
+	static const char * id () {
+	    return TYPEID (IDot);
+	}
+	
+	std::vector <std::string> getIds () {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IDot));
+	    return ret;
+	}
+	
 	
 	void print (int nb = 0) override;
 		
@@ -36,10 +49,16 @@ namespace syntax {
 	IDotCall (Instruction inside, Word token, Expression call, Expression firstPar);
 
 	Expression expression () override;
-
+	
 	Expression& call ();
 
 	Expression& firstPar ();
+
+	static const char * id () {
+	    return TYPEID (IDotCall);
+	}
+	
+	std::vector <std::string> getIds ();
 	
 	void print (int nb = 0) override;
 	

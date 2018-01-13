@@ -116,7 +116,7 @@ namespace semantic {
 	else return "double";
     }
 
-    std::string IFloatInfo::simpleTypeString () {
+    std::string IFloatInfo::innerSimpleTypeString () {
 	if (this-> _type == FloatConst::FLOAT) return "f";
 	else return "d";
     }

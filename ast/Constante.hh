@@ -37,6 +37,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 
 	void setUValue (ulong val);
@@ -57,6 +59,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;	
@@ -75,6 +79,8 @@ namespace syntax {
 	IFloat (Word word, std::string suite);
 
 	Expression expression () override;
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
 	
 	Ymir::Tree toGeneric () override;
 	
@@ -93,15 +99,19 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
 
 	std::string getStr ();
 	
-	static const char* id ();
-
-	const char* getId () override;
+	static const char * id () {
+	    return TYPEID (IString);
+	}
+	
+	std::vector <std::string> getIds () override;
 	
     private:
 
@@ -189,6 +199,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override {
@@ -207,10 +219,31 @@ namespace syntax {
 
 	Expression expression () override;	
 	
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Null> %s",
+		    nb, ' ',
+		    this-> token.toString ().c_str ()
+	    );
+	}
+	
+    };
+
+    class IIgnore : public IExpression {
+    public:
+	IIgnore (Word token)
+	    : IExpression (token)
+	{}
+
+	Expression expression () override;
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
+	void print (int nb = 0) override {
+	    printf ("\n%*c<Ignore> %s",
 		    nb, ' ',
 		    this-> token.toString ().c_str ()
 	    );
@@ -224,4 +257,5 @@ namespace syntax {
     typedef IString* String;
     typedef IBool* Bool;
     typedef INull* Null;
+    typedef IIgnore* Ignore;
 }

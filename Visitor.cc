@@ -84,7 +84,7 @@ namespace syntax {
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-			       Keys::TRAIT
+			       Keys::TRAIT, Keys::REF, Keys::CONST
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -663,7 +663,7 @@ namespace syntax {
 	    auto type = visitType ();
 	    return new (GC) IOfVar (ident, type);	    
 	} else if (next == Token::TDOT) {
-	    return new IVariadicVar (ident);
+	    return new (GC) IVariadicVar (ident);
 	} else this-> lex.rewind ();
 	return new (GC) IVar (ident, deco);
     }
@@ -771,6 +771,28 @@ namespace syntax {
 	return ret;
     }
 
+    Var Visitor::visitDecoType (Word begin) {
+	auto next = this-> lex.next ();
+	Var type = NULL;
+	if (next == Token::NOT) {
+	    next = this-> lex.next ();
+	    if (next == Token::LPAR) {
+		type = visitType ();
+		this-> lex.next ({Token::RPAR});
+	    } else {
+		this-> lex.rewind ();
+		type = visitType ();
+	    }
+	} else if (next == Token::LPAR) {
+	    type = visitType ();
+	    this-> lex.next ({Token::RPAR});
+	} else {
+	    this-> lex.rewind ();
+	    type = visitType ();
+	}
+	return new (GC) IVar (begin, {type});
+    }
+    
     /**
        type := Identifiant ('!' (('(' expression (',' expression)* ')') | expression ) 
     */
@@ -789,10 +811,13 @@ namespace syntax {
 	    auto end = this-> lex.next ();
 	    if (end != Token::RCRO) syntaxError (end, {Token::RCRO});
 	    return new (GC) IArrayVar (begin, type);
-	} else this-> lex.rewind ();
+	} else if (begin == Keys::CONST)
+	    return visitDecoType (begin);	
+	else this-> lex.rewind ();
+	
 	auto ident = visitIdentifiant ();
 	auto next = this-> lex.next ();
-	if (next == Token::NOT || ident == Keys::CONST || ident == Keys::REF) {
+	if (next == Token::NOT) {
 	    if (!(next == Token::NOT)) this-> lex.rewind ();
 	    std::vector <Expression> params;
 	    next = this-> lex.next ();
@@ -1196,7 +1221,7 @@ namespace syntax {
 	    }
 	    
 	    next = this-> lex.next ();
-	    if (next == Token::DARROW || next == Token::LACC) {
+	    if ((next == Token::DARROW || next == Token::LACC) && this-> lambdaPossible) {
 		isLambda = true;
 		std::vector <Var> realParams;
 		for (auto it : params) {
@@ -1252,6 +1277,8 @@ namespace syntax {
 	    return visitIs ();
 	else if (tok == Keys::TYPEOF)
 	    return visitTypeOf ();
+	else if (tok == Keys::UNDER)
+	    return new (GC) IIgnore (tok);
 	else this-> lex.rewind ();
 	return NULL;
     }
@@ -1715,6 +1742,7 @@ namespace syntax {
 	auto expr = visitExpression ();
 	
 	auto next = this-> lex.next ({Token::LACC});
+	this-> lambdaPossible = false;
 	while (true) {
 	    next = this-> lex.next ();
 	    if (next != Keys::UNDER) {
@@ -1738,6 +1766,7 @@ namespace syntax {
 	    }
 	}
 	
+	this-> lambdaPossible = true;
 	return new (GC) IMatch (begin, expr, values, insts, defaultInsts);
     }
     

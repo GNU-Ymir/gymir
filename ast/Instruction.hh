@@ -2,9 +2,22 @@
 
 #include "../syntax/Word.hh"
 #include <gc/gc_cpp.h>
+#include <algorithm>
+#include <map>
+#include <string>
 
 namespace Ymir {
     struct Tree;    
+}
+
+#define TYPEID(x) #x
+
+//const char* getTypeid 
+
+template <typename T>
+const char* valueof (const char* in) {
+    printf ("%s\n", in);
+    return in;
 }
 
 namespace syntax {
@@ -12,6 +25,9 @@ namespace syntax {
     class IBlock;
     typedef IBlock* Block;
     
+    class IExpression;
+    typedef IExpression* Expression;
+
     class IInstruction : public gc {
     protected:
 
@@ -33,27 +49,26 @@ namespace syntax {
 	void setStatic (bool is) {
 	    this-> isStatic = is;
 	}
-
-	static const char* id () {
-	    return "IInstruction";
-	}
 	
-	virtual const char* getId () {
-	    return IInstruction:: id ();
-	};
+	virtual std::vector <std::string> getIds () {
+	    return {TYPEID (IInstruction)};
+	}
 
 	virtual IInstruction* instruction () = 0;	   
 
+	virtual IInstruction* templateReplace (std::map <std::string, Expression> tmps) = 0;
+	
 	virtual Ymir::Tree toGeneric ();
 		
 	template <typename T>
 	bool is () {
-	    return strcmp (this-> getId (), T::id ()) == 0;
+	    return this-> to<T> () != NULL;
 	}
 
 	template <typename T>
 	T* to () {
-	    if (strcmp (this-> getId (), T::id ()) == 0)
+	    auto ids = this-> getIds ();
+	    if (std::find (ids.begin (), ids.end (), T::id ()) != ids.end ())
 		return (T*) this;
 	    return NULL;
 	}
@@ -75,8 +90,14 @@ namespace syntax {
 	    return "INone";
 	}
 
-	const char* getId () override {
-	    return INone::id ();
+	IInstruction* templateReplace (std::map <std::string, Expression>) override {
+	    return this;    
+	}
+	
+	std::vector <std::string> getIds () override {
+	    auto ret = IInstruction::getIds ();
+	    ret.push_back (INone::id ());
+	    return ret;
 	}
 	
 	void print (int nb = 0) override {

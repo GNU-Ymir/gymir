@@ -16,11 +16,7 @@ namespace semantic {
     IArrayInfo::IArrayInfo (bool isConst, InfoType content) :
 	IInfoType (isConst),
 	_content (content)
-    {
-	if (this-> _content)
-	    this-> _content-> isConst (this-> isConst ());
-    }
-
+    {}
     
     InfoType IArrayInfo::content () {
 	return this-> _content;
@@ -62,7 +58,11 @@ namespace semantic {
     InfoType IArrayInfo::Affect (Expression right) {
 	auto type = right-> info-> type-> to<IArrayInfo> ();
 	if (type && type-> _content-> isSame (this-> _content)) {
-	    auto ret = this-> clone ();
+	    auto ret = type-> clone ();
+	    ret-> isConst (this-> isConst ());
+	    if (type-> _content-> ConstVerif (this-> _content) == NULL)
+		return NULL;
+	    
 	    ret-> binopFoo = ArrayUtils::InstAffect;
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
@@ -134,7 +134,7 @@ namespace semantic {
 
     InfoType IArrayInfo::Ptr () {
 	auto ret = new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	ret-> unopFoo = ArrayUtils::InstLen;
+	ret-> unopFoo = ArrayUtils::InstPtr;
 	return ret;
     }
 
@@ -179,7 +179,7 @@ namespace semantic {
 	}
 	
 	if (treat) {
-	    auto ch = this-> _content-> clone ();
+	    auto ch = new (GC) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
 	}
@@ -206,8 +206,14 @@ namespace semantic {
 
     InfoType IArrayInfo::CompOp (InfoType other) {
 	auto type = other-> to<IArrayInfo> ();
-	if ((type && type-> _content-> isSame (this-> _content)) ||
-	    other-> is<IUndefInfo> ()) {
+	if (type && type-> _content-> isSame (this-> _content)) {
+	    auto ret = type-> clone ();
+	    ret-> isConst (this-> isConst ());
+	    if (this-> _content-> ConstVerif (type-> _content) == NULL)
+		return NULL;	    
+	    ret-> binopFoo = ArrayUtils::InstToArray;
+	    return ret;	    
+	} else if (other-> is<IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = ArrayUtils::InstToArray;
 	    //ret-> lintInst = ArrayUtils::InstAffectRight;
@@ -220,7 +226,8 @@ namespace semantic {
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (auto arr = ref-> content ()-> to<IArrayInfo> ()) {
 		if (arr-> _content-> isSame (this-> _content) && !this-> isConst ()) {
-		    auto aux = new (GC) IRefInfo (this-> clone ());
+		    auto aux = new (GC) IRefInfo (false, this-> clone ());
+		    aux-> binopFoo = &ArrayUtils::InstAddr;
 		    //aux-> lintInstS.push_back (&ArrayUtils::InstAddr);
 		    return aux;
 		}
@@ -235,10 +242,13 @@ namespace semantic {
 
     InfoType IArrayInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
-	else if (!this-> isConst ()&& other-> isConst ()) {
-	    this-> isConst (false);
-	}
-	return this;
+	if (auto ot = other-> to<IArrayInfo> ()) {
+	    if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
+	    if (!this-> isConst ()&& other-> isConst ()) {
+		this-> isConst (false);
+	    }
+	    return this;
+	} else return NULL;
     }
 
     Ymir::Tree IArrayInfo::toGeneric () {
@@ -257,12 +267,11 @@ namespace semantic {
     }
     
     std::string IArrayInfo::innerTypeString () {
-	return std::string ("[") + this-> _content-> innerTypeString () + "]";
+	return std::string ("[") + this-> _content-> typeString () + "]";
     }
 
-    std::string IArrayInfo::simpleTypeString () {
-	if (this-> isConst ()) return std::string ("cA") + this-> _content-> simpleTypeString ();
-	else return std::string ("A") + this-> _content-> simpleTypeString ();
+    std::string IArrayInfo::innerSimpleTypeString () {	
+	return std::string ("A") + this-> _content-> simpleTypeString ();
     }
 
     InfoType IArrayInfo::getTemplate (ulong i) {
@@ -411,10 +420,11 @@ namespace semantic {
 	
 	Ymir::Tree InstAccessInt (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
-	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
-	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
+
+	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
+	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    if (left-> is<IConstArray> ()) {
 		return getArrayRef (loc, rexp, inner, rexp);
 	    } else {
@@ -493,13 +503,18 @@ namespace semantic {
 	    return getLen (loc, expr, ltree);
 	}
 
+	Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}
+	
 	Tree InstConcat (Word locus, InfoType, Expression left, Expression right) {
+	    auto lexp = left-> toGeneric ();
+	    auto rexp = right-> toGeneric ();
+	    
 	    ArrayInfo info = left-> info-> type-> to <IArrayInfo> ();
 	    Ymir::Tree inner = info-> content ()-> toGeneric ();
 	    location_t loc = locus.getLocus ();
 	    Ymir::TreeStmtList list; 
-	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();
 
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getLen (loc, right, rexp);

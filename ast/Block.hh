@@ -30,6 +30,8 @@ namespace syntax {
 	Word& getIdent ();
 
 	Instruction instruction () override;
+
+	Instruction templateReplace (std::map <std::string, Expression>) override;
 	
 	IBlock* block ();
 

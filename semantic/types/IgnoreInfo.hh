@@ -4,32 +4,33 @@
 
 namespace semantic {
 
-    class INullInfo : public IInfoType {
+    class IIgnoreInfo : public IInfoType {
     public:
 
-	INullInfo ();
+	IIgnoreInfo ();
 
 	bool isSame (InfoType) override;
-
+	
 	InfoType clone () override;
 
-	InfoType DotOp (syntax::Var) override;
-
-	InfoType CompOp (InfoType) override;
-
+	InfoType BinaryOp (Word op, syntax::Expression left) override;
+	
+	std::string typeString () override;
+	
 	std::string innerTypeString () override;
-
+	
 	std::string innerSimpleTypeString () override;
+	
+	Ymir::Tree toGeneric () override;       
 
 	static const char* id () {
-	    return "INullInfo";
+	    return "IIgnoreInfo";
 	}
-
+	
 	const char* getId () override;
-
 	
     };
 
-    typedef INullInfo* NullInfo;
+    typedef IIgnoreInfo* IgnoreInfo;
     
 }

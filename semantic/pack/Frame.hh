@@ -78,11 +78,15 @@ namespace semantic {
 	virtual void isVariadic (bool isVariadic);
 
 	static void verifyReturn (Word token, Symbol ret, FrameReturnInfo infos);
-
+	
 	virtual ApplicationScore isApplicable (syntax::ParamList params);
 
 	virtual ApplicationScore isApplicable (std::vector <InfoType> params);
 
+	virtual IFrame* TempOp (std::vector <syntax::Expression> params);
+
+	virtual std::string toString ();
+	
 	::syntax::Function func ();
 
 	virtual Word ident ();
@@ -109,7 +113,7 @@ namespace semantic {
 
 	ApplicationScore getScore (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
 
-	ApplicationScore isApplicable (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
+	virtual ApplicationScore isApplicable (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
 
 	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, std::vector <syntax::Var> finalParams, syntax::Block block, std::vector <syntax::Expression> tmps, bool isVariadic);
 		

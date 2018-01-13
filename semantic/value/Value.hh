@@ -57,6 +57,7 @@ namespace semantic {
 	    return strcmp (this-> getId (), T::id ()) == 0;
 	}
 	
+	virtual std::string toString ();
     };
 
 

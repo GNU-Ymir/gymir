@@ -11,7 +11,7 @@
 #include <ymir/semantic/pack/Namespace.hh>
 
 namespace syntax {
-
+    
     class IFunction : public IDeclaration {
     protected :
 	
@@ -32,8 +32,14 @@ namespace syntax {
 	
 	std::string name ();
 
-	std::vector <Var> getParams ();
+	std::vector <Var>& getParams ();
 
+	std::vector <Expression>& getTemplates ();
+
+	Declaration templateDeclReplace (std::map <std::string, Expression> tmps);
+	
+	IFunction* templateReplace (std::map <std::string, Expression> tmps);
+	
 	Var getType ();
 
 	Block getBlock ();
@@ -45,7 +51,8 @@ namespace syntax {
     private:
 	
 	semantic::Frame verifyPure (semantic::Namespace);
-
+	bool verifyTemplates ();
+	
     };
 
     typedef IFunction* Function;

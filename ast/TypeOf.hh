@@ -17,6 +17,8 @@ namespace syntax {
 	    expr (expr)
 	{}
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;	
+	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<TypeOf> %s",
 		    nb, ' ',

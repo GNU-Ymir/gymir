@@ -126,8 +126,10 @@ namespace semantic {
 
 	virtual std::string innerTypeString () = 0;
 	
-	virtual std::string simpleTypeString () = 0;
+	virtual std::string simpleTypeString ();
 
+	virtual std::string innerSimpleTypeString () = 0;
+	
 	virtual bool isSame (InfoType) = 0;
 
 	virtual InfoType BinaryOp (Word, syntax::Expression);

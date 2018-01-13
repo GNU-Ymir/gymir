@@ -4,6 +4,7 @@
 
 #include "../errors/_.hh"
 #include "../syntax/Word.hh"
+#include <map>
 
 namespace semantic {
     class ISymbol;
@@ -32,8 +33,28 @@ namespace syntax {
 	
 	virtual IExpression* expression () {
 	    this-> print (0);
-	    Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
+	    Ymir::Error::assert ((std::string ("TODO") + this-> getIds ().back ()).c_str ());
 	    return NULL;
+	}
+	
+	IInstruction* templateReplace (std::map <std::string, IExpression*> elems) final {
+	    return this-> templateExpReplace (elems);
+	}
+
+	virtual IExpression* templateExpReplace (std::map <std::string, IExpression*>);
+	
+	IExpression* clone ();
+	
+	virtual IExpression* onClone () {
+	    this-> print (0);
+	    Ymir::Error::assert ((std::string ("TODO") + this-> getIds ().back ()).c_str ());
+	    return NULL;	    
+	};
+	
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IInstruction::getIds ();
+	    ids.push_back (TYPEID (IExpression));
+	    return ids;
 	}
 	
 	virtual void print (int) override {}

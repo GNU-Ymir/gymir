@@ -207,7 +207,7 @@ namespace semantic {
 	return "ptr!" + this-> _content-> innerTypeString ();
     }
 
-    std::string IPtrInfo::simpleTypeString () {
+    std::string IPtrInfo::innerSimpleTypeString () {
 	return "P" + this-> _content-> simpleTypeString ();
     }
 
@@ -235,7 +235,11 @@ namespace semantic {
 	    inner.getTree ()
 	);
     }
-
+    
+    InfoType IPtrInfo::getTemplate (ulong nb) {
+	if (nb == 0) return this-> _content;
+	return NULL;
+    }
 
     namespace PtrUtils {
 	using namespace syntax;

@@ -39,7 +39,19 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
+
+	static const char * id () {
+	    return TYPEID (IPar);
+	}
+
+	std::vector <std::string> getIds () {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID(IPar));
+	    return ret;
+	}
 	
 	void print (int nb = 0) override;
 

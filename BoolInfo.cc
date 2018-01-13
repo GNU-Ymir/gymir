@@ -40,8 +40,8 @@ namespace semantic {
 	return std::string ("bool");
     }
 
-    std::string IBoolInfo::simpleTypeString () {
-	return std::string ("b");
+    std::string IBoolInfo::innerSimpleTypeString () {
+	return "b";
     }
 
     InfoType IBoolInfo::DotOp (syntax::Var var) {

@@ -29,12 +29,16 @@ namespace syntax {
 		this-> expr-> inside = this;
 	}
 
-	static const char* id () {
-	    return "IFuncPtr";
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
+	static const char * id () {
+	    return TYPEID (IFuncPtr);
 	}
 
-	const char* getId () override {
-	    return IFuncPtr::id ();
+	std::vector <std::string> getIds () override {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IFuncPtr));
+	    return ret;
 	}
 	
 	void print (int nb = 0) override {

@@ -20,14 +20,19 @@ namespace syntax {
 	std::vector <semantic::InfoType> getParamTypes ();
 
 	Expression expression () override;
+
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
 	
 	std::vector <tree> toGenericParams (std::vector <semantic::InfoType>);
 
 	void print (int nb = 0) override;
 
-	const char* getId () override;
+	static const char * id () {
+	    return TYPEID (IParamList);
+	}
 	
-	static const char * id ();
+	std::vector <std::string> getIds () override;
+	
     };
 
     typedef IParamList* ParamList;

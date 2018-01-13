@@ -58,6 +58,8 @@ namespace semantic {
 
 	std::string name ();
 
+	std::string toString () override;
+	
 	bool isVariadic () const override;
 
 	static const char* id () {

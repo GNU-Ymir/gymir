@@ -45,7 +45,7 @@ namespace semantic {
 	return new IEnumInfo (false, this-> _name, this-> type-> cloneOnExit ());
     }
 
-    std::string IEnumCstInfo::simpleTypeString () {
+    std::string IEnumCstInfo::innerSimpleTypeString () {
 	return Ymir::format ("%d%s%s", this-> _name.length (), "E", this-> _name.c_str ());
     }
 
@@ -151,7 +151,7 @@ namespace semantic {
 	return this-> _content-> ApplyOp (other);
     }
 
-    std::string IEnumInfo::simpleTypeString () {
+    std::string IEnumInfo::innerSimpleTypeString () {
 	return Ymir::format ("%d%s%s", this-> _name.length (), "E", this-> _name.c_str ());
     }
 

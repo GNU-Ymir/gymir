@@ -33,7 +33,7 @@ namespace semantic {
 	
 	std::string innerTypeString () override;
 
-	std::string simpleTypeString () override;
+	std::string innerSimpleTypeString () override;
 	
 	Ymir::Tree toGeneric () override;
 	
@@ -42,6 +42,8 @@ namespace semantic {
 	ulong nbParams ();
 
 	std::vector <InfoType> &getParams ();
+
+	InfoType getTemplate (ulong) override;
 	
 	static const char* id () {
 	    return "ITupleInfo";

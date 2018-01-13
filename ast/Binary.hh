@@ -19,15 +19,17 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
-	
-	const char* getId () override;
 
-	static const char* id () {
-	    return "IBinary";
+	static const char * id () {
+	    return TYPEID (IBinary);
 	}
+	
+	std::vector <std::string> getIds () override;
 	
     private:
 

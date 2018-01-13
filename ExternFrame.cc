@@ -109,5 +109,27 @@ namespace semantic {
     const char* IExternFrame::getId () {
 	return IExternFrame::id ();
     }
+
+    
+    std::string IExternFrame::toString () {
+	if (this-> _proto) {
+	    Ymir::OutBuffer buf;
+	    buf.write ("(");
+	    for (auto it : Ymir::r (0, this-> _proto-> params ().size ())) {
+		auto var = this-> _proto-> params () [it];
+		buf.write (var-> prettyPrint ());
+		if (it < (int) this-> _proto-> params ().size () - 1)
+		    buf.write (", ");
+	    }
+	
+	    buf.write (")");
+	
+	    if (auto t = this-> _proto-> type ())
+		buf.write ("-> ", t-> prettyPrint ());
+	    return buf.str ();
+	}
+	return IFrame::toString ();
+    }
+
     
 }
