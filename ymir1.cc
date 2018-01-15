@@ -161,7 +161,9 @@ ymir_langhook_getdecls (void)
 {
   return NULL;
 }
- 
+
+
+
 #undef LANG_HOOKS_NAME
 #define LANG_HOOKS_NAME "Ymir"
  
@@ -188,7 +190,7 @@ ymir_langhook_getdecls (void)
  
 #undef LANG_HOOKS_GETDECLS
 #define LANG_HOOKS_GETDECLS ymir_langhook_getdecls
- 
+
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
  
 #include "gt-ymir-ymir1.h"

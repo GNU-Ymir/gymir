@@ -34,6 +34,11 @@ namespace syntax {
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
+
+    private:
+
+	semantic::InfoType validate ();
+	
     };
     
     typedef IConstArray* ConstArray;

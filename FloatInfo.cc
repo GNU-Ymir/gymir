@@ -82,28 +82,36 @@ namespace semantic {
 	if (auto ot = other-> to<IFloatInfo> ()) {
 	    if (ot-> _type == this-> _type) return this;
 	    else {
-		//TODO
-		return other-> clone ();
+		auto aux = other-> clone ();
+		aux-> binopFoo = FloatUtils::InstCast;
+		return aux;
 	    }
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
-	    //TODO
-	    return ot-> clone ();
+	    if (this-> _type == FloatConst::DOUBLE) {
+		if (ot-> type () != FixedConst::LONG ||
+		    ot-> type () != FixedConst::ULONG) return NULL;
+	    } else if (ot-> type () < FixedConst::INT) return NULL;
+	    auto aux = ot-> clone ();
+	    aux-> binopFoo = FloatUtils::InstCast;
+	    return aux;
 	}
 	return NULL;
     }
 
     InfoType IFloatInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> ()) {
-	    //TODO
-	    return this-> clone ();
+	    auto ret = this-> clone ();
+	    ret-> binopFoo = FloatUtils::InstCast;
+	    return ret;
 	} else if (auto ot = other-> to<IFloatInfo> ()) {
 	    if (ot-> _type >= this-> _type) {
-		//TODO
-		return ot-> clone ();	       
+		auto ret = ot-> clone ();
+		ret-> binopFoo = FloatUtils::InstCast;
+		return ret;
 	    }
 	} else if (other-> is<IRefInfo> ()) {
 	    auto aux = new IRefInfo (this-> clone ());
-	    //TODO
+	    aux-> binopFoo = FloatUtils::InstAddr;
 	    return aux;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
 	    return this-> CompOp (en-> content ());

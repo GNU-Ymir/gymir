@@ -3,25 +3,22 @@
 GYC_INSTALL_NAME := $(shell echo gyc|sed '$(program_transform_name)')
 GYC_TARGET_INSTALL_NAME := $(target_noncanonical)-$(shell echo gyc|sed '$(program_transform_name)')
 
-
 ymir: ymir1$(exeext)
  
 .PHONY: ymir
 
 GYC_INCLUDES = -I$(srcdir)/include -I$(srcdir)/
 
-# Driver
-GYC_OBJS = \
-   $(GCC_OBJS) \
-   ymir/ymirspec.o \
-   $(END)
- 
+CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES)
 
+# Driver
+GYC_OBJS = $(GCC_OBJS) ymir/gycspec.o
+ 
 gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GYC_INCLUDES) -o $@ \
 	  $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a \
-	  $(EXTRA_GCC_LIBS) $(LIBS) -lgc -lpthread
- 
+	  $(EXTRA_GCC_LIBS) $(LIBS)
+		    
 # The compiler proper
  
 ymir_OBJS = \
@@ -67,7 +64,6 @@ ymir_OBJS = \
 	ymir/EnumInfo.o \
 	ymir/Parser.o \
 	ymir/Creators.o \
-	ymir/ymirspec.o \
 	ymir/FrameScope.o \
 	ymir/Mangler.o \
 	ymir/Keys.o \
@@ -83,12 +79,14 @@ ymir_OBJS = \
 	ymir/TemplateFrame.o \
 	ymir/astTemplate.o \
 	$(END)
-    
+
+
+
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
-	      attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) -lgc -lpthread 
+	attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) -lgc -lpthread
  
-ymir.all.cross:
+ymir.all.cross: 
  
 ymir.start.encap: gyc$(exeext)
 ymir.rest.encap:

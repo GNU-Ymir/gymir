@@ -594,28 +594,60 @@ namespace syntax {
 		    return new (GC) IType (tok, new (GC) IArrayInfo (true, type-> info-> type));
 		}
 	    }
-
-	    auto begin = new (GC) ISymbol (this-> token, new (GC) IUndefInfo ());
-	    for (auto fst : Ymir::r (0, aux-> params.size ())) {
-		if (aux-> params [fst]-> is<IType> ()) {
-		    Ymir::Error::useAsVar (aux-> params [fst]-> token,
-					   aux-> params [fst]-> info);
-		    return NULL;
-		}
-
-		auto cmp = aux-> params [fst]-> info-> type-> CompOp (begin-> type);
-		aux-> casters.push_back (cmp);
-		if (cmp == NULL) {
-		    Ymir::Error::incompatibleTypes (this-> token, aux-> params [fst]-> info, begin-> type);
-		    break;
-		}
-		if (fst == 0) begin-> type = cmp;
-	    }
-	    aux-> info = new (GC) ISymbol (aux-> token, new (GC) IArrayInfo (true, begin-> type-> clone ()));
+	    
+	    auto type = aux-> validate ();
+	    if (!type) return NULL;
+	    aux-> info = new (GC) ISymbol (aux-> token, new (GC) IArrayInfo (true, type));
 	}
 	return aux;
     }
 
+    InfoType IConstArray::validate () {
+	this-> casters.clear ();
+	InfoType successType = NULL;
+	for (auto fst : Ymir::r (0, this-> params.size ())) {
+	    std::vector <InfoType> casters (this-> params.size ());;
+	    if (this-> params [fst]-> is<IType> ()) {
+		Ymir::Error::useAsVar (this-> params [fst]-> token,
+				       this-> params [fst]-> info);
+		return NULL;
+	    }
+
+	    auto begin = this-> params [fst]-> info-> type;
+	    casters [fst] = begin-> CompOp (new (GC) IUndefInfo ());
+	    bool success = true;
+	    for (auto scd : Ymir::r (0, this-> params.size ())) {
+		if (scd != fst) {
+		    casters [scd] = this-> params [scd]-> info-> type-> CompOp (begin);
+		    if (casters [scd])
+			casters [scd] = casters [scd]-> ConstVerif (begin);
+		}
+		if (casters [scd] == NULL) {
+		    success = false;
+		    break;
+		}
+	    }
+
+	    if (success) {
+		this-> casters = casters;
+		successType = casters [fst];
+		break;
+	    }	    
+	}
+
+	if (this-> casters.size () != this-> params.size ()) {
+	    for (auto it : Ymir::r (1, this-> params.size ())) {
+		if (this-> params [it]-> info-> type-> CompOp (this-> params [0]-> info-> type) == NULL) {
+		    Ymir::Error::incompatibleTypes (this-> token, this-> params [0]-> info, this-> params [it]-> info-> type);
+		    return NULL;
+		}
+	    }
+	} else {
+	    return successType-> clone ();
+	}
+    }
+
+    
     Expression IConstRange::expression () {
 	auto aux = new (GC) IConstRange (this-> token, this-> left-> expression (), this-> right-> expression ());
 	if (!aux-> left || !aux-> right) return NULL;
