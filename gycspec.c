@@ -30,13 +30,13 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     uint argc = *in_decoded_options_count;
     cl_decoded_option *decoded_options = *in_decoded_options;
     int added_libraries = *in_added_libraries;
-
-    bool need_gc = true;
-    bool need_midgard = true;
-    bool need_runtime = true;
+    bool need_gc = *in_decoded_options_count != 1;
+    bool need_midgard = *in_decoded_options_count != 1;
+    bool need_runtime = *in_decoded_options_count != 1;
     
     for (i = 0 ; i < argc ; i++) {
 	const char * arg = decoded_options [i].arg;
+	if (arg != NULL) {
 	switch (decoded_options [i].opt_index) {
 	case OPT_l:
 	    if ((strcmp (arg, LIBGC) == 0)) need_gc = false;
@@ -44,6 +44,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    else if (strcmp (arg, LIBYMIDGARD) == 0) need_midgard = false;
 	    break;
 	}
+	} 
     }
 
     num_args = argc + need_gc + need_midgard + need_runtime;
