@@ -54,7 +54,7 @@ namespace semantic {
 	std::string name ();
 
 	static const char* id () {
-	    return "IFloatInfo";
+	    return "IFunctionInfo";
 	}
 
 	const char* getId () override;

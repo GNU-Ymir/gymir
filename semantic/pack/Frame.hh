@@ -89,6 +89,8 @@ namespace semantic {
 	
 	::syntax::Function func ();
 
+	virtual bool& isPrivate ();
+	
 	virtual Word ident ();
 
 	template <typename T>

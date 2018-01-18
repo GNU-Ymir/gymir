@@ -61,8 +61,6 @@ namespace semantic {
 	bool isSigned ();
 	
 	Ymir::Tree toGeneric () override;
-
-	Ymir::Tree getInitFnPtr () override;
 	
     private:
 

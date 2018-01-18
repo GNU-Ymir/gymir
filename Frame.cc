@@ -332,6 +332,10 @@ namespace semantic {
 	return this-> _function;
     }
 
+    bool& IFrame::isPrivate () {
+	return this-> _isPrivate;
+    }
+    
     Word IFrame::ident () {
 	return this-> _function-> getIdent ();
     }

@@ -72,6 +72,8 @@ namespace Ymir {
 	    ReturnVoid,
 	    UnreachableStmt,
 	    MissingReturn,
+	    ModuleDontExist,
+	    ImportError,
 	    LAST_ERROR
 	};
 
@@ -136,6 +138,10 @@ namespace Ymir {
 	
 	static void templateCreation (Word);
 
+	static void moduleDontExist (Word, Word);
+
+	static void importError (Word);
+	
 	static void recursiveExpansion (Word);
 
 	static void unknownType (Word);

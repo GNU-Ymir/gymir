@@ -1,5 +1,4 @@
 #include <ymir/semantic/types/_.hh>
-#include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
@@ -372,11 +371,6 @@ namespace semantic {
 	case FixedConst::ULONG : return long_unsigned_type_node ;
 	}
 	return integer_type_node;
-    }
-
-    Ymir::Tree IFixedInfo::getInitFnPtr () {
-	if (this-> _type == FixedConst::INT) return InternalFunction::getYInitInt ();
-	else return IInfoType::getInitFnPtr ();
     }
     
     namespace FixedUtils {

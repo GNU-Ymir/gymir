@@ -409,6 +409,29 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
+    void Error::moduleDontExist (Word loc, Word mod) {
+	auto str = getString (ModuleDontExist);
+	auto msg = format (str, YELLOW, mod.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, loc);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::importError (Word loc) {
+	auto str = getString (ImportError);
+	auto msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (str);
+	msg = addLine (msg, loc);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
     
     void Error::unterminated (Word word) {
 	auto str = getString (Unterminated);

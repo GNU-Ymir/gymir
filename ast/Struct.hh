@@ -24,6 +24,8 @@ namespace syntax {
 	}
 
 	void declare () override {}
+
+	void declareAsExtern (semantic::Module) override {}
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Struct> %s",

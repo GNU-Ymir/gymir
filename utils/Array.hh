@@ -50,8 +50,13 @@ namespace Ymir {
 }
 
 template<typename T, typename T2>
-auto find (std::vector <T> vec, T2 elem) {
+auto find (std::vector <T>& vec, T2& elem) {
     return std::find (vec.begin (), vec.end (), elem);
+}
+
+template<typename T, typename T2>
+auto canFindRef (std::vector <T>& vec, T2& elem) {
+    return std::find (vec.begin (), vec.end (), elem) != vec.end ();
 }
 
 template<typename T, typename T2>

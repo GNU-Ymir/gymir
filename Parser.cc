@@ -46,7 +46,7 @@ namespace Ymir {
 	this-> semantic_time (prg);
 	this-> lint_time ();
     }
-
+    
     syntax::Program Parser::syntax_analyse () {
 	auto visitor = syntax::Visitor (lexer);
 	auto ret = visitor.visit ();
@@ -81,7 +81,6 @@ namespace Ymir {
 
     
 };
-
 
 static void ymir_parse_file (const char * filename);
 

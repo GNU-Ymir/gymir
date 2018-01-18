@@ -46,11 +46,14 @@ namespace syntax {
 	
 	void declare () override;
 	
+	void declareAsExtern (semantic::Module) override;
+	
 	void print (int nb = 0) override;
 	
     private:
 	
 	semantic::Frame verifyPure (semantic::Namespace);
+	semantic::Frame verifyPureExtern (semantic::Namespace);
 	bool verifyTemplates ();
 	
     };

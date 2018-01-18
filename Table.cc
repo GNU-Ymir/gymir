@@ -263,8 +263,9 @@ namespace semantic {
 		auto access = it-> accessible ();
 		for (auto sp : access) {
 		    auto mod = this-> getModule (sp);
-		    if (find (alls, mod) == alls.end ())
+		    if (find (alls, mod) == alls.end ()) {
 			alls.push_back (mod);
+		    }
 		}
 	    }
 	}
@@ -327,6 +328,7 @@ namespace semantic {
     }
 
     bool Table::moduleExists (Namespace name) {
+	if (name == this-> _space) return true;
 	for (auto it : this-> _importations) {
 	    if (it-> space () == name) return true;
 	}

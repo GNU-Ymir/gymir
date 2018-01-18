@@ -39,11 +39,7 @@ namespace semantic {
     }
     
     bool operator== (const Namespace &fst, const Namespace &scd) {
-	if (fst.names.size () != scd.names.size ()) return false;
-	for (uint i = 0 ; i < fst.names.size () ; i++) {
-	    if (fst.names [i] != scd.names [i]) return false;
-	}
-	return true;
+	return fst.toString () == scd.toString ();
     }
 
     bool Namespace::isSubOf (Namespace other) {
@@ -68,7 +64,7 @@ namespace semantic {
 	return false;
     }
 
-    std::string Namespace::toString () {
+    std::string Namespace::toString () const {
 	std::ostringstream ss;
 	for (uint it = 0 ; it < this-> names.size () ; it ++) {
 	    ss << this-> names [it];

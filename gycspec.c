@@ -24,7 +24,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		      unsigned int * in_decoded_options_count,
 		      int * in_added_libraries)
 {
-    uint i, j;
+    uint i;
     cl_decoded_option *new_decoded_options;
     uint num_args = 1;
     uint argc = *in_decoded_options_count;
@@ -49,7 +49,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 
     num_args = argc + need_gc + need_midgard + need_runtime;
     new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
-    i = 0; j = 0;
+    i = 0;
 
     while (i < argc) {
 	new_decoded_options [i] = decoded_options [i];

@@ -5,6 +5,7 @@
 #include "ast/Var.hh"
 #include "errors/Error.hh"
 #include <ymir/semantic/utils/OperatorUtils.hh>
+#include <ymir/semantic/pack/InternalFunction.hh>
 
 namespace semantic {
 
@@ -199,8 +200,7 @@ namespace semantic {
     }
 
     Ymir::Tree IInfoType::getInitFnPtr () {
-	Ymir::Error::assert ((std::string ("TODO getInitFnPtr") + this-> getId ()).c_str ());
-	return NULL;
+	return InternalFunction::getYInitType (this-> innerTypeString ().c_str ());
     }
     
     std::vector <InfoType> IInfoType::getTemplate (ulong bef, ulong) {

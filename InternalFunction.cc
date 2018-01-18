@@ -5,8 +5,8 @@ namespace semantic {
 
     Ymir::Tree InternalFunction::__fnMalloc__;
     Ymir::Tree InternalFunction::__y_newArray__;	
-    Ymir::Tree InternalFunction::__y_Init_int__;
     Ymir::Tree InternalFunction::__y_memcpy__;
+    std::map <std::string, Ymir::Tree> InternalFunction::__funcs__;
     
     Ymir::Tree InternalFunction::getMalloc () {
 	if (__fnMalloc__.isNull ()) {
@@ -62,18 +62,19 @@ namespace semantic {
 	}
 	return __y_newArray__;
     }
-    
-    Ymir::Tree InternalFunction::getYInitInt () {
-	if (__y_Init_int__.isNull ()) {
+
+    Ymir::Tree InternalFunction::getYInitType (const char * name) {
+	auto it = __funcs__.find (name);
+	if (it == __funcs__.end ()) {
 	    tree ret = build_pointer_type (void_type_node);
 	    tree fndecl_type = build_function_type_array (ret, 0, NULL);
-	    tree fndecl = build_fn_decl ("_y_Init_int", fndecl_type);
+	    tree fndecl = build_fn_decl ((std::string("_y_Init_") + name).c_str (), fndecl_type);
 	    DECL_EXTERNAL (fndecl) = 1;
-	    __y_Init_int__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
-	}
-	return __y_Init_int__;
+	    __funcs__ [name] = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	    return __funcs__ [name];
+	}	
+	return it-> second;
     }
-
-    
+        
 
 }

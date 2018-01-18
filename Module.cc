@@ -49,8 +49,7 @@ namespace semantic {
 
     std::vector <Namespace> IModule::accessible (std::vector <Namespace> dones) {
 	for (auto sp : this-> publicOpens) {
-	    auto id = find (dones, sp);
-	    if (id == dones.end ()) {
+	    if (!canFindRef (dones, sp)) {
 		dones.push_back (sp);
 		auto mod = Table::instance ().getModule (sp);
 		if (mod) {

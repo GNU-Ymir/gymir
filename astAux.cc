@@ -36,8 +36,8 @@ namespace syntax {
 	case FixedConst::UBYTE : return "bu";
 	case FixedConst::SHORT : return "h";
 	case FixedConst::USHORT: return "hu";
-	case FixedConst::INT : return "d";
-	case FixedConst::UINT : return "du";
+	case FixedConst::INT : return "i";
+	case FixedConst::UINT : return "iu";
 	case FixedConst::LONG : return "l";
 	case FixedConst::ULONG : return "lu";
 	}

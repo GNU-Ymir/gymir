@@ -19,7 +19,9 @@ namespace syntax {
 	    params (params)
 	{}
 
-	void declare () override {}
+	void declare () override;
+
+	void declareAsExtern (semantic::Module) override;
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Import> %s",

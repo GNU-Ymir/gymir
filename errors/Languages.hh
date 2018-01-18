@@ -45,6 +45,8 @@ namespace Ymir {
 		phrases [ReturnVoid] = "retour d'un élèment de type '%%%'";
 		phrases [UnreachableStmt] = "Instruction inatteigable";
 		phrases [MissingReturn] = "Il manque une instruction de retour pour la fonction '%%%' qui retourne '%%%'";
+		phrases [ModuleDontExist] = "Le fichier source %.yr n'existe pas";
+		phrases [ImportError] = "Lors de l'importation de module";
 		init = true;		
 	    } 
 	    return phrases;
@@ -91,6 +93,8 @@ namespace Ymir {
 		phrases [ReturnVoid] = "Cannot return a '%%%' element";
 		phrases [UnreachableStmt] = "Unreachable statement";
 		phrases [MissingReturn] = "Missing return statement for function '%%%' expecting a value of type '%%%'";
+		phrases [ModuleDontExist] = "Source file %.yr doesn't exist";
+		phrases [ImportError] = "Importation failed";
 		init = true;
 	    } 
 	    return phrases;

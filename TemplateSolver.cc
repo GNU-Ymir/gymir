@@ -92,9 +92,9 @@ namespace semantic {
 			    TemplateSolution res (0, true);
 			    if (auto of = var-> to<IOfVar> ())
 				res = solve (tmps, of, tvar, type, isConst);
-			    else
+			    else {
 				res = solve (var, tvar, type, isConst);
-			    
+			    }
 			    if (!res.valid || !merge (soluce.score, soluce.elements, res))
 				return TemplateSolution (0, false);
 			    else {
@@ -224,7 +224,6 @@ namespace semantic {
 	
 	auto type_ = type-> cloneOnExit ();
 	type_-> isConst (isConst);
-	
 	map <string, Expression> ret;
 	ret [elem-> token.getStr ()] = new (GC) IType (param-> token, type_);	
 	return TemplateSolution (__VAR__, true, type_, ret);

@@ -50,7 +50,7 @@ namespace semantic {
     }
     
     FrameProto IExternFrame::validate () {
-	//if (this-> _proto == NULL) return validateFunc ();
+	if (this-> _proto == NULL) return validateFunc ();
 	auto ancSpace = Table::instance ().programNamespace ();
 	Table::instance ().enterFrame (this-> space (), this-> name (), this-> isInternal ());
 	std::vector <Var> finalParams = IFrame::computeParams (this-> _proto-> params ());
@@ -102,8 +102,23 @@ namespace semantic {
     }
 
     FrameProto IExternFrame::validateFunc () {
-	Ymir::Error::assert ("TODO");
-	return NULL;
+	auto ancSpace = Table::instance ().programNamespace ();
+	Table::instance ().enterFrame (this-> space (), this-> name (), this-> isInternal ());
+	std::vector <Var> finalParams = IFrame::computeParams (this-> _function-> getParams ());
+	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> name ()));
+	Table::instance ().programNamespace () = this-> space ();
+	if (this-> _function-> getType () == NULL) {
+	       Table::instance ().retInfo ().info = new ISymbol (Word::eof (), new IVoidInfo ());
+	} else {
+	    Table::instance ().retInfo ().info = this-> _function-> getType ()-> asType ()-> info;
+	}
+
+	this-> _fr = new (GC) IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+	this-> _fr-> externName () = this-> _from;
+	this-> _fr-> isCVariadic () = this-> isVariadic ();
+	Table::instance ().quitFrame ();
+	Table::instance ().programNamespace () = ancSpace;
+	return this-> _fr;	
     }
 
     const char* IExternFrame::getId () {

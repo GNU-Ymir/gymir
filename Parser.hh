@@ -16,10 +16,10 @@ namespace Ymir {
 	
 	void parse_program ();
 	
-    private:
-
 	syntax::Program syntax_analyse ();
 
+    private:
+	
 	void semantic_time (syntax::Program);
 
 	void lint_time ();

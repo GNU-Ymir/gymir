@@ -642,6 +642,7 @@ namespace syntax {
 		    return NULL;
 		}
 	    }
+	    return NULL;
 	} else {
 	    return successType-> clone ();
 	}

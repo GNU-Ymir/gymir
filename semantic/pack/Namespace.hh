@@ -26,7 +26,7 @@ namespace semantic {
 
 	bool isAbsSubOf (Namespace other);
 
-	std::string toString ();
+	std::string toString () const;
 	
     };
     

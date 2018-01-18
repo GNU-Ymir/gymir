@@ -2,6 +2,11 @@
 
 #include <gc/gc_cpp.h>
 
+namespace semantic {
+    class IModule;
+    typedef IModule* Module;
+}
+
 namespace syntax {
 
     class IExpression;
@@ -23,6 +28,8 @@ namespace syntax {
 	}
 
 	virtual void declare () = 0;
+
+	virtual void declareAsExtern (semantic::Module);	
 
 	virtual void declareAsInternal () {
 	    return this-> declare ();

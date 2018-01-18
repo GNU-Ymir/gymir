@@ -28,6 +28,8 @@ namespace syntax {
 
 	void declare () override;
 
+	void declareAsExtern (semantic::Module) override;
+	
 	std::string name ();
 	
 	Var& type ();
