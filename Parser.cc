@@ -40,19 +40,14 @@ namespace Ymir {
 	       }
 	)
     {}    
-
-    void Parser::parse_program () {
-	auto prg = this-> syntax_analyse ();
-	this-> semantic_time (prg);
-	this-> lint_time ();
-    }
     
     syntax::Program Parser::syntax_analyse () {
 	auto visitor = syntax::Visitor (lexer);
 	auto ret = visitor.visit ();
 	if (Ymir::Error::nb_errors > 0) {
 	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
-	}	
+	}
+	this-> lexer.dispose ();
 	return ret;
     }
 
@@ -96,7 +91,9 @@ static void ymir_parse_file (const char * filename) {
 	fatal_error (UNKNOWN_LOCATION, "cannot open filename %s: %m", filename);
 
     Ymir::Parser parser (filename, file);
-    
-    parser.parse_program ();
+    auto prg = parser.syntax_analyse ();
     fclose (file);
+    
+    parser.semantic_time (prg);
+    parser.lint_time ();    
 }

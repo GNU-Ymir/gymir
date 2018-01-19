@@ -7,6 +7,7 @@
 #include <ymir/utils/Mangler.hh>
 #include <sys/stat.h>
 #include <ymir/Parser.hh>
+#include <cstdio>
 
 namespace syntax {
 
@@ -189,10 +190,12 @@ namespace syntax {
 	    }
 	    Namespace space (it.getStr ());
 	    if (!Table::instance ().moduleExists (space)) {
-		Ymir::Parser parser (name.c_str (), fopen (name.c_str (), "r"));
+		auto file = fopen (name.c_str (), "r");
+		Ymir::Parser parser (name.c_str (), file);
 		auto mod = Table::instance ().addModule (space);
 		mod-> addOpen (globSpace);
 		auto prg = parser.syntax_analyse ();
+		fclose (file);
 		prg-> declareAsExtern (it.getStr (), mod);
 	    }
 	    Table::instance ().openModuleForSpace (space, globSpace);

@@ -179,7 +179,8 @@ namespace semantic {
 	}
 	
 	if (treat) {
-	    auto ch = new (GC) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
+	    //auto ch = new (GC) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
+	    auto ch = this-> _content-> clone ();
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
 	}

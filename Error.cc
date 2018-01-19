@@ -45,8 +45,8 @@ namespace Ymir {
 	}
     }  
     
-    std::string getLine (location_t locus) {
-	auto file = fopen (LOCATION_FILE (locus), "r");
+    std::string getLine (const location_t& locus, const char * filename) {
+	auto file = fopen (filename, "r");
 	std::string cline;
 	for (auto it = 0 ; it < LOCATION_LINE (locus) ; it ++) {
 	    cline = readln (file);
@@ -88,15 +88,15 @@ namespace Ymir {
 	return true;
     }
 
-    void addLine (std::ostringstream &ss, Word word) {
+    void addLine (std::ostringstream &ss, const Word& word) {
 	auto locus = word.getLocus ();
-	auto line = getLine (locus);
+	auto line = getLine (locus, word.getFile ().c_str ());
 	if (line.length () > 0) {
 	    std::string leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
 	    ss << format ("\n% --> %:(%,%)%\n%% | %\n", 
 			  Error::BOLD,
-			  LOCATION_FILE (locus),
+			  word.getFile ().c_str (),
 			  LOCATION_LINE (locus),
 			  LOCATION_COLUMN (locus),
 			  Error::RESET,
@@ -139,14 +139,14 @@ namespace Ymir {
 	}
     }
 
-    void addLine (std::ostringstream &ss, Word word, Word word2) {
+    void addLine (std::ostringstream &ss, const Word& word, const Word& word2) {
 	auto locus = word.getLocus (), locus2 = word2.getLocus ();
-	auto line = getLine (locus);
+	auto line = getLine (locus, word.getFile ().c_str ());
 	if (line.size () > 0) {
 	    auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
 	    auto padd = center ("", leftLine.size (), ' ');
 	    ss << format ("\n% --> %:(%,%)%\n%% | %\n",
-			  Error::BOLD, LOCATION_FILE (locus),  LOCATION_LINE (locus), LOCATION_COLUMN (locus),
+			  Error::BOLD, word.getFile ().c_str (),  LOCATION_LINE (locus), LOCATION_COLUMN (locus),
 			  Error::RESET, Error::BOLD,
 			  padd.c_str (),
 			  Error::RESET
@@ -199,16 +199,16 @@ namespace Ymir {
 	}
     }
 
-    void addLine (std::ostream &, Word, ulong, ulong) {}
+    void addLine (std::ostream &, const Word&, ulong, ulong) {}
     
-    std::string addLine (std::string in, Word word) {
+    std::string addLine (std::string in, const Word& word) {
 	std::ostringstream ss;
 	ss << in;
 	addLine (ss, word);
 	return ss.str ();
     }    
 
-    std::string addLine (std::string in, Word word, Word word2) {
+    std::string addLine (std::string in, const Word& word, const Word& word2) {
 	std::ostringstream ss;
 	ss << in;
 	addLine (ss, word, word2);
@@ -232,7 +232,7 @@ namespace Ymir {
 	}
     }
 
-    void Error::notATemplate (Word word) {
+    void Error::notATemplate (const Word& word) {
 	auto str = getString (NotATemplate);
 	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
@@ -244,7 +244,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::noValueNonVoidFunction (Word word) {
+    void Error::noValueNonVoidFunction (const Word& word) {
 	auto str = getString (NoValueNonVoid);
 	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
@@ -256,7 +256,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::takeATypeAsTemplate (Word word) {
+    void Error::takeATypeAsTemplate (const Word& word) {
 	std::string msg = getString (TakeAType);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
@@ -267,7 +267,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::unknownType (Word word) {
+    void Error::unknownType (const Word& word) {
 	std::string msg = format (getString (UnknownType), YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
@@ -278,7 +278,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::recursiveExpansion (Word word) {
+    void Error::recursiveExpansion (const Word& word) {
 	std::string msg = getString (RecursiveExpansion);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
@@ -289,7 +289,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::shadowingVar (Word word, Word word2) {
+    void Error::shadowingVar (const Word& word, const Word& word2) {
 	std::string msg = format (getString (ShadowingVar), YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
@@ -306,7 +306,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::multipleLoopName (Word word, Word word2) {
+    void Error::multipleLoopName (const Word& word, const Word& word2) {
 	std::string msg = format (getString (MultipleLoopName), YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
@@ -325,7 +325,7 @@ namespace Ymir {
 
     
     
-    void Error::syntaxError (Word word) {
+    void Error::syntaxError (const Word& word) {
 	auto str = getString (SyntaxError2);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -337,7 +337,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::syntaxError (Word word, const char * expected) {
+    void Error::syntaxError (const Word& word, const char * expected) {
 	auto str = getString (SyntaxError);
 	auto msg = format (str, expected, YELLOW, word.getStr ().c_str (), RESET);
 
@@ -349,7 +349,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::syntaxError (Word word, Word word2) {
+    void Error::syntaxError (const Word& word, const Word& word2) {
 	auto str = getString (SyntaxError);
 	auto msg = format (str, word2.getStr().c_str (),
 			   YELLOW, word.getStr ().c_str (), RESET);
@@ -363,7 +363,7 @@ namespace Ymir {
     }
 
 
-    void Error::syntaxErrorFor (Word word, Word word2) {
+    void Error::syntaxErrorFor (const Word& word, const Word& word2) {
 	auto str = getString (SyntaxErrorFor);
 	auto msg = format (str,
 			   YELLOW, word.getStr ().c_str (), RESET,
@@ -378,7 +378,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::escapeError (Word word) {
+    void Error::escapeError (const Word& word) {
 	auto msg = std::string (getString (EscapeChar));	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
@@ -398,7 +398,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::templateCreation (Word word) {
+    void Error::templateCreation (const Word& word) {
 	auto str = getString (TemplateCreation);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (msg);
@@ -410,7 +410,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::moduleDontExist (Word loc, Word mod) {
+    void Error::moduleDontExist (const Word& loc, const Word& mod) {
 	auto str = getString (ModuleDontExist);
 	auto msg = format (str, YELLOW, mod.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -422,7 +422,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::importError (Word loc) {
+    void Error::importError (const Word& loc) {
 	auto str = getString (ImportError);
 	auto msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (str);
 	msg = addLine (msg, loc);
@@ -433,7 +433,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::unterminated (Word word) {
+    void Error::unterminated (const Word& word) {
 	auto str = getString (Unterminated);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -445,7 +445,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::uninitVar (Word word) {
+    void Error::uninitVar (const Word& word) {
 	auto str = getString (UninitVar);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -457,7 +457,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::useAsVar (Word word, semantic::Symbol) {
+    void Error::useAsVar (const Word& word, semantic::Symbol) {
 	auto str = getString (UseAsVar);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -469,7 +469,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::breakRefUndef (Word word) {
+    void Error::breakRefUndef (const Word& word) {
 	auto str = getString (BreakRefUndef);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -481,7 +481,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::constNoInit (Word word) {
+    void Error::constNoInit (const Word& word) {
 	auto str = getString (ConstNoInit);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -493,7 +493,7 @@ namespace Ymir {
 	} else __caught__.push_back (erroMsg);
     }
     
-    void Error::notLValue (Word word) {
+    void Error::notLValue (const Word& word) {
 	auto str = getString (NotLValue);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -505,7 +505,7 @@ namespace Ymir {
 	} else __caught__.push_back (erroMsg);
     }
     
-    void Error::breakOutSide (Word word) {
+    void Error::breakOutSide (const Word& word) {
 	auto msg = std::string (getString (BreakOutSide));
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
@@ -516,7 +516,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::unreachableStmt (Word word) {
+    void Error::unreachableStmt (const Word& word) {
 	auto msg = std::string (getString (UnreachableStmt));
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
@@ -527,7 +527,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::missingReturn (Word word, semantic::Symbol type) {
+    void Error::missingReturn (const Word& word, semantic::Symbol type) {
 	auto msg = format (getString (MissingReturn), YELLOW, word.getStr (), RESET, YELLOW, type-> typeString (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
@@ -538,7 +538,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::returnVoid (Word word, semantic::Symbol type) {
+    void Error::returnVoid (const Word& word, semantic::Symbol type) {
 	auto msg = format (getString (ReturnVoid), YELLOW, type-> type-> typeString ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
@@ -549,7 +549,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }    
     
-    void Error::incompatibleTypes (Word where, semantic::Symbol type, semantic::InfoType other) {
+    void Error::incompatibleTypes (const Word& where, semantic::Symbol type, semantic::InfoType other) {
 	auto str = getString (IncompatibleTypes);
 	auto msg = format (str, YELLOW, type-> type-> typeString ().c_str (), RESET,
 			   YELLOW, other-> typeString ().c_str (), RESET
@@ -566,7 +566,7 @@ namespace Ymir {
     }
 
     
-    void Error::useAsType (Word word) {
+    void Error::useAsType (const Word& word) {
 	auto str = getString (UseAsType);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -578,7 +578,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::undefinedOp (Word begin, semantic::Symbol elem, syntax::ParamList params) {
+    void Error::undefinedOp (const Word& begin, semantic::Symbol elem, syntax::ParamList params) {
 	auto str = getString (UndefinedOp);
 	OutBuffer buf;
 	ulong i = 0;
@@ -604,7 +604,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::undefinedOp (Word begin, Word end, semantic::Symbol elem, syntax::ParamList params) {
+    void Error::undefinedOp (const Word& begin, const Word& end, semantic::Symbol elem, syntax::ParamList params) {
 	auto str = getString (UndefinedOpMult);
 	OutBuffer buf;
 	ulong i = 0;
@@ -626,7 +626,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::undefinedOp (Word op, semantic::Symbol left, semantic::Symbol right) {
+    void Error::undefinedOp (const Word& op, semantic::Symbol left, semantic::Symbol right) {
 	auto str = getString (UndefinedOp);
 	auto msg = format (str,
 			   YELLOW, op.getStr ().c_str (), RESET,
@@ -643,7 +643,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }	
 
-    void Error::undefinedOp (Word op, semantic::Symbol left) {
+    void Error::undefinedOp (const Word& op, semantic::Symbol left) {
 	auto str = getString (UndefinedOpUnary);
 	auto msg = format (str,
 			   YELLOW, op.getStr ().c_str (), RESET,
@@ -659,7 +659,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }	
     
-    void Error::undefinedOp (Word op, semantic::Symbol left, semantic::InfoType right) {
+    void Error::undefinedOp (const Word& op, semantic::Symbol left, semantic::InfoType right) {
 	auto str = getString (UndefinedOp);
 	auto msg = format (str,
 			   YELLOW, op.getStr ().c_str (), RESET,
@@ -677,7 +677,7 @@ namespace Ymir {
     }	
 
     
-    void Error::templateSpecialisation (Word word, Word word2) {
+    void Error::templateSpecialisation (const Word& word, const Word& word2) {
 	auto str = getString (TemplateSpecialisation);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -694,7 +694,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::undefVar (Word word, semantic::Symbol alike) {
+    void Error::undefVar (const Word& word, semantic::Symbol alike) {
 	std::string msg;
 	if (alike != NULL)
 	    msg = format (getString (UndefVar2), YELLOW, word.getStr ().c_str (), RESET, YELLOW, alike-> sym.getStr ().c_str (), RESET);
@@ -710,7 +710,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
         
-    void Error::undefAttr (Word word, semantic::Symbol type, syntax::Var attr) {
+    void Error::undefAttr (const Word& word, semantic::Symbol type, syntax::Var attr) {
 	std::string msg = format (getString (UndefinedAttr),
 				  YELLOW, attr-> token.getStr ().c_str (), RESET,
 				  YELLOW, type-> typeString ().c_str (), RESET);
@@ -724,7 +724,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::templateInferType (Word token, Word func) {
+    void Error::templateInferType (const Word& token, const Word& func) {
 	std::string msg = format (getString (TemplateInferType));
 	std::string msg2 = format (getString (TemplateInferTypeNote));
 	

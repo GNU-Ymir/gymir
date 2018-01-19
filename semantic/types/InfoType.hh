@@ -155,7 +155,7 @@ namespace semantic {
 	virtual InfoType CompOp (InfoType);
 
 	virtual InfoType ConstVerif (InfoType);
-
+	
 	virtual InfoType CastTo (InfoType);
 
 	virtual InfoType DotOp (::syntax::Var);

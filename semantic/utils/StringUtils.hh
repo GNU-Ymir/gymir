@@ -16,6 +16,8 @@ namespace semantic {
 	
 	Ymir::Tree InstToString (Word locus, InfoType, syntax::Expression elem, syntax::Expression type);
 
+	Ymir::Tree InstToArray (Word locus, InfoType, syntax::Expression elem, syntax::Expression type);
+
 	Ymir::Tree InstConcat (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
 
 	Ymir::Tree InstConcatAff (Word locus, InfoType, syntax::Expression left, syntax::Expression right);

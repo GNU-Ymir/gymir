@@ -97,7 +97,7 @@ namespace semantic {
 
     std::string IInfoType::simpleTypeString () {
 	if (this-> isConst ()) {
-	    return std::string ("C") + this-> innerSimpleTypeString ();
+	    return std::string ("x") + this-> innerSimpleTypeString ();
 	} else return this-> innerSimpleTypeString ();
     }
     
@@ -153,7 +153,7 @@ namespace semantic {
 	this-> isConst (other-> isConst ());
 	return this;
     }
-
+    
     InfoType IInfoType::CastTo (InfoType) {
 	return NULL;
     }

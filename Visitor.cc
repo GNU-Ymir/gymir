@@ -27,19 +27,19 @@ namespace syntax {
 	Ymir::Error::syntaxError (token,  join (mandatories).c_str ());
     }
 
-    void unterminated (Word token) {
+    void unterminated (const Word& token) {
 	Ymir::Error::unterminated (token);
     }
     
-    void syntaxError (Word token) {
+    void syntaxError (const Word& token) {
 	Ymir::Error::syntaxError (token);
     }
 
-    void syntaxErrorFor (Word token, Word tok2) {
+    void syntaxErrorFor (const Word& token, Word tok2) {
 	Ymir::Error::syntaxErrorFor (token, tok2);
     }
 
-    void escapeError (Word token) {
+    void escapeError (const Word& token) {
 	Ymir::Error::escapeError (token);
     }
 
@@ -771,7 +771,7 @@ namespace syntax {
 	return ret;
     }
 
-    Var Visitor::visitDecoType (Word begin) {
+    Var Visitor::visitDecoType (const Word& begin) {
 	auto next = this-> lex.next ();
 	Var type = NULL;
 	if (next == Token::NOT) {
@@ -1029,7 +1029,7 @@ namespace syntax {
 	return new (GC) IVarDecl (tok, decos, decls, insts);
     }
    
-    Instruction Visitor::visitLetDestruct (Word begin) {
+    Instruction Visitor::visitLetDestruct (const Word& begin) {
 	bool isVariadic;
 	std::vector <Var> decls;
 	while (true) {
@@ -1188,7 +1188,7 @@ namespace syntax {
 	}
     }
 
-    Expression Visitor::visitPthPar (Word token) {
+    Expression Visitor::visitPthPar (const Word& token) {
 	std::vector <Expression> params;
 	Expression exp;
 	Word tok, next;
@@ -1344,7 +1344,7 @@ namespace syntax {
 	}
     }
 
-    Expression Visitor::visitNumeric (Word begin, bool abrev) {
+    Expression Visitor::visitNumeric (const Word& begin, bool abrev) {
 	for (int it = 0 ; it < (int) begin.getStr ().length (); it++) {
 	    if (begin.getStr () [it] < '0' || begin.getStr() [it] > '9') {		
 		if (begin.getStr () .substr (it, begin.getStr ().length ()) == "ub" || begin.getStr () .substr (it, begin.getStr ().length ()) == "UB")
@@ -1386,7 +1386,7 @@ namespace syntax {
 	return new (GC) IFixed (begin, FixedConst::INT);
     }    
     
-    Expression Visitor::visitFloat (Word) {
+    Expression Visitor::visitFloat (const Word&) {
 	auto next = this-> lex.next ();
 	for (auto it : next.getStr ()) {
 	    if (it < '0' || it > '9') 
@@ -1395,7 +1395,7 @@ namespace syntax {
 	return new (GC) IFloat (next);
     }
 
-    Expression Visitor::visitString (Word word) {
+    Expression Visitor::visitString (Word& word) {
 	this-> lex.skipEnable (Token::SPACE, false);       
 	this-> lex.commentEnable (false);
 	if (word == Token::BSTRING) {
@@ -1451,7 +1451,7 @@ namespace syntax {
 	return new (GC) IString (word, res);
     }
 
-    Expression Visitor::visitPthWPar (Word tok) {
+    Expression Visitor::visitPthWPar (Word& tok) {
 	this-> lex.rewind ();
 	auto constante = visitConstante ();
 	if (constante != NULL) {
@@ -1624,7 +1624,7 @@ namespace syntax {
     }    
     
     
-    Expression Visitor::visitSuite (Word token, Expression left) {
+    Expression Visitor::visitSuite (const Word& token, Expression left) {
 	if (token == Token::LPAR) return visitPar (left);
 	else if (token == Token::LCRO) return visitAccess (left);
 	else if (token == Token::DOT) return visitDot (left);
@@ -1770,11 +1770,11 @@ namespace syntax {
 	return new (GC) IMatch (begin, expr, values, insts, defaultInsts);
     }
     
-    Expression Visitor::visitAfter (Word word, Expression left) {
+    Expression Visitor::visitAfter (const Word& word, Expression left) {
 	return new (GC) IUnary (word, left);
     }
     
-    Expression Visitor::visitBeforePth (Word word) {
+    Expression Visitor::visitBeforePth (const Word& word) {
 	auto elem = visitPth ();
 	return new (GC) IUnary (word, elem);
     }

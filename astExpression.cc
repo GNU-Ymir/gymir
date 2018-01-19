@@ -147,7 +147,6 @@ namespace syntax {
 	std::vector <Expression> tmps;
 	for (auto it : this-> templates)
 	    tmps.push_back (it-> expression ());
-	
 	if (!IInfoType::exists (this-> token.getStr ())) {	    
 	    Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
 	    return NULL;
@@ -217,6 +216,7 @@ namespace syntax {
     semantic::InfoType ITypedVar::getType () {
 	if (this-> type) {
 	    auto type = this-> type-> asType ();
+	    if (type == NULL) return NULL;
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
 		    Ymir::Error::assert ("TODO");
@@ -227,6 +227,7 @@ namespace syntax {
 	    return type-> info-> type;	    
 	} else {
 	    this-> expType = this-> expType-> expression ();
+	    if (this-> expType == NULL) return NULL;
 	    auto type = this-> expType;
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
@@ -271,8 +272,7 @@ namespace syntax {
     Var ITypedVar::var () {
 	return (Var) this-> expression ();
     }
-    
-    
+        
     Expression IArrayAlloc::expression () {
 	auto aux = new (GC) IArrayAlloc (this-> token, NULL, this-> size-> expression ());
 	if (auto fn = this-> type-> to<IFuncPtr> ()) aux-> type = fn-> expression ();
@@ -557,14 +557,13 @@ namespace syntax {
 		    return NULL;
 		}
 	    }
-
-	    info = info-> ConstVerif (type-> info-> type);
-	    if (info == NULL)
-		Ymir::Error::undefinedOp (this-> token, expr-> info, type-> info-> type);
+	    
+	    if (expr-> info-> isConst ())
+		info-> isConst (true);
+	    else info-> isConst (type-> info-> isConst ());
 
 	    auto aux = new (GC) ICast (this-> token, type, expr);
 	    aux-> info = new (GC) ISymbol (this-> token, info);
-	    aux-> info-> type-> isConst (type-> info-> isConst ());
 	    return aux;
 	}	    
     }
@@ -614,7 +613,7 @@ namespace syntax {
 	    }
 
 	    auto begin = this-> params [fst]-> info-> type;
-	    casters [fst] = begin-> CompOp (new (GC) IUndefInfo ());
+	    casters [fst] = begin-> CompOp (new (GC) IUndefInfo ());	    
 	    bool success = true;
 	    for (auto scd : Ymir::r (0, this-> params.size ())) {
 		if (scd != fst) {

@@ -39,6 +39,8 @@ namespace semantic {
 	InfoType clone () override;
 
 	InfoType DotOp (syntax::Var) override;
+
+	InfoType CastOp (InfoType) override;
 	
 	InfoType CompOp (InfoType) override;
 

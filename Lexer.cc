@@ -9,7 +9,7 @@
 #include "errors/_.hh"
 
 namespace lexical {
-
+       
     std::string readln (FILE * i) {
 	unsigned long max = 255;
 	std::string final = "";
@@ -35,28 +35,31 @@ namespace lexical {
 	enableComment (true),
 	current (-1)
     {
-	line_map = ::linemap_add (::line_table, ::LC_ENTER,
-				  /* sysp */0, filename,
-				  /* currentLine */ 1);
-
+	
 	for (auto it : skips) {
 	    this-> skips [it] = true;
 	}
-
+	
+	this-> filename = filename;
 	this-> tokens = Token::members ();
 	this-> comments = comments;	
 	this -> file = file;
+	this-> disposed = false;
     }
 
+    void Lexer::dispose () {
+    }
+    
     Lexer :: ~Lexer () {
-	::linemap_add (::line_table, ::LC_LEAVE,
-		       /* sysp */ 0,
-		       /* filename */ NULL,
-		       /* to_line */0);       
+	dispose ();
     }
 
     location_t Lexer::getCurrentLocation () {
-	return linemap_position_for_column (::line_table, this-> column);
+	linemap_add (line_table, LC_ENTER, 0, this-> filename.c_str (), this-> line);	
+	linemap_line_start (line_table, this-> line, 0);
+	auto ret = linemap_position_for_column (line_table, this-> column);
+	linemap_add (line_table, LC_LEAVE, 0, NULL, 0);
+	return ret;
     }
 
     Word Lexer::fileLocus () {

@@ -56,7 +56,9 @@ namespace semantic {
 		InfoType info = NULL;
 		auto param = attrs [it];
 		if (auto tvar = param-> to<ITypedVar> ()) {
-		    info = tvar-> getType ()-> clone ();
+		    auto getType = tvar-> getType ();
+		    if (getType == NULL) return NULL;
+		    info = getType-> clone ();
 		} else {
 		    tvar = param-> setType (new (GC) IUndefInfo ());
 		    info = tvar-> getType ()-> clone ();

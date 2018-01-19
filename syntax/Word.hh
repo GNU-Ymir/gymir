@@ -14,31 +14,51 @@ struct Word {
 private:
     
     location_t locus;
+    
     std::string str;
-
+    std::string locFile;
+    
 public:
 
     Word (location_t locus, std::string str) :
 	locus (locus),
 	str (str)
-    {}
+    {
+	if (locus != UNKNOWN_LOCATION)
+	    this-> locFile = LOCATION_FILE (locus);
+    }
 
     Word (location_t locus, const char* str) :
 	locus (locus),
 	str (str)
-    {}
+    {
+	if (locus != UNKNOWN_LOCATION)
+	    this-> locFile = LOCATION_FILE (locus);
+    }
     
     Word (const Word & other) :
 	locus (other.locus),
 	str (other.str)
-    {}
+    {
+	this-> locFile = other.locFile;
+    }
 
+    const Word & operator=(const Word & other) {
+	this-> locus = other.locus;
+	this-> str = other.str;
+	if (this-> locus != UNKNOWN_LOCATION)
+	    this-> locFile = LOCATION_FILE (this-> locus);
+	return other;
+    }
+    
     Word () :
 	locus (UNKNOWN_LOCATION),
 	str ("")
     {}
     
     void setLocus (location_t locus) {
+	if (locus != UNKNOWN_LOCATION)
+	    this-> locFile = LOCATION_FILE (locus);
 	this-> locus = locus;
     }
 
@@ -46,7 +66,7 @@ public:
 	return this-> locus;
     }
 
-    std::string getStr () {
+    std::string getStr () const {
 	return this-> str;
     }
 
@@ -54,13 +74,13 @@ public:
 	this-> str = other;	
     }
 
-    std::string getFile ();  
+    std::string getFile () const;  
     
     static Word eof () {
 	return Word (UNKNOWN_LOCATION, "");
     }
 
-    bool isEof () {
+    bool isEof () const {
 	return this-> locus == UNKNOWN_LOCATION;
     }
 
@@ -69,17 +89,26 @@ public:
 	this-> str = "";
     }
 
-    bool isToken ();
+    bool isToken () const;
     
-    friend bool operator== (Word elem, std::string sec) {
+
+    friend bool operator== (const Word& elem, const char* sec) {
+	return elem.getStr () == sec;
+    }
+    
+    friend bool operator== (const Word& elem, std::string& sec) {
 	return elem.getStr () == sec;
     }
 
-    friend bool operator!= (Word elem, std::string sec) {
+    friend bool operator!= (const Word& elem, const char* sec) {
 	return elem.getStr () != sec;
     }
     
-    std::string toString ();    
+    friend bool operator!= (const Word& elem, std::string& sec) {
+	return elem.getStr () != sec;
+    }
+    
+    std::string toString () const;    
     
 };
 

@@ -24,7 +24,7 @@ namespace semantic {
     }
 
     std::string IStringInfo::innerSimpleTypeString () {
-	return "s";
+	return "Aya";
     }
 
     InfoType IStringInfo::BinaryOp (Word op, syntax::Expression right) {
@@ -71,6 +71,17 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IStringInfo::CastOp (InfoType other) {
+	if (auto arr = other-> to <IArrayInfo> ()) {
+	    if (arr-> content ()-> is <ICharInfo> ()) {
+		auto ret = other-> clone ();
+		ret-> binopFoo = &StringUtils::InstToArray;
+		return ret;
+	    }
+	}
+	return NULL;
+    }
+    
     InfoType IStringInfo::CompOp (InfoType other) {
 	if (other-> is <IUndefInfo> () || this-> isSame (other)) {
 	    auto ret = this-> clone ();
@@ -149,6 +160,8 @@ namespace semantic {
 	}
 	return this;	
     }
+    
+    
 
     Ymir::Tree IStringInfo::toGeneric () {
 	return toGenericStatic ();
@@ -298,40 +311,49 @@ namespace semantic {
 	}
 	
 	Tree InstToString (Word locus, InfoType, Expression elem, Expression type) {
+	    if (elem-> info-> isConst ()) {
+		return InstToArray (locus, NULL, elem, type);
+	    } else {
+		auto rexp = elem-> toGeneric ();
+		if (rexp.getTreeCode () == CALL_EXPR)
+		    return rexp;
+	    
+		return elem-> toGeneric ();
+	    }
+	}
+
+	Tree InstToArray (Word locus, InfoType, Expression elem, Expression type) {
 	    auto rexp = elem-> toGeneric ();
 	    if (rexp.getTreeCode () == CALL_EXPR)
 		return rexp;
 	    
-	    if (elem-> info-> isConst ()) {
-		location_t loc = locus.getLocus ();
+	    location_t loc = locus.getLocus ();
+	    if (!type-> info-> isConst () && elem-> info-> isConst ()) {
 		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
-		if (!type-> info-> isConst ()) {
-		    return buildDup (loc, auxVar, rexp, elem);
-		} else {
-		    TreeStmtList list;
-		    Tree lenr = getLen (loc, elem, rexp);
-		    Tree ptrr = getPtr (loc, elem, rexp);
-
-		    Tree aux = makeAuxVar (loc, ISymbol::getLastTmp (), IStringInfo::toGenericStatic ());
-
-		    Tree lenl = getField (loc, aux, "len");
-		    Tree ptrl = getField (loc, aux, "ptr");
-		    list.append (buildTree (
-			MODIFY_EXPR, loc, void_type_node, lenl, lenr)
-		    );
-		    
-		    list.append (buildTree (
-			MODIFY_EXPR, loc, void_type_node, ptrl, ptrr)
-		    );
-
-		    getStackStmtList ().back ().append (list.getTree ());
-		    return aux;
-		}
+		return buildDup (loc, auxVar, rexp, elem);
 	    } else {
-		return elem-> toGeneric ();
+		TreeStmtList list;
+		Tree lenr = getLen (loc, elem, rexp);
+		Tree ptrr = getPtr (loc, elem, rexp);
+
+		Tree aux = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
+
+		Tree lenl = getField (loc, aux, "len");
+		Tree ptrl = getField (loc, aux, "ptr");
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, lenl, lenr)
+		);
+		    
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, ptrl, ptrr)
+		);
+
+		getStackStmtList ().back ().append (list.getTree ());
+		return aux;
 	    }
 	}
 	
+		
 	Tree InstConcat (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    Ymir::TreeStmtList list; 

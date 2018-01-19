@@ -81,7 +81,7 @@ namespace Ymir {
     };
 
     
-    std::string addLine (std::string, Word word);    
+    std::string addLine (std::string, const Word& word);    
     bool isVerbose ();
     
     template <typename ... T> 
@@ -116,81 +116,81 @@ namespace Ymir {
 	
 	static unsigned long nb_errors;// (0);
 
-	static void notATemplate (Word);
+	static void notATemplate (const Word&);
 
-	static void takeATypeAsTemplate (Word);
+	static void takeATypeAsTemplate (const Word&);
 
-	static void syntaxError (Word);
+	static void syntaxError (const Word&);
 
-	static void syntaxErrorFor (Word, Word);
+	static void syntaxErrorFor (const Word&, const Word&);
 
-	static void syntaxError (Word, const char*);
+	static void syntaxError (const Word&, const char*);
 
-	static void syntaxError (Word, Word);
+	static void syntaxError (const Word&, const Word&);
 
-	static void escapeError (Word);
+	static void escapeError (const Word&);
 
 	static void endOfFile ();
 
-	static void unterminated (Word);
+	static void unterminated (const Word&);
 
-	static void templateSpecialisation (Word, Word);
+	static void templateSpecialisation (const Word&, const Word&);
 	
-	static void templateCreation (Word);
+	static void templateCreation (const Word&);
 
-	static void moduleDontExist (Word, Word);
+	static void moduleDontExist (const Word&, const Word&);
 
-	static void importError (Word);
+	static void importError (const Word&);
 	
-	static void recursiveExpansion (Word);
+	static void recursiveExpansion (const Word&);
 
-	static void unknownType (Word);
+	static void unknownType (const Word&);
 
-	static void multipleLoopName (Word, Word);
+	static void multipleLoopName (const Word&, const Word&);
 
-	static void shadowingVar (Word, Word);
+	static void shadowingVar (const Word&, const Word&);
 
-	static void constNoInit (Word);
+	static void constNoInit (const Word&);
 
-	static void notLValue (Word);
+	static void notLValue (const Word&);
 	
-	static void undefVar (Word, semantic::Symbol);
+	static void undefVar (const Word&, semantic::Symbol);
 
-	static void undefAttr (Word, semantic::Symbol, syntax::Var);
+	static void undefAttr (const Word&, semantic::Symbol, syntax::Var);
 	
-	static void uninitVar (Word);
+	static void uninitVar (const Word&);
 
-	static void useAsVar (Word, semantic::Symbol);
+	static void useAsVar (const Word&, semantic::Symbol);
 
-	static void breakRefUndef (Word);
+	static void breakRefUndef (const Word&);
 
-	static void breakOutSide (Word);
+	static void breakOutSide (const Word&);
 	
-	static void useAsType (Word);
+	static void useAsType (const Word&);
 	
-	static void undefinedOp (Word, Word, semantic::Symbol, syntax::ParamList);
+	static void undefinedOp (const Word&, const Word&, semantic::Symbol, syntax::ParamList);
 
-	static void undefinedOp (Word, semantic::Symbol, syntax::ParamList);
+	static void undefinedOp (const Word&, semantic::Symbol, syntax::ParamList);
 
-	static void undefinedOp (Word, semantic::Symbol, semantic::Symbol);
+	static void undefinedOp (const Word&, semantic::Symbol, semantic::Symbol);
 
-	static void undefinedOp (Word, semantic::Symbol, semantic::InfoType);
+	static void undefinedOp (const Word&, semantic::Symbol, semantic::InfoType);
 	
-	static void undefinedOp (Word, semantic::Symbol);
+	static void undefinedOp (const Word&, semantic::Symbol);
 
-	static void incompatibleTypes (Word, semantic::Symbol, semantic::InfoType);
+	static void incompatibleTypes (const Word&, semantic::Symbol, semantic::InfoType);
 
-	static void templateInferType (Word, Word);
+	static void templateInferType (const Word&, const Word&);
 
 	static void activeError (bool);	
 
-	static void returnVoid (Word, semantic::Symbol);
+	static void returnVoid (const Word&, semantic::Symbol);
 
-	static void missingReturn (Word, semantic::Symbol);
+	static void missingReturn (const Word&, semantic::Symbol);
 	
-	static void unreachableStmt (Word);
+	static void unreachableStmt (const Word&);
 	
-	static void noValueNonVoidFunction (Word);
+	static void noValueNonVoidFunction (const Word&);
 	
 	static std::vector <ErrorMsg>& caught ();
 
@@ -217,7 +217,7 @@ namespace Ymir {
     private:
 	
 	template <typename ... TArgs>
-	void fatal_ (Word word, const char * format_, TArgs ... args) {
+	void fatal_ (const Word& word, const char * format_, TArgs ... args) {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
 	    aux = addLine (aux, word);
@@ -227,12 +227,12 @@ namespace Ymir {
 	}
 		
 	template <typename ... TArgs>
-	static void fatal (Word word, const char * format_, TArgs ... args) {
+	static void fatal (const Word& word, const char * format_, TArgs ... args) {
 	    __instance__.fatal_ (word, format_, args...);
 	}
 
 	template <typename ... TArgs>
-	void append_ (Word word, const char * format_, TArgs ... args) {
+	void append_ (const Word& word, const char * format_, TArgs ... args) {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
 	    aux = addLine (aux, word);
@@ -241,12 +241,12 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
-	static void append (Word word, const char * format_, TArgs ... args) {
+	static void append (const Word& word, const char * format_, TArgs ... args) {
 	    __instance__.append_ (word, format_, args...);
 	}
 	
 	template <typename ... TArgs>
-	void note_ (Word word, const char * format_, TArgs ... args) {
+	void note_ (const Word& word, const char * format_, TArgs ... args) {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (BLUE) + "Note" + std::string (RESET) + " : " + aux;
 	    aux = addLine (aux, word);
@@ -256,7 +256,7 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
-	static void note (Word word, const char * format_, TArgs ... args) {
+	static void note (const Word& word, const char * format_, TArgs ... args) {
 	    __instance__.note_ (word, format_, args...);
 	}
 	

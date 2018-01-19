@@ -17,12 +17,12 @@ namespace Ymir {
 	void parse_program ();
 	
 	syntax::Program syntax_analyse ();
-
-    private:
 	
 	void semantic_time (syntax::Program);
 
 	void lint_time ();
+	
+    private:
 	
 	void define_gcc_symbols ();
 	

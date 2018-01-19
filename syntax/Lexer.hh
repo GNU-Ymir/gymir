@@ -39,6 +39,8 @@ namespace lexical {
 	void seek (ulong);
        	
 	Word fileLocus ();
+
+	void dispose ();
 	
 	~Lexer ();
 
@@ -63,9 +65,10 @@ namespace lexical {
 
 	static const int maxColumnHint = 80;
 	ulong line, column;    
-	bool enableComment;
+	bool enableComment, disposed;
 	std::string filename;
-		
+
+	
 	std::map <std::string, bool> skips;
 	std::vector <std::string> tokens;	
 	std::vector <std::pair<std::string, std::string> > comments;	
