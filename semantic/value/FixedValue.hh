@@ -28,6 +28,10 @@ namespace semantic {
 	static const char* id () {
 	    return "IFixedValue";
 	}
+
+	std::string toString () override;
+
+	syntax::Expression toYmir (Symbol sym) override;
 	
     };
 

@@ -20,6 +20,23 @@ namespace semantic {
 	return __instance__;
     }
 
+    std::string TemplateSolution::toString () {
+	Ymir::OutBuffer buf;
+	buf.write ("{", this-> score, ", ", this-> valid);
+	if (this-> type)
+	    buf.write (this-> type-> typeString (), ", [");
+	else buf.write ("null, [");
+	for (auto it : this-> elements) {
+	    buf.write (it.first, " : ", it.second-> info-> typeString ());
+	}
+	buf.write ("], [");
+	for (auto it : this-> varTypes) {
+	    buf.write (it-> typeString ());
+	}
+	buf.write ("]}");
+	return buf.str ();	
+    }
+    
     TemplateSolver::TemplateSolver () {}
     
     bool TemplateSolver::merge (long& score, map <string, Expression>& left, TemplateSolution& right) {
@@ -141,7 +158,7 @@ namespace semantic {
 			return TemplateSolution (0, false);			
 		}
 	    }
-
+	    
 	    for (auto it : tmps) {
 		if (auto var = it-> to <IVar> ()) {
 		    if (param-> token.getStr () == var-> token.getStr ()) {
@@ -340,9 +357,24 @@ namespace semantic {
 	}	
     }
     
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> &, TypedVar , Expression ) {
-	Ymir::Error::assert ("TODO");
-	return TemplateSolution (0, false);
+    TemplateSolution TemplateSolver::solveInside (vector <Expression> & tmps, TypedVar left, Expression right) {
+	auto type = right-> info-> type;
+	if (!right-> info-> isImmutable ()) {
+	    Ymir::Error::notImmutable (right-> info);
+	    return TemplateSolution (0, false);
+	}
+
+	auto res = this-> solveInside (tmps, left-> typeVar (), type);
+	if (!res.valid)
+	    return TemplateSolution (0, false);
+
+	if (!type-> isSame (res.type))
+	    return TemplateSolution (0, false);
+
+	map <string, Expression> ret = {{left-> token.getStr (), right}};
+	if (!merge (res.score, res.elements, ret))
+	    return TemplateSolution (0, false);
+	return res;
     }
 
     TemplateSolution TemplateSolver::solveInside (vector <Expression> &, Expression , Expression ) {
@@ -379,14 +411,14 @@ namespace semantic {
 	for (auto it : args) {
 	    if (auto type = it-> to <ITypedVar> ()) {
 		auto elem = types.find (type-> token.getStr ());
-		if (elem != types.end () && elem-> second != NULL)
-		    return true;
-		return false;
+		if (elem != types.end () && elem-> second == NULL)
+		    return false;
+		else if (elem == types.end ()) return false;
 	    } else {
 		auto elem = types.find (it-> token.getStr ());
-		if (elem != types.end () && elem-> second != NULL)
-		    return true;
-		return false;
+		if (elem != types.end () && elem-> second == NULL)
+		    return false;
+		else if (elem == types.end ()) return false;
 	    }
 	}
 	return true;

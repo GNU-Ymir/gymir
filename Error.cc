@@ -244,6 +244,31 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::notATemplate (const Word& word, std::vector <syntax::Expression> & exprs) {
+	auto str = getString (NotATemplate2);
+	OutBuffer buf ("(", exprs, ")");
+	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET, YELLOW, buf.str ().c_str (), RESET);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
+    void Error::notImmutable (semantic::Symbol sym) {
+	auto msg = std::string (getString (NotImmutable));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, sym-> sym);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::noValueNonVoidFunction (const Word& word) {
 	auto str = getString (NoValueNonVoid);
 	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET);

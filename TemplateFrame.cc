@@ -77,15 +77,85 @@ namespace semantic {
 	return NULL;
     }
 
-    Frame ITemplateFrame::TempOp (vector <Expression>)  {
-	Ymir::Error::assert ("TODO");
-	return NULL;
+    Frame ITemplateFrame::TempOp (vector <Expression> params)  {
+	this-> currentScore () = 0;
+	if (params.size () > this-> _function-> getTemplates ().size ()) {
+	    return NULL;
+	}
+
+	auto globSpace = Table::instance ().space ();
+	auto tScope = Table::instance ().templateNamespace ();
+	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> _function-> name ()));
+	Table::instance ().templateNamespace () = globSpace;
+
+	auto ret = getScoreTempOp (params);
+	
+	Table::instance ().setCurrentSpace (globSpace);
+	Table::instance ().templateNamespace () = tScope;	
+	return ret;
     }
 	
     ApplicationScore ITemplateFrame::isApplicableVariadic (Word , vector <Var> , vector <InfoType> ) {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }
+
+    Frame ITemplateFrame::getScoreTempOp (std::vector <Expression>& params) {
+	std::vector <InfoType> totals;
+	std::vector <Expression> finals;
+	std::vector <Expression> vars;
+
+	totals.resize (this-> _function-> getTemplates ().size ());
+	auto res = TemplateSolver::instance (). solve (this-> _function-> getTemplates (), params);
+	
+	if (!res.valid) return NULL;
+	Ymir::OutBuffer space;
+	space.write ("(");
+
+	for (auto i : Ymir::r (0, params.size ())) {
+	    auto &it = params [i];
+	    if (auto _val = it-> info-> value ()) {
+		space.write (_val-> toString ());
+	    } else
+		space.write (it-> info-> type-> simpleTypeString ());
+	    if (i < params.size () - 1) space.write (",");
+	}
+	
+	space.write (")");
+
+	for (auto &it : res.elements) {
+	    if (it.second-> info-> isImmutable ()) {
+		it.second = it.second-> info-> value ()-> toYmir (it.second-> info);
+	    }
+	}
+
+	auto func = this-> _function-> templateReplace (res.elements);
+	func-> name ((func-> name () + space.str ()).c_str ());
+
+	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
+	    // if (func-> test ()) {
+	    //TODO
+	    // }
+
+	    Frame ret;
+	    if (!this-> _isPure) ret = new (GC) IUnPureFrame (this-> space (), func);
+	    else if (this-> _isExtern) ret = new (GC) IExternFrame (this-> space (), func);
+	    else ret = new (GC) IPureFrame (this-> space (), func);
+
+	    ret-> currentScore () = this-> currentScore () + res.score;
+	    return ret;	    
+	} else {
+	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
+	    
+	    auto aux = new (GC) ITemplateFrame (this-> space (), func);
+	    aux-> _currentScore = this-> currentScore () + res.score;
+	    aux-> _isPure = this-> _isPure;
+	    aux-> _isExtern = this-> _isExtern;
+	    return aux;
+	}
+	
+    }
+    
 
     ApplicationScore ITemplateFrame::getScoreSimple (Word ident, vector <Var> attrs, vector <InfoType> args) {
 	auto score = new (GC) IApplicationScore (ident);
@@ -134,7 +204,7 @@ namespace semantic {
 						       tmps)) return NULL;
 	    for (auto exp : tmps) {
 		if (exp.second-> info-> isImmutable ()) {
-		    // TODO exp = exp-> info-> valye-> toYmir (exp-> info);
+		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
 		}
 	    }
 

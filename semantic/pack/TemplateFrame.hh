@@ -22,9 +22,7 @@ namespace semantic {
 	static long AFF_TMP ;// = 5;
 	static long CONST_CHANGE_TMP ;// = 6;    
 	static long CHANGE_TMP ;// = 7;
-
-	
-
+       
     public:
 
 	ITemplateFrame (Namespace space, syntax::Function func);
@@ -59,6 +57,8 @@ namespace semantic {
 
 	ApplicationScore getScoreSimple (Word ident, std::vector <syntax::Var> attrs, std::vector <InfoType> args);
 
+	Frame getScoreTempOp (std::vector <syntax::Expression> & params);
+	
 	std::string computeName (std::string name);
 
 	FrameProto validateExtern ();

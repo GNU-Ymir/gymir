@@ -19,6 +19,8 @@ namespace syntax {
 
 	Expression templateExpReplace (std::map <std::string, Expression>) override;
 	
+	Expression getLeft ();
+
 	Ymir::Tree toGeneric () override;
 
 	static const char * id () {

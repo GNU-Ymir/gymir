@@ -2,6 +2,13 @@
 
 #include <gc/gc_cpp.h>
 #include <string>
+#include <ymir/utils/Range.hh>
+#include <vector>
+
+namespace syntax {
+    class IExpression;
+    typedef IExpression* Expression;
+}
 
 namespace Ymir {
     
@@ -14,6 +21,11 @@ namespace Ymir {
 	
     public:
 
+	template <typename ... T>
+	OutBuffer (T ... args) {
+	    write (args ...);
+	}
+	
 	void writef (const char* s) {
 	    write (s);
 	}
@@ -97,12 +109,23 @@ namespace Ymir {
 		s++;
 	    }
 	}
-	
+		
 	void write ();
+	
+	template <typename T>
+	void write_ (const std::vector <T> &elem) {
+	    for (auto it : Ymir::r (0, elem.size ())) {
+		write_ (elem [it]);
+		if (it < (int) elem.size () - 1)
+		    write (", ");
+	    }
+	}
 
+	void write_ (syntax::Expression expr);
+	
 	void write_ (const char * str);
 	
-	void write_ (std::string);
+	void write_ (const std::string&);
 
 	void write_ (int);
 	

@@ -179,23 +179,22 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IFunctionInfo::TempOp (std::vector<syntax::Expression>) {
-	//TODO
-	// auto frames = getFrames ();
-	// std::vector <Frame> ret;
-	// for (auto it : frames) {
-	//     if (auto aux = it-> TempOp (params))
-	// 	ret.push_back (aux);
-	// }
+    InfoType IFunctionInfo::TempOp (std::vector<syntax::Expression> params) {
+	auto frames = getFrames ();
+	std::vector <Frame> ret;
+	for (auto it : frames) {
+	    if (auto aux = it-> TempOp (params))
+		ret.push_back (aux);
+	}
 
-	// if (ret.size () != 0)
-	//     return new IFunctionInfo (this-> _space, this-> _name, ret);
+	if (ret.size () != 0)
+	    return new IFunctionInfo (this-> _space, this-> _name, ret);
 	return NULL;
     }
 
     std::string IFunctionInfo::innerTypeString () {
 	auto frames = getFrames ();
-	if (frames.size () == 1) {
+	if (frames.size () == 1 && this-> _info) {
 	    Ymir::OutBuffer buf;
 	    if (!this-> _info-> isPrivate ()) {
 		buf.write (Ymir::format ("function <%.%> %",

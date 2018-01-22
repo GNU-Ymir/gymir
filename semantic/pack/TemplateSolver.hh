@@ -30,6 +30,8 @@ namespace semantic {
 	{
 	    this-> elements.swap (elemts);
 	}
+
+	std::string toString ();
 	
     };
 

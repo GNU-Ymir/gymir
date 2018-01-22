@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/syntax/Word.hh>
+#include <gc/gc_cpp.h>
 
 namespace syntax {
     class IParamList;
@@ -20,8 +21,11 @@ namespace semantic {
 
     class IInfoType;
     typedef IInfoType* InfoType;
+
+    class ISymbol;
+    typedef ISymbol* Symbol;
     
-    class IValue {
+    class IValue : public gc {
     public:
 	
 	virtual Value BinaryOp (Word token, Value right);
@@ -58,6 +62,9 @@ namespace semantic {
 	}
 	
 	virtual std::string toString ();
+
+	virtual syntax::Expression toYmir (Symbol);
+
     };
 
 

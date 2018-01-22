@@ -74,10 +74,18 @@ namespace syntax {
 	    }
 
 	    if (this-> templates.size () != 0) {
-		if (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> ()) {
-		    Ymir::Error::assert ("TODO");
-		} else if (this-> inside-> is<IDot> ()) {
-		    Ymir::Error::assert ("TODO");
+		if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> ())) {
+		    auto params = new (GC) IParamList (this-> token, {});
+		    auto call = new (GC) IPar (this-> token, this-> token, this, params, true);
+		    this-> inside = call;
+		    return call-> expression ();
+		} else if (auto dt = this-> inside-> to<IDot> ()) {
+		    if (this == dt-> getLeft ()) {
+			auto params = new (GC) IParamList (this-> token, {});
+			auto call = new (GC) IPar (this-> token, this-> token, this, params, true);
+			this-> inside = call;
+			return call-> expression ();
+		    }
 		}
 		
 		std::vector <Expression> tmps;
@@ -87,7 +95,8 @@ namespace syntax {
 
 		auto type = aux-> info-> type-> TempOp (tmps);
 		if (type == NULL) {
-		    Ymir::Error::assert ("TODO, gerer l'erreur");
+		    Ymir::Error::notATemplate (this-> token, tmps);
+		    return NULL;
 		}
 		aux-> templates = tmps;
 		aux-> info = new (GC) ISymbol (aux-> info-> sym, type);
@@ -527,7 +536,7 @@ namespace syntax {
     Expression IString::expression () {
 	auto aux = new (GC) IString (this-> token, this-> content);
 	aux-> info = new (GC) ISymbol (this-> token, new (GC) IStringInfo (true));
-	//TODO
+	aux-> info-> value () = new IStringValue (this-> content);
 	return aux;
     }
     
@@ -767,7 +776,10 @@ namespace syntax {
     }
     
     bool IPar::simpleVerif (Par& aux) {
-	if (aux-> _left == NULL || aux-> params == NULL) {
+	if (aux-> _left == NULL ||
+	    aux-> params == NULL ||
+	    aux-> _left-> info == NULL ||
+	    aux-> _left-> info-> type == NULL) {
 	    return true;
 	}
 	aux-> _left-> inside = this;

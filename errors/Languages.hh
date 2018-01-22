@@ -15,6 +15,7 @@ namespace Ymir {
 		phrases [SyntaxErrorFor] = "%%% inattendue pour l'expression %%%";
 		phrases [EscapeChar] = "caractère d'échappement inconnu";
 		phrases [NotATemplate] = "L'élément '%%%' n'est pas un template";
+		phrases [NotATemplate2] = "Aucune spécialisation de template pour '%%%' avec '%%%'";
 		phrases [EndOfFile] = "Fin de fichier inattendue";
 		phrases [Unterminated] = "caractère de fin de chaîne '%%%' manquant";
 		phrases [TakeAType] = "Prend un type en template";
@@ -47,6 +48,7 @@ namespace Ymir {
 		phrases [MissingReturn] = "Il manque une instruction de retour pour la fonction '%%%' qui retourne '%%%'";
 		phrases [ModuleDontExist] = "Le fichier source %.yr n'existe pas";
 		phrases [ImportError] = "Lors de l'importation de module";
+		phrases [NotImmutable] = "La valeur ne peut être connu à la compilation";
 		init = true;		
 	    } 
 	    return phrases;
@@ -61,6 +63,7 @@ namespace Ymir {
 		phrases [SyntaxErrorFor] = "%%% unexpected when analysing expression %%%";
 		phrases [EscapeChar] = "unknown escape character";
 		phrases [NotATemplate] = "'%%%' element is not a template";
+		phrases [NotATemplate2] = "There is not a valid template specialisation for '%%%' with '%%%'";
 		phrases [EndOfFile] = "unexpected end of file";
 		phrases [Unterminated] = "missing terminating '%%%' character";
 		phrases [TakeAType] = "take a type as template argument";
@@ -93,8 +96,9 @@ namespace Ymir {
 		phrases [ReturnVoid] = "Cannot return a '%%%' element";
 		phrases [UnreachableStmt] = "Unreachable statement";
 		phrases [MissingReturn] = "Missing return statement for function '%%%' expecting a value of type '%%%'";
-		phrases [ModuleDontExist] = "Source file %.yr doesn't exist";
+		phrases [ModuleDontExist] = "Source file %.yr doesn't exist";		
 		phrases [ImportError] = "Importation failed";
+		phrases [NotImmutable] = "The value cannot be read at compile time";
 		init = true;
 	    } 
 	    return phrases;

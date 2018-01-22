@@ -32,6 +32,10 @@ namespace syntax {
 	
 	std::string name ();
 
+	void name (std::string &);
+
+	void name (const char*);
+
 	std::vector <Var>& getParams ();
 
 	std::vector <Expression>& getTemplates ();

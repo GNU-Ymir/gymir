@@ -57,7 +57,9 @@ namespace syntax {
 	    return ids;
 	}
 	
-	virtual void print (int) override {}
+	virtual void print (int) override;
+
+	virtual std::string prettyPrint ();
 	
     };
 

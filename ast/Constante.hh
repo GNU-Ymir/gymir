@@ -46,6 +46,8 @@ namespace syntax {
 	void setValue (long val);
 	
 	void print (int nb = 0) override;
+
+	std::string prettyPrint () override;
     };
 
     typedef unsigned char ubyte;
@@ -63,7 +65,9 @@ namespace syntax {
 
 	Ymir::Tree toGeneric () override;
 	
-	void print (int nb = 0) override;	
+	void print (int nb = 0) override;
+	
+	std::string prettyPrint () override;
     };
 
     class IFloat : public IExpression {
@@ -85,6 +89,8 @@ namespace syntax {
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
+
+	std::string prettyPrint () override;
 	
     };
 
@@ -96,7 +102,7 @@ namespace syntax {
     public :
 
 	IString (Word word, std::string content);
-
+	
 	Expression expression () override;
 
 	Expression templateExpReplace (std::map <std::string, Expression>) override;
@@ -105,6 +111,8 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	std::string prettyPrint () override;
+	
 	std::string getStr ();
 	
 	static const char * id () {
@@ -208,7 +216,9 @@ namespace syntax {
 		    nb, ' ',
 		    this-> token.toString ().c_str ()
 	    );
-	}	
+	}
+
+	std::string prettyPrint () override;
     };    
 
     class INull : public IExpression {
@@ -229,6 +239,8 @@ namespace syntax {
 		    this-> token.toString ().c_str ()
 	    );
 	}
+
+	std::string prettyPrint () override;
 	
     };
 
@@ -248,7 +260,8 @@ namespace syntax {
 		    this-> token.toString ().c_str ()
 	    );
 	}
-	
+
+	std::string prettyPrint () override;
     };
     
     typedef IFixed* Fixed;

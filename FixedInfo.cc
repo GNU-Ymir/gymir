@@ -515,24 +515,6 @@ namespace semantic {
 	
     }
 
-    IFixedValue::IFixedValue (FixedConst type, ulong ul, long l) {
-	this-> type = type;
-	if (!isSigned (this-> type)) {
-	    this-> value.ul = ul;	    
-	} else this-> value.l = l;
-    }
-    
-    long IFixedValue::getValue () {
-	return this-> value.l;
-    }
-
-    ulong IFixedValue::getUValue () {
-	return this-> value.ul;
-    }
-    
-    const char * IFixedValue::getId () {
-	return IFixedValue::id ();
-    }
 
     
 }

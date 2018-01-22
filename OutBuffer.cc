@@ -1,6 +1,8 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/errors/Error.hh>
+#include <ymir/ast/Expression.hh>
 #include <cstring>
+
 
 namespace Ymir {
     
@@ -18,7 +20,7 @@ namespace Ymir {
     }
 
     
-    void OutBuffer::write_ (std::string cs) {
+    void OutBuffer::write_ (const std::string& cs) {
 	if (capacity < len + cs.length ()) {
 	    resize (len + cs.length ());
 	}
@@ -81,6 +83,10 @@ namespace Ymir {
 	len += 1;
     }
     
+    void OutBuffer::write_ (syntax::Expression expr) {
+	this-> write (expr-> prettyPrint ().c_str ());
+    }
+    
     void OutBuffer::resize (ulong len) {
 	if (capacity == 0) capacity = len + 1;
 	else if (capacity * 2 < len) capacity = len + capacity + 1;
@@ -94,7 +100,6 @@ namespace Ymir {
 	delete[] this-> current;
 	this-> current = aux;
     }
-
 
     void OutBuffer::write () {}
 

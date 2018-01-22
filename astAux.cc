@@ -83,6 +83,14 @@ namespace syntax {
     std::string IFunction::name () {
 	return this-> ident.getStr ();
     }
+
+    void IFunction::name (std::string &other) {
+	this-> ident.setStr (other);
+    }
+
+    void IFunction::name (const char* other) {
+	this-> ident.setStr (other);
+    }
     
     Block IFunction::getBlock () {
 	return this-> block;
@@ -307,13 +315,25 @@ namespace syntax {
     void IFixed::setValue (long val) {
 	this-> value = val;
     }
+
+
+    std::string IFixed::prettyPrint () {
+	if (isSigned (this-> type))
+	    return Ymir::OutBuffer (this-> value).str ();
+	else
+	    return Ymir::OutBuffer (this-> uvalue).str ();
+    }
+    
     
     IChar::IChar (Word word, ubyte code) :
 	IExpression (word),
 	code (code) {
     }
-
     
+    std::string IChar::prettyPrint () {
+	return Ymir::OutBuffer ((char) this-> code).str ();
+    }
+
     IFloat::IFloat (Word word) : IExpression (word), _type (FloatConst::DOUBLE) {
 	this-> totale = "0." + this-> token.getStr ();
     }
@@ -326,6 +346,21 @@ namespace syntax {
 	this-> totale = this-> token.getStr () + "." + suite;
     }
 
+    std::string IFloat::prettyPrint () {
+	return this-> totale;
+    }
+
+    std::string IBool::prettyPrint () {
+	return this-> token.getStr ();
+    }
+    
+    std::string INull::prettyPrint () {
+	return "null";
+    }
+
+    std::string IIgnore::prettyPrint () {
+	return "_";
+    }
     
     IString::IString (Word word, std::string content) :
 	IExpression (word),
@@ -334,6 +369,10 @@ namespace syntax {
 
     std::string IString::getStr () {
 	return this-> content;
+    }
+
+    std::string IString::prettyPrint () {
+	return Ymir::OutBuffer ("\"", this-> content, "\"").str ();
     }
     
     std::vector <std::string> IString::getIds () {
@@ -390,6 +429,9 @@ namespace syntax {
 	right (right)
     {}
 
+    Expression IDot::getLeft () {
+	return this-> left;
+    }   
     
     IDotCall::IDotCall (Instruction inside, Word token, Expression call, Expression firstPar) :
 	IExpression (token),
@@ -731,6 +773,16 @@ namespace syntax {
 	return NULL;	    
     }
 
+    void IExpression::print (int) {
+	Ymir::OutBuffer buf ("TODO {", this-> getIds (), "}");
+	Ymir::Error::assert (buf.str ().c_str ());
+    }
 
+    std::string IExpression::prettyPrint () {
+	Ymir::OutBuffer buf ("TODO {", this-> getIds (), "}");
+	Ymir::Error::assert (buf.str ().c_str ());
+
+	return "";
+    }    
     
 }

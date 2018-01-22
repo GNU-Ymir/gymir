@@ -37,6 +37,7 @@ namespace Ymir {
     namespace Private {
 	enum ErrorType {
 	    NotATemplate = 1,
+	    NotATemplate2,
 	    TakeAType,
 	    SyntaxError,
 	    SyntaxErrorFor,
@@ -74,6 +75,7 @@ namespace Ymir {
 	    MissingReturn,
 	    ModuleDontExist,
 	    ImportError,
+	    NotImmutable,
 	    LAST_ERROR
 	};
 
@@ -118,6 +120,10 @@ namespace Ymir {
 
 	static void notATemplate (const Word&);
 
+	static void notATemplate (const Word&, std::vector <syntax::Expression>&);
+
+	static void notImmutable (semantic::Symbol);
+	
 	static void takeATypeAsTemplate (const Word&);
 
 	static void syntaxError (const Word&);

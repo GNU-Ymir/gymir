@@ -66,7 +66,7 @@ namespace syntax {
 	}
 
 	template <typename T>
-	T* to () {
+	T* to () {	    
 	    auto ids = this-> getIds ();
 	    if (std::find (ids.begin (), ids.end (), T::id ()) != ids.end ())
 		return (T*) this;
