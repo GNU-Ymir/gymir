@@ -16,15 +16,15 @@ namespace semantic {
 	
 	Namespace (std::string name);
 
-	Namespace (Namespace space, std::string name);
+	Namespace (const Namespace &space, std::string name);
 
 	friend bool operator== (const Namespace &self, const Namespace &other);
 
 	friend bool operator!= (const Namespace &self, const Namespace &other);
 
-	bool isSubOf (Namespace other);
+	bool isSubOf (const Namespace& other) const;
 
-	bool isAbsSubOf (Namespace other);
+	bool isAbsSubOf (const Namespace& other) const;
 
 	std::string toString () const;
 	

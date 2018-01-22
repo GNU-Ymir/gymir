@@ -20,7 +20,7 @@ namespace syntax {
 
 	Instruction instruction () override;
 
-	Instruction templateReplace (std::map <std::string, Expression>) override;
+	Instruction templateReplace (const std::map <std::string, Expression>&) override;
 	
 	void print (int nb = 0) override;	
     };

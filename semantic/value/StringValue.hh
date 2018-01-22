@@ -22,7 +22,12 @@ namespace semantic {
 	
 	std::string toString () override;
 
-	syntax::Expression toYmir (Symbol sym);	
+	syntax::Expression toYmir (Symbol sym);
+
+	bool equals (Value) override;
+
+	Value clone () override;
+	
     };
     
 }

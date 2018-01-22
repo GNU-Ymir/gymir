@@ -155,6 +155,20 @@ namespace syntax {
 		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new IBoolInfo (true));
 		return NULL;
 	    }
+
+
+	    if (this-> isStatic) {
+		if (!expr-> info-> isImmutable ()) {
+		    Ymir::Error::notImmutable (expr-> info);
+		    return NULL;
+		} else if (expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ()) {
+		    return this-> block-> instruction ();
+		} else {
+		    if (this-> else_)
+			return this-> else_-> instruction ();
+		    else return new (GC) IBlock (this-> block-> token, {}, {});
+		}
+	    }
 	    
 	    Table::instance ().retInfo ().currentBlock () = "if";
 	    Table::instance ().retInfo ().changed () = true;

@@ -87,9 +87,9 @@ namespace semantic {
 	auto tScope = Table::instance ().templateNamespace ();
 	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> _function-> name ()));
 	Table::instance ().templateNamespace () = globSpace;
-
-	auto ret = getScoreTempOp (params);
 	
+	auto ret = getScoreTempOp (params);
+
 	Table::instance ().setCurrentSpace (globSpace);
 	Table::instance ().templateNamespace () = tScope;	
 	return ret;
@@ -128,7 +128,9 @@ namespace semantic {
 		it.second = it.second-> info-> value ()-> toYmir (it.second-> info);
 	    }
 	}
-
+	
+	printf("%s\n", space.str ().c_str ());
+	       
 	auto func = this-> _function-> templateReplace (res.elements);
 	func-> name ((func-> name () + space.str ()).c_str ());
 
@@ -143,6 +145,7 @@ namespace semantic {
 	    else ret = new (GC) IPureFrame (this-> space (), func);
 
 	    ret-> currentScore () = this-> currentScore () + res.score;
+	    ret-> templateParams () = getValues (res.elements);
 	    return ret;	    
 	} else {
 	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);

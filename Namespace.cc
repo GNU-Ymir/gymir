@@ -16,7 +16,7 @@ namespace semantic {
 	this-> names.push_back (space);
     }
     
-    Namespace::Namespace (Namespace space_, std::string name) {
+    Namespace::Namespace (const Namespace& space_, std::string name) {
 	auto space = Mangler::mangle_file (name);
 	auto index =  space.find (".");
 	while (index != std::string::npos) {
@@ -42,7 +42,7 @@ namespace semantic {
 	return fst.toString () == scd.toString ();
     }
 
-    bool Namespace::isSubOf (Namespace other) {
+    bool Namespace::isSubOf (const Namespace& other) const {
 	if (this-> names.size () <= other. names.size ()) {
 	    for (auto it = 0 ; it < (int) this-> names.size () ; it++) {
 		if (other.names [it] != this-> names [it])
@@ -53,7 +53,7 @@ namespace semantic {
 	return false;
     }
 
-    bool Namespace::isAbsSubOf (Namespace other) {
+    bool Namespace::isAbsSubOf (const Namespace& other) const {
 	if (this-> names.size () < other. names.size ()) {
 	    for (auto it = 0 ; it < (int) this-> names.size () ; it++) {
 		if (other.names [it] != this-> names [it])

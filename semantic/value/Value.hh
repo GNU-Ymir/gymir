@@ -65,6 +65,12 @@ namespace semantic {
 
 	virtual syntax::Expression toYmir (Symbol);
 
+	virtual bool equals (Value) {
+	    return false;
+	}
+	
+	virtual Value clone () = 0;
+	
     };
 
 

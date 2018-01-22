@@ -32,6 +32,10 @@ namespace semantic {
 	return this-> value;
     }
 
+    Value IBoolValue::clone () {
+	return new (GC) IBoolValue (this-> value);
+    }
+    
     const char* IBoolValue::getId () {
 	return IBoolValue::id ();
     }
@@ -44,6 +48,10 @@ namespace semantic {
 	return ICharValue::id ();
     }
 
+    Value ICharValue::clone () {
+	return new (GC) ICharValue (this-> code);
+    }
+    
     std::string IValue::toString () {
 	Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
 	return "";
@@ -70,44 +78,19 @@ namespace semantic {
 	return this-> value;
     }
 
+    Value IStringValue::clone () {
+	return new (GC) IStringValue (this-> value);
+    }
+
+    bool IStringValue::equals (Value other) {
+	if (auto ot = other-> to<IStringValue> ()) {
+	    return this-> value == ot-> value;
+	}
+	return false;
+    }
+    
     syntax::Expression IStringValue::toYmir (Symbol sym) {
 	auto ret = new (GC) IString (sym-> sym, this-> value);
-	ret-> info = sym;
-	return ret;
-    }
-
-    IFixedValue::IFixedValue (FixedConst type, ulong ul, long l) {
-	this-> type = type;
-	if (!isSigned (this-> type)) {
-	    this-> value.ul = ul;	    
-	} else this-> value.l = l;
-    }
-    
-    long IFixedValue::getValue () {
-	return this-> value.l;
-    }
-
-    ulong IFixedValue::getUValue () {
-	return this-> value.ul;
-    }
-    
-    const char * IFixedValue::getId () {
-	return IFixedValue::id ();
-    }
-
-    std::string IFixedValue::toString () {
-	if (isSigned (this-> type))
-	    return Ymir::OutBuffer (this-> value.l).str ();
-	else
-	    return Ymir::OutBuffer (this-> value.ul).str ();
-    }
-
-    syntax::Expression IFixedValue::toYmir (Symbol sym) {
-	auto ret = new (GC) IFixed (sym-> sym, this-> type);
-	if (isSigned (this-> type))
-	    ret-> setValue (this-> value.l);
-	else
-	    ret-> setUValue (this-> value.ul);
 	ret-> info = sym;
 	return ret;
     }

@@ -17,7 +17,7 @@ namespace semantic {
 	
     public:
 
-	IModule (Namespace);
+	IModule (const Namespace&);
 
 	Symbol get (std::string name);
 
@@ -25,23 +25,23 @@ namespace semantic {
 
 	void insert (Symbol sym);
 
-	void addOpen (Namespace space);
+	void addOpen (const Namespace& space);
 
-	void close (Namespace space);
+	void close (const Namespace& space);
 
-	void addPublicOpen (Namespace space);
+	void addPublicOpen (const Namespace& space);
 
 	std::vector <Namespace> opens ();
 
 	std::vector <Namespace> accessible ();
 
-	bool authorized (Namespace);
-
-	Namespace space ();
+	bool authorized (const Namespace&);
+	
+	const Namespace& space ();
 
     private:
 
-	std::vector <Namespace> accessible (std::vector <Namespace>);
+	std::vector <Namespace> accessible (std::vector <Namespace>&);
 	
     };
 

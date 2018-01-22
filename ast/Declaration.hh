@@ -35,7 +35,7 @@ namespace syntax {
 	    return this-> declare ();
 	}
 
-	virtual IDeclaration* templateDeclReplace (std::map <std::string, Expression>);
+	virtual IDeclaration* templateDeclReplace (const std::map <std::string, Expression>&);
 	
 	virtual void print (int nb = 0) = 0;	
 	

@@ -37,11 +37,11 @@ namespace syntax {
 	    return NULL;
 	}
 	
-	IInstruction* templateReplace (std::map <std::string, IExpression*> elems) final {
+	IInstruction* templateReplace (const std::map <std::string, IExpression*>& elems) final {
 	    return this-> templateExpReplace (elems);
 	}
 
-	virtual IExpression* templateExpReplace (std::map <std::string, IExpression*>);
+	virtual IExpression* templateExpReplace (const std::map <std::string, IExpression*>&);
 	
 	IExpression* clone ();
 	

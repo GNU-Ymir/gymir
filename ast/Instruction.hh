@@ -56,7 +56,7 @@ namespace syntax {
 
 	virtual IInstruction* instruction () = 0;	   
 
-	virtual IInstruction* templateReplace (std::map <std::string, Expression> tmps) = 0;
+	virtual IInstruction* templateReplace (const std::map <std::string, Expression>& tmps) = 0;
 	
 	virtual Ymir::Tree toGeneric ();
 		
@@ -90,7 +90,7 @@ namespace syntax {
 	    return "INone";
 	}
 
-	IInstruction* templateReplace (std::map <std::string, Expression>) override {
+	IInstruction* templateReplace (const std::map <std::string, Expression>&) override {
 	    return this;    
 	}
 	

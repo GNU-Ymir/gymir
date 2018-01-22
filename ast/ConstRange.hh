@@ -21,7 +21,7 @@ namespace syntax {
 
 	Expression expression () override;
 
-	Expression templateExpReplace (std::map <std::string, Expression>) override;
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
 	void print (int nb = 0) override;
 	

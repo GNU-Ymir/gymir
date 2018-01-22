@@ -18,6 +18,8 @@ namespace semantic {
 	static const char* id () {
 	    return "ICharValue";
 	}
+
+	Value clone () override;
 	
     };
 

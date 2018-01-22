@@ -146,7 +146,8 @@ namespace semantic {
 
     InfoType IFixedInfo::clone () {
 	auto ret = new IFixedInfo (this-> isConst (), this-> _type);
-	ret-> value () = this-> value ();
+	if (this-> value ())
+	    ret-> value () = this-> value ()-> clone ();
 	return ret;
     }
 
@@ -531,5 +532,284 @@ namespace semantic {
     }
 
 
+
+    IFixedValue::IFixedValue (FixedConst type, ulong ul, long l) {
+	this-> type = type;
+	if (!isSigned (this-> type)) {
+	    this-> value.ul = ul;	    
+	} else this-> value.l = l;
+    }
+    
+    long IFixedValue::getValue () {
+	return this-> value.l;
+    }
+
+    ulong IFixedValue::getUValue () {
+	return this-> value.ul;
+    }
+
+    Value IFixedValue::BinaryOp (Word op, Value val) {
+	if (op == Token::PLUS) return this-> add (val);
+	if (op == Token::MINUS) return this-> sub (val);
+	if (op == Token::DIV) return this-> div (val);
+	if (op == Token::STAR) return this-> mul (val);
+	if (op == Token::PIPE) return this-> lor (val);
+	if (op == Token::AND) return this-> land (val);
+	if (op == Token::LEFTD) return this-> lshift (val);
+	if (op == Token::XOR) return this-> lxor (val);
+	if (op == Token::RIGHTD) return this-> rshift (val);
+	if (op == Token::PERCENT) return this-> mod (val);
+	if (op == Token::DAND) return  this-> dand (val);
+	if (op == Token::DPIPE) return this-> dor (val);
+	if (op == Token::INF) return this-> inf (val);
+	if (op == Token::SUP) return this-> sup (val);
+	if (op == Token::INF_EQUAL) return this-> infeq (val);
+	if (op == Token::SUP_EQUAL) return this-> supeq (val);
+	if (op == Token::NOT_EQUAL) return this-> neq (val);
+	if (op == Token::DEQUAL) return this-> eq (val);
+	return NULL;
+    }
+    
+    const char * IFixedValue::getId () {
+	return IFixedValue::id ();
+    }
+
+    std::string IFixedValue::toString () {
+	if (isSigned (this-> type))
+	    return Ymir::OutBuffer (this-> value.l).str ();
+	else
+	    return Ymir::OutBuffer (this-> value.ul).str ();
+    }
+
+    syntax::Expression IFixedValue::toYmir (Symbol sym) {
+	auto ret = new (GC) IFixed (sym-> sym, this-> type);
+	if (isSigned (this-> type))
+	    ret-> setValue (this-> value.l);
+	else
+	    ret-> setUValue (this-> value.ul);
+	ret-> info = sym;
+	return ret;
+    }
+
+
+    Value IFixedValue::add (Value other) {
+	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l + ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul + ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::sub (Value other) {
+	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l - ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul - ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    Value IFixedValue::div (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l / ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul / ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    Value IFixedValue::mul (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l * ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul * ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    Value IFixedValue::lor (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l | ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul | ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+
+    Value IFixedValue::land (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l & ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul & ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::lshift (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l << ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul << ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::rshift (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l >> ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul >> ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::lxor (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l ^ ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul ^ ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::mod (Value other) {
+	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l % ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul % ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::dand (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l && ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul && ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::dor (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IFixedValue (this-> type, 0,
+					     this-> value.l || ot-> value.l);
+	    return new (GC) IFixedValue (this-> type,
+					 this-> value.ul || ot-> value.ul,
+					 0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::inf (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IBoolValue (this-> value.l < ot-> value.l);
+	    return new (GC) IBoolValue (this-> value.ul < ot-> value.ul);
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::sup (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IBoolValue (this-> value.l > ot-> value.l);
+	    return new (GC) IBoolValue (this-> value.ul > ot-> value.ul);
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::infeq (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IBoolValue (this-> value.l <= ot-> value.l);
+	    return new (GC) IBoolValue (this-> value.ul <= ot-> value.ul);
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::supeq (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IBoolValue (this-> value.l >= ot-> value.l);
+	    return new (GC) IBoolValue (this-> value.ul >= ot-> value.ul);
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::neq (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IBoolValue (this-> value.l != ot-> value.l);
+	    return new (GC) IBoolValue (this-> value.ul != ot-> value.ul);
+	}
+	return NULL;
+    }
+    
+    Value IFixedValue::eq (Value other) {
+    	if (auto ot = other-> to<IFixedValue> ()) {
+	    if (isSigned (this-> type))
+		return new (GC) IBoolValue (this-> value.l == ot-> value.l);
+	    return new (GC) IBoolValue (this-> value.ul == ot-> value.ul);
+	}
+	return NULL;
+    }
+
+    Value IFixedValue::clone () {
+	return new (GC) IFixedValue (this-> type, this-> value.ul, this-> value.l);
+    }    
+
+    bool IFixedValue::equals (Value other) {
+	if (auto ot = other-> to <IFixedValue> ()) {
+	    return this-> type == ot-> type &&
+		this-> value.ul == ot-> value.ul &&
+		this-> value.l == ot-> value.l;
+	}
+	return false;
+    }
     
 }

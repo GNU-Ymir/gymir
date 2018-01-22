@@ -84,11 +84,13 @@ namespace semantic {
 	virtual ApplicationScore isApplicable (std::vector <InfoType> params);
 
 	virtual IFrame* TempOp (std::vector <syntax::Expression> params);
-
+	
 	virtual std::string toString ();
 	
 	::syntax::Function func ();
 
+	std::vector <::syntax::Expression> & templateParams ();
+	
 	virtual bool& isPrivate ();
 	
 	virtual Word ident ();
@@ -113,7 +115,7 @@ namespace semantic {
 
     protected:
 
-	ApplicationScore getScore (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
+	ApplicationScore getScore (Word ident, const std::vector <syntax::Var>&, const std::vector <InfoType>&);
 
 	virtual ApplicationScore isApplicable (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
 

@@ -771,7 +771,7 @@ namespace syntax {
 	return ret;
     }
 
-    Expression IExpression::templateExpReplace (std::map <std::string, Expression>) {
+    Expression IExpression::templateExpReplace (const std::map <std::string, Expression>&) {
 	this-> print (0);
 	Ymir::Error::assert ((std::string ("TODO") + this-> getIds ().back ()).c_str ());
 	return NULL;	    

@@ -40,9 +40,9 @@ namespace syntax {
 
 	std::vector <Expression>& getTemplates ();
 
-	Declaration templateDeclReplace (std::map <std::string, Expression> tmps);
+	Declaration templateDeclReplace (const std::map <std::string, Expression>& tmps);
 	
-	IFunction* templateReplace (std::map <std::string, Expression> tmps);
+	IFunction* templateReplace (const std::map <std::string, Expression>& tmps);
 	
 	Var getType ();
 

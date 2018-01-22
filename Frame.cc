@@ -43,7 +43,7 @@ namespace semantic {
 	return NULL;
     }
     
-    ApplicationScore IFrame::getScore (Word ident, std::vector <Var> attrs, std::vector <InfoType> args) {
+    ApplicationScore IFrame::getScore (Word ident, const std::vector <Var>& attrs, const std::vector <InfoType>& args) {
 	auto score = new IApplicationScore (ident);
 	if (attrs.size () == 0 && args.size () == 0) {
 	    score-> score = AFF;
@@ -342,6 +342,10 @@ namespace semantic {
 	return this-> _function-> getIdent ();
     }
 
+    std::vector <syntax::Expression> & IFrame::templateParams () {
+	return this-> tempParams;
+    }
+    
     std::string IFrame::toString () {
 	Ymir::OutBuffer buf;
 	buf.write ("(");

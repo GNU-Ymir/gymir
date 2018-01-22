@@ -4,7 +4,7 @@
 
 namespace semantic {
 
-    IModule::IModule (Namespace space) :
+    IModule::IModule (const Namespace& space) :
 	_space (space)
     {}
 
@@ -20,11 +20,11 @@ namespace semantic {
 	this-> globalScope.set (symbol-> sym.getStr (), symbol);
     }
 
-    void IModule::addOpen (Namespace space) {
+    void IModule::addOpen (const Namespace& space) {
 	this-> _opens.push_back (space);       
     }
 
-    void IModule::close (Namespace space) {
+    void IModule::close (const Namespace& space) {
 	auto id = find (this-> _opens, space);
 	if (id != this-> _opens.end ()) 
 	    this-> _opens.erase (id);
@@ -35,7 +35,7 @@ namespace semantic {
 	
     }
     
-    void IModule::addPublicOpen (Namespace space) {
+    void IModule::addPublicOpen (const Namespace& space) {
 	this-> publicOpens.push_back (space);
     }
 
@@ -44,10 +44,11 @@ namespace semantic {
     }
 
     std::vector <Namespace> IModule::accessible () {
-	return accessible ({this-> _space});
+	std::vector <Namespace> vec = {this-> _space};
+	return accessible (vec);
     }
 
-    std::vector <Namespace> IModule::accessible (std::vector <Namespace> dones) {
+    std::vector <Namespace> IModule::accessible (std::vector <Namespace>& dones) {
 	for (auto sp : this-> publicOpens) {
 	    if (!canFindRef (dones, sp)) {
 		dones.push_back (sp);
@@ -61,20 +62,20 @@ namespace semantic {
 	return dones;
     }
 
-    bool IModule::authorized (Namespace space) {
+    bool IModule::authorized (const Namespace &space) {
 	if (this-> _space.isSubOf (space)) return true;
-	for (auto it : this-> _opens) {
+	for (auto& it : this-> _opens) {
 	    if (it.isSubOf (space)) return true;
 	}
 
-	for (auto it : this-> publicOpens) {
+	for (auto& it : this-> publicOpens) {
 	    if (it.isSubOf (space)) return true;
 	}
 	
 	return false;
     }
 
-    Namespace IModule::space () {
+    const Namespace& IModule::space () {
 	return this-> _space;
     }
     

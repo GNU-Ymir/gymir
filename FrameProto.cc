@@ -6,10 +6,11 @@
 #include <ymir/ast/Var.hh>
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/semantic/value/_.hh>
 
 namespace semantic {
 
-    IFrameProto::IFrameProto (std::string name, Namespace space, Symbol type, std::vector <syntax::Var> vars, std::vector <syntax::Expression> tmps) :
+    IFrameProto::IFrameProto (std::string name, Namespace space, Symbol type, const std::vector <syntax::Var>& vars, const std::vector <syntax::Expression>& tmps) :
 	_space (space),
 	_name (name),
 	_type (type),
@@ -57,12 +58,14 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, this-> _tmps.size ())) {
 		if (this-> _tmps [it]-> info-> isImmutable () != scd-> _tmps [it]-> info-> isImmutable ()) {
 		    return false;
-		} else if (this-> _tmps [it]-> info-> isImmutable ())
-		    Ymir::Error::assert ("TODO");
-		else if (!(this-> _tmps [it]-> info-> type-> isSame (scd-> _tmps [it]-> info-> type)))
+		} else if (this-> _tmps [it]-> info-> isImmutable ()) {
+		    if (!this-> _tmps [it]-> info-> value ()-> equals (scd-> _tmps [it]-> info-> value ())) {
+			return false;
+		    }
+		} else if (!(this-> _tmps [it]-> info-> type-> isSame (scd-> _tmps [it]-> info-> type)))
 		    return false;
 	    }
-
+	    
 	    for (auto it : Ymir::r (0, this-> _vars.size ())) {
 		if (!(this-> _vars [it]-> info-> type-> isSame (scd-> _vars  [it]-> info-> type)) ||
 		    this-> _vars [it]-> info-> isConst () != scd-> _vars  [it]-> info-> type-> isConst ())

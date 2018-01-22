@@ -63,7 +63,8 @@ namespace semantic {
         
     InfoType IStringInfo::clone () {
 	auto ret = new IStringInfo (this-> isConst ());
-	ret-> value () = this-> value ();
+	if (this-> value ())
+	    ret-> value () = this-> value ()-> clone ();
 	return ret;
     }
 

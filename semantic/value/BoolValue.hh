@@ -20,6 +20,8 @@ namespace semantic {
 	    return "IBoolValue";
 	}
 	
+	Value clone () override;
+
     };
 
 }

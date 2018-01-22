@@ -36,7 +36,7 @@ namespace syntax {
 	    return NULL;
 	}
 
-	Instruction templateReplace (std::map <std::string, Expression>) override;	
+	Instruction templateReplace (const std::map <std::string, Expression>&) override;	
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<TupleDest> %s",

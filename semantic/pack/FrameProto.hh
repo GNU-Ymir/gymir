@@ -42,7 +42,7 @@ namespace semantic {
 	
     public:
 
-	IFrameProto (std::string, Namespace, Symbol, std::vector<syntax::Var>, std::vector<syntax::Expression>);
+	IFrameProto (std::string, Namespace, Symbol, const std::vector<syntax::Var>&, const std::vector<syntax::Expression>&);
 
 	std::string& name ();
 

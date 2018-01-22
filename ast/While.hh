@@ -22,7 +22,7 @@ namespace syntax {
 
 	Instruction instruction () override;
 
-	Instruction templateReplace (std::map <std::string, Expression>) override;	
+	Instruction templateReplace (const std::map <std::string, Expression>&) override;	
 	
 	Ymir::Tree toGeneric () override;
 	
