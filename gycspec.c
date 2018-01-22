@@ -5,7 +5,10 @@
 #include "gcc.h"
 #include "tm.h"
 #include "opts.h"
+#include "cppdefault.h"
 #include <stdio.h>
+#include <vector>
+#include <algorithm>
 
 #ifndef LIBYRUNTIME
 #define LIBYRUNTIME "gyruntime"
@@ -33,6 +36,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     bool need_gc = *in_decoded_options_count != 1;
     bool need_midgard = *in_decoded_options_count != 1;
     bool need_runtime = *in_decoded_options_count != 1;
+    std::vector <int> toRemove;
     
     for (i = 0 ; i < argc ; i++) {
 	const char * arg = decoded_options [i].arg;
@@ -43,16 +47,17 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    else if (strcmp (arg, LIBYRUNTIME) == 0) need_runtime = false;
 	    else if (strcmp (arg, LIBYMIDGARD) == 0) need_midgard = false;
 	    break;
-	}
+	} 
 	} 
     }
 
-    num_args = argc + need_gc + need_midgard + need_runtime;
+    num_args = argc + need_gc + need_midgard + need_runtime - toRemove.size ();
     new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
     i = 0;
 
     while (i < argc) {
-	new_decoded_options [i] = decoded_options [i];
+	if (std::find (toRemove.begin (), toRemove.end (), i) == toRemove.end ())
+	    new_decoded_options [i] = decoded_options [i];
 	i ++;
     }
 

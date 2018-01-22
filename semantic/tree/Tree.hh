@@ -19,6 +19,8 @@
 #include "fold-const.h"
 #include "tree-pretty-print.h"
 #include "print-tree.h"
+#include "cppdefault.h"
+#include "tm.h"
 
 #include <vector>
 

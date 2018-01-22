@@ -6,6 +6,7 @@
 #include <ymir/errors/Error.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
+#include <ymir/semantic/value/_.hh>
 
 namespace semantic {
 
@@ -61,13 +62,16 @@ namespace semantic {
     }
         
     InfoType IStringInfo::clone () {
-	return new IStringInfo (this-> isConst ());
+	auto ret = new IStringInfo (this-> isConst ());
+	ret-> value () = this-> value ();
+	return ret;
     }
 
     InfoType IStringInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "ptr") return Ptr ();
 	if (var-> token == "len") return Length ();
+	if (var-> token == "typeid") return StringOf ();
 	return NULL;
     }
 
@@ -106,6 +110,8 @@ namespace semantic {
     InfoType IStringInfo::Length () {
 	auto ret = new IFixedInfo (true, FixedConst::ULONG);
 	ret-> unopFoo = &StringUtils::InstLen;
+	if (this-> value ())
+	    ret-> value () = new (GC) IFixedValue (FixedConst::ULONG, this-> value ()-> to<IStringValue> ()-> toString ().length (), 0);
 	return ret;
     }
     
@@ -187,9 +193,10 @@ namespace semantic {
 
 
 	Tree getLen (location_t loc, Expression expr, Tree tree) {
-	    if (auto cst = expr-> to <IString> ()) {
-		auto intExpr = new (GC) IFixed (cst-> token, FixedConst::ULONG);
-		intExpr-> setUValue (cst-> getStr ().length ());
+	    if (expr-> info-> value ()) {
+		auto cst = expr-> info-> value ()-> to<IStringValue> ();
+		auto intExpr = new (GC) IFixed (expr-> info-> sym, FixedConst::ULONG);
+		intExpr-> setUValue (cst-> toString ().length ());
 		auto lenExpr = (Fixed) intExpr-> expression ();			
 		return lenExpr-> toGeneric ();
 	    } else {

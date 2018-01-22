@@ -91,8 +91,6 @@ namespace semantic {
 	InfoType Min ();
 
 	InfoType SizeOf ();
-
-	InfoType StringOf ();	
 	
 	bool isSup (IFixedInfo*);
 	

@@ -6,6 +6,8 @@
 #include "errors/Error.hh"
 #include <ymir/semantic/utils/OperatorUtils.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
+#include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/value/_.hh>
 
 namespace semantic {
 
@@ -178,9 +180,15 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IInfoType::StringOf () {
+	auto str = new IStringInfo (true);
+	str-> value () = new (GC) IStringValue (this-> typeString ().c_str ());
+	return str;
+    }	
+    
     InfoType IInfoType::cloneOnExit () {
 	auto ret = this-> clone ();
-	//if (ret) ret-> _value = NULL;
+	if (ret) ret-> value () = NULL;
 	return ret;
     }
 

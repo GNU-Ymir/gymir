@@ -170,6 +170,8 @@ namespace semantic {
 
 	virtual InfoType clone () = 0;
 
+	virtual InfoType StringOf ();
+
 	InfoType cloneOnExit ();
 
 	InfoType cloneConst ();

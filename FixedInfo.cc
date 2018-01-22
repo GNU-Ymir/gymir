@@ -72,6 +72,8 @@ namespace semantic {
 	if (op == Token::MINUS) {
 	    auto ret = new IFixedInfo (true, this-> type ());
 	    ret-> unopFoo = FixedUtils::UnaryMinus;
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
 	} else if (op == Token::AND && !this-> isConst ())
 	    return toPtr ();
@@ -143,7 +145,8 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::clone () {
-	auto ret = new IFixedInfo (this-> isConst (), this-> _type);	
+	auto ret = new IFixedInfo (this-> isConst (), this-> _type);
+	ret-> value () = this-> value ();
 	return ret;
     }
 
@@ -235,25 +238,33 @@ namespace semantic {
 	return NULL;
     }
     
-    InfoType IFixedInfo::opTest (Word, syntax::Expression right) {
+    InfoType IFixedInfo::opTest (Word op, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> _type == ot-> type ()) {
 		auto ret = new IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTest;
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
 		return ret;	    
 	    } else if (this-> isSup (ot)) {
 		auto ret = new IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTest;
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		return ret;
 	    } else {
 		auto ret = new IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTestRight;
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		return ret;
 	    }	    
-	} else if (right-> info-> type-> is<ICharInfo> ()) {
+	} else if (auto ot = right-> info-> type-> to<ICharInfo> ()) {
 	    if (this-> _type == FixedConst::UBYTE) {
 		auto ret = new IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTest;
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		return ret;
 	    }
 	}
@@ -291,30 +302,40 @@ namespace semantic {
 	return NULL;
     }
     
-    InfoType IFixedInfo::opNorm (Word, syntax::Expression right) {
+    InfoType IFixedInfo::opNorm (Word op, syntax::Expression right) {
 	if (this-> isSame (right-> info-> type)) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &FixedUtils::InstNormal;
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
 	    return ret;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
 		    auto ret = this-> clone ();
 		    ret-> binopFoo = &FixedUtils::InstNormal;
+		    if (this-> value ())
+			ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		    return ret;
 		} else {
 		    auto ret = ot-> clone ();
 		    ret-> binopFoo = &FixedUtils::InstNormalRight;
+		    if (this-> value ())
+			ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		    return ret;
 		}		    
 	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
 		    auto ret = this-> clone ();
+		    if (this-> value ())
+			ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		    ret-> binopFoo = &FixedUtils::InstNormal;
 		    return ret;
 		} else {
 		    auto ret = ot-> clone ();
 		    ret-> binopFoo = &FixedUtils::InstNormalRight;
+		    if (this-> value ())
+			ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		    return ret;
 		}
 	    }
@@ -324,7 +345,6 @@ namespace semantic {
 
     InfoType IFixedInfo::Init () {
 	auto ret = new IFixedInfo (true, this-> _type);
-	//TODO
 	return ret;	
     }
 
@@ -345,11 +365,6 @@ namespace semantic {
 	//TODO
 	return ret;	
     }
-
-    InfoType IFixedInfo::StringOf () {
-	auto str = new IStringInfo (true);
-	return str;
-    }	
 
     bool IFixedInfo::isSigned () {
 	return syntax::isSigned (this-> _type);

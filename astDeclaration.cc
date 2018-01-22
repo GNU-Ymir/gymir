@@ -181,11 +181,12 @@ namespace syntax {
 	    ulong nbErrorBeg = Ymir::Error::nb_errors;
 	    std::string name = it.getStr () + ".yr";
 	    if (!exists (name)) {
-		std::string path = PREFIX_INCLUDE_DIR;
+		std::string path = cpp_GCC_INCLUDE_DIR;
 		if (path [path.length () - 1] != '/') path += "/";
 		name = path + "ymir/" + name;
 		if (!exists (name)) {
 		    Ymir::Error::moduleDontExist (this-> ident, it);
+		    return;
 		}
 	    }
 	    Namespace space (it.getStr ());
@@ -212,11 +213,12 @@ namespace syntax {
 	    ulong nbErrorBeg = Ymir::Error::nb_errors;
 	    std::string name = it.getStr () + ".yr";
 	    if (!exists (name)) {
-		std::string path = PREFIX_INCLUDE_DIR;
+		std::string path = cpp_GCC_INCLUDE_DIR;
 		if (path [path.length () - 1] != '/') path += "/";
 		name = path + "ymir/" + name;
 		if (!exists (name)) {
 		    Ymir::Error::moduleDontExist (this-> ident, it);
+		    return;
 		}
 	    }
 	    Namespace space (it.getStr ());

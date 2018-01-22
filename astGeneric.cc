@@ -7,6 +7,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include "print-tree.h"
+#include <ymir/semantic/value/_.hh>
 
 namespace syntax {
     using namespace semantic;
@@ -236,6 +237,11 @@ namespace syntax {
     }
 
     Ymir::Tree IDot::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    return ret;
+	}
+	
 	if (this-> right-> is<IVar> ()) {
 	    return this-> info-> type-> buildUnaryOp (
 		this-> token,

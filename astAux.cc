@@ -300,6 +300,10 @@ namespace syntax {
 	return ret;
     }
 
+    std::string IBinary::prettyPrint () {
+	return Ymir::OutBuffer ("(", this-> left, " ", this-> token.getStr (), " ", this-> right, ")").str ();
+    }
+    
     IFixed::IFixed (Word word, FixedConst type) :
 	IExpression (word),
 	type (type)
