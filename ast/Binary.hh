@@ -21,6 +21,10 @@ namespace syntax {
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
+	Expression& getLeft ();
+
+	Expression& getRight ();
+
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
@@ -32,6 +36,8 @@ namespace syntax {
 	}
 	
 	std::vector <std::string> getIds () override;
+
+	virtual ~IBinary ();
 	
     private:
 

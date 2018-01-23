@@ -38,6 +38,8 @@ namespace syntax {
 	virtual IDeclaration* templateDeclReplace (const std::map <std::string, Expression>&);
 	
 	virtual void print (int nb = 0) = 0;	
+
+	virtual ~IDeclaration () {}
 	
     };
         

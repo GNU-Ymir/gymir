@@ -45,8 +45,8 @@ namespace semantic {
     }
 
     
-    InfoType IInfoType::factory (Word word, std::vector <syntax::Expression> templates) {
-	auto it = (InfoType (*)(Word, std::vector<syntax::Expression>)) (
+    InfoType IInfoType::factory (Word word, const std::vector<syntax::Expression> & templates) {
+	auto it = (InfoType (*)(Word, const std::vector<syntax::Expression> &)) (
 	    Creators::instance ().find (word.getStr ())
 	);
 	if (it != NULL) {
@@ -105,7 +105,7 @@ namespace semantic {
     
     InfoType IInfoType::BinaryOp (Word w, InfoType info) {
 	auto expr = new syntax::IExpression (w);
-	expr-> info = new ISymbol (w, info);
+	expr-> info = new (GC) ISymbol (w, info);
 	return this-> BinaryOp (w, expr);
     }
     
@@ -115,7 +115,7 @@ namespace semantic {
 
     InfoType IInfoType::BinaryOpRight (Word w, InfoType info) {
 	auto expr = new syntax::IExpression (w);
-	expr-> info = new ISymbol (w, info);
+	expr-> info = new (GC) ISymbol (w, info);
 	return this-> BinaryOpRight (w, expr);
     }
     
@@ -127,11 +127,11 @@ namespace semantic {
 	return NULL;
     }
 
-    ApplicationScore IInfoType::CallOp (Word, std::vector <InfoType>) {
+    ApplicationScore IInfoType::CallOp (Word, const std::vector<InfoType> &) {
 	return NULL;
     }
     
-    InfoType IInfoType::ApplyOp (std::vector <::syntax::Var>) {
+    InfoType IInfoType::ApplyOp (const std::vector<::syntax::Var> &) {
 	return NULL;
     }
 
@@ -176,12 +176,12 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IInfoType::TempOp (std::vector <syntax::Expression>) {
+    InfoType IInfoType::TempOp (const std::vector<syntax::Expression> &) {
 	return NULL;
     }
 
     InfoType IInfoType::StringOf () {
-	auto str = new IStringInfo (true);
+	auto str = new (GC) IStringInfo (true);
 	str-> value () = new (GC) IStringValue (this-> typeString ().c_str ());
 	return str;
     }	

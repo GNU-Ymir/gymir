@@ -67,6 +67,13 @@ namespace syntax {
 		this-> expr-> print (nb + 8);
 	    }	    		    
 	}
+
+	virtual ~ILambdaFunc () {
+	    for (auto it : params) delete it;
+	    if (ret) delete ret;
+	    if (block) delete block;
+	    if (expr) delete expr;
+	}
 	
     };
 

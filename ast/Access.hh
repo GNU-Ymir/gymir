@@ -46,6 +46,8 @@ namespace syntax {
 	    ret.push_back (TYPEID (IAccess));
 	    return ret;
 	}
+
+	virtual ~IAccess ();
 	
     private:
 	

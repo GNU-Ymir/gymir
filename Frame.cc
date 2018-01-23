@@ -32,19 +32,19 @@ namespace semantic {
 	);
     }
     
-    ApplicationScore IFrame::isApplicable (std::vector <InfoType> params) {
+    ApplicationScore IFrame::isApplicable (const std::vector<InfoType> & params) {
 	return this-> isApplicable (this-> _function-> getIdent (),
 				    this-> _function-> getParams (),
 				    params
 	);
     }
 
-    Frame IFrame::TempOp (std::vector <syntax::Expression>) {
+    Frame IFrame::TempOp (const std::vector<syntax::Expression> &) {
 	return NULL;
     }
     
     ApplicationScore IFrame::getScore (Word ident, const std::vector <Var>& attrs, const std::vector <InfoType>& args) {
-	auto score = new IApplicationScore (ident);
+	auto score = new (GC) IApplicationScore (ident);
 	if (attrs.size () == 0 && args.size () == 0) {
 	    score-> score = AFF;
 	    score-> score += this-> currentScore ();
@@ -89,7 +89,7 @@ namespace semantic {
     }
     
 
-    ApplicationScore IFrame::isApplicable (Word ident, std::vector <Var> attrs, std::vector <InfoType> args) {
+    ApplicationScore IFrame::isApplicable (Word ident, const std::vector<Var> & attrs, const std::vector <InfoType>& args) {
 	if (this-> _isPrivate && !this-> _space.isSubOf (Table::instance ().space ()))
 	    return NULL;
 
@@ -101,15 +101,15 @@ namespace semantic {
 	return score;
     }
 	
-    FrameProto IFrame::validate (std::vector <Var> finalParams) {
+    FrameProto IFrame::validate (const std::vector<Var> & finalParams) {
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _function-> getIdent ().getStr ()));
 
 	if (this-> _function-> getType () == NULL)
-	    Table::instance ().retInfo ().info = new ISymbol (Word::eof (), new IUndefInfo ());
+	    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
 	else
 	    Table::instance ().retInfo ().info = this-> _function-> getType ()-> asType ()-> info;
 	
-	auto proto = new IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+	auto proto = new (GC) IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams);
 
 	if (!FrameTable::instance ().existsProto (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -120,9 +120,9 @@ namespace semantic {
 	    auto block = this-> _function-> getBlock ()-> block ();
 
 	    if (Table::instance ().retInfo ().info-> type-> is<IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new IVoidInfo ();
+		Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
 
-	    auto finFrame = new IFinalFrame (Table::instance ().retInfo ().info,
+	    auto finFrame = new (GC) IFinalFrame (Table::instance ().retInfo ().info,
 					    this-> _space, this-> _function-> name (),
 					    finalParams, block, this-> tempParams);
 	    
@@ -153,12 +153,12 @@ namespace semantic {
 	return NULL;
     }
 
-    FrameProto IFrame::validate (std::vector <InfoType>) {
+    FrameProto IFrame::validate (const std::vector<InfoType> &) {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }    
     
-    FrameProto IFrame::validate (ApplicationScore score, std::vector <InfoType> params) {
+    FrameProto IFrame::validate (ApplicationScore score, const std::vector<InfoType> & params) {
 	if (score-> tmps.size () == 0)
 	    return validate (params);
 	Ymir::Error::assert ("TODO");
@@ -174,7 +174,7 @@ namespace semantic {
 	}
     }
 
-    std::vector <::syntax::Var> IFrame::computeParams (std::vector<Var> attr, std::vector<InfoType> params) {
+    std::vector <::syntax::Var> IFrame::computeParams (const std::vector<Var> & attr, const std::vector<InfoType>& params) {
 	std::vector <Var> finalParams;
 	for (auto it : Ymir::r (0, attr.size ())) {
 	    if (auto var = attr [it] -> to<ITypedVar> ()) {
@@ -187,7 +187,7 @@ namespace semantic {
 	return finalParams;
     }
     
-    std::vector <::syntax::Var> IFrame::computeParams (std::vector<::syntax::Var> params) {
+    std::vector <::syntax::Var> IFrame::computeParams (const std::vector<::syntax::Var> & params) {
 	std::vector <Var> finalParams;
 	for (auto it : Ymir::r (0, params.size ())) {
 	    auto info = params [it]-> var ();
@@ -196,7 +196,7 @@ namespace semantic {
 	return finalParams;
     }
 
-    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, std::vector <Var> params, Block block, std::vector <Expression> tmps, bool isVariadic) {
+    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
 	Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
 	struct Exit {
 	    Namespace last;
@@ -204,7 +204,7 @@ namespace semantic {
 	    Exit () : last (Table::instance ().templateNamespace ()) {
 	    }
 	    
-	    FrameProto operator () (Word name, Namespace from, Symbol ret, std::vector <Var> params, Block block, std::vector <Expression> tmps, bool isVariadic) {
+	    FrameProto operator () (Word name, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
 		Table::instance ().templateNamespace () = from;
 		if (ret == NULL) 
 		    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
@@ -252,7 +252,7 @@ namespace semantic {
 	return ex (name, from, ret, params, block, tmps, isVariadic);	
     }
 
-    FrameProto IFrame::validate (Namespace space, Namespace from, std::vector <Var> params, bool isVariadic) {
+    FrameProto IFrame::validate (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
 	Table::instance ().setCurrentSpace (Namespace (space, this-> _function-> getIdent ().getStr ()));
 	struct Exit {
 	    Namespace last;
@@ -261,7 +261,7 @@ namespace semantic {
 	    Exit (Frame self) : last (Table::instance ().templateNamespace ()), self (self) {
 	    }
 
-	    FrameProto operator () (Namespace from, std::vector <Var> params, bool isVariadic) {		
+	    FrameProto operator () (Namespace from, const std::vector<Var> & params, bool isVariadic) {		
 		if (self-> _function-> getType () == NULL) 
 		    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
 		else

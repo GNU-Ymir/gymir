@@ -38,6 +38,11 @@ namespace syntax {
 		this-> values [i]-> print (nb + 8);
 	    }
 	}
+
+	virtual ~IEnum () {
+	    for (auto it : values)
+		delete it;
+	}
 	
     };
 

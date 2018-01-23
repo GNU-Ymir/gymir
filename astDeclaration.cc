@@ -26,7 +26,7 @@ namespace syntax {
     
     void IFunction::declare ()  {
 	if (this-> ident == Keys::MAIN) {
-	    FrameTable::instance ().insert (new IPureFrame (Table::instance ().space (), this));							    
+	    FrameTable::instance ().insert (new (GC) IPureFrame (Table::instance ().space (), this));							    
 	} else {
 	    auto fr = verifyPure (Table::instance ().space ());
 	    auto space = Table::instance ().space ();
@@ -36,9 +36,9 @@ namespace syntax {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
 		}		
 	    }
-	    auto fun = new IFunctionInfo (space, this-> ident.getStr ());
+	    auto fun = new (GC) IFunctionInfo (space, this-> ident.getStr ());
 	    fun-> set (fr);
-	    Table::instance ().insert (new ISymbol (this-> ident, fun));
+	    Table::instance ().insert (new (GC) ISymbol (this-> ident, fun));
 	}
     }
 
@@ -79,9 +79,16 @@ namespace syntax {
 	    }
 	}
 	
-	auto fr = new (GC) IExternFrame (space, this);
+	auto fr = new (GC) IExternFrame (space, "", this-> toProto ());
 	FrameTable::instance ().insert (fr);
 	return fr;
+    }
+
+
+    Proto IFunction::toProto () {
+	delete this-> block;
+	this-> block = NULL;
+	return new (GC) IProto (this-> ident, this-> params, false);
     }
     
     Frame IFunction::verifyPure (Namespace space) {
@@ -100,25 +107,16 @@ namespace syntax {
 
 	for (auto it : this-> params) {
 	    if (!it-> is<ITypedVar> ()) {
-		return new IUnPureFrame (space, this);
+		return new (GC) IUnPureFrame (space, this);
 	    }
 	}
 
-	auto fr = new IPureFrame (space, this);
+	auto fr = new (GC) IPureFrame (space, this);
 	FrameTable::instance ().insert (fr);
 	return fr;
     }
 
     bool IFunction::verifyTemplates () {		
-	//TODO;
-	// for (auto it : this-> tmps) {
-	//     if (auto tvar = it-> to<ITypedVar> ()) {
-	// 	for (auto it : this-> params) {
-	// 	    if (auto _tvar_ = it_-> <ITypedVar> it_)
-
-	// 	}
-	//     }
-	// }
 	return false;
     }
     
@@ -160,10 +158,10 @@ namespace syntax {
     void IProto::declare () {       
 	Namespace space (this-> space != "" ? this-> space : Table::instance ().space ());
 		
-	auto fr = new IExternFrame (space, this-> from, this);
-	auto fun = new IFunctionInfo (space, this-> ident.getStr ());
+	auto fr = new (GC) IExternFrame (space, this-> from, this);
+	auto fun = new (GC) IFunctionInfo (space, this-> ident.getStr ());
 	fun-> set (fr);
-	Table::instance ().insert (new ISymbol (this-> ident, fun));
+	Table::instance ().insert (new (GC) ISymbol (this-> ident, fun));
     }
 
     void IProto::declareAsExtern (semantic::Module mod) {

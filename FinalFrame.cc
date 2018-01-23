@@ -30,7 +30,7 @@ namespace semantic {
     std::map <std::string, Ymir::Tree> IFinalFrame::__declared__;
     std::vector <Ymir::Tree> IFinalFrame::__contextToAdd__;
 
-    IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, std::vector <syntax::Var> vars, syntax::Block bl, std::vector <syntax::Expression> tmps) :
+    IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, const std::vector<syntax::Var> & vars, syntax::Block bl, const std::vector <syntax::Expression>& tmps) :
 	_type (type),
 	_file (""),
 	_space (space),

@@ -55,17 +55,17 @@ namespace semantic {
 	    
 	virtual FrameProto validate ();
 
-	virtual FrameProto validate (std::vector <InfoType>);
+	virtual FrameProto validate (const std::vector<InfoType> &);
 	
-	virtual FrameProto validate (std::vector <::syntax::Var>);
+	virtual FrameProto validate (const std::vector<::syntax::Var> &);
 	
 	virtual FrameProto validate (::syntax::ParamList);
 
-	virtual FrameProto validate (ApplicationScore, std::vector <InfoType>);
+	virtual FrameProto validate (ApplicationScore, const std::vector<InfoType> &);
 
-	static std::vector <::syntax::Var> computeParams (std::vector<::syntax::Var>, std::vector<InfoType>);
+	static std::vector <::syntax::Var> computeParams (const std::vector<::syntax::Var> &, const std::vector<InfoType>&);
 
-	static std::vector <::syntax::Var> computeParams (std::vector<::syntax::Var>);
+	static std::vector <::syntax::Var> computeParams (const std::vector<::syntax::Var> &);
 
 	virtual Namespace& space ();
 
@@ -81,9 +81,9 @@ namespace semantic {
 	
 	virtual ApplicationScore isApplicable (syntax::ParamList params);
 
-	virtual ApplicationScore isApplicable (std::vector <InfoType> params);
+	virtual ApplicationScore isApplicable (const std::vector<InfoType> & params);
 
-	virtual IFrame* TempOp (std::vector <syntax::Expression> params);
+	virtual IFrame* TempOp (const std::vector<syntax::Expression> & params);
 	
 	virtual std::string toString ();
 	
@@ -117,11 +117,11 @@ namespace semantic {
 
 	ApplicationScore getScore (Word ident, const std::vector <syntax::Var>&, const std::vector <InfoType>&);
 
-	virtual ApplicationScore isApplicable (Word ident, std::vector <syntax::Var>, std::vector <InfoType>);
+	virtual ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> &, const std::vector <InfoType> &);
 
-	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, std::vector <syntax::Var> finalParams, syntax::Block block, std::vector <syntax::Expression> tmps, bool isVariadic);
+	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<syntax::Var> & finalParams, syntax::Block block, const std::vector <syntax::Expression> &tmps, bool isVariadic);
 		
-	FrameProto validate (Namespace space, Namespace from, std::vector <syntax::Var> finalParams, bool isVariadic);
+	FrameProto validate (Namespace space, Namespace from, const std::vector<syntax::Var> & finalParams, bool isVariadic);
 	
     };
 

@@ -39,7 +39,7 @@ namespace semantic {
     }
 
     ITreeInfo* ITreeInfo::enterBlock (std::string sc) {
-	this-> _infos.push_back (new ITreeInfo (sc));
+	this-> _infos.push_back (new (GC) ITreeInfo (sc));
 	this-> _infos.back ()-> _father = this;
 	return this-> _infos.back ();
     }
@@ -124,7 +124,7 @@ namespace semantic {
 	else return -1;
     }
 
-    long ITreeInfo::rewind (std::vector <std::string> types, long nb) {
+    long ITreeInfo::rewind (const std::vector<std::string> & types, long nb) {
 	nb ++;
 	if (canFind (types, this-> _name))
 	    return nb;
@@ -167,7 +167,7 @@ namespace semantic {
     void FrameReturnInfo::enterBlock () {
 	if (this-> _retInfo) {
 	    this-> _retInfo = this-> _retInfo-> enterBlock (this-> _currentBlock);
-	} else this-> _retInfo = new ITreeInfo (this-> _currentBlock);
+	} else this-> _retInfo = new (GC) ITreeInfo (this-> _currentBlock);
     }
 
     void FrameReturnInfo::quitBlock () {
@@ -209,7 +209,7 @@ namespace semantic {
 	return this-> _retInfo-> rewind (name);
     }
 
-    long FrameReturnInfo::rewind (std::vector <std::string> types) {
+    long FrameReturnInfo::rewind (const std::vector<std::string> & types) {
 	return this-> _retInfo-> rewind (types);
     }
     

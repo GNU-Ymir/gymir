@@ -15,12 +15,12 @@ namespace semantic {
 
 	FloatConst type ();
 	
-	static InfoType create (Word token, std::vector <syntax::Expression> tmps) {
+	static InfoType create (Word token, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 0)
 		Ymir::Error::notATemplate (token);
 
-	    if (token == "float") return new IFloatInfo (false, FloatConst::FLOAT);
-	    else if (token == "double") return new IFloatInfo (false, FloatConst::DOUBLE);
+	    if (token == "float") return new (GC) IFloatInfo (false, FloatConst::FLOAT);
+	    else if (token == "double") return new (GC) IFloatInfo (false, FloatConst::DOUBLE);
 	    return NULL;
 	}
 

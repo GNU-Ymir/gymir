@@ -35,7 +35,9 @@ namespace syntax {
 	
 	
 	void print (int nb = 0) override;
-		
+
+	virtual ~IDot ();
+	
     };
 
 
@@ -63,6 +65,8 @@ namespace syntax {
 	std::vector <std::string> getIds ();
 	
 	void print (int nb = 0) override;
+
+	virtual ~IDotCall ();
 	
     };
 

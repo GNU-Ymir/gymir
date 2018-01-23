@@ -19,7 +19,7 @@ namespace syntax {
     class IExpression : public IInstruction {
     public:
 	
-	::semantic::Symbol info;
+	::semantic::Symbol info = NULL;
 	
 	Instruction inside;
 
@@ -60,6 +60,8 @@ namespace syntax {
 	virtual void print (int) override;
 
 	virtual std::string prettyPrint ();
+
+	virtual ~IExpression ();
 	
     };
 

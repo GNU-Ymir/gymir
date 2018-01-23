@@ -39,7 +39,7 @@ namespace semantic {
 	
     public:
 
-	IFinalFrame (Symbol, Namespace, std::string, std::vector <syntax::Var>, syntax::Block, std::vector<syntax::Expression>) ;
+	IFinalFrame (Symbol, Namespace, std::string, const std::vector<syntax::Var> &, syntax::Block, const std::vector<syntax::Expression>&) ;
 
 	std::string name ();
 

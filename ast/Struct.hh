@@ -43,6 +43,13 @@ namespace syntax {
 	    printf ("\n%*c}", nb, ' ');	    
 	}
 	
+	virtual ~IStruct () {
+	    for (auto it : params)
+		delete it;
+	    for (auto it : tmps)
+		delete it;
+	}
+
     };
 
     typedef IStruct* Struct;

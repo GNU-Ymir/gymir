@@ -18,13 +18,16 @@ namespace syntax {
 	
     public:
 
-	IFor (Word token, Word id, std::vector <Var> var, Expression iter, Block bl);
+	IFor (Word token, Word id, const std::vector <Var>& var, Expression iter, Block bl);
 
 	Instruction instruction () override;
 	
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
 	
-	void print (int nb = 0) override;		
+	void print (int nb = 0) override;
+
+	virtual ~IFor ();
+	
     };
 
     typedef IFor* For;

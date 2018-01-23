@@ -11,6 +11,13 @@ namespace syntax {
 	return this-> ident;
     }
 
+    IBlock::~IBlock ()  {
+	for (auto it : decls)
+	    delete it;
+	    
+	for (auto it : insts)
+	    delete it;
+    }    
 
     bool isSigned (FixedConst ct) {
 	return ((int) ct) % 2 == 0;
@@ -45,7 +52,7 @@ namespace syntax {
     }
     
     
-    IFunction::IFunction (Word ident, std::vector <Var> params, std::vector <Expression> tmps, Expression test, Block block) :
+    IFunction::IFunction (Word ident, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
 	ident (ident),
 	type (NULL),
 	params (params),
@@ -55,7 +62,7 @@ namespace syntax {
     {}
     
 	
-    IFunction::IFunction (Word ident, Var type, std::vector <Var> params, std::vector <Expression> tmps, Expression test, Block block) :
+    IFunction::IFunction (Word ident, Var type, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
 	ident (ident),
 	type (type),
 	params (params),
@@ -64,6 +71,17 @@ namespace syntax {
 	test (test)	    
     {}
 
+    IFunction::~IFunction () {
+	if (type) delete type;
+	for (auto it : params)
+	    delete it;
+	for (auto it : tmps)
+	    delete it;
+	
+	if (block) delete block;
+	if (test) delete test;
+    }
+    
     Word IFunction::getIdent () {
 	return this-> ident;
     }
@@ -96,11 +114,16 @@ namespace syntax {
 	return this-> block;
     }
        
-    IParamList::IParamList (Word ident, std::vector <Expression> params) :
+    IParamList::IParamList (Word ident, const std::vector<Expression> & params) :
 	IExpression (ident),
 	params (params)
     {}
 
+    IParamList::~IParamList () {
+	for (auto it : params)
+	    delete it;
+    }
+    
     std::vector <Expression>& IParamList::getParams () {
 	return this-> params;
     }
@@ -126,11 +149,16 @@ namespace syntax {
 	deco (deco)
     {}
 
-    IVar::IVar (Word ident, std::vector <Expression> tmps) :
+    IVar::IVar (Word ident, const std::vector<Expression> & tmps) :
 	IExpression (ident),
 	templates (tmps)
     {}
-	
+
+    IVar::~IVar () {
+	for (auto it : templates)
+	    delete it;
+    }
+    
     std::vector <std::string> IVar::getIds () {
 	auto ret = IExpression::getIds ();
 	ret.push_back (TYPEID (IVar));
@@ -183,7 +211,12 @@ namespace syntax {
     {
 	this-> deco = deco;
     }
-	
+
+    ITypedVar::~ITypedVar () {
+	if (type) delete type;
+	if (expType) delete expType;
+    }
+    
     Var ITypedVar::typeVar () {
 	return this-> type;
     }
@@ -220,9 +253,13 @@ namespace syntax {
 	IVar (token),
 	_type (type)
     {
-	this-> info = new ISymbol (token, type);
+	this-> info = new (GC) ISymbol (token, type);
     }    
 
+    IType::~IType () {
+	if (_type) delete _type;
+    }
+    
     InfoType IType::type () {
 	return this-> _type;
     }
@@ -247,7 +284,7 @@ namespace syntax {
     }
 
 
-    IVarDecl::IVarDecl (Word word, std::vector <Word> decos, std::vector <Var> decls, std::vector <Expression> insts) :
+    IVarDecl::IVarDecl (Word word, const std::vector<Word> & decos, const std::vector <Var>& decls, const std::vector <Expression>& insts) :
 	IInstruction (word),
 	decls (decls),
 	insts (insts),
@@ -257,7 +294,17 @@ namespace syntax {
     IVarDecl::IVarDecl (Word word) :
 	IInstruction (word)
     {}
-       
+
+    IVarDecl::~IVarDecl () {
+	for (auto it : decls)
+	    delete it;
+	
+	for (auto it : insts) {
+	    it-> to<IBinary> ()-> getLeft () = NULL;
+	    delete it;
+	}
+    }
+    
     IArrayAlloc::IArrayAlloc (Word token, Expression type, Expression size) :
 	IExpression (token),
 	type (type),
@@ -268,6 +315,16 @@ namespace syntax {
 	    this-> type-> inside = this;
     }    
 
+    IArrayAlloc::~IArrayAlloc () {
+	delete type;
+	type = NULL;
+	delete size;
+	size = NULL;
+	if (cster)
+	    delete cster;
+    }
+
+    
     std::vector <std::string> IArrayAlloc::getIds () {
 	auto ret = IExpression::getIds ();
 	ret.push_back (TYPEID(IArrayAlloc));
@@ -284,7 +341,13 @@ namespace syntax {
 	    this-> msg-> inside = this;
 	this-> isStatic = isStatic;
     }
-            
+
+    IAssert::~IAssert ()  {
+	delete expr;
+	if (msg)
+	    delete msg;
+    }
+    
     IBinary::IBinary (Word word, Expression left, Expression right) :
 	IExpression (word),
 	left (left),
@@ -294,6 +357,19 @@ namespace syntax {
 	if (this-> right) this-> right-> inside = this;	    
     }
 
+    IBinary::~IBinary () {
+	if (this-> left) delete left;
+	if (this-> right) delete right;	    
+    }        
+    
+    Expression& IBinary::getLeft () {
+	return this-> left;
+    }
+
+    Expression& IBinary::getRight () {
+	return this-> right;
+    }
+    
     std::vector <std::string> IBinary::getIds () {
 	auto ret = IExpression::getIds ();
 	ret.push_back (TYPEID(IBinary));
@@ -402,11 +478,23 @@ namespace syntax {
 	this-> expr-> inside = this;
     }
 
-    IConstArray::IConstArray (Word token, std::vector <Expression> params) :
+    ICast::~ICast () {
+	delete type;
+	delete expr;
+    }
+    
+    IConstArray::IConstArray (Word token, const std::vector<Expression> & params) :
 	IExpression (token),
 	params (params)
     {}
 
+    IConstArray::~IConstArray () {
+	for (auto it : params)
+	    delete it;
+	for (auto it : casters)
+	    delete it;
+    }
+    
     int IConstArray::nbParams () {
 	return this-> params.size ();
     }    
@@ -420,12 +508,22 @@ namespace syntax {
 	this-> right-> inside = this;
     }
 
+    IConstRange::~IConstRange () {
+	delete left;
+	delete right;
+    }    
+    
     IDColon::IDColon (Word token, Expression left, Expression right) :
 	IExpression (token),
 	left (left),
 	right (right)
     {}
 
+    IDColon::~IDColon () {	
+	delete left;
+	delete right;	
+    }
+    
     
     IDot::IDot (Word word, Expression left, Expression right) :
 	IExpression (word),
@@ -433,6 +531,11 @@ namespace syntax {
 	right (right)
     {}
 
+    IDot::~IDot () {
+	delete left;
+	delete right;
+    }
+    
     Expression IDot::getLeft () {
 	return this-> left;
     }   
@@ -446,6 +549,11 @@ namespace syntax {
 	this-> info = call-> info;
     }
 
+    IDotCall::~IDotCall () {
+	delete _call;
+	delete _firstPar;
+    }
+    
     Expression& IDotCall::call () {
 	return this->_call;
     }
@@ -482,6 +590,13 @@ namespace syntax {
 	this-> _left-> inside = this;
 	this-> params-> inside = this;	    	    
     }
+
+    IPar::~IPar () {
+	delete params;
+	delete _left;
+	if (_dotCall) delete _dotCall;
+	if (_score) delete _score;
+    }
     
     ParamList& IPar::paramList () {
 	return this-> params;
@@ -499,7 +614,7 @@ namespace syntax {
 	return this-> _dotCall;
     }
         
-    IProto::IProto (Word ident, std::vector <Var> params, bool isVariadic) :
+    IProto::IProto (Word ident, const std::vector<Var> & params, bool isVariadic) :
 	_type (NULL),
 	_params (params),
 	space (""),
@@ -507,7 +622,7 @@ namespace syntax {
 	ident (ident)
     {}
 
-    IProto::IProto (Word ident, Var type, std::vector <Var> params, std::string space, bool isVariadic) :
+    IProto::IProto (Word ident, Var type, const std::vector<Var> & params, std::string space, bool isVariadic) :
 	_type (type),
 	_params (params),
 	space (space),
@@ -515,6 +630,12 @@ namespace syntax {
 	ident (ident)
     {}
 
+    IProto::~IProto () {
+	if (_type) delete _type;
+	for (auto it : _params)
+	    delete it;
+    }
+    
     bool& IProto::isVariadic () {
 	return this-> _isVariadic;
     }
@@ -541,7 +662,7 @@ namespace syntax {
 	IExpression (locus),	
 	_content (content)
     {
-	this-> info = new ISymbol (locus, info);
+	this-> info = new (GC) ISymbol (locus, info);
     }
 
     void ITreeExpression::print (int) {}
@@ -569,6 +690,13 @@ namespace syntax {
 	if (this-> else_)
 	    this-> else_-> isStatic = isStatic;
     }
+
+    IIf::~IIf () {
+	if (test) delete test;
+	if (block) delete block;
+	if (else_) delete else_;
+	if (info) delete info;
+    }
     
     void IIf::print (int nb) {
 	if (this-> test) {
@@ -591,7 +719,7 @@ namespace syntax {
 	    this-> else_-> print (nb + 8);	    
     }
 
-    IFor::IFor (Word token, Word id, std::vector <Var> var, Expression iter, Block bl) :
+    IFor::IFor (Word token, Word id, const std::vector<Var> & var, Expression iter, Block bl) :
 	IInstruction (token),
 	id (id),
 	var (var),
@@ -599,6 +727,13 @@ namespace syntax {
 	block (bl)
     {
 	this-> iter-> inside = this;
+    }
+
+    IFor::~IFor ()  {
+	for (auto it : var)
+	    delete it;
+	delete iter;
+	delete block;
     }
     
     void IFor::print (int nb) {
@@ -627,7 +762,12 @@ namespace syntax {
 	test (test),
 	block (block)
     {}
-    	
+
+    IWhile::~IWhile () {
+	if (test) delete test;
+	if (block) delete block;
+    }
+    
     void IWhile::print (int nb) {
 	printf ("\n%*c<While> %s:%s",
 		nb, ' ',
@@ -646,6 +786,10 @@ namespace syntax {
 	this-> elem-> inside = this;
     }
 
+    IUnary::~IUnary () {
+	if (type) delete type;
+	delete elem;
+    }    
 
     void IUnary::print (int nb) {
 	printf ("\n%*c<Unary> %s",
@@ -671,6 +815,14 @@ namespace syntax {
     {
     }
 
+    IAccess::~IAccess () {
+	delete params;
+	delete left;
+	for (auto &it : treats)
+	    delete it;
+	treats.clear ();
+    }
+    
     Expression IAccess::getLeft () {
 	return this-> left;
     }
@@ -688,11 +840,18 @@ namespace syntax {
 	this-> params-> print (nb + 4);
     }
           
-    IConstTuple::IConstTuple (Word word, Word end, std::vector <Expression> params) :
+    IConstTuple::IConstTuple (Word word, Word end, const std::vector<Expression> & params) :
 	IExpression (word),
 	end (end),
 	params (params)
     {}
+
+    IConstTuple::~IConstTuple () {
+	for (auto it : params)
+	    delete it;
+	for (auto it : casters)
+	    delete it;
+    }
     
     std::vector <std::string> IConstTuple::getIds () {
 	auto ret = IExpression::getIds ();
@@ -722,6 +881,10 @@ namespace syntax {
 	it (it)
     {}
 
+    IExpand::~IExpand () {
+	delete expr;
+    }
+    
     void IExpand::print (int nb) {
 	printf("\n%*c<Expand> %s",
 	       nb, ' ',
@@ -738,6 +901,11 @@ namespace syntax {
 	caster (NULL)
     {}
 
+    IReturn::~IReturn () {
+	if (caster) delete caster;
+	if (elem) delete elem;
+    }
+    
     void IReturn::print (int nb) {
 	printf ("\n%*c<Return> %s",
 		nb, ' ',
@@ -753,6 +921,10 @@ namespace syntax {
 	content (content)
     {}
 
+    IArrayVar::~IArrayVar () {
+	if (content) delete content;
+    }
+    
     Expression IArrayVar::contentExp () {
 	return this-> content;
     }
@@ -764,6 +936,9 @@ namespace syntax {
 	);	
     }
 
+    IExpression::~IExpression () {
+    }
+    
     IExpression* IExpression::clone () {
 	auto ret = this-> onClone ();
 	if (this-> info && ret != this) 

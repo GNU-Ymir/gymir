@@ -11,6 +11,9 @@
 #include <ymir/semantic/pack/Namespace.hh>
 
 namespace syntax {
+
+    class IProto;
+    typedef IProto* Proto;
     
     class IFunction : public IDeclaration {
     protected :
@@ -24,9 +27,9 @@ namespace syntax {
 
     public:
 	
-	IFunction (Word ident, std::vector <Var> params, std::vector <Expression> tmps, Expression test, Block block);
+	IFunction (Word ident, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block);
 	
-	IFunction (Word ident, Var type, std::vector <Var> params, std::vector <Expression> tmps, Expression test, Block block);
+	IFunction (Word ident, Var type, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block);
 
 	Word getIdent ();	
 	
@@ -53,11 +56,14 @@ namespace syntax {
 	void declareAsExtern (semantic::Module) override;
 	
 	void print (int nb = 0) override;
+
+	virtual ~IFunction ();
 	
     private:
 	
 	semantic::Frame verifyPure (semantic::Namespace);
 	semantic::Frame verifyPureExtern (semantic::Namespace);
+	Proto toProto ();
 	bool verifyTemplates ();
 	
     };

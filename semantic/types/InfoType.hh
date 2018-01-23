@@ -21,7 +21,7 @@ namespace semantic {
 
 
     // typedef Tree (InstComp*)(Tree, Tree);
-    // typedef Tree (InstCompMult*)(Tree, std::vector <Tree>);
+    // typedef Tree (InstCompMult*)(Tree, const std::vector<Tree> &);
     // typedef Tree (InstCompS*)(Tree);
     // typedef Tree (InstPreTreatment*)(InfoType, Expression, Expression);
         
@@ -81,7 +81,7 @@ namespace semantic {
 
 	Ymir::Tree buildMultOp (Word word, InfoType, syntax::Expression elem, syntax::Expression rights);
 	
-	static InfoType factory (Word word, std::vector <syntax::Expression> templates);
+	static InfoType factory (Word word, const std::vector<syntax::Expression> & templates);
 	
 	static const char* id () {
 	    return "IInfoType";
@@ -142,9 +142,9 @@ namespace semantic {
 
 	virtual ApplicationScore CallOp (Word, syntax::ParamList);
 
-	virtual ApplicationScore CallOp (Word, std::vector <IInfoType*>);
+	virtual ApplicationScore CallOp (Word, const std::vector<IInfoType*> &);
 
-	virtual InfoType ApplyOp (std::vector<::syntax::Var>);
+	virtual InfoType ApplyOp (const std::vector<::syntax::Var> &);
 
 	virtual InfoType UnaryOp (Word);
 
@@ -166,7 +166,7 @@ namespace semantic {
 
 	InfoType DotOp (std::string);
 
-	virtual InfoType TempOp (std::vector <::syntax::Expression>);
+	virtual InfoType TempOp (const std::vector<::syntax::Expression> &);
 
 	virtual InfoType clone () = 0;
 
@@ -211,6 +211,8 @@ namespace semantic {
 	    } else return NULL;
 	}
 	
+	virtual ~IInfoType () {}
+
 	BinopLint binopFoo;
 	UnopLint unopFoo;
 	BinopLint multFoo;

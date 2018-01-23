@@ -35,6 +35,11 @@ namespace syntax {
 	    if (this-> type)
 		this-> type-> print (nb + 4);
 	}
+
+	virtual ~IGlobal () {
+	    if (type) delete type;
+	    if (expr) delete expr;
+	}
 	
     };
 

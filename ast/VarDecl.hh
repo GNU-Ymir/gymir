@@ -20,7 +20,7 @@ namespace syntax {
 
     public:
 
-	IVarDecl (Word word, std::vector <Word> decos, std::vector <Var> decls, std::vector <Expression> insts);
+	IVarDecl (Word word, const std::vector <Word>& decos, const std::vector <Var> &decls, const std::vector <Expression>& insts);
 	
 	Instruction instruction () override;	
 
@@ -30,6 +30,8 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	virtual ~IVarDecl ();
+	
     private:
 
 	IVarDecl (Word word);

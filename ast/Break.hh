@@ -22,7 +22,8 @@ namespace syntax {
 
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
 	
-	void print (int nb = 0) override;	
+	void print (int nb = 0) override;
+	
     };
 
     typedef IBreak* Break;

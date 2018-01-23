@@ -24,7 +24,7 @@ namespace syntax {
 
 	IVar (Word ident);
 	IVar (Word ident, Word deco);
-	IVar (Word ident, std::vector <Expression> tmps);
+	IVar (Word ident, const std::vector <Expression>& tmps);
 
 	static const char * id () {
 	    return TYPEID (IVar);
@@ -57,6 +57,9 @@ namespace syntax {
 	void print (int nb = 0) override;
 
 	virtual std::string prettyPrint ();
+
+	virtual ~IVar ();
+	
     };
 
     class IArrayVar : public IVar {
@@ -85,7 +88,10 @@ namespace syntax {
 	
 	std::vector <std::string> getIds () override;
 	
-	void print (int nb = 0) override;	
+	void print (int nb = 0) override;
+
+	virtual ~IArrayVar ();
+	
     };
     
     typedef IVar* Var;    

@@ -165,7 +165,7 @@ namespace syntax {
 	}
     }
     
-    std::vector <tree> IParamList::toGenericParams (std::vector <semantic::InfoType> treat) {
+    std::vector <tree> IParamList::toGenericParams (const std::vector <semantic::InfoType>& treat) {
 	std::vector <tree> params (this-> params.size ());
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree elist;
@@ -205,7 +205,7 @@ namespace syntax {
     Ymir::Tree IConstArray::toGeneric () {
 	ArrayInfo info = this-> info-> type-> to<IArrayInfo> ();
 	Ymir::Tree innerType = info-> content ()-> toGeneric ();
-	auto intExpr = new IFixed (this-> token, FixedConst::ULONG);
+	auto intExpr = new (GC) IFixed (this-> token, FixedConst::ULONG);
 	intExpr-> setUValue (this-> params.size () - 1);
 	auto lenExpr = intExpr-> expression ();			
 	auto len = lenExpr-> toGeneric ();
@@ -224,7 +224,7 @@ namespace syntax {
 	
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree ref = Ymir::getArrayRef (this-> token.getLocus (), aux, innerType, i);
-	    auto left = new ITreeExpression (this-> token, info-> content (), ref);
+	    auto left = new (GC) ITreeExpression (this-> token, info-> content (), ref);
 	    list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
 					  void_type_node,
 					  ref, 
@@ -389,7 +389,7 @@ namespace syntax {
 	    auto ret = this-> casters [it]-> buildBinaryOp (
 		this-> params [it]-> token,
 		this-> casters [it],
-		new ITreeExpression (this-> token, type_inner [it], field),
+		new (GC) ITreeExpression (this-> token, type_inner [it], field),
 		this-> params [it]
 	    );
 	    list.append (ret);
@@ -407,23 +407,26 @@ namespace syntax {
     Ymir::Tree IReturn::toGeneric () {
 	Ymir::Tree res;
 	auto tlvalue = DECL_RESULT (IFinalFrame::currentFrame ().getTree ());
-
-	if (this-> caster-> unopFoo) {
-	    res = this-> caster-> buildUnaryOp (
-		this-> token,
-		this-> caster,
-		this-> elem
-	    );
-	} else {
-	    res = this-> caster-> buildBinaryOp (
-		this-> token,
-		this-> caster,
-		this-> elem,
-		new (GC) ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
-	    );
+	if (this-> elem != NULL) {
+	    if (this-> caster-> unopFoo) {
+		res = this-> caster-> buildUnaryOp (
+		    this-> token,
+		    this-> caster,
+		    this-> elem
+		);
+	    } else {
+		res = this-> caster-> buildCastOp (
+		    this-> token,
+		    this-> caster,
+		    this-> elem,
+		    new (GC) ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
+		);
+	    }
 	}
+	auto set_result = this-> elem != NULL ?
+	    buildTree (MODIFY_EXPR, this-> token.getLocus (), void_type_node, tlvalue, res) :
+	    Ymir::Tree ();
 	
-	auto set_result = buildTree (MODIFY_EXPR, this-> token.getLocus (), void_type_node, tlvalue, res);	
 	return Ymir::buildTree (RETURN_EXPR, this-> token.getLocus (), void_type_node, set_result);
     }
 

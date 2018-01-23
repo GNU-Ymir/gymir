@@ -27,6 +27,10 @@ namespace syntax {
 	    this-> expr-> print (nb + 4);
 	}
 	
+	virtual ~ITypeOf () {
+	    delete expr;
+	}
+
     };
 
     typedef ITypeOf* TypeOf;

@@ -67,7 +67,7 @@ namespace semantic {
 
     InfoType ICharInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || other-> is<ICharInfo> ()) {
-	    auto ch = new ICharInfo (this-> isConst ());
+	    auto ch = new (GC) ICharInfo (this-> isConst ());
 	    //TODO
 	    return ch;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
@@ -77,7 +77,7 @@ namespace semantic {
     }
 
     InfoType ICharInfo::clone () {
-	auto ret = new ICharInfo (this-> isConst ());
+	auto ret = new (GC) ICharInfo (this-> isConst ());
 	//TODO
 	return ret;
     }
@@ -88,7 +88,7 @@ namespace semantic {
 
     InfoType ICharInfo::Affect (syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
-	    auto ch = new ICharInfo (this-> isConst ());
+	    auto ch = new (GC) ICharInfo (this-> isConst ());
 	    ch-> binopFoo = &FixedUtils::InstAffect;
 	    return ch;
 	}
@@ -97,7 +97,7 @@ namespace semantic {
 
     InfoType ICharInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    auto ch = new ICharInfo (this-> isConst ());
+	    auto ch = new (GC) ICharInfo (this-> isConst ());
 	    ch-> binopFoo = &FixedUtils::InstAffect;
 	    return ch;
 	}
@@ -106,14 +106,14 @@ namespace semantic {
 
     InfoType ICharInfo::opTest (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
-	    auto bl = new IBoolInfo (true);	    
+	    auto bl = new (GC) IBoolInfo (true);	    
 	    //TODO
 	    // if (this-> value)
 	    //    ch-> value = this-> value-> BinaryOp (op, right-> info-> type-> value);
 	    return bl;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
-		auto ch = new IBoolInfo (true);
+		auto ch = new (GC) IBoolInfo (true);
 		//TODO
 		// if (this-> value)
 		//    ch-> value = this-> value-> BinaryOp (op, right-> info-> type-> value);
@@ -126,7 +126,7 @@ namespace semantic {
     InfoType ICharInfo::opTestRight (Word, syntax::Expression left) {
 	if (auto ot = left-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
-		auto ch = new IBoolInfo (true);
+		auto ch = new (GC) IBoolInfo (true);
 		//TODO
 		// if (this-> value)
 		//    ch-> value = this-> value-> BinaryOpRight (op, right-> info-> type-> value);
@@ -138,12 +138,12 @@ namespace semantic {
     
     InfoType ICharInfo::opAff (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
-	    auto ch = new ICharInfo (false);
+	    auto ch = new (GC) ICharInfo (false);
 	    //TODO ch-> lintInst = CharUtils::InstOpAff ();
 	    return ch;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
-		auto ch = new ICharInfo (false);
+		auto ch = new (GC) ICharInfo (false);
 		//TODO ch-> lintInst = CharUtils::InstOpAff ();
 		return ch;
 	    }
@@ -153,12 +153,12 @@ namespace semantic {
 
     InfoType ICharInfo::opNorm (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
-	    auto ch = new ICharInfo (true);
+	    auto ch = new (GC) ICharInfo (true);
 	    //TODO
 	    return ch;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
-		auto ch = new ICharInfo (true);
+		auto ch = new (GC) ICharInfo (true);
 		return ch;
 	    }
 	}
@@ -168,7 +168,7 @@ namespace semantic {
     InfoType ICharInfo::opNormRight (Word, syntax::Expression left) {
 	if (auto ot = left-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
-		auto ch = new ICharInfo (true);
+		auto ch = new (GC) ICharInfo (true);
 		//TODO
 		return ch;
 	    }
@@ -177,19 +177,19 @@ namespace semantic {
     }
 
     InfoType ICharInfo::Init () {
-	auto ch = new ICharInfo (true);
+	auto ch = new (GC) ICharInfo (true);
 	//TODO
 	return ch;
     }
 
     InfoType ICharInfo::SizeOf () {
-	auto _in = new IFixedInfo (true, FixedConst::UBYTE);
+	auto _in = new (GC) IFixedInfo (true, FixedConst::UBYTE);
 	//TODO
 	return _in;
     }
 
     InfoType ICharInfo::StringOf () {
-	auto str = new IStringInfo (true);
+	auto str = new (GC) IStringInfo (true);
 	//TODO
 	return str;
     }

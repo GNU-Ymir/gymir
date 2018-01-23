@@ -58,12 +58,12 @@ namespace semantic {
 	Table::instance ().programNamespace () = this-> space ();
 
 	if (this-> _proto-> type () == NULL) {
-	    Table::instance ().retInfo ().info = new ISymbol (Word::eof (), new IVoidInfo ());
+	    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IVoidInfo ());
 	} else {
 	    Table::instance ().retInfo ().info = this-> _proto-> type ()-> asType ()-> info;
 	}
 
-	this-> _fr = new IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+	this-> _fr = new (GC) IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);
 
 	this-> _fr-> externName () = this-> _from;
 	this-> _fr-> isCVariadic () = this-> isVariadic ();
@@ -76,7 +76,7 @@ namespace semantic {
 	return validate ();
     }
 
-    FrameProto IExternFrame::validate (std::vector <InfoType>) {
+    FrameProto IExternFrame::validate (const std::vector<InfoType> &) {
 	return validate ();
     }
 
@@ -108,7 +108,7 @@ namespace semantic {
 	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> name ()));
 	Table::instance ().programNamespace () = this-> space ();
 	if (this-> _function-> getType () == NULL) {
-	       Table::instance ().retInfo ().info = new ISymbol (Word::eof (), new IVoidInfo ());
+	       Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IVoidInfo ());
 	} else {
 	    Table::instance ().retInfo ().info = this-> _function-> getType ()-> asType ()-> info;
 	}

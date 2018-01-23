@@ -41,6 +41,10 @@ namespace syntax {
 	    );
 	    this-> type-> print (nb + 4);
 	}
+
+	virtual ~IOfVar () {
+	    delete type;
+	}
 	
     };
 

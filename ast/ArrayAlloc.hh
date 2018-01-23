@@ -31,6 +31,10 @@ namespace syntax {
 	virtual std::vector <std::string> getIds ();
 	
 	void print (int nb = 0) override;
+
+
+	virtual ~IArrayAlloc ();
+	
     };
 
     typedef IArrayAlloc* ArrayAlloc;

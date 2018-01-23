@@ -53,7 +53,7 @@ namespace Ymir {
 	return record_type;
     }
 
-    Tree makeTuple (std::string name, std::vector <InfoType> types, std::vector <std::string> attrs) {
+    Tree makeTuple (std::string name, const std::vector <InfoType>& types, const std::vector<std::string> & attrs) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);
 
@@ -75,7 +75,7 @@ namespace Ymir {
 	return record_type;
     }
 
-    Tree makeTuple (std::string name, std::vector <InfoType> types) {
+    Tree makeTuple (std::string name, const std::vector<InfoType> & types) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);
 	

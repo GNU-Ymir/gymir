@@ -57,6 +57,8 @@ namespace semantic {
 	static ulong getLastTmp ();
 
 	static void resetNbTmp ();
+
+	virtual ~ISymbol ();
 	
     };
     

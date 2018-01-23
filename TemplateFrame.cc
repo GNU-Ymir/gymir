@@ -29,7 +29,7 @@ namespace semantic {
 	return this-> _isExtern;
     }
 
-    ApplicationScore ITemplateFrame::isApplicable (Word ident, vector <Var> attrs, vector <InfoType> args)  {
+    ApplicationScore ITemplateFrame::isApplicable (Word ident, const vector<Var> & attrs, const vector <InfoType> &args)  {
 	if (args.size () > this-> _function-> getParams ().size ())
 	    return this-> isApplicableVariadic (ident, attrs, args);
 	else return this-> isApplicableSimple (ident, attrs, args);
@@ -39,11 +39,11 @@ namespace semantic {
 	return this-> isApplicable (this-> _function-> getIdent (), this-> _function-> getParams (), params-> getParamTypes ());
     }
 
-    ApplicationScore ITemplateFrame::isApplicable (vector <InfoType> params)  {
+    ApplicationScore ITemplateFrame::isApplicable (const vector<InfoType> & params)  {
 	return this-> isApplicable (this-> _function-> getIdent (), this-> _function-> getParams (), params);
     }
 
-    FrameProto ITemplateFrame::validate (vector <InfoType>)  {
+    FrameProto ITemplateFrame::validate (const vector<InfoType> &)  {
 	return NULL;
     }
 
@@ -59,7 +59,7 @@ namespace semantic {
 	return vec;
     }
     
-    FrameProto ITemplateFrame::validate (ApplicationScore score, vector <InfoType> params)  {
+    FrameProto ITemplateFrame::validate (ApplicationScore score, const vector<InfoType> & params)  {
 	if (this-> _isExtern) return validateExtern ();
 	else if (this-> _isPure) return validate ();
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> _isInternal);
@@ -77,7 +77,7 @@ namespace semantic {
 	return NULL;
     }
 
-    Frame ITemplateFrame::TempOp (vector <Expression> params)  {
+    Frame ITemplateFrame::TempOp (const vector<Expression> & params)  {
 	this-> currentScore () = 0;
 	if (params.size () > this-> _function-> getTemplates ().size ()) {
 	    return NULL;
@@ -95,12 +95,12 @@ namespace semantic {
 	return ret;
     }
 	
-    ApplicationScore ITemplateFrame::isApplicableVariadic (Word , vector <Var> , vector <InfoType> ) {
+    ApplicationScore ITemplateFrame::isApplicableVariadic (Word , const vector<Var> & , const vector<InfoType> & ) {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }
 
-    Frame ITemplateFrame::getScoreTempOp (std::vector <Expression>& params) {
+    Frame ITemplateFrame::getScoreTempOp (const std::vector <Expression>& params) {
 	std::vector <InfoType> totals;
 	std::vector <Expression> finals;
 	std::vector <Expression> vars;
@@ -118,19 +118,17 @@ namespace semantic {
 		space.write (_val-> toString ());
 	    } else
 		space.write (it-> info-> type-> simpleTypeString ());
-	    if (i < params.size () - 1) space.write (",");
+	    if (i < (int) params.size () - 1) space.write (",");
 	}
 	
 	space.write (")");
-
 	for (auto &it : res.elements) {
-	    if (it.second-> info-> isImmutable ()) {
+	    if (it.second-> info-> isImmutable ()) 
 		it.second = it.second-> info-> value ()-> toYmir (it.second-> info);
-	    }
+	    else
+		it.second = it.second-> templateExpReplace ({});
 	}
 	
-	printf("%s\n", space.str ().c_str ());
-	       
 	auto func = this-> _function-> templateReplace (res.elements);
 	func-> name ((func-> name () + space.str ()).c_str ());
 
@@ -138,7 +136,6 @@ namespace semantic {
 	    // if (func-> test ()) {
 	    //TODO
 	    // }
-
 	    Frame ret;
 	    if (!this-> _isPure) ret = new (GC) IUnPureFrame (this-> space (), func);
 	    else if (this-> _isExtern) ret = new (GC) IExternFrame (this-> space (), func);
@@ -160,7 +157,7 @@ namespace semantic {
     }
     
 
-    ApplicationScore ITemplateFrame::getScoreSimple (Word ident, vector <Var> attrs, vector <InfoType> args) {
+    ApplicationScore ITemplateFrame::getScoreSimple (Word ident, const vector<Var> & attrs, const vector<InfoType> & args) {
 	auto score = new (GC) IApplicationScore (ident);
 	map <string, Expression> tmps;
 	
@@ -208,6 +205,8 @@ namespace semantic {
 	    for (auto exp : tmps) {
 		if (exp.second-> info-> isImmutable ()) {
 		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
+		} else {
+		    exp.second = exp.second-> templateExpReplace ({});
 		}
 	    }
 
@@ -217,7 +216,7 @@ namespace semantic {
 	return NULL;
     }
     
-    ApplicationScore ITemplateFrame::isApplicableSimple (Word ident, vector <Var> attrs, vector <InfoType> args) {
+    ApplicationScore ITemplateFrame::isApplicableSimple (Word ident, const vector<Var> & attrs, const vector <InfoType> &args) {
 	auto tScope = Table::instance ().templateNamespace ();
 	auto globSpace = Table::instance ().space ();
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> name));

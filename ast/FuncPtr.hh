@@ -55,6 +55,14 @@ namespace syntax {
 		this->expr-> print (nb + 5);
 	}
 
+	virtual ~IFuncPtr () {
+	    for (auto it : params)
+		delete it;
+	    delete ret;
+	    if (expr)
+		delete expr;
+	}
+	
     };
 
     typedef IFuncPtr* FuncPtr;

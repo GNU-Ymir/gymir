@@ -64,7 +64,7 @@ namespace semantic {
 	   type = le type du paramètre passé 
 	   Returns: le tableau associatif des nouvelles expression
 	*/
-	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::Var param, InfoType type);
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::Var param, InfoType type);
 
 	/**
 	   Résolution du type d'un paramètre, 
@@ -74,7 +74,7 @@ namespace semantic {
 	   type = le type du paramètre passé 
 	   Returns: le tableau associatif des nouvelles expression
 	*/
-	TemplateSolution solveInside (std::vector <syntax::Expression> &tmps, syntax::Var param, InfoType type);
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Var param, InfoType type);
 
 	
 	/**
@@ -85,7 +85,7 @@ namespace semantic {
 	   type = les types interne du paramètre.
 	   Returns: une solution template
 	*/
-	TemplateSolution solveInside (std::vector <syntax::Expression> &tmps, syntax::Var var, std::vector <InfoType> &type);
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Var var, const std::vector <InfoType> &type);
 
 	/**
 	   Résoud un paramètre template de type tableau
@@ -102,7 +102,7 @@ namespace semantic {
 	   type = Le type du paramètre
 	   Returns: une solution template
 	*/
-	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::ArrayVar param, InfoType type, bool isConst = false);
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::ArrayVar param, InfoType type, bool isConst = false);
 
 	/**
 	   Résoud un paramètre template de type fonction
@@ -114,7 +114,7 @@ namespace semantic {
 	   foo ((a : int) => 10); // solve ([T], fn (T) -> T, funcPtr(int)->int);
 	   -------
 	*/
-	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::Expression param, InfoType type);
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::Expression param, InfoType type);
 
 	/**
 	   Résoud un paramètre template de type fonction
@@ -125,7 +125,7 @@ namespace semantic {
 	   foo ((a : int) => 10); // solve ([T], fn (T) -> T, funcPtr (int) -> int);
 	   -------
 	*/
-	TemplateSolution solveInside (std::vector <syntax::Expression> &tmps, syntax::FuncPtr ptr, InfoType type);
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::FuncPtr ptr, InfoType type);
 
 	/**
 	   résoud un paramètre template
@@ -161,7 +161,7 @@ namespace semantic {
 	   type = le type du paramètre passé à la fonction
 	   Returns: une solution template
 	*/
-	TemplateSolution solve (std::vector <syntax::Expression> &tmps, syntax::OfVar elem, syntax::Var param, InfoType type, bool isConst = false);
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::OfVar elem, syntax::Var param, InfoType type, bool isConst = false);
 
 	/**
 	   résolution des paramètre templates.
@@ -177,7 +177,7 @@ namespace semantic {
 	   params = la liste des paramètre de opTemp
 	   Returns: le tableau associatif des nouvelles expressions
 	*/    
-	TemplateSolution solve (std::vector <syntax::Expression> &tmps, std::vector <syntax::Expression> &params);
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, const std::vector <syntax::Expression> &params);
 
 	/**
 	   Résoud un paramètre template
@@ -197,7 +197,7 @@ namespace semantic {
 	   right = le paramètre template passé à la fonction
 	   Returns: une solution de résolution template
 	*/
-	TemplateSolution solveInside (std::vector <syntax::Expression> &tmps, syntax::Var left, syntax::Expression right);
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Var left, syntax::Expression right);
 
 
 	/**
@@ -234,7 +234,7 @@ namespace semantic {
 	   foo!int (); //solveInside (T of int, int);
 	   --------
 	*/
-	TemplateSolution solveInside (std::vector <syntax::Expression> &tmps, syntax::OfVar left, syntax::Expression right) ;
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::OfVar left, syntax::Expression right) ;
 	    
 
 	// /**
@@ -246,7 +246,7 @@ namespace semantic {
 	//    foo ((1, 2, 3)); // solveInside (T..., tuple(int, int, int));
 	//    -----------     
 	// */
-	// TemplateSolution solveInside (std::vector <syntax::Expression> tmps, syntax::VariadicVar var, syntax::Expression right);
+	// TemplateSolution solveInside (const const const std::vector<syntax::Expression>  & tmps, syntax::VariadicVar var, syntax::Expression right);
 
 	/**
 	   Résoud un paramètre template
@@ -257,7 +257,7 @@ namespace semantic {
 	   foo!"salut" ();     
 	   -------
 	*/
-	TemplateSolution solveInside (std::vector <syntax::Expression> &tmps, syntax::TypedVar left, syntax::Expression right);
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::TypedVar left, syntax::Expression right);
 
 	/**
 	   Résoud un paramètre template
@@ -269,7 +269,7 @@ namespace semantic {
 	   foo!("salut") ();
 	   --------
 	*/
-	TemplateSolution solveInside (std::vector <syntax::Expression> &tmps, syntax::Expression left, syntax::Expression right);
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Expression left, syntax::Expression right);
 
 	/**
 	   Résolution des paramètre templates.
@@ -286,14 +286,14 @@ namespace semantic {
 	   params = la liste des paramètre de opTemp
 	   Returns: le tableau associatif des nouvelles expressions
 	*/    
-	TemplateSolution solve (std::vector <syntax::Var> &tmps, std::vector <syntax::Expression> &params) ;
+	TemplateSolution solve (const std::vector <syntax::Var> &tmps, const std::vector <syntax::Expression> &params) ;
 
 	/**
 	   Vérifie que les paramètres templates sont valide
 	   Params:
 	   args = les paramètre templates
 	*/
-	bool isValid (std::vector <syntax::Expression> &args);
+	bool isValid (const std::vector <syntax::Expression> &args);
 
 	/**
 	   Params:
@@ -301,7 +301,7 @@ namespace semantic {
 	   soluce = la résolution
 	   Returns: Les paramètres templates ont été correctement typé, et le résultat est une solution valide ?
 	*/
-	bool isSolved (std::vector <syntax::Expression> &args, TemplateSolution soluce);
+	bool isSolved (const std::vector <syntax::Expression> &args, TemplateSolution soluce);
 
 	/**
 	   Params:
@@ -309,7 +309,7 @@ namespace semantic {
 	   types = la résolution
 	   Returns: Les paramètres templates ont été correctement typé, et le résultat est une solution valide ?
 	*/
-	bool isSolved (std::vector <syntax::Expression> &args, std::map <std::string, syntax::Expression> &types);
+	bool isSolved (const std::vector <syntax::Expression> &args, std::map <std::string, syntax::Expression> &types);
 
 	
 	/**
@@ -324,7 +324,7 @@ namespace semantic {
 	   soluce = une solution de résolution templates
 	   Returns: la liste des paramètre qui n'apparaissent pas résolue dans la solution
 	*/
-	std::vector <syntax::Expression> unSolved (std::vector <syntax::Expression> &args, TemplateSolution soluce);
+	std::vector <syntax::Expression> unSolved (const std::vector <syntax::Expression> &args, TemplateSolution soluce);
 
 		
     private:

@@ -45,7 +45,7 @@ namespace semantic {
 
 	long rewind (std::string name, long nb = 0);
 
-	long rewind (std::vector <std::string> types, long nb = 0);
+	long rewind (const std::vector<std::string> & types, long nb = 0);
 
 	void print (int i = 0);
 	
@@ -89,7 +89,7 @@ namespace semantic {
 
 	long rewind (std::string name);
 
-	long rewind (std::vector <std::string> types);
+	long rewind (const std::vector<std::string> & types);
 
 	void print ();
 

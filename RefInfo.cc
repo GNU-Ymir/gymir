@@ -282,7 +282,7 @@ namespace semantic {
     }
 
     InfoType IRefInfo::clone () {
-	return new IRefInfo (this-> isConst (), this-> _content-> clone ());
+	return new (GC) IRefInfo (this-> isConst (), this-> _content-> clone ());
     }
 
     const char* IRefInfo::getId () {

@@ -26,7 +26,10 @@ namespace syntax {
 	
 	Ymir::Tree toGeneric () override;
 	
-	void print (int nb = 0) override;	
+	void print (int nb = 0) override;
+
+	virtual ~IUnary ();
+	
     };
 
     typedef IUnary* Unary;

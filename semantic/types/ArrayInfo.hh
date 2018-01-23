@@ -19,12 +19,12 @@ namespace semantic {
 
 	bool isSame (InfoType other) override;
 
-	static InfoType create (Word token, std::vector <syntax::Expression> templates) {
+	static InfoType create (Word token, const std::vector<syntax::Expression> & templates) {
 	    if (templates.size () != 1 || !(templates [0]-> is<syntax::IType> ())) {
 		// if (auto cst = templates [0]-> info-> type-> to<StructCstInfo> ()) {}
 		Ymir::Error::takeATypeAsTemplate (token);		
 	    } else {
-		return new IArrayInfo (false, templates [0]-> info-> type);
+		return new (GC) IArrayInfo (false, templates [0]-> info-> type);
 	    }
 	}
 
@@ -32,7 +32,7 @@ namespace semantic {
 
 	InfoType BinaryOpRight (Word, syntax::Expression) override;
 
-	InfoType ApplyOp (std::vector <syntax::Var> vars) override;
+	InfoType ApplyOp (const std::vector<syntax::Var> & vars) override;
 	
 	InfoType AccessOp (Word, syntax::ParamList, std::vector <InfoType> &) override;
 

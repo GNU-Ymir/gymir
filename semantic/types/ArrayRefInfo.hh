@@ -37,7 +37,7 @@ namespace semantic {
 
 	InfoType CompOp (InfoType other) override;
 
-	//InfoType ApplyOp (std::vector <syntax::Var> vars) override;
+	//InfoType ApplyOp (const std::vector<syntax::Var> & vars) override;
 
 	ApplicationScore CallOp (Word op, syntax::ParamList params) override;
 	

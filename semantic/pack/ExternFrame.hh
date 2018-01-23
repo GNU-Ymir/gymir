@@ -40,7 +40,7 @@ namespace semantic {
 
 	FrameProto validate (::syntax::ParamList) override;
 	
-	FrameProto validate (std::vector <InfoType>) override;
+	FrameProto validate (const std::vector<InfoType> &) override;
 
 	static std::vector <IExternFrame*> frames () {
 	    return __extFrames__;

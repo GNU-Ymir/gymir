@@ -11,14 +11,14 @@ namespace semantic {
     }
 
     InfoType IUndefInfo::clone () {
-	return new IUndefInfo ();
+	return new (GC) IUndefInfo ();
     }
 
     InfoType IUndefInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
 	    //TODO
-	    return new IStringInfo (true);
+	    return new (GC) IStringInfo (true);
 	}
 	return NULL;
     }

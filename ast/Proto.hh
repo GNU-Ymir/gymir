@@ -22,9 +22,9 @@ namespace syntax {
 	Word ident;
 	std::string from;
 	
-	IProto (Word ident, std::vector <Var> params, bool isVariadic);
+	IProto (Word ident, const std::vector <Var>& params, bool isVariadic);
 
-	IProto (Word ident, Var type, std::vector <Var> params, std::string space, bool isVariadic);
+	IProto (Word ident, Var type, const std::vector <Var>& params, std::string space, bool isVariadic);
 
 	void declare () override;
 
@@ -39,6 +39,8 @@ namespace syntax {
 	std::vector <Var>& params ();
 	
 	void print (int nb = 0) override;
+
+	virtual ~IProto ();
 	
     };
 

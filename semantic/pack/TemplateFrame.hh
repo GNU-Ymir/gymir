@@ -31,33 +31,33 @@ namespace semantic {
 
 	bool& isExtern ();
 
-	ApplicationScore isApplicable (Word ident, std::vector <syntax::Var> attrs, std::vector <InfoType> args) override;
+	ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args) override;
 
 	ApplicationScore isApplicable (syntax::ParamList params) override;
 
-	ApplicationScore isApplicable (std::vector <InfoType> params) override;
+	ApplicationScore isApplicable (const std::vector<InfoType> & params) override;
 
-	FrameProto validate (std::vector <InfoType> params) override;
+	FrameProto validate (const std::vector<InfoType> & params) override;
 
 	FrameProto validate (syntax::ParamList params) override;
 
-	FrameProto validate (ApplicationScore score, std::vector <InfoType> params) override;
+	FrameProto validate (ApplicationScore score, const std::vector<InfoType> & params) override;
 
 	FrameProto validate () override;
 
-	Frame TempOp (std::vector <syntax::Expression> params) override;
+	Frame TempOp (const std::vector<syntax::Expression> & params) override;
 
 	const char * getId () override;
 	
     private : 
 
-	ApplicationScore isApplicableVariadic (Word ident, std::vector <syntax::Var> attrs, std::vector <InfoType> params);	
+	ApplicationScore isApplicableVariadic (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & params);	
 
-	ApplicationScore isApplicableSimple (Word ident, std::vector <syntax::Var> attrs, std::vector <InfoType> args);
+	ApplicationScore isApplicableSimple (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
 
-	ApplicationScore getScoreSimple (Word ident, std::vector <syntax::Var> attrs, std::vector <InfoType> args);
+	ApplicationScore getScoreSimple (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
 
-	Frame getScoreTempOp (std::vector <syntax::Expression> & params);
+	Frame getScoreTempOp (const std::vector <syntax::Expression> & params);
 	
 	std::string computeName (std::string name);
 

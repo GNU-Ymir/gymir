@@ -536,7 +536,7 @@ namespace syntax {
     Expression IString::expression () {
 	auto aux = new (GC) IString (this-> token, this-> content);
 	aux-> info = new (GC) ISymbol (this-> token, new (GC) IStringInfo (true));
-	aux-> info-> value () = new IStringValue (this-> content);
+	aux-> info-> value () = new (GC) IStringValue (this-> content);
 	return aux;
     }
     

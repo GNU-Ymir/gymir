@@ -13,7 +13,7 @@ namespace syntax {
 	std::vector <Expression> params;
 
     public :
-	IParamList (Word ident, std::vector <Expression> params);
+	IParamList (Word ident, const std::vector <Expression>& params);
 	
 	std::vector <Expression>& getParams ();
 
@@ -23,7 +23,7 @@ namespace syntax {
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
-	std::vector <tree> toGenericParams (std::vector <semantic::InfoType>);
+	std::vector <tree> toGenericParams (const std::vector <semantic::InfoType>&);
 
 	void print (int nb = 0) override;
 
@@ -32,6 +32,8 @@ namespace syntax {
 	}
 	
 	std::vector <std::string> getIds () override;
+
+	virtual ~IParamList ();
 	
     };
 

@@ -17,7 +17,7 @@ namespace semantic {
 
 	InfoType ConstVerif (InfoType other) override;
 	
-	static InfoType create (Word token, std::vector <syntax::Expression> templates);
+	static InfoType create (Word token, const std::vector<syntax::Expression> & templates);
 
 	InfoType BinaryOpRight (Word op, syntax::Expression left);
 

@@ -93,8 +93,10 @@ namespace Mangler {
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
 	for (auto it : frame-> tmps ()) {
-	    if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-	    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    if (it-> info) {
+		if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
+		else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    }
 	}
 	
 	for (auto it : frame-> vars ()) {
@@ -110,8 +112,10 @@ namespace Mangler {
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
 	for (auto it : frame-> tmps ()) {
-	    if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-	    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    if (it-> info) {
+		if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
+		else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    }
 	}
 	
 	for (auto it : frame-> vars ()) {

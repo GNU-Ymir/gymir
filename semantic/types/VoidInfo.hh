@@ -11,7 +11,7 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
-	static InfoType create (Word tok, std::vector <syntax::Expression> tmps) {
+	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 0) 
 		Ymir::Error::notATemplate (tok);
 	    return new (GC) IVoidInfo ();

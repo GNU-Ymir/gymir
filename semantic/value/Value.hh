@@ -70,6 +70,8 @@ namespace semantic {
 	}
 	
 	virtual Value clone () = 0;
+
+	virtual ~IValue () {}
 	
     };
 

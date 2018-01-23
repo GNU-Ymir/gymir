@@ -18,7 +18,7 @@ namespace syntax {
 
     public:
 
-	IConstArray (Word token, std::vector <Expression> params);
+	IConstArray (Word token, const std::vector <Expression> &params);
 
 	Expression expression () override;
 	
@@ -35,6 +35,8 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	virtual ~IConstArray ();
+	
     private:
 
 	semantic::InfoType validate ();

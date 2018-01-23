@@ -11,14 +11,14 @@ namespace semantic {
     }
 
     InfoType IVoidInfo::clone () {
-	return new IVoidInfo ();
+	return new (GC) IVoidInfo ();
     }
 
     InfoType IVoidInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
 	    //TODO
-	    return new IStringInfo (true);
+	    return new (GC) IStringInfo (true);
 	}
 	return NULL;
     }

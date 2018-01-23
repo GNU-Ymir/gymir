@@ -24,6 +24,8 @@ namespace syntax {
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
 	void print (int nb = 0) override;
+
+	virtual ~IConstRange ();
 	
     private:
 

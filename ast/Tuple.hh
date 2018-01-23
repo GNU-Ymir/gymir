@@ -16,7 +16,7 @@ namespace syntax {
 	
     public:
 
-	IConstTuple (Word word, Word end, std::vector <Expression> params);
+	IConstTuple (Word word, Word end, const std::vector <Expression>& params);
 
 	Expression expression () override;
 
@@ -31,6 +31,8 @@ namespace syntax {
 	std::vector <std::string> getIds () override;
 	
 	void print (int nb = 0) override;
+
+	virtual ~IConstTuple ();
 	
     };
 

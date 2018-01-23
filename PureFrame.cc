@@ -15,6 +15,7 @@ namespace semantic {
     {
 	if (fun) {
 	    this-> name = fun-> getIdent ().getStr ();
+	    this-> validate ();
 	}
     }
     
@@ -22,7 +23,7 @@ namespace semantic {
 	return this-> validate ();
     }
 
-    FrameProto IPureFrame::validate (std::vector <InfoType>) {
+    FrameProto IPureFrame::validate (const std::vector<InfoType> &) {
 	return this-> validate ();
     }    
     
@@ -36,6 +37,7 @@ namespace semantic {
 	std::vector <Var> finalParam = IFrame::computeParams (this-> _function-> getParams ());
 	
 	this-> proto = IFrame::validate (finalParam);
+	delete this-> _function-> getBlock ();
 	return this-> proto;
     }
 
@@ -44,12 +46,12 @@ namespace semantic {
 	    auto tok = this-> _function-> getParams () [0]-> token;
 	    if (auto a = this-> _function-> getParams () [0]-> to<ITypedVar> ()) {
 		auto type = a-> getType ();
-		if (!type-> isSame (new IArrayInfo (true, new IStringInfo (true)))) {
+		if (!type-> isSame (new (GC) IArrayInfo (true, new (GC) IStringInfo (true)))) {
 		    Ymir::Error::assert ("TODO, erreur");
 		} else {
 		    auto str = Word (tok.getLocus (), "string");
-		    this-> _function-> getParams () [0] = new ITypedVar (tok,
-									 new IArrayVar (tok, new IVar (str))
+		    this-> _function-> getParams () [0] = new (GC) ITypedVar (tok,
+									 new (GC) IArrayVar (tok, new (GC) IVar (str))
 		    );
 		}
 	    }

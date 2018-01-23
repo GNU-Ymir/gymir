@@ -19,12 +19,12 @@ namespace semantic {
 
 	InfoType ConstVerif (InfoType) override;
 
-	static InfoType create (Word tok, std::vector<syntax::Expression> tmps) {
+	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
-		return new IRefInfo (false, tmps [0]-> info-> type);
+		return new (GC) IRefInfo (false, tmps [0]-> info-> type);
 	    }
 	}
 
@@ -46,7 +46,7 @@ namespace semantic {
 
 	InfoType CompOp (InfoType other) override;
 
-	//InfoType ApplyOp (std::vector <syntax::Var> vars) override;
+	//InfoType ApplyOp (const std::vector<syntax::Var> & vars) override;
 
 	ApplicationScore CallOp (Word op, syntax::ParamList params) override;
 

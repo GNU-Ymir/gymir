@@ -21,7 +21,7 @@ namespace semantic {
     }
 
     InfoType IIgnoreInfo::clone () {
-	return new IIgnoreInfo ();
+	return new (GC) IIgnoreInfo ();
     }
 
     InfoType IIgnoreInfo::BinaryOp (Word op, syntax::Expression left) {

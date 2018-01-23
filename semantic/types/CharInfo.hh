@@ -9,11 +9,11 @@ namespace semantic {
 	
 	ICharInfo (bool isConst); 
 
-	static InfoType create (Word w, std::vector <::syntax::Expression> tmps) {
+	static InfoType create (Word w, const std::vector<::syntax::Expression> & tmps) {
 	    if (tmps.size () != 0) {
 		Ymir::Error::notATemplate (w);
 		return NULL;
-	    } else return new ICharInfo (false);
+	    } else return new (GC) ICharInfo (false);
 	}
 
 	bool isSame (InfoType) override;

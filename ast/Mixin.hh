@@ -27,6 +27,10 @@ namespace syntax {
 	    this-> inside-> print (nb + 4);
 	}
 	
+	virtual ~IMixin () {
+	    delete inside;
+	}
+
     };
 
     typedef IMixin* Mixin;

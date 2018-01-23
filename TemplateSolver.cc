@@ -7,7 +7,7 @@ namespace semantic {
     using namespace syntax;
     using namespace std;
 
-    void print (vector <Expression> vec) {
+    void print (const vector<Expression> & vec) {
 	printf ("[");
 	for (auto it : vec)
 	    printf ("[%s], ", it-> token.getStr ().c_str ());
@@ -70,7 +70,7 @@ namespace semantic {
 	return true;	
     }
     
-    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, Var param, InfoType type) {
+    TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, Var param, InfoType type) {
 	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();	
 	if (auto tvar = param-> to <ITypedVar> ()) {
 	    if (tvar-> typeExp ()) return solve (tmps, tvar-> typeExp (), type);
@@ -132,7 +132,7 @@ namespace semantic {
 	return TemplateSolution (0, false);
     }
     
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> &tmps, Var param, InfoType type) {
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var param, InfoType type) {
 	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
 	bool isConst = false;	    
 	while (param-> token == Keys::CONST) {
@@ -177,6 +177,7 @@ namespace semantic {
 		    }
 		}		
 	    }
+
 	    auto var = IVar (param-> token, types).asType ();
 	    if (var == NULL) return TemplateSolution (0, false);
 	    soluce.type = var-> info-> type;
@@ -186,7 +187,7 @@ namespace semantic {
 	}    
     }
 	
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> &tmps, Var var, vector <InfoType> &type) {
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var var, const vector <InfoType> &type) {
 	if (type.size () == 1) return solveInside (tmps, var, type [0]);
 	else {
 	    Ymir::Error::assert ("TODO");
@@ -194,7 +195,7 @@ namespace semantic {
 	}
     }
 
-    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, ArrayVar param, InfoType type, bool isConst) {
+    TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, ArrayVar param, InfoType type, bool isConst) {
 	if (!type-> is <IArrayInfo> ()) {
 	    if (auto ptr = type-> to <IRefInfo> ()) {
 		if (!ptr-> content ()-> is <IArrayInfo> ())
@@ -220,12 +221,12 @@ namespace semantic {
 	return TemplateSolution (0, false);	
     }
 
-    TemplateSolution TemplateSolver::solve (vector <Expression> &, Expression , InfoType ) {
+    TemplateSolution TemplateSolver::solve (const vector <Expression> &, Expression , InfoType ) {
 	Ymir::Error::assert ("TODO");
 	return TemplateSolution (0, false);
     }
 
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> &, FuncPtr , InfoType ) {
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &, FuncPtr , InfoType ) {
 	Ymir::Error::assert ("TODO");
 	return TemplateSolution (0, false);
     }
@@ -265,7 +266,7 @@ namespace semantic {
 	return TemplateSolution (__VAR__, true, type_, ret);
     }
 
-    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, OfVar elem, Var param, InfoType type, bool isConst) {
+    TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, OfVar elem, Var param, InfoType type, bool isConst) {
 	Var typeVar;
 	auto typedParam = param-> to <ITypedVar> ();
 	if (typedParam) typeVar = typedParam-> typeVar ();
@@ -292,7 +293,7 @@ namespace semantic {
 	
     }
 
-    TemplateSolution TemplateSolver::solve (vector <Expression> &tmps, vector <Expression> &params) {
+    TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, const vector <Expression> &params) {
 	TemplateSolution soluce (0, true);
 	if (tmps.size () < params.size ())
 	    return TemplateSolution (0, false);
@@ -310,7 +311,7 @@ namespace semantic {
 	return soluce;	
     }
 
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> &tmps, Var left, Expression right) {
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var left, Expression right) {
 	if (auto tvar = left-> to<ITypedVar> ())
 	    return this-> solveInside (tmps, tvar, right);
 	else if (auto of = left-> to <IOfVar> ())
@@ -339,7 +340,7 @@ namespace semantic {
 	return TemplateSolution (0, false);
     }
 
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> &tmps, OfVar left, Expression right) {
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, OfVar left, Expression right) {
 	auto type = right-> to<IType> ();
 	if (!type) return TemplateSolution (0, false);
 
@@ -357,7 +358,7 @@ namespace semantic {
 	}	
     }
     
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> & tmps, TypedVar left, Expression right) {
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, TypedVar left, Expression right) {
 	auto type = right-> info-> type;
 	if (!right-> info-> isImmutable ()) {
 	    Ymir::Error::notImmutable (right-> info);
@@ -377,19 +378,19 @@ namespace semantic {
 	return res;
     }
 
-    TemplateSolution TemplateSolver::solveInside (vector <Expression> &, Expression , Expression ) {
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &, Expression , Expression ) {
 	Ymir::Error::assert ("TODO");
 	return TemplateSolution (0, false);
     }
 
-    TemplateSolution TemplateSolver::solve (vector <Var> &tmps, vector <Expression> &params) {
+    TemplateSolution TemplateSolver::solve (const vector <Var> &tmps, const vector <Expression> &params) {
 	vector <Expression> aux;
 	for (auto it : tmps)
 	    aux.push_back (it);
 	return solve (aux, params);
     }
 
-    bool TemplateSolver::isValid (vector <Expression> &args) {
+    bool TemplateSolver::isValid (const vector <Expression> &args) {
 	for (auto it : args) {
 	    if (auto var = it-> to <IVar> ()) {
 		for (auto it_ : args) {
@@ -402,12 +403,12 @@ namespace semantic {
 	return true;
     }
 
-    bool TemplateSolver::isSolved (vector <Expression> &args, TemplateSolution soluce) {
+    bool TemplateSolver::isSolved (const vector <Expression> &args, TemplateSolution soluce) {
 	if (!soluce.valid) return false;
 	return isSolved (args, soluce.elements);
     }
 
-    bool TemplateSolver::isSolved (vector <Expression> &args, map <string, Expression> &types) {
+    bool TemplateSolver::isSolved (const vector <Expression> &args, map <string, Expression> &types) {
 	for (auto it : args) {
 	    if (auto type = it-> to <ITypedVar> ()) {
 		auto elem = types.find (type-> token.getStr ());
@@ -424,7 +425,7 @@ namespace semantic {
 	return true;
     }
        
-    vector <Expression> TemplateSolver::unSolved (vector <Expression> &args, TemplateSolution soluce) {
+    vector <Expression> TemplateSolver::unSolved (const vector <Expression> &args, TemplateSolution soluce) {
 	std::vector <Expression> rets;
 	ulong nb = 0;
 	for (auto it : args) {

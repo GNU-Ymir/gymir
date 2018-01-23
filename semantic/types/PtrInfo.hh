@@ -19,12 +19,12 @@ namespace semantic {
 
 	InfoType ConstVerif (InfoType) override;
 
-	static InfoType create (Word tok, std::vector<syntax::Expression> tmps) {
+	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
-		return new IPtrInfo (false, tmps [0]-> info-> type);
+		return new (GC) IPtrInfo (false, tmps [0]-> info-> type);
 	    }
 	}
 

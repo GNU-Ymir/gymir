@@ -46,6 +46,11 @@ namespace syntax {
 		printf (": %s", this-> expType.toString ().c_str ());	    
 	}
 	
+	virtual ~IIs () {
+	    delete left;
+	    delete type;
+	}
+	
     };
 
     typedef IIs* Is;

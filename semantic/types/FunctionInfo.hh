@@ -21,7 +21,7 @@ namespace semantic {
 
 	IFunctionInfo (Namespace, std::string);
 
-	IFunctionInfo (Namespace, std::string, std::vector<Frame> infos);
+	IFunctionInfo (Namespace, std::string, const std::vector<Frame> & infos);
 
 	bool isSame (InfoType) override;
 
@@ -35,13 +35,13 @@ namespace semantic {
 
 	std::vector <Frame> getFrames ();
 
-	ApplicationScore CallOp (Word, std::vector <InfoType>) override;
+	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
 
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
 
 	InfoType UnaryOp (Word) override;
 
-	InfoType TempOp (std::vector<syntax::Expression>);
+	InfoType TempOp (const std::vector<syntax::Expression> &);
 
 	std::string innerTypeString () override;
 

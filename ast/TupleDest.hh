@@ -55,6 +55,14 @@ namespace syntax {
 	    this-> right-> print (nb + 4);	    
 	}
 
+	virtual ~ITupleDest () {
+	    for (auto it : decls)
+		delete it;
+	    for (auto it : insts)
+		delete it;
+	    if (right) delete right;
+	}
+	
     };
 
     typedef ITupleDest* TupleDest;    

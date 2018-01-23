@@ -40,6 +40,12 @@ namespace syntax {
 		it-> print (nb + 4);
 	    printf ("\n");
 	}	
+	
+	virtual ~IProgram () {
+	    for (auto it : decls)
+		delete it;
+	}
+	
     };
 
     typedef IProgram* Program;

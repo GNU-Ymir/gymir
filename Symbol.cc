@@ -1,5 +1,6 @@
 #include "semantic/pack/Symbol.hh"
 #include "semantic/types/InfoType.hh"
+#include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/tree/Tree.hh>
 
 namespace semantic {
@@ -75,4 +76,16 @@ namespace semantic {
 	return __nbTmp__;
     }
     
+    ISymbol::~ISymbol () {
+	if (this-> value () != NULL) {
+	    delete this-> value ();
+	    this-> value () = NULL;
+	}
+	
+	if (this-> type != NULL) {
+	    delete this-> type;
+	    this-> type = NULL;
+	}
+    }
+
 }

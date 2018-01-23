@@ -29,7 +29,11 @@ namespace syntax {
 	    
 	    this-> block-> print (nb + 4);
 	}	
-
+	
+	virtual ~ISelf () {
+	    delete block;
+	}
+	
     };
 
     typedef ISelf* Self;

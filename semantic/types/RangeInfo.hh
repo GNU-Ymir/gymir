@@ -20,14 +20,14 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
-	static InfoType create (Word tok, std::vector<syntax::Expression> tmps) {
+	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
 		auto type = tmps [0]-> info-> type;		
 		if (type-> is <IFloatInfo> () || type-> is <IFixedInfo> () || type-> is <ICharInfo> ())
-		    return new IRangeInfo (false, tmps [0]-> info-> type);
+		    return new (GC) IRangeInfo (false, tmps [0]-> info-> type);
 		else return NULL;
 	    }
 	}

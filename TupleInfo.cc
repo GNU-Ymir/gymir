@@ -22,7 +22,7 @@ namespace semantic {
 
     InfoType ITupleInfo::ConstVerif (InfoType other) {
 	if (auto tuple = other-> to <ITupleInfo> ()) {
-	    auto other = new ITupleInfo (IInfoType::isConst ());
+	    auto other = new (GC) ITupleInfo (IInfoType::isConst ());
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto res = this-> params [it]-> ConstVerif (tuple-> params [it]);
 		if (res == NULL) return NULL;
@@ -45,8 +45,8 @@ namespace semantic {
 	return false;
     }
     
-    InfoType ITupleInfo::create (Word, std::vector <syntax::Expression> templates) {
-	auto tuple = new ITupleInfo (false);
+    InfoType ITupleInfo::create (Word, const std::vector<syntax::Expression> & templates) {
+	auto tuple = new (GC) ITupleInfo (false);
 	for (auto it : Ymir::r (0, templates.size ())) {
 	    tuple-> params.push_back (templates [it]-> info-> type);
 	}
@@ -67,7 +67,7 @@ namespace semantic {
 	Word tok (UNKNOWN_LOCATION, Token::EQUAL);
 	if (this-> isType ()) return NULL;
 	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
-	    auto ret = new ITupleInfo (IInfoType::isConst ());
+	    auto ret = new (GC) ITupleInfo (IInfoType::isConst ());
 	    for (auto it : this-> params) {
 		ret-> params.push_back (it-> BinaryOp (tok, it));
 		//TODO ret-> params.back ()-> value = NULL;
@@ -86,7 +86,7 @@ namespace semantic {
     }
 		
     InfoType ITupleInfo::clone () {
-	auto tu = new ITupleInfo (IInfoType::isConst ());
+	auto tu = new (GC) ITupleInfo (IInfoType::isConst ());
 	for (auto it : this-> params) {
 	    tu-> params.push_back (it-> clone ());
 	}
@@ -169,7 +169,7 @@ namespace semantic {
     InfoType ITupleInfo::AffectRight (Word tok, Expression left) {
 	if (this-> isType ()) return NULL;
 	if (left-> info-> type-> is <IUndefInfo> ()) {
-	    auto ret = new ITupleInfo (false);
+	    auto ret = new (GC) ITupleInfo (false);
 	    for (auto it : this-> params) {
 		ret-> params.push_back (it-> BinaryOpRight (tok, left));
 		//TODO ret-> params.back ()-> value = NULL;

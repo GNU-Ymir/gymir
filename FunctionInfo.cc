@@ -15,7 +15,7 @@ namespace semantic {
 	_alone (false)
     {}
 
-    IFunctionInfo::IFunctionInfo (Namespace space, std::string name, std::vector<Frame> infos) :
+    IFunctionInfo::IFunctionInfo (Namespace space, std::string name, const std::vector<Frame> & infos) :
 	IInfoType (true),
 	_name (name),
 	_space (space),
@@ -56,7 +56,7 @@ namespace semantic {
 	return alls;
     }
 
-    ApplicationScore IFunctionInfo::CallOp (Word tok, std::vector <InfoType> params) {
+    ApplicationScore IFunctionInfo::CallOp (Word tok, const std::vector<InfoType> & params) {
 	ulong nbErrorBeg = Ymir::Error::nb_errors;
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
@@ -65,7 +65,7 @@ namespace semantic {
 	    total.push_back (it-> isApplicable (params));
 
 	std::vector <Frame> goods;
-	ApplicationScore right = new IApplicationScore ();
+	ApplicationScore right = new (GC) IApplicationScore ();
 	for (uint it = 0; it < total.size () ; it++) {
 	    if (total [it]) {
 		if (goods.size () == 0 && total [it]-> score != 0) {
@@ -125,7 +125,7 @@ namespace semantic {
 	}
 
 	std::vector <Frame> goods;
-	ApplicationScore right = new IApplicationScore ();
+	ApplicationScore right = new (GC) IApplicationScore ();
 	for (uint it = 0; it < total.size () ; it++) {
 	    if (total [it]) {
 		if (goods.size () == 0 && total [it]-> score != 0) {
@@ -179,7 +179,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IFunctionInfo::TempOp (std::vector<syntax::Expression> params) {
+    InfoType IFunctionInfo::TempOp (const std::vector<syntax::Expression> & params) {
 	auto frames = getFrames ();
 	std::vector <Frame> ret;
 	for (auto it : frames) {
@@ -188,7 +188,7 @@ namespace semantic {
 	}
 
 	if (ret.size () != 0)
-	    return new IFunctionInfo (this-> _space, this-> _name, ret);
+	    return new (GC) IFunctionInfo (this-> _space, this-> _name, ret);
 	return NULL;
     }
 
@@ -245,7 +245,7 @@ namespace semantic {
 		//     params.push_back (it-> info-> type);
 		// }
 		// auto ret = proto-> type-> type;
-		// auto ptr = new IPtrFuncInfo (true);
+		// auto ptr = new (GC) IPtrFuncInfo (true);
 		// ptr-> params = params;
 		// ptr-> ret = ret;
 		// ptr-> score = this-> CallOp (fr-> ident, params);

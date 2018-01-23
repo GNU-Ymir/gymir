@@ -79,7 +79,7 @@ namespace semantic {
 
 	InfoType CastOp (InfoType) override;
 
-	InfoType ApplyOp (std::vector <syntax::Var>) override;
+	InfoType ApplyOp (const std::vector<syntax::Var> &) override;
 
 	std::string innerSimpleTypeString () override;
 

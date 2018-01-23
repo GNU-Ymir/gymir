@@ -54,7 +54,7 @@ namespace semantic {
 	}
 	
 	if (treat) {	    
-	    auto ch = new ICharInfo (this-> isConst ());
+	    auto ch = new (GC) ICharInfo (this-> isConst ());
 	    ch-> binopFoo = &StringUtils::InstAccessInt;
 	    return ch;
 	}
@@ -62,7 +62,7 @@ namespace semantic {
     }
         
     InfoType IStringInfo::clone () {
-	auto ret = new IStringInfo (this-> isConst ());
+	auto ret = new (GC) IStringInfo (this-> isConst ());
 	if (this-> value ())
 	    ret-> value () = this-> value ()-> clone ();
 	return ret;
@@ -103,13 +103,13 @@ namespace semantic {
     }
     
     InfoType IStringInfo::Ptr () {	
-	auto ret = new IPtrInfo (this-> isConst (), new ICharInfo (this-> isConst ()));
+	auto ret = new (GC) IPtrInfo (this-> isConst (), new (GC) ICharInfo (this-> isConst ()));
 	ret-> unopFoo = &StringUtils::InstPtr;
 	return ret;
     }
 
     InfoType IStringInfo::Length () {
-	auto ret = new IFixedInfo (true, FixedConst::ULONG);
+	auto ret = new (GC) IFixedInfo (true, FixedConst::ULONG);
 	ret-> unopFoo = &StringUtils::InstLen;
 	if (this-> value ())
 	    ret-> value () = new (GC) IFixedValue (FixedConst::ULONG, this-> value ()-> to<IStringValue> ()-> toString ().length (), 0);
@@ -179,9 +179,9 @@ namespace semantic {
 	if (string_type_node.isNull ()) {
 	    string_type_node = Ymir::makeStructType ("string", 2,
 						     get_identifier ("len"),
-						     (new IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+						     (new (GC) IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
 						     get_identifier ("ptr"),
-						     (new IPtrInfo (true, new ICharInfo (true)))-> toGeneric ().getTree ()
+						     (new (GC) IPtrInfo (true, new (GC) ICharInfo (true)))-> toGeneric ().getTree ()
 	    ).getTree ();
 	    IFinalFrame::declareType ("string", string_type_node);	    
 	}

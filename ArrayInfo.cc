@@ -103,7 +103,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IArrayInfo::ApplyOp (std::vector <syntax::Var> vars) {
+    InfoType IArrayInfo::ApplyOp (const std::vector<syntax::Var> & vars) {
 	if (vars.size () != 1) return NULL;
 	if (this-> isConst ()) {
 	    vars [0]-> info-> type = this-> _content-> clone ();

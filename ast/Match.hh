@@ -28,6 +28,11 @@ namespace syntax {
 	    this-> left-> print (nb + 4);
 	    this-> right-> print (nb + 4);
 	}
+
+	virtual ~IMatchPair () {
+	    delete left;
+	    delete right;
+	}
 	
     };
     
@@ -77,6 +82,19 @@ namespace syntax {
 
 	    if (this-> default_) this-> default_-> print (nb + 10);
 	}	
+
+	virtual ~IMatch () {
+	    delete expr;
+	    for (auto it : values)
+		delete it;
+	    for (auto it : block)
+		delete it;
+	    if (default_) delete default_;
+
+	    for (auto it : results)
+		delete it;
+	    if (defaultResult) delete defaultResult;
+	}
 	
     };
 
