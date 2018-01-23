@@ -25,7 +25,7 @@ namespace semantic {
 	
 	InfoType CompOp (InfoType other);
 		
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	InfoType DotExpOp (syntax::Expression right);
 

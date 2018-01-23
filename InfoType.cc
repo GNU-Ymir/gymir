@@ -104,8 +104,8 @@ namespace semantic {
     }
     
     InfoType IInfoType::BinaryOp (Word w, InfoType info) {
-	auto expr = new syntax::IExpression (w);
-	expr-> info = new (GC) ISymbol (w, info);
+	auto expr = new (Z0) syntax::IExpression (w);
+	expr-> info = new (Z0)  ISymbol (w, info);
 	return this-> BinaryOp (w, expr);
     }
     
@@ -114,8 +114,8 @@ namespace semantic {
     }
 
     InfoType IInfoType::BinaryOpRight (Word w, InfoType info) {
-	auto expr = new syntax::IExpression (w);
-	expr-> info = new (GC) ISymbol (w, info);
+	auto expr = new (Z0) syntax::IExpression (w);
+	expr-> info = new (Z0)  ISymbol (w, info);
 	return this-> BinaryOpRight (w, expr);
     }
     
@@ -181,11 +181,17 @@ namespace semantic {
     }
 
     InfoType IInfoType::StringOf () {
-	auto str = new (GC) IStringInfo (true);
-	str-> value () = new (GC) IStringValue (this-> typeString ().c_str ());
+	auto str = new (Z0)  IStringInfo (true);
+	str-> value () = new (Z0)  IStringValue (this-> typeString ().c_str ());
 	return str;
     }	
     
+    InfoType IInfoType::clone () {
+	auto ret = this-> onClone ();
+	if (ret) ret-> value () = this-> value ();
+	return ret;
+    }
+
     InfoType IInfoType::cloneOnExit () {
 	auto ret = this-> clone ();
 	if (ret) ret-> value () = NULL;

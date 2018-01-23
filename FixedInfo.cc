@@ -70,7 +70,7 @@ namespace semantic {
 	
     InfoType IFixedInfo::UnaryOp (Word op) {
 	if (op == Token::MINUS) {
-	    auto ret = new (GC) IFixedInfo (true, this-> type ());
+	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
 	    ret-> unopFoo = FixedUtils::UnaryMinus;
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
@@ -83,15 +83,15 @@ namespace semantic {
     InfoType IFixedInfo::CastOp (InfoType other) {
 	if (this-> isSame (other)) return this;
 	if (other-> is<IBoolInfo> ()) {
-	    auto aux = new (GC) IBoolInfo (this-> isConst ());
+	    auto aux = new (Z0)  IBoolInfo (this-> isConst ());
 	    aux-> binopFoo = FixedUtils::InstCast;
 	    return aux;
 	} else if (other-> is<ICharInfo> ()) {
-	    auto aux = new (GC) ICharInfo (this-> isConst ());
+	    auto aux = new (Z0)  ICharInfo (this-> isConst ());
 	    aux-> binopFoo = FixedUtils::InstCast;
 	    return aux;
 	} else if (auto ot = other-> to<IFloatInfo> ()) {
-	    auto aux = new (GC) IFloatInfo (this-> isConst (), ot-> type ());
+	    auto aux = new (Z0)  IFloatInfo (this-> isConst (), ot-> type ());
 	    aux-> binopFoo = FixedUtils::InstCast;
 	    return aux;
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
@@ -110,7 +110,7 @@ namespace semantic {
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
-		auto aux = new (GC) IRefInfo (this-> isConst (), this-> clone ());
+		auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
 		aux-> binopFoo = &FixedUtils::InstAddr;
 		return aux;
 	    }
@@ -144,8 +144,8 @@ namespace semantic {
 	return this-> _type;
     }
 
-    InfoType IFixedInfo::clone () {
-	auto ret = new (GC) IFixedInfo (this-> isConst (), this-> _type);
+    InfoType IFixedInfo::onClone () {
+	auto ret = new (Z0)  IFixedInfo (this-> isConst (), this-> _type);
 	if (this-> value ())
 	    ret-> value () = this-> value ()-> clone ();
 	return ret;
@@ -156,7 +156,7 @@ namespace semantic {
     }
 	
     InfoType IFixedInfo::toPtr () {
-	auto ret = new (GC) IPtrInfo (this-> isConst (), this-> clone ());
+	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
 	ret-> binopFoo = &FixedUtils::InstAddr;
 	return ret;
     }
@@ -194,7 +194,7 @@ namespace semantic {
 
     InfoType IFixedInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    auto i = new (GC) IFixedInfo (false, this-> _type);
+	    auto i = new (Z0)  IFixedInfo (false, this-> _type);
 	    i-> binopFoo = &FixedUtils::InstAffect;
 	    return i;
 	}
@@ -242,19 +242,19 @@ namespace semantic {
     InfoType IFixedInfo::opTest (Word op, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (this-> _type == ot-> type ()) {
-		auto ret = new (GC) IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTest;
 		if (this-> value ())
 		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
 		return ret;	    
 	    } else if (this-> isSup (ot)) {
-		auto ret = new (GC) IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTest;
 		if (this-> value ())
 		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		return ret;
 	    } else {
-		auto ret = new (GC) IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTestRight;
 		if (this-> value ())
 		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
@@ -262,7 +262,7 @@ namespace semantic {
 	    }	    
 	} else if (auto ot = right-> info-> type-> to<ICharInfo> ()) {
 	    if (this-> _type == FixedConst::UBYTE) {
-		auto ret = new (GC) IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = &FixedUtils::InstTest;
 		if (this-> value ())
 		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
@@ -274,27 +274,27 @@ namespace semantic {
 
     InfoType IFixedInfo::opRange (Word, syntax::Expression right) {
 	if (this-> isSame (right-> info-> type)) {
-	    auto ret = new (GC) IRangeInfo (true, this-> clone ());
+	    auto ret = new (Z0)  IRangeInfo (true, this-> clone ());
 	    ret-> binopFoo = &FixedUtils::InstRange;
 	    return ret;
 	} else if (auto ot = right-> info-> type-> to <IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
-		    auto ret = new (GC) IRangeInfo (true, this-> clone ());
+		    auto ret = new (Z0)  IRangeInfo (true, this-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRange;
 		    return ret;
 		} else {
-		    auto ret = new (GC) IRangeInfo (true, ot-> clone ());
+		    auto ret = new (Z0)  IRangeInfo (true, ot-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRangeRight;
 		    return ret;
 		}
 	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
-		    auto ret = new (GC) IRangeInfo (true, this-> clone ());
+		    auto ret = new (Z0)  IRangeInfo (true, this-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRange;
 		    return ret;
 		} else {
-		    auto ret = new (GC) IRangeInfo (true, ot-> clone ());
+		    auto ret = new (Z0)  IRangeInfo (true, ot-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRangeRight;
 		    return ret;
 		}
@@ -345,24 +345,24 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::Init () {
-	auto ret = new (GC) IFixedInfo (true, this-> _type);
+	auto ret = new (Z0)  IFixedInfo (true, this-> _type);
 	return ret;	
     }
 
     InfoType IFixedInfo::Max () {
-	auto ret = new (GC) IFixedInfo (true, this-> _type);
+	auto ret = new (Z0)  IFixedInfo (true, this-> _type);
 	//TODO
 	return ret;	
     }
 
     InfoType IFixedInfo::Min () {
-	auto ret = new (GC) IFixedInfo (true, this-> _type);
+	auto ret = new (Z0)  IFixedInfo (true, this-> _type);
 	//TODO
 	return ret;	
     }
 
     InfoType IFixedInfo::SizeOf () {
-	auto ret = new (GC) IFixedInfo (true, FixedConst::UBYTE);
+	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
 	//TODO
 	return ret;	
     }
@@ -582,7 +582,7 @@ namespace semantic {
     }
 
     syntax::Expression IFixedValue::toYmir (Symbol sym) {
-	auto ret = new (GC) IFixed (sym-> sym, this-> type);
+	auto ret = new (Z0)  IFixed (sym-> sym, this-> type);
 	if (isSigned (this-> type))
 	    ret-> setValue (this-> value.l);
 	else
@@ -595,9 +595,9 @@ namespace semantic {
     Value IFixedValue::add (Value other) {
 	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l + ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul + ot-> value.ul,
 					 0
 	    );
@@ -608,9 +608,9 @@ namespace semantic {
     Value IFixedValue::sub (Value other) {
 	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l - ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul - ot-> value.ul,
 					 0
 	    );
@@ -620,9 +620,9 @@ namespace semantic {
     Value IFixedValue::div (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l / ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul / ot-> value.ul,
 					 0
 	    );
@@ -632,9 +632,9 @@ namespace semantic {
     Value IFixedValue::mul (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l * ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul * ot-> value.ul,
 					 0
 	    );
@@ -644,9 +644,9 @@ namespace semantic {
     Value IFixedValue::lor (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l | ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul | ot-> value.ul,
 					 0
 	    );
@@ -657,9 +657,9 @@ namespace semantic {
     Value IFixedValue::land (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l & ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul & ot-> value.ul,
 					 0
 	    );
@@ -670,9 +670,9 @@ namespace semantic {
     Value IFixedValue::lshift (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l << ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul << ot-> value.ul,
 					 0
 	    );
@@ -683,9 +683,9 @@ namespace semantic {
     Value IFixedValue::rshift (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l >> ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul >> ot-> value.ul,
 					 0
 	    );
@@ -696,9 +696,9 @@ namespace semantic {
     Value IFixedValue::lxor (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l ^ ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul ^ ot-> value.ul,
 					 0
 	    );
@@ -709,9 +709,9 @@ namespace semantic {
     Value IFixedValue::mod (Value other) {
 	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l % ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul % ot-> value.ul,
 					 0
 	    );
@@ -722,9 +722,9 @@ namespace semantic {
     Value IFixedValue::dand (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l && ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul && ot-> value.ul,
 					 0
 	    );
@@ -735,9 +735,9 @@ namespace semantic {
     Value IFixedValue::dor (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IFixedValue (this-> type, 0,
+		return new (Z0)  IFixedValue (this-> type, 0,
 					     this-> value.l || ot-> value.l);
-	    return new (GC) IFixedValue (this-> type,
+	    return new (Z0)  IFixedValue (this-> type,
 					 this-> value.ul || ot-> value.ul,
 					 0
 	    );
@@ -748,8 +748,8 @@ namespace semantic {
     Value IFixedValue::inf (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IBoolValue (this-> value.l < ot-> value.l);
-	    return new (GC) IBoolValue (this-> value.ul < ot-> value.ul);
+		return new (Z0)  IBoolValue (this-> value.l < ot-> value.l);
+	    return new (Z0)  IBoolValue (this-> value.ul < ot-> value.ul);
 	}
 	return NULL;
     }
@@ -757,8 +757,8 @@ namespace semantic {
     Value IFixedValue::sup (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IBoolValue (this-> value.l > ot-> value.l);
-	    return new (GC) IBoolValue (this-> value.ul > ot-> value.ul);
+		return new (Z0)  IBoolValue (this-> value.l > ot-> value.l);
+	    return new (Z0)  IBoolValue (this-> value.ul > ot-> value.ul);
 	}
 	return NULL;
     }
@@ -766,8 +766,8 @@ namespace semantic {
     Value IFixedValue::infeq (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IBoolValue (this-> value.l <= ot-> value.l);
-	    return new (GC) IBoolValue (this-> value.ul <= ot-> value.ul);
+		return new (Z0)  IBoolValue (this-> value.l <= ot-> value.l);
+	    return new (Z0)  IBoolValue (this-> value.ul <= ot-> value.ul);
 	}
 	return NULL;
     }
@@ -775,8 +775,8 @@ namespace semantic {
     Value IFixedValue::supeq (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IBoolValue (this-> value.l >= ot-> value.l);
-	    return new (GC) IBoolValue (this-> value.ul >= ot-> value.ul);
+		return new (Z0)  IBoolValue (this-> value.l >= ot-> value.l);
+	    return new (Z0)  IBoolValue (this-> value.ul >= ot-> value.ul);
 	}
 	return NULL;
     }
@@ -784,8 +784,8 @@ namespace semantic {
     Value IFixedValue::neq (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IBoolValue (this-> value.l != ot-> value.l);
-	    return new (GC) IBoolValue (this-> value.ul != ot-> value.ul);
+		return new (Z0)  IBoolValue (this-> value.l != ot-> value.l);
+	    return new (Z0)  IBoolValue (this-> value.ul != ot-> value.ul);
 	}
 	return NULL;
     }
@@ -793,14 +793,14 @@ namespace semantic {
     Value IFixedValue::eq (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
-		return new (GC) IBoolValue (this-> value.l == ot-> value.l);
-	    return new (GC) IBoolValue (this-> value.ul == ot-> value.ul);
+		return new (Z0)  IBoolValue (this-> value.l == ot-> value.l);
+	    return new (Z0)  IBoolValue (this-> value.ul == ot-> value.ul);
 	}
 	return NULL;
     }
 
     Value IFixedValue::clone () {
-	return new (GC) IFixedValue (this-> type, this-> value.ul, this-> value.l);
+	return new (Z0)  IFixedValue (this-> type, this-> value.ul, this-> value.l);
     }    
 
     bool IFixedValue::equals (Value other) {

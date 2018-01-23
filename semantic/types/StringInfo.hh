@@ -22,7 +22,7 @@ namespace semantic {
 		Ymir::Error::notATemplate (tok);
 		return NULL;
 	    } else {
-		return new (GC) IStringInfo (false);
+		return new  IStringInfo (false);
 	    }
 	}
 
@@ -36,7 +36,7 @@ namespace semantic {
 
 	std::string innerSimpleTypeString () override;
 
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	InfoType DotOp (syntax::Var) override;
 

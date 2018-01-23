@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/semantic/pack/Namespace.hh>
 
@@ -21,7 +21,7 @@ namespace syntax {
 
 namespace semantic {
 
-    class IFinalFrame : public gc {
+    class IFinalFrame  {
     private :
 
 	Symbol _type;

@@ -15,7 +15,7 @@ namespace syntax {
     
 
 
-    class IProgram : public gc {
+    class IProgram  {
 
 	std::vector <Declaration> decls;
 	Word locus;

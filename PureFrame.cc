@@ -46,12 +46,12 @@ namespace semantic {
 	    auto tok = this-> _function-> getParams () [0]-> token;
 	    if (auto a = this-> _function-> getParams () [0]-> to<ITypedVar> ()) {
 		auto type = a-> getType ();
-		if (!type-> isSame (new (GC) IArrayInfo (true, new (GC) IStringInfo (true)))) {
+		if (!type-> isSame (new (Z0)  IArrayInfo (true, new (Z0)  IStringInfo (true)))) {
 		    Ymir::Error::assert ("TODO, erreur");
 		} else {
 		    auto str = Word (tok.getLocus (), "string");
-		    this-> _function-> getParams () [0] = new (GC) ITypedVar (tok,
-									 new (GC) IArrayVar (tok, new (GC) IVar (str))
+		    this-> _function-> getParams () [0] = new (Z0)  ITypedVar (tok,
+									 new (Z0)  IArrayVar (tok, new (Z0)  IVar (str))
 		    );
 		}
 	    }

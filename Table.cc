@@ -233,7 +233,7 @@ namespace semantic {
     }
 
     Module Table::addModule (Namespace space) {
-	Module mod = new (GC) IModule (space);
+	Module mod = new (Z0)  IModule (space);
 	this-> _importations.push_back (mod);
 	return mod;	
     }

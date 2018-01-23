@@ -27,7 +27,7 @@ namespace semantic {
 	    } else {
 		auto type = tmps [0]-> info-> type;		
 		if (type-> is <IFloatInfo> () || type-> is <IFixedInfo> () || type-> is <ICharInfo> ())
-		    return new (GC) IRangeInfo (false, tmps [0]-> info-> type);
+		    return new  IRangeInfo (false, tmps [0]-> info-> type);
 		else return NULL;
 	    }
 	}
@@ -52,7 +52,7 @@ namespace semantic {
 
 	InfoType getTemplate (ulong);
 	
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	static const char* id () {
 	    return "IRangeInfo";

@@ -36,7 +36,6 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
-	virtual ~IIf ();
 	
     };
     

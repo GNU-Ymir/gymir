@@ -10,7 +10,7 @@ namespace semantic {
 
     IRangeInfo::IRangeInfo (bool isConst) :
 	IInfoType (isConst),
-	_content (new (GC) IVoidInfo ())
+	_content (new (Z0)  IVoidInfo ())
     {}
     
     IRangeInfo::IRangeInfo (bool isConst, InfoType content) :
@@ -51,8 +51,8 @@ namespace semantic {
 	} else return NULL;
     }
 
-    InfoType IRangeInfo::clone () {
-	return new (GC) IRangeInfo (this-> isConst (), this-> _content-> clone ());
+    InfoType IRangeInfo::onClone () {
+	return new (Z0)  IRangeInfo (this-> isConst (), this-> _content-> clone ());
     }
     
     const char * IRangeInfo::getId () {
@@ -91,7 +91,7 @@ namespace semantic {
     
     InfoType IRangeInfo::In (Expression left) {
 	if (this-> _content-> isSame (left-> info-> type)) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = &RangeUtils::InstIn;
 	    return ret;
 	}

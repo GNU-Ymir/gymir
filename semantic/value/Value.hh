@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ymir/syntax/Word.hh>
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 
 namespace syntax {
     class IParamList;
@@ -25,7 +25,7 @@ namespace semantic {
     class ISymbol;
     typedef ISymbol* Symbol;
     
-    class IValue : public gc {
+    class IValue  {
     public:
 	
 	virtual Value BinaryOp (Word token, Value right);

@@ -28,7 +28,7 @@ namespace semantic {
 
     InfoType IBoolInfo::UnaryOp (Word op) {
 	if (op == Token::NOT) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    //ret-> lintInstS.push_back (BoolUtils::InstXor);
 	    //if (this-> value) ret-> value = this-> value-> UnaryOp (op);
 	    return ret;
@@ -59,7 +59,7 @@ namespace semantic {
 
     InfoType IBoolInfo::CompOp (InfoType other) {
 	if (other-> is<IBoolInfo> () || other-> is<IUndefInfo> ()) {
-	    auto bl = new (GC) IBoolInfo (this-> isConst ());
+	    auto bl = new (Z0)  IBoolInfo (this-> isConst ());
 	    //bl-> lintInst = BoolUtils::InstAffect;
 	    return bl;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
@@ -68,19 +68,19 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IBoolInfo::clone () {
-	return new (GC) IBoolInfo (this-> isConst ());
+    InfoType IBoolInfo::onClone () {
+	return new (Z0)  IBoolInfo (this-> isConst ());
     }
 		
     InfoType IBoolInfo::Ptr () {
-	auto ptr = new (GC) IPtrInfo (this-> isConst (), this-> clone ());
+	auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
 	//ptr-> lintInstS.push_back (BoolUtils::InstAddr);
 	return ptr;
     }
 
     InfoType IBoolInfo::Affect (syntax::Expression right) {
 	if (right-> info-> type-> is<IBoolInfo> ()) {
-	    auto b = new (GC) IBoolInfo (this-> isConst ());
+	    auto b = new (Z0)  IBoolInfo (this-> isConst ());
 	    b-> binopFoo = BoolUtils::InstAffect;
 	    return b;
 	}
@@ -89,7 +89,7 @@ namespace semantic {
 
     InfoType IBoolInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    auto b = new (GC) IBoolInfo (this-> isConst ());
+	    auto b = new (Z0)  IBoolInfo (this-> isConst ());
 	    b-> binopFoo = BoolUtils::InstAffect;
 	    return b;
 	}
@@ -98,7 +98,7 @@ namespace semantic {
 
     InfoType IBoolInfo::opNorm (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<IBoolInfo> ()) {
-	    auto b = new (GC) IBoolInfo (true);
+	    auto b = new (Z0)  IBoolInfo (true);
 	    //TODO
 	    return b;
 	}
@@ -107,17 +107,17 @@ namespace semantic {
 
     InfoType IBoolInfo::Init () {
 	//TODO
-	return new (GC) IBoolInfo (true);
+	return new (Z0)  IBoolInfo (true);
     }
 
     InfoType IBoolInfo::SizeOf () {
 	//TODO
-	return new (GC) IFixedInfo (true, FixedConst::UBYTE);
+	return new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
     }
 
     InfoType IBoolInfo::StringOf () {
 	//TODO
-	return new (GC) IStringInfo (true);
+	return new (Z0)  IStringInfo (true);
     }
     
     const char* IBoolInfo::getId () {

@@ -87,12 +87,18 @@ namespace Ymir {
 	this-> write (expr-> prettyPrint ().c_str ());
     }
     
+    void OutBuffer::write_ (bool b) {
+	if (b)
+	    this-> write_ ("true");
+	else this-> write_ ("false");
+    }
+
     void OutBuffer::resize (ulong len) {
 	if (capacity == 0) capacity = len + 1;
 	else if (capacity * 2 < len) capacity = len + capacity + 1;
 	else capacity = (capacity * 2) + 1;
 	
-	auto aux = new char [capacity];
+	auto aux = new (Z0) char [capacity];
 
 	for (uint i = 0 ; i < this-> len ; i ++)
 	    aux [i] = this-> current [i];
@@ -103,6 +109,7 @@ namespace Ymir {
 
     void OutBuffer::write () {}
 
+    
     void OutBuffer::throwError () {
 	Ymir::Error::assert ("error");
     }

@@ -39,7 +39,7 @@ namespace semantic {
     }
 
     ITreeInfo* ITreeInfo::enterBlock (std::string sc) {
-	this-> _infos.push_back (new (GC) ITreeInfo (sc));
+	this-> _infos.push_back (new (Z0)  ITreeInfo (sc));
 	this-> _infos.back ()-> _father = this;
 	return this-> _infos.back ();
     }
@@ -167,7 +167,7 @@ namespace semantic {
     void FrameReturnInfo::enterBlock () {
 	if (this-> _retInfo) {
 	    this-> _retInfo = this-> _retInfo-> enterBlock (this-> _currentBlock);
-	} else this-> _retInfo = new (GC) ITreeInfo (this-> _currentBlock);
+	} else this-> _retInfo = new (Z0)  ITreeInfo (this-> _currentBlock);
     }
 
     void FrameReturnInfo::quitBlock () {

@@ -7,7 +7,7 @@
 #include <string>
 #include <tr1/memory>
 #include <stdlib.h>
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include "Token.hh"
 
 struct Word {

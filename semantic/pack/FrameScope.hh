@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include "../../syntax/Word.hh"
 #include <ymir/semantic/pack/Scope.hh>
 #include "Symbol.hh"
@@ -9,12 +9,12 @@
 
 namespace semantic {
 
-    class ITreeInfo : public gc {
+    class ITreeInfo  {
 	std::string _name;
 	Word _ident;
 	std::vector <ITreeInfo*> _infos;
-	bool _returned;
-	bool _breaked;
+	bool _returned = false;
+	bool _breaked = false;
 	ITreeInfo* _father;
 
     public:

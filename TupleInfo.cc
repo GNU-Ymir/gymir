@@ -22,7 +22,7 @@ namespace semantic {
 
     InfoType ITupleInfo::ConstVerif (InfoType other) {
 	if (auto tuple = other-> to <ITupleInfo> ()) {
-	    auto other = new (GC) ITupleInfo (IInfoType::isConst ());
+	    auto other = new (Z0)  ITupleInfo (IInfoType::isConst ());
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto res = this-> params [it]-> ConstVerif (tuple-> params [it]);
 		if (res == NULL) return NULL;
@@ -46,7 +46,7 @@ namespace semantic {
     }
     
     InfoType ITupleInfo::create (Word, const std::vector<syntax::Expression> & templates) {
-	auto tuple = new (GC) ITupleInfo (false);
+	auto tuple = new (Z0)  ITupleInfo (false);
 	for (auto it : Ymir::r (0, templates.size ())) {
 	    tuple-> params.push_back (templates [it]-> info-> type);
 	}
@@ -67,7 +67,7 @@ namespace semantic {
 	Word tok (UNKNOWN_LOCATION, Token::EQUAL);
 	if (this-> isType ()) return NULL;
 	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
-	    auto ret = new (GC) ITupleInfo (IInfoType::isConst ());
+	    auto ret = new (Z0)  ITupleInfo (IInfoType::isConst ());
 	    for (auto it : this-> params) {
 		ret-> params.push_back (it-> BinaryOp (tok, it));
 		//TODO ret-> params.back ()-> value = NULL;
@@ -77,7 +77,7 @@ namespace semantic {
 	    return ret;
 	} else if (auto ot = other->to <IRefInfo> ()) {
 	    if (!this-> isConst () && ot-> content ()-> isSame (this)) {
-		auto aux = new (GC) IRefInfo (false, this-> clone ());
+		auto aux = new (Z0)  IRefInfo (false, this-> clone ());
 		aux-> binopFoo = &TupleUtils::InstAddr;
 		return aux;
 	    }
@@ -85,8 +85,8 @@ namespace semantic {
 	return NULL;
     }
 		
-    InfoType ITupleInfo::clone () {
-	auto tu = new (GC) ITupleInfo (IInfoType::isConst ());
+    InfoType ITupleInfo::onClone () {
+	auto tu = new (Z0)  ITupleInfo (IInfoType::isConst ());
 	for (auto it : this-> params) {
 	    tu-> params.push_back (it-> clone ());
 	}
@@ -154,7 +154,7 @@ namespace semantic {
 	if (this-> isType ()) return NULL;
 	if (auto tuple = right-> info-> type-> to <ITupleInfo> ()) {
 	    if (tuple-> nbParams () != this-> nbParams ()) return NULL;
-	    auto ret = new (GC) ITupleInfo (false);
+	    auto ret = new (Z0)  ITupleInfo (false);
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		ret-> params.push_back (this-> params [it]-> BinaryOp (tok, tuple-> params [it]));
 		if (ret-> params.back () == NULL) return NULL;
@@ -169,7 +169,7 @@ namespace semantic {
     InfoType ITupleInfo::AffectRight (Word tok, Expression left) {
 	if (this-> isType ()) return NULL;
 	if (left-> info-> type-> is <IUndefInfo> ()) {
-	    auto ret = new (GC) ITupleInfo (false);
+	    auto ret = new (Z0)  ITupleInfo (false);
 	    for (auto it : this-> params) {
 		ret-> params.push_back (it-> BinaryOpRight (tok, left));
 		//TODO ret-> params.back ()-> value = NULL;
@@ -220,8 +220,8 @@ namespace semantic {
 		auto ret = info-> getParams () [it]-> buildBinaryOp (
 		    locus,
 		    info-> getParams () [it],
-		    new (GC) ITreeExpression (locus, info-> getParams () [it], laux),
-		    new (GC) ITreeExpression (locus, rtype-> getParams () [it], raux)
+		    new (Z0)  ITreeExpression (locus, info-> getParams () [it], laux),
+		    new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], raux)
 		);
 		list.append (ret);		
 	    }
@@ -245,8 +245,8 @@ namespace semantic {
 		auto ret = info-> getParams () [it]-> buildBinaryOp (
 		    locus,
 		    info-> getParams () [it],
-		    new (GC) ITreeExpression (locus, info-> getParams () [it], laux),
-		    new (GC) ITreeExpression (locus, rtype-> getParams () [it], raux)
+		    new (Z0)  ITreeExpression (locus, info-> getParams () [it], laux),
+		    new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], raux)
 		);
 		list.append (ret);		
 	    }

@@ -21,7 +21,7 @@ namespace syntax {
 
     Block IBlock::blockWithoutEnter () {
 	std::vector <Instruction> insts;
-	auto bl = new (GC) IBlock (this-> token, {}, {});
+	auto bl = new (Z0)  IBlock (this-> token, {}, {});
 	
 	if (!this-> ident.isEof ()) 
 	    Table::instance ().retInfo ().setIdent (this-> ident);
@@ -51,10 +51,10 @@ namespace syntax {
 
     
     Instruction IVarDecl::instruction () {
-	auto auxDecl = new (GC) IVarDecl (this-> token);
+	auto auxDecl = new (Z0)  IVarDecl (this-> token);
 	ulong id = 0;
 	for (auto it : this-> decls) {
-	    auto aux = new (GC) IVar (it-> token);
+	    auto aux = new (Z0)  IVar (it-> token);
 	    auto info = Table::instance ().get (it-> token.getStr ());
 	    if (info && Table::instance ().sameFrame (info)) {
 		Ymir::Error::shadowingVar (it-> token, info-> sym);
@@ -64,7 +64,7 @@ namespace syntax {
 	    if (this-> decos [id] == Keys::IMMUTABLE) {
 		Ymir::Error::assert ("TODO, Immut");
 	    } else if (this-> decos [id] == Keys::CONST) {
-		aux-> info = new (GC) ISymbol (aux-> token, new (GC) IUndefInfo ());
+		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
 		aux-> info-> isConst (false);
 		Table::instance ().insert (aux-> info);
 		if (this-> insts [id] == NULL) {
@@ -78,7 +78,7 @@ namespace syntax {
 	    } else if (this-> decos [id] == Keys::STATIC) {
 		Ymir::Error::assert ("TODO, static");
 	    } else {
-		aux-> info = new (GC) ISymbol (aux-> token, new (GC) IUndefInfo ());
+		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
 		aux-> info-> isConst (false);
 		Table::instance ().insert (aux-> info);
 		auxDecl-> decls.push_back (aux);
@@ -93,16 +93,16 @@ namespace syntax {
 
     Instruction IAssert::instruction () {
 	auto expr = this-> expr-> expression ();
-	if (!expr-> info-> type-> isSame (new (GC) IBoolInfo (true))) {
-	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (GC) IBoolInfo (true));
+	if (!expr-> info-> type-> isSame (new (Z0)  IBoolInfo (true))) {
+	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
 	    return NULL;
 	}
 
 	Expression msg = NULL;
 	if (this-> msg) {
 	    msg = this-> msg-> expression ();
-	    if (!msg-> info-> type-> isSame (new (GC) IStringInfo (true))) {
-		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (GC) IStringInfo (true));
+	    if (!msg-> info-> type-> isSame (new (Z0)  IStringInfo (true))) {
+		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IStringInfo (true));
 		return NULL;
 	    }
 	}
@@ -121,11 +121,11 @@ namespace syntax {
 	    if (expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ())
 		Table::instance ().retInfo ().returned ();
 	}
-	return new (GC) IAssert (this-> token, expr, msg, this-> isStatic);
+	return new (Z0)  IAssert (this-> token, expr, msg, this-> isStatic);
     }
     
     Instruction IBreak::instruction () {
-	auto aux = new (GC) IBreak (this-> token, this-> ident);
+	auto aux = new (Z0)  IBreak (this-> token, this-> ident);
 	Table::instance ().retInfo ().breaked ();
 	if (this-> ident.isEof ()) {
 	    auto nb = Table::instance ().retInfo ().rewind (std::vector <std::string> {"while", "for"});
@@ -149,10 +149,10 @@ namespace syntax {
 	if (this-> test != NULL) {
 	    auto expr = this-> test-> expression ();
 	    if (expr == NULL) return NULL;
-	    auto type = expr-> info-> type-> CompOp (new (GC) IBoolInfo (true));
+	    auto type = expr-> info-> type-> CompOp (new (Z0)  IBoolInfo (true));
 	    
 	    if (type == NULL) {
-		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (GC) IBoolInfo (true));
+		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
 		return NULL;
 	    }
 
@@ -164,9 +164,11 @@ namespace syntax {
 		} else if (expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ()) {
 		    return this-> block-> instruction ();
 		} else {
-		    if (this-> else_)
+		    if (this-> else_) {
+			this-> else_-> isStatic  = this-> isStatic;
 			return this-> else_-> instruction ();
-		    else return new (GC) IBlock (this-> block-> token, {}, {});
+		    }
+		    else return new (Z0)  IBlock (this-> block-> token, {}, {});
 		}
 	    }
 	    
@@ -175,19 +177,24 @@ namespace syntax {
 	    Block bl = this-> block-> block ();
 	    If _if;
 	    if (this-> else_ != NULL) {
-		_if = new (GC) IIf (this-> token, expr, bl, (If) this-> else_-> instruction ());
+		_if = new (Z0)  IIf (this-> token, expr, bl, (If) this-> else_-> instruction ());
 		_if-> info = type;
 	    } else {
-		_if = new (GC) IIf (this-> token, expr, bl);
+		_if = new (Z0)  IIf (this-> token, expr, bl);
 		_if-> info = type;
 	    }
 	    return _if;
 	} else {
-	    Table::instance ().retInfo ().currentBlock () = "else";
-	    Table::instance ().retInfo ().changed () = true;
-	    Block bl = this-> block-> block ();
-	    If _if = new (GC) IIf (this-> token, NULL, bl);
-	    return _if;
+	    if (!this-> isStatic) {
+		Table::instance ().retInfo ().currentBlock () = "else";
+		Table::instance ().retInfo ().changed () = true;
+	    
+		Block bl = this-> block-> block ();
+		If _if = new (Z0)  IIf (this-> token, NULL, bl);
+		return _if;
+	    } else {
+		return this-> block-> instruction ();
+	    }
 	}
     }
     
@@ -199,22 +206,22 @@ namespace syntax {
     Instruction IWhile::instruction () {
 	auto expr = this-> test-> expression ();
 	if (expr == NULL) return NULL;
-	auto type = expr-> info-> type-> CompOp (new (GC) IBoolInfo (true));
+	auto type = expr-> info-> type-> CompOp (new (Z0)  IBoolInfo (true));
 
 	if (type == NULL) {
-	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (GC) IBoolInfo (true));
+	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
 	}
 
 	Table::instance ().retInfo ().currentBlock () = "while";
 	Table::instance ().retInfo ().changed () = true;
 	Block bl = this-> block-> block ();
 
-	return new (GC) IWhile (this-> token, expr, bl);		
+	return new (Z0)  IWhile (this-> token, expr, bl);		
     }
 
 
     Instruction IReturn::instruction () {
-	auto aux = new (GC) IReturn (this-> token);
+	auto aux = new (Z0)  IReturn (this-> token);
 	Table::instance ().retInfo ().returned ();
 	if (this-> elem != NULL) {
 	    aux-> elem = this-> elem-> expression ();
@@ -225,29 +232,35 @@ namespace syntax {
 	    
 	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ()) {
 		Table::instance ().retInfo ().info-> type = aux-> elem-> info-> type-> clone ();
-		if (!Table::instance ().retInfo ().changed ())
+		if (!Table::instance ().retInfo ().changed ()) {
 		    Table::instance ().retInfo ().changed () = true;
-		//else TODO  Table::instance ().retInfo ().info->type-> value = NULL;
+		    Table::instance ().retInfo ().info-> value () = aux-> elem-> info-> value ();
+		} else 
+		    Table::instance ().retInfo ().info-> value () = NULL;
 	    } else {
 		auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
 		if (type == NULL) {
 		    Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
-		} else if (type-> isSame (aux-> elem-> info-> type)) {
-		    //if (!Table::instance () TODO immutable
+		} else if (type-> isSame (aux-> elem-> info-> type)) {		    
+		    if (!Table::instance ().retInfo ().changed ()) {
+			Table::instance ().retInfo ().info-> value () =
+			    aux-> elem-> info-> value ();
+		    } else
+			Table::instance ().retInfo ().info-> value () = NULL;
+		    Table::instance ().retInfo ().changed () = true;
 		}
+	    
 	    }
-
-	    Word word (this-> token.getLocus (), Token::EQUAL);
+	    
 	    aux-> caster = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
 	    if (!Table::instance ().retInfo ().info-> type-> is <IRefInfo> ())
-		aux-> caster-> isConst (true);
-	    
+		aux-> caster-> isConst (true);			    
 	} else {
 	    if (!Table::instance ().retInfo ().info-> type-> is<IUndefInfo> () &&
 		!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> ())
 		Ymir::Error::noValueNonVoidFunction (this-> token);
 	    else
-		Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
+		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 	}
 	return aux;
     }

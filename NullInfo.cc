@@ -10,15 +10,15 @@ namespace semantic {
 	return other-> is<INullInfo> ();
     }
 
-    InfoType INullInfo::clone () {
-	return new (GC) INullInfo ();
+    InfoType INullInfo::onClone () {
+	return new (Z0)  INullInfo ();
     }
 
     InfoType INullInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
 	    //TODO
-	    return new (GC) IStringInfo (true);
+	    return new (Z0)  IStringInfo (true);
 	}
 	return NULL;
     }

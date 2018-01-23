@@ -110,7 +110,7 @@ namespace semantic {
 		return ret;
 	    }
 	} else if (other-> is<IRefInfo> ()) {
-	    auto aux = new (GC) IRefInfo (this-> clone ());
+	    auto aux = new (Z0)  IRefInfo (this-> clone ());
 	    aux-> binopFoo = FloatUtils::InstAddr;
 	    return aux;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
@@ -129,8 +129,8 @@ namespace semantic {
 	else return "d";
     }
 
-    InfoType IFloatInfo::clone () {
-	return new (GC) IFloatInfo (this-> isConst (), this-> _type);
+    InfoType IFloatInfo::onClone () {
+	return new (Z0)  IFloatInfo (this-> isConst (), this-> _type);
     }
 
     const char* IFloatInfo::getId () {
@@ -140,11 +140,11 @@ namespace semantic {
     InfoType IFloatInfo::Affect (syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot-> _type) {
-		auto f = new (GC) IFloatInfo (false, this-> _type);
+		auto f = new (Z0)  IFloatInfo (false, this-> _type);
 		//TODO
 		return f;
 	    } else if (right-> info-> type-> is<IFixedInfo> ()) {
-		auto f = new (GC) IFloatInfo (false, this-> _type);
+		auto f = new (Z0)  IFloatInfo (false, this-> _type);
 		//TODO
 		return f;
 	    }
@@ -154,7 +154,7 @@ namespace semantic {
 
     InfoType IFloatInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    auto fl = new (GC) IFloatInfo (false, this-> _type);
+	    auto fl = new (Z0)  IFloatInfo (false, this-> _type);
 	    fl-> binopFoo = &FloatUtils::InstAffect;
 	    return fl;
 	}
@@ -188,7 +188,7 @@ namespace semantic {
 
     InfoType IFloatInfo::Dig () {
     	//TODO
-	return new (GC) IFixedInfo (true, FixedConst::UINT);	
+	return new (Z0)  IFixedInfo (true, FixedConst::UINT);	
     }
 
     InfoType IFloatInfo::Epsilon () {
@@ -198,7 +198,7 @@ namespace semantic {
 
     InfoType IFloatInfo::MantDig () {
     	//TODO
-	return new (GC) IFixedInfo (true, FixedConst::UINT);	
+	return new (Z0)  IFixedInfo (true, FixedConst::UINT);	
     }
 	
     InfoType IFloatInfo::Max10Exp () {
@@ -233,7 +233,7 @@ namespace semantic {
     
     InfoType IFloatInfo::StringOf () {
 	//TODO
-	return new (GC) IStringInfo (true);
+	return new (Z0)  IStringInfo (true);
     }    
 
     InfoType IFloatInfo::opAff (Word, syntax::Expression right) {
@@ -268,16 +268,16 @@ namespace semantic {
     InfoType IFloatInfo::opTest (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot-> _type) {
-		auto ret = new (GC) IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = FloatUtils::InstTest;
 		return ret;
 	    } else {
-		auto ret = new (GC) IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = FloatUtils::InstTestRight;
 		return ret;
 	    }
 	} else if (right-> info-> type-> is<IFixedInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = FloatUtils::InstTest;
 	    return ret;
 	}
@@ -295,7 +295,7 @@ namespace semantic {
 
     InfoType IFloatInfo::opTestRight (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = FloatUtils::InstTestRight;
 	    return ret;
 	}

@@ -97,7 +97,7 @@ namespace semantic {
 			if (!res.valid || !merge (soluce.score, soluce.elements, res))
 			    return TemplateSolution (0, false);
 			if (res.type)
-			    types.push_back (new (GC) IType (var-> token, res.type));
+			    types.push_back (new (Z0)  IType (var-> token, res.type));
 			else
 			    return TemplateSolution (0, false);			
 		    }
@@ -153,7 +153,7 @@ namespace semantic {
 		    if (!res.valid || !merge (soluce.score, soluce.elements, res))
 			return TemplateSolution (0, false);
 		    if (res.type)
-			types.push_back (new (GC) IType (var-> token, res.type));
+			types.push_back (new (Z0)  IType (var-> token, res.type));
 		    else
 			return TemplateSolution (0, false);			
 		}
@@ -215,7 +215,7 @@ namespace semantic {
 	    res = this-> solveInside (tmps, content-> to<IFuncPtr> (), type_);
 	
 	if (res.valid) {
-	    auto type_ = new (GC) IArrayInfo (isConst, res.type-> cloneOnExit ());
+	    auto type_ = new (Z0)  IArrayInfo (isConst, res.type-> cloneOnExit ());
 	    return TemplateSolution (res.score, true, type_, res.elements);
 	}
 	return TemplateSolution (0, false);	
@@ -243,7 +243,7 @@ namespace semantic {
 	auto type_ = type-> cloneOnExit ();
 	type_-> isConst (isConst);
 	map <string, Expression> ret;
-	ret [elem-> token.getStr ()] = new (GC) IType (param-> token, type_);	
+	ret [elem-> token.getStr ()] = new (Z0)  IType (param-> token, type_);	
 	return TemplateSolution (__VAR__, true, type_, ret);
     }
 
@@ -262,7 +262,7 @@ namespace semantic {
 	type_-> isConst (isConst);
 	
 	map <string, Expression> ret;	
-	ret [elem-> token.getStr ()] = new (GC) IType (param-> token, type_);
+	ret [elem-> token.getStr ()] = new (Z0)  IType (param-> token, type_);
 	return TemplateSolution (__VAR__, true, type_, ret);
     }
 
@@ -284,7 +284,7 @@ namespace semantic {
 	else {
 	    auto type_ = res.type;//type-> cloneOnExit ();	    
 	    type_-> isConst (isConst);
-	    map<string, Expression> ret = {{elem-> token.getStr (), new (GC) IType (typeVar-> token, type_)}};
+	    map<string, Expression> ret = {{elem-> token.getStr (), new (Z0)  IType (typeVar-> token, type_)}};
 	    if (!merge (res.score, res.elements, ret))
 		return TemplateSolution (0, false);
 	    res.score += __VAR__;

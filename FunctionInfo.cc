@@ -4,6 +4,7 @@
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/pack/PureFrame.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/semantic/value/Value.hh>
 
 namespace semantic {
 
@@ -39,7 +40,7 @@ namespace semantic {
 	return this-> _space;
     }
 
-    InfoType IFunctionInfo::clone () {
+    InfoType IFunctionInfo::onClone () {
 	return this;
     }
 
@@ -65,7 +66,7 @@ namespace semantic {
 	    total.push_back (it-> isApplicable (params));
 
 	std::vector <Frame> goods;
-	ApplicationScore right = new (GC) IApplicationScore ();
+	ApplicationScore right = new (Z0)  IApplicationScore ();
 	for (uint it = 0; it < total.size () ; it++) {
 	    if (total [it]) {
 		if (goods.size () == 0 && total [it]-> score != 0) {
@@ -102,7 +103,8 @@ namespace semantic {
 	}
 
 	right-> ret = info-> type ()-> type-> cloneConst ();
-	// TODO clone value
+	right-> ret-> value () = info-> type ()-> value ();
+
 	if (right-> ret-> is<IRefInfo> ())
 	    right-> ret-> isConst (false);
 
@@ -125,7 +127,7 @@ namespace semantic {
 	}
 
 	std::vector <Frame> goods;
-	ApplicationScore right = new (GC) IApplicationScore ();
+	ApplicationScore right = new (Z0)  IApplicationScore ();
 	for (uint it = 0; it < total.size () ; it++) {
 	    if (total [it]) {
 		if (goods.size () == 0 && total [it]-> score != 0) {
@@ -162,7 +164,9 @@ namespace semantic {
 	}
 
 	right-> ret = info-> type ()-> type-> cloneConst ();
-	// TODO clone value
+	right-> ret-> value () = info-> type ()-> value ();
+
+	
 	if (right-> ret-> is<IRefInfo> ())
 	    right-> ret-> isConst (false);
 
@@ -188,7 +192,7 @@ namespace semantic {
 	}
 
 	if (ret.size () != 0)
-	    return new (GC) IFunctionInfo (this-> _space, this-> _name, ret);
+	    return new (Z0)  IFunctionInfo (this-> _space, this-> _name, ret);
 	return NULL;
     }
 
@@ -245,7 +249,7 @@ namespace semantic {
 		//     params.push_back (it-> info-> type);
 		// }
 		// auto ret = proto-> type-> type;
-		// auto ptr = new (GC) IPtrFuncInfo (true);
+		// auto ptr = new (Z0)  IPtrFuncInfo (true);
 		// ptr-> params = params;
 		// ptr-> ret = ret;
 		// ptr-> score = this-> CallOp (fr-> ident, params);

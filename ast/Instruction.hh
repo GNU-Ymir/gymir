@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../syntax/Word.hh"
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include <algorithm>
 #include <map>
 #include <string>
@@ -14,12 +14,6 @@ namespace Ymir {
 
 //const char* getTypeid 
 
-template <typename T>
-const char* valueof (const char* in) {
-    printf ("%s\n", in);
-    return in;
-}
-
 namespace syntax {
     
     class IBlock;
@@ -28,7 +22,7 @@ namespace syntax {
     class IExpression;
     typedef IExpression* Expression;
 
-    class IInstruction : public gc {
+    class IInstruction  {
     protected:
 
 	Block parent;	
@@ -67,12 +61,7 @@ namespace syntax {
 
 	template <typename T>
 	T* to () {	    
-	    auto ids = this-> getIds ();
-	    printf ("{");
-	    for (auto &it : ids)
-		printf ("%s,", it.c_str ());
-	    printf ("}\n");
-	    
+	    auto ids = this-> getIds ();	    
 	    if (std::find (ids.begin (), ids.end (), T::id ()) != ids.end ())
 		return (T*) this;
 	    return NULL;

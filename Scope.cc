@@ -38,7 +38,7 @@ namespace semantic {
     
     size_t levenshteinDistance(const char* s, size_t n, const char* t, size_t m) {
 	++n; ++m;
-	size_t* d = new size_t[n * m];
+	size_t* d = new (Z0) size_t[n * m];
 	memset(d, 0, sizeof(size_t) * n * m);
 	for (size_t i = 1, im = 0; i < m; ++i, ++im) {
 	    for (size_t j = 1, jn = 0; j < n; ++j, ++jn) {

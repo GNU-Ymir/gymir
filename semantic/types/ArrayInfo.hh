@@ -24,7 +24,7 @@ namespace semantic {
 		// if (auto cst = templates [0]-> info-> type-> to<StructCstInfo> ()) {}
 		Ymir::Error::takeATypeAsTemplate (token);		
 	    } else {
-		return new (GC) IArrayInfo (false, templates [0]-> info-> type);
+		return new  IArrayInfo (false, templates [0]-> info-> type);
 	    }
 	}
 
@@ -38,7 +38,7 @@ namespace semantic {
 
 	InfoType DotOp (syntax::Var) override;
 
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	InfoType CastOp (InfoType) override;
 

@@ -47,16 +47,16 @@ namespace semantic {
     InfoType IPtrInfo::Affect (syntax::Expression right) {
 	auto type = right-> info-> type-> to<IPtrInfo> ();
 	if (type != NULL && type-> _content-> isSame (this-> _content)) {
-	    auto ret = new (GC) IPtrInfo (false, this-> _content-> clone ());
+	    auto ret = new (Z0)  IPtrInfo (false, this-> _content-> clone ());
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
 	    this-> _content = type-> _content-> clone ();
-	    auto ret = new (GC) IPtrInfo (false, this-> _content-> clone ());
+	    auto ret = new (Z0)  IPtrInfo (false, this-> _content-> clone ());
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
 	} else if (type && type-> _content-> is <IVoidInfo> ()) {
-	    auto ret = new (GC) IPtrInfo (false, type-> _content-> clone ());
+	    auto ret = new (Z0)  IPtrInfo (false, type-> _content-> clone ());
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
 	} else if (right-> info-> type-> is <INullInfo> ()) {
@@ -69,7 +69,7 @@ namespace semantic {
 
     InfoType IPtrInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    auto ret = new (GC) IPtrInfo (false, this-> _content-> clone ());
+	    auto ret = new (Z0)  IPtrInfo (false, this-> _content-> clone ());
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
 	}
@@ -78,7 +78,7 @@ namespace semantic {
 
     InfoType IPtrInfo::Plus (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
-	    auto ptr = new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
+	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	    //ptr-> binopFoo = &PtrUtils::InstPlus
 	    return ptr;
 	}
@@ -87,7 +87,7 @@ namespace semantic {
     
     InfoType IPtrInfo::Sub (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
-	    auto ptr = new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
+	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	    //ptr-> binopFoo = &PtrUtils::InstSub
 	    return ptr;
 	}
@@ -96,7 +96,7 @@ namespace semantic {
 
     InfoType IPtrInfo::PlusRight (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
-	    auto ptr = new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
+	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	    //ptr-> binopFoo = &PtrUtils::InstPlus
 	    return ptr;
 	}
@@ -105,7 +105,7 @@ namespace semantic {
     
     InfoType IPtrInfo::SubRight (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
-	    auto ptr = new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
+	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	    //ptr-> binopFoo = &PtrUtils::InstSub
 	    return ptr;
 	}
@@ -114,11 +114,11 @@ namespace semantic {
 
     InfoType IPtrInfo::Is (syntax::Expression right) {
 	if (right-> info-> type-> is <IPtrInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    //ret-> binopFoo = &PtrUtils::InstIs
 	    return ret;
 	} else if (right-> info-> type-> is <INullInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    //ret-> binopFoo = &PtrUtils::InstIsNull
 	    return ret;
 	}
@@ -127,11 +127,11 @@ namespace semantic {
 
     InfoType IPtrInfo::NotIs (syntax::Expression right) {
 	if (right-> info-> type-> is <IPtrInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    //ret-> binopFoo = &PtrUtils::InstNotIs
 	    return ret;
 	} else if (right-> info-> type-> is <INullInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    //ret-> binopFoo = &PtrUtils::InstNotIsNull
 	    return ret;
 	}
@@ -147,7 +147,7 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::toPtr () {
-	auto ret = new (GC) IPtrInfo (this-> isConst (), this-> clone ());
+	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
 	// ret-> unopFoo = &PtrUtils::InstPtr;
 	return ret;
     }
@@ -164,8 +164,8 @@ namespace semantic {
 	    //type-> unopFoo = &PtrUtils::InstNull;
 	    return type;
 	} else if (var-> token == "typeid") {
-	    auto str = new (GC) IStringInfo (true);
-	    //str-> value = new (GC) IStringValue (this-> typeString ());
+	    auto str = new (Z0)  IStringInfo (true);
+	    //str-> value = new (Z0)  IStringValue (this-> typeString ());
 	    return str;
 	}
 	return NULL;
@@ -180,7 +180,7 @@ namespace semantic {
 	if (type && type-> _content-> isSame (this-> _content)) {
 	    return this;
 	} else if (type) {
-	    auto ptr = new (GC) IPtrInfo (this-> isConst (), type-> _content-> clone ());
+	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), type-> _content-> clone ());
 	    //ptr-> binopFoo = &PtrUtils::InstCast
 	    return ptr;
 	    // }  else if (auto tu = other-> to <ITupleInfo> ()) {
@@ -211,8 +211,8 @@ namespace semantic {
 	return "P" + this-> _content-> simpleTypeString ();
     }
 
-    InfoType IPtrInfo::clone () {
-	return new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
+    InfoType IPtrInfo::onClone () {
+	return new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
     }
     
     InfoType IPtrInfo::ConstVerif (InfoType other) {

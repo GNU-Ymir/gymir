@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include <algorithm>
 #include <vector>
 #include <stdio.h>

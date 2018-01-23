@@ -10,15 +10,15 @@ namespace semantic {
 	return false;
     }
 
-    InfoType IUndefInfo::clone () {
-	return new (GC) IUndefInfo ();
+    InfoType IUndefInfo::onClone () {
+	return new (Z0)  IUndefInfo ();
     }
 
     InfoType IUndefInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
 	    //TODO
-	    return new (GC) IStringInfo (true);
+	    return new (Z0)  IStringInfo (true);
 	}
 	return NULL;
     }

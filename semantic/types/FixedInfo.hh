@@ -19,14 +19,14 @@ namespace semantic {
 	    if (templates.size () != 0)
 		Ymir::Error::notATemplate (token);
 
-	    if (token == "byte") return new (GC) IFixedInfo (false, FixedConst::BYTE);
-	    if (token == "ubyte") return new (GC) IFixedInfo (false, FixedConst::UBYTE);
-	    if (token == "short") return new (GC) IFixedInfo (false, FixedConst::SHORT);
-	    if (token == "ushort") return new (GC) IFixedInfo (false, FixedConst::USHORT);
-	    if (token == "int") return new (GC) IFixedInfo (false, FixedConst::INT);
-	    if (token == "uint") return new (GC) IFixedInfo (false, FixedConst::UINT);
-	    if (token == "long") return new (GC) IFixedInfo (false, FixedConst::LONG);
-	    if (token == "ulong") return new (GC) IFixedInfo (false, FixedConst::ULONG);
+	    if (token == "byte") return new  IFixedInfo (false, FixedConst::BYTE);
+	    if (token == "ubyte") return new  IFixedInfo (false, FixedConst::UBYTE);
+	    if (token == "short") return new  IFixedInfo (false, FixedConst::SHORT);
+	    if (token == "ushort") return new  IFixedInfo (false, FixedConst::USHORT);
+	    if (token == "int") return new  IFixedInfo (false, FixedConst::INT);
+	    if (token == "uint") return new  IFixedInfo (false, FixedConst::UINT);
+	    if (token == "long") return new  IFixedInfo (false, FixedConst::LONG);
+	    if (token == "ulong") return new  IFixedInfo (false, FixedConst::ULONG);
 	    return NULL;
 	}
 
@@ -50,7 +50,7 @@ namespace semantic {
 
 	FixedConst type ();	   
 	
-	InfoType clone () override;
+	InfoType onClone () override;
 		
 	static const char* id () {
 	    return "IFixedInfo";

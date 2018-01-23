@@ -26,7 +26,7 @@ namespace syntax {
     
     void IFunction::declare ()  {
 	if (this-> ident == Keys::MAIN) {
-	    FrameTable::instance ().insert (new (GC) IPureFrame (Table::instance ().space (), this));							    
+	    FrameTable::instance ().insert (new (Z0)  IPureFrame (Table::instance ().space (), this));							    
 	} else {
 	    auto fr = verifyPure (Table::instance ().space ());
 	    auto space = Table::instance ().space ();
@@ -36,9 +36,9 @@ namespace syntax {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
 		}		
 	    }
-	    auto fun = new (GC) IFunctionInfo (space, this-> ident.getStr ());
+	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	    fun-> set (fr);
-	    Table::instance ().insert (new (GC) ISymbol (this-> ident, fun));
+	    Table::instance ().insert (new (Z0)  ISymbol (this-> ident, fun));
 	}
     }
 
@@ -52,16 +52,16 @@ namespace syntax {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
 		}
 	    }
-	    auto fun = new (GC) IFunctionInfo (space, this-> ident.getStr ());
+	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	    fun-> set (fr);
-	    mod-> insert (new (GC) ISymbol (this-> ident,fun));
+	    mod-> insert (new (Z0)  ISymbol (this-> ident,fun));
 	}
     }
 
     Frame IFunction::verifyPureExtern (Namespace space) {
 	if (this-> tmps.size () != 0) {
 	    auto isPure = verifyTemplates ();
-	    auto ret = new (GC) ITemplateFrame (space, this);
+	    auto ret = new (Z0)  ITemplateFrame (space, this);
 	    if (!isPure) return ret;
 	    for (auto it : this-> params) {
 	    	if (!it-> is<ITypedVar> ()) return ret;
@@ -75,11 +75,11 @@ namespace syntax {
 
 	for (auto it : this-> params) {
 	    if (!it-> is<ITypedVar> ()) {
-		return new (GC) IUnPureFrame (space, this);
+		return new (Z0)  IUnPureFrame (space, this);
 	    }
 	}
 	
-	auto fr = new (GC) IExternFrame (space, "", this-> toProto ());
+	auto fr = new (Z0)  IExternFrame (space, "", this-> toProto ());
 	FrameTable::instance ().insert (fr);
 	return fr;
     }
@@ -88,13 +88,13 @@ namespace syntax {
     Proto IFunction::toProto () {
 	delete this-> block;
 	this-> block = NULL;
-	return new (GC) IProto (this-> ident, this-> params, false);
+	return new (Z0)  IProto (this-> ident, this-> params, false);
     }
     
     Frame IFunction::verifyPure (Namespace space) {
 	if (this-> tmps.size () != 0) {
 	    auto isPure = verifyTemplates ();
-	    auto ret = new (GC) ITemplateFrame (space, this);
+	    auto ret = new (Z0)  ITemplateFrame (space, this);
 	    if (!isPure) return ret;
 	    for (auto it : this-> params) {
 	    	if (!it-> is<ITypedVar> ()) return ret;
@@ -107,11 +107,11 @@ namespace syntax {
 
 	for (auto it : this-> params) {
 	    if (!it-> is<ITypedVar> ()) {
-		return new (GC) IUnPureFrame (space, this);
+		return new (Z0)  IUnPureFrame (space, this);
 	    }
 	}
 
-	auto fr = new (GC) IPureFrame (space, this);
+	auto fr = new (Z0)  IPureFrame (space, this);
 	FrameTable::instance ().insert (fr);
 	return fr;
     }
@@ -158,19 +158,19 @@ namespace syntax {
     void IProto::declare () {       
 	Namespace space (this-> space != "" ? this-> space : Table::instance ().space ());
 		
-	auto fr = new (GC) IExternFrame (space, this-> from, this);
-	auto fun = new (GC) IFunctionInfo (space, this-> ident.getStr ());
+	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
+	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	fun-> set (fr);
-	Table::instance ().insert (new (GC) ISymbol (this-> ident, fun));
+	Table::instance ().insert (new (Z0)  ISymbol (this-> ident, fun));
     }
 
     void IProto::declareAsExtern (semantic::Module mod) {
 	Namespace space (this-> space != "" ? this-> space : mod-> space ());
-	auto fr = new (GC) IExternFrame (space, this-> from, this);
+	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
 	fr-> isPrivate () = !this-> isPublic;
-	auto fun = new (GC) IFunctionInfo (space, this-> ident.getStr ());
+	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	fun-> set (fr);
-	mod-> insert (new (GC) ISymbol (this-> ident, fun));
+	mod-> insert (new (Z0)  ISymbol (this-> ident, fun));
     }
     
     void IImport::declare () {

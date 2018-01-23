@@ -14,10 +14,10 @@ namespace semantic {
 	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 0) 
 		Ymir::Error::notATemplate (tok);
-	    return new (GC) IVoidInfo ();
+	    return new  IVoidInfo ();
 	}
 	
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	InfoType DotOp (syntax::Var) override;
 

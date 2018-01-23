@@ -32,14 +32,14 @@ namespace semantic {
 		    locus,
 		    type,
 		    left,
-		    new (GC) ITreeExpression (right-> token, innerType, rightExp)
+		    new (Z0)  ITreeExpression (right-> token, innerType, rightExp)
 		);
 	    } else {
 		return type-> buildMultOp (
 		    locus,
 		    type,
 		    left,
-		    new (GC) ITreeExpression (right-> token, innerType, rightExp)
+		    new (Z0)  ITreeExpression (right-> token, innerType, rightExp)
 		);
 	    }	    
 	    
@@ -59,21 +59,21 @@ namespace semantic {
 		return type-> buildBinaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, innerType, leftExp),
+		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
 		    right
 		);
 	    } else if (type-> multFoo) {
 		return type-> buildMultOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, innerType, leftExp),
+		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
 		    right
 		);
 	    } else if (type-> unopFoo) {
 		return type-> buildUnaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, innerType, leftExp)
+		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp)
 		);
 	    }
 	    return leftExp;
@@ -98,15 +98,15 @@ namespace semantic {
 		return type-> buildBinaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, innerLeft, leftExp),
-		    new (GC) ITreeExpression (right-> token, innerRight, rightExp)
+		    new (Z0)  ITreeExpression (left-> token, innerLeft, leftExp),
+		    new (Z0)  ITreeExpression (right-> token, innerRight, rightExp)
 		);
 	    } else {
 		return type-> buildMultOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, innerLeft, leftExp),
-		    new (GC) ITreeExpression (right-> token, innerRight, rightExp)
+		    new (Z0)  ITreeExpression (left-> token, innerLeft, leftExp),
+		    new (Z0)  ITreeExpression (right-> token, innerRight, rightExp)
 		);
 	    }	    
 	}
@@ -125,14 +125,14 @@ namespace semantic {
 		return type-> buildUnaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp)
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp)
 		);
 	    } else if (type-> binopFoo) {
 		return type-> buildBinaryOp (
 		    locus,
 		    type,
-		    new (GC) ITreeExpression (left-> token, left-> info-> type, leftExp),
-		    new (GC) ITreeExpression (locus, type, Ymir::Tree ())
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (Z0)  ITreeExpression (locus, type, Ymir::Tree ())
 		);
 	    } else {
 		return leftExp;
@@ -281,8 +281,8 @@ namespace semantic {
 	return std::string ("R") + this-> _content-> simpleTypeString ();
     }
 
-    InfoType IRefInfo::clone () {
-	return new (GC) IRefInfo (this-> isConst (), this-> _content-> clone ());
+    InfoType IRefInfo::onClone () {
+	return new (Z0)  IRefInfo (this-> isConst (), this-> _content-> clone ());
     }
 
     const char* IRefInfo::getId () {
@@ -402,8 +402,8 @@ namespace semantic {
 	return this-> _content-> innerSimpleTypeString ();
     }
 
-    InfoType IArrayRefInfo::clone () {
-	return new (GC) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
+    InfoType IArrayRefInfo::onClone () {
+	return new (Z0)  IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
     }
 
     const char* IArrayRefInfo::getId () {

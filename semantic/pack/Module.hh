@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include "Namespace.hh"
 #include "Scope.hh"
 #include "Symbol.hh"
@@ -8,7 +8,7 @@
 
 namespace semantic {
 
-    class IModule : public gc {
+    class IModule  {
 
 	Namespace _space;
 	std::vector <Namespace> _opens;

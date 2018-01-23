@@ -24,7 +24,7 @@ namespace semantic {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
-		return new (GC) IPtrInfo (false, tmps [0]-> info-> type);
+		return new  IPtrInfo (false, tmps [0]-> info-> type);
 	    }
 	}
 
@@ -44,7 +44,7 @@ namespace semantic {
 	
 	std::string innerSimpleTypeString () override;
 
-	InfoType clone () override;
+	InfoType onClone () override;
 	
 	Ymir::Tree toGeneric () override;
 

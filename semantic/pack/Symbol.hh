@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include "../../syntax/Word.hh"
 #include "Namespace.hh"
 #include <ymir/semantic/tree/Tree.hh>
@@ -13,7 +13,7 @@ namespace semantic {
     class IValue;
     typedef IValue* Value;
     
-    class ISymbol : public gc {
+    class ISymbol  {
 
 	bool scoped;
 	bool _public;

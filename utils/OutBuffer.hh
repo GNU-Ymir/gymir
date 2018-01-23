@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include <string>
 #include <ymir/utils/Range.hh>
 #include <vector>
@@ -12,7 +12,7 @@ namespace syntax {
 
 namespace Ymir {
     
-    class OutBuffer : public gc {
+    class OutBuffer  {
     private :
 	
 	char * current = NULL;
@@ -137,6 +137,8 @@ namespace Ymir {
 
 	void write_ (double);
 		
+	void write_ (bool);
+	
 	void throwError ();
 
     private:

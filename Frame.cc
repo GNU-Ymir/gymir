@@ -44,7 +44,7 @@ namespace semantic {
     }
     
     ApplicationScore IFrame::getScore (Word ident, const std::vector <Var>& attrs, const std::vector <InfoType>& args) {
-	auto score = new (GC) IApplicationScore (ident);
+	auto score = new (Z0)  IApplicationScore (ident);
 	if (attrs.size () == 0 && args.size () == 0) {
 	    score-> score = AFF;
 	    score-> score += this-> currentScore ();
@@ -60,7 +60,7 @@ namespace semantic {
 		    if (getType == NULL) return NULL;
 		    info = getType-> clone ();
 		} else {
-		    tvar = param-> setType (new (GC) IUndefInfo ());
+		    tvar = param-> setType (new (Z0)  IUndefInfo ());
 		    info = tvar-> getType ()-> clone ();
 		    CONST_SAME = this-> CONST_CHANGE;
 		    SAME = this-> CHANGE;
@@ -105,11 +105,11 @@ namespace semantic {
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _function-> getIdent ().getStr ()));
 
 	if (this-> _function-> getType () == NULL)
-	    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
+	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 	else
 	    Table::instance ().retInfo ().info = this-> _function-> getType ()-> asType ()-> info;
 	
-	auto proto = new (GC) IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams);
 
 	if (!FrameTable::instance ().existsProto (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -120,9 +120,9 @@ namespace semantic {
 	    auto block = this-> _function-> getBlock ()-> block ();
 
 	    if (Table::instance ().retInfo ().info-> type-> is<IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
+		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 
-	    auto finFrame = new (GC) IFinalFrame (Table::instance ().retInfo ().info,
+	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 					    this-> _space, this-> _function-> name (),
 					    finalParams, block, this-> tempParams);
 	    
@@ -207,11 +207,11 @@ namespace semantic {
 	    FrameProto operator () (Word name, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
 		Table::instance ().templateNamespace () = from;
 		if (ret == NULL) 
-		    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
+		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 		else
 		    Table::instance ().retInfo ().info = ret;
 
-		auto proto = new (GC) IFrameProto (name.getStr (), from, Table::instance ().retInfo ().info, params, tmps);
+		auto proto = new (Z0)  IFrameProto (name.getStr (), from, Table::instance ().retInfo ().info, params, tmps);
 		if (!FrameTable::instance ().existsProto (proto)) {
 		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 			Table::instance ().retInfo ().isImmutable () = true;
@@ -221,9 +221,9 @@ namespace semantic {
 		    block = block-> block ();
 
 		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-			Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
+			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 
-		    auto finFrame = new (GC) IFinalFrame (Table::instance ().retInfo ().info,
+		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 							  from, name.getStr (),
 							  params, block, tmps);
 
@@ -263,11 +263,11 @@ namespace semantic {
 
 	    FrameProto operator () (Namespace from, const std::vector<Var> & params, bool isVariadic) {		
 		if (self-> _function-> getType () == NULL) 
-		    Table::instance ().retInfo ().info = new (GC) ISymbol (Word::eof (), new (GC) IUndefInfo ());
+		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 		else
 		    Table::instance ().retInfo ().info = self-> _function-> getType ()-> asType ()-> info;
 
-		auto proto = new (GC) IFrameProto (self-> _function-> getIdent ().getStr (), from, Table::instance ().retInfo ().info, params, self-> tempParams);
+		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), from, Table::instance ().retInfo ().info, params, self-> tempParams);
 		
 		if (!FrameTable::instance ().existsProto (proto)) {
 		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -278,9 +278,9 @@ namespace semantic {
 		    auto block = self-> _function-> getBlock ()-> block ();
 
 		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-			Table::instance ().retInfo ().info-> type = new (GC) IVoidInfo ();
+			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 
-		    auto finFrame = new (GC) IFinalFrame (Table::instance ().retInfo ().info,
+		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 							  from, self-> _function-> getIdent ().getStr (),
 							  params, block, self-> tempParams);
 

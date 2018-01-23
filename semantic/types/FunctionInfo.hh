@@ -31,7 +31,7 @@ namespace semantic {
 
 	Namespace space ();
 
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	std::vector <Frame> getFrames ();
 

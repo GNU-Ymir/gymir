@@ -98,6 +98,11 @@ namespace syntax {
     }
 
     Ymir::Tree IBinary::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    return ret;
+	}
+	
 	return this-> info-> type-> buildBinaryOp (
 	    this-> token,
 	    this-> info-> type,
@@ -118,7 +123,7 @@ namespace syntax {
 		this-> token,
 		this-> info-> type,
 		this-> expr,
-		new (GC) ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+		new (Z0)  ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
 	    );
 	}
     }
@@ -135,7 +140,7 @@ namespace syntax {
 		this-> token,
 		this-> info-> type,
 		this-> elem,
-		new (GC) ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+		new (Z0)  ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
 	    );
 	}
     }
@@ -147,12 +152,12 @@ namespace syntax {
 		this-> token,
 		this-> info-> type,
 		this-> left,
-		new (GC) ITreeExpression (this-> params-> getParams ()[0]-> token, this-> params-> getParams () [0]-> info-> type, args [0])
+		new (Z0)  ITreeExpression (this-> params-> getParams ()[0]-> token, this-> params-> getParams () [0]-> info-> type, args [0])
 	    );
 	} else {
 	    IParamList params (this-> params-> token, {});
 	    for (auto it : Ymir::r (0, args.size ())) {
-		params.getParams ().push_back (new (GC) ITreeExpression (this-> params-> getParams () [it]-> token,
+		params.getParams ().push_back (new (Z0)  ITreeExpression (this-> params-> getParams () [it]-> token,
 									 this-> params-> getParams () [it]-> info-> type,
 									 args [it]));
 	    }
@@ -174,7 +179,7 @@ namespace syntax {
 		    this-> params [i]-> token,
 		    treat [i],
 		    this-> params [i],
-		    new (GC) ITreeExpression (this-> params [i]-> token, treat [i], Ymir::Tree ())
+		    new (Z0)  ITreeExpression (this-> params [i]-> token, treat [i], Ymir::Tree ())
 		);
 	    } else {
 		elist = this-> params [i]-> toGeneric ();
@@ -185,6 +190,10 @@ namespace syntax {
     }
     
     Ymir::Tree IPar::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    return ret;
+	}
 	std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
 	// if (this-> _score-> left) {	    
 	// }
@@ -205,7 +214,7 @@ namespace syntax {
     Ymir::Tree IConstArray::toGeneric () {
 	ArrayInfo info = this-> info-> type-> to<IArrayInfo> ();
 	Ymir::Tree innerType = info-> content ()-> toGeneric ();
-	auto intExpr = new (GC) IFixed (this-> token, FixedConst::ULONG);
+	auto intExpr = new (Z0)  IFixed (this-> token, FixedConst::ULONG);
 	intExpr-> setUValue (this-> params.size () - 1);
 	auto lenExpr = intExpr-> expression ();			
 	auto len = lenExpr-> toGeneric ();
@@ -224,7 +233,7 @@ namespace syntax {
 	
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree ref = Ymir::getArrayRef (this-> token.getLocus (), aux, innerType, i);
-	    auto left = new (GC) ITreeExpression (this-> token, info-> content (), ref);
+	    auto left = new (Z0)  ITreeExpression (this-> token, info-> content (), ref);
 	    list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
 					  void_type_node,
 					  ref, 
@@ -389,7 +398,7 @@ namespace syntax {
 	    auto ret = this-> casters [it]-> buildBinaryOp (
 		this-> params [it]-> token,
 		this-> casters [it],
-		new (GC) ITreeExpression (this-> token, type_inner [it], field),
+		new (Z0)  ITreeExpression (this-> token, type_inner [it], field),
 		this-> params [it]
 	    );
 	    list.append (ret);
@@ -408,6 +417,7 @@ namespace syntax {
 	Ymir::Tree res;
 	auto tlvalue = DECL_RESULT (IFinalFrame::currentFrame ().getTree ());
 	if (this-> elem != NULL) {
+
 	    if (this-> caster-> unopFoo) {
 		res = this-> caster-> buildUnaryOp (
 		    this-> token,
@@ -419,7 +429,7 @@ namespace syntax {
 		    this-> token,
 		    this-> caster,
 		    this-> elem,
-		    new (GC) ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
+		    new (Z0)  ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
 		);
 	    }
 	}

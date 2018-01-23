@@ -48,21 +48,21 @@ namespace semantic {
     }
     
     InfoType IStringInfo::Access (syntax::Expression expr, InfoType& treat) {
-	treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::LONG));
+	treat = expr-> info-> type-> CompOp (new (Z0)  IFixedInfo (true, FixedConst::LONG));
 	if (treat == NULL) {
-	    treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::ULONG));
+	    treat = expr-> info-> type-> CompOp (new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	}
 	
 	if (treat) {	    
-	    auto ch = new (GC) ICharInfo (this-> isConst ());
+	    auto ch = new (Z0)  ICharInfo (this-> isConst ());
 	    ch-> binopFoo = &StringUtils::InstAccessInt;
 	    return ch;
 	}
 	return NULL;
     }
         
-    InfoType IStringInfo::clone () {
-	auto ret = new (GC) IStringInfo (this-> isConst ());
+    InfoType IStringInfo::onClone () {
+	auto ret = new (Z0)  IStringInfo (this-> isConst ());
 	if (this-> value ())
 	    ret-> value () = this-> value ()-> clone ();
 	return ret;
@@ -94,7 +94,7 @@ namespace semantic {
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
-		auto ret = new (GC) IRefInfo (false, this-> clone ());
+		auto ret = new (Z0)  IRefInfo (false, this-> clone ());
 		ret-> binopFoo = &StringUtils::InstAddr;
 		return ret;
 	    }
@@ -103,16 +103,16 @@ namespace semantic {
     }
     
     InfoType IStringInfo::Ptr () {	
-	auto ret = new (GC) IPtrInfo (this-> isConst (), new (GC) ICharInfo (this-> isConst ()));
+	auto ret = new (Z0)  IPtrInfo (this-> isConst (), new (Z0)  ICharInfo (this-> isConst ()));
 	ret-> unopFoo = &StringUtils::InstPtr;
 	return ret;
     }
 
     InfoType IStringInfo::Length () {
-	auto ret = new (GC) IFixedInfo (true, FixedConst::ULONG);
+	auto ret = new (Z0)  IFixedInfo (true, FixedConst::ULONG);
 	ret-> unopFoo = &StringUtils::InstLen;
 	if (this-> value ())
-	    ret-> value () = new (GC) IFixedValue (FixedConst::ULONG, this-> value ()-> to<IStringValue> ()-> toString ().length (), 0);
+	    ret-> value () = new (Z0)  IFixedValue (FixedConst::ULONG, this-> value ()-> to<IStringValue> ()-> toString ().length (), 0);
 	return ret;
     }
     
@@ -179,9 +179,9 @@ namespace semantic {
 	if (string_type_node.isNull ()) {
 	    string_type_node = Ymir::makeStructType ("string", 2,
 						     get_identifier ("len"),
-						     (new (GC) IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+						     (new (Z0)  IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
 						     get_identifier ("ptr"),
-						     (new (GC) IPtrInfo (true, new (GC) ICharInfo (true)))-> toGeneric ().getTree ()
+						     (new (Z0)  IPtrInfo (true, new (Z0)  ICharInfo (true)))-> toGeneric ().getTree ()
 	    ).getTree ();
 	    IFinalFrame::declareType ("string", string_type_node);	    
 	}
@@ -196,7 +196,7 @@ namespace semantic {
 	Tree getLen (location_t loc, Expression expr, Tree tree) {
 	    if (expr-> info-> value ()) {
 		auto cst = expr-> info-> value ()-> to<IStringValue> ();
-		auto intExpr = new (GC) IFixed (expr-> info-> sym, FixedConst::ULONG);
+		auto intExpr = new (Z0)  IFixed (expr-> info-> sym, FixedConst::ULONG);
 		intExpr-> setUValue (cst-> toString ().length ());
 		auto lenExpr = (Fixed) intExpr-> expression ();			
 		return lenExpr-> toGeneric ();
@@ -401,7 +401,7 @@ namespace semantic {
 	Tree InstConcatAff (Word locus, InfoType type, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    auto lexp = left-> toGeneric ();
-	    auto aux = InstConcat (locus, type, new (GC) ITreeExpression (left-> token, left-> info-> type, lexp), right);
+	    auto aux = InstConcat (locus, type, new (Z0)  ITreeExpression (left-> token, left-> info-> type, lexp), right);
 	    Ymir::TreeStmtList list;
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getField (loc, aux, "len");

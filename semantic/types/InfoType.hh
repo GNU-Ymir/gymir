@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 //#include <ymir/errors/Error.hh>
 #include <ymir/semantic/utils/OperatorUtils.hh>
 #include <ymir/semantic/types/Creators.hh>
@@ -28,7 +28,7 @@ namespace semantic {
     class IInfoType;
     typedef IInfoType* InfoType;
     
-    class IApplicationScore : public gc {
+    class IApplicationScore  {
     public:
 
 	IApplicationScore ();
@@ -38,19 +38,19 @@ namespace semantic {
 	Word token;
 	std::string name;
 	bool dyn;
-	InfoType left;
-	InfoType ret;
+	InfoType left = NULL;
+	InfoType ret = NULL;
 	std::vector <InfoType> treat;
 	std::map <std::string, syntax::Expression> tmps;
-	bool isVariadic;
-	bool isTemplate;
-	Frame toValidate;
-	FrameProto proto;
+	bool isVariadic = false;
+	bool isTemplate = false;
+	Frame toValidate = NULL;
+	FrameProto proto = NULL;
     };
 
     typedef IApplicationScore* ApplicationScore;
     
-    class IInfoType : public gc {
+    class IInfoType  {
 	
 	typedef Ymir::Tree (*BinopLint) (Word, IInfoType*, syntax::Expression, syntax::Expression);
 	typedef Ymir::Tree (*UnopLint) (Word, IInfoType*, syntax::Expression);
@@ -168,8 +168,10 @@ namespace semantic {
 
 	virtual InfoType TempOp (const std::vector<::syntax::Expression> &);
 
-	virtual InfoType clone () = 0;
+	InfoType clone ();
 
+	virtual InfoType onClone () = 0;
+	
 	virtual InfoType StringOf ();
 
 	InfoType cloneOnExit ();
@@ -213,9 +215,9 @@ namespace semantic {
 	
 	virtual ~IInfoType () {}
 
-	BinopLint binopFoo;
-	UnopLint unopFoo;
-	BinopLint multFoo;
+	BinopLint binopFoo = NULL;
+	UnopLint unopFoo = NULL;
+	BinopLint multFoo = NULL;
 
 	std::list <BinopLint> nextBinop;
 	std::list <UnopLint> nextUnop;

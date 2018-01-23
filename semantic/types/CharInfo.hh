@@ -13,7 +13,7 @@ namespace semantic {
 	    if (tmps.size () != 0) {
 		Ymir::Error::notATemplate (w);
 		return NULL;
-	    } else return new (GC) ICharInfo (false);
+	    } else return new  ICharInfo (false);
 	}
 
 	bool isSame (InfoType) override;
@@ -32,7 +32,7 @@ namespace semantic {
 
 	InfoType CompOp (InfoType) override;
 
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	Ymir::Tree toGeneric () override;
 	

@@ -35,14 +35,14 @@ namespace semantic {
     InfoType IEnumCstInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "member") {
-	    auto info = new (GC) IArrayInfo (true, new (GC) IEnumInfo (true, this-> _name, this-> type-> clone ()));
+	    auto info = new (Z0)  IArrayInfo (true, new (Z0)  IEnumInfo (true, this-> _name, this-> type-> clone ()));
 	    //TODO
 	    return info;
 	} else return NULL;
     }
 
     InfoType IEnumCstInfo::create () {
-	return new (GC) IEnumInfo (false, this-> _name, this-> type-> cloneOnExit ());
+	return new (Z0)  IEnumInfo (false, this-> _name, this-> type-> cloneOnExit ());
     }
 
     std::string IEnumCstInfo::innerSimpleTypeString () {
@@ -64,7 +64,7 @@ namespace semantic {
 	return false;
     }
 
-    InfoType IEnumCstInfo::clone () {
+    InfoType IEnumCstInfo::onClone () {
 	return this;
     }
 
@@ -73,7 +73,7 @@ namespace semantic {
     }
 
     InfoType IEnumCstInfo::GetAttrib (ulong nb) {
-	auto type = new (GC) IEnumInfo (true, this-> _name, this-> type-> clone ());
+	auto type = new (Z0)  IEnumInfo (true, this-> _name, this-> type-> clone ());
 	//if (this-> values [nb]-> info-> value) {
 	//    type-> _content-> value = this-> _values [nb]-> info-> value;
 	//}
@@ -114,7 +114,7 @@ namespace semantic {
     InfoType IEnumInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return this-> _content-> DotOp (var);
 	else if (var-> token == "typeid") {
-	    auto str = new (GC) IStringInfo (true);
+	    auto str = new (Z0)  IStringInfo (true);
 	    //TODO
 	    return str;
 	} else return this-> _content-> DotOp (var);
@@ -170,8 +170,8 @@ namespace semantic {
 	return false;
     }
 
-    InfoType IEnumInfo::clone () {
-	return new (GC) IEnumInfo (this-> isConst (), this-> _name, this-> _content-> clone ());
+    InfoType IEnumInfo::onClone () {
+	return new (Z0)  IEnumInfo (this-> isConst (), this-> _name, this-> _content-> clone ());
     }
 	
     InfoType IEnumInfo::content () {

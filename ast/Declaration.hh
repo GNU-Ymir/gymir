@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 
 namespace semantic {
     class IModule;
@@ -12,7 +12,7 @@ namespace syntax {
     class IExpression;
     typedef IExpression* Expression;
     
-    class IDeclaration : public gc {
+    class IDeclaration  {
     protected :
 	
 	bool isPublic;

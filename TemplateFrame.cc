@@ -137,9 +137,9 @@ namespace semantic {
 	    //TODO
 	    // }
 	    Frame ret;
-	    if (!this-> _isPure) ret = new (GC) IUnPureFrame (this-> space (), func);
-	    else if (this-> _isExtern) ret = new (GC) IExternFrame (this-> space (), func);
-	    else ret = new (GC) IPureFrame (this-> space (), func);
+	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> space (), func);
+	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> space (), func);
+	    else ret = new (Z0)  IPureFrame (this-> space (), func);
 
 	    ret-> currentScore () = this-> currentScore () + res.score;
 	    ret-> templateParams () = getValues (res.elements);
@@ -147,7 +147,7 @@ namespace semantic {
 	} else {
 	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
 	    
-	    auto aux = new (GC) ITemplateFrame (this-> space (), func);
+	    auto aux = new (Z0)  ITemplateFrame (this-> space (), func);
 	    aux-> _currentScore = this-> currentScore () + res.score;
 	    aux-> _isPure = this-> _isPure;
 	    aux-> _isExtern = this-> _isExtern;
@@ -158,7 +158,7 @@ namespace semantic {
     
 
     ApplicationScore ITemplateFrame::getScoreSimple (Word ident, const vector<Var> & attrs, const vector<InfoType> & args) {
-	auto score = new (GC) IApplicationScore (ident);
+	auto score = new (Z0)  IApplicationScore (ident);
 	map <string, Expression> tmps;
 	
 	if (attrs.size () == 0 && args.size () == 0) return NULL;
@@ -175,14 +175,14 @@ namespace semantic {
 		    info = res.type;
 		    if (tvar-> getDeco () == Keys::CONST) info-> isConst (true);
 		} else {
-		    tvar = param-> setType (new (GC) IUndefInfo ());
+		    tvar = param-> setType (new (Z0)  IUndefInfo ());
 		    info = tvar-> getType ()-> clone ();
 		    CONST_SAME_TMP = this-> CONST_CHANGE;
 		    SAME_TMP = this-> CHANGE;
 		}
 
 		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
-		    info = new (GC) IRefInfo (false, info);
+		    info = new (Z0)  IRefInfo (false, info);
 		
 		auto type = args [it]-> CompOp (info);
 		if (type) type = type-> ConstVerif (info);

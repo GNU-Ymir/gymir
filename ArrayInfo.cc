@@ -31,11 +31,11 @@ namespace semantic {
 
     InfoType IArrayInfo::Is (Expression right) {
 	if (right-> info-> type-> is<INullInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = ArrayUtils::InstIs;
 	    return ret;
 	} else if (this-> isSame (right-> info-> type)) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = ArrayUtils::InstIs;
 	    return ret;
 	}
@@ -44,11 +44,11 @@ namespace semantic {
 
     InfoType IArrayInfo::NotIs (Expression right) {
 	if (right-> info-> type-> is<INullInfo> ()) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = ArrayUtils::InstNotIs;
 	    return ret;
 	} else if (this-> isSame (right-> info-> type)) {
-	    auto ret = new (GC) IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = ArrayUtils::InstNotIs;
 	    return ret;
 	}
@@ -108,7 +108,7 @@ namespace semantic {
 	if (this-> isConst ()) {
 	    vars [0]-> info-> type = this-> _content-> clone ();
 	} else {
-	    vars [0]-> info-> type = new (GC) IRefInfo (false, this-> _content-> clone ());
+	    vars [0]-> info-> type = new (Z0)  IRefInfo (false, this-> _content-> clone ());
 	}
 	auto ret = this-> clone ();
 	// TODO
@@ -133,21 +133,21 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::Ptr () {
-	auto ret = new (GC) IPtrInfo (this-> isConst (), this-> _content-> clone ());
+	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	ret-> unopFoo = ArrayUtils::InstPtr;
 	return ret;
     }
 
     InfoType IArrayInfo::Length () {
 	if (this-> _content-> is<IVoidInfo> ()) return NULL;
-	auto elem = new (GC) IFixedInfo (true, FixedConst::ULONG);
+	auto elem = new (Z0)  IFixedInfo (true, FixedConst::ULONG);
 	elem-> unopFoo = ArrayUtils::InstLen;
 	return elem;
     }
 
     InfoType IArrayInfo::TypeId () {
-	auto str = new (GC) IStringInfo (true);
-	//str-> value = new (GC) IStringValue (this-> typeString ());
+	auto str = new (Z0)  IStringInfo (true);
+	//str-> value = new (Z0)  IStringValue (this-> typeString ());
 	return str;
     }
 
@@ -173,13 +173,13 @@ namespace semantic {
     }
     
     InfoType IArrayInfo::Access (syntax::Expression expr, InfoType& treat) {
-	treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::LONG));
+	treat = expr-> info-> type-> CompOp (new (Z0)  IFixedInfo (true, FixedConst::LONG));
 	if (treat == NULL) {
-	    treat = expr-> info-> type-> CompOp (new (GC) IFixedInfo (true, FixedConst::ULONG));
+	    treat = expr-> info-> type-> CompOp (new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	}
 	
 	if (treat) {
-	    //auto ch = new (GC) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
+	    //auto ch = new (Z0)  IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
 	    auto ch = this-> _content-> clone ();
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
@@ -187,8 +187,8 @@ namespace semantic {
 	return NULL;
     }
     
-    InfoType IArrayInfo::clone () {
-	auto ret = new (GC) IArrayInfo (this-> isConst (), this-> _content-> clone ());
+    InfoType IArrayInfo::onClone () {
+	auto ret = new (Z0)  IArrayInfo (this-> isConst (), this-> _content-> clone ());
 	//ret-> value = this-> value;
 	return ret;
     }
@@ -198,7 +198,7 @@ namespace semantic {
 	if (type && type-> _content-> isSame (this-> _content)) {
 	    return this;
 	} else if (other-> is<IStringInfo> () && this-> _content-> is<ICharInfo> ()) {
-	    auto other_ = new (GC) IStringInfo (this-> isConst ());
+	    auto other_ = new (Z0)  IStringInfo (this-> isConst ());
 	    //other_-> lintInstS.push_back (ArrayUtils::InstCastString);
 	    return other_;
 	}
@@ -227,7 +227,7 @@ namespace semantic {
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (auto arr = ref-> content ()-> to<IArrayInfo> ()) {
 		if (arr-> _content-> isSame (this-> _content) && !this-> isConst ()) {
-		    auto aux = new (GC) IRefInfo (false, this-> clone ());
+		    auto aux = new (Z0)  IRefInfo (false, this-> clone ());
 		    aux-> binopFoo = &ArrayUtils::InstAddr;
 		    //aux-> lintInstS.push_back (&ArrayUtils::InstAddr);
 		    return aux;
@@ -258,9 +258,9 @@ namespace semantic {
 	if (array_type_node.isNull ()) {
 	    array_type_node = Ymir::makeStructType (name, 2,
 						    get_identifier ("len"),
-						    (new (GC) IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+						    (new (Z0)  IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
 						    get_identifier ("ptr"),
-						    (new (GC) IPtrInfo (true, this-> _content-> clone ()))-> toGeneric ().getTree ()
+						    (new (Z0)  IPtrInfo (true, this-> _content-> clone ()))-> toGeneric ().getTree ()
 	    ).getTree ();
 	    IFinalFrame::declareType (name, array_type_node);
 	}
@@ -291,7 +291,7 @@ namespace semantic {
 
 	Tree getLen (location_t loc, Expression expr, Tree tree) {
 	    if (auto cst = expr-> to <IConstArray> ()) {
-		auto intExpr = new (GC) IFixed (cst-> token, FixedConst::ULONG);
+		auto intExpr = new (Z0)  IFixed (cst-> token, FixedConst::ULONG);
 		intExpr-> setUValue (cst-> nbParams ());
 		auto lenExpr = (Fixed) intExpr-> expression ();			
 		return lenExpr-> toGeneric ();		
@@ -547,7 +547,7 @@ namespace semantic {
 	Tree InstConcatAff (Word locus, InfoType type, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    auto lexp = left-> toGeneric ();
-	    auto aux = InstConcat (locus, type, new (GC) ITreeExpression (left-> token, left-> info-> type, lexp), right);
+	    auto aux = InstConcat (locus, type, new (Z0)  ITreeExpression (left-> token, left-> info-> type, lexp), right);
 	    Ymir::TreeStmtList list;
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getField (loc, aux, "len");

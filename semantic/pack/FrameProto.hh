@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include <ymir/semantic/pack/Namespace.hh>
 #include <ymir/utils/Array.hh>
 #include <ymir/semantic/tree/Tree.hh>
@@ -28,7 +28,7 @@ namespace semantic {
     class ISymbol;
     typedef ISymbol* Symbol;
     
-    class IFrameProto : public gc {
+    class IFrameProto  {
     private:
 	
 	Namespace _space;

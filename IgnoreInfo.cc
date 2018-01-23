@@ -20,13 +20,13 @@ namespace semantic {
 	return false;
     }
 
-    InfoType IIgnoreInfo::clone () {
-	return new (GC) IIgnoreInfo ();
+    InfoType IIgnoreInfo::onClone () {
+	return new (Z0)  IIgnoreInfo ();
     }
 
     InfoType IIgnoreInfo::BinaryOp (Word op, syntax::Expression left) {
 	if (op == Token::EQUAL && !left-> info-> type-> is<IIgnoreInfo> ()) {
-	    auto ret = new (GC) IIgnoreInfo ();
+	    auto ret = new (Z0)  IIgnoreInfo ();
 	    ret-> binopFoo = &IgnoreUtils::InstAffect;
 	    return ret;
 	}

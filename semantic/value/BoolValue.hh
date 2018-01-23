@@ -22,6 +22,8 @@ namespace semantic {
 	
 	Value clone () override;
 
+	std::string toString () override;
+	
     };
 
 }

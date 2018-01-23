@@ -35,7 +35,7 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
-	InfoType clone () override;
+	InfoType onClone () override;
 
 	static const char* id () {
 	    return "IEnumCstInfo";
@@ -93,7 +93,7 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
-	InfoType clone () override;
+	InfoType onClone () override;
 	
 	InfoType content ();
 	

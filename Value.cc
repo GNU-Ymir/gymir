@@ -31,13 +31,17 @@ namespace semantic {
     bool IBoolValue::isTrue () {
 	return this-> value;
     }
-
+       
     Value IBoolValue::clone () {
-	return new (GC) IBoolValue (this-> value);
+	return new (Z0)  IBoolValue (this-> value);
     }
     
     const char* IBoolValue::getId () {
 	return IBoolValue::id ();
+    }
+
+    std::string IBoolValue::toString () {
+	return Ymir::OutBuffer (this-> value).str ();
     }
     
     ICharValue::ICharValue (char code) :
@@ -49,7 +53,7 @@ namespace semantic {
     }
 
     Value ICharValue::clone () {
-	return new (GC) ICharValue (this-> code);
+	return new (Z0)  ICharValue (this-> code);
     }
     
     std::string IValue::toString () {
@@ -79,7 +83,7 @@ namespace semantic {
     }
 
     Value IStringValue::clone () {
-	return new (GC) IStringValue (this-> value);
+	return new (Z0)  IStringValue (this-> value);
     }
 
     bool IStringValue::equals (Value other) {
@@ -90,7 +94,7 @@ namespace semantic {
     }
     
     syntax::Expression IStringValue::toYmir (Symbol sym) {
-	auto ret = new (GC) IString (sym-> sym, this-> value);
+	auto ret = new (Z0)  IString (sym-> sym, this-> value);
 	ret-> info = sym;
 	return ret;
     }

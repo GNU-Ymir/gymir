@@ -253,7 +253,7 @@ namespace syntax {
 	IVar (token),
 	_type (type)
     {
-	this-> info = new (GC) ISymbol (token, type);
+	this-> info = new (Z0)  ISymbol (token, type);
     }    
 
     IType::~IType () {
@@ -662,7 +662,7 @@ namespace syntax {
 	IExpression (locus),	
 	_content (content)
     {
-	this-> info = new (GC) ISymbol (locus, info);
+	this-> info = new (Z0)  ISymbol (locus, info);
     }
 
     void ITreeExpression::print (int) {}
@@ -689,13 +689,6 @@ namespace syntax {
 	this-> isStatic = isStatic;
 	if (this-> else_)
 	    this-> else_-> isStatic = isStatic;
-    }
-
-    IIf::~IIf () {
-	if (test) delete test;
-	if (block) delete block;
-	if (else_) delete else_;
-	if (info) delete info;
     }
     
     void IIf::print (int nb) {
@@ -942,7 +935,7 @@ namespace syntax {
     IExpression* IExpression::clone () {
 	auto ret = this-> onClone ();
 	if (this-> info && ret != this) 
-	    ret-> info = new (GC) ISymbol (this-> info-> sym, this-> info-> type ? this-> info-> type-> clone () : NULL);
+	    ret-> info = new (Z0)  ISymbol (this-> info-> sym, this-> info-> type ? this-> info-> type-> clone () : NULL);
 	return ret;
     }
 

@@ -13,7 +13,7 @@ namespace semantic {
 	    if (tmps.size () != 0) {
 		Ymir::Error::notATemplate (w);
 		return NULL;
-	    } else return new (GC) IBoolInfo (false);
+	    } else return new  IBoolInfo (false);
 	}
 
 	bool isSame (InfoType) override;
@@ -34,7 +34,7 @@ namespace semantic {
 
 	InfoType CompOp (InfoType) override;
 
-	InfoType clone () override;
+	InfoType onClone () override;
 		
 	static const char* id () {
 	    return "IBoolInfo";

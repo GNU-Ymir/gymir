@@ -34,7 +34,7 @@ namespace Ymir {
 	unsigned long max = 255;
 	std::string final = "";
 	while (1) {
-	    char * buf = new char[max];
+	    char * buf = new (Z0) char[max];
 	    char * aux = fgets(buf, max, i);
 	    if (aux == NULL) return "";
 	    std::string ret = std::string (buf);

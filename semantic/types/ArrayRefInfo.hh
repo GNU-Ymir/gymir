@@ -45,7 +45,7 @@ namespace semantic {
 	
 	std::string innerSimpleTypeString () override;
 	
-	InfoType clone () override;
+	InfoType onClone () override;
 	
 	static const char* id () {
 	    return "IArrayRefInfo";

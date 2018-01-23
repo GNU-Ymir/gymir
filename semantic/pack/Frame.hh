@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gc/gc_cpp.h>
+#include <ymir/utils/memory.hh>
 #include "Namespace.hh"
 #include "FrameProto.hh"
 #include "FrameScope.hh"
@@ -28,7 +28,7 @@ namespace semantic {
     class IInfoType;
     typedef IInfoType* InfoType;
     
-    class IFrame : public gc {
+    class IFrame  {
     protected:
 	
 	::syntax::Function _function;

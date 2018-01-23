@@ -24,7 +24,7 @@ namespace semantic {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
-		return new (GC) IRefInfo (false, tmps [0]-> info-> type);
+		return new  IRefInfo (false, tmps [0]-> info-> type);
 	    }
 	}
 
@@ -58,7 +58,7 @@ namespace semantic {
 
 	std::string innerSimpleTypeString () override;
 	
-	InfoType clone () override;
+	InfoType onClone () override;
 	
 	static const char* id () {
 	    return "IRefInfo";
