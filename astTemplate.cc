@@ -77,6 +77,7 @@ namespace syntax {
     Expression IFloat::templateExpReplace (const map <string, Expression>&) {
 	auto ret = new (Z0)  IFloat (this-> token, this-> suite);
 	ret-> _type = this-> _type;
+	ret-> totale = this-> totale;
 	return ret;
     }
 

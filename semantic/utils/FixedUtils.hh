@@ -25,6 +25,8 @@ namespace semantic {
 	Ymir::Tree InstRange (Word locus, InfoType, syntax::Expression elem, syntax::Expression);
 	Ymir::Tree InstRangeRight (Word locus, InfoType, syntax::Expression elem, syntax::Expression);
 
+	Ymir::Tree InstSizeOf (Word, InfoType type, syntax::Expression);
+	
     }
 
 }

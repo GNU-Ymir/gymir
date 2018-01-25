@@ -1,6 +1,9 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FloatUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/value/_.hh>
+#include <cfloat>
+#include <math.h>
 
 namespace semantic {
 
@@ -56,7 +59,7 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::UnaryOp (Word op) {
-	if (op == Token::MINUS) return Inv ();
+	if (op == Token::MINUS) return Inv (op);
 	return NULL;
     }
 
@@ -130,7 +133,10 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::onClone () {
-	return new (Z0)  IFloatInfo (this-> isConst (), this-> _type);
+	auto ret = new (Z0)  IFloatInfo (this-> isConst (), this-> _type);
+	if (this-> value ())
+	    ret-> value () = this-> value ()-> clone ();
+	return ret;
     }
 
     const char* IFloatInfo::getId () {
@@ -141,11 +147,11 @@ namespace semantic {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot-> _type) {
 		auto f = new (Z0)  IFloatInfo (false, this-> _type);
-		//TODO
+		f-> binopFoo = &FloatUtils::InstAffect;
 		return f;
 	    } else if (right-> info-> type-> is<IFixedInfo> ()) {
 		auto f = new (Z0)  IFloatInfo (false, this-> _type);
-		//TODO
+		f-> binopFoo = &FloatUtils::InstAffect;
 		return f;
 	    }
 	}
@@ -161,81 +167,112 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IFloatInfo::Inv () {
-	//TODO
-	return this-> cloneConst ();
+    InfoType IFloatInfo::Inv (const Word& op) {
+	auto ret = new (Z0) IFloatInfo (true, this-> _type);
+	ret-> unopFoo = &FloatUtils::UnaryMinus;
+	if (this-> value ())
+	    ret-> value () = this-> value ()-> UnaryOp (op);	
+	return ret;
     }
 
     InfoType IFloatInfo::Init () {
-	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, 0.0);
+	return ret;
     }
 
     InfoType IFloatInfo::Max () {
-    	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MAX, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MAX);
+	return ret;
     }
 	
     InfoType IFloatInfo::Min () {
-    	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MIN, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MIN);
+	return ret;
     }
 
     InfoType IFloatInfo::Nan () {
-    	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, NAN, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0, NAN);
+	return ret;
     }
 
     InfoType IFloatInfo::Dig () {
-    	//TODO
-	return new (Z0)  IFixedInfo (true, FixedConst::UINT);	
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_DIG, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_DIG);
+	return ret;
     }
 
     InfoType IFloatInfo::Epsilon () {
-    	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_EPSILON, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_EPSILON);
+	return ret;
     }
 
     InfoType IFloatInfo::MantDig () {
-    	//TODO
-	return new (Z0)  IFixedInfo (true, FixedConst::UINT);	
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MANT_DIG, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MANT_DIG);
+	return ret;
     }
 	
     InfoType IFloatInfo::Max10Exp () {
-    	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MAX_10_EXP, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MAX_10_EXP);
+	return ret;
     }
 
     InfoType IFloatInfo::MaxExp () {
-    	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MAX_EXP, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MAX_EXP);
+	return ret;
     }
 
     InfoType IFloatInfo::MinExp () {
-	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MIN_EXP, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MIN_EXP);
+	return ret;
     }
 
     InfoType IFloatInfo::Min10Exp () {
-	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MIN_10_EXP, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MIN_10_EXP);
+	return ret;
     }
 
     InfoType IFloatInfo::Inf () {
-    	//TODO
-	return this-> cloneConst ();
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, INFINITY, 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, INFINITY);
+	return ret;
     }
 
     InfoType IFloatInfo::Sqrt () {
-	//TODO
-	return this-> cloneConst ();
+	return NULL;
     }
     
-    InfoType IFloatInfo::StringOf () {
-	//TODO
-	return new (Z0)  IStringInfo (true);
-    }    
-
     InfoType IFloatInfo::opAff (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (ot-> _type <= this-> _type) {
@@ -245,40 +282,58 @@ namespace semantic {
 	}
 	return NULL;
     }
-
-    InfoType IFloatInfo::opNorm (Word, syntax::Expression right) {
+    
+    InfoType IFloatInfo::opNorm (Word op, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot->_type) {
 		auto ret = this-> cloneConst ();
 		ret-> binopFoo = &FloatUtils::InstNormal;
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+
 		return ret;
 	    } else {
 		auto ret = ot-> cloneConst ();
 		ret-> binopFoo = &FloatUtils::InstNormalRight;
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+
 		return ret;
 	    }
 	} else if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto fl = this-> cloneConst ();
 	    fl-> binopFoo = &FloatUtils::InstNormal;
+	    if (this-> value ())
+		fl-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+
 	    return fl;
 	} 
 	return NULL;
     }
 
-    InfoType IFloatInfo::opTest (Word, syntax::Expression right) {
+    InfoType IFloatInfo::opTest (Word op, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot-> _type) {
 		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = FloatUtils::InstTest;
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+
 		return ret;
 	    } else {
 		auto ret = new (Z0)  IBoolInfo (true);
+		if (this-> value ())
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+
 		ret-> binopFoo = FloatUtils::InstTestRight;
 		return ret;
 	    }
 	} else if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = FloatUtils::InstTest;
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+
 	    return ret;
 	}
 	return NULL;
@@ -408,4 +463,177 @@ namespace semantic {
 		
     }
 
+    IFloatValue::IFloatValue (FloatConst type, float f, double d) {
+	this-> type = type;
+	if (this-> type == FloatConst::FLOAT) {
+	    this-> value.f = f;	    
+	} else this-> value.d = d;
+    }
+    
+    double& IFloatValue::getDouble () {
+	return this-> value.d;
+    }
+    
+    float& IFloatValue::getFloat () {
+	return this-> value.f;
+    }
+
+    Value IFloatValue::BinaryOp (Word op, Value val) {
+	if (op == Token::PLUS) return this-> add (val);
+	if (op == Token::MINUS) return this-> sub (val);
+	if (op == Token::DIV) return this-> div (val);
+	if (op == Token::STAR) return this-> mul (val);
+	if (op == Token::INF) return this-> inf (val);
+	if (op == Token::SUP) return this-> sup (val);
+	if (op == Token::INF_EQUAL) return this-> infeq (val);
+	if (op == Token::SUP_EQUAL) return this-> supeq (val);
+	if (op == Token::NOT_EQUAL) return this-> neq (val);
+	if (op == Token::DEQUAL) return this-> eq (val);
+	return NULL;
+    }
+    
+    const char * IFloatValue::getId () {
+	return IFloatValue::id ();
+    }
+
+    std::string IFloatValue::toString () {
+	if (this-> type == FloatConst::FLOAT)
+	    return Ymir::OutBuffer (this-> value.d).str ();
+	else
+	    return Ymir::OutBuffer (this-> value.f).str ();
+    }
+
+    syntax::Expression IFloatValue::toYmir (Symbol sym) {
+	auto ret = new (Z0)  IFloat (sym-> sym, this-> type);
+	if (this-> type == FloatConst::FLOAT)
+	    ret-> setValue (this-> value.f);
+	else
+	    ret-> setValue (this-> value.d);
+	ret-> info = sym;
+	return ret;
+    }
+
+
+    Value IFloatValue::add (Value other) {
+	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IFloatValue (this-> type, 0,
+					      this-> value.d + ot-> value.d);
+	    return new (Z0)  IFloatValue (this-> type,
+					  this-> value.f + ot-> value.f,
+					  0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFloatValue::sub (Value other) {
+	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IFloatValue (this-> type, 0,
+					      this-> value.d - ot-> value.d);
+	    return new (Z0)  IFloatValue (this-> type,
+					  this-> value.f - ot-> value.f,
+					  0
+	    );
+	}
+	return NULL;
+    }        
+
+
+    Value IFloatValue::mul (Value other) {
+	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IFloatValue (this-> type, 0,
+					      this-> value.d * ot-> value.d);
+	    return new (Z0)  IFloatValue (this-> type,
+					  this-> value.f * ot-> value.f,
+					  0
+	    );
+	}
+	return NULL;
+    }
+    
+    Value IFloatValue::div (Value other) {
+	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IFloatValue (this-> type, 0,
+					      this-> value.d / ot-> value.d);
+	    return new (Z0)  IFloatValue (this-> type,
+					  this-> value.f / ot-> value.f,
+					  0
+	    );
+	}
+	return NULL;
+    }        
+
+    
+    Value IFloatValue::inf (Value other) {
+    	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IBoolValue (this-> value.d < ot-> value.d);
+	    return new (Z0)  IBoolValue (this-> value.f < ot-> value.f);
+	}
+	return NULL;
+    }
+    
+    Value IFloatValue::sup (Value other) {
+    	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IBoolValue (this-> value.d > ot-> value.d);
+	    return new (Z0)  IBoolValue (this-> value.f > ot-> value.f);
+	}
+	return NULL;
+    }
+    
+    Value IFloatValue::infeq (Value other) {
+    	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IBoolValue (this-> value.d <= ot-> value.d);
+	    return new (Z0)  IBoolValue (this-> value.f <= ot-> value.f);
+	}
+	return NULL;
+    }
+    
+    Value IFloatValue::supeq (Value other) {
+    	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IBoolValue (this-> value.d >= ot-> value.d);
+	    return new (Z0)  IBoolValue (this-> value.f >= ot-> value.f);
+	}
+	return NULL;
+    }
+    
+    Value IFloatValue::neq (Value other) {
+    	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IBoolValue (this-> value.d != ot-> value.d);
+	    return new (Z0)  IBoolValue (this-> value.f != ot-> value.f);
+	}
+	return NULL;
+    }
+    
+    Value IFloatValue::eq (Value other) {
+    	if (auto ot = other-> to<IFloatValue> ()) {
+	    if (this-> type == FloatConst::DOUBLE)
+		return new (Z0)  IBoolValue (this-> value.d == ot-> value.d);
+	    return new (Z0)  IBoolValue (this-> value.f == ot-> value.f);
+	}
+	return NULL;
+    }
+
+    Value IFloatValue::clone () {
+	return new (Z0)  IFloatValue (this-> type, this-> value.f, this-> value.d);
+    }    
+
+    bool IFloatValue::equals (Value other) {
+	if (auto ot = other-> to <IFloatValue> ()) {
+	    return this-> type == ot-> type &&
+		this-> value.f == ot-> value.f &&
+		this-> value.d == ot-> value.d;
+	}
+	return false;
+    }
+
+    
 }

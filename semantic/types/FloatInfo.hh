@@ -58,7 +58,7 @@ namespace semantic {
 
 	InfoType AffectRight (syntax::Expression);
 
-	InfoType Inv ();
+	InfoType Inv (const Word&);
 
 	InfoType Init ();
 
@@ -85,8 +85,6 @@ namespace semantic {
 	InfoType Inf ();
 
 	InfoType Sqrt ();
-
-	InfoType StringOf ();
 
 	InfoType opAff (Word, syntax::Expression);
 

@@ -82,9 +82,17 @@ namespace syntax {
 	
 	IFloat (Word word, std::string suite);
 
+	IFloat (Word word, FloatConst type);
+	
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+
+	void setValue (float val);
+
+	void setValue (double val);
+
+	std::string getValue ();
 	
 	Ymir::Tree toGeneric () override;
 	

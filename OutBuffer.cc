@@ -65,12 +65,12 @@ namespace Ymir {
 
     
     void OutBuffer::write_ (double nb) {
-	auto len = snprintf (NULL, 0, "%lf", nb);
+	auto len = snprintf (NULL, 0, "%A", nb);
 	if (this-> capacity < this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%lf", nb);
+	sprintf (this-> current + this-> len, "%A", nb);
 	this-> len += len;
     }
     

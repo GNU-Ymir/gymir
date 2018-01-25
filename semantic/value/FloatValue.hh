@@ -5,30 +5,30 @@
 
 namespace semantic {
 
-    union signedun {
-	long l;
-	ulong ul;
+    union doublePrec {
+	float f;
+	double d;
     };
     
-    class IFixedValue : public IValue {
+    class IFloatValue : public IValue {
 
-	signedun value;
-	FixedConst type;
+	doublePrec value;
+	FloatConst type;
 	
     public:
 
-	IFixedValue (FixedConst cst, ulong ul, long l);
+	IFloatValue (FloatConst cst, float ul, double l);
 
-	ulong& getUValue ();
+	float& getFloat ();
 
-	long& getValue ();
+	double& getDouble ();
 
 	Value BinaryOp (Word , Value ) override;
 	
 	const char* getId () override;
 
 	static const char* id () {
-	    return "IFixedValue";
+	    return "IFloatValue";
 	}
 
 	std::string toString () override;
@@ -45,14 +45,6 @@ namespace semantic {
 	Value sub (Value other);
 	Value div (Value other);
 	Value mul (Value other);
-	Value lor (Value other);
-	Value land (Value other);
-	Value lshift (Value other);
-	Value rshift (Value other);
-	Value lxor (Value other);
-	Value mod (Value other);
-	Value dand (Value other);
-	Value dor (Value other);
 	Value inf (Value other);
 	Value sup (Value other);
 	Value infeq (Value other);

@@ -426,6 +426,25 @@ namespace syntax {
 	this-> totale = this-> token.getStr () + "." + suite;
     }
 
+    IFloat::IFloat (Word word, FloatConst type) :
+	IExpression (word),
+	suite (""),
+	_type (type)
+    {	
+    }
+
+    void IFloat::setValue (float val) {
+	this-> totale = Ymir::OutBuffer (val).str ();
+    }
+
+    void IFloat::setValue (double val) {
+	this-> totale = Ymir::OutBuffer (val).str ();
+    }    
+
+    std::string IFloat::getValue () {
+	return this-> totale;
+    }
+    
     std::string IFloat::prettyPrint () {
 	return this-> totale;
     }

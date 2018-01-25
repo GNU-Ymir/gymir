@@ -14,6 +14,7 @@ namespace syntax {
 	aux-> params = (ParamList) this-> params-> expression ();
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
+	if (aux-> params == NULL) return NULL;
 	if (aux-> left-> is<IType> ())
 	    Ymir::Error::undefVar (aux-> left-> token,
 				   Table::instance ().getAlike (aux-> left-> token.getStr ())
@@ -529,7 +530,7 @@ namespace syntax {
     Expression IFloat::expression () {
 	auto aux = new (Z0)  IFloat (this-> token, this-> suite);
 	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (true, this-> _type));
-	//TODO
+	aux-> totale = this-> totale;
 	return aux;
     }
 
@@ -714,7 +715,7 @@ namespace syntax {
     }
 
     Expression IDot::expression () {
-	auto aux = new (Z0)  IDot (this-> token, this-> left-> expression (), this-> right);
+	auto aux = new (Z0)  IDot (this-> token, this-> left-> expression (), this-> right-> templateExpReplace ({}));
 	if (aux-> left == NULL) return NULL;
 	else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token);

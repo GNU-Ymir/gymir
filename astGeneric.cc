@@ -81,6 +81,7 @@ namespace syntax {
     Ymir::Tree IFloat::toGeneric () {
 	REAL_VALUE_TYPE real_value;
 	Ymir::Tree type = this-> info-> type-> toGeneric ();
+	printf ("%s\n", this-> totale.c_str ());
 	real_from_string3 (&real_value, this-> totale.c_str (), TYPE_MODE (type.getTree ()));
 	return build_real (type.getTree (), real_value);
     }

@@ -3,6 +3,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/_.hh>
+#include <climits>
 
 namespace semantic {
 
@@ -75,8 +76,21 @@ namespace semantic {
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
-	} else if (op == Token::AND && !this-> isConst ())
+	} else if (op == Token::AND && !this-> isConst ()) {
 	    return toPtr ();
+	} else if (op == Token::DPLUS) {
+	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
+	    ret-> unopFoo = FixedUtils::InstPPlus;
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> UnaryOp (op);
+	    return ret;
+	} else if (op == Token::DMINUS) {
+	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
+	    ret-> unopFoo = FixedUtils::InstSSub;
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> UnaryOp (op);
+	    return ret;
+	}
 	return NULL;
     }
 
@@ -346,24 +360,47 @@ namespace semantic {
 
     InfoType IFixedInfo::Init () {
 	auto ret = new (Z0)  IFixedInfo (true, this-> _type);
+	ret-> value () = new IFixedValue (this-> _type, 0, 0);
 	return ret;	
     }
 
     InfoType IFixedInfo::Max () {
-	auto ret = new (Z0)  IFixedInfo (true, this-> _type);
-	//TODO
-	return ret;	
+	auto retI = new (Z0)  IFixedInfo (true, this-> _type);	
+	IFixedValue* ret = new (Z0) IFixedValue (this-> _type, 0, 0);
+	switch (this-> _type) {
+	case FixedConst::BYTE : ret-> getValue () = SCHAR_MAX; break;
+	case FixedConst::UBYTE : ret-> getValue () = UCHAR_MAX; break;
+	case FixedConst::SHORT : ret-> getValue () = SHRT_MAX; break;
+	case FixedConst::USHORT : ret-> getValue () = USHRT_MAX; break;
+	case FixedConst::INT : ret-> getValue () = INT_MAX; break;
+	case FixedConst::UINT : ret-> getValue () = UINT_MAX; break;
+	case FixedConst::LONG : ret-> getValue () = LONG_MAX; break;
+	case FixedConst::ULONG : ret-> getValue () = ULONG_MAX; break;	    
+	}
+	retI-> value () = ret;
+	return retI;	
     }
 
     InfoType IFixedInfo::Min () {
-	auto ret = new (Z0)  IFixedInfo (true, this-> _type);
-	//TODO
-	return ret;	
+	auto retI = new (Z0)  IFixedInfo (true, this-> _type);	
+	IFixedValue* ret = new (Z0) IFixedValue (this-> _type, 0, 0);
+	switch (this-> _type) {
+	case FixedConst::BYTE : ret-> getValue () = SCHAR_MIN; break;
+	case FixedConst::UBYTE : ret-> getValue () = 0; break;
+	case FixedConst::SHORT : ret-> getValue () = SHRT_MIN; break;
+	case FixedConst::USHORT : ret-> getValue () = 0; break;
+	case FixedConst::INT : ret-> getValue () = INT_MIN; break;
+	case FixedConst::UINT : ret-> getValue () = 0; break;
+	case FixedConst::LONG : ret-> getValue () = LONG_MIN; break;
+	case FixedConst::ULONG : ret-> getValue () = 0; break;	    
+	}
+	retI-> value () = ret;
+	return retI;
     }
 
     InfoType IFixedInfo::SizeOf () {
 	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
-	//TODO
+	ret-> unopFoo = FixedUtils::InstSizeOf;
 	return ret;	
     }
 
@@ -506,17 +543,25 @@ namespace semantic {
 	}
 
 	Ymir::Tree InstSSub (Word locus, InfoType, Expression elem) {
-	    auto lexp = elem-> toGeneric ();
+	    auto ltree = elem-> toGeneric ();
+	    auto rtree = build_int_cst_type (ltree.getType ().getTree (), 1);
 	    return Ymir::buildTree (
-		PREDECREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
-	    );
+		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree,
+		Ymir::buildTree (
+		    MINUS_EXPR, locus.getLocus (), ltree.getType (), ltree, rtree
+		)
+	    );		
 	}
 	
 	Ymir::Tree InstPPlus (Word locus, InfoType, Expression elem) {
-	    auto lexp = elem-> toGeneric ();
+	    auto ltree = elem-> toGeneric ();
+	    auto rtree = build_int_cst_type (ltree.getType ().getTree (), 1);
 	    return Ymir::buildTree (
-		PREINCREMENT_EXPR, locus.getLocus (), lexp.getType (), lexp
-	    );
+		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree,
+		Ymir::buildTree (
+		    PLUS_EXPR, locus.getLocus (), ltree.getType (), ltree, rtree
+		)
+	    );		
 	}
 	
 	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
@@ -528,9 +573,12 @@ namespace semantic {
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
+
+	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
+	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
+	}
 	
     }
-
 
 
     IFixedValue::IFixedValue (FixedConst type, ulong ul, long l) {
@@ -540,11 +588,11 @@ namespace semantic {
 	} else this-> value.l = l;
     }
     
-    long IFixedValue::getValue () {
+    long& IFixedValue::getValue () {
 	return this-> value.l;
     }
 
-    ulong IFixedValue::getUValue () {
+    ulong& IFixedValue::getUValue () {
 	return this-> value.ul;
     }
 
