@@ -1347,19 +1347,19 @@ namespace syntax {
     Expression Visitor::visitNumeric (const Word& begin, bool abrev) {
 	for (int it = 0 ; it < (int) begin.getStr ().length (); it++) {
 	    if (begin.getStr () [it] < '0' || begin.getStr() [it] > '9') {		
-		if (begin.getStr () .substr (it, begin.getStr ().length ()) == "ub" || begin.getStr () .substr (it, begin.getStr ().length ()) == "UB")
+		if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "ub" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "UB")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UBYTE);
-		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "b" || begin.getStr () .substr (it, begin.getStr ().length ()) == "B")
+		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "b" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "B")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr ().substr (0, it)}, FixedConst::BYTE);
-		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "s" || begin.getStr () .substr (it, begin.getStr ().length ()) == "S")
+		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "s" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "S")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::SHORT);
-		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "us" || begin.getStr () .substr (it, begin.getStr ().length ()) == "US")
+		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "us" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "US")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::USHORT);
-		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "u" || begin.getStr () .substr (it, begin.getStr ().length ()) == "U")
+		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "u" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "U")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UINT);
-		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "ul" || begin.getStr () .substr (it, begin.getStr ().length ()) == "UL")
+		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "ul" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "UL")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::ULONG);
-		else if (begin.getStr () .substr (it, begin.getStr ().length ()) == "l" || begin.getStr () .substr (it, begin.getStr ().length ()) == "L")
+		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "l" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "L")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::LONG);
 		else {
 		    syntaxError (begin);
@@ -1373,14 +1373,22 @@ namespace syntax {
 	    if (next == Token::DOT) {
 		next = this-> lex.next ();
 		auto suite = next.getStr ();
-		for (auto it : next.getStr ()) {		
-		    if (it < '0' || it > '9') {
-			suite = "0";
-			this-> lex.rewind ();
-			break;
+		FloatConst type = FloatConst::DOUBLE;
+		for (auto it : Ymir::r (0, next.getStr ().length ())) {		
+		    if (next.getStr () [it] < '0' || next.getStr () [it] > '9') {
+			if (next.getStr ().substr (it, next.getStr ().length () - it) == "f" ||
+			    next.getStr ().substr (it, next.getStr ().length () - it) == "F") {
+			    type = FloatConst::FLOAT;
+			    return new IFloat (begin, next.getStr ().substr (0, it), type);
+			    break;
+			} else {
+			    suite = "0";
+			    this-> lex.rewind ();
+			    break;
+			}
 		    }		    
 		}
-		return new (Z0)  IFloat (begin, suite);
+		return new (Z0)  IFloat (begin, suite, type);
 	    } else this-> lex.rewind ();
 	}
 	return new (Z0)  IFixed (begin, FixedConst::INT);
@@ -1388,11 +1396,20 @@ namespace syntax {
     
     Expression Visitor::visitFloat (const Word&) {
 	auto next = this-> lex.next ();
-	for (auto it : next.getStr ()) {
-	    if (it < '0' || it > '9') 
-		syntaxError (next);	    
+	FloatConst type = FloatConst::DOUBLE;
+	for (auto it : Ymir::r (0, next.getStr ().length ())) {
+	    if (next.getStr () [it] < '0' || next.getStr () [it] > '9') {
+		if (next.getStr ().substr (it, next.getStr ().length () - it) == "f" ||
+		    next.getStr ().substr (it, next.getStr ().length () - it) == "F") {
+		    type = FloatConst::FLOAT;
+		    return new IFloat ({next.getLocus (), next.getStr ().substr (0, it)}, type);
+		
+		} else {
+		    syntaxError (next);
+		}
+	    }
 	}
-	return new (Z0)  IFloat (next);
+	return new (Z0)  IFloat (next, type);
     }
 
     Expression Visitor::visitString (Word& word) {

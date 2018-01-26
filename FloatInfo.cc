@@ -86,15 +86,17 @@ namespace semantic {
 	    if (ot-> _type == this-> _type) return this;
 	    else {
 		auto aux = other-> clone ();
+		aux-> isConst (this-> isConst ());
 		aux-> binopFoo = FloatUtils::InstCast;
 		return aux;
 	    }
 	} else if (auto ot = other-> to<IFixedInfo> ()) {
 	    if (this-> _type == FloatConst::DOUBLE) {
-		if (ot-> type () != FixedConst::LONG ||
+		if (ot-> type () != FixedConst::LONG &&
 		    ot-> type () != FixedConst::ULONG) return NULL;
 	    } else if (ot-> type () < FixedConst::INT) return NULL;
 	    auto aux = ot-> clone ();
+	    aux-> isConst (this-> isConst ());
 	    aux-> binopFoo = FloatUtils::InstCast;
 	    return aux;
 	}
@@ -206,10 +208,10 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::Dig () {
-	auto ret = this-> cloneConst ();
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::INT);
 	if (this-> _type == FloatConst::FLOAT) {
-	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_DIG, 0.0);
-	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_DIG);
+	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_DIG, 0);
+	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, 0, DBL_DIG);
 	return ret;
     }
 
@@ -222,42 +224,42 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::MantDig () {
-	auto ret = this-> cloneConst ();
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::INT);
 	if (this-> _type == FloatConst::FLOAT) {
-	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MANT_DIG, 0.0);
-	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MANT_DIG);
+	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_MANT_DIG, 0);
+	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, 0, DBL_MANT_DIG);
 	return ret;
     }
 	
     InfoType IFloatInfo::Max10Exp () {
-	auto ret = this-> cloneConst ();
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::INT);
 	if (this-> _type == FloatConst::FLOAT) {
-	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MAX_10_EXP, 0.0);
-	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MAX_10_EXP);
+	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_MAX_10_EXP, 0);
+	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, 0, DBL_MAX_10_EXP);
 	return ret;
     }
 
     InfoType IFloatInfo::MaxExp () {
-	auto ret = this-> cloneConst ();
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::INT);
 	if (this-> _type == FloatConst::FLOAT) {
-	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MAX_EXP, 0.0);
-	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MAX_EXP);
+	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_MAX_EXP, 0);
+	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, 0, DBL_MAX_EXP);
 	return ret;
     }
 
     InfoType IFloatInfo::MinExp () {
-	auto ret = this-> cloneConst ();
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::INT);
 	if (this-> _type == FloatConst::FLOAT) {
-	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MIN_EXP, 0.0);
-	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MIN_EXP);
+	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_MIN_EXP, 0);
+	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, 0, DBL_MIN_EXP);
 	return ret;
     }
 
     InfoType IFloatInfo::Min10Exp () {
-	auto ret = this-> cloneConst ();
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::INT);
 	if (this-> _type == FloatConst::FLOAT) {
-	    ret-> value () = new (Z0) IFloatValue (this-> _type, FLT_MIN_10_EXP, 0.0);
-	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MIN_10_EXP);
+	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_MIN_10_EXP, 0);
+	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, 0, DBL_MIN_10_EXP);
 	return ret;
     }
 
@@ -373,7 +375,7 @@ namespace semantic {
 
 	Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
-	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    
 	    return Ymir::buildTree (
 		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree, rtree
@@ -382,7 +384,7 @@ namespace semantic {
 	
 	Tree InstReaff (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
-	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGenericReal (locus);
 	    return Ymir::buildTree (
 		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree,
@@ -394,7 +396,7 @@ namespace semantic {
 	
 	Ymir::Tree InstNormal (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
-	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGenericReal (locus);
 	    return Ymir::buildTree (
 		code, locus.getLocus (), ltree.getType (), ltree, rtree
@@ -403,7 +405,7 @@ namespace semantic {
 
 	Ymir::Tree InstNormalRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
-	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
+	    Ymir::Tree ltree = convert (rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 
 	    tree_code code = OperatorUtils::toGenericReal (locus);
 	    return Ymir::buildTree (
@@ -413,7 +415,7 @@ namespace semantic {
 
 	Ymir::Tree InstTest (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
-	    Ymir::Tree rtree = fold_convert_loc (locus.getLocus (), ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    tree_code code = OperatorUtils::toGenericReal (locus);
 	    return Ymir::buildTree (
 		code, locus.getLocus (), boolean_type_node, ltree, rtree
@@ -422,7 +424,7 @@ namespace semantic {
 
 	Ymir::Tree InstTestRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
-	    Ymir::Tree ltree = fold_convert_loc (locus.getLocus (), rtree.getType ().getTree (), left-> toGeneric ().getTree ());
+	    Ymir::Tree ltree = convert (rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 
 	    tree_code code = OperatorUtils::toGenericReal (locus);
 	    return Ymir::buildTree (
@@ -451,10 +453,10 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
-	    auto type = typeExpr-> info-> type-> toGeneric ();
+	Ymir::Tree InstCast (Word, InfoType typei, Expression elem, Expression) {
+	    auto type = typei-> toGeneric ();
 	    auto lexp = elem-> toGeneric ();
-	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
+	    return convert (type.getTree (), lexp.getTree ());	    
 	}
 	
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {

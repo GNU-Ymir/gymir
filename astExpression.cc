@@ -528,7 +528,7 @@ namespace syntax {
     }
 
     Expression IFloat::expression () {
-	auto aux = new (Z0)  IFloat (this-> token, this-> suite);
+	auto aux = new (Z0)  IFloat (this-> token, this-> suite, this-> _type);
 	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (true, this-> _type));
 	aux-> totale = this-> totale;
 	return aux;

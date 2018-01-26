@@ -426,6 +426,14 @@ namespace syntax {
 	this-> totale = this-> token.getStr () + "." + suite;
     }
 
+    IFloat::IFloat (Word word, std::string suite, FloatConst type) :
+	IExpression (word),
+	suite (suite),
+	_type (type)
+    {
+	this-> totale = this-> token.getStr () + "." + suite;
+    }
+
     IFloat::IFloat (Word word, FloatConst type) :
 	IExpression (word),
 	suite (""),

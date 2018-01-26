@@ -81,6 +81,8 @@ namespace syntax {
 	IFloat (Word word);
 	
 	IFloat (Word word, std::string suite);
+	
+	IFloat (Word word, std::string suite, FloatConst type);
 
 	IFloat (Word word, FloatConst type);
 	

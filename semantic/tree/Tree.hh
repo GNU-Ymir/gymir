@@ -17,6 +17,13 @@
 #include "print-tree.h"
 #include "stor-layout.h"
 #include "fold-const.h"
+
+#include "convert.h"
+#include "langhooks.h"
+#include "ubsan.h"
+#include "stringpool.h"
+#include "attribs.h"
+#include "asan.h"
 #include "tree-pretty-print.h"
 #include "print-tree.h"
 #include "cppdefault.h"
