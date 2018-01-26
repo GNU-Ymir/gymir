@@ -457,8 +457,16 @@ namespace syntax {
 	return this-> totale;
     }
 
-    std::string IBool::prettyPrint () {
+    IBool::IBool (Word token) : IExpression (token) {
+	this-> value = token == Keys::TRUE_;
+    }
+    
+    std::string IBool::prettyPrint () {	
 	return this-> token.getStr ();
+    }
+
+    bool &IBool::getValue () {
+	return this-> value;
     }
     
     std::string INull::prettyPrint () {

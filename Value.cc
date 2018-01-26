@@ -23,26 +23,6 @@ namespace semantic {
 
     Value IValue::DotOp (Var ) { return NULL; }
 
-
-    IBoolValue::IBoolValue (bool value) :
-	value (value)
-    {}
-    
-    bool IBoolValue::isTrue () {
-	return this-> value;
-    }
-       
-    Value IBoolValue::clone () {
-	return new (Z0)  IBoolValue (this-> value);
-    }
-    
-    const char* IBoolValue::getId () {
-	return IBoolValue::id ();
-    }
-
-    std::string IBoolValue::toString () {
-	return Ymir::OutBuffer (this-> value).str ();
-    }
     
     ICharValue::ICharValue (char code) :
 	code (code)

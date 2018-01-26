@@ -871,8 +871,8 @@ namespace syntax {
     
     Expression IBool::expression () {
 	auto aux = new (Z0)  IBool (this-> token);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IBoolInfo (this-> token == Keys::TRUE_));
-	aux-> info-> value () = new (Z0)  IBoolValue (this-> token == Keys::TRUE_);
+	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IBoolInfo (this-> value));
+	aux-> info-> value () = new (Z0)  IBoolValue (this-> value);
 	return aux;
     }
 

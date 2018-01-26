@@ -54,11 +54,11 @@ namespace semantic {
 
 	InfoType opNorm (Word, syntax::Expression);
 
+	InfoType opReaff (Word, syntax::Expression);
+	
 	InfoType Init ();
 
 	InfoType SizeOf ();
-
-	InfoType StringOf ();
 	
     };
 

@@ -75,7 +75,7 @@ namespace syntax {
     }
     
     Ymir::Tree IBool::toGeneric () {
-	return build_int_cst_type (unsigned_char_type_node, this-> token == Keys::TRUE_);
+	return build_int_cst_type (boolean_type_node, this-> token == Keys::TRUE_);
     }
 
     Ymir::Tree IFloat::toGeneric () {

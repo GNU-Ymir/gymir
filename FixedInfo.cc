@@ -432,7 +432,8 @@ namespace semantic {
 	
 	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
-	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());
+	    auto rtree = right-> toGeneric ();
+	    rtree = convert (ltree.getType ().getTree (), rtree.getTree ());
 	    
 	    return Ymir::buildTree (
 		MODIFY_EXPR, locus.getLocus (), void_type_node, ltree, rtree
@@ -479,6 +480,15 @@ namespace semantic {
 	    );
 	}
 
+	Ymir::Tree InstNot (Word locus, InfoType, Expression left) {
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = convert (ltree.getType ().getTree (), build_int_cst_type (boolean_type_node, true));
+	    tree_code code = OperatorUtils::toGeneric ({locus.getLocus (), Token::XOR});
+	    return Ymir::buildTree (
+		code, locus.getLocus (), boolean_type_node, ltree, rtree
+	    );
+	}
+	
 	Ymir::Tree InstTestRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
 	    Ymir::Tree ltree = convert (rtree.getType ().getTree (), left-> toGeneric ().getTree ());

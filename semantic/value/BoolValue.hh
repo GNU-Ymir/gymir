@@ -12,8 +12,10 @@ namespace semantic {
 
 	IBoolValue (bool value);
 
-	bool isTrue ();
+	bool& isTrue ();
 
+	Value BinaryOp (Word , Value ) override;
+	
 	const char* getId () override;
 
 	static const char* id () {
@@ -22,7 +24,20 @@ namespace semantic {
 	
 	Value clone () override;
 
+	syntax::Expression toYmir (Symbol sym) override;
+
+	bool equals (Value) override;
+	
 	std::string toString () override;
+
+    private:
+
+	Value dand (Value);
+	Value dor (Value);
+	Value neq (Value);
+	Value eq (Value);
+	Value lxor (Value);
+	
 	
     };
 

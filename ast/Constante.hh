@@ -211,9 +211,13 @@ namespace syntax {
     };
         
     class IBool : public IExpression {
+
+	bool value;
+	
     public :
-	IBool (Word token) : IExpression (token) {
-	}
+	IBool (Word token);
+	
+	bool& getValue ();
 
 	Expression expression () override;
 

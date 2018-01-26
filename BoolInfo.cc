@@ -1,6 +1,9 @@
 #include <ymir/semantic/types/_.hh>
-#include <ymir/semantic/utils/BoolUtils.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
+#include <ymir/semantic/value/BoolValue.hh>
+#include <ymir/ast/Constante.hh>
 #include "print-tree.h"
+
 
 namespace semantic {
 
@@ -16,6 +19,14 @@ namespace semantic {
 	if (op == Token::EQUAL) return Affect (right);
 	if (op == Token::DAND) return opNorm (op, right);
 	if (op == Token::DPIPE) return opNorm (op, right);
+	if (op == Token::PIPE) return opNorm (op, right);
+	if (op == Token::AND) return opNorm (op, right);
+	if (op == Token::XOR) return opNorm (op, right);
+	
+	if (op == Token::AND_AFF) return opReaff (op, right);
+	if (op == Token::PIPE_EQUAL) return opReaff (op, right);
+	if (op == Token::XOR_EQUAL) return opReaff (op, right);
+	
 	if (op == Token::NOT_EQUAL) return opNorm (op, right);
 	if (op == Token::DEQUAL) return opNorm (op, right);
 	return NULL;
@@ -29,8 +40,10 @@ namespace semantic {
     InfoType IBoolInfo::UnaryOp (Word op) {
 	if (op == Token::NOT) {
 	    auto ret = new (Z0)  IBoolInfo (true);
-	    //ret-> lintInstS.push_back (BoolUtils::InstXor);
-	    //if (this-> value) ret-> value = this-> value-> UnaryOp (op);
+	    ret-> unopFoo = FixedUtils::InstNot;
+	    //ret-> lintInstS.push_back (FixedUtils::InstXor);
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
 	} else if (op == Token::AND) return Ptr ();
 	return NULL;
@@ -60,7 +73,7 @@ namespace semantic {
     InfoType IBoolInfo::CompOp (InfoType other) {
 	if (other-> is<IBoolInfo> () || other-> is<IUndefInfo> ()) {
 	    auto bl = new (Z0)  IBoolInfo (this-> isConst ());
-	    //bl-> lintInst = BoolUtils::InstAffect;
+	    bl-> binopFoo = FixedUtils::InstCast;
 	    return bl;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
 	    return this-> CompOp (en-> content ());
@@ -74,14 +87,14 @@ namespace semantic {
 		
     InfoType IBoolInfo::Ptr () {
 	auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
-	//ptr-> lintInstS.push_back (BoolUtils::InstAddr);
+	ptr-> binopFoo = &FixedUtils::InstAddr;
 	return ptr;
     }
 
     InfoType IBoolInfo::Affect (syntax::Expression right) {
 	if (right-> info-> type-> is<IBoolInfo> ()) {
 	    auto b = new (Z0)  IBoolInfo (this-> isConst ());
-	    b-> binopFoo = BoolUtils::InstAffect;
+	    b-> binopFoo = FixedUtils::InstAffect;
 	    return b;
 	}
 	return NULL;
@@ -89,35 +102,44 @@ namespace semantic {
 
     InfoType IBoolInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    auto b = new (Z0)  IBoolInfo (this-> isConst ());
-	    b-> binopFoo = BoolUtils::InstAffect;
+	    auto b = new (Z0)  IBoolInfo (this-> isConst ());	    
+	    b-> binopFoo = FixedUtils::InstAffect;
 	    return b;
 	}
 	return NULL;
     }
 
-    InfoType IBoolInfo::opNorm (Word, syntax::Expression right) {
+    InfoType IBoolInfo::opNorm (Word op, syntax::Expression right) {
 	if (right-> info-> type-> is<IBoolInfo> ()) {
 	    auto b = new (Z0)  IBoolInfo (true);
-	    //TODO
+	    b-> binopFoo = &FixedUtils::InstNormal;
+	    if (this-> value ()) {
+		b-> value () = this-> value ()-> BinaryOp (op, right-> info-> value ());
+	    }
 	    return b;
 	}
 	return NULL;
     }
 
+    InfoType IBoolInfo::opReaff (Word, syntax::Expression right) {
+	if (right-> info-> type-> is<IBoolInfo> ()) {
+	    auto b = new (Z0)  IBoolInfo (true);
+	    b-> binopFoo = &FixedUtils::InstReaff;
+	    return b;
+	}
+	return NULL;
+    }
+    
     InfoType IBoolInfo::Init () {
-	//TODO
-	return new (Z0)  IBoolInfo (true);
+	auto ret = new (Z0)  IBoolInfo (true);
+	ret-> value () = new (Z0) IBoolValue (false);
+	return ret;
     }
 
-    InfoType IBoolInfo::SizeOf () {
-	//TODO
-	return new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
-    }
-
-    InfoType IBoolInfo::StringOf () {
-	//TODO
-	return new (Z0)  IStringInfo (true);
+    InfoType IBoolInfo::SizeOf () {	
+	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
+	ret-> unopFoo = FixedUtils::InstSizeOf;
+	return ret;
     }
     
     const char* IBoolInfo::getId () {
@@ -125,24 +147,91 @@ namespace semantic {
     }
 
     Ymir::Tree IBoolInfo::toGeneric () {
-	return unsigned_char_type_node;
+	return boolean_type_node;
     }
     
-    namespace BoolUtils {
-	using namespace syntax;
-	using namespace Ymir;
-	
-	Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
-	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();
-	    auto typeTree = left-> info-> type-> toGeneric ();
-	    return buildTree (
-		MODIFY_EXPR, locus.getLocus (),
-		typeTree, lexp, rexp
-	    );
-	}	
-
+    IBoolValue::IBoolValue (bool value) :
+	value (value)
+    {}
+    
+    bool& IBoolValue::isTrue () {
+	return this-> value;
     }
+       
+    Value IBoolValue::clone () {
+	return new (Z0) IBoolValue (this-> value);
+    }
+    
+    const char* IBoolValue::getId () {
+	return IBoolValue::id ();
+    }
+
+    std::string IBoolValue::toString () {
+	return Ymir::OutBuffer (this-> value).str ();
+    }
+
+    Value IBoolValue::BinaryOp (Word op, Value val) {
+	if (op == Token::DAND) return this-> dand (val);
+	if (op == Token::DPIPE) return this-> dor (val);
+	if (op == Token::NOT_EQUAL) return this-> neq (val);
+	if (op == Token::XOR) return this-> lxor (val);
+	if (op == Token::AND) return this-> dand (val);
+	if (op == Token::PIPE) return this-> dor (val);
+	if (op == Token::DEQUAL) return this-> eq (val);	
+	return NULL;
+    }
+    
+    Value IBoolValue::dand (Value other) {
+	if (auto ot = other-> to<IBoolValue> ()) {
+	    return new (Z0) IBoolValue (this-> value && ot-> value);
+	}
+	return NULL;
+    }
+
+    Value IBoolValue::dor (Value other) {
+	if (auto ot = other-> to<IBoolValue> ()) {
+	    return new (Z0) IBoolValue (this-> value || ot-> value);
+	}
+	return NULL;	
+    }
+
+    Value IBoolValue::neq (Value other) {
+	if (auto ot = other-> to<IBoolValue> ()) {
+	    return new (Z0) IBoolValue (this-> value != ot-> value);
+	}
+	return NULL; 
+    }
+
+    Value IBoolValue::eq (Value other) {
+	if (auto ot = other-> to<IBoolValue> ()) {
+	    return new (Z0) IBoolValue (this-> value == ot-> value);
+	}
+	return NULL;	
+    }
+
+    Value IBoolValue::lxor (Value other) {
+	if (auto ot = other-> to<IBoolValue> ()) {
+	    return new (Z0) IBoolValue (this-> value == ot-> value);
+	}
+	return NULL;	
+    }
+    
+    syntax::Expression IBoolValue::toYmir (Symbol sym) {
+	auto ret = new (Z0) syntax::IBool (sym-> sym);
+	ret-> getValue () = this-> value;
+	ret-> info = sym;
+	return ret;
+    }
+    
+    bool IBoolValue::equals (Value other) {
+	if (auto ot = other-> to <IBoolValue> ()) {
+	    return this-> value == ot-> value;
+	}
+	return false;
+    }
+    
 
     
 }
+
+
