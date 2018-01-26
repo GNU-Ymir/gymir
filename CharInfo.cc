@@ -1,5 +1,6 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
+#include <ymir/semantic/value/CharValue.hh>
 
 namespace semantic {
 
@@ -59,7 +60,7 @@ namespace semantic {
 	if (other-> is<ICharInfo> ()) return this;
 	if (auto ot = other-> to<IFixedInfo> ()) {
 	    auto aux = ot-> clone ();
-	    //TODO;
+	    aux-> binopFoo = FixedUtils::InstCast;
 	    return aux;
 	}
 	return NULL;
@@ -68,7 +69,7 @@ namespace semantic {
     InfoType ICharInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || other-> is<ICharInfo> ()) {
 	    auto ch = new (Z0)  ICharInfo (this-> isConst ());
-	    //TODO
+	    ch-> binopFoo = FixedUtils::InstCast;
 	    return ch;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
 	    return this-> CompOp (en-> content ());
@@ -77,9 +78,7 @@ namespace semantic {
     }
 
     InfoType ICharInfo::onClone () {
-	auto ret = new (Z0)  ICharInfo (this-> isConst ());
-	//TODO
-	return ret;
+	return new (Z0)  ICharInfo (this-> isConst ());	
     }
 		
     const char* ICharInfo::getId () {
@@ -104,32 +103,33 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType ICharInfo::opTest (Word, syntax::Expression right) {
+    InfoType ICharInfo::opTest (Word op, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
-	    auto bl = new (Z0)  IBoolInfo (true);	    
-	    //TODO
-	    // if (this-> value)
-	    //    ch-> value = this-> value-> BinaryOp (op, right-> info-> type-> value);
+	    auto bl = new (Z0)  IBoolInfo (true);	    	    
+	    bl-> binopFoo = &FixedUtils::InstTest;
+	    if (this-> value ())
+		bl-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+	    
 	    return bl;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
 		auto ch = new (Z0)  IBoolInfo (true);
-		//TODO
-		// if (this-> value)
-		//    ch-> value = this-> value-> BinaryOp (op, right-> info-> type-> value);
+		ch-> binopFoo = &FixedUtils::InstTest;
+		if (this-> value ())
+		    ch-> value () = this-> value()-> BinaryOp (op, right-> info-> type-> value ());
 		return ch;
 	    }
 	}
 	return NULL;
     }
     
-    InfoType ICharInfo::opTestRight (Word, syntax::Expression left) {
+    InfoType ICharInfo::opTestRight (Word op, syntax::Expression left) {
 	if (auto ot = left-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
 		auto ch = new (Z0)  IBoolInfo (true);
-		//TODO
-		// if (this-> value)
-		//    ch-> value = this-> value-> BinaryOpRight (op, right-> info-> type-> value);
+		ch-> binopFoo = FixedUtils::InstTestRight;
+		if (this-> value ())
+		    ch-> value () = this-> value ()-> BinaryOpRight (op, left-> info-> type-> value ());
 		return ch;
 	    }
 	}
@@ -139,37 +139,44 @@ namespace semantic {
     InfoType ICharInfo::opAff (Word, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
 	    auto ch = new (Z0)  ICharInfo (false);
-	    //TODO ch-> lintInst = CharUtils::InstOpAff ();
+	    ch-> binopFoo = &FixedUtils::InstReaff;	    
 	    return ch;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
 		auto ch = new (Z0)  ICharInfo (false);
-		//TODO ch-> lintInst = CharUtils::InstOpAff ();
+		ch-> binopFoo = &FixedUtils::InstReaff;
 		return ch;
 	    }
 	}
 	return NULL;
     }
 
-    InfoType ICharInfo::opNorm (Word, syntax::Expression right) {
+    InfoType ICharInfo::opNorm (Word op, syntax::Expression right) {
 	if (right-> info-> type-> is<ICharInfo> ()) {
 	    auto ch = new (Z0)  ICharInfo (true);
-	    //TODO
+	    ch-> binopFoo = &FixedUtils::InstNormal;
+	    if (this-> value ())
+		ch-> value () = this-> value ()-> BinaryOp (op, right-> info-> value ());
 	    return ch;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
-	    if (ot-> type () == FixedConst::UBYTE) {
+	    if (ot-> type () == FixedConst::UBYTE) {		
 		auto ch = new (Z0)  ICharInfo (true);
+		ch-> binopFoo = &FixedUtils::InstNormal;
+		if (this-> value ())
+		    ch-> value () = this-> value ()-> BinaryOp (op, right-> info-> value ());
 		return ch;
 	    }
 	}
 	return NULL;
     }
 
-    InfoType ICharInfo::opNormRight (Word, syntax::Expression left) {
+    InfoType ICharInfo::opNormRight (Word op, syntax::Expression left) {
 	if (auto ot = left-> info-> type-> to<IFixedInfo> ()) {
 	    if (ot-> type () == FixedConst::UBYTE) {
 		auto ch = new (Z0)  ICharInfo (true);
-		//TODO
+		ch-> binopFoo = &FixedUtils::InstNormalRight;
+		if (this-> value ())
+		    ch-> value () = this-> value ()-> BinaryOpRight (op, left-> info-> value ());
 		return ch;
 	    }
 	}
@@ -178,24 +185,36 @@ namespace semantic {
 
     InfoType ICharInfo::Init () {
 	auto ch = new (Z0)  ICharInfo (true);
-	//TODO
+	ch-> value () = new (Z0) ICharValue ('\0');
 	return ch;
     }
 
     InfoType ICharInfo::SizeOf () {
 	auto _in = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
-	//TODO
+	_in-> unopFoo = FixedUtils::InstSizeOf;
 	return _in;
-    }
-
-    InfoType ICharInfo::StringOf () {
-	auto str = new (Z0)  IStringInfo (true);
-	//TODO
-	return str;
     }
 
     Ymir::Tree ICharInfo::toGeneric () {
 	return char_type_node;
     }
+
+    ICharValue::ICharValue (char code) :
+	code (code)
+    {}
+
+    const char* ICharValue::getId () {
+	return ICharValue::id ();
+    }
+
+    syntax::Expression ICharValue::toYmir (Symbol sym) {
+	auto ret = new (Z0) syntax::IChar (sym-> sym, this-> code);
+	ret-> info = sym;
+	return ret;
+    }
     
+    Value ICharValue::clone () {
+	return new (Z0)  ICharValue (this-> code);
+    }
+
 }

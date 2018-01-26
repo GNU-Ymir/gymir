@@ -61,8 +61,6 @@ namespace semantic {
 	InfoType Init ();
 
 	InfoType SizeOf ();
-
-	InfoType StringOf ();
 	
     };
 

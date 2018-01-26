@@ -20,6 +20,8 @@ namespace semantic {
 	}
 
 	Value clone () override;
+
+	syntax::Expression toYmir (Symbol sym) override;
 	
     };
 

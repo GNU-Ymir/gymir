@@ -159,10 +159,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::onClone () {
-	auto ret = new (Z0)  IFixedInfo (this-> isConst (), this-> _type);
-	if (this-> value ())
-	    ret-> value () = this-> value ()-> clone ();
-	return ret;
+	return new (Z0)  IFixedInfo (this-> isConst (), this-> _type);
     }
 
     const char* IFixedInfo::getId () {

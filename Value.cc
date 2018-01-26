@@ -24,18 +24,6 @@ namespace semantic {
     Value IValue::DotOp (Var ) { return NULL; }
 
     
-    ICharValue::ICharValue (char code) :
-	code (code)
-    {}
-
-    const char* ICharValue::getId () {
-	return ICharValue::id ();
-    }
-
-    Value ICharValue::clone () {
-	return new (Z0)  ICharValue (this-> code);
-    }
-    
     std::string IValue::toString () {
 	Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
 	return "";
