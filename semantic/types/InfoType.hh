@@ -178,6 +178,8 @@ namespace semantic {
 
 	InfoType cloneConst ();
 
+	virtual bool isImmutable ();
+	
 	virtual Ymir::Tree toGeneric ();
 
 	virtual Ymir::Tree getInitFnPtr ();	    

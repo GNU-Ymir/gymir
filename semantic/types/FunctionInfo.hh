@@ -50,7 +50,7 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 
 	bool& alone ();
-
+	
 	std::string name ();
 
 	static const char* id () {

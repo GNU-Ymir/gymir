@@ -3,6 +3,7 @@
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/utils/Range.hh>
 #include <ymir/ast/Var.hh>
+#include <ymir/ast/Return.hh>
 #include <ymir/ast/TypedVar.hh>
 #include "ast/ParamList.hh"
 #include "errors/Error.hh"
@@ -252,6 +253,73 @@ namespace semantic {
 	return ex (name, from, ret, params, block, tmps, isVariadic);	
     }
 
+    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block) {
+	Table::instance ().setCurrentSpace (Namespace (space, name));
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
+
+	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {});
+	
+	if (!FrameTable::instance ().existsProto (proto)) {
+	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().isImmutable () = true;
+
+	    FrameTable::instance ().insert (proto);
+	    Table::instance ().retInfo ().currentBlock () = "true";
+	    auto exprBlock = _block-> expression ();	    
+	    Table::instance ().retInfo ().info-> type = exprBlock-> info-> type;
+	    Block block = NULL;
+	    if (!exprBlock-> info-> type-> is<IVoidInfo> ()) {
+		auto ret = new (Z0) IReturn (_block-> token, exprBlock);
+		ret-> getCaster () = exprBlock-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
+		block = new (Z0) IBlock (exprBlock-> token, {}, {ret});
+	    } else {		    
+		block = new (Z0) IBlock (exprBlock-> token, {}, {exprBlock});
+	    }
+	    
+	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
+						  space, name, params, block, {});
+	    proto-> type () = Table::instance ().retInfo ().info;
+	    FrameTable::instance ().insert (finFrame);
+	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
+	    Table::instance ().quitBlock ();
+	    Table::instance ().quitFrame ();
+	    return proto;
+	}
+	Table::instance ().quitBlock ();
+	Table::instance ().quitFrame ();
+	return proto;	
+    }
+
+    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Block _block) {
+	Table::instance ().setCurrentSpace (Namespace (space, name));
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
+
+	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {});
+	
+	if (!FrameTable::instance ().existsProto (proto)) {
+	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().isImmutable () = true;
+
+	    FrameTable::instance ().insert (proto);
+	    Table::instance ().retInfo ().currentBlock () = "true";
+	    auto block = _block-> block ();	    
+	    	    
+	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
+						  space, name, params, block, {});
+	    proto-> type () = Table::instance ().retInfo ().info;
+	    FrameTable::instance ().insert (finFrame);
+	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
+	    Table::instance ().quitBlock ();
+	    Table::instance ().quitFrame ();
+	    return proto;
+	}
+	Table::instance ().quitBlock ();
+	Table::instance ().quitFrame ();
+	return proto;	
+    }
+
+    
+    
     FrameProto IFrame::validate (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
 	Table::instance ().setCurrentSpace (Namespace (space, this-> _function-> getIdent ().getStr ()));
 	struct Exit {

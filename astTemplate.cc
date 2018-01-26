@@ -211,9 +211,16 @@ namespace syntax {
 	Var ret = NULL;
 	if (this-> ret)
 	    ret = (Var) this-> ret-> templateExpReplace (values);
-	auto block = (Block) this-> block-> templateReplace (values);
 	
-	return new (Z0)  ILambdaFunc (this-> token, var, ret, block);
+	if (this-> block) {
+	    auto block = (Block) this-> block-> templateReplace (values);
+	    return new (Z0)  ILambdaFunc (this-> token, var, ret, block);
+	} else if (this-> expr) {
+	    auto expr = this-> expr-> templateExpReplace (values);
+	    return new (Z0) ILambdaFunc (this-> token, var, expr);
+	} else {
+	    return new (Z0) ILambdaFunc (this-> token, this-> frame);
+	}
     }
     
     Expression IMatch::templateExpReplace (const map <string, Expression>& values) {

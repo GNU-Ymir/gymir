@@ -24,7 +24,11 @@ namespace semantic {
 	_alone (false)
     {}
 
-    bool IFunctionInfo::isSame (InfoType) {
+    bool IFunctionInfo::isSame (InfoType other) {
+	if (auto ot = other-> to<IFunctionInfo> ()) {
+	    if (ot-> _space == this-> _space && this-> _name == ot-> _name) return true;
+	    if (ot-> value () == this-> value ()) return true;	    
+	}
 	return false;
     }
 
@@ -41,9 +45,14 @@ namespace semantic {
     }
 
     InfoType IFunctionInfo::onClone () {
-	return this;
+	auto ret = new (Z0) IFunctionInfo (this-> _space, this-> _name);
+	ret-> _info = this-> _info;
+	ret-> _alone = this-> _alone;
+	ret-> _fromTemplates = this-> _fromTemplates;
+	ret-> value () = this-> value ();
+	return ret;
     }
-
+    
     std::vector <Frame> IFunctionInfo::getFrames () {
 	if (this-> _alone) return {this-> _info};
 	if (this-> _fromTemplates.size () != 0) return this-> _fromTemplates;
@@ -191,8 +200,9 @@ namespace semantic {
 		ret.push_back (aux);
 	}
 
-	if (ret.size () != 0)
+	if (ret.size () != 0) {
 	    return new (Z0)  IFunctionInfo (this-> _space, this-> _name, ret);
+	}
 	return NULL;
     }
 

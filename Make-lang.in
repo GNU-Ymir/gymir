@@ -79,6 +79,7 @@ ymir_OBJS = \
 	ymir/TemplateFrame.o \
 	ymir/astTemplate.o \
 	ymir/memory.o \
+	ymir/LambdaFrame.o \
 	$(END)
 
 

@@ -77,13 +77,17 @@ namespace syntax {
 	    if (this-> templates.size () != 0) {
 		if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> ())) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
-		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
+		    Word aux {this-> token.getLocus (), "("};
+		    Word aux2 {this-> token.getLocus (), ")"};
+		    auto call = new (Z0)  IPar (aux, aux2, this, params, true);
 		    this-> inside = call;
 		    return call-> expression ();
 		} else if (auto dt = this-> inside-> to<IDot> ()) {
 		    if (this == dt-> getLeft ()) {
 			auto params = new (Z0)  IParamList (this-> token, {});
-			auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
+			Word aux {this-> token.getLocus (), "("};
+			Word aux2 {this-> token.getLocus (), ")"};
+			auto call = new (Z0)  IPar (aux, aux2, this, params, true);
 			this-> inside = call;
 			return call-> expression ();
 		    }
@@ -922,7 +926,6 @@ namespace syntax {
 	return aux;
     }
 
-
     Expression IExpand::expression () {
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
@@ -945,6 +948,31 @@ namespace syntax {
 	} else {
 	    return expr;
 	}	
+    }
+    
+    Expression ILambdaFunc::expression () {
+	auto space = Table::instance ().space ();
+	auto aux = new (Z0) ILambdaFunc (this-> token, NULL);
+	if (this-> expr)
+	    aux-> expr = this-> expr-> templateExpReplace ({});
+	if (this-> block) aux-> block = (Block) this-> block-> templateReplace ({});
+	if (this-> ret) aux-> ret = (Var) this-> ret-> templateExpReplace ({});
+	for (auto it : this-> params)
+	    aux-> params.push_back ((Var) it-> templateExpReplace ({}));
+
+	if (this-> frame == NULL) {
+	    auto ident = Ymir::OutBuffer ("Lambda_", this-> id).str ();
+	    aux-> frame = new (Z0) ILambdaFrame (space, ident, aux);
+	} else {
+	    aux-> frame = this-> frame;
+	}
+	
+	auto fun = new (Z0) IFunctionInfo (aux-> frame-> space (), "");
+	fun-> set (frame);
+	fun-> alone () = true;
+	fun-> value () = new (Z0) ILambdaValue (aux-> frame);
+	aux-> info = new (Z0) ISymbol (aux-> token, fun);
+	return aux;
     }
     
 }

@@ -7,6 +7,8 @@ namespace syntax {
 
     using namespace semantic;
 
+    ulong ILambdaFunc::__nbLambda__ = 0;
+    
     Word& IBlock::getIdent () {
 	return this-> ident;
     }
@@ -929,6 +931,10 @@ namespace syntax {
 	caster (NULL)
     {}
 
+    InfoType& IReturn::getCaster () {
+	return this-> caster;
+    }
+    
     IReturn::~IReturn () {
 	if (caster) delete caster;
 	if (elem) delete elem;
@@ -991,5 +997,75 @@ namespace syntax {
 
 	return "";
     }    
+    
+    ILambdaFunc::ILambdaFunc (Word begin, std::vector <Var> params, Var type, Block block) : 
+	IExpression (begin),
+	params (params),
+	ret (type),
+	block (block),
+	id (getLastNb ())
+    {}
+
+    ILambdaFunc::ILambdaFunc (Word begin, semantic::LambdaFrame frame) : 
+	IExpression (begin),	
+	params (),
+	ret (NULL),
+	block (NULL),
+	id (0),
+	frame (frame)
+    {}
+
+    
+    ILambdaFunc::ILambdaFunc (Word begin, std::vector <Var> params, Block block) : 
+	IExpression (begin),
+	params (params),
+	ret (NULL),
+	block (block),
+	id (getLastNb ())
+    {}
+	
+    ILambdaFunc::ILambdaFunc (Word begin, std::vector <Var> params, Expression ret) :
+	IExpression (begin),
+	params (params),
+	ret (NULL),
+	block (NULL),
+	expr (ret),
+	id (getLastNb ())
+    {}
+
+    std::string ILambdaFunc::prettyPrint () {
+	auto ident = Ymir::OutBuffer ("Lambda_", this-> id, " (");
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    ident.write (this-> params [it]-> prettyPrint ());
+	    if (it < (int) this-> params.size () - 1)
+		ident.write (", ");
+	}
+	ident.write (")");
+	return ident.str ();
+    }
+    
+    std::vector <Var> & ILambdaFunc::getParams () {
+	return this-> params;
+    }
+    
+    Expression ILambdaFunc::getExpr () {
+	return this-> expr;
+    }
+
+    Block ILambdaFunc::getBlock () {
+	return this-> block;
+    }
+    
+    ulong ILambdaFunc::getLastNb () {
+	__nbLambda__ ++;
+	return __nbLambda__;
+    }
+    
+    ILambdaFunc::~ILambdaFunc () {
+	for (auto it : params) delete it;
+	if (ret) delete ret;
+	if (block) delete block;
+	if (expr) delete expr;
+    }
     
 }

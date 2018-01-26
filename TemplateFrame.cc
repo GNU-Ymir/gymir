@@ -123,9 +123,9 @@ namespace semantic {
 	
 	space.write (")");
 	for (auto &it : res.elements) {
-	    if (it.second-> info-> isImmutable ()) 
-		it.second = it.second-> info-> value ()-> toYmir (it.second-> info);
-	    else
+	    if (it.second-> info-> isImmutable ()) {
+		it.second = it.second-> info-> value ()-> toYmir (it.second-> info);		
+	    } else
 		it.second = it.second-> templateExpReplace ({});
 	}
 	

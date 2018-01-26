@@ -185,10 +185,16 @@ namespace semantic {
 	str-> value () = new (Z0)  IStringValue (this-> typeString ().c_str ());
 	return str;
     }	
+
+    bool IInfoType::isImmutable () {
+	return false;
+    }
     
     InfoType IInfoType::clone () {
 	auto ret = this-> onClone ();
-	if (ret) ret-> value () = this-> value ();
+	if (ret) {
+	    ret-> value () = this-> value ();
+	}
 	return ret;
     }
 

@@ -273,4 +273,28 @@ namespace syntax {
 	    this-> _type-> print (nb + 6);
     }
     
+    void ILambdaFunc::print (int nb)  {
+	printf ("\n%*c<LambdaFunc> %s (",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	    
+	for (auto it : this-> params) {
+	    it-> print (nb + 4);
+	}
+	printf ("\n%*c ) %s ",
+		nb, ' ',
+		this-> ret ? "->" : "=>"
+	);
+	    
+	if (this-> ret) {
+	    this-> ret-> print (nb + 4);
+	    this-> block-> print (nb + 8);
+	} else if (this-> block) {
+	    this-> block-> print (nb + 4);
+	} else {
+	    this-> expr-> print (nb + 8);
+	}	    		    
+    }
+
 }

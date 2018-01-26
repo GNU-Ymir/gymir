@@ -8,6 +8,11 @@
 #include "../syntax/Word.hh"
 #include <ymir/utils/Array.hh>
 
+namespace semantic {
+    class ILambdaFrame;
+    typedef ILambdaFrame* LambdaFrame;
+}
+
 namespace syntax {
 
     class ILambdaFunc : public IExpression {
@@ -16,64 +21,39 @@ namespace syntax {
 	Var ret;
 	Block block;
 	Expression expr;
+	ulong id;
 
+	semantic::LambdaFrame frame; 
+
+	static ulong __nbLambda__;
 	
     public:
 
-	ILambdaFunc (Word begin, std::vector <Var> params, Var type, Block block) : 
-	    IExpression (begin),
-	    params (params),
-	    ret (type),
-	    block (block)
-	{}
-
-	ILambdaFunc (Word begin, std::vector <Var> params, Block block) : 
-	    IExpression (begin),
-	    params (params),
-	    ret (NULL),
-	    block (block)
-	{}
+	ILambdaFunc (Word begin, semantic::LambdaFrame frame);
 	
-	ILambdaFunc (Word begin, std::vector <Var> params, Expression ret) :
-	    IExpression (begin),
-	    params (params),
-	    ret (NULL),
-	    block (NULL),
-	    expr (ret)
-	{}
+	ILambdaFunc (Word begin, std::vector <Var> params, Var type, Block block);
+	
+	ILambdaFunc (Word begin, std::vector <Var> params, Block block);
+	
+	ILambdaFunc (Word begin, std::vector <Var> params, Expression ret);
+	
+	Expression expression () override;	
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
-	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<LambdaFunc> %s (",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    
-	    for (auto it : this-> params) {
-		it-> print (nb + 4);
-	    }
-	    printf ("\n%*c ) %s ",
-		    nb, ' ',
-		    this-> ret ? "->" : "=>"
-	    );
-	    
-	    if (this-> ret) {
-		this-> ret-> print (nb + 4);
-		this-> block-> print (nb + 8);
-	    } else if (this-> block) {
-		this-> block-> print (nb + 4);
-	    } else {
-		this-> expr-> print (nb + 8);
-	    }	    		    
-	}
 
-	virtual ~ILambdaFunc () {
-	    for (auto it : params) delete it;
-	    if (ret) delete ret;
-	    if (block) delete block;
-	    if (expr) delete expr;
-	}
+	std::vector <Var> & getParams ();
+	
+	Expression getExpr ();
+
+	Block getBlock ();
+	
+	static ulong getLastNb ();
+
+	std::string prettyPrint () override;
+
+	void print (int nb = 0) override;
+	
+	virtual ~ILambdaFunc ();
 	
     };
 

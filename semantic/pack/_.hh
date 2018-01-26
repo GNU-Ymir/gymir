@@ -13,4 +13,5 @@
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/pack/ExternFrame.hh>
+#include <ymir/semantic/pack/LambdaFrame.hh>
 #include <ymir/semantic/pack/TemplateFrame.hh>

@@ -33,7 +33,9 @@ namespace semantic {
     }
 
     bool ISymbol::isImmutable () {
-	return this-> type && this-> type-> value () != NULL;
+	return this-> type &&
+	    (this-> type-> value () != NULL ||
+	     this-> type-> isImmutable ());
     }
 
     void ISymbol::quit (Namespace) {

@@ -2,6 +2,7 @@
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/semantic/value/_.hh>
 
 namespace semantic {
     using namespace syntax;
@@ -364,7 +365,7 @@ namespace semantic {
 	    Ymir::Error::notImmutable (right-> info);
 	    return TemplateSolution (0, false);
 	}
-
+	
 	auto res = this-> solveInside (tmps, left-> typeVar (), type);
 	if (!res.valid)
 	    return TemplateSolution (0, false);

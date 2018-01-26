@@ -6,3 +6,4 @@
 #include <ymir/semantic/value/FloatValue.hh>
 #include <ymir/semantic/value/CharValue.hh>
 #include <ymir/semantic/value/StringValue.hh>
+#include <ymir/semantic/value/LambdaValue.hh>
