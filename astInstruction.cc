@@ -52,8 +52,8 @@ namespace syntax {
     
     Instruction IVarDecl::instruction () {
 	auto auxDecl = new (Z0)  IVarDecl (this-> token);
-	ulong id = 0;
-	for (auto it : this-> decls) {
+	for (auto id : Ymir::r (0, this-> decls.size ())) {
+	    auto it = this-> decls [id];
 	    auto aux = new (Z0)  IVar (it-> token);
 	    auto info = Table::instance ().get (it-> token.getStr ());
 	    if (info && Table::instance ().sameFrame (info)) {
