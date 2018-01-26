@@ -265,7 +265,9 @@ namespace semantic {
 
 	    FrameTable::instance ().insert (proto);
 	    Table::instance ().retInfo ().currentBlock () = "true";
-	    auto exprBlock = _block-> expression ();	    
+	    auto exprBlock = _block-> expression ();
+	    if (exprBlock == NULL) return NULL;
+	    
 	    Table::instance ().retInfo ().info-> type = exprBlock-> info-> type;
 	    Block block = NULL;
 	    if (!exprBlock-> info-> type-> is<IVoidInfo> ()) {
