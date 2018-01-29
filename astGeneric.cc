@@ -214,37 +214,53 @@ namespace syntax {
     }
 
     Ymir::Tree IConstArray::toGeneric () {
-	ArrayInfo info = this-> info-> type-> to<IArrayInfo> ();
-	Ymir::Tree innerType = info-> content ()-> toGeneric ();
-	auto intExpr = new (Z0)  IFixed (this-> token, FixedConst::ULONG);
-	intExpr-> setUValue (this-> params.size () - 1);
-	auto lenExpr = intExpr-> expression ();			
-	auto len = lenExpr-> toGeneric ();
-	intExpr-> setUValue (0);
-	auto begin = intExpr-> toGeneric ();
-	
 	Ymir::TreeStmtList list;
+	if (this-> params.size () != 0) {
+	    ArrayInfo info = this-> info-> type-> to<IArrayInfo> ();	
+	    Ymir::Tree innerType = info-> content ()-> toGeneric ();
+	    auto intExpr = new (Z0)  IFixed (this-> token, FixedConst::ULONG);
+	    intExpr-> setUValue (this-> params.size () - 1);
+	    auto lenExpr = intExpr-> expression ();			
+	    auto len = lenExpr-> toGeneric ();
+	    intExpr-> setUValue (0);
+	    auto begin = intExpr-> toGeneric ();
+	
+	    Ymir::Tree range_type = build_range_type (integer_type_node, fold (begin.getTree ()), fold (len.getTree ()));
+	    Ymir::Tree array_type = build_array_type (innerType.getTree (), range_type.getTree ());
+	
+	    Ymir::Tree aux = Ymir::makeAuxVar (this-> token.getLocus (),
+					       ISymbol::getLastTmp (),
+					       array_type
+	    );
 
-	Ymir::Tree range_type = build_range_type (integer_type_node, fold (begin.getTree ()), fold (len.getTree ()));
-	Ymir::Tree array_type = build_array_type (innerType.getTree (), range_type.getTree ());
-	
-	Ymir::Tree aux = Ymir::makeAuxVar (this-> token.getLocus (),
-					   ISymbol::getLastTmp (),
-					   array_type
-	);
-	
-	for (uint i = 0 ; i < this-> params.size () ; i++) {
-	    Ymir::Tree ref = Ymir::getArrayRef (this-> token.getLocus (), aux, innerType, i);
-	    auto left = new (Z0)  ITreeExpression (this-> token, info-> content (), ref);
-	    list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
-					  void_type_node,
-					  ref, 
-					  this-> casters [i]-> buildCastOp (this-> token, this-> casters [i], this-> params [i], left)
-	    ));
+	    for (uint i = 0 ; i < this-> params.size () ; i++) {
+		Ymir::Tree ref = Ymir::getArrayRef (this-> token.getLocus (), aux, innerType, i);
+		auto left = new (Z0)  ITreeExpression (this-> token, info-> content (), ref);
+		list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
+					      void_type_node,
+					      ref, 
+					      this-> casters [i]-> buildCastOp (this-> token, this-> casters [i], this-> params [i], left)
+		));
+	    }
+
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    return aux;
+	} else {
+	    auto intExpr = new (Z0)  IFixed (this-> token, FixedConst::ULONG);
+	    intExpr-> setUValue (0);
+	    auto lenExpr = intExpr-> expression ();			
+	    auto zero = lenExpr-> toGeneric ();
+	    
+	    auto loc = this-> token.getLocus ();
+	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), this-> info-> type-> toGeneric ());
+	    auto len = getField (loc, aux, "len");
+	    auto ptr = getField (loc, aux, "ptr");
+
+	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, len, zero));
+	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, ptr, zero));
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    return aux;
 	}
-
-	Ymir::getStackStmtList ().back ().append (list.getTree ());
-	return aux;
     }
 
     Ymir::Tree IDot::toGeneric () {

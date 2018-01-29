@@ -2,6 +2,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 
 namespace semantic {
 
@@ -79,7 +80,7 @@ namespace semantic {
     InfoType IPtrInfo::Plus (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    //ptr-> binopFoo = &PtrUtils::InstPlus
+	    ptr-> binopFoo = &FixedUtils::InstNormal;
 	    return ptr;
 	}
 	return NULL;
@@ -88,7 +89,7 @@ namespace semantic {
     InfoType IPtrInfo::Sub (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    //ptr-> binopFoo = &PtrUtils::InstSub
+	    ptr-> binopFoo = &FixedUtils::InstNormal;
 	    return ptr;
 	}
 	return NULL;
@@ -97,7 +98,7 @@ namespace semantic {
     InfoType IPtrInfo::PlusRight (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    //ptr-> binopFoo = &PtrUtils::InstPlus
+	    ptr-> binopFoo = &FixedUtils::InstNormalRight;
 	    return ptr;
 	}
 	return NULL;
@@ -106,7 +107,7 @@ namespace semantic {
     InfoType IPtrInfo::SubRight (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    //ptr-> binopFoo = &PtrUtils::InstSub
+	    ptr-> binopFoo = &FixedUtils::InstNormalRight;
 	    return ptr;
 	}
 	return NULL;
@@ -115,11 +116,11 @@ namespace semantic {
     InfoType IPtrInfo::Is (syntax::Expression right) {
 	if (right-> info-> type-> is <IPtrInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
-	    //ret-> binopFoo = &PtrUtils::InstIs
+	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
 	} else if (right-> info-> type-> is <INullInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
-	    //ret-> binopFoo = &PtrUtils::InstIsNull
+	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
 	}
 	return NULL;
@@ -128,11 +129,11 @@ namespace semantic {
     InfoType IPtrInfo::NotIs (syntax::Expression right) {
 	if (right-> info-> type-> is <IPtrInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
-	    //ret-> binopFoo = &PtrUtils::InstNotIs
+	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
 	} else if (right-> info-> type-> is <INullInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
-	    //ret-> binopFoo = &PtrUtils::InstNotIsNull
+	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
 	}
 	return NULL;
@@ -148,7 +149,7 @@ namespace semantic {
 
     InfoType IPtrInfo::toPtr () {
 	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
-	// ret-> unopFoo = &PtrUtils::InstPtr;
+	ret-> binopFoo = &FixedUtils::InstAddr;
 	return ret;
     }
 
@@ -164,9 +165,7 @@ namespace semantic {
 	    //type-> unopFoo = &PtrUtils::InstNull;
 	    return type;
 	} else if (var-> token == "typeid") {
-	    auto str = new (Z0)  IStringInfo (true);
-	    //str-> value = new (Z0)  IStringValue (this-> typeString ());
-	    return str;
+	    return StringOf ();
 	}
 	return NULL;
     }

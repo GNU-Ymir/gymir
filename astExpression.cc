@@ -616,6 +616,7 @@ namespace syntax {
     }
 
     InfoType IConstArray::validate () {
+	if (this-> params.size () == 0) return new (Z0) IVoidInfo ();
 	this-> casters.clear ();
 	InfoType successType = NULL;
 	for (auto fst : Ymir::r (0, this-> params.size ())) {

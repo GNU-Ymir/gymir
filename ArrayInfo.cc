@@ -139,7 +139,6 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::Length () {
-	if (this-> _content-> is<IVoidInfo> ()) return NULL;
 	auto elem = new (Z0)  IFixedInfo (true, FixedConst::ULONG);
 	elem-> unopFoo = ArrayUtils::InstLen;
 	return elem;
@@ -290,7 +289,8 @@ namespace semantic {
 	using namespace Ymir;
 
 	Tree getLen (location_t loc, Expression expr, Tree tree) {
-	    if (auto cst = expr-> to <IConstArray> ()) {
+	    if (tree.getType ().getTreeCode () != RECORD_TYPE) {
+		auto cst = expr-> to <IConstArray> ();
 		auto intExpr = new (Z0)  IFixed (cst-> token, FixedConst::ULONG);
 		intExpr-> setUValue (cst-> nbParams ());
 		auto lenExpr = (Fixed) intExpr-> expression ();			
@@ -300,8 +300,8 @@ namespace semantic {
 	    }
 	}
 
-	Tree getPtr (location_t loc, Expression expr, Tree tree) {
-	    if (expr-> to <IConstArray> ()) {
+	Tree getPtr (location_t loc, Expression, Tree tree) {
+	    if (tree.getType ().getTreeCode () != RECORD_TYPE) {
 		return getAddr (tree);
 	    } else {
 		return getField (loc, tree, "ptr");
@@ -358,39 +358,46 @@ namespace semantic {
 	}
 	
 	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, ConstArray cst) {
-	    Ymir::TreeStmtList list;
-	    ArrayInfo arrayInfo = cst-> info-> type-> to<IArrayInfo> ();
-	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
-
-	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
-	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
-	    Ymir::Tree len, ptrr;
-
-	    if (rexp.getTreeCode () != CALL_EXPR) {
-		len = getLen (loc, cst, rexp);
-		ptrr = getPtr (loc, cst, rexp);
+	    if (cst && cst-> nbParams () == 0) {
+		Ymir::getStackStmtList ().back ().append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, lexp, rexp
+		));
+		return lexp;
 	    } else {
-		auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), lexp.getType ());
-		list.append (buildTree (
-		    MODIFY_EXPR, loc, void_type_node, aux, rexp
+		Ymir::TreeStmtList list;
+		ArrayInfo arrayInfo = cst-> info-> type-> to<IArrayInfo> ();
+		Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
+		
+		Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
+		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
+		Ymir::Tree len, ptrr;
+		
+		if (rexp.getTreeCode () != CALL_EXPR) {
+		    len = getLen (loc, cst, rexp);
+		    ptrr = getPtr (loc, cst, rexp);
+		} else {
+		    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), lexp.getType ());
+		    list.append (buildTree (
+			MODIFY_EXPR, loc, void_type_node, aux, rexp
+		    ));
+		    
+		    len = getField (loc, aux, "len");	    
+		    ptrr = getField (loc, aux, "ptr");
+		}
+		
+		auto allocRet = buildArray (loc, len, inner);
+		list.append (Ymir::buildTree (
+		    MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
 		));
 		
-		len = getField (loc, aux, "len");	    
-		ptrr = getField (loc, aux, "ptr");
+		list.append (Ymir::buildTree (
+		    MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
+		));
+		
+		list.append (copyArray (loc, ptrl, ptrr, len, inner));	    
+		Ymir::getStackStmtList ().back ().append (list.getTree ());
+		return lexp;
 	    }
-	    
-	    auto allocRet = buildArray (loc, len, inner);
-	    list.append (Ymir::buildTree (
-		MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
-	    ));
-	    
-	    list.append (Ymir::buildTree (
-		MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
-	    ));
-	    	    	    
-	    list.append (copyArray (loc, ptrl, ptrr, len, inner));	    
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    return lexp;
 	}
 
 	Ymir::Tree InstAffect (Word word, InfoType, Expression left, Expression right) {

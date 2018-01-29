@@ -1,6 +1,7 @@
 #include <ymir/semantic/tree/Tree.hh>
 #include "semantic/types/InfoType.hh"
 #include "syntax/Word.hh"
+#include <ymir/syntax/Keys.hh>
 #include "ast/Expression.hh"
 #include "ast/Var.hh"
 #include "errors/Error.hh"
@@ -259,6 +260,8 @@ namespace semantic {
 	    if (op == Token::XOR) return BIT_XOR_EXPR;
 	    if (op == Token::RIGHTD) return RSHIFT_EXPR;
 	    if (op == Token::PERCENT) return TRUNC_MOD_EXPR;
+	    if (op == Keys::NOT_IS) return NE_EXPR;
+	    if (op == Keys::IS) return EQ_EXPR;
 	    return NOP_EXPR;
 	}
 	
