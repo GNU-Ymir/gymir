@@ -67,8 +67,8 @@ namespace semantic {
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 
-	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;
-	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, Table::instance ().globalNamespace (), ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
+	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;	
+	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, Table::instance ().globalNamespace (), ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);	
 	return proto;
     }
 
@@ -146,7 +146,6 @@ namespace semantic {
 	    return ret;	    
 	} else {
 	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
-	    
 	    auto aux = new (Z0)  ITemplateFrame (this-> space (), func);
 	    aux-> _currentScore = this-> currentScore () + res.score;
 	    aux-> _isPure = this-> _isPure;

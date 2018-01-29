@@ -123,8 +123,8 @@ namespace semantic {
 		    }		
 		}
 		
-		auto var = IVar (typeVar-> token, types);		
-		soluce.type = (var).asType ()-> info-> type;
+		auto var = new (Z0) IVar (typeVar-> token, types);		
+		soluce.type = var-> asType ()-> info-> type;
 		soluce.type-> isConst (isConst);
 		soluce.score += __VAR__;
 		return soluce;
@@ -179,7 +179,7 @@ namespace semantic {
 		}		
 	    }
 
-	    auto var = IVar (param-> token, types).asType ();
+	    auto var = (new (Z0) IVar (param-> token, types))-> asType ();
 	    if (var == NULL) return TemplateSolution (0, false);
 	    soluce.type = var-> info-> type;
 	    soluce.type-> isConst (isConst);
@@ -430,8 +430,9 @@ namespace semantic {
 	std::vector <Expression> rets;
 	ulong nb = 0;
 	for (auto it : args) {
-	    if (auto v = it-> to<ITypedVar> ()) {
-		if (soluce.elements.find (v-> token.getStr ()) == soluce.elements.end ())
+	    if (auto v = it-> to<IVar> ()) {
+		auto elem = soluce.elements.find (v-> token.getStr ());
+		if (elem == soluce.elements.end ())
 		    rets.push_back (it-> templateExpReplace (soluce.elements));
 	    } else {
 		Ymir::OutBuffer buf;

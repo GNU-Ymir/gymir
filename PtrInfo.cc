@@ -6,7 +6,8 @@
 namespace semantic {
 
     IPtrInfo::IPtrInfo (bool isConst) :
-	IInfoType (isConst)	
+	IInfoType (isConst),
+	_content (NULL)
     {
 	Ymir::Error::assert ("WH!!");
     }
@@ -14,8 +15,7 @@ namespace semantic {
     IPtrInfo::IPtrInfo (bool isConst, InfoType type) :
 	IInfoType (isConst),
 	_content (type) 
-    {}
-    
+    {}    
    
     const char * IPtrInfo::getId () {
 	return IPtrInfo::id ();
@@ -212,7 +212,7 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::onClone () {
-	return new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
+	return new (Z0) IPtrInfo (this-> isConst (), this-> _content-> clone ());
     }
     
     InfoType IPtrInfo::ConstVerif (InfoType other) {

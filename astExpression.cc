@@ -728,6 +728,7 @@ namespace syntax {
 	    auto type = aux-> left-> info-> type-> DotOp (var);
 	    if (type == NULL) {
 		Ymir::Error::activeError (false);
+		var-> inside = aux;
 		auto call = var-> expression ();
 		Ymir::Error::activeError (true);	       
 		if (call == NULL || call-> is<IType> () || call-> info-> type-> is<IUndefInfo> ()) {
@@ -756,7 +757,7 @@ namespace syntax {
     }
 
     Expression IDotCall::expression () {
-	if (!this-> inside-> is<IPar> ()) {
+	if (!this-> inside || !this-> inside-> is<IPar> ()) {
 	    auto aux = new (Z0)  IPar (this-> token, this-> token);
 	    aux-> dotCall () = this;
 	    Word word (this-> token.getLocus (), Keys::DPAR);

@@ -120,6 +120,19 @@ namespace syntax {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }
+
+    Declaration IProto::templateDeclReplace (const map <string, Expression> & exps) {
+	Var type = NULL;
+	if (this-> _type != NULL)
+	    type = (Var) this-> _type-> templateExpReplace (exps);
+	std::vector <Var> params;
+	for (auto it : this-> _params)
+	    params.push_back ((Var) it-> templateExpReplace (exps));
+	
+	auto ret = new (Z0) IProto (this-> ident, type, params, this-> from, this-> isVariadic ());
+	ret-> from = this-> from;
+	return ret;
+    }
     
     Expression IDot::templateExpReplace (const map <string, Expression>& values) {
 	auto left = this-> left-> templateExpReplace (values);

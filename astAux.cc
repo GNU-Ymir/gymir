@@ -566,7 +566,10 @@ namespace syntax {
 	IExpression (word),
 	left (left),
 	right (right)
-    {}
+    {
+	if (this-> left) this-> left-> inside = this;
+	//if (this-> right) this-> right-> inside = this;
+    }
 
     IDot::~IDot () {
 	delete left;

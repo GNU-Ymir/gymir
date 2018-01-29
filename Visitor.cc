@@ -1379,7 +1379,7 @@ namespace syntax {
 			if (next.getStr ().substr (it, next.getStr ().length () - it) == "f" ||
 			    next.getStr ().substr (it, next.getStr ().length () - it) == "F") {
 			    type = FloatConst::FLOAT;
-			    return new IFloat (begin, next.getStr ().substr (0, it), type);
+			    return new (Z0) IFloat (begin, next.getStr ().substr (0, it), type);
 			    break;
 			} else {
 			    suite = "0";
@@ -1402,7 +1402,7 @@ namespace syntax {
 		if (next.getStr ().substr (it, next.getStr ().length () - it) == "f" ||
 		    next.getStr ().substr (it, next.getStr ().length () - it) == "F") {
 		    type = FloatConst::FLOAT;
-		    return new IFloat ({next.getLocus (), next.getStr ().substr (0, it)}, type);
+		    return new (Z0) IFloat ({next.getLocus (), next.getStr ().substr (0, it)}, type);
 		
 		} else {
 		    syntaxError (next);

@@ -40,6 +40,7 @@ namespace syntax {
 		get_identifier (var-> token.getStr ().c_str ()),
 		type_tree.getTree ()
 	    );
+
 	    
 	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();	    
 	    var-> info-> treeDecl (decl);
@@ -47,6 +48,7 @@ namespace syntax {
 	    list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
 	    
 	    if (aff != NULL) {
+		aff-> info-> value () = NULL;
 		list.append (aff-> toGeneric ());
 	    }
 

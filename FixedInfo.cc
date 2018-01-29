@@ -356,8 +356,8 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::Init () {
-	auto ret = new (Z0)  IFixedInfo (true, this-> _type);
-	ret-> value () = new IFixedValue (this-> _type, 0, 0);
+	auto ret = new (Z0) IFixedInfo (true, this-> _type);
+	ret-> value () = new (Z0) IFixedValue (this-> _type, 0, 0);
 	return ret;	
     }
 

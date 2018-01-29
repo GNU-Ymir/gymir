@@ -24,7 +24,7 @@ namespace semantic {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
-		return new  IPtrInfo (false, tmps [0]-> info-> type);
+		return new (Z0) IPtrInfo (false, tmps [0]-> info-> type);
 	    }
 	}
 

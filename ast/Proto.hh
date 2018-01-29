@@ -30,6 +30,8 @@ namespace syntax {
 
 	void declareAsExtern (semantic::Module) override;
 	
+	Declaration templateDeclReplace (const std::map <std::string, Expression>&) override;
+
 	std::string name ();
 	
 	Var& type ();

@@ -243,7 +243,7 @@ namespace semantic {
 	    Tree lenl = getField (loc, lexp, "len");	    
 	    Tree ptrl = getField (loc, lexp, "ptr");
 	    Tree len, ptrr;
-
+	    
 	    if (rexp.getTreeCode () != CALL_EXPR) {
 		len = getLen (loc, cst, rexp);
 		ptrr = getPtr (loc, cst, rexp);		
@@ -275,7 +275,8 @@ namespace semantic {
 	Tree InstAff (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();	   
 	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();	    
+	    auto rexp = right-> toGeneric ();
+	    
 	    if (right-> info-> isConst ()) {
 		if (!left-> info-> isConst ())
 		    return buildDup (loc, lexp, rexp, right);
