@@ -124,9 +124,6 @@ namespace semantic {
 	if (right-> ret-> is<IRefInfo> ())
 	    right-> ret-> isConst (false);
 
-
-
-	
 	return right;
     }
 

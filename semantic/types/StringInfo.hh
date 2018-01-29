@@ -67,7 +67,7 @@ namespace semantic {
 
 	InfoType Access (syntax::Expression, InfoType&);
 	
-	InfoType Concat (syntax::Expression);
+	InfoType Concat (Word & op, syntax::Expression);
 	
 	InfoType ConcatAff (syntax::Expression);
 

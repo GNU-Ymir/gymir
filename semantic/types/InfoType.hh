@@ -57,6 +57,7 @@ namespace semantic {
 
 	
 	bool _isConst = false;
+	bool _isLValue = false;
 	bool _isStatic = false;
 	ulong _toGet;
 	
@@ -111,7 +112,7 @@ namespace semantic {
 	virtual bool isConst ();
 
 	virtual void isConst (bool isConst);
-	
+       	
 	bool& isStatic ();
 
 	virtual bool isScopable ();

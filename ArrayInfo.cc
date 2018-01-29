@@ -253,7 +253,7 @@ namespace semantic {
     }
 
     Ymir::Tree IArrayInfo::toGeneric () {
-	std::string name = this-> _content-> typeString () + "[]";
+	std::string name = this-> _content-> innerTypeString () + "[]";
 	auto array_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (array_type_node.isNull ()) {
 	    array_type_node = Ymir::makeStructType (name, 2,
@@ -379,7 +379,7 @@ namespace semantic {
 		ptrr = getField (loc, aux, "ptr");
 	    }
 	    
-	    auto allocRet = buildArray (loc, len, inner);	    
+	    auto allocRet = buildArray (loc, len, inner);
 	    list.append (Ymir::buildTree (
 		MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
 	    ));

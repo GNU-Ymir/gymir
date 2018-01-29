@@ -1530,7 +1530,15 @@ namespace syntax {
 		}
 	    }
 	}
-	return new (Z0)  IConstArray (begin, params);
+	
+	auto retour = new (Z0)  IConstArray (begin, params);
+	auto next = this-> lex.next ();
+	if (find (suiteElem, next))
+	    return visitSuite (next, retour);
+	else if (find (afUnary, next))
+	    return visitAfter (next, retour);
+	this-> lex.rewind ();
+	return retour;
     }
 
         

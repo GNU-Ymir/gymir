@@ -30,7 +30,7 @@ namespace semantic {
 
     InfoType IStringInfo::BinaryOp (Word op, syntax::Expression right) {
 	if (op == Token::EQUAL) return Affect (right);
-	else if (op == Token::TILDE) return Concat (right);
+	else if (op == Token::TILDE) return Concat (op, right);
 	else if (op == Token::TILDE_EQUAL) return ConcatAff (right);
 	else return NULL;
     }
@@ -135,10 +135,12 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IStringInfo::Concat (syntax::Expression right) {
+    InfoType IStringInfo::Concat (Word & op, syntax::Expression right) {
 	if (right-> info-> type-> is <IStringInfo> ()) {
 	    auto i = this-> clone ();
 	    i-> isConst (false);
+	    if (this-> value ())
+		i-> value () = this-> value ()-> BinaryOp (op, right-> info-> value ());
 	    i-> binopFoo = &StringUtils::InstConcat;
 	    return i;
 	}
@@ -150,6 +152,7 @@ namespace semantic {
 	if (right-> info-> type-> is <IStringInfo> ()) {
 	    auto i = this-> clone ();
 	    i-> isConst (false);
+	    i-> value () = NULL;
 	    i-> binopFoo = &StringUtils::InstConcatAff;
 	    return i;
 	}
