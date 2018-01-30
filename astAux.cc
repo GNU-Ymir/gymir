@@ -302,8 +302,12 @@ namespace syntax {
 	    delete it;
 	
 	for (auto it : insts) {
-	    it-> to<IBinary> ()-> getLeft () = NULL;
-	    delete it;
+	    if (it) {
+		if (auto bin = it-> to<IBinary> ()) {
+		    bin-> getLeft () = NULL;
+		}
+		delete it;
+	    }
 	}
     }
     

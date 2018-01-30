@@ -247,9 +247,6 @@ namespace semantic {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
 	if (auto ot = other-> to<IArrayInfo> ()) {
 	    if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
-	    if (!this-> isConst ()&& other-> isConst ()) {
-		this-> isConst (false);
-	    }
 	    return this;
 	} else return NULL;
     }
@@ -685,17 +682,17 @@ namespace semantic {
 	    list.append (goto_test);
 	    list.append (begin_label_expr);
 	    Ymir::enterBlock ();
-	    
+
 	    Ymir::getStackStmtList ().back ().append (affectIndex (locus, it, array, var, iter-> info-> type, vars [0]-> info-> type));
 	    Ymir::getStackStmtList ().back ().append (block-> toGenericSimple ());	    
 	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (
-		MODIFY_EXPR, locus.getLocus (), it.getType (), it,
-	    	Ymir::buildTree (
-	    	    PLUS_EXPR, locus.getLocus (), it.getType (), it, one
-		)
+	     	MODIFY_EXPR, locus.getLocus (), it.getType (), it,
+	     	Ymir::buildTree (
+	     	    PLUS_EXPR, locus.getLocus (), it.getType (), it, one
+	     	)
 	    ));
 	    
-	    auto begin_part = Ymir::leaveBlock ().bind_expr;			      
+	    auto begin_part = Ymir::leaveBlock ().bind_expr;
 	    list.append (begin_part);	    
 	    list.append (goto_test);
 	    

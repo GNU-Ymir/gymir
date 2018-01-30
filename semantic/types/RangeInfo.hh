@@ -40,6 +40,8 @@ namespace semantic {
 		
 	InfoType CompOp (InfoType other) override;
 
+	InfoType ApplyOp (const std::vector <syntax::Var> & ) override;
+	
 	std::string innerTypeString () override;
 
 	std::string innerSimpleTypeString () override;
@@ -51,6 +53,8 @@ namespace semantic {
 	static Ymir::Tree toGenericStatic (std::string name, Ymir::Tree);
 
 	InfoType getTemplate (ulong);
+
+	InfoType content ();
 	
 	InfoType onClone () override;
 

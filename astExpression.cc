@@ -391,6 +391,7 @@ namespace syntax {
 
 	aux-> info = new (Z0)  ISymbol (aux-> token, type);
 	Table::instance ().retInfo ().changed () = true;
+	aux-> info-> value () = NULL;
 	return aux;	
     }
 
@@ -418,6 +419,7 @@ namespace syntax {
 
 	aux-> info = new (Z0)  ISymbol (aux-> token, type);
 	Table::instance ().retInfo ().changed () = true;
+	aux-> info-> value () = NULL;
 	return aux;	
     }
 
@@ -789,6 +791,7 @@ namespace syntax {
 	    aux-> _left-> info-> type == NULL) {
 	    return true;
 	}
+	
 	aux-> _left-> inside = this;
 	
 	if (aux-> _left-> is<IType> ()) {

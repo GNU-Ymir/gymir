@@ -54,6 +54,8 @@ namespace semantic {
 
 	InfoType opAff (Word op, syntax::Expression);
 
+	InfoType opRange (Word op, syntax::Expression);
+
 	InfoType opNorm (Word op, syntax::Expression);
 
 	InfoType opNormRight (Word op, syntax::Expression);

@@ -249,7 +249,7 @@ namespace semantic {
 	    rf-> binopFoo = &PtrUtils::InstAffect;
 	    return rf;
 	} else {
-	    auto aux = this-> _content-> CastOp (other);
+	    auto aux = this-> _content-> CompOp (other);
 	    if (aux) return addUnref (aux);
 	}
 	return NULL;

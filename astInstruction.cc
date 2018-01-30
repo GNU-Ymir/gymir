@@ -219,7 +219,8 @@ namespace syntax {
 	
 	auto type = expr-> info-> type-> ApplyOp (var);
 	if (type == NULL) {
-	    Ymir::Error::assert ("TODO");
+	    Ymir::Error::undefinedOp (this-> token, expr-> info);
+	    return NULL;
 	}
 
 	Table::instance ().retInfo ().currentBlock () = "for";

@@ -24,6 +24,7 @@ namespace semantic {
 	if (op == Token::NOT_EQUAL) return opTest (op, right);
 	if (op == Token::PLUS) return opNorm (op, right);
 	if (op == Token::MINUS) return opNorm (op, right);
+	if (op == Token::DDOT) return opRange (op, right);
 	return NULL;
     }
 
@@ -138,6 +139,15 @@ namespace semantic {
 		    ch-> value () = this-> value ()-> BinaryOpRight (op, left-> info-> type-> value ());
 		return ch;
 	    }
+	}
+	return NULL;
+    }
+
+    InfoType ICharInfo::opRange (Word, syntax::Expression right) {
+	if (this-> isSame (right-> info-> type)) {
+	    auto ret = new (Z0) IRangeInfo (true, this-> clone ());
+	    ret-> binopFoo = &FixedUtils::InstRange;
+	    return ret;
 	}
 	return NULL;
     }

@@ -184,9 +184,6 @@ namespace semantic {
 
     InfoType IStringInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
-	else if (!this-> isConst () && other-> isConst ()) {
-	    this-> isConst (true);
-	}
 	return this;	
     }
     
