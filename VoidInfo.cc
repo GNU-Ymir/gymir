@@ -6,8 +6,8 @@ namespace semantic {
 	IInfoType (false)
     {}
 
-    bool IVoidInfo::isSame (InfoType) {
-	return false;
+    bool IVoidInfo::isSame (InfoType other) {
+	return other-> is <IVoidInfo> ();
     }
 
     InfoType IVoidInfo::onClone () {
@@ -17,8 +17,7 @@ namespace semantic {
     InfoType IVoidInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
-	    //TODO
-	    return new (Z0)  IStringInfo (true);
+	    return StringOf ();
 	}
 	return NULL;
     }

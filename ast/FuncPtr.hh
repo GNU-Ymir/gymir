@@ -18,50 +18,21 @@ namespace syntax {
 	
     public:
 
-	IFuncPtr (Word begin, std::vector <Var> params, Var type, Expression expr = NULL) :
-	    IExpression (begin),
-	    params (params),
-	    ret (type),
-	    expr (expr)
-	{
-	    this-> ret-> inside = this;
-	    if (this-> expr)
-		this-> expr-> inside = this;
-	}
+	IFuncPtr (Word begin, std::vector <Var> params, Var type, Expression expr = NULL);
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
-	
-	static const char * id () {
-	    return TYPEID (IFuncPtr);
-	}
 
-	std::vector <std::string> getIds () override {
-	    auto ret = IExpression::getIds ();
-	    ret.push_back (TYPEID (IFuncPtr));
-	    return ret;
-	}
-	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<FuncPtr> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    
-	    for (auto it : this-> params) {
-		it-> print (nb + 4);
-	    }
-	    this-> ret-> print (nb + 5);
-	    if (this-> expr)
-		this->expr-> print (nb + 5);
-	}
+	Expression expression () override;
 
-	virtual ~IFuncPtr () {
-	    for (auto it : params)
-		delete it;
-	    delete ret;
-	    if (expr)
-		delete expr;
-	}
+	Ymir::Tree toGeneric () override;
+	
+	static const char * id ();
+
+	std::vector <std::string> getIds () override;
+	
+	void print (int nb = 0) override;
+	
+	virtual ~IFuncPtr ();
 	
     };
 

@@ -136,10 +136,11 @@ namespace semantic {
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var param, InfoType type) {
 	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
 	bool isConst = false;	    
-	while (param-> token == Keys::CONST) {
+	while (param && param-> token == Keys::CONST) {
 	    isConst = true;
 	    param = param-> getTemplates () [0]-> to <IVar> ();
-	}		
+	}
+	if (param == NULL) return TemplateSolution (0, false);
 
 	if (auto arr = param-> to <IArrayVar> ()) {
 	    return solve (tmps, arr, type, isConst);

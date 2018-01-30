@@ -973,11 +973,43 @@ namespace syntax {
 	}
 	
 	auto fun = new (Z0) IFunctionInfo (aux-> frame-> space (), "");
-	fun-> set (frame);
+	fun-> set (aux-> frame);
 	fun-> alone () = true;
 	fun-> value () = new (Z0) ILambdaValue (aux-> frame);
 	aux-> info = new (Z0) ISymbol (aux-> token, fun);
 	return aux;
     }
     
+    Expression IFuncPtr::expression () {
+	std::vector <Expression> tmps (this-> params.size () + 1);
+	if (this-> ret) tmps [0] = this-> ret-> asType ();
+	else Ymir::Error::assert ("ERROR");
+	
+	auto ret = tmps [0]-> to <IVar> ();
+	std::vector <Var> params;
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    tmps [it + 1] = this-> params [it]-> asType ();
+	    params.push_back (tmps [it + 1]-> to<IVar> ());
+	}
+
+	auto t_info = IInfoType::factory (this-> token, tmps);
+	if (this-> expr) {
+	    auto aux = this-> expr-> expression ();
+	    if (aux == NULL) return NULL;
+	    auto treat = aux-> info-> type-> CompOp (t_info);
+	    if (treat == NULL) {
+		Ymir::Error::incompatibleTypes (this-> token, new (Z0) ISymbol (this-> token, t_info), aux-> info-> type);
+		return NULL;
+	    }
+
+	    auto func = new (Z0) IFuncPtr (this-> token, params, ret, aux);
+	    func-> info = new (Z0) ISymbol (this-> token, treat);
+	    return func;
+	} else {
+	    auto func = new (Z0) IFuncPtr (this-> token, params, ret);
+	    func-> info = new (Z0) ISymbol (this-> token, t_info);
+	    return func;
+	}
+    }
+
 }

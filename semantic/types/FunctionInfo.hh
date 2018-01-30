@@ -43,6 +43,8 @@ namespace semantic {
 
 	InfoType TempOp (const std::vector<syntax::Expression> &);
 
+	InfoType CompOp (InfoType other) override;
+	
 	std::string innerTypeString () override;
 
 	std::string typeString () override;

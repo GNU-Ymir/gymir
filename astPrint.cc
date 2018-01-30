@@ -297,4 +297,18 @@ namespace syntax {
 	}	    		    
     }
 
+    void IFuncPtr::print (int nb) {
+	printf ("\n%*c<FuncPtr> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	    
+	for (auto it : this-> params) {
+	    it-> print (nb + 4);
+	}
+	this-> ret-> print (nb + 5);
+	if (this-> expr)
+	    this->expr-> print (nb + 5);
+    }
+    
 }

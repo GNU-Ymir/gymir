@@ -1074,5 +1074,40 @@ namespace syntax {
 	if (block) delete block;
 	if (expr) delete expr;
     }
+
+
+    IFuncPtr::IFuncPtr (Word begin, std::vector <Var> params, Var type, Expression expr) :
+	IExpression (begin),
+	params (params),
+	ret (type),
+	expr (expr)
+    {
+	this-> ret-> inside = this;
+	if (this-> expr)
+	    this-> expr-> inside = this;
+    }
+    
+
+    const char * IFuncPtr::id () {
+	return TYPEID (IFuncPtr);
+    }
+
+    std::vector <std::string> IFuncPtr::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IFuncPtr));
+	return ret;
+    }
+
+    
+    IFuncPtr::~IFuncPtr () {
+	for (auto it : params)
+	    delete it;
+	delete ret;
+	if (expr)
+	    delete expr;
+    }
+    
+
+
     
 }

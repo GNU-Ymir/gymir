@@ -32,6 +32,10 @@ namespace semantic {
     ApplicationScore ILambdaFrame::isApplicable (ParamList params) {
 	return IFrame::isApplicable (this-> frame-> token, this-> frame-> getParams (), params-> getParamTypes ());
     }
+
+    ApplicationScore ILambdaFrame::isApplicable (const std::vector <InfoType> & params) {
+	return IFrame::isApplicable (this-> frame-> token, this-> frame-> getParams (), params);
+    }
     
     FrameProto ILambdaFrame::validate (ParamList params) {
 	return this-> validate (params-> getParamTypes ());

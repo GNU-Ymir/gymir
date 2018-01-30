@@ -5,21 +5,74 @@
 namespace semantic {
 
     class IPtrFuncInfo : public IInfoType {
-    public:
-	
+
 	std::vector <InfoType> params;
 	InfoType ret;
 	ApplicationScore score;
+	
+    public:
 
-	//TODO
+	IPtrFuncInfo (bool isConst);
+	
+	bool isSame (InfoType) override;
 
+	static InfoType create (Word tok, const std::vector<syntax::Expression> & templates) {
+	    if (templates.size () < 1) 
+		Ymir::Error::takeATypeAsTemplate (tok);
+	    else {
+		auto ptr = new (Z0) IPtrFuncInfo (false);
+		ptr-> ret = templates [0]-> info-> type;
+		if (templates.size () > 1) {
+		    for (auto it : Ymir::r (1, templates.size ())) {
+			ptr-> params.push_back (templates [it]-> info-> type);
+		    }
+		}
+		return ptr;
+	    }
+	    return NULL;
+	}
+
+	InfoType BinaryOp (Word token, syntax::Expression right) override;
+
+	InfoType BinaryOpRight (Word token, syntax::Expression right) override;
+	
+	InfoType onClone () override;
+
+	InfoType DotOp (syntax::Var) override;
+
+	ApplicationScore CallOp (Word token, syntax::ParamList params);
+
+	InfoType CompOp (InfoType other) override;
+	
+	std::string innerTypeString () override;
+
+	std::string innerSimpleTypeString () override;
+	
+	Ymir::Tree toGeneric () override;
+
+	InfoType getTemplate (ulong i);
+	
+	InfoType& getType ();
+
+	std::vector <InfoType> & getParams ();
+
+	ApplicationScore& getScore ();	 
+	
 	static const char* id () {
 	    return "IPtrFuncInfo";
 	}
 
 	const char* getId () override;
 
-	
+    private:
+
+	InfoType Affect (syntax::Expression right);
+
+	InfoType AffectRight (syntax::Expression right);
+
+	InfoType Is (syntax::Expression right);
+
+	InfoType NotIs (syntax::Expression right);
 	
     };
 

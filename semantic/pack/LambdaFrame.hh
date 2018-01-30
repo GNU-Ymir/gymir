@@ -21,6 +21,8 @@ namespace semantic {
 	FrameProto validate (const std::vector<InfoType> & params) override;
 
 	ApplicationScore isApplicable (syntax::ParamList params) override;
+
+	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
 	
 	static const char * id () {
 	    return "ILambdaFrame";

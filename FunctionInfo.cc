@@ -5,9 +5,32 @@
 #include <ymir/semantic/pack/PureFrame.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/value/Value.hh>
+#include <ymir/semantic/value/LambdaValue.hh>
 
 namespace semantic {
 
+    namespace FunctionUtils {
+	using namespace syntax;
+	using namespace std;
+	using namespace Ymir;
+
+	Tree InstAffect (Word, InfoType type, Expression, Expression) {
+	    PtrFuncInfo func = (PtrFuncInfo) type;
+	    tree ret = void_type_node;
+	    tree fndecl_type = build_function_type_array (
+		ret, 0, NULL
+	    );
+	    std::string name = Mangler::mangle_function (
+		func-> getScore ()-> proto-> name (),
+		func-> getScore ()-> proto
+	    );
+	    
+	    tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
+	    return build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	}       
+
+    }
+    
     IFunctionInfo::IFunctionInfo (Namespace space, std::string name) :
 	IInfoType (true),
 	_name (name),
@@ -205,6 +228,22 @@ namespace semantic {
 
 	if (ret.size () != 0) {
 	    return new (Z0)  IFunctionInfo (this-> _space, this-> _name, ret);
+	}
+	return NULL;
+    }
+
+    InfoType IFunctionInfo::CompOp (InfoType other) {
+	if (auto ot = other-> to<IPtrFuncInfo> ()) {
+	    auto score = this-> CallOp ({UNKNOWN_LOCATION, ""}, ot-> getParams ());
+	    
+	    if (score == NULL) return NULL;
+	    if (!score-> ret-> isSame (ot-> getType ()))
+		return NULL;
+	    
+	    auto ret = (PtrFuncInfo) ot-> cloneConst ();
+	    ret-> getScore () = score;
+	    ret-> binopFoo = &FunctionUtils::InstAffect;
+	    return ret;	
 	}
 	return NULL;
     }

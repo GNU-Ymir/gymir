@@ -210,8 +210,6 @@ namespace syntax {
 	    return ret;
 	}
 	std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
-	// if (this-> _score-> left) {	    
-	// }
 
 	Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 	return build_call_array_loc (this-> token.getLocus (),
@@ -494,6 +492,20 @@ namespace syntax {
 	return Ymir::buildTree (RETURN_EXPR, this-> token.getLocus (), void_type_node, set_result);
     }
 
+    Ymir::Tree IFuncPtr::toGeneric () {
+	if (this-> expr != NULL) {
+	    return this-> info-> type-> buildBinaryOp (
+		this-> token,
+		this-> info-> type,
+		this-> expr,
+		new (Z0) ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+	    );
+	} else {
+	    return build_int_cst_type (long_unsigned_type_node, 0);	   
+	}
+    }
+
+    
 }
 
 
