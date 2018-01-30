@@ -106,13 +106,16 @@ namespace semantic {
     InfoType IArrayInfo::ApplyOp (const std::vector<syntax::Var> & vars) {
 	if (vars.size () != 1) return NULL;
 	if (this-> isConst ()) {
-	    vars [0]-> info-> type = this-> _content-> clone ();
+	    vars [0]-> info-> type = this-> _content-> clone ()-> CompOp (vars [0]-> info-> type);
 	} else {
-	    vars [0]-> info-> type = new (Z0)  IRefInfo (false, this-> _content-> clone ());
+	    InfoType ref = new (Z0) IRefInfo (false, this-> _content);
+	    auto content = this-> _content-> clone ();
+	    content-> isConst (false);
+	    vars [0]-> info-> type = content-> CompOp (ref);	    
 	}
+	if (vars [0]-> info-> type == NULL) return NULL;
 	auto ret = this-> clone ();
-	// TODO
-	ret-> isConst (this-> isConst ());
+	ret-> applyFoo = &ArrayUtils::InstApply;
 	return ret;
     }
 	
@@ -434,7 +437,7 @@ namespace semantic {
 	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
 	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    if (left-> is<IConstArray> ()) {
-		return getArrayRef (loc, rexp, inner, rexp);
+		return getArrayRef (loc, lexp, inner, rexp);
 	    } else {
 		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");
 		return getPointerUnref (loc, ptrl, inner, rexp);
@@ -603,6 +606,82 @@ namespace semantic {
 	    }
 	}
 
+	Tree affectIndex (Word &loc, Tree index, Tree array, Tree var, InfoType arrayType, InfoType varType) {
+	    Ymir::Tree elem;
+	    Ymir::Tree inner = ((ArrayInfo) arrayType)-> content ()-> toGeneric ();
+	    if (array.getType ().getTreeCode () != RECORD_TYPE) {
+		elem = getArrayRef (loc.getLocus (), array, inner, index);
+	    } else {
+		auto ptr = Ymir::getField (loc.getLocus (), array, "ptr");
+		elem = getPointerUnref (loc.getLocus (), ptr, inner, index);
+	    }
+
+	    return Ymir::buildTree (
+		MODIFY_EXPR, loc.getLocus (),
+		void_type_node, var,
+		varType-> buildBinaryOp (
+		    loc,
+		    varType,
+		    new (Z0) ITreeExpression (loc, ((ArrayInfo) arrayType)-> content (), elem),
+		    new (Z0) ITreeExpression (loc, varType, var)	
+		)
+	    );
+	}
+	
+	Tree InstApply (Word locus, std::vector <Var> & vars, Block block, Expression iter) {
+	    auto loc = locus.getLocus ();
+	    auto array = iter-> toGeneric ();
+	    auto len = getLen (loc, iter, array);
+	    auto intExpr = new (Z0)  IFixed (locus, FixedConst::ULONG);
+	    intExpr-> setUValue (0);
+	    auto zero = intExpr-> expression ()-> toGeneric ();				    
+	    intExpr-> setUValue (1);
+	    auto one = intExpr-> expression ()-> toGeneric ();
+	    auto var = vars [0]-> toGeneric ();
+	    auto it = makeAuxVar (loc, ISymbol::getLastTmp (), long_unsigned_type_node);
+	    
+	    
+	    Ymir::TreeStmtList list;
+	    
+	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, it, zero));
+	    Ymir::Tree bool_expr = buildTree (LT_EXPR, loc, boolean_type_node, it, len);
+	    
+	    Ymir::Tree test_label = Ymir::makeLabel (loc, "test");
+	    Ymir::Tree begin_label = Ymir::makeLabel (loc, "begin");
+	    Ymir::Tree end_label = Ymir::makeLabel (loc, "end");
+
+	    Ymir::Tree goto_test = Ymir::buildTree (GOTO_EXPR, iter-> token.getLocus (), void_type_node, test_label);
+	    Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, iter-> token.getLocus (), void_type_node, end_label);
+	    Ymir::Tree goto_begin = Ymir::buildTree (GOTO_EXPR, iter-> token.getLocus (), void_type_node, begin_label);
+	
+	    Ymir::Tree test_expr = Ymir::buildTree (COND_EXPR, iter-> token.getLocus (), void_type_node, bool_expr, goto_begin, goto_end);
+	    Ymir::Tree begin_label_expr = Ymir::buildTree (LABEL_EXPR, block-> token.getLocus (), void_type_node, begin_label);
+	    list.append (goto_test);
+	    list.append (begin_label_expr);
+	    Ymir::enterBlock ();
+	    
+	    Ymir::getStackStmtList ().back ().append (affectIndex (locus, it, array, var, iter-> info-> type, vars [0]-> info-> type));
+	    Ymir::getStackStmtList ().back ().append (block-> toGenericSimple ());	    
+	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (
+		MODIFY_EXPR, locus.getLocus (), it.getType (), it,
+	    	Ymir::buildTree (
+	    	    PLUS_EXPR, locus.getLocus (), it.getType (), it, one
+		)
+	    ));
+	    
+	    auto begin_part = Ymir::leaveBlock ().bind_expr;			      
+	    list.append (begin_part);	    
+	    list.append (goto_test);
+	    
+	    Ymir::Tree test_label_expr = Ymir::buildTree (LABEL_EXPR, iter-> token.getLocus (), void_type_node, test_label);
+	    list.append (test_label_expr);
+	    list.append (test_expr);
+
+	    Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, iter-> token.getLocus (), void_type_node, end_label);	
+	    list.append (end_expr);
+
+	    return list.getTree ();
+	}	
 	
     }
 

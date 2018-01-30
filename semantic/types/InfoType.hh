@@ -55,6 +55,7 @@ namespace semantic {
 	typedef Ymir::Tree (*BinopLint) (Word, IInfoType*, syntax::Expression, syntax::Expression);
 	typedef Ymir::Tree (*UnopLint) (Word, IInfoType*, syntax::Expression);
 
+	typedef Ymir::Tree (*ApplyLint) (Word, std::vector <syntax::Var>&, syntax::Block, syntax::Expression);
 	
 	bool _isConst = false;
 	bool _isLValue = false;
@@ -81,6 +82,8 @@ namespace semantic {
 	Ymir::Tree buildUnaryOp (Word word, InfoType, syntax::Expression elem);
 
 	Ymir::Tree buildMultOp (Word word, InfoType, syntax::Expression elem, syntax::Expression rights);
+
+	Ymir::Tree buildApplyOp (Word word, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression iter);
 	
 	static InfoType factory (Word word, const std::vector<syntax::Expression> & templates);
 	
@@ -221,6 +224,7 @@ namespace semantic {
 	BinopLint binopFoo = NULL;
 	UnopLint unopFoo = NULL;
 	BinopLint multFoo = NULL;
+	ApplyLint applyFoo = NULL;
 
 	std::list <BinopLint> nextBinop;
 	std::list <UnopLint> nextUnop;

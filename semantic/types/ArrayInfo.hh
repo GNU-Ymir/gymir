@@ -45,7 +45,7 @@ namespace semantic {
 	InfoType CompOp (InfoType) override;
 
 	InfoType ConstVerif (InfoType) override;
-
+	
 	std::string innerTypeString () override;
 
 	std::string innerSimpleTypeString () override;

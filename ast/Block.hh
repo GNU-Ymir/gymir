@@ -38,6 +38,8 @@ namespace syntax {
 	IBlock* blockWithoutEnter ();
 	
 	Ymir::Tree toGeneric () override;
+
+	Ymir::Tree toGenericSimple ();
 	
 	void print (int nb = 0) override;
 

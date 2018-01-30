@@ -44,7 +44,10 @@ namespace semantic {
     Ymir::Tree IInfoType::buildMultOp (Word locus, InfoType type, syntax::Expression left, syntax::Expression rights) {
 	return this-> multFoo (locus, type, left, rights);
     }
-
+    
+    Ymir::Tree IInfoType::buildApplyOp (Word locus, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr) {
+	return this-> applyFoo (locus, vars, bl, expr);
+    }
     
     InfoType IInfoType::factory (Word word, const std::vector<syntax::Expression> & templates) {
 	auto it = (InfoType (*)(Word, const std::vector<syntax::Expression> &)) (

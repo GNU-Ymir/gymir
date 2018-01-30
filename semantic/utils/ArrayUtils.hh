@@ -28,6 +28,8 @@ namespace semantic {
 
 	Ymir::Tree InstToArray (Word word, InfoType, syntax::Expression elem, syntax::Expression type);
 	
+	Ymir::Tree InstApply (Word word, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
+
     }
 
 }

@@ -14,7 +14,7 @@ namespace syntax {
 	std::vector <Var> var;
 	Expression iter;
 	Block block;
-	// InfoType ret;
+	semantic::InfoType ret;
 	
     public:
 
@@ -23,6 +23,8 @@ namespace syntax {
 	Instruction instruction () override;
 	
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
 

@@ -199,8 +199,36 @@ namespace syntax {
     }
     
     Instruction IFor::instruction () {
-	Ymir::Error::assert ("TODO For");
-	return NULL;
+	auto expr = this-> iter-> expression ();
+	if (expr == NULL) return NULL;
+	Table::instance ().enterBlock ();
+	std::vector <Var> var (this-> var.size ());
+	for (auto it : Ymir::r (0, this-> var.size ())) {
+	    var [it] = (Var) this-> var [it]-> templateExpReplace ({});
+	    auto info = Table::instance ().get (var [it]-> token.getStr ());
+	    if (info && Table::instance ().sameFrame (info)) {
+		Ymir::Error::shadowingVar (var [it]-> token, info-> sym);
+		return NULL;
+	    }
+
+	    var [it]-> info = new (Z0) ISymbol (var [it]-> token, new (Z0) IUndefInfo ());
+	    var [it]-> info-> isConst (false);
+	    var [it]-> info-> value () = NULL;
+	    Table::instance ().insert (var [it]-> info);
+	}
+	
+	auto type = expr-> info-> type-> ApplyOp (var);
+	if (type == NULL) {
+	    Ymir::Error::assert ("TODO");
+	}
+
+	Table::instance ().retInfo ().currentBlock () = "for";
+	Table::instance ().retInfo ().changed () = true;
+	Block bl = this-> block-> block ();
+	Table::instance ().quitBlock ();
+	auto aux = new (Z0) IFor (this-> token, this-> id, var, expr, bl);
+	aux-> ret = type;
+	return aux;
     }
     
     Instruction IWhile::instruction () {

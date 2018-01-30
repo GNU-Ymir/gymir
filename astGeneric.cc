@@ -28,6 +28,19 @@ namespace syntax {
 	return ret.bind_expr;
     }
 
+    Ymir::Tree IBlock::toGenericSimple () {
+	//Ymir::enterBlock ();
+	Ymir::TreeStmtList list;
+	for (auto it : this-> insts) {
+	    auto inst = it-> toGeneric ();
+	    list.append (inst);    
+	}
+	
+	//auto ret = Ymir::leaveBlock ();
+	return list.getTree ();
+    }
+    
+
     Ymir::Tree IVarDecl::toGeneric () {
 	Ymir::TreeStmtList list;
 	for (int i = 0 ; i < (int) this-> decls.size () ; i++) {
@@ -337,6 +350,29 @@ namespace syntax {
 	}
     }
 
+    Ymir::Tree IFor::toGeneric () {
+	Ymir::TreeStmtList list;
+	for (int i = 0; i < (int) this-> var.size () ; i++) {
+	    auto var = this-> var [i];
+	    auto type_tree = var-> info-> type-> toGeneric ();
+	    Ymir::Tree decl = build_decl (
+		var-> token.getLocus (),
+		VAR_DECL,
+		get_identifier (var-> token.getStr ().c_str ()),
+		type_tree.getTree ()
+	    );
+
+	    
+	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();	    
+	    var-> info-> treeDecl (decl);
+	    Ymir::getStackVarDeclChain ().back ().append (decl);
+	    list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
+	}
+	
+	list.append (this-> ret-> buildApplyOp (this-> token, this-> var, this-> block, this-> iter));
+	return list.getTree ();
+    }
+    
     Ymir::Tree IWhile::toGeneric () {
 	Ymir::TreeStmtList list;
 	Ymir::Tree bool_expr = this-> test-> toGeneric ();
