@@ -90,6 +90,10 @@ namespace Ymir {
 	    return TREE_TYPE (t);
 	}
 
+	Tree getOperand (int i) const {
+	    return TREE_OPERAND (t, i);
+	}
+
     private:
 
 	tree t;

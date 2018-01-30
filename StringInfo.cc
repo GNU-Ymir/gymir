@@ -7,6 +7,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/value/_.hh>
+#include <ymir/semantic/utils/ArrayUtils.hh>
 
 namespace semantic {
 
@@ -100,6 +101,24 @@ namespace semantic {
 	    }
 	}
 	return NULL;
+    }
+
+    InfoType IStringInfo::ApplyOp (const std::vector<syntax::Var> & vars) {
+	if (vars.size () != 1) return NULL;
+	if (this-> isConst ()) {
+	    auto content = new (Z0) ICharInfo (false);
+	    vars [0]-> info-> type = content-> clone ()-> CompOp (vars [0]-> info-> type);
+	} else {
+	    auto content = new (Z0) ICharInfo (false);
+	    InfoType ref = new (Z0) IRefInfo (false, content);
+	    content-> isConst (false);
+	    vars [0]-> info-> type = content-> CompOp (ref);	    
+	}
+	
+	if (vars [0]-> info-> type == NULL) return NULL;
+	auto ret = this-> clone ();
+	ret-> applyFoo = &ArrayUtils::InstApply;
+	return ret;
     }
     
     InfoType IStringInfo::Ptr () {	

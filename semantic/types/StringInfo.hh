@@ -44,6 +44,8 @@ namespace semantic {
 	
 	InfoType CompOp (InfoType) override;
 
+	InfoType ApplyOp (const std::vector <syntax::Var>&) override;
+	
 	Ymir::Tree toGeneric () override;
 
 	static Ymir::Tree toGenericStatic ();

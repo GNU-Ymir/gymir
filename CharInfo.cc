@@ -71,6 +71,12 @@ namespace semantic {
 	    auto ch = new (Z0)  ICharInfo (this-> isConst ());
 	    ch-> binopFoo = FixedUtils::InstCast;
 	    return ch;
+	} else if (auto ref = other-> to <IRefInfo> ()) {
+	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
+		auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAddr;
+		return aux;
+	    }
 	} else if (auto en = other-> to<IEnumInfo> ()) {
 	    return this-> CompOp (en-> content ());
 	}

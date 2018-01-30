@@ -291,21 +291,38 @@ namespace semantic {
 	using namespace syntax;
 	using namespace Ymir;
 
-	Tree getLen (location_t loc, Expression expr, Tree tree) {
+	bool isStringType (Tree type) {
+	    return type.getTreeCode () == POINTER_TYPE
+		&& TYPE_MAIN_VARIANT (TREE_TYPE (type.getTree ())) == char_type_node;
+	}
+	
+	Tree getLen (location_t loc, Expression, Tree tree) {
 	    if (tree.getType ().getTreeCode () != RECORD_TYPE) {
-		auto cst = expr-> to <IConstArray> ();
-		auto intExpr = new (Z0)  IFixed (cst-> token, FixedConst::ULONG);
-		intExpr-> setUValue (cst-> nbParams ());
-		auto lenExpr = (Fixed) intExpr-> expression ();			
-		return lenExpr-> toGeneric ();		
-	    } else {
-		return getField (loc, tree, "len");
-	    }
+		if (isStringType (tree.getType ())) {
+		    if (TREE_CONSTANT (tree.getTree ())) {
+			auto t = tree.getOperand (0).getOperand (0);
+			return build_int_cst_type (long_unsigned_type_node, TREE_STRING_LENGTH (t.getTree ()) - 1);
+		    }
+		} else {
+		    auto range = TYPE_DOMAIN (tree.getType ().getTree ());
+		    return convert (long_unsigned_type_node,
+				    buildTree (PLUS_EXPR, loc, integer_type_node, 
+					       TYPE_MAX_VALUE (range),
+					       build_int_cst_type (integer_type_node, 1)
+				    ).getTree ()
+		    );
+		}
+	    }	    
+	    return getField (loc, tree, "len");		    
 	}
 
 	Tree getPtr (location_t loc, Expression, Tree tree) {
 	    if (tree.getType ().getTreeCode () != RECORD_TYPE) {
-		return getAddr (tree);
+		if (isStringType (tree.getType ())) {
+		    return tree;
+		} else {
+		    return getAddr (tree);
+		}
 	    } else {
 		return getField (loc, tree, "ptr");
 	    }
@@ -337,7 +354,6 @@ namespace semantic {
 
 	}
 	
-
 	Tree copyArray (location_t loc, Tree dst, Tree src, Tree len, Tree begin, Tree type) {
 	    auto byteBegin = buildTree (
 		MULT_EXPR, loc,
@@ -608,13 +624,23 @@ namespace semantic {
 
 	Tree affectIndex (Word &loc, Tree index, Tree array, Tree var, InfoType arrayType, InfoType varType) {
 	    Ymir::Tree elem;
-	    Ymir::Tree inner = ((ArrayInfo) arrayType)-> content ()-> toGeneric ();
-	    if (array.getType ().getTreeCode () != RECORD_TYPE) {
-		elem = getArrayRef (loc.getLocus (), array, inner, index);
-	    } else {
-		auto ptr = Ymir::getField (loc.getLocus (), array, "ptr");
-		elem = getPointerUnref (loc.getLocus (), ptr, inner, index);
-	    }
+	    if (auto ainfo = arrayType-> to<IArrayInfo> ()) {
+		Ymir::Tree inner = (ainfo)-> content ()-> toGeneric ();
+		if (array.getType ().getTreeCode () != RECORD_TYPE) {
+		    elem = getArrayRef (loc.getLocus (), array, inner, index);
+		} else {
+		    auto ptr = Ymir::getField (loc.getLocus (), array, "ptr");
+		    elem = getPointerUnref (loc.getLocus (), ptr, inner, index);
+		}
+	    } else { //StringInfo
+		auto inner = (new (Z0) ICharInfo (false))-> toGeneric ();
+		if (array.getType ().getTreeCode () != RECORD_TYPE) {
+		    elem = getPointerUnref (loc.getLocus (), array, char_type_node, index);
+		} else {
+		    auto ptr = Ymir::getField (loc.getLocus (), array, "ptr");
+		    elem = getPointerUnref (loc.getLocus (), ptr, inner, index);
+		}
+	    }	    
 
 	    return Ymir::buildTree (
 		MODIFY_EXPR, loc.getLocus (),
