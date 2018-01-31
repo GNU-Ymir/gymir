@@ -89,6 +89,27 @@ namespace semantic {
 	return alls;
     }
 
+    InfoType IFunctionInfo::BinaryOpRight (Word op, syntax::Expression left) {
+	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
+	    auto frames = getFrames ();
+	    if (frames.size () == 1 && frames [0]-> isPure ()) {
+		auto infoTypes = frames [0]-> getParamTypes ();
+		auto score = this-> CallOp ({op.getLocus (), ""}, infoTypes);
+		if (score == NULL) return NULL;
+		auto ret = new (Z0) IPtrFuncInfo (true);
+		ret-> getParams () = infoTypes;
+		ret-> getType () = score-> ret-> cloneConst ();
+		ret-> getScore () = score;
+		
+		ret-> nextBinop.push_back (&FunctionUtils::InstAffect);
+		ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
+		
+		return ret;	
+	    }
+	}
+	return NULL;
+    }
+    
     ApplicationScore IFunctionInfo::CallOp (Word tok, const std::vector<InfoType> & params) {
 	ulong nbErrorBeg = Ymir::Error::nb_errors;
 	std::vector <ApplicationScore> total;

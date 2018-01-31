@@ -1,7 +1,45 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
+#include <ymir/ast/ParamList.hh>
 
 namespace semantic {
+
+    namespace PtrFuncUtils {
+	using namespace syntax;
+	using namespace std;
+	using namespace Ymir;
+
+	template <typename T>
+	T getAndRemoveBack (std::list <T> &list) {
+	    auto last = list.back ();
+	    list.pop_back ();
+	    return last;
+	}
+	
+	Tree InstAffectComp (Word loc, InfoType type, Expression left, Expression right) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = type-> buildBinaryOp (
+		loc, type, left, right
+	    );
+
+	    return buildTree (MODIFY_EXPR, loc.getLocus (), ltree.getType (), ltree, rtree);	    
+	}
+
+	Tree InstCall (Word loc, InfoType ret, Expression left, Expression paramsExp) {
+	    ParamList params = paramsExp-> to <IParamList> ();
+	    auto fn = left-> toGeneric ();
+	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());	    
+	    return build_call_array_loc (loc.getLocus (),
+					 ret-> toGeneric ().getTree (),
+					 fn.getTree (),
+					 args.size (),
+					 args.data ()
+	    );
+	}
+	
+    }
     
     IPtrFuncInfo::IPtrFuncInfo (bool isConst)
 	: IInfoType (isConst)
@@ -22,6 +60,7 @@ namespace semantic {
     }
     
     InfoType IPtrFuncInfo::BinaryOp (Word token, syntax::Expression right) {
+	if (token == Token::EQUAL) return Affect (right);
 	return NULL;
     }
 
@@ -31,9 +70,47 @@ namespace semantic {
     }	
 
     ApplicationScore IPtrFuncInfo::CallOp (Word token, syntax::ParamList params) {
-	return NULL;
+	if (params-> getParams ().size () != this-> params.size ()) 
+	    return NULL;
+
+	auto score = new (Z0) IApplicationScore (token);
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    InfoType info = this-> params [it];
+	    auto type = params-> getParams() [it]-> info-> type-> CompOp (info);
+	    if (type) type = type-> ConstVerif (info);
+	    if (type) {
+		score-> score += 1;
+		score-> treat.push_back (type);
+	    } else return NULL;
+	}
+
+	auto ret = this-> ret-> cloneConst ();
+	ret-> multFoo = &PtrFuncUtils::InstCall;
+	score-> dyn = true;
+	score-> ret = ret;	
+	return score;
     }
 
+    InfoType IPtrFuncInfo::Affect (syntax::Expression right) {
+	if (this-> isSame (right-> info-> type)) {
+	    auto ret = this-> clone ();
+	    ret-> binopFoo = &PtrUtils::InstAffect;
+	    return ret;
+	} else if (right-> info-> type-> is <INullInfo> ()) {
+	    auto ret = this-> clone ();
+	    ret-> binopFoo = &PtrUtils::InstAffect;
+	    return ret;
+	} else if (right-> info-> type-> is <IFunctionInfo> ()) {
+	    auto ret = right-> info-> type-> CompOp (this);
+	    if (ret) {
+		ret-> nextBinop.push_back (ret-> binopFoo);		
+		ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
+		return ret;
+	    }
+	}
+	return NULL;
+    }
+    
     InfoType IPtrFuncInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
@@ -111,9 +188,15 @@ namespace semantic {
     }
     
     Ymir::Tree IPtrFuncInfo::toGeneric () {
+	std::vector<tree> fndecl_type_params;
+	for (auto it : this->params) {
+	    fndecl_type_params.push_back (it-> toGeneric ().getTree ());
+	}
+
+	tree ret = this-> ret-> toGeneric ().getTree ();
 	return build_pointer_type (
-	    void_type_node
-	);
+	    build_function_type_array (ret, fndecl_type_params.size (), fndecl_type_params.data ())
+	);	
     }
 
     const char * IPtrFuncInfo::getId () {

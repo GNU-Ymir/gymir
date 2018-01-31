@@ -46,7 +46,7 @@ namespace semantic {
 	bool _isInternal = false;	
 	bool _isPrivate = false;
 	bool _isVariadic = false;
-
+	
 	std::vector <::syntax::Expression> tempParams;
 
     public:
@@ -90,8 +90,12 @@ namespace semantic {
 	::syntax::Function func ();
 
 	std::vector <::syntax::Expression> & templateParams ();
+
+	virtual std::vector <InfoType> getParamTypes ();
 	
 	virtual bool& isPrivate ();
+
+	virtual bool isPure ();
 	
 	virtual Word ident ();
 

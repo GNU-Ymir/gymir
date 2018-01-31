@@ -962,12 +962,18 @@ namespace syntax {
 	    aux-> expr = this-> expr-> templateExpReplace ({});
 	if (this-> block) aux-> block = (Block) this-> block-> templateReplace ({});
 	if (this-> ret) aux-> ret = (Var) this-> ret-> templateExpReplace ({});
-	for (auto it : this-> params)
+	bool isPure = true;
+	for (auto it : this-> params) {
 	    aux-> params.push_back ((Var) it-> templateExpReplace ({}));
-
+	    if (!aux-> params.back ()-> is <ITypedVar> ())
+		isPure = false;
+	}
+	
 	if (this-> frame == NULL) {
 	    auto ident = Ymir::OutBuffer ("Lambda_", this-> id).str ();
-	    aux-> frame = new (Z0) ILambdaFrame (space, ident, aux);
+	    auto fr = new (Z0) ILambdaFrame (space, ident, aux);
+	    fr-> isPure (isPure);
+	    aux-> frame = fr;
 	} else {
 	    aux-> frame = this-> frame;
 	}

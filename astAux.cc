@@ -121,6 +121,7 @@ namespace syntax {
 	params (params)
     {}
 
+       
     IParamList::~IParamList () {
 	for (auto it : params)
 	    delete it;
@@ -129,7 +130,11 @@ namespace syntax {
     std::vector <Expression>& IParamList::getParams () {
 	return this-> params;
     }
-
+    
+    std::vector <semantic::InfoType>& IParamList::getTreats () {
+	return this-> treats;
+    }
+    
     std::vector <semantic::InfoType> IParamList::getParamTypes () {
 	std::vector<semantic::InfoType> paramTypes;
 	for (auto it : this-> params) {

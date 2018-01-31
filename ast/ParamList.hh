@@ -12,6 +12,8 @@ namespace syntax {
 
 	std::vector <Expression> params;
 
+	std::vector <semantic::InfoType> treats;
+	
     public :
 	IParamList (Word ident, const std::vector <Expression>& params);
 	
@@ -25,6 +27,8 @@ namespace syntax {
 	
 	std::vector <tree> toGenericParams (const std::vector <semantic::InfoType>&);
 
+	std::vector <semantic::InfoType> & getTreats ();
+	
 	void print (int nb = 0) override;
 
 	static const char * id () {

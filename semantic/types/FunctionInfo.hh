@@ -33,6 +33,8 @@ namespace semantic {
 
 	InfoType onClone () override;
 
+	InfoType BinaryOpRight (Word op, syntax::Expression left) override;
+	
 	std::vector <Frame> getFrames ();
 
 	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;

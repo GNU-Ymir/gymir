@@ -404,6 +404,15 @@ namespace semantic {
 	return this-> _function;
     }
 
+    bool IFrame::isPure () {
+	return false;
+    }
+
+    std::vector <InfoType> IFrame::getParamTypes () {
+	Ymir::Error::assert ("");
+	return {};	
+    }
+    
     bool& IFrame::isPrivate () {
 	return this-> _isPrivate;
     }

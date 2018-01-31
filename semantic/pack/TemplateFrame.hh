@@ -27,8 +27,10 @@ namespace semantic {
 
 	ITemplateFrame (Namespace space, syntax::Function func);
 	
-	bool& isPure ();
+	bool isPure () override;
 
+	void isPure (bool);
+	
 	bool& isExtern ();
 
 	ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args) override;

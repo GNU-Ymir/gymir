@@ -12,6 +12,8 @@ namespace semantic {
 	syntax::LambdaFunc frame;
 	std::string name;
 
+	bool _isPure;
+	
     public:
 
 	ILambdaFrame (Namespace space, std::string& name, syntax::LambdaFunc func);
@@ -28,6 +30,12 @@ namespace semantic {
 	    return "ILambdaFrame";
 	}
 
+	bool isPure () override;
+
+	void isPure (bool);
+
+	std::vector <InfoType> getParamTypes () override;
+	
 	std::string getName ();
 	
 	syntax::LambdaFunc func ();

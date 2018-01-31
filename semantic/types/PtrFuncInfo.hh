@@ -4,6 +4,10 @@
 
 namespace semantic {
 
+    namespace PtrFuncUtils {
+	Ymir::Tree InstAffectComp (Word loc, InfoType type, syntax::Expression left, syntax::Expression right);
+    }
+    
     class IPtrFuncInfo : public IInfoType {
 
 	std::vector <InfoType> params;

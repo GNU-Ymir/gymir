@@ -61,6 +61,18 @@ namespace semantic {
 	this-> pass = true;
 	return validate ();
     }
+
+    bool IPureFrame::isPure () {
+	return true;
+    }
+
+    std::vector <InfoType> IPureFrame::getParamTypes () {
+	std::vector <InfoType> params;
+	for (auto it : this-> _function-> getParams ()) {
+	    params.push_back (it-> to<ITypedVar> ()-> getType ());
+	}
+	return params;
+    }
     
     const char* IPureFrame::getId () {
 	return IPureFrame::id ();

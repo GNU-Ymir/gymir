@@ -49,6 +49,22 @@ namespace semantic {
 	return this-> name;
     }
 
+    bool ILambdaFrame::isPure () {
+	return this-> _isPure;
+    }
+
+    void ILambdaFrame::isPure (bool isPure) {
+	this-> _isPure = isPure;
+    }
+
+    std::vector <InfoType> ILambdaFrame::getParamTypes () {
+	std::vector <InfoType> params;
+	for (auto it : this-> frame-> getParams ()) {
+	    params.push_back (it-> to <ITypedVar> ()-> getType ());
+	}
+	return params;
+    }
+    
     const char * ILambdaFrame::getId () {
 	return ILambdaFrame::id ();
     }

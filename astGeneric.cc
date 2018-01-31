@@ -209,15 +209,25 @@ namespace syntax {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
 	    return ret;
 	}
-	std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
 
-	Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
-	return build_call_array_loc (this-> token.getLocus (),
-				     this-> _score-> ret-> toGeneric ().getTree (),
-				     fn.getTree (),
-				     args.size (),
-				     args.data ()
-	);
+	if (this-> _score-> dyn) {
+	    this-> params-> getTreats () = this-> _score-> treat;
+	    return this-> _score-> ret-> buildMultOp (
+		this-> token,
+		this-> _score-> ret,
+		this-> _left,
+		this-> params
+	    );
+	} else {
+	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
+	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
+	    return build_call_array_loc (this-> token.getLocus (),
+					 this-> _score-> ret-> toGeneric ().getTree (),
+					 fn.getTree (),
+					 args.size (),
+					 args.data ()
+	    );
+	}
     }
     
     Ymir::Tree IString::toGeneric () {	

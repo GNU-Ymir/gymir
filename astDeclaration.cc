@@ -67,7 +67,7 @@ namespace syntax {
 	    	if (!it-> is<ITypedVar> ()) return ret;
 	    }
 
-	    ret-> isPure () = true;
+	    ret-> isPure (true);
 	    ret-> isExtern () = true;
 	    FrameTable::instance ().insert (ret);
 	    return ret;	
@@ -100,7 +100,7 @@ namespace syntax {
 	    	if (!it-> is<ITypedVar> ()) return ret;
 	    }
 
-	    ret-> isPure () = true;
+	    ret-> isPure (true);
 	    FrameTable::instance ().insert (ret);
 	    return ret;
 	}

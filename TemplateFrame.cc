@@ -21,10 +21,14 @@ namespace semantic {
 	this-> name = func-> getIdent ().getStr ();
     }
 
-    bool& ITemplateFrame::isPure () {
+    bool ITemplateFrame::isPure () {
 	return this-> _isPure;
     }
 
+    void ITemplateFrame::isPure (bool isPure) {
+	this-> _isPure = isPure;
+    }
+    
     bool& ITemplateFrame::isExtern () {
 	return this-> _isExtern;
     }
