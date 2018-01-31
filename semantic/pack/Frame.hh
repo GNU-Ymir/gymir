@@ -92,6 +92,8 @@ namespace semantic {
 	std::vector <::syntax::Expression> & templateParams ();
 
 	virtual std::vector <InfoType> getParamTypes ();
+
+	virtual InfoType getRetType ();
 	
 	virtual bool& isPrivate ();
 

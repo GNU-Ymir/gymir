@@ -35,6 +35,8 @@ namespace semantic {
 	void isPure (bool);
 
 	std::vector <InfoType> getParamTypes () override;
+
+	InfoType getRetType () override;
 	
 	std::string getName ();
 	

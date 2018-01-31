@@ -218,6 +218,10 @@ namespace semantic {
 	return NULL;
     }
 
+    ulong IInfoType::nbTemplates () {
+	return 0;
+    }
+    
     Ymir::Tree IInfoType::toGeneric () {
 	Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
 	return NULL;

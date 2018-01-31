@@ -303,6 +303,26 @@ namespace semantic {
 	return "F";
     }
 
+    InfoType IFunctionInfo::getTemplate (ulong i) {
+	auto frames = this-> getFrames ();
+	if (frames.size () == 1) {
+	    auto infoTypes = frames [0]-> getParamTypes ();
+	    if (i < infoTypes.size ()) return infoTypes [i];
+	    else if (i == infoTypes.size ())
+		return frames [0]-> getRetType ();
+	}
+	return NULL;
+    }
+
+    ulong IFunctionInfo::nbTemplates () {
+	auto frames = this-> getFrames ();
+	if (frames.size () == 1) {
+	    auto infoTypes = frames [0]-> getParamTypes ();
+	    return infoTypes.size () + 1;
+	}
+	return 0;
+    }
+    
     bool& IFunctionInfo::alone () {
 	return this-> _alone;
     }

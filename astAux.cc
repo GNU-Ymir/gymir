@@ -1106,9 +1106,16 @@ namespace syntax {
 	this-> ret-> inside = this;
 	if (this-> expr)
 	    this-> expr-> inside = this;
+    }    
+
+    std::vector <Var> & IFuncPtr::getParams () {
+	return this-> params;
+    }
+
+    Var IFuncPtr::getRet () {
+	return this-> ret;
     }
     
-
     const char * IFuncPtr::id () {
 	return TYPEID (IFuncPtr);
     }

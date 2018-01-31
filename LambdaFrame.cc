@@ -60,11 +60,24 @@ namespace semantic {
     std::vector <InfoType> ILambdaFrame::getParamTypes () {
 	std::vector <InfoType> params;
 	for (auto it : this-> frame-> getParams ()) {
-	    params.push_back (it-> to <ITypedVar> ()-> getType ());
+	    if (auto type = it-> to <ITypedVar> ())
+		params.push_back (type-> getType ());
+	    else params.push_back (new (Z0) IUndefInfo ());
 	}
 	return params;
     }
     
+    InfoType ILambdaFrame::getRetType () {
+	if (this-> isPure ()) {
+	    auto infoTypes = this-> getParamTypes ();
+	    auto ret = this-> validate (infoTypes);
+	    if (ret != NULL) {
+		return ret-> type ()-> type-> cloneConst ();
+	    }	    
+	} 
+	return new (Z0) IUndefInfo ();
+    }
+
     const char * ILambdaFrame::getId () {
 	return ILambdaFrame::id ();
     }

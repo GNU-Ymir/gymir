@@ -24,6 +24,10 @@ namespace syntax {
 
 	Expression expression () override;
 
+	std::vector <Var> & getParams ();
+
+	Var getRet ();
+	
 	Ymir::Tree toGeneric () override;
 	
 	static const char * id ();

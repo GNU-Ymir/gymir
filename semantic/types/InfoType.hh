@@ -190,6 +190,8 @@ namespace semantic {
 	
 	virtual InfoType getTemplate (ulong);
 
+	virtual ulong nbTemplates ();
+	
 	/**
 	   Retourne les paramètre templates sur un range (pour les variadics templates).
 	   Params:

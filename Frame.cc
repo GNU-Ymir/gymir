@@ -412,8 +412,11 @@ namespace semantic {
     }
 
     std::vector <InfoType> IFrame::getParamTypes () {
-	Ymir::Error::assert ("");
 	return {};	
+    }
+
+    InfoType IFrame::getRetType () {
+	return NULL;
     }
     
     bool& IFrame::isPrivate () {

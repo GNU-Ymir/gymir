@@ -126,7 +126,7 @@ namespace semantic {
 	   -------
 	*/
 	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::FuncPtr ptr, InfoType type);
-
+	
 	/**
 	   résoud un paramètre template
 	   Params;

@@ -53,6 +53,10 @@ namespace semantic {
 
 	std::string innerSimpleTypeString () override;
 
+	InfoType getTemplate (ulong i) override;
+
+	ulong nbTemplates () override;
+	
 	bool& alone ();
 	
 	std::string name ();

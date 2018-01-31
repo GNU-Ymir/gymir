@@ -45,8 +45,11 @@ namespace semantic {
 	    auto inside = left.find (it.first);
 	    if (inside != left.end ()) {
 		auto ltype = inside-> second-> to<IType> ();
-		auto rtype = it.second-> to<IType> ();
-		if (!ltype || !rtype || !ltype-> info-> type-> isSame (rtype-> info-> type))
+		auto rtype = it.second-> to<IType> ();	       
+		if (!ltype || !rtype) return false;
+		if (!ltype-> info-> type-> is <IUndefInfo> () &&
+		    !rtype-> info-> type-> is <IUndefInfo> () &&
+		    !ltype-> info-> type-> isSame (rtype-> info-> type))
 		    return false;
 	    } else {
 		left [it.first] = it.second;
@@ -62,8 +65,12 @@ namespace semantic {
 	    if (inside != left.end ()) {
 		auto ltype = inside-> second-> to <IType> ();
 		auto rtype = it.second-> to <IType> ();
-		if (!ltype || !rtype || !ltype-> info-> type-> isSame (rtype-> info-> type))
+		if (!ltype || !rtype) return false;
+		if (!ltype-> info-> type-> is <IUndefInfo> () &&
+		    !rtype-> info-> type-> is <IUndefInfo> () &&
+		    !ltype-> info-> type-> isSame (rtype-> info-> type))
 		    return false;
+
 	    } else {
 		left [it.first] = it.second;
 	    }
@@ -82,7 +89,7 @@ namespace semantic {
 		isConst = true;
 		typeVar = typeVar-> getTemplates () [0]-> to <IVar> ();
 	    }
-
+	    
 	    if (auto arr = typeVar-> to <IArrayVar> ()) {
 		return solve (tmps, arr, type, isConst);
 	    } else if (typeVar-> is <IType> ()) {
@@ -145,7 +152,8 @@ namespace semantic {
 	if (auto arr = param-> to <IArrayVar> ()) {
 	    return solve (tmps, arr, type, isConst);
 	} else {
-	    vector <Expression> types;
+	    
+	    vector <Expression> types;	    
 	    TemplateSolution soluce (0, true);
 	    for (auto it : Ymir::r (0, param-> getTemplates ().size ())) {
 		if (auto var = param-> getTemplates () [it]-> to <IVar> ()) {
@@ -179,9 +187,12 @@ namespace semantic {
 		    }
 		}		
 	    }
-
+	    
 	    auto var = (new (Z0) IVar (param-> token, types))-> asType ();
 	    if (var == NULL) return TemplateSolution (0, false);
+
+	    if (!var-> info-> type-> isSame (type) && !type-> is<IUndefInfo> ())
+		return TemplateSolution (0, false);
 	    soluce.type = var-> info-> type;
 	    soluce.type-> isConst (isConst);
 	    soluce.score += __VAR__;
@@ -228,8 +239,43 @@ namespace semantic {
 	return TemplateSolution (0, false);
     }
 
-    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &, FuncPtr , InfoType ) {
-	Ymir::Error::assert ("TODO");
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, FuncPtr func, InfoType type) {
+
+	vector <Var> types;
+	TemplateSolution soluce (0, true);
+	if (type-> nbTemplates () != func-> getParams ().size () + 1)
+	    return TemplateSolution (0, false);
+	
+	for (auto it : Ymir::r (0, func-> getParams ().size ())) {
+	    auto var = func-> getParams () [it];
+	    auto typeTemplates = type-> getTemplate (it);
+	    if (!typeTemplates) return TemplateSolution (0, false);
+	    auto res = this-> solveInside (tmps, var, typeTemplates);
+	    if (!res.valid || !merge (soluce.score, soluce.elements, res))
+		return TemplateSolution (0, false);
+	    if (res.type)
+		types.push_back (new (Z0)  IType (var-> token, res.type));
+	    else
+		return TemplateSolution (0, false);			
+	}
+	
+	auto typeTemplate = type-> getTemplate (func-> getParams ().size ());
+	if (typeTemplate == NULL) return TemplateSolution (0, false);
+	auto res = this-> solveInside (tmps, func-> getRet (), typeTemplate);
+	
+	if (!res.valid || !merge (soluce.score, soluce.elements, res))
+	    return TemplateSolution (0, false);
+	if (res.type) {
+	    auto var = (new (Z0) IFuncPtr (func-> token, types,
+					  new (Z0) IType (func-> getRet ()-> token, res.type)
+	    ))-> expression ();
+
+	    if (var == NULL) return TemplateSolution (0, false);
+	    soluce.type = var-> info-> type;
+	    soluce.type-> isConst (false);
+	    soluce.score += __VAR__;
+	    return soluce;
+	}
 	return TemplateSolution (0, false);
     }
 
@@ -252,7 +298,7 @@ namespace semantic {
     TemplateSolution TemplateSolver::solve (Var elem, TypedVar param, InfoType type, bool isConst) {
 	if (elem-> is<ITypedVar> ()) return TemplateSolution (0, false);
 	else if (elem-> is<IArrayVar> ()) return TemplateSolution (0, false);
-	else if (type-> is<IFunctionInfo> ()) return TemplateSolution (0, false);
+	else if (type-> is<IFunctionInfo> ()) return TemplateSolution (0, false);	
 	// TODO Object, Struct
 
 	if (elem-> token == Keys::CONST) {
@@ -366,20 +412,27 @@ namespace semantic {
 	    Ymir::Error::notImmutable (right-> info);
 	    return TemplateSolution (0, false);
 	}
-	
-	auto res = this-> solveInside (tmps, left-> typeVar (), type);
-	if (!res.valid)
-	    return TemplateSolution (0, false);
 
-	if (!type-> isSame (res.type))
-	    return TemplateSolution (0, false);
-
+	TemplateSolution res (0, false);
+	if (left-> typeVar ()) {
+	    res = this-> solveInside (tmps, left-> typeVar (), type);
+	    if (!res.valid)
+		return TemplateSolution (0, false);
+	    
+	    if (!type-> isSame (res.type)) 
+		return TemplateSolution (0, false);
+	} else {
+	    res = this-> solveInside (tmps, left-> typeExp ()-> to <IFuncPtr> (), type);
+	    if (!res.valid)
+		return TemplateSolution (0, false);
+	}
+	       
 	map <string, Expression> ret = {{left-> token.getStr (), right}};
 	if (!merge (res.score, res.elements, ret))
 	    return TemplateSolution (0, false);
 	return res;
     }
-
+    
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &, Expression , Expression ) {
 	Ymir::Error::assert ("TODO");
 	return TemplateSolution (0, false);

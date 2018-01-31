@@ -26,6 +26,8 @@ namespace semantic {
 	bool isPure () override;
 
 	std::vector <InfoType> getParamTypes () override;
+
+	InfoType getRetType () override;
 	
 	static const char* id () {
 	    return "IPureFrame";

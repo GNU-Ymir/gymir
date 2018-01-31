@@ -6,7 +6,7 @@ namespace semantic {
 	IInfoType (true)
     {}
 
-    bool IUndefInfo::isSame (InfoType) {
+    bool IUndefInfo::isSame (InfoType other) {	
 	return false;
     }
 

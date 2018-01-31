@@ -73,6 +73,11 @@ namespace semantic {
 	}
 	return params;
     }
+
+    InfoType IPureFrame::getRetType () {
+	auto proto = this-> validate ();
+	return proto-> type ()-> type;
+    }
     
     const char* IPureFrame::getId () {
 	return IPureFrame::id ();
