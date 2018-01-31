@@ -20,3 +20,4 @@
 #include "TupleInfo.hh"
 #include "IgnoreInfo.hh"
 #include "ArrayRefInfo.hh"
+#include "StructInfo.hh"

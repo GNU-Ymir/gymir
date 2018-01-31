@@ -238,4 +238,21 @@ namespace syntax {
 	}
     }
 
+    void IStruct::declare () {
+	auto exist = Table::instance ().getLocal (this-> ident.getStr ());
+	if (exist) {
+	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
+	    return;
+	} else {
+	    auto str = new (Z0) IStructCstInfo (Table::instance ().space (), this-> ident.getStr (), this-> tmps);
+
+	    str-> isPublic (true);
+	    auto sym = new (Z0) ISymbol (this-> ident, str);
+	    Table::instance ().insert (sym);
+	    for (auto it : this-> params) {
+		str-> addAttrib (it-> to <ITypedVar> ());		
+	    }
+	}
+    }
+    
 }

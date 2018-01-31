@@ -204,6 +204,16 @@ namespace syntax {
 	return params;
     }
     
+    Ymir::Tree IStructCst::toGeneric () {
+	this-> params-> getTreats () = this-> score-> treat;
+	return this-> score-> ret-> buildMultOp (
+	    this-> token,
+	    this-> score-> ret,
+	    this-> left,
+	    this-> params
+	);	
+    }
+
     Ymir::Tree IPar::toGeneric () {
 	if (this-> info-> isImmutable ()) {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
@@ -290,7 +300,7 @@ namespace syntax {
 	    return ret;
 	}
 	
-	if (this-> right-> is<IVar> ()) {
+	if (this-> right-> is<IVar> () && this-> info-> type-> unopFoo) {
 	    return this-> info-> type-> buildUnaryOp (
 		this-> token,
 		this-> info-> type,

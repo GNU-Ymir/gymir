@@ -44,7 +44,7 @@ namespace syntax {
 	aux-> info = new (Z0)  ISymbol (this-> token, type);
 	return aux;
     }
-
+       
     Expression IAccess::findOpAccess () {
 	Ymir::Error::activeError (false);
 	Word word (this-> token.getLocus (), Keys::OPACCESS);
@@ -286,7 +286,7 @@ namespace syntax {
     Var ITypedVar::var () {
 	return (Var) this-> expression ();
     }
-        
+    
     Expression IArrayAlloc::expression () {
 	auto aux = new (Z0)  IArrayAlloc (this-> token, NULL, this-> size-> expression ());
 	if (auto fn = this-> type-> to<IFuncPtr> ()) aux-> type = fn-> expression ();
@@ -1017,5 +1017,25 @@ namespace syntax {
 	    return func;
 	}
     }
+
+    Expression IStructCst::expression () {
+	auto aux = new (Z0) IStructCst (this-> token, this-> end);
+	aux-> params = (ParamList) this-> params-> expression ();
+	aux-> left = this-> left-> expression ();
+	if (aux-> left == NULL) return NULL;
+	if (aux-> params == NULL) return NULL;
+	if (!aux-> left-> is <IType> () && !aux-> left-> info-> type-> isType ())
+	    Ymir::Error::useAsType (aux-> left-> token);
+	auto type = aux-> left-> info-> type-> CallOp (aux-> left-> token, aux-> params);
+	if (type == NULL) {
+	    Ymir::Error::undefinedOp (this-> token, this-> end, aux-> left-> info, aux-> params);
+	    return NULL;
+	}
+
+	aux-> score = type;
+	aux-> info = new (Z0) ISymbol (this-> token, type-> ret);
+	return aux;	
+    }
+    
 
 }

@@ -1503,8 +1503,35 @@ namespace syntax {
 	auto next = this-> lex.next ();
 	if (find (suiteElem, next)) 
 	    return visitSuite (next, var);
-	else this-> lex.rewind ();
+	else if (next == Token::LACC) {
+	    return visitStructCst (var);
+	} else this-> lex.rewind ();
 	return var;
+    }
+
+    Expression Visitor::visitStructCst (Expression left) {
+	this-> lex.rewind ();
+	auto beg = this-> lex.next (), next = this-> lex.next ();
+	auto suite = next;
+	std::vector <Expression> params;
+	if (next != Token::RPAR) {
+	    this-> lex.rewind ();
+	    while (true) {
+		params.push_back (visitExpression ());
+		next = this-> lex.next ({Token::RACC, Token::COMA});
+		if (next == Token::RACC) break;
+	    }
+	}
+	
+	auto retour = new (Z0) IStructCst (beg, next, left, new (Z0)  IParamList (suite, params));
+	next = this-> lex.next ();
+	
+	if (find (suiteElem, next))
+	    return visitSuite (next, retour);
+	else if (find (afUnary, next))
+	    return visitAfter (next, retour);
+	this-> lex.rewind ();
+	return retour;
     }
     
     Expression Visitor::visitConstArray () {

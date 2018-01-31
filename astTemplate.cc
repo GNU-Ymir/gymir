@@ -13,6 +13,12 @@ namespace syntax {
 	return new (Z0)  IAccess (this-> token, this-> end, left, params);
     }
 
+    Expression IStructCst::templateExpReplace (const map <string, Expression>& values) {
+	auto params = (ParamList) this-> params-> templateExpReplace (values);
+	auto left = this-> left-> templateExpReplace (values);
+	return new (Z0) IStructCst (this-> token, this-> end, left, params);
+    }    
+    
     Expression IArrayAlloc::templateExpReplace (const map <string, Expression>& values) {
 	auto type = this-> type-> templateExpReplace (values);
 	auto size = this-> size-> templateExpReplace (values);

@@ -52,3 +52,4 @@
 #include "VarDecl.hh"
 #include "Var.hh"
 #include "While.hh"
+#include "StructCst.hh"

@@ -79,6 +79,7 @@ namespace syntax {
 	Expression visitLambda ();
 	Expression visitSuite (const Word& token, Expression left);
 	Expression visitPar (Expression left);
+	Expression visitStructCst (Expression left);
 	Expression visitAccess (Expression left);
 	Expression visitDot (Expression left);
 	Expression visitDColon (Expression left);

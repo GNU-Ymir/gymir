@@ -841,6 +841,22 @@ namespace syntax {
 	this-> elem-> print (nb + 4);
     }
        
+    IStructCst::IStructCst (Word word, Word end, Expression left, ParamList params) :
+	IExpression (word),
+	end (end),
+	params (params),
+	left (left)	    
+    {
+	this-> left-> inside = this;
+	this-> params-> inside = this;
+    }
+
+    IStructCst::IStructCst (Word word, Word end) :
+	IExpression (word),
+	end (end)
+    {
+    }
+
     IAccess::IAccess (Word word, Word end, Expression left, ParamList params) :
 	IExpression (word),
 	end (end),
@@ -1113,6 +1129,22 @@ namespace syntax {
     }
     
 
+    IStruct::IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params) :
+	ident (ident),
+	params (params),
+	tmps (tmps)	      
+    {
+	this-> isPublic = true;
+    }
+
+    IStruct::~IStruct () {
+	for (auto it : params)
+	    delete it;
+	for (auto it : tmps)
+	    delete it;
+    }
+
+    
 
     
 }

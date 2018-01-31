@@ -80,9 +80,8 @@ ymir_OBJS = \
 	ymir/astTemplate.o \
 	ymir/memory.o \
 	ymir/LambdaFrame.o \
-	$(END)
-
-
+	ymir/StructInfo.o \
+	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \

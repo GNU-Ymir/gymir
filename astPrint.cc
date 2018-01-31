@@ -310,5 +310,24 @@ namespace syntax {
 	if (this-> expr)
 	    this->expr-> print (nb + 5);
     }
+
+    void IStruct::print (int nb)  {
+	printf ("\n%*c<Struct> %s",
+		nb, ' ',
+		this-> ident.toString ().c_str ()
+	);
+	
+	printf ("\n%*c!(", nb, ' ');
+	for (auto it : this-> tmps)
+	    it-> print (nb + 4);
+	printf ("\n%*c)", nb, ' ');
+
+	printf ("\n%*c{", nb, ' ');
+	for (auto it : this-> params)
+	    it-> print (nb + 4);
+	printf ("\n%*c}", nb, ' ');	    
+    }
+	
+
     
 }
