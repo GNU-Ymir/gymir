@@ -161,9 +161,21 @@ namespace syntax {
 	std::vector <Expression> tmps;
 	for (auto it : this-> templates)
 	    tmps.push_back (it-> expression ());
-	if (!IInfoType::exists (this-> token.getStr ())) {	    
+	
+	if (!IInfoType::exists (this-> token.getStr ())) {
+	    auto sym = Table::instance ().get (this-> token.getStr ());
+	    if (sym != NULL && sym-> type-> isType ()) {		
+		auto t_info = sym-> type-> TempOp (tmps);
+		if (t_info != NULL) {
+		    if (this-> deco == Keys::REF)
+			t_info = new (Z0)  IRefInfo (false, t_info);
+		    else if (this-> deco == Keys::CONST) t_info-> isConst (true);
+		    return new (Z0)  IType (this-> token, t_info);
+		}
+	    }
+	    
 	    Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
-	    return NULL;
+	    return NULL;	    
 	} else {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
 	    if (this-> deco == Keys::REF)

@@ -36,6 +36,10 @@ namespace semantic {
 
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
 	
+	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
+
+	InfoType TempOp (const std::vector<::syntax::Expression> &) override;
+	
 	std::string innerTypeString () override;
 
 	std::string innerSimpleTypeString () override;
@@ -72,6 +76,8 @@ namespace semantic {
 	InfoType onClone () override;
 
 	InfoType DotOp (syntax::Var) override;
+	
+	InfoType CompOp (InfoType) override;
 	
 	std::string innerTypeString () override;
 

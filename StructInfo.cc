@@ -30,6 +30,10 @@ namespace semantic {
 	    return aux;
 	}
 
+	Tree InstCast (Word, InfoType, Expression elem, Expression) {
+	    return elem-> toGeneric ();
+	}
+	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
@@ -101,6 +105,65 @@ namespace semantic {
 	
 	return score;
     }
+
+    ApplicationScore IStructCstInfo::CallOp (Word token, const std::vector <InfoType>& params) {
+	if (this-> tmps.size () != 0) {
+	    Ymir::Error::assert ("TODO");
+	    return NULL;
+	}
+	if (params.size () != this-> params.size ())
+	    return NULL;
+
+	std::vector <InfoType> types;
+	std::vector <std::string> attribs;
+	
+	auto score = new (Z0) IApplicationScore (token);
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    InfoType info = this-> params [it]-> getType ();
+	    types.push_back (info);
+	    attribs.push_back (this-> params [it]-> token.getStr ());
+	    
+	    auto type = params [it]-> CompOp (info);
+	    //if (type) type = ConstVerif (info);
+	    if (type) {
+		type-> isConst (info-> isConst ());
+		score-> score += 1;
+		score-> treat.push_back (type);
+	    } else return NULL;
+	}
+
+	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	ret-> setTypes (types);
+	ret-> setAttribs (attribs); 
+	
+	ret-> multFoo = &StructUtils::InstCall;
+	score-> dyn = true;
+	score-> ret = ret;
+	
+	return score;
+    }
+
+    InfoType IStructCstInfo::TempOp (const std::vector <syntax::Expression> & tmps) {
+	if (this-> tmps.size () != 0) {
+	    Ymir::Error::assert ("TODO");
+	    return NULL;
+	}
+
+	if (this-> tmps.size () != tmps.size ()) return NULL;
+	std::vector <InfoType> types;
+	std::vector <std::string> attribs;
+
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    InfoType info = this-> params [it]-> getType ();
+	    types.push_back (info);
+	    attribs.push_back (this-> params [it]-> token.getStr ());
+	}
+	
+	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	ret-> setTypes (types);
+	ret-> setAttribs (attribs);
+	return ret;
+    }
     
     std::string IStructCstInfo::innerTypeString () {
 	Ymir::OutBuffer buf ("typeof ", this-> space.toString (), ".", this-> name, "{");
@@ -140,7 +203,16 @@ namespace semantic {
 	name (name)
     {}
 
-    bool IStructInfo::isSame (InfoType) {
+    bool IStructInfo::isSame (InfoType other) {
+	if (auto ot = other-> to <IStructInfo> ()) {
+	    if (ot-> name == this-> name && ot-> space == this-> space) {
+		for (auto it : Ymir::r (0, this-> types.size ())) {
+		    if (!this-> types [it]-> isSame (ot-> types [it]))
+			return false;
+		}
+		return true;
+	    }
+	}
 	return false;
     }
 
@@ -166,6 +238,14 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IStructInfo::CompOp (InfoType other) {
+	if (this-> isSame (other)) {
+	    auto ret = other-> clone ();
+	    ret-> binopFoo = &StructUtils::InstCast;
+	    return ret;
+	}
+	return NULL;
+    }
     
     InfoType IStructInfo::BinaryOpRight (Word op, Expression left) {
 	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
@@ -189,7 +269,12 @@ namespace semantic {
     }
 
     std::string IStructInfo::innerSimpleTypeString () {
-	return "";
+	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
+	for (auto i : Ymir::r (0, this-> types.size ())) {
+	    auto it = this-> types [i];
+	    buf.write (it-> innerSimpleTypeString ());
+	}
+	return buf.str ();
     }
 
     void IStructInfo::setTypes (std::vector <InfoType> types) {
