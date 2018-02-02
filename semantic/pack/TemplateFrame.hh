@@ -65,6 +65,8 @@ namespace semantic {
 
 	FrameProto validateExtern ();
 	
+	bool validateTest (syntax::Expression test);
+	
     };
     
 }

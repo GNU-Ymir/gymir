@@ -8,6 +8,8 @@ namespace syntax {
     using namespace semantic;
 
     ulong ILambdaFunc::__nbLambda__ = 0;
+
+    std::map <Expression, Ymir::Tree> IExpand::__values__;
     
     Word& IBlock::getIdent () {
 	return this-> ident;
@@ -83,7 +85,7 @@ namespace syntax {
 	if (block) delete block;
 	if (test) delete test;
     }
-    
+       
     Word IFunction::getIdent () {
 	return this-> ident;
     }
@@ -96,6 +98,10 @@ namespace syntax {
 	return this-> tmps;
     }
 
+    Expression IFunction::getTest () {
+	return this-> test;
+    }
+    
     Var IFunction::getType () {
 	return this-> type;
     }
@@ -938,7 +944,8 @@ namespace syntax {
 	expr (expr),
 	it (it)
     {}
-
+    
+	
     IExpand::~IExpand () {
 	delete expr;
     }
@@ -1150,8 +1157,53 @@ namespace syntax {
 	for (auto it : tmps)
 	    delete it;
     }
+       
+    IIs::IIs (Word begin, Expression expr, Expression type) :
+	IExpression (begin),
+	left (expr),
+	type (type),
+	expType (Word::eof ())
+    {
+	if (left) this-> left-> inside = this;
+	if (type) this-> type-> inside = this;
+    }
+
+    IIs::IIs (Word begin, Expression expr, Word type) :
+	IExpression (begin),
+	left (expr),
+	type (NULL),
+	expType (type)
+    {
+	if (left) this-> left-> inside = this;
+    }
+
+    IIs::~IIs () {
+	delete left;
+	if (type) delete type;
+    }
+
+    ITupleDest::ITupleDest (Word token, bool isVariadic, std::vector <Var> decls, Expression right) :
+	IInstruction (token),
+	decls (decls),
+	right (right),
+	isVariadic (isVariadic)	    
+    {}
+
+    ITupleDest::ITupleDest (Word token, std::vector <Expression> insts, Expression right) :
+	IInstruction (token),
+	insts (insts),
+	right (right),
+	isVariadic (false)
+    {}
 
     
+    ITupleDest::~ITupleDest () {
+	for (auto it : decls)
+	    delete it;
+	for (auto it : insts)
+	    delete it;
+	if (right) delete right;
+    }
 
-    
+
 }

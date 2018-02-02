@@ -11,6 +11,8 @@ namespace syntax {
 	Expression expr;
 	ulong it;
 
+	static std::map <syntax::Expression, Ymir::Tree> __values__;
+	
     public :
 
 	IExpand (Word begin, Expression expr);

@@ -73,10 +73,15 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "ptr") return Ptr ();
 	if (var-> token == "len") return Length ();
-	if (var-> token == "typeid") return StringOf ();
 	return NULL;
     }
 
+    InfoType IStringInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "typeid") return StringOf ();
+	return NULL;
+    }
+    
     InfoType IStringInfo::CastOp (InfoType other) {
 	if (auto arr = other-> to <IArrayInfo> ()) {
 	    if (arr-> content ()-> is <ICharInfo> ()) {
@@ -211,6 +216,12 @@ namespace semantic {
 	using namespace syntax;
 	using namespace Ymir;
 
+	
+	bool isStringType (Tree type) {
+	    return type.getTreeCode () == POINTER_TYPE
+		&& TYPE_MAIN_VARIANT (TREE_TYPE (type.getTree ())) == char_type_node;
+	}
+
 
 	Tree getLen (location_t loc, Expression expr, Tree tree) {
 	    if (expr-> info-> value ()) {
@@ -301,7 +312,7 @@ namespace semantic {
 		    return buildDup (loc, lexp, rexp, right);
 	    }
 
-	    if (!right-> is <IString> ()) {
+	    if (!isStringType (rexp.getType ())) {
 		getStackStmtList ().back ().append (buildTree (
 		    MODIFY_EXPR, loc, void_type_node, lexp, rexp
 		));
@@ -445,7 +456,7 @@ namespace semantic {
 	    location_t loc = word.getLocus ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
-	    if (left-> is<IString> ()) {
+	    if (isStringType (rexp.getType ())) {
 		return getPointerUnref (loc, lexp, char_type_node, rexp);
 	    } else {
 		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");

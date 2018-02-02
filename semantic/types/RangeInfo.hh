@@ -37,6 +37,8 @@ namespace semantic {
 	InfoType BinaryOpRight (Word token, syntax::Expression left) override;
 		
 	InfoType DotOp (syntax::Var var) override;
+
+	InfoType DColonOp (syntax::Var var) override;
 		
 	InfoType CompOp (InfoType other) override;
 

@@ -111,10 +111,15 @@ namespace semantic {
 
     InfoType ITupleInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
-	//if (var-> token == "typeid") return
 	return NULL;
     }
-	
+
+    InfoType ITupleInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "typeid") return StringOf ();
+	return NULL;
+    }
+    
     std::string ITupleInfo::innerTypeString () {
 	Ymir::OutBuffer buf;
 	if (this-> isType ()) buf.write ("t!(");

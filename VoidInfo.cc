@@ -14,7 +14,7 @@ namespace semantic {
 	return new (Z0)  IVoidInfo ();
     }
 
-    InfoType IVoidInfo::DotOp (syntax::Var var) {
+    InfoType IVoidInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
 	    return StringOf ();

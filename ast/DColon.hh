@@ -18,6 +18,8 @@ namespace syntax {
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+
+	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;
 

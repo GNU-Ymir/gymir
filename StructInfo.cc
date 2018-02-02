@@ -33,6 +33,28 @@ namespace semantic {
 	Tree InstCast (Word, InfoType, Expression elem, Expression) {
 	    return elem-> toGeneric ();
 	}
+
+	Tree InstCastTuple (Word locus, InfoType type, Expression left, Expression) {
+	    auto loc = locus.getLocus ();
+	    auto info = type-> to<ITupleInfo> ();
+
+	    auto rtree = left-> toGeneric ();
+	    //auto rinfo = left-> info-> type-> to<IStructInfo> ();
+	    //auto rtype = left-> info-> type-> toGeneric ();
+
+	    Ymir::TreeStmtList list;
+	    auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
+	    for (auto it : Ymir::r (0, info-> nbParams ())) {
+		auto raux = getField (loc, rtree, it);
+		auto laux = getField (loc, aux, it);
+		list.append (Ymir::buildTree (
+		    MODIFY_EXPR, loc, raux.getType (), laux, raux
+		));
+	    }
+	    
+	    getStackStmtList ().back ().append (list.getTree ());
+	    return aux;
+	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
@@ -68,7 +90,13 @@ namespace semantic {
     InfoType IStructCstInfo::DotOp (syntax::Var) {
 	return NULL;
     }
-
+    
+    InfoType IStructCstInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "typeid") return StringOf ();
+	return NULL;
+    }
+    
     ApplicationScore IStructCstInfo::CallOp (Word token, syntax::ParamList params) {
 	if (this-> tmps.size () != 0) {
 	    Ymir::Error::assert ("TODO");
@@ -235,12 +263,26 @@ namespace semantic {
 		return ret;
 	    }
 	}
+	
+	if (var-> token == "tupleof") {
+	    auto ret = new ITupleInfo (false);
+	    for (auto it : this-> types)
+		ret-> addParam (it-> clone ());
+	    ret-> binopFoo = StructUtils::InstCastTuple;
+	    return ret;
+	}
 	return NULL;
     }
 
+    InfoType IStructInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "typeid") return StringOf ();
+	return NULL;
+    }
+    
     InfoType IStructInfo::CompOp (InfoType other) {
-	if (this-> isSame (other)) {
-	    auto ret = other-> clone ();
+	if (this-> isSame (other) || other-> is <IUndefInfo> ()) {
+	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstCast;
 	    return ret;
 	}

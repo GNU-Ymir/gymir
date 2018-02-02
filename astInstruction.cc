@@ -295,5 +295,67 @@ namespace syntax {
     }
 
 
+    Instruction ITupleDest::Incompatible (semantic::Symbol info) {
+	auto tuType = new (Z0) ITupleInfo (true);
+	for (auto it __attribute__((unused)) : Ymir::r (0, this-> decls.size ()))
+		tuType-> addParam (new (Z0) IUndefInfo ());
+	Ymir::Error::incompatibleTypes (this-> token, info, tuType);
+	return NULL;
+    }
+
+    Instruction ITupleDest::instruction () {
+	auto right = this-> right-> expression ();
+	if (right == NULL) return NULL;
+	if (!right-> info-> type-> is<ITupleInfo> ()) {
+	    return this-> Incompatible (right-> info);
+	}
+
+	auto tupleType = right-> info-> type-> to <ITupleInfo> ();
+	Word aff {this-> token.getLocus (), Token::EQUAL};
+	std::vector <Expression> insts;
+
+	if (!this-> isVariadic && this-> decls.size () != tupleType-> nbParams ()) {
+	    return this-> Incompatible (right-> info);
+	} else if (this-> isVariadic && this-> decls.size () > tupleType-> nbParams ()) {
+	    return this-> Incompatible (right-> info);
+	}
+
+	auto auxDecl = new (Z0) ITupleDest (this-> token, {}, right);		
+	ulong i = 0;
+	for (auto it : this-> decls) {
+	    auto aux = new (Z0) IVar (it-> token);
+	    auto info = Table::instance ().get (it-> token.getStr ());
+	    if (info && Table::instance ().sameFrame (info)) {
+		Ymir::Error::shadowingVar (it-> token, info-> sym);
+		return NULL;
+	    }
+
+	    aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IUndefInfo ());
+	    aux-> info-> isConst (false);
+	    auxDecl-> decls.push_back (aux);
+	    
+	    Table::instance ().insert (aux-> info);
+	    if (i == this-> decls.size () - 1 && this-> isVariadic) {
+		std::vector <Expression> last;
+		for (auto it_ : Ymir::r (i, tupleType-> nbParams ())) {
+		    auto exp = new (Z0) IExpand (right-> token, right, it_);
+		    exp-> info = new (Z0) ISymbol (exp-> token, tupleType-> getParams () [it_]-> clone ());
+		    last.push_back (exp);
+		}
+
+		auto ctuple = new (Z0) IConstTuple (right-> token, right-> token, last);
+		auxDecl-> insts.push_back ((new (Z0) IBinary (aff, new (Z0) IVar (this-> decls [i]-> token), ctuple))-> expression ());
+	    } else {
+		auto exp = new (Z0) IExpand (right-> token, right, i);
+		exp-> info = new (Z0) ISymbol (exp-> token, tupleType-> getParams () [i]-> clone ());
+		auxDecl-> insts.push_back ((new (Z0) IBinary (aff, new (Z0) IVar (it-> token), exp))-> expression ());
+	    }
+	    i ++;
+	}
+	
+	return auxDecl;
+    }
+
+    
 }
 

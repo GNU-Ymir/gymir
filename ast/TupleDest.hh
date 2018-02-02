@@ -6,6 +6,11 @@
 #include "../syntax/Word.hh"
 #include <ymir/utils/Array.hh>
 
+namespace semantic {
+    class ISymbol;
+    typedef ISymbol* Symbol;
+}
+
 namespace syntax {
 
     class ITupleDest : public IInstruction {
@@ -17,51 +22,23 @@ namespace syntax {
 
     public:
 
-	ITupleDest (Word token, bool isVariadic, std::vector <Var> decls, Expression right) :
-	    IInstruction (token),
-	    decls (decls),
-	    right (right),
-	    isVariadic (isVariadic)	    
-	{}
+	ITupleDest (Word token, bool isVariadic, std::vector <Var> decls, Expression right);
 
-	ITupleDest (Word token, std::vector <Expression> insts, Expression right) :
-	    IInstruction (token),
-	    insts (insts),
-	    right (right),
-	    isVariadic (false)
-	{}
+	ITupleDest (Word token, std::vector <Expression> insts, Expression right);
+	
+	Instruction instruction () override;
 
-	Instruction instruction () override {
-	    Ymir::Error::assert ("TODO");
-	    return NULL;
-	}
-
+	Ymir::Tree toGeneric () override;
+	
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;	
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<TupleDest> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
+	void print (int nb = 0) override;
+	
+	virtual ~ITupleDest ();
 
-	    for (auto it : this-> decls) {
-		it-> print (nb + 4);		
-	    }
+    private :
 
-	    for (auto it : this-> insts) {
-		it-> print (nb + 4);
-	    }
-
-	    this-> right-> print (nb + 4);	    
-	}
-
-	virtual ~ITupleDest () {
-	    for (auto it : decls)
-		delete it;
-	    for (auto it : insts)
-		delete it;
-	    if (right) delete right;
-	}
+	Instruction Incompatible (semantic::Symbol info);
 	
     };
 

@@ -444,6 +444,7 @@ namespace syntax {
 		return NULL;
 	    }
 
+	    printf ("%s %s %s\n", aux-> left-> info-> typeString ().c_str (), this-> token.toString ().c_str (), aux-> right-> info-> typeString ().c_str ());
 	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
 	    if (type == NULL) {
 		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
@@ -944,6 +945,7 @@ namespace syntax {
     }
 
     Expression IExpand::expression () {
+	if (this-> info) return this;
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
 	if (expr-> is <IType> () || expr-> info-> isType ()) {
@@ -1049,5 +1051,58 @@ namespace syntax {
 	return aux;	
     }
     
+    Expression IIs::expression () {
+	if (this-> type) {
+	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> type-> expression ());
 
+	    if (aux-> type == NULL || aux-> left == NULL) return NULL;
+	    if (!aux-> type-> is<IType> () &&
+		!aux-> type-> info-> type-> is <IStructCstInfo> () &&
+		!aux-> type-> info-> isType ()) {
+		Ymir::Error::useAsType (aux-> type-> token);
+		return NULL;
+	    }
+	    
+	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+		Ymir::Error::uninitVar (aux-> left-> token);
+		return NULL;
+	    }
+
+	    auto res = aux-> left-> info-> type-> isSame (aux-> type-> info-> type);
+	    auto type = new (Z0) IBoolInfo (true);
+	    aux-> info = new (Z0) ISymbol (this-> token, type);
+	    aux-> info-> value () = new (Z0) IBoolValue (res);
+	    return aux;
+	} else {
+	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> expType);
+	    if (aux-> left == NULL) return NULL;
+	    else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+		Ymir::Error::uninitVar (aux-> left-> token);
+		return NULL;
+	    }
+	    auto type = new (Z0) IBoolInfo (true);
+	    aux-> info = new (Z0) ISymbol (this-> token, type);
+	    if (this-> expType == Keys::FUNCTION) {
+		aux-> info-> value () = new (Z0) IBoolValue (
+		    aux-> left-> info-> type-> is <IPtrFuncInfo> () ||
+		    aux-> left-> info-> type-> is <IFunctionInfo> ()
+		);
+	    } else if (this-> expType == Keys::TUPLE) {
+		aux-> info-> value () = new (Z0) IBoolValue (
+		    aux-> left-> info-> type-> is <ITupleInfo> ()
+		);
+	    } else if (this-> expType == Keys::STRUCT) {
+		aux-> info-> value () = new (Z0) IBoolValue (
+		    aux-> left-> info-> type-> is <IStructInfo> () ||
+		    aux-> left-> info-> type-> is <IStructCstInfo> () 
+		);
+	    } else {
+		Ymir::Error::assert ("");
+		return NULL;
+	    }
+	    return aux;
+	}
+    }
+
+    
 }

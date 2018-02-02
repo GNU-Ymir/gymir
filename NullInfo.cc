@@ -16,13 +16,15 @@ namespace semantic {
 
     InfoType INullInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
-	if (var-> token == "typeid") {
-	    //TODO
-	    return new (Z0)  IStringInfo (true);
-	}
 	return NULL;
     }
 
+    InfoType INullInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	return NULL;
+    }
+
+    
     InfoType INullInfo::CompOp (InfoType other) {
 	// if (other-> is<IStructInfo> ()) {
 	//     //TODO

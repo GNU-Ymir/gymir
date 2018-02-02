@@ -42,6 +42,12 @@ namespace semantic {
 	if (var-> token == "scd") return Scd ();
 	return NULL;       
     }
+
+    InfoType IRangeInfo::DColonOp (Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "typeid") return StringOf ();
+	return NULL;       
+    }
         
     InfoType IRangeInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || other-> isSame (this)) {

@@ -65,6 +65,11 @@ namespace semantic {
 
     InfoType IFloatInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
+	return NULL;
+    }
+
+    InfoType IFloatInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "init") return Init ();
 	if (var-> token == "max") return Max ();
 	if (var-> token == "min") return Min ();
@@ -77,10 +82,9 @@ namespace semantic {
 	if (var-> token == "min_10_exp") return Min10Exp ();
 	if (var-> token == "min_exp") return MinExp ();
 	if (var-> token == "typeid") return StringOf ();
-	if (var-> token == "sqrt") return Sqrt ();
 	return NULL;
     }
-	
+    
     InfoType IFloatInfo::CastOp (InfoType other) {
 	if (auto ot = other-> to<IFloatInfo> ()) {
 	    if (ot-> _type == this-> _type) return this;

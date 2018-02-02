@@ -316,6 +316,19 @@ namespace syntax {
 	}
     }    
 
+    Ymir::Tree IDColon::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    return ret;
+	}
+	
+	return this-> info-> type-> buildUnaryOp (
+	    this-> token,
+	    this-> info-> type,
+	    this-> left
+	);
+    }    
+    
     Ymir::Tree ITreeExpression::toGeneric () {
 	return this-> _content;
     }
@@ -481,7 +494,15 @@ namespace syntax {
     
     Ymir::Tree IExpand::toGeneric () {
 	location_t loc = this-> token.getLocus ();
-	auto elemTree = this-> expr-> toGeneric ();
+	Ymir::Tree elemTree;
+	auto it = IExpand::__values__.find (this-> expr);
+	if (it == IExpand::__values__.end ()) {
+	    elemTree = this-> expr-> toGeneric ();
+	    IExpand::__values__ [this-> expr] = elemTree;
+	} else {
+	    elemTree = it-> second;
+	}
+	
 	return getField (loc, elemTree, this-> it);
     }
 
@@ -525,6 +546,34 @@ namespace syntax {
 	}
     }
 
+    Ymir::Tree ITupleDest::toGeneric () {
+	Ymir::TreeStmtList list;
+	for (int i = 0 ; i < (int) this-> decls.size () ; i++) {
+	    auto var = this-> decls [i];
+	    auto aff = this-> insts [i];
+	    auto type_tree = var-> info-> type-> toGeneric ();
+	    Ymir::Tree decl = build_decl (
+		var-> token.getLocus (),
+		VAR_DECL,
+		get_identifier (var-> token.getStr ().c_str ()),
+		type_tree.getTree ()
+	    );
+
+	    
+	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();	    
+	    var-> info-> treeDecl (decl);
+	    Ymir::getStackVarDeclChain ().back ().append (decl);
+	    list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
+	    
+	    if (aff != NULL) {
+		aff-> info-> value () = NULL;
+		list.append (aff-> toGeneric ());
+	    }
+	}
+	
+	return list.getTree ();
+    }
+    
     
 }
 

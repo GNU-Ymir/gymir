@@ -327,7 +327,36 @@ namespace syntax {
 	    it-> print (nb + 4);
 	printf ("\n%*c}", nb, ' ');	    
     }
+        
+    void IIs::print (int nb) {
+	printf ("\n%*c<Is> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
 	
+	this-> left-> print (nb + 4);
+	if (this-> type) this-> type-> print (nb + 4);
+	else
+	    printf (": %s", this-> expType.toString ().c_str ());	    
+    }
+	
+    void ITupleDest::print (int nb) {
+	printf ("\n%*c<TupleDest> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
 
+	for (auto it : this-> decls) {
+	    it-> print (nb + 4);		
+	}
+
+	for (auto it : this-> insts) {
+	    it-> print (nb + 4);
+	}
+
+	this-> right-> print (nb + 4);	    
+    }
+    
+    
     
 }

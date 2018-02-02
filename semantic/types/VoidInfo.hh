@@ -19,7 +19,7 @@ namespace semantic {
 	
 	InfoType onClone () override;
 
-	InfoType DotOp (syntax::Var) override;
+	InfoType DColonOp (syntax::Var) override;
 
 	std::string typeString () override;
 	

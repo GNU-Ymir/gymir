@@ -149,6 +149,11 @@ namespace semantic {
 	if (var-> token == "init") return Init ();
 	if (var-> token == "max") return Max ();
 	if (var-> token == "min") return Min ();
+	return NULL;
+    }
+    
+    InfoType IFixedInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "typeid") return StringOf ();
 	return NULL;

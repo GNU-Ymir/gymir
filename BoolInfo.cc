@@ -59,12 +59,17 @@ namespace semantic {
 
     InfoType IBoolInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
-	if (var-> token.getStr () == "init") return Init ();
-	if (var-> token.getStr () == "sizeof") return SizeOf ();
-	if (var-> token.getStr () == "typeid") return StringOf ();
 	return NULL;
     }
 
+    InfoType IBoolInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token.getStr () == "init") return Init ();
+	if (var-> token.getStr () == "sizeof") return SizeOf ();
+	if (var-> token == "typeid") return StringOf ();
+	return NULL;
+    }
+    
     InfoType IBoolInfo::CastOp (InfoType) {
 	//TODO
 	return NULL;

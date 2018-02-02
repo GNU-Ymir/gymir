@@ -135,6 +135,13 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IArrayInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "typeid") return StringOf ();
+	return NULL;
+    }
+
+    
     InfoType IArrayInfo::Ptr () {
 	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	ret-> unopFoo = ArrayUtils::InstPtr;

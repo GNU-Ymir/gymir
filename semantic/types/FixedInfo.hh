@@ -47,6 +47,8 @@ namespace semantic {
 	//InfoType CastTo (InfoType) override;
 
 	InfoType DotOp (syntax::Var) override;
+	
+	InfoType DColonOp (syntax::Var) override;
 
 	FixedConst type ();	   
 	

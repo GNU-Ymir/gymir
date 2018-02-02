@@ -34,6 +34,8 @@ namespace semantic {
 
 	InfoType DotOp (syntax::Var) override;
 
+	InfoType DColonOp (syntax::Var) override;
+
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
 	
 	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
@@ -76,6 +78,8 @@ namespace semantic {
 	InfoType onClone () override;
 
 	InfoType DotOp (syntax::Var) override;
+
+	InfoType DColonOp (syntax::Var) override;
 	
 	InfoType CompOp (InfoType) override;
 	

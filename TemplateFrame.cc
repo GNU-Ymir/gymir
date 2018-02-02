@@ -2,7 +2,8 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/utils/OutBuffer.hh>
-#include <ymir/semantic/value/Value.hh>
+#include <ymir/semantic/value/_.hh>
+#include <ymir/semantic/value/BoolValue.hh>
 
 namespace semantic {
     using namespace std;
@@ -100,10 +101,27 @@ namespace semantic {
     }
 	
     ApplicationScore ITemplateFrame::isApplicableVariadic (Word , const vector<Var> & , const vector<InfoType> & ) {
-	Ymir::Error::assert ("TODO");
 	return NULL;
     }
 
+    bool ITemplateFrame::validateTest (Expression test) {
+	if (test) {
+	    auto res = test-> expression ();
+	    if (!res) return false;
+	    if (!res-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (res-> info);
+		return false;
+	    } else if (!res-> info-> value ()-> is<IBoolValue> ()) {
+		Ymir::Error::incompatibleTypes (res-> token, res-> info, new (Z0) IBoolInfo (true));
+		return false;
+	    } else if (!res-> info-> value ()-> to <IBoolValue> ()-> isTrue ()) {
+		return false;
+	    }
+	}
+	return true;
+    }
+    
+    
     Frame ITemplateFrame::getScoreTempOp (const std::vector <Expression>& params) {
 	std::vector <InfoType> totals;
 	std::vector <Expression> finals;
@@ -137,9 +155,7 @@ namespace semantic {
 	func-> name ((func-> name () + space.str ()).c_str ());
 
 	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
-	    // if (func-> test ()) {
-	    //TODO
-	    // }
+	    if (!validateTest (func-> getTest ())) return NULL;	    
 	    Frame ret;
 	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> space (), func);
 	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> space (), func);
@@ -213,6 +229,11 @@ namespace semantic {
 		}
 	    }
 
+	    if (this-> _function-> getTest ()) {
+		auto valid = this-> _function-> getTest ()-> templateExpReplace (tmps);
+		if (!validateTest (valid)) return NULL;
+	    }
+	    
 	    score-> tmps = tmps;
 	    return score;
 	}

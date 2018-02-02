@@ -146,7 +146,7 @@ namespace semantic {
 	return aux;
     }
 
-    InfoType IPtrFuncInfo::DotOp (syntax::Var var) {
+    InfoType IPtrFuncInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
 	    return StringOf ();

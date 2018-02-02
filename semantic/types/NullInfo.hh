@@ -15,6 +15,8 @@ namespace semantic {
 
 	InfoType DotOp (syntax::Var) override;
 
+	InfoType DColonOp (syntax::Var) override;
+
 	InfoType CompOp (InfoType) override;
 
 	std::string innerTypeString () override;

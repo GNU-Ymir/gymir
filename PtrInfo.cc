@@ -3,6 +3,7 @@
 #include <ymir/semantic/utils/PtrUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
+#include <ymir/semantic/value/FixedValue.hh>
 
 namespace semantic {
 
@@ -154,15 +155,20 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::DotOp (syntax::Var var) {
-	//if (var-> hasTemplate ()) return NULL;
 	if (var-> isType ()) {
 	    auto type = var-> asType ();
 	    auto ret = type-> info-> type;
 	    //ret-> binopFoo = &PtrUtils::InstUnrefTyped
 	    return ret;
-	} else if (var-> token == "init") {
+	}
+	return NULL;
+    }
+    
+    InfoType IPtrInfo::DColonOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "init") {
 	    auto type = this-> clone ();
-	    //type-> unopFoo = &PtrUtils::InstNull;
+	    type-> value () = new (Z0) IFixedValue (FixedConst::ULONG, 0, 0);
 	    return type;
 	} else if (var-> token == "typeid") {
 	    return StringOf ();

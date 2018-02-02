@@ -49,6 +49,8 @@ namespace syntax {
 	
 	Var getType ();
 
+	Expression getTest ();
+	
 	Block getBlock ();
 	
 	void declare () override;

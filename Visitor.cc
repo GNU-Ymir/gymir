@@ -1030,7 +1030,7 @@ namespace syntax {
     }
    
     Instruction Visitor::visitLetDestruct (const Word& begin) {
-	bool isVariadic;
+	bool isVariadic = false;
 	std::vector <Var> decls;
 	while (true) {
 	    decls.push_back (visitVar ());
