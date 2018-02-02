@@ -120,14 +120,14 @@ namespace semantic {
     InfoType IRangeInfo::Fst () {
 	auto cst = this-> _content-> clone ();
 	cst-> isConst (this-> isConst ());
-	cst-> unopFoo = &RangeUtils::InstFst;
+	cst-> binopFoo = &RangeUtils::InstFst;
 	return cst;
     }
     
     InfoType IRangeInfo::Scd () {
 	auto cst = this-> _content-> clone ();
 	cst-> isConst (this-> isConst ());
-	cst-> unopFoo = &RangeUtils::InstScd;
+	cst-> binopFoo = &RangeUtils::InstScd;
 	return cst;
     }
 
@@ -233,13 +233,13 @@ namespace semantic {
 	    return result;
 	}
 
-	Tree InstFst (Word locus, InfoType, Expression left) {
+	Tree InstFst (Word locus, InfoType, Expression left, Expression) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
 	    return getField (loc, ltree, "fst");
 	}
 
-	Tree InstScd (Word locus, InfoType, Expression left) {
+	Tree InstScd (Word locus, InfoType, Expression left, Expression) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
 	    return getField (loc, ltree, "scd");

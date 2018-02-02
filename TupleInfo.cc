@@ -142,7 +142,7 @@ namespace semantic {
     }
     
     Ymir::Tree ITupleInfo::toGeneric () {
-	auto name = this-> simpleTypeString ();
+	auto name = this-> innerTypeString ();
 	auto tuple_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (tuple_type_node.isNull ()) {
 	    tuple_type_node = Ymir::makeTuple (name, this-> params);	

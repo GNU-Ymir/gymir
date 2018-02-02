@@ -262,6 +262,7 @@ namespace syntax {
 	    auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
 	    if (type == NULL) {
 		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
+		return NULL;
 	    } else if (type-> isSame (aux-> elem-> info-> type)) {		    
 		if (!Table::instance ().retInfo ().changed ()) {
 		    Table::instance ().retInfo ().info-> value () =
@@ -274,8 +275,7 @@ namespace syntax {
 	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().info-> type = type;
 	    	    
-	    aux-> caster = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
-	    
+	    aux-> caster = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);	    
 	    if (!Table::instance ().retInfo ().info-> type-> is <IRefInfo> ())
 		aux-> caster-> isConst (true);			    
 	} else {

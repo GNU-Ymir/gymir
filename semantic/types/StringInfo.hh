@@ -38,6 +38,8 @@ namespace semantic {
 
 	InfoType onClone () override;
 
+	ApplicationScore CallOp (Word, syntax::ParamList) override;
+	
 	InfoType DotOp (syntax::Var) override;
 
 	InfoType DColonOp (syntax::Var) override;

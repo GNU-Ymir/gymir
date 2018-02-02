@@ -50,7 +50,7 @@ namespace syntax {
 	Word word (this-> token.getLocus (), Keys::OPACCESS);
 	auto var = new (Z0)  IVar (word);
 	std::vector <Expression> params = {this-> left};
-	params.insert (params.begin (), this-> params-> getParams ().begin (),
+	params.insert (params.end (), this-> params-> getParams ().begin (),
 		       this-> params-> getParams ().end ());
 	auto finalParams = new (Z0)  IParamList (this-> token, params);
 	auto call = new (Z0)  IPar (this-> token, this-> token, var, finalParams, true);

@@ -7,6 +7,62 @@
 
 namespace semantic {
 
+    namespace PtrUtils {
+	using namespace syntax;
+	
+	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = right-> toGeneric ();
+	    auto typeTree = left-> info-> type-> toGeneric ();
+	    return Ymir::buildTree (
+		MODIFY_EXPR, locus.getLocus (), typeTree.getTree (), ltree, rtree
+	    );	    
+	}
+	
+	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
+	    auto type = typeExpr-> info-> type-> toGeneric ();
+	    auto lexp = elem-> toGeneric ();
+	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
+	}
+
+	Ymir::Tree InstPlus (Word locus, InfoType, Expression left, Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    Ymir::Tree rtree = convert (long_unsigned_type_node, right-> toGeneric ().getTree ());
+	    tree_code code = POINTER_PLUS_EXPR;
+	    return Ymir::buildTree (
+		code, locus.getLocus (), ltree.getType (), ltree, rtree
+	    );
+	}
+
+	Ymir::Tree InstPlusRight (Word locus, InfoType, Expression left, Expression right) {
+	    auto ltree = right-> toGeneric ();
+	    Ymir::Tree rtree = convert (long_unsigned_type_node, left-> toGeneric ().getTree ());
+	    tree_code code = POINTER_PLUS_EXPR;
+	    return Ymir::buildTree (
+		code, locus.getLocus (), ltree.getType (), ltree, rtree
+	    );
+	}
+	
+	Ymir::Tree InstSub (Word locus, InfoType, Expression left, Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    Ymir::Tree rtree = Ymir::buildTree (
+		NEGATE_EXPR, locus.getLocus (), long_unsigned_type_node,
+		convert (long_unsigned_type_node, right-> toGeneric ().getTree ())
+	    );
+	    
+	    tree_code code = POINTER_PLUS_EXPR;
+	    return Ymir::buildTree (
+		code, locus.getLocus (), ltree.getType (), ltree, rtree
+	    );
+	}
+	
+	Ymir::Tree InstUnref (Word locus, InfoType type, Expression elem) {
+	    auto inner = type-> toGeneric ();
+	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
+	}
+	
+    }
+    
     IPtrInfo::IPtrInfo (bool isConst) :
 	IInfoType (isConst),
 	_content (NULL)
@@ -35,7 +91,6 @@ namespace semantic {
     InfoType IPtrInfo::BinaryOpRight (Word token, syntax::Expression left) {
 	if (token == Token::EQUAL) return AffectRight (left);
 	else if (token == Token::PLUS) return PlusRight (left);
-	else if (token == Token::MINUS) return SubRight (left);
 	return NULL;
     }
 
@@ -81,7 +136,7 @@ namespace semantic {
     InfoType IPtrInfo::Plus (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    ptr-> binopFoo = &FixedUtils::InstNormal;
+	    ptr-> binopFoo = &PtrUtils::InstPlus;
 	    return ptr;
 	}
 	return NULL;
@@ -90,7 +145,7 @@ namespace semantic {
     InfoType IPtrInfo::Sub (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    ptr-> binopFoo = &FixedUtils::InstNormal;
+	    ptr-> binopFoo = &PtrUtils::InstSub;
 	    return ptr;
 	}
 	return NULL;
@@ -99,20 +154,12 @@ namespace semantic {
     InfoType IPtrInfo::PlusRight (syntax::Expression right) {
 	if (right-> info-> type-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    ptr-> binopFoo = &FixedUtils::InstNormalRight;
+	    ptr-> binopFoo = &PtrUtils::InstPlusRight;
 	    return ptr;
 	}
 	return NULL;
     }
     
-    InfoType IPtrInfo::SubRight (syntax::Expression right) {
-	if (right-> info-> type-> is<IFixedInfo> ()) {
-	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	    ptr-> binopFoo = &FixedUtils::InstNormalRight;
-	    return ptr;
-	}
-	return NULL;
-    }
 
     InfoType IPtrInfo::Is (syntax::Expression right) {
 	if (right-> info-> type-> is <IPtrInfo> ()) {
@@ -245,28 +292,5 @@ namespace semantic {
 	return NULL;
     }
 
-    namespace PtrUtils {
-	using namespace syntax;
-	
-	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
-	    auto ltree = left-> toGeneric ();
-	    auto rtree = right-> toGeneric ();
-	    auto typeTree = left-> info-> type-> toGeneric ();
-	    return Ymir::buildTree (
-		MODIFY_EXPR, locus.getLocus (), typeTree.getTree (), ltree, rtree
-	    );	    
-	}
-	
-	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
-	    auto type = typeExpr-> info-> type-> toGeneric ();
-	    auto lexp = elem-> toGeneric ();
-	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
-	}
 
-	Ymir::Tree InstUnref (Word locus, InfoType type, Expression elem) {
-	    auto inner = type-> toGeneric ();
-	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
-	}
-	
-    }
 }
