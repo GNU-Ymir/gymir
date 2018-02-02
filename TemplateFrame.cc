@@ -203,7 +203,7 @@ namespace semantic {
 		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
 		    info = new (Z0)  IRefInfo (false, info);
 		
-		auto type = args [it]-> CompOp (info);
+		auto type = args [it]-> CompOp (info);		
 		if (type) type = type-> ConstVerif (info);
 		else return NULL;
 

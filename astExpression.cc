@@ -443,8 +443,7 @@ namespace syntax {
 		Ymir::Error::uninitVar (aux-> left-> token);
 		return NULL;
 	    }
-
-	    printf ("%s %s %s\n", aux-> left-> info-> typeString ().c_str (), this-> token.toString ().c_str (), aux-> right-> info-> typeString ().c_str ());
+	    
 	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
 	    if (type == NULL) {
 		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);

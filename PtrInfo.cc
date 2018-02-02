@@ -126,7 +126,6 @@ namespace semantic {
 	}
 	return NULL;
     }
-
     InfoType IPtrInfo::NotIs (syntax::Expression right) {
 	if (right-> info-> type-> is <IPtrInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);

@@ -73,6 +73,8 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
+	InfoType BinaryOp (Word op, syntax::Expression left) override;
+	
 	InfoType BinaryOpRight (Word op, syntax::Expression left) override;
 	
 	InfoType onClone () override;

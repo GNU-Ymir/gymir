@@ -439,7 +439,7 @@ namespace syntax {
 	Ymir::Tree innerType = info-> content ()-> toGeneric ();
 	Ymir::Tree array_type = info-> toGeneric ();
 	auto lenr = this-> size-> toGeneric ();
-	std::vector <tree> args = {fold_convert (build_pointer_type (void_type_node), info-> content ()-> getInitFnPtr ().getTree ()), lenr.getTree ()};
+	std::vector <tree> args = {convert (long_unsigned_type_node, TYPE_SIZE_UNIT (innerType.getTree ())), lenr.getTree ()};
 	
 	auto ptrr = build_call_array (
 	    build_pointer_type (void_type_node),

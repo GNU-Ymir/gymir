@@ -433,9 +433,30 @@ namespace semantic {
 	return res;
     }
     
-    TemplateSolution TemplateSolver::solveInside (const vector <Expression> &, Expression , Expression ) {
-	Ymir::Error::assert ("TODO");
-	return TemplateSolution (0, false);
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, Expression left , Expression right) {
+	if (!right-> info-> isImmutable ()) {
+	    Ymir::Error::notImmutable (right-> info);
+	    return TemplateSolution (0, false);
+	}
+	
+	auto elem = left-> expression ();
+	if (elem == NULL) return TemplateSolution (0, false);
+	else if (!elem-> info-> isImmutable ()) {
+	    Ymir::Error::notImmutable (right-> info);
+	    return TemplateSolution (0, false);
+	}
+	    
+	if (!elem-> info-> value ()-> equals (right-> info-> value ()))
+	    return TemplateSolution (0, false);
+	
+	auto it = 0;
+	for (auto et : tmps) {
+	    if (left == et) break;
+	    else it++;
+	}
+	
+	map<string, Expression> elems = {{Ymir::OutBuffer (it).str (), right}};
+	return TemplateSolution (__VAR__, true, elem-> info-> type, elems);
     }
 
     TemplateSolution TemplateSolver::solve (const vector <Var> &tmps, const vector <Expression> &params) {

@@ -288,6 +288,15 @@ namespace semantic {
 	}
 	return NULL;
     }
+
+    InfoType IStructInfo::BinaryOp (Word op, Expression right) {
+	if (op == Token::EQUAL && right-> info-> type-> isSame (this)) {
+	    auto ret = this-> clone ();
+	    ret-> binopFoo = &StructUtils::InstAffect;
+	    return ret;	    
+	}
+	return NULL;
+    }
     
     InfoType IStructInfo::BinaryOpRight (Word op, Expression left) {
 	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
