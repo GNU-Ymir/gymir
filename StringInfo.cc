@@ -128,13 +128,13 @@ namespace semantic {
     
     InfoType IStringInfo::Ptr () {	
 	auto ret = new (Z0)  IPtrInfo (this-> isConst (), new (Z0)  ICharInfo (this-> isConst ()));
-	ret-> unopFoo = &StringUtils::InstPtr;
+	ret-> binopFoo = &StringUtils::InstPtr;
 	return ret;
     }
 
     InfoType IStringInfo::Length () {
 	auto ret = new (Z0)  IFixedInfo (true, FixedConst::ULONG);
-	ret-> unopFoo = &StringUtils::InstLen;
+	ret-> binopFoo = &StringUtils::InstLen;
 	if (this-> value ())
 	    ret-> value () = new (Z0)  IFixedValue (FixedConst::ULONG, this-> value ()-> to<IStringValue> ()-> toString ().length (), 0);
 	return ret;
@@ -339,12 +339,12 @@ namespace semantic {
 	    return lexp;			    
 	}
 	
-	Tree InstPtr (Word locus, InfoType, Expression expr) {
+	Tree InstPtr (Word locus, InfoType, Expression expr, Expression) {
 	    location_t loc = locus.getLocus ();
 	    return getPtr (loc, expr, expr-> toGeneric ());
 	}
 
-	Tree InstLen (Word locus, InfoType, Expression expr) {
+	Tree InstLen (Word locus, InfoType, Expression expr, Expression) {
 	    location_t loc = locus.getLocus ();
 	    return getLen (loc, expr, expr-> toGeneric ());
 	}

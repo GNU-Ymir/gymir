@@ -144,13 +144,13 @@ namespace semantic {
     
     InfoType IArrayInfo::Ptr () {
 	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
-	ret-> unopFoo = ArrayUtils::InstPtr;
+	ret-> binopFoo = ArrayUtils::InstPtr;
 	return ret;
     }
 
     InfoType IArrayInfo::Length () {
 	auto elem = new (Z0)  IFixedInfo (true, FixedConst::ULONG);
-	elem-> unopFoo = ArrayUtils::InstLen;
+	elem-> binopFoo = ArrayUtils::InstLen;
 	return elem;
     }
 
@@ -522,13 +522,13 @@ namespace semantic {
 	    }
 	}
 
-	Tree InstPtr (Word locus, InfoType, Expression expr) {
+	Tree InstPtr (Word locus, InfoType, Expression expr, Expression) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = expr-> toGeneric ();
 	    return getPtr (loc, expr, ltree);
 	}
 
-	Tree InstLen (Word locus, InfoType, Expression expr) {
+	Tree InstLen (Word locus, InfoType, Expression expr, Expression) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = expr-> toGeneric ();
 	    return getLen (loc, expr, ltree);

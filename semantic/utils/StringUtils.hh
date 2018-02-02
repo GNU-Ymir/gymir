@@ -10,9 +10,9 @@ namespace semantic {
 
 	Ymir::Tree InstAddr (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
-	Ymir::Tree InstPtr (Word locus, InfoType, syntax::Expression left);
+	Ymir::Tree InstPtr (Word locus, InfoType, syntax::Expression left, syntax::Expression);
 
-	Ymir::Tree InstLen (Word locus, InfoType, syntax::Expression left);	
+	Ymir::Tree InstLen (Word locus, InfoType, syntax::Expression left, syntax::Expression);	
 	
 	Ymir::Tree InstToString (Word locus, InfoType, syntax::Expression elem, syntax::Expression type);
 

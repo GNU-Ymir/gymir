@@ -395,8 +395,12 @@ namespace syntax {
 		aux-> left-> info-> type = type;
 		aux-> left-> info-> type-> isConst (false);
 	    } else if (type == NULL) {
-		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-		return NULL;
+		auto call = findOpAssign (aux);
+		if (!call) {
+		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		    return NULL;
+		}
+		return call;	    
 	    }
 	    aux-> isRight = true;
 	}
@@ -511,14 +515,68 @@ namespace syntax {
 	return res;
     }
 
-    Expression IBinary::findOpTest (Binary) {
-	Ymir::Error::assert ("TODO");
-	return NULL;
+    Expression IBinary::findOpTest (Binary aux) {
+	Ymir::Error::activeError (false);
+	Word word {this-> token.getLocus (), Keys::OPTEST};
+	auto var = new (Z0) IVar (word, {new (Z0) IString (this-> token, this-> token.getStr ())});
+	auto params = new (Z0) IParamList (this-> token, {aux-> left, aux-> right});
+	auto call = new (Z0) IPar (this-> token, this-> token, var, params, false);
+	auto res = call-> expression ();
+	
+	auto errors = Ymir::Error::caught ();
+	Ymir::Error::activeError (true);	
+	if (errors.size () != 0) return NULL;
+	if (res == NULL) return NULL;
+
+	if (res-> info-> type-> is <IBoolInfo> ()) return res;
+	else if (auto dec = res-> info-> type-> to <IFixedInfo> ()) {
+	    auto fx = new (Z0) IFixed (this-> token, dec-> type ());
+	    fx-> setValue (0);
+	    fx-> setUValue (0);
+	    auto bin = new (Z0) IBinary (this-> token, res, fx-> expression ());
+	    bin-> info = new (Z0) ISymbol (aux-> token, bin-> left-> info-> type-> BinaryOp (this-> token, bin-> right));
+	    return bin;
+	}
+	return NULL;	
     }
     
-    Expression IBinary::findOpEqual (Binary) {
-	Ymir::Error::assert ("TODO");
-	return NULL;
+    Expression IBinary::findOpEqual (Binary aux) {
+	Ymir::Error::activeError (false);
+
+	Word word (this-> token.getLocus (), Keys::OPEQUAL);
+	auto var = new (Z0)  IVar (word);
+	auto params = new (Z0)  IParamList (this-> token, {aux-> left, aux-> right});
+
+	auto call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
+	Expression res = NULL;
+	if (this-> token == Token::DEQUAL) {
+	    res = call-> expression ();
+	} else {
+	    res = new (Z0) IUnary ({this-> token.getLocus (), Token::NOT}, call);
+	    res = res-> expression ();
+	}
+	auto errors = Ymir::Error::caught ();
+	Ymir::Error::activeError (true);
+	
+	if (errors.size () != 0) {
+	    Ymir::Error::activeError (false);
+	    word = Word (this-> token.getLocus (), Keys::OPEQUAL);
+	    var = new (Z0)  IVar (word);
+	    params = new (Z0)  IParamList (this-> token, {aux-> right, aux-> left});
+	    call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
+	    if (this-> token == Token::DEQUAL) {
+		res = call-> expression ();
+	    } else {
+		res = new (Z0) IUnary ({this-> token.getLocus (), Token::NOT}, call);
+		res = res-> expression ();
+	    }
+	    errors = Ymir::Error::caught ();
+	    Ymir::Error::activeError (true);
+	    if (errors.size () != 0) return NULL;
+	}	
+	
+	return res;
+       
     }
     
     bool IBinary::isTest (Word elem) {

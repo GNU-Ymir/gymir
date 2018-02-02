@@ -69,7 +69,12 @@ namespace semantic {
 	    return buildTree (
 		MODIFY_EXPR, loc.getLocus (), ltree.getType (), ltree, rtree
 	    );
-	}	
+	}
+
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
+	    
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}		
     }
        
     IStructCstInfo::IStructCstInfo (Namespace space, string name, vector <Expression> &tmps) :
@@ -285,6 +290,12 @@ namespace semantic {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstCast;
 	    return ret;
+	} else if (auto ref = other-> to<IRefInfo> ()) {
+	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
+		auto ret = new (Z0)  IRefInfo (false, this-> clone ());
+		ret-> binopFoo = &StructUtils::InstAddr;
+		return ret;
+	    }
 	}
 	return NULL;
     }

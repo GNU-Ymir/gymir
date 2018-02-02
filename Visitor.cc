@@ -1942,6 +1942,7 @@ namespace syntax {
 	if (need) {
 	    next = this-> lex.next ({Token::RPAR});
 	}
+	
 	return new (Z0)  IFor (begin, id, vars, iter, visitBlock ());
     }       
     

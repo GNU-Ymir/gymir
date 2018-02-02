@@ -300,20 +300,12 @@ namespace syntax {
 	    return ret;
 	}
 	
-	if (this-> right-> is<IVar> () && this-> info-> type-> unopFoo) {
-	    return this-> info-> type-> buildUnaryOp (
-		this-> token,
-		this-> info-> type,
-		this-> left
-	    );
-	} else {
-	    return this-> info-> type-> buildBinaryOp (
-		this-> token,
-		this-> info-> type,
-		this-> left,
-		this-> right
-	    );
-	}
+	return this-> info-> type-> buildBinaryOp (
+	    this-> token,
+	    this-> info-> type,
+	    this-> left,
+	    this-> right
+	);	
     }    
 
     Ymir::Tree IDColon::toGeneric () {

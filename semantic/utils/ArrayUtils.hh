@@ -16,9 +16,9 @@ namespace semantic {
 
 	Ymir::Tree InstNotIs (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
-	Ymir::Tree InstLen (Word word, InfoType, syntax::Expression elem);
+	Ymir::Tree InstLen (Word word, InfoType, syntax::Expression elem, syntax::Expression);
 
-	Ymir::Tree InstPtr (Word word, InfoType, syntax::Expression elem);
+	Ymir::Tree InstPtr (Word word, InfoType, syntax::Expression elem, syntax::Expression);
 
 	Ymir::Tree InstAddr (Word word, InfoType, syntax::Expression elem, syntax::Expression);
 

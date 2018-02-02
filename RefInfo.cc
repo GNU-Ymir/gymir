@@ -22,7 +22,7 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
-	    auto innerType = left-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto innerType = right-> info-> type-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
 	    auto rightExp = right-> toGeneric ();
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
@@ -244,9 +244,9 @@ namespace semantic {
 
     InfoType IRefInfo::CompOp (InfoType other) {
 	auto ptr = other-> to <IRefInfo> ();
-	if (other-> is <IUndefInfo> () || (ptr && ptr-> _content-> isSame (this-> _content))) {
+	if (ptr && ptr-> _content-> isSame (this-> _content)) {
 	    auto rf = this-> clone ();
-	    rf-> binopFoo = &PtrUtils::InstAffect;
+	    rf-> binopFoo = &PtrUtils::InstCast;
 	    return rf;
 	} else {
 	    auto aux = this-> _content-> CompOp (other);
