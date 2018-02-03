@@ -20,6 +20,8 @@ namespace semantic {
 	IModule (const Namespace&);
 
 	Symbol get (std::string name);
+	
+	Symbol getFor (std::string name, const Namespace & space);
 
 	std::vector <Symbol> getAll (std::string name);
 

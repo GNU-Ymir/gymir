@@ -38,6 +38,8 @@ namespace semantic {
 
 	void setCurrentSpace (Namespace space);
 
+	Namespace getCurrentSpace ();
+
 	void addCall (Word sym);
 
 	void addGlobal (syntax::Global gl);

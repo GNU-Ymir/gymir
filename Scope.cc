@@ -14,6 +14,13 @@ namespace semantic {
 	} else return NULL;
     }    
 
+    Symbol Scope::getPublic (std::string name) {
+	auto it = this-> local.find (name);
+	if (it != this-> local.end () && it-> second [0]-> isPublic ()) {
+	    return it-> second [0];
+	} else return NULL;
+    }    
+    
     void Scope::set (std::string name, Symbol sym) {
 	auto it = this-> local.find (name);
 	if (it != this-> local.end ()) {
@@ -27,7 +34,17 @@ namespace semantic {
 	    return it-> second;
 	} else return {};
     }
-
+    
+    std::vector <Symbol> Scope::getAllPublic (std::string name) {
+	auto it = this-> local.find (name);
+	if (it != this-> local.end ()) {
+	    std::vector <Symbol> ret;
+	    for (auto it_ : it-> second)
+		if (it_-> isPublic ()) ret.push_back (it_);
+	    return ret;
+	} else return {};
+    }
+    
     void Scope::addOpen (Namespace space) {
 	this-> imports.push_back (space);
     }

@@ -21,8 +21,12 @@ namespace semantic {
 	void set (std::string name, Symbol sym);
 
 	Symbol get (std::string name);
+
+	Symbol getPublic (std::string name);
 	
 	std::vector <Symbol> getAll (std::string name);
+
+	std::vector <Symbol> getAllPublic (std::string name);
 
 	void addOpen (Namespace space);
 

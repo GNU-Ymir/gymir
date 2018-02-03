@@ -63,8 +63,9 @@ namespace syntax {
 	tmps (tmps),
 	block (block),
 	test (test)	    
-    {}
-    
+    {
+	this-> is_public (true);
+    }    
 	
     IFunction::IFunction (Word ident, Var type, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
 	ident (ident),
@@ -73,7 +74,9 @@ namespace syntax {
 	tmps (tmps),
 	block (block),
 	test (test)	    
-    {}
+    {
+	this-> is_public (true);
+    }
 
     IFunction::~IFunction () {
 	if (type) delete type;
@@ -1204,6 +1207,17 @@ namespace syntax {
 	    delete it;
 	if (right) delete right;
     }
+    
+    IEnum::IEnum (Word ident, Var type, std::vector <Word> names, std::vector <Expression> values) :
+	ident (ident),
+	type (type),
+	names (names),
+	values (values)
+    {}
 
+    IEnum::~IEnum () {
+	for (auto it : values)
+	    delete it;
+    }
 
 }

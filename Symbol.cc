@@ -10,7 +10,9 @@ namespace semantic {
     ISymbol::ISymbol (Word word, InfoType type) :
 	sym (word),
 	type (type)
-    {}
+    {
+	this-> isPublic () = true;
+    }
     
     bool ISymbol::isConst () {
 	return this-> type-> isConst ();

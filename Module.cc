@@ -12,6 +12,13 @@ namespace semantic {
 	return this-> globalScope.get (name);
     }
 
+    Symbol IModule::getFor (std::string name, const Namespace & space) {
+	if (this-> _space.isSubOf (space))
+	    return this-> globalScope.get (name);
+	else
+	    return this-> globalScope.getPublic (name);
+    }
+    
     std::vector <Symbol> IModule::getAll (std::string name) {
 	return this-> globalScope.getAll (name);
     }

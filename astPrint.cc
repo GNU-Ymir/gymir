@@ -356,7 +356,20 @@ namespace syntax {
 
 	this-> right-> print (nb + 4);	    
     }
-    
-    
+        
+    void IEnum::print (int nb) {
+	printf ("\n%*c<Enum> %s",
+		nb, ' ',
+		this-> ident.toString ().c_str ()
+	);
+	
+	for (int i = 0 ; i < (int) this-> names.size (); i++) {
+	    printf ("\n%*c%s ", nb + 4, ' ',
+		    this-> names [i].toString ().c_str ());
+	    
+	    this-> values [i]-> print (nb + 8);
+	}
+    }
+
     
 }

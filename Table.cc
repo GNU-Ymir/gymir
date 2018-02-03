@@ -25,6 +25,14 @@ namespace semantic {
 	}
     }
 
+    Namespace Table::getCurrentSpace () {
+	if (!this-> _frameTable.empty ()) {
+	    return this-> _frameTable.front ().space ();
+	} else {
+	    return this-> _space;
+	}
+    }
+    
     void Table::setCurrentSpace (Namespace space) {
 	if (!this-> _frameTable.empty ()) {
 	    this-> _frameTable.front ().space () = space;
@@ -121,7 +129,7 @@ namespace semantic {
 	if (ret == NULL) {
 	    auto mods = this-> getAllMod (this-> _space);
 	    for (auto it : mods) {
-		ret = it->  get (name);
+		ret = it->  getFor (name, getCurrentSpace ());
 		if (ret != NULL) return ret;
 	    }
 	}

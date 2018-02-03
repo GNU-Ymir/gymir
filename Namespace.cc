@@ -26,9 +26,8 @@ namespace semantic {
 	    index = space.find (".");
 	}
 	this-> names.push_back (space);
-	
 
-	this-> names.insert (this-> names.end (),
+	this-> names.insert (this-> names.begin (),
 			     space_.names.begin (),
 			     space_.names.end ()
 	);	

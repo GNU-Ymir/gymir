@@ -16,33 +16,13 @@ namespace syntax {
 
     public:
 
-	IEnum (Word ident, Var type, std::vector <Word> names, std::vector <Expression> values) :
-	    ident (ident),
-	    type (type),
-	    names (names),
-	    values (values)
-	{}
+	IEnum (Word ident, Var type, std::vector <Word> names, std::vector <Expression> values);
 
-	void declare () override {}
+	void declare () override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Enum> %s",
-		    nb, ' ',
-		    this-> ident.toString ().c_str ()
-	    );
+	void print (int nb = 0) override;
 
-	    for (int i = 0 ; i < (int) this-> names.size (); i++) {
-		printf ("\n%*c%s ", nb + 4, ' ',
-			this-> names [i].toString ().c_str ());
-		
-		this-> values [i]-> print (nb + 8);
-	    }
-	}
-
-	virtual ~IEnum () {
-	    for (auto it : values)
-		delete it;
-	}
+	virtual ~IEnum ();
 	
     };
 

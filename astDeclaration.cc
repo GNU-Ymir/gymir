@@ -53,8 +53,10 @@ namespace syntax {
 		}
 	    }
 	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
+	    auto sym = new (Z0) ISymbol (this-> ident, fun);
 	    fun-> set (fr);
-	    mod-> insert (new (Z0)  ISymbol (this-> ident,fun));
+	    sym-> isPublic () = this-> is_public ();
+	    mod-> insert (sym);	
 	}
     }
 
@@ -242,7 +244,6 @@ namespace syntax {
 	auto exist = Table::instance ().getLocal (this-> ident.getStr ());
 	if (exist) {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
-	    return;
 	} else {
 	    auto str = new (Z0) IStructCstInfo (Table::instance ().space (), this-> ident.getStr (), this-> tmps);
 
@@ -255,4 +256,41 @@ namespace syntax {
 	}
     }
     
+    void IEnum::declare () {
+	auto exist = Table::instance ().getLocal (this-> ident.getStr ());
+	if (exist) {
+	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
+	} else {
+	    Symbol type = NULL;
+	    Expression fst = NULL;
+	    if (this-> type != NULL) {
+		type = this-> type-> asType ()-> info;
+	    } else {
+		fst = this-> values [0]-> expression ();
+		type = fst-> info;
+	    }
+
+	    auto en = new (Z0) IEnumCstInfo (this-> ident.getStr (), type-> type);
+	    auto sym = new (Z0) ISymbol (this-> ident, en);
+	    sym-> isPublic () = true;
+
+	    for (auto i : Ymir::r (0, this-> names.size ())) {
+		if (i == 0 && fst) {
+		    en-> addAttrib (this-> names [i].getStr (), fst, NULL);
+		} else {
+		    auto val = this-> values [i]-> expression ();
+		    auto comp = val-> info-> type-> CompOp (type-> type);
+		    if (comp == NULL)
+			en-> addAttrib (this-> names [i].getStr (), val, comp);
+		    else {
+			Ymir::Error::incompatibleTypes (this-> ident, val-> info, type-> type);
+			return;
+		    }			
+		}
+	    }
+	    
+	    Table::instance ().insert (sym);	    
+	}
+    }
+
 }
