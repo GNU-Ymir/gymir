@@ -12,6 +12,9 @@ namespace syntax {
 
 namespace semantic {
 
+    class IStructInfo;
+    typedef IStructInfo* StructInfo;
+    
     class IStructCstInfo : public IInfoType {
 
 	Namespace space;
@@ -21,6 +24,8 @@ namespace semantic {
 	std::vector <syntax::TypedVar> params;
 
 	std::vector <syntax::Expression> tmps;
+
+	StructInfo _info;
 	
 	bool _isPublic;
 	
@@ -41,10 +46,14 @@ namespace semantic {
 	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
 
 	InfoType TempOp (const std::vector<::syntax::Expression> &) override;
+
+	std::string typeString () override;
 	
 	std::string innerTypeString () override;
 
 	std::string innerSimpleTypeString () override;
+
+	Ymir::Tree toGeneric () override;
 
 	bool isType () override;
 	
@@ -84,9 +93,19 @@ namespace semantic {
 	InfoType DColonOp (syntax::Var) override;
 	
 	InfoType CompOp (InfoType) override;
+
+	InfoType UnaryOp (Word) override;
+
+	std::string getName ();
+
+	Namespace & getSpace ();
+
+	std::string typeString () override;
 	
 	std::string innerTypeString () override;
 
+	std::string simpleTypeString () override;
+	
 	std::string innerSimpleTypeString () override;
 
 	Ymir::Tree toGeneric () override;

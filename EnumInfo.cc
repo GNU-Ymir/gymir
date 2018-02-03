@@ -46,14 +46,14 @@ namespace semantic {
     }
 
     std::string IEnumCstInfo::innerSimpleTypeString () {
-	return Ymir::format ("%d%s%s", this-> _name.length (), "E", this-> _name.c_str ());
+	return Ymir::format ("%%%", this-> _name.length (), "E", this-> _name.c_str ());
     }
 
     std::string IEnumCstInfo::innerTypeString () {
 	if (this-> type) {
-	    return Ymir::format ("%s(%s)", this-> _name.c_str (), this-> type-> innerTypeString ());
+	    return Ymir::format ("%(%)", this-> _name.c_str (), this-> type-> innerTypeString ());
 	} else {
-	    return Ymir::format ("%s(...)", this-> _name.c_str ());
+	    return Ymir::format ("%(...)", this-> _name.c_str ());
 	}
     }
 

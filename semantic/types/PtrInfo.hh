@@ -5,6 +5,7 @@
 
 namespace semantic {
 
+       
     class IPtrInfo : public IInfoType {
 
 	InfoType _content = NULL;
@@ -19,15 +20,8 @@ namespace semantic {
 
 	InfoType ConstVerif (InfoType) override;
 
-	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
-	    if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
-		Ymir::Error::takeATypeAsTemplate (tok);
-		return NULL;
-	    } else {
-		return new (Z0) IPtrInfo (false, tmps [0]-> info-> type);
-	    }
-	}
-
+	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps);
+	
 	InfoType BinaryOp (Word token, syntax::Expression right) override;
 	
 	InfoType BinaryOpRight (Word token, syntax::Expression right) override;

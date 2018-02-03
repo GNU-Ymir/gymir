@@ -31,6 +31,7 @@ namespace Ymir {
 		phrases [UndefVar2] = "Identifiant '%%%' inconnu, peut être '%%%'";
 		phrases [UninitVar] = "Utilisation d'une variable sans type, '%%%'";
 		phrases [UseAsVar] = "'%%%' n'identifie pas une variable";
+		phrases [UseAsType] = "'%%%' n'identifie pas un type";
 		phrases [UndefinedOpMult] = "L'operateur '%%%%' est indéfinis pour le type '%%%' et (%)";
 		phrases [UndefinedOp] = "L'operateur '%%%' entre les types '%%%' et '%%%' n'existe pas";
 		phrases [UndefinedOpUnary] = "L'operateur '%%%' pour le type '%%%' n'existe pas";
@@ -80,6 +81,7 @@ namespace Ymir {
 		phrases [UndefVar2] = "Undefined identifier '%%%', maybe '%%%' was meant";
 		phrases [UninitVar] = "Variable '%%%' has no type";
 		phrases [UseAsVar] = "'%%%' do not identify a variable";
+		phrases [UseAsType] = "'%%%' do not identify a type";
 		phrases [UndefinedOpMult] = "Operator '%%%%' is undefined for type '%%%' and (%)";
 		phrases [UndefinedOp] = "Operator '%%%' between types '%%%' and '%%%' doesn't exist";
 		phrases [UndefinedOpUnary] = "Operator '%%%' for type '%%%' doesn't exist";

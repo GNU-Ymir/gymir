@@ -1095,8 +1095,11 @@ namespace syntax {
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
 	if (aux-> params == NULL) return NULL;
-	if (!aux-> left-> is <IType> () && !aux-> left-> info-> type-> isType ())
-	    Ymir::Error::useAsType (aux-> left-> token);
+	if (!aux-> left-> is <IType> () && !aux-> left-> info-> type-> isType ()) {
+	    Ymir::Error::useAsType (this-> left-> token);
+	    return NULL;
+	}
+	
 	auto type = aux-> left-> info-> type-> CallOp (aux-> left-> token, aux-> params);
 	if (type == NULL) {
 	    Ymir::Error::undefinedOp (this-> token, this-> end, aux-> left-> info, aux-> params);

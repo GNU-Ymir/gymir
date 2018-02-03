@@ -75,6 +75,23 @@ namespace semantic {
 	_content (type) 
     {}    
    
+    InfoType IPtrInfo::create (Word tok, const std::vector<syntax::Expression> & tmps) {
+	if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
+	    if (!tmps [0]-> info-> type-> isType ()) {
+		Ymir::Error::takeATypeAsTemplate (tok);
+		return NULL;
+	    }
+	}	    	    
+
+	if (auto ot = tmps [0]-> info-> type-> to<IStructCstInfo> ()) {
+	    auto type = ot-> TempOp ({});
+	    if (type == NULL) return NULL;
+	    return new (Z0) IPtrInfo (false, type);
+	} else {
+	    return new (Z0) IPtrInfo (false, tmps [0]-> info-> type);
+	}
+    }
+
     const char * IPtrInfo::getId () {
 	return IPtrInfo::id ();
     }
@@ -173,6 +190,7 @@ namespace semantic {
 	}
 	return NULL;
     }
+    
     InfoType IPtrInfo::NotIs (syntax::Expression right) {
 	if (right-> info-> type-> is <IPtrInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
@@ -185,13 +203,16 @@ namespace semantic {
 	}
 	return NULL;
     }
-
+    
     InfoType IPtrInfo::Unref () {
 	if (this-> _content-> is<IUndefInfo> ()) return NULL;
 	else if (this-> _content-> is <IVoidInfo> ()) return NULL;
-	auto ret = this-> _content-> clone ();
-	ret-> unopFoo = &PtrUtils::InstUnref;
-	return ret;
+	else {
+	    auto ret = this-> _content-> clone ();
+	    ret-> isConst (false);
+	    ret-> unopFoo = &PtrUtils::InstUnref;
+	    return ret;
+	}
     }
 
     InfoType IPtrInfo::toPtr () {
@@ -232,7 +253,7 @@ namespace semantic {
 	    return this;
 	} else if (type) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), type-> _content-> clone ());
-	    //ptr-> binopFoo = &PtrUtils::InstCast
+	    ptr-> binopFoo = &PtrUtils::InstCast;
 	    return ptr;
 	    // }  else if (auto tu = other-> to <ITupleInfo> ()) {
 	} else if (auto ul = other-> to <IFixedInfo> ()) {

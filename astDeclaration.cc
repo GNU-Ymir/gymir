@@ -280,7 +280,7 @@ namespace syntax {
 		} else {
 		    auto val = this-> values [i]-> expression ();
 		    auto comp = val-> info-> type-> CompOp (type-> type);
-		    if (comp == NULL)
+		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
 		    else {
 			Ymir::Error::incompatibleTypes (this-> ident, val-> info, type-> type);
