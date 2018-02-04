@@ -63,6 +63,25 @@ namespace semantic {
 	return __y_memcpy__;
     }
 
+    Ymir::Tree InternalFunction::getYMemset () {
+	if (__y_memcpy__.isNull ()) {
+	    tree fndecl_type_params [] = {
+		build_pointer_type (void_type_node),
+		long_unsigned_type_node,
+		long_unsigned_type_node		
+	    };
+
+	    tree ret = build_pointer_type (void_type_node);
+	    tree fndecl_type = build_function_type_array (ret, 2, fndecl_type_params);
+	    tree fndecl = build_fn_decl ("memset", fndecl_type);
+	    DECL_EXTERNAL (fndecl) = 1;
+
+	    __y_memcpy__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	}
+	return __y_memcpy__;
+    }
+
+    
     Ymir::Tree InternalFunction::getYInitType (const char * name) {
 	auto it = __funcs__.find (name);
 	if (it == __funcs__.end ()) {

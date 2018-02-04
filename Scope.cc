@@ -15,7 +15,7 @@ namespace semantic {
     }    
 
     Symbol Scope::getPublic (std::string name) {
-	auto it = this-> local.find (name);
+	auto it = this-> local.find (name);	
 	if (it != this-> local.end () && it-> second [0]-> isPublic ()) {
 	    return it-> second [0];
 	} else return NULL;

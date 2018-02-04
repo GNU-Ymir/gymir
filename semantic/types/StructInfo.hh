@@ -62,7 +62,7 @@ namespace semantic {
 	void isPublic (bool);
 
 	void addAttrib (syntax::TypedVar param);
-	
+		
 	static const char* id () {
 	    return "IStructCstInfo";
 	}
@@ -72,6 +72,8 @@ namespace semantic {
     private:
 
 	InfoType getScore (const std::vector <syntax::Expression> & tmps);
+
+	InfoType Init ();
 	
     };    
     
@@ -127,7 +129,12 @@ namespace semantic {
 	    return "IStructInfo";
 	}
 
-	const char* getId () override;	
+	const char* getId () override;
+
+    private:
+
+	InfoType Init ();
+	
     };
 
     typedef IStructInfo* StructInfo;

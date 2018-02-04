@@ -76,7 +76,7 @@ namespace semantic {
 	return ret;
     }
     
-    std::vector <Frame> IFunctionInfo::getFrames () {
+    std::vector <Frame> IFunctionInfo::getFrames () {	
 	if (this-> _alone) return {this-> _info};
 	if (this-> _fromTemplates.size () != 0) return this-> _fromTemplates;
 	std::vector <Frame> alls;

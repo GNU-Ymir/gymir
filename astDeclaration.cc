@@ -255,6 +255,23 @@ namespace syntax {
 	    }
 	}
     }
+
+    void IStruct::declareAsExtern (Module mod) {
+	auto exist = mod-> get (this-> ident.getStr ());
+	if (exist) {
+	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
+	} else {
+	    auto str = new (Z0) IStructCstInfo (Table::instance ().space (), this-> ident.getStr (), this-> tmps);
+
+	    str-> isPublic (this-> is_public ());
+	    auto sym = new (Z0) ISymbol (this-> ident, str);
+	    sym-> isPublic () = this-> is_public ();
+	    mod-> insert (sym);
+	    for (auto it : this-> params) {
+		str-> addAttrib (it-> to <ITypedVar> ());		
+	    }
+	}
+    }
     
     void IEnum::declare () {
 	auto exist = Table::instance ().getLocal (this-> ident.getStr ());

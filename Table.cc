@@ -127,7 +127,7 @@ namespace semantic {
 
 	if (ret == NULL) ret = this-> _globalScope.get (name);
 	if (ret == NULL) {
-	    auto mods = this-> getAllMod (this-> _space);
+	    auto mods = this-> getAllMod (getCurrentSpace ());
 	    for (auto it : mods) {
 		ret = it->  getFor (name, getCurrentSpace ());
 		if (ret != NULL) return ret;
@@ -155,7 +155,7 @@ namespace semantic {
 
 	auto aux = this-> _globalScope.getAll (name);
 	alls.insert (alls.end (), aux.begin (), aux.end ());
-	auto mods = this-> getAllMod (this-> _space);
+	auto mods = this-> getAllMod (getCurrentSpace ());
 	for (auto m : mods) {
 	    if (!m-> space ().isSubOf (this-> _space)) {
 		aux = m-> getAll (name);

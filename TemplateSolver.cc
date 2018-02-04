@@ -350,11 +350,12 @@ namespace semantic {
 
 	for (auto it : Ymir::r (0, params.size ())) {
 	    TemplateSolution res (0, true);
-	    if (auto v = tmps [it]-> to<IVar> ())
+	    if (auto v = tmps [it]-> to<IVar> ()) {
 		res = this-> solveInside (tmps, v, params [it]);
-	    else
+	    } else {
 		res = this-> solveInside (tmps, tmps [it], params [it]);
-
+	    }
+	    
 	    if (!res.valid || !merge (soluce.score, soluce.elements, res))
 		return TemplateSolution (0, false);
 	}
@@ -370,7 +371,7 @@ namespace semantic {
 	    return this-> solveInside (left, type);
 	else if (auto vvar = left-> to <IVariadicVar> ())
 	    return this-> solveInside (tmps, vvar, right);
-	else if (auto var = right-> to <IVar> ())
+	else if (auto var = right-> to <IVar> ()) 
 	    return this-> solveInside (left, var);
 	else return TemplateSolution (0, false);
     }
@@ -383,10 +384,14 @@ namespace semantic {
 	return TemplateSolution (__VAR__, true, type, value);
     }
     
-    TemplateSolution TemplateSolver::solveInside (Var, Var) {
-	//auto type = right-> info-> type;
-	//if (auto cst = type-> to <StructCstInfo> ())
-	// if (auto cst = type-> to <ObjectCstInfo> ())
+    TemplateSolution TemplateSolver::solveInside (Var left, Var right) {
+	auto type = right-> info-> type;
+	if (auto ty = type-> to <IStructCstInfo> ()) {
+	    vector <Expression> ignore;
+	    auto clo = new (Z0) IType (right-> token, ty-> TempOp (ignore));
+	    map<string, Expression> value =  {{left-> token.getStr (), clo}};
+	    return TemplateSolution (__VAR__, true, type, value);
+	}
 	return TemplateSolution (0, false);
     }
 

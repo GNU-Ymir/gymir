@@ -2,6 +2,7 @@
 #include <ymir/ast/ParamList.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/ast/TypedVar.hh>
+#include <ymir/semantic/pack/InternalFunction.hh>
 
 namespace semantic {
 
@@ -55,6 +56,18 @@ namespace semantic {
 	    getStackStmtList ().back ().append (list.getTree ());
 	    return aux;
 	}
+
+	Tree InstInit (Word locus, InfoType type, Expression) {
+	    auto loc = locus.getLocus ();
+	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
+	    auto addr = Ymir::getAddr (loc, ltree);
+	    tree memsetArgs [] = {addr.getTree (),
+				  build_int_cst_type (long_unsigned_type_node, 0),
+				  TYPE_SIZE_UNIT (ltree.getType ().getTree ())};
+
+	    Ymir::getStackStmtList ().back ().append (build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs));
+	    return ltree;
+	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
@@ -103,7 +116,15 @@ namespace semantic {
     InfoType IStructCstInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "init") return Init ();
 	return NULL;
+    }
+
+    InfoType IStructCstInfo::Init () {
+	std::vector <syntax::Expression> exp;
+	auto ret = this-> TempOp (exp);
+	ret-> unopFoo = StructUtils::InstInit;
+	return ret;
     }
     
     ApplicationScore IStructCstInfo::CallOp (Word token, syntax::ParamList params) {
@@ -353,7 +374,14 @@ namespace semantic {
     InfoType IStructInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "init") return Init ();
 	return NULL;
+    }
+
+    InfoType IStructInfo::Init () {
+	auto ret = this-> clone ();
+	ret-> unopFoo = StructUtils::InstInit;
+	return ret;
     }
     
     InfoType IStructInfo::CompOp (InfoType other) {
@@ -457,8 +485,9 @@ namespace semantic {
     }
 
     InfoType IStructInfo::getTemplate (ulong nb) {	
-	if (nb < this-> tmpsDone.size ()) 
+	if (nb < this-> tmpsDone.size ()) {
 	    return this-> tmpsDone [nb]-> info-> type;
+	}
 	return NULL;
     }
     

@@ -19,7 +19,7 @@ namespace syntax {
 	IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params);
 	void declare () override;
 	
-	void declareAsExtern (semantic::Module) override {}
+	void declareAsExtern (semantic::Module) override;
 	
 	void print (int nb = 0) override ;
 	
