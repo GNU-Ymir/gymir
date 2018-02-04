@@ -25,6 +25,8 @@ namespace semantic {
 
 	std::vector <syntax::Expression> tmps;
 
+	std::vector <syntax::Expression> tmpsDone;
+	
 	StructInfo _info;
 	
 	bool _isPublic;
@@ -67,6 +69,10 @@ namespace semantic {
 
 	const char* getId () override;
 
+    private:
+
+	InfoType getScore (const std::vector <syntax::Expression> & tmps);
+	
     };    
     
     class IStructInfo : public IInfoType {
@@ -75,7 +81,8 @@ namespace semantic {
 	std::string name;
 	std::vector <InfoType> types;
 	std::vector <std::string> attrs;
-
+	std::vector <syntax::Expression> tmpsDone;
+	
     public:
 
 	IStructInfo (Namespace space, std::string name);
@@ -100,11 +107,7 @@ namespace semantic {
 
 	Namespace & getSpace ();
 
-	std::string typeString () override;
-	
 	std::string innerTypeString () override;
-
-	std::string simpleTypeString () override;
 	
 	std::string innerSimpleTypeString () override;
 
@@ -114,6 +117,10 @@ namespace semantic {
 
 	void setAttribs (std::vector <std::string> names);
 
+	void setTmps (std::vector <syntax::Expression> tmps);
+
+	InfoType getTemplate (ulong) override;
+	
 	std::vector <std::string> & getAttribs ();
 	
 	static const char* id () {

@@ -22,6 +22,8 @@ namespace syntax {
 	Type asType () override;
 
 	Expression expression () override;
+
+	Expression onClone () override;
 	
 	semantic::InfoType type ();	
 

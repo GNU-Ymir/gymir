@@ -108,7 +108,6 @@ namespace semantic {
     
     ApplicationScore IStructCstInfo::CallOp (Word token, syntax::ParamList params) {
 	if (this-> tmps.size () != 0) {
-	    Ymir::Error::assert ("TODO");
 	    return NULL;
 	}
  
@@ -135,8 +134,9 @@ namespace semantic {
 
 	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
 	ret-> setTypes (types);
-	ret-> setAttribs (attribs); 
-	
+	ret-> setAttribs (attribs);
+	ret-> setTmps (this-> tmpsDone);
+	    
 	ret-> multFoo = &StructUtils::InstCall;
 	score-> dyn = true;
 	score-> ret = ret;
@@ -146,9 +146,9 @@ namespace semantic {
 
     ApplicationScore IStructCstInfo::CallOp (Word token, const std::vector <InfoType>& params) {
 	if (this-> tmps.size () != 0) {
-	    Ymir::Error::assert ("TODO");
 	    return NULL;
 	}
+
 	if (params.size () != this-> params.size ())
 	    return NULL;
 
@@ -172,7 +172,8 @@ namespace semantic {
 
 	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
 	ret-> setTypes (types);
-	ret-> setAttribs (attribs); 
+	ret-> setAttribs (attribs);
+	ret-> setTmps (this-> tmpsDone);
 	
 	ret-> multFoo = &StructUtils::InstCall;
 	score-> dyn = true;
@@ -183,16 +184,18 @@ namespace semantic {
 
     InfoType IStructCstInfo::TempOp (const std::vector <syntax::Expression> & tmps) {
 	if (this-> tmps.size () != 0) {
-	    Ymir::Error::assert ("TODO");
-	    return NULL;
+	    return this-> getScore (tmps);
 	}
 
 	if (this-> tmps.size () != tmps.size ()) return NULL;
-	if (this-> _info == NULL) {
-	    std::vector <InfoType> types;
-	    std::vector <std::string> attribs;
+	std::vector <InfoType> types;
+	std::vector <std::string> attribs;
+	static std::map <std::string, InfoType> dones;
+	auto name = this-> innerTypeString ();
+	auto inside = dones.find (name);
+	if (inside == dones.end ()) {
 	    this-> _info = new (Z0) IStructInfo (this-> space, this-> name);
-
+	    dones [name] = this-> _info;
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		InfoType info = this-> params [it]-> getType ();
 		if (info) {
@@ -202,25 +205,77 @@ namespace semantic {
 	    }
 	
 	    this-> _info-> setTypes (types);
-	    this-> _info-> setAttribs (attribs);
+	    this-> _info-> setAttribs (attribs);	    
+	    this-> _info-> setTmps (this-> tmpsDone);
+	} else {
+	    return inside-> second;
 	}
+	
 	return this-> _info;
     }
+
+    template <typename K, typename V>
+    vector <V> getValues (map <K, V> dico) {
+	vector <V> vec;
+	for (auto it : dico)
+	    vec.push_back (it.second);
+	return vec;
+    }
     
+    InfoType IStructCstInfo::getScore (const std::vector <syntax::Expression> & tmps) {
+	auto res = TemplateSolver::instance ().solve (this-> tmps, tmps);
+	if (!res.valid) return NULL;
+	std::vector <syntax::TypedVar> params;
+	for (auto it : this-> params) {
+	    params.push_back (it-> templateExpReplace (res.elements)-> to <ITypedVar> ());
+	}
+
+	std::vector <syntax::Expression> ignore;
+	auto ret = new (Z0) IStructCstInfo (this-> space, this-> name, ignore);
+	ret-> params = params;	
+	ret-> tmpsDone = getValues (res.elements);
+	for (auto &it : ret-> tmpsDone) {
+	    it = it-> templateExpReplace ({});
+	}
+	
+	return ret;	
+    }
+
     std::string IStructCstInfo::typeString () {
 	Ymir::OutBuffer buf ("typeof ", this-> space.toString (), ".", this-> name, "{");
 	for (auto i : Ymir::r (0, this-> params.size ())) {
 	    auto it = this-> params [i];
-	    buf.write (it-> getType ()-> innerTypeString ());	
+	    auto t = it-> getType ();
+	    if (t != NULL) 
+		buf.write (t-> innerTypeString ());	
+	    else buf.write ("undef");		    
 	    if (i < (int) this-> params.size () - 1)
-		buf.write (", ");
+		buf.write (", ");		
 	}
 	buf.write ("}");
 	return buf.str ();
     }
 
     std::string IStructCstInfo::innerTypeString () {
-	Ymir::OutBuffer buf ("typeof ", this-> space.toString (), ".", this-> name, "{...}");
+	static std::map <std::string, bool> inner;
+	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
+	auto inside = inner.find (buf.str ());
+	if (inside == inner.end () || !inside-> second) {
+	    std::string name = buf.str ();	    
+	    inner [name] = true;
+	    buf.write ("{");
+	    for (auto i : Ymir::r (0, this-> params.size ())) {
+		auto it = this-> params [i];
+		auto t = it-> getType ();
+		if (t)
+		    buf.write (t-> innerTypeString ());
+		else buf.write ("undef");		
+		if (i < (int) this-> params.size () - 1)
+		    buf.write (", ");
+	    }
+	    buf.write ("}");
+	    inner [name] = false;
+	}
 	return buf.str ();
     }
 
@@ -253,10 +308,11 @@ namespace semantic {
     bool IStructInfo::isSame (InfoType other) {
 	if (auto ot = other-> to <IStructInfo> ()) {
 	    if (ot-> name == this-> name && ot-> space == this-> space) {
-		// for (auto it : Ymir::r (0, this-> types.size ())) {
-		//     if (!this-> types [it]-> isSame (ot-> types [it]))
-		// 	return false;
-		// }
+		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
+		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
+		    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+			return false;
+		}
 		return true;
 	    }
 	}
@@ -269,6 +325,7 @@ namespace semantic {
 	for (auto it : this-> types) {
 	    ret-> types.push_back (it);
 	}
+	ret-> tmpsDone = this-> tmpsDone;
 	return ret;
     }
 
@@ -340,23 +397,24 @@ namespace semantic {
 	}
 	return NULL;
     }
-
-    std::string IStructInfo::typeString () {
-	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name, "{");
-	for (auto i : Ymir::r (0, this-> types.size ())) {
-	    auto it = this-> types [i];
-	    buf.write (it-> innerTypeString ());
-	    if (i < (int) this-> types.size () - 1)
-		buf.write (", ");
-	}
-	buf.write ("}");
-	if (this-> isConst ()) {
-	    return std::string ("const(") + buf.str () + ")";
-	} else return buf.str ();
-    }
     
     std::string IStructInfo::innerTypeString () {
-	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name, "{...}");
+	static std::map <std::string, bool> inner;
+	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
+	auto inside = inner.find (buf.str ());
+	if (inside == inner.end () || !inside-> second) {
+	    std::string name = buf.str ();	    
+	    inner [name] = true;
+	    buf.write ("{");
+	    for (auto i : Ymir::r (0, this-> types.size ())) {
+		auto it = this-> types [i];
+		buf.write (it-> innerTypeString ());
+		if (i < (int) this-> types.size () - 1)
+		    buf.write (", ");
+	    }
+	    buf.write ("}");
+	    inner [name] = false;
+	}
 	return buf.str ();
     }
 
@@ -367,30 +425,22 @@ namespace semantic {
     std::string IStructInfo::getName () {
 	return this-> name;
     }
-
-    std::string IStructInfo::simpleTypeString () {
-	static bool inner = false;
-	if (!inner) {
-	    inner = true;
-	    Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
+    
+    std::string IStructInfo::innerSimpleTypeString () {
+	static std::map <std::string, bool> inner;
+	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
+	auto inside = inner.find (buf.str ());
+	if (inside == inner.end () || !inside-> second) {
+	    std::string name = buf.str ();	    
+	    inner [name] = true;
 	    for (auto i : Ymir::r (0, this-> types.size ())) {
 		auto it = this-> types [i];
 		buf.write (it-> innerSimpleTypeString ());
+		if (i < (int) this-> types.size () - 1)
+		    buf.write (", ");
 	    }
-	    
-	    if (this-> isConst ()) {
-		return  std::string ("x") + buf.str ();
-	    } else return buf.str ();
-	    inner = false;
-	} else {
-	    if (this-> isConst ()) {
-		return  std::string ("x") + this-> innerSimpleTypeString ();
-	    } else return this-> innerSimpleTypeString ();
+	    inner [name] = false;
 	}
-    }
-    
-    std::string IStructInfo::innerSimpleTypeString () {
-	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
 	return buf.str ();
     }
 
@@ -402,6 +452,16 @@ namespace semantic {
 	this-> attrs = names;
     }
 
+    void IStructInfo::setTmps (std::vector <syntax::Expression> tmps) {
+	this-> tmpsDone = tmps;
+    }
+
+    InfoType IStructInfo::getTemplate (ulong nb) {	
+	if (nb < this-> tmpsDone.size ()) 
+	    return this-> tmpsDone [nb]-> info-> type;
+	return NULL;
+    }
+    
     std::vector <std::string> & IStructInfo::getAttribs () {
 	return this-> attrs;
     }
@@ -410,6 +470,7 @@ namespace semantic {
 	static std::map <std::string, bool> inner;
 	auto name = this-> innerTypeString ();	
 	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	
 	auto inside = inner.find (name);
 	if (inside == inner.end () || !inside-> second) {
 	    inner [name] = true;

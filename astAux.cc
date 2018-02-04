@@ -168,7 +168,11 @@ namespace syntax {
     IVar::IVar (Word ident, const std::vector<Expression> & tmps) :
 	IExpression (ident),
 	templates (tmps)
-    {}
+    {
+	for (auto it : this-> templates) {
+	    it-> inside = this;
+	}
+    }
 
     IVar::~IVar () {
 	for (auto it : templates)
@@ -278,6 +282,10 @@ namespace syntax {
     
     InfoType IType::type () {
 	return this-> _type;
+    }
+
+    Expression IType::onClone () {
+	return new (Z0) IType (this-> token, this-> _type);
     }
     
     std::vector <std::string> IType::getIds () {
