@@ -1,15 +1,49 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/errors/Error.hh>
+#include <ymir/ast/TreeExpression.hh>
 
 namespace semantic {
 
     using namespace syntax;
+
+    namespace EnumUtils {
+
+	using namespace Ymir;
+	
+	Tree InstGet (Word locus, InfoType type, Expression) {
+	    EnumInfo ecst = type-> to <IEnumInfo> ();
+	    if (ecst-> getComp () != NULL) {
+		if (ecst-> getComp ()-> unopFoo) {
+		    return ecst-> getComp ()-> buildUnaryOp (
+			locus,
+			ecst-> getComp () ,
+			ecst-> getValue ()
+		    );
+		} else {
+		    return ecst-> getComp ()-> buildBinaryOp (
+			locus,
+			ecst-> getComp (),
+			ecst-> getValue (),
+			new (Z0) ITreeExpression (locus, ecst-> getComp (), Ymir::Tree ())
+		    );
+		}
+	    } else {
+		return ecst-> getValue ()-> toGeneric ();
+	    }
+	    	    
+	    Ymir::Error::assert ("");
+	    return NULL;
+	}
+	
+    }
     
     IEnumCstInfo::IEnumCstInfo (std::string name, InfoType type) :
 	IInfoType (true),
 	_name (name),
 	type (type)
-    {}
+    {
+	this-> _isType = true;
+    }
 
     std::string IEnumCstInfo::name () {
 	return this-> _name;
@@ -32,19 +66,25 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IEnumCstInfo::DotOp (syntax::Var var) {
-	if (var-> hasTemplate ()) return NULL;
-	if (var-> token == "member") {
-	    auto info = new (Z0)  IArrayInfo (true, new (Z0)  IEnumInfo (true, this-> _name, this-> type-> clone ()));
-	    //TODO
-	    return info;
-	} else return NULL;
+    InfoType IEnumCstInfo::DotOp (syntax::Var) {
+	// if (var-> hasTemplate ()) return NULL;
+	// if (var-> token == "member") {
+	//     auto info = new (Z0)  IArrayInfo (true, new (Z0)  IEnumInfo (true, this-> _name, this-> type-> clone ()));
+	//     //TODO
+	//     return info;
+	// } else return NULL;
+	return NULL;
     }
 
     InfoType IEnumCstInfo::create () {
-	return new (Z0)  IEnumInfo (false, this-> _name, this-> type-> cloneOnExit ());
+	return new (Z0) IEnumInfo (false, this-> _name, this-> type-> cloneOnExit ());
     }
 
+    InfoType IEnumCstInfo::TempOp (const std::vector<::syntax::Expression> & tmps) {
+	if (tmps.size () != 0) return NULL;
+	return create ();
+    }
+    
     std::string IEnumCstInfo::innerSimpleTypeString () {
 	return Ymir::format ("%%%", this-> _name.length (), "E", this-> _name.c_str ());
     }
@@ -64,6 +104,18 @@ namespace semantic {
 	return false;
     }
 
+    std::vector <std::string> & IEnumCstInfo::getNames () {
+	return this-> names;
+    }
+
+    std::vector <syntax::Expression> & IEnumCstInfo::getValues () {
+	return this-> values;
+    }
+
+    std::vector <InfoType> & IEnumCstInfo::getComp () {
+	return this-> comps;
+    }    
+    
     InfoType IEnumCstInfo::onClone () {
 	return this;
     }
@@ -74,11 +126,13 @@ namespace semantic {
 
     InfoType IEnumCstInfo::GetAttrib (ulong nb) {
 	auto type = new (Z0)  IEnumInfo (true, this-> _name, this-> type-> clone ());
-	//if (this-> values [nb]-> info-> value) {
-	//    type-> _content-> value = this-> _values [nb]-> info-> value;
-	//}
-	type-> toGet () = nb;
-	//TODO
+	if (this-> values [nb]-> info-> isImmutable ()) {
+	    type-> getContent ()-> value () = this-> values [nb]-> info-> value ();
+	}
+	//type-> toGet () = nb;
+	type-> unopFoo = EnumUtils::InstGet;
+	type-> getValue () = this-> values [nb];
+	type-> getComp () = this-> comps [nb];
 	return type;
     }
 
@@ -90,8 +144,16 @@ namespace semantic {
 	this-> _content-> isConst (this-> isConst ());
     }
 
-    std::string IEnumInfo::name () {
+    std::string& IEnumInfo::name () {
 	return this-> _name;
+    }
+
+    InfoType & IEnumInfo::getComp () {
+	return this-> comp;
+    }
+
+    Expression & IEnumInfo::getValue () {
+	return this-> value;
     }
 
     InfoType IEnumInfo::BinaryOp (Word op, syntax::Expression right) {
@@ -112,12 +174,7 @@ namespace semantic {
     }
 
     InfoType IEnumInfo::DotOp (syntax::Var var) {
-	if (var-> hasTemplate ()) return this-> _content-> DotOp (var);
-	else if (var-> token == "typeid") {
-	    auto str = new (Z0)  IStringInfo (true);
-	    //TODO
-	    return str;
-	} else return this-> _content-> DotOp (var);
+	return this-> _content-> DotOp (var);
     }
 
     InfoType IEnumInfo::DotExpOp (syntax::Expression var) {
@@ -137,7 +194,6 @@ namespace semantic {
 	    auto rf = this-> clone ();
 	    auto ret = this-> _content-> CompOp (this-> _content);
 	    rf-> binopFoo = ret-> binopFoo;
-	    //TODO
 	    return rf;
 	} else
 	    return this-> _content-> CompOp (other);
@@ -151,12 +207,16 @@ namespace semantic {
 	return this-> _content-> ApplyOp (other);
     }
 
+    InfoType & IEnumInfo::getContent () {
+	return this-> _content;
+    }    
+    
     std::string IEnumInfo::innerSimpleTypeString () {
-	return Ymir::format ("%d%s%s", this-> _name.length (), "E", this-> _name.c_str ());
+	return Ymir::format ("%%%", this-> _name.length (), "E", this-> _name.c_str ());
     }
 
     std::string IEnumInfo::innerTypeString () {
-	return Ymir::format ("%s(%s)", this-> _name.c_str (), this-> _content-> innerTypeString ().c_str ());
+	return Ymir::format ("%(%)", this-> _name.c_str (), this-> _content-> innerTypeString ().c_str ());
     }
 
     const char* IEnumInfo::getId () {
@@ -166,14 +226,19 @@ namespace semantic {
     bool IEnumInfo::isSame (InfoType other) {
 	if (auto en = other-> to<IEnumInfo> ()) {
 	    return (en-> _name == this-> _name && this-> _content-> isSame (en-> _content));
-	}
+	} else
+	    return this-> _content-> isSame (other);
 	return false;
     }
 
     InfoType IEnumInfo::onClone () {
 	return new (Z0)  IEnumInfo (this-> isConst (), this-> _name, this-> _content-> clone ());
     }
-	
+
+    Ymir::Tree IEnumInfo::toGeneric () {
+	return this-> _content-> toGeneric ();
+    }
+    
     InfoType IEnumInfo::content () {
 	return this-> _content;
     }

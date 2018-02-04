@@ -503,9 +503,9 @@ namespace semantic {
 	if (string_type_node.isNull ()) {
 	    string_type_node = Ymir::makeStructType ("string", 2,
 						     get_identifier ("len"),
-						     (new (Z0)  IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+						     (new (Z0)  IFixedInfo (false, FixedConst::ULONG))-> toGeneric ().getTree (),
 						     get_identifier ("ptr"),
-						     (new (Z0)  IPtrInfo (true, new (Z0)  ICharInfo (true)))-> toGeneric ().getTree ()
+						     (new (Z0)  IPtrInfo (false, new (Z0)  ICharInfo (false)))-> toGeneric ().getTree ()
 	    ).getTree ();
 	    IFinalFrame::declareType ("string", string_type_node);	    
 	}

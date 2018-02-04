@@ -29,10 +29,18 @@ namespace semantic {
 
 	InfoType create ();
 
+	InfoType TempOp (const std::vector<::syntax::Expression> &) override;	
+	
 	std::string innerSimpleTypeString () override;
 
 	std::string innerTypeString () override;
 
+	std::vector <std::string> & getNames ();
+
+	std::vector <syntax::Expression> & getValues ();
+
+	std::vector <InfoType> & getComp ();
+	
 	bool isSame (InfoType) override;
 
 	InfoType onClone () override;
@@ -55,12 +63,19 @@ namespace semantic {
 	std::string _name;
 	InfoType _content;
 
+	InfoType comp;
+	syntax::Expression value;
+	
     public:
 
 	IEnumInfo (bool, std::string, InfoType);
 
-	std::string name ();
+	std::string& name ();
 
+	InfoType & getComp ();
+
+	syntax::Expression & getValue ();
+	
 	InfoType BinaryOp (Word, syntax::Expression) override;
 
 	InfoType BinaryOpRight (Word, syntax::Expression) override;
@@ -81,10 +96,14 @@ namespace semantic {
 
 	InfoType ApplyOp (const std::vector<syntax::Var> &) override;
 
+	InfoType & getContent ();
+	
 	std::string innerSimpleTypeString () override;
 
 	std::string innerTypeString () override;
 
+	Ymir::Tree toGeneric ();
+	
 	static const char* id () {
 	    return "IEnumInfo";
 	}
@@ -102,5 +121,6 @@ namespace semantic {
     
 
     typedef IEnumCstInfo* EnumCstInfo;
+    typedef IEnumInfo* EnumInfo;
     
 }

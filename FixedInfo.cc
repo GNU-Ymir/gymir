@@ -138,8 +138,6 @@ namespace semantic {
 		ret-> binopFoo = FixedUtils::InstCast;
 		return ret;
 	    }
-	} else if (auto ot = other-> to<IEnumInfo> ()) {
-	    return this-> CompOp (ot-> content ());
 	}
 	return NULL;
     }
@@ -492,7 +490,7 @@ namespace semantic {
 	}
 	
 	Ymir::Tree InstTestRight (Word locus, InfoType, Expression left, Expression right) {
-	    auto rtree = right-> toGeneric ();
+	    auto rtree = right-> toGeneric ();	    
 	    Ymir::Tree ltree = convert (rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 
 	    tree_code code = OperatorUtils::toGeneric (locus);

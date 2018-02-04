@@ -46,7 +46,7 @@ namespace semantic {
     }
 
     Ymir::Tree InternalFunction::getYMemcpy () {
-	if (__y_newArray__.isNull ()) {
+	if (__y_memcpy__.isNull ()) {
 	    tree fndecl_type_params [] = {
 		build_pointer_type (void_type_node),
 		build_pointer_type (void_type_node),
@@ -58,9 +58,9 @@ namespace semantic {
 	    tree fndecl = build_fn_decl ("memcpy", fndecl_type);
 	    DECL_EXTERNAL (fndecl) = 1;
 
-	    __y_newArray__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	    __y_memcpy__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
 	}
-	return __y_newArray__;
+	return __y_memcpy__;
     }
 
     Ymir::Tree InternalFunction::getYInitType (const char * name) {

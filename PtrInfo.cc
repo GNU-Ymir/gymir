@@ -61,6 +61,13 @@ namespace semantic {
 	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
 	}
 	
+
+	Ymir::Tree InstUnrefTyped (Word locus, InfoType type, Expression elem, Expression) {
+	    auto inner = type-> toGeneric ();
+	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
+	}
+	
+
     }
     
     IPtrInfo::IPtrInfo (bool isConst) :
@@ -224,9 +231,13 @@ namespace semantic {
     InfoType IPtrInfo::DotOp (syntax::Var var) {
 	if (var-> isType ()) {
 	    auto type = var-> asType ();
-	    auto ret = type-> info-> type;
-	    //ret-> binopFoo = &PtrUtils::InstUnrefTyped
-	    return ret;
+	    if (type) {
+		auto ret = type-> info-> type;
+		ret-> unopFoo = &PtrUtils::InstUnref;
+		ret-> binopFoo = &PtrUtils::InstUnrefTyped;
+		return ret;
+	    }
+	    return NULL;
 	}
 	return NULL;
     }

@@ -502,7 +502,7 @@ namespace syntax {
 	Ymir::Tree res;
 	auto tlvalue = DECL_RESULT (IFinalFrame::currentFrame ().getTree ());
 	if (this-> elem != NULL) {
-
+	    this-> caster-> isConst (false);
 	    if (this-> caster-> unopFoo) {
 		res = this-> caster-> buildUnaryOp (
 		    this-> token,

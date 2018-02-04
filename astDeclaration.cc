@@ -283,7 +283,7 @@ namespace syntax {
 		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
 		    else {
-			Ymir::Error::incompatibleTypes (this-> ident, val-> info, type-> type);
+			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type);
 			return;
 		    }			
 		}

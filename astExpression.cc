@@ -163,7 +163,7 @@ namespace syntax {
 	    it-> inside = this;
 	    tmps.push_back (it-> expression ());
 	}
-	
+
 	if (!IInfoType::exists (this-> token.getStr ())) {
 	    auto sym = Table::instance ().get (this-> token.getStr ());
 	    if (sym != NULL && sym-> type-> isType ()) {		
