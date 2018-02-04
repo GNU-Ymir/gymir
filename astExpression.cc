@@ -1015,7 +1015,7 @@ namespace syntax {
 	    Ymir::Error::useAsVar (expr-> token, expr-> info);
 	    return NULL;
 	}
-
+	
 	if (auto tuple = expr-> info-> type-> to <ITupleInfo> ()) {
 	    std::vector <Expression> params;
 	    for (auto it : Ymir::r (0, tuple-> getParams ().size ())) {

@@ -101,7 +101,9 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 
 	std::string innerTypeString () override;
-
+	
+	InfoType getTemplate (ulong) override;
+	
 	Ymir::Tree toGeneric ();
 	
 	static const char* id () {

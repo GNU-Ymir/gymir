@@ -239,8 +239,8 @@ namespace semantic {
 	    location_t loc = locus.getLocus ();
 	    TupleInfo info = type-> to<ITupleInfo> ();
 	    auto rtree = elem-> toGeneric ();
-	    
-	    auto rtype = elem-> info-> type-> to <ITupleInfo> ();
+
+	    auto rtype = elem-> info-> type-> to <ITupleInfo> ();	    
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
 	    Ymir::TreeStmtList list;
 	    

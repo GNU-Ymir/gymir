@@ -30,9 +30,28 @@ namespace semantic {
 	    } else {
 		return ecst-> getValue ()-> toGeneric ();
 	    }
-	    	    
-	    Ymir::Error::assert ("");
-	    return NULL;
+	}
+
+	Tree InstGet (Word locus, InfoType type, Expression, Expression) {
+	    EnumInfo ecst = type-> to <IEnumInfo> ();
+	    if (ecst-> getComp () != NULL) {
+		if (ecst-> getComp ()-> unopFoo) {
+		    return ecst-> getComp ()-> buildUnaryOp (
+			locus,
+			ecst-> getComp () ,
+			ecst-> getValue ()
+		    );
+		} else {
+		    return ecst-> getComp ()-> buildBinaryOp (
+			locus,
+			ecst-> getComp (),
+			ecst-> getValue (),
+			new (Z0) ITreeExpression (locus, ecst-> getComp (), Ymir::Tree ())
+		    );
+		}
+	    } else {
+		return ecst-> getValue ()-> toGeneric ();
+	    }
 	}
 	
     }
@@ -191,12 +210,15 @@ namespace semantic {
 
     InfoType IEnumInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
-	    auto rf = this-> clone ();
+	    auto rf = this-> clone ()-> to <IEnumInfo> ();
 	    auto ret = this-> _content-> CompOp (this-> _content);
-	    rf-> binopFoo = ret-> binopFoo;
+	    //rf-> _content = ret;
+	    rf-> comp = ret;
+	    rf-> binopFoo = EnumUtils::InstGet;
 	    return rf;
-	} else
+	} else {	    
 	    return this-> _content-> CompOp (other);
+	}
     }
 
     InfoType IEnumInfo::CastOp (InfoType other) {
@@ -231,8 +253,14 @@ namespace semantic {
 	return false;
     }
 
+    InfoType IEnumInfo::getTemplate (ulong i) {
+	return this-> _content-> getTemplate (i);
+    }
+    
     InfoType IEnumInfo::onClone () {
-	return new (Z0)  IEnumInfo (this-> isConst (), this-> _name, this-> _content-> clone ());
+	auto ret = new (Z0)  IEnumInfo (this-> isConst (), this-> _name, this-> _content-> clone ());
+	ret-> value = this-> value;
+	return ret;
     }
 
     Ymir::Tree IEnumInfo::toGeneric () {
