@@ -15,7 +15,6 @@ namespace semantic {
     {
 	if (fun) {
 	    this-> name = fun-> getIdent ().getStr ();
-	    this-> validate ();
 	}
     }
     
@@ -37,7 +36,6 @@ namespace semantic {
 	std::vector <Var> finalParam = IFrame::computeParams (this-> _function-> getParams ());
 	
 	this-> proto = IFrame::validate (finalParam);
-	delete this-> _function-> getBlock ();
 	return this-> proto;
     }
 

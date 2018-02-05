@@ -17,6 +17,10 @@ namespace semantic {
 	std::vector <Frame> _fromTemplates;
 	bool _alone = false;
 
+	static int nbTmpsCreation;// = 0;
+	static bool needToReset;// = true;
+	bool itsUpToMe = false;
+	
     public:
 
 	IFunctionInfo (Namespace, std::string);
@@ -72,6 +76,8 @@ namespace semantic {
 	InfoType toPtr ();
 
 	std::map<Word, std::string> candidates ();
+
+	ApplicationScore verifErrors ();
 	
     };
 

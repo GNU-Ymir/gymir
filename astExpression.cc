@@ -905,6 +905,8 @@ namespace syntax {
 	    if (type == NULL) {
 		Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
 		return NULL;
+	    } else if (type-> ret == NULL) {
+		return NULL;
 	    }
 
 	    if (type-> treat.size () != aux-> params-> getParams ().size ())

@@ -9,6 +9,9 @@
 
 namespace semantic {
 
+    int IFunctionInfo::nbTmpsCreation = 0;
+    bool IFunctionInfo::needToReset = true;
+    
     namespace FunctionUtils {
 	using namespace syntax;
 	using namespace std;
@@ -109,8 +112,23 @@ namespace semantic {
 	}
 	return NULL;
     }
+
+    ApplicationScore IFunctionInfo::verifErrors () {
+	if (itsUpToMe) {
+	    itsUpToMe = false;
+	    needToReset = true;
+	    nbTmpsCreation = 0;
+	}
+	
+	return NULL;
+    }
     
     ApplicationScore IFunctionInfo::CallOp (Word tok, const std::vector<InfoType> & params) {
+	if (needToReset) {
+	    itsUpToMe = true;
+	    needToReset = false;
+	}
+	
 	ulong nbErrorBeg = Ymir::Error::nb_errors;
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
@@ -140,7 +158,7 @@ namespace semantic {
 	    Ymir::Error::templateSpecialisation (goods [0]-> ident (),
 						 goods [1]-> ident ()
 	    );
-	    return NULL;
+	    return verifErrors ();
 	}
 
 	Table::instance ().addCall (tok);
@@ -158,8 +176,15 @@ namespace semantic {
 	}
 
 	if (Ymir::Error::nb_errors - nbErrorBeg) {
-	    Ymir::Error::templateCreation (tok);
-	    return NULL;
+	    nbTmpsCreation ++;
+	    if (nbTmpsCreation < 4) {
+		Ymir::Error::templateCreation (tok);
+	    } else if (this-> itsUpToMe) {
+		Ymir::Error::templateCreation2 (tok);
+	    }
+	    right-> ret = NULL;
+	    verifErrors ();
+	    return right;
 	}
 	
 	right-> ret = info-> type ()-> type-> cloneConst ();
@@ -172,6 +197,11 @@ namespace semantic {
     }
 
     ApplicationScore IFunctionInfo::CallOp (Word tok, syntax::ParamList params) {
+	if (needToReset) {
+	    itsUpToMe = true;
+	    needToReset = false;
+	}
+	
 	ulong nbErrorBeg = Ymir::Error::nb_errors;
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
@@ -202,7 +232,7 @@ namespace semantic {
 	    Ymir::Error::templateSpecialisation (goods [0]-> ident (),
 						 goods [1]-> ident ()
 	    );
-	    return NULL;
+	    return verifErrors ();
 	}
 
 	Table::instance ().addCall (tok);
@@ -219,9 +249,17 @@ namespace semantic {
 	    right-> proto = info;
 	}
 
+
 	if (Ymir::Error::nb_errors - nbErrorBeg) {
-	    Ymir::Error::templateCreation (tok);
-	    return NULL;
+	    nbTmpsCreation ++;
+	    if (nbTmpsCreation < 4) {
+		Ymir::Error::templateCreation (tok);
+	    } else if (this-> itsUpToMe) {
+		Ymir::Error::templateCreation2 (tok);
+	    }
+	    right-> ret = NULL;
+	    verifErrors ();
+	    return right;
 	}
 	
 	right-> ret = info-> type ()-> type-> cloneConst ();

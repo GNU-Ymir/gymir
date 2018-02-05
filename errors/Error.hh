@@ -47,6 +47,7 @@ namespace Ymir {
 	    Unterminated,
 	    TemplateSpecialisation,
 	    TemplateCreation,
+	    TemplateCreation2,
 	    And,
 	    Here,
 	    RecursiveExpansion,
@@ -143,6 +144,8 @@ namespace Ymir {
 	static void templateSpecialisation (const Word&, const Word&);
 	
 	static void templateCreation (const Word&);
+
+	static void templateCreation2 (const Word&);
 
 	static void moduleDontExist (const Word&, const Word&);
 

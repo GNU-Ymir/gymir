@@ -962,7 +962,7 @@ namespace syntax {
 	else if (tok == Keys::LET) return visitLet ();
 	else if (tok == Keys::BREAK) return visitBreak ();
 	else if (tok == Keys::ASSERT) return visitAssert ();
-	else if (tok == Keys::STATIC) {
+	else if (tok == Keys::IMMUTABLE) {
 	    tok = this-> lex.next ();
 	    Instruction inst;
 	    if (tok == Keys::IF) inst = visitIf ();
@@ -1842,7 +1842,7 @@ namespace syntax {
         
     Instruction Visitor::visitIf () {
 	this-> lex.rewind ();
-	bool needClose = false;
+	//bool needClose = false;
 	auto begin = this-> lex.next ();
 	this-> lambdaPossible = false;
 	auto test = visitExpression ();

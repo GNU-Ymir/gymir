@@ -115,7 +115,7 @@ namespace semantic {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
 
-	    for (auto it : this-> _frameTable) {
+	    for (auto it : this-> _frameTable) {		
 		if (it.space ().isAbsSubOf (last)) {
 		    ret = it.get (name);
 		    if (ret && ret-> isScoped ()) return ret;
@@ -124,7 +124,7 @@ namespace semantic {
 		} else if (this-> _space != last) break;	    
 	    }
 	}
-
+	
 	if (ret == NULL) ret = this-> _globalScope.get (name);
 	if (ret == NULL) {
 	    auto mods = this-> getAllMod (getCurrentSpace ());

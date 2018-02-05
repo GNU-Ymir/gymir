@@ -281,9 +281,12 @@ namespace syntax {
 	    Symbol type = NULL;
 	    Expression fst = NULL;
 	    if (this-> type != NULL) {
-		type = this-> type-> asType ()-> info;
+		auto ftype = this-> type-> asType ();
+		if (ftype == NULL) return;
+		type = ftype-> info;
 	    } else {
 		fst = this-> values [0]-> expression ();
+		if (fst == NULL) return;
 		type = fst-> info;
 	    }
 

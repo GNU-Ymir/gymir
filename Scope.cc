@@ -117,4 +117,16 @@ namespace semantic {
 	}	
     }
 
+    std::string Scope::toString () {
+	Ymir::OutBuffer buf ("syms : {\n");
+	for (auto it : this-> local) {
+	    buf.write ("\t", it.first, " : [");
+	    for (auto it_ : it.second)
+		buf.write (it_-> typeString ());
+	    buf.write ("]\n");
+	}
+	buf.write ("}");
+	return buf.str ();
+    }
+    
 }

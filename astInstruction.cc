@@ -253,10 +253,12 @@ namespace syntax {
 	auto aux = new (Z0)  IReturn (this-> token);
 	Table::instance ().retInfo ().returned ();
 	if (this-> elem != NULL) {
+	    this-> elem-> inside = this;
 	    aux-> elem = this-> elem-> expression ();
 	    if (aux-> elem == NULL) return NULL;
 	    if (aux-> elem-> info-> type-> is <IVoidInfo> ()) {
 		Ymir::Error::returnVoid (this-> token, aux-> elem-> info);
+		return NULL;
 	    }
 	    
 	    auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
