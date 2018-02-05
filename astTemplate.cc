@@ -20,8 +20,8 @@ namespace syntax {
     }    
     
     Expression IArrayAlloc::templateExpReplace (const map <string, Expression>& values) {
-	auto type = this-> type-> templateExpReplace (values);
-	auto size = this-> size-> templateExpReplace (values);
+	auto type = this-> type-> templateExpReplace (values);	
+	auto size = this-> size-> templateExpReplace (values);	
 	return new (Z0)  IArrayAlloc (this-> token, type, size);
     }
 

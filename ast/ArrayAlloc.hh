@@ -20,7 +20,13 @@ namespace syntax {
     
 	Expression expression () override;
 
+	Expression staticArray ();
+	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+	
+	Expression getType ();
+
+	Expression getSize ();
 	
 	Ymir::Tree toGeneric () override;
 

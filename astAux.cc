@@ -343,6 +343,14 @@ namespace syntax {
 	    this-> type-> inside = this;
     }    
 
+    Expression IArrayAlloc::getType () {
+	return this-> type;
+    }
+
+    Expression IArrayAlloc::getSize () {
+	return this-> size;
+    }
+    
     IArrayAlloc::~IArrayAlloc () {
 	delete type;
 	type = NULL;

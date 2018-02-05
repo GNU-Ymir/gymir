@@ -9,6 +9,8 @@ namespace semantic {
     
     class IArrayInfo : public IInfoType {
 
+	bool _isStatic;
+	ulong _size;
 	InfoType _content;
 
     public:
@@ -37,7 +39,7 @@ namespace semantic {
 	InfoType AccessOp (Word, syntax::ParamList, std::vector <InfoType> &) override;
 
 	InfoType DotOp (syntax::Var) override;
-
+	
 	InfoType DColonOp (syntax::Var) override;
 
 	InfoType onClone () override;
@@ -55,7 +57,11 @@ namespace semantic {
 	Ymir::Tree toGeneric () override;
 	
 	InfoType getTemplate (ulong) override;
-       	
+
+	bool isStatic ();
+	
+	void isStatic (bool isStatic, ulong size);
+	
 	static const char* id () {
 	    return "IArrayInfo";
 	}

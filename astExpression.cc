@@ -258,8 +258,14 @@ namespace syntax {
 	    }
 	    return type-> info-> type;	    
 	} else {
-	    this-> expType = this-> expType-> expression ();
-	    if (this-> expType == NULL) return NULL;
+	    if (!this-> expType) return NULL;
+	    if (auto alloc = this-> expType-> to<IArrayAlloc> ()) {
+		this-> expType = alloc-> staticArray ();
+		if (this-> expType == NULL) return NULL;
+	    } else {
+		this-> expType = this-> expType-> expression ();
+		if (this-> expType == NULL) return NULL;
+	    }
 	    auto type = this-> expType;
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
@@ -267,7 +273,7 @@ namespace syntax {
 		return new (Z0)  IRefInfo (false, type-> info-> type);
 	    } else if (this-> deco == Keys::CONST) {
 		type-> info-> type-> isConst (true);
-	    }
+	    }	
 	    return type-> info-> type;	    
 	}
     }
@@ -284,9 +290,13 @@ namespace syntax {
 	    if (type == NULL) return NULL;
 	    aux = new (Z0)  ITypedVar (this-> token, type);
 	} else {
-	    auto ptr = this-> expType-> expression ()-> to<IFuncPtr> ();
-	    if (ptr) {
+	    if (auto ptr = this-> expType-> to<IFuncPtr> ()) {
+		ptr = this-> expType-> expression ()-> to<IFuncPtr> ();
 		aux = new (Z0)  ITypedVar (this-> token, new (Z0)  IType (ptr-> token, ptr-> info-> type));
+	    } else if (auto ialloc = this-> expType-> to <IArrayAlloc> ()) {
+		auto res = ialloc-> staticArray ();
+		if (res == NULL) return NULL;
+		aux = new (Z0)  ITypedVar (this-> token, new (Z0)  IType (res-> token, res-> info-> type));
 	    } else Ymir::Error::assert ("Error");	
 	}
 	
@@ -318,10 +328,38 @@ namespace syntax {
 	auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
 	if (cmp == NULL) {
-	    Ymir::Error::assert ("TODO");
+	    Ymir::Error::incompatibleTypes (this-> token, aux-> size-> info, ul-> type);
+	    return NULL;
 	}
 	aux-> cster = cmp;
 	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IArrayInfo (false, aux-> type-> info-> type-> clone ()));
+	return aux;
+    }
+
+    Expression IArrayAlloc::staticArray () {
+	auto aux = new (Z0)  IArrayAlloc (this-> token, NULL, this-> size-> expression ());
+	if (auto fn = this-> type-> to<IFuncPtr> ()) aux-> type = fn-> expression ();
+	else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
+	else Ymir::Error::useAsType (this-> type-> token);
+	
+	auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
+	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
+	if (cmp == NULL) {
+	    Ymir::Error::incompatibleTypes (this-> token, aux-> size-> info, ul-> type);
+	    return NULL;
+	}
+
+	auto arrayType = new (Z0)  IArrayInfo (true, aux-> type-> info-> type-> clone ());
+	aux-> cster = cmp;
+	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
+	
+	if (!aux-> size-> info-> isImmutable ()) {
+	    Ymir::Error::notImmutable (aux-> size-> info);
+	    return NULL;
+	} else {
+	    arrayType-> isStatic (true, aux-> size-> info-> value ()-> to <IFixedValue> ()-> getUValue ()); 
+	}	
+	
 	return aux;
     }
     

@@ -654,6 +654,21 @@ namespace syntax {
 	    if (next == Keys::FUNCTION) {
 		auto type = visitFuncPtrSimple ();
 		return new (Z0)  ITypedVar (ident, type, deco);
+	    } else if (next == Token::LCRO) {
+		auto begin = next;
+		next = this-> lex.next ();
+		Expression type;
+		if (next == Keys::FUNCTION) type = visitFuncPtrSimple ();
+		else {
+		    this-> lex.rewind ();
+		    type = visitType ();
+		}
+		next = this-> lex.next ({Token::RCRO, Token::SEMI_COLON});
+		if (next == Token::SEMI_COLON) {
+		    auto len = visitNumericOrVar ();
+		    this-> lex.next ({Token::RCRO});
+		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), Word::eof ());
+		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), Word::eof ());
 	    } else {
 		this-> lex.rewind ();
 		auto type = visitType ();
@@ -684,6 +699,21 @@ namespace syntax {
 	    if (next == Keys::FUNCTION) {
 		auto type = visitFuncPtrSimple ();
 		return new (Z0)  ITypedVar (ident, type, deco);
+	    } else if (next == Token::LCRO) {
+		auto begin = next;
+		next = this-> lex.next ();
+		Expression type;
+		if (next == Keys::FUNCTION) type = visitFuncPtrSimple ();
+		else {
+		    this-> lex.rewind ();
+		    type = visitType ();
+		}
+		next = this-> lex.next ({Token::RCRO, Token::SEMI_COLON});
+		if (next == Token::SEMI_COLON) {
+		    auto len = visitNumericOrVar ();
+		    this-> lex.next ({Token::RCRO});
+		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), Word::eof ());
+		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), Word::eof ());
 	    } else {
 		this-> lex.rewind ();
 		auto type = visitType ();
@@ -962,7 +992,7 @@ namespace syntax {
 	else if (tok == Keys::LET) return visitLet ();
 	else if (tok == Keys::BREAK) return visitBreak ();
 	else if (tok == Keys::ASSERT) return visitAssert ();
-	else if (tok == Keys::IMMUTABLE) {
+	else if (tok == Keys::STATIC) {
 	    tok = this-> lex.next ();
 	    Instruction inst;
 	    if (tok == Keys::IF) inst = visitIf ();
@@ -1347,6 +1377,15 @@ namespace syntax {
 	}
     }
 
+    Expression Visitor::visitNumericOrVar () {
+	auto tok = this-> lex.next ();
+	if (tok.isEof ()) return NULL;
+	if (tok.getStr () [0] >= '0'&& tok.getStr () [0] <= '9')
+	    return visitNumeric (tok, false);
+	else this-> lex.rewind ();
+	return visitVar ();
+    }
+    
     Expression Visitor::visitNumeric (const Word& begin, bool abrev) {
 	for (int it = 0 ; it < (int) begin.getStr ().length (); it++) {
 	    if (begin.getStr () [it] < '0' || begin.getStr() [it] > '9') {		
@@ -1842,7 +1881,6 @@ namespace syntax {
         
     Instruction Visitor::visitIf () {
 	this-> lex.rewind ();
-	//bool needClose = false;
 	auto begin = this-> lex.next ();
 	this-> lambdaPossible = false;
 	auto test = visitExpression ();

@@ -123,6 +123,7 @@ namespace semantic {
     InfoType IStructCstInfo::Init () {
 	std::vector <syntax::Expression> exp;
 	auto ret = this-> TempOp (exp);
+	if (ret == NULL) return NULL;
 	ret-> unopFoo = StructUtils::InstInit;
 	return ret;
     }
@@ -141,6 +142,7 @@ namespace semantic {
 	auto score = new (Z0) IApplicationScore (token);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    InfoType info = this-> params [it]-> getType ();
+	    if (info == NULL) return NULL;
 	    types.push_back (info);
 	    attribs.push_back (this-> params [it]-> token.getStr ());
 	    

@@ -8,6 +8,7 @@
 #include <ymir/semantic/utils/ArrayUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
+#include <ymir/semantic/value/FixedValue.hh>
 
 namespace semantic {
 
@@ -25,6 +26,7 @@ namespace semantic {
     bool IArrayInfo::isSame (InfoType other) {
 	auto arr = other-> to<IArrayInfo> ();
 	if (arr == NULL) return NULL;
+	if (this-> _isStatic != arr-> _isStatic || this-> _size != arr-> _size) return false;
 	if (this-> _content == arr-> _content) return true;
 	return this-> _content-> isSame (arr-> _content);
     }
@@ -151,6 +153,9 @@ namespace semantic {
     InfoType IArrayInfo::Length () {
 	auto elem = new (Z0)  IFixedInfo (true, FixedConst::ULONG);
 	elem-> binopFoo = ArrayUtils::InstLen;
+	if (this-> _isStatic) {
+	    elem-> value () = new (Z0) IFixedValue (FixedConst::ULONG, this-> _size, this-> _size);
+	}
 	return elem;
     }
 
@@ -199,6 +204,7 @@ namespace semantic {
     InfoType IArrayInfo::onClone () {
 	auto ret = new (Z0)  IArrayInfo (this-> isConst (), this-> _content-> clone ());
 	//ret-> value = this-> value;
+	ret-> isStatic (this-> _isStatic, this-> _size);
 	return ret;
     }
 
@@ -217,6 +223,9 @@ namespace semantic {
     InfoType IArrayInfo::CompOp (InfoType other) {
 	auto type = other-> to<IArrayInfo> ();
 	if (type && type-> _content-> isSame (this-> _content)) {
+	    if (type-> _isStatic != this-> _isStatic || type-> _size != this-> _size)
+		return NULL;
+	    
 	    auto ret = type-> clone ();
 	    ret-> isConst (this-> isConst ());
 	    if (this-> _content-> ConstVerif (type-> _content) == NULL)
@@ -259,31 +268,60 @@ namespace semantic {
     }
 
     Ymir::Tree IArrayInfo::toGeneric () {
-	std::string name = this-> _content-> innerTypeString () + "[]";
-	auto array_type_node = IFinalFrame::getDeclaredType (name.c_str ());
-	if (array_type_node.isNull ()) {
-	    array_type_node = Ymir::makeStructType (name, 2,
-						    get_identifier ("len"),
-						    (new (Z0)  IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
-						    get_identifier ("ptr"),
-						    (new (Z0)  IPtrInfo (true, this-> _content-> clone ()))-> toGeneric ().getTree ()
-	    ).getTree ();
-	    IFinalFrame::declareType (name, array_type_node);
+	if (!this-> _isStatic) {
+	    std::string name = this-> _content-> innerTypeString () + "[]";
+	    auto array_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	    if (array_type_node.isNull ()) {
+		array_type_node = Ymir::makeStructType (name, 2,
+							get_identifier ("len"),
+							(new (Z0)  IFixedInfo (true, FixedConst::ULONG))-> toGeneric ().getTree (),
+							get_identifier ("ptr"),
+							(new (Z0)  IPtrInfo (true, this-> _content-> clone ()))-> toGeneric ().getTree ()
+		).getTree ();
+		IFinalFrame::declareType (name, array_type_node);
+	    }
+	    return array_type_node;
+	} else {
+	    tree begin = build_int_cst_type (integer_type_node, 0);
+	    tree len = build_int_cst_type (integer_type_node, this-> _size - 1);
+	    auto innerType = this-> _content-> toGeneric ();
+	    Ymir::Tree range_type = build_range_type (integer_type_node, fold (begin), fold (len));
+	    Ymir::Tree array_type = build_array_type (innerType.getTree (), range_type.getTree ());
+	    return array_type;
 	}
-	return array_type_node;
     }
     
     std::string IArrayInfo::innerTypeString () {
-	return std::string ("[") + this-> _content-> typeString () + "]";
+	if (this-> _isStatic) {
+	    return Ymir::OutBuffer ("[", this-> _content-> typeString (), " ; ", this-> _size, "]").str ();
+	} else {
+	    return std::string ("[") + this-> _content-> typeString () + "]";
+	}
     }
 
-    std::string IArrayInfo::innerSimpleTypeString () {	
-	return std::string ("A") + this-> _content-> simpleTypeString ();
+    std::string IArrayInfo::innerSimpleTypeString () {
+	if (this-> _isStatic) {
+	    return Ymir::OutBuffer ("A", this-> _size, this-> _content-> typeString ()).str ();
+	} else 
+	    return std::string ("A") + this-> _content-> simpleTypeString ();
     }
 
     InfoType IArrayInfo::getTemplate (ulong i) {
 	if (i == 0) return this-> _content;
+	if (i == 1 && this-> _isStatic) {
+	    return Length ();
+	}
 	else return NULL;
+    }
+
+    bool IArrayInfo::isStatic () {
+	return this-> _isStatic;
+    }
+
+    void IArrayInfo::isStatic (bool isStatic, ulong size) {
+	this-> _isStatic = isStatic;
+	this-> isConst (this-> _isStatic);
+	this-> _size = size;
     }
     
     const char* IArrayInfo::getId () {
@@ -456,7 +494,7 @@ namespace semantic {
 
 	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
 	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
-	    if (left-> is<IConstArray> ()) {
+	    if (lexp.getType ().getTreeCode () != RECORD_TYPE) {
 		return getArrayRef (loc, lexp, inner, rexp);
 	    } else {
 		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");

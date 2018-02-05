@@ -5,6 +5,7 @@
 #include <ymir/ast/Function.hh>
 #include <ymir/ast/ParamList.hh>
 #include <ymir/ast/OfVar.hh>
+#include <ymir/ast/ArrayAlloc.hh>
 #include <ymir/ast/FuncPtr.hh>
 #include <map>
 
@@ -103,6 +104,9 @@ namespace semantic {
 	   Returns: une solution template
 	*/
 	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::ArrayVar param, InfoType type, bool isConst = false);
+
+	
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::ArrayAlloc param, InfoType type, bool isConst = false);
 
 	/**
 	   Résoud un paramètre template de type fonction

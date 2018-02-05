@@ -66,6 +66,7 @@ namespace syntax {
 	Expression visitExpand ();
 	Expression visitTypeOf ();
 	Expression visitIs ();
+	Expression visitNumericOrVar ();
 	Expression visitNumeric (const Word& begin, bool abrev = true);
 	Expression visitFloat (const Word& begin);
 	Expression visitString (Word& word);

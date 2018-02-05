@@ -69,7 +69,7 @@ namespace semantic {
 	else if (this-> _isPure) return validate ();
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> _isInternal);
 	Table::instance ().enterBlock ();
-	auto func = this-> _function-> templateReplace (score-> tmps);
+	auto func = this-> _function-> templateReplace (score-> tmps);	
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 
 	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;	

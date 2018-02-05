@@ -357,7 +357,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());	    
+	    assert ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -369,7 +369,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, true, false};
 	if (__isEnable__) {	    
 	    Error::instance ().nb_errors ++;
-	    fail("%s", errorMsg.msg.c_str ());
+	    assert("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -382,7 +382,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    assert ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -398,7 +398,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    assert ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
