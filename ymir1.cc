@@ -14,7 +14,18 @@
 #include "langhooks.h"
 #include "langhooks-def.h"
 #include "common/common-target.h"
+#include <ymir/semantic/tree/Tree.hh>
 #include "Parser.hh"
+
+
+#define ubyte_type_node unsigned_char_type_node
+#define byte_type_node signed_char_type_node
+#define ushort_type_node short_unsigned_type_node
+#define short_type_node short_integer_type_node
+#define int_type_node integer_type_node
+#define uint_type_node unsigned_type_node
+#define long_type_node long_integer_type_node
+#define ulong_type_node long_unsigned_type_node
 
 /* Language-dependent contents of a type.  */
  
@@ -84,11 +95,12 @@ ymir_langhook_parse_file (void)
 static tree
 ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
 {
+  
   if (mode == TYPE_MODE (float_type_node))
-    return float_type_node;
- 
+      return float_type_node;
+  
   if (mode == TYPE_MODE (double_type_node))
-    return double_type_node;
+      return double_type_node;
  
   if (mode == TYPE_MODE (intQI_type_node))
     return unsignedp ? unsigned_intQI_type_node : intQI_type_node;
@@ -128,11 +140,22 @@ ymir_langhook_type_for_mode (enum machine_mode mode, int unsignedp)
 }
  
 static tree
-ymir_langhook_type_for_size (unsigned int bits ATTRIBUTE_UNUSED,
-			     int unsignedp ATTRIBUTE_UNUSED)
+ymir_langhook_type_for_size (unsigned int bits,
+			     int unsignedp)
 {
-  gcc_unreachable ();
-  return NULL;
+    if (bits <= TYPE_PRECISION (byte_type_node))
+	return unsignedp ? ubyte_type_node : byte_type_node;
+
+    if (bits <= TYPE_PRECISION (short_type_node))
+	return unsignedp ? ushort_type_node : short_type_node;
+
+    if (bits <= TYPE_PRECISION (int_type_node))
+	return unsignedp ? uint_type_node : int_type_node;
+    
+    if (bits <= TYPE_PRECISION (long_type_node))
+	return unsignedp ? ulong_type_node : long_type_node;
+    
+    return NULL;
 }
  
 /* Record a builtin function.  We just ignore builtin functions.  */
@@ -146,8 +169,8 @@ ymir_langhook_builtin_function (tree decl)
 static bool
 ymir_langhook_global_bindings_p (void)
 {
-  gcc_unreachable ();
-  return true;
+    gcc_unreachable ();
+    return true;
 }
  
 static tree

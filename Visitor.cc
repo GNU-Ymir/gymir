@@ -74,7 +74,7 @@ namespace syntax {
 	this-> highOp = {Token::DIV, Token::AND, Token::STAR, Token::PERCENT,
 			 Token::DXOR};
 	
-	this-> suiteElem = {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON};
+	this-> suiteElem = {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON, Token::LACC};
 	this-> afUnary = {Token::DPLUS, Token::DMINUS};	
 	this-> befUnary = {Token::MINUS, Token::AND, Token::STAR, Token::NOT};
 	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT,
@@ -1208,7 +1208,10 @@ namespace syntax {
 		    isLambda = true;
 		    params.push_back (visitVarDeclaration ());
 		} else {
+		    auto save = this-> lambdaPossible;
+		    this-> lambdaPossible = true;
 		    params.push_back (visitExpressionUlt ());
+		    this-> lambdaPossible = save;
 		}
 		tok = this-> lex.next ({Token::RPAR, Token::COMA});
 		if (tok == Token::RPAR) break;
@@ -1503,9 +1506,7 @@ namespace syntax {
 	auto next = this-> lex.next ();
 	if (find (suiteElem, next)) 
 	    return visitSuite (next, var);
-	else if (next == Token::LACC) {
-	    return visitStructCst (var);
-	} else this-> lex.rewind ();
+	else this-> lex.rewind ();
 	return var;
     }
 
@@ -1681,6 +1682,14 @@ namespace syntax {
 	else if (token == Token::LCRO) return visitAccess (left);
 	else if (token == Token::DOT) return visitDot (left);
 	else if (token == Token::DCOLON) return visitDColon (left);
+	else if (token == Token::LACC) {
+	    if (this-> lambdaPossible) {
+		return visitStructCst (left);
+	    } else {
+		this-> lex.rewind ();
+		return left;
+	    }
+	}
 	else {
 	    syntaxError (token, {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON});
 	    return NULL;
@@ -1835,11 +1844,9 @@ namespace syntax {
 	this-> lex.rewind ();
 	bool needClose = false;
 	auto begin = this-> lex.next ();
-	auto par = this-> lex.next ();
-	if (par == Token::LPAR) needClose = true;
-	else this-> lex.rewind ();
+	this-> lambdaPossible = false;
 	auto test = visitExpression ();
-	if (needClose) this-> lex.next ({Token::RPAR});
+	this-> lambdaPossible = true;
 	auto block = visitBlock ();
 	auto next = this-> lex.next ();
 	if (next == Keys::ELSE) {
@@ -1908,12 +1915,16 @@ namespace syntax {
 	if (next == Token::COLON) {
 	    auto id = visitIdentifiant ();
 	    next = this-> lex.next ({Token::LPAR});
+	    this-> lambdaPossible = false;
 	    auto test = visitExpression ();
+	    this-> lambdaPossible = true;
 	    next = this-> lex.next ({Token::RPAR});
 	    return new (Z0)  IWhile (begin, id, test, visitBlock ());
 	} else {
 	    this-> lex.rewind ();
+	    this-> lambdaPossible = false;
 	    auto test = visitExpression ();
+	    this-> lambdaPossible = true;
 	    return new (Z0)  IWhile (begin, test, visitBlock ());
 	}
     }
@@ -1923,6 +1934,7 @@ namespace syntax {
 	auto begin = this-> lex.next ();
 	auto next = this-> lex.next ();
 	Word id = Word::eof ();
+	this-> lambdaPossible = false;
 	bool need = false;
 	if (next == Token::COLON) {
 	    id = visitIdentifiant ();
@@ -1942,6 +1954,7 @@ namespace syntax {
 	if (need) {
 	    next = this-> lex.next ({Token::RPAR});
 	}
+	this-> lambdaPossible = true;
 	
 	return new (Z0)  IFor (begin, id, vars, iter, visitBlock ());
     }       

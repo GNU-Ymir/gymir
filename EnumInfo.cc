@@ -10,8 +10,9 @@ namespace semantic {
 
 	using namespace Ymir;
 	
-	Tree InstGet (Word locus, InfoType type, Expression) {
+	Tree InstGet (Word locus, InfoType type, Expression elem) {
 	    EnumInfo ecst = type-> to <IEnumInfo> ();
+	    if (ecst-> getValue () == NULL) ecst-> getValue () = elem;
 	    if (ecst-> getComp () != NULL) {
 		if (ecst-> getComp ()-> unopFoo) {
 		    return ecst-> getComp ()-> buildUnaryOp (
@@ -32,13 +33,14 @@ namespace semantic {
 	    }
 	}
 
-	Tree InstGet (Word locus, InfoType type, Expression, Expression) {
+	Tree InstGet (Word locus, InfoType type, Expression elem, Expression) {
 	    EnumInfo ecst = type-> to <IEnumInfo> ();
+	    if (ecst-> getValue () == NULL) ecst-> getValue () = elem;
 	    if (ecst-> getComp () != NULL) {
 		if (ecst-> getComp ()-> unopFoo) {
 		    return ecst-> getComp ()-> buildUnaryOp (
 			locus,
-			ecst-> getComp () ,
+			ecst-> getComp (),
 			ecst-> getValue ()
 		    );
 		} else {
@@ -211,8 +213,7 @@ namespace semantic {
     InfoType IEnumInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
 	    auto rf = this-> clone ()-> to <IEnumInfo> ();
-	    auto ret = this-> _content-> CompOp (this-> _content);
-	    //rf-> _content = ret;
+	    auto ret = this-> _content-> CompOp (this-> _content);	    
 	    rf-> comp = ret;
 	    rf-> binopFoo = EnumUtils::InstGet;
 	    return rf;
