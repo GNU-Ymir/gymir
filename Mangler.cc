@@ -88,7 +88,7 @@ namespace Mangler {
     }
     
     std::string mangle_function (std::string& name, ::semantic::FrameProto frame) {
-	if (name == Keys::MAIN) return name;
+	if (name == Keys::MAIN) return "_Y" + name;
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
@@ -108,7 +108,7 @@ namespace Mangler {
     }
 
     std::string mangle_function (std::string & name, ::semantic::FinalFrame frame) {
-	if (name == Keys::MAIN) return name;
+	if (name == Keys::MAIN) return "_Y" + name;
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");

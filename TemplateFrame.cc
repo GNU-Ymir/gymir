@@ -155,7 +155,11 @@ namespace semantic {
 	func-> name ((func-> name () + space.str ()).c_str ());
 
 	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
-	    if (!validateTest (func-> getTest ())) return NULL;	    
+	    if (func-> getTest ()) {
+		auto valid = func-> getTest ()-> templateExpReplace (res.elements);
+		if (!validateTest (valid)) return NULL;
+	    }
+	    
 	    Frame ret;
 	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> space (), func);
 	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> space (), func);
@@ -228,7 +232,7 @@ namespace semantic {
 		    exp.second = exp.second-> templateExpReplace ({});
 		}
 	    }
-
+	    
 	    if (this-> _function-> getTest ()) {
 		auto valid = this-> _function-> getTest ()-> templateExpReplace (tmps);
 		if (!validateTest (valid)) return NULL;

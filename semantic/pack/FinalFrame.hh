@@ -59,7 +59,7 @@ namespace semantic {
 
 	void finalize ();
 	
-	static Ymir::Tree currentFrame ();
+	static Ymir::Tree& currentFrame ();
 
 	static Ymir::Tree getDeclaredType (const char * name);
 	

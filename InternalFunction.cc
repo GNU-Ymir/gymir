@@ -6,6 +6,8 @@ namespace semantic {
     Ymir::Tree InternalFunction::__fnMalloc__;
     Ymir::Tree InternalFunction::__y_newArray__;	
     Ymir::Tree InternalFunction::__y_memcpy__;
+    Ymir::Tree InternalFunction::__y_main__;
+    Ymir::Tree InternalFunction::__y_run_main__;
     std::map <std::string, Ymir::Tree> InternalFunction::__funcs__;
     
     Ymir::Tree InternalFunction::getMalloc () {
@@ -95,5 +97,33 @@ namespace semantic {
 	return it-> second;
     }
         
+    Ymir::Tree InternalFunction::getYMainPtr () {
+	if (__y_main__.isNull ()) {
+	    tree ret = int_type_node;
+	    tree fndecl_type = build_function_type_array (ret, 0, NULL);
+	    tree fndecl = build_fn_decl ("_Ymain", fndecl_type);
+	    DECL_EXTERNAL (fndecl) = 1;
+	    __y_main__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	}
+	return __y_main__;
+    }
 
+    Ymir::Tree InternalFunction::getYRunMain () {
+	if (__y_run_main__.isNull ()) {
+	    tree args [] = {
+		int_type_node,
+		build_pointer_type (build_pointer_type (ubyte_type_node)),
+		getYMainPtr ().getType ().getTree ()
+	    };
+	    tree ret = int_type_node;
+	    tree fndecl_type = build_function_type_array (ret, 3, args);
+	    tree fndecl = build_fn_decl ("y_run_main", fndecl_type);
+	    DECL_EXTERNAL (fndecl) = 1;
+	    __y_run_main__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	}
+	return __y_run_main__;
+    }
+
+    
+    
 }

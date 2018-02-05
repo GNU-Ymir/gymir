@@ -806,10 +806,8 @@ namespace syntax {
 	} else if (auto var = aux-> right-> to<IVar> ()) {
 	    auto type = aux-> left-> info-> type-> DotOp (var);
 	    if (type == NULL) {
-		Ymir::Error::activeError (false);
 		var-> inside = aux;
 		auto call = var-> expression ();
-		Ymir::Error::activeError (true);	       
 		if (call == NULL || call-> is<IType> () || call-> info-> type-> is<IUndefInfo> ()) {
 		    Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
 		    return NULL;
@@ -846,10 +844,10 @@ namespace syntax {
 	    if (type == NULL) {
 		Ymir::Error::undefinedOp (word, aux-> left ()-> info, aux-> paramList ());
 		return NULL;
-	    }
+	    } else if (type-> ret == NULL) return NULL;
 
 	    aux-> score () = type;
-	    aux-> info = new (Z0)  ISymbol (this-> token, type-> ret);
+	    aux-> info = new (Z0)  ISymbol (this-> token, type-> ret);	    
 	    if (type-> ret-> is <IUndefInfo> ()) {
 		Ymir::Error::templateInferType (aux-> left ()-> token, aux-> score ()-> token);
 		return NULL;
@@ -958,6 +956,7 @@ namespace syntax {
     
     Expression IBool::expression () {
 	auto aux = new (Z0)  IBool (this-> token);
+	aux-> value = this-> value;
 	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IBoolInfo (this-> value));
 	aux-> info-> value () = new (Z0)  IBoolValue (this-> value);
 	return aux;

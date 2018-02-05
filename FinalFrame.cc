@@ -4,7 +4,9 @@
 #include <ymir/ast/Expression.hh>
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/types/InfoType.hh>
+#include <ymir/semantic/types/VoidInfo.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/syntax/Keys.hh>
 
 #include "config.h"
 #include "system.h"
@@ -73,7 +75,7 @@ namespace semantic {
     	return this-> _block;
     }
     
-    Ymir::Tree IFinalFrame::currentFrame () {
+    Ymir::Tree& IFinalFrame::currentFrame () {
 	return __fn_decl__;
     }
 
@@ -148,8 +150,11 @@ namespace semantic {
 	std::vector <tree> args (this-> _vars.size ());
 	for (uint i = 0 ; i < this-> _vars.size () ; i++)
 	    args [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
-
-	tree ret = this-> _type-> type-> toGeneric ().getTree ();
+	tree ret;
+	if (this-> _name == Keys::MAIN && this-> _type-> type-> is<IVoidInfo> ())
+	    ret = int_type_node;
+	else
+	    ret = this-> _type-> type-> toGeneric ().getTree ();
 		
 	//tree ident = get_identifier (this-> _name.c_str ());
 	tree ident = get_identifier (Mangler::mangle_function (this-> _name, this).c_str ());
@@ -171,7 +176,16 @@ namespace semantic {
 	
 	Ymir::Tree inside = this-> _block-> toGeneric ();	
 	Ymir::getStackStmtList ().back ().append (inside);	
-	
+
+	if (this-> _name == Keys::MAIN && this-> _type-> type-> is <IVoidInfo> ()) {
+	    Ymir::Tree inside = Ymir::buildTree (
+		MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, result_decl, build_int_cst_type (int_type_node, 0)
+	    );
+
+	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (
+		RETURN_EXPR, BUILTINS_LOCATION, void_type_node, inside
+	    ));
+	}	    
 	auto fnTreeBlock = Ymir::leaveBlock ();
 	auto fnBlock = fnTreeBlock.block;
 

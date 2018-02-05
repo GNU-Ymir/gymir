@@ -12,7 +12,9 @@ namespace semantic {
 	static Ymir::Tree __y_newArray__;	
 	static Ymir::Tree __y_memcpy__;
 	static Ymir::Tree __y_memset__;
-	
+	static Ymir::Tree __y_run_main__;
+	static Ymir::Tree __y_main__;
+		
     public:
 	
 	static Ymir::Tree getMalloc ();
@@ -20,6 +22,8 @@ namespace semantic {
 	static Ymir::Tree getYMemcpy ();
 	static Ymir::Tree getYMemset ();
 	static Ymir::Tree getYInitType (const char*);
+	static Ymir::Tree getYMainPtr ();
+	static Ymir::Tree getYRunMain ();
 	
     };
     

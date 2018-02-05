@@ -74,7 +74,7 @@ namespace Ymir {
 		phrases [And] = "And";
 		phrases [Here] = "Here";
 		phrases [MultipleLoopName] = "Loop identifier '%%%' is already used";
-
+		phrases [MainPrototype] = "Function main parameters must be main () or main ([string])";
 		phrases [ShadowingVar] = "Identifier '%%%' is already used";
 		phrases [UnknownType] = "There is no type called '%%%'";
 		phrases [RecursiveExpansion] = "Maximum number of recursive expansions reached";

@@ -40,21 +40,23 @@ namespace semantic {
     }
 
     FrameProto IPureFrame::validateMain () {
+	FrameTable::instance ().addMain ();
 	if (this-> _function-> getParams ().size () == 1) {
 	    auto tok = this-> _function-> getParams () [0]-> token;
 	    if (auto a = this-> _function-> getParams () [0]-> to<ITypedVar> ()) {
 		auto type = a-> getType ();
 		if (!type-> isSame (new (Z0)  IArrayInfo (true, new (Z0)  IStringInfo (true)))) {
-		    Ymir::Error::assert ("TODO, erreur");
-		} else {
-		    auto str = Word (tok.getLocus (), "string");
-		    this-> _function-> getParams () [0] = new (Z0)  ITypedVar (tok,
-									 new (Z0)  IArrayVar (tok, new (Z0)  IVar (str))
-		    );
+		    Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type),  new (Z0)  IArrayInfo (true, new (Z0)  IStringInfo (false)));
 		}
-	    }
+	    } else {
+		auto str = Word (tok.getLocus (), "string");
+		this-> _function-> getParams () [0] = new (Z0)  ITypedVar (tok,
+									   new (Z0)  IArrayVar (tok, new (Z0)  IVar (str))
+		);
+	    }	    
 	} else if (this-> _function-> getParams ().size () != 0) {
-	    Ymir::Error::assert ("TODO, erreur");
+	    Ymir::Error::mainPrototype (this-> _function-> getIdent ());
+	    this-> _function-> getParams () = {};
 	}
 	this-> pass = true;
 	return validate ();

@@ -90,7 +90,7 @@ namespace syntax {
     }
     
     Ymir::Tree IBool::toGeneric () {
-	return build_int_cst_type (boolean_type_node, this-> token == Keys::TRUE_);
+	return build_int_cst_type (boolean_type_node, this-> value);
     }
 
     Ymir::Tree IFloat::toGeneric () {
@@ -114,7 +114,7 @@ namespace syntax {
 
     Ymir::Tree IBinary::toGeneric () {
 	if (this-> info-> isImmutable ()) {
-	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
 	
@@ -216,7 +216,7 @@ namespace syntax {
 
     Ymir::Tree IPar::toGeneric () {
 	if (this-> info-> isImmutable ()) {
-	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
 
@@ -296,7 +296,7 @@ namespace syntax {
 
     Ymir::Tree IDot::toGeneric () {
 	if (this-> info-> isImmutable ()) {
-	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
 	
@@ -310,7 +310,7 @@ namespace syntax {
 
     Ymir::Tree IDColon::toGeneric () {
 	if (this-> info-> isImmutable ()) {
-	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> expression ()-> toGeneric ();
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
 	
@@ -566,6 +566,16 @@ namespace syntax {
 	return list.getTree ();
     }
     
+
+    Ymir::Tree IIs::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
+	    return ret;
+	} else {
+	    Ymir::Error::assert ("");
+	    return Ymir::Tree ();
+	}
+    }
     
 }
 

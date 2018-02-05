@@ -77,6 +77,7 @@ namespace Ymir {
 	    ModuleDontExist,
 	    ImportError,
 	    NotImmutable,
+	    MainPrototype,
 	    LAST_ERROR
 	};
 
@@ -118,6 +119,8 @@ namespace Ymir {
 	static const char*	BOLD;	// = "\u001B[1;50m";
 	
 	static unsigned long nb_errors;// (0);
+
+	static void mainPrototype (const Word&);
 
 	static void notATemplate (const Word&);
 
