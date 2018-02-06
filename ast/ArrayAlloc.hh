@@ -4,6 +4,11 @@
 #include "../semantic/types/InfoType.hh"
 #include "../syntax/Word.hh"
 
+namespace semantic {
+    class IArrayInfo;
+    typedef IArrayInfo* ArrayInfo;
+}
+
 namespace syntax {
 
     class IArrayAlloc : public IExpression {
@@ -14,9 +19,11 @@ namespace syntax {
 	
 	semantic::InfoType cster;
 
+	bool isImmutable;
+	
     public:
 
-	IArrayAlloc (Word token, Expression type, Expression size);
+	IArrayAlloc (Word token, Expression type, Expression size, bool isImmutable = false);
     
 	Expression expression () override;
 
@@ -36,10 +43,18 @@ namespace syntax {
 	
 	virtual std::vector <std::string> getIds ();
 	
+	std::string prettyPrint () override;
+
 	void print (int nb = 0) override;
 
-
 	virtual ~IArrayAlloc ();
+	
+    private :
+
+	Ymir::Tree staticGeneric (semantic::ArrayInfo info, Ymir::Tree inner, Ymir::Tree array);
+	
+	Ymir::Tree dynamicGeneric (semantic::ArrayInfo info, Ymir::Tree inner, Ymir::Tree array);
+
 	
     };
 

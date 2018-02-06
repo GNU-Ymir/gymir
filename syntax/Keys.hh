@@ -43,7 +43,8 @@ struct Keys {
     static std::string  OPCALL; 
     static std::string  TYPEOF; 
     static std::string  CONST; 
-    static std::string  IMMUTABLE; 
+    static std::string  IMMUTABLE;
+    static std::string  MUTABLE; 
     static std::string  REF; 
     static std::string  PROTECTED; 
     static std::string  MIXIN; 

@@ -1,6 +1,7 @@
 #include <ymir/semantic/pack/_.hh>
 #include "ast/Proto.hh"
 #include "ast/ParamList.hh"
+#include <ymir/syntax/Keys.hh>
 
 namespace semantic {
     using namespace syntax;
@@ -61,6 +62,9 @@ namespace semantic {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	} else {
 	    Table::instance ().retInfo ().info = this-> _proto-> type ()-> asType ()-> info;
+	    Table::instance ().retInfo ().deco = this-> _proto-> type ()-> deco.getStr ();
+	    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
+		Table::instance ().retInfo ().info-> isConst (true);
 	}
 
 	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);

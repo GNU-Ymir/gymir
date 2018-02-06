@@ -90,7 +90,9 @@ namespace syntax {
     Proto IFunction::toProto () {
 	delete this-> block;
 	this-> block = NULL;
-	return new (Z0)  IProto (this-> ident, this-> params, false);
+	auto ret = new (Z0)  IProto (this-> ident, this-> params, false);
+	ret-> type () = this-> type;
+	return ret;
     }
     
     Frame IFunction::verifyPure (Namespace space) {

@@ -3,6 +3,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/utils/RangeUtils.hh>
 using namespace syntax;
 
@@ -61,6 +62,7 @@ namespace semantic {
 	if (vars.size () != 1) return NULL;	
 	vars [0]-> info-> type = this-> _content-> clone ()-> CompOp (vars [0]-> info-> type);		
 	if (vars [0]-> info-> type == NULL) return NULL;
+	vars [0]-> info-> value () = NULL;
 	auto ret = this-> clone ();
 	ret-> applyFoo = &RangeUtils::InstApply;
 	return ret;	
@@ -281,7 +283,8 @@ namespace semantic {
 	    Ymir::enterBlock ();
 
 	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (MODIFY_EXPR, loc, void_type_node, var, it));
-	    Ymir::getStackStmtList ().back ().append (block-> toGenericSimple ());	    
+	    auto innerBl = block-> toGenericSimple ();
+	    Ymir::getStackStmtList ().back ().append (innerBl);	    
 	    auto add_expr = Ymir::buildTree (
 	     	MODIFY_EXPR, locus.getLocus (), it.getType (), it,
 	     	Ymir::buildTree (

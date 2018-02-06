@@ -27,9 +27,13 @@ namespace semantic {
 	Ymir::Tree InstConcatAff (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
 	Ymir::Tree InstToArray (Word word, InfoType, syntax::Expression elem, syntax::Expression type);
+
+	Ymir::Tree InstToString (Word word, InfoType type, syntax::Expression elem, syntax::Expression);
 	
 	Ymir::Tree InstApply (Word word, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
 
+	Ymir::Tree InstCall (Word loc, semantic::InfoType ret, syntax::Expression, syntax::Expression paramsExp);
+	
     }
 
 }

@@ -93,6 +93,7 @@ namespace Ymir {
 		phrases [TemplateInferTypeNote] = "Inferred from";
 		phrases [BreakRefUndef] = "Loop identifier '%%%' doesn't exist";
 		phrases [ConstNoInit] = "Const declaration '%%%' with no initial value";
+		phrases [ImmutNoInit] = "Immutable declaration '%%%' with no initial value";
 		phrases [NotLValue] = "'%%%' is not a lvalue";
 		phrases [NoValueNonVoid] = "Function exit without value in a non void function";
 

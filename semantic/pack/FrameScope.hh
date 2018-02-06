@@ -54,9 +54,11 @@ namespace semantic {
     typedef ITreeInfo* TreeInfo;
     
     struct FrameReturnInfo {
+
 	Symbol info;
 	bool _isImmutable;
-
+	std::string deco; 
+	
     private :
 	std::string _currentBlock;
 	TreeInfo _retInfo = NULL;
@@ -72,7 +74,7 @@ namespace semantic {
 	bool& changed ();
 
 	bool& isImmutable ();
-
+	
 	void enterBlock ();
 
 	void quitBlock ();

@@ -61,7 +61,7 @@ namespace semantic {
 		    if (getType == NULL) return NULL;
 		    info = getType-> clone ();
 		} else {
-		    tvar = param-> setType (new (Z0)  IUndefInfo ());
+		    tvar = param-> setType (args [it]-> clone ());
 		    info = tvar-> getType ()-> clone ();
 		    CONST_SAME = this-> CONST_CHANGE;
 		    SAME = this-> CHANGE;
@@ -107,8 +107,12 @@ namespace semantic {
 
 	if (this-> _function-> getType () == NULL)
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
-	else
+	else {
 	    Table::instance ().retInfo ().info = this-> _function-> getType ()-> asType ()-> info;
+	    Table::instance ().retInfo ().deco = this-> _function-> getType ()-> deco.getStr ();
+	    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
+		Table::instance ().retInfo ().info-> isConst (true);
+	}
 	
 	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams);
 
@@ -196,7 +200,7 @@ namespace semantic {
 	}
 	return finalParams;
     }
-
+    
     FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
 	Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
 	struct Exit {
@@ -337,8 +341,12 @@ namespace semantic {
 	    FrameProto operator () (Namespace from, const std::vector<Var> & params, bool isVariadic) {		
 		if (self-> _function-> getType () == NULL) 
 		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
-		else
+		else {
 		    Table::instance ().retInfo ().info = self-> _function-> getType ()-> asType ()-> info;
+		    Table::instance ().retInfo ().deco = self-> _function-> getType ()-> deco.getStr ();
+		    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
+			Table::instance ().retInfo ().info-> isConst (true);
+		}
 
 		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), from, Table::instance ().retInfo ().info, params, self-> tempParams);
 		

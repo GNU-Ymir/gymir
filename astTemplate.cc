@@ -353,6 +353,10 @@ namespace syntax {
 		    v-> deco = this-> deco;
 		    ret = v;
 		    break;		
+		} else if (auto t = clo-> to <IType> ()) {
+		    t-> deco = this-> deco;
+		    ret = t;
+		    break;
 		} else if (this-> templates.size () == 0) {
 		    return clo;
 		} else {
@@ -374,8 +378,10 @@ namespace syntax {
     }
     
     Expression IArrayVar::templateExpReplace (const map <string, Expression>& values) {
-	auto cont = this-> content-> templateExpReplace (values);
-	return new (Z0)  IArrayVar (this-> token, cont);
+	auto cont = this-> content-> templateExpReplace (values);	
+	auto ret = new (Z0)  IArrayVar (this-> token, cont);
+	ret-> deco = this-> deco;
+	return ret;
     }
 
     Instruction IWhile::templateReplace (const map <string, Expression>& values) {

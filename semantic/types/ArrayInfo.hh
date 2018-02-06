@@ -35,6 +35,8 @@ namespace semantic {
 	InfoType BinaryOpRight (Word, syntax::Expression) override;
 
 	InfoType ApplyOp (const std::vector<syntax::Var> & vars) override;
+
+	ApplicationScore CallOp (Word token, syntax::ParamList params) override;
 	
 	InfoType AccessOp (Word, syntax::ParamList, std::vector <InfoType> &) override;
 

@@ -349,6 +349,7 @@ namespace semantic {
 	    ret-> types.push_back (it);
 	}
 	ret-> tmpsDone = this-> tmpsDone;
+	ret-> isConst (this-> isConst ());
 	return ret;
     }
 

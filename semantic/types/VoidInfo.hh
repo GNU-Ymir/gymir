@@ -27,6 +27,8 @@ namespace semantic {
 
 	std::string innerSimpleTypeString () override;
 
+	std::string simpleTypeString () override;
+
 	Ymir::Tree toGeneric () override;
 	
 	static const char* id () {

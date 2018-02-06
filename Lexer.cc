@@ -189,7 +189,6 @@ namespace lexical {
 	if (word.getStr () == "\n" || word.getStr () == "\r") {
 	    this-> line ++;
 	    this-> column = 1;
-	    linemap_line_start (::line_table, this-> line, 80);
 	} else {
 	    this-> column += word.getStr ().length ();
 	}
@@ -209,7 +208,7 @@ namespace lexical {
 	    word.setStr (line.substr (0, min (beg, line.length ())));
 	    fseek (this-> file, where + beg, SEEK_SET);
 	}
-	word.setLocus (this-> getCurrentLocation ());
+	word.setLocus (this-> filename, this-> line, this-> column);
     }
     
 }

@@ -38,6 +38,11 @@ namespace semantic {
 	return "v";
     }
 
+    std::string IVoidInfo::simpleTypeString () {
+	return "v";
+    }
+
+    
     const char * IVoidInfo::getId () {
 	return IVoidInfo::id ();
     }

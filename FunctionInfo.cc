@@ -187,11 +187,8 @@ namespace semantic {
 	    return right;
 	}
 	
-	right-> ret = info-> type ()-> type-> cloneConst ();
+	right-> ret = info-> type ()-> type-> clone ();
 	right-> ret-> value () = info-> type ()-> value ();
-
-	if (right-> ret-> is<IRefInfo> ())
-	    right-> ret-> isConst (false);
 
 	return right;
     }
@@ -262,13 +259,9 @@ namespace semantic {
 	    return right;
 	}
 	
-	right-> ret = info-> type ()-> type-> cloneConst ();
+	right-> ret = info-> type ()-> type-> clone ();
 	right-> ret-> value () = info-> type ()-> value ();
 
-	
-	if (right-> ret-> is<IRefInfo> ())
-	    right-> ret-> isConst (false);
-	
 	return right;
     }
 

@@ -163,7 +163,7 @@ namespace semantic {
     bool& FrameReturnInfo::isImmutable () {
 	return this-> _isImmutable;
     }
-
+    
     void FrameReturnInfo::enterBlock () {
 	if (this-> _retInfo) {
 	    this-> _retInfo = this-> _retInfo-> enterBlock (this-> _currentBlock);

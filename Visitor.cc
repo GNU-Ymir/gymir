@@ -534,7 +534,7 @@ namespace syntax {
 	    this-> lex.rewind ();
 	    while (true) {
 		auto constante = visitConstante ();
-		if (constante == NULL) 
+		if (constante == NULL)
 		    temps.push_back (visitOf ());
 		else {
 		    templates = true;
@@ -573,10 +573,10 @@ namespace syntax {
 
 	if (word == Token::ARROW) {
 	    auto deco = this-> lex.next ();
-	    if (deco != Keys::REF) {
+	    if (deco != Keys::REF && deco != Keys::MUTABLE) {
 		deco = Word::eof ();
 		this-> lex.rewind ();
-	    }
+	    } 
 	    auto type = visitType ();
 	    type-> deco = deco;
 	    return new (Z0)  IFunction (ident, type, exps, temps, test, visitBlock ());
@@ -624,7 +624,13 @@ namespace syntax {
 	word = this-> lex.next ({Token::ARROW, Token::SEMI_COLON});
 	Var type = NULL;
 	if (word == Token::ARROW) {
+	    auto deco = this-> lex.next ();
+	    if (deco != Keys::REF && deco != Keys::MUTABLE) {
+		deco = Word::eof ();
+		this-> lex.rewind ();
+	    } 
 	    type = visitType ();
+	    type-> deco = deco;
 	    word = this-> lex.next ({Token::SEMI_COLON});
 	}
 	
@@ -667,8 +673,8 @@ namespace syntax {
 		if (next == Token::SEMI_COLON) {
 		    auto len = visitNumericOrVar ();
 		    this-> lex.next ({Token::RCRO});
-		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), Word::eof ());
-		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), Word::eof ());
+		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), deco);
+		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), deco);
 	    } else {
 		this-> lex.rewind ();
 		auto type = visitType ();
@@ -712,8 +718,8 @@ namespace syntax {
 		if (next == Token::SEMI_COLON) {
 		    auto len = visitNumericOrVar ();
 		    this-> lex.next ({Token::RCRO});
-		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), Word::eof ());
-		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), Word::eof ());
+		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), deco);
+		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), deco);
 	    } else {
 		this-> lex.rewind ();
 		auto type = visitType ();
@@ -1584,9 +1590,13 @@ namespace syntax {
 	    auto fst = visitExpression ();
 	    auto next = this-> lex.next ();
 	    if (next == Token::SEMI_COLON) {
+		bool isImmutable = false;
+		next = this-> lex.next ();
+		if (next == Keys::IMMUTABLE) isImmutable = true;
+		else this-> lex.rewind ();
 		auto size = visitExpression ();
 		next = this-> lex.next ({Token::RCRO});
-		return new (Z0)  IArrayAlloc (begin, fst, size);
+		return new (Z0)  IArrayAlloc (begin, fst, size, isImmutable);		
 	    } else {
 		params.push_back (fst);
 		this-> lex.rewind ();

@@ -259,7 +259,7 @@ namespace syntax {
 	} else {
 	    return Ymir::format ("% : %",
 				 this-> token.getStr ().c_str (),
-				 this-> expType-> info-> type-> typeString ().c_str ());
+				 this-> expType-> prettyPrint ().c_str ());
 	}
     }
     
@@ -296,8 +296,7 @@ namespace syntax {
 
     std::string IType::prettyPrint () {
 	return this-> info-> type-> typeString ();
-    }
-
+    }    
     
     std::vector <Expression>& IVar::getTemplates () {
 	return this-> templates;
@@ -333,10 +332,11 @@ namespace syntax {
 	}
     }
     
-    IArrayAlloc::IArrayAlloc (Word token, Expression type, Expression size) :
+    IArrayAlloc::IArrayAlloc (Word token, Expression type, Expression size, bool isImmutable) :
 	IExpression (token),
 	type (type),
-	size (size)
+	size (size),
+	isImmutable (isImmutable)
     {
 	this-> size-> inside = this;
 	if (this-> type)
@@ -351,6 +351,10 @@ namespace syntax {
 	return this-> size;
     }
     
+    std::string IArrayAlloc::prettyPrint () {
+	return Ymir::OutBuffer ("arrayalloc TODO").str ();
+    }
+
     IArrayAlloc::~IArrayAlloc () {
 	delete type;
 	type = NULL;

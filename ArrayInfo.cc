@@ -60,6 +60,9 @@ namespace semantic {
     InfoType IArrayInfo::Affect (Expression right) {
 	auto type = right-> info-> type-> to<IArrayInfo> ();
 	if (type && type-> _content-> isSame (this-> _content)) {
+	    if (type-> _isStatic != this-> _isStatic || type-> _size != this-> _size)
+		return NULL;
+	    
 	    auto ret = type-> clone ();
 	    ret-> isConst (this-> isConst ());
 	    if (type-> _content-> ConstVerif (this-> _content) == NULL)
@@ -120,7 +123,28 @@ namespace semantic {
 	ret-> applyFoo = &ArrayUtils::InstApply;
 	return ret;
     }
+
+    ApplicationScore IArrayInfo::CallOp (Word token, syntax::ParamList params) {
+	if (params-> getParams ().size () != 2 && !this-> _isStatic) 
+	    return NULL;
 	
+	auto fst = params-> getParams ()[0];
+	auto scd = params-> getParams ()[1];
+
+	auto score = new (Z0) IApplicationScore (token);
+	score-> treat.push_back (fst-> info-> type-> CompOp (new (Z0) IFixedInfo (true, FixedConst::ULONG)));
+	if (!score-> treat.back ()) return NULL;
+
+	score-> treat.push_back (scd-> info-> type-> CompOp (new (Z0) IPtrInfo (false, this-> _content)));
+	if (!score-> treat.back ()) return NULL;
+
+	auto res = new (Z0) IArrayInfo (false, this-> _content-> clone ());
+	res-> multFoo = &ArrayUtils::InstCall;
+	score-> dyn = true;
+	score-> ret = res;
+	return score;
+    }
+    
     InfoType IArrayInfo::AccessOp (Word, syntax::ParamList params, std::vector <InfoType> & treats) {
 	if (params-> getParams ().size () == 1) {
 	    return Access (params-> getParams () [0], treats [0]);
@@ -214,7 +238,7 @@ namespace semantic {
 	    return this;
 	} else if (other-> is<IStringInfo> () && this-> _content-> is<ICharInfo> ()) {
 	    auto other_ = new (Z0)  IStringInfo (this-> isConst ());
-	    //other_-> lintInstS.push_back (ArrayUtils::InstCastString);
+	    other_-> binopFoo = &ArrayUtils::InstToString;
 	    return other_;
 	}
 	return NULL;
@@ -239,15 +263,12 @@ namespace semantic {
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
 	    auto ret = this-> clone ();
-	    // ret-> leftTreatment = ArrayUtils::InstCastFromNull;
-	    // ret-> lintInst = ArrayUtils::InstAffectRight;
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (auto arr = ref-> content ()-> to<IArrayInfo> ()) {
-		if (arr-> _content-> isSame (this-> _content) && !this-> isConst ()) {
+		if (!this-> isConst () && arr-> isSame (this)) {
 		    auto aux = new (Z0)  IRefInfo (false, this-> clone ());
 		    aux-> binopFoo = &ArrayUtils::InstAddr;
-		    //aux-> lintInstS.push_back (&ArrayUtils::InstAddr);
 		    return aux;
 		}
 	    }
@@ -320,7 +341,6 @@ namespace semantic {
 
     void IArrayInfo::isStatic (bool isStatic, ulong size) {
 	this-> _isStatic = isStatic;
-	this-> isConst (this-> _isStatic);
 	this-> _size = size;
     }
     
@@ -418,55 +438,58 @@ namespace semantic {
 
 	}
 	
-	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, ConstArray cst) {
-	    if (cst && cst-> nbParams () == 0) {
-		Ymir::getStackStmtList ().back ().append (buildTree (
-		    MODIFY_EXPR, loc, void_type_node, lexp, rexp
-		));
-		return lexp;
+	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, Expression right) {
+	    Ymir::TreeStmtList list;
+	    ArrayInfo arrayInfo = right-> info-> type-> to<IArrayInfo> ();
+	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
+		
+	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
+	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
+	    Ymir::Tree len, ptrr;
+		
+	    if (rexp.getTreeCode () != CALL_EXPR) {
+		len = getLen (loc, right, rexp);
+		ptrr = getPtr (loc, right, rexp);
 	    } else {
-		Ymir::TreeStmtList list;
-		ArrayInfo arrayInfo = cst-> info-> type-> to<IArrayInfo> ();
-		Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
-		
-		Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
-		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
-		Ymir::Tree len, ptrr;
-		
-		if (rexp.getTreeCode () != CALL_EXPR) {
-		    len = getLen (loc, cst, rexp);
-		    ptrr = getPtr (loc, cst, rexp);
-		} else {
-		    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), lexp.getType ());
-		    list.append (buildTree (
-			MODIFY_EXPR, loc, void_type_node, aux, rexp
-		    ));
+		auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), lexp.getType ());
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, aux, rexp
+		));
 		    
-		    len = getField (loc, aux, "len");	    
-		    ptrr = getField (loc, aux, "ptr");
-		}
-		
-		auto allocRet = buildArray (loc, len, inner);
-		list.append (Ymir::buildTree (
-		    MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
-		));
-		
-		list.append (Ymir::buildTree (
-		    MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
-		));
-		
-		list.append (copyArray (loc, ptrl, ptrr, len, inner));	    
-		Ymir::getStackStmtList ().back ().append (list.getTree ());
-		return lexp;
+		len = getField (loc, aux, "len");	    
+		ptrr = getField (loc, aux, "ptr");
 	    }
+		
+	    auto allocRet = buildArray (loc, len, inner);
+	    list.append (Ymir::buildTree (
+		MODIFY_EXPR, loc, void_type_node, lenl.getTree (), len.getTree ()
+	    ));
+		
+	    list.append (Ymir::buildTree (
+		MODIFY_EXPR, loc, void_type_node, ptrl.getTree (), allocRet
+	    ));
+		
+	    list.append (copyArray (loc, ptrl, ptrr, len, inner));	    
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    return lexp;
 	}
 
 	Ymir::Tree InstAffect (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
-	    if (auto cst = right-> to<IConstArray> ())
-		return buildDup (loc, lexp, rexp, cst);
+	    if (lexp.getType ().getTreeCode () == rexp.getType ().getTreeCode ()) {
+		if (!left-> info-> isConst () && right-> info-> isConst ()) {
+		    return buildDup (loc, lexp, rexp, right);
+		} else {
+		    return Ymir::buildTree (
+			MODIFY_EXPR, loc, lexp.getType (), lexp, rexp
+		    );
+		}
+	    }
+	    
+	    if (rexp.getType ().getTreeCode () != RECORD_TYPE)
+		return buildDup (loc, lexp, rexp, right);
 				 
 	    Ymir::TreeStmtList list;
 	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
@@ -635,6 +658,28 @@ namespace semantic {
 	    return lexp;
 	}
 
+	Tree InstToString (Word locus, InfoType type, Expression elem, Expression) {
+	    auto loc = locus.getLocus ();
+	    auto string_type = type-> toGeneric ();
+	    auto rexp = elem-> toGeneric ();
+	    auto auxVar = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), string_type);
+	    auto lenr = getLen (loc, elem, rexp);
+	    auto ptrr = getPtr (loc, elem, rexp);
+	    auto ptrl = getField (loc, auxVar, "ptr");
+	    auto lenl = getField (loc, auxVar, "len");
+	    TreeStmtList list;
+
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, lenl, lenr
+	    ));
+	    
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
+	    ));
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    return auxVar;	    
+	}
+	
 	Tree InstToArray (Word locus, InfoType, Expression elem, Expression type) {
 	    auto rexp = elem-> toGeneric ();
 	    if (auto cst = elem-> to<IConstArray> ()) {
@@ -749,7 +794,24 @@ namespace semantic {
 	    list.append (end_expr);
 
 	    return list.getTree ();
-	}	
+	}
+
+	Ymir::Tree InstCall (Word loc, InfoType ret, Expression, Expression paramsExp) {
+	    ParamList params = paramsExp-> to <IParamList> ();
+	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
+	    Ymir::TreeStmtList list;
+	    auto aux = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), ret-> toGeneric ());
+	    
+	    for (auto i : Ymir::r (0, 2)) {
+		auto attr = getField (loc.getLocus (), aux, i);
+		list.append (buildTree (
+		    MODIFY_EXPR, loc.getLocus (), attr.getType (), attr, args [i]
+		));
+	    }
+	    
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    return aux;
+	}
 	
     }
 

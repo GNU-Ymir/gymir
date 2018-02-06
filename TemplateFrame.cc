@@ -72,8 +72,12 @@ namespace semantic {
 	auto func = this-> _function-> templateReplace (score-> tmps);	
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 
-	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;	
-	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, Table::instance ().globalNamespace (), ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);	
+	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;
+	if (func-> getType ()) {
+	    ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
+	}
+	
+	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, Table::instance ().globalNamespace (), ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
 	return proto;
     }
 
@@ -198,7 +202,7 @@ namespace semantic {
 		    info = res.type;
 		    if (tvar-> getDeco () == Keys::CONST) info-> isConst (true);
 		} else {
-		    tvar = param-> setType (new (Z0)  IUndefInfo ());
+		    tvar = param-> setType (args [it]-> clone ());
 		    info = tvar-> getType ()-> clone ();
 		    CONST_SAME_TMP = this-> CONST_CHANGE;
 		    SAME_TMP = this-> CHANGE;

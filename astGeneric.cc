@@ -46,25 +46,26 @@ namespace syntax {
 	for (int i = 0 ; i < (int) this-> decls.size () ; i++) {
 	    auto var = this-> decls [i];
 	    auto aff = this-> insts [i];
-	    auto type_tree = var-> info-> type-> toGeneric ();
-	    Ymir::Tree decl = build_decl (
-		var-> token.getLocus (),
-		VAR_DECL,
-		get_identifier (var-> token.getStr ().c_str ()),
-		type_tree.getTree ()
-	    );
+	    if (!var-> info-> isImmutable ()) {
+		auto type_tree = var-> info-> type-> toGeneric ();	    
+		Ymir::Tree decl = build_decl (
+		    var-> token.getLocus (),
+		    VAR_DECL,
+		    get_identifier (var-> token.getStr ().c_str ()),
+		    type_tree.getTree ()
+		);
 
 	    
-	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();	    
-	    var-> info-> treeDecl (decl);
-	    Ymir::getStackVarDeclChain ().back ().append (decl);
-	    list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
+		DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();	    
+		var-> info-> treeDecl (decl);
+		Ymir::getStackVarDeclChain ().back ().append (decl);
+		list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
 	    
-	    if (aff != NULL) {
-		aff-> info-> value () = NULL;
-		list.append (aff-> toGeneric ());
+		if (aff != NULL) {
+		    aff-> info-> value () = NULL;
+		    list.append (aff-> toGeneric ());
+		}
 	    }
-
 	}
 	return list.getTree ();
     }
@@ -101,6 +102,9 @@ namespace syntax {
     }
     
     Ymir::Tree IVar::toGeneric () {
+	if (this-> info-> value ())
+	    return this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
+	
 	if (this-> info-> type-> unopFoo) {
 	    return this-> info-> type-> buildUnaryOp (
 		this-> token,
@@ -426,10 +430,31 @@ namespace syntax {
     }    
 
     Ymir::Tree IArrayAlloc::toGeneric () {
-	Ymir::TreeStmtList list;
 	ArrayInfo info = this-> info-> type-> to <IArrayInfo> ();
 	Ymir::Tree innerType = info-> content ()-> toGeneric ();
 	Ymir::Tree array_type = info-> toGeneric ();
+	if (array_type.getTreeCode () == RECORD_TYPE) {
+	    return dynamicGeneric (info, innerType, array_type);
+	} else {
+	    return staticGeneric (info, innerType, array_type);
+	}
+    }
+
+    Ymir::Tree IArrayAlloc::staticGeneric (semantic::ArrayInfo, Ymir::Tree, Ymir::Tree array_type) {
+	Ymir::TreeStmtList list;
+	auto loc = this-> token.getLocus ();
+	auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), array_type);
+	auto addr = Ymir::getAddr (loc, aux);
+	tree memsetArgs [] = {addr.getTree (),
+			      build_int_cst_type (long_unsigned_type_node, 0),
+			      TYPE_SIZE_UNIT (aux.getType ().getTree ())};
+	
+	Ymir::getStackStmtList ().back ().append (build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs));
+	return aux;
+    }
+    
+    Ymir::Tree IArrayAlloc::dynamicGeneric (semantic::ArrayInfo, Ymir::Tree innerType, Ymir::Tree array_type) {
+	Ymir::TreeStmtList list;	
 	auto lenr = this-> size-> toGeneric ();
 	std::vector <tree> args = {convert (long_unsigned_type_node, TYPE_SIZE_UNIT (innerType.getTree ())), lenr.getTree ()};
 	

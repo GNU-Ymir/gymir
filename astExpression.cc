@@ -35,6 +35,7 @@ namespace syntax {
 	    if (call == NULL) {
 		Ymir::Error::undefinedOp (this-> token, this-> end,
 					  aux-> left-> info, aux-> params);
+		return NULL;
 	    } else {
 		return call;
 	    }
@@ -46,21 +47,16 @@ namespace syntax {
     }
        
     Expression IAccess::findOpAccess () {
-	Ymir::Error::activeError (false);
 	Word word (this-> token.getLocus (), Keys::OPACCESS);
 	auto var = new (Z0)  IVar (word);
 	std::vector <Expression> params = {this-> left};
 	params.insert (params.end (), this-> params-> getParams ().begin (),
 		       this-> params-> getParams ().end ());
+	
 	auto finalParams = new (Z0)  IParamList (this-> token, params);
 	auto call = new (Z0)  IPar (this-> token, this-> token, var, finalParams, true);
-
-	auto res = call-> expression ();
-	auto errors = Ymir::Error::caught ();
-	Ymir::Error::activeError (true);
 	
-	if (errors.size () != 0) return NULL;
-	else return res;	
+	return call-> expression ();
     }    
     
     Expression IVar::expression () {
@@ -138,23 +134,13 @@ namespace syntax {
     }
     
     TypedVar IVar::setType (Symbol info) {
-	if (this-> deco == Keys::REF) {
-	    auto type = new (Z0)  IType (info-> sym, info-> type-> cloneOnExit ());
-	    return new (Z0)  ITypedVar (this-> token, type);
-	} else {
-	    auto type = new (Z0)  IType (info-> sym, info-> type-> cloneOnExit ());
-	    return new (Z0)  ITypedVar (this-> token, type, this-> deco);
-	}
+	auto type = new (Z0)  IType (info-> sym, info-> type-> cloneOnExit ());
+	return new (Z0)  ITypedVar (this-> token, type, this-> deco);	
     }
 
     TypedVar IVar::setType (InfoType info) {
-	if (this-> deco == Keys::REF) {
-	    auto type = new (Z0)  IType (this-> token, info-> cloneOnExit ());
-	    return new (Z0)  ITypedVar (this-> token, type);
-	} else {
-	    auto type = new (Z0)  IType (this-> token, info-> cloneOnExit ());
-	    return new (Z0)  ITypedVar (this-> token, type, this-> deco);
-	}
+	auto type = new (Z0)  IType (this-> token, info-> cloneOnExit ());
+	return new (Z0)  ITypedVar (this-> token, type, this-> deco);	
     }
 
     Type IVar::asType () {
@@ -203,6 +189,10 @@ namespace syntax {
     }
     
     Type IType::asType () {
+	if (this-> deco == Keys::REF && !this-> _type-> is <IRefInfo> ()) {
+	    return new (Z0) IType (this-> token,
+				   new (Z0) IRefInfo (false, this-> _type));
+	}
 	return this;
     }
 
@@ -214,8 +204,11 @@ namespace syntax {
 	if (auto var = this-> content-> to <IVar> ()) {
 	    auto content = var-> asType ();
 	    Word tok (this-> token.getLocus (), "");
-	    auto type = new (Z0)  IArrayInfo (false, content-> info-> type);
+	    InfoType type = new (Z0)  IArrayInfo (false, content-> info-> type);
 	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");
+	    if (this-> deco == Keys::REF) {
+		type = new (Z0) IRefInfo (false, type);
+	    }
 	    return new (Z0)  IType (tok, type);
 	} else {
 	    Ymir::Error::assert ("TODO");
@@ -266,6 +259,7 @@ namespace syntax {
 		this-> expType = this-> expType-> expression ();
 		if (this-> expType == NULL) return NULL;
 	    }
+
 	    auto type = this-> expType;
 	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
 		if (type-> info-> type-> is<IEnumInfo> ()) 
@@ -300,7 +294,7 @@ namespace syntax {
 	    } else Ymir::Error::assert ("Error");	
 	}
 	
-	if (this-> deco == Keys::REF) {
+	if (this-> deco == Keys::REF && !aux-> type-> info-> type-> is <IRefInfo> ()) {
 	    aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IRefInfo (false, aux-> type-> info-> type));
 	} else {
 	    aux -> info = new (Z0)  ISymbol (this-> token, aux-> type-> info-> type);
@@ -331,8 +325,22 @@ namespace syntax {
 	    Ymir::Error::incompatibleTypes (this-> token, aux-> size-> info, ul-> type);
 	    return NULL;
 	}
+
+
+	auto arrayType = new (Z0)  IArrayInfo (false, aux-> type-> info-> type-> clone ());
 	aux-> cster = cmp;
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IArrayInfo (false, aux-> type-> info-> type-> clone ()));
+	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
+
+	if (this-> isImmutable) {
+	    if (!aux-> size-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (aux-> size-> info);
+		return NULL;
+	    } else {
+		arrayType-> isStatic (true, aux-> size-> info-> value ()-> to <IFixedValue> ()-> getUValue ()); 
+	    }	
+
+	}
+	
 	return aux;
     }
 
@@ -420,8 +428,8 @@ namespace syntax {
     
     Expression IBinary::affect () {
 	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());	
-	if (simpleVerif (aux)) return NULL;
 
+	if (simpleVerif (aux)) return NULL;
 	if (aux-> left-> info-> isConst ()) {
 	    Ymir::Error::notLValue (aux-> left-> token);
 	    return NULL;
@@ -515,29 +523,24 @@ namespace syntax {
 	}	
     }
 
-    Expression IBinary::findOpAssign (Binary aux) {
-	Ymir::Error::activeError (false);
+    Expression IBinary::findOpAssign (Binary) {
 	Word word (this-> token.getLocus (), Keys::OPASSIGN);
 	auto var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
-	auto params = new (Z0)  IParamList (this-> token, {aux-> left, aux-> right});
+	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
 	auto call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
 	
 	auto res = call-> expression ();
-	auto errors = Ymir::Error::caught ();
-	Ymir::Error::activeError (true);
-	
-	if (errors.size () != 0) return NULL;
-	else return res;
+	return res;
     }
 
     Expression IBinary::findOpBinary (Binary aux) {
 	if (isTest (this-> token)) return findOpTest (aux);
 	else if (isEq (this-> token)) return findOpEqual (aux);
 	Ymir::Error::activeError (false);
-
-	Word word (this-> token.getLocus (), Keys::OPBINARY);
+	
+	Word word {this-> token, Keys::OPBINARY};
 	auto var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
-	auto params = new (Z0)  IParamList (this-> token, {aux-> left, aux-> right});
+	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
 
 	auto call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
 	auto res = call-> expression ();	
@@ -551,25 +554,23 @@ namespace syntax {
 	    params = new (Z0)  IParamList (this-> token, {aux-> right, aux-> left});
 	    call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
 	    res = call-> expression ();
-	    errors = Ymir::Error::caught ();
+	    auto errors2 = Ymir::Error::caught ();
 	    Ymir::Error::activeError (true);
-	    if (errors.size () != 0) return NULL;
+	    if (errors2.size () != 0) {
+		for (auto it : errors) printf ("%s\n", it.msg.c_str ());
+		return NULL;
+	    }
 	}	
 	
 	return res;
     }
 
-    Expression IBinary::findOpTest (Binary aux) {
-	Ymir::Error::activeError (false);
+    Expression IBinary::findOpTest (Binary) {
 	Word word {this-> token.getLocus (), Keys::OPTEST};
 	auto var = new (Z0) IVar (word, {new (Z0) IString (this-> token, this-> token.getStr ())});
-	auto params = new (Z0) IParamList (this-> token, {aux-> left, aux-> right});
+	auto params = new (Z0) IParamList (this-> token, {this-> left, this-> right});
 	auto call = new (Z0) IPar (this-> token, this-> token, var, params, false);
 	auto res = call-> expression ();
-	
-	auto errors = Ymir::Error::caught ();
-	Ymir::Error::activeError (true);	
-	if (errors.size () != 0) return NULL;
 	if (res == NULL) return NULL;
 
 	if (res-> info-> type-> is <IBoolInfo> ()) return res;
@@ -578,18 +579,18 @@ namespace syntax {
 	    fx-> setValue (0);
 	    fx-> setUValue (0);
 	    auto bin = new (Z0) IBinary (this-> token, res, fx-> expression ());
-	    bin-> info = new (Z0) ISymbol (aux-> token, bin-> left-> info-> type-> BinaryOp (this-> token, bin-> right));
+	    bin-> info = new (Z0) ISymbol (this-> token, bin-> left-> info-> type-> BinaryOp (this-> token, bin-> right));
 	    return bin;
 	}
 	return NULL;	
     }
     
-    Expression IBinary::findOpEqual (Binary aux) {
+    Expression IBinary::findOpEqual (Binary) {
 	Ymir::Error::activeError (false);
 
 	Word word (this-> token.getLocus (), Keys::OPEQUAL);
 	auto var = new (Z0)  IVar (word);
-	auto params = new (Z0)  IParamList (this-> token, {aux-> left, aux-> right});
+	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
 
 	auto call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
 	Expression res = NULL;
@@ -606,7 +607,7 @@ namespace syntax {
 	    Ymir::Error::activeError (false);
 	    word = Word (this-> token.getLocus (), Keys::OPEQUAL);
 	    var = new (Z0)  IVar (word);
-	    params = new (Z0)  IParamList (this-> token, {aux-> right, aux-> left});
+	    params = new (Z0)  IParamList (this-> token, {this-> right, this-> left});
 	    call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
 	    if (this-> token == Token::DEQUAL) {
 		res = call-> expression ();
@@ -614,9 +615,12 @@ namespace syntax {
 		res = new (Z0) IUnary ({this-> token.getLocus (), Token::NOT}, call);
 		res = res-> expression ();
 	    }
-	    errors = Ymir::Error::caught ();
+	    auto errors2 = Ymir::Error::caught ();
 	    Ymir::Error::activeError (true);
-	    if (errors.size () != 0) return NULL;
+	    if (errors2.size () != 0) {
+		for (auto it : errors) printf ("%s\n", it.msg.c_str ());
+		return NULL;
+	    }
 	}	
 	
 	return res;
@@ -939,7 +943,10 @@ namespace syntax {
 	    auto type = aux-> _left-> info-> type-> CallOp (aux-> _left-> token, aux-> params);	    
 
 	    if (type == NULL) {
-		Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
+		if (this-> token.getStr () != this-> end.getStr ())
+		    Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
+		else
+		    Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> params);
 		return NULL;
 	    } else if (type-> ret == NULL) {
 		return NULL;
@@ -950,7 +957,7 @@ namespace syntax {
 
 	    aux-> _score = type;
 	    aux-> info = new (Z0) ISymbol (this-> token, type-> ret);
-	    
+
 	    if (type-> ret-> is<IUndefInfo> () && this-> inside != NULL) {
 		Ymir::Error::templateInferType (aux-> _left-> token, aux-> _score-> token);
 		return NULL;
@@ -958,7 +965,6 @@ namespace syntax {
 
 	    if (!aux-> info-> isImmutable ())
 		Table::instance ().retInfo ().changed () = true;
-	    
 	    return aux;	    
 	} else {
 	    aux-> info = this-> info;

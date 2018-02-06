@@ -62,7 +62,22 @@ namespace syntax {
 	    }
 
 	    if (this-> decos [id] == Keys::IMMUTABLE) {
-		Ymir::Error::assert ("TODO, Immut");
+		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
+		    auto type = bin-> getRight ()-> expression ();
+		    aux-> info = new (Z0) ISymbol (aux-> token, type-> info-> type-> clone ());
+		    aux-> info-> isConst (true);
+		    aux-> info-> value () = type-> info-> type-> value ();
+		    if (!aux-> info-> isImmutable ()) {
+			Ymir::Error::notImmutable (type-> info);
+			return NULL;
+		    }
+		    Table::instance ().insert (aux-> info);
+		    auxDecl-> decls.push_back (aux);
+		    auxDecl-> insts.push_back (NULL);
+		} else {
+		    Ymir::Error::immutNoInit (it-> token);
+		    return NULL;
+		}		    
 	    } else if (this-> decos [id] == Keys::CONST) {
 		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
 		aux-> info-> isConst (false);
@@ -74,6 +89,7 @@ namespace syntax {
 		    auxDecl-> decls.push_back (aux);
 		    auxDecl-> insts.push_back (this-> insts [id]-> expression ());
 		    aux-> info-> isConst (true);
+		    aux-> info-> value () = NULL;
 		}
 	    } else if (this-> decos [id] == Keys::STATIC) {
 		Ymir::Error::assert ("TODO, static");
@@ -84,7 +100,8 @@ namespace syntax {
 		auxDecl-> decls.push_back (aux);
 		if (this-> insts [id]) 
 		    auxDecl-> insts.push_back (this-> insts [id]-> expression ());
-		else auxDecl-> insts.push_back (NULL);		
+		else auxDecl-> insts.push_back (NULL);
+		aux-> info-> value () = NULL;
 	    }
 	}
 	
@@ -93,6 +110,7 @@ namespace syntax {
 
     Instruction IAssert::instruction () {
 	auto expr = this-> expr-> expression ();
+	if (expr == NULL) return NULL;
 	if (!expr-> info-> type-> isSame (new (Z0)  IBoolInfo (true))) {
 	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
 	    return NULL;
@@ -281,8 +299,8 @@ namespace syntax {
 	    }
 	    	    	    
 	    aux-> caster = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);	    
-	    if (!Table::instance ().retInfo ().info-> type-> is <IRefInfo> ())
-		aux-> caster-> isConst (true);			    
+	    if (Table::instance ().retInfo ().deco == "" || Table::instance ().retInfo ().deco == Keys::CONST)
+	    	aux-> caster-> isConst (true);			    
 	} else {
 	    if (!Table::instance ().retInfo ().info-> type-> is<IUndefInfo> () &&
 		!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> ())

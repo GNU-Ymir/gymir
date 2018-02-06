@@ -347,8 +347,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    
-    
+        
     void Error::syntaxError (const Word& word) {
 	auto str = getString (SyntaxError2);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
@@ -357,7 +356,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    assert ("%s", errorMsg.msg.c_str ());	    
+	    fail ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -369,7 +368,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, true, false};
 	if (__isEnable__) {	    
 	    Error::instance ().nb_errors ++;
-	    assert("%s", errorMsg.msg.c_str ());
+	    fail("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -382,7 +381,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    assert ("%s", errorMsg.msg.c_str ());
+	    fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -398,7 +397,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    assert ("%s", errorMsg.msg.c_str ());
+	    fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -514,7 +513,6 @@ namespace Ymir {
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
-	    Ymir::Error::assert ("");
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -532,6 +530,18 @@ namespace Ymir {
 
     void Error::constNoInit (const Word& word) {
 	auto str = getString (ConstNoInit);
+	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg erroMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", erroMsg.msg.c_str ());
+	} else __caught__.push_back (erroMsg);
+    }
+
+    void Error::immutNoInit (const Word& word) {
+	auto str = getString (ImmutNoInit);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);

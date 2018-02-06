@@ -41,6 +41,7 @@ std::string     Keys::OPCALL	= "opCall";
 std::string     Keys::TYPEOF	= "typeof";
 std::string     Keys::CONST	= "const";
 std::string     Keys::IMMUTABLE = "imut";
+std::string     Keys::MUTABLE   = "mut";
 std::string     Keys::REF	= "ref";
 std::string     Keys::PROTECTED = "protected";
 std::string     Keys::MIXIN	= "mixin";
