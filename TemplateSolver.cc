@@ -237,12 +237,44 @@ namespace semantic {
 	    res = this-> solveInside (tmps, var, type_);
 	else
 	    res = this-> solveInside (tmps, content-> to<IFuncPtr> (), type_);
-	
-	if (res.valid) {
+	if (!res.valid) return TemplateSolution (0, false);
+	if (!param-> getLen ()) {
 	    auto type_ = new (Z0)  IArrayInfo (isConst, res.type-> cloneOnExit ());
 	    return TemplateSolution (res.score, true, type_, res.elements);
+	} else {
+	    auto innerType = res.type;
+	    auto paramSize = param-> getLen ();
+	    auto size = type-> getTemplate (1);
+	    
+	    if (size == NULL) return TemplateSolution (0, false);
+	    if (auto temp = paramSize-> to <IVar> ()) {
+		TemplateSolution res2 (0, false);
+		paramSize = paramSize-> templateExpReplace ({});
+		paramSize-> info = new (Z0) ISymbol (paramSize-> token, size);
+		for (auto it : Ymir::r (0, tmps.size ())) {
+		    if (auto v = tmps [it]-> to<IVar> ()) {
+			if (temp-> token.getStr () == v-> token.getStr ()) {
+			    res2 = this-> solveInside (tmps, v, paramSize);
+			    break;
+			}
+		    }
+		}
+
+		if ((!res2.valid || !merge (res.score, res.elements, res2)))
+		    return TemplateSolution (0, false);
+
+		auto arraySize = size-> value ()-> to<IFixedValue> ()-> getUValue ();
+		auto type_ = new (Z0) IArrayInfo (isConst, innerType-> cloneOnExit ());
+		type_-> isStatic (true, arraySize);
+		return TemplateSolution (res.score, true, type_, res.elements);
+	    } else {
+		auto arraySize = paramSize-> expression ()-> info-> value ()-> to <IFixedValue> ()-> getUValue ();
+		auto type_ = new (Z0) IArrayInfo (isConst, innerType-> cloneOnExit ());
+		type_-> isStatic (true, arraySize);
+		return TemplateSolution (res.score, true, type_, res.elements);
+	    }
+
 	}
-	return TemplateSolution (0, false);	
     }
 
 
@@ -428,7 +460,7 @@ namespace semantic {
 	}
 	return soluce;	
     }
-
+    
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var left, Expression right) {
 	if (auto tvar = left-> to<ITypedVar> ())
 	    return this-> solveInside (tmps, tvar, right);
@@ -463,16 +495,22 @@ namespace semantic {
     }
 
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, OfVar left, Expression right) {
-	auto type = right-> to<IType> ();
-	if (!type) return TemplateSolution (0, false);
+	InfoType info = NULL;;	
+	if (auto all = right-> to <IArrayAlloc> ()) info = all-> info-> type;
+	else if (auto v = right-> to <IVar> ()) {
+	    if (v-> info-> type-> is <IStructCstInfo> ()) info = v-> info-> type-> TempOp ({});
+	}
+	
+	if (auto type = right-> to<IType> ()) info = type-> info-> type;
+	if (!info) return TemplateSolution (0, false);
 
-	auto res = this-> solveInside (tmps, left-> typeVar (), type-> info-> type);
-	if (!res.valid || !res.type-> CompOp (type-> info-> type))
+	auto res = this-> solveInside (tmps, left-> typeVar (), info);
+	if (!res.valid || !res.type-> CompOp (info))
 	    return TemplateSolution (0, false);
 	else {
-	    auto clo = type-> clone ();
+	    auto clo = right-> clone ();
 	    clo-> info-> type = clo-> info-> type-> cloneOnExit ();
-	    res.type = type-> info-> type-> cloneOnExit ();
+	    res.type = info-> cloneOnExit ();
 	    map <string, Expression> ret = {{left-> token.getStr (), clo}};
 	    if (!merge (res.score, res.elements, ret))
 		return TemplateSolution (0, false);

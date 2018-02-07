@@ -253,7 +253,7 @@ namespace semantic {
 	    auto ret = type-> clone ();
 	    ret-> isConst (this-> isConst ());
 	    if (this-> _content-> ConstVerif (type-> _content) == NULL)
-		return NULL;	    
+	    	return NULL;	    
 	    ret-> binopFoo = ArrayUtils::InstToArray;
 	    return ret;	    
 	} else if (other-> is<IUndefInfo> ()) {
@@ -322,7 +322,7 @@ namespace semantic {
 
     std::string IArrayInfo::innerSimpleTypeString () {
 	if (this-> _isStatic) {
-	    return Ymir::OutBuffer ("A", this-> _size, this-> _content-> typeString ()).str ();
+	    return Ymir::OutBuffer ("A", this-> _size, this-> _content-> simpleTypeString ()).str ();
 	} else 
 	    return std::string ("A") + this-> _content-> simpleTypeString ();
     }
@@ -437,12 +437,27 @@ namespace semantic {
 	    return build_call_array_loc (loc, void_type_node, InternalFunction::getYMemcpy ().getTree (), 3, argsMemcpy);	    
 
 	}
+
+	Ymir::Tree buildDupSimple (location_t loc, Tree lexp, Tree rexp) {
+	    // auto ptrr = getPtr (loc, NULL, rexp);
+	    // auto lenl = getLen (loc, NULL, lexp);
+	    // auto ptrl = getPtr (loc, NULL, lexp);
+	    // Ymir::TreeStmtList list;
+	    // list.append (copyArray (loc, ptrl, ptrr, lenl, inner));
+	    // Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    Ymir::getStackStmtList ().back ().append (
+		Ymir::buildTree (
+		    MODIFY_EXPR, loc, void_type_node, lexp, rexp
+		)
+	    );
+	    return lexp;
+	}
 	
 	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, Expression right) {
-	    Ymir::TreeStmtList list;
+	    Ymir::TreeStmtList list;	    
 	    ArrayInfo arrayInfo = right-> info-> type-> to<IArrayInfo> ();
 	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
-		
+	    if (lexp.getType ().getTreeCode () != RECORD_TYPE) return buildDupSimple (loc, lexp, rexp);
 	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
 	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
 	    Ymir::Tree len, ptrr;
@@ -487,25 +502,25 @@ namespace semantic {
 		    );
 		}
 	    }
-	    
-	    if (rexp.getType ().getTreeCode () != RECORD_TYPE)
+
+	    if (rexp.getType ().getTreeCode () != RECORD_TYPE && !left-> info-> isConst ())
 		return buildDup (loc, lexp, rexp, right);
-				 
+	    
 	    Ymir::TreeStmtList list;
 	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
 	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
-
-	    auto lenr = Ymir::getField (loc, rexp, "len");
-	    auto ptrr = Ymir::getField (loc, rexp, "ptr");
-
+	    
+	    auto lenr = getLen (loc, NULL, rexp);
+	    auto ptrr = getPtr (loc, NULL, rexp);
+	    
 	    list.append (Ymir::buildTree (
 		MODIFY_EXPR, loc, void_type_node, lenl, lenr
 	    ));
-		
+	    
 	    list.append (Ymir::buildTree (
 		MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
 	    ));
-			     
+	    
 	    Ymir::getStackStmtList ().back ().append (list.getTree ());		
 	    return lexp;			    	    	    
 	}	
@@ -693,7 +708,7 @@ namespace semantic {
 		    auto ptrl = getField (loc, auxVar, "ptr");
 		    auto lenl = getField (loc, auxVar, "len");
 		    TreeStmtList list;
-
+    
 		    list.append (buildTree (
 			MODIFY_EXPR, loc, void_type_node, lenl, lenr
 		    ));

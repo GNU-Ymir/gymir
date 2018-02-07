@@ -22,7 +22,7 @@ namespace syntax {
     Expression IArrayAlloc::templateExpReplace (const map <string, Expression>& values) {
 	auto type = this-> type-> templateExpReplace (values);	
 	auto size = this-> size-> templateExpReplace (values);	
-	return new (Z0)  IArrayAlloc (this-> token, type, size);
+	return new (Z0)  IArrayAlloc (this-> token, type, size, this-> isImmutable);
     }
 
     Instruction IAssert::templateReplace (const map <string, Expression>& values) {
@@ -380,6 +380,9 @@ namespace syntax {
     Expression IArrayVar::templateExpReplace (const map <string, Expression>& values) {
 	auto cont = this-> content-> templateExpReplace (values);	
 	auto ret = new (Z0)  IArrayVar (this-> token, cont);
+	if (this-> len) {
+	    ret-> len = this-> len-> templateExpReplace (values);
+	}
 	ret-> deco = this-> deco;
 	return ret;
     }

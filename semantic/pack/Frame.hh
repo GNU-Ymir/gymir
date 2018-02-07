@@ -64,6 +64,8 @@ namespace semantic {
 	virtual FrameProto validate (ApplicationScore, const std::vector<InfoType> &);
 
 	static std::vector <::syntax::Var> computeParams (const std::vector<::syntax::Var> &, const std::vector<InfoType>&);
+
+	static std::vector <::syntax::Var> copyParams (const std::vector <::syntax::Var> &);
 	
 	static std::vector <::syntax::Var> computeParams (const std::vector<::syntax::Var> &);
 

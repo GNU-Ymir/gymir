@@ -39,6 +39,8 @@ namespace syntax {
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	
 	Ymir::Tree toGeneric () override;
+
+	Expression onClone () override;
 	
 	virtual IVar* var ();
 		
@@ -64,17 +66,22 @@ namespace syntax {
 
     class IArrayVar : public IVar {
 	Expression content;
-
+	Expression len;
+	
     public: 
 	IArrayVar (Word token, Expression content);
 
+	IArrayVar (Word token, Expression content, Expression len);
+	
 	IVar* var () override;
-
+		
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	
 	Expression contentExp ();
+
+	Expression getLen ();
 	
 	Type asType () override;
 

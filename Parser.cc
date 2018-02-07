@@ -57,6 +57,10 @@ namespace Ymir {
 
 	prg-> declare ();
 
+	for (auto it : FrameTable::instance ().structs ()) {
+	    it-> TempOp ({});
+	}
+	
 	for (auto it : FrameTable::instance ().pures ()) {
 	    it-> validate ();
 	}

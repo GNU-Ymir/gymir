@@ -252,6 +252,8 @@ namespace syntax {
 	    str-> isPublic (true);
 	    auto sym = new (Z0) ISymbol (this-> ident, str);
 	    Table::instance ().insert (sym);
+	    if (this-> tmps.size () == 0)
+		FrameTable::instance ().insert (str);
 	    for (auto it : this-> params) {
 		str-> addAttrib (it-> to <ITypedVar> ());		
 	    }

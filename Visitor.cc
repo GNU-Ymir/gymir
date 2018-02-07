@@ -673,7 +673,7 @@ namespace syntax {
 		if (next == Token::SEMI_COLON) {
 		    auto len = visitNumericOrVar ();
 		    this-> lex.next ({Token::RCRO});
-		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), deco);
+		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type, len), deco);
 		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), deco);
 	    } else {
 		this-> lex.rewind ();
@@ -718,7 +718,7 @@ namespace syntax {
 		if (next == Token::SEMI_COLON) {
 		    auto len = visitNumericOrVar ();
 		    this-> lex.next ({Token::RCRO});
-		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), deco);
+		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type, len), deco);
 		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), deco);
 	    } else {
 		this-> lex.rewind ();
@@ -749,7 +749,7 @@ namespace syntax {
 	    if (next == Token::SEMI_COLON) {
 		auto len = visitNumeric (this-> lex.next ());
 		this-> lex.next ({Token::RCRO});
-		return new (Z0)  ITypedVar (ident, new (Z0)  IArrayAlloc (begin, type, len), Word::eof ());
+		return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type, len), Word::eof ());
 	    } else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), Word::eof ());
 	} else {
 	    this-> lex.rewind ();
@@ -844,9 +844,12 @@ namespace syntax {
 		type = visitType ();
 	    }
 	    
-	    auto end = this-> lex.next ();
-	    if (end != Token::RCRO) syntaxError (end, {Token::RCRO});
-	    return new (Z0)  IArrayVar (begin, type);
+	    auto end = this-> lex.next ({Token::RCRO, Token::SEMI_COLON});
+	    if (end == Token::SEMI_COLON) {
+		auto len = visitNumericOrVar ();
+		this-> lex.next ({Token::RCRO});
+		return new (Z0) IArrayVar (begin, type, len);
+	    } else return new (Z0)  IArrayVar (begin, type);
 	} else if (begin == Keys::CONST)
 	    return visitDecoType (begin);	
 	else this-> lex.rewind ();

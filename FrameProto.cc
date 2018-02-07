@@ -62,14 +62,15 @@ namespace semantic {
 		    if (!this-> _tmps [it]-> info-> value ()-> equals (scd-> _tmps [it]-> info-> value ())) {
 			return false;
 		    }
-		} else if (this-> _tmps [it]-> info-> type-> simpleTypeString () != scd-> _tmps [it]-> info-> type-> simpleTypeString ())
+		} else if (this-> _tmps [it]-> info-> type-> simpleTypeString () != scd-> _tmps [it]-> info-> type-> simpleTypeString ()) {
 		    return false;
+		}
 	    }
-	    
-	    for (auto it : Ymir::r (0, this-> _vars.size ())) {
-		if (this-> _vars [it]-> info-> type-> simpleTypeString () != scd-> _vars  [it]-> info-> type-> simpleTypeString () ||
-		    this-> _vars [it]-> info-> isConst () != scd-> _vars  [it]-> info-> type-> isConst ())
+
+	    for (auto it : Ymir::r (0, this-> _vars.size ())) {		
+		if (this-> _vars [it]-> info-> type-> simpleTypeString () != scd-> _vars  [it]-> info-> type-> simpleTypeString ()) {
 		    return false;
+		}
 	    }
 	    return true;
 	}

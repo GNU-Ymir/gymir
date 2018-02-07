@@ -41,7 +41,7 @@ namespace semantic {
 
 	IFinalFrame (Symbol, Namespace, std::string, const std::vector<syntax::Var> &, syntax::Block, const std::vector<syntax::Expression>&) ;
 
-	std::string name ();
+	std::string& name ();
 
 	Namespace space ();
 

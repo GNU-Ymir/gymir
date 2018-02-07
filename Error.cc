@@ -313,6 +313,17 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::recursiveNoSize (const Word& word) {
+	std::string msg = format (getString (RecursiveNoSize), YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::shadowingVar (const Word& word, const Word& word2) {
 	std::string msg = format (getString (ShadowingVar), YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;

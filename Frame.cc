@@ -9,6 +9,7 @@
 #include "errors/Error.hh"
 #include <ymir/ast/Function.hh>
 #include <ymir/syntax/Keys.hh>
+#include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/pack/FrameTable.hh>
 
 namespace semantic {
@@ -130,7 +131,7 @@ namespace semantic {
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 					    this-> _space, this-> _function-> name (),
 					    finalParams, block, this-> tempParams);
-	    
+
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    FrameTable::instance ().insert (finFrame);
 
@@ -200,6 +201,14 @@ namespace semantic {
 	}
 	return finalParams;
     }
+
+    std::vector <::syntax::Var> IFrame::copyParams (const std::vector <::syntax::Var> & params) {
+	std::vector <Var> finalParams;
+	for (auto it : params) {
+	    finalParams.push_back (new (Z0) IType (it-> token, it-> info-> type-> clone ()));
+	}
+	return finalParams;
+    }
     
     FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
 	Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
@@ -222,6 +231,7 @@ namespace semantic {
 			Table::instance ().retInfo ().isImmutable () = true;
 		    
 		    FrameTable::instance ().insert (proto);
+
 		    Table::instance ().retInfo ().currentBlock () = "true";
 		    block = block-> block ();
 
@@ -231,7 +241,7 @@ namespace semantic {
 		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 							  from, name.getStr (),
 							  params, block, tmps);
-
+		    
 		    finFrame-> isVariadic () = isVariadic;
 		    proto-> type () = Table::instance ().retInfo ().info;
 		    FrameTable::instance ().insert (finFrame);

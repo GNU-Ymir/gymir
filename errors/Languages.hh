@@ -90,6 +90,9 @@ namespace Ymir {
 		phrases [BreakOutSide] = "Break outside of a breakable scope";
 		phrases [UndefinedAttr] = "No property '%%%' for type '%%%'";
 		phrases [TemplateInferType] = "Forward reference to inferred return type of function call";
+
+		phrases [RecursiveNoSize] = "Attribute %%% has no size because of forward reference";
+		
 		phrases [TemplateInferTypeNote] = "Inferred from";
 		phrases [BreakRefUndef] = "Loop identifier '%%%' doesn't exist";
 		phrases [ConstNoInit] = "Const declaration '%%%' with no initial value";

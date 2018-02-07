@@ -3,15 +3,20 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/utils/Mangler.hh>
 
 namespace semantic {
     
     FrameTable FrameTable::__instance__;
-
+    
     void FrameTable::insert (Frame fr) {
 	this-> _pures.push_back (fr);
     }
 
+    void FrameTable::insert (StructCstInfo info) {
+	this-> _structs.push_back (info);
+    }
+    
     void FrameTable::insert (FinalFrame fr) {
 	this-> _finals.push_back (fr);
     }
@@ -60,6 +65,10 @@ namespace semantic {
 	return this-> _finalTemplates;
     }
 
+    std::vector <StructCstInfo> & FrameTable::structs () {
+	return this-> _structs;
+    }
+    
     std::vector <tree> declArguments (Ymir::Tree func) {
 	std::vector <tree> vars;
 	Ymir::Tree arglist;	

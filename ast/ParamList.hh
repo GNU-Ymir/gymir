@@ -28,6 +28,8 @@ namespace syntax {
 	std::vector <tree> toGenericParams (const std::vector <semantic::InfoType>&);
 
 	std::vector <semantic::InfoType> & getTreats ();
+
+	std::string prettyPrint () override;
 	
 	void print (int nb = 0) override;
 

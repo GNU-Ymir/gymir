@@ -13,13 +13,16 @@ namespace semantic {
     class IFrameProto;
     typedef IFrameProto* FrameProto;
 
+    class IStructCstInfo;
+    typedef IStructCstInfo* StructCstInfo;
+    
     class FrameTable {
 
 	std::vector <Frame> _pures;
 	std::vector <FinalFrame> _finals;
 	std::vector <FinalFrame> _finalTemplates;
 	std::vector <FrameProto> _protos;
-	//std::vector <StructCstInfo> structs;
+	std::vector <StructCstInfo> _structs;
 	//std::vector <ObjectCstInfo> objects;
 	
     public:
@@ -29,6 +32,8 @@ namespace semantic {
 	}
 
 	void insert (Frame);
+
+	void insert (StructCstInfo info);
 
 	void insert (FinalFrame);
 	
@@ -42,6 +47,8 @@ namespace semantic {
 
 	//StructCstInfo existsStruct (std::string);
 
+	std::vector <StructCstInfo> & structs ();
+	
 	std::vector <Frame> & pures ();
 
 	std::vector <FinalFrame>& finals ();

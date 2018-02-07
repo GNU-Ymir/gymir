@@ -130,6 +130,15 @@ namespace syntax {
 	params (params)
     {}
 
+    std::string IParamList::prettyPrint () {
+	Ymir::OutBuffer buf;
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    buf.write (this-> params [it]-> prettyPrint ());
+	    if (it < (int) this-> params.size () - 1)
+		buf.write (", ");
+	}
+	return buf.str ();
+    }    
        
     IParamList::~IParamList () {
 	for (auto it : params)
@@ -284,8 +293,16 @@ namespace syntax {
 	return this-> _type;
     }
 
+    Expression IVar::onClone () {
+	return new (Z0) IType (this-> token, this-> info-> type);
+    }
+    
     Expression IType::onClone () {
 	return new (Z0) IType (this-> token, this-> _type);
+    }
+
+    Expression IArrayAlloc::onClone () {
+	return new (Z0) IType (this-> token, this-> info-> type);
     }
     
     std::vector <std::string> IType::getIds () {
@@ -352,7 +369,8 @@ namespace syntax {
     }
     
     std::string IArrayAlloc::prettyPrint () {
-	return Ymir::OutBuffer ("arrayalloc TODO").str ();
+	return Ymir::format ("[% ; %]", this-> type-> prettyPrint ().c_str (),
+			     this-> size-> prettyPrint ().c_str ());
     }
 
     IArrayAlloc::~IArrayAlloc () {
@@ -594,6 +612,10 @@ namespace syntax {
 	right (right)
     {}
 
+    std::string IDColon::prettyPrint () {
+	return Ymir::OutBuffer (this-> left-> prettyPrint (), "::", this-> right-> prettyPrint ()).str ();
+    }
+    
     IDColon::~IDColon () {	
 	delete left;
 	delete right;	
@@ -886,6 +908,11 @@ namespace syntax {
     {
     }
 
+    std::string IStructCst::prettyPrint () {
+	Ymir::OutBuffer buf (this-> left-> prettyPrint (), "{", this-> params-> prettyPrint (), "}");
+	return buf.str ();
+    }
+    
     IAccess::IAccess (Word word, Word end, Expression left, ParamList params) :
 	IExpression (word),
 	end (end),
@@ -1013,12 +1040,23 @@ namespace syntax {
 	content (content)
     {}
 
+    IArrayVar::IArrayVar (Word token, Expression content, Expression len) :
+	IVar (token),
+	content (content),
+	len (len)
+    {}
+    
     IArrayVar::~IArrayVar () {
 	if (content) delete content;
+	if (len) delete len;
     }
     
     Expression IArrayVar::contentExp () {
 	return this-> content;
+    }
+
+    Expression IArrayVar::getLen () {
+	return this-> len;
     }
     
     void IArrayVar::print (int nb) {

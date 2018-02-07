@@ -73,6 +73,8 @@ namespace semantic {
 
 	InfoType getScore (const std::vector <syntax::Expression> & tmps);
 
+	bool recursiveGet (InfoType info, InfoType where);
+	
 	InfoType Init ();
 	
     };    
@@ -124,6 +126,8 @@ namespace semantic {
 	InfoType getTemplate (ulong) override;
 	
 	std::vector <std::string> & getAttribs ();
+
+	std::vector <InfoType> & getTypes ();
 	
 	static const char* id () {
 	    return "IStructInfo";

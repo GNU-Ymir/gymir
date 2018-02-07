@@ -30,6 +30,8 @@ namespace syntax {
 	Expression staticArray ();
 	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+
+	Expression onClone () override;
 	
 	Expression getType ();
 

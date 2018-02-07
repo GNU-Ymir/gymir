@@ -37,6 +37,8 @@ namespace syntax {
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
 	Ymir::Tree toGeneric () override;
+
+	std::string prettyPrint () override;
 	
 	static const char * id () {
 	    return TYPEID (IStructCst);

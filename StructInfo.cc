@@ -101,7 +101,19 @@ namespace semantic {
 	tmps (tmps)       
     {}
 
-    bool IStructCstInfo::isSame (InfoType) {
+    bool IStructCstInfo::isSame (InfoType other) {
+	printf ("%s\n", other-> typeString ().c_str ());
+	if (auto ot = other-> to<IStructCstInfo> ()) {
+	    printf ("ici");
+	    if (ot-> name == this-> name && ot-> space == this-> space) {
+		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
+		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
+		    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+			return false;
+		}
+		return true;
+	    }
+	}
 	return false;
     }
 
@@ -222,11 +234,16 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		InfoType info = this-> params [it]-> getType ();
 		if (info) {
+		    if (recursiveGet (this-> _info, info)) {
+			Ymir::Error::recursiveNoSize (this-> params [it]-> token);
+			return NULL;
+		    }
 		    types.push_back (info);
 		    attribs.push_back (this-> params [it]-> token.getStr ());
 		} else return NULL;
 	    }
-	
+	    
+	    this-> _info-> isConst (false);
 	    this-> _info-> setTypes (types);
 	    this-> _info-> setAttribs (attribs);	    
 	    this-> _info-> setTmps (this-> tmpsDone);
@@ -237,6 +254,23 @@ namespace semantic {
 	return this-> _info;
     }
 
+    bool IStructCstInfo::recursiveGet (InfoType who, InfoType where) {
+	if (who-> isSame (where)) return true;
+	if (auto str = where-> to <IStructInfo> ()) {
+	    for (auto it : str-> getTypes ()) {
+		if (recursiveGet (who, it)) return true;
+	    }
+	    return false;
+	} else if (auto cstr = where-> to <IStructCstInfo> ()) {
+	    return recursiveGet (who, cstr-> TempOp ({}));
+	} else if (auto arr = where-> to <IArrayInfo> ()) {
+	    if (arr-> isStatic ()) {
+		return recursiveGet (who, arr-> content ());
+	    }
+	}
+	return false;
+    }
+    
     template <typename K, typename V>
     vector <V> getValues (map <K, V> dico) {
 	vector <V> vec;
@@ -464,11 +498,8 @@ namespace semantic {
 	if (inside == inner.end () || !inside-> second) {
 	    std::string name = buf.str ();	    
 	    inner [name] = true;
-	    for (auto i : Ymir::r (0, this-> types.size ())) {
-		auto it = this-> types [i];
+	    for (auto it : this-> types) {
 		buf.write (it-> innerSimpleTypeString ());
-		if (i < (int) this-> types.size () - 1)
-		    buf.write (", ");
 	    }
 	    inner [name] = false;
 	}
@@ -496,6 +527,10 @@ namespace semantic {
     
     std::vector <std::string> & IStructInfo::getAttribs () {
 	return this-> attrs;
+    }
+
+    std::vector <InfoType> & IStructInfo::getTypes () {
+	return this-> types;
     }
     
     Ymir::Tree IStructInfo::toGeneric () {

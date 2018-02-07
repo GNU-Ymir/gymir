@@ -73,17 +73,14 @@ namespace syntax {
 	    if (this-> templates.size () != 0) {		
 		if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> ())) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
-		    Word aux {this-> token.getLocus (), "("};
 		    Word aux2 {this-> token.getLocus (), ")"};
-		    auto call = new (Z0)  IPar (aux, aux2, this, params, true);
+		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
 		    this-> inside = call;
 		    return call-> expression ();
 		} else if (auto dt = this-> inside-> to<IDot> ()) {
 		    if (this == dt-> getLeft ()) {
 			auto params = new (Z0)  IParamList (this-> token, {});
-			Word aux {this-> token.getLocus (), "("};
-			Word aux2 {this-> token.getLocus (), ")"};
-			auto call = new (Z0)  IPar (aux, aux2, this, params, true);
+			auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
 			this-> inside = call;
 			return call-> expression ();
 		    }
@@ -92,6 +89,7 @@ namespace syntax {
 		std::vector <Expression> tmps;
 		for (auto it : this-> templates) {
 		    tmps.push_back (it-> expression ());
+		    if (tmps.back () == NULL) return NULL;
 		}
 
 		auto type = aux-> info-> type-> TempOp (tmps);
@@ -153,8 +151,8 @@ namespace syntax {
 	if (!IInfoType::exists (this-> token.getStr ())) {
 	    auto sym = Table::instance ().get (this-> token.getStr ());
 	    if (sym != NULL && sym-> type-> isType ()) {		
-		auto t_info = sym-> type-> TempOp (tmps);
-		if (t_info-> is<IStructCstInfo> ())
+		auto t_info = sym-> type-> TempOp (tmps);		
+		if (t_info && t_info-> is<IStructCstInfo> ())
 		    t_info = t_info-> TempOp ({});
 		
 		if (t_info != NULL) {
@@ -203,9 +201,31 @@ namespace syntax {
     Expression IArrayVar::expression () {
 	if (auto var = this-> content-> to <IVar> ()) {
 	    auto content = var-> asType ();
+	    if (content == NULL) return NULL;
 	    Word tok (this-> token.getLocus (), "");
-	    InfoType type = new (Z0)  IArrayInfo (false, content-> info-> type);
-	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");
+	    InfoType type;
+	    if (this-> len) {
+		auto size = this-> len-> expression ();
+		if (size == NULL) return NULL;
+		auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
+		auto cmp = size-> info-> type-> CompOp (ul-> type);
+		if (cmp == NULL) {
+		    Ymir::Error::incompatibleTypes (this-> token, size-> info, ul-> type);
+		    return NULL;
+		}
+		
+		auto arrtype = new (Z0)  IArrayInfo (true, content-> info-> type-> clone ());
+		if (!size-> info-> isImmutable ()) {
+		    Ymir::Error::notImmutable (size-> info);
+		    return NULL;
+		} else {
+		    arrtype-> isStatic (true, size-> info-> value ()-> to<IFixedValue> ()-> getUValue ());
+		}
+		type = arrtype;
+	    } else {
+		type = new (Z0)  IArrayInfo (false, content-> info-> type);
+	    }
+	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");	    
 	    if (this-> deco == Keys::REF) {
 		type = new (Z0) IRefInfo (false, type);
 	    }
@@ -221,7 +241,9 @@ namespace syntax {
     }
 
     Type IArrayVar::asType () {
-	return this-> expression ()-> to <IType> ();
+	auto ret = this-> expression ();
+	if (!ret) return NULL;
+	return ret-> to <IType> ();
     }
 
     bool IArrayVar::isType () {
@@ -230,7 +252,9 @@ namespace syntax {
 
     std::string IArrayVar::prettyPrint () {
 	if (auto v = this-> content-> to <IVar> ()) {
-	    return Ymir::format ("[%]", v-> prettyPrint ().c_str ());
+	    if (this-> len == NULL) 
+		return Ymir::format ("[%]", v-> prettyPrint ().c_str ());
+	    return Ymir::format ("[% ; %]", v-> prettyPrint ().c_str (), this-> len-> prettyPrint ().c_str ());
 	} else {
 	    Ymir::Error::assert ("TODO");
 	    return "";
@@ -315,6 +339,7 @@ namespace syntax {
 	else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
 	else Ymir::Error::useAsType (this-> type-> token);
 
+	if (aux-> type == NULL) return NULL;
 	// if (auto type = aux-> type-> info-> type-> to<IStructCstInfo> ()) {
 	//     Ymir::Error::assert ("TODO");
 	// }
@@ -322,12 +347,12 @@ namespace syntax {
 	auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
 	if (cmp == NULL) {
-	    Ymir::Error::incompatibleTypes (this-> token, aux-> size-> info, ul-> type);
+	    Ymir::Error::incompatibleTypes (aux-> size-> token, aux-> size-> info, ul-> type);
 	    return NULL;
 	}
 
 
-	auto arrayType = new (Z0)  IArrayInfo (false, aux-> type-> info-> type-> clone ());
+	auto arrayType = new (Z0)  IArrayInfo (true, aux-> type-> info-> type-> clone ());
 	aux-> cster = cmp;
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 

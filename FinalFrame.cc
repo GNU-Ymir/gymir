@@ -43,7 +43,7 @@ namespace semantic {
 	_block (bl)
     {}
     
-    std::string IFinalFrame::name () {
+    std::string &IFinalFrame::name () {
 	return this-> _name;
     }
 

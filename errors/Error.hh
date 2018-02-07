@@ -51,6 +51,7 @@ namespace Ymir {
 	    And,
 	    Here,
 	    RecursiveExpansion,
+	    RecursiveNoSize,
 	    MultipleLoopName,
 	    ShadowingVar,
 	    UnknownType,
@@ -156,6 +157,8 @@ namespace Ymir {
 	static void importError (const Word&);
 	
 	static void recursiveExpansion (const Word&);
+
+	static void recursiveNoSize (const Word&);
 
 	static void unknownType (const Word&);
 

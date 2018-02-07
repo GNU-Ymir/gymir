@@ -155,8 +155,7 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IInfoType::ConstVerif (InfoType other) {
-	this-> isConst (other-> isConst ());
+    InfoType IInfoType::ConstVerif (InfoType) {
 	return this;
     }
     
