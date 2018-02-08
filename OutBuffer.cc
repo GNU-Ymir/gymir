@@ -1,6 +1,7 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/ast/Expression.hh>
+#include <ymir/semantic/types/InfoType.hh>
 #include <cstring>
 
 
@@ -85,6 +86,12 @@ namespace Ymir {
     
     void OutBuffer::write_ (syntax::Expression expr) {
 	this-> write (expr-> prettyPrint ().c_str ());
+    }
+
+    void OutBuffer::write_ (semantic::InfoType info) {
+	if (info) 
+	    this-> write (info-> typeString ().c_str ());
+	else this-> write ("null");
     }
     
     void OutBuffer::write_ (bool b) {

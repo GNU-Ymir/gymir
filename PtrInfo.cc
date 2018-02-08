@@ -313,10 +313,15 @@ namespace semantic {
     }
 
     Ymir::Tree IPtrInfo::toGeneric () {
-	Ymir::Tree inner = this-> _content-> toGeneric ();
-	return build_pointer_type (
-	    inner.getTree ()
-	);
+	if (this-> _content-> to<IStructInfo> ()) {
+	    return build_pointer_type (
+		void_type_node
+	    );
+	} else {
+	    return build_pointer_type (
+		this-> _content-> toGeneric ().getTree ()
+	    );
+	}
     }
     
     InfoType IPtrInfo::getTemplate (ulong nb) {

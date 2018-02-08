@@ -71,7 +71,7 @@ namespace syntax {
 	    }
 
 	    if (this-> templates.size () != 0) {		
-		if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> ())) {
+		if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> () && !this-> inside-> is <IDColon> ())) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
 		    Word aux2 {this-> token.getLocus (), ")"};
 		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
@@ -844,6 +844,7 @@ namespace syntax {
     }
     
     Expression IDColon::expression () {
+	this-> left-> inside = this;
 	auto aux = new (Z0)  IDColon (this-> token, this-> left-> expression (), this-> right);
 	if (aux-> left == NULL) return NULL;
 	if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
@@ -1238,6 +1239,43 @@ namespace syntax {
 	    }
 	    return aux;
 	}
+    }
+
+    Expression ITypeOf::expression () {
+	auto expr = this-> expr-> expression ();
+	if (expr == NULL) return NULL;
+	return new (Z0) IType (this-> token, expr-> info-> type);
+    }
+
+
+    Expression IMatch::expression () {
+	auto expr = this-> expr-> expression ();
+	if (expr == NULL) return NULL;
+
+	std::vector <semantic::DestructSolution> soluce;
+	bool unreachable = false;
+	for (auto it : this-> values) {
+	    auto res = semantic::DestructSolver::instance ().solve (expr, it);
+	    if (res.valid) {
+		// enter block
+		// declare vars
+		// validate block
+		// affect
+		// quitblock
+	    }
+	    if (res.immutable) unreachable = true;	    
+	}
+	
+	if (!unreachable && !this-> defaultResult) {
+	    Ymir::Error::assert ("");
+	    return NULL;
+	}
+	
+	auto ret = new (Z0) IMatch (this-> token, expr);
+	ret-> soluce = soluce;
+	//ret-> results = results;
+	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IUndefInfo ());
+	return ret;
     }
 
     

@@ -1277,5 +1277,55 @@ namespace syntax {
 	for (auto it : values)
 	    delete it;
     }
+    
+    ITypeOf::ITypeOf (Word begin, Expression expr) :
+	IExpression (begin),
+	expr (expr)
+    {}
+    
+    ITypeOf::~ITypeOf () {
+	delete expr;
+    }
+        
+    IMatchPair::IMatchPair (Word token, Expression left, Expression right) :
+	IExpression (token),
+	left (left),
+	right (right)
+    {}
 
+    
+    IMatchPair::~IMatchPair () {
+	delete left;
+	delete right;
+    }
+    	
+    IMatch::IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block, Block def) :
+	IExpression (word),
+	expr (expr),
+	values (values),
+	block (block),
+	default_ (def),
+	defaultResult (NULL)
+    {}
+    
+    IMatch::IMatch (Word word, Expression expr) :
+	IExpression (word),
+	expr (expr)
+    {}
+
+    IMatch::~IMatch () {
+	delete expr;
+	for (auto it : values)
+	    delete it;
+	for (auto it : block)
+	    delete it;
+	if (default_) delete default_;
+	
+	for (auto it : results)
+	    delete it;
+	if (defaultResult) delete defaultResult;
+    }
+    
+    
+    
 }

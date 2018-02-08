@@ -38,7 +38,7 @@ namespace semantic {
 	bool isSame (InfoType) override;
 	
 	InfoType onClone () override;
-
+	
 	InfoType DotOp (syntax::Var) override;
 
 	InfoType DColonOp (syntax::Var) override;
@@ -50,6 +50,8 @@ namespace semantic {
 	InfoType TempOp (const std::vector<::syntax::Expression> &) override;
 
 	std::string typeString () override;
+
+	std::string onlyNameTypeString ();
 	
 	std::string innerTypeString () override;
 
@@ -76,6 +78,8 @@ namespace semantic {
 	bool recursiveGet (InfoType info, InfoType where);
 	
 	InfoType Init ();
+
+	InfoType SizeOf ();
 	
     };    
     
@@ -111,6 +115,8 @@ namespace semantic {
 
 	Namespace & getSpace ();
 
+	std::string onlyNameTypeString ();
+	
 	std::string innerTypeString () override;
 	
 	std::string innerSimpleTypeString () override;
@@ -138,6 +144,8 @@ namespace semantic {
     private:
 
 	InfoType Init ();
+
+	InfoType SizeOf ();	
 	
     };
 

@@ -12,24 +12,15 @@ namespace syntax {
 
     public:
 
-	ITypeOf (Word begin, Expression expr) :
-	    IExpression (begin),
-	    expr (expr)
-	{}
-
+	ITypeOf (Word begin, Expression expr);
+	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<TypeOf> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    this-> expr-> print (nb + 4);
-	}
+	Expression expression () override;
 	
-	virtual ~ITypeOf () {
-	    delete expr;
-	}
+	void print (int nb = 0) override;
+	
+	virtual ~ITypeOf ();
 
     };
 

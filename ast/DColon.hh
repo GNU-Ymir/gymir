@@ -20,6 +20,16 @@ namespace syntax {
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
 	Ymir::Tree toGeneric () override;
+
+	static const char * id () {
+	    return TYPEID (IDColon);
+	}
+	
+	std::vector <std::string> getIds () {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IDColon));
+	    return ret;
+	}
 	
 	void print (int nb = 0) override;
 

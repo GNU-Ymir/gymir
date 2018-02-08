@@ -5,6 +5,11 @@
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 #include <ymir/utils/Array.hh>
+#include <ymir/semantic/pack/DestructSolver.hh>
+
+namespace semantic {
+    struct DestructSolution;
+}
 
 namespace syntax {
 
@@ -13,26 +18,11 @@ namespace syntax {
 
     public:
 
-	IMatchPair (Word token, Expression left, Expression right) :
-	    IExpression (token),
-	    left (left),
-	    right (right) {
-	}
+	IMatchPair (Word token, Expression left, Expression right);
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<MatchPair> %s",
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    
-	    this-> left-> print (nb + 4);
-	    this-> right-> print (nb + 4);
-	}
+	void print (int nb = 0) override;
 
-	virtual ~IMatchPair () {
-	    delete left;
-	    delete right;
-	}
+	virtual ~IMatchPair ();
 	
     };
     
@@ -45,19 +35,18 @@ namespace syntax {
 	std::vector <Expression> results;
 	Expression defaultResult;
 
-    public:
+	std::vector <semantic::DestructSolution> soluce;
 	
-	IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block, Block def) :
-	    IExpression (word),
-	    expr (expr),
-	    values (values),
-	    block (block),
-	    default_ (def),
-	    defaultResult (NULL)
-	{}
+    public:
+
+	IMatch (Word word, Expression expr);
+	
+	IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block, Block def);
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
+	Expression expression () override;
+
 	static const char * id () {
 	    return TYPEID (IMatch);
 	}
@@ -68,33 +57,9 @@ namespace syntax {
 	    return ret;
 	}
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Match> %s", 
-		    nb, ' ',
-		    this-> token.toString ().c_str ()
-	    );
-	    this-> expr-> print (nb + 4);
-	    
-	    for (int i = 0 ; i < (int) this-> values.size () ; i++) {
-		this-> values [i]-> print (nb + 8);
-		this-> block [i]-> print (nb + 8);
-	    }
+	void print (int nb = 0) override;
 
-	    if (this-> default_) this-> default_-> print (nb + 10);
-	}	
-
-	virtual ~IMatch () {
-	    delete expr;
-	    for (auto it : values)
-		delete it;
-	    for (auto it : block)
-		delete it;
-	    if (default_) delete default_;
-
-	    for (auto it : results)
-		delete it;
-	    if (defaultResult) delete defaultResult;
-	}
+	virtual ~IMatch ();
 	
     };
 

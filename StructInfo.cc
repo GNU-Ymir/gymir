@@ -84,7 +84,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {	    
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) { 
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
 
@@ -92,6 +92,12 @@ namespace semantic {
 	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
 	}
 	
+	Ymir::Tree InstSizeOfCst (Word, InfoType, Expression elem) {
+	    StructCstInfo cst = elem-> info-> type-> to <IStructCstInfo> ();
+	    auto type = cst-> TempOp ({})-> toGeneric ().getTree ();
+	    return TYPE_SIZE_UNIT (type);
+	}
+
     }
        
     IStructCstInfo::IStructCstInfo (Namespace space, string name, vector <Expression> &tmps) :
@@ -129,6 +135,7 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "init") return Init ();
+	if (var-> token == "sizeof") return SizeOf ();
 	return NULL;
     }
 
@@ -139,6 +146,16 @@ namespace semantic {
 	ret-> unopFoo = StructUtils::InstInit;
 	return ret;
     }
+    
+    InfoType IStructCstInfo::SizeOf () {
+	if (this-> TempOp ({}) != NULL) {
+	    auto ret = new (Z0) IFixedInfo (true, FixedConst::UBYTE);
+	    ret-> unopFoo = StructUtils::InstSizeOfCst;
+	    return ret;
+	}
+	return NULL;
+    }
+
     
     ApplicationScore IStructCstInfo::CallOp (Word token, syntax::ParamList params) {
 	if (this-> tmps.size () != 0) {
@@ -225,8 +242,8 @@ namespace semantic {
 	if (this-> tmps.size () != tmps.size ()) return NULL;
 	std::vector <InfoType> types;
 	std::vector <std::string> attribs;
-	static std::map <std::string, InfoType> dones;
-	auto name = this-> innerTypeString ();
+	static std::map <std::string, StructInfo> dones;
+	auto name = this-> onlyNameTypeString ();
 	auto inside = dones.find (name);
 	if (inside == dones.end ()) {
 	    this-> _info = new (Z0) IStructInfo (this-> space, this-> name);
@@ -247,11 +264,10 @@ namespace semantic {
 	    this-> _info-> setTypes (types);
 	    this-> _info-> setAttribs (attribs);	    
 	    this-> _info-> setTmps (this-> tmpsDone);
+	    return this-> _info;
 	} else {
 	    return inside-> second;
-	}
-	
-	return this-> _info;
+	}		
     }
 
     bool IStructCstInfo::recursiveGet (InfoType who, InfoType where) {
@@ -281,7 +297,9 @@ namespace semantic {
     
     InfoType IStructCstInfo::getScore (const std::vector <syntax::Expression> & tmps) {
 	auto res = TemplateSolver::instance ().solve (this-> tmps, tmps);
-	if (!res.valid) return NULL;
+	if (!res.valid || !TemplateSolver::instance ().isSolved (this-> tmps, res))
+	    return NULL;
+	
 	std::vector <syntax::TypedVar> params;
 	for (auto it : this-> params) {
 	    params.push_back (it-> templateExpReplace (res.elements)-> to <ITypedVar> ());
@@ -298,6 +316,17 @@ namespace semantic {
 	return ret;	
     }
 
+    std::string IStructCstInfo::onlyNameTypeString () {
+	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name, "!(");
+	for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
+	    buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+	    if (it < (int) this-> tmpsDone.size () - 1)
+		buf.write (", ");
+	}
+	buf.write (")");
+	return buf.str ();
+    }
+    
     std::string IStructCstInfo::typeString () {
 	Ymir::OutBuffer buf ("typeof ", this-> space.toString (), ".", this-> name, "{");
 	for (auto i : Ymir::r (0, this-> params.size ())) {
@@ -312,7 +341,7 @@ namespace semantic {
 	buf.write ("}");
 	return buf.str ();
     }
-
+    
     std::string IStructCstInfo::innerTypeString () {
 	static std::map <std::string, bool> inner;
 	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
@@ -375,7 +404,7 @@ namespace semantic {
 	}
 	return false;
     }
-
+    
     InfoType IStructInfo::onClone () {
 	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
 	ret-> setAttribs (this-> attrs);
@@ -412,12 +441,19 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "init") return Init ();
+	if (var-> token == "sizeof") return SizeOf ();
 	return NULL;
     }
 
     InfoType IStructInfo::Init () {
 	auto ret = this-> clone ();
 	ret-> unopFoo = StructUtils::InstInit;
+	return ret;
+    }
+
+    InfoType IStructInfo::SizeOf () {
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::UBYTE);
+	ret-> unopFoo = StructUtils::InstSizeOf;
 	return ret;
     }
     
@@ -463,6 +499,17 @@ namespace semantic {
 	return NULL;
     }
     
+    std::string IStructInfo::onlyNameTypeString () {
+	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name, "!(");
+	for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
+	    buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+	    if (it < (int) this-> tmpsDone.size () - 1)
+		buf.write (", ");
+	}
+	buf.write (")");
+	return buf.str ();
+    }
+
     std::string IStructInfo::innerTypeString () {
 	static std::map <std::string, bool> inner;
 	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
@@ -534,20 +581,11 @@ namespace semantic {
     }
     
     Ymir::Tree IStructInfo::toGeneric () {
-	static std::map <std::string, bool> inner;
-	auto name = this-> innerTypeString ();	
-	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());
-	
-	auto inside = inner.find (name);
-	if (inside == inner.end () || !inside-> second) {
-	    inner [name] = true;
-	    if (str_type_node.isNull ()) {
-		str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs);
-		IFinalFrame::declareType (name, str_type_node);
-	    }
-	    inner [name] = false;
-	} else {
-	    return void_type_node;
+	auto name = this-> onlyNameTypeString ();	
+	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());	
+	if (str_type_node.isNull ()) {
+	    str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs);
+	    IFinalFrame::declareType (name, str_type_node);
 	}
 	return str_type_node;
     }

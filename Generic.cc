@@ -56,7 +56,6 @@ namespace Ymir {
     Tree makeTuple (std::string name, const std::vector <InfoType>& types, const std::vector<std::string> & attrs) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);
-
 	for (uint i = 0 ; i < types.size () ; i++) {
 	    tree ident = get_identifier (attrs [i].c_str ());
 	    tree type = types [i]-> toGeneric ().getTree ();

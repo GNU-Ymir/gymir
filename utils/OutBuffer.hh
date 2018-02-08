@@ -2,12 +2,18 @@
 
 #include <ymir/utils/memory.hh>
 #include <string>
+#include <map>
 #include <ymir/utils/Range.hh>
 #include <vector>
 
 namespace syntax {
     class IExpression;
     typedef IExpression* Expression;
+}
+
+namespace semantic {
+    class IInfoType;
+    typedef IInfoType* InfoType;
 }
 
 namespace Ymir {
@@ -121,7 +127,18 @@ namespace Ymir {
 	    }
 	}
 
+	template <typename K, typename V>	
+	void write_ (const std::map <K, V> &elem) {
+	    write ("{");
+	    for (auto it : elem) {
+		write (it.first, " : ", it.second, ",");
+	    }
+	    write ("}");
+	}
+	
 	void write_ (syntax::Expression expr);
+
+	void write_ (semantic::InfoType type);
 	
 	void write_ (const char * str);
 	
@@ -149,4 +166,9 @@ namespace Ymir {
     };
     
 
+}
+
+template <typename ... T>
+void println (T ... args) {
+    printf ("%s\n", Ymir::OutBuffer (args...).str ().c_str ());
 }

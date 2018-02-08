@@ -371,5 +371,38 @@ namespace syntax {
 	}
     }
 
-    
+    void ITypeOf::print (int nb) {
+	printf ("\n%*c<TypeOf> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	this-> expr-> print (nb + 4);
+    }
+	    
+
+    void IMatchPair::print (int nb) {
+	printf ("\n%*c<MatchPair> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	
+	this-> left-> print (nb + 4);
+	this-> right-> print (nb + 4);
+    }
+        	
+    void IMatch::print (int nb) {
+	printf ("\n%*c<Match> %s", 
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	this-> expr-> print (nb + 4);
+	    
+	for (int i = 0 ; i < (int) this-> values.size () ; i++) {
+	    this-> values [i]-> print (nb + 8);
+	    this-> block [i]-> print (nb + 8);
+	}
+
+	if (this-> default_) this-> default_-> print (nb + 10);
+    }	
+
 }

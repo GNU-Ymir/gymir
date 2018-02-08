@@ -1849,13 +1849,14 @@ namespace syntax {
 	std::vector <Expression> values;
 	std::vector <Block> insts;
 	Block defaultInsts = NULL;
-	
+
+	this-> lambdaPossible = false;
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
 	auto expr = visitExpression ();
 	
 	auto next = this-> lex.next ({Token::LACC});
-	this-> lambdaPossible = false;
+	
 	while (true) {
 	    next = this-> lex.next ();
 	    if (next != Keys::UNDER) {
