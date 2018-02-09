@@ -109,6 +109,7 @@ namespace syntax {
 	std::vector <std::string> forbiddenIds;
 	std::vector <std::string> decoKeys;
 	bool lambdaPossible;
+	bool isInMatch;
 	
 	lexical::Lexer & lex;
 

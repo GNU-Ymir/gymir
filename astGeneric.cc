@@ -121,7 +121,7 @@ namespace syntax {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
-	
+
 	return this-> info-> type-> buildBinaryOp (
 	    this-> token,
 	    this-> info-> type,
@@ -589,8 +589,7 @@ namespace syntax {
 	}
 	
 	return list.getTree ();
-    }
-    
+    }    
 
     Ymir::Tree IIs::toGeneric () {
 	if (this-> info-> isImmutable ()) {
@@ -600,6 +599,107 @@ namespace syntax {
 	    Ymir::Error::assert ("");
 	    return Ymir::Tree ();
 	}
+    }
+
+    Ymir::Tree IMatch::declareVars (std::vector <Var> vars, std::vector <Expression> casters) {
+	Ymir::TreeStmtList list;
+	for (auto it : Ymir::r (0, vars.size ())) {
+	    auto var = vars [it];
+	    auto aff = casters [it];
+	    auto type_tree = var-> info-> type-> toGeneric ();
+	    Ymir::Tree decl = build_decl (
+		var-> token.getLocus (),
+		VAR_DECL,
+		get_identifier (var-> token.getStr ().c_str ()),
+		type_tree.getTree ()
+	    );
+	    
+	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
+	    var-> info-> treeDecl (decl);
+	    Ymir::getStackVarDeclChain ().back ().append (decl);
+	    list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
+
+	    if (aff != NULL) {
+		aff-> info-> value () = NULL;
+		list.append (aff-> toGeneric ());
+	    }
+	}
+	return list.getTree ();
+    }
+    
+    Ymir::Tree IMatch::validateBlock (Expression test, Block block, Ymir::Tree endLabel, Ymir::Tree elsePart) {
+	Ymir::Tree bool_expr = test-> toGeneric ();
+	Ymir::Tree thenLabel = Ymir::makeLabel (this-> token.getLocus (), "then");
+	Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, test-> token.getLocus (), void_type_node, thenLabel);
+	Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, test-> token.getLocus (), void_type_node, endLabel);
+	Ymir::Tree goto_else, elseLabel;
+	
+	if (elsePart.isNull ()) {
+	    goto_else = goto_end;
+	} else {
+	    elseLabel = Ymir::makeLabel (this-> token.getLocus (), "else");
+	    goto_else = Ymir::buildTree (GOTO_EXPR, test-> token.getLocus (), void_type_node, elseLabel);
+	}
+
+	Ymir::TreeStmtList list;
+	Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, test-> token.getLocus (), void_type_node, bool_expr, goto_then, goto_else);
+	list.append (cond_expr);
+
+	Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, block-> token.getLocus (), void_type_node, thenLabel);
+	list.append (then_label_expr);
+	Ymir::Tree then_part = block-> toGeneric ();
+	list.append (then_part);
+	list.append (goto_end);
+	if (!elseLabel.isNull ()) {
+	    Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, test-> token.getLocus (), void_type_node, elseLabel);
+	    list.append (else_label_expr);
+	    list.append (elsePart);
+	    list.append (goto_end);
+	}
+
+	return list.getTree ();	
+    }
+
+    Ymir::Tree IMatch::declareAndAffectAux () {
+	Ymir::TreeStmtList list;
+	auto decl = Ymir::makeAuxVar (this-> aux-> token.getLocus (), ISymbol::getLastTmp (), this-> aux-> info-> type-> toGeneric ());
+
+	this-> aux-> info-> treeDecl (decl);
+	list.append (this-> binAux-> toGeneric ());	
+
+	return list.getTree ();
+    }
+    
+    Ymir::Tree IMatch::toGeneric () {
+	Ymir::Tree endLabel = Ymir::makeLabel (this-> token.getLocus (), "end_if");
+	Ymir::Tree elsePart;
+	Ymir::TreeStmtList list;
+	list.append (declareAndAffectAux ());
+
+	for (auto it : Ymir::r (0, this-> soluce.size ())) {
+	    Ymir::enterBlock ();
+	    Ymir::getStackStmtList ().back ().append (
+		declareVars (
+		    this-> soluce [it].created,
+		    this-> soluce [it].caster
+		)
+	    );
+	    	    
+	    elsePart = validateBlock (
+		this-> soluce [it].test,
+		this-> block [it],
+		endLabel,
+		elsePart	    
+	    );
+	    
+	    list.append (Ymir::leaveBlock ().bind_expr);
+	}
+	
+	list.append (elsePart);
+	Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, this-> token.getLocus (), void_type_node, endLabel);
+	list.append (endif_label_expr);
+	
+	return list.getTree ();
     }
     
 }

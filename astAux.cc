@@ -1293,6 +1293,13 @@ namespace syntax {
 	right (right)
     {}
 
+    Expression IMatchPair::getLeft () {
+	return this-> left;
+    }
+
+    Expression IMatchPair::getRight () {
+	return this-> right;
+    }    
     
     IMatchPair::~IMatchPair () {
 	delete left;

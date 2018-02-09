@@ -542,7 +542,7 @@ namespace syntax {
 	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
 	    return aux;
 	} else {
-	    auto aux = new (Z0)  IBinary (this-> token, NULL, NULL);
+	    auto aux = new (Z0)  IBinary (this-> token, this-> left, this-> right);
 	    aux-> info = this-> info;
 	    return aux;
 	}	
@@ -993,6 +993,11 @@ namespace syntax {
 		Table::instance ().retInfo ().changed () = true;
 	    return aux;	    
 	} else {
+	    aux-> _left = this-> _left;
+	    aux-> _score = this-> _score;
+	    aux-> params = this-> params;
+	    aux-> _dotCall = this-> _dotCall;
+	    aux-> _opCall = this-> _opCall;
 	    aux-> info = this-> info;
 	    return aux;
 	}
@@ -1253,17 +1258,19 @@ namespace syntax {
 	if (expr == NULL) return NULL;
 
 	std::vector <semantic::DestructSolution> soluce;
+	std::vector <Block> blocks;
 	bool unreachable = false;
 	for (auto it : this-> values) {
-	    auto res = semantic::DestructSolver::instance ().solve (expr, it);
+	    auto res = semantic::DestructSolver::instance ().solve (it, expr);
 	    if (res.valid) {
-		// enter block
-		// declare vars
-		// validate block
-		// affect
-		// quitblock
+		// Table::instance ().enterBlock ();
+		// for (auto it : res.created) {
+		//     Table::instance ().insert (it-> info);
+		// }
+		// blocks.push_back (this-> block-> block ());		
+		// Table::instance ().quitBlock ();
 	    }
-	    if (res.immutable) unreachable = true;	    
+	    //	    if (res.immutable) unreachable = true;	    
 	}
 	
 	if (!unreachable && !this-> defaultResult) {

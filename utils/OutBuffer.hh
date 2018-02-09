@@ -11,6 +11,8 @@ namespace syntax {
     typedef IExpression* Expression;
 }
 
+struct Word;
+
 namespace semantic {
     class IInfoType;
     typedef IInfoType* InfoType;
@@ -135,6 +137,8 @@ namespace Ymir {
 	    }
 	    write ("}");
 	}
+
+	void write_ (const Word& word);	
 	
 	void write_ (syntax::Expression expr);
 

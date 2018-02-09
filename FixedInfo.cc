@@ -607,6 +607,7 @@ namespace semantic {
     }
 
     Value IFixedValue::BinaryOp (Word op, Value val) {
+	if (val == NULL) return NULL;
 	if (op == Token::PLUS) return this-> add (val);
 	if (op == Token::MINUS) return this-> sub (val);
 	if (op == Token::DIV) return this-> div (val);
@@ -822,7 +823,7 @@ namespace semantic {
     }
     
     Value IFixedValue::infeq (Value other) {
-    	if (auto ot = other-> to<IFixedValue> ()) {
+	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
 		return new (Z0)  IBoolValue (this-> value.l <= ot-> value.l);
 	    return new (Z0)  IBoolValue (this-> value.ul <= ot-> value.ul);

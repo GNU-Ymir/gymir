@@ -47,6 +47,16 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	static const char * id () {
+	    return TYPEID (IFixed);
+	}
+	
+	std::vector <std::string> getIds () override {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IFixed));
+	    return ret;
+	}
+	
 	std::string prettyPrint () override;
     };
 

@@ -2,6 +2,7 @@
 #include <ymir/errors/Error.hh>
 #include <ymir/ast/Expression.hh>
 #include <ymir/semantic/types/InfoType.hh>
+#include <ymir/syntax/Word.hh>
 #include <cstring>
 
 
@@ -85,7 +86,10 @@ namespace Ymir {
     }
     
     void OutBuffer::write_ (syntax::Expression expr) {
-	this-> write (expr-> prettyPrint ().c_str ());
+	if (expr)
+	    this-> write (expr-> prettyPrint ().c_str ());
+	else
+	    this-> write ("null");
     }
 
     void OutBuffer::write_ (semantic::InfoType info) {
@@ -94,6 +98,10 @@ namespace Ymir {
 	else this-> write ("null");
     }
     
+    void OutBuffer::write_ (const Word & word) {
+	this-> write (word.toString ());
+    }
+
     void OutBuffer::write_ (bool b) {
 	if (b)
 	    this-> write_ ("true");
@@ -113,7 +121,7 @@ namespace Ymir {
 	delete[] this-> current;
 	this-> current = aux;
     }
-
+    
     void OutBuffer::write () {}
 
     

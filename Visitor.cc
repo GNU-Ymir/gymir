@@ -11,7 +11,6 @@ using namespace std;
 namespace syntax {
 
     using namespace lexical;
-
     
     std::string join (std::vector <std::string> elems) {
 	stringstream ss;
@@ -88,7 +87,8 @@ namespace syntax {
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
-	this-> lambdaPossible = true;	
+	this-> lambdaPossible = true;
+	this-> isInMatch = false;
     }
     
     Program Visitor::visit () {
@@ -1563,7 +1563,7 @@ namespace syntax {
 	auto beg = this-> lex.next (), next = this-> lex.next ();
 	auto suite = next;
 	std::vector <Expression> params;
-	if (next != Token::RPAR) {
+	if (next != Token::RACC) {
 	    this-> lex.rewind ();
 	    while (true) {
 		params.push_back (visitExpression ());
@@ -1735,7 +1735,7 @@ namespace syntax {
 	else if (token == Token::DOT) return visitDot (left);
 	else if (token == Token::DCOLON) return visitDColon (left);
 	else if (token == Token::LACC) {
-	    if (this-> lambdaPossible) {
+	    if (this-> lambdaPossible || this-> isInMatch) {
 		return visitStructCst (left);
 	    } else {
 		this-> lex.rewind ();
@@ -1857,6 +1857,7 @@ namespace syntax {
 	
 	auto next = this-> lex.next ({Token::LACC});
 	
+	this-> isInMatch = true;
 	while (true) {
 	    next = this-> lex.next ();
 	    if (next != Keys::UNDER) {
@@ -1868,18 +1869,27 @@ namespace syntax {
 		    next = this-> lex.next ({Token::DARROW});
 		}
 		
+		this-> lambdaPossible = true;
+		this-> isInMatch = false;
 		insts.push_back (visitBlock ());
+		this-> lambdaPossible = false;
+		this-> isInMatch = true;
 		next = this-> lex.next ();
 		if (next == Token::RACC) break;
 		else this-> lex.rewind ();
 	    } else {
 		this-> lex.next ({Token::DARROW});
+		this-> isInMatch = false;
+		this-> lambdaPossible = true;
 		defaultInsts = visitBlock ();
+		this-> lambdaPossible = false;
+		this-> isInMatch = true;
 		this-> lex.next ({Token::RACC});
 		break;
 	    }
 	}
 	
+	this-> isInMatch = false;
 	this-> lambdaPossible = true;
 	return new (Z0)  IMatch (begin, expr, values, insts, defaultInsts);
     }

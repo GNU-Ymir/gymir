@@ -22,6 +22,20 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	Expression getLeft ();
+
+	Expression getRight ();
+	
+	static const char * id () {
+	    return TYPEID (IMatch);
+	}
+	
+	std::vector <std::string> getIds () override {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IMatch));
+	    return ret;
+	}
+	
 	virtual ~IMatchPair ();
 	
     };
@@ -36,6 +50,7 @@ namespace syntax {
 	Expression defaultResult;
 
 	std::vector <semantic::DestructSolution> soluce;
+	Expression aux, binAux;
 	
     public:
 
@@ -47,6 +62,10 @@ namespace syntax {
 	
 	Expression expression () override;
 
+	Instruction instruction () override;
+
+	Ymir::Tree toGeneric () override;
+	
 	static const char * id () {
 	    return TYPEID (IMatch);
 	}
@@ -60,9 +79,16 @@ namespace syntax {
 	void print (int nb = 0) override;
 
 	virtual ~IMatch ();
+
+    private:
+
+	Ymir::Tree declareAndAffectAux ();
+	
+	Ymir::Tree declareVars (std::vector <Var> vars, std::vector <Expression> caster);	
+	Ymir::Tree validateBlock (Expression test, Block bl, Ymir::Tree endLabel, Ymir::Tree elsePart);
 	
     };
 
     typedef IMatch* Match;
-  
+    typedef IMatchPair* MatchPair;
 }

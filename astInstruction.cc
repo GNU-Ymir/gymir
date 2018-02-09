@@ -374,6 +374,43 @@ namespace syntax {
 	return auxDecl;
     }
 
+    Instruction IMatch::instruction () {
+	Table::instance ().enterBlock ();
+	auto aux = new (Z0) IVar ({expr-> token, "_"});
+	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IUndefInfo ());
+	aux-> info-> isConst (false);
+	Table::instance ().insert (aux-> info);
+	
+	Word affTok {this-> token, Token::EQUAL};
+	auto binAux = (new (Z0) IBinary (affTok, aux, this-> expr))-> expression ();
+	if (!binAux) return NULL;       
+	aux-> info-> isConst (true);
+	
+	std::vector <semantic::DestructSolution> soluce;
+	std::vector <Block> blocks;
+	//bool unreachable = false;
+	for (auto it : Ymir::r (0, this-> values.size ())) {
+	    auto res = semantic::DestructSolver::instance ().solve (this-> values [it], aux);
+	    
+	    if (res.valid) {
+		soluce.push_back (res);
+		Table::instance ().enterBlock ();
+		for (auto it_ : res.created) {
+		    Table::instance ().insert (it_-> info);
+		}
+		blocks.push_back (this-> block [it]-> block ());		
+		Table::instance ().quitBlock ();
+	    }
+	}	
+
+	Table::instance ().quitBlock ();
+	auto ret = new (Z0) IMatch (this-> token, expr);	
+	ret-> aux = aux;		
+	ret-> binAux = binAux;
+	ret-> soluce = soluce;
+	ret-> block = blocks;
+	return ret;
+    }
     
 }
 
