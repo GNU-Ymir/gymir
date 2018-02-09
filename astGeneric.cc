@@ -396,8 +396,18 @@ namespace syntax {
 	    Ymir::getStackVarDeclChain ().back ().append (decl);
 	    list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
 	}
+	Ymir::Tree end_label = Ymir::makeLabel (this-> token.getLocus (), "end");
+	Ymir::getLoopLabels ().push_back (end_label);
+	if (!this-> id.isEof ())
+	    Ymir::getLoopLabelsNamed () [this-> id.getStr ()] = end_label;
 	
 	list.append (this-> ret-> buildApplyOp (this-> token, this-> var, this-> block, this-> iter));
+	Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, this-> token.getLocus (), void_type_node, end_label);	
+	list.append (end_expr);
+	Ymir::getLoopLabels ().pop_back ();
+	if (!this-> id.isEof ())
+	    Ymir::getLoopLabelsNamed ().erase (this-> id.getStr ());
+
 	return list.getTree ();
     }
     
@@ -408,6 +418,10 @@ namespace syntax {
 	Ymir::Tree begin_label = Ymir::makeLabel (this-> token.getLocus (), "begin");
 	Ymir::Tree end_label = Ymir::makeLabel (this-> token.getLocus (), "end");
 
+	Ymir::getLoopLabels ().push_back (end_label);	
+	if (!this-> name.isEof ())
+	    Ymir::getLoopLabelsNamed () [this-> name.getStr ()] = end_label;
+	
 	Ymir::Tree goto_test = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, test_label);
 	Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, end_label);
 	Ymir::Tree goto_begin = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, begin_label);
@@ -426,10 +440,23 @@ namespace syntax {
 
 	Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, this-> test-> token.getLocus (), void_type_node, end_label);	
 	list.append (end_expr);
+	Ymir::getLoopLabels ().pop_back ();
+	if (!this-> name.isEof ())
+	    Ymir::getLoopLabelsNamed ().erase (this-> name.getStr ());
 	
 	return list.getTree ();	
     }    
 
+    Ymir::Tree IBreak::toGeneric () {
+	Ymir::Tree label;
+	if (this-> ident.isEof ()) {
+	    label = Ymir::getLoopLabels ().back ();
+	} else {
+	    label = Ymir::getLoopLabelsNamed () [this-> ident.getStr ()];
+	}
+	return Ymir::buildTree (GOTO_EXPR, this-> token.getLocus (), void_type_node, label);
+    }
+    
     Ymir::Tree IArrayAlloc::toGeneric () {
 	ArrayInfo info = this-> info-> type-> to <IArrayInfo> ();
 	Ymir::Tree innerType = info-> content ()-> toGeneric ();

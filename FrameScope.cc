@@ -23,7 +23,7 @@ namespace semantic {
 	if (!ex.isEof ()) {
 	    Ymir::Error::multipleLoopName (name, ex);
 	}
-	this-> ident () = name;
+	this-> _ident = name;
     }
 
     void ITreeInfo::returned () {

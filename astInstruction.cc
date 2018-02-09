@@ -220,6 +220,9 @@ namespace syntax {
 	auto expr = this-> iter-> expression ();
 	if (expr == NULL) return NULL;
 	Table::instance ().enterBlock ();
+	if (!this-> id.isEof ())
+	    Table::instance ().retInfo ().setIdent (this-> id);
+	
 	std::vector <Var> var (this-> var.size ());
 	for (auto it : Ymir::r (0, this-> var.size ())) {
 	    var [it] = (Var) this-> var [it]-> templateExpReplace ({});
@@ -258,12 +261,16 @@ namespace syntax {
 	if (type == NULL) {
 	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
 	}
-
+	Table::instance ().enterBlock ();
+	if (!this-> name.isEof ())
+	    Table::instance ().retInfo ().setIdent (this-> name);
+	
 	Table::instance ().retInfo ().currentBlock () = "while";
 	Table::instance ().retInfo ().changed () = true;
 	Block bl = this-> block-> block ();
-
-	return new (Z0)  IWhile (this-> token, expr, bl);		
+	Table::instance ().quitBlock ();
+	
+	return new (Z0)  IWhile (this-> token, this-> name, expr, bl);		
     }
 
 

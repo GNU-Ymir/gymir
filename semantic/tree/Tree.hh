@@ -30,6 +30,7 @@
 #include "tm.h"
 
 #include <vector>
+#include <map>
 
 #define ubyte_type_node unsigned_char_type_node
 #define byte_type_node signed_char_type_node
@@ -214,6 +215,9 @@ namespace Ymir {
     std::vector <TreeChain>& getStackVarDeclChain ();
     std::vector <TreeStmtList>& getStackStmtList ();
     std::vector <BlockChain>& getStackBlockChain ();
+    std::map <std::string, Tree>& getLoopLabelsNamed ();
+    std::vector <Tree>& getLoopLabels ();
+    
     
     void enterBlock ();
     TreeSymbolMapping leaveBlock ();    
