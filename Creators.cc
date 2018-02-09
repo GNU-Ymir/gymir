@@ -8,12 +8,13 @@ namespace semantic {
     Creators Creators::__instance__;
 
     InfoType createConst (Word token, std::vector <syntax::Expression> templates) {
-	if (templates.size () != 1 || !templates [0]-> is <::syntax::IType> ()) {
+	if (templates.size () != 1 ||
+	    (!templates [0]-> is <::syntax::IType> () && !templates [0]-> info-> type-> isType ())
+	) {
 	    Ymir::Error::takeATypeAsTemplate (token);
-	    return NULL;
-	} else {
-	    return templates [0]-> info-> type-> cloneConst ();
-	}
+	    return NULL;	
+	} 
+	return templates [0]-> info-> type-> cloneConst ();	
     }
     
     Creators::Creators () {

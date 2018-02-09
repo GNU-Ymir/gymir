@@ -987,6 +987,8 @@ namespace syntax {
 	    if (type-> ret-> is<IUndefInfo> () && this-> inside != NULL) {
 		Ymir::Error::templateInferType (aux-> _left-> token, aux-> _score-> token);
 		return NULL;
+	    } else if (type-> ret-> is <IUndefInfo> ()) {
+		type-> ret = new (Z0) IVoidInfo ();
 	    }
 
 	    if (!aux-> info-> isImmutable ())

@@ -198,7 +198,7 @@ namespace semantic {
 		    TemplateSolution res = TemplateSolver::instance ().solve (this-> _function-> getTemplates (), tvar, args [it]);
 		    if (!res.valid || !TemplateSolver::instance ().merge (score-> score, tmps, res))
 			return NULL;
-
+		    score-> score += res.score;
 		    info = res.type;
 		    if (tvar-> getDeco () == Keys::CONST) info-> isConst (true);
 		} else {

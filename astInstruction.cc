@@ -390,6 +390,7 @@ namespace syntax {
 	std::vector <Block> blocks;
 	bool unreachable = false;
 	for (auto it : Ymir::r (0, this-> values.size ())) {
+	    Table::instance ().enterBlock ();
 	    if (unreachable) {
 		Ymir::Error::unreachableStmtWarn (this-> values [it]-> token);
 	    } 
@@ -404,6 +405,7 @@ namespace syntax {
 		Table::instance ().quitBlock ();
 		unreachable = res.immutable;
 	    }
+	    Table::instance ().quitBlock ();
 	}	
 
 	Table::instance ().quitBlock ();

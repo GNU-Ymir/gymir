@@ -282,7 +282,13 @@ namespace semantic {
 	    auto ptr = this-> clone ();
 	    ptr-> binopFoo = &PtrUtils::InstCast;
 	    return ptr;
-	}
+	} else if (auto ref = other-> to<IRefInfo> ()) {
+	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
+		auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAddr;
+		return aux;
+	    }
+	} 
 	return NULL;
     }
     

@@ -1,6 +1,7 @@
 #include <ymir/semantic/pack/DestructSolver.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/value/BoolValue.hh>
+#include <ymir/syntax/Keys.hh>
 #include <ymir/ast/_.hh>
 
 
@@ -63,7 +64,7 @@ namespace semantic {
 	    return solveTuple (tu, right);
 	} else if (auto st = left-> to <IStructCst> ()) {
 	    return solveStructCst (st, right);
-	}
+	} 
 	return solveNormal (left, right);
     }
 
@@ -117,8 +118,8 @@ namespace semantic {
     DestructSolution DestructSolver::solveIgnore (Expression right) {
 	DestructSolution soluce {__VAR__, true};
 	auto test = new (Z0) IBool (right-> token);
-	test-> getValue () = true;
-	soluce.test = test;
+	test-> getValue () = true;	
+	soluce.test = test-> expression ();
 	soluce.immutable = true;
 	return soluce;
     }
@@ -183,11 +184,15 @@ namespace semantic {
 	auto value = left-> expression ();
 	if (value == NULL) return DestructSolution (0, false);
 
-	if (!right-> info-> type-> CompOp (value-> info-> type))
+	if (!value-> info-> type-> CompOp (right-> info-> type))
 	    return DestructSolution (0, false);
 
 	Word tok {left-> token, Token::DEQUAL};
-	Expression bin = new (Z0) IBinary (tok, left, right);
+	if (right-> info-> type-> is <IPtrInfo> ()) {
+	    tok.setStr (Keys::IS);
+	}
+	
+	Expression bin = new (Z0) IBinary (tok, right, left);
 	bin = bin-> expression ();
 	if (!bin) return DestructSolution (0, false);
 	DestructSolution soluce {__VALUE__, true};
