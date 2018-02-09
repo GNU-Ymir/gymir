@@ -908,6 +908,14 @@ namespace syntax {
     {
     }
 
+    Expression IStructCst::getLeft () {
+	return this-> left;
+    }
+    
+    std::vector <Expression> & IStructCst::getExprs () {
+	return this-> params-> getParams ();
+    }
+    
     std::string IStructCst::prettyPrint () {
 	Ymir::OutBuffer buf (this-> left-> prettyPrint (), "{", this-> params-> prettyPrint (), "}");
 	return buf.str ();
@@ -965,6 +973,10 @@ namespace syntax {
 	    delete it;
 	for (auto it : casters)
 	    delete it;
+    }
+
+    std::vector <Expression> & IConstTuple::getExprs () {
+	return this-> params;
     }
     
     std::vector <std::string> IConstTuple::getIds () {
@@ -1306,13 +1318,11 @@ namespace syntax {
 	delete right;
     }
     	
-    IMatch::IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block, Block def) :
+    IMatch::IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block) :
 	IExpression (word),
 	expr (expr),
 	values (values),
-	block (block),
-	default_ (def),
-	defaultResult (NULL)
+	block (block)
     {}
     
     IMatch::IMatch (Word word, Expression expr) :
@@ -1326,11 +1336,9 @@ namespace syntax {
 	    delete it;
 	for (auto it : block)
 	    delete it;
-	if (default_) delete default_;
-	
+
 	for (auto it : results)
 	    delete it;
-	if (defaultResult) delete defaultResult;
     }
     
     

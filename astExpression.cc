@@ -1259,7 +1259,7 @@ namespace syntax {
 
 	std::vector <semantic::DestructSolution> soluce;
 	std::vector <Block> blocks;
-	bool unreachable = false;
+	//bool unreachable = false;
 	for (auto it : this-> values) {
 	    auto res = semantic::DestructSolver::instance ().solve (it, expr);
 	    if (res.valid) {
@@ -1272,12 +1272,7 @@ namespace syntax {
 	    }
 	    //	    if (res.immutable) unreachable = true;	    
 	}
-	
-	if (!unreachable && !this-> defaultResult) {
-	    Ymir::Error::assert ("");
-	    return NULL;
-	}
-	
+		
 	auto ret = new (Z0) IMatch (this-> token, expr);
 	ret-> soluce = soluce;
 	//ret-> results = results;

@@ -6,6 +6,8 @@
 namespace syntax {
     class IMatchPair;
     class IBinary;
+    class IConstTuple;
+    class IStructCst;
 }
 
 namespace semantic {
@@ -16,10 +18,10 @@ namespace semantic {
     struct DestructSolution {
 	long score;
 	bool valid;
-	//bool immutable;
+	bool immutable = false;
 	std::vector <syntax::Expression> caster;
 	std::vector <syntax::Var> created;
-	syntax::Expression test;
+	syntax::Expression test = NULL;
 	
 	DestructSolution (long score, bool valid) :
 	    score (score), valid (valid)
@@ -52,9 +54,17 @@ namespace semantic {
 	DestructSolution solvePair (syntax::IMatchPair* left, syntax::Expression right);
 
 	DestructSolution solveBinary (syntax::IBinary* bin, syntax::Expression right);
+
+	DestructSolution solveTuple (syntax::IConstTuple* tu, syntax::Expression right);
+
+	DestructSolution solveVar (syntax::IVar * var, syntax::Expression right);
+
+	DestructSolution solveIgnore (syntax::Expression right);
+
+	DestructSolution solveStructCst (syntax::IStructCst* str, syntax::Expression right);
 	
     private :
-
+	
 	bool merge (DestructSolution&, const DestructSolution&, const std::string & op);
 	
     };

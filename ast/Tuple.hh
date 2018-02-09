@@ -30,6 +30,8 @@ namespace syntax {
 	
 	std::vector <std::string> getIds () override;
 	
+	std::vector <Expression> & getExprs ();
+	
 	void print (int nb = 0) override;
 
 	virtual ~IConstTuple ();

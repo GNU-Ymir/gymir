@@ -401,8 +401,6 @@ namespace syntax {
 	    this-> values [i]-> print (nb + 8);
 	    this-> block [i]-> print (nb + 8);
 	}
-
-	if (this-> default_) this-> default_-> print (nb + 10);
     }	
 
 }

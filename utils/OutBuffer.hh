@@ -5,6 +5,7 @@
 #include <map>
 #include <ymir/utils/Range.hh>
 #include <vector>
+#include <type_traits>
 
 namespace syntax {
     class IExpression;
@@ -137,7 +138,7 @@ namespace Ymir {
 	    }
 	    write ("}");
 	}
-
+	
 	void write_ (const Word& word);	
 	
 	void write_ (syntax::Expression expr);
@@ -154,6 +155,8 @@ namespace Ymir {
 
 	void write_ (ulong);
 
+	void write_ (float);
+	
 	void write_ (char);
 
 	void write_ (double);

@@ -627,7 +627,7 @@ namespace syntax {
 	return list.getTree ();
     }
     
-    Ymir::Tree IMatch::validateBlock (Expression test, Block block, Ymir::Tree endLabel, Ymir::Tree elsePart) {
+    Ymir::Tree IMatch::validateBlock (Expression test, Block block, Ymir::Tree endLabel, Ymir::Tree elsePart, Ymir::Tree affectPart) {
 	Ymir::Tree bool_expr = test-> toGeneric ();
 	Ymir::Tree thenLabel = Ymir::makeLabel (this-> token.getLocus (), "then");
 	Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, test-> token.getLocus (), void_type_node, thenLabel);
@@ -648,6 +648,7 @@ namespace syntax {
 	Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, block-> token.getLocus (), void_type_node, thenLabel);
 	list.append (then_label_expr);
 	Ymir::Tree then_part = block-> toGeneric ();
+	list.append (affectPart);
 	list.append (then_part);
 	list.append (goto_end);
 	if (!elseLabel.isNull ()) {
@@ -676,23 +677,19 @@ namespace syntax {
 	Ymir::TreeStmtList list;
 	list.append (declareAndAffectAux ());
 
-	for (auto it : Ymir::r (0, this-> soluce.size ())) {
-	    Ymir::enterBlock ();
-	    Ymir::getStackStmtList ().back ().append (
-		declareVars (
-		    this-> soluce [it].created,
-		    this-> soluce [it].caster
-		)
-	    );
+	for (auto it : Ymir::r (this-> soluce.size (), 0)) {
+	    Ymir::Tree affectPart = declareVars (
+		this-> soluce [it - 1].created,
+		this-> soluce [it - 1].caster
+	    );	    
 	    	    
 	    elsePart = validateBlock (
-		this-> soluce [it].test,
-		this-> block [it],
+		this-> soluce [it - 1].test,
+		this-> block [it - 1],
 		endLabel,
-		elsePart	    
-	    );
-	    
-	    list.append (Ymir::leaveBlock ().bind_expr);
+		elsePart,
+		affectPart	    
+	    );	    
 	}
 	
 	list.append (elsePart);

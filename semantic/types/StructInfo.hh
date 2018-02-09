@@ -36,6 +36,8 @@ namespace semantic {
 	IStructCstInfo (Namespace space, std::string name, std::vector <syntax::Expression> & tmps);
 
 	bool isSame (InfoType) override;
+
+	bool isInstance (StructInfo info);
 	
 	InfoType onClone () override;
 	
@@ -91,6 +93,8 @@ namespace semantic {
 	std::vector <std::string> attrs;
 	std::vector <syntax::Expression> tmpsDone;
 	
+	friend IStructCstInfo;
+
     public:
 
 	IStructInfo (Namespace space, std::string name);

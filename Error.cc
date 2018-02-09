@@ -597,6 +597,16 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::unreachableStmtWarn (const Word& word) {
+	auto msg = std::string (getString (UnreachableStmt));
+	msg = std::string (YELLOW) + "Warning" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    printf ("%s", errorMsg.msg.c_str ());
+	} 
+    }
+    
     void Error::missingReturn (const Word& word, semantic::Symbol type) {
 	auto msg = format (getString (MissingReturn), YELLOW, word.getStr (), RESET, YELLOW, type-> typeString (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

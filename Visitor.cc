@@ -1848,7 +1848,6 @@ namespace syntax {
     Expression Visitor::visitMatch () {
 	std::vector <Expression> values;
 	std::vector <Block> insts;
-	Block defaultInsts = NULL;
 
 	this-> lambdaPossible = false;
 	this-> lex.rewind ();
@@ -1859,39 +1858,26 @@ namespace syntax {
 	
 	this-> isInMatch = true;
 	while (true) {
-	    next = this-> lex.next ();
-	    if (next != Keys::UNDER) {
-		this-> lex.rewind ();
-		values.push_back (visitExpression ());
-		next = this-> lex.next ({Token::DARROW, Token::TDOT});
-		if (next == Token::TDOT) {
-		    values.back () = new (Z0)  IMatchPair (next, values.back (), visitExpression ());
-		    next = this-> lex.next ({Token::DARROW});
-		}
-		
-		this-> lambdaPossible = true;
-		this-> isInMatch = false;
-		insts.push_back (visitBlock ());
-		this-> lambdaPossible = false;
-		this-> isInMatch = true;
-		next = this-> lex.next ();
-		if (next == Token::RACC) break;
-		else this-> lex.rewind ();
-	    } else {
-		this-> lex.next ({Token::DARROW});
-		this-> isInMatch = false;
-		this-> lambdaPossible = true;
-		defaultInsts = visitBlock ();
-		this-> lambdaPossible = false;
-		this-> isInMatch = true;
-		this-> lex.next ({Token::RACC});
-		break;
+	    values.push_back (visitExpression ());
+	    next = this-> lex.next ({Token::DARROW, Token::TDOT});
+	    if (next == Token::TDOT) {
+		values.back () = new (Z0)  IMatchPair (next, values.back (), visitExpression ());
+		next = this-> lex.next ({Token::DARROW});
 	    }
+	    
+	    this-> lambdaPossible = true;
+	    this-> isInMatch = false;
+	    insts.push_back (visitBlock ());
+	    this-> lambdaPossible = false;
+	    this-> isInMatch = true;
+	    next = this-> lex.next ();
+	    if (next == Token::RACC) break;
+	    else this-> lex.rewind ();
 	}
 	
 	this-> isInMatch = false;
 	this-> lambdaPossible = true;
-	return new (Z0)  IMatch (begin, expr, values, insts, defaultInsts);
+	return new (Z0)  IMatch (begin, expr, values, insts);
     }
     
     Expression Visitor::visitAfter (const Word& word, Expression left) {

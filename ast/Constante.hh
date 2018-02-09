@@ -277,7 +277,17 @@ namespace syntax {
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+		
+	static const char * id () {
+	    return TYPEID (IIgnore);
+	}
 	
+	std::vector <std::string> getIds () override {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (IIgnore));
+	    return ret;
+	}
+
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Ignore> %s",
 		    nb, ' ',

@@ -108,9 +108,7 @@ namespace semantic {
     {}
 
     bool IStructCstInfo::isSame (InfoType other) {
-	printf ("%s\n", other-> typeString ().c_str ());
 	if (auto ot = other-> to<IStructCstInfo> ()) {
-	    printf ("ici");
 	    if (ot-> name == this-> name && ot-> space == this-> space) {
 		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
 		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
@@ -123,6 +121,18 @@ namespace semantic {
 	return false;
     }
 
+    bool IStructCstInfo::isInstance (StructInfo ot) {
+	if (ot-> name == this-> name && ot-> space == this-> space) {
+	    if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
+	    for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
+		if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+		    return false;
+	    }
+	    return true;
+	}
+	return false;
+    }
+    
     InfoType IStructCstInfo::onClone () {
 	return this;
     }

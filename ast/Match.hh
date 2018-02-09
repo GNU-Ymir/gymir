@@ -44,10 +44,8 @@ namespace syntax {
 	Expression expr;
 	std::vector<Expression> values;
 	std::vector<Block> block;
-	Block default_;
-	
+
 	std::vector <Expression> results;
-	Expression defaultResult;
 
 	std::vector <semantic::DestructSolution> soluce;
 	Expression aux, binAux;
@@ -56,7 +54,7 @@ namespace syntax {
 
 	IMatch (Word word, Expression expr);
 	
-	IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block, Block def);
+	IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block);
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
@@ -85,7 +83,7 @@ namespace syntax {
 	Ymir::Tree declareAndAffectAux ();
 	
 	Ymir::Tree declareVars (std::vector <Var> vars, std::vector <Expression> caster);	
-	Ymir::Tree validateBlock (Expression test, Block bl, Ymir::Tree endLabel, Ymir::Tree elsePart);
+	Ymir::Tree validateBlock (Expression test, Block bl, Ymir::Tree endLabel, Ymir::Tree elsePart, Ymir::Tree affectPart);
 	
     };
 

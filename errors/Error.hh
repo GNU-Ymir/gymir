@@ -208,6 +208,8 @@ namespace Ymir {
 	
 	static void unreachableStmt (const Word&);
 	
+	static void unreachableStmtWarn (const Word&);
+	
 	static void noValueNonVoidFunction (const Word&);
 	
 	static std::vector <ErrorMsg>& caught ();

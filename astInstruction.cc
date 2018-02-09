@@ -385,13 +385,15 @@ namespace syntax {
 	auto binAux = (new (Z0) IBinary (affTok, aux, this-> expr))-> expression ();
 	if (!binAux) return NULL;       
 	aux-> info-> isConst (true);
-	
+	aux-> info-> value () = binAux-> to<IBinary> ()-> getRight ()-> info-> value ();
 	std::vector <semantic::DestructSolution> soluce;
 	std::vector <Block> blocks;
-	//bool unreachable = false;
+	bool unreachable = false;
 	for (auto it : Ymir::r (0, this-> values.size ())) {
-	    auto res = semantic::DestructSolver::instance ().solve (this-> values [it], aux);
-	    
+	    if (unreachable) {
+		Ymir::Error::unreachableStmtWarn (this-> values [it]-> token);
+	    } 
+	    auto res = semantic::DestructSolver::instance ().solve (this-> values [it], aux);	    
 	    if (res.valid) {
 		soluce.push_back (res);
 		Table::instance ().enterBlock ();
@@ -400,6 +402,7 @@ namespace syntax {
 		}
 		blocks.push_back (this-> block [it]-> block ());		
 		Table::instance ().quitBlock ();
+		unreachable = res.immutable;
 	    }
 	}	
 

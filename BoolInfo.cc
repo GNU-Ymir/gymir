@@ -176,6 +176,7 @@ namespace semantic {
     }
 
     Value IBoolValue::BinaryOp (Word op, Value val) {
+	if (val == NULL) return NULL;
 	if (op == Token::DAND) return this-> dand (val);
 	if (op == Token::DPIPE) return this-> dor (val);
 	if (op == Token::NOT_EQUAL) return this-> neq (val);

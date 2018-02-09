@@ -252,10 +252,7 @@ namespace syntax {
 	for (auto it : this-> block)
 	    auxBlock.push_back ((Block) it-> templateReplace (values));
 
-	Block def = NULL;
-	if (this-> default_)
-	    def = (Block) this-> default_-> templateReplace (values);
-	return new (Z0)  IMatch (this-> token, expr, auxValues, auxBlock, def);
+	return new (Z0)  IMatch (this-> token, expr, auxValues, auxBlock);
     }
 
     Expression IMixin::templateExpReplace (const map <string, Expression>& values) {

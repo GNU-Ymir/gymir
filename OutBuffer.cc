@@ -108,6 +108,16 @@ namespace Ymir {
 	else this-> write_ ("false");
     }
 
+    void OutBuffer::write_ (float nb) {
+	auto len = snprintf (NULL, 0, "%A", nb);
+	if (this-> capacity < this-> len + len) {
+	    resize (this-> len + len);
+	}
+
+	sprintf (this-> current + this-> len, "%A", nb);
+	this-> len += len;
+    }
+    
     void OutBuffer::resize (ulong len) {
 	if (capacity == 0) capacity = len + 1;
 	else if (capacity * 2 < len) capacity = len + capacity + 1;

@@ -49,7 +49,11 @@ namespace syntax {
 	    ret.push_back (TYPEID (IStructCst));
 	    return ret;
 	}
-		
+
+	std::vector <Expression> & getExprs ();
+
+	Expression getLeft ();
+	
     };
 
     typedef IStructCst* StructCst;
