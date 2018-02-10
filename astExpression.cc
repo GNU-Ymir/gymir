@@ -111,7 +111,8 @@ namespace syntax {
 	    auto aux = new (Z0)  IVar (this-> token);
 	    aux-> info = Table::instance ().get (this-> token.getStr ());
 	    if (aux-> info == NULL) {
-		Ymir::Error::assert ("TODO, gerer l'erreur");
+		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
+		return NULL;
 	    }
 
 	    if (this-> templates.size () != 0) {
