@@ -2,8 +2,14 @@
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
+#include <ymir/semantic/pack/Symbol.hh>
+#include <ymir/semantic/value/Value.hh>
+#include <ymir/ast/Expression.hh>
+#include "toplev.h"
 
 using namespace semantic;
+
+static GTY(()) vec<tree, va_gc> *global_declarations;
 
 namespace Ymir {
     
@@ -211,6 +217,81 @@ namespace Ymir {
 	tree decl = build_decl (loc, LABEL_DECL, get_identifier (name), void_type_node);
 	DECL_CONTEXT (decl) = IFinalFrame::currentFrame ().getTree ();
 	return decl;
+    }
+
+    Tree getGlobalContext () {
+	static Tree global_context;
+	if (global_context.isNull ()) {
+	    global_context = build_translation_unit_decl (NULL_TREE);
+	}
+	return global_context;
+    }
+
+    void push_decl (Tree decl_) {
+	auto decl = decl_.getTree ();
+	if (!DECL_CONTEXT (decl)) {
+	    if (!Ymir::currentContext ().isNull ()) {
+		DECL_CONTEXT (decl) = Ymir::currentContext ().getTree ();
+	    } else {
+		DECL_CONTEXT (decl) = getGlobalContext ().getTree ();
+	    }
+	}
+
+	if (TREE_STATIC (decl)) {
+	    vec_safe_push (global_declarations, decl);
+	} else {
+	    Ymir::getStackVarDeclChain ().back ().append (decl);
+	}
+    }
+    
+    void declareGlobal (Symbol sym) {
+	auto type_tree = sym-> type-> toGeneric ();
+	tree decl = build_decl (
+	    sym-> sym.getLocus (),
+	    VAR_DECL,
+	    get_identifier (sym-> sym.getStr ().c_str ()),
+	    type_tree.getTree ()
+	);
+
+	TREE_STATIC (decl) = 1;
+	TREE_USED (decl) = 1;
+	DECL_EXTERNAL (decl) = 0;
+	DECL_PRESERVE_P (decl) = 1;
+	TREE_PUBLIC (decl) = 1;
+	if (sym-> value ()) {
+	    DECL_INITIAL (decl) = sym-> value ()-> toYmir (sym)-> toGeneric ().getTree ();
+	} else {
+	    DECL_INITIAL (decl) = error_mark_node;
+	}
+	
+	push_decl (decl);
+	sym-> treeDecl (decl);
+    }
+
+    void declareGlobalExtern (Symbol sym) {
+	auto type_tree = sym-> type-> toGeneric ();
+	tree decl = build_decl (
+	    sym-> sym.getLocus (),
+	    VAR_DECL,
+	    get_identifier (sym-> sym.getStr ().c_str ()),
+	    type_tree.getTree ()
+	);
+
+	TREE_STATIC (decl) = 1;
+	TREE_USED (decl) = 1;
+	DECL_EXTERNAL (decl) = 1;
+	DECL_PRESERVE_P (decl) = 1;
+	TREE_PUBLIC (decl) = 1;
+	sym-> treeDecl (decl);
+    }
+    
+    void finishCompilation () {
+	int len = vec_safe_length (global_declarations);
+	tree * addr = vec_safe_address (global_declarations);
+	for (int i = 0 ; i < len ; i++) {
+	    tree decl = addr [i];
+	    wrapup_global_declarations (&decl, 1);
+	}
     }
     
 }

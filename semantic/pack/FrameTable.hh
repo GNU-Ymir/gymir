@@ -15,6 +15,9 @@ namespace semantic {
 
     class IStructCstInfo;
     typedef IStructCstInfo* StructCstInfo;
+
+    class ISymbol;
+    typedef ISymbol* Symbol;
     
     class FrameTable {
 
@@ -23,6 +26,8 @@ namespace semantic {
 	std::vector <FinalFrame> _finalTemplates;
 	std::vector <FrameProto> _protos;
 	std::vector <StructCstInfo> _structs;
+	std::vector <Symbol> _globals;
+	std::vector <Symbol> _externals;
 	//std::vector <ObjectCstInfo> objects;
 	
     public:
@@ -36,6 +41,10 @@ namespace semantic {
 	void insert (StructCstInfo info);
 
 	void insert (FinalFrame);
+
+	void insert (Symbol);
+	
+	void insertExtern (Symbol);
 	
 	void insertTemplate (FinalFrame);
 
@@ -55,6 +64,10 @@ namespace semantic {
 
 	std::vector <FinalFrame>& templates ();
 
+	std::vector <Symbol> & globals ();
+
+	std::vector <Symbol> & externals ();
+	
 	void addMain ();
 	
 	void purge ();

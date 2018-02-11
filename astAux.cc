@@ -1341,6 +1341,24 @@ namespace syntax {
 	    delete it;
     }
     
+    IGlobal::IGlobal (Word ident, Expression type, bool isExternal) :
+	ident (ident),
+	expr (NULL),
+	type (type),
+	isExternal (isExternal)
+    {}
+
+    IGlobal::IGlobal (Word ident, Expression expr, Expression type) :
+	ident (ident),
+	expr (expr),
+	type (type)
+    {}
+
+    IGlobal::~IGlobal () {
+	if (type) delete type;
+	if (expr) delete expr;
+    }
+
     
     
 }

@@ -317,4 +317,39 @@ namespace syntax {
 	}
     }
 
+    void IGlobal::declare () {
+	//auto space = Table::instance ().space ();
+	auto sym = new (Z0) ISymbol (this-> ident, NULL);
+	if (this-> expr) {
+	    auto expr = this-> expr-> expression ();
+	    if (expr == NULL) return;
+
+	    if (!expr-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (expr-> info);
+		return;
+	    }
+
+	    sym-> type = expr-> info-> type;
+	    sym-> value () = expr-> info-> value ();
+	    
+	} else {
+	    if (auto var = this-> type-> to <IVar> ()) {
+		auto type = var-> asType ();
+		if (type == NULL) return;
+		sym-> type = type-> info-> type;
+	    } else {
+		auto expType = this-> type-> expression ();
+		if (expType == NULL) return;
+		sym-> type = expType-> info-> type;
+	    }
+	}
+	
+	Table::instance ().insert (sym);
+	if (this-> isExternal) {
+	    FrameTable::instance ().insertExtern (sym);
+	} else {
+	    FrameTable::instance ().insertExtern (sym);
+	}
+    }
+    
 }

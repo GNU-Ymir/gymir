@@ -29,6 +29,14 @@ namespace semantic {
 	this-> _protos.push_back (fr);
     }
 
+    void FrameTable::insert (Symbol sym) {
+	this-> _globals.push_back (sym);
+    }
+
+    void FrameTable::insertExtern (Symbol sym) {
+	this-> _globals.push_back (sym);
+    }
+    
     FinalFrame FrameTable::existsFinal (std::string name) {
 	for (auto it : this-> _finals) {
 	    if (it-> name () == name) return it;
@@ -67,6 +75,14 @@ namespace semantic {
 
     std::vector <StructCstInfo> & FrameTable::structs () {
 	return this-> _structs;
+    }
+
+    std::vector <Symbol> & FrameTable::globals () {
+	return this-> _globals;
+    }
+   
+    std::vector <Symbol> & FrameTable::externals () {
+	return this-> _externals;
     }
     
     std::vector <tree> declArguments (Ymir::Tree func) {

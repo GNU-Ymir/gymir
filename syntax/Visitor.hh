@@ -32,7 +32,7 @@ namespace syntax {
 	Enum visitEnum ();
 	Expression visitIfFunction ();
 	Function visitFunction ();
-	Proto visitExtern ();
+	Declaration visitExtern ();
 	Var visitVar ();
 	Expression visitOf ();
 	Var visitVarDeclaration ();
