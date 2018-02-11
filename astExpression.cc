@@ -146,7 +146,9 @@ namespace syntax {
 	std::vector <Expression> tmps;
 	for (auto it : this-> templates) {
 	    it-> inside = this;
-	    tmps.push_back (it-> expression ());
+	    auto tmpExpr = it-> expression ();
+	    if (tmpExpr == NULL) return NULL;
+	    tmps.push_back (tmpExpr);
 	}
 
 	if (!IInfoType::exists (this-> token.getStr ())) {
