@@ -278,10 +278,9 @@ namespace Ymir {
 	);
 
 	TREE_STATIC (decl) = 1;
-	TREE_USED (decl) = 1;
-	DECL_EXTERNAL (decl) = 1;
-	DECL_PRESERVE_P (decl) = 1;
-	TREE_PUBLIC (decl) = 1;
+	//TREE_USED (decl) = 1;
+	//DECL_EXTERNAL (decl) = 1;
+	//TREE_PUBLIC (decl) = 1;
 	sym-> treeDecl (decl);
     }
     

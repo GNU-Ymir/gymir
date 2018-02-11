@@ -201,6 +201,7 @@ namespace syntax {
 		fclose (file);
 		prg-> declareAsExtern (it.getStr (), mod);
 	    }
+	    
 	    Table::instance ().openModuleForSpace (space, globSpace);
 	    Table::instance ().setCurrentSpace (globSpace);
 	    if (Ymir::Error::nb_errors - nbErrorBeg) {
@@ -348,7 +349,7 @@ namespace syntax {
 	if (this-> isExternal) {
 	    FrameTable::instance ().insertExtern (sym);
 	} else {
-	    FrameTable::instance ().insertExtern (sym);
+	    FrameTable::instance ().insert (sym);
 	}
     }
     

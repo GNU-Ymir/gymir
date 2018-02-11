@@ -34,7 +34,7 @@ namespace semantic {
     }
 
     void FrameTable::insertExtern (Symbol sym) {
-	this-> _globals.push_back (sym);
+	this-> _externals.push_back (sym);
     }
     
     FinalFrame FrameTable::existsFinal (std::string name) {
