@@ -18,7 +18,9 @@ namespace syntax {
 
 	IEnum (Word ident, Var type, std::vector <Word> names, std::vector <Expression> values);
 
-	void declare () override;
+	void declare () override;	
+
+	void declareAsExtern (semantic::Module mod) override;
 	
 	void print (int nb = 0) override;
 

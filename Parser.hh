@@ -29,7 +29,7 @@ namespace Ymir {
     private:
 	
 	lexical::Lexer lexer;
-	
+	std::string _workingFile;
     };
     
 };

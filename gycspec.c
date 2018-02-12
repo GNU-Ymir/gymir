@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
+#include <string>
 
 #ifndef LIBYRUNTIME
 #define LIBYRUNTIME "gyruntime"
@@ -37,21 +38,22 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     bool need_midgard = *in_decoded_options_count != 1;
     bool need_runtime = *in_decoded_options_count != 1;
     std::vector <int> toRemove;
-    
+    std::vector <std::string> includes;
+
     for (i = 0 ; i < argc ; i++) {
 	const char * arg = decoded_options [i].arg;
 	if (arg != NULL) {
-	switch (decoded_options [i].opt_index) {
-	case OPT_l:
-	    if ((strcmp (arg, LIBGC) == 0)) need_gc = false;
-	    else if (strcmp (arg, LIBYRUNTIME) == 0) need_runtime = false;
-	    else if (strcmp (arg, LIBYMIDGARD) == 0) need_midgard = false;
-	    break;
-	} 
-	} 
+	    switch (decoded_options [i].opt_index) {
+	    case OPT_l:
+		if ((strcmp (arg, LIBGC) == 0)) need_gc = false;
+		else if (strcmp (arg, LIBYRUNTIME) == 0) need_runtime = false;
+		else if (strcmp (arg, LIBYMIDGARD) == 0) need_midgard = false;
+		break;
+	    } 
+	}
     }
 
-    num_args = argc + need_gc + need_midgard + need_runtime - toRemove.size ();
+    num_args = argc + need_gc + need_midgard + need_runtime + includes.size () - toRemove.size ();
     new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
     i = 0;
 
@@ -60,7 +62,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    new_decoded_options [i] = decoded_options [i];
 	i ++;
     }
-
+    
     if (need_gc) {
 	generate_option (OPT_l, LIBGC, 1, CL_DRIVER, &new_decoded_options [i]);
 	added_libraries ++;

@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include <ymir/Parser.hh>
 #include <cstdio>
+#include <ymir/utils/Options.hh>
+#include <unistd.h>
 
 namespace syntax {
 
@@ -176,21 +178,36 @@ namespace syntax {
 	fun-> set (fr);
 	mod-> insert (new (Z0)  ISymbol (this-> ident, fun));
     }
+
+    std::string IImport::firstExistingPath (std::string file) {
+	if (exists (file)) return file;
+	std::vector <std::string> paths = Options::instance ().includeDirs ();
+	for (auto it : paths) {
+	    auto current = it + file;
+	    if (Options::instance ().isVerbose ())
+		println ("Test import : ", current);
+	    if (exists (current))
+		return current;
+	}
+	return "";
+    }
+    
     
     void IImport::declare () {
 	auto globSpace = Table::instance ().space ();
 	for (auto it : this-> params) {
 	    ulong nbErrorBeg = Ymir::Error::nb_errors;
-	    std::string name = it.getStr () + ".yr";
-	    if (!exists (name)) {
-		std::string path = cpp_GCC_INCLUDE_DIR;
-		if (path [path.length () - 1] != '/') path += "/";
+	    std::string name = firstExistingPath (it.getStr () + ".yr");
+	    if (name == "") {
+		name = it.getStr () + ".yr";
+		std::string path = Options::instance ().prefixIncludeDir ();
 		name = path + "ymir/" + name;
 		if (!exists (name)) {
 		    Ymir::Error::moduleDontExist (this-> ident, it);
 		    return;
 		}
 	    }
+	    
 	    Namespace space (it.getStr ());
 	    if (!Table::instance ().moduleExists (space)) {
 		auto file = fopen (name.c_str (), "r");
@@ -213,10 +230,10 @@ namespace syntax {
 	auto globSpace = Table::instance ().space ();
 	for (auto it : this-> params) {
 	    ulong nbErrorBeg = Ymir::Error::nb_errors;
-	    std::string name = it.getStr () + ".yr";
-	    if (!exists (name)) {
-		std::string path = cpp_GCC_INCLUDE_DIR;
-		if (path [path.length () - 1] != '/') path += "/";
+	    std::string name = firstExistingPath (it.getStr () + ".yr");
+	    if (name == "") {
+		name = it.getStr () + ".yr";
+		std::string path = Options::instance ().prefixIncludeDir ();
 		name = path + "ymir/" + name;
 		if (!exists (name)) {
 		    Ymir::Error::moduleDontExist (this-> ident, it);
@@ -265,8 +282,12 @@ namespace syntax {
 	if (exist) {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
 	} else {
-	    auto str = new (Z0) IStructCstInfo (Table::instance ().space (), this-> ident.getStr (), this-> tmps);
-
+	    auto str = new (Z0) IStructCstInfo (
+		mod-> space (),
+		this-> ident.getStr (),
+		this-> tmps
+	    );
+	    
 	    str-> isPublic (this-> is_public ());
 	    auto sym = new (Z0) ISymbol (this-> ident, str);
 	    sym-> isPublic () = this-> is_public ();
@@ -293,8 +314,8 @@ namespace syntax {
 		if (fst == NULL) return;
 		type = fst-> info;
 	    }
-
-	    auto en = new (Z0) IEnumCstInfo (this-> ident.getStr (), type-> type);
+	    auto space = Table::instance ().space ();
+	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type);
 	    auto sym = new (Z0) ISymbol (this-> ident, en);
 	    sym-> isPublic () = true;
 
@@ -317,4 +338,46 @@ namespace syntax {
 	}
     }
 
+    void IEnum::declareAsExtern (Module mod) {
+	if (!this-> isPublic) return;
+	auto exist = mod-> get (this-> ident.getStr ());
+	if (exist) {
+	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
+	} else {
+	    Symbol type = NULL;
+	    Expression fst = NULL;
+	    if (this-> type != NULL) {
+		auto ftype = this-> type-> asType ();
+		if (ftype == NULL) return;
+		type = ftype-> info;
+	    } else {
+		fst = this-> values [0]-> expression ();
+		if (fst == NULL) return;
+		type = fst-> info;
+	    }
+	    auto space = mod-> space ();
+	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type);
+	    auto sym = new (Z0) ISymbol (this-> ident, en);
+	    sym-> isPublic () = true;
+
+	    for (auto i : Ymir::r (0, this-> names.size ())) {
+		if (i == 0 && fst) {
+		    en-> addAttrib (this-> names [i].getStr (), fst, NULL);
+		} else {
+		    auto val = this-> values [i]-> expression ();
+		    auto comp = val-> info-> type-> CompOp (type-> type);
+		    if (comp != NULL)
+			en-> addAttrib (this-> names [i].getStr (), val, comp);
+		    else {
+			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type);
+			return;
+		    }			
+		}
+	    }
+	    
+	    mod-> insert (sym);	    
+	}
+    }
+
+    
 }

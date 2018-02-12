@@ -15,6 +15,7 @@
 #include "langhooks-def.h"
 #include "common/common-target.h"
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/utils/Options.hh>
 #include "Parser.hh"
 
 
@@ -76,6 +77,52 @@ ymir_langhook_init (void)
   return true;
 }
 
+
+static void
+ymir_init_options (unsigned int, cl_decoded_option *)
+{
+}
+
+static void
+ymir_init_options_struct (gcc_options *opts) {
+  opts->x_flag_exceptions = 1;
+
+  /* Avoid range issues for complex multiply and divide.  */
+  opts->x_flag_complex_method = 2;
+
+  /* Unlike C, there is no global 'errno' variable.  */
+  opts->x_flag_errno_math = 0;
+  opts->frontend_set_flag_errno_math = true;
+
+  /* Keep in sync with existing -fbounds-check flag.  */
+  //opts->x_flag_bounds_check = global.params.useArrayBounds;
+
+  /* D says that signed overflow is precisely defined.  */
+  opts->x_flag_wrapv = 1;
+}
+
+static unsigned int
+ymir_option_lang_mask (void) {
+    return CL_YMIR;
+}
+
+static bool
+ymir_langhook_handle_option (size_t scode, const char *arg, int value,
+		   int kind ATTRIBUTE_UNUSED, location_t loc ATTRIBUTE_UNUSED,
+		   const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
+{
+    opt_code code = (opt_code) scode;
+    if (code == OPT_I)
+	Options::instance ().addIncludeDir (arg);
+    else if (code == OPT_iprefix) 
+	Options::instance ().setPrefix (arg);
+    else if (code == OPT_v) {
+	Options::instance ().isVerbose () = true;
+    }
+    else return false;
+    
+    return true;
+}
 
 static void
 ymir_langhook_parse_file (void)
@@ -176,34 +223,34 @@ ymir_langhook_getdecls (void)
   return NULL;
 }
 
-
-
 #undef LANG_HOOKS_NAME
-#define LANG_HOOKS_NAME "Ymir"
- 
 #undef LANG_HOOKS_INIT
-#define LANG_HOOKS_INIT ymir_langhook_init
- 
+#undef LANG_HOOKS_INIT_OPTIONS
+#undef LANG_HOOKS_INIT_OPTIONS_STRUCT
 #undef LANG_HOOKS_PARSE_FILE
-#define LANG_HOOKS_PARSE_FILE ymir_langhook_parse_file
- 
 #undef LANG_HOOKS_TYPE_FOR_MODE
-#define LANG_HOOKS_TYPE_FOR_MODE ymir_langhook_type_for_mode
- 
 #undef LANG_HOOKS_TYPE_FOR_SIZE
-#define LANG_HOOKS_TYPE_FOR_SIZE ymir_langhook_type_for_size
- 
 #undef LANG_HOOKS_BUILTIN_FUNCTION
-#define LANG_HOOKS_BUILTIN_FUNCTION ymir_langhook_builtin_function
- 
 #undef LANG_HOOKS_GLOBAL_BINDINGS_P
-#define LANG_HOOKS_GLOBAL_BINDINGS_P ymir_langhook_global_bindings_p
- 
 #undef LANG_HOOKS_PUSHDECL
-#define LANG_HOOKS_PUSHDECL ymir_langhook_pushdecl
- 
 #undef LANG_HOOKS_GETDECLS
+#undef LANG_HOOKS_HANDLE_OPTION
+#undef LANG_HOOKS_OPTION_LANG_MASK
+
+#define LANG_HOOKS_NAME "Ymir" 
+#define LANG_HOOKS_INIT ymir_langhook_init 
+#define LANG_HOOKS_INIT_OPTIONS	 ymir_init_options
+#define LANG_HOOKS_INIT_OPTIONS_STRUCT	    ymir_init_options_struct
+#define LANG_HOOKS_OPTION_LANG_MASK ymir_option_lang_mask
+#define LANG_HOOKS_HANDLE_OPTION ymir_langhook_handle_option
+#define LANG_HOOKS_PARSE_FILE ymir_langhook_parse_file
+#define LANG_HOOKS_TYPE_FOR_MODE ymir_langhook_type_for_mode
+#define LANG_HOOKS_TYPE_FOR_SIZE ymir_langhook_type_for_size
+#define LANG_HOOKS_BUILTIN_FUNCTION ymir_langhook_builtin_function
+#define LANG_HOOKS_GLOBAL_BINDINGS_P ymir_langhook_global_bindings_p
+#define LANG_HOOKS_PUSHDECL ymir_langhook_pushdecl
 #define LANG_HOOKS_GETDECLS ymir_langhook_getdecls
+
 
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
  

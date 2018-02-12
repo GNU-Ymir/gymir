@@ -1,6 +1,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/ast/TreeExpression.hh>
+#include <ymir/utils/Mangler.hh>
 
 namespace semantic {
 
@@ -58,9 +59,10 @@ namespace semantic {
 	
     }
     
-    IEnumCstInfo::IEnumCstInfo (std::string name, InfoType type) :
+    IEnumCstInfo::IEnumCstInfo (Namespace space, std::string name, InfoType type) :
 	IInfoType (true),
 	_name (name),
+	_space (space),
 	type (type)
     {
 	this-> _isType = true;
@@ -98,7 +100,7 @@ namespace semantic {
     }
 
     InfoType IEnumCstInfo::create () {
-	return new (Z0) IEnumInfo (false, this-> _name, this-> type-> cloneOnExit ());
+	return new (Z0) IEnumInfo (false, this-> _space, this-> _name, this-> type-> cloneOnExit ());
     }
 
     InfoType IEnumCstInfo::TempOp (const std::vector<::syntax::Expression> & tmps) {
@@ -107,20 +109,20 @@ namespace semantic {
     }
     
     std::string IEnumCstInfo::innerSimpleTypeString () {
-	return Ymir::format ("%%%", this-> _name.length (), "E", this-> _name.c_str ());
+	return Ymir::format ("%%", Mangler::mangle_type (this-> _space.toString () + "." + this-> _name), "E");
     }
 
     std::string IEnumCstInfo::innerTypeString () {
 	if (this-> type) {
-	    return Ymir::format ("%(%)", this-> _name.c_str (), this-> type-> innerTypeString ());
+	    return Ymir::format ("%.%(%)", this-> _space.toString (), this-> _name.c_str (), this-> type-> innerTypeString ());
 	} else {
-	    return Ymir::format ("%(...)", this-> _name.c_str ());
+	    return Ymir::format ("%.%(...)", this-> _space.toString (), this-> _name.c_str ());
 	}
     }
 
     bool IEnumCstInfo::isSame (InfoType ot) {
 	if (auto en = ot-> to<IEnumCstInfo> ()) {
-	    return en-> _name == this-> _name;
+	    return en-> _name == this-> _name && en-> _space == this-> _space;
 	}
 	return false;
     }
@@ -146,7 +148,7 @@ namespace semantic {
     }
 
     InfoType IEnumCstInfo::GetAttrib (ulong nb) {
-	auto type = new (Z0)  IEnumInfo (true, this-> _name, this-> type-> clone ());
+	auto type = new (Z0)  IEnumInfo (true, this-> _space, this-> _name, this-> type-> clone ());
 	if (this-> values [nb]-> info-> isImmutable ()) {
 	    type-> getContent ()-> value () = this-> values [nb]-> info-> value ();
 	}
@@ -157,9 +159,10 @@ namespace semantic {
 	return type;
     }
 
-    IEnumInfo::IEnumInfo (bool isConst, std::string name, InfoType type) :
+    IEnumInfo::IEnumInfo (bool isConst, Namespace space, std::string name, InfoType type) :
 	IInfoType (isConst),
 	_name (name),
+	_space (space),
 	_content (type)
     {
 	this-> _content-> isConst (this-> isConst ());
@@ -235,11 +238,11 @@ namespace semantic {
     }    
     
     std::string IEnumInfo::innerSimpleTypeString () {
-	return Ymir::format ("%%%", this-> _name.length (), "E", this-> _name.c_str ());
+	return Ymir::format ("%%", Mangler::mangle_type (this-> _space.toString () + "." +this-> _name), "E");
     }
 
     std::string IEnumInfo::innerTypeString () {
-	return Ymir::format ("%(%)", this-> _name.c_str (), this-> _content-> innerTypeString ().c_str ());
+	return Ymir::format ("%.%(%)", this-> _space.toString (), this-> _name.c_str (), this-> _content-> innerTypeString ());
     }
 
     const char* IEnumInfo::getId () {
@@ -248,7 +251,7 @@ namespace semantic {
 
     bool IEnumInfo::isSame (InfoType other) {
 	if (auto en = other-> to<IEnumInfo> ()) {
-	    return (en-> _name == this-> _name && this-> _content-> isSame (en-> _content));
+	    return (en-> _space == this-> _space && en-> _name == this-> _name && this-> _content-> isSame (en-> _content));
 	} else
 	    return this-> _content-> isSame (other);
 	return false;
@@ -259,7 +262,7 @@ namespace semantic {
     }
     
     InfoType IEnumInfo::onClone () {
-	auto ret = new (Z0)  IEnumInfo (this-> isConst (), this-> _name, this-> _content-> clone ());
+	auto ret = new (Z0)  IEnumInfo (this-> isConst (), this-> _space, this-> _name, this-> _content-> clone ());
 	ret-> value = this-> value;
 	return ret;
     }

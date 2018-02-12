@@ -33,6 +33,10 @@ namespace syntax {
 	    }
 	}
 	
+    private:
+
+	std::string firstExistingPath (std::string file);
+
     };
 
     typedef IImport* Import;

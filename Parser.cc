@@ -39,7 +39,9 @@ namespace Ymir {
 			   {Token::LCOMM3, Token::RCOMM3}
 	       }
 	)
-    {}    
+    {
+	this-> _workingFile = filename;	
+    }    
     
     syntax::Program Parser::syntax_analyse () {
 	auto visitor = syntax::Visitor (lexer);
@@ -54,7 +56,7 @@ namespace Ymir {
     void Parser::semantic_time (syntax::Program prg) {
 	Table::instance ().purge ();
 	FrameTable::instance ().purge ();
-
+	
 	prg-> declare ();
 
 	for (auto it : FrameTable::instance ().structs ()) {

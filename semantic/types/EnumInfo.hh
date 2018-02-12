@@ -9,7 +9,8 @@ namespace semantic {
     class IEnumCstInfo : public IInfoType {
 
 	std::string _name;
-
+	Namespace _space;
+	
     public:
 
 	std::vector <InfoType> comps;
@@ -17,7 +18,7 @@ namespace semantic {
 	std::vector <syntax::Expression> values;
 	InfoType type;
 	
-	IEnumCstInfo (std::string, InfoType);
+	IEnumCstInfo (Namespace space, std::string, InfoType);
 
 	std::string name ();
 
@@ -61,6 +62,7 @@ namespace semantic {
     class IEnumInfo : public IInfoType {
 
 	std::string _name;
+	Namespace _space;
 	InfoType _content;
 
 	InfoType comp;
@@ -68,7 +70,7 @@ namespace semantic {
 	
     public:
 
-	IEnumInfo (bool, std::string, InfoType);
+	IEnumInfo (bool, Namespace, std::string, InfoType);
 
 	std::string& name ();
 
