@@ -8,6 +8,7 @@
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/pack/FrameTable.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/semantic/tree/Generic.hh>
 
 #include "config.h"
 #include "system.h"
@@ -62,7 +63,15 @@ namespace Ymir {
 	for (auto it : FrameTable::instance ().structs ()) {
 	    it-> TempOp ({});
 	}
+
+	for (auto it : FrameTable::instance ().globals ()) {
+	    Ymir::declareGlobal (it);
+	}
 	
+	for (auto it : FrameTable::instance ().externals ()) {
+	    Ymir::declareGlobalExtern (it);
+	}
+
 	for (auto it : FrameTable::instance ().pures ()) {
 	    it-> validate ();
 	}
@@ -75,9 +84,11 @@ namespace Ymir {
 	for (auto it : FrameTable::instance ().finals ()) {
 	    it-> finalize ();
 	}
-
+	
 	if (Ymir::Error::nb_errors > 0) // Ne doit pas arriver
 	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
+
+	Ymir::finishCompilation ();
     }
 
     

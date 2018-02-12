@@ -436,7 +436,7 @@ namespace semantic {
 	    rtree = convert (ltree.getType ().getTree (), rtree.getTree ());
 	    
 	    return Ymir::buildTree (
-		MODIFY_EXPR, locus.getLocus (), void_type_node, ltree, rtree
+		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree, rtree
 	    );
 	}
 
@@ -509,11 +509,11 @@ namespace semantic {
 	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), type);
 	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
 	    list.append (buildTree (
-		MODIFY_EXPR, loc, void_type_node, fst, ltree
+		MODIFY_EXPR, loc, fst.getType (), fst, ltree
 	    ));
 
 	    list.append (buildTree (
-		MODIFY_EXPR, loc, void_type_node, scd, rtree
+		MODIFY_EXPR, loc, scd.getType (), scd, rtree
 	    ));
 
 	    getStackStmtList ().back ().append (list.getTree ());
@@ -533,11 +533,11 @@ namespace semantic {
 	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
 	    
 	    list.append (buildTree (
-		MODIFY_EXPR, loc, void_type_node, fst, ltree
+		MODIFY_EXPR, loc, fst.getType (), fst, ltree
 	    ));
 
 	    list.append (buildTree (
-		MODIFY_EXPR, loc, void_type_node, scd, rtree
+		MODIFY_EXPR, loc, scd.getType (), scd, rtree
 	    ));
 
 	    getStackStmtList ().back ().append (list.getTree ());

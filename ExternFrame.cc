@@ -54,7 +54,7 @@ namespace semantic {
 	if (this-> _proto == NULL) return validateFunc ();
 	auto ancSpace = Table::instance ().programNamespace ();
 	Table::instance ().enterFrame (this-> space (), this-> name (), this-> isInternal ());
-	std::vector <Var> finalParams = IFrame::computeParams (this-> _proto-> params ());
+	std::vector <Var> finalParams = IFrame::computeParams (this-> _proto-> params ());	
 	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> name ()));
 	Table::instance ().programNamespace () = this-> space ();
 

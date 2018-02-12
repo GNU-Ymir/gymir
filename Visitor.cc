@@ -584,7 +584,7 @@ namespace syntax {
 	return new (Z0)  IFunction (ident, exps, temps, test, visitBlock ());
     }
 
-    Proto Visitor::visitExtern () {
+    Declaration Visitor::visitExtern () {
 	auto word = this-> lex.next ();
 	bool isVariadic = false;
 	Word from = Word::eof ();
@@ -601,8 +601,19 @@ namespace syntax {
 	auto ident = visitIdentifiant ();
 	std::vector <Var> exps;
 
-	word = this-> lex.next ();
-	if (word != Token::LPAR) syntaxError (word, {Token::LPAR});
+	word = this-> lex.next ({Token::LPAR, Token::COLON});
+	if (word == Token::COLON) {
+	    Expression type;
+	    word = this-> lex.next ();
+	    if (word == Keys::FUNCTION) type = visitFuncPtrSimple ();
+	    else {
+		this-> lex.rewind ();
+		type = visitType ();
+	    }
+	    this-> lex.next ({Token::SEMI_COLON});
+	    return new (Z0) IGlobal (ident, type, true);
+	}
+	
 	this-> lex.next (word);
 	if (word != Token::RPAR) {
 	    this-> lex.rewind ();

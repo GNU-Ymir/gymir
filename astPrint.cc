@@ -403,4 +403,18 @@ namespace syntax {
 	}
     }	
 
+    void IGlobal::print (int nb) {
+	printf ("\n%*c<Global> %s",
+		nb, ' ',
+		this-> ident.toString ().c_str ()
+	);
+
+	if (this-> expr)
+	    this-> expr-> print (nb + 4);
+	    
+	if (this-> type)
+	    this-> type-> print (nb + 4);
+    }
+
+    
 }

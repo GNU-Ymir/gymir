@@ -111,7 +111,8 @@ namespace syntax {
 	    auto aux = new (Z0)  IVar (this-> token);
 	    aux-> info = Table::instance ().get (this-> token.getStr ());
 	    if (aux-> info == NULL) {
-		Ymir::Error::assert ("TODO, gerer l'erreur");
+		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
+		return NULL;
 	    }
 
 	    if (this-> templates.size () != 0) {
@@ -145,7 +146,9 @@ namespace syntax {
 	std::vector <Expression> tmps;
 	for (auto it : this-> templates) {
 	    it-> inside = this;
-	    tmps.push_back (it-> expression ());
+	    auto tmpExpr = it-> expression ();
+	    if (tmpExpr == NULL) return NULL;
+	    tmps.push_back (tmpExpr);
 	}
 
 	if (!IInfoType::exists (this-> token.getStr ())) {

@@ -6,6 +6,10 @@
 namespace semantic {    
     class IInfoType;
     typedef IInfoType* InfoType;
+
+    class ISymbol;
+    typedef ISymbol* Symbol;
+    
 }
 
 namespace Ymir {    
@@ -40,6 +44,12 @@ namespace Ymir {
 
     Tree getAddr (location_t, Tree elem);
 
+    void declareGlobal (semantic::Symbol sym);
+    
+    void declareGlobalExtern (semantic::Symbol sym);
+
+    void finishCompilation ();
+    
     real_value makeRealValue (float elem);
 
     real_value makeRealValue (double elem);

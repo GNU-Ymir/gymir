@@ -185,9 +185,13 @@ namespace semantic {
 	for (auto it : Ymir::r (0, attr.size ())) {
 	    if (auto var = attr [it] -> to<ITypedVar> ()) {
 		finalParams.push_back (var-> var ());
+		if (finalParams.back () == NULL)
+		    finalParams.pop_back ();
 	    } else {		
 		auto v = attr [it]-> setType (params [it]);
 		finalParams.push_back (v-> var ());
+		if (finalParams.back () == NULL)
+		    finalParams.pop_back ();
 	    }
 	}
 	return finalParams;
@@ -197,7 +201,8 @@ namespace semantic {
 	std::vector <Var> finalParams;
 	for (auto it : Ymir::r (0, params.size ())) {
 	    auto info = params [it]-> var ();
-	    finalParams.push_back (info);
+	    if (info != NULL) 
+		finalParams.push_back (info);
 	}
 	return finalParams;
     }

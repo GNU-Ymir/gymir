@@ -12,34 +12,19 @@ namespace syntax {
 
 	Word ident;
 	Expression expr, type;
-
+	bool isExternal;
+	
     public:
 
-	IGlobal (Word ident, Expression expr, Expression type = NULL) :
-	    ident (ident),
-	    expr (expr),
-	    type (type)
-	{}
+	IGlobal (Word ident, Expression expr, Expression type = NULL);
 
-	void declare () override {}
+	IGlobal (Word ident, Expression type, bool isExternal);
+
+	void declare () override;
+		
+	void print (int nb = 0) override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Global> %s",
-		    nb, ' ',
-		    this-> ident.toString ().c_str ()
-	    );
-
-	    if (this-> expr)
-		this-> expr-> print (nb + 4);
-	    
-	    if (this-> type)
-		this-> type-> print (nb + 4);
-	}
-
-	virtual ~IGlobal () {
-	    if (type) delete type;
-	    if (expr) delete expr;
-	}
+	virtual ~IGlobal ();
 	
     };
 
