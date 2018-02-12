@@ -131,6 +131,20 @@ namespace syntax {
     void IDeclaration::declareAsExtern (semantic::Module) {
 	Ymir::Error::assert ("TODO");
     }
+
+    void IModDecl::declare () {
+	auto str = this-> ident.getStr ();
+	auto space = Mangler::mangle_file (str);
+	Table::instance ().setCurrentSpace ({space});
+	Table::instance ().programNamespace () = Table::instance ().globalNamespace ();
+	Table::instance ().addForeignModule (Table::instance ().globalNamespace ());
+    }
+    
+    void IModDecl::declareAsExtern (semantic::Module) {
+	auto str = this-> ident.getStr ();
+	auto space = Mangler::mangle_file (str);
+	Table::instance ().setCurrentSpace ({space});
+    }
     
     void IProgram::declare () {
 	std::string name = LOCATION_FILE (this-> locus.getLocus ());
@@ -142,10 +156,21 @@ namespace syntax {
 	Table::instance ().setCurrentSpace ({Mangler::mangle_file (name)});
 	Table::instance ().programNamespace () = Table::instance ().globalNamespace ();
 	Table::instance ().addForeignModule (Table::instance ().globalNamespace ());
-
-	for (auto it : this-> decls) {
-	    it-> declare ();
+	
+	auto begin = 0;
+	if (this-> decls.size () != 0) {
+	    if (this-> decls [0]-> is <IModDecl> ()) {
+		this-> decls [0]-> declare ();
+		begin ++;
+	    }
 	}
+		    
+	for (auto it : Ymir::r (begin, this-> decls.size ())) {
+	    if (this-> decls [it]-> is <IModDecl> ()) {
+		Ymir::Error::assert ("TODO");
+	    }
+	    this-> decls [it]-> declare ();
+	}	    
 	
     }    
 
@@ -155,9 +180,20 @@ namespace syntax {
 	}
 
 	Table::instance ().setCurrentSpace (Namespace (Mangler::mangle_file (name)));
-	for (auto it : this-> decls) {
-	    it-> declareAsExtern (mod);
+	auto begin = 0;
+	if (this-> decls.size () != 0) {
+	    if (this-> decls [0]-> is <IModDecl> ()) {
+		this-> decls [0]-> declareAsExtern (mod);
+		begin ++;
+	    }
 	}
+		    
+	for (auto it : Ymir::r (begin, this-> decls.size ())) {
+	    if (this-> decls [it]-> is <IModDecl> ()) {
+		Ymir::Error::assert ("TODO");
+	    }
+	    this-> decls [it]-> declareAsExtern (mod);
+	}	    
     }
 
     

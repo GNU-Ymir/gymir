@@ -95,7 +95,7 @@ namespace syntax {
 	Instruction visitBreak ();
 	Instruction visitWhile ();
 	Instruction visitFor ();
-	ModDecl visitMod ();
+	ModDecl visitModule ();
 	
 
     private:

@@ -209,6 +209,7 @@ namespace syntax {
     Declaration Visitor::visitDeclaration (bool fatal) {
     	auto token = this-> lex.next ();
     	if (token == Keys::DEF) return visitFunction ();
+	if (token == Keys::MOD) return visitModule ();
     	else if (token == Keys::IMPORT) return visitImport ();
     	else if (token == Keys::EXTERN) return visitExtern ();
     	else if (token == Keys::STRUCT) return visitStruct ();
@@ -226,6 +227,19 @@ namespace syntax {
     	return NULL;
     }
 
+    ModDecl Visitor::visitModule () {
+	auto ident = visitIdentifiant ();
+	auto word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
+	while (word == Token::DOT) {
+	    if (word == Token::DOT)
+		ident.setStr (ident.getStr () + ".");
+	    auto name = visitIdentifiant ();
+	    ident.setStr (ident.getStr () + name.getStr ());
+	    word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
+	}
+	return new (Z0) IModDecl (ident);
+    }
+    
     /**
        impl := 'impl' identifiant ('from identifiant)? '{' (functionImpl | constructor)* '}'       
     */

@@ -29,6 +29,8 @@ namespace syntax {
 
 	void declare ();	
 	void declareAsExtern (std::string, semantic::Module);
+
+	
 	
 	void print (int nb = 0) {
 	    printf ("\n%*c<Program> %s",

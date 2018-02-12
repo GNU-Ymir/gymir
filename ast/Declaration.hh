@@ -36,6 +36,23 @@ namespace syntax {
 	}
 
 	virtual IDeclaration* templateDeclReplace (const std::map <std::string, Expression>&);
+
+	virtual std::vector <std::string> getIds () {
+	    return {TYPEID (IInstruction)};
+	}
+	
+	template <typename T>
+	bool is () {
+	    return this-> to<T> () != NULL;
+	}
+
+	template <typename T>
+	T* to () {	    
+	    auto ids = this-> getIds ();
+	    if (std::find (ids.begin (), ids.end (), T::id ()) != ids.end ())
+		return (T*) this;
+	    return NULL;
+	}
 	
 	virtual void print (int nb = 0) = 0;	
 
