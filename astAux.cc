@@ -139,7 +139,22 @@ namespace syntax {
 	}
 	return buf.str ();
     }    
-       
+
+    std::string IFuncPtr::prettyPrint () {
+	Ymir::OutBuffer buf ("fn (");
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    buf.write (this-> params [it]-> prettyPrint ());
+	    if (it < (int) this-> params.size () - 1)
+		buf.write (", ");
+	}
+	buf.write (") -> ");
+	buf.write (this-> ret-> prettyPrint ());
+	if (this-> expr) {
+	    buf.write ("(", this-> prettyPrint (), ")");
+	}
+	return buf.str ();
+    }
+    
     IParamList::~IParamList () {
 	for (auto it : params)
 	    delete it;

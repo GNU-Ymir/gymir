@@ -25,7 +25,7 @@ namespace syntax {
 	    return {TYPEID (IModDecl)};
 	}
 
-	void print (int nb = 0) override {}
+	void print (int) override {}
 	
     };
 

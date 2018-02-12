@@ -33,6 +33,8 @@ namespace syntax {
 	static const char * id ();
 
 	std::vector <std::string> getIds () override;
+
+	std::string prettyPrint () override;
 	
 	void print (int nb = 0) override;
 	
