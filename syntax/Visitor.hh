@@ -95,7 +95,9 @@ namespace syntax {
 	Instruction visitBreak ();
 	Instruction visitWhile ();
 	Instruction visitFor ();
+	ModDecl visitMod ();
 	
+
     private:
 	
 	std::vector <std::string> ultimeOp;

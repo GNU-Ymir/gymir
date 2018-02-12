@@ -55,3 +55,4 @@ std::string     Keys::OVER	= "over";
 std::string     Keys::FROM	= "from";
 std::string     Keys::DLANG	= "D";
 std::string     Keys::DPAR      = "()";
+std::string     Keys::MOD       = "mod";
