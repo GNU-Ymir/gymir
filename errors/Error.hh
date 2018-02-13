@@ -135,7 +135,7 @@ namespace Ymir {
 
 	static void notATemplate (const Word&, std::vector <syntax::Expression>&);
 
-	static void notImmutable (semantic::Symbol);
+	static void notImmutable (const Word &, semantic::Symbol);
 	
 	static void takeATypeAsTemplate (const Word&);
 

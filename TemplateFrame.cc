@@ -114,7 +114,7 @@ namespace semantic {
 	    auto res = test-> expression ();
 	    if (!res) return false;
 	    if (!res-> info-> isImmutable ()) {
-		Ymir::Error::notImmutable (res-> info);
+		Ymir::Error::notImmutable (test-> token, res-> info);
 		return false;
 	    } else if (!res-> info-> value ()-> is<IBoolValue> ()) {
 		Ymir::Error::incompatibleTypes (res-> token, res-> info, new (Z0) IBoolInfo (true));

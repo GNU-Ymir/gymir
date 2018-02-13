@@ -3,6 +3,11 @@
 #include <vector>
 #include "Tree.hh"
 
+namespace syntax {
+    class IExpression;
+    typedef IExpression* Expression;    
+}
+
 namespace semantic {    
     class IInfoType;
     typedef IInfoType* InfoType;
@@ -44,7 +49,7 @@ namespace Ymir {
 
     Tree getAddr (location_t, Tree elem);
 
-    void declareGlobal (semantic::Symbol sym);
+    void declareGlobal (semantic::Symbol sym, syntax::Expression);
     
     void declareGlobalExtern (semantic::Symbol sym);
 

@@ -27,5 +27,7 @@ namespace Mangler {
     std::string mangle_namespace (std::string);
 
     std::string mangle_var (std::string);
+
+    std::string mangle_global (std::string);
     
 }

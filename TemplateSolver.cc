@@ -522,7 +522,7 @@ namespace semantic {
 	auto type = right-> info-> type;
 	
 	if (!right-> info-> isImmutable ()) {
-	    Ymir::Error::notImmutable (right-> info);
+	    Ymir::Error::notImmutable (right-> token, right-> info);
 	    return TemplateSolution (0, false);
 	}
 	
@@ -548,14 +548,14 @@ namespace semantic {
     
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, Expression left , Expression right) {
 	if (!right-> info-> isImmutable ()) {
-	    Ymir::Error::notImmutable (right-> info);
+	    Ymir::Error::notImmutable (right-> token, right-> info);
 	    return TemplateSolution (0, false);
 	}
 	
 	auto elem = left-> expression ();
 	if (elem == NULL) return TemplateSolution (0, false);
 	else if (!elem-> info-> isImmutable ()) {
-	    Ymir::Error::notImmutable (right-> info);
+	    Ymir::Error::notImmutable (right-> token, right-> info);
 	    return TemplateSolution (0, false);
 	}
 	    

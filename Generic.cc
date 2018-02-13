@@ -5,6 +5,7 @@
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/ast/Expression.hh>
+#include <ymir/utils/Mangler.hh>
 #include "toplev.h"
 
 using namespace semantic;
@@ -244,12 +245,13 @@ namespace Ymir {
 	}
     }
     
-    void declareGlobal (Symbol sym) {
+    void declareGlobal (Symbol sym, syntax::Expression value) {
 	auto type_tree = sym-> type-> toGeneric ();
+	auto name = Mangler::mangle_global (Namespace (sym-> space (), sym-> sym.getStr ()).toString ());
 	tree decl = build_decl (
 	    sym-> sym.getLocus (),
 	    VAR_DECL,
-	    get_identifier (sym-> sym.getStr ().c_str ()),
+	    get_identifier (name.c_str ()),
 	    type_tree.getTree ()
 	);
 
@@ -258,8 +260,9 @@ namespace Ymir {
 	DECL_EXTERNAL (decl) = 0;
 	DECL_PRESERVE_P (decl) = 1;
 	TREE_PUBLIC (decl) = 1;
-	if (sym-> value ()) {
-	    DECL_INITIAL (decl) = sym-> value ()-> toYmir (sym)-> toGeneric ().getTree ();
+
+	if (value) {
+	    DECL_INITIAL (decl) = value-> info-> value ()-> toYmir (value-> info)-> toGeneric ().getTree ();
 	} else {
 	    DECL_INITIAL (decl) = error_mark_node;
 	}
@@ -270,10 +273,11 @@ namespace Ymir {
 
     void declareGlobalExtern (Symbol sym) {
 	auto type_tree = sym-> type-> toGeneric ();
+	auto name = Mangler::mangle_global (Namespace (sym-> space (), sym-> sym.getStr ()).toString ());
 	tree decl = build_decl (
 	    sym-> sym.getLocus (),
 	    VAR_DECL,
-	    get_identifier (sym-> sym.getStr ().c_str ()),
+	    get_identifier (name.c_str ()),
 	    type_tree.getTree ()
 	);
 

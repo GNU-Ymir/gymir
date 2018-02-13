@@ -2,6 +2,11 @@
 
 #include <ymir/utils/Array.hh>
 
+namespace syntax {
+    class IGlobal;
+    typedef IGlobal* Global;
+}
+
 namespace semantic {
 
     class IFrame;
@@ -26,7 +31,7 @@ namespace semantic {
 	std::vector <FinalFrame> _finalTemplates;
 	std::vector <FrameProto> _protos;
 	std::vector <StructCstInfo> _structs;
-	std::vector <Symbol> _globals;
+	std::vector <syntax::Global> _globals;
 	std::vector <Symbol> _externals;
 	//std::vector <ObjectCstInfo> objects;
 	
@@ -42,7 +47,7 @@ namespace semantic {
 
 	void insert (FinalFrame);
 
-	void insert (Symbol);
+	void insert (syntax::Global);
 	
 	void insertExtern (Symbol);
 	
@@ -64,7 +69,7 @@ namespace semantic {
 
 	std::vector <FinalFrame>& templates ();
 
-	std::vector <Symbol> & globals ();
+	std::vector <syntax::Global> & globals ();
 
 	std::vector <Symbol> & externals ();
 	

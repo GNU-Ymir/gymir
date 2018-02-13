@@ -8,6 +8,7 @@ namespace semantic {
     ulong ISymbol::__nbTmp__ = 0;
     
     ISymbol::ISymbol (Word word, InfoType type) :
+	_space (""),
 	sym (word),
 	type (type)
     {
@@ -71,6 +72,10 @@ namespace semantic {
 	return this-> type-> simpleTypeString ();
     }
 
+    Namespace & ISymbol::space () {
+	return this-> _space;
+    }
+    
     void ISymbol::resetNbTmp () {
 	__nbTmp__ = 0;
     }

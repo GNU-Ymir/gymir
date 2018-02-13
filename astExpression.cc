@@ -222,7 +222,7 @@ namespace syntax {
 		
 		auto arrtype = new (Z0)  IArrayInfo (true, content-> info-> type-> clone ());
 		if (!size-> info-> isImmutable ()) {
-		    Ymir::Error::notImmutable (size-> info);
+		    Ymir::Error::notImmutable (this-> token, size-> info);
 		    return NULL;
 		} else {
 		    arrtype-> isStatic (true, size-> info-> value ()-> to<IFixedValue> ()-> getUValue ());
@@ -364,7 +364,7 @@ namespace syntax {
 
 	if (this-> isImmutable) {
 	    if (!aux-> size-> info-> isImmutable ()) {
-		Ymir::Error::notImmutable (aux-> size-> info);
+		Ymir::Error::notImmutable (this-> token, aux-> size-> info);
 		return NULL;
 	    } else {
 		arrayType-> isStatic (true, aux-> size-> info-> value ()-> to <IFixedValue> ()-> getUValue ()); 
@@ -393,7 +393,7 @@ namespace syntax {
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 	
 	if (!aux-> size-> info-> isImmutable ()) {
-	    Ymir::Error::notImmutable (aux-> size-> info);
+	    Ymir::Error::notImmutable (this-> token, aux-> size-> info);
 	    return NULL;
 	} else {
 	    arrayType-> isStatic (true, aux-> size-> info-> value ()-> to <IFixedValue> ()-> getUValue ()); 

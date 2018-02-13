@@ -635,19 +635,18 @@ namespace syntax {
 
     void IGlobal::declare () {
 	//auto space = Table::instance ().space ();
-	auto sym = new (Z0) ISymbol (this-> ident, NULL);
+	this-> sym = new (Z0) ISymbol (this-> ident, NULL);
 	if (this-> expr) {
-	    auto expr = this-> expr-> expression ();
+	    this-> expr = this-> expr-> expression ();
 	    if (expr == NULL) return;
 
 	    if (!expr-> info-> isImmutable ()) {
-		Ymir::Error::notImmutable (expr-> info);
+		Ymir::Error::notImmutable (expr-> token, expr-> info);
 		return;
 	    }
 
-	    sym-> type = expr-> info-> type;
-	    sym-> value () = expr-> info-> value ();
-	    
+	    sym-> type = expr-> info-> type-> clone ();
+	    sym-> value () = this-> _isImut ? expr-> info-> value () : NULL;
 	} else {
 	    if (auto var = this-> type-> to <IVar> ()) {
 		auto type = var-> asType ();
@@ -660,29 +659,33 @@ namespace syntax {
 	    }
 	}
 	
+	if (!this-> _isImut)
+	    sym-> isConst (false);
+	
+	sym-> space () = Table::instance ().space ();	
 	Table::instance ().insert (sym);
 	if (this-> isExternal) {
+	    if (this-> fromC ()) sym-> space () = {""};
 	    FrameTable::instance ().insertExtern (sym);
-	} else {
-	    FrameTable::instance ().insert (sym);
+	} else if (!this-> _isImut) {
+	    FrameTable::instance ().insert (this);
 	}
     }
 
     void IGlobal::declare (semantic::Module mod) {
 	//auto space = Table::instance ().space ();
-	auto sym = new (Z0) ISymbol (this-> ident, NULL);
+	this-> sym = new (Z0) ISymbol (this-> ident, NULL);
 	if (this-> expr) {
-	    auto expr = this-> expr-> expression ();
+	    this-> expr = this-> expr-> expression ();
 	    if (expr == NULL) return;
 
 	    if (!expr-> info-> isImmutable ()) {
-		Ymir::Error::notImmutable (expr-> info);
+		Ymir::Error::notImmutable (this-> expr-> token, expr-> info);
 		return;
 	    }
 
-	    sym-> type = expr-> info-> type;
-	    sym-> value () = expr-> info-> value ();
-	    
+	    sym-> type = expr-> info-> type-> clone ();	    
+	    sym-> value () = this-> _isImut ? expr-> info-> value () : NULL;
 	} else {
 	    if (auto var = this-> type-> to <IVar> ()) {
 		auto type = var-> asType ();
@@ -695,29 +698,34 @@ namespace syntax {
 	    }
 	}
 	
+	if (!this-> _isImut)
+	    sym-> isConst (false);
+	
+	sym-> space () = mod-> space ();
+	sym-> isPublic () = this-> is_public ();
 	mod-> insert (sym);
 	if (this-> isExternal) {
+	    if (this-> fromC ()) sym-> space () = {""};
 	    FrameTable::instance ().insertExtern (sym);
-	} else {
-	    FrameTable::instance ().insert (sym);
+	} else if (!this-> _isImut) {
+	    FrameTable::instance ().insert (this);
 	}
     }
 
     void IGlobal::declareAsExtern (semantic::Module mod) {
 	//auto space = Table::instance ().space ();
-	auto sym = new (Z0) ISymbol (this-> ident, NULL);
+	this-> sym = new (Z0) ISymbol (this-> ident, NULL);
 	if (this-> expr) {
-	    auto expr = this-> expr-> expression ();
+	    this-> expr = this-> expr-> expression ();
 	    if (expr == NULL) return;
 
 	    if (!expr-> info-> isImmutable ()) {
-		Ymir::Error::notImmutable (expr-> info);
+		Ymir::Error::notImmutable (expr-> token, expr-> info);
 		return;
 	    }
 
-	    sym-> type = expr-> info-> type;
-	    sym-> value () = expr-> info-> value ();
-	    
+	    sym-> type = expr-> info-> type-> clone ();
+	    sym-> value () = this-> _isImut ? expr-> info-> value () : NULL;
 	} else {
 	    if (auto var = this-> type-> to <IVar> ()) {
 		auto type = var-> asType ();
@@ -729,8 +737,20 @@ namespace syntax {
 		sym-> type = expType-> info-> type;
 	    }
 	}
-
-	sym-> isPublic () = this-> is_public ();
+	
+	if (!this-> _isImut)
+	    sym-> isConst (false);
+	
+	sym-> space () = mod-> space ();
+	Table::instance ().insert (sym);	
+	if (this-> isExternal) {
+	    if (this-> fromC ()) sym-> space () = {""};
+	    FrameTable::instance ().insertExtern (sym);
+	} else if (!this-> _isImut) {
+	    FrameTable::instance ().insert (this);
+	}
+	
+	sym-> isPublic () = this-> is_public ();	
 	mod-> insert (sym);
     }
 

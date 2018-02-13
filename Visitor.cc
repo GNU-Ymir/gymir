@@ -83,7 +83,7 @@ namespace syntax {
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-			       Keys::TRAIT, Keys::REF, Keys::CONST
+			       Keys::TRAIT, Keys::REF, Keys::CONST, Keys::MOD
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -215,6 +215,7 @@ namespace syntax {
     	else if (token == Keys::STRUCT) return visitStruct ();
     	else if (token == Keys::ENUM) return visitEnum ();
     	else if (token == Keys::STATIC) return visitGlobal ();
+	else if (token == Keys::IMMUTABLE) return visitGlobalImut ();
     	else if (token == Keys::SELF) return visitSelf ();
     	else if (token == Keys::TRAIT) return NULL;// visitTrait ();
     	else if (token == Keys::IMPL) return visitImpl ();	      	
@@ -401,7 +402,18 @@ namespace syntax {
 	    return new (Z0)  IGlobal (ident, NULL, type);
 	}
     }
-    
+
+    Global Visitor::visitGlobalImut () {
+	auto begin = this-> lex.rewind ().next ();
+	auto ident = visitIdentifiant ();
+	auto next = this-> lex.next ({Token::EQUAL});
+
+	auto expr = visitExpression ();
+	this-> lex.next ({Token::SEMI_COLON});
+	auto ret = new (Z0)  IGlobal (ident, expr);
+	ret-> isImut () = true;
+	return ret;
+    }
 
     /**
        space := identifiant ('.' identifiant)*
@@ -646,7 +658,10 @@ namespace syntax {
 		type = visitType ();
 	    }
 	    this-> lex.next ({Token::SEMI_COLON});
-	    return new (Z0) IGlobal (ident, type, true);
+	    auto ret = new (Z0) IGlobal (ident, type, true);
+	    ret-> from = from.getStr ();
+	    ret-> space = space;
+	    return ret;
 	}
 	
 	this-> lex.next (word);
@@ -1047,7 +1062,7 @@ namespace syntax {
 	else if (tok == Keys::LET) return visitLet ();
 	else if (tok == Keys::BREAK) return visitBreak ();
 	else if (tok == Keys::ASSERT) return visitAssert ();
-	else if (tok == Keys::STATIC) {
+	else if (tok == Keys::IMMUTABLE) {
 	    tok = this-> lex.next ();
 	    Instruction inst;
 	    if (tok == Keys::IF) inst = visitIf ();

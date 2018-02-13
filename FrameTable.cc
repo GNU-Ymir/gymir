@@ -3,6 +3,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/ast/Global.hh>
 #include <ymir/utils/Mangler.hh>
 
 namespace semantic {
@@ -29,7 +30,7 @@ namespace semantic {
 	this-> _protos.push_back (fr);
     }
 
-    void FrameTable::insert (Symbol sym) {
+    void FrameTable::insert (syntax::Global sym) {
 	this-> _globals.push_back (sym);
     }
 
@@ -77,7 +78,7 @@ namespace semantic {
 	return this-> _structs;
     }
 
-    std::vector <Symbol> & FrameTable::globals () {
+    std::vector <syntax::Global> & FrameTable::globals () {
 	return this-> _globals;
     }
    

@@ -68,7 +68,7 @@ namespace syntax {
 		    aux-> info-> isConst (true);
 		    aux-> info-> value () = type-> info-> type-> value ();
 		    if (!aux-> info-> isImmutable ()) {
-			Ymir::Error::notImmutable (type-> info);
+			Ymir::Error::notImmutable (this-> token, type-> info);
 			return NULL;
 		    }
 		    Table::instance ().insert (aux-> info);
@@ -177,7 +177,7 @@ namespace syntax {
 
 	    if (this-> isStatic) {
 		if (!expr-> info-> isImmutable ()) {
-		    Ymir::Error::notImmutable (expr-> info);
+		    Ymir::Error::notImmutable (this-> token, expr-> info);
 		    return NULL;
 		} else if (expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ()) {
 		    return this-> block-> instruction ();

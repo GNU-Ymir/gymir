@@ -86,6 +86,15 @@ namespace Mangler {
 	}
 	return ss.str ();
     }
+
+    std::string mangle_global (std::string name) {
+	auto res = mangle_namespace (name);
+	for (int i = 0 ; i < (int) res.length () ; i++) {
+	    if (res [i] < '0' || res [i] > '9')
+		return res.substr (i);
+	}
+	return res;
+    }
     
     std::string mangle_function (std::string& name, ::semantic::FrameProto frame) {
 	if (name == Keys::MAIN) return "_Y" + name;

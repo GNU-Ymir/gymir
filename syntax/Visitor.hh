@@ -25,6 +25,7 @@ namespace syntax {
 	Declaration visitFunctionImpl (bool &);
 	Self visitSelf ();
 	Global visitGlobal ();
+	Global visitGlobalImut ();
 	std::string visitSpace ();
 	Import visitImport ();
 	std::vector <Expression> visitTemplateStruct ();

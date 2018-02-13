@@ -285,11 +285,13 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::notImmutable (semantic::Symbol sym) {
+    void Error::notImmutable (const Word & loc, semantic::Symbol sym) {
 	auto msg = std::string (getString (NotImmutable));
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, sym-> sym);
-	ErrorMsg errorMsg = {msg, false, false};
+	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : ";
+	aux = addLine (aux, loc);
+	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());

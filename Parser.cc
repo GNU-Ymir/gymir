@@ -64,7 +64,7 @@ namespace Ymir {
 	}
 
 	for (auto it : FrameTable::instance ().globals ()) {
-	    Ymir::declareGlobal (it);
+	    Ymir::declareGlobal (it-> sym, it-> getExpr ());
 	}
 	
 	for (auto it : FrameTable::instance ().externals ()) {

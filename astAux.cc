@@ -1369,6 +1369,18 @@ namespace syntax {
 	type (type)
     {}
 
+    bool & IGlobal::isImut () {
+	return this-> _isImut;
+    }
+
+    bool IGlobal::fromC () {
+	return this-> from == "C";
+    }
+
+    Expression IGlobal::getExpr () {
+	return this-> expr;
+    }
+    
     IGlobal::~IGlobal () {
 	if (type) delete type;
 	if (expr) delete expr;
