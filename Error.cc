@@ -272,12 +272,23 @@ namespace Ymir {
     }
     
     void Error::notATemplate (const Word& word, std::vector <syntax::Expression> & exprs) {
-	auto str = getString (NotATemplate2);
+	std::vector <std::string> ops = {
+	    Keys::OPBINARY, Keys::OPBINARYR, Keys::OPACCESS, Keys::OPRANGE,
+	    Keys::OPTEST, Keys::OPUNARY, Keys::OPEQUAL, Keys::OPCALL, Keys::OPASSIGN
+	};
+
+	auto str = getString (NotATemplate2);	
 	OutBuffer buf ("(", exprs, ")");
-	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET, YELLOW, buf.str ().c_str (), RESET);
+	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET, YELLOW, buf.str ().c_str (), RESET);
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
-	msg = addLine (msg, word);
+
+	if (std::find (ops.begin (), ops.end (), word.getStr ()) != ops.end ()) {	
+	    msg = addLine (msg, exprs [0]-> token);
+	} else {
+	    msg = addLine (msg, word);
+	}
+	
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;

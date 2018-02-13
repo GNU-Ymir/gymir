@@ -156,8 +156,8 @@ namespace semantic {
 		auto rexp = elem-> toGeneric ();
 		if (rexp.getTreeCode () == CALL_EXPR)
 		    return rexp;
-	    
-		return elem-> toGeneric ();
+		
+		return rexp;
 	    }
 	}
 

@@ -462,64 +462,73 @@ namespace syntax {
 
 	if (simpleVerif (aux)) return NULL;
 	if (aux-> left-> info-> isConst ()) {
-	    Ymir::Error::notLValue (aux-> left-> token);
-	    return NULL;
-	}
-	
-	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
-	if (type == NULL) {
-	    type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
-	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-		if (type == NULL) {
-		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-		    return NULL;
-		}
-
-		aux-> left-> info-> type = type;
-		aux-> left-> info-> type-> isConst (false);
-	    } else if (type == NULL) {
-		auto call = findOpAssign (aux);
-		if (!call) {
-		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-		    return NULL;
-		}
-		return call;	    
+	    auto call = findOpAssign (aux);
+	    if (!call) {
+		Ymir::Error::notLValue (aux-> left-> token);
+		return NULL;
 	    }
-	    aux-> isRight = true;
-	}
+	    return call;	    
+	} else {	
+	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);	
+	    if (type == NULL) {
+		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
+		if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+		    if (type == NULL) {
+			Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+			return NULL;
+		    }
 
-	aux-> info = new (Z0)  ISymbol (aux-> token, type);
-	Table::instance ().retInfo ().changed () = true;
-	aux-> info-> value () = NULL;
-	return aux;	
+		    aux-> left-> info-> type = type;
+		    aux-> left-> info-> type-> isConst (false);
+		} else if (type == NULL) {
+		    auto call = findOpAssign (aux);
+		    if (!call) {
+			Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+			return NULL;
+		    }
+		    return call;	    
+		}
+		aux-> isRight = true;
+	    }
+	
+	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
+	    Table::instance ().retInfo ().changed () = true;
+	    aux-> info-> value () = NULL;
+	    return aux;
+	}
     }
 
     Expression IBinary::reaff () {
 	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 
 	if (simpleVerif (aux)) return NULL;
-	else if (aux-> left-> info-> isConst ()) {
-	    Ymir::Error::notLValue (aux-> left-> token);
-	    return NULL;
-	} else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+	if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token);
 	    return NULL;
 	}
 
-	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
-	if (type == NULL) {
+	if (aux-> left-> info-> isConst ()) {
 	    auto call = findOpAssign (aux);
 	    if (!call) {
-		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		Ymir::Error::notLValue (aux-> left-> token);
 		return NULL;
 	    }
 	    return call;	    
+	} else {
+	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
+	    if (type == NULL) {
+		auto call = findOpAssign (aux);
+		if (!call) {
+		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		    return NULL;
+		}
+		return call;	    
+	    }	
+	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
+	    Table::instance ().retInfo ().changed () = true;
+	    aux-> info-> value () = NULL;
+	    return aux;
 	}
-
-	aux-> info = new (Z0)  ISymbol (aux-> token, type);
-	Table::instance ().retInfo ().changed () = true;
-	aux-> info-> value () = NULL;
-	return aux;	
     }
 
     Expression IBinary::normal () {	
@@ -558,7 +567,9 @@ namespace syntax {
 	Word word (this-> token.getLocus (), Keys::OPASSIGN);
 	auto var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
 	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
-	auto call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	
+	auto call = new (Z0)  IPar (tok, tok2, var, params, false);
 	
 	auto res = call-> expression ();
 	return res;
@@ -572,8 +583,8 @@ namespace syntax {
 	Word word {this-> token, Keys::OPBINARY};
 	auto var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
 	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
-
-	auto call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	auto call = new (Z0)  IPar (tok, tok2, var, params, false);
 	auto res = call-> expression ();	
 	auto errors = Ymir::Error::caught ();
 	Ymir::Error::activeError (true);
@@ -583,7 +594,7 @@ namespace syntax {
 	    word = Word (this-> token.getLocus (), Keys::OPBINARYR);
 	    var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
 	    params = new (Z0)  IParamList (this-> token, {aux-> right, aux-> left});
-	    call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
+	    call = new (Z0)  IPar (tok, tok2, var, params, false);
 	    res = call-> expression ();
 	    auto errors2 = Ymir::Error::caught ();
 	    Ymir::Error::activeError (true);
@@ -600,7 +611,8 @@ namespace syntax {
 	Word word {this-> token.getLocus (), Keys::OPTEST};
 	auto var = new (Z0) IVar (word, {new (Z0) IString (this-> token, this-> token.getStr ())});
 	auto params = new (Z0) IParamList (this-> token, {this-> left, this-> right});
-	auto call = new (Z0) IPar (this-> token, this-> token, var, params, false);
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	auto call = new (Z0) IPar (tok, tok2, var, params, false);
 	auto res = call-> expression ();
 	if (res == NULL) return NULL;
 
@@ -622,8 +634,8 @@ namespace syntax {
 	Word word (this-> token.getLocus (), Keys::OPEQUAL);
 	auto var = new (Z0)  IVar (word);
 	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
-
-	auto call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	auto call = new (Z0)  IPar (tok, tok2, var, params, false);
 	Expression res = NULL;
 	if (this-> token == Token::DEQUAL) {
 	    res = call-> expression ();

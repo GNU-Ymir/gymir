@@ -571,10 +571,11 @@ namespace syntax {
 		);
 	    }
 	}
+
 	auto set_result = this-> elem != NULL ?
 	    buildTree (MODIFY_EXPR, this-> token.getLocus (), void_type_node, tlvalue, res) :
 	    Ymir::Tree ();
-	
+
 	return Ymir::buildTree (RETURN_EXPR, this-> token.getLocus (), void_type_node, set_result);
     }
 
