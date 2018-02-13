@@ -318,7 +318,7 @@ namespace syntax {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
-	
+
 	return this-> info-> type-> buildUnaryOp (
 	    this-> token,
 	    this-> info-> type,

@@ -26,7 +26,7 @@ namespace semantic {
 		// if (auto cst = templates [0]-> info-> type-> to<StructCstInfo> ()) {}
 		Ymir::Error::takeATypeAsTemplate (token);		
 	    } else {
-		return new  IArrayInfo (false, templates [0]-> info-> type);
+		return new (Z0) IArrayInfo (false, templates [0]-> info-> type);
 	    }
 	}
 

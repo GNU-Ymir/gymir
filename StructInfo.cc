@@ -438,7 +438,7 @@ namespace semantic {
 	}
 	
 	if (var-> token == "tupleof") {
-	    auto ret = new ITupleInfo (false);
+	    auto ret = new (Z0) ITupleInfo (false);
 	    for (auto it : this-> types)
 		ret-> addParam (it-> clone ());
 	    ret-> binopFoo = StructUtils::InstCastTuple;

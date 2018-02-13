@@ -202,7 +202,7 @@ namespace syntax {
        | enum
        | global 
        | self
-       #| trait
+       | trait
        | impl
        
     */
@@ -229,15 +229,36 @@ namespace syntax {
 
     ModDecl Visitor::visitModule () {
 	auto ident = visitIdentifiant ();
-	auto word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
-	while (word == Token::DOT) {
-	    if (word == Token::DOT)
-		ident.setStr (ident.getStr () + ".");
-	    auto name = visitIdentifiant ();
-	    ident.setStr (ident.getStr () + name.getStr ());
-	    word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
+	auto word = this-> lex.next ({Token::DOT, Token::SEMI_COLON, Token::LACC});
+	if (word != Token::LACC) {
+	    while (word == Token::DOT) {
+		if (word == Token::DOT)
+		    ident.setStr (ident.getStr () + ".");
+		auto name = visitIdentifiant ();
+		ident.setStr (ident.getStr () + name.getStr ());
+		word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
+	    }		
+	    return new (Z0) IModDecl (ident);
+	} else {
+	    std::vector <Declaration> decls;
+	    while (true) {
+		auto decl = visitDeclaration (false);
+		if (decl) decls.push_back (decl);
+		else {
+		    auto tok = this-> lex.next ({Token::RACC, Keys::PRIVATE, Keys::PUBLIC});
+		    if (tok == Keys::PRIVATE) {
+			this-> lex.rewind ();
+			auto prv_decls = visitPrivateBlock ();
+			for (auto it : prv_decls) decls.push_back (it);
+		    } else if (tok == Keys::PUBLIC) {
+			this-> lex.rewind ();
+			auto pub_decls = visitPublicBlock ();
+			for (auto it : pub_decls) decls.push_back (it);
+		    } else break;
+		}
+	    }
+	    return new (Z0) IModDecl (ident, decls);
 	}
-	return new (Z0) IModDecl (ident);
     }
     
     /**
@@ -998,8 +1019,8 @@ namespace syntax {
 	    std::vector <Instruction> insts;
 	    while (true) {
 		auto next = this-> lex.next ();
-		if (next == Keys::DEF) decls.push_back (visitFunction ());
-		else if (next == Keys::IMPORT) decls.push_back (visitImport ());
+		//if (next == Keys::DEF) decls.push_back (visitFunction ());
+		if (next == Keys::IMPORT) decls.push_back (visitImport ());
 		else if (next == Keys::EXTERN) decls.push_back (visitExtern ());
 		else if (next == Keys::STRUCT) decls.push_back (visitStruct ());
 		else if (next == Token::LACC) {

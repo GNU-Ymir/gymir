@@ -17,6 +17,9 @@ struct Word;
 namespace semantic {
     class IInfoType;
     typedef IInfoType* InfoType;
+
+    struct Namespace;
+    
 }
 
 namespace Ymir {
@@ -144,6 +147,8 @@ namespace Ymir {
 	void write_ (syntax::Expression expr);
 
 	void write_ (semantic::InfoType type);
+
+	void write_ (semantic::Namespace& space);
 	
 	void write_ (const char * str);
 	

@@ -32,6 +32,8 @@ namespace semantic {
 
 	Symbol getAlike (std::string name);
 
+	Symbol getPublicAlike (std::string name);
+	
 	void clear ();
 
 	void quit (Namespace space);

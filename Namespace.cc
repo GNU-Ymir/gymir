@@ -44,8 +44,8 @@ namespace semantic {
     bool Namespace::isSubOf (const Namespace& other) const {
 	if (this-> names.size () <= other. names.size ()) {
 	    for (auto it = 0 ; it < (int) this-> names.size () ; it++) {
-		if (other.names [it] != this-> names [it])
-		    return false;
+		if (other.names [it] != this-> names [it]) 
+		    return false;		
 	    }
 	    return true;
 	}

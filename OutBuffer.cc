@@ -3,6 +3,7 @@
 #include <ymir/ast/Expression.hh>
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/syntax/Word.hh>
+#include <ymir/semantic/pack/Namespace.hh>
 #include <cstring>
 
 
@@ -132,6 +133,10 @@ namespace Ymir {
 	this-> current = aux;
     }
     
+    void OutBuffer::write_ (semantic::Namespace & space) {
+	this-> write (space.toString ());
+    }
+
     void OutBuffer::write () {}
 
     

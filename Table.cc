@@ -110,21 +110,20 @@ namespace semantic {
 
     Symbol Table::get (std::string name) {
 	Symbol ret;
-	Namespace last = this-> _space;
+	Namespace last = this-> getCurrentSpace ();
 	if (!this-> _frameTable.empty ()) {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
-
-	    for (auto it : this-> _frameTable) {		
-		if (it.space ().isAbsSubOf (last)) {
+	    for (auto it : this-> _frameTable) {
+		if (it.space ().isSubOf (last)) {
 		    ret = it.get (name);
-		    if (ret && ret-> isScoped ()) return ret;
+		    if (ret) return ret;
 		    else ret = NULL;
 		    last = it.space ();
 		} else if (this-> _space != last) break;	    
 	    }
 	}
-	
+
 	if (ret == NULL) ret = this-> _globalScope.get (name);
 	if (ret == NULL) {
 	    auto mods = this-> getAllMod (getCurrentSpace ());
@@ -139,15 +138,14 @@ namespace semantic {
 
     std::vector <Symbol> Table::getAll (std::string name) {
 	std::vector <Symbol> alls;
-	Namespace last = this-> _space;
+	Namespace last = this-> getCurrentSpace ();
 	if (!this-> _frameTable.empty ()) {
-	    alls = this-> _frameTable.front ().getAll (name);
-
+	    //alls = this-> _frameTable.front ().getAll (name);
 	    for (auto it : this-> _frameTable) {
-		if (it.space ().isAbsSubOf (last)) {
+		if (it.space ().isSubOf (last)) {
 		    auto aux = it.getAll (name);
 		    for (auto at : aux)
-			if (at-> isScoped ()) alls.push_back (at);
+			alls.push_back (at);
 		    last = it.space ();
 		} else if (this-> _space != last) break;
 	    }
@@ -224,7 +222,14 @@ namespace semantic {
 		if (ret) return ret;
 	    }
 	}
-	return this-> _globalScope.getAlike (name);
+	auto ret = this-> _globalScope.getAlike (name);
+	if (ret) return ret;
+	auto mods = this-> getAllMod (getCurrentSpace ());
+	for (auto it : mods) {
+	    ret = it->  getAlikeFor (name, getCurrentSpace ());
+	    if (ret != NULL) return ret;
+	}
+	return NULL;
     }
 	
     

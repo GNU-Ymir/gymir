@@ -23,7 +23,11 @@ namespace semantic {
 	
 	Symbol getFor (std::string name, const Namespace & space);
 
+	Symbol getAlikeFor (std::string name, const Namespace & space);
+
 	std::vector <Symbol> getAll (std::string name);
+
+	std::vector <Symbol> getAllFor (std::string name, const Namespace & space);
 
 	void insert (Symbol sym);
 

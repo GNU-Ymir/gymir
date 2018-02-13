@@ -21,3 +21,4 @@
 #include "IgnoreInfo.hh"
 #include "ArrayRefInfo.hh"
 #include "StructInfo.hh"
+#include "ModuleInfo.hh"

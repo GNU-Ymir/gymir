@@ -102,6 +102,21 @@ namespace semantic {
 	}
 	return ret;
     }
+
+    Symbol Scope::getPublicAlike (std::string name) {
+	auto min = 3UL;
+	Symbol ret = NULL;
+	for (auto& it : this-> local) {
+	    if (it.second[0]->  isPublic ()) {
+		auto diff = levenshteinDistance (it.first.c_str (), it.first.length (), name.c_str (), name.length ());
+		if (diff < min && diff < name.length ()) {
+		    ret = it.second [0];
+		    min = diff;
+		}
+	    }
+	}
+	return ret;
+    }
     
     void Scope::clear () {
 	this-> local.clear ();

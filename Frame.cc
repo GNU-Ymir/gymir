@@ -223,14 +223,15 @@ namespace semantic {
 	    Exit () : last (Table::instance ().templateNamespace ()) {
 	    }
 	    
-	    FrameProto operator () (Word name, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
+	    FrameProto operator () (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
 		Table::instance ().templateNamespace () = from;
+		Namespace finalNamespace (space, from.toString ());
 		if (ret == NULL) 
 		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 		else
 		    Table::instance ().retInfo ().info = ret;
 
-		auto proto = new (Z0)  IFrameProto (name.getStr (), from, Table::instance ().retInfo ().info, params, tmps);
+		auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps);
 		if (!FrameTable::instance ().existsProto (proto)) {
 		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 			Table::instance ().retInfo ().isImmutable () = true;
@@ -244,8 +245,8 @@ namespace semantic {
 			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 
 		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
-							  from, name.getStr (),
-							  params, block, tmps);
+							   finalNamespace, name.getStr (),
+							   params, block, tmps);
 		    
 		    finFrame-> isVariadic () = isVariadic;
 		    proto-> type () = Table::instance ().retInfo ().info;
@@ -269,7 +270,7 @@ namespace semantic {
 	};
 
 	Exit ex;
-	return ex (name, from, ret, params, block, tmps, isVariadic);	
+	return ex (name, space, from, ret, params, block, tmps, isVariadic);	
     }
 
     FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block) {
@@ -353,7 +354,10 @@ namespace semantic {
 	    Exit (Frame self) : last (Table::instance ().templateNamespace ()), self (self) {
 	    }
 
-	    FrameProto operator () (Namespace from, const std::vector<Var> & params, bool isVariadic) {		
+	    FrameProto operator () (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
+		Namespace finalNamespace (space, from.toString ());
+		Table::instance ().templateNamespace () = from;
+		
 		if (self-> _function-> getType () == NULL) 
 		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 		else {
@@ -363,7 +367,7 @@ namespace semantic {
 			Table::instance ().retInfo ().info-> isConst (true);
 		}
 
-		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), from, Table::instance ().retInfo ().info, params, self-> tempParams);
+		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, self-> tempParams);
 		
 		if (!FrameTable::instance ().existsProto (proto)) {
 		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -377,8 +381,8 @@ namespace semantic {
 			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 
 		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
-							  from, self-> _function-> getIdent ().getStr (),
-							  params, block, self-> tempParams);
+							   finalNamespace, self-> _function-> getIdent ().getStr (),
+							   params, block, self-> tempParams);
 
 		    finFrame-> isVariadic () = isVariadic;
 		    proto-> type () = Table::instance ().retInfo ().info;
@@ -401,7 +405,7 @@ namespace semantic {
 	    
 	};
 	Exit ex (this);
-	return ex (from, params, isVariadic);
+	return ex (space, from, params, isVariadic);
     }
     
     

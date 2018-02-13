@@ -59,7 +59,6 @@ namespace Ymir {
 	FrameTable::instance ().purge ();
 	
 	prg-> declare ();
-
 	for (auto it : FrameTable::instance ().structs ()) {
 	    it-> TempOp ({});
 	}
@@ -72,8 +71,11 @@ namespace Ymir {
 	    Ymir::declareGlobalExtern (it);
 	}
 
-	for (auto it : FrameTable::instance ().pures ()) {
+	uint i = 0;
+	while (i < FrameTable::instance ().pures ().size ()) {
+	    auto it = FrameTable::instance ().pures () [i];
 	    it-> validate ();
+	    i++;
 	}
 	
 	if (Ymir::Error::nb_errors > 0)

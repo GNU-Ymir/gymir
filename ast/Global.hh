@@ -21,6 +21,10 @@ namespace syntax {
 	IGlobal (Word ident, Expression type, bool isExternal);
 
 	void declare () override;
+
+	void declare (semantic::Module) override;
+
+	void declareAsExtern (semantic::Module) override;
 		
 	void print (int nb = 0) override;
 	

@@ -28,7 +28,9 @@ namespace syntax {
 	}
 
 	virtual void declare () = 0;
-
+	
+	virtual void declare (semantic::Module);
+	
 	virtual void declareAsExtern (semantic::Module);	
 
 	virtual void declareAsInternal () {
@@ -38,7 +40,7 @@ namespace syntax {
 	virtual IDeclaration* templateDeclReplace (const std::map <std::string, Expression>&);
 
 	virtual std::vector <std::string> getIds () {
-	    return {TYPEID (IInstruction)};
+	    return {TYPEID (IDeclaration)};
 	}
 	
 	template <typename T>

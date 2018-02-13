@@ -76,8 +76,9 @@ namespace semantic {
 	if (func-> getType ()) {
 	    ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
 	}
-	
-	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, Table::instance ().globalNamespace (), ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
+
+	auto from = Table::instance ().globalNamespace ();
+	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
 	return proto;
     }
 

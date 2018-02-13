@@ -24,7 +24,7 @@ namespace semantic {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
-		return new  IRefInfo (false, tmps [0]-> info-> type);
+		return new (Z0) IRefInfo (false, tmps [0]-> info-> type);
 	    }
 	}
 

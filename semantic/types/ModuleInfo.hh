@@ -1,25 +1,24 @@
 #pragma once
 
 #include <ymir/semantic/types/InfoType.hh>
+#include <ymir/semantic/pack/Namespace.hh>
+#include <ymir/semantic/pack/Module.hh>
 
 namespace semantic {
 
-    class IVoidInfo : public IInfoType {
+    class IModuleInfo : public IInfoType {
+
+	Module content;
+
     public:
 
-	IVoidInfo ();
+	IModuleInfo (Module mod);
 
 	bool isSame (InfoType) override;
-
-	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
-	    if (tmps.size () != 0) 
-		Ymir::Error::notATemplate (tok);
-	    return new (Z0) IVoidInfo ();
-	}
 	
 	InfoType onClone () override;
 
-	InfoType DColonOp (syntax::Var) override;
+	Module get ();
 
 	std::string typeString () override;
 	
@@ -28,11 +27,9 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 
 	std::string simpleTypeString () override;
-
-	Ymir::Tree toGeneric () override;
 	
 	static const char* id () {
-	    return "IVoidInfo";
+	    return "IModuleInfo";
 	}
 
 	const char* getId () override;
@@ -40,6 +37,6 @@ namespace semantic {
 	
     };
 
-    typedef IVoidInfo* VoidInfo;
-    
+    typedef IModuleInfo* ModuleInfo;
+
 }

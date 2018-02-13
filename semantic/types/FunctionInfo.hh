@@ -15,6 +15,7 @@ namespace semantic {
 	Namespace _space;
 	Frame _info;
 	std::vector <Frame> _fromTemplates;
+	std::vector <Frame> alls;
 	bool _alone = false;
 
 	static int nbTmpsCreation;// = 0;

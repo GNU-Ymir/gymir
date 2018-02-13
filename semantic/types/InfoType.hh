@@ -7,6 +7,7 @@
 #include <vector>
 #include <ymir/syntax/Word.hh>
 #include <ymir/semantic/pack/Frame.hh>
+#include <ymir/semantic/pack/Module.hh>
 #include <vector>
 
 namespace syntax {
@@ -69,7 +70,7 @@ namespace semantic {
     protected:
 
 	bool _isType = false;
-	
+	Module _onlyInMe = NULL;
 
     public:
 
@@ -209,6 +210,8 @@ namespace semantic {
 	*/	
 	virtual std::vector <InfoType> getTemplate (ulong bef, ulong af);
 
+	InfoType onlyInMod (Module mod);
+	
 	template <typename T>
 	bool is () {
 	    return strcmp (this-> getId (), T::id ()) == 0;

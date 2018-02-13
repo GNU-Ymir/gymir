@@ -83,12 +83,20 @@ namespace semantic {
 	if (this-> _alone) return {this-> _info};
 	if (this-> _fromTemplates.size () != 0) return this-> _fromTemplates;
 	std::vector <Frame> alls;
-	auto others = Table::instance ().getAll (this-> _name);
+	std::vector <Symbol> others;
+	if (this-> _onlyInMe) others = this-> _onlyInMe-> getAllFor (this-> _name, Table::instance ().space ()); 
+	else others = Table::instance ().getAll (this-> _name);
+	
+	bool adds = false;
 	for (auto it : others) {
 	    if (auto fun = it-> type-> to<IFunctionInfo> ()) {
-		if (!fun-> _alone) alls.push_back (fun-> _info);
+		if (!fun-> _alone) {
+		    alls.push_back (fun-> _info);
+		    if (fun-> _info == this-> _info) adds = true;
+		}		
 	    }
 	}
+	if (!adds) alls.push_back (this-> _info);	
 	return alls;
     }
 

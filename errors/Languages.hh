@@ -106,6 +106,9 @@ namespace Ymir {
 		phrases [ModuleDontExist] = "Source file %%%.yr doesn't exist";		
 		phrases [ImportError] = "Importation failed";
 		phrases [NotImmutable] = "The value cannot be read at compile time";
+		phrases [ModuleNotFirst] = "Global module declaration must be the first declaration";
+		phrases [ModuleDontMatch] = "Module %%% must be placed in file %%%";
+		phrases [ShadowingVar2] = "Cannot override '%%%' with a different acces property (%%%)";
 		init = true;
 	    } 
 	    return phrases;

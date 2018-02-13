@@ -213,6 +213,13 @@ namespace semantic {
 	return ret;
     }
 
+    InfoType IInfoType::onlyInMod (Module mod) {
+	auto ret = this-> clone ();
+	ret-> _onlyInMe = mod;
+	return ret;
+    }
+
+    
     InfoType IInfoType::getTemplate (ulong) {
 	return NULL;
     }

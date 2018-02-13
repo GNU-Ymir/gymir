@@ -30,8 +30,8 @@ namespace syntax {
 	if (this-> ident == Keys::MAIN) {
 	    FrameTable::instance ().insert (new (Z0)  IPureFrame (Table::instance ().space (), this));							    
 	} else {
-	    auto fr = verifyPure (Table::instance ().space ());
 	    auto space = Table::instance ().space ();
+	    auto fr = verifyPure (space);
 	    auto it = Table::instance ().getLocal (this-> ident.getStr ());
 	    if (it != NULL) {
 		if (!it-> type-> is<IFunctionInfo> ()) {
@@ -44,14 +44,38 @@ namespace syntax {
 	}
     }
 
+    void IFunction::declare (Module mod)  {
+	auto fr = verifyPure (mod-> space ());
+	auto space = mod-> space ();
+	auto it = mod-> get (this-> ident.getStr ());
+	if (it != NULL) {
+	    if (!it-> type-> is<IFunctionInfo> ()) {
+		Ymir::Error::shadowingVar (ident, it-> sym);
+		return;
+	    } else if (it-> isPublic () != this-> is_public ()) {
+		Ymir::Error::shadowingVar (ident, it-> sym, this-> is_public ());
+		return;
+	    }
+	}
+	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
+	auto sym = new (Z0)  ISymbol (this-> ident, fun);
+	fun-> set (fr);
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);	
+    }
+
     void IFunction::declareAsExtern (semantic::Module mod) {
 	if (this-> ident != Keys::MAIN) {
-	    auto fr = verifyPureExtern (Table::instance ().space ());
+	    auto fr = verifyPureExtern (mod-> space ());
 	    auto space = mod-> space ();
 	    auto it = mod-> get (this-> ident.getStr ());
 	    if (it != NULL) {
 		if (!it-> type-> is<IFunctionInfo> ()) {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
+		    return;
+		} else if (it-> isPublic () != this-> is_public ()) {
+		    Ymir::Error::shadowingVar (ident, it-> sym, this-> is_public ());
+		    return;
 		}
 	    }
 	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
@@ -132,22 +156,97 @@ namespace syntax {
 	Ymir::Error::assert ("TODO");
     }
 
-    void IModDecl::declare () {
-	auto str = this-> ident.getStr ();
-	auto space = Mangler::mangle_file (str);
-	Table::instance ().setCurrentSpace ({space});
-	Table::instance ().programNamespace () = Table::instance ().globalNamespace ();
-	Table::instance ().addForeignModule (Table::instance ().globalNamespace ());
+    void IDeclaration::declare (semantic::Module) {
+	Ymir::Error::assert ("TODO");
     }
     
-    void IModDecl::declareAsExtern (semantic::Module) {
-	auto str = this-> ident.getStr ();
-	auto space = Mangler::mangle_file (str);
-	Table::instance ().setCurrentSpace ({space});
+    void IModDecl::declare () {
+	if (this-> isGlobal ()) {
+	    Ymir::Error::moduleNotFirst (this-> ident);
+	}
+	auto globSpace = Table::instance ().space ();
+	auto space = Namespace (Table::instance ().space (), this-> ident.getStr ());
+	auto mod = Table::instance ().addModule (space);
+	for (auto it : this-> decls) {
+	    it-> declare (mod);
+	}
+	auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod));
+	sym-> isPublic () = this-> is_public ();
+	Table::instance ().insert (sym);
+	//TODO insert ModuleAccessor
+	Table::instance ().setCurrentSpace (globSpace);
+    }
+    
+    void IModDecl::declare (semantic::Module mod) {
+	if (this-> isGlobal ()) {
+	    Ymir::Error::moduleNotFirst (this-> ident);
+	}
+	auto globSpace = mod-> space ();
+	auto space = Namespace (mod-> space (), this-> ident.getStr ());
+	auto mod_ = Table::instance ().addModule (space);
+	for (auto it : this-> decls) {
+	    it-> declare (mod_);	    
+	}
+	mod-> addOpen (space);
+	auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);
+    }
+    
+    void IModDecl::declareAsExtern (semantic::Module mod) {
+	if (this-> isGlobal ()) {
+	    Ymir::Error::moduleNotFirst (this-> ident);
+	}
+	
+	auto globSpace = mod-> space ();
+	auto space = Namespace (mod-> space (), this-> ident.getStr ());
+	auto mod_ = Table::instance ().addModule (space);
+	for (auto it : this-> decls) {
+	    it-> declareAsExtern (mod_);	    
+	}
+	
+	auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);
+    }
+
+    void IProgram::detachFile (std::string & file, std::string & path) {
+	auto last = path.find_last_of ('/');
+	if (last == std::string::npos) {
+	    file = path;
+	    path = "";
+	} else {
+	    file = path.substr (last + 1);
+	    path = path.substr (0, last);
+	}
+    }
+    
+    void IProgram::detachSpace (std::string & file, std::string & path) {
+	auto last = path.find_last_of ('.');
+	if (last == std::string::npos) {
+	    file = path;
+	    path = "";
+	} else {
+	    file = path.substr (last + 1);
+	    path = path.substr (0, last);
+	}
+    }
+    
+    bool IProgram::verifyMatch (Word & loc, std::string file, std::string mod) {
+	while (mod.length () != 0) {
+	    std::string f1, f2;
+	    detachFile (f1, file);
+	    detachSpace (f2, mod);
+	    if (f1 != f2) {
+		Ymir::Error::moduleDontMatch (loc);
+		return false;
+	    }
+	}
+	return true;
     }
     
     void IProgram::declare () {
-	std::string name = LOCATION_FILE (this-> locus.getLocus ());
+	std::string name = this-> locus.getFile ();
 	auto dot = name.find_last_of ('.');
 	if (dot != name.npos && name.substr (dot, name.length () - dot) == ".yr") {
 	    name = name.substr (0, dot);
@@ -159,16 +258,19 @@ namespace syntax {
 	
 	auto begin = 0;
 	if (this-> decls.size () != 0) {
-	    if (this-> decls [0]-> is <IModDecl> ()) {
-		this-> decls [0]-> declare ();
-		begin ++;
+	    if (auto mod = this-> decls [0]-> to <IModDecl> ()) {
+		if (mod-> isGlobal () && verifyMatch (mod-> getIdent (), name, mod-> getIdent ().getStr ())) {
+		    auto str = mod-> getIdent ().getStr ();
+		    auto space = Mangler::mangle_file (str);
+		    Table::instance ().setCurrentSpace ({space});
+		    Table::instance ().programNamespace () = Table::instance ().globalNamespace ();
+		    Table::instance ().addForeignModule (Table::instance ().globalNamespace ());
+		    begin ++;
+		}
 	    }
 	}
 		    
 	for (auto it : Ymir::r (begin, this-> decls.size ())) {
-	    if (this-> decls [it]-> is <IModDecl> ()) {
-		Ymir::Error::assert ("TODO");
-	    }
 	    this-> decls [it]-> declare ();
 	}	    
 	
@@ -182,18 +284,19 @@ namespace syntax {
 	Table::instance ().setCurrentSpace (Namespace (Mangler::mangle_file (name)));
 	auto begin = 0;
 	if (this-> decls.size () != 0) {
-	    if (this-> decls [0]-> is <IModDecl> ()) {
-		this-> decls [0]-> declareAsExtern (mod);
-		begin ++;
+	    if (auto mod_ = this-> decls [0]-> to <IModDecl> ()) {
+		if (mod_-> isGlobal () && verifyMatch (mod_-> getIdent (), name, mod_-> getIdent ().getStr ())) { 
+		    auto str = mod_-> getIdent ().getStr ();
+		    auto space = Mangler::mangle_file (str);
+		    Table::instance ().setCurrentSpace ({space});
+		    begin ++;
+		}
 	    }
 	}
-		    
+	
 	for (auto it : Ymir::r (begin, this-> decls.size ())) {
-	    if (this-> decls [it]-> is <IModDecl> ()) {
-		Ymir::Error::assert ("TODO");
-	    }
 	    this-> decls [it]-> declareAsExtern (mod);
-	}	    
+	}
     }
 
     
@@ -206,13 +309,26 @@ namespace syntax {
 	Table::instance ().insert (new (Z0)  ISymbol (this-> ident, fun));
     }
 
+    void IProto::declare (semantic::Module mod) {       
+	Namespace space (this-> space != "" ? this-> space : mod-> space ());
+		
+	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
+	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
+	auto sym = new (Z0)  ISymbol (this-> ident, fun);
+	sym-> isPublic () = this-> is_public ();
+	fun-> set (fr);
+	mod-> insert (sym);
+    }
+    
     void IProto::declareAsExtern (semantic::Module mod) {
 	Namespace space (this-> space != "" ? this-> space : mod-> space ());
 	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
 	fr-> isPrivate () = !this-> isPublic;
 	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
+	auto sym = new (Z0)  ISymbol (this-> ident, fun);
+	sym-> isPublic () = this-> is_public ();
 	fun-> set (fr);
-	mod-> insert (new (Z0)  ISymbol (this-> ident, fun));
+	mod-> insert (sym);
     }
 
     std::string IImport::firstExistingPath (std::string file) {
@@ -243,6 +359,41 @@ namespace syntax {
 		    return;
 		}
 	    }
+
+	    Namespace space (it.getStr ());
+	    if (!Table::instance ().moduleExists (space)) {
+	    	auto file = fopen (name.c_str (), "r");
+	    	Ymir::Parser parser (name.c_str (), file);
+	    	auto mod = Table::instance ().addModule (space);
+	    	mod-> addOpen (globSpace);
+	    	auto prg = parser.syntax_analyse ();
+	    	fclose (file);
+		prg-> declareAsExtern (it.getStr (), mod);
+	    }
+
+	    Table::instance ().openModuleForSpace (space, globSpace);
+	    Table::instance ().setCurrentSpace (globSpace);
+
+	    if (Ymir::Error::nb_errors - nbErrorBeg) {
+		Ymir::Error::importError (this-> ident);
+	    }
+	}	
+    }
+
+    void IImport::declare (semantic::Module mod_) {
+	auto globSpace = mod_-> space ();
+	for (auto it : this-> params) {
+	    ulong nbErrorBeg = Ymir::Error::nb_errors;
+	    std::string name = firstExistingPath (it.getStr () + ".yr");
+	    if (name == "") {
+		name = it.getStr () + ".yr";
+		std::string path = Options::instance ().prefixIncludeDir ();
+		name = path + "ymir/" + name;
+		if (!exists (name)) {
+		    Ymir::Error::moduleDontExist (this-> ident, it);
+		    return;
+		}
+	    }
 	    
 	    Namespace space (it.getStr ());
 	    if (!Table::instance ().moduleExists (space)) {
@@ -253,10 +404,12 @@ namespace syntax {
 		auto prg = parser.syntax_analyse ();
 		fclose (file);
 		prg-> declareAsExtern (it.getStr (), mod);
+		if (this-> isPublic) {
+		    mod_-> addPublicOpen (mod-> space ());
+		}
 	    }
 	    
-	    Table::instance ().openModuleForSpace (space, globSpace);
-	    Table::instance ().setCurrentSpace (globSpace);
+	    //Table::instance ().openModuleForSpace (space, globSpace);
 	    if (Ymir::Error::nb_errors - nbErrorBeg) {
 		Ymir::Error::importError (this-> ident);
 	    }
@@ -277,6 +430,7 @@ namespace syntax {
 		    return;
 		}
 	    }
+
 	    Namespace space (it.getStr ());
 	    if (!Table::instance ().moduleExists (space)) {
 		Ymir::Parser parser (name.c_str (), fopen (name.c_str (), "r"));
@@ -314,6 +468,29 @@ namespace syntax {
 	}
     }
 
+    void IStruct::declare (semantic::Module mod) {
+	auto exist = mod-> get (this-> ident.getStr ());
+	if (exist) {
+	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
+	} else {
+	    auto str = new (Z0) IStructCstInfo (
+		mod-> space (),
+		this-> ident.getStr (),
+		this-> tmps
+	    );
+
+	    str-> isPublic (this-> is_public ());
+	    auto sym = new (Z0) ISymbol (this-> ident, str);
+	    sym-> isPublic () = this-> is_public ();
+	    mod-> insert (sym);
+	    if (this-> tmps.size () == 0)
+		FrameTable::instance ().insert (str);
+	    for (auto it : this-> params) {
+		str-> addAttrib (it-> to <ITypedVar> ());		
+	    }
+	}
+    }
+    
     void IStruct::declareAsExtern (Module mod) {
 	auto exist = mod-> get (this-> ident.getStr ());
 	if (exist) {
@@ -372,6 +549,46 @@ namespace syntax {
 	    }
 	    
 	    Table::instance ().insert (sym);	    
+	}
+    }
+
+    void IEnum::declare (semantic::Module mod) {
+	auto exist = mod-> get (this-> ident.getStr ());
+	if (exist) {
+	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
+	} else {
+	    Symbol type = NULL;
+	    Expression fst = NULL;
+	    if (this-> type != NULL) {
+		auto ftype = this-> type-> asType ();
+		if (ftype == NULL) return;
+		type = ftype-> info;
+	    } else {
+		fst = this-> values [0]-> expression ();
+		if (fst == NULL) return;
+		type = fst-> info;
+	    }
+	    auto space = mod-> space ();
+	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type);
+	    auto sym = new (Z0) ISymbol (this-> ident, en);
+	    sym-> isPublic () = true;
+
+	    for (auto i : Ymir::r (0, this-> names.size ())) {
+		if (i == 0 && fst) {
+		    en-> addAttrib (this-> names [i].getStr (), fst, NULL);
+		} else {
+		    auto val = this-> values [i]-> expression ();
+		    auto comp = val-> info-> type-> CompOp (type-> type);
+		    if (comp != NULL)
+			en-> addAttrib (this-> names [i].getStr (), val, comp);
+		    else {
+			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type);
+			return;
+		    }			
+		}
+	    }
+	    
+	    mod-> insert (sym);	    
 	}
     }
 
@@ -451,5 +668,72 @@ namespace syntax {
 	}
     }
 
+    void IGlobal::declare (semantic::Module mod) {
+	//auto space = Table::instance ().space ();
+	auto sym = new (Z0) ISymbol (this-> ident, NULL);
+	if (this-> expr) {
+	    auto expr = this-> expr-> expression ();
+	    if (expr == NULL) return;
+
+	    if (!expr-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (expr-> info);
+		return;
+	    }
+
+	    sym-> type = expr-> info-> type;
+	    sym-> value () = expr-> info-> value ();
+	    
+	} else {
+	    if (auto var = this-> type-> to <IVar> ()) {
+		auto type = var-> asType ();
+		if (type == NULL) return;
+		sym-> type = type-> info-> type;
+	    } else {
+		auto expType = this-> type-> expression ();
+		if (expType == NULL) return;
+		sym-> type = expType-> info-> type;
+	    }
+	}
+	
+	mod-> insert (sym);
+	if (this-> isExternal) {
+	    FrameTable::instance ().insertExtern (sym);
+	} else {
+	    FrameTable::instance ().insert (sym);
+	}
+    }
+
+    void IGlobal::declareAsExtern (semantic::Module mod) {
+	//auto space = Table::instance ().space ();
+	auto sym = new (Z0) ISymbol (this-> ident, NULL);
+	if (this-> expr) {
+	    auto expr = this-> expr-> expression ();
+	    if (expr == NULL) return;
+
+	    if (!expr-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (expr-> info);
+		return;
+	    }
+
+	    sym-> type = expr-> info-> type;
+	    sym-> value () = expr-> info-> value ();
+	    
+	} else {
+	    if (auto var = this-> type-> to <IVar> ()) {
+		auto type = var-> asType ();
+		if (type == NULL) return;
+		sym-> type = type-> info-> type;
+	    } else {
+		auto expType = this-> type-> expression ();
+		if (expType == NULL) return;
+		sym-> type = expType-> info-> type;
+	    }
+	}
+
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);
+    }
+
+    
     
 }

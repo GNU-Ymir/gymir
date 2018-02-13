@@ -47,6 +47,12 @@ namespace syntax {
 	    for (auto it : decls)
 		delete it;
 	}
+
+    private:
+
+	bool verifyMatch (Word & loc, std::string file, std::string mod);
+	void detachFile (std::string & file, std::string & path);
+	void detachSpace (std::string & file, std::string & path);
 	
     };
 

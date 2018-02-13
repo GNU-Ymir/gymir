@@ -58,49 +58,52 @@ namespace syntax {
 	
 	return call-> expression ();
     }    
+
+    Expression IVar::expression (Symbol sym) {
+	auto aux = new (Z0) IVar (this-> token);
+	aux-> info = sym;
+	if (this-> templates.size () != 0) {		
+	    if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> () && !this-> inside-> is <IDColon> ())) {
+		auto params = new (Z0)  IParamList (this-> token, {});
+		Word aux2 {this-> token.getLocus (), ")"};
+		auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
+		this-> inside = call;
+		return call-> expression ();
+	    } else if (auto dt = this-> inside-> to<IDot> ()) {
+		if (this == dt-> getLeft ()) {
+		    auto params = new (Z0)  IParamList (this-> token, {});
+		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
+		    this-> inside = call;
+		    return call-> expression ();
+		}
+	    }
+		
+	    std::vector <Expression> tmps;
+	    for (auto it : this-> templates) {
+		tmps.push_back (it-> expression ());
+		if (tmps.back () == NULL) return NULL;
+	    }
+
+	    auto type = aux-> info-> type-> TempOp (tmps);
+	    if (type == NULL) {
+		Ymir::Error::notATemplate (this-> token, tmps);
+		return NULL;
+	    }
+	    aux-> templates = tmps;
+	    aux-> info = new (Z0)  ISymbol (aux-> info-> sym, type);
+	}
+	return aux;	
+    }
     
     Expression IVar::expression () {
 	if (this-> info && this-> info-> isImmutable ()) {
 	    return this;	    
 	} else if (!this-> isType ()) {
-	    auto aux = new (Z0)  IVar (this-> token);
-	    aux-> info = Table::instance ().get (this-> token.getStr ());
-	    if (aux-> info == NULL) {
+	    auto sym = Table::instance ().get (this-> token.getStr ());
+	    if (sym == NULL) {
 		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
 		return NULL;
-	    }
-
-	    if (this-> templates.size () != 0) {		
-		if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> () && !this-> inside-> is <IDColon> ())) {
-		    auto params = new (Z0)  IParamList (this-> token, {});
-		    Word aux2 {this-> token.getLocus (), ")"};
-		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
-		    this-> inside = call;
-		    return call-> expression ();
-		} else if (auto dt = this-> inside-> to<IDot> ()) {
-		    if (this == dt-> getLeft ()) {
-			auto params = new (Z0)  IParamList (this-> token, {});
-			auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
-			this-> inside = call;
-			return call-> expression ();
-		    }
-		}
-		
-		std::vector <Expression> tmps;
-		for (auto it : this-> templates) {
-		    tmps.push_back (it-> expression ());
-		    if (tmps.back () == NULL) return NULL;
-		}
-
-		auto type = aux-> info-> type-> TempOp (tmps);
-		if (type == NULL) {
-		    Ymir::Error::notATemplate (this-> token, tmps);
-		    return NULL;
-		}
-		aux-> templates = tmps;
-		aux-> info = new (Z0)  ISymbol (aux-> info-> sym, type);
-	    }
-	    return aux;
+	    } else return this-> expression (sym);
 	} else return asType ();	
     }
 
@@ -848,24 +851,54 @@ namespace syntax {
     
     Expression IDColon::expression () {
 	this-> left-> inside = this;
-	auto aux = new (Z0)  IDColon (this-> token, this-> left-> expression (), this-> right);
-	if (aux-> left == NULL) return NULL;
-	if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (aux-> left-> token);
-	    return NULL;
-	} else if (!aux-> right-> is<IVar> ()) {
-	    Ymir::Error::useAsVar (aux-> right-> token, aux-> right-> expression ()-> info);
+	auto left = this-> left-> expression ();
+	if (left == NULL) return NULL;
+	if (left-> info-> type-> is<IUndefInfo> ()) {
+	    Ymir::Error::uninitVar (left-> token);
 	    return NULL;
 	}
 	
-	auto var = aux-> right-> to<IVar> ();
-	auto type = aux-> left-> info-> type-> DColonOp (var);
-	if (type == NULL) {
-	    Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
-	    return NULL;
+	if (auto mod = left-> info-> type-> to<IModuleInfo> ()) {
+	    auto content = mod-> get ();
+	    bool needToClose = false;
+	    auto space = Table::instance ().space ();
+	    if (!content-> authorized (space)) {
+		content-> addOpen (space);
+		needToClose = true;
+	    }
+	    
+	    auto sym = content-> getFor (this-> right-> token.getStr (), space);
+	    if (sym == NULL) {
+		Ymir::Error::undefAttr (this-> token, left-> info, this-> right-> to<IVar> ());
+		return NULL;
+	    }
+	    
+	    this-> right-> inside = this;
+	    auto aux = this-> right-> to<IVar> ()-> expression (sym);
+	    if (needToClose) content-> close (space);
+
+	    if (aux) {
+		aux-> info = new (Z0) ISymbol (aux-> token, aux-> info-> type-> onlyInMod (content));
+	    }
+
+	    return aux;
+	} else {
+	    if (!this-> right-> is<IVar> ()) {
+		Ymir::Error::useAsVar (this-> right-> token, this-> right-> expression ()-> info);
+		return NULL;
+	    }
+	    
+	    auto var = this-> right-> to<IVar> ();
+	    auto type = left-> info-> type-> DColonOp (var);
+	    if (type == NULL) {
+		Ymir::Error::undefAttr (this-> token, left-> info, var);
+		return NULL;
+	    }
+	    	    
+	    auto aux = new (Z0)  IDColon (this-> token, this-> left-> expression (), this-> right);
+	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
+	    return aux;	
 	}
-	aux-> info = new (Z0)  ISymbol (aux-> token, type);
-	return aux;	
     }
 
     Expression IDot::expression () {

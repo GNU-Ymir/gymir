@@ -27,7 +27,9 @@ namespace syntax {
 	IProto (Word ident, Var type, const std::vector <Var>& params, std::string space, bool isVariadic);
 
 	void declare () override;
-
+	
+	void declare (semantic::Module) override;
+	
 	void declareAsExtern (semantic::Module) override;
 	
 	Declaration templateDeclReplace (const std::map <std::string, Expression>&) override;

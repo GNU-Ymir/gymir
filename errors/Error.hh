@@ -54,6 +54,7 @@ namespace Ymir {
 	    RecursiveNoSize,
 	    MultipleLoopName,
 	    ShadowingVar,
+	    ShadowingVar2,
 	    UnknownType,
 	    UndefVar,
 	    UndefVar2,
@@ -80,6 +81,8 @@ namespace Ymir {
 	    ImportError,
 	    NotImmutable,
 	    MainPrototype,
+	    ModuleNotFirst,
+	    ModuleDontMatch,
 	    LAST_ERROR
 	};
 
@@ -124,6 +127,10 @@ namespace Ymir {
 
 	static void mainPrototype (const Word&);
 
+	static void moduleNotFirst (const Word &);
+
+	static void moduleDontMatch (const Word &);
+	
 	static void notATemplate (const Word&);
 
 	static void notATemplate (const Word&, std::vector <syntax::Expression>&);
@@ -165,6 +172,8 @@ namespace Ymir {
 	static void multipleLoopName (const Word&, const Word&);
 
 	static void shadowingVar (const Word&, const Word&);
+
+	static void shadowingVar (const Word&, const Word&, bool isPublic);
 
 	static void constNoInit (const Word&);
 

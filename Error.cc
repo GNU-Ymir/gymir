@@ -4,6 +4,7 @@
 #include <ymir/ast/_.hh>
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/semantic/pack/Symbol.hh>
+#include <ymir/syntax/Keys.hh>
 #include <sstream>
 #include <iostream>
 #include <string>
@@ -243,6 +244,33 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::moduleNotFirst (const Word& word) {
+	auto str = getString (ModuleNotFirst);
+	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
+    void Error::moduleDontMatch (const Word& word) {
+	auto str = getString (ModuleDontMatch);
+	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET,
+				  YELLOW, word.getStr ().c_str (), RESET
+	);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::notATemplate (const Word& word, std::vector <syntax::Expression> & exprs) {
 	auto str = getString (NotATemplate2);
 	OutBuffer buf ("(", exprs, ")");
@@ -340,7 +368,24 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
-    
+
+    void Error::shadowingVar (const Word& word, const Word& word2, bool isPublic) {
+	std::string msg = format (getString (ShadowingVar2), YELLOW, word.getStr ().c_str (), RESET, YELLOW, isPublic ? Keys::PUBLIC : Keys::PRIVATE, RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+
+	
+	auto msg2 = std::string (getString (Here));
+	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : " + msg2;
+	aux = addLine (aux, word2);
+	
+	ErrorMsg errorMsg = {msg + aux, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
     void Error::multipleLoopName (const Word& word, const Word& word2) {
 	std::string msg = format (getString (MultipleLoopName), YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
@@ -681,6 +726,7 @@ namespace Ymir {
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
+	    assert ("");
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -776,10 +822,11 @@ namespace Ymir {
 
     void Error::undefVar (const Word& word, semantic::Symbol alike) {
 	std::string msg;
-	if (alike != NULL)
+	if (alike != NULL) {
 	    msg = format (getString (UndefVar2), YELLOW, word.getStr ().c_str (), RESET, YELLOW, alike-> sym.getStr ().c_str (), RESET);
-	else
+	} else {
 	    msg = format (getString (UndefVar), YELLOW, word.getStr ().c_str (), RESET);
+	}
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);

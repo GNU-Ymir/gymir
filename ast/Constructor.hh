@@ -16,7 +16,7 @@ namespace syntax {
 		       params,
 		       {}, NULL, bl)	    	    
 	{
-	    this-> params.insert (this-> params.begin (), new  IVar (token));
+	    this-> params.insert (this-> params.begin (), new (Z0) IVar (token));
 	}
 
 	void print (int nb = 0) override {

@@ -22,7 +22,7 @@ namespace semantic {
 		Ymir::Error::notATemplate (tok);
 		return NULL;
 	    } else {
-		return new  IStringInfo (false);
+		return new (Z0) IStringInfo (false);
 	    }
 	}
 

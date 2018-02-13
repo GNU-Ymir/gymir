@@ -36,6 +36,8 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression expression (semantic::Symbol sym);
+
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	
 	Ymir::Tree toGeneric () override;

@@ -13,7 +13,7 @@ namespace semantic {
 	    if (tmps.size () != 0) {
 		Ymir::Error::notATemplate (w);
 		return NULL;
-	    } else return new  IBoolInfo (false);
+	    } else return new (Z0) IBoolInfo (false);
 	}
 
 	bool isSame (InfoType) override;
