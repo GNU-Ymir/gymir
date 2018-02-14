@@ -47,8 +47,7 @@ namespace syntax {
 	}
 	
     };
-
-
+    
     class IVariadicVar : public IVar {
     public:
 

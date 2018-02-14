@@ -16,10 +16,6 @@ namespace semantic {
 
     InfoType IUndefInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
-	if (var-> token == "typeid") {
-	    //TODO
-	    return new (Z0)  IStringInfo (true);
-	}
 	return NULL;
     }
     

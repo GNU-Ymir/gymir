@@ -8,9 +8,10 @@ namespace semantic {
     private:
 
 	static bool __initStringTypeNode__;
-
+	bool _innerConst;
+	
     public:
-
+	
 	IStringInfo (bool);
 
 	bool isSame (InfoType) override;
@@ -22,7 +23,7 @@ namespace semantic {
 		Ymir::Error::notATemplate (tok);
 		return NULL;
 	    } else {
-		return new (Z0) IStringInfo (false);
+		return new (Z0) IArrayInfo (false, new (Z0) ICharInfo (false));
 	    }
 	}
 

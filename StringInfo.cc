@@ -23,19 +23,22 @@ namespace semantic {
 	}
 
 
-	Tree getLen (location_t loc, Expression expr, Tree tree) {
-	    if (expr-> info-> value ()) {
-		auto cst = expr-> info-> value ()-> to<IStringValue> ();
-		auto intExpr = new (Z0)  IFixed (expr-> info-> sym, FixedConst::ULONG);
-		intExpr-> setUValue (cst-> toString ().length ());
-		auto lenExpr = (Fixed) intExpr-> expression ();			
-		return lenExpr-> toGeneric ();
+	Tree getLen (location_t loc, Tree tree) {
+	    if (tree.getType ().getTreeCode () != RECORD_TYPE) {
+		if (isStringType (tree.getType ())) {
+		    if (TREE_CONSTANT (tree.getTree ())) {
+			auto t = tree.getOperand (0).getOperand (0);
+			return build_int_cst_type (long_unsigned_type_node, TREE_STRING_LENGTH (t.getTree ()) - 1);
+		    }
+		} 
+		Ymir::Error::assert ("");
+		return Ymir::Tree ();
 	    } else {
 		return getField (loc, tree, "len");
 	    }
 	}
 
-	Tree getPtr (location_t loc, Expression, Tree tree) {
+	Tree getPtr (location_t loc, Tree tree) {
 	    if (tree.getType ().getTreeCode () != RECORD_TYPE) {
 		return tree;
 	    } else {
@@ -68,15 +71,15 @@ namespace semantic {
 	    return build_call_array_loc (loc, void_type_node, InternalFunction::getYMemcpy ().getTree (), 3, argsMemcpy);	    
 	}
 	
-	Tree buildDup (location_t loc, Tree lexp, Tree rexp, Expression cst) {
+	Tree buildDup (location_t loc, Tree lexp, Tree rexp) {
 	    TreeStmtList list;	    
 	    Tree lenl = getField (loc, lexp, "len");	    
 	    Tree ptrl = getField (loc, lexp, "ptr");
 	    Tree len, ptrr;
 	    
 	    if (rexp.getTreeCode () != CALL_EXPR) {
-		len = getLen (loc, cst, rexp);
-		ptrr = getPtr (loc, cst, rexp);		
+		len = getLen (loc, rexp);
+		ptrr = getPtr (loc, rexp);		
 	    } else {
 		auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), lexp.getType ());
 		list.append (buildTree (
@@ -108,8 +111,11 @@ namespace semantic {
 	    auto rexp = right-> toGeneric ();
 	    
 	    if (right-> info-> isConst ()) {
-		if (!left-> info-> isConst ())
-		    return buildDup (loc, lexp, rexp, right);
+		if (auto ref = left-> info-> type-> to <IArrayRefInfo> ()) {
+		    if (!ref-> content ()-> isConst ())
+			return buildDup (loc, lexp, rexp);
+		} else if (!left-> info-> isConst ())
+		    return buildDup (loc, lexp, rexp);
 	    }
 
 	    if (!isStringType (rexp.getType ())) {
@@ -123,8 +129,8 @@ namespace semantic {
 	    Tree lenl = getField (loc, lexp, "len");
 	    Tree ptrl = getField (loc, lexp, "ptr");	
 	    
-	    auto lenr = getLen (loc, right, rexp);
-	    auto ptrr = getPtr (loc, right, rexp);	    
+	    auto lenr = getLen (loc, rexp);
+	    auto ptrr = getPtr (loc, rexp);	    
 	    
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, void_type_node, lenl, lenr)
@@ -141,12 +147,12 @@ namespace semantic {
 	
 	Tree InstPtr (Word locus, InfoType, Expression expr, Expression) {
 	    location_t loc = locus.getLocus ();
-	    return getPtr (loc, expr, expr-> toGeneric ());
+	    return getPtr (loc, expr-> toGeneric ());
 	}
 
 	Tree InstLen (Word locus, InfoType, Expression expr, Expression) {
 	    location_t loc = locus.getLocus ();
-	    return getLen (loc, expr, expr-> toGeneric ());
+	    return getLen (loc, expr-> toGeneric ());
 	}
 	
 	Tree InstToString (Word locus, InfoType, Expression elem, Expression type) {
@@ -168,28 +174,35 @@ namespace semantic {
 	    
 	    location_t loc = locus.getLocus ();
 	    if (!type-> info-> isConst () && elem-> info-> isConst ()) {
-		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
-		return buildDup (loc, auxVar, rexp, elem);
-	    } else {
-		TreeStmtList list;
-		Tree lenr = getLen (loc, elem, rexp);
-		Tree ptrr = getPtr (loc, elem, rexp);
+		if (auto ref = type-> info-> type-> to <IArrayRefInfo> ()) {
+		    if (!ref-> content ()-> isConst ()) {
+			Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
+			return buildDup (loc, auxVar, rexp);
+		    }
+		} else {
+		    Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
+		    return buildDup (loc, auxVar, rexp);
+		}
+	    } 
 
-		Tree aux = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
+	    TreeStmtList list;
+	    Tree lenr = getLen (loc, rexp);
+	    Tree ptrr = getPtr (loc, rexp);
 
-		Tree lenl = getField (loc, aux, "len");
-		Tree ptrl = getField (loc, aux, "ptr");
-		list.append (buildTree (
-		    MODIFY_EXPR, loc, void_type_node, lenl, lenr)
-		);
+	    Tree aux = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
+
+	    Tree lenl = getField (loc, aux, "len");
+	    Tree ptrl = getField (loc, aux, "ptr");
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, lenl, lenr)
+	    );
 		    
-		list.append (buildTree (
-		    MODIFY_EXPR, loc, void_type_node, ptrl, ptrr)
-		);
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, void_type_node, ptrl, ptrr)
+	    );
 
-		getStackStmtList ().back ().append (list.getTree ());
-		return aux;
-	    }
+	    getStackStmtList ().back ().append (list.getTree ());
+	    return aux;
 	}
 	
 		
@@ -199,10 +212,10 @@ namespace semantic {
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
 
-	    auto lenl = getLen (loc, left, lexp);
-	    auto lenr = getLen (loc, right, rexp);
-	    auto ptrl = getPtr (loc, left, lexp);
-	    auto ptrr = getPtr (loc, right, rexp);
+	    auto lenl = getLen (loc, lexp);
+	    auto lenr = getLen (loc, rexp);
+	    auto ptrl = getPtr (loc, lexp);
+	    auto ptrr = getPtr (loc, rexp);
 	    
 	    Ymir::Tree aux = makeAuxVar (loc, ISymbol::getLastTmp (), IStringInfo::toGenericStatic ());	    
 
@@ -234,9 +247,9 @@ namespace semantic {
 	    auto lexp = left-> toGeneric ();
 	    auto aux = InstConcat (locus, type, new (Z0)  ITreeExpression (left-> token, left-> info-> type, lexp), right);
 	    Ymir::TreeStmtList list;
-	    auto lenl = getLen (loc, left, lexp);
+	    auto lenl = getLen (loc, lexp);
 	    auto lenr = getField (loc, aux, "len");
-	    auto ptrl = getPtr (loc, left, lexp);
+	    auto ptrl = getPtr (loc, lexp);
 	    auto ptrr = getField (loc, aux, "ptr");
 
 	    list.append (buildTree (

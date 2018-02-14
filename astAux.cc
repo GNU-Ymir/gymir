@@ -555,6 +555,10 @@ namespace syntax {
 	content (content)
     {}
 
+    bool & IString::isMut () {
+	return this-> _isMut;
+    }
+    
     std::string IString::getStr () {
 	return this-> content;
     }
@@ -596,6 +600,10 @@ namespace syntax {
 	params (params)
     {}
 
+    bool & IConstArray::isMut () {
+	return this-> _isMut;
+    }
+    
     IConstArray::~IConstArray () {
 	for (auto it : params)
 	    delete it;

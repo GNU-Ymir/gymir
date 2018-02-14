@@ -80,7 +80,7 @@ namespace syntax {
 		}		    
 	    } else if (this-> decos [id] == Keys::CONST) {
 		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
-		aux-> info-> isConst (false);
+		aux-> info-> isConst (true);
 		Table::instance ().insert (aux-> info);
 		if (this-> insts [id] == NULL) {
 		    Ymir::Error::constNoInit (it-> token);
@@ -119,8 +119,8 @@ namespace syntax {
 	Expression msg = NULL;
 	if (this-> msg) {
 	    msg = this-> msg-> expression ();
-	    if (!msg-> info-> type-> isSame (new (Z0)  IStringInfo (true))) {
-		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IStringInfo (true));
+	    if (!msg-> info-> type-> isSame (new (Z0) IArrayInfo (true, new (Z0) ICharInfo (true)))) {
+		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0) IArrayInfo (true, new (Z0) ICharInfo (true)));
 		return NULL;
 	    }
 	}

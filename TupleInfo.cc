@@ -66,11 +66,24 @@ namespace semantic {
     InfoType ITupleInfo::CompOp (InfoType other) {
 	Word tok (UNKNOWN_LOCATION, Token::EQUAL);
 	if (this-> isType ()) return NULL;
-	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
-	    auto ret = new (Z0)  ITupleInfo (IInfoType::isConst ());
-	    for (auto it : this-> params) {
-		ret-> params.push_back (it-> BinaryOp (tok, it));
-		//TODO ret-> params.back ()-> value = NULL;
+	if (other-> isSame (this)) {
+	    auto ot = other-> to <ITupleInfo> ();
+	    auto ret = new (Z0)  ITupleInfo (ot-> isConst ());
+	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		auto l = this-> params [it];
+		auto r = ot-> params [it];
+		auto aux = r-> CompOp (l);
+		if (!l-> ConstVerif (aux)) return NULL;
+		ret-> params.push_back (aux);
+	    }
+	    
+	    ret-> binopFoo = &TupleUtils::InstCast;
+	    return ret;
+	} else if (other-> is <IUndefInfo> ()) {
+	    auto ret = new (Z0)  ITupleInfo (this-> isConst ());
+	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		auto l = this-> params [it];		
+		ret-> params.push_back (l-> CompOp (l));
 	    }
 	    
 	    ret-> binopFoo = &TupleUtils::InstCast;
@@ -242,16 +255,19 @@ namespace semantic {
 
 	    auto rtype = elem-> info-> type-> to <ITupleInfo> ();	    
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
-	    Ymir::TreeStmtList list;
 	    
+	    Ymir::TreeStmtList list;	    
 	    for (auto it : Ymir::r (0, info-> nbParams ())) {
 		auto laux = getField (loc, ltree, it);
 		auto raux = getField (loc, rtree, it);
-		auto ret = info-> getParams () [it]-> buildBinaryOp (
-		    locus,
-		    info-> getParams () [it],
-		    new (Z0)  ITreeExpression (locus, info-> getParams () [it], laux),
-		    new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], raux)
+		auto ret = Ymir::buildTree (
+		    MODIFY_EXPR, loc, laux.getType (), laux,
+		    info-> getParams () [it]-> buildBinaryOp (
+			locus,
+			rtype-> getParams () [it],
+			new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], raux),
+			new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], Ymir::Tree ())
+		    )
 		);
 		list.append (ret);		
 	    }

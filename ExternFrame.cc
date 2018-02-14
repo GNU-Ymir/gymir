@@ -27,14 +27,19 @@ namespace semantic {
 	this-> _name = func-> name ();
     }
 
-    ApplicationScore IExternFrame::isApplicable (ParamList params) {
+    ApplicationScore IExternFrame::isApplicable (const std::vector<InfoType> & params) {
 	if (this-> _proto == NULL) return IFrame::isApplicable (params);
 	if (this-> _proto-> isVariadic ()) return isApplicableVariadic (params);
+	else return IFrame::isApplicable (this-> _proto-> ident, this-> _proto-> params (), params);
+    }
+    
+    ApplicationScore IExternFrame::isApplicable (ParamList params) {
+	if (this-> _proto == NULL) return IFrame::isApplicable (params);
+	if (this-> _proto-> isVariadic ()) return isApplicableVariadic (params-> getParamTypes ());
 	else return IFrame::isApplicable (this-> _proto-> ident, this-> _proto-> params (), params-> getParamTypes ());
     }
 
-    ApplicationScore IExternFrame::isApplicableVariadic (ParamList params) {
-	auto ftypes = params-> getParamTypes ();
+    ApplicationScore IExternFrame::isApplicableVariadic (const std::vector <InfoType> & ftypes) {
 	std::vector <InfoType> types;
 	if (ftypes.size () >= this-> _proto-> params ().size ()) {
 	    types = {ftypes.begin (), ftypes.begin () + this-> _proto-> params ().size ()};
@@ -49,7 +54,7 @@ namespace semantic {
 	}
 	return ret;
     }
-    
+        
     FrameProto IExternFrame::validate () {
 	if (this-> _proto == NULL) return validateFunc ();
 	auto ancSpace = Table::instance ().programNamespace ();

@@ -184,7 +184,7 @@ namespace semantic {
     }
 
     InfoType IInfoType::StringOf () {
-	auto str = new (Z0)  IStringInfo (true);
+	auto str = new (Z0) IArrayInfo (true, new (Z0) ICharInfo (true));
 	str-> value () = new (Z0)  IStringValue (this-> typeString ().c_str ());
 	return str;
     }	

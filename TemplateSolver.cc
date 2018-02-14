@@ -333,18 +333,19 @@ namespace semantic {
 	
     }
     
-    TemplateSolution TemplateSolver::solve (const vector <Expression> &, Expression , InfoType ) {
-	Ymir::Error::assert ("TODO");
+    TemplateSolution TemplateSolver::solve (const vector <Expression> & tmps, Expression elem, InfoType type) {
+	if (auto func = elem-> to <IFuncPtr> ()) {
+	    return solveInside (tmps, func, type);
+	}
 	return TemplateSolution (0, false);
     }
 
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, FuncPtr func, InfoType type) {
-
 	vector <Var> types;
 	TemplateSolution soluce (0, true);
 	if (type-> nbTemplates () != func-> getParams ().size () + 1)
 	    return TemplateSolution (0, false);
-	
+
 	for (auto it : Ymir::r (0, func-> getParams ().size ())) {
 	    auto var = func-> getParams () [it];
 	    auto typeTemplates = type-> getTemplate (it);
@@ -442,11 +443,70 @@ namespace semantic {
 	
     }
 
+    Expression getAndRemove (std::string elem, std::map <std::string, Expression> & elements) {
+	auto it = elements.find (elem);
+	if (it == elements.end ()) return NULL;
+	elements.erase (elem);
+	return it-> second;
+    }
+    
+    TemplateSolution TemplateSolver::solveVariadic (const std::vector <Expression> tmps, Expression last, std::vector <Expression> params) {
+	if (params.size () == 1) {
+	    auto var = new (Z0) IVar (last-> token);
+	    return solveInside (tmps, var, params [0]);
+	} else {
+	    TemplateSolution soluce (0, true);
+	    std::vector <Expression> elements;
+	    for (auto it : Ymir::r (0, params.size ())) {
+		Word token {last-> token, Ymir::OutBuffer ("_", it, last-> token.getStr ()).str ()};
+		auto var = new (Z0) IVar (token);
+		auto res = solveInside (tmps, var, params [it]);
+		if (!res.valid || !merge (soluce.score, soluce.elements, res))
+		    return TemplateSolution (0, false);
+		elements.push_back (getAndRemove (token.getStr (), soluce.elements));
+	    }
+	    auto aux = new (Z0) IParamList (last-> token, elements);
+	    map<string, Expression> ret = {{last-> token.getStr (), aux}};
+	    if (!merge (soluce.score, soluce.elements, ret))
+		return TemplateSolution (0, false);
+	    soluce.score += __VAR__;
+	    soluce.isVariadic = true;
+	    return soluce;
+	}
+    }
+    
+    TemplateSolution TemplateSolver::solveVariadic (const vector <Expression> & tmps, const vector <Expression> & params) {
+	auto last = tmps [tmps.size () - 1];
+	std::vector <Expression> tmps2 {tmps.begin (), tmps.end () - 1};
+	std::vector <Expression> aux (params.end () - (params.size () - tmps2.size ()), params.end ());
+	std::vector <Expression> params2 (params.begin (), params.end () - (params.size () - tmps2.size ()));
+	TemplateSolution soluce (0, true);
+	for (auto it : Ymir::r (0, params2.size ())) {
+	    TemplateSolution res (0, true);
+	    if (auto v = tmps2 [it]-> to<IVar> ()) {
+		res = this-> solveInside (tmps2, v, params2 [it]);
+	    } else {
+		res = this-> solveInside (tmps2, tmps2 [it], params2 [it]);
+	    }
+	    
+	    if (!res.valid || !merge (soluce.score, soluce.elements, res))
+		return TemplateSolution (0, false);
+	}
+
+	auto res = solveVariadic (tmps2, last, aux);
+	if (!res.valid || !merge (soluce.score, soluce.elements, res))
+	    return TemplateSolution (0, false);
+	return soluce;	
+    }
+    
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, const vector <Expression> &params) {
 	TemplateSolution soluce (0, true);
-	if (tmps.size () < params.size ())
+	if (tmps.size () != 0 && tmps [tmps.size () - 1]-> is <IVariadicVar> ()) {
+		return solveVariadic (tmps, params);
+	} else if (tmps.size () < params.size ()) {
 	    return TemplateSolution (0, false);
-
+	}
+	
 	for (auto it : Ymir::r (0, params.size ())) {
 	    TemplateSolution res (0, true);
 	    if (auto v = tmps [it]-> to<IVar> ()) {
@@ -466,19 +526,20 @@ namespace semantic {
 	    return this-> solveInside (tmps, tvar, right);
 	else if (auto of = left-> to <IOfVar> ())
 	    return this-> solveInside (tmps, of, right);
-	else if (auto type = right-> to<IType> ())
-	    return this-> solveInside (left, type);
 	else if (auto vvar = left-> to <IVariadicVar> ())
 	    return this-> solveInside (tmps, vvar, right);
+	else if (auto type = right-> to<IType> ()) 
+	    return this-> solveInside (left, type);
 	else if (auto var = right-> to <IVar> ()) 
 	    return this-> solveInside (left, var);
+	else if (auto func = right-> to <IFuncPtr> ()) 
+	    return this-> solveInside (left, func);
 	else return TemplateSolution (0, false);
     }
 
     TemplateSolution TemplateSolver::solveInside (Var left, Type right) {
 	auto type = right-> info-> type;
-	auto clo = right-> clone ();
-	clo-> info-> type = clo-> info-> type-> cloneOnExit ();
+	auto clo = new (Z0) IType (right-> token,  type-> cloneOnExit ());
 	map<string, Expression> value =  {{left-> token.getStr (), clo}};
 	return TemplateSolution (__VAR__, true, type, value);
     }
@@ -494,6 +555,13 @@ namespace semantic {
 	return TemplateSolution (0, false);
     }
 
+    TemplateSolution TemplateSolver::solveInside (Var left, FuncPtr right) {
+	auto type = right-> info-> type;
+	auto clo = new (Z0) IType (right-> token, type-> cloneOnExit ());
+	map<string, Expression> value =  {{left-> token.getStr (), clo}};
+	return TemplateSolution (__VAR__, true, type, value);
+    }
+    
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, OfVar left, Expression right) {
 	InfoType info = NULL;;	
 	if (auto all = right-> to <IArrayAlloc> ()) info = all-> info-> type;
@@ -518,6 +586,11 @@ namespace semantic {
 	}	
     }
     
+    TemplateSolution TemplateSolver::solveInside (const std::vector<syntax::Expression>  &, syntax::VariadicVar, syntax::Expression) {
+	Ymir::Error::assert ("TODO");
+	return TemplateSolution (0, false);
+    }
+
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, TypedVar left, Expression right) {
 	auto type = right-> info-> type;
 	

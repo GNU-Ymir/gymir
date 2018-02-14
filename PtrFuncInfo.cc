@@ -123,12 +123,16 @@ namespace semantic {
     InfoType IPtrFuncInfo::CompOp (InfoType other) {
 	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
 	    auto ptr = this-> clone ();
-	    ptr-> binopFoo = &PtrUtils::InstAffect;
+	    ptr-> binopFoo = &PtrUtils::InstCast;
 	    return ptr;
 	}
 	return NULL;
     }
 
+    ulong IPtrFuncInfo::nbTemplates () {
+	return this-> params.size () + 1;
+    }
+    
     InfoType IPtrFuncInfo::getTemplate (ulong i) {
 	if (i < this-> params.size ()) return this-> params [i];
 	else if (i == this-> params.size ())

@@ -28,16 +28,18 @@ namespace semantic {
     {}
     
     ApplicationScore IFrame::isApplicable (::syntax::ParamList params) {
-	return this-> isApplicable (this-> _function-> getIdent (),
-				    this-> _function-> getParams (),
-				    params-> getParamTypes ()
+	return this-> isApplicable (
+	    this-> _function-> getIdent (),
+	    this-> _function-> getParams (),
+	    params-> getParamTypes ()
 	);
     }
     
     ApplicationScore IFrame::isApplicable (const std::vector<InfoType> & params) {
-	return this-> isApplicable (this-> _function-> getIdent (),
-				    this-> _function-> getParams (),
-				    params
+	return this-> isApplicable (
+	    this-> _function-> getIdent (),
+	    this-> _function-> getParams (),
+	    params
 	);
     }
 

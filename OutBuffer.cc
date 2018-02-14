@@ -4,10 +4,11 @@
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/syntax/Word.hh>
 #include <ymir/semantic/pack/Namespace.hh>
+#include <ymir/semantic/tree/Tree.hh>
 #include <cstring>
 
 
-namespace Ymir {
+namespace Ymir {    
     
     void OutBuffer::write_ (const char* cs) {
 	auto cslen = strlen (cs);

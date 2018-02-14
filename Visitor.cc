@@ -1598,6 +1598,25 @@ namespace syntax {
 	return left;
     }
 
+    Expression Visitor::visitMutable () {
+	auto begin = this-> lex.rewind ().next ();
+	auto next = this-> lex.next ({Token::APOS, Token::GUILL, Token::BSTRING, Token::LCRO});
+	this-> lex.rewind ();
+	if (next == Token::LCRO) {
+	    auto array = visitLeftOp ()-> to<IConstArray> ();
+	    array-> isMut () = true;
+	    return array;
+	} else {
+	    auto cst = visitConstante ();
+	    if (auto str = cst-> to <IString> ()) {
+		str-> isMut () = true;
+	    } else {
+		syntaxError (begin);
+	    }
+	    return cst;
+	}
+    }
+    
     Expression Visitor::visitLeftOp () {
 	auto word = this-> lex.next ();
 	if (word == Keys::CAST) {
@@ -1610,6 +1629,8 @@ namespace syntax {
 	    return visitMixin ();
 	} else  if (word == Keys::MATCH) {
 	    return visitMatch ();
+	} else if (word == Keys::MUTABLE) {
+	    return visitMutable ();
 	} else this-> lex.rewind ();
 	auto var = visitVar ();
 	auto next = this-> lex.next ();

@@ -12,6 +12,8 @@ namespace semantic {
 
 	Ymir::Tree InstPtr (Word locus, InfoType, syntax::Expression left, syntax::Expression);
 
+	Ymir::Tree buildDup (location_t locus, Ymir::Tree left, Ymir::Tree right);
+	
 	Ymir::Tree InstLen (Word locus, InfoType, syntax::Expression left, syntax::Expression);	
 	
 	Ymir::Tree InstToString (Word locus, InfoType, syntax::Expression elem, syntax::Expression type);

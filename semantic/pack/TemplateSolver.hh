@@ -15,6 +15,7 @@ namespace semantic {
 	long score;
 	bool valid;
 	InfoType type;
+	bool isVariadic = false;
 	std::map <std::string, syntax::Expression> elements;
 	std::vector <InfoType> varTypes;
 
@@ -118,8 +119,7 @@ namespace semantic {
 	   foo ((a : int) => 10); // solve ([T], fn (T) -> T, funcPtr(int)->int);
 	   -------
 	*/
-	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::Expression param, InfoType type);
-
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::Expression param, InfoType type);	
 	/**
 	   Résoud un paramètre template de type fonction
 	   Example:
@@ -230,6 +230,20 @@ namespace semantic {
 	TemplateSolution solveInside (syntax::Var left, syntax::Var right);
 
 	/**
+	 * Résoud  un paramètre template
+	 * Example:
+	 * ------------------
+	 * 
+	 * def foo (T) () {
+	 *    // ...
+	 * }
+	 *
+	 * foo!(fn (int)-> int); // solveInside (T, Test);
+	 * ------------------
+	 */
+	TemplateSolution solveInside (syntax::Var left, syntax::FuncPtr right);
+
+	/**
 	   Résoud un paramètre template
 	   Example:
 	   --------
@@ -250,7 +264,7 @@ namespace semantic {
 	//    foo ((1, 2, 3)); // solveInside (T..., tuple(int, int, int));
 	//    -----------     
 	// */
-	// TemplateSolution solveInside (const const const std::vector<syntax::Expression>  & tmps, syntax::VariadicVar var, syntax::Expression right);
+	TemplateSolution solveInside (const std::vector<syntax::Expression>  & tmps, syntax::VariadicVar var, syntax::Expression right);
 
 	/**
 	   Résoud un paramètre template
@@ -292,6 +306,10 @@ namespace semantic {
 	*/    
 	TemplateSolution solve (const std::vector <syntax::Var> &tmps, const std::vector <syntax::Expression> &params) ;
 
+	TemplateSolution solveVariadic (const std::vector <syntax::Expression> tmps, syntax::Expression last, std::vector <syntax::Expression> params);
+
+	TemplateSolution solveVariadic (const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & params);
+	
 	/**
 	   Vérifie que les paramètres templates sont valide
 	   Params:

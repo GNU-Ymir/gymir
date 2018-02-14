@@ -6,6 +6,8 @@
 #include <ymir/errors/Error.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
+#include <ymir/semantic/utils/StringUtils.hh>
+#include <ymir/semantic/utils/ArrayUtils.hh>
 #include "print-tree.h"
 #include <ymir/semantic/value/_.hh>
 
@@ -245,7 +247,7 @@ namespace syntax {
 	}
     }
     
-    Ymir::Tree IString::toGeneric () {	
+    Ymir::Tree IString::toGeneric () {
 	return build_string_literal (this-> content.length () + 1, this-> content.c_str ());       
     }
 

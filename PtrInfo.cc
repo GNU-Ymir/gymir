@@ -10,13 +10,8 @@ namespace semantic {
     namespace PtrUtils {
 	using namespace syntax;
 	
-	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
-	    auto ltree = left-> toGeneric ();
-	    auto rtree = right-> toGeneric ();
-	    auto typeTree = left-> info-> type-> toGeneric ();
-	    return Ymir::buildTree (
-		MODIFY_EXPR, locus.getLocus (), typeTree.getTree (), ltree, rtree
-	    );	    
+	Ymir::Tree InstAffect (Word locus, InfoType type, Expression left, Expression right) {
+	    return FixedUtils::InstAffect (locus, type, left, right);
 	}
 	
 	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {

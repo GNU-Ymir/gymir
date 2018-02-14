@@ -64,6 +64,7 @@ namespace syntax {
 	Expression visitPthPar (const Word& token);
 	Expression visitConstante ();
 	Expression visitConstanteSimple ();
+	Expression visitMutable ();
 	Expression visitExpand ();
 	Expression visitTypeOf ();
 	Expression visitIs ();

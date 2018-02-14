@@ -118,7 +118,8 @@ namespace syntax {
     class IString : public IExpression {
 
 	std::string content;
-
+	bool _isMut;
+	
     public :
 
 	IString (Word word, std::string content);
@@ -133,6 +134,8 @@ namespace syntax {
 
 	std::string prettyPrint () override;
 	
+	bool & isMut ();
+
 	std::string getStr ();
 	
 	static const char * id () {

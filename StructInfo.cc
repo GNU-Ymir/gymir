@@ -186,7 +186,7 @@ namespace semantic {
 	    attribs.push_back (this-> params [it]-> token.getStr ());
 	    
 	    auto type = params-> getParams () [it]-> info-> type-> CompOp (info);
-	    //if (type) type = ConstVerif (info);
+	    if (type) type = type-> ConstVerif (info);
 	    if (type) {
 		type-> isConst (info-> isConst ());
 		score-> score += 1;

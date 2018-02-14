@@ -15,16 +15,20 @@ namespace syntax {
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
 	if (aux-> params == NULL) return NULL;
-	if (aux-> left-> is<IType> ())
+	if (aux-> left-> is<IType> ()) {
 	    Ymir::Error::undefVar (aux-> left-> token,
 				   Table::instance ().getAlike (aux-> left-> token.getStr ())
 	    );
+	    return NULL;
+	}
 
-	else if (aux-> left-> info-> type-> is <IUndefInfo> ())
+	else if (aux-> left-> info-> type-> is <IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token);
-	else if (aux-> left-> info-> isType ())
+	    return NULL;
+	} else if (aux-> left-> info-> isType ()) {
 	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
-	
+	    return NULL;
+	}
 	std::vector <InfoType> treats (aux-> params-> getParams ().size ());
 	auto type = aux-> left-> info-> type-> AccessOp (aux-> left-> token,
 							 aux-> params,
@@ -307,6 +311,7 @@ namespace syntax {
 	auto info = Table::instance ().get (this-> token.getStr ());
 	if (info && Table::instance ().sameFrame (info)) {
 	    Ymir::Error::shadowingVar (this-> token, info-> sym);
+	    return NULL;
 	}
 	
 	if (this-> type) {
@@ -461,7 +466,7 @@ namespace syntax {
 	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());	
 
 	if (simpleVerif (aux)) return NULL;
-	if (aux-> left-> info-> isConst ()) {
+	if (aux-> left-> info-> isConst () && !aux-> left-> info-> type-> is <IUndefInfo> ()) {
 	    auto call = findOpAssign (aux);
 	    if (!call) {
 		Ymir::Error::notLValue (aux-> left-> token);
@@ -478,8 +483,16 @@ namespace syntax {
 			return NULL;
 		    }
 
+		    if (auto str = aux-> right-> to <IString> ()) {
+			if (!str-> isMut ()) {
+			    if (!aux-> left-> info-> isConst ()) {
+				Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+				return NULL;
+			    }
+			}		    
+		    } 
 		    aux-> left-> info-> type = type;
-		    aux-> left-> info-> type-> isConst (false);
+		    aux-> left-> info-> type-> isConst (false);		    
 		} else if (type == NULL) {
 		    auto call = findOpAssign (aux);
 		    if (!call) {
@@ -703,8 +716,10 @@ namespace syntax {
 
     Expression IString::expression () {
 	auto aux = new (Z0)  IString (this-> token, this-> content);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IStringInfo (true));
-	aux-> info-> value () = new (Z0)  IStringValue (this-> content);
+	auto arrayType = new (Z0) IArrayInfo (true, new (Z0) ICharInfo (false));
+	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
+	aux-> info-> value () = new (Z0)  IStringValue (this-> content);	
+	aux-> isMut () = this-> _isMut;
 	return aux;
     }
     
@@ -767,13 +782,17 @@ namespace syntax {
 		    Word tok (this-> token.getLocus (),
 			      this-> token.getStr () + type-> token.getStr () + "]"
 		    );
-		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (true, type-> info-> type));
+		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, type-> info-> type));
 		}
 	    }
 	    
 	    auto type = aux-> validate ();
 	    if (!type) return NULL;
-	    aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IArrayInfo (true, type));
+	    auto arrayType = new (Z0)  IArrayInfo (true, type);
+	    aux-> info = new (Z0)  ISymbol (aux-> token, arrayType);
+	    if (!this-> isMut ()) {
+		arrayType-> isStatic (true, aux-> params.size ());
+	    }
 	}
 	return aux;
     }
@@ -820,7 +839,7 @@ namespace syntax {
 		}
 	    }
 	    return NULL;
-	} else {
+	} else {	    
 	    return successType-> clone ();
 	}
     }
@@ -921,7 +940,7 @@ namespace syntax {
 	    return NULL;
 	} else if (auto var = aux-> right-> to<IVar> ()) {
 	    auto type = aux-> left-> info-> type-> DotOp (var);
-	    if (type == NULL) {
+	    if (type == NULL && this-> inside-> is <IPar> ()) {
 		var-> inside = aux;
 		auto call = var-> expression ();
 		if (call == NULL || call-> is<IType> () || call-> info-> type-> is<IUndefInfo> ()) {
@@ -929,10 +948,9 @@ namespace syntax {
 		    return NULL;
 		}
 		return (new (Z0)  IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
-	    } else if (type-> is<IPtrFuncInfo> ()) {
-		auto call = new (Z0)  IVar (var-> token);
-		call-> info = new (Z0)  ISymbol (call-> token, type);
-		return (new (Z0)  IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
+	    } else if (type == NULL) {
+		Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
+		return NULL;		
 	    }
 	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
 	    return aux;
@@ -1073,6 +1091,7 @@ namespace syntax {
 		    return NULL;
 		} else if (ex_it-> is<IType> () || ex_it-> info-> isType ()) {
 		    Ymir::Error::useAsVar (ex_it-> token, ex_it-> info);
+		    return NULL;
 		} 
 	    }
 	}
