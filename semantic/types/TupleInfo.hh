@@ -62,6 +62,8 @@ namespace semantic {
 	InfoType SizeOf ();
 
 	InfoType Empty ();
+
+	InfoType Arity ();
 	
     };
 

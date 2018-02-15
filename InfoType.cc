@@ -13,6 +13,7 @@
 namespace semantic {
 
     std::map <std::string, InfoType> IInfoType::__alias__;
+    bool IInfoType::__need__Print_CONST__ = true;
     
     IApplicationScore::IApplicationScore () :
 	score (0)
@@ -102,15 +103,19 @@ namespace semantic {
     Value& IInfoType::value () {
 	return this-> _value;
     }
+
+    void IInfoType::printConst (bool need) {
+	__need__Print_CONST__ = need;
+    }
     
     std::string IInfoType::typeString () {
-	if (this-> isConst ()) {
+	if (this-> isConst () && __need__Print_CONST__) {
 	    return std::string ("const(") + this-> innerTypeString () + ")";
 	} else return this-> innerTypeString ();
     }
 
     std::string IInfoType::simpleTypeString () {
-	if (this-> isConst ()) {
+	if (this-> isConst () && __need__Print_CONST__) {
 	    return std::string ("x") + this-> innerSimpleTypeString ();
 	} else return this-> innerSimpleTypeString ();
     }

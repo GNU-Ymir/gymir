@@ -403,17 +403,25 @@ namespace semantic {
     ApplicationScore IArrayRefInfo::CallOp (Word op, syntax::ParamList params) {
 	return this-> _content-> CallOp (op, params);
     }
-        
+
+    std::string IArrayRefInfo::typeString () {
+	return this-> _content-> typeString ();
+    }
+    
     std::string IArrayRefInfo::innerTypeString () {
 	return this-> _content-> innerTypeString ();
     }
 
+    std::string IArrayRefInfo::simpleTypeString () {
+	return this-> _content-> simpleTypeString ();
+    }
+    
     std::string IArrayRefInfo::innerSimpleTypeString () {
 	return this-> _content-> innerSimpleTypeString ();
     }
 
     InfoType IArrayRefInfo::onClone () {
-	return new (Z0)  IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
+	return new (Z0) IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
     }
 
     const char* IArrayRefInfo::getId () {
@@ -424,6 +432,10 @@ namespace semantic {
 	return this-> _content;
     }
 
+    InfoType IArrayRefInfo::getTemplate (ulong nb) {
+	return this-> _content-> getTemplate (nb);
+    }
+    
     Ymir::Tree IArrayRefInfo::toGeneric () {
 	return this-> _content-> toGeneric ();
     }

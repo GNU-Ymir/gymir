@@ -69,7 +69,7 @@ namespace semantic {
 	else if (this-> _isPure) return validate ();
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> _isInternal);
 	Table::instance ().enterBlock ();
-	auto func = this-> _function-> templateReplace (score-> tmps);	
+	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 
 	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;
@@ -212,10 +212,9 @@ namespace semantic {
 		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
 		    info = new (Z0)  IRefInfo (false, info);
 
-		auto type = args [it]-> CompOp (info);		
+		auto type = args [it]-> CompOp (info);
 		if (type) type = type-> ConstVerif (info);
 		else return NULL;
-
 		if (type && type-> isSame (args [it])) {
 		    if (args [it]-> isConst () != info-> isConst ())
 			score-> score += this-> changed ? CONST_CHANGE_TMP : CONST_SAME_TMP;

@@ -224,7 +224,7 @@ namespace syntax {
 		    return NULL;
 		}
 		
-		auto arrtype = new (Z0)  IArrayInfo (true, content-> info-> type-> clone ());
+		auto arrtype = new (Z0)  IArrayInfo (false, content-> info-> type-> clone ());
 		if (!size-> info-> isImmutable ()) {
 		    Ymir::Error::notImmutable (this-> token, size-> info);
 		    return NULL;
@@ -811,6 +811,7 @@ namespace syntax {
 		    if (casters [scd])
 			casters [scd] = casters [scd]-> ConstVerif (begin);
 		}
+		
 		if (casters [scd] == NULL) {
 		    success = false;
 		    break;

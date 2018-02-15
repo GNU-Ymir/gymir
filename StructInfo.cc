@@ -2,6 +2,7 @@
 #include <ymir/ast/ParamList.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/ast/TypedVar.hh>
+#include <ymir/semantic/value/StringValue.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 
 namespace semantic {
@@ -329,9 +330,20 @@ namespace semantic {
     std::string IStructCstInfo::onlyNameTypeString () {
 	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name, "!(");
 	for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-	    buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+	    if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
+		buf.write ("{");
+		for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+		    buf.write (ps-> getParams () [it_]-> info-> typeString ());
+		    if (it_ < (int) ps-> getParams ().size () - 1)
+			buf.write (", ");
+		}
+		buf.write ("}");
+	    } else {
+		buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+	    }
+
 	    if (it < (int) this-> tmpsDone.size () - 1)
-		buf.write (", ");
+		buf.write (", ");	    
 	}
 	buf.write (")");
 	return buf.str ();
@@ -406,8 +418,19 @@ namespace semantic {
 	    if (ot-> name == this-> name && ot-> space == this-> space) {
 		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
 		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-		    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
-			return false;
+		    if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
+			if (auto ps2 = ot-> tmpsDone [it]-> to <IParamList> ()) {
+			    if (ps-> getParams ().size () != ps2-> getParams ().size ()) return false;
+			    for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+				if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type))
+				    return false;
+			    }
+			} else return false;
+		    } else {
+			if (ot-> tmpsDone [it]-> is <IParamList> ()) return false;
+			if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+			    return false;
+		    }
 		}
 		return true;
 	    }
@@ -434,6 +457,7 @@ namespace semantic {
 		auto ret = this-> types [it]-> clone ();
 		if (this-> isConst ())
 		    ret-> isConst (true);
+		else ret-> isConst (this-> types [it]-> isConst ());
 		ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
 		ret-> binopFoo = StructUtils::InstGet;
 		return ret;
@@ -515,9 +539,20 @@ namespace semantic {
     std::string IStructInfo::onlyNameTypeString () {
 	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name, "!(");
 	for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-	    buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+	    if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
+		buf.write ("{");
+		for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+		    buf.write (ps-> getParams () [it_]-> info-> typeString ());
+		    if (it_ < (int) ps-> getParams ().size () - 1)
+			buf.write (", ");
+		}
+		buf.write ("}");
+	    } else {
+		buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+	    }
+	    
 	    if (it < (int) this-> tmpsDone.size () - 1)
-		buf.write (", ");
+		buf.write (", ");	    
 	}
 	buf.write (")");
 	return buf.str ();
@@ -580,7 +615,16 @@ namespace semantic {
 
     InfoType IStructInfo::getTemplate (ulong nb) {	
 	if (nb < this-> tmpsDone.size ()) {
+	    if (auto ps = this-> tmpsDone [nb]-> to <IParamList> ()) {
+		return ps-> getParams ()[0]-> info-> type;
+	    }
 	    return this-> tmpsDone [nb]-> info-> type;
+	} else {
+	    nb = nb - this-> tmpsDone.size ();
+	    if (auto ps = this-> tmpsDone [nb]-> to <IParamList> ()) {
+		if (nb < ps-> getParams ().size ())
+		    return ps-> getParams () [nb]-> info-> type;
+	    }
 	}
 	return NULL;
     }
@@ -591,6 +635,12 @@ namespace semantic {
 
     std::vector <InfoType> & IStructInfo::getTypes () {
 	return this-> types;
+    }
+
+    InfoType IStructInfo::StringOf () {
+	auto str = new (Z0) IStringInfo (true);
+	str-> value () = new (Z0)  IStringValue (this-> onlyNameTypeString ().c_str ());
+	return str;
     }
     
     Ymir::Tree IStructInfo::toGeneric () {

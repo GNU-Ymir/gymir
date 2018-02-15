@@ -214,8 +214,8 @@ namespace semantic {
     InfoType IFloatInfo::Dig () {
 	auto ret = new (Z0) IFixedInfo (true, FixedConst::INT);
 	if (this-> _type == FloatConst::FLOAT) {
-	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_DIG, 0);
-	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, 0, DBL_DIG);
+	    ret-> value () = new (Z0) IFixedValue (FixedConst::INT, FLT_DIG, FLT_DIG);
+	} else ret-> value () = new (Z0) IFixedValue (FixedConst::INT, DBL_DIG, DBL_DIG);
 	return ret;
     }
 

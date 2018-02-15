@@ -42,10 +42,14 @@ namespace semantic {
 	//InfoType ApplyOp (const std::vector<syntax::Var> & vars) override;
 
 	ApplicationScore CallOp (Word op, syntax::ParamList params) override;
+
+	std::string typeString () override;
 	
 	std::string innerTypeString () override;
 	
 	std::string innerSimpleTypeString () override;
+
+	std::string simpleTypeString () override;
 	
 	InfoType onClone () override;
 	
@@ -58,6 +62,8 @@ namespace semantic {
 	const char* getId () override;
 
 	InfoType content ();
+
+	InfoType getTemplate (ulong nb) override;
 	
     };
 

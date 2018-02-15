@@ -77,7 +77,7 @@ namespace syntax {
     }
 
     Expression IChar::templateExpReplace (const map <string, Expression>&) {
-	return new (Z0)  IChar (this-> token, this-> code);
+	return new (Z0) IChar (this-> token, this-> code);
     }
 
     Expression IFloat::templateExpReplace (const map <string, Expression>&) {
@@ -163,8 +163,16 @@ namespace syntax {
 
     Expression IFuncPtr::templateExpReplace (const map <string, Expression>& values) {
 	vector <Var> params;
-	for (auto it : this-> params) 
-	    params.push_back ((Var) it-> templateExpReplace (values));
+	for (auto it : this-> params) {
+	    auto elem = it-> templateExpReplace (values);
+	    if (auto ps = elem-> to <IParamList> ()) {
+		for (auto it_ : ps-> getParams ()) {
+		    params.push_back (it_-> to <IVar> ());
+		}
+	    } else {
+		params.push_back (elem-> to <IVar> ());
+	    }
+	}
 
 	auto ret = this-> ret-> templateExpReplace (values);
 	if (this-> expr) {
@@ -185,7 +193,7 @@ namespace syntax {
 
 	vector <Var> params;
 	for (auto it : this-> params)
-	    params.push_back ((Var) it-> templateExpReplace (values));
+	    params.push_back (it-> templateExpReplace (values)-> to <IVar> ());
 
 	Expression test = NULL;
 	if (this-> test)
@@ -225,7 +233,7 @@ namespace syntax {
     Expression ILambdaFunc::templateExpReplace (const map <string, Expression>& values) {
 	vector <Var> var;
 	for (auto it : this-> params)
-	    var.push_back ((Var) it-> templateExpReplace (values));
+	    var.push_back (it-> templateExpReplace (values)-> to <IVar> ());
 
 	Var ret = NULL;
 	if (this-> ret)
@@ -267,8 +275,16 @@ namespace syntax {
 
     Expression IParamList::templateExpReplace (const map <string, Expression>& values) {
 	vector <Expression> params;
-	for (auto it : this-> params)
-	    params.push_back (it-> templateExpReplace (values));
+	for (auto it : this-> params) {
+	    auto elem = it-> templateExpReplace (values);
+	    if (auto ps = elem-> to <IParamList> ()) {
+		for (auto it_ : ps-> getParams ()) {
+		    params.push_back (it_-> to <IVar> ());
+		}
+	    } else {
+		params.push_back (elem);
+	    }
+	}
 	return new (Z0)  IParamList (this-> token, params);
     }
 
@@ -300,9 +316,24 @@ namespace syntax {
 	return new (Z0)  IConstTuple (this-> token, this-> end, exprs);
     }
 
+    Var paramListToTupleVar (Word token, ParamList params) {
+	Word tuple {token, "t"};
+	auto type = new (Z0) IVar (tuple);
+	for (auto it_ : params-> getParams ()) {
+	    type-> getTemplates ().push_back (it_);
+	}
+	return type;
+    }
+    
     Expression ITypedVar::templateExpReplace (const map <string, Expression>& values) {
 	if (this-> type) {
-	    auto type = (Var) this-> type-> templateExpReplace (values);
+	    Var type;
+	    auto elem = this-> type-> templateExpReplace (values);
+	    if (auto ps = elem-> to <IParamList> ()) {
+		type = paramListToTupleVar (this-> type-> token, ps);
+	    } else {
+		type = elem-> to <IVar> ();
+	    }
 	    return new (Z0)  ITypedVar (this-> token, type, this-> deco);
 	} else {
 	    auto type = this-> expType-> templateExpReplace (values);
@@ -363,8 +394,14 @@ namespace syntax {
 	}
 
 	vector <Expression> tmps;
-	for (auto it : this-> templates) 
-	    tmps.push_back (it-> templateExpReplace (values));
+	for (auto it : this-> templates) {
+	    auto elem = it-> templateExpReplace (values);
+	    if (auto ps = elem-> to<IParamList> ()) {
+		tmps.push_back (paramListToTupleVar (it-> token, ps));
+	    } else {
+		tmps.push_back (elem);
+	    }
+	}
 
 	if (ret == NULL)
 	    ret = new (Z0)  IVar (this-> token, tmps);
@@ -375,7 +412,11 @@ namespace syntax {
     }
     
     Expression IArrayVar::templateExpReplace (const map <string, Expression>& values) {
-	auto cont = this-> content-> templateExpReplace (values);	
+	auto cont = this-> content-> templateExpReplace (values);
+	if (auto ps = cont-> to <IParamList> ()) {
+	    cont = paramListToTupleVar (this-> content-> token, ps);
+	}
+	
 	auto ret = new (Z0)  IArrayVar (this-> token, cont);
 	if (this-> len) {
 	    ret-> len = this-> len-> templateExpReplace (values);

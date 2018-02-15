@@ -266,7 +266,9 @@ namespace semantic {
 
     Ymir::Tree IArrayInfo::toGeneric () {
 	if (!this-> _isStatic) {
+	    IInfoType::printConst (false);
 	    std::string name = this-> _content-> innerTypeString () + "[]";
+	    IInfoType::printConst (true);
 	    auto array_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	    if (array_type_node.isNull ()) {
 		array_type_node = Ymir::makeStructType (name, 2,

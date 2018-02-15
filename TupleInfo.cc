@@ -25,9 +25,11 @@ namespace semantic {
 	    auto other = new (Z0)  ITupleInfo (IInfoType::isConst ());
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto res = this-> params [it]-> ConstVerif (tuple-> params [it]);
+		//res-> binopFoo = this-> params [it]-> binopFoo;
 		if (res == NULL) return NULL;
-		else other-> addParam (res);
+		else other-> addParam (res);		
 	    }
+	    other-> binopFoo = this-> binopFoo;
 	    return other;
 	}
 	return NULL;
@@ -133,7 +135,14 @@ namespace semantic {
     InfoType ITupleInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "arity") return Arity ();
 	return NULL;
+    }
+
+    InfoType ITupleInfo::Arity () {
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::UINT);
+	ret-> value () = new (Z0) IFixedValue (FixedConst::UINT, this-> params.size (), this-> params.size ());
+	return ret;
     }
     
     std::string ITupleInfo::innerTypeString () {
@@ -158,7 +167,9 @@ namespace semantic {
     }
     
     Ymir::Tree ITupleInfo::toGeneric () {
+	IInfoType::printConst (false);
 	auto name = this-> innerTypeString ();
+	IInfoType::printConst (true);
 	auto tuple_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (tuple_type_node.isNull ()) {
 	    tuple_type_node = Ymir::makeTuple (name, this-> params);	
@@ -204,6 +215,9 @@ namespace semantic {
     
     void ITupleInfo::addParam (InfoType type) {
 	this-> params.push_back (type-> clone ());
+	this-> params.back ()-> binopFoo = type-> binopFoo;
+	this-> params.back ()-> unopFoo = type-> unopFoo;
+	this-> params.back ()-> multFoo = type-> multFoo;
     }
 
     std::vector<InfoType> & ITupleInfo::getParams () {

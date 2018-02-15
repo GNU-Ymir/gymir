@@ -138,6 +138,8 @@ namespace semantic {
 	std::vector <std::string> & getAttribs ();
 
 	std::vector <InfoType> & getTypes ();
+
+	InfoType StringOf () override;
 	
 	static const char* id () {
 	    return "IStructInfo";

@@ -66,7 +66,7 @@ namespace semantic {
 	Value _value = NULL;
 	
 	static std::map<std::string, InfoType> __alias__;
-	
+	static bool __need__Print_CONST__;
     protected:
 
 	bool _isType = false;
@@ -131,8 +131,10 @@ namespace semantic {
 	
 	Value& value ();
 
+	static void printConst (bool needPrintConst = true);
+	
 	virtual std::string typeString ();
-
+	
 	virtual std::string innerTypeString () = 0;
 	
 	virtual std::string simpleTypeString ();
