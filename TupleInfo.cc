@@ -115,6 +115,9 @@ namespace semantic {
 	    if (value >= (int) this-> params.size ()) return NULL;
 	    else {
 		auto ret = this-> params [value]-> clone ();
+		if (this-> isConst ())
+		    ret-> isConst (true);
+		ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
 		ret-> binopFoo = &TupleUtils::InstGet;
 		return ret;
 	    }

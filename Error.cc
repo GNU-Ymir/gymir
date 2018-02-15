@@ -842,7 +842,11 @@ namespace Ymir {
 	}
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
-	msg = addLine (msg, word);
+	Word loc {word};
+	if (word == Keys::OPASSIGN)
+	    loc.setStr (Token::EQUAL);
+	
+	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
