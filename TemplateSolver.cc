@@ -118,7 +118,7 @@ namespace semantic {
 			    return TemplateSolution (0, false);			
 		    }
 		}
-
+		
 		for (auto it : tmps) {
 		    if (auto var = it-> to <IVar> ()) {
 			if (typeVar-> token.getStr () == var-> token.getStr ()) {
@@ -163,6 +163,14 @@ namespace semantic {
 	    return solve (tmps, arr, type, isConst);
 	} else if (auto all = param-> to <IArrayAlloc> ()) {
 	    return solve (tmps, all, type, isConst);
+	} else if (auto ty = param-> to <IType> ()) {
+	    TemplateSolution soluce (0, true);
+	    soluce.type = ty-> info-> type-> clone ();
+	    soluce.type-> isConst (isConst);
+	    if (!ty-> info-> type-> isSame (type) && !type-> is<IUndefInfo> ())
+		return TemplateSolution (0, false);
+	    soluce.score += __VAR__;
+	    return soluce;
 	} else {
 	    
 	    vector <Expression> types;	    
@@ -470,6 +478,34 @@ namespace semantic {
 	    map<string, Expression> ret = {{last-> token.getStr (), aux}};
 	    if (!merge (soluce.score, soluce.elements, ret))
 		return TemplateSolution (0, false);
+	    soluce.score += __VAR__;
+	    soluce.isVariadic = true;
+	    return soluce;
+	}
+    }
+
+    TemplateSolution TemplateSolver::solveVariadic (const std::vector <syntax::Expression> tmps, syntax::Expression last, const std::vector <InfoType>& params) {
+	if (params.size () == 1) {
+	    auto var = new (Z0) IVar (last-> token);
+	    return solveInside (tmps, var, params [0]);
+	} else {
+	    TemplateSolution soluce (0, true);
+	    std::vector <Expression> elements;
+	    for (auto it : Ymir::r (0, params.size ())) {
+		Word token {last-> token, Ymir::OutBuffer ("_", it, last-> token.getStr ()).str ()};
+		auto var = new (Z0) IVar (token);
+		auto res = solveInside (tmps, var, new (Z0) IType (token, params [it]-> clone ()));
+		if (res.valid) res.type-> isConst (params[it]-> isConst ());
+		if (!res.valid || !merge (soluce.score, soluce.elements, res))
+		    return TemplateSolution (0, false);
+		elements.push_back (getAndRemove (token.getStr (), soluce.elements));
+	    }
+	    
+	    auto aux = new (Z0) IParamList (last-> token, elements);
+	    map<string, Expression> ret = {{last-> token.getStr (), aux}};
+	    if (!merge (soluce.score, soluce.elements, ret))
+		return TemplateSolution (0, false);
+
 	    soluce.score += __VAR__;
 	    soluce.isVariadic = true;
 	    return soluce;

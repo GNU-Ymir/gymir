@@ -90,7 +90,8 @@ namespace semantic {
     Frame ITemplateFrame::TempOp (const vector<Expression> & params)  {
 	this-> currentScore () = 0;
 	if (params.size () > this-> _function-> getTemplates ().size ()) {
-	    return NULL;
+	    if (!this-> _function-> getTemplates ().back ()-> is<IVariadicVar> ())
+		return NULL;
 	}
 
 	auto globSpace = Table::instance ().space ();
@@ -104,8 +105,43 @@ namespace semantic {
 	Table::instance ().templateNamespace () = tScope;	
 	return ret;
     }
-	
-    ApplicationScore ITemplateFrame::isApplicableVariadic (Word , const vector<Var> & , const vector<InfoType> & ) {
+    
+    ApplicationScore ITemplateFrame::isApplicableVariadic (Word, const vector<Var> & attrs, const vector<InfoType> & params) {
+	if (attrs.size () == 0)  
+	    return NULL;
+	else if (auto tvar = attrs.back()-> to<ITypedVar> ()) {
+	    auto last = this-> _function-> getTemplates ().back ();
+	    if (!last-> is<IVariadicVar> ()) return NULL;
+
+	    std::vector <InfoType> others (params.begin () + attrs.size () - 1, params.end ());
+	    TemplateSolution res (0, true);
+	    if (tvar-> typeVar ()) 
+		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeVar (), others);
+	    else {
+		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeExp (), others);
+	    }
+	    if (!res.valid) return NULL;
+
+	    auto func = this-> _function-> templateReplace (res.elements);
+	    Frame tmps;
+	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
+		func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
+		tmps = new (Z0) ITemplateFrame (this-> space (), func);		
+	    } else tmps = new (Z0) IUnPureFrame (this-> space (), func);
+
+	    tmps-> isVariadic (true);
+	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
+	    auto tuple = new (Z0) ITupleInfo (false);
+	    tuple-> getParams () = others;
+	    types.push_back (tuple);
+
+	    auto score = tmps-> isApplicable (types);
+	    if (score) {
+		score-> score += res.score;
+		score-> toValidate = tmps;
+	    }
+	    return score;
+	}
 	return NULL;
     }
 
@@ -150,10 +186,12 @@ namespace semantic {
 	
 	space.write (")");
 	for (auto &it : res.elements) {
-	    if (it.second-> info-> isImmutable ()) {
-		it.second = it.second-> info-> value ()-> toYmir (it.second-> info);		
-	    } else
-		it.second = it.second-> templateExpReplace ({});
+	    if (it.second-> info) {
+		if (it.second-> info-> isImmutable ()) {
+		    it.second = it.second-> info-> value ()-> toYmir (it.second-> info);		
+		} else
+		    it.second = it.second-> templateExpReplace ({});
+	    }
 	}
 	
 	auto func = this-> _function-> templateReplace (res.elements);
@@ -228,7 +266,9 @@ namespace semantic {
 		} else return NULL;				
 	    }
 	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (),
-						       tmps)) return NULL;
+						       tmps)) {
+		return NULL;
+	    }
 	    for (auto exp : tmps) {
 		if (exp.second-> info-> isImmutable ()) {
 		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);

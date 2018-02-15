@@ -1039,7 +1039,7 @@ namespace syntax {
 	    }
 
 	    if (type-> treat.size () != aux-> params-> getParams ().size ())
-		Ymir::Error::assert ("TODO, tupling");
+		tuplingParams (type, aux);
 
 	    aux-> _score = type;
 	    aux-> info = new (Z0) ISymbol (this-> token, type-> ret);
@@ -1063,6 +1063,15 @@ namespace syntax {
 	    aux-> info = this-> info;
 	    return aux;
 	}
+    }
+
+    void IPar::tuplingParams (ApplicationScore score, Par par) {
+	std::vector <Expression> lasts (par-> params-> getParams ().begin () + score-> treat.size () - 1, par-> params-> getParams ().end ());
+	auto ctuple = (new (Z0) IConstTuple (par-> token, par-> token, lasts))-> expression ();
+	
+	std::vector <Expression> alls (par-> params-> getParams ().begin (), par-> params-> getParams ().begin () + score-> treat.size () - 1);
+	alls.push_back (ctuple);
+	par-> params-> getParams () = alls;
     }
     
     Expression IParamList::expression () {

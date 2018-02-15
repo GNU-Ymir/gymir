@@ -60,6 +60,8 @@ namespace syntax {
     private:
 
 	bool simpleVerif (IPar*&);
+
+	void tuplingParams (semantic::ApplicationScore score, IPar* par);
 	
     };
 
