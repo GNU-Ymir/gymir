@@ -1,4 +1,5 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 
 namespace semantic {
 
@@ -26,20 +27,14 @@ namespace semantic {
 
     
     InfoType INullInfo::CompOp (InfoType other) {
-	// if (other-> is<IStructInfo> ()) {
-	//     //TODO
-	//     return other-> clone ();
-	// } else
-	if (other-> is<IArrayInfo> ()) {
-	    return other-> clone ();
-	} else if (other-> is<IStringInfo> ()) {
-	    return other-> clone ();
-	} else if (other-> is<IPtrInfo> ()) {
-	    return other-> clone ();
+	if (other-> is<IPtrInfo> ()) {
+	    auto ret = other-> clone ();
+	    ret-> binopFoo = &FixedUtils::InstCast;
+	    return ret;
 	} else if (other-> is <IPtrFuncInfo> ()) {
-	    return other-> clone ();
-	} else if (other-> is<INullInfo> ()) {
-	    return other-> clone ();
+	    auto ret = other-> clone ();
+	    ret-> binopFoo = &FixedUtils::InstCast;
+	    return ret;
 	}
 	return NULL;
     }
