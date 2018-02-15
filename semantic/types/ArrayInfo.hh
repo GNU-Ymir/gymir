@@ -72,10 +72,6 @@ namespace semantic {
 
     private:
 	
-	InfoType Is (syntax::Expression);
-
-	InfoType NotIs (syntax::Expression);
-
 	InfoType Affect (syntax::Expression);
 
 	InfoType AffectRight (syntax::Expression);

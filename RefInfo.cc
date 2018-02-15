@@ -150,7 +150,7 @@ namespace semantic {
 	IInfoType (isConst),
 	_content (content)
     {}
-
+    
     bool IRefInfo::isSame (InfoType type) {
 	if (auto ot = type-> to<IRefInfo> ()) {
 	    return ot-> _content-> isSame (this-> _content);
@@ -344,6 +344,10 @@ namespace semantic {
 	_content (content)
     {}
 
+    InfoType IArrayRefInfo::getIntern () {
+	return this-> _content;
+    }
+    
     bool IArrayRefInfo::isSame (InfoType type) {
 	return this-> _content-> isSame (type);	
     }
@@ -353,11 +357,17 @@ namespace semantic {
     }
 
     InfoType IArrayRefInfo::BinaryOp (Word token, syntax::Expression right) {
-	return this-> _content-> BinaryOp (token, right);
+	if (auto type = right-> info-> type-> to <IArrayRefInfo> ()) {
+	    return this-> _content-> BinaryOp (token, type-> _content);
+	} else 
+	    return this-> _content-> BinaryOp (token, right);
     }
 
     InfoType IArrayRefInfo::BinaryOpRight (Word token, syntax::Expression left) {
-	return this-> _content-> BinaryOpRight (token, left);
+	auto aux = this-> _content-> BinaryOpRight (token, left);
+	if (aux != NULL) return aux;
+	else 
+	    return left-> info-> type-> BinaryOp (token, this-> _content);	
     }
 
     InfoType IArrayRefInfo::AccessOp (Word token, syntax::ParamList params, std::vector <InfoType> & treats) {

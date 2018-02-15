@@ -363,7 +363,7 @@ namespace syntax {
 	}
 
 
-	auto arrayType = new (Z0)  IArrayInfo (true, aux-> type-> info-> type-> clone ());
+	auto arrayType = new (Z0)  IArrayInfo (false, aux-> type-> info-> type-> clone ());
 	aux-> cster = cmp;
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 
@@ -483,16 +483,11 @@ namespace syntax {
 			return NULL;
 		    }
 
-		    if (auto str = aux-> right-> to <IString> ()) {
-			if (!str-> isMut ()) {
-			    if (!aux-> left-> info-> isConst ()) {
-				Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-				return NULL;
-			    }
-			}		    
-		    } 
 		    aux-> left-> info-> type = type;
-		    aux-> left-> info-> type-> isConst (false);		    
+		    if (!aux-> right-> info-> type-> isText ())
+			aux-> left-> info-> isConst (false);
+		    else
+			aux-> left-> info-> isConst (true);
 		} else if (type == NULL) {
 		    auto call = findOpAssign (aux);
 		    if (!call) {
@@ -716,10 +711,10 @@ namespace syntax {
 
     Expression IString::expression () {
 	auto aux = new (Z0)  IString (this-> token, this-> content);
-	auto arrayType = new (Z0) IArrayInfo (true, new (Z0) ICharInfo (false));
+	auto arrayType = new (Z0) IStringInfo (true);
+	arrayType-> isText () = true;
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 	aux-> info-> value () = new (Z0)  IStringValue (this-> content);	
-	aux-> isMut () = this-> _isMut;
 	return aux;
     }
     
@@ -788,11 +783,9 @@ namespace syntax {
 	    
 	    auto type = aux-> validate ();
 	    if (!type) return NULL;
-	    auto arrayType = new (Z0)  IArrayInfo (true, type);
+	    auto arrayType = new (Z0)  IArrayInfo (false, type);
 	    aux-> info = new (Z0)  ISymbol (aux-> token, arrayType);
-	    if (!this-> isMut ()) {
-		arrayType-> isStatic (true, aux-> params.size ());
-	    }
+	    arrayType-> isStatic (true, aux-> params.size ());	    
 	}
 	return aux;
     }

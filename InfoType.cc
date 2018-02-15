@@ -74,6 +74,10 @@ namespace semantic {
     void IInfoType::isConst (bool is) {
 	this-> _isConst = is;
     }
+
+    bool & IInfoType::isText () {
+	return this-> _isText;
+    }
     
     bool& IInfoType::isStatic () {
 	return this-> _isStatic;
@@ -85,6 +89,10 @@ namespace semantic {
 
     bool IInfoType::isType () {
 	return this-> _isType;
+    }
+
+    InfoType IInfoType::getIntern () {
+	return this;
     }
 
     void IInfoType::isType (bool is) {
@@ -184,7 +192,7 @@ namespace semantic {
     }
 
     InfoType IInfoType::StringOf () {
-	auto str = new (Z0) IArrayInfo (true, new (Z0) ICharInfo (true));
+	auto str = new (Z0) IStringInfo (true);
 	str-> value () = new (Z0)  IStringValue (this-> typeString ().c_str ());
 	return str;
     }	

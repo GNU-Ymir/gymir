@@ -15,7 +15,6 @@ namespace syntax {
     class IConstArray : public IExpression {
 	std::vector <Expression> params;
 	std::vector <semantic::InfoType> casters;
-	bool _isMut;
 	
     public:
 
@@ -25,9 +24,7 @@ namespace syntax {
 	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	int nbParams ();
-	
-	bool & isMut ();
-	
+		
 	static const char * id () {
 	    return TYPEID (IConstArray);
 	}

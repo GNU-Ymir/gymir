@@ -119,8 +119,8 @@ namespace syntax {
 	Expression msg = NULL;
 	if (this-> msg) {
 	    msg = this-> msg-> expression ();
-	    if (!msg-> info-> type-> isSame (new (Z0) IArrayInfo (true, new (Z0) ICharInfo (true)))) {
-		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0) IArrayInfo (true, new (Z0) ICharInfo (true)));
+	    if (!msg-> info-> type-> isSame (new (Z0) IStringInfo (true))) {
+		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0) IStringInfo (true));
 		return NULL;
 	    }
 	}
@@ -307,7 +307,13 @@ namespace syntax {
 	    	    	    
 	    aux-> caster = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);	    
 	    if (Table::instance ().retInfo ().deco == "" || Table::instance ().retInfo ().deco == Keys::CONST)
-	    	aux-> caster-> isConst (true);			    
+	    	aux-> caster-> isConst (true);
+	    else {
+		if (!aux-> caster-> ConstVerif (Table::instance ().retInfo ().info-> type)) {
+		    Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
+		    return NULL;		    
+		}
+	    }
 	} else {
 	    if (!Table::instance ().retInfo ().info-> type-> is<IUndefInfo> () &&
 		!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> ())

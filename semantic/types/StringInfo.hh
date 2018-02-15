@@ -4,80 +4,30 @@
 
 namespace semantic {
 
-    class IStringInfo : public IInfoType {
+    class IStringInfo : public IArrayInfo {
     private:
 
 	static bool __initStringTypeNode__;
 	bool _innerConst;
+	bool _isImut;
 	
     public:
 	
 	IStringInfo (bool);
-
-	bool isSame (InfoType) override;
-
-	InfoType ConstVerif (InfoType) override;
-
+	
 	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 0) {
 		Ymir::Error::notATemplate (tok);
 		return NULL;
 	    } else {
-		return new (Z0) IArrayInfo (false, new (Z0) ICharInfo (false));
+		return new (Z0) IStringInfo (false);
 	    }
 	}
 
-	InfoType BinaryOp (Word tok, syntax::Expression right) override;
+	InfoType onClone () override;
 	
 	InfoType BinaryOpRight (Word tok, syntax::Expression left) override;
-
-	InfoType AccessOp (Word, syntax::ParamList, std::vector <InfoType> &) override;
 	
-	std::string innerTypeString () override;
-
-	std::string innerSimpleTypeString () override;
-
-	InfoType onClone () override;
-
-	ApplicationScore CallOp (Word, syntax::ParamList) override;
-	
-	InfoType DotOp (syntax::Var) override;
-
-	InfoType DColonOp (syntax::Var) override;
-
-	InfoType CastOp (InfoType) override;
-	
-	InfoType CompOp (InfoType) override;
-
-	InfoType ApplyOp (const std::vector <syntax::Var>&) override;
-	
-	Ymir::Tree toGeneric () override;
-
-	static Ymir::Tree toGenericStatic ();
-	
-	static const char* id () {
-	    return "IStringInfo";
-	}
-
-	const char* getId () override;
-
-	//TODO
-    private:
-
-	InfoType Ptr ();
-	
-	InfoType Length ();
-
-	InfoType AffectRight (syntax::Expression);
-
-	InfoType Affect (syntax::Expression);
-
-	InfoType Access (syntax::Expression, InfoType&);
-	
-	InfoType Concat (Word & op, syntax::Expression);
-	
-	InfoType ConcatAff (syntax::Expression);
-
     };
 
     typedef IStringInfo* StringInfo;

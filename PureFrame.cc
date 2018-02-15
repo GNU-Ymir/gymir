@@ -45,8 +45,8 @@ namespace semantic {
 	    auto tok = this-> _function-> getParams () [0]-> token;
 	    if (auto a = this-> _function-> getParams () [0]-> to<ITypedVar> ()) {
 		auto type = a-> getType ();
-		if (!type-> isSame (new (Z0)  IArrayInfo (true, new (Z0) IArrayInfo (false, new (Z0) ICharInfo (false))))) {
-		    Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type),  new (Z0)  IArrayInfo (true, new (Z0) IArrayInfo (false, new (Z0) ICharInfo (false))));
+		if (!type-> isSame (new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)))) {
+		    Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type),  new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)));
 		}
 	    } else {
 		auto str = Word (tok.getLocus (), "string");

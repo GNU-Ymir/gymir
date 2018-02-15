@@ -16,6 +16,8 @@ namespace semantic {
     
     IArrayInfo::IArrayInfo (bool isConst, InfoType content) :
 	IInfoType (isConst),
+	_isStatic (false),
+	_size (0),
 	_content (content)
     {}
     
@@ -29,32 +31,6 @@ namespace semantic {
 	if (this-> _isStatic != arr-> _isStatic || this-> _size != arr-> _size) return false;
 	if (this-> _content == arr-> _content) return true;
 	return this-> _content-> isSame (arr-> _content);
-    }
-
-    InfoType IArrayInfo::Is (Expression right) {
-	if (right-> info-> type-> is<INullInfo> ()) {
-	    auto ret = new (Z0)  IBoolInfo (true);
-	    ret-> binopFoo = ArrayUtils::InstIs;
-	    return ret;
-	} else if (this-> isSame (right-> info-> type)) {
-	    auto ret = new (Z0)  IBoolInfo (true);
-	    ret-> binopFoo = ArrayUtils::InstIs;
-	    return ret;
-	}
-	return NULL;
-    }
-
-    InfoType IArrayInfo::NotIs (Expression right) {
-	if (right-> info-> type-> is<INullInfo> ()) {
-	    auto ret = new (Z0)  IBoolInfo (true);
-	    ret-> binopFoo = ArrayUtils::InstNotIs;
-	    return ret;
-	} else if (this-> isSame (right-> info-> type)) {
-	    auto ret = new (Z0)  IBoolInfo (true);
-	    ret-> binopFoo = ArrayUtils::InstNotIs;
-	    return ret;
-	}
-	return NULL;
     }
 
     InfoType IArrayInfo::Affect (Expression right) {
@@ -96,10 +72,13 @@ namespace semantic {
     
     InfoType IArrayInfo::BinaryOp (Word token, syntax::Expression right) {
 	if (token == Token::EQUAL) return Affect (right);
-	if (token == Keys::IS) return Is (right);
-	if (token == Keys::NOT_IS) return NotIs (right);
-	if (token == Token::TILDE) return Concat (right);
-	if (token == Token::TILDE_EQUAL) return ConcatAff (right);
+	if (token == Token::TILDE) {
+	    auto aux = Concat (right);
+	    if (aux && this-> value ()) {
+		aux-> value () = this-> value ()-> BinaryOp (token, right-> info-> value ());
+	    }
+	    return aux;
+	} else if (token == Token::TILDE_EQUAL) return ConcatAff (right);
 	return NULL;
     }
 
@@ -215,8 +194,10 @@ namespace semantic {
 	}
 	
 	if (treat) {
-	    auto ch = new (Z0)  IArrayRefInfo (this-> isConst (), this-> _content-> clone ());
-	    //auto ch = this-> _content-> clone ();
+	    auto content = this-> _content-> clone ();
+	    if (this-> isConst ())
+		content-> isConst (true);
+	    auto ch = new (Z0)  IArrayRefInfo (this-> isConst (), content);
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    return ch;
 	}
@@ -240,7 +221,7 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::CompOp (InfoType other) {
-	auto type = other-> to<IArrayInfo> ();
+	auto type = other-> to<IArrayInfo> ();	
 	if (type && type-> _content-> isSame (this-> _content)) {
 	    if (type-> _isStatic != this-> _isStatic || type-> _size != this-> _size)
 		return NULL;
@@ -537,64 +518,6 @@ namespace semantic {
 	    }
 	}
 	
-	Ymir::Tree InstIs (Word word, InfoType, Expression left, Expression right) {
-	    location_t loc = word.getLocus ();
-	    if (auto cst = left-> to <IConstArray> ()) {
-		return build_int_cst_type (boolean_type_node, cst-> nbParams () != 0);
-	    } else {
-		auto lexp = left-> toGeneric ();		
-		auto rexp = right-> toGeneric ();
-		if (!left-> info-> type-> is <INullInfo> ()) {
-		    lexp = fold_convert_loc (loc,
-					     long_unsigned_type_node,
-					     Ymir::getField (loc, lexp, "ptr").getTree ()
-		    );
-		}
-		
-		if (!right-> info-> type-> is <INullInfo> ()) {
-		    rexp = fold_convert_loc (loc,
-					     long_unsigned_type_node,
-					     Ymir::getField (loc, rexp, "ptr").getTree ()
-		    );
-		}
-		
-		return Ymir::buildTree (EQ_EXPR, loc,
-					    boolean_type_node,
-					    lexp.getTree (),
-					    rexp.getTree ()
-		);
-	    }
-	}
-
-	Ymir::Tree InstNotIs (Word word, InfoType, Expression left, Expression right) {
-	    location_t loc = word.getLocus ();
-	    if (left-> is <IConstArray> ()) {
-		return build_int_cst_type (boolean_type_node, 1);
-	    } else {
-		auto lexp = left-> toGeneric ();
-		auto rexp = right-> toGeneric ();
-		if (!left-> info-> type-> is <INullInfo> ()) {
-		    lexp = fold_convert_loc (loc,
-					     long_unsigned_type_node,
-					     Ymir::getField (loc, lexp, "ptr").getTree ()
-		    );
-		}
-		
-		if (!right-> info-> type-> is <INullInfo> ()) {
-		    rexp = fold_convert_loc (loc,
-					     long_unsigned_type_node,
-					     Ymir::getField (loc, rexp, "ptr").getTree ()
-		    );
-		}
-		
-		return Ymir::buildTree (NE_EXPR, loc,
-					    boolean_type_node,
-					    lexp.getTree (),
-					    rexp.getTree ()
-		);
-	    }
-	}
-
 	Tree InstPtr (Word locus, InfoType, Expression expr, Expression) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = expr-> toGeneric ();
@@ -611,7 +534,7 @@ namespace semantic {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
 	
-	Tree InstConcat (Word locus, InfoType, Expression left, Expression right) {
+	Tree InstConcat (Word locus, InfoType retType, Expression left, Expression right) {
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
 	    
@@ -625,7 +548,7 @@ namespace semantic {
 	    auto ptrl = getPtr (loc, left, lexp);
 	    auto ptrr = getPtr (loc, right, rexp);
 	    
-	    Ymir::Tree aux = makeAuxVar (loc, ISymbol::getLastTmp (), IStringInfo::toGenericStatic ());	    
+	    Ymir::Tree aux = makeAuxVar (loc, ISymbol::getLastTmp (), retType-> toGeneric ());	    
 
 	    auto auxPtr = getField (loc, aux, "ptr");
 	    auto auxLen = getField (loc, aux, "len");
@@ -676,23 +599,27 @@ namespace semantic {
 	    if (rexp.getType ().getTreeCode () == RECORD_TYPE) {
 		return rexp;
 	    } else {
-		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), type-> info-> type-> toGeneric ());
-		
-		auto lenr = getLen (loc, elem, rexp);
-		auto ptrr = getPtr (loc, elem, rexp);
-		auto ptrl = getField (loc, auxVar, "ptr");
-		auto lenl = getField (loc, auxVar, "len");
-		TreeStmtList list;
+		auto toType = type-> info-> type-> toGeneric ();
+		if (toType.getTreeCode () == RECORD_TYPE) {
+		    Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), toType);
+		    auto lenr = getLen (loc, elem, rexp);
+		    auto ptrr = getPtr (loc, elem, rexp);
+		    auto ptrl = getField (loc, auxVar, "ptr");
+		    auto lenl = getField (loc, auxVar, "len");
+		    TreeStmtList list;
     
-		list.append (buildTree (
-		    MODIFY_EXPR, loc, void_type_node, lenl, lenr
-		));
+		    list.append (buildTree (
+			MODIFY_EXPR, loc, void_type_node, lenl, lenr
+		    ));
 	    
-		list.append (buildTree (
-		    MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
-		));
-		Ymir::getStackStmtList ().back ().append (list.getTree ());
-		return auxVar;
+		    list.append (buildTree (
+			MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
+		    ));
+		    Ymir::getStackStmtList ().back ().append (list.getTree ());
+		    return auxVar;
+		} else {
+		    return rexp;
+		}		
 	    }
 	}
 

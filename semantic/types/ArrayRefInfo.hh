@@ -15,6 +15,8 @@ namespace semantic {
 
 	IArrayRefInfo (bool, InfoType);
 
+	InfoType getIntern () override;
+	
 	bool isSame (InfoType) override;
 
 	InfoType ConstVerif (InfoType) override;

@@ -62,7 +62,7 @@ namespace semantic {
 	bool _isLValue = false;
 	bool _isStatic = false;
 	ulong _toGet;
-	
+	bool _isText = false;
 	Value _value = NULL;
 	
 	static std::map<std::string, InfoType> __alias__;
@@ -115,6 +115,8 @@ namespace semantic {
 
 	virtual bool isConst ();
 
+	bool & isText ();
+	
 	virtual void isConst (bool isConst);
        	
 	bool& isStatic ();
@@ -125,6 +127,8 @@ namespace semantic {
 	
 	virtual void isType (bool);
 
+	virtual InfoType getIntern ();
+	
 	Value& value ();
 
 	virtual std::string typeString ();
@@ -219,8 +223,8 @@ namespace semantic {
 	
 	template <typename T>
 	T* to () {
-	    if (strcmp (this-> getId (), T::id ()) == 0) {
-		return (T*) this;
+	    if (strcmp (this-> getIntern ()-> getId (), T::id ()) == 0) {
+		return (T*) this-> getIntern ();
 	    } else return NULL;
 	}
 	

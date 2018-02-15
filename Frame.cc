@@ -34,7 +34,7 @@ namespace semantic {
 	    params-> getParamTypes ()
 	);
     }
-    
+
     ApplicationScore IFrame::isApplicable (const std::vector<InfoType> & params) {
 	return this-> isApplicable (
 	    this-> _function-> getIdent (),
@@ -86,6 +86,7 @@ namespace semantic {
 		    score-> treat.push_back (type);
 		} else return NULL;		
 	    }
+	    
 	    score-> score += this-> currentScore ();
 	    return score;
 	}
