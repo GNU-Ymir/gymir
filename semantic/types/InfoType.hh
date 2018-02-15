@@ -218,7 +218,7 @@ namespace semantic {
 	
 	template <typename T>
 	bool is () {
-	    return strcmp (this-> getId (), T::id ()) == 0;
+	    return strcmp (this-> getIntern ()-> getId (), T::id ()) == 0;
 	}
 	
 	template <typename T>

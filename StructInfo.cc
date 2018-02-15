@@ -434,7 +434,7 @@ namespace semantic {
 		auto ret = this-> types [it]-> clone ();
 		if (this-> isConst ())
 		    ret-> isConst (true);
-		
+		ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
 		ret-> binopFoo = StructUtils::InstGet;
 		return ret;
 	    }

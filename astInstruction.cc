@@ -337,7 +337,7 @@ namespace syntax {
     Instruction ITupleDest::instruction () {
 	auto right = this-> right-> expression ();
 	if (right == NULL) return NULL;
-	if (!right-> info-> type-> is<ITupleInfo> ()) {
+	if (!right-> info-> type-> is<ITupleInfo> ()) {	    
 	    return this-> Incompatible (right-> info);
 	}
 
