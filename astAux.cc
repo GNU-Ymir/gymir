@@ -1298,7 +1298,9 @@ namespace syntax {
 	type (type),
 	names (names),
 	values (values)
-    {}
+    {
+	this-> is_public (true);
+    }
 
     IEnum::~IEnum () {
 	for (auto it : values)

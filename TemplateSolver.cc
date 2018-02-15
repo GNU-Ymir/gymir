@@ -138,8 +138,9 @@ namespace semantic {
 		    }		
 		}
 		
-		auto var = new (Z0) IVar (typeVar-> token, types);		
-		soluce.type = var-> asType ()-> info-> type;
+		auto var = (new (Z0) IVar (typeVar-> token, types))-> asType ();
+		if (!var) return TemplateSolution (0, false);
+		soluce.type = var-> info-> type;
 		soluce.type-> isConst (isConst);
 		soluce.score += __VAR__;
 		return soluce;
