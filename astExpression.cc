@@ -56,9 +56,10 @@ namespace syntax {
 	std::vector <Expression> params = {this-> left};
 	params.insert (params.end (), this-> params-> getParams ().begin (),
 		       this-> params-> getParams ().end ());
-	
+
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
 	auto finalParams = new (Z0)  IParamList (this-> token, params);
-	auto call = new (Z0)  IPar (this-> token, this-> token, var, finalParams, true);
+	auto call = new (Z0)  IPar (tok, tok2, var, finalParams, true);
 	
 	return call-> expression ();
     }    
@@ -934,7 +935,7 @@ namespace syntax {
 	    return NULL;
 	} else if (auto var = aux-> right-> to<IVar> ()) {
 	    auto type = aux-> left-> info-> type-> DotOp (var);
-	    if (type == NULL && this-> inside-> is <IPar> ()) {
+	    if (type == NULL && this-> inside && this-> inside-> is <IPar> ()) {
 		var-> inside = aux;
 		auto call = var-> expression ();
 		if (call == NULL || call-> is<IType> () || call-> info-> type-> is<IUndefInfo> ()) {
@@ -1077,6 +1078,7 @@ namespace syntax {
     Expression IParamList::expression () {
 	auto aux = new (Z0)  IParamList (this-> token, {});
 	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    this-> params [it]-> inside = this;
 	    Expression ex_it = this-> params [it]-> expression ();
 	    if (ex_it == NULL || ex_it-> info == NULL || ex_it-> info-> type == NULL) return NULL;
 	    if (auto ex = ex_it-> to<IParamList> ()) {

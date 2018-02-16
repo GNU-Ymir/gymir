@@ -13,7 +13,13 @@ namespace semantic {
 	) {
 	    Ymir::Error::takeATypeAsTemplate (token);
 	    return NULL;	
-	} 
+	}
+	
+	if (templates [0]-> info-> type-> is <IStructCstInfo> ()) {
+	    auto ret =  templates [0]-> info-> type-> TempOp ({});
+	    ret-> isConst (true);
+	    return ret;
+	}
 	return templates [0]-> info-> type-> cloneConst ();	
     }
     

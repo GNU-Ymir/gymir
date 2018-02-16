@@ -730,7 +730,7 @@ namespace Ymir {
 	auto msg = format (str,
 			   YELLOW, begin.getStr().c_str (), RESET,
 			   YELLOW, elem-> typeString ().c_str (), RESET,
-			   buf.str ().c_str ());
+			   std::string ("(") + YELLOW, buf.str ().c_str (), RESET + std::string (")"));
 
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, begin);
@@ -738,8 +738,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
-	    printf ("%s", errorMsg.msg.c_str ());
-	    assert ("");
+	    printf ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
 
