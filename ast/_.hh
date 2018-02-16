@@ -27,7 +27,6 @@
 #include "Function.hh"
 #include "Global.hh"
 #include "If.hh"
-#include "Impl.hh"
 #include "Import.hh"
 #include "Instruction.hh"
 #include "Is.hh"

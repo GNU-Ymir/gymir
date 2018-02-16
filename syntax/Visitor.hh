@@ -14,13 +14,11 @@ namespace syntax {
 	
     private:
 
-
 	Program visitProgram ();
 	std::vector<Declaration> visitPublicBlock ();
 	std::vector<Declaration> visitPrivateBlock ();
 	Declaration visitDeclaration (bool);
 
-	Impl visitImpl ();
 	Constructor visitConstructor ();
 	Declaration visitFunctionImpl (bool &);
 	Self visitSelf ();
