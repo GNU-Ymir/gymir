@@ -35,8 +35,8 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     cl_decoded_option *decoded_options = *in_decoded_options;
     int added_libraries = *in_added_libraries;
     bool need_gc = *in_decoded_options_count != 1;
-    bool need_midgard = *in_decoded_options_count != 1;
-    bool need_runtime = *in_decoded_options_count != 1;
+    /* bool need_midgard = *in_decoded_options_count != 1; */
+    /* bool need_runtime = *in_decoded_options_count != 1; */
     std::vector <int> toRemove;
     std::vector <std::string> includes;
 
@@ -51,7 +51,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	}
     }
 
-    num_args = argc + need_gc + need_midgard + need_runtime + includes.size () - toRemove.size ();
+    num_args = argc + need_gc + 4 + includes.size () - toRemove.size ();
     new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
     i = 0;
 
