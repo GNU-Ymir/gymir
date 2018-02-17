@@ -46,8 +46,6 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    switch (decoded_options [i].opt_index) {
 	    case OPT_l:
 		if ((strcmp (arg, LIBGC) == 0)) need_gc = false;
-		else if (strcmp (arg, LIBYRUNTIME) == 0) need_runtime = false;
-		else if (strcmp (arg, LIBYMIDGARD) == 0) need_midgard = false;
 		break;
 	    } 
 	}
@@ -69,18 +67,23 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	i++;
     }
     
-    if (need_runtime) {
-	generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
-	added_libraries ++;
-	i++;
-    }
+    generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
+    added_libraries ++;
+    i++;
+    
 
-    if (need_midgard) {
-	generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
-	added_libraries ++;
-	i++;
-    }    
+    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
+    added_libraries ++;
+    i++;
 
+    generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
+    added_libraries ++;
+    i++;    
+
+    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
+    added_libraries ++;
+    i++;
+        
     *in_decoded_options_count = num_args;
     *in_decoded_options = new_decoded_options;
 }
