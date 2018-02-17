@@ -157,11 +157,12 @@ namespace semantic {
 	    ret = this-> _type-> type-> toGeneric ().getTree ();
 		
 	//tree ident = get_identifier (this-> _name.c_str ());
-	tree ident = get_identifier (Mangler::mangle_function (this-> _name, this).c_str ());
+	tree ident = get_identifier (Namespace (this-> space (), this-> _name).toString ().c_str ());
+	tree ident_ASM = get_identifier (Mangler::mangle_function (this-> _name, this).c_str ());
 	
 	tree fntype = build_function_type_array (ret, args.size (), args.data ());
 	tree fn_decl = build_decl (BUILTINS_LOCATION, FUNCTION_DECL, ident, fntype);	
-	//DECL_ASSEMBLER_NAME (fn_decl) = asmIdent;
+	SET_DECL_ASSEMBLER_NAME (fn_decl, ident_ASM);// = asmIdent;
 	
 	Ymir::currentContext () = fn_decl;
 	__fn_decl__ = fn_decl;

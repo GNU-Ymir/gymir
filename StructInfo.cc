@@ -461,9 +461,9 @@ namespace semantic {
 	for (auto it : Ymir::r (0, this-> attrs.size ())) {
 	    if (var-> token == this-> attrs [it]) {
 		auto ret = this-> types [it]-> clone ();
-		if (this-> isConst ())
+		if (this-> isConst ()) {
 		    ret-> isConst (true);
-		else ret-> isConst (this-> types [it]-> isConst ());
+		} else ret-> isConst (this-> types [it]-> isConst ());
 		ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
 		ret-> binopFoo = StructUtils::InstGet;
 		return ret;
