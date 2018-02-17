@@ -28,6 +28,18 @@ namespace semantic {
 		code, locus.getLocus (), ltree.getType (), ltree, rtree
 	    );
 	}
+	
+	Ymir::Tree InstPPlus (Word locus, InfoType, Expression left) {
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = build_int_cst_type (long_unsigned_type_node, 1);
+	    tree_code code = POINTER_PLUS_EXPR;
+	    return Ymir::buildTree (
+		MODIFY_EXPR, locus.getLocus (), ltree.getType (), ltree,
+		Ymir::buildTree (
+		    code, locus.getLocus (), ltree.getType (), ltree, rtree
+		)
+	    );
+	}
 
 	Ymir::Tree InstPlusRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = right-> toGeneric ();
@@ -117,6 +129,11 @@ namespace semantic {
 	if (op == Token::STAR) return Unref ();
 	//TODO : isConst () -> isImmutable ()
 	else if (op == Token::AND && !this-> isConst ()) return toPtr ();
+	else if (op == Token::DPLUS) {
+	    auto ret = this-> cloneConst ();
+	    ret-> unopFoo = PtrUtils::InstPPlus;
+	    return ret;
+	}	
 	return NULL;
     }
 
