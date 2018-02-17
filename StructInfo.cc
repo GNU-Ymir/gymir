@@ -272,14 +272,15 @@ namespace semantic {
 		    attribs.push_back (this-> params [it]-> token.getStr ());
 		} else return NULL;
 	    }
-	    
+
+	    dones.erase (name);
 	    this-> _info-> isConst (false);
 	    this-> _info-> setTypes (types);
 	    this-> _info-> setAttribs (attribs);	    
-	    this-> _info-> setTmps (this-> tmpsDone);
+	    this-> _info-> setTmps (this-> tmpsDone);	    
 	    return this-> _info-> clone ();
 	} else {
-	    return inside-> second-> clone ();
+	    return inside-> second;//-> clone ();
 	}		
     }
 

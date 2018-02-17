@@ -183,7 +183,7 @@ namespace semantic {
 	    right-> proto = info;
 	}
 
-	if (Ymir::Error::nb_errors - nbErrorBeg) {
+	if (Ymir::Error::nb_errors - nbErrorBeg && !tok.isEof ()) {
 	    nbTmpsCreation ++;
 	    if (nbTmpsCreation < 4) {
 		Ymir::Error::templateCreation (tok);
@@ -255,7 +255,7 @@ namespace semantic {
 	}
 
 
-	if (Ymir::Error::nb_errors - nbErrorBeg) {
+	if (Ymir::Error::nb_errors - nbErrorBeg && !tok.isEof ()) {
 	    nbTmpsCreation ++;
 	    if (nbTmpsCreation < 4) {
 		Ymir::Error::templateCreation (tok);
@@ -294,7 +294,7 @@ namespace semantic {
 
     InfoType IFunctionInfo::CompOp (InfoType other) {
 	if (auto ot = other-> to<IPtrFuncInfo> ()) {
-	    auto score = this-> CallOp ({UNKNOWN_LOCATION, ""}, ot-> getParams ());
+	    auto score = this-> CallOp (Word::eof (), ot-> getParams ());
 	    
 	    if (score == NULL) return NULL;
 	    if (!score-> ret-> isSame (ot-> getType ()))

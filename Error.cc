@@ -490,7 +490,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::templateCreation (const Word& word) {
+    void Error::templateCreation (const Word& word) {	
 	auto str = getString (TemplateCreation);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (msg);
