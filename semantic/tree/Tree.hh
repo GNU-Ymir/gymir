@@ -120,26 +120,15 @@ namespace Ymir {
 	return !(t1 == t2);
     }
 
-    inline Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1) {
-	return build1_loc (loc, tc, type.getTree (), t1.getTree ());
-    }
+    Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1);
 
-    inline Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2) {
-	return build2_loc (loc, tc, type.getTree (), t1.getTree(), t2.getTree ());
-    }
+    Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2);
 
-    inline Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2, Tree t3) {
-	return build3_loc (loc, tc, type.getTree (), t1.getTree(), t2.getTree (), t3.getTree ());
-    }
+    Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2, Tree t3);
 
-    inline Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2, Tree t3, Tree t4) {
-	return build4_loc (loc, tc, type.getTree (), t1.getTree(), t2.getTree (), t3.getTree (), t4.getTree ());
-    }
+    Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2, Tree t3, Tree t4);
 
-    inline Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2, Tree t3, Tree t4, Tree t5) {
-	return build5_loc (loc, tc, type.getTree (), t1.getTree(), t2.getTree (), t3.getTree (), t4.getTree (), t5.getTree ());
-    }
-
+    Tree buildTree (tree_code tc, location_t loc, Tree type, Tree t1, Tree t2, Tree t3, Tree t4, Tree t5);
 
     struct TreeStmtList {
 

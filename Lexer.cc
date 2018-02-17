@@ -54,16 +54,11 @@ namespace lexical {
 	dispose ();
     }
 
-    location_t Lexer::getCurrentLocation () {
-	linemap_add (line_table, LC_ENTER, 0, this-> filename.c_str (), this-> line);	
-	linemap_line_start (line_table, this-> line, 0);
-	auto ret = linemap_position_for_column (line_table, this-> column);
-	linemap_add (line_table, LC_LEAVE, 0, NULL, 0);
-	return ret;
-    }
 
     Word Lexer::fileLocus () {
-	return Word (getCurrentLocation (), "");
+	Word loc;
+	loc.setLocus (this-> filename, 0, 0);
+	return loc;
     }
 
     std::string Lexer::getFilename () const {

@@ -58,8 +58,6 @@ namespace lexical {
 
 	void constructWord (Word &word, ulong beg, ulong _max, std::string line,
 			    ulong where);
-
-	location_t getCurrentLocation ();
 	
     protected:
 

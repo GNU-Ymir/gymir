@@ -1,6 +1,7 @@
 #include "syntax/Word.hh"
 #include <sstream>
 #include <algorithm>
+#include <ymir/utils/OutBuffer.hh>
 
 Word::Word (location_t locus, std::string str) :
     str (str)
@@ -14,7 +15,7 @@ Word::Word (location_t locus, std::string str) :
 
 Word::Word (location_t locus, const char* str) :
     str (str)
-{
+{    
     if (locus != UNKNOWN_LOCATION) {
 	this-> locFile = LOCATION_FILE (locus);
 	this-> line = LOCATION_LINE (locus);
@@ -59,7 +60,12 @@ void Word::setLocus (std::string filename, ulong line, ulong column) {
 }
 
 location_t Word::getLocus () const {
-    linemap_add (line_table, LC_ENTER, 0, this-> locFile.c_str (), this-> line);	
+    char * aux = new (Z0) char [this-> locFile.length () + 1];
+    for (auto it : Ymir::r (0, this-> locFile.length ()))
+	aux [it] = this-> locFile [it];
+    aux [this-> locFile.length ()] = '\0';
+    
+    linemap_add (line_table, LC_ENTER, 0, aux, this-> line);	
     linemap_line_start (line_table, this-> line, 0);
     auto ret = linemap_position_for_column (line_table, this-> column);
     linemap_add (line_table, LC_LEAVE, 0, NULL, 0);

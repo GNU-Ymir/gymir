@@ -217,11 +217,10 @@ namespace syntax {
     	else if (token == Keys::STATIC) return visitGlobal ();
 	else if (token == Keys::IMMUTABLE) return visitGlobalImut ();
     	else if (token == Keys::SELF) return visitSelf ();
-    	else if (token == Keys::TRAIT) return NULL;// visitTrait ();
     	else if (fatal) syntaxError (token,
 				     {Keys::DEF, Keys::IMPORT, Keys::EXTERN,
 					     Keys::STRUCT, Keys::ENUM, Keys::STATIC,
-					     Keys::SELF, Keys::TRAIT, Keys::IMPL}
+					     Keys::SELF}
 	);
     	else this-> lex.rewind ();
     	return NULL;
