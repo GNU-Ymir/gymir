@@ -128,7 +128,6 @@ namespace syntax {
 		for (auto it : this-> templates) {
 		    tmps.push_back (it-> expression ());
 		}
-
 		auto type = aux-> info-> type-> TempOp (tmps);
 		if (type == NULL) {
 		    Ymir::Error::assert ("TODO, gerer l'erreur");
@@ -137,7 +136,9 @@ namespace syntax {
 		aux-> info = new (Z0)  ISymbol (aux-> info-> sym, type);
 	    }
 	    return aux;
-	} else return asType ();
+	} else {
+	    return asType ();
+	}
     }
     
     TypedVar IVar::setType (Symbol info) {
@@ -162,10 +163,9 @@ namespace syntax {
 	if (!IInfoType::exists (this-> token.getStr ())) {
 	    auto sym = Table::instance ().get (this-> token.getStr ());
 	    if (sym != NULL && sym-> type-> isType ()) {		
-		auto t_info = sym-> type-> TempOp (tmps);		
+		auto t_info = sym-> type-> TempOp (tmps);
 		if (t_info && t_info-> is<IStructCstInfo> ())
 		    t_info = t_info-> TempOp ({});
-		
 		if (t_info != NULL) {
 		    if (this-> deco == Keys::REF)
 			t_info = new (Z0)  IRefInfo (false, t_info);

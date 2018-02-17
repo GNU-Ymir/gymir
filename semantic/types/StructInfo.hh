@@ -100,8 +100,10 @@ namespace semantic {
 	IStructInfo (Namespace space, std::string name);
 
 	bool isSame (InfoType) override;
-
+	
 	InfoType ConstVerif (InfoType) override;
+
+	ApplicationScore CallOp (Word, syntax::ParamList) override;
 	
 	InfoType BinaryOp (Word op, syntax::Expression left) override;
 	

@@ -286,8 +286,7 @@ namespace syntax {
 		return NULL;
 	    }
 	    
-	    auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
-
+	    auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);	    
 	    if (type == NULL) {		
 		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
 		return NULL;

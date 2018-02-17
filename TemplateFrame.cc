@@ -71,14 +71,14 @@ namespace semantic {
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
-
 	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;
 	if (func-> getType ()) {
 	    ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
 	}
-
+	
 	auto from = Table::instance ().globalNamespace ();
 	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
+
 	return proto;
     }
 
@@ -239,7 +239,7 @@ namespace semantic {
 			return NULL;
 		    score-> score += res.score;
 		    info = res.type;
-		    if (tvar-> getDeco () == Keys::CONST) info-> isConst (true);
+		    if (tvar-> getDeco () == Keys::CONST) info = info-> cloneConst ();
 		} else {
 		    tvar = param-> setType (args [it]-> clone ());
 		    info = tvar-> getType ()-> clone ();
@@ -251,8 +251,10 @@ namespace semantic {
 		    info = new (Z0)  IRefInfo (false, info);
 
 		auto type = args [it]-> CompOp (info);
+
 		if (type) type = type-> ConstVerif (info);
 		else return NULL;
+
 		if (type && type-> isSame (args [it])) {
 		    if (args [it]-> isConst () != info-> isConst ())
 			score-> score += this-> changed ? CONST_CHANGE_TMP : CONST_SAME_TMP;
@@ -265,6 +267,7 @@ namespace semantic {
 		    score-> treat.push_back (type);
 		} else return NULL;				
 	    }
+
 	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (),
 						       tmps)) {
 		return NULL;

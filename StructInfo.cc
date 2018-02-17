@@ -196,6 +196,7 @@ namespace semantic {
 	}
 
 	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
@@ -234,6 +235,7 @@ namespace semantic {
 	}
 
 	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
@@ -275,7 +277,7 @@ namespace semantic {
 	    this-> _info-> setTypes (types);
 	    this-> _info-> setAttribs (attribs);	    
 	    this-> _info-> setTmps (this-> tmpsDone);
-	    return this-> _info;
+	    return this-> _info-> clone ();
 	} else {
 	    return inside-> second-> clone ();
 	}		
@@ -455,6 +457,41 @@ namespace semantic {
 	return ret;
     }
 
+    ApplicationScore IStructInfo::CallOp (Word token, syntax::ParamList params) {
+	if (params-> getParams ().size () != this-> types.size ())
+	    return NULL;
+
+	std::vector <InfoType> types;
+	std::vector <std::string> attribs;
+	
+	auto score = new (Z0) IApplicationScore (token);
+	for (auto it : Ymir::r (0, this-> attrs.size ())) {
+	    InfoType info = this-> types [it];
+	    if (info == NULL) return NULL;
+	    types.push_back (info);
+	    attribs.push_back (this-> attrs [it]);
+	    
+	    auto type = params-> getParams () [it]-> info-> type-> CompOp (info);
+	    if (type) type = type-> ConstVerif (info);
+	    if (type) {
+		type-> isConst (info-> isConst ());
+		score-> score += 1;
+		score-> treat.push_back (type);
+	    } else return NULL;
+	}
+
+	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	ret-> isConst (this-> isConst ());
+	ret-> setTypes (types);
+	ret-> setAttribs (attribs);
+	ret-> setTmps (this-> tmpsDone);
+	    
+	ret-> multFoo = &StructUtils::InstCall;
+	score-> dyn = true;
+	score-> ret = ret;
+
+	return score;
+    }
     
     InfoType IStructInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;

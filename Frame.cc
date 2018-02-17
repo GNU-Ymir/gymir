@@ -118,6 +118,8 @@ namespace semantic {
 	    Table::instance ().retInfo ().deco = this-> _function-> getType ()-> deco.getStr ();
 	    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
 		Table::instance ().retInfo ().info-> isConst (true);
+	    else
+		Table::instance ().retInfo ().info-> isConst (false);
 	}
 	
 	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams);
