@@ -34,8 +34,8 @@ namespace semantic {
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> isInternal ());
 	Table::instance ().enterBlock ();
 	std::vector <Var> finalParam = IFrame::computeParams (this-> _function-> getParams ());
-	
-	this-> proto = IFrame::validate (finalParam);
+
+	this-> proto = IFrame::validate (finalParam);	
 	return this-> proto;
     }
 

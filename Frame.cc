@@ -127,10 +127,9 @@ namespace semantic {
 	    FrameTable::instance ().insert (proto);
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    auto block = this-> _function-> getBlock ()-> block ();
-
+	    
 	    if (Table::instance ().retInfo ().info-> type-> is<IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
-
+		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();	    
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 					    this-> _space, this-> _function-> name (),
 					    finalParams, block, this-> tempParams);

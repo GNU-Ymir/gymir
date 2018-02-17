@@ -277,7 +277,7 @@ namespace semantic {
 	    this-> _info-> setTmps (this-> tmpsDone);
 	    return this-> _info;
 	} else {
-	    return inside-> second;
+	    return inside-> second-> clone ();
 	}		
     }
 
@@ -437,6 +437,11 @@ namespace semantic {
 	}
 	return false;
     }
+
+    InfoType IStructInfo::ConstVerif (InfoType other) {
+	if (this-> isConst () && !other-> isConst ()) return NULL;
+	return this;
+    }
     
     InfoType IStructInfo::onClone () {
 	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
@@ -444,6 +449,7 @@ namespace semantic {
 	for (auto it : this-> types) {
 	    ret-> types.push_back (it);
 	}
+	
 	ret-> tmpsDone = this-> tmpsDone;
 	ret-> isConst (this-> isConst ());
 	return ret;
@@ -495,13 +501,20 @@ namespace semantic {
     }
     
     InfoType IStructInfo::CompOp (InfoType other) {
-	if (this-> isSame (other) || other-> is <IUndefInfo> ()) {
+	if (this-> isSame (other)) {
+	    auto ret = other-> clone ();
+	    ret-> isConst (this-> isConst ());
+	    ret-> binopFoo = &StructUtils::InstCast;
+	    return ret;
+	} else if (other-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstCast;
+	    
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
-		auto ret = new (Z0)  IRefInfo (false, this-> clone ());
+		auto ret = new (Z0)  IRefInfo (false, ref-> content ()-> clone ());
+		ret-> content ()-> isConst (this-> isConst ());
 		ret-> binopFoo = &StructUtils::InstAddr;
 		return ret;
 	    }
@@ -559,23 +572,7 @@ namespace semantic {
     }
 
     std::string IStructInfo::innerTypeString () {
-	static std::map <std::string, bool> inner;
-	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
-	auto inside = inner.find (buf.str ());
-	if (inside == inner.end () || !inside-> second) {
-	    std::string name = buf.str ();	    
-	    inner [name] = true;
-	    buf.write ("{");
-	    for (auto i : Ymir::r (0, this-> types.size ())) {
-		auto it = this-> types [i];
-		buf.write (it-> innerTypeString ());
-		if (i < (int) this-> types.size () - 1)
-		    buf.write (", ");
-	    }
-	    buf.write ("}");
-	    inner [name] = false;
-	}
-	return buf.str ();
+	return onlyNameTypeString ();
     }
 
     Namespace& IStructInfo::getSpace () {
@@ -587,18 +584,7 @@ namespace semantic {
     }
     
     std::string IStructInfo::innerSimpleTypeString () {
-	static std::map <std::string, bool> inner;
-	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
-	auto inside = inner.find (buf.str ());
-	if (inside == inner.end () || !inside-> second) {
-	    std::string name = buf.str ();	    
-	    inner [name] = true;
-	    for (auto it : this-> types) {
-		buf.write (it-> innerSimpleTypeString ());
-	    }
-	    inner [name] = false;
-	}
-	return buf.str ();
+	return this-> onlyNameTypeString ();
     }
 
     void IStructInfo::setTypes (std::vector <InfoType> types) {

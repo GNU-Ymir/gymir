@@ -116,7 +116,8 @@ namespace semantic {
 
 	score-> treat.push_back (scd-> info-> type-> CompOp (new (Z0) IPtrInfo (false, this-> _content)));
 	if (!score-> treat.back ()) return NULL;
-
+	if (scd-> info-> type-> isConst () && !this-> isConst ()) return NULL;	    
+	
 	auto res = new (Z0) IArrayInfo (false, this-> _content-> clone ());
 	res-> multFoo = &ArrayUtils::InstCall;
 	score-> dyn = true;

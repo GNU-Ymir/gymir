@@ -150,8 +150,6 @@ namespace syntax {
 	return false;
     }
     
-    void IImpl::declare () {}
-
     void IDeclaration::declareAsExtern (semantic::Module) {
 	Ymir::Error::assert ("TODO");
     }

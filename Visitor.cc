@@ -218,7 +218,6 @@ namespace syntax {
 	else if (token == Keys::IMMUTABLE) return visitGlobalImut ();
     	else if (token == Keys::SELF) return visitSelf ();
     	else if (token == Keys::TRAIT) return NULL;// visitTrait ();
-    	else if (token == Keys::IMPL) return visitImpl ();	      	
     	else if (fatal) syntaxError (token,
 				     {Keys::DEF, Keys::IMPORT, Keys::EXTERN,
 					     Keys::STRUCT, Keys::ENUM, Keys::STATIC,
@@ -262,47 +261,6 @@ namespace syntax {
 	}
     }
     
-    /**
-       impl := 'impl' identifiant ('from identifiant)? '{' (functionImpl | constructor)* '}'       
-    */
-    Impl Visitor::visitImpl () {
-	auto ident = visitIdentifiant ();
-	auto what = Word::eof ();
-	auto next = this-> lex.next ({Keys::FROM, Token::LACC});
-
-	if (next == Keys::FROM) {
-	    what = visitIdentifiant ();
-	    this-> lex.next ({Token::LACC});
-	}
-
-	next = this-> lex.next ({Token::RACC, Keys::DEF, Keys::OVER});
-	std::vector <Function> methods; std::vector <bool> herit;
-	std::vector <Constructor> csts;
-	bool isOver = (next == Keys::OVER);
-
-	if (isOver && what.isEof ()) syntaxError (next, {Token::RACC, Keys::DEF});
-	if (next != Token::RACC) {
-	    while (true) {
-		bool isCst = false;
-		auto meth = visitFunctionImpl (isCst);
-		if (!isCst) {
-		    methods.push_back ((Function) meth);
-		    herit.push_back (isOver);
-		} else csts.push_back ((Constructor) (meth));
-		next = this-> lex.next ({Token::RACC, Keys::DEF, Keys::OVER});
-		if (next == Token::RACC) break;
-		else if (next == Keys::OVER) {
-		    if (what.isEof ()) syntaxError (next, {Token::RACC, Keys::DEF});
-		    isOver = true;
-		} else isOver = false;
-	    }
-	}
-	
-	if (what.isEof ())
-	    return new (Z0)  IImpl (ident, methods, csts);
-	else return new (Z0)  IImpl (ident, what, methods, herit, csts);	
-    }
-
     /**
        constructor := 'def' '(' 'self' (',' varDeclaration)* ')' block
     */

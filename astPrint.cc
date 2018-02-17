@@ -46,24 +46,7 @@ namespace syntax {
 
 	this-> block-> print (nb + 6);	    	    
     }
-    
-    void IImpl::print (int nb) {
-	printf ("\n%*c<Impl> %s : %s",
-		nb, ' ',
-		this-> what.toString ().c_str (),
-		this-> who.isEof () ? "object" : this-> who.toString ().c_str ()
-	);
-
-	for (auto it : this-> csts) {
-	    it-> print (nb + 4);
-	}
-	    
-	for (auto it : this-> methods) {
-	    it-> print (nb + 4);
-	}	    
-    }
-
-    
+       
 	
     void IParamList::print (int nb) {
 	printf ("\n%*c<ParamList> %s",
