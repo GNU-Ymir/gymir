@@ -351,6 +351,7 @@ namespace syntax {
 	else Ymir::Error::useAsType (this-> type-> token);
 
 	if (aux-> type == NULL) return NULL;
+	if (aux-> size == NULL) return NULL;
 	// if (auto type = aux-> type-> info-> type-> to<IStructCstInfo> ()) {
 	//     Ymir::Error::assert ("TODO");
 	// }

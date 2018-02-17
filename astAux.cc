@@ -370,7 +370,8 @@ namespace syntax {
 	size (size),
 	isImmutable (isImmutable)
     {
-	this-> size-> inside = this;
+	if (this-> size)
+	    this-> size-> inside = this;
 	if (this-> type)
 	    this-> type-> inside = this;
     }    

@@ -843,8 +843,13 @@ namespace Ymir {
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	Word loc {word};
-	if (word == Keys::OPASSIGN)
-	    loc.setStr (Token::EQUAL);
+	std::vector <std::string> ops = {
+	    Keys::OPBINARY, Keys::OPBINARYR, Keys::OPACCESS, Keys::OPRANGE,
+	    Keys::OPTEST, Keys::OPUNARY, Keys::OPEQUAL, Keys::OPCALL, Keys::OPASSIGN
+	};
+	if (std::find (ops.begin (), ops.end (), word.getStr ()) != ops.end ()) {
+	    loc.setStr (word.getStr () [0] + std::string (""));
+	}
 	
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
