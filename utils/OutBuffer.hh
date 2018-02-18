@@ -184,3 +184,8 @@ template <typename ... T>
 void println (T ... args) {
     printf ("%s\n", Ymir::OutBuffer (args...).str ().c_str ());
 }
+
+template <typename ... T>
+void print (T ... args) {
+    printf ("%s", Ymir::OutBuffer (args...).str ().c_str ());
+}

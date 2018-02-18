@@ -78,36 +78,34 @@ namespace semantic {
     }
     
     Ymir::Tree IFrameProto::toGeneric () {
-	if (this-> _fn.isNull ()) {
-	    std::vector <tree> fndecl_type_params (this-> _vars.size ());
-	    for (uint i = 0 ; i < this-> _vars.size () ; i++) {
-		fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
-	    }
-
-	    std::string ident = Namespace (this-> space (), this-> _name).toString ();
-	    std::string ident_ASM;
-	    tree ret = this-> _type-> type-> toGeneric ().getTree ();
-	    tree fndecl_type;
-	    if (this-> isCVariadic ()) {
-		ident_ASM = this-> _name;
-		fndecl_type = build_varargs_function_type_array (ret, 0, fndecl_type_params.data ());
-	    } else {
-		if (this-> _extern == "C") ident_ASM = this-> _name;		
-		else if (this-> _extern == "") ident_ASM = Mangler::mangle_function (this-> _name, this);
-		else Ymir::Error::assert ("TODO");
-		
-		fndecl_type = build_function_type_array (ret, 0, fndecl_type_params.data ());
-	    }
-
-	    tree fndecl = build_fn_decl (ident.c_str (), fndecl_type);
-	    SET_DECL_ASSEMBLER_NAME (fndecl, get_identifier (ident_ASM.c_str ()));
-	    
-	    if (this->_extern != "") {
-		DECL_EXTERNAL (fndecl) = 1;
-	    }
-	
-	    this-> _fn =  build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	std::vector <tree> fndecl_type_params (this-> _vars.size ());
+	for (uint i = 0 ; i < this-> _vars.size () ; i++) {
+	    fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
 	}
+
+	std::string ident = Namespace (this-> space (), this-> _name).toString ();
+	std::string ident_ASM;
+	tree ret = this-> _type-> type-> toGeneric ().getTree ();
+	tree fndecl_type;
+	if (this-> isCVariadic ()) {
+	    ident_ASM = this-> _name;
+	    fndecl_type = build_varargs_function_type_array (ret, 0, fndecl_type_params.data ());
+	} else {
+	    if (this-> _extern == "C") ident_ASM = this-> _name;		
+	    else if (this-> _extern == "") ident_ASM = Mangler::mangle_function (this-> _name, this);
+	    else Ymir::Error::assert ("TODO");
+		
+	    fndecl_type = build_function_type_array (ret, 0, fndecl_type_params.data ());
+	}
+
+	tree fndecl = build_fn_decl (ident.c_str (), fndecl_type);
+	SET_DECL_ASSEMBLER_NAME (fndecl, get_identifier (ident_ASM.c_str ()));
+	    
+	if (this->_extern != "") {
+	    DECL_EXTERNAL (fndecl) = 1;
+	}
+	
+	this-> _fn =  build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
 	return this-> _fn;
     }        
 

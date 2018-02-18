@@ -80,7 +80,7 @@ namespace semantic {
     }
 
     Ymir::Tree IFinalFrame::getDeclaredType (const char* name) {
-	auto type = __declared__.find (name);
+       	auto type = __declared__.find (name);
 	if (type == __declared__.end ()) return Ymir::Tree ();
 	return type-> second;
     }

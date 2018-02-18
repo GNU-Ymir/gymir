@@ -440,7 +440,7 @@ namespace semantic {
 	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
 	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
 	    Ymir::Tree len, ptrr;
-		
+	    
 	    if (rexp.getTreeCode () != CALL_EXPR) {
 		len = getLen (loc, right, rexp);
 		ptrr = getPtr (loc, right, rexp);
