@@ -645,9 +645,11 @@ namespace semantic {
 	    return this-> tmpsDone [nb]-> info-> type;
 	} else {
 	    nb = nb - this-> tmpsDone.size ();
-	    if (auto ps = this-> tmpsDone [nb]-> to <IParamList> ()) {
-		if (nb < ps-> getParams ().size ())
-		    return ps-> getParams () [nb]-> info-> type;
+	    if (nb < this-> tmpsDone.size ()) {
+		if (auto ps = this-> tmpsDone [nb]-> to <IParamList> ()) {
+		    if (nb < ps-> getParams ().size ())
+			return ps-> getParams () [nb]-> info-> type;
+		}
 	    }
 	}
 	return NULL;
