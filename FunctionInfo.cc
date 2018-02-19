@@ -103,10 +103,10 @@ namespace semantic {
     InfoType IFunctionInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
 	    auto frames = getFrames ();
-	    if (frames.size () == 1 && frames [0]-> isPure ()) {
+	    if (frames.size () == 1) {//&& frames [0]-> isPure ()) {
 		auto infoTypes = frames [0]-> getParamTypes ();
 		auto score = this-> CallOp ({op.getLocus (), ""}, infoTypes);
-		if (score == NULL) return NULL;
+		if (score == NULL || score-> ret == NULL) return NULL;
 		auto ret = new (Z0) IPtrFuncInfo (true);
 		ret-> getParams () = infoTypes;
 		ret-> getType () = score-> ret-> cloneConst ();

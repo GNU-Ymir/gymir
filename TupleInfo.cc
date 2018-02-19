@@ -100,6 +100,15 @@ namespace semantic {
 	return NULL;
     }
 		
+    InfoType ITupleInfo::UnaryOp (Word op) {
+	if (op == Token::AND) {
+	    auto ret = new (Z0) IPtrInfo (this-> isConst (), this-> clone ());
+	    ret-> binopFoo = &TupleUtils::InstAddr;
+	    return ret;
+	}
+	return NULL;
+    }
+    
     InfoType ITupleInfo::onClone () {
 	auto tu = new (Z0)  ITupleInfo (IInfoType::isConst ());
 	for (auto it : this-> params) {

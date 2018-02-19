@@ -19,6 +19,8 @@ namespace semantic {
 
 	FrameProto validate (const std::vector<InfoType> & params) override;
 
+	std::vector <InfoType> getParamTypes () override;
+
 	static const char * id () {
 	    return "IUnPureFrame";
 	}

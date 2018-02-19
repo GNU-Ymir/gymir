@@ -68,13 +68,14 @@ namespace syntax {
 	auto aux = new (Z0) IVar (this-> token);
 	aux-> info = sym;
 	if (this-> templates.size () != 0) {		
-	    if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> () && !this-> inside-> is <IDColon> ())) {
-		auto params = new (Z0)  IParamList (this-> token, {});
-		Word aux2 {this-> token.getLocus (), ")"};
-		auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
-		this-> inside = call;
-		return call-> expression ();
-	    } else if (auto dt = this-> inside-> to<IDot> ()) {
+	    // if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> () && !this-> inside-> is <IDColon> ())) {
+	    // 	auto params = new (Z0)  IParamList (this-> token, {});
+	    // 	Word aux2 {this-> token.getLocus (), ")"};
+	    // 	auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
+	    // 	this-> inside = call;
+	    // 	return call-> expression ();
+	    // } else
+		if (auto dt = this-> inside-> to<IDot> ()) {
 		if (this == dt-> getLeft ()) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
 		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
@@ -1166,7 +1167,7 @@ namespace syntax {
 	    Ymir::Error::useAsVar (expr-> token, expr-> info);
 	    return NULL;
 	}
-	
+
 	if (auto tuple = expr-> info-> type-> to <ITupleInfo> ()) {
 	    std::vector <Expression> params;
 	    for (auto it : Ymir::r (0, tuple-> getParams ().size ())) {

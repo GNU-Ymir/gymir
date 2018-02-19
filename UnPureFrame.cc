@@ -26,6 +26,16 @@ namespace semantic {
 	return IFrame::validate (this-> _space, from, finalParams, this-> isVariadic ());
     }
 
+    std::vector <InfoType> IUnPureFrame::getParamTypes () {
+	std::vector <InfoType> params;
+	for (auto it : this-> _function-> getParams ()) {
+	    if (auto tvar = it-> to <ITypedVar> ()) {
+		params.push_back (tvar-> getType ());
+	    } else return {};
+	}
+	return params;
+    }
+    
     FrameProto IUnPureFrame::validate (ParamList params) {
 	return this-> validate (params-> getParamTypes ());
     }

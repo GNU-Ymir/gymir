@@ -397,7 +397,9 @@ namespace syntax {
 	for (auto it : this-> templates) {
 	    auto elem = it-> templateExpReplace (values);
 	    if (auto ps = elem-> to<IParamList> ()) {
-		tmps.push_back (paramListToTupleVar (it-> token, ps));
+		for (auto it_ : ps-> getParams ()) {
+		    tmps.push_back (it_);
+		}
 	    } else {
 		tmps.push_back (elem);
 	    }
@@ -414,7 +416,7 @@ namespace syntax {
     Expression IArrayVar::templateExpReplace (const map <string, Expression>& values) {
 	auto cont = this-> content-> templateExpReplace (values);
 	if (auto ps = cont-> to <IParamList> ()) {
-	    cont = paramListToTupleVar (this-> content-> token, ps);
+	    cont = ps;//paramListToTupleVar (this-> content-> token, ps);
 	}
 	
 	auto ret = new (Z0)  IArrayVar (this-> token, cont);
