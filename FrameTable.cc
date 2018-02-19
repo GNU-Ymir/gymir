@@ -3,6 +3,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/semantic/tree/Generic.hh>
 #include <ymir/ast/Global.hh>
 #include <ymir/utils/Mangler.hh>
 
@@ -135,9 +136,10 @@ namespace semantic {
 	Ymir::enterBlock ();
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL, NULL_TREE, ret); 
 	DECL_RESULT (fn_decl) = result_decl;
-
+	auto aux = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), ret);
+	
 	Ymir::Tree inside = Ymir::buildTree (
-	    MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, result_decl,
+	    MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, aux,
 	    build_call_array_loc (
 		BUILTINS_LOCATION,
 		void_type_node,
@@ -147,8 +149,16 @@ namespace semantic {
 	    )
 	);
 	
+	Ymir::getStackStmtList ().back ().append (allSelfCall ());
+	Ymir::getStackStmtList ().back ().append (inside);
+	Ymir::getStackStmtList ().back ().append (allSelfDestCall ());
+	    
+	Ymir::Tree result_expr = Ymir::buildTree (
+	    MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, result_decl, aux
+	);
+	
 	Ymir::getStackStmtList ().back ().append (Ymir::buildTree (
-	    RETURN_EXPR, BUILTINS_LOCATION, void_type_node, inside
+	    RETURN_EXPR, BUILTINS_LOCATION, void_type_node, result_expr
 	));
 
 	auto fnTreeBlock = Ymir::leaveBlock ();
@@ -170,6 +180,46 @@ namespace semantic {
 	IFinalFrame::currentFrame () = NULL;
     }
     
+    Ymir::Tree FrameTable::allSelfDestCall () {
+	Ymir::TreeStmtList list;
+	auto modules = Table::instance ().modules ();
+	for (auto it : modules) {
+	    auto fr = Table::instance ().moduleDestruct (it);
+	    if (fr != NULL) {
+		auto proto = fr-> validate ();
+		list.append (
+		    build_call_array_loc (
+			BUILTINS_LOCATION,
+			void_type_node, 
+			proto-> toGeneric ().getTree (),
+			0, NULL
+		    )
+		);
+	    }
+	}
+	return list.getTree (); 
+    }
+
+    Ymir::Tree FrameTable::allSelfCall () {
+	Ymir::TreeStmtList list;
+	auto modules = Table::instance ().modules ();
+	for (auto it : modules) {
+	    auto fr = Table::instance ().moduleConstruct (it);
+	    if (fr != NULL) {
+		auto proto = fr-> validate ();
+		list.append (
+		    build_call_array_loc (
+			BUILTINS_LOCATION,
+			void_type_node, 
+			proto-> toGeneric ().getTree (),
+			0, NULL
+		    )
+		);
+	    }
+	}
+	return list.getTree ();
+    }
+
     void FrameTable::purge () {
 	this-> _finals.clear ();
 	this-> _finalTemplates.clear ();

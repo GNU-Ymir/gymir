@@ -63,7 +63,7 @@ namespace syntax {
 
 	virtual ~IFunction ();
 	
-    private:
+    protected:
 	
 	semantic::Frame verifyPure (semantic::Namespace);
 	semantic::Frame verifyPureExtern (semantic::Namespace);

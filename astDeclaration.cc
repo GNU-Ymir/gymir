@@ -751,7 +751,95 @@ namespace syntax {
 	sym-> isPublic () = this-> is_public ();	
 	mod-> insert (sym);
     }
-
     
+    void ISelf::declare () {
+	if (Table::instance ().constructor () != NULL) {
+	    Ymir::Error::shadowingVar (
+		this-> ident,
+		Table::instance ().constructor ()-> ident ()
+	    );
+	    return;
+	}
+	
+	auto space = Table::instance ().space ();
+	auto fr = new (Z0) IPureFrame (space, this);	
+	FrameTable::instance ().insert (fr);
+	Table::instance ().constructor () = fr;
+    }
+
+    void ISelf::declare (semantic::Module mod) {
+	if (mod-> constructor () != NULL) {
+	    Ymir::Error::shadowingVar (
+		this-> ident,
+		mod-> constructor ()-> ident ()
+	    );
+	    return;
+	}
+	
+	auto space = Table::instance ().space ();
+	auto fr = new (Z0) IPureFrame (space, this);	
+	FrameTable::instance ().insert (fr);
+	mod-> constructor () = fr;
+    }
+
+    void ISelf::declareAsExtern (semantic::Module mod) {
+	if (mod-> constructor () != NULL) {
+	    Ymir::Error::shadowingVar (
+		this-> ident,
+		mod-> constructor ()-> ident ()
+	    );
+	    return;
+	}
+	
+	auto space = Table::instance ().space ();
+	auto fr = new (Z0) IExternFrame (space, "", this-> toProto ());	
+	FrameTable::instance ().insert (fr);
+	mod-> constructor () = fr;
+    }
+
+    void IDestSelf::declare () {
+	if (Table::instance ().destructor () != NULL) {
+	    Ymir::Error::shadowingVar (
+		this-> ident,
+		Table::instance ().destructor ()-> ident ()
+	    );
+	    return;
+	}
+	
+	auto space = Table::instance ().space ();
+	auto fr = new (Z0) IPureFrame (space, this);	
+	FrameTable::instance ().insert (fr);
+	Table::instance ().destructor () = fr;
+    }
+
+    void IDestSelf::declare (semantic::Module mod) {
+	if (mod-> destructor () != NULL) {
+	    Ymir::Error::shadowingVar (
+		this-> ident,
+		mod-> destructor ()-> ident ()
+	    );
+	    return;
+	}
+	
+	auto space = Table::instance ().space ();
+	auto fr = new (Z0) IPureFrame (space, this);	
+	FrameTable::instance ().insert (fr);
+	mod-> destructor () = fr;
+    }
+
+    void IDestSelf::declareAsExtern (semantic::Module mod) {
+	if (mod-> destructor () != NULL) {
+	    Ymir::Error::shadowingVar (
+		this-> ident,
+		mod-> destructor ()-> ident ()
+	    );
+	    return;
+	}
+	
+	auto space = Table::instance ().space ();
+	auto fr = new (Z0) IExternFrame (space, "", this-> toProto ());	
+	FrameTable::instance ().insert (fr);
+	mod-> destructor () = fr;
+    }
     
 }

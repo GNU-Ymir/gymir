@@ -2,6 +2,10 @@
 
 #include <ymir/utils/Array.hh>
 
+namespace Ymir {
+    struct Tree;
+}
+
 namespace syntax {
     class IGlobal;
     typedef IGlobal* Global;
@@ -79,6 +83,10 @@ namespace semantic {
 	
     private:
 
+	Ymir::Tree allSelfCall ();
+
+	Ymir::Tree allSelfDestCall ();
+	
 	static FrameTable __instance__;
 	
     };

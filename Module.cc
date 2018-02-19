@@ -96,6 +96,14 @@ namespace semantic {
 	return false;
     }
 
+    Frame & IModule::constructor () {
+	return this-> _constructor;
+    }
+
+    Frame & IModule::destructor () {
+	return this-> _destructor;
+    }
+    
     const Namespace& IModule::space () {
 	return this-> _space;
     }

@@ -22,6 +22,7 @@ namespace syntax {
 	Constructor visitConstructor ();
 	Declaration visitFunctionImpl (bool &);
 	Self visitSelf ();
+	DestSelf visitDestSelf ();
 	Global visitGlobal ();
 	Global visitGlobalImut ();
 	std::string visitSpace ();

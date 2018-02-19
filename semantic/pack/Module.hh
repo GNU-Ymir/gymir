@@ -4,6 +4,7 @@
 #include "Namespace.hh"
 #include "Scope.hh"
 #include "Symbol.hh"
+#include <ymir/semantic/pack/Frame.hh>
 #include <ymir/utils/Array.hh>
 
 namespace semantic {
@@ -13,8 +14,11 @@ namespace semantic {
 	Namespace _space;
 	std::vector <Namespace> _opens;
 	std::vector <Namespace> publicOpens;
-	Scope globalScope;
+	Frame _constructor;
+	Frame _destructor;
 	
+	Scope globalScope;
+		
     public:
 
 	IModule (const Namespace&);
@@ -42,6 +46,10 @@ namespace semantic {
 	std::vector <Namespace> accessible ();
 
 	bool authorized (const Namespace&);
+
+	Frame & constructor ();
+
+	Frame & destructor ();
 	
 	const Namespace& space ();
 

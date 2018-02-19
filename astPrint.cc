@@ -399,5 +399,17 @@ namespace syntax {
 	    this-> type-> print (nb + 4);
     }
 
+		
+    void IConstructor::print (int nb) {
+	printf ("\n%*c<Constructor> %s",
+		nb, ' ',
+		this-> ident.toString ().c_str ()
+	);
+	
+	for (auto it : this-> params) {
+	    it-> print (nb + 4);
+	}
+	this-> block-> print (nb + 8);
+    }
     
 }

@@ -83,7 +83,7 @@ namespace syntax {
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-			       Keys::TRAIT, Keys::REF, Keys::CONST, Keys::MOD
+			       Keys::TRAIT, Keys::REF, Keys::CONST, Keys::MOD, Keys::SELF
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -217,6 +217,7 @@ namespace syntax {
     	else if (token == Keys::STATIC) return visitGlobal ();
 	else if (token == Keys::IMMUTABLE) return visitGlobalImut ();
     	else if (token == Keys::SELF) return visitSelf ();
+	else if (token == Token::TILDE) return visitDestSelf ();
     	else if (fatal) syntaxError (token,
 				     {Keys::DEF, Keys::IMPORT, Keys::EXTERN,
 					     Keys::STRUCT, Keys::ENUM, Keys::STATIC,
@@ -336,6 +337,13 @@ namespace syntax {
 	return new (Z0)  ISelf (begin, visitBlock ());
     }
 
+    DestSelf Visitor::visitDestSelf () {
+	auto begin = this-> lex.next ();
+	this-> lex.next ({Token::LPAR});
+	this-> lex.next ({Token::RPAR});
+	return new (Z0)  IDestSelf (begin, visitBlock ());
+    }
+    
     /**
        global := 'static' identifiant (('=' expression) | (':' type)) ';'
     */

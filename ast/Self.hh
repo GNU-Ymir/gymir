@@ -1,41 +1,55 @@
 #pragma once
 
-#include "Declaration.hh"
+#include "Function.hh"
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
 
 namespace syntax {
 
-    class ISelf : public IDeclaration {
+    class ISelf : public IFunction {
 
 	Word ident;
-	Block block;
 
     public:
 
 	ISelf (Word ident, Block block) :
-	    ident (ident),
-	    block (block)
+	    IFunction (ident, {}, {}, NULL, block)
 	{}
 
-	void declare () override {}
+	void declare () override;
+
+	void declare (semantic::Module) override;
+
+	void declareAsExtern (semantic::Module) override;
 	
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Self> %s",
-		    nb, ' ',
-		    this-> ident.toString ().c_str ()
-	    );
-	    
-	    this-> block-> print (nb + 4);
+	void print (int) override {
 	}	
-	
-	virtual ~ISelf () {
-	    delete block;
-	}
-	
+		
     };
 
+    class IDestSelf : public IFunction {
+
+	Word ident;
+
+    public:
+
+	IDestSelf (Word ident, Block block) :
+	    IFunction ({ident, "~" + ident.getStr ()}, {}, {}, NULL, block)
+	{}
+
+	void declare () override;
+
+	void declare (semantic::Module) override;
+
+	void declareAsExtern (semantic::Module) override;
+	
+	void print (int) override {
+	}	
+		
+    };
+
+    typedef IDestSelf* DestSelf;
     typedef ISelf* Self;
     
 }

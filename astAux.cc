@@ -1391,4 +1391,15 @@ namespace syntax {
 
     
     
+    IConstructor::IConstructor (Word token, std::vector <Var> params, Block bl) :
+	IFunction (Word (token.getLocus(), token.getStr () + "__cst__"),
+		   params,
+		   {}, NULL, bl)	    	    
+    {
+	this-> params.insert (this-> params.begin (), new (Z0) IVar (token));
+    }
+    
+	
+
+    
 }

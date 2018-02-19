@@ -324,6 +324,7 @@ namespace semantic {
 	for (auto it : this-> _importations) {
 	    spaces.push_back (it-> space ());
 	}
+	spaces.push_back (this-> _space);
 	return spaces;
     }
 
@@ -348,8 +349,32 @@ namespace semantic {
 	return false;
     }
 
+    Frame Table::moduleConstruct (Namespace name) {
+	if (name == this-> _space) return this-> _constructor;
+	for (auto it : this-> _importations) {
+	    if (it-> space () == name) return it-> constructor ();
+	}
+	return NULL;
+    }
+
+    Frame Table::moduleDestruct (Namespace name) {
+	if (name == this-> _space) return this-> _destructor;
+	for (auto it : this-> _importations) {	    
+	    if (it-> space () == name) return it-> destructor ();
+	}
+	return NULL;
+    }
+        
     ulong Table::nbRecursive () {
 	return this-> _nbFrame;
+    }
+
+    Frame & Table::constructor () {
+	return this-> _constructor;
+    }
+
+    Frame & Table::destructor () {
+	return this-> _destructor;
     }
     
 }

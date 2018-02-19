@@ -25,7 +25,9 @@ namespace semantic {
 	ulong _nbFrame = 0;
 	static const int __maxNbRec__ = 300;
 	std::vector <syntax::Instruction> _staticInits;
-
+	Frame _constructor;
+	Frame _destructor;
+	
     public:
 	
 	static Table& instance () {
@@ -98,6 +100,14 @@ namespace semantic {
 
 	std::vector <Namespace> modulesAndForeigns ();
 
+	Frame moduleConstruct (Namespace space);
+	
+	Frame moduleDestruct (Namespace space);
+
+	Frame & constructor ();
+
+	Frame & destructor ();
+	
 	bool moduleExists (Namespace name);
 
 	ulong nbRecursive ();

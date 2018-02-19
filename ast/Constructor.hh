@@ -11,25 +11,9 @@ namespace syntax {
     class IConstructor : public IFunction {
     public:
 
-	IConstructor (Word token, std::vector <Var> params, Block bl) :
-	    IFunction (Word (token.getLocus(), token.getStr () + "__cst__"),
-		       params,
-		       {}, NULL, bl)	    	    
-	{
-	    this-> params.insert (this-> params.begin (), new (Z0) IVar (token));
-	}
-
-	void print (int nb = 0) override {
-	    printf ("\n%*c<Constructor> %s",
-		    nb, ' ',
-		    this-> ident.toString ().c_str ()
-	    );
-	    
-	    for (auto it : this-> params) {
-		it-> print (nb + 4);
-	    }
-	    this-> block-> print (nb + 8);
-	}
+	IConstructor (Word token, std::vector <Var> params, Block bl);
+	
+	void print (int nb = 0) override;
     };
 
     typedef IConstructor* Constructor;
