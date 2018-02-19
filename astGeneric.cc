@@ -729,6 +729,73 @@ namespace syntax {
 	
 	return list.getTree ();
     }
+
+    Ymir::Tree IAssert::callPrint (Ymir::Tree msgTree) {
+	auto fn = InternalFunction::getYError ().getTree ();
+	
+	std::string pre;	
+	Ymir::TreeStmtList list;
+		
+	if (!msgTree.isNull ()) {
+	    auto aux = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), msgTree.getType ());
+	    list.append (buildTree (
+		MODIFY_EXPR, this-> token.getLocus (), void_type_node, aux, msgTree
+	    ));
+
+	    auto treeExpr = new (Z0) ITreeExpression (this-> token, this-> msg-> info-> type, aux);
+	    
+	    tree nextArgs [] = {
+		ArrayUtils::InstLen (this-> token, NULL, treeExpr, NULL).getTree (),
+		ArrayUtils::InstPtr (this-> token, NULL, treeExpr, NULL).getTree ()
+	    };
+	    
+	    list.append (
+		build_call_array_loc (this-> token.getLocus (),
+				      void_type_node, fn,
+				      2,
+				      nextArgs
+		)		
+	    );
+	}
+
+	auto abort_fn = InternalFunction::getAbort ();
+	
+	list.append (
+	    build_call_array_loc (this-> token.getLocus (), void_type_node, abort_fn.getTree (), 0, NULL)
+	);
+	
+	return list.getTree ();
+    }
+    
+    Ymir::Tree IAssert::toGeneric () {
+	Ymir::Tree text;
+	std::string format;
+	if (this-> msg) {
+	    text = ArrayUtils::InstToArray (
+		this-> token,
+		this-> msg-> info-> type,
+		this-> msg,
+		new (Z0) ITreeExpression (this-> token, this-> msg-> info-> type, Ymir::Tree ())
+	    );
+	}
+
+	Ymir::Tree bool_expr = this-> expr-> toGeneric ();
+	Ymir::Tree thenLabel = Ymir::makeLabel (this-> token.getLocus (), "then");
+	Ymir::Tree endLabel = Ymir::makeLabel (this-> token.getLocus (), "end");
+	Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, this-> expr-> token.getLocus (), void_type_node, thenLabel);
+	Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, this-> expr-> token.getLocus (), void_type_node, endLabel);
+
+	Ymir::TreeStmtList list;
+	Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, this-> expr-> token.getLocus (), void_type_node, bool_expr, goto_end, goto_then);
+	list.append (cond_expr);
+	Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, this-> expr-> token.getLocus (), void_type_node, thenLabel);
+	Ymir::Tree end_label_expr = Ymir::buildTree (LABEL_EXPR, this-> expr-> token.getLocus (), void_type_node, endLabel);
+	list.append (then_label_expr);
+	list.append (callPrint (text));
+	list.append (goto_end);
+	list.append (end_label_expr);
+	return list.getTree ();	
+    }
     
 }
 

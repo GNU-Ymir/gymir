@@ -1,5 +1,6 @@
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/utils/Options.hh>
 
 namespace semantic {
 
@@ -9,6 +10,9 @@ namespace semantic {
     Ymir::Tree InternalFunction::__y_memset__;
     Ymir::Tree InternalFunction::__y_main__;
     Ymir::Tree InternalFunction::__y_run_main__;
+    Ymir::Tree InternalFunction::__y_error__;
+    Ymir::Tree InternalFunction::__abort__;
+    
     std::map <std::string, Ymir::Tree> InternalFunction::__funcs__;
     
     Ymir::Tree InternalFunction::getMalloc () {
@@ -48,6 +52,38 @@ namespace semantic {
 	return __y_newArray__;
     }
 
+    Ymir::Tree InternalFunction::getYError () {
+	if (__y_error__.isNull ()) {
+	    tree fndecl_type_params [] = {
+		long_unsigned_type_node,
+		build_pointer_type (char_type_node)
+	    };
+
+	    tree ret = build_pointer_type (void_type_node);
+	    tree fndecl_type = build_function_type_array (ret, 2, fndecl_type_params);
+	    tree fndecl = build_fn_decl ("_y_error", fndecl_type);
+	    DECL_EXTERNAL (fndecl) = 1;
+
+	    __y_error__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	}
+	return __y_error__;
+    }
+
+    Ymir::Tree InternalFunction::getAbort () {
+	if (__abort__.isNull ()) {
+	    tree fndecl_type_params [] = {
+	    };
+
+	    tree ret = build_pointer_type (void_type_node);
+	    tree fndecl_type = build_function_type_array (ret, 0, fndecl_type_params);
+	    tree fndecl = build_fn_decl ("abort", fndecl_type);
+	    DECL_EXTERNAL (fndecl) = 1;
+
+	    __abort__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	}
+	return __abort__;
+    }
+
     Ymir::Tree InternalFunction::getYMemcpy () {
 	if (__y_memcpy__.isNull ()) {
 	    tree fndecl_type_params [] = {
@@ -83,8 +119,7 @@ namespace semantic {
 	}
 	return __y_memset__;
     }
-
-    
+        
     Ymir::Tree InternalFunction::getYInitType (const char * name) {
 	auto it = __funcs__.find (name);
 	if (it == __funcs__.end ()) {
@@ -118,7 +153,10 @@ namespace semantic {
 	    };
 	    tree ret = int_type_node;
 	    tree fndecl_type = build_function_type_array (ret, 3, args);
-	    tree fndecl = build_fn_decl ("y_run_main", fndecl_type);
+	    const char* name;
+	    if (!Options::instance ().isDebug ()) name = "y_run_main";
+	    else name = "y_run_main_debug";
+	    tree fndecl = build_fn_decl (name, fndecl_type);
 	    DECL_EXTERNAL (fndecl) = 1;
 	    __y_run_main__ = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
 	}

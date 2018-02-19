@@ -9,7 +9,8 @@ class Options {
     std::vector <std::string> _includeDirs;
     std::string _prefixIncludeDir;
     bool _isVerbose = false;
-
+    bool _isDebug = false;
+    
     static Options __instance__;
     
 public:
@@ -20,6 +21,8 @@ public:
     
     bool & isVerbose ();
 
+    bool & isDebug ();
+    
     std::string & prefixIncludeDir ();
 
     void setPrefix (const char * path);

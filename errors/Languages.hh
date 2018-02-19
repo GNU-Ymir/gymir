@@ -109,6 +109,8 @@ namespace Ymir {
 		phrases [ModuleNotFirst] = "Global module declaration must be the first declaration";
 		phrases [ModuleDontMatch] = "Module %%% must be placed in file %%%.yr";
 		phrases [ShadowingVar2] = "Cannot override '%%%' with a different acces property (%%%)";
+		phrases [AssertFailure] = "Assert failure : %";
+		phrases [AssertFailure2] = "Assert failure";
 		init = true;
 	    } 
 	    return phrases;

@@ -308,7 +308,29 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
-    
+
+    void Error::assertFailure (const Word & loc, const char* msgFail) {
+	auto msg = format (getString (AssertFailure), msgFail);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, loc);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);	
+    }
+
+    void Error::assertFailure (const Word & loc) {
+	auto msg = std::string (getString (AssertFailure2));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, loc);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);	
+    }
+            
     void Error::noValueNonVoidFunction (const Word& word) {
 	auto str = getString (NoValueNonVoid);
 	std::string msg = format (str, YELLOW, word.getStr ().c_str (), RESET);

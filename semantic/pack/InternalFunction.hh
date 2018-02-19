@@ -14,7 +14,9 @@ namespace semantic {
 	static Ymir::Tree __y_memset__;
 	static Ymir::Tree __y_run_main__;
 	static Ymir::Tree __y_main__;
-		
+	static Ymir::Tree __y_error__;
+	static Ymir::Tree __abort__;
+	
     public:
 	
 	static Ymir::Tree getMalloc ();
@@ -24,7 +26,8 @@ namespace semantic {
 	static Ymir::Tree getYInitType (const char*);
 	static Ymir::Tree getYMainPtr ();
 	static Ymir::Tree getYRunMain ();
-	
+	static Ymir::Tree getYError ();
+	static Ymir::Tree getAbort ();
     };
     
 }

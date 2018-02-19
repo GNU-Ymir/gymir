@@ -79,8 +79,16 @@ ymir_langhook_init (void)
 
 
 static void
-ymir_init_options (unsigned int, cl_decoded_option *)
+ymir_init_options (unsigned int argc, cl_decoded_option * decoded_options)
 {
+    for (unsigned int i = 0 ; i < argc ; i++) {
+	//const char * arg = decoded_options [i].arg;
+	switch (decoded_options [i].opt_index) {
+	case OPT_g :
+	case OPT_ggdb : Options::instance ().isDebug () = true; break;
+	case OPT_v : Options::instance ().isVerbose () = true; break;
+	}
+    }
 }
 
 static void
@@ -98,7 +106,7 @@ ymir_init_options_struct (gcc_options *opts) {
   //opts->x_flag_bounds_check = global.params.useArrayBounds;
 
   /* D says that signed overflow is precisely defined.  */
-  opts->x_flag_wrapv = 1;
+  opts->x_flag_wrapv = 1;  
 }
 
 static unsigned int
@@ -119,7 +127,9 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
     else if (code == OPT_v) {
 	Options::instance ().isVerbose () = true;
     }
-    else return false;
+    else {
+	return false;
+    }
     
     return true;
 }

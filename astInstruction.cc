@@ -127,16 +127,18 @@ namespace syntax {
 
 	if (this-> isStatic) {
 	    if (msg && !msg-> info-> isImmutable ()) {
-		Ymir::Error::assert ("TODO");
+		Ymir::Error::notImmutable (this-> token, msg-> info);
 	    }
 
 	    if (!expr-> info-> isImmutable ()) {
-		Ymir::Error::assert ("TODO");
+		Ymir::Error::notImmutable (this-> token, expr-> info);
 	    } else if (!(expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ())) {
-		Ymir::Error::assert ("TODO");
+		if (msg) 
+		    Ymir::Error::assertFailure (this-> token, msg-> info-> value ()-> toString ().c_str ());
+		else Ymir::Error::assertFailure (this-> token);
 	    }
 	} else if (expr-> info-> isImmutable ()) {
-	    if (expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ())
+	    if (!expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ())
 		Table::instance ().retInfo ().returned ();
 	}
 	return new (Z0)  IAssert (this-> token, expr, msg, this-> isStatic);

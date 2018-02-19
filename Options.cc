@@ -6,6 +6,10 @@ bool & Options::isVerbose () {
     return this-> _isVerbose;
 }
 
+bool & Options::isDebug () {
+    return this-> _isDebug;
+}
+
 void Options::setPrefix (const char * path) {
     this-> _prefixIncludeDir = path;
     if (this-> _prefixIncludeDir [this-> _prefixIncludeDir.length () - 1] != '/')

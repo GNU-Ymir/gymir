@@ -83,6 +83,8 @@ namespace Ymir {
 	    MainPrototype,
 	    ModuleNotFirst,
 	    ModuleDontMatch,
+	    AssertFailure,
+	    AssertFailure2,
 	    LAST_ERROR
 	};
 
@@ -136,6 +138,10 @@ namespace Ymir {
 	static void notATemplate (const Word&, std::vector <syntax::Expression>&);
 
 	static void notImmutable (const Word &, semantic::Symbol);
+
+	static void assertFailure (const Word &, const char* msg);
+
+	static void assertFailure (const Word &);
 	
 	static void takeATypeAsTemplate (const Word&);
 
