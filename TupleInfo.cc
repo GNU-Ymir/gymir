@@ -184,10 +184,10 @@ namespace semantic {
 	if (this-> isType ()) return NULL;
 	if (auto tuple = right-> info-> type-> to <ITupleInfo> ()) {
 	    if (!this-> isSame (tuple)) return NULL;
-	    auto ret = new (Z0)  ITupleInfo (false);
-	    for (auto it : Ymir::r (0, this-> params.size ())) {
-		ret-> params.push_back (this-> params [it]-> clone ());
-	    }
+	    auto ret = this-> CompOp (tuple);
+	    if (ret) ret = tuple-> ConstVerif (this);
+	    if (ret == NULL) return NULL;
+	    
 	    ret-> binopFoo = &TupleUtils::InstAffect;
 	    return ret;
 	}
