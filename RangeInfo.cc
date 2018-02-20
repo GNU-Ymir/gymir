@@ -129,6 +129,7 @@ namespace semantic {
     InfoType IRangeInfo::Scd () {
 	auto cst = this-> _content-> clone ();
 	cst-> isConst (this-> isConst ());
+	cst-> value () = NULL;
 	cst-> binopFoo = &RangeUtils::InstScd;
 	return cst;
     }

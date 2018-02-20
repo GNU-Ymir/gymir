@@ -852,7 +852,6 @@ namespace syntax {
 	}
 
 	aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IRangeInfo (true, type));
-	//TODO Immutable
 	return aux;
     }
 
