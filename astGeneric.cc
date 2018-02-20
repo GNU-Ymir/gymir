@@ -527,12 +527,16 @@ namespace syntax {
 	auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), tuple_type);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    auto field = Ymir::getField (loc, aux, it);
-	    auto ret = this-> casters [it]-> buildBinaryOp (
-		this-> params [it]-> token,
-		this-> casters [it],
-		new (Z0)  ITreeExpression (this-> token, type_inner [it], field),
-		this-> params [it]
-	    );
+	    auto ret =
+		buildTree (
+		    MODIFY_EXPR, loc, void_type_node, field,
+		    this-> casters [it]-> buildBinaryOp (
+			this-> params [it]-> token,
+			this-> casters [it],
+			this-> params [it],
+			new (Z0)  ITreeExpression (this-> token, type_inner [it], Ymir::Tree ())
+		    )
+		);
 	    list.append (ret);
 	}
 	Ymir::getStackStmtList ().back ().append (list.getTree ());

@@ -25,7 +25,6 @@ namespace semantic {
 	    auto other = new (Z0)  ITupleInfo (IInfoType::isConst ());
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto res = this-> params [it]-> ConstVerif (tuple-> params [it]);
-		//res-> binopFoo = this-> params [it]-> binopFoo;
 		if (res == NULL) return NULL;
 		else other-> addParam (res);		
 	    }
@@ -184,7 +183,7 @@ namespace semantic {
     InfoType ITupleInfo::Affect (Word, Expression right) {
 	if (this-> isType ()) return NULL;
 	if (auto tuple = right-> info-> type-> to <ITupleInfo> ()) {
-	    if (tuple-> nbParams () != this-> nbParams ()) return NULL;
+	    if (!this-> isSame (tuple)) return NULL;
 	    auto ret = new (Z0)  ITupleInfo (false);
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		ret-> params.push_back (this-> params [it]-> clone ());

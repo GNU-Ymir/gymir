@@ -1122,27 +1122,24 @@ namespace syntax {
     Expression IConstTuple::expression () {
 	auto aux = new (Z0)  IConstTuple (this-> token, this-> end, {});
 	auto type = new (Z0)  ITupleInfo (true);
-	Word op (this-> token.getLocus (), Token::EQUAL);
-	auto undefExpr = new (Z0)  ITreeExpression (this-> token, new (Z0)  IUndefInfo (), Ymir::Tree ());
+	auto undef = new (Z0)  IUndefInfo ();
 	for (auto it : this-> params) {
 	    auto expr = it-> expression ();
 	    if (expr == NULL) return NULL;
 	    if (auto par = expr-> to <IParamList> ()) {
 		for (auto exp_it : par-> getParams ()) {
-		    aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
+		    aux-> casters.push_back (exp_it-> info-> type-> CompOp (undef));
 		    if (aux-> casters.back () == NULL) {
-			op.setLocus (expr-> token.getLocus ());
-			Ymir::Error::undefinedOp (op, undefExpr-> info, expr-> info);
+			Ymir::Error::incompatibleTypes (exp_it-> token, exp_it-> info, undef);
 			return NULL;
 		    }
 		    aux-> params.push_back (exp_it);
 		    type-> addParam (exp_it-> info-> type);
 		}
 	    } else {		
-		aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
+		aux-> casters.push_back (expr-> info-> type-> CompOp (undef));
 		if (aux-> casters.back () == NULL) {
-		    op.setLocus (expr-> token.getLocus ());
-		    Ymir::Error::undefinedOp (op, undefExpr-> info, expr-> info);
+		    Ymir::Error::incompatibleTypes (expr-> token, expr-> info, undef);
 		    return NULL;
 		}
 		aux-> params.push_back (expr);
