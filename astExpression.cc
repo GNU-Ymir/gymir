@@ -67,15 +67,9 @@ namespace syntax {
     Expression IVar::expression (Symbol sym) {
 	auto aux = new (Z0) IVar (this-> token);
 	aux-> info = sym;
-	if (this-> templates.size () != 0) {		
-	    // if (!this-> inside || (!this-> inside-> is<IPar> () && !this-> inside-> is<IDot> () && !this-> inside-> is <IStructCst> () && !this-> inside-> is <IVar> () && !this-> inside-> is <IDColon> ())) {
-	    // 	auto params = new (Z0)  IParamList (this-> token, {});
-	    // 	Word aux2 {this-> token.getLocus (), ")"};
-	    // 	auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
-	    // 	this-> inside = call;
-	    // 	return call-> expression ();
-	    // } else
-		if (auto dt = this-> inside-> to<IDot> ()) {
+	if (this-> templates.size () != 0) {
+	    
+	    if (auto dt = this-> inside-> to<IDot> ()) {
 		if (this == dt-> getLeft ()) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
 		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
@@ -179,6 +173,7 @@ namespace syntax {
 	    return NULL;	    
 	} else {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
+	    if (t_info == NULL) return NULL;
 	    if (this-> deco == Keys::REF)
 		t_info = new (Z0)  IRefInfo (false, t_info);
 	    else if (this-> deco == Keys::CONST) t_info-> isConst (true);
@@ -1144,7 +1139,7 @@ namespace syntax {
 		    aux-> params.push_back (exp_it);
 		    type-> addParam (exp_it-> info-> type);
 		}
-	    } else {
+	    } else {		
 		aux-> casters.push_back (expr-> info-> type-> BinaryOpRight (op, undefExpr));
 		if (aux-> casters.back () == NULL) {
 		    op.setLocus (expr-> token.getLocus ());

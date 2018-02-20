@@ -91,7 +91,7 @@ namespace semantic {
    
     InfoType IPtrInfo::create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
-	    if (!tmps [0]-> info-> type-> isType ()) {
+	    if (tmps.size () != 1 || !tmps [0]-> info-> type-> isType ()) {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    }

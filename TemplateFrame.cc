@@ -283,6 +283,7 @@ namespace semantic {
 	    if (this-> _function-> getTest ()) {
 		auto valid = this-> _function-> getTest ()-> templateExpReplace (tmps);
 		if (!validateTest (valid)) return NULL;
+		else score-> score += 1;//__TEST__;
 	    }
 	    
 	    score-> tmps = tmps;

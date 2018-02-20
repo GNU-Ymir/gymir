@@ -29,8 +29,6 @@ namespace semantic {
 
 	InfoType DotExpOp (syntax::Expression right) override;
 
-	InfoType DotOp (syntax::Var var) override;
-
 	InfoType DColonOp (syntax::Var var) override;
 
 	InfoType UnaryOp (Word) override;

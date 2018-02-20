@@ -73,21 +73,16 @@ namespace semantic {
 	    auto ret = new (Z0)  ITupleInfo (ot-> isConst ());
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto l = this-> params [it];
-		auto r = ot-> params [it];
-		auto aux = r-> CompOp (l);
-		if (!l-> ConstVerif (aux)) return NULL;
-		ret-> params.push_back (aux);
-	    }
-	    
+		ret-> params.push_back (l-> clone ());
+	    }	    
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
 	} else if (other-> is <IUndefInfo> ()) {
 	    auto ret = new (Z0)  ITupleInfo (this-> isConst ());
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto l = this-> params [it];		
-		ret-> params.push_back (l-> CompOp (l));
-	    }
-	    
+		ret-> params.push_back (l-> clone ());
+	    }	    
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
 	} else if (auto ot = other->to <IRefInfo> ()) {
@@ -133,11 +128,6 @@ namespace semantic {
 		return ret;
 	    }
 	}
-	return NULL;
-    }
-
-    InfoType ITupleInfo::DotOp (syntax::Var var) {
-	if (var-> hasTemplate ()) return NULL;
 	return NULL;
     }
 
@@ -191,15 +181,13 @@ namespace semantic {
 	return ITupleInfo::id ();
     }
 
-    InfoType ITupleInfo::Affect (Word tok, Expression right) {
+    InfoType ITupleInfo::Affect (Word, Expression right) {
 	if (this-> isType ()) return NULL;
 	if (auto tuple = right-> info-> type-> to <ITupleInfo> ()) {
 	    if (tuple-> nbParams () != this-> nbParams ()) return NULL;
 	    auto ret = new (Z0)  ITupleInfo (false);
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
-		ret-> params.push_back (this-> params [it]-> BinaryOp (tok, tuple-> params [it]));
-		if (ret-> params.back () == NULL) return NULL;
-		//TODO ret-> params.back ()-> value = NULL;
+		ret-> params.push_back (this-> params [it]-> clone ());
 	    }
 	    ret-> binopFoo = &TupleUtils::InstAffect;
 	    return ret;
@@ -207,13 +195,12 @@ namespace semantic {
 	return NULL;
     }
     
-    InfoType ITupleInfo::AffectRight (Word tok, Expression left) {
+    InfoType ITupleInfo::AffectRight (Word, Expression left) {
 	if (this-> isType ()) return NULL;
 	if (left-> info-> type-> is <IUndefInfo> ()) {
 	    auto ret = new (Z0)  ITupleInfo (false);
 	    for (auto it : this-> params) {
-		ret-> params.push_back (it-> BinaryOpRight (tok, left));
-		//TODO ret-> params.back ()-> value = NULL;
+		ret-> params.push_back (it-> clone ());
 	    }
 
 	    ret-> binopFoo = &TupleUtils::InstAffect;
@@ -224,9 +211,6 @@ namespace semantic {
     
     void ITupleInfo::addParam (InfoType type) {
 	this-> params.push_back (type-> clone ());
-	this-> params.back ()-> binopFoo = type-> binopFoo;
-	this-> params.back ()-> unopFoo = type-> unopFoo;
-	this-> params.back ()-> multFoo = type-> multFoo;
     }
 
     std::vector<InfoType> & ITupleInfo::getParams () {
@@ -254,52 +238,47 @@ namespace semantic {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();	    
-	    TupleInfo info = type-> to<ITupleInfo> ();
-	    auto rtype = right-> info-> type-> to <ITupleInfo> ();
 	    Ymir::TreeStmtList list;
-	    
-	    for (auto it : Ymir::r (0, info-> nbParams ())) {
-		auto laux = getField (loc, ltree, it);
-		auto raux = getField (loc, rtree, it);
-		auto ret = info-> getParams () [it]-> buildBinaryOp (
-		    locus,
-		    info-> getParams () [it],
-		    new (Z0)  ITreeExpression (locus, info-> getParams () [it], laux),
-		    new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], raux)
-		);
-		list.append (ret);		
-	    }
-	    
-	    getStackStmtList ().back ().append (list.getTree ());
-	    return ltree;
+	    if (ltree.getType ().getTree () == rtree.getType ().getTree ()) {
+		return buildTree (
+		    MODIFY_EXPR, loc, ltree.getType (), ltree, rtree
+		);		
+	    } else {
+		auto info = type-> to <ITupleInfo> ();
+		for (auto it : Ymir::r (0, info-> nbParams ())) {
+		    auto laux = getField (loc, ltree, it);
+		    auto raux = getField (loc, rtree, it);
+		    list.append (buildTree (
+			MODIFY_EXPR, loc, void_type_node, laux, raux
+		    ));		
+		}
+		
+		getStackStmtList ().back ().append (list.getTree ());
+		return ltree;
+	    }	   
 	}
 
 	Tree InstCast (Word locus, InfoType type, Expression elem, Expression) {
 	    location_t loc = locus.getLocus ();
-	    TupleInfo info = type-> to<ITupleInfo> ();
 	    auto rtree = elem-> toGeneric ();
-
-	    auto rtype = elem-> info-> type-> to <ITupleInfo> ();	    
-	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
-	    
-	    Ymir::TreeStmtList list;	    
-	    for (auto it : Ymir::r (0, info-> nbParams ())) {
-		auto laux = getField (loc, ltree, it);
-		auto raux = getField (loc, rtree, it);
-		auto ret = Ymir::buildTree (
-		    MODIFY_EXPR, loc, laux.getType (), laux,
-		    info-> getParams () [it]-> buildBinaryOp (
-			locus,
-			rtype-> getParams () [it],
-			new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], raux),
-			new (Z0)  ITreeExpression (locus, rtype-> getParams () [it], Ymir::Tree ())
-		    )
-		);
-		list.append (ret);		
+	    auto ltype = type-> toGeneric ();
+	    if (rtree.getType ().getTree () == ltype.getTree ())
+		return rtree;
+	    else {
+		TreeStmtList list;
+		auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
+		auto info = type-> to <ITupleInfo> ();
+		for (auto it : Ymir::r (0, info-> nbParams ())) {
+		    auto laux = getField (loc, ltree, it);
+		    auto raux = getField (loc, rtree, it);
+		    list.append (buildTree (
+			MODIFY_EXPR, loc, void_type_node, laux, raux
+		    ));		
+		}
+		
+		getStackStmtList ().back ().append (list.getTree ());
+		return ltree;		
 	    }
-	    
-	    getStackStmtList ().back ().append (list.getTree ());
-	    return ltree;
 	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {
