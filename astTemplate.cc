@@ -185,7 +185,16 @@ namespace syntax {
     Declaration IFunction::templateDeclReplace (const map <string, Expression>& tmps) {
 	return this-> templateReplace (tmps);
     }
+
+    Declaration IStruct::templateDeclReplace (const map <string, Expression> & tmps) {
+	std::vector <Var> params;
+	for (auto it : this-> params) {
+	    params.push_back (it-> templateExpReplace (tmps)-> to<IVar> ());
+	}
 	
+	return new (Z0) IStruct (this-> ident, this-> tmps, params);
+    }
+    
     Function IFunction::templateReplace (const map <string, Expression>& values) {
 	Var type = NULL;
 	if (this-> type)
