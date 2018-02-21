@@ -194,7 +194,8 @@ namespace semantic {
 	    verifErrors ();
 	    return right;
 	}
-	
+
+	if (info == NULL) return NULL;
 	right-> ret = info-> type ()-> type-> clone ();
 	right-> ret-> value () = info-> type ()-> value ();
 
@@ -266,7 +267,8 @@ namespace semantic {
 	    verifErrors ();
 	    return right;
 	}
-	
+
+	if (info == NULL) return NULL;
 	right-> ret = info-> type ()-> type-> clone ();
 	right-> ret-> value () = info-> type ()-> value ();
 

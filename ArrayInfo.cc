@@ -434,8 +434,8 @@ namespace semantic {
 	}
 	
 	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, Expression right) {
-	    Ymir::TreeStmtList list;	    
-	    ArrayInfo arrayInfo = right-> info-> type-> to<IArrayInfo> ();
+	    Ymir::TreeStmtList list;
+	    ArrayInfo arrayInfo = right-> info-> type-> getIntern ()-> to<IArrayInfo> ();
 	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    if (lexp.getType ().getTreeCode () != RECORD_TYPE) return buildDupSimple (loc, lexp, rexp);
 	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
@@ -474,7 +474,7 @@ namespace semantic {
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
 	    if (right-> info-> isConst ()) {
-		if (auto ref = left-> info-> type-> to <IArrayRefInfo> ()) {
+		if (auto ref = left-> info-> type-> realTo <IArrayRefInfo> ()) {
 		    if (!ref-> content ()-> isConst ())
 			return buildDup (loc, lexp, rexp, right);
 		} else if (!left-> info-> isConst ())

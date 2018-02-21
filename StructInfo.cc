@@ -419,28 +419,33 @@ namespace semantic {
     bool IStructInfo::isSame (InfoType other) {
 	if (auto ot = other-> to <IStructInfo> ()) {
 	    if (ot-> name == this-> name && ot-> space == this-> space) {
-		if (this-> types.size () != ot-> types.size ()) return false;
-		for (auto it : Ymir::r (0, this-> types.size ())) {
-		    if (!this-> types [it]-> isSame (ot-> types [it])) return false;
-		}
-
-		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
-		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-		    if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
-			if (auto ps2 = ot-> tmpsDone [it]-> to <IParamList> ()) {
-			    if (ps-> getParams ().size () != ps2-> getParams ().size ()) return false;
-			    for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
-				if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type))
-				    return false;
-			    }
-			} else return false;
-		    } else {
-			if (ot-> tmpsDone [it]-> is <IParamList> ()) return false;
-			if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
-			    return false;
+		static std::vector <StructInfo> dones;
+		if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
+		    dones.push_back (this);
+		    if (this-> types.size () != ot-> types.size ()) return false;
+		    for (auto it : Ymir::r (0, this-> types.size ())) {
+			if (!this-> types [it]-> isSame (ot-> types [it])) return false;
 		    }
-		}
 
+		    if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
+		    for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
+			if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
+			    if (auto ps2 = ot-> tmpsDone [it]-> to <IParamList> ()) {
+				if (ps-> getParams ().size () != ps2-> getParams ().size ()) return false;
+				for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+				    if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type))
+					return false;
+				}
+			    } else return false;
+			} else {
+			    if (ot-> tmpsDone [it]-> is <IParamList> ()) return false;
+			    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+				return false;
+			}
+		    }
+		    dones.erase (std::find (dones.begin (), dones.end (), this));
+		}
+		
 		return true;
 	    }
 	}
@@ -617,14 +622,21 @@ namespace semantic {
     }
 
     std::string IStructInfo::innerTypeString () {
-	Ymir::OutBuffer buf (this-> onlyNameTypeString (), "{");
-	for (auto it : Ymir::r (0, this-> types.size ())) {
-	    buf.write (this-> types [it]-> typeString ());
-	    if (it != (int) this-> types.size () - 1)
-		buf.write (", ");
+	static std::vector <InfoType> dones;
+	if (std::find (dones.begin (), dones.end (), this) != dones.end ()) {
+	    dones.push_back (this);
+	    Ymir::OutBuffer buf (this-> onlyNameTypeString (), "{");
+	    for (auto it : Ymir::r (0, this-> types.size ())) {
+		buf.write (this-> types [it]-> typeString ());
+		if (it != (int) this-> types.size () - 1)
+		    buf.write (", ");
+	    }
+	    buf.write ("}");
+	    dones.erase (std::find (dones.begin (), dones.end (), this));
+	    return buf.str ();
+	} else {
+	    return this-> onlyNameTypeString ();
 	}
-	buf.write ("}");
-	return buf.str ();
     }
 
     Namespace& IStructInfo::getSpace () {
@@ -636,11 +648,18 @@ namespace semantic {
     }
     
     std::string IStructInfo::innerSimpleTypeString () {
-	Ymir::OutBuffer buf (this-> onlyNameTypeString ());
-	for (auto it : Ymir::r (0, this-> types.size ())) {
-	    buf.write (this-> types [it]-> simpleTypeString ());
+	static std::vector <InfoType> dones;
+	if (std::find (dones.begin (), dones.end (), this) != dones.end ()) {
+	    dones.push_back (this);
+	    Ymir::OutBuffer buf (this-> onlyNameTypeString ());
+	    for (auto it : Ymir::r (0, this-> types.size ())) {
+		buf.write (this-> types [it]-> simpleTypeString ());
+	    }
+	    dones.erase (std::find (dones.begin (), dones.end (), this));
+	    return buf.str ();
+	} else {
+	    return this-> onlyNameTypeString ();
 	}
-	return buf.str ();
     }
 
     void IStructInfo::setTypes (std::vector <InfoType> types) {

@@ -489,7 +489,7 @@ namespace syntax {
     }
 
     IFloat::IFloat (Word word) : IExpression (word), _type (FloatConst::DOUBLE) {
-	this-> totale = "0." + this-> token.getStr ();
+	this-> totale = "0." + word.getStr ();
     }
     
     IFloat::IFloat (Word word, std::string suite) :
@@ -512,7 +512,8 @@ namespace syntax {
 	IExpression (word),
 	suite (""),
 	_type (type)
-    {	
+    {
+	this-> totale = "0." + this-> token.getStr ();
     }
 
     void IFloat::setValue (float val) {

@@ -255,7 +255,8 @@ namespace semantic {
 	return NULL;
     }
 
-    //InfoType IRefInfo::ApplyOp (std::vector <syntax::Var> vars) {}
+    // InfoType IRefInfo::ApplyOp (std::vector <syntax::Var> vars) {	
+    // }
 
     ApplicationScore IRefInfo::CallOp (Word op, syntax::ParamList params) {
 	auto ret = this-> _content-> CallOp (op, params);
@@ -357,7 +358,7 @@ namespace semantic {
     }
 
     InfoType IArrayRefInfo::BinaryOp (Word token, syntax::Expression right) {
-	if (auto type = right-> info-> type-> to <IArrayRefInfo> ()) {
+	if (auto type = right-> info-> type-> realTo <IArrayRefInfo> ()) {
 	    return this-> _content-> BinaryOp (token, type-> _content);
 	} else 
 	    return this-> _content-> BinaryOp (token, right);

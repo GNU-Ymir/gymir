@@ -229,6 +229,14 @@ namespace semantic {
 		return (T*) this-> getIntern ();
 	    } else return NULL;
 	}
+
+	template <typename T>
+	T* realTo () {
+	    if (strcmp (this-> getId (), T::id ()) == 0) {
+		return (T*) this;
+	    } else return NULL;
+	}
+
 	
 	virtual ~IInfoType () {}
 

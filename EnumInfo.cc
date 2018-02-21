@@ -10,9 +10,16 @@ namespace semantic {
     namespace EnumUtils {
 
 	using namespace Ymir;
+
+	template <typename T>
+	T getAndRemoveBack (std::list <T> &list) {
+	    auto last = list.back ();
+	    list.pop_back ();
+	    return last;
+	}
 	
 	Tree InstGet (Word locus, InfoType type, Expression elem) {
-	    EnumInfo ecst = type-> to <IEnumInfo> ();
+	    EnumInfo ecst = type-> realTo <IEnumInfo> ();
 	    if (ecst-> getValue () == NULL) ecst-> getValue () = elem;
 	    if (ecst-> getComp () != NULL) {
 		if (ecst-> getComp ()-> unopFoo) {
@@ -35,7 +42,7 @@ namespace semantic {
 	}
 
 	Tree InstGet (Word locus, InfoType type, Expression elem, Expression) {
-	    EnumInfo ecst = type-> to <IEnumInfo> ();
+	    EnumInfo ecst = type-> realTo <IEnumInfo> ();
 	    if (ecst-> getValue () == NULL) ecst-> getValue () = elem;
 	    if (ecst-> getComp () != NULL) {
 		if (ecst-> getComp ()-> unopFoo) {
@@ -56,6 +63,130 @@ namespace semantic {
 		return ecst-> getValue ()-> toGeneric ();
 	    }
 	}
+
+	Tree InstUnrefBin (Word locus, InfoType type, Expression left, Expression right) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+
+	    InfoType inner = type;
+	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    if (ecst) type = ecst-> getContent ();
+
+	    inner-> binopFoo = type-> binopFoo;
+	    inner-> unopFoo = type-> unopFoo;
+	    inner-> multFoo = type-> multFoo;
+	    
+	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    left-> info-> type = linfo-> content ();
+	    left-> info-> value () = NULL;
+
+	    left-> info-> type-> binopFoo = linfo-> binopFoo;
+	    left-> info-> type-> unopFoo = linfo-> unopFoo;
+	    left-> info-> type-> multFoo = linfo-> multFoo;
+	    
+	    if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus, inner, left, right
+		);
+	    } else {
+		return type-> buildMultOp (
+		    locus, inner, left, right
+		);
+	    }
+	}
+
+	Tree InstUnrefBinRight (Word locus, InfoType type, Expression left, Expression right) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+
+	    InfoType inner = type;
+	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    if (ecst) inner = ecst-> getContent ();
+	    
+	    auto rinfo = right-> info-> type-> to <IEnumInfo> ();
+	    right-> info-> type = rinfo-> content ();
+	    right-> info-> value () = NULL;
+
+	    right-> info-> type-> binopFoo = rinfo-> binopFoo;
+	    right-> info-> type-> unopFoo = rinfo-> unopFoo;
+	    right-> info-> type-> multFoo = rinfo-> multFoo;
+	    
+	    if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus, inner, left, right
+		);
+	    } else {
+		return type-> buildMultOp (
+		    locus, inner, left, right
+		);
+	    }
+	}
+
+	Tree InstUnrefBinDouble (Word locus, InfoType type, Expression left, Expression right) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+
+	    InfoType inner = type;
+	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    if (ecst) inner = ecst-> getContent ();
+
+	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    left-> info-> type = linfo-> content ();
+	    left-> info-> value () = NULL;
+	    
+	    auto rinfo = right-> info-> type-> to <IEnumInfo> ();
+	    right-> info-> type = rinfo-> content ();
+	    right-> info-> value () = NULL;
+
+	    left-> info-> type-> binopFoo = linfo-> binopFoo;
+	    left-> info-> type-> unopFoo = linfo-> unopFoo;
+	    left-> info-> type-> multFoo = linfo-> multFoo;
+	    
+	    right-> info-> type-> binopFoo = rinfo-> binopFoo;
+	    right-> info-> type-> unopFoo = rinfo-> unopFoo;
+	    right-> info-> type-> multFoo = rinfo-> multFoo;
+	    if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus, inner, left, right
+		);
+	    } else {
+		return type-> buildMultOp (
+		    locus, inner, left, right
+		);
+	    }
+	}
+
+	Tree InstUnrefUn (Word locus, InfoType type, Expression left) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+
+	    InfoType inner = type;
+	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    if (ecst) type = ecst-> getContent ();
+
+	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    left-> info-> type = linfo-> content ();
+	    left-> info-> value () = NULL;
+
+	    left-> info-> type-> binopFoo = linfo-> binopFoo;
+	    left-> info-> type-> unopFoo = linfo-> unopFoo;
+	    left-> info-> type-> multFoo = linfo-> multFoo;
+	    
+	    if (type-> unopFoo) {
+		return type-> buildUnaryOp (
+		    locus, inner, left
+		);
+	    } else {
+		return type-> buildBinaryOp (
+		    locus, inner, left, new (Z0) ITreeExpression (locus, type, Ymir::Tree ())
+		);
+	    }
+	}
+	
 	
     }
     
@@ -181,36 +312,63 @@ namespace semantic {
     }
 
     InfoType IEnumInfo::BinaryOp (Word op, syntax::Expression right) {
+	InfoType aux = NULL, refRight = NULL;	
 	if (auto type = right-> info-> type-> to<IEnumInfo> ()) {
-	    return this-> _content-> BinaryOp (op, type-> _content);
-	} else return this-> _content-> BinaryOp (op, right);
+	    aux = this-> _content-> BinaryOp (op, type-> _content);
+	    refRight = type-> _content;
+	} else aux = this-> _content-> BinaryOp (op, right);
+	
+	if (aux != NULL) {
+	    if (refRight != NULL) aux = addUnrefDouble (aux);
+	    else aux = addUnref (aux);
+	    return aux;
+	}
+	return NULL;
     }
 
     InfoType IEnumInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
 	    return this-> _content-> BinaryOpRight (op, left);
-	} else
-	    return left-> info-> type-> BinaryOp (op, this-> _content);
+	}
+	
+	auto aux = this-> _content-> BinaryOpRight (op, left);
+	if (aux != NULL) {
+	    return addUnrefRight (aux);
+	} else {
+	    aux = left-> info-> type-> BinaryOp (op, this-> _content);
+	    if (aux != NULL) return addUnrefRight (aux);	    
+	}
+	return NULL;	
     }
 
     InfoType IEnumInfo::AccessOp (Word op, syntax::ParamList params, std::vector <InfoType> & treats) {
-	return this-> _content-> AccessOp (op, params, treats);
+	auto ret = this-> _content-> AccessOp (op, params, treats);
+	if (ret) return addUnref (ret);
+	return NULL;
     }
 
     InfoType IEnumInfo::DotOp (syntax::Var var) {
-	return this-> _content-> DotOp (var);
+	auto ret = this-> _content-> DotOp (var);
+	if (ret) return addUnref (ret);
+	return NULL;
     }
 
     InfoType IEnumInfo::DotExpOp (syntax::Expression var) {
-	return this-> _content-> DotExpOp (var);
+	auto ret = this-> _content-> DotExpOp (var);
+	if (ret) return addUnref (ret);
+	return NULL;
     }
 
     InfoType IEnumInfo::DColonOp (syntax::Var var) {
-	return this-> _content-> DColonOp (var);
+	auto ret = this-> _content-> DColonOp (var);
+	if (ret) return addUnref (ret);
+	return NULL;
     }
 
     InfoType IEnumInfo::UnaryOp (Word op) {
-	return this-> _content-> UnaryOp (op);
+	auto ret = this-> _content-> UnaryOp (op);
+	if (ret) return addUnref (ret);
+	return NULL;
     }
 
     InfoType IEnumInfo::CompOp (InfoType other) {
@@ -220,22 +378,67 @@ namespace semantic {
 	    rf-> comp = ret;
 	    rf-> binopFoo = EnumUtils::InstGet;
 	    return rf;
-	} else {	    
-	    return this-> _content-> CompOp (other);
+	} else {
+	    auto ret = this-> _content-> CompOp (other);
+	    if (ret) return addUnref (ret);
+	    return ret;
 	}
     }
 
     InfoType IEnumInfo::CastOp (InfoType other) {
-	return this-> _content-> CastOp (other);
+	auto ret = this-> _content-> CastOp (other);
+	if (ret) return addUnref (ret);
+	return NULL;
     }
 
-    InfoType IEnumInfo::ApplyOp (const std::vector<syntax::Var> & other) {
-	return this-> _content-> ApplyOp (other);
+    ApplicationScore IEnumInfo::CallOp (Word op, syntax::ParamList params) {
+	auto ret = this-> _content-> CallOp (op, params);
+	if (ret && ret-> dyn) {
+	    ret-> left = addUnref (this-> _content-> cloneOnExit ());
+	}
+	return ret;
     }
+    
+    InfoType IEnumInfo::addUnref (InfoType elem) {
+	elem-> nextBinop.push_back (elem-> binopFoo);
+	elem-> nextUnop.push_back (elem-> unopFoo);
+	elem-> nextMult.push_back (elem-> multFoo);
 
+	elem-> binopFoo = &EnumUtils::InstUnrefBin;
+	elem-> unopFoo = &EnumUtils::InstUnrefUn;
+	elem-> multFoo = &EnumUtils::InstUnrefBin;
+	return elem;
+    }
+    
+    InfoType IEnumInfo::addUnrefDouble (InfoType elem) {
+	elem-> nextBinop.push_back (elem-> binopFoo);
+	elem-> nextUnop.push_back (elem-> unopFoo);
+	elem-> nextMult.push_back (elem-> multFoo);
+
+	elem-> binopFoo = &EnumUtils::InstUnrefBinDouble;
+	elem-> unopFoo = &EnumUtils::InstUnrefUn;
+	elem-> multFoo = &EnumUtils::InstUnrefBinDouble;
+	return elem;
+    }
+    
+    InfoType IEnumInfo::addUnrefRight (InfoType elem) {
+	elem-> nextBinop.push_back (elem-> binopFoo);
+	elem-> nextUnop.push_back (elem-> unopFoo);
+	elem-> nextMult.push_back (elem-> multFoo);
+
+	elem-> binopFoo = &EnumUtils::InstUnrefBinRight;
+	elem-> unopFoo = &EnumUtils::InstUnrefUn;
+	elem-> multFoo = &EnumUtils::InstUnrefBinRight;
+	return elem;
+    }    
+    
     InfoType & IEnumInfo::getContent () {
 	return this-> _content;
-    }    
+    }
+
+    InfoType IEnumInfo::getIntern () {
+	return this-> _content;
+    }
     
     std::string IEnumInfo::innerSimpleTypeString () {
 	return Ymir::format ("%%", Mangler::mangle_type (this-> _space.toString () + "." +this-> _name), "E");

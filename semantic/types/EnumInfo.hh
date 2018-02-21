@@ -96,7 +96,9 @@ namespace semantic {
 
 	InfoType CastOp (InfoType) override;
 
-	InfoType ApplyOp (const std::vector<syntax::Var> &) override;
+	ApplicationScore CallOp (Word op, syntax::ParamList) override;
+
+	//InfoType ApplyOp (const std::vector<syntax::Var> &) override;
 
 	InfoType & getContent ();
 	
@@ -119,6 +121,14 @@ namespace semantic {
 	InfoType onClone () override;
 	
 	InfoType content ();
+
+	InfoType getIntern ();
+	
+    private :
+
+	InfoType addUnref (InfoType);
+	InfoType addUnrefRight (InfoType);
+	InfoType addUnrefDouble (InfoType);
 	
     };
 

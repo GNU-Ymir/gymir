@@ -194,7 +194,11 @@ namespace semantic {
     Ymir::Tree IPtrFuncInfo::toGeneric () {
 	std::vector<tree> fndecl_type_params;
 	for (auto it : this->params) {
-	    fndecl_type_params.push_back (it-> toGeneric ().getTree ());
+	    if (!it-> is <IStructInfo> ()) {
+		fndecl_type_params.push_back (it-> toGeneric ().getTree ());
+	    } else {
+		fndecl_type_params.push_back (void_type_node);
+	    }
 	}
 
 	tree ret = this-> ret-> toGeneric ().getTree ();
