@@ -94,6 +94,7 @@ namespace semantic {
 	} else {
 	    InfoType ref = new (Z0) IRefInfo (false, this-> _content);
 	    auto content = this-> _content-> clone ();
+	    content-> value () = NULL;
 	    content-> isConst (false);
 	    vars [0]-> info-> type = content-> CompOp (ref);	    
 	}
