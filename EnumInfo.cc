@@ -70,14 +70,14 @@ namespace semantic {
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
 	    InfoType inner = type;
-	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    EnumInfo ecst = left-> info-> type-> realTo <IEnumInfo> ();
 	    if (ecst) type = ecst-> getContent ();
 
 	    inner-> binopFoo = type-> binopFoo;
 	    inner-> unopFoo = type-> unopFoo;
 	    inner-> multFoo = type-> multFoo;
 	    
-	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    auto linfo = left-> info-> type-> realTo <IEnumInfo> ();
 	    left-> info-> type = linfo-> content ();
 	    left-> info-> value () = NULL;
 
@@ -102,10 +102,10 @@ namespace semantic {
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
 	    InfoType inner = type;
-	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    EnumInfo ecst = left-> info-> type-> realTo <IEnumInfo> ();
 	    if (ecst) inner = ecst-> getContent ();
 	    
-	    auto rinfo = right-> info-> type-> to <IEnumInfo> ();
+	    auto rinfo = right-> info-> type-> realTo <IEnumInfo> ();
 	    right-> info-> type = rinfo-> content ();
 	    right-> info-> value () = NULL;
 
@@ -130,14 +130,14 @@ namespace semantic {
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
 	    InfoType inner = type;
-	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    EnumInfo ecst = left-> info-> type-> realTo <IEnumInfo> ();
 	    if (ecst) inner = ecst-> getContent ();
 
-	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    auto linfo = left-> info-> type-> realTo <IEnumInfo> ();
 	    left-> info-> type = linfo-> content ();
 	    left-> info-> value () = NULL;
 	    
-	    auto rinfo = right-> info-> type-> to <IEnumInfo> ();
+	    auto rinfo = right-> info-> type-> realTo <IEnumInfo> ();
 	    right-> info-> type = rinfo-> content ();
 	    right-> info-> value () = NULL;
 
@@ -165,10 +165,10 @@ namespace semantic {
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
 	    InfoType inner = type;
-	    EnumInfo ecst = left-> info-> type-> to <IEnumInfo> ();
+	    EnumInfo ecst = left-> info-> type-> realTo <IEnumInfo> ();
 	    if (ecst) type = ecst-> getContent ();
 
-	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    auto linfo = left-> info-> type-> realTo <IEnumInfo> ();
 	    left-> info-> type = linfo-> content ();
 	    left-> info-> value () = NULL;
 
@@ -313,7 +313,7 @@ namespace semantic {
 
     InfoType IEnumInfo::BinaryOp (Word op, syntax::Expression right) {
 	InfoType aux = NULL, refRight = NULL;	
-	if (auto type = right-> info-> type-> to<IEnumInfo> ()) {
+	if (auto type = right-> info-> type-> realTo <IEnumInfo> ()) {
 	    aux = this-> _content-> BinaryOp (op, type-> _content);
 	    refRight = type-> _content;
 	} else aux = this-> _content-> BinaryOp (op, right);
@@ -373,7 +373,7 @@ namespace semantic {
 
     InfoType IEnumInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
-	    auto rf = this-> clone ()-> to <IEnumInfo> ();
+	    auto rf = this-> clone ()-> realTo <IEnumInfo> ();
 	    auto ret = this-> _content-> CompOp (this-> _content);	    
 	    rf-> comp = ret;
 	    rf-> binopFoo = EnumUtils::InstGet;
@@ -453,7 +453,7 @@ namespace semantic {
     }
 
     bool IEnumInfo::isSame (InfoType other) {
-	if (auto en = other-> to<IEnumInfo> ()) {
+	if (auto en = other-> realTo<IEnumInfo> ()) {
 	    return (en-> _space == this-> _space && en-> _name == this-> _name && this-> _content-> isSame (en-> _content));
 	} else
 	    return this-> _content-> isSame (other);
