@@ -1933,7 +1933,9 @@ namespace syntax {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next (), next = this-> lex.next ();
 	if (next == Keys::IF) {
+	    this-> lambdaPossible = false;
 	    auto test = visitExpression ();
+	    this-> lambdaPossible = true;
 	    auto block = visitBlock ();
 	    next = this-> lex.next ();
 	    if (next == Keys::ELSE) {
