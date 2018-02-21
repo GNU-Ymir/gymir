@@ -236,8 +236,13 @@ namespace syntax {
 		this-> params
 	    );
 	} else {
-	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
 	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
+	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
+	    if (this-> _score-> proto-> isCVariadic ()) {
+		for (auto & it : args) {
+		    it = Ymir::promote (it);
+		}
+	    }
 	    return build_call_array_loc (this-> token.getLocus (),
 					 this-> _score-> ret-> toGeneric ().getTree (),
 					 fn.getTree (),

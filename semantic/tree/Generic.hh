@@ -58,6 +58,8 @@ namespace Ymir {
     real_value makeRealValue (float elem);
 
     real_value makeRealValue (double elem);
+
+    tree promote (tree type);
     
 }
 

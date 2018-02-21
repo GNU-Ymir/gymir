@@ -28,7 +28,12 @@ namespace syntax {
     
     void IFunction::declare ()  {
 	if (this-> ident == Keys::MAIN) {
-	    FrameTable::instance ().insert (new (Z0)  IPureFrame (Table::instance ().space (), this));							    
+	    auto it = Table::instance ().get (this-> ident.getStr ());
+	    if (it != NULL) {
+		Ymir::Error::shadowingVar (ident, it-> sym);
+	    }
+	    FrameTable::instance ().insert (new (Z0)  IPureFrame (Table::instance ().space (), this));
+	    Table::instance ().insert (new (Z0) ISymbol (this-> ident, new (Z0) IVoidInfo ()));
 	} else {
 	    auto space = Table::instance ().space ();
 	    auto fr = verifyPure (space);
@@ -44,7 +49,12 @@ namespace syntax {
 	}
     }
 
-    void IFunction::declare (Module mod)  {
+    void IFunction::declare (Module mod)  {	
+	if (this-> ident == Keys::MAIN) {
+	    Ymir::Error::mainInModule (this-> ident);
+	    return;
+	}
+	
 	auto fr = verifyPure (mod-> space ());
 	auto space = mod-> space ();
 	auto it = mod-> get (this-> ident.getStr ());
@@ -57,6 +67,7 @@ namespace syntax {
 		return;
 	    }
 	}
+
 	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	auto sym = new (Z0)  ISymbol (this-> ident, fun);
 	fun-> set (fr);

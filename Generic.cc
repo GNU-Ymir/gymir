@@ -296,6 +296,27 @@ namespace Ymir {
 	    wrapup_global_declarations (&decl, 1);
 	}
     }
+
+    tree promote (tree expr) {
+	tree type = TREE_TYPE (expr);
+	enum tree_code code = TREE_CODE (type);
+	switch (code) {
+	case BOOLEAN_TYPE : return convert (integer_type_node, expr);
+	case ENUMERAL_TYPE : return convert (integer_type_node, expr);
+	case INTEGER_TYPE : {
+	    if (type == signed_char_type_node ||
+		type == short_integer_type_node)
+		return convert (integer_type_node, expr);
+	    else if (type == unsigned_char_type_node ||
+		     type == short_unsigned_type_node)
+		return convert (unsigned_type_node, expr);
+	    else return expr;
+	}
+	case REAL_TYPE : return convert (double_type_node, expr);
+	default : return expr;
+	}
+    }
+
     
 }
 

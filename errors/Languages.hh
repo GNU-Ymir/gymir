@@ -75,6 +75,8 @@ namespace Ymir {
 		phrases [Here] = "Here";
 		phrases [MultipleLoopName] = "Loop identifier '%%%' is already used";
 		phrases [MainPrototype] = "Function main parameters must be main () or main ([string])";
+
+		phrases [MainInModule] = "Function main can't be declared in a sub module";
 		phrases [ShadowingVar] = "Identifier '%%%' is already used";
 		phrases [UnknownType] = "There is no type called '%%%'";
 		phrases [RecursiveExpansion] = "Maximum number of recursive expansions reached";

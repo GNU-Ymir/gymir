@@ -81,6 +81,7 @@ namespace Ymir {
 	    ImportError,
 	    NotImmutable,
 	    MainPrototype,
+	    MainInModule,
 	    ModuleNotFirst,
 	    ModuleDontMatch,
 	    AssertFailure,
@@ -128,6 +129,8 @@ namespace Ymir {
 	static unsigned long nb_errors;// (0);
 
 	static void mainPrototype (const Word&);
+
+	static void mainInModule (const Word&);
 
 	static void moduleNotFirst (const Word &);
 
