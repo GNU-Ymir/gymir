@@ -1321,30 +1321,96 @@ namespace syntax {
 
 
     Expression IMatch::expression () {
-	auto expr = this-> expr-> expression ();
-	if (expr == NULL) return NULL;
-
+	Table::instance ().enterBlock ();
+	auto aux = new (Z0) IVar ({expr-> token, "_"});
+	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IUndefInfo ());
+	aux-> info-> isConst (false);
+	Table::instance ().insert (aux-> info);
+	
+	Word affTok {this-> token, Token::EQUAL};
+	auto binAux = (new (Z0) IBinary (affTok, aux, this-> expr))-> expression ();
+	if (!binAux) return NULL;       
+	aux-> info-> isConst (true);
+	aux-> info-> value () = binAux-> to<IBinary> ()-> getRight ()-> info-> value ();
+	
 	std::vector <semantic::DestructSolution> soluce;
-	std::vector <Block> blocks;
+	std::vector <Block> results;
+	std::vector <Symbol> syms;
 	//bool unreachable = false;
-	for (auto it : this-> values) {
-	    auto res = semantic::DestructSolver::instance ().solve (it, expr);
+	for (auto it : Ymir::r (0, this-> values.size ())) {
+	    auto res = semantic::DestructSolver::instance ().solve (this-> values [it], aux);
 	    if (res.valid) {
-		// Table::instance ().enterBlock ();
-		// for (auto it : res.created) {
-		//     Table::instance ().insert (it-> info);
-		// }
-		// blocks.push_back (this-> block-> block ());		
-		// Table::instance ().quitBlock ();
+		soluce.push_back (res);
+		Table::instance ().enterBlock ();
+		for (auto it : res.created) {
+		    Table::instance ().insert (it-> info);
+		}
+
+		auto bl = this-> block [it]-> block ();
+		auto expr = bl-> getLastExpr ();
+		if (expr == NULL) {
+		    Ymir::Error::uninitVar (bl-> token);
+		    return NULL;
+		}
+		
+		results.push_back (bl);
+		syms.push_back (expr-> info);
+		Table::instance ().quitBlock ();
 	    }
 	    //	    if (res.immutable) unreachable = true;	    
 	}
-		
+	
+	Table::instance ().quitBlock ();
 	auto ret = new (Z0) IMatch (this-> token, expr);
+	ret-> aux = aux;
+	ret-> binAux = binAux;
 	ret-> soluce = soluce;
-	//ret-> results = results;
-	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IUndefInfo ());
+	ret-> block = results;
+	auto type = ret-> validate (syms);
+	if (type == NULL) return NULL;
+	ret-> info = new (Z0) ISymbol (this-> token, type);
 	return ret;
+    }
+
+    InfoType IMatch::validate (std::vector <Symbol> & params) {
+	if (params.size () == 0) return new (Z0) IVoidInfo ();
+	this-> casters.clear ();
+	InfoType successType = NULL;
+	for (auto fst : Ymir::r (0, params.size ())) {
+	    std::vector <InfoType> casters (params.size ());
+	    auto begin = params [fst]-> type; 
+	    casters [fst] = begin-> CompOp (new (Z0) IUndefInfo ());
+	    bool success = true;
+	    for (auto scd : Ymir::r (0, params.size ())) {
+		if (scd != fst) {
+		    casters [scd] = params [scd]-> type-> CompOp (begin);
+		    if (casters [scd])
+			casters [scd] = casters [scd]-> ConstVerif (begin);
+		}
+		if (casters [scd] == NULL) {
+		    success = false;
+		    break;
+		}
+	    }
+
+	    if (success) {
+		this-> casters = casters;
+		successType = casters [fst];
+		break;
+	    }	    
+	}
+
+	if (this-> casters.size () != params.size ()) {
+	    for (auto it : Ymir::r (1, params.size ())) {
+		if (!params [it]-> type-> CompOp (params [0]-> type)) {
+		    Ymir::Error::incompatibleTypes (this-> token, params [it], params [0]-> type);
+		    return NULL;
+		}		
+	    }
+	    return NULL;
+	} else {
+	    return successType-> clone ();
+	}		
     }
 
     

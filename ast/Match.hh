@@ -45,8 +45,8 @@ namespace syntax {
 	std::vector<Expression> values;
 	std::vector<Block> block;
 
-	std::vector <Expression> results;
-
+	std::vector <semantic::InfoType> casters;
+	
 	std::vector <semantic::DestructSolution> soluce;
 	Expression aux, binAux;
 	
@@ -83,8 +83,15 @@ namespace syntax {
 	Ymir::Tree declareAndAffectAux ();
 	
 	Ymir::Tree declareVars (std::vector <Var> vars, std::vector <Expression> caster);	
+
 	Ymir::Tree validateBlock (Expression test, Block bl, Ymir::Tree endLabel, Ymir::Tree elsePart, Ymir::Tree affectPart);
+
+	Ymir::Tree validateBlockExpr (Expression test, Block bl, semantic::InfoType caster, Ymir::Tree res, Ymir::Tree endLabel, Ymir::Tree elsePart, Ymir::Tree affectPart);
+
+	Ymir::Tree toGenericExpression (Ymir::TreeStmtList list, Ymir::Tree, Ymir::Tree);
 	
+	semantic::InfoType validate (std::vector <semantic::Symbol> & syms);	
+
     };
 
     typedef IMatch* Match;

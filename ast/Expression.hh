@@ -50,6 +50,10 @@ namespace syntax {
 	    Ymir::Error::assert ((std::string ("TODO") + this-> getIds ().back ()).c_str ());
 	    return NULL;	    
 	};
+
+	static const char * id () {
+	    return TYPEID (IExpression);
+	}
 	
 	virtual std::vector <std::string> getIds () override {
 	    auto ids = IInstruction::getIds ();

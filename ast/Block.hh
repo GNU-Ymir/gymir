@@ -6,8 +6,13 @@
 #include "../errors/_.hh"
 #include "../syntax/Word.hh"
 
-namespace syntax {
+namespace semantic {
+    class IInfoType;
+    typedef IInfoType* InfoType;
+}
 
+namespace syntax {
+    
     class IDeclaration;
     typedef IDeclaration* Declaration;
     
@@ -39,7 +44,11 @@ namespace syntax {
 	
 	Ymir::Tree toGeneric () override;
 
+	Ymir::Tree toGenericExpr (semantic::InfoType & type, Ymir::Tree & res);
+
 	Ymir::Tree toGenericSimple ();
+
+	Expression getLastExpr ();
 	
 	void print (int nb = 0) override;
 

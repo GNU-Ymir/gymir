@@ -1355,9 +1355,6 @@ namespace syntax {
 	    delete it;
 	for (auto it : block)
 	    delete it;
-
-	for (auto it : results)
-	    delete it;
     }
     
     IGlobal::IGlobal (Word ident, Expression type, bool isExternal) :

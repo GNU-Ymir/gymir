@@ -31,6 +31,21 @@ namespace syntax {
 	return ret.bind_expr;
     }
 
+    Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
+	Ymir::enterBlock ();
+	auto last = this-> insts.back ()-> to <IExpression> ();
+	this-> insts.pop_back ();
+	for (auto it : this-> insts) {
+	    auto inst = it-> toGeneric ();
+	    Ymir::getStackStmtList ().back ().append (inst);    
+	}
+
+	type = last-> info-> type;
+	expr = last-> toGeneric ();
+	auto ret = Ymir::leaveBlock ();
+	return ret.bind_expr;
+    }
+    
     Ymir::Tree IBlock::toGenericSimple () {
 	//Ymir::enterBlock ();
 	Ymir::TreeStmtList list;
@@ -701,14 +716,92 @@ namespace syntax {
 	return list.getTree ();	
     }
 
+    Ymir::Tree IMatch::validateBlockExpr (Expression test, Block block, InfoType caster, Ymir::Tree res, Ymir::Tree endLabel, Ymir::Tree elsePart, Ymir::Tree affectPart) {
+	Ymir::Tree bool_expr = test-> toGeneric ();
+	Ymir::Tree thenLabel = Ymir::makeLabel (this-> token.getLocus (), "then");
+	Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, test-> token.getLocus (), void_type_node, thenLabel);
+	Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, test-> token.getLocus (), void_type_node, endLabel);
+	Ymir::Tree goto_else, elseLabel;
+	
+	if (elsePart.isNull ()) {
+	    goto_else = goto_end;
+	} else {
+	    elseLabel = Ymir::makeLabel (this-> token.getLocus (), "else");
+	    goto_else = Ymir::buildTree (GOTO_EXPR, test-> token.getLocus (), void_type_node, elseLabel);
+	}
+
+	Ymir::TreeStmtList list;
+	Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, test-> token.getLocus (), void_type_node, bool_expr, goto_then, goto_else);
+	list.append (cond_expr);
+
+	Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, block-> token.getLocus (), void_type_node, thenLabel);
+	list.append (then_label_expr);
+	Ymir::Tree resTree;
+	InfoType type;
+	Ymir::Tree then_part = block-> toGenericExpr (type, resTree);
+
+	
+	
+	list.append (affectPart);
+	list.append (then_part);
+	list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
+				      void_type_node,
+				      res,
+				      caster-> buildCastOp (this-> token,
+							    caster, 
+							    new (Z0) ITreeExpression (this-> token, type, resTree),
+							    new (Z0) ITreeExpression (this-> token, caster, Ymir::Tree ()))
+	));
+	
+	list.append (goto_end);							    
+	
+	if (!elseLabel.isNull ()) {
+	    Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, test-> token.getLocus (), void_type_node, elseLabel);
+	    list.append (else_label_expr);
+	    list.append (elsePart);
+	    list.append (goto_end);
+	}
+
+	return list.getTree ();	
+    }
+    
     Ymir::Tree IMatch::declareAndAffectAux () {
 	Ymir::TreeStmtList list;
 	auto decl = Ymir::makeAuxVar (this-> aux-> token.getLocus (), ISymbol::getLastTmp (), this-> aux-> info-> type-> toGeneric ());
-
+	
 	this-> aux-> info-> treeDecl (decl);
 	list.append (this-> binAux-> toGeneric ());	
 
 	return list.getTree ();
+    }
+
+
+    Ymir::Tree IMatch::toGenericExpression (Ymir::TreeStmtList list, Ymir::Tree endLabel, Ymir::Tree elsePart) {
+	auto aux = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> info-> type-> toGeneric ());
+	
+	for (auto it : Ymir::r (this-> soluce.size (), 0)) {
+	    Ymir::Tree affectPart = declareVars (
+		this-> soluce [it - 1].created,
+		this-> soluce [it - 1].caster
+	    );	    
+	    
+	    elsePart = validateBlockExpr (
+		this-> soluce [it - 1].test,
+		this-> block [it - 1],
+		this-> casters [it - 1],
+		aux,
+		endLabel,
+		elsePart,
+		affectPart	    
+	    );	    
+	}
+	
+	list.append (elsePart);
+	Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, this-> token.getLocus (), void_type_node, endLabel);
+	list.append (endif_label_expr);
+
+	Ymir::getStackStmtList ().back ().append (list.getTree ());
+	return aux;
     }
     
     Ymir::Tree IMatch::toGeneric () {
@@ -717,12 +810,16 @@ namespace syntax {
 	Ymir::TreeStmtList list;
 	list.append (declareAndAffectAux ());
 
+	if (this-> info != NULL) {
+	    return toGenericExpression (list, endLabel, elsePart);
+	}
+	
 	for (auto it : Ymir::r (this-> soluce.size (), 0)) {
 	    Ymir::Tree affectPart = declareVars (
 		this-> soluce [it - 1].created,
 		this-> soluce [it - 1].caster
 	    );	    
-	    	    
+	    
 	    elsePart = validateBlock (
 		this-> soluce [it - 1].test,
 		this-> block [it - 1],

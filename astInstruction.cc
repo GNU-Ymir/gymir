@@ -19,6 +19,13 @@ namespace syntax {
 	return ret;
     }
 
+    Expression IBlock::getLastExpr () {
+	if (this-> insts.size () != 0) {
+	    return this-> insts.back ()-> to <IExpression> ();
+	}
+	return NULL;
+    }
+    
     Block IBlock::blockWithoutEnter () {
 	std::vector <Instruction> insts;
 	auto bl = new (Z0)  IBlock (this-> token, {}, {});
