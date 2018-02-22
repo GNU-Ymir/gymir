@@ -1267,6 +1267,13 @@ namespace syntax {
 	if (left) this-> left-> inside = this;
     }
 
+    std::string IIs::prettyPrint () {
+	if (this-> type)
+	    return Ymir::OutBuffer ("is (", this-> left-> prettyPrint (), " : ", this-> type-> prettyPrint (), ")").str ();
+	else
+	    return Ymir::OutBuffer ("is (", this-> left-> prettyPrint (), " : ", this-> expType.getStr (), ")").str ();
+    }
+    
     IIs::~IIs () {
 	delete left;
 	if (type) delete type;

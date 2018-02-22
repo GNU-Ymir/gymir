@@ -68,9 +68,23 @@ namespace syntax {
 	auto aux = new (Z0) IVar (this-> token);
 	aux-> info = sym;
 	if (this-> templates.size () != 0) {
-	    
-	    if (auto dt = this-> inside-> to<IDot> ()) {
-		if (this == dt-> getLeft ()) {
+	    if (this-> inside && this-> inside-> is <IDot> ()) {
+		if (auto dt = this-> inside-> to<IDot> ()) {
+		    if (this == dt-> getLeft ()) {
+			auto params = new (Z0)  IParamList (this-> token, {});
+			auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
+			this-> inside = call;
+			return call-> expression ();
+		    }
+		}
+	    } else if (this-> templates.size () != 0 && (!this-> inside || !this-> inside-> is <IPar> ())) {
+		bool doCall = true;
+		if (this-> inside) {
+		    if (auto bin = this-> inside-> to <IBinary> ()) {
+			if (bin-> token == Token::EQUAL) doCall = false;
+		    }
+		}
+		if (doCall) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
 		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
 		    this-> inside = call;
