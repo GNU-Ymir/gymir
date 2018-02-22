@@ -2,6 +2,7 @@
 #include <ymir/errors/Error.hh>
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/utils/Options.hh>
 
 namespace semantic {
 
@@ -321,7 +322,10 @@ namespace semantic {
 
     InfoType IEnumInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    return this-> _content-> BinaryOpRight (op, left);
+	    auto ret = this-> clone ()-> to <IEnumInfo> ();
+	    ret-> _content = this-> _content-> BinaryOpRight (op, left);
+	    ret-> binopFoo = ret-> content ()-> binopFoo;
+	    return ret;
 	}
 	
 	auto aux = this-> _content-> BinaryOpRight (op, left);
@@ -445,6 +449,10 @@ namespace semantic {
 
     InfoType IEnumInfo::getIntern () {
 	return this-> _content;
+    }
+
+    bool IEnumInfo::allowInternalUnref () {
+	return Options::instance ().itsLintTime ();
     }
     
     std::string IEnumInfo::innerSimpleTypeString () {

@@ -96,6 +96,10 @@ namespace semantic {
 	return this;
     }
 
+    bool IInfoType::allowInternalUnref () {
+	return true;
+    }
+    
     void IInfoType::isType (bool is) {
 	this-> _isType = is;
     }

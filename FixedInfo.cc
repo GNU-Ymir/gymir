@@ -122,13 +122,13 @@ namespace semantic {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &FixedUtils::InstCast;
 	    return ret;
-	} else if (auto ref = other-> to<IRefInfo> ()) {
+	} else if (auto ref = other-> to <IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
 		auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
 		aux-> binopFoo = &FixedUtils::InstAddr;
 		return aux;
 	    }
-	} else if (auto ot = other-> to<IFixedInfo> ()) {
+	} else if (auto ot = other-> to <IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && ot-> isSup (this)) {
 		auto ret = ot-> clone ();
 		ret-> binopFoo = FixedUtils::InstCast;

@@ -128,6 +128,8 @@ namespace semantic {
 	virtual void isType (bool);
 
 	virtual InfoType getIntern ();
+
+	virtual bool allowInternalUnref ();
 	
 	Value& value ();
 
@@ -230,7 +232,8 @@ namespace semantic {
 		if (strcmp (current-> getId (), T::id ()) == 0) {
 		    return (T*) current;
 		}
-		if (current == current-> getIntern ()) break;
+		
+		if (current == current-> getIntern () || !current-> allowInternalUnref ()) break;
 		else current = current-> getIntern ();
 	    }
 	    return NULL;

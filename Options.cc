@@ -31,3 +31,15 @@ void Options::addIncludeDir (const char * path) {
     if (this-> _includeDirs.back () [this-> _includeDirs.back ().length () - 1] != '/')
 	this-> _includeDirs.back () += "/";
 }
+
+void Options::lintTime () {
+    this-> _current = LINT;    
+}
+
+void Options::semanticTime () {
+    this-> _current = SEMANTIC;
+}
+
+bool Options::itsLintTime () {
+    return this-> _current == LINT;
+}

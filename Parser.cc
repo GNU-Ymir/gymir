@@ -9,6 +9,7 @@
 #include <ymir/semantic/pack/FrameTable.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/utils/Options.hh>
 
 #include "config.h"
 #include "system.h"
@@ -57,6 +58,7 @@ namespace Ymir {
     void Parser::semantic_time (syntax::Program prg) {
 	Table::instance ().purge ();
 	FrameTable::instance ().purge ();
+	Options::instance ().semanticTime ();
 	
 	prg-> declare ();
 	for (auto it : FrameTable::instance ().structs ()) {
@@ -83,6 +85,7 @@ namespace Ymir {
     }
 
     void Parser::lint_time () {
+	Options::instance ().lintTime ();
 	for (auto it : FrameTable::instance ().finals ()) {
 	    it-> finalize ();
 	}

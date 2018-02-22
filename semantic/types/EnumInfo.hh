@@ -122,7 +122,10 @@ namespace semantic {
 	
 	InfoType content ();
 
-	InfoType getIntern ();
+	InfoType getIntern () override;
+
+	bool allowInternalUnref () override;
+	
 	
     private :
 

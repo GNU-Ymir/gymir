@@ -4,6 +4,11 @@
 #include <string>
 
 
+enum CurrentTime {
+    LINT,
+    SEMANTIC
+};
+
 class Options {
 
     std::vector <std::string> _includeDirs;
@@ -12,6 +17,7 @@ class Options {
     bool _isDebug = false;
     
     static Options __instance__;
+    CurrentTime _current;
     
 public:
 
@@ -30,4 +36,11 @@ public:
     std::vector <std::string> & includeDirs ();
 
     void addIncludeDir (const char * path);
+
+    void lintTime ();
+
+    void semanticTime ();
+
+    bool itsLintTime ();
+    
 };
