@@ -138,6 +138,8 @@ namespace semantic {
 	void setTmps (std::vector <syntax::Expression> tmps);
 
 	InfoType getTemplate (ulong) override;
+
+	std::vector <InfoType> getTemplate (ulong, ulong) override;
 	
 	std::vector <std::string> & getAttribs ();
 

@@ -60,6 +60,8 @@ namespace semantic {
 
 	InfoType getTemplate (ulong i) override;
 
+	std::vector <InfoType> getTemplate (ulong i, ulong af) override;
+
 	ulong nbTemplates () override;
 	
 	bool& alone ();

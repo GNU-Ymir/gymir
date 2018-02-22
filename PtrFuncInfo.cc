@@ -139,6 +139,17 @@ namespace semantic {
 	    return this-> ret;
 	return NULL;
     }
+
+    std::vector <InfoType> IPtrFuncInfo::getTemplate (ulong bef, ulong af) {
+	if (bef < this-> params.size ()) {
+	    std::vector <InfoType> ret;
+	    for (auto it : Ymir::r (bef, this-> params.size () - af)) {
+		ret.push_back (this-> params [it]);
+	    }
+	    return ret;
+	}
+	return {NULL};
+    }
     
     InfoType IPtrFuncInfo::onClone () {
 	auto aux = new (Z0) IPtrFuncInfo (this-> isConst ());

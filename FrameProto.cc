@@ -2,6 +2,7 @@
 #include <ymir/errors/Error.hh>
 #include <ymir/utils/Range.hh>
 #include <ymir/semantic/types/InfoType.hh>
+#include <ymir/ast/ParamList.hh>
 #include <ymir/semantic/pack/Symbol.hh>
 #include <ymir/ast/Var.hh>
 #include <ymir/semantic/tree/Tree.hh>
@@ -9,7 +10,8 @@
 #include <ymir/semantic/value/_.hh>
 
 namespace semantic {
-
+    using namespace syntax;    
+    
     IFrameProto::IFrameProto (std::string name, Namespace space, Symbol type, const std::vector <syntax::Var>& vars, const std::vector <syntax::Expression>& tmps) :
 	_space (space),
 	_name (name),
@@ -56,7 +58,17 @@ namespace semantic {
 		this-> _vars.size () != scd-> _vars.size ()) return false;
 	    
 	    for (auto it : Ymir::r (0, this-> _tmps.size ())) {
-		if (this-> _tmps [it]-> info-> isImmutable () != scd-> _tmps [it]-> info-> isImmutable ()) {
+		if (auto params = this-> _tmps [it]-> to <IParamList> ()) {
+		    if (auto params2 = scd-> _tmps [it]-> to <IParamList> ()) {
+			auto fstP = params-> getParamTypes ();
+			auto scdP = params2-> getParamTypes ();
+			if (fstP.size () != scdP.size ()) return false;
+			for (auto it_ : Ymir::r (0, fstP.size ())) {
+			    if (fstP [it_]-> simpleTypeString () != scdP [it_]-> simpleTypeString ())
+				return false;
+			}
+		    } else return false;
+		} else if (this-> _tmps [it]-> info-> isImmutable () != scd-> _tmps [it]-> info-> isImmutable ()) {
 		    return false;
 		} else if (this-> _tmps [it]-> info-> isImmutable ()) {
 		    if (!this-> _tmps [it]-> info-> value ()-> equals (scd-> _tmps [it]-> info-> value ())) {

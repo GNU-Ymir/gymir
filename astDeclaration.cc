@@ -158,6 +158,18 @@ namespace syntax {
     }
 
     bool IFunction::verifyTemplates () {		
+	std::vector <Word> dones;
+	for (auto it : this-> tmps) {
+	    if (auto var = it-> to <IVar> ()) {
+		for (auto w : dones) {
+		    if (var-> token.getStr () == w.getStr ()) {
+			Ymir::Error::shadowingVar (var-> token, w);
+			return false;
+		    }
+		}
+		dones.push_back (var-> token);
+	    }
+	}
 	return false;
     }
     

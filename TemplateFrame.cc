@@ -272,11 +272,14 @@ namespace semantic {
 						       tmps)) {
 		return NULL;
 	    }
+	    
 	    for (auto exp : tmps) {
-		if (exp.second-> info-> isImmutable ()) {
-		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
-		} else {
-		    exp.second = exp.second-> templateExpReplace ({});
+		if (exp.second-> info) {
+		    if (exp.second-> info-> isImmutable ()) {
+			exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
+		    } else {
+			exp.second = exp.second-> templateExpReplace ({});
+		    }
 		}
 	    }
 	    

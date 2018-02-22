@@ -28,7 +28,14 @@ namespace semantic {
 	    buf.write (this-> type-> typeString (), ", [");
 	else buf.write ("null, [");
 	for (auto it : this-> elements) {
-	    buf.write (it.first, " : ", it.second-> info-> typeString ());
+	    if (it.second-> info)
+		buf.write (it.first, " : ", it.second-> info-> typeString ());
+	    else if (auto params = it.second-> to<IParamList> ()) {
+		buf.write (it.first, " : {"); 
+		for (auto it : params-> getParamTypes ())
+		    buf.write (it-> typeString (), " ");
+		buf.write ("}");
+	    }
 	}
 	buf.write ("], [");
 	for (auto it : this-> varTypes) {
@@ -46,8 +53,19 @@ namespace semantic {
 	    if (inside != left.end ()) {
 		auto ltype = inside-> second-> to<IType> ();
 		auto rtype = it.second-> to<IType> ();	       
-		if (!ltype || !rtype) return false;
-		if (!ltype-> info-> type-> is <IUndefInfo> () &&
+		if (!ltype || !rtype) {
+		    auto lpars = inside-> second-> to <IParamList> ();
+		    auto rpars = it.second-> to <IParamList> ();
+		    if (!lpars || !rpars || lpars-> getParams ().size () != rpars-> getParams ().size ()) return false;
+		    for (auto it_ : Ymir::r (0, lpars-> getParams ().size ())) {
+			auto linfo = lpars-> getParamTypes () [it_];
+			auto rinfo = rpars-> getParamTypes () [it_];
+			if (!linfo-> is <IUndefInfo> () &&
+			    !rinfo-> is <IUndefInfo> () &&
+			    !linfo-> isSame (rinfo))
+			    return false;
+		    }
+		} else if (!ltype-> info-> type-> is <IUndefInfo> () &&
 		    !rtype-> info-> type-> is <IUndefInfo> () &&
 		    !ltype-> info-> type-> isSame (rtype-> info-> type))
 		    return false;
@@ -65,8 +83,19 @@ namespace semantic {
 	    if (inside != left.end ()) {
 		auto ltype = inside-> second-> to <IType> ();
 		auto rtype = it.second-> to <IType> ();
-		if (!ltype || !rtype) return false;
-		if (!ltype-> info-> type-> is <IUndefInfo> () &&
+		if (!ltype || !rtype) {
+		    auto lpars = inside-> second-> to <IParamList> ();
+		    auto rpars = it.second-> to <IParamList> ();
+		    if (!lpars || !rpars || lpars-> getParams ().size () != rpars-> getParams ().size ()) return false;
+		    for (auto it_ : Ymir::r (0, lpars-> getParams ().size ())) {
+			auto linfo = lpars-> getParamTypes () [it_];
+			auto rinfo = rpars-> getParamTypes () [it_];
+			if (!linfo-> is <IUndefInfo> () &&
+			    !rinfo-> is <IUndefInfo> () &&
+			    !linfo-> isSame (rinfo))
+			    return false;
+		    }
+		} else if (!ltype-> info-> type-> is <IUndefInfo> () &&
 		    !rtype-> info-> type-> is <IUndefInfo> () &&
 		    !ltype-> info-> type-> isSame (rtype-> info-> type))
 		    return false;
@@ -79,6 +108,7 @@ namespace semantic {
     }
     
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, Var param, InfoType type) {
+	
 	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
 	if (auto t = type-> to <IEnumInfo> ()) type = t-> getContent ();
 	if (auto tvar = param-> to <ITypedVar> ()) {
@@ -114,7 +144,14 @@ namespace semantic {
 			    return TemplateSolution (0, false);
 			if (res.type)
 			    types.push_back (new (Z0)  IType (var-> token, res.type));
-			else
+			else if (typeTemplates.size () != 1) {
+			    for (auto it_ : res.elements) {
+				if (auto params = it_.second-> to<IParamList> ()) {
+				    for (auto it__ : params-> getParams ())
+					types.push_back (it__-> to <IType> ());
+				} else Ymir::Error::assert ("!!");
+			    }
+			} else
 			    return TemplateSolution (0, false);			
 		    }
 		}
@@ -184,7 +221,14 @@ namespace semantic {
 			return TemplateSolution (0, false);
 		    if (res.type)
 			types.push_back (new (Z0)  IType (var-> token, res.type));
-		    else
+		    else if (typeTemplates.size () != 1) {
+			    for (auto it_ : res.elements) {
+				if (auto params = it_.second-> to<IParamList> ()) {
+				    for (auto it__ : params-> getParams ())
+					types.push_back (it__-> to <IType> ());
+				} else Ymir::Error::assert ("!!");
+			    }
+		    } else
 			return TemplateSolution (0, false);			
 		}
 	    }
@@ -223,7 +267,21 @@ namespace semantic {
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var var, const vector <InfoType> &type) {
 	if (type.size () == 1) return solveInside (tmps, var, type [0]);
 	else {
-	    Ymir::Error::assert ("TODO");
+	    for (auto it : tmps) {
+		if (auto vvar = it-> to <IVariadicVar> ()) {
+		    if (var-> token.getStr () == vvar-> token.getStr ()) {
+			TemplateSolution res = TemplateSolution (0, true);
+			res.varTypes = type;
+			std::vector <Expression> types;
+			for (auto it : Ymir::r (0, type.size ())) {
+			    Word token {var-> token, Ymir::OutBuffer ("_", it, var-> token.getStr ()).str ()};
+			    types.push_back (new (Z0) IType (token, type [it]));
+			}
+			res.elements [var-> token.getStr ()] = new (Z0) IParamList (var-> token, types);
+			return res;
+		    }
+		}
+	    }
 	    return TemplateSolution (0, false);
 	}
     }
@@ -352,23 +410,34 @@ namespace semantic {
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, FuncPtr func, InfoType type) {
 	vector <Var> types;
 	TemplateSolution soluce (0, true);
-	if (type-> nbTemplates () != func-> getParams ().size () + 1)
-	    return TemplateSolution (0, false);
+	// if (type-> nbTemplates () != func-> getParams ().size () + 1)
+	//     return TemplateSolution (0, false);
 
+	ulong nb = 0;
 	for (auto it : Ymir::r (0, func-> getParams ().size ())) {
 	    auto var = func-> getParams () [it];
-	    auto typeTemplates = type-> getTemplate (it);
-	    if (!typeTemplates) return TemplateSolution (0, false);
+	    if (!type-> getTemplate (it)) return TemplateSolution (0, false);
+	    auto typeTemplates = type-> getTemplate (it, func-> getParams ().size () - (it + 1));
+	    nb += typeTemplates.size ();
 	    auto res = this-> solveInside (tmps, var, typeTemplates);
+	    
 	    if (!res.valid || !merge (soluce.score, soluce.elements, res))
 		return TemplateSolution (0, false);
+
 	    if (res.type)
 		types.push_back (new (Z0)  IType (var-> token, res.type));
-	    else
+	    else if (typeTemplates.size () != 1) {
+		for (auto it_ : res.elements) {
+		    if (auto params = it_.second-> to<IParamList> ()) {
+			for (auto it__ : params-> getParams ())
+			    types.push_back (it__-> to <IType> ());
+		    } else Ymir::Error::assert ("!!");
+		}
+	    } else
 		return TemplateSolution (0, false);			
 	}
-	
-	auto typeTemplate = type-> getTemplate (func-> getParams ().size ());
+
+	auto typeTemplate = type-> getTemplate (nb);
 	if (typeTemplate == NULL) return TemplateSolution (0, false);
 	auto res = this-> solveInside (tmps, func-> getRet (), typeTemplate);
 	

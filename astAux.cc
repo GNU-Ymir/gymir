@@ -221,8 +221,8 @@ namespace syntax {
 	if (this-> templates.size () != 0) {
 	    buf.write ("!(");
 	    int i = 0;	
-	    for (auto __attribute__ ((unused)) it : this-> templates) {
-		buf.write ("_");
+	    for (auto it : this-> templates) {
+		buf.write (it-> prettyPrint ());
 		if (i < (int) this-> templates.size () - 1)
 		    buf.write (", ");
 		i = i + 1;

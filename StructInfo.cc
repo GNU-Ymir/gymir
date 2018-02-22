@@ -674,22 +674,38 @@ namespace semantic {
 	this-> tmpsDone = tmps;
     }
 
-    InfoType IStructInfo::getTemplate (ulong nb) {	
-	if (nb < this-> tmpsDone.size ()) {
-	    if (auto ps = this-> tmpsDone [nb]-> to <IParamList> ()) {
-		return ps-> getParams ()[0]-> info-> type;
-	    }
-	    return this-> tmpsDone [nb]-> info-> type;
-	} else {
-	    nb = nb - this-> tmpsDone.size ();
-	    if (nb < this-> tmpsDone.size ()) {
-		if (auto ps = this-> tmpsDone [nb]-> to <IParamList> ()) {
-		    if (nb < ps-> getParams ().size ())
-			return ps-> getParams () [nb]-> info-> type;
+    InfoType IStructInfo::getTemplate (ulong nb) {
+	ulong current = 0;
+	for (auto it : Ymir::r (0,  this-> tmpsDone.size ())) {
+	    if (auto par = this-> tmpsDone [it]-> to <IParamList> ()) {
+		if (current <= nb && nb < current + par-> getParams ().size ()) {
+		    auto index = nb - current;
+		    return par-> getParamTypes () [index]-> clone ();
+		} else {
+		    current += par-> getParams ().size ();
 		}
+	    } else {
+		if (current == nb)
+		    return this-> tmpsDone [current]-> info-> type;
+		current ++;
 	    }
 	}
 	return NULL;
+    }
+
+    std::vector <InfoType> IStructInfo::getTemplate (ulong bef, ulong af) {
+	std::vector <InfoType> types;
+	ulong it = bef;
+	while (true) {
+	    auto tmp = this-> getTemplate (it);		
+	    if (tmp == NULL) break;
+	    types.push_back (tmp);		
+	    it ++;
+	}
+	
+	if ((int) types.size () - (int) af < 0) return {NULL};
+	types.resize (types.size () - af);	
+	return types;    
     }
     
     std::vector <std::string> & IStructInfo::getAttribs () {

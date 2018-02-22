@@ -355,6 +355,21 @@ namespace semantic {
 	return NULL;
     }
 
+    std::vector <InfoType> IFunctionInfo::getTemplate (ulong bef, ulong af) {
+	auto frames = this-> getFrames ();
+	if (frames.size () == 1) {
+	    auto infoTypes = frames [0]-> getParamTypes ();
+	    if (bef < infoTypes.size ()) {
+		std::vector <InfoType> ret;
+		for (auto it : Ymir::r (bef, infoTypes.size () - af)) {
+		    ret.push_back (infoTypes [it]);
+		}
+		return ret;
+	    }
+	}
+	return {NULL};
+    }
+    
     ulong IFunctionInfo::nbTemplates () {
 	auto frames = this-> getFrames ();
 	if (frames.size () == 1) {

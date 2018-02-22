@@ -235,11 +235,29 @@ namespace syntax {
 	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");	    
 	    if (this-> deco == Keys::REF) {
 		type = new (Z0) IRefInfo (false, type);
-	    }
+	    } else if (this-> deco == Keys::CONST)
+		type-> isConst (true);
+	    
 	    return new (Z0)  IType (tok, type);
 	} else {
-	    Ymir::Error::assert ("TODO");
-	    return NULL;
+	    Expression expType = NULL;
+	    if (auto alloc = this-> content-> to <IArrayAlloc> ()) {
+		expType = alloc-> staticArray ();
+		if (expType == NULL) return NULL;
+	    } else {
+		expType = this-> content-> expression ();
+		if (expType == NULL) return NULL;
+	    }
+	    
+	    Word tok (this-> token.getLocus (), "");
+	    InfoType type = new (Z0)  IArrayInfo (false, expType-> info-> type);			
+	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");	    
+	    if (this-> deco == Keys::REF) {
+		type = new (Z0) IRefInfo (false, type);
+	    } else if (this-> deco == Keys::CONST)
+		type-> isConst (true);
+	    		
+	    return new (Z0) IType (tok, type);
 	}
     }
 
