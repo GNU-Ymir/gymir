@@ -474,7 +474,7 @@ namespace semantic {
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
 	    if (right-> info-> isConst ()) {
-		if (auto ref = left-> info-> type-> realTo <IArrayRefInfo> ()) {
+		if (auto ref = left-> info-> type-> to <IArrayRefInfo> ()) {
 		    if (!ref-> content ()-> isConst ())
 			return buildDup (loc, lexp, rexp, right);
 		} else if (!left-> info-> isConst ())

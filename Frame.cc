@@ -69,7 +69,7 @@ namespace semantic {
 		    CONST_SAME = this-> CONST_CHANGE;
 		    SAME = this-> CHANGE;
 		}
-
+		
 		auto type = args [it]-> CompOp (info);
 		if (type != NULL) type = type-> ConstVerif (info);
 		else return NULL;

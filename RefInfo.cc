@@ -12,9 +12,13 @@ namespace semantic {
 
 	template <typename T>
 	T getAndRemoveBack (std::list <T> &list) {
-	    auto last = list.back ();
-	    list.pop_back ();
-	    return last;
+	    if (list.size () != 0) {
+		auto last = list.back ();	    
+		list.pop_back ();
+		return last;
+	    } else {
+		return NULL;
+	    }
 	}
 	
 	Ymir::Tree InstUnrefBinRight (Word locus, InfoType type, Expression left, Expression right) {
@@ -302,35 +306,68 @@ namespace semantic {
     }
     
     InfoType IRefInfo::addUnref (InfoType elem) {
-	elem-> nextBinop.push_back (elem-> binopFoo);
-	elem-> nextUnop.push_back (elem-> unopFoo);
-	elem-> nextMult.push_back (elem-> multFoo);
+	bool binop = false, unop = false, mult = false;
+	if (elem-> binopFoo) {
+	    elem-> nextBinop.push_back (elem-> binopFoo);
+	    binop = true;
+	}
+	if (elem-> unopFoo) {
+	    elem-> nextUnop.push_back (elem-> unopFoo);
+	    unop = true;
+	}
 
-	elem-> binopFoo = &RefUtils::InstUnrefBin;
-	elem-> unopFoo = &RefUtils::InstUnrefUn;
-	elem-> multFoo = &RefUtils::InstUnrefBin;
+	if (elem-> multFoo) {
+	    elem-> nextMult.push_back (elem-> multFoo);
+	    mult = true;
+	}
+	
+	if (binop) elem-> binopFoo = &RefUtils::InstUnrefBin;
+	if (unop) elem-> unopFoo = &RefUtils::InstUnrefUn;
+	if (mult) elem-> multFoo = &RefUtils::InstUnrefBin;
 	return elem;
     }
     
     InfoType IRefInfo::addUnrefDouble (InfoType elem) {
-	elem-> nextBinop.push_back (elem-> binopFoo);
-	elem-> nextUnop.push_back (elem-> unopFoo);
-	elem-> nextMult.push_back (elem-> multFoo);
+	bool binop = false, unop = false, mult = false;
+	if (elem-> binopFoo) {
+	    elem-> nextBinop.push_back (elem-> binopFoo);
+	    binop = true;
+	}
+	if (elem-> unopFoo) {
+	    elem-> nextUnop.push_back (elem-> unopFoo);
+	    unop = true;
+	}
 
-	elem-> binopFoo = &RefUtils::InstUnrefBinDouble;
-	elem-> unopFoo = &RefUtils::InstUnrefUn;
-	elem-> multFoo = &RefUtils::InstUnrefBinDouble;
+	if (elem-> multFoo) {
+	    elem-> nextMult.push_back (elem-> multFoo);
+	    mult = true;
+	}
+	
+	if (binop) elem-> binopFoo = &RefUtils::InstUnrefBinDouble;
+	if (unop) elem-> unopFoo = &RefUtils::InstUnrefUn;
+	if (mult) elem-> multFoo = &RefUtils::InstUnrefBinDouble;
 	return elem;
     }
     
     InfoType IRefInfo::addUnrefRight (InfoType elem) {
-	elem-> nextBinop.push_back (elem-> binopFoo);
-	elem-> nextUnop.push_back (elem-> unopFoo);
-	elem-> nextMult.push_back (elem-> multFoo);
+	bool binop = false, unop = false, mult = false;
+	if (elem-> binopFoo) {
+	    elem-> nextBinop.push_back (elem-> binopFoo);
+	    binop = true;
+	}
+	if (elem-> unopFoo) {
+	    elem-> nextUnop.push_back (elem-> unopFoo);
+	    unop = true;
+	}
 
-	elem-> binopFoo = &RefUtils::InstUnrefBinRight;
-	elem-> unopFoo = &RefUtils::InstUnrefUn;
-	elem-> multFoo = &RefUtils::InstUnrefBinRight;
+	if (elem-> multFoo) {
+	    elem-> nextMult.push_back (elem-> multFoo);
+	    mult = true;
+	}
+	
+	if (binop) elem-> binopFoo = &RefUtils::InstUnrefBinRight;
+	if (unop) elem-> unopFoo = &RefUtils::InstUnrefUn;
+	if (mult) elem-> multFoo = &RefUtils::InstUnrefBinRight;
 	return elem;
     }
 
@@ -358,7 +395,7 @@ namespace semantic {
     }
 
     InfoType IArrayRefInfo::BinaryOp (Word token, syntax::Expression right) {
-	if (auto type = right-> info-> type-> realTo <IArrayRefInfo> ()) {
+	if (auto type = right-> info-> type-> to <IArrayRefInfo> ()) {
 	    return this-> _content-> BinaryOp (token, type-> _content);
 	} else 
 	    return this-> _content-> BinaryOp (token, right);

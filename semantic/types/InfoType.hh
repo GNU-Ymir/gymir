@@ -220,23 +220,21 @@ namespace semantic {
 	
 	template <typename T>
 	bool is () {
-	    return strcmp (this-> getIntern ()-> getId (), T::id ()) == 0;
+	    return this-> to<T> () != NULL;
 	}
 	
 	template <typename T>
 	T* to () {
-	    if (strcmp (this-> getIntern ()-> getId (), T::id ()) == 0) {
-		return (T*) this-> getIntern ();
-	    } else return NULL;
+	    auto current = this;
+	    while (true) {
+		if (strcmp (current-> getId (), T::id ()) == 0) {
+		    return (T*) current;
+		}
+		if (current == current-> getIntern ()) break;
+		else current = current-> getIntern ();
+	    }
+	    return NULL;
 	}
-
-	template <typename T>
-	T* realTo () {
-	    if (strcmp (this-> getId (), T::id ()) == 0) {
-		return (T*) this;
-	    } else return NULL;
-	}
-
 	
 	virtual ~IInfoType () {}
 

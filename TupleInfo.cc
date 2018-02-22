@@ -49,7 +49,13 @@ namespace semantic {
     InfoType ITupleInfo::create (Word, const std::vector<syntax::Expression> & templates) {
 	auto tuple = new (Z0)  ITupleInfo (false);
 	for (auto it : Ymir::r (0, templates.size ())) {
-	    tuple-> params.push_back (templates [it]-> info-> type);
+	    if (auto ot = templates [it]-> info-> type-> to <IStructCstInfo> ()) {
+		auto type = ot-> TempOp ({});
+		if (type == NULL) return NULL;
+		tuple-> params.push_back (type);
+	    } else {
+		tuple-> params.push_back (templates [it]-> info-> type);
+	    }
 	}
 	return tuple;
     }

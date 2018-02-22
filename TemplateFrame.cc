@@ -255,7 +255,7 @@ namespace semantic {
 		if (type) type = type-> ConstVerif (info);
 		else return NULL;
 
-		if (type && type-> isSame (args [it])) {
+		if (type && type-> isSame (args [it]-> getIntern ())) {
 		    if (args [it]-> isConst () != info-> isConst ())
 			score-> score += this-> changed ? CONST_CHANGE_TMP : CONST_SAME_TMP;
 		    else score-> score += this-> changed ? CHANGE_TMP : SAME_TMP;
