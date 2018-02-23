@@ -941,7 +941,8 @@ namespace syntax {
 	    if (needToClose) content-> close (space);
 
 	    if (aux) {
-		aux-> info = new (Z0) ISymbol (aux-> token, aux-> info-> type-> onlyInMod (content));
+		if (aux-> info-> treeDecl ().isNull ())
+		    aux-> info = new (Z0) ISymbol (aux-> token, aux-> info-> type-> onlyInMod (content));
 	    }
 
 	    return aux;

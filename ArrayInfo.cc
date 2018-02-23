@@ -481,7 +481,7 @@ namespace semantic {
 		    return buildDup (loc, lexp, rexp, right);
 	    }
 	    
-	    if (lexp.getType ().getTreeCode () == rexp.getType ().getTreeCode ()) {		
+	    if (lexp.getType () == rexp.getType ()) {		
 		return Ymir::buildTree (
 		    MODIFY_EXPR, loc, lexp.getType (), lexp, rexp
 		);

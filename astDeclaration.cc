@@ -818,13 +818,8 @@ namespace syntax {
 	
 	sym-> space () = mod-> space ();
 	Table::instance ().insert (sym);	
-	if (this-> isExternal) {
-	    if (this-> fromC ()) sym-> space () = {""};
-	    FrameTable::instance ().insertExtern (sym);
-	} else if (!this-> _isImut) {
-	    FrameTable::instance ().insert (this);
-	}
-	
+	if (this-> fromC ()) sym-> space () = {""};
+	FrameTable::instance ().insertExtern (sym);	
 	sym-> isPublic () = this-> is_public ();	
 	mod-> insert (sym);
     }
