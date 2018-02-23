@@ -45,7 +45,16 @@ namespace semantic {
 	    Ymir::OutBuffer name;
 	    name.write (this-> decl-> getIdent ().getStr (), "(");
 	    for (auto it = res.elements.begin (); it != res.elements.end (); ) {
-		name.write (it-> first, ":", it-> second-> info-> typeString ());
+		if (auto params = it-> second-> to <IParamList> ()) {
+		    name.write ("{");
+		    for (auto it_ : Ymir::r (0, params-> getParamTypes ().size ())) {
+			name.write (params-> getParamTypes () [it_]-> typeString ());
+			if (it_ < (int) params-> getParamTypes ().size () - 1)
+			    name.write (", ");
+		    }
+		} else {
+		    name.write (it-> first, ":", it-> second-> info-> typeString ());
+		}
 		++it;
 		if (it != res.elements.end ())
 		    name.write (", ");

@@ -137,6 +137,7 @@ namespace syntax {
 	
 	auto ret = new (Z0) IProto (this-> ident, type, params, this-> from, this-> isVariadic ());
 	ret-> from = this-> from;
+	ret-> is_public (this-> is_public ());
 	return ret;
     }
     
