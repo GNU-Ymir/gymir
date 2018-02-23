@@ -182,7 +182,7 @@ namespace syntax {
     }
     
     void IModDecl::declare () {
-	auto get = Table::instance ().get (this-> ident.getStr ());
+	auto get = Table::instance ().getLocal (this-> ident.getStr ());
 	if (get != NULL) {
 	    Ymir::Error::shadowingVar (this-> ident, get-> sym);
 	    return;
@@ -263,15 +263,11 @@ namespace syntax {
 	    auto globSpace = mod-> space ();
 	    auto space = Namespace (mod-> space (), this-> ident.getStr ());
 	    auto mod_ = Table::instance ().addModule (space);
-	    std::vector <Use> later;
 	    for (auto it : this-> decls) {
-		if (auto use = it-> to<IUse> ())
-		    later.push_back (use);
-		else it-> declareAsExtern (mod_);
+		if (!it-> is<IUse> ())
+		    it-> declareAsExtern (mod_);
 	    }
-
-	    for (auto it : later)
-		it-> declareAsExtern (mod_);	
+	    
 	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);
@@ -372,15 +368,10 @@ namespace syntax {
 	    }
 	}
 
-	std::vector <Use> later;
 	for (auto it : Ymir::r (begin, this-> decls.size ())) {
-	    if (auto use = this-> decls [it]-> to <IUse> ()) {
-		later.push_back (use);
-	    } else this-> decls [it]-> declareAsExtern (mod);
+	    if (!this-> decls [it]-> is <IUse> ()) 
+		this-> decls [it]-> declareAsExtern (mod);
 	}
-
-	for (auto it : later)
-	    it-> declare ();
     }
 
     
@@ -962,23 +953,7 @@ namespace syntax {
 	}
     }
 
-    void IUse::declareAsExtern (semantic::Module mod) {
-	if (this-> is_public ()) {
-	    auto sym = this-> mod-> expression ();
-	    if (sym == NULL) return;
-	    if (auto mod_ = sym-> info-> type-> to <IModuleInfo> ()) {
-		auto content = mod_-> get ();
-		if (content == NULL) {
-		    Ymir::Error::uninitVar (this-> mod-> token);
-		    return;
-		}
-
-		auto space = mod-> space ();
-		content-> addOpen (space);
-	    } else {
-		Ymir::Error::incompatibleTypes (this-> loc, sym-> info, "module");
-	    }
-	}
+    void IUse::declareAsExtern (semantic::Module) {
     }
 
 }

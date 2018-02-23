@@ -9,7 +9,7 @@ namespace syntax {
 
 	Word loc;
 	Expression mod;
-
+	
     public :
 
 	IUse (Word loc, Expression mod) :
@@ -26,6 +26,8 @@ namespace syntax {
 	void declare (semantic::Module) override;
 	
 	void declareAsExtern (semantic::Module) override;
+
+	void execute ();
 	
 	void print (int) override {}
 
