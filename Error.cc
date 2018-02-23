@@ -689,6 +689,17 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::scopeExitEnd (const Word& word) {
+	auto msg = std::string (getString (ScopeExitEnd));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::unreachableStmtWarn (const Word& word) {
 	auto msg = std::string (getString (UnreachableStmt));
 	msg = std::string (YELLOW) + "Warning" + std::string (RESET) + " : " + std::string (msg);

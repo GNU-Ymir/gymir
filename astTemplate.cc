@@ -59,6 +59,10 @@ namespace syntax {
 	return new (Z0)  IBlock (this-> token, decls, insts);
     }
 
+    Instruction IScope::templateReplace (const map <string, Expression> & values) {
+	return new (Z0) IScope (this-> token, (Block) this-> block-> templateReplace (values));
+    }
+    
     Instruction IBreak::templateReplace (const map <string, Expression>&) {
 	return new (Z0)  IBreak (this-> token, this-> ident);
     }

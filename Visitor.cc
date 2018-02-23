@@ -76,7 +76,7 @@ namespace syntax {
 	this-> suiteElem = {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON, Token::LACC};
 	this-> afUnary = {Token::DPLUS, Token::DMINUS};	
 	this-> befUnary = {Token::MINUS, Token::AND, Token::STAR, Token::NOT};
-	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT,
+	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::SCOPE,
 			       Keys::DEF, Keys::IF, Keys::RETURN,
 			       Keys::FOR,  Keys::WHILE, Keys::BREAK,
 			       Keys::MATCH, Keys::IN, Keys::ELSE,
@@ -1052,6 +1052,7 @@ namespace syntax {
 	else if (tok == Keys::LET) return visitLet ();
 	else if (tok == Keys::BREAK) return visitBreak ();
 	else if (tok == Keys::ASSERT) return visitAssert ();
+	else if (tok == Keys::SCOPE) return visitScope ();
 	else if (tok == Keys::IMMUTABLE) {
 	    tok = this-> lex.next ();
 	    Instruction inst;
@@ -1983,6 +1984,13 @@ namespace syntax {
 	    return new (Z0)  IIf (begin, test, block);
 	} else this-> lex.rewind ();
 	return new (Z0)  IIf (begin, NULL, visitBlock ());
+    }
+
+    Scope Visitor::visitScope () {
+	auto begin = this->lex.next ();
+	auto next = this-> lex.next ({Token::LACC, Token::DARROW});
+	if (next == Token::LACC) this-> lex.rewind ();
+	return new (Z0) IScope (begin, visitBlock ());
     }
     
     Assert Visitor::visitAssert () {

@@ -33,7 +33,8 @@ struct Keys {
     static std::string  UNDER; 
     static std::string  OPBINARY; 
     static std::string  OPBINARYR; 
-    static std::string  ASSERT; 
+    static std::string  ASSERT;
+    static std::string  SCOPE; 
     static std::string  STATIC; 
     static std::string  OPACCESS; 
     static std::string  OPRANGE; 

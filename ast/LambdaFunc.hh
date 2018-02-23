@@ -42,6 +42,10 @@ namespace syntax {
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
 	std::vector <Var> & getParams ();
+
+	Ymir::Tree toGeneric () override {
+	    return Ymir::Tree ();
+	}
 	
 	Expression getExpr ();
 

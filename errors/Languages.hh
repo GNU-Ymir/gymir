@@ -113,6 +113,7 @@ namespace Ymir {
 		phrases [ShadowingVar2] = "Cannot override '%%%' with a different acces property (%%%)";
 		phrases [AssertFailure] = "Assert failure : %";
 		phrases [AssertFailure2] = "Assert failure";
+		phrases [ScopeExitEnd] = "Scope guard declaration after scope exit";
 		init = true;
 	    } 
 	    return phrases;

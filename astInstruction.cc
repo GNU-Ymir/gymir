@@ -40,10 +40,15 @@ namespace syntax {
 	for (auto it : this-> insts) {
 	    if (Table::instance ().retInfo ().hasReturned () ||
 		Table::instance ().retInfo ().hasBreaked ()) {
-		Ymir::Error::unreachableStmt (it-> token);
-		break;
+		if (it-> is<IScope> ()) {
+		    Ymir::Error::scopeExitEnd (it-> token);
+		} else {
+		    Ymir::Error::unreachableStmt (it-> token);
+		    break;
+		}
 	    }
 	    if (!it-> is<INone> ()) {
+		it-> father () = bl;
 		auto inst = it-> instruction ();
 		if (inst != NULL) {
 		    insts.push_back (inst);
@@ -436,6 +441,13 @@ namespace syntax {
 	ret-> soluce = soluce;
 	ret-> block = blocks;
 	return ret;
+    }
+    
+    Instruction IScope::instruction () {
+	Table::instance ().retInfo ().currentBlock () = "if";
+	auto ret = block-> block ();
+	this-> father ()-> addFinally (ret);	
+	return new (Z0) INone (this-> token);
     }
     
 }

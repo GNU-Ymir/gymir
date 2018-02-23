@@ -54,3 +54,4 @@
 #include "StructCst.hh"
 #include "Module.hh"
 #include "Use.hh"
+#include "Scope.hh"

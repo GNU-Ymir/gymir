@@ -21,7 +21,8 @@ namespace syntax {
 	Word ident;
 	std::vector <Declaration> decls;
 	std::vector <Instruction> insts;
-
+	std::vector <IBlock*> finally;
+	
     public :
 
 	IBlock (Word word, std::vector <Declaration> decls, std::vector <Instruction> insts) :
@@ -34,6 +35,8 @@ namespace syntax {
 
 	Word& getIdent ();
 
+	void addFinally (IBlock * insts);
+	
 	Instruction instruction () override;
 
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
@@ -45,8 +48,6 @@ namespace syntax {
 	Ymir::Tree toGeneric () override;
 
 	Ymir::Tree toGenericExpr (semantic::InfoType & type, Ymir::Tree & res);
-
-	Ymir::Tree toGenericSimple ();
 
 	Expression getLastExpr ();
 	

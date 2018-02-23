@@ -284,7 +284,7 @@ namespace semantic {
 	    Ymir::enterBlock ();
 
 	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (MODIFY_EXPR, loc, void_type_node, var, it));
-	    auto innerBl = block-> toGenericSimple ();
+	    auto innerBl = block-> toGeneric ();
 	    Ymir::getStackStmtList ().back ().append (innerBl);	    
 	    auto add_expr = Ymir::buildTree (
 	     	MODIFY_EXPR, locus.getLocus (), it.getType (), it,

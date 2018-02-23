@@ -86,6 +86,8 @@ namespace syntax {
 	    return "INone";
 	}
 
+	Ymir::Tree toGeneric () override;
+	
 	IInstruction* templateReplace (const std::map <std::string, Expression>&) override {
 	    return this;    
 	}

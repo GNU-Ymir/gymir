@@ -15,6 +15,13 @@ namespace syntax {
 	return this-> ident;
     }
 
+    void IBlock::addFinally (Block block) {
+	if (block-> insts.size () != 0) {
+	    if (!block-> insts [0]-> is<INone> () || block-> insts.size () != 1)
+		this-> finally.push_back (block);
+	}
+    }
+    
     IBlock::~IBlock ()  {
 	for (auto it : decls)
 	    delete it;
@@ -1416,5 +1423,9 @@ namespace syntax {
 	return this-> decls;
     }
     
-    
+    IScope::IScope (Word token, Block block) :
+	IInstruction (token),
+	block (block)
+    {}
+       
 }

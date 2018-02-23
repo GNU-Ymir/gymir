@@ -692,7 +692,7 @@ namespace semantic {
 	    Ymir::enterBlock ();
 
 	    Ymir::getStackStmtList ().back ().append (affectIndex (locus, it, array, var, iter-> info-> type, vars [0]-> info-> type));
-	    Ymir::getStackStmtList ().back ().append (block-> toGenericSimple ());	    
+	    Ymir::getStackStmtList ().back ().append (block-> toGeneric ());	    
 	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (
 	     	MODIFY_EXPR, locus.getLocus (), it.getType (), it,
 	     	Ymir::buildTree (

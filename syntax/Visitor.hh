@@ -93,6 +93,7 @@ namespace syntax {
 	Instruction visitIf ();
 	If visitElse ();
 	Assert visitAssert ();
+	Scope visitScope ();
 	Instruction visitReturn ();
 	Instruction visitBreak ();
 	Instruction visitWhile ();

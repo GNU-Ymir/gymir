@@ -19,7 +19,11 @@ namespace syntax {
 	Ymir::Error::assert ((std::string ("TODO generic") + this-> getIds ().back ()).c_str  ());
 	return NULL;
     }
-        
+
+    Ymir::Tree INone::toGeneric () {
+	return Ymir::Tree ();
+    }
+    
     Ymir::Tree IBlock::toGeneric () {
 	Ymir::enterBlock ();
 	for (auto it : this-> insts) {
@@ -27,8 +31,22 @@ namespace syntax {
 	    Ymir::getStackStmtList ().back ().append (inst);    
 	}
 	
-	auto ret = Ymir::leaveBlock ();
-	return ret.bind_expr;
+	auto body = Ymir::leaveBlock ();
+	if (this-> finally.size () == 0)
+	    return body.bind_expr;
+
+	if (this-> finally.size () == 1) {
+	    auto finally = this-> finally [0]-> toGeneric ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.getTree ());
+	} else {
+	    Ymir::enterBlock ();
+	    for (auto it : this-> finally) {
+		auto inst = it-> toGeneric ();
+		Ymir::getStackStmtList ().back ().append (inst);
+	    }
+	    auto finally = Ymir::leaveBlock ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.bind_expr.getTree ());
+	}      
     }
 
     Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
@@ -42,23 +60,25 @@ namespace syntax {
 
 	type = last-> info-> type;
 	expr = last-> toGeneric ();
-	auto ret = Ymir::leaveBlock ();
-	return ret.bind_expr;
-    }
-    
-    Ymir::Tree IBlock::toGenericSimple () {
-	//Ymir::enterBlock ();
-	Ymir::TreeStmtList list;
-	for (auto it : this-> insts) {
-	    auto inst = it-> toGeneric ();
-	    list.append (inst);    
-	}
 	
-	//auto ret = Ymir::leaveBlock ();
-	return list.getTree ();
-    }
-    
+	auto body = Ymir::leaveBlock ();
+	if (this-> finally.size () == 0)
+	    return body.bind_expr;
 
+	if (this-> finally.size () == 1) {
+	    auto finally = this-> finally [0]-> toGeneric ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.getTree ());
+	} else {
+	    Ymir::enterBlock ();
+	    for (auto it : this-> finally) {
+		auto inst = it-> toGeneric ();
+		Ymir::getStackStmtList ().back ().append (inst);
+	    }
+	    auto finally = Ymir::leaveBlock ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.bind_expr.getTree ());
+	}
+    }
+        
     Ymir::Tree IVarDecl::toGeneric () {
 	Ymir::TreeStmtList list;
 	for (int i = 0 ; i < (int) this-> decls.size () ; i++) {

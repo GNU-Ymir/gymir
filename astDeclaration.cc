@@ -817,7 +817,6 @@ namespace syntax {
 	    sym-> isConst (false);
 	
 	sym-> space () = mod-> space ();
-	Table::instance ().insert (sym);	
 	if (this-> fromC ()) sym-> space () = {""};
 	FrameTable::instance ().insertExtern (sym);	
 	sym-> isPublic () = this-> is_public ();	
@@ -848,7 +847,7 @@ namespace syntax {
 	    return;
 	}
 	
-	auto space = Table::instance ().space ();
+	auto space = mod-> space ();
 	auto fr = new (Z0) IPureFrame (space, this);	
 	FrameTable::instance ().insert (fr);
 	mod-> constructor () = fr;
@@ -863,7 +862,7 @@ namespace syntax {
 	    return;
 	}
 	
-	auto space = Table::instance ().space ();
+	auto space = mod-> space ();
 	auto fr = new (Z0) IExternFrame (space, "", this-> toProto ());	
 	FrameTable::instance ().insert (fr);
 	mod-> constructor () = fr;
@@ -893,7 +892,7 @@ namespace syntax {
 	    return;
 	}
 	
-	auto space = Table::instance ().space ();
+	auto space = mod-> space ();
 	auto fr = new (Z0) IPureFrame (space, this);	
 	FrameTable::instance ().insert (fr);
 	mod-> destructor () = fr;
@@ -908,7 +907,7 @@ namespace syntax {
 	    return;
 	}
 	
-	auto space = Table::instance ().space ();
+	auto space = mod-> space ();
 	auto fr = new (Z0) IExternFrame (space, "", this-> toProto ());	
 	FrameTable::instance ().insert (fr);
 	mod-> destructor () = fr;

@@ -57,3 +57,4 @@ std::string     Keys::DLANG	= "D";
 std::string     Keys::DPAR      = "()";
 std::string     Keys::MOD       = "mod";
 std::string     Keys::USE       = "use";
+std::string     Keys::SCOPE     = "on";

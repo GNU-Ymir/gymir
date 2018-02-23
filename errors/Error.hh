@@ -86,6 +86,7 @@ namespace Ymir {
 	    ModuleDontMatch,
 	    AssertFailure,
 	    AssertFailure2,
+	    ScopeExitEnd,
 	    LAST_ERROR
 	};
 
@@ -227,6 +228,8 @@ namespace Ymir {
 	static void missingReturn (const Word&, semantic::Symbol);
 	
 	static void unreachableStmt (const Word&);
+
+	static void scopeExitEnd (const Word&);
 	
 	static void unreachableStmtWarn (const Word&);
 	
