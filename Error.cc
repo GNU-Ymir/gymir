@@ -737,6 +737,21 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::incompatibleTypes (const Word& where, semantic::Symbol type, std::string other) {
+	auto str = getString (IncompatibleTypes);
+	auto msg = format (str, YELLOW, type-> type-> typeString ().c_str (), RESET,
+			   YELLOW, other.c_str (), RESET
+	);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, where);
+	
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
     
     void Error::useAsType (const Word& word) {
 	auto str = getString (UseAsType);

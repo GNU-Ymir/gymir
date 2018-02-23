@@ -191,7 +191,9 @@ namespace syntax {
 	std::vector <Declaration> decls;
 	for (auto it : this-> decls)
 	    decls.push_back (it-> templateDeclReplace (tmps));
-	return new (Z0) IModDecl (this-> ident, decls);
+	auto ret = new (Z0) IModDecl (this-> ident, decls);
+	ret-> is_public (this-> is_public ());
+	return ret;
     }
     
     Declaration IStruct::templateDeclReplace (const map <string, Expression> & tmps) {
@@ -200,7 +202,9 @@ namespace syntax {
 	    params.push_back (it-> templateExpReplace (tmps)-> to<IVar> ());
 	}
 	
-	return new (Z0) IStruct (this-> ident, this-> tmps, params);
+	auto ret = new (Z0) IStruct (this-> ident, this-> tmps, params);
+	ret-> is_public (this-> is_public ());
+	return ret;
     }
     
     Function IFunction::templateReplace (const map <string, Expression>& values) {
@@ -221,7 +225,9 @@ namespace syntax {
 	    tmps.push_back (it-> templateExpReplace (values));
 
 	auto block = (Block) this-> block-> templateReplace (values);
-	return new (Z0)  IFunction (this-> ident, type, params, tmps, test, block);	
+	auto ret = new (Z0)  IFunction (this-> ident, type, params, tmps, test, block);
+	ret-> is_public (this-> is_public ());
+	return ret;
     }
 
     Instruction IIf::templateReplace (const map <string, Expression>& values) {
@@ -451,5 +457,12 @@ namespace syntax {
     }
 
     
+    Declaration IUse::templateDeclReplace (const map <string, Expression> & values) {
+	auto mod = this-> mod-> templateExpReplace (values);
+	auto ret = new (Z0) IUse (this-> loc, mod);
+	ret-> is_public (this-> is_public ());
+	return ret;
+    }
+
     
 }

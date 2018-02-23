@@ -53,3 +53,4 @@
 #include "While.hh"
 #include "StructCst.hh"
 #include "Module.hh"
+#include "Use.hh"

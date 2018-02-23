@@ -216,6 +216,8 @@ namespace Ymir {
 
 	static void incompatibleTypes (const Word&, semantic::Symbol, semantic::InfoType);
 
+	static void incompatibleTypes (const Word&, semantic::Symbol, std::string);
+
 	static void templateInferType (const Word&, const Word&);
 
 	static void activeError (bool);	

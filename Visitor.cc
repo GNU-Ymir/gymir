@@ -83,7 +83,7 @@ namespace syntax {
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-			       Keys::TRAIT, Keys::REF, Keys::CONST, Keys::MOD, Keys::SELF
+			       Keys::TRAIT, Keys::REF, Keys::CONST, Keys::MOD, Keys::SELF, Keys::USE
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -209,7 +209,8 @@ namespace syntax {
     Declaration Visitor::visitDeclaration (bool fatal) {
     	auto token = this-> lex.next ();
     	if (token == Keys::DEF) return visitFunction ();
-	if (token == Keys::MOD) return visitModule ();
+	else if (token == Keys::USE) return visitUse ();
+	else if (token == Keys::MOD) return visitModule ();
     	else if (token == Keys::IMPORT) return visitImport ();
     	else if (token == Keys::EXTERN) return visitExtern ();
     	else if (token == Keys::STRUCT) return visitStruct ();
@@ -404,6 +405,13 @@ namespace syntax {
 	return buf.str ();
     }
 
+    Use Visitor::visitUse () {
+	auto begin = this-> lex.rewind ().next ();
+	auto mod = visitExpression ();
+	this-> lex.next ({Token::SEMI_COLON});
+	return new (Z0) IUse (begin, mod);
+    }
+    
     Import Visitor::visitImport () {
 	auto begin = this-> lex.rewind ().next ();
 	std::vector <Word> idents;
@@ -1017,6 +1025,7 @@ namespace syntax {
 		auto next = this-> lex.next ();
 		//if (next == Keys::DEF) decls.push_back (visitFunction ());
 		if (next == Keys::IMPORT) decls.push_back (visitImport ());
+		else if (next == Keys::USE) decls.push_back (visitUse ());
 		else if (next == Keys::EXTERN) decls.push_back (visitExtern ());
 		else if (next == Keys::STRUCT) decls.push_back (visitStruct ());
 		else if (next == Token::LACC) {

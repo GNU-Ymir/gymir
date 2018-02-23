@@ -27,6 +27,7 @@ namespace syntax {
 	Global visitGlobalImut ();
 	std::string visitSpace ();
 	Import visitImport ();
+	Use visitUse ();
 	std::vector <Expression> visitTemplateStruct ();
 	Struct visitStruct ();
 	Enum visitEnum ();
