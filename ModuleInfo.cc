@@ -4,9 +4,20 @@
 
 namespace semantic {
     
+    using namespace syntax;
+    
+    IModuleInfo::IModuleInfo (Namespace space, syntax::ModDecl decl) :
+	IInfoType (true),
+	content (NULL),
+	decl (decl),
+	space (space)
+    {}
+    
     IModuleInfo::IModuleInfo (Module content) :
 	IInfoType (true),
-	content (content)
+	content (content),
+	decl (NULL),
+	space ("")
     {}
 
     bool IModuleInfo::isSame (InfoType other) {
@@ -18,15 +29,55 @@ namespace semantic {
     }
     
     Module IModuleInfo::get () {
+	if (!this-> content) {
+	    auto info = this-> TempOp ({});
+	    if (info) return info-> to <IModuleInfo> ()-> content;
+	}
 	return this-> content;
     }
     
+    InfoType IModuleInfo::TempOp (const std::vector<::syntax::Expression> & tmps) {
+	if (this-> decl) {
+	    auto res = TemplateSolver::instance ().solve (this-> decl-> getTemplates (), tmps);
+	    if (!res.valid || !TemplateSolver::instance ().isSolved (this-> decl-> getTemplates (), res))
+		return NULL;
+	    auto mod = this-> decl-> templateDeclReplace (res.elements)-> to <IModDecl> ();
+	    Ymir::OutBuffer name;
+	    name.write (this-> decl-> getIdent ().getStr (), "(");
+	    for (auto it = res.elements.begin (); it != res.elements.end (); ) {
+		name.write (it-> first, ":", it-> second-> info-> typeString ());
+		++it;
+		if (it != res.elements.end ())
+		    name.write (", ");
+	    }
+	    name.write (")");
+	    
+	    mod-> getIdent ().setStr (name.str ());
+	    auto globSpace = Table::instance ().space ();
+	    auto space = Namespace (this-> space, mod-> getIdent ().getStr ());
+	    auto mod_ = Table::instance ().addModule (space);
+	    for (auto it : mod-> getDecls ()) {
+		it-> declare (mod_);
+	    }
+	    
+	    auto info = new (Z0) IModuleInfo (mod_);
+	    Table::instance ().setCurrentSpace (globSpace);
+	    return info;
+	} return NULL;
+    }
+
     std::string IModuleInfo::typeString () {
-	return "Module::" + this-> content-> space ().toString ();
+	if (this-> content)
+	    return "Module::" + this-> content-> space ().toString ();
+	else
+	    return "Module::" + this-> decl-> getIdent ().getStr ();
     }
 
     std::string IModuleInfo::innerTypeString () {
-	return "Module::" + this-> content-> space ().toString ();
+	if (this-> content)
+	    return "Module::" + this-> content-> space ().toString ();
+	else
+	    return "Module::" + this-> decl-> getIdent ().getStr ();
     }
 
     std::string IModuleInfo::innerSimpleTypeString () {

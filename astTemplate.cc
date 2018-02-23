@@ -186,6 +186,13 @@ namespace syntax {
 	return this-> templateReplace (tmps);
     }
 
+    Declaration IModDecl::templateDeclReplace (const map <string, Expression> & tmps) {
+	std::vector <Declaration> decls;
+	for (auto it : this-> decls)
+	    decls.push_back (it-> templateDeclReplace (tmps));
+	return new (Z0) IModDecl (this-> ident, decls);
+    }
+    
     Declaration IStruct::templateDeclReplace (const map <string, Expression> & tmps) {
 	std::vector <Var> params;
 	for (auto it : this-> params) {

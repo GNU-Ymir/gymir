@@ -80,9 +80,13 @@ namespace syntax {
 	    } else if (this-> templates.size () != 0 && (!this-> inside || !this-> inside-> is <IPar> ())) {
 		bool doCall = true;
 		if (this-> inside) {
+		    if (this-> inside-> is <IStructCst> ()) doCall = false;
+		    if (this-> inside-> is <IDColon> ()) doCall = false;
+		    if (this-> inside-> is <IDot> ()) doCall = false;
 		    if (auto bin = this-> inside-> to <IBinary> ()) {
 			if (bin-> token == Token::EQUAL) doCall = false;
 		    }
+		    if (!sym-> type-> is <IFunctionInfo> ()) doCall = false;
 		}
 		if (doCall) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
@@ -914,6 +918,11 @@ namespace syntax {
 	
 	if (auto mod = left-> info-> type-> to<IModuleInfo> ()) {
 	    auto content = mod-> get ();
+	    if (content == NULL) {
+		Ymir::Error::undefAttr (this-> token, left-> info, this-> right-> to<IVar> ());
+		return NULL;
+	    }
+	    
 	    bool needToClose = false;
 	    auto space = Table::instance ().space ();
 	    if (!content-> authorized (space)) {

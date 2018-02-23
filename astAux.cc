@@ -217,6 +217,8 @@ namespace syntax {
 	
     std::string IVar::prettyPrint () {
 	Ymir::OutBuffer buf;
+	if (!this-> deco.isEof ())
+	    buf.write (this-> deco.getStr (), " ");
 	buf.write (this-> token.getStr ());
 	if (this-> templates.size () != 0) {
 	    buf.write ("!(");
@@ -276,15 +278,16 @@ namespace syntax {
     }
 
     std::string ITypedVar::prettyPrint () {
-	if (this-> type) {
-	    return Ymir::format ("% : %",
-				 this-> token.getStr ().c_str (),
-				 this-> type-> prettyPrint ().c_str ());
-	} else {
-	    return Ymir::format ("% : %",
-				 this-> token.getStr ().c_str (),
-				 this-> expType-> prettyPrint ().c_str ());
+	Ymir::OutBuffer buf;
+	if (!this-> deco.isEof ()) {
+	    buf.write (this-> deco.getStr (), " ");
 	}
+	if (this-> type) {
+	    buf.write (this-> token.getStr ().c_str (), " : ", this-> type-> prettyPrint ().c_str ());	    
+	} else {
+	    buf.write (this-> token.getStr ().c_str (), " : ", this-> expType-> prettyPrint ().c_str ());	   
+	}
+	return buf.str ();
     }
     
     bool IVar::hasTemplate () {
@@ -1405,6 +1408,13 @@ namespace syntax {
     }
     
 	
+    std::vector <Expression> & IModDecl::getTemplates () {
+	return this-> tmps;
+    }
 
+    std::vector <Declaration> & IModDecl::getDecls () {
+	return this-> decls;
+    }
+    
     
 }

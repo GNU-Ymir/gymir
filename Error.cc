@@ -459,7 +459,7 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, true, false};
 	if (__isEnable__) {	    
 	    Error::instance ().nb_errors ++;
-	    fail("%s", errorMsg.msg.c_str ());
+	    fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 

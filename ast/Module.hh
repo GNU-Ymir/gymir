@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/ast/Declaration.hh>
+#include <ymir/ast/Expression.hh>
 
 namespace syntax {
 
@@ -9,6 +10,7 @@ namespace syntax {
 	Word ident;
 	bool _isGlobal = true;
 	std::vector <Declaration> decls;
+	std::vector <Expression> tmps;
 	
     public :
 
@@ -27,6 +29,12 @@ namespace syntax {
 	    this-> is_public (true);
 	}
 
+	std::vector <Expression> & getTemplates ();
+
+	std::vector <Declaration> & getDecls ();
+	
+	Declaration templateDeclReplace (const std::map <std::string, Expression>& tmps);
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;

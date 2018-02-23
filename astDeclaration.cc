@@ -184,51 +184,68 @@ namespace syntax {
     void IModDecl::declare () {
 	if (this-> isGlobal ()) {
 	    Ymir::Error::moduleNotFirst (this-> ident);
+	} else if (this-> tmps.size () == 0) {
+	    auto globSpace = Table::instance ().space ();
+	    auto space = Namespace (Table::instance ().space (), this-> ident.getStr ());
+	    auto mod = Table::instance ().addModule (space);
+	    for (auto it : this-> decls) {
+		it-> declare (mod);
+	    }
+	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod));
+	    sym-> isPublic () = this-> is_public ();
+	    Table::instance ().insert (sym);
+	    //TODO insert ModuleAccessor
+	    Table::instance ().setCurrentSpace (globSpace);
+	} else {
+	    auto globSpace = Table::instance ().space ();
+	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (globSpace, this));
+	    sym-> isPublic () = this-> is_public ();
+	    Table::instance ().insert (sym);	    
 	}
-	auto globSpace = Table::instance ().space ();
-	auto space = Namespace (Table::instance ().space (), this-> ident.getStr ());
-	auto mod = Table::instance ().addModule (space);
-	for (auto it : this-> decls) {
-	    it-> declare (mod);
-	}
-	auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod));
-	sym-> isPublic () = this-> is_public ();
-	Table::instance ().insert (sym);
-	//TODO insert ModuleAccessor
-	Table::instance ().setCurrentSpace (globSpace);
     }
     
     void IModDecl::declare (semantic::Module mod) {
 	if (this-> isGlobal ()) {
 	    Ymir::Error::moduleNotFirst (this-> ident);
+	} else if (this-> tmps.size () == 0) {
+	    auto globSpace = mod-> space ();
+	    auto space = Namespace (mod-> space (), this-> ident.getStr ());
+	    auto mod_ = Table::instance ().addModule (space);
+	    for (auto it : this-> decls) {
+		it-> declare (mod_);	    
+	    }
+	    mod-> addOpen (space);
+	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
+	    sym-> isPublic () = this-> is_public ();
+	    mod-> insert (sym);
+	} else {
+	    auto globSpace = mod-> space ();
+	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (globSpace, this));
+	    sym-> isPublic () = this-> is_public ();
+	    mod-> insert (sym);	    
 	}
-	auto globSpace = mod-> space ();
-	auto space = Namespace (mod-> space (), this-> ident.getStr ());
-	auto mod_ = Table::instance ().addModule (space);
-	for (auto it : this-> decls) {
-	    it-> declare (mod_);	    
-	}
-	mod-> addOpen (space);
-	auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
-	sym-> isPublic () = this-> is_public ();
-	mod-> insert (sym);
     }
     
     void IModDecl::declareAsExtern (semantic::Module mod) {
 	if (this-> isGlobal ()) {
 	    Ymir::Error::moduleNotFirst (this-> ident);
-	}
+	} else if (this-> tmps.size () == 0) {	
+	    auto globSpace = mod-> space ();
+	    auto space = Namespace (mod-> space (), this-> ident.getStr ());
+	    auto mod_ = Table::instance ().addModule (space);
+	    for (auto it : this-> decls) {
+		it-> declareAsExtern (mod_);	    
+	    }
 	
-	auto globSpace = mod-> space ();
-	auto space = Namespace (mod-> space (), this-> ident.getStr ());
-	auto mod_ = Table::instance ().addModule (space);
-	for (auto it : this-> decls) {
-	    it-> declareAsExtern (mod_);	    
-	}
-	
-	auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
-	sym-> isPublic () = this-> is_public ();
-	mod-> insert (sym);
+	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
+	    sym-> isPublic () = this-> is_public ();
+	    mod-> insert (sym);
+	} else {
+	    auto globSpace = mod-> space ();
+	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (globSpace, this));
+	    sym-> isPublic () = this-> is_public ();
+	    mod-> insert (sym);	    
+	} 
     }
 
     void IProgram::detachFile (std::string & file, std::string & path) {

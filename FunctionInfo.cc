@@ -301,6 +301,11 @@ namespace semantic {
 	    if (score == NULL) return NULL;
 	    if (!score-> ret-> isSame (ot-> getType ()))
 		return NULL;
+
+	    for (auto it : Ymir::r (0, score-> treat.size ())) {
+		if (!ot-> getParams() [it]-> isSame (score-> treat [it]))
+		    return NULL;
+	    }
 	    
 	    auto ret = (PtrFuncInfo) ot-> cloneConst ();
 	    ret-> getScore () = score;
@@ -388,23 +393,21 @@ namespace semantic {
     }
 
     InfoType IFunctionInfo::toPtr () {
-	auto frames = getFrames ();
-	if (frames.size () == 1) {
-	    if (frames [0]-> is<IPureFrame> ()) {
-		//TODO
-		// auto proto = fr.validate ();
-		// std::vector <InfoType> params;
-		// for (auto it : proto-> vars) {
-		//     params.push_back (it-> info-> type);
-		// }
-		// auto ret = proto-> type-> type;
-		// auto ptr = new (Z0)  IPtrFuncInfo (true);
-		// ptr-> params = params;
-		// ptr-> ret = ret;
-		// ptr-> score = this-> CallOp (fr-> ident, params);
-		// return ptr;
-	    }
-	}
+	// auto frames = getFrames ();
+	// if (frames.size () == 1) {
+	//     auto infoTypes = frames [0]-> getParamTypes ();
+	//     auto score = this-> CallOp ({op.getLocus (), ""}, infoTypes);
+	//     if (score == NULL || score-> ret == NULL) return NULL;
+	//     auto ret = new (Z0) IPtrFuncInfo (true);
+	//     ret-> getParams () = infoTypes;
+	//     ret-> getType () = score-> ret-> cloneConst ();
+	//     ret-> getScore () = score;
+	    
+	//     ret-> nextBinop.push_back (&FunctionUtils::InstAffect);
+	//     ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
+	    
+	//     return ret;	
+	// }
 	return NULL;
     }
 

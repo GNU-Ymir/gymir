@@ -229,8 +229,8 @@ namespace syntax {
 
     ModDecl Visitor::visitModule () {
 	auto ident = visitIdentifiant ();
-	auto word = this-> lex.next ({Token::DOT, Token::SEMI_COLON, Token::LACC});
-	if (word != Token::LACC) {
+	auto word = this-> lex.next ({Token::DOT, Token::SEMI_COLON, Token::LACC, Token::LPAR});
+	if (word != Token::LACC && word != Token::LPAR) {
 	    while (word == Token::DOT) {
 		if (word == Token::DOT)
 		    ident.setStr (ident.getStr () + ".");
@@ -240,6 +240,12 @@ namespace syntax {
 	    }		
 	    return new (Z0) IModDecl (ident);
 	} else {
+	    std::vector <Expression> templates;
+	    if (word == Token::LPAR) {
+		templates = visitTemplateStruct ();
+		word = this-> lex.next ({Token::LACC});
+	    }
+	    
 	    std::vector <Declaration> decls;
 	    while (true) {
 		auto decl = visitDeclaration (false);
@@ -257,7 +263,9 @@ namespace syntax {
 		    } else break;
 		}
 	    }
-	    return new (Z0) IModDecl (ident, decls);
+	    auto ret = new (Z0) IModDecl (ident, decls);
+	    ret-> getTemplates () = templates;
+	    return ret;
 	}
     }
     
@@ -877,7 +885,7 @@ namespace syntax {
 		return new (Z0) IArrayVar (begin, type, len);
 	    } else return new (Z0)  IArrayVar (begin, type);
 	} else if (begin == Keys::CONST)
-	    return visitDecoType (begin);	
+	    return visitDecoType (begin);
 	else this-> lex.rewind ();
 	
 	auto ident = visitIdentifiant ();
@@ -888,7 +896,15 @@ namespace syntax {
 	    next = this-> lex.next ();
 	    if (next == Token::LPAR) {
 		while (true) {
-		    params.push_back (visitExpression ());
+		    auto ref = this-> lex.next ();
+		    if (ref != Keys::REF) {
+			this-> lex.rewind ();
+			params.push_back (visitExpression ());
+		    } else {
+			auto type = visitType ();
+			type-> deco = ref;
+			params.push_back (type);
+		    } 
 		    next = this-> lex.next ();
 		    if (next == Token::RPAR) break;
 		    else if (next != Token::COMA) {
@@ -1686,7 +1702,14 @@ namespace syntax {
 	if (word != Token::RPAR) {
 	    this-> lex.rewind ();
 	    while (true) {
-		params.push_back (visitType ());
+		bool ref = false;
+		word = this-> lex.next ();
+		if (word == Keys::REF) ref = true;
+		else this-> lex.rewind ();
+		auto type = visitType ();
+		if (ref) type-> deco = word;
+		
+		params.push_back (type);
 		word = this-> lex.next ({Token::RPAR, Token::COMA});
 		if (word == Token::RPAR) break;
 	    }	    
@@ -1705,7 +1728,14 @@ namespace syntax {
 	if (word != Token::RPAR) {
 	    this-> lex.rewind ();
 	    while (true) {
-		params.push_back (visitType ());
+		bool ref = false;
+		word = this-> lex.next ();
+		if (word == Keys::REF) ref = true;
+		else this-> lex.rewind ();
+		auto type = visitType ();
+		if (ref) type-> deco = word;
+		
+		params.push_back (type);
 		word = this-> lex.next ({Token::RPAR, Token::COMA});
 		if (word == Token::RPAR) break;
 	    }	    
