@@ -56,11 +56,17 @@ namespace syntax {
 	static const char * id () {
 	    return TYPEID (IVariadicVar);
 	}
+
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
 	std::vector <std::string> getIds () {
 	    auto ret = IVar::getIds ();
 	    ret.push_back (TYPEID (IVariadicVar));
 	    return ret;
+	}
+
+	std::string prettyPrint () {
+	    return IVar::prettyPrint () + "...";
 	}
 	
 	void print (int nb = 0) override {

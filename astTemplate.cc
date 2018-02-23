@@ -300,6 +300,10 @@ namespace syntax {
 	return new (Z0)  IOfVar (this-> token, type);
     }
 
+    Expression IVariadicVar::templateExpReplace (const map <string, Expression>& values) {
+	return new (Z0) IVariadicVar (this-> token);
+    }
+
     Expression IParamList::templateExpReplace (const map <string, Expression>& values) {
 	vector <Expression> params;
 	for (auto it : this-> params) {

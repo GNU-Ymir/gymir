@@ -226,7 +226,7 @@ namespace semantic {
     ApplicationScore ITemplateFrame::getScoreSimple (Word ident, const vector<Var> & attrs, const vector<InfoType> & args) {
 	auto score = new (Z0)  IApplicationScore (ident);
 	map <string, Expression> tmps;
-	
+
 	if (attrs.size () == 0 && args.size () == 0) return NULL;
 	else if (attrs.size () == args.size ()) {
 	    for (auto it : Ymir::r (0, args.size ())) {

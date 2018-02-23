@@ -583,9 +583,16 @@ namespace semantic {
     
     TemplateSolution TemplateSolver::solveVariadic (const vector <Expression> & tmps, const vector <Expression> & params) {
 	auto last = tmps [tmps.size () - 1];
-	std::vector <Expression> tmps2 {tmps.begin (), tmps.end () - 1};
-	std::vector <Expression> aux (params.end () - (params.size () - tmps2.size ()), params.end ());
-	std::vector <Expression> params2 (params.begin (), params.end () - (params.size () - tmps2.size ()));
+	std::vector <Expression> tmps2 (tmps.begin (), tmps.end () - 1);
+
+	std::vector <Expression> aux, params2;
+	if (params.size () > tmps2.size ()) {
+	    aux = std::vector <Expression> (params.end () - (params.size () - tmps2.size ()), params.end ());	
+	    params2  = std::vector <Expression> (params.begin (), params.end () - (params.size () - tmps2.size ()));
+	} else {
+	    params2 = params;
+	}
+	
 	TemplateSolution soluce (0, true);
 	for (auto it : Ymir::r (0, params2.size ())) {
 	    TemplateSolution res (0, true);
@@ -599,16 +606,19 @@ namespace semantic {
 		return TemplateSolution (0, false);
 	}
 
-	auto res = solveVariadic (tmps2, last, aux);
-	if (!res.valid || !merge (soluce.score, soluce.elements, res))
-	    return TemplateSolution (0, false);
+	if (aux.size () != 0) {
+	    auto res = solveVariadic (tmps2, last, aux);
+	    if (!res.valid || !merge (soluce.score, soluce.elements, res))
+		return TemplateSolution (0, false);
+	}
+	
 	return soluce;	
     }
     
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, const vector <Expression> &params) {
 	TemplateSolution soluce (0, true);
 	if (tmps.size () != 0 && tmps [tmps.size () - 1]-> is <IVariadicVar> ()) {
-		return solveVariadic (tmps, params);
+	    return solveVariadic (tmps, params);
 	} else if (tmps.size () < params.size ()) {
 	    return TemplateSolution (0, false);
 	}
