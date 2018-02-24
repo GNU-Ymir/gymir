@@ -87,6 +87,7 @@ namespace Ymir {
 	    AssertFailure,
 	    AssertFailure2,
 	    ScopeExitEnd,
+	    Overflow,
 	    LAST_ERROR
 	};
 
@@ -162,6 +163,8 @@ namespace Ymir {
 	static void endOfFile ();
 
 	static void unterminated (const Word&);
+
+	static void overflow (const Word&, std::string);
 
 	static void templateSpecialisation (const Word&, const Word&);
 	

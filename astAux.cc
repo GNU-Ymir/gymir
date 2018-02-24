@@ -468,10 +468,54 @@ namespace syntax {
 	IExpression (word),
 	type (type)
     {
-	if (isSigned (this-> type)) this-> value = std::strtol (this-> token.getStr ().c_str (), NULL, 0);
-	else this-> uvalue = std::strtoul (this-> token.getStr ().c_str (), NULL, 0);		
+	if (isSigned (this-> type)) this-> value = this-> convertS ();	
+	else this-> uvalue = this-> convertU ();
     }
 
+    ulong IFixed::convertU () {
+	char * temp; errno = 0;
+	ulong value = std::strtoul (this-> token.getStr ().c_str (), &temp, 0);
+	bool overflow = false;
+	if (temp == this-> token.getStr ().c_str () || *temp != '\0' ||
+	    ((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
+	    overflow = true;
+	}
+	
+	switch (this-> type) {
+	case FixedConst::UBYTE : overflow = value >= UCHAR_MAX; break;
+	case FixedConst::USHORT : overflow = value >= USHRT_MAX; break;
+	case FixedConst::UINT : overflow = value >= UINT_MAX; break;
+	default: break;
+	}
+
+	if (overflow) {
+	    Ymir::Error::overflow (this-> token, name (this-> type));
+	}
+	return value;
+    }
+
+    long IFixed::convertS () {
+	char * temp; errno = 0;
+	long value = std::strtol (this-> token.getStr ().c_str (), &temp, 0);
+	bool overflow = false;
+	if (temp == this-> token.getStr ().c_str () || *temp != '\0' ||
+	    ((value == LONG_MIN || value == LONG_MAX) && errno == ERANGE)) {
+	    overflow = true;
+	}
+	
+	switch (this-> type) {
+	case FixedConst::BYTE : overflow = value >= SCHAR_MAX || value < SCHAR_MIN; break;
+	case FixedConst::USHORT : overflow = value >= SHRT_MAX || value < SHRT_MIN; break;
+	case FixedConst::UINT : overflow = value >= INT_MAX || value < INT_MIN; break;
+	default: break;
+	}
+
+	if (overflow) {
+	    Ymir::Error::overflow (this-> token, name (this-> type));
+	} 
+	return value;
+    }
+    
     void IFixed::setUValue (ulong val) {
 	this-> uvalue = val;
     }

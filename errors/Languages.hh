@@ -114,6 +114,7 @@ namespace Ymir {
 		phrases [AssertFailure] = "Assert failure : %";
 		phrases [AssertFailure2] = "Assert failure";
 		phrases [ScopeExitEnd] = "Scope guard declaration after scope exit";
+		phrases [Overflow] = "Overflow capacity for type %%%";
 		init = true;
 	    } 
 	    return phrases;

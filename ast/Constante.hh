@@ -58,6 +58,12 @@ namespace syntax {
 	}
 	
 	std::string prettyPrint () override;
+
+    private:
+
+	ulong convertU ();
+	long convertS ();
+	
     };
 
     typedef unsigned char ubyte;
