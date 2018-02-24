@@ -79,7 +79,8 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto l = this-> params [it];
 		ret-> params.push_back (l-> clone ());
-	    }	    
+	    }
+	    
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
 	} else if (other-> is <IUndefInfo> ()) {
@@ -277,13 +278,13 @@ namespace semantic {
 		    auto laux = getField (loc, ltree, it);
 		    auto raux = getField (loc, rtree, it);
 		    list.append (buildTree (
-			MODIFY_EXPR, loc, void_type_node, laux, raux
-		    ));		
+					    MODIFY_EXPR, loc, void_type_node, laux, raux
+					    ));		
 		}
 		
 		getStackStmtList ().back ().append (list.getTree ());
 		return ltree;		
-	}
+	    }
 	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {

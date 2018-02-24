@@ -1170,24 +1170,24 @@ namespace syntax {
     Expression IConstTuple::expression () {
 	auto aux = new (Z0)  IConstTuple (this-> token, this-> end, {});
 	auto type = new (Z0)  ITupleInfo (true);
-	auto undef = new (Z0)  IUndefInfo ();
+	//auto undef = new (Z0)  IUndefInfo ();
 	for (auto it : this-> params) {
 	    auto expr = it-> expression ();
 	    if (expr == NULL) return NULL;
 	    if (auto par = expr-> to <IParamList> ()) {
 		for (auto exp_it : par-> getParams ()) {
-		    aux-> casters.push_back (exp_it-> info-> type-> CompOp (undef));
+		    aux-> casters.push_back (exp_it-> info-> type-> CompOp (exp_it-> info-> type));
 		    if (aux-> casters.back () == NULL) {
-			Ymir::Error::incompatibleTypes (exp_it-> token, exp_it-> info, undef);
+			Ymir::Error::incompatibleTypes (exp_it-> token, exp_it-> info, exp_it-> info-> type);
 			return NULL;
 		    }
 		    aux-> params.push_back (exp_it);
 		    type-> addParam (exp_it-> info-> type);
 		}
 	    } else {		
-		aux-> casters.push_back (expr-> info-> type-> CompOp (undef));
+		aux-> casters.push_back (expr-> info-> type-> CompOp (expr-> info-> type));
 		if (aux-> casters.back () == NULL) {
-		    Ymir::Error::incompatibleTypes (expr-> token, expr-> info, undef);
+		    Ymir::Error::incompatibleTypes (expr-> token, expr-> info, expr-> info-> type);
 		    return NULL;
 		}
 		aux-> params.push_back (expr);
