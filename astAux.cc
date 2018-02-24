@@ -1427,5 +1427,16 @@ namespace syntax {
 	IInstruction (token),
 	block (block)
     {}
-       
+
+    std::string IConstArray::prettyPrint () {
+	Ymir::OutBuffer buf ("[");
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    buf.write (this-> params [it]);
+	    if (it < (int) this-> params.size () - 1)
+		buf.write (", ");
+	}
+	buf.write ("]");
+	return buf.str ();
+    }
+    
 }

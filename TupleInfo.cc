@@ -268,7 +268,7 @@ namespace semantic {
 	    auto rtree = elem-> toGeneric ();
 	    auto ltype = type-> toGeneric ();
 	    if (rtree.getType ().getTree () == ltype.getTree ())
-		return rtree;
+	    	return rtree;
 	    else {
 		TreeStmtList list;
 		auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
@@ -283,7 +283,7 @@ namespace semantic {
 		
 		getStackStmtList ().back ().append (list.getTree ());
 		return ltree;		
-	    }
+	}
 	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {

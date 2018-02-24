@@ -273,6 +273,7 @@ namespace syntax {
 	} else {
 	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
+	    
 	    if (this-> _score-> proto-> isCVariadic ()) {
 		for (auto & it : args) {
 		    it = Ymir::promote (it);

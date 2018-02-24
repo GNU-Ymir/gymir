@@ -94,7 +94,7 @@ namespace semantic {
 	for (uint i = 0 ; i < this-> _vars.size () ; i++) {
 	    fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
 	}
-
+	
 	std::string ident = Namespace (this-> space (), this-> _name).toString ();
 	std::string ident_ASM;
 	tree ret = this-> _type-> type-> toGeneric ().getTree ();

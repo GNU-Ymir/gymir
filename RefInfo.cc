@@ -299,10 +299,16 @@ namespace semantic {
     }
 
     Ymir::Tree IRefInfo::toGeneric () {
-	Ymir::Tree inner = this-> _content-> toGeneric ();
-	return build_pointer_type (
-	    inner.getTree ()
-	);
+	if (this-> _content-> is <IStructInfo> ()) {
+	    return build_pointer_type (
+				       void_type_node
+				       );
+	} else {
+	    Ymir::Tree inner = this-> _content-> toGeneric ();
+	    return build_pointer_type (
+				       inner.getTree ()
+				       );
+	}
     }
     
     InfoType IRefInfo::addUnref (InfoType elem) {

@@ -55,7 +55,7 @@ namespace semantic {
     }
                
     Symbol Scope::getAlike (std::string name) {
-	auto min = 3UL;
+	auto min = 3UL < name.length () ? 3UL : name.length ();
 	Symbol ret = NULL;
 	for (auto& it : this-> local) {
 	    auto diff = levenshtein_distance (it.first.c_str (), it.first.length (), name.c_str (), name.length ());

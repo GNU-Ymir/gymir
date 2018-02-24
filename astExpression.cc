@@ -107,16 +107,18 @@ namespace syntax {
 		Ymir::Error::notATemplate (this-> token, tmps);
 		return NULL;
 	    }
+
 	    aux-> templates = tmps;
 	    aux-> info = new (Z0)  ISymbol (aux-> info-> sym, type);
 	}
+	    
 	return aux;	
     }
     
     Expression IVar::expression () {
 	if (this-> info && this-> info-> isImmutable ()) {
 	    return this;	    
-	} else if (!this-> isType ()) {
+	} else if (!this-> isType () && this-> deco != Keys::REF) {
 	    auto sym = Table::instance ().get (this-> token.getStr ());
 	    if (sym == NULL) {
 		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
@@ -128,7 +130,7 @@ namespace syntax {
     Var IVar::var () {
 	if (this-> info && this-> info-> isImmutable ()) {
 	    return this;	    
-	} else if (!this-> isType ()) {
+	} else if (!this-> isType () && this-> deco != Keys::REF) {
 	    auto aux = new (Z0)  IVar (this-> token);
 	    aux-> info = Table::instance ().get (this-> token.getStr ());
 	    if (aux-> info == NULL) {
@@ -169,7 +171,7 @@ namespace syntax {
 	for (auto it : this-> templates) {
 	    it-> inside = this;
 	    auto tmpExpr = it-> expression ();
-	    if (tmpExpr == NULL) return NULL;
+	    if (tmpExpr == NULL) return NULL;	    
 	    tmps.push_back (tmpExpr);
 	}
 
@@ -187,8 +189,12 @@ namespace syntax {
 		}
 	    }
 	    
-	    Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
-	    return NULL;	    
+	    if (!sym)
+		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
+	    else
+		Ymir::Error::useAsType (this-> token);
+	    return NULL;
+	    
 	} else {
 	    auto t_info = IInfoType::factory (this-> token, tmps);
 	    if (t_info == NULL) return NULL;

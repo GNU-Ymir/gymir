@@ -32,6 +32,8 @@ namespace syntax {
 	std::vector <std::string> getIds () override;
 
 	Ymir::Tree toGeneric () override;
+
+	std::string prettyPrint ();
 	
 	void print (int nb = 0) override;
 
