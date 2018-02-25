@@ -41,10 +41,10 @@ namespace semantic {
 	
     private :
 
-	Value add (Value other);
-	Value sub (Value other);
-	Value div (Value other);
-	Value mul (Value other);
+	Value add (Word, Value other);
+	Value sub (Word, Value other);
+	Value div (Word, Value other);
+	Value mul (Word, Value other);
 	Value lor (Value other);
 	Value land (Value other);
 	Value lshift (Value other);
@@ -59,6 +59,10 @@ namespace semantic {
 	Value supeq (Value other);
 	Value neq (Value other);
 	Value eq (Value other);
+
+	void check (Word op, long value, FixedConst cst);
+	void check (Word op, ulong value, FixedConst cst);
+	
     };
 
 }

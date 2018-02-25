@@ -609,10 +609,10 @@ namespace semantic {
 
     Value IFixedValue::BinaryOp (Word op, Value val) {
 	if (val == NULL) return NULL;
-	if (op == Token::PLUS) return this-> add (val);
-	if (op == Token::MINUS) return this-> sub (val);
-	if (op == Token::DIV) return this-> div (val);
-	if (op == Token::STAR) return this-> mul (val);
+	if (op == Token::PLUS) return this-> add (op, val);
+	if (op == Token::MINUS) return this-> sub (op, val);
+	if (op == Token::DIV) return this-> div (op, val);
+	if (op == Token::STAR) return this-> mul (op, val);
 	if (op == Token::PIPE) return this-> lor (val);
 	if (op == Token::AND) return this-> land (val);
 	if (op == Token::LEFTD) return this-> lshift (val);
@@ -652,32 +652,60 @@ namespace semantic {
     }
 
 
-    Value IFixedValue::add (Value other) {
+    Value IFixedValue::add (Word op, Value other) {
 	if (auto ot = other-> to<IFixedValue> ()) {
-	    if (isSigned (this-> type))
-		return new (Z0)  IFixedValue (this-> type, 0,
-					     this-> value.l + ot-> value.l);
-	    return new (Z0)  IFixedValue (this-> type,
-					 this-> value.ul + ot-> value.ul,
-					 0
-	    );
+	    if (isSigned (this-> type)) {
+		auto ret = new (Z0)  IFixedValue (this-> type, 0,
+						  this-> value.l + ot-> value.l);
+		
+		if ((this-> value.l < 0 && ot-> value.l < 0 && ret-> value.l >= 0)
+		    ||
+		    (this-> value.l >= 0 && ot-> value.l >= 0 && ret-> value.l < 0)
+		    ) 
+		    Ymir::Error::overflow (op, name (this-> type));
+		check (op, this-> value.l, this-> type);
+		return ret;
+	    } else {
+		auto ret = new (Z0)  IFixedValue (this-> type,
+						  this-> value.ul + ot-> value.ul,
+						  0
+						  );
+		if (ret-> value.ul < this-> value.ul || ret-> value.ul < this-> value.ul)
+		    Ymir::Error::overflow (op, name (this-> type));
+		check (op, this-> value.ul, this-> type);
+		return ret;
+	    }
 	}
 	return NULL;
     }
     
-    Value IFixedValue::sub (Value other) {
+    Value IFixedValue::sub (Word op, Value other) {
 	if (auto ot = other-> to<IFixedValue> ()) {
-	    if (isSigned (this-> type))
-		return new (Z0)  IFixedValue (this-> type, 0,
-					     this-> value.l - ot-> value.l);
-	    return new (Z0)  IFixedValue (this-> type,
-					 this-> value.ul - ot-> value.ul,
-					 0
-	    );
+	    if (isSigned (this-> type)) {
+		auto ret = new (Z0)  IFixedValue (this-> type, 0,
+						  this-> value.l - ot-> value.l);
+		if ((this-> value.l < 0 && ot-> value.l < 0 && ret-> value.l >= 0)
+		    ||
+		    (this-> value.l >= 0 && ot-> value.l < 0 && (ret-> value.l < 0 || ot-> value.l == LONG_MIN))
+		    )
+		    Ymir::Error::overflow (op, name (this-> type));
+		check (op, this-> value.l, this-> type);
+		return ret;
+	    }
+	    if (this-> value.ul < ot-> value.ul)
+		Ymir::Error::overflow (op, name (this-> type));
+	    
+	    auto ret = new (Z0)  IFixedValue (this-> type,
+					  this-> value.ul - ot-> value.ul,
+					  0
+					  );
+	    check (op, ret-> value.ul, this-> type);
+	    return ret;
 	}
 	return NULL;
     }
-    Value IFixedValue::div (Value other) {
+    
+    Value IFixedValue::div (Word, Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
 		return new (Z0)  IFixedValue (this-> type, 0,
@@ -689,7 +717,7 @@ namespace semantic {
 	}
 	return NULL;
     }
-    Value IFixedValue::mul (Value other) {
+    Value IFixedValue::mul (Word, Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
 		return new (Z0)  IFixedValue (this-> type, 0,
@@ -701,6 +729,31 @@ namespace semantic {
 	}
 	return NULL;
     }
+
+    void IFixedValue::check (Word op, long l, FixedConst cst) {
+	bool overflow = false;
+	switch (cst) {
+	case FixedConst::BYTE : overflow = (l < SCHAR_MIN || l > SCHAR_MAX); break;
+	case FixedConst::SHORT : overflow = (l < SHRT_MIN || l > SHRT_MAX); break;
+	case FixedConst::INT : overflow = (l < INT_MIN || l > INT_MAX); break;
+	default: break;
+	}
+	if (overflow)
+	    Ymir::Error::overflow (op, name (cst));
+    }
+    
+    void IFixedValue::check (Word op, ulong l, FixedConst cst) {
+	bool overflow = false;
+	switch (cst) {
+	case FixedConst::UBYTE : overflow = (l > UCHAR_MAX); break;
+	case FixedConst::USHORT : overflow = (l > USHRT_MAX); break;
+	case FixedConst::UINT : overflow = (l > UINT_MAX); break;
+	default: break;
+	}
+	if (overflow)
+	    Ymir::Error::overflow (op, name (cst));
+    }
+
     Value IFixedValue::lor (Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
 	    if (isSigned (this-> type))
