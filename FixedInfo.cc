@@ -642,7 +642,7 @@ namespace semantic {
     }
 
     syntax::Expression IFixedValue::toYmir (Symbol sym) {
-	auto ret = new (Z0)  IFixed (sym-> sym, this-> type);
+	auto ret = new (Z0)  IFixed (sym-> sym, this-> type, FixedMode::BUILTINS);
 	if (isSigned (this-> type))
 	    ret-> setValue (this-> value.l);
 	else

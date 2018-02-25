@@ -74,7 +74,7 @@ namespace syntax {
     }
 
     Expression IFixed::templateExpReplace (const map <string, Expression>&) {
-	auto ret = new (Z0)  IFixed (this-> token, this-> type);
+	auto ret = new (Z0)  IFixed (this-> token, this-> type, FixedMode::BUILTINS);
 	ret-> setUValue (this-> uvalue);
 	ret-> setValue (this-> value);
 	return ret;

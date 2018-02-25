@@ -12,6 +12,10 @@ enum class FixedConst {
     LONG, ULONG
 };
 
+enum class FixedMode {
+    HEXA, DECIMAL, BUILTINS    
+};
+
 enum class FloatConst {
     FLOAT,
     DOUBLE
@@ -30,10 +34,13 @@ namespace syntax {
 
 	ulong uvalue;
 	ulong value;
+	FixedMode mode;
 	
     public:
 	
 	IFixed (Word word, FixedConst type);
+
+	IFixed (Word word, FixedConst type, FixedMode mode);
 
 	Expression expression () override;
 

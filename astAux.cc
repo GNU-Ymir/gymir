@@ -466,11 +466,26 @@ namespace syntax {
     
     IFixed::IFixed (Word word, FixedConst type) :
 	IExpression (word),
-	type (type)
+	type (type),
+	mode (FixedMode::BUILTINS)
     {
-	if (isSigned (this-> type)) this-> value = this-> convertS ();	
-	else this-> uvalue = this-> convertU ();
+	if (this-> mode == FixedMode::DECIMAL) {
+	    if (isSigned (this-> type)) this-> value = this-> convertS ();	
+	    else this-> uvalue = this-> convertU ();
+	}
     }
+
+    IFixed::IFixed (Word word, FixedConst type, FixedMode mode) :
+	IExpression (word),
+	type (type),
+	mode (mode)
+    {
+	if (this-> mode == FixedMode::DECIMAL) {
+	    if (isSigned (this-> type)) this-> value = this-> convertS ();	
+	    else this-> uvalue = this-> convertU ();
+	}
+    }
+    
 
     ulong IFixed::convertU () {
 	char * temp; errno = 0;

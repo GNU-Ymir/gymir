@@ -1451,19 +1451,19 @@ namespace syntax {
 	for (int it = 0 ; it < (int) begin.getStr ().length (); it++) {
 	    if (begin.getStr () [it] < '0' || begin.getStr() [it] > '9') {		
 		if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "ub" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "UB")
-		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UBYTE);
+		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UBYTE, FixedMode::DECIMAL);
 		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "b" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "B")
-		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr ().substr (0, it)}, FixedConst::BYTE);
+		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr ().substr (0, it)}, FixedConst::BYTE, FixedMode::DECIMAL);
 		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "s" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "S")
-		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::SHORT);
+		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::SHORT, FixedMode::DECIMAL);
 		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "us" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "US")
-		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::USHORT);
+		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::USHORT, FixedMode::DECIMAL);
 		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "u" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "U")
-		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UINT);
+		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UINT, FixedMode::DECIMAL);
 		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "ul" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "UL")
-		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::ULONG);
+		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::ULONG, FixedMode::DECIMAL);
 		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "l" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "L")
-		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::LONG);
+		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::LONG, FixedMode::DECIMAL);
 		else {
 		    syntaxError (begin);
 		    return NULL;
@@ -1494,7 +1494,7 @@ namespace syntax {
 		return new (Z0)  IFloat (begin, suite, type);
 	    } else this-> lex.rewind ();
 	}
-	return new (Z0)  IFixed (begin, FixedConst::INT);
+	return new (Z0)  IFixed (begin, FixedConst::INT, FixedMode::DECIMAL);
     }    
     
     Expression Visitor::visitFloat (const Word&) {
