@@ -66,7 +66,10 @@ namespace semantic {
 	if (this-> _proto-> type () == NULL) {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	} else {
-	    Table::instance ().retInfo ().info = this-> _proto-> type ()-> asType ()-> info;
+	    auto type = this-> _proto-> type ()-> asType ();
+	    if (type == NULL)
+		Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IVoidInfo ());
+	    else Table::instance ().retInfo ().info = type-> info;
 	    Table::instance ().retInfo ().deco = this-> _proto-> type ()-> deco.getStr ();
 	    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
 		Table::instance ().retInfo ().info-> isConst (true);
