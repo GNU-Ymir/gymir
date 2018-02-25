@@ -736,8 +736,7 @@ namespace semantic {
 	    if (ret-> value.ul >> 32 && ret-> value.ul / this-> value.ul != ot-> value.ul)
 		Ymir::Error::overflow (op, name (this-> type));
 	    check (op, ret-> value.ul, this-> type);
-	    return ret;
-	    
+	    return ret;	    
 	}
 	return NULL;
     }

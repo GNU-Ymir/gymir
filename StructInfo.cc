@@ -259,9 +259,13 @@ namespace semantic {
 	auto name = this-> onlyNameTypeString ();
 	auto inside = dones.find (name);
 	if (inside == dones.end ()) {
+	    auto last = Table::instance ().templateNamespace ();
+	    auto currentSpace = Table::instance ().space ();
 	    this-> _info = new (Z0) IStructInfo (this-> space, this-> name);
 	    dones [name] = this-> _info;
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		Table::instance ().setCurrentSpace (this-> space);
+		Table::instance ().templateNamespace () = currentSpace;
 		InfoType info = this-> params [it]-> getType ();
 		if (info) {
 		    if (recursiveGet (this-> _info, info)) {
@@ -272,7 +276,9 @@ namespace semantic {
 		    attribs.push_back (this-> params [it]-> token.getStr ());
 		} else return NULL;
 	    }
-
+	    Table::instance ().setCurrentSpace (currentSpace);
+	    Table::instance ().templateNamespace () = last;
+	    
 	    dones.erase (name);
 	    this-> _info-> isConst (false);
 	    this-> _info-> setTypes (types);
