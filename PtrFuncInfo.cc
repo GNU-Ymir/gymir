@@ -147,6 +147,8 @@ namespace semantic {
 		ret.push_back (this-> params [it]);
 	    }
 	    return ret;
+	} else if (bef == this-> params.size ()) {
+	    return {this-> ret};
 	}
 	return {NULL};
     }
