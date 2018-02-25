@@ -71,11 +71,13 @@ namespace semantic {
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
-	auto ret = func-> getType () != NULL ? func-> getType ()-> asType ()-> info : NULL;
+	Symbol ret = NULL;
 	if (func-> getType ()) {
+	    auto type = func-> getType ()-> asType ();
+	    ret = type-> info;
 	    ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
 	}
-	
+		
 	auto from = Table::instance ().globalNamespace ();
 	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
 

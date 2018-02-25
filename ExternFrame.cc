@@ -122,7 +122,9 @@ namespace semantic {
 	if (this-> _function-> getType () == NULL) {
 	       Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	} else {
-	    Table::instance ().retInfo ().info = this-> _function-> getType ()-> asType ()-> info;
+	    auto type = this-> _function-> getType ()-> asType ();
+	    if (type) Table::instance ().retInfo ().info = type-> info;
+	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	}
 
 	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);
