@@ -663,7 +663,7 @@ namespace semantic {
 		    (this-> value.l >= 0 && ot-> value.l >= 0 && ret-> value.l < 0)
 		    ) 
 		    Ymir::Error::overflow (op, name (this-> type));
-		check (op, this-> value.l, this-> type);
+		check (op, ret-> value.l, this-> type);
 		return ret;
 	    } else {
 		auto ret = new (Z0)  IFixedValue (this-> type,
@@ -672,7 +672,7 @@ namespace semantic {
 						  );
 		if (ret-> value.ul < this-> value.ul || ret-> value.ul < this-> value.ul)
 		    Ymir::Error::overflow (op, name (this-> type));
-		check (op, this-> value.ul, this-> type);
+		check (op, ret-> value.ul, this-> type);
 		return ret;
 	    }
 	}
@@ -689,7 +689,7 @@ namespace semantic {
 		    (this-> value.l >= 0 && ot-> value.l < 0 && (ret-> value.l < 0 || ot-> value.l == LONG_MIN))
 		    )
 		    Ymir::Error::overflow (op, name (this-> type));
-		check (op, this-> value.l, this-> type);
+		check (op, ret-> value.l, this-> type);
 		return ret;
 	    }
 	    if (this-> value.ul < ot-> value.ul)
@@ -717,15 +717,27 @@ namespace semantic {
 	}
 	return NULL;
     }
-    Value IFixedValue::mul (Word, Value other) {
+    Value IFixedValue::mul (Word op, Value other) {
     	if (auto ot = other-> to<IFixedValue> ()) {
-	    if (isSigned (this-> type))
-		return new (Z0)  IFixedValue (this-> type, 0,
-					     this-> value.l * ot-> value.l);
-	    return new (Z0)  IFixedValue (this-> type,
-					 this-> value.ul * ot-> value.ul,
-					 0
-	    );
+	    if (isSigned (this-> type)) {
+		auto ret = new (Z0)  IFixedValue (this-> type, 0,
+						  this-> value.l * ot-> value.l);
+		if ((this-> value.l & (long) (-2)) && ((ret-> value.l == ot-> value.l) ? ret-> value.l : (ret-> value.l / this-> value.l) != ot-> value.l))
+		    Ymir::Error::overflow (op, name (this-> type));
+		
+		check (op, ret-> value.l, this-> type);
+		return ret;
+	    } 
+	    
+	    auto ret = new (Z0)  IFixedValue (this-> type,
+					      this-> value.ul * ot-> value.ul,
+					      0
+					      );
+	    if (ret-> value.ul >> 32 && ret-> value.ul / this-> value.ul != ot-> value.ul)
+		Ymir::Error::overflow (op, name (this-> type));
+	    check (op, ret-> value.ul, this-> type);
+	    return ret;
+	    
 	}
 	return NULL;
     }
