@@ -237,6 +237,7 @@ namespace semantic {
 		if (auto tvar = param-> to <ITypedVar> ()) {
 		    this-> changed = false;
 		    TemplateSolution res = TemplateSolver::instance ().solve (this-> _function-> getTemplates (), tvar, args [it]);
+		    
 		    if (!res.valid || !TemplateSolver::instance ().merge (score-> score, tmps, res))
 			return NULL;
 		    score-> score += res.score;
@@ -248,10 +249,10 @@ namespace semantic {
 		    CONST_SAME_TMP = this-> CONST_CHANGE;
 		    SAME_TMP = this-> CHANGE;
 		}
-
+		
 		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
 		    info = new (Z0)  IRefInfo (false, info);
-
+		
 		auto type = args [it]-> CompOp (info);
 
 		if (type) type = type-> ConstVerif (info);

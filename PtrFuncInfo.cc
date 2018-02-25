@@ -51,8 +51,9 @@ namespace semantic {
 	    if (this-> params.size () != ptr-> params.size ())
 		return false;
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
-		if (!ptr-> params [it]-> isSame (this-> params [it]))
+		if (!ptr-> params [it]-> isSame (this-> params [it])) {
 		    return false;
+		}
 	    }
 	    return true;
 	}

@@ -145,13 +145,13 @@ namespace semantic {
 	
     }
     
-    IRefInfo::IRefInfo (bool isConst) :
-	IInfoType (isConst),
+    IRefInfo::IRefInfo (bool) :
+	IInfoType (false),
 	_content (NULL)
     {}
 
-    IRefInfo::IRefInfo (bool isConst, InfoType content) :
-	IInfoType (isConst),
+    IRefInfo::IRefInfo (bool, InfoType content) :
+	IInfoType (false),
 	_content (content)
     {}
     

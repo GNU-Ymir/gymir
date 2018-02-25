@@ -432,39 +432,64 @@ namespace semantic {
     bool IStructInfo::isSame (InfoType other) {
 	if (auto ot = other-> to <IStructInfo> ()) {
 	    if (ot-> name == this-> name && ot-> space == this-> space) {
-		static std::vector <StructInfo> dones;
-		if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
-		    dones.push_back (this);
-		    if (this-> types.size () != ot-> types.size ()) return false;
-		    for (auto it : Ymir::r (0, this-> types.size ())) {
-			if (!this-> types [it]-> isSame (ot-> types [it])) return false;
+		static std::vector <std::string> dones;		
+		if (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()) == dones.end ()) {
+		    dones.push_back (this-> onlyNameTypeString ());
+		    // if (this-> types.size () != ot-> types.size ()) {
+		    // 	dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+		    // 	return false;
+		    // }
+		    
+		    // for (auto it : Ymir::r (0, this-> types.size ())) {
+		    // 	if (!this-> types [it]-> isSame (ot-> types [it])) {
+		    // 	    dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+		    // 	    return false;
+		    // 	}
+		    // }
+		    
+		    if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) {
+			dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+			return false;
 		    }
-
-		    if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
+		    
 		    for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
 			if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
 			    if (auto ps2 = ot-> tmpsDone [it]-> to <IParamList> ()) {
-				if (ps-> getParams ().size () != ps2-> getParams ().size ()) return false;
-				for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
-				    if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type))
-					return false;
+				if (ps-> getParams ().size () != ps2-> getParams ().size ()) {
+				    dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+				    return false;
 				}
-			    } else return false;
-			} else {
-			    if (ot-> tmpsDone [it]-> is <IParamList> ()) return false;
-			    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+				for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+				    if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type)) {
+					dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+					return false;
+				    }
+				}
+			    } else {
+				dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
 				return false;
+			    }
+			} else {
+			    if (ot-> tmpsDone [it]-> is <IParamList> ()) {
+				dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+				return false;
+			    }
+			    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type)) {
+				dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+				return false;
+			    }
 			}
 		    }
-		    dones.erase (std::find (dones.begin (), dones.end (), this));
+		    
+		    dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
 		}
 		
 		return true;
 	    }
 	}
 	return false;
-    }
-
+    }    
+    
     InfoType IStructInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
 	return this;
@@ -562,7 +587,7 @@ namespace semantic {
 	return ret;
     }
     
-    InfoType IStructInfo::CompOp (InfoType other) {
+    InfoType IStructInfo::CompOp (InfoType other) {	
 	if (this-> isSame (other)) {
 	    auto ret = other-> clone ();
 	    ret-> isConst (this-> isConst ());
