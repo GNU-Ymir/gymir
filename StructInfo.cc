@@ -220,7 +220,12 @@ namespace semantic {
 	std::vector <std::string> attribs;
 	
 	auto score = new (Z0) IApplicationScore (token);
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
 	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    
+	    Table::instance ().setCurrentSpace (this-> space);
+	    Table::instance ().templateNamespace () = currentSpace;
 	    InfoType info = this-> params [it]-> getType ();
 	    types.push_back (info);
 	    attribs.push_back (this-> params [it]-> token.getStr ());
@@ -234,6 +239,8 @@ namespace semantic {
 	    } else return NULL;
 	}
 
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
 	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
 	ret-> isConst (false);
 	ret-> setTypes (types);
