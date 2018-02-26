@@ -54,7 +54,9 @@ namespace semantic {
 
 	const char* getId () override;
 
-	//TODO
+	bool isConst () override;
+
+	void isConst (bool isConst) override;
 
     private:
 

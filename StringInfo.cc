@@ -28,6 +28,15 @@ namespace semantic {
 	return IArrayInfo::BinaryOpRight (op, left);
     }
 
+    bool IStringInfo::isConst () {
+	return IInfoType::isConst ();
+    }
+    
+    void IStringInfo::isConst (bool isConst) {
+	IInfoType::isConst (isConst);
+	this-> isText () = isConst;
+    }
+    
     InfoType IStringInfo::onClone () {
 	auto aux = new IStringInfo (this-> isConst ());
 	aux-> value () = this-> value ();

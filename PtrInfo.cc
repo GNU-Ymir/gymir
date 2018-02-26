@@ -87,7 +87,9 @@ namespace semantic {
     IPtrInfo::IPtrInfo (bool isConst, InfoType type) :
 	IInfoType (isConst),
 	_content (type) 
-    {}    
+    {
+	this-> isText () = isConst;
+    }    
    
     InfoType IPtrInfo::create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
@@ -228,7 +230,7 @@ namespace semantic {
 	else if (this-> _content-> is <IVoidInfo> ()) return NULL;
 	else {
 	    auto ret = this-> _content-> clone ();
-	    ret-> isConst (false);
+	    if (this-> isConst ()) ret-> isConst (this-> isConst ());
 	    ret-> unopFoo = &PtrUtils::InstUnref;
 	    return ret;
 	}
@@ -323,6 +325,15 @@ namespace semantic {
 	return this;
     }
 
+    bool IPtrInfo::isConst () {
+	return IInfoType::isConst ();
+    }
+    
+    void IPtrInfo::isConst (bool isConst) {
+	IInfoType::isConst (isConst);
+	this-> isText () = isConst;
+    }
+    
     bool IPtrInfo::isSame (InfoType other) {
 	if (auto ot = other-> to<IPtrInfo> ()) {
 	    return ot-> _content-> isSame (this-> _content); 

@@ -25,6 +25,10 @@ namespace semantic {
 	}
 
 	InfoType onClone () override;
+
+	bool isConst () override;
+	
+	void isConst (bool isConst) override;
 	
 	InfoType BinaryOpRight (Word tok, syntax::Expression left) override;
 	
