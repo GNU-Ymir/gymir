@@ -60,6 +60,38 @@ namespace semantic {
 	}
 	return false;
     }
+
+    void FrameTable::identify (StructInfo) {
+	// auto name = info-> onlyNameTypeString ();
+	// auto val = this-> _structIds.find (name);
+	// if (val == this-> _structIds.end ()) {
+	//     auto id = this-> _currentStructId;
+	//     this-> _currentStructId ++;
+	//     info-> setId (id);
+	//     this-> _structIds [name] = {info};
+	// } else {	    
+	//     for (auto it : val-> second) {
+	// 	if (info-> getTypes ().size () == it-> getTypes ().size ()) {
+	// 	    bool same = true;
+	// 	    for (auto it_ : Ymir::r (0, info-> getTypes ().size ())) {
+	// 		if (!info-> getTypes () [it_]-> isSame (it-> getTypes () [it_])) {
+	// 		    same = false;
+	// 		    break;
+	// 		}
+	// 	    }
+
+	// 	    if (same) {
+	// 		info-> setId (it-> getStrId ());
+	// 		return;
+	// 	    }
+	// 	}
+	//     }
+	//     auto id = this-> _currentStructId;
+	//     this-> _currentStructId ++;
+	//     info-> setId (id);
+	//     this-> _structIds [name].push_back (info);
+	// }
+    }
     
     //StructCstInfo existsStruct (std::string);
 

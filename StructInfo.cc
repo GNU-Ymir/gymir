@@ -85,7 +85,7 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) { 
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
 
@@ -101,9 +101,10 @@ namespace semantic {
 
     }
        
-    IStructCstInfo::IStructCstInfo (Namespace space, string name, vector <Expression> &tmps) :
-	IInfoType (true),
+    IStructCstInfo::IStructCstInfo (Word locId, Namespace space, string name, vector <Expression> &tmps) :
+	IInfoType (true),	
 	space (space),
+	_locId (locId),
 	name (name),
 	tmps (tmps)       
     {}
@@ -195,7 +196,7 @@ namespace semantic {
 	    } else return NULL;
 	}
 
-	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name);
 	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -241,7 +242,7 @@ namespace semantic {
 
 	Table::instance ().setCurrentSpace (currentSpace);
 	Table::instance ().templateNamespace () = last;
-	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name);
 	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -268,7 +269,7 @@ namespace semantic {
 	if (inside == dones.end ()) {
 	    auto last = Table::instance ().templateNamespace ();
 	    auto currentSpace = Table::instance ().space ();
-	    this-> _info = new (Z0) IStructInfo (this-> space, this-> name);
+	    this-> _info = new (Z0) IStructInfo (this, this-> space, this-> name);
 	    dones [name] = this-> _info;
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		Table::instance ().setCurrentSpace (this-> space);
@@ -276,12 +277,16 @@ namespace semantic {
 		InfoType info = this-> params [it]-> getType ();
 		if (info) {
 		    if (recursiveGet (this-> _info, info)) {
+			dones.erase (name);
 			Ymir::Error::recursiveNoSize (this-> params [it]-> token);
 			return NULL;
 		    }
 		    types.push_back (info);
 		    attribs.push_back (this-> params [it]-> token.getStr ());
-		} else return NULL;
+		} else {
+		    dones.erase (name);
+		    return NULL;
+		}
 	    }
 	    Table::instance ().setCurrentSpace (currentSpace);
 	    Table::instance ().templateNamespace () = last;
@@ -290,7 +295,7 @@ namespace semantic {
 	    this-> _info-> isConst (false);
 	    this-> _info-> setTypes (types);
 	    this-> _info-> setAttribs (attribs);	    
-	    this-> _info-> setTmps (this-> tmpsDone);	    
+	    this-> _info-> setTmps (this-> tmpsDone);
 	    return this-> _info-> clone ();
 	} else {
 	    return inside-> second;//-> clone ();
@@ -333,7 +338,7 @@ namespace semantic {
 	}
 
 	std::vector <syntax::Expression> ignore;
-	auto ret = new (Z0) IStructCstInfo (this-> space, this-> name, ignore);
+	auto ret = new (Z0) IStructCstInfo (this-> _locId, this-> space, this-> name, ignore);
 	ret-> params = params;	
 	ret-> tmpsDone = getValues (res.elements);
 	for (auto &it : ret-> tmpsDone) {
@@ -423,81 +428,61 @@ namespace semantic {
     const char * IStructCstInfo::getId () {
 	return IStructCstInfo::id ();
     }
-        
-    IStructInfo::IStructInfo (Namespace space, std::string name) :
+
+    Word IStructCstInfo::getLocId () {
+	return this-> _locId;
+    }
+    
+    IStructInfo::IStructInfo (StructCstInfo id, Namespace space, std::string name) :
 	IInfoType (true),
 	space (space),
-	name (name)
+	name (name),
+	_id (id)
     {}
 
     bool IStructInfo::isSame (InfoType other) {
 	if (auto ot = other-> to <IStructInfo> ()) {
-	    if (ot-> name == this-> name && ot-> space == this-> space) {
-		static std::vector <std::string> dones;		
-		if (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()) == dones.end ()) {
-		    dones.push_back (this-> onlyNameTypeString ());
-		    // if (this-> types.size () != ot-> types.size ()) {
-		    // 	dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-		    // 	return false;
-		    // }
+	    if (this-> space == ot-> space && this-> name == ot-> name && this-> _id-> getLocId ().isSame (ot-> _id-> getLocId ())) {		    
+		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) {
+		    return false;
+		}
 		    
-		    // for (auto it : Ymir::r (0, this-> types.size ())) {
-		    // 	if (!this-> types [it]-> isSame (ot-> types [it])) {
-		    // 	    dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-		    // 	    return false;
-		    // 	}
-		    // }
-		    
-		    if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) {
-			dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-			return false;
-		    }
-		    
-		    for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-			if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
-			    if (auto ps2 = ot-> tmpsDone [it]-> to <IParamList> ()) {
-				if (ps-> getParams ().size () != ps2-> getParams ().size ()) {
-				    dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
+		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
+		    if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
+			if (auto ps2 = ot-> tmpsDone [it]-> to <IParamList> ()) {
+			    if (ps-> getParams ().size () != ps2-> getParams ().size ()) {
+				return false;
+			    }
+			    for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+				if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type)) {
 				    return false;
 				}
-				for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
-				    if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type)) {
-					dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-					return false;
-				    }
-				}
-			    } else {
-				dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-				return false;
 			    }
 			} else {
-			    if (ot-> tmpsDone [it]-> is <IParamList> ()) {
-				dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-				return false;
-			    }
-			    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type)) {
-				dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-				return false;
-			    }
+			    return false;
+			}
+		    } else {
+			if (ot-> tmpsDone [it]-> is <IParamList> ()) {
+			    return false;
+			}
+			if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type)) {
+			    return false;
 			}
 		    }
-		    
-		    dones.erase (std::find (dones.begin (), dones.end (), this-> onlyNameTypeString ()));
-		}
-		
+		}		    
 		return true;
 	    }
 	}
 	return false;
     }    
     
-    InfoType IStructInfo::ConstVerif (InfoType other) {
-	if (this-> isConst () && !other-> isConst ()) return NULL;
+    InfoType IStructInfo::ConstVerif (InfoType) {
+	//if (this-> isConst () && !other-> isConst ()) return NULL;
 	return this;
     }
     
     InfoType IStructInfo::onClone () {
-	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name);
 	ret-> setAttribs (this-> attrs);
 	for (auto it : this-> types) {
 	    ret-> types.push_back (it);
@@ -531,7 +516,7 @@ namespace semantic {
 	    } else return NULL;
 	}
 
-	auto ret = new (Z0) IStructInfo (this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name);
 	ret-> isConst (this-> isConst ());
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -779,6 +764,4 @@ namespace semantic {
 	return IStructInfo::id ();
     }
         
-
-    
 }

@@ -25,6 +25,9 @@ namespace semantic {
     class IStructCstInfo;
     typedef IStructCstInfo* StructCstInfo;
 
+    class IStructInfo;
+    typedef IStructInfo* StructInfo;
+    
     class ISymbol;
     typedef ISymbol* Symbol;
     
@@ -35,9 +38,12 @@ namespace semantic {
 	std::vector <FinalFrame> _finalTemplates;
 	std::vector <FrameProto> _protos;
 	std::vector <StructCstInfo> _structs;
+	std::map <std::string, std::vector <StructInfo> > _structIds;	
 	std::vector <syntax::Global> _globals;
 	std::vector <Symbol> _externals;
 	//std::vector <ObjectCstInfo> objects;
+	
+	ulong _currentStructId = 0;
 	
     public:
        	
@@ -65,6 +71,8 @@ namespace semantic {
 
 	//StructCstInfo existsStruct (std::string);
 
+	void identify (StructInfo info);
+	
 	std::vector <StructCstInfo> & structs ();
 	
 	std::vector <Frame> & pures ();

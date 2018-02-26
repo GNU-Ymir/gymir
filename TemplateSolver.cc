@@ -66,6 +66,9 @@ namespace semantic {
 			    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
 				if (!rtype-> info-> type-> isSame (ref-> content ()))
 				    return false;
+				else {
+				    left [it.first] = inside-> second;
+				}
 			    } else {		
 				return false;
 			    }
@@ -77,6 +80,9 @@ namespace semantic {
 		    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
 			if (!rtype-> info-> type-> isSame (ref-> content ()))
 			    return false;
+			else {
+			    left [it.first] = inside-> second;
+			}
 		    } else {		
 			return false;
 		    }
@@ -108,6 +114,9 @@ namespace semantic {
 			    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
 				if (!rtype-> info-> type-> isSame (ref-> content ()))
 				    return false;
+				else {
+				    left [it.first] = inside-> second;
+				}
 			    } else {		
 				return false;
 			    }
@@ -119,6 +128,9 @@ namespace semantic {
 		    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
 			if (!rtype-> info-> type-> isSame (ref-> content ()))
 			    return false;
+			else {
+			    left [it.first] = inside-> second;
+			}
 		    } else {		
 			return false;
 		    }

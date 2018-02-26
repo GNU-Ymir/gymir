@@ -19,6 +19,8 @@ namespace semantic {
 
 	Namespace space;
 
+	Word _locId;
+	
 	std::string name;
 
 	std::vector <syntax::TypedVar> params;
@@ -33,7 +35,7 @@ namespace semantic {
 	
     public:
 
-	IStructCstInfo (Namespace space, std::string name, std::vector <syntax::Expression> & tmps);
+	IStructCstInfo (Word locId, Namespace space, std::string name, std::vector <syntax::Expression> & tmps);
 
 	bool isSame (InfoType) override;
 
@@ -73,6 +75,8 @@ namespace semantic {
 
 	const char* getId () override;
 
+	Word getLocId ();
+	
     private:
 
 	InfoType getScore (const std::vector <syntax::Expression> & tmps);
@@ -92,12 +96,13 @@ namespace semantic {
 	std::vector <InfoType> types;
 	std::vector <std::string> attrs;
 	std::vector <syntax::Expression> tmpsDone;
+	IStructCstInfo* _id = NULL;
 	
 	friend IStructCstInfo;
 
     public:
-
-	IStructInfo (Namespace space, std::string name);
+	
+	IStructInfo (IStructCstInfo* from, Namespace space, std::string name);
 
 	bool isSame (InfoType) override;
 	
@@ -152,7 +157,7 @@ namespace semantic {
 	}
 
 	const char* getId () override;
-
+	
     private:
 
 	InfoType Init ();

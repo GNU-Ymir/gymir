@@ -73,9 +73,10 @@ namespace syntax {
     }	
     
     void IType::print (int nb) {
-	printf ("\n%*c<Type> %s",
+	printf ("\n%*c<Type> %s : %s",
 		nb, ' ',
-		this-> token.toString ().c_str ()
+		this-> token.toString ().c_str (),
+		this-> _type-> typeString ().c_str ()
 	);
     }
     

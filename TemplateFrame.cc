@@ -227,22 +227,42 @@ namespace semantic {
 	}
 	
     }
-    
+
+    std::vector <Expression> replace (std::vector <Expression> exprs, const std::map <std::string, Expression> & tmps) {
+	std::vector <Expression> re (exprs.size ());
+	for (auto exp : tmps) {
+	    if (exp.second-> info) {
+		if (exp.second-> info-> isImmutable ()) {
+		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
+		} else {
+		    exp.second = exp.second-> templateExpReplace ({});
+		    exp.second-> info-> isConst (false);
+		}
+	    }
+	}
+
+	for (auto it : Ymir::r (0, exprs.size ())) {
+	    re [it] = exprs [it]-> templateExpReplace (tmps);
+	}
+	return re;
+    }
 
     ApplicationScore ITemplateFrame::getScoreSimple (Word ident, const vector<Var> & attrs, const vector<InfoType> & args) {
 	auto score = new (Z0)  IApplicationScore (ident);
 	map <string, Expression> tmps;
-
+	auto templates = this-> _function-> getTemplates ();
 	if (attrs.size () == 0 && args.size () == 0) return NULL;
 	else if (attrs.size () == args.size ()) {
 	    for (auto it : Ymir::r (0, args.size ())) {
 		InfoType info = NULL;
 		auto param = attrs [it];
 		if (auto tvar = param-> to <ITypedVar> ()) {
+		    tvar = tvar-> templateExpReplace (tmps)-> to <ITypedVar> ();
 		    this-> changed = false;
-		    TemplateSolution res = TemplateSolver::instance ().solve (this-> _function-> getTemplates (), tvar, args [it]);
+		    TemplateSolution res = TemplateSolver::instance ().solve (templates, tvar, args [it]);
 		    if (!res.valid || !TemplateSolver::instance ().merge (score-> score, tmps, res))
 			return NULL;
+		    
 		    score-> score += res.score;
 		    info = res.type;
 		    if (tvar-> getDeco () == Keys::CONST) info = info-> cloneConst ();
@@ -252,12 +272,11 @@ namespace semantic {
 		    CONST_SAME_TMP = this-> CONST_CHANGE;
 		    SAME_TMP = this-> CHANGE;
 		}
-		
+
 		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
 		    info = new (Z0)  IRefInfo (false, info);
 
 		auto type = args [it]-> CompOp (info);
-
 		if (type) type = type-> ConstVerif (info);
 		else return NULL;
 
@@ -277,17 +296,6 @@ namespace semantic {
 	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (),
 						       tmps)) {
 		return NULL;
-	    }
-	    
-	    for (auto exp : tmps) {
-		if (exp.second-> info) {
-		    if (exp.second-> info-> isImmutable ()) {
-			exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
-		    } else {
-			exp.second = exp.second-> templateExpReplace ({});
-			exp.second-> info-> isConst (false);
-		    }
-		}
 	    }
 	    
 	    if (this-> _function-> getTest ()) {

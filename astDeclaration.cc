@@ -530,7 +530,7 @@ namespace syntax {
 	if (exist) {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
 	} else {
-	    auto str = new (Z0) IStructCstInfo (Table::instance ().space (), this-> ident.getStr (), this-> tmps);
+	    auto str = new (Z0) IStructCstInfo (this-> ident, Table::instance ().space (), this-> ident.getStr (), this-> tmps);
 
 	    str-> isPublic (true);
 	    auto sym = new (Z0) ISymbol (this-> ident, str);
@@ -549,6 +549,7 @@ namespace syntax {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
 	} else {
 	    auto str = new (Z0) IStructCstInfo (
+		this-> ident, 
 		mod-> space (),
 		this-> ident.getStr (),
 		this-> tmps
@@ -572,6 +573,7 @@ namespace syntax {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
 	} else {
 	    auto str = new (Z0) IStructCstInfo (
+		this-> ident,
 		mod-> space (),
 		this-> ident.getStr (),
 		this-> tmps

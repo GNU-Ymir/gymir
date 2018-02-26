@@ -95,3 +95,10 @@ bool Word::isToken () const {
     auto mem = Token::members ();
     return std::find (mem.begin (), mem.end (), this-> str) != mem.end ();
 }
+
+bool Word::isSame (const Word & other) {
+    return this-> str == other.str &&
+	this-> locFile == other.locFile &&
+	this-> line == other.line &&
+	this-> column == other.column;    
+}
