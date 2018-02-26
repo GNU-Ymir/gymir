@@ -785,6 +785,7 @@ namespace Ymir {
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
+	    assert ("");
 	} else __caught__.push_back (errorMsg);
     }
     

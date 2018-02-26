@@ -387,14 +387,16 @@ namespace syntax {
 	auto aux = new (Z0)  IArrayAlloc (this-> token, NULL, this-> size-> expression ());
 	if (auto fn = this-> type-> to<IFuncPtr> ()) aux-> type = fn-> expression ();
 	else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
-	else Ymir::Error::useAsType (this-> type-> token);
+	else aux-> type = this-> type-> expression ();
+	
 
 	if (aux-> type == NULL) return NULL;
 	if (aux-> size == NULL) return NULL;
-	// if (auto type = aux-> type-> info-> type-> to<IStructCstInfo> ()) {
-	//     Ymir::Error::assert ("TODO");
-	// }
-	
+	if (!aux-> type-> is <IType> () && !aux-> type-> info-> type-> isType ()) {
+	    Ymir::Error::useAsType (this-> type-> token);
+	    return NULL;
+	}
+		
 	auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
 	if (cmp == NULL) {
@@ -979,7 +981,7 @@ namespace syntax {
 	    return NULL;
 	} else if (auto var = aux-> right-> to<IVar> ()) {
 	    auto type = aux-> left-> info-> type-> DotOp (var);
-	    if (type == NULL && this-> inside && this-> inside-> is <IPar> ()) {
+	    if (type == NULL && ((this-> inside && this-> inside-> is <IPar> ()) || var-> hasTemplate ())) {
 		var-> inside = aux;
 		auto call = var-> expression ();
 		if (call == NULL || call-> is<IType> () || call-> info-> type-> is<IUndefInfo> ()) {
