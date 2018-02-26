@@ -66,10 +66,15 @@ namespace syntax {
 	
 	std::string prettyPrint () override;
 
+	std::string removeUnder (); 
+	
     private:
 
 	ulong convertU ();
 	long convertS ();
+
+	ulong convertUX ();
+	long convertSX ();
 	
     };
 
@@ -191,7 +196,7 @@ namespace syntax {
 	    short total = 0;
 	    int current = size - 1;	    
 	    for (int i = index ; i < (int) (index + size) ; i ++, current --) {
-		if (elem [i] > 'a')
+		if (elem [i] >= 'a')
 		    total += pow (16, current) * (elem [i] - 'a' + 10);
 		else
 		    total += pow (16, current) * (elem [i] - '0');

@@ -1446,10 +1446,40 @@ namespace syntax {
 	else this-> lex.rewind ();
 	return visitVar ();
     }
+
+    Expression Visitor::visitNumericHexa (const Word & begin) {
+	auto val = begin.getStr ().substr (2);
+	for (auto it : Ymir::r (0, val.size ())) {
+	    if ((val [it] < '0' || val [it] > '9') && (val [it] < 'A' || val [it] > 'F') && (val [it] < 'a' || val [it] > 'f') && val [it] != Keys::UNDER [0]) {
+		if (val.substr (it) == "ub" || val.substr (it) == "UB")
+		    return new (Z0) IFixed ({begin.getLocus (), val.substr (0, it)}, FixedConst::UBYTE, FixedMode::HEXA);
+		else if (val.substr (it) == "us" || val.substr (it) == "US")
+		    return new (Z0) IFixed ({begin.getLocus (), val.substr (0, it)}, FixedConst::USHORT, FixedMode::HEXA);
+		else if (val.substr (it) == "s" || val.substr (it) == "S")
+		    return new (Z0) IFixed ({begin.getLocus (), val.substr (0, it)}, FixedConst::SHORT, FixedMode::HEXA);
+		else if (val.substr (it) == "u" || val.substr (it) == "U")
+		    return new (Z0) IFixed ({begin.getLocus (), val.substr (0, it)}, FixedConst::UINT, FixedMode::HEXA);
+		else if (val.substr (it) == "uL" || val.substr (it) == "UL")
+		    return new (Z0) IFixed ({begin.getLocus (), val.substr (0, it)}, FixedConst::ULONG, FixedMode::HEXA);
+		else if (val.substr (it) == "l" || val.substr (it) == "L")
+		    return new (Z0) IFixed ({begin.getLocus (), val.substr (0, it)}, FixedConst::LONG, FixedMode::HEXA);
+		else {
+		    syntaxError (begin);
+		    return NULL;
+		}
+	    } else if ((val.substr (it) == "_b" || val.substr (it) == "_B") && it == (int) val.size () - 2)
+		return new (Z0) IFixed ({begin.getLocus (), val.substr (0, it)}, FixedConst::BYTE, FixedMode::HEXA);
+	}
+	return new (Z0) IFixed ({begin.getLocus (), val}, FixedConst::INT, FixedMode::HEXA);
+    }
     
     Expression Visitor::visitNumeric (const Word& begin, bool abrev) {
+	if (begin.getStr ().size () > 2 && begin.getStr () [0] == '0' && begin.getStr () [1] == Keys::LX [0]) {
+	    return visitNumericHexa (begin);
+	}
+	
 	for (int it = 0 ; it < (int) begin.getStr ().length (); it++) {
-	    if (begin.getStr () [it] < '0' || begin.getStr() [it] > '9') {		
+	    if ((begin.getStr () [it] < '0' || begin.getStr() [it] > '9') && begin.getStr ()[it] != Keys::UNDER [0]) {		
 		if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "ub" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "UB")
 		    return new (Z0)  IFixed ({begin.getLocus (), begin.getStr () .substr (0, it)}, FixedConst::UBYTE, FixedMode::DECIMAL);
 		else if (begin.getStr () .substr (it, begin.getStr ().length () - it) == "b" || begin.getStr () .substr (it, begin.getStr ().length () - it) == "B")
@@ -1478,7 +1508,7 @@ namespace syntax {
 		auto suite = next.getStr ();
 		FloatConst type = FloatConst::DOUBLE;
 		for (auto it : Ymir::r (0, next.getStr ().length ())) {		
-		    if (next.getStr () [it] < '0' || next.getStr () [it] > '9') {
+		    if ((next.getStr () [it] < '0' || next.getStr () [it] > '9') && next.getStr ()[it] != Keys::UNDER [0]) {
 			if (next.getStr ().substr (it, next.getStr ().length () - it) == "f" ||
 			    next.getStr ().substr (it, next.getStr ().length () - it) == "F") {
 			    type = FloatConst::FLOAT;
@@ -1501,7 +1531,7 @@ namespace syntax {
 	auto next = this-> lex.next ();
 	FloatConst type = FloatConst::DOUBLE;
 	for (auto it : Ymir::r (0, next.getStr ().length ())) {
-	    if (next.getStr () [it] < '0' || next.getStr () [it] > '9') {
+	    if ((next.getStr () [it] < '0' || next.getStr () [it] > '9') && next.getStr () [it] != Keys::UNDER [0]) {
 		if (next.getStr ().substr (it, next.getStr ().length () - it) == "f" ||
 		    next.getStr ().substr (it, next.getStr ().length () - it) == "F") {
 		    type = FloatConst::FLOAT;

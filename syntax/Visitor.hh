@@ -70,6 +70,7 @@ namespace syntax {
 	Expression visitIs ();
 	Expression visitNumericOrVar ();
 	Expression visitNumeric (const Word& begin, bool abrev = true);
+	Expression visitNumericHexa (const Word& begin);
 	Expression visitFloat (const Word& begin);
 	Expression visitString (Word& word);
 	Expression visitPthWPar (Word& tok);

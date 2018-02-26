@@ -670,7 +670,7 @@ namespace semantic {
 						  this-> value.ul + ot-> value.ul,
 						  0
 						  );
-		if (ret-> value.ul < this-> value.ul || ret-> value.ul < this-> value.ul)
+		if (ret-> value.ul < this-> value.ul || ret-> value.ul < ot-> value.ul)
 		    Ymir::Error::overflow (op, name (this-> type));
 		check (op, ret-> value.ul, this-> type);
 		return ret;

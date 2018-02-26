@@ -483,13 +483,68 @@ namespace syntax {
 	if (this-> mode == FixedMode::DECIMAL) {
 	    if (isSigned (this-> type)) this-> value = this-> convertS ();	
 	    else this-> uvalue = this-> convertU ();
+	} else if (this-> mode == FixedMode::HEXA) {
+	    if (isSigned (this-> type)) this-> value = this-> convertSX ();
+	    else this-> uvalue = this-> convertUX ();
 	}
     }
-    
 
+    std::string IFixed::removeUnder () {
+	Ymir::OutBuffer fin;
+	for (auto it : this-> token.getStr ())
+	    if (it != '_') fin.write (it);
+	return fin.str ();
+    }   
+
+    ulong IFixed::convertUX () {
+	char * temp; errno = 0;
+	auto val = "0x" + removeUnder ();
+	ulong value = std::strtoul (val.c_str (), &temp, 0);
+	bool overflow = false;
+	if (temp == this-> token.getStr ().c_str () || *temp != '\0' ||
+	    ((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
+	    overflow = true;
+	}
+	
+	switch (this-> type) {
+	case FixedConst::UBYTE : overflow = value > UCHAR_MAX; break;
+	case FixedConst::USHORT : overflow = value > USHRT_MAX; break;
+	case FixedConst::UINT : overflow = value > UINT_MAX; break;
+	default: break;
+	}
+
+	if (overflow) {
+	    Ymir::Error::overflow (this-> token, name (this-> type));
+	}
+	return value;
+    }
+
+    long IFixed::convertSX () {
+	char * temp; errno = 0;
+	auto val = "0x" + removeUnder ();
+	long value = std::strtol (val.c_str (), &temp, 0);
+	bool overflow = false;
+	if (temp == this-> token.getStr ().c_str () || *temp != '\0' ||
+	    ((value == LONG_MIN || value == LONG_MAX) && errno == ERANGE)) {
+	    overflow = true;
+	}
+	
+	switch (this-> type) {
+	case FixedConst::BYTE : overflow = value > SCHAR_MAX || value < SCHAR_MIN; break;
+	case FixedConst::SHORT : overflow = value > SHRT_MAX || value < SHRT_MIN; break;
+	case FixedConst::INT : overflow = value > INT_MAX || value < INT_MIN; break;
+	default: break;
+	}
+
+	if (overflow) {
+	    Ymir::Error::overflow (this-> token, name (this-> type));
+	} 
+	return value;
+    }
+    
     ulong IFixed::convertU () {
 	char * temp; errno = 0;
-	ulong value = std::strtoul (this-> token.getStr ().c_str (), &temp, 0);
+	ulong value = std::strtoul (removeUnder ().c_str (), &temp, 0);
 	bool overflow = false;
 	if (temp == this-> token.getStr ().c_str () || *temp != '\0' ||
 	    ((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
@@ -511,7 +566,7 @@ namespace syntax {
 
     long IFixed::convertS () {
 	char * temp; errno = 0;
-	long value = std::strtol (this-> token.getStr ().c_str (), &temp, 0);
+	long value = std::strtol (removeUnder ().c_str (), &temp, 0);
 	bool overflow = false;
 	if (temp == this-> token.getStr ().c_str () || *temp != '\0' ||
 	    ((value == LONG_MIN || value == LONG_MAX) && errno == ERANGE)) {
@@ -520,8 +575,8 @@ namespace syntax {
 	
 	switch (this-> type) {
 	case FixedConst::BYTE : overflow = value > SCHAR_MAX || value < SCHAR_MIN; break;
-	case FixedConst::USHORT : overflow = value > SHRT_MAX || value < SHRT_MIN; break;
-	case FixedConst::UINT : overflow = value > INT_MAX || value < INT_MIN; break;
+	case FixedConst::SHORT : overflow = value > SHRT_MAX || value < SHRT_MIN; break;
+	case FixedConst::INT : overflow = value > INT_MAX || value < INT_MIN; break;
 	default: break;
 	}
 
