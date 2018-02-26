@@ -25,8 +25,8 @@ namespace semantic {
 	Ymir::OutBuffer buf;
 	buf.write ("{", this-> score, ", ", this-> valid);
 	if (this-> type)
-	    buf.write (this-> type-> typeString (), ", [");
-	else buf.write ("null, [");
+	    buf.write (", ", this-> type-> typeString (), ", [");
+	else buf.write (", null, [");
 	for (auto it : this-> elements) {
 	    if (it.second-> info)
 		buf.write (it.first, " : ", it.second-> info-> typeString ());
@@ -62,14 +62,24 @@ namespace semantic {
 			auto rinfo = rpars-> getParamTypes () [it_];
 			if (!linfo-> is <IUndefInfo> () &&
 			    !rinfo-> is <IUndefInfo> () &&
-			    !linfo-> isSame (rinfo))
-			    return false;
+			    !linfo-> isSame (rinfo)) {
+			    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
+				if (!rtype-> info-> type-> isSame (ref-> content ()))
+				    return false;
+			    } else {		
+				return false;
+			    }
+			}
 		    }
 		} else if (!ltype-> info-> type-> is <IUndefInfo> () &&
 			   !rtype-> info-> type-> is <IUndefInfo> () &&
 			   !ltype-> info-> type-> isSame (rtype-> info-> type)) {
-		    
-		    return false;
+		    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
+			if (!rtype-> info-> type-> isSame (ref-> content ()))
+			    return false;
+		    } else {		
+			return false;
+		    }
 		}
 	    } else {
 		left [it.first] = it.second;
@@ -94,14 +104,25 @@ namespace semantic {
 			auto rinfo = rpars-> getParamTypes () [it_];
 			if (!linfo-> is <IUndefInfo> () &&
 			    !rinfo-> is <IUndefInfo> () &&
-			    !linfo-> isSame (rinfo))
-			    return false;
+			    !linfo-> isSame (rinfo)) {
+			    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
+				if (!rtype-> info-> type-> isSame (ref-> content ()))
+				    return false;
+			    } else {		
+				return false;
+			    }
+			}
 		    }
 		} else if (!ltype-> info-> type-> is <IUndefInfo> () &&
-		    !rtype-> info-> type-> is <IUndefInfo> () &&
-		    !ltype-> info-> type-> isSame (rtype-> info-> type))
-		    return false;
-
+			   !rtype-> info-> type-> is <IUndefInfo> () &&
+			   !ltype-> info-> type-> isSame (rtype-> info-> type)) {
+		    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
+			if (!rtype-> info-> type-> isSame (ref-> content ()))
+			    return false;
+		    } else {		
+			return false;
+		    }
+		}
 	    } else {
 		left [it.first] = it.second;
 	    }

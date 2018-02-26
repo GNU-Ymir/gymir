@@ -497,9 +497,9 @@ namespace syntax {
 	}
 	
 	switch (this-> type) {
-	case FixedConst::UBYTE : overflow = value >= UCHAR_MAX; break;
-	case FixedConst::USHORT : overflow = value >= USHRT_MAX; break;
-	case FixedConst::UINT : overflow = value >= UINT_MAX; break;
+	case FixedConst::UBYTE : overflow = value > UCHAR_MAX; break;
+	case FixedConst::USHORT : overflow = value > USHRT_MAX; break;
+	case FixedConst::UINT : overflow = value > UINT_MAX; break;
 	default: break;
 	}
 
@@ -519,9 +519,9 @@ namespace syntax {
 	}
 	
 	switch (this-> type) {
-	case FixedConst::BYTE : overflow = value >= SCHAR_MAX || value < SCHAR_MIN; break;
-	case FixedConst::USHORT : overflow = value >= SHRT_MAX || value < SHRT_MIN; break;
-	case FixedConst::UINT : overflow = value >= INT_MAX || value < INT_MIN; break;
+	case FixedConst::BYTE : overflow = value > SCHAR_MAX || value < SCHAR_MIN; break;
+	case FixedConst::USHORT : overflow = value > SHRT_MAX || value < SHRT_MIN; break;
+	case FixedConst::UINT : overflow = value > INT_MAX || value < INT_MIN; break;
 	default: break;
 	}
 

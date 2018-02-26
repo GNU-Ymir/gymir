@@ -338,6 +338,7 @@ namespace semantic {
 	ret-> tmpsDone = getValues (res.elements);
 	for (auto &it : ret-> tmpsDone) {
 	    it = it-> templateExpReplace ({});
+	    it-> info-> isConst (false);
 	}
 	
 	return ret;	

@@ -73,9 +73,11 @@ namespace semantic {
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 	Symbol ret = NULL;
 	if (func-> getType ()) {
-	    auto type = func-> getType ()-> asType ();
-	    ret = type-> info;
-	    ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
+	    auto type = func-> getType ()-> asType ();	    
+	    if (type) {
+		ret = type-> info;
+		ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
+	    }
 	}
 		
 	auto from = Table::instance ().globalNamespace ();
@@ -191,8 +193,10 @@ namespace semantic {
 	    if (it.second-> info) {
 		if (it.second-> info-> isImmutable ()) {
 		    it.second = it.second-> info-> value ()-> toYmir (it.second-> info);		
-		} else
+		} else {
 		    it.second = it.second-> templateExpReplace ({});
+		    it.second-> info-> isConst (false);
+		}
 	    }
 	}
 	
@@ -237,7 +241,6 @@ namespace semantic {
 		if (auto tvar = param-> to <ITypedVar> ()) {
 		    this-> changed = false;
 		    TemplateSolution res = TemplateSolver::instance ().solve (this-> _function-> getTemplates (), tvar, args [it]);
-		    
 		    if (!res.valid || !TemplateSolver::instance ().merge (score-> score, tmps, res))
 			return NULL;
 		    score-> score += res.score;
@@ -252,7 +255,7 @@ namespace semantic {
 		
 		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
 		    info = new (Z0)  IRefInfo (false, info);
-		
+
 		auto type = args [it]-> CompOp (info);
 
 		if (type) type = type-> ConstVerif (info);
@@ -282,6 +285,7 @@ namespace semantic {
 			exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
 		    } else {
 			exp.second = exp.second-> templateExpReplace ({});
+			exp.second-> info-> isConst (false);
 		    }
 		}
 	    }
