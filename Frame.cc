@@ -78,12 +78,18 @@ namespace semantic {
 		    if (args [it]-> isConst () != info-> isConst ())
 			score-> score += CONST_SAME;
 		    else score-> score += SAME;
-		    score-> treat.push_back (type);
+		    score-> treat.push_back (type);		
 		} else if (type != NULL) {
+		    bool changed = false;
+		    if (auto ref = args [it]-> to<IRefInfo> ()) {
+			if (ref-> content ()-> isSame (type)) 
+			    changed = true;			   			
+		    }
+		    
 		    if (args [it]-> isConst () != info-> isConst ())
-			score-> score += CONST_AFF;
-		    else score-> score += AFF;
-		    score-> treat.push_back (type);
+			score-> score += changed ? CONST_CHANGE : CONST_AFF;
+		    else score-> score += changed ? CHANGE : AFF;
+		    score-> treat.push_back (type);			
 		} else return NULL;		
 	    }
 	    

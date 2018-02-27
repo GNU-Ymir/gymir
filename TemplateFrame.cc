@@ -326,9 +326,15 @@ namespace semantic {
 		    else score-> score += this-> changed ? CHANGE_TMP : SAME_TMP;
 		    score-> treat.push_back (type);
 		} else if (type != NULL) {
+		    bool change = false;
+		    if (auto ref = args [it]-> to<IRefInfo> ()) {
+			if (ref-> content ()-> isSame (type)) 
+			    changed = true;			   			
+		    }
+		    
 		    if (args [it]-> isConst () != info-> isConst ())
-			score-> score += CONST_AFF_TMP;
-		    else score-> score += AFF_TMP;
+			score-> score += change ? CONST_CHANGE_TMP : CONST_AFF_TMP;
+		    else score-> score += change ? CHANGE_TMP : AFF_TMP;
 		    score-> treat.push_back (type);
 		} else return NULL;				
 	    }
