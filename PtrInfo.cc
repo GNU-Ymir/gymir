@@ -231,7 +231,6 @@ namespace semantic {
 	else {
 	    auto ret = this-> _content-> clone ();
 	    if (this-> isConst ()) ret-> isConst (this-> isConst ());
-	    else ret-> isConst (false);
 	    ret-> unopFoo = &PtrUtils::InstUnref;
 	    return ret;
 	}
