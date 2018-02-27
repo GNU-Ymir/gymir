@@ -69,6 +69,12 @@ namespace semantic {
 				else {
 				    left [it.first] = inside-> second;
 				}
+			    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
+				if (!ltype-> info-> type-> isSame (ref-> content ()))
+				    return false;
+				else {
+				    left [it.first] = it.second;
+				}
 			    } else {		
 				return false;
 			    }
@@ -82,6 +88,12 @@ namespace semantic {
 			    return false;
 			else {
 			    left [it.first] = inside-> second;
+			}
+		    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
+			if (!ltype-> info-> type-> isSame (ref-> content ()))
+			    return false;
+			else {
+			    left [it.first] = it.second;
 			}
 		    } else {		
 			return false;
@@ -117,9 +129,13 @@ namespace semantic {
 				else {
 				    left [it.first] = inside-> second;
 				}
-			    } else {		
-				return false;
-			    }
+			    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
+				if (!ltype-> info-> type-> isSame (ref-> content ()))
+				    return false;
+				else {
+				    left [it.first] = it.second;
+				}
+			    } else return false;
 			}
 		    }
 		} else if (!ltype-> info-> type-> is <IUndefInfo> () &&
@@ -130,6 +146,12 @@ namespace semantic {
 			    return false;
 			else {
 			    left [it.first] = inside-> second;
+			}
+		    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
+			if (!ltype-> info-> type-> isSame (ref-> content ()))
+			    return false;
+			else {
+			    left [it.first] = it.second;
 			}
 		    } else {		
 			return false;

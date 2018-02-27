@@ -247,34 +247,74 @@ namespace semantic {
 	return re;
     }
 
+    vector <Var> ITemplateFrame::transformParams (long & score, const vector <Var> & attrs, const vector <InfoType> & args, map <string, Expression>& tmps) {
+	auto templates = this-> _function-> getTemplates ();
+	for (auto it : Ymir::r (0, args.size ())) {
+	    auto param = attrs [it];
+	    if (auto tvar = param-> to <ITypedVar> ()) {
+		TemplateSolution res = TemplateSolver::instance ().solve (templates, tvar, args [it]);
+		if (!res.valid || !TemplateSolver::instance ().merge (score, tmps, res))
+		    return {};
+		score += res.score;		
+	    }
+	}
+	if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), tmps))
+	    return {};
+
+	for (auto exp : tmps) {
+	    if (exp.second-> info) {
+		if (exp.second-> info-> isImmutable ()) {
+		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
+		} else {
+		    exp.second = exp.second-> templateExpReplace ({});
+		    exp.second-> info-> isConst (false);
+		}
+	    }
+	}
+	
+	if (this-> _function-> getTest ()) {
+	    auto valid = this-> _function-> getTest ()-> templateExpReplace (tmps);
+	    if (!validateTest (valid)) return {};
+	    else score += 1;//__TEST__;
+	}
+	std::vector <Var> finals (attrs.size ());
+	for (auto it : Ymir::r (0, finals.size ()))
+	    finals [it] = attrs [it]-> templateExpReplace (tmps)-> to <IVar> ();
+	
+	return finals;
+    }
+
+    // tvar = tvar-> templateExpReplace (tmps)-> to <ITypedVar> ();
+    // this-> changed = false;
+    // TemplateSolution res = TemplateSolver::instance ().solve (templates, tvar, args [it]);
+    // if (!res.valid || !TemplateSolver::instance ().merge (score-> score, tmps, res))
+    // 	return NULL;
+		    
+    // score-> score += res.score;
+    // info = res.type;
+    // if (tvar-> getDeco () == Keys::CONST) info = info-> cloneConst ();
+    
     ApplicationScore ITemplateFrame::getScoreSimple (Word ident, const vector<Var> & attrs, const vector<InfoType> & args) {
 	auto score = new (Z0)  IApplicationScore (ident);
 	map <string, Expression> tmps;
 	auto templates = this-> _function-> getTemplates ();
 	if (attrs.size () == 0 && args.size () == 0) return NULL;
 	else if (attrs.size () == args.size ()) {
+	    auto realAttrs = transformParams (score-> score, attrs, args, tmps);
+	    if (realAttrs.size () != attrs.size ()) return NULL;
 	    for (auto it : Ymir::r (0, args.size ())) {
 		InfoType info = NULL;
-		auto param = attrs [it];
+		auto param = realAttrs [it];
 		if (auto tvar = param-> to <ITypedVar> ()) {
-		    tvar = tvar-> templateExpReplace (tmps)-> to <ITypedVar> ();
-		    this-> changed = false;
-		    TemplateSolution res = TemplateSolver::instance ().solve (templates, tvar, args [it]);
-		    if (!res.valid || !TemplateSolver::instance ().merge (score-> score, tmps, res))
-			return NULL;
-		    
-		    score-> score += res.score;
-		    info = res.type;
-		    if (tvar-> getDeco () == Keys::CONST) info = info-> cloneConst ();
+		    auto getType = tvar-> getType ();
+		    if (getType == NULL) return NULL;
+		    info = getType-> clone ();
 		} else {
 		    tvar = param-> setType (args [it]-> clone ());
 		    info = tvar-> getType ()-> clone ();
 		    CONST_SAME_TMP = this-> CONST_CHANGE;
 		    SAME_TMP = this-> CHANGE;
 		}
-
-		if (param-> getDeco () == Keys::REF && !info-> is <IRefInfo> ())
-		    info = new (Z0)  IRefInfo (false, info);
 
 		auto type = args [it]-> CompOp (info);
 		if (type) type = type-> ConstVerif (info);
@@ -291,28 +331,6 @@ namespace semantic {
 		    else score-> score += AFF_TMP;
 		    score-> treat.push_back (type);
 		} else return NULL;				
-	    }
-
-	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (),
-						       tmps)) {
-		return NULL;
-	    }
-
-	    for (auto exp : tmps) {
-		if (exp.second-> info) {
-		    if (exp.second-> info-> isImmutable ()) {
-			exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
-		    } else {
-			exp.second = exp.second-> templateExpReplace ({});
-			exp.second-> info-> isConst (false);
-		    }
-		}
-	    }
-
-	    if (this-> _function-> getTest ()) {
-		auto valid = this-> _function-> getTest ()-> templateExpReplace (tmps);
-		if (!validateTest (valid)) return NULL;
-		else score-> score += 1;//__TEST__;
 	    }
 	    
 	    score-> tmps = tmps;

@@ -67,6 +67,11 @@ namespace semantic {
 	
 	bool validateTest (syntax::Expression test);
 	
+	std::vector <syntax::Var> transformParams (long & score,
+						   const std::vector<syntax::Var> & attrs,
+						   const std::vector<InfoType> & args,
+						   std::map <std::string, syntax::Expression> & tmps);
+
     };
     
 }
