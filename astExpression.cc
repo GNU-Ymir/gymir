@@ -748,6 +748,11 @@ namespace syntax {
 	auto aux = new (Z0)  IFloat (this-> token, this-> suite, this-> _type);
 	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (true, this-> _type));
 	aux-> totale = this-> totale;
+	char * temp;
+	if (this-> _type == FloatConst::FLOAT)
+	    aux-> setValue (strtof (this-> totale.c_str (), &temp));
+	else
+	    aux-> setValue (strtod (this-> totale.c_str (), &temp));	
 	return aux;
     }
 

@@ -3,6 +3,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/value/_.hh>
 #include <cfloat>
+#include <limits>
 #include <math.h>
 
 namespace semantic {
@@ -75,6 +76,7 @@ namespace semantic {
 	if (var-> token == "min") return Min ();
 	if (var-> token == "nan") return Nan ();
 	if (var-> token == "dig") return Dig ();
+	if (var-> token == "infinity") return Infinity ();
 	if (var-> token == "epsilon") return Epsilon ();
 	if (var-> token == "mant_dig") return MantDig ();
 	if (var-> token == "max_10_exp") return Max10Exp ();
@@ -194,7 +196,15 @@ namespace semantic {
 	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, DBL_MAX);
 	return ret;
     }
-	
+
+    InfoType IFloatInfo::Infinity () {
+	auto ret = this-> cloneConst ();
+	if (this-> _type == FloatConst::FLOAT) {
+	    ret-> value () = new (Z0) IFloatValue (this-> _type, std::numeric_limits<float>::infinity (), 0.0);
+	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, std::numeric_limits<double>::infinity ());
+	return ret;
+    }
+    
     InfoType IFloatInfo::Min () {
 	auto ret = this-> cloneConst ();
 	if (this-> _type == FloatConst::FLOAT) {

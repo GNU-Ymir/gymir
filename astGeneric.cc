@@ -133,9 +133,12 @@ namespace syntax {
     }
 
     Ymir::Tree IFloat::toGeneric () {
-	REAL_VALUE_TYPE real_value;
+	REAL_VALUE_TYPE real_value ;
+	auto str = this-> getValue ();
+	if (str == "INF") str = "Inf";
+	else if (str == "NAN") str = "QNaN";
 	Ymir::Tree type = this-> info-> type-> toGeneric ();
-	real_from_string3 (&real_value, this-> totale.c_str (), TYPE_MODE (type.getTree ()));
+	real_from_string (&real_value, str.c_str ());
 	return build_real (type.getTree (), real_value);
     }
     

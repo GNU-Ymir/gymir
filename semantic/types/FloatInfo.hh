@@ -63,6 +63,8 @@ namespace semantic {
 	InfoType Inv (const Word&);
 
 	InfoType Init ();
+	
+	InfoType Infinity ();
 
 	InfoType Max ();
 	
