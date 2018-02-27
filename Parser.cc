@@ -65,13 +65,13 @@ namespace Ymir {
 	    it-> TempOp ({});
 	}
 
-	for (auto it : FrameTable::instance ().globals ()) {
-	    Ymir::declareGlobal (it-> sym, it-> getExpr ());
-	}
+	// for (auto it : FrameTable::instance ().globals ()) {
+	//     Ymir::declareGlobal (it-> sym, it-> getExpr ());
+	// }
 	
-	for (auto it : FrameTable::instance ().externals ()) {
-	    Ymir::declareGlobalExtern (it);
-	}
+	// for (auto it : FrameTable::instance ().externals ()) {
+	//     Ymir::declareGlobalExtern (it);
+	// }
 
 	uint i = 0;
 	while (i < FrameTable::instance ().pures ().size ()) {

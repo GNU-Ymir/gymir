@@ -355,7 +355,15 @@ namespace syntax {
 	}
 	return type;
     }
-    
+
+    Declaration IGlobal::templateDeclReplace (const map <string, Expression>& values) {
+	if (this-> expr) {
+	    return new (Z0) IGlobal (this-> ident, this-> expr-> templateExpReplace (values));
+	} else {	    
+	    return new (Z0) IGlobal (this-> ident, this-> type-> templateExpReplace (values), this-> isExternal);
+	}
+    }
+
     Expression ITypedVar::templateExpReplace (const map <string, Expression>& values) {
 	if (this-> type) {
 	    Var type;

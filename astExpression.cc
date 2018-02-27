@@ -790,7 +790,8 @@ namespace syntax {
 		    Ymir::Error::undefinedOp (this-> token, expr-> info, type-> info-> type);
 		    return NULL;
 		}
-	    }
+	    } else if (info == expr-> info-> type)
+		return expr;
 	    
 	    if (expr-> info-> isConst ())
 		info-> isConst (true);

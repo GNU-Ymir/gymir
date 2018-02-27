@@ -40,6 +40,8 @@ namespace syntax {
 
 	void declareAsExtern (semantic::Module) override;
 
+	Declaration templateDeclReplace (const std::map <std::string, Expression>&) override;
+	
 	Expression getExpr ();
 	
 	void print (int nb = 0) override;

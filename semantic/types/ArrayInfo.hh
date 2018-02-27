@@ -76,6 +76,8 @@ namespace semantic {
 
 	InfoType AffectRight (syntax::Expression);
 
+	InfoType Init ();
+	
 	InfoType Ptr ();
 
 	InfoType Length ();

@@ -6,7 +6,9 @@ namespace semantic {
 
     namespace ArrayUtils {
 
-	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
+	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
+
+	Ymir::Tree InstAffectNull (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
 	Ymir::Tree InstPtr (Word locus, InfoType, syntax::Expression left);
 
@@ -34,6 +36,8 @@ namespace semantic {
 
 	Ymir::Tree InstCall (Word loc, semantic::InfoType ret, syntax::Expression, syntax::Expression paramsExp);
 	
+	Ymir::Tree InstInit (Word locus, semantic::InfoType type, syntax::Expression);
+
     }
 
 }

@@ -9,6 +9,7 @@
 #include <ymir/Parser.hh>
 #include <cstdio>
 #include <ymir/utils/Options.hh>
+#include <ymir/semantic/tree/Generic.hh>
 #include <unistd.h>
 
 namespace syntax {
@@ -744,8 +745,10 @@ namespace syntax {
 	if (this-> isExternal) {
 	    if (this-> fromC ()) sym-> space () = {""};
 	    FrameTable::instance ().insertExtern (sym);
+	    Ymir::declareGlobalExtern (sym);
 	} else if (!this-> _isImut) {
 	    FrameTable::instance ().insert (this);
+	    Ymir::declareGlobal (this-> sym, this-> getExpr ());
 	}
     }
 
@@ -784,8 +787,10 @@ namespace syntax {
 	if (this-> isExternal) {
 	    if (this-> fromC ()) sym-> space () = {""};
 	    FrameTable::instance ().insertExtern (sym);
+	    Ymir::declareGlobalExtern (sym);
 	} else if (!this-> _isImut) {
 	    FrameTable::instance ().insert (this);
+	    Ymir::declareGlobal (this-> sym, this-> getExpr ());
 	}
     }
 
@@ -820,7 +825,8 @@ namespace syntax {
 	
 	sym-> space () = mod-> space ();
 	if (this-> fromC ()) sym-> space () = {""};
-	FrameTable::instance ().insertExtern (sym);	
+	FrameTable::instance ().insertExtern (sym);
+	Ymir::declareGlobalExtern (sym);
 	sym-> isPublic () = this-> is_public ();	
 	mod-> insert (sym);
     }

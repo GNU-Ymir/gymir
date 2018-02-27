@@ -36,26 +36,8 @@ namespace semantic {
 	    return elem-> toGeneric ();
 	}
 
-	Tree InstCastTuple (Word locus, InfoType type, Expression left, Expression) {
-	    auto loc = locus.getLocus ();
-	    auto info = type-> to<ITupleInfo> ();
-
-	    auto rtree = left-> toGeneric ();
-	    //auto rinfo = left-> info-> type-> to<IStructInfo> ();
-	    //auto rtype = left-> info-> type-> toGeneric ();
-
-	    Ymir::TreeStmtList list;
-	    auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), info-> toGeneric ());
-	    for (auto it : Ymir::r (0, info-> nbParams ())) {
-		auto raux = getField (loc, rtree, it);
-		auto laux = getField (loc, aux, it);
-		list.append (Ymir::buildTree (
-		    MODIFY_EXPR, loc, raux.getType (), laux, raux
-		));
-	    }
-	    
-	    getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	Tree InstCastTuple (Word, InfoType, Expression left, Expression) {
+	    return left-> toGeneric ();
 	}
 
 	Tree InstInit (Word locus, InfoType type, Expression) {
