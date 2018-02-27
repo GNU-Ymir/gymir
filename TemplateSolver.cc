@@ -143,7 +143,7 @@ namespace semantic {
     }
     
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, Var param, InfoType type) {	
-	//if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
+	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
 	//if (auto t = type-> to <IEnumInfo> ()) type = t-> getContent ();
 	if (auto tvar = param-> to <ITypedVar> ()) {
 	    if (tvar-> typeExp ()) {
@@ -221,7 +221,7 @@ namespace semantic {
     }
     
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var param, InfoType type) {
-	// if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
+	//if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
 	// if (auto t = type-> to <IEnumInfo> ()) type = t-> getContent ();
 	bool isConst = false;	    
 	while (param && param-> token == Keys::CONST) {
