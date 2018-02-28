@@ -129,7 +129,6 @@ namespace semantic {
 
     InfoType IPtrInfo::UnaryOp (Word op) {
 	if (op == Token::STAR) return Unref ();
-	//TODO : isConst () -> isImmutable ()
 	else if (op == Token::AND && !this-> isConst ()) return toPtr ();
 	else if (op == Token::DPLUS) {
 	    auto ret = this-> cloneConst ();

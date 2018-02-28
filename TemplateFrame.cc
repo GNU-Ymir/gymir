@@ -63,11 +63,37 @@ namespace semantic {
 	    vec.push_back (it.second);
 	return vec;
     }
+
+    Namespace ITemplateFrame::computeSpace (const map<string, Expression> &tmps) {
+	if (tmps.size () != 0) {
+	    Ymir::OutBuffer name;
+	    for (auto it = tmps.begin (); it != tmps.end (); ) {
+		if (auto params = it-> second-> to <IParamList> ()) {
+		    name.write ("{");
+		    for (auto it_ : Ymir::r (0, params-> getParamTypes ().size ())) {
+			name.write (params-> getParamTypes () [it_]-> simpleTypeString ());
+			if (it_ < (int) params-> getParamTypes ().size () - 1)
+			    name.write (",");
+		    }
+		    name.write ("}");
+		} else {
+		    if (it-> second-> info-> isImmutable ())
+			name.write (it-> second-> info-> value ()-> toString ());
+		    else
+			name.write (it-> second-> info-> simpleTypeString ());
+		}
+		++it;
+	    }
+	    return Namespace (this-> _space.toString () + name.str ());
+	}
+	return this-> _space;
+    }
     
     FrameProto ITemplateFrame::validate (ApplicationScore score, const vector<InfoType> & params)  {
 	if (this-> _isExtern) return validateExtern ();
 	else if (this-> _isPure) return validate ();
-	Table::instance ().enterFrame (this-> _space, this-> name, this-> _isInternal);
+	auto space = computeSpace (score-> tmps);
+	Table::instance ().enterFrame (space, this-> name, this-> _isInternal);
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
@@ -81,7 +107,7 @@ namespace semantic {
 	}
 		
 	auto from = Table::instance ().globalNamespace ();
-	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
+	auto proto = IFrame::validate (this-> _function-> getIdent (), space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
 
 	return proto;
     }
@@ -130,8 +156,8 @@ namespace semantic {
 	    Frame tmps;
 	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
 		func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
-		tmps = new (Z0) ITemplateFrame (this-> space (), func);		
-	    } else tmps = new (Z0) IUnPureFrame (this-> space (), func);
+		tmps = new (Z0) ITemplateFrame (computeSpace (res.elements), func);		
+	    } else tmps = new (Z0) IUnPureFrame (computeSpace (res.elements), func);
 
 	    tmps-> isVariadic (true);
 	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
@@ -144,6 +170,7 @@ namespace semantic {
 		score-> score += res.score;
 		score-> toValidate = tmps;
 	    }
+	    
 	    return score;
 	}
 	return NULL;
@@ -176,19 +203,6 @@ namespace semantic {
 	auto res = TemplateSolver::instance (). solve (this-> _function-> getTemplates (), params);
 	
 	if (!res.valid) return NULL;
-	Ymir::OutBuffer space;
-	space.write ("(");
-
-	for (auto i : Ymir::r (0, params.size ())) {
-	    auto &it = params [i];
-	    if (auto _val = it-> info-> value ()) {
-		space.write (_val-> toString ());
-	    } else
-		space.write (it-> info-> type-> simpleTypeString ());
-	    if (i < (int) params.size () - 1) space.write (",");
-	}
-	
-	space.write (")");
 	for (auto &it : res.elements) {
 	    if (it.second-> info) {
 		if (it.second-> info-> isImmutable ()) {
@@ -203,8 +217,6 @@ namespace semantic {
 	}
 	
 	auto func = this-> _function-> templateReplace (res.elements);
-	func-> name ((func-> name () + space.str ()).c_str ());
-
 	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
 	    if (func-> getTest ()) {
 		auto valid = func-> getTest ()-> templateExpReplace (res.elements);
@@ -212,16 +224,16 @@ namespace semantic {
 	    }
 	    
 	    Frame ret;
-	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> space (), func);
-	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> space (), func);
-	    else ret = new (Z0)  IPureFrame (this-> space (), func);
+	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (computeSpace (res.elements), func);
+	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (computeSpace (res.elements), func);
+	    else ret = new (Z0)  IPureFrame (computeSpace (res.elements), func);
 
 	    ret-> currentScore () = this-> currentScore () + res.score;
 	    ret-> templateParams () = getValues (res.elements);
 	    return ret;	    
 	} else {
 	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
-	    auto aux = new (Z0)  ITemplateFrame (this-> space (), func);
+	    auto aux = new (Z0)  ITemplateFrame (computeSpace (res.elements), func);
 	    aux-> _currentScore = this-> currentScore () + res.score;
 	    aux-> _isPure = this-> _isPure;
 	    aux-> _isExtern = this-> _isExtern;

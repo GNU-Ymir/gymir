@@ -72,6 +72,8 @@ namespace semantic {
 						   const std::vector<InfoType> & args,
 						   std::map <std::string, syntax::Expression> & tmps);
 
+	Namespace computeSpace (const std::map <std::string, syntax::Expression> & tmps);
+	
     };
     
 }

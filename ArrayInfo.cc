@@ -243,10 +243,15 @@ namespace semantic {
     InfoType IArrayInfo::CompOp (InfoType other) {
 	auto type = other-> to<IArrayInfo> ();	
 	if (type && type-> _content-> isSame (this-> _content)) {
-	    if (type-> _isStatic != this-> _isStatic || type-> _size != this-> _size)
+	    ArrayInfo ret;
+	    if (this-> _isStatic && !type-> _isStatic) {
+		ret = type-> clone ()-> to <IArrayInfo> ();		
+	    } else if (type-> _isStatic != this-> _isStatic || type-> _size != this-> _size)
 		return NULL;
+	    else { 	   
+		ret = type-> clone ()-> to<IArrayInfo> ();
+	    }
 	    
-	    auto ret = type-> clone ()-> to<IArrayInfo> ();
 	    ret-> isConst (this-> isConst ());
 	    ret-> _content-> isConst (this-> _content-> isConst ());
 	    ret-> binopFoo = ArrayUtils::InstToArray;
@@ -278,7 +283,7 @@ namespace semantic {
     InfoType IArrayInfo::ConstVerif (InfoType other) {
 	if (this-> isConst () && !other-> isConst ()) return NULL;
 	if (auto ot = other-> to<IArrayInfo> ()) {
-	    if (this-> _content-> isConst () && !ot-> _content-> isConst ()) return NULL;
+	    if (other-> isConst ()) return this;
 	    if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
 	    return this;
 	} else return NULL;

@@ -1,5 +1,7 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/ast/ParamList.hh>
 
 namespace semantic {
@@ -62,6 +64,8 @@ namespace semantic {
     
     InfoType IPtrFuncInfo::BinaryOp (Word token, syntax::Expression right) {
 	if (token == Token::EQUAL) return Affect (right);
+	else if (token == Keys::IS) return Is (right);
+	else if (token == Keys::NOT_IS) return NotIs (right);
 	return NULL;
     }
 
@@ -130,6 +134,32 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IPtrFuncInfo::Is (syntax::Expression right) {
+	if (right-> info-> type-> isSame (this)) {
+	    auto ret = new (Z0) IBoolInfo (true);
+	    ret-> binopFoo = &FixedUtils::InstTest;
+	    return ret;
+	} else if (right-> info-> type-> is <INullInfo> ()) {
+	    auto ret = new (Z0) IBoolInfo (true);
+	    ret-> binopFoo = &FixedUtils::InstTest;
+	    return ret;
+	}
+	return NULL;
+    }
+    
+    InfoType IPtrFuncInfo::NotIs (syntax::Expression right) {
+	if (right-> info-> type-> isSame (this)) {
+	    auto ret = new (Z0) IBoolInfo (true);
+	    ret-> binopFoo = &FixedUtils::InstTest;
+	    return ret;
+	} else if (right-> info-> type-> is <INullInfo> ()) {
+	    auto ret = new (Z0) IBoolInfo (true);
+	    ret-> binopFoo = &FixedUtils::InstTest;
+	    return ret;
+	}
+	return NULL;
+    }
+    
     ulong IPtrFuncInfo::nbTemplates () {
 	return this-> params.size () + 1;
     }
