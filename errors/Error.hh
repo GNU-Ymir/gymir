@@ -71,6 +71,7 @@ namespace Ymir {
 	    TemplateInferType,
 	    TemplateInferTypeNote,
 	    ConstNoInit,
+	    StaticNoInit,
 	    ImmutNoInit,
 	    NotLValue,
 	    NoValueNonVoid,
@@ -189,6 +190,8 @@ namespace Ymir {
 	static void shadowingVar (const Word&, const Word&, bool isPublic);
 
 	static void constNoInit (const Word&);
+
+	static void staticNoInit (const Word&);
 
 	static void immutNoInit (const Word&);
 

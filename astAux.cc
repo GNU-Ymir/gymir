@@ -337,7 +337,10 @@ namespace syntax {
     }
 
     std::string IType::prettyPrint () {
-	return this-> info-> type-> typeString ();
+	if (this-> info && this-> info-> type)
+	    return this-> info-> type-> typeString ();
+	else
+	    return this-> token.getStr ();
     }    
     
     std::vector <Expression>& IVar::getTemplates () {

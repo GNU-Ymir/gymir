@@ -262,7 +262,10 @@ namespace Ymir {
 	TREE_PUBLIC (decl) = 1;
 
 	if (value) {
-	    DECL_INITIAL (decl) = value-> info-> value ()-> toYmir (value-> info)-> toGeneric ().getTree ();
+	    if (value-> info-> value ())
+		DECL_INITIAL (decl) = value-> info-> value ()-> toYmir (value-> info)-> toGeneric ().getTree ();
+	    else
+		DECL_INITIAL (decl) = value-> toGeneric ().getTree ();
 	} else {
 	    DECL_INITIAL (decl) = error_mark_node;
 	}

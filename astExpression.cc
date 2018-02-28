@@ -145,7 +145,8 @@ namespace syntax {
 		}
 		auto type = aux-> info-> type-> TempOp (tmps);
 		if (type == NULL) {
-		    Ymir::Error::assert ("TODO, gerer l'erreur");
+		    Ymir::Error::notATemplate (this-> token, tmps);
+		    return NULL;
 		}
 		aux-> templates = tmps;
 		aux-> info = new (Z0)  ISymbol (aux-> info-> sym, type);

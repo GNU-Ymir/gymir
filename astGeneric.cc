@@ -105,6 +105,11 @@ namespace syntax {
 		}
 	    }
 	}
+	
+	for (auto it : Ymir::r (0, this-> statics.size ())) {
+	    Ymir::declareGlobal (this-> statics [it]-> info, this-> staticExprs [it]);
+	}
+	
 	return list.getTree ();
     }
 

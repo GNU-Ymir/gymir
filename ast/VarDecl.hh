@@ -16,6 +16,9 @@ namespace syntax {
     class IVarDecl : public IInstruction {
 	std::vector <Var> decls;
 	std::vector <Expression> insts;
+
+	std::vector <Var> statics;
+	std::vector <Expression> staticExprs;
 	std::vector <Word> decos;
 
     public:

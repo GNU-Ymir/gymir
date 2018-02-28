@@ -246,7 +246,7 @@ namespace semantic {
 	std::vector <InfoType> types;
 	std::vector <std::string> attribs;
 	static std::map <std::string, StructInfo> dones;
-	auto name = this-> onlyNameTypeString ();
+	auto name = Namespace (this-> space, this-> onlyNameTypeString ()).toString ();
 	auto inside = dones.find (name);
 	if (inside == dones.end ()) {
 	    auto last = Table::instance ().templateNamespace ();
@@ -259,21 +259,20 @@ namespace semantic {
 		InfoType info = this-> params [it]-> getType ();
 		if (info) {
 		    if (recursiveGet (this-> _info, info)) {
-			dones.erase (name);
 			Ymir::Error::recursiveNoSize (this-> params [it]-> token);
 			return NULL;
 		    }
 		    types.push_back (info);
 		    attribs.push_back (this-> params [it]-> token.getStr ());
 		} else {
-		    dones.erase (name);
 		    return NULL;
 		}
 	    }
+	    
 	    Table::instance ().setCurrentSpace (currentSpace);
 	    Table::instance ().templateNamespace () = last;
 	    
-	    dones.erase (name);
+	    //dones.erase (name);
 	    this-> _info-> isConst (false);
 	    this-> _info-> setTypes (types);
 	    this-> _info-> setAttribs (attribs);	    

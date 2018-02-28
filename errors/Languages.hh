@@ -42,6 +42,7 @@ namespace Ymir {
 		phrases [TemplateInferTypeNote] = "Type déduis de la fonction";
 		phrases [IncompatibleTypes] = "Types incompatibles '%%%' et '%%%'";
 		phrases [ConstNoInit] = "Declaration constante '%%%' sans valeur d'initialisation";
+		
 		phrases [NotLValue] = "'%%%' n'est pas une lvalue";
 		phrases [NoValueNonVoid] = "retour de fonction sans valeur dans une fonction ne retournant pas void";
 		phrases [ReturnVoid] = "retour d'un élèment de type '%%%'";
@@ -98,6 +99,7 @@ namespace Ymir {
 		phrases [TemplateInferTypeNote] = "Inferred from";
 		phrases [BreakRefUndef] = "Loop identifier '%%%' doesn't exist";
 		phrases [ConstNoInit] = "Const declaration '%%%' with no initial value";
+		phrases [StaticNoInit] = "Static declaration '%%%' with no initial value";
 		phrases [ImmutNoInit] = "Immutable declaration '%%%' with no initial value";
 		phrases [NotLValue] = "'%%%' is not a lvalue";
 		phrases [NoValueNonVoid] = "Function exit without value in a non void function";

@@ -381,6 +381,7 @@ namespace syntax {
     }
 
     Expression IType::templateExpReplace (const map <string, Expression>&) {
+	if (this-> _type == NULL) return NULL;
 	return new (Z0)  IType (this-> token, this-> _type);
     }
     

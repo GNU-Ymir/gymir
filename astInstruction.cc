@@ -3,6 +3,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/value/_.hh>
 #include <ymir/syntax/Keys.hh>
+#include <ymir/semantic/tree/Generic.hh>
 
 namespace syntax {
 
@@ -104,7 +105,19 @@ namespace syntax {
 		    aux-> info-> value () = NULL;
 		}
 	    } else if (this-> decos [id] == Keys::STATIC) {
-		Ymir::Error::assert ("TODO, static");
+		auto space = Table::instance ().space ();
+		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
+		    auto type = bin-> getRight ()-> expression ();
+		    aux-> info = new (Z0) ISymbol (aux-> token, type-> info-> type-> clone ());
+		    aux-> info-> isConst (false);
+		    aux-> info-> value () = NULL;
+		    Table::instance ().insert (aux-> info);
+		    auxDecl-> statics.push_back (aux);
+		    auxDecl-> staticExprs.push_back (type);
+		} else {
+		    Ymir::Error::staticNoInit (it-> token);
+		    return NULL;
+		}		
 	    } else {
 		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
 		aux-> info-> isConst (false);

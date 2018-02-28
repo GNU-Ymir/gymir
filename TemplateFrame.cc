@@ -195,7 +195,9 @@ namespace semantic {
 		    it.second = it.second-> info-> value ()-> toYmir (it.second-> info);		
 		} else {
 		    it.second = it.second-> templateExpReplace ({});
-		    it.second-> info-> isConst (false);
+		    if (it.second && it.second-> info) {
+			it.second-> info-> isConst (false);
+		    } else if (!it.second) return NULL;
 		}
 	    }
 	}
@@ -236,6 +238,7 @@ namespace semantic {
 		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
 		} else {
 		    exp.second = exp.second-> templateExpReplace ({});
+		    if (exp.second == NULL) return {};
 		    exp.second-> info-> isConst (false);
 		}
 	    }
