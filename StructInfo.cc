@@ -130,9 +130,16 @@ namespace semantic {
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
+	if (var-> token == "name") return Name ();
 	return NULL;
     }
 
+    InfoType IStructInfo::Name () {
+	auto str = new (Z0) IStringInfo (true);
+	str-> value () = new (Z0)  IStringValue (this-> name.c_str ());
+	return str;
+    }	
+    
     InfoType IStructCstInfo::Init () {
 	std::vector <syntax::Expression> exp;
 	auto ret = this-> TempOp (exp);
@@ -305,14 +312,14 @@ namespace semantic {
 	vector <V> vec;
 	for (auto it : dico)
 	    vec.push_back (it.second);
-	return vec;
+	return vec;		
     }
     
     InfoType IStructCstInfo::getScore (const std::vector <syntax::Expression> & tmps) {
 	auto res = TemplateSolver::instance ().solve (this-> tmps, tmps);
 	if (!res.valid || !TemplateSolver::instance ().isSolved (this-> tmps, res))
 	    return NULL;
-	
+
 	std::vector <syntax::TypedVar> params;
 	for (auto it : this-> params) {
 	    params.push_back (it-> templateExpReplace (res.elements)-> to <ITypedVar> ());
@@ -321,8 +328,16 @@ namespace semantic {
 	std::vector <syntax::Expression> ignore;
 	auto ret = new (Z0) IStructCstInfo (this-> _locId, this-> space, this-> name, ignore);
 	ret-> params = params;	
-	ret-> tmpsDone = getValues (res.elements);
-	for (auto &it : ret-> tmpsDone) {
+	//ret-> tmpsDone = getValues (res.elements, this-> tmps);
+	std::vector <syntax::Expression> tmpsDone;
+	for (auto it : Ymir::r (0, this-> tmps.size ())) {
+	    if (auto var = this-> tmps [it]-> to <IVar> ()) {
+		tmpsDone.push_back (res.elements [var-> token.getStr ()]);		
+	    } else Ymir::Error::assert ("");
+	}
+	ret-> tmpsDone = tmpsDone;
+	
+	for (auto &it : ret-> tmpsDone) {	    
 	    it = it-> templateExpReplace ({});
 	    if (it-> info)
 		it-> info-> isConst (false);
@@ -540,9 +555,16 @@ namespace semantic {
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
+	if (var-> token == "name") return Name ();
 	return NULL;
     }
 
+    InfoType IStructCstInfo::Name () {
+	auto str = new (Z0) IStringInfo (true);
+	str-> value () = new (Z0)  IStringValue (this-> name.c_str ());
+	return str;
+    }	
+    
     InfoType IStructInfo::Init () {
 	auto ret = this-> clone ();
 	ret-> unopFoo = StructUtils::InstInit;
@@ -732,7 +754,9 @@ namespace semantic {
 	auto name = this-> innerTypeString ();	
 	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());	
 	if (str_type_node.isNull ()) {
-	    str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs);
+	    if (this-> types.size () != 0) {
+		str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs);
+	    } else str_type_node = Ymir::makeTuple (name, {new (Z0) ICharInfo (true)});
 	    IFinalFrame::declareType (name, str_type_node);
 	}
 	return str_type_node;

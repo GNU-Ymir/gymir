@@ -835,6 +835,10 @@ namespace syntax {
 	this-> params-> inside = this;	    	    
     }
 
+    std::string IPar::prettyPrint () {
+	return Ymir::OutBuffer (this-> _left-> prettyPrint (), "(", this-> params-> prettyPrint (), ")").str ();	
+    }
+    
     IPar::~IPar () {
 	delete params;
 	delete _left;

@@ -1329,12 +1329,18 @@ namespace syntax {
 		return NULL;
 	    }
 	    
+	    auto rtype = aux-> type-> info-> type;
 	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 		Ymir::Error::uninitVar (aux-> left-> token);
 		return NULL;
 	    }
 
-	    auto res = aux-> left-> info-> type-> isSame (aux-> type-> info-> type);
+	    if (rtype-> is <IStructCstInfo> ()) {
+		rtype = rtype-> TempOp ({});
+		if (rtype == NULL) return NULL;
+	    }
+	    
+	    auto res = aux-> left-> info-> type-> isSame (rtype);
 	    auto type = new (Z0) IBoolInfo (true);
 	    aux-> info = new (Z0) ISymbol (this-> token, type);
 	    aux-> info-> value () = new (Z0) IBoolValue (res);

@@ -85,6 +85,8 @@ namespace semantic {
 	
 	InfoType Init ();
 
+	InfoType Name ();
+
 	InfoType SizeOf ();
 	
     };    
@@ -164,6 +166,7 @@ namespace semantic {
 
 	InfoType SizeOf ();	
 	
+	InfoType Name ();
     };
 
     typedef IStructInfo* StructInfo;

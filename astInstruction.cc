@@ -331,7 +331,7 @@ namespace syntax {
 		Table::instance ().retInfo ().changed () = true;
 	    }
 	    	    	    
-	    aux-> caster = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);	    
+	    aux-> caster = type;
 	    if (Table::instance ().retInfo ().deco == "" || Table::instance ().retInfo ().deco == Keys::CONST)
 	    	aux-> caster-> isConst (true);
 	    else {

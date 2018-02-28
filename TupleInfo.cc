@@ -177,7 +177,10 @@ namespace semantic {
 	IInfoType::printConst (true);
 	auto tuple_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (tuple_type_node.isNull ()) {
-	    tuple_type_node = Ymir::makeTuple (name, this-> params);	
+	    if (this-> params.size () != 0) 
+		tuple_type_node = Ymir::makeTuple (name, this-> params);
+	    else
+		tuple_type_node = Ymir::makeTuple (name, {new (Z0) ICharInfo (true)});
 	    IFinalFrame::declareType (name, tuple_type_node);
 	}
 	return tuple_type_node;

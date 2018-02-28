@@ -47,6 +47,8 @@ namespace syntax {
 	    return TYPEID (IPar);
 	}
 
+	std::string prettyPrint () override;
+	
 	std::vector <std::string> getIds () {
 	    auto ret = IExpression::getIds ();
 	    ret.push_back (TYPEID(IPar));

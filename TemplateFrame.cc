@@ -93,7 +93,7 @@ namespace semantic {
 	if (this-> _isExtern) return validateExtern ();
 	else if (this-> _isPure) return validate ();
 	auto name = computeSpace (score-> tmps);
-	Table::instance ().enterFrame (this-> _space, name.toString (), this-> _isInternal);
+	Table::instance ().enterFrame (this-> _space, this-> name, this-> _isInternal);
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
@@ -153,8 +153,8 @@ namespace semantic {
 	    if (!res.valid) return NULL;
 
 	    auto func = this-> _function-> templateReplace (res.elements);
-	    auto name = computeSpace (res.elements);
-	    func-> name (name.toString ().c_str ());
+	    //auto name = computeSpace (res.elements);
+	    //func-> name (name.toString ().c_str ());
 	    Frame tmps;
 	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
 		func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
