@@ -84,16 +84,16 @@ namespace semantic {
 		}
 		++it;
 	    }
-	    return Namespace (this-> _space.toString () + name.str ());
+	    return Namespace (this-> name + name.str ());
 	}
-	return this-> _space;
+	return this-> name;
     }
     
     FrameProto ITemplateFrame::validate (ApplicationScore score, const vector<InfoType> & params)  {
 	if (this-> _isExtern) return validateExtern ();
 	else if (this-> _isPure) return validate ();
-	auto space = computeSpace (score-> tmps);
-	Table::instance ().enterFrame (space, this-> name, this-> _isInternal);
+	auto name = computeSpace (score-> tmps);
+	Table::instance ().enterFrame (this-> _space, name.toString (), this-> _isInternal);
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
@@ -107,7 +107,7 @@ namespace semantic {
 	}
 		
 	auto from = Table::instance ().globalNamespace ();
-	auto proto = IFrame::validate (this-> _function-> getIdent (), space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
+	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
 
 	return proto;
     }
@@ -153,11 +153,13 @@ namespace semantic {
 	    if (!res.valid) return NULL;
 
 	    auto func = this-> _function-> templateReplace (res.elements);
+	    auto name = computeSpace (res.elements);
+	    func-> name (name.toString ().c_str ());
 	    Frame tmps;
 	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
 		func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
-		tmps = new (Z0) ITemplateFrame (computeSpace (res.elements), func);		
-	    } else tmps = new (Z0) IUnPureFrame (computeSpace (res.elements), func);
+		tmps = new (Z0) ITemplateFrame (this-> _space, func);		
+	    } else tmps = new (Z0) IUnPureFrame (this-> _space, func);
 
 	    tmps-> isVariadic (true);
 	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
@@ -224,16 +226,16 @@ namespace semantic {
 	    }
 	    
 	    Frame ret;
-	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (computeSpace (res.elements), func);
-	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (computeSpace (res.elements), func);
-	    else ret = new (Z0)  IPureFrame (computeSpace (res.elements), func);
+	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> _space, func);
+	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> _space, func);
+	    else ret = new (Z0)  IPureFrame (this-> _space, func);
 
 	    ret-> currentScore () = this-> currentScore () + res.score;
 	    ret-> templateParams () = getValues (res.elements);
 	    return ret;	    
 	} else {
 	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
-	    auto aux = new (Z0)  ITemplateFrame (computeSpace (res.elements), func);
+	    auto aux = new (Z0)  ITemplateFrame (this-> _space, func);
 	    aux-> _currentScore = this-> currentScore () + res.score;
 	    aux-> _isPure = this-> _isPure;
 	    aux-> _isExtern = this-> _isExtern;
