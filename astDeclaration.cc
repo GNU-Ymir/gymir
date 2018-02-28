@@ -616,6 +616,7 @@ namespace syntax {
 		    en-> addAttrib (this-> names [i].getStr (), fst, NULL);
 		} else {
 		    auto val = this-> values [i]-> expression ();
+		    if (val == NULL) return;
 		    auto comp = val-> info-> type-> CompOp (type-> type);
 		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
@@ -656,6 +657,7 @@ namespace syntax {
 		    en-> addAttrib (this-> names [i].getStr (), fst, NULL);
 		} else {
 		    auto val = this-> values [i]-> expression ();
+		    if (val == NULL) return;
 		    auto comp = val-> info-> type-> CompOp (type-> type);
 		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
@@ -697,6 +699,7 @@ namespace syntax {
 		    en-> addAttrib (this-> names [i].getStr (), fst, NULL);
 		} else {
 		    auto val = this-> values [i]-> expression ();
+		    if (val == NULL) return;
 		    auto comp = val-> info-> type-> CompOp (type-> type);
 		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
