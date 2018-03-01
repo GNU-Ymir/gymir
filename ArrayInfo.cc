@@ -9,6 +9,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/value/FixedValue.hh>
+#include <ymir/semantic/value/StringValue.hh>
 
 namespace semantic {
 
@@ -171,7 +172,11 @@ namespace semantic {
 	elem-> binopFoo = ArrayUtils::InstLen;
 	if (this-> _isStatic) {
 	    elem-> value () = new (Z0) IFixedValue (FixedConst::ULONG, this-> _size, this-> _size);
+	} else if (this-> value ()) {
+	    if (auto str = this-> value ()-> to <IStringValue> ()) 
+		elem-> value () = str-> getLen ();
 	}
+	
 	return elem;
     }
 
@@ -212,6 +217,9 @@ namespace semantic {
 		content-> isConst (true);
 	    auto ch = new (Z0)  IArrayRefInfo (this-> isConst (), content);
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
+	    if (this-> value ()) 
+		ch-> value () = this-> value ()-> AccessOp (expr);
+	    
 	    return ch;
 	}
 	return NULL;

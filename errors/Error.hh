@@ -48,6 +48,7 @@ namespace Ymir {
 	    TemplateSpecialisation,
 	    TemplateCreation,
 	    TemplateCreation2,
+	    MoreErrors,
 	    And,
 	    Here,
 	    RecursiveExpansion,
@@ -89,6 +90,7 @@ namespace Ymir {
 	    AssertFailure2,
 	    ScopeExitEnd,
 	    Overflow,
+	    OverflowArray,
 	    LAST_ERROR
 	};
 
@@ -167,11 +169,13 @@ namespace Ymir {
 
 	static void overflow (const Word&, std::string);
 
+	static void overflowArray (const Word&, ulong index, ulong len);
+
 	static void templateSpecialisation (const Word&, const Word&);
 	
 	static void templateCreation (const Word&);
 
-	static void templateCreation2 (const Word&);
+	static void templateCreation2 (const Word&, ulong nb);
 
 	static void moduleDontExist (const Word&, const Word&);
 

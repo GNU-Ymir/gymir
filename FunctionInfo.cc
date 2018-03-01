@@ -1,6 +1,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/pack/Frame.hh>
+#include <ymir/utils/Options.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/pack/PureFrame.hh>
 #include <ymir/utils/OutBuffer.hh>
@@ -131,84 +132,7 @@ namespace semantic {
 	return NULL;
     }
     
-    ApplicationScore IFunctionInfo::CallOp (Word tok, const std::vector<InfoType> & params) {
-	if (needToReset) {
-	    itsUpToMe = true;
-	    needToReset = false;
-	}
-	
-	ulong nbErrorBeg = Ymir::Error::nb_errors;
-	std::vector <ApplicationScore> total;
-	std::vector <Frame> frames = getFrames ();
-
-	for (auto it : frames)
-	    total.push_back (it-> isApplicable (params));
-
-	std::vector <Frame> goods;
-	ApplicationScore right = new (Z0)  IApplicationScore ();
-	for (uint it = 0; it < total.size () ; it++) {
-	    if (total [it]) {
-		if (goods.size () == 0 && total [it]-> score != 0) {
-		    right = total [it];
-		    goods.push_back (frames [it]);
-		} else if (right-> score < total [it]-> score) {
-		    goods.clear ();
-		    goods.push_back (frames [it]);
-		    right = total [it];
-		} else if (right-> score == total [it]-> score && total [it]-> score != 0) {
-		    goods.push_back (frames [it]);
-		}
-	    }
-	}
-
-	if (goods.size () == 0) return NULL;
-	else if (goods.size () != 1) {
-	    Ymir::Error::templateSpecialisation (goods [0]-> ident (),
-						 goods [1]-> ident ()
-	    );
-	    return verifErrors ();
-	}
-
-	Table::instance ().addCall (tok);
-	FrameProto info;
-	if (right-> toValidate) {
-	    info = right-> toValidate-> validate (right, right-> treat);
-	    if (info != NULL)
-		right-> name = Mangler::mangle_functionv (info-> name (), info);
-	    right-> proto = info;
-	} else {
-	    info = goods [0]-> validate (right, right-> treat);
-	    if (info != NULL)
-		right-> name = Mangler::mangle_function (info-> name (), info);
-	    right-> proto = info;
-	}
-
-	if (Ymir::Error::nb_errors - nbErrorBeg && !tok.isEof ()) {
-	    nbTmpsCreation ++;
-	    if (nbTmpsCreation < 4) {
-		Ymir::Error::templateCreation (tok);
-	    } else if (this-> itsUpToMe) {
-		Ymir::Error::templateCreation2 (tok);
-	    }
-	    right-> ret = NULL;
-	    verifErrors ();
-	    return right;
-	}
-
-	if (info == NULL) return NULL;
-	right-> ret = info-> type ()-> type-> clone ();
-	right-> ret-> value () = info-> type ()-> value ();
-
-	return right;
-    }
-
-    ApplicationScore IFunctionInfo::CallOp (Word tok, syntax::ParamList params) {
-	if (needToReset) {
-	    itsUpToMe = true;
-	    needToReset = false;
-	}
-	
-	ulong nbErrorBeg = Ymir::Error::nb_errors;
+    ApplicationScore IFunctionInfo::CallAndThrow (Word tok, const std::vector <InfoType> & params, FrameProto & info) {
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
 
@@ -241,33 +165,81 @@ namespace semantic {
 	    return verifErrors ();
 	}
 
-	Table::instance ().addCall (tok);
-	FrameProto info;
+	if (!Table::instance ().addCall (tok)) return NULL;
+	
 	if (right-> toValidate) {
 	    info = right-> toValidate-> validate (right, right-> treat);
-	    // if (info != NULL)
-	    // 	right-> name = Mangler::mangle_functionv (info-> name (), info);
 	    right-> proto = info;
 	} else {
 	    info = goods [0]-> validate (right, right-> treat);
-	    // if (info != NULL)
-	    // 	right-> name = Mangler::mangle_function (info-> name (), info);
 	    right-> proto = info;
 	}
+	return right;
+    }
 
+
+    ApplicationScore IFunctionInfo::CallOp (Word tok, const std::vector<InfoType> & params) {
+	if (needToReset) {
+	    itsUpToMe = true;
+	    needToReset = false;
+	}
+	
+	FrameProto info;
+	ulong nbErrorBeg = Ymir::Error::nb_errors;
+	auto right = this-> CallAndThrow (tok, params, info);
 
 	if (Ymir::Error::nb_errors - nbErrorBeg && !tok.isEof ()) {
 	    nbTmpsCreation ++;
-	    if (nbTmpsCreation < 4) {
+	    if (nbTmpsCreation < 4 || Options::instance ().isVerbose ()) {
 		Ymir::Error::templateCreation (tok);
 	    } else if (this-> itsUpToMe) {
-		Ymir::Error::templateCreation2 (tok);
+		println (nbTmpsCreation - 3);
+		Ymir::Error::templateCreation2 (tok, nbTmpsCreation - 3);
 	    }
-	    right-> ret = NULL;
+	    
+	    if (right)
+		right-> ret = NULL;
 	    verifErrors ();
 	    return right;
-	}
+	} else if (right == NULL) return NULL;
 
+	verifErrors ();
+	if (info == NULL) return NULL;
+	right-> ret = info-> type ()-> type-> clone ();
+	right-> ret-> value () = info-> type ()-> value ();
+
+	return right;
+    }
+
+    
+    ApplicationScore IFunctionInfo::CallOp (Word tok, syntax::ParamList params) {
+	if (needToReset) {
+	    itsUpToMe = true;
+	    needToReset = false;
+	}
+	
+	ulong nbErrorBeg = Ymir::Error::nb_errors;
+
+	FrameProto info;
+	auto types = params-> getParamTypes ();
+	auto right = this-> CallAndThrow (tok, types, info);
+	
+	if (Ymir::Error::nb_errors - nbErrorBeg && !tok.isEof ()) {
+	    nbTmpsCreation ++;
+	    if (nbTmpsCreation < 4 || Options::instance ().isVerbose ()) {
+		Ymir::Error::templateCreation (tok);
+	    } else if (this-> itsUpToMe) {
+		println (nbTmpsCreation - 3);
+		Ymir::Error::templateCreation2 (tok, nbTmpsCreation - 3);
+	    }
+	    
+	    if (right) 
+		right-> ret = NULL;
+	    verifErrors ();
+	    return right;
+	} else if (right == NULL) return NULL;
+	
+	verifErrors ();
 	if (info == NULL) return NULL;
 	right-> ret = info-> type ()-> type-> clone ();
 	right-> ret-> value () = info-> type ()-> value ();

@@ -81,6 +81,8 @@ namespace semantic {
 	std::map<Word, std::string> candidates ();
 
 	ApplicationScore verifErrors ();
+
+	ApplicationScore CallAndThrow (Word tok, const std::vector <InfoType>& params, FrameProto & info);
 	
     };
 

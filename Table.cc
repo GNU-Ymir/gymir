@@ -43,10 +43,12 @@ namespace semantic {
 	}
     }
 
-    void Table::addCall (Word sym) {
+    bool Table::addCall (Word sym) {
 	if (this-> _nbFrame > __maxNbRec__) {
 	    Ymir::Error::recursiveExpansion (sym);
+	    return false;
 	}
+	return true;
     }
 
     void Table::addGlobal (syntax::Global gl) {

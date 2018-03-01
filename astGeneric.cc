@@ -216,6 +216,11 @@ namespace syntax {
     }
     
     Ymir::Tree IAccess::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
+	    return ret;
+	}
+
 	std::vector <tree> args = this-> params-> toGenericParams (this-> treats);
 	if (this-> info-> type-> binopFoo) {
 	    return this-> info-> type-> buildBinaryOp (
@@ -906,8 +911,17 @@ namespace syntax {
 	
 	return list.getTree ();
     }
+
+    Ymir::Tree IPragma::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
+	    return ret;
+	}
+	return Ymir::Tree ();
+    }
     
     Ymir::Tree IAssert::toGeneric () {
+	if (this-> isStatic) return Ymir::Tree ();
 	Ymir::Tree text;
 	std::string format;
 	if (this-> msg) {

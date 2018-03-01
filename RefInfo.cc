@@ -388,6 +388,10 @@ namespace semantic {
 	_content (content)
     {}
 
+    Value & IArrayRefInfo::value () {
+	return this-> _content-> value ();
+    }
+    
     InfoType IArrayRefInfo::getIntern () {
 	return this-> _content;
     }

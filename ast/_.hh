@@ -55,3 +55,4 @@
 #include "Module.hh"
 #include "Use.hh"
 #include "Scope.hh"
+#include "Pragma.hh"

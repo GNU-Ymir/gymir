@@ -547,11 +547,13 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
-    void Error::templateCreation2 (const Word& word) {
+    void Error::templateCreation2 (const Word& word, ulong nb) {
 	auto str = getString (TemplateCreation2);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
-	msg = std::string (BLUE) + "Note" + std::string(RESET) + " : " + std::string (BOLD)
-	    + "...\n" + std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (msg);
+	auto str2 = getString (MoreErrors);
+	auto msg2 = format (str2, nb);
+	msg = std::string (BLUE) + "Note" + std::string(RESET) + " : " + std::string (BOLD) +
+	    msg2 + std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (msg);
 	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
@@ -598,6 +600,22 @@ namespace Ymir {
     void Error::overflow (const Word& word, std::string type) {
 	auto str = getString (Overflow);
 	auto msg = format (str, YELLOW, type.c_str (), RESET);	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::overflowArray (const Word& word, ulong i, ulong len) {
+	auto str = getString (OverflowArray);
+	auto msg = format (str,
+			   YELLOW, i, RESET,
+			   YELLOW, len, RESET
+	);
+	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};

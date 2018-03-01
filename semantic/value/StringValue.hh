@@ -13,12 +13,18 @@ namespace semantic {
 	IStringValue (std::string &val);
 
 	IStringValue (const char * val);
+
+	Value BinaryOp (Word, Value) override;
+	
+	Value AccessOp (syntax::Expression) override;
 	
 	const char * getId () override;
 
 	static const char * id () {
 	    return "IStringValue";
 	}
+
+	Value getLen ();
 	
 	std::string toString () override;
 

@@ -1,6 +1,6 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
-#include <ymir/semantic/value/CharValue.hh>
+#include <ymir/semantic/value/FixedValue.hh>
 
 namespace semantic {
 
@@ -120,8 +120,9 @@ namespace semantic {
 	if (right-> info-> type-> is<ICharInfo> ()) {
 	    auto bl = new (Z0)  IBoolInfo (true);	    	    
 	    bl-> binopFoo = &FixedUtils::InstTest;
-	    if (this-> value ())
+	    if (this-> value ()) {
 		bl-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+	    }
 	    
 	    return bl;
 	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
@@ -207,7 +208,7 @@ namespace semantic {
 
     InfoType ICharInfo::Init () {
 	auto ch = new (Z0)  ICharInfo (true);
-	ch-> value () = new (Z0) ICharValue ('\0');
+	ch-> value () = new (Z0) IFixedValue (FixedConst::UBYTE, '\0', '\0');
 	return ch;
     }
 
@@ -219,24 +220,6 @@ namespace semantic {
 
     Ymir::Tree ICharInfo::toGeneric () {
 	return char_type_node;
-    }
-
-    ICharValue::ICharValue (char code) :
-	code (code)
-    {}
-
-    const char* ICharValue::getId () {
-	return ICharValue::id ();
-    }
-
-    syntax::Expression ICharValue::toYmir (Symbol sym) {
-	auto ret = new (Z0) syntax::IChar (sym-> sym, this-> code);
-	ret-> info = sym;
-	return ret;
-    }
-    
-    Value ICharValue::clone () {
-	return new (Z0)  ICharValue (this-> code);
     }
 
 }

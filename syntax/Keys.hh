@@ -61,4 +61,5 @@ struct Keys {
     static std::string  DPAR;
     static std::string  MOD;
     static std::string  USE;
+    static std::string  PRAGMA;
 };

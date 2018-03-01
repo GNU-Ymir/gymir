@@ -131,7 +131,7 @@ namespace semantic {
 
 	virtual bool allowInternalUnref ();
 	
-	Value& value ();
+	virtual Value& value ();
 
 	static void printConst (bool needPrintConst = true);
 	

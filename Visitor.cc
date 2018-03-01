@@ -77,7 +77,7 @@ namespace syntax {
 	this-> afUnary = {Token::DPLUS, Token::DMINUS};	
 	this-> befUnary = {Token::MINUS, Token::AND, Token::STAR, Token::NOT};
 	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::SCOPE,
-			       Keys::DEF, Keys::IF, Keys::RETURN,
+			       Keys::DEF, Keys::IF, Keys::RETURN, Keys::PRAGMA, 
 			       Keys::FOR,  Keys::WHILE, Keys::BREAK,
 			       Keys::MATCH, Keys::IN, Keys::ELSE,
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
@@ -1052,6 +1052,7 @@ namespace syntax {
 	else if (tok == Keys::LET) return visitLet ();
 	else if (tok == Keys::BREAK) return visitBreak ();
 	else if (tok == Keys::ASSERT) return visitAssert ();
+	else if (tok == Keys::PRAGMA) return visitPragma ();
 	else if (tok == Keys::SCOPE) return visitScope ();
 	else if (tok == Keys::IMMUTABLE) {
 	    tok = this-> lex.next ();
@@ -1631,6 +1632,8 @@ namespace syntax {
 	    return visitMixin ();
 	} else  if (word == Keys::MATCH) {
 	    return visitMatch ();
+	} else if (word == Keys::PRAGMA) {
+	    return visitPragma ();
 	} else this-> lex.rewind ();
 	auto var = visitVar ();
 	auto next = this-> lex.next ();
@@ -2037,7 +2040,23 @@ namespace syntax {
 	next = this-> lex.next ({Token::SEMI_COLON});
 	return new (Z0)  IAssert (begin, expr, msg);
     }
-        
+
+    Pragma Visitor::visitPragma () {
+	auto next = this-> lex.next ({Token::LPAR});
+	auto id = visitIdentifiant ();
+	auto suite = this-> lex.next ();
+	std::vector <Expression> params;
+	if (suite == Token::COMA) {
+	    while (true) {
+		params.push_back (visitExpression ());
+		next = this-> lex.next ({Token::RPAR, Token::COMA});
+		if (next == Token::RPAR) break;
+	    }
+	}
+	
+	return new (Z0) IPragma (id, new (Z0) IParamList (suite, params));
+    }    
+    
     Instruction Visitor::visitReturn () {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next (), next = this-> lex.next ();

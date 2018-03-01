@@ -8,6 +8,10 @@
 
 namespace syntax {
     using namespace semantic;
+
+    const std::string IPragma::COMPILE = "compiles";
+    const std::string IPragma::MSG = "msg";
+
     
     Expression IAccess::expression () {
 	auto aux = new (Z0)  IAccess (this-> token, this-> end);
@@ -34,6 +38,8 @@ namespace syntax {
 							 aux-> params,
 							 treats
 	);
+
+
 	if (type == NULL) {
 	    auto call = findOpAccess ();
 	    if (call == NULL) {
@@ -585,13 +591,15 @@ namespace syntax {
     Expression IBinary::normal () {	
 	if (!this-> info) {
 	    auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
+
 	    if (simpleVerif (aux)) return NULL;
 	    else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 		Ymir::Error::uninitVar (aux-> left-> token);
 		return NULL;
 	    }
-	    
+
 	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
+
 	    if (type == NULL) {
 		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
 		if (type == NULL) {
@@ -741,7 +749,7 @@ namespace syntax {
     Expression IChar::expression () {
 	auto aux = new (Z0)  IChar (this-> token, this-> code);
 	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  ICharInfo (true));
-	aux-> info-> value () = new (Z0)  ICharValue (this-> code);
+	aux-> info-> value () = new (Z0) IFixedValue (FixedConst::UBYTE, this-> code, this-> code);
 	return aux;
     }
 
@@ -1480,5 +1488,42 @@ namespace syntax {
 	}		
     }
 
+
+    Expression IPragma::expression () {
+	if (this-> token.getStr () == COMPILE) return executeCompile ();
+	if (this-> token.getStr () == MSG) executeMsg ();
+
+	auto ret = new (Z0) IPragma (this-> token, NULL);
+	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
+	return ret;
+    }
+
+    void IPragma::executeMsg () {
+	Ymir::OutBuffer buf;
+	auto list = this-> params-> expression ()-> to <IParamList> ();
+	for (auto it : list-> getParams ()) {
+	    if (it-> info-> isImmutable ())
+		 buf.write (it-> info-> value ()-> toString ());
+	    else Ymir::Error::notImmutable (it-> token, it-> info);
+	}
+	println (buf.str ());
+    }
+
+    Expression IPragma::executeCompile () {
+	Ymir::Error::activeError (false);
+	this-> params-> expression ();
+	auto errors = Ymir::Error::caught ();
+	Ymir::Error::activeError (true);
+	auto ret = new (Z0) IPragma (this-> token, NULL);
+	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IBoolInfo (true));
+	if (errors.size () != 0) {
+	    ret-> info-> value () = new (Z0) IBoolValue (false);	    
+	} else
+	    ret-> info-> value () = new (Z0) IBoolValue (true);
+	return ret;
+	
+    }
+
+    
     
 }

@@ -95,6 +95,7 @@ namespace syntax {
 	If visitElse ();
 	Assert visitAssert ();
 	Scope visitScope ();
+	Pragma visitPragma ();
 	Instruction visitReturn ();
 	Instruction visitBreak ();
 	Instruction visitWhile ();

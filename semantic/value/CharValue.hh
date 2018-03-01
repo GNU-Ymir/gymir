@@ -13,6 +13,10 @@ namespace semantic {
 
 	ICharValue (char);
 
+	Value BinaryOp (Word, Value) override;
+
+	Value UnaryOp (Word) override;
+	
 	const char* getId () override;
 
 	static const char* id () {

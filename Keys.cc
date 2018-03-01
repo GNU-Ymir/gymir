@@ -58,3 +58,4 @@ std::string     Keys::DPAR      = "()";
 std::string     Keys::MOD       = "mod";
 std::string     Keys::USE       = "use";
 std::string     Keys::SCOPE     = "on";
+std::string     Keys::PRAGMA     = "__pragma";

@@ -481,5 +481,9 @@ namespace syntax {
 	return ret;
     }
 
+    Expression IPragma::templateExpReplace (const map <string, Expression> & values) {
+	return new (Z0) IPragma (this-> token, this-> params-> templateReplace (values)-> to <IParamList> ());
+    }
+    
     
 }

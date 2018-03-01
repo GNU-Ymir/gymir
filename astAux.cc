@@ -1559,5 +1559,10 @@ namespace syntax {
 	buf.write ("]");
 	return buf.str ();
     }
+
+    IPragma::IPragma (Word token, ParamList params) :
+	IExpression (token),
+	params (params)
+    {}
     
 }

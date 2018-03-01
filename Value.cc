@@ -34,38 +34,6 @@ namespace semantic {
 	return NULL;
     }
     
-    IStringValue::IStringValue (std::string &val)
-	: value (val)
-    {}
-
-    IStringValue::IStringValue (const char* val)
-	: value (val)
-    {}
-
-    const char* IStringValue::getId () {
-	return IStringValue::id ();
-    }
-
-    std::string IStringValue::toString () {
-	return this-> value;
-    }
-
-    Value IStringValue::clone () {
-	return new (Z0)  IStringValue (this-> value);
-    }
-
-    bool IStringValue::equals (Value other) {
-	if (auto ot = other-> to<IStringValue> ()) {
-	    return this-> value == ot-> value;
-	}
-	return false;
-    }
-    
-    syntax::Expression IStringValue::toYmir (Symbol sym) {
-	auto ret = new (Z0)  IString (sym-> sym, this-> value);
-	ret-> info = sym;
-	return ret;
-    }
 
     
 }

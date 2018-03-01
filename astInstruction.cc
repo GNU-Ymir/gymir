@@ -464,5 +464,6 @@ namespace syntax {
 	return new (Z0) INone (this-> token);
     }
     
+
 }
 

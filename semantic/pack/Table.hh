@@ -23,7 +23,7 @@ namespace semantic {
 	Namespace _programSpace;
 	std::vector <syntax::Global> _globalVars;
 	ulong _nbFrame = 0;
-	static const int __maxNbRec__ = 300;
+	static const int __maxNbRec__ = 1000;
 	std::vector <syntax::Instruction> _staticInits;
 	Frame _constructor;
 	Frame _destructor;
@@ -42,7 +42,7 @@ namespace semantic {
 
 	Namespace getCurrentSpace ();
 
-	void addCall (Word sym);
+	bool addCall (Word sym);
 
 	void addGlobal (syntax::Global gl);
 
