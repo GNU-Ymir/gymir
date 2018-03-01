@@ -867,6 +867,7 @@ namespace semantic {
 		auto elem = soluce.elements.find (v-> token.getStr ());
 		if (elem != soluce.elements.end ()) {
 		    auto val = elem-> second-> templateExpReplace ({});
+		    if (val && !val-> info && !val-> is<IParamList> ()) val = val-> expression ();
 		    if (val && val-> info) val-> info-> isConst (false);
 		    rets.push_back (val);		    
 		}
@@ -875,7 +876,7 @@ namespace semantic {
 		buf.write (nb);
 		if (soluce.elements.find (buf.str ()) != soluce.elements.end ()) {
 		    if (it-> info) 
-			rets.push_back (it-> info-> value ()-> toYmir (it-> info));
+			rets.push_back (it-> info-> value ()-> toYmir (it-> info)-> expression ());
 		    else
 			rets.push_back (it-> templateExpReplace (soluce.elements)-> expression ());
 		}
@@ -894,6 +895,7 @@ namespace semantic {
 		auto elem = soluce.find (v-> token.getStr ());
 		if (elem != soluce.end ()) {
 		    auto val = elem-> second-> templateExpReplace ({});
+		    if (val && !val-> info && !val-> is <IParamList> ()) val = val-> expression ();
 		    if (val && val-> info) val-> info-> isConst (false);
 		    rets.push_back (val);		    
 		}
@@ -902,7 +904,7 @@ namespace semantic {
 		buf.write (nb);
 		if (soluce.find (buf.str ()) != soluce.end ()) {
 		    if (it-> info) 
-			rets.push_back (it-> info-> value ()-> toYmir (it-> info));
+			rets.push_back (it-> info-> value ()-> toYmir (it-> info)-> expression ());
 		    else
 			rets.push_back (it-> templateExpReplace (soluce)-> expression ());
 		}

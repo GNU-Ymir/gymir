@@ -24,6 +24,8 @@ namespace semantic {
 	long& getValue ();
 
 	Value BinaryOp (Word , Value ) override;
+
+	Value UnaryOp (Word) override;
 	
 	const char* getId () override;
 

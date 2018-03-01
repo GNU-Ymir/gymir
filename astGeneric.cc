@@ -194,6 +194,11 @@ namespace syntax {
     }
     
     Ymir::Tree IUnary::toGeneric () {
+	if (this-> info-> isImmutable ()) {
+	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
+	    return ret;
+	}
+	
 	if (this-> info-> type-> unopFoo) {
 	    return this-> info-> type-> buildUnaryOp (
 		this-> token,

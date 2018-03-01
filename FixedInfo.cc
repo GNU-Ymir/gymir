@@ -927,6 +927,20 @@ namespace semantic {
 	return new (Z0)  IFixedValue (this-> type, this-> value.ul, this-> value.l);
     }    
 
+    Value IFixedValue::UnaryOp (Word op) {
+	if (op == Token::MINUS) return new (Z0) IFixedValue (this-> type, -this-> value.ul, -this-> value.l);
+	else if (op == Token::DPLUS) {
+	    if (isSigned (this-> type)) this-> value.l++;
+	    else this-> value.ul++;
+	    return this;
+	} else if (op == Token::DMINUS) {
+	    if (isSigned (this-> type)) this-> value.l--;
+	    else this-> value.ul--;
+	    return this;
+	}
+	return NULL;
+    }
+    
     bool IFixedValue::equals (Value other) {
 	if (auto ot = other-> to <IFixedValue> ()) {
 	    return this-> type == ot-> type &&

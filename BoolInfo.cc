@@ -222,6 +222,13 @@ namespace semantic {
 	return NULL;	
     }
     
+    Value IBoolValue::UnaryOp (Word op) {
+	if (op == Token::NOT) {
+	    return new (Z0) IBoolValue (!this-> value);
+	}
+	return NULL;
+    }
+
     syntax::Expression IBoolValue::toYmir (Symbol sym) {
 	auto ret = new (Z0) syntax::IBool (sym-> sym);
 	ret-> getValue () = this-> value;

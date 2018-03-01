@@ -69,7 +69,7 @@ namespace semantic {
 			}
 		    } else return false;
 		} else if (this-> _tmps [it]-> info == NULL || scd-> _tmps [it]-> info == NULL) {
-		    if (this-> _tmps [it]-> info != scd-> _tmps [it]-> info) return false;
+		    if (this-> _tmps [it]-> prettyPrint () != scd-> _tmps [it]-> prettyPrint ()) return false;
 		} else if (this-> _tmps [it]-> info-> isImmutable () != scd-> _tmps [it]-> info-> isImmutable ()) {
 		    return false;
 		} else if (this-> _tmps [it]-> info-> isImmutable ()) {

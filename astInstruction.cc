@@ -77,6 +77,7 @@ namespace syntax {
 	    if (this-> decos [id] == Keys::IMMUTABLE) {
 		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
 		    auto type = bin-> getRight ()-> expression ();
+		    if (type == NULL) return NULL;
 		    aux-> info = new (Z0) ISymbol (aux-> token, type-> info-> type-> clone ());
 		    aux-> info-> isConst (true);
 		    aux-> info-> value () = type-> info-> type-> value ();

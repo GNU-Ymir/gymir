@@ -15,6 +15,8 @@ namespace semantic {
 	bool& isTrue ();
 
 	Value BinaryOp (Word , Value ) override;
+
+	Value UnaryOp (Word) override;
 	
 	const char* getId () override;
 
