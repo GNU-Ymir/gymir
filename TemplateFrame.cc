@@ -92,8 +92,11 @@ namespace semantic {
     FrameProto ITemplateFrame::validate (ApplicationScore score, const vector<InfoType> & params)  {
 	if (this-> _isExtern) return validateExtern ();
 	else if (this-> _isPure) return validate ();
-	auto name = computeSpace (score-> tmps);
-	Table::instance ().enterFrame (this-> _space, this-> name, this-> _isInternal);
+
+	auto tmps = this-> templateParams ();
+	auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), score-> tmps);
+	tmps.insert (tmps.end (), auxTmps.begin (), auxTmps.end ());
+	Table::instance ().enterFrame (this-> _space, this-> name, tmps, this-> _isInternal);
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
@@ -105,10 +108,10 @@ namespace semantic {
 		ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
 	    }
 	}
-		
-	auto from = Table::instance ().globalNamespace ();
-	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), getValues (score-> tmps), this-> _isVariadic);
 
+
+	auto from = Table::instance ().globalNamespace ();
+	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), tmps, this-> _isVariadic);
 	return proto;
     }
 
@@ -153,16 +156,18 @@ namespace semantic {
 	    if (!res.valid) return NULL;
 
 	    auto func = this-> _function-> templateReplace (res.elements);
-	    //auto name = computeSpace (res.elements);
-	    //func-> name (name.toString ().c_str ());
 	    Frame tmps;
 	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
 		func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
 		tmps = new (Z0) ITemplateFrame (this-> _space, func);		
 	    } else tmps = new (Z0) IUnPureFrame (this-> _space, func);
-
+	    
+	    tmps-> templateParams () = this-> templateParams ();	    
+	    auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);
+	    tmps-> templateParams ().insert (tmps-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
 	    tmps-> isVariadic (true);
 	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
+
 	    auto tuple = new (Z0) ITupleInfo (false);
 	    tuple-> getParams () = others;
 	    types.push_back (tuple);
@@ -217,7 +222,8 @@ namespace semantic {
 		}
 	    }
 	}
-	
+
+	auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);
 	auto func = this-> _function-> templateReplace (res.elements);
 	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
 	    if (func-> getTest ()) {
@@ -229,19 +235,21 @@ namespace semantic {
 	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> _space, func);
 	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> _space, func);
 	    else ret = new (Z0)  IPureFrame (this-> _space, func);
-
-	    ret-> currentScore () = this-> currentScore () + res.score;
-	    ret-> templateParams () = getValues (res.elements);
+	    
+	    ret-> currentScore () = this-> currentScore () + res.score;	    
+	    ret-> templateParams () = this-> templateParams ();
+	    ret-> templateParams ().insert (ret-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
 	    return ret;	    
 	} else {
 	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
 	    auto aux = new (Z0)  ITemplateFrame (this-> _space, func);
+	    aux-> templateParams () = this-> templateParams ();
+	    aux-> templateParams ().insert (aux-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
 	    aux-> _currentScore = this-> currentScore () + res.score;
 	    aux-> _isPure = this-> _isPure;
 	    aux-> _isExtern = this-> _isExtern;
 	    return aux;
-	}
-	
+	}	
     }
 
     std::vector <Expression> replace (std::vector <Expression> exprs, const std::map <std::string, Expression> & tmps) {

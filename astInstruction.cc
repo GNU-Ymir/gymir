@@ -331,7 +331,7 @@ namespace syntax {
 		Table::instance ().retInfo ().changed () = true;
 	    }
 	    	    	    
-	    aux-> caster = type;
+	    aux-> caster = type-> cloneOnExitWithInfo ();
 	    if (Table::instance ().retInfo ().deco == "" || Table::instance ().retInfo ().deco == Keys::CONST)
 	    	aux-> caster-> isConst (true);
 	    else {

@@ -2,6 +2,8 @@
 #include "semantic/pack/ExternFrame.hh"
 #include <algorithm>
 #include <ymir/utils/Array.hh>
+#include <ymir/ast/ParamList.hh>
+#include <ymir/semantic/value/Value.hh>
 
 namespace semantic {
 
@@ -55,8 +57,30 @@ namespace semantic {
 	return this-> _globalVars;
     }
 
-    void Table::enterFrame (Namespace space, std::string name, bool internal) {
-	this-> _frameTable.push_front ({{space, name}, internal});
+    void Table::enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> & tmps, bool internal) {
+	Ymir::OutBuffer buf ("0_", name);
+	if (tmps.size () != 0) {
+	    buf.write ("(");
+	    for (auto it : tmps) {
+		if (auto ps = it-> to <syntax::IParamList> ()) {
+		    buf.write ("{");
+		    for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+			buf.write (ps-> getParams () [it_]-> info-> typeString ());
+			if (it_ < (int) ps-> getParams ().size () - 1)
+			    buf.write (",");
+		    }
+		    buf.write ("}");
+		} else if (it-> info) {		    
+		    if (it-> info-> isImmutable ()) buf.write (it-> info-> value ()-> toString ());
+		    else buf.write (it-> info-> typeString ());		    
+		} else buf.write (it-> prettyPrint ());
+		if (it != tmps.back ())
+		    buf.write (",");
+	    }
+	    buf.write (")");
+	}
+	
+	this-> _frameTable.push_front ({{space, buf.str ()}, internal});
 	this-> _nbFrame ++;
     }
 

@@ -335,6 +335,10 @@ namespace semantic {
 	*/
 	bool isSolved (const std::vector <syntax::Expression> &args, std::map <std::string, syntax::Expression> &types);
 
+
+	std::vector <syntax::Expression> solved (const std::vector <syntax::Expression> &args, std::map <std::string, syntax::Expression>& soluce);
+	
+	std::vector <syntax::Expression> solved (const std::vector <syntax::Expression> &args, TemplateSolution soluce);
 	
 	/**
 	   Example:

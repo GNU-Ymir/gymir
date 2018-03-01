@@ -17,7 +17,7 @@ namespace semantic {
     }
 
     FrameProto IUnPureFrame::validate (const std::vector<InfoType> & params) {
-	Table::instance ().enterFrame (this-> _space, this-> name, this-> isInternal ());
+	Table::instance ().enterFrame (this-> _space, this-> name, this-> templateParams (), this-> isInternal ());
 	Table::instance ().enterBlock ();
 	std::vector <Var> finalParams = IFrame::computeParams (this-> _function-> getParams (), params);
 	Namespace from = Table::instance ().globalNamespace ();

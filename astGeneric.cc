@@ -278,7 +278,7 @@ namespace syntax {
 		this-> _left,
 		this-> params
 	    );
-	} else {
+	} else {	    
 	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
 	    

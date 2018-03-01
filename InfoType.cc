@@ -224,6 +224,20 @@ namespace semantic {
 	return ret;
     }
 
+    
+    InfoType IInfoType::cloneOnExitWithInfo () {
+	auto ret = this-> clone ();
+	if (ret) ret-> value () = NULL;
+	ret-> binopFoo = this-> binopFoo;
+	ret-> unopFoo = this-> unopFoo;
+	ret-> multFoo = this-> multFoo;
+	ret-> applyFoo = this-> applyFoo;
+	ret-> nextBinop = this-> nextBinop;
+	ret-> nextUnop = this-> nextUnop;
+	ret-> nextMult = this-> nextMult;
+	return ret;
+    }
+
     InfoType IInfoType::cloneConst () {
 	auto ret = this-> clone ();
 	ret-> isConst (true);

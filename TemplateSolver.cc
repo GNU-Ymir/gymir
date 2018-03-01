@@ -858,7 +858,60 @@ namespace semantic {
 	}
 	return true;
     }
-       
+
+    vector <Expression> TemplateSolver::solved (const vector <Expression> &args, TemplateSolution soluce) {
+	std::vector <Expression> rets;
+	ulong nb = 0;
+	for (auto it : args) {
+	    if (auto v = it-> to<IVar> ()) {
+		auto elem = soluce.elements.find (v-> token.getStr ());
+		if (elem != soluce.elements.end ()) {
+		    auto val = elem-> second-> templateExpReplace ({});
+		    if (val && val-> info) val-> info-> isConst (false);
+		    rets.push_back (val);		    
+		}
+	    } else {
+		Ymir::OutBuffer buf;
+		buf.write (nb);
+		if (soluce.elements.find (buf.str ()) != soluce.elements.end ()) {
+		    if (it-> info) 
+			rets.push_back (it-> info-> value ()-> toYmir (it-> info));
+		    else
+			rets.push_back (it-> templateExpReplace (soluce.elements)-> expression ());
+		}
+	    }
+	    nb ++;
+	}
+	return rets;
+    }
+
+    
+    vector <Expression> TemplateSolver::solved (const vector <Expression> &args, map<string, Expression>& soluce) {
+	std::vector <Expression> rets;
+	ulong nb = 0;
+	for (auto it : args) {
+	    if (auto v = it-> to<IVar> ()) {
+		auto elem = soluce.find (v-> token.getStr ());
+		if (elem != soluce.end ()) {
+		    auto val = elem-> second-> templateExpReplace ({});
+		    if (val && val-> info) val-> info-> isConst (false);
+		    rets.push_back (val);		    
+		}
+	    } else {
+		Ymir::OutBuffer buf;
+		buf.write (nb);
+		if (soluce.find (buf.str ()) != soluce.end ()) {
+		    if (it-> info) 
+			rets.push_back (it-> info-> value ()-> toYmir (it-> info));
+		    else
+			rets.push_back (it-> templateExpReplace (soluce)-> expression ());
+		}
+	    }
+	    nb ++;
+	}
+	return rets;
+    }
+
     vector <Expression> TemplateSolver::unSolved (const vector <Expression> &args, TemplateSolution soluce) {
 	std::vector <Expression> rets;
 	ulong nb = 0;

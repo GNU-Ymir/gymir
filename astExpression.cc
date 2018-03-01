@@ -1297,7 +1297,11 @@ namespace syntax {
 
     Expression IStructCst::expression () {
 	auto aux = new (Z0) IStructCst (this-> token, this-> end);
+	this-> left-> inside = this;
+	this-> params-> inside = this;
+
 	aux-> params = (ParamList) this-> params-> expression ();
+	
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
 	if (aux-> params == NULL) return NULL;

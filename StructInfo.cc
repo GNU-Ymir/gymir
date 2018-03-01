@@ -245,49 +245,54 @@ namespace semantic {
     }
 
     InfoType IStructCstInfo::TempOp (const std::vector <syntax::Expression> & tmps) {
+	static std::map <std::string, StructInfo> inProgress;
+	static std::map <std::string, StructInfo> validated;
+	
 	if (this-> tmps.size () != 0) {
 	    return this-> getScore (tmps);
 	}
 
 	if (this-> tmps.size () != tmps.size ()) return NULL;
+	
+	auto name = Namespace (this-> space, this-> onlyNameTypeString ()).toString ();
+	auto valid = validated.find (name);
+	
+	if (valid != validated.end ()) return valid-> second-> clone ();	
+	auto inside = inProgress.find (name);
+	if (inside != inProgress.end ()) return inside-> second;
+	
 	std::vector <InfoType> types;
 	std::vector <std::string> attribs;
-	static std::map <std::string, StructInfo> dones;
-	auto name = Namespace (this-> space, this-> onlyNameTypeString ()).toString ();
-	auto inside = dones.find (name);
-	if (inside == dones.end ()) {
-	    auto last = Table::instance ().templateNamespace ();
-	    auto currentSpace = Table::instance ().space ();
-	    this-> _info = new (Z0) IStructInfo (this, this-> space, this-> name);
-	    dones [name] = this-> _info;
-	    for (auto it : Ymir::r (0, this-> params.size ())) {
-		Table::instance ().setCurrentSpace (this-> space);
-		Table::instance ().templateNamespace () = currentSpace;
-		InfoType info = this-> params [it]-> getType ();
-		if (info) {
-		    if (recursiveGet (this-> _info, info)) {
-			Ymir::Error::recursiveNoSize (this-> params [it]-> token);
-			return NULL;
-		    }
-		    types.push_back (info);
-		    attribs.push_back (this-> params [it]-> token.getStr ());
-		} else {
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
+	this-> _info = new (Z0) IStructInfo (this, this-> space, this-> name);
+	inProgress [name] = this-> _info;
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    Table::instance ().setCurrentSpace (this-> space);
+	    Table::instance ().templateNamespace () = currentSpace;
+	    InfoType info = this-> params [it]-> getType ();
+	    if (info) {
+		if (recursiveGet (this-> _info, info)) {
+		    Ymir::Error::recursiveNoSize (this-> params [it]-> token);
 		    return NULL;
 		}
+		types.push_back (info);
+		attribs.push_back (this-> params [it]-> token.getStr ());
+	    } else {
+		return NULL;
 	    }
+	}
 	    
-	    Table::instance ().setCurrentSpace (currentSpace);
-	    Table::instance ().templateNamespace () = last;
-	    
-	    //dones.erase (name);
-	    this-> _info-> isConst (false);
-	    this-> _info-> setTypes (types);
-	    this-> _info-> setAttribs (attribs);	    
-	    this-> _info-> setTmps (this-> tmpsDone);
-	    return this-> _info-> clone ();
-	} else {
-	    return inside-> second;//-> clone ();
-	}		
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
+	this-> _info-> isConst (false);
+	this-> _info-> setTypes (types);
+	this-> _info-> setAttribs (attribs);	    
+	this-> _info-> setTmps (this-> tmpsDone);
+	
+	inProgress.erase (name);
+	//validated [name] = this-> _info;
+	return this-> _info-> clone ();
     }
 
     bool IStructCstInfo::recursiveGet (InfoType who, InfoType where) {
@@ -329,12 +334,7 @@ namespace semantic {
 	auto ret = new (Z0) IStructCstInfo (this-> _locId, this-> space, this-> name, ignore);
 	ret-> params = params;	
 	//ret-> tmpsDone = getValues (res.elements, this-> tmps);
-	std::vector <syntax::Expression> tmpsDone;
-	for (auto it : Ymir::r (0, this-> tmps.size ())) {
-	    if (auto var = this-> tmps [it]-> to <IVar> ()) {
-		tmpsDone.push_back (res.elements [var-> token.getStr ()]);		
-	    } else Ymir::Error::assert ("");
-	}
+	std::vector <syntax::Expression> tmpsDone = TemplateSolver::instance ().solved (this-> tmps, res);
 	ret-> tmpsDone = tmpsDone;
 	
 	for (auto &it : ret-> tmpsDone) {	    
@@ -473,8 +473,19 @@ namespace semantic {
 	return false;
     }    
     
-    InfoType IStructInfo::ConstVerif (InfoType) {
-	//if (this-> isConst () && !other-> isConst ()) return NULL;
+    InfoType IStructInfo::ConstVerif (InfoType other) {
+	auto str = other-> to <IStructInfo> ();
+	if (str == NULL || !str-> isSame (this)) return NULL;
+	
+	static std::vector <InfoType> dones;
+	if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
+	    dones.push_back (this);
+	    for (auto it : Ymir::r (0, this-> types.size ())) {
+		if (!this-> types [it]-> ConstVerif (str-> types [it]))
+		    return NULL;
+	    }
+	    dones.erase (std::find (dones.begin (), dones.end (), this));
+	} 
 	return this;
     }
     
@@ -579,14 +590,13 @@ namespace semantic {
     
     InfoType IStructInfo::CompOp (InfoType other) {	
 	if (this-> isSame (other)) {
-	    auto ret = other-> clone ();
+	    auto ret = this-> clone ();
 	    ret-> isConst (this-> isConst ());
 	    ret-> binopFoo = &StructUtils::InstCast;
 	    return ret;
 	} else if (other-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
-	    ret-> binopFoo = &StructUtils::InstCast;
-	    
+	    ret-> binopFoo = &StructUtils::InstCast;	    
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
@@ -650,21 +660,20 @@ namespace semantic {
     }
 
     std::string IStructInfo::innerTypeString () {
-	static std::vector <InfoType> dones;
-	if (std::find (dones.begin (), dones.end (), this) != dones.end ()) {
-	    dones.push_back (this);
-	    Ymir::OutBuffer buf (this-> onlyNameTypeString (), "{");
-	    for (auto it : Ymir::r (0, this-> types.size ())) {
-		buf.write (this-> types [it]-> typeString ());
-		if (it != (int) this-> types.size () - 1)
-		    buf.write (", ");
-	    }
-	    buf.write ("}");
-	    dones.erase (std::find (dones.begin (), dones.end (), this));
-	    return buf.str ();
-	} else {
-	    return this-> onlyNameTypeString ();
-	}
+	// static std::vector <InfoType> dones;
+	// if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
+	//     dones.push_back (this);
+	//     Ymir::OutBuffer buf (this-> onlyNameTypeString (), "{");
+	//     for (auto it : Ymir::r (0, this-> types.size ())) {
+	// 	buf.write (this-> types [it]-> typeString ());
+	// 	if (it != (int) this-> types.size () - 1)
+	// 	    buf.write (", ");
+	//     }
+	//     buf.write ("}");
+	//     dones.erase (std::find (dones.begin (), dones.end (), this));
+	//     return buf.str ();
+	// } else {
+	return this-> onlyNameTypeString ();	
     }
 
     Namespace& IStructInfo::getSpace () {
@@ -676,18 +685,17 @@ namespace semantic {
     }
     
     std::string IStructInfo::innerSimpleTypeString () {
-	static std::vector <InfoType> dones;
-	if (std::find (dones.begin (), dones.end (), this) != dones.end ()) {
-	    dones.push_back (this);
-	    Ymir::OutBuffer buf (this-> onlyNameTypeString ());
-	    for (auto it : Ymir::r (0, this-> types.size ())) {
-		buf.write (this-> types [it]-> simpleTypeString ());
-	    }
-	    dones.erase (std::find (dones.begin (), dones.end (), this));
-	    return buf.str ();
-	} else {
-	    return this-> onlyNameTypeString ();
-	}
+	// static std::vector <InfoType> dones;
+	// if (std::find (dones.begin (), dones.end (), this) != dones.end ()) {
+	//     dones.push_back (this);
+	//     Ymir::OutBuffer buf (this-> onlyNameTypeString ());
+	//     for (auto it : Ymir::r (0, this-> types.size ())) {
+	// 	buf.write (this-> types [it]-> simpleTypeString ());
+	//     }
+	//     dones.erase (std::find (dones.begin (), dones.end (), this));
+	//     return buf.str ();
+	// } else {
+	return this-> onlyNameTypeString ();	
     }
 
     void IStructInfo::setTypes (std::vector <InfoType> types) {
@@ -751,7 +759,9 @@ namespace semantic {
     }
     
     Ymir::Tree IStructInfo::toGeneric () {
-	auto name = this-> innerTypeString ();	
+	IInfoType::printConst (false);
+	auto name = this-> innerTypeString ();
+	IInfoType::printConst (true);
 	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());	
 	if (str_type_node.isNull ()) {
 	    if (this-> types.size () != 0) {

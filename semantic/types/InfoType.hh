@@ -189,6 +189,8 @@ namespace semantic {
 
 	InfoType cloneOnExit ();
 
+	InfoType cloneOnExitWithInfo ();
+
 	InfoType cloneConst ();
 
 	virtual bool isImmutable ();

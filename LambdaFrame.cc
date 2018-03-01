@@ -18,7 +18,7 @@ namespace semantic {
     }
 
     FrameProto ILambdaFrame::validate (const std::vector<InfoType> & params) {
-	Table::instance ().enterFrame (this-> _space, this-> name, true);
+	Table::instance ().enterFrame (this-> _space, this-> name, this-> templateParams (), true);
 	Table::instance ().enterBlock ();
 	std::vector <Var> finalParams = IFrame::computeParams (this-> frame-> getParams (), params);
 

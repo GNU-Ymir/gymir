@@ -101,17 +101,18 @@ namespace Mangler {
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
-	// for (auto it : frame-> tmps ()) {
-	//     if (it-> info) {
-	// 	if (it-> info-> isImmutable ()) {
-	// 	    ss.write ("N", mangle_var (it-> info-> value ()-> toString ()))<;		    
-	// 	} else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
-	//     }
-	// }
+	for (auto it : frame-> tmps ()) {
+	    if (it-> info) {
+		if (it-> info-> isImmutable ()) {
+		    ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));		    
+		} else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    }
+	}
 	
 	for (auto it : frame-> vars ()) {
 	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
 	}
+	
 	ss.write ("Z", mangle_type (frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
@@ -121,12 +122,12 @@ namespace Mangler {
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
-	// for (auto it : frame-> tmps ()) {
-	//     if (it-> info) {
-	// 	if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-	// 	else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
-	//     }
-	// }
+	for (auto it : frame-> tmps ()) {
+	    if (it-> info) {
+		if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
+		else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    }
+	}
 	
 	for (auto it : frame-> vars ()) {
 	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
@@ -139,10 +140,10 @@ namespace Mangler {
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write  ("_Y", mangle_namespace (space), mangle_namespace (name), "VF");
-	// for (auto it : frame-> tmps ()) {
-	//     if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-	//     else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
-	// }
+	for (auto it : frame-> tmps ()) {
+	    if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
+	    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	}
 	
 	for (auto it : frame-> vars ()) {
 	    ss.write (mangle_type (it-> info-> simpleTypeString ()));

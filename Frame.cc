@@ -113,7 +113,7 @@ namespace semantic {
     }
 	
     FrameProto IFrame::validate (const std::vector<Var> & finalParams) {
-	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _function-> getIdent ().getStr ()));
+	//Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _function-> getIdent ().getStr ()));
 
 	if (this-> _function-> getType () == NULL)
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
@@ -228,7 +228,7 @@ namespace semantic {
     }
     
     FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
-	Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
+	//Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
 	struct Exit {
 	    Namespace last;
 
@@ -286,7 +286,7 @@ namespace semantic {
     }
 
     FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block) {
-	Table::instance ().setCurrentSpace (Namespace (space, name));
+	//Table::instance ().setCurrentSpace (Namespace (space, name));
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {});
@@ -325,7 +325,7 @@ namespace semantic {
     }
 
     FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Block _block) {
-	Table::instance ().setCurrentSpace (Namespace (space, name));
+	//Table::instance ().setCurrentSpace (Namespace (space, name));
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {});
@@ -358,7 +358,7 @@ namespace semantic {
     
     
     FrameProto IFrame::validate (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
-	Table::instance ().setCurrentSpace (Namespace (space, this-> _function-> getIdent ().getStr ()));
+	//Table::instance ().setCurrentSpace (Namespace (space, this-> _function-> getIdent ().getStr ()));
 	struct Exit {
 	    Namespace last;
 	    Frame self;

@@ -48,7 +48,7 @@ namespace semantic {
 
 	std::vector <syntax::Global> globalVars ();
 
-	void enterFrame (Namespace space, std::string name, bool internal);
+	void enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> &tmps, bool internal);
 
 	void quitFrame ();
 
