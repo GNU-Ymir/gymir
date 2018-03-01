@@ -24,6 +24,8 @@ namespace syntax {
 	void declare (semantic::Module) override;
 	
 	void declareAsExtern (semantic::Module) override;
+
+	Declaration templateDeclReplace (const std::map <std::string, Expression>&) override;
 	
 	void print (int nb = 0) override {
 	    printf ("\n%*c<Import> %s",

@@ -93,8 +93,10 @@ ymir_init_options (unsigned int argc, cl_decoded_option * decoded_options)
 
 static void
 ymir_init_options_struct (gcc_options *opts) {
-  opts->x_flag_exceptions = 1;
-
+  opts->x_flag_exceptions = 0;
+  opts->x_warn_return_type = 0;
+  opts->x_warn_return_local_addr = 1;
+  
   /* Avoid range issues for complex multiply and divide.  */
   opts->x_flag_complex_method = 2;
 

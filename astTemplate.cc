@@ -50,8 +50,9 @@ namespace syntax {
     Instruction IBlock::templateReplace (const map <string, Expression>& values) {
 	vector <Declaration> decls;
 	vector <Instruction> insts;
-	for (auto it : this-> decls) 
+	for (auto it : this-> decls) {
 	    decls.push_back (it-> templateDeclReplace (values));
+	}
 	
 	for (auto it : this-> insts)
 	    insts.push_back (it-> templateReplace (values)); 
@@ -127,6 +128,7 @@ namespace syntax {
     }
 
     Declaration IDeclaration::templateDeclReplace (const map <string, Expression>&)  {
+	
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }
@@ -483,6 +485,10 @@ namespace syntax {
 
     Expression IPragma::templateExpReplace (const map <string, Expression> & values) {
 	return new (Z0) IPragma (this-> token, this-> params-> templateReplace (values)-> to <IParamList> ());
+    }
+
+    Declaration IImport::templateDeclReplace (const map <string, Expression> &) {
+	return new (Z0) IImport (this-> ident, this-> params);
     }
     
     
