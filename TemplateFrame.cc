@@ -375,8 +375,10 @@ namespace semantic {
 	    frame-> templateParams ().insert (frame-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
 	    frame-> isVariadic (true);
 	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
-	    auto tuple = new (Z0) ITupleInfo (false, true);
-	    tuple-> getParams () = others;
+	    	    
+	    auto tuple = new (Z0) ITupleInfo (false);
+	    tuple-> setFake ();
+	    tuple-> getParams () = others;	    
 	    types.push_back (tuple);
 	    auto score = frame-> getScoreSimple (ident, func-> getParams (), types, false);
 	    if (score) {
@@ -384,7 +386,7 @@ namespace semantic {
 		score-> toValidate = frame;
 	    }
 	    
-	    return score;
+	    return score;	
 	}
 	return NULL;
     }

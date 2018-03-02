@@ -46,6 +46,10 @@ namespace semantic {
 
 	ulong nbParams ();
 
+	void setFake ();
+
+	InfoType asNoFake ();
+	
 	std::vector <InfoType> &getParams ();
 
 	InfoType getTemplate (ulong) override;

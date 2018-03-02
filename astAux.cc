@@ -1116,6 +1116,7 @@ namespace syntax {
 	params (params)
     {}
 
+    
     IConstTuple::~IConstTuple () {
 	for (auto it : params)
 	    delete it;
@@ -1123,6 +1124,10 @@ namespace syntax {
 	    delete it;
     }
 
+    std::vector <semantic::InfoType> & IConstTuple::getCasters () {
+	return this-> casters;
+    }
+    
     std::vector <Expression> & IConstTuple::getExprs () {
 	return this-> params;
     }

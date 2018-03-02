@@ -1129,8 +1129,14 @@ namespace syntax {
 
     void IPar::tuplingParams (ApplicationScore score, Par par) {
 	std::vector <Expression> lasts (par-> params-> getParams ().begin () + score-> treat.size () - 1, par-> params-> getParams ().end ());
-	auto ctuple = (new (Z0) IConstTuple (par-> token, par-> token, lasts))-> expression ();
+	auto lastInfo = score-> treat.back ()-> to<ITupleInfo> ();
+	auto ctuple = new (Z0) IConstTuple (par-> token, par-> token, lasts);
+	ctuple-> info = new (Z0) ISymbol (par-> token, lastInfo);
+	for (auto it : lastInfo-> getParams ()) {
+	    ctuple-> getCasters ().push_back (it);
+	}
 	
+	score-> treat.back () = lastInfo-> asNoFake ();
 	std::vector <Expression> alls (par-> params-> getParams ().begin (), par-> params-> getParams ().begin () + score-> treat.size () - 1);
 	alls.push_back (ctuple);
 	par-> params-> getParams () = alls;

@@ -22,6 +22,19 @@ namespace semantic {
 	isFake (isFake)
     {}
     
+    void ITupleInfo::setFake () {
+	this-> isFake = true;
+    }
+
+    InfoType ITupleInfo::asNoFake () {
+	auto ret = this-> cloneOnExitWithInfo ();
+	if (this-> binopFoo && this-> binopFoo == TupleUtils::InstCastFake) {
+	    ret-> binopFoo = TupleUtils::InstCast;
+	}
+	return ret;
+    }
+
+    
     ulong ITupleInfo::nbParams () {
 	return this-> params.size ();
     }
@@ -78,7 +91,7 @@ namespace semantic {
 	Word tok (UNKNOWN_LOCATION, Token::EQUAL);
 	auto ot = other-> to <ITupleInfo> ();
 	if (this-> isType ()) return NULL;
-	if (other-> isSame (this)) {	    
+	if (!this-> isFake && other-> isSame (this)) {	    
 	    auto ret = new (Z0)  ITupleInfo (ot-> isConst ());
 	    for (auto it : Ymir::r (0, ot-> params.size ())) {
 		auto l = ot-> params [it];

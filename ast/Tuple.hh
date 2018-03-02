@@ -31,6 +31,8 @@ namespace syntax {
 	std::vector <std::string> getIds () override;
 	
 	std::vector <Expression> & getExprs ();
+
+	std::vector <semantic::InfoType> & getCasters ();
 	
 	void print (int nb = 0) override;
 
