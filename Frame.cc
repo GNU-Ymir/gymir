@@ -69,11 +69,10 @@ namespace semantic {
 		    CONST_SAME = this-> CONST_CHANGE;
 		    SAME = this-> CHANGE;
 		}
-
+		
 		auto type = args [it]-> CompOp (info);
 		if (type != NULL) type = type-> ConstVerif (info);
 		else return NULL;
-		
 		if (type && type-> isSame (args [it])) {
 		    if (args [it]-> isConst () != info-> isConst ())
 			score-> score += CONST_SAME;
@@ -89,8 +88,8 @@ namespace semantic {
 		    if (args [it]-> isConst () != info-> isConst ())
 			score-> score += changed ? CONST_CHANGE : CONST_AFF;
 		    else score-> score += changed ? CHANGE : AFF;
-		    score-> treat.push_back (type);			
-		} else return NULL;		
+		    score-> treat.push_back (type);
+		} else return NULL;
 	    }
 	    
 	    score-> score += this-> currentScore ();

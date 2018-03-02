@@ -63,14 +63,14 @@ namespace semantic {
 			if (!linfo-> is <IUndefInfo> () &&
 			    !rinfo-> is <IUndefInfo> () &&
 			    !linfo-> isSame (rinfo)) {
-			    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
-				if (!rtype-> info-> type-> isSame (ref-> content ()))
+			    if (auto ref = linfo-> to <IRefInfo> ()) {
+				if (!rinfo-> isSame (ref-> content ()))
 				    return false;
 				else {
 				    left [it.first] = inside-> second;
 				}
-			    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
-				if (!ltype-> info-> type-> isSame (ref-> content ()))
+			    } else if (auto ref = rinfo-> to <IRefInfo> ()) {
+				if (!linfo-> isSame (ref-> content ()))
 				    return false;
 				else {
 				    left [it.first] = it.second;
@@ -123,14 +123,14 @@ namespace semantic {
 			if (!linfo-> is <IUndefInfo> () &&
 			    !rinfo-> is <IUndefInfo> () &&
 			    !linfo-> isSame (rinfo)) {
-			    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
-				if (!rtype-> info-> type-> isSame (ref-> content ()))
+			    if (auto ref = linfo-> to <IRefInfo> ()) {
+				if (!rinfo-> isSame (ref-> content ()))
 				    return false;
 				else {
 				    left [it.first] = inside-> second;
 				}
-			    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
-				if (!ltype-> info-> type-> isSame (ref-> content ()))
+			    } else if (auto ref = rinfo-> to <IRefInfo> ()) {
+				if (!linfo-> isSame (ref-> content ()))
 				    return false;
 				else {
 				    left [it.first] = it.second;
@@ -615,7 +615,11 @@ namespace semantic {
 	    return solveInside (tmps, var, params [0]);
 	} else {
 	    TemplateSolution soluce (0, true);
-	    std::vector <Expression> elements;
+	    while (last && last-> is <IVar> () && last-> token == Keys::CONST) {
+		last = last-> to<IVar> ()-> getTemplates () [0]-> to <IVar> ();
+	    }
+
+	    std::vector <Expression> elements;	    
 	    for (auto it : Ymir::r (0, params.size ())) {
 		Word token {last-> token, Ymir::OutBuffer ("_", it, last-> token.getStr ()).str ()};
 		auto var = new (Z0) IVar (token);

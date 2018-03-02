@@ -7,6 +7,17 @@ using namespace std;
 
 namespace syntax {
 
+
+    Var paramListToTupleVar (Word token, ParamList params) {
+	Word tuple {token, "t"};
+	auto type = new (Z0) IVar (tuple);
+	for (auto it_ : params-> getParams ()) {
+	    type-> getTemplates ().push_back (it_);
+	}
+	return type;
+    }
+
+    
     Expression IAccess::templateExpReplace (const map <string, Expression>& values) {
 	auto params = (ParamList) this-> params-> templateExpReplace (values);
 	auto left = this-> left-> templateExpReplace (values);
@@ -349,15 +360,6 @@ namespace syntax {
 	return new (Z0)  IConstTuple (this-> token, this-> end, exprs);
     }
 
-    Var paramListToTupleVar (Word token, ParamList params) {
-	Word tuple {token, "t"};
-	auto type = new (Z0) IVar (tuple);
-	for (auto it_ : params-> getParams ()) {
-	    type-> getTemplates ().push_back (it_);
-	}
-	return type;
-    }
-
     Declaration IGlobal::templateDeclReplace (const map <string, Expression>& values) {
 	if (this-> expr) {
 	    return new (Z0) IGlobal (this-> ident, this-> expr-> templateExpReplace (values));
@@ -434,16 +436,24 @@ namespace syntax {
 		}
 	    }
 	}
-
+	
 	vector <Expression> tmps;
-	for (auto it : this-> templates) {
-	    auto elem = it-> templateExpReplace (values);
-	    if (auto ps = elem-> to<IParamList> ()) {
-		for (auto it_ : ps-> getParams ()) {
-		    tmps.push_back (it_);
+	if (this-> token == Keys::CONST && this-> templates.size () == 1) {
+	    auto elem = this-> templates [0]-> templateExpReplace (values);
+	    if (auto ps = elem-> to <IParamList> ()) {
+		auto type = paramListToTupleVar (elem-> token, ps);
+		tmps.push_back (type);
+	    } else tmps.push_back (elem);						 
+	} else {
+	    for (auto it : this-> templates) {
+		auto elem = it-> templateExpReplace (values);
+		if (auto ps = elem-> to<IParamList> ()) {
+		    for (auto it_ : ps-> getParams ()) {
+			tmps.push_back (it_);
+		    }
+		} else {
+		    tmps.push_back (elem);
 		}
-	    } else {
-		tmps.push_back (elem);
 	    }
 	}
 

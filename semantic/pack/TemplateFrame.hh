@@ -57,7 +57,9 @@ namespace semantic {
 
 	ApplicationScore isApplicableSimple (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
 
-	ApplicationScore getScoreSimple (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
+	ApplicationScore getScoreSimple (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args, bool transform = true);
+
+	ApplicationScore getScoreVaridadic (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
 
 	Frame getScoreTempOp (const std::vector <syntax::Expression> & params);
 	

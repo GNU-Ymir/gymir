@@ -139,48 +139,17 @@ namespace semantic {
 	return ret;
     }
     
-    ApplicationScore ITemplateFrame::isApplicableVariadic (Word, const vector<Var> & attrs, const vector<InfoType> & params) {
-	if (attrs.size () == 0)  
-	    return NULL;
-	else if (auto tvar = attrs.back()-> to<ITypedVar> ()) {
-	    auto last = this-> _function-> getTemplates ().back ();
-	    if (!last-> is<IVariadicVar> ()) return NULL;
-
-	    std::vector <InfoType> others (params.begin () + attrs.size () - 1, params.end ());
-	    TemplateSolution res (0, true);
-	    if (tvar-> typeVar ()) 
-		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeVar (), others);
-	    else {
-		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeExp (), others);
-	    }
-	    if (!res.valid) return NULL;
-
-	    auto func = this-> _function-> templateReplace (res.elements);
-	    Frame tmps;
-	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
-		func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
-		tmps = new (Z0) ITemplateFrame (this-> _space, func);		
-	    } else tmps = new (Z0) IUnPureFrame (this-> _space, func);
-	    
-	    tmps-> templateParams () = this-> templateParams ();	    
-	    auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);
-	    tmps-> templateParams ().insert (tmps-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
-	    tmps-> isVariadic (true);
-	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
-
-	    auto tuple = new (Z0) ITupleInfo (false);
-	    tuple-> getParams () = others;
-	    types.push_back (tuple);
-
-	    auto score = tmps-> isApplicable (types);
-	    if (score) {
-		score-> score += res.score;
-		score-> toValidate = tmps;
-	    }
-	    
-	    return score;
-	}
-	return NULL;
+    ApplicationScore ITemplateFrame::isApplicableVariadic (Word ident, const vector<Var> & attrs, const vector<InfoType> & args) {
+	auto tScope = Table::instance ().templateNamespace ();
+	auto globSpace = Table::instance ().space ();
+	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> name));
+	Table::instance ().templateNamespace () = globSpace;
+	
+	auto score = getScoreVaridadic (ident, attrs, args);
+	
+	Table::instance ().setCurrentSpace (globSpace);
+	Table::instance ().templateNamespace () = tScope;
+	return score;
     }
 
     bool ITemplateFrame::validateTest (Expression test) {
@@ -283,8 +252,7 @@ namespace semantic {
 		score += res.score;		
 	    }
 	}
-	if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), tmps))
-	    return {};
+
 
 	for (auto exp : tmps) {
 	    if (exp.second-> info) {
@@ -319,14 +287,20 @@ namespace semantic {
     // info = res.type;
     // if (tvar-> getDeco () == Keys::CONST) info = info-> cloneConst ();
     
-    ApplicationScore ITemplateFrame::getScoreSimple (Word ident, const vector<Var> & attrs, const vector<InfoType> & args) {
+    ApplicationScore ITemplateFrame::getScoreSimple (Word ident, const vector<Var> & attrs, const vector<InfoType> & args, bool transform) {
 	auto score = new (Z0)  IApplicationScore (ident);
 	map <string, Expression> tmps;
 	auto templates = this-> _function-> getTemplates ();
 	if (attrs.size () == 0 && args.size () == 0) return NULL;
 	else if (attrs.size () == args.size ()) {
-	    auto realAttrs = transformParams (score-> score, attrs, args, tmps);
-	    if (realAttrs.size () != attrs.size ()) return NULL;
+	    std::vector <Var> realAttrs;
+	    if (transform) {
+		realAttrs = transformParams (score-> score, attrs, args, tmps);
+		if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), tmps))
+		    return NULL;
+		if (realAttrs.size () != attrs.size ()) return NULL;
+	    } else realAttrs = attrs;
+	    
 	    for (auto it : Ymir::r (0, args.size ())) {
 		InfoType info = NULL;
 		auto param = realAttrs [it];
@@ -370,6 +344,51 @@ namespace semantic {
 	return NULL;
     }
     
+    ApplicationScore ITemplateFrame::getScoreVaridadic (Word ident, const vector<Var> & attrs, const vector<InfoType> & params) {
+	if (attrs.size () == 0)  
+	    return NULL;
+	else if (auto tvar = attrs.back()-> to<ITypedVar> ()) {
+	    auto last = this-> _function-> getTemplates ().back ();
+	    if (!last-> is<IVariadicVar> ()) return NULL;
+
+	    std::vector <InfoType> others (params.begin () + attrs.size () - 1, params.end ());
+	    TemplateSolution res (0, true);
+	    if (tvar-> typeVar ()) 
+		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeVar (), others);
+	    else {
+		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeExp (), others);
+	    }
+	    if (!res.valid) return NULL;
+	    map <string, Expression> attrTmps;
+	    vector <Var> auxAttrs (attrs.begin (), attrs.end () - 1);
+	    vector <InfoType> auxParams (params.begin (), params.begin () + attrs.size () - 1);
+	    auto realAttrs = transformParams (res.score, auxAttrs, auxParams, attrTmps);
+	    if (realAttrs.size () != auxAttrs.size ()) return NULL;
+
+	    if (!TemplateSolver::instance ().merge (res.score, res.elements, attrTmps)) return NULL;
+	    auto func = this-> _function-> templateReplace (res.elements);
+	    if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) return NULL;
+	    auto frame = new (Z0) ITemplateFrame (this-> _space, func);
+	    
+	    frame-> templateParams () = this-> templateParams ();	    
+	    auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);
+	    frame-> templateParams ().insert (frame-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
+	    frame-> isVariadic (true);
+	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
+	    auto tuple = new (Z0) ITupleInfo (false, true);
+	    tuple-> getParams () = others;
+	    types.push_back (tuple);
+	    auto score = frame-> getScoreSimple (ident, func-> getParams (), types, false);
+	    if (score) {
+		score-> score += res.score;
+		score-> toValidate = frame;
+	    }
+	    
+	    return score;
+	}
+	return NULL;
+    }
+
     ApplicationScore ITemplateFrame::isApplicableSimple (Word ident, const vector<Var> & attrs, const vector <InfoType> &args) {
 	auto tScope = Table::instance ().templateNamespace ();
 	auto globSpace = Table::instance ().space ();
@@ -377,6 +396,7 @@ namespace semantic {
 	Table::instance ().templateNamespace () = globSpace;
 	
 	auto score = getScoreSimple (ident, attrs, args);
+	
 	Table::instance ().setCurrentSpace (globSpace);
 	Table::instance ().templateNamespace () = tScope;
 	return score;

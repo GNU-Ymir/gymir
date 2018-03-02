@@ -8,10 +8,13 @@ namespace semantic {
     class ITupleInfo : public IInfoType {
 
 	std::vector <InfoType> params;
-
+	bool isFake;
+	
     public:
 
 	ITupleInfo (bool isConst);
+	
+	ITupleInfo (bool isConst, bool fake);
 
 	bool isSame (InfoType) override;
 

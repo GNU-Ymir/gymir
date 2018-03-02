@@ -13,23 +13,26 @@ using namespace syntax;
 namespace semantic {
 
     ITupleInfo::ITupleInfo (bool isConst) :
-	IInfoType (isConst)
+	IInfoType (isConst),
+	isFake (false)
     {}
 
+    ITupleInfo::ITupleInfo (bool isConst, bool isFake) :
+	IInfoType (isConst),
+	isFake (isFake)
+    {}
+    
     ulong ITupleInfo::nbParams () {
 	return this-> params.size ();
     }
 
     InfoType ITupleInfo::ConstVerif (InfoType other) {
 	if (auto tuple = other-> to <ITupleInfo> ()) {
-	    auto other = new (Z0)  ITupleInfo (IInfoType::isConst ());
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto res = this-> params [it]-> ConstVerif (tuple-> params [it]);
 		if (res == NULL) return NULL;
-		else other-> addParam (res);		
 	    }
-	    other-> binopFoo = this-> binopFoo;
-	    return other;
+	    return this;
 	}
 	return NULL;
     }
@@ -41,6 +44,7 @@ namespace semantic {
 		if (!(tu-> params [it]-> isSame (this-> params [it])))
 		    return false;
 	    }
+
 	    return true;
 	}
 	return false;
@@ -72,12 +76,12 @@ namespace semantic {
 
     InfoType ITupleInfo::CompOp (InfoType other) {
 	Word tok (UNKNOWN_LOCATION, Token::EQUAL);
+	auto ot = other-> to <ITupleInfo> ();
 	if (this-> isType ()) return NULL;
-	if (other-> isSame (this)) {
-	    auto ot = other-> to <ITupleInfo> ();
+	if (other-> isSame (this)) {	    
 	    auto ret = new (Z0)  ITupleInfo (ot-> isConst ());
-	    for (auto it : Ymir::r (0, this-> params.size ())) {
-		auto l = this-> params [it];
+	    for (auto it : Ymir::r (0, ot-> params.size ())) {
+		auto l = ot-> params [it];
 		ret-> params.push_back (l-> clone ());
 	    }
 	    
@@ -91,12 +95,22 @@ namespace semantic {
 	    }	    
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
-	} else if (auto ot = other->to <IRefInfo> ()) {
-	    if (!this-> isConst () && ot-> content ()-> isSame (this)) {
+	} else if (auto ref = other->to <IRefInfo> ()) {
+	    if (!this-> isConst () && ref-> content ()-> isSame (this)) {
 		auto aux = new (Z0)  IRefInfo (false, this-> clone ());
 		aux-> binopFoo = &TupleUtils::InstAddr;
 		return aux;
 	    }
+	} else if (this-> isFake && ot && ot-> params.size () == this-> params.size ()) {
+	    auto ret = new (Z0) ITupleInfo (ot-> isConst ());
+	    for (auto it : Ymir::r (0, ot-> params.size ())) {
+		auto l = this-> params [it]-> CompOp (ot-> params [it]);
+		ret-> params.push_back (l);
+	    }
+	    
+	    ret-> isFake = true;
+	    ret-> binopFoo = &TupleUtils::InstCastFake;
+	    return ret;
 	}
 	return NULL;
     }
@@ -156,6 +170,8 @@ namespace semantic {
 	else buf.write ("t(");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (this-> params [it]-> typeString ());
+	    if (this-> params [it]-> binopFoo)
+		buf.write ("bin");
 	    if (it != (int) this-> params.size () - 1) buf.write (", ");
 	}
 	buf.write (")");
@@ -289,6 +305,34 @@ namespace semantic {
 		return ltree;		
 	    }
 	}
+
+	Tree InstCastFake (Word locus, InfoType type, Expression elem, Expression) {
+	    location_t loc = locus.getLocus ();
+	    auto rtree = elem-> toGeneric ();
+	    auto ltype = type-> toGeneric ();
+	    TreeStmtList list;
+	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
+	    auto info = type-> to <ITupleInfo> ();
+	    auto elemInfo = elem-> info-> type-> to <ITupleInfo> ();
+	    
+	    for (auto it : Ymir::r (0, info-> nbParams ())) {
+		auto laux = getField (loc, ltree, it);
+		auto raux = getField (loc, rtree, it);
+		auto relem = info-> getParams () [it]-> buildCastOp (
+								  locus,
+								  info-> getParams ()[it],
+								  new (Z0) ITreeExpression (locus, elemInfo-> getParams ()[it], raux),
+								  new (Z0) ITreeExpression (locus, info-> getParams ()[it], Ymir::Tree ())
+								  );
+		
+		list.append (buildTree (
+					MODIFY_EXPR, loc, void_type_node, laux, relem
+					));		
+	    }
+	    
+	    getStackStmtList ().back ().append (list.getTree ());
+	    return ltree;			    
+	}	
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {
 	    location_t loc = locus.getLocus ();
