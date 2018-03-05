@@ -272,7 +272,7 @@ namespace semantic {
     namespace TupleUtils {
 	using namespace Ymir;
 	
-	Tree InstAffect (Word locus, InfoType type, Expression left, Expression right) {
+	Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();	    
@@ -282,17 +282,12 @@ namespace semantic {
 		    MODIFY_EXPR, loc, ltree.getType (), ltree, rtree
 		);		
 	    } else {
-		auto info = type-> to <ITupleInfo> ();
-		for (auto it : Ymir::r (0, info-> nbParams ())) {
-		    auto laux = getField (loc, ltree, it);
-		    auto raux = getField (loc, rtree, it);
-		    list.append (buildTree (
-			MODIFY_EXPR, loc, void_type_node, laux, raux
-		    ));		
-		}
-		
-		getStackStmtList ().back ().append (list.getTree ());
-		return ltree;
+		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
+		auto ptrr = Ymir::getAddr (loc, rtree).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		return result;
 	    }	   
 	}
 
@@ -303,19 +298,13 @@ namespace semantic {
 	    if (rtree.getType ().getTree () == ltype.getTree ())
 	    	return rtree;
 	    else {
-		TreeStmtList list;
 		auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
-		auto info = type-> to <ITupleInfo> ();
-		for (auto it : Ymir::r (0, info-> nbParams ())) {
-		    auto laux = getField (loc, ltree, it);
-		    auto raux = getField (loc, rtree, it);
-		    list.append (buildTree (
-					    MODIFY_EXPR, loc, void_type_node, laux, raux
-					    ));		
-		}
-		
-		getStackStmtList ().back ().append (list.getTree ());
-		return ltree;		
+		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
+		auto ptrr = Ymir::getAddr (loc, rtree).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		return result;
 	    }
 	}
 

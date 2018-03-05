@@ -1992,10 +1992,15 @@ namespace syntax {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
 	this-> lambdaPossible = false;
+	bool needPar = false;
+	auto next = this-> lex.next  ();
+	if (next == Token::LPAR) needPar = true;	
+	else this-> lex.rewind ();
 	auto test = visitExpression ();
 	this-> lambdaPossible = true;
+	if (needPar) this-> lex.next ({Token::RPAR});
 	auto block = visitBlock ();
-	auto next = this-> lex.next ();
+	next = this-> lex.next ();
 	if (next == Keys::ELSE) {
 	    return new (Z0)  IIf (begin, test, block, visitElse ()); 
 	} else this-> lex.rewind ();
@@ -2007,8 +2012,13 @@ namespace syntax {
 	auto begin = this-> lex.next (), next = this-> lex.next ();
 	if (next == Keys::IF) {
 	    this-> lambdaPossible = false;
+	    bool needPar = false;
+	    auto next = this-> lex.next  ();
+	    if (next == Token::LPAR) needPar = true;
+	    else this-> lex.rewind ();
 	    auto test = visitExpression ();
 	    this-> lambdaPossible = true;
+	    if (needPar) this-> lex.next ({Token::RPAR});
 	    auto block = visitBlock ();
 	    next = this-> lex.next ();
 	    if (next == Keys::ELSE) {
@@ -2088,14 +2098,24 @@ namespace syntax {
 	    auto id = visitIdentifiant ();
 	    next = this-> lex.next ({Token::LPAR});
 	    this-> lambdaPossible = false;
+	    bool needPar = false;
+	    auto next = this-> lex.next ();
+	    if (next == Token::LPAR) needPar = true;
+	    else this-> lex.rewind ();
 	    auto test = visitExpression ();
+	    if (needPar) this-> lex.next ({Token::RPAR});
 	    this-> lambdaPossible = true;
 	    next = this-> lex.next ({Token::RPAR});
 	    return new (Z0)  IWhile (begin, id, test, visitBlock ());
 	} else {
 	    this-> lex.rewind ();
 	    this-> lambdaPossible = false;
+	    bool needPar = false;
+	    auto next = this-> lex.next ();
+	    if (next == Token::LPAR) needPar = true;
+	    else this-> lex.rewind ();
 	    auto test = visitExpression ();
+	    if (needPar) this-> lex.next ({Token::RPAR});
 	    this-> lambdaPossible = true;
 	    return new (Z0)  IWhile (begin, test, visitBlock ());
 	}
