@@ -3,6 +3,7 @@
 #include <ymir/semantic/utils/PtrUtils.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/ast/ParamList.hh>
+#include <ymir/semantic/tree/Generic.hh>
 
 namespace semantic {
 
@@ -18,6 +19,22 @@ namespace semantic {
 	    return last;
 	}
 	
+	Tree InstAffectDelegate (Word loc, InfoType, Expression left, Expression right) {
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = right-> toGeneric ();
+	    auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
+	    auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
+	    tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+	    tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+	    auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+	    return Ymir::compoundExpr (loc.getLocus (), result, ltree);
+	}
+
+	Tree InstCastDelegate (Word, InfoType, Expression left, Expression) {
+	    return left-> toGeneric ();
+	}
+
+		
 	Tree InstAffectComp (Word loc, InfoType type, Expression left, Expression right) {
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 
@@ -25,20 +42,41 @@ namespace semantic {
 	    auto rtree = type-> buildBinaryOp (
 		loc, type, left, right
 	    );
-
-	    return buildTree (MODIFY_EXPR, loc.getLocus (), ltree.getType (), ltree, rtree);	    
+	    if (ltree.getType ().getTree () == rtree.getType ().getTree ()) 
+		return buildTree (MODIFY_EXPR, loc.getLocus (), ltree.getType (), ltree, rtree);
+	    else {		
+		auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
+		auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		return Ymir::compoundExpr (loc.getLocus (), result, ltree);
+	    }
 	}
 
 	Tree InstCall (Word loc, InfoType ret, Expression left, Expression paramsExp) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    auto fn = left-> toGeneric ();
-	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());	    
-	    return build_call_array_loc (loc.getLocus (),
-					 ret-> toGeneric ().getTree (),
-					 fn.getTree (),
-					 args.size (),
-					 args.data ()
-	    );
+	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
+	    auto func = left-> info-> type-> to<IPtrFuncInfo> ();
+	    if (func-> isDelegate ()) {
+		auto closureType = getField (loc.getLocus (), fn, "obj");
+		auto fnPtr = getField (loc.getLocus (), fn, "ptr");
+		args.insert (args.begin (), closureType.getTree ());
+		return build_call_array_loc (loc.getLocus (),
+					     ret-> toGeneric ().getTree (),
+					     fnPtr.getTree (),
+					     args.size (),
+					     args.data ()
+		);		
+	    } else {	    
+		return build_call_array_loc (loc.getLocus (),
+					     ret-> toGeneric ().getTree (),
+					     fn.getTree (),
+					     args.size (),
+					     args.data ()
+		);
+	    }
 	}
 	
     }
@@ -49,6 +87,7 @@ namespace semantic {
 
     bool IPtrFuncInfo::isSame (InfoType other) {
 	if (auto ptr = other-> to <IPtrFuncInfo> ()) {
+	    if (this-> isDelegate () != ptr-> isDelegate ()) return false;
 	    if (!this-> ret-> isSame (ptr-> ret)) return false;
 	    if (this-> params.size () != ptr-> params.size ())
 		return false;
@@ -103,11 +142,15 @@ namespace semantic {
 	    return ret;
 	} else if (right-> info-> type-> is <INullInfo> ()) {
 	    auto ret = this-> clone ();
-	    ret-> binopFoo = &PtrUtils::InstAffect;
+	    if (this-> isDelegate ()) {
+		ret-> binopFoo = &PtrUtils::InstAffect;
+	    } else {
+		ret-> binopFoo = &PtrFuncUtils::InstAffectDelegate;
+	    }
 	    return ret;
 	} else if (right-> info-> type-> is <IFunctionInfo> ()) {
 	    auto ret = right-> info-> type-> CompOp (this);
-	    if (ret) {
+	    if (ret && ret-> isSame (this)) {
 		ret-> nextBinop.push_back (ret-> binopFoo);		
 		ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
 		return ret;
@@ -119,7 +162,11 @@ namespace semantic {
     InfoType IPtrFuncInfo::AffectRight (syntax::Expression left) {
 	if (left-> info-> type-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
-	    ret-> binopFoo = &PtrUtils::InstAffect;
+	    if (this-> isDelegate ()) {
+		ret-> binopFoo = &PtrFuncUtils::InstAffectDelegate;
+	    } else {
+		ret-> binopFoo = &PtrUtils::InstAffect;
+	    }
 	    return ret;
 	}
 	return NULL;
@@ -128,7 +175,11 @@ namespace semantic {
     InfoType IPtrFuncInfo::CompOp (InfoType other) {
 	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
 	    auto ptr = this-> clone ();
-	    ptr-> binopFoo = &PtrUtils::InstCast;
+	    if (this-> isDelegate ()) 
+		ptr-> binopFoo = &PtrFuncUtils::InstCastDelegate;
+	    else 
+		ptr-> binopFoo = &PtrUtils::InstCast;
+	    
 	    return ptr;
 	}
 	return NULL;
@@ -191,6 +242,7 @@ namespace semantic {
 	}
 	aux-> ret = this-> ret-> clone ();
 	aux-> score = this-> score;
+	aux-> _isDelegate = this-> _isDelegate; 
 	return aux;
     }
 
@@ -204,7 +256,9 @@ namespace semantic {
     }
  	
     std::string IPtrFuncInfo::innerTypeString () {
-	Ymir::OutBuffer buf ("fn(");
+	Ymir::OutBuffer buf;
+	if (this-> isDelegate ()) buf.write ("dg(");
+	else buf.write ("fn(");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (this-> params [it]-> typeString ());
 	    if (it < (int) this-> params.size () - 1)
@@ -215,7 +269,9 @@ namespace semantic {
     }
 
     std::string IPtrFuncInfo::innerSimpleTypeString () {
-	Ymir::OutBuffer buf ("PF");
+	Ymir::OutBuffer buf;
+	if (this-> isDelegate ()) buf.write ("DG");
+	else buf.write ("PF");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (this-> params [it]-> simpleTypeString ());
 	}
@@ -234,8 +290,12 @@ namespace semantic {
     ApplicationScore& IPtrFuncInfo::getScore () {
 	return this-> score;
     }
+
+    bool & IPtrFuncInfo::isDelegate () {
+	return this-> _isDelegate;
+    }
     
-    Ymir::Tree IPtrFuncInfo::toGeneric () {
+    Ymir::Tree IPtrFuncInfo::toGeneric () {	
 	std::vector<tree> fndecl_type_params;
 	for (auto it : this->params) {
 	    if (!it-> is <IStructInfo> ()) {
@@ -246,9 +306,20 @@ namespace semantic {
 	}
 
 	tree ret = this-> ret-> toGeneric ().getTree ();
-	return build_pointer_type (
+	auto ptr = build_pointer_type (
 	    build_function_type_array (ret, fndecl_type_params.size (), fndecl_type_params.data ())
-	);	
+	);
+	
+	if (this-> isDelegate ()) {
+	    return Ymir::makeStructType ("", 2,
+					 get_identifier ("obj"),
+					 build_pointer_type (
+					     this-> score-> proto-> createClosureType ().getTree ()
+					 ),
+					 get_identifier ("ptr"),
+					 ptr
+	    );	    
+	} else return ptr;	
     }
 
     const char * IPtrFuncInfo::getId () {

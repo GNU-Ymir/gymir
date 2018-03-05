@@ -34,7 +34,8 @@ namespace semantic {
 	Namespace _space;
 	std::string _name;
 	Symbol _type;
-	std::vector <::syntax::Var> _vars;
+	std::vector <::syntax::Var> _vars;	
+	std::vector <::syntax::Var> _closure;
 	std::vector <::syntax::Expression> _tmps;
 	std::string _extern;
 	Ymir::Tree _fn;
@@ -52,15 +53,21 @@ namespace semantic {
 
 	std::vector <syntax::Var>& vars ();
 
+	std::vector <syntax::Var>& closure ();
+
 	std::vector <syntax::Expression>& tmps ();
 	
 	std::string& externName (); 
 	
+	bool isDelegate ();
+
 	bool equals (IFrameProto* scd);
 
 	bool& isCVariadic ();
 	
 	Ymir::Tree toGeneric ();
+
+	Ymir::Tree createClosureType ();
 	
     };
 

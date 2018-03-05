@@ -147,6 +147,16 @@ namespace syntax {
 	return build_real (type.getTree (), real_value);
     }
     
+    Ymir::Tree IVar::lastInfoDecl () {
+	if (this-> _lastInfo-> type-> unopFoo) {
+	    return this-> _lastInfo-> type-> buildUnaryOp (
+		this-> token,
+		this-> _lastInfo-> type,
+		this
+	    );	    
+	} else return this-> _lastInfo-> treeDecl ();
+    }
+
     Ymir::Tree IVar::toGeneric () {
 	if (this-> info-> value ())
 	    return this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
@@ -156,9 +166,17 @@ namespace syntax {
 		this-> token,
 		this-> info-> type,
 		this
-	    );
+	    );	    
 	} else {
-	    return this-> info-> treeDecl ();
+	    if (this-> _fromClosure) {
+		auto closure = IFinalFrame::getCurrentClosure ();
+		auto field = Ymir::getField (this-> token.getLocus (),
+					     closure,
+					     this-> token.getStr ());
+		return field;
+	    } else {
+		return this-> info-> treeDecl ();
+	    }
 	}
     }
 
@@ -275,6 +293,24 @@ namespace syntax {
 	);	
     }
 
+    Ymir::Tree IPar::createClosureVar () {
+	auto closureType = this-> _score-> proto-> createClosureType ();
+	auto closureVar = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), closureType);
+	Ymir::TreeStmtList list;
+	for (auto it : this-> _score-> proto-> closure ()) {
+	    auto field = Ymir::getField (BUILTINS_LOCATION, closureVar, it-> token.getStr ());
+	    auto lastInfo = it-> lastInfoDecl ();
+	    list.append (buildTree (
+		MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, field, getAddr (lastInfo)
+	    ));
+	}
+	
+	return Ymir::compoundExpr (this-> token.getLocus (),
+				   list.getTree (),
+				   getAddr (closureVar)
+	);
+    }
+    
     Ymir::Tree IPar::toGeneric () {
 	if (this-> info-> isImmutable ()) {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
@@ -297,7 +333,11 @@ namespace syntax {
 		for (auto & it : args) {
 		    it = Ymir::promote (it);
 		}
+	    } else if (this-> _score-> proto-> closure ().size () != 0) {
+		auto closureVar = createClosureVar ();
+		args.insert (args.begin (), closureVar.getTree ());
 	    }
+	    
 	    return build_call_array_loc (this-> token.getLocus (),
 					 this-> _score-> ret-> toGeneric ().getTree (),
 					 fn.getTree (),

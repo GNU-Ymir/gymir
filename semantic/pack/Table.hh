@@ -78,6 +78,8 @@ namespace semantic {
 
 	bool sameFrame (Symbol sym);
 
+	bool parentFrame (Symbol sym);
+
 	Symbol getAlike (std::string name);
 
 	FrameReturnInfo& retInfo ();

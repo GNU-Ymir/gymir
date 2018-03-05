@@ -7,6 +7,11 @@
 #include <ymir/utils/Array.hh>
 #include <list>
 
+namespace syntax {
+    class IVar;
+    typedef IVar* Var;
+}
+
 namespace semantic {
 
     class ITreeInfo  {
@@ -58,6 +63,7 @@ namespace semantic {
 	Symbol info;
 	bool _isImmutable;
 	std::string deco; 
+	std::vector <syntax::Var> closure;
 	
     private :
 	std::string _currentBlock;
@@ -72,7 +78,7 @@ namespace semantic {
 	void breaked ();
 
 	bool& changed ();
-
+	
 	bool& isImmutable ();
 	
 	void enterBlock ();

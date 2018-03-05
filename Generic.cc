@@ -107,8 +107,11 @@ namespace Ymir {
 
     
     Tree getField (location_t loc, Tree obj, std::string name) {
+	if (obj.getType ().getTreeCode () == POINTER_TYPE) {
+	    return getField (loc, getPointerUnref (loc, obj, TREE_TYPE (obj.getType ().getTree ()), 0), name);
+	}
 	Tree field_decl = TYPE_FIELDS (TREE_TYPE (obj.getTree ()));
-
+	
 	while (!field_decl.isNull ()) {
 	    Tree decl_name = DECL_NAME (field_decl.getTree ());
 	    std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));

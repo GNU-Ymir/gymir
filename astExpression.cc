@@ -129,7 +129,30 @@ namespace syntax {
 	    if (sym == NULL) {
 		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
 		return NULL;
-	    } else return this-> expression (sym);
+	    } else {		
+		auto ret = this-> expression (sym);
+		if (Table::instance ().parentFrame (sym) && ret-> is<IVar> ()) {
+		    auto var = ret-> to <IVar> ();
+		    if (!var-> is<IType> () &&
+			!var-> info-> type-> is <IStructCstInfo> () &&
+			!var-> info-> isType ()) {
+			bool found = false;
+			for (auto it : Table::instance ().retInfo ().closure)
+			    if (it-> token.getStr () == ret-> token.getStr ()) {
+				found = true;
+				break;
+			    }
+
+			if (!found)
+			    Table::instance ().retInfo ().closure.push_back (ret-> to<IVar> ());
+			
+			ret-> to<IVar> ()-> _fromClosure = true;
+			var-> _lastInfo = ret-> info;
+			ret-> info = new (Z0) ISymbol (ret-> token, new (Z0) IRefInfo (false, ret-> info-> type-> clone ()));
+		    }
+		}
+		return ret;
+	    }
 	} else return asType ();	
     }
 

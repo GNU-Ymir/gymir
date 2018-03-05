@@ -143,7 +143,9 @@ namespace semantic {
 					    this-> _space, this-> _function-> name (),
 					    finalParams, block, this-> tempParams);
 
+	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> type () = Table::instance ().retInfo ().info;
+	    proto-> closure () = Table::instance ().retInfo ().closure;
 	    FrameTable::instance ().insert (finFrame);
 
 	    finFrame-> file () = LOCATION_FILE (this-> _function-> getIdent ().getLocus ());
@@ -261,6 +263,8 @@ namespace semantic {
 		    
 		    finFrame-> isVariadic () = isVariadic;
 		    proto-> type () = Table::instance ().retInfo ().info;
+		    finFrame-> closure () = Table::instance ().retInfo ().closure;
+		    proto-> closure () = Table::instance ().retInfo ().closure;
 		    FrameTable::instance ().insert (finFrame);
 
 		    finFrame-> file () = name.getFile ();
@@ -312,6 +316,9 @@ namespace semantic {
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
 						  space, name, params, block, {});
 	    proto-> type () = Table::instance ().retInfo ().info;
+	    finFrame-> closure () = Table::instance ().retInfo ().closure;
+	    proto-> closure () = Table::instance ().retInfo ().closure;
+
 	    FrameTable::instance ().insert (finFrame);
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
 	    Table::instance ().quitBlock ();
@@ -343,6 +350,9 @@ namespace semantic {
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
 						  space, name, params, block, {});
 	    proto-> type () = Table::instance ().retInfo ().info;
+	    finFrame-> closure () = Table::instance ().retInfo ().closure;
+	    proto-> closure () = Table::instance ().retInfo ().closure;
+
 	    FrameTable::instance ().insert (finFrame);
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
 	    Table::instance ().quitBlock ();
@@ -400,6 +410,9 @@ namespace semantic {
 
 		    finFrame-> isVariadic () = isVariadic;
 		    proto-> type () = Table::instance ().retInfo ().info;
+		    finFrame-> closure () = Table::instance ().retInfo ().closure;
+		    proto-> closure () = Table::instance ().retInfo ().closure;
+		    
 		    FrameTable::instance ().insert (finFrame);
 
 		    finFrame-> file () = self-> _function-> getIdent ().getFile ();

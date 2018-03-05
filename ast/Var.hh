@@ -17,7 +17,9 @@ namespace syntax {
     protected :
 	
 	std::vector <Expression> templates;
-
+	bool _fromClosure = false;
+	semantic::Symbol _lastInfo;
+	
     public :
 
 	Word deco;
@@ -42,6 +44,8 @@ namespace syntax {
 	
 	Ymir::Tree toGeneric () override;
 
+	Ymir::Tree lastInfoDecl ();
+	
 	Expression onClone () override;
 	
 	virtual IVar* var ();

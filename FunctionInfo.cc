@@ -7,6 +7,7 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/value/LambdaValue.hh>
+#include <ymir/semantic/tree/Generic.hh>
 
 namespace semantic {
 
@@ -31,8 +32,54 @@ namespace semantic {
 	    
 	    tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
 	    return build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
-	}       
+	}
 
+	Tree InstAffectDelegate (Word locus, InfoType type, Expression, Expression) {
+	    auto loc = locus.getLocus ();
+	    PtrFuncInfo func = (PtrFuncInfo) type;
+	    tree ret = void_type_node;
+	    tree fndecl_type = build_function_type_array (
+		ret, 0, NULL
+	    );
+	    
+	    std::string name = Mangler::mangle_function (
+		func-> getScore ()-> proto-> name (),
+		func-> getScore ()-> proto
+	    );
+	    
+	    tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
+	    tree fnPtr = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	    
+	    auto values = func-> getScore ()-> proto-> closure ();
+	    auto closureType = func-> getScore ()-> proto-> createClosureType ();
+	    auto closureVar = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), closureType);
+	    Ymir::TreeStmtList list;
+	    
+	    for (auto it : values) {
+		auto field = Ymir::getField (BUILTINS_LOCATION, closureVar, it-> token.getStr ());
+		auto lastInfo = it-> lastInfoDecl ();
+		list.append (buildTree (
+		    MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, field, getAddr (lastInfo)
+		));
+	    }
+
+	    auto finalType = type-> toGeneric ();
+	    auto finalRet = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), finalType);
+	    
+	    auto obj = Ymir::getField (loc, finalRet, "obj");
+	    auto ptr = Ymir::getField (loc, finalRet, "ptr");
+	    
+	    auto ptrc = Ymir::getAddr (loc, closureVar).getTree ();
+	    list.append (buildTree (
+		MODIFY_EXPR, locus.getLocus (), void_type_node, obj, ptrc
+	    ));
+	    
+	    list.append (buildTree (
+		MODIFY_EXPR, locus.getLocus (), void_type_node, ptr, fnPtr
+	    ));
+	    
+	    return Ymir::compoundExpr (locus.getLocus (), list.getTree (), finalRet);
+	}       
     }
     
     IFunctionInfo::IFunctionInfo (Namespace space, std::string name) :
@@ -112,8 +159,13 @@ namespace semantic {
 		ret-> getParams () = infoTypes;
 		ret-> getType () = score-> ret-> cloneConst ();
 		ret-> getScore () = score;
+		ret-> isDelegate () = score-> proto-> isDelegate ();
+		if (ret-> isDelegate ()) {		
+		    ret-> nextBinop.push_back (&FunctionUtils::InstAffectDelegate);
+		} else {
+		    ret-> nextBinop.push_back (&FunctionUtils::InstAffect);
+		}
 		
-		ret-> nextBinop.push_back (&FunctionUtils::InstAffect);
 		ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
 		
 		return ret;	
@@ -281,7 +333,12 @@ namespace semantic {
 	    
 	    auto ret = (PtrFuncInfo) ot-> cloneConst ();
 	    ret-> getScore () = score;
-	    ret-> binopFoo = &FunctionUtils::InstAffect;
+	    ret-> isDelegate () = score-> proto-> isDelegate ();
+	    if (ret-> isDelegate ()) {
+		ret-> binopFoo = &FunctionUtils::InstAffectDelegate;
+	    } else {
+		ret-> binopFoo = &FunctionUtils::InstAffect;
+	    }
 	    return ret;	
 	}
 	return NULL;

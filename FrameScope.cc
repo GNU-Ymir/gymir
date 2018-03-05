@@ -155,7 +155,7 @@ namespace semantic {
     void FrameReturnInfo::breaked () {
 	this-> _retInfo-> breaked ();
     }
-
+    
     bool& FrameReturnInfo::changed () {
 	return this-> _changed;
     }

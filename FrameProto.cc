@@ -8,6 +8,7 @@
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/value/_.hh>
+#include <ymir/semantic/tree/Generic.hh>
 
 namespace semantic {
     using namespace syntax;    
@@ -38,10 +39,18 @@ namespace semantic {
 	return this-> _vars;
     }
 
+    std::vector<syntax::Var>& IFrameProto::closure () {
+	return this-> _closure;
+    }
+    
     std::vector <syntax::Expression>& IFrameProto::tmps () {
 	return this-> _tmps;
     }
 
+    bool IFrameProto::isDelegate () {
+	return this-> _closure.size () != 0;
+    }
+    
     std::string& IFrameProto::externName () {
 	return this-> _extern;
     }
@@ -90,11 +99,34 @@ namespace semantic {
 	}
 	return false;
     }
+
+    Ymir::Tree IFrameProto::createClosureType () {
+	if (this-> _closure.size () != 0) {
+	    auto name = Namespace (this-> space (), this-> _name).toString () + ".closure";
+	    std::vector <InfoType> types;
+	    std::vector <std::string> attrs;
+	    for (auto it : this-> _closure) {
+		types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
+		attrs.push_back (it-> info-> sym.getStr ());
+	    }
+	    
+	    return Ymir::makeTuple (name, types, attrs);
+	}
+	return Ymir::Tree ();
+    }
     
     Ymir::Tree IFrameProto::toGeneric () {
 	std::vector <tree> fndecl_type_params (this-> _vars.size ());
 	for (uint i = 0 ; i < this-> _vars.size () ; i++) {
 	    fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
+	}
+
+	Ymir::Tree closureType = createClosureType ();
+	if (!closureType.isNull ()) {
+	    fndecl_type_params.insert (
+		fndecl_type_params.begin (),
+		closureType.getTree ()
+	    );	    
 	}
 	
 	std::string ident = Namespace (this-> space (), this-> _name).toString ();

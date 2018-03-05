@@ -13,6 +13,7 @@ namespace semantic {
 	std::vector <InfoType> params;
 	InfoType ret;
 	ApplicationScore score;
+	bool _isDelegate;
 	
     public:
 
@@ -66,6 +67,8 @@ namespace semantic {
 
 	ApplicationScore& getScore ();	 
 	
+	bool & isDelegate ();
+
 	static const char* id () {
 	    return "IPtrFuncInfo";
 	}

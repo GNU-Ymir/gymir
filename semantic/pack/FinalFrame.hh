@@ -29,6 +29,8 @@ namespace semantic {
 	Namespace _space;
 	std::string _name;
 	std::vector <syntax::Var> _vars;
+	std::vector <::syntax::Var> _closure;
+	
 	std::vector <syntax::Expression> _tmps;
 	bool _isVariadic;
 	syntax::Block _block;
@@ -36,6 +38,7 @@ namespace semantic {
 	static std::map <std::string, Ymir::Tree> __declared__;
 	static std::vector <Ymir::Tree> __contextToAdd__;
 	static Ymir::Tree __fn_decl__;
+	static Ymir::Tree __fn_closure__;
 	
     public:
 
@@ -52,24 +55,30 @@ namespace semantic {
 	bool& isVariadic ();
 
 	std::vector<syntax::Var> &vars ();
-
+	
+	std::vector <syntax::Var>& closure ();
+	
 	std::vector <syntax::Expression> &tmps ();
 
 	syntax::Block block ();	
 
 	void finalize ();
 	
-	static Ymir::Tree& currentFrame ();
+	Ymir::Tree createClosureType ();
 
+	static Ymir::Tree& currentFrame ();
+	
 	static Ymir::Tree getDeclaredType (const char * name);
 	
+	static Ymir::Tree getCurrentClosure ();
+
 	static void declareType (std::string &name, Ymir::Tree type);
 
 	static void declareType (const char * name, Ymir::Tree type);	
 
     private:
 
-	void declArguments ();
+	void declArguments (Ymir::Tree);
 	
     };
 

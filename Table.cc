@@ -146,7 +146,7 @@ namespace semantic {
 		    if (ret) return ret;
 		    else ret = NULL;
 		    last = it.space ();
-		} else if (this-> _space != last) break;	    
+		} else if (this-> getCurrentSpace () != last) break;	    
 	    }
 	}
 
@@ -257,15 +257,33 @@ namespace semantic {
 	}
 	return NULL;
     }
-	
-    
+	    
     bool Table::sameFrame (Symbol sym) {
 	if (this-> _frameTable.empty ()) return true;
-	auto ret =this-> _frameTable.front ().get (sym-> sym.getStr ());
+	auto ret = this-> _frameTable.front ().get (sym-> sym.getStr ());
 	if (ret != NULL) return true;
 	return false;
     }
 
+    bool Table::parentFrame (Symbol sym) {
+	if (!this-> _frameTable.empty ()) {
+	    auto name = sym-> sym.getStr ();
+	    Namespace last = this-> getCurrentSpace ();
+	    auto ret = this-> _frameTable.front ().get (name);
+	    if (ret) return false;
+	    for (auto it : this-> _frameTable) {
+		if (it.space ().isSubOf (last)) {
+		    ret = it.get (name);
+		    if (ret) {
+			return getCurrentSpace () != it.space ();     
+		    } else ret = NULL;
+		    last = it.space ();
+		} else if (this-> _space != last) break;	    
+	    }
+	}
+	return false;
+    }
+    
     FrameReturnInfo& Table::retInfo () {
 	if (this-> _frameTable.empty ()) return FrameReturnInfo::empty ();
 	else return this-> _frameTable.front ().retInfo ();

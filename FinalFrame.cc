@@ -5,7 +5,10 @@
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/semantic/types/VoidInfo.hh>
+#include <ymir/semantic/types/TupleInfo.hh>
+#include <ymir/semantic/types/RefInfo.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/semantic/tree/Generic.hh>
 #include <ymir/syntax/Keys.hh>
 
 #include "config.h"
@@ -29,6 +32,7 @@
 namespace semantic {
 
     Ymir::Tree IFinalFrame::__fn_decl__;
+    Ymir::Tree IFinalFrame::__fn_closure__;
     std::map <std::string, Ymir::Tree> IFinalFrame::__declared__;
     std::vector <Ymir::Tree> IFinalFrame::__contextToAdd__;
 
@@ -67,6 +71,14 @@ namespace semantic {
 	return this-> _vars;
     }
 
+    std::vector<syntax::Var>& IFinalFrame::closure () {
+	return this-> _closure;
+    }
+
+    Ymir::Tree IFinalFrame::getCurrentClosure () {
+	return __fn_closure__;
+    }
+    
     std::vector <syntax::Expression>& IFinalFrame::tmps () {
 	return this-> _tmps;
     }
@@ -122,8 +134,37 @@ namespace semantic {
 	}	    
     }
 
-    void IFinalFrame::declArguments () {
+    Ymir::Tree IFinalFrame::createClosureType () {
+	if (this-> _closure.size () != 0) {
+	    auto name = Namespace (this-> space (), this-> _name).toString () + ".closure";
+	    std::vector <InfoType> types;
+	    std::vector <std::string> attrs;
+	    for (auto it : this-> _closure) {
+		types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
+		attrs.push_back (it-> info-> sym.getStr ());
+	    }
+	    
+	    return build_pointer_type (Ymir::makeTuple (name, types, attrs).getTree ());
+	}
+	return Ymir::Tree ();
+    }
+    
+    void IFinalFrame::declArguments (Ymir::Tree closureType) {
 	Ymir::Tree arglist;
+	if (!closureType.isNull ()) {
+	    __fn_closure__ = build_decl (
+		BUILTINS_LOCATION,
+		PARM_DECL,
+		get_identifier (Keys::SELF.c_str ()),
+		closureType.getTree ()
+	    );
+	    
+	    DECL_CONTEXT (__fn_closure__.getTree ()) = __fn_decl__.getTree ();
+	    DECL_ARG_TYPE (__fn_closure__.getTree ()) = TREE_TYPE (__fn_closure__.getTree ());
+	    arglist = chainon (arglist.getTree (), __fn_closure__.getTree ());
+	    TREE_USED (__fn_closure__.getTree ()) = 1;
+	}
+	
 	for (auto var : this-> _vars) {
 	    Ymir::Tree decl = build_decl (
 		var-> token.getLocus (),
@@ -131,7 +172,7 @@ namespace semantic {
 		get_identifier (var-> token.getStr ().c_str ()),
 		var-> info-> type-> toGeneric ().getTree ()
 	    );
-
+	    
 	    DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();	    
 	    DECL_ARG_TYPE (decl.getTree ()) = TREE_TYPE (decl.getTree ());
 	    
@@ -150,6 +191,12 @@ namespace semantic {
 	std::vector <tree> args (this-> _vars.size ());
 	for (uint i = 0 ; i < this-> _vars.size () ; i++)
 	    args [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
+
+	Ymir::Tree closureType = createClosureType ();
+	if (!closureType.isNull ()) {
+	    args.insert (args.begin (), closureType.getTree ());	    
+	} 
+	
 	tree ret;
 	if (this-> _name == Keys::MAIN && this-> _type-> type-> is<IVoidInfo> ())
 	    ret = int_type_node;
@@ -166,9 +213,9 @@ namespace semantic {
 	
 	Ymir::currentContext () = fn_decl;
 	__fn_decl__ = fn_decl;
-
-	this-> declArguments ();
 	
+	this-> declArguments (closureType);
+
 	Ymir::enterBlock ();
 	tree result_decl = build_decl (BUILTINS_LOCATION, RESULT_DECL,
 				       NULL_TREE, ret);
