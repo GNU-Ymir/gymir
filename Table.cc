@@ -229,6 +229,7 @@ namespace semantic {
     bool Table::sameFrame (Symbol sym) {
 	if (this-> _frameTable.empty ()) return true;
 	auto ret = this-> _frameTable.front ().get (sym-> sym.getStr ());
+	if (this-> _frameTable.front ().fromFriend (sym)) return false;
 	if (ret != NULL) return true;
 	return false;
     }
