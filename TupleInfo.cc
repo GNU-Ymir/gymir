@@ -304,7 +304,7 @@ namespace semantic {
 		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
 		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
-		return result;
+		return Ymir::compoundExpr (loc, result, ltree);
 	    }
 	}
 

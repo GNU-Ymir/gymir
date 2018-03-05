@@ -60,6 +60,8 @@ namespace Ymir {
     real_value makeRealValue (double elem);
 
     tree promote (tree type);
+
+    Tree compoundExpr (location_t, Tree arg0, Tree arg1);
     
 }
 

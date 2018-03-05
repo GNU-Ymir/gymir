@@ -43,6 +43,8 @@ namespace syntax {
 
 	std::vector <Expression>& getTemplates ();
 
+	std::vector <semantic::Symbol> allInnerDecls ();
+
 	Declaration templateDeclReplace (const std::map <std::string, Expression>& tmps);
 	
 	IFunction* templateReplace (const std::map <std::string, Expression>& tmps);

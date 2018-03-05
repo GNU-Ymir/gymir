@@ -8,6 +8,10 @@
 namespace syntax {
 
     using namespace semantic;
+
+    std::vector <semantic::Symbol> INone::allInnerDecls () {
+	return {};
+    }
     
     Instruction IBlock::instruction () {
 	return this-> block ();
@@ -25,6 +29,15 @@ namespace syntax {
 	    return this-> insts.back ()-> to <IExpression> ();
 	}
 	return NULL;
+    }
+
+    std::vector <Symbol> IBlock::allInnerDecls () {
+	std::vector <Symbol> allInner;
+	for (auto it : this-> insts) {
+	    auto decls = it-> allInnerDecls ();
+	    allInner.insert (allInner.end (), decls.begin (), decls.end ());
+	}
+	return allInner;
     }
     
     Block IBlock::blockWithoutEnter () {
@@ -61,8 +74,15 @@ namespace syntax {
 	bl-> insts = insts;
 	return bl;    
     }
-
     
+    std::vector <semantic::Symbol> IVarDecl::allInnerDecls () {
+	std::vector <Symbol> syms;
+	for (auto it : this-> decls) {
+	    syms.push_back (it-> info);
+	}
+	return syms;
+    }
+
     Instruction IVarDecl::instruction () {
 	auto auxDecl = new (Z0)  IVarDecl (this-> token);
 	for (auto id : Ymir::r (0, this-> decls.size ())) {
@@ -141,7 +161,7 @@ namespace syntax {
 	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
 	    return NULL;
 	}
-
+	
 	Expression msg = NULL;
 	if (this-> msg) {
 	    msg = this-> msg-> expression ();
@@ -170,6 +190,14 @@ namespace syntax {
 	return new (Z0)  IAssert (this-> token, expr, msg, this-> isStatic);
     }
     
+    std::vector <semantic::Symbol> IAssert::allInnerDecls () {
+	return {};
+    }
+
+    std::vector <semantic::Symbol> IBreak::allInnerDecls () {
+	return {};
+    }
+
     Instruction IBreak::instruction () {
 	auto aux = new (Z0)  IBreak (this-> token, this-> ident);
 	Table::instance ().retInfo ().breaked ();
@@ -191,6 +219,13 @@ namespace syntax {
 	return aux;
     }    
 
+    std::vector <semantic::Symbol> IIf::allInnerDecls () {
+	auto ret = this-> block-> allInnerDecls ();
+	auto el = this-> else_-> allInnerDecls ();
+	ret.insert (ret.begin (), el.begin (), el.end ());
+	return ret;
+    }
+    
     Instruction IIf::instruction () {
 	if (this-> test != NULL) {
 	    auto expr = this-> test-> expression ();
@@ -243,6 +278,15 @@ namespace syntax {
 	    }
 	}
     }
+
+    std::vector <semantic::Symbol> IFor::allInnerDecls () {
+	std::vector <Symbol> syms;
+	for (auto it : this-> var)
+	    syms.push_back (it-> info);
+	auto bl = this-> block-> allInnerDecls ();
+	syms.insert (syms.end (), bl.begin (), bl.end ());
+	return syms;
+    }
     
     Instruction IFor::instruction () {
 	auto expr = this-> iter-> expression ();
@@ -280,6 +324,10 @@ namespace syntax {
 	aux-> ret = type;
 	return aux;
     }
+
+    std::vector <semantic::Symbol> IWhile::allInnerDecls () {
+	return this-> block-> allInnerDecls ();
+    }
     
     Instruction IWhile::instruction () {
 	auto expr = this-> test-> expression ();
@@ -301,7 +349,10 @@ namespace syntax {
 	return new (Z0)  IWhile (this-> token, this-> name, expr, bl);		
     }
 
-
+    std::vector <semantic::Symbol> IReturn::allInnerDecls () {
+	return {};
+    }    
+    
     Instruction IReturn::instruction () {
 	auto aux = new (Z0)  IReturn (this-> token);
 	Table::instance ().retInfo ().returned ();
@@ -352,7 +403,13 @@ namespace syntax {
 	return aux;
     }
 
-
+    std::vector <semantic::Symbol> ITupleDest::allInnerDecls () {
+	std::vector <Symbol> syms;
+	for (auto it : this-> decls)
+	    syms.push_back (it-> info);
+	return syms;
+    }
+    
     Instruction ITupleDest::Incompatible (semantic::Symbol info) {
 	auto tuType = new (Z0) ITupleInfo (true);
 	for (auto it __attribute__((unused)) : Ymir::r (0, this-> decls.size ()))
@@ -455,6 +512,10 @@ namespace syntax {
 	ret-> soluce = soluce;
 	ret-> block = blocks;
 	return ret;
+    }
+
+    std::vector <semantic::Symbol> IScope::allInnerDecls () {
+	return this-> block-> allInnerDecls ();
     }
     
     Instruction IScope::instruction () {

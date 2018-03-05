@@ -31,6 +31,8 @@ namespace syntax {
 	Ymir::Tree toGeneric () override;
 	
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;	
+
+	std::vector <semantic::Symbol> allInnerDecls () override;
 	
 	void print (int nb = 0) override;
 	

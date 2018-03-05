@@ -43,6 +43,10 @@ namespace syntax {
 
 	virtual IExpression* templateExpReplace (const std::map <std::string, IExpression*>&);
 	
+	virtual std::vector <semantic::Symbol> allInnerDecls () {
+	    return {};
+	}
+	
 	IExpression* clone ();
 	
 	virtual IExpression* onClone () {

@@ -6,6 +6,11 @@
 #include <map>
 #include <string>
 
+namespace semantic {
+    class ISymbol;
+    typedef ISymbol* Symbol;
+}
+
 namespace Ymir {
     struct Tree;    
 }
@@ -34,6 +39,8 @@ namespace syntax {
 	
 	IInstruction (Word token) : token (token) {}
 
+	virtual std::vector <semantic::Symbol> allInnerDecls () = 0;
+	
 	virtual void print (int nb = 0) = 0;
 
 	Block& father () {
@@ -92,6 +99,8 @@ namespace syntax {
 	    return this;    
 	}
 	
+	std::vector <semantic::Symbol> allInnerDecls () override;
+
 	std::vector <std::string> getIds () override {
 	    auto ret = IInstruction::getIds ();
 	    ret.push_back (INone::id ());

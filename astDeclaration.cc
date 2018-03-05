@@ -960,5 +960,5 @@ namespace syntax {
 
     void IUse::declareAsExtern (semantic::Module) {
     }
-
+       
 }

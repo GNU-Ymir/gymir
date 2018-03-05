@@ -22,6 +22,8 @@ namespace syntax {
 
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
 
+	std::vector <semantic::Symbol> allInnerDecls () override;
+	
 	semantic::InfoType& getCaster ();
 	
 	Ymir::Tree toGeneric () override;

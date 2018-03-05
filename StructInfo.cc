@@ -43,13 +43,13 @@ namespace semantic {
 	Tree InstInit (Word locus, InfoType type, Expression) {
 	    auto loc = locus.getLocus ();
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
-	    auto addr = Ymir::getAddr (loc, ltree);
-	    tree memsetArgs [] = {addr.getTree (),
-				  build_int_cst_type (long_unsigned_type_node, 0),
-				  TYPE_SIZE_UNIT (ltree.getType ().getTree ())};
-
-	    Ymir::getStackStmtList ().back ().append (build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs));
-	    return ltree;
+	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
+				  
+	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
+	    
+	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
+	    return Ymir::compoundExpr (loc, result, ltree);
 	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression right) {
@@ -62,18 +62,12 @@ namespace semantic {
 	Tree InstAffect (Word loc, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();
-	    // if (ltree.getType ().getTree () == rtree.getType ().getTree ()) {
-	    // 	return buildTree (
-	    // 	    MODIFY_EXPR, loc.getLocus (), ltree.getType (), ltree, rtree
-	    // 	);
-	    // } else {
 	    auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
 	    auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
 	    tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
-	    tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+	    tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
 	    auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
-	    return result;
-	    //}
+	    return Ymir::compoundExpr (loc.getLocus (), result, ltree);
 	}
 
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {

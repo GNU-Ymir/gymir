@@ -1400,7 +1400,15 @@ namespace syntax {
 	return new (Z0) IType (this-> token, expr-> info-> type);
     }
 
-
+    std::vector <semantic::Symbol> IMatch::allInnerDecls () {
+	std::vector <Symbol> syms;
+	for (auto it : this-> soluce) {
+	    for (auto it_ : it.created)
+		syms.push_back (it_-> info);
+	}
+	return syms;
+    }
+    
     Expression IMatch::expression () {
 	Table::instance ().enterBlock ();
 	auto aux = new (Z0) IVar ({expr-> token, "_"});

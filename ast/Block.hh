@@ -44,6 +44,8 @@ namespace syntax {
 	IBlock* block ();
 
 	IBlock* blockWithoutEnter ();
+
+	std::vector <semantic::Symbol> allInnerDecls () override;
 	
 	Ymir::Tree toGeneric () override;
 

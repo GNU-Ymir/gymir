@@ -25,7 +25,7 @@ namespace syntax {
 	Expression getLeft ();
 
 	Expression getRight ();
-	
+		
 	static const char * id () {
 	    return TYPEID (IMatch);
 	}
@@ -57,6 +57,8 @@ namespace syntax {
 	IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block);
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+
+	std::vector <semantic::Symbol> allInnerDecls () override;
 	
 	Expression expression () override;
 
