@@ -59,6 +59,10 @@ namespace semantic {
 	    auto fn = left-> toGeneric ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
 	    auto func = left-> info-> type-> to<IPtrFuncInfo> ();
+	    if (auto ref = left-> info-> type-> to <IRefInfo> ()) {
+		func = ref-> content ()-> to<IPtrFuncInfo> ();
+	    }
+	    
 	    if (func-> isDelegate ()) {
 		auto closureType = getField (loc.getLocus (), fn, "obj");
 		auto fnPtr = getField (loc.getLocus (), fn, "ptr");

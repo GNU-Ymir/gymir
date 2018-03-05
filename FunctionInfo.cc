@@ -52,19 +52,19 @@ namespace semantic {
 	    
 	    auto values = func-> getScore ()-> proto-> closure ();
 	    auto closureType = func-> getScore ()-> proto-> createClosureType ();
-	    auto closureVar = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), closureType);
+	    auto closureVar = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), closureType);
 	    Ymir::TreeStmtList list;
 	    
 	    for (auto it : values) {
-		auto field = Ymir::getField (BUILTINS_LOCATION, closureVar, it-> token.getStr ());
+		auto field = Ymir::getField (locus.getLocus (), closureVar, it-> token.getStr ());
 		auto lastInfo = it-> lastInfoDecl ();
 		list.append (buildTree (
-		    MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, field, getAddr (lastInfo)
+		    MODIFY_EXPR, locus.getLocus (), void_type_node, field, getAddr (lastInfo)
 		));
 	    }
 
 	    auto finalType = type-> toGeneric ();
-	    auto finalRet = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), finalType);
+	    auto finalRet = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), finalType);
 	    
 	    auto obj = Ymir::getField (loc, finalRet, "obj");
 	    auto ptr = Ymir::getField (loc, finalRet, "ptr");
