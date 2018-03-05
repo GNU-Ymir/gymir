@@ -59,9 +59,10 @@ namespace semantic {
 	if (this-> _proto == NULL) return validateFunc ();
 	auto ancSpace = Table::instance ().programNamespace ();
 	Table::instance ().enterFrame (this-> space (), this-> name (), this-> templateParams (), this-> isInternal ());
-	std::vector <Var> finalParams = IFrame::computeParams (this-> _proto-> params ());	
+	
 	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> name ()));
 	Table::instance ().programNamespace () = this-> space ();
+	std::vector <Var> finalParams = IFrame::computeParams (this-> _proto-> params ());	
 
 	if (this-> _proto-> type () == NULL) {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());

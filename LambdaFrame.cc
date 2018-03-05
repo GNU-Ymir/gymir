@@ -17,19 +17,25 @@ namespace semantic {
 	this-> name = name;
     }
 
-    FrameProto ILambdaFrame::validate (const std::vector<InfoType> & params) {
+    FrameProto ILambdaFrame::validate (const std::vector<InfoType> & params) {	
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> templateParams (), true);
 	Table::instance ().enterBlock ();
 	std::vector <Var> finalParams = IFrame::computeParams (this-> frame-> getParams (), params);
-
+	auto from = Table::instance ().globalNamespace ();
+	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> name));
+	
+	FrameProto ret;
 	if (this-> frame-> getExpr ()) {
-	    return IFrame::validate (this-> name, this-> _space, finalParams, this-> frame-> getExpr ());
+	    ret = IFrame::validate (this-> name, this-> _space, finalParams, this-> frame-> getExpr ());
 	} else {
-	    return IFrame::validate (this-> name, this-> _space, finalParams, this-> frame-> getBlock ());
+	    ret = IFrame::validate (this-> name, this-> _space, finalParams, this-> frame-> getBlock ());
 	}
+	
+	Table::instance ().setCurrentSpace (from);
+	return ret;
     }
 
-    ApplicationScore ILambdaFrame::isApplicable (ParamList params) {
+    ApplicationScore ILambdaFrame::isApplicable (ParamList params) {	
 	return IFrame::isApplicable (this-> frame-> token, this-> frame-> getParams (), params-> getParamTypes ());
     }
 

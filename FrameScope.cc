@@ -219,9 +219,8 @@ namespace semantic {
 
     FrameReturnInfo FrameReturnInfo::__empty__;
 
-    FrameScope::FrameScope (Namespace space, bool isInternal) :
-	_space (space),
-	_isInternal (isInternal)
+    FrameScope::FrameScope (Namespace space) :
+	_space (space)
     {
 	this-> _retInfo.currentBlock () = "";
 	this-> enterBlock ();
@@ -236,8 +235,12 @@ namespace semantic {
 	this-> _local.front ().addOpen (space);
     }
 
-    bool& FrameScope::isInternal () {
-	return this-> _isInternal;
+    void FrameScope::setInternal (FrameScope* scope) {
+	this-> _friend = scope;
+    }
+    
+    bool FrameScope::isInternal () {
+	return this-> _friend != NULL;
     }
 
     void FrameScope::quitBlock () {
@@ -259,9 +262,23 @@ namespace semantic {
 	    auto t = it.get (name);
 	    if (t) return t;
 	}
-	return NULL;
+	
+	if (this-> _friend) return this-> _friend-> get (name);
+	return NULL;	
     }
 
+    bool FrameScope::fromFriend (Symbol sym) {
+	if (!this-> _friend) return false;
+	auto name = sym-> sym.getStr ();
+	for (auto it : this-> _local) {
+	    auto t = it.get (name);
+	    if (t) return false;
+	}
+	
+	if (this-> _friend-> get (name)) return true;
+	return false;
+    }
+    
     std::vector <Symbol> FrameScope::getAll (std::string name) {
 	std::vector <Symbol> syms;
 	for (auto it : this-> _local) {
@@ -276,6 +293,7 @@ namespace semantic {
 	    auto t = it.getAlike (name);
 	    if (t) return t;
 	}
+	if (this-> _friend) return this-> _friend-> get (name);
 	return NULL;
     }
 

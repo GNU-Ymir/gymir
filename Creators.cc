@@ -44,6 +44,7 @@ namespace semantic {
 	this-> creators ["void"] = (void*) &IVoidInfo::create;
 	this-> creators ["bool"] = (void*) IBoolInfo::create;
 	this-> creators ["fn"] = (void*) IPtrFuncInfo::create;
+	this-> creators ["dg"] = (void*) IPtrFuncInfo::createDeg;
     }
 
     void* Creators::find (const std::string & elem) {

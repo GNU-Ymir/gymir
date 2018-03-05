@@ -142,9 +142,10 @@ namespace semantic {
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 					    this-> _space, this-> _function-> name (),
 					    finalParams, block, this-> tempParams);
-
+	    
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> type () = Table::instance ().retInfo ().info;
+	    proto-> attached () = finFrame;
 	    proto-> closure () = Table::instance ().retInfo ().closure;
 	    FrameTable::instance ().insert (finFrame);
 
@@ -265,6 +266,7 @@ namespace semantic {
 		    proto-> type () = Table::instance ().retInfo ().info;
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;
+		    proto-> attached () = finFrame;
 		    FrameTable::instance ().insert (finFrame);
 
 		    finFrame-> file () = name.getFile ();
@@ -318,6 +320,7 @@ namespace semantic {
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> closure () = Table::instance ().retInfo ().closure;
+	    proto-> attached () = finFrame;
 
 	    FrameTable::instance ().insert (finFrame);
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
@@ -352,6 +355,7 @@ namespace semantic {
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> closure () = Table::instance ().retInfo ().closure;
+	    proto-> attached () = finFrame;
 
 	    FrameTable::instance ().insert (finFrame);
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
@@ -412,6 +416,7 @@ namespace semantic {
 		    proto-> type () = Table::instance ().retInfo ().info;
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;
+		    proto-> attached () = finFrame;
 		    
 		    FrameTable::instance ().insert (finFrame);
 

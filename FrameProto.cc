@@ -8,6 +8,7 @@
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/value/_.hh>
+#include <ymir/semantic/types/CharInfo.hh>
 #include <ymir/semantic/tree/Generic.hh>
 
 namespace semantic {
@@ -58,6 +59,16 @@ namespace semantic {
     bool& IFrameProto::isCVariadic () {
 	return this-> _isCVariadic;
     }
+
+    FinalFrame & IFrameProto::attached () {
+	return this-> _attached;
+    }
+
+    void IFrameProto::isForcedDelegate () {
+	this-> _isForced = true;
+	if (this-> _attached)
+	    this-> _attached-> isForcedDelegate ();
+    }
     
     bool IFrameProto::equals (IFrameProto* scd) {
 	if (scd) {
@@ -101,8 +112,8 @@ namespace semantic {
     }
 
     Ymir::Tree IFrameProto::createClosureType () {
+	auto name = Namespace (this-> space (), this-> _name).toString () + ".closure";
 	if (this-> _closure.size () != 0) {
-	    auto name = Namespace (this-> space (), this-> _name).toString () + ".closure";
 	    std::vector <InfoType> types;
 	    std::vector <std::string> attrs;
 	    for (auto it : this-> _closure) {
@@ -111,6 +122,8 @@ namespace semantic {
 	    }
 	    
 	    return Ymir::makeTuple (name, types, attrs);
+	} else if (this-> _isForced) {
+	    return Ymir::makeTuple (name, {new (Z0) ICharInfo (false)});
 	}
 	return Ymir::Tree ();
     }

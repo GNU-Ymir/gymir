@@ -77,8 +77,8 @@ namespace syntax {
 	Expression visitLeftOp ();
 	Expression visitConstArray ();
 	Expression visitCast ();
-	Expression visitFuncPtrSimple ();
-	Expression visitFuncPtr ();
+	Expression visitFuncPtrSimple (const Word &);
+	Expression visitFuncPtr (const Word &);
 	Expression visitLambdaEmpty ();
 	Expression visitLambda ();
 	Expression visitSuite (const Word& token, Expression left);

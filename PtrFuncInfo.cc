@@ -30,8 +30,22 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc.getLocus (), result, ltree);
 	}
 
-	Tree InstCastDelegate (Word, InfoType, Expression left, Expression) {
-	    return left-> toGeneric ();
+	Tree InstCastDelegate (Word loc, InfoType, Expression left, Expression) {
+	    auto ret = left-> toGeneric (); 
+	    if (ret.getType ().getTreeCode () == RECORD_TYPE) return ret;
+	    else {
+		auto auxType = Ymir::makeStructType ("", 2,
+						get_identifier ("obj"),
+						build_pointer_type (void_type_node),
+						get_identifier ("ptr"),
+						ret.getType ().getTree ()
+						);
+		
+		auto auxVar = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), auxType);
+		auto ptr = Ymir::getField (loc.getLocus (), auxVar, "ptr");
+		auto result = buildTree (MODIFY_EXPR, loc.getLocus (), void_type_node, ptr, ret);
+		return Ymir::compoundExpr (loc.getLocus (), result, auxVar);
+	    }
 	}
 
 		
@@ -89,6 +103,21 @@ namespace semantic {
 	: IInfoType (isConst)
     {}
 
+    bool IPtrFuncInfo::isSameNoDTest (InfoType other) {
+	if (auto ptr = other-> to <IPtrFuncInfo> ()) {
+	    if (!this-> ret-> isSame (ptr-> ret)) return false;
+	    if (this-> params.size () != ptr-> params.size ())
+		return false;
+	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		if (!ptr-> params [it]-> isSame (this-> params [it])) {
+		    return false;
+		}
+	    }
+	    return true;
+	}
+	return false;
+    }
+    
     bool IPtrFuncInfo::isSame (InfoType other) {
 	if (auto ptr = other-> to <IPtrFuncInfo> ()) {
 	    if (this-> isDelegate () != ptr-> isDelegate ()) return false;
@@ -261,14 +290,14 @@ namespace semantic {
  	
     std::string IPtrFuncInfo::innerTypeString () {
 	Ymir::OutBuffer buf;
-	if (this-> isDelegate ()) buf.write ("dg(");
-	else buf.write ("fn(");
+	if (this-> isDelegate ()) buf.write ("dg (");
+	else buf.write ("fn (");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (this-> params [it]-> typeString ());
 	    if (it < (int) this-> params.size () - 1)
 		buf.write (",");
 	}
-	buf.write (")->", this-> ret-> typeString ());
+	buf.write (")-> ", this-> ret-> typeString ());
 	return buf.str ();
     }
 
@@ -318,8 +347,8 @@ namespace semantic {
 	    return Ymir::makeStructType ("", 2,
 					 get_identifier ("obj"),
 					 build_pointer_type (
-					     this-> score-> proto-> createClosureType ().getTree ()
-					 ),
+							     void_type_node
+							     ),
 					 get_identifier ("ptr"),
 					 ptr
 	    );	    

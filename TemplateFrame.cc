@@ -99,6 +99,7 @@ namespace semantic {
 	Table::instance ().enterFrame (this-> _space, this-> name, tmps, this-> _isInternal);
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
+	
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 	Symbol ret = NULL;
 	if (func-> getType ()) {

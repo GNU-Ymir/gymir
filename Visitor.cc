@@ -79,7 +79,7 @@ namespace syntax {
 	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::SCOPE,
 			       Keys::DEF, Keys::IF, Keys::RETURN, Keys::PRAGMA, 
 			       Keys::FOR,  Keys::WHILE, Keys::BREAK,
-			       Keys::MATCH, Keys::IN, Keys::ELSE,
+			       Keys::MATCH, Keys::IN, Keys::ELSE, Keys::DELEGATE, 
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
@@ -367,7 +367,7 @@ namespace syntax {
 	} else {
 	    Expression type;
 	    next = this-> lex.next ();
-	    if (next == Keys::FUNCTION) type = visitFuncPtrSimple ();
+	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
 	    else {
 		this-> lex.rewind ();
 		type = visitType ();
@@ -633,7 +633,7 @@ namespace syntax {
 	if (word == Token::COLON) {
 	    Expression type;
 	    word = this-> lex.next ();
-	    if (word == Keys::FUNCTION) type = visitFuncPtrSimple ();
+	    if (word == Keys::FUNCTION || word == Keys::DELEGATE) type = visitFuncPtrSimple (word);
 	    else {
 		this-> lex.rewind ();
 		type = visitType ();
@@ -699,14 +699,14 @@ namespace syntax {
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
 	    next = this-> lex.next ();
-	    if (next == Keys::FUNCTION) {
-		auto type = visitFuncPtrSimple ();
+	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
+		auto type = visitFuncPtrSimple (next);
 		return new (Z0)  ITypedVar (ident, type, deco);
 	    } else if (next == Token::LCRO) {
 		auto begin = next;
 		next = this-> lex.next ();
 		Expression type;
-		if (next == Keys::FUNCTION) type = visitFuncPtrSimple ();
+		if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
 		else {
 		    this-> lex.rewind ();
 		    type = visitType ();
@@ -744,14 +744,14 @@ namespace syntax {
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
 	    next = this-> lex.next ();
-	    if (next == Keys::FUNCTION) {
-		auto type = visitFuncPtrSimple ();
+	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
+		auto type = visitFuncPtrSimple (next);
 		return new (Z0)  ITypedVar (ident, type, deco);
 	    } else if (next == Token::LCRO) {
 		auto begin = next;
 		next = this-> lex.next ();
 		Expression type;
-		if (next == Keys::FUNCTION) type = visitFuncPtrSimple ();
+		if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
 		else {
 		    this-> lex.rewind ();
 		    type = visitType ();
@@ -775,14 +775,14 @@ namespace syntax {
 	auto ident = visitIdentifiant ();
 	Word next  = this-> lex.next ({Token::COLON});
 	next = this-> lex.next ();
-	if (next == Keys::FUNCTION) {
-	    auto type = visitFuncPtrSimple ();
+	if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
+	    auto type = visitFuncPtrSimple (next);
 	    return new (Z0)  ITypedVar (ident, type, Word::eof ());
 	} else if (next == Token::LCRO) {
 	    auto begin = next;
 	    next = this-> lex.next ();
 	    Expression type;
-	    if (next == Keys::FUNCTION) type = visitFuncPtrSimple ();
+	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
 	    else {
 		this-> lex.rewind ();
 		type = visitType ();
@@ -812,8 +812,8 @@ namespace syntax {
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
 	    next = this-> lex.next ();
-	    if (next == Keys::FUNCTION) {
-		auto type = visitFuncPtrSimple ();
+	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
+		auto type = visitFuncPtrSimple (next);
 		return new (Z0)  ITypedVar (ident, type, deco);
 	    } else {
 		this-> lex.rewind ();
@@ -879,8 +879,8 @@ namespace syntax {
 	if (begin == Token::LCRO) {
 	    auto next = this-> lex.next ();
 	    Expression type;
-	    if (next == Keys::FUNCTION) 
-		type = visitFuncPtrSimple ();
+	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) 
+		type = visitFuncPtrSimple (next);
 	    else { 
 		this-> lex.rewind ();
 		type = visitType ();
@@ -1427,7 +1427,7 @@ namespace syntax {
 	this-> lambdaPossible = true;
 	next = this-> lex.next ({Token::COLON});
 	next = this-> lex.next ();
-	if (next == Keys::FUNCTION || next == Keys::STRUCT || next == Keys::TUPLE) {
+	if (next == Keys::FUNCTION || next == Keys::STRUCT || next == Keys::TUPLE || next == Keys::DELEGATE) {
 	    auto expType = next;
 	    next = this-> lex.next ({Token::RPAR});
 	    return new (Z0)  IIs (begin, expr, expType);
@@ -1626,8 +1626,8 @@ namespace syntax {
 	    return visitCast ();
 	} else if (word == Token::LCRO) {
 	    return visitConstArray ();
-	} else if (word == Keys::FUNCTION) {
-	    return visitFuncPtr ();
+	} else if (word == Keys::FUNCTION || word == Keys::DELEGATE) {
+	    return visitFuncPtr (word);
 	} else if (word == Keys::MIXIN) {
 	    return visitMixin ();
 	} else  if (word == Keys::MATCH) {
@@ -1716,8 +1716,8 @@ namespace syntax {
 	auto begin = this-> lex.next ();
 	auto word = this-> lex.next ({Token::NOT});
 	auto next = this-> lex.next ();
-	if (next == Keys::FUNCTION) {
-	    type = visitFuncPtrSimple ();	    
+	if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
+	    type = visitFuncPtrSimple (next);	    
 	} else {
 	    bool needClose = false;
 	    if (next == Token::LPAR) 
@@ -1736,10 +1736,8 @@ namespace syntax {
     }
     
 
-    Expression Visitor::visitFuncPtrSimple () {
+    Expression Visitor::visitFuncPtrSimple (const Word & type) {
 	std::vector <Var> params;
-	this-> lex.rewind ();
-	auto begin = this-> lex.next ();
 	auto word = this-> lex.next ({Token::LPAR});
 	word = this-> lex.next ();
 	if (word != Token::RPAR) {
@@ -1759,13 +1757,11 @@ namespace syntax {
 	}
 	word = this-> lex.next ({Token::ARROW});
 	auto ret = visitType ();
-	return new (Z0)  IFuncPtr (begin, params, ret);
+	return new (Z0)  IFuncPtr (type, params, ret);
     }
 
-    Expression Visitor::visitFuncPtr () {
+    Expression Visitor::visitFuncPtr (const Word & begin) {
 	std::vector <Var> params;
-	this-> lex.rewind ();
-	auto begin = this-> lex.next ();
 	auto word = this-> lex.next ({Token::LPAR});
 	word = this-> lex.next ();
 	if (word != Token::RPAR) {

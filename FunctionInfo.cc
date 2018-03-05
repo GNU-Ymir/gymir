@@ -333,7 +333,9 @@ namespace semantic {
 	    
 	    auto ret = (PtrFuncInfo) ot-> cloneConst ();
 	    ret-> getScore () = score;
-	    ret-> isDelegate () = score-> proto-> isDelegate ();
+	    ret-> isDelegate () = score-> proto-> isDelegate () || ot-> isDelegate ();
+	    
+	    if (ot-> isDelegate ()) score-> proto-> isForcedDelegate ();	    
 	    if (ret-> isDelegate ()) {
 		ret-> binopFoo = &FunctionUtils::InstAffectDelegate;
 	    } else {

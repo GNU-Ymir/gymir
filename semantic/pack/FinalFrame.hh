@@ -33,6 +33,7 @@ namespace semantic {
 	
 	std::vector <syntax::Expression> _tmps;
 	bool _isVariadic;
+	bool _isForced = false;
 	syntax::Block _block;
 
 	static std::map <std::string, Ymir::Tree> __declared__;
@@ -60,6 +61,8 @@ namespace semantic {
 	
 	std::vector <syntax::Expression> &tmps ();
 
+	void isForcedDelegate ();
+	
 	syntax::Block block ();	
 
 	void finalize ();

@@ -81,8 +81,10 @@ namespace semantic {
 	    }
 	    buf.write (")");
 	}
-	
-	this-> _frameTable.push_front ({{space, buf.str ()}, internal});
+
+	FrameScope scope {{space, buf.str ()}};
+	if (internal) scope.setInternal (&this-> _frameTable.front ());
+	this-> _frameTable.push_front (scope);
 	this-> _nbFrame ++;
     }
 
@@ -140,14 +142,6 @@ namespace semantic {
 	if (!this-> _frameTable.empty ()) {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
-	    for (auto it : this-> _frameTable) {
-		if (it.space ().isSubOf (last)) {
-		    ret = it.get (name);
-		    if (ret) return ret;
-		    else ret = NULL;
-		    last = it.space ();
-		} else if (this-> getCurrentSpace () != last) break;	    
-	    }
 	}
 
 	if (ret == NULL) ret = this-> _globalScope.get (name);
@@ -166,15 +160,7 @@ namespace semantic {
 	std::vector <Symbol> alls;
 	Namespace last = this-> getCurrentSpace ();
 	if (!this-> _frameTable.empty ()) {
-	    //alls = this-> _frameTable.front ().getAll (name);
-	    for (auto it : this-> _frameTable) {
-		if (it.space ().isSubOf (last)) {
-		    auto aux = it.getAll (name);
-		    for (auto at : aux)
-			alls.push_back (at);
-		    last = it.space ();
-		} else if (this-> _space != last) break;
-	    }
+	    alls = this-> _frameTable.front ().getAll (name);
 	}
 
 	auto aux = this-> _globalScope.getAll (name);
@@ -195,15 +181,6 @@ namespace semantic {
 	if (!this-> _frameTable.empty ()) {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
-
-	    for (auto it : this-> _frameTable) {
-		if (it.space ().isAbsSubOf (last)) {
-		    ret = it.get (name);
-		    if (ret && ret-> isScoped ()) return ret;
-		    else ret = NULL;
-		    last = it.space ();
-		} else if (this-> _space != last) break;	    
-	    }
 	}
 
 	if (ret == NULL) ret = this-> _globalScope.get (name);
@@ -226,15 +203,6 @@ namespace semantic {
 	if (!this-> _frameTable.empty ()) {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
-
-	    for (auto it : this-> _frameTable) {
-		if (it.space ().isAbsSubOf (last)) {
-		    ret = it.get (name);
-		    if (ret && ret-> isScoped ()) return ret;
-		    else ret = NULL;
-		    last = it.space ();
-		} else if (this-> _space != last) break;	    
-	    }
 	}
 
 	if (ret == NULL) ret = this-> _globalScope.get (name);
@@ -267,19 +235,7 @@ namespace semantic {
 
     bool Table::parentFrame (Symbol sym) {
 	if (!this-> _frameTable.empty ()) {
-	    auto name = sym-> sym.getStr ();
-	    Namespace last = this-> getCurrentSpace ();
-	    auto ret = this-> _frameTable.front ().get (name);
-	    if (ret) return false;
-	    for (auto it : this-> _frameTable) {
-		if (it.space ().isSubOf (last)) {
-		    ret = it.get (name);
-		    if (ret) {
-			return getCurrentSpace () != it.space ();     
-		    } else ret = NULL;
-		    last = it.space ();
-		} else if (this-> _space != last) break;	    
-	    }
+	    return this-> _frameTable.front ().fromFriend (sym);
 	}
 	return false;
     }

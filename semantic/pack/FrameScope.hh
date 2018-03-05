@@ -21,7 +21,7 @@ namespace semantic {
 	bool _returned = false;
 	bool _breaked = false;
 	ITreeInfo* _father;
-
+	
     public:
 
 	ITreeInfo (std::string name);
@@ -43,7 +43,7 @@ namespace semantic {
 	bool hasBreaked ();
 
 	bool hasReturned ();
-
+	
 	ITreeInfo* quitBlock ();
 
 	bool retract ();
@@ -111,18 +111,23 @@ namespace semantic {
     class FrameScope {
 	FrameReturnInfo _retInfo;
 	std::list <Scope> _local;
+	FrameScope* _friend = NULL;
+	
 	Namespace _space;
-	bool _isInternal;
-
+	
     public:
 
-	FrameScope (Namespace space, bool isInternal);
+	FrameScope (Namespace space);
 
 	void enterBlock ();
 
 	void addOpen (Namespace space);
 
-	bool& isInternal ();
+	void setInternal (FrameScope* scope);
+
+	bool fromFriend (Symbol sym);
+	
+	bool isInternal ();
 
 	void quitBlock ();
 

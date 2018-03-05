@@ -27,6 +27,9 @@ namespace semantic {
 
     class ISymbol;
     typedef ISymbol* Symbol;
+
+    class IFinalFrame;
+    typedef IFinalFrame* FinalFrame;
     
     class IFrameProto  {
     private:
@@ -40,6 +43,8 @@ namespace semantic {
 	std::string _extern;
 	Ymir::Tree _fn;
 	bool _isCVariadic;
+	bool _isForced = false;
+	FinalFrame _attached;
 	
     public:
 
@@ -65,6 +70,10 @@ namespace semantic {
 
 	bool& isCVariadic ();
 	
+	FinalFrame & attached ();
+
+	void isForcedDelegate ();
+
 	Ymir::Tree toGeneric ();
 
 	Ymir::Tree createClosureType ();

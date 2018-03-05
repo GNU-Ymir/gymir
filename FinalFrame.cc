@@ -9,6 +9,7 @@
 #include <ymir/semantic/types/RefInfo.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/types/CharInfo.hh>
 #include <ymir/syntax/Keys.hh>
 
 #include "config.h"
@@ -83,6 +84,10 @@ namespace semantic {
 	return this-> _tmps;
     }
 
+    void IFinalFrame::isForcedDelegate () {
+	this-> _isForced = true;
+    }
+
     syntax::Block IFinalFrame::block () {
     	return this-> _block;
     }
@@ -135,8 +140,8 @@ namespace semantic {
     }
 
     Ymir::Tree IFinalFrame::createClosureType () {
+	auto name = Namespace (this-> space (), this-> _name).toString () + ".closure";
 	if (this-> _closure.size () != 0) {
-	    auto name = Namespace (this-> space (), this-> _name).toString () + ".closure";
 	    std::vector <InfoType> types;
 	    std::vector <std::string> attrs;
 	    for (auto it : this-> _closure) {
@@ -145,7 +150,10 @@ namespace semantic {
 	    }
 	    
 	    return build_pointer_type (Ymir::makeTuple (name, types, attrs).getTree ());
+	} else if (this-> _isForced) {
+	    return build_pointer_type (Ymir::makeTuple (name, {new (Z0) ICharInfo (false)}).getTree ());
 	}
+	
 	return Ymir::Tree ();
     }
     

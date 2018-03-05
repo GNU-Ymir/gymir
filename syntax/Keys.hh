@@ -18,7 +18,8 @@ struct Keys {
     static std::string  FALSE_; 
     static std::string  NULL_; 
     static std::string  CAST; 
-    static std::string  FUNCTION; 
+    static std::string  FUNCTION;
+    static std::string  DELEGATE; 
     static std::string  LET; 
     static std::string  IS; 
     static std::string  NOT_IS; 

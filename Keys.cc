@@ -16,6 +16,7 @@ std::string     Keys::FALSE_	= "false";
 std::string     Keys::NULL_	= "null";
 std::string     Keys::CAST	= "cast";
 std::string     Keys::FUNCTION	= "fn";
+std::string     Keys::DELEGATE	= "dg";
 std::string     Keys::LET	= "let";
 std::string     Keys::IS	= "is";
 std::string     Keys::NOT_IS	= "!is";

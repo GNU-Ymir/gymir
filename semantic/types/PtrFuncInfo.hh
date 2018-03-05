@@ -21,6 +21,8 @@ namespace semantic {
 	
 	bool isSame (InfoType) override;
 
+	bool isSameNoDTest (InfoType);
+
 	static InfoType create (Word tok, const std::vector<syntax::Expression> & templates) {
 	    if (templates.size () < 1) 
 		Ymir::Error::takeATypeAsTemplate (tok);
@@ -37,6 +39,23 @@ namespace semantic {
 	    return NULL;
 	}
 
+	static InfoType createDeg (Word tok, const std::vector<syntax::Expression> & templates) {
+	    if (templates.size () < 1) 
+		Ymir::Error::takeATypeAsTemplate (tok);
+	    else {
+		auto ptr = new (Z0) IPtrFuncInfo (false);
+		ptr-> ret = templates [0]-> info-> type;
+		if (templates.size () > 1) {
+		    for (auto it : Ymir::r (1, templates.size ())) {
+			ptr-> params.push_back (templates [it]-> info-> type);
+		    }
+		}
+		ptr-> isDelegate () = true;
+		return ptr;
+	    }
+	    return NULL;
+	}
+	
 	InfoType BinaryOp (Word token, syntax::Expression right) override;
 
 	InfoType BinaryOpRight (Word token, syntax::Expression right) override;
