@@ -15,7 +15,9 @@ namespace semantic {
 
 	Tree InstCall (Word loc, InfoType ret, Expression, Expression paramsExp) {
 	    ParamList params = paramsExp-> to <IParamList> ();
+	    println ("ICI");
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
+	    println ("LA");
 	    Ymir::TreeStmtList list;
 	    StructInfo info = ret-> to <IStructInfo> ();
 	    auto aux = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), ret-> toGeneric ());

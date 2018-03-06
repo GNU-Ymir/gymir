@@ -158,6 +158,7 @@ namespace syntax {
     }
 
     Ymir::Tree IVar::toGeneric () {
+	println (this-> info-> value (), " ", this-> info-> sym);
 	if (this-> info-> value ())
 	    return this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	
