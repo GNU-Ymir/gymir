@@ -158,7 +158,6 @@ namespace syntax {
     }
 
     Ymir::Tree IVar::toGeneric () {
-	println (this-> info-> value (), " ", this-> info-> sym);
 	if (this-> info-> value ())
 	    return this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	
@@ -268,8 +267,8 @@ namespace syntax {
 	std::vector <tree> params (this-> params.size ());
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree elist;
-
-	    if (treat [i] && treat [i]-> binopFoo) {		
+	    
+	    if (treat [i] && treat [i]-> binopFoo) {
 		elist = treat [i]-> buildCastOp (
 		    this-> params [i]-> token,
 		    treat [i],

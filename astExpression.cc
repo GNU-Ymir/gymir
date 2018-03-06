@@ -1343,7 +1343,6 @@ namespace syntax {
 	this-> params-> inside = this;
 
 	aux-> params = (ParamList) this-> params-> expression ();
-	
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
 	if (aux-> params == NULL) return NULL;

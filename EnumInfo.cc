@@ -48,7 +48,7 @@ namespace semantic {
 
 	Tree InstGet (Word locus, InfoType type, Expression elem, Expression) {
 	    EnumInfo ecst = type-> to <IEnumInfo> ();
-	    if (ecst-> getValue () == NULL) ecst-> getValue () = elem;
+	    ecst-> getValue () = elem;
 	    if (ecst-> getComp () != NULL) {
 		if (ecst-> getComp ()-> unopFoo) {
 		    return ecst-> getComp ()-> buildUnaryOp (
@@ -364,7 +364,7 @@ namespace semantic {
 	    rf-> comp = ret;
 	    rf-> binopFoo = EnumUtils::InstGet;
 	    return rf;
-	} else {
+	} else {	    
 	    return this-> _content-> CompOp (other);
 	}
     }
