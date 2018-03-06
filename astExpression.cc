@@ -597,13 +597,18 @@ namespace syntax {
 	} else {
 	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
 	    if (type == NULL) {
-		auto call = findOpAssign (aux);
-		if (!call) {
-		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-		    return NULL;
+		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
+		if (type == NULL) {
+		    auto call = findOpAssign (aux);
+		    if (!call) {
+			Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+			return NULL;
+		    }
+		    return call;
 		}
-		return call;	    
-	    }	
+		aux-> isRight = true;
+	    }
+	    
 	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
 	    Table::instance ().retInfo ().changed () = true;
 	    aux-> info-> value () = NULL;

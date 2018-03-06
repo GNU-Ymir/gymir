@@ -120,8 +120,8 @@ namespace semantic {
 		ret-> binopFoo = FloatUtils::InstCast;
 		return ret;
 	    }
-	} else if (other-> is<IRefInfo> ()) {
-	    auto aux = new (Z0)  IRefInfo (this-> clone ());
+	} else if (other-> is<IRefInfo> () && !this-> isConst ()) {
+	    auto aux = new (Z0)  IRefInfo (false, this-> clone ());
 	    aux-> binopFoo = FloatUtils::InstAddr;
 	    return aux;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
@@ -292,8 +292,9 @@ namespace semantic {
     InfoType IFloatInfo::opAff (Word, syntax::Expression right) {
 	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
 	    if (ot-> _type <= this-> _type) {
-		ot-> binopFoo = &FloatUtils::InstReaff;
-		return this-> clone ();
+		auto ret = this-> clone ();
+		ret-> binopFoo = &FloatUtils::InstReaff;
+		return ret;
 	    }
 	}
 	return NULL;
