@@ -49,12 +49,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		if ((strcmp (arg, LIBGC) == 0)) need_gc = false;
 		break;
 	    case OPT_SPECIAL_input_file :
-		if (arg [0] == '\0' || arg [1] == '\0')
-		    continue;
-		int len = strlen (arg);
-		if (len <= 2 || strcmp (arg + len - 3, ".yr") == 0) {
-		    yr_file_found = true;
-		}		    
+		yr_file_found = true;
 	    }	    
 	}
     }
