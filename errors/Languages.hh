@@ -109,6 +109,7 @@ namespace Ymir {
 		phrases [MissingReturn] = "Missing return statement for function '%%%' expecting a value of type '%%%'";		
 		phrases [ModuleDontExist] = "Source file %%%.yr doesn't exist";		
 		phrases [ImportError] = "Importation failed";
+		phrases [PermissionDenied] = "Cannot open file named %%%, permission denied";
 		phrases [NotImmutable] = "The value cannot be read at compile time";
 		phrases [ModuleNotFirst] = "Global module declaration must be the first declaration";
 		phrases [ModuleDontMatch] = "Module %%% must be placed in file %%%.yr";

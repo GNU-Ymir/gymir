@@ -580,10 +580,20 @@ namespace Ymir {
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::permissionDenied (std::string & name) {
+	auto msg = format (getString (PermissionDenied), YELLOW, name.c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg) + "\n";
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
     
     void Error::unterminated (const Word& word) {
 	auto str = getString (Unterminated);

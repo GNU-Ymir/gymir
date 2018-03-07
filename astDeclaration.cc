@@ -439,12 +439,16 @@ namespace syntax {
 	    Namespace space (it.getStr ());
 	    if (!Table::instance ().moduleExists (space)) {
 	    	auto file = fopen (name.c_str (), "r");
-	    	Ymir::Parser parser (name.c_str (), file);
-	    	auto mod = Table::instance ().addModule (space);
-	    	mod-> addOpen (globSpace);
-	    	auto prg = parser.syntax_analyse ();
-	    	fclose (file);
-		prg-> declareAsExtern (it.getStr (), mod);
+		if (file) { 
+		    Ymir::Parser parser (name.c_str (), file);
+		    auto mod = Table::instance ().addModule (space);
+		    mod-> addOpen (globSpace);
+		    auto prg = parser.syntax_analyse ();
+		    fclose (file);
+		    prg-> declareAsExtern (it.getStr (), mod);
+		} else {
+		    Ymir::Error::permissionDenied (name);
+		}
 	    }
 
 	    Table::instance ().openModuleForSpace (space, globSpace);
@@ -474,14 +478,18 @@ namespace syntax {
 	    Namespace space (it.getStr ());
 	    if (!Table::instance ().moduleExists (space)) {
 		auto file = fopen (name.c_str (), "r");
-		Ymir::Parser parser (name.c_str (), file);
-		auto mod = Table::instance ().addModule (space);
-		mod-> addOpen (globSpace);
-		auto prg = parser.syntax_analyse ();
-		fclose (file);
-		prg-> declareAsExtern (it.getStr (), mod);
-		if (this-> isPublic) {
-		    mod_-> addPublicOpen (mod-> space ());
+		if (file) {
+		    Ymir::Parser parser (name.c_str (), file);
+		    auto mod = Table::instance ().addModule (space);
+		    mod-> addOpen (globSpace);
+		    auto prg = parser.syntax_analyse ();
+		    fclose (file);
+		    prg-> declareAsExtern (it.getStr (), mod);
+		    if (this-> isPublic) {
+			mod_-> addPublicOpen (mod-> space ());		    
+		    }
+		} else {
+		    Ymir::Error::permissionDenied (name);
 		}
 	    }
 	    
@@ -509,13 +517,18 @@ namespace syntax {
 
 	    Namespace space (it.getStr ());
 	    if (!Table::instance ().moduleExists (space)) {
-		Ymir::Parser parser (name.c_str (), fopen (name.c_str (), "r"));
-		auto mod = Table::instance ().addModule (space);
-		mod-> addOpen (globSpace);
-		auto prg = parser.syntax_analyse ();
-		prg-> declareAsExtern (it.getStr (), mod);
-		if (this-> isPublic) {
-		    mod_-> addPublicOpen (mod-> space ());
+		auto file = fopen (name.c_str (), "r");
+		if (file) {
+		    Ymir::Parser parser (name.c_str (), file);
+		    auto mod = Table::instance ().addModule (space);
+		    mod-> addOpen (globSpace);
+		    auto prg = parser.syntax_analyse ();
+		    prg-> declareAsExtern (it.getStr (), mod);
+		    if (this-> isPublic) {
+			mod_-> addPublicOpen (mod-> space ());
+		    }
+		} else {
+		    Ymir::Error::permissionDenied (name);
 		}
 	    }
 	    Table::instance ().openModuleForSpace (space, globSpace);

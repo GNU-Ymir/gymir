@@ -81,6 +81,7 @@ namespace Ymir {
 	    MissingReturn,
 	    ModuleDontExist,
 	    ImportError,
+	    PermissionDenied,
 	    NotImmutable,
 	    MainPrototype,
 	    MainInModule,
@@ -180,6 +181,8 @@ namespace Ymir {
 	static void moduleDontExist (const Word&, const Word&);
 
 	static void importError (const Word&);
+
+	static void permissionDenied (std::string&);
 	
 	static void recursiveExpansion (const Word&);
 
