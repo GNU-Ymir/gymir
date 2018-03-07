@@ -37,6 +37,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     bool need_gc = *in_decoded_options_count != 1;
     /* bool need_midgard = *in_decoded_options_count != 1; */
     /* bool need_runtime = *in_decoded_options_count != 1; */
+    bool yr_file_found = false;
     std::vector <int> toRemove;
     std::vector <std::string> includes;
 
@@ -47,45 +48,54 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    case OPT_l:
 		if ((strcmp (arg, LIBGC) == 0)) need_gc = false;
 		break;
-	    } 
+	    case OPT_SPECIAL_input_file :
+		if (arg [0] == '\0' || arg [1] == '\0')
+		    continue;
+		int len = strlen (arg);
+		if (len <= 2 || strcmp (arg + len - 3, ".yr") == 0) {
+		    yr_file_found = true;
+		}		    
+	    }	    
 	}
     }
-
-    num_args = argc + need_gc + 4 + includes.size () - toRemove.size ();
-    new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
-    i = 0;
-
-    while (i < argc) {
-	if (std::find (toRemove.begin (), toRemove.end (), i) == toRemove.end ())
-	    new_decoded_options [i] = decoded_options [i];
-	i ++;
-    }
     
-    if (need_gc) {
-	generate_option (OPT_l, LIBGC, 1, CL_DRIVER, &new_decoded_options [i]);
+    if (yr_file_found) {
+	num_args = argc + need_gc + 4 + includes.size () - toRemove.size ();
+	new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
+	i = 0;
+
+	while (i < argc) {
+	    if (std::find (toRemove.begin (), toRemove.end (), i) == toRemove.end ())
+		new_decoded_options [i] = decoded_options [i];
+	    i ++;
+	}
+
+	if (need_gc) {
+	    generate_option (OPT_l, LIBGC, 1, CL_DRIVER, &new_decoded_options [i]);
+	    added_libraries ++;
+	    i++;
+	}
+    		     
+	generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
 	added_libraries ++;
 	i++;
-    }
-    		     
-    generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
-    added_libraries ++;
-    i++;
     
 
-    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
-    added_libraries ++;
-    i++;
+	generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
+	added_libraries ++;
+	i++;
 
-    generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
-    added_libraries ++;
-    i++;    
+	generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
+	added_libraries ++;
+	i++;    
 
-    generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
-    added_libraries ++;
-    i++;
-        
-    *in_decoded_options_count = num_args;
-    *in_decoded_options = new_decoded_options;
+	generate_option (OPT_l, LIBYMIDGARD, 1, CL_DRIVER, &new_decoded_options [i]);
+	added_libraries ++;
+	i++;
+	*in_decoded_options_count = num_args;
+	*in_decoded_options = new_decoded_options;
+    }
+    
 }
  
 /* Called before linking.  Returns 0 on success and -1 on failure.  */
