@@ -64,6 +64,10 @@ namespace semantic {
 	
 	void isStatic (bool isStatic, ulong size);
 	
+	bool isConst () override;
+	
+	void isConst (bool isConst) override;
+
 	static const char* id () {
 	    return "IArrayInfo";
 	}

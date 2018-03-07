@@ -20,7 +20,9 @@ namespace semantic {
 	_isStatic (false),
 	_size (0),
 	_content (content)
-    {}
+    {
+	this-> isText () = isConst;
+    }
     
     InfoType IArrayInfo::content () {
 	return this-> _content;
@@ -70,8 +72,7 @@ namespace semantic {
 	    return arr;
 	}
 	return NULL;
-    }
-    
+    }    
     
     InfoType IArrayInfo::BinaryOp (Word token, syntax::Expression right) {
 	if (token == Token::EQUAL) return Affect (right);
@@ -354,6 +355,16 @@ namespace semantic {
 	this-> _isStatic = isStatic;
 	this-> _size = size;
     }
+    
+    bool IArrayInfo::isConst () {
+	return IInfoType::isConst ();
+    }
+    
+    void IArrayInfo::isConst (bool isConst) {
+	IInfoType::isConst (isConst);
+	this-> isText () = isConst;
+    }
+
     
     const char* IArrayInfo::getId () {
 	return IArrayInfo::id ();

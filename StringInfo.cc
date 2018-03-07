@@ -10,7 +10,6 @@
 #include <ymir/ast/_.hh>
 #include <ymir/semantic/utils/ArrayUtils.hh>
 
-
 namespace semantic {
         
     IStringInfo::IStringInfo (bool isConst) :
