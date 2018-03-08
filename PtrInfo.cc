@@ -2,6 +2,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/ast/TreeExpression.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/FixedValue.hh>
 
@@ -10,6 +11,17 @@ namespace semantic {
     namespace PtrUtils {
 	using namespace syntax;
 	
+	template <typename T>
+	T getAndRemoveBack (std::list <T> &list) {
+	    if (list.size () != 0) {
+		auto last = list.back ();	    
+		list.pop_back ();
+		return last;
+	    } else {
+		return NULL;
+	    }
+	}
+
 	Ymir::Tree InstAffect (Word locus, InfoType type, Expression left, Expression right) {
 	    return FixedUtils::InstAffect (locus, type, left, right);
 	}
@@ -41,6 +53,69 @@ namespace semantic {
 	    );
 	}
 
+	Ymir::Tree InstUnrefUn (Word locus, InfoType type, Expression left) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+	    
+	    auto inner = left-> info-> type-> to<IPtrInfo> ()-> content ()-> toGeneric ();
+	    
+	    auto leftExp = left-> toGeneric ();
+	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
+
+	    if (type-> unopFoo) {
+		return type-> buildUnaryOp (
+		    locus,
+		    type,
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp)
+		);
+	    } else if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus,
+		    type,
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (Z0)  ITreeExpression (locus, type, Ymir::Tree ())
+		);
+	    } else {
+		return leftExp;
+	    }
+	}
+	
+	Ymir::Tree InstUnrefBin (Word locus, InfoType type, Expression left, Expression right) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+
+	    auto innerType = left-> info-> type-> to<IPtrInfo> ()-> content ();
+	    auto inner = innerType-> toGeneric ();	    
+	    auto leftExp = left-> toGeneric ();
+	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
+	    
+	    if (type-> binopFoo) {
+		return type-> buildBinaryOp (
+		    locus,
+		    type,
+		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
+		    right
+		);
+	    } else if (type-> multFoo) {
+		return type-> buildMultOp (
+		    locus,
+		    type,
+		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
+		    right
+		);
+	    } else if (type-> unopFoo) {
+		return type-> buildUnaryOp (
+		    locus,
+		    type,
+		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp)
+		);
+	    }
+	    return leftExp;
+	}
+
+	
 	Ymir::Tree InstPlusRight (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = right-> toGeneric ();
 	    Ymir::Tree rtree = convert (long_unsigned_type_node, left-> toGeneric ().getTree ());
@@ -251,6 +326,10 @@ namespace semantic {
 		return ret;
 	    }
 	    return NULL;
+	} else {
+	    auto aux = this-> _content-> DotOp (var);
+	    if (aux != NULL) return addUnref (aux);
+	    return NULL;
 	}
 	return NULL;
     }
@@ -340,6 +419,28 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IPtrInfo::addUnref (InfoType elem) {
+	bool binop = false, unop = false, mult = false;
+	if (elem-> binopFoo) {
+	    elem-> nextBinop.push_back (elem-> binopFoo);
+	    binop = true;
+	}
+	if (elem-> unopFoo) {
+	    elem-> nextUnop.push_back (elem-> unopFoo);
+	    unop = true;
+	}
+
+	if (elem-> multFoo) {
+	    elem-> nextMult.push_back (elem-> multFoo);
+	    mult = true;
+	}
+	
+	if (binop) elem-> binopFoo = &PtrUtils::InstUnrefBin;
+	if (unop) elem-> unopFoo = &PtrUtils::InstUnrefUn;
+	if (mult) elem-> multFoo = &PtrUtils::InstUnrefBin;
+	return elem;
+    }
+    
     Ymir::Tree IPtrInfo::toGeneric () {
 	if (this-> _content-> to<IStructInfo> ()) {
 	    return build_pointer_type (

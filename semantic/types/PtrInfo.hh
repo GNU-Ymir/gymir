@@ -78,7 +78,9 @@ namespace semantic {
 
 	InfoType Unref ();
 
-	InfoType toPtr ();	
+	InfoType toPtr ();
+
+	InfoType addUnref (InfoType elem);
 	
     };
 
