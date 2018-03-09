@@ -56,3 +56,4 @@
 #include "Use.hh"
 #include "Scope.hh"
 #include "Pragma.hh"
+#include "Macro.hh"

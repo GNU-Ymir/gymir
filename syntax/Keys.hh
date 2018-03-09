@@ -63,4 +63,7 @@ struct Keys {
     static std::string  MOD;
     static std::string  USE;
     static std::string  PRAGMA;
+    static std::string  MACRO;
+    static std::string  MACRO_EXPR;
+    static std::string  MACRO_IDENT;
 };

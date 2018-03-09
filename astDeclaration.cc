@@ -973,5 +973,14 @@ namespace syntax {
 
     void IUse::declareAsExtern (semantic::Module) {
     }
-       
+
+    void IMacro::declare () {	
+    }
+
+    void IMacro::declare (semantic::Module) {	
+    }
+
+    void IMacro::declareAsExtern (semantic::Module) {
+    }
+    
 }

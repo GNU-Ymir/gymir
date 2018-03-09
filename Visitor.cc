@@ -73,7 +73,7 @@ namespace syntax {
 	this-> highOp = {Token::DIV, Token::AND, Token::STAR, Token::PERCENT,
 			 Token::DXOR};
 	
-	this-> suiteElem = {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON, Token::LACC};
+	this-> suiteElem = {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON, Token::LACC, Token::MACEX};
 	this-> afUnary = {Token::DPLUS, Token::DMINUS};	
 	this-> befUnary = {Token::MINUS, Token::AND, Token::STAR, Token::NOT};
 	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::SCOPE,
@@ -83,7 +83,8 @@ namespace syntax {
 			       Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
-			       Keys::TRAIT, Keys::REF, Keys::CONST, Keys::MOD, Keys::SELF, Keys::USE
+			       Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
+			       Keys::MOD, Keys::SELF, Keys::USE
 	};
 
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -209,6 +210,7 @@ namespace syntax {
     Declaration Visitor::visitDeclaration (bool fatal) {
     	auto token = this-> lex.next ();
     	if (token == Keys::DEF) return visitFunction ();
+	else if (token == Keys::MACRO) return visitMacro ();
 	else if (token == Keys::USE) return visitUse ();
 	else if (token == Keys::MOD) return visitModule ();
     	else if (token == Keys::IMPORT) return visitImport ();
@@ -228,6 +230,68 @@ namespace syntax {
     	return NULL;
     }
 
+    Macro Visitor::visitMacro () {
+	auto ident = visitIdentifiant ();
+	auto word = this-> lex.next ({Token::LACC});
+	std::vector <MacroExpr> exprs;
+	std::vector <Block> blocks;
+	exprs.push_back (visitMacroExpression ());
+	blocks.push_back (visitBlock ());
+	this-> lex.next ({Token::RACC});
+	return new (Z0) IMacro (ident, exprs, blocks);
+    }
+
+    MacroExpr Visitor::visitMacroExpression (bool in_repeat) {
+	Word begin;
+	if (!in_repeat)
+	    begin = this-> lex.next ({Token::LPAR});
+	
+	Word end;
+	auto endTok = Token::RPAR;
+	if (in_repeat) endTok = Token::COMA;
+	
+	std::vector <MacroElement> elements;
+	while (true) {
+	    auto next = this-> lex.next ({Token::STAR, Token::DOLLAR, Token::GUILL, endTok});
+	    if (next == Token::STAR) elements.push_back (visitMacroRepeat ());		
+	    else if (next == Token::DOLLAR) elements.push_back (visitMacroVar ());
+	    else if (next == Token::GUILL) elements.push_back (visitMacroToken ());
+	    else { end = next; break; } 
+	}
+	return new (Z0) IMacroExpr (begin, end, elements);
+    }
+
+    MacroRepeat Visitor::visitMacroRepeat () {
+	this-> lex.next ({Token::LPAR});
+	auto expr = visitMacroExpression (true);
+	this-> lex.next ({Token::GUILL});
+	auto tok = visitMacroToken ();
+	this-> lex.next ({Token::RPAR});
+	return new (Z0) IMacroRepeat (expr, tok);
+    }
+
+    MacroVar Visitor::visitMacroVar () {
+	auto ident = this-> visitIdentifiant ();
+	this-> lex.next ({Token::COLON});
+	auto val = this-> lex.next ({Keys::MACRO_EXPR, Keys::MACRO_IDENT});
+	if (val == Keys::MACRO_IDENT)
+	    return new (Z0) IMacroVar (ident, MacroVarConst::IDENT);
+	else
+	    return new (Z0) IMacroVar (ident, MacroVarConst::EXPR);
+    }
+
+    MacroToken Visitor::visitMacroToken () {
+	auto begin = this-> lex.rewind ().next ();
+	auto val = visitString (begin);
+	std::string value;
+	if (auto ch = val-> to<IChar> ()) {	    
+	    value = std::string (1, ch-> toChar ()); 
+	} else if (auto str = val-> to <IString> ()) {
+	    value = str-> getStr (); 	    
+	} else Ymir::Error::assert ("!!");
+	return new (Z0) IMacroToken (value);
+    }
+    
     ModDecl Visitor::visitModule () {
 	auto ident = visitIdentifiant ();
 	auto word = this-> lex.next ({Token::DOT, Token::SEMI_COLON, Token::LACC, Token::LPAR});
@@ -920,7 +984,7 @@ namespace syntax {
 			break;
 		    }
 		}
-	    } else if (next != Keys::IS) {
+	    } else if (next != Token::LCRO && next != Keys::IS) {
 		this-> lex.rewind ();
 		auto constante = visitConstante ();
 		if (constante != NULL) 
@@ -1829,6 +1893,7 @@ namespace syntax {
 	else if (token == Token::LCRO) return visitAccess (left);
 	else if (token == Token::DOT) return visitDot (left);
 	else if (token == Token::DCOLON) return visitDColon (left);
+	else if (token == Token::MACEX) return visitMacroCall (left);
 	else if (token == Token::LACC) {
 	    if (this-> lambdaPossible || this-> isInMatch) {
 		return visitStructCst (left);
@@ -1891,6 +1956,22 @@ namespace syntax {
 	    return visitAfter (next, retour);
 	this-> lex.rewind ();
 	return retour;
+    }
+
+    MacroCall Visitor::visitMacroCall (Expression left) {
+	auto beg = this-> lex.rewind ().next ();
+	this-> lex.skipEnable (Token::SPACE, false);       
+	auto open = 1;
+	std::vector <Word> tok;
+	while (open != 0) {
+	    tok.push_back (this-> lex.next ());
+	    if (tok.back () == Token::RCRO) open--;
+	    else if (tok.back ().isEof ()) unterminated (beg);	    
+	}
+	this-> lex.skipEnable (Token::SPACE, true);       
+	auto end = tok.back ();
+	tok.pop_back ();
+	return new (Z0) IMacroCall (beg, end, left, tok);
     }
     
 

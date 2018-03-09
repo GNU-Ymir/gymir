@@ -611,6 +611,10 @@ namespace syntax {
 	code (code) {
     }
     
+    char IChar::toChar () {
+	return code;
+    }
+
     std::string IChar::prettyPrint () {
 	return Ymir::OutBuffer ((char) this-> code).str ();
     }
@@ -1568,6 +1572,30 @@ namespace syntax {
     IPragma::IPragma (Word token, ParamList params) :
 	IExpression (token),
 	params (params)
+    {}
+    
+    IMacroExpr::IMacroExpr (Word, Word, std::vector <MacroElement> elements) :
+	elements (elements)
+    {}
+    
+    IMacro::IMacro (Word ident, std::vector <MacroExpr> exprs, std::vector <Block> blocks) :
+	ident (ident),
+	_exprs (exprs),
+	_blocks (blocks)
+    {}
+
+    IMacroVar::IMacroVar (Word name, MacroVarConst type) :
+	name (name),
+	type (type)
+    {}
+
+    IMacroToken::IMacroToken (std::string value) :
+	value (value)
+    {}
+
+    IMacroRepeat::IMacroRepeat (MacroExpr content, MacroToken pass) :
+	content (content),
+	pass (pass)
     {}
     
 }

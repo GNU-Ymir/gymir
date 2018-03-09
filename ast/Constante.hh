@@ -91,6 +91,8 @@ namespace syntax {
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
+	char toChar ();
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;

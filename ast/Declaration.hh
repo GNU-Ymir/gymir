@@ -56,7 +56,7 @@ namespace syntax {
 	    return NULL;
 	}
 	
-	virtual void print (int nb = 0) = 0;	
+	virtual void print (int) {}
 
 	virtual ~IDeclaration () {}
 	

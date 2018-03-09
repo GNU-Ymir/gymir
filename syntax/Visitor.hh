@@ -12,8 +12,6 @@ namespace syntax {
 
 	Program visit ();
 	
-    private:
-
 	Program visitProgram ();
 	std::vector<Declaration> visitPublicBlock ();
 	std::vector<Declaration> visitPrivateBlock ();
@@ -101,6 +99,12 @@ namespace syntax {
 	Instruction visitWhile ();
 	Instruction visitFor ();
 	ModDecl visitModule ();
+	Macro visitMacro ();
+	MacroExpr visitMacroExpression (bool in_repeat = false);
+	MacroRepeat visitMacroRepeat ();
+	MacroVar visitMacroVar ();
+	MacroToken visitMacroToken ();
+	MacroCall visitMacroCall (Expression left);
 	
 
     private:
