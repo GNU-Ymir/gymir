@@ -287,34 +287,35 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::opRange (Word, syntax::Expression right) {
+	RangeInfo ret = NULL;
 	if (this-> isSame (right-> info-> type)) {
-	    auto ret = new (Z0)  IRangeInfo (true, this-> clone ());
-	    ret-> binopFoo = &FixedUtils::InstRange;
-	    return ret;
+	    ret = new (Z0)  IRangeInfo (true, this-> clone ());
+	    ret-> binopFoo = &FixedUtils::InstRange;	    
 	} else if (auto ot = right-> info-> type-> to <IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
-		    auto ret = new (Z0)  IRangeInfo (true, this-> clone ());
+		    ret = new (Z0)  IRangeInfo (true, this-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRange;
-		    return ret;
 		} else {
-		    auto ret = new (Z0)  IRangeInfo (true, ot-> clone ());
+		    ret = new (Z0)  IRangeInfo (true, ot-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRangeRight;
-		    return ret;
 		}
 	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
-		    auto ret = new (Z0)  IRangeInfo (true, this-> clone ());
+		    ret = new (Z0)  IRangeInfo (true, this-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRange;
-		    return ret;
 		} else {
-		    auto ret = new (Z0)  IRangeInfo (true, ot-> clone ());
+		    ret = new (Z0)  IRangeInfo (true, ot-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRangeRight;
-		    return ret;
 		}
 	    }
 	}
-	return NULL;
+	
+	if (ret) {
+	    ret-> leftValue () = this-> value ();
+	    ret-> rightValue () = right-> info-> value ();
+	}
+	return ret;
     }
     
     InfoType IFixedInfo::opNorm (Word op, syntax::Expression right) {
@@ -597,6 +598,10 @@ namespace semantic {
 	if (!isSigned (this-> type)) {
 	    this-> value.ul = ul;	    
 	} else this-> value.l = l;
+    }
+
+    FixedConst IFixedValue::getType () {
+	return this-> type;
     }
     
     long& IFixedValue::getValue () {

@@ -69,7 +69,9 @@ namespace syntax {
 	for(auto it : this-> templates) {
 	    it-> print (nb + 4);
 	}
-	    
+	if (this-> info)
+	    printf (" %s", this-> info-> typeString ().c_str ());
+	
     }	
     
     void IType::print (int nb) {

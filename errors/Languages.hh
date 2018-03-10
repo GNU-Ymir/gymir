@@ -120,6 +120,7 @@ namespace Ymir {
 		phrases [Overflow] = "Overflow capacity for type %%%";
 		phrases [OverflowArray] = "Out of range %%% > %%%";
 		phrases [MoreErrors] = "... (and % more, -v to show)\n";
+		phrases [LabelingImmutableFor] = "Cannot label an immutable for";
 		init = true;
 	    } 
 	    return phrases;

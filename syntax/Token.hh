@@ -77,7 +77,6 @@ struct Token {
     static std::string 	BSTRING;
     static std::string 	ESTRING;
     static std::string 	DCOLON;
-    static std::string  MACEX;
     
     static std::vector <std::string> members () {
 	return {DIV,		DIV_AFF,	DOT,		DDOT,		TDOT,		AND,		AND_AFF,	DAND,		PIPE,	PIPE_EQUAL,
@@ -88,7 +87,7 @@ struct Token {
 		COLON,		DOLLAR,		EQUAL,		DEQUAL,		STAR,		STAR_EQUAL,	PERCENT,	PERCENT_EQUAL,
 		XOR,		XOR_EQUAL,	DXOR_EQUAL,	DXOR,		TILDE,		TILDE_EQUAL,	AT,		DARROW,
 		SHARP,		SPACE,		RETURN,		RRETURN, ANTI, 	LCOMM1,		RCOMM1,		LCOMM2,
-		GUILL,		APOS,		TAB,		LCOMM3,		RCOMM3,		ARROW,		BSTRING,	ESTRING,	DCOLON, MACEX
+		GUILL,		APOS,		TAB,		LCOMM3,		RCOMM3,		ARROW,		BSTRING,	ESTRING,	DCOLON
 		};
     }
     

@@ -21,6 +21,10 @@ namespace syntax {
 		this-> finally.push_back (block);
 	}
     }
+
+    std::vector <Instruction>& IBlock::getInsts () {
+	return this-> insts;
+    }
     
     IBlock::~IBlock ()  {
 	for (auto it : decls)
@@ -363,6 +367,14 @@ namespace syntax {
 	IInstruction (word)
     {}
 
+    std::vector <Var> &IVarDecl::getDecls () {
+	return this-> decls;
+    }
+
+    std::vector <Expression> &IVarDecl::getInsts () {
+	return this-> insts;
+    }
+    
     IVarDecl::~IVarDecl () {
 	for (auto it : decls)
 	    delete it;
@@ -1593,9 +1605,10 @@ namespace syntax {
 	value (value)
     {}
 
-    IMacroRepeat::IMacroRepeat (MacroExpr content, MacroToken pass) :
+    IMacroRepeat::IMacroRepeat (MacroExpr content, MacroToken pass, bool oneTime) :
 	content (content),
-	pass (pass)
+	pass (pass),
+	oneTime (oneTime)
     {}
     
 }

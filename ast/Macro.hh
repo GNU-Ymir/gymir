@@ -31,8 +31,9 @@ namespace syntax {
     class IMacroRepeat : public IMacroElement {
 	IMacroExpr* content;
 	IMacroToken * pass;
+	bool oneTime;
     public :	
-	IMacroRepeat (IMacroExpr * content, IMacroToken * pass);
+	IMacroRepeat (IMacroExpr * content, IMacroToken * pass, bool atLeastOneTime);
     };
     
     class IMacroVar : public IMacroElement {

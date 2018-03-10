@@ -288,41 +288,144 @@ namespace syntax {
 	return syms;
     }
     
-    Instruction IFor::instruction () {
-	auto expr = this-> iter-> expression ();
-	if (expr == NULL) return NULL;
-	Table::instance ().enterBlock ();
-	if (!this-> id.isEof ())
-	    Table::instance ().retInfo ().setIdent (this-> id);
-	
-	std::vector <Var> var (this-> var.size ());
-	for (auto it : Ymir::r (0, this-> var.size ())) {
-	    var [it] = (Var) this-> var [it]-> templateExpReplace ({});
-	    auto info = Table::instance ().get (var [it]-> token.getStr ());
-	    if (info && Table::instance ().sameFrame (info)) {
-		Ymir::Error::shadowingVar (var [it]-> token, info-> sym);
-		return NULL;
-	    }
-
-	    var [it]-> info = new (Z0) ISymbol (var [it]-> token, new (Z0) IUndefInfo ());
-	    var [it]-> info-> isConst (false);
-	    var [it]-> info-> value () = NULL;
-	    Table::instance ().insert (var [it]-> info);
+    Instruction IFor::immutable (Expression expr) {
+	if (expr-> info-> type-> is<IRangeInfo> () && this-> var.size () == 1) {
+	    return immutableRange (this-> var, expr);
+	} else if (expr-> info-> type-> is <ITupleInfo> () && this-> var.size () == 1) {
+	    return immutableTuple (this-> var, expr);
 	}
 	
-	auto type = expr-> info-> type-> ApplyOp (var);
-	if (type == NULL) {
-	    Ymir::Error::undefinedOp (this-> token, expr-> info);
+	Ymir::Error::undefinedOp (this-> token, expr-> info);
+	return NULL;
+    }
+
+    Instruction IFor::immutableTuple (std::vector <Var> & vars, Expression expr) {
+	auto tu = expr-> info-> type-> to <ITupleInfo> ();
+	Table::instance ().enterBlock ();
+	Block bl = new (Z0) IBlock (this-> token, {}, {});
+	auto varDecl = new IVarDecl (this-> token, {}, {}, {});
+	bl-> getInsts ().push_back (varDecl);
+	
+	auto aux = new (Z0) IVar ({this-> token, "_"});
+	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IUndefInfo ());
+	Table::instance ().insert (aux-> info);
+	varDecl-> getDecls ().push_back (aux);
+	varDecl-> getInsts ().push_back ((new (Z0) IBinary ({this-> token, Token::EQUAL},
+						       aux, expr
+						       ))-> expression ()
+				     );
+	
+	for (auto i : Ymir::r (0, tu-> nbParams ())) {
+	    auto var = vars [0]-> templateExpReplace ({})-> to <IVar> ();
+	    Table::instance ().enterBlock ();
+	    auto index = new (Z0) IFixedInfo (true, FixedConst::UINT);
+	    index-> value () = new (Z0) IFixedValue (FixedConst::UINT, i, i);
+	    auto indexVal = index-> value ()-> toYmir (new (Z0) ISymbol (var-> token, index));
+	    var-> info = new (Z0) ISymbol (var-> token, new (Z0) IUndefInfo ());
+	    var-> info-> isConst (false);
+	    Table::instance ().insert (var-> info);
+	    
+	    varDecl-> getDecls ().push_back (var);
+	    varDecl-> getInsts ().push_back (NULL);
+	    
+	    bl-> getInsts ().push_back ((new (Z0) IBinary ({this-> token, Token::EQUAL},
+							  var,
+							  new (Z0) IDot (this-> token, aux, indexVal)
+							  ))-> expression ());
+	    
+	    bl-> getInsts ().push_back (this-> block-> block ());
+	    Table::instance ().quitBlock ();
+	}
+	Table::instance ().quitBlock ();
+	return bl;
+    }
+    
+    Instruction IFor::immutableRange (std::vector <Var> & vars, Expression expr) {
+	auto range = expr-> info-> type-> to <IRangeInfo> ();
+	if (!range-> leftValue () || !range-> rightValue ()) {
+	    Ymir::Error::notImmutable (this-> token, expr-> info);
 	    return NULL;
 	}
 
-	Table::instance ().retInfo ().currentBlock () = "for";
-	Table::instance ().retInfo ().changed () = true;
-	Block bl = this-> block-> block ();
-	Table::instance ().quitBlock ();
-	auto aux = new (Z0) IFor (this-> token, this-> id, var, expr, bl);
-	aux-> ret = type;
-	return aux;
+	Block bl = new (Z0) IBlock (this-> token, {}, {});
+	if (auto li = range-> leftValue ()-> to <IFixedValue> ()) {
+	    auto ri = range-> rightValue ()-> to <IFixedValue> ();
+	    if (isSigned (li-> getType ())) {
+		ulong left = li-> getUValue (), right = ri-> getUValue ();
+		for (ulong i = left ; i != right ; i += left > right ? -1 : 1) {
+		    auto var = vars [0]-> templateExpReplace ({});
+		    auto index = range-> content ()-> cloneConst ();
+		    index-> value () = new (Z0) IFixedValue (li-> getType (), i, i);
+		    var-> info = new (Z0) ISymbol (var-> token, index);
+		    Table::instance ().enterBlock ();
+		    Table::instance ().insert (var-> info);
+		    bl-> getInsts ().push_back (this-> block-> block ());
+		    Table::instance ().quitBlock ();
+		}
+	    } else {
+		long left = li-> getValue (), right = ri-> getValue ();
+		for (long i = left ; i != right ; i += left > right ? -1 : 1) {
+		    auto var = vars [0]-> templateExpReplace ({});
+		    auto index = range-> content ()-> cloneConst ();
+		    index-> value () = new (Z0) IFixedValue (li-> getType (), i, i);
+		    var-> info = new (Z0) ISymbol (var-> token, index);
+		    Table::instance ().enterBlock ();
+		    Table::instance ().insert (var-> info);
+		    bl-> getInsts ().push_back (this-> block-> block ());
+		    Table::instance ().quitBlock ();
+		}
+	    }
+	} else {
+	    Ymir::Error::notImmutable (this-> token, expr-> info);
+	    return NULL;
+	}
+	
+	return bl;
+    }
+    
+    Instruction IFor::instruction () {
+	auto expr = this-> iter-> expression ();
+	if (expr == NULL) return NULL;
+	if (!this-> id.isEof () && !this-> isStatic)
+	    Table::instance ().retInfo ().setIdent (this-> id);
+	else if (!this-> id.isEof () && this-> isStatic) {
+	    Ymir::Error::labelingImmutableFor (this-> id);
+	}
+	
+	if (!this-> isStatic) {
+	    Table::instance ().enterBlock ();
+	    std::vector <Var> var (this-> var.size ());
+	    for (auto it : Ymir::r (0, this-> var.size ())) {
+		var [it] = (Var) this-> var [it]-> templateExpReplace ({});
+		auto info = Table::instance ().get (var [it]-> token.getStr ());
+		if (info && Table::instance ().sameFrame (info)) {
+		    Ymir::Error::shadowingVar (var [it]-> token, info-> sym);
+		    return NULL;
+		}
+
+		var [it]-> info = new (Z0) ISymbol (var [it]-> token, new (Z0) IUndefInfo ());
+		var [it]-> info-> isConst (false);
+		var [it]-> info-> value () = NULL;
+		if (!this-> isStatic)
+		    Table::instance ().insert (var [it]-> info);
+	    }
+	
+	    auto type = expr-> info-> type-> ApplyOp (var);
+	    if (type == NULL) {
+		Ymir::Error::undefinedOp (this-> token, expr-> info);
+		return NULL;
+	    }
+
+	    Table::instance ().retInfo ().currentBlock () = "for";
+	    Table::instance ().retInfo ().changed () = true;
+	    Block bl = this-> block-> block ();
+	    Table::instance ().quitBlock ();
+	    auto aux = new (Z0) IFor (this-> token, this-> id, var, expr, bl);
+	    aux-> ret = type;
+	    return aux;
+	} else {
+	    return this-> immutable (expr);	    
+	}
     }
 
     std::vector <semantic::Symbol> IWhile::allInnerDecls () {

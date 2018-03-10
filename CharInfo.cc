@@ -154,6 +154,8 @@ namespace semantic {
 	if (this-> isSame (right-> info-> type)) {
 	    auto ret = new (Z0) IRangeInfo (true, this-> clone ());
 	    ret-> binopFoo = &FixedUtils::InstRange;
+	    ret-> leftValue () = this-> value ();
+	    ret-> rightValue () = right-> info-> value ();
 	    return ret;
 	}
 	return NULL;

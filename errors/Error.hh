@@ -92,6 +92,7 @@ namespace Ymir {
 	    ScopeExitEnd,
 	    Overflow,
 	    OverflowArray,
+	    LabelingImmutableFor,
 	    LAST_ERROR
 	};
 
@@ -201,6 +202,8 @@ namespace Ymir {
 	static void staticNoInit (const Word&);
 
 	static void immutNoInit (const Word&);
+	
+	static void labelingImmutableFor (const Word&);
 
 	static void notLValue (const Word&);
 	

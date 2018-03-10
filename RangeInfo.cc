@@ -118,6 +118,14 @@ namespace semantic {
 	}
 	return NULL;
     }
+
+    Value & IRangeInfo::leftValue () {
+	return this-> left;
+    }
+
+    Value & IRangeInfo::rightValue () {
+	return this-> right;
+    }
     
     InfoType IRangeInfo::Fst () {
 	auto cst = this-> _content-> clone ();

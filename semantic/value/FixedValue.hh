@@ -23,6 +23,8 @@ namespace semantic {
 
 	long& getValue ();
 
+	FixedConst getType ();
+
 	Value BinaryOp (Word , Value ) override;
 
 	Value UnaryOp (Word) override;

@@ -4,6 +4,7 @@
 #include <ymir/semantic/types/FixedInfo.hh>
 #include <ymir/semantic/types/FloatInfo.hh>
 #include <ymir/semantic/types/CharInfo.hh>
+#include <ymir/semantic/value/Value.hh>
 #include <ymir/ast/Type.hh>
 
 namespace semantic {
@@ -11,7 +12,8 @@ namespace semantic {
     class IRangeInfo : public IInfoType {
 
 	InfoType _content = NULL;
-
+	Value left, right;
+	
     public:
 
 	IRangeInfo (bool);
@@ -60,6 +62,10 @@ namespace semantic {
 	
 	InfoType onClone () override;
 
+	Value & leftValue ();
+
+	Value & rightValue ();
+	
 	static const char* id () {
 	    return "IRangeInfo";
 	}

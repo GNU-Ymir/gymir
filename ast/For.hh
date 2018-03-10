@@ -31,6 +31,18 @@ namespace syntax {
 	void print (int nb = 0) override;
 
 	virtual ~IFor ();
+
+    private :
+
+	Instruction immutable (Expression expr);
+
+	Instruction immutableRange (std::vector <Var> & vars, Expression expr);
+
+	Instruction immutableString (std::vector <Var> & vars, Expression expr);
+	
+	Instruction immutableTuple (std::vector <Var> & vars, Expression expr);
+
+	Instruction immutableMacro (std::vector <Var> & vars, Expression expr);
 	
     };
 

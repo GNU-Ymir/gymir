@@ -38,13 +38,15 @@ namespace syntax {
 	void addFinally (IBlock * insts);
 	
 	Instruction instruction () override;
-
+       	
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
 	
 	IBlock* block ();
 
 	IBlock* blockWithoutEnter ();
 
+	std::vector <Instruction> & getInsts ();
+	
 	std::vector <semantic::Symbol> allInnerDecls () override;
 	
 	Ymir::Tree toGeneric () override;

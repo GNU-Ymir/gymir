@@ -176,7 +176,9 @@ namespace syntax {
 	
 	auto iter = this-> iter-> templateExpReplace (values);
 	auto block = (Block) this-> block-> templateReplace (values);
-	return new (Z0)  IFor (this-> token, this-> id, vars, iter, block);
+	auto ret = new (Z0)  IFor (this-> token, this-> id, vars, iter, block);
+	ret-> isStatic = this-> isStatic;
+	return ret;
     }
 
     Expression IFuncPtr::templateExpReplace (const map <string, Expression>& values) {

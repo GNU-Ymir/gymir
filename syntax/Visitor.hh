@@ -101,7 +101,7 @@ namespace syntax {
 	ModDecl visitModule ();
 	Macro visitMacro ();
 	MacroExpr visitMacroExpression (bool in_repeat = false);
-	MacroRepeat visitMacroRepeat ();
+	MacroRepeat visitMacroRepeat (bool);
 	MacroVar visitMacroVar ();
 	MacroToken visitMacroToken ();
 	MacroCall visitMacroCall (Expression left);

@@ -73,4 +73,3 @@ std::string Token::ARROW = "->";
 std::string Token::BSTRING = "(_{";
 std::string Token::ESTRING = "}_)";
 std::string Token::DCOLON = "::";
-std::string Token::MACEX  = "![";
