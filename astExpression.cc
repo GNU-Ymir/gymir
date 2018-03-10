@@ -1546,13 +1546,16 @@ namespace syntax {
 
     void IPragma::executeMsg () {
 	Ymir::OutBuffer buf;
-	auto list = this-> params-> expression ()-> to <IParamList> ();
-	for (auto it : list-> getParams ()) {
-	    if (it-> info-> isImmutable ())
-		 buf.write (it-> info-> value ()-> toString ());
-	    else Ymir::Error::notImmutable (it-> token, it-> info);
+	auto l = this-> params-> expression ();
+	if (l) {
+	    auto list = l-> to <IParamList> ();
+	    for (auto it : list-> getParams ()) {
+		if (it-> info-> isImmutable ())
+		    buf.write (it-> info-> value ()-> toString ());
+		else Ymir::Error::notImmutable (it-> token, it-> info);
+	    }
+	    println (buf.str ());
 	}
-	println (buf.str ());
     }
 
     Expression IPragma::executeCompile () {

@@ -496,6 +496,7 @@ namespace semantic {
     }
 
     Value IFloatValue::BinaryOp (Word op, Value val) {
+	if (val == NULL) return NULL;
 	if (op == Token::PLUS) return this-> add (val);
 	if (op == Token::MINUS) return this-> sub (val);
 	if (op == Token::DIV) return this-> div (val);
