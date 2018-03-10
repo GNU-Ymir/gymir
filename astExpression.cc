@@ -786,10 +786,15 @@ namespace syntax {
 	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (true, this-> _type));
 	aux-> totale = this-> totale;
 	char * temp;
-	if (this-> _type == FloatConst::FLOAT)
-	    aux-> setValue (strtof (this-> totale.c_str (), &temp));
-	else
-	    aux-> setValue (strtod (this-> totale.c_str (), &temp));	
+	if (this-> _type == FloatConst::FLOAT) {
+	    float val = strtof (this-> totale.c_str (), &temp); 
+	    aux-> setValue (val);
+	    aux-> info-> value () = new (Z0) IFloatValue (FloatConst::FLOAT, val, val);
+	} else {
+	    double val = strtod (this-> totale.c_str (), &temp);
+	    aux-> setValue (val);	
+	    aux-> info-> value () = new (Z0) IFloatValue (FloatConst::DOUBLE, val, val);
+	}
 	return aux;
     }
 
