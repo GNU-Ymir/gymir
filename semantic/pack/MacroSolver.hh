@@ -1,0 +1,54 @@
+#pragma once
+
+#include <ymir/ast/Expression.hh>
+#include <ymir/syntax/FakeLexer.hh>
+#include <ymir/ast/Var.hh>
+
+namespace syntax {
+    class IMacro;
+    class IMacroExpr;
+    class IMacroElement;
+    class IMacroToken;
+    class IMacroRepeat;
+    class IMacroVar;
+    class IMacroCall;
+}
+
+namespace semantic {
+
+    class ISymbol;
+    typedef ISymbol* Symbol;
+
+    class IInfoType;
+    typedef IInfoType* InfoType;
+    
+    struct MacroSolution {
+	bool valid;
+	std::vector <syntax::IMacroElement*> elements;	
+    };
+
+
+    class MacroSolver {
+
+	static MacroSolver __instance__;
+	
+    public:
+
+	static MacroSolver & instance ();
+
+	MacroSolution solve (syntax::IMacro * left, syntax::IMacroCall * right);	
+
+	MacroSolution solve (syntax::IMacroExpr* left, lexical::FakeLexer lex);
+
+	MacroSolution solve (syntax::IMacroElement* left, lexical::FakeLexer lex);
+
+	MacroSolution solve (syntax::IMacroToken* left, lexical::FakeLexer lex);
+
+	MacroSolution solve (syntax::IMacroRepeat* left, lexical::FakeLexer lex);
+
+	MacroSolution solve (syntax::IMacroVar* left, lexical::FakeLexer lex);
+	
+    };
+        
+}
+

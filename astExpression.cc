@@ -1573,6 +1573,23 @@ namespace syntax {
 	
     }
 
+    Expression IMacroCall::expression () {
+	auto expr = this-> left-> expression ();
+	if (auto mac = expr-> info-> type-> to <IMacroInfo> ()) {
+	    auto soluce = mac-> resolve (this);
+	    if (!soluce.valid) {
+		Ymir::Error::macroResolution (this-> left-> token);
+		return NULL;
+	    }
+	} else {
+	    Ymir::Error::notAMacro (this-> left-> token);
+	    return NULL;
+	}
+	
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }
+
     
     
 }

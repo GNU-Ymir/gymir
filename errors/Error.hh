@@ -93,6 +93,8 @@ namespace Ymir {
 	    Overflow,
 	    OverflowArray,
 	    LabelingImmutableFor,
+	    NotAMacro,
+	    MacroResolution,
 	    LAST_ERROR
 	};
 
@@ -204,6 +206,10 @@ namespace Ymir {
 	static void immutNoInit (const Word&);
 	
 	static void labelingImmutableFor (const Word&);
+
+	static void notAMacro (const Word&);
+
+	static void macroResolution (const Word&);
 
 	static void notLValue (const Word&);
 	

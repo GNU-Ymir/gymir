@@ -716,6 +716,28 @@ namespace Ymir {
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
+
+    void Error::notAMacro (const Word& word) {
+	auto msg = format (getString (NotAMacro), YELLOW, word.getStr (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg erroMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", erroMsg.msg.c_str ());
+	} else __caught__.push_back (erroMsg);
+    }
+
+    void Error::macroResolution (const Word& word) {
+	auto msg = format (getString (MacroResolution), YELLOW, word.getStr (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg erroMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", erroMsg.msg.c_str ());
+	} else __caught__.push_back (erroMsg);
+    }
     
     void Error::notLValue (const Word& word) {
 	auto str = getString (NotLValue);

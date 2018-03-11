@@ -974,13 +974,44 @@ namespace syntax {
     void IUse::declareAsExtern (semantic::Module) {
     }
 
-    void IMacro::declare () {	
+    void IMacro::declare () {
+	auto space = Table::instance ().space ();
+	auto it = Table::instance ().getLocal (this-> ident.getStr ());
+	if (it != NULL) {
+	    Ymir::Error::shadowingVar (ident, it-> sym);
+	    return;
+	}
+
+	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
+	Table::instance ().insert (new (Z0) ISymbol (this-> ident, mac));
     }
 
-    void IMacro::declare (semantic::Module) {	
-    }
+    void IMacro::declare (semantic::Module mod) {
+	auto space = mod-> space ();
+	auto it = mod-> get (this-> ident.getStr ());
+	if (it != NULL) {
+	    Ymir::Error::shadowingVar (ident, it-> sym);
+	    return;
+	}
 
-    void IMacro::declareAsExtern (semantic::Module) {
+	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
+	auto sym = new (Z0) ISymbol (this-> ident, mac);
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);
+    }
+	    
+    void IMacro::declareAsExtern (semantic::Module mod) {
+	auto space = mod-> space ();
+	auto it = mod-> get (this-> ident.getStr ());
+	if (it != NULL) {
+	    Ymir::Error::shadowingVar (ident, it-> sym);
+	    return;
+	}
+
+	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
+	auto sym = new (Z0) ISymbol (this-> ident, mac);
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);
     }
     
 }

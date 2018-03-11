@@ -269,7 +269,7 @@ namespace syntax {
 	this-> lex.next ({Token::GUILL});
 	auto tok = visitMacroToken ();
 	this-> lex.next ({Token::RPAR});
-	return new (Z0) IMacroRepeat (expr, tok, atLeastOneTime);
+	return new (Z0) IMacroRepeat (ident, expr, tok, atLeastOneTime);
     }
 
     MacroVar Visitor::visitMacroVar () {

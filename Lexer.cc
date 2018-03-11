@@ -1,4 +1,5 @@
 #include "syntax/Lexer.hh"
+#include <ymir/syntax/FakeLexer.hh>
 
 #include "config.h"
 #include "coretypes.h"
@@ -206,4 +207,45 @@ namespace lexical {
 	word.setLocus (this-> filename, this-> line, this-> column);
     }
     
+
+    FakeLexer::FakeLexer (const std::vector <Word> & words) :
+	Lexer (NULL, NULL,
+	       {Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB},
+	       {
+		   {Token::LCOMM1, Token::RCOMM1},
+		       {Token::LCOMM2, Token::RETURN},
+			   {Token::LCOMM3, Token::RCOMM3}
+	       }),
+	words (words),
+	current (0)	
+    {}
+
+    bool FakeLexer::getWord (Word & word) {
+	if (this-> current < this-> words.size ()) {
+	    word = this-> words [current];
+	    current ++;
+	    return true;
+	}
+	return false;
+    }
+
+    void FakeLexer::cutCurrentWord (ulong beg) {
+	auto ret = this-> words [current - 1];
+	Word aux {ret, ret.getStr ().substr (0, beg)};
+	Word aux2 {ret, ret.getStr ().substr (beg)};
+	this-> words [current - 1] = aux;
+	this-> words.insert (this-> words.begin () + current, aux2);	
+    }
+    
+    Lexer& FakeLexer::rewind (ulong nb) {
+	if (this-> current >= nb)
+	    this-> current -= nb;
+	else this-> current = 0;
+	return *this;
+    }
+
+    
 }
+
+
+

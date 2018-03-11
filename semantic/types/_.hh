@@ -22,3 +22,4 @@
 #include "ArrayRefInfo.hh"
 #include "StructInfo.hh"
 #include "ModuleInfo.hh"
+#include "MacroInfo.hh"

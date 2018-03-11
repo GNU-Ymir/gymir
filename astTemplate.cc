@@ -502,6 +502,10 @@ namespace syntax {
     Declaration IImport::templateDeclReplace (const map <string, Expression> &) {
 	return new (Z0) IImport (this-> ident, this-> params);
     }
-    
-    
+       
+    Expression IMacroCall::templateExpReplace (const std::map <std::string, Expression>& values) {
+	auto left = this-> left-> templateExpReplace (values);
+	return new (Z0) IMacroCall (this-> token, this-> end, left, this-> content);
+    }
+
 }

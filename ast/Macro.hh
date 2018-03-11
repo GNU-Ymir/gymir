@@ -13,34 +13,47 @@ namespace syntax {
 	IDENT
     };
 
-    class IMacroElement {};
+    class IMacroElement {
+    public: 
+	semantic::Symbol info;
+
+	virtual IMacroElement* clone () = 0;
+    };
     
     class IMacroExpr {	
 	std::vector <IMacroElement*> elements;
     public:
 	IMacroExpr (Word begin, Word end, std::vector <IMacroElement*> elements);
+
     };
 
     class IMacroToken : public IMacroElement {
 	std::string value;
     public:
 	IMacroToken (std::string value);
+	
+	IMacroToken* clone () override;
     };
 
     
     class IMacroRepeat : public IMacroElement {
+	Word ident;
 	IMacroExpr* content;
 	IMacroToken * pass;
 	bool oneTime;
     public :	
-	IMacroRepeat (IMacroExpr * content, IMacroToken * pass, bool atLeastOneTime);
+	IMacroRepeat (Word ident, IMacroExpr * content, IMacroToken * pass, bool atLeastOneTime);
+
+	IMacroRepeat* clone () override;
     };
     
     class IMacroVar : public IMacroElement {
 	Word name;
 	MacroVarConst type;	
     public:	
-	IMacroVar (Word name, MacroVarConst type);	
+	IMacroVar (Word name, MacroVarConst type);
+
+	IMacroVar* clone () override;
     };
     
 
@@ -67,34 +80,17 @@ namespace syntax {
 	
     public :
 
-	IMacroCall (Word begin, Word end, Expression left, std::vector<Word> content) :
-	    IExpression (begin),
-	    end (end),
-	    left (left),
-	    content (content)
-	{}
+	IMacroCall (Word begin, Word end, Expression left, std::vector<Word> content);
 	
-	Expression expression () override {
-	    println (this-> content);
-	    Ymir::Error::assert ("TODO");
-	    return NULL;
-	}
-
-	Expression templateExpReplace (const std::map <std::string, Expression>&) override {
-	    Ymir::Error::assert ("TODO");
-	    return NULL;
-	}
+	Expression expression () override;
+	
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
 	static const char * id () {
 	    return TYPEID (IMacroCall);
 	}
 	
-	std::vector <std::string> getIds () override {
-	    auto ret = IExpression::getIds ();
-	    ret.push_back (TYPEID (IMacroCall));
-	    return ret;
-	}
-	
+	std::vector <std::string> getIds () override;	
 	
     };
 	    

@@ -32,7 +32,7 @@ namespace lexical {
 
 	Word next (std::vector <std::string> mandatories);
 	
-	Lexer& rewind (ulong nb = 1);
+	virtual Lexer& rewind (ulong nb = 1);
 
 	ulong tell ();
 
@@ -52,7 +52,7 @@ namespace lexical {
 
 	bool isSkip (Word elem);
 
-	bool getWord (Word &word);
+	virtual bool getWord (Word &word);
 
 	ulong min (ulong, ulong);
 

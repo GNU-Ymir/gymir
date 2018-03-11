@@ -121,6 +121,8 @@ namespace Ymir {
 		phrases [OverflowArray] = "Out of range %%% > %%%";
 		phrases [MoreErrors] = "... (and % more, -v to show)\n";
 		phrases [LabelingImmutableFor] = "Cannot label an immutable for";
+		phrases [NotAMacro] = "%%% do not identify a macro";
+		phrases [MacroResolution] = "Macro resolution %%% failed";
 		init = true;
 	    } 
 	    return phrases;

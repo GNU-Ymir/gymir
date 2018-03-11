@@ -1595,20 +1595,50 @@ namespace syntax {
 	_exprs (exprs),
 	_blocks (blocks)
     {}
-
+        
     IMacroVar::IMacroVar (Word name, MacroVarConst type) :
 	name (name),
 	type (type)
     {}
 
+    MacroVar IMacroVar::clone () {
+	return new (Z0) IMacroVar (this-> name, this-> type);
+    }
+    
     IMacroToken::IMacroToken (std::string value) :
 	value (value)
     {}
 
-    IMacroRepeat::IMacroRepeat (MacroExpr content, MacroToken pass, bool oneTime) :
+    MacroToken IMacroToken::clone () {
+	return new (Z0) IMacroToken (this-> value);
+    }
+       
+    IMacroRepeat::IMacroRepeat (Word ident, MacroExpr content, MacroToken pass, bool oneTime) :
+	ident (ident),
 	content (content),
 	pass (pass),
 	oneTime (oneTime)
     {}
+
+    MacroRepeat IMacroRepeat::clone () {
+	return new (Z0) IMacroRepeat (this-> ident, this-> content, this-> pass, this-> oneTime);
+    }
+    
+
+    
+    IMacroCall::IMacroCall (Word begin, Word end, Expression left, std::vector<Word> content) :
+	IExpression (begin),
+	end (end),
+	left (left),
+	content (content)
+    {}
+
+    	
+    std::vector <std::string> IMacroCall::getIds () {
+	auto ret = IExpression::getIds ();
+	ret.push_back (TYPEID (IMacroCall));
+	return ret;
+    }
+
     
 }
