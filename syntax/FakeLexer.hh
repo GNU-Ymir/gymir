@@ -19,8 +19,8 @@ namespace lexical {
 
 	void cutCurrentWord (ulong beg);
 
-	Lexer& rewind (ulong nb = 1) override;
-
+	std::string toString ();
+	
     protected:
 
 	bool getWord (Word& word) override;
@@ -28,7 +28,7 @@ namespace lexical {
     private :
 
 	std::vector <Word> words;
-	ulong current;
+	ulong fake_current;
 	
     };
 

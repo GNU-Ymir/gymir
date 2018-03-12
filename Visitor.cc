@@ -86,7 +86,7 @@ namespace syntax {
 			       Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
 			       Keys::MOD, Keys::SELF, Keys::USE
 	};
-
+	
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
 	this-> lambdaPossible = true;
 	this-> isInMatch = false;
@@ -286,11 +286,12 @@ namespace syntax {
 	auto begin = this-> lex.rewind ().next ();
 	auto val = visitString (begin);
 	std::string value;
-	if (auto ch = val-> to<IChar> ()) {	    
-	    value = std::string (1, ch-> toChar ()); 
-	} else if (auto str = val-> to <IString> ()) {
+	if (auto str = val-> to <IString> ()) {
 	    value = str-> getStr (); 	    
-	} else Ymir::Error::assert ("!!");
+	} else if (auto ch = val-> to<IChar> ()) {
+	    value = std::string (1, ch-> toChar ()); 
+	} else  Ymir::Error::assert ("!!");
+	
 	return new (Z0) IMacroToken (value);
     }
     
@@ -1003,33 +1004,42 @@ namespace syntax {
 
         
     /**
-       Identifiant := ('_')* ([a-z]|[A-Z]) ([a-z]|[A-Z]|'_')|[0-9])*
+       Identifiant := ('_')* ([a-z]|[A-Z]) ([a-z]|[A-Z]|'_'|[0-9])*
     */
     Word Visitor::visitIdentifiant () {
 	auto ident = this-> lex.next ();
 	/*if (ident.isEof () && this-> lex.isMixinContext ())
 	  return Word.eof ();*/
+
+	if (ident.isToken ()) {
+	    syntaxError (ident, {"'Identifier'"});
+	    return Word::eof ();
+	}
 	
-	if (ident.isToken ())
-	    syntaxError (ident, {"'Identifiant'"});
+	if (std::find (this-> forbiddenIds.begin (), this-> forbiddenIds.end (), ident.getStr ()) != this-> forbiddenIds.end ()) {
+	    syntaxError (ident, {"'Identifier'"});
+	    return Word::eof ();
+	}
 	
-	if (std::find (this-> forbiddenIds.begin (), this-> forbiddenIds.end (), ident.getStr ()) != this-> forbiddenIds.end ())
-	    syntaxError (ident, {"'Identifiant'"});
-	
-	if (ident.getStr ().length () == 0) syntaxError (ident, {"'Identifiant'"});
+	if (ident.getStr ().length () == 0) {
+	    syntaxError (ident, {"'Identifier'"});
+	    return Word::eof ();
+	}
 	
 	auto i = 0;
 	for (auto it : ident.getStr ()) {
 	    if ((it >= 'a' && it <= 'z') || (it >= 'A' && it <= 'Z')) break;
 	    else if (it != '_')  {
-		syntaxError (ident, {"'identifiant'"});
-		break;
+		syntaxError (ident, {"'identifier'"});
+		return Word::eof ();
 	    }
 	    i++;
 	}
 	i++;
-	if (((int) ident.getStr ().length ()) < i)
+	if (((int) ident.getStr ().length ()) < i) {
 	    syntaxError (ident, {"'Identifiant'"});
+	    return Word::eof ();
+	}
 	
 	for (auto it : ident.getStr ().substr (i, ident.getStr ().length ())) {
 	    if ((it < 'a' || it > 'z')
@@ -1037,7 +1047,7 @@ namespace syntax {
 		&& (it != '_')
 		&& (it < '0' || it > '9')) {
 		syntaxError (ident, {"'Identifiant'"});
-		break;
+		return Word::eof ();
 	    }
 	}
 	

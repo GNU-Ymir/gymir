@@ -1589,6 +1589,10 @@ namespace syntax {
     IMacroExpr::IMacroExpr (Word, Word, std::vector <MacroElement> elements) :
 	elements (elements)
     {}
+
+    std::vector <MacroElement> &IMacroExpr::getElements () {
+	return this-> elements;
+    }
     
     IMacro::IMacro (Word ident, std::vector <MacroExpr> exprs, std::vector <Block> blocks) :
 	ident (ident),
@@ -1596,11 +1600,35 @@ namespace syntax {
 	_blocks (blocks)
     {}
         
+    std::vector <MacroExpr>& IMacro::getExprs () {
+	return this-> _exprs;
+    }
+
+    std::vector <Block>& IMacro::getBlocks () {
+	return this-> _blocks;
+    }
+
     IMacroVar::IMacroVar (Word name, MacroVarConst type) :
-	name (name),
-	type (type)
+	type (type),
+	name (name)
     {}
 
+    const char* IMacroVar::id () {
+	return "IMacroVar";
+    }
+	
+    const char * IMacroVar::getId () {
+	return IMacroVar::id ();
+    }
+
+    MacroVarConst IMacroVar::getType () {
+	return this-> type;
+    }
+    
+    void IMacroVar::setContent (Expression expr) {
+	this-> content = expr;
+    }
+    
     MacroVar IMacroVar::clone () {
 	return new (Z0) IMacroVar (this-> name, this-> type);
     }
@@ -1609,22 +1637,40 @@ namespace syntax {
 	value (value)
     {}
 
+    std::string & IMacroToken::getValue () {
+	return this-> value;
+    }
+    
+    const char* IMacroToken::id () {
+	return "IMacroToken";
+    }
+	
+    const char * IMacroToken::getId () {
+	return IMacroToken::id ();
+    }
+    
     MacroToken IMacroToken::clone () {
 	return new (Z0) IMacroToken (this-> value);
     }
        
     IMacroRepeat::IMacroRepeat (Word ident, MacroExpr content, MacroToken pass, bool oneTime) :
-	ident (ident),
 	content (content),
 	pass (pass),
-	oneTime (oneTime)
+	oneTime (oneTime),
+	ident (ident)
     {}
 
     MacroRepeat IMacroRepeat::clone () {
 	return new (Z0) IMacroRepeat (this-> ident, this-> content, this-> pass, this-> oneTime);
     }
     
-
+    const char* IMacroRepeat::id () {
+	return "IMacroRepeat";
+    }
+	
+    const char * IMacroRepeat::getId () {
+	return IMacroRepeat::id ();
+    }
     
     IMacroCall::IMacroCall (Word begin, Word end, Expression left, std::vector<Word> content) :
 	IExpression (begin),
@@ -1633,7 +1679,10 @@ namespace syntax {
 	content (content)
     {}
 
-    	
+    std::vector <Word> & IMacroCall::getTokens () {
+	return this-> content;
+    }
+    
     std::vector <std::string> IMacroCall::getIds () {
 	auto ret = IExpression::getIds ();
 	ret.push_back (TYPEID (IMacroCall));

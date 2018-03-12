@@ -32,7 +32,7 @@ namespace semantic {
     }
 
     MacroSolution IMacroInfo::resolve (MacroCall call) {
-	return {false, {}};
+	return MacroSolver::instance ().solve (this-> _info, call);
     }
 
     std::string IMacroInfo::innerTypeString () {

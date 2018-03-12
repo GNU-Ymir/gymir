@@ -243,8 +243,6 @@ namespace Ymir {
 
 	static void templateInferType (const Word&, const Word&);
 
-	static void activeError (bool);	
-
 	static void returnVoid (const Word&, semantic::Symbol);
 
 	static void missingReturn (const Word&, semantic::Symbol);
@@ -256,7 +254,9 @@ namespace Ymir {
 	static void unreachableStmtWarn (const Word&);
 	
 	static void noValueNonVoidFunction (const Word&);
-	
+
+	static void activeError (bool);	
+		
 	static std::vector <ErrorMsg>& caught ();
 
 	static void assert (const char* format);

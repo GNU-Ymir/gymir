@@ -209,7 +209,7 @@ namespace lexical {
     
 
     FakeLexer::FakeLexer (const std::vector <Word> & words) :
-	Lexer (NULL, NULL,
+	Lexer ("", NULL,
 	       {Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB},
 	       {
 		   {Token::LCOMM1, Token::RCOMM1},
@@ -217,33 +217,29 @@ namespace lexical {
 			   {Token::LCOMM3, Token::RCOMM3}
 	       }),
 	words (words),
-	current (0)	
+	fake_current (0)	
     {}
 
     bool FakeLexer::getWord (Word & word) {
-	if (this-> current < this-> words.size ()) {
-	    word = this-> words [current];
-	    current ++;
+	if (this-> fake_current < this-> words.size ()) {
+	    word = this-> words [fake_current];
+	    fake_current ++;
 	    return true;
-	}
+	} else fake_current++;	
 	return false;
     }
 
     void FakeLexer::cutCurrentWord (ulong beg) {
-	auto ret = this-> words [current - 1];
-	Word aux {ret, ret.getStr ().substr (0, beg)};
-	Word aux2 {ret, ret.getStr ().substr (beg)};
-	this-> words [current - 1] = aux;
-	this-> words.insert (this-> words.begin () + current, aux2);	
+	this-> reads [this-> current].setStr (
+	    this-> reads [this-> current].getStr ().substr (beg)
+	);
+	this-> reads [this-> current].column += beg;
+	this-> rewind ();
     }
     
-    Lexer& FakeLexer::rewind (ulong nb) {
-	if (this-> current >= nb)
-	    this-> current -= nb;
-	else this-> current = 0;
-	return *this;
+    std::string FakeLexer::toString () {
+	return Ymir::OutBuffer ("[", this-> fake_current, "] ", this-> words).str ();
     }
-
     
 }
 

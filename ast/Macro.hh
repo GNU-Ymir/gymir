@@ -18,6 +18,22 @@ namespace syntax {
 	semantic::Symbol info;
 
 	virtual IMacroElement* clone () = 0;
+
+	virtual const char * getId () = 0;
+	
+	template <typename T>
+	bool is () {
+	    return this-> to<T> () != NULL;
+	}
+	
+	template <typename T>
+	T* to () {
+	    if (strcmp (this-> getId (), T::id ()) == 0) {
+		return (T*) this;
+	    }	    	
+	    return NULL;
+	}
+	
     };
     
     class IMacroExpr {	
@@ -25,6 +41,8 @@ namespace syntax {
     public:
 	IMacroExpr (Word begin, Word end, std::vector <IMacroElement*> elements);
 
+	std::vector <IMacroElement*> & getElements ();
+	
     };
 
     class IMacroToken : public IMacroElement {
@@ -33,27 +51,51 @@ namespace syntax {
 	IMacroToken (std::string value);
 	
 	IMacroToken* clone () override;
+
+	std::string & getValue ();
+	
+	static const char* id ();
+	
+	const char * getId () override;
     };
 
     
     class IMacroRepeat : public IMacroElement {
-	Word ident;
 	IMacroExpr* content;
 	IMacroToken * pass;
 	bool oneTime;
-    public :	
+    public :
+	Word ident;
+	
 	IMacroRepeat (Word ident, IMacroExpr * content, IMacroToken * pass, bool atLeastOneTime);
 
 	IMacroRepeat* clone () override;
+
+	static const char* id ();
+	
+	const char * getId () override;
+
     };
     
     class IMacroVar : public IMacroElement {
-	Word name;
+
 	MacroVarConst type;	
-    public:	
+	Expression content;
+	
+    public:
+	Word name;
+	
 	IMacroVar (Word name, MacroVarConst type);
 
 	IMacroVar* clone () override;
+
+	MacroVarConst getType ();
+	
+	void setContent (Expression content);
+	
+	static const char* id ();
+	
+	const char * getId () override;
     };
     
 
@@ -71,6 +113,10 @@ namespace syntax {
 	
 	void declareAsExtern (semantic::Module) override;
 	
+	std::vector <IMacroExpr*>& getExprs ();
+
+	std::vector <Block>& getBlocks ();
+	
     };
 
     class IMacroCall : public IExpression {
@@ -85,6 +131,8 @@ namespace syntax {
 	Expression expression () override;
 	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+
+	std::vector <Word> & getTokens ();	
 	
 	static const char * id () {
 	    return TYPEID (IMacroCall);

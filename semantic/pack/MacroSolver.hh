@@ -12,6 +12,7 @@ namespace syntax {
     class IMacroRepeat;
     class IMacroVar;
     class IMacroCall;
+    class IBlock;
 }
 
 namespace semantic {
@@ -24,7 +25,8 @@ namespace semantic {
     
     struct MacroSolution {
 	bool valid;
-	std::vector <syntax::IMacroElement*> elements;	
+	std::vector <syntax::IMacroElement*> elements;
+	syntax::IBlock* block;
     };
 
 
@@ -37,16 +39,15 @@ namespace semantic {
 	static MacroSolver & instance ();
 
 	MacroSolution solve (syntax::IMacro * left, syntax::IMacroCall * right);	
+	MacroSolution solve (syntax::IMacroExpr* left, lexical::FakeLexer& lex);
 
-	MacroSolution solve (syntax::IMacroExpr* left, lexical::FakeLexer lex);
+	MacroSolution solve (syntax::IMacroToken* left, lexical::FakeLexer& lex);
 
-	MacroSolution solve (syntax::IMacroElement* left, lexical::FakeLexer lex);
+	MacroSolution solve (syntax::IMacroRepeat* left, lexical::FakeLexer& lex);
 
-	MacroSolution solve (syntax::IMacroToken* left, lexical::FakeLexer lex);
+	MacroSolution solve (syntax::IMacroVar* left, lexical::FakeLexer& lex);
 
-	MacroSolution solve (syntax::IMacroRepeat* left, lexical::FakeLexer lex);
-
-	MacroSolution solve (syntax::IMacroVar* left, lexical::FakeLexer lex);
+	MacroSolution merge (MacroSolution &left, MacroSolution &right);
 	
     };
         

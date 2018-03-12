@@ -11,7 +11,6 @@
 #include "Token.hh"
 
 struct Word {
-private:
     
     //    location_t locus;    
     std::string str;
