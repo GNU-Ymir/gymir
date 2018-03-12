@@ -24,7 +24,19 @@ namespace syntax {
 	return Ymir::Tree ();
     }
     
+    Ymir::Tree IBlock::toGenericValue () {
+	auto expr = this-> value;
+	this-> value = NULL;
+	auto insts = toGeneric ();
+	auto value = expr-> toGeneric ();
+	return Ymir::compoundExpr (this-> token.getLocus (), insts, value);
+    }
+
     Ymir::Tree IBlock::toGeneric () {
+	if (this-> value != NULL) {
+	    return this-> toGenericValue ();
+	}
+	
 	Ymir::enterBlock ();
 	for (auto it : this-> insts) {
 	    auto inst = it-> toGeneric ();

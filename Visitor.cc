@@ -237,7 +237,6 @@ namespace syntax {
 	std::vector <Block> blocks;
 	while (true) {
 	    exprs.push_back (visitMacroExpression ());
-	    this-> lex.next ({Token::DARROW});
 	    blocks.push_back (visitBlock ());	    
 	    auto next = this-> lex.next ();
 	    if (next == Token::RACC)
@@ -280,11 +279,13 @@ namespace syntax {
     MacroVar Visitor::visitMacroVar () {
 	auto ident = this-> visitIdentifiant ();
 	this-> lex.next ({Token::COLON});
-	auto val = this-> lex.next ({Keys::MACRO_EXPR, Keys::MACRO_IDENT});
+	auto val = this-> lex.next ({Keys::MACRO_EXPR, Keys::MACRO_IDENT, Keys::MACRO_BLOCK});
 	if (val == Keys::MACRO_IDENT)
 	    return new (Z0) IMacroVar (ident, MacroVarConst::IDENT);
-	else
+	else if (val == Keys::MACRO_EXPR)
 	    return new (Z0) IMacroVar (ident, MacroVarConst::EXPR);
+	else
+	    return new (Z0) IMacroVar (ident, MacroVarConst::BLOCK);
     }
 
     MacroToken Visitor::visitMacroToken () {

@@ -96,6 +96,9 @@ namespace semantic {
 	    content = visit.visitExpression ();
 	else if (var-> getType () == MacroVarConst::IDENT)
 	    content = new (Z0) IVar (visit.visitIdentifiant ());
+	else if (var-> getType () == MacroVarConst::BLOCK) 
+	    content = visit.visitBlock ();
+	
 	if (Ymir::Error::nb_errors - nbErrorBeg)
 	    return {false, {}, NULL};
 	auto ret = var-> clone ();

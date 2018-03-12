@@ -63,3 +63,4 @@ std::string     Keys::PRAGMA    = "__pragma";
 std::string     Keys::MACRO     = "__macro"; 
 std::string     Keys::MACRO_IDENT     = "ident";
 std::string     Keys::MACRO_EXPR      = "expr";
+std::string     Keys::MACRO_BLOCK     = "block";

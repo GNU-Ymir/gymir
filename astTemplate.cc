@@ -58,7 +58,7 @@ namespace syntax {
 	return new (Z0)  IBinary (this-> token, left, right);
     }
 
-    Instruction IBlock::templateReplace (const map <string, Expression>& values) {
+    Expression IBlock::templateExpReplace (const map <string, Expression>& values) {
 	vector <Declaration> decls;
 	vector <Instruction> insts;
 	for (auto it : this-> decls) {

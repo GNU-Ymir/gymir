@@ -39,6 +39,7 @@ namespace semantic {
 	static MacroSolver & instance ();
 
 	MacroSolution solve (syntax::IMacro * left, syntax::IMacroCall * right);	
+
 	MacroSolution solve (syntax::IMacroExpr* left, lexical::FakeLexer& lex);
 
 	MacroSolution solve (syntax::IMacroToken* left, lexical::FakeLexer& lex);

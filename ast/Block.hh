@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Instruction.hh"
+#include "Expression.hh"
 #include <ymir/utils/Array.hh>
 #include <stdio.h>
 #include "../errors/_.hh"
@@ -16,17 +16,18 @@ namespace syntax {
     class IDeclaration;
     typedef IDeclaration* Declaration;
     
-    class IBlock : public IInstruction {
+    class IBlock : public IExpression {
 
 	Word ident;
 	std::vector <Declaration> decls;
 	std::vector <Instruction> insts;
 	std::vector <IBlock*> finally;
+	Expression value;
 	
     public :
 
 	IBlock (Word word, std::vector <Declaration> decls, std::vector <Instruction> insts) :
-	    IInstruction (word),
+	    IExpression (word),
 	    decls (decls),
 	    insts (insts)
 	{
@@ -38,8 +39,10 @@ namespace syntax {
 	void addFinally (IBlock * insts);
 	
 	Instruction instruction () override;
-       	
-	Instruction templateReplace (const std::map <std::string, Expression>&) override;
+
+	Expression expression () override;
+	
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
 	IBlock* block ();
 
@@ -53,6 +56,8 @@ namespace syntax {
 
 	Ymir::Tree toGenericExpr (semantic::InfoType & type, Ymir::Tree & res);
 
+	Ymir::Tree toGenericValue ();
+	
 	Expression getLastExpr ();
 
 

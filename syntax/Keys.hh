@@ -66,4 +66,5 @@ struct Keys {
     static std::string  MACRO;
     static std::string  MACRO_EXPR;
     static std::string  MACRO_IDENT;
+    static std::string  MACRO_BLOCK;
 };

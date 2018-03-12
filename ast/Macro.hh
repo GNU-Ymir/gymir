@@ -11,7 +11,8 @@ namespace syntax {
        
     enum class MacroVarConst {
 	EXPR,
-	IDENT
+	IDENT,
+	BLOCK
     };
 
     class IMacroElement : public IExpression {

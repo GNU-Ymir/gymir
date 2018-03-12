@@ -1595,6 +1595,7 @@ namespace syntax {
 	    } else {
 		aux-> info = new (Z0) ISymbol (this-> token, expr-> info-> type-> clone ());
 		aux-> expr = expr;
+		aux-> bl-> getInsts ().pop_back ();
 	    }
 	    Table::instance ().quitFrame ();
 	    if (Ymir::Error::nb_errors != nbError) {
@@ -1611,6 +1612,19 @@ namespace syntax {
 
     Expression IMacroVar::expression () {
 	return this-> content-> expression ();
+    }
+
+    Expression IBlock::expression () {
+	auto bl = this-> block ();
+	auto expr = bl-> getLastExpr ();
+	if (expr != NULL) {
+	    bl-> info = new (Z0) ISymbol (bl-> token, expr-> info-> type-> clone ());
+	    bl-> value = expr;
+	    bl-> insts.pop_back ();
+	} else {
+	    bl-> info = new (Z0) ISymbol (bl-> token, new (Z0) IVoidInfo ());
+	}
+	return bl;
     }
     
     
