@@ -1575,6 +1575,7 @@ namespace syntax {
 
     Expression IMacroCall::expression () {
 	auto expr = this-> left-> expression ();
+	if (expr == NULL) return NULL;
 	if (auto mac = expr-> info-> type-> to <IMacroInfo> ()) {
 	    auto soluce = mac-> resolve (this);
 	    if (!soluce.valid) {
