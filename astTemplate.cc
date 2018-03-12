@@ -406,7 +406,7 @@ namespace syntax {
 	vector <Var> decls;
 	vector <Word> decos;
 	for (auto it : this-> decls)
-	    decls.push_back ((Var) it-> templateExpReplace ({}));
+	    decls.push_back (it-> templateExpReplace ({values})-> to <IVar> ());
 
 	for (auto it : this-> decos)
 	    decos.push_back (it);
@@ -506,6 +506,10 @@ namespace syntax {
     Expression IMacroCall::templateExpReplace (const std::map <std::string, Expression>& values) {
 	auto left = this-> left-> templateExpReplace (values);
 	return new (Z0) IMacroCall (this-> token, this-> end, left, this-> content);
+    }
+
+    Expression IMacroVar::templateExpReplace (const std::map <std::string, Expression>&) {
+	return this-> content-> templateExpReplace ({});
     }
 
 }

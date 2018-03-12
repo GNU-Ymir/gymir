@@ -35,6 +35,8 @@ namespace semantic {
 	}
               
 	void enterBlock ();
+	
+	void enterPhantomBlock ();
 
 	void quitBlock ();
 

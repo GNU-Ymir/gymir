@@ -104,7 +104,7 @@ namespace syntax {
 	MacroRepeat visitMacroRepeat (bool);
 	MacroVar visitMacroVar ();
 	MacroToken visitMacroToken ();
-	MacroCall visitMacroCall (Expression left);
+	Expression visitMacroCall (Expression left);
 	
 
     private:

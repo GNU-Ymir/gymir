@@ -123,6 +123,7 @@ namespace Ymir {
 		phrases [LabelingImmutableFor] = "Cannot label an immutable for";
 		phrases [NotAMacro] = "%%% do not identify a macro";
 		phrases [MacroResolution] = "Macro resolution %%% failed";
+		phrases [NoLet] = "Malformed statement %%%";
 		init = true;
 	    } 
 	    return phrases;

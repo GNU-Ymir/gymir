@@ -95,6 +95,7 @@ namespace Ymir {
 	    LabelingImmutableFor,
 	    NotAMacro,
 	    MacroResolution,
+	    NoLet,
 	    LAST_ERROR
 	};
 
@@ -212,6 +213,8 @@ namespace Ymir {
 	static void macroResolution (const Word&);
 
 	static void notLValue (const Word&);
+
+	static void noLet (const Word&);
 	
 	static void undefVar (const Word&, semantic::Symbol);
 

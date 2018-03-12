@@ -21,6 +21,14 @@ namespace semantic {
 	}
     }
 
+    void Table::enterPhantomBlock () {
+	FrameScope scope {{this-> getCurrentSpace (), "__"}};
+	scope.isPhantom () = true;
+	scope.setInternal (&this-> _frameTable.front ());
+	this-> _frameTable.push_front (scope);
+	this-> _nbFrame ++;
+    }
+
     void Table::quitBlock () {
 	if (!this-> _frameTable.empty ()) {
 	    this-> _frameTable.front ().quitBlock ();
@@ -230,13 +238,13 @@ namespace semantic {
 	if (this-> _frameTable.empty ()) return true;
 	auto ret = this-> _frameTable.front ().get (sym-> sym.getStr ());
 	if (this-> _frameTable.front ().fromFriend (sym)) return false;
-	if (ret != NULL) return true;
+	if (ret != NULL && !this-> _frameTable.front ().isPhantom ()) return true;
 	return false;
     }
 
     bool Table::parentFrame (Symbol sym) {
 	if (!this-> _frameTable.empty ()) {
-	    return this-> _frameTable.front ().fromFriend (sym);
+	    return this-> _frameTable.front ().fromFriend (sym) && !this-> _frameTable.front ().isPhantom ();
 	}
 	return false;
     }

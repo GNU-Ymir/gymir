@@ -86,6 +86,7 @@ namespace semantic {
 	this-> local.clear ();
     }
 
+    
     void Scope::quit (Namespace space) {
 	for (auto it : this-> local) {
 	    for (auto it_ : it.second) it_-> quit (space);

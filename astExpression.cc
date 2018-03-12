@@ -1581,15 +1581,37 @@ namespace syntax {
 		Ymir::Error::macroResolution (this-> left-> token);
 		return NULL;
 	    }
+	    
+	    auto block = soluce.block-> templateReplace (soluce.elements)-> to <IBlock> ();	    
+	    std::vector <Expression> tmps;
+	    Table::instance ().enterPhantomBlock ();
+	    Table::instance ().retInfo ().info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
+	    auto aux = new (Z0) IMacroCall (this-> token, this-> end, this-> left-> templateExpReplace ({}), this-> content);
+	    auto nbError = Ymir::Error::nb_errors;
+	    aux-> bl = block-> block ();
+	    auto expr = aux-> bl-> getLastExpr ();
+	    if (expr == NULL) {
+		aux-> info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());		
+	    } else {
+		aux-> info = new (Z0) ISymbol (this-> token, expr-> info-> type-> clone ());
+		aux-> expr = expr;
+	    }
+	    Table::instance ().quitFrame ();
+	    if (Ymir::Error::nb_errors != nbError) {
+		Ymir::Error::templateCreation (this-> left-> token);
+		return NULL;
+	    }
+	    return aux;
 	} else {
 	    Ymir::Error::notAMacro (this-> left-> token);
 	    return NULL;
-	}
-	
-	Ymir::Error::assert ("TODO");
+	}	
 	return NULL;
     }
 
+    Expression IMacroVar::expression () {
+	return this-> content-> expression ();
+    }
     
     
 }

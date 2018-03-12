@@ -992,6 +992,16 @@ namespace syntax {
 	return list.getTree ();	
     }
     
+
+    Ymir::Tree IMacroCall::toGeneric () {
+	auto insts = this-> bl-> toGeneric ();
+	if (this-> expr) {
+	    auto expr = this-> expr-> toGeneric ();
+	    return Ymir::compoundExpr (this-> token.getLocus (), insts, expr);
+	}
+	return insts;
+    }
+
 }
 
 

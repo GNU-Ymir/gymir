@@ -10,10 +10,11 @@
 namespace semantic {
 
     class Scope {
-
+	
+	bool phantom = false;
 	std::map <std::string, std::vector <Symbol> > local;
 	std::vector <Namespace> imports;
-
+	
     public:
 
 	Scope ();
@@ -31,8 +32,10 @@ namespace semantic {
 	void addOpen (Namespace space);
 
 	Symbol getAlike (std::string name);
-
+       	
 	Symbol getPublicAlike (std::string name);
+
+	bool isPhantom ();
 	
 	void clear ();
 

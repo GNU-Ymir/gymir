@@ -54,6 +54,17 @@ namespace syntax {
 	Ymir::Tree toGenericExpr (semantic::InfoType & type, Ymir::Tree & res);
 
 	Expression getLastExpr ();
+
+
+	static const char * id () {
+	    return TYPEID (IBlock);
+	}
+	
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IInstruction::getIds ();
+	    ids.push_back (TYPEID (IBlock));
+	    return ids;
+	}
 	
 	void print (int nb = 0) override;
 

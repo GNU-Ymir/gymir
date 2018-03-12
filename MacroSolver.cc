@@ -15,28 +15,11 @@ namespace semantic {
     MacroSolution MacroSolver::merge (MacroSolution &left, MacroSolution &right) {
 	MacroSolution global {true, left.elements, NULL};
 	for (auto it : right.elements) {
-	    if (auto var = it-> to<IMacroVar> ()) {
-		for (auto it_ : left.elements) {
-		    if (auto var_ = it_-> to <IMacroVar> ()) {
-			if (var_-> name.getStr () == var-> name.getStr ()) 
-			    return {false, {}, NULL};			
-		    } else if (auto rep_ = it_-> to <IMacroRepeat> ()) {
-			if (rep_-> ident.getStr () == var-> name.getStr ()) 
-			    return {false, {}, NULL};
-		    }
-		}
-	    } else if (auto rep = it-> to <IMacroRepeat> ()) {
-		for (auto it_ : left.elements) {
-		    if (auto var_ = it_-> to <IMacroVar> ()) {
-			if (var_-> name.getStr () == rep-> ident.getStr ()) 
-			    return {false, {}, NULL};			
-		    } else if (auto rep_ = it_-> to <IMacroRepeat> ()) {
-			if (rep_-> ident.getStr () == rep-> ident.getStr ()) 
-			    return {false, {}, NULL};
-		    }
-		}
+	    for (auto it_ : left.elements) {
+		if (it.first == it_.first) 
+		    return {false, {}, NULL};
 	    }
-	    global.elements.push_back (it);
+	    global.elements [it.first] = (it.second);
 	}
 	return global;
     }
@@ -69,7 +52,7 @@ namespace semantic {
 		soluce = solve (var, lex);		
 	    }
 	    if (!soluce.valid) return soluce;
-	    soluce = merge (soluce, globSoluce);
+	    globSoluce = merge (globSoluce, soluce);
 	    if (!globSoluce.valid) return globSoluce;
 	}
 	return globSoluce;
@@ -117,7 +100,8 @@ namespace semantic {
 	    return {false, {}, NULL};
 	auto ret = var-> clone ();
 	ret-> setContent (content);
-	return {true, {ret}, NULL};
+	
+	return MacroSolution {true, {{var-> name.getStr (), ret}}, NULL};
     }
     
 }

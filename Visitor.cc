@@ -235,9 +235,14 @@ namespace syntax {
 	auto word = this-> lex.next ({Token::LACC});
 	std::vector <MacroExpr> exprs;
 	std::vector <Block> blocks;
-	exprs.push_back (visitMacroExpression ());
-	blocks.push_back (visitBlock ());
-	this-> lex.next ({Token::RACC});
+	while (true) {
+	    exprs.push_back (visitMacroExpression ());
+	    this-> lex.next ({Token::DARROW});
+	    blocks.push_back (visitBlock ());	    
+	    auto next = this-> lex.next ();
+	    if (next == Token::RACC)
+		break;
+	}
 	return new (Z0) IMacro (ident, exprs, blocks);
     }
 
@@ -292,7 +297,7 @@ namespace syntax {
 	    value = std::string (1, ch-> toChar ()); 
 	} else  Ymir::Error::assert ("!!");
 	
-	return new (Z0) IMacroToken (value);
+	return new (Z0) IMacroToken (begin, value);
     }
     
     ModDecl Visitor::visitModule () {
@@ -1977,7 +1982,7 @@ namespace syntax {
 	return retour;
     }
 
-    MacroCall Visitor::visitMacroCall (Expression left) {
+    Expression Visitor::visitMacroCall (Expression left) {
 	auto beg = this-> lex.next ({Token::LCRO, Token::LACC, Token::LPAR});
 	std::string tokEnd = beg == Token::LCRO ? Token::RCRO : (beg == Token::LACC ? Token::RACC : Token::RPAR);
 	this-> lex.skipEnable (Token::SPACE, false);       
@@ -1986,13 +1991,23 @@ namespace syntax {
 	while (open != 0) {
 	    tok.push_back (this-> lex.next ());
 	    if (tok.back () == tokEnd) open--;
+	    else if (tok.back () == beg) open ++;
 	    else if (tok.back ().isEof ()) unterminated (beg);	    
 	}
 	
 	this-> lex.skipEnable (Token::SPACE, true);       
 	auto end = tok.back ();
 	tok.pop_back ();
-	return new (Z0) IMacroCall (beg, end, left, tok);
+	auto retour = new (Z0) IMacroCall (beg, end, left, tok);
+	
+	auto next = this-> lex.next ();	
+	if (find (suiteElem, next))
+	    return visitSuite (next, retour);
+	else if (find (afUnary, next))
+	    return visitAfter (next, retour);
+	this-> lex.rewind ();
+	return retour;
+
     }
     
 

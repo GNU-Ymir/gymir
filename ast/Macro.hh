@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Declaration.hh"
+#include "Expression.hh"
 #include "../errors/_.hh"
 #include "../semantic/_.hh"
 #include "../syntax/Word.hh"
@@ -13,26 +14,12 @@ namespace syntax {
 	IDENT
     };
 
-    class IMacroElement {
+    class IMacroElement : public IExpression {
     public: 
-	semantic::Symbol info;
 
+	IMacroElement (Word ident) : IExpression (ident) {}
+	
 	virtual IMacroElement* clone () = 0;
-
-	virtual const char * getId () = 0;
-	
-	template <typename T>
-	bool is () {
-	    return this-> to<T> () != NULL;
-	}
-	
-	template <typename T>
-	T* to () {
-	    if (strcmp (this-> getId (), T::id ()) == 0) {
-		return (T*) this;
-	    }	    	
-	    return NULL;
-	}
 	
     };
     
@@ -48,7 +35,7 @@ namespace syntax {
     class IMacroToken : public IMacroElement {
 	std::string value;
     public:
-	IMacroToken (std::string value);
+	IMacroToken (Word tok, std::string value);
 	
 	IMacroToken* clone () override;
 
@@ -56,7 +43,7 @@ namespace syntax {
 	
 	static const char* id ();
 	
-	const char * getId () override;
+	std::vector <std::string> getIds () override;
     };
 
     
@@ -72,9 +59,9 @@ namespace syntax {
 	IMacroRepeat* clone () override;
 
 	static const char* id ();
-	
-	const char * getId () override;
 
+	std::vector <std::string> getIds () override;
+       
     };
     
     class IMacroVar : public IMacroElement {
@@ -89,13 +76,18 @@ namespace syntax {
 
 	IMacroVar* clone () override;
 
+	Expression templateExpReplace (const std::map <std::string, Expression> &) override;
+
+	Expression expression ();
+	
 	MacroVarConst getType ();
 	
 	void setContent (Expression content);
 	
 	static const char* id ();
-	
-	const char * getId () override;
+
+	std::vector <std::string> getIds () override;
+
     };
     
 
@@ -123,6 +115,8 @@ namespace syntax {
 	Word end;
 	Expression left;
 	std::vector <Word> content;
+	Block bl;
+	Expression expr;
 	
     public :
 
@@ -134,6 +128,8 @@ namespace syntax {
 
 	std::vector <Word> & getTokens ();	
 	
+	Ymir::Tree toGeneric () override;
+
 	static const char * id () {
 	    return TYPEID (IMacroCall);
 	}

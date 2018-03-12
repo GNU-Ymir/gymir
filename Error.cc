@@ -739,6 +739,18 @@ namespace Ymir {
 	} else __caught__.push_back (erroMsg);
     }
     
+    void Error::noLet (const Word& word) {
+	auto str = getString (NoLet);
+	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg erroMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", erroMsg.msg.c_str ());
+	} else __caught__.push_back (erroMsg);
+    }
+    
     void Error::notLValue (const Word& word) {
 	auto str = getString (NotLValue);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);

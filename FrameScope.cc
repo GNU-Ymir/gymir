@@ -230,7 +230,7 @@ namespace semantic {
 	this-> _local.push_front ({});
 	this-> _retInfo.enterBlock ();
     }
-
+    
     void FrameScope::addOpen (Namespace space) {
 	this-> _local.front ().addOpen (space);
     }
@@ -297,6 +297,10 @@ namespace semantic {
 	return NULL;
     }
 
+    bool &FrameScope::isPhantom () {
+	return this-> phantom;
+    }
+    
     Namespace& FrameScope::space () {
 	return this-> _space;
     }

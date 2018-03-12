@@ -25,7 +25,7 @@ namespace semantic {
     
     struct MacroSolution {
 	bool valid;
-	std::vector <syntax::IMacroElement*> elements;
+	std::map <std::string, syntax::Expression> elements;
 	syntax::IBlock* block;
     };
 

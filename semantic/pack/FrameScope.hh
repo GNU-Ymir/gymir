@@ -114,6 +114,7 @@ namespace semantic {
 	FrameScope* _friend = NULL;
 	
 	Namespace _space;
+	bool phantom;
 	
     public:
 
@@ -139,6 +140,8 @@ namespace semantic {
 	
 	Symbol getAlike (std::string);
 
+	bool& isPhantom ();
+	
 	Namespace& space ();
 
 	FrameReturnInfo& retInfo ();

@@ -87,6 +87,10 @@ namespace syntax {
 	auto auxDecl = new (Z0)  IVarDecl (this-> token);
 	for (auto id : Ymir::r (0, this-> decls.size ())) {
 	    auto it = this-> decls [id];
+	    if (!it || !it-> is<IVar> ()) {
+		Ymir::Error::noLet (this-> token);
+		continue;
+	    } 
 	    auto aux = new (Z0)  IVar (it-> token);
 	    auto info = Table::instance ().get (it-> token.getStr ());
 	    if (info && Table::instance ().sameFrame (info)) {
