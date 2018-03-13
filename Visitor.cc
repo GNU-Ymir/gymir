@@ -1359,7 +1359,10 @@ namespace syntax {
 	} else {
 	    if (tok == Token::LPAR)
 		return visitPthPar (tok);
-	    else return visitPthWPar (tok);
+	    else if (tok == Token::LACC) {
+		this-> lex.rewind ();
+		return visitBlock ();
+	    } else return visitPthWPar (tok);
 	}
     }
 

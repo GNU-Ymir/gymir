@@ -332,8 +332,7 @@ namespace semantic {
 					));		
 	    }
 	    
-	    getStackStmtList ().back ().append (list.getTree ());
-	    return ltree;			    
+	    return Ymir::compoundExpr (locus.getLocus (), list.getTree (), ltree);			    
 	}	
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {

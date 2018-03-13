@@ -202,8 +202,7 @@ namespace semantic {
 		MODIFY_EXPR, loc, void_type_node, lscd.getTree (), rscd.getTree ()
 	    ));
 	    
-	    getStackStmtList ().back ().append (list.getTree ());
-	    return ltree;
+	    return Ymir::compoundExpr (loc, list.getTree (), ltree);
 	}
 	
 	Tree InstIn (Word locus, InfoType, Expression left, Expression right) {
@@ -272,7 +271,7 @@ namespace semantic {
 	    auto it = makeAuxVar (loc, ISymbol::getLastTmp (), innerInfo);
 	    auto var = vars [0]-> toGeneric ();
 	    
-	    Ymir::TreeStmtList list;
+	    Ymir::TreeStmtList list, begin_part;
 	    
 	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, it, begin));
 	    Ymir::Tree bool_expr = buildTree (NE_EXPR, loc, boolean_type_node, it, scd);
@@ -289,11 +288,10 @@ namespace semantic {
 	    Ymir::Tree begin_label_expr = Ymir::buildTree (LABEL_EXPR, block-> token.getLocus (), void_type_node, begin_label);
 	    list.append (goto_test);
 	    list.append (begin_label_expr);
-	    Ymir::enterBlock ();
 
-	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (MODIFY_EXPR, loc, void_type_node, var, it));
+	    begin_part.append (Ymir::buildTree (MODIFY_EXPR, loc, void_type_node, var, it));
 	    auto innerBl = block-> toGeneric ();
-	    Ymir::getStackStmtList ().back ().append (innerBl);	    
+	    begin_part.append (innerBl);	    
 	    auto add_expr = Ymir::buildTree (
 	     	MODIFY_EXPR, locus.getLocus (), it.getType (), it,
 	     	Ymir::buildTree (
@@ -309,10 +307,9 @@ namespace semantic {
 	    );
 	    
 	    Ymir::Tree bool2_expr = buildTree (LT_EXPR, loc, boolean_type_node, begin, scd);
-	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (COND_EXPR, iter-> token.getLocus (), void_type_node, bool2_expr, add_expr, sub_expr));
+	    begin_part.append (Ymir::buildTree (COND_EXPR, iter-> token.getLocus (), void_type_node, bool2_expr, add_expr, sub_expr));
 	    
-	    auto begin_part = Ymir::leaveBlock ().bind_expr;
-	    list.append (begin_part);	    
+	    list.append (begin_part.getTree ());	    
 	    list.append (goto_test);
 	    
 	    Ymir::Tree test_label_expr = Ymir::buildTree (LABEL_EXPR, iter-> token.getLocus (), void_type_node, test_label);

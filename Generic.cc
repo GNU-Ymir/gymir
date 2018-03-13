@@ -166,9 +166,9 @@ namespace Ymir {
 
 	DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
 	Ymir::getStackVarDeclChain ().back ().append (decl);
-	Ymir::getStackStmtList ().back ().append (buildTree (DECL_EXPR, locus, void_type_node, decl));
-	return decl;
-							     
+	return compoundExpr (locus,
+			     buildTree (DECL_EXPR, locus, void_type_node, decl),
+			     decl);
     }
 
     Tree getArrayRef (location_t locus, Tree array, Tree inner, ulong index) {	

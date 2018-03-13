@@ -460,8 +460,9 @@ namespace semantic {
 	}
 
 	Ymir::Tree buildDupSimple (location_t loc, Tree lexp, Tree rexp, Tree inner) {
+	    Ymir::TreeStmtList list;
 	    if (lexp.getTree () == rexp.getTree ()) {
-		Ymir::getStackStmtList ().back ().append (
+		list.append (
 		    Ymir::buildTree (
 			MODIFY_EXPR, loc, void_type_node, lexp, rexp
 		    )
@@ -470,18 +471,9 @@ namespace semantic {
 		auto ptrr = getPtr (loc, NULL, rexp);
 		auto lenl = getLen (loc, NULL, lexp);
 		auto ptrl = getPtr (loc, NULL, lexp);
-		Ymir::TreeStmtList list;
-		// tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
-		// tree size = fold_build2_loc (loc, MULT_EXPR, size_type_node,
-		// 			convert (size_type_node, lenl.getTree ()),
-		// 			convert (size_type_node, TYPE_SIZE_UNIT (inner.getTree ()))					
-		// );
-		
 		list.append (copyArray (loc, ptrl, ptrr, lenl, inner));
-		//auto result = build_call_expr (tmemcopy, 3, ptrl.getTree (), ptrr.getTree (), size);
-		Ymir::getStackStmtList ().back ().append (list.getTree ());
 	    }
-	    return lexp;
+	    return Ymir::compoundExpr (loc, list.getTree (), lexp);
 	}
 	
 	Ymir::Tree buildDup (location_t loc, Tree lexp, Tree rexp, Expression right) {
@@ -516,8 +508,7 @@ namespace semantic {
 	    ));
 		
 	    list.append (copyArray (loc, ptrl, ptrr, len, inner));	    
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    return lexp;
+	    return Ymir::compoundExpr (loc, list.getTree (), lexp);
 	}
 
 	Ymir::Tree InstAffectNull (Word word, InfoType, Expression left, Expression) {
@@ -528,8 +519,11 @@ namespace semantic {
 				  build_int_cst_type (long_unsigned_type_node, 0),
 				  TYPE_SIZE_UNIT (ltree.getType ().getTree ())};
 
-	    Ymir::getStackStmtList ().back ().append (build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs));
-	    return ltree;
+	    return Ymir::compoundExpr (
+		loc,
+		build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs),
+		ltree
+	    );
 	}
 	
 	Ymir::Tree InstAffect (Word word, InfoType, Expression left, Expression right) {
@@ -568,8 +562,7 @@ namespace semantic {
 		MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
 	    ));
 	    
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());		
-	    return lexp;			    	    	    
+	    return Ymir::compoundExpr (loc, list.getTree (), lexp);			    	    	    
 	}	
 	
 	Ymir::Tree InstAccessInt (Word word, InfoType, Expression left, Expression right) {
@@ -638,8 +631,7 @@ namespace semantic {
 	    list.append (copyArray (loc, auxPtr, ptrl, lenl, inner));
 	    list.append (copyArray (loc, auxPtr, ptrr, lenr, lenl, inner));	    
 	    
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	    return Ymir::compoundExpr (loc, list.getTree (), aux);
 	}
 	
 	Tree InstConcatAff (Word locus, InfoType type, Expression left, Expression right) {
@@ -659,10 +651,8 @@ namespace semantic {
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
 	    ));
-	    
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    
-	    return lexp;
+	    	    
+	    return Ymir::compoundExpr (loc, list.getTree (), lexp);
 	}
 	
 	Tree InstToArray (Word locus, InfoType, Expression elem, Expression type) {
@@ -687,8 +677,8 @@ namespace semantic {
 		    list.append (buildTree (
 			MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
 		    ));
-		    Ymir::getStackStmtList ().back ().append (list.getTree ());
-		    return auxVar;
+
+		    return Ymir::compoundExpr (loc, list.getTree (), auxVar);
 		} else {
 		    return rexp;
 		}		
@@ -745,7 +735,7 @@ namespace semantic {
 	    auto var = vars [0]-> toGeneric ();
 	    auto it = makeAuxVar (loc, ISymbol::getLastTmp (), long_unsigned_type_node);
 	    	    
-	    Ymir::TreeStmtList list;
+	    Ymir::TreeStmtList list, begin_part;
 	    
 	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, it, zero));
 	    Ymir::Tree bool_expr = buildTree (LT_EXPR, loc, boolean_type_node, it, len);
@@ -762,20 +752,19 @@ namespace semantic {
 	    Ymir::Tree begin_label_expr = Ymir::buildTree (LABEL_EXPR, block-> token.getLocus (), void_type_node, begin_label);
 	    list.append (goto_test);
 	    list.append (begin_label_expr);
-	    Ymir::enterBlock ();
 
-	    Ymir::getStackStmtList ().back ().append (affectIndex (locus, it, array, var, iter-> info-> type, vars [0]-> info-> type));
+	    begin_part.append (affectIndex (locus, it, array, var, iter-> info-> type, vars [0]-> info-> type));
+
 	    auto inner = block-> toGeneric ();
-	    Ymir::getStackStmtList ().back ().append (inner);	    
-	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (
+	    begin_part.append (inner);	    
+	    begin_part.append (Ymir::buildTree (
 	     	MODIFY_EXPR, locus.getLocus (), it.getType (), it,
 	     	Ymir::buildTree (
 	     	    PLUS_EXPR, locus.getLocus (), it.getType (), it, one
 	     	)
 	    ));
 	    
-	    auto begin_part = Ymir::leaveBlock ().bind_expr;
-	    list.append (begin_part);	    
+	    list.append (begin_part.getTree ());	    
 	    list.append (goto_test);
 	    
 	    Ymir::Tree test_label_expr = Ymir::buildTree (LABEL_EXPR, iter-> token.getLocus (), void_type_node, test_label);
@@ -801,8 +790,7 @@ namespace semantic {
 		));
 	    }
 	    
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
 	}
 	
 	Ymir::Tree InstInit (Word locus, InfoType type, Expression) {

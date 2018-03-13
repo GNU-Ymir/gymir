@@ -28,8 +28,7 @@ namespace semantic {
 		));
 	    }
 	    
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
 	}
 
 	Tree InstCast (Word, InfoType, Expression elem, Expression) {

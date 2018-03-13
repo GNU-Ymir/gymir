@@ -518,8 +518,7 @@ namespace semantic {
 		MODIFY_EXPR, loc, scd.getType (), scd, rtree
 	    ));
 
-	    getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	    return Ymir::compoundExpr (loc, list.getTree (), aux);
 	}
 
 	
@@ -542,8 +541,7 @@ namespace semantic {
 		MODIFY_EXPR, loc, scd.getType (), scd, rtree
 	    ));
 
-	    getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	    return Ymir::compoundExpr (loc, list.getTree (), aux);
 	}
 
 	

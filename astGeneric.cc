@@ -25,11 +25,14 @@ namespace syntax {
     }
     
     Ymir::Tree IBlock::toGenericValue () {
-	auto expr = this-> value;
+	auto expr = this-> value;	
 	this-> value = NULL;
-	auto insts = toGeneric ();
-	auto value = expr-> toGeneric ();
-	return Ymir::compoundExpr (this-> token.getLocus (), insts, value);
+	this-> insts.push_back (expr);
+	InfoType type;
+	Ymir::Tree res;
+	auto list = toGenericExpr (type, res);
+	Ymir::getStackStmtList ().back ().append (list);
+	return res;
     }
 
     Ymir::Tree IBlock::toGeneric () {
@@ -62,9 +65,11 @@ namespace syntax {
     }
 
     Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
-	Ymir::enterBlock ();
 	auto last = this-> insts.back ()-> to <IExpression> ();
 	this-> insts.pop_back ();
+	auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type-> toGeneric ());
+	
+	Ymir::enterBlock ();
 	for (auto it : this-> insts) {
 	    auto inst = it-> toGeneric ();
 	    Ymir::getStackStmtList ().back ().append (inst);    
@@ -72,6 +77,13 @@ namespace syntax {
 
 	type = last-> info-> type;
 	expr = last-> toGeneric ();
+	Ymir::getStackStmtList ().back ().append (
+	    buildTree (MODIFY_EXPR,
+		       this-> token.getLocus (),
+		       expr.getType (),
+		       res, expr)
+	);
+	expr = res;
 	
 	auto body = Ymir::leaveBlock ();
 	if (this-> finally.size () == 0)
@@ -393,8 +405,7 @@ namespace syntax {
 		));
 	    }
 
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	    return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), aux);
 	} else {
 	    auto intExpr = new (Z0)  IFixed (this-> token, FixedConst::ULONG);
 	    intExpr-> setUValue (0);
@@ -408,8 +419,7 @@ namespace syntax {
 
 	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, len, zero));
 	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, ptr, zero));
-	    Ymir::getStackStmtList ().back ().append (list.getTree ());
-	    return aux;
+	    return Ymir::compoundExpr (loc, list.getTree (), aux);
 	}
     }
 
@@ -591,8 +601,9 @@ namespace syntax {
 			      build_int_cst_type (long_unsigned_type_node, 0),
 			      TYPE_SIZE_UNIT (aux.getType ().getTree ())};
 	
-	Ymir::getStackStmtList ().back ().append (build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs));
-	return aux;
+	return Ymir::compoundExpr (loc,
+				   build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs),
+				   aux);
     }
     
     Ymir::Tree IArrayAlloc::dynamicGeneric (semantic::ArrayInfo, Ymir::Tree innerType, Ymir::Tree array_type) {
@@ -627,8 +638,7 @@ namespace syntax {
 	    fold_convert (build_pointer_type (innerType.getTree ()), ptrr)
 	));
 
-	Ymir::getStackStmtList ().back ().append (list.getTree ());
-	return aux;
+	return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), aux);
     }
     
     Ymir::Tree IConstTuple::toGeneric () {
@@ -651,8 +661,8 @@ namespace syntax {
 		);
 	    list.append (ret);
 	}
-	Ymir::getStackStmtList ().back ().append (list.getTree ());
-	return aux;
+	
+	return Ymir::compoundExpr (loc, list.getTree (), aux);
     }
     
     Ymir::Tree IExpand::toGeneric () {
@@ -831,9 +841,7 @@ namespace syntax {
 	Ymir::Tree resTree;
 	InfoType type;
 	Ymir::Tree then_part = block-> toGenericExpr (type, resTree);
-
-	
-	
+		
 	list.append (affectPart);
 	list.append (then_part);
 	list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
@@ -892,8 +900,7 @@ namespace syntax {
 	Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, this-> token.getLocus (), void_type_node, endLabel);
 	list.append (endif_label_expr);
 
-	Ymir::getStackStmtList ().back ().append (list.getTree ());
-	return aux;
+	return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), aux);
     }
     
     Ymir::Tree IMatch::toGeneric () {
