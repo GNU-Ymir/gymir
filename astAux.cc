@@ -1615,6 +1615,14 @@ namespace syntax {
 	name (name)
     {}
 
+    std::string IMacroVar::prettyPrint () {
+	if (this-> content) {
+	    return this-> content-> prettyPrint ();
+	} else {
+	    return Ymir::OutBuffer (this-> name, ": null").str (); 
+	}
+    }
+    
     const char* IMacroVar::id () {
 	return "IMacroVar";
     }

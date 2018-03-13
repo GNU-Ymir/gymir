@@ -29,7 +29,8 @@ namespace semantic {
 	    auto left = expr-> getExprs () [it];
 	    FakeLexer lex (call-> getTokens ());
 	    auto soluce = this-> solve (left, lex);
-	    if (soluce.valid && lex.next ().isEof ()) {
+	    
+	    if (soluce.valid) {
 		soluce.block = expr-> getBlocks () [it];
 		return soluce;
 	    }
@@ -40,21 +41,50 @@ namespace semantic {
        
     MacroSolution MacroSolver::solve (MacroExpr expr, FakeLexer& lex) {	
 	MacroSolution globSoluce {true, {}, NULL};
+	std::vector <FakeLexer> lexers;
+	std::vector <uint> get;
+	uint current = 0;
 	for (auto elem : expr-> getElements ()) {
-	    MacroSolution soluce {false, {}, NULL};
 	    if (auto tok = elem-> to <IMacroToken> ()) {
-		lex.skipEnable (Token::SPACE, false);
-		soluce = solve (tok, lex);
-		lex.skipEnable (Token::SPACE, true);
-	    } else if (auto rep = elem-> to <IMacroRepeat> ()) {
-		soluce = solve (rep, lex);
-	    } else if (auto var = elem-> to <IMacroVar> ()) {
-		soluce = solve (var, lex);		
+		bool success = true;
+		auto toks = this-> until (tok, lex, success);
+		if (!success) return {false, {}, NULL};
+		else {
+		    FakeLexer other (toks);
+		    lexers.push_back (other);
+		    current ++;
+		} 
+	    } else {
+		get.push_back (current);
 	    }
+	}
+		
+	uint i = 0;
+	
+	for (auto elem : expr-> getElements ()) {
+	    MacroSolution soluce {true, {}, NULL};
+	    if (auto rep = elem-> to <IMacroRepeat> ()) {
+		if (get [i] < lexers.size ())
+		    soluce = solve (rep, lexers [get [i]]);
+		else
+		    soluce = solve (rep, lex);
+		i++;
+	    } else if (auto var = elem-> to <IMacroVar> ()) {
+		if (get [i] < lexers.size ())
+		    soluce = solve (var, lexers [get [i]]);
+		else
+		    soluce = solve (var, lex);
+		i++;
+	    }
+	    
 	    if (!soluce.valid) return soluce;
 	    globSoluce = merge (globSoluce, soluce);
 	    if (!globSoluce.valid) return globSoluce;
 	}
+
+	for (auto it : lexers)
+	    if (!it.next ().isEof ()) return {false, {}, NULL};
+
 	return globSoluce;
     }
     
@@ -84,22 +114,54 @@ namespace semantic {
 	}
     }
 
-    std::vector<Word> MacroSolver::until (MacroToken tok, FakeLexer & lex) {
+    std::vector <Word> MacroSolver::untilOpen (FakeLexer & lex, std::string & val, bool & success) {
+	std::string openTok = "";
+	uint open = 1;
+	std::vector <Word> words;
+	
+	if (val == Token::RACC) openTok = Token::LACC;
+	else if (val == Token::RCRO) openTok = Token::LCRO;
+	else if (val == Token::RPAR) openTok = Token::LPAR;
+	while (true) {
+	    auto word = lex.next ();
+	    if (word.isEof ()) break;
+	    if (word == openTok) open ++;
+	    else if (word == val) {
+		open--;
+		if (open == 0) return words;
+	    } else {
+		words.push_back (word);
+	    }
+	}
+	
+	success = false;
+	return {};
+    }
+    
+    std::vector<Word> MacroSolver::until (MacroToken tok, FakeLexer & lex, bool &success) {
+	success = true;	
+	std::string val = tok-> getValue ();
+	if (val == Token::RACC || val == Token::RCRO || val == Token::RPAR) {
+	    return untilOpen (lex, val, success);
+	}
+	
 	std::vector<Word> words;
 	ulong beg = 0, current = 0, beginWord = lex.tell ();
+
 	std::vector <Word> read;
-	std::string val = tok-> getValue ();
+
 	if (val.length () == 0) return read;
 	while (true) {
 	    auto word = lex.next ();
 	    if (word.isEof ()) {
 		lex.seek (beginWord);
+		success = false;
 		return {};
 	    } else if (word == Token::SPACE && current == 0 && val [current] != ' ') {
 		read.push_back (word);
 		continue;
 	    }
-	    
+
 	    beg = 0;	    
 	    for (auto it : Ymir::r (0, word.getStr ().length ())) {
 		if (current >= val.length ()) {
@@ -123,8 +185,9 @@ namespace semantic {
 	auto result = new (Z0) IMacroRepeat (rep-> token, rep-> getExpr (), rep-> getClose (), rep-> isOneTime ());
 	bool end = false;
 	while (!end) {
+	    bool fail = false, ignore = true;
 	    ulong beginLex = lex.tell ();
-	    auto toks = this-> until (closeToken, lex);
+	    auto toks = this-> until (closeToken, lex, ignore);
 	    FakeLexer other (toks);
 	    FakeLexer* doing = &other;
 	    if (toks.size () == 0) {
@@ -136,14 +199,15 @@ namespace semantic {
 	    auto soluce = this-> solve (rep-> getExpr (), *doing);
 	    auto errors = Ymir::Error::caught ();
 	    Ymir::Error::activeError (true);
-	    if (errors.size () != 0) {
+	    if (errors.size () != 0 || !soluce.valid) {
 		lex.seek (beginLex);
+		fail = true;
 	    }
 	    
-	    if (errors.size () != 0 && rep-> isOneTime () && result-> getSolution ().size () == 0) return {false, {}, NULL};
-	    else if (errors.size () != 0 && end && result-> getSolution ().size () == 0) return {true, {{rep-> token.getStr (), result}}, NULL};
-	    else if (errors.size () != 0) return {false, {}, NULL};
-	
+	    if (fail && rep-> isOneTime () && result-> getSolution ().size () == 0) return {false, {}, NULL};
+	    else if (fail && end && result-> getSolution ().size () == 0) return {true, {{rep-> token.getStr (), result}}, NULL};
+	    else if (fail) return {false, {}, NULL};
+
 	    result-> addSolution (new (Z0) MacroSolution {soluce});
 	}
 	

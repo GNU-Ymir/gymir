@@ -236,9 +236,22 @@ namespace lexical {
 	this-> reads [this-> current].column += beg;
 	this-> rewind ();
     }
+
+    FakeLexer FakeLexer::cutOff () {
+	if (this-> current == -1) return *this;
+	std::vector <Word> toks (this-> words.begin () + this-> current + 2, this-> words.end ());
+	return FakeLexer {toks};
+    }
     
     std::string FakeLexer::toString () {
-	return Ymir::OutBuffer ("[", this-> fake_current, ":", this-> current, "] ", this-> words).str ();
+	Ymir::OutBuffer buf ("[", this-> fake_current, ":", this-> current, "] [");
+	for (auto i : Ymir::r (0, this-> current + 1))
+	    buf.write (this-> words [i]);
+	buf.write ("][");
+	for (auto i : Ymir::r (this-> current + 1, this-> words.size ()))
+	    buf.write (this-> words [i]);
+	buf.write ("]");
+	return buf.str ();
     }
     
 }

@@ -100,6 +100,8 @@ namespace syntax {
 	MacroVarConst getType ();
 	
 	void setContent (Expression content);
+
+	std::string prettyPrint () override;
 	
 	static const char* id ();
 

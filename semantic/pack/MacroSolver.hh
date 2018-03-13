@@ -52,7 +52,9 @@ namespace semantic {
 
     private:
 	
-	std::vector <Word> until (syntax::IMacroToken * tok, lexical::FakeLexer& lex);
+	std::vector <Word> until (syntax::IMacroToken * tok, lexical::FakeLexer& lex, bool&);
+
+	std::vector <Word> untilOpen (lexical::FakeLexer& lex, std::string &val, bool&);
 	
     };
         

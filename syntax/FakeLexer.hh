@@ -18,7 +18,9 @@ namespace lexical {
 	FakeLexer (const std::vector<Word> & words);
 
 	void cutCurrentWord (ulong beg);
-
+	
+	FakeLexer cutOff ();
+	
 	std::string toString ();
 	
     protected:
