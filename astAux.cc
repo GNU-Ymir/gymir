@@ -1,5 +1,6 @@
 #include <ymir/ast/_.hh>
 #include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/pack/MacroSolver.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/syntax/Token.hh>
 
@@ -1669,6 +1670,26 @@ namespace syntax {
 
     MacroRepeat IMacroRepeat::clone () {
 	return new (Z0) IMacroRepeat (this-> ident, this-> content, this-> pass, this-> oneTime);
+    }
+    
+    MacroToken IMacroRepeat::getClose () {
+	return this-> pass;
+    }
+
+    MacroExpr IMacroRepeat::getExpr () {
+	return this-> content;
+    }
+
+    bool IMacroRepeat::isOneTime () {
+	return this-> oneTime;
+    }
+
+    void IMacroRepeat::addSolution (semantic::MacroSolution* soluce) {
+	this-> soluce.push_back (soluce);
+    }
+
+    std::vector <semantic::MacroSolution*> IMacroRepeat::getSolution () {
+	return this-> soluce;
     }
     
     const char* IMacroRepeat::id () {

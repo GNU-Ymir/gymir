@@ -7,6 +7,10 @@
 #include "../syntax/Word.hh"
 #include <ymir/utils/Array.hh>
 
+namespace semantic {
+    struct MacroSolution;
+}
+
 namespace syntax {
        
     enum class MacroVarConst {
@@ -52,6 +56,8 @@ namespace syntax {
 	IMacroExpr* content;
 	IMacroToken * pass;
 	bool oneTime;
+	std::vector <semantic::MacroSolution*> soluce;
+	
     public :
 	Word ident;
 	
@@ -59,6 +65,16 @@ namespace syntax {
 
 	IMacroRepeat* clone () override;
 
+	IMacroToken* getClose ();
+
+	IMacroExpr* getExpr ();
+
+	void addSolution (semantic::MacroSolution* soluce);
+
+	std::vector <semantic::MacroSolution*> getSolution ();
+
+	bool isOneTime ();
+	
 	static const char* id ();
 
 	std::vector <std::string> getIds () override;

@@ -266,9 +266,9 @@ namespace syntax {
     }
 
     MacroRepeat Visitor::visitMacroRepeat (bool atLeastOneTime) {
-	this-> lex.next ({Token::LPAR});
 	auto ident = visitIdentifiant ();
-	this-> lex.next ({Token::COMA});
+	this-> lex.next ({Token::COLON});
+	this-> lex.next ({Token::LPAR});
 	auto expr = visitMacroExpression (true);
 	this-> lex.next ({Token::GUILL});
 	auto tok = visitMacroToken ();

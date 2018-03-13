@@ -29,7 +29,7 @@ namespace semantic {
 	    auto left = expr-> getExprs () [it];
 	    FakeLexer lex (call-> getTokens ());
 	    auto soluce = this-> solve (left, lex);
-	    if (soluce.valid) {
+	    if (soluce.valid && lex.next ().isEof ()) {
 		soluce.block = expr-> getBlocks () [it];
 		return soluce;
 	    }
@@ -65,7 +65,8 @@ namespace semantic {
 	while (true) {
 	    auto word = lex.next ();
 	    if (word.isEof ()) return {false, {}, NULL};
-	    else if (word == Token::SPACE && current == 0 && val [current] != ' ') continue;
+	    else if (word == Token::SPACE && current == 0 && val [current] != ' ')
+		continue;
 	    beg = 0;
 	    for (auto it : Ymir::r (0, word.getStr ().length ())) {
 		if (current >= val.length ()) {
@@ -83,9 +84,69 @@ namespace semantic {
 	}
     }
 
+    std::vector<Word> MacroSolver::until (MacroToken tok, FakeLexer & lex) {
+	std::vector<Word> words;
+	ulong beg = 0, current = 0, beginWord = lex.tell ();
+	std::vector <Word> read;
+	std::string val = tok-> getValue ();
+	if (val.length () == 0) return read;
+	while (true) {
+	    auto word = lex.next ();
+	    if (word.isEof ()) {
+		lex.seek (beginWord);
+		return {};
+	    } else if (word == Token::SPACE && current == 0 && val [current] != ' ') {
+		read.push_back (word);
+		continue;
+	    }
+	    
+	    beg = 0;	    
+	    for (auto it : Ymir::r (0, word.getStr ().length ())) {
+		if (current >= val.length ()) {
+		    lex.cutCurrentWord (beg);
+		    return read;
+		} else if (word.getStr () [it] == val [current]) {
+		    current++;
+		    beg++;
+		} else {
+		    current = 0;
+		    read.push_back (word);
+		    break;
+		}
+	    }
+	    if (current == val.length ()) return read;	    
+	}
+    }
+    
     MacroSolution MacroSolver::solve (MacroRepeat rep, FakeLexer & lex) {
-	Ymir::Error::assert ("TODO");
-	return {false, {}, NULL};
+	auto closeToken = rep-> getClose ();
+	auto result = new (Z0) IMacroRepeat (rep-> token, rep-> getExpr (), rep-> getClose (), rep-> isOneTime ());
+	bool end = false;
+	while (!end) {
+	    auto toks = this-> until (closeToken, lex);
+	    FakeLexer other (toks);
+	    FakeLexer* doing = &other;
+	    if (toks.size () == 0) {
+		end = true;
+		doing = &lex;
+	    }
+	    
+	    ulong beginWord = doing-> tell ();
+	    Ymir::Error::activeError (false);
+	    auto soluce = this-> solve (rep-> getExpr (), *doing);
+	    auto errors = Ymir::Error::caught ();
+	    Ymir::Error::activeError (true);
+	    if (errors.size () != 0)
+		doing-> seek (beginWord);
+	    
+	    if (errors.size () != 0 && rep-> isOneTime () && result-> getSolution ().size () == 0) return {false, {}, NULL};
+	    else if (errors.size () != 0 && end && result-> getSolution ().size () == 0) return {true, {{rep-> token.getStr (), result}}, NULL};
+	    else if (errors.size () != 0 && end && result-> getSolution ().size () != 0) return {false, {}, NULL};
+	
+	    result-> addSolution (new (Z0) MacroSolution {soluce});
+	}
+	
+	return {true, {{rep-> token.getStr (), result}}, NULL};	
     }
 
     MacroSolution MacroSolver::solve (MacroVar var, FakeLexer & lex) {
@@ -106,5 +167,6 @@ namespace semantic {
 	
 	return MacroSolution {true, {{var-> name.getStr (), ret}}, NULL};
     }
+    
     
 }

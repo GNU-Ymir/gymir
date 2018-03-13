@@ -238,7 +238,7 @@ namespace lexical {
     }
     
     std::string FakeLexer::toString () {
-	return Ymir::OutBuffer ("[", this-> fake_current, "] ", this-> words).str ();
+	return Ymir::OutBuffer ("[", this-> fake_current, ":", this-> current, "] ", this-> words).str ();
     }
     
 }

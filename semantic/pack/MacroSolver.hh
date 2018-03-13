@@ -49,6 +49,10 @@ namespace semantic {
 	MacroSolution solve (syntax::IMacroVar* left, lexical::FakeLexer& lex);
 
 	MacroSolution merge (MacroSolution &left, MacroSolution &right);
+
+    private:
+	
+	std::vector <Word> until (syntax::IMacroToken * tok, lexical::FakeLexer& lex);
 	
     };
         
