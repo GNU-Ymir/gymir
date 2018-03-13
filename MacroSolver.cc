@@ -123,6 +123,7 @@ namespace semantic {
 	auto result = new (Z0) IMacroRepeat (rep-> token, rep-> getExpr (), rep-> getClose (), rep-> isOneTime ());
 	bool end = false;
 	while (!end) {
+	    ulong beginLex = lex.tell ();
 	    auto toks = this-> until (closeToken, lex);
 	    FakeLexer other (toks);
 	    FakeLexer* doing = &other;
@@ -131,17 +132,17 @@ namespace semantic {
 		doing = &lex;
 	    }
 	    
-	    ulong beginWord = doing-> tell ();
 	    Ymir::Error::activeError (false);
 	    auto soluce = this-> solve (rep-> getExpr (), *doing);
 	    auto errors = Ymir::Error::caught ();
 	    Ymir::Error::activeError (true);
-	    if (errors.size () != 0)
-		doing-> seek (beginWord);
+	    if (errors.size () != 0) {
+		lex.seek (beginLex);
+	    }
 	    
 	    if (errors.size () != 0 && rep-> isOneTime () && result-> getSolution ().size () == 0) return {false, {}, NULL};
 	    else if (errors.size () != 0 && end && result-> getSolution ().size () == 0) return {true, {{rep-> token.getStr (), result}}, NULL};
-	    else if (errors.size () != 0 && end && result-> getSolution ().size () != 0) return {false, {}, NULL};
+	    else if (errors.size () != 0) return {false, {}, NULL};
 	
 	    result-> addSolution (new (Z0) MacroSolution {soluce});
 	}
