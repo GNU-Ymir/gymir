@@ -512,4 +512,17 @@ namespace syntax {
 	return this-> content-> templateExpReplace ({});
     }
 
+    Expression IMacroRepeat::templateExpReplace (const std::map <std::string, Expression> & values) {
+	auto res = new (Z0) IMacroRepeat (this-> token, this-> content, this-> pass, this-> oneTime);
+	for (auto soluce : this-> soluce) {
+	    std::map <std::string, Expression> current;
+	    for (auto it : soluce.elements) {
+		current [it.first] = it.second-> templateExpReplace (values);
+	    }
+	    res-> addSolution ({true, current, NULL});
+	}
+	return res;
+    }
+
+    
 }

@@ -83,7 +83,9 @@ namespace semantic {
 
 	for (auto it : lexers)
 	    if (!it.next ().isEof ()) return {false, {}, NULL};
-
+	
+	if (!lex.next ().isEof ()) return {false, {}, NULL};
+	
 	return globSoluce;
     }
     
@@ -169,7 +171,7 @@ namespace semantic {
 	    else if (fail && end && result-> getSolution ().size () == 0) return {true, {{rep-> token.getStr (), result}}, NULL};
 	    else if (fail) return {false, {}, NULL};
 
-	    result-> addSolution (new (Z0) MacroSolution {soluce});
+	    result-> addSolution (soluce);
 	}
 	
 	return {true, {{rep-> token.getStr (), result}}, NULL};	

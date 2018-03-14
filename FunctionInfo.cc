@@ -245,7 +245,6 @@ namespace semantic {
 	    if (nbTmpsCreation < 4 || Options::instance ().isVerbose ()) {
 		Ymir::Error::templateCreation (tok);
 	    } else if (this-> itsUpToMe) {
-		println (nbTmpsCreation - 3);
 		Ymir::Error::templateCreation2 (tok, nbTmpsCreation - 3);
 	    }
 	    

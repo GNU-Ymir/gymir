@@ -1680,6 +1680,14 @@ namespace syntax {
 	ident (ident)
     {}
 
+    std::string IMacroRepeat::prettyPrint () {
+	Ymir::OutBuffer buf;
+	for (auto it : this-> soluce) {
+	    buf.write (it.elements);
+	}
+	return buf.str ();
+    }
+        
     MacroRepeat IMacroRepeat::clone () {
 	return new (Z0) IMacroRepeat (this-> ident, this-> content, this-> pass, this-> oneTime);
     }
@@ -1696,11 +1704,11 @@ namespace syntax {
 	return this-> oneTime;
     }
 
-    void IMacroRepeat::addSolution (semantic::MacroSolution* soluce) {
+    void IMacroRepeat::addSolution (semantic::MacroSolution soluce) {
 	this-> soluce.push_back (soluce);
     }
 
-    std::vector <semantic::MacroSolution*> IMacroRepeat::getSolution () {
+    std::vector <semantic::MacroSolution>& IMacroRepeat::getSolution () {
 	return this-> soluce;
     }
     

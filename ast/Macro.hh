@@ -56,7 +56,7 @@ namespace syntax {
 	IMacroExpr* content;
 	IMacroToken * pass;
 	bool oneTime;
-	std::vector <semantic::MacroSolution*> soluce;
+	std::vector <semantic::MacroSolution> soluce;
 	
     public :
 	Word ident;
@@ -69,10 +69,16 @@ namespace syntax {
 
 	IMacroExpr* getExpr ();
 
-	void addSolution (semantic::MacroSolution* soluce);
+	void addSolution (semantic::MacroSolution soluce);
 
-	std::vector <semantic::MacroSolution*> getSolution ();
+	Expression expression () override;
+	
+	std::string prettyPrint () override;
+	
+	std::vector <semantic::MacroSolution>& getSolution ();
 
+	Expression templateExpReplace (const std::map <std::string, Expression> &) override;
+	
 	bool isOneTime ();
 	
 	static const char* id ();
@@ -136,6 +142,9 @@ namespace syntax {
 	std::vector <Word> content;
 	Block bl;
 	Expression expr;
+	bool itsUpToMe = false;
+	static bool needToReset;
+	static int nbTmps;
 	
     public :
 
@@ -154,6 +163,8 @@ namespace syntax {
 	}
 	
 	std::vector <std::string> getIds () override;	
+
+	void verifErrors ();
 	
     };
 	    

@@ -52,6 +52,7 @@ namespace Ymir {
 	for (auto it = 0 ; it < LOCATION_LINE (locus) ; it ++) {
 	    cline = readln (file);
 	}
+	if (file) fclose (file);
 	return cline;
     }
 	

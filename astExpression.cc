@@ -4,6 +4,7 @@
 #include <ymir/semantic/value/_.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/Array.hh>
+#include <ymir/utils/Options.hh>
 
 
 namespace syntax {
@@ -11,7 +12,8 @@ namespace syntax {
 
     const std::string IPragma::COMPILE = "compiles";
     const std::string IPragma::MSG = "msg";
-
+    bool IMacroCall::needToReset = true;
+    int IMacroCall::nbTmps = 0;
     
     Expression IAccess::expression () {
 	auto aux = new (Z0)  IAccess (this-> token, this-> end);
@@ -1573,6 +1575,14 @@ namespace syntax {
 	
     }
 
+    void IMacroCall::verifErrors () {
+	if (itsUpToMe) {
+	    itsUpToMe = false;
+	    needToReset = true;
+	    nbTmps = 0;
+	}
+    }
+    
     Expression IMacroCall::expression () {
 	auto expr = this-> left-> expression ();
 	if (expr == NULL) return NULL;
@@ -1583,12 +1593,20 @@ namespace syntax {
 		return NULL;
 	    }
 	    
+	    if (needToReset) {
+		itsUpToMe = true;
+		needToReset = false;
+	    }
+	    
 	    auto block = soluce.block-> templateReplace (soluce.elements)-> to <IBlock> ();	    
 	    std::vector <Expression> tmps;
+	    
+	    if (!Table::instance ().addCall (this-> token)) return NULL;
 	    Table::instance ().enterPhantomBlock ();
 	    Table::instance ().retInfo ().info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
-	    auto aux = new (Z0) IMacroCall (this-> token, this-> end, this-> left-> templateExpReplace ({}), this-> content);
-	    auto nbError = Ymir::Error::nb_errors;
+	    auto aux = new (Z0) IMacroCall (this-> token, this-> end, this-> left-> templateExpReplace ({}), this-> content);	    
+
+	    auto nbError = Ymir::Error::nb_errors;	    	    
 	    aux-> bl = block-> block ();
 	    auto expr = aux-> bl-> getLastExpr ();
 	    if (expr == NULL) {
@@ -1598,11 +1616,22 @@ namespace syntax {
 		aux-> expr = expr;
 		aux-> bl-> getInsts ().pop_back ();
 	    }
-	    Table::instance ().quitFrame ();
+	    
+	    Table::instance ().quitFrame ();	  	 
+	    
 	    if (Ymir::Error::nb_errors != nbError) {
-		Ymir::Error::templateCreation (this-> left-> token);
+		nbTmps ++;
+		if (nbTmps < 4 || Options::instance ().isVerbose ()) {		    
+		    Ymir::Error::templateCreation (this-> left-> token);
+		} else if (this-> itsUpToMe) {
+		    Ymir::Error::templateCreation2 (this-> left-> token, nbTmps - 3);
+		}
+		
+		verifErrors ();
 		return NULL;
 	    }
+	    
+	    verifErrors ();
 	    return aux;
 	} else {
 	    Ymir::Error::notAMacro (this-> left-> token);
@@ -1628,5 +1657,18 @@ namespace syntax {
 	return bl;
     }
     
+    Expression IMacroRepeat::expression () {
+	auto res = this-> templateExpReplace ({})-> to <IMacroRepeat> ();
+	for (auto& soluce : res-> getSolution ()) {
+	    for (auto& it : soluce.elements) {
+		it.second = it.second-> expression ();
+	    }
+	}
+	
+	res-> info = new (Z0) ISymbol (this-> token, new (Z0) IMacroRepeatInfo (res));
+	return res;
+    }
     
+
+
 }

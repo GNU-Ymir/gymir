@@ -297,6 +297,8 @@ namespace syntax {
 	    return immutableRange (this-> var, expr);
 	} else if (expr-> info-> type-> is <ITupleInfo> () && this-> var.size () == 1) {
 	    return immutableTuple (this-> var, expr);
+	} else if (expr-> info-> type-> is <IMacroRepeatInfo> () && this-> var.size () == 1) {
+	    return immutableMacro (this-> var, expr);
 	}
 	
 	Ymir::Error::undefinedOp (this-> token, expr-> info);
@@ -384,6 +386,21 @@ namespace syntax {
 	    return NULL;
 	}
 	
+	return bl;
+    }
+
+    Instruction IFor::immutableMacro (std::vector <Var> & vars, Expression expr) {
+	auto rep = expr-> info-> type-> to <IMacroRepeatInfo> ();
+	Block bl = new (Z0) IBlock (this-> token, {}, {});
+	for (ulong i = 0 ; i < rep-> getLen () ; i++) {
+	    auto var = vars [0]-> templateExpReplace ({});
+	    auto index = rep-> getValue (i);
+	    var-> info = new (Z0) ISymbol (var-> token, index);
+	    Table::instance ().enterBlock ();
+	    Table::instance ().insert (var-> info);
+	    bl-> getInsts ().push_back (this-> block-> block ());
+	    Table::instance ().quitBlock ();
+	}
 	return bl;
     }
     
