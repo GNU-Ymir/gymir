@@ -113,7 +113,7 @@ namespace semantic {
     }
     
     std::string IMacroRepeatInfo::innerTypeString () {
-	return this-> info-> token.getStr ();
+	return "void";
     }
 
     std::string IMacroRepeatInfo::typeString () {
@@ -157,7 +157,7 @@ namespace semantic {
     }
 
     std::string IMacroAccessInfo::innerTypeString () {
-	return "undef";
+	return "void";
     }
 
     std::string IMacroAccessInfo::typeString () {

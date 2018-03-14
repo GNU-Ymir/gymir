@@ -1021,6 +1021,10 @@ namespace syntax {
 	return insts;
     }
 
+    Ymir::Tree IMacroRepeat::toGeneric () {
+	return Ymir::Tree ();
+    }
+    
 }
 
 

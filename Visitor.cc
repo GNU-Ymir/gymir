@@ -1105,7 +1105,6 @@ namespace syntax {
 	    std::vector <Instruction> insts;
 	    while (true) {
 		auto next = this-> lex.next ();
-		//if (next == Keys::DEF) decls.push_back (visitFunction ());
 		if (next == Keys::IMPORT) decls.push_back (visitImport ());
 		else if (next == Keys::USE) decls.push_back (visitUse ());
 		else if (next == Keys::EXTERN) decls.push_back (visitExtern ());

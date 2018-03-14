@@ -71,6 +71,8 @@ namespace syntax {
 
 	void addSolution (semantic::MacroSolution soluce);
 
+	Ymir::Tree toGeneric () override;
+	
 	Expression expression () override;
 	
 	std::string prettyPrint () override;

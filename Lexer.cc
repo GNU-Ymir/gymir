@@ -107,7 +107,8 @@ namespace lexical {
 	for (auto it : mandatories) {
 	    if (it == word.getStr ()) return word;
 	}
-
+	
+	this-> rewind ();
 	Ymir::Error::syntaxError (word, join (mandatories).c_str ());
 	
 	return Word::eof ();

@@ -1,6 +1,7 @@
 #include <ymir/semantic/pack/MacroSolver.hh>
 #include <ymir/ast/Macro.hh>
 #include <ymir/syntax/_.hh>
+#include <ymir/utils/Options.hh>
 
 namespace semantic {
     using namespace syntax;
@@ -165,6 +166,10 @@ namespace semantic {
 	    if (errors.size () != 0 || !soluce.valid) {
 		lex.seek (beginLex);
 		fail = true;
+		if (Options::instance ().isVerbose ()) {
+		    for (auto it : errors)
+			println (it.msg);
+		}
 	    }
 	    
 	    if (fail && rep-> isOneTime () && result-> getSolution ().size () == 0) return {false, {}, NULL};

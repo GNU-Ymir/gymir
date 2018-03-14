@@ -325,9 +325,10 @@ namespace Ymir {
 
     
     Tree compoundExpr (location_t loc, Tree arg0, Tree arg1) {
+	if (arg1.isNull ()) return arg0;
 	return fold_build2_loc (loc, COMPOUND_EXPR,
-			 arg1.getType ().getTree (),
-			 arg0.getTree (), arg1.getTree ());
+				arg1.getType ().getTree (),
+				arg0.getTree (), arg1.getTree ());
     }
 
 }
