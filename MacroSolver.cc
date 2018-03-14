@@ -59,8 +59,7 @@ namespace semantic {
 	    }
 	}
 		
-	uint i = 0;
-	
+	uint i = 0;	
 	for (auto elem : expr-> getElements ()) {
 	    MacroSolution soluce {true, {}, NULL};
 	    if (auto rep = elem-> to <IMacroRepeat> ()) {
@@ -113,71 +112,33 @@ namespace semantic {
 	    if (current == val.length ()) return {true, {}, NULL};
 	}
     }
-
-    std::vector <Word> MacroSolver::untilOpen (FakeLexer & lex, std::string & val, bool & success) {
-	std::string openTok = "";
-	uint open = 1;
-	std::vector <Word> words;
-	
-	if (val == Token::RACC) openTok = Token::LACC;
-	else if (val == Token::RCRO) openTok = Token::LCRO;
-	else if (val == Token::RPAR) openTok = Token::LPAR;
+    
+    std::vector<Word> MacroSolver::until (MacroToken tok, FakeLexer & lex, bool &success) {
+	std::vector<Word> words;
+	ulong beginWord = lex.tell ();
+	int openAcc = 0, openCro = 0, openPar = 0;
+	std::vector <Word> read;
+	auto val = tok-> getValue ();
+	success = true;	
 	while (true) {
 	    auto word = lex.next ();
 	    if (word.isEof ()) break;
-	    if (word == openTok) open ++;
-	    else if (word == val) {
-		open--;
-		if (open == 0) return words;
-	    } else {
-		words.push_back (word);
-	    }
+
+	    if (word == val && openPar <= 0 && openCro <= 0 && openAcc <= 0)
+		return read;
+
+	    if (word == Token::LACC) openAcc++;
+	    else if (word == Token::RACC) openAcc --;
+	    else if (word == Token::LCRO) openCro ++;
+	    else if (word == Token::RCRO) openCro --;
+	    else if (word == Token::LPAR) openPar ++;
+	    else if (word == Token::RPAR) openPar --;
+	    read.push_back (word);
 	}
-	
+
+	lex.seek (beginWord);
 	success = false;
 	return {};
-    }
-    
-    std::vector<Word> MacroSolver::until (MacroToken tok, FakeLexer & lex, bool &success) {
-	success = true;	
-	std::string val = tok-> getValue ();
-	if (val == Token::RACC || val == Token::RCRO || val == Token::RPAR) {
-	    return untilOpen (lex, val, success);
-	}
-	
-	std::vector<Word> words;
-	ulong beg = 0, current = 0, beginWord = lex.tell ();
-
-	std::vector <Word> read;
-
-	if (val.length () == 0) return read;
-	while (true) {
-	    auto word = lex.next ();
-	    if (word.isEof ()) {
-		lex.seek (beginWord);
-		success = false;
-		return {};
-	    } else if (word == Token::SPACE && current == 0 && val [current] != ' ') {
-		read.push_back (word);
-		continue;
-	    }
-
-	    beg = 0;	    
-	    for (auto it : Ymir::r (0, word.getStr ().length ())) {
-		if (current >= val.length ()) {
-		    lex.cutCurrentWord (beg);
-		    return read;
-		} else if (word.getStr () [it] == val [current]) {
-		    current++;
-		    beg++;
-		} else {
-		    current = 0;
-		    read.push_back (word);
-		    break;
-		}
-	    }
-	    if (current == val.length ()) return read;	    
-	}
     }
     
     MacroSolution MacroSolver::solve (MacroRepeat rep, FakeLexer & lex) {

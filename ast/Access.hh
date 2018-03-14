@@ -37,6 +37,8 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	std::string prettyPrint () override;
+	
 	static const char * id () {
 	    return TYPEID (IAccess);
 	}

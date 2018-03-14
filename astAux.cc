@@ -1102,6 +1102,10 @@ namespace syntax {
     {
     }
 
+    std::string IAccess::prettyPrint () {
+	return Ymir::OutBuffer (this-> left-> prettyPrint (), "[", this-> params-> prettyPrint (), "]").str ();	
+    }
+    
     IAccess::~IAccess () {
 	delete params;
 	delete left;
