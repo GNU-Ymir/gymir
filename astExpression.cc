@@ -1662,6 +1662,8 @@ namespace syntax {
 	for (auto& soluce : res-> getSolution ()) {
 	    for (auto& it : soluce.elements) {
 		it.second = it.second-> expression ();
+		if (!it.second) 
+		    return NULL;			
 	    }
 	}
 	
