@@ -33,7 +33,7 @@ namespace syntax {
 	
 	virtual IExpression* expression () {
 	    this-> print (0);
-	    Ymir::Error::assert ((std::string ("TODO") + this-> getIds ().back ()).c_str ());
+	    Ymir::Error::assert ((std::string ("TODO expression () : ") + this-> getIds ().back ()).c_str ());
 	    return NULL;
 	}
 	

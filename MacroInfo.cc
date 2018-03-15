@@ -90,6 +90,11 @@ namespace semantic {
 	return this-> info-> getSolution ().size ();
     }
 
+    std::vector <Word> IMacroRepeatInfo::toTokens (bool& valid) {
+	valid = true;
+	return this-> info-> toTokens (valid);
+    }
+    
     MacroAccessInfo IMacroRepeatInfo::getValue (ulong i) {
 	return new (Z0) IMacroAccessInfo (this-> info-> getSolution ()[i]);
     }
@@ -133,20 +138,41 @@ namespace semantic {
 	info (soluce)
     {}
 
+    std::vector <Word> IMacroAccessInfo::toTokens (bool & valid) {
+	std::vector <Word> tokens;
+	valid = true;
+	for (auto it : this-> info.elements) {
+	     if (auto var = it.second-> to <IVar> ()) {
+		tokens.push_back (var-> token);
+	    } else if (auto elem = it.second-> to <IMacroElement> ()) {
+		auto current = elem-> toTokens (valid);
+		if (!valid) return {};
+		tokens.insert (tokens.end (), current.begin (), current.end ());
+	    }
+	}
+	return tokens;
+    }
+    
     bool IMacroAccessInfo::isSame (InfoType) {
 	return false;
     }
-
+    
     MacroSolution& IMacroAccessInfo::getInfo () {
 	return this-> info;
     }
     
     InfoType IMacroAccessInfo::DotOp (syntax::Var var) {
-	for (auto it : this-> info.elements) {
+	for (auto &it : this-> info.elements) {
 	    if (it.first == var-> token.getStr ()) {
-		auto res = it.second-> info-> type-> cloneConst ();
-		res-> binopFoo = MacroUtils::InstGet;
-		return res;
+		if (!it.second-> info) {		
+		    auto res = this-> cloneConst ()-> to<IMacroAccessInfo> ();
+		    res-> info = {true, {{it.first, it.second}}, NULL};
+		    return res;
+		} else {
+		    auto res = it.second-> info-> type-> cloneConst ();
+		    res-> binopFoo = MacroUtils::InstGet;
+		    return res;
+		}
 	    }
 	}
 	return NULL;

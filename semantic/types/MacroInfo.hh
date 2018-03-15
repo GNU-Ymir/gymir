@@ -64,6 +64,8 @@ namespace semantic {
 
 	IMacroAccessInfo (MacroSolution elem);
 
+	std::vector <Word> toTokens (bool&);
+	
 	bool isSame (InfoType) override;
 
 	InfoType onClone () override;
@@ -97,6 +99,8 @@ namespace semantic {
 
 	ulong getLen ();
 
+	std::vector <Word> toTokens (bool&);
+	
 	IMacroAccessInfo* getValue (ulong i);
 
 	InfoType onClone () override;

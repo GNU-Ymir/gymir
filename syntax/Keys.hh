@@ -43,7 +43,8 @@ struct Keys {
     static std::string  OPUNARY; 
     static std::string  OPEQUAL; 
     static std::string  OPCALL; 
-    static std::string  TYPEOF; 
+    static std::string  TYPEOF;
+    static std::string  STRINGOF; 
     static std::string  CONST; 
     static std::string  IMMUTABLE;
     static std::string  MUTABLE; 
@@ -67,4 +68,5 @@ struct Keys {
     static std::string  MACRO_EXPR;
     static std::string  MACRO_IDENT;
     static std::string  MACRO_BLOCK;
+    static std::string  MACRO_TOKEN;
 };

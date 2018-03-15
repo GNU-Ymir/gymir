@@ -2,6 +2,8 @@
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/syntax/Token.hh>
+#include <ymir/syntax/FakeLexer.hh>
+#include <ymir/syntax/Visitor.hh>
 
 using namespace std;
 
@@ -396,6 +398,11 @@ namespace syntax {
 	return new (Z0)  ITypeOf (this-> token, left);
     }
 
+    Expression IStringOf::templateExpReplace (const map <string, Expression>& values) {
+	auto left = this-> expr-> templateExpReplace (values);
+	return new (Z0) IStringOf (this-> token, left);
+    }
+    
     Expression IUnary::templateExpReplace (const map <string, Expression>& values) {
 	auto elem = this-> elem-> templateExpReplace (values);
 	return new (Z0)  IUnary (this-> token, elem);
@@ -504,8 +511,26 @@ namespace syntax {
     }
        
     Expression IMacroCall::templateExpReplace (const std::map <std::string, Expression>& values) {
-	auto left = this-> left-> templateExpReplace (values);
-	return new (Z0) IMacroCall (this-> token, this-> end, left, this-> content);
+	auto left = this-> left-> templateExpReplace (values);	
+	std::vector <Word> content;
+	Ymir::Error::activeError (false);
+	lexical::FakeLexer lex {this-> content};
+	lex.next ({Token::DOLLAR});
+	lex.next ({Token::LPAR});
+	
+	syntax::Visitor visit (lex);
+	auto expr = visit.visitExpression ();
+	lex.next ({Token::RPAR});
+	auto caught = Ymir::Error::caught ();
+	Ymir::Error::activeError (true);
+	
+	if (!lex.next ().isEof () || caught.size () != 0) {
+	    content = this-> content;
+	    return new (Z0) IMacroCall (this-> token, this-> end, left, content);
+	} else {
+	    expr = expr-> templateExpReplace (values);
+	    return new (Z0) IMacroCall (this-> token, this-> end, left, expr);
+	}	    
     }
 
     Expression IMacroVar::templateExpReplace (const std::map <std::string, Expression>&) {
@@ -522,6 +547,10 @@ namespace syntax {
 	    res-> addSolution ({true, current, NULL});
 	}
 	return res;
+    }
+
+    Expression IMacroToken::templateExpReplace (const std::map <std::string, Expression> &) {
+	return new (Z0) IMacroToken (this-> token, this-> value);
     }
 
     

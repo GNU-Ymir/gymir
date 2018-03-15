@@ -57,3 +57,4 @@
 #include "Scope.hh"
 #include "Pragma.hh"
 #include "Macro.hh"
+#include "StringOf.hh"

@@ -1434,6 +1434,14 @@ namespace syntax {
 	return new (Z0) IType (this-> token, expr-> info-> type);
     }
 
+    Expression IStringOf::expression () {
+	std::string val = this-> expr-> prettyPrint ();
+	auto ret = new (Z0) IString (this-> token, val);
+	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IStringInfo (true));
+	ret-> info-> value () = new (Z0) IStringValue (val);
+	return ret;
+    }
+    
     std::vector <semantic::Symbol> IMatch::allInnerDecls () {
 	std::vector <Symbol> syms;
 	for (auto it : this-> soluce) {
@@ -1585,8 +1593,26 @@ namespace syntax {
     
     Expression IMacroCall::expression () {
 	auto expr = this-> left-> expression ();
-	if (expr == NULL) return NULL;
+	if (expr == NULL) return NULL;       
 	if (auto mac = expr-> info-> type-> to <IMacroInfo> ()) {
+	    if (this-> expr != NULL) {
+		
+		this-> expr-> inside = this;
+		auto content = this-> expr-> expression ();
+		if (!content) return NULL;
+		bool valid = false;
+		if (auto acc = content-> info-> type-> to<IMacroAccessInfo> ()) {
+		    this-> content = acc-> toTokens (valid);
+		} else if (auto rep = content-> info-> type-> to <IMacroRepeatInfo> ()) {
+		    this-> content = rep-> toTokens (valid);
+		}
+		
+		if (!valid) {
+		    Ymir::Error::macroResolution (this-> left-> token);
+		    return NULL;
+		}
+	    }
+	    
 	    auto soluce = mac-> resolve (this);
 	    if (!soluce.valid) {
 		Ymir::Error::macroResolution (this-> left-> token);
@@ -1659,18 +1685,22 @@ namespace syntax {
     
     Expression IMacroRepeat::expression () {
 	auto res = this-> templateExpReplace ({})-> to <IMacroRepeat> ();
-	for (auto& soluce : res-> getSolution ()) {
-	    for (auto& it : soluce.elements) {
-		it.second = it.second-> expression ();
-		if (!it.second) 
-		    return NULL;			
+	if (!this-> inside || !this-> inside-> is<IMacroCall> ()) {
+	    for (auto& sol : res-> getSolution ()) {
+		for (auto& it : sol.elements) {
+		    it.second = it.second-> expression ();
+		    if (!it.second) return NULL;
+		}
 	    }
 	}
-	
 	res-> info = new (Z0) ISymbol (this-> token, new (Z0) IMacroRepeatInfo (res));
 	return res;
     }
-    
 
-
+    Expression IMacroToken::expression () {
+	auto aux = new (Z0) IMacroToken (this-> token, this-> value);
+	aux-> info = new (Z0) ISymbol (this-> token, new (Z0) IStringInfo (true));
+	aux-> info-> value () = new (Z0) IStringValue (this-> value);
+	return aux;
+    }
 }

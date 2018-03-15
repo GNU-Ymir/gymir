@@ -1481,7 +1481,16 @@ namespace syntax {
     ITypeOf::~ITypeOf () {
 	delete expr;
     }
-        
+
+    IStringOf::IStringOf (Word begin, Expression expr) :
+	IExpression (begin),
+	expr (expr)
+    {}
+    
+    IStringOf::~IStringOf () {
+	delete expr;
+    }
+
     IMatchPair::IMatchPair (Word token, Expression left, Expression right) :
 	IExpression (token),
 	left (left),
@@ -1613,15 +1622,29 @@ namespace syntax {
 	return this-> _blocks;
     }
 
+    std::vector <Word> IMacroElement::toTokens (bool& success) {
+	success = false;
+	return {};
+    }
+    
     IMacroVar::IMacroVar (Word name, MacroVarConst type) :
 	IMacroElement (name),
 	type (type),
 	name (name)
     {}
 
+    std::vector <Word> IMacroVar::toTokens (bool& success) {
+	if (auto elem = this-> content-> to<IMacroElement> ()) {
+	    return elem-> toTokens (success);
+	} else if (this-> content-> to<IVar> () && this-> type == MacroVarConst::IDENT) {
+	    return {this-> content-> token};
+	}
+	return IMacroElement::toTokens (success);
+    }
+    
     std::string IMacroVar::prettyPrint () {
 	if (this-> content) {
-	    return this-> content-> prettyPrint ();
+	    return Ymir::OutBuffer ("[", this-> content-> prettyPrint (), "]").str ();
 	} else {
 	    return Ymir::OutBuffer (this-> name, ": null").str (); 
 	}
@@ -1654,6 +1677,15 @@ namespace syntax {
 	value (value)
     {}
 
+    std::vector <Word> IMacroToken::toTokens (bool& success) {
+	success = true;
+	return {{this-> token, this-> value}};	
+    }
+    
+    std::string IMacroToken::prettyPrint () {
+	return this-> value;
+    }
+
     std::string & IMacroToken::getValue () {
 	return this-> value;
     }
@@ -1680,6 +1712,23 @@ namespace syntax {
 	ident (ident)
     {}
 
+    std::vector <Word> IMacroRepeat::toTokens (bool& success) {
+	std::vector <Word> tokens;
+	success = true;
+	for (auto soluce : this-> soluce) {
+	    for (auto it : soluce.elements) {
+		if (auto elem = it.second-> to<IMacroElement> ()) {
+		    auto current = elem-> toTokens (success);
+		    if (!success) return IMacroElement::toTokens (success);
+		    else {
+			tokens.insert (tokens.end (), current.begin (), current.end ());
+		    }
+		}
+	    }
+	}
+	return tokens;
+    }
+    
     std::string IMacroRepeat::prettyPrint () {
 	Ymir::OutBuffer buf;
 	for (auto it : this-> soluce) {
@@ -1729,6 +1778,14 @@ namespace syntax {
 	content (content)
     {}
 
+    IMacroCall::IMacroCall (Word begin, Word end, Expression left, Expression expr) :
+	IExpression (begin),
+	end (end),
+	left (left),
+	content ({}),
+	expr (expr)
+    {}
+    
     std::vector <Word> & IMacroCall::getTokens () {
 	return this-> content;
     }

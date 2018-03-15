@@ -78,8 +78,11 @@ namespace lexical {
 	if (this-> current >= (long) (this-> reads.size ()) - 1) {
 	    return this-> get (word);
 	} else {
-	    this-> current ++;
-	    word = this-> reads [this-> current];
+	    do {
+		this-> current ++;
+		word = this-> reads [this-> current];
+	    } while (isSkip (word) && this-> current < (long) (this-> reads.size ()) - 1);
+	    if (isSkip (word)) return this-> get (word);	    
 	    return *this;
 	}
     }
@@ -252,6 +255,7 @@ namespace lexical {
 	for (auto i : Ymir::r (this-> current + 1, this-> words.size ()))
 	    buf.write (this-> words [i]);
 	buf.write ("]");
+	buf.write (this-> skips);
 	return buf.str ();
     }
     

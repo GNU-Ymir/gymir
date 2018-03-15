@@ -84,7 +84,7 @@ namespace syntax {
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 			       Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
-			       Keys::MOD, Keys::SELF, Keys::USE
+			       Keys::MOD, Keys::SELF, Keys::USE, Keys::STRINGOF
 	};
 	
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -235,12 +235,13 @@ namespace syntax {
 	auto word = this-> lex.next ({Token::LACC});
 	std::vector <MacroExpr> exprs;
 	std::vector <Block> blocks;
-	while (true) {
+	while (true) {	    
 	    exprs.push_back (visitMacroExpression ());
 	    blocks.push_back (visitBlock ());	    
 	    auto next = this-> lex.next ();
 	    if (next == Token::RACC)
 		break;
+	    else this-> lex.rewind ();
 	}
 	return new (Z0) IMacro (ident, exprs, blocks);
     }
@@ -256,7 +257,7 @@ namespace syntax {
 	
 	std::vector <MacroElement> elements;
 	while (true) {
-	    auto next = this-> lex.next ({Token::STAR, Token::DOLLAR, Token::PLUS, Token::GUILL, endTok});
+	    auto next = this-> lex.next ({Token::STAR, Token::DOLLAR, Token::PLUS, Token::GUILL, endTok, Token::RPAR});
 	    if (next == Token::STAR || next == Token::PLUS) elements.push_back (visitMacroRepeat (next == Token::PLUS));		
 	    else if (next == Token::DOLLAR) elements.push_back (visitMacroVar ());
 	    else if (next == Token::GUILL) elements.push_back (visitMacroToken ());
@@ -270,22 +271,28 @@ namespace syntax {
 	this-> lex.next ({Token::COLON});
 	this-> lex.next ({Token::LPAR});
 	auto expr = visitMacroExpression (true);
-	this-> lex.next ({Token::GUILL});
-	auto tok = visitMacroToken ();
-	this-> lex.next ({Token::RPAR});
+	auto end = this-> lex.rewind ().next ();
+	MacroToken tok = NULL;
+	if (end == Token::COMA) {
+	    this-> lex.next ({Token::GUILL});
+	    tok = visitMacroToken ();
+	    this-> lex.next ({Token::RPAR});
+	}
 	return new (Z0) IMacroRepeat (ident, expr, tok, atLeastOneTime);
     }
 
     MacroVar Visitor::visitMacroVar () {
 	auto ident = this-> visitIdentifiant ();
 	this-> lex.next ({Token::COLON});
-	auto val = this-> lex.next ({Keys::MACRO_EXPR, Keys::MACRO_IDENT, Keys::MACRO_BLOCK});
+	auto val = this-> lex.next ({Keys::MACRO_EXPR, Keys::MACRO_IDENT, Keys::MACRO_BLOCK, Keys::MACRO_TOKEN});
 	if (val == Keys::MACRO_IDENT)
 	    return new (Z0) IMacroVar (ident, MacroVarConst::IDENT);
 	else if (val == Keys::MACRO_EXPR)
 	    return new (Z0) IMacroVar (ident, MacroVarConst::EXPR);
-	else
+	else if (val == Keys::MACRO_BLOCK)
 	    return new (Z0) IMacroVar (ident, MacroVarConst::BLOCK);
+	else 
+	    return new (Z0) IMacroVar (ident, MacroVarConst::TOKEN);
     }
 
     MacroToken Visitor::visitMacroToken () {
@@ -1457,8 +1464,10 @@ namespace syntax {
 	    return visitIs ();
 	else if (tok == Keys::TYPEOF)
 	    return visitTypeOf ();
-	else if (tok == Keys::UNDER)
+	else if (tok == Keys::UNDER)	    
 	    return new (Z0)  IIgnore (tok);
+	else if (tok == Keys::STRINGOF) 
+	    return visitStringOf ();
 	else this-> lex.rewind ();
 	return NULL;
     }
@@ -1480,6 +1489,8 @@ namespace syntax {
 	    return visitIs ();
 	else if (tok == Keys::TYPEOF)
 	    return visitTypeOf ();
+	else if (tok == Keys::STRINGOF)
+	    return visitStringOf ();
 	else this-> lex.rewind ();
 	return NULL;
     }
@@ -1502,7 +1513,16 @@ namespace syntax {
 	next = this-> lex.next ({Token::RPAR});
 	return new (Z0)  ITypeOf (begin, expr);
     }
-    
+
+    Expression Visitor::visitStringOf () {
+	this-> lex.rewind ();
+	auto begin = this-> lex.next ();
+	auto next = this-> lex.next ({Token::LPAR});
+	auto expr = visitExpression ();
+	next = this-> lex.next ({Token::RPAR});
+	return new (Z0) IStringOf (begin, expr);
+    }
+       
     Expression Visitor::visitIs () {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
@@ -2023,6 +2043,8 @@ namespace syntax {
 	    retour = new (Z0)  IExpand (next, left);
 	} else if (next == Keys::TYPEOF) {
 	    retour = new (Z0)  ITypeOf (next, left);
+	} else if (next == Keys::STRINGOF) {
+	    retour = new (Z0) IStringOf (next, left);
 	} else {
 	    this-> lex.rewind ();
 	    Expression right = visitConstanteSimple ();

@@ -16,13 +16,16 @@ namespace syntax {
     enum class MacroVarConst {
 	EXPR,
 	IDENT,
-	BLOCK
+	BLOCK,
+	TOKEN
     };
 
     class IMacroElement : public IExpression {
     public: 
 
 	IMacroElement (Word ident) : IExpression (ident) {}
+
+	virtual std::vector <Word> toTokens (bool& success);
 	
 	virtual IMacroElement* clone () = 0;
 	
@@ -44,7 +47,15 @@ namespace syntax {
 	
 	IMacroToken* clone () override;
 
+	std::vector <Word> toTokens (bool& success) override;
+	
 	std::string & getValue ();
+
+	Expression expression () override;
+	
+	Expression templateExpReplace (const std::map <std::string, Expression> &) override;
+
+	std::string prettyPrint () override;
 	
 	static const char* id ();
 	
@@ -69,6 +80,8 @@ namespace syntax {
 
 	IMacroExpr* getExpr ();
 
+	std::vector <Word> toTokens (bool& success) override;
+	
 	void addSolution (semantic::MacroSolution soluce);
 
 	Ymir::Tree toGeneric () override;
@@ -101,6 +114,8 @@ namespace syntax {
 
 	IMacroVar* clone () override;
 
+	std::vector <Word> toTokens (bool& success) override;
+	
 	Expression templateExpReplace (const std::map <std::string, Expression> &) override;
 
 	Expression expression ();
@@ -143,14 +158,16 @@ namespace syntax {
 	Expression left;
 	std::vector <Word> content;
 	Block bl;
-	Expression expr;
 	bool itsUpToMe = false;
+	Expression expr = NULL;
 	static bool needToReset;
 	static int nbTmps;
 	
     public :
 
 	IMacroCall (Word begin, Word end, Expression left, std::vector<Word> content);
+
+	IMacroCall (Word begin, Word end, Expression left, Expression expr);
 	
 	Expression expression () override;
 	
@@ -167,6 +184,10 @@ namespace syntax {
 	std::vector <std::string> getIds () override;	
 
 	void verifErrors ();
+
+    private:
+
+	std::vector <Word> expressionExpand ();
 	
     };
 	    

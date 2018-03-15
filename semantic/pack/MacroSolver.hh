@@ -40,7 +40,7 @@ namespace semantic {
 
 	MacroSolution solve (syntax::IMacro * left, syntax::IMacroCall * right);	
 
-	MacroSolution solve (syntax::IMacroExpr* left, lexical::FakeLexer& lex);
+	MacroSolution solve (syntax::IMacroExpr* left, lexical::FakeLexer& lex, bool needAll = true);
 
 	MacroSolution solve (syntax::IMacroToken* left, lexical::FakeLexer& lex);
 
