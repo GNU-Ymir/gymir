@@ -162,10 +162,7 @@ namespace syntax {
 	Expression left, inner;
 	std::vector <Word> content;
 	Block bl = NULL;
-	
-	bool itsUpToMe = false;
-	static bool needToReset;
-	static int nbTmps;
+	std::map <std::string, Expression> soluce;
 	
     public :
 
@@ -177,7 +174,7 @@ namespace syntax {
 
 	std::vector <Word> & getTokens ();	
 	
-	//Ymir::Tree toGeneric () override;
+	void setSolution (std::map <std::string, Expression> soluce);
 
 	std::string prettyPrint () override;
 	
@@ -186,8 +183,6 @@ namespace syntax {
 	}
 	
 	std::vector <std::string> getIds () override;	
-
-	void verifErrors ();
 
     private:
 

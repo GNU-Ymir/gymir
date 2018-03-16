@@ -71,6 +71,7 @@ namespace Ymir {
 		phrases [TakeAType] = "take a type as template argument";
 		phrases [TemplateSpecialisation] = "Template specialisation works with both";
 		phrases [TemplateCreation] = "Template creation";
+		phrases [TemplateCreationWith] = "Template creation with %";
 		phrases [TemplateCreation2] = "From first template creation";
 		phrases [And] = "And";
 		phrases [Here] = "Here";

@@ -525,6 +525,17 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::templateCreation (const Word& word, std::string values) {	
+	auto str = getString (TemplateCreationWith);
+	auto msg = format (str, values);
+	msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::mainPrototype (const Word& word) {
 	auto str = getString (MainPrototype);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);

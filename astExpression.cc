@@ -12,8 +12,6 @@ namespace syntax {
 
     const std::string IPragma::COMPILE = "compiles";
     const std::string IPragma::MSG = "msg";
-    bool IMacroCall::needToReset = true;
-    int IMacroCall::nbTmps = 0;
     
     Expression IAccess::expression () {
 	auto aux = new (Z0)  IAccess (this-> token, this-> end);
@@ -1582,23 +1580,22 @@ namespace syntax {
 	return ret;
 	
     }
-
-    void IMacroCall::verifErrors () {
-	if (itsUpToMe) {
-	    itsUpToMe = false;
-	    needToReset = true;
-	    nbTmps = 0;
-	}
-    }
     
     Expression IMacroCall::expression () {
 	if (auto block = this-> bl) {
 	    if (!Table::instance ().addCall (this-> token)) return NULL;
+	    auto nbErrors = Ymir::Error::nb_errors;
 	    Table::instance ().enterPhantomBlock ();
 	    Table::instance ().retInfo ().info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
-
-	    auto aux = block-> expression ();
-	    Table::instance ().quitFrame ();	  	 
+	    auto aux = block-> expression ();	    
+	    Table::instance ().quitFrame ();
+	    
+	    if (Ymir::Error::nb_errors != nbErrors) {
+		Ymir::OutBuffer buf (this-> soluce);		
+		Ymir::Error::templateCreation (this-> left-> token, buf.str ());		
+		return NULL;
+	    }
+	    
 	    return aux;
 	} else {
 	    auto res = this-> solve ({});

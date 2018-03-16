@@ -1816,7 +1816,6 @@ namespace syntax {
 	content (content)
     {}
 
-        
     std::vector <Word> & IMacroCall::getTokens () {
 	return this-> content;
     }
@@ -1831,6 +1830,10 @@ namespace syntax {
 	    buf.write ("}");
 	    return buf.str ();
 	}
+    }
+    
+    void IMacroCall::setSolution (std::map <std::string, Expression> exprs) {
+	this-> soluce = exprs;
     }
     
     std::vector <std::string> IMacroCall::getIds () {
@@ -1863,10 +1866,10 @@ namespace syntax {
 	
 	block = (Block) block-> templateExpReplace (values);
 	if (!block) return NULL;
-	//println (block-> prettyPrint ());
 
 	semantic::Table::instance ().quitFrame ();
 	auto aux = new (Z0) IMacroCall (this-> token, this-> end, this-> left-> templateExpReplace ({}), this-> content);
+	aux-> setSolution (soluce.elements);
 	aux-> bl = block;	
 	return aux;
     }

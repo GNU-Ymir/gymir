@@ -47,6 +47,7 @@ namespace Ymir {
 	    Unterminated,
 	    TemplateSpecialisation,
 	    TemplateCreation,
+	    TemplateCreationWith,
 	    TemplateCreation2,
 	    MoreErrors,
 	    And,
@@ -179,6 +180,8 @@ namespace Ymir {
 	static void templateSpecialisation (const Word&, const Word&);
 	
 	static void templateCreation (const Word&);
+
+	static void templateCreation (const Word&, std::string tmps);
 
 	static void templateCreation2 (const Word&, ulong nb);
 
