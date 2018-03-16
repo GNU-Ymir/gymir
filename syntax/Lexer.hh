@@ -24,6 +24,8 @@ namespace lexical {
 
 	void skipEnable (std::string elem, bool on = true);
 
+	void skipEnable (std::vector <std::string> elem, bool on = true);
+	
 	void commentEnable (bool on = true);
 
 	Lexer& next (Word &word);

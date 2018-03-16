@@ -23,6 +23,8 @@ namespace syntax {
 
 	Ymir::Tree toGeneric () override;
 
+	std::string prettyPrint () override;
+	
 	static const char * id () {
 	    return TYPEID (IDot);
 	}

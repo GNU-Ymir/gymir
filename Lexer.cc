@@ -70,6 +70,12 @@ namespace lexical {
 	this-> skips [elem] = on;
     }
 
+    void Lexer::skipEnable (std::vector<std::string> elem, bool on) {
+	for (auto it : elem)
+	    this-> skips [it] = on;
+    }
+
+    
     void Lexer::commentEnable (bool on) {
 	this-> enableComment = on;
     }

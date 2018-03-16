@@ -3,6 +3,7 @@
 #include <ymir/semantic/pack/MacroSolver.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/syntax/Token.hh>
+#include <ymir/semantic/pack/Table.hh>
 
 namespace syntax {
 
@@ -12,10 +13,28 @@ namespace syntax {
 
     std::map <Expression, Ymir::Tree> IExpand::__values__;
     
+    std::string IInstruction::prettyPrint () {	
+	Ymir::OutBuffer buf ("TODO {", this-> getIds (), "}");
+	Ymir::Error::assert (buf.str ().c_str ());	
+	return "";    
+    }
+    
     Word& IBlock::getIdent () {
 	return this-> ident;
     }
 
+    std::string IBlock::prettyPrint () {
+	Ymir::OutBuffer buf ("{\n");
+	for (auto it : this-> insts) {	    
+	    buf.write (it-> prettyPrint ());
+	    if (it-> is<IExpression> ())
+		buf.write (";");
+	    buf.write ("\n");
+	}
+	buf.write ("}\n");
+	return buf.str ();
+    }
+    
     void IBlock::addFinally (Block block) {
 	if (block-> insts.size () != 0) {
 	    if (!block-> insts [0]-> is<INone> () || block-> insts.size () != 1)
@@ -792,6 +811,10 @@ namespace syntax {
 	//if (this-> right) this-> right-> inside = this;
     }
 
+    std::string IDot::prettyPrint () {
+	return Ymir::OutBuffer (this-> left-> prettyPrint (), ".", this-> right-> prettyPrint ()).str ();
+    }
+    
     IDot::~IDot () {
 	delete left;
 	delete right;
@@ -1599,6 +1622,10 @@ namespace syntax {
 	IExpression (token),
 	params (params)
     {}
+
+    std::string IPragma::prettyPrint () {
+	return "";
+    }
     
     IMacroExpr::IMacroExpr (Word, Word, std::vector <MacroElement> elements) :
 	elements (elements)
@@ -1625,6 +1652,16 @@ namespace syntax {
     std::vector <Word> IMacroElement::toTokens (bool& success) {
 	success = false;
 	return {};
+    }
+
+    const char* IMacroElement::id () {
+	return "IMacroElement";
+    }
+	
+    std::vector <std::string> IMacroElement::getIds () {
+	auto ids = IExpression::getIds ();
+	ids.push_back (IMacroElement::id ());
+	return ids;
     }
     
     IMacroVar::IMacroVar (Word name, MacroVarConst type) :
@@ -1655,7 +1692,7 @@ namespace syntax {
     }
 	
     std::vector <std::string> IMacroVar::getIds () {
-	auto ids = IExpression::getIds ();
+	auto ids = IMacroElement::getIds ();
 	ids.push_back (IMacroVar::id ());
 	return ids;
     }
@@ -1695,7 +1732,7 @@ namespace syntax {
     }
 
     std::vector <std::string> IMacroToken::getIds () {
-	auto ids = IExpression::getIds ();
+	auto ids = IMacroElement::getIds ();
 	ids.push_back (IMacroToken::id ());
 	return ids;
     }
@@ -1730,10 +1767,11 @@ namespace syntax {
     }
     
     std::string IMacroRepeat::prettyPrint () {
-	Ymir::OutBuffer buf;
+	Ymir::OutBuffer buf ("(");
 	for (auto it : this-> soluce) {
 	    buf.write (it.elements);
 	}
+	buf.write (")");
 	return buf.str ();
     }
         
@@ -1766,7 +1804,7 @@ namespace syntax {
     }
 	
     std::vector <std::string> IMacroRepeat::getIds () {
-	auto ids = IExpression::getIds ();
+	auto ids = IMacroElement::getIds ();
 	ids.push_back (IMacroRepeat::id ());
 	return ids;
     }
@@ -1778,16 +1816,21 @@ namespace syntax {
 	content (content)
     {}
 
-    IMacroCall::IMacroCall (Word begin, Word end, Expression left, Expression expr) :
-	IExpression (begin),
-	end (end),
-	left (left),
-	content ({}),
-	expr (expr)
-    {}
-    
+        
     std::vector <Word> & IMacroCall::getTokens () {
 	return this-> content;
+    }
+
+    std::string IMacroCall::prettyPrint () {
+	if (this-> bl)
+	    return this-> bl-> prettyPrint ();
+	else {
+	    Ymir::OutBuffer buf (this-> left-> prettyPrint (), ": {");
+	    for (auto it : this-> content)
+		buf.write (it.getStr ());
+	    buf.write ("}");
+	    return buf.str ();
+	}
     }
     
     std::vector <std::string> IMacroCall::getIds () {
@@ -1796,5 +1839,37 @@ namespace syntax {
 	return ret;
     }
 
+    MacroCall IMacroCall::solve (const std::map <std::string, Expression> & values) {
+	auto expr = this-> left-> expression ();
+	if (expr == NULL) return NULL;	
+	auto mac = expr-> info-> type-> to <IMacroInfo> ();
+	if (mac == NULL) {
+	    Ymir::Error::notAMacro (this-> left-> token);
+	    return NULL;
+	}
+	
+	auto soluce = mac-> resolve (this);
+	if (!soluce.valid) {
+	    Ymir::Error::macroResolution (this-> left-> token);
+	    return NULL;
+	}
+
+	if (!semantic::Table::instance ().addCall (this-> token)) return NULL;
+	semantic::Table::instance ().enterPhantomBlock ();
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
+
+	Block block = (Block) soluce.block-> templateExpReplace (soluce.elements);
+	if (!block) return NULL;
+	
+	block = (Block) block-> templateExpReplace (values);
+	if (!block) return NULL;
+	//println (block-> prettyPrint ());
+
+	semantic::Table::instance ().quitFrame ();
+	auto aux = new (Z0) IMacroCall (this-> token, this-> end, this-> left-> templateExpReplace ({}), this-> content);
+	aux-> bl = block;	
+	return aux;
+    }
+    
     
 }

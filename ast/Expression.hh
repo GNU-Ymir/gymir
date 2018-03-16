@@ -67,7 +67,7 @@ namespace syntax {
 	
 	virtual void print (int) override;
 
-	virtual std::string prettyPrint ();
+	virtual std::string prettyPrint () override;
 
 	virtual ~IExpression ();
 	

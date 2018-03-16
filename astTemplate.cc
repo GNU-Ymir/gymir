@@ -4,6 +4,7 @@
 #include <ymir/syntax/Token.hh>
 #include <ymir/syntax/FakeLexer.hh>
 #include <ymir/syntax/Visitor.hh>
+#include <ymir/semantic/value/FixedValue.hh>
 
 using namespace std;
 
@@ -19,7 +20,6 @@ namespace syntax {
 	return type;
     }
 
-    
     Expression IAccess::templateExpReplace (const map <string, Expression>& values) {
 	auto params = (ParamList) this-> params-> templateExpReplace (values);
 	auto left = this-> left-> templateExpReplace (values);
@@ -67,8 +67,11 @@ namespace syntax {
 	    decls.push_back (it-> templateDeclReplace (values));
 	}
 	
-	for (auto it : this-> insts)
-	    insts.push_back (it-> templateReplace (values)); 
+	for (auto it : this-> insts) {
+	    auto res = it-> templateReplace (values);
+	    if (!res) return NULL;
+	    insts.push_back (res);
+	}
 	
 	return new (Z0)  IBlock (this-> token, decls, insts);
     }
@@ -163,6 +166,30 @@ namespace syntax {
     Expression IDot::templateExpReplace (const map <string, Expression>& values) {
 	auto left = this-> left-> templateExpReplace (values);
 	auto right = this-> right-> templateExpReplace (values);
+	if (auto rep = left-> to<IMacroRepeat> ()) {
+	    if (auto fx = right-> to <IFixed> ()) {
+		auto val = fx-> expression ()-> info-> value ()-> to<semantic::IFixedValue> ()-> getValue ();
+		if (val < (int) rep-> getSolution ().size ()) {
+		    auto soluce = rep-> getSolution () [val];
+		    for (auto & it : soluce.elements)
+			it.second = it.second-> templateExpReplace (values);
+		    
+		    auto ret = new (Z0) IMacroRepeat (this-> token, NULL, NULL, false);
+		    ret-> addSolution (soluce);
+		    return ret;
+		}
+	    } else if (auto var = right-> to <IVar> () ) {
+		if (rep-> getSolution ().size () == 1) {
+		    auto name = var-> token.getStr ();
+		    auto soluce = rep-> getSolution () [0];
+		    auto elem = soluce.elements.find (name);
+		    if (elem != soluce.elements.end ()) {
+			return elem-> second-> templateExpReplace (values);
+		    }
+		}
+	    }
+	}
+	
 	return new (Z0)  IDot (this-> token, left, right);
     }
 
@@ -177,6 +204,31 @@ namespace syntax {
 	    vars.push_back ((Var) it-> templateExpReplace (values));
 	
 	auto iter = this-> iter-> templateExpReplace (values);
+
+	if (this-> isStatic && iter-> is <IMacroRepeat> () && vars.size () == 1) {
+	    auto rep = iter-> to <IMacroRepeat> ();
+	    auto bl = new (Z0) IBlock (this-> block-> token, {}, {});
+	    for (ulong i = 0 ; i < rep-> getSolution ().size () ; i++) {
+		auto id = vars [0]-> token.getStr ();
+		auto index = rep-> getSolution () [i];
+		for (auto & it : index.elements)
+		    it.second = it.second-> templateExpReplace (values);
+		auto elem = new (Z0) IMacroRepeat (this-> block-> token, NULL, NULL, false);
+		elem-> addSolution (index);
+		auto block = this-> block-> templateExpReplace ({{id, elem}});
+		if (block == NULL) return NULL;
+		
+		block = block-> templateExpReplace (values);
+		if (block == NULL) return NULL;
+		
+		bl-> getInsts ().push_back (
+		    block
+		);
+	    }
+	    
+	    return bl;
+	}
+	
 	auto block = (Block) this-> block-> templateReplace (values);
 	auto ret = new (Z0)  IFor (this-> token, this-> id, vars, iter, block);
 	ret-> isStatic = this-> isStatic;
@@ -418,8 +470,11 @@ namespace syntax {
 	for (auto it : this-> decos)
 	    decos.push_back (it);
 
-	for (auto it : this-> insts)
-	    insts.push_back (it-> templateExpReplace (values));
+	for (auto it : this-> insts) {
+	    if (it)
+		insts.push_back (it-> templateExpReplace (values));
+	    else insts.push_back (NULL);
+	}
 	
 	return new (Z0)  IVarDecl (this-> token, decos, decls, insts);
     }
@@ -511,26 +566,35 @@ namespace syntax {
     }
        
     Expression IMacroCall::templateExpReplace (const std::map <std::string, Expression>& values) {
-	auto left = this-> left-> templateExpReplace (values);	
+	auto left = this-> left-> templateExpReplace (values);
+	
 	std::vector <Word> content;
-	Ymir::Error::activeError (false);
 	lexical::FakeLexer lex {this-> content};
-	lex.next ({Token::DOLLAR});
-	lex.next ({Token::LPAR});
+	lex.skipEnable ({Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB} , false);
 	
-	syntax::Visitor visit (lex);
-	auto expr = visit.visitExpression ();
-	lex.next ({Token::RPAR});
-	auto caught = Ymir::Error::caught ();
-	Ymir::Error::activeError (true);
+	while (true) {
+	    auto next = lex.next ();
+	    if (next.isEof ()) break;
+	    if (next == Token::DOLLAR) {
+		lex.skipEnable ({Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB} , true);
+		lex.next ({Token::LPAR});
+		syntax::Visitor visit (lex);		
+		auto expr = visit.visitExpression ();		
+		lex.next ({Token::RPAR});
+		lex.skipEnable ({Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB} , false);
+		expr = expr-> templateExpReplace (values);
+		if (!expr) return NULL;
+		if (auto elem = expr-> to<IMacroElement> ()) {
+		    bool success = false;
+		    auto current = elem-> toTokens (success);
+		    if (!success) return NULL;
+		    content.insert (content.end (), current.begin (), current.end ());
+		} else content.push_back (expr-> token);		
+	    } else content.push_back (next);
+	}
 	
-	if (!lex.next ().isEof () || caught.size () != 0) {
-	    content = this-> content;
-	    return new (Z0) IMacroCall (this-> token, this-> end, left, content);
-	} else {
-	    expr = expr-> templateExpReplace (values);
-	    return new (Z0) IMacroCall (this-> token, this-> end, left, expr);
-	}	    
+	auto aux = new (Z0) IMacroCall (this-> token, this-> end, left, content);
+	return aux-> solve (values);
     }
 
     Expression IMacroVar::templateExpReplace (const std::map <std::string, Expression>&) {

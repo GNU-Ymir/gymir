@@ -136,8 +136,11 @@ namespace Ymir {
 	template <typename K, typename V>	
 	void write_ (const std::map <K, V> &elem) {
 	    write ("{");
-	    for (auto it : elem) {
-		write (it.first, " : ", it.second, ",");
+	    for (auto it = elem.begin () ; it != elem.end ();) {
+		write (it-> first, " : ", it-> second);
+		it ++;
+		if (it != elem.end ())
+		    write (", ");
 	    }
 	    write ("}");
 	}

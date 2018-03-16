@@ -28,6 +28,10 @@ namespace syntax {
 	virtual std::vector <Word> toTokens (bool& success);
 	
 	virtual IMacroElement* clone () = 0;
+
+	static const char* id ();
+	
+	std::vector <std::string> getIds () override;
 	
     };
     
@@ -155,19 +159,17 @@ namespace syntax {
 
     class IMacroCall : public IExpression {
 	Word end;
-	Expression left;
+	Expression left, inner;
 	std::vector <Word> content;
-	Block bl;
+	Block bl = NULL;
+	
 	bool itsUpToMe = false;
-	Expression expr = NULL;
 	static bool needToReset;
 	static int nbTmps;
 	
     public :
 
 	IMacroCall (Word begin, Word end, Expression left, std::vector<Word> content);
-
-	IMacroCall (Word begin, Word end, Expression left, Expression expr);
 	
 	Expression expression () override;
 	
@@ -175,8 +177,10 @@ namespace syntax {
 
 	std::vector <Word> & getTokens ();	
 	
-	Ymir::Tree toGeneric () override;
+	//Ymir::Tree toGeneric () override;
 
+	std::string prettyPrint () override;
+	
 	static const char * id () {
 	    return TYPEID (IMacroCall);
 	}
@@ -187,6 +191,8 @@ namespace syntax {
 
     private:
 
+	MacroCall solve (const std::map <std::string, Expression>&);
+	
 	std::vector <Word> expressionExpand ();
 	
     };

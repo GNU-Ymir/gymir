@@ -60,6 +60,7 @@ namespace syntax {
 	
 	Expression getLastExpr ();
 
+	std::string prettyPrint ();
 
 	static const char * id () {
 	    return TYPEID (IBlock);
