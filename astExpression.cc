@@ -535,10 +535,15 @@ namespace syntax {
     }
     
     Expression IBinary::affect () {
-	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());	
-
+	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 	if (simpleVerif (aux)) return NULL;
+	
 	if (aux-> left-> info-> isConst () && !aux-> left-> info-> type-> is <IUndefInfo> ()) {
+	    if (aux-> left-> info-> value () && aux-> right-> info-> value () && aux-> left-> info-> type-> isSame (aux-> right-> info-> type)) {
+		aux-> left-> info-> value () = aux-> right-> info-> value ();
+		return aux-> left;
+	    }
+	    
 	    auto call = findOpAssign (aux);
 	    if (!call) {
 		Ymir::Error::notLValue (aux-> left-> token);
@@ -556,10 +561,7 @@ namespace syntax {
 		    }
 
 		    aux-> left-> info-> type = type;
-		    if (!aux-> right-> info-> type-> isText ())
-			aux-> left-> info-> isConst (false);
-		    else
-			aux-> left-> info-> isConst (true);
+		    aux-> left-> info-> isConst (false);
 		} else if (type == NULL) {
 		    auto call = findOpAssign (aux);
 		    if (!call) {
@@ -800,8 +802,7 @@ namespace syntax {
 
     Expression IString::expression () {
 	auto aux = new (Z0)  IString (this-> token, this-> content);
-	auto arrayType = new (Z0) IStringInfo (true);
-	arrayType-> isText () = true;
+	auto arrayType = new (Z0) IStringInfo (true, true);
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 	aux-> info-> value () = new (Z0)  IStringValue (this-> content);	
 	return aux;
@@ -867,12 +868,14 @@ namespace syntax {
 		    Word tok (this-> token.getLocus (),
 			      this-> token.getStr () + type-> token.getStr () + "]"
 		    );
+		    type-> info-> type-> isConst (false);
 		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, type-> info-> type));
 		}
 	    }
 	    
 	    auto type = aux-> validate ();
 	    if (!type) return NULL;
+	    type-> isConst (false);
 	    auto arrayType = new (Z0)  IArrayInfo (false, type);
 	    aux-> info = new (Z0)  ISymbol (aux-> token, arrayType);
 	    arrayType-> isStatic (true, aux-> params.size ());	    
@@ -1435,7 +1438,7 @@ namespace syntax {
     Expression IStringOf::expression () {
 	std::string val = this-> expr-> prettyPrint ();
 	auto ret = new (Z0) IString (this-> token, val);
-	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IStringInfo (true));
+	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IStringInfo (true, true));
 	ret-> info-> value () = new (Z0) IStringValue (val);
 	return ret;
     }
@@ -1630,7 +1633,7 @@ namespace syntax {
 
     Expression IMacroToken::expression () {
 	auto aux = new (Z0) IString (this-> token, this-> value);
-	aux-> info = new (Z0) ISymbol (this-> token, new (Z0) IStringInfo (true));
+	aux-> info = new (Z0) ISymbol (this-> token, new (Z0) IStringInfo (true, true));
 	aux-> info-> value () = new (Z0) IStringValue (this-> value);
 	return aux;
     }

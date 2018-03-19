@@ -21,7 +21,6 @@ namespace semantic {
 	_size (0),
 	_content (content)
     {
-	this-> isText () = isConst;
     }
     
     InfoType IArrayInfo::content () {
@@ -216,7 +215,7 @@ namespace semantic {
 	    auto content = this-> _content-> clone ();
 	    if (this-> isConst ())
 		content-> isConst (true);
-	    auto ch = new (Z0)  IArrayRefInfo (this-> isConst (), content);
+	    auto ch = new (Z0)  IArrayRefInfo (this-> isConst () || content-> isConst (), content);
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    if (this-> value ()) 
 		ch-> value () = this-> value ()-> AccessOp (expr);
@@ -290,10 +289,11 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::ConstVerif (InfoType other) {
-	if (this-> isConst () && !other-> isConst ()) return NULL;
 	if (auto ot = other-> to<IArrayInfo> ()) {
 	    if (other-> isConst ()) return this;
 	    if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
+	    else if (this-> _content-> isConst () && !ot-> _content-> isConst ())
+		return NULL;
 	    return this;
 	} else return NULL;
     }
@@ -362,7 +362,6 @@ namespace semantic {
     
     void IArrayInfo::isConst (bool isConst) {
 	IInfoType::isConst (isConst);
-	this-> isText () = isConst;
     }
 
     
@@ -530,13 +529,6 @@ namespace semantic {
 	    location_t loc = word.getLocus ();
 	    auto lexp = left-> toGeneric ();
 	    auto rexp = right-> toGeneric ();
-	    if (right-> info-> isConst ()) {
-		if (auto ref = left-> info-> type-> to <IArrayRefInfo> ()) {
-		    if (!ref-> content ()-> isConst ())
-			return buildDup (loc, lexp, rexp, right);
-		} else if (!left-> info-> isConst ())
-		    return buildDup (loc, lexp, rexp, right);
-	    }
 	    
 	    if (lexp.getType () == rexp.getType ()) {		
 		return Ymir::buildTree (

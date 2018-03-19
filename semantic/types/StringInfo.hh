@@ -13,14 +13,14 @@ namespace semantic {
 	
     public:
 	
-	IStringInfo (bool);
+	IStringInfo (bool, bool = true);
 	
 	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 0) {
 		Ymir::Error::notATemplate (tok);
 		return NULL;
 	    } else {
-		return new (Z0) IStringInfo (false);
+		return new (Z0) IStringInfo (false, true);
 	    }
 	}
 

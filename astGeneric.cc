@@ -67,23 +67,33 @@ namespace syntax {
     Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
 	auto last = this-> insts.back ()-> to <IExpression> ();
 	this-> insts.pop_back ();
-	auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type-> toGeneric ());
-	
-	Ymir::enterBlock ();
-	for (auto it : this-> insts) {
-	    auto inst = it-> toGeneric ();
-	    Ymir::getStackStmtList ().back ().append (inst);    
-	}
+	if (!last-> info-> value ()) {
+	    auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type-> toGeneric ());	
+	    Ymir::enterBlock ();
+	    for (auto it : this-> insts) {
+		auto inst = it-> toGeneric ();
+		Ymir::getStackStmtList ().back ().append (inst);    
+	    }
+	    type = last-> info-> type;
+	    expr = last-> toGeneric ();
 
-	type = last-> info-> type;
-	expr = last-> toGeneric ();
-	Ymir::getStackStmtList ().back ().append (
-	    buildTree (MODIFY_EXPR,
-		       this-> token.getLocus (),
-		       expr.getType (),
-		       res, expr)
-	);
-	expr = res;
+	    Ymir::getStackStmtList ().back ().append (
+		buildTree (MODIFY_EXPR,
+			   this-> token.getLocus (),
+			   expr.getType (),
+			   res, expr)
+	    );
+	
+	    expr = res;
+	} else {
+	    Ymir::enterBlock ();
+	    for (auto it : this-> insts) {
+		auto inst = it-> toGeneric ();
+		Ymir::getStackStmtList ().back ().append (inst);    
+	    }
+	    type = last-> info-> type;
+	    expr = last-> toGeneric ();	    
+	}
 	
 	auto body = Ymir::leaveBlock ();
 	if (this-> finally.size () == 0)

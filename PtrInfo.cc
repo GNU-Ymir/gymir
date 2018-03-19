@@ -163,7 +163,7 @@ namespace semantic {
 	IInfoType (isConst),
 	_content (type) 
     {
-	this-> isText () = isConst;
+	//this-> isText () = isConst;
     }    
    
     InfoType IPtrInfo::create (Word tok, const std::vector<syntax::Expression> & tmps) {
@@ -397,10 +397,14 @@ namespace semantic {
     }
     
     InfoType IPtrInfo::ConstVerif (InfoType other) {
-	if (this-> isConst () && !other-> isConst ()) return NULL;
-	else if (!this-> isConst () && other-> isConst ())
-	    this-> isConst (true);
-	return this;
+	if (auto ot = other-> to<IPtrInfo> ()) {
+	    if (other-> isConst ()) return this;
+	    else if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
+	    else if (this-> _content-> isConst () && !ot-> _content-> isConst ())
+		return NULL;
+	    return this;
+	}
+	return NULL;
     }
 
     bool IPtrInfo::isConst () {
@@ -409,7 +413,6 @@ namespace semantic {
     
     void IPtrInfo::isConst (bool isConst) {
 	IInfoType::isConst (isConst);
-	this-> isText () = isConst;
     }
     
     bool IPtrInfo::isSame (InfoType other) {

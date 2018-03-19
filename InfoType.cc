@@ -75,10 +75,6 @@ namespace semantic {
     void IInfoType::isConst (bool is) {
 	this-> _isConst = is;
     }
-
-    bool & IInfoType::isText () {
-	return this-> _isText;
-    }
     
     bool& IInfoType::isStatic () {
 	return this-> _isStatic;

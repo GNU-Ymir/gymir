@@ -12,10 +12,9 @@
 
 namespace semantic {
         
-    IStringInfo::IStringInfo (bool isConst) :
-	IArrayInfo (isConst, new (Z0) ICharInfo (false))
+    IStringInfo::IStringInfo (bool isConst, bool inner) :
+	IArrayInfo (isConst, new (Z0) ICharInfo (inner))
     {
-	this-> isText () = isConst;
     }
     
     InfoType IStringInfo::BinaryOpRight (Word op, syntax::Expression left) {
@@ -35,13 +34,11 @@ namespace semantic {
     
     void IStringInfo::isConst (bool isConst) {
 	IInfoType::isConst (isConst);
-	this-> isText () = isConst;
     }
     
     InfoType IStringInfo::onClone () {
 	auto aux = new IStringInfo (this-> isConst ());
 	aux-> value () = this-> value ();
-	aux-> isText () = this-> isConst ();
 	return aux;
     }
 
