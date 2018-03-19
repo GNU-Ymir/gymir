@@ -389,7 +389,9 @@ namespace syntax {
 	    aux = new (Z0)  ITypedVar (this-> token, type);
 	} else {
 	    if (auto ptr = this-> expType-> to<IFuncPtr> ()) {
-		ptr = this-> expType-> expression ()-> to<IFuncPtr> ();
+		auto expr = this-> expType-> expression ();
+		if (expr == NULL) return NULL;
+		ptr = expr -> to<IFuncPtr> ();
 		aux = new (Z0)  ITypedVar (this-> token, new (Z0)  IType (ptr-> token, ptr-> info-> type));
 	    } else if (auto ialloc = this-> expType-> to <IArrayAlloc> ()) {
 		auto res = ialloc-> staticArray ();
@@ -1317,11 +1319,13 @@ namespace syntax {
 	std::vector <Expression> tmps (this-> params.size () + 1);
 	if (this-> ret) tmps [0] = this-> ret-> asType ();
 	else Ymir::Error::assert ("ERROR");
+	if (tmps [0] == NULL) return NULL;
 	
 	auto ret = tmps [0]-> to <IVar> ();
 	std::vector <Var> params;
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    tmps [it + 1] = this-> params [it]-> asType ();
+	    if (tmps [it + 1] == NULL) return NULL;
 	    params.push_back (tmps [it + 1]-> to<IVar> ());
 	}
 

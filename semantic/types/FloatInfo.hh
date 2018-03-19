@@ -19,8 +19,8 @@ namespace semantic {
 	    if (tmps.size () != 0)
 		Ymir::Error::notATemplate (token);
 
-	    if (token == "float") return new (Z0) IFloatInfo (false, FloatConst::FLOAT);
-	    else if (token == "double") return new (Z0) IFloatInfo (false, FloatConst::DOUBLE);
+	    if (token == "f32") return new (Z0) IFloatInfo (false, FloatConst::FLOAT);
+	    else if (token == "f64") return new (Z0) IFloatInfo (false, FloatConst::DOUBLE);
 	    return NULL;
 	}
 

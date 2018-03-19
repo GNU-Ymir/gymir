@@ -60,14 +60,14 @@ namespace syntax {
 
     std::string name (FixedConst ct) {
 	switch (ct) {
-	case FixedConst::BYTE : return "byte";
-	case FixedConst::UBYTE : return "ubyte";
-	case FixedConst::SHORT : return "short";
-	case FixedConst::USHORT: return "ushort";
-	case FixedConst::INT : return "int";
-	case FixedConst::UINT : return "uint";
-	case FixedConst::LONG : return "long";
-	case FixedConst::ULONG : return "ulong";
+	case FixedConst::BYTE : return "i8";
+	case FixedConst::UBYTE : return "u8";
+	case FixedConst::SHORT : return "i16";
+	case FixedConst::USHORT: return "u16";
+	case FixedConst::INT : return "i32";
+	case FixedConst::UINT : return "u32";
+	case FixedConst::LONG : return "i64";
+	case FixedConst::ULONG : return "u64";
 	}
 	return "none";
     }
@@ -316,7 +316,7 @@ namespace syntax {
 	if (this-> type) {
 	    buf.write (this-> token.getStr ().c_str (), " : ", this-> type-> prettyPrint ().c_str ());	    
 	} else {
-	    buf.write (this-> token.getStr ().c_str (), " : ", this-> expType-> prettyPrint ().c_str ());	   
+	    buf.write (this-> token.getStr ().c_str (), " : ", this-> expType ? this-> expType-> prettyPrint ().c_str () : "");	   
 	}
 	return buf.str ();
     }

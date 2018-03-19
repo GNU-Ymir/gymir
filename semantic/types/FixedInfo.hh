@@ -19,14 +19,14 @@ namespace semantic {
 	    if (templates.size () != 0)
 		Ymir::Error::notATemplate (token);
 
-	    if (token == "byte") return new (Z0) IFixedInfo (false, FixedConst::BYTE);
-	    if (token == "ubyte") return new (Z0) IFixedInfo (false, FixedConst::UBYTE);
-	    if (token == "short") return new (Z0) IFixedInfo (false, FixedConst::SHORT);
-	    if (token == "ushort") return new (Z0) IFixedInfo (false, FixedConst::USHORT);
-	    if (token == "int") return new (Z0) IFixedInfo (false, FixedConst::INT);
-	    if (token == "uint") return new (Z0) IFixedInfo (false, FixedConst::UINT);
-	    if (token == "long") return new (Z0) IFixedInfo (false, FixedConst::LONG);
-	    if (token == "ulong") return new (Z0) IFixedInfo (false, FixedConst::ULONG);
+	    if (token == "i8") return new (Z0) IFixedInfo (false, FixedConst::BYTE);
+	    if (token == "u8") return new (Z0) IFixedInfo (false, FixedConst::UBYTE);
+	    if (token == "i16") return new (Z0) IFixedInfo (false, FixedConst::SHORT);
+	    if (token == "u16") return new (Z0) IFixedInfo (false, FixedConst::USHORT);
+	    if (token == "i32") return new (Z0) IFixedInfo (false, FixedConst::INT);
+	    if (token == "u32") return new (Z0) IFixedInfo (false, FixedConst::UINT);
+	    if (token == "i64") return new (Z0) IFixedInfo (false, FixedConst::LONG);
+	    if (token == "u64") return new (Z0) IFixedInfo (false, FixedConst::ULONG);
 	    return NULL;
 	}
 

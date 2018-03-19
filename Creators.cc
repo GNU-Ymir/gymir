@@ -24,17 +24,17 @@ namespace semantic {
     }
     
     Creators::Creators () {
-	this-> creators ["int"] = (void*)&IFixedInfo::create;
-	this-> creators ["uint"] = (void*)&IFixedInfo::create;
-	this-> creators ["short"] = (void*)&IFixedInfo::create;
-	this-> creators ["ushort"] = (void*) &IFixedInfo::create;
-	this-> creators ["byte"] = (void*) &IFixedInfo::create;
-	this-> creators ["ubyte"] = (void*) &IFixedInfo::create;
-	this-> creators ["long"] = (void*) &IFixedInfo::create;
-	this-> creators ["ulong"] = (void*) &IFixedInfo::create;
+	this-> creators ["i32"] = (void*)&IFixedInfo::create;
+	this-> creators ["u32"] = (void*)&IFixedInfo::create;
+	this-> creators ["i16"] = (void*)&IFixedInfo::create;
+	this-> creators ["u16"] = (void*) &IFixedInfo::create;
+	this-> creators ["i8"] = (void*) &IFixedInfo::create;
+	this-> creators ["u8"] = (void*) &IFixedInfo::create;
+	this-> creators ["i64"] = (void*) &IFixedInfo::create;
+	this-> creators ["u64"] = (void*) &IFixedInfo::create;
 	this-> creators ["char"] = (void*) &ICharInfo::create;
-	this-> creators ["float"] = (void*) &IFloatInfo::create;
-	this-> creators ["double"] = (void*) &IFloatInfo::create;
+	this-> creators ["f32"] = (void*) &IFloatInfo::create;
+	this-> creators ["f64"] = (void*) &IFloatInfo::create;
 	this-> creators ["string"] = (void*) &IStringInfo::create;
 	this-> creators ["p"] = (void*) &IPtrInfo::create;
 	this-> creators ["r"] = (void*) &IRangeInfo::create;
