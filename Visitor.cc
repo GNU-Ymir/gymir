@@ -2008,7 +2008,9 @@ namespace syntax {
     Expression Visitor::visitMacroCall (Expression left) {
 	auto beg = this-> lex.next ({Token::LCRO, Token::LACC, Token::LPAR});
 	std::string tokEnd = beg == Token::LCRO ? Token::RCRO : (beg == Token::LACC ? Token::RACC : Token::RPAR);
-	this-> lex.skipEnable (Token::SPACE, false);       
+	this-> lex.commentEnable (false);
+	this-> lex.skipEnable ({Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB}, false);       
+
 	auto open = 1;
 	std::vector <Word> tok;
 	while (open != 0) {
@@ -2018,7 +2020,8 @@ namespace syntax {
 	    else if (tok.back ().isEof ()) unterminated (beg);	    
 	}
 	
-	this-> lex.skipEnable (Token::SPACE, true);       
+	this-> lex.commentEnable (true);
+	this-> lex.skipEnable ({Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB}, true);       
 	auto end = tok.back ();
 	tok.pop_back ();
 	auto retour = new (Z0) IMacroCall (beg, end, left, tok);

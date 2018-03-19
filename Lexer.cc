@@ -228,7 +228,9 @@ namespace lexical {
 	       }),
 	words (words),
 	fake_current (0)	
-    {}
+    {
+	Lexer::commentEnable (false);
+    }
 
     bool FakeLexer::getWord (Word & word) {
 	if (this-> fake_current < this-> words.size ()) {
