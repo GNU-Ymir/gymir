@@ -7,6 +7,7 @@
 #include <ymir/semantic/value/FixedValue.hh>
 
 using namespace std;
+using namespace semantic;
 
 namespace syntax {
 
@@ -247,7 +248,7 @@ namespace syntax {
 		params.push_back (elem-> to <IVar> ());
 	    }
 	}
-
+	
 	auto ret = this-> ret-> templateExpReplace (values);
 	if (this-> expr) {
 	    auto expr = this-> expr-> templateExpReplace (values);
@@ -485,14 +486,17 @@ namespace syntax {
 	    if (it.first == this-> token.getStr ()) {
 		auto clo = it.second-> templateExpReplace ({});
 		clo-> token.setLocus (this-> token.getLocus ());
-		if (auto v = clo-> to <IVar> ()) {
+		if (auto t = clo-> to <IType> ()) {
+		    t-> deco = this-> deco;
+		    if (this-> deco == Keys::REF && !clo-> info-> type-> is <semantic::IRefInfo> ()) {
+			t-> info-> type = new semantic::IRefInfo (t-> info-> isConst (), t-> info-> type);
+		    }
+		    ret = t;
+		    break;
+		} else if (auto v = clo-> to <IVar> ()) {
 		    v-> deco = this-> deco;
 		    ret = v;
 		    break;		
-		} else if (auto t = clo-> to <IType> ()) {
-		    t-> deco = this-> deco;
-		    ret = t;
-		    break;
 		} else if (this-> templates.size () == 0) {
 		    return clo;
 		} else {

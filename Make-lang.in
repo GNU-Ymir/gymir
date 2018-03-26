@@ -7,7 +7,7 @@ ymir: ymir1$(exeext)
  
 .PHONY: ymir
 
-GYC_INCLUDES = -I$(srcdir)/include -I$(srcdir)/
+GYC_INCLUDES = -I$(srcdir)/include -I$(srcdir)/ 
 
 CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES)
 

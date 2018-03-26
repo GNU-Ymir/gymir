@@ -243,7 +243,7 @@ namespace semantic {
     }
     
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, Var param, InfoType type) {
-	//if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
+	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
 	// if (auto t = type-> to <IEnumInfo> ()) type = t-> getContent ();
 	bool isConst = false;	    
 	while (param && param-> token == Keys::CONST) {
@@ -471,9 +471,10 @@ namespace semantic {
 
 	ulong nb = 0;
 	for (auto it : Ymir::r (0, func-> getParams ().size ())) {
-	    auto var = func-> getParams () [it];
+	    auto var = func-> getParams () [it];	    
 	    if (!type-> getTemplate (it)) return TemplateSolution (0, false);
 	    auto typeTemplates = type-> getTemplate (it, func-> getParams ().size () - (it + 1));
+	    
 	    nb += typeTemplates.size ();
 	    auto res = this-> solveInside (tmps, var, typeTemplates);
 	    

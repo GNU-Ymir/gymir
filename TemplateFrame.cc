@@ -253,8 +253,7 @@ namespace semantic {
 		score += res.score;		
 	    }
 	}
-
-
+	
 	for (auto exp : tmps) {
 	    if (exp.second-> info) {
 		if (exp.second-> info-> isImmutable ()) {
