@@ -69,6 +69,8 @@ namespace semantic {
 
 	bool existsProto (FrameProto&);
 
+	FrameProto getProto (FrameProto&);
+
 	//StructCstInfo existsStruct (std::string);
 
 	void identify (StructInfo info);

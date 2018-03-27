@@ -54,6 +54,7 @@ namespace Ymir {
 	    Here,
 	    RecursiveExpansion,
 	    RecursiveNoSize,
+	    RecursiveInline, 
 	    MultipleLoopName,
 	    ShadowingVar,
 	    ShadowingVar2,
@@ -192,6 +193,8 @@ namespace Ymir {
 	static void permissionDenied (std::string&);
 	
 	static void recursiveExpansion (const Word&);
+
+	static void recursiveInlining (const Word&);
 
 	static void recursiveNoSize (const Word&);
 

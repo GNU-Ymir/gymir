@@ -347,7 +347,7 @@ namespace syntax {
     
     Ymir::Tree IPar::callInline (std::vector <tree> args) {
 	auto frame = this-> _score-> proto-> attached ();
-	return frame-> callInline (args);
+	return frame-> callInline (this-> _left-> token, args);
     }
 
     Ymir::Tree IPar::toGeneric () {

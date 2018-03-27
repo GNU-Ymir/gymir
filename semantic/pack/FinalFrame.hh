@@ -42,6 +42,7 @@ namespace semantic {
 	static Ymir::Tree __fn_closure__;
 	static std::vector <Ymir::Tree> __isInlining__;
 	static std::vector <Ymir::Tree> __endLabel__;
+	static std::vector <IFinalFrame*> __inlining__;
 	
     public:
 
@@ -75,7 +76,7 @@ namespace semantic {
 	
 	Ymir::Tree createClosureType ();
 
-	Ymir::Tree callInline (std::vector <tree> params);
+	Ymir::Tree callInline (Word where, std::vector <tree> params);
 
 	Ymir::Tree declInlineArgs (std::vector <tree> params);
 	

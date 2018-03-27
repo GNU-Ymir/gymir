@@ -61,6 +61,17 @@ namespace semantic {
 	return false;
     }
 
+    FrameProto FrameTable::getProto (FrameProto& proto) {
+	for (auto it : this-> _protos) {
+	    if (it-> equals (proto)) {
+		proto-> type () = it-> type ();
+		return it;
+	    }
+	}
+	return NULL;
+    }
+
+    
     void FrameTable::identify (StructInfo) {
 	// auto name = info-> onlyNameTypeString ();
 	// auto val = this-> _structIds.find (name);

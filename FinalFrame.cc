@@ -38,6 +38,7 @@ namespace semantic {
     std::vector <Ymir::Tree> IFinalFrame::__contextToAdd__;
     std::vector <Ymir::Tree> IFinalFrame::__isInlining__;
     std::vector <Ymir::Tree> IFinalFrame::__endLabel__;
+    std::vector <FinalFrame> IFinalFrame::__inlining__;
     
     IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, const std::vector<syntax::Var> & vars, syntax::Block bl, const std::vector <syntax::Expression>& tmps) :
 	_type (type),
@@ -214,8 +215,16 @@ namespace semantic {
 	return list.getTree ();
     }
     
-    Ymir::Tree IFinalFrame::callInline (std::vector <tree> params) {
+    Ymir::Tree IFinalFrame::callInline (Word where, std::vector <tree> params) {
 	Ymir::TreeStmtList list;
+	for (auto it : __inlining__) {
+	    if (it == this) {
+		Ymir::Error::recursiveInlining (where);
+		return build_int_cst_type (long_unsigned_type_node, 0);	   
+	    }
+	}
+	
+	__inlining__.push_back (this);
 	list.append (declInlineArgs (params));
 	auto endLabel = Ymir::makeLabel (BUILTINS_LOCATION, "end");
 	if (!this-> _type-> type-> is <IVoidInfo> ()) {
@@ -228,6 +237,8 @@ namespace semantic {
 	    IFinalFrame::__isInlining__.pop_back ();
 	    IFinalFrame::__endLabel__.pop_back ();
 	    list.append (Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel));
+	    __inlining__.pop_back ();
+	    
 	    return Ymir::compoundExpr (BUILTINS_LOCATION, list.getTree (), var);
 	} else {
 	    IFinalFrame::__isInlining__.push_back (Ymir::Tree ());
@@ -237,6 +248,7 @@ namespace semantic {
 	    IFinalFrame::__isInlining__.pop_back ();
 	    IFinalFrame::__endLabel__.pop_back ();
 	    list.append (Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel));
+	    __inlining__.pop_back ();
 	    return list.getTree ();
 	}
     }
@@ -257,6 +269,9 @@ namespace semantic {
 	ISymbol::resetNbTmp ();
 	__declared__.clear ();
 	__contextToAdd__.clear ();
+	
+	__inlining__.push_back (this);
+	auto lastErrors = Ymir::Error::nb_errors;
 	
 	std::vector <tree> args (this-> _vars.size ());
 	for (uint i = 0 ; i < this-> _vars.size () ; i++)
@@ -306,7 +321,8 @@ namespace semantic {
 	}	    
 	auto fnTreeBlock = Ymir::leaveBlock ();
 	auto fnBlock = fnTreeBlock.block;
-
+	__inlining__.pop_back ();
+	
 	BLOCK_SUPERCONTEXT (fnBlock.getTree ()) = fn_decl;
 	DECL_INITIAL (fn_decl) = fnBlock.getTree ();
 	DECL_SAVED_TREE (fn_decl) = fnTreeBlock.bind_expr.getTree ();
@@ -316,6 +332,9 @@ namespace semantic {
 
 	TREE_PUBLIC (fn_decl) = 1;
 	TREE_STATIC (fn_decl) = 1;
+
+	if (Ymir::Error::nb_errors > lastErrors)
+	    return;
 	
 	gimplify_function_tree (fn_decl);
 	cgraph_node::finalize_function (fn_decl, true);

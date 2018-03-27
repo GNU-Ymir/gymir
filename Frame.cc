@@ -161,8 +161,7 @@ namespace semantic {
 	
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
-	return proto;
-	
+	return FrameTable::instance ().getProto (proto);	
     }
     
     FrameProto IFrame::validate () {
@@ -280,7 +279,7 @@ namespace semantic {
 		}
 		Table::instance ().quitBlock ();
 		Table::instance ().quitFrame ();
-		return proto;
+		return FrameTable::instance ().getProto (proto);	
 	    }
 
 	    ~Exit () {
@@ -333,7 +332,7 @@ namespace semantic {
 	}
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
-	return proto;	
+	return FrameTable::instance ().getProto (proto);	
     }
 
     FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Block _block) {
@@ -368,7 +367,7 @@ namespace semantic {
 	}
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
-	return proto;	
+	return FrameTable::instance ().getProto (proto);	
     }
 
     
@@ -431,7 +430,7 @@ namespace semantic {
 		}
 		Table::instance ().quitBlock ();
 		Table::instance ().quitFrame ();
-		return proto;		
+		return FrameTable::instance ().getProto (proto);	
 	    }
 	    
 	    ~Exit () {

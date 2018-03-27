@@ -91,7 +91,7 @@ namespace Ymir {
 	}
 	
 	if (Ymir::Error::nb_errors > 0) // Ne doit pas arriver
-	    Ymir::Error::assert ("NB Error : %d", Ymir::Error::nb_errors);
+	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
 
 	Ymir::finishCompilation ();
     }

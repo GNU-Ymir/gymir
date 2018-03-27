@@ -82,6 +82,7 @@ namespace Ymir {
 		phrases [ShadowingVar] = "Identifier '%%%' is already used";
 		phrases [UnknownType] = "There is no type called '%%%'";
 		phrases [RecursiveExpansion] = "Maximum number of recursive expansions reached";
+		phrases [RecursiveInline] = "Recursive inline is impossible";
 		phrases [UndefVar] = "Undefined identifier '%%%'";
 		phrases [UndefVar2] = "Undefined identifier '%%%', maybe '%%%' was meant";
 		phrases [UninitVar] = "Variable '%%%' has no type";
