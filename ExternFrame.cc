@@ -76,7 +76,7 @@ namespace semantic {
 		Table::instance ().retInfo ().info-> isConst (true);
 	}
 
-	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams, {});
 
 	this-> _fr-> externName () = this-> _from;
 	this-> _fr-> isCVariadic () = this-> isVariadic ();
@@ -128,7 +128,7 @@ namespace semantic {
 	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	}
 
-	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams, {});
 	this-> _fr-> externName () = this-> _from;
 	this-> _fr-> isCVariadic () = this-> isVariadic ();
 	Table::instance ().quitFrame ();

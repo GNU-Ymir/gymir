@@ -66,6 +66,8 @@ namespace syntax {
 	void tuplingParams (semantic::ApplicationScore score, IPar* par);
 
 	Ymir::Tree createClosureVar ();
+
+	Ymir::Tree callInline (std::vector <tree> args);
 	
     };
 

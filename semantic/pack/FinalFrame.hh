@@ -40,6 +40,8 @@ namespace semantic {
 	static std::vector <Ymir::Tree> __contextToAdd__;
 	static Ymir::Tree __fn_decl__;
 	static Ymir::Tree __fn_closure__;
+	static std::vector <Ymir::Tree> __isInlining__;
+	static std::vector <Ymir::Tree> __endLabel__;
 	
     public:
 
@@ -61,6 +63,10 @@ namespace semantic {
 	
 	std::vector <syntax::Expression> &tmps ();
 
+	static Ymir::Tree isInlining ();
+
+	static Ymir::Tree endLabel ();
+	
 	void isForcedDelegate ();
 	
 	syntax::Block block ();	
@@ -69,6 +75,10 @@ namespace semantic {
 	
 	Ymir::Tree createClosureType ();
 
+	Ymir::Tree callInline (std::vector <tree> params);
+
+	Ymir::Tree declInlineArgs (std::vector <tree> params);
+	
 	static Ymir::Tree& currentFrame ();
 	
 	static Ymir::Tree getDeclaredType (const char * name);
@@ -78,7 +88,7 @@ namespace semantic {
 	static void declareType (std::string &name, Ymir::Tree type);
 
 	static void declareType (const char * name, Ymir::Tree type);	
-
+	
     private:
 
 	void declArguments (Ymir::Tree);

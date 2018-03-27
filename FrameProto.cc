@@ -14,12 +14,13 @@
 namespace semantic {
     using namespace syntax;    
     
-    IFrameProto::IFrameProto (std::string name, Namespace space, Symbol type, const std::vector <syntax::Var>& vars, const std::vector <syntax::Expression>& tmps) :
+    IFrameProto::IFrameProto (std::string name, Namespace space, Symbol type, const std::vector <syntax::Var>& vars, const std::vector <syntax::Expression>& tmps, std::vector <Word> attributes) :
 	_space (space),
 	_name (name),
 	_type (type),
 	_vars (vars),
 	_tmps (tmps),
+	_attributes (attributes),
 	_extern (""),
 	_fn ()
     {}
@@ -48,6 +49,10 @@ namespace semantic {
 	return this-> _tmps;
     }
 
+    std::vector <Word> & IFrameProto::attributes () {
+	return this-> _attributes;
+    }
+    
     bool IFrameProto::isDelegate () {
 	return this-> _closure.size () != 0;
     }
@@ -64,6 +69,12 @@ namespace semantic {
 	return this-> _attached;
     }
 
+    bool IFrameProto::has (std::string attrs) {
+	for (auto it : this-> _attributes)
+	    if (it == attrs) return true;
+	return false;
+    }
+    
     void IFrameProto::isForcedDelegate () {
 	this-> _isForced = true;
 	if (this-> _attached)

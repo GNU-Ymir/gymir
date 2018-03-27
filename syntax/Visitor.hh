@@ -106,7 +106,7 @@ namespace syntax {
 	MacroVar visitMacroVar ();
 	MacroToken visitMacroToken ();
 	Expression visitMacroCall (Expression left);
-	
+	std::vector <Word> visitAttributes ();
 
     private:
 	

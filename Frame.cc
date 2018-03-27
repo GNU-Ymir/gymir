@@ -25,7 +25,9 @@ namespace semantic {
     IFrame::IFrame (Namespace space, ::syntax::Function func) :
 	_function (func),
 	_space (space)
-    {}
+    {
+	if (func) this-> _attributes = func-> getAttributes ();
+    }
     
     ApplicationScore IFrame::isApplicable (::syntax::ParamList params) {
 	return this-> isApplicable (
@@ -127,7 +129,7 @@ namespace semantic {
 		Table::instance ().retInfo ().info-> isConst (false);
 	}
 	
-	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams);
+	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams, this-> _attributes);
 
 	if (!FrameTable::instance ().existsProto (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -245,7 +247,7 @@ namespace semantic {
 		else
 		    Table::instance ().retInfo ().info = ret;
 
-		auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps);
+		auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, {});
 		if (!FrameTable::instance ().existsProto (proto)) {
 		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 			Table::instance ().retInfo ().isImmutable () = true;
@@ -294,7 +296,7 @@ namespace semantic {
 	//Table::instance ().setCurrentSpace (Namespace (space, name));
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
 
-	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {});
+	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
 	
 	if (!FrameTable::instance ().existsProto (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -337,7 +339,7 @@ namespace semantic {
 	//Table::instance ().setCurrentSpace (Namespace (space, name));
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
 
-	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {});
+	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
 	
 	if (!FrameTable::instance ().existsProto (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -395,7 +397,7 @@ namespace semantic {
 			Table::instance ().retInfo ().info-> isConst (true);
 		}
 
-		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, self-> tempParams);
+		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, self-> tempParams, self-> _attributes);
 		
 		if (!FrameTable::instance ().existsProto (proto)) {
 		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
@@ -486,8 +488,18 @@ namespace semantic {
 	return this-> _function-> getIdent ();
     }
 
+    bool IFrame::has (std::string attrs) {
+	for (auto it : this-> _attributes)
+	    if (it == attrs) return true;
+	return NULL;
+    }
+    
     std::vector <syntax::Expression> & IFrame::templateParams () {
 	return this-> tempParams;
+    }
+
+    std::vector <Word> & IFrame::attributes () {
+	return this-> _attributes;
     }
     
     std::string IFrame::toString () {

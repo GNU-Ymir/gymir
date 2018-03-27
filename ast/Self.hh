@@ -14,7 +14,7 @@ namespace syntax {
     public:
 
 	ISelf (Word ident, Block block) :
-	    IFunction (ident, {}, {}, NULL, block)
+	    IFunction (ident, {}, {}, {}, NULL, block)
 	{}
 
 	void declare () override;
@@ -35,7 +35,7 @@ namespace syntax {
     public:
 
 	IDestSelf (Word ident, Block block) :
-	    IFunction ({ident, "~" + ident.getStr ()}, {}, {}, NULL, block)
+	    IFunction ({ident, "~" + ident.getStr ()}, {}, {}, {}, NULL, block)
 	{}
 
 	void declare () override;

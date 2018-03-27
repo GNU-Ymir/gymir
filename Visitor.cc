@@ -412,7 +412,7 @@ namespace syntax {
 	    type = visitType ();
 	    type-> deco = deco;
 	} else this-> lex.rewind ();
-	return new (Z0)  IFunction (ident, params, {}, NULL, visitBlock ());
+	return new (Z0)  IFunction (ident, {}, params, {}, NULL, visitBlock ());
     }
 
 
@@ -624,10 +624,31 @@ namespace syntax {
 	return expr;
     }
 
+    std::vector <Word> Visitor::visitAttributes () {
+	std::vector <Word> attrs;
+	auto beg = this-> lex.next ();
+	if (beg == Token::LACC) {
+	    while (true) {
+		attrs.push_back (visitIdentifiant ());
+		beg = this-> lex.next ({Token::RACC, Token::COMA});
+		if (beg == Token::RACC) break;
+	    }	    
+	} else {
+	    this-> lex.rewind ();
+	    attrs.push_back (visitIdentifiant ());
+	}
+	return attrs;
+    }
+    
     /**
        function := 'def' Identifiant ('(' var (',') var)* ')' )? '(' (var (',' var)*)? ')' (':' type)? '{' block '}'
     */
     Function Visitor::visitFunction () {
+	std::vector <Word> attrs;
+	auto next = this-> lex.next ();
+	if (next == Token::AT) attrs = visitAttributes ();
+	else this-> lex.rewind ();
+	
 	auto ident = visitIdentifiant ();
 	bool templates = false;
 	std::vector<Var> exps;
@@ -687,9 +708,9 @@ namespace syntax {
 	    } 
 	    auto type = visitType ();
 	    type-> deco = deco;
-	    return new (Z0)  IFunction (ident, type, exps, temps, test, visitBlock ());
+	    return new (Z0)  IFunction (ident, attrs, type, exps, temps, test, visitBlock ());
 	} else this-> lex.rewind ();	
-	return new (Z0)  IFunction (ident, exps, temps, test, visitBlock ());
+	return new (Z0)  IFunction (ident, attrs, exps, temps, test, visitBlock ());
     }
 
     Declaration Visitor::visitExtern () {

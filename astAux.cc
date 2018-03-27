@@ -87,22 +87,24 @@ namespace syntax {
     }
     
     
-    IFunction::IFunction (Word ident, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
+    IFunction::IFunction (Word ident, const std::vector <Word> & attrs, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
 	ident (ident),
 	type (NULL),
 	params (params),
 	tmps (tmps),
+	attrs (attrs),
 	block (block),
-	test (test)	    
+	test (test)
     {
 	this-> is_public (true);
     }    
 	
-    IFunction::IFunction (Word ident, Var type, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
+    IFunction::IFunction (Word ident, const std::vector <Word> & attrs, Var type, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
 	ident (ident),
 	type (type),
 	params (params),
 	tmps (tmps),
+	attrs (attrs),
 	block (block),
 	test (test)	    
     {
@@ -132,6 +134,10 @@ namespace syntax {
 	return this-> tmps;
     }
 
+    std::vector <Word> & IFunction::getAttributes () {
+	return this-> attrs;
+    }
+    
     Expression IFunction::getTest () {
 	return this-> test;
     }
@@ -1587,6 +1593,7 @@ namespace syntax {
     
     IConstructor::IConstructor (Word token, std::vector <Var> params, Block bl) :
 	IFunction (Word (token.getLocus(), token.getStr () + "__cst__"),
+		   {},
 		   params,
 		   {}, NULL, bl)	    	    
     {

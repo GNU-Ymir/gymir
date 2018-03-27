@@ -345,6 +345,11 @@ namespace syntax {
 	);
     }
     
+    Ymir::Tree IPar::callInline (std::vector <tree> args) {
+	auto frame = this-> _score-> proto-> attached ();
+	return frame-> callInline (args);
+    }
+
     Ymir::Tree IPar::toGeneric () {
 	if (this-> info-> isImmutable ()) {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
@@ -360,7 +365,6 @@ namespace syntax {
 		this-> params
 	    );
 	} else {	    
-	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
 	    
 	    if (this-> _score-> proto-> isCVariadic ()) {
@@ -370,14 +374,17 @@ namespace syntax {
 	    } else if (this-> _score-> proto-> closure ().size () != 0) {
 		auto closureVar = createClosureVar ();
 		args.insert (args.begin (), closureVar.getTree ());
-	    }
+	    } else if (this-> _score-> proto-> has (Keys::INLINE)) {
+		return this-> callInline (args);
+	    } 
 	    
+	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 	    return build_call_array_loc (this-> token.getLocus (),
 					 this-> _score-> ret-> toGeneric ().getTree (),
-					 fn.getTree (),
+					     fn.getTree (),
 					 args.size (),
 					 args.data ()
-	    );
+	    );	
 	}
     }
     
@@ -691,7 +698,11 @@ namespace syntax {
 
     Ymir::Tree IReturn::toGeneric () {
 	Ymir::Tree res;
-	auto tlvalue = DECL_RESULT (IFinalFrame::currentFrame ().getTree ());
+	Ymir::Tree tlvalue;
+	if (IFinalFrame::endLabel ().isNull ())
+	    tlvalue = DECL_RESULT (IFinalFrame::currentFrame ().getTree ());
+	else tlvalue = IFinalFrame::isInlining ();
+	
 	if (this-> elem != NULL) {
 	    this-> caster-> isConst (false);
 	    if (this-> caster-> unopFoo) {
@@ -709,12 +720,18 @@ namespace syntax {
 		);
 	    }
 	}
-
+	
 	auto set_result = this-> elem != NULL ?
 	    buildTree (MODIFY_EXPR, this-> token.getLocus (), void_type_node, tlvalue, res) :
 	    Ymir::Tree ();
-
-	return Ymir::buildTree (RETURN_EXPR, this-> token.getLocus (), void_type_node, set_result);
+	if (IFinalFrame::endLabel ().isNull ()) 
+	    return Ymir::buildTree (RETURN_EXPR, this-> token.getLocus (), void_type_node, set_result);
+	else {
+	    Ymir::TreeStmtList list;
+	    list.append (set_result);
+	    list.append (Ymir::buildTree (GOTO_EXPR, this-> token.getLocus (), void_type_node, IFinalFrame::endLabel ()));
+	    return list.getTree ();
+	}
     }
 
     Ymir::Tree IFuncPtr::toGeneric () {

@@ -48,7 +48,8 @@ namespace semantic {
 	bool _isVariadic = false;
 	
 	std::vector <::syntax::Expression> tempParams;
-
+	std::vector <Word> _attributes;
+	
     public:
 
 	IFrame (Namespace space, ::syntax::Function func);
@@ -68,7 +69,7 @@ namespace semantic {
 	static std::vector <::syntax::Var> copyParams (const std::vector <::syntax::Var> &);
 	
 	static std::vector <::syntax::Var> computeParams (const std::vector<::syntax::Var> &);
-
+	
 	virtual Namespace& space ();
 
 	virtual int& currentScore ();
@@ -93,6 +94,8 @@ namespace semantic {
 
 	std::vector <::syntax::Expression> & templateParams ();
 
+	std::vector <Word> & attributes ();
+	
 	virtual std::vector <InfoType> getParamTypes ();
 
 	virtual InfoType getRetType ();
@@ -103,6 +106,8 @@ namespace semantic {
 	
 	virtual Word ident ();
 
+	bool has (std::string attrs);
+	
 	template <typename T>
 	bool is () {
 	    return strcmp (this-> getId (), T::id ()) == 0;

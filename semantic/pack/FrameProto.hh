@@ -40,6 +40,7 @@ namespace semantic {
 	std::vector <::syntax::Var> _vars;	
 	std::vector <::syntax::Var> _closure;
 	std::vector <::syntax::Expression> _tmps;
+	std::vector <Word> _attributes;
 	std::string _extern;
 	Ymir::Tree _fn;
 	bool _isCVariadic;
@@ -48,7 +49,7 @@ namespace semantic {
 	
     public:
 
-	IFrameProto (std::string, Namespace, Symbol, const std::vector<syntax::Var>&, const std::vector<syntax::Expression>&);
+	IFrameProto (std::string, Namespace, Symbol, const std::vector<syntax::Var>&, const std::vector<syntax::Expression>&, std::vector <Word> attrs);
 
 	std::string& name ();
 
@@ -61,6 +62,8 @@ namespace semantic {
 	std::vector <syntax::Var>& closure ();
 
 	std::vector <syntax::Expression>& tmps ();
+
+	std::vector <Word> & attributes ();
 	
 	std::string& externName (); 
 	
@@ -72,6 +75,8 @@ namespace semantic {
 	
 	FinalFrame & attached ();
 
+	bool has (std::string attrs);
+	
 	void isForcedDelegate ();
 
 	Ymir::Tree toGeneric ();

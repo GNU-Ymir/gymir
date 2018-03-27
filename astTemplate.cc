@@ -299,7 +299,7 @@ namespace syntax {
 	    tmps.push_back (it-> templateExpReplace (values));
 
 	auto block = (Block) this-> block-> templateReplace (values);
-	auto ret = new (Z0)  IFunction (this-> ident, type, params, tmps, test, block);
+	auto ret = new (Z0)  IFunction (this-> ident, this-> attrs, type, params, tmps, test, block);
 	ret-> is_public (this-> is_public ());
 	return ret;
     }
