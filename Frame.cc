@@ -235,8 +235,9 @@ namespace semantic {
 	//Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
 	struct Exit {
 	    Namespace last;
+	    Frame self;
 
-	    Exit () : last (Table::instance ().templateNamespace ()) {
+	    Exit (Frame self) : last (Table::instance ().templateNamespace ()), self (self) {
 	    }
 	    
 	    FrameProto operator () (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
@@ -246,8 +247,8 @@ namespace semantic {
 		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 		else
 		    Table::instance ().retInfo ().info = ret;
-
-		auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, {});
+		
+		auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, self-> _attributes);
 		if (!FrameTable::instance ().existsProto (proto)) {
 		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 			Table::instance ().retInfo ().isImmutable () = true;
@@ -288,7 +289,7 @@ namespace semantic {
 	    
 	};
 
-	Exit ex;
+	Exit ex (this);
 	return ex (name, space, from, ret, params, block, tmps, isVariadic);	
     }
 

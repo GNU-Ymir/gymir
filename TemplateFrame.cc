@@ -205,6 +205,7 @@ namespace semantic {
 	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> _space, func);
 	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> _space, func);
 	    else ret = new (Z0)  IPureFrame (this-> _space, func);
+	    ret-> attributes () = this-> attributes ();
 	    
 	    ret-> currentScore () = this-> currentScore () + res.score;	    
 	    ret-> templateParams () = this-> templateParams ();
@@ -213,6 +214,8 @@ namespace semantic {
 	} else {
 	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
 	    auto aux = new (Z0)  ITemplateFrame (this-> _space, func);
+	    aux-> attributes () = this-> attributes ();
+	    
 	    aux-> templateParams () = this-> templateParams ();
 	    aux-> templateParams ().insert (aux-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
 	    aux-> _currentScore = this-> currentScore () + res.score;
