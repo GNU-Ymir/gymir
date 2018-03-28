@@ -276,7 +276,7 @@ namespace syntax {
 	    params.push_back (it-> templateExpReplace (tmps)-> to<IVar> ());
 	}
 	
-	auto ret = new (Z0) IStruct (this-> ident, this-> tmps, params);
+	auto ret = new (Z0) IStruct (this-> ident, this-> tmps, params, this-> _udas);
 	ret-> is_public (this-> is_public ());
 	return ret;
     }

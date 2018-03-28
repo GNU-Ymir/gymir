@@ -4,6 +4,7 @@
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/semantic/value/StringValue.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace semantic {
 
@@ -85,12 +86,13 @@ namespace semantic {
 
     }
        
-    IStructCstInfo::IStructCstInfo (Word locId, Namespace space, string name, vector <Expression> &tmps) :
+    IStructCstInfo::IStructCstInfo (Word locId, Namespace space, string name, vector <Expression> &tmps, vector <Word> attrs) :
 	IInfoType (true),	
 	space (space),
 	_locId (locId),
 	name (name),
-	tmps (tmps)       
+	tmps (tmps),
+	_udas (attrs)
     {}
 
     bool IStructCstInfo::isSame (InfoType other) {
@@ -187,7 +189,7 @@ namespace semantic {
 	    } else return NULL;
 	}
 	
-	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas);
 	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -233,7 +235,7 @@ namespace semantic {
 
 	Table::instance ().setCurrentSpace (currentSpace);
 	Table::instance ().templateNamespace () = last;
-	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas);
 	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -267,7 +269,7 @@ namespace semantic {
 	std::vector <std::string> attribs;
 	auto last = Table::instance ().templateNamespace ();
 	auto currentSpace = Table::instance ().space ();
-	this-> _info = new (Z0) IStructInfo (this, this-> space, this-> name);
+	this-> _info = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas);
 	inProgress [name] = this-> _info;
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    Table::instance ().setCurrentSpace (this-> space);
@@ -333,7 +335,7 @@ namespace semantic {
 	}
 
 	std::vector <syntax::Expression> ignore;
-	auto ret = new (Z0) IStructCstInfo (this-> _locId, this-> space, this-> name, ignore);
+	auto ret = new (Z0) IStructCstInfo (this-> _locId, this-> space, this-> name, ignore, this-> _udas);
 	ret-> params = params;	
 	//ret-> tmpsDone = getValues (res.elements, this-> tmps);
 	std::vector <syntax::Expression> tmpsDone = TemplateSolver::instance ().solved (this-> tmps, res);
@@ -412,6 +414,10 @@ namespace semantic {
 	return "";
     }
 
+    std::vector<Word> & IStructCstInfo::udas () {
+	return this-> _udas;
+    }
+    
     bool IStructCstInfo::isType () {
 	return true;
     }
@@ -432,11 +438,12 @@ namespace semantic {
 	return this-> _locId;
     }
     
-    IStructInfo::IStructInfo (StructCstInfo id, Namespace space, std::string name) :
+    IStructInfo::IStructInfo (StructCstInfo id, Namespace space, std::string name, vector <Word> udas) :
 	IInfoType (true),
 	space (space),
 	name (name),
-	_id (id)
+	_id (id),
+	_udas (udas)
     {}
 
     bool IStructInfo::isSame (InfoType other) {
@@ -492,7 +499,7 @@ namespace semantic {
     }
     
     InfoType IStructInfo::onClone () {
-	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name, this-> _udas);
 	ret-> setAttribs (this-> attrs);
 	for (auto it : this-> types) {
 	    ret-> types.push_back (it);
@@ -526,7 +533,7 @@ namespace semantic {
 	    } else return NULL;
 	}
 
-	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name);
+	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name, this-> _udas);
 	ret-> isConst (this-> isConst ());
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -678,6 +685,10 @@ namespace semantic {
 	return this-> onlyNameTypeString ();	
     }
 
+    vector <Word> & IStructInfo::udas () {
+	return this-> _udas;
+    }
+    
     Namespace& IStructInfo::getSpace () {
 	return this-> space;
     }
@@ -754,6 +765,12 @@ namespace semantic {
 	return this-> types;
     }
 
+    bool IStructInfo::has (std::string attr) {
+	for (auto it : this-> _udas)
+	    if (it == attr) return true;
+	return false;
+    }
+    
     InfoType IStructInfo::StringOf () {
 	auto str = new (Z0) IStringInfo (true);
 	str-> value () = new (Z0)  IStringValue (this-> onlyNameTypeString ().c_str ());
@@ -764,11 +781,11 @@ namespace semantic {
 	IInfoType::printConst (false);
 	auto name = this-> innerTypeString ();
 	IInfoType::printConst (true);
-	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());	
+	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (str_type_node.isNull ()) {
 	    if (this-> types.size () != 0) {
-		str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs);
-	    } else str_type_node = Ymir::makeTuple (name, {new (Z0) ICharInfo (true)});
+		str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs, this-> has (Keys::PACKED));
+	    } else str_type_node = Ymir::makeTuple (name, {new (Z0) ICharInfo (true)}, {"_"});
 	    IFinalFrame::declareType (name, str_type_node);
 	}
 	return str_type_node;

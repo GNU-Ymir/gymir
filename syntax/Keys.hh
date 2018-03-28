@@ -70,4 +70,5 @@ struct Keys {
     static std::string  MACRO_BLOCK;
     static std::string  MACRO_TOKEN;
     static std::string  INLINE;
+    static std::string  PACKED;
 };

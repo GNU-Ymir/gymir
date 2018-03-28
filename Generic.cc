@@ -60,12 +60,15 @@ namespace Ymir {
 	return record_type;
     }
 
-    Tree makeTuple (std::string name, const std::vector <InfoType>& types, const std::vector<std::string> & attrs) {
+    Tree makeTuple (std::string name, const std::vector <InfoType>& types, const std::vector<std::string> & attrs, bool packed) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);
+	auto size = 0;
 	for (uint i = 0 ; i < types.size () ; i++) {
 	    tree ident = get_identifier (attrs [i].c_str ());
 	    tree type = types [i]-> toGeneric ().getTree ();
+	    size += TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type));
+	    
 	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
 	    DECL_CONTEXT (field) = record_type;
 
@@ -75,9 +78,18 @@ namespace Ymir {
 	}
 
 	TYPE_NAME (record_type) = get_identifier (name.c_str ());
-	TREE_CHAIN (fields_last) = NULL_TREE;
+	TREE_CHAIN (fields_last) = NULL_TREE;	
 	TYPE_FIELDS (record_type) = fields_begin;
 	layout_type (record_type);
+	
+	if (packed) {
+	    TYPE_SIZE (record_type) = bitsize_int (size * BITS_PER_UNIT);
+	    TYPE_SIZE_UNIT (record_type) = size_int (size);
+	    TYPE_PACKED (record_type) = 1;
+	    SET_TYPE_ALIGN (record_type, 1 * BITS_PER_UNIT);
+	    compute_record_mode (record_type);	
+	}		
+	
 	return record_type;
     }
 
@@ -101,7 +113,11 @@ namespace Ymir {
 	TYPE_NAME (record_type) = get_identifier (name.c_str ());
 	TREE_CHAIN (fields_last) = NULL_TREE;
 	TYPE_FIELDS (record_type) = fields_begin;
+	SET_TYPE_ALIGN (record_type, 1 * BITS_PER_UNIT);
+	TYPE_PACKED (record_type) = 1;
+	compute_record_mode (record_type);	
 	layout_type (record_type);
+	
 	return record_type;
     }
 

@@ -67,3 +67,4 @@ std::string     Keys::MACRO_EXPR      = "expr";
 std::string     Keys::MACRO_BLOCK     = "block";
 std::string     Keys::MACRO_TOKEN     = "token";
 std::string     Keys::INLINE    = "inline";
+std::string     Keys::PACKED    = "packed";

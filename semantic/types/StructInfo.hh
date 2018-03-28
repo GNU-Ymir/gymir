@@ -28,6 +28,8 @@ namespace semantic {
 	std::vector <syntax::Expression> tmps;
 
 	std::vector <syntax::Expression> tmpsDone;
+
+	std::vector <Word> _udas;
 	
 	StructInfo _info;
 	
@@ -35,7 +37,7 @@ namespace semantic {
 	
     public:
 
-	IStructCstInfo (Word locId, Namespace space, std::string name, std::vector <syntax::Expression> & tmps);
+	IStructCstInfo (Word locId, Namespace space, std::string name, std::vector <syntax::Expression> & tmps, std::vector <Word> attrs);
 
 	bool isSame (InfoType) override;
 
@@ -53,6 +55,8 @@ namespace semantic {
 
 	InfoType TempOp (const std::vector<::syntax::Expression> &) override;
 
+	std::vector <Word> &udas ();
+	
 	std::string typeString () override;
 
 	std::string onlyNameTypeString ();
@@ -98,13 +102,14 @@ namespace semantic {
 	std::vector <InfoType> types;
 	std::vector <std::string> attrs;
 	std::vector <syntax::Expression> tmpsDone;
+	std::vector <Word> _udas;
 	IStructCstInfo* _id = NULL;
 	
 	friend IStructCstInfo;
 
     public:
 	
-	IStructInfo (IStructCstInfo* from, Namespace space, std::string name);
+	IStructInfo (IStructCstInfo* from, Namespace space, std::string name, std::vector <Word> udas);
 
 	bool isSame (InfoType) override;
 	
@@ -152,6 +157,10 @@ namespace semantic {
 
 	std::vector <InfoType> & getTypes ();
 
+	std::vector <Word> &udas ();
+
+	bool has (std::string attr);
+	
 	InfoType StringOf () override;
 	
 	static const char* id () {

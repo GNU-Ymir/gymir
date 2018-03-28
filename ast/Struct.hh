@@ -13,10 +13,12 @@ namespace syntax {
 	Word ident;
 	std::vector<Var> params;
 	std::vector<Expression> tmps;
-
+	std::vector <Word> _udas;
+	
     public:
 
-	IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params);
+	IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas);
+	
 	void declare () override;
 	
 	void declare (semantic::Module) override;

@@ -536,7 +536,12 @@ namespace syntax {
 	Word word = this-> lex.next (), ident;
 	std::vector <Var> exps;
 	std::vector <Expression> temps;
-
+	std::vector <Word> udas;
+	if (word == Token::AT) {
+	    udas = visitAttributes ();
+	    word = this-> lex.next ();
+	}
+	
 	if (word == Token::LPAR) {
 	    temps = visitTemplateStruct ();
 	    word = this-> lex.next ({Token::PIPE});
@@ -571,7 +576,7 @@ namespace syntax {
 	    visitIdentifiant ();
 	    this-> lex.next ({Token::COMA});    
 	}
-	return new (Z0)  IStruct (ident, temps, exps);
+	return new (Z0)  IStruct (ident, temps, exps, udas);
     }
 
     Enum Visitor::visitEnum () {
