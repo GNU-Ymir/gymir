@@ -1069,6 +1069,20 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::undefUda (const Word& ident, const Word & uda) {
+	std::string msg = format (getString (UndefUda),
+				  YELLOW, uda.getStr ().c_str (), RESET,
+				  YELLOW, ident.getStr ().c_str (), RESET);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, uda);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::templateInferType (const Word& token, const Word& func) {
 	std::string msg = format (getString (TemplateInferType));
 	std::string msg2 = format (getString (TemplateInferTypeNote));

@@ -72,4 +72,7 @@ struct Keys {
     static std::string  MACRO_TOKEN;
     static std::string  INLINE;
     static std::string  PACKED;
+    static std::string  SAFE;
+    static std::string  NOGC;
+    static std::string  FUNCTIONAL;
 };

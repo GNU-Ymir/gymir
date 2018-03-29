@@ -69,3 +69,7 @@ std::string     Keys::MACRO_BLOCK     = "block";
 std::string     Keys::MACRO_TOKEN     = "token";
 std::string     Keys::INLINE    = "inline";
 std::string     Keys::PACKED    = "packed";
+std::string     Keys::SAFE      = "safe";
+std::string     Keys::NOGC      = "nogc";
+std::string     Keys::FUNCTIONAL = "fnal";
+

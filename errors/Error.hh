@@ -61,6 +61,7 @@ namespace Ymir {
 	    UnknownType,
 	    UndefVar,
 	    UndefVar2,
+	    UndefUda,
 	    UninitVar,
 	    UndefinedOp,
 	    UndefinedOpUnary,
@@ -225,6 +226,8 @@ namespace Ymir {
 	static void undefVar (const Word&, semantic::Symbol);
 
 	static void undefAttr (const Word&, semantic::Symbol, syntax::Var);
+
+	static void undefUda (const Word&, const Word&);
 	
 	static void uninitVar (const Word&);
 

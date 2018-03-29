@@ -28,6 +28,7 @@ namespace syntax {
     }
     
     void IFunction::declare ()  {
+	if (!this-> verifUdas ()) return;
 	if (this-> ident == Keys::MAIN) {
 	    auto it = Table::instance ().get (this-> ident.getStr ());
 	    if (it != NULL) {
@@ -50,7 +51,8 @@ namespace syntax {
 	}
     }
 
-    void IFunction::declare (Module mod)  {	
+    void IFunction::declare (Module mod)  {
+	if (!this-> verifUdas ()) return;
 	if (this-> ident == Keys::MAIN) {
 	    Ymir::Error::mainInModule (this-> ident);
 	    return;
@@ -77,6 +79,7 @@ namespace syntax {
     }
 
     void IFunction::declareAsExtern (semantic::Module mod) {
+	if (!this-> verifUdas ()) return;
 	if (this-> ident != Keys::MAIN) {
 	    auto fr = verifyPureExtern (mod-> space ());
 	    auto space = mod-> space ();
@@ -96,8 +99,21 @@ namespace syntax {
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);	
 	}
-    }
+    } 
 
+    bool IFunction::verifUdas () {
+	for (auto it : this-> attrs) {
+	    if (it != Keys::INLINE &&
+		it != Keys::SAFE &&
+		it != Keys::NOGC &&
+		it != Keys::FUNCTIONAL) {
+		Ymir::Error::undefUda (this-> ident, it);
+		return false;
+	    }
+	}
+	return true;
+    }
+   
     Frame IFunction::verifyPureExtern (Namespace space) {
 	if (this-> tmps.size () != 0) {
 	    auto isPure = verifyTemplates ();
@@ -540,6 +556,7 @@ namespace syntax {
     }
 
     void IStruct::declare () {
+	if (!verifUdas ()) return;	
 	auto exist = Table::instance ().getLocal (this-> ident.getStr ());
 	if (exist) {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
@@ -558,6 +575,7 @@ namespace syntax {
     }
 
     void IStruct::declare (semantic::Module mod) {
+	if (!verifUdas ()) return;
 	auto exist = mod-> get (this-> ident.getStr ());
 	if (exist) {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
@@ -584,6 +602,7 @@ namespace syntax {
     }
     
     void IStruct::declareAsExtern (Module mod) {
+	if (!verifUdas ()) return;
 	auto exist = mod-> get (this-> ident.getStr ());
 	if (exist) {
 	    Ymir::Error::shadowingVar (this-> ident, exist-> sym);
@@ -606,6 +625,19 @@ namespace syntax {
 	    }
 	}
     }
+    
+    bool IStruct::verifUdas () {
+	for (auto it : this-> _udas) {
+	    if (it != Keys::PACKED ||
+		(it == Keys::PACKED && this-> _isUnion)
+	    ) {
+		Ymir::Error::undefUda (this-> ident, it);
+		return false;
+	    }
+	}
+	return true;
+    }
+
     
     void IEnum::declare () {
 	auto exist = Table::instance ().getLocal (this-> ident.getStr ());

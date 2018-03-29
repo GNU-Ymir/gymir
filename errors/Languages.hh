@@ -126,6 +126,7 @@ namespace Ymir {
 		phrases [NotAMacro] = "%%% do not identify a macro";
 		phrases [MacroResolution] = "Macro resolution %%% failed";
 		phrases [NoLet] = "Malformed statement %%%";
+		phrases [UndefUda] = "Undefined attribute %%% for %%%";
 		init = true;
 	    } 
 	    return phrases;

@@ -72,6 +72,7 @@ namespace syntax {
 	
 	semantic::Frame verifyPure (semantic::Namespace);
 	semantic::Frame verifyPureExtern (semantic::Namespace);
+	bool verifUdas ();
 	Proto toProto ();
 	bool verifyTemplates ();
 	

@@ -31,6 +31,11 @@ namespace syntax {
 	void print (int nb = 0) override ;
 	
 	virtual ~IStruct ();
+
+    private:
+
+	bool verifUdas ();
+	
     };
 
     typedef IStruct* Struct;
