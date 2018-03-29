@@ -216,6 +216,7 @@ namespace syntax {
     	else if (token == Keys::IMPORT) return visitImport ();
     	else if (token == Keys::EXTERN) return visitExtern ();
     	else if (token == Keys::STRUCT) return visitStruct ();
+	else if (token == Keys::UNION) return visitStruct (true);
     	else if (token == Keys::ENUM) return visitEnum ();
     	else if (token == Keys::STATIC) return visitGlobal ();
 	else if (token == Keys::IMMUTABLE) return visitGlobalImut ();
@@ -532,7 +533,7 @@ namespace syntax {
 	return expr;
     }
 
-    Struct Visitor::visitStruct () {
+    Struct Visitor::visitStruct (bool isUnion) {
 	Word word = this-> lex.next (), ident;
 	std::vector <Var> exps;
 	std::vector <Expression> temps;
@@ -576,7 +577,7 @@ namespace syntax {
 	    visitIdentifiant ();
 	    this-> lex.next ({Token::COMA});    
 	}
-	return new (Z0)  IStruct (ident, temps, exps, udas);
+	return new (Z0)  IStruct (ident, temps, exps, udas, isUnion);
     }
 
     Enum Visitor::visitEnum () {
@@ -1142,6 +1143,7 @@ namespace syntax {
 		else if (next == Keys::USE) decls.push_back (visitUse ());
 		else if (next == Keys::EXTERN) decls.push_back (visitExtern ());
 		else if (next == Keys::STRUCT) decls.push_back (visitStruct ());
+		else if (next == Keys::UNION) decls.push_back (visitStruct (true));
 		else if (next == Token::LACC) {
 		    this-> lex.rewind ();
 		    insts.push_back (visitBlock ());		

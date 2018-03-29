@@ -1419,11 +1419,12 @@ namespace syntax {
     }
     
 
-    IStruct::IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas) :
+    IStruct::IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas, bool isUnion) :
 	ident (ident),
 	params (params),
 	tmps (tmps),
-	_udas (udas)
+	_udas (udas),
+	_isUnion (isUnion)
     {
 	this-> isPublic = true;
     }

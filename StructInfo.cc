@@ -31,6 +31,27 @@ namespace semantic {
 	    
 	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
 	}
+	
+	Tree InstCallUnion (Word loc, InfoType ret, Expression, Expression paramsExp) {
+	    ParamList params = paramsExp-> to <IParamList> ();
+	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
+	    Ymir::TreeStmtList list;
+	    StructInfo info = ret-> to <IStructInfo> ();
+	    auto aux = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), ret-> toGeneric ());
+	    
+	    for (auto i : Ymir::r (0, info-> getAttribs ().size ())) {
+		auto &it = info-> getAttribs () [i];
+		auto attr = getField (loc.getLocus (), aux, it);
+		if ((Tree {args [0]}).getType () == attr.getType ()) {
+		    list.append (buildTree (
+			MODIFY_EXPR, loc.getLocus (), attr.getType (), attr, args [0]
+		    ));
+		    break;
+		}
+	    }
+	    
+	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
+	}
 
 	Tree InstCast (Word, InfoType, Expression elem, Expression) {
 	    return elem-> toGeneric ();
@@ -86,13 +107,14 @@ namespace semantic {
 
     }
        
-    IStructCstInfo::IStructCstInfo (Word locId, Namespace space, string name, vector <Expression> &tmps, vector <Word> attrs) :
+    IStructCstInfo::IStructCstInfo (Word locId, Namespace space, string name, vector <Expression> &tmps, vector <Word> attrs, bool isUnion) :
 	IInfoType (true),	
 	space (space),
 	_locId (locId),
 	name (name),
 	tmps (tmps),
-	_udas (attrs)
+	_udas (attrs),
+	_isUnion (isUnion)
     {}
 
     bool IStructCstInfo::isSame (InfoType other) {
@@ -161,12 +183,90 @@ namespace semantic {
 	return NULL;
     }
 
+    ApplicationScore IStructCstInfo::CallOpUnion (Word token, syntax::ParamList params) {
+	if (params-> getParams ().size () != 1) return NULL;
+
+	std::vector <InfoType> types;
+	std::vector <std::string> attribs;
+	bool done = false;
+	auto score = new (Z0) IApplicationScore (token);
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    InfoType info = this-> params [it]-> getType ();
+	    if (info == NULL) return NULL;
+	    types.push_back (info);
+	    attribs.push_back (this-> params [it]-> token.getStr ());
+
+	    if (!done) {
+		auto type = params-> getParams () [0]-> info-> type-> CompOp (info);
+		if (type) type = type-> ConstVerif (info);
+		if (type) {
+		    type-> isConst (info-> isConst ());
+		    score-> score += 1;
+		    score-> treat.push_back (type);
+		    done = true;
+		} 
+	    }	    
+	}
+
+	if (!done) return NULL;
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, true);
+	ret-> isConst (false);
+	ret-> setTypes (types);
+	ret-> setAttribs (attribs);
+	ret-> setTmps (this-> tmpsDone);
+	
+	ret-> multFoo = &StructUtils::InstCallUnion;	
+	score-> dyn = true;
+	score-> ret = ret;
+	return score;
+    }
+    
+    ApplicationScore IStructCstInfo::CallOpUnion (Word token, const std::vector <InfoType> & params) {
+	if (this-> params.size () != 1) return NULL;
+
+	std::vector <InfoType> types;
+	std::vector <std::string> attribs;
+	
+	bool done = false;
+	auto score = new (Z0) IApplicationScore (token);
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    InfoType info = this-> params [it]-> getType ();
+	    if (info == NULL) return NULL;
+	    types.push_back (info);
+	    attribs.push_back (this-> params [it]-> token.getStr ());
+
+	    if (!done) {
+		auto type = params [0]-> CompOp (info);
+		if (type) type = type-> ConstVerif (info);
+		if (type) {
+		    type-> isConst (info-> isConst ());
+		    score-> score += 1;
+		    score-> treat.push_back (type);
+		    done = true;
+		} 
+	    }	    
+	}
+
+	if (!done) return NULL;
+	
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, true);
+	ret-> isConst (false);
+	ret-> setTypes (types);
+	ret-> setAttribs (attribs);
+	ret-> setTmps (this-> tmpsDone);
+	
+	ret-> multFoo = &StructUtils::InstCallUnion;	
+	score-> dyn = true;
+	score-> ret = ret;
+	return score;
+    }
     
     ApplicationScore IStructCstInfo::CallOp (Word token, syntax::ParamList params) {
 	if (this-> tmps.size () != 0) {
 	    return NULL;
 	}
 	
+	if (this-> _isUnion) return CallOpUnion (token, params);
 	if (params-> getParams ().size () != this-> params.size ())
 	    return NULL;
 
@@ -189,7 +289,7 @@ namespace semantic {
 	    } else return NULL;
 	}
 	
-	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas);
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, this-> _isUnion);
 	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -235,7 +335,7 @@ namespace semantic {
 
 	Table::instance ().setCurrentSpace (currentSpace);
 	Table::instance ().templateNamespace () = last;
-	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas);
+	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, this-> _isUnion);
 	ret-> isConst (false);
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -269,7 +369,7 @@ namespace semantic {
 	std::vector <std::string> attribs;
 	auto last = Table::instance ().templateNamespace ();
 	auto currentSpace = Table::instance ().space ();
-	this-> _info = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas);
+	this-> _info = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, this-> _isUnion);
 	inProgress [name] = this-> _info;
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    Table::instance ().setCurrentSpace (this-> space);
@@ -335,7 +435,7 @@ namespace semantic {
 	}
 
 	std::vector <syntax::Expression> ignore;
-	auto ret = new (Z0) IStructCstInfo (this-> _locId, this-> space, this-> name, ignore, this-> _udas);
+	auto ret = new (Z0) IStructCstInfo (this-> _locId, this-> space, this-> name, ignore, this-> _udas, this-> _isUnion);
 	ret-> params = params;	
 	//ret-> tmpsDone = getValues (res.elements, this-> tmps);
 	std::vector <syntax::Expression> tmpsDone = TemplateSolver::instance ().solved (this-> tmps, res);
@@ -438,12 +538,13 @@ namespace semantic {
 	return this-> _locId;
     }
     
-    IStructInfo::IStructInfo (StructCstInfo id, Namespace space, std::string name, vector <Word> udas) :
+    IStructInfo::IStructInfo (StructCstInfo id, Namespace space, std::string name, vector <Word> udas, bool isUnion) :
 	IInfoType (true),
 	space (space),
 	name (name),
 	_id (id),
-	_udas (udas)
+	_udas (udas),
+	_isUnion (isUnion)
     {}
 
     bool IStructInfo::isSame (InfoType other) {
@@ -499,7 +600,7 @@ namespace semantic {
     }
     
     InfoType IStructInfo::onClone () {
-	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name, this-> _udas);
+	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name, this-> _udas, this-> _isUnion);
 	ret-> setAttribs (this-> attrs);
 	for (auto it : this-> types) {
 	    ret-> types.push_back (it);
@@ -533,7 +634,7 @@ namespace semantic {
 	    } else return NULL;
 	}
 
-	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name, this-> _udas);
+	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name, this-> _udas, this-> _isUnion);
 	ret-> isConst (this-> isConst ());
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
@@ -784,7 +885,9 @@ namespace semantic {
 	auto str_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (str_type_node.isNull ()) {
 	    if (this-> types.size () != 0) {
-		str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs, this-> has (Keys::PACKED));
+		if (this-> _isUnion)
+		    str_type_node = Ymir::makeUnion (name, this-> types, this-> attrs);
+		else str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs, this-> has (Keys::PACKED));
 	    } else str_type_node = Ymir::makeTuple (name, {new (Z0) ICharInfo (true)}, {"_"});
 	    IFinalFrame::declareType (name, str_type_node);
 	}

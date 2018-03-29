@@ -30,6 +30,8 @@ namespace semantic {
 	std::vector <syntax::Expression> tmpsDone;
 
 	std::vector <Word> _udas;
+
+	bool _isUnion;
 	
 	StructInfo _info;
 	
@@ -37,7 +39,7 @@ namespace semantic {
 	
     public:
 
-	IStructCstInfo (Word locId, Namespace space, std::string name, std::vector <syntax::Expression> & tmps, std::vector <Word> attrs);
+	IStructCstInfo (Word locId, Namespace space, std::string name, std::vector <syntax::Expression> & tmps, std::vector <Word> attrs, bool isUnion);
 
 	bool isSame (InfoType) override;
 
@@ -49,7 +51,11 @@ namespace semantic {
 
 	InfoType DColonOp (syntax::Var) override;
 
+	ApplicationScore CallOpUnion (Word, syntax::ParamList);
+	
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
+
+	ApplicationScore CallOpUnion (Word, const std::vector <InfoType> &);
 	
 	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
 
@@ -102,14 +108,15 @@ namespace semantic {
 	std::vector <InfoType> types;
 	std::vector <std::string> attrs;
 	std::vector <syntax::Expression> tmpsDone;
-	std::vector <Word> _udas;
 	IStructCstInfo* _id = NULL;
+	std::vector <Word> _udas;
+	bool _isUnion;
 	
 	friend IStructCstInfo;
 
     public:
 	
-	IStructInfo (IStructCstInfo* from, Namespace space, std::string name, std::vector <Word> udas);
+	IStructInfo (IStructCstInfo* from, Namespace space, std::string name, std::vector <Word> udas, bool isUnion);
 
 	bool isSame (InfoType) override;
 	

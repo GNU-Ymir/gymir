@@ -27,7 +27,7 @@ namespace syntax {
 	Import visitImport ();
 	Use visitUse ();
 	std::vector <Expression> visitTemplateStruct ();
-	Struct visitStruct ();
+	Struct visitStruct (bool isUnion = false);
 	Enum visitEnum ();
 	Expression visitIfFunction ();
 	Function visitFunction ();

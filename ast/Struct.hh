@@ -14,10 +14,11 @@ namespace syntax {
 	std::vector<Var> params;
 	std::vector<Expression> tmps;
 	std::vector <Word> _udas;
+	bool _isUnion;
 	
     public:
 
-	IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas);
+	IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas, bool isUnion = false);
 	
 	void declare () override;
 	

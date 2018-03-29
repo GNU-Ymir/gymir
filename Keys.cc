@@ -2,6 +2,7 @@
 
 std::string	Keys::IMPORT	= "import";
 std::string	Keys::STRUCT	= "struct";
+std::string     Keys::UNION     = "union";
 std::string     Keys::DEF	= "def";
 std::string     Keys::IF	= "if";
 std::string     Keys::RETURN	= "return";

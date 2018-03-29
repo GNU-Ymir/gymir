@@ -60,6 +60,27 @@ namespace Ymir {
 	return record_type;
     }
 
+    Tree makeUnion (std::string name, const std::vector <InfoType>& types, const std::vector<std::string> & attrs) {
+	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
+	tree record_type = make_node (UNION_TYPE);
+	for (uint i = 0 ; i < types.size () ; i++) {
+	    tree ident = get_identifier (attrs [i].c_str ());
+	    tree type = types [i]-> toGeneric ().getTree ();	    
+	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
+	    DECL_CONTEXT (field) = record_type;
+
+	    if (fields_begin == NULL) fields_begin = field;
+	    if (fields_last != NULL) TREE_CHAIN (fields_last) = field;
+	    fields_last = field;
+	}
+
+	TYPE_NAME (record_type) = get_identifier (name.c_str ());
+	TREE_CHAIN (fields_last) = NULL_TREE;	
+	TYPE_FIELDS (record_type) = fields_begin;
+	layout_type (record_type);
+	return record_type;
+    }
+    
     Tree makeTuple (std::string name, const std::vector <InfoType>& types, const std::vector<std::string> & attrs, bool packed) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (RECORD_TYPE);

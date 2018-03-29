@@ -5,6 +5,7 @@
 struct Keys {
     static std::string  IMPORT;
     static std::string  STRUCT;
+    static std::string  UNION;
     static std::string  DEF; 
     static std::string  IF; 
     static std::string  RETURN; 
