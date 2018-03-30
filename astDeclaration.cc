@@ -138,6 +138,7 @@ namespace syntax {
 	}
 	
 	auto fr = new (Z0)  IExternFrame (space, "", this-> toProto ());
+	fr-> attributes () = this-> attrs;
 	FrameTable::instance ().insert (fr);
 	return fr;
     }
