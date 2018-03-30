@@ -66,7 +66,7 @@ namespace semantic {
 	
     private:
 
-	InfoType toPtr ();
+	InfoType toPtr (Word & tok);
 
 	InfoType pplus ();
 

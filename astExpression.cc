@@ -484,7 +484,7 @@ namespace syntax {
     Expression IUnary::expression () {
 	auto elem = this-> elem-> expression ();
 	if (elem == NULL) return NULL;
-
+	
 	auto type = elem-> info-> type-> UnaryOp (this-> token);
 	if (type == NULL) {
 	    Ymir::Error::undefinedOp (this-> token, elem-> info);

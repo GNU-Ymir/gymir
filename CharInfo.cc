@@ -1,6 +1,8 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/FixedValue.hh>
+#include <ymir/semantic/pack/Table.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace semantic {
 
@@ -41,6 +43,31 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType ICharInfo::UnaryOp (Word op) {
+	if (op == Token::AND && !this-> isConst ()) {
+	    return toPtr (op);
+	} else if (op == Token::DPLUS) {
+	    auto ret = new (Z0) ICharInfo (true);
+	    ret-> unopFoo = FixedUtils::InstPPlus;
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> UnaryOp (op);
+	    return ret;
+	} else if (op == Token::DMINUS) {
+	    auto ret = new (Z0) ICharInfo (true);
+	    ret-> unopFoo = FixedUtils::InstSSub;
+	    if (this-> value ())
+		ret-> value () = this-> value ()-> UnaryOp (op);
+	    return ret;
+	}
+	return NULL;
+    }
+
+    InfoType ICharInfo::toPtr (const Word &) {
+	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
+	ret-> binopFoo = &FixedUtils::InstAddr;
+	return ret;
+    }
+    
     std::string ICharInfo::innerTypeString () {
 	return "char";
     }

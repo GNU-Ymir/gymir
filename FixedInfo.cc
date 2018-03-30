@@ -3,6 +3,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/_.hh>
+#include <ymir/syntax/Keys.hh>
 #include <climits>
 
 namespace semantic {
@@ -77,7 +78,7 @@ namespace semantic {
 		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
 	} else if (op == Token::AND && !this-> isConst ()) {
-	    return toPtr ();
+	    return toPtr (op);
 	} else if (op == Token::DPLUS) {
 	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
 	    ret-> unopFoo = FixedUtils::InstPPlus;
@@ -169,7 +170,7 @@ namespace semantic {
 	return IFixedInfo::id ();
     }
 	
-    InfoType IFixedInfo::toPtr () {
+    InfoType IFixedInfo::toPtr (Word &) {	
 	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
 	ret-> binopFoo = &FixedUtils::InstAddr;
 	return ret;

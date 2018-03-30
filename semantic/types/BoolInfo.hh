@@ -48,7 +48,7 @@ namespace semantic {
 	
     private:
 
-	InfoType Ptr ();
+	InfoType Ptr (const Word&);
 
 	InfoType Affect (syntax::Expression );
 

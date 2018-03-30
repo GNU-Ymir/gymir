@@ -99,6 +99,7 @@ namespace Ymir {
 	    NotAMacro,
 	    MacroResolution,
 	    NoLet,
+	    UnrefInSafe,
 	    LAST_ERROR
 	};
 
@@ -161,6 +162,8 @@ namespace Ymir {
 	
 	static void takeATypeAsTemplate (const Word&);
 
+	static void unrefInSafe (const Word&);
+	
 	static void syntaxError (const Word&);
 
 	static void syntaxErrorFor (const Word&, const Word&);

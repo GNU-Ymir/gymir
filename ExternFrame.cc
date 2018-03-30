@@ -58,7 +58,7 @@ namespace semantic {
     FrameProto IExternFrame::validate () {
 	if (this-> _proto == NULL) return validateFunc ();
 	auto ancSpace = Table::instance ().programNamespace ();
-	Table::instance ().enterFrame (this-> space (), this-> name (), this-> templateParams (), this-> isInternal ());
+	Table::instance ().enterFrame (this-> space (), this-> name (), this-> templateParams (), this-> attributes (), this-> isInternal ());
 	
 	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> name ()));
 	Table::instance ().programNamespace () = this-> space ();
@@ -116,7 +116,7 @@ namespace semantic {
 
     FrameProto IExternFrame::validateFunc () {
 	auto ancSpace = Table::instance ().programNamespace ();
-	Table::instance ().enterFrame (this-> space (), this-> name (), this-> templateParams (), this-> isInternal ());
+	Table::instance ().enterFrame (this-> space (), this-> name (), this-> templateParams (), this-> attributes (), this-> isInternal ());
 	std::vector <Var> finalParams = IFrame::computeParams (this-> _function-> getParams ());
 	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> name ()));
 	Table::instance ().programNamespace () = this-> space ();

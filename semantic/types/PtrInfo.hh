@@ -76,7 +76,7 @@ namespace semantic {
 
 	InfoType NotIs (syntax::Expression right);
 
-	InfoType Unref ();
+	InfoType Unref (Word&);
 
 	InfoType toPtr ();
 

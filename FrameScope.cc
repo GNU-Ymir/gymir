@@ -231,6 +231,18 @@ namespace semantic {
 	this-> _retInfo.enterBlock ();
     }
     
+    void FrameScope::setContext (const std::vector <Word> & context) {
+	this-> _context = context;
+    }
+
+    bool FrameScope::hasContext (const std::string & uda) {
+	for (auto it : this-> _context) {
+	    if (it.getStr () == uda)
+		return true;
+	}
+	return false;
+    }
+    
     void FrameScope::addOpen (Namespace space) {
 	this-> _local.front ().addOpen (space);
     }

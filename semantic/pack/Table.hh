@@ -50,8 +50,10 @@ namespace semantic {
 
 	std::vector <syntax::Global> globalVars ();
 
-	void enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> &tmps, bool internal);
+	void enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> &tmps, const std::vector <Word> & context, bool internal);
 
+	bool hasCurrentContext (const std::string & uda);
+	
 	void quitFrame ();
 
 	Namespace space ();

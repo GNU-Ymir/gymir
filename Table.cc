@@ -67,7 +67,7 @@ namespace semantic {
 	return this-> _globalVars;
     }
 
-    void Table::enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> & tmps, bool internal) {
+    void Table::enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> & tmps, const std::vector <Word> & context, bool internal) {
 	Ymir::OutBuffer buf ("0_", name);
 	if (tmps.size () != 0) {
 	    buf.write ("(");
@@ -91,11 +91,18 @@ namespace semantic {
 	}
 
 	FrameScope scope {{space, buf.str ()}};
+	scope.setContext (context);
 	if (internal) scope.setInternal (&this-> _frameTable.front ());
 	this-> _frameTable.push_front (scope);
 	this-> _nbFrame ++;
     }
 
+    bool Table::hasCurrentContext (const std::string & uda) {
+	if (!this-> _frameTable.empty ()) {
+	    return this-> _frameTable.back ().hasContext (uda);
+	} else return false;
+    }
+    
     void Table::quitFrame () {
 	if (!this-> _frameTable.empty ()) {
 	    this-> _frameTable.pop_front ();

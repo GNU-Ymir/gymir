@@ -112,6 +112,7 @@ namespace semantic {
 	FrameReturnInfo _retInfo;
 	std::list <Scope> _local;
 	FrameScope* _friend = NULL;
+	std::vector <Word> _context;
 	
 	Namespace _space;
 	bool phantom;
@@ -124,6 +125,10 @@ namespace semantic {
 
 	void addOpen (Namespace space);
 
+	void setContext (const std::vector<Word> & context);
+
+	bool hasContext (const std::string & uda);
+	
 	void setInternal (FrameScope* scope);
 
 	bool fromFriend (Symbol sym);

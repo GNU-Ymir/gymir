@@ -356,6 +356,17 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::unrefInSafe (const Word& word) {
+	std::string msg = getString (UnrefInSafe);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::unknownType (const Word& word) {
 	std::string msg = format (getString (UnknownType), YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;

@@ -1,7 +1,9 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/BoolValue.hh>
+#include <ymir/semantic/pack/Table.hh>
 #include <ymir/ast/Constante.hh>
+#include <ymir/syntax/Keys.hh>
 #include "print-tree.h"
 
 
@@ -45,7 +47,7 @@ namespace semantic {
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
-	} else if (op == Token::AND) return Ptr ();
+	} else if (op == Token::AND) return Ptr (op);
 	return NULL;
     }
 
@@ -90,7 +92,7 @@ namespace semantic {
 	return new (Z0)  IBoolInfo (this-> isConst ());
     }
 		
-    InfoType IBoolInfo::Ptr () {
+    InfoType IBoolInfo::Ptr (const Word &) {	
 	auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
 	ptr-> binopFoo = &FixedUtils::InstAddr;
 	return ptr;

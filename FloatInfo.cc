@@ -1,6 +1,8 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FloatUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/syntax/Keys.hh>
+#include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/value/_.hh>
 #include <cfloat>
 #include <limits>
@@ -61,9 +63,16 @@ namespace semantic {
 
     InfoType IFloatInfo::UnaryOp (Word op) {
 	if (op == Token::MINUS) return Inv (op);
+	else if (op == Token::AND) return toPtr (op);
 	return NULL;
     }
 
+    InfoType IFloatInfo::toPtr (Word &) {
+	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> clone ());
+	ret-> binopFoo = &FloatUtils::InstAddr;
+	return ret;
+    }
+    
     InfoType IFloatInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	return NULL;

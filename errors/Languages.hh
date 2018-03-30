@@ -127,6 +127,7 @@ namespace Ymir {
 		phrases [MacroResolution] = "Macro resolution %%% failed";
 		phrases [NoLet] = "Malformed statement %%%";
 		phrases [UndefUda] = "Undefined attribute %%% for %%%";
+		phrases [UnrefInSafe] = "Cannot unref pointer in @safe context"; 
 		init = true;
 	    } 
 	    return phrases;

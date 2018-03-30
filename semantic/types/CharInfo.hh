@@ -34,8 +34,10 @@ namespace semantic {
 
 	InfoType CompOp (InfoType) override;
 
+	InfoType UnaryOp (Word) override;
+	
 	InfoType onClone () override;
-
+	
 	Ymir::Tree toGeneric () override;
 	
 	static const char* id () {
@@ -65,6 +67,8 @@ namespace semantic {
 	InfoType Init ();
 
 	InfoType SizeOf ();
+
+	InfoType toPtr (const Word &);
 	
     };
 

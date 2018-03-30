@@ -5,6 +5,7 @@
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/FixedValue.hh>
+#include <ymir/semantic/pack/Table.hh>
 
 namespace semantic {
 
@@ -203,7 +204,7 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::UnaryOp (Word op) {
-	if (op == Token::STAR) return Unref ();
+	if (op == Token::STAR) return Unref (op);
 	else if (op == Token::AND && !this-> isConst ()) return toPtr ();
 	else if (op == Token::DPLUS) {
 	    auto ret = this-> cloneConst ();
@@ -299,10 +300,13 @@ namespace semantic {
 	return NULL;
     }
     
-    InfoType IPtrInfo::Unref () {
+    InfoType IPtrInfo::Unref (Word & op) {	
 	if (this-> _content-> is<IUndefInfo> ()) return NULL;
 	else if (this-> _content-> is <IVoidInfo> ()) return NULL;
 	else {
+	    if (Table::instance ().hasCurrentContext (Keys::SAFE)) {
+		Ymir::Error::unrefInSafe (op);
+	    }
 	    auto ret = this-> _content-> clone ();
 	    if (this-> isConst ()) ret-> isConst (this-> isConst ());
 	    ret-> unopFoo = &PtrUtils::InstUnref;

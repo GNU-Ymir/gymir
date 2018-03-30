@@ -96,7 +96,7 @@ namespace semantic {
 	auto tmps = this-> templateParams ();
 	auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), score-> tmps);
 	tmps.insert (tmps.end (), auxTmps.begin (), auxTmps.end ());
-	Table::instance ().enterFrame (this-> _space, this-> name, tmps, this-> _isInternal);
+	Table::instance ().enterFrame (this-> _space, this-> name, tmps, this-> attributes (), this-> _isInternal);
 	Table::instance ().enterBlock ();
 	auto func = this-> _function-> templateReplace (score-> tmps);
 	

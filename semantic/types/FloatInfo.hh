@@ -99,6 +99,8 @@ namespace semantic {
 	InfoType opNormRight (Word, syntax::Expression);
 
 	InfoType opTestRight (Word, syntax::Expression);
+
+	InfoType toPtr (Word&);
 	
     };
 
