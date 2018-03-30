@@ -72,4 +72,5 @@ std::string     Keys::PACKED    = "packed";
 std::string     Keys::SAFE      = "safe";
 std::string     Keys::NOGC      = "nogc";
 std::string     Keys::FUNCTIONAL = "fnal";
+std::string     Keys::TRUSTED    = "trusted";
 

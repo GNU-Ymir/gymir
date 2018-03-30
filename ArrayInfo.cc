@@ -10,6 +10,7 @@
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/value/FixedValue.hh>
 #include <ymir/semantic/value/StringValue.hh>
+#include <ymir/semantic/pack/Table.hh>
 
 namespace semantic {
 
@@ -212,13 +213,24 @@ namespace semantic {
 	}
 	
 	if (treat) {
-	    auto content = this-> _content-> clone ();
+	    auto content = this-> _content-> cloneOnExit ();
 	    if (this-> isConst ())
 		content-> isConst (true);
 	    auto ch = new (Z0)  IArrayRefInfo (this-> isConst () || content-> isConst (), content);
 	    ch-> binopFoo = &ArrayUtils::InstAccessInt;
 	    if (this-> value ()) 
-		ch-> value () = this-> value ()-> AccessOp (expr);
+		ch-> value () = this-> value ()-> AccessOp (expr);	    
+
+	    if (expr-> info-> value () && this-> _isStatic) {
+		auto val = expr-> info-> value ()-> to<IFixedValue> ()-> getValue ();
+		if (val > (long) this-> _size || val < 0) {
+		    Ymir::Error::outOfRange (expr-> token, this-> _size, val);
+		}
+	    } else {
+		if (Table::instance ().hasCurrentContext (Keys::SAFE)) {
+		    Ymir::Error::dynamicAccess (expr-> token);
+		}
+	    }	    
 	    
 	    return ch;
 	}

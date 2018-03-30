@@ -448,7 +448,8 @@ namespace syntax {
 	    } else {
 		arrayType-> isStatic (true, aux-> size-> info-> value ()-> to <IFixedValue> ()-> getUValue ()); 
 	    }	
-
+	} else if (Table::instance ().hasCurrentContext (Keys::SAFE)) {
+	    Ymir::Error::allocationInSafe (this-> token);
 	}
 	
 	return aux;

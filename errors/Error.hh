@@ -100,6 +100,11 @@ namespace Ymir {
 	    MacroResolution,
 	    NoLet,
 	    UnrefInSafe,
+	    CallFuncPtrInSafe,
+	    OutOfRange,
+	    DynamicAccess,
+	    AllocationInSafe,
+	    CallUnsafeInSafe, 
 	    LAST_ERROR
 	};
 
@@ -163,6 +168,16 @@ namespace Ymir {
 	static void takeATypeAsTemplate (const Word&);
 
 	static void unrefInSafe (const Word&);
+
+	static void callFuncPtrInSafe (const Word&);
+
+	static void outOfRange (const Word&, ulong size, ulong index);
+
+	static void dynamicAccess (const Word&);
+
+	static void allocationInSafe (const Word&);
+
+	static void callUnsafeInSafe (const Word&);
 	
 	static void syntaxError (const Word&);
 

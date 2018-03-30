@@ -8,6 +8,7 @@
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/value/LambdaValue.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace semantic {
 
@@ -220,9 +221,15 @@ namespace semantic {
 	if (!Table::instance ().addCall (tok)) return NULL;
 	
 	if (right-> toValidate) {
+	    if (Table::instance ().hasCurrentContext (Keys::SAFE) && !(right-> toValidate-> has (Keys::SAFE) || right-> toValidate-> has (Keys::TRUSTED)))
+		Ymir::Error::callUnsafeInSafe (tok);
+	    
 	    info = right-> toValidate-> validate (right, right-> treat);
 	    right-> proto = info;
 	} else {
+	    if (Table::instance ().hasCurrentContext (Keys::SAFE) && !(goods [0]-> has (Keys::SAFE) || goods [0]-> has (Keys::TRUSTED)))
+		Ymir::Error::callUnsafeInSafe (tok);
+	    
 	    info = goods [0]-> validate (right, right-> treat);
 	    right-> proto = info;
 	}

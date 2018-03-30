@@ -4,6 +4,7 @@
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/ast/ParamList.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/pack/Table.hh>
 
 namespace semantic {
 
@@ -147,6 +148,10 @@ namespace semantic {
     }	
 
     ApplicationScore IPtrFuncInfo::CallOp (Word token, syntax::ParamList params) {
+	if (Table::instance ().hasCurrentContext (Keys::SAFE)) {
+	    Ymir::Error::callFuncPtrInSafe (token);
+	}
+	
 	if (params-> getParams ().size () != this-> params.size ()) 
 	    return NULL;
 
@@ -160,7 +165,7 @@ namespace semantic {
 		score-> treat.push_back (type);
 	    } else return NULL;
 	}
-
+	
 	auto ret = this-> ret-> cloneConst ();
 	ret-> multFoo = &PtrFuncUtils::InstCall;
 	score-> dyn = true;

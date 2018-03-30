@@ -75,4 +75,5 @@ struct Keys {
     static std::string  SAFE;
     static std::string  NOGC;
     static std::string  FUNCTIONAL;
+    static std::string  TRUSTED;
 };

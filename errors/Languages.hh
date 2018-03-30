@@ -128,6 +128,11 @@ namespace Ymir {
 		phrases [NoLet] = "Malformed statement %%%";
 		phrases [UndefUda] = "Undefined attribute %%% for %%%";
 		phrases [UnrefInSafe] = "Cannot unref pointer in @safe context"; 
+		phrases [CallFuncPtrInSafe] = "Cannot call function pointer in @safe context";
+		phrases [OutOfRange] = "The index is out of range %%% < %%%";
+		phrases [DynamicAccess] = "Cannot make a dynamic access in @safe context";
+		phrases [AllocationInSafe] = "Cannot allocate memory in @safe context";
+		phrases [CallUnsafeInSafe] = "Cannot call unsafe context in @safe context";
 		init = true;
 	    } 
 	    return phrases;

@@ -100,13 +100,15 @@ namespace syntax {
 	    mod-> insert (sym);	
 	}
     } 
-
+    
     bool IFunction::verifUdas () {
 	for (auto it : this-> attrs) {
 	    if (it != Keys::INLINE &&
 		it != Keys::SAFE &&
 		it != Keys::NOGC &&
-		it != Keys::FUNCTIONAL) {
+		it != Keys::FUNCTIONAL &&
+		it != Keys::TRUSTED
+	    ) {
 		Ymir::Error::undefUda (this-> ident, it);
 		return false;
 	    }
