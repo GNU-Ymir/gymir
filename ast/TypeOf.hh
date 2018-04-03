@@ -9,10 +9,11 @@ namespace syntax {
 
     class ITypeOf : public IExpression {
 	Expression expr;
-
+	bool _mut;
+	
     public:
 
-	ITypeOf (Word begin, Expression expr);
+	ITypeOf (Word begin, Expression expr, bool mut = false);
 	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	

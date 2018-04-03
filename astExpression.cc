@@ -1130,11 +1130,14 @@ namespace syntax {
 	    auto type = aux-> _left-> info-> type-> CallOp (aux-> _left-> token, aux-> params);	    
 
 	    if (type == NULL) {
-		if (this-> token.getStr () != this-> end.getStr ())
-		    Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
-		else
-		    Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> params);
-		return NULL;
+		auto call = !this-> _opCall ? findOpCall () : NULL;
+		if (call == NULL) {
+		    if (this-> token.getStr () != this-> end.getStr ())
+			Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
+		    else
+			Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> params);
+		    return NULL;
+		} else return call;
 	    } else if (type-> ret == NULL) {
 		return NULL;
 	    }
@@ -1166,6 +1169,20 @@ namespace syntax {
 	}
     }
 
+    Expression IPar::findOpCall () {
+	Word word (this-> token.getLocus (), Keys::OPCALL);
+	auto var = new (Z0) IVar (word);
+	std::vector <Expression> params = {this-> _left};
+	params.insert (params.end (), this-> params-> getParams ().begin (),
+		       this-> params-> getParams ().end ());
+
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	auto finalParams = new (Z0)  IParamList (this-> token, params);
+	auto call = new (Z0)  IPar (tok, tok2, var, finalParams, true);
+	
+	return call-> expression ();
+    }
+    
     void IPar::tuplingParams (ApplicationScore score, Par par) {
 	std::vector <Expression> lasts (par-> params-> getParams ().begin () + score-> treat.size () - 1, par-> params-> getParams ().end ());
 	auto lastInfo = score-> treat.back ()-> to<ITupleInfo> ();
@@ -1437,7 +1454,9 @@ namespace syntax {
     Expression ITypeOf::expression () {
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
-	return new (Z0) IType (this-> token, expr-> info-> type);
+	auto type = expr-> info-> type-> cloneOnExit ();
+	if (this-> _mut) type-> isConst (false);
+	return new (Z0) IType (this-> token, type);
     }
 
     Expression IStringOf::expression () {

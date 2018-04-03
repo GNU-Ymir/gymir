@@ -448,7 +448,7 @@ namespace syntax {
     
     Expression ITypeOf::templateExpReplace (const map <string, Expression>& values) {
 	auto left = this-> expr-> templateExpReplace (values);
-	return new (Z0)  ITypeOf (this-> token, left);
+	return new (Z0)  ITypeOf (this-> token, left, this-> _mut);
     }
 
     Expression IStringOf::templateExpReplace (const map <string, Expression>& values) {

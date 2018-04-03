@@ -614,6 +614,8 @@ namespace semantic {
     ApplicationScore IStructInfo::CallOp (Word token, syntax::ParamList params) {
 	if (params-> getParams ().size () != this-> types.size ())
 	    return NULL;
+	
+	if (!this-> isType ()) return NULL;
 
 	std::vector <InfoType> types;
 	std::vector <std::string> attribs;

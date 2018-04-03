@@ -1578,12 +1578,16 @@ namespace syntax {
     }
 
     Expression Visitor::visitTypeOf () {
+	bool mut = false;
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
 	auto next = this-> lex.next ({Token::LPAR});
+	next = this-> lex.next ();
+	if (next == Keys::MUTABLE) mut = true;
+	else this-> lex.rewind ();
 	auto expr = visitExpression ();
 	next = this-> lex.next ({Token::RPAR});
-	return new (Z0)  ITypeOf (begin, expr);
+	return new (Z0)  ITypeOf (begin, expr, mut);
     }
 
     Expression Visitor::visitStringOf () {

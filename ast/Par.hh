@@ -22,7 +22,7 @@ namespace syntax {
 	IDotCall* _dotCall;
 	bool _opCall = false;
 	semantic::ApplicationScore _score;
-
+	
     public :
 
 	IPar (Word word, Word end);
@@ -68,6 +68,8 @@ namespace syntax {
 	Ymir::Tree createClosureVar ();
 
 	Ymir::Tree callInline (std::vector <tree> args);
+
+	Expression findOpCall ();
 	
     };
 

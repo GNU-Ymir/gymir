@@ -1516,9 +1516,10 @@ namespace syntax {
 	    delete it;
     }
     
-    ITypeOf::ITypeOf (Word begin, Expression expr) :
+    ITypeOf::ITypeOf (Word begin, Expression expr, bool mut) :
 	IExpression (begin),
-	expr (expr)
+	expr (expr),
+	_mut (mut)
     {}
     
     ITypeOf::~ITypeOf () {
