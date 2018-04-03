@@ -146,6 +146,18 @@ namespace syntax {
 	return this-> type;
     }
 
+    Block& IFunction::post () {
+	return this-> _post;
+    }
+
+    Block & IFunction::pre () {
+	return this-> _pre;
+    }
+
+    Var & IFunction::postVar () {
+	return this-> _postVar;
+    }
+    
     std::string IFunction::name () {
 	return this-> ident.getStr ();
     }

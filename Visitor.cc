@@ -706,19 +706,63 @@ namespace syntax {
 	    temps.clear ();
 	} else syntaxError (word, {Token::RPAR});
 
+	Var type = NULL;
 	if (word == Token::ARROW) {
 	    auto deco = this-> lex.next ();
 	    if (deco != Keys::REF && deco != Keys::MUTABLE) {
 		deco = Word::eof ();
 		this-> lex.rewind ();
 	    } 
-	    auto type = visitType ();
+	    type = visitType ();
 	    type-> deco = deco;
-	    return new (Z0)  IFunction (ident, attrs, type, exps, temps, test, visitBlock ());
-	} else this-> lex.rewind ();	
-	return new (Z0)  IFunction (ident, attrs, exps, temps, test, visitBlock ());
+	} else this-> lex.rewind ();
+	
+	next = this-> lex.next ();
+	if (next == Token::LACC) {
+	    next = this-> lex.next ();
+	    this-> lex.rewind ();
+	    if (next == Keys::PRE || next == Keys::POST || next == Keys::BODY) {
+		return visitContract (ident, attrs, type, exps, temps, test);
+	    } 
+	}
+	this-> lex.rewind ();
+	return new (Z0)  IFunction (ident, attrs, type, exps, temps, test, visitBlock ());
     }
 
+    Function Visitor::visitContract (Word ident, std::vector<Word> & attrs, Var type, std::vector<Var> & exps, std::vector <Expression> & temps, Expression test) {
+	Function func = NULL;
+	Block pre = NULL, post = NULL;
+	Var var = NULL;
+	bool dones [] = {false, false, false};
+	while (true) {
+	    auto next = this-> lex.next ({Keys::PRE, Keys::BODY, Keys::POST, Token::RACC});
+	    if (next == Keys::PRE && !dones [0]) {
+		dones [0] = true;
+		pre = visitBlock ();
+	    } else if (next == Keys::BODY && !dones [1]) {
+		dones [1] = true;
+		func = new (Z0) IFunction (ident, attrs, type, exps, temps, test, visitBlock ());
+	    } else if (next == Keys::POST && !dones [2]) {
+		dones [2] = true;
+		next = this-> lex.next ({Token::LPAR});
+		var = visitVar ();
+		next = this-> lex.next ({Token::RPAR});
+		post = visitBlock ();
+	    } else if (next == Token::RACC) {
+		if (!func) Ymir::Error::syntaxError (next);
+		break;
+	    } else {
+		Ymir::Error::syntaxError (next);
+		break;
+	    }
+	}
+	
+	func-> postVar () = var;
+	func-> pre () = pre;
+	func-> post () = post;
+	return func;
+    }
+    
     Declaration Visitor::visitExtern () {
 	auto word = this-> lex.next ();
 	bool isVariadic = false;

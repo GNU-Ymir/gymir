@@ -76,4 +76,7 @@ struct Keys {
     static std::string  NOGC;
     static std::string  FUNCTIONAL;
     static std::string  TRUSTED;
+    static std::string  PRE;
+    static std::string  POST;
+    static std::string  BODY;
 };

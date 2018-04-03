@@ -73,4 +73,6 @@ std::string     Keys::SAFE      = "safe";
 std::string     Keys::NOGC      = "nogc";
 std::string     Keys::FUNCTIONAL = "fnal";
 std::string     Keys::TRUSTED    = "trusted";
-
+std::string     Keys::PRE        = "pre";
+std::string     Keys::POST       = "post";
+std::string     Keys::BODY       = "body";

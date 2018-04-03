@@ -26,6 +26,9 @@ namespace syntax {
 	Block block;
 	Expression test;
 
+	Block _pre = NULL, _post = NULL;
+	Var _postVar = NULL;
+	
     public:
 	
 	IFunction (Word ident, const std::vector <Word>& attrs, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block);
@@ -66,6 +69,12 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	Block& pre ();
+
+	Block& post ();
+
+	Var& postVar ();
+	
 	virtual ~IFunction ();
 	
     protected:
