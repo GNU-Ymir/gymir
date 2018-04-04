@@ -173,7 +173,14 @@ namespace syntax {
     Block IFunction::getBlock () {
 	return this-> block;
     }
-       
+
+    bool IFunction::has (const std::string & str) {
+	for (auto & it : this-> attrs) {
+	    if (it.getStr () == str) return true;
+	}
+	return false;
+    }
+    
     IParamList::IParamList (Word ident, const std::vector<Expression> & params) :
 	IExpression (ident),
 	params (params)

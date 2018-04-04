@@ -74,6 +74,8 @@ namespace syntax {
 	Block& post ();
 
 	Var& postVar ();
+
+	bool has (const std::string & str);
 	
 	virtual ~IFunction ();
 	

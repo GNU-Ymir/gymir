@@ -136,11 +136,17 @@ namespace syntax {
 		return new (Z0)  IUnPureFrame (space, this);
 	    }
 	}
-	
-	auto fr = new (Z0)  IExternFrame (space, "", this-> toProto ());
-	fr-> attributes () = this-> attrs;
-	FrameTable::instance ().insert (fr);
-	return fr;
+
+	if (!this-> has (Keys::INLINE)) {	    
+	    auto fr = new (Z0)  IExternFrame (space, "", this-> toProto ());
+	    fr-> attributes () = this-> attrs;
+	    FrameTable::instance ().insert (fr);
+	    return fr;
+	} else {
+	    auto fr = new (Z0)  IPureFrame (space, this);
+	    FrameTable::instance ().insert (fr);
+	    return fr;
+	}
     }
 
 
