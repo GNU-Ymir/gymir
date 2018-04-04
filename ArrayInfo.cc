@@ -279,10 +279,11 @@ namespace semantic {
 	} else if (other-> is<IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = ArrayUtils::InstToArray;
-	    //ret-> lintInst = ArrayUtils::InstAffectRight;
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
-	    auto ret = this-> clone ();
+	    auto ret = type-> clone ();
+	    ret-> isConst (this-> isConst ());
+	    ret-> binopFoo = ArrayUtils::InstToArray;
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
 	    if (auto arr = ref-> content ()-> to<IArrayInfo> ()) {
@@ -662,31 +663,28 @@ namespace semantic {
 	Tree InstToArray (Word locus, InfoType, Expression elem, Expression type) {
 	    auto loc = locus.getLocus ();
 	    auto rexp = elem-> toGeneric ();
-	    if (rexp.getType ().getTreeCode () == RECORD_TYPE) {
-		return rexp;
-	    } else {
-		auto toType = type-> info-> type-> toGeneric ();
-		if (toType.getTreeCode () == RECORD_TYPE) {
-		    Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), toType);
-		    auto lenr = getLen (loc, elem, rexp);
-		    auto ptrr = getPtr (loc, elem, rexp);
-		    auto ptrl = getField (loc, auxVar, "ptr");
-		    auto lenl = getField (loc, auxVar, "len");
-		    TreeStmtList list;
-    
-		    list.append (buildTree (
-			MODIFY_EXPR, loc, void_type_node, lenl, lenr
-		    ));
-	    
-		    list.append (buildTree (
-			MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
-		    ));
+	    auto toType = type-> info-> type-> toGeneric ();
 
-		    return Ymir::compoundExpr (loc, list.getTree (), auxVar);
-		} else {
-		    return rexp;
-		}		
-	    }
+	    if (toType != rexp.getType ()) {
+		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), toType);
+		auto lenr = getLen (loc, elem, rexp);
+		auto ptrr = getPtr (loc, elem, rexp);
+		auto ptrl = getField (loc, auxVar, "ptr");
+		auto lenl = getField (loc, auxVar, "len");
+		TreeStmtList list;
+    
+		list.append (buildTree (
+					MODIFY_EXPR, loc, void_type_node, lenl, lenr
+					));
+	    
+		list.append (buildTree (
+					MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
+					));
+
+		return Ymir::compoundExpr (loc, list.getTree (), auxVar);
+	    } else {
+		return rexp;
+	    }		
 	}
 
 	Tree affectIndex (Word &loc, Tree index, Tree array, Tree var, InfoType arrayType, InfoType varType) {
