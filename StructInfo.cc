@@ -279,7 +279,7 @@ namespace semantic {
 	    if (info == NULL) return NULL;
 	    types.push_back (info);
 	    attribs.push_back (this-> params [it]-> token.getStr ());
-	    
+
 	    auto type = params-> getParams () [it]-> info-> type-> CompOp (info);
 	    if (type) type = type-> ConstVerif (info);
 	    if (type) {
@@ -316,16 +316,15 @@ namespace semantic {
 	auto score = new (Z0) IApplicationScore (token);
 	auto last = Table::instance ().templateNamespace ();
 	auto currentSpace = Table::instance ().space ();
-	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    
+	for (auto it : Ymir::r (0, this-> params.size ())) {	    
 	    Table::instance ().setCurrentSpace (this-> space);
 	    Table::instance ().templateNamespace () = currentSpace;
 	    InfoType info = this-> params [it]-> getType ();
 	    types.push_back (info);
 	    attribs.push_back (this-> params [it]-> token.getStr ());
-	    
+
 	    auto type = params [it]-> CompOp (info);
-	    //if (type) type = ConstVerif (info);
+	    if (type) type = ConstVerif (info);
 	    if (type) {
 		type-> isConst (info-> isConst ());
 		score-> score += 1;
@@ -626,8 +625,10 @@ namespace semantic {
 	    if (info == NULL) return NULL;
 	    types.push_back (info);
 	    attribs.push_back (this-> attrs [it]);
-	    
-	    auto type = params-> getParams () [it]-> info-> type-> CompOp (info);
+
+	    info = info-> clone ();
+	    if (this-> isConst ()) info-> isConst (true);
+	    auto type = params-> getParams () [it]-> info-> type-> CompOp (info);	    
 	    if (type) type = type-> ConstVerif (info);
 	    if (type) {
 		type-> isConst (info-> isConst ());

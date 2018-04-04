@@ -18,6 +18,7 @@ namespace semantic {
 	if (templates [0]-> info-> type-> is <IStructCstInfo> ()) {
 	    auto ret =  templates [0]-> info-> type-> TempOp ({});
 	    ret-> isConst (true);
+	    ret-> isType (true);
 	    return ret;
 	}
 	return templates [0]-> info-> type-> cloneConst ();	

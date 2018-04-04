@@ -389,7 +389,7 @@ namespace semantic {
     }
     
     std::string IPtrInfo::innerTypeString () {
-	return "ptr!" + this-> _content-> innerTypeString ();
+	return "p!(" + this-> _content-> typeString () + ")";
     }
 
     std::string IPtrInfo::innerSimpleTypeString () {

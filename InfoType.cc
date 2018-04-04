@@ -110,7 +110,7 @@ namespace semantic {
     
     std::string IInfoType::typeString () {
 	if (this-> isConst () && __need__Print_CONST__) {
-	    return std::string ("const(") + this-> innerTypeString () + ")";
+	    return std::string ("const ") + this-> innerTypeString ();
 	} else return this-> innerTypeString ();
     }
 
