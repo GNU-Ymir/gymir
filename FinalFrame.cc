@@ -48,6 +48,7 @@ namespace semantic {
 	_vars (vars),
 	_tmps (tmps),
 	_isVariadic (false),
+	_isInline (false),
 	_block (bl)
     {}
     
@@ -71,6 +72,10 @@ namespace semantic {
 	return this-> _isVariadic;
     }
 
+    bool& IFinalFrame::isInline () {
+	return this-> _isInline;
+    }
+    
     std::vector<syntax::Var>& IFinalFrame::vars () {
 	return this-> _vars;
     }
@@ -266,6 +271,8 @@ namespace semantic {
     }
     
     void IFinalFrame::finalize () {
+	if (this-> isInline ()) return;
+	
 	ISymbol::resetNbTmp ();
 	__declared__.clear ();
 	__contextToAdd__.clear ();

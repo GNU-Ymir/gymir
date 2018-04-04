@@ -146,6 +146,8 @@ namespace semantic {
 					    finalParams, block, this-> tempParams);
 	    
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
+	    finFrame-> isInline () = this-> has (Keys::INLINE);
+	    
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    proto-> attached () = finFrame;
 	    proto-> closure () = Table::instance ().retInfo ().closure;
@@ -265,6 +267,8 @@ namespace semantic {
 							   params, block, tmps);
 		    
 		    finFrame-> isVariadic () = isVariadic;
+		    finFrame-> isInline () = self-> has (Keys::INLINE);
+		    
 		    proto-> type () = Table::instance ().retInfo ().info;
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;
@@ -321,6 +325,8 @@ namespace semantic {
 						  space, name, params, block, {});
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
+	    finFrame-> isInline () = this-> has (Keys::INLINE);
+	    
 	    proto-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> attached () = finFrame;
 
@@ -356,6 +362,8 @@ namespace semantic {
 						  space, name, params, block, {});
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
+	    finFrame-> isInline () = this-> has (Keys::INLINE);
+	    
 	    proto-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> attached () = finFrame;
 
@@ -415,6 +423,8 @@ namespace semantic {
 							   params, block, self-> tempParams);
 
 		    finFrame-> isVariadic () = isVariadic;
+		    finFrame-> isInline () = self-> has (Keys::INLINE);
+		    
 		    proto-> type () = Table::instance ().retInfo ().info;
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;

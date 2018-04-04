@@ -33,6 +33,7 @@ namespace semantic {
 	
 	std::vector <syntax::Expression> _tmps;
 	bool _isVariadic;
+	bool _isInline;
 	bool _isForced = false;
 	syntax::Block _block;
 
@@ -58,6 +59,8 @@ namespace semantic {
 
 	bool& isVariadic ();
 
+	bool& isInline ();
+	
 	std::vector<syntax::Var> &vars ();
 	
 	std::vector <syntax::Var>& closure ();

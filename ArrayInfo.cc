@@ -665,7 +665,7 @@ namespace semantic {
 	    auto rexp = elem-> toGeneric ();
 	    auto toType = type-> info-> type-> toGeneric ();
 
-	    if (toType != rexp.getType ()) {
+	    if (toType != rexp.getType () && toType.getTreeCode () == RECORD_TYPE) {		
 		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), toType);
 		auto lenr = getLen (loc, elem, rexp);
 		auto ptrr = getPtr (loc, elem, rexp);

@@ -111,7 +111,7 @@ namespace syntax {
 	    ) {
 		Ymir::Error::undefUda (this-> ident, it);
 		return false;
-	    }
+	    } 
 	}
 	return true;
     }
