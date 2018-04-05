@@ -114,6 +114,10 @@ namespace semantic {
 	    ret-> isConst (this-> isConst ());
 	    ret-> binopFoo = FixedUtils::InstCast;
 	    return ret;
+	} else if (auto ot = other-> to <IPtrInfo> ()) {
+	    auto ret = ot-> clone ();
+	    ret-> binopFoo = FixedUtils::InstCast;
+	    return ret;
 	}
 	return NULL;
     }

@@ -871,7 +871,6 @@ namespace syntax {
 		    Word tok (this-> token.getLocus (),
 			      this-> token.getStr () + type-> token.getStr () + "]"
 		    );
-		    type-> info-> type-> isConst (false);
 		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, type-> info-> type));
 		}
 	    }

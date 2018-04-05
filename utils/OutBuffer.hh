@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/utils/memory.hh>
+#include <ymir/utils/Options.hh>
 #include <string>
 #include <map>
 #include <ymir/utils/Range.hh>
@@ -191,4 +192,13 @@ void println (T ... args) {
 template <typename ... T>
 void print (T ... args) {
     printf ("%s", Ymir::OutBuffer (args...).str ().c_str ());
+}
+
+
+namespace Ymir {
+    template <typename ... T>
+    void log (T ... args) {
+	if (Options::instance ().isVerbose ())
+	    println (args...);
+    }
 }

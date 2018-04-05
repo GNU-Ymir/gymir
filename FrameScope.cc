@@ -149,7 +149,8 @@ namespace semantic {
     }
 
     void FrameReturnInfo::returned () {
-	this-> _retInfo-> returned ();
+	if (this-> _retInfo) 
+	    this-> _retInfo-> returned ();
     }
 
     void FrameReturnInfo::breaked () {

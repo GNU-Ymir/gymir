@@ -23,6 +23,26 @@ namespace semantic {
 	}
 	return templates [0]-> info-> type-> cloneConst ();	
     }
+
+    InfoType createMut (Word token, std::vector <syntax::Expression> templates) {
+	if (templates.size () != 1 ||
+	    (!templates [0]-> is <::syntax::IType> () && !templates [0]-> info-> type-> isType ())
+	) {
+	    Ymir::Error::takeATypeAsTemplate (token);
+	    return NULL;	
+	}
+	
+	if (templates [0]-> info-> type-> is <IStructCstInfo> ()) {
+	    auto ret =  templates [0]-> info-> type-> TempOp ({});
+	    ret-> isConst (false);
+	    ret-> isType (true);
+	    return ret;
+	}
+	auto ret = templates [0]-> info-> type-> cloneConst ();
+	ret-> isConst (false);
+	return ret;
+    }
+
     
     Creators::Creators () {
 	this-> creators ["i32"] = (void*)&IFixedInfo::create;
@@ -41,6 +61,7 @@ namespace semantic {
 	this-> creators ["r"] = (void*) &IRangeInfo::create;
 	this-> creators ["t"] = (void*) &ITupleInfo::create;
 	this-> creators ["const"] = (void*) &createConst;
+	this-> creators ["mut"] = (void*) &createMut;
 	this-> creators ["ref"] = (void*) &IRefInfo::create;
 	this-> creators ["void"] = (void*) &IVoidInfo::create;
 	this-> creators ["bool"] = (void*) IBoolInfo::create;

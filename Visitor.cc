@@ -1043,8 +1043,8 @@ namespace syntax {
 		this-> lex.next ({Token::RCRO});
 		return new (Z0) IArrayVar (begin, type, len);
 	    } else return new (Z0)  IArrayVar (begin, type);
-	} else if (begin == Keys::CONST)
-	    return visitDecoType (begin);
+	} else if (begin == Keys::CONST || begin == Keys::MUTABLE)
+	    return visitDecoType (begin);	
 	else this-> lex.rewind ();
 	
 	auto ident = visitIdentifiant ();

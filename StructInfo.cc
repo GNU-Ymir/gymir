@@ -442,8 +442,6 @@ namespace semantic {
 	
 	for (auto &it : ret-> tmpsDone) {	    
 	    it = it-> templateExpReplace ({});
-	    if (it-> info)
-		it-> info-> isConst (false);
 	}
 	
 	return ret;	

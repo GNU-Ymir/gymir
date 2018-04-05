@@ -44,7 +44,7 @@ namespace semantic {
 	    
 	    auto ret = type-> clone ();
 	    ret-> isConst (this-> isConst ());
-	    if (type-> _content-> ConstVerif (this-> _content) == NULL)
+	    if (type-> ConstVerif (this) == NULL)
 		return NULL;
 	    
 	    ret-> binopFoo = ArrayUtils::InstAffect;
@@ -118,10 +118,15 @@ namespace semantic {
 	auto score = new (Z0) IApplicationScore (token);
 	score-> treat.push_back (fst-> info-> type-> CompOp (new (Z0) IFixedInfo (true, FixedConst::ULONG)));
 	if (!score-> treat.back ()) return NULL;
-
-	score-> treat.push_back (scd-> info-> type-> CompOp (new (Z0) IPtrInfo (false, this-> _content)));
-	if (!score-> treat.back ()) return NULL;
-	if (scd-> info-> type-> isConst () && !this-> isConst ()) return NULL;	    
+	
+	auto inner = this-> _content-> clone ();
+	if (this-> isConst ()) inner-> isConst (true);
+	auto info = new (Z0) IPtrInfo (false, inner);
+	auto type = scd-> info-> type-> CompOp (info);
+	if (type) type = type-> ConstVerif (info);
+	if (!type) return NULL;
+	
+	score-> treat.push_back (type);
 	
 	auto res = new (Z0) IArrayInfo (false, this-> _content-> clone ());
 	res-> multFoo = &ArrayUtils::InstCall;
@@ -163,7 +168,9 @@ namespace semantic {
     }
     
     InfoType IArrayInfo::Ptr () {
-	auto ret = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
+	auto inner = this-> _content-> clone ();
+	if (this-> isConst ()) inner-> isConst (true);	
+	auto ret = new (Z0)  IPtrInfo (this-> isConst (), inner);
 	ret-> binopFoo = ArrayUtils::InstPtr;
 	return ret;
     }

@@ -178,7 +178,7 @@ namespace semantic {
 
 	totals.resize (this-> _function-> getTemplates ().size ());
 	auto res = TemplateSolver::instance (). solve (this-> _function-> getTemplates (), params);
-	
+
 	if (!res.valid) return NULL;
 	for (auto &it : res.elements) {
 	    if (it.second-> info) {
@@ -186,14 +186,12 @@ namespace semantic {
 		    it.second = it.second-> info-> value ()-> toYmir (it.second-> info);		
 		} else {
 		    it.second = it.second-> templateExpReplace ({});
-		    if (it.second && it.second-> info) {
-			it.second-> info-> isConst (false);
-		    } else if (!it.second) return NULL;
+		    if (!it.second) return NULL;
 		}
 	    }
 	}
-
-	auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);
+		
+	auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);	
 	auto func = this-> _function-> templateReplace (res.elements);
 	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
 	    if (func-> getTest ()) {
@@ -234,7 +232,6 @@ namespace semantic {
 		} else {
 		    exp.second = exp.second-> templateExpReplace ({});
 		    if (exp.second == NULL) return {};
-		    exp.second-> info-> isConst (false);
 		}
 	    }
 	}
@@ -251,19 +248,20 @@ namespace semantic {
 	    auto param = attrs [it];
 	    if (auto tvar = param-> to <ITypedVar> ()) {
 		TemplateSolution res = TemplateSolver::instance ().solve (templates, tvar, args [it]);
+		Ymir::log ("Soluce for : (", templates, ") (", tvar-> prettyPrint (), ") with (", args [it], ") : ", res.toString ());
 		if (!res.valid || !TemplateSolver::instance ().merge (score, tmps, res))
 		    return {};
 		score += res.score;		
 	    }
 	}
-	
+
+	Ymir::log ("Total solve : ", tmps);	
 	for (auto exp : tmps) {
 	    if (exp.second-> info) {
 		if (exp.second-> info-> isImmutable ()) {
 		    exp.second = exp.second-> info-> value ()-> toYmir (exp.second-> info);
 		} else {
 		    exp.second = exp.second-> templateExpReplace ({});
-		    exp.second-> info-> isConst (false);
 		}
 	    }
 	}
@@ -298,7 +296,9 @@ namespace semantic {
 	else if (attrs.size () == args.size ()) {
 	    std::vector <Var> realAttrs;
 	    if (transform) {
+		Ymir::log ("Template solving for ", ident, " start");
 		realAttrs = transformParams (score-> score, attrs, args, tmps);
+		Ymir::log ("Template solving for ", ident, " end");
 		if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), tmps))
 		    return NULL;
 		if (realAttrs.size () != attrs.size ()) return NULL;
