@@ -31,21 +31,29 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc.getLocus (), result, ltree);
 	}
 
-	Tree InstCastDelegate (Word loc, InfoType, Expression left, Expression) {
-	    auto ret = left-> toGeneric (); 
-	    if (ret.getType ().getTreeCode () == RECORD_TYPE) return ret;
+	Tree InstCastDelegate (Word loc, InfoType type, Expression left, Expression) {
+	    auto ret = left-> toGeneric ();
+	    auto typeTree = type-> toGeneric ();
+	    if (ret.getType () == typeTree) return ret;
 	    else {
-		auto auxType = Ymir::makeStructType ("", 2,
-						get_identifier ("obj"),
-						build_pointer_type (void_type_node),
-						get_identifier ("ptr"),
-						ret.getType ().getTree ()
-						);
-		
-		auto auxVar = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), auxType);
-		auto ptr = Ymir::getField (loc.getLocus (), auxVar, "ptr");
-		auto result = buildTree (MODIFY_EXPR, loc.getLocus (), void_type_node, ptr, ret);
-		return Ymir::compoundExpr (loc.getLocus (), result, auxVar);
+		if (ret.getType ().getTreeCode () == RECORD_TYPE) {
+		    Ymir::TreeStmtList list;
+		    auto auxVar = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), typeTree);
+		    auto robj = Ymir::getField (loc.getLocus (), ret, "obj");
+		    auto obj = Ymir::getField (loc.getLocus (), auxVar, "obj");
+		    
+		    auto rptr = Ymir::getField (loc.getLocus (), ret, "ptr");
+		    auto ptr = Ymir::getField (loc.getLocus (), auxVar, "ptr");
+		    
+		    list.append (buildTree (MODIFY_EXPR, loc.getLocus (), void_type_node, ptr, rptr));
+		    list.append (buildTree (MODIFY_EXPR, loc.getLocus (), void_type_node, obj, robj));
+		    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), auxVar);
+		} else {
+		    auto auxVar = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), typeTree);
+		    auto ptr = Ymir::getField (loc.getLocus (), auxVar, "ptr");
+		    auto result = buildTree (MODIFY_EXPR, loc.getLocus (), void_type_node, ptr, ret);
+		    return Ymir::compoundExpr (loc.getLocus (), result, auxVar);
+		}
 	    }
 	}
 
@@ -213,7 +221,6 @@ namespace semantic {
     InfoType IPtrFuncInfo::CompOp (InfoType other) {
 	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
 	    auto ptr = other-> clone ();
-	    println (other, " ", this);
 	    if (this-> isDelegate ()) 
 		ptr-> binopFoo = &PtrFuncUtils::InstCastDelegate;
 	    else 
@@ -350,14 +357,20 @@ namespace semantic {
 	);
 	
 	if (this-> isDelegate ()) {
-	    return Ymir::makeStructType ("", 2,
-					 get_identifier ("obj"),
-					 build_pointer_type (
-							     void_type_node
-							     ),
-					 get_identifier ("ptr"),
-					 ptr
-	    );	    
+	    auto name = this-> innerTypeString ();
+	    auto dg_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	    if (dg_type_node.isNull ()) {
+		dg_type_node = Ymir::makeStructType ("", 2,
+						     get_identifier ("obj"),
+						     build_pointer_type (
+							 void_type_node
+						     ),
+						     get_identifier ("ptr"),
+						     ptr
+		);
+		IFinalFrame::declareType (name, dg_type_node);
+	    }
+	    return dg_type_node;
 	} else return ptr;	
     }
 
