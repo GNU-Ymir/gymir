@@ -76,3 +76,4 @@ std::string     Keys::TRUSTED    = "trusted";
 std::string     Keys::PRE        = "pre";
 std::string     Keys::POST       = "post";
 std::string     Keys::BODY       = "body";
+std::string     Keys::NEW        = "new";

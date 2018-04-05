@@ -79,4 +79,5 @@ struct Keys {
     static std::string  PRE;
     static std::string  POST;
     static std::string  BODY;
+    static std::string  NEW;
 };

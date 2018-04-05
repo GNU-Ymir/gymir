@@ -1859,9 +1859,9 @@ namespace syntax {
 	    auto fst = visitExpression ();
 	    auto next = this-> lex.next ();
 	    if (next == Token::SEMI_COLON) {
-		bool isImmutable = false;
+		bool isImmutable = true;
 		next = this-> lex.next ();
-		if (next == Keys::IMMUTABLE) isImmutable = true;
+		if (next == Keys::NEW) isImmutable = false;
 		else this-> lex.rewind ();
 		auto size = visitExpression ();
 		next = this-> lex.next ({Token::RCRO});
