@@ -490,6 +490,11 @@ namespace syntax {
     Expression IUnary::expression () {
 	auto elem = this-> elem-> expression ();
 	if (elem == NULL) return NULL;
+
+	if (this-> token != Token::MINUS && this-> token != Token::STAR && !elem-> isLvalue ()) {
+	    Ymir::Error::notLValue (elem-> token);
+	    return NULL;
+	}
 	
 	auto type = elem-> info-> type-> UnaryOp (this-> token);
 	if (type == NULL) {
