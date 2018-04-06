@@ -150,7 +150,7 @@ namespace syntax {
 			ret-> to<IVar> ()-> _fromClosure = true;
 			var-> _lastInfo = ret-> info;
 			if (Table::instance ().retInfo ().closureMoved ()) {
-			    ret-> info = new (Z0) ISymbol (ret-> token, ret-> info-> type-> cloneConst ());
+			    ret-> info = new (Z0) ISymbol (ret-> token, ret-> info-> type-> clone ());
 			} else {
 			    ret-> info = new (Z0) ISymbol (ret-> token, new (Z0) IRefInfo (false, ret-> info-> type-> clone ()));
 			}
