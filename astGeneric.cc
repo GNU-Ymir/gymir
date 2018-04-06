@@ -212,7 +212,6 @@ namespace syntax {
     }
 
     Ymir::Tree IVar::toGeneric () {
-	println (this-> token, " : ", this-> info-> isClosured ());
 	if (this-> info-> value ())
 	    return this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	
