@@ -37,6 +37,8 @@ namespace syntax {
 	
 	IDotCall*& dotCall (); 
 
+	bool isLvalue () override;
+	
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;

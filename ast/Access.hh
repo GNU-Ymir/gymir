@@ -34,6 +34,8 @@ namespace syntax {
 	std::vector <Expression> getParams ();
 
 	Ymir::Tree toGeneric () override;
+
+	bool isLvalue () override;
 	
 	void print (int nb = 0) override;
 

@@ -46,6 +46,7 @@ namespace semantic {
 	bool _isCVariadic;
 	bool _isForced = false;
 	FinalFrame _attached;
+	bool _isLvalue = false;	
 	
     public:
 
@@ -75,6 +76,8 @@ namespace semantic {
 	
 	FinalFrame & attached ();
 
+	bool& isLvalue ();
+	
 	bool has (std::string attrs);
 	
 	void isForcedDelegate ();

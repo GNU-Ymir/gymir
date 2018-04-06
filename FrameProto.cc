@@ -69,6 +69,10 @@ namespace semantic {
 	return this-> _attached;
     }
 
+    bool& IFrameProto::isLvalue () {
+	return this-> _isLvalue;
+    }
+    
     bool IFrameProto::has (std::string attrs) {
 	for (auto it : this-> _attributes)
 	    if (it == attrs) return true;

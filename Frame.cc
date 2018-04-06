@@ -125,8 +125,9 @@ namespace semantic {
 	    Table::instance ().retInfo ().deco = this-> _function-> getType ()-> deco.getStr ();
 	    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
 		Table::instance ().retInfo ().info-> isConst (true);
-	    else
+	    else {
 		Table::instance ().retInfo ().info-> isConst (false);
+	    }
 	}
 	
 	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams, this-> _attributes);
@@ -148,7 +149,9 @@ namespace semantic {
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
 	    
-	    proto-> type () = Table::instance ().retInfo ().info;
+	    proto-> type () = Table::instance ().retInfo ().info;	    
+	    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+	    
 	    proto-> attached () = finFrame;
 	    proto-> closure () = Table::instance ().retInfo ().closure;
 	    FrameTable::instance ().insert (finFrame);
@@ -270,6 +273,8 @@ namespace semantic {
 		    finFrame-> isInline () = self-> has (Keys::INLINE);
 		    
 		    proto-> type () = Table::instance ().retInfo ().info;
+		    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+		    
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> attached () = finFrame;
@@ -324,6 +329,8 @@ namespace semantic {
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
 						  space, name, params, block, {});
 	    proto-> type () = Table::instance ().retInfo ().info;
+	    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+	    
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
 	    
@@ -360,7 +367,9 @@ namespace semantic {
 	    
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
 						  space, name, params, block, {});
+	    
 	    proto-> type () = Table::instance ().retInfo ().info;
+	    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
 	    
@@ -426,6 +435,8 @@ namespace semantic {
 		    finFrame-> isInline () = self-> has (Keys::INLINE);
 		    
 		    proto-> type () = Table::instance ().retInfo ().info;
+		    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+		    
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> attached () = finFrame;

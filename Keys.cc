@@ -77,3 +77,5 @@ std::string     Keys::PRE        = "pre";
 std::string     Keys::POST       = "post";
 std::string     Keys::BODY       = "body";
 std::string     Keys::NEW        = "new";
+std::string     Keys::ATTRIBUTE  = "attrib";
+std::string     Keys::MOVE       = "move";

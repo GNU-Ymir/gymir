@@ -65,6 +65,8 @@ namespace syntax {
 	    return ids;
 	}
 	
+	virtual bool isLvalue ();
+
 	virtual void print (int) override;
 
 	virtual std::string prettyPrint () override;

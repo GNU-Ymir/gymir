@@ -540,19 +540,15 @@ namespace syntax {
     Expression IBinary::affect () {
 	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 	if (simpleVerif (aux)) return NULL;
-	
-	if (aux-> left-> info-> isConst () && !aux-> left-> info-> type-> is <IUndefInfo> ()) {
-	    if (aux-> left-> info-> value () && aux-> right-> info-> value () && aux-> left-> info-> type-> isSame (aux-> right-> info-> type)) {
-		aux-> left-> info-> value () = aux-> right-> info-> value ();
-		return aux-> left;
-	    }
-	    
-	    auto call = findOpAssign (aux);
-	    if (!call) {
-		Ymir::Error::notLValue (aux-> left-> token);
-		return NULL;
-	    }
-	    return call;	    
+
+	if (aux-> left-> isLvalue () &&
+	    aux-> left-> info-> value () && aux-> right-> info-> value () && aux-> left-> info-> type-> isSame (aux-> right-> info-> type)) {
+		
+	    aux-> left-> info-> value () = aux-> right-> info-> value ();
+	    return aux-> left;
+	} else if ((!aux-> left-> isLvalue () || aux-> left-> info-> isConst ()) && !aux-> left-> info-> type-> is <IUndefInfo> ()) {	    
+	    Ymir::Error::notLValue (aux-> left-> token);
+	    return NULL;	    
 	} else {	
 	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);	
 	    if (type == NULL) {
@@ -772,7 +768,7 @@ namespace syntax {
 
     Expression IFixed::expression () {
 	auto aux = new (Z0)  IFixed (this-> token, this-> type);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, this-> type));
+	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (false, this-> type));
 	aux-> info-> value () = new (Z0)  IFixedValue (this-> type, this-> uvalue, this->value);
 	aux-> uvalue = this-> uvalue;
 	aux-> value = this-> value;
@@ -781,14 +777,14 @@ namespace syntax {
     
     Expression IChar::expression () {
 	auto aux = new (Z0)  IChar (this-> token, this-> code);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  ICharInfo (true));
+	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  ICharInfo (false));
 	aux-> info-> value () = new (Z0) IFixedValue (FixedConst::UBYTE, this-> code, this-> code);
 	return aux;
     }
 
     Expression IFloat::expression () {
 	auto aux = new (Z0)  IFloat (this-> token, this-> suite, this-> _type);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (true, this-> _type));
+	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (false, this-> _type));
 	aux-> totale = this-> totale;
 	char * temp;
 	if (this-> _type == FloatConst::FLOAT) {
@@ -805,7 +801,7 @@ namespace syntax {
 
     Expression IString::expression () {
 	auto aux = new (Z0)  IString (this-> token, this-> content);
-	auto arrayType = new (Z0) IStringInfo (true, true);
+	auto arrayType = new (Z0) IStringInfo (false, true);
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 	aux-> info-> value () = new (Z0)  IStringValue (this-> content);	
 	return aux;

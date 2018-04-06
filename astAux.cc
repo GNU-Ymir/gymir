@@ -254,6 +254,10 @@ namespace syntax {
 	}
     }
 
+    bool IVar::isLvalue () {
+	return true;
+    }
+    
     IVar::~IVar () {
 	for (auto it : templates)
 	    delete it;
@@ -512,6 +516,11 @@ namespace syntax {
 
     Expression& IBinary::getRight () {
 	return this-> right;
+    }
+
+    bool IBinary::isLvalue () {
+	if (this-> token == Token::EQUAL) return true;
+	return false;
     }
     
     std::vector <std::string> IBinary::getIds () {
@@ -845,6 +854,10 @@ namespace syntax {
 	delete right;
     }
     
+    bool IDot::isLvalue () {
+	return true;
+    }
+    
     Expression IDot::getLeft () {
 	return this-> left;
     }   
@@ -902,6 +915,12 @@ namespace syntax {
 
     std::string IPar::prettyPrint () {
 	return Ymir::OutBuffer (this-> _left-> prettyPrint (), "(", this-> params-> prettyPrint (), ")").str ();	
+    }
+
+    bool IPar::isLvalue () {
+	if (this-> _score-> proto && this-> _score-> proto-> isLvalue ())
+	    return true;
+	return this-> info-> type-> is<IRefInfo> ();
     }
     
     IPar::~IPar () {
@@ -1150,6 +1169,10 @@ namespace syntax {
     {
     }
 
+    bool IAccess::isLvalue () {
+	return true;
+    }
+    
     std::string IAccess::prettyPrint () {
 	return Ymir::OutBuffer (this-> left-> prettyPrint (), "[", this-> params-> prettyPrint (), "]").str ();	
     }
@@ -1327,6 +1350,10 @@ namespace syntax {
 
 	return "";
     }    
+
+    bool IExpression::isLvalue () {
+	return false;
+    }
     
     ILambdaFunc::ILambdaFunc (Word begin, std::vector <Var> params, Var type, Block block) : 
 	IExpression (begin),

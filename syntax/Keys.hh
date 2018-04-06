@@ -80,4 +80,6 @@ struct Keys {
     static std::string  POST;
     static std::string  BODY;
     static std::string  NEW;
+    static std::string  ATTRIBUTE;
+    static std::string  MOVE;
 };

@@ -54,6 +54,8 @@ namespace syntax {
 
 	virtual bool isType ();
 
+	bool isLvalue () override;
+	
 	std::vector<Expression>& getTemplates ();
 
 	Word& getDeco ();
