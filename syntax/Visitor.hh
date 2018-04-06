@@ -81,6 +81,7 @@ namespace syntax {
 	Expression visitFuncPtr (const Word &);
 	Expression visitLambdaEmpty ();
 	Expression visitLambda ();
+	Expression visitLambdaMove ();
 	Expression visitSuite (const Word& token, Expression left);
 	Expression visitPar (Expression left);
 	Expression visitStructCst (Expression left);

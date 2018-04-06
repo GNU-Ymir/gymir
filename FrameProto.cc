@@ -72,6 +72,10 @@ namespace semantic {
     bool& IFrameProto::isLvalue () {
 	return this-> _isLvalue;
     }
+
+    bool& IFrameProto::isMoved () {
+	return this-> _isMoved;
+    }
     
     bool IFrameProto::has (std::string attrs) {
 	for (auto it : this-> _attributes)
@@ -132,7 +136,10 @@ namespace semantic {
 	    std::vector <InfoType> types;
 	    std::vector <std::string> attrs;
 	    for (auto it : this-> _closure) {
-		types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
+		if (this-> _isMoved)
+		    types.push_back (it-> info-> type);
+		else
+		    types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
 		attrs.push_back (it-> info-> sym.getStr ());
 	    }
 	    

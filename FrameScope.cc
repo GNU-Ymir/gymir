@@ -164,6 +164,10 @@ namespace semantic {
     bool& FrameReturnInfo::isImmutable () {
 	return this-> _isImmutable;
     }
+
+    bool& FrameReturnInfo::closureMoved () {
+	return this-> _closureMoved;
+    }
     
     void FrameReturnInfo::enterBlock () {
 	if (this-> _retInfo) {

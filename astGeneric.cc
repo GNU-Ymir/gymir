@@ -8,6 +8,7 @@
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/utils/StringUtils.hh>
 #include <ymir/semantic/utils/ArrayUtils.hh>
+#include <ymir/semantic/utils/FunctionUtils.hh>
 #include "print-tree.h"
 #include <ymir/semantic/value/_.hh>
 
@@ -119,7 +120,12 @@ namespace syntax {
 	    auto var = this-> decls [i];
 	    auto aff = this-> insts [i];
 	    if (!var-> info-> isImmutable ()) {
-		auto type_tree = var-> info-> type-> toGeneric ();	    
+		auto type_tree = var-> info-> type-> toGeneric ();
+		auto inner = type_tree;
+		
+		if (var-> info-> isClosured ()) 
+		    type_tree = build_pointer_type (type_tree.getTree ());
+		
 		Ymir::Tree decl = build_decl (
 		    var-> token.getLocus (),
 		    VAR_DECL,
@@ -132,7 +138,21 @@ namespace syntax {
 		var-> info-> treeDecl (decl);
 		Ymir::getStackVarDeclChain ().back ().append (decl);
 		list.append (buildTree (DECL_EXPR, var-> token.getLocus (), void_type_node, decl));
-	    
+
+		if (var-> info-> isClosured ()) {
+		    auto fn = InternalFunction::getMalloc ();
+		    auto byte_len = TYPE_SIZE_UNIT (inner.getTree ());
+		    auto alloc = build_call_array_loc (this-> token.getLocus (),
+						       type_tree.getTree (),
+						       fn.getTree (), 1, &byte_len);
+		    
+		    list.append (buildTree (
+			MODIFY_EXPR,
+			this-> token.getLocus (),
+			type_tree, decl, alloc
+		    ));
+		}
+		
 		if (aff != NULL) {
 		    aff-> info-> value () = NULL;
 		    list.append (aff-> toGeneric ());
@@ -192,6 +212,7 @@ namespace syntax {
     }
 
     Ymir::Tree IVar::toGeneric () {
+	println (this-> token, " : ", this-> info-> isClosured ());
 	if (this-> info-> value ())
 	    return this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	
@@ -209,7 +230,17 @@ namespace syntax {
 					     this-> token.getStr ());
 		return field;
 	    } else {
-		return this-> info-> treeDecl ();
+		auto ret = this-> info-> treeDecl ();
+		if (this-> info-> isClosured ()) {
+		    return Ymir::getPointerUnref (
+			this-> token.getLocus (),
+			ret,
+			this-> info-> type-> toGeneric (),
+			0
+		    );
+		} else {
+		    return ret;
+		}
 	    }
 	}
     }
@@ -327,23 +358,6 @@ namespace syntax {
 	);	
     }
 
-    Ymir::Tree IPar::createClosureVar () {
-	auto closureType = this-> _score-> proto-> createClosureType ();
-	auto closureVar = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), closureType);
-	Ymir::TreeStmtList list;
-	for (auto it : this-> _score-> proto-> closure ()) {
-	    auto field = Ymir::getField (BUILTINS_LOCATION, closureVar, it-> token.getStr ());
-	    auto lastInfo = it-> lastInfoDecl ();
-	    list.append (buildTree (
-		MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, field, getAddr (lastInfo)
-	    ));
-	}
-	
-	return Ymir::compoundExpr (this-> token.getLocus (),
-				   list.getTree (),
-				   getAddr (closureVar)
-	);
-    }
     
     Ymir::Tree IPar::callInline (std::vector <tree> args) {
 	auto frame = this-> _score-> proto-> attached ();
@@ -372,7 +386,7 @@ namespace syntax {
 		    it = Ymir::promote (it);
 		}
 	    } else if (this-> _score-> proto-> closure ().size () != 0) {
-		auto closureVar = createClosureVar ();
+		auto closureVar = semantic::FunctionUtils::createClosureVar (this-> token.getLocus (), this-> _score);
 		args.insert (args.begin (), closureVar.getTree ());
 	    } else if (this-> _score-> proto-> has (Keys::INLINE)) {
 		return this-> callInline (args);

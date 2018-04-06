@@ -35,7 +35,7 @@ namespace syntax {
 	std::vector <std::string> getIds () override;
 	
 	bool hasTemplate ();
-
+	
 	Expression expression () override;
 
 	Expression expression (semantic::Symbol sym);

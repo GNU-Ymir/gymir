@@ -75,6 +75,10 @@ namespace semantic {
     bool& IFinalFrame::isInline () {
 	return this-> _isInline;
     }
+
+    bool& IFinalFrame::isMoved () {
+	return this-> _isMoved;
+    }
     
     std::vector<syntax::Var>& IFinalFrame::vars () {
 	return this-> _vars;
@@ -153,7 +157,10 @@ namespace semantic {
 	    std::vector <InfoType> types;
 	    std::vector <std::string> attrs;
 	    for (auto it : this-> _closure) {
-		types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
+		if (!this-> _isMoved)
+		    types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
+		else
+		    types.push_back (it-> info-> type);
 		attrs.push_back (it-> info-> sym.getStr ());
 	    }
 	    
@@ -263,7 +270,7 @@ namespace semantic {
 	    return IFinalFrame::__isInlining__.back ();
 	return Ymir::Tree ();
     }
-
+       
     Ymir::Tree IFinalFrame::endLabel () {       
 	if (IFinalFrame::__endLabel__.size () != 0)
 	    return IFinalFrame::__endLabel__.back ();

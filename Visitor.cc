@@ -1540,7 +1540,9 @@ namespace syntax {
 	    return new (Z0)  IIgnore (tok);
 	else if (tok == Keys::STRINGOF) 
 	    return visitStringOf ();
-	else this-> lex.rewind ();
+	else if (tok == Keys::MOVE) {
+	    return visitLambdaMove ();
+	} else this-> lex.rewind ();
 	return NULL;
     }
 
@@ -1983,6 +1985,34 @@ namespace syntax {
 	} else return NULL;
     }
     
+    Expression Visitor::visitLambdaMove () {
+	std::vector <Var> params;
+	auto begin = this-> lex.next ({Token::LPAR});
+	auto next = this-> lex.next ();
+	if (next != Token::RPAR) {
+	    this-> lex.rewind ();
+	    while (true) {
+		params.push_back (visitVarDeclaration ());
+		auto next = this-> lex.next ({Token::RPAR, Token::COMA});
+		if (next == Token::RPAR) break;
+	    }
+	}
+	
+	LambdaFunc lambda;
+	next = this-> lex.next ({Token::DARROW, Token::LACC});
+	if (next == Token::DARROW) {
+	    auto expr = visitExpressionUlt ();
+	    lambda = new (Z0)  ILambdaFunc (begin, params, expr);
+	} else if (next == Token::LACC) {
+	    this-> lex.rewind ();
+	    auto block = visitBlock ();
+	    lambda = new (Z0)  ILambdaFunc (begin, params, block);
+	} else return NULL;
+	
+	lambda-> isMoved () = true;
+	return lambda;
+    }    
+
     Expression Visitor::visitLambda () {
 	std::vector <Var> params;
 	this-> lex.rewind ();

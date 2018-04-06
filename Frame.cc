@@ -151,6 +151,9 @@ namespace semantic {
 	    
 	    proto-> attached () = finFrame;
 	    proto-> closure () = Table::instance ().retInfo ().closure;
+
+	    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+	    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
 	    FrameTable::instance ().insert (finFrame);
 
 	    finFrame-> file () = LOCATION_FILE (this-> _function-> getIdent ().getLocus ());
@@ -274,6 +277,9 @@ namespace semantic {
 		    
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;
+
+		    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+		    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
 		    proto-> attached () = finFrame;
 		    FrameTable::instance ().insert (finFrame);
 
@@ -334,6 +340,8 @@ namespace semantic {
 	    proto-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> attached () = finFrame;
 
+	    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+	    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
 	    FrameTable::instance ().insert (finFrame);
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
 	    Table::instance ().quitBlock ();
@@ -373,6 +381,8 @@ namespace semantic {
 	    proto-> closure () = Table::instance ().retInfo ().closure;
 	    proto-> attached () = finFrame;
 
+	    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+	    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
 	    FrameTable::instance ().insert (finFrame);
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
 	    Table::instance ().quitBlock ();
@@ -435,6 +445,8 @@ namespace semantic {
 		    proto-> isLvalue () = lvalue;
 		    
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
+		    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+		    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
 		    proto-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> attached () = finFrame;
 		    

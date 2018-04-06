@@ -13,7 +13,8 @@ namespace semantic {
 	std::string name;
 
 	bool _isPure;
-	
+	bool _isMoved;
+
     public:
 
 	ILambdaFrame (Namespace space, std::string& name, syntax::LambdaFunc func);
@@ -34,6 +35,8 @@ namespace semantic {
 
 	void isPure (bool);
 
+	bool& isMoved ();
+	
 	std::vector <InfoType> getParamTypes () override;
 
 	InfoType getRetType () override;

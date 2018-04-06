@@ -143,12 +143,17 @@ namespace syntax {
 				break;
 			    }
 
-			if (!found)
+			if (!found) {
 			    Table::instance ().retInfo ().closure.push_back (ret-> to<IVar> ());
+			}
 			
 			ret-> to<IVar> ()-> _fromClosure = true;
 			var-> _lastInfo = ret-> info;
-			ret-> info = new (Z0) ISymbol (ret-> token, new (Z0) IRefInfo (false, ret-> info-> type-> clone ()));
+			if (Table::instance ().retInfo ().closureMoved ()) {
+			    ret-> info = new (Z0) ISymbol (ret-> token, ret-> info-> type-> cloneConst ());
+			} else {
+			    ret-> info = new (Z0) ISymbol (ret-> token, new (Z0) IRefInfo (false, ret-> info-> type-> clone ()));
+			}
 		    }
 		}
 		return ret;
@@ -1315,6 +1320,7 @@ namespace syntax {
 	    auto ident = Ymir::OutBuffer ("Lambda_", this-> id).str ();
 	    auto fr = new (Z0) ILambdaFrame (space, ident, aux);
 	    fr-> isPure (isPure);
+	    fr-> isMoved () = this-> _isMoved;
 	    aux-> frame = fr;
 	} else {
 	    aux-> frame = this-> frame;

@@ -22,6 +22,8 @@ namespace semantic {
 	static ulong __nbTmp__;
 	Ymir::Tree decl;
 	Namespace _space;
+	bool _isClosured = false;
+	
     public:
 
 	Word sym;
@@ -36,6 +38,8 @@ namespace semantic {
 	bool& isPublic ();
 
 	bool& isStatic ();
+
+	bool& isClosured ();
 	
 	Value & value ();
 	

@@ -1406,6 +1406,10 @@ namespace syntax {
 	return ident.str ();
     }
     
+    bool& ILambdaFunc::isMoved () {
+	return this-> _isMoved;
+    }
+    
     std::vector <Var> & ILambdaFunc::getParams () {
 	return this-> params;
     }

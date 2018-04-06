@@ -9,6 +9,7 @@
 #include <ymir/semantic/value/LambdaValue.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/syntax/Keys.hh>
+#include <ymir/semantic/pack/InternalFunction.hh>
 
 namespace semantic {
 
@@ -35,6 +36,62 @@ namespace semantic {
 	    return build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
 	}
 
+	
+	Tree createClosureVarMoved (location_t loc, ApplicationScore score) {
+	    Ymir::TreeStmtList list;
+	    auto closureType = score-> proto-> createClosureType ();	
+	    auto type_tree = build_pointer_type (closureType.getTree ());
+	    auto fn = InternalFunction::getMalloc ();
+	    auto byte_len = TYPE_SIZE_UNIT (closureType.getTree ());
+	    auto alloc = build_call_array_loc (loc,
+					       type_tree,
+					       fn.getTree (), 1, &byte_len);
+	
+	    auto closureVar = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), type_tree);
+	
+	    list.append (buildTree (
+		MODIFY_EXPR,
+		loc,
+		Ymir::Tree (type_tree), closureVar, alloc
+	    ));
+
+	    for (auto it : score-> proto-> closure ()) {
+		auto field = Ymir::getField (BUILTINS_LOCATION,
+					     Ymir::getPointerUnref (loc, closureVar, closureType, 0), it-> token.getStr ());
+		auto lastInfo = it-> lastInfoDecl ();
+	    
+		list.append (buildTree (
+		    MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, field, lastInfo
+		));
+	    }
+	
+	    return Ymir::compoundExpr (loc,
+				       list.getTree (),
+				       closureVar
+	    );	    
+	}
+
+	Tree createClosureVar (location_t loc, ApplicationScore score) {
+	    Ymir::TreeStmtList list;
+	    if (score-> proto-> isMoved ()) return createClosureVarMoved (loc, score);
+	    auto values = score-> proto-> closure ();
+	    auto closureType = score-> proto-> createClosureType ();
+	    auto closureVar = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), closureType);
+	    
+	    for (auto it : values) {
+		auto field = Ymir::getField (loc, closureVar, it-> token.getStr ());
+		auto lastInfo = it-> lastInfoDecl ();
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, field, getAddr (lastInfo)
+		));
+	    }
+	    
+	    return Ymir::compoundExpr (loc,
+				       list.getTree (),
+				       getAddr (closureVar)
+	    );	   
+	}
+	
 	Tree InstAffectDelegate (Word locus, InfoType type, Expression, Expression) {
 	    auto loc = locus.getLocus ();
 	    PtrFuncInfo func = (PtrFuncInfo) type;
@@ -50,29 +107,19 @@ namespace semantic {
 	    
 	    tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
 	    tree fnPtr = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
-	    
-	    auto values = func-> getScore ()-> proto-> closure ();
-	    auto closureType = func-> getScore ()-> proto-> createClosureType ();
-	    auto closureVar = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), closureType);
-	    Ymir::TreeStmtList list;
-	    
-	    for (auto it : values) {
-		auto field = Ymir::getField (locus.getLocus (), closureVar, it-> token.getStr ());
-		auto lastInfo = it-> lastInfoDecl ();
-		list.append (buildTree (
-		    MODIFY_EXPR, locus.getLocus (), void_type_node, field, getAddr (lastInfo)
-		));
-	    }
 
+	    Ymir::TreeStmtList list;
+	    auto closureVar = createClosureVar (loc, func-> getScore ());
+	    
 	    auto finalType = type-> toGeneric ();
 	    auto finalRet = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), finalType);
 	    
 	    auto obj = Ymir::getField (loc, finalRet, "obj");
 	    auto ptr = Ymir::getField (loc, finalRet, "ptr");
+
 	    
-	    auto ptrc = Ymir::getAddr (loc, closureVar).getTree ();
 	    list.append (buildTree (
-		MODIFY_EXPR, locus.getLocus (), void_type_node, obj, ptrc
+		MODIFY_EXPR, locus.getLocus (), void_type_node, obj, closureVar
 	    ));
 	    
 	    list.append (buildTree (
@@ -161,7 +208,7 @@ namespace semantic {
 		ret-> getType () = score-> ret-> cloneConst ();
 		ret-> getScore () = score;
 		ret-> isDelegate () = score-> proto-> isDelegate ();
-		if (ret-> isDelegate ()) {		
+		if (ret-> isDelegate ()) {
 		    ret-> nextBinop.push_back (&FunctionUtils::InstAffectDelegate);
 		} else {
 		    ret-> nextBinop.push_back (&FunctionUtils::InstAffect);

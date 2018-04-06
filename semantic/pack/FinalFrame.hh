@@ -35,6 +35,7 @@ namespace semantic {
 	bool _isVariadic;
 	bool _isInline;
 	bool _isForced = false;
+	bool _isMoved = false;
 	syntax::Block _block;
 
 	static std::map <std::string, Ymir::Tree> __declared__;
@@ -60,6 +61,8 @@ namespace semantic {
 	bool& isVariadic ();
 
 	bool& isInline ();
+
+	bool& isMoved ();
 	
 	std::vector<syntax::Var> &vars ();
 	

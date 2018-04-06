@@ -19,6 +19,7 @@ namespace semantic {
 
     FrameProto ILambdaFrame::validate (const std::vector<InfoType> & params) {	
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> templateParams (), this-> attributes (), true);
+	Table::instance ().retInfo ().closureMoved () = this-> isMoved ();
 	Table::instance ().enterBlock ();
 	std::vector <Var> finalParams = IFrame::computeParams (this-> frame-> getParams (), params);
 	auto from = Table::instance ().globalNamespace ();
@@ -31,6 +32,7 @@ namespace semantic {
 	    ret = IFrame::validate (this-> name, this-> _space, finalParams, this-> frame-> getBlock ());
 	}
 	
+	ret-> isMoved () = this-> isMoved ();
 	Table::instance ().setCurrentSpace (from);
 	return ret;
     }
@@ -63,6 +65,10 @@ namespace semantic {
 	this-> _isPure = isPure;
     }
 
+    bool& ILambdaFrame::isMoved () {
+	return this-> _isMoved;
+    }
+    
     std::vector <InfoType> ILambdaFrame::getParamTypes () {
 	std::vector <InfoType> params;
 	for (auto it : this-> frame-> getParams ()) {

@@ -69,6 +69,7 @@ namespace semantic {
 	std::string _currentBlock;
 	TreeInfo _retInfo = NULL;
 	bool _changed = false;
+	bool _closureMoved = false;
 
     public:
 	static FrameReturnInfo& empty ();
@@ -80,6 +81,8 @@ namespace semantic {
 	bool& changed ();
 	
 	bool& isImmutable ();
+
+	bool& closureMoved ();
 	
 	void enterBlock ();
 

@@ -26,6 +26,10 @@ namespace semantic {
     bool& ISymbol::isStatic () {
 	return this-> _static;
     }
+
+    bool& ISymbol::isClosured () {
+	return this-> _isClosured;
+    }
     
     bool& ISymbol::isPublic () {
 	return this-> _public;

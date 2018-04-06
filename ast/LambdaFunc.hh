@@ -22,7 +22,8 @@ namespace syntax {
 	Block block;
 	Expression expr;
 	ulong id;
-
+	bool _isMoved = false;
+	
 	semantic::LambdaFrame frame; 
 
 	static ulong __nbLambda__;
@@ -41,6 +42,8 @@ namespace syntax {
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
+	bool& isMoved ();
+	
 	std::vector <Var> & getParams ();
 
 	Ymir::Tree toGeneric () override {
