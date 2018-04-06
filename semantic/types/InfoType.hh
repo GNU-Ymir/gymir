@@ -165,6 +165,8 @@ namespace semantic {
 	virtual InfoType CompOp (InfoType);
 
 	virtual InfoType ConstVerif (InfoType);
+
+	virtual bool passingConst (InfoType);
 	
 	virtual InfoType CastTo (InfoType);
 

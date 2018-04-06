@@ -595,6 +595,22 @@ namespace semantic {
 	} 
 	return this;
     }
+
+    bool IStructInfo::passingConst (InfoType other) {
+	if (IInfoType::passingConst (other)) return true;
+	else if (auto type = other-> to <IStructInfo> ()) {
+	    static std::vector <InfoType> dones;
+	    if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
+		dones.push_back (this);
+		for (auto it : Ymir::r (0, this-> types.size ())) {
+		    if (this-> types [it]-> passingConst (type-> types [it]))
+			return true;
+		}
+		dones.erase (std::find (dones.begin (), dones.end (), this));
+	    }
+	}
+	return false;
+    }
     
     InfoType IStructInfo::onClone () {
 	auto ret = new (Z0) IStructInfo (this-> _id, this-> space, this-> name, this-> _udas, this-> _isUnion);

@@ -23,6 +23,8 @@ namespace semantic {
 
 	InfoType ConstVerif (InfoType) override;
 
+	bool passingConst (InfoType) override;
+	
 	InfoType BinaryOp (Word token, syntax::Expression right) override;
 
 	InfoType BinaryOpRight (Word token, syntax::Expression left) override;

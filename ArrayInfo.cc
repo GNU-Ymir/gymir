@@ -318,6 +318,14 @@ namespace semantic {
 	} else return NULL;
     }
 
+    bool IArrayInfo::passingConst (InfoType other) {
+	if (IInfoType::passingConst (other)) return true;
+	else if (auto type = other-> to <IArrayInfo> ()) {
+	    return this-> _content-> passingConst (type-> _content);
+	}
+	return false;
+    }
+    
     Ymir::Tree IArrayInfo::toGeneric () {
 	if (!this-> _isStatic) {
 	    IInfoType::printConst (false);

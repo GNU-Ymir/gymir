@@ -1111,6 +1111,11 @@ namespace syntax {
 	this-> elem-> inside = this;
     }
 
+    bool IUnary::isLvalue () {
+	if (this-> token == Token::AND) return false;
+	return true;
+    }
+    
     IUnary::~IUnary () {
 	if (type) delete type;
 	delete elem;

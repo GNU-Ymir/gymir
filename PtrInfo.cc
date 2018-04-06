@@ -411,6 +411,14 @@ namespace semantic {
 	return NULL;
     }
 
+    bool IPtrInfo::passingConst (InfoType other) {
+	if (IInfoType::passingConst (other)) return true;
+	else if (auto type = other-> to <IPtrInfo> ()) {
+	    return this-> _content-> passingConst (type-> _content);
+	}
+	return false;
+    }
+    
     bool IPtrInfo::isConst () {
 	return IInfoType::isConst ();
     }

@@ -174,6 +174,14 @@ namespace semantic {
 	return NULL;
     }
 
+    bool IRefInfo::passingConst (InfoType other) {
+	if (IInfoType::passingConst (other)) return true;
+	else if (auto type = other-> to <IRefInfo> ()) {
+	    return this-> _content-> passingConst (type-> _content);
+	}
+	return this-> _content-> passingConst (other);
+    }
+    
     InfoType IRefInfo::BinaryOp (Word token, syntax::Expression right) {
 	InfoType aux = NULL, refRight = NULL;
 	if (auto type = right-> info-> type-> to<IRefInfo> ()) {
@@ -404,6 +412,10 @@ namespace semantic {
 	return this-> _content-> ConstVerif (type);	
     }
 
+    bool IArrayRefInfo::passingConst (InfoType type) {
+	return this-> _content-> passingConst (type);
+    }
+    
     InfoType IArrayRefInfo::BinaryOp (Word token, syntax::Expression right) {
 	if (auto type = right-> info-> type-> to <IArrayRefInfo> ()) {
 	    return this-> _content-> BinaryOp (token, type-> _content);

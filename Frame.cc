@@ -76,7 +76,7 @@ namespace semantic {
 		if (type != NULL) type = type-> ConstVerif (info);
 		else return NULL;
 		if (type && type-> isSame (args [it])) {
-		    if (args [it]-> isConst () != info-> isConst ())
+		    if (args [it]-> passingConst (info))
 			score-> score += CONST_SAME;
 		    else score-> score += SAME;
 		    score-> treat.push_back (type);		
@@ -87,13 +87,13 @@ namespace semantic {
 			    changed = true;			   			
 		    }
 		    
-		    if (args [it]-> isConst () != info-> isConst ())
+		    if (args [it]-> passingConst (info))
 			score-> score += changed ? CONST_CHANGE : CONST_AFF;
 		    else score-> score += changed ? CHANGE : AFF;
 		    score-> treat.push_back (type);
 		} else return NULL;
 	    }
-	    
+	    Ymir::log ("Call : ", ident, " with ", args, " result : ", score-> score);
 	    score-> score += this-> currentScore ();
 	    return score;
 	}
@@ -116,6 +116,7 @@ namespace semantic {
     FrameProto IFrame::validate (const std::vector<Var> & finalParams) {
 	//Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _function-> getIdent ().getStr ()));
 
+	bool lvalue = false;
 	if (this-> _function-> getType () == NULL)
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 	else {
@@ -123,11 +124,7 @@ namespace semantic {
 	    if (var != NULL) Table::instance ().retInfo ().info = var-> info;
 	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
 	    Table::instance ().retInfo ().deco = this-> _function-> getType ()-> deco.getStr ();
-	    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
-		Table::instance ().retInfo ().info-> isConst (true);
-	    else {
-		Table::instance ().retInfo ().info-> isConst (false);
-	    }
+	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
 	}
 	
 	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams, this-> _attributes);
@@ -150,7 +147,7 @@ namespace semantic {
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
 	    
 	    proto-> type () = Table::instance ().retInfo ().info;	    
-	    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+	    proto-> isLvalue () = lvalue;
 	    
 	    proto-> attached () = finFrame;
 	    proto-> closure () = Table::instance ().retInfo ().closure;
@@ -273,7 +270,7 @@ namespace semantic {
 		    finFrame-> isInline () = self-> has (Keys::INLINE);
 		    
 		    proto-> type () = Table::instance ().retInfo ().info;
-		    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+		    proto-> isLvalue () = false;
 		    
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;
@@ -329,7 +326,7 @@ namespace semantic {
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
 						  space, name, params, block, {});
 	    proto-> type () = Table::instance ().retInfo ().info;
-	    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+	    proto-> isLvalue () = false;
 	    
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
@@ -369,7 +366,7 @@ namespace semantic {
 						  space, name, params, block, {});
 	    
 	    proto-> type () = Table::instance ().retInfo ().info;
-	    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+	    proto-> isLvalue () = false;
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
 	    
@@ -401,6 +398,7 @@ namespace semantic {
 	    FrameProto operator () (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
 		Namespace finalNamespace (space, from.toString ());
 		Table::instance ().templateNamespace () = from;
+		bool lvalue = false;
 		
 		if (self-> _function-> getType () == NULL) 
 		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
@@ -410,8 +408,7 @@ namespace semantic {
 		    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
 		    
 		    Table::instance ().retInfo ().deco = self-> _function-> getType ()-> deco.getStr ();
-		    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
-			Table::instance ().retInfo ().info-> isConst (true);
+		    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
 		}
 
 		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, self-> tempParams, self-> _attributes);
@@ -435,7 +432,7 @@ namespace semantic {
 		    finFrame-> isInline () = self-> has (Keys::INLINE);
 		    
 		    proto-> type () = Table::instance ().retInfo ().info;
-		    proto-> isLvalue () = !Table::instance ().retInfo ().info-> isConst ();
+		    proto-> isLvalue () = lvalue;
 		    
 		    finFrame-> closure () = Table::instance ().retInfo ().closure;
 		    proto-> closure () = Table::instance ().retInfo ().closure;

@@ -19,6 +19,8 @@ namespace semantic {
 	bool isSame (InfoType) override;
 
 	InfoType ConstVerif (InfoType other) override;
+
+	bool passingConst (InfoType other) override;
 	
 	static InfoType create (Word token, const std::vector<syntax::Expression> & templates);
 

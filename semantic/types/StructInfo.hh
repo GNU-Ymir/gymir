@@ -122,6 +122,8 @@ namespace semantic {
 	
 	InfoType ConstVerif (InfoType) override;
 
+	bool passingConst (InfoType) override;
+	
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
 	
 	InfoType BinaryOp (Word op, syntax::Expression left) override;

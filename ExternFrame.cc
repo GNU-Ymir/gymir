@@ -64,6 +64,7 @@ namespace semantic {
 	Table::instance ().programNamespace () = this-> space ();
 	std::vector <Var> finalParams = IFrame::computeParams (this-> _proto-> params ());	
 
+	bool lvalue = false;
 	if (this-> _proto-> type () == NULL) {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	} else {
@@ -72,12 +73,12 @@ namespace semantic {
 		Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IVoidInfo ());
 	    else Table::instance ().retInfo ().info = type-> info;
 	    Table::instance ().retInfo ().deco = this-> _proto-> type ()-> deco.getStr ();
-	    if (Table::instance ().retInfo ().deco != Keys::REF && Table::instance ().retInfo ().deco != Keys::MUTABLE)
-		Table::instance ().retInfo ().info-> isConst (true);
+	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
 	}
 
 	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams, {});
 
+	this-> _fr-> isLvalue () = lvalue;
 	this-> _fr-> externName () = this-> _from;
 	this-> _fr-> isCVariadic () = this-> isVariadic ();
 	Table::instance ().quitFrame ();

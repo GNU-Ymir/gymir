@@ -171,6 +171,12 @@ namespace semantic {
     InfoType IInfoType::ConstVerif (InfoType) {
 	return this;
     }
+
+    bool IInfoType::passingConst (InfoType ot) {
+	if (this-> isConst () != ot-> isConst ())
+	    return true;
+	return false;
+    }
     
     InfoType IInfoType::CastTo (InfoType) {
 	return NULL;

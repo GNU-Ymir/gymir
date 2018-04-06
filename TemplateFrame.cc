@@ -102,17 +102,19 @@ namespace semantic {
 	
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 	Symbol ret = NULL;
+	bool lvalue = false;
 	if (func-> getType ()) {
-	    auto type = func-> getType ()-> asType ();	    
+	    auto type = func-> getType ()-> asType ();
 	    if (type) {
 		ret = type-> info;
-		ret-> isConst (func-> getType ()-> deco != Keys::REF && func-> getType ()-> deco != Keys::MUTABLE);
+		lvalue = func-> getType ()-> deco == Keys::MUTABLE;
 	    }
 	}
 
 
 	auto from = Table::instance ().globalNamespace ();
 	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), tmps, this-> _isVariadic);
+	proto-> isLvalue () = lvalue;
 	return proto;
     }
 
@@ -323,7 +325,7 @@ namespace semantic {
 		else return NULL;
 
 		if (type && type-> isSame (args [it]-> getIntern ())) {
-		    if (args [it]-> isConst () != info-> isConst ())
+		    if (args [it]-> passingConst (info))
 			score-> score += this-> changed ? CONST_CHANGE_TMP : CONST_SAME_TMP;
 		    else score-> score += this-> changed ? CHANGE_TMP : SAME_TMP;
 		    score-> treat.push_back (type);
@@ -334,7 +336,7 @@ namespace semantic {
 			    changed = true;			   			
 		    }
 		    
-		    if (args [it]-> isConst () != info-> isConst ())
+		    if (args [it]-> passingConst (info))
 			score-> score += change ? CONST_CHANGE_TMP : CONST_AFF_TMP;
 		    else score-> score += change ? CHANGE_TMP : AFF_TMP;
 		    score-> treat.push_back (type);

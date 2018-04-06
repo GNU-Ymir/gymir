@@ -49,6 +49,17 @@ namespace semantic {
 	}
 	return NULL;
     }
+
+    bool ITupleInfo::passingConst (InfoType other) {
+	if (IInfoType::passingConst (other)) return true;
+	else if (auto tuple = other-> to <ITupleInfo> ()) {
+	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		if (this-> params [it]-> passingConst (tuple-> params [it]))
+		    return true;		
+	    }
+	}
+	return false;
+    }
     
     bool ITupleInfo::isSame (InfoType other) {
 	if (auto tu = other-> to <ITupleInfo> ()) {

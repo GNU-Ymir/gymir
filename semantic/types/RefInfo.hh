@@ -19,6 +19,8 @@ namespace semantic {
 
 	InfoType ConstVerif (InfoType) override;
 
+	bool passingConst (InfoType) override;
+	
 	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps) {
 	    if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
 		Ymir::Error::takeATypeAsTemplate (tok);
