@@ -104,7 +104,8 @@ namespace Ymir {
 	    OutOfRange,
 	    DynamicAccess,
 	    AllocationInSafe,
-	    CallUnsafeInSafe, 
+	    CallUnsafeInSafe,
+	    LineInstruction,
 	    LAST_ERROR
 	};
 
@@ -284,6 +285,8 @@ namespace Ymir {
 	static void scopeExitEnd (const Word&);
 	
 	static void unreachableStmtWarn (const Word&);
+
+	static void lineInstructionWarn (const Word&);
 	
 	static void noValueNonVoidFunction (const Word&);
 

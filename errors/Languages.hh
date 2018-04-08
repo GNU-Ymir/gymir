@@ -108,6 +108,7 @@ namespace Ymir {
 
 		phrases [ReturnVoid] = "Cannot return a '%%%' element";
 		phrases [UnreachableStmt] = "Unreachable statement";
+		phrases [LineInstruction] = "Use '{ }' for an empty statement, not a ';'";
 		phrases [MissingReturn] = "Missing return statement for function '%%%' expecting a value of type '%%%'";		
 		phrases [ModuleDontExist] = "Source file %%%.yr doesn't exist";		
 		phrases [ImportError] = "Importation failed";

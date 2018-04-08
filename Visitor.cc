@@ -115,10 +115,9 @@ namespace syntax {
 	    } else {
 		this-> lex.next ();
 		syntaxError (token,
-			     {Keys::DEF, Keys::IMPORT, Keys::EXTERN,
-				     Keys::STRUCT, Keys::ENUM, Keys::STATIC,
-				     Keys::SELF, Keys::TRAIT, Keys::IMPL,
-				     Keys::PUBLIC, Keys::PRIVATE
+			     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
+				     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
+				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
 				     }
 		);
 	    }
@@ -146,11 +145,10 @@ namespace syntax {
     		    auto tok = this-> lex.next ();
     		    if (tok != Token::RACC)
 			syntaxError (tok,
-				     {Keys::DEF, Keys::IMPORT,
-					     Keys::EXTERN,
-					     Keys::STRUCT, Keys::ENUM,
-					     Keys::STATIC, Keys::SELF,
-					     Keys::TRAIT, Keys::IMPL }
+				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
+					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
+					     }
 			);
     		    break;
     		}
@@ -179,10 +177,11 @@ namespace syntax {
     		} else {
     		    auto tok = this-> lex.next ();
     		    if (tok != Token::RACC)
-			syntaxError (tok, {Keys::DEF, Keys::IMPORT,
-				    Keys::EXTERN, Keys::STRUCT,
-				    Keys::ENUM,   Keys::STATIC,
-				    Keys::SELF, Keys::TRAIT, Keys::IMPL }
+			syntaxError (tok,
+				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
+					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
+					     }
 			);			
     		    break;
     		}
@@ -223,9 +222,10 @@ namespace syntax {
     	else if (token == Keys::SELF) return visitSelf ();
 	else if (token == Token::TILDE) return visitDestSelf ();
     	else if (fatal) syntaxError (token,
-				     {Keys::DEF, Keys::IMPORT, Keys::EXTERN,
-					     Keys::STRUCT, Keys::ENUM, Keys::STATIC,
-					     Keys::SELF}
+				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
+					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
+					     }
 	);
     	else this-> lex.rewind ();
     	return NULL;
@@ -1221,14 +1221,14 @@ namespace syntax {
 	    else if (tok == Keys::FOR) inst = visitFor ();
 	    else if (tok == Keys::ASSERT) inst = visitAssert ();
 	    else {
-		syntaxError (tok, {Keys::IF, Keys::ASSERT});
+		syntaxError (tok, {Keys::IF, Keys::ASSERT, Keys::FOR});
 		return NULL;
 	    }
 	    inst-> setStatic (true);
 	    return inst;
 	}
 	else if (tok == Token::SEMI_COLON) {
-	    // TODO warn
+	    Ymir::Error::lineInstructionWarn (tok);
 	    return new (Z0)  INone (tok);
 	} else {
 	    this-> lex.rewind ();
