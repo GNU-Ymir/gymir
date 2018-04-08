@@ -220,7 +220,7 @@ namespace semantic {
     
     InfoType IPtrFuncInfo::CompOp (InfoType other) {
 	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
-	    auto ptr = other-> clone ();
+	    auto ptr = other-> is <IUndefInfo> () ? this-> clone () : other-> clone ();
 	    if (this-> isDelegate ()) 
 		ptr-> binopFoo = &PtrFuncUtils::InstCastDelegate;
 	    else 

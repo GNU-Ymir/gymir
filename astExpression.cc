@@ -880,11 +880,12 @@ namespace syntax {
 		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, type-> info-> type));
 		}
 	    }
-	    
+
 	    auto type = aux-> validate ();
 	    if (!type) return NULL;
 	    type-> isConst (false);
 	    auto arrayType = new (Z0)  IArrayInfo (false, type);
+	    
 	    aux-> info = new (Z0)  ISymbol (aux-> token, arrayType);
 	    arrayType-> isStatic (true, aux-> params.size ());	    
 	}
