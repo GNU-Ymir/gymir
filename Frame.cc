@@ -134,17 +134,35 @@ namespace semantic {
 		Table::instance ().retInfo ().isImmutable () = true;
 
 	    FrameTable::instance ().insert (proto);
+
+	    Block pre = NULL, post = NULL; Var postVar = NULL;
+	    if (this-> _function-> pre () != NULL) {
+		pre = this-> _function-> pre ()-> block ();
+	    }
+	    
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    auto block = this-> _function-> getBlock ()-> block ();
 	    
 	    if (Table::instance ().retInfo ().info-> type-> is<IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();	    
+		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+	    
+
+	    if (this-> _function-> post () != NULL) {
+		postVar = this-> _function-> postVar ()-> templateExpReplace ({})-> to<IVar> ();
+		postVar-> info = new ISymbol (postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+		Table::instance ().insert (postVar-> info);
+		post = this-> _function-> post ()-> block ();
+	    }
+
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 					    this-> _space, this-> _function-> name (),
 					    finalParams, block, this-> tempParams);
 	    
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
+	    finFrame-> pre () = pre;
+	    finFrame-> post () = post;
+	    finFrame-> postVar () = postVar;
 	    
 	    proto-> type () = Table::instance ().retInfo ().info;	    
 	    proto-> isLvalue () = lvalue;
@@ -160,6 +178,7 @@ namespace semantic {
 	    Table::instance ().quitBlock ();
 
 	    verifyReturn (this-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
+	    
 	    Table::instance ().quitFrame ();
 	    return proto;
 	}
@@ -235,8 +254,7 @@ namespace semantic {
 	return finalParams;
     }
     
-    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
-	//Table::instance ().setCurrentSpace (Namespace (space, name.getStr ()));
+    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block pre, Block post, Var postVar) {
 	struct Exit {
 	    Namespace last;
 	    Frame self;
@@ -244,7 +262,7 @@ namespace semantic {
 	    Exit (Frame self) : last (Table::instance ().templateNamespace ()), self (self) {
 	    }
 	    
-	    FrameProto operator () (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic) {
+	    FrameProto operator () (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block _pre, Block _post, Var _postVar) {
 		Table::instance ().templateNamespace () = from;
 		Namespace finalNamespace (space, from.toString ());
 		if (ret == NULL) 
@@ -259,19 +277,35 @@ namespace semantic {
 		    
 		    FrameTable::instance ().insert (proto);
 
+		    Block pre = NULL, post = NULL; Var postVar = NULL;
+		    if (_pre != NULL) {
+			pre = _pre-> block ();
+		    }	    
+		    
 		    Table::instance ().retInfo ().currentBlock () = "true";
 		    block = block-> block ();
 
 		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 
+		    	   
+		    if (_post != NULL) {
+			postVar = _postVar-> templateExpReplace ({})-> to<IVar> ();
+			postVar-> info = new ISymbol (_postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+			Table::instance ().insert (postVar-> info);
+			post = _post-> block ();
+		    }
+		    
 		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 							   finalNamespace, name.getStr (),
 							   params, block, tmps);
 		    
 		    finFrame-> isVariadic () = isVariadic;
 		    finFrame-> isInline () = self-> has (Keys::INLINE);
-		    
+		    finFrame-> pre () = pre;
+		    finFrame-> post () = post;
+		    finFrame-> postVar () = postVar;
+
 		    proto-> type () = Table::instance ().retInfo ().info;
 		    proto-> isLvalue () = false;
 		    
@@ -301,7 +335,7 @@ namespace semantic {
 	};
 
 	Exit ex (this);
-	return ex (name, space, from, ret, params, block, tmps, isVariadic);	
+	return ex (name, space, from, ret, params, block, tmps, isVariadic, pre, post, postVar);	
     }
 
     FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block) {
@@ -428,11 +462,24 @@ namespace semantic {
 			Table::instance ().retInfo ().isImmutable () = true;
 
 		    FrameTable::instance ().insert (proto);
+
+		    Block pre = NULL, post = NULL; Var postVar = NULL;
+		    if (self-> _function-> pre () != NULL) {
+			pre = self-> _function-> pre ()-> block ();
+		    }	    
+
 		    Table::instance ().retInfo ().currentBlock () = "true";
 		    auto block = self-> _function-> getBlock ()-> block ();
 
 		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+		    	   
+		    if (self-> _function-> post () != NULL) {
+			postVar = self-> _function-> postVar ()-> templateExpReplace ({})-> to<IVar> ();
+			postVar-> info = new ISymbol (postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+			Table::instance ().insert (postVar-> info);
+			post = self-> _function-> post ()-> block ();
+		    }
 
 		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 							   finalNamespace, self-> _function-> getIdent ().getStr (),
@@ -440,6 +487,9 @@ namespace semantic {
 
 		    finFrame-> isVariadic () = isVariadic;
 		    finFrame-> isInline () = self-> has (Keys::INLINE);
+		    finFrame-> pre () = pre;
+		    finFrame-> post () = post;
+		    finFrame-> postVar () = postVar;
 		    
 		    proto-> type () = Table::instance ().retInfo ().info;
 		    proto-> isLvalue () = lvalue;

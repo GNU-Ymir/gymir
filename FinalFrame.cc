@@ -103,6 +103,18 @@ namespace semantic {
     syntax::Block IFinalFrame::block () {
     	return this-> _block;
     }
+
+    syntax::Block& IFinalFrame::pre () {
+	return this-> _pre;
+    }
+
+    syntax::Block& IFinalFrame::post () {
+	return this-> _post;
+    }
+
+    syntax::Var& IFinalFrame::postVar () {
+	return this-> _postVar;
+    }
     
     Ymir::Tree& IFinalFrame::currentFrame () {
 	return __fn_decl__;
@@ -320,20 +332,57 @@ namespace semantic {
 				       NULL_TREE, ret);
 	
 	DECL_RESULT (fn_decl) = result_decl;
+	Ymir::Tree endLabel = Ymir::makeLabel (BUILTINS_LOCATION, "end");
+	
+	Ymir::TreeStmtList list; 
+	if (this-> _pre != NULL)  {
+	    Ymir::Tree pre = this-> _pre-> toGeneric ();
+	    list.append (pre);
+	}
+
+	if (this-> _postVar != NULL) {	    
+	    auto auxVar = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), ret);
+	    IFinalFrame::__isInlining__.push_back (auxVar);
+	    IFinalFrame::__endLabel__.push_back (endLabel);
+	}
 	
 	Ymir::Tree inside = this-> _block-> toGeneric ();	
-	Ymir::getStackStmtList ().back ().append (inside);	
+	list.append (inside);	
 
 	if (this-> _name == Keys::MAIN && this-> _type-> type-> is <IVoidInfo> ()) {
 	    Ymir::Tree inside = Ymir::buildTree (
 		MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, result_decl, build_int_cst_type (int_type_node, 0)
 	    );
 
-	    Ymir::getStackStmtList ().back ().append (Ymir::buildTree (
+	    list.append (Ymir::buildTree (
 		RETURN_EXPR, BUILTINS_LOCATION, void_type_node, inside
 	    ));
 	}	    
-	auto fnTreeBlock = Ymir::leaveBlock ();
+
+	if (this-> _post != NULL) {
+	    Ymir::Tree decl = build_decl (
+					  this-> _postVar-> token.getLocus (),
+					  VAR_DECL,
+					  get_identifier (this-> _postVar-> token.getStr ().c_str ()),
+					  this-> _postVar-> info-> type-> toGeneric ().getTree ()
+            );
+	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
+	    this-> _postVar-> info-> treeDecl (decl);
+	    Ymir::getStackVarDeclChain ().back ().append (decl);
+
+	    list.append (Ymir::buildTree (LABEL_EXPR, this-> _post-> token.getLocus (), void_type_node, endLabel));
+	    list.append (buildTree (DECL_EXPR, this-> _postVar-> token.getLocus (), void_type_node, decl));
+	    list.append (
+			    Ymir::buildTree (MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, this-> _postVar-> toGeneric (), IFinalFrame::__isInlining__.back ())
+	    );
+	    
+	    IFinalFrame::__isInlining__.pop_back ();
+	    list.append (this-> _post-> toGeneric ());
+	    
+	} 
+	
+	Ymir::getStackStmtList ().back ().append (list.getTree ());
+	auto fnTreeBlock = Ymir::leaveBlock ();	
 	auto fnBlock = fnTreeBlock.block;
 	__inlining__.pop_back ();
 	

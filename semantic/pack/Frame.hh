@@ -136,7 +136,7 @@ namespace semantic {
 
 	FrameProto validate (std::string& name, Namespace space, const std::vector <syntax::Var> & params, syntax::Block block);
 	
-	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<syntax::Var> & finalParams, syntax::Block block, const std::vector <syntax::Expression> &tmps, bool isVariadic);
+	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<syntax::Var> & finalParams, syntax::Block block, const std::vector <syntax::Expression> &tmps, bool isVariadic, syntax::Block pre, syntax::Block post, syntax::Var postVar);
 		
 	FrameProto validate (Namespace space, Namespace from, const std::vector<syntax::Var> & finalParams, bool isVariadic);
 	
