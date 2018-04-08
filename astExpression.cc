@@ -872,12 +872,20 @@ namespace syntax {
 
 
 	    if (aux-> params.size () == 1)  {
-		auto type = aux-> params [0]-> to<IType> ();
-		if (type) {
+		auto expr = aux-> params [0]-> expression ();
+		if (auto type = expr-> to<IType> ()) {
 		    Word tok (this-> token.getLocus (),
 			      this-> token.getStr () + type-> token.getStr () + "]"
 		    );
 		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, type-> info-> type));
+		} else if (expr-> info-> type-> isType ()) {
+		    Word tok (this-> token.getLocus (),
+			      this-> token.getStr () + expr-> token.getStr () + "]"
+		    );
+		    auto inner = expr-> info-> type;
+		    if (expr-> info-> type-> is <IEnumCstInfo> ()) inner = inner-> TempOp ({});
+		    else if (expr-> info-> type-> is <IStructCstInfo> ()) inner = inner-> TempOp ({});
+		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, inner));
 		}
 	    }
 
@@ -1370,6 +1378,7 @@ namespace syntax {
 	} else {
 	    auto func = new (Z0) IFuncPtr (this-> token, params, ret);
 	    func-> info = new (Z0) ISymbol (this-> token, t_info);
+	    t_info-> isType (true);
 	    return func;
 	}
     }
