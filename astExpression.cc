@@ -491,7 +491,7 @@ namespace syntax {
 	auto elem = this-> elem-> expression ();
 	if (elem == NULL) return NULL;
 
-	if (this-> token != Token::MINUS && this-> token != Token::STAR && !elem-> isLvalue ()) {
+	if ((this-> token == Token::DMINUS || this-> token == Token::DPLUS || this-> token == Token::AND) && !elem-> isLvalue ()) {
 	    Ymir::Error::notLValue (elem-> token);
 	    return NULL;
 	}
