@@ -154,6 +154,13 @@ namespace semantic {
 	return false;
     }
 
+    bool IFunctionInfo::passingConst (InfoType other) {
+	if (auto ot = other-> to <IPtrFuncInfo> ()) {
+	    return ot-> isDelegate ();
+	}
+	return false;
+    }
+    
     void IFunctionInfo::set (Frame fr) {
 	this-> _info = fr;
     }
@@ -387,6 +394,7 @@ namespace semantic {
 	    auto ret = (PtrFuncInfo) ot-> cloneConst ();
 	    ret-> getScore () = score;
 	    ret-> isDelegate () = score-> proto-> isDelegate () || ot-> isDelegate ();
+	    if (!score-> proto-> isDelegate ()) ret-> forcedDelegate () = true;
 
 	    if (ret-> isDelegate () && !ot-> isDelegate ()) return NULL;
 	    if (ot-> isDelegate ()) score-> proto-> isForcedDelegate ();	    

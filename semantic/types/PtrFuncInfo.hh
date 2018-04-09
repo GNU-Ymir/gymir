@@ -13,14 +13,16 @@ namespace semantic {
 	std::vector <InfoType> params;
 	InfoType ret;
 	ApplicationScore score;
-	bool _isDelegate;
+	bool _isDelegate, _forcedDelegate = false;
 	
     public:
 
 	IPtrFuncInfo (bool isConst);
+
+	bool passingConst (InfoType) override;
 	
 	bool isSame (InfoType) override;
-
+	
 	bool isSameNoDTest (InfoType);
 
 	static InfoType create (Word tok, const std::vector<syntax::Expression> & templates) {
@@ -88,6 +90,8 @@ namespace semantic {
 	
 	bool & isDelegate ();
 
+	bool & forcedDelegate ();
+	
 	static const char* id () {
 	    return "IPtrFuncInfo";
 	}

@@ -44,6 +44,8 @@ namespace semantic {
 	
 	InfoType DColonOp (syntax::Var) override;
 
+	InfoType UnaryOp (Word) override;
+	
 	InfoType onClone () override;
 
 	InfoType CastOp (InfoType) override;

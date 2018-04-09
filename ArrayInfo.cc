@@ -97,6 +97,15 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IArrayInfo::UnaryOp (Word token) {
+	if (token == Token::AND) {
+	    auto ret = new (Z0) IPtrInfo (this-> isConst (), this-> clone ());
+	    ret-> binopFoo = &FixedUtils::InstAddr;
+	    return ret;
+	}
+	return NULL;
+    }
+    
     InfoType IArrayInfo::ApplyOp (const std::vector<syntax::Var> & vars) {
 	if (vars.size () != 1) return NULL;
 	if (this-> isConst ()) {

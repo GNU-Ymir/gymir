@@ -179,7 +179,14 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "arity") return Arity ();
+	if (var-> token == "init") return Init ();
 	return NULL;
+    }
+
+    InfoType ITupleInfo::Init () {
+	auto ret = this-> clone ();
+	ret-> unopFoo = TupleUtils::InstInit;
+	return ret;
     }
 
     InfoType ITupleInfo::Arity () {
@@ -356,6 +363,19 @@ namespace semantic {
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}	
+
+	Tree InstInit (Word locus, InfoType type, Expression) {
+	    auto loc = locus.getLocus ();
+	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
+	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
+				  
+	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
+	    
+	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
+	    return Ymir::compoundExpr (loc, result, ltree);
+	}
+
     }
     
 

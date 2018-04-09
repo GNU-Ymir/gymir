@@ -30,6 +30,8 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
+	bool passingConst (InfoType) override;
+	
 	void set (Frame);
 
 	Frame frame ();

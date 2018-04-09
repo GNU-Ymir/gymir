@@ -126,6 +126,13 @@ namespace semantic {
 	}
 	return false;
     }
+
+    bool IPtrFuncInfo::passingConst (InfoType other) {
+	if (auto ptr = other-> to <IPtrFuncInfo> ()) {
+	    if (ptr-> isDelegate () != this-> isDelegate ()) return true;
+	}
+	return false;
+    }
     
     bool IPtrFuncInfo::isSame (InfoType other) {
 	if (auto ptr = other-> to <IPtrFuncInfo> ()) {
@@ -339,6 +346,10 @@ namespace semantic {
 
     bool & IPtrFuncInfo::isDelegate () {
 	return this-> _isDelegate;
+    }
+
+    bool & IPtrFuncInfo::forcedDelegate () {
+	return this-> _forcedDelegate;
     }
     
     Ymir::Tree IPtrFuncInfo::toGeneric () {	

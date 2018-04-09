@@ -15,6 +15,8 @@ namespace semantic {
 	Ymir::Tree InstGet (Word locus, InfoType type, syntax::Expression elem, syntax::Expression index);
 
 	Ymir::Tree InstAddr (Word locus, InfoType, syntax::Expression elem, syntax::Expression);
+
+	Ymir::Tree InstInit (Word locus, InfoType type, syntax::Expression);
 	
     }
 
