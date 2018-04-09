@@ -288,7 +288,7 @@ namespace semantic {
 	}
 	aux-> ret = this-> ret-> clone ();
 	aux-> score = this-> score;
-	aux-> _isDelegate = this-> _isDelegate; 
+	aux-> _isDelegate = this-> _isDelegate;
 	return aux;
     }
 

@@ -82,6 +82,8 @@ namespace semantic {
 
 	InfoType AffectRight (syntax::Expression);
 
+	InfoType SizeOf ();
+	
 	InfoType Init ();
 	
 	InfoType Ptr ();

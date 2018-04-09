@@ -365,6 +365,7 @@ namespace syntax {
 		if (this-> expType == NULL) return NULL;
 	    } else {
 		this-> expType = this-> expType-> expression ();
+		this-> expType-> info-> type-> isType (false);
 		if (this-> expType == NULL) return NULL;
 	    }
 
@@ -395,6 +396,7 @@ namespace syntax {
 	} else {
 	    if (auto ptr = this-> expType-> to<IFuncPtr> ()) {
 		auto expr = this-> expType-> expression ();
+		expr-> info-> type-> isType (false);
 		if (expr == NULL) return NULL;
 		ptr = expr -> to<IFuncPtr> ();
 		aux = new (Z0)  ITypedVar (this-> token, new (Z0)  IType (ptr-> token, ptr-> info-> type));
@@ -422,16 +424,26 @@ namespace syntax {
     
     Expression IArrayAlloc::expression () {
 	auto aux = new (Z0)  IArrayAlloc (this-> token, NULL, this-> size-> expression ());
-	if (auto fn = this-> type-> to<IFuncPtr> ()) aux-> type = fn-> expression ();
-	else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
+	if (auto fn = this-> type-> to<IFuncPtr> ()) {
+	    aux-> type = fn-> expression ();
+	    if (aux-> type) aux-> type-> info-> type-> isType (true);
+	} else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
 	else aux-> type = this-> type-> expression ();
 	
 
 	if (aux-> type == NULL) return NULL;
 	if (aux-> size == NULL) return NULL;
 	if (!aux-> type-> is <IType> () && !aux-> type-> info-> type-> isType ()) {
-	    Ymir::Error::useAsType (this-> type-> token);
-	    return NULL;
+	    bool failed = true;
+	    if (aux-> type-> is <IArrayAlloc> ()) {
+		if (auto arr = aux-> type-> info-> type-> to <IArrayInfo> ())
+		    failed = !arr-> isStatic ();
+	    }
+
+	    if (failed) {
+		Ymir::Error::useAsType (this-> type-> token);
+		return NULL;
+	    }
 	}
 		
 	auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
@@ -1378,7 +1390,6 @@ namespace syntax {
 	} else {
 	    auto func = new (Z0) IFuncPtr (this-> token, params, ret);
 	    func-> info = new (Z0) ISymbol (this-> token, t_info);
-	    t_info-> isType (true);
 	    return func;
 	}
     }

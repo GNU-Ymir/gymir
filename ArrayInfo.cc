@@ -6,6 +6,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/ArrayUtils.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/value/FixedValue.hh>
@@ -48,6 +49,11 @@ namespace semantic {
 		return NULL;
 	    
 	    ret-> binopFoo = ArrayUtils::InstAffect;
+	    return ret;
+	} else if (type && type-> _content-> is <IVoidInfo> ()) {
+	    if (this-> _isStatic) return NULL;
+	    auto ret = this-> clone ();
+	    ret-> binopFoo = ArrayUtils::InstAffectNull;
 	    return ret;
 	} else if (type && this-> _content-> is<IVoidInfo> ()) {
 	    if (this-> _isStatic) return NULL;
@@ -155,9 +161,16 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "init") return Init ();
+	if (var-> token == "sizeof") return SizeOf ();
 	return NULL;
     }
 
+    InfoType IArrayInfo::SizeOf () {
+	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
+	ret-> unopFoo = FixedUtils::InstSizeOf;
+	return ret;	
+    }
+    
     InfoType IArrayInfo::Init () {
 	if (!this-> _isStatic) {
 	    auto ret = this-> clone ();

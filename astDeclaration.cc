@@ -11,6 +11,7 @@
 #include <ymir/utils/Options.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <unistd.h>
+#include <dirent.h>
 
 namespace syntax {
 
@@ -364,6 +365,8 @@ namespace syntax {
 		}
 	    }
 	}
+
+	this-> importAllCoreFiles ();
 	
 	std::vector <Use> later;
 	for (auto it : Ymir::r (begin, this-> decls.size ())) {
@@ -393,6 +396,8 @@ namespace syntax {
 		}
 	    }
 	}
+	
+	this-> importAllCoreFilesAsExtern (mod);
 
 	for (auto it : Ymir::r (begin, this-> decls.size ())) {
 	    if (!this-> decls [it]-> is <IUse> ()) 
@@ -400,6 +405,57 @@ namespace syntax {
 	}
     }
 
+    void IProgram::importAllCoreFiles () {
+	std::string path = Options::instance ().prefixIncludeDir ();
+	if (path [path.size () - 1] == '/') path = path + "ymir/core/";
+	else path = path + "/ymir/core/";
+	
+	DIR* dir = opendir (path.c_str ());
+	dirent* ent;
+	if (dir != NULL) {
+	    while ((ent = readdir (dir)) != NULL) {
+		std::string name = ent-> d_name;
+		if (ent-> d_type == DT_REG &&
+		    name.size () > 3 && 
+		    name [name.size () - 1] == 'r'
+		    && name [name.size () - 2] == 'y' &&
+		    name [name.size () - 3] == '.') {
+		    Word file;
+		    file.setStr ("core/" + name.substr (0, name.size () - 3));
+		    auto import = new (Z0) IImport (Word::eof (), {file});
+		    import-> is_public (false);
+		    import-> declare ();
+		}
+	    }
+	    closedir (dir);
+	}
+    }    
+
+    void IProgram::importAllCoreFilesAsExtern (semantic::Module mod) {
+	std::string path = Options::instance ().prefixIncludeDir ();
+	if (path [path.size () - 1] == '/') path = path + "ymir/core/";
+	else path = path + "/ymir/core/";
+	
+	DIR* dir = opendir (path.c_str ());
+	dirent* ent;
+	if (dir != NULL) {
+	    while ((ent = readdir (dir)) != NULL) {
+		std::string name = ent-> d_name;
+		if (ent-> d_type == DT_REG &&
+		    name.size () > 3 && 
+		    name [name.size () - 1] == 'r'
+		    && name [name.size () - 2] == 'y' &&
+		    name [name.size () - 3] == '.') {
+		    Word file;
+		    file.setStr ("core/" + name.substr (0, name.size () - 3));
+		    auto import = new (Z0) IImport (Word::eof (), {file});
+		    import-> is_public (false);
+		    import-> declareAsExtern (mod);
+		}
+	    }
+	    closedir (dir);
+	}
+    }
     
     void IProto::declare () {       
 	Namespace space (this-> space != "" ? this-> space : Table::instance ().space ());

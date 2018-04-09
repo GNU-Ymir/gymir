@@ -11,14 +11,14 @@ namespace syntax {
     class IImport : public IDeclaration {
 	Word ident;
 	std::vector <Word> params;
-
+	
     public:
 
 	IImport (Word ident, std::vector <Word> params) :
 	    ident (ident),
 	    params (params)
 	{}
-
+      	
 	void declare () override;
 
 	void declare (semantic::Module) override;
