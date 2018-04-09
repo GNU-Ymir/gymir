@@ -33,7 +33,6 @@ namespace semantic {
 	}
 	
 	ret-> isMoved () = this-> isMoved ();
-	Table::instance ().setCurrentSpace (from);
 	return ret;
     }
 

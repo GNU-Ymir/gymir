@@ -16,7 +16,7 @@ namespace semantic {
 
 	std::list <FrameScope> _frameTable;
 	Scope _globalScope;
-	Namespace _templateScope;
+	std::list <Namespace> _templateScope;
 	std::vector <Module> _importations;
 	std::vector <Namespace> _foreigns;
 	Namespace _space;

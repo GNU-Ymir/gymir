@@ -113,6 +113,7 @@ namespace semantic {
 
 
 	auto from = Table::instance ().globalNamespace ();
+	Ymir::log ("Validate template function : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());
 	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), tmps, this-> _isVariadic, this-> _function-> pre (), this-> _function-> post (), this-> _function-> postVar ());
 	proto-> isLvalue () = lvalue;
 	return proto;

@@ -414,6 +414,7 @@ namespace syntax {
 	    if (this-> deco == Keys::CONST) 
 		aux-> info-> type-> isConst (true);
 	}
+	aux-> info-> type-> isType (false);
 	Table::instance ().insert (aux-> info);
 	return aux;    
     }

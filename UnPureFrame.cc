@@ -18,6 +18,7 @@ namespace semantic {
 
     FrameProto IUnPureFrame::validate (const std::vector<InfoType> & params) {
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> templateParams (), this-> attributes (), this-> isInternal ());
+	Ymir::log ("Validate unpure function : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());
 	Table::instance ().enterBlock ();
 	std::vector <Var> finalParams = IFrame::computeParams (this-> _function-> getParams (), params);
 	Namespace from = Table::instance ().globalNamespace ();

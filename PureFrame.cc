@@ -32,6 +32,7 @@ namespace semantic {
 	    return validateMain ();
 	
 	Table::instance ().enterFrame (this-> _space, this-> name, this-> templateParams (), this-> attributes (), this-> isInternal ());
+	Ymir::log ("Validate pure function : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());
 	Table::instance ().enterBlock ();
 	
 	std::vector <Var> finalParam = IFrame::computeParams (this-> _function-> getParams ());

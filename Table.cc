@@ -10,10 +10,12 @@ namespace semantic {
     Table Table::__instance__;
 
     Table::Table () :
-	_templateScope (""),
+	_templateScope (),
 	_space (""),
 	_programSpace ("")	
-    {}
+    {
+	_templateScope.push_front (Namespace {""});
+    }
 
     void Table::enterBlock () {
 	if (!this-> _frameTable.empty ()) {
@@ -26,6 +28,7 @@ namespace semantic {
 	scope.isPhantom () = true;
 	scope.setInternal (&this-> _frameTable.front ());
 	this-> _frameTable.push_front (scope);
+	this-> _templateScope.push_front (Namespace {""});
 	this-> _nbFrame ++;
     }
 
@@ -94,6 +97,7 @@ namespace semantic {
 	scope.setContext (context);
 	if (internal) scope.setInternal (&this-> _frameTable.front ());
 	this-> _frameTable.push_front (scope);
+	this-> _templateScope.push_front (Namespace {""});
 	this-> _nbFrame ++;
     }
 
@@ -106,6 +110,7 @@ namespace semantic {
     void Table::quitFrame () {
 	if (!this-> _frameTable.empty ()) {
 	    this-> _frameTable.pop_front ();
+	    this-> _templateScope.pop_front ();
 	    this-> _nbFrame --;
 	}
     }
@@ -124,7 +129,7 @@ namespace semantic {
     }
 
     Namespace& Table::templateNamespace () {
-	return this-> _templateScope;
+	return this-> _templateScope.front ();
     }
 
     void Table::insert (Symbol info) {
@@ -154,6 +159,7 @@ namespace semantic {
     Symbol Table::get (std::string name) {
 	Symbol ret;
 	Namespace last = this-> getCurrentSpace ();
+	Ymir::log ("Get : ", name, " from : ", last);
 	if (!this-> _frameTable.empty ()) {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
@@ -161,7 +167,11 @@ namespace semantic {
 
 	if (ret == NULL) ret = this-> _globalScope.get (name);
 	if (ret == NULL) {
+	    Ymir::log ("Get All mod from : ", getCurrentSpace (), " and : ", this-> _templateScope.front (), " {");
 	    auto mods = this-> getAllMod (getCurrentSpace ());
+	    for (auto i : mods)
+		Ymir::log ("\t", i-> space ());
+	    Ymir::log ("}");
 	    for (auto it : mods) {
 		ret = it->  getFor (name, getCurrentSpace ());
 		if (ret != NULL) return ret;
@@ -288,7 +298,7 @@ namespace semantic {
     std::vector <Module> Table::getAllMod (Namespace space) {
 	std::vector <Module> alls;
 	for (auto it : this-> _importations) {
-	    if (it-> authorized (space) || it-> authorized (this-> _templateScope)) {
+	    if (it-> authorized (space) || it-> authorized (this-> _templateScope.front ())) {
 		auto access = it-> accessible ();
 		for (auto sp : access) {
 		    auto mod = this-> getModule (sp);

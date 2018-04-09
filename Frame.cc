@@ -92,7 +92,7 @@ namespace semantic {
 		    else score-> score += changed ? CHANGE : AFF;
 		    score-> treat.push_back (type);
 		} else return NULL;
-	    }
+	    }	    
 	    Ymir::log ("Call : ", ident, " with ", args, " result : ", score-> score);
 	    score-> score += this-> currentScore ();
 	    return score;
@@ -265,6 +265,8 @@ namespace semantic {
 	    FrameProto operator () (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block _pre, Block _post, Var _postVar) {
 		Table::instance ().templateNamespace () = from;
 		Namespace finalNamespace (space, from.toString ());
+				
+		Ymir::log ("Validate function : ", name, " in space : ",  Table::instance ().getCurrentSpace ());
 		if (ret == NULL) 
 		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 		else
@@ -392,7 +394,7 @@ namespace semantic {
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
-	
+
 	if (!FrameTable::instance ().existsProto (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
@@ -423,6 +425,7 @@ namespace semantic {
 	    Table::instance ().quitFrame ();
 	    return proto;
 	}
+	
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
 	return FrameTable::instance ().getProto (proto);	
