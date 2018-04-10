@@ -1443,7 +1443,11 @@ namespace syntax {
 		if (rtype == NULL) return NULL;
 	    }
 	    
-	    auto res = aux-> left-> info-> type-> isSame (rtype);
+	    auto linfo = aux-> left-> info-> type;
+	    if (auto ref = linfo-> to <IRefInfo> ())
+		linfo = ref-> content ();
+
+	    auto res = linfo-> isSame (rtype);
 	    auto type = new (Z0) IBoolInfo (true);
 	    aux-> info = new (Z0) ISymbol (this-> token, type);
 	    aux-> info-> value () = new (Z0) IBoolValue (res);
