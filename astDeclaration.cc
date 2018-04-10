@@ -290,10 +290,16 @@ namespace syntax {
 	    auto globSpace = mod-> space ();
 	    auto space = Namespace (mod-> space (), this-> ident.getStr ());
 	    auto mod_ = Table::instance ().addModule (space);
+
+	    std::vector <Use> later;
 	    for (auto it : this-> decls) {
-		if (!it-> is<IUse> ())
-		    it-> declareAsExtern (mod_);
+		if (auto use = it-> to<IUse> ())
+		    later.push_back (use);
+		else it-> declareAsExtern (mod_);
 	    }
+
+	    for (auto it : later)
+		it-> declareAsExtern (mod_);
 	    
 	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
 	    sym-> isPublic () = this-> is_public ();
@@ -399,10 +405,15 @@ namespace syntax {
 	
 	this-> importAllCoreFilesAsExtern (mod);
 
+	std::vector <Use> later;
 	for (auto it : Ymir::r (begin, this-> decls.size ())) {
-	    if (!this-> decls [it]-> is <IUse> ()) 
-		this-> decls [it]-> declareAsExtern (mod);
-	}
+	    if (auto use = this-> decls [it]-> to <IUse> ()) {
+		later.push_back (use);
+	    } else this-> decls [it]-> declareAsExtern (mod);
+	}	    
+
+	for (auto it : later)
+	    it-> declareAsExtern (mod);
     }
 
     void IProgram::importAllCoreFiles () {
@@ -1072,7 +1083,21 @@ namespace syntax {
 	}
     }
 
-    void IUse::declareAsExtern (semantic::Module) {
+    void IUse::declareAsExtern (semantic::Module mod) {
+	auto sym = this-> mod-> expression ();
+	if (sym == NULL) return;
+	if (auto mod_ = sym-> info-> type-> to <IModuleInfo> ()) {
+	    auto content = mod_-> get ();
+	    if (content == NULL) {
+		Ymir::Error::uninitVar (this-> mod-> token);
+		return;
+	    }
+	    
+	    auto space = mod-> space ();
+	    content-> addOpen (space);
+	} else {
+	    Ymir::Error::incompatibleTypes (this-> loc, sym-> info, "module");
+	}
     }
 
     void IMacro::declare () {

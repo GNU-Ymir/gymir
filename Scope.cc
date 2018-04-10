@@ -101,8 +101,8 @@ namespace semantic {
 	Ymir::OutBuffer buf ("syms : {\n");
 	for (auto it : this-> local) {
 	    buf.write ("\t", it.first, " : [");
-	    for (auto it_ : it.second)
-		buf.write (it_-> typeString ());
+	    /*for (auto it_ : it.second)
+	      buf.write (it_-> typeString ());*/
 	    buf.write ("]\n");
 	}
 	buf.write ("}");
