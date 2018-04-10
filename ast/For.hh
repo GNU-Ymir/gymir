@@ -14,11 +14,12 @@ namespace syntax {
 	std::vector <Var> var;
 	Expression iter;
 	Block block;
+	std::vector <bool> _const;
 	semantic::InfoType ret;
 	
     public:
 
-	IFor (Word token, Word id, const std::vector <Var>& var, Expression iter, Block bl);
+	IFor (Word token, Word id, const std::vector <Var>& var, Expression iter, Block bl, std::vector <bool> _const);
 
 	Instruction instruction () override;
 	

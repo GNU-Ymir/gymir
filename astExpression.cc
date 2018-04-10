@@ -1689,4 +1689,11 @@ namespace syntax {
 	aux-> info-> value () = new (Z0) IStringValue (this-> value);
 	return aux;
     }
+
+    Expression IAffectGeneric::expression () {
+	auto left = this-> left-> expression ();
+	auto right = this-> right-> expression ();
+	if (left == NULL || right == NULL) return NULL;
+	return new (Z0) IAffectGeneric (this-> token, left, right, this-> _addr);
+    }
 }

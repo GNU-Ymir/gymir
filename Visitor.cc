@@ -2383,8 +2383,16 @@ namespace syntax {
 	    need = true;
 	} else this-> lex.rewind ();
 	std::vector <Var> vars;
-	while (true) {	    
-	    vars.push_back (visitVar ());
+	std::vector <bool> _const;
+	while (true) {
+	    auto next = this-> lex.next ();
+	    if (next == Keys::CONST) _const.push_back (true);
+	    else {
+		_const.push_back (false);
+		this-> lex.rewind ();
+	    }
+	    
+	    vars.push_back (visitVar ());	    
 	    next = this-> lex.next ({Keys::IN, Token::COMA});
 	    if (next == Keys::IN) break;
 	}
@@ -2395,7 +2403,7 @@ namespace syntax {
 	}
 	this-> lambdaPossible = true;
 	
-	return new (Z0)  IFor (begin, id, vars, iter, visitBlock ());
+	return new (Z0)  IFor (begin, id, vars, iter, visitBlock (), _const);
     }       
     
 };

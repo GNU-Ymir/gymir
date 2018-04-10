@@ -311,15 +311,17 @@ namespace syntax {
 	Block bl = new (Z0) IBlock (this-> token, {}, {});
 	auto varDecl = new IVarDecl (this-> token, {}, {}, {});
 	bl-> getInsts ().push_back (varDecl);
+	expr = expr-> expression ();
 	
-	auto aux = new (Z0) IVar ({this-> token, "_"});
-	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IUndefInfo ());
+	auto aux = new (Z0) IVar ({this-> token, "_"});	
+	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IRefInfo (true, expr-> info-> type-> clone ()));
 	Table::instance ().insert (aux-> info);
 	varDecl-> getDecls ().push_back (aux);
-	varDecl-> getInsts ().push_back ((new (Z0) IBinary ({this-> token, Token::EQUAL},
-						       aux, expr
-						       ))-> expression ()
-				     );
+	varDecl-> getInsts ().push_back ((new (Z0) IAffectGeneric (this-> token,
+								   aux, expr,
+								   true
+	))-> expression ()
+	);
 	
 	for (auto i : Ymir::r (0, tu-> nbParams ())) {
 	    auto var = vars [0]-> templateExpReplace ({})-> to <IVar> ();
@@ -327,17 +329,22 @@ namespace syntax {
 	    auto index = new (Z0) IFixedInfo (true, FixedConst::UINT);
 	    index-> value () = new (Z0) IFixedValue (FixedConst::UINT, i, i);
 	    auto indexVal = index-> value ()-> toYmir (new (Z0) ISymbol (var-> token, index));
-	    var-> info = new (Z0) ISymbol (var-> token, new (Z0) IUndefInfo ());
-	    var-> info-> isConst (false);
-	    Table::instance ().insert (var-> info);
+	    auto currentVal = (new (Z0) IDot (this-> token, aux, indexVal))-> expression ();
+
+	    var-> info = new (Z0) ISymbol (var-> token, new (Z0) IRefInfo (this-> _const [0],
+									   this-> _const [0] ?
+									   currentVal-> info-> type-> cloneConst () : currentVal-> info-> type-> clone ())
+	    );
 	    
+	    Table::instance ().insert (var-> info);
 	    varDecl-> getDecls ().push_back (var);
 	    varDecl-> getInsts ().push_back (NULL);
 	    
-	    bl-> getInsts ().push_back ((new (Z0) IBinary ({this-> token, Token::EQUAL},
-							  var,
-							  new (Z0) IDot (this-> token, aux, indexVal)
-							  ))-> expression ());
+	    bl-> getInsts ().push_back ((new (Z0) IAffectGeneric ({this-> token, Token::EQUAL},
+								  var,
+								  currentVal,
+								  true
+	    ))-> expression ());
 	    
 	    bl-> getInsts ().push_back (this-> block-> block ());
 	    Table::instance ().quitBlock ();
@@ -439,9 +446,13 @@ namespace syntax {
 
 	    Table::instance ().retInfo ().currentBlock () = "for";
 	    Table::instance ().retInfo ().changed () = true;
+	    for (auto it : Ymir::r (0, this-> var.size ())) {
+		var [it]-> info-> type-> isConst (this-> _const [it]);
+	    }
+	    
 	    Block bl = this-> block-> block ();
 	    Table::instance ().quitBlock ();
-	    auto aux = new (Z0) IFor (this-> token, this-> id, var, expr, bl);
+	    auto aux = new (Z0) IFor (this-> token, this-> id, var, expr, bl, this-> _const);
 	    aux-> ret = type;
 	    return aux;
 	} else {

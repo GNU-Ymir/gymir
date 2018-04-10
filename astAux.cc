@@ -1044,12 +1044,13 @@ namespace syntax {
 	    this-> else_-> print (nb + 8);	    
     }
 
-    IFor::IFor (Word token, Word id, const std::vector<Var> & var, Expression iter, Block bl) :
+    IFor::IFor (Word token, Word id, const std::vector<Var> & var, Expression iter, Block bl, std::vector <bool> _const) :
 	IInstruction (token),
 	id (id),
 	var (var),
 	iter (iter),
-	block (bl)
+	block (bl),
+	_const (_const)
     {
 	this-> iter-> inside = this;
     }
@@ -1938,6 +1939,12 @@ namespace syntax {
 	aux-> bl = block;	
 	return aux;
     }
-    
-    
+
+    IAffectGeneric::IAffectGeneric (Word word, Expression left, Expression right, bool addr) :
+	IExpression (word),
+	left (left),
+	right (right),
+	_addr (addr)
+    {}
+        
 }

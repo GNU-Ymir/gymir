@@ -255,90 +255,73 @@ namespace semantic {
 	return finalParams;
     }
     
-    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block pre, Block post, Var postVar) {
-	struct Exit {
-	    Namespace last;
-	    Frame self;
+    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block _pre, Block _post, Var _postVar) {
 
-	    Exit (Frame self) : last (Table::instance ().templateNamespace ()), self (self) {
-	    }
-	    
-	    FrameProto operator () (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block _pre, Block _post, Var _postVar) {
-		Table::instance ().templateNamespace () = from;
-		Namespace finalNamespace (space, from.toString ());
+	Table::instance ().templateNamespace () = from;
+	Namespace finalNamespace (space, from.toString ());
 				
-		Ymir::log ("Validate function : ", name, " in space : ",  Table::instance ().getCurrentSpace ());
-		if (ret == NULL) 
-		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
-		else
-		    Table::instance ().retInfo ().info = ret;
+	Ymir::log ("Validate function : ", name, " in space : ",  Table::instance ().getCurrentSpace ());
+	if (ret == NULL) 
+	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
+	else
+	    Table::instance ().retInfo ().info = ret;
 		
-		auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, self-> _attributes);
-		if (!FrameTable::instance ().existsProto (proto)) {
-		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-			Table::instance ().retInfo ().isImmutable () = true;
+	auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, this-> _attributes);
+	if (!FrameTable::instance ().existsProto (proto)) {
+	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().isImmutable () = true;
 		    
-		    FrameTable::instance ().insert (proto);
+	    FrameTable::instance ().insert (proto);
 
-		    Block pre = NULL, post = NULL; Var postVar = NULL;
-		    if (_pre != NULL) {
-			pre = _pre-> block ();
-		    }	    
+	    Block pre = NULL, post = NULL; Var postVar = NULL;
+	    if (_pre != NULL) {
+		pre = _pre-> block ();
+	    }	    
 		    
-		    Table::instance ().retInfo ().currentBlock () = "true";
-		    block = block-> block ();
+	    Table::instance ().retInfo ().currentBlock () = "true";
+	    block = block-> block ();
 
-		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 
 		    	   
-		    if (_post != NULL) {
-			postVar = _postVar-> templateExpReplace ({})-> to<IVar> ();
-			postVar-> info = new ISymbol (_postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
-			Table::instance ().insert (postVar-> info);
-			post = _post-> block ();
-		    }
-		    
-		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
-							   finalNamespace, name.getStr (),
-							   params, block, tmps);
-		    
-		    finFrame-> isVariadic () = isVariadic;
-		    finFrame-> isInline () = self-> has (Keys::INLINE);
-		    finFrame-> pre () = pre;
-		    finFrame-> post () = post;
-		    finFrame-> postVar () = postVar;
-
-		    proto-> type () = Table::instance ().retInfo ().info;
-		    proto-> isLvalue () = false;
-		    
-		    finFrame-> closure () = Table::instance ().retInfo ().closure;
-		    proto-> closure () = Table::instance ().retInfo ().closure;
-
-		    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
-		    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
-		    proto-> attached () = finFrame;
-		    FrameTable::instance ().insert (finFrame);
-
-		    finFrame-> file () = name.getFile ();
-		    Table::instance ().quitBlock ();
-		    verifyReturn (name, proto-> type (), Table::instance ().retInfo ());
-		    Table::instance ().quitFrame ();
-		    return proto;
-		}
-		Table::instance ().quitBlock ();
-		Table::instance ().quitFrame ();
-		return FrameTable::instance ().getProto (proto);	
+	    if (_post != NULL) {
+		postVar = _postVar-> templateExpReplace ({})-> to<IVar> ();
+		postVar-> info = new ISymbol (_postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+		Table::instance ().insert (postVar-> info);
+		post = _post-> block ();
 	    }
+		    
+	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
+						   finalNamespace, name.getStr (),
+						   params, block, tmps);
+		    
+	    finFrame-> isVariadic () = isVariadic;
+	    finFrame-> isInline () = this-> has (Keys::INLINE);
+	    finFrame-> pre () = pre;
+	    finFrame-> post () = post;
+	    finFrame-> postVar () = postVar;
 
-	    ~Exit () {
-		Table::instance ().templateNamespace () = last;
-	    }
-	    
-	};
+	    proto-> type () = Table::instance ().retInfo ().info;
+	    proto-> isLvalue () = false;
+		    
+	    finFrame-> closure () = Table::instance ().retInfo ().closure;
+	    proto-> closure () = Table::instance ().retInfo ().closure;
 
-	Exit ex (this);
-	return ex (name, space, from, ret, params, block, tmps, isVariadic, pre, post, postVar);	
+	    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+	    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+	    proto-> attached () = finFrame;
+	    FrameTable::instance ().insert (finFrame);
+
+	    finFrame-> file () = name.getFile ();
+	    Table::instance ().quitBlock ();
+	    verifyReturn (name, proto-> type (), Table::instance ().retInfo ());
+	    Table::instance ().quitFrame ();
+	    return proto;
+	}
+	Table::instance ().quitBlock ();
+	Table::instance ().quitFrame ();
+	return FrameTable::instance ().getProto (proto);	
     }
 
     FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block) {
@@ -435,95 +418,77 @@ namespace semantic {
     
     
     FrameProto IFrame::validate (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
-	//Table::instance ().setCurrentSpace (Namespace (space, this-> _function-> getIdent ().getStr ()));
-	struct Exit {
-	    Namespace last;
-	    Frame self;
-
-	    Exit (Frame self) : last (Table::instance ().templateNamespace ()), self (self) {
-	    }
-
-	    FrameProto operator () (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
-		Namespace finalNamespace (space, from.toString ());
-		Table::instance ().templateNamespace () = from;
-		bool lvalue = false;
+	Namespace finalNamespace (space, from.toString ());
+	Table::instance ().templateNamespace () = from;
+	bool lvalue = false;
 		
-		if (self-> _function-> getType () == NULL) 
-		    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
-		else {
-		    auto type = self-> _function-> getType ()-> asType ();
-		    if (type) Table::instance ().retInfo ().info = type-> info;
-		    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
+	if (this-> _function-> getType () == NULL) 
+	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
+	else {
+	    auto type = this-> _function-> getType ()-> asType ();
+	    if (type) Table::instance ().retInfo ().info = type-> info;
+	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
 		    
-		    Table::instance ().retInfo ().deco = self-> _function-> getType ()-> deco.getStr ();
-		    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
-		}
+	    Table::instance ().retInfo ().deco = this-> _function-> getType ()-> deco.getStr ();
+	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
+	}
 
-		auto proto = new (Z0)  IFrameProto (self-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, self-> tempParams, self-> _attributes);
+	auto proto = new (Z0)  IFrameProto (this-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, this-> tempParams, this-> _attributes);
 		
-		if (!FrameTable::instance ().existsProto (proto)) {
-		    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-			Table::instance ().retInfo ().isImmutable () = true;
+	if (!FrameTable::instance ().existsProto (proto)) {
+	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().isImmutable () = true;
 
-		    FrameTable::instance ().insert (proto);
+	    FrameTable::instance ().insert (proto);
 
-		    Block pre = NULL, post = NULL; Var postVar = NULL;
-		    if (self-> _function-> pre () != NULL) {
-			pre = self-> _function-> pre ()-> block ();
-		    }	    
+	    Block pre = NULL, post = NULL; Var postVar = NULL;
+	    if (this-> _function-> pre () != NULL) {
+		pre = this-> _function-> pre ()-> block ();
+	    }	    
 
-		    Table::instance ().retInfo ().currentBlock () = "true";
-		    auto block = self-> _function-> getBlock ()-> block ();
+	    Table::instance ().retInfo ().currentBlock () = "true";
+	    auto block = this-> _function-> getBlock ()-> block ();
 
-		    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-			Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 		    	   
-		    if (self-> _function-> post () != NULL) {
-			postVar = self-> _function-> postVar ()-> templateExpReplace ({})-> to<IVar> ();
-			postVar-> info = new ISymbol (postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
-			Table::instance ().insert (postVar-> info);
-			post = self-> _function-> post ()-> block ();
-		    }
-
-		    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
-							   finalNamespace, self-> _function-> getIdent ().getStr (),
-							   params, block, self-> tempParams);
-
-		    finFrame-> isVariadic () = isVariadic;
-		    finFrame-> isInline () = self-> has (Keys::INLINE);
-		    finFrame-> pre () = pre;
-		    finFrame-> post () = post;
-		    finFrame-> postVar () = postVar;
-		    
-		    proto-> type () = Table::instance ().retInfo ().info;
-		    proto-> isLvalue () = lvalue;
-		    
-		    finFrame-> closure () = Table::instance ().retInfo ().closure;
-		    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
-		    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
-		    proto-> closure () = Table::instance ().retInfo ().closure;
-		    proto-> attached () = finFrame;
-		    
-		    FrameTable::instance ().insert (finFrame);
-
-		    finFrame-> file () = self-> _function-> getIdent ().getFile ();
-		    Table::instance ().quitBlock ();
-		    verifyReturn (self-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
-		    Table::instance ().quitFrame ();
-		    return proto;
-		}
-		Table::instance ().quitBlock ();
-		Table::instance ().quitFrame ();
-		return FrameTable::instance ().getProto (proto);	
+	    if (this-> _function-> post () != NULL) {
+		postVar = this-> _function-> postVar ()-> templateExpReplace ({})-> to<IVar> ();
+		postVar-> info = new ISymbol (postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+		Table::instance ().insert (postVar-> info);
+		post = this-> _function-> post ()-> block ();
 	    }
-	    
-	    ~Exit () {
-		Table::instance ().templateNamespace () = last;
-	    }
-	    
-	};
-	Exit ex (this);
-	return ex (space, from, params, isVariadic);
+
+	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
+						   finalNamespace, this-> _function-> getIdent ().getStr (),
+						   params, block, this-> tempParams);
+
+	    finFrame-> isVariadic () = isVariadic;
+	    finFrame-> isInline () = this-> has (Keys::INLINE);
+	    finFrame-> pre () = pre;
+	    finFrame-> post () = post;
+	    finFrame-> postVar () = postVar;
+		    
+	    proto-> type () = Table::instance ().retInfo ().info;
+	    proto-> isLvalue () = lvalue;
+		    
+	    finFrame-> closure () = Table::instance ().retInfo ().closure;
+	    finFrame-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+	    proto-> isMoved () = Table::instance ().retInfo ().closureMoved ();
+	    proto-> closure () = Table::instance ().retInfo ().closure;
+	    proto-> attached () = finFrame;
+		    
+	    FrameTable::instance ().insert (finFrame);
+
+	    finFrame-> file () = this-> _function-> getIdent ().getFile ();
+	    Table::instance ().quitBlock ();
+	    verifyReturn (this-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
+	    Table::instance ().quitFrame ();
+	    return proto;
+	}
+	Table::instance ().quitBlock ();
+	Table::instance ().quitFrame ();
+	return FrameTable::instance ().getProto (proto);		    
     }
     
     

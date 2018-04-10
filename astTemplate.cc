@@ -231,7 +231,7 @@ namespace syntax {
 	}
 	
 	auto block = (Block) this-> block-> templateReplace (values);
-	auto ret = new (Z0)  IFor (this-> token, this-> id, vars, iter, block);
+	auto ret = new (Z0)  IFor (this-> token, this-> id, vars, iter, block, this-> _const);
 	ret-> isStatic = this-> isStatic;
 	return ret;
     }

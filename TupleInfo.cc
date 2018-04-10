@@ -169,6 +169,7 @@ namespace semantic {
 		    ret-> isConst (true);
 		ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
 		ret-> binopFoo = &TupleUtils::InstGet;
+		ret-> value () = NULL;
 		return ret;
 	    }
 	}

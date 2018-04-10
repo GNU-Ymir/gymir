@@ -154,7 +154,8 @@ namespace syntax {
 		}
 		
 		if (aff != NULL) {
-		    aff-> info-> value () = NULL;
+		    if (aff-> info)
+			aff-> info-> value () = NULL;
 		    list.append (aff-> toGeneric ());
 		}
 	    }
@@ -1063,6 +1064,16 @@ namespace syntax {
 
     Ymir::Tree IMacroRepeat::toGeneric () {
 	return Ymir::Tree ();
+    }
+
+    Ymir::Tree IAffectGeneric::toGeneric () {	
+	return Ymir::buildTree (
+	    MODIFY_EXPR,
+	    this-> token.getLocus (),
+	    void_type_node,
+	    this-> left-> toGeneric (),
+	    this-> _addr ? Ymir::getAddr (this-> right-> toGeneric ()) : this-> right-> toGeneric ()
+	);
     }
     
 }
