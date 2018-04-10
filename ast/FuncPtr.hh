@@ -27,6 +27,8 @@ namespace syntax {
 	std::vector <Var> & getParams ();
 
 	Var getRet ();
+
+	Expression body ();
 	
 	Ymir::Tree toGeneric () override;
 	

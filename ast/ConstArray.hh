@@ -24,7 +24,9 @@ namespace syntax {
 	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	int nbParams ();
-		
+
+	Expression getParam (int nb);
+	
 	static const char * id () {
 	    return TYPEID (IConstArray);
 	}

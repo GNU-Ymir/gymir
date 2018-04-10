@@ -7,6 +7,8 @@
 #include <ymir/ast/OfVar.hh>
 #include <ymir/ast/ArrayAlloc.hh>
 #include <ymir/ast/FuncPtr.hh>
+#include <ymir/ast/ConstArray.hh>
+#include <ymir/ast/DColon.hh>
 #include <map>
 
 namespace semantic {
@@ -106,7 +108,42 @@ namespace semantic {
 	*/
 	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::ArrayVar param, InfoType type, bool isConst = false);
 
+	/**
+	   Résoud un paramètre template de type tableau
+	   Example:
+	   --------
+	   def foo (T) (a : [T]) {
+	   }
+	   
+	   foo ([10]); // solve ([T], [T], [int]);
+	   --------
+	   Params:
+	   tmps = les paramètres templates de la fonction
+	   param = l'expression type de l'attribut
+	   type = Le type du paramètre
+	   Returns: une solution template
+	*/
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::ConstArray param, InfoType type, bool isConst = false);
+
 	
+	/**
+	   Résoud un paramètre template de type tableau
+	   Example:
+	   --------
+	   def foo (T) (a : F::Test!T) {
+	   }
+	   
+	   foo (F::Test!T {10}); // solve ({T}, F::Test!T, F::Test!i32);
+	   --------
+	   Params:
+	   tmps = les paramètres templates de la fonction
+	   param = l'expression type de l'attribut
+	   type = Le type du paramètre
+	   Returns: une solution template
+	*/
+	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::DColon param, InfoType type, bool isConst = false);
+	
+       
 	TemplateSolution solve (const std::vector <syntax::Expression> &tmps, syntax::ArrayAlloc param, InfoType type, bool isConst = false);
 
 	/**

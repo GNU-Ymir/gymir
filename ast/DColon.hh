@@ -19,6 +19,10 @@ namespace syntax {
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
+	Expression getLeft ();
+
+	Expression getRight ();
+	
 	Ymir::Tree toGeneric () override;
 
 	static const char * id () {
@@ -39,4 +43,5 @@ namespace syntax {
 
     };
     
+    typedef IDColon* DColon;
 };

@@ -614,8 +614,9 @@ namespace syntax {
     
     Ymir::Tree IArrayAlloc::toGeneric () {
 	ArrayInfo info = this-> info-> type-> to <IArrayInfo> ();
-	Ymir::Tree innerType = info-> content ()-> toGeneric ();
+	Ymir::Tree innerType = info-> content ()-> toGeneric ();	
 	Ymir::Tree array_type = info-> toGeneric ();
+	
 	if (array_type.getTreeCode () == RECORD_TYPE) {
 	    return dynamicGeneric (info, innerType, array_type);
 	} else {

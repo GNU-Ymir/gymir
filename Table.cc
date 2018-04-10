@@ -159,7 +159,7 @@ namespace semantic {
     Symbol Table::get (std::string name) {
 	Symbol ret;
 	Namespace last = this-> getCurrentSpace ();
-	Ymir::log ("Get : ", name, " from : ", last);
+	//Ymir::log ("Get : ", name, " from : ", last);
 	if (!this-> _frameTable.empty ()) {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
@@ -167,11 +167,11 @@ namespace semantic {
 
 	if (ret == NULL) ret = this-> _globalScope.get (name);
 	if (ret == NULL) {
-	    Ymir::log ("Get All mod from : ", getCurrentSpace (), " and : ", this-> _templateScope.front (), " {");
+	    //Ymir::log ("Get All mod from : ", getCurrentSpace (), " and : ", this-> _templateScope.front (), " {");
 	    auto mods = this-> getAllMod (getCurrentSpace ());
-	    for (auto i : mods)
-		Ymir::log ("\t", i-> space ());
-	    Ymir::log ("}");
+	    //for (auto i : mods)
+		//Ymir::log ("\t", i-> space ());
+		//Ymir::log ("}");
 	    for (auto it : mods) {
 		ret = it->  getFor (name, getCurrentSpace ());
 		if (ret != NULL) return ret;

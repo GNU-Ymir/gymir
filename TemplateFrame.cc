@@ -359,8 +359,9 @@ namespace semantic {
 
 	    std::vector <InfoType> others (params.begin () + attrs.size () - 1, params.end ());
 	    TemplateSolution res (0, true);
-	    if (tvar-> typeVar ()) 
-		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeVar (), others);
+	    
+	    if (auto var = tvar-> typeExp ()-> to<IVar> ()) 
+		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), var, others);
 	    else {
 		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeExp (), others);
 	    }

@@ -849,30 +849,8 @@ namespace syntax {
 	auto ident = visitIdentifiant ();
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
-	    next = this-> lex.next ();
-	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
-		auto type = visitFuncPtrSimple (next);
-		return new (Z0)  ITypedVar (ident, type, deco);
-	    } else if (next == Token::LCRO) {
-		auto begin = next;
-		next = this-> lex.next ();
-		Expression type;
-		if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
-		else {
-		    this-> lex.rewind ();
-		    type = visitType ();
-		}
-		next = this-> lex.next ({Token::RCRO, Token::SEMI_COLON});
-		if (next == Token::SEMI_COLON) {
-		    auto len = visitNumericOrVar ();
-		    this-> lex.next ({Token::RCRO});
-		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type, len), deco);
-		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), deco);
-	    } else {
-		this-> lex.rewind ();
-		auto type = visitType ();
-		return new (Z0)  ITypedVar (ident, type, deco);
-	    }
+	    auto type = visitLeftOp ();
+	    return new (Z0)  ITypedVar (ident, type, deco);
 	} else if (next == Keys::OF && deco.isEof ()) {
 	    auto type = visitType ();
 	    return new (Z0)  IOfVar (ident, type);	    
@@ -894,30 +872,8 @@ namespace syntax {
 	auto ident = visitIdentifiant ();
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
-	    next = this-> lex.next ();
-	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
-		auto type = visitFuncPtrSimple (next);
-		return new (Z0)  ITypedVar (ident, type, deco);
-	    } else if (next == Token::LCRO) {
-		auto begin = next;
-		next = this-> lex.next ();
-		Expression type;
-		if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
-		else {
-		    this-> lex.rewind ();
-		    type = visitType ();
-		}
-		next = this-> lex.next ({Token::RCRO, Token::SEMI_COLON});
-		if (next == Token::SEMI_COLON) {
-		    auto len = visitNumericOrVar ();
-		    this-> lex.next ({Token::RCRO});
-		    return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type, len), deco);
-		} else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), deco);
-	    } else {
-		this-> lex.rewind ();
-		auto type = visitType ();
-		return new (Z0)  ITypedVar (ident, type, deco);
-	    }
+	    auto type = visitLeftOp ();
+	    return new (Z0)  ITypedVar (ident, type, deco);
 	} else this-> lex.rewind ();
 	return new (Z0)  IVar (ident, deco);
     }
@@ -925,30 +881,8 @@ namespace syntax {
     TypedVar Visitor::visitStructVarDeclaration () {
 	auto ident = visitIdentifiant ();
 	Word next  = this-> lex.next ({Token::COLON});
-	next = this-> lex.next ();
-	if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
-	    auto type = visitFuncPtrSimple (next);
-	    return new (Z0)  ITypedVar (ident, type, Word::eof ());
-	} else if (next == Token::LCRO) {
-	    auto begin = next;
-	    next = this-> lex.next ();
-	    Expression type;
-	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
-	    else {
-		this-> lex.rewind ();
-		type = visitType ();
-	    }
-	    next = this-> lex.next ({Token::RCRO, Token::SEMI_COLON});
-	    if (next == Token::SEMI_COLON) {
-		auto len = visitNumeric (this-> lex.next ());
-		this-> lex.next ({Token::RCRO});
-		return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type, len), Word::eof ());
-	    } else return new (Z0)  ITypedVar (ident, new (Z0)  IArrayVar (begin, type), Word::eof ());
-	} else {
-	    this-> lex.rewind ();
-	    auto type = visitType ();
-	    return new (Z0)  ITypedVar (ident, type, Word::eof ());
-	}
+	auto type = visitLeftOp ();
+	return new (Z0)  ITypedVar (ident, type, Word::eof ());
     }
 
     
@@ -960,20 +894,9 @@ namespace syntax {
 	}
 
 	auto ident = visitIdentifiant ();
-	Word next = this-> lex.next ();
-	if (next == Token::COLON) {
-	    next = this-> lex.next ();
-	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
-		auto type = visitFuncPtrSimple (next);
-		return new (Z0)  ITypedVar (ident, type, deco);
-	    } else {
-		this-> lex.rewind ();
-		auto type = visitType ();
-		return new (Z0)  ITypedVar (ident, type, deco);
-	    }
-	}
-	syntaxError (next, {Token::COLON});
-	return NULL;
+	Word next = this-> lex.next ({Token::COLON});
+	auto type = visitLeftOp ();
+	return new (Z0)  ITypedVar (ident, type, deco);
     }
 
 
@@ -1966,9 +1889,9 @@ namespace syntax {
 	word = this-> lex.next ({Token::ARROW});
 	auto ret = visitType ();
 	word = this-> lex.next ();
-	if (word == Token::LPAR) {
+	if (word == Token::LACC) {
 	    auto expr = visitExpression ();
-	    word = this-> lex.next ({Token::RPAR});
+	    word = this-> lex.next ({Token::RACC});
 	    return new (Z0)  IFuncPtr (begin, params, ret, expr);
 	} else this-> lex.rewind ();
 	return new (Z0)  IFuncPtr (begin, params, ret);

@@ -9,14 +9,9 @@ namespace syntax {
 
     class ITypedVar : public IVar {
 
-	Var type;
-	Expression expType;
+	Expression type;
 
     public:
-
-	ITypedVar (Word ident, Var type);
-
-	ITypedVar (Word ident, Var type, Word deco);
 
 	ITypedVar (Word ident, Expression type);
 
@@ -29,10 +24,8 @@ namespace syntax {
 
 	semantic::InfoType getType ();
 
-	Var typeVar ();
-	
 	Expression typeExp ();
-	
+		
 	Expression expression ();
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	

@@ -294,41 +294,24 @@ namespace syntax {
 	return buf.str ();
     }    
 
-    ITypedVar::ITypedVar (Word ident, Var type) :
-	IVar (ident),
-	type (type)
-    {}
-
-    ITypedVar::ITypedVar (Word ident, Var type, Word deco) :
-	IVar (ident),
-	type (type)
-    {
-	this-> deco = deco;
-    }
-
     ITypedVar::ITypedVar (Word ident, Expression type) :
 	IVar (ident),
-	expType (type)
+	type (type)
     {}
 
     ITypedVar::ITypedVar (Word ident, Expression type, Word deco) :
 	IVar (ident),
-	expType (type)
+	type (type)
     {
 	this-> deco = deco;
     }
 
     ITypedVar::~ITypedVar () {
 	if (type) delete type;
-	if (expType) delete expType;
     }
     
-    Var ITypedVar::typeVar () {
-	return this-> type;
-    }
-
     Expression ITypedVar::typeExp () {
-	return this-> expType;
+	return this-> type;
     }
 
     std::vector <std::string> ITypedVar::getIds () {
@@ -342,11 +325,10 @@ namespace syntax {
 	if (!this-> deco.isEof ()) {
 	    buf.write (this-> deco.getStr (), " ");
 	}
-	if (this-> type) {
+
+	if (this-> type) 
 	    buf.write (this-> token.getStr ().c_str (), " : ", this-> type-> prettyPrint ().c_str ());	    
-	} else {
-	    buf.write (this-> token.getStr ().c_str (), " : ", this-> expType ? this-> expType-> prettyPrint ().c_str () : "");	   
-	}
+
 	return buf.str ();
     }
     
@@ -828,6 +810,14 @@ namespace syntax {
 
     std::string IDColon::prettyPrint () {
 	return Ymir::OutBuffer (this-> left-> prettyPrint (), "::", this-> right-> prettyPrint ()).str ();
+    }
+
+    Expression IDColon::getLeft () {
+	return this-> left;
+    }
+    
+    Expression IDColon::getRight () {
+	return this-> right;
     }
     
     IDColon::~IDColon () {	
@@ -1454,6 +1444,10 @@ namespace syntax {
     Var IFuncPtr::getRet () {
 	return this-> ret;
     }
+
+    Expression IFuncPtr::body () {
+	return this-> expr;
+    }
     
     const char * IFuncPtr::id () {
 	return TYPEID (IFuncPtr);
@@ -1672,6 +1666,10 @@ namespace syntax {
 	IInstruction (token),
 	block (block)
     {}
+
+    Expression IConstArray::getParam (int nb) {
+	return this-> params [nb];
+    }
 
     std::string IConstArray::prettyPrint () {
 	Ymir::OutBuffer buf ("[");

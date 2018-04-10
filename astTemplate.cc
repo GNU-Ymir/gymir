@@ -426,19 +426,15 @@ namespace syntax {
     }
 
     Expression ITypedVar::templateExpReplace (const map <string, Expression>& values) {
-	if (this-> type) {
-	    Var type;
-	    auto elem = this-> type-> templateExpReplace (values);
-	    if (auto ps = elem-> to <IParamList> ()) {
-		type = paramListToTupleVar (this-> type-> token, ps);
-	    } else {
-		type = elem-> to <IVar> ();
-	    }
-	    return new (Z0)  ITypedVar (this-> token, type, this-> deco);
+	Expression type;
+	auto elem = this-> type-> templateExpReplace (values);
+	if (auto ps = elem-> to <IParamList> ()) {
+	    type = paramListToTupleVar (this-> type-> token, ps);
 	} else {
-	    auto type = this-> expType-> templateExpReplace (values);
-	    return new (Z0)  ITypedVar (this-> token, type, this-> deco);
+	    type = elem;
 	}
+	return new (Z0)  ITypedVar (this-> token, type, this-> deco);
+
     }
 
     Expression IType::templateExpReplace (const map <string, Expression>&) {

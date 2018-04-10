@@ -134,7 +134,6 @@ namespace syntax {
 		if (Table::instance ().parentFrame (sym) && ret-> is<IVar> ()) {
 		    auto var = ret-> to <IVar> ();
 		    if (!var-> is<IType> () &&
-			!var-> info-> type-> is <IStructCstInfo> () &&
 			!var-> info-> isType ()) {
 			bool found = false;
 			for (auto it : Table::instance ().retInfo ().closure)
@@ -200,7 +199,38 @@ namespace syntax {
 	auto type = new (Z0)  IType (this-> token, info-> cloneOnExit ());
 	return new (Z0)  ITypedVar (this-> token, type, this-> deco);	
     }
+    
+    Expression IExpression::toType () {
+	Expression aux;
+	bool derog = false;
+	if (auto var = this-> to<IVar> ()) {
+	    aux = var-> asType ();
+	} else if (auto arr = this-> to <IArrayAlloc> ()) {
+	    aux = arr-> staticArray ();
+	    derog = true;	    
+	} else aux = this-> expression ();
+	if (aux == NULL) return NULL;
 
+	if (auto fn = aux-> to <IFuncPtr> ()) {
+	    if (fn-> body () == NULL) derog = true;
+	}
+
+	if (!aux-> is <IType> () &&
+	    !aux-> info-> type-> isType () && !derog) {
+	    Ymir::Error::useAsType (aux-> token);
+	    return NULL;
+	}
+	auto type = aux-> info-> type;
+	if (type-> is <IStructCstInfo> ()) {
+	    type = type-> TempOp ({});
+	    if (!type) return NULL;
+	}
+	
+	type-> isType (false);
+	return new (Z0) IType (this-> token, type);
+    }
+
+    
     Type IVar::asType () {
 	std::vector <Expression> tmps;
 	for (auto it : this-> templates) {
@@ -265,59 +295,35 @@ namespace syntax {
     }
     
     Expression IArrayVar::expression () {
-	if (auto var = this-> content-> to <IVar> ()) {
-	    auto content = var-> asType ();
-	    if (content == NULL) return NULL;
-	    Word tok (this-> token.getLocus (), "");
-	    InfoType type;
-	    if (this-> len) {
-		auto size = this-> len-> expression ();
-		if (size == NULL) return NULL;
-		auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
-		auto cmp = size-> info-> type-> CompOp (ul-> type);
-		if (cmp == NULL) {
-		    Ymir::Error::incompatibleTypes (this-> token, size-> info, ul-> type);
-		    return NULL;
-		}
+	auto content = this-> content-> toType ();
+	if (content == NULL) return NULL;
+	Word tok (this-> token.getLocus (), "");
+	InfoType type = new (Z0)  IArrayInfo (false, content-> info-> type-> clone ());;
+	if (this-> len) {
+	    auto size = this-> len-> expression ();
+	    if (size == NULL) return NULL;
+	    auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
+	    auto cmp = size-> info-> type-> CompOp (ul-> type);
+	    if (cmp == NULL) {
+		Ymir::Error::incompatibleTypes (this-> token, size-> info, ul-> type);
+		return NULL;
+	    }
 		
-		auto arrtype = new (Z0)  IArrayInfo (false, content-> info-> type-> clone ());
-		if (!size-> info-> isImmutable ()) {
-		    Ymir::Error::notImmutable (this-> token, size-> info);
-		    return NULL;
-		} else {
-		    arrtype-> isStatic (true, size-> info-> value ()-> to<IFixedValue> ()-> getUValue ());
-		}
-		type = arrtype;
+	    if (!size-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (this-> token, size-> info);
+		return NULL;
 	    } else {
-		type = new (Z0)  IArrayInfo (false, content-> info-> type);
+		type-> to<IArrayInfo> ()-> isStatic (true, size-> info-> value ()-> to<IFixedValue> ()-> getUValue ());
 	    }
-	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");	    
-	    if (this-> deco == Keys::REF) {
-		type = new (Z0) IRefInfo (false, type);
-	    } else if (this-> deco == Keys::CONST)
-		type-> isConst (true);
-	    
-	    return new (Z0)  IType (tok, type);
-	} else {
-	    Expression expType = NULL;
-	    if (auto alloc = this-> content-> to <IArrayAlloc> ()) {
-		expType = alloc-> staticArray ();
-		if (expType == NULL) return NULL;
-	    } else {
-		expType = this-> content-> expression ();
-		if (expType == NULL) return NULL;
-	    }
-	    
-	    Word tok (this-> token.getLocus (), "");
-	    InfoType type = new (Z0)  IArrayInfo (false, expType-> info-> type);			
-	    tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");	    
-	    if (this-> deco == Keys::REF) {
-		type = new (Z0) IRefInfo (false, type);
-	    } else if (this-> deco == Keys::CONST)
-		type-> isConst (true);
-	    		
-	    return new (Z0) IType (tok, type);
 	}
+	
+	tok.setStr (this-> token.getStr () + this-> content-> token.getStr () + "]");	    
+	if (this-> deco == Keys::REF) {
+	    type = new (Z0) IRefInfo (false, type);
+	} else if (this-> deco == Keys::CONST)
+	    type-> isConst (true);
+	    
+	return new (Z0)  IType (tok, type);
     }
 
     Var IArrayVar::var () {
@@ -346,39 +352,17 @@ namespace syntax {
     }
     
     semantic::InfoType ITypedVar::getType () {
-	if (this-> type) {
-	    this-> type-> inside = this;
-	    auto type = this-> type-> asType ();
-	    if (type == NULL) return NULL;
-	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
-		if (type-> info-> type-> is<IEnumInfo> ()) 
-		    Ymir::Error::assert ("TODO");
-		return new (Z0)  IRefInfo (false, type-> info-> type);
-	    } else if (this-> deco == Keys::CONST) {
-		type-> info-> type-> isConst (true);
-	    }
-	    return type-> info-> type;	    
-	} else {
-	    if (!this-> expType) return NULL;
-	    if (auto alloc = this-> expType-> to<IArrayAlloc> ()) {
-		this-> expType = alloc-> staticArray ();
-		if (this-> expType == NULL) return NULL;
-	    } else {
-		this-> expType = this-> expType-> expression ();
-		this-> expType-> info-> type-> isType (false);
-		if (this-> expType == NULL) return NULL;
-	    }
-
-	    auto type = this-> expType;
-	    if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
-		if (type-> info-> type-> is<IEnumInfo> ()) 
-		    Ymir::Error::assert ("TODO");
-		return new (Z0)  IRefInfo (false, type-> info-> type);
-	    } else if (this-> deco == Keys::CONST) {
-		type-> info-> type-> isConst (true);
-	    }	
-	    return type-> info-> type;	    
+	this-> type-> inside = this;
+	auto type = this-> type-> toType ();
+	if (type == NULL) return NULL;
+	if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
+	    if (type-> info-> type-> is<IEnumInfo> ()) 
+		Ymir::Error::assert ("TODO");
+	    return new (Z0)  IRefInfo (false, type-> info-> type);
+	} else if (this-> deco == Keys::CONST) {
+	    type-> info-> type-> isConst (true);
 	}
+	return type-> info-> type;	    
     }
 
     Expression ITypedVar::expression () {
@@ -389,23 +373,9 @@ namespace syntax {
 	    return NULL;
 	}
 	
-	if (this-> type) {
-	    auto type = this-> type-> asType ();
-	    if (type == NULL) return NULL;
-	    aux = new (Z0)  ITypedVar (this-> token, type);
-	} else {
-	    if (auto ptr = this-> expType-> to<IFuncPtr> ()) {
-		auto expr = this-> expType-> expression ();
-		expr-> info-> type-> isType (false);
-		if (expr == NULL) return NULL;
-		ptr = expr -> to<IFuncPtr> ();
-		aux = new (Z0)  ITypedVar (this-> token, new (Z0)  IType (ptr-> token, ptr-> info-> type));
-	    } else if (auto ialloc = this-> expType-> to <IArrayAlloc> ()) {
-		auto res = ialloc-> staticArray ();
-		if (res == NULL) return NULL;
-		aux = new (Z0)  ITypedVar (this-> token, new (Z0)  IType (res-> token, res-> info-> type));
-	    } else Ymir::Error::assert ("Error");	
-	}
+	auto type = this-> type-> toType ();
+	if (type == NULL) return NULL;
+	aux = new (Z0)  ITypedVar (this-> token, type);
 	
 	if (this-> deco == Keys::REF && !aux-> type-> info-> type-> is <IRefInfo> ()) {
 	    aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IRefInfo (false, aux-> type-> info-> type));
@@ -414,6 +384,7 @@ namespace syntax {
 	    if (this-> deco == Keys::CONST) 
 		aux-> info-> type-> isConst (true);
 	}
+	
 	aux-> info-> type-> isType (false);
 	Table::instance ().insert (aux-> info);
 	return aux;    
@@ -424,28 +395,10 @@ namespace syntax {
     }
     
     Expression IArrayAlloc::expression () {
-	auto aux = new (Z0)  IArrayAlloc (this-> token, NULL, this-> size-> expression ());
-	if (auto fn = this-> type-> to<IFuncPtr> ()) {
-	    aux-> type = fn-> expression ();
-	    if (aux-> type) aux-> type-> info-> type-> isType (true);
-	} else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
-	else aux-> type = this-> type-> expression ();
+	auto aux = new (Z0)  IArrayAlloc (this-> token, this-> type-> toType (), this-> size-> expression ());
 	
-
 	if (aux-> type == NULL) return NULL;
 	if (aux-> size == NULL) return NULL;
-	if (!aux-> type-> is <IType> () && !aux-> type-> info-> type-> isType ()) {
-	    bool failed = true;
-	    if (aux-> type-> is <IArrayAlloc> ()) {
-		if (auto arr = aux-> type-> info-> type-> to <IArrayInfo> ())
-		    failed = !arr-> isStatic ();
-	    }
-
-	    if (failed) {
-		Ymir::Error::useAsType (this-> type-> token);
-		return NULL;
-	    }
-	}
 		
 	auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
@@ -453,7 +406,6 @@ namespace syntax {
 	    Ymir::Error::incompatibleTypes (aux-> size-> token, aux-> size-> info, ul-> type);
 	    return NULL;
 	}
-
 
 	auto arrayType = new (Z0)  IArrayInfo (false, aux-> type-> info-> type-> clone ());
 	aux-> cster = cmp;
@@ -474,11 +426,7 @@ namespace syntax {
     }
 
     Expression IArrayAlloc::staticArray () {
-	auto aux = new (Z0)  IArrayAlloc (this-> token, NULL, this-> size-> expression ());
-	if (auto fn = this-> type-> to<IFuncPtr> ()) aux-> type = fn-> expression ();
-	else if (auto type = this-> type-> to<IVar> ()) aux-> type = type-> asType ();
-	else Ymir::Error::useAsType (this-> type-> token);
-	
+	auto aux = new (Z0)  IArrayAlloc (this-> token, this-> type-> toType (), this-> size-> expression ());	
 	auto ul = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> size-> info-> type-> CompOp (ul-> type);
 	if (cmp == NULL) {
@@ -486,7 +434,7 @@ namespace syntax {
 	    return NULL;
 	}
 
-	auto arrayType = new (Z0)  IArrayInfo (true, aux-> type-> info-> type-> clone ());
+	auto arrayType = new (Z0)  IArrayInfo (false, aux-> type-> info-> type-> clone ());
 	aux-> cster = cmp;
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 	
@@ -883,10 +831,9 @@ namespace syntax {
 		} else aux-> params.push_back (expr);
 	    }
 
-
 	    if (aux-> params.size () == 1)  {
 		auto expr = aux-> params [0]-> expression ();
-		if (auto type = expr-> to<IType> ()) {
+		if (auto type = expr-> to <IType> ()) {
 		    Word tok (this-> token.getLocus (),
 			      this-> token.getStr () + type-> token.getStr () + "]"
 		    );
@@ -898,7 +845,7 @@ namespace syntax {
 		    auto inner = expr-> info-> type;
 		    if (expr-> info-> type-> is <IEnumCstInfo> ()) inner = inner-> TempOp ({});
 		    else if (expr-> info-> type-> is <IStructCstInfo> ()) inner = inner-> TempOp ({});
-		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, inner));
+		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, inner));				
 		}
 	    }
 
@@ -1389,9 +1336,9 @@ namespace syntax {
 	    func-> info = new (Z0) ISymbol (this-> token, treat);
 	    return func;
 	} else {
-	    auto func = new (Z0) IFuncPtr (this-> token, params, ret);
-	    func-> info = new (Z0) ISymbol (this-> token, t_info);
-	    return func;
+	    //auto func = new (Z0) IFuncPtr (this-> token, params, ret);
+	    //func-> info = new (Z0) ISymbol (this-> token, t_info);
+	    return new (Z0) IType (this-> token, t_info); ;
 	}
     }
 
@@ -1422,25 +1369,13 @@ namespace syntax {
     
     Expression IIs::expression () {
 	if (this-> type) {
-	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> type-> expression ());
-
+	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> type-> toType ());
 	    if (aux-> type == NULL || aux-> left == NULL) return NULL;
-	    if (!aux-> type-> is<IType> () &&
-		!aux-> type-> info-> type-> is <IStructCstInfo> () &&
-		!aux-> type-> info-> isType ()) {
-		Ymir::Error::useAsType (aux-> type-> token);
-		return NULL;
-	    }
 	    
 	    auto rtype = aux-> type-> info-> type;
 	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 		Ymir::Error::uninitVar (aux-> left-> token);
 		return NULL;
-	    }
-
-	    if (rtype-> is <IStructCstInfo> ()) {
-		rtype = rtype-> TempOp ({});
-		if (rtype == NULL) return NULL;
 	    }
 	    
 	    auto linfo = aux-> left-> info-> type;

@@ -88,9 +88,9 @@ namespace syntax {
 		this-> deco.isEof () ? "" : this-> deco.getStr ().c_str (),
 		this-> token.toString ().c_str ()
 	);
+	
 	if (this-> type) 
 	    this-> type-> print (nb + 4);
-	else this-> expType-> print (nb + 4);
     }
 
    

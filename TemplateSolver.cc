@@ -4,6 +4,7 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/value/_.hh>
 
+
 namespace semantic {
     using namespace syntax;
     using namespace std;
@@ -166,29 +167,33 @@ namespace semantic {
     
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, Var param, InfoType type) {	
 	if (auto t = type-> to <IRefInfo> ()) type = t-> content ();
-	//if (auto t = type-> to <IEnumInfo> ()) type = t-> getContent ();
 	if (auto tvar = param-> to <ITypedVar> ()) {
-	    if (tvar-> typeExp ()) {
-		if (auto all = tvar-> typeExp ()-> to<IArrayAlloc> ()) {
-		    return solve (tmps, all, type);
-		} 
+	    if (tvar-> typeExp ()-> is <IFuncPtr> ()) {
 		return solve (tmps, tvar-> typeExp (), type);
 	    }
 
-	    bool isConst = false;				
-	    auto typeVar = tvar-> typeVar ();
-	    while (typeVar-> token == Keys::CONST) {
-		isConst = true;
-		typeVar = typeVar-> getTemplates () [0]-> to <IVar> ();
+	    bool isConst = false;
+	    Expression typeExp = tvar-> typeExp ();
+	    auto typeVar = tvar-> typeExp ()-> to <IVar> ();
+	    if (typeVar) {
+		while (typeVar-> token == Keys::CONST) {
+		    isConst = true;
+		    typeVar = typeVar-> getTemplates () [0]-> to <IVar> ();
+		}
+		typeExp = typeVar;
 	    }
-	    
-	    if (auto arr = typeVar-> to <IArrayVar> ()) {
+
+	    if (auto ddot = typeExp-> to <IDColon> ()) {
+		return solve (tmps, ddot, type, isConst);
+	    } else if (auto carr = typeExp-> to <IConstArray> ()) {
+		return solve (tmps, carr, type, isConst);
+	    } else if (auto arr = typeExp-> to <IArrayVar> ()) {
 		return solve (tmps, arr, type, isConst);
-	    } else if (auto all = typeVar-> to <IArrayAlloc> ()) {
+	    } else if (auto all = typeExp-> to <IArrayAlloc> ()) {
 		return solve (tmps, all, type, isConst);
-	    } else if (typeVar-> is <IType> ()) {
-		return TemplateSolution (0, true, tvar-> typeVar ()-> info-> type);
-	    } else {
+	    } else if (typeExp-> is <IType> ()) {
+		return TemplateSolution (0, true, tvar-> typeExp ()-> info-> type);
+	    } else if (typeVar != NULL) {
 		vector <Expression> types;
 		TemplateSolution soluce (0, true);
 		for (auto it : Ymir::r (0, typeVar-> getTemplates ().size ())) {
@@ -252,7 +257,9 @@ namespace semantic {
 	}
 	if (param == NULL) return TemplateSolution (0, false);
 
-	if (auto arr = param-> to <IArrayVar> ()) {
+	if (auto carr = param-> to <IConstArray> ()) {
+	    return solve (tmps, carr, type, isConst);
+	} else if (auto arr = param-> to <IArrayVar> ()) {
 	    return solve (tmps, arr, type, isConst);
 	} else if (auto all = param-> to <IArrayAlloc> ()) {
 	    return solve (tmps, all, type, isConst);
@@ -342,6 +349,61 @@ namespace semantic {
 	}
     }
 
+    TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, DColon param, InfoType type, bool isConst) {
+	bool needToClose = false;
+	auto space = Table::instance ().space ();
+	auto left = param-> getLeft ()-> expression ();
+	if (left == NULL) return TemplateSolution (0, false);
+	
+	auto mod = left-> info-> type-> to <IModuleInfo> ();
+	if (mod == NULL) return TemplateSolution (0, false);
+	auto content = mod-> get ();
+	if (content == NULL) return TemplateSolution (0, false);    
+
+	if (!content-> authorized (space)) {
+	    content-> addOpen (space);
+	    needToClose = true;
+	}
+	
+	auto right = param-> getRight ();
+	TemplateSolution res (0, false);
+	if (auto var = right-> to <IVar> ()) {
+	    res = this-> solveInside (tmps, var, type);
+	} else if (auto dot = right-> to <IDColon> ()) {
+	    res = this-> solve (tmps, dot, type, isConst);
+	} 
+
+	if (needToClose) content-> close (space);
+	if (res.valid && res.type != NULL)
+	    res.type-> isConst (isConst);
+	
+	return res;
+    }
+    
+    TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, ConstArray param, InfoType type, bool isConst) {	
+	if (param-> nbParams () != 1) return TemplateSolution (0, false);
+	if (!type-> is <IArrayInfo> ()) {
+	    if (auto ptr = type-> to<IRefInfo> ()) {
+		if (!ptr-> content ()-> is <IArrayInfo> ())
+		    return TemplateSolution (0, false);		
+	    } else return TemplateSolution (0, false);
+	}
+	
+	auto content = param-> getParam (0);
+	auto type_ = type-> getTemplate (0);
+	if (type_ == NULL) return TemplateSolution (0, false);
+
+	TemplateSolution res (0, true);
+	if (auto var = content-> to <IVar> ()) 
+	    res = this-> solveInside (tmps, var, type_);
+	else
+	    res = this-> solveInside (tmps, content-> to<IFuncPtr> (), type_);
+	if (!res.valid) return TemplateSolution (0, false);
+	
+	type_ = new (Z0)  IArrayInfo (isConst, res.type-> cloneOnExit ());
+	return TemplateSolution (res.score, true, type_, res.elements);
+    }
+    
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, ArrayVar param, InfoType type, bool isConst) {
 	if (!type-> is <IArrayInfo> ()) {
 	    if (auto ptr = type-> to <IRefInfo> ()) {
@@ -516,8 +578,9 @@ namespace semantic {
 
     TemplateSolution TemplateSolver::solve (Var elem, Var param, InfoType type, bool isConst) {
 	if (elem-> is<ITypedVar> ()) return TemplateSolution (0, false);
-	else if (elem-> is<IArrayVar> ()) return TemplateSolution (0, false);
-	else if (elem-> is<IArrayAlloc> ()) return TemplateSolution (0, false);
+	else if (elem-> is <IConstArray> ()) return TemplateSolution (0, false);
+	else if (elem-> is <IArrayVar> ()) return TemplateSolution (0, false);
+	else if (elem-> is <IArrayAlloc> ()) return TemplateSolution (0, false);
 
 	if (elem-> token == Keys::CONST) {
 	    return solve (elem-> getTemplates () [0]-> to<IVar> (), param, type, true);	    
@@ -533,6 +596,7 @@ namespace semantic {
 
     TemplateSolution TemplateSolver::solve (Var elem, TypedVar param, InfoType type, bool isConst) {
 	if (elem-> is<ITypedVar> ()) return TemplateSolution (0, false);
+	else if (elem-> is <IConstArray> ()) return TemplateSolution (0, false);
 	else if (elem-> is<IArrayVar> ()) return TemplateSolution (0, false);
 	else if (elem-> is<IArrayAlloc> ()) return TemplateSolution (0, false);
 	else if (type-> is<IFunctionInfo> ()) return TemplateSolution (0, false);	
@@ -552,9 +616,9 @@ namespace semantic {
     }
 
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, OfVar elem, Var param, InfoType type, bool isConst) {
-	Var typeVar;
+	Expression typeVar;
 	auto typedParam = param-> to <ITypedVar> ();
-	if (typedParam) typeVar = typedParam-> typeVar ();
+	if (typedParam) typeVar = typedParam-> typeExp ();
 	else typeVar = param;
 		
 	auto res = this-> solveInside (tmps, elem-> typeVar (), type);
@@ -777,8 +841,8 @@ namespace semantic {
 	}
 	
 	TemplateSolution res (0, false);
-	if (left-> typeVar ()) {
-	    res = this-> solveInside (tmps, left-> typeVar (), type);
+	if (auto var = left-> typeExp ()-> to <IVar> ()) {
+	    res = this-> solveInside (tmps, var, type);
 	    if (!res.valid)
 		return TemplateSolution (0, false);
 	    

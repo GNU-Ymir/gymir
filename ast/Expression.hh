@@ -36,6 +36,8 @@ namespace syntax {
 	    Ymir::Error::assert ((std::string ("TODO expression () : ") + this-> getIds ().back ()).c_str ());
 	    return NULL;
 	}
+
+	virtual IExpression* toType ();
 	
 	IInstruction* templateReplace (const std::map <std::string, IExpression*>& elems) final {
 	    return this-> templateExpReplace (elems);

@@ -19,6 +19,22 @@ namespace semantic {
 	    list.pop_back ();
 	    return last;
 	}
+
+	Tree InstInit (Word, InfoType, Expression) {
+	    return build_int_cst_type (long_unsigned_type_node, 0);	   
+	}
+	
+	Tree InstInitDelegate (Word locus, InfoType type, Expression) {
+	    auto loc = locus.getLocus ();
+	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
+	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
+				  
+	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
+	    
+	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
+	    return Ymir::compoundExpr (loc, result, ltree);
+	}
 	
 	Tree InstAffectDelegate (Word loc, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
@@ -305,6 +321,14 @@ namespace semantic {
 	    return StringOf ();
 	} else if (var-> token == "paramTuple") return NULL;
 	else if (var-> token == "retType") return NULL;
+	else if (var-> token == "init") {
+	    auto ret = this-> clone ();
+	    if (!this-> isDelegate ())
+		ret-> unopFoo = &PtrFuncUtils::InstInit;
+	    else
+		ret-> unopFoo = &PtrFuncUtils::InstInitDelegate;
+	    return ret;
+	}
 	return NULL;
     }
  	
