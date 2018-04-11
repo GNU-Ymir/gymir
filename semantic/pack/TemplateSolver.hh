@@ -80,6 +80,8 @@ namespace semantic {
 	*/
 	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Var param, InfoType type);
 
+
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Expression param, InfoType type);
 	
 	/**
 	   Résoud un paramètre template de type variadic
@@ -91,6 +93,8 @@ namespace semantic {
 	*/
 	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Var var, const std::vector <InfoType> &type);
 
+	TemplateSolution solveInside (const std::vector <syntax::Expression> &tmps, syntax::Expression param, const std::vector <InfoType>& type);
+	
 	/**
 	   Résoud un paramètre template de type tableau
 	   Example:

@@ -1426,7 +1426,7 @@ namespace syntax {
     }
 
 
-    IFuncPtr::IFuncPtr (Word begin, std::vector <Var> params, Var type, Expression expr) :
+    IFuncPtr::IFuncPtr (Word begin, std::vector <Expression> params, Expression type, Expression expr) :
 	IExpression (begin),
 	params (params),
 	ret (type),
@@ -1437,11 +1437,11 @@ namespace syntax {
 	    this-> expr-> inside = this;
     }    
 
-    std::vector <Var> & IFuncPtr::getParams () {
+    std::vector <Expression> & IFuncPtr::getParams () {
 	return this-> params;
     }
 
-    Var IFuncPtr::getRet () {
+    Expression IFuncPtr::getRet () {
 	return this-> ret;
     }
 

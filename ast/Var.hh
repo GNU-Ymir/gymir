@@ -52,7 +52,7 @@ namespace syntax {
 		
 	virtual Type asType ();
 
-	virtual bool isType ();
+	virtual bool isTypeV ();
 
 	bool isLvalue () override;
 	

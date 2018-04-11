@@ -12,21 +12,21 @@ namespace syntax {
 
     class IFuncPtr : public IExpression {
 
-	std::vector <Var> params;
-	Var ret;
+	std::vector <Expression> params;
+	Expression ret;
 	Expression expr;
 	
     public:
 
-	IFuncPtr (Word begin, std::vector <Var> params, Var type, Expression expr = NULL);
+	IFuncPtr (Word begin, std::vector <Expression> params, Expression type, Expression expr = NULL);
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
 	Expression expression () override;
 
-	std::vector <Var> & getParams ();
+	std::vector <Expression> & getParams ();
 
-	Var getRet ();
+	Expression getRet ();
 
 	Expression body ();
 	

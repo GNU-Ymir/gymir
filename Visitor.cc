@@ -925,22 +925,22 @@ namespace syntax {
 
     Var Visitor::visitDecoType (const Word& begin) {
 	auto next = this-> lex.next ();
-	Var type = NULL;
+	Expression type = NULL;
 	if (next == Token::NOT) {
 	    next = this-> lex.next ();
 	    if (next == Token::LPAR) {
-		type = visitType ();
+		type = visitLeftOp ();
 		this-> lex.next ({Token::RPAR});
 	    } else {
 		this-> lex.rewind ();
-		type = visitType ();
+		type = visitLeftOp ();
 	    }
 	} else if (next == Token::LPAR) {
-	    type = visitType ();
+	    type = visitLeftOp ();
 	    this-> lex.next ({Token::RPAR});
 	} else {
 	    this-> lex.rewind ();
-	    type = visitType ();
+	    type = visitLeftOp ();
 	}
 	return new (Z0)  IVar (begin, {type});
     }
@@ -1843,7 +1843,7 @@ namespace syntax {
     
 
     Expression Visitor::visitFuncPtrSimple (const Word & type) {
-	std::vector <Var> params;
+	std::vector <Expression> params;
 	auto word = this-> lex.next ({Token::LPAR});
 	word = this-> lex.next ();
 	if (word != Token::RPAR) {
@@ -1853,8 +1853,12 @@ namespace syntax {
 		word = this-> lex.next ();
 		if (word == Keys::REF) ref = true;
 		else this-> lex.rewind ();
-		auto type = visitType ();
-		if (ref) type-> deco = word;
+		Expression type;
+		if (ref) {
+		    auto var = visitType ();
+		    var-> deco = word;
+		    type = var;		    
+		} else type = visitLeftOp ();
 		
 		params.push_back (type);
 		word = this-> lex.next ({Token::RPAR, Token::COMA});
@@ -1862,12 +1866,12 @@ namespace syntax {
 	    }	    
 	}
 	word = this-> lex.next ({Token::ARROW});
-	auto ret = visitType ();
+	auto ret = visitLeftOp ();
 	return new (Z0)  IFuncPtr (type, params, ret);
     }
 
     Expression Visitor::visitFuncPtr (const Word & begin) {
-	std::vector <Var> params;
+	std::vector <Expression> params;
 	auto word = this-> lex.next ({Token::LPAR});
 	word = this-> lex.next ();
 	if (word != Token::RPAR) {
@@ -1877,8 +1881,12 @@ namespace syntax {
 		word = this-> lex.next ();
 		if (word == Keys::REF) ref = true;
 		else this-> lex.rewind ();
-		auto type = visitType ();
-		if (ref) type-> deco = word;
+		Expression type;
+		if (ref) {
+		    auto var = visitType ();
+		    var-> deco = word;
+		    type = var;		    
+		} else type = visitLeftOp ();
 		
 		params.push_back (type);
 		word = this-> lex.next ({Token::RPAR, Token::COMA});
@@ -1887,7 +1895,7 @@ namespace syntax {
 	}
 	
 	word = this-> lex.next ({Token::ARROW});
-	auto ret = visitType ();
+	auto ret = visitLeftOp ();
 	word = this-> lex.next ();
 	if (word == Token::LACC) {
 	    auto expr = visitExpression ();

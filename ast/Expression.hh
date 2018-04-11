@@ -16,6 +16,8 @@ namespace semantic {
 
 namespace syntax {
 
+    class IType;
+    
     class IExpression : public IInstruction {
     public:
 	
@@ -37,7 +39,9 @@ namespace syntax {
 	    return NULL;
 	}
 
-	virtual IExpression* toType ();
+	virtual IType* toType ();
+
+	virtual bool isType ();
 	
 	IInstruction* templateReplace (const std::map <std::string, IExpression*>& elems) final {
 	    return this-> templateExpReplace (elems);

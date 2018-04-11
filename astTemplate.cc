@@ -237,24 +237,24 @@ namespace syntax {
     }
 
     Expression IFuncPtr::templateExpReplace (const map <string, Expression>& values) {
-	vector <Var> params;
+	vector <Expression> params;
 	for (auto it : this-> params) {
 	    auto elem = it-> templateExpReplace (values);
 	    if (auto ps = elem-> to <IParamList> ()) {
 		for (auto it_ : ps-> getParams ()) {
-		    params.push_back (it_-> to <IVar> ());
+		    params.push_back (it_);
 		}
 	    } else {
-		params.push_back (elem-> to <IVar> ());
+		params.push_back (elem);
 	    }
 	}
 	
 	auto ret = this-> ret-> templateExpReplace (values);
 	if (this-> expr) {
 	    auto expr = this-> expr-> templateExpReplace (values);
-	    return new (Z0)  IFuncPtr (this-> token, params, (Var) ret, expr);
+	    return new (Z0)  IFuncPtr (this-> token, params, ret, expr);
 	} else
-	    return new (Z0)  IFuncPtr (this-> token, params, (Var) ret);
+	    return new (Z0)  IFuncPtr (this-> token, params, ret);
     }
 
     Declaration IFunction::templateDeclReplace (const map <string, Expression>& tmps) {

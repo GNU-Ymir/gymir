@@ -8,41 +8,38 @@ namespace semantic {
     Creators Creators::__instance__;
 
     InfoType createConst (Word token, std::vector <syntax::Expression> templates) {
-	if (templates.size () != 1 ||
-	    (!templates [0]-> is <::syntax::IType> () && !templates [0]-> info-> type-> isType ())
-	) {
+	if (templates.size () != 1 || !templates [0]-> isType ()) {
 	    Ymir::Error::takeATypeAsTemplate (token);
 	    return NULL;	
 	}
 	
-	if (templates [0]-> info-> type-> is <IStructCstInfo> ()) {
-	    auto ret =  templates [0]-> info-> type-> TempOp ({});
-	    ret-> isConst (true);
-	    ret-> isType (true);
-	    return ret;
+	auto type = templates [0]-> info-> type;
+	if (type-> is <IStructCstInfo> ()) {
+	    type = type-> TempOp ({});
+	    type-> isType (true);
 	}
-	return templates [0]-> info-> type-> cloneConst ();	
+	
+	if (type == NULL) return NULL;
+	return type-> cloneConst ();	
     }
 
     InfoType createMut (Word token, std::vector <syntax::Expression> templates) {
-	if (templates.size () != 1 ||
-	    (!templates [0]-> is <::syntax::IType> () && !templates [0]-> info-> type-> isType ())
-	) {
+	if (templates.size () != 1 || !templates [0]-> isType ()) {
 	    Ymir::Error::takeATypeAsTemplate (token);
 	    return NULL;	
 	}
 	
-	if (templates [0]-> info-> type-> is <IStructCstInfo> ()) {
-	    auto ret =  templates [0]-> info-> type-> TempOp ({});
-	    ret-> isConst (false);
-	    ret-> isType (true);
-	    return ret;
+	auto type = templates [0]-> info-> type;
+	if (type-> is <IStructCstInfo> ()) {
+	    type = type-> TempOp ({});
+	    type-> isType (true);
 	}
-	auto ret = templates [0]-> info-> type-> cloneConst ();
+	
+	if (type == NULL) return NULL;
+	auto ret = type-> clone ();
 	ret-> isConst (false);
 	return ret;
     }
-
     
     Creators::Creators () {
 	this-> creators ["i32"] = (void*)&IFixedInfo::create;

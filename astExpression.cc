@@ -13,26 +13,57 @@ namespace syntax {
     const std::string IPragma::COMPILE = "compiles";
     const std::string IPragma::MSG = "msg";
     
+    Type IExpression::toType () {
+	Expression aux;
+	bool derog = false;
+	if (auto var = this-> to<IVar> ()) {
+	    aux = var-> asType ();
+	} else if (auto arr = this-> to <IArrayAlloc> ()) {
+	    aux = arr-> staticArray ();
+	    derog = true;	    
+	} else aux = this-> expression ();
+	if (aux == NULL) return NULL;
+
+	if (auto fn = aux-> to <IFuncPtr> ()) {
+	    if (fn-> body () == NULL) derog = true;
+	}
+
+	if (!aux-> isType () && !derog) {
+	    Ymir::Error::useAsType (aux-> token);
+	    return NULL;
+	}
+	auto type = aux-> info-> type;
+	if (type-> is <IStructCstInfo> ()) {
+	    type = type-> TempOp ({});
+	    if (!type) return NULL;
+	}
+	
+	type-> isType (false);
+	return new (Z0) IType (this-> token, type);
+    }
+
+    bool IExpression::isType () {
+	if (this-> is<IType> ()) return true;
+	else if (this-> info && this-> info-> type-> isType ()) return true;
+	return false;
+    }
+    
     Expression IAccess::expression () {
 	auto aux = new (Z0)  IAccess (this-> token, this-> end);
 	aux-> params = (ParamList) this-> params-> expression ();
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
 	if (aux-> params == NULL) return NULL;
-	if (aux-> left-> is<IType> ()) {
-	    Ymir::Error::undefVar (aux-> left-> token,
-				   Table::instance ().getAlike (aux-> left-> token.getStr ())
-	    );
+	if (aux-> left-> isType ()) {
+	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
 	    return NULL;
 	}
 
 	else if (aux-> left-> info-> type-> is <IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token);
 	    return NULL;
-	} else if (aux-> left-> info-> isType ()) {
-	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
-	    return NULL;
 	}
+	
 	std::vector <InfoType> treats (aux-> params-> getParams ().size ());
 	auto type = aux-> left-> info-> type-> AccessOp (aux-> left-> token,
 							 aux-> params,
@@ -124,7 +155,7 @@ namespace syntax {
     Expression IVar::expression () {
 	if (this-> info && this-> info-> isImmutable ()) {
 	    return this;	    
-	} else if (!this-> isType () && this-> deco != Keys::REF) {
+	} else if (!this-> isTypeV () && this-> deco != Keys::REF) {
 	    auto sym = Table::instance ().get (this-> token.getStr ());
 	    if (sym == NULL) {
 		Ymir::Error::undefVar (this-> token, Table::instance ().getAlike (this-> token.getStr ()));
@@ -133,8 +164,7 @@ namespace syntax {
 		auto ret = this-> expression (sym);
 		if (Table::instance ().parentFrame (sym) && ret-> is<IVar> ()) {
 		    auto var = ret-> to <IVar> ();
-		    if (!var-> is<IType> () &&
-			!var-> info-> isType ()) {
+		    if (!var-> isType ()) {
 			bool found = false;
 			for (auto it : Table::instance ().retInfo ().closure)
 			    if (it-> token.getStr () == ret-> token.getStr ()) {
@@ -163,7 +193,7 @@ namespace syntax {
     Var IVar::var () {
 	if (this-> info && this-> info-> isImmutable ()) {
 	    return this;	    
-	} else if (!this-> isType () && this-> deco != Keys::REF) {
+	} else if (!this-> isTypeV () && this-> deco != Keys::REF) {
 	    auto aux = new (Z0)  IVar (this-> token);
 	    aux-> info = Table::instance ().get (this-> token.getStr ());
 	    if (aux-> info == NULL) {
@@ -199,37 +229,6 @@ namespace syntax {
 	auto type = new (Z0)  IType (this-> token, info-> cloneOnExit ());
 	return new (Z0)  ITypedVar (this-> token, type, this-> deco);	
     }
-    
-    Expression IExpression::toType () {
-	Expression aux;
-	bool derog = false;
-	if (auto var = this-> to<IVar> ()) {
-	    aux = var-> asType ();
-	} else if (auto arr = this-> to <IArrayAlloc> ()) {
-	    aux = arr-> staticArray ();
-	    derog = true;	    
-	} else aux = this-> expression ();
-	if (aux == NULL) return NULL;
-
-	if (auto fn = aux-> to <IFuncPtr> ()) {
-	    if (fn-> body () == NULL) derog = true;
-	}
-
-	if (!aux-> is <IType> () &&
-	    !aux-> info-> type-> isType () && !derog) {
-	    Ymir::Error::useAsType (aux-> token);
-	    return NULL;
-	}
-	auto type = aux-> info-> type;
-	if (type-> is <IStructCstInfo> ()) {
-	    type = type-> TempOp ({});
-	    if (!type) return NULL;
-	}
-	
-	type-> isType (false);
-	return new (Z0) IType (this-> token, type);
-    }
-
     
     Type IVar::asType () {
 	std::vector <Expression> tmps;
@@ -270,12 +269,11 @@ namespace syntax {
 	}
     }
     
-    bool IVar::isType () {
+    bool IVar::isTypeV () {
 	if (IInfoType::exists (this-> token.getStr ())) return true;
 	else {
 	    auto info = Table::instance ().get (this-> token.getStr ());
 	    if (info) {
-		//if (info-> type-> is<IStructCstInfo> ()) return true;
 		return false;
 	    }
 	}
@@ -483,23 +481,17 @@ namespace syntax {
 
     bool IBinary::simpleVerif (Binary aux) {
 	if (aux-> left == NULL || aux-> right == NULL) return true;
-	else if (aux-> left-> is<IType> ()) {
+	else if (aux-> left-> isType ()) {
 	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
 	    return true;
-	} else if (aux-> right-> is<IType> ()) {
+	} else if (aux-> right-> isType ()) {
 	    Ymir::Error::useAsVar (aux-> right-> token, aux-> right-> info);
 	    return true;
 	} else if (aux-> right-> info == NULL) {
 	    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, new (Z0)  IVoidInfo ());
 	    return true;
-	} else if (aux-> right-> info-> isType ()) {
-	    Ymir::Error::useAsVar (aux-> right-> token, aux-> right-> info);
-	    return true;
 	} else if (aux-> left-> info == NULL) {
 	    Ymir::Error::undefVar (aux-> left-> token, Table::instance ().getAlike (aux-> left-> token.getStr ()));
-	    return true;
-	} else if (aux-> left-> info-> isType ()) {
-	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
 	    return true;
 	} else if (aux-> right-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> right-> token);
@@ -786,11 +778,12 @@ namespace syntax {
 
 	auto expr = this-> expr-> expression ();
 	if (!type || !expr) return NULL;
-	else if (expr-> is<IType> ()) {
+	else if (expr-> isType ()) {
 	    Ymir::Error::useAsVar (expr-> token, expr-> info);
 	    return NULL;
-	} else if (!type-> is <IType> () && !type-> is<IFuncPtr> ()) {
-	    Ymir::Error::assert ("TODO");
+	} else if (!type-> isType ()) {
+	    Ymir::Error::useAsType (type-> token);
+	    return NULL;
 	}
 
 	if (expr-> info-> type-> isSame (type-> info-> type)) {
@@ -866,7 +859,7 @@ namespace syntax {
 	InfoType successType = NULL;
 	for (auto fst : Ymir::r (0, this-> params.size ())) {
 	    std::vector <InfoType> casters (this-> params.size ());;
-	    if (this-> params [fst]-> is<IType> ()) {
+	    if (this-> params [fst]-> isType ()) {
 		Ymir::Error::useAsVar (this-> params [fst]-> token,
 				       this-> params [fst]-> info);
 		return NULL;
@@ -1012,7 +1005,7 @@ namespace syntax {
 	    if (type == NULL && ((this-> inside && this-> inside-> is <IPar> ()) || var-> hasTemplate ())) {
 		var-> inside = aux;
 		auto call = var-> expression ();
-		if (call == NULL || call-> is<IType> () || call-> info-> type-> is<IUndefInfo> ()) {
+		if (call == NULL || call-> isType () || call-> info-> type-> is<IUndefInfo> ()) {
 		    Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
 		    return NULL;
 		}
@@ -1071,17 +1064,14 @@ namespace syntax {
 	
 	aux-> _left-> inside = this;
 	
-	if (aux-> _left-> is<IType> ()) {
+	if (aux-> _left-> isType ()) {
 	    Ymir::Error::useAsVar (aux-> _left-> token, aux-> _left-> info);
 	    return true;
 	} else if (aux-> _left-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> _left-> token);
 	    return true;
-	} else if (aux-> _left-> info != NULL && aux-> _left-> info-> isType ()) {
-	    //if (!aux-> _left-> info-> type-> is<IStructCstInfo> ()) {
-	    Ymir::Error::useAsVar (aux-> _left-> token, aux-> _left-> info);
-	    return true;
 	}
+	
 	return false;
     }
 
@@ -1191,7 +1181,7 @@ namespace syntax {
 		if (ex_it-> info-> type-> is<IUndefInfo> ()) {
 		    Ymir::Error::uninitVar (ex_it-> token);
 		    return NULL;
-		} else if (ex_it-> is<IType> () || ex_it-> info-> isType ()) {
+		} else if (ex_it-> isType ()) {
 		    Ymir::Error::useAsVar (ex_it-> token, ex_it-> info);
 		    return NULL;
 		} 
@@ -1255,7 +1245,7 @@ namespace syntax {
 	if (this-> info) return this;
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
-	if (expr-> is <IType> () || expr-> info-> isType ()) {
+	if (expr-> isType ()) {
 	    Ymir::Error::useAsVar (expr-> token, expr-> info);
 	    return NULL;
 	}
@@ -1310,19 +1300,20 @@ namespace syntax {
     
     Expression IFuncPtr::expression () {
 	std::vector <Expression> tmps (this-> params.size () + 1);
-	if (this-> ret) tmps [0] = this-> ret-> asType ();
+	if (this-> ret) tmps [0] = this-> ret-> toType ();
 	else Ymir::Error::assert ("ERROR");
 	if (tmps [0] == NULL) return NULL;
 	
-	auto ret = tmps [0]-> to <IVar> ();
-	std::vector <Var> params;
+	auto ret = tmps [0];
+	std::vector <Expression> params;
 	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    tmps [it + 1] = this-> params [it]-> asType ();
+	    tmps [it + 1] = this-> params [it]-> toType ();
 	    if (tmps [it + 1] == NULL) return NULL;
-	    params.push_back (tmps [it + 1]-> to<IVar> ());
+	    params.push_back (tmps [it + 1]);
 	}
 
 	auto t_info = IInfoType::factory (this-> token, tmps);
+	if (t_info == NULL) return NULL;
 	if (this-> expr) {
 	    auto aux = this-> expr-> expression ();
 	    if (aux == NULL) return NULL;
@@ -1336,9 +1327,7 @@ namespace syntax {
 	    func-> info = new (Z0) ISymbol (this-> token, treat);
 	    return func;
 	} else {
-	    //auto func = new (Z0) IFuncPtr (this-> token, params, ret);
-	    //func-> info = new (Z0) ISymbol (this-> token, t_info);
-	    return new (Z0) IType (this-> token, t_info); ;
+	    return new (Z0) IType (this-> token, t_info);
 	}
     }
 
@@ -1351,7 +1340,7 @@ namespace syntax {
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
 	if (aux-> params == NULL) return NULL;
-	if (!aux-> left-> is <IType> () && !aux-> left-> info-> type-> isType ()) {
+	if (!aux-> left-> isType ()) {
 	    Ymir::Error::useAsType (this-> left-> token);
 	    return NULL;
 	}

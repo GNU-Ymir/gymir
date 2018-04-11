@@ -73,7 +73,7 @@ namespace semantic {
 	    DestructSolution soluce {0, true};
 	    auto type = left-> getLeft ()-> expression ();
 	    if (type == NULL) return DestructSolution (0, false);
-	    if (!type-> is <IType> () && !type-> info-> type-> isType ()) {
+	    if (!type-> isType ()) {
 		Ymir::Error::useAsType (type-> token);
 		return DestructSolution (0, false);
 	    }
