@@ -381,6 +381,9 @@ namespace syntax {
 	
 	auto type = this-> type-> toType ();
 	if (type == NULL) return NULL;
+	if (type-> info-> type-> is <IVoidInfo> ()) {
+	    Ymir::Error::cannotBeVoid (this-> token);
+	}
 	aux = new (Z0)  ITypedVar (this-> token, type);
 	
 	if (this-> deco == Keys::REF && !aux-> type-> info-> type-> is <IRefInfo> ()) {

@@ -1343,7 +1343,6 @@ namespace syntax {
     std::string IExpression::prettyPrint () {
 	Ymir::OutBuffer buf ("TODO {", this-> getIds (), "}");
 	Ymir::Error::assert (buf.str ().c_str ());
-
 	return "";
     }    
 
@@ -1559,6 +1558,14 @@ namespace syntax {
 	expr (expr),
 	_mut (mut)
     {}
+
+    std::string ITypeOf::prettyPrint () {
+	Ymir::OutBuffer buf ("typeof (");
+	if (this-> _mut) buf.write ("mut ");
+	buf.write (this-> expr-> prettyPrint ());
+	buf.write (")");
+	return buf.str ();
+    }
     
     ITypeOf::~ITypeOf () {
 	delete expr;

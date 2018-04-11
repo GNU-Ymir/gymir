@@ -18,6 +18,8 @@ namespace syntax {
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
 	
 	Expression expression () override;
+
+	std::string prettyPrint () override;
 	
 	void print (int nb = 0) override;
 	

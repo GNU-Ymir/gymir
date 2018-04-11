@@ -106,6 +106,7 @@ namespace Ymir {
 	    AllocationInSafe,
 	    CallUnsafeInSafe,
 	    LineInstruction,
+	    CannotBeVoid,
 	    LAST_ERROR
 	};
 
@@ -252,6 +253,8 @@ namespace Ymir {
 
 	static void useAsVar (const Word&, semantic::Symbol);
 
+	static void cannotBeVoid (const Word&);
+	
 	static void breakRefUndef (const Word&);
 
 	static void breakOutSide (const Word&);
