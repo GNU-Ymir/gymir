@@ -66,6 +66,8 @@ namespace semantic {
 	
 	InfoType DColonOp (syntax::Var) override;
 
+	ApplicationScore CallType (Word token, syntax::ParamList params) override;
+	
 	ApplicationScore CallOp (Word token, syntax::ParamList params);
 
 	InfoType CompOp (InfoType other) override;

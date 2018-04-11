@@ -45,6 +45,8 @@ namespace semantic {
 
 	//InfoType ApplyOp (const std::vector<syntax::Var> & vars) override;
 
+	ApplicationScore CallType (Word op, syntax::ParamList params) override;
+	
 	ApplicationScore CallOp (Word op, syntax::ParamList params) override;
 
 	std::string typeString () override;

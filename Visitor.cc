@@ -933,14 +933,14 @@ namespace syntax {
 		this-> lex.next ({Token::RPAR});
 	    } else {
 		this-> lex.rewind ();
-		type = visitLeftOp ();
+		type = visitType ();
 	    }
 	} else if (next == Token::LPAR) {
 	    type = visitLeftOp ();
 	    this-> lex.next ({Token::RPAR});
 	} else {
 	    this-> lex.rewind ();
-	    type = visitLeftOp ();
+	    type = visitType ();
 	}
 	return new (Z0)  IVar (begin, {type});
     }
@@ -1896,12 +1896,12 @@ namespace syntax {
 	
 	word = this-> lex.next ({Token::ARROW});
 	auto ret = visitLeftOp ();
-	word = this-> lex.next ();
-	if (word == Token::LACC) {
-	    auto expr = visitExpression ();
-	    word = this-> lex.next ({Token::RACC});
-	    return new (Z0)  IFuncPtr (begin, params, ret, expr);
-	} else this-> lex.rewind ();
+	// word = this-> lex.next ();
+	// if (word == Token::LACC) {
+	//     auto expr = visitExpression ();
+	//     word = this-> lex.next ({Token::RACC});
+	//     return new (Z0)  IFuncPtr (begin, params, ret, expr);
+	// } else this-> lex.rewind ();
 	return new (Z0)  IFuncPtr (begin, params, ret);
     }
 

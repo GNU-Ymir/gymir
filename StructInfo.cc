@@ -153,7 +153,11 @@ namespace semantic {
     
     InfoType IStructCstInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
-	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "typeid") {
+	    auto ret = this-> TempOp ({});
+	    if (ret == NULL) return NULL;
+	    return ret-> StringOf ();
+	}
 	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "name") return Name ();
@@ -220,48 +224,8 @@ namespace semantic {
 	score-> ret = ret;
 	return score;
     }
-    
-    ApplicationScore IStructCstInfo::CallOpUnion (Word token, const std::vector <InfoType> & params) {
-	if (this-> params.size () != 1) return NULL;
-
-	std::vector <InfoType> types;
-	std::vector <std::string> attribs;
-	
-	bool done = false;
-	auto score = new (Z0) IApplicationScore (token);
-	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    InfoType info = this-> params [it]-> getType ();
-	    if (info == NULL) return NULL;
-	    types.push_back (info);
-	    attribs.push_back (this-> params [it]-> token.getStr ());
-
-	    if (!done) {
-		auto type = params [0]-> CompOp (info);
-		if (type) type = type-> ConstVerif (info);
-		if (type) {
-		    type-> isConst (info-> isConst ());
-		    score-> score += 1;
-		    score-> treat.push_back (type);
-		    done = true;
-		} 
-	    }	    
-	}
-
-	if (!done) return NULL;
-	
-	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, true);
-	ret-> isConst (false);
-	ret-> setTypes (types);
-	ret-> setAttribs (attribs);
-	ret-> setTmps (this-> tmpsDone);
-	
-	ret-> multFoo = &StructUtils::InstCallUnion;	
-	score-> dyn = true;
-	score-> ret = ret;
-	return score;
-    }
-    
-    ApplicationScore IStructCstInfo::CallOp (Word token, syntax::ParamList params) {
+        
+    ApplicationScore IStructCstInfo::CallType (Word token, syntax::ParamList params) {
 	if (this-> tmps.size () != 0) {
 	    return NULL;
 	}
@@ -295,51 +259,6 @@ namespace semantic {
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
 	    
-	ret-> multFoo = &StructUtils::InstCall;
-	score-> dyn = true;
-	score-> ret = ret;
-	
-	return score;
-    }
-
-    ApplicationScore IStructCstInfo::CallOp (Word token, const std::vector <InfoType>& params) {
-	if (this-> tmps.size () != 0) {
-	    return NULL;
-	}
-
-	if (params.size () != this-> params.size ())
-	    return NULL;
-
-	std::vector <InfoType> types;
-	std::vector <std::string> attribs;
-	
-	auto score = new (Z0) IApplicationScore (token);
-	auto last = Table::instance ().templateNamespace ();
-	auto currentSpace = Table::instance ().space ();
-	for (auto it : Ymir::r (0, this-> params.size ())) {	    
-	    Table::instance ().setCurrentSpace (this-> space);
-	    Table::instance ().templateNamespace () = currentSpace;
-	    InfoType info = this-> params [it]-> getType ();
-	    types.push_back (info);
-	    attribs.push_back (this-> params [it]-> token.getStr ());
-
-	    auto type = params [it]-> CompOp (info);
-	    if (type) type = ConstVerif (info);
-	    if (type) {
-		type-> isConst (info-> isConst ());
-		score-> score += 1;
-		score-> treat.push_back (type);
-	    } else return NULL;
-	}
-
-	Table::instance ().setCurrentSpace (currentSpace);
-	Table::instance ().templateNamespace () = last;
-	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, this-> _isUnion);
-	ret-> isConst (false);
-	ret-> setTypes (types);
-	ret-> setAttribs (attribs);
-	ret-> setTmps (this-> tmpsDone);
-	
 	ret-> multFoo = &StructUtils::InstCall;
 	score-> dyn = true;
 	score-> ret = ret;
@@ -624,7 +543,7 @@ namespace semantic {
 	return ret;
     }
 
-    ApplicationScore IStructInfo::CallOp (Word token, syntax::ParamList params) {
+    ApplicationScore IStructInfo::CallType (Word token, syntax::ParamList params) {
 	if (params-> getParams ().size () != this-> types.size ())
 	    return NULL;
 	

@@ -140,11 +140,11 @@ namespace semantic {
 	return NULL;
     }
 
-    ApplicationScore IInfoType::CallOp (Word, syntax::ParamList) {
+    ApplicationScore IInfoType::CallType (Word, syntax::ParamList) {
 	return NULL;
     }
-
-    ApplicationScore IInfoType::CallOp (Word, const std::vector<InfoType> &) {
+    
+    ApplicationScore IInfoType::CallOp (Word, syntax::ParamList) {
 	return NULL;
     }
     

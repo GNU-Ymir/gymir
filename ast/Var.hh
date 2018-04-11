@@ -93,7 +93,7 @@ namespace syntax {
 	
 	Type asType () override;
 
-	bool isType () override;
+	bool isTypeV () override;
 
 	std::string prettyPrint () override;
 

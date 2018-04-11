@@ -270,6 +270,11 @@ namespace semantic {
     // InfoType IRefInfo::ApplyOp (std::vector <syntax::Var> vars) {	
     // }
 
+    ApplicationScore IRefInfo::CallType (Word op, syntax::ParamList params) {
+	auto ret = this-> _content-> CallType (op, params);
+	return ret;
+    }
+    
     ApplicationScore IRefInfo::CallOp (Word op, syntax::ParamList params) {
 	auto ret = this-> _content-> CallOp (op, params);
 	if (ret && ret-> dyn) {
@@ -460,6 +465,10 @@ namespace semantic {
 
     //InfoType IArrayRefInfo::ApplyOp (std::vector <syntax::Var> vars) {}
 
+    ApplicationScore IArrayRefInfo::CallType (Word op, syntax::ParamList params) {
+	return this-> _content-> CallType (op, params);
+    }
+    
     ApplicationScore IArrayRefInfo::CallOp (Word op, syntax::ParamList params) {
 	return this-> _content-> CallOp (op, params);
     }

@@ -123,7 +123,7 @@ namespace semantic {
 	return ret;
     }
 
-    ApplicationScore IArrayInfo::CallOp (Word token, syntax::ParamList params) {
+    ApplicationScore IArrayInfo::CallType (Word token, syntax::ParamList params) {
 	if (params-> getParams ().size () != 2 && !this-> _isStatic) 
 	    return NULL;
 	

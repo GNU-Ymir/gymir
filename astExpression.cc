@@ -44,8 +44,16 @@ namespace syntax {
 
     bool IExpression::isType () {
 	if (this-> is<IType> ()) return true;
-	else if (this-> info && this-> info-> type-> isType ()) return true;
+	else if (auto all = this-> to <IArrayAlloc> ()) {
+	    return all-> info-> type-> to <IArrayInfo> ()-> isStatic ();
+	} else if (this-> info && this-> info-> type-> isType ()) return true;
 	return false;
+    }
+
+    bool IExpression::isExpression () {
+	auto ist = this-> isType ();
+	if (this-> is <IArrayAlloc> ()) return true;
+	else return !ist;
     }
     
     Expression IAccess::expression () {
@@ -54,7 +62,7 @@ namespace syntax {
 	aux-> left = this-> left-> expression ();
 	if (aux-> left == NULL) return NULL;
 	if (aux-> params == NULL) return NULL;
-	if (aux-> left-> isType ()) {
+	if (!aux-> left-> isExpression ()) {
 	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
 	    return NULL;
 	}
@@ -334,7 +342,7 @@ namespace syntax {
 	return ret-> to <IType> ();
     }
 
-    bool IArrayVar::isType () {
+    bool IArrayVar::isTypeV () {
 	return true;
     }
 
@@ -481,10 +489,10 @@ namespace syntax {
 
     bool IBinary::simpleVerif (Binary aux) {
 	if (aux-> left == NULL || aux-> right == NULL) return true;
-	else if (aux-> left-> isType ()) {
+	else if (!aux-> left-> isExpression ()) {
 	    Ymir::Error::useAsVar (aux-> left-> token, aux-> left-> info);
 	    return true;
-	} else if (aux-> right-> isType ()) {
+	} else if (!aux-> right-> isExpression ()) {
 	    Ymir::Error::useAsVar (aux-> right-> token, aux-> right-> info);
 	    return true;
 	} else if (aux-> right-> info == NULL) {
@@ -778,7 +786,7 @@ namespace syntax {
 
 	auto expr = this-> expr-> expression ();
 	if (!type || !expr) return NULL;
-	else if (expr-> isType ()) {
+	else if (!expr-> isExpression ()) {
 	    Ymir::Error::useAsVar (expr-> token, expr-> info);
 	    return NULL;
 	} else if (!type-> isType ()) {
@@ -859,7 +867,7 @@ namespace syntax {
 	InfoType successType = NULL;
 	for (auto fst : Ymir::r (0, this-> params.size ())) {
 	    std::vector <InfoType> casters (this-> params.size ());;
-	    if (this-> params [fst]-> isType ()) {
+	    if (!this-> params [fst]-> isExpression ()) {
 		Ymir::Error::useAsVar (this-> params [fst]-> token,
 				       this-> params [fst]-> info);
 		return NULL;
@@ -1064,7 +1072,7 @@ namespace syntax {
 	
 	aux-> _left-> inside = this;
 	
-	if (aux-> _left-> isType ()) {
+	if (!aux-> _left-> isExpression ()) {
 	    Ymir::Error::useAsVar (aux-> _left-> token, aux-> _left-> info);
 	    return true;
 	} else if (aux-> _left-> info-> type-> is<IUndefInfo> ()) {
@@ -1181,7 +1189,7 @@ namespace syntax {
 		if (ex_it-> info-> type-> is<IUndefInfo> ()) {
 		    Ymir::Error::uninitVar (ex_it-> token);
 		    return NULL;
-		} else if (ex_it-> isType ()) {
+		} else if (!ex_it-> isExpression ()) {
 		    Ymir::Error::useAsVar (ex_it-> token, ex_it-> info);
 		    return NULL;
 		} 
@@ -1245,7 +1253,7 @@ namespace syntax {
 	if (this-> info) return this;
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
-	if (expr-> isType ()) {
+	if (!expr-> isExpression ()) {
 	    Ymir::Error::useAsVar (expr-> token, expr-> info);
 	    return NULL;
 	}
@@ -1344,15 +1352,17 @@ namespace syntax {
 	    Ymir::Error::useAsType (this-> left-> token);
 	    return NULL;
 	}
-	
-	auto type = aux-> left-> info-> type-> CallOp (aux-> left-> token, aux-> params);
-	if (type == NULL) {
+
+	auto type = aux-> left-> info-> type-> clone ();
+	type-> isType (true);
+	auto score = type-> CallType (aux-> left-> token, aux-> params);
+	if (score == NULL) {
 	    Ymir::Error::undefinedOp (this-> token, this-> end, aux-> left-> info, aux-> params);
 	    return NULL;
 	}
 
-	aux-> score = type;
-	aux-> info = new (Z0) ISymbol (this-> token, type-> ret);
+	aux-> score = score;
+	aux-> info = new (Z0) ISymbol (this-> token, score-> ret);
 	return aux;	
     }
     

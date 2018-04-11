@@ -44,8 +44,6 @@ namespace semantic {
 	
 	std::vector <Frame> getFrames ();
 
-	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
-
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
 
 	InfoType UnaryOp (Word) override;
@@ -85,6 +83,8 @@ namespace semantic {
 	ApplicationScore verifErrors ();
 
 	ApplicationScore CallAndThrow (Word tok, const std::vector <InfoType>& params, FrameProto & info);
+
+	ApplicationScore CallOp (Word, const std::vector<InfoType> &);
 	
     };
 

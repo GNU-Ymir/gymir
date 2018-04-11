@@ -290,7 +290,6 @@ namespace semantic {
 	return right;
     }
 
-
     ApplicationScore IFunctionInfo::CallOp (Word tok, const std::vector<InfoType> & params) {
 	if (needToReset) {
 	    itsUpToMe = true;

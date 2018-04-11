@@ -42,6 +42,8 @@ namespace syntax {
 	virtual IType* toType ();
 
 	virtual bool isType ();
+
+	virtual bool isExpression ();
 	
 	IInstruction* templateReplace (const std::map <std::string, IExpression*>& elems) final {
 	    return this-> templateExpReplace (elems);

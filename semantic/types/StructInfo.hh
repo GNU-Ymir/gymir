@@ -53,11 +53,11 @@ namespace semantic {
 
 	ApplicationScore CallOpUnion (Word, syntax::ParamList);
 	
-	ApplicationScore CallOp (Word, syntax::ParamList) override;
+	ApplicationScore CallType (Word, syntax::ParamList) override;
 
-	ApplicationScore CallOpUnion (Word, const std::vector <InfoType> &);
+	// ApplicationScore CallOpUnion (Word, const std::vector <InfoType> &);
 	
-	ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
+	// ApplicationScore CallOp (Word, const std::vector<InfoType> &) override;
 
 	InfoType TempOp (const std::vector<::syntax::Expression> &) override;
 
@@ -124,7 +124,7 @@ namespace semantic {
 
 	bool passingConst (InfoType) override;
 	
-	ApplicationScore CallOp (Word, syntax::ParamList) override;
+	ApplicationScore CallType (Word, syntax::ParamList) override;
 	
 	InfoType BinaryOp (Word op, syntax::Expression left) override;
 	

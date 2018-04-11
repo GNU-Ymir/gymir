@@ -150,9 +150,9 @@ namespace semantic {
 
 	InfoType BinaryOpRight (Word, InfoType);
 
+	virtual ApplicationScore CallType (Word, syntax::ParamList);
+	
 	virtual ApplicationScore CallOp (Word, syntax::ParamList);
-
-	virtual ApplicationScore CallOp (Word, const std::vector<IInfoType*> &);
 
 	virtual InfoType ApplyOp (const std::vector<::syntax::Var> &);
 

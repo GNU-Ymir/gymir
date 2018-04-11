@@ -35,6 +35,18 @@ namespace semantic {
 	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
+
+	Tree InstCallType (Word loc, InfoType ret, Expression, Expression paramsExp) {
+	    ParamList params = paramsExp-> to <IParamList> ();
+	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
+	    Ymir::TreeStmtList list;
+	    auto aux = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), ret-> toGeneric ());
+	    list.append (buildTree (
+		MODIFY_EXPR, loc.getLocus (), aux.getType (), aux, args [0]
+	    ));
+	    
+	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
+	}
 	
 	Tree InstAffectDelegate (Word loc, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
@@ -178,6 +190,23 @@ namespace semantic {
 	return NULL;
     }	
 
+    ApplicationScore IPtrFuncInfo::CallType (Word token, syntax::ParamList params) {
+	if (params-> getParams ().size () == 1) {
+	    auto treat = params-> getParams () [0]-> info-> type-> CompOp (this);
+	    if (treat == NULL) return NULL;
+	    auto score = new (Z0) IApplicationScore (token);
+	    score-> treat.push_back (treat);
+
+	    auto res = this-> clone ();
+	    res-> isType (false);
+	    res-> multFoo = &PtrFuncUtils::InstCallType;
+	    score-> dyn = true;
+	    score-> ret = res;
+	    return score;
+	}
+	return NULL;
+    }
+    
     ApplicationScore IPtrFuncInfo::CallOp (Word token, syntax::ParamList params) {
 	if (Table::instance ().hasCurrentContext (Keys::SAFE)) {
 	    Ymir::Error::callFuncPtrInSafe (token);
