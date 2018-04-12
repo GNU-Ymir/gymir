@@ -129,6 +129,7 @@ namespace semantic {
 	    auto ret = new (Z0) ITupleInfo (ot-> isConst ());
 	    for (auto it : Ymir::r (0, ot-> params.size ())) {
 		auto l = this-> params [it]-> CompOp (ot-> params [it]);
+		if (l == NULL) return NULL;
 		ret-> params.push_back (l);
 	    }
 	    
@@ -198,8 +199,7 @@ namespace semantic {
     
     std::string ITupleInfo::innerTypeString () {
 	Ymir::OutBuffer buf;
-	if (this-> isType ()) buf.write ("t!(");
-	else buf.write ("t(");
+	buf.write ("(");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (this-> params [it]-> typeString ());
 	    if (this-> params [it]-> binopFoo)

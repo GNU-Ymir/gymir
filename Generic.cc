@@ -147,6 +147,7 @@ namespace Ymir {
 	if (obj.getType ().getTreeCode () == POINTER_TYPE) {
 	    return getField (loc, getPointerUnref (loc, obj, TREE_TYPE (obj.getType ().getTree ()), 0), name);
 	}
+	
 	Tree field_decl = TYPE_FIELDS (TREE_TYPE (obj.getTree ()));
 	
 	while (!field_decl.isNull ()) {

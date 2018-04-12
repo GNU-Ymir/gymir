@@ -362,8 +362,6 @@ namespace syntax {
 	auto type = this-> type-> toType ();
 	if (type == NULL) return NULL;
 	if (this-> deco == Keys::REF && !type-> info-> type-> is <IRefInfo> ()) {
-	    if (type-> info-> type-> is<IEnumInfo> ()) 
-		Ymir::Error::assert ("TODO");
 	    return new (Z0)  IRefInfo (false, type-> info-> type);
 	} else if (this-> deco == Keys::CONST) {
 	    type-> info-> type-> isConst (true);
@@ -998,10 +996,13 @@ namespace syntax {
 		Ymir::Error::undefAttr (this-> token, left-> info, var);
 		return NULL;
 	    }
-	    	    
-	    auto aux = new (Z0)  IDColon (this-> token, this-> left-> expression (), this-> right);
-	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
-	    return aux;	
+
+	    if (type-> isType ()) return new (Z0) IType (this-> token, type);
+	    else {
+		auto aux = new (Z0)  IDColon (this-> token, this-> left-> expression (), this-> right);
+		aux-> info = new (Z0)  ISymbol (aux-> token, type);
+		return aux;
+	    }
 	}
     }
 
@@ -1304,6 +1305,7 @@ namespace syntax {
 	auto fun = new (Z0) IFunctionInfo (aux-> frame-> space (), "");
 	fun-> set (aux-> frame);
 	fun-> alone () = true;
+	fun-> isLambda () = true;
 	fun-> value () = new (Z0) ILambdaValue (aux-> frame);
 	aux-> info = new (Z0) ISymbol (aux-> token, fun);
 	return aux;

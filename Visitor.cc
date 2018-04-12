@@ -1539,7 +1539,7 @@ namespace syntax {
 	    return new (Z0)  IIs (begin, expr, expType);
 	} else {
 	    this-> lex.rewind ();
-	    auto type = visitType ();
+	    auto type = visitLeftOp ();
 	    next = this-> lex.next ({Token::RPAR});
 	    return new (Z0)  IIs (begin, expr, type);
 	}

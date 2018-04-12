@@ -17,7 +17,9 @@ namespace semantic {
 	std::vector <Frame> _fromTemplates;
 	std::vector <Frame> alls;
 	bool _alone = false;
+	bool _isLambda = false;
 
+	
 	static int nbTmpsCreation;// = 0;
 	static bool needToReset;// = true;
 	bool itsUpToMe = false;
@@ -65,6 +67,10 @@ namespace semantic {
 	ulong nbTemplates () override;
 	
 	bool& alone ();
+
+	bool& isLambda ();
+	
+	InfoType toPtr (Word op);
 	
 	std::string name ();
 
@@ -76,7 +82,6 @@ namespace semantic {
 	
     private:
 
-	InfoType toPtr ();
 
 	std::map<Word, std::string> candidates ();
 

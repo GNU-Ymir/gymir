@@ -278,7 +278,7 @@ namespace semantic {
     ApplicationScore IRefInfo::CallOp (Word op, syntax::ParamList params) {
 	auto ret = this-> _content-> CallOp (op, params);
 	if (ret && ret-> dyn) {
-	    ret-> left = addUnref (this-> _content-> cloneOnExit ());
+	    ret-> ret = addUnref (ret-> ret);
 	}
 	return ret;
     }

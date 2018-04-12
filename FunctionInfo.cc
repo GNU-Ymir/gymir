@@ -177,6 +177,7 @@ namespace semantic {
 	auto ret = new (Z0) IFunctionInfo (this-> _space, this-> _name);
 	ret-> _info = this-> _info;
 	ret-> _alone = this-> _alone;
+	ret-> _isLambda = this-> _isLambda;
 	ret-> _fromTemplates = this-> _fromTemplates;
 	ret-> value () = this-> value ();
 	return ret;
@@ -212,7 +213,7 @@ namespace semantic {
 		if (score == NULL || score-> ret == NULL) return NULL;
 		auto ret = new (Z0) IPtrFuncInfo (true);
 		ret-> getParams () = infoTypes;
-		ret-> getType () = score-> ret-> cloneConst ();
+		ret-> getType () = score-> ret-> clone ();
 		ret-> getScore () = score;
 		ret-> isDelegate () = score-> proto-> isDelegate ();
 		if (ret-> isDelegate ()) {
@@ -359,7 +360,7 @@ namespace semantic {
     }
 
     InfoType IFunctionInfo::UnaryOp (Word op) {
-	if (op == Token::AND) return toPtr ();
+	if (op == Token::AND) return toPtr (op);
 	return NULL;
     }
 
@@ -480,26 +481,28 @@ namespace semantic {
 	return this-> _alone;
     }
 
+    bool& IFunctionInfo::isLambda () {
+	return this-> _isLambda;
+    }
+
     std::string IFunctionInfo::name () {
 	return this-> _name;
     }
 
-    InfoType IFunctionInfo::toPtr () {
-	// auto frames = getFrames ();
-	// if (frames.size () == 1) {
-	//     auto infoTypes = frames [0]-> getParamTypes ();
-	//     auto score = this-> CallOp ({op.getLocus (), ""}, infoTypes);
-	//     if (score == NULL || score-> ret == NULL) return NULL;
-	//     auto ret = new (Z0) IPtrFuncInfo (true);
-	//     ret-> getParams () = infoTypes;
-	//     ret-> getType () = score-> ret-> cloneConst ();
-	//     ret-> getScore () = score;
+    InfoType IFunctionInfo::toPtr (Word op) {
+	auto frames = getFrames ();
+	if (frames.size () == 1) {
+	    auto infoTypes = frames [0]-> getParamTypes ();
+	    auto score = this-> CallOp ({op.getLocus (), ""}, infoTypes);
+	    if (score == NULL || score-> ret == NULL) return NULL;
+	    auto ret = new (Z0) IPtrFuncInfo (true);
+	    ret-> getParams () = infoTypes;
+	    ret-> getType () = score-> ret-> clone ();
+	    ret-> getScore () = score;
 	    
-	//     ret-> nextBinop.push_back (&FunctionUtils::InstAffect);
-	//     ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
-	    
-	//     return ret;	
-	// }
+	    ret-> binopFoo = &FunctionUtils::InstAffect;	    
+	    return ret;	
+	}
 	return NULL;
     }
 

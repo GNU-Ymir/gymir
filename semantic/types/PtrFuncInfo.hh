@@ -63,6 +63,8 @@ namespace semantic {
 	InfoType BinaryOpRight (Word token, syntax::Expression right) override;
 	
 	InfoType onClone () override;
+
+	InfoType DotOp (syntax::Var) override;
 	
 	InfoType DColonOp (syntax::Var) override;
 

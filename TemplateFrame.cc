@@ -258,7 +258,7 @@ namespace semantic {
 	    }
 	}
 
-	Ymir::log ("Total solve : ", tmps);	
+	Ymir::log ("Total solve for : {", attrs, " | ",  args, "} : ", tmps);	
 	for (auto exp : tmps) {
 	    if (exp.second-> info) {
 		if (exp.second-> info-> isImmutable ()) {
@@ -366,6 +366,7 @@ namespace semantic {
 		res = TemplateSolver::instance ().solveVariadic (this-> _function-> getTemplates (), tvar-> typeExp (), others);
 	    }
 	    if (!res.valid) return NULL;
+	    Ymir::log ("Variadic soluce for : {", attrs, " | ", params, "} : ", res.elements);
 	    map <string, Expression> attrTmps;
 	    vector <Var> auxAttrs (attrs.begin (), attrs.end () - 1);
 	    vector <InfoType> auxParams (params.begin (), params.begin () + attrs.size () - 1);

@@ -36,6 +36,18 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
 
+	Tree InstGetObj (Word locus, InfoType, Expression left, Expression) {
+	    location_t loc = locus.getLocus ();
+	    auto ltree = left-> toGeneric ();
+	    return getField (loc, ltree, "obj");
+	}
+
+	Tree InstGetPtr (Word locus, InfoType, Expression left, Expression) {
+	    location_t loc = locus.getLocus ();
+	    auto ltree = left-> toGeneric ();
+	    return getField (loc, ltree, "ptr");
+	}
+	
 	Tree InstCallType (Word loc, InfoType ret, Expression, Expression paramsExp) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
@@ -93,6 +105,7 @@ namespace semantic {
 	    auto rtree = type-> buildBinaryOp (
 		loc, type, left, right
 	    );
+
 	    if (ltree.getType ().getTree () == rtree.getType ().getTree ()) 
 		return buildTree (MODIFY_EXPR, loc.getLocus (), ltree.getType (), ltree, rtree);
 	    else {		
@@ -104,7 +117,7 @@ namespace semantic {
 		return Ymir::compoundExpr (loc.getLocus (), result, ltree);
 	    }
 	}
-
+	
 	Tree InstCall (Word loc, InfoType ret, Expression left, Expression paramsExp) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    auto fn = left-> toGeneric ();
@@ -344,13 +357,36 @@ namespace semantic {
 	return aux;
     }
 
+    InfoType IPtrFuncInfo::DotOp (syntax::Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "obj" && this-> isDelegate ()) {
+	    auto ret = new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ());
+	    ret-> binopFoo = PtrFuncUtils::InstGetObj;
+	    return ret;
+	} else if (var-> token == "ptr" && this-> isDelegate ()) {
+	    auto ret = this-> clone ()-> to <IPtrFuncInfo> ();
+	    ret-> _isDelegate = false;
+	    ret-> params.insert (ret-> params.begin (), new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()));
+	    ret-> binopFoo = PtrFuncUtils::InstGetPtr;
+	    return ret;
+	}
+	return NULL;
+    }
+    
     InfoType IPtrFuncInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") {
 	    return StringOf ();
-	} else if (var-> token == "paramTuple") return NULL;
-	else if (var-> token == "retType") return NULL;
-	else if (var-> token == "init") {
+	} else if (var-> token == "paramTuple") {
+	    auto ret = new (Z0) ITupleInfo (false);
+	    ret-> getParams () = this-> params;
+	    ret-> isType (true);
+	    return ret;
+	} else if (var-> token == "retType") {
+	    auto ret = this-> ret-> clone ();
+	    ret-> isType (true);
+	    return ret;
+	} else if (var-> token == "init") {
 	    auto ret = this-> clone ();
 	    if (!this-> isDelegate ())
 		ret-> unopFoo = &PtrFuncUtils::InstInit;

@@ -420,8 +420,9 @@ namespace semantic {
 	TemplateSolution res (0, true);
 	if (auto var = content-> to <IVar> ()) 
 	    res = this-> solveInside (tmps, var, type_);
-	else
+	else if (content-> is <IFuncPtr> ())
 	    res = this-> solveInside (tmps, content-> to<IFuncPtr> (), type_);
+	else return TemplateSolution (0, false);
 	if (!res.valid) return TemplateSolution (0, false);
 	
 	type_ = new (Z0)  IArrayInfo (isConst, res.type-> cloneOnExit ());
@@ -643,6 +644,13 @@ namespace semantic {
 	    isConst = true;
 	
 	auto type_ = type-> cloneOnExit ();
+	if (auto fn = type_-> to <IFunctionInfo> ()) {
+	    if (fn-> isLambda ()) {
+		type_ = fn-> toPtr (param-> token);
+		if (type_ == NULL) return TemplateSolution (0, false);
+	    }
+	}
+	
 	type_-> isConst (isConst);
 	
 	map <string, Expression> ret;	
@@ -701,6 +709,7 @@ namespace semantic {
 		    return TemplateSolution (0, false);
 		elements.push_back (getAndRemove (token.getStr (), soluce.elements));
 	    }
+	    
 	    auto aux = new (Z0) IParamList (last-> token, elements);
 	    map<string, Expression> ret = {{last-> token.getStr (), aux}};
 	    if (!merge (soluce.score, soluce.elements, ret))
@@ -821,8 +830,14 @@ namespace semantic {
 
     TemplateSolution TemplateSolver::solveInside (Var left, Type right) {
 	Ymir::log ("Solve inside type : ", left, "|", right);
-	auto type = right-> info-> type;
-	auto clo = new (Z0) IType (right-> token,  type-> cloneOnExit ());
+	auto type = right-> info-> type-> cloneOnExit ();
+	if (auto fn = type-> to <IFunctionInfo> ()) {
+	    if (fn-> isLambda ()) { 
+		type = fn-> toPtr (left-> token);
+		if (type == NULL) return TemplateSolution (0, false);
+	    }
+	}
+	auto clo = new (Z0) IType (right-> token,  type);
 	map<string, Expression> value =  {{left-> token.getStr (), clo}};
 	return TemplateSolution (__VAR__, true, type, value);
     }

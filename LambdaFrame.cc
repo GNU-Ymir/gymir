@@ -32,6 +32,7 @@ namespace semantic {
 	    ret = IFrame::validate (this-> name, this-> _space, finalParams, this-> frame-> getBlock ());
 	}
 	
+	if (ret == NULL) return NULL;
 	ret-> isMoved () = this-> isMoved ();
 	return ret;
     }
