@@ -2077,22 +2077,10 @@ namespace syntax {
     Expression Visitor::visitDot (Expression left) {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
+	Expression right = visitConstanteSimple ();
+	if (right == NULL) right = visitVar ();
+	auto retour = new (Z0)  IDot (begin, left, right);
 	auto next = this-> lex.next ();
-	Expression retour;
-	if (next == Keys::EXPAND) {
-	    retour = new (Z0)  IExpand (next, left);
-	} else if (next == Keys::TYPEOF) {
-	    retour = new (Z0)  ITypeOf (next, left);
-	} else if (next == Keys::STRINGOF) {
-	    retour = new (Z0) IStringOf (next, left);
-	} else {
-	    this-> lex.rewind ();
-	    Expression right = visitConstanteSimple ();
-	    if (right == NULL) right = visitVar ();
-	    retour = new (Z0)  IDot (begin, left, right);
-	}
-	
-	next = this-> lex.next ();
 	if (find (suiteElem, next))
 	    return visitSuite (next, retour);
 	else if (find (afUnary, next))
@@ -2104,9 +2092,21 @@ namespace syntax {
     Expression Visitor::visitDColon (Expression left) {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
-	auto right = visitVar ();
-	auto retour = new (Z0)  IDColon (begin, left, right);
 	auto next = this-> lex.next ();
+	Expression retour;
+	if (next == Keys::EXPAND) {
+	    retour = new (Z0)  IExpand (next, left);
+	} else if (next == Keys::TYPEOF) {
+	    retour = new (Z0)  ITypeOf (next, left);
+	} else if (next == Keys::STRINGOF) {
+	    retour = new (Z0) IStringOf (next, left);
+	} else {
+	    this-> lex.rewind ();
+	    auto right = visitVar ();
+	    retour = new (Z0)  IDColon (begin, left, right);
+	}
+	
+	next = this-> lex.next ();	
 	if (find (suiteElem, next))
 	    return visitSuite (next, retour);
 	else if (find (afUnary, next))
