@@ -90,6 +90,7 @@ namespace syntax {
 	Expression visitDColon (Expression left);
 	Expression visitMixin ();
 	Expression visitMatch ();
+	Expression visitMatchExpression ();
 	Expression visitAfter (const Word& word, Expression left);
 	Expression visitBeforePth (const Word& word);
 	Instruction visitIf ();

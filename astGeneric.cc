@@ -707,6 +707,11 @@ namespace syntax {
 	} else {
 	    elemTree = it-> second;
 	}
+
+	if (auto ref = this-> expr-> info-> type-> to <IRefInfo> ()) {
+	    auto inner = ref-> content ()-> toGeneric ();
+	    elemTree = getPointerUnref (loc, elemTree, inner, 0);
+	}
 	
 	return getField (loc, elemTree, this-> it);
     }
@@ -1067,7 +1072,7 @@ namespace syntax {
 	return Ymir::Tree ();
     }
 
-    Ymir::Tree IAffectGeneric::toGeneric () {	
+    Ymir::Tree IAffectGeneric::toGeneric () {
 	return Ymir::buildTree (
 	    MODIFY_EXPR,
 	    this-> token.getLocus (),

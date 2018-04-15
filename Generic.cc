@@ -172,6 +172,10 @@ namespace Ymir {
 
 
     Tree getField (location_t loc, Tree obj, ulong it) {
+	if (obj.getType ().getTreeCode () == POINTER_TYPE) {
+	    return getField (loc, getPointerUnref (loc, obj, TREE_TYPE (obj.getType ().getTree ()), 0), it);
+	}
+	
 	Tree field_decl = TYPE_FIELDS (TREE_TYPE (obj.getTree ()));
 
 	for (auto it __attribute__((unused)) : Ymir::r (0, it)) {

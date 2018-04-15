@@ -1450,15 +1450,15 @@ namespace syntax {
     Expression IMatch::expression () {
 	Table::instance ().enterBlock ();
 	auto aux = new (Z0) IVar ({expr-> token, "_"});
-	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IUndefInfo ());
-	aux-> info-> isConst (false);
+	auto expr = this-> expr-> expression ();
+	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IRefInfo (expr-> info-> isConst ()
+								       , expr-> info-> type-> clone ()));
 	Table::instance ().insert (aux-> info);
 	
 	Word affTok {this-> token, Token::EQUAL};
-	auto binAux = (new (Z0) IBinary (affTok, aux, this-> expr))-> expression ();
+	auto binAux = (new (Z0) IAffectGeneric (affTok, aux, expr, true))-> expression ();
 	if (!binAux) return NULL;       
-	aux-> info-> isConst (true);
-	aux-> info-> value () = binAux-> to<IBinary> ()-> getRight ()-> info-> value ();
+	aux-> info-> value () = expr-> info-> value ();
 	
 	std::vector <semantic::DestructSolution> soluce;
 	std::vector <Block> results;
@@ -1637,6 +1637,8 @@ namespace syntax {
 	auto left = this-> left-> expression ();
 	auto right = this-> right-> expression ();
 	if (left == NULL || right == NULL) return NULL;
-	return new (Z0) IAffectGeneric (this-> token, left, right, this-> _addr);
+	auto ret = new (Z0) IAffectGeneric (this-> token, left, right, this-> _addr);
+	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
+	return ret;
     }
 }

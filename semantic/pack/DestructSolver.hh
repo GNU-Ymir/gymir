@@ -8,6 +8,7 @@ namespace syntax {
     class IBinary;
     class IConstTuple;
     class IStructCst;
+    class ITypedVar;
 }
 
 namespace semantic {
@@ -57,7 +58,9 @@ namespace semantic {
 
 	DestructSolution solveTuple (syntax::IConstTuple* tu, syntax::Expression right);
 
-	DestructSolution solveVar (syntax::IVar * var, syntax::Expression right);
+	DestructSolution solveVar (syntax::IVar * var, syntax::Expression right, bool canNormal = true);
+
+	DestructSolution solveTyped (syntax::ITypedVar * var, syntax::Expression right);
 
 	DestructSolution solveIgnore (syntax::Expression right);
 

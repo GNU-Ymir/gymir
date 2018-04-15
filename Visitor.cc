@@ -864,7 +864,7 @@ namespace syntax {
        vardecl := var (':' type)?
     */
     Var Visitor::visitVarDeclaration () {
-	auto deco = this->lex.next ();
+	auto deco = this-> lex.next ();
 	if (deco != Keys::CONST && deco != Keys::REF) {
 	    this-> lex.rewind ();
 	    deco = Word::eof ();
@@ -1757,7 +1757,11 @@ namespace syntax {
 	if (next != Token::RACC) {
 	    this-> lex.rewind ();
 	    while (true) {
-		params.push_back (visitExpression ());
+		if (this-> isInMatch) 
+		    params.push_back (visitMatchExpression ());
+		else
+		    params.push_back (visitExpression ());
+		
 		next = this-> lex.next ({Token::RACC, Token::COMA});
 		if (next == Token::RACC) break;
 	    }
@@ -2135,12 +2139,8 @@ namespace syntax {
 	
 	this-> isInMatch = true;
 	while (true) {
-	    values.push_back (visitExpression ());
-	    next = this-> lex.next ({Token::DARROW, Token::TDOT});
-	    if (next == Token::TDOT) {
-		values.back () = new (Z0)  IMatchPair (next, values.back (), visitExpression ());
-		next = this-> lex.next ({Token::DARROW});
-	    }
+	    values.push_back (visitMatchExpression ());
+	    next = this-> lex.next ({Token::DARROW});
 	    
 	    this-> lambdaPossible = true;
 	    this-> isInMatch = false;
@@ -2156,6 +2156,40 @@ namespace syntax {
 	this-> lambdaPossible = true;
 	return new (Z0)  IMatch (begin, expr, values, insts);
     }
+
+    Expression Visitor::visitMatchExpression () {
+	auto begin = this-> lex.next ();
+	if (begin == Token::LPAR) {
+	    Word tok;
+	    std::vector <Expression> params;
+	    while (true) {
+		params.push_back (visitMatchExpression ());
+		auto next = this-> lex.next ({Token::RPAR, Token::COMA});
+		if (next == Token::RPAR) { tok = next; break; }
+	    }
+	    return new (Z0) IConstTuple (begin, tok, params);
+	} else {
+	    this-> lex.rewind ();
+	    if (canVisitVarDeclaration ()) {
+		return visitVarDeclaration ();
+	    } else {
+		if (begin == Keys::REF) {
+		    this-> lex.next ();
+		    auto var = new (Z0) IVar (visitIdentifiant ());
+		    var-> deco = begin;
+		    return var;
+		}
+
+		auto expr = visitExpression ();
+		auto next = this-> lex.next ();
+		if (next == Token::TDOT) {
+		    auto res = visitExpression ();
+		    return new (Z0) IMatchPair (next, expr, res);
+		} else this-> lex.rewind ();
+		return expr;
+	    }
+	}
+    }    
     
     Expression Visitor::visitAfter (const Word& word, Expression left) {
 	return new (Z0)  IUnary (word, left);

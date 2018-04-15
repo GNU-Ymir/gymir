@@ -69,7 +69,9 @@ namespace semantic {
     }
 
     DestructSolution DestructSolver::solveStructCst (StructCst left, Expression right) {
-	if (auto str = right-> info-> type-> to <IStructInfo> ()) {
+	InfoType type = right-> info-> type;
+	if (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
+	if (auto str = type-> to <IStructInfo> ()) {
 	    DestructSolution soluce {0, true};
 	    auto type = left-> getLeft ()-> expression ();
 	    if (type == NULL) return DestructSolution (0, false);
@@ -81,12 +83,14 @@ namespace semantic {
 	    auto strCst = type-> info-> type-> to <IStructCstInfo> ();
 	    if (!strCst) return DestructSolution (0, false);	    
 	    if (left-> getExprs ().size () != str-> getTypes ().size ()) {
-		return DestructSolution {0, false};
+	    	return DestructSolution {0, false};
 	    }
 
 	    for (auto it : Ymir::r (0, str-> getTypes ().size ())) {
-		auto exp = new (Z0) IExpand (right-> token, right, it);
+		auto exp = new (Z0) IExpand (right-> token, right, it);		
 		exp-> info = new (Z0) ISymbol (exp-> token, str-> getTypes  ()[it]-> clone ());
+		exp-> info-> isConst (right-> info-> isConst ());
+		
 		auto res = solve (left-> getExprs () [it], exp);
 		if (!res.valid || !merge (soluce, res, Token::AND))
 		    return DestructSolution {0, false};
@@ -98,7 +102,9 @@ namespace semantic {
     }
     
     DestructSolution DestructSolver::solveTuple (ConstTuple left, Expression right) {
-	if (auto tuple = right-> info-> type-> to <ITupleInfo> ()) {
+	InfoType type = right-> info-> type;
+	if (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
+	if (auto tuple = type-> to <ITupleInfo> ()) {
 	    DestructSolution soluce {0, true};
 	    if (left-> getExprs ().size () != tuple-> nbParams ()) {
 		return DestructSolution {0, false};
@@ -107,6 +113,7 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, tuple-> nbParams ())) {
 		auto exp = new (Z0) IExpand (right-> token, right, it);
 		exp-> info = new (Z0) ISymbol (exp-> token, tuple-> getParams ()[it]-> clone ());
+		exp-> info-> isConst (right-> info-> isConst ()); 
 		auto res = solve (left-> getExprs () [it], exp);
 		if (!res.valid || !merge (soluce, res, Token::AND))
 		    return DestructSolution {0, false};
@@ -123,28 +130,49 @@ namespace semantic {
 	soluce.immutable = true;
 	return soluce;
     }
-    
-    DestructSolution DestructSolver::solveVar (Var var, Expression right) {
-	if (Table::instance ().get (var-> token.getStr ()) != NULL)
-	    return solveNormal (var, right);
 
+    DestructSolution DestructSolver::solveVar (Var var, Expression right, bool canNormal) {
+	if (auto typed = var-> to <ITypedVar> ()) return solveTyped (typed, right);
+    	if (Table::instance ().get (var-> token.getStr ()) != NULL && canNormal)
+    	    return solveNormal (var, right);
+
+    	Expression bin = NULL;
 	auto aux = new (Z0) IVar (var-> token);
-	aux-> info = new (Z0) ISymbol (var-> token, new (Z0) IUndefInfo ());
-	aux-> info-> isConst (false);
-	Table::instance ().insert (aux-> info);
+    	if (var-> deco == Keys::REF) {
+	    if (right-> info-> type-> is <IRefInfo> ()) {
+		aux-> info = new (Z0) ISymbol (var-> token, right-> info-> type-> clone ());
+		Table::instance ().insert (aux-> info);
+	    
+		bin = (new (Z0) IAffectGeneric ({var-> token, Token::EQUAL},
+						aux,
+						right, false))-> expression ();
+	    } else {
+		aux-> info = new (Z0) ISymbol (var-> token, new (Z0) IRefInfo (false, right-> info-> type-> clone ()));
+		Table::instance ().insert (aux-> info);
+		
+		bin = (new (Z0) IAffectGeneric ({var-> token, Token::EQUAL},
+						aux,
+						right, true))-> expression ();
+	    }
+    	} else {
+    	    aux-> info = new (Z0) ISymbol (var-> token, new (Z0) IUndefInfo ());
+    	    aux-> info-> isConst (false);
+    	    Table::instance ().insert (aux-> info);
 
-	Word affTok {var-> token, Token::EQUAL};
-	auto bin = (new (Z0) IBinary (affTok, aux, right))-> expression ();
-	if (!bin) return DestructSolution (0, false);
-	DestructSolution soluce {__VAR__, true};
-	soluce.created.push_back (aux);
-	soluce.caster.push_back (bin);
-	auto test = new (Z0) IBool (var-> token);
-	test-> getValue () = true;
-	soluce.test = test-> expression ();
-	soluce.immutable = true;
+    	    Word affTok {var-> token, Token::EQUAL};
+	    bin = (new (Z0) IBinary (affTok, aux, right))-> expression ();
+    	    if (!bin) return DestructSolution (0, false);
+    }
+    
+    	DestructSolution soluce {__VAR__, true};
+    	soluce.created.push_back (aux);
+    	soluce.caster.push_back (bin);
+    	auto test = new (Z0) IBool (var-> token);
+    	test-> getValue () = true;
+    	soluce.test = test-> expression ();
+    	soluce.immutable = true;
 	
-	return soluce;
+    	return soluce;	
     }
     
     DestructSolution DestructSolver::solvePair (MatchPair pair, Expression right) {
@@ -179,7 +207,7 @@ namespace semantic {
 	}
 	return soluce;
     }
-    
+        
     DestructSolution DestructSolver::solveNormal (Expression left, Expression right) {
 	auto value = left-> expression ();
 	if (value == NULL) return DestructSolution (0, false);
@@ -203,6 +231,22 @@ namespace semantic {
 	return soluce;
     }
 
+    DestructSolution DestructSolver::solveTyped (TypedVar left, Expression right) {
+	auto ltype = left-> getType ();
+	auto rtype = right-> info-> type;
+	if (auto ref = rtype-> to <IRefInfo> ())
+	    rtype = ref-> content ();
+
+	if (auto ref = ltype-> to <IRefInfo> ())
+	    ltype = ref-> content ();
+	
+	if (ltype-> isSame (rtype)) {
+	    auto var = new (Z0) IVar (left-> token);
+	    var-> deco = left-> deco;
+	    return solveVar (var, right, false);
+	} else return DestructSolution (0, false);
+    }
+    
     DestructSolution DestructSolver::solveBinary (Binary left, Expression right) {
 	if (left-> token != Token::PIPE) return solveNormal (left, right);
 
