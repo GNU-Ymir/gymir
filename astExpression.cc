@@ -1626,6 +1626,12 @@ namespace syntax {
 	return res;
     }
 
+    Expression IMacroEnum::expression () {
+	auto res = this-> templateExpReplace ({});
+	res-> info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
+	return res;
+    }
+
     Expression IMacroToken::expression () {
 	auto aux = new (Z0) IString (this-> token, this-> value);
 	aux-> info = new (Z0) ISymbol (this-> token, new (Z0) IStringInfo (true, true));

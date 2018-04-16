@@ -259,7 +259,7 @@ namespace syntax {
 	std::vector <MacroElement> elements;
 	while (true) {
 	    auto next = this-> lex.next ({Token::STAR, Token::DOLLAR, Token::PLUS, Token::GUILL, endTok, Token::RPAR});
-	    if (next == Token::STAR || next == Token::PLUS) elements.push_back (visitMacroRepeat (next == Token::PLUS));		
+	    if (next == Token::STAR || next == Token::PLUS) elements.push_back (visitMacroRepeat (next == Token::PLUS));
 	    else if (next == Token::DOLLAR) elements.push_back (visitMacroVar ());
 	    else if (next == Token::GUILL) elements.push_back (visitMacroToken ());
 	    else { end = next; break; } 
@@ -281,7 +281,7 @@ namespace syntax {
 	}
 	return new (Z0) IMacroRepeat (ident, expr, tok, atLeastOneTime);
     }
-
+        
     MacroVar Visitor::visitMacroVar () {
 	auto ident = this-> visitIdentifiant ();
 	this-> lex.next ({Token::COLON});
@@ -294,6 +294,7 @@ namespace syntax {
 	    return new (Z0) IMacroVar (ident, MacroVarConst::BLOCK);
 	else 
 	    return new (Z0) IMacroVar (ident, MacroVarConst::TOKEN);
+	
     }
 
     MacroToken Visitor::visitMacroToken () {

@@ -2,6 +2,7 @@
 #include <ymir/ast/Macro.hh>
 #include <ymir/syntax/_.hh>
 #include <ymir/utils/Options.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace semantic {
     using namespace syntax;
@@ -64,16 +65,16 @@ namespace semantic {
 	for (auto elem : expr-> getElements ()) {
 	    MacroSolution soluce {true, {}, NULL};
 	    if (auto rep = elem-> to <IMacroRepeat> ()) {
-		if (get [i] < lexers.size ())
-		    soluce = solve (rep, lexers [get [i]]);
-		else
-		    soluce = solve (rep, lex);
+		if (get [i] < lexers.size ()) soluce = solve (rep, lexers [get [i]]);
+		else soluce = solve (rep, lex);
 		i++;
+	    } if (auto en = elem-> to <IMacroEnum> ()) {
+		if (get [i] < lexers.size ())  soluce = solve (en, lexers [get [i]]);
+		else soluce = solve (en, lex);
+		i ++;
 	    } else if (auto var = elem-> to <IMacroVar> ()) {
-		if (get [i] < lexers.size ())
-		    soluce = solve (var, lexers [get [i]]);
-		else
-		    soluce = solve (var, lex);
+		if (get [i] < lexers.size ()) soluce = solve (var, lexers [get [i]]);
+		else soluce = solve (var, lex);
 		i++;
 	    }
 	    
@@ -160,6 +161,23 @@ namespace semantic {
 	success = false;
 	return {};
     }
+
+    MacroSolution MacroSolver::solve (MacroEnum en, FakeLexer & lex) {
+	auto res = new (Z0) IMacroEnum (en-> token, en-> getElems ());
+	MacroSolution globSoluce {false, {}, NULL};
+	for (auto it : res-> getElems ()) {
+	    auto beg = lex.tell ();
+	    auto soluce = this-> solve (it, lex, false);
+	    if (!soluce.valid) lex.seek (beg);
+	    else {
+		globSoluce = soluce;
+		break;
+	    }
+	}
+	
+	res-> getSoluce () = globSoluce;
+	return {true, {{res-> token.getStr (), res}}, NULL};
+    }
     
     MacroSolution MacroSolver::solve (MacroRepeat rep, FakeLexer & lex) {
 	auto closeToken = rep-> getClose ();
@@ -206,8 +224,13 @@ namespace semantic {
 
     MacroSolution MacroSolver::solve (MacroVar var, FakeLexer & lex) {
 	Ymir::Error::activeError (false);
-	Visitor visit (lex);	
 	Expression content = NULL;
+	if (var-> getToken ()) {
+	    auto soluce = this-> solve (var-> getToken (), lex);
+	    content = new (Z0) IBool ({var-> token, Keys::TRUE_});
+	}
+	
+	Visitor visit (lex);	
 	if (var-> getType () == MacroVarConst::EXPR) 
 	    content = visit.visitExpression ();
 	else if (var-> getType () == MacroVarConst::IDENT)

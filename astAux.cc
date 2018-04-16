@@ -1126,8 +1126,10 @@ namespace syntax {
 	params (params),
 	left (left)	    
     {
-	this-> left-> inside = this;
-	this-> params-> inside = this;
+	if (this-> left)
+	    this-> left-> inside = this;
+	if (this-> params)
+	    this-> params-> inside = this;
     }
 
     IStructCst::IStructCst (Word word, Word end) :
@@ -1738,9 +1740,18 @@ namespace syntax {
     IMacroVar::IMacroVar (Word name, MacroVarConst type) :
 	IMacroElement (name),
 	type (type),
+	_token (NULL),
 	name (name)
     {}
 
+    IMacroVar::IMacroVar (Word name, MacroToken type) :
+	IMacroElement (name),
+	type (MacroVarConst::TOKEN),
+	_token (type),
+	name (name)
+    {}
+
+    
     std::vector <Word> IMacroVar::toTokens (bool& success) {
 	if (auto elem = this-> content-> to<IMacroElement> ()) {
 	    return elem-> toTokens (success);
@@ -1770,6 +1781,10 @@ namespace syntax {
 
     MacroVarConst IMacroVar::getType () {
 	return this-> type;
+    }
+
+    MacroToken IMacroVar::getToken () {
+	return this-> _token;
     }
     
     void IMacroVar::setContent (Expression expr) {
@@ -1877,6 +1892,55 @@ namespace syntax {
     std::vector <std::string> IMacroRepeat::getIds () {
 	auto ids = IMacroElement::getIds ();
 	ids.push_back (IMacroRepeat::id ());
+	return ids;
+    }
+
+    IMacroEnum::IMacroEnum (Word name, std::vector <MacroExpr> elems) :
+	IMacroElement (name),
+	_elems (elems)
+    {}
+
+    semantic::MacroSolution& IMacroEnum::getSoluce () {
+	return this-> soluce;
+    }
+
+    const std::vector <MacroExpr> & IMacroEnum::getElems () {
+	return this-> _elems;
+    }
+    
+    std::vector<Word> IMacroEnum::toTokens (bool& success) {
+	std::vector <Word> tokens;
+	success = true;
+	for (auto it : this-> soluce.elements) {
+	    if (auto elem = it.second-> to <IMacroElement> ()) {
+		auto current = elem-> toTokens (success);
+		if (!success) return IMacroElement::toTokens (success);
+		else {
+		    tokens.insert (tokens.end (), current.begin (), current.end ());
+		}
+	    } 
+	}
+	return tokens;
+    }
+
+    std::string IMacroEnum::prettyPrint () {
+	Ymir::OutBuffer buf ("(");
+	buf.write (this-> soluce.elements);	
+	buf.write (")");
+	return buf.str ();
+    }
+
+    MacroEnum IMacroEnum::clone () {
+	return new (Z0) IMacroEnum (this-> token, this-> _elems);
+    }
+    
+    const char* IMacroEnum::id () {
+	return "IMacroEnum";
+    }
+
+    std::vector <std::string> IMacroEnum::getIds () {
+	auto ids = IMacroElement::getIds ();
+	ids.push_back (IMacroEnum::id ());
 	return ids;
     }
     

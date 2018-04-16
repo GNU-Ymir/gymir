@@ -11,6 +11,7 @@ namespace syntax {
     class IMacroToken;
     class IMacroRepeat;
     class IMacroVar;
+    class IMacroEnum;
     class IMacroCall;
     class IBlock;
 }
@@ -46,6 +47,8 @@ namespace semantic {
 
 	MacroSolution solve (syntax::IMacroRepeat* left, lexical::FakeLexer& lex);
 
+	MacroSolution solve (syntax::IMacroEnum* left, lexical::FakeLexer& lex);
+	
 	MacroSolution solve (syntax::IMacroVar* left, lexical::FakeLexer& lex);
 
 	MacroSolution merge (MacroSolution &left, MacroSolution &right);

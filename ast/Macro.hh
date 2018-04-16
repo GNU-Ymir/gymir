@@ -109,12 +109,15 @@ namespace syntax {
     class IMacroVar : public IMacroElement {
 
 	MacroVarConst type;	
+	IMacroToken * _token;
 	Expression content;
 	
     public:
 	Word name;
 	
 	IMacroVar (Word name, MacroVarConst type);
+
+	IMacroVar (Word name, IMacroToken* type);
 
 	IMacroVar* clone () override;
 
@@ -125,6 +128,8 @@ namespace syntax {
 	Expression expression ();
 	
 	MacroVarConst getType ();
+
+	IMacroToken* getToken ();
 	
 	void setContent (Expression content);
 
@@ -134,6 +139,34 @@ namespace syntax {
 
 	std::vector <std::string> getIds () override;
 
+    };
+
+    class IMacroEnum : public IMacroElement {
+	std::vector <IMacroExpr*> _elems;
+	semantic::MacroSolution soluce;
+	
+    public:
+
+	IMacroEnum (Word name, std::vector <IMacroExpr*> elems);
+
+	semantic::MacroSolution& getSoluce ();
+
+	IMacroEnum* clone () override;
+	
+	std::vector <Word> toTokens (bool& success) override;
+
+	const std::vector <IMacroExpr*> & getElems ();
+	
+	Expression templateExpReplace (const std::map <std::string, Expression> &) override;
+
+	Expression expression ();
+
+	std::string prettyPrint () override;
+
+	static const char * id ();
+
+	std::vector <std::string> getIds () override;	
+	
     };
     
 
@@ -199,6 +232,7 @@ namespace syntax {
     typedef IMacroVar* MacroVar;
     typedef IMacroToken* MacroToken;
     typedef IMacroRepeat* MacroRepeat;
+    typedef IMacroEnum* MacroEnum;
 }
 
 

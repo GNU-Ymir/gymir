@@ -30,6 +30,7 @@ namespace syntax {
     Expression IStructCst::templateExpReplace (const map <string, Expression>& values) {
 	auto params = (ParamList) this-> params-> templateExpReplace (values);
 	auto left = this-> left-> templateExpReplace (values);
+	if (params == NULL || left == NULL) return NULL;
 	return new (Z0) IStructCst (this-> token, this-> end, left, params);
     }    
     
@@ -58,6 +59,7 @@ namespace syntax {
     Expression IBinary::templateExpReplace (const map <string, Expression>& values) {
 	auto left = this-> left-> templateExpReplace (values);
 	auto right = this-> right-> templateExpReplace (values);
+	if (left == NULL || right == NULL) return NULL;
 	return new (Z0)  IBinary (this-> token, left, right);
     }
 
@@ -188,6 +190,14 @@ namespace syntax {
 			return elem-> second-> templateExpReplace (values);
 		    }
 		}
+	    }
+	} else if (auto rep = left-> to <IMacroEnum> ()) {
+	    if (auto var = right-> to <IVar> ()) {
+		auto name = var-> token.getStr ();
+		auto soluce = rep-> getSoluce ();
+		auto elem = soluce.elements.find (name);
+		if (elem != soluce.elements.end ())
+		    return elem-> second-> templateExpReplace (values);		
 	    }
 	}
 	
@@ -378,6 +388,7 @@ namespace syntax {
 	vector <Expression> params;
 	for (auto it : this-> params) {
 	    auto elem = it-> templateExpReplace (values);
+	    if (elem == NULL) return NULL;
 	    if (auto ps = elem-> to <IParamList> ()) {
 		for (auto it_ : ps-> getParams ()) {
 		    params.push_back (it_-> to <IVar> ());
@@ -593,7 +604,7 @@ namespace syntax {
 	    } else content.push_back (next);
 	}
 	
-	auto aux = new (Z0) IMacroCall (this-> token, this-> end, left, content);
+	auto aux = new (Z0) IMacroCall (this-> token, this-> end, left, content);	
 	return aux-> solve (values);
     }
 
@@ -613,6 +624,16 @@ namespace syntax {
 	return res;
     }
 
+    Expression IMacroEnum::templateExpReplace (const std::map <std::string, Expression> & values) {
+	auto res = new (Z0) IMacroEnum (this-> token, this-> _elems);
+	std::map <std::string, Expression> current;
+	for (auto it : soluce.elements) {
+	    current [it.first] = it.second-> templateExpReplace (values);
+	}
+	res-> soluce = {true, current, NULL};
+	return res;
+    }
+    
     Expression IMacroToken::templateExpReplace (const std::map <std::string, Expression> &) {
 	return new (Z0) IMacroToken (this-> token, this-> value);
     }
