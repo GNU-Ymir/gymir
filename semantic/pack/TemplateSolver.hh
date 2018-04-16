@@ -41,9 +41,9 @@ namespace semantic {
 
     class TemplateSolver {
 
-	ulong __VAR__ = 1;
-	ulong __ARRAY__ = 2;
-	ulong __FUN__ = 1;
+	ulong __VAR__ = 2;
+	ulong __ARRAY__ = 4;
+	ulong __FUN__ = 2;
 	static TemplateSolver __instance__;
 	
     public:
