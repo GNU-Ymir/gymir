@@ -740,7 +740,7 @@ namespace syntax {
 
     Expression IFixed::expression () {
 	auto aux = new (Z0)  IFixed (this-> token, this-> type);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (false, this-> type));
+	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFixedInfo (true, this-> type));
 	aux-> info-> value () = new (Z0)  IFixedValue (this-> type, this-> uvalue, this->value);
 	aux-> uvalue = this-> uvalue;
 	aux-> value = this-> value;
@@ -749,14 +749,14 @@ namespace syntax {
     
     Expression IChar::expression () {
 	auto aux = new (Z0)  IChar (this-> token, this-> code);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  ICharInfo (false));
+	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  ICharInfo (true));
 	aux-> info-> value () = new (Z0) IFixedValue (FixedConst::UBYTE, this-> code, this-> code);
 	return aux;
     }
 
     Expression IFloat::expression () {
 	auto aux = new (Z0)  IFloat (this-> token, this-> suite, this-> _type);
-	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (false, this-> _type));
+	aux-> info = new (Z0)  ISymbol (this-> token, new (Z0)  IFloatInfo (true, this-> _type));
 	aux-> totale = this-> totale;
 	char * temp;
 	if (this-> _type == FloatConst::FLOAT) {
@@ -773,7 +773,7 @@ namespace syntax {
 
     Expression IString::expression () {
 	auto aux = new (Z0)  IString (this-> token, this-> content);
-	auto arrayType = new (Z0) IStringInfo (false, true);
+	auto arrayType = new (Z0) IStringInfo (true, true);
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 	aux-> info-> value () = new (Z0)  IStringValue (this-> content);	
 	return aux;
@@ -1377,6 +1377,8 @@ namespace syntax {
 	    if (aux-> type == NULL || aux-> left == NULL) return NULL;
 	    
 	    auto rtype = aux-> type-> info-> type;
+	    while (auto ref = rtype-> to <IRefInfo> ()) rtype = ref-> content ();
+	    
 	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 		Ymir::Error::uninitVar (aux-> left-> token);
 		return NULL;
@@ -1426,7 +1428,9 @@ namespace syntax {
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
 	auto type = expr-> info-> type-> cloneOnExit ();
-	if (this-> _mut) type-> isConst (false);
+	while (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();
+	
+	if (this-> _mut) type-> isConst (false);	
 	return new (Z0) IType (this-> token, type);
     }
 

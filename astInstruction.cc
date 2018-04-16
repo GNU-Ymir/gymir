@@ -169,6 +169,7 @@ namespace syntax {
 	Expression msg = NULL;
 	if (this-> msg) {
 	    msg = this-> msg-> expression ();
+	    if (msg == NULL) return NULL;
 	    if (!msg-> info-> type-> isSame (new (Z0) IStringInfo (true))) {
 		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0) IStringInfo (true));
 		return NULL;

@@ -70,7 +70,7 @@ namespace semantic {
 
     DestructSolution DestructSolver::solveStructCst (StructCst left, Expression right) {
 	InfoType type = right-> info-> type;
-	if (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
+	while (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
 	if (auto str = type-> to <IStructInfo> ()) {
 	    DestructSolution soluce {0, true};
 	    auto type = left-> getLeft ()-> expression ();
@@ -103,7 +103,7 @@ namespace semantic {
     
     DestructSolution DestructSolver::solveTuple (ConstTuple left, Expression right) {
 	InfoType type = right-> info-> type;
-	if (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
+	while (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
 	if (auto tuple = type-> to <ITupleInfo> ()) {
 	    DestructSolution soluce {0, true};
 	    if (left-> getExprs ().size () != tuple-> nbParams ()) {
@@ -234,7 +234,7 @@ namespace semantic {
     DestructSolution DestructSolver::solveTyped (TypedVar left, Expression right) {
 	auto ltype = left-> getType ();
 	auto rtype = right-> info-> type;
-	if (auto ref = rtype-> to <IRefInfo> ())
+	while (auto ref = rtype-> to <IRefInfo> ())
 	    rtype = ref-> content ();
 
 	if (auto ref = ltype-> to <IRefInfo> ())
