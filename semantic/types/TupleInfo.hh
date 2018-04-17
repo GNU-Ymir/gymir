@@ -75,6 +75,7 @@ namespace semantic {
 	InfoType Arity ();
 
 	InfoType Init ();
+
 	
     };
 

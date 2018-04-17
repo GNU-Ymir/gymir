@@ -27,6 +27,8 @@ namespace syntax {
 	bool isLvalue () override;
 	
 	Ymir::Tree toGeneric () override;
+
+	std::string prettyPrint () override;
 	
 	void print (int nb = 0) override;
 

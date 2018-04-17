@@ -17,6 +17,8 @@ namespace semantic {
 	Ymir::Tree InstAddr (Word locus, InfoType, syntax::Expression elem, syntax::Expression);
 
 	Ymir::Tree InstInit (Word locus, InfoType type, syntax::Expression);
+
+	Ymir::Tree InstSizeOf (Word, InfoType, syntax::Expression elem);	    
 	
     }
 

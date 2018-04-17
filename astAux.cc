@@ -1102,6 +1102,12 @@ namespace syntax {
 	this-> elem-> inside = this;
     }
 
+    std::string IUnary::prettyPrint () {
+	Ymir::OutBuffer buf (this-> token.getStr ());
+	buf.write ("(", this-> elem-> prettyPrint (), ")");
+	return buf.str ();
+    }
+    
     bool IUnary::isLvalue () {
 	if (this-> token == Token::AND) return false;
 	return true;

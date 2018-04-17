@@ -182,12 +182,19 @@ namespace semantic {
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "arity") return Arity ();
 	if (var-> token == "init") return Init ();
+	if (var-> token == "sizeof") return SizeOf ();
 	return NULL;
     }
 
     InfoType ITupleInfo::Init () {
 	auto ret = this-> clone ();
 	ret-> unopFoo = TupleUtils::InstInit;
+	return ret;
+    }
+
+    InfoType ITupleInfo::SizeOf () {
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::UBYTE);
+	ret-> unopFoo = TupleUtils::InstSizeOf;
 	return ret;
     }
 
@@ -273,11 +280,7 @@ namespace semantic {
     std::vector<InfoType> & ITupleInfo::getParams () {
 	return this-> params;
     }
-    
-    InfoType ITupleInfo::SizeOf () {
-	return NULL;
-    }
-    
+        
     InfoType ITupleInfo::Empty () {
 	return NULL;
     }
@@ -327,6 +330,10 @@ namespace semantic {
 	    }
 	}
 
+	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
+	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
+	}
+	
 	Tree InstCastFake (Word locus, InfoType type, Expression elem, Expression) {
 	    location_t loc = locus.getLocus ();
 	    auto rtree = elem-> toGeneric ();
