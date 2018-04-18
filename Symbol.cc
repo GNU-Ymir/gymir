@@ -30,6 +30,10 @@ namespace semantic {
     bool& ISymbol::isClosured () {
 	return this-> _isClosured;
     }
+
+    bool& ISymbol::isInline () {
+	return this-> _isInline;
+    }
     
     bool& ISymbol::isPublic () {
 	return this-> _public;

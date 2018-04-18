@@ -23,6 +23,7 @@ namespace semantic {
 	Ymir::Tree decl;
 	Namespace _space;
 	bool _isClosured = false;
+	bool _isInline = false;
 	
     public:
 
@@ -40,6 +41,8 @@ namespace semantic {
 	bool& isStatic ();
 
 	bool& isClosured ();
+
+	bool & isInline ();
 	
 	Value & value ();
 	

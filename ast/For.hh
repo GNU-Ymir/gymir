@@ -44,6 +44,8 @@ namespace syntax {
 	Instruction immutableTuple (std::vector <Var> & vars, Expression expr);
 
 	Instruction immutableMacro (std::vector <Var> & vars, Expression expr);
+
+	Instruction findOpApply (); 
 	
     };
 

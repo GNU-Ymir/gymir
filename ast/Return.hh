@@ -11,6 +11,7 @@ namespace syntax {
 
 	Expression elem;
 	semantic::InfoType caster;
+	bool _isUseless = false;
 	
     public:
 
@@ -18,6 +19,8 @@ namespace syntax {
 	
 	IReturn (Word ident, Expression elem);
 
+	Expression getExpr ();
+	
 	Instruction instruction () override;
 
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
@@ -27,9 +30,21 @@ namespace syntax {
 	semantic::InfoType& getCaster ();
 	
 	Ymir::Tree toGeneric () override;
+
+	bool& isUseless ();
 	
 	void print (int nb = 0) override;
 
+	static std::string id () {
+	    return TYPEID (IReturn);
+	}
+	
+	virtual std::vector <std::string> getIds () {
+	    auto ret = IInstruction::getIds ();
+	    ret.push_back (TYPEID (IReturn));
+	    return ret;
+	}
+	
 	virtual ~IReturn ();
 	
     };

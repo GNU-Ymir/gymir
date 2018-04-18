@@ -42,6 +42,12 @@ namespace syntax {
 	}
 	
 	Ymir::enterBlock ();
+
+	for (auto it : this-> inlines) {
+	    if (!it-> info-> type-> is <IUndefInfo> ())
+		Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
+	}
+	
 	for (auto it : this-> insts) {
 	    auto inst = it-> toGeneric ();
 	    Ymir::getStackStmtList ().back ().append (inst);    
@@ -231,7 +237,19 @@ namespace syntax {
 		return field;
 	    } else {
 		auto ret = this-> info-> treeDecl ();
-		if (this-> info-> isClosured ()) {
+		if (this-> info-> isInline ()) {
+		    if (ret.isNull ()) {
+			Ymir::Tree decl = build_decl (
+			    this-> token.getLocus (),
+			    VAR_DECL,
+			    get_identifier (this-> token.getStr ().c_str ()),			    
+			    this-> info-> type-> toGeneric ().getTree ());
+			DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
+			this-> info-> treeDecl (decl);
+			Ymir::getStackVarDeclChain ().back ().append (decl);
+			return Ymir::compoundExpr (this-> token.getLocus (), buildTree (DECL_EXPR, this-> token.getLocus (), void_type_node, decl), decl);
+		    } else return ret;
+		} else if (this-> info-> isClosured ()) {
 		    return Ymir::getPointerUnref (
 			this-> token.getLocus (),
 			ret,

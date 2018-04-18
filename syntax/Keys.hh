@@ -38,7 +38,8 @@ struct Keys {
     static std::string  ASSERT;
     static std::string  SCOPE; 
     static std::string  STATIC; 
-    static std::string  OPACCESS; 
+    static std::string  OPACCESS;
+    static std::string  OPAPPLY;
     static std::string  OPRANGE; 
     static std::string  OPTEST; 
     static std::string  OPUNARY; 

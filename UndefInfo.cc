@@ -34,5 +34,10 @@ namespace semantic {
     const char * IUndefInfo::getId () {
 	return IUndefInfo::id ();
     }
+
+    Ymir::Tree IUndefInfo::toGeneric () {
+	return char_type_node;
+    }
+    
     
 }

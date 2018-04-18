@@ -22,6 +22,7 @@ namespace syntax {
 	std::vector <Declaration> decls;
 	std::vector <Instruction> insts;
 	std::vector <IBlock*> finally;
+	std::vector <Var> inlines;
 	Expression value;
 	
     public :
@@ -37,6 +38,8 @@ namespace syntax {
 	Word& getIdent ();
 
 	void addFinally (IBlock * insts);
+
+	void addInline (Var var);
 	
 	Instruction instruction () override;
 
@@ -48,6 +51,8 @@ namespace syntax {
 
 	IBlock* blockWithoutEnter ();
 
+	IBlock* replaceBreakAndReturn (int i);
+	
 	std::vector <Instruction> & getInsts ();
 	
 	std::vector <semantic::Symbol> allInnerDecls () override;
@@ -61,7 +66,7 @@ namespace syntax {
 	Expression getLastExpr ();
 
 	std::string prettyPrint ();
-
+		
 	static const char * id () {
 	    return TYPEID (IBlock);
 	}

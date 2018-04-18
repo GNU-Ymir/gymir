@@ -25,6 +25,16 @@ namespace syntax {
 	std::vector <semantic::Symbol> allInnerDecls () override;
 	
 	Ymir::Tree toGeneric () override;
+
+	static std::string id () {
+	    return TYPEID (IBreak);
+	}
+	
+	virtual std::vector <std::string> getIds () {
+	    auto ret = IInstruction::getIds ();
+	    ret.push_back (TYPEID (IBreak));
+	    return ret;
+	}
 	
 	void print (int nb = 0) override;
 	

@@ -408,7 +408,9 @@ namespace syntax {
 
     Instruction IReturn::templateReplace (const map <string, Expression>& values) {
 	if (this-> elem == NULL) return new (Z0)  IReturn (this-> token);
-	return new (Z0)  IReturn (this-> token, this-> elem-> templateExpReplace (values));
+	auto ret = new (Z0)  IReturn (this-> token, this-> elem-> templateExpReplace (values));
+	ret-> isUseless () = this-> isUseless ();
+	return ret;
     }
 
     Instruction ITupleDest::templateReplace (const map <string, Expression>& values) {

@@ -518,37 +518,58 @@ namespace syntax {
 		
 	    aux-> left-> info-> value () = aux-> right-> info-> value ();
 	    return aux-> left;
-	} else if ((!aux-> left-> isLvalue () || aux-> left-> info-> isConst ()) && !aux-> left-> info-> type-> is <IUndefInfo> ()) {	    
-	    Ymir::Error::notLValue (aux-> left-> token);
-	    return NULL;	    
-	} else {	
-	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);	
-	    if (type == NULL) {
-		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
-		if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-		    if (type == NULL) {
-			Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-			return NULL;
-		    }
-
-		    aux-> left-> info-> type = type;
-		    aux-> left-> info-> isConst (false);
-		} else if (type == NULL) {
-		    auto call = findOpAssign (aux);
-		    if (!call) {
-			Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-			return NULL;
-		    }
-		    return call;	    
-		}
-		aux-> isRight = true;
+	} else if ((!aux-> left-> isLvalue () || aux-> left-> info-> isConst ()) && !aux-> left-> info-> type-> is <IUndefInfo> ()) {
+	    bool fail = true;
+	    if (auto ref = aux-> left-> info-> type-> to<IRefInfo> ()) 
+		if (ref-> content ()-> is <IUndefInfo> ()) fail = false;
+	    if (fail) {
+		Ymir::Error::notLValue (aux-> left-> token);
+		return NULL;
 	    }
-	
-	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
-	    Table::instance ().retInfo ().changed () = true;
-	    aux-> info-> value () = NULL;
-	    return aux;
 	}
+	
+	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);	
+	if (type == NULL) {
+	    if (auto v = aux-> left-> to <IVar> ()) {
+		if (v-> fromClosure () && v-> lastInfo ()-> type-> is <IUndefInfo> ()) {
+		    auto auxVar = new (Z0) IVar (v-> token);
+		    auxVar-> info = v-> lastInfo (); 
+		    type = aux-> right-> info-> type-> BinaryOpRight (this-> token, auxVar);
+		    v-> lastInfo ()-> type = type;
+		    v-> lastInfo ()-> isConst (false);
+		    if (Table::instance ().retInfo ().closureMoved ()) 
+			aux-> left-> info-> type = type-> clone ();
+		    else {
+			aux-> left-> info-> type = new (Z0) IRefInfo (false, type-> clone ());
+
+		    }
+		    return this-> affect ();
+		}
+	    }  
+	    type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);	   
+	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+		if (type == NULL) {
+		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		    return NULL;
+		}
+
+		aux-> left-> info-> type = type;
+		aux-> left-> info-> isConst (false);
+	    } else if (type == NULL) {
+		auto call = findOpAssign (aux);
+		if (!call) {
+		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		    return NULL;
+		}
+		return call;	    
+	    }
+	    aux-> isRight = true;
+	}
+	
+	aux-> info = new (Z0)  ISymbol (aux-> token, type);
+	Table::instance ().retInfo ().changed () = true;
+	aux-> info-> value () = NULL;
+	return aux;	
     }
 
     Expression IBinary::reaff () {

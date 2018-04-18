@@ -25,6 +25,8 @@ namespace semantic {
 	    return "IUndefInfo";
 	}
 
+	Ymir::Tree toGeneric () override;
+	
 	const char* getId () override;
 
 	

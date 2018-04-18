@@ -54,11 +54,17 @@ namespace syntax {
 	for (auto it : this-> insts) {
 	    if (Table::instance ().retInfo ().hasReturned () ||
 		Table::instance ().retInfo ().hasBreaked ()) {
-		if (it-> is<IScope> ()) {
-		    Ymir::Error::scopeExitEnd (it-> token);
-		} else {
-		    Ymir::Error::unreachableStmt (it-> token);
-		    break;
+		auto fail = true;
+		if (auto ret = it-> to <IReturn> ()) {
+		    if (ret-> isUseless ()) fail = false;
+		}
+		if (fail) {
+		    if (it-> is<IScope> ()) {
+			Ymir::Error::scopeExitEnd (it-> token);
+		    } else {
+			Ymir::Error::unreachableStmt (it-> token);
+			break;
+		    }
 		}
 	    }
 	    if (!it-> is<INone> ()) {
@@ -441,8 +447,11 @@ namespace syntax {
 	
 	    auto type = expr-> info-> type-> ApplyOp (var);
 	    if (type == NULL) {
-		Ymir::Error::undefinedOp (this-> token, expr-> info);
-		return NULL;
+		auto call = findOpApply ();
+		if (call == NULL) {
+		    Ymir::Error::undefinedOp (this-> token, expr-> info);
+		    return NULL;
+		} else return call;
 	    }
 
 	    Table::instance ().retInfo ().currentBlock () = "for";
@@ -461,6 +470,47 @@ namespace syntax {
 	}
     }
 
+    Instruction IFor::findOpApply () {
+	static int i = 0;
+	i ++;
+	Word word (this-> token.getLocus (), Keys::OPAPPLY);
+	auto bl = this-> block-> replaceBreakAndReturn (i);
+	auto val = new (Z0) IFixed (this-> token, FixedConst::INT);
+	val-> setValue (0);
+	auto add_ret = new (Z0) IReturn (this-> token, val);
+	add_ret-> isUseless () = true;
+	
+	bl-> getInsts ().push_back (add_ret);	
+	auto lambda = new (Z0) ILambdaFunc (this-> token, this-> var, bl);
+	auto var = new (Z0) IVar (word);
+	std::vector <Expression> params = {this-> iter, lambda};
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	auto finalParams = new (Z0) IParamList (this-> token, params);
+	auto call = new (Z0) IPar (tok, tok2, var, finalParams, true);
+
+	auto var_ret = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", i).str ()});
+	var_ret-> info = new (Z0) ISymbol (var_ret-> token, new (Z0) IUndefInfo ()); //Table::instance ().retInfo ().info-> type-> clone ());
+	var_ret-> info-> isConst (false);
+	var_ret-> info-> isInline () = true;
+	Table::instance ().insert (var_ret-> info);
+	
+	auto fin = call-> expression ();
+	if (fin == NULL) return NULL;
+	auto ret_block = new (Z0) IBlock (this-> token, {}, {});
+	ret_block-> addInline (var_ret);
+	if (!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> () &&	    
+	    !var_ret-> info-> type-> is<IUndefInfo> ()) {
+	    val = new (Z0) IFixed (this-> token, FixedConst::INT);
+	    val-> setValue (2);
+	    auto if_ = new (Z0) IIf (this-> token,
+	    			     new (Z0) IBinary ({this-> token, Token::DEQUAL}, call, val),
+	    			     new (Z0) IBlock (this-> token, {}, {new (Z0) IReturn (this-> token, var_ret)})
+	    );
+	    ret_block-> getInsts ().push_back (if_-> instruction ());
+	} else ret_block-> getInsts ().push_back (fin);
+	return ret_block;
+    }
+    
     std::vector <semantic::Symbol> IWhile::allInnerDecls () {
 	return this-> block-> allInnerDecls ();
     }

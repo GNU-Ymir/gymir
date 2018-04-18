@@ -32,6 +32,9 @@ namespace syntax {
 	
     };
 
+    
     typedef IAffectGeneric* AffectGeneric;
-
+  
 }
+
+

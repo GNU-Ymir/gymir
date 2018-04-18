@@ -46,6 +46,8 @@ namespace syntax {
 
 	Ymir::Tree lastInfoDecl ();
 	
+	semantic::Symbol& lastInfo ();
+
 	Expression onClone () override;
 	
 	virtual IVar* var ();
@@ -54,6 +56,8 @@ namespace syntax {
 
 	virtual bool isTypeV ();
 
+	bool fromClosure ();
+	
 	bool isLvalue () override;
 	
 	std::vector<Expression>& getTemplates ();

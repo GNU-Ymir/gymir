@@ -42,6 +42,34 @@ namespace syntax {
 	}
     }
 
+    void IBlock::addInline (Var var) {
+	this-> inlines.push_back (var);
+    }
+    
+    Block IBlock::replaceBreakAndReturn (int i) {
+	auto aux = new IBlock (this-> token, this-> decls, {});
+	for (auto it : this-> insts)  {
+	    if (auto bl = it-> to<IBlock> ())
+		aux-> insts.push_back (bl-> replaceBreakAndReturn (i));
+	    else if (auto ret = it-> to <IReturn> ()) {
+		auto var_ret = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", i).str ()});
+		if (ret-> getExpr ()) { 
+		    aux-> insts.push_back (new (Z0) IBinary ({ret-> token, Token::EQUAL},
+							     var_ret,
+							     ret-> getExpr ()));
+		}
+		auto val = new (Z0) IFixed (it-> token, FixedConst::INT);
+		val-> setValue (2);
+		aux-> insts.push_back (new (Z0) IReturn (it-> token, val));
+	    } else if (it-> is <IBreak> ()) {
+		auto val = new (Z0) IFixed (it-> token, FixedConst::INT);
+		val-> setValue (1);
+		aux-> insts.push_back (new (Z0) IReturn (it-> token, val));
+	    } else aux-> insts.push_back (it);
+	}
+	return aux;
+    }
+    
     std::vector <Instruction>& IBlock::getInsts () {
 	return this-> insts;
     }
@@ -263,6 +291,14 @@ namespace syntax {
 	return true;
     }
     
+    bool IVar::fromClosure () {
+	return this-> _fromClosure;
+    }
+
+    semantic::Symbol& IVar::lastInfo () {
+	return this-> _lastInfo;
+    }
+
     IVar::~IVar () {
 	for (auto it : templates)
 	    delete it;
@@ -1287,6 +1323,14 @@ namespace syntax {
 	caster (NULL)
     {}
 
+    Expression IReturn::getExpr () {
+	return this-> elem;
+    }
+
+    bool& IReturn::isUseless () {
+	return this-> _isUseless;
+    }
+    
     InfoType& IReturn::getCaster () {
 	return this-> caster;
     }
