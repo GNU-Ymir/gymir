@@ -212,11 +212,15 @@ namespace semantic {
 	auto value = left-> expression ();
 	if (value == NULL) return DestructSolution (0, false);
 
-	if (!value-> info-> type-> CompOp (right-> info-> type))
+	auto rtype = right-> info-> type;
+	while (auto ref = rtype-> to <IRefInfo> ())
+	    rtype = ref-> content ();
+	
+	if (!value-> info-> type-> CompOp (rtype))
 	    return DestructSolution (0, false);
-
+	
 	Word tok {left-> token, Token::DEQUAL};
-	if (right-> info-> type-> is <IPtrInfo> ()) {
+	if (rtype-> is <IPtrInfo> ()) {
 	    tok.setStr (Keys::IS);
 	}
 	

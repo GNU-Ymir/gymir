@@ -193,8 +193,13 @@ namespace semantic {
 	std::vector <InfoType> types;
 	std::vector <std::string> attribs;
 	bool done = false;
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
+	
 	auto score = new (Z0) IApplicationScore (token);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    Table::instance ().setCurrentSpace (this-> space);
+	    Table::instance ().templateNamespace () = currentSpace;
 	    InfoType info = this-> params [it]-> getType ();
 	    if (info == NULL) return NULL;
 	    types.push_back (info);
@@ -212,6 +217,8 @@ namespace semantic {
 	    }	    
 	}
 
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
 	if (!done) return NULL;
 	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, true);
 	ret-> isConst (false);
@@ -236,9 +243,13 @@ namespace semantic {
 
 	std::vector <InfoType> types;
 	std::vector <std::string> attribs;
-	
+
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
 	auto score = new (Z0) IApplicationScore (token);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    Table::instance ().setCurrentSpace (this-> space);
+	    Table::instance ().templateNamespace () = currentSpace;
 	    InfoType info = this-> params [it]-> getType ();
 	    if (info == NULL) return NULL;
 	    types.push_back (info);
@@ -250,9 +261,15 @@ namespace semantic {
 		type-> isConst (info-> isConst ());
 		score-> score += 1;
 		score-> treat.push_back (type);
-	    } else return NULL;
+	    } else {
+		Table::instance ().setCurrentSpace (currentSpace);
+		Table::instance ().templateNamespace () = last;		
+		return NULL;
+	    }
 	}
-	
+
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
 	auto ret = new (Z0) IStructInfo (this, this-> space, this-> name, this-> _udas, this-> _isUnion);
 	ret-> isConst (false);
 	ret-> setTypes (types);
@@ -295,12 +312,16 @@ namespace semantic {
 	    InfoType info = this-> params [it]-> getType ();
 	    if (info) {
 		if (recursiveGet (this-> _info, info)) {
+		    Table::instance ().setCurrentSpace (currentSpace);
+		    Table::instance ().templateNamespace () = last;
 		    Ymir::Error::recursiveNoSize (this-> params [it]-> token);
 		    return NULL;
 		}
 		types.push_back (info);
 		attribs.push_back (this-> params [it]-> token.getStr ());
 	    } else {
+		Table::instance ().setCurrentSpace (currentSpace);
+		Table::instance ().templateNamespace () = last;
 		return NULL;
 	    }
 	}
@@ -390,7 +411,11 @@ namespace semantic {
     
     std::string IStructCstInfo::typeString () {
 	Ymir::OutBuffer buf ("typeof ", this-> space.toString (), ".", this-> name, "{");
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
 	for (auto i : Ymir::r (0, this-> params.size ())) {
+	    Table::instance ().setCurrentSpace (this-> space);
+	    Table::instance ().templateNamespace () = currentSpace;
 	    auto it = this-> params [i];
 	    auto t = it-> getType ();
 	    if (t != NULL) 
@@ -400,11 +425,15 @@ namespace semantic {
 		buf.write (", ");		
 	}
 	buf.write ("}");
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
 	return buf.str ();
     }
     
     std::string IStructCstInfo::innerTypeString () {
 	static std::map <std::string, bool> inner;
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
 	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
 	auto inside = inner.find (buf.str ());
 	if (inside == inner.end () || !inside-> second) {
@@ -412,6 +441,8 @@ namespace semantic {
 	    inner [name] = true;
 	    buf.write ("{");
 	    for (auto i : Ymir::r (0, this-> params.size ())) {
+		Table::instance ().setCurrentSpace (this-> space);
+		Table::instance ().templateNamespace () = currentSpace;
 		auto it = this-> params [i];
 		auto t = it-> getType ();
 		if (t)
@@ -423,6 +454,8 @@ namespace semantic {
 	    buf.write ("}");
 	    inner [name] = false;
 	}
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
 	return buf.str ();
     }
 

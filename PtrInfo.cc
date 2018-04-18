@@ -346,6 +346,10 @@ namespace semantic {
 	    return type;
 	} else if (var-> token == "typeid") {
 	    return StringOf ();
+	} else if (var-> token == "sizeof") {
+	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
+	    ret-> unopFoo = FixedUtils::InstSizeOf;
+	    return ret;	
 	}
 	return NULL;
     }
