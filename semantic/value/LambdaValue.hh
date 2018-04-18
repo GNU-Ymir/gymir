@@ -25,6 +25,8 @@ namespace semantic {
 
 	Value clone () override;
 
+	bool equals (Value) override;
+	
 	std::string toString () override;
 	
 	syntax::Expression toYmir (Symbol sym) override;

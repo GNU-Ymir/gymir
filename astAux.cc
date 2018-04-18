@@ -99,9 +99,10 @@ namespace syntax {
 	this-> is_public (true);
     }    
 	
-    IFunction::IFunction (Word ident, const std::vector <Word> & attrs, Var type, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
+    IFunction::IFunction (Word ident, const std::vector <Word> & attrs, Expression type, Word retDeco, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
 	ident (ident),
 	type (type),
+	retDeco (retDeco),
 	params (params),
 	tmps (tmps),
 	attrs (attrs),
@@ -142,10 +143,14 @@ namespace syntax {
 	return this-> test;
     }
     
-    Var IFunction::getType () {
+    Expression IFunction::getType () {
 	return this-> type;
     }
 
+    Word IFunction::getRetDeco () {
+	return this-> retDeco;
+    }
+    
     Block& IFunction::post () {
 	return this-> _post;
     }
@@ -944,8 +949,9 @@ namespace syntax {
 	ident (ident)
     {}
 
-    IProto::IProto (Word ident, Var type, const std::vector<Var> & params, std::string space, bool isVariadic) :
+    IProto::IProto (Word ident, Expression type, Word retDeco, const std::vector<Var> & params, std::string space, bool isVariadic) :
 	_type (type),
+	_retDeco (retDeco),
 	_params (params),
 	space (space),
 	_isVariadic (isVariadic),
@@ -965,9 +971,13 @@ namespace syntax {
     std::vector <Var>& IProto::params () {
 	return this-> _params;
     }
-
-    Var& IProto::type () {
+    
+    Expression& IProto::type () {
 	return this-> _type;
+    }
+
+    Word IProto::retDeco () {
+	return this-> _retDeco;
     }
 
     std::string IProto::name () {

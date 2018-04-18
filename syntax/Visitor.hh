@@ -31,7 +31,7 @@ namespace syntax {
 	Enum visitEnum ();
 	Expression visitIfFunction ();
 	Function visitFunction ();
-	Function visitContract (Word ident, std::vector<Word> &, Var type, std::vector<Var> &, std::vector <Expression> &, Expression);
+	Function visitContract (Word ident, std::vector<Word> &, Expression type, Word retDeco, std::vector<Var> &, std::vector <Expression> &, Expression);
 	Declaration visitExtern ();
 	Var visitVar ();
 	Expression visitOf ();
@@ -75,6 +75,7 @@ namespace syntax {
 	Expression visitString (Word& word);
 	Expression visitPthWPar (Word& tok);
 	Expression visitLeftOp ();
+	Expression visitLeftOpSimple ();
 	Expression visitConstArray ();
 	Expression visitCast ();
 	Expression visitFuncPtrSimple (const Word &);

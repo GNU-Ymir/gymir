@@ -707,15 +707,15 @@ namespace syntax {
 	    temps.clear ();
 	} else syntaxError (word, {Token::RPAR});
 
-	Var type = NULL;
+	Expression type = NULL;
+	Word retDeco;
 	if (word == Token::ARROW) {
-	    auto deco = this-> lex.next ();
-	    if (deco != Keys::REF && deco != Keys::MUTABLE) {
-		deco = Word::eof ();
+	    retDeco = this-> lex.next ();
+	    if (retDeco != Keys::REF && retDeco != Keys::MUTABLE) {
+		retDeco = Word::eof ();
 		this-> lex.rewind ();
 	    } 
-	    type = visitType ();
-	    type-> deco = deco;
+	    type = visitLeftOpSimple ();
 	} else this-> lex.rewind ();
 	
 	next = this-> lex.next ();
@@ -723,14 +723,14 @@ namespace syntax {
 	    next = this-> lex.next ();
 	    this-> lex.rewind ();
 	    if (next == Keys::PRE || next == Keys::POST || next == Keys::BODY) {
-		return visitContract (ident, attrs, type, exps, temps, test);
+		return visitContract (ident, attrs, type, retDeco, exps, temps, test);
 	    } 
 	}
 	this-> lex.rewind ();
-	return new (Z0)  IFunction (ident, attrs, type, exps, temps, test, visitBlock ());
+	return new (Z0)  IFunction (ident, attrs, type, retDeco, exps, temps, test, visitBlock ());
     }
 
-    Function Visitor::visitContract (Word ident, std::vector<Word> & attrs, Var type, std::vector<Var> & exps, std::vector <Expression> & temps, Expression test) {
+    Function Visitor::visitContract (Word ident, std::vector<Word> & attrs, Expression type, Word retDeco, std::vector<Var> & exps, std::vector <Expression> & temps, Expression test) {
 	Function func = NULL;
 	Block pre = NULL, post = NULL;
 	Var var = NULL;
@@ -742,7 +742,7 @@ namespace syntax {
 		pre = visitBlock ();
 	    } else if (next == Keys::BODY && !dones [1]) {
 		dones [1] = true;
-		func = new (Z0) IFunction (ident, attrs, type, exps, temps, test, visitBlock ());
+		func = new (Z0) IFunction (ident, attrs, type, retDeco, exps, temps, test, visitBlock ());
 	    } else if (next == Keys::POST && !dones [2]) {
 		dones [2] = true;
 		next = this-> lex.next ({Token::LPAR});
@@ -788,7 +788,7 @@ namespace syntax {
 	    if (word == Keys::FUNCTION || word == Keys::DELEGATE) type = visitFuncPtrSimple (word);
 	    else {
 		this-> lex.rewind ();
-		type = visitType ();
+		type = visitLeftOpSimple ();
 	    }
 	    this-> lex.next ({Token::SEMI_COLON});
 	    auto ret = new (Z0) IGlobal (ident, type, true);
@@ -816,19 +816,18 @@ namespace syntax {
 	    }
 	}
 	word = this-> lex.next ({Token::ARROW, Token::SEMI_COLON});
-	Var type = NULL;
+	Expression type = NULL; Word deco;
 	if (word == Token::ARROW) {
-	    auto deco = this-> lex.next ();
+	    deco = this-> lex.next ();
 	    if (deco != Keys::REF && deco != Keys::MUTABLE) {
 		deco = Word::eof ();
 		this-> lex.rewind ();
 	    } 
-	    type = visitType ();
-	    type-> deco = deco;
+	    type = visitLeftOpSimple ();
 	    word = this-> lex.next ({Token::SEMI_COLON});
 	}
 	
-	auto ret = new (Z0)  IProto (ident, type, exps, space, isVariadic);
+	auto ret = new (Z0)  IProto (ident, type, deco, exps, space, isVariadic);
 	ret-> from = from.getStr ();
 	return ret;
     }
@@ -850,7 +849,7 @@ namespace syntax {
 	auto ident = visitIdentifiant ();
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
-	    auto type = visitLeftOp ();
+	    auto type = visitLeftOpSimple ();
 	    return new (Z0)  ITypedVar (ident, type, deco);
 	} else if (next == Keys::OF && deco.isEof ()) {
 	    auto type = visitType ();
@@ -873,7 +872,7 @@ namespace syntax {
 	auto ident = visitIdentifiant ();
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
-	    auto type = visitLeftOp ();
+	    auto type = visitLeftOpSimple ();
 	    return new (Z0)  ITypedVar (ident, type, deco);
 	} else this-> lex.rewind ();
 	return new (Z0)  IVar (ident, deco);
@@ -882,7 +881,7 @@ namespace syntax {
     TypedVar Visitor::visitStructVarDeclaration () {
 	auto ident = visitIdentifiant ();
 	Word next  = this-> lex.next ({Token::COLON});
-	auto type = visitLeftOp ();
+	auto type = visitLeftOpSimple ();
 	return new (Z0)  ITypedVar (ident, type, Word::eof ());
     }
 
@@ -896,7 +895,7 @@ namespace syntax {
 
 	auto ident = visitIdentifiant ();
 	Word next = this-> lex.next ({Token::COLON});
-	auto type = visitLeftOp ();
+	auto type = visitLeftOpSimple ();
 	return new (Z0)  ITypedVar (ident, type, deco);
     }
 
@@ -930,14 +929,14 @@ namespace syntax {
 	if (next == Token::NOT) {
 	    next = this-> lex.next ();
 	    if (next == Token::LPAR) {
-		type = visitLeftOp ();
+		type = visitLeftOpSimple ();
 		this-> lex.next ({Token::RPAR});
 	    } else {
 		this-> lex.rewind ();
 		type = visitType ();
 	    }
 	} else if (next == Token::LPAR) {
-	    type = visitLeftOp ();
+	    type = visitLeftOpSimple ();
 	    this-> lex.next ({Token::RPAR});
 	} else {
 	    this-> lex.rewind ();
@@ -1540,7 +1539,7 @@ namespace syntax {
 	    return new (Z0)  IIs (begin, expr, expType);
 	} else {
 	    this-> lex.rewind ();
-	    auto type = visitLeftOp ();
+	    auto type = visitLeftOpSimple ();
 	    next = this-> lex.next ({Token::RPAR});
 	    return new (Z0)  IIs (begin, expr, type);
 	}
@@ -1750,6 +1749,44 @@ namespace syntax {
 	return var;
     }
 
+    Expression Visitor::visitLeftOpSimple () {
+
+	struct Inner {
+	    Visitor * self;
+	    bool last, lastM;
+	    
+	    Inner (Visitor* visit) : self (visit) {
+		last = self-> lambdaPossible;
+		lastM = self-> isInMatch;
+		self-> lambdaPossible = false;
+		self-> isInMatch = false;
+	    }
+	    
+	    Expression call () {
+		auto word = self-> lex.next ();
+		if (word == Token::LCRO) {
+		    return self-> visitConstArray ();
+		} else if (word == Keys::FUNCTION || word == Keys::DELEGATE) {
+		    return self-> visitFuncPtr (word);
+		} else self-> lex.rewind ();
+		auto var = self-> visitVar ();
+		auto next = self-> lex.next ();
+		if (find (self-> suiteElem, next)) 
+		    return self-> visitSuite (next, var);
+		else self-> lex.rewind ();
+		return var;
+	    }
+
+	    ~Inner () {
+		self-> lambdaPossible = last;
+		self-> isInMatch = lastM;
+	    }
+	};
+	
+	Inner in (this);
+	return in.call ();
+    }
+    
     Expression Visitor::visitStructCst (Expression left) {
 	this-> lex.rewind ();
 	auto beg = this-> lex.next (), next = this-> lex.next ();
@@ -1863,7 +1900,7 @@ namespace syntax {
 		    auto var = visitType ();
 		    var-> deco = word;
 		    type = var;		    
-		} else type = visitLeftOp ();
+		} else type = visitLeftOpSimple ();
 		
 		params.push_back (type);
 		word = this-> lex.next ({Token::RPAR, Token::COMA});
@@ -1871,7 +1908,7 @@ namespace syntax {
 	    }	    
 	}
 	word = this-> lex.next ({Token::ARROW});
-	auto ret = visitLeftOp ();
+	auto ret = visitLeftOpSimple ();
 	return new (Z0)  IFuncPtr (type, params, ret);
     }
 
@@ -1891,7 +1928,7 @@ namespace syntax {
 		    auto var = visitType ();
 		    var-> deco = word;
 		    type = var;		    
-		} else type = visitLeftOp ();
+		} else type = visitLeftOpSimple ();
 		
 		params.push_back (type);
 		word = this-> lex.next ({Token::RPAR, Token::COMA});
@@ -1900,7 +1937,7 @@ namespace syntax {
 	}
 	
 	word = this-> lex.next ({Token::ARROW});
-	auto ret = visitLeftOp ();
+	auto ret = visitLeftOpSimple ();
 	// word = this-> lex.next ();
 	// if (word == Token::LACC) {
 	//     auto expr = visitExpression ();

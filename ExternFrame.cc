@@ -68,11 +68,11 @@ namespace semantic {
 	if (this-> _proto-> type () == NULL) {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	} else {
-	    auto type = this-> _proto-> type ()-> asType ();
+	    auto type = this-> _proto-> type ()-> toType ();
 	    if (type == NULL)
 		Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IVoidInfo ());
 	    else Table::instance ().retInfo ().info = type-> info;
-	    Table::instance ().retInfo ().deco = this-> _proto-> type ()-> deco.getStr ();
+	    Table::instance ().retInfo ().deco = this-> _proto-> retDeco ().getStr ();
 	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
 	}
 
@@ -124,7 +124,7 @@ namespace semantic {
 	if (this-> _function-> getType () == NULL) {
 	       Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	} else {
-	    auto type = this-> _function-> getType ()-> asType ();
+	    auto type = this-> _function-> getType ()-> toType ();
 	    if (type) Table::instance ().retInfo ().info = type-> info;
 	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	}

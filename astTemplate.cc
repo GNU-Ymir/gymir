@@ -160,7 +160,7 @@ namespace syntax {
 	for (auto it : this-> _params)
 	    params.push_back ((Var) it-> templateExpReplace (exps));
 	
-	auto ret = new (Z0) IProto (this-> ident, type, params, this-> from, this-> isVariadic ());
+	auto ret = new (Z0) IProto (this-> ident, type, _retDeco, params, this-> from, this-> isVariadic ());
 	ret-> from = this-> from;
 	ret-> is_public (this-> is_public ());
 	return ret;
@@ -292,9 +292,9 @@ namespace syntax {
     }
     
     Function IFunction::templateReplace (const map <string, Expression>& values) {
-	Var type = NULL;
+	Expression type = NULL;
 	if (this-> type)
-	    type = (Var) this-> type-> templateExpReplace (values);
+	    type = this-> type-> templateExpReplace (values);
 
 	vector <Var> params;
 	for (auto it : this-> params)
@@ -309,7 +309,7 @@ namespace syntax {
 	    tmps.push_back (it-> templateExpReplace (values));
 
 	auto block = (Block) this-> block-> templateReplace (values);
-	auto ret = new (Z0)  IFunction (this-> ident, this-> attrs, type, params, tmps, test, block);
+	auto ret = new (Z0)  IFunction (this-> ident, this-> attrs, type, retDeco, params, tmps, test, block);
 	ret-> is_public (this-> is_public ());
 	return ret;
     }

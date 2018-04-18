@@ -118,6 +118,14 @@ namespace semantic {
 	return this;
     }
 
+    bool ILambdaValue::equals (Value other) {
+	if (auto lv = other-> to <ILambdaValue> ()) {
+	    return lv-> frame == this-> frame;
+	}
+	return false;
+	
+    }
+    
     syntax::Expression ILambdaValue::toYmir (Symbol sym) {
 	auto ret = new (Z0) ILambdaFunc (sym-> sym, this-> frame);
 	ret-> info = sym;

@@ -12,7 +12,8 @@ namespace syntax {
 
     class IProto : public IDeclaration {
 
-	Var _type;
+	Expression _type;
+	Word _retDeco;
 	std::vector <Var> _params;
 	std::string space;
 	bool _isVariadic;
@@ -24,7 +25,7 @@ namespace syntax {
 	
 	IProto (Word ident, const std::vector <Var>& params, bool isVariadic);
 
-	IProto (Word ident, Var type, const std::vector <Var>& params, std::string space, bool isVariadic);
+	IProto (Word ident, Expression type, Word retDeco, const std::vector <Var>& params, std::string space, bool isVariadic);
 
 	void declare () override;
 	
@@ -36,7 +37,9 @@ namespace syntax {
 
 	std::string name ();
 	
-	Var& type ();
+	Expression& type ();
+
+	Word retDeco ();
 	
 	bool& isVariadic ();
 

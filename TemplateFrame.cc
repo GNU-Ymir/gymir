@@ -104,10 +104,10 @@ namespace semantic {
 	Symbol ret = NULL;
 	bool lvalue = false;
 	if (func-> getType ()) {
-	    auto type = func-> getType ()-> asType ();
+	    auto type = func-> getType ()-> toType ();
 	    if (type) {
 		ret = type-> info;
-		lvalue = func-> getType ()-> deco == Keys::MUTABLE;
+		lvalue = func-> getRetDeco () == Keys::MUTABLE;
 	    }
 	}
 

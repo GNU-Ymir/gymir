@@ -19,7 +19,8 @@ namespace syntax {
     protected :
 	
 	Word ident;
-	Var type;
+	Expression type;
+	Word retDeco;
 	std::vector <Var> params;
 	std::vector <Expression> tmps;
 	std::vector <Word> attrs;
@@ -33,7 +34,7 @@ namespace syntax {
 	
 	IFunction (Word ident, const std::vector <Word>& attrs, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block);
 	
-	IFunction (Word ident, const std::vector <Word>& attrs, Var type, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block);
+	IFunction (Word ident, const std::vector <Word>& attrs, Expression type, Word retDeco, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block);
 
 	Word getIdent ();	
 	
@@ -55,8 +56,10 @@ namespace syntax {
 	
 	IFunction* templateReplace (const std::map <std::string, Expression>& tmps);
 	
-	Var getType ();
+	Expression getType ();
 
+	Word getRetDeco ();
+	
 	Expression getTest ();
 	
 	Block getBlock ();

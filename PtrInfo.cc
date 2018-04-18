@@ -366,7 +366,7 @@ namespace semantic {
 	} else if (auto ul = other-> to <IFixedInfo> ()) {
 	    if (ul-> type () == FixedConst::ULONG) {
 		auto ot = ul-> cloneOnExit ();
-		// ot-> binopFoo = &PtrUtils::InstCast
+		ot-> binopFoo = &PtrUtils::InstCast;
 		return ot;
 	    }
 	}

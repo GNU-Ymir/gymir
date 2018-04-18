@@ -121,10 +121,10 @@ namespace semantic {
 	if (this-> _function-> getType () == NULL)
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 	else {
-	    auto var = this-> _function-> getType ()-> asType ();
+	    auto var = this-> _function-> getType ()-> toType ();
 	    if (var != NULL) Table::instance ().retInfo ().info = var-> info;
 	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
-	    Table::instance ().retInfo ().deco = this-> _function-> getType ()-> deco.getStr ();
+	    Table::instance ().retInfo ().deco = this-> _function-> getRetDeco ().getStr ();
 	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
 	}
 	
@@ -425,11 +425,11 @@ namespace semantic {
 	if (this-> _function-> getType () == NULL) 
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 	else {
-	    auto type = this-> _function-> getType ()-> asType ();
+	    auto type = this-> _function-> getType ()-> toType ();
 	    if (type) Table::instance ().retInfo ().info = type-> info;
 	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
 		    
-	    Table::instance ().retInfo ().deco = this-> _function-> getType ()-> deco.getStr ();
+	    Table::instance ().retInfo ().deco = this-> _function-> getRetDeco ().getStr ();
 	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
 	}
 
