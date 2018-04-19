@@ -589,7 +589,7 @@ namespace semantic {
 	    }
 	    
 	   
-	    Ymir::TreeStmtList list;
+	    Ymir::TreeStmtList list;	    
 	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
 	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
 	    

@@ -42,6 +42,7 @@ struct Keys {
     static std::string  OPAPPLYBEGIN;
     static std::string  OPAPPLYITER;
     static std::string  OPAPPLYEND;
+    static std::string  OPAPPLYGET;
     static std::string  OPRANGE; 
     static std::string  OPTEST; 
     static std::string  OPUNARY; 

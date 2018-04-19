@@ -474,6 +474,7 @@ namespace syntax {
 	Word beginW {this-> token, Keys::OPAPPLYBEGIN};
 	Word nextW {this-> token, Keys::OPAPPLYITER};
 	Word endW {this-> token, Keys::OPAPPLYEND};
+	Word getW {this-> token, Keys::OPAPPLYGET};
 	
 	auto block = new (Z0) IBlock (this-> token,  {}, {});
 	auto nbVar = new (Z0) IFixed (this-> token, FixedConst::INT);
@@ -491,12 +492,11 @@ namespace syntax {
 
 	block-> getInsts ().push_back (decl);	
 	auto innerBlock = new (Z0) IBlock (this-> token, {}, {});
-	auto tupleof = new (Z0) IVar ({this-> token, "tupleof"});
 	for (auto it : Ymir::r (0, this-> var.size ())) {
 	    auto var = this-> var [it]-> templateExpReplace ({})-> to <IVar> ();
 	    auto val = new (Z0) IFixed (this-> token, FixedConst::INT);
 	    val-> setValue ((int) it);
-	    auto right = (new (Z0) IDot (this-> token, new (Z0) IDot (this-> token, iterator, tupleof), val));
+	    auto right = new (Z0) IPar (tok, tok2, new (Z0) IVar (getW, {val}), new (Z0) IParamList (this-> token, {iterator}));
 	    innerBlock-> getInsts ().push_back (new (Z0) IFakeDecl (this-> token, var, right, this-> _const [it], true));
 	}
 	

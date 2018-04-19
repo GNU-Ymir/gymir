@@ -397,8 +397,7 @@ namespace syntax {
 		this-> params
 	    );
 	} else {	    
-	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
-	    
+	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);	    
 	    if (this-> _score-> proto-> isCVariadic ()) {
 		for (auto & it : args) {
 		    it = Ymir::promote (it);

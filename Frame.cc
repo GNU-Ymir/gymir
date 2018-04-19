@@ -122,10 +122,14 @@ namespace semantic {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 	else {
 	    auto var = this-> _function-> getType ()-> toType ();
-	    if (var != NULL) Table::instance ().retInfo ().info = var-> info;
-	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
 	    Table::instance ().retInfo ().deco = this-> _function-> getRetDeco ().getStr ();
-	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
+	    if (var != NULL) {
+		Table::instance ().retInfo ().info = var-> info;
+		if (Table::instance ().retInfo ().deco == Keys::REF) {
+		    Table::instance ().retInfo ().info-> type = new (Z0) IRefInfo (false, var-> info-> type);
+		}
+	    } else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
+	    lvalue = (Table::instance ().retInfo ().deco == Keys::MUTABLE || Table::instance ().retInfo ().deco == Keys::REF);
 	}
 	
 	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams, this-> _attributes);
@@ -426,11 +430,15 @@ namespace semantic {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
 	else {
 	    auto type = this-> _function-> getType ()-> toType ();
-	    if (type) Table::instance ().retInfo ().info = type-> info;
-	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
-		    
 	    Table::instance ().retInfo ().deco = this-> _function-> getRetDeco ().getStr ();
-	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
+	    if (type) {
+		Table::instance ().retInfo ().info = type-> info;
+		if (Table::instance ().retInfo ().deco == Keys::REF) {
+		    Table::instance ().retInfo ().info-> type = new (Z0) IRefInfo (false, type-> info-> type);
+		}
+	    } else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
+		    
+	    lvalue = (Table::instance ().retInfo ().deco == Keys::MUTABLE || Table::instance ().retInfo ().deco == Keys::REF);
 	}
 
 	auto proto = new (Z0)  IFrameProto (this-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, this-> tempParams, this-> _attributes);

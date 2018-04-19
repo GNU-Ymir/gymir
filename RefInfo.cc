@@ -29,6 +29,14 @@ namespace semantic {
 	    auto innerType = right-> info-> type-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
 	    auto rightExp = right-> toGeneric ();
+	    if (rightExp.getTreeCode () == CALL_EXPR) {
+		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), rightExp.getType ());
+		rightExp = Ymir::compoundExpr (locus.getLocus (),
+		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, rightExp),
+		    aux
+		);
+	    }
+	    
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
 	    
 	    if (type-> binopFoo) {
@@ -57,6 +65,13 @@ namespace semantic {
 	    auto innerType = left-> info-> type-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
 	    auto leftExp = left-> toGeneric ();
+	    if (leftExp.getTreeCode () == CALL_EXPR) {
+		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), leftExp.getType ());
+		leftExp = Ymir::compoundExpr (locus.getLocus (),
+		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, leftExp),
+		    aux
+		);
+	    }
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 	    
 	    if (type-> binopFoo) {
@@ -91,11 +106,25 @@ namespace semantic {
 	    auto innerLeft = left-> info-> type-> to<IRefInfo> ()-> content ();
 	    auto inner = innerLeft-> toGeneric ();
 	    auto leftExp = left-> toGeneric ();
+	    if (leftExp.getTreeCode () == CALL_EXPR) {
+		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), leftExp.getType ());
+		leftExp = Ymir::compoundExpr (locus.getLocus (),
+		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, leftExp),
+		    aux
+		);
+	    }
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
-
+	    
 	    auto innerRight = right-> info-> type-> to<IRefInfo> ()-> content ();
 	    inner = innerRight-> toGeneric ();
 	    auto rightExp = right-> toGeneric ();
+	    if (rightExp.getTreeCode () == CALL_EXPR) {
+		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), rightExp.getType ());
+		rightExp = Ymir::compoundExpr (locus.getLocus (),
+		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, rightExp),
+		    aux
+		);
+	    }
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
 	    
 	    if (type-> binopFoo) {
@@ -123,6 +152,13 @@ namespace semantic {
 	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
 	    
 	    auto leftExp = left-> toGeneric ();
+	    if (leftExp.getTreeCode () == CALL_EXPR) {
+		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), leftExp.getType ());
+		leftExp = Ymir::compoundExpr (locus.getLocus (),
+		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, leftExp),
+		    aux
+		);
+	    }
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 
 	    if (type-> unopFoo) {
