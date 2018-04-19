@@ -1667,9 +1667,29 @@ namespace syntax {
     }
 
     Expression IAffectGeneric::expression () {
-	auto left = this-> left-> expression ();
 	auto right = this-> right-> expression ();
+	auto left = this-> left-> expression ();
+	
 	if (left == NULL || right == NULL) return NULL;
+	auto ret = new (Z0) IAffectGeneric (this-> token, left, right, this-> _addr);
+	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
+	return ret;	
+    }
+
+    Expression IFakeDecl::expression () {
+	auto right = this-> right-> expression ();
+	auto left = this-> left-> templateExpReplace ({});
+	if (right == NULL) return NULL;
+	if (this-> _addr)
+	    left-> info = new (Z0) ISymbol (left-> token, new (Z0) IRefInfo (true, right-> info-> type-> clone ()));
+	else
+	    left-> info = new (Z0) ISymbol (left-> token, right-> info-> type-> clone ());
+	
+	if (this-> _const)
+	    left-> info-> isConst (true);
+	left-> info-> isInline () = true;
+
+	Table::instance ().insert (left-> info);
 	auto ret = new (Z0) IAffectGeneric (this-> token, left, right, this-> _addr);
 	ret-> info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
 	return ret;

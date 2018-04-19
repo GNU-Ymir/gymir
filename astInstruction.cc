@@ -104,7 +104,7 @@ namespace syntax {
 		return NULL;
 	    }
 
-	    if (this-> decos [id] == Keys::IMMUTABLE) {
+	    if (this-> decos.size () > (uint) id && this-> decos [id] == Keys::IMMUTABLE) {
 		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
 		    auto type = bin-> getRight ()-> expression ();
 		    if (type == NULL) return NULL;
@@ -122,7 +122,7 @@ namespace syntax {
 		    Ymir::Error::immutNoInit (it-> token);
 		    return NULL;
 		}		    
-	    } else if (this-> decos [id] == Keys::CONST) {
+	    } else if (this-> decos.size () > (uint) id && this-> decos [id] == Keys::CONST) {
 		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
 		aux-> info-> isConst (true);
 		Table::instance ().insert (aux-> info);
@@ -135,7 +135,7 @@ namespace syntax {
 		    aux-> info-> isConst (true);
 		    aux-> info-> value () = NULL;
 		}
-	    } else if (this-> decos [id] == Keys::STATIC) {
+	    } else if (this-> decos.size () > (uint) id && this-> decos [id] == Keys::STATIC) {
 		auto space = Table::instance ().space ();
 		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
 		    auto type = bin-> getRight ()-> expression ();
@@ -471,44 +471,44 @@ namespace syntax {
     }
 
     Instruction IFor::findOpApply () {
-	static int i = 0;
-	i ++;
-	Word word (this-> token.getLocus (), Keys::OPAPPLY);
-	auto bl = this-> block-> replaceBreakAndReturn (i);
-	auto val = new (Z0) IFixed (this-> token, FixedConst::INT);
-	val-> setValue (0);
-	auto add_ret = new (Z0) IReturn (this-> token, val);
-	add_ret-> isUseless () = true;
+	Word beginW {this-> token, Keys::OPAPPLYBEGIN};
+	Word nextW {this-> token, Keys::OPAPPLYITER};
+	Word endW {this-> token, Keys::OPAPPLYEND};
 	
-	bl-> getInsts ().push_back (add_ret);	
-	auto lambda = new (Z0) ILambdaFunc (this-> token, this-> var, bl);
-	auto var = new (Z0) IVar (word);
-	std::vector <Expression> params = {this-> iter, lambda};
+	auto block = new (Z0) IBlock (this-> token,  {}, {});
+	auto nbVar = new (Z0) IFixed (this-> token, FixedConst::INT);
+	nbVar-> setValue ((int) this-> var.size ());
+	auto params = new (Z0) IParamList (this-> token, {this-> iter});
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto finalParams = new (Z0) IParamList (this-> token, params);
-	auto call = new (Z0) IPar (tok, tok2, var, finalParams, true);
+	auto begin = new (Z0) IPar (tok, tok2, new (Z0) IVar (beginW, {nbVar}), params);
 
-	auto var_ret = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", i).str ()});
-	var_ret-> info = new (Z0) ISymbol (var_ret-> token, new (Z0) IUndefInfo ()); //Table::instance ().retInfo ().info-> type-> clone ());
-	var_ret-> info-> isConst (false);
-	var_ret-> info-> isInline () = true;
-	Table::instance ().insert (var_ret-> info);
+	auto decl = new (Z0) IVarDecl (this-> token, {}, {}, {});
+	auto iterator = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", this-> var [0]-> token.getStr ()).str ()});
+
+	decl-> getDecls ().push_back (iterator);
+	decl-> getInsts ().push_back (new (Z0) IBinary ({this-> token, Token::EQUAL},
+							iterator, begin));
+
+	block-> getInsts ().push_back (decl);	
+	auto innerBlock = new (Z0) IBlock (this-> token, {}, {});
+	auto tupleof = new (Z0) IVar ({this-> token, "tupleof"});
+	for (auto it : Ymir::r (0, this-> var.size ())) {
+	    auto var = this-> var [it]-> templateExpReplace ({})-> to <IVar> ();
+	    auto val = new (Z0) IFixed (this-> token, FixedConst::INT);
+	    val-> setValue ((int) it);
+	    auto right = (new (Z0) IDot (this-> token, new (Z0) IDot (this-> token, iterator, tupleof), val));
+	    innerBlock-> getInsts ().push_back (new (Z0) IFakeDecl (this-> token, var, right, this-> _const [it], true));
+	}
 	
-	auto fin = call-> expression ();
-	if (fin == NULL) return NULL;
-	auto ret_block = new (Z0) IBlock (this-> token, {}, {});
-	ret_block-> addInline (var_ret);
-	if (!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> () &&	    
-	    !var_ret-> info-> type-> is<IUndefInfo> ()) {
-	    val = new (Z0) IFixed (this-> token, FixedConst::INT);
-	    val-> setValue (2);
-	    auto if_ = new (Z0) IIf (this-> token,
-	    			     new (Z0) IBinary ({this-> token, Token::DEQUAL}, call, val),
-	    			     new (Z0) IBlock (this-> token, {}, {new (Z0) IReturn (this-> token, var_ret)})
-	    );
-	    ret_block-> getInsts ().push_back (if_-> instruction ());
-	} else ret_block-> getInsts ().push_back (fin);
-	return ret_block;
+	innerBlock-> getInsts ().push_back (this-> block-> templateExpReplace ({}));	
+	innerBlock-> getInsts ().push_back (new (Z0) IPar (tok, tok2, new (Z0) IVar (nextW), new (Z0) IParamList (this-> token, {iterator})));	
+	block-> getInsts ().push_back (new (Z0) IWhile (this-> token,
+							new (Z0) IUnary ({this-> token, Token::NOT},
+									 new (Z0) IPar (tok, tok2, new (Z0) IVar (endW), new (Z0) IParamList (this-> token, {iterator}))
+							),
+							innerBlock));
+	
+	return block-> expression ();
     }
     
     std::vector <semantic::Symbol> IWhile::allInnerDecls () {

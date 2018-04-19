@@ -29,8 +29,9 @@ namespace syntax {
 	IIf (Word word, Expression test, Block block, If else_, bool isStatic = false);
 
 	Instruction instruction () override;	
-
+	
 	Instruction templateReplace (const std::map <std::string, Expression>&) override;
+	
 	std::vector <semantic::Symbol> allInnerDecls () override;
 	
 	Ymir::Tree toGeneric () override;

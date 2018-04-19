@@ -50,8 +50,6 @@ namespace syntax {
 	IBlock* block ();
 
 	IBlock* blockWithoutEnter ();
-
-	IBlock* replaceBreakAndReturn (int i);
 	
 	std::vector <Instruction> & getInsts ();
 	

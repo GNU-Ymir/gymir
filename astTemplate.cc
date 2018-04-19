@@ -84,7 +84,7 @@ namespace syntax {
     }
     
     Instruction IBreak::templateReplace (const map <string, Expression>&) {
-	return new (Z0)  IBreak (this-> token, this-> ident);
+	return new (Z0)  IBreak (this-> token, this-> ident);	
     }
 
     Expression ICast::templateExpReplace (const map <string, Expression>& values) {
@@ -410,7 +410,7 @@ namespace syntax {
 	if (this-> elem == NULL) return new (Z0)  IReturn (this-> token);
 	auto ret = new (Z0)  IReturn (this-> token, this-> elem-> templateExpReplace (values));
 	ret-> isUseless () = this-> isUseless ();
-	return ret;
+	return ret;	
     }
 
     Instruction ITupleDest::templateReplace (const map <string, Expression>& values) {

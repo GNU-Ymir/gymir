@@ -63,7 +63,7 @@ namespace syntax {
 	Expression expression () override;
 
 	Instruction instruction () override;
-
+	
 	Ymir::Tree toGeneric () override;
 	
 	static const char * id () {

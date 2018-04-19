@@ -45,31 +45,7 @@ namespace syntax {
     void IBlock::addInline (Var var) {
 	this-> inlines.push_back (var);
     }
-    
-    Block IBlock::replaceBreakAndReturn (int i) {
-	auto aux = new IBlock (this-> token, this-> decls, {});
-	for (auto it : this-> insts)  {
-	    if (auto bl = it-> to<IBlock> ())
-		aux-> insts.push_back (bl-> replaceBreakAndReturn (i));
-	    else if (auto ret = it-> to <IReturn> ()) {
-		auto var_ret = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", i).str ()});
-		if (ret-> getExpr ()) { 
-		    aux-> insts.push_back (new (Z0) IBinary ({ret-> token, Token::EQUAL},
-							     var_ret,
-							     ret-> getExpr ()));
-		}
-		auto val = new (Z0) IFixed (it-> token, FixedConst::INT);
-		val-> setValue (2);
-		aux-> insts.push_back (new (Z0) IReturn (it-> token, val));
-	    } else if (it-> is <IBreak> ()) {
-		auto val = new (Z0) IFixed (it-> token, FixedConst::INT);
-		val-> setValue (1);
-		aux-> insts.push_back (new (Z0) IReturn (it-> token, val));
-	    } else aux-> insts.push_back (it);
-	}
-	return aux;
-    }
-    
+        
     std::vector <Instruction>& IBlock::getInsts () {
 	return this-> insts;
     }
@@ -799,6 +775,7 @@ namespace syntax {
 	IInstruction (token),
 	ident (ident) {
     }
+
     
     ICast::ICast (Word begin, Expression type, Expression expr) :
 	IExpression (begin),
@@ -1045,7 +1022,7 @@ namespace syntax {
 	    this-> test-> inside = this;
 	this-> isStatic = isStatic;
     }
-        
+    
     IIf::IIf (Word word, Expression test, Block block, If else_, bool isStatic) : 
 	IInstruction (word),
 	test (test),
@@ -1057,7 +1034,7 @@ namespace syntax {
 	this-> isStatic = isStatic;
 	if (this-> else_)
 	    this-> else_-> isStatic = isStatic;
-    }
+    }    
     
     void IIf::print (int nb) {
 	if (this-> test) {
@@ -1091,6 +1068,7 @@ namespace syntax {
 	this-> iter-> inside = this;
     }
 
+    
     IFor::~IFor ()  {
 	for (auto it : var)
 	    delete it;
@@ -2075,5 +2053,13 @@ namespace syntax {
 	right (right),
 	_addr (addr)
     {}
-        
+
+    IFakeDecl::IFakeDecl (Word word, Var left, Expression right, bool const_, bool addr) :
+	IExpression (word),
+	left (left),
+	right (right),
+	_addr (addr),
+	_const (const_)
+    {}
+    
 }

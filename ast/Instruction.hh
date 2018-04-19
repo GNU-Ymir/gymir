@@ -58,7 +58,7 @@ namespace syntax {
 	virtual IInstruction* instruction () = 0;	   
 
 	virtual IInstruction* templateReplace (const std::map <std::string, Expression>& tmps) = 0;
-
+	
 	virtual std::string prettyPrint ();
 	
 	virtual Ymir::Tree toGeneric ();

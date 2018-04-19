@@ -83,7 +83,7 @@ namespace semantic {
 	bool& isImmutable ();
 
 	bool& closureMoved ();
-	
+
 	void enterBlock ();
 
 	void quitBlock ();
@@ -95,7 +95,7 @@ namespace semantic {
 	bool hasBreaked ();
 
 	void setIdent (Word ident);
-
+	
 	std::string& currentBlock ();
 
 	long rewind (std::string name);
