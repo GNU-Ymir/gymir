@@ -268,7 +268,7 @@ namespace syntax {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
-
+	
 	return this-> info-> type-> buildBinaryOp (
 	    this-> token,
 	    this-> info-> type,
@@ -411,11 +411,11 @@ namespace syntax {
 	    
 	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 	    return build_call_array_loc (this-> token.getLocus (),
-					 this-> _score-> ret-> toGeneric ().getTree (),
-					     fn.getTree (),
-					 args.size (),
-					 args.data ()
-	    );	
+						    this-> _score-> ret-> toGeneric ().getTree (),
+						    fn.getTree (),
+						    args.size (),
+						    args.data ()
+	    );	    
 	}
     }
     

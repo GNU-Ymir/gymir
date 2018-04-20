@@ -296,29 +296,31 @@ namespace semantic {
 	
 	Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
-	    auto ltree = left-> toGeneric ();
-	    auto rtree = right-> toGeneric ();	    
 	    Ymir::TreeStmtList list;
+	    auto ltree = Ymir::getExpr (list, left);
+	    auto rtree = Ymir::getExpr (list, right);
 	    if (ltree.getType ().getTree () == rtree.getType ().getTree ()) {
-		return buildTree (
+		return Ymir::compoundExpr (loc, list, buildTree (
 		    MODIFY_EXPR, loc, ltree.getType (), ltree, rtree
-		);		
+		));		
 	    } else {
 		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
 		auto ptrr = Ymir::getAddr (loc, rtree).getTree ();
 		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
 		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
-		return result;
+		list.append (result);
+		return Ymir::compoundExpr (loc, list, ltree);
 	    }	   
 	}
 
 	Tree InstCast (Word locus, InfoType type, Expression elem, Expression) {
 	    location_t loc = locus.getLocus ();
-	    auto rtree = elem-> toGeneric ();
+	    Ymir::TreeStmtList list;
+	    auto rtree = Ymir::getExpr (list, elem);
 	    auto ltype = type-> toGeneric ();
 	    if (rtree.getType ().getTree () == ltype.getTree ())
-	    	return rtree;
+	    	return Ymir::compoundExpr (loc, list, rtree);
 	    else {
 		auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
 		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
@@ -326,7 +328,8 @@ namespace semantic {
 		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
 		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
-		return Ymir::compoundExpr (loc, result, ltree);
+		list.append (result);
+		return Ymir::compoundExpr (loc, list, ltree);
 	    }
 	}
 
@@ -336,9 +339,10 @@ namespace semantic {
 	
 	Tree InstCastFake (Word locus, InfoType type, Expression elem, Expression) {
 	    location_t loc = locus.getLocus ();
-	    auto rtree = elem-> toGeneric ();
-	    auto ltype = type-> toGeneric ();
 	    TreeStmtList list;
+	    auto rtree = Ymir::getExpr (list, elem);
+	    auto ltype = type-> toGeneric ();
+
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
 	    auto info = type-> to <ITupleInfo> ();
 	    auto elemInfo = elem-> info-> type-> to <ITupleInfo> ();

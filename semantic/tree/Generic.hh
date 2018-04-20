@@ -65,6 +65,12 @@ namespace Ymir {
 
     Tree compoundExpr (location_t, Tree arg0, Tree arg1);
     
+    Tree compoundExpr (location_t, TreeStmtList arg0, Tree arg1);
+
+    Tree getExpr (TreeStmtList& list, Tree arg);
+
+    Tree getExpr (TreeStmtList& list, syntax::Expression arg);
+    
 }
 
 //tree convert (tre

@@ -198,26 +198,25 @@ namespace semantic {
 		vector <Expression> types;
 		TemplateSolution soluce (0, true);
 		for (auto it : Ymir::r (0, typeVar-> getTemplates ().size ())) {
-		    if (auto var = typeVar-> getTemplates () [it]-> to <IVar> ()) {
-			if (!type-> getTemplate (it)) return TemplateSolution (0, false);
-			auto typeTemplates = type-> getTemplate (it, typeVar-> getTemplates ().size () - (it + 1));
-			auto res = this-> solveInside (tmps, var, typeTemplates);			
-			if (!res.valid || !merge (soluce.score, soluce.elements, res))
-			    return TemplateSolution (0, false);
-			if (res.type)
-			    types.push_back (new (Z0)  IType (var-> token, res.type));
-			else if (typeTemplates.size () != 1) {
-			    for (auto it_ : res.elements) {
-				if (auto params = it_.second-> to<IParamList> ()) {
-				    for (auto it__ : params-> getParams ())
-					types.push_back (it__-> to <IType> ());
-				} else Ymir::Error::assert ("!!");
-			    }
-			} else
-			    return TemplateSolution (0, false);			
-		    }
+		    auto var = typeVar-> getTemplates () [it];
+		    if (!type-> getTemplate (it)) return TemplateSolution (0, false);
+		    auto typeTemplates = type-> getTemplate (it, typeVar-> getTemplates ().size () - (it + 1));
+		    auto res = this-> solveInside (tmps, var, typeTemplates);			
+		    if (!res.valid || !merge (soluce.score, soluce.elements, res))
+			return TemplateSolution (0, false);
+		    if (res.type)
+			types.push_back (new (Z0)  IType (var-> token, res.type));
+		    else if (typeTemplates.size () != 1) {
+			for (auto it_ : res.elements) {
+			    if (auto params = it_.second-> to<IParamList> ()) {
+				for (auto it__ : params-> getParams ())
+				    types.push_back (it__);
+			    } else Ymir::Error::assert ("!!");
+			}
+		    } else
+			return TemplateSolution (0, false);			
 		}
-		
+
 		for (auto it : tmps) {
 		    if (auto var = it-> to <IVar> ()) {
 			if (typeVar-> token.getStr () == var-> token.getStr ()) {
@@ -247,7 +246,7 @@ namespace semantic {
 	}
 	return TemplateSolution (0, false);
     }
-
+    
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, Expression param, InfoType type) {
 	Ymir::log ("Solve inside expr : ", tmps, "|", param, "|", type);
 	bool isConst = false;
@@ -266,6 +265,29 @@ namespace semantic {
 	    return solve (tmps, all, type, isConst);
 	else if (auto fn = param-> to <IFuncPtr> ())
 	    return solveInside (tmps, fn, type);
+	return TemplateSolution (0, false);
+    }
+
+    TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, Expression param, const std::vector <InfoType>& types) {
+	Ymir::log ("Solve inside expr : ", tmps, "|", param, "|", types);
+	bool isConst = false;
+	auto tvar = param-> to <IVar> ();
+	while (tvar && tvar-> token == Keys::CONST) {
+	    isConst = true;
+	    param = tvar-> getTemplates () [0];
+	    tvar = param-> to <IVar> ();
+	}
+
+	if (auto var = param-> to <IVar> ())
+	    return solveInside (tmps, var, types);
+	else if (auto ddot = param-> to <IDColon> ()) {
+	    if (types.size () == 1)
+		return solve (tmps, ddot, types [0], isConst);
+	} else if (auto all = param-> to <IArrayAlloc> ()) {
+	    if (types.size () == 1) 
+		return solve (tmps, all, types [0], isConst);
+	} else if (auto fn = param-> to <IFuncPtr> ())
+	    return solveInside (tmps, fn, types);
 	return TemplateSolution (0, false);
     }
     
@@ -297,24 +319,23 @@ namespace semantic {
 	    vector <Expression> types;	    
 	    TemplateSolution soluce (0, true);
 	    for (auto it : Ymir::r (0, param-> getTemplates ().size ())) {
-		if (auto var = param-> getTemplates () [it]-> to <IVar> ()) {
-		    if (!type-> getTemplate (it)) return TemplateSolution (0, false);
-		    auto typeTemplates = type-> getTemplate (it, param-> getTemplates ().size () - (it + 1));
-		    auto res = this-> solveInside (tmps, var, typeTemplates);
-		    if (!res.valid || !merge (soluce.score, soluce.elements, res))
-			return TemplateSolution (0, false);
-		    if (res.type)
-			types.push_back (new (Z0)  IType (var-> token, res.type));
-		    else if (typeTemplates.size () != 1) {
-			    for (auto it_ : res.elements) {
-				if (auto params = it_.second-> to<IParamList> ()) {
-				    for (auto it__ : params-> getParams ())
-					types.push_back (it__-> to <IType> ());
-				} else Ymir::Error::assert ("!!");
-			    }
-		    } else
-			return TemplateSolution (0, false);			
-		}
+		auto var = param-> getTemplates () [it];
+		if (!type-> getTemplate (it)) return TemplateSolution (0, false);
+		auto typeTemplates = type-> getTemplate (it, param-> getTemplates ().size () - (it + 1));
+		auto res = this-> solveInside (tmps, var, typeTemplates);
+		if (!res.valid || !merge (soluce.score, soluce.elements, res))
+		    return TemplateSolution (0, false);
+		if (res.type)
+		    types.push_back (new (Z0)  IType (var-> token, res.type));
+		else if (typeTemplates.size () != 1) {
+		    for (auto it_ : res.elements) {
+			if (auto params = it_.second-> to<IParamList> ()) {
+			    for (auto it__ : params-> getParams ())
+				types.push_back (it__-> to <IType> ());
+			} else Ymir::Error::assert ("!!");
+		    }
+		} else
+		    return TemplateSolution (0, false);					
 	    }
 	    
 	    for (auto it : tmps) {

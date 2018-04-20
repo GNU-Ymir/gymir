@@ -537,7 +537,6 @@ namespace syntax {
 	if (ret == NULL)
 	    ret = new (Z0)  IVar (this-> token, tmps);
 	else ret-> templates = tmps;
-	
 	ret-> deco = this-> deco;
 	return ret;	
     }

@@ -138,7 +138,8 @@ namespace Ymir {
 	TreeStmtList (Tree t) : list (t.getTree ()) {}
 
 	void append (Tree t) {
-	    append_to_statement_list (t.getTree (), &list);
+	    if (!t.isNull ())
+		append_to_statement_list (t.getTree (), &list);
 	}
 
 	tree getTree () const {

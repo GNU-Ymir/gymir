@@ -81,14 +81,16 @@ namespace semantic {
 	}
 	
 	Tree InstAffect (Word loc, InfoType, Expression left, Expression right) {
-	    auto ltree = left-> toGeneric ();
-	    auto rtree = right-> toGeneric ();
+	    Ymir::TreeStmtList list;
+	    auto ltree = Ymir::getExpr (list, left);
+	    auto rtree = Ymir::getExpr (list, right);
 	    auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
 	    auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
 	    tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 	    tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
 	    auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
-	    return Ymir::compoundExpr (loc.getLocus (), result, ltree);
+	    list.append (result);
+	    return Ymir::compoundExpr (loc.getLocus (), list, ltree);
 	}
 
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {

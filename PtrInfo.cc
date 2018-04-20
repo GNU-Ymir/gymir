@@ -168,11 +168,12 @@ namespace semantic {
     }    
    
     InfoType IPtrInfo::create (Word tok, const std::vector<syntax::Expression> & tmps) {
-	if (tmps.size () != 1 || !tmps [0]-> is<syntax::IType> ()) {
-	    if (tmps.size () != 1 || !tmps [0]-> info-> type-> isType ()) {
-		Ymir::Error::takeATypeAsTemplate (tok);
-		return NULL;
-	    }
+	if (tmps.size () != 1 || tmps [0] == NULL || !tmps [0]-> isType ()) {
+	    if (tmps.size () == 1)
+		println (tmps [0] && tmps [0]-> isType ());
+	    
+	    Ymir::Error::takeATypeAsTemplate (tok);
+	    return NULL;	    
 	}	    	    
 
 	if (auto ot = tmps [0]-> info-> type-> to<IStructCstInfo> ()) {

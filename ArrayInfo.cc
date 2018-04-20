@@ -561,67 +561,75 @@ namespace semantic {
 	}
 
 	Ymir::Tree InstAffectNull (Word word, InfoType, Expression left, Expression) {
+	    Ymir::TreeStmtList list;
 	    auto loc = word.getLocus ();
-	    auto ltree = left-> toGeneric ();
+	    auto ltree = Ymir::getExpr (list, left);
+	    
 	    auto addr = Ymir::getAddr (loc, ltree);
 	    tree memsetArgs [] = {addr.getTree (),
 				  build_int_cst_type (long_unsigned_type_node, 0),
 				  TYPE_SIZE_UNIT (ltree.getType ().getTree ())};
 
-	    return Ymir::compoundExpr (
-		loc,
-		build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs),
-		ltree
-	    );
+	    list.append (build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs));
+	    return Ymir::compoundExpr (loc, list.getTree (), ltree);
 	}
 	
 	Ymir::Tree InstAffect (Word word, InfoType, Expression left, Expression right) {
 	    location_t loc = word.getLocus ();
-	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();
+	    TreeStmtList list;	    
+	    auto lexp = Ymir::getExpr (list, left);
+	    auto rexp = Ymir::getExpr (list, right); 
 	    
 	    if (lexp.getType () == rexp.getType ()) {		
-		return Ymir::buildTree (
+		return Ymir::compoundExpr (loc, list, Ymir::buildTree (
 		    MODIFY_EXPR, loc, lexp.getType (), lexp, rexp
-		);
+		));
 	    } else if (lexp.getType ().getTreeCode () != RECORD_TYPE) {
-		return buildDup (loc, lexp, rexp, right);
+		return Ymir::compoundExpr (loc, list, buildDup (loc, lexp, rexp, right));
 	    }
+
+	    if (rexp.getType ().getTreeCode () != RECORD_TYPE) {
+		auto lenr = getLen (loc, NULL, rexp);
+		auto ptrr = getPtr (loc, NULL, rexp);
+		auto ptrl = getField (loc, lexp, "ptr");
+		auto lenl = getField (loc, lexp, "len");
+		
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, lenl, lenr
+		));
 	    
-	   
-	    Ymir::TreeStmtList list;	    
-	    Ymir::Tree lenl = Ymir::getField (loc, lexp, "len");
-	    Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");	
-	    
-	    auto lenr = getLen (loc, NULL, rexp);
-	    auto ptrr = getPtr (loc, NULL, rexp);
-	    
-	    list.append (Ymir::buildTree (
-		MODIFY_EXPR, loc, void_type_node, lenl, lenr
-	    ));
-	    
-	    list.append (Ymir::buildTree (
-		MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
-	    ));
-	    
-	    return Ymir::compoundExpr (loc, list.getTree (), lexp);			    	    	    
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
+		));
+
+		return Ymir::compoundExpr (loc, list.getTree (), lexp);
+	    } else {
+		auto ptrl = Ymir::getAddr (loc, lexp).getTree ();
+		auto ptrr = Ymir::getAddr (loc, rexp).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (lexp.getType ().getTree ());
+		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		list.append (result);
+		return Ymir::compoundExpr (loc, list, lexp);
+	    }
 	}	
 	
 	Ymir::Tree InstAccessInt (Word word, InfoType, Expression left, Expression right) {
+	    Ymir::TreeStmtList list;
 	    location_t loc = word.getLocus ();
-	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();
-
+	    auto lexp = Ymir::getExpr (list, left); 
+	    auto rexp = Ymir::getExpr (list, right);
+	    
 	    ArrayInfo arrayInfo = left-> info-> type-> to<IArrayInfo> ();
 	    Ymir::Tree inner = arrayInfo-> content ()-> toGeneric ();
 	    if (lexp.getType ().getTreeCode () != RECORD_TYPE) {
 		if (isStringType (lexp.getType ())) {
-		    return getPointerUnref (loc, lexp, inner, rexp);
+		    return Ymir::compoundExpr (loc, list.getTree (), getPointerUnref (loc, lexp, inner, rexp));
 		} else 
-		    return getArrayRef (loc, lexp, inner, rexp);
+		    return Ymir::compoundExpr (loc, list.getTree (), getArrayRef (loc, lexp, inner, rexp));
 	    } else {
 		Ymir::Tree ptrl = Ymir::getField (loc, lexp, "ptr");
-		return getPointerUnref (loc, ptrl, inner, rexp);
+		return Ymir::compoundExpr (loc, list.getTree (), getPointerUnref (loc, ptrl, inner, rexp));
 	    }
 	}
 	
@@ -642,13 +650,14 @@ namespace semantic {
 	}
 	
 	Tree InstConcat (Word locus, InfoType retType, Expression left, Expression right) {
-	    auto lexp = left-> toGeneric ();
-	    auto rexp = right-> toGeneric ();
+	    Ymir::TreeStmtList list; 
+	    auto lexp = Ymir::getExpr (list, left);
+	    auto rexp = Ymir::getExpr (list, right);
 	    
 	    ArrayInfo info = left-> info-> type-> to <IArrayInfo> ();
 	    Ymir::Tree inner = info-> content ()-> toGeneric ();
 	    location_t loc = locus.getLocus ();
-	    Ymir::TreeStmtList list; 
+
 
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getLen (loc, right, rexp);
@@ -678,9 +687,11 @@ namespace semantic {
 	
 	Tree InstConcatAff (Word locus, InfoType type, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
-	    auto lexp = left-> toGeneric ();
-	    auto aux = InstConcat (locus, type, new (Z0)  ITreeExpression (left-> token, left-> info-> type, lexp), right);
 	    Ymir::TreeStmtList list;
+	    auto lexp = Ymir::getExpr (list, left);
+	    
+	    auto aux = InstConcat (locus, type, new (Z0)  ITreeExpression (left-> token, left-> info-> type, lexp), right);
+	    
 	    auto lenl = getLen (loc, left, lexp);
 	    auto lenr = getField (loc, aux, "len");
 	    auto ptrl = getPtr (loc, left, lexp);
@@ -699,28 +710,29 @@ namespace semantic {
 	
 	Tree InstToArray (Word locus, InfoType, Expression elem, Expression type) {
 	    auto loc = locus.getLocus ();
-	    auto rexp = elem-> toGeneric ();
+	    TreeStmtList list;
+	    auto rexp = Ymir::getExpr (list, elem);
 	    auto toType = type-> info-> type-> toGeneric ();
 
 	    if (toType != rexp.getType () && toType.getTreeCode () == RECORD_TYPE) {		
 		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), toType);
+	       		
 		auto lenr = getLen (loc, elem, rexp);
 		auto ptrr = getPtr (loc, elem, rexp);
 		auto ptrl = getField (loc, auxVar, "ptr");
 		auto lenl = getField (loc, auxVar, "len");
-		TreeStmtList list;
-    
+		
 		list.append (buildTree (
-					MODIFY_EXPR, loc, void_type_node, lenl, lenr
-					));
-	    
+		    MODIFY_EXPR, loc, void_type_node, lenl, lenr
+		));
+		
 		list.append (buildTree (
-					MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
-					));
-
+		    MODIFY_EXPR, loc, void_type_node, ptrl, ptrr
+		));
+		
 		return Ymir::compoundExpr (loc, list.getTree (), auxVar);
 	    } else {
-		return rexp;
+		return Ymir::compoundExpr (loc, list, rexp);
 	    }		
 	}
 
@@ -843,7 +855,7 @@ namespace semantic {
 	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
-
+	
 
     }
 

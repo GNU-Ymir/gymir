@@ -26,33 +26,28 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
+	    auto loc = locus.getLocus ();
 	    auto innerType = right-> info-> type-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
-	    auto rightExp = right-> toGeneric ();
-	    if (rightExp.getTreeCode () == CALL_EXPR) {
-		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), rightExp.getType ());
-		rightExp = Ymir::compoundExpr (locus.getLocus (),
-		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, rightExp),
-		    aux
-		);
-	    }
-	    
+
+	    Ymir::TreeStmtList list;
+	    auto rightExp = Ymir::getExpr (list, right);	    
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
 	    
 	    if (type-> binopFoo) {
-		return type-> buildBinaryOp (
+		return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
 		    locus,
 		    type,
 		    left,
 		    new (Z0)  ITreeExpression (right-> token, innerType, rightExp)
-		);
+		));
 	    } else {
-		return type-> buildMultOp (
+		return Ymir::compoundExpr (loc, list, type-> buildMultOp (
 		    locus,
 		    type,
 		    left,
 		    new (Z0)  ITreeExpression (right-> token, innerType, rightExp)
-		);
+		));
 	    }	    
 	    
 	}
@@ -62,38 +57,34 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
+	    auto loc = locus.getLocus ();
 	    auto innerType = left-> info-> type-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
-	    auto leftExp = left-> toGeneric ();
-	    if (leftExp.getTreeCode () == CALL_EXPR) {
-		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), leftExp.getType ());
-		leftExp = Ymir::compoundExpr (locus.getLocus (),
-		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, leftExp),
-		    aux
-		);
-	    }
+
+	    Ymir::TreeStmtList list;
+	    auto leftExp = Ymir::getExpr (list, left);
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 	    
 	    if (type-> binopFoo) {
-		return type-> buildBinaryOp (
+		return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
 		    right
-		);
+		));
 	    } else if (type-> multFoo) {
-		return type-> buildMultOp (
+		return Ymir::compoundExpr (loc, list, type-> buildMultOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
 		    right
-		);
+		));
 	    } else if (type-> unopFoo) {
-		return type-> buildUnaryOp (
+		return Ymir::compoundExpr (loc, list, type-> buildUnaryOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp)
-		);
+		));
 	    }
 	    return leftExp;
 	}
@@ -103,44 +94,32 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
+	    auto loc = locus.getLocus ();
+	    Ymir::TreeStmtList list;
 	    auto innerLeft = left-> info-> type-> to<IRefInfo> ()-> content ();
-	    auto inner = innerLeft-> toGeneric ();
-	    auto leftExp = left-> toGeneric ();
-	    if (leftExp.getTreeCode () == CALL_EXPR) {
-		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), leftExp.getType ());
-		leftExp = Ymir::compoundExpr (locus.getLocus (),
-		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, leftExp),
-		    aux
-		);
-	    }
+	    auto inner = innerLeft-> toGeneric ();	    
+	    auto leftExp = Ymir::getExpr (list, left);
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 	    
 	    auto innerRight = right-> info-> type-> to<IRefInfo> ()-> content ();
 	    inner = innerRight-> toGeneric ();
-	    auto rightExp = right-> toGeneric ();
-	    if (rightExp.getTreeCode () == CALL_EXPR) {
-		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), rightExp.getType ());
-		rightExp = Ymir::compoundExpr (locus.getLocus (),
-		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, rightExp),
-		    aux
-		);
-	    }
+	    auto rightExp = Ymir::getExpr (list, right);
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
-	    
+
 	    if (type-> binopFoo) {
-		return type-> buildBinaryOp (
+		return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, innerLeft, leftExp),
 		    new (Z0)  ITreeExpression (right-> token, innerRight, rightExp)
-		);
+		));
 	    } else {
-		return type-> buildMultOp (
+		return Ymir::compoundExpr (loc, list, type-> buildMultOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, innerLeft, leftExp),
 		    new (Z0)  ITreeExpression (right-> token, innerRight, rightExp)
-		);
+		));
 	    }	    
 	}
 	
@@ -150,32 +129,26 @@ namespace semantic {
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 	    
 	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
-	    
-	    auto leftExp = left-> toGeneric ();
-	    if (leftExp.getTreeCode () == CALL_EXPR) {
-		auto aux = Ymir::makeAuxVar (locus.getLocus (), ISymbol::getLastTmp (), leftExp.getType ());
-		leftExp = Ymir::compoundExpr (locus.getLocus (),
-		    buildTree (MODIFY_EXPR, locus.getLocus (), void_type_node, aux, leftExp),
-		    aux
-		);
-	    }
-	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 
+	    Ymir::TreeStmtList list;	    
+	    auto leftExp = Ymir::getExpr (list, left);
+	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
+	    
 	    if (type-> unopFoo) {
-		return type-> buildUnaryOp (
+		return Ymir::compoundExpr (locus.getLocus (), list, type-> buildUnaryOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp)
-		);
+		));
 	    } else if (type-> binopFoo) {
-		return type-> buildBinaryOp (
+		return Ymir::compoundExpr (locus.getLocus (), list, type-> buildBinaryOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp),
 		    new (Z0)  ITreeExpression (locus, type, Ymir::Tree ())
-		);
+		));
 	    } else {
-		return leftExp;
+		return Ymir::compoundExpr (locus.getLocus (), list, leftExp);
 	    }
 	}
 	

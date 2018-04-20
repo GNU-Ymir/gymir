@@ -364,16 +364,51 @@ namespace Ymir {
 	default : return expr;
 	}
     }
-
     
     Tree compoundExpr (location_t loc, Tree arg0, Tree arg1) {
 	if (arg1.isNull ()) return arg0;
+	if (arg0.isNull ()) return arg1;
 	return fold_build2_loc (loc, COMPOUND_EXPR,
 				arg1.getType ().getTree (),
 				arg0.getTree (), arg1.getTree ());
+    }       
+
+    Tree compoundExpr (location_t loc, TreeStmtList arg0, Tree arg1) {
+	if (arg1.isNull ()) return arg0.getTree ();
+	return fold_build2_loc (loc, COMPOUND_EXPR,
+				arg1.getType ().getTree (),
+				arg0.getTree (), arg1.getTree ());
+    }       
+
+    
+    Tree getExpr (TreeStmtList & list, Tree arg) {
+	if (arg.getTreeCode () == COMPOUND_EXPR) {
+	    list.append (arg.getOperand (0));
+	    return arg.getOperand (1);
+	} else if (arg.getTreeCode () == CALL_EXPR) {
+	    auto aux = makeAuxVar (arg.getLocus (), ISymbol::getLastTmp (), arg.getType ());
+	    list.append (buildTree (MODIFY_EXPR, arg.getLocus (), arg.getType (), aux, arg));
+	    return aux;
+	}
+	return arg;
     }
 
+    Tree getExpr (TreeStmtList & list, syntax::Expression expr) {
+	auto arg = expr-> toGeneric ();
+	if (arg.getTreeCode () == COMPOUND_EXPR) {
+	    list.append (arg.getOperand (0));
+	    return arg.getOperand (1);
+	} else if (arg.getTreeCode () == CALL_EXPR) {
+	    auto aux = makeAuxVar (arg.getLocus (), ISymbol::getLastTmp (), arg.getType ());
+	    list.append (buildTree (MODIFY_EXPR, arg.getLocus (), arg.getType (), aux, arg));
+	    return aux;
+	}
+	return arg;
+    }
+
+    
 }
+
 
 tree convert (tree type, tree expr) {
     tree e = expr;
