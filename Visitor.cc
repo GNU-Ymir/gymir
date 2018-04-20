@@ -317,9 +317,16 @@ namespace syntax {
 	    while (word == Token::DOT) {
 		if (word == Token::DOT)
 		    ident.setStr (ident.getStr () + ".");
-		auto name = visitIdentifiant ();
-		ident.setStr (ident.getStr () + name.getStr ());
-		word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
+		auto nx = this-> lex.next ();
+		if (nx == Keys::UNDER) {
+		    ident.setStr (ident.getStr () + nx.getStr ());
+		    word = this-> lex.next ({Token::SEMI_COLON});
+		} else {
+		    this-> lex.rewind ();
+		    auto name = visitIdentifiant ();
+		    ident.setStr (ident.getStr () + name.getStr ());
+		    word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
+		}
 	    }		
 	    return new (Z0) IModDecl (ident);
 	} else {

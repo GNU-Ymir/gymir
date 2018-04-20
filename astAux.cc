@@ -989,7 +989,7 @@ namespace syntax {
 	return this-> _type;
     }
 
-    Word IProto::retDeco () {
+    Word & IProto::retDeco () {
 	return this-> _retDeco;
     }
 
@@ -1236,6 +1236,18 @@ namespace syntax {
 	params (params)
     {}
 
+    std::string IConstTuple::prettyPrint () {
+	Ymir::OutBuffer buf ("(");
+	for (auto it : Ymir::r (0, params.size ())) {
+	    buf.write (params [it]);
+	    if (it < (int) params.size () - 1)
+		buf.write (", ");
+	}
+	if (params.size () == 1)
+	    buf.write (",");
+	buf.write (")");
+	return buf.str ();
+    }    
     
     IConstTuple::~IConstTuple () {
 	for (auto it : params)

@@ -33,6 +33,8 @@ namespace syntax {
 	std::vector <Expression> & getExprs ();
 
 	std::vector <semantic::InfoType> & getCasters ();
+
+	std::string prettyPrint () override;
 	
 	void print (int nb = 0) override;
 

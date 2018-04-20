@@ -156,6 +156,7 @@ namespace syntax {
 	this-> block = NULL;
 	auto ret = new (Z0)  IProto (this-> ident, this-> params, false);
 	ret-> type () = this-> type;
+	ret-> retDeco () = this-> retDeco;
 	return ret;
     }
     
@@ -1055,7 +1056,7 @@ namespace syntax {
 	if (auto mod = sym-> info-> type-> to <IModuleInfo> ()) {
 	    auto content = mod-> get ();
 	    if (content == NULL) {
-		Ymir::Error::uninitVar (this-> mod-> token);
+		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
 		return;
 	    }
 
@@ -1072,7 +1073,7 @@ namespace syntax {
 	if (auto mod_ = sym-> info-> type-> to <IModuleInfo> ()) {
 	    auto content = mod_-> get ();
 	    if (content == NULL) {
-		Ymir::Error::uninitVar (this-> mod-> token);
+		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
 		return;
 	    }
 
@@ -1089,7 +1090,7 @@ namespace syntax {
 	if (auto mod_ = sym-> info-> type-> to <IModuleInfo> ()) {
 	    auto content = mod_-> get ();
 	    if (content == NULL) {
-		Ymir::Error::uninitVar (this-> mod-> token);
+		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
 		return;
 	    }
 	    

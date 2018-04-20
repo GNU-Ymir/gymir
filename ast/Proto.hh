@@ -39,7 +39,7 @@ namespace syntax {
 	
 	Expression& type ();
 
-	Word retDeco ();
+	Word& retDeco ();
 	
 	bool& isVariadic ();
 

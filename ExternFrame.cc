@@ -69,11 +69,16 @@ namespace semantic {
 	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
 	} else {
 	    auto type = this-> _proto-> type ()-> toType ();
+	    Table::instance ().retInfo ().deco = this-> _proto-> retDeco ().getStr ();
 	    if (type == NULL)
 		Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IVoidInfo ());
-	    else Table::instance ().retInfo ().info = type-> info;
-	    Table::instance ().retInfo ().deco = this-> _proto-> retDeco ().getStr ();
-	    lvalue = Table::instance ().retInfo ().deco == Keys::MUTABLE;
+	    else {
+		Table::instance ().retInfo ().info = type-> info;
+		if (Table::instance ().retInfo ().deco == Keys::REF)
+		    Table::instance ().retInfo ().info-> type = new (Z0) IRefInfo (false, type-> info-> type);
+	    }
+	    
+	    lvalue = (Table::instance ().retInfo ().deco == Keys::MUTABLE || Table::instance ().retInfo ().deco == Keys::REF);
 	}
 
 	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams, {});

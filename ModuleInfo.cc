@@ -53,6 +53,8 @@ namespace semantic {
 			    name.write (", ");
 		    }
 		} else {
+		    if (it-> second == NULL || it-> second-> info == NULL || it-> second-> info-> type == NULL)
+			return NULL;
 		    name.write (it-> first, ":", it-> second-> info-> typeString ());
 		}
 		++it;

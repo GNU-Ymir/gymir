@@ -725,11 +725,17 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::uninitVar (const Word& word) {
+    void Error::uninitVar (const Word& word, const Word& sym) {
 	auto str = getString (UninitVar);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
+
+	if (!sym.isSame (word)) {
+	    msg = msg + std::string (BLUE) + "Note" + std::string (RESET) + " : ";
+	    msg = addLine (msg, sym);
+	}
+	    
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__) {
 	    Error::instance ().nb_errors ++;

@@ -64,7 +64,7 @@ public:
 
     bool isToken () const;
     
-    bool isSame (const Word& other);
+    bool isSame (const Word& other) const;
 
     friend bool operator== (const Word& elem, const char* sec) {
 	return elem.getStr () == sec;

@@ -273,8 +273,11 @@ namespace syntax {
 
     Declaration IModDecl::templateDeclReplace (const map <string, Expression> & tmps) {
 	std::vector <Declaration> decls;
-	for (auto it : this-> decls)
-	    decls.push_back (it-> templateDeclReplace (tmps));
+	for (auto it : this-> decls) {
+	    auto r = it-> templateDeclReplace (tmps);
+	    if (r != NULL) 
+		decls.push_back (r);
+	}
 	auto ret = new (Z0) IModDecl (this-> ident, decls);
 	ret-> is_public (this-> is_public ());
 	return ret;
@@ -403,6 +406,7 @@ namespace syntax {
     Expression IPar::templateExpReplace (const map <string, Expression>& values) {
 	auto params = (ParamList) this-> params-> templateExpReplace (values);
 	auto left = this-> _left-> templateExpReplace (values);
+	if (params == NULL || left == NULL) return NULL;
 	return new (Z0)  IPar (this-> token, this-> end, left, params);
     }
 
@@ -494,6 +498,7 @@ namespace syntax {
 	for (auto it : values) {
 	    if (it.first == this-> token.getStr ()) {
 		auto clo = it.second-> templateExpReplace ({});
+		if (clo == NULL) return NULL;
 		clo-> token.setLocus (this-> token.getLocus ());
 		if (auto t = clo-> to <IType> ()) {
 		    t-> deco = this-> deco;
@@ -524,6 +529,7 @@ namespace syntax {
 	} else {
 	    for (auto it : this-> templates) {
 		auto elem = it-> templateExpReplace (values);
+		if (elem == NULL) return NULL;
 		if (auto ps = elem-> to<IParamList> ()) {
 		    for (auto it_ : ps-> getParams ()) {
 			tmps.push_back (it_);

@@ -249,7 +249,7 @@ namespace Ymir {
 
 	static void undefUda (const Word&, const Word&);
 	
-	static void uninitVar (const Word&);
+	static void uninitVar (const Word&, const Word&);
 
 	static void useAsVar (const Word&, semantic::Symbol);
 

@@ -68,7 +68,7 @@ namespace syntax {
 	}
 
 	else if (aux-> left-> info-> type-> is <IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (aux-> left-> token);
+	    Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 	    return NULL;
 	}
 	
@@ -503,7 +503,7 @@ namespace syntax {
 	    Ymir::Error::undefVar (aux-> left-> token, Table::instance ().getAlike (aux-> left-> token.getStr ()));
 	    return true;
 	} else if (aux-> right-> info-> type-> is<IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (aux-> right-> token);
+	    Ymir::Error::uninitVar (aux-> right-> token, aux-> right-> info-> sym);
 	    return true;
 	} else if (aux-> left-> info-> type == NULL || aux-> right-> info-> type == NULL) return true;
 	return false;
@@ -577,7 +577,7 @@ namespace syntax {
 
 	if (simpleVerif (aux)) return NULL;
 	if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (aux-> left-> token);
+	    Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 	    return NULL;
 	}
 
@@ -616,7 +616,7 @@ namespace syntax {
 
 	    if (simpleVerif (aux)) return NULL;
 	    else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-		Ymir::Error::uninitVar (aux-> left-> token);
+		Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 		return NULL;
 	    }
 
@@ -971,7 +971,7 @@ namespace syntax {
 	auto left = this-> left-> expression ();
 	if (left == NULL) return NULL;
 	if (left-> info-> type-> is<IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (left-> token);
+	    Ymir::Error::uninitVar (left-> token, left-> info-> sym);
 	    return NULL;
 	}
 	
@@ -1031,7 +1031,7 @@ namespace syntax {
 	auto aux = new (Z0)  IDot (this-> token, this-> left-> expression (), this-> right-> templateExpReplace ({}));
 	if (aux-> left == NULL) return NULL;
 	else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (aux-> left-> token);
+	    Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 	    return NULL;
 	} else if (auto var = aux-> right-> to<IVar> ()) {
 	    auto type = aux-> left-> info-> type-> DotOp (var);
@@ -1101,7 +1101,7 @@ namespace syntax {
 	    Ymir::Error::useAsVar (aux-> _left-> token, aux-> _left-> info);
 	    return true;
 	} else if (aux-> _left-> info-> type-> is<IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (aux-> _left-> token);
+	    Ymir::Error::uninitVar (aux-> _left-> token, aux-> _left-> info-> sym);
 	    return true;
 	}
 	
@@ -1205,14 +1205,14 @@ namespace syntax {
 		for (auto it : ex-> params) {
 		    aux-> params.push_back (it);
 		    if (aux-> params.back ()-> info-> type-> is<IUndefInfo> ()) {
-			Ymir::Error::uninitVar (aux-> params.back ()-> token);
+			Ymir::Error::uninitVar (aux-> params.back ()-> token, aux-> params.back ()-> info-> sym);
 			return NULL;
 		    }
 		}
 	    } else {
 		aux-> params.push_back (ex_it);
 		if (ex_it-> info-> type-> is<IUndefInfo> ()) {
-		    Ymir::Error::uninitVar (ex_it-> token);
+		    Ymir::Error::uninitVar (ex_it-> token, ex_it-> info-> sym);
 		    return NULL;
 		} else if (!ex_it-> isExpression ()) {
 		    Ymir::Error::useAsVar (ex_it-> token, ex_it-> info);
@@ -1401,7 +1401,7 @@ namespace syntax {
 	    while (auto ref = rtype-> to <IRefInfo> ()) rtype = ref-> content ();
 	    
 	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-		Ymir::Error::uninitVar (aux-> left-> token);
+		Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 		return NULL;
 	    }
 	    
@@ -1418,7 +1418,7 @@ namespace syntax {
 	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> expType);
 	    if (aux-> left == NULL) return NULL;
 	    else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
-		Ymir::Error::uninitVar (aux-> left-> token);
+		Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 		return NULL;
 	    }
 	    auto type = new (Z0) IBoolInfo (true);
@@ -1503,7 +1503,7 @@ namespace syntax {
 		auto bl = this-> block [it]-> block ();
 		auto expr = bl-> getLastExpr ();
 		if (expr == NULL) {
-		    Ymir::Error::uninitVar (bl-> token);
+		    Ymir::Error::uninitVar (bl-> token, bl-> token);
 		    return NULL;
 		}
 		

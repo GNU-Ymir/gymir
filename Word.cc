@@ -96,7 +96,7 @@ bool Word::isToken () const {
     return std::find (mem.begin (), mem.end (), this-> str) != mem.end ();
 }
 
-bool Word::isSame (const Word & other) {
+bool Word::isSame (const Word & other) const {
     return this-> str == other.str &&
 	this-> locFile == other.locFile &&
 	this-> line == other.line &&
