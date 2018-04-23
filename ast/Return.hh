@@ -46,6 +46,10 @@ namespace syntax {
 	}
 	
 	virtual ~IReturn ();
+
+    private :
+
+	void verifLocal ();
 	
     };
     

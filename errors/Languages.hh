@@ -135,6 +135,7 @@ namespace Ymir {
 		phrases [DynamicAccess] = "Cannot make a dynamic access in @safe context";
 		phrases [AllocationInSafe] = "Cannot allocate memory in @safe context";
 		phrases [CallUnsafeInSafe] = "Cannot call unsafe context in @safe context";
+		phrases [AddrLocalVar] = "Escaping reference to local variable %%%";
 		init = true;
 	    } 
 	    return phrases;

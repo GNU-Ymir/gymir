@@ -203,6 +203,14 @@ namespace semantic {
 	return alls;
     }
 
+    bool Table::isFrameLocal (Symbol sym) {
+	if (!this-> _frameTable.empty ()) {
+	    auto ret = this-> _frameTable.front ().get (sym-> sym.getStr ());
+	    if (ret == sym) return true;
+	}
+	return false;
+    }
+    
     Symbol Table::getLocal (std::string name) {
 	Symbol ret;
 	Namespace last = this-> _space;

@@ -1126,6 +1126,10 @@ namespace syntax {
 	this-> elem-> inside = this;
     }
 
+    Expression IUnary::getElem () {
+	return this-> elem;
+    }
+    
     std::string IUnary::prettyPrint () {
 	Ymir::OutBuffer buf (this-> token.getStr ());
 	buf.write ("(", this-> elem-> prettyPrint (), ")");

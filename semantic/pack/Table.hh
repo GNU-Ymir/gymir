@@ -78,6 +78,8 @@ namespace semantic {
 
 	Symbol getLocal (std::string name);
 
+	bool isFrameLocal (Symbol sym);
+	
 	Symbol local (std::string name);
 
 	bool sameFrame (Symbol sym);

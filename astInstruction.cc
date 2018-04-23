@@ -538,6 +538,20 @@ namespace syntax {
     std::vector <semantic::Symbol> IReturn::allInnerDecls () {
 	return {};
     }    
+
+    void IReturn::verifLocal () {
+	if (this-> elem && this-> elem-> is <IUnary> ()) {
+	    auto un = this-> elem-> to <IUnary> ();
+	    if (un-> token == Token::AND) {
+		auto sym = un-> getElem ();
+		if (!sym-> info-> type-> is<IRefInfo> ()) {
+		    if (Table::instance ().isFrameLocal (sym-> info)) {
+			Ymir::Error::returnLocalAddr (sym-> info-> sym, this-> token);
+		    }
+		}
+	    }
+	}
+    }
     
     Instruction IReturn::instruction () {
 	auto aux = new (Z0)  IReturn (this-> token);
@@ -585,7 +599,8 @@ namespace syntax {
 	    else
 		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
 	}
-
+	
+	aux-> verifLocal ();
 	return aux;
     }
 

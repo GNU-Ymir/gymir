@@ -107,6 +107,7 @@ namespace Ymir {
 	    CallUnsafeInSafe,
 	    LineInstruction,
 	    CannotBeVoid,
+	    AddrLocalVar,
 	    LAST_ERROR
 	};
 
@@ -170,9 +171,11 @@ namespace Ymir {
 	static void takeATypeAsTemplate (const Word&);
 
 	static void unrefInSafe (const Word&);
-
+		
 	static void callFuncPtrInSafe (const Word&);
 
+	static void returnLocalAddr (const Word&, const Word&);
+	
 	static void outOfRange (const Word&, ulong size, ulong index);
 
 	static void dynamicAccess (const Word&);
