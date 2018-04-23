@@ -24,13 +24,13 @@ namespace syntax {
 	ulong id;
 	bool _isMoved = false;
 	
-	semantic::LambdaFrame frame; 
+	std::vector <semantic::Frame> frame; 
 
 	static ulong __nbLambda__;
 	
     public:
 
-	ILambdaFunc (Word begin, semantic::LambdaFrame frame);
+	ILambdaFunc (Word begin, std::vector<semantic::Frame> frame);
 	
 	ILambdaFunc (Word begin, std::vector <Var> params, Var type, Block block);
 	

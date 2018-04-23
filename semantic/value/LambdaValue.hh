@@ -1,22 +1,25 @@
 #pragma once
 
-
-#pragma once
-
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/utils/BigInt.hh>
-#include <ymir/semantic/pack/LambdaFrame.hh>
 
 namespace semantic {
 
+    class IFrame;
+    typedef IFrame* Frame;
+
     class ILambdaValue : public IValue {
 
-	LambdaFrame frame;
+	std::vector <Frame> frame;
 	
     public:
 
-	ILambdaValue (LambdaFrame);
+	ILambdaValue (Frame);
 
+	ILambdaValue (std::vector <Frame> & frames);
+
+	void push (Frame fr);
+	
 	const char* getId () override;
 
 	static const char* id () {

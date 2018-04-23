@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <ymir/utils/Options.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/value/LambdaValue.hh>
 #include <unistd.h>
 #include <dirent.h>
 
@@ -41,13 +42,21 @@ namespace syntax {
 	    auto space = Table::instance ().space ();
 	    auto fr = verifyPure (space);
 	    auto it = Table::instance ().getLocal (this-> ident.getStr ());
+	    Value val = NULL;
 	    if (it != NULL) {
 		if (!it-> type-> is<IFunctionInfo> ()) {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
-		}		
+		} else {
+		    val = it-> type-> value ();
+		}
 	    }
+
+	    if (val == NULL) val = new (Z0) ILambdaValue (fr);
+	    else val-> to <ILambdaValue> ()-> push (fr);
+	    
 	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
-	    fun-> set (fr);
+	    fun-> set (fr);	    
+	    fun-> value () = val;
 	    Table::instance ().insert (new (Z0)  ISymbol (this-> ident, fun));
 	}
     }
@@ -62,6 +71,7 @@ namespace syntax {
 	auto fr = verifyPure (mod-> space ());
 	auto space = mod-> space ();
 	auto it = mod-> get (this-> ident.getStr ());
+	Value val = NULL;
 	if (it != NULL) {
 	    if (!it-> type-> is<IFunctionInfo> ()) {
 		Ymir::Error::shadowingVar (ident, it-> sym);
@@ -69,13 +79,17 @@ namespace syntax {
 	    } else if (it-> isPublic () != this-> is_public ()) {
 		Ymir::Error::shadowingVar (ident, it-> sym, this-> is_public ());
 		return;
-	    }
+	    } else val = it-> type-> value ();
 	}
 
+	if (val == NULL) val = new (Z0) ILambdaValue (fr);
+	else val-> to <ILambdaValue> ()-> push (fr);
+	
 	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	auto sym = new (Z0)  ISymbol (this-> ident, fun);
 	fun-> set (fr);
 	sym-> isPublic () = this-> is_public ();
+	fun-> value () = val;
 	mod-> insert (sym);	
     }
 
@@ -85,6 +99,7 @@ namespace syntax {
 	    auto fr = verifyPureExtern (mod-> space ());
 	    auto space = mod-> space ();
 	    auto it = mod-> get (this-> ident.getStr ());
+	    Value val = NULL;
 	    if (it != NULL) {
 		if (!it-> type-> is<IFunctionInfo> ()) {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
@@ -92,12 +107,17 @@ namespace syntax {
 		} else if (it-> isPublic () != this-> is_public ()) {
 		    Ymir::Error::shadowingVar (ident, it-> sym, this-> is_public ());
 		    return;
-		}
+		} else val = it-> type-> value ();
 	    }
+	    
+	    if (val == NULL) val = new (Z0) ILambdaValue (fr);
+	    else val-> to <ILambdaValue> ()-> push (fr);
+	
 	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	    auto sym = new (Z0) ISymbol (this-> ident, fun);
 	    fun-> set (fr);
 	    sym-> isPublic () = this-> is_public ();
+	    fun-> value () = val;
 	    mod-> insert (sym);	
 	}
     } 

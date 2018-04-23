@@ -1301,7 +1301,7 @@ namespace syntax {
     
     Expression ILambdaFunc::expression () {
 	auto space = Table::instance ().space ();
-	auto aux = new (Z0) ILambdaFunc (this-> token, NULL);
+	auto aux = new (Z0) ILambdaFunc (this-> token, {});
 	if (this-> expr)
 	    aux-> expr = this-> expr-> templateExpReplace ({});
 	if (this-> block) aux-> block = (Block) this-> block-> templateReplace ({});
@@ -1313,19 +1313,17 @@ namespace syntax {
 		isPure = false;
 	}
 	
-	if (this-> frame == NULL) {
+	if (this-> frame.size () == 0) {
 	    auto ident = Ymir::OutBuffer ("Lambda_", this-> id).str ();
 	    auto fr = new (Z0) ILambdaFrame (space, ident, aux);
 	    fr-> isPure (isPure);
 	    fr-> isMoved () = this-> _isMoved;
-	    aux-> frame = fr;
+	    aux-> frame = {fr};
 	} else {
 	    aux-> frame = this-> frame;
 	}
 	
-	auto fun = new (Z0) IFunctionInfo (aux-> frame-> space (), "");
-	fun-> set (aux-> frame);
-	fun-> alone () = true;
+	auto fun = new (Z0) IFunctionInfo (aux-> frame [0]-> space (), "", aux-> frame);	
 	fun-> isLambda () = true;
 	fun-> value () = new (Z0) ILambdaValue (aux-> frame);
 	aux-> info = new (Z0) ISymbol (aux-> token, fun);

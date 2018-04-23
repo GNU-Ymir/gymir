@@ -116,6 +116,10 @@ namespace semantic {
 	return this-> _name;
     }
 
+    std::string IExternFrame::getName () {
+	return this-> _name;
+    }
+
     bool IExternFrame::isVariadic () const {
 	return this-> _proto && this-> _proto-> isVariadic ();
     }

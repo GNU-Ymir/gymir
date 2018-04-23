@@ -436,6 +436,10 @@ namespace semantic {
 	return NULL;
     }       
 
+    std::string ITemplateFrame::getName () {
+	return this-> name;
+    }
+    
     const char * ITemplateFrame::getId () {
 	return "ITemplateFrame";
     }

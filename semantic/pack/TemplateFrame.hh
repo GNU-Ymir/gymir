@@ -66,6 +66,8 @@ namespace semantic {
 	std::string computeName (std::string name);
 
 	FrameProto validateExtern ();
+
+	std::string getName () override;
 	
 	bool validateTest (syntax::Expression test);
 	

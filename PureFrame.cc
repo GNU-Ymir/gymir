@@ -79,6 +79,10 @@ namespace semantic {
 	auto proto = this-> validate ();
 	return proto-> type ()-> type;
     }
+
+    std::string IPureFrame::getName () {
+	return this-> name;
+    }
     
     const char* IPureFrame::getId () {
 	return IPureFrame::id ();

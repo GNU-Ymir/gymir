@@ -10,6 +10,8 @@
 #include <ymir/semantic/value/_.hh>
 #include <ymir/semantic/types/CharInfo.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/pack/FinalFrame.hh>
+#include <ymir/semantic/types/RefInfo.hh>
 
 namespace semantic {
     using namespace syntax;    

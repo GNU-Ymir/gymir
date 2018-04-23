@@ -89,6 +89,8 @@ namespace semantic {
 	virtual IFrame* TempOp (const std::vector<syntax::Expression> & params);
 	
 	virtual std::string toString ();
+
+	virtual std::string getName ();
 	
 	::syntax::Function func ();
 

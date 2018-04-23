@@ -44,5 +44,9 @@ namespace semantic {
     const char * IUnPureFrame::getId () {
 	return IUnPureFrame::id ();
     }
+
+    std::string IUnPureFrame::getName () {
+	return this-> name;
+    }
     
 }

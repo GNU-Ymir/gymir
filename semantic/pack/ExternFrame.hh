@@ -60,6 +60,8 @@ namespace semantic {
 
 	std::string name ();
 
+	std::string getName () override;
+	
 	std::string toString () override;
 	
 	bool isVariadic () const override;

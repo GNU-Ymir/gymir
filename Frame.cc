@@ -207,7 +207,7 @@ namespace semantic {
 	Ymir::Error::assert ("TODO");
 	return NULL;
     }    
-    
+        
     FrameProto IFrame::validate (ApplicationScore score, const std::vector<InfoType> & params) {
 	if (score-> tmps.size () == 0)
 	    return validate (params);
@@ -517,6 +517,11 @@ namespace semantic {
 	return this-> _isVariadic;
     }
 
+    std::string IFrame::getName () {
+	Ymir::Error::assert ("TODO");
+	return "";
+    }
+    
     void IFrame::isVariadic (bool isVariadic) {
 	this-> _isVariadic = isVariadic;
     }

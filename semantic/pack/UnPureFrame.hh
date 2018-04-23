@@ -21,6 +21,8 @@ namespace semantic {
 
 	std::vector <InfoType> getParamTypes () override;
 
+	std::string getName () override;
+	
 	static const char * id () {
 	    return "IUnPureFrame";
 	}

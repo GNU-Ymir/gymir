@@ -1414,7 +1414,7 @@ namespace syntax {
 	id (getLastNb ())
     {}
 
-    ILambdaFunc::ILambdaFunc (Word begin, semantic::LambdaFrame frame) : 
+    ILambdaFunc::ILambdaFunc (Word begin, std::vector <semantic::Frame> frame) : 
 	IExpression (begin),	
 	params (),
 	ret (NULL),

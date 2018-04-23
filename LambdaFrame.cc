@@ -106,10 +106,18 @@ namespace semantic {
 	return buf.str ();
     }
     
-    ILambdaValue::ILambdaValue (LambdaFrame frame)	
-	: frame (frame)
+    ILambdaValue::ILambdaValue (Frame frame)	
+	: frame ({frame})
     {}
 
+    ILambdaValue::ILambdaValue (std::vector <Frame> & frame)	
+	: frame (frame)
+    {}
+    
+    void ILambdaValue::push (Frame fr) {
+	this-> frame.push_back (fr);
+    }
+    
     const char* ILambdaValue::getId () {
 	return ILambdaValue::id ();
     }
@@ -134,8 +142,8 @@ namespace semantic {
     }
 
     std::string ILambdaValue::toString () {
-	return Ymir::OutBuffer (this-> frame-> space ().toString (), ".",
-				this-> frame-> getName ()).str ();
+	return Ymir::OutBuffer (this-> frame [0]-> space ().toString (), ".",
+				this-> frame [0]-> getName ()).str ();
     }
     
     
