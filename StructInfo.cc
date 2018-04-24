@@ -53,8 +53,23 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
 	}
 
-	Tree InstCast (Word, InfoType, Expression elem, Expression) {
-	    return elem-> toGeneric ();
+	Tree InstCast (Word loc, InfoType type, Expression elem, Expression) {
+	    auto toType = type-> toGeneric ();
+	    auto rtree = elem-> toGeneric ();
+	    if (toType != rtree.getType ()) {
+		Ymir::TreeStmtList list;
+		auto ltree = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), toType);
+		auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
+		auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
+		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		list.append (result);
+		
+		return Ymir::compoundExpr (loc.getLocus (), list, ltree);
+	    } else {
+		return rtree;
+	    }
 	}
 
 	Tree InstCastTuple (Word, InfoType, Expression left, Expression) {
@@ -85,13 +100,13 @@ namespace semantic {
 	    auto ltree = Ymir::getExpr (list, left);
 	    auto rtree = Ymir::getExpr (list, right);
 	    if (ltree.getType () != rtree.getType ()) {
-	    auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
-	    auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
-	    tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
-	    tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
-	    auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
-	    list.append (result);
-	    return Ymir::compoundExpr (loc.getLocus (), list, ltree);
+		auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
+		auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
+		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		list.append (result);
+		return Ymir::compoundExpr (loc.getLocus (), list, ltree);
 	    } else {
 		list.append (buildTree (
 		    MODIFY_EXPR, loc.getLocus (), void_type_node, ltree, rtree 
