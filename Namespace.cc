@@ -41,6 +41,10 @@ namespace semantic {
 	return fst.toString () == scd.toString ();
     }
 
+    const std::vector <std::string> & Namespace::innerMods () {
+	return this-> names;
+    }
+    
     bool Namespace::isSubOf (const Namespace& other) const {
 	if (this-> names.size () <= other. names.size ()) {
 	    for (auto it = 0 ; it < (int) this-> names.size () ; it++) {

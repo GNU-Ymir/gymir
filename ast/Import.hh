@@ -41,6 +41,8 @@ namespace syntax {
 
 	std::string firstExistingPath (std::string file);
 
+	semantic::Symbol createAndDeclareSubMod (semantic::Module& last, semantic::Namespace space, int current);
+	
     };
 
     typedef IImport* Import;

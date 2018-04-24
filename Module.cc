@@ -13,8 +13,9 @@ namespace semantic {
     }
 
     Symbol IModule::getFor (std::string name, const Namespace & space) {
-	// if (name == "TcpStream")
-	//     println (this-> space (), ":: ", name, ":", space, " -> ", this-> globalScope.toString ());	
+	// if (name == "comparison")
+	//     println (this-> space (), ":: ", name, ":", space, " -> ", this-> globalScope.toString ());
+	
 	if (this-> _space.isSubOf (space))
 	    return this-> globalScope.get (name);
 	else 

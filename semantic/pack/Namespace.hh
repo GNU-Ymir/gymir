@@ -22,6 +22,8 @@ namespace semantic {
 
 	friend bool operator!= (const Namespace &self, const Namespace &other);
 
+	const std::vector <std::string> & innerMods ();
+	
 	bool isSubOf (const Namespace& other) const;
 
 	bool isAbsSubOf (const Namespace& other) const;

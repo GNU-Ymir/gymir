@@ -525,14 +525,40 @@ namespace syntax {
 	std::vector <std::string> paths = Options::instance ().includeDirs ();
 	for (auto it : paths) {
 	    auto current = it + file;
-	    if (Options::instance ().isVerbose ())
-		println ("Test import : ", current);
+	    Ymir::log ("Test import : ", current);
 	    if (exists (current))
 		return current;
 	}
 	return "";
     }
-    
+
+    Symbol IImport::createAndDeclareSubMod (Module& last, Namespace space, int current) {
+	if (current == (int) space.innerMods ().size ()) {
+	    last = Table::instance ().addModule (space);
+	    auto sym = new (Z0) ISymbol ({this-> ident, space.innerMods ().back ()}, new (Z0) IModuleInfo (last));
+	    return sym;
+	} else {
+	    auto innerMods = space.innerMods ();
+	    Ymir::OutBuffer buf;
+	    for (auto it : Ymir::r (0, current)) {
+		buf.write (innerMods [it]);
+		if (it != current - 1) buf.write (".");
+	    }
+
+	    auto next = createAndDeclareSubMod (last, space, current + 1);	    
+	    Namespace current (buf.str ());
+	    Module mod;
+	    if (Table::instance ().isModule (current)) {
+		mod = Table::instance ().getModule (current);
+	    } else mod = Table::instance ().addModule (current);
+
+	    mod-> addOpen (next-> type-> to <IModuleInfo> ()-> get ()-> space ());
+	    mod-> insert (next);
+	    auto sym = new (Z0) ISymbol ({this-> ident, current.innerMods ().back ()},
+					 new (Z0) IModuleInfo (mod));
+	    return sym;
+	}
+    }    
     
     void IImport::declare () {
 	auto globSpace = Table::instance ().space ();
@@ -554,11 +580,13 @@ namespace syntax {
 	    	auto file = fopen (name.c_str (), "r");
 		if (file) { 
 		    Ymir::Parser parser (name.c_str (), file);
-		    auto mod = Table::instance ().addModule (space);
+		    Module mod;
+		    auto sym = this-> createAndDeclareSubMod (mod, space, 1);
 		    mod-> addOpen (globSpace);
 		    auto prg = parser.syntax_analyse ();
 		    fclose (file);
 		    prg-> declareAsExtern (it.getStr (), mod);
+		    Table::instance ().insert (sym);
 		} else {
 		    Ymir::Error::permissionDenied (name);
 		}
@@ -593,7 +621,8 @@ namespace syntax {
 		auto file = fopen (name.c_str (), "r");
 		if (file) {
 		    Ymir::Parser parser (name.c_str (), file);
-		    auto mod = Table::instance ().addModule (space);
+		    Module mod;
+		    auto sym = this-> createAndDeclareSubMod (mod, space, 1);
 		    mod-> addOpen (globSpace);
 		    auto prg = parser.syntax_analyse ();
 		    fclose (file);
@@ -601,6 +630,7 @@ namespace syntax {
 		    if (this-> isPublic) {
 			mod_-> addPublicOpen (mod-> space ());		    
 		    }
+		    mod_-> insert (sym);
 		} else {
 		    Ymir::Error::permissionDenied (name);
 		}
@@ -633,13 +663,15 @@ namespace syntax {
 		auto file = fopen (name.c_str (), "r");
 		if (file) {
 		    Ymir::Parser parser (name.c_str (), file);
-		    auto mod = Table::instance ().addModule (space);
+		    Module mod;
+		    auto sym = this-> createAndDeclareSubMod (mod, space, 1);
 		    mod-> addOpen (globSpace);
 		    auto prg = parser.syntax_analyse ();
 		    prg-> declareAsExtern (it.getStr (), mod);
 		    if (this-> isPublic) {
 			mod_-> addPublicOpen (mod-> space ());
 		    }
+		    mod_-> insert (sym);
 		} else {
 		    Ymir::Error::permissionDenied (name);
 		}
