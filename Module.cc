@@ -111,5 +111,9 @@ namespace semantic {
     const Namespace& IModule::space () {
 	return this-> _space;
     }
+
+    bool& IModule::isAuto () {
+	return this-> _isAuto;
+    }
     
 }

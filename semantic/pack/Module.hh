@@ -18,7 +18,8 @@ namespace semantic {
 	Frame _destructor;
 	
 	Scope globalScope;
-		
+	bool _isAuto = true;
+	
     public:
 
 	IModule (const Namespace&);
@@ -53,6 +54,8 @@ namespace semantic {
 	
 	const Namespace& space ();
 
+	bool & isAuto ();
+	
     private:
 
 	std::vector <Namespace> accessible (std::vector <Namespace>&);

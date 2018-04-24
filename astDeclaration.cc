@@ -554,6 +554,7 @@ namespace syntax {
 
 	    mod-> addOpen (next-> type-> to <IModuleInfo> ()-> get ()-> space ());
 	    mod-> insert (next);
+	    mod-> isAuto () = false;
 	    auto sym = new (Z0) ISymbol ({this-> ident, current.innerMods ().back ()},
 					 new (Z0) IModuleInfo (mod));
 	    return sym;

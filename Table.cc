@@ -159,13 +159,13 @@ namespace semantic {
     Symbol Table::get (std::string name) {
 	Symbol ret;
 	Namespace last = this-> getCurrentSpace ();
-	if (name == "inner")
+	if (name == "abort")
 	    Ymir::log ("Get : ", name, " from : ", last);
 	if (!this-> _frameTable.empty ()) {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
 	}
-	if (name == "inner")
+	if (name == "abort")
 	    Ymir::log ("Global : ", this-> _globalScope.toString());
 	
 	if (ret == NULL) ret = this-> _globalScope.get (name);
@@ -313,7 +313,7 @@ namespace semantic {
 		auto access = it-> accessible ();
 		for (auto sp : access) {
 		    auto mod = this-> getModule (sp);
-		    if (find (alls, mod) == alls.end ()) {
+		    if (find (alls, mod) == alls.end () && mod-> isAuto ()) {
 			alls.push_back (mod);
 		    }
 		}
