@@ -1,4 +1,6 @@
 #include "syntax/Keys.hh"
+#include <ymir/utils/Version.hh>
+#include <ymir/utils/Options.hh>
 
 std::string	Keys::IMPORT	= "import";
 std::string	Keys::STRUCT	= "struct";
@@ -83,3 +85,20 @@ std::string     Keys::BODY       = "body";
 std::string     Keys::NEW        = "new";
 std::string     Keys::ATTRIBUTE  = "attrib";
 std::string     Keys::MOVE       = "move";
+std::string     Keys::VERSION    = "version";
+
+std::string Version::DEBUG = "debug";
+std::string Version::UNIX = "unix";
+std::string Version::x84_64 = "x86_64";
+std::string Version::LINUX = "linux";
+std::string Version::GNU_LINUX = "gnu_linux";
+std::string Version::AMD64 = "amd64";
+
+
+bool Version::isOn (const std::string & version) {
+    if (version == Version::DEBUG)
+	return Options::instance ().isDebug ();    
+    return false;
+}
+
+

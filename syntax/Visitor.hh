@@ -15,6 +15,8 @@ namespace syntax {
 	Program visitProgram ();
 	std::vector<Declaration> visitPublicBlock ();
 	std::vector<Declaration> visitPrivateBlock ();
+	std::vector<Declaration> visitVersionGlob ();
+	std::vector<Declaration> visitDeclBlock ();
 	Declaration visitDeclaration (bool);
 
 	Constructor visitConstructor ();
@@ -103,15 +105,16 @@ namespace syntax {
 	Instruction visitBreak ();
 	Instruction visitWhile ();
 	Instruction visitFor ();
+	Instruction visitVersion ();	
 	ModDecl visitModule ();
 	Macro visitMacro ();
 	MacroExpr visitMacroExpression (bool in_repeat = false);
 	MacroRepeat visitMacroRepeat (bool);
 	MacroVar visitMacroVar ();
 	MacroToken visitMacroToken ();
-	Expression visitMacroCall (Expression left);
-	std::vector <Word> visitAttributes ();
-
+	Expression visitMacroCall (Expression left);	
+	std::vector <Word> visitAttributes ();	
+	
     private:
 	
 	std::vector <std::string> ultimeOp;

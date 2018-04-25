@@ -1,6 +1,7 @@
 #include "syntax/_.hh"
 #include "errors/_.hh"
 #include "syntax/Keys.hh"
+#include <ymir/utils/Version.hh>
 
 #include <map>
 #include <vector>
@@ -112,12 +113,15 @@ namespace syntax {
 	    } else if (token == Keys::PRIVATE) {
 		auto prv_decls = visitPrivateBlock ();
 		for (auto it : prv_decls) decls.push_back (it);
+	    } else if (token == Keys::VERSION) {
+		auto ver_decls = visitVersionGlob ();
+		for (auto it : ver_decls) decls.push_back (it);
 	    } else {
 		this-> lex.next ();
 		syntaxError (token,
 			     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 				     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
+				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION
 				     }
 		);
 	    }
@@ -143,14 +147,21 @@ namespace syntax {
     		    decls.back ()-> is_public (true);
     		} else {
     		    auto tok = this-> lex.next ();
-    		    if (tok != Token::RACC)
+		    if (tok == Keys::VERSION) {
+			auto ver_decls = visitVersionGlob ();
+			for (auto it : ver_decls) {
+			    it-> is_public (true);
+			    decls.push_back (it);
+			}
+		    } else if (tok != Token::RACC) {
 			syntaxError (tok,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
 					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
 					     }
 			);
-    		    break;
+		    } else 
+			break;
     		}
     	    }
     	} else {
@@ -176,7 +187,13 @@ namespace syntax {
     		    decls.back ()-> is_public (false);
     		} else {
     		    auto tok = this-> lex.next ();
-    		    if (tok != Token::RACC)
+		    if (tok == Keys::VERSION) {
+			auto ver_decls = visitVersionGlob ();
+			for (auto it : ver_decls) {
+			    it-> is_public (true);
+			    decls.push_back (it);
+			}
+		    } else if (tok != Token::RACC)
 			syntaxError (tok,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
@@ -194,6 +211,80 @@ namespace syntax {
     	return decls;
     }
 
+
+    std::vector <Declaration> Visitor::visitDeclBlock () {
+	std::vector <Declaration> decls;
+	auto token = this-> lex.next ({Token::LACC});
+	while (true) {
+	    auto decl = visitDeclaration (false);
+	    if (decl != NULL) decls.push_back (decl);
+	    else if (token == Keys::PUBLIC) {
+		auto pub_decls = visitPublicBlock ();
+		for (auto it : pub_decls) decls.push_back (it);
+	    } else if (token == Keys::PRIVATE) {
+		auto prv_decls = visitPrivateBlock ();
+		for (auto it : prv_decls) decls.push_back (it);
+	    } else if (token == Keys::VERSION) {
+		auto ver_decls = visitVersionGlob ();
+		for (auto it : ver_decls) decls.push_back (it);
+	    } else if (token != Token::RACC) {
+		this-> lex.next ();
+		syntaxError (token,
+			     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
+				     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
+				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION
+				     }
+		);
+	    } else {
+		this-> lex.next ();
+		break;
+	    }
+	    
+	    token = this-> lex.next ();
+	    this-> lex.rewind ();
+	}
+	return decls;
+    }
+        
+    std::vector <Declaration> Visitor::visitVersionGlob () {
+	auto begin = this-> lex.next ();
+	auto type = this-> visitIdentifiant ();
+	
+	if (Version::isOn (type.getStr ())) {
+	    auto bl = visitDeclBlock ();
+	    auto next = this-> lex.next ();
+	    if (next == Keys::ELSE) {
+		this-> lex.next ({Token::LACC});
+		auto nb = 1;
+		while (nb != 0) {
+		    auto next = this-> lex.next ();
+		    if (next == Token::RACC) nb --;
+		    else if (next == Token::LACC) nb ++;		
+		    else if (next.isEof ())
+			syntaxError (next);		    
+		}
+	    } else this-> lex.rewind ();
+	    return bl;
+	} else {
+	    this-> lex.next ({Token::LACC});
+	    auto nb = 1;
+	    while (nb != 0) {
+		auto next = this-> lex.next ();
+		if (next == Token::RACC) nb --;
+		else if (next == Token::LACC) nb ++;		
+		else if (next.isEof ()) syntaxError (next);
+	    }
+
+	    auto next = this-> lex.next ();
+	    if (next == Keys::ELSE) {
+		return visitDeclBlock ();
+	    } else {
+		this-> lex.rewind ();
+		return {};
+	    }
+	}
+    }
+    
     /**
        declaration :=   function 
        | import
@@ -1144,6 +1235,7 @@ namespace syntax {
 	else if (tok == Keys::ASSERT) return visitAssert ();
 	else if (tok == Keys::PRAGMA) return visitPragma ();
 	else if (tok == Keys::SCOPE) return visitScope ();
+	else if (tok == Keys::VERSION) return visitVersion ();
 	else if (tok == Keys::IMMUTABLE) {
 	    tok = this-> lex.next ();
 	    Instruction inst;
@@ -1170,6 +1262,43 @@ namespace syntax {
 	}	
     }
 
+    Instruction Visitor::visitVersion () {
+	auto ver = this-> visitIdentifiant ();
+	if (Version::isOn (ver.getStr ())) {
+	    auto bl = this-> visitBlock ();
+	    auto next = this-> lex.next ();
+	    if (next == Keys::ELSE) {
+		this-> lex.next ({Token::LACC});
+		auto nb = 1;
+		while (nb != 0) {
+		    auto next = this-> lex.next ();
+		    if (next == Token::RACC) nb --;
+		    else if (next == Token::LACC) nb ++;		
+		    else if (next.isEof ())
+			syntaxError (next);		    
+		}
+	    } else this-> lex.rewind ();
+	    return bl;
+	} else {
+	    this-> lex.next ({Token::LACC});
+	    auto nb = 1;
+	    while (nb != 0) {
+		auto next = this-> lex.next ();
+		if (next == Token::RACC) nb --;
+		else if (next == Token::LACC) nb ++;		
+		else if (next.isEof ()) syntaxError (next);
+	    }
+
+	    auto next = this-> lex.next ();
+	    if (next == Keys::ELSE) {
+		return this-> visitBlock ();
+	    } else {
+		this-> lex.rewind ();
+		return {};
+	    }
+	}
+    }
+    
     /**
      let := 'let' (var ('=' right)? ',')* (var ('=' right)? ';')
      */

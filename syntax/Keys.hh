@@ -86,4 +86,5 @@ struct Keys {
     static std::string  NEW;
     static std::string  ATTRIBUTE;
     static std::string  MOVE;
+    static std::string  VERSION;
 };
