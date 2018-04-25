@@ -97,9 +97,9 @@ namespace Mangler {
 	    auto content = mangle_type_CPP (ref-> content());
 	    return std::string ("R") + content;
 	} else if (auto en = type-> to <IEnumInfo> ()) {
-	    return en-> name ();
+	    return mangle_var (en-> name ());
 	} else if (auto st = type-> to <IStructInfo> ()) {
-	    return st-> getName ();
+	    return mangle_var (st-> getName ());
 	} else if (auto tu = type-> to <ITupleInfo> ()) {
 	    Ymir::OutBuffer buf;
 	    for (auto it : tu-> getParams ())
