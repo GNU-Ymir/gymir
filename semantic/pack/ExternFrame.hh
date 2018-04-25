@@ -23,7 +23,8 @@ namespace semantic {
 
 	std::string _name;
 	::syntax::Proto _proto;
-	std::string _from;	
+	std::string _from;
+	std::string _externSpace;
 	FrameProto _fr;
 
 	static std::vector <IExternFrame*> __extFrames__;
@@ -56,6 +57,8 @@ namespace semantic {
 
 	std::string from ();
 
+	std::string& externSpace ();
+	
 	FrameProto proto ();
 
 	std::string name ();

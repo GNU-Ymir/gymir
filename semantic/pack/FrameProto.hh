@@ -41,13 +41,16 @@ namespace semantic {
 	std::vector <::syntax::Var> _closure;
 	std::vector <::syntax::Expression> _tmps;
 	std::vector <Word> _attributes;
-	std::string _extern;
+	
+	std::string _externLang;
+	std::string _externLangSpace;
 	Ymir::Tree _fn;
 	bool _isCVariadic;
 	bool _isForced = false;
 	FinalFrame _attached;
 	bool _isLvalue = false;
 	bool _isMoved = false;
+
 	
     public:
 
@@ -67,7 +70,9 @@ namespace semantic {
 
 	std::vector <Word> & attributes ();
 	
-	std::string& externName (); 
+	std::string& externLang ();
+
+	std::string& externLangSpace (); 
 	
 	bool isDelegate ();
 

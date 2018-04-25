@@ -3,6 +3,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/semantic/value/Value.hh>
+#include <ymir/semantic/types/_.hh>
 #include <string>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Array.hh>
@@ -12,6 +13,7 @@
 
 namespace Mangler {
     using namespace Ymir;
+    using namespace semantic;
     
     std::string mangle_file (std::string & in) {
 	Ymir::OutBuffer ss;
@@ -71,6 +73,46 @@ namespace Mangler {
 	return fin.str ();
     }
 
+    std::string mangle_type_CPP (semantic::InfoType type) {
+	if (auto fixed = type-> to<IFixedInfo> ()) {
+	    if (fixed-> type () == FixedConst::UBYTE) return "h";
+	    if (fixed-> type () == FixedConst::BYTE) return "c";
+	    if (fixed-> type () == FixedConst::SHORT) return "s";
+	    if (fixed-> type () == FixedConst::USHORT) return "t";
+	    if (fixed-> type () == FixedConst::INT) return "i";
+	    if (fixed-> type () == FixedConst::UINT) return "j";
+	    if (fixed-> type () == FixedConst::LONG) return "l";
+	    if (fixed-> type () == FixedConst::ULONG) return "m";
+	} else if (auto flt = type-> to <IFloatInfo> ()) {
+	    if (flt-> type () == FloatConst::FLOAT) return "f";
+	    if (flt-> type () == FloatConst::DOUBLE) return "d";
+	} else if (type-> to <IBoolInfo> ()) { return "b"; 
+	} else if (type-> to<ICharInfo> ()) { return "c";
+	} else if (auto arr = type-> to<IArrayInfo> ()) {
+	    auto content = mangle_type_CPP (arr-> content());
+	    if (!arr-> isStatic ()) {
+		return std::string ("mP") + content;
+	    } else return "P" + content;
+	} else if (auto ref = type-> to <IRefInfo> ()) {
+	    auto content = mangle_type_CPP (ref-> content());
+	    return std::string ("R") + content;
+	} else if (auto en = type-> to <IEnumInfo> ()) {
+	    return en-> name ();
+	} else if (auto st = type-> to <IStructInfo> ()) {
+	    return st-> getName ();
+	} else if (auto tu = type-> to <ITupleInfo> ()) {
+	    Ymir::OutBuffer buf;
+	    for (auto it : tu-> getParams ())
+		buf.write (mangle_type_CPP (it));
+	    return buf.str ();
+	} else if (auto rng = type-> to <IRangeInfo> ()) {
+	    auto content = mangle_type_CPP (rng-> content ());
+	    return content + content;
+	} 
+	Ymir::Error::assert ("TODO ", type-> typeString ());
+	return "";    
+    }
+    
     std::string mangle_namespace (std::string name) {
 	OutBuffer ss;
 	while (true) {
@@ -87,6 +129,23 @@ namespace Mangler {
 	return ss.str ();
     }
 
+    std::string mangle_namespace_CPP (std::string name) {
+	OutBuffer ss;
+	ss.write ("N");
+	while (true) {
+	    auto index = name.find (".");
+	    if (index != name.npos) {
+		auto curr = mangle_var (name.substr (0, index));
+		name = name.substr (index + 1, name.length () - (index + 1));
+		ss.write (curr);
+	    } else {
+		ss.write (mangle_var (name));
+		break;
+	    }
+	}
+	return ss.str ();
+    }
+    
     std::string mangle_global (std::string name) {
 	auto res = mangle_namespace (name);
 	for (int i = 0 ; i < (int) res.length () ; i++) {
@@ -95,9 +154,51 @@ namespace Mangler {
 	}
 	return res;
     }
+
+    std::string mangle_function_C (std::string & name, semantic::FrameProto) {
+	return name;
+    }
+
+    std::string mangle_function_C (std::string & name, semantic::FinalFrame) {
+	return name;
+    }
+
+    std::string mangle_function_CPP (std::string & name, semantic::FrameProto proto) {
+	auto space = proto-> externLangSpace ();
+	if (space != "") {
+	    Ymir::OutBuffer buf;
+	    buf.write ("_Z", mangle_namespace_CPP (space));
+	    buf.write (mangle_var (name), "E");
+	    for (auto it : proto-> vars ()) {
+		buf.write (mangle_type_CPP (it-> info-> type));
+	    }
+	    return buf.str ();
+	} else {
+	    Ymir::OutBuffer buf;
+	    buf.write ("_Z", mangle_var (name));
+	    for (auto it : proto-> vars ()) {
+		buf.write (mangle_type_CPP (it-> info-> type));
+	    }
+	    return buf.str ();
+	}
+    }
+    
+    std::string mangle_function_D (std::string &, semantic::FrameProto) {
+	Ymir::Error::assert ("TODO");
+	return "";
+    }
     
     std::string mangle_function (std::string& name, ::semantic::FrameProto frame) {
-	if (name == Keys::MAIN) return "_Y" + name;
+	if (name == Keys::MAIN) {
+	    if (!Options::instance ().isStandalone ())
+		return "_Y" + name;
+	    else return name;
+	}
+
+	if (frame-> externLang () == Keys::CLANG) return mangle_function_C (name, frame);
+	else if (frame-> externLang () == Keys::CPPLANG) return mangle_function_CPP (name, frame);
+	else if (frame-> externLang () == Keys::DLANG) return mangle_function_D (name, frame);
+	
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");
@@ -118,7 +219,13 @@ namespace Mangler {
     }
 
     std::string mangle_function (std::string & name, ::semantic::FinalFrame frame) {
-	if (name == Keys::MAIN) return "_Y" + name;
+	if (name == Keys::MAIN) {
+	    if (!Options::instance ().isStandalone ())
+		return "_Y" + name;
+	    else return name;
+	}
+
+	if (frame-> externLang () == Keys::CLANG) return mangle_function_C (name, frame);
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;
 	ss.write ("_Y", mangle_namespace (space), mangle_namespace (name), "F");

@@ -177,11 +177,17 @@ namespace syntax {
 	auto ret = new (Z0)  IProto (this-> ident, this-> params, false);
 	ret-> type () = this-> type;
 	ret-> retDeco () = this-> retDeco;
+	ret-> externLang () = this-> _externLang;
+	ret-> externLangSpace () = this-> _externLangSpace;
 	return ret;
     }
     
     Frame IFunction::verifyPure (Namespace space) {
 	if (this-> tmps.size () != 0) {
+	    if (this-> _externLang != "") {
+		Ymir::Error::unpureExternC (this-> ident);
+	    } 
+	    
 	    auto isPure = verifyTemplates ();
 	    auto ret = new (Z0)  ITemplateFrame (space, this);
 	    if (!isPure) return ret;
@@ -201,6 +207,7 @@ namespace syntax {
 	}
 
 	auto fr = new (Z0)  IPureFrame (space, this);
+	fr-> externLang () = this-> _externLang;
 	FrameTable::instance ().insert (fr);
 	return fr;
     }
@@ -438,58 +445,62 @@ namespace syntax {
     }
 
     void IProgram::importAllCoreFiles () {
-	std::string path = Options::instance ().prefixIncludeDir ();
-	if (path [path.size () - 1] == '/') path = path + "ymir/core/";
-	else path = path + "/ymir/core/";
+	if (!Options::instance ().isStandalone ()) {
+	    std::string path = Options::instance ().prefixIncludeDir ();
+	    if (path [path.size () - 1] == '/') path = path + "ymir/core/";
+	    else path = path + "/ymir/core/";
 	
-	DIR* dir = opendir (path.c_str ());
-	dirent* ent;
-	if (dir != NULL) {
-	    while ((ent = readdir (dir)) != NULL) {
-		std::string name = ent-> d_name;
-		if (ent-> d_type == DT_REG &&
-		    name.size () > 3 && 
-		    name [name.size () - 1] == 'r'
-		    && name [name.size () - 2] == 'y' &&
-		    name [name.size () - 3] == '.') {
-		    Word file;
-		    file.setStr ("core/" + name.substr (0, name.size () - 3));
-		    auto import = new (Z0) IImport (Word::eof (), {file});
-		    import-> is_public (false);
-		    import-> declare ();
+	    DIR* dir = opendir (path.c_str ());
+	    dirent* ent;
+	    if (dir != NULL) {
+		while ((ent = readdir (dir)) != NULL) {
+		    std::string name = ent-> d_name;
+		    if (ent-> d_type == DT_REG &&
+			name.size () > 3 && 
+			name [name.size () - 1] == 'r'
+			&& name [name.size () - 2] == 'y' &&
+			name [name.size () - 3] == '.') {
+			Word file;
+			file.setStr ("core/" + name.substr (0, name.size () - 3));
+			auto import = new (Z0) IImport (Word::eof (), {file});
+			import-> is_public (false);
+			import-> declare ();
+		    }
 		}
+		closedir (dir);
 	    }
-	    closedir (dir);
 	}
     }    
 
     void IProgram::importAllCoreFilesAsExtern (semantic::Module mod) {
-	std::string path = Options::instance ().prefixIncludeDir ();
-	if (path [path.size () - 1] == '/') path = path + "ymir/core/";
-	else path = path + "/ymir/core/";
+	if (!Options::instance ().isStandalone ()) {
+	    std::string path = Options::instance ().prefixIncludeDir ();
+	    if (path [path.size () - 1] == '/') path = path + "ymir/core/";
+	    else path = path + "/ymir/core/";
 	
-	DIR* dir = opendir (path.c_str ());
-	dirent* ent;
-	if (dir != NULL) {
-	    while ((ent = readdir (dir)) != NULL) {
-		std::string name = ent-> d_name;
-		if (ent-> d_type == DT_REG &&
-		    name.size () > 3 && 
-		    name [name.size () - 1] == 'r'
-		    && name [name.size () - 2] == 'y' &&
-		    name [name.size () - 3] == '.') {
-		    Word file;
-		    file.setStr ("core/" + name.substr (0, name.size () - 3));
-		    auto import = new (Z0) IImport (Word::eof (), {file});
-		    import-> is_public (false);
-		    import-> declareAsExtern (mod);
+	    DIR* dir = opendir (path.c_str ());
+	    dirent* ent;
+	    if (dir != NULL) {
+		while ((ent = readdir (dir)) != NULL) {
+		    std::string name = ent-> d_name;
+		    if (ent-> d_type == DT_REG &&
+			name.size () > 3 && 
+			name [name.size () - 1] == 'r'
+			&& name [name.size () - 2] == 'y' &&
+			name [name.size () - 3] == '.') {
+			Word file;
+			file.setStr ("core/" + name.substr (0, name.size () - 3));
+			auto import = new (Z0) IImport (Word::eof (), {file});
+			import-> is_public (false);
+			import-> declareAsExtern (mod);
+		    }
 		}
+		closedir (dir);
 	    }
-	    closedir (dir);
 	}
     }
     
-    void IProto::declare () {       
+    void IProto::declare () {
 	Namespace space (this-> space != "" ? this-> space : Table::instance ().space ());
 		
 	auto fr = new (Z0)  IExternFrame (space, this-> from, this);

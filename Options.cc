@@ -10,6 +10,10 @@ bool & Options::isDebug () {
     return this-> _isDebug;
 }
 
+bool & Options::isStandalone () {
+    return this-> _isStandalone;
+}
+
 void Options::setPrefix (const char * path) {
     this-> _prefixIncludeDir = path;
     if (this-> _prefixIncludeDir [this-> _prefixIncludeDir.length () - 1] != '/')

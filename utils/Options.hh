@@ -15,6 +15,7 @@ class Options {
     std::string _prefixIncludeDir;
     bool _isVerbose = false;
     bool _isDebug = false;
+    bool _isStandalone = false;
     
     static Options __instance__;
     CurrentTime _current;
@@ -28,6 +29,8 @@ public:
     bool & isVerbose ();
 
     bool & isDebug ();
+
+    bool & isStandalone ();
     
     std::string & prefixIncludeDir ();
 

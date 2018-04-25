@@ -12,6 +12,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/types/RefInfo.hh>
+#include <ymir/syntax/Keys.hh>
 
 namespace semantic {
     using namespace syntax;    
@@ -23,7 +24,8 @@ namespace semantic {
 	_vars (vars),
 	_tmps (tmps),
 	_attributes (attributes),
-	_extern (""),
+	_externLang (""),
+	_externLangSpace (""),
 	_fn ()
     {}
 
@@ -59,8 +61,12 @@ namespace semantic {
 	return this-> _closure.size () != 0;
     }
     
-    std::string& IFrameProto::externName () {
-	return this-> _extern;
+    std::string& IFrameProto::externLang () {
+	return this-> _externLang;
+    }
+
+    std::string& IFrameProto::externLangSpace () {
+	return this-> _externLangSpace;
     }
 
     bool& IFrameProto::isCVariadic () {
@@ -167,24 +173,19 @@ namespace semantic {
 	}
 	
 	std::string ident = Namespace (this-> space (), this-> _name).toString ();
-	std::string ident_ASM;
+	std::string ident_ASM = Mangler::mangle_function (this-> _name, this);		;
 	tree ret = this-> _type-> type-> toGeneric ().getTree ();
 	tree fndecl_type;
 	if (this-> isCVariadic ()) {
-	    ident_ASM = this-> _name;
 	    fndecl_type = build_varargs_function_type_array (ret, 0, fndecl_type_params.data ());
 	} else {
-	    if (this-> _extern == "C") ident_ASM = this-> _name;		
-	    else if (this-> _extern == "") ident_ASM = Mangler::mangle_function (this-> _name, this);
-	    else Ymir::Error::assert ("TODO");
-		
 	    fndecl_type = build_function_type_array (ret, 0, fndecl_type_params.data ());
 	}
 
 	tree fndecl = build_fn_decl (ident.c_str (), fndecl_type);
 	SET_DECL_ASSEMBLER_NAME (fndecl, get_identifier (ident_ASM.c_str ()));
-	    
-	if (this->_extern != "") {
+	
+	if (this->_externLang != "") {
 	    DECL_EXTERNAL (fndecl) = 1;
 	}
 	

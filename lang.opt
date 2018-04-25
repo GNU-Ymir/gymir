@@ -22,12 +22,14 @@
 Language
 YMIR
 
+stalone
+YMIR Driver
+
 I
 YMIR Joined Separate
-; YMIRocumented in C
 
 iprefix
 YMIR Joined Separate
 
--verbose
-Ymir Alias(v)
+-standalone
+YMIR Driver Alias(stalone)

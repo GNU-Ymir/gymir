@@ -78,6 +78,7 @@ namespace Ymir {
 		phrases [MultipleLoopName] = "Loop identifier '%%%' is already used";
 		phrases [MainPrototype] = "Function main parameters must be main () or main ([string])";
 
+		phrases [MainPrototypeStand] = "Function main parameters in standalone context must be main () or main (i32, p!(p!char))";
 		phrases [MainInModule] = "Function main can't be declared in a sub module";
 		phrases [ShadowingVar] = "Identifier '%%%' is already used";
 		phrases [UnknownType] = "There is no type called '%%%'";
@@ -136,6 +137,7 @@ namespace Ymir {
 		phrases [AllocationInSafe] = "Cannot allocate memory in @safe context";
 		phrases [CallUnsafeInSafe] = "Cannot call unsafe context in @safe context";
 		phrases [AddrLocalVar] = "Escaping reference to local variable %%%";
+		phrases [UnPureExternC] = "Extern C function must be pure";
 		init = true;
 	    } 
 	    return phrases;

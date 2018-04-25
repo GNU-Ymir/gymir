@@ -79,6 +79,10 @@ namespace semantic {
     bool& IFinalFrame::isMoved () {
 	return this-> _isMoved;
     }
+
+    std::string& IFinalFrame::externLang () {
+	return this-> _externLang;
+    }
     
     std::vector<syntax::Var>& IFinalFrame::vars () {
 	return this-> _vars;

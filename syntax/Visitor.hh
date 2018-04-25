@@ -34,7 +34,9 @@ namespace syntax {
 	Expression visitIfFunction ();
 	Function visitFunction ();
 	Function visitContract (Word ident, std::vector<Word> &, Expression type, Word retDeco, std::vector<Var> &, std::vector <Expression> &, Expression);
-	Declaration visitExtern ();
+	
+	std::vector<Declaration> visitExtern ();
+	Declaration visitExternBl ();
 	Var visitVar ();
 	Expression visitOf ();
 	Var visitVarDeclaration ();
@@ -114,7 +116,11 @@ namespace syntax {
 	MacroToken visitMacroToken ();
 	Expression visitMacroCall (Expression left);	
 	std::vector <Word> visitAttributes ();	
+	Declaration visitProto (Word, std::string);
+	std::vector<Declaration> visitExternBlock (Word, std::string, bool);
 	
+	Word visitFromExtern ();
+
     private:
 	
 	std::vector <std::string> ultimeOp;

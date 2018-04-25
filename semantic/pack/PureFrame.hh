@@ -12,7 +12,8 @@ namespace semantic {
 	FrameProto proto = NULL;
 	bool isValid = false;
 	bool pass = false;
-
+	bool _isExternC = false;
+	
     public:
 
 	IPureFrame (Namespace space, syntax::Function fun);
@@ -24,7 +25,7 @@ namespace semantic {
 	FrameProto validate () override ;
 
 	bool isPure () override;
-
+	
 	std::string getName () override;
 	
 	std::vector <InfoType> getParamTypes () override;

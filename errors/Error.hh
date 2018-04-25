@@ -87,6 +87,7 @@ namespace Ymir {
 	    PermissionDenied,
 	    NotImmutable,
 	    MainPrototype,
+	    MainPrototypeStand,
 	    MainInModule,
 	    ModuleNotFirst,
 	    ModuleDontMatch,
@@ -108,6 +109,7 @@ namespace Ymir {
 	    LineInstruction,
 	    CannotBeVoid,
 	    AddrLocalVar,
+	    UnPureExternC,
 	    LAST_ERROR
 	};
 
@@ -183,6 +185,8 @@ namespace Ymir {
 	static void allocationInSafe (const Word&);
 
 	static void callUnsafeInSafe (const Word&);
+
+	static void unpureExternC (const Word&);
 	
 	static void syntaxError (const Word&);
 

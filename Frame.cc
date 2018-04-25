@@ -133,7 +133,9 @@ namespace semantic {
 	}
 	
 	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams, this-> _attributes);
-
+	proto-> externLang () = this-> _externLang;
+	proto-> externLangSpace () = this-> _externLangSpace;
+	
 	if (!FrameTable::instance ().existsProto (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
@@ -168,6 +170,7 @@ namespace semantic {
 	    finFrame-> pre () = pre;
 	    finFrame-> post () = post;
 	    finFrame-> postVar () = postVar;
+	    finFrame-> externLang () = this-> _externLang;
 	    
 	    proto-> type () = Table::instance ().retInfo ().info;	    
 	    proto-> isLvalue () = lvalue;
@@ -530,6 +533,14 @@ namespace semantic {
 	return this-> _function;
     }
 
+    std::string& IFrame::externLang () {
+	return this-> _externLang;
+    }
+
+    std::string& IFrame::externLangSpace () {
+	return this-> _externLangSpace;
+    }
+    
     bool IFrame::isPure () {
 	return false;
     }

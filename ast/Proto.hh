@@ -39,6 +39,10 @@ namespace syntax {
 	
 	Expression& type ();
 
+	std::string & externLang ();
+	
+	std::string & externLangSpace ();
+	
 	Word& retDeco ();
 	
 	bool& isVariadic ();

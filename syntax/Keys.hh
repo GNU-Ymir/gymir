@@ -65,6 +65,8 @@ struct Keys {
     static std::string  OVER; 
     static std::string  FROM; 
     static std::string  DLANG;
+    static std::string  CLANG;
+    static std::string  CPPLANG;
     static std::string  DPAR;
     static std::string  MOD;
     static std::string  USE;

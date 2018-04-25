@@ -46,6 +46,8 @@ namespace semantic {
 	bool _isInternal = false;	
 	bool _isPrivate = false;
 	bool _isVariadic = false;
+	std::string _externLang;
+	std::string _externLangSpace;
 	
 	std::vector <::syntax::Expression> tempParams;
 	std::vector <Word> _attributes;
@@ -104,6 +106,10 @@ namespace semantic {
 	
 	virtual bool& isPrivate ();
 
+	std::string & externLang ();
+
+	std::string & externLangSpace ();
+	
 	virtual bool isPure ();
 	
 	virtual Word ident ();

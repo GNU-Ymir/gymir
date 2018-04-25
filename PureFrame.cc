@@ -41,23 +41,53 @@ namespace semantic {
     }
 
     FrameProto IPureFrame::validateMain () {
-	FrameTable::instance ().addMain ();
-	if (this-> _function-> getParams ().size () == 1) {
-	    auto tok = this-> _function-> getParams () [0]-> token;
-	    if (auto a = this-> _function-> getParams () [0]-> to<ITypedVar> ()) {
-		auto type = a-> getType ();
-		if (!type-> isSame (new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)))) {
-		    Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type),  new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)));
+	if (!Options::instance ().isStandalone ()) {
+	    FrameTable::instance ().addMain ();
+	    if (this-> _function-> getParams ().size () == 1) {
+		auto tok = this-> _function-> getParams () [0]-> token;
+		if (auto a = this-> _function-> getParams () [0]-> to<ITypedVar> ()) {
+		    auto type = a-> getType ();
+		    if (!type-> isSame (new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)))) {
+			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type),  new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)));
+		    }
+		} else {
+		    auto str = Word (tok.getLocus (), "string");
+		    this-> _function-> getParams () [0] = new (Z0)  ITypedVar (tok,
+									       new (Z0)  IArrayVar (tok, new (Z0)  IVar (str))
+		    );
+		}	    
+	    } else if (this-> _function-> getParams ().size () != 0) {
+		Ymir::Error::mainPrototype (this-> _function-> getIdent ());
+		this-> _function-> getParams () = {};
+	    }
+	} else {
+	    if (this-> _function-> getParams ().size () == 2) {
+		auto tok = this-> _function-> getParams ()[0]-> token;
+		if (auto a = this-> _function-> getParams ()[0]-> to <ITypedVar> ()) {
+		    auto type = a-> getType ();
+		    if (!type-> isSame (new (Z0) IFixedInfo (false, FixedConst::INT))) {
+			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type), new (Z0) IFixedInfo (false, FixedConst::INT));
+		    }
+		} else {
+		    auto i32 = Word (tok, "i32");
+		    this-> _function-> getParams ()[0] = new (Z0) ITypedVar (tok, new (Z0) IVar (i32));
 		}
-	    } else {
-		auto str = Word (tok.getLocus (), "string");
-		this-> _function-> getParams () [0] = new (Z0)  ITypedVar (tok,
-									   new (Z0)  IArrayVar (tok, new (Z0)  IVar (str))
-		);
-	    }	    
-	} else if (this-> _function-> getParams ().size () != 0) {
-	    Ymir::Error::mainPrototype (this-> _function-> getIdent ());
-	    this-> _function-> getParams () = {};
+
+		tok = this-> _function-> getParams ()[1]-> token;
+		if (auto a = this-> _function-> getParams ()[1]-> to <ITypedVar> ()) {
+		    auto type = a-> getType ();
+		    if (!type-> isSame (new (Z0) IPtrInfo (false, new (Z0) IPtrInfo (false, new (Z0) ICharInfo (false))))) {
+			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type), new (Z0) IPtrInfo (false, new (Z0) IPtrInfo (false, new (Z0) ICharInfo (false))));
+		    }
+		} else {
+		    auto pchar = Word (tok, "char");
+		    auto p = Word (tok, "p");
+		    this-> _function-> getParams ()[1] = new (Z0) ITypedVar (tok, new (Z0) IVar (p, {new (Z0) IVar (p, {new (Z0) IVar (pchar)})}));
+		}		
+	    } else if (this-> _function-> getParams ().size () != 0) {
+		Ymir::Error::mainPrototype (this-> _function-> getIdent ());
+		this-> _function-> getParams () = {};
+	    }
 	}
 	this-> pass = true;
 	return validate ();
@@ -66,7 +96,7 @@ namespace semantic {
     bool IPureFrame::isPure () {
 	return true;
     }
-
+    
     std::vector <InfoType> IPureFrame::getParamTypes () {
 	std::vector <InfoType> params;
 	for (auto it : this-> _function-> getParams ()) {

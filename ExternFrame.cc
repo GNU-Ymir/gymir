@@ -15,6 +15,7 @@ namespace semantic {
 	_fr (NULL)	
     {
 	__extFrames__.push_back (this);
+	_externSpace = space.toString ();
 	this-> _name = func-> name ();
     }
 
@@ -24,6 +25,7 @@ namespace semantic {
 	_fr (NULL)
     {
 	__extFrames__.push_back (this);
+	_externSpace = space.toString ();
 	this-> _name = func-> name ();
     }
 
@@ -84,7 +86,8 @@ namespace semantic {
 	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams, {});
 
 	this-> _fr-> isLvalue () = lvalue;
-	this-> _fr-> externName () = this-> _from;
+	this-> _fr-> externLang () = this-> _from;
+	this-> _fr-> externLangSpace () = this-> externSpace ();
 	this-> _fr-> isCVariadic () = this-> isVariadic ();
 	Table::instance ().quitFrame ();
 	Table::instance ().programNamespace () = ancSpace;
@@ -108,6 +111,10 @@ namespace semantic {
 	return this-> _from;
     }
 
+    std::string& IExternFrame::externSpace () {
+	return this-> _externSpace;
+    }
+    
     FrameProto IExternFrame::proto () {
 	return this-> _fr;
     }
@@ -139,7 +146,9 @@ namespace semantic {
 	}
 
 	this-> _fr = new (Z0)  IFrameProto (this-> name (), this-> space (), Table::instance ().retInfo ().info, finalParams, this-> tempParams, {});
-	this-> _fr-> externName () = this-> _from;
+	this-> _fr-> externLang () = this-> _from;
+	this-> _fr-> externLangSpace () = this-> _externSpace;
+	
 	this-> _fr-> isCVariadic () = this-> isVariadic ();
 	Table::instance ().quitFrame ();
 	Table::instance ().programNamespace () = ancSpace;

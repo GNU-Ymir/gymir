@@ -29,6 +29,8 @@ namespace syntax {
 
 	Block _pre = NULL, _post = NULL;
 	Var _postVar = NULL;
+	std::string _externLang = "";
+	std::string _externLangSpace = "";
 	
     public:
 	
@@ -59,6 +61,10 @@ namespace syntax {
 	Expression getType ();
 
 	Word getRetDeco ();
+
+	std::string& externLang ();
+
+	std::string& externLangSpace ();
 	
 	Expression getTest ();
 	
@@ -80,6 +86,10 @@ namespace syntax {
 
 	bool has (const std::string & str);
 	
+	static const char* id ();
+	
+	std::vector <std::string> getIds () override;
+
 	virtual ~IFunction ();
 	
     protected:

@@ -425,6 +425,17 @@ namespace Ymir {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
+    void Error::unpureExternC (const Word & word) {
+	std::string msg = getString (UnPureExternC);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
     
     void Error::outOfRange (const Word& word, ulong size, ulong index) {
 	std::string line = getString (OutOfRange);
@@ -631,6 +642,10 @@ namespace Ymir {
     
     void Error::mainPrototype (const Word& word) {
 	auto str = getString (MainPrototype);
+	if (Options::instance ().isStandalone ()) {
+	    str = getString (MainPrototypeStand);
+	}
+	
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);

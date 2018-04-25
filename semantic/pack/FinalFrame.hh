@@ -36,10 +36,12 @@ namespace semantic {
 	bool _isInline;
 	bool _isForced = false;
 	bool _isMoved = false;
+	std::string _externLang = "";
 	syntax::Block _block;
 	syntax::Block _pre = NULL, _post = NULL;
 	syntax::Var _postVar = NULL;
 	
+
 	static std::map <std::string, Ymir::Tree> __declared__;
 	static std::vector <Ymir::Tree> __contextToAdd__;
 	static Ymir::Tree __fn_decl__;
@@ -66,6 +68,8 @@ namespace semantic {
 
 	bool& isMoved ();
 	
+	std::string& externLang ();
+
 	std::vector<syntax::Var> &vars ();
 	
 	std::vector <syntax::Var>& closure ();

@@ -116,6 +116,9 @@ namespace syntax {
 	    } else if (token == Keys::VERSION) {
 		auto ver_decls = visitVersionGlob ();
 		for (auto it : ver_decls) decls.push_back (it);
+	    } else if (token == Keys::EXTERN) {
+		auto ext_decls = visitExtern ();
+		for (auto it : ext_decls) decls.push_back (it);
 	    } else {
 		this-> lex.next ();
 		syntaxError (token,
@@ -153,6 +156,13 @@ namespace syntax {
 			    it-> is_public (true);
 			    decls.push_back (it);
 			}
+		    } else if (tok == Keys::EXTERN)  {
+			this-> lex.rewind (); 
+			auto ext_decls = visitExtern ();
+			for (auto it : ext_decls) {
+			    it-> is_public (true);
+			    decls.push_back (it);
+			}
 		    } else if (tok != Token::RACC) {
 			syntaxError (tok,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
@@ -166,8 +176,13 @@ namespace syntax {
     	    }
     	} else {
 	    this-> lex.rewind ();
-    	    decls.push_back (visitDeclaration (true));
-    	    decls.back ()-> is_public (true);
+	    if (next == Keys::EXTERN) {
+		decls = visitExtern ();
+		for (auto it : decls) it-> is_public (true);
+	    } else {
+		decls.push_back (visitDeclaration (true));
+		decls.back ()-> is_public (true);
+	    }
     	}
     	return decls;
     }
@@ -190,7 +205,14 @@ namespace syntax {
 		    if (tok == Keys::VERSION) {
 			auto ver_decls = visitVersionGlob ();
 			for (auto it : ver_decls) {
-			    it-> is_public (true);
+			    it-> is_public (false);
+			    decls.push_back (it);
+			}
+		    } else if (tok == Keys::EXTERN)  {
+			this-> lex.rewind ();
+			auto ext_decls = visitExtern ();
+			for (auto it : ext_decls) {
+			    it-> is_public (false);
 			    decls.push_back (it);
 			}
 		    } else if (tok != Token::RACC)
@@ -203,10 +225,15 @@ namespace syntax {
     		    break;
     		}
     	    }
-    	} else {
+    	} else {	    
 	    this-> lex.rewind ();
-    	    decls.push_back (visitDeclaration (true));
-    	    decls.back ()-> is_public (false);
+	    if (next == Keys::EXTERN) {
+		decls = visitExtern ();
+		for (auto it : decls) it-> is_public (false);
+	    } else {
+		decls.push_back (visitDeclaration (true));
+		decls.back ()-> is_public (false);
+	    }
     	}
     	return decls;
     }
@@ -227,6 +254,9 @@ namespace syntax {
 	    } else if (token == Keys::VERSION) {
 		auto ver_decls = visitVersionGlob ();
 		for (auto it : ver_decls) decls.push_back (it);
+	    } else if (token == Keys::EXTERN)  {
+		auto ext_decls = visitExtern ();
+		for (auto it : ext_decls) decls.push_back (it);
 	    } else if (token != Token::RACC) {
 		this-> lex.next ();
 		syntaxError (token,
@@ -304,7 +334,6 @@ namespace syntax {
 	else if (token == Keys::USE) return visitUse ();
 	else if (token == Keys::MOD) return visitModule ();
     	else if (token == Keys::IMPORT) return visitImport ();
-    	else if (token == Keys::EXTERN) return visitExtern ();
     	else if (token == Keys::STRUCT) return visitStruct ();
 	else if (token == Keys::UNION) return visitStruct (true);
     	else if (token == Keys::ENUM) return visitEnum ();
@@ -861,56 +890,33 @@ namespace syntax {
 	func-> post () = post;
 	return func;
     }
-    
-    Declaration Visitor::visitExtern () {
-	auto word = this-> lex.next ();
+
+    Declaration Visitor::visitProto (Word from, std::string space) {
 	bool isVariadic = false;
-	Word from = Word::eof ();
-	std::string space = "";
-	if (word == Token::LPAR) {
-	    from = visitIdentifiant ();
-	    word = this-> lex.next ({Token::COMA, Token::RPAR});
-	    if (word == Token::COMA) {
-		if (from != Keys::DLANG) syntaxError (word, {Token::RPAR});
-		space = visitSpace ();
-		this-> lex.next ({Token::RPAR});
-	    }
-	} else this-> lex.rewind ();
 	auto ident = visitIdentifiant ();
 	std::vector <Var> exps;
-
-	word = this-> lex.next ({Token::LPAR, Token::COLON});
+	auto word = this-> lex.next ({Token::LPAR, Token::COLON});
 	if (word == Token::COLON) {
-	    Expression type;
-	    word = this-> lex.next ();
-	    if (word == Keys::FUNCTION || word == Keys::DELEGATE) type = visitFuncPtrSimple (word);
-	    else {
-		this-> lex.rewind ();
-		type = visitLeftOpSimple ();
-	    }
+	    auto type = visitLeftOpSimple ();
 	    this-> lex.next ({Token::SEMI_COLON});
 	    auto ret = new (Z0) IGlobal (ident, type, true);
 	    ret-> from = from.getStr ();
 	    ret-> space = space;
 	    return ret;
-	}
-	
-	this-> lex.next (word);
+	} 
+	word = this-> lex.next ();
 	if (word != Token::RPAR) {
 	    this-> lex.rewind ();
 	    while (true) {
 		word = this-> lex.next ();
 		if (word == Token::TDOT) {
 		    isVariadic = true;
-		    word = this-> lex.next ();
-		    if (word != Token::RPAR) syntaxError (word, {Token::RPAR});
+		    word = this-> lex.next ({Token::RPAR});
 		    break;
 		} else this-> lex.rewind ();
 		exps.push_back (visitVarDeclaration ());
-		this-> lex.next (word);
+		word = this-> lex.next ({Token::COMA, Token::RPAR});
 		if (word == Token::RPAR) break;
-		else if (word != Token::COMA)
-		    syntaxError (word, {Token::RPAR, Token::COMA});
 	    }
 	}
 	word = this-> lex.next ({Token::ARROW, Token::SEMI_COLON});
@@ -928,6 +934,81 @@ namespace syntax {
 	auto ret = new (Z0)  IProto (ident, type, deco, exps, space, isVariadic);
 	ret-> from = from.getStr ();
 	return ret;
+    }
+
+    Word Visitor::visitFromExtern () {
+	Word begin = this-> lex.next ();
+	while (true) {
+	    auto word = this-> lex.next ();
+	    if (word == Token::RPAR || word == Token::COMA) { this-> lex.rewind (); break; }	    
+	    else begin.setStr (begin.getStr () + word.getStr ());
+	}
+	if (begin != Keys::CPPLANG && begin != Keys::DLANG && begin != Keys::CLANG) {
+	    syntaxError (begin, {Keys::CPPLANG, Keys::DLANG, Keys::CLANG});
+	}
+	return begin;
+    }
+    
+    std::vector <Declaration> Visitor::visitExternBlock (Word from, std::string space, bool onlyProto) {
+	std::vector <Declaration> decls;
+	while (true) {	   
+	    auto next = this-> lex.next ({Keys::EXTERN, Keys::DEF, Token::RACC});
+	    if (next == Keys::EXTERN) decls.push_back (visitProto (from, space));
+	    else if (next == Keys::DEF && !onlyProto) {
+		auto func = this-> visitFunction ()-> to<IFunction> ();
+		func-> externLang () = from.getStr ();
+		func-> externLangSpace () = space;
+		decls.push_back (func);
+	    } else if (next == Token::RACC) break;	    
+	    else {
+		if (onlyProto)
+		    syntaxError (next, {Keys::EXTERN, Token::RACC});
+		else syntaxError (next, {Keys::EXTERN, Token::RACC, Keys::DEF});
+	    }
+	}
+	return decls;
+    }
+
+    std::vector <Declaration> Visitor::visitExtern () {
+	auto begin = this-> lex.next ();
+	auto word = this-> lex.next ();
+	Word from = Word::eof ();
+	std::string space = "";
+	if (word == Token::LPAR) {
+	    from = this-> visitFromExtern ();
+	    word = this-> lex.next ({Token::COMA, Token::RPAR});
+	    if (word == Token::COMA) {
+		if (from != Keys::DLANG && from != Keys::CPPLANG)
+		    syntaxError (word, {Token::RPAR});
+		space = visitSpace ();
+		this-> lex.next ({Token::RPAR});
+	    }
+	} else this-> lex.rewind ();
+	auto next = this-> lex.next ();
+	
+	if (next == Token::LACC) {
+	    return visitExternBlock (from, space, from != Keys::CLANG);
+	} else {
+	    this-> lex.rewind ();
+	    return {visitProto (from, space)};
+	}
+    }    
+    
+    Declaration Visitor::visitExternBl () {
+	auto word = this-> lex.next ();
+	Word from = Word::eof ();
+	std::string space = "";
+	if (word == Token::LPAR) {
+	    from = visitFromExtern ();
+	    word = this-> lex.next ({Token::COMA, Token::RPAR});
+	    if (word == Token::COMA) {
+		if (from != Keys::DLANG && from != Keys::CPPLANG)
+		    syntaxError (word, {Token::RPAR});
+		space = visitSpace ();
+		this-> lex.next ({Token::RPAR});
+	    }
+	} else this-> lex.rewind ();
+	return visitProto (from, space);
     }
 
     /**
@@ -1206,7 +1287,7 @@ namespace syntax {
 		auto next = this-> lex.next ();
 		if (next == Keys::IMPORT) decls.push_back (visitImport ());
 		else if (next == Keys::USE) decls.push_back (visitUse ());
-		else if (next == Keys::EXTERN) decls.push_back (visitExtern ());
+		else if (next == Keys::EXTERN) decls.push_back (visitExternBl ());
 		else if (next == Keys::STRUCT) decls.push_back (visitStruct ());
 		else if (next == Keys::UNION) decls.push_back (visitStruct (true));
 		else if (next == Token::LACC) {

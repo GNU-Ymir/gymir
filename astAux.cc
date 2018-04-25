@@ -167,6 +167,24 @@ namespace syntax {
 	return this-> _postVar;
     }
     
+    const char* IFunction::id () {
+	return TYPEID (IFunction);
+    }
+	
+    std::vector <std::string> IFunction::getIds () {
+	auto ret = IDeclaration::getIds ();
+	ret.push_back (TYPEID (IFunction));
+	return ret;
+    }
+    
+    std::string & IFunction::externLang () {
+	return this-> _externLang;
+    }
+
+    std::string & IFunction::externLangSpace () {
+	return this-> _externLangSpace;
+    }
+
     std::string IFunction::name () {
 	return this-> ident.getStr ();
     }
@@ -997,6 +1015,14 @@ namespace syntax {
 	return this-> ident.getStr ();
     }
 
+    std::string & IProto::externLang () {
+	return this-> from;
+    }
+
+    std::string & IProto::externLangSpace () {
+	return this-> space;
+    }
+    
     std::vector <std::string> IConstArray::getIds () {
 	auto ret = IExpression::getIds ();
 	ret.push_back (TYPEID (IConstArray));
