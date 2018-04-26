@@ -249,7 +249,7 @@ namespace semantic {
     }
     
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, Expression param, InfoType type) {
-	Ymir::log ("Solve inside expr : ", tmps, "|", param, "|", type);
+	Ymir::log ("Solve inside expr 1 : ", tmps, "|", param, "|", type);
 	bool isConst = false;
 	auto tvar = param-> to <IVar> ();
 	while (tvar && tvar-> token == Keys::CONST) {
@@ -264,13 +264,17 @@ namespace semantic {
 	    return solve (tmps, ddot, type, isConst);
 	else if (auto all = param-> to <IArrayAlloc> ()) 
 	    return solve (tmps, all, type, isConst);
+	else if (auto carr = param-> to <IConstArray> ())
+	    return solve (tmps, carr, type, isConst);
+	else if (auto var = param-> to <IArrayVar> ())
+	    return solve (tmps, var, type, isConst);
 	else if (auto fn = param-> to <IFuncPtr> ())
 	    return solveInside (tmps, fn, type);
 	return TemplateSolution (0, false);
     }
 
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, Expression param, const std::vector <InfoType>& types) {
-	Ymir::log ("Solve inside expr : ", tmps, "|", param, "|", types);
+	Ymir::log ("Solve inside expr 2 : ", tmps, "|", param, "|", types);
 	bool isConst = false;
 	auto tvar = param-> to <IVar> ();
 	while (tvar && tvar-> token == Keys::CONST) {
@@ -287,6 +291,12 @@ namespace semantic {
 	} else if (auto all = param-> to <IArrayAlloc> ()) {
 	    if (types.size () == 1) 
 		return solve (tmps, all, types [0], isConst);
+	} else if (auto var = param-> to <IArrayVar> ()) {
+	    if (types.size () == 1)
+		return solve (tmps, var, types [0], isConst);
+	} else if (auto carr = param-> to <IConstArray> ()) {
+	    if (types.size () == 1)
+		return solve (tmps, carr, types [0], isConst);
 	} else if (auto fn = param-> to <IFuncPtr> ())
 	    return solveInside (tmps, fn, types);
 	return TemplateSolution (0, false);
@@ -989,7 +999,7 @@ namespace semantic {
     }
     
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, Expression left , Expression right) {
-	Ymir::log ("Solve inside expr : ", tmps, "|", left, "|", right);
+	Ymir::log ("Solve inside expr 3 : ", tmps, "|", left, "|", right);
 	if (!right-> info-> isImmutable ()) {
 	    Ymir::Error::notImmutable (right-> token, right-> info);
 	    return TemplateSolution (0, false);

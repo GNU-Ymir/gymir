@@ -30,6 +30,10 @@ namespace syntax {
 	    return ret;
 	}
 
+	std::string prettyPrint () {
+	    return IVar::prettyPrint () + std::string (" of ") + this-> type-> prettyPrint ();
+	}
+	
 	Expression typeVar () {
 	    return this-> type;
 	}
