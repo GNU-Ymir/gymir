@@ -461,16 +461,21 @@ namespace syntax {
 		auto decl = visitDeclaration (false);
 		if (decl) decls.push_back (decl);
 		else {
-		    auto tok = this-> lex.next ({Token::RACC, Keys::PRIVATE, Keys::PUBLIC});
+		    auto tok = this-> lex.next ({Token::RACC, Keys::PRIVATE, Keys::PUBLIC, Keys::VERSION, Keys::EXTERN});
+		    this-> lex.rewind ();
 		    if (tok == Keys::PRIVATE) {
-			this-> lex.rewind ();
 			auto prv_decls = visitPrivateBlock ();
 			for (auto it : prv_decls) decls.push_back (it);
 		    } else if (tok == Keys::PUBLIC) {
-			this-> lex.rewind ();
 			auto pub_decls = visitPublicBlock ();
 			for (auto it : pub_decls) decls.push_back (it);
-		    } else break;
+		    } else if (tok == Keys::VERSION) {			
+			auto ver_decls = visitVersionGlob ();
+			for (auto it : ver_decls) decls.push_back (it);
+		    } else if (tok == Keys::EXTERN) {
+			auto ext_decls = visitExtern ();
+			for (auto it : ext_decls) decls.push_back (it);
+		    }  else { this-> lex.next (); break; }
 		}
 	    }
 	    auto ret = new (Z0) IModDecl (ident, decls);

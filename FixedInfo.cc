@@ -79,13 +79,13 @@ namespace semantic {
 	    return ret;
 	} else if (op == Token::AND && !this-> isConst ()) {
 	    return toPtr (op);
-	} else if (op == Token::DPLUS && !this-> isConst ()) {
+	} else if (op == Token::DPLUS && (!this-> isConst () || this-> value ())) {
 	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
 	    ret-> unopFoo = FixedUtils::InstPPlus;
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
-	} else if (op == Token::DMINUS && !this-> isConst ()) {
+	} else if (op == Token::DMINUS && (!this-> isConst () || this-> value ())) {
 	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
 	    ret-> unopFoo = FixedUtils::InstSSub;
 	    if (this-> value ())
