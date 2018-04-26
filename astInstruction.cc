@@ -312,8 +312,24 @@ namespace syntax {
 	return NULL;
     }
 
+    Instruction IFor::immutableTupleFake (std::vector <Var> & vars, Expression expr) {
+	auto tu = expr-> info-> type-> to <ITupleInfo> ();
+	auto ctuple = expr-> to <IConstTuple> ();
+	Table::instance ().enterBlock ();
+	Block bl = new (Z0) IBlock (this-> token, {}, {});
+	for (auto it : Ymir::r (0, tu-> nbParams ())) {
+	    std::map<std::string, Expression> res = {{vars [0]-> token.getStr (), tu-> getParams ()[it]-> value ()-> toYmir (ctuple-> getExprs ()[it]-> info)}};
+	    auto currentBl = this-> block-> templateReplace (res)-> to<IBlock> ();
+	    bl-> getInsts ().push_back (currentBl-> block ());
+	}
+	Table::instance ().quitBlock ();
+	return bl;
+    }
+    
     Instruction IFor::immutableTuple (std::vector <Var> & vars, Expression expr) {
 	auto tu = expr-> info-> type-> to <ITupleInfo> ();
+	if (tu-> isFake ()) return immutableTupleFake (vars, expr);
+	
 	Table::instance ().enterBlock ();
 	Block bl = new (Z0) IBlock (this-> token, {}, {});
 	auto varDecl = new IVarDecl (this-> token, {}, {}, {});

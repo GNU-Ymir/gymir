@@ -9,11 +9,11 @@ namespace syntax {
 
     class IOfVar : public IVar {
 
-	Var type;
+	Expression type;
 
     public:
 
-	IOfVar (Word ident, Var type) :
+	IOfVar (Word ident, Expression type) :
 	    IVar (ident),
 	    type (type)
 	{}
@@ -30,7 +30,7 @@ namespace syntax {
 	    return ret;
 	}
 
-	Var typeVar () {
+	Expression typeVar () {
 	    return this-> type;
 	}
 	
@@ -49,15 +49,25 @@ namespace syntax {
     };
     
     class IVariadicVar : public IVar {
+
+	bool _isValue = false;
+
     public:
 
-	IVariadicVar (Word ident) : IVar (ident) {}
+	IVariadicVar (Word ident, bool isValue = false) :
+	    IVar (ident),
+	    _isValue (isValue)
+	{}
 
 	static const char * id () {
 	    return TYPEID (IVariadicVar);
 	}
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+	
+	bool& isValue () {
+	    return this-> _isValue;
+	}
 	
 	std::vector <std::string> getIds () {
 	    auto ret = IVar::getIds ();

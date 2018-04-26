@@ -142,8 +142,10 @@ namespace semantic {
     }
 
     std::string ILambdaValue::toString () {
-	return Ymir::OutBuffer (this-> frame [0]-> space ().toString (), ".",
-				this-> frame [0]-> getName ()).str ();
+	auto ret = Ymir::OutBuffer (this-> frame [0]-> space ().toString (), ".",
+				    this-> frame [0]-> getName ()).str ();
+	
+	return Ymir::OutBuffer (ret.length (), ret).str ();
     }
     
     

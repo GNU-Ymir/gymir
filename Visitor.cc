@@ -651,11 +651,15 @@ namespace syntax {
     std::vector <Expression> Visitor::visitTemplateStruct () {
 	std::vector<Expression> expr;
 	auto next = this-> lex.next ();
+	bool ig = false, cont = true;
 	if (next != Token::RPAR) {
 	    this-> lex.rewind ();
 	    while (next != Token::RPAR) {
-		expr.push_back (visitOf ());
-		next = this-> lex.next ({Token::RPAR, Token::COMA});
+		expr.push_back (visitOf (ig, cont));
+		if (cont)
+		    next = this-> lex.next ({Token::RPAR, Token::COMA});
+		else
+		    next = this-> lex.next ({Token::RPAR});
 	    }
 	}
 	return expr;
@@ -784,7 +788,7 @@ namespace syntax {
 	else this-> lex.rewind ();
 	
 	auto ident = visitIdentifiant ();
-	bool templates = false;
+	bool templates = false, cont = true;
 	std::vector<Var> exps;
 	std::vector <Expression> temps;
 	
@@ -798,17 +802,17 @@ namespace syntax {
 	    while (true) {
 		auto constante = visitConstante ();
 		if (constante == NULL)
-		    temps.push_back (visitOf ());
+		    temps.push_back (visitOf (templates, cont));
 		else {
 		    templates = true;
 		    temps.push_back (constante);
 		}
-		this-> lex.next (word);
+		if (cont)
+		    word = this-> lex.next ({Token::RPAR, Token::COMA});
+		else
+		    word = this-> lex.next ({Token::RPAR});
+		
 		if (word == Token::RPAR) break;
-		else if (word != Token::COMA) {
-		    syntaxError (word, {Token::RPAR, Token::COMA});
-		    break;
-		}
 	    }
 	}
 
@@ -1018,7 +1022,7 @@ namespace syntax {
 	return visitType ();
     }
 
-    Expression Visitor::visitOf () {
+    Expression Visitor::visitOf (bool & temps, bool & cont) {
 	auto deco = this-> lex.next ();
 	if (deco != Keys::CONST && deco != Keys::REF) {
 	    this-> lex.rewind ();
@@ -1028,12 +1032,23 @@ namespace syntax {
 	auto ident = visitIdentifiant ();
 	Word next = this-> lex.next ();
 	if (next == Token::COLON) {
-	    auto type = visitLeftOpSimple ();
-	    return new (Z0)  ITypedVar (ident, type, deco);
+	    next = this-> lex.next ();
+	    if (next == Token::TDOT) {
+		temps = true;
+		cont = false;
+		return new (Z0) IVariadicVar (ident, true);
+	    } else {
+		this-> lex.rewind ();
+		auto type = visitLeftOpSimple ();
+		return new (Z0)  ITypedVar (ident, type, deco);
+	    }
 	} else if (next == Keys::OF && deco.isEof ()) {
-	    auto type = visitType ();
+	    temps = true;
+	    auto type = visitLeftOpSimple ();
 	    return new (Z0)  IOfVar (ident, type);	    
 	} else if (next == Token::TDOT) {
+	    cont = false;
+	    temps = true;
 	    return new (Z0)  IVariadicVar (ident);
 	} else this-> lex.rewind ();
 	return new (Z0)  IVar (ident, deco);

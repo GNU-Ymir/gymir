@@ -456,7 +456,8 @@ namespace semantic {
     }
     
     std::string IEnumInfo::innerSimpleTypeString () {
-	return Ymir::format ("%%", Mangler::mangle_type (this-> _space.toString () + "." +this-> _name), "E");
+	auto name = Mangler::mangle_type (this-> _space.toString () + "." + this-> _name);
+	return Ymir::format ("%%%", name.length () + 1, name, "E");
     }
 
     std::string IEnumInfo::innerTypeString () {

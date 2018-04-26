@@ -14,16 +14,20 @@ namespace semantic {
 
     ITupleInfo::ITupleInfo (bool isConst) :
 	IInfoType (isConst),
-	isFake (false)
+	_isFake (false)
     {}
 
     ITupleInfo::ITupleInfo (bool isConst, bool isFake) :
 	IInfoType (isConst),
-	isFake (isFake)
+	_isFake (isFake)
     {}
     
     void ITupleInfo::setFake () {
-	this-> isFake = true;
+	this-> _isFake = true;
+    }
+
+    bool ITupleInfo::isFake () {
+	return this-> _isFake;
     }
 
     InfoType ITupleInfo::asNoFake () {
@@ -102,7 +106,7 @@ namespace semantic {
 	Word tok (UNKNOWN_LOCATION, Token::EQUAL);
 	auto ot = other-> to <ITupleInfo> ();
 	if (this-> isType ()) return NULL;
-	if (!this-> isFake && other-> isSame (this)) {	    
+	if (!this-> _isFake && other-> isSame (this)) {	    
 	    auto ret = new (Z0)  ITupleInfo (ot-> isConst ());
 	    for (auto it : Ymir::r (0, ot-> params.size ())) {
 		auto l = ot-> params [it];
@@ -125,7 +129,7 @@ namespace semantic {
 		aux-> binopFoo = &TupleUtils::InstAddr;
 		return aux;
 	    }
-	} else if (this-> isFake && ot && ot-> params.size () == this-> params.size ()) {
+	} else if (this-> _isFake && ot && ot-> params.size () == this-> params.size ()) {
 	    auto ret = new (Z0) ITupleInfo (ot-> isConst ());
 	    for (auto it : Ymir::r (0, ot-> params.size ())) {
 		auto l = this-> params [it]-> CompOp (ot-> params [it]);
@@ -133,7 +137,7 @@ namespace semantic {
 		ret-> params.push_back (l);
 	    }
 	    
-	    ret-> isFake = true;
+	    ret-> _isFake = true;
 	    ret-> binopFoo = &TupleUtils::InstCastFake;
 	    return ret;
 	}
@@ -170,7 +174,8 @@ namespace semantic {
 		    ret-> isConst (true);
 		ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
 		ret-> binopFoo = &TupleUtils::InstGet;
-		ret-> value () = NULL;
+		if (!this-> _isFake) 
+		    ret-> value () = NULL;
 		return ret;
 	    }
 	}

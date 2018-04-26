@@ -13,6 +13,8 @@ namespace syntax {
 	Word end;
 	std::vector <Expression> params;
 	std::vector <semantic::InfoType> casters;
+
+	bool _isFake = false;
 	
     public:
 
@@ -20,8 +22,9 @@ namespace syntax {
 
 	Expression expression () override;
 
-	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
-	
+	Expression expressionFake ();
+
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;		
 	Ymir::Tree toGeneric () override;
        
 	static const char * id () {
@@ -32,6 +35,8 @@ namespace syntax {
 	
 	std::vector <Expression> & getExprs ();
 
+	bool& isFake ();
+	
 	std::vector <semantic::InfoType> & getCasters ();
 
 	std::string prettyPrint () override;

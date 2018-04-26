@@ -349,6 +349,8 @@ namespace semantic {
 
 	TemplateSolution solveVariadic (const std::vector <syntax::Expression> tmps, syntax::Expression last, std::vector <syntax::Expression> params);
 
+	TemplateSolution solveVariadicValue (syntax::VariadicVar last, const std::vector <syntax::Expression>& params);
+
 	TemplateSolution solveVariadic (const std::vector <syntax::Expression> tmps, syntax::Expression last, const std::vector <InfoType>& params);
 
 	TemplateSolution solveVariadic (const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & params);

@@ -1243,7 +1243,29 @@ namespace syntax {
 	return aux;
     }
     
+    Expression IConstTuple::expressionFake () {
+	auto aux = new (Z0) IConstTuple (this-> token, this-> end, {});
+	auto type = new (Z0) ITupleInfo (true, true);
+	for (auto it : this-> params) {
+	    auto expr = it-> expression ();
+	    if (expr == NULL) return NULL;
+	    if (auto par = expr-> to <IParamList> ()) {
+		for (auto exp_it : par-> getParams ()) {
+		    aux-> params.push_back (exp_it);
+		    type-> addParam (exp_it-> info-> type);
+		}
+	    } else {
+		aux-> params.push_back (expr);
+		type-> addParam (expr-> info-> type);
+	    }
+	}
+	aux-> isFake () = true;
+	aux-> info = new (Z0) ISymbol (this-> token, type);
+	return aux;
+    }
+    
     Expression IConstTuple::expression () {
+	if (this-> isFake ()) return expressionFake ();
 	auto aux = new (Z0)  IConstTuple (this-> token, this-> end, {});
 	auto type = new (Z0)  ITupleInfo (true);
 	//auto undef = new (Z0)  IUndefInfo ();
@@ -1271,7 +1293,7 @@ namespace syntax {
 	    }
 	}
 	aux-> info = new (Z0)  ISymbol (this-> token, type);
-	return aux;
+	return aux;	
     }
 
     Expression IExpand::expression () {

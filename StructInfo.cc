@@ -792,17 +792,8 @@ namespace semantic {
     }
     
     std::string IStructInfo::innerSimpleTypeString () {
-	// static std::vector <InfoType> dones;
-	// if (std::find (dones.begin (), dones.end (), this) != dones.end ()) {
-	//     dones.push_back (this);
-	//     Ymir::OutBuffer buf (this-> onlyNameTypeString ());
-	//     for (auto it : Ymir::r (0, this-> types.size ())) {
-	// 	buf.write (this-> types [it]-> simpleTypeString ());
-	//     }
-	//     dones.erase (std::find (dones.begin (), dones.end (), this));
-	//     return buf.str ();
-	// } else {
-	return this-> onlyNameTypeString ();	
+	std::string buf = this-> onlyNameTypeString ();
+	return Ymir::OutBuffer (buf.length (), buf).str ();
     }
 
     void IStructInfo::setTypes (std::vector <InfoType> types) {

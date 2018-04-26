@@ -206,6 +206,11 @@ namespace Mangler {
 	    if (it-> info) {
 		if (it-> info-> isImmutable ()) {
 		    ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));		    
+		} else if (auto tu = it-> info-> type-> to <ITupleInfo> ()) {
+		    if (tu-> isFake ())
+			for (auto it : tu-> getParams ())
+			    ss.write ("N", it-> value ()-> toString ());
+		    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
 		} else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
 	    }
 	}
@@ -232,7 +237,12 @@ namespace Mangler {
 	for (auto it : frame-> tmps ()) {
 	    if (it-> info) {
 		if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-		else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+		else if (auto tu = it-> info-> type-> to <ITupleInfo> ()) {
+		    if (tu-> isFake ())
+			for (auto it : tu-> getParams ())
+			    ss.write ("N", it-> value ()-> toString ());
+		    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+		} else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
 	    }
 	}
 	
@@ -249,7 +259,12 @@ namespace Mangler {
 	ss.write  ("_Y", mangle_namespace (space), mangle_namespace (name), "VF");
 	for (auto it : frame-> tmps ()) {
 	    if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-	    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    else if (auto tu = it-> info-> type-> to <ITupleInfo> ()) {
+		if (tu-> isFake ())
+		    for (auto it : tu-> getParams ())
+			ss.write ("N", it-> value ()-> toString ());
+		else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+	    } else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
 	}
 	
 	for (auto it : frame-> vars ()) {

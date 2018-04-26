@@ -8,7 +8,7 @@ namespace semantic {
     class ITupleInfo : public IInfoType {
 
 	std::vector <InfoType> params;
-	bool isFake;
+	bool _isFake;
 	
     public:
 
@@ -50,6 +50,8 @@ namespace semantic {
 
 	void setFake ();
 
+	bool isFake ();
+	
 	InfoType asNoFake ();
 	
 	std::vector <InfoType> &getParams ();

@@ -12,6 +12,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/semantic/types/RefInfo.hh>
+#include <ymir/semantic/types/TupleInfo.hh>
 #include <ymir/syntax/Keys.hh>
 
 namespace semantic {
@@ -123,8 +124,18 @@ namespace semantic {
 		    if (!this-> _tmps [it]-> info-> value ()-> equals (scd-> _tmps [it]-> info-> value ())) {
 			return false;
 		    }
-		} else if (this-> _tmps [it]-> info-> type-> simpleTypeString () != scd-> _tmps [it]-> info-> type-> simpleTypeString ()) {
-		    return false;
+		} else {
+		    if (auto tu = this-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
+			if (auto tu2 = scd-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
+			    if (tu2-> isFake () != tu-> isFake ()) return false;
+			    for (auto it : Ymir::r (0, tu-> getParams ().size ())) {
+				if (!tu-> getParams () [it]-> value ()-> equals (tu2-> getParams () [it]-> value ()))
+				    return false;
+			    }
+			} else return false;
+		    } else if (this-> _tmps [it]-> info-> type-> simpleTypeString () != scd-> _tmps [it]-> info-> type-> simpleTypeString ()) {
+			return false;
+		    }
 		}
 	    }
 

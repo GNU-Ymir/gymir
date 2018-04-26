@@ -3,6 +3,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/value/_.hh>
+#include <ymir/ast/Tuple.hh>
 
 
 namespace semantic {
@@ -713,9 +714,38 @@ namespace semantic {
 	elements.erase (elem);
 	return it-> second;
     }
+
+    TemplateSolution TemplateSolver::solveVariadicValue (VariadicVar last, const std::vector <Expression>& params) {
+	Ymir::log ("Solve variadic value : ", last, "|", params);
+	map <string, Expression> ret;
+	std::vector <Expression> expParams;
+	std::vector <InfoType> types;
+	for (auto it : Ymir::r (0, params.size ())) {
+	    if (!params [it]-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (params [it]-> token, params [it]-> info);
+		return TemplateSolution (0, false);
+	    }
+
+	    types.push_back (params [it]-> info-> type-> cloneOnExit ());
+	    expParams.push_back (params [it]-> info-> value ()-> toYmir (params [it]-> info));
+	}
+	
+	auto type = new (Z0) ITupleInfo (true, true);
+	type-> getParams () = types;
+	Word begTok {last-> token, Token::LPAR}, endTok {last-> token, Token::RPAR};
+	auto ctuple = new (Z0) IConstTuple (begTok, endTok, expParams);
+	ctuple-> isFake () = true;
+	ret [last-> token.getStr ()] = ctuple;
+	
+	return TemplateSolution {__VAR__, true, type, ret};
+    }
     
     TemplateSolution TemplateSolver::solveVariadic (const std::vector <Expression> tmps, Expression last, std::vector <Expression> params) {
-	Ymir::log ("Solve variadic : ", tmps, "|", last, "|", params);
+	Ymir::log ("Solve variadic exprs : ", tmps, "|", last, "|", params);
+	if (auto var = last-> to <IVariadicVar> ()) {
+	    if (var-> isValue ())
+		return solveVariadicValue (var, params);
+	}
 	if (params.size () == 1) {
 	    auto var = new (Z0) IVar (last-> token);
 	    return solveInside (tmps, var, params [0]);
@@ -772,7 +802,7 @@ namespace semantic {
 	    soluce.isVariadic = true;
 	    return soluce;
 	}
-    }
+    } 
     
     TemplateSolution TemplateSolver::solveVariadic (const vector <Expression> & tmps, const vector <Expression> & params) {
 	Ymir::log ("Solve variadic : ", tmps, "|", params);

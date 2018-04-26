@@ -379,7 +379,7 @@ namespace syntax {
     }
 
     Expression IOfVar::templateExpReplace (const map <string, Expression>& values) {
-	auto type = (Var) this-> type-> templateExpReplace (values);
+	auto type = this-> type-> templateExpReplace (values);
 	return new (Z0)  IOfVar (this-> token, type);
     }
 
@@ -431,7 +431,9 @@ namespace syntax {
 	for (auto it : this-> params)
 	    exprs.push_back (it-> templateExpReplace (values));
 
-	return new (Z0)  IConstTuple (this-> token, this-> end, exprs);
+	auto ret = new (Z0)  IConstTuple (this-> token, this-> end, exprs);
+	ret-> isFake () = this-> isFake ();
+	return ret;
     }
 
     Declaration IGlobal::templateDeclReplace (const map <string, Expression>& values) {

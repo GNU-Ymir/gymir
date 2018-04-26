@@ -1293,6 +1293,10 @@ namespace syntax {
     std::vector <Expression> & IConstTuple::getExprs () {
 	return this-> params;
     }
+
+    bool& IConstTuple::isFake () {
+	return this-> _isFake;
+    }
     
     std::vector <std::string> IConstTuple::getIds () {
 	auto ret = IExpression::getIds ();

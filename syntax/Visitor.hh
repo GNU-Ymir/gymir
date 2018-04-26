@@ -38,7 +38,7 @@ namespace syntax {
 	std::vector<Declaration> visitExtern ();
 	Declaration visitExternBl ();
 	Var visitVar ();
-	Expression visitOf ();
+	Expression visitOf (bool&, bool&);
 	Var visitVarDeclaration ();
 	TypedVar visitStructVarDeclaration ();
 	TypedVar visitTypedVarDeclaration ();
