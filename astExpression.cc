@@ -143,8 +143,12 @@ namespace syntax {
 		
 	    std::vector <Expression> tmps;
 	    for (auto it : this-> templates) {
-		tmps.push_back (it-> expression ());
-		if (tmps.back () == NULL) return NULL;
+		auto elem = it-> expression ();
+		if (elem == NULL) return NULL;
+		else if (auto par = elem-> to <IParamList> ())
+		    for (auto it : par-> getParams ())
+			tmps.push_back (it);
+		else tmps.push_back (elem);
 	    }
 
 	    auto type = aux-> info-> type-> TempOp (tmps);
@@ -1305,6 +1309,19 @@ namespace syntax {
 	    return NULL;
 	}
 
+	if (auto tu = expr-> to <IConstTuple> ()) {
+	    if (tu-> isFake ()) {
+		std::vector <Expression> params;
+		for (auto it : Ymir::r (0, tu-> getExprs ().size ())) {
+		    params.push_back (tu-> getExprs () [it]);
+		}
+		
+		auto aux = new (Z0) IParamList (this-> token, params);
+		aux-> info = new (Z0) ISymbol (this-> token, new (Z0) IUndefInfo ());
+		return aux;
+	    }
+	}
+	
 	if (auto tuple = expr-> info-> type-> to <ITupleInfo> ()) {
 	    std::vector <Expression> params;
 	    for (auto it : Ymir::r (0, tuple-> getParams ().size ())) {

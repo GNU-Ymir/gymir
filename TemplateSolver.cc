@@ -847,10 +847,15 @@ namespace semantic {
 	} else if (tmps.size () < params.size ()) {
 	    return TemplateSolution (0, false);
 	}
-	
+
+	bool end = false;
 	for (auto it : Ymir::r (0, params.size ())) {
 	    TemplateSolution res (0, true);
-	    if (auto v = tmps [it]-> to<IVar> ()) {
+	     if (auto vv = tmps [it]-> to <IVariadicVar> ()) {
+		std::vector<Expression> rest (params.begin () + it, params.end ());
+		res = this-> solveVariadic (tmps, vv, rest);
+		end = true;
+	    } else if (auto v = tmps [it]-> to<IVar> ()) {
 		res = this-> solveInside (tmps, v, params [it]);
 	    } else {
 		res = this-> solveInside (tmps, tmps [it], params [it]);
@@ -858,6 +863,7 @@ namespace semantic {
 	    
 	    if (!res.valid || !merge (soluce.score, soluce.elements, res))
 		return TemplateSolution (0, false);
+	    if (end) break;
 	}
 	return soluce;	
     }
@@ -938,8 +944,18 @@ namespace semantic {
 	}	
     }
     
-    TemplateSolution TemplateSolver::solveInside (const std::vector<syntax::Expression>  &, syntax::VariadicVar, syntax::Expression) {	
-	Ymir::Error::assert ("TODO");
+    TemplateSolution TemplateSolver::solveInside (const std::vector<syntax::Expression>  & tmps, syntax::VariadicVar var, syntax::Expression expr) {	
+	Ymir::log ("Solve inside variadic ", tmps, "|", var, "|", expr);
+	if (var-> isValue ()) {
+	    if (!expr-> info-> isImmutable ()) {
+		Ymir::Error::notImmutable (expr-> token, expr-> info);
+		return TemplateSolution (0, false);
+	    }
+	    map <string, Expression> ret = {{var-> token.getStr(), expr-> info-> value ()-> toYmir (expr-> info)}};
+	    return TemplateSolution {0, true, expr-> info-> type-> cloneOnExit (), ret};
+	} else {
+	    Ymir::Error::assert ("TODO");
+	}
 	return TemplateSolution (0, false);
     }
 

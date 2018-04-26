@@ -129,6 +129,7 @@ namespace semantic {
 			if (auto tu2 = scd-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
 			    if (tu2-> isFake () != tu-> isFake ()) return false;
 			    for (auto it : Ymir::r (0, tu-> getParams ().size ())) {
+				if (!tu-> getParams () [it]-> value ()) return false;
 				if (!tu-> getParams () [it]-> value ()-> equals (tu2-> getParams () [it]-> value ()))
 				    return false;
 			    }

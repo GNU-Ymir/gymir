@@ -656,10 +656,7 @@ namespace syntax {
 	    this-> lex.rewind ();
 	    while (next != Token::RPAR) {
 		expr.push_back (visitOf (ig, cont));
-		if (cont)
-		    next = this-> lex.next ({Token::RPAR, Token::COMA});
-		else
-		    next = this-> lex.next ({Token::RPAR});
+		next = this-> lex.next ({Token::RPAR, Token::COMA});
 	    }
 	}
 	return expr;
@@ -807,11 +804,7 @@ namespace syntax {
 		    templates = true;
 		    temps.push_back (constante);
 		}
-		if (cont)
-		    word = this-> lex.next ({Token::RPAR, Token::COMA});
-		else
-		    word = this-> lex.next ({Token::RPAR});
-		
+		word = this-> lex.next ({Token::RPAR, Token::COMA});		
 		if (word == Token::RPAR) break;
 	    }
 	}
