@@ -21,6 +21,8 @@ namespace syntax {
 	} else if (auto arr = this-> to <IArrayAlloc> ()) {
 	    aux = arr-> staticArray ();
 	    derog = true;	    
+	} else if (auto tu = this-> to <IConstTuple> ()) {
+	    aux = tu-> asType ();	    
 	} else aux = this-> expression ();
 	if (aux == NULL) return NULL;
 
@@ -46,6 +48,8 @@ namespace syntax {
 	if (this-> is<IType> ()) return true;
 	else if (auto all = this-> to <IArrayAlloc> ()) {
 	    return all-> info-> type-> to <IArrayInfo> ()-> isStatic ();
+	} else if (auto tu = this-> to <ITupleInfo> ()) {
+	    return tu-> isType ();
 	} else if (this-> info && this-> info-> type-> isType ()) return true;
 	return false;
     }
@@ -1275,6 +1279,7 @@ namespace syntax {
 	//auto undef = new (Z0)  IUndefInfo ();
 	for (auto it : this-> params) {
 	    auto expr = it-> expression ();
+	    if (expr-> isType ()) return this-> asType ();
 	    if (expr == NULL) return NULL;
 	    if (auto par = expr-> to <IParamList> ()) {
 		for (auto exp_it : par-> getParams ()) {
@@ -1300,6 +1305,22 @@ namespace syntax {
 	return aux;	
     }
 
+    Expression IConstTuple::asType () {
+	auto type = new (Z0) ITupleInfo (false);
+	for (auto it : this-> params) {
+	    auto expr = it-> toType ();
+	    if (expr == NULL) return NULL;
+	    type-> addParam (expr-> info-> type);
+	}
+	return new (Z0) IType (this-> token, type);
+    }
+
+    bool IConstTuple::isType () {
+	for (auto it : this-> params)
+	    if (!it-> isType ()) return false;
+	return true;
+    }
+    
     Expression IExpand::expression () {
 	if (this-> info) return this;
 	auto expr = this-> expr-> expression ();

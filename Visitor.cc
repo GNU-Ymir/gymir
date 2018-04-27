@@ -1122,14 +1122,16 @@ namespace syntax {
 	    next = this-> lex.next ();
 	    if (next == Token::LPAR) {
 		type = visitLeftOpSimple ();
-		this-> lex.next ({Token::RPAR});
+		next = this-> lex.next ({Token::RPAR, Token::COMA});
+		if (next == Token::COMA) type = visitConstTuple (type);
 	    } else {
 		this-> lex.rewind ();
 		type = visitType ();
 	    }
 	} else if (next == Token::LPAR) {
 	    type = visitLeftOpSimple ();
-	    this-> lex.next ({Token::RPAR});
+	    next = this-> lex.next ({Token::RPAR, Token::COMA});
+	    if (next == Token::COMA) type = visitConstTuple (type);
 	} else {
 	    this-> lex.rewind ();
 	    type = visitType ();
@@ -1669,7 +1671,42 @@ namespace syntax {
 	} else this-> lex.rewind ();
 	return exp;
     }
+    
+    Expression Visitor::visitConstTuple () {
+	auto begin = this-> lex.rewind ().next ();
+	std::vector <Expression> params;
+	bool isTuple = false;
+	Word tok;
+	while (true) {
+	    params.push_back (visitExpressionUlt ());
+	    tok = this-> lex.next ({Token::RPAR, Token::COMA});
+	    if (tok == Token::RPAR) break;
+	    else {
+		isTuple = true;
+		tok = this-> lex.next ();
+		if (tok == Token::RPAR) break;
+		else this-> lex.rewind ();
+	    }	    
+	}
+	
+	if (!isTuple) return params [0];
+	else return new (Z0) IConstTuple (begin, tok, params);
+    }
 
+    Expression Visitor::visitConstTuple (Expression fst) {
+	auto begin = this-> lex.rewind ().next ();
+	std::vector <Expression> params;
+	params.push_back (fst);
+	Word tok;
+	while (true) {
+	    params.push_back (visitExpressionUlt ());
+	    tok = this-> lex.next ({Token::RPAR, Token::COMA});
+	    if (tok == Token::RPAR) break;
+	}
+	
+	return new (Z0) IConstTuple (begin, tok, params);
+    }
+    
     Expression Visitor::visitConstante () {       
 	auto tok = this-> lex.next ();
 	if (tok.isEof ()) return NULL;
@@ -1996,6 +2033,8 @@ namespace syntax {
 		auto word = self-> lex.next ();
 		if (word == Token::LCRO) {
 		    return self-> visitConstArray ();
+		} else if (word == Token::LPAR) {
+		    return self-> visitConstTuple ();
 		} else if (word == Keys::FUNCTION || word == Keys::DELEGATE) {
 		    return self-> visitFuncPtr (word);
 		} else self-> lex.rewind ();

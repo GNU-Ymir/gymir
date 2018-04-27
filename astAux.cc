@@ -1625,7 +1625,7 @@ namespace syntax {
 	if (right) delete right;
     }
     
-    IEnum::IEnum (Word ident, Var type, std::vector <Word> names, std::vector <Expression> values) :
+    IEnum::IEnum (Word ident, Expression type, std::vector <Word> names, std::vector <Expression> values) :
 	ident (ident),
 	type (type),
 	names (names),

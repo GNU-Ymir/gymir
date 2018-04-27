@@ -120,7 +120,9 @@ namespace syntax {
 	std::vector<Declaration> visitExternBlock (Word, std::string, bool);
 	
 	Word visitFromExtern ();
-
+	Expression visitConstTuple ();
+	Expression visitConstTuple (Expression begin);
+	
     private:
 	
 	std::vector <std::string> ultimeOp;

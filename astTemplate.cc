@@ -12,13 +12,12 @@ using namespace semantic;
 namespace syntax {
 
 
-    Var paramListToTupleVar (Word token, ParamList params) {
-	Word tuple {token, "t"};
-	auto type = new (Z0) IVar (tuple);
+    Expression paramListToTupleVar (Word token, ParamList params) {
+	std::vector <Expression> rets;
 	for (auto it_ : params-> getParams ()) {
-	    type-> getTemplates ().push_back (it_);
+	    rets.push_back (it_);
 	}
-	return type;
+	return new (Z0) IConstTuple (token, token, rets);
     }
 
     Expression IAccess::templateExpReplace (const map <string, Expression>& values) {

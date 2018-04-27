@@ -788,7 +788,7 @@ namespace syntax {
 	    Symbol type = NULL;
 	    Expression fst = NULL;
 	    if (this-> type != NULL) {
-		auto ftype = this-> type-> asType ();
+		auto ftype = this-> type-> toType ();
 		if (ftype == NULL) return;
 		type = ftype-> info;
 	    } else {
@@ -829,7 +829,7 @@ namespace syntax {
 	    Symbol type = NULL;
 	    Expression fst = NULL;
 	    if (this-> type != NULL) {
-		auto ftype = this-> type-> asType ();
+		auto ftype = this-> type-> toType ();
 		if (ftype == NULL) return;
 		type = ftype-> info;
 	    } else {
@@ -871,7 +871,7 @@ namespace syntax {
 	    Symbol type = NULL;
 	    Expression fst = NULL;
 	    if (this-> type != NULL) {
-		auto ftype = this-> type-> asType ();
+		auto ftype = this-> type-> toType ();
 		if (ftype == NULL) return;
 		type = ftype-> info;
 	    } else {

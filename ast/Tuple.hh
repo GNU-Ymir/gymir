@@ -22,6 +22,10 @@ namespace syntax {
 
 	Expression expression () override;
 
+	Expression asType ();
+
+	bool isType ();
+	
 	Expression expressionFake ();
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;		

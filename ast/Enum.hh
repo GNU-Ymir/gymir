@@ -10,13 +10,13 @@ namespace syntax {
 
     class IEnum : public IDeclaration {
 	Word ident;
-	Var type;
+	Expression type;
 	std::vector <Word> names;
 	std::vector <Expression> values;
 
     public:
 
-	IEnum (Word ident, Var type, std::vector <Word> names, std::vector <Expression> values);
+	IEnum (Word ident, Expression type, std::vector <Word> names, std::vector <Expression> values);
 
 	void declare () override;
 	

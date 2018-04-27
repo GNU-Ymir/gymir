@@ -56,7 +56,6 @@ namespace semantic {
 	this-> creators ["string"] = (void*) &IStringInfo::create;
 	this-> creators ["p"] = (void*) &IPtrInfo::create;
 	this-> creators ["r"] = (void*) &IRangeInfo::create;
-	this-> creators ["t"] = (void*) &ITupleInfo::create;
 	this-> creators ["const"] = (void*) &createConst;
 	this-> creators ["mut"] = (void*) &createMut;
 	this-> creators ["ref"] = (void*) &IRefInfo::create;
