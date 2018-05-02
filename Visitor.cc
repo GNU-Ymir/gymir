@@ -485,72 +485,6 @@ namespace syntax {
     }
     
     /**
-       constructor := 'def' '(' 'self' (',' varDeclaration)* ')' block
-    */
-    Constructor Visitor::visitConstructor () {
-	auto begin = this-> lex.next ({Keys::SELF});
-	std::vector <Var> params;
-
-	while (true) {
-	    auto next = this-> lex.next ({Token::COMA, Token::RPAR});
-	    if (next == Token::RPAR) break;
-	    else {
-		params.push_back (visitVarDeclaration ());		
-	    }
-	}
-	return new (Z0)  IConstructor (begin, params, visitBlock ());
-    }
-
-    /**
-       functionImpl := ('over'|'def') identifiant '(' ('self')? (',' varDeclaration)* ')' block
-    */    
-    Declaration Visitor::visitFunctionImpl (bool &isCst) {
-	auto begin = this-> lex.rewind ().next ();
-	auto next = this-> lex.next ();
-	if (next == Token::LPAR && begin == Keys::DEF) {
-	    isCst = true;
-	    return visitConstructor ();
-	} else this-> lex.rewind ();
-	
-	isCst = false;
-	auto ident = visitIdentifiant ();
-	std::vector <Var> params;
-	this-> lex.next ({Token::LPAR});
-	next = this-> lex.next ();
-	if (next != Token::RPAR) {
-	    this-> lex.rewind ();
-	    while (true) {
-		if (params.size () == 0) {
-		    next = this-> lex.next ();
-		    if (next == Keys::SELF)
-			params.push_back (new (Z0)  IVar (next));
-		    else {
-			this-> lex.rewind ();
-			params.push_back (visitVarDeclaration ());
-		    }
-		} else
-		    params.push_back (visitVarDeclaration ());
-		next = this-> lex.next ({Token::RPAR, Token::COMA});
-		if (next == Token::RPAR) break;		
-	    } 
-	}
-
-	Var type;
-	next = this-> lex.next ();
-	if (next == Token::COLON) {
-	    auto deco = this-> lex.next ();
-	    if (deco != Keys::REF) {
-		deco = Word::eof ();
-		this-> lex.rewind ();
-	    }
-	    type = visitType ();
-	    type-> deco = deco;
-	} else this-> lex.rewind ();
-	return new (Z0)  IFunction (ident, {}, params, {}, NULL, visitBlock ());
-    }
-
-
-    /**
        self := 'self' '(' ')' block
     */
     Self Visitor::visitSelf () {
@@ -1993,6 +1927,8 @@ namespace syntax {
 	return left;
     }
     
+
+    //ICI
     Expression Visitor::visitLeftOp () {
 	auto word = this-> lex.next ();
 	if (word == Keys::CAST) {

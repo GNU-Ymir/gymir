@@ -517,6 +517,13 @@ namespace syntax {
 	return false;
     }
     
+    bool IBinary::canOverOpAssign (Binary aux) {
+	if (aux-> left-> info-> type-> is <IStructInfo> ()) return true;
+	if (auto ref = aux-> left-> info-> type-> to <IRefInfo> ())
+	    return ref-> content ()-> is <IStructInfo> ();
+	return false;
+    }
+
     Expression IBinary::affect () {
 	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 	if (simpleVerif (aux)) return NULL;
@@ -534,6 +541,11 @@ namespace syntax {
 		Ymir::Error::notLValue (aux-> left-> token);
 		return NULL;
 	    }
+	}
+
+	if (canOverOpAssign (aux)) {
+	    if (auto call = findOpAssign (aux, false))
+		return call;
 	}
 	
 	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);	
@@ -564,12 +576,8 @@ namespace syntax {
 		aux-> left-> info-> type = type;
 		aux-> left-> info-> isConst (false);
 	    } else if (type == NULL) {
-		auto call = findOpAssign (aux);
-		if (!call) {
-		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-		    return NULL;
-		}
-		return call;	    
+		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
+		return NULL;			    
 	    }
 	    aux-> isRight = true;
 	}
@@ -582,41 +590,37 @@ namespace syntax {
 
     Expression IBinary::reaff () {
 	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
-
+	
 	if (simpleVerif (aux)) return NULL;
 	if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 	    Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 	    return NULL;
+	} else if (!aux-> left-> isLvalue () || aux-> left-> info-> isConst ()) {
+	    Ymir::Error::notLValue (aux-> left-> token);
+	    return NULL;
 	}
+	
+	if (canOverOpAssign (aux)) {
+	    if (auto call = findOpAssign (aux, false))
+		return call;
+	}
+	
+	auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
+	if (type == NULL) {
+	    type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
+	    if (type == NULL) {
 
-	if (aux-> left-> info-> isConst ()) {
-	    auto call = findOpAssign (aux);
-	    if (!call) {
-		Ymir::Error::notLValue (aux-> left-> token);
+		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
 		return NULL;
 	    }
-	    return call;	    
-	} else {
-	    auto type = aux-> left-> info-> type-> BinaryOp (this-> token, aux-> right);
-	    if (type == NULL) {
-		type = aux-> right-> info-> type-> BinaryOpRight (this-> token, aux-> left);
-		if (type == NULL) {
-		    auto call = findOpAssign (aux);
-		    if (!call) {
-			Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
-			return NULL;
-		    }
-		    return call;
-		}
-		aux-> isRight = true;
-	    }
-	    
-	    aux-> info = new (Z0)  ISymbol (aux-> token, type);
-	    Table::instance ().retInfo ().changed () = true;
-	    aux-> info-> value () = NULL;
-	    return aux;
+	    aux-> isRight = true;
 	}
-    }
+	
+	aux-> info = new (Z0)  ISymbol (aux-> token, type);
+	Table::instance ().retInfo ().changed () = true;
+	aux-> info-> value () = NULL;
+	return aux;
+    }    
 
     Expression IBinary::normal () {	
 	if (!this-> info) {
@@ -652,15 +656,18 @@ namespace syntax {
 	}	
     }
 
-    Expression IBinary::findOpAssign (Binary) {
+    Expression IBinary::findOpAssign (Binary, bool mandatory) {
 	Word word (this-> token.getLocus (), Keys::OPASSIGN);
 	auto var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
 	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
 	
 	auto call = new (Z0)  IPar (tok, tok2, var, params, false);
-	
+
+	if (!mandatory) Ymir::Error::activeError (false);
 	auto res = call-> expression ();
+	if (!mandatory) Ymir::Error::activeError (true);
+	
 	return res;
     }
 

@@ -375,10 +375,12 @@ namespace Ymir {
 	    printf ("%sAssert%s : %s\n", RED, RESET, format (format_, args...).c_str ());
 	    raise (SIGSEGV);
 	}	
+
+	static bool isEnable ();	    	
 	
     private:
 
-	static bool __isEnable__;
+	static std::vector <bool> __isEnable__;
 	static std::vector <ErrorMsg> __caught__;
 	static Error __instance__;
 	

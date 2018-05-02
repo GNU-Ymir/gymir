@@ -47,9 +47,10 @@ namespace syntax {
 	Expression reaff ();
 	Expression normal ();
 	bool simpleVerif (IBinary*);
-
+	bool canOverOpAssign (IBinary*);
+	
 	Expression findOpBinary (IBinary*);
-	Expression findOpAssign (IBinary*);
+	Expression findOpAssign (IBinary*, bool mandatory = true);
 	Expression findOpTest (IBinary*);
 	Expression findOpEqual (IBinary*);
 

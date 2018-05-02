@@ -23,7 +23,7 @@ namespace Ymir {
     unsigned long Error::nb_errors (0);
     
     std::vector <ErrorMsg> Error::__caught__;
-    bool Error::__isEnable__ = true;
+    std::vector <bool> Error::__isEnable__ = {true};
     Error Error::__instance__;
 
     std::string substr (std::string& x, ulong beg, ulong end) {
@@ -228,7 +228,8 @@ namespace Ymir {
     }
     
     void Error::activeError (bool isActive) {
-	__isEnable__ = isActive;
+	if (isActive) __isEnable__.pop_back ();
+	else __isEnable__.push_back (isActive);
 	if (isActive) {
 	    __caught__.clear ();
 	}
@@ -240,7 +241,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -252,7 +253,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -267,7 +268,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -292,7 +293,7 @@ namespace Ymir {
 	}
 	
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -305,7 +306,7 @@ namespace Ymir {
 	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : ";
 	aux = addLine (aux, loc);
 	ErrorMsg errorMsg = {msg + aux, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -316,7 +317,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
@@ -327,7 +328,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
@@ -339,7 +340,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -350,7 +351,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -361,7 +362,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -372,7 +373,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -387,7 +388,7 @@ namespace Ymir {
 	aux = addLine (aux, word2);
 	
 	ErrorMsg errorMsg = {msg + aux, false, false};	
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
@@ -398,7 +399,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -409,7 +410,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -420,7 +421,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -431,7 +432,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -443,7 +444,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -454,7 +455,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -465,7 +466,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -476,7 +477,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -487,7 +488,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -504,7 +505,7 @@ namespace Ymir {
 	aux = addLine (aux, word2);
 	
 	ErrorMsg errorMsg = {msg + aux, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -521,7 +522,7 @@ namespace Ymir {
 	aux = addLine (aux, word2);
 	
 	ErrorMsg errorMsg = {msg + aux, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -538,7 +539,7 @@ namespace Ymir {
 	aux = addLine (aux, word2);
 	
 	ErrorMsg errorMsg = {msg + aux, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -551,7 +552,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    assert ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
@@ -563,7 +564,7 @@ namespace Ymir {
 
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, true, false};
-	if (__isEnable__) {	    
+	if (__isEnable__.back ()) {	    
 	    Error::instance ().nb_errors ++;
 	    assert ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -576,7 +577,7 @@ namespace Ymir {
 	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    assert ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -592,7 +593,7 @@ namespace Ymir {
 	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    assert ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -602,7 +603,7 @@ namespace Ymir {
 	auto msg = std::string (getString (EscapeChar));	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -612,7 +613,7 @@ namespace Ymir {
 	auto msg = std::string (getString (EndOfFile));	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -624,7 +625,7 @@ namespace Ymir {
 	msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
@@ -635,7 +636,7 @@ namespace Ymir {
 	msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
@@ -650,7 +651,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -662,7 +663,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -678,7 +679,7 @@ namespace Ymir {
 	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
@@ -689,7 +690,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -700,7 +701,7 @@ namespace Ymir {
 	auto msg = std::string (BLUE) + "Note" + std::string (RESET) + " : " + std::string (str);
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
@@ -709,7 +710,7 @@ namespace Ymir {
 	auto msg = format (getString (PermissionDenied), YELLOW, name.c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg) + "\n";
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -721,7 +722,7 @@ namespace Ymir {
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    assert ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
@@ -733,7 +734,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -749,7 +750,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -767,7 +768,7 @@ namespace Ymir {
 	}
 	    
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -779,7 +780,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -791,7 +792,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -803,7 +804,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -815,7 +816,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -827,7 +828,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -839,7 +840,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -850,7 +851,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -861,7 +862,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -872,7 +873,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -884,7 +885,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -896,7 +897,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg erroMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
@@ -907,7 +908,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -918,7 +919,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -929,7 +930,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -940,7 +941,7 @@ namespace Ymir {
 	msg = std::string (YELLOW) + "Warning" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} 
     }
@@ -950,7 +951,7 @@ namespace Ymir {
 	msg = std::string (YELLOW) + "Warning" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    printf ("%s", errorMsg.msg.c_str ());
 	} 
     }
@@ -960,7 +961,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -971,7 +972,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -987,7 +988,7 @@ namespace Ymir {
 	msg = addLine (msg, where);
 	
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1003,7 +1004,7 @@ namespace Ymir {
 	msg = addLine (msg, where);
 	
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1019,7 +1020,7 @@ namespace Ymir {
 	msg = addLine (msg, where);
 	
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1032,7 +1033,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1058,7 +1059,7 @@ namespace Ymir {
 	msg = addLine (msg, begin);
 	
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
@@ -1080,7 +1081,7 @@ namespace Ymir {
 	msg = addLine (msg, begin, end);
 	
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1097,7 +1098,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, op);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1113,7 +1114,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, op);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1130,7 +1131,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, op);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1148,7 +1149,7 @@ namespace Ymir {
 	aux = addLine (aux, word2);
 	
 	ErrorMsg errorMsg = {msg + aux, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1174,7 +1175,7 @@ namespace Ymir {
 	
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1188,7 +1189,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1202,7 +1203,7 @@ namespace Ymir {
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, uda);
 	ErrorMsg errorMsg = {msg, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
@@ -1219,7 +1220,7 @@ namespace Ymir {
 	msg2 = addLine (msg2, func);
 	
 	ErrorMsg errorMsg = {msg + msg2, false, false};
-	if (__isEnable__) {
+	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
 	    printf ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
