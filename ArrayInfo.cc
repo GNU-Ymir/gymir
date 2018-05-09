@@ -824,7 +824,7 @@ namespace semantic {
 
 	    Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, iter-> token.getLocus (), void_type_node, end_label);	
 	    list.append (end_expr);
-
+	    debug_tree (list.getTree ());
 	    return list.getTree ();
 	}
 

@@ -92,7 +92,7 @@ namespace semantic {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
 	    auto val = right-> token.getStr ();
-	    return getField (loc, ltree, val.c_str ());
+	    return getField (loc, ltree, val.c_str ()).getTree ();
 	}
 	
 	Tree InstAffect (Word loc, InfoType, Expression left, Expression right) {
@@ -763,20 +763,13 @@ namespace semantic {
     }
 
     std::string IStructInfo::innerTypeString () {
-	// static std::vector <InfoType> dones;
-	// if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
-	//     dones.push_back (this);
-	//     Ymir::OutBuffer buf (this-> onlyNameTypeString (), "{");
-	//     for (auto it : Ymir::r (0, this-> types.size ())) {
-	// 	buf.write (this-> types [it]-> typeString ());
-	// 	if (it != (int) this-> types.size () - 1)
-	// 	    buf.write (", ");
-	//     }
-	//     buf.write ("}");
-	//     dones.erase (std::find (dones.begin (), dones.end (), this));
-	//     return buf.str ();
-	// } else {
-	return this-> onlyNameTypeString ();	
+	static std::map <InfoType, bool> dones;
+	if (dones.find (this) == dones.end ()) {
+	    dones [this] = true;
+	    auto ret = this-> onlyNameTypeString ();
+	    dones.erase (this);
+	    return ret;
+	} else return "_";
     }
 
     vector <Word> & IStructInfo::udas () {
@@ -850,6 +843,13 @@ namespace semantic {
 	return this-> types;
     }
 
+    InfoType IStructInfo::typeOfAttrib (const std::string & name) {
+	for (int i = 0 ; i < (int) this-> attrs.size () ; i++) {
+	    if (this-> attrs [i] == name) return this-> types [i];
+	}
+	return NULL;
+    }
+    
     bool IStructInfo::has (std::string attr) {
 	for (auto it : this-> _udas)
 	    if (it == attr) return true;
@@ -872,8 +872,8 @@ namespace semantic {
 		if (this-> _isUnion)
 		    str_type_node = Ymir::makeUnion (name, this-> types, this-> attrs);
 		else str_type_node = Ymir::makeTuple (name, this-> types, this-> attrs, this-> has (Keys::PACKED));
+		IFinalFrame::declareType (name, str_type_node);	    
 	    } else str_type_node = Ymir::makeTuple (name, {new (Z0) ICharInfo (true)}, {"_"});
-	    IFinalFrame::declareType (name, str_type_node);
 	}
 	return str_type_node;
     }

@@ -203,6 +203,7 @@ namespace semantic {
 	    if (func-> getTest ()) {
 		auto valid = func-> getTest ()-> templateExpReplace (res.elements);
 		if (!validateTest (valid)) return NULL;
+		else res.score += 1;
 	    }
 	    
 	    Frame ret;

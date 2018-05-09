@@ -21,7 +21,9 @@ namespace semantic {
 	    }
 	}
 	
-	Ymir::Tree InstUnrefBinRight (Word locus, InfoType type, Expression left, Expression right) {
+	Ymir::Tree InstUnrefBinRight (Word locus, InfoType t, Expression left, Expression right) {
+	    auto type = t-> cloneOnExitWithInfo ();
+	    
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
@@ -52,7 +54,8 @@ namespace semantic {
 	    
 	}
 		
-	Ymir::Tree InstUnrefBin (Word locus, InfoType type, Expression left, Expression right) {
+	Ymir::Tree InstUnrefBin (Word locus, InfoType t, Expression left, Expression right) {
+	    auto type = t-> cloneOnExitWithInfo ();
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
@@ -60,7 +63,7 @@ namespace semantic {
 	    auto loc = locus.getLocus ();
 	    auto innerType = left-> info-> type-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
-
+	    
 	    Ymir::TreeStmtList list;
 	    auto leftExp = Ymir::getExpr (list, left);
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
@@ -89,7 +92,8 @@ namespace semantic {
 	    return leftExp;
 	}
 
-	Ymir::Tree InstUnrefBinDouble (Word locus, InfoType type, Expression left, Expression right) {
+	Ymir::Tree InstUnrefBinDouble (Word locus, InfoType t, Expression left, Expression right) {
+	    auto type = t-> cloneOnExitWithInfo ();
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
@@ -105,7 +109,7 @@ namespace semantic {
 	    inner = innerRight-> toGeneric ();
 	    auto rightExp = Ymir::getExpr (list, right);
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
-
+	    
 	    if (type-> binopFoo) {
 		return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
 		    locus,
@@ -123,7 +127,8 @@ namespace semantic {
 	    }	    
 	}
 	
-	Ymir::Tree InstUnrefUn (Word locus, InfoType type, Expression left) {
+	Ymir::Tree InstUnrefUn (Word locus, InfoType t, Expression left) {
+	    auto type = t-> cloneOnExitWithInfo ();
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
@@ -323,15 +328,16 @@ namespace semantic {
     Ymir::Tree IRefInfo::toGeneric () {
 	if (this-> _content-> is <IStructInfo> ()) {
 	    return build_pointer_type (
-				       void_type_node
-				       );
+		void_type_node
+	    );
 	} else {
 	    Ymir::Tree inner = this-> _content-> toGeneric ();
 	    return build_pointer_type (
-				       inner.getTree ()
-				       );
+		inner.getTree ()
+	    );
 	}
     }
+
     
     InfoType IRefInfo::addUnref (InfoType elem) {
 	bool binop = false, unop = false, mult = false;

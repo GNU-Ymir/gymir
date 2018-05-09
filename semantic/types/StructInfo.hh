@@ -166,6 +166,8 @@ namespace semantic {
 
 	std::vector <InfoType> & getTypes ();
 
+	InfoType typeOfAttrib (const std::string & name);
+	
 	std::vector <Word> &udas ();
 
 	bool has (std::string attr);

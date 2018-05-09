@@ -6,6 +6,8 @@
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/ast/Expression.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/semantic/types/RefInfo.hh>
+#include <ymir/semantic/types/PtrInfo.hh>
 #include "toplev.h"
 
 using namespace semantic;
@@ -65,7 +67,8 @@ namespace Ymir {
 	tree record_type = make_node (UNION_TYPE);
 	for (uint i = 0 ; i < types.size () ; i++) {
 	    tree ident = get_identifier (attrs [i].c_str ());
-	    tree type = types [i]-> toGeneric ().getTree ();	    
+	    tree type = types [i]-> toGeneric ().getTree ();
+	    
 	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
 	    DECL_CONTEXT (field) = record_type;
 
@@ -87,9 +90,9 @@ namespace Ymir {
 	auto size = 0;
 	for (uint i = 0 ; i < types.size () ; i++) {
 	    tree ident = get_identifier (attrs [i].c_str ());
-	    tree type = types [i]-> toGeneric ().getTree ();
-	    size += TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type));
+	    tree type = types [i]-> toGeneric ().getTree (); 
 	    
+	    size += TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type));
 	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
 	    DECL_CONTEXT (field) = record_type;
 
@@ -122,7 +125,8 @@ namespace Ymir {
 	    OutBuffer buf;
 	    buf.write ("_", (int) i);
 	    tree ident = get_identifier (buf.str ().c_str ());
-	    tree type = types [i]-> toGeneric ().getTree ();
+	    tree type = types [i]-> toGeneric ().getTree (); 
+
 	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
 	    DECL_CONTEXT (field) = record_type;
 
@@ -149,18 +153,16 @@ namespace Ymir {
 	}
 	
 	Tree field_decl = TYPE_FIELDS (TREE_TYPE (obj.getTree ()));
-	
 	while (!field_decl.isNull ()) {
 	    Tree decl_name = DECL_NAME (field_decl.getTree ());
 	    std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));
-
 	    if (field_name == name) break;
 	    else 
 		field_decl = TREE_CHAIN (field_decl.getTree ());
 	}
 
-	if (field_decl.isNull ())
-	    Ymir::Error::assert ("");
+	if (field_decl.isNull ()) 
+	    Ymir::Error::assert ((std::string ("undef attr ") + name).c_str ());
 	
 	return Ymir::buildTree (COMPONENT_REF, loc,
 				TREE_TYPE (field_decl.getTree ()),
@@ -218,7 +220,7 @@ namespace Ymir {
 	return buildTree (ARRAY_REF, locus, inner, array, it, Tree (), Tree ());
     }
 
-    Tree getPointerUnref (location_t loc, Tree ptr, Tree inner, ulong index) {
+    Tree getPointerUnref (location_t loc, Tree ptr, Tree inner, ulong index) {	
 	if (index != 0) {
 	    Tree it = build_int_cst_type (long_unsigned_type_node, index);
 	    return getPointerUnref (loc, ptr, inner, it);

@@ -476,13 +476,13 @@ namespace syntax {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
-	
+
 	return this-> info-> type-> buildBinaryOp (
 	    this-> token,
 	    this-> info-> type,
 	    this-> left,
 	    this-> right
-	);	
+	);
     }    
 
     Ymir::Tree IDColon::toGeneric () {
@@ -490,7 +490,7 @@ namespace syntax {
 	    auto ret = this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	    return ret;
 	}
-
+	
 	return this-> info-> type-> buildUnaryOp (
 	    this-> token,
 	    this-> info-> type,

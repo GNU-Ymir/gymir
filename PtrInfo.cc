@@ -54,7 +54,8 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstUnrefUn (Word locus, InfoType type, Expression left) {
+	Ymir::Tree InstUnrefUn (Word locus, InfoType t, Expression left) {
+	    auto type = t-> cloneOnExitWithInfo ();
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
@@ -82,7 +83,8 @@ namespace semantic {
 	    }
 	}
 	
-	Ymir::Tree InstUnrefBin (Word locus, InfoType type, Expression left, Expression right) {
+	Ymir::Tree InstUnrefBin (Word locus, InfoType t, Expression left, Expression right) {
+	    auto type = t-> cloneOnExitWithInfo ();
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
@@ -461,6 +463,7 @@ namespace semantic {
 	return elem;
     }
     
+
     Ymir::Tree IPtrInfo::toGeneric () {
 	if (this-> _content-> to<IStructInfo> ()) {
 	    return build_pointer_type (
