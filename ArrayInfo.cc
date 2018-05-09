@@ -110,6 +110,7 @@ namespace semantic {
 	if (vars.size () != 1) return NULL;
 	if (this-> isConst ()) {
 	    vars [0]-> info-> type = this-> _content-> clone ()-> CompOp (vars [0]-> info-> type);
+	    vars [0]-> info-> type-> value () = NULL;
 	} else {
 	    InfoType ref = new (Z0) IRefInfo (false, this-> _content);
 	    auto content = this-> _content-> clone ();
@@ -824,7 +825,6 @@ namespace semantic {
 
 	    Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, iter-> token.getLocus (), void_type_node, end_label);	
 	    list.append (end_expr);
-	    debug_tree (list.getTree ());
 	    return list.getTree ();
 	}
 
