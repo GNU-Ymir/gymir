@@ -350,7 +350,7 @@ namespace semantic {
 	} else if (var-> token == "typeid") {
 	    return StringOf ();
 	} else if (var-> token == "sizeof") {
-	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
+	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
 	    ret-> unopFoo = FixedUtils::InstSizeOf;
 	    return ret;	
 	}

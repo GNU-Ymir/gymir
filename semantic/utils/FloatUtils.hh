@@ -21,7 +21,7 @@ namespace semantic {
 
 	Ymir::Tree InstTest (Word locus, InfoType, syntax::Expression elem, syntax::Expression);
 	Ymir::Tree InstTestRight (Word locus, InfoType, syntax::Expression elem, syntax::Expression);
-
+	Ymir::Tree InstSizeOf (Word, InfoType, syntax::Expression elem);
 	
     }
 

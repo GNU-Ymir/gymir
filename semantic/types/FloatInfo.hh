@@ -90,6 +90,8 @@ namespace semantic {
 
 	InfoType Sqrt ();
 
+	InfoType SizeOf ();
+	
 	InfoType opAff (Word, syntax::Expression);
 
 	InfoType opNorm (Word, syntax::Expression);

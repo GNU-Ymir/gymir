@@ -446,11 +446,20 @@ namespace syntax {
 	    for (uint i = 0 ; i < this-> params.size () ; i++) {
 		Ymir::Tree ref = Ymir::getArrayRef (this-> token.getLocus (), aux, innerType, i);
 		auto left = new (Z0)  ITreeExpression (this-> token, info-> content (), ref);
-		list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
-					      void_type_node,
-					      ref, 
-					      this-> casters [i]-> buildCastOp (this-> token, this-> casters [i], this-> params [i], left)
-		));
+		auto right = this-> casters [i]-> buildCastOp (this-> token, this-> casters [i], this-> params [i], left);
+		if (ref.getType () == right.getType ()) {
+		    list.append (Ymir::buildTree (MODIFY_EXPR, this-> token.getLocus (),
+						  void_type_node,
+						  ref, right)
+		    );
+		} else {
+		    auto ptrl = Ymir::getAddr (this-> token.getLocus (), ref).getTree ();
+		    auto ptrr = Ymir::getAddr (this-> token.getLocus (), right).getTree ();
+		    tree tmemcpy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		    tree size = TYPE_SIZE_UNIT (ref.getType ().getTree ());
+		    auto res = build_call_expr (tmemcpy, 3, ptrl, ptrr, size);
+		    list.append (res);
+		}
 	    }
 
 	    return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), aux);

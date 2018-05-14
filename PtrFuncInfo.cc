@@ -369,6 +369,10 @@ namespace semantic {
 	    ret-> params.insert (ret-> params.begin (), new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()));
 	    ret-> binopFoo = PtrFuncUtils::InstGetPtr;
 	    return ret;
+	} else if (var-> token == "sizeof") {
+	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
+	    ret-> unopFoo = FixedUtils::InstSizeOf;
+	    return ret;	
 	}
 	return NULL;
     }

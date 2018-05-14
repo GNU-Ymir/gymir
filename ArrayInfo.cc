@@ -176,7 +176,7 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::SizeOf () {
-	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
+	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
 	ret-> unopFoo = FixedUtils::InstSizeOf;
 	return ret;	
     }

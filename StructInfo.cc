@@ -54,7 +54,7 @@ namespace semantic {
 	}
 
 	Tree InstCast (Word loc, InfoType type, Expression elem, Expression) {
-	    auto toType = type-> toGeneric ();
+	    auto toType = type->  toGeneric ();
 	    auto rtree = elem-> toGeneric ();
 	    if (toType != rtree.getType ()) {
 		Ymir::TreeStmtList list;
@@ -204,7 +204,7 @@ namespace semantic {
     
     InfoType IStructCstInfo::SizeOf () {
 	if (this-> TempOp ({}) != NULL) {
-	    auto ret = new (Z0) IFixedInfo (true, FixedConst::UBYTE);
+	    auto ret = new (Z0) IFixedInfo (true, FixedConst::UINT);
 	    ret-> unopFoo = StructUtils::InstSizeOfCst;
 	    return ret;
 	}

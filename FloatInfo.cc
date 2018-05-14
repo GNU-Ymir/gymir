@@ -92,6 +92,7 @@ namespace semantic {
 	if (var-> token == "max_exp") return MaxExp ();
 	if (var-> token == "min_10_exp") return Min10Exp ();
 	if (var-> token == "min_exp") return MinExp ();
+	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "typeid") return StringOf ();
 	return NULL;
     }
@@ -293,9 +294,15 @@ namespace semantic {
 	} else ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, INFINITY);
 	return ret;
     }
-
+    
     InfoType IFloatInfo::Sqrt () {
 	return NULL;
+    }
+
+    InfoType IFloatInfo::SizeOf () {
+	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
+	ret-> unopFoo = FloatUtils::InstSizeOf;
+	return ret;	
     }
     
     InfoType IFloatInfo::opAff (Word, syntax::Expression right) {
@@ -486,7 +493,11 @@ namespace semantic {
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
-		
+
+	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
+	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
+	}
+	
     }
 
     IFloatValue::IFloatValue (FloatConst type, float f, double d) {

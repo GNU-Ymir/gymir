@@ -198,7 +198,7 @@ namespace semantic {
     }
 
     InfoType ITupleInfo::SizeOf () {
-	auto ret = new (Z0) IFixedInfo (true, FixedConst::UBYTE);
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::UINT);
 	ret-> unopFoo = TupleUtils::InstSizeOf;
 	return ret;
     }

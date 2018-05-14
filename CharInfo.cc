@@ -242,7 +242,7 @@ namespace semantic {
     }
 
     InfoType ICharInfo::SizeOf () {
-	auto _in = new (Z0)  IFixedInfo (true, FixedConst::UBYTE);
+	auto _in = new (Z0)  IFixedInfo (true, FixedConst::UINT);
 	_in-> unopFoo = FixedUtils::InstSizeOf;
 	return _in;
     }

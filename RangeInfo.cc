@@ -5,6 +5,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/utils/RangeUtils.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 using namespace syntax;
 
 namespace semantic {
@@ -41,6 +42,11 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "fst") return Fst ();
 	if (var-> token == "scd") return Scd ();
+	else if (var-> token == "sizeof") {
+	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
+	    ret-> unopFoo = FixedUtils::InstSizeOf;
+	    return ret;	
+	}
 	return NULL;       
     }
 
