@@ -81,6 +81,8 @@ ymir_langhook_init (void)
 static void
 ymir_init_options (unsigned int argc, cl_decoded_option * decoded_options)
 {
+    Options::instance ().setExecutable (decoded_options [0].arg);
+    Ymir::log ("prefix : ", Options::instance ().prefixIncludeDir ());
     for (unsigned int i = 0 ; i < argc ; i++) {
 	//const char * arg = decoded_options [i].arg;
 	switch (decoded_options [i].opt_index) {
@@ -125,9 +127,11 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
     opt_code code = (opt_code) scode;
     if (code == OPT_I)
 	Options::instance ().addIncludeDir (arg);
-    else if (code == OPT_iprefix) 
+    else if (code == OPT_iprefix) {
+	Ymir::log ("Change prefix from : ", Options::instance ().prefixIncludeDir ());
 	Options::instance ().setPrefix (arg);
-    else if (code == OPT_v) {
+	Ymir::log ("Change prefix : ", Options::instance ().prefixIncludeDir ());
+    } else if (code == OPT_v) {
 	Options::instance ().isVerbose () = true;
     } else if (code == OPT_stalone) 
 	Options::instance ().isStandalone () = true;

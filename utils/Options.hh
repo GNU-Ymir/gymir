@@ -13,6 +13,7 @@ class Options {
 
     std::vector <std::string> _includeDirs;
     std::string _prefixIncludeDir;
+    std::string _executable;
     bool _isVerbose = false;
     bool _isDebug = false;
     bool _isStandalone = false;
@@ -36,6 +37,8 @@ public:
 
     void setPrefix (const char * path);
 
+    void setExecutable (const char * path);
+    
     std::vector <std::string> & includeDirs ();
 
     void addIncludeDir (const char * path);

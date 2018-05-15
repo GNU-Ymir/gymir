@@ -14,6 +14,12 @@ bool & Options::isStandalone () {
     return this-> _isStandalone;
 }
 
+void Options::setExecutable (const char * path) {
+    this-> _executable = path;
+    auto index = this-> _executable.find_last_of ("/");
+    this-> setPrefix (this-> _executable.substr (0, index).c_str ());    
+}
+
 void Options::setPrefix (const char * path) {
     this-> _prefixIncludeDir = path;
     if (this-> _prefixIncludeDir [this-> _prefixIncludeDir.length () - 1] != '/')
