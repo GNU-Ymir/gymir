@@ -775,7 +775,7 @@ namespace semantic {
 	    );
 	}
 	
-	Tree InstApply (Word locus, std::vector <Var> & vars, Block block, Expression iter) {
+	Tree InstApply (Word locus, InfoType, std::vector <Var> & vars, Block block, Expression iter) {
 	    auto loc = locus.getLocus ();
 	    auto array = iter-> toGeneric ();
 	    auto len = getLen (loc, iter, array);

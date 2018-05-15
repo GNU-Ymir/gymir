@@ -582,7 +582,7 @@ namespace syntax {
 	if (!this-> id.isEof ())
 	    Ymir::getLoopLabelsNamed () [this-> id.getStr ()] = end_label;
 	
-	list.append (this-> ret-> buildApplyOp (this-> token, this-> var, this-> block, this-> iter));
+	list.append (this-> ret-> buildApplyOp (this-> token, this-> ret, this-> var, this-> block, this-> iter));
 	Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, this-> token.getLocus (), void_type_node, end_label);	
 	list.append (end_expr);
 	Ymir::getLoopLabels ().pop_back ();

@@ -20,6 +20,26 @@ namespace semantic {
 		return NULL;
 	    }
 	}
+
+	Ymir::Tree InstUnrefApply (Word locus, InfoType t, std::vector <Var> & vars, Block block, Expression iter) {
+	    auto type = t-> cloneOnExitWithInfo ();
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+	    type-> applyFoo = getAndRemoveBack (type-> nextApply);
+
+	    auto loc = locus.getLocus ();
+	    auto innerType = iter-> info-> type-> to <IRefInfo> ()-> content ();
+	    auto inner = innerType-> toGeneric ();
+
+	    Ymir::TreeStmtList list;
+	    auto iterExp = Ymir::getExpr (list, iter);
+	    iterExp = getPointerUnref (locus.getLocus (), iterExp, inner, 0);
+	    return Ymir::compoundExpr (loc, list, type-> buildApplyOp (
+		locus, type, vars, block,
+		new (Z0) ITreeExpression (iter-> token, innerType, iterExp)
+	    ));	    
+	}
 	
 	Ymir::Tree InstUnrefBinRight (Word locus, InfoType t, Expression left, Expression right) {
 	    auto type = t-> cloneOnExitWithInfo ();
@@ -281,8 +301,11 @@ namespace semantic {
 	return NULL;
     }
 
-    // InfoType IRefInfo::ApplyOp (std::vector <syntax::Var> vars) {	
-    // }
+    InfoType IRefInfo::ApplyOp (const std::vector <syntax::Var> & vars) {	
+	auto ret = this-> _content-> ApplyOp (vars);
+	if (ret) return addUnref (ret);
+	return ret;
+    }
 
     ApplicationScore IRefInfo::CallType (Word op, syntax::ParamList params) {
 	auto ret = this-> _content-> CallType (op, params);
@@ -341,6 +364,7 @@ namespace semantic {
     
     InfoType IRefInfo::addUnref (InfoType elem) {
 	bool binop = false, unop = false, mult = false;
+	bool apply = false;
 	if (elem-> binopFoo) {
 	    elem-> nextBinop.push_back (elem-> binopFoo);
 	    binop = true;
@@ -354,10 +378,16 @@ namespace semantic {
 	    elem-> nextMult.push_back (elem-> multFoo);
 	    mult = true;
 	}
+
+	if (elem-> applyFoo) {
+	    elem-> nextApply.push_back (elem-> applyFoo);
+	    apply = true;
+	}
 	
 	if (binop) elem-> binopFoo = &RefUtils::InstUnrefBin;
 	if (unop) elem-> unopFoo = &RefUtils::InstUnrefUn;
 	if (mult) elem-> multFoo = &RefUtils::InstUnrefBin;
+	if (apply) elem-> applyFoo = &RefUtils::InstUnrefApply;
 	return elem;
     }
     
@@ -478,7 +508,9 @@ namespace semantic {
 	return this-> _content-> CompOp (other);
     }
 
-    //InfoType IArrayRefInfo::ApplyOp (std::vector <syntax::Var> vars) {}
+    InfoType IArrayRefInfo::ApplyOp (const std::vector <syntax::Var> &vars) {
+	return this-> _content-> ApplyOp (vars);
+    }
 
     ApplicationScore IArrayRefInfo::CallType (Word op, syntax::ParamList params) {
 	return this-> _content-> CallType (op, params);

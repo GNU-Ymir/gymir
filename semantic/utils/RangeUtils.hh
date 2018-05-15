@@ -15,7 +15,7 @@ namespace semantic {
 	Ymir::Tree InstScd (Word locus, InfoType, syntax::Expression left, syntax::Expression);		
 	Ymir::Tree InstCast (Word, InfoType, syntax::Expression elem, syntax::Expression);
 
-	Ymir::Tree InstApply (Word word, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
+	Ymir::Tree InstApply (Word word, InfoType, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
 	
     }
 

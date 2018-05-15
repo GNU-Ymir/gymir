@@ -32,7 +32,7 @@ namespace semantic {
 
 	Ymir::Tree InstToString (Word word, InfoType type, syntax::Expression elem, syntax::Expression);
 	
-	Ymir::Tree InstApply (Word word, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
+	Ymir::Tree InstApply (Word word, InfoType, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
 
 	Ymir::Tree InstCall (Word loc, semantic::InfoType ret, syntax::Expression, syntax::Expression paramsExp);
 	

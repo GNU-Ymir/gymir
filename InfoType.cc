@@ -46,8 +46,8 @@ namespace semantic {
 	return this-> multFoo (locus, type, left, rights);
     }
     
-    Ymir::Tree IInfoType::buildApplyOp (Word locus, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr) {
-	return this-> applyFoo (locus, vars, bl, expr);
+    Ymir::Tree IInfoType::buildApplyOp (Word locus, InfoType type, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr) {
+	return this-> applyFoo (locus, type, vars, bl, expr);
     }
     
     InfoType IInfoType::factory (Word word, const std::vector<syntax::Expression> & templates) {
@@ -237,6 +237,7 @@ namespace semantic {
 	ret-> nextBinop = this-> nextBinop;
 	ret-> nextUnop = this-> nextUnop;
 	ret-> nextMult = this-> nextMult;
+	ret-> nextApply = this-> nextApply;
 	return ret;
     }
 
