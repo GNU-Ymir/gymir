@@ -463,6 +463,7 @@ namespace syntax {
 	
 	    auto type = expr-> info-> type-> ApplyOp (var);
 	    if (type == NULL) {
+		Table::instance ().quitBlock ();
 		auto call = findOpApply ();
 		if (call == NULL) {
 		    Ymir::Error::undefinedOp (this-> token, expr-> info);
