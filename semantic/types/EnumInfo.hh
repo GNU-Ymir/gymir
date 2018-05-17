@@ -55,6 +55,8 @@ namespace semantic {
     private:
 
 	InfoType GetAttrib (ulong nb);
+
+	InfoType GetMembers ();
 	
     };
 

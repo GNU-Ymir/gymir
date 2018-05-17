@@ -3,6 +3,7 @@
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/utils/Options.hh>
+#include <ymir/semantic/tree/Generic.hh>
 
 namespace semantic {
 
@@ -46,6 +47,62 @@ namespace semantic {
 	    }
 	}
 
+	Tree InstGet (Word locus, EnumCstInfo info, ulong i) {
+	    if (info-> comps [i]) {
+		if (info-> comps [i]-> unopFoo) {
+		    return info-> comps [i]-> buildUnaryOp (
+			locus, info-> comps [i], info-> values [i]
+		    );
+		} else {
+		    return info-> comps [i]-> buildBinaryOp (
+			locus, info-> comps [i], info-> values [i],
+			new (Z0) ITreeExpression (locus, info-> comps [i], Ymir::Tree ())
+		    );
+		}
+	    } else return info-> values [i]-> toGeneric ();
+	}
+	
+	Tree InstMembers (Word locus, InfoType type, Expression elem) {
+	    Ymir::TreeStmtList list;
+	    ArrayInfo info = type-> to <IArrayInfo> ();
+	    auto encst = elem-> info-> type-> to <IEnumCstInfo> ();
+	    Ymir::Tree innerType = info-> content ()-> toGeneric ();
+	    auto intExpr = new (Z0) IFixed (locus, FixedConst::ULONG);
+	    intExpr-> setUValue (encst-> values.size ());
+	    auto lenExpr = intExpr-> expression ();
+	    auto len = lenExpr-> toGeneric ();
+	    intExpr-> setUValue (0);
+	    auto begin = intExpr-> toGeneric ();
+
+	    Ymir::Tree range_type = build_range_type (integer_type_node, fold (begin.getTree ()), fold (len.getTree ()));
+	    Ymir::Tree array_type = build_array_type (innerType.getTree (), range_type.getTree ());
+	
+	    Ymir::Tree aux = Ymir::makeAuxVar (locus.getLocus (),
+					       ISymbol::getLastTmp (),
+					       array_type
+	    );
+
+	    for (uint i = 0 ; i < encst-> values.size () ; i++) {
+		auto ref = Ymir::getArrayRef (locus.getLocus (), aux, innerType, i);
+		// auto left = new (Z0) ITreeExpression (locus, info-> content (), ref);
+		auto right = EnumUtils::InstGet (locus, encst, i);
+		if (ref.getType () == right.getType ()) {
+		    list.append (Ymir::buildTree (
+			MODIFY_EXPR, locus.getLocus (),
+			void_type_node, ref, right
+		    ));
+		} else {
+		    auto ptrl = Ymir::getAddr (locus.getLocus (), ref).getTree ();
+		    auto ptrr = Ymir::getAddr (locus.getLocus (), right).getTree ();
+		    tree tmemcpy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		    tree size = TYPE_SIZE_UNIT (ref.getType ().getTree ());
+		    auto res = build_call_expr (tmemcpy, 3, ptrl, ptrr, size);
+		    list.append (res);
+		}
+	    }
+	    return Ymir::compoundExpr (locus.getLocus (), list.getTree (), aux);
+	}	
+	
 	Tree InstGet (Word locus, InfoType type, Expression elem, Expression) {
 	    EnumInfo ecst = type-> to <IEnumInfo> ();
 	    ecst-> getValue () = elem;
@@ -222,6 +279,10 @@ namespace semantic {
 		return GetAttrib (i);
 	    i++;
 	}
+	
+	if (var-> token == "members")
+	    return GetMembers ();
+	
 	return NULL;
     }
 
@@ -295,6 +356,13 @@ namespace semantic {
 	return type;
     }
 
+    InfoType IEnumCstInfo::GetMembers () {
+	auto type = new (Z0) IArrayInfo (true, this-> type-> cloneConst ());
+	type-> isStatic (true, this-> values.size ());
+	type-> unopFoo = EnumUtils::InstMembers;
+	return type;
+    }
+    
     IEnumInfo::IEnumInfo (bool isConst, Namespace space, std::string name, InfoType type) :
 	IInfoType (isConst),
 	_name (name),
