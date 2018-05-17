@@ -88,6 +88,8 @@ std::string     Keys::NEW        = "new";
 std::string     Keys::ATTRIBUTE  = "attrib";
 std::string     Keys::MOVE       = "move";
 std::string     Keys::VERSION    = "version";
+std::string     Keys::TYPE       = "type";
+std::string     Keys::EXIT       = "exit";
 
 std::string Version::DEBUG = "debug";
 std::string Version::UNIX = "unix";

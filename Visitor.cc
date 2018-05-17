@@ -85,7 +85,7 @@ namespace syntax {
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 			       Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
-			       Keys::MOD, Keys::SELF, Keys::USE, Keys::STRINGOF
+			       Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::TYPE
 	};
 	
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -124,7 +124,7 @@ namespace syntax {
 		syntaxError (token,
 			     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 				     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION
+				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION, Keys::TYPE
 				     }
 		);
 	    }
@@ -167,7 +167,7 @@ namespace syntax {
 			syntaxError (tok,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE
 					     }
 			);
 		    } else 
@@ -219,7 +219,7 @@ namespace syntax {
 			syntaxError (tok,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE
 					     }
 			);			
     		    break;
@@ -262,7 +262,7 @@ namespace syntax {
 		syntaxError (token,
 			     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 				     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION
+				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION, Keys::TYPE
 				     }
 		);
 	    } else {
@@ -341,10 +341,11 @@ namespace syntax {
 	else if (token == Keys::IMMUTABLE) return visitGlobalImut ();
     	else if (token == Keys::SELF) return visitSelf ();
 	else if (token == Token::TILDE) return visitDestSelf ();
+	else if (token == Keys::TYPE) return visitTypeCreator ();
     	else if (fatal) syntaxError (token,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF)
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE
 					     }
 	);
     	else this-> lex.rewind ();
@@ -608,7 +609,7 @@ namespace syntax {
 	std::vector <Word> udas;
 	if (word == Token::AT) {
 	    udas = visitAttributes ();
-	    word = this-> lex.next ();
+	    word = this-> lex.next ({Token::LPAR, Token::PIPE, Token::ARROW});
 	}
 	
 	if (word == Token::LPAR) {
@@ -624,24 +625,7 @@ namespace syntax {
 	    }
 	    ident = visitIdentifiant ();
 	    word = this-> lex.next ({Token::SEMI_COLON});
- 	} else if (word != Token::ARROW) {
-	    this-> lex.rewind ();
-	    ident = visitIdentifiant ();
-	    auto next = this-> lex.next ({Token::LPAR, Token::LACC});
-	    if (next == Token::LPAR) {
-		temps = visitTemplateStruct ();
-		this-> lex.next ({Token::LACC});
-	    }
-	    next = this-> lex.next ();
-	    if (next != Token::RACC) {
-		this-> lex.rewind ();
-		while (true) {
-		    exps.push_back (visitStructVarDeclaration ());
-		    word = this-> lex.next ({Token::COMA, Token::RACC});
-		    if (word == Token::RACC) break;
-		}
-	    }
-	} else {
+ 	} else {
 	    visitIdentifiant ();
 	    this-> lex.next ({Token::COMA});    
 	}
@@ -656,34 +640,82 @@ namespace syntax {
 	Var type = NULL;
 	if (word == Token::COLON) type = visitType ();
 	else this-> lex.rewind ();
-	word = this-> lex.next ();
-	if (word != Token::PIPE)  {
-	    this-> lex.rewind ();
-	    ident = visitIdentifiant ();
-	    auto next = this-> lex.next ({Token::COLON, Token::LACC});
-	    if (next == Token::COLON) type = visitType ();
-	    while (true) {
-		names.push_back (visitIdentifiant ());
-		next = this-> lex.next ({Token::COLON});
-		values.push_back (visitPth ());
-		next = this-> lex.next ({Token::RACC, Token::COMA});
-		if (next == Token::RACC || next.isEof ()) break;
-	    }
-	} else {
-	    while (true) {
-		names.push_back (visitIdentifiant ());
-		auto next = this-> lex.next ({Token::COLON});
-		values.push_back (visitPth ());
-		next = this-> lex.next ({Token::ARROW, Token::PIPE});
-		if (next == Token::ARROW || next.isEof ()) break;
-	    }
-	
-	    ident = visitIdentifiant ();       	    
-	    word = this-> lex.next ({Token::SEMI_COLON});
+	word = this-> lex.next ({Token::PIPE});
+	while (true) {
+	    names.push_back (visitIdentifiant ());
+	    auto next = this-> lex.next ({Token::COLON});
+	    values.push_back (visitPth ());
+	    next = this-> lex.next ({Token::ARROW, Token::PIPE});
+	    if (next == Token::ARROW || next.isEof ()) break;
 	}
+	
+	ident = visitIdentifiant ();       	    
+	word = this-> lex.next ({Token::SEMI_COLON});	
 	return new (Z0)  IEnum (ident, type, names, values);
     }
 
+    TypeCreator Visitor::visitTypeCreator () {
+	std::vector <Expression> temps;
+	auto ident = visitIdentifiant ();
+	auto word = this-> lex.next ();
+	TypeForm form = TypeForm::OVER; 
+	if (word == Token::LPAR) {
+	    temps = visitTemplateStruct ();
+	    word = this-> lex.next ({Keys::OVER, Keys::IMPL});
+	    form = (word == Keys::OVER) ? TypeForm::OVER : TypeForm::IMPL;
+	}
+
+	auto save = this-> lambdaPossible;
+	this-> lambdaPossible = false;	
+	auto expr = visitExpression ();
+	this-> lambdaPossible = save;
+	auto type = new (Z0) ITypeCreator (ident, form, expr, temps);
+	
+	this-> lex.next ({Token::LACC});
+	while (true) {
+	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PUBLIC});
+	    if (next == Keys::SELF) type-> getConstructors ().push_back (visitTypeConstructor ());
+	    else if (next == Keys::OVER || next == Keys::DEF)
+		type-> getMethods ().push_back (visitTypeMethod ());
+	    else if (next == Token::TILDE) type-> getDestructors ().push_back (visitTypeDestructor ());
+	    else if (next == Keys::PRIVATE) visitTypePrivate (type);		
+	    else if (next == Keys::PUBLIC) visitTypePublic (type);
+	    else break;
+	}
+	return type;
+    }
+
+    TypeConstructor Visitor::visitTypeConstructor () {
+	std::vector <Var> params;
+	auto begin = this-> lex.rewind ().next ();
+	auto word = this-> lex.next ({Token::LPAR});
+	word = this-> lex.next ();
+	if (word != Token::RPAR) {
+	    this-> lex.rewind ();
+	    while (true) {
+		params.push_back (visitVarDeclaration ());
+		word = this-> lex.next ({Token::RPAR, Token::COMA});
+		if (word == Token::RPAR) break;
+	    }
+	}
+	return new (Z0) ITypeConstructor (begin, params, visitBlock ());
+    }
+
+    TypeDestructor Visitor::visitTypeDestructor () {	
+	Word begin = this-> lex.next ({Keys::SELF});
+	this-> lex.next ({Token::LPAR});
+	this-> lex.next ({Token::RPAR});
+	return new (Z0) ITypeDestructor (begin, visitBlock ());
+    }
+
+    TypeMethod Visitor::visitTypeMethod () {
+	auto over = (this-> lex.rewind ().next () == Keys::OVER);
+	auto function = visitFunction ();
+	return new (Z0) ITypeMethod (function, over);
+    }
+
+    void Visitor::visitTypePrivate (TypeCreator creator) {}
+    void Visitor::visitTypePublic (TypeCreator creator) {} 
     
     Expression Visitor::visitIfFunction () {
 	auto next = this-> lex.next ();

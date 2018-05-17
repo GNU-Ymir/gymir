@@ -110,6 +110,7 @@ namespace Ymir {
 	    CannotBeVoid,
 	    AddrLocalVar,
 	    UnPureExternC,
+	    ImplicitModule,
 	    LAST_ERROR
 	};
 
@@ -257,6 +258,8 @@ namespace Ymir {
 	static void undefUda (const Word&, const Word&);
 	
 	static void uninitVar (const Word&, const Word&);
+
+	static void implicitModule (const Word&);
 
 	static void useAsVar (const Word&, semantic::Symbol);
 

@@ -59,3 +59,4 @@
 #include "Macro.hh"
 #include "StringOf.hh"
 #include "AffectGeneric.hh"
+#include "TypeCreator.hh"

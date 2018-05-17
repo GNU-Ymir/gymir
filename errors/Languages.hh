@@ -138,6 +138,7 @@ namespace Ymir {
 		phrases [CallUnsafeInSafe] = "Cannot call unsafe context in @safe context";
 		phrases [AddrLocalVar] = "Escaping reference to local variable %%%";
 		phrases [UnPureExternC] = "Extern C function must be pure";
+		phrases [ImplicitModule] = "Cannot use implicitly declared module";
 		init = true;
 	    } 
 	    return phrases;

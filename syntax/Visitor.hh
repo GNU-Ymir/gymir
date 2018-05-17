@@ -19,8 +19,13 @@ namespace syntax {
 	std::vector<Declaration> visitDeclBlock ();
 	Declaration visitDeclaration (bool);
 
-	Constructor visitConstructor ();
-	Declaration visitFunctionImpl (bool &);
+	TypeCreator visitTypeCreator ();
+	TypeConstructor visitTypeConstructor ();
+	TypeDestructor visitTypeDestructor ();
+	TypeMethod visitTypeMethod ();
+	void visitTypePrivate (TypeCreator type);
+	void visitTypePublic (TypeCreator type);
+	
 	Self visitSelf ();
 	DestSelf visitDestSelf ();
 	Global visitGlobal ();

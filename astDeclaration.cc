@@ -1122,6 +1122,9 @@ namespace syntax {
 	    if (content == NULL) {
 		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
 		return;
+	    } else if (!content-> isAuto ()) {
+		Ymir::Error::implicitModule (this-> mod-> token);
+		return;
 	    }
 
 	    auto space = Table::instance ().space ();
@@ -1139,6 +1142,9 @@ namespace syntax {
 	    if (content == NULL) {
 		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
 		return;
+	    } else if (!content-> isAuto ()) {
+		Ymir::Error::implicitModule (this-> mod-> token);
+		return;
 	    }
 
 	    auto space = mod-> space ();
@@ -1155,6 +1161,9 @@ namespace syntax {
 	    auto content = mod_-> get ();
 	    if (content == NULL) {
 		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
+		return;
+	    } else if (!content-> isAuto ()) {
+		Ymir::Error::implicitModule (this-> mod-> token);
 		return;
 	    }
 	    

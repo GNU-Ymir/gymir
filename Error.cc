@@ -774,6 +774,19 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::implicitModule (const Word& word) {
+	auto str = getString (ImplicitModule);
+	auto msg = format (str);	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	    
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    printf ("%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::useAsVar (const Word& word, semantic::Symbol) {
 	auto str = getString (UseAsVar);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);	

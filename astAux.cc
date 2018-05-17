@@ -2107,5 +2107,36 @@ namespace syntax {
 	_addr (addr),
 	_const (const_)
     {}
+
+    ITypeCreator::ITypeCreator (Word ident, TypeForm form, Expression who, const std::vector <Expression> & tmps) {
+	this-> _ident = ident;
+	this-> _form = form;
+	this-> _who = who;
+	this-> _tmps = tmps;
+    }
+
+    std::vector <TypeConstructor> & ITypeCreator::getConstructors () {
+	return this-> _constr;
+    }
+
+    std::vector <TypeDestructor> & ITypeCreator::getDestructors () {
+	return this-> _destr;
+    }
+
+    std::vector <TypeMethod> & ITypeCreator::getMethods () {
+	return this-> _methods;
+    }
     
+    ITypeConstructor::ITypeConstructor (Word ident, const std::vector <Var> & params, Block block) :
+	IFunction (ident, {}, params, {}, NULL, block)
+    {}
+
+    ITypeDestructor::ITypeDestructor (Word ident, Block block)
+	: IFunction (ident, {}, {}, {}, NULL, block)
+    {}
+
+    ITypeMethod::ITypeMethod (Function func, bool over) 
+	: IFunction (*func),
+	  _isOver (over)
+    {}
 }
