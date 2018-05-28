@@ -50,7 +50,7 @@ namespace Ymir {
 	TRY {
 	    auto ret = visitor.visit ();	
 	    if (Ymir::Error::nb_errors > 0) {
-		Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
+		Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);
 	    }
 	    this-> lexer.dispose ();
 	    return ret;
@@ -87,7 +87,7 @@ namespace Ymir {
 	}
 	
 	if (Ymir::Error::nb_errors > 0) // Ne doit pas arriver
-	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
+	    Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);
 
 	Ymir::finishCompilation ();
     }

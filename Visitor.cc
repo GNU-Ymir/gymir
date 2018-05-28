@@ -628,8 +628,8 @@ namespace syntax {
 	    ident = visitIdentifiant ();
 	    word = this-> lex.next ({Token::SEMI_COLON});
  	} else {
-	    visitIdentifiant ();
-	    this-> lex.next ({Token::COMA});    
+	    ident = visitIdentifiant ();
+	    this-> lex.next ({Token::SEMI_COLON});    
 	}
 	return new (Z0)  IStruct (ident, temps, exps, udas, isUnion);
     }

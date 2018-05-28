@@ -1249,13 +1249,19 @@ namespace syntax {
     }
 
     InfoType ITypeConstructor::declare (AggregateCstInfo) {
-	//	auto space = Table::instance ().space ();	
+	//	auto space = Table::instance ().space ();
+	Ymir::Error::assert ("TODO");
+	return NULL;
     }
 
     InfoType ITypeMethod::declare (AggregateCstInfo, bool&) {
+	Ymir::Error::assert ("TODO");
+	return NULL;
     }
 
     InfoType ITypeDestructor::declare (AggregateCstInfo) {
+	Ymir::Error::assert ("TODO");
+	return NULL;
     }
     
     void ITypeMethod::declare () {
