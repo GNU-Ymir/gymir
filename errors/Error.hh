@@ -8,8 +8,13 @@
 #include "../syntax/Word.hh"
 #include <cmath>
 #include <ymir/utils/OutBuffer.hh>
+#include <setjmp.h>
 
 #define INCLUDE_STRING
+
+#define TRY if( !setjmp(Ymir::Error::ex_buf__) )
+#define CATCH else 
+#define THROW longjmp(Ymir::Error::ex_buf__, 1)
 
 namespace semantic {
     class ISymbol;
@@ -111,6 +116,7 @@ namespace Ymir {
 	    AddrLocalVar,
 	    UnPureExternC,
 	    ImplicitModule,
+	    MultiDestr,
 	    LAST_ERROR
 	};
 
@@ -152,7 +158,8 @@ namespace Ymir {
 	static const char*	BOLD;	// = "\u001B[1;50m";
 	
 	static unsigned long nb_errors;// (0);
-
+	static jmp_buf ex_buf__;
+	
 	static void mainPrototype (const Word&);
 
 	static void mainInModule (const Word&);
@@ -193,13 +200,15 @@ namespace Ymir {
 
 	static void syntaxErrorFor (const Word&, const Word&);
 
+	static void syntaxErrorFor (const Word&);
+
 	static void syntaxError (const Word&, const char*);
 
 	static void syntaxError (const Word&, const Word&);
 
 	static void escapeError (const Word&);
 
-	static void endOfFile ();
+	static void endOfFile (const Word&);
 
 	static void unterminated (const Word&);
 
@@ -303,6 +312,8 @@ namespace Ymir {
 	
 	static void noValueNonVoidFunction (const Word&);
 
+	static void multipleDestr (const Word &);
+	
 	static void activeError (bool);	
 		
 	static std::vector <ErrorMsg>& caught ();
@@ -316,6 +327,13 @@ namespace Ymir {
 
 	template <typename ... TArgs>
 	static void fail (const char * format_, TArgs ... args) {	    
+	    //fatal_error (UNKNOWN_LOCATION, format_, args...);
+	    fprintf (stderr, format_, args...);
+	    THROW;
+	}
+
+	template <typename ... TArgs>
+	static void end (const char * format_, TArgs ... args) {	    
 	    fatal_error (UNKNOWN_LOCATION, format_, args...);
 	}
 	
@@ -334,9 +352,8 @@ namespace Ymir {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
 	    aux = addLine (aux, word);
-	    printf ("%s", aux.c_str ());
-	    
-	    fatal_error (UNKNOWN_LOCATION, "");
+	    fprintf (stderr, "%s", aux.c_str ());
+	    THROW;
 	}
 		
 	template <typename ... TArgs>
@@ -349,7 +366,7 @@ namespace Ymir {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
 	    aux = addLine (aux, word);
-	    printf ("%s", aux.c_str ());
+	    fprintf (stderr, "%s", aux.c_str ());
 	    nb_errors ++;
 	}
 
@@ -363,9 +380,7 @@ namespace Ymir {
 	    std::string aux = format (format_, args...);
 	    aux = std::string (BLUE) + "Note" + std::string (RESET) + " : " + aux;
 	    aux = addLine (aux, word);
-	    printf ("%s", aux.c_str ());
-	    
-	    inform (UNKNOWN_LOCATION, "");
+	    printf ("%s", aux.c_str ());	    
 	}
 
 	template <typename ... TArgs>
@@ -375,8 +390,8 @@ namespace Ymir {
 	
 	template <typename ... TArgs>
 	void assert_ (const char * format_, TArgs ... args) {	    
-	    printf ("%sAssert%s : %s\n", RED, RESET, format (format_, args...).c_str ());
-	    raise (SIGSEGV);
+	    fprintf (stderr, "%sAssert%s : %s\n", RED, RESET, format (format_, args...).c_str ());
+	    THROW;
 	}	
 
 	static bool isEnable ();	    	

@@ -46,13 +46,21 @@ public:
 
     std::string getFile () const;  
     
+    static Word eof (std::string file) {
+	auto ret = Word {};
+	ret.str = "";
+	ret.line = 0;
+	ret.locFile = file;
+	return ret;
+    }
+
     static Word eof () {
 	auto ret = Word {};
 	ret.str = "";
 	ret.line = 0;
 	return ret;
     }
-
+    
     bool isEof () const {
 	return this-> line == 0 && this-> str == "";
     }
@@ -60,6 +68,12 @@ public:
     void setEof () {
 	this-> line = 0;
 	this-> str = "";
+    }
+    
+    void setEof (std::string file) {
+	this-> line = 0;
+	this-> str = "";
+	this-> locFile = file;
     }
 
     bool isToken () const;

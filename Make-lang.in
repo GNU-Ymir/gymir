@@ -86,6 +86,7 @@ ymir_OBJS = \
 	ymir/ModuleInfo.o \
 	ymir/MacroInfo.o \
 	ymir/MacroSolver.o \
+	ymir/AggregateInfo.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

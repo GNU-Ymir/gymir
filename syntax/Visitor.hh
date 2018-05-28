@@ -8,6 +8,8 @@ namespace syntax {
 
     struct Visitor {
 
+	static bool failure;
+	
 	Visitor (lexical::Lexer & lexer);
 
 	Program visit ();
@@ -24,7 +26,7 @@ namespace syntax {
 	TypeDestructor visitTypeDestructor ();
 	TypeMethod visitTypeMethod ();
 	void visitTypePrivate (TypeCreator type);
-	void visitTypePublic (TypeCreator type);
+	void visitTypeProtected (TypeCreator type);
 	
 	Self visitSelf ();
 	DestSelf visitDestSelf ();
@@ -144,7 +146,7 @@ namespace syntax {
 	bool isInMatch;
 	
 	lexical::Lexer & lex;
-
+	
     };
 
 };

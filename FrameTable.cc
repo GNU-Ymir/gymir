@@ -6,6 +6,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/ast/Global.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 
 namespace semantic {
     
@@ -17,6 +18,10 @@ namespace semantic {
 
     void FrameTable::insert (StructCstInfo info) {
 	this-> _structs.push_back (info);
+    }
+
+    void FrameTable::insert (AggregateCstInfo info) {
+	this-> _aggrs.push_back (info);
     }
     
     void FrameTable::insert (FinalFrame fr) {

@@ -139,6 +139,7 @@ namespace Ymir {
 		phrases [AddrLocalVar] = "Escaping reference to local variable %%%";
 		phrases [UnPureExternC] = "Extern C function must be pure";
 		phrases [ImplicitModule] = "Cannot use implicitly declared module";
+		phrases [MultiDestr] = "A type cannot have multiple destructors";
 		init = true;
 	    } 
 	    return phrases;

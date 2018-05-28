@@ -2108,11 +2108,12 @@ namespace syntax {
 	_const (const_)
     {}
 
-    ITypeCreator::ITypeCreator (Word ident, TypeForm form, Expression who, const std::vector <Expression> & tmps) {
+    ITypeCreator::ITypeCreator (Word ident, TypeForm form, const std::vector <Expression> & who, const std::vector <Expression> & tmps, bool isUnion) {
 	this-> _ident = ident;
 	this-> _form = form;
 	this-> _who = who;
 	this-> _tmps = tmps;
+	this-> _isUnion = isUnion;
     }
 
     std::vector <TypeConstructor> & ITypeCreator::getConstructors () {
@@ -2128,15 +2129,31 @@ namespace syntax {
     }
     
     ITypeConstructor::ITypeConstructor (Word ident, const std::vector <Var> & params, Block block) :
-	IFunction (ident, {}, params, {}, NULL, block)
+	_ident (ident),
+	_params (params),
+	_block (block)
     {}
 
+    InnerProtection& ITypeConstructor::getProtection () {
+	return this-> _prot;
+    }
+    
     ITypeDestructor::ITypeDestructor (Word ident, Block block)
-	: IFunction (ident, {}, {}, {}, NULL, block)
+	:
+	_ident (ident),
+	_block (block)
     {}
 
+    InnerProtection& ITypeDestructor::getProtection () {
+	return this-> _prot;
+    }
+    
     ITypeMethod::ITypeMethod (Function func, bool over) 
 	: IFunction (*func),
 	  _isOver (over)
     {}
+
+    InnerProtection& ITypeMethod::getProtection () {
+	return this-> _prot;
+    }
 }

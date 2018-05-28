@@ -11,6 +11,8 @@ using namespace std;
 
 namespace syntax {
 
+    bool Visitor::failure = false;
+    
     using namespace lexical;
     
     std::string join (std::vector <std::string> elems) {
@@ -38,7 +40,7 @@ namespace syntax {
     void syntaxErrorFor (const Word& token, Word tok2) {
 	Ymir::Error::syntaxErrorFor (token, tok2);
     }
-
+    
     void escapeError (const Word& token) {
 	Ymir::Error::escapeError (token);
     }
@@ -657,29 +659,53 @@ namespace syntax {
     TypeCreator Visitor::visitTypeCreator () {
 	std::vector <Expression> temps;
 	auto ident = visitIdentifiant ();
-	auto word = this-> lex.next ();
+	auto word = this-> lex.next ({Token::LPAR, Keys::OVER, Keys::IMPL});
 	TypeForm form = TypeForm::OVER; 
 	if (word == Token::LPAR) {
 	    temps = visitTemplateStruct ();
 	    word = this-> lex.next ({Keys::OVER, Keys::IMPL});
 	    form = (word == Keys::OVER) ? TypeForm::OVER : TypeForm::IMPL;
+	} else {	    
+	    form = (word == Keys::OVER) ? TypeForm::OVER : TypeForm::IMPL;
 	}
 
 	auto save = this-> lambdaPossible;
-	this-> lambdaPossible = false;	
-	auto expr = visitExpression ();
+	this-> lambdaPossible = false;
+
+	bool isUnion = false;
+	std::vector <Expression> who;
+	if (form == TypeForm::IMPL) {
+	    auto next = this-> lex.next ();
+	    if (next == Token::LPAR) {
+		while (true) {
+		    who.push_back (visitLeftOpSimple ());
+		    next = this-> lex.next ({Token::RPAR, Token::PIPE, Token::COMA});
+		    if (next == Token::PIPE) {
+			if (!isUnion && who.size () != 1) syntaxError (next, {Token::COMA, Token::RPAR});
+			else isUnion = true;
+		    } else if (next == Token::COMA) {
+			if (isUnion && who.size () != 1) syntaxError (next, {Token::PIPE, Token::RPAR});
+			else isUnion = false;
+		    } else break;
+		}
+	    } else {
+		this-> lex.rewind ();
+		who.push_back (visitExpression ());
+	    }
+	}
+	
 	this-> lambdaPossible = save;
-	auto type = new (Z0) ITypeCreator (ident, form, expr, temps);
+	auto type = new (Z0) ITypeCreator (ident, form, who, temps, isUnion);
 	
 	this-> lex.next ({Token::LACC});
 	while (true) {
-	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PUBLIC});
+	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED});
 	    if (next == Keys::SELF) type-> getConstructors ().push_back (visitTypeConstructor ());
 	    else if (next == Keys::OVER || next == Keys::DEF)
 		type-> getMethods ().push_back (visitTypeMethod ());
 	    else if (next == Token::TILDE) type-> getDestructors ().push_back (visitTypeDestructor ());
 	    else if (next == Keys::PRIVATE) visitTypePrivate (type);		
-	    else if (next == Keys::PUBLIC) visitTypePublic (type);
+	    else if (next == Keys::PROTECTED) visitTypeProtected (type);
 	    else break;
 	}
 	return type;
@@ -714,8 +740,38 @@ namespace syntax {
 	return new (Z0) ITypeMethod (function, over);
     }
 
-    void Visitor::visitTypePrivate (TypeCreator creator) {}
-    void Visitor::visitTypePublic (TypeCreator creator) {} 
+    void Visitor::visitTypePrivate (TypeCreator type) {
+	this-> lex.next ({Token::LACC});
+	while (true) {
+	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER});
+	    if (next == Keys::SELF) {
+		auto cst = visitTypeConstructor ();
+		cst-> getProtection () = InnerProtection::PRIVATE;
+		type-> getConstructors ().push_back (cst);
+	    } else if (next == Keys::OVER || next == Keys::DEF) {
+		auto cst = visitTypeMethod ();
+		cst-> getProtection () = InnerProtection::PRIVATE;
+		type-> getMethods ().push_back (cst);
+	    } else break;
+	}
+    }
+    
+    void Visitor::visitTypeProtected (TypeCreator type) {	
+	this-> lex.next ({Token::LACC});
+	while (true) {
+	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER});
+	    if (next == Keys::SELF) {
+		auto cst = visitTypeConstructor ();
+		cst-> getProtection () = InnerProtection::PROTECTED;
+		type-> getConstructors ().push_back (cst);
+	    } else if (next == Keys::OVER || next == Keys::DEF) {
+		auto cst = visitTypeMethod ();
+		cst-> getProtection () = InnerProtection::PROTECTED;
+		type-> getMethods ().push_back (cst);
+	    } else break;
+	}
+    } 
+
     
     Expression Visitor::visitIfFunction () {
 	auto next = this-> lex.next ();

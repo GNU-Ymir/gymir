@@ -120,7 +120,7 @@ namespace lexical {
 	this-> rewind ();
 	Ymir::Error::syntaxError (word, join (mandatories).c_str ());
 	
-	return Word::eof ();
+	return Word::eof (this-> filename);
     }
 
     Lexer& Lexer::rewind (ulong nb) {
@@ -140,7 +140,7 @@ namespace lexical {
     Lexer& Lexer::get (Word &word) {
 	do {
 	    if (!getWord (word)) {
-		word.setEof ();
+		word.setEof (this-> filename);
 		break;
 	    } else {
 		std::string com;

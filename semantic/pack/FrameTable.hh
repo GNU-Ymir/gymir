@@ -28,6 +28,9 @@ namespace semantic {
     class IStructInfo;
     typedef IStructInfo* StructInfo;
     
+    class IAggregateCstInfo;
+    typedef IAggregateCstInfo* AggregateCstInfo;
+
     class ISymbol;
     typedef ISymbol* Symbol;
     
@@ -38,6 +41,7 @@ namespace semantic {
 	std::vector <FinalFrame> _finalTemplates;
 	std::vector <FrameProto> _protos;
 	std::vector <StructCstInfo> _structs;
+	std::vector <AggregateCstInfo> _aggrs;
 	std::map <std::string, std::vector <StructInfo> > _structIds;	
 	std::vector <syntax::Global> _globals;
 	std::vector <Symbol> _externals;
@@ -55,6 +59,8 @@ namespace semantic {
 
 	void insert (StructCstInfo info);
 
+	void insert (AggregateCstInfo info);
+	
 	void insert (FinalFrame);
 
 	void insert (syntax::Global);

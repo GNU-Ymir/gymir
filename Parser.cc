@@ -47,12 +47,16 @@ namespace Ymir {
     
     syntax::Program Parser::syntax_analyse () {
 	auto visitor = syntax::Visitor (lexer);
-	auto ret = visitor.visit ();
-	if (Ymir::Error::nb_errors > 0) {
-	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
+	TRY {
+	    auto ret = visitor.visit ();	
+	    if (Ymir::Error::nb_errors > 0) {
+		Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);
+	    }
+	    this-> lexer.dispose ();
+	    return ret;
+	} CATCH {
+	    return new (Z0) syntax::IProgram (Word::eof (), {});
 	}
-	this-> lexer.dispose ();
-	return ret;
     }
 
     void Parser::semantic_time (syntax::Program prg) {
@@ -64,15 +68,7 @@ namespace Ymir {
 	for (auto it : FrameTable::instance ().structs ()) {
 	    it-> TempOp ({});
 	}
-
-	// for (auto it : FrameTable::instance ().globals ()) {
-	//     Ymir::declareGlobal (it-> sym, it-> getExpr ());
-	// }
 	
-	// for (auto it : FrameTable::instance ().externals ()) {
-	//     Ymir::declareGlobalExtern (it);
-	// }
-
 	uint i = 0;
 	while (i < FrameTable::instance ().pures ().size ()) {
 	    auto it = FrameTable::instance ().pures () [i];
@@ -81,7 +77,7 @@ namespace Ymir {
 	}
 	
 	if (Ymir::Error::nb_errors > 0)
-	    Ymir::Error::fail ("NB Error : %d", Ymir::Error::nb_errors);	
+	    Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);	
     }
 
     void Parser::lint_time () {

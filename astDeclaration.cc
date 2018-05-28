@@ -4,6 +4,7 @@
 #include <ymir/semantic/pack/PureFrame.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/object/_.hh>
 #include <ymir/utils/Mangler.hh>
 #include <sys/stat.h>
 #include <ymir/Parser.hh>
@@ -1212,6 +1213,61 @@ namespace syntax {
 	auto sym = new (Z0) ISymbol (this-> ident, mac);
 	sym-> isPublic () = this-> is_public ();
 	mod-> insert (sym);
+    }
+
+    void ITypeCreator::declare () {
+	auto space = Table::instance ().space ();
+	auto it = Table::instance ().getLocal (this-> _ident.getStr ());
+	if (it != NULL) {
+	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
+	}
+
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
+
+	if (this-> _destr.size () > 1) {
+	    Ymir::Error::multipleDestr (this-> _ident);
+	} else if (this-> _destr.size () == 1) {
+	    type-> getDestructor () = this-> _destr [0]-> declare (type);
+	}
+
+	for (auto cst : this-> _constr) {
+	    type-> getConstructors ().push_back (cst-> declare  (type));
+	}
+
+	for (auto meth : this-> _methods) {
+	    bool isStatic = false;
+	    auto info = meth-> declare (type, isStatic);
+	    if (isStatic) type-> getStaticMethods ().push_back (info);
+	    else type-> getMethods ().push_back (info);
+	}
+
+	auto sym = new (Z0) ISymbol (this-> _ident, type);
+	Table::instance ().insert (sym);
+	if (this-> _tmps.size () == 0) {
+	    FrameTable::instance ().insert (type);
+	}	
+    }
+
+    InfoType ITypeConstructor::declare (AggregateCstInfo) {
+	//	auto space = Table::instance ().space ();	
+    }
+
+    InfoType ITypeMethod::declare (AggregateCstInfo, bool&) {
+    }
+
+    InfoType ITypeDestructor::declare (AggregateCstInfo) {
+    }
+    
+    void ITypeMethod::declare () {
+	Ymir::Error::assert ("!!?");
+    }
+    
+    void ITypeMethod::declare (semantic::Module) {
+	Ymir::Error::assert ("!!?");
+    }
+    
+    void ITypeMethod::declareAsExtern (semantic::Module) {
+	Ymir::Error::assert ("!!?");
     }
     
 }
