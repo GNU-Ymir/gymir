@@ -60,36 +60,40 @@ namespace Ymir {
     }
 
     void Parser::semantic_time (syntax::Program prg) {
-	Table::instance ().purge ();
-	FrameTable::instance ().purge ();
-	Options::instance ().semanticTime ();
-	
-	prg-> declare ();
-	for (auto it : FrameTable::instance ().structs ()) {
-	    it-> TempOp ({});
-	}
-	
-	uint i = 0;
-	while (i < FrameTable::instance ().pures ().size ()) {
+	TRY {
+	    Table::instance ().purge ();
+	    FrameTable::instance ().purge ();
+	    Options::instance ().semanticTime ();
+	    
+	    prg-> declare ();
+	    for (auto it : FrameTable::instance ().structs ()) {
+		it-> TempOp ({});
+	    }
+	    
+	    uint i = 0;
+	    while (i < FrameTable::instance ().pures ().size ()) {
 	    auto it = FrameTable::instance ().pures () [i];
 	    it-> validate ();
 	    i++;
 	}
-	
-	if (Ymir::Error::nb_errors > 0)
-	    Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);	
+	    
+	    if (Ymir::Error::nb_errors > 0)
+		Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);	
+	} CATCH {}
     }
 
     void Parser::lint_time () {
-	Options::instance ().lintTime ();
-	for (auto it : FrameTable::instance ().finals ()) {
-	    it-> finalize ();
-	}
+	TRY {
+	    Options::instance ().lintTime ();
+	    for (auto it : FrameTable::instance ().finals ()) {
+		it-> finalize ();
+	    }
 	
-	if (Ymir::Error::nb_errors > 0) // Ne doit pas arriver
-	    Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);
+	    if (Ymir::Error::nb_errors > 0) // Ne doit pas arriver
+		Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);
 
-	Ymir::finishCompilation ();
+	    Ymir::finishCompilation ();
+	} CATCH {}
     }
 
     

@@ -140,6 +140,7 @@ namespace Ymir {
 		phrases [UnPureExternC] = "Extern C function must be pure";
 		phrases [ImplicitModule] = "Cannot use implicitly declared module";
 		phrases [MultiDestr] = "A type cannot have multiple destructors";
+		phrases [NeedAllType] = "All type must be known in constructor";
 		init = true;
 	    } 
 	    return phrases;

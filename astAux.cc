@@ -2137,6 +2137,18 @@ namespace syntax {
     InnerProtection& ITypeConstructor::getProtection () {
 	return this-> _prot;
     }
+
+    std::vector <Var> & ITypeConstructor::getParams () {
+	return this-> _params;
+    }
+
+    Block& ITypeConstructor::getBlock () {
+	return this-> _block;
+    }
+
+    Word ITypeConstructor::getIdent () {
+	return this-> _ident;
+    }
     
     ITypeDestructor::ITypeDestructor (Word ident, Block block)
 	:

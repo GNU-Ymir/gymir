@@ -18,7 +18,7 @@ namespace semantic {
 	std::vector <Frame> alls;
 	bool _alone = false;
 	bool _isLambda = false;
-
+	bool _isConstr = false;
 	
 	static int nbTmpsCreation;// = 0;
 	static bool needToReset;// = true;
@@ -69,6 +69,8 @@ namespace semantic {
 	bool& alone ();
 
 	bool& isLambda ();
+
+	bool& isConstr ();
 	
 	InfoType toPtr (Word op);
 	

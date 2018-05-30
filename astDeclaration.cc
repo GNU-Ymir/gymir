@@ -2,6 +2,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/pack/FrameTable.hh>
 #include <ymir/semantic/pack/PureFrame.hh>
+#include <ymir/semantic/pack/MethodFrame.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/object/_.hh>
@@ -1227,16 +1228,18 @@ namespace syntax {
 	if (this-> _destr.size () > 1) {
 	    Ymir::Error::multipleDestr (this-> _ident);
 	} else if (this-> _destr.size () == 1) {
-	    type-> getDestructor () = this-> _destr [0]-> declare (type);
+	    type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
 	}
 
 	for (auto cst : this-> _constr) {
-	    type-> getConstructors ().push_back (cst-> declare  (type));
+	    auto res = cst-> declare  (type);
+	    if (res)
+		type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	}
 
 	for (auto meth : this-> _methods) {
 	    bool isStatic = false;
-	    auto info = meth-> declare (type, isStatic);
+	    auto info = meth-> declare (type, isStatic)-> to <IFunctionInfo> ();
 	    if (isStatic) type-> getStaticMethods ().push_back (info);
 	    else type-> getMethods ().push_back (info);
 	}
@@ -1248,10 +1251,21 @@ namespace syntax {
 	}	
     }
 
-    InfoType ITypeConstructor::declare (AggregateCstInfo) {
-	//	auto space = Table::instance ().space ();
-	Ymir::Error::assert ("TODO");
-	return NULL;
+    InfoType ITypeConstructor::declare (AggregateCstInfo info) {
+	auto space = Table::instance ().space ();
+	for (auto it : this-> _params) {
+	    if (!it-> is<ITypedVar> ()) {
+		Ymir::Error::needAllTypeConstr (this-> _ident);
+		return NULL;
+	    }
+	}
+
+	auto fr = new IMethodFrame (info-> space (), "init",  info, this);
+	auto func = new IFunctionInfo (info-> space (), "init");
+	FrameTable::instance ().insert (fr);
+	func-> set (fr);
+	func-> isConst (true);
+	return func;
     }
 
     InfoType ITypeMethod::declare (AggregateCstInfo, bool&) {

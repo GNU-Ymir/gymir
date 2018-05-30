@@ -86,9 +86,15 @@ namespace syntax {
 	ITypeConstructor (Word ident, const std::vector <Var> & params, Block block);
 
 	InnerProtection & getProtection ();
+
+	std::vector <Var> & getParams ();
+
+	Block& getBlock ();
 	
 	semantic::InfoType declare (semantic::AggregateCstInfo info);
-		
+
+	Word getIdent ();
+	
     };
 
     class ITypeDestructor {	

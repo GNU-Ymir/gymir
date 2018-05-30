@@ -388,7 +388,7 @@ namespace syntax {
 	    return ret;
 	}
 
-	if (this-> _score-> dyn) {
+	if (this-> _score-> ret-> multFoo) {
 	    this-> params-> getTreats () = this-> _score-> treat;
 	    return this-> _score-> ret-> buildMultOp (
 		this-> token,
@@ -407,14 +407,27 @@ namespace syntax {
 		args.insert (args.begin (), closureVar.getTree ());
 	    } else if (this-> _score-> proto-> has (Keys::INLINE)) {
 		return this-> callInline (args);
+	    } else if (this-> _left-> info-> type-> is <IFunctionInfo> () &&
+		       this-> _left-> info-> type-> to <IFunctionInfo> ()-> isConstr ()) {
+		auto ltree = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> _score-> ret-> toGeneric ());
+		args.insert (args.begin (), getAddr (ltree).getTree ());
+		Ymir::TreeStmtList list;
+		Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
+		list.append (build_call_array_loc (this-> token.getLocus (),
+					     void_type_node,
+					     fn.getTree (),
+					     args.size (),
+					     args.data ()
+		));
+		return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), ltree);
 	    } 
 	    
 	    Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 	    return build_call_array_loc (this-> token.getLocus (),
-						    this-> _score-> ret-> toGeneric ().getTree (),
-						    fn.getTree (),
-						    args.size (),
-						    args.data ()
+					 this-> _score-> ret-> toGeneric ().getTree (),
+					 fn.getTree (),
+					 args.size (),
+					 args.data ()
 	    );	    
 	}
     }

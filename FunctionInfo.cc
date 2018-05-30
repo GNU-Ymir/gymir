@@ -127,7 +127,8 @@ namespace semantic {
 	    ));
 	    
 	    return Ymir::compoundExpr (locus.getLocus (), list.getTree (), finalRet);
-	}       
+	}
+	
     }
     
     IFunctionInfo::IFunctionInfo (Namespace space, std::string name) :
@@ -180,6 +181,7 @@ namespace semantic {
 	ret-> _isLambda = this-> _isLambda;
 	ret-> _fromTemplates = this-> _fromTemplates;
 	ret-> value () = this-> value ();
+	ret-> _isConstr = this-> _isConstr;
 	return ret;
     }
     
@@ -485,6 +487,10 @@ namespace semantic {
 	return this-> _isLambda;
     }
 
+    bool& IFunctionInfo::isConstr () {
+	return this-> _isConstr;
+    }
+    
     std::string IFunctionInfo::name () {
 	return this-> _name;
     }

@@ -117,6 +117,7 @@ namespace Ymir {
 	    UnPureExternC,
 	    ImplicitModule,
 	    MultiDestr,
+	    NeedAllType, 
 	    LAST_ERROR
 	};
 
@@ -313,7 +314,9 @@ namespace Ymir {
 	static void noValueNonVoidFunction (const Word&);
 
 	static void multipleDestr (const Word &);
-	
+
+	static void needAllTypeConstr (const Word&);
+	    
 	static void activeError (bool);	
 		
 	static std::vector <ErrorMsg>& caught ();
@@ -391,7 +394,7 @@ namespace Ymir {
 	template <typename ... TArgs>
 	void assert_ (const char * format_, TArgs ... args) {	    
 	    fprintf (stderr, "%sAssert%s : %s\n", RED, RESET, format (format_, args...).c_str ());
-	    THROW;
+	    raise (SIGABRT);
 	}	
 
 	static bool isEnable ();	    	

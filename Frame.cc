@@ -331,9 +331,9 @@ namespace semantic {
 	return FrameTable::instance ().getProto (proto);	
     }
 
-    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block) {
-	//Table::instance ().setCurrentSpace (Namespace (space, name));
-	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
+    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block, InfoType retType) {
+	if (retType == NULL) retType = new (Z0) IUndefInfo ();
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), retType);
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
 	
@@ -380,9 +380,9 @@ namespace semantic {
 	return FrameTable::instance ().getProto (proto);	
     }
 
-    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Block _block) {
-	//Table::instance ().setCurrentSpace (Namespace (space, name));
-	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), new (Z0) IUndefInfo ());
+    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Block _block, InfoType retType) {
+	if (retType == NULL) retType = new (Z0) IUndefInfo ();
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), retType);
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
 

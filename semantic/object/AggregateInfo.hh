@@ -14,11 +14,13 @@ namespace syntax {
 
 namespace semantic {
 
+    class IFunctionInfo;    
     class IAggregateCstInfo;
     class IAggregateInfo;
-
+    
     typedef IAggregateCstInfo* AggregateCstInfo;
     typedef IAggregateInfo* AggregateInfo;
+    typedef IFunctionInfo* FunctionInfo;
     
     class IAggregateCstInfo : public IInfoType {
 
@@ -26,10 +28,10 @@ namespace semantic {
 	Word _locId;
 	std::string _name;
 	
-	std::vector <InfoType> _contrs;
-	InfoType _destr;
-	std::vector <InfoType> _methods;
-	std::vector <InfoType> _staticMeth;
+	std::vector <FunctionInfo> _contrs;
+	FunctionInfo _destr;
+	std::vector <FunctionInfo> _methods;
+	std::vector <FunctionInfo> _staticMeth;
 
 	std::vector <syntax::Expression> _tmps;
 	std::vector <syntax::Expression> _impl;
@@ -39,18 +41,20 @@ namespace semantic {
 
 	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion);
 
-	std::vector <InfoType> & getConstructors ();
+	std::vector <FunctionInfo> & getConstructors ();
 
-	InfoType& getDestructor ();
+	FunctionInfo& getDestructor ();
 
-	std::vector <InfoType> & getMethods ();
+	std::vector <FunctionInfo> & getMethods ();
 
-	std::vector <InfoType> & getStaticMethods ();
+	std::vector <FunctionInfo> & getStaticMethods ();
 
+	Namespace space ();
+	
 	bool isSame (InfoType) override;
 
 	InfoType onClone () override;
-
+	
 	InfoType DColonOp (syntax::Var) override;
 
 	InfoType TempOp (const std::vector <::syntax::Expression> &) override;
@@ -72,7 +76,11 @@ namespace semantic {
 	const char * getId () override;
 
 	Word getLocId ();
-		
+
+    private :
+
+	InfoType Init ();
+	
     };
 
     class IAggregateInfo : public IInfoType {
@@ -81,10 +89,10 @@ namespace semantic {
 	Word _locId;
 	std::string _name;
 	
-	std::vector <Frame> _contrs;
-	Frame _destr;
-	std::vector <Frame> _methods;
-	std::vector <Frame> _staticMeth;
+	std::vector <FunctionInfo> _contrs;
+	FunctionInfo _destr;
+	std::vector <FunctionInfo> _methods;
+	std::vector <FunctionInfo> _staticMeth;
 
 	std::vector <syntax::Expression> tmpsDone;
 	AggregateCstInfo _id = NULL;
@@ -101,6 +109,10 @@ namespace semantic {
 	InfoType ConstVerif (InfoType) override;
 
 	InfoType onClone () override;
+
+	InfoType BinaryOp (Word, syntax::Expression) override;
+	
+	InfoType BinaryOpRight (Word, syntax::Expression) override;
 
 	InfoType DotOp (syntax::Var) override;
 

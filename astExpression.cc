@@ -1155,7 +1155,9 @@ namespace syntax {
 	    }
 
 	    if (type-> treat.size () != aux-> params-> getParams ().size ())
-		tuplingParams (type, aux);
+		if (!aux-> _left-> info-> type-> is <IFunctionInfo> () ||
+		    !aux-> _left-> info-> type-> to <IFunctionInfo> ()-> isConstr ())
+		    tuplingParams (type, aux);
 
 	    aux-> _score = type;
 	    aux-> info = new (Z0) ISymbol (this-> token, type-> ret);

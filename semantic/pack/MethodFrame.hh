@@ -2,21 +2,48 @@
 
 #include "Frame.hh"
 #include "FrameProto.hh"
-#include <ymir/ast/TypeCreator.hh>
 #include "UnPureFrame.hh"
 #include "PureFrame.hh"
 #include "TemplateFrame.hh"
 #include <ymir/ast/ParamList.hh>
 
+namespace syntax {
+    class ITypeConstructor;
+    typedef ITypeConstructor* TypeConstructor;
+
+    class IParamList;
+    typedef IParamList* ParamList; 
+    
+}
+
+
 namespace semantic {
+    
+    class IMethodFrame : public IFrame {
+	semantic::InfoType _info;
+	syntax::TypeConstructor _const;
+	std::string _name;
+	
+    public:
 
-    class IUnPureMethodFrame : public IUnPureFrame {
-    };
+	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeConstructor);
+	
+	FrameProto validate (const std::vector <InfoType> & params) override;
 
-    class IPureMethodFrame : public IPureFrame {
-    };
+	FrameProto validate (syntax::ParamList params) override;
 
-    class ITemplateMethodFrame : public ITemplateFrame {
+	FrameProto validate () override;
+	
+	ApplicationScore isApplicable (syntax::ParamList params) override;
+
+	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
+
+	static const char * id () {
+	    return "IMethodFrame";
+	}
+	
+	virtual const char* getId ();	
+	
     };
 	
 }
