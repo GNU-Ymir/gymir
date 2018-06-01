@@ -1,5 +1,6 @@
 #include <ymir/ast/_.hh>
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 #include <ymir/semantic/pack/_.hh>
 #include <ymir/semantic/value/_.hh>
 #include <ymir/syntax/Keys.hh>
@@ -518,9 +519,10 @@ namespace syntax {
     }
     
     bool IBinary::canOverOpAssign (Binary aux) {
+	if (aux-> left-> info-> type-> is <IAggregateInfo> ()) return true;
 	if (aux-> left-> info-> type-> is <IStructInfo> ()) return true;
 	if (auto ref = aux-> left-> info-> type-> to <IRefInfo> ())
-	    return ref-> content ()-> is <IStructInfo> ();
+	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> ();
 	return false;
     }
 

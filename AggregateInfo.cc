@@ -3,7 +3,9 @@
 #include <ymir/ast/Var.hh>
 #include <ymir/semantic/utils/StructUtils.hh>
 #include <ymir/semantic/types/UndefInfo.hh>
+#include <ymir/semantic/types/FixedInfo.hh>
 #include <ymir/ast/ParamList.hh>
+
 
 using namespace syntax;
 
@@ -74,8 +76,18 @@ namespace semantic {
 	}
     }
 
+    InfoType IAggregateCstInfo::SizeOf () {
+	if (this-> TempOp ({}) != NULL) {
+	    auto ret = new (Z0) IFixedInfo (true, FixedConst::UINT);
+	    ret-> unopFoo = StructUtils::InstSizeOfCst;
+	    return ret;
+	}
+	return NULL;
+    }
+
     InfoType IAggregateCstInfo::DColonOp (Var var) {
-	if (var-> token == "init") return Init ();	
+	if (var-> token == "init") return Init ();
+	if (var-> token == "sizeof") return SizeOf ();
 	return NULL;
     }
     
@@ -211,7 +223,10 @@ namespace semantic {
 	return ret;
     }
 
-    InfoType IAggregateInfo::DColonOp (Var) {
+    InfoType IAggregateInfo::DColonOp (Var var) {
+	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "sizeof") return SizeOf ();
+	//if (var-> token == "name") return Name ();
 	return NULL;
     }
 
@@ -235,6 +250,12 @@ namespace semantic {
 	return this-> _name;
     }
 
+    InfoType IAggregateInfo::SizeOf () {
+	auto ret = new (Z0) IFixedInfo (true, FixedConst::UINT);
+	ret-> unopFoo = StructUtils::InstSizeOf;
+	return ret;
+    }
+    
     Ymir::Tree IAggregateInfo::toGeneric () {
 	return this-> _impl-> toGeneric ();
     }

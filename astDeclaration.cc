@@ -1276,7 +1276,7 @@ namespace syntax {
 
     InfoType ITypeDestructor::declare (AggregateCstInfo info) {
 	auto space = Namespace (Table::instance ().space (), info-> name ());
-	auto fr = new IMethodFrame (info-> space (), "delete", info, this);
+	auto fr = new IMethodFrame (space, "delete", info, this);
 	auto func = new IFunctionInfo (space, "delete");
 
 	FrameTable::instance ().insert (fr);

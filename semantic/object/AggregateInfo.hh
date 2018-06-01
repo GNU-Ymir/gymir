@@ -82,6 +82,8 @@ namespace semantic {
     private :
 
 	InfoType Init ();
+
+	InfoType SizeOf ();
 	
     };
 
@@ -146,6 +148,12 @@ namespace semantic {
 
 	const char * getId () override;
 	
+    private :
+
+	InfoType SizeOf ();
+
+	//InfoType Name ();
+
     };
 
 }
