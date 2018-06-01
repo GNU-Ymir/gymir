@@ -1252,19 +1252,20 @@ namespace syntax {
     }
 
     InfoType ITypeConstructor::declare (AggregateCstInfo info) {
-	auto space = Table::instance ().space ();
+	auto space = Namespace (Table::instance ().space (), info-> name ());
+	bool addable = true;
 	for (auto it : this-> _params) {
 	    if (!it-> is<ITypedVar> ()) {
-		Ymir::Error::needAllTypeConstr (this-> _ident);
-		return NULL;
+		addable = false;
 	    }
 	}
+	auto fr = new IMethodFrame (space, "init",  info, this);
+	auto func = new IFunctionInfo (space, "init");
 
-	auto fr = new IMethodFrame (info-> space (), "init",  info, this);
-	auto func = new IFunctionInfo (info-> space (), "init");
-	FrameTable::instance ().insert (fr);
+	if (addable)
+	    FrameTable::instance ().insert (fr);
 	func-> set (fr);
-	func-> isConst (true);
+	func-> isConstr () = (true);
 	return func;
     }
 
@@ -1273,9 +1274,15 @@ namespace syntax {
 	return NULL;
     }
 
-    InfoType ITypeDestructor::declare (AggregateCstInfo) {
-	Ymir::Error::assert ("TODO");
-	return NULL;
+    InfoType ITypeDestructor::declare (AggregateCstInfo info) {
+	auto space = Namespace (Table::instance ().space (), info-> name ());
+	auto fr = new IMethodFrame (info-> space (), "delete", info, this);
+	auto func = new IFunctionInfo (space, "delete");
+
+	FrameTable::instance ().insert (fr);
+	func-> set (fr);
+	//func-> isConstr (true);
+	return func;
     }
     
     void ITypeMethod::declare () {

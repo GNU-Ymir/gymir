@@ -9,6 +9,7 @@
 #include <ymir/semantic/utils/StringUtils.hh>
 #include <ymir/semantic/utils/ArrayUtils.hh>
 #include <ymir/semantic/utils/FunctionUtils.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 #include "print-tree.h"
 #include <ymir/semantic/value/_.hh>
 
@@ -396,8 +397,8 @@ namespace syntax {
 		this-> _left,
 		this-> params
 	    );
-	} else {	    
-	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);	    
+	} else {
+	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
 	    if (this-> _score-> proto-> isCVariadic ()) {
 		for (auto & it : args) {
 		    it = Ymir::promote (it);
@@ -419,6 +420,15 @@ namespace syntax {
 					     args.size (),
 					     args.data ()
 		));
+
+		if (auto frame = this-> _score-> ret-> to<IAggregateInfo> ()-> getDestructor ()) {
+		    auto proto = frame-> validate ();
+		    std::vector <tree> params = {getAddr (ltree).getTree ()};
+		    auto destr = build_call_array_loc (this-> token.getLocus (), void_type_node, proto-> toGeneric ().getTree (), 1, params.data ());
+		    auto block = new (Z0) IBlock (this-> token, {}, {new (Z0) ITreeExpression (this-> token, NULL, destr)});
+		    this-> father ()-> addFinally (block);
+		}
+		
 		return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), ltree);
 	    } 
 	    

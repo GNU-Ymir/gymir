@@ -2156,6 +2156,14 @@ namespace syntax {
 	_block (block)
     {}
 
+    Block & ITypeDestructor::getBlock () {
+	return this-> _block;
+    }
+
+    Word & ITypeDestructor::getIdent () {
+	return this-> _ident;
+    }
+    
     InnerProtection& ITypeDestructor::getProtection () {
 	return this-> _prot;
     }

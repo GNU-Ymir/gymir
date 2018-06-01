@@ -108,7 +108,11 @@ namespace syntax {
 	ITypeDestructor (Word ident, Block block);
 
 	InnerProtection & getProtection ();
-	       
+
+	Word & getIdent ();
+
+	Block & getBlock ();
+	
 	semantic::InfoType declare (semantic::AggregateCstInfo info);		
 	
     };

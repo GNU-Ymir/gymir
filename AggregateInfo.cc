@@ -64,6 +64,8 @@ namespace semantic {
 	    if (str) {
 		auto ret = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {});
 		ret-> _impl = str-> to <IStructInfo> ();
+		if (this-> _destr)
+		    ret-> _destr = this-> _destr-> frame ();
 		return ret;
 	    } return NULL;
 	} else {
@@ -98,6 +100,10 @@ namespace semantic {
 	return true;
     }
 
+    std::string IAggregateCstInfo::name () {
+	return this-> _name;
+    }
+    
     const char* IAggregateCstInfo::getId () {
 	return IAggregateCstInfo::id ();
     }
@@ -163,6 +169,10 @@ namespace semantic {
 	return false;
     }
 
+    FrameProto IAggregateInfo::getDestructor () {
+	return this-> _destr;
+    }   
+    
     InfoType IAggregateInfo::ConstVerif (InfoType type) {
 	if (auto aggr = type-> to <IAggregateInfo> ())
 	    if (this-> _impl-> ConstVerif (aggr-> _impl))
@@ -171,8 +181,10 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::onClone () {
-	auto ret = new IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone);
+	auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone);
 	ret-> _impl = this-> _impl-> clone ()-> to <IStructInfo> ();
+	ret-> _destr = this-> _destr;	
+	
 	return ret;
     }
 

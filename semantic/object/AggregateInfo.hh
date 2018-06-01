@@ -40,7 +40,7 @@ namespace semantic {
     public :
 
 	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion);
-
+	
 	std::vector <FunctionInfo> & getConstructors ();
 
 	FunctionInfo& getDestructor ();
@@ -69,6 +69,8 @@ namespace semantic {
 
 	bool isType () override;
 
+	std::string name ();
+	
 	static const char * id () {
 	    return "IAggregateCstInfo";
 	}
@@ -90,7 +92,7 @@ namespace semantic {
 	std::string _name;
 	
 	std::vector <FunctionInfo> _contrs;
-	FunctionInfo _destr;
+	Frame _destr;
 	std::vector <FunctionInfo> _methods;
 	std::vector <FunctionInfo> _staticMeth;
 
@@ -106,6 +108,8 @@ namespace semantic {
 
 	bool isSame (InfoType) override;
 
+	Frame getDestructor ();
+	
 	InfoType ConstVerif (InfoType) override;
 
 	InfoType onClone () override;
