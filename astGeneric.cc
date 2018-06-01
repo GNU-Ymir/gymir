@@ -43,7 +43,7 @@ namespace syntax {
 	}
 	
 	Ymir::enterBlock ();
-
+	IBlock::currentBlock.push_back (this);
 	for (auto it : this-> inlines) {
 	    if (!it-> info-> type-> is <IUndefInfo> ())
 		Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
@@ -53,7 +53,8 @@ namespace syntax {
 	    auto inst = it-> toGeneric ();
 	    Ymir::getStackStmtList ().back ().append (inst);    
 	}
-	
+
+	IBlock::currentBlock.pop_back ();
 	auto body = Ymir::leaveBlock ();
 	if (this-> finally.size () == 0)
 	    return body.bind_expr;
@@ -78,7 +79,9 @@ namespace syntax {
 	if (!last-> info-> value ()) {
 	    auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type-> toGeneric ());	
 	    Ymir::enterBlock ();
+	    IBlock::currentBlock.push_back (this);
 	    for (auto it : this-> insts) {
+		it-> father () = this;
 		auto inst = it-> toGeneric ();
 		Ymir::getStackStmtList ().back ().append (inst);    
 	    }
@@ -96,13 +99,15 @@ namespace syntax {
 	} else {
 	    Ymir::enterBlock ();
 	    for (auto it : this-> insts) {
+		it-> father () = this;
 		auto inst = it-> toGeneric ();
 		Ymir::getStackStmtList ().back ().append (inst);    
 	    }
 	    type = last-> info-> type;
 	    expr = last-> toGeneric ();	    
 	}
-	
+
+	IBlock::currentBlock.pop_back ();
 	auto body = Ymir::leaveBlock ();
 	if (this-> finally.size () == 0)
 	    return body.bind_expr;
@@ -164,6 +169,16 @@ namespace syntax {
 		    if (aff-> info)
 			aff-> info-> value () = NULL;
 		    list.append (aff-> toGeneric ());
+		}
+
+		if (var-> info-> type-> is <IAggregateInfo> ()) {
+		    if (auto frame = var-> info-> type-> to <IAggregateInfo> ()-> getDestructor ()) {
+			auto proto = frame-> validate ();
+			std::vector <tree> params = {getAddr (decl).getTree ()};
+			auto destr = build_call_array_loc (this-> token.getLocus (), void_type_node, proto-> toGeneric ().getTree (), 1, params.data ());
+			auto block = new (Z0) IBlock (this-> token, {}, {new (Z0) ITreeExpression (this-> token, NULL, destr)});
+			IBlock::getCurrentBlock ()-> addFinally (block);
+		    }
 		}
 	    }
 	}
@@ -426,7 +441,7 @@ namespace syntax {
 		    std::vector <tree> params = {getAddr (ltree).getTree ()};
 		    auto destr = build_call_array_loc (this-> token.getLocus (), void_type_node, proto-> toGeneric ().getTree (), 1, params.data ());
 		    auto block = new (Z0) IBlock (this-> token, {}, {new (Z0) ITreeExpression (this-> token, NULL, destr)});
-		    this-> father ()-> addFinally (block);
+		    IBlock::getCurrentBlock ()-> addFinally (block);
 		}
 		
 		return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), ltree);

@@ -27,7 +27,7 @@ namespace semantic {
 	syntax::TypeConstructor _const;
 	syntax::TypeDestructor _dest;
 	std::string _name;
-	FrameProto proto;
+	FrameProto _proto;
 	
     public:
 

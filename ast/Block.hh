@@ -24,6 +24,8 @@ namespace syntax {
 	std::vector <IBlock*> finally;
 	std::vector <Var> inlines;
 	Expression value;
+
+	static std::vector <IBlock*> currentBlock;
 	
     public :
 
@@ -50,6 +52,8 @@ namespace syntax {
 	IBlock* block ();
 
 	IBlock* blockWithoutEnter ();
+
+	static IBlock* getCurrentBlock ();
 	
 	std::vector <Instruction> & getInsts ();
 	

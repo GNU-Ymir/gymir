@@ -10,6 +10,7 @@ namespace semantic {
 	IFrame (space, NULL),
 	_info (type),
         _const (cst),
+	_dest (NULL),
 	_name (name),
 	_proto (NULL)
     {}
@@ -18,6 +19,7 @@ namespace semantic {
     IMethodFrame::IMethodFrame (Namespace space, std::string name, InfoType type, TypeDestructor dst):
 	IFrame (space, NULL),
 	_info (type),
+	_const (NULL),
         _dest (dst),
 	_name (name),
 	_proto (NULL)
@@ -95,9 +97,9 @@ namespace semantic {
        	
 	    return validate (types);
 	} else {
-	    if (this-> proto == NULL) 
-		this-> proto = validate ({new (Z0) IRefInfo (false, object)});
-	    return this-> proto;
+	    if (this-> _proto == NULL) 
+		this-> _proto = validate ({new (Z0) IRefInfo (false, object)});
+	    return this-> _proto;
 	}
     }
     

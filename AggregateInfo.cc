@@ -169,7 +169,7 @@ namespace semantic {
 	return false;
     }
 
-    FrameProto IAggregateInfo::getDestructor () {
+    Frame IAggregateInfo::getDestructor () {
 	return this-> _destr;
     }   
     

@@ -12,6 +12,7 @@ namespace syntax {
     ulong ILambdaFunc::__nbLambda__ = 0;
 
     std::map <Expression, Ymir::Tree> IExpand::__values__;
+    std::vector <Block> IBlock::currentBlock;
     
     std::string IInstruction::prettyPrint () {	
 	Ymir::OutBuffer buf ("TODO {", this-> getIds (), "}");
@@ -50,6 +51,10 @@ namespace syntax {
 	return this-> insts;
     }
     
+    Block IBlock::getCurrentBlock () {
+	return currentBlock.back ();
+    }
+
     IBlock::~IBlock ()  {
 	for (auto it : decls)
 	    delete it;
