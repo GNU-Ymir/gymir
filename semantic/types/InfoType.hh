@@ -115,7 +115,9 @@ namespace semantic {
 	virtual bool isConst ();
 	
 	virtual void isConst (bool isConst);
-       	
+
+	virtual bool needKeepConst ();
+	
 	bool& isStatic ();
 
 	virtual bool isScopable ();

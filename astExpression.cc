@@ -574,9 +574,9 @@ namespace syntax {
 		    Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
 		    return NULL;
 		}
-
+		
 		aux-> left-> info-> type = type;
-		aux-> left-> info-> isConst (false);
+		aux-> left-> info-> isConst (aux-> right-> info-> type-> needKeepConst ());
 	    } else if (type == NULL) {
 		Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
 		return NULL;			    
@@ -811,7 +811,7 @@ namespace syntax {
 
     Expression IString::expression () {
 	auto aux = new (Z0)  IString (this-> token, this-> content);
-	auto arrayType = new (Z0) IStringInfo (true, true);
+	auto arrayType = new (Z0) IStringInfo (false, true);
 	aux-> info = new (Z0)  ISymbol (this-> token, arrayType);
 	aux-> info-> value () = new (Z0)  IStringValue (this-> content);	
 	return aux;
@@ -859,7 +859,7 @@ namespace syntax {
     Expression IConstArray::expression () {
 	auto aux = new (Z0)  IConstArray (this-> token, {});
 	if (this-> params.size () == 0) {
-	    aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IArrayInfo (true, new (Z0)  IVoidInfo ()));	    
+	    aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IArrayInfo (false, new (Z0)  IVoidInfo ()));	    
 	} else {
 	    for (uint i = 0 ; i < this-> params.size (); i++) {
 		auto expr = this-> params [i]-> expression ();

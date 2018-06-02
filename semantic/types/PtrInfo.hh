@@ -21,6 +21,8 @@ namespace semantic {
 	InfoType ConstVerif (InfoType) override;
 
 	bool passingConst (InfoType) override;
+
+	bool needKeepConst () override;
 	
 	static InfoType create (Word tok, const std::vector<syntax::Expression> & tmps);
 	

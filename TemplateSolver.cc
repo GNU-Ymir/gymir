@@ -278,9 +278,13 @@ namespace semantic {
 	bool isConst = false;
 	auto tvar = param-> to <IVar> ();
 	while (tvar && tvar-> token == Keys::CONST) {
-	    isConst = true;
-	    param = tvar-> getTemplates () [0];
-	    tvar = param-> to <IVar> ();
+	    isConst = true;	    
+	    if (tvar-> getTemplates ().size () != 0) {
+		param = tvar-> getTemplates () [0];
+		tvar = param-> to <IVar> ();
+	    } else {
+		break;
+	    }
 	}
 
 	if (auto var = param-> to <IVar> ())
@@ -307,7 +311,9 @@ namespace semantic {
 	bool isConst = false;	    
 	while (param && param-> token == Keys::CONST) {
 	    isConst = true;
-	    param = param-> getTemplates () [0]-> to <IVar> ();
+	    if (param-> getTemplates ().size () != 0) 
+		param = param-> getTemplates () [0]-> to <IVar> ();
+	    else break;
 	}
 	if (param == NULL) return TemplateSolution (0, false);
 

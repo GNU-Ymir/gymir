@@ -72,6 +72,8 @@ namespace semantic {
 	
 	void isConst (bool isConst) override;
 
+	bool needKeepConst () override;
+	
 	static const char* id () {
 	    return "IArrayInfo";
 	}

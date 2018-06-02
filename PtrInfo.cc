@@ -425,6 +425,10 @@ namespace semantic {
 	}
 	return false;
     }
+
+    bool IPtrInfo::needKeepConst () {
+	return this-> isConst ();
+    }
     
     bool IPtrInfo::isConst () {
 	return IInfoType::isConst ();

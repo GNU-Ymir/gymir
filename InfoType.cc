@@ -75,6 +75,10 @@ namespace semantic {
     void IInfoType::isConst (bool is) {
 	this-> _isConst = is;
     }
+
+    bool IInfoType::needKeepConst () {
+	return false;
+    }
     
     bool& IInfoType::isStatic () {
 	return this-> _isStatic;
@@ -168,7 +172,9 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IInfoType::ConstVerif (InfoType) {
+    InfoType IInfoType::ConstVerif (InfoType other) {
+	if (this-> needKeepConst () && !other-> isConst ())
+	    return NULL;
 	return this;
     }
 

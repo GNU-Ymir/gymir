@@ -601,14 +601,13 @@ namespace syntax {
 	    }
 	    	    	    
 	    aux-> caster = type-> cloneOnExitWithInfo ();
-	    if (Table::instance ().retInfo ().deco == "" || Table::instance ().retInfo ().deco == Keys::CONST)
+	    if (Table::instance ().retInfo ().deco == Keys::CONST)
 	    	aux-> caster-> isConst (true);
-	    else {
-		if (!aux-> caster-> ConstVerif (Table::instance ().retInfo ().info-> type)) {
-		    Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
-		    return NULL;		    
-		}
-	    }
+
+	    if (!aux-> caster-> ConstVerif (Table::instance ().retInfo ().info-> type)) {
+		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
+		return NULL;		    
+	    }	    
 	} else {
 	    if (!Table::instance ().retInfo ().info-> type-> is<IUndefInfo> () &&
 		!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> ())

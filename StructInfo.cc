@@ -556,7 +556,7 @@ namespace semantic {
 	return false;
     }    
     
-    InfoType IStructInfo::ConstVerif (InfoType other) {
+    InfoType IStructInfo::ConstVerif (InfoType other) {	
 	auto str = other-> to <IStructInfo> ();
 	if (str == NULL || !str-> isSame (this)) return NULL;
 	
@@ -564,10 +564,11 @@ namespace semantic {
 	if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
 	    dones.push_back (this);
 	    for (auto it : Ymir::r (0, this-> types.size ())) {
-		if (!this-> types [it]-> ConstVerif (str-> types [it]))
-		    return NULL;
+		if (!this-> types [it]-> ConstVerif (str-> types [it])) {
+		    if (!str-> needKeepConst ())
+			return NULL;
+		}
 	    }
-	    dones.erase (std::find (dones.begin (), dones.end (), this));
 	} 
 	return this;
     }
@@ -848,6 +849,20 @@ namespace semantic {
 	    if (this-> attrs [i] == name) return this-> types [i];
 	}
 	return NULL;
+    }
+
+    bool IStructInfo::needKeepConst () {
+	if (this-> isConst ()) {
+	    static std::vector <InfoType> dones;
+	    if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
+		dones.push_back (this);
+		for (auto it : this-> types) {
+		    if (it-> cloneConst ()-> needKeepConst ()) return true;
+		}
+		dones.erase (std::find (dones.begin (), dones.end (), this));
+	    }
+	}
+	return false;
     }
     
     bool IStructInfo::has (std::string attr) {

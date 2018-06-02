@@ -143,8 +143,8 @@ namespace semantic {
 	if (!type) return NULL;
 	
 	score-> treat.push_back (type);
-	
-	auto res = new (Z0) IArrayInfo (false, this-> _content-> clone ());
+
+	auto res = new (Z0) IArrayInfo (type-> isConst (), this-> _content-> clone ());
 	res-> multFoo = &ArrayUtils::InstCall;
 	score-> dyn = true;
 	score-> ret = res;
@@ -337,6 +337,8 @@ namespace semantic {
 	    if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
 	    else if (this-> _content-> isConst () && !ot-> _content-> isConst ())
 		return NULL;
+	    else if (this-> isConst () && !ot-> isConst () && !this-> _content-> isConst ())
+		return NULL;
 	    return this;
 	} else return NULL;
     }
@@ -415,6 +417,9 @@ namespace semantic {
 	IInfoType::isConst (isConst);
     }
 
+    bool IArrayInfo::needKeepConst () {
+	return this-> isConst ();
+    }    
     
     const char* IArrayInfo::getId () {
 	return IArrayInfo::id ();
