@@ -490,6 +490,10 @@ namespace semantic {
     bool& IFunctionInfo::isConstr () {
 	return this-> _isConstr;
     }
+
+    bool& IFunctionInfo::isVirtual () {
+	return this-> _isVirtual;
+    }
     
     std::string IFunctionInfo::name () {
 	return this-> _name;

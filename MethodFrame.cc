@@ -10,21 +10,35 @@ namespace semantic {
 	IFrame (space, NULL),
 	_info (type),
         _const (cst),
+	_method (NULL),
 	_dest (NULL),
 	_name (name),
 	_proto (NULL)
     {}
 
 
+    IMethodFrame::IMethodFrame (Namespace space, std::string name, InfoType type, TypeMethod meth):
+	IFrame (space, meth),
+	_info (type),
+	_const (NULL),
+	_method (meth),
+        _dest (NULL),
+	_name (name),
+	_proto (NULL)
+    {}
+
+    
     IMethodFrame::IMethodFrame (Namespace space, std::string name, InfoType type, TypeDestructor dst):
 	IFrame (space, NULL),
 	_info (type),
 	_const (NULL),
+	_method (NULL),
         _dest (dst),
 	_name (name),
 	_proto (NULL)
     {}
 
+           
     
     FrameProto IMethodFrame::validate (const std::vector <InfoType> & params_) {
 	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
@@ -34,7 +48,7 @@ namespace semantic {
 
 	auto from = Table::instance ().globalNamespace ();
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _name));
-	
+
 	if (this-> _const != NULL) {
 	    auto vars = this-> _const-> getParams ();
 	    vars.insert (vars.begin (), new (Z0) IVar (this-> _const-> getIdent ()));
@@ -44,6 +58,11 @@ namespace semantic {
 		ret-> type ()-> type = object;
 	    }
 	    return ret;
+	} else if (this-> _method) {
+	    auto vars = this-> _method-> getParams ();
+	    auto finalParams = IFrame::computeParams (vars, params);
+	    
+	    return IFrame::validate (this-> _space, from, finalParams, false);
 	} else {
 	    std::vector <Var> vars = {new (Z0) IVar (this-> _dest-> getIdent ())};
 	    auto finalParams = IFrame::computeParams (vars, params);
@@ -84,23 +103,29 @@ namespace semantic {
 
     FrameProto IMethodFrame::validate () {
 	auto object = this-> _info-> TempOp ({});
+	std::vector <Var> vars;
+	std::vector <InfoType> types;
+	if (this-> _proto != NULL) return this-> _proto;	
 	if (this-> _const) {
-	    auto vars = this-> _const-> getParams ();
-	
-	    std::vector <InfoType> types;
+	    vars = this-> _const-> getParams ();
 	    types.push_back (new (Z0) IRefInfo (false, object));
-	    for (auto it : Ymir::r (0, vars.size ())) {
-		auto info = vars [it]-> var ();
-		if (info != NULL)
-		    types.push_back (info-> info-> type);
-	    }
-       	
-	    return validate (types);
+	} else if (this-> _method) {
+	    vars = this-> _method-> getParams ();
+	    vars = std::vector <Var> (vars.begin () + 1, vars.end ());
+	    types.push_back (new (Z0) IRefInfo (false, object));
 	} else {
-	    if (this-> _proto == NULL) 
-		this-> _proto = validate ({new (Z0) IRefInfo (false, object)});
+	    this-> _proto = validate ({new (Z0) IRefInfo (false, object)});
 	    return this-> _proto;
 	}
+		
+	for (auto it : Ymir::r (0, vars.size ())) {
+	    auto info = vars [it]-> var ();
+	    if (info != NULL)
+		types.push_back (info-> info-> type);
+	}
+       	
+	this-> _proto = validate (types);
+	return this-> _proto;
     }
     
     const char* IMethodFrame::getId () {

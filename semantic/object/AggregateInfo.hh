@@ -97,7 +97,7 @@ namespace semantic {
 	Frame _destr;
 	std::vector <FunctionInfo> _methods;
 	std::vector <FunctionInfo> _staticMeth;
-
+	
 	std::vector <syntax::Expression> tmpsDone;
 	AggregateCstInfo _id = NULL;
 	StructInfo _impl;
@@ -152,6 +152,8 @@ namespace semantic {
 
 	InfoType SizeOf ();
 
+	InfoType Method (syntax::Var);
+	
 	//InfoType Name ();
 
     };

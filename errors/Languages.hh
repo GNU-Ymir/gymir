@@ -141,6 +141,7 @@ namespace Ymir {
 		phrases [ImplicitModule] = "Cannot use implicitly declared module";
 		phrases [MultiDestr] = "A type cannot have multiple destructors";
 		phrases [NeedAllType] = "All type must be known in constructor";
+		phrases [StaticMethodInit] = "The keyword %init% is reserved for constructors; Note that constructors are always named %self%";
 		init = true;
 	    } 
 	    return phrases;

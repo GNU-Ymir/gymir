@@ -1238,10 +1238,13 @@ namespace syntax {
 	}
 
 	for (auto meth : this-> _methods) {
-	    bool isStatic = false;
-	    auto info = meth-> declare (type, isStatic)-> to <IFunctionInfo> ();
-	    if (isStatic) type-> getStaticMethods ().push_back (info);
-	    else type-> getMethods ().push_back (info);
+	    bool isMethod = false;
+	    auto info_ = meth-> declare (type, isMethod);
+	    if (info_) {
+		auto info = info_-> to <IFunctionInfo> ();
+		if (!isMethod) type-> getStaticMethods ().push_back (info);
+		else type-> getMethods ().push_back (info);
+	    }
 	}
 
 	auto sym = new (Z0) ISymbol (this-> _ident, type);
@@ -1259,8 +1262,8 @@ namespace syntax {
 		addable = false;
 	    }
 	}
-	auto fr = new IMethodFrame (space, "init",  info, this);
-	auto func = new IFunctionInfo (space, "init");
+	auto fr = new (Z0) IMethodFrame (space, Keys::INIT,  info, this);
+	auto func = new (Z0) IFunctionInfo (space, Keys::INIT);
 
 	if (addable)
 	    FrameTable::instance ().insert (fr);
@@ -1269,15 +1272,50 @@ namespace syntax {
 	return func;
     }
 
-    InfoType ITypeMethod::declare (AggregateCstInfo, bool&) {
-	Ymir::Error::assert ("TODO");
-	return NULL;
+    InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method) {
+	auto space = Namespace (Table::instance ().space (), info-> name ());
+
+	bool addable = this-> tmps.size () == 0;
+	method = false;
+	if (this-> params.size () > 0) {
+	    if (this-> params [0]-> token.getStr () == Keys::SELF) method = true;
+	    if (method)
+		for (auto it : Ymir::r (1, this-> params.size ())) {
+		    if (!this-> params [it]-> is <ITypedVar> ())
+			addable = false;
+		}
+	    else
+		for (auto it : Ymir::r (0, this-> params.size ())) {
+		    if (!this-> params [it]-> is<ITypedVar> ())
+			addable = false;
+		}
+	}
+	
+	if (!method && this-> name () == Keys::INIT) {
+	    Ymir::Error::staticMethodInit (this-> ident);
+	    return NULL;
+	}
+	
+	Frame fr = NULL;
+	if (method) fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
+	else if (addable) fr = new (Z0) IPureFrame (space, this);
+	else fr = new (Z0) IUnPureFrame (space, this);
+	    
+	auto func = new (Z0) IFunctionInfo (space, this-> name ());
+
+	if (addable) {
+	    FrameTable::instance ().insert (fr);
+	    func-> isVirtual () = true;
+	}
+	
+	func-> set (fr);	
+	return func;
     }
 
     InfoType ITypeDestructor::declare (AggregateCstInfo info) {
 	auto space = Namespace (Table::instance ().space (), info-> name ());
-	auto fr = new IMethodFrame (space, "delete", info, this);
-	auto func = new IFunctionInfo (space, "delete");
+	auto fr = new (Z0) IMethodFrame (space, Keys::DELETE, info, this);
+	auto func = new (Z0) IFunctionInfo (space, Keys::DELETE);
 
 	FrameTable::instance ().insert (fr);
 	func-> set (fr);
@@ -1285,7 +1323,7 @@ namespace syntax {
 	return func;
     }
     
-    void ITypeMethod::declare () {
+    void ITypeMethod::declare () {	
 	Ymir::Error::assert ("!!?");
     }
     

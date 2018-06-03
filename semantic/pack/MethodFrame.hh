@@ -13,6 +13,9 @@ namespace syntax {
 
     class ITypeDestructor;
     typedef ITypeDestructor* TypeDestructor;
+
+    class ITypeMethod;
+    typedef ITypeMethod* TypeMethod;
     
     class IParamList;
     typedef IParamList* ParamList; 
@@ -25,7 +28,8 @@ namespace semantic {
     class IMethodFrame : public IFrame {
 	semantic::InfoType _info;
 	syntax::TypeConstructor _const;
-	syntax::TypeDestructor _dest;
+	syntax::TypeMethod _method;
+	syntax::TypeDestructor _dest;	
 	std::string _name;
 	FrameProto _proto;
 	
@@ -33,7 +37,9 @@ namespace semantic {
 
 	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeConstructor);
 
-	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeDestructor);
+	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeMethod);
+	
+	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeDestructor);	
 	
 	FrameProto validate (const std::vector <InfoType> & params) override;
 

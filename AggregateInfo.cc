@@ -4,12 +4,28 @@
 #include <ymir/semantic/utils/StructUtils.hh>
 #include <ymir/semantic/types/UndefInfo.hh>
 #include <ymir/semantic/types/FixedInfo.hh>
+#include <ymir/semantic/object/MethodInfo.hh>
 #include <ymir/ast/ParamList.hh>
 
 
 using namespace syntax;
 
+   
+
 namespace semantic {
+
+    namespace AggregateUtils {
+	using namespace Ymir;
+	
+	Tree InstGetStaticMeth (Word, InfoType, Expression) {
+	    return Tree ();
+	}
+
+	Tree InstGetMethod (Word, InfoType, Expression left, Expression) {
+	    return left-> toGeneric ();
+	}
+	
+    }
     
     IAggregateCstInfo::IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion) :
 	IInfoType (true),
@@ -68,6 +84,8 @@ namespace semantic {
 		ret-> _impl = str-> to <IStructInfo> ();
 		if (this-> _destr)
 		    ret-> _destr = this-> _destr-> frame ();
+		ret-> _staticMeth = this-> _staticMeth;
+		ret-> _methods = this-> _methods;
 		return ret;
 	    } return NULL;
 	} else {
@@ -88,6 +106,13 @@ namespace semantic {
     InfoType IAggregateCstInfo::DColonOp (Var var) {
 	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
+	for (auto it : this-> _staticMeth) {
+	    if (it-> name () == var-> token.getStr ()) {
+		auto ret = it-> clone ();
+		ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
+		return ret;
+	    }	    		
+	}
 	return NULL;
     }
     
@@ -195,7 +220,9 @@ namespace semantic {
     InfoType IAggregateInfo::onClone () {
 	auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone);
 	ret-> _impl = this-> _impl-> clone ()-> to <IStructInfo> ();
-	ret-> _destr = this-> _destr;	
+	ret-> _destr = this-> _destr;
+	ret-> _staticMeth = this-> _staticMeth;
+	ret-> _methods = this-> _methods;
 	
 	return ret;
     }
@@ -220,13 +247,24 @@ namespace semantic {
     
     InfoType IAggregateInfo::DotOp (Var var) {
 	auto ret = this-> _impl-> DotOp (var);
-	return ret;
+	if (ret == NULL) {
+	    return this-> Method (var);
+	} else {
+	    return ret;
+	}
     }
 
     InfoType IAggregateInfo::DColonOp (Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "sizeof") return SizeOf ();
 	//if (var-> token == "name") return Name ();
+	for (auto it : this-> _staticMeth) {
+	    if (it-> name () == var-> token.getStr ()) {
+		auto ret = it-> clone ();
+		ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
+		return ret;
+	    }	    		
+	}
 	return NULL;
     }
 
@@ -256,6 +294,26 @@ namespace semantic {
 	return ret;
     }
     
+    InfoType IAggregateInfo::Method (Var var) {
+	std::vector <Frame> frames;
+	std::vector <int> index;
+	int i = 0;
+	for (auto it : this-> _methods) {
+	    if (it-> name () == var-> token.getStr ()) {
+		frames.push_back (it-> frame ());
+		index.push_back (i);
+	    }
+	    i ++;
+	}
+	
+	if (frames.size () != 0) {
+	    auto meth = new (Z0) IMethodInfo (this, var-> token.getStr (), frames, index);
+	    meth-> binopFoo = AggregateUtils::InstGetMethod;
+	    return meth;
+	} else return NULL;
+    }
+    
+
     Ymir::Tree IAggregateInfo::toGeneric () {
 	return this-> _impl-> toGeneric ();
     }

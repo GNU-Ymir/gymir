@@ -117,7 +117,8 @@ namespace Ymir {
 	    UnPureExternC,
 	    ImplicitModule,
 	    MultiDestr,
-	    NeedAllType, 
+	    NeedAllType,
+	    StaticMethodInit,
 	    LAST_ERROR
 	};
 
@@ -316,7 +317,9 @@ namespace Ymir {
 	static void multipleDestr (const Word &);
 
 	static void needAllTypeConstr (const Word&);
-	    
+
+	static void staticMethodInit (const Word&);
+	
 	static void activeError (bool);	
 		
 	static std::vector <ErrorMsg>& caught ();

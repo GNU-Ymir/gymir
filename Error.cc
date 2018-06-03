@@ -1290,6 +1290,18 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::staticMethodInit (const Word & token) {
+	std::string msg = format (getString (StaticMethodInit), YELLOW, RESET, YELLOW, RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::assert (const char* msg) {
 	return __instance__.assert_ (msg);
     }
