@@ -39,6 +39,8 @@ namespace Ymir {
 
     Tree makeLabel (location_t loc, const char* name);
 
+    Tree makeVectorCst (Tree, std::string name, std::vector <Tree> values);
+    
     Tree getArrayRef (location_t, Tree array, Tree inner, ulong index);
 
     Tree getPointerUnref (location_t, Tree ptr, Tree inner, ulong index);
@@ -54,6 +56,8 @@ namespace Ymir {
     void declareGlobal (semantic::Symbol sym, syntax::Expression);
     
     void declareGlobalExtern (semantic::Symbol sym);
+
+    void declareVtable (const std::string, Tree type, Tree value);
 
     void finishCompilation ();
     

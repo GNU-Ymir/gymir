@@ -6,7 +6,10 @@
 #include <ymir/semantic/types/FixedInfo.hh>
 #include <ymir/semantic/object/MethodInfo.hh>
 #include <ymir/ast/ParamList.hh>
-
+#include <ymir/semantic/types/PtrInfo.hh>
+#include <ymir/semantic/types/VoidInfo.hh>
+#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/pack/FinalFrame.hh>
 
 using namespace syntax;
 
@@ -312,9 +315,52 @@ namespace semantic {
 	    return meth;
 	} else return NULL;
     }
-    
 
+    Ymir::Tree IAggregateInfo::buildVtableType (std::string name) {
+	int size = 0;
+	for (auto it : this-> _methods) {
+	    if (it-> isVirtual ())
+		size ++;
+	}
+
+	auto innerType = new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ());
+	auto intExpr = new (Z0)  IFixed (Word::eof (), FixedConst::ULONG);
+	intExpr-> setUValue (size);
+	auto lenExpr = intExpr-> toGeneric ();			
+	intExpr-> setUValue (0);
+	auto begin = intExpr-> toGeneric ();
+	intExpr-> setUValue (size);
+	
+	auto range_type = build_range_type (integer_type_node, fold (begin.getTree ()), fold (lenExpr.getTree ()));
+	auto array_type = build_array_type (innerType-> toGeneric ().getTree (), range_type);
+	return array_type;
+    }
+    
+    Ymir::Tree IAggregateInfo::buildVtableEnum (Ymir::Tree vtype, std::string vname) {
+	vec<constructor_elt, va_gc> * elms = NULL;
+	int i = 0;
+	for (auto it : this-> _methods) {
+	    if (it-> isVirtual ()) {
+		CONSTRUCTOR_APPEND_ELT (elms, size_int (i), it-> frame ()-> validate ()-> toGeneric ().getTree ());
+		i ++;
+	    }
+	}
+	
+	return build_constructor (vtype.getTree (), elms);
+    }
+
+    
     Ymir::Tree IAggregateInfo::toGeneric () {
+	auto thisName = this-> simpleTypeString ();
+	auto vname = Ymir::OutBuffer ("_YTV", thisName.length (), thisName).str ();
+	auto vtype = IFinalFrame::getDeclaredType (vname.c_str ());
+	if (vtype.isNull ()) {	    
+	    vtype = buildVtableType (vname);
+	    IFinalFrame::declareType (vname, vtype);
+	    auto vec = buildVtableEnum (vtype, vname);
+	    declareVtable (vname, vtype, vec);
+	}
+	
 	return this-> _impl-> toGeneric ();
     }
 

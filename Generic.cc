@@ -14,7 +14,10 @@ using namespace semantic;
 
 static GTY(()) vec<tree, va_gc> *global_declarations;
 
+
 namespace Ymir {
+    
+    std::map <std::string, Tree> __vtable__;
     
     Tree makeField (InfoType type, std::string name) {
 	Tree t_decl = type-> toGeneric ();
@@ -266,7 +269,7 @@ namespace Ymir {
 	DECL_CONTEXT (decl) = IFinalFrame::currentFrame ().getTree ();
 	return decl;
     }
-
+    
     Tree getGlobalContext () {
 	static Tree global_context;
 	if (global_context.isNull ()) {
@@ -321,6 +324,29 @@ namespace Ymir {
 	sym-> treeDecl (decl);
     }
 
+    void declareVtable (const std::string name, Tree type, Tree value) {
+	tree decl = build_decl (
+	    UNKNOWN_LOCATION,
+	    VAR_DECL,
+	    get_identifier(name.c_str ()),
+	    type.getTree ()
+	);
+
+	TREE_STATIC (decl) = 1;
+	DECL_ARTIFICIAL (decl) = 1;
+	TREE_READONLY (decl) = 1;
+	SET_DECL_ALIGN (decl, TARGET_VTABLE_ENTRY_ALIGN);
+	DECL_USER_ALIGN (decl) = true;
+	DECL_EXTERNAL (decl) = 0;
+	DECL_PRESERVE_P (decl) = 1;
+	TREE_PUBLIC (decl) = 1;
+	
+	DECL_INITIAL (decl) = value.getTree ();	
+	push_decl (decl);
+	Ymir::__vtable__ [name] = decl;
+    }
+    
+    
     void declareGlobalExtern (Symbol sym) {
 	auto type_tree = sym-> type-> toGeneric ();
 	auto name = Mangler::mangle_global (Namespace (sym-> space (), sym-> sym.getStr ()).toString ());

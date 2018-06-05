@@ -156,6 +156,10 @@ namespace semantic {
 	
 	//InfoType Name ();
 
+	Ymir::Tree buildVtableType (std::string name);
+	
+	Ymir::Tree buildVtableEnum (Ymir::Tree vtype, std::string vname);
+	
     };
 
 }
