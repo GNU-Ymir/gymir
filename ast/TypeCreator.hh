@@ -67,8 +67,8 @@ namespace syntax {
 	void declare () override;
 
 	void declare (semantic::Module) override {}
-
-	void declareAsExtern (semantic::Module) override {}
+	
+	void declareAsExtern (semantic::Module) override;
 
 	void print (int) override {}
 	
@@ -91,7 +91,7 @@ namespace syntax {
 
 	Block& getBlock ();
 	
-	semantic::InfoType declare (semantic::AggregateCstInfo info);
+	semantic::InfoType declare (semantic::AggregateCstInfo info, bool isExternal = false);
 
 	Word getIdent ();
 	
@@ -113,7 +113,7 @@ namespace syntax {
 
 	Block & getBlock ();
 	
-	semantic::InfoType declare (semantic::AggregateCstInfo info);		
+	semantic::InfoType declare (semantic::AggregateCstInfo info, bool isExternal = false);		
 	
     };
 
@@ -128,7 +128,7 @@ namespace syntax {
 	
 	InnerProtection & getProtection ();
 	
-	semantic::InfoType declare (semantic::AggregateCstInfo info, bool & isStatic);
+	semantic::InfoType declare (semantic::AggregateCstInfo info, bool & isStatic, bool isExternal = false);
 
 	void declare () override;
 

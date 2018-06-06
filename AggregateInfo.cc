@@ -82,7 +82,7 @@ namespace semantic {
 	if (expr-> info-> type-> is <IStructCstInfo> ())  {
 	    auto str = expr-> info-> type-> TempOp (exprs);
 	    if (str) {
-		auto ret = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {});
+		auto ret = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {}, this-> _isExternal);
 		ret-> _impl = str-> to <IStructInfo> ();
 		if (this-> _destr)
 		    ret-> _destr = this-> _destr-> frame ();
@@ -139,6 +139,10 @@ namespace semantic {
 	return true;
     }
 
+    bool& IAggregateCstInfo::isExtern () {
+	return this-> _isExternal;
+    }
+    
     std::string IAggregateCstInfo::name () {
 	return this-> _name;
     }
@@ -164,12 +168,13 @@ namespace semantic {
 	}
     }
 
-    IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone) :
+    IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExtern) :
 	IInfoType (false),
 	_space (space),
 	_name (name),
 	tmpsDone (tmpsDone),
-	_id (from)
+	_id (from),
+	_isExternal (isExtern)	
     {}
 
     bool IAggregateInfo::isSame (InfoType other) {
@@ -220,7 +225,7 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::onClone () {
-	auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone);
+	auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone, this-> _isExternal);
 	ret-> _impl = this-> _impl-> clone ()-> to <IStructInfo> ();
 	ret-> _destr = this-> _destr;
 	ret-> _staticMeth = this-> _staticMeth;
@@ -354,8 +359,10 @@ namespace semantic {
 	auto vtable = Ymir::getVtable (vname);
 	if (vtable.isNull ()) {
 	    auto vtype = buildVtableType ();
-	    auto vec = buildVtableEnum (vtype);
-	    vtable = declareVtable (vname, vtype, vec);	    
+	    if (!this-> _isExternal) {
+		auto vec = buildVtableEnum (vtype);
+		vtable = declareVtable (vname, vtype, vec);
+	    } else vtable = declareVtableExtern (vname, vtype);
 	}
 	return vtable;
     }
@@ -374,8 +381,10 @@ namespace semantic {
 	    
 	    if (Ymir::getVtable (vname).isNull ()) {
 		auto vtype = buildVtableType ();
-		auto vec = buildVtableEnum (vtype);
-		declareVtable (vname, vtype, vec);
+		if (!this-> _isExternal) {
+		    auto vec = buildVtableEnum (vtype);
+		    declareVtable (vname, vtype, vec);
+		} else declareVtableExtern (vname, vtype);
 	    }
 	}
 	

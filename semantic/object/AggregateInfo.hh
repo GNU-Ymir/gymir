@@ -36,6 +36,7 @@ namespace semantic {
 	std::vector <syntax::Expression> _tmps;
 	std::vector <syntax::Expression> _impl;
 	bool _isUnion;
+	bool _isExternal;
 	
     public :
 
@@ -69,6 +70,8 @@ namespace semantic {
 
 	bool isType () override;
 
+	bool& isExtern ();
+	
 	std::string name ();
 	
 	static const char * id () {
@@ -101,12 +104,13 @@ namespace semantic {
 	std::vector <syntax::Expression> tmpsDone;
 	AggregateCstInfo _id = NULL;
 	StructInfo _impl;
-
+	bool _isExternal;
+	
 	friend IAggregateCstInfo;
 
     public:
 	
-	IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone);
+	IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExternal);
 
 	bool isSame (InfoType) override;
 

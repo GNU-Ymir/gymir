@@ -26,11 +26,14 @@ namespace syntax {
 namespace semantic {
     
     class IMethodFrame : public IFrame {
+	
 	semantic::InfoType _info;
 	syntax::TypeConstructor _const;
 	syntax::TypeMethod _method;
 	syntax::TypeDestructor _dest;	
 	std::string _name;
+	bool _isExtern = false;
+	bool _isVirtual = true;
 	FrameProto _proto;
 	
     public:
@@ -51,11 +54,16 @@ namespace semantic {
 
 	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
 
+	
 	static const char * id () {
 	    return "IMethodFrame";
 	}
 	
 	virtual const char* getId ();	
+
+	bool& isExtern ();
+	
+	bool & isVirtual ();
 	
     };
 	

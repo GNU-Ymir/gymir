@@ -143,4 +143,14 @@ namespace semantic {
     const char* IMethodFrame::getId () {
 	return IMethodFrame::id ();
     }
+
+    bool& IMethodFrame::isExtern () {
+	return this-> _isExtern;
+    }
+
+    bool& IMethodFrame::isVirtual () {
+	return this-> _isVirtual;
+    }
+
 }
+

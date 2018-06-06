@@ -3,6 +3,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/pack/MethodFrame.hh>
 
 namespace semantic {
 
@@ -23,18 +24,23 @@ namespace semantic {
 	    auto ptr_type = build_pointer_type (
 		build_function_type_array (ret, types.size (), types.data ())
 	    );
-	    
-	    auto vtable = getField (token.getLocus (), ltree, Keys::VTABLE_FIELD);
-	    auto ptr_size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (build_pointer_type (void_type_node)));
-	    auto nb = score-> methIndex * ptr_size;
-	    auto padd = build_int_cst_type (long_unsigned_type_node, nb);
-	    auto access = Ymir::getPointerUnref (token.getLocus (), vtable, ptr_type, padd).getTree ();
-	    
+	    tree access;
+	    if (score-> proto == NULL) {
+		auto vtable = getField (token.getLocus (), ltree, Keys::VTABLE_FIELD);
+		auto ptr_size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (build_pointer_type (void_type_node)));
+		auto nb = score-> methIndex * ptr_size;
+		auto padd = build_int_cst_type (long_unsigned_type_node, nb);
+		access = Ymir::getPointerUnref (token.getLocus (), vtable, ptr_type, padd).getTree ();
+	    } else {
+		access = score-> proto-> toGeneric ().getTree ();
+	    }
+	     
 	    return build_call_array_loc (token.getLocus (),
 					 type-> toGeneric ().getTree (),
 					 access,
 					 args.size (),
 					 args.data ());
+	    
 	}
 
     }
@@ -91,19 +97,28 @@ namespace semantic {
 
 	right-> methIndex = index.back ();
 	if (!Table::instance ().addCall (tok)) return NULL;
+	auto fparams = std::vector <InfoType> (right-> treat.begin () + 1, right-> treat.end ());
 	if (right-> toValidate) {
 	    if (Table::instance ().hasCurrentContext (Keys::SAFE) && !(right-> toValidate-> has (Keys::SAFE) || right-> toValidate-> has (Keys::TRUSTED)))
 		Ymir::Error::callUnsafeInSafe (tok);
-	    FrameProto info = right-> toValidate-> validate (right, right-> treat);
+	    FrameProto info = right-> toValidate-> validate (right, fparams);
 	    retType = info-> type ()-> type;
-	    right-> dyn = true;
+	    if (!right-> toValidate-> is <IMethodFrame> () || !right-> toValidate-> to <IMethodFrame> ()-> isVirtual ()) {
+		right-> proto = info;
+	    }
+	    
+	    right-> dyn = true;	    
 	    right-> isMethod = true;
 	} else {
 	    if (Table::instance ().hasCurrentContext (Keys::SAFE) && !(goods [0]-> has (Keys::SAFE) || goods [0]-> has (Keys::TRUSTED)))
 		Ymir::Error::callUnsafeInSafe (tok);
 	    
-	    FrameProto info = goods [0]-> validate (right, right-> treat);
+	    FrameProto info = goods [0]-> validate (right, fparams);
 	    retType = info-> type ()-> type;
+	    if (!goods [0]-> is <IMethodFrame> () || !goods [0]-> to<IMethodFrame> ()-> isVirtual ()) {
+		right-> proto = info;
+	    }
+	    
 	    right-> dyn = true;
 	    right-> isMethod = true;
 	}

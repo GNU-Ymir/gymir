@@ -58,6 +58,8 @@ namespace Ymir {
     void declareGlobalExtern (semantic::Symbol sym);
 
     Tree declareVtable (const std::string&, Tree type, Tree value);
+    
+    Tree declareVtableExtern (const std::string&, Tree type);
 
     Tree getVtable (const std::string & name);
     

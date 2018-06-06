@@ -1254,7 +1254,44 @@ namespace syntax {
 	}	
     }
 
-    InfoType ITypeConstructor::declare (AggregateCstInfo info) {
+    void ITypeCreator::declareAsExtern (semantic::Module mod) {
+	auto space = mod-> space ();
+	auto it = mod-> get (this-> _ident.getStr ());
+	if (it != NULL) {
+	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
+	}
+
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
+	type-> isExtern () = true;
+	
+	if (this-> _destr.size () > 1) {
+	    Ymir::Error::multipleDestr (this-> _ident);
+	} else if (this-> _destr.size () == 1) {
+	    type-> getDestructor () = this-> _destr [0]-> declare (type, true)-> to <IFunctionInfo> ();
+	}
+
+	for (auto cst : this-> _constr) {
+	    auto res = cst-> declare  (type, true);
+	    if (res)
+		type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
+	}
+
+	for (auto meth : this-> _methods) {
+	    bool isMethod = false;
+	    auto info_ = meth-> declare (type, isMethod, true);
+	    if (info_) {
+		auto info = info_-> to <IFunctionInfo> ();
+		if (!isMethod) type-> getStaticMethods ().push_back (info);
+		else type-> getMethods ().push_back (info);
+	    }
+	}
+
+	auto sym = new (Z0) ISymbol (this-> _ident, type);
+	mod-> insert (sym);
+    }
+    
+    
+    InfoType ITypeConstructor::declare (AggregateCstInfo info, bool isExternal) {
 	auto space = Namespace (Table::instance ().space (), info-> name ());
 	bool addable = true;
 	for (auto it : this-> _params) {
@@ -1263,16 +1300,18 @@ namespace syntax {
 	    }
 	}
 	auto fr = new (Z0) IMethodFrame (space, Keys::INIT,  info, this);
+	fr-> isExtern () = isExternal;
+	
 	auto func = new (Z0) IFunctionInfo (space, Keys::INIT);
 
-	if (addable)
+	if (addable && !isExternal)
 	    FrameTable::instance ().insert (fr);
 	func-> set (fr);
 	func-> isConstr () = (true);
 	return func;
     }
 
-    InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method) {
+    InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method, bool isExternal) {
 	auto space = Namespace (Table::instance ().space (), info-> name ());
 
 	bool addable = this-> tmps.size () == 0;
@@ -1297,12 +1336,18 @@ namespace syntax {
 	}
 	
 	Frame fr = NULL;
-	if (method) fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
-	else if (addable) fr = new (Z0) IPureFrame (space, this);
-	else fr = new (Z0) IUnPureFrame (space, this);
+	if (method) {
+	    fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
+	    fr-> to <IMethodFrame> ()-> isExtern () = isExternal;
+	    fr-> to <IMethodFrame> ()-> isVirtual () = addable;
+	} else if (addable) {
+	    if (!isExternal)
+		fr = new (Z0) IPureFrame (space, this);
+	    else
+		fr = new (Z0) IExternFrame (space, "", this-> toProto ());
+	} else fr = new (Z0) IUnPureFrame (space, this);
 	    
 	auto func = new (Z0) IFunctionInfo (space, this-> name ());
-
 	if (addable) {
 	    FrameTable::instance ().insert (fr);
 	    func-> isVirtual () = true;
@@ -1312,12 +1357,14 @@ namespace syntax {
 	return func;
     }
 
-    InfoType ITypeDestructor::declare (AggregateCstInfo info) {
+    InfoType ITypeDestructor::declare (AggregateCstInfo info, bool isExternal) {
 	auto space = Namespace (Table::instance ().space (), info-> name ());
 	auto fr = new (Z0) IMethodFrame (space, Keys::DELETE, info, this);
+	fr-> isExtern () = isExternal;
+	
 	auto func = new (Z0) IFunctionInfo (space, Keys::DELETE);
 
-	FrameTable::instance ().insert (fr);
+	if (!isExternal) FrameTable::instance ().insert (fr);
 	func-> set (fr);
 	//func-> isConstr (true);
 	return func;
