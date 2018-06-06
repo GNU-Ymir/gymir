@@ -1156,10 +1156,16 @@ namespace syntax {
 		return NULL;
 	    }
 
-	    if (type-> treat.size () != aux-> params-> getParams ().size ())
-		if (!aux-> _left-> info-> type-> is <IFunctionInfo> () ||
-		    !aux-> _left-> info-> type-> to <IFunctionInfo> ()-> isConstr ())
+	    if (type-> treat.size () != aux-> params-> getParams ().size ()) {
+		bool need = true;
+		if (aux-> _left-> info-> type-> is <IFunctionInfo> () && aux-> _left-> info-> type-> to <IFunctionInfo> ()-> isConstr ())
+		    need = false;
+		else if (type-> isMethod && type-> treat.size () == aux-> params-> getParams ().size () + 1)
+		    need = false;
+
+		if (need)
 		    tuplingParams (type, aux);
+	    }
 
 	    aux-> _score = type;
 	    aux-> info = new (Z0) ISymbol (this-> token, type-> ret);

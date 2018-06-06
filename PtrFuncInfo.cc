@@ -48,7 +48,7 @@ namespace semantic {
 	    return getField (loc, ltree, "ptr");
 	}
 	
-	Tree InstCallType (Word loc, InfoType ret, Expression, Expression paramsExp) {
+	Tree InstCallType (Word loc, InfoType ret, Expression, Expression paramsExp, ApplicationScore) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
 	    Ymir::TreeStmtList list;
@@ -118,7 +118,7 @@ namespace semantic {
 	    }
 	}
 	
-	Tree InstCall (Word loc, InfoType ret, Expression left, Expression paramsExp) {
+	Tree InstCall (Word loc, InfoType ret, Expression left, Expression paramsExp, ApplicationScore) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    auto fn = left-> toGeneric ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());

@@ -357,7 +357,8 @@ namespace syntax {
 		this-> token,
 		this-> info-> type,
 		this-> left,
-		&params
+		&params,
+		NULL
 	    );
 	}
     }
@@ -388,7 +389,8 @@ namespace syntax {
 	    this-> token,
 	    this-> score-> ret,
 	    this-> left,
-	    this-> params
+	    this-> params,
+	    NULL
 	);	
     }
 
@@ -410,7 +412,8 @@ namespace syntax {
 		this-> token,
 		this-> _score-> ret,
 		this-> _left,
-		this-> params
+		this-> params,
+		this-> _score
 	    );
 	} else {
 	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
@@ -429,13 +432,24 @@ namespace syntax {
 		args.insert (args.begin (), getAddr (ltree).getTree ());
 		Ymir::TreeStmtList list;
 		Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
+		auto vtable = Ymir::getAddr (this-> _score-> ret-> to <IAggregateInfo> ()-> getVtable ());
+		auto vfield = Ymir::getField (this-> token.getLocus (), ltree, Keys::VTABLE_FIELD);
+		list.append (
+		    Ymir::buildTree (MODIFY_EXPR,
+				     this-> token.getLocus (),
+				     void_type_node,
+				     vfield,
+				     convert (vfield.getType ().getTree (), vtable.getTree ())
+		    )
+		);
+		
 		list.append (build_call_array_loc (this-> token.getLocus (),
-					     void_type_node,
-					     fn.getTree (),
-					     args.size (),
-					     args.data ()
+						   void_type_node,
+						   fn.getTree (),
+						   args.size (),
+						   args.data ()
 		));
-
+		    
 		if (auto frame = this-> _score-> ret-> to<IAggregateInfo> ()-> getDestructor ()) {
 		    auto proto = frame-> validate ();
 		    std::vector <tree> params = {getAddr (ltree).getTree ()};
@@ -443,7 +457,6 @@ namespace syntax {
 		    auto block = new (Z0) IBlock (this-> token, {}, {new (Z0) ITreeExpression (this-> token, NULL, destr)});
 		    IBlock::getCurrentBlock ()-> addFinally (block);
 		}
-		
 		return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), ltree);
 	    } 
 	    

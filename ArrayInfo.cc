@@ -833,7 +833,7 @@ namespace semantic {
 	    return list.getTree ();
 	}
 
-	Ymir::Tree InstCall (Word loc, InfoType ret, Expression, Expression paramsExp) {
+	Ymir::Tree InstCall (Word loc, InfoType ret, Expression, Expression paramsExp, ApplicationScore) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
 	    Ymir::TreeStmtList list;

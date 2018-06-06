@@ -14,7 +14,7 @@ namespace semantic {
     namespace StructUtils {
 	using namespace Ymir;
 
-	Tree InstCall (Word loc, InfoType ret, Expression, Expression paramsExp) {
+	Tree InstCall (Word loc, InfoType ret, Expression, Expression paramsExp, ApplicationScore) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
 	    Ymir::TreeStmtList list;
@@ -32,7 +32,7 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
 	}
 	
-	Tree InstCallUnion (Word loc, InfoType ret, Expression, Expression paramsExp) {
+	Tree InstCallUnion (Word loc, InfoType ret, Expression, Expression paramsExp, ApplicationScore) {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
 	    Ymir::TreeStmtList list;

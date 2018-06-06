@@ -101,13 +101,6 @@ namespace semantic {
 		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
 		    right
 		);
-	    } else if (type-> multFoo) {
-		return type-> buildMultOp (
-		    locus,
-		    type,
-		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
-		    right
-		);
 	    } else if (type-> unopFoo) {
 		return type-> buildUnaryOp (
 		    locus,
@@ -115,6 +108,30 @@ namespace semantic {
 		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp)
 		);
 	    }
+	    return leftExp;
+	}
+
+	Ymir::Tree InstUnrefMult (Word locus, InfoType t, Expression left, Expression right, ApplicationScore score) {
+	    auto type = t-> cloneOnExitWithInfo ();
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+
+	    auto innerType = left-> info-> type-> to<IPtrInfo> ()-> content ();
+	    auto inner = innerType-> toGeneric ();	    
+	    auto leftExp = left-> toGeneric ();
+	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
+	    
+	    if (type-> multFoo) {
+		return type-> buildMultOp (
+		    locus,
+		    type,
+		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
+		    right,
+		    score
+		);
+	    }
+	    
 	    return leftExp;
 	}
 
@@ -463,7 +480,7 @@ namespace semantic {
 	
 	if (binop) elem-> binopFoo = &PtrUtils::InstUnrefBin;
 	if (unop) elem-> unopFoo = &PtrUtils::InstUnrefUn;
-	if (mult) elem-> multFoo = &PtrUtils::InstUnrefBin;
+	if (mult) elem-> multFoo = &PtrUtils::InstUnrefMult;
 	return elem;
     }
     

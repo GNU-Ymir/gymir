@@ -10,10 +10,9 @@
 #include <ymir/semantic/types/VoidInfo.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
+#include <ymir/syntax/Keys.hh>
 
-using namespace syntax;
-
-   
+using namespace syntax;   
 
 namespace semantic {
 
@@ -316,7 +315,7 @@ namespace semantic {
 	} else return NULL;
     }
 
-    Ymir::Tree IAggregateInfo::buildVtableType (std::string name) {
+    Ymir::Tree IAggregateInfo::buildVtableType () {
 	int size = 0;
 	for (auto it : this-> _methods) {
 	    if (it-> isVirtual ())
@@ -336,7 +335,7 @@ namespace semantic {
 	return array_type;
     }
     
-    Ymir::Tree IAggregateInfo::buildVtableEnum (Ymir::Tree vtype, std::string vname) {
+    Ymir::Tree IAggregateInfo::buildVtableEnum (Ymir::Tree vtype) {
 	vec<constructor_elt, va_gc> * elms = NULL;
 	int i = 0;
 	for (auto it : this-> _methods) {
@@ -349,18 +348,38 @@ namespace semantic {
 	return build_constructor (vtype.getTree (), elms);
     }
 
+    Ymir::Tree IAggregateInfo::getVtable () {
+	auto thisName = this-> simpleTypeString ();
+	auto vname = Ymir::OutBuffer ("_YTV", thisName.length (), thisName).str ();
+	auto vtable = Ymir::getVtable (vname);
+	if (vtable.isNull ()) {
+	    auto vtype = buildVtableType ();
+	    auto vec = buildVtableEnum (vtype);
+	    vtable = declareVtable (vname, vtype, vec);	    
+	}
+	return vtable;
+    }
     
     Ymir::Tree IAggregateInfo::toGeneric () {
 	auto thisName = this-> simpleTypeString ();
+	auto tname = Ymir::OutBuffer (thisName.length (), thisName).str ();
 	auto vname = Ymir::OutBuffer ("_YTV", thisName.length (), thisName).str ();
-	auto vtype = IFinalFrame::getDeclaredType (vname.c_str ());
-	if (vtype.isNull ()) {	    
-	    vtype = buildVtableType (vname);
-	    IFinalFrame::declareType (vname, vtype);
-	    auto vec = buildVtableEnum (vtype, vname);
-	    declareVtable (vname, vtype, vec);
+	auto ttype = IFinalFrame::getDeclaredType (tname.c_str ());
+	if (ttype.isNull ()) {	    	    
+	    auto temp = (StructInfo) this-> _impl-> clone ();
+	    temp-> getTypes ().insert (temp-> getTypes ().begin (), new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()));
+	    temp-> getAttribs ().insert (temp-> getAttribs ().begin (), Keys::VTABLE_FIELD);
+	    ttype = temp-> toGeneric ();
+	    IFinalFrame::declareType (tname, ttype);
+	    
+	    if (Ymir::getVtable (vname).isNull ()) {
+		auto vtype = buildVtableType ();
+		auto vec = buildVtableEnum (vtype);
+		declareVtable (vname, vtype, vec);
+	    }
 	}
 	
+	return ttype;
 	return this-> _impl-> toGeneric ();
     }
 

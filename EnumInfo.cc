@@ -126,6 +126,28 @@ namespace semantic {
 	    }
 	}
 
+	Tree InstUnrefMult (Word locus, InfoType type, Expression left, Expression right, ApplicationScore score) {
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+
+	    InfoType inner = type;
+	    
+	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    if (linfo) {
+		left-> info-> type = linfo-> content ();
+		left-> info-> value () = NULL;
+
+		left-> info-> type-> binopFoo = linfo-> binopFoo;
+		left-> info-> type-> unopFoo = linfo-> unopFoo;
+		left-> info-> type-> multFoo = linfo-> multFoo;
+	    }
+
+	    return type-> buildMultOp (
+		locus, inner, left, right, score
+	    );	    
+	}
+	
 	Tree InstUnrefBin (Word locus, InfoType type, Expression left, Expression right) {
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
@@ -143,15 +165,9 @@ namespace semantic {
 		left-> info-> type-> multFoo = linfo-> multFoo;
 	    }
 
-	    if (type-> binopFoo) {
-		return type-> buildBinaryOp (
-		    locus, inner, left, right
-		);
-	    } else {
-		return type-> buildMultOp (
-		    locus, inner, left, right
-		);
-	    }
+	    return type-> buildBinaryOp (
+		locus, inner, left, right
+	    );	    
 	}
 
 	Tree InstUnrefBinRight (Word locus, InfoType type, Expression left, Expression right) {
@@ -171,15 +187,9 @@ namespace semantic {
 		right-> info-> type-> multFoo = rinfo-> multFoo;
 	    }
 	    
-	    if (type-> binopFoo) {
-		return type-> buildBinaryOp (
-		    locus, inner, left, right
-		);
-	    } else {
-		return type-> buildMultOp (
-		    locus, inner, left, right
-		);
-	    }
+	    return type-> buildBinaryOp (
+		locus, inner, left, right
+	    );
 	}
 
 	Tree InstUnrefBinDouble (Word locus, InfoType type, Expression left, Expression right) {
@@ -208,15 +218,9 @@ namespace semantic {
 		left-> info-> type-> multFoo = linfo-> multFoo;
 	    }
 
-	    if (type-> binopFoo) {
-		return type-> buildBinaryOp (
-		    locus, inner, left, right
-		);
-	    } else {
-		return type-> buildMultOp (
-		    locus, inner, left, right
-		);
-	    }
+	    return type-> buildBinaryOp (
+		locus, inner, left, right
+	    );
 	}
 
 	Tree InstUnrefUn (Word locus, InfoType type, Expression left) {
@@ -248,6 +252,8 @@ namespace semantic {
 		return left-> toGeneric ();
 	    }
 	}
+
+	
 	
 	
     }
@@ -463,7 +469,7 @@ namespace semantic {
 
 	if (binop) elem-> binopFoo = &EnumUtils::InstUnrefBin;
 	if (unop) elem-> unopFoo = &EnumUtils::InstUnrefUn;
-	if (mult) elem-> multFoo = &EnumUtils::InstUnrefBin;
+	if (mult) elem-> multFoo = &EnumUtils::InstUnrefMult;
 	return elem;
     }
     
@@ -485,7 +491,7 @@ namespace semantic {
 	
 	if (binop) elem-> binopFoo = &EnumUtils::InstUnrefBinDouble;
 	if (unop) elem-> unopFoo = &EnumUtils::InstUnrefUn;
-	if (mult) elem-> multFoo = &EnumUtils::InstUnrefBinDouble;
+	if (mult) elem-> multFoo = &EnumUtils::InstUnrefMult;
 	return elem;
     }
     
@@ -507,7 +513,7 @@ namespace semantic {
 	
 	if (binop) elem-> binopFoo = &EnumUtils::InstUnrefBinRight;
 	if (unop) elem-> unopFoo = &EnumUtils::InstUnrefUn;
-	if (mult) elem-> multFoo = &EnumUtils::InstUnrefBinRight;
+	if (mult) elem-> multFoo = &EnumUtils::InstUnrefMult;
 	return elem;
     }    
     

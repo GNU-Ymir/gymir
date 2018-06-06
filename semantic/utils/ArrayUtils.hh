@@ -34,7 +34,7 @@ namespace semantic {
 	
 	Ymir::Tree InstApply (Word word, InfoType, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
 
-	Ymir::Tree InstCall (Word loc, semantic::InfoType ret, syntax::Expression, syntax::Expression paramsExp);
+	Ymir::Tree InstCall (Word loc, semantic::InfoType ret, syntax::Expression, syntax::Expression paramsExp, ApplicationScore);
 	
 	Ymir::Tree InstInit (Word locus, semantic::InfoType type, syntax::Expression);
 

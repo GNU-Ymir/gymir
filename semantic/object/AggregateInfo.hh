@@ -134,6 +134,8 @@ namespace semantic {
 
 	std::string innerSimpleTypeString () override;
 
+	Ymir::Tree getVtable ();
+	
 	Ymir::Tree toGeneric () override;
 
 	void setTmps (const std::vector <syntax::Expression> & tmps);
@@ -156,9 +158,9 @@ namespace semantic {
 	
 	//InfoType Name ();
 
-	Ymir::Tree buildVtableType (std::string name);
+	Ymir::Tree buildVtableType ();
 	
-	Ymir::Tree buildVtableEnum (Ymir::Tree vtype, std::string vname);
+	Ymir::Tree buildVtableEnum (Ymir::Tree vtype);
 	
     };
 

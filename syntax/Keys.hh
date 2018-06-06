@@ -93,4 +93,5 @@ struct Keys {
     static std::string  EXIT;
     static std::string  INIT;
     static std::string  DELETE;
+    static std::string  VTABLE_FIELD;
 };

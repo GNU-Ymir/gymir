@@ -324,7 +324,7 @@ namespace Ymir {
 	sym-> treeDecl (decl);
     }
 
-    void declareVtable (const std::string name, Tree type, Tree value) {
+    Ymir::Tree declareVtable (const std::string & name, Tree type, Tree value) {	
 	tree decl = build_decl (
 	    UNKNOWN_LOCATION,
 	    VAR_DECL,
@@ -344,8 +344,15 @@ namespace Ymir {
 	DECL_INITIAL (decl) = value.getTree ();	
 	push_decl (decl);
 	Ymir::__vtable__ [name] = decl;
+	return decl;
     }
-    
+
+    Tree getVtable (const std::string & name) {
+	auto it = Ymir::__vtable__.find (name);
+	if (it == Ymir::__vtable__.end ())
+	    return Ymir::Tree ();
+	return it-> second;
+    }
     
     void declareGlobalExtern (Symbol sym) {
 	auto type_tree = sym-> type-> toGeneric ();

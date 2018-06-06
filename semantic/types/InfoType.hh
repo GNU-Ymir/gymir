@@ -39,12 +39,14 @@ namespace semantic {
 	Word token;
 	std::string name;
 	bool dyn;
+	long methIndex;
 	InfoType left = NULL;
 	InfoType ret = NULL;
 	std::vector <InfoType> treat;
 	std::map <std::string, syntax::Expression> tmps;
 	bool isVariadic = false;
 	bool isTemplate = false;
+	bool isMethod = false;
 	Frame toValidate = NULL;
 	FrameProto proto = NULL;
     };
@@ -54,6 +56,7 @@ namespace semantic {
     class IInfoType  {
 	
 	typedef Ymir::Tree (*BinopLint) (Word, IInfoType*, syntax::Expression, syntax::Expression);
+	typedef Ymir::Tree (*MultLint) (Word, IInfoType*, syntax::Expression, syntax::Expression, ApplicationScore);
 	typedef Ymir::Tree (*UnopLint) (Word, IInfoType*, syntax::Expression);
 
 	typedef Ymir::Tree (*ApplyLint) (Word, IInfoType*, std::vector <syntax::Var>&, syntax::Block, syntax::Expression);
@@ -81,7 +84,7 @@ namespace semantic {
 	
 	Ymir::Tree buildUnaryOp (Word word, InfoType, syntax::Expression elem);
 
-	Ymir::Tree buildMultOp (Word word, InfoType, syntax::Expression elem, syntax::Expression rights);
+	Ymir::Tree buildMultOp (Word word, InfoType, syntax::Expression elem, syntax::Expression rights, ApplicationScore);
 
 	Ymir::Tree buildApplyOp (Word word, InfoType, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression iter);
 	
@@ -246,12 +249,12 @@ namespace semantic {
 
 	BinopLint binopFoo = NULL;
 	UnopLint unopFoo = NULL;
-	BinopLint multFoo = NULL;
+	MultLint multFoo = NULL;
 	ApplyLint applyFoo = NULL;
 
 	std::list <BinopLint> nextBinop;
 	std::list <UnopLint> nextUnop;
-	std::list <BinopLint> nextMult;
+	std::list <MultLint> nextMult;
 	std::list <ApplyLint> nextApply;
     };    
 

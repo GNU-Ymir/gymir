@@ -42,8 +42,8 @@ namespace semantic {
 	return this-> unopFoo (locus, _type, elem);
     }
 
-    Ymir::Tree IInfoType::buildMultOp (Word locus, InfoType type, syntax::Expression left, syntax::Expression rights) {
-	return this-> multFoo (locus, type, left, rights);
+    Ymir::Tree IInfoType::buildMultOp (Word locus, InfoType type, syntax::Expression left, syntax::Expression rights, ApplicationScore score) {
+	return this-> multFoo (locus, type, left, rights, score);
     }
     
     Ymir::Tree IInfoType::buildApplyOp (Word locus, InfoType type, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr) {

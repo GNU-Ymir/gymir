@@ -73,24 +73,36 @@ namespace semantic {
     ApplicationScore IMethodFrame::isApplicable (ParamList params) {
 	auto object = this-> _info-> TempOp ({});
 	auto types = params-> getParamTypes ();
-	// types.insert (types.begin (), new (Z0) IRefInfo (false, object));
+	std::vector <Var> vars;
+	Word ident;
+	if (this-> _const) {
+	    vars = this-> _const-> getParams ();
+	    ident = this-> _const-> getIdent ();
+	} else {
+	    vars = this-> _method-> getParams ();
+	    ident = this-> _method-> getIdent ();
+	}
 	
-	auto vars = this-> _const-> getParams ();
-	// vars.insert (vars.begin (), new (Z0) IVar (this-> _const-> getIdent ()));
-	auto ret = IFrame::isApplicable (this-> _const-> getIdent (), vars, types);
+	auto ret = IFrame::isApplicable (ident, vars, types);
 	if (ret)
 	    ret-> ret = object;
 	return ret;
     }
 
     ApplicationScore IMethodFrame::isApplicable (const std::vector <InfoType> & params) {
-	//auto params = params_;
 	auto object = this-> _info-> TempOp ({});
-	// params.insert (params.begin (), new (Z0) IRefInfo (false, object));
+	std::vector <Var> vars;
+	Word ident;
+	if (this-> _const) {	   
+	    vars = this-> _const-> getParams ();
+	    ident = this-> _const-> getIdent ();
+	} else {
+	    vars = this-> _method-> getParams ();
+	    ident = this-> _method->getIdent ();
+	}
 	
-	auto vars = this-> _const-> getParams ();
-	// vars.insert (vars.begin (), new (Z0) IVar (this-> _const-> getIdent ()));
-	auto ret = IFrame::isApplicable (this-> _const-> getIdent (), vars, params);
+	
+	auto ret = IFrame::isApplicable (ident, vars, params);
 	if (ret) 
 	    ret-> ret = object;
 	

@@ -35,6 +35,7 @@ namespace semantic {
 	    Ymir::TreeStmtList list;
 	    auto iterExp = Ymir::getExpr (list, iter);
 	    iterExp = getPointerUnref (locus.getLocus (), iterExp, inner, 0);
+
 	    return Ymir::compoundExpr (loc, list, type-> buildApplyOp (
 		locus, type, vars, block,
 		new (Z0) ITreeExpression (iter-> token, innerType, iterExp)
@@ -56,21 +57,12 @@ namespace semantic {
 	    auto rightExp = Ymir::getExpr (list, right);	    
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
 	    
-	    if (type-> binopFoo) {
-		return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
-		    locus,
-		    type,
-		    left,
-		    new (Z0)  ITreeExpression (right-> token, innerType, rightExp)
-		));
-	    } else {
-		return Ymir::compoundExpr (loc, list, type-> buildMultOp (
-		    locus,
-		    type,
-		    left,
-		    new (Z0)  ITreeExpression (right-> token, innerType, rightExp)
-		));
-	    }	    
+	    return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
+		locus,
+		type,
+		left,
+		new (Z0)  ITreeExpression (right-> token, innerType, rightExp)
+	    ));
 	    
 	}
 		
@@ -90,13 +82,6 @@ namespace semantic {
 	    
 	    if (type-> binopFoo) {
 		return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
-		    locus,
-		    type,
-		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
-		    right
-		));
-	    } else if (type-> multFoo) {
-		return Ymir::compoundExpr (loc, list, type-> buildMultOp (
 		    locus,
 		    type,
 		    new (Z0)  ITreeExpression (left-> token, innerType, leftExp),
@@ -130,21 +115,13 @@ namespace semantic {
 	    auto rightExp = Ymir::getExpr (list, right);
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
 	    
-	    if (type-> binopFoo) {
-		return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
-		    locus,
-		    type,
-		    new (Z0)  ITreeExpression (left-> token, innerLeft, leftExp),
-		    new (Z0)  ITreeExpression (right-> token, innerRight, rightExp)
-		));
-	    } else {
-		return Ymir::compoundExpr (loc, list, type-> buildMultOp (
-		    locus,
-		    type,
-		    new (Z0)  ITreeExpression (left-> token, innerLeft, leftExp),
-		    new (Z0)  ITreeExpression (right-> token, innerRight, rightExp)
-		));
-	    }	    
+
+	    return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
+		locus,
+		type,
+		new (Z0)  ITreeExpression (left-> token, innerLeft, leftExp),
+		new (Z0)  ITreeExpression (right-> token, innerRight, rightExp)
+	    ));
 	}
 	
 	Ymir::Tree InstUnrefUn (Word locus, InfoType t, Expression left) {
@@ -176,7 +153,30 @@ namespace semantic {
 		return Ymir::compoundExpr (locus.getLocus (), list, leftExp);
 	    }
 	}
-	
+
+
+	Ymir::Tree InstUnrefMult (Word locus, InfoType t, Expression left, Expression right, ApplicationScore score) {
+	    auto type = t-> cloneOnExitWithInfo ();
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
+	    type-> multFoo = getAndRemoveBack (type-> nextMult);
+	    
+	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
+
+	    Ymir::TreeStmtList list;	    
+	    auto leftExp = Ymir::getExpr (list, left);
+	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
+	    
+
+	    return Ymir::compoundExpr (locus.getLocus (), list, type-> buildMultOp (
+		locus,
+		type,
+		new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp),
+		right,
+		score
+	    ));	    
+	}
+
     }
     
     IRefInfo::IRefInfo (bool) :
@@ -386,7 +386,7 @@ namespace semantic {
 	
 	if (binop) elem-> binopFoo = &RefUtils::InstUnrefBin;
 	if (unop) elem-> unopFoo = &RefUtils::InstUnrefUn;
-	if (mult) elem-> multFoo = &RefUtils::InstUnrefBin;
+	if (mult) elem-> multFoo = &RefUtils::InstUnrefMult;
 	if (apply) elem-> applyFoo = &RefUtils::InstUnrefApply;
 	return elem;
     }
@@ -409,7 +409,7 @@ namespace semantic {
 	
 	if (binop) elem-> binopFoo = &RefUtils::InstUnrefBinDouble;
 	if (unop) elem-> unopFoo = &RefUtils::InstUnrefUn;
-	if (mult) elem-> multFoo = &RefUtils::InstUnrefBinDouble;
+	if (mult) elem-> multFoo = &RefUtils::InstUnrefMult;
 	return elem;
     }
     
@@ -431,7 +431,7 @@ namespace semantic {
 	
 	if (binop) elem-> binopFoo = &RefUtils::InstUnrefBinRight;
 	if (unop) elem-> unopFoo = &RefUtils::InstUnrefUn;
-	if (mult) elem-> multFoo = &RefUtils::InstUnrefBinRight;
+	if (mult) elem-> multFoo = &RefUtils::InstUnrefMult;
 	return elem;
     }
 
