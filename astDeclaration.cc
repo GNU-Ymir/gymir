@@ -1292,7 +1292,7 @@ namespace syntax {
     
     
     InfoType ITypeConstructor::declare (AggregateCstInfo info, bool isExternal) {
-	auto space = Namespace (Table::instance ().space (), info-> name ());
+	auto space = Namespace (info-> space (), info-> name ());
 	bool addable = true;
 	for (auto it : this-> _params) {
 	    if (!it-> is<ITypedVar> ()) {
@@ -1312,7 +1312,7 @@ namespace syntax {
     }
 
     InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method, bool isExternal) {
-	auto space = Namespace (Table::instance ().space (), info-> name ());
+	auto space = Namespace (info-> space (), info-> name ());
 
 	bool addable = this-> tmps.size () == 0;
 	method = false;
@@ -1358,7 +1358,7 @@ namespace syntax {
     }
 
     InfoType ITypeDestructor::declare (AggregateCstInfo info, bool isExternal) {
-	auto space = Namespace (Table::instance ().space (), info-> name ());
+	auto space = Namespace (info-> space (), info-> name ());
 	auto fr = new (Z0) IMethodFrame (space, Keys::DELETE, info, this);
 	fr-> isExtern () = isExternal;
 	

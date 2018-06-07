@@ -140,13 +140,13 @@ namespace semantic {
 
 	virtual ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> &, const std::vector <InfoType> &);
 
-	FrameProto validate (std::string& name, Namespace space, const std::vector <syntax::Var> & params, syntax::Expression block, InfoType type = NULL);
+	FrameProto validate (std::string& name, Namespace space, const std::vector <syntax::Var> & params, syntax::Expression block, InfoType type = NULL, bool isExtern = false);
 
-	FrameProto validate (std::string& name, Namespace space, const std::vector <syntax::Var> & params, syntax::Block block, InfoType type = NULL);
+	FrameProto validate (std::string& name, Namespace space, const std::vector <syntax::Var> & params, syntax::Block block, InfoType type = NULL, bool isExtern = false);
 	
-	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<syntax::Var> & finalParams, syntax::Block block, const std::vector <syntax::Expression> &tmps, bool isVariadic, syntax::Block pre, syntax::Block post, syntax::Var postVar);
+	FrameProto validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<syntax::Var> & finalParams, syntax::Block block, const std::vector <syntax::Expression> &tmps, bool isVariadic, syntax::Block pre, syntax::Block post, syntax::Var postVar, bool isExtern = false);
 		
-	FrameProto validate (Namespace space, Namespace from, const std::vector<syntax::Var> & finalParams, bool isVariadic);
+	FrameProto validate (Namespace space, Namespace from, const std::vector<syntax::Var> & finalParams, bool isVariadic, bool isExtern = false);
 	
     };
 

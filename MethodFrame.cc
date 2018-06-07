@@ -42,31 +42,32 @@ namespace semantic {
     
     FrameProto IMethodFrame::validate (const std::vector <InfoType> & params_) {
 	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
+	Table::instance ().enterBlock ();
 	auto object = this-> _info-> TempOp ({});
 	auto params = params_;
 	params.insert (params.begin (), new (Z0) IRefInfo (false, object));
 
 	auto from = Table::instance ().globalNamespace ();
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _name));
-
 	if (this-> _const != NULL) {
 	    auto vars = this-> _const-> getParams ();
 	    vars.insert (vars.begin (), new (Z0) IVar (this-> _const-> getIdent ()));
 	    auto finalParams = IFrame::computeParams (vars, params);
-	    auto ret = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _const-> getBlock (), new (Z0) IVoidInfo ());
+	    auto ret = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _const-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());	    
 	    if (ret) {
 		ret-> type ()-> type = object;
 	    }
-	    return ret;
+	    return ret;	
 	} else if (this-> _method) {
 	    auto vars = this-> _method-> getParams ();
 	    auto finalParams = IFrame::computeParams (vars, params);
 	    
-	    return IFrame::validate (this-> _space, from, finalParams, false);
+	    if (this-> _isVirtual) from = this-> _space;
+	    return IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern () && this-> _isVirtual);
 	} else {
 	    std::vector <Var> vars = {new (Z0) IVar (this-> _dest-> getIdent ())};
 	    auto finalParams = IFrame::computeParams (vars, params);
-	    return IFrame::validate (this-> _name, this-> _space, finalParams, this-> _dest-> getBlock (), new (Z0) IVoidInfo ());
+	    return IFrame::validate (this-> _name, this-> _space, finalParams, this-> _dest-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());
 	}
     }
 

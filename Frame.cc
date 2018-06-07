@@ -262,10 +262,11 @@ namespace semantic {
 	return finalParams;
     }
     
-    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block _pre, Block _post, Var _postVar) {
-
+    FrameProto IFrame::validate (Word name, Namespace space, Namespace from, Symbol ret, const std::vector<Var> & params, Block block, const std::vector <Expression>& tmps, bool isVariadic, Block _pre, Block _post, Var _postVar, bool isExtern) {
 	Table::instance ().templateNamespace () = from;
-	Namespace finalNamespace (space, from.toString ());
+	
+	Namespace finalNamespace = space;
+	if (from != space) finalNamespace = Namespace (space, from.toString ());
 				
 	Ymir::log ("Validate function : ", name, " in space : ",  Table::instance ().getCurrentSpace ());
 	if (ret == NULL) 
@@ -274,7 +275,8 @@ namespace semantic {
 	    Table::instance ().retInfo ().info = ret;
 		
 	auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, this-> _attributes);
-	if (!FrameTable::instance ().existsProto (proto)) {
+	auto exists = FrameTable::instance ().existsProto (proto);
+	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 		    
@@ -325,19 +327,26 @@ namespace semantic {
 	    verifyReturn (name, proto-> type (), Table::instance ().retInfo ());
 	    Table::instance ().quitFrame ();
 	    return proto;
-	}
+	} else if (!exists)
+	    FrameTable::instance ().insert (proto);
+	
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
 	return FrameTable::instance ().getProto (proto);	
     }
 
-    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block, InfoType retType) {
-	if (retType == NULL) retType = new (Z0) IUndefInfo ();
+    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Expression _block, InfoType retType, bool isExtern) {
+	if (retType == NULL) {
+	    if (isExtern) retType = new (Z0) IVoidInfo ();
+	    else retType = new (Z0) IUndefInfo ();
+	}
+	
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), retType);
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
-	
-	if (!FrameTable::instance ().existsProto (proto)) {
+
+	auto exists = FrameTable::instance ().existsProto (proto);
+	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
@@ -374,19 +383,25 @@ namespace semantic {
 	    Table::instance ().quitBlock ();
 	    Table::instance ().quitFrame ();
 	    return proto;
-	}
+	} else if (!exists)
+	    FrameTable::instance ().insert (proto);
+	
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
 	return FrameTable::instance ().getProto (proto);	
     }
 
-    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Block _block, InfoType retType) {
-	if (retType == NULL) retType = new (Z0) IUndefInfo ();
+    FrameProto IFrame::validate (std::string& name, Namespace space, const std::vector<Var> & params, Block _block, InfoType retType, bool isExtern) {
+	if (retType == NULL) {
+	    if (isExtern) retType = new (Z0) IVoidInfo ();
+	    else retType = new (Z0) IUndefInfo ();
+	}
+	
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), retType);
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
-
-	if (!FrameTable::instance ().existsProto (proto)) {
+	auto exists = FrameTable::instance ().existsProto (proto);
+	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
@@ -415,7 +430,8 @@ namespace semantic {
 	    Table::instance ().quitBlock ();
 	    Table::instance ().quitFrame ();
 	    return proto;
-	}
+	} else if (!exists)
+	    FrameTable::instance ().insert (proto);
 	
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
@@ -424,14 +440,17 @@ namespace semantic {
 
     
     
-    FrameProto IFrame::validate (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic) {
-	Namespace finalNamespace (space, from.toString ());
+    FrameProto IFrame::validate (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic, bool isExtern) {
+	Namespace finalNamespace = space;
+	if (from != space) finalNamespace = Namespace (space, from.toString ());
+
 	Table::instance ().templateNamespace () = from;
 	bool lvalue = false;
 		
-	if (this-> _function-> getType () == NULL) 
-	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
-	else {
+	if (this-> _function-> getType () == NULL) {
+	    if (isExtern) Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
+	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
+	} else {
 	    auto type = this-> _function-> getType ()-> toType ();
 	    Table::instance ().retInfo ().deco = this-> _function-> getRetDeco ().getStr ();
 	    if (type) {
@@ -445,8 +464,9 @@ namespace semantic {
 	}
 
 	auto proto = new (Z0)  IFrameProto (this-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, this-> tempParams, this-> _attributes);
-		
-	if (!FrameTable::instance ().existsProto (proto)) {
+
+	auto exists = FrameTable::instance ().existsProto (proto);
+	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
@@ -496,7 +516,9 @@ namespace semantic {
 	    verifyReturn (this-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
 	    Table::instance ().quitFrame ();
 	    return proto;
-	}
+	} else if (!exists)
+	    FrameTable::instance ().insert (proto);
+	
 	Table::instance ().quitBlock ();
 	Table::instance ().quitFrame ();
 	return FrameTable::instance ().getProto (proto);		    
