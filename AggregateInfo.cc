@@ -12,6 +12,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/TreeExpression.hh>
+#include <ymir/utils/Mangler.hh>
 
 using namespace syntax;   
 
@@ -153,15 +154,15 @@ namespace semantic {
     }
     
     std::string IAggregateCstInfo::typeString () {
-	return this-> _name;
+	return Namespace (this-> _space, this-> _name).toString ();
     }
 
     std::string IAggregateCstInfo::innerTypeString () {
-	return this-> _name;
+	return Namespace (this-> _space, this-> _name).toString ();
     }    
     
     std::string IAggregateCstInfo::innerSimpleTypeString () {
-	return Ymir::OutBuffer (this-> _name.length (), this-> _name).str ();
+	return Namespace (this-> _space, this-> _name).toString ();
     }
 
     Ymir::Tree IAggregateCstInfo::toGeneric () {
@@ -346,11 +347,11 @@ namespace semantic {
     }
 
     std::string IAggregateInfo::innerTypeString () {
-	return this-> _name;	
+	return Namespace (this-> _space, this-> _name).toString ();
     }
 
     std::string IAggregateInfo::innerSimpleTypeString () {
-	return this-> _name;
+	return Namespace (this-> _space, this-> _name + "A").toString ();
     }
 
     InfoType IAggregateInfo::SizeOf () {
@@ -417,8 +418,8 @@ namespace semantic {
     }
     
     Ymir::Tree IAggregateInfo::getVtable () {
-	auto thisName = this-> simpleTypeString ();
-	auto vname = Ymir::OutBuffer ("_YTV", thisName.length (), thisName).str ();
+	auto tname = this-> simpleTypeString ();
+	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();
 	auto vtable = Ymir::getVtable (vname);
 	if (vtable.isNull ()) {
 	    auto vtype = buildVtableType ();
@@ -431,9 +432,8 @@ namespace semantic {
     }
     
     Ymir::Tree IAggregateInfo::toGeneric () {
-	auto thisName = this-> simpleTypeString ();
-	auto tname = Ymir::OutBuffer (thisName.length (), thisName).str ();
-	auto vname = Ymir::OutBuffer ("_YTV", thisName.length (), thisName).str ();
+	auto tname = this-> simpleTypeString ();
+	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();
 	auto ttype = IFinalFrame::getDeclaredType (tname.c_str ());
 	if (ttype.isNull ()) {
 	    std::vector <InfoType> types = {new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()), this-> _impl};

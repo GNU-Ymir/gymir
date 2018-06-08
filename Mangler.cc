@@ -9,7 +9,8 @@
 #include <ymir/utils/Array.hh>
 #include <ymir/ast/Var.hh>
 #include <ymir/syntax/Keys.hh>
-
+#include <ymir/semantic/object/AggregateInfo.hh>
+#include <ymir/semantic/types/StructInfo.hh>
 
 namespace Mangler {
     using namespace Ymir;
@@ -58,7 +59,8 @@ namespace Mangler {
 	return ss.str ();
     }
     
-    std::string mangle_type (std::string name) {
+    std::string mangle_type (InfoType type, std::string name) {
+	if (type-> is <IAggregateInfo> () || type-> is <IStructInfo> ()) return mangle_namespace (name);
 	auto res = replace (name, {'(', ')', ',', '\''}, {'N', 'N', 'U', 'G'});
 	OutBuffer fin;
 	for (auto it : res) {
@@ -210,16 +212,16 @@ namespace Mangler {
 		    if (tu-> isFake ())
 			for (auto it : tu-> getParams ())
 			    ss.write ("N", it-> value ()-> toString ());
-		    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
-		} else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+		    else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+		} else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
 	    }
 	}
 	
 	for (auto it : frame-> vars ()) {
-	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
+	    ss.write (mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
 	}
 	
-	ss.write ("Z", mangle_type (frame-> type ()-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> type, frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
 
@@ -241,15 +243,15 @@ namespace Mangler {
 		    if (tu-> isFake ())
 			for (auto it : tu-> getParams ())
 			    ss.write ("N", it-> value ()-> toString ());
-		    else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
-		} else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+		    else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+		} else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
 	    }
 	}
 	
 	for (auto it : frame-> vars ()) {
-	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
+	    ss.write (mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
 	}
-	ss.write ("Z", mangle_type (frame-> type ()-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> type, frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
     
@@ -263,14 +265,14 @@ namespace Mangler {
 		if (tu-> isFake ())
 		    for (auto it : tu-> getParams ())
 			ss.write ("N", it-> value ()-> toString ());
-		else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
-	    } else ss.write ("N", mangle_type (it-> info-> simpleTypeString ()));
+		else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+	    } else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
 	}
 	
 	for (auto it : frame-> vars ()) {
-	    ss.write (mangle_type (it-> info-> simpleTypeString ()));
+	    ss.write (mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
 	}
-	ss.write ("Z", mangle_type (frame-> type ()-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> type, frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
 

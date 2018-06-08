@@ -141,8 +141,8 @@ namespace semantic {
     }
 	
     std::string IFloatInfo::innerTypeString () {
-	if (this-> _type == FloatConst::FLOAT) return "float";
-	else return "double";
+	if (this-> _type == FloatConst::FLOAT) return "f32";
+	else return "f64";
     }
 
     std::string IFloatInfo::innerSimpleTypeString () {

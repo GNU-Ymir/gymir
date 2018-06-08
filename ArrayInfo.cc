@@ -387,9 +387,9 @@ namespace semantic {
 
     std::string IArrayInfo::innerSimpleTypeString () {
 	if (this-> _isStatic) {
-	    return Ymir::OutBuffer ("A", this-> _size, this-> _content-> simpleTypeString ()).str ();
+	    return Ymir::OutBuffer ("A", this-> _size, Mangler::mangle_type (this-> _content, this-> _content-> simpleTypeString ())).str ();
 	} else 
-	    return std::string ("A") + this-> _content-> simpleTypeString ();
+	    return std::string ("A") + Mangler::mangle_type (this-> _content, this-> _content-> simpleTypeString ());
     }
 
     InfoType IArrayInfo::getTemplate (ulong i) {

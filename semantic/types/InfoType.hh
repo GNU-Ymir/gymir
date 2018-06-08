@@ -9,6 +9,7 @@
 #include <ymir/semantic/pack/Frame.hh>
 #include <ymir/semantic/pack/Module.hh>
 #include <vector>
+#include <ymir/utils/Mangler.hh>
 
 namespace syntax {
     class IExpression;

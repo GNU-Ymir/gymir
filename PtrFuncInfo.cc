@@ -419,9 +419,9 @@ namespace semantic {
 	if (this-> isDelegate ()) buf.write ("DG");
 	else buf.write ("PF");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    buf.write (this-> params [it]-> simpleTypeString ());
+	    buf.write (Mangler::mangle_type (this-> params [it], this-> params [it]-> simpleTypeString ()));
 	}
-	buf.write ("Z", this-> ret-> typeString ());
+	buf.write ("Z", Mangler::mangle_type (this-> ret, this-> ret-> simpleTypeString ()));
 	return buf.str ();
     }
 

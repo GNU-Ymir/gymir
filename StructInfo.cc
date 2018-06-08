@@ -5,6 +5,7 @@
 #include <ymir/semantic/value/StringValue.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/syntax/Keys.hh>
+#include <ymir/utils/Mangler.hh>
 
 namespace semantic {
 
@@ -428,7 +429,7 @@ namespace semantic {
 
 	    if (it < (int) this-> tmpsDone.size () - 1)
 		buf.write (", ");	    
-	}
+	}	
 	buf.write (")");
 	return buf.str ();
     }
@@ -760,6 +761,7 @@ namespace semantic {
 		buf.write (", ");	    
 	}
 	if (this-> tmpsDone.size () != 0) buf.write (")");
+	buf.write ("S");
 	return buf.str ();
     }
 

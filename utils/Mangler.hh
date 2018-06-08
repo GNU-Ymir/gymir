@@ -9,6 +9,9 @@ namespace semantic {
 
     class IFinalFrame;
     typedef IFinalFrame* FinalFrame;
+
+    class IInfoType;
+    typedef IInfoType* InfoType;
     
 }
 
@@ -22,7 +25,7 @@ namespace Mangler {
     
     std::string mangle_functionv (std::string&, ::semantic::FrameProto);
 
-    std::string mangle_type (std::string);
+    std::string mangle_type (::semantic::InfoType, std::string);
 
     std::string mangle_namespace (std::string);
 

@@ -333,7 +333,7 @@ namespace semantic {
     }
 
     std::string IRefInfo::innerSimpleTypeString () {
-	return std::string ("R") + this-> _content-> simpleTypeString ();
+	return std::string ("R") + Mangler::mangle_type (this-> _content, this-> _content-> simpleTypeString ());
     }
 
     InfoType IRefInfo::onClone () {

@@ -264,7 +264,7 @@ namespace semantic {
 	Ymir::OutBuffer buf;
 	buf.write ("T");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    buf.write (this-> params [it]-> simpleTypeString ());
+	    buf.write (Mangler::mangle_type (this-> params [it], this-> params [it]-> simpleTypeString ()));
 	    if (this-> _isUnion) {
 		if (it != (int) this-> params.size () - 1) buf.write ("|");
 	    }

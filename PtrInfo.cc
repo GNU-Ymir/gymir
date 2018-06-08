@@ -417,7 +417,7 @@ namespace semantic {
     }
 
     std::string IPtrInfo::innerSimpleTypeString () {
-	return "P" + this-> _content-> simpleTypeString ();
+	return "P" + Mangler::mangle_type (this-> _content, this-> _content-> simpleTypeString ());
     }
 
     InfoType IPtrInfo::onClone () {

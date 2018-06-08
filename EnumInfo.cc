@@ -312,7 +312,7 @@ namespace semantic {
     }
     
     std::string IEnumCstInfo::innerSimpleTypeString () {
-	return Ymir::format ("%%", Mangler::mangle_type (this-> _space.toString () + "." + this-> _name), "E");
+	return Ymir::format ("%%", Namespace (this-> _space.toString (), this-> _name).toString (), "E");
     }
 
     std::string IEnumCstInfo::innerTypeString () {
@@ -530,8 +530,8 @@ namespace semantic {
     }
     
     std::string IEnumInfo::innerSimpleTypeString () {
-	auto name = Mangler::mangle_type (this-> _space.toString () + "." + this-> _name);
-	return Ymir::format ("%%%", name.length () + 1, name, "E");
+	auto name = Namespace (this-> _space.toString (), this-> _name);
+	return Ymir::format ("%%", name, "E");
     }
 
     std::string IEnumInfo::innerTypeString () {
