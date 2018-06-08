@@ -11,6 +11,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/syntax/Keys.hh>
+#include <ymir/ast/TreeExpression.hh>
 
 using namespace syntax;   
 
@@ -18,6 +19,17 @@ namespace semantic {
 
     namespace AggregateUtils {
 	using namespace Ymir;
+
+	template <typename T>
+	T getAndRemoveBack (std::list <T> &list) {
+	    if (list.size () != 0) {
+		auto last = list.back ();	    
+		list.pop_back ();
+		return last;
+	    } else {
+		return NULL;
+	    }
+	}
 	
 	Tree InstGetStaticMeth (Word, InfoType, Expression) {
 	    return Tree ();
@@ -26,6 +38,26 @@ namespace semantic {
 	Tree InstGetMethod (Word, InfoType, Expression left, Expression) {
 	    return left-> toGeneric ();
 	}
+
+	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
+	    auto type = t-> cloneOnExitWithInfo ();
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+
+	    auto loc = locus.getLocus ();
+	    auto innerType = left-> info-> type-> to <IAggregateInfo> ()-> getImpl ();
+	    
+	    Ymir::TreeStmtList list;
+	    auto leftExp = Ymir::getExpr (list, left);
+	    leftExp = getField (locus.getLocus (), leftExp, 1);
+	    
+	    return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
+		locus,
+		type,
+		new (Z0) ITreeExpression (left-> token, innerType, leftExp),
+		right
+	    ));
+	}
+
 	
     }
     
@@ -75,25 +107,27 @@ namespace semantic {
     InfoType IAggregateCstInfo::onClone () {
 	return this;
     }
-    
-    
-    InfoType IAggregateCstInfo::TempOp (const std::vector <Expression> & exprs) {
-	auto expr = this-> _impl [0]-> expression ();
-	if (expr-> info-> type-> is <IStructCstInfo> ())  {
-	    auto str = expr-> info-> type-> TempOp (exprs);
+        
+    InfoType IAggregateCstInfo::TempOp (const std::vector <Expression> &) {
+	if (this-> _impl.size () != 0) {
+	    auto str = this-> constructImpl ();
 	    if (str) {
 		auto ret = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {}, this-> _isExternal);
-		ret-> _impl = str-> to <IStructInfo> ();
+		ret-> _impl = str;
 		if (this-> _destr)
 		    ret-> _destr = this-> _destr-> frame ();
 		ret-> _staticMeth = this-> _staticMeth;
 		ret-> _methods = this-> _methods;
-		return ret;
-	    } return NULL;
-	} else {
-	    //TODO
-	    return NULL;
-	}
+		return ret;	    
+	    } else {
+		// if (!this-> _isFailure) {
+		//     this-> _isFailure = true;	    
+		//     Ymir::Error::cannotImpl (expr-> token, expr-> info-> type);
+		// }
+		return NULL;
+	    }
+	} else Ymir::Error::assert ("");
+	return NULL;
     }
 
     InfoType IAggregateCstInfo::SizeOf () {
@@ -168,6 +202,19 @@ namespace semantic {
 	}
     }
 
+    TupleInfo IAggregateCstInfo::constructImpl () {
+	auto type = this-> _impl [0]-> toType ();
+	if (type == NULL) return NULL;
+
+	auto str = type-> info-> type-> to <ITupleInfo> ();
+	if (str == NULL) {
+	    str = new (Z0) ITupleInfo (false, false, this-> _isUnion);
+	    str-> addParam (type-> info-> type);
+	}
+	
+	return str;		
+    }    
+    
     IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExtern) :
 	IInfoType (false),
 	_space (space),
@@ -226,7 +273,7 @@ namespace semantic {
 
     InfoType IAggregateInfo::onClone () {
 	auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone, this-> _isExternal);
-	ret-> _impl = this-> _impl-> clone ()-> to <IStructInfo> ();
+	ret-> _impl = this-> _impl-> clone ()-> to <ITupleInfo> ();
 	ret-> _destr = this-> _destr;
 	ret-> _staticMeth = this-> _staticMeth;
 	ret-> _methods = this-> _methods;
@@ -253,14 +300,25 @@ namespace semantic {
     }
     
     InfoType IAggregateInfo::DotOp (Var var) {
-	auto ret = this-> _impl-> DotOp (var);
+	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
 	if (ret == NULL) {
 	    return this-> Method (var);
 	} else {
+	    ret-> nextBinop.push_back (ret-> binopFoo);
+	    ret-> binopFoo = &AggregateUtils::InstUnref;
 	    return ret;
 	}
     }
 
+    InfoType IAggregateInfo::DotExpOp (Expression right) {
+	auto ret = this-> _impl-> DotExpOp (right);
+	if (ret != NULL) {
+	    ret-> nextBinop.push_back (ret-> binopFoo);
+	    ret-> binopFoo = &AggregateUtils::InstUnref;
+	}
+	return ret;
+    }
+    
     InfoType IAggregateInfo::DColonOp (Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "sizeof") return SizeOf ();
@@ -320,6 +378,11 @@ namespace semantic {
 	} else return NULL;
     }
 
+
+    TupleInfo IAggregateInfo::getImpl () {
+	return this-> _impl;
+    }
+    
     Ymir::Tree IAggregateInfo::buildVtableType () {
 	int size = 0;
 	for (auto it : this-> _methods) {
@@ -352,7 +415,7 @@ namespace semantic {
 	
 	return build_constructor (vtype.getTree (), elms);
     }
-
+    
     Ymir::Tree IAggregateInfo::getVtable () {
 	auto thisName = this-> simpleTypeString ();
 	auto vname = Ymir::OutBuffer ("_YTV", thisName.length (), thisName).str ();
@@ -372,11 +435,11 @@ namespace semantic {
 	auto tname = Ymir::OutBuffer (thisName.length (), thisName).str ();
 	auto vname = Ymir::OutBuffer ("_YTV", thisName.length (), thisName).str ();
 	auto ttype = IFinalFrame::getDeclaredType (tname.c_str ());
-	if (ttype.isNull ()) {	    	    
-	    auto temp = (StructInfo) this-> _impl-> clone ();
-	    temp-> getTypes ().insert (temp-> getTypes ().begin (), new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()));
-	    temp-> getAttribs ().insert (temp-> getAttribs ().begin (), Keys::VTABLE_FIELD);
-	    ttype = temp-> toGeneric ();
+	if (ttype.isNull ()) {
+	    std::vector <InfoType> types = {new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()), this-> _impl};
+	    auto attrs = {Keys::VTABLE_FIELD};
+
+	    ttype = Ymir::makeTuple (tname, types, attrs); 
 	    IFinalFrame::declareType (tname, ttype);
 	    
 	    if (Ymir::getVtable (vname).isNull ()) {

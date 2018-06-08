@@ -119,6 +119,8 @@ namespace Ymir {
 	    MultiDestr,
 	    NeedAllType,
 	    StaticMethodInit,
+	    CannotImpl,
+	    AmbiguousAccess,
 	    LAST_ERROR
 	};
 
@@ -319,6 +321,10 @@ namespace Ymir {
 	static void needAllTypeConstr (const Word&);
 
 	static void staticMethodInit (const Word&);
+
+	static void cannotImpl (const Word&, semantic::InfoType);
+
+	static void ambiguousAccess (const Word&, const Word&, semantic::InfoType);
 	
 	static void activeError (bool);	
 		

@@ -675,23 +675,7 @@ namespace syntax {
 	bool isUnion = false;
 	std::vector <Expression> who;
 	if (form == TypeForm::IMPL) {
-	    auto next = this-> lex.next ();
-	    if (next == Token::LPAR) {
-		while (true) {
-		    who.push_back (visitLeftOpSimple ());
-		    next = this-> lex.next ({Token::RPAR, Token::PIPE, Token::COMA});
-		    if (next == Token::PIPE) {
-			if (!isUnion && who.size () != 1) syntaxError (next, {Token::COMA, Token::RPAR});
-			else isUnion = true;
-		    } else if (next == Token::COMA) {
-			if (isUnion && who.size () != 1) syntaxError (next, {Token::PIPE, Token::RPAR});
-			else isUnion = false;
-		    } else break;
-		}
-	    } else {
-		this-> lex.rewind ();
-		who.push_back (visitExpression ());
-	    }
+	    who.push_back (visitExpression ());	    
 	}
 	
 	this-> lambdaPossible = save;

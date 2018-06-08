@@ -256,6 +256,7 @@ namespace semantic {
 	std::list <UnopLint> nextUnop;
 	std::list <MultLint> nextMult;
 	std::list <ApplyLint> nextApply;
+	std::list <ulong> nextToGet;
     };    
 
 }

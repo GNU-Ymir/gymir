@@ -126,24 +126,25 @@ namespace semantic {
 		    }
 		} else {
 		    if (auto tu = this-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
-			if (auto tu2 = scd-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
-			    if (tu2-> isFake () != tu-> isFake ()) return false;
-			    for (auto it : Ymir::r (0, tu-> getParams ().size ())) {
-				if (!tu-> getParams () [it]-> value ()) return false;
-				if (!tu-> getParams () [it]-> value ()-> equals (tu2-> getParams () [it]-> value ()))
-				    return false;
-			    }
-			} else return false;
+		    	if (auto tu2 = scd-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
+		    	    if (tu2-> isFake () != tu-> isFake ()) return false;
+			    if (tu-> getParams ().size () != tu2-> getParams ().size ()) return false;
+		    	    for (auto it : Ymir::r (0, tu-> getParams ().size ())) {
+		    		if (!tu-> getParams () [it]-> value () && tu2-> getParams () [it]-> value ()) return false;
+		    		if (tu-> getParams () [it]-> value () && !tu-> getParams () [it]-> value ()-> equals (tu2-> getParams () [it]-> value ()))
+		    		    return false;
+		    	    }
+		    	} else return false;
 		    } else if (this-> _tmps [it]-> info-> type-> simpleTypeString () != scd-> _tmps [it]-> info-> type-> simpleTypeString ()) {
-			return false;
+		    	return false;
 		    }
 		}
 	    }
 
 	    for (auto it : Ymir::r (0, this-> _vars.size ())) {		
-		if (this-> _vars [it]-> info-> type-> simpleTypeString () != scd-> _vars  [it]-> info-> type-> simpleTypeString ()) {
-		    return false;
-		}
+	    	if (this-> _vars [it]-> info-> type-> simpleTypeString () != scd-> _vars  [it]-> info-> type-> simpleTypeString ()) {
+	    	    return false;
+	    	}
 	    }
 	    return true;
 	}

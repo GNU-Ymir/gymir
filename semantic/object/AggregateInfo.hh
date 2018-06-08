@@ -3,6 +3,7 @@
 #include <ymir/semantic/types/InfoType.hh>
 #include <ymir/semantic/pack/Frame.hh>
 #include <ymir/semantic/types/StructInfo.hh>
+#include <ymir/semantic/types/TupleInfo.hh>
 
 namespace syntax {
     class ITypedVar;
@@ -37,6 +38,7 @@ namespace semantic {
 	std::vector <syntax::Expression> _impl;
 	bool _isUnion;
 	bool _isExternal;
+	bool _isFailure = false;
 	
     public :
 
@@ -87,6 +89,8 @@ namespace semantic {
 	InfoType Init ();
 
 	InfoType SizeOf ();
+
+	TupleInfo constructImpl (); 
 	
     };
 
@@ -103,7 +107,7 @@ namespace semantic {
 	
 	std::vector <syntax::Expression> tmpsDone;
 	AggregateCstInfo _id = NULL;
-	StructInfo _impl;
+	TupleInfo _impl;
 	bool _isExternal;
 	
 	friend IAggregateCstInfo;
@@ -126,6 +130,8 @@ namespace semantic {
 
 	InfoType DotOp (syntax::Var) override;
 
+	InfoType DotExpOp (syntax::Expression right) override;
+	
 	InfoType DColonOp (syntax::Var) override;
 
 	InfoType CompOp (InfoType) override;
@@ -138,10 +144,12 @@ namespace semantic {
 
 	std::string innerSimpleTypeString () override;
 
+	TupleInfo getImpl ();
+	
 	Ymir::Tree getVtable ();
 	
-	Ymir::Tree toGeneric () override;
-
+	Ymir::Tree toGeneric () override;	
+	
 	void setTmps (const std::vector <syntax::Expression> & tmps);
 
 	InfoType getTemplate (ulong) override;

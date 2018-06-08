@@ -142,6 +142,8 @@ namespace Ymir {
 		phrases [MultiDestr] = "A type cannot have multiple destructors";
 		phrases [NeedAllType] = "All type must be known in constructor";
 		phrases [StaticMethodInit] = "The keyword %init% is reserved for constructors; Note that constructors are always named %self%";
+		phrases [CannotImpl] = "Aggregate type cannot implement type %%%";
+		phrases [AmbiguousAccess] = "Ambiguous access of field for type %%%";
 		init = true;
 	    } 
 	    return phrases;

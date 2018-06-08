@@ -222,13 +222,18 @@ namespace semantic {
 	auto ret = this-> onClone ();
 	if (ret) {
 	    ret-> value () = this-> value ();
+	    ret-> _toGet = this-> _toGet;
 	}
 	return ret;
     }
 
     InfoType IInfoType::cloneOnExit () {
 	auto ret = this-> clone ();
-	if (ret) ret-> value () = NULL;
+	if (ret) {
+	    ret-> value () = NULL;
+	    ret-> _toGet = this-> _toGet;
+	}
+	
 	return ret;
     }
 
@@ -244,18 +249,26 @@ namespace semantic {
 	ret-> nextUnop = this-> nextUnop;
 	ret-> nextMult = this-> nextMult;
 	ret-> nextApply = this-> nextApply;
+	ret-> nextToGet = this-> nextToGet;
+	ret-> _toGet = this-> _toGet;
 	return ret;
     }
 
     InfoType IInfoType::cloneConst () {
 	auto ret = this-> clone ();
-	ret-> isConst (true);
+	if (ret) {
+	    ret-> isConst (true);
+	    ret-> _toGet = this-> _toGet;
+	}
 	return ret;
     }
 
     InfoType IInfoType::onlyInMod (Module mod) {
 	auto ret = this-> clone ();
-	ret-> _onlyInMe = mod;
+	if (ret) {
+	    ret-> _onlyInMe = mod;
+	    ret-> _toGet = this-> _toGet;
+	}
 	return ret;
     }
 

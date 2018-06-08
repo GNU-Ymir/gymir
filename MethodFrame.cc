@@ -44,6 +44,8 @@ namespace semantic {
 	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
 	Table::instance ().enterBlock ();
 	auto object = this-> _info-> TempOp ({});
+	if (object == NULL) return NULL;
+		
 	auto params = params_;
 	params.insert (params.begin (), new (Z0) IRefInfo (false, object));
 
@@ -73,6 +75,8 @@ namespace semantic {
 
     ApplicationScore IMethodFrame::isApplicable (ParamList params) {
 	auto object = this-> _info-> TempOp ({});
+	if (object == NULL) return NULL;
+	
 	auto types = params-> getParamTypes ();
 	std::vector <Var> vars;
 	Word ident;
@@ -92,6 +96,8 @@ namespace semantic {
 
     ApplicationScore IMethodFrame::isApplicable (const std::vector <InfoType> & params) {
 	auto object = this-> _info-> TempOp ({});
+	if (object == NULL) return NULL;
+	
 	std::vector <Var> vars;
 	Word ident;
 	if (this-> _const) {	   
@@ -116,6 +122,7 @@ namespace semantic {
 
     FrameProto IMethodFrame::validate () {
 	auto object = this-> _info-> TempOp ({});
+	if (object == NULL) return NULL;
 	std::vector <Var> vars;
 	std::vector <InfoType> types;
 	if (this-> _proto != NULL) return this-> _proto;	

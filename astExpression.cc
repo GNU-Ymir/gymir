@@ -36,10 +36,10 @@ namespace syntax {
 	    return NULL;
 	}
 	auto type = aux-> info-> type;
-	if (type-> is <IStructCstInfo> ()) {
+	if (type-> is <IStructCstInfo> () || type-> is <IAggregateCstInfo> ()) {
 	    type = type-> TempOp ({});
 	    if (!type) return NULL;
-	}
+	} 
 	
 	type-> isType (false);
 	return new (Z0) IType (this-> token, type);
@@ -494,7 +494,9 @@ namespace syntax {
 			Token::DXOR_EQUAL, Token::TILDE_EQUAL
 			}, this-> token.getStr ())) {
 	    return reaff ();
-	} else return normal ();
+	} else if (this-> token.getStr () == Token::PIPE)
+	    return bitwiseOr ();
+	return normal ();
     }
 
     bool IBinary::simpleVerif (Binary aux) {
@@ -624,12 +626,36 @@ namespace syntax {
 	return aux;
     }    
 
-    Expression IBinary::normal () {	
+    Expression IBinary::bitwiseOr () {
 	if (!this-> info) {
-	    auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
-
+	    auto left = this-> left-> expression ();
+	    if (left == NULL) return NULL;
+	    if (left-> isType ()) {
+		auto ltype = left-> toType (), rtype = right-> toType ();
+		if (ltype == NULL || rtype == NULL) return NULL;
+		TupleInfo tu  = ltype-> info-> type-> to <ITupleInfo> ();
+		if (tu != NULL) {
+		    tu-> addParam (rtype-> info-> type-> clone ());
+		} else {
+		    tu = new (Z0) ITupleInfo (false, false, true);
+		    tu-> addParam (ltype-> info-> type-> clone ());
+		    tu-> addParam (rtype-> info-> type-> clone ());
+		}
+		return new (Z0) IType (this-> token, tu);
+	    } else return normal ();
+	} else {
+	    return normal ();
+	}
+    }
+    
+    Expression IBinary::normal (Binary aux) {	
+	if (!this-> info) {
+	    if (aux == NULL) {
+		aux = new (Z0) IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
+	    }
+	    
 	    if (simpleVerif (aux)) return NULL;
-	    else if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
+	    if (aux-> left-> info-> type-> is<IUndefInfo> ()) {
 		Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 		return NULL;
 	    }

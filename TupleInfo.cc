@@ -8,6 +8,7 @@
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/semantic/value/_.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 using namespace syntax;
 
 namespace semantic {
@@ -17,15 +18,16 @@ namespace semantic {
 	_isFake (false)
     {}
 
-    ITupleInfo::ITupleInfo (bool isConst, bool isFake) :
+    ITupleInfo::ITupleInfo (bool isConst, bool isFake, bool isUnion) :
 	IInfoType (isConst),
-	_isFake (isFake)
+	_isFake (isFake),
+	_isUnion (isUnion)       
     {}
     
     void ITupleInfo::setFake () {
 	this-> _isFake = true;
     }
-
+    
     bool ITupleInfo::isFake () {
 	return this-> _isFake;
     }
@@ -67,7 +69,8 @@ namespace semantic {
     
     bool ITupleInfo::isSame (InfoType other) {
 	if (auto tu = other-> to <ITupleInfo> ()) {
-	    if (tu-> params.size () != this-> params.size ()) return NULL;
+	    if (this-> _isUnion != tu-> _isUnion) return false;
+	    if (tu-> params.size () != this-> params.size ()) return false;
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		if (!(tu-> params [it]-> isSame (this-> params [it])))
 		    return false;
@@ -113,6 +116,7 @@ namespace semantic {
 		ret-> params.push_back (l-> clone ());
 	    }
 	    
+	    ret-> _isUnion = this-> _isUnion;
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
 	} else if (other-> is <IUndefInfo> ()) {
@@ -120,7 +124,9 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, this-> params.size ())) {
 		auto l = this-> params [it];		
 		ret-> params.push_back (l-> clone ());
-	    }	    
+	    }
+	    
+	    ret-> _isUnion = this-> _isUnion;
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
 	} else if (auto ref = other->to <IRefInfo> ()) {
@@ -136,7 +142,8 @@ namespace semantic {
 		if (l == NULL) return NULL;
 		ret-> params.push_back (l);
 	    }
-	    
+
+	    ret-> _isUnion = this-> _isUnion;
 	    ret-> _isFake = true;
 	    ret-> binopFoo = &TupleUtils::InstCastFake;
 	    return ret;
@@ -160,6 +167,8 @@ namespace semantic {
 	}
 	//tu-> value = this-> value;
 	tu-> isType (this-> isType ());
+	tu-> _isUnion = this-> _isUnion;
+	
 	return tu;
     } 
 
@@ -181,6 +190,34 @@ namespace semantic {
 	}
 	return NULL;
     }
+
+    InfoType ITupleInfo::DotOpAggr (const Word & locId, InfoType aggr, syntax::Var var) {
+	InfoType ret = NULL;
+	ulong i = 0, currenti = 0;
+	for (auto it : this-> params) {
+	    auto current = it-> DotOp (var);
+	    if (auto tu = it-> to <ITupleInfo> ())
+		current = tu-> DotOpAggr (locId, aggr, var);
+	    if (current) {
+		if (ret) {
+		    Ymir::Error::ambiguousAccess (var-> token, locId, aggr);
+		    return NULL;
+		} 
+		ret = current;
+		i = currenti;
+	    }
+	    currenti ++;
+	}
+	
+	if (ret) {
+	    ret-> nextToGet.push_back (ret-> toGet ());
+	    ret-> toGet () = i;
+	    ret-> nextBinop.push_back (ret-> binopFoo);
+	    ret-> binopFoo = &TupleUtils::InstUnref;
+	}
+	return ret;
+    }
+    
 
     InfoType ITupleInfo::DColonOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
@@ -214,9 +251,10 @@ namespace semantic {
 	buf.write ("(");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (this-> params [it]-> typeString ());
-	    if (this-> params [it]-> binopFoo)
-		buf.write ("bin");
-	    if (it != (int) this-> params.size () - 1) buf.write (", ");
+	    if (this-> _isUnion) {
+		if (it != (int) this-> params.size () - 1) buf.write (" | ");
+	    } else
+		if (it != (int) this-> params.size () - 1) buf.write (", ");
 	}
 	buf.write (")");
 	return buf.str ();
@@ -225,8 +263,11 @@ namespace semantic {
     std::string ITupleInfo::innerSimpleTypeString () {
 	Ymir::OutBuffer buf;
 	buf.write ("T");
-	for (auto it : this-> params) {
-	    buf.write (it-> simpleTypeString ());
+	for (auto it : Ymir::r (0, this-> params.size ())) {
+	    buf.write (this-> params [it]-> simpleTypeString ());
+	    if (this-> _isUnion) {
+		if (it != (int) this-> params.size () - 1) buf.write ("|");
+	    }
 	}
 	return buf.str ();
     }
@@ -237,9 +278,12 @@ namespace semantic {
 	IInfoType::printConst (true);
 	auto tuple_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (tuple_type_node.isNull ()) {
-	    if (this-> params.size () != 0) 
-		tuple_type_node = Ymir::makeTuple (name, this-> params);
-	    else
+	    if (this-> params.size () != 0) {
+		if (this-> _isUnion)
+		    tuple_type_node = Ymir::makeUnion (name, this-> params);
+		else
+		    tuple_type_node = Ymir::makeTuple (name, this-> params);
+	    } else
 		tuple_type_node = Ymir::makeTuple (name, {new (Z0) ICharInfo (true)});
 	    IFinalFrame::declareType (name, tuple_type_node);
 	}
@@ -272,6 +316,7 @@ namespace semantic {
 		ret-> params.push_back (it-> clone ());
 	    }
 
+	    ret-> _isUnion = this-> _isUnion;
 	    ret-> binopFoo = &TupleUtils::InstAffect;
 	    return ret;
 	}
@@ -285,7 +330,11 @@ namespace semantic {
     std::vector<InfoType> & ITupleInfo::getParams () {
 	return this-> params;
     }
-        
+
+    std::vector<std::string> & ITupleInfo::getAttribs () {
+	return this-> attribs;
+    }
+    
     InfoType ITupleInfo::Empty () {
 	return NULL;
     }
@@ -298,6 +347,17 @@ namespace semantic {
     
     namespace TupleUtils {
 	using namespace Ymir;
+
+	template <typename T>
+	T getAndRemoveBack (std::list <T> &list) {
+	    if (list.size () != 0) {
+		auto last = list.back ();	    
+		list.pop_back ();
+		return last;
+	    } else {
+		return (T) NULL;
+	    }
+	}
 	
 	Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
@@ -393,6 +453,32 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
 
+	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
+	    auto type = t-> cloneOnExitWithInfo ();	    
+	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
+
+	    auto toget = type-> toGet ();	    
+	    type-> toGet () = getAndRemoveBack (type-> nextToGet);
+
+	    auto loc = locus.getLocus ();
+	    InfoType innerType;
+	    if (left-> info-> type-> is <IAggregateInfo> ())
+		innerType = left-> info-> type-> to <IAggregateInfo> ()-> getImpl ()-> getParams () [toget];
+	    else
+		innerType = left-> info-> type-> to <ITupleInfo> ()-> getParams () [toget];
+	    
+	    Ymir::TreeStmtList list;
+	    auto leftExp = Ymir::getExpr (list, left);
+	    leftExp = getField (locus.getLocus (), leftExp, toget);
+	    
+	    return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
+		locus,
+		type,
+		new (Z0) ITreeExpression (left-> token, innerType, leftExp),
+		right
+	    ));
+	}
+	
     }
     
 

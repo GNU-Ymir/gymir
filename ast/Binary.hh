@@ -45,7 +45,8 @@ namespace syntax {
 
 	Expression affect ();
 	Expression reaff ();
-	Expression normal ();
+	Expression bitwiseOr ();
+	Expression normal (IBinary* = NULL);
 	bool simpleVerif (IBinary*);
 	bool canOverOpAssign (IBinary*);
 	

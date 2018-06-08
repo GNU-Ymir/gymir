@@ -8,13 +8,15 @@ namespace semantic {
     class ITupleInfo : public IInfoType {
 
 	std::vector <InfoType> params;
+	std::vector <std::string> attribs;
 	bool _isFake;
+	bool _isUnion = false;
 	
     public:
 
 	ITupleInfo (bool isConst);
 	
-	ITupleInfo (bool isConst, bool fake);
+	ITupleInfo (bool isConst, bool fake, bool isUnion = false);
 
 	bool isSame (InfoType) override;
 
@@ -34,6 +36,8 @@ namespace semantic {
 
 	InfoType DotExpOp (syntax::Expression right) override;
 
+	InfoType DotOpAggr (const Word & loc, InfoType aggr, syntax::Var var);
+	
 	InfoType DColonOp (syntax::Var var) override;
 
 	InfoType UnaryOp (Word) override;
@@ -51,11 +55,13 @@ namespace semantic {
 	void setFake ();
 
 	bool isFake ();
-	
+	      
 	InfoType asNoFake ();
 	
 	std::vector <InfoType> &getParams ();
 
+	std::vector <std::string> & getAttribs ();
+	
 	InfoType getTemplate (ulong) override;
 	
 	static const char* id () {
