@@ -1,6 +1,7 @@
 #include <ymir/semantic/pack/MethodFrame.hh>
 #include <ymir/ast/Function.hh>
 #include <ymir/ast/TypeCreator.hh>
+#include <ymir/syntax/Keys.hh>
 
 using namespace syntax;
 
@@ -62,6 +63,7 @@ namespace semantic {
 	    return ret;	
 	} else if (this-> _method) {
 	    auto vars = this-> _method-> getParams ();
+	    
 	    auto finalParams = IFrame::computeParams (vars, params);
 	    
 	    if (this-> _isVirtual) from = this-> _space;
@@ -85,6 +87,8 @@ namespace semantic {
 	    ident = this-> _const-> getIdent ();
 	} else {
 	    vars = this-> _method-> getParams ();
+	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
+	    
 	    ident = this-> _method-> getIdent ();
 	}
 	
@@ -105,10 +109,11 @@ namespace semantic {
 	    ident = this-> _const-> getIdent ();
 	} else {
 	    vars = this-> _method-> getParams ();
-	    ident = this-> _method->getIdent ();
+	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
+	    
+	    ident = this-> _method-> getIdent ();
 	}
-	
-	
+
 	auto ret = IFrame::isApplicable (ident, vars, params);
 	if (ret) 
 	    ret-> ret = object;

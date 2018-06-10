@@ -74,6 +74,7 @@ namespace semantic {
 
 		if (args [it] == NULL) return NULL;
 		auto type = args [it]-> CompOp (info);
+		
 		if (type != NULL) type = type-> ConstVerif (info);
 		else return NULL;
 		if (type && type-> isSame (args [it])) {

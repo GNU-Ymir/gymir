@@ -250,6 +250,7 @@ namespace semantic {
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
+	ret-> _isConstante = true;
 	
 	ret-> multFoo = &StructUtils::InstCallUnion;	
 	score-> dyn = true;
@@ -300,6 +301,7 @@ namespace semantic {
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
+	ret-> _isConstante = true;
 	    
 	ret-> multFoo = &StructUtils::InstCall;
 	score-> dyn = true;
@@ -357,6 +359,7 @@ namespace semantic {
 	this-> _info-> setTypes (types);
 	this-> _info-> setAttribs (attribs);	    
 	this-> _info-> setTmps (this-> tmpsDone);
+	this-> _info-> _isConstante = true;
 	
 	inProgress.erase (name);
 	//validated [name] = this-> _info;
@@ -599,6 +602,7 @@ namespace semantic {
 	
 	ret-> tmpsDone = this-> tmpsDone;
 	ret-> isConst (this-> isConst ());
+	ret-> _isConstante = this-> _isConstante;
 	return ret;
     }
 
@@ -634,7 +638,8 @@ namespace semantic {
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
-	    
+	ret-> _isConstante = true;
+	
 	ret-> multFoo = &StructUtils::InstCall;
 	score-> dyn = true;
 	score-> ret = ret;
@@ -704,7 +709,7 @@ namespace semantic {
 	    ret-> binopFoo = &StructUtils::InstCast;	    
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
-	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
+	    if (!this-> _isConstante && this-> isSame (ref-> content ())) {
 		auto ret = new (Z0)  IRefInfo (false, ref-> content ()-> clone ());
 		ret-> content ()-> isConst (this-> isConst ());
 		ret-> binopFoo = &StructUtils::InstAddr;
@@ -736,6 +741,7 @@ namespace semantic {
 	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstAffect;
+	    ret-> to <IStructInfo> ()-> _isConstante = false;
 	    return ret;	    
 	}
 	return NULL;

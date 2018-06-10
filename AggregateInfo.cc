@@ -13,6 +13,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/semantic/types/RefInfo.hh>
 
 using namespace syntax;   
 
@@ -278,6 +279,7 @@ namespace semantic {
 	ret-> _destr = this-> _destr;
 	ret-> _staticMeth = this-> _staticMeth;
 	ret-> _methods = this-> _methods;
+	ret-> isConst (this-> isConst ());
 	
 	return ret;
     }
@@ -305,6 +307,7 @@ namespace semantic {
 	if (ret == NULL) {
 	    return this-> Method (var);
 	} else {
+	    ret-> isConst (this-> isConst ());
 	    ret-> nextBinop.push_back (ret-> binopFoo);
 	    ret-> binopFoo = &AggregateUtils::InstUnref;
 	    return ret;
@@ -314,6 +317,7 @@ namespace semantic {
     InfoType IAggregateInfo::DotExpOp (Expression right) {
 	auto ret = this-> _impl-> DotExpOp (right);
 	if (ret != NULL) {
+	    ret-> isConst (this-> isConst ());
 	    ret-> nextBinop.push_back (ret-> binopFoo);
 	    ret-> binopFoo = &AggregateUtils::InstUnref;
 	}
@@ -334,8 +338,25 @@ namespace semantic {
 	return NULL;
     }
 
-    InfoType IAggregateInfo::CompOp (InfoType type) {
-	return type-> clone ();
+    InfoType IAggregateInfo::CompOp (InfoType other) {
+	if (this-> isSame (other)) {
+	    auto ret = this-> clone ();
+	    ret-> isConst (this-> isConst ());
+	    ret-> binopFoo = &StructUtils::InstCast;
+	    return ret;
+	} else if (other-> is <IUndefInfo> ()) {
+	    auto ret = this-> clone ();
+	    ret-> binopFoo = &StructUtils::InstCast;
+	    return ret;
+	} else if (auto ref = other-> to <IRefInfo> ()) {
+	    if (this-> isSame (ref-> content ())) {
+		auto ret = new (Z0) IRefInfo (this-> isConst (), ref-> content ()-> clone ());
+		ret-> content ()-> isConst (this-> isConst ());
+		ret-> binopFoo = &StructUtils::InstAddr;
+		return ret;
+	    }
+	}
+	return NULL;
     }
 
     std::string IAggregateInfo::getName () {

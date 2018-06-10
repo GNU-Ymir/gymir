@@ -199,6 +199,9 @@ namespace semantic {
     InfoType IRefInfo::ConstVerif (InfoType type) {
 	auto aux = type-> to <IRefInfo> ();
 	if (aux) {
+	    if ((this-> isConst () || this-> _content-> isConst ()) && (!aux-> _content-> isConst () && !aux-> isConst ()))
+		return NULL;
+		
 	    auto content = this-> _content-> ConstVerif (aux-> _content);
 	    if (content != NULL) {
 		this-> _content = content;

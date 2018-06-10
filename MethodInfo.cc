@@ -129,7 +129,7 @@ namespace semantic {
     ApplicationScore IMethodInfo::CallOp (Word tok, syntax::ParamList params) {
 	InfoType retType;
 	auto types = params-> getParamTypes ();
-	types.insert (types.begin (), this-> _info-> clone ());
+	types.insert (types.begin (), new (Z0) IRefInfo (this-> _info-> isConst (), this-> _info-> clone ()));
 	
 	auto right = this-> CallAndThrow (tok, types, retType);
 	if (right) {

@@ -66,7 +66,7 @@ namespace syntax {
 
 	void declare () override;
 
-	void declare (semantic::Module) override {}
+	void declare (semantic::Module) override;
 	
 	void declareAsExtern (semantic::Module) override;
 
