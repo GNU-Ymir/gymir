@@ -1,19 +1,18 @@
 #include <ymir/semantic/object/AggregateInfo.hh>
-#include <ymir/semantic/types/FunctionInfo.hh>
+#include <ymir/ast/Function.hh>
+#include <ymir/ast/TypeCreator.hh>
 #include <ymir/ast/Var.hh>
-#include <ymir/semantic/utils/StructUtils.hh>
-#include <ymir/semantic/types/UndefInfo.hh>
-#include <ymir/semantic/types/FixedInfo.hh>
 #include <ymir/semantic/object/MethodInfo.hh>
 #include <ymir/ast/ParamList.hh>
-#include <ymir/semantic/types/PtrInfo.hh>
-#include <ymir/semantic/types/VoidInfo.hh>
+#include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/types/RefInfo.hh>
+#include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/utils/StructUtils.hh>
 
 using namespace syntax;   
 
@@ -110,28 +109,75 @@ namespace semantic {
 	return this;
     }
         
-    InfoType IAggregateCstInfo::TempOp (const std::vector <Expression> &) {
-	if (this-> _impl.size () != 0) {
-	    auto str = this-> constructImpl ();
-	    if (str) {
-		auto ret = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {}, this-> _isExternal);
-		ret-> _impl = str;
-		if (this-> _destr)
-		    ret-> _destr = this-> _destr-> frame ();
-		ret-> _staticMeth = this-> _staticMeth;
-		ret-> _methods = this-> _methods;
-		return ret;	    
-	    } else {
-		// if (!this-> _isFailure) {
-		//     this-> _isFailure = true;	    
-		//     Ymir::Error::cannotImpl (expr-> token, expr-> info-> type);
-		// }
-		return NULL;
-	    }
-	} else Ymir::Error::assert ("");
-	return NULL;
+    InfoType IAggregateCstInfo::TempOp (const std::vector <Expression> & tmps) {
+	static std::map <std::string, AggregateInfo> inProgress;
+	static std::map <std::string, AggregateInfo> validated;
+
+	if (this-> _tmps.size () != 0) {
+	    return NULL;
+	    //return this-> getScore (tmps);
+	}
+	
+	if (this-> _tmps.size () != tmps.size ()) return NULL;
+
+	auto name = Namespace (this-> _space, this-> _name).toString ();
+	auto valid = validated.find (name);
+	if (valid != validated.end ()) return valid-> second-> clone ();
+	auto inside = inProgress.find (name);
+	if (inside != inProgress.end ()) return inside-> second;
+	
+	auto info = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {}, this-> _isExternal);
+	inProgress [name] = info;
+	
+	auto str = this-> constructImpl ();
+	if (str == NULL) {
+	    inProgress [name] = NULL;
+	    return NULL;
+	}
+	
+	if (recursiveGet (info, str)) {
+	    inProgress [name] = NULL;
+	    Ymir::Error::recursiveNoSize (this-> _impl [0]-> token);
+	    return NULL;
+	}
+	    
+	info-> _impl = str;
+	if (this-> _destr)
+	    info-> _destr = this-> _destr-> frame ();
+	info-> _staticMeth = this-> _staticMeth;
+	info-> _methods = this-> _methods;
+	// info-> setTmps (this-> tmpsDone); TODO
+	inProgress.erase (name);
+	
+	return info-> clone ();	    
     }
 
+    bool IAggregateCstInfo::recursiveGet (InfoType who, InfoType where) {
+	if (who-> isSame (where)) return true;
+	if (auto str = where-> to <IStructInfo> ()) {
+	    for (auto it : str-> getTypes ()) {
+		if (recursiveGet (who, it)) return true;
+	    }
+	    return false;
+	} else if (auto tu = where-> to <ITupleInfo> ()) {
+	    for (auto it : tu-> getParams ()) {
+		if (recursiveGet (who, it)) return true;
+	    }
+	    return false;
+	} else if (auto agg = where-> to <IAggregateInfo> ()) {
+	    return recursiveGet (who, agg-> getImpl ());
+	} else if (auto cstr = where-> to <IStructCstInfo> ()) {
+	    return recursiveGet (who, cstr-> TempOp ({}));
+	} else if (auto cagg = where-> to <IAggregateCstInfo> ()) {
+	    return recursiveGet (who, cagg-> TempOp ({}));
+	} else if (auto arr = where-> to <IArrayInfo> ()) {
+	    if (arr-> isStatic ()) {
+		return recursiveGet (who, arr-> content ());
+	    }
+	}
+	return false;
+    }
+    
     InfoType IAggregateCstInfo::SizeOf () {
 	if (this-> TempOp ({}) != NULL) {
 	    auto ret = new (Z0) IFixedInfo (true, FixedConst::UINT);
@@ -182,6 +228,10 @@ namespace semantic {
     std::string IAggregateCstInfo::name () {
 	return this-> _name;
     }
+
+    TypeCreator& IAggregateCstInfo::creator () {
+	return this-> _creator;
+    }
     
     const char* IAggregateCstInfo::getId () {
 	return IAggregateCstInfo::id ();
@@ -190,7 +240,7 @@ namespace semantic {
     Word IAggregateCstInfo::getLocId () {
 	return this-> _locId;	
     }
-
+    
     InfoType IAggregateCstInfo::Init () {
 	if (this-> _contrs.size () == 0) {
 	    return NULL;
@@ -205,6 +255,12 @@ namespace semantic {
     }
 
     TupleInfo IAggregateCstInfo::constructImpl () {
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
+	
+	Table::instance ().setCurrentSpace (this-> _space);
+	Table::instance ().templateNamespace () = currentSpace;
+	
 	auto type = this-> _impl [0]-> toType ();
 	if (type == NULL) return NULL;
 
@@ -213,7 +269,9 @@ namespace semantic {
 	    str = new (Z0) ITupleInfo (false, false, this-> _isUnion);
 	    str-> addParam (type-> info-> type);
 	}
-	
+
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
 	return str;		
     }    
     

@@ -6,6 +6,7 @@
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/Mangler.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 
 namespace semantic {
 
@@ -342,6 +343,7 @@ namespace semantic {
 		    Table::instance ().setCurrentSpace (currentSpace);
 		    Table::instance ().templateNamespace () = last;
 		    Ymir::Error::recursiveNoSize (this-> params [it]-> token);
+		    inProgress [name] = NULL;
 		    return NULL;
 		}
 		types.push_back (info);
@@ -349,6 +351,7 @@ namespace semantic {
 	    } else {
 		Table::instance ().setCurrentSpace (currentSpace);
 		Table::instance ().templateNamespace () = last;
+		inProgress [name] = NULL;
 		return NULL;
 	    }
 	}
@@ -373,8 +376,17 @@ namespace semantic {
 		if (recursiveGet (who, it)) return true;
 	    }
 	    return false;
+	} else if (auto tu = where-> to <ITupleInfo> ()) {
+	    for (auto it : tu-> getParams ()) {
+		if (recursiveGet (who, it)) return true;
+	    }
+	    return false;
+	} else if (auto agg = where-> to <IAggregateInfo> ()) {
+	    return recursiveGet (who, agg-> getImpl ());
 	} else if (auto cstr = where-> to <IStructCstInfo> ()) {
 	    return recursiveGet (who, cstr-> TempOp ({}));
+	} else if (auto cagg = where-> to <IAggregateCstInfo> ()) {
+	    return recursiveGet (who, cagg-> TempOp ({}));
 	} else if (auto arr = where-> to <IArrayInfo> ()) {
 	    if (arr-> isStatic ()) {
 		return recursiveGet (who, arr-> content ());

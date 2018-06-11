@@ -10,7 +10,10 @@ namespace syntax {
     typedef ITypedVar* TypedVar;
 
     class IExpression;
-    typedef IExpression* Expression;    
+    typedef IExpression* Expression;
+
+    class ITypeCreator;
+    typedef ITypeCreator* TypeCreator;
 }
 
 namespace semantic {
@@ -39,6 +42,8 @@ namespace semantic {
 	bool _isUnion;
 	bool _isExternal;
 	bool _isFailure = false;
+
+	syntax::TypeCreator _creator;
 	
     public :
 
@@ -75,6 +80,8 @@ namespace semantic {
 	bool& isExtern ();
 	
 	std::string name ();
+
+	syntax::TypeCreator& creator ();
 	
 	static const char * id () {
 	    return "IAggregateCstInfo";
@@ -91,6 +98,8 @@ namespace semantic {
 	InfoType SizeOf ();
 
 	TupleInfo constructImpl (); 
+
+	bool recursiveGet (InfoType, InfoType);
 	
     };
 

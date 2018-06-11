@@ -39,8 +39,7 @@ namespace semantic {
 					 type-> toGeneric ().getTree (),
 					 access,
 					 args.size (),
-					 args.data ());
-	    
+					 args.data ());	    
 	}
 
     }
@@ -140,9 +139,13 @@ namespace semantic {
 	
 	return right;
     }
+
+    std::string IMethodInfo::typeString () {
+	return this-> innerTypeString ();
+    }
     
     std::string IMethodInfo::innerTypeString () {
-	return "method <" + this-> _info-> getName () + "." + this-> _name + ">";
+	return "method <" + this-> _info-> typeString () + "." + this-> _name + ">";
     }
 
     std::string IMethodInfo::innerSimpleTypeString () {

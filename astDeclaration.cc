@@ -1225,33 +1225,39 @@ namespace syntax {
 
 	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
 
-	if (this-> _destr.size () > 1) {
+	if (this-> _destr.size () > 1)
 	    Ymir::Error::multipleDestr (this-> _ident);
-	} else if (this-> _destr.size () == 1) {
-	    type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
-	}
-
-	for (auto cst : this-> _constr) {
-	    auto res = cst-> declare  (type);
-	    if (res)
-		type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
-	}
-
-	for (auto meth : this-> _methods) {
-	    bool isMethod = false;
-	    auto info_ = meth-> declare (type, isMethod);
-	    if (info_) {
-		auto info = info_-> to <IFunctionInfo> ();
-		if (!isMethod) type-> getStaticMethods ().push_back (info);
-		else type-> getMethods ().push_back (info);
+	
+	if (this-> _tmps.size () == 0) {
+	    if (this-> _destr.size () == 1) {
+		type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
 	    }
-	}
 
+	    for (auto cst : this-> _constr) {
+		auto res = cst-> declare  (type);
+		if (res)
+		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
+	    }
+
+	    for (auto meth : this-> _methods) {
+		bool isMethod = false;
+		auto info_ = meth-> declare (type, isMethod);
+		if (info_) {
+		    auto info = info_-> to <IFunctionInfo> ();
+		    if (!isMethod) type-> getStaticMethods ().push_back (info);
+		    else type-> getMethods ().push_back (info);
+		}
+	    }
+
+	    if (this-> _tmps.size () == 0) {
+		FrameTable::instance ().insert (type);
+	    }
+	} else {
+	    type-> creator () = this;
+	}
+	
 	auto sym = new (Z0) ISymbol (this-> _ident, type);
 	Table::instance ().insert (sym);
-	if (this-> _tmps.size () == 0) {
-	    FrameTable::instance ().insert (type);
-	}	
     }
 
     void ITypeCreator::declare (semantic::Module mod) {
@@ -1263,34 +1269,39 @@ namespace syntax {
 
 	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
 
-	if (this-> _destr.size () > 1) {
+	if (this-> _destr.size () > 1) 
 	    Ymir::Error::multipleDestr (this-> _ident);
-	} else if (this-> _destr.size () == 1) {
-	    type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
-	}
-
-	for (auto cst : this-> _constr) {
-	    auto res = cst-> declare (type);
-	    if (res)
-		type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
-	}
-
-	for (auto meth : this-> _methods) {
-	    bool isMethod = false;
-	    auto info_ = meth-> declare (type, isMethod);
-	    if (info_) {
-		auto info = info_-> to <IFunctionInfo> ();
-		if (!isMethod) type-> getStaticMethods ().push_back (info);
-		else type-> getMethods ().push_back (info);
+	
+	if (this-> _tmps.size () == 0) {
+	    if (this-> _destr.size () == 1) {
+		type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
 	    }
-	}
 
+	    for (auto cst : this-> _constr) {
+		auto res = cst-> declare (type);
+		if (res)
+		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
+	    }
+
+	    for (auto meth : this-> _methods) {
+		bool isMethod = false;
+		auto info_ = meth-> declare (type, isMethod);
+		if (info_) {
+		    auto info = info_-> to <IFunctionInfo> ();
+		    if (!isMethod) type-> getStaticMethods ().push_back (info);
+		    else type-> getMethods ().push_back (info);
+		}
+	    }
+
+	    if (this-> _tmps.size () == 0) {
+		FrameTable::instance ().insert (type);
+	    }	
+	} else {
+	    type-> creator () = this;
+	}
+	
 	auto sym = new (Z0) ISymbol (this-> _ident, type);
 	mod-> insert (sym);
-	if (this-> _tmps.size () == 0) {
-	    FrameTable::instance ().insert (type);
-	}	
-
     }
     
     void ITypeCreator::declareAsExtern (semantic::Module mod) {
@@ -1303,28 +1314,34 @@ namespace syntax {
 	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
 	type-> isExtern () = true;
 	
-	if (this-> _destr.size () > 1) {
+	if (this-> _destr.size () > 1) 
 	    Ymir::Error::multipleDestr (this-> _ident);
-	} else if (this-> _destr.size () == 1) {
-	    type-> getDestructor () = this-> _destr [0]-> declare (type, true)-> to <IFunctionInfo> ();
-	}
 
-	for (auto cst : this-> _constr) {
-	    auto res = cst-> declare  (type, true);
-	    if (res)
-		type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
-	}
-
-	for (auto meth : this-> _methods) {
-	    bool isMethod = false;
-	    auto info_ = meth-> declare (type, isMethod, true);
-	    if (info_) {
-		auto info = info_-> to <IFunctionInfo> ();
-		if (!isMethod) type-> getStaticMethods ().push_back (info);
-		else type-> getMethods ().push_back (info);
+	if (this-> _tmps.size () == 0) {
+	    if (this-> _destr.size () == 1) {
+		type-> getDestructor () = this-> _destr [0]-> declare (type, true)-> to <IFunctionInfo> ();
 	    }
-	}
 
+	    for (auto cst : this-> _constr) {
+		auto res = cst-> declare  (type, true);
+		if (res)
+		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
+	    }
+
+	    for (auto meth : this-> _methods) {
+		bool isMethod = false;
+		auto info_ = meth-> declare (type, isMethod, true);
+		if (info_) {
+		    auto info = info_-> to <IFunctionInfo> ();
+		    if (!isMethod) type-> getStaticMethods ().push_back (info);
+		    else type-> getMethods ().push_back (info);
+		}
+	    }
+
+	} else {
+	    type-> creator () = this;
+	}
+	
 	auto sym = new (Z0) ISymbol (this-> _ident, type);
 	mod-> insert (sym);
     }

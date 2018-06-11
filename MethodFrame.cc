@@ -49,7 +49,7 @@ namespace semantic {
 		
 	auto params = params_;
 	params.insert (params.begin (), new (Z0) IRefInfo (false, object));
-
+	
 	auto from = Table::instance ().globalNamespace ();
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _name));
 	if (this-> _const != NULL) {
@@ -62,8 +62,7 @@ namespace semantic {
 	    }
 	    return ret;	
 	} else if (this-> _method) {
-	    auto vars = this-> _method-> getParams ();
-	    
+	    auto vars = this-> _method-> getParams ();	    
 	    auto finalParams = IFrame::computeParams (vars, params);
 	    
 	    if (this-> _isVirtual) from = this-> _space;

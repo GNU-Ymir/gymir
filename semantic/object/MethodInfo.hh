@@ -24,7 +24,9 @@ namespace semantic {
 	std::vector <Frame> getFrames ();
 
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
-		
+
+	std::string typeString () override;
+	
 	std::string innerTypeString () override;
 
 	std::string innerSimpleTypeString () override;

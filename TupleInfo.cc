@@ -324,7 +324,7 @@ namespace semantic {
     }
     
     void ITupleInfo::addParam (InfoType type) {
-	this-> params.push_back (type-> clone ());
+	this-> params.push_back (type);
     }
 
     std::vector<InfoType> & ITupleInfo::getParams () {
