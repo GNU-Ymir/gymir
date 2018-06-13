@@ -72,21 +72,21 @@ namespace semantic {
 	
     InfoType IFixedInfo::UnaryOp (Word op) {
 	if (op == Token::MINUS) {
-	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
+	    auto ret = new (Z0)  IFixedInfo (false, this-> type ());
 	    ret-> unopFoo = FixedUtils::UnaryMinus;
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
-	} else if (op == Token::AND && !this-> isConst ()) {
+	} else if (op == Token::AND && this-> isLvalue ()) {
 	    return toPtr (op);
-	} else if (op == Token::DPLUS && (!this-> isConst () || this-> value ())) {
-	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
+	} else if (op == Token::DPLUS && (this-> isLvalue () || this-> value ())) {
+	    auto ret = new (Z0)  IFixedInfo (false, this-> type ());
 	    ret-> unopFoo = FixedUtils::InstPPlus;
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
-	} else if (op == Token::DMINUS && (!this-> isConst () || this-> value ())) {
-	    auto ret = new (Z0)  IFixedInfo (true, this-> type ());
+	} else if (op == Token::DMINUS && (this-> isLvalue () || this-> value ())) {
+	    auto ret = new (Z0)  IFixedInfo (false, this-> type ());
 	    ret-> unopFoo = FixedUtils::InstSSub;
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
@@ -128,7 +128,7 @@ namespace semantic {
 	    ret-> binopFoo = &FixedUtils::InstCast;
 	    return ret;
 	} else if (auto ref = other-> to <IRefInfo> ()) {
-	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
+	    if (this-> isLvalue () && this-> isSame (ref-> content ())) {
 		auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
 		aux-> binopFoo = &FixedUtils::InstAddr;
 		return aux;
@@ -193,7 +193,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::Affect (syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
 		ret-> binopFoo = &FixedUtils::InstAffect;
@@ -212,7 +212,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type-> is<IUndefInfo> ()) {
+	if (left-> info-> type ()-> is<IUndefInfo> ()) {
 	    auto i = new (Z0)  IFixedInfo (false, this-> _type);
 	    i-> binopFoo = &FixedUtils::InstAffect;
 	    return i;
@@ -221,7 +221,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::opAff (Word, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
 		ret-> binopFoo = &FixedUtils::InstAffect;
@@ -240,7 +240,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::opReaff (Word, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned () && this-> isSup (ot)) {
 		auto ret = this-> clone ();
 		ret-> binopFoo = &FixedUtils::InstReaff;
@@ -259,29 +259,29 @@ namespace semantic {
     }
     
     InfoType IFixedInfo::opTest (Word op, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFixedInfo> ()) {
 	    if (this-> _type == ot-> type ()) {
-		auto ret = new (Z0)  IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (false);
 		ret-> binopFoo = &FixedUtils::InstTest;
 		if (this-> value ())
-		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 		return ret;	    
 	    } else if (this-> isSup (ot)) {
-		auto ret = new (Z0)  IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (false);
 		ret-> binopFoo = &FixedUtils::InstTest;
 		if (this-> value ())
 		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		return ret;
 	    } else {
-		auto ret = new (Z0)  IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (false);
 		ret-> binopFoo = &FixedUtils::InstTestRight;
 		if (this-> value ())
 		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
 		return ret;
 	    }	    
-	} else if (auto ot = right-> info-> type-> to<ICharInfo> ()) {
+	} else if (auto ot = right-> info-> type ()-> to<ICharInfo> ()) {
 	    if (this-> _type == FixedConst::UBYTE) {
-		auto ret = new (Z0)  IBoolInfo (true);
+		auto ret = new (Z0)  IBoolInfo (false);
 		ret-> binopFoo = &FixedUtils::InstTest;
 		if (this-> value ())
 		    ret-> value () = this-> value ()-> BinaryOp (op, ot-> value ());
@@ -293,24 +293,24 @@ namespace semantic {
 
     InfoType IFixedInfo::opRange (Word, syntax::Expression right) {
 	RangeInfo ret = NULL;
-	if (this-> isSame (right-> info-> type)) {
-	    ret = new (Z0)  IRangeInfo (true, this-> clone ());
+	if (this-> isSame (right-> info-> type ())) {
+	    ret = new (Z0)  IRangeInfo (false, this-> clone ());
 	    ret-> binopFoo = &FixedUtils::InstRange;	    
-	} else if (auto ot = right-> info-> type-> to <IFixedInfo> ()) {
+	} else if (auto ot = right-> info-> type ()-> to <IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
-		    ret = new (Z0)  IRangeInfo (true, this-> clone ());
+		    ret = new (Z0)  IRangeInfo (false, this-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRange;
 		} else {
-		    ret = new (Z0)  IRangeInfo (true, ot-> clone ());
+		    ret = new (Z0)  IRangeInfo (false, ot-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRangeRight;
 		}
 	    } else if (!this-> isSigned () && !ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
-		    ret = new (Z0)  IRangeInfo (true, this-> clone ());
+		    ret = new (Z0)  IRangeInfo (false, this-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRange;
 		} else {
-		    ret = new (Z0)  IRangeInfo (true, ot-> clone ());
+		    ret = new (Z0)  IRangeInfo (false, ot-> clone ());
 		    ret-> binopFoo = &FixedUtils::InstRangeRight;
 		}
 	    }
@@ -324,13 +324,13 @@ namespace semantic {
     }
     
     InfoType IFixedInfo::opNorm (Word op, syntax::Expression right) {
-	if (this-> isSame (right-> info-> type)) {
+	if (this-> isSame (right-> info-> type ())) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &FixedUtils::InstNormal;
 	    if (this-> value ())
-		ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 	    return ret;
-	} else if (auto ot = right-> info-> type-> to<IFixedInfo> ()) {
+	} else if (auto ot = right-> info-> type ()-> to<IFixedInfo> ()) {
 	    if (this-> isSigned () && ot-> isSigned ()) {
 		if (this-> isSup (ot)) {
 		    auto ret = this-> clone ();
@@ -365,13 +365,13 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::Init () {
-	auto ret = new (Z0) IFixedInfo (true, this-> _type);
+	auto ret = new (Z0) IFixedInfo (false, this-> _type);
 	ret-> value () = new (Z0) IFixedValue (this-> _type, 0, 0);
 	return ret;	
     }
 
     InfoType IFixedInfo::Max () {
-	auto retI = new (Z0)  IFixedInfo (true, this-> _type);	
+	auto retI = new (Z0)  IFixedInfo (false, this-> _type);	
 	IFixedValue* ret = new (Z0) IFixedValue (this-> _type, 0, 0);
 	switch (this-> _type) {
 	case FixedConst::BYTE : ret-> getValue () = SCHAR_MAX; break;
@@ -388,7 +388,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::Min () {
-	auto retI = new (Z0)  IFixedInfo (true, this-> _type);	
+	auto retI = new (Z0)  IFixedInfo (false, this-> _type);	
 	IFixedValue* ret = new (Z0) IFixedValue (this-> _type, 0, 0);
 	switch (this-> _type) {
 	case FixedConst::BYTE : ret-> getValue () = SCHAR_MIN; break;
@@ -405,7 +405,7 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::SizeOf () {
-	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
+	auto ret = new (Z0)  IFixedInfo (false, FixedConst::UINT);
 	ret-> unopFoo = FixedUtils::InstSizeOf;
 	return ret;	
     }
@@ -510,7 +510,7 @@ namespace semantic {
 	    TreeStmtList list;
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());
-	    auto type = IRangeInfo::toGenericStatic (left-> info-> type-> simpleTypeString (), left-> info-> type-> toGeneric ());
+	    auto type = IRangeInfo::toGenericStatic (left-> info-> type ()-> simpleTypeString (), left-> info-> type ()-> toGeneric ());
 	    	    
 	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), type);
 	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
@@ -532,7 +532,7 @@ namespace semantic {
 	    auto rtree = right-> toGeneric ();
 	    Ymir::Tree ltree = convert (rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 	    	    
-	    auto type = IRangeInfo::toGenericStatic (right-> info-> type-> simpleTypeString (), right-> info-> type-> toGeneric ());
+	    auto type = IRangeInfo::toGenericStatic (right-> info-> type ()-> simpleTypeString (), right-> info-> type ()-> toGeneric ());
 	    	    
 	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), type);
 	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
@@ -579,7 +579,7 @@ namespace semantic {
 	}
 	
 	Ymir::Tree InstCast (Word, InfoType, Expression elem, Expression typeExpr) {
-	    auto type = typeExpr-> info-> type-> toGeneric ();
+	    auto type = typeExpr-> info-> type ()-> toGeneric ();
 	    auto lexp = elem-> toGeneric ();
 	    return convert (type.getTree (), lexp.getTree ());
 	}
@@ -589,7 +589,7 @@ namespace semantic {
 	}
 
 	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
-	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
+	    return TYPE_SIZE_UNIT (elem-> info-> type ()-> toGeneric ().getTree ());
 	}
 	
     }

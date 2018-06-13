@@ -174,9 +174,9 @@ namespace semantic {
 	    std::vector <std::string> attrs;
 	    for (auto it : this-> _closure) {
 		if (!this-> _isMoved)
-		    types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
+		    types.push_back (new (Z0) IRefInfo (false, it-> info-> type ()));
 		else
-		    types.push_back (it-> info-> type);
+		    types.push_back (it-> info-> type ());
 		attrs.push_back (it-> info-> sym.getStr ());
 	    }
 	    
@@ -209,7 +209,7 @@ namespace semantic {
 		var-> token.getLocus (),
 		PARM_DECL,
 		get_identifier (var-> token.getStr ().c_str ()),
-		var-> info-> type-> toGeneric ().getTree ()
+		var-> info-> type ()-> toGeneric ().getTree ()
 	    );
 	    
 	    DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();	    
@@ -230,7 +230,7 @@ namespace semantic {
 		var-> token.getLocus (),
 		VAR_DECL,
 		get_identifier (var-> token.getStr ().c_str ()),
-		var-> info-> type-> toGeneric ().getTree ()
+		var-> info-> type ()-> toGeneric ().getTree ()
 	    );
 	    
 	    DECL_CONTEXT (decl.getTree ()) = __fn_decl__.getTree ();	    	    
@@ -255,8 +255,8 @@ namespace semantic {
 	__inlining__.push_back (this);
 	list.append (declInlineArgs (params));
 	auto endLabel = Ymir::makeLabel (BUILTINS_LOCATION, "end");
-	if (!this-> _type-> type-> is <IVoidInfo> ()) {
-	    tree ret = this-> _type-> type-> toGeneric ().getTree ();
+	if (!this-> _type-> type ()-> is <IVoidInfo> ()) {
+	    tree ret = this-> _type-> type ()-> toGeneric ().getTree ();
 	    auto var = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), ret);
 	    IFinalFrame::__isInlining__.push_back (var);
 	    IFinalFrame::__endLabel__.push_back (endLabel);
@@ -305,7 +305,7 @@ namespace semantic {
 	
 	std::vector <tree> args (this-> _vars.size ());
 	for (uint i = 0 ; i < this-> _vars.size () ; i++)
-	    args [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
+	    args [i] = this-> _vars [i]-> info-> type ()-> toGeneric ().getTree ();
 
 	Ymir::Tree closureType = createClosureType ();
 	if (!closureType.isNull ()) {
@@ -313,10 +313,10 @@ namespace semantic {
 	} 
 	
 	tree ret;
-	if (this-> _name == Keys::MAIN && this-> _type-> type-> is<IVoidInfo> ())
+	if (this-> _name == Keys::MAIN && this-> _type-> type ()-> is<IVoidInfo> ())
 	    ret = int_type_node;
 	else
-	    ret = this-> _type-> type-> toGeneric ().getTree ();
+	    ret = this-> _type-> type ()->  toGeneric ().getTree ();
 		
 	//tree ident = get_identifier (this-> _name.c_str ());
 	tree ident = get_identifier (Namespace (this-> space (), this-> _name).toString ().c_str ());
@@ -353,7 +353,7 @@ namespace semantic {
 	Ymir::Tree inside = this-> _block-> toGeneric ();	
 	list.append (inside);	
 
-	if (this-> _name == Keys::MAIN && this-> _type-> type-> is <IVoidInfo> ()) {
+	if (this-> _name == Keys::MAIN && this-> _type-> type ()-> is <IVoidInfo> ()) {
 	    Ymir::Tree inside = Ymir::buildTree (
 		MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, result_decl, build_int_cst_type (int_type_node, 0)
 	    );
@@ -368,7 +368,7 @@ namespace semantic {
 					  this-> _postVar-> token.getLocus (),
 					  VAR_DECL,
 					  get_identifier (this-> _postVar-> token.getStr ().c_str ()),
-					  this-> _postVar-> info-> type-> toGeneric ().getTree ()
+					  this-> _postVar-> info-> type ()-> toGeneric ().getTree ()
             );
 	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
 	    this-> _postVar-> info-> treeDecl (decl);

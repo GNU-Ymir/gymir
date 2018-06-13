@@ -74,7 +74,7 @@ namespace syntax {
 	}
 	
 	virtual std::vector <std::string> getIds () override {
-	    auto ids = IInstruction::getIds ();
+	    auto ids = IExpression::getIds ();
 	    ids.push_back (TYPEID (IBlock));
 	    return ids;
 	}

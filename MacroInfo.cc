@@ -16,7 +16,7 @@ namespace semantic {
 	
 	Tree InstGet (Word, InfoType, Expression left, Expression right) {
 	    auto val = right-> token.getStr ();
-	    auto macro = left-> info-> type-> to <IMacroAccessInfo> ();
+	    auto macro = left-> info-> type ()-> to <IMacroAccessInfo> ();
 	    for (auto it : macro-> getInfo ().elements) {
 		if (it.first == val) {
 		    return it.second-> toGeneric ();
@@ -169,7 +169,7 @@ namespace semantic {
 		    res-> info = {true, {{it.first, it.second}}, NULL};
 		    return res;
 		} else {
-		    auto res = it.second-> info-> type-> cloneConst ();
+		    auto res = it.second-> info-> type ()-> cloneConst ();
 		    res-> binopFoo = MacroUtils::InstGet;
 		    return res;
 		}

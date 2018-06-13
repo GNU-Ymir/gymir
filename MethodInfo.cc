@@ -101,7 +101,7 @@ namespace semantic {
 	    if (Table::instance ().hasCurrentContext (Keys::SAFE) && !(right-> toValidate-> has (Keys::SAFE) || right-> toValidate-> has (Keys::TRUSTED)))
 		Ymir::Error::callUnsafeInSafe (tok);
 	    FrameProto info = right-> toValidate-> validate (right, fparams);
-	    retType = info-> type ()-> type;
+	    retType = info-> type ()-> type ();
 	    if (!right-> toValidate-> is <IMethodFrame> () || !right-> toValidate-> to <IMethodFrame> ()-> isVirtual ()) {
 		right-> proto = info;
 	    }
@@ -113,7 +113,7 @@ namespace semantic {
 		Ymir::Error::callUnsafeInSafe (tok);
 	    
 	    FrameProto info = goods [0]-> validate (right, fparams);
-	    retType = info-> type ()-> type;
+	    retType = info-> type ()-> type ();
 	    if (!goods [0]-> is <IMethodFrame> () || !goods [0]-> to<IMethodFrame> ()-> isVirtual ()) {
 		right-> proto = info;
 	    }

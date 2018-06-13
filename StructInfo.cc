@@ -122,11 +122,11 @@ namespace semantic {
 	}
 
 	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
-	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
+	    return TYPE_SIZE_UNIT (elem-> info-> type ()-> toGeneric ().getTree ());
 	}
 	
 	Ymir::Tree InstSizeOfCst (Word, InfoType, Expression elem) {
-	    StructCstInfo cst = elem-> info-> type-> to <IStructCstInfo> ();
+	    StructCstInfo cst = elem-> info-> type ()-> to <IStructCstInfo> ();
 	    auto type = cst-> TempOp ({})-> toGeneric ().getTree ();
 	    return TYPE_SIZE_UNIT (type);
 	}
@@ -148,7 +148,7 @@ namespace semantic {
 	    if (ot-> name == this-> name && ot-> space == this-> space) {
 		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
 		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-		    if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+		    if (!this-> tmpsDone [it]-> info-> type ()-> isSame (ot-> tmpsDone [it]-> info-> type ()))
 			return false;
 		}
 		return true;
@@ -161,7 +161,7 @@ namespace semantic {
 	if (ot-> name == this-> name && ot-> space == this-> space) {
 	    if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) return false;
 	    for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-		if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type))
+		if (!this-> tmpsDone [it]-> info-> type ()-> isSame (ot-> tmpsDone [it]-> info-> type ()))
 		    return false;
 	    }
 	    return true;
@@ -232,7 +232,7 @@ namespace semantic {
 	    attribs.push_back (this-> params [it]-> token.getStr ());
 
 	    if (!done) {
-		auto type = params-> getParams () [0]-> info-> type-> CompOp (info);
+		auto type = params-> getParams () [0]-> info-> type ()-> CompOp (info);
 		if (type) type = type-> ConstVerif (info);
 		if (type) {
 		    type-> isConst (info-> isConst ());
@@ -251,7 +251,6 @@ namespace semantic {
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
-	ret-> _isConstante = true;
 	
 	ret-> multFoo = &StructUtils::InstCallUnion;	
 	score-> dyn = true;
@@ -282,7 +281,7 @@ namespace semantic {
 	    types.push_back (info);
 	    attribs.push_back (this-> params [it]-> token.getStr ());
 
-	    auto type = params-> getParams () [it]-> info-> type-> CompOp (info);
+	    auto type = params-> getParams () [it]-> info-> type ()-> CompOp (info);
 	    if (type) type = type-> ConstVerif (info);
 	    if (type) {
 		type-> isConst (info-> isConst ());
@@ -302,7 +301,6 @@ namespace semantic {
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
-	ret-> _isConstante = true;
 	    
 	ret-> multFoo = &StructUtils::InstCall;
 	score-> dyn = true;
@@ -362,10 +360,9 @@ namespace semantic {
 	this-> _info-> setTypes (types);
 	this-> _info-> setAttribs (attribs);	    
 	this-> _info-> setTmps (this-> tmpsDone);
-	this-> _info-> _isConstante = true;
 	
 	inProgress.erase (name);
-	//validated [name] = this-> _info;
+	// validated [name] = this-> _info;
 	return this-> _info-> clone ();
     }
 
@@ -550,7 +547,7 @@ namespace semantic {
 				return false;
 			    }
 			    for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
-				if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type)) {
+				if (!ps-> getParams ()[it_]-> info-> type ()-> isSame (ps2-> getParams () [it_]-> info-> type ())) {
 				    return false;
 				}
 			    }
@@ -561,7 +558,7 @@ namespace semantic {
 			if (ot-> tmpsDone [it]-> is <IParamList> ()) {
 			    return false;
 			}
-			if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type)) {
+			if (!this-> tmpsDone [it]-> info-> type ()-> isSame (ot-> tmpsDone [it]-> info-> type ())) {
 			    return false;
 			}
 		    }
@@ -614,7 +611,6 @@ namespace semantic {
 	
 	ret-> tmpsDone = this-> tmpsDone;
 	ret-> isConst (this-> isConst ());
-	ret-> _isConstante = this-> _isConstante;
 	return ret;
     }
 
@@ -636,7 +632,7 @@ namespace semantic {
 
 	    info = info-> clone ();
 	    if (this-> isConst ()) info-> isConst (true);
-	    auto type = params-> getParams () [it]-> info-> type-> CompOp (info);	    
+	    auto type = params-> getParams () [it]-> info-> type ()-> CompOp (info);	    
 	    if (type) type = type-> ConstVerif (info);
 	    if (type) {
 		type-> isConst (info-> isConst ());
@@ -650,7 +646,6 @@ namespace semantic {
 	ret-> setTypes (types);
 	ret-> setAttribs (attribs);
 	ret-> setTmps (this-> tmpsDone);
-	ret-> _isConstante = true;
 	
 	ret-> multFoo = &StructUtils::InstCall;
 	score-> dyn = true;
@@ -721,7 +716,7 @@ namespace semantic {
 	    ret-> binopFoo = &StructUtils::InstCast;	    
 	    return ret;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
-	    if (!this-> _isConstante && this-> isSame (ref-> content ())) {
+	    if (this-> isLvalue () && this-> isSame (ref-> content ())) {
 		auto ret = new (Z0)  IRefInfo (false, ref-> content ()-> clone ());
 		ret-> content ()-> isConst (this-> isConst ());
 		ret-> binopFoo = &StructUtils::InstAddr;
@@ -732,7 +727,7 @@ namespace semantic {
     }
 
     InfoType IStructInfo::UnaryOp (Word op) {
-	if (op == Token::AND) {
+	if (op == Token::AND && this-> isLvalue ()) {
 	    auto ret = new (Z0) IPtrInfo (this-> isConst (), this-> clone ());
 	    ret-> binopFoo = &StructUtils::InstAddr;
 	    return ret;
@@ -741,7 +736,7 @@ namespace semantic {
     }
     
     InfoType IStructInfo::BinaryOp (Word op, Expression right) {
-	if (op == Token::EQUAL && right-> info-> type-> isSame (this)) {
+	if (op == Token::EQUAL && right-> info-> type ()-> isSame (this)) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstAffect;
 	    return ret;	    
@@ -750,10 +745,9 @@ namespace semantic {
     }
     
     InfoType IStructInfo::BinaryOpRight (Word op, Expression left) {
-	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
+	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstAffect;
-	    ret-> to <IStructInfo> ()-> _isConstante = false;
 	    return ret;	    
 	}
 	return NULL;
@@ -834,7 +828,7 @@ namespace semantic {
 		}
 	    } else {
 		if (current == nb)
-		    return this-> tmpsDone [current]-> info-> type;
+		    return this-> tmpsDone [current]-> info-> type ();
 		current ++;
 	    }
 	}

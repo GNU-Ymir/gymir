@@ -27,9 +27,9 @@ namespace semantic {
 		Ymir::Error::takeATypeAsTemplate (tok);
 		return NULL;
 	    } else {
-		auto type = tmps [0]-> info-> type;		
+		auto type = tmps [0]-> info-> type ();		
 		if (type-> is <IFloatInfo> () || type-> is <IFixedInfo> () || type-> is <ICharInfo> ())
-		    return new (Z0) IRangeInfo (false, tmps [0]-> info-> type);
+		    return new (Z0) IRangeInfo (false, tmps [0]-> info-> type ());
 		else return NULL;
 	    }
 	}
@@ -37,7 +37,9 @@ namespace semantic {
 	InfoType BinaryOp (Word token, syntax::Expression right) override;
 
 	InfoType BinaryOpRight (Word token, syntax::Expression left) override;
-		
+
+	InfoType UnaryOp (Word token);
+	
 	InfoType DotOp (syntax::Var var) override;
 
 	InfoType DColonOp (syntax::Var var) override;

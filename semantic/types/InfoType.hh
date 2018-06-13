@@ -29,6 +29,10 @@ namespace semantic {
         
     class IInfoType;
     typedef IInfoType* InfoType;
+
+    class ISymbol;
+    typedef ISymbol* Symbol;
+    
     
     class IApplicationScore  {
     public:
@@ -67,6 +71,7 @@ namespace semantic {
 	bool _isStatic = false;
 	ulong _toGet;
 	Value _value = NULL;
+	Symbol _sym = NULL;
 	
 	static std::map<std::string, InfoType> __alias__;
 	static bool __need__Print_CONST__;
@@ -136,6 +141,10 @@ namespace semantic {
 	
 	virtual Value& value ();
 
+	virtual Symbol& symbol ();
+
+	virtual bool isLvalue ();
+	
 	static void printConst (bool needPrintConst = true);
 	
 	virtual std::string typeString ();

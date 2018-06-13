@@ -82,17 +82,17 @@ namespace semantic {
 			    }
 			}
 		    }
-		} else if (!ltype-> info-> type-> is <IUndefInfo> () &&
-			   !rtype-> info-> type-> is <IUndefInfo> () &&
-			   !ltype-> info-> type-> isSame (rtype-> info-> type)) {
-		    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
-			if (!rtype-> info-> type-> isSame (ref-> content ()))
+		} else if (!ltype-> info-> type ()-> is <IUndefInfo> () &&
+			   !rtype-> info-> type ()-> is <IUndefInfo> () &&
+			   !ltype-> info-> type ()-> isSame (rtype-> info-> type ())) {
+		    if (auto ref = ltype-> info-> type ()-> to <IRefInfo> ()) {
+			if (!rtype-> info-> type ()-> isSame (ref-> content ()))
 			    return false;
 			else {
 			    left [it.first] = inside-> second;
 			}
-		    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
-			if (!ltype-> info-> type-> isSame (ref-> content ()))
+		    } else if (auto ref = rtype-> info-> type ()-> to <IRefInfo> ()) {
+			if (!ltype-> info-> type ()-> isSame (ref-> content ()))
 			    return false;
 			else {
 			    left [it.first] = it.second;
@@ -140,17 +140,17 @@ namespace semantic {
 			    } else return false;
 			}
 		    }
-		} else if (!ltype-> info-> type-> is <IUndefInfo> () &&
-			   !rtype-> info-> type-> is <IUndefInfo> () &&
-			   !ltype-> info-> type-> isSame (rtype-> info-> type)) {
-		    if (auto ref = ltype-> info-> type-> to <IRefInfo> ()) {
-			if (!rtype-> info-> type-> isSame (ref-> content ()))
+		} else if (!ltype-> info-> type ()-> is <IUndefInfo> () &&
+			   !rtype-> info-> type ()-> is <IUndefInfo> () &&
+			   !ltype-> info-> type ()-> isSame (rtype-> info-> type ())) {
+		    if (auto ref = ltype-> info-> type ()-> to <IRefInfo> ()) {
+			if (!rtype-> info-> type ()-> isSame (ref-> content ()))
 			    return false;
 			else {
 			    left [it.first] = inside-> second;
 			}
-		    } else if (auto ref = rtype-> info-> type-> to <IRefInfo> ()) {
-			if (!ltype-> info-> type-> isSame (ref-> content ()))
+		    } else if (auto ref = rtype-> info-> type ()-> to <IRefInfo> ()) {
+			if (!ltype-> info-> type ()-> isSame (ref-> content ()))
 			    return false;
 			else {
 			    left [it.first] = it.second;
@@ -194,7 +194,7 @@ namespace semantic {
 	    } else if (auto all = typeExp-> to <IArrayAlloc> ()) {
 		return solve (tmps, all, type, isConst);
 	    } else if (typeExp-> isType ()) {
-		return TemplateSolution (0, true, tvar-> typeExp ()-> info-> type);
+		return TemplateSolution (0, true, tvar-> typeExp ()-> info-> type ());
 	    } else if (typeVar != NULL) {
 		vector <Expression> types;
 		TemplateSolution soluce (0, true);
@@ -239,7 +239,7 @@ namespace semantic {
 		
 		auto var = (new (Z0) IVar (typeVar-> token, types))-> asType ();
 		if (!var) return TemplateSolution (0, false);
-		soluce.type = var-> info-> type;
+		soluce.type = var-> info-> type ();
 		soluce.type-> isConst (isConst);
 		soluce.score += __VAR__;
 		return soluce;
@@ -325,9 +325,9 @@ namespace semantic {
 	    return solve (tmps, all, type, isConst);
 	} else if (auto ty = param-> to <IType> ()) {
 	    TemplateSolution soluce (0, true);
-	    soluce.type = ty-> info-> type-> clone ();
+	    soluce.type = ty-> info-> type ()-> clone ();
 	    soluce.type-> isConst (isConst);
-	    if (!ty-> info-> type-> isSame (type) && !type-> is<IUndefInfo> ())
+	    if (!ty-> info-> type ()-> isSame (type) && !type-> is<IUndefInfo> ())
 		return TemplateSolution (0, false);
 	    soluce.score += __VAR__;
 	    return soluce;
@@ -377,9 +377,9 @@ namespace semantic {
 	    auto var = (new (Z0) IVar (param-> token, types))-> asType ();
 	    if (var == NULL) return TemplateSolution (0, false);
 
-	    if (!var-> info-> type-> isSame (type) && !type-> is<IUndefInfo> ())
+	    if (!var-> info-> type ()-> isSame (type) && !type-> is<IUndefInfo> ())
 		return TemplateSolution (0, false);
-	    soluce.type = var-> info-> type;
+	    soluce.type = var-> info-> type ();
 	    soluce.type-> isConst (isConst);
 	    soluce.score += __VAR__;
 	    return soluce;
@@ -416,7 +416,7 @@ namespace semantic {
 	auto left = param-> getLeft ()-> expression ();
 	if (left == NULL) return TemplateSolution (0, false);
 	
-	auto mod = left-> info-> type-> to <IModuleInfo> ();
+	auto mod = left-> info-> type ()-> to <IModuleInfo> ();
 	if (mod == NULL) return TemplateSolution (0, false);
 	auto content = mod-> get ();
 	if (content == NULL) return TemplateSolution (0, false);    
@@ -499,7 +499,7 @@ namespace semantic {
 	    if (auto temp = paramSize-> to <IVar> ()) {
 		TemplateSolution res2 (0, false);
 		paramSize = paramSize-> templateExpReplace ({});
-		paramSize-> info = new (Z0) ISymbol (paramSize-> token, size);
+		paramSize-> info = new (Z0) ISymbol (paramSize-> token, paramSize, size);
 		for (auto it : Ymir::r (0, tmps.size ())) {
 		    if (auto v = tmps [it]-> to<IVar> ()) {
 			if (temp-> token.getStr () == v-> token.getStr ()) {
@@ -557,7 +557,7 @@ namespace semantic {
 	if (auto temp = paramSize-> to <IVar> ()) {
 	    TemplateSolution res2 (0, false);
 	    paramSize = paramSize-> templateExpReplace ({});
-	    paramSize-> info = new (Z0) ISymbol (paramSize-> token, size);
+	    paramSize-> info = new (Z0) ISymbol (paramSize-> token, paramSize, size);
 	    for (auto it : Ymir::r (0, tmps.size ())) {
 		if (auto v = tmps [it]-> to<IVar> ()) {
 		    if (temp-> token.getStr () == v-> token.getStr ()) {
@@ -640,7 +640,7 @@ namespace semantic {
 	    ))-> expression ();
 
 	    if (var == NULL) return TemplateSolution (0, false);
-	    soluce.type = var-> info-> type;
+	    soluce.type = var-> info-> type ();
 	    soluce.type-> isConst (false);
 	    soluce.score += __VAR__;
 	    return soluce;
@@ -742,7 +742,7 @@ namespace semantic {
 		return TemplateSolution (0, false);
 	    }
 
-	    types.push_back (params [it]-> info-> type-> cloneOnExit ());
+	    types.push_back (params [it]-> info-> type ()-> cloneOnExit ());
 	    expParams.push_back (params [it]-> info-> value ()-> toYmir (params [it]-> info));
 	}
 	
@@ -903,7 +903,7 @@ namespace semantic {
 
     TemplateSolution TemplateSolver::solveInside (Var left, Type right) {
 	Ymir::log ("Solve inside type : ", left, "|", right);
-	auto type = right-> info-> type-> cloneOnExit ();
+	auto type = right-> info-> type ()-> cloneOnExit ();
 	if (auto fn = type-> to <IFunctionInfo> ()) {
 	    if (fn-> isLambda ()) { 
 		type = fn-> toPtr (left-> token);
@@ -917,7 +917,7 @@ namespace semantic {
     
     TemplateSolution TemplateSolver::solveInside (Var left, Var right) {
 	Ymir::log ("Solve inside var : ", left, "|", right);
-	auto type = right-> info-> type;
+	auto type = right-> info-> type ();
 	if (auto ty = type-> to <IStructCstInfo> ()) {
 	    vector <Expression> ignore;
 	    auto clo = new (Z0) IType (right-> token, ty-> TempOp (ignore));
@@ -929,7 +929,7 @@ namespace semantic {
 
     TemplateSolution TemplateSolver::solveInside (Var left, FuncPtr right) {
 	Ymir::log ("Solve inside fn : ", left, "|", right);
-	auto type = right-> info-> type;
+	auto type = right-> info-> type ();
 	auto clo = new (Z0) IType (right-> token, type-> cloneOnExit ());
 	map<string, Expression> value =  {{left-> token.getStr (), clo}};
 	return TemplateSolution (__VAR__, true, type, value);
@@ -938,12 +938,12 @@ namespace semantic {
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> &tmps, OfVar left, Expression right) {
 	Ymir::log ("Solve inside of : ", tmps, "|", left, "|", right);
 	InfoType info = NULL;;	
-	if (auto all = right-> to <IArrayAlloc> ()) info = all-> info-> type;
+	if (auto all = right-> to <IArrayAlloc> ()) info = all-> info-> type ();
 	else if (auto v = right-> to <IVar> ()) {
-	    if (v-> info-> type-> is <IStructCstInfo> ()) info = v-> info-> type-> TempOp ({});
+	    if (v-> info-> type ()-> is <IStructCstInfo> ()) info = v-> info-> type ()-> TempOp ({});
 	}
 	
-	if (auto type = right-> to<IType> ()) info = type-> info-> type;
+	if (auto type = right-> to<IType> ()) info = type-> info-> type ();
 	if (!info) return TemplateSolution (0, false);
 
 	auto res = this-> solveInside (tmps, left-> typeVar (), info);
@@ -951,7 +951,7 @@ namespace semantic {
 	    return TemplateSolution (0, false);
 	else {
 	    auto clo = right-> clone ();
-	    clo-> info-> type = clo-> info-> type-> cloneOnExit ();
+	    clo-> info-> type (clo-> info-> type ()-> cloneOnExit ());
 	    res.type = info-> cloneOnExit ();
 	    map <string, Expression> ret = {{left-> token.getStr (), clo}};
 	    if (!merge (res.score, res.elements, ret))
@@ -968,7 +968,7 @@ namespace semantic {
 		return TemplateSolution (0, false);
 	    }
 	    map <string, Expression> ret = {{var-> token.getStr(), expr-> info-> value ()-> toYmir (expr-> info)}};
-	    return TemplateSolution {0, true, expr-> info-> type-> cloneOnExit (), ret};
+	    return TemplateSolution {0, true, expr-> info-> type ()-> cloneOnExit (), ret};
 	} else {
 	    Ymir::Error::assert ("TODO");
 	}
@@ -977,7 +977,7 @@ namespace semantic {
 
     TemplateSolution TemplateSolver::solveInside (const vector <Expression> & tmps, TypedVar left, Expression right) {
 	Ymir::log ("Solve inside typed : ", tmps, "|", left, "|", right);
-	auto type = right-> info-> type;
+	auto type = right-> info-> type ();
 	
 	if (!right-> info-> isImmutable ()) {
 	    Ymir::Error::notImmutable (right-> token, right-> info);
@@ -1028,7 +1028,7 @@ namespace semantic {
 	}
 	
 	map<string, Expression> elems = {{Ymir::OutBuffer (it).str (), right}};
-	return TemplateSolution (__VAR__, true, elem-> info-> type, elems);
+	return TemplateSolution (__VAR__, true, elem-> info-> type (), elems);
     }
 
     TemplateSolution TemplateSolver::solve (const vector <Var> &tmps, const vector <Expression> &params) {

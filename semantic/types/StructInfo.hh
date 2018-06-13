@@ -111,7 +111,6 @@ namespace semantic {
 	IStructCstInfo* _id = NULL;
 	std::vector <Word> _udas;
 	bool _isUnion;
-	bool _isConstante = false;
 	
 	friend IStructCstInfo;
 

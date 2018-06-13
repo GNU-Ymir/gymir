@@ -37,6 +37,15 @@ namespace semantic {
 	else if (token == Keys::IN) return In (left);
 	return NULL;
     }
+
+    InfoType IRangeInfo::UnaryOp (Word op) {
+	if (op == Token::AND && this-> isLvalue ()) {
+	    auto ret = new (Z0) IPtrInfo (this-> isConst (), this-> clone ());
+	    ret-> binopFoo = &RangeUtils::InstAddr;
+	    return ret;
+	}
+	return NULL;
+    }
     
     InfoType IRangeInfo::DotOp (Var var) {
 	if (var-> hasTemplate ()) return NULL;
@@ -61,13 +70,20 @@ namespace semantic {
 	    auto ra = this-> clone ();
 	    ra-> binopFoo = &RangeUtils::InstCast;
 	    return ra;
-	} else return NULL;
+	} else if (auto ref = other-> to <IRefInfo> ()) {
+	    if (this-> isLvalue () && this-> isSame (ref-> content ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &RangeUtils::InstAddr;
+		return aux;
+	    }
+	}
+	return NULL;
     }
 
     InfoType IRangeInfo::ApplyOp (const std::vector <syntax::Var> & vars) {
 	if (vars.size () != 1) return NULL;	
-	vars [0]-> info-> type = this-> _content-> clone ()-> CompOp (vars [0]-> info-> type);		
-	if (vars [0]-> info-> type == NULL) return NULL;
+	vars [0]-> info-> type (this-> _content-> clone ()-> CompOp (vars [0]-> info-> type ()));		
+	if (vars [0]-> info-> type () == NULL) return NULL;
 	vars [0]-> info-> value () = NULL;
 	auto ret = this-> clone ();
 	ret-> applyFoo = &RangeUtils::InstApply;
@@ -99,7 +115,7 @@ namespace semantic {
     }
 
     InfoType IRangeInfo::Affect (Expression right) {
-	if (this-> isSame (right-> info-> type)) {
+	if (this-> isSame (right-> info-> type ())) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &RangeUtils::InstAffect;
 	    return ret;
@@ -108,7 +124,7 @@ namespace semantic {
     }
 	
     InfoType IRangeInfo::AffectRight (Expression left) {
-	if (left-> info-> type-> is <IUndefInfo> ()) {
+	if (left-> info-> type ()-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &RangeUtils::InstAffect;
 	    return ret;
@@ -117,7 +133,7 @@ namespace semantic {
     }
     
     InfoType IRangeInfo::In (Expression left) {
-	if (this-> _content-> isSame (left-> info-> type)) {
+	if (this-> _content-> isSame (left-> info-> type ())) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = &RangeUtils::InstIn;
 	    return ret;
@@ -134,16 +150,15 @@ namespace semantic {
     }
     
     InfoType IRangeInfo::Fst () {
-	auto cst = this-> _content-> clone ();
-	cst-> isConst (this-> isConst ());
+	auto cst = this-> _content-> cloneOnExit ();
+	cst = new (Z0) IArrayRefInfo (this-> isConst (), cst);	
 	cst-> binopFoo = &RangeUtils::InstFst;
 	return cst;
     }
     
     InfoType IRangeInfo::Scd () {
-	auto cst = this-> _content-> clone ();
-	cst-> isConst (this-> isConst ());
-	cst-> value () = NULL;
+	auto cst = this-> _content-> cloneOnExit ();
+	cst = new (Z0) IArrayRefInfo (this-> isConst (), cst);	
 	cst-> binopFoo = &RangeUtils::InstScd;
 	return cst;
     }
@@ -268,7 +283,7 @@ namespace semantic {
 	Tree InstApply (Word locus, InfoType, std::vector <Var> & vars, Block block, Expression iter) {
 	    auto loc = locus.getLocus ();
 	    auto range = iter-> toGeneric ();
-	    auto rangeInfo = (RangeInfo) iter-> info-> type;
+	    auto rangeInfo = (RangeInfo) iter-> info-> type ();
 	    auto innerInfo = rangeInfo-> content ()-> toGeneric ();
 	    auto scd = getField (loc, range, "scd");
 	    auto begin = getField (loc, range, "fst");
@@ -329,6 +344,10 @@ namespace semantic {
 	    
 	}
 
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}
+	
     }
     
 }

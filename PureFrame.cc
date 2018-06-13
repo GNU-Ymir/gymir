@@ -48,7 +48,7 @@ namespace semantic {
 		if (auto a = this-> _function-> getParams () [0]-> to<ITypedVar> ()) {
 		    auto type = a-> getType ();
 		    if (!type-> isSame (new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)))) {
-			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type),  new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)));
+			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, NULL, type),  new (Z0)  IArrayInfo (true, new (Z0) IStringInfo (false)));
 		    }
 		} else {
 		    auto str = Word (tok.getLocus (), "string");
@@ -66,7 +66,7 @@ namespace semantic {
 		if (auto a = this-> _function-> getParams ()[0]-> to <ITypedVar> ()) {
 		    auto type = a-> getType ();
 		    if (!type-> isSame (new (Z0) IFixedInfo (false, FixedConst::INT))) {
-			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type), new (Z0) IFixedInfo (false, FixedConst::INT));
+			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, NULL, type), new (Z0) IFixedInfo (false, FixedConst::INT));
 		    }
 		} else {
 		    auto i32 = Word (tok, "i32");
@@ -77,7 +77,7 @@ namespace semantic {
 		if (auto a = this-> _function-> getParams ()[1]-> to <ITypedVar> ()) {
 		    auto type = a-> getType ();
 		    if (!type-> isSame (new (Z0) IPtrInfo (false, new (Z0) IPtrInfo (false, new (Z0) ICharInfo (false))))) {
-			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, type), new (Z0) IPtrInfo (false, new (Z0) IPtrInfo (false, new (Z0) ICharInfo (false))));
+			Ymir::Error::incompatibleTypes (a-> token, new (Z0) ISymbol (a-> token, NULL, type), new (Z0) IPtrInfo (false, new (Z0) IPtrInfo (false, new (Z0) ICharInfo (false))));
 		    }
 		} else {
 		    auto pchar = Word (tok, "char");
@@ -107,7 +107,7 @@ namespace semantic {
 
     InfoType IPureFrame::getRetType () {
 	auto proto = this-> validate ();
-	return proto-> type ()-> type;
+	return proto-> type ()-> type ();
     }
 
     std::string IPureFrame::getName () {

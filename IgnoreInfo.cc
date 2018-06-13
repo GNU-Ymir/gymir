@@ -25,7 +25,7 @@ namespace semantic {
     }
 
     InfoType IIgnoreInfo::BinaryOp (Word op, syntax::Expression left) {
-	if (op == Token::EQUAL && !left-> info-> type-> is<IIgnoreInfo> ()) {
+	if (op == Token::EQUAL && !left-> info-> type ()-> is<IIgnoreInfo> ()) {
 	    auto ret = new (Z0)  IIgnoreInfo ();
 	    ret-> binopFoo = &IgnoreUtils::InstAffect;
 	    return ret;

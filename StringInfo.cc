@@ -19,7 +19,7 @@ namespace semantic {
     
     InfoType IStringInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (op == Token::EQUAL) {
-	    if (left-> info-> type-> is <IUndefInfo> ()) {
+	    if (left-> info-> type ()-> is <IUndefInfo> ()) {
 		auto arr = this-> clone ();
 		arr-> binopFoo = &ArrayUtils::InstAffect;
 		return arr;

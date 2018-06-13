@@ -56,6 +56,13 @@ namespace syntax {
 	
 	static ulong getLastNb ();
 
+
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IExpression::getIds ();
+	    ids.push_back (TYPEID (ILambdaFunc));
+	    return ids;
+	}
+	
 	std::string prettyPrint () override;
 
 	void print (int nb = 0) override;

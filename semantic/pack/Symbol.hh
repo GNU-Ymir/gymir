@@ -6,6 +6,13 @@
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/pack/Namespace.hh>
 
+namespace syntax {
+
+    class IExpression;
+    typedef IExpression* Expression;
+    
+}
+
 namespace semantic {
 
     class IInfoType;
@@ -24,13 +31,15 @@ namespace semantic {
 	Namespace _space;
 	bool _isClosured = false;
 	bool _isInline = false;
+
+	InfoType _type;
 	
     public:
 
 	Word sym;
-	InfoType type;
+	syntax::Expression _from = NULL;
 	
-	ISymbol (Word word, InfoType);
+	ISymbol (Word word, syntax::Expression from, InfoType);
 	
 	bool isConst ();
 	
@@ -45,6 +54,8 @@ namespace semantic {
 	bool & isInline ();
 	
 	Value & value ();
+
+	bool isLvalue ();
 	
 	bool isType ();
 
@@ -58,6 +69,10 @@ namespace semantic {
 
 	Namespace & space ();
 	
+	InfoType type ();
+
+	void type (InfoType type);
+
 	void treeDecl (Ymir::Tree tree);
 	
 	std::string typeString ();

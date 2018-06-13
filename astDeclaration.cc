@@ -39,17 +39,17 @@ namespace syntax {
 		Ymir::Error::shadowingVar (ident, it-> sym);
 	    }
 	    FrameTable::instance ().insert (new (Z0)  IPureFrame (Table::instance ().space (), this));
-	    Table::instance ().insert (new (Z0) ISymbol (this-> ident, new (Z0) IVoidInfo ()));
+	    Table::instance ().insert (new (Z0) ISymbol (this-> ident, NULL, new (Z0) IVoidInfo ()));
 	} else {
 	    auto space = Table::instance ().space ();
 	    auto fr = verifyPure (space);
 	    auto it = Table::instance ().getLocal (this-> ident.getStr ());
 	    Value val = NULL;
 	    if (it != NULL) {
-		if (!it-> type-> is<IFunctionInfo> ()) {
+		if (!it-> type ()-> is<IFunctionInfo> ()) {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
 		} else {
-		    val = it-> type-> value ();
+		    val = it-> type ()-> value ();
 		}
 	    }
 
@@ -59,7 +59,7 @@ namespace syntax {
 	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	    fun-> set (fr);	    
 	    fun-> value () = val;
-	    Table::instance ().insert (new (Z0)  ISymbol (this-> ident, fun));
+	    Table::instance ().insert (new (Z0)  ISymbol (this-> ident, NULL, fun));
 	}
     }
 
@@ -75,20 +75,20 @@ namespace syntax {
 	auto it = mod-> get (this-> ident.getStr ());
 	Value val = NULL;
 	if (it != NULL) {
-	    if (!it-> type-> is<IFunctionInfo> ()) {
+	    if (!it-> type ()-> is<IFunctionInfo> ()) {
 		Ymir::Error::shadowingVar (ident, it-> sym);
 		return;
 	    } else if (it-> isPublic () != this-> is_public ()) {
 		Ymir::Error::shadowingVar (ident, it-> sym, this-> is_public ());
 		return;
-	    } else val = it-> type-> value ();
+	    } else val = it-> type ()-> value ();
 	}
 
 	if (val == NULL) val = new (Z0) ILambdaValue (fr);
 	else val-> to <ILambdaValue> ()-> push (fr);
 	
 	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
-	auto sym = new (Z0)  ISymbol (this-> ident, fun);
+	auto sym = new (Z0)  ISymbol (this-> ident, NULL, fun);
 	fun-> set (fr);
 	sym-> isPublic () = this-> is_public ();
 	fun-> value () = val;
@@ -103,20 +103,20 @@ namespace syntax {
 	    auto it = mod-> get (this-> ident.getStr ());
 	    Value val = NULL;
 	    if (it != NULL) {
-		if (!it-> type-> is<IFunctionInfo> ()) {
+		if (!it-> type ()-> is<IFunctionInfo> ()) {
 		    Ymir::Error::shadowingVar (ident, it-> sym);
 		    return;
 		} else if (it-> isPublic () != this-> is_public ()) {
 		    Ymir::Error::shadowingVar (ident, it-> sym, this-> is_public ());
 		    return;
-		} else val = it-> type-> value ();
+		} else val = it-> type ()-> value ();
 	    }
 	    
 	    if (val == NULL) val = new (Z0) ILambdaValue (fr);
 	    else val-> to <ILambdaValue> ()-> push (fr);
 	
 	    auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
-	    auto sym = new (Z0) ISymbol (this-> ident, fun);
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, fun);
 	    fun-> set (fr);
 	    sym-> isPublic () = this-> is_public ();
 	    fun-> value () = val;
@@ -260,7 +260,7 @@ namespace syntax {
 	    for (auto it : later)
 		it-> declare (mod);
 	    
-	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod));
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (mod));
 	    sym-> isPublic () = this-> is_public ();
 	    Table::instance ().insert (sym);
 	    //TODO insert ModuleAccessor
@@ -268,7 +268,7 @@ namespace syntax {
 	} else {
 	    auto globSpace = Table::instance ().space ();
 
-	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (globSpace, this));
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (globSpace, this));
 	    sym-> isPublic () = this-> is_public ();
 	    Table::instance ().insert (sym);	    
 	}
@@ -296,12 +296,12 @@ namespace syntax {
 	    for (auto it : later)
 		it-> declare (mod_);
 	    mod-> addOpen (space);
-	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (mod_));
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);
 	} else {
 	    auto globSpace = mod-> space ();
-	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (globSpace, this));
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (globSpace, this));
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);	    
 	}
@@ -331,12 +331,12 @@ namespace syntax {
 	    for (auto it : later)
 		it-> declareAsExtern (mod_);
 	    
-	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (mod_));
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (mod_));
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);
 	} else {
 	    auto globSpace = mod-> space ();
-	    auto sym = new (Z0) ISymbol (this-> ident, new (Z0) IModuleInfo (globSpace, this));
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (globSpace, this));
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);	    
 	} 
@@ -508,7 +508,7 @@ namespace syntax {
 	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
 	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
 	fun-> set (fr);
-	Table::instance ().insert (new (Z0)  ISymbol (this-> ident, fun));
+	Table::instance ().insert (new (Z0)  ISymbol (this-> ident, NULL, fun));
     }
 
     void IProto::declare (semantic::Module mod) {       
@@ -516,7 +516,7 @@ namespace syntax {
 		
 	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
 	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
-	auto sym = new (Z0)  ISymbol (this-> ident, fun);
+	auto sym = new (Z0)  ISymbol (this-> ident, NULL, fun);
 	sym-> isPublic () = this-> is_public ();
 	fun-> set (fr);
 	mod-> insert (sym);
@@ -527,7 +527,7 @@ namespace syntax {
 	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
 	fr-> isPrivate () = !this-> isPublic;
 	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
-	auto sym = new (Z0)  ISymbol (this-> ident, fun);
+	auto sym = new (Z0)  ISymbol (this-> ident, NULL, fun);
 	sym-> isPublic () = this-> is_public ();
 	fun-> set (fr);
 	mod-> insert (sym);
@@ -548,7 +548,7 @@ namespace syntax {
     Symbol IImport::createAndDeclareSubMod (Module& last, Namespace space, int current) {
 	if (current == (int) space.innerMods ().size ()) {
 	    last = Table::instance ().addModule (space);
-	    auto sym = new (Z0) ISymbol ({this-> ident, space.innerMods ().back ()}, new (Z0) IModuleInfo (last));
+	    auto sym = new (Z0) ISymbol ({this-> ident, space.innerMods ().back ()}, NULL, new (Z0) IModuleInfo (last));
 	    return sym;
 	} else {
 	    auto innerMods = space.innerMods ();
@@ -565,10 +565,11 @@ namespace syntax {
 		mod = Table::instance ().getModule (current);
 	    } else mod = Table::instance ().addModule (current);
 
-	    mod-> addOpen (next-> type-> to <IModuleInfo> ()-> get ()-> space ());
+	    mod-> addOpen (next-> type ()-> to <IModuleInfo> ()-> get ()-> space ());
 	    mod-> insert (next);
 	    mod-> isAuto () = false;
 	    auto sym = new (Z0) ISymbol ({this-> ident, current.innerMods ().back ()},
+					 NULL,
 					 new (Z0) IModuleInfo (mod));
 	    return sym;
 	}
@@ -707,7 +708,7 @@ namespace syntax {
 	    auto str = new (Z0) IStructCstInfo (this-> ident, Table::instance ().space (), this-> ident.getStr (), this-> tmps, this-> _udas, this-> _isUnion);
 
 	    str-> isPublic (true);
-	    auto sym = new (Z0) ISymbol (this-> ident, str);
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, str);
 	    Table::instance ().insert (sym);
 	    if (this-> tmps.size () == 0)
 		FrameTable::instance ().insert (str);
@@ -733,7 +734,7 @@ namespace syntax {
 	    );
 
 	    str-> isPublic (this-> is_public ());
-	    auto sym = new (Z0) ISymbol (this-> ident, str);
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, str);
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);
 	    if (this-> tmps.size () == 0)
@@ -760,7 +761,7 @@ namespace syntax {
 	    );
 	    
 	    str-> isPublic (this-> is_public ());
-	    auto sym = new (Z0) ISymbol (this-> ident, str);
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, str);
 	    sym-> isPublic () = this-> is_public ();
 	    mod-> insert (sym);
 	    for (auto it : this-> params) {
@@ -799,8 +800,8 @@ namespace syntax {
 		type = fst-> info;
 	    }
 	    auto space = Table::instance ().space ();
-	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type);
-	    auto sym = new (Z0) ISymbol (this-> ident, en);
+	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type ());
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, en);
 	    sym-> isPublic () = true;
 
 	    for (auto i : Ymir::r (0, this-> names.size ())) {
@@ -809,11 +810,11 @@ namespace syntax {
 		} else {
 		    auto val = this-> values [i]-> expression ();
 		    if (val == NULL) return;
-		    auto comp = val-> info-> type-> CompOp (type-> type);
+		    auto comp = val-> info-> type ()-> CompOp (type-> type ());
 		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
 		    else {
-			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type);
+			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type ());
 			return;
 		    }			
 		}
@@ -840,8 +841,8 @@ namespace syntax {
 		type = fst-> info;
 	    }
 	    auto space = mod-> space ();
-	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type);
-	    auto sym = new (Z0) ISymbol (this-> ident, en);
+	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type ());
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, en);
 	    sym-> isPublic () = true;
 
 	    for (auto i : Ymir::r (0, this-> names.size ())) {
@@ -850,11 +851,11 @@ namespace syntax {
 		} else {
 		    auto val = this-> values [i]-> expression ();
 		    if (val == NULL) return;
-		    auto comp = val-> info-> type-> CompOp (type-> type);
+		    auto comp = val-> info-> type ()-> CompOp (type-> type ());
 		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
 		    else {
-			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type);
+			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type ());
 			return;
 		    }			
 		}
@@ -882,8 +883,8 @@ namespace syntax {
 		type = fst-> info;
 	    }
 	    auto space = mod-> space ();
-	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type);
-	    auto sym = new (Z0) ISymbol (this-> ident, en);
+	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type ());
+	    auto sym = new (Z0) ISymbol (this-> ident, NULL, en);
 	    sym-> isPublic () = true;
 
 	    for (auto i : Ymir::r (0, this-> names.size ())) {
@@ -892,11 +893,11 @@ namespace syntax {
 		} else {
 		    auto val = this-> values [i]-> expression ();
 		    if (val == NULL) return;
-		    auto comp = val-> info-> type-> CompOp (type-> type);
+		    auto comp = val-> info-> type ()-> CompOp (type-> type ());
 		    if (comp != NULL)
 			en-> addAttrib (this-> names [i].getStr (), val, comp);
 		    else {
-			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type);
+			Ymir::Error::incompatibleTypes (this-> names [i], val-> info, type-> type ());
 			return;
 		    }			
 		}
@@ -908,7 +909,7 @@ namespace syntax {
 
     void IGlobal::declare () {
 	//auto space = Table::instance ().space ();
-	this-> sym = new (Z0) ISymbol (this-> ident, NULL);
+	this-> sym = new (Z0) ISymbol (this-> ident, NULL, NULL);
 	if (this-> expr) {
 	    this-> expr = this-> expr-> expression ();
 	    if (expr == NULL) return;
@@ -918,17 +919,17 @@ namespace syntax {
 		return;
 	    }
 
-	    sym-> type = expr-> info-> type-> clone ();
+	    sym-> type (expr-> info-> type ()-> clone ());
 	    sym-> value () = this-> _isImut ? expr-> info-> value () : NULL;
 	} else {
 	    if (auto var = this-> type-> to <IVar> ()) {
 		auto type = var-> asType ();
 		if (type == NULL) return;
-		sym-> type = type-> info-> type;
+		sym-> type (type-> info-> type ());
 	    } else {
 		auto expType = this-> type-> expression ();
 		if (expType == NULL) return;
-		sym-> type = expType-> info-> type;
+		sym-> type (expType-> info-> type ());
 	    }
 	}
 	
@@ -949,7 +950,7 @@ namespace syntax {
 
     void IGlobal::declare (semantic::Module mod) {
 	//auto space = Table::instance ().space ();
-	this-> sym = new (Z0) ISymbol (this-> ident, NULL);
+	this-> sym = new (Z0) ISymbol (this-> ident, NULL, NULL);
 	if (this-> expr) {
 	    this-> expr = this-> expr-> expression ();
 	    if (expr == NULL) return;
@@ -959,17 +960,17 @@ namespace syntax {
 		return;
 	    }
 
-	    sym-> type = expr-> info-> type-> clone ();	    
+	    sym-> type (expr-> info-> type ()-> clone ());	    
 	    sym-> value () = this-> _isImut ? expr-> info-> value () : NULL;
 	} else {
 	    if (auto var = this-> type-> to <IVar> ()) {
 		auto type = var-> asType ();
 		if (type == NULL) return;
-		sym-> type = type-> info-> type;
+		sym-> type (type-> info-> type ());
 	    } else {
 		auto expType = this-> type-> expression ();
 		if (expType == NULL) return;
-		sym-> type = expType-> info-> type;
+		sym-> type (expType-> info-> type ());
 	    }
 	}
 	
@@ -991,7 +992,7 @@ namespace syntax {
 
     void IGlobal::declareAsExtern (semantic::Module mod) {
 	//auto space = Table::instance ().space ();
-	this-> sym = new (Z0) ISymbol (this-> ident, NULL);
+	this-> sym = new (Z0) ISymbol (this-> ident, NULL, NULL);
 	if (this-> expr) {
 	    this-> expr = this-> expr-> expression ();
 	    if (expr == NULL) return;
@@ -1001,17 +1002,17 @@ namespace syntax {
 		return;
 	    }
 
-	    sym-> type = expr-> info-> type-> clone ();
+	    sym-> type (expr-> info-> type ()-> clone ());
 	    sym-> value () = this-> _isImut ? expr-> info-> value () : NULL;
 	} else {
 	    if (auto var = this-> type-> to <IVar> ()) {
 		auto type = var-> asType ();
 		if (type == NULL) return;
-		sym-> type = type-> info-> type;
+		sym-> type (type-> info-> type ());
 	    } else {
 		auto expType = this-> type-> expression ();
 		if (expType == NULL) return;
-		sym-> type = expType-> info-> type;
+		sym-> type (expType-> info-> type ());
 	    }
 	}
 	
@@ -1119,7 +1120,7 @@ namespace syntax {
     void IUse::declare () {
 	auto sym = this-> mod-> expression ();
 	if (sym == NULL) return;
-	if (auto mod = sym-> info-> type-> to <IModuleInfo> ()) {
+	if (auto mod = sym-> info-> type ()-> to <IModuleInfo> ()) {
 	    auto content = mod-> get ();
 	    if (content == NULL) {
 		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
@@ -1139,7 +1140,7 @@ namespace syntax {
     void IUse::declare (semantic::Module mod) {
 	auto sym = this-> mod-> expression ();
 	if (sym == NULL) return;
-	if (auto mod_ = sym-> info-> type-> to <IModuleInfo> ()) {
+	if (auto mod_ = sym-> info-> type ()-> to <IModuleInfo> ()) {
 	    auto content = mod_-> get ();
 	    if (content == NULL) {
 		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
@@ -1159,7 +1160,7 @@ namespace syntax {
     void IUse::declareAsExtern (semantic::Module mod) {
 	auto sym = this-> mod-> expression ();
 	if (sym == NULL) return;
-	if (auto mod_ = sym-> info-> type-> to <IModuleInfo> ()) {
+	if (auto mod_ = sym-> info-> type ()-> to <IModuleInfo> ()) {
 	    auto content = mod_-> get ();
 	    if (content == NULL) {
 		Ymir::Error::uninitVar (this-> mod-> token, this-> mod-> token);
@@ -1185,7 +1186,7 @@ namespace syntax {
 	}
 
 	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
-	Table::instance ().insert (new (Z0) ISymbol (this-> ident, mac));
+	Table::instance ().insert (new (Z0) ISymbol (this-> ident, NULL, mac));
     }
 
     void IMacro::declare (semantic::Module mod) {
@@ -1197,7 +1198,7 @@ namespace syntax {
 	}
 
 	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
-	auto sym = new (Z0) ISymbol (this-> ident, mac);
+	auto sym = new (Z0) ISymbol (this-> ident, NULL, mac);
 	sym-> isPublic () = this-> is_public ();
 	mod-> insert (sym);
     }
@@ -1211,7 +1212,7 @@ namespace syntax {
 	}
 
 	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
-	auto sym = new (Z0) ISymbol (this-> ident, mac);
+	auto sym = new (Z0) ISymbol (this-> ident, NULL, mac);
 	sym-> isPublic () = this-> is_public ();
 	mod-> insert (sym);
     }
@@ -1256,7 +1257,7 @@ namespace syntax {
 	    type-> creator () = this;
 	}
 	
-	auto sym = new (Z0) ISymbol (this-> _ident, type);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
 	Table::instance ().insert (sym);
     }
 
@@ -1300,7 +1301,7 @@ namespace syntax {
 	    type-> creator () = this;
 	}
 	
-	auto sym = new (Z0) ISymbol (this-> _ident, type);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
 	mod-> insert (sym);
     }
     
@@ -1342,7 +1343,7 @@ namespace syntax {
 	    type-> creator () = this;
 	}
 	
-	auto sym = new (Z0) ISymbol (this-> _ident, type);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
 	mod-> insert (sym);
     }
     

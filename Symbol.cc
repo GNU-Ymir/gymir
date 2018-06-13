@@ -2,25 +2,29 @@
 #include "semantic/types/InfoType.hh"
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/tree/Tree.hh>
+#include <ymir/ast/Expression.hh>
 
 namespace semantic {
 
     ulong ISymbol::__nbTmp__ = 0;
     
-    ISymbol::ISymbol (Word word, InfoType type) :
+    ISymbol::ISymbol (Word word, syntax::Expression from, InfoType type) :
 	_space (""),
+	_type (type),
 	sym (word),
-	type (type)
+	_from (from)
     {
 	this-> isPublic () = true;
+	if (this-> _type)
+	    this-> _type-> symbol () = this;
     }
     
     bool ISymbol::isConst () {
-	return this-> type-> isConst ();
+	return this-> _type-> isConst ();
     }
 
     void ISymbol::isConst (bool is) {
-	this-> type-> isConst (is);
+	this-> _type-> isConst (is);
     }
 
     bool& ISymbol::isStatic () {
@@ -44,16 +48,35 @@ namespace semantic {
     }
 
     bool ISymbol::isImmutable () {
-	return this-> type &&
-	    (this-> type-> value () != NULL ||
-	     this-> type-> isImmutable ());
+	return this-> _type &&
+	    (this-> _type-> value () != NULL ||
+	     this-> _type-> isImmutable ());
     }
 
     void ISymbol::quit (Namespace) {
     }
 
+    InfoType ISymbol::type () {	
+	return this-> _type;
+    }
+
+    void ISymbol::type (InfoType type) {
+	if (this-> _type)
+	    this-> _type-> symbol () = NULL;
+	
+	this-> _type = type;
+	if (this-> _type)
+	    this-> _type-> symbol () = this;
+    }
+    
+    bool ISymbol::isLvalue () {
+	if (this-> _from)
+	    return this-> _from-> isLvalue ();
+	return true; // Si il n'y a pas d'expression associé, c'est du built-in donc lvalue
+    }
+    
     std::string ISymbol::typeString () {
-	return this-> type-> typeString ();
+	return this-> _type-> typeString ();
     }
 
     void ISymbol::treeDecl (Ymir::Tree tree) {
@@ -65,19 +88,19 @@ namespace semantic {
     }
     
     bool ISymbol::isType () {
-	if (this-> type)
-	    return this-> type-> isType ();
+	if (this-> _type)
+	    return this-> _type-> isType ();
 	return false;
     }
 
     Value& ISymbol::value () {
-	return this-> type-> value ();
+	return this-> _type-> value ();
     }
     
     std::string ISymbol::simpleTypeString () {
-	if (this-> type-> isConst ())
-	    return std::string ("c") + this-> type-> simpleTypeString ();
-	return this-> type-> simpleTypeString ();
+	if (this-> _type-> isConst ())
+	    return std::string ("c") + this-> _type-> simpleTypeString ();
+	return this-> _type-> simpleTypeString ();
     }
 
     Namespace & ISymbol::space () {
@@ -99,9 +122,9 @@ namespace semantic {
 	    this-> value () = NULL;
 	}
 	
-	if (this-> type != NULL) {
-	    delete this-> type;
-	    this-> type = NULL;
+	if (this-> _type != NULL) {
+	    delete this-> _type;
+	    this-> _type = NULL;
 	}
     }
 

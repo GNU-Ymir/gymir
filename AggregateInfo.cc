@@ -45,7 +45,7 @@ namespace semantic {
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
 
 	    auto loc = locus.getLocus ();
-	    auto innerType = left-> info-> type-> to <IAggregateInfo> ()-> getImpl ();
+	    auto innerType = left-> info-> type ()-> to <IAggregateInfo> ()-> getImpl ();
 	    
 	    Ymir::TreeStmtList list;
 	    auto leftExp = Ymir::getExpr (list, left);
@@ -264,10 +264,10 @@ namespace semantic {
 	auto type = this-> _impl [0]-> toType ();
 	if (type == NULL) return NULL;
 
-	auto str = type-> info-> type-> to <ITupleInfo> ();
+	auto str = type-> info-> type ()-> to <ITupleInfo> ();
 	if (str == NULL) {
 	    str = new (Z0) ITupleInfo (false, false, this-> _isUnion);
-	    str-> addParam (type-> info-> type);
+	    str-> addParam (type-> info-> type ());
 	}
 
 	Table::instance ().setCurrentSpace (currentSpace);
@@ -298,7 +298,7 @@ namespace semantic {
 				return false;
 			    }
 			    for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
-				if (!ps-> getParams ()[it_]-> info-> type-> isSame (ps2-> getParams () [it_]-> info-> type)) {
+				if (!ps-> getParams ()[it_]-> info-> type ()-> isSame (ps2-> getParams () [it_]-> info-> type ())) {
 				    return false;
 				}
 			    }
@@ -309,7 +309,7 @@ namespace semantic {
 			if (ot-> tmpsDone [it]-> is <IParamList> ()) {
 			    return false;
 			}
-			if (!this-> tmpsDone [it]-> info-> type-> isSame (ot-> tmpsDone [it]-> info-> type)) {
+			if (!this-> tmpsDone [it]-> info-> type ()-> isSame (ot-> tmpsDone [it]-> info-> type ())) {
 			    return false;
 			}
 		    }
@@ -343,7 +343,7 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::BinaryOp (Word op, Expression right) {
-	if (op == Token::EQUAL && right-> info-> type-> isSame (this)) {
+	if (op == Token::EQUAL && right-> info-> type ()-> isSame (this)) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstAffect;
 	    return ret;
@@ -352,7 +352,7 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::BinaryOpRight (Word op, Expression left) {
-	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
+	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstAffect;
 	    return ret;

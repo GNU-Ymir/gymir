@@ -13,7 +13,7 @@ namespace semantic {
 	    return NULL;	
 	}
 	
-	auto type = templates [0]-> info-> type;
+	auto type = templates [0]-> info-> type ();
 	if (type-> is <IStructCstInfo> ()) {
 	    type = type-> TempOp ({});
 	    type-> isType (true);
@@ -29,7 +29,7 @@ namespace semantic {
 	    return NULL;	
 	}
 	
-	auto type = templates [0]-> info-> type;
+	auto type = templates [0]-> info-> type ();
 	if (type-> is <IStructCstInfo> ()) {
 	    type = type-> TempOp ({});
 	    type-> isType (true);

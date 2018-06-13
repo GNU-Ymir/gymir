@@ -172,14 +172,14 @@ namespace Mangler {
 	    buf.write ("_Z", mangle_namespace_CPP (space));
 	    buf.write (mangle_var (name), "E");
 	    for (auto it : proto-> vars ()) {
-		buf.write (mangle_type_CPP (it-> info-> type));
+		buf.write (mangle_type_CPP (it-> info-> type ()));
 	    }
 	    return buf.str ();
 	} else {
 	    Ymir::OutBuffer buf;
 	    buf.write ("_Z", mangle_var (name));
 	    for (auto it : proto-> vars ()) {
-		buf.write (mangle_type_CPP (it-> info-> type));
+		buf.write (mangle_type_CPP (it-> info-> type ()));
 	    }
 	    return buf.str ();
 	}
@@ -208,20 +208,20 @@ namespace Mangler {
 	    if (it-> info) {
 		if (it-> info-> isImmutable ()) {
 		    ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));		    
-		} else if (auto tu = it-> info-> type-> to <ITupleInfo> ()) {
+		} else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
 		    if (tu-> isFake ())
 			for (auto it : tu-> getParams ())
 			    ss.write ("N", it-> value ()-> toString ());
-		    else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
-		} else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+		    else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
+		} else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	    }
 	}
 	
 	for (auto it : frame-> vars ()) {
-	    ss.write (mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+	    ss.write (mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	}
 	
-	ss.write ("Z", mangle_type (frame-> type ()-> type, frame-> type ()-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> type (), frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
 
@@ -239,19 +239,19 @@ namespace Mangler {
 	for (auto it : frame-> tmps ()) {
 	    if (it-> info) {
 		if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-		else if (auto tu = it-> info-> type-> to <ITupleInfo> ()) {
+		else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
 		    if (tu-> isFake ())
 			for (auto it : tu-> getParams ())
 			    ss.write ("N", it-> value ()-> toString ());
-		    else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
-		} else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+		    else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
+		} else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	    }
 	}
 	
 	for (auto it : frame-> vars ()) {
-	    ss.write (mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+	    ss.write (mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	}
-	ss.write ("Z", mangle_type (frame-> type ()-> type, frame-> type ()-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> type (), frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
     
@@ -261,18 +261,18 @@ namespace Mangler {
 	ss.write  ("_Y", mangle_namespace (space), mangle_namespace (name), "VF");
 	for (auto it : frame-> tmps ()) {
 	    if (it-> info-> isImmutable ()) ss.write ("N", mangle_var (it-> info-> value ()-> toString ()));
-	    else if (auto tu = it-> info-> type-> to <ITupleInfo> ()) {
+	    else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
 		if (tu-> isFake ())
 		    for (auto it : tu-> getParams ())
 			ss.write ("N", it-> value ()-> toString ());
-		else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
-	    } else ss.write ("N", mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+		else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
+	    } else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	}
 	
 	for (auto it : frame-> vars ()) {
-	    ss.write (mangle_type (it-> info-> type, it-> info-> simpleTypeString ()));
+	    ss.write (mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	}
-	ss.write ("Z", mangle_type (frame-> type ()-> type, frame-> type ()-> simpleTypeString ()));
+	ss.write ("Z", mangle_type (frame-> type ()-> type (), frame-> type ()-> simpleTypeString ()));
 	return ss.str ();
     }
 

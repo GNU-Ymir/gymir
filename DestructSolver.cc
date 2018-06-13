@@ -69,7 +69,7 @@ namespace semantic {
     }
 
     DestructSolution DestructSolver::solveStructCst (StructCst left, Expression right) {
-	InfoType type = right-> info-> type;
+	InfoType type = right-> info-> type ();
 	while (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
 	if (auto str = type-> to <IStructInfo> ()) {
 	    DestructSolution soluce {0, true};
@@ -80,7 +80,7 @@ namespace semantic {
 		return DestructSolution (0, false);
 	    }
 	    
-	    auto strCst = type-> info-> type-> to <IStructCstInfo> ();
+	    auto strCst = type-> info-> type ()-> to <IStructCstInfo> ();
 	    if (!strCst) return DestructSolution (0, false);	    
 	    if (left-> getExprs ().size () != str-> getTypes ().size ()) {
 	    	return DestructSolution {0, false};
@@ -88,7 +88,7 @@ namespace semantic {
 
 	    for (auto it : Ymir::r (0, str-> getTypes ().size ())) {
 		auto exp = new (Z0) IExpand (right-> token, right, it);		
-		exp-> info = new (Z0) ISymbol (exp-> token, str-> getTypes  ()[it]-> clone ());
+		exp-> info = new (Z0) ISymbol (exp-> token, exp, str-> getTypes  ()[it]-> clone ());
 		exp-> info-> isConst (right-> info-> isConst ());
 		
 		auto res = solve (left-> getExprs () [it], exp);
@@ -102,7 +102,7 @@ namespace semantic {
     }
     
     DestructSolution DestructSolver::solveTuple (ConstTuple left, Expression right) {
-	InfoType type = right-> info-> type;
+	InfoType type = right-> info-> type ();
 	while (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
 	if (auto tuple = type-> to <ITupleInfo> ()) {
 	    DestructSolution soluce {0, true};
@@ -112,7 +112,7 @@ namespace semantic {
 
 	    for (auto it : Ymir::r (0, tuple-> nbParams ())) {
 		auto exp = new (Z0) IExpand (right-> token, right, it);
-		exp-> info = new (Z0) ISymbol (exp-> token, tuple-> getParams ()[it]-> clone ());
+		exp-> info = new (Z0) ISymbol (exp-> token, exp, tuple-> getParams ()[it]-> clone ());
 		exp-> info-> isConst (right-> info-> isConst ()); 
 		auto res = solve (left-> getExprs () [it], exp);
 		if (!res.valid || !merge (soluce, res, Token::AND))
@@ -139,15 +139,15 @@ namespace semantic {
     	Expression bin = NULL;
 	auto aux = new (Z0) IVar (var-> token);
     	if (var-> deco == Keys::REF) {
-	    if (right-> info-> type-> is <IRefInfo> ()) {
-		aux-> info = new (Z0) ISymbol (var-> token, right-> info-> type-> clone ());
+	    if (right-> info-> type ()-> is <IRefInfo> ()) {
+		aux-> info = new (Z0) ISymbol (var-> token, aux, right-> info-> type ()-> clone ());
 		Table::instance ().insert (aux-> info);
 	    
 		bin = (new (Z0) IAffectGeneric ({var-> token, Token::EQUAL},
 						aux,
 						right, false))-> expression ();
 	    } else {
-		aux-> info = new (Z0) ISymbol (var-> token, new (Z0) IRefInfo (false, right-> info-> type-> clone ()));
+		aux-> info = new (Z0) ISymbol (var-> token, aux, new (Z0) IRefInfo (false, right-> info-> type ()-> clone ()));
 		Table::instance ().insert (aux-> info);
 		
 		bin = (new (Z0) IAffectGeneric ({var-> token, Token::EQUAL},
@@ -155,7 +155,7 @@ namespace semantic {
 						right, true))-> expression ();
 	    }
     	} else {
-    	    aux-> info = new (Z0) ISymbol (var-> token, new (Z0) IUndefInfo ());
+    	    aux-> info = new (Z0) ISymbol (var-> token, aux, new (Z0) IUndefInfo ());
     	    aux-> info-> isConst (false);
     	    Table::instance ().insert (aux-> info);
 
@@ -181,12 +181,12 @@ namespace semantic {
 
 	if (lvalue == NULL || rvalue == NULL) return DestructSolution (0, false);
 
-	if (!lvalue-> info-> type-> CompOp (rvalue-> info-> type)) {
-	    Ymir::Error::incompatibleTypes (pair-> token, lvalue-> info, rvalue-> info-> type);
+	if (!lvalue-> info-> type ()-> CompOp (rvalue-> info-> type ())) {
+	    Ymir::Error::incompatibleTypes (pair-> token, lvalue-> info, rvalue-> info-> type ());
 	    return DestructSolution (0, false);
 	}
 
-	if (!right-> info-> type-> CompOp (lvalue-> info-> type))
+	if (!right-> info-> type ()-> CompOp (lvalue-> info-> type ()))
 	    return DestructSolution (0, false);
 
 	Word tokLeft {pair-> token, Token::SUP_EQUAL};
@@ -212,11 +212,11 @@ namespace semantic {
 	auto value = left-> expression ();
 	if (value == NULL) return DestructSolution (0, false);
 
-	auto rtype = right-> info-> type;
+	auto rtype = right-> info-> type ();
 	while (auto ref = rtype-> to <IRefInfo> ())
 	    rtype = ref-> content ();
 	
-	if (!value-> info-> type-> CompOp (rtype))
+	if (!value-> info-> type ()-> CompOp (rtype))
 	    return DestructSolution (0, false);
 	
 	Word tok {left-> token, Token::DEQUAL};
@@ -237,7 +237,7 @@ namespace semantic {
 
     DestructSolution DestructSolver::solveTyped (TypedVar left, Expression right) {
 	auto ltype = left-> getType ();
-	auto rtype = right-> info-> type;
+	auto rtype = right-> info-> type ();
 	while (auto ref = rtype-> to <IRefInfo> ())
 	    rtype = ref-> content ();
 

@@ -108,6 +108,16 @@ namespace semantic {
 	return this-> _value;
     }
 
+    Symbol& IInfoType::symbol () {
+	return this-> _sym;
+    }
+
+    bool IInfoType::isLvalue () {
+	if (this-> _sym)
+	    return this-> _sym-> isLvalue ();
+	return true;// Si il n'y a pas d'expression associé, c'est du built-in donc lvalue
+    }
+    
     void IInfoType::printConst (bool need) {
 	__need__Print_CONST__ = need;
     }
@@ -125,9 +135,12 @@ namespace semantic {
     }
     
     InfoType IInfoType::BinaryOp (Word w, InfoType info) {
+	auto tmp = info-> symbol ();
 	auto expr = new (Z0) syntax::IExpression (w);
-	expr-> info = new (Z0)  ISymbol (w, info);
-	return this-> BinaryOp (w, expr);
+	expr-> info = new (Z0)  ISymbol (w, expr, info);
+	auto ret = this-> BinaryOp (w, expr);
+	info-> symbol () = tmp;
+	return ret;
     }
     
     InfoType IInfoType::BinaryOp (Word, syntax::Expression) {
@@ -135,9 +148,12 @@ namespace semantic {
     }
 
     InfoType IInfoType::BinaryOpRight (Word w, InfoType info) {
+	auto tmp = info-> symbol ();
 	auto expr = new (Z0) syntax::IExpression (w);
-	expr-> info = new (Z0)  ISymbol (w, info);
-	return this-> BinaryOpRight (w, expr);
+	expr-> info = new (Z0)  ISymbol (w, expr, info);
+	auto ret = this-> BinaryOpRight (w, expr);
+	info-> symbol () = tmp;
+	return ret;	   	
     }
     
     InfoType IInfoType::BinaryOpRight (Word, syntax::Expression) {

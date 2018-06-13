@@ -45,7 +45,7 @@ namespace syntax {
 	Ymir::enterBlock ();
 	IBlock::currentBlock.push_back (this);
 	for (auto it : this-> inlines) {
-	    if (!it-> info-> type-> is <IUndefInfo> ())
+	    if (!it-> info-> type ()-> is <IUndefInfo> ())
 		Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
 	}
 	
@@ -77,7 +77,7 @@ namespace syntax {
 	auto last = this-> insts.back ()-> to <IExpression> ();
 	this-> insts.pop_back ();
 	if (!last-> info-> value ()) {
-	    auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type-> toGeneric ());	
+	    auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type ()-> toGeneric ());	
 	    Ymir::enterBlock ();
 	    IBlock::currentBlock.push_back (this);
 	    for (auto it : this-> insts) {
@@ -85,7 +85,7 @@ namespace syntax {
 		auto inst = it-> toGeneric ();
 		Ymir::getStackStmtList ().back ().append (inst);    
 	    }
-	    type = last-> info-> type;
+	    type = last-> info-> type ();
 	    expr = last-> toGeneric ();
 
 	    Ymir::getStackStmtList ().back ().append (
@@ -103,7 +103,7 @@ namespace syntax {
 		auto inst = it-> toGeneric ();
 		Ymir::getStackStmtList ().back ().append (inst);    
 	    }
-	    type = last-> info-> type;
+	    type = last-> info-> type ();
 	    expr = last-> toGeneric ();	    
 	}
 
@@ -132,7 +132,7 @@ namespace syntax {
 	    auto var = this-> decls [i];
 	    auto aff = this-> insts [i];
 	    if (!var-> info-> isImmutable ()) {
-		auto type_tree = var-> info-> type-> toGeneric ();
+		auto type_tree = var-> info-> type ()-> toGeneric ();
 		auto inner = type_tree;
 		
 		if (var-> info-> isClosured ()) 
@@ -171,8 +171,8 @@ namespace syntax {
 		    list.append (aff-> toGeneric ());
 		}
 
-		if (var-> info-> type-> is <IAggregateInfo> ()) {
-		    if (auto frame = var-> info-> type-> to <IAggregateInfo> ()-> getDestructor ()) {
+		if (var-> info-> type ()-> is <IAggregateInfo> ()) {
+		    if (auto frame = var-> info-> type ()-> to <IAggregateInfo> ()-> getDestructor ()) {
 			auto proto = frame-> validate ();
 			std::vector <tree> params = {getAddr (decl).getTree ()};
 			auto destr = build_call_array_loc (this-> token.getLocus (), void_type_node, proto-> toGeneric ().getTree (), 1, params.data ());
@@ -219,16 +219,16 @@ namespace syntax {
 	auto str = this-> getValue ();
 	if (str == "INF") str = "Inf";
 	else if (str == "NAN") str = "QNaN";
-	Ymir::Tree type = this-> info-> type-> toGeneric ();
+	Ymir::Tree type = this-> info-> type ()-> toGeneric ();
 	real_from_string (&real_value, str.c_str ());
 	return build_real (type.getTree (), real_value);
     }
     
     Ymir::Tree IVar::lastInfoDecl () {
-	if (this-> _lastInfo-> type-> unopFoo) {
-	    return this-> _lastInfo-> type-> buildUnaryOp (
+	if (this-> _lastInfo-> type ()-> unopFoo) {
+	    return this-> _lastInfo-> type ()-> buildUnaryOp (
 		this-> token,
-		this-> _lastInfo-> type,
+		this-> _lastInfo-> type (),
 		this
 	    );	    
 	} else return this-> _lastInfo-> treeDecl ();
@@ -238,10 +238,10 @@ namespace syntax {
 	if (this-> info-> value ())
 	    return this-> info-> value ()-> toYmir (this-> info)-> toGeneric ();
 	
-	if (this-> info-> type-> unopFoo) {
-	    return this-> info-> type-> buildUnaryOp (
+	if (this-> info-> type ()-> unopFoo) {
+	    return this-> info-> type ()-> buildUnaryOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this
 	    );	    
 	} else {
@@ -259,7 +259,7 @@ namespace syntax {
 			    this-> token.getLocus (),
 			    VAR_DECL,
 			    get_identifier (this-> token.getStr ().c_str ()),			    
-			    this-> info-> type-> toGeneric ().getTree ());
+			    this-> info-> type ()-> toGeneric ().getTree ());
 			DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
 			this-> info-> treeDecl (decl);
 			Ymir::getStackVarDeclChain ().back ().append (decl);
@@ -269,7 +269,7 @@ namespace syntax {
 		    return Ymir::getPointerUnref (
 			this-> token.getLocus (),
 			ret,
-			this-> info-> type-> toGeneric (),
+			this-> info-> type ()-> toGeneric (),
 			0
 		    );
 		} else {
@@ -285,27 +285,27 @@ namespace syntax {
 	    return ret;
 	}
 	
-	return this-> info-> type-> buildBinaryOp (
+	return this-> info-> type ()-> buildBinaryOp (
 	    this-> token,
-	    this-> info-> type,
+	    this-> info-> type (),
 	    this-> left,
 	    this-> right
 	);
     }
 
     Ymir::Tree ICast::toGeneric () {
-	if (this-> info-> type-> unopFoo) {
-	    return this-> info-> type-> buildUnaryOp (
+	if (this-> info-> type ()-> unopFoo) {
+	    return this-> info-> type ()-> buildUnaryOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this-> expr
 	    );
 	} else {
-	    return this-> info-> type-> buildBinaryOp (
+	    return this-> info-> type ()-> buildBinaryOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this-> expr,
-		new (Z0)  ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+		new (Z0)  ITreeExpression (this-> token, this-> info-> type (), Ymir::Tree ())
 	    );
 	}
     }
@@ -316,18 +316,18 @@ namespace syntax {
 	    return ret;
 	}
 	
-	if (this-> info-> type-> unopFoo) {
-	    return this-> info-> type-> buildUnaryOp (
+	if (this-> info-> type ()-> unopFoo) {
+	    return this-> info-> type ()-> buildUnaryOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this-> elem
 	    );
 	} else {
-	    return this-> info-> type-> buildBinaryOp (
+	    return this-> info-> type ()-> buildBinaryOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this-> elem,
-		new (Z0)  ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+		new (Z0)  ITreeExpression (this-> token, this-> info-> type (), Ymir::Tree ())
 	    );
 	}
     }
@@ -339,23 +339,23 @@ namespace syntax {
 	}
 
 	std::vector <tree> args = this-> params-> toGenericParams (this-> treats);
-	if (this-> info-> type-> binopFoo) {
-	    return this-> info-> type-> buildBinaryOp (
+	if (this-> info-> type ()-> binopFoo) {
+	    return this-> info-> type ()-> buildBinaryOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this-> left,
-		new (Z0)  ITreeExpression (this-> params-> getParams ()[0]-> token, this-> params-> getParams () [0]-> info-> type, args [0])
+		new (Z0)  ITreeExpression (this-> params-> getParams ()[0]-> token, this-> params-> getParams () [0]-> info-> type (), args [0])
 	    );
 	} else {
 	    IParamList params (this-> params-> token, {});
 	    for (auto it : Ymir::r (0, args.size ())) {
 		params.getParams ().push_back (new (Z0)  ITreeExpression (this-> params-> getParams () [it]-> token,
-									 this-> params-> getParams () [it]-> info-> type,
+									 this-> params-> getParams () [it]-> info-> type (),
 									 args [it]));
 	    }
-	    return this-> info-> type-> buildMultOp (
+	    return this-> info-> type ()-> buildMultOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this-> left,
 		&params,
 		NULL
@@ -426,8 +426,8 @@ namespace syntax {
 		args.insert (args.begin (), closureVar.getTree ());
 	    } else if (this-> _score-> proto-> has (Keys::INLINE)) {
 		return this-> callInline (args);
-	    } else if (this-> _left-> info-> type-> is <IFunctionInfo> () &&
-		       this-> _left-> info-> type-> to <IFunctionInfo> ()-> isConstr ()) {
+	    } else if (this-> _left-> info-> type ()-> is <IFunctionInfo> () &&
+		       this-> _left-> info-> type ()-> to <IFunctionInfo> ()-> isConstr ()) {
 		auto ltree = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> _score-> ret-> toGeneric ());
 		args.insert (args.begin (), getAddr (ltree).getTree ());
 		Ymir::TreeStmtList list;
@@ -477,7 +477,7 @@ namespace syntax {
     Ymir::Tree IConstArray::toGeneric () {
 	Ymir::TreeStmtList list;
 	if (this-> params.size () != 0) {
-	    ArrayInfo info = this-> info-> type-> to<IArrayInfo> ();	
+	    ArrayInfo info = this-> info-> type ()-> to<IArrayInfo> ();	
 	    Ymir::Tree innerType = info-> content ()-> toGeneric ();
 	    auto intExpr = new (Z0)  IFixed (this-> token, FixedConst::ULONG);
 	    intExpr-> setUValue (this-> params.size () - 1);
@@ -521,7 +521,7 @@ namespace syntax {
 	    auto zero = lenExpr-> toGeneric ();
 	    
 	    auto loc = this-> token.getLocus ();
-	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), this-> info-> type-> toGeneric ());
+	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), this-> info-> type ()-> toGeneric ());
 	    auto len = getField (loc, aux, "len");
 	    auto ptr = getField (loc, aux, "ptr");
 
@@ -537,9 +537,9 @@ namespace syntax {
 	    return ret;
 	}
 
-	return this-> info-> type-> buildBinaryOp (
+	return this-> info-> type ()-> buildBinaryOp (
 	    this-> token,
-	    this-> info-> type,
+	    this-> info-> type (),
 	    this-> left,
 	    this-> right
 	);
@@ -551,9 +551,9 @@ namespace syntax {
 	    return ret;
 	}
 	
-	return this-> info-> type-> buildUnaryOp (
+	return this-> info-> type ()-> buildUnaryOp (
 	    this-> token,
-	    this-> info-> type,
+	    this-> info-> type (),
 	    this-> left
 	);
     }    
@@ -614,7 +614,7 @@ namespace syntax {
 	Ymir::TreeStmtList list;
 	for (int i = 0; i < (int) this-> var.size () ; i++) {
 	    auto var = this-> var [i];
-	    auto type_tree = var-> info-> type-> toGeneric ();
+	    auto type_tree = var-> info-> type ()-> toGeneric ();
 	    Ymir::Tree decl = build_decl (
 		var-> token.getLocus (),
 		VAR_DECL,
@@ -690,7 +690,7 @@ namespace syntax {
     }
     
     Ymir::Tree IArrayAlloc::toGeneric () {
-	ArrayInfo info = this-> info-> type-> to <IArrayInfo> ();
+	ArrayInfo info = this-> info-> type ()-> to <IArrayInfo> ();
 	Ymir::Tree innerType = info-> content ()-> toGeneric ();	
 	Ymir::Tree array_type = info-> toGeneric ();
 	
@@ -752,8 +752,8 @@ namespace syntax {
     
     Ymir::Tree IConstTuple::toGeneric () {
 	location_t loc = this-> token.getLocus ();
-	auto tuple_type = this-> info-> type-> toGeneric ();
-	std::vector <InfoType> type_inner = this-> info-> type-> to <ITupleInfo> ()-> getParams ();
+	auto tuple_type = this-> info-> type ()-> toGeneric ();
+	std::vector <InfoType> type_inner = this-> info-> type ()-> to <ITupleInfo> ()-> getParams ();
 	Ymir::TreeStmtList list;
 	auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), tuple_type);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
@@ -785,7 +785,7 @@ namespace syntax {
 	    elemTree = it-> second;
 	}
 
-	if (auto ref = this-> expr-> info-> type-> to <IRefInfo> ()) {
+	if (auto ref = this-> expr-> info-> type ()-> to <IRefInfo> ()) {
 	    auto inner = ref-> content ()-> toGeneric ();
 	    elemTree = getPointerUnref (loc, elemTree, inner, 0);
 	}
@@ -833,11 +833,11 @@ namespace syntax {
 
     Ymir::Tree IFuncPtr::toGeneric () {
 	if (this-> expr != NULL) {
-	    return this-> info-> type-> buildBinaryOp (
+	    return this-> info-> type ()-> buildBinaryOp (
 		this-> token,
-		this-> info-> type,
+		this-> info-> type (),
 		this-> expr,
-		new (Z0) ITreeExpression (this-> token, this-> info-> type, Ymir::Tree ())
+		new (Z0) ITreeExpression (this-> token, this-> info-> type (), Ymir::Tree ())
 	    );
 	} else {
 	    return build_int_cst_type (long_unsigned_type_node, 0);	   
@@ -849,7 +849,7 @@ namespace syntax {
 	for (int i = 0 ; i < (int) this-> decls.size () ; i++) {
 	    auto var = this-> decls [i];
 	    auto aff = this-> insts [i];
-	    auto type_tree = var-> info-> type-> toGeneric ();
+	    auto type_tree = var-> info-> type ()-> toGeneric ();
 	    Ymir::Tree decl = build_decl (
 		var-> token.getLocus (),
 		VAR_DECL,
@@ -887,7 +887,7 @@ namespace syntax {
 	for (auto it : Ymir::r (0, vars.size ())) {
 	    auto var = vars [it];
 	    auto aff = casters [it];
-	    auto type_tree = var-> info-> type-> toGeneric ();
+	    auto type_tree = var-> info-> type ()-> toGeneric ();
 	    Ymir::Tree decl = build_decl (
 		var-> token.getLocus (),
 		VAR_DECL,
@@ -991,7 +991,7 @@ namespace syntax {
     
     Ymir::Tree IMatch::declareAndAffectAux () {
 	Ymir::TreeStmtList list;
-	auto decl = Ymir::makeAuxVar (this-> aux-> token.getLocus (), ISymbol::getLastTmp (), this-> aux-> info-> type-> toGeneric ());
+	auto decl = Ymir::makeAuxVar (this-> aux-> token.getLocus (), ISymbol::getLastTmp (), this-> aux-> info-> type ()-> toGeneric ());
 	
 	this-> aux-> info-> treeDecl (decl);
 	list.append (this-> binAux-> toGeneric ());	
@@ -1001,7 +1001,7 @@ namespace syntax {
 
 
     Ymir::Tree IMatch::toGenericExpression (Ymir::TreeStmtList list, Ymir::Tree endLabel, Ymir::Tree elsePart) {
-	auto aux = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> info-> type-> toGeneric ());
+	auto aux = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> info-> type ()-> toGeneric ());
 	
 	for (auto it : Ymir::r (this-> soluce.size (), 0)) {
 	    Ymir::Tree affectPart = declareVars (
@@ -1071,7 +1071,7 @@ namespace syntax {
 		MODIFY_EXPR, this-> token.getLocus (), void_type_node, aux, msgTree
 	    ));
 
-	    auto treeExpr = new (Z0) ITreeExpression (this-> token, this-> msg-> info-> type, aux);
+	    auto treeExpr = new (Z0) ITreeExpression (this-> token, this-> msg-> info-> type (), aux);
 	    
 	    tree nextArgs [] = {
 		ArrayUtils::InstLen (this-> token, NULL, treeExpr, NULL).getTree (),
@@ -1111,9 +1111,9 @@ namespace syntax {
 	if (this-> msg) {
 	    text = ArrayUtils::InstToArray (
 		this-> token,
-		this-> msg-> info-> type,
+		this-> msg-> info-> type (),
 		this-> msg,
-		new (Z0) ITreeExpression (this-> token, this-> msg-> info-> type, Ymir::Tree ())
+		new (Z0) ITreeExpression (this-> token, this-> msg-> info-> type (), Ymir::Tree ())
 	    );
 	}
 

@@ -29,7 +29,7 @@ namespace semantic {
 	    type-> applyFoo = getAndRemoveBack (type-> nextApply);
 
 	    auto loc = locus.getLocus ();
-	    auto innerType = iter-> info-> type-> to <IRefInfo> ()-> content ();
+	    auto innerType = iter-> info-> type ()-> to <IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();
 
 	    Ymir::TreeStmtList list;
@@ -50,7 +50,7 @@ namespace semantic {
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
 	    auto loc = locus.getLocus ();
-	    auto innerType = right-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto innerType = right-> info-> type ()-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
 
 	    Ymir::TreeStmtList list;
@@ -73,7 +73,7 @@ namespace semantic {
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
 	    auto loc = locus.getLocus ();
-	    auto innerType = left-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto innerType = left-> info-> type ()-> to<IRefInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
 	    
 	    Ymir::TreeStmtList list;
@@ -105,12 +105,12 @@ namespace semantic {
 
 	    auto loc = locus.getLocus ();
 	    Ymir::TreeStmtList list;
-	    auto innerLeft = left-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto innerLeft = left-> info-> type ()-> to<IRefInfo> ()-> content ();
 	    auto inner = innerLeft-> toGeneric ();	    
 	    auto leftExp = Ymir::getExpr (list, left);
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
 	    
-	    auto innerRight = right-> info-> type-> to<IRefInfo> ()-> content ();
+	    auto innerRight = right-> info-> type ()-> to<IRefInfo> ()-> content ();
 	    inner = innerRight-> toGeneric ();
 	    auto rightExp = Ymir::getExpr (list, right);
 	    rightExp = getPointerUnref (locus.getLocus (), rightExp, inner, 0);
@@ -130,7 +130,7 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 	    
-	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
+	    auto inner = left-> info-> type ()-> to<IRefInfo> ()-> content ()-> toGeneric ();
 
 	    Ymir::TreeStmtList list;	    
 	    auto leftExp = Ymir::getExpr (list, left);
@@ -140,13 +140,13 @@ namespace semantic {
 		return Ymir::compoundExpr (locus.getLocus (), list, type-> buildUnaryOp (
 		    locus,
 		    type,
-		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp)
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type (), leftExp)
 		));
 	    } else if (type-> binopFoo) {
 		return Ymir::compoundExpr (locus.getLocus (), list, type-> buildBinaryOp (
 		    locus,
 		    type,
-		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type (), leftExp),
 		    new (Z0)  ITreeExpression (locus, type, Ymir::Tree ())
 		));
 	    } else {
@@ -161,7 +161,7 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 	    
-	    auto inner = left-> info-> type-> to<IRefInfo> ()-> content ()-> toGeneric ();
+	    auto inner = left-> info-> type ()-> to<IRefInfo> ()-> content ()-> toGeneric ();
 
 	    Ymir::TreeStmtList list;	    
 	    auto leftExp = Ymir::getExpr (list, left);
@@ -171,7 +171,7 @@ namespace semantic {
 	    return Ymir::compoundExpr (locus.getLocus (), list, type-> buildMultOp (
 		locus,
 		type,
-		new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp),
+		new (Z0)  ITreeExpression (left-> token, left-> info-> type (), leftExp),
 		right,
 		score
 	    ));	    
@@ -221,7 +221,7 @@ namespace semantic {
     
     InfoType IRefInfo::BinaryOp (Word token, syntax::Expression right) {
 	InfoType aux = NULL, refRight = NULL;
-	if (auto type = right-> info-> type-> to<IRefInfo> ()) {
+	if (auto type = right-> info-> type ()-> to<IRefInfo> ()) {
 	    aux = this-> _content-> BinaryOp (token, type-> _content);
 	    refRight = type-> _content;	    
 	} else aux = this-> _content-> BinaryOp (token, right);
@@ -238,7 +238,7 @@ namespace semantic {
 	if (aux != NULL) {
 	    return addUnrefRight (aux);
 	} else {
-	    aux = left-> info-> type-> BinaryOp (token, this-> _content);    
+	    aux = left-> info-> type ()-> BinaryOp (token, this-> _content);    
 	    if (aux != NULL) return addUnrefRight (aux);
 	}
 	return NULL;
@@ -351,6 +351,14 @@ namespace semantic {
 	return this-> _content;
     }
 
+    Symbol& IRefInfo::symbol () {
+	return this-> _content-> symbol ();
+    }
+
+    bool IRefInfo::isLvalue () {
+	return this-> _content-> isLvalue ();
+    }    
+    
     Ymir::Tree IRefInfo::toGeneric () {
 	if (this-> _content-> is <IStructInfo> ()) {
 	    return build_pointer_type (
@@ -470,7 +478,7 @@ namespace semantic {
     }
     
     InfoType IArrayRefInfo::BinaryOp (Word token, syntax::Expression right) {
-	if (auto type = right-> info-> type-> to <IArrayRefInfo> ()) {
+	if (auto type = right-> info-> type ()-> to <IArrayRefInfo> ()) {
 	    return this-> _content-> BinaryOp (token, type-> _content);
 	} else 
 	    return this-> _content-> BinaryOp (token, right);
@@ -480,7 +488,7 @@ namespace semantic {
 	auto aux = this-> _content-> BinaryOpRight (token, left);
 	if (aux != NULL) return aux;
 	else 
-	    return left-> info-> type-> BinaryOp (token, this-> _content);	
+	    return left-> info-> type ()-> BinaryOp (token, this-> _content);	
     }
 
     InfoType IArrayRefInfo::AccessOp (Word token, syntax::ParamList params, std::vector <InfoType> & treats) {
@@ -559,6 +567,13 @@ namespace semantic {
 	return this-> _content-> toGeneric ();
     }
 
+    Symbol& IArrayRefInfo::symbol () {
+	return this-> _content-> symbol ();
+    }
 
+    bool IArrayRefInfo::isLvalue () {
+	return this-> _content-> isLvalue ();
+    }
+    
     
 }

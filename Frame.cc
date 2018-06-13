@@ -120,16 +120,16 @@ namespace semantic {
 
 	bool lvalue = false;
 	if (this-> _function-> getType () == NULL)
-	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
+	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), NULL, new (Z0)  IUndefInfo ());
 	else {
 	    auto var = this-> _function-> getType ()-> toType ();
 	    Table::instance ().retInfo ().deco = this-> _function-> getRetDeco ().getStr ();
 	    if (var != NULL) {
 		Table::instance ().retInfo ().info = var-> info;
 		if (Table::instance ().retInfo ().deco == Keys::REF) {
-		    Table::instance ().retInfo ().info-> type = new (Z0) IRefInfo (false, var-> info-> type);
+		    Table::instance ().retInfo ().info-> type (new (Z0) IRefInfo (false, var-> info-> type ()));
 		}
-	    } else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
+	    } else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), NULL, new (Z0) IVoidInfo ());
 	    lvalue = (Table::instance ().retInfo ().deco == Keys::MUTABLE || Table::instance ().retInfo ().deco == Keys::REF);
 	}
 	
@@ -138,7 +138,7 @@ namespace semantic {
 	proto-> externLangSpace () = this-> _externLangSpace;
 	
 	if (!FrameTable::instance ().existsProto (proto)) {
-	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
 	    FrameTable::instance ().insert (proto);
@@ -151,13 +151,13 @@ namespace semantic {
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    auto block = this-> _function-> getBlock ()-> block ();
 	    
-	    if (Table::instance ().retInfo ().info-> type-> is<IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+	    if (Table::instance ().retInfo ().info-> type ()-> is<IUndefInfo> ())
+		Table::instance ().retInfo ().info-> type (new (Z0)  IVoidInfo ());
 	    
 
 	    if (this-> _function-> post () != NULL) {
 		postVar = this-> _function-> postVar ()-> templateExpReplace ({})-> to<IVar> ();
-		postVar-> info = new ISymbol (postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+		postVar-> info = new ISymbol (postVar-> token, postVar, Table::instance ().retInfo ().info-> type ()-> clone ());
 		Table::instance ().insert (postVar-> info);
 		post = this-> _function-> post ()-> block ();
 	    }
@@ -221,7 +221,7 @@ namespace semantic {
 
 
     void IFrame::verifyReturn (Word loc, Symbol ret, FrameReturnInfo info) {
-	if (!ret-> type-> is<IVoidInfo> () && !ret-> type-> is<IUndefInfo> ()) {
+	if (!ret-> type ()-> is<IVoidInfo> () && !ret-> type ()-> is<IUndefInfo> ()) {
 	    if (!info.retract ()) {
 		Ymir::Error::missingReturn (loc, ret);
 	    }
@@ -258,7 +258,7 @@ namespace semantic {
     std::vector <::syntax::Var> IFrame::copyParams (const std::vector <::syntax::Var> & params) {
 	std::vector <Var> finalParams;
 	for (auto it : params) {
-	    finalParams.push_back (new (Z0) IType (it-> token, it-> info-> type-> clone ()));
+	    finalParams.push_back (new (Z0) IType (it-> token, it-> info-> type ()-> clone ()));
 	}
 	return finalParams;
     }
@@ -271,14 +271,14 @@ namespace semantic {
 				
 	Ymir::log ("Validate function : ", name, " in space : ",  Table::instance ().getCurrentSpace ());
 	if (ret == NULL) 
-	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
+	    Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), NULL, new (Z0)  IUndefInfo ());
 	else
 	    Table::instance ().retInfo ().info = ret;
 		
 	auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, this-> _attributes);
 	auto exists = FrameTable::instance ().existsProto (proto);
 	if (!exists && !isExtern) {
-	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 		    
 	    FrameTable::instance ().insert (proto);
@@ -291,13 +291,13 @@ namespace semantic {
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    block = block-> block ();
 
-	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+	    if (Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().info-> type (new (Z0)  IVoidInfo ());
 
 		    	   
 	    if (_post != NULL) {
 		postVar = _postVar-> templateExpReplace ({})-> to<IVar> ();
-		postVar-> info = new ISymbol (_postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+		postVar-> info = new ISymbol (_postVar-> token, _postVar, Table::instance ().retInfo ().info-> type ()-> clone ());
 		Table::instance ().insert (postVar-> info);
 		post = _post-> block ();
 	    }
@@ -342,13 +342,13 @@ namespace semantic {
 	    else retType = new (Z0) IUndefInfo ();
 	}
 	
-	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), retType);
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), NULL, retType);
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
 
 	auto exists = FrameTable::instance ().existsProto (proto);
 	if (!exists && !isExtern) {
-	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
 	    FrameTable::instance ().insert (proto);
@@ -356,11 +356,11 @@ namespace semantic {
 	    auto exprBlock = _block-> expression ();
 	    if (exprBlock == NULL) return NULL;
 	    
-	    Table::instance ().retInfo ().info-> type = exprBlock-> info-> type;
+	    Table::instance ().retInfo ().info-> type (exprBlock-> info-> type ());
 	    Block block = NULL;
-	    if (!exprBlock-> info-> type-> is<IVoidInfo> ()) {
+	    if (!exprBlock-> info-> type ()-> is<IVoidInfo> ()) {
 		auto ret = new (Z0) IReturn (_block-> token, exprBlock);
-		ret-> getCaster () = exprBlock-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);
+		ret-> getCaster () = exprBlock-> info-> type ()-> CompOp (Table::instance ().retInfo ().info-> type ());
 		block = new (Z0) IBlock (exprBlock-> token, {}, {ret});
 	    } else {		    
 		block = new (Z0) IBlock (exprBlock-> token, {}, {exprBlock});
@@ -398,20 +398,20 @@ namespace semantic {
 	    else retType = new (Z0) IUndefInfo ();
 	}
 	
-	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), retType);
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), NULL, retType);
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
 	auto exists = FrameTable::instance ().existsProto (proto);
 	if (!exists && !isExtern) {
-	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
 	    FrameTable::instance ().insert (proto);
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    auto block = _block-> block ();	    
 
-	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+	    if (Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().info-> type (new (Z0)  IVoidInfo ());
 	    
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
 						  space, name, params, block, {});
@@ -449,17 +449,17 @@ namespace semantic {
 	bool lvalue = false;
 		
 	if (this-> _function-> getType () == NULL) {
-	    if (isExtern) Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IVoidInfo ());
-	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0)  IUndefInfo ());
+	    if (isExtern) Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), NULL, new (Z0)  IVoidInfo ());
+	    else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), NULL, new (Z0)  IUndefInfo ());
 	} else {
 	    auto type = this-> _function-> getType ()-> toType ();
 	    Table::instance ().retInfo ().deco = this-> _function-> getRetDeco ().getStr ();
 	    if (type) {
 		Table::instance ().retInfo ().info = type-> info;
 		if (Table::instance ().retInfo ().deco == Keys::REF) {
-		    Table::instance ().retInfo ().info-> type = new (Z0) IRefInfo (false, type-> info-> type);
+		    Table::instance ().retInfo ().info-> type (new (Z0) IRefInfo (false, type-> info-> type ()));
 		}
-	    } else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), new (Z0) IVoidInfo ());
+	    } else Table::instance ().retInfo ().info = new (Z0)  ISymbol (Word::eof (), NULL, new (Z0) IVoidInfo ());
 		    
 	    lvalue = (Table::instance ().retInfo ().deco == Keys::MUTABLE || Table::instance ().retInfo ().deco == Keys::REF);
 	}
@@ -468,7 +468,7 @@ namespace semantic {
 
 	auto exists = FrameTable::instance ().existsProto (proto);
 	if (!exists && !isExtern) {
-	    if (!Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
+	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
 	    FrameTable::instance ().insert (proto);
@@ -481,12 +481,12 @@ namespace semantic {
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    auto block = this-> _function-> getBlock ()-> block ();
 
-	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+	    if (Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().info-> type (new (Z0)  IVoidInfo ());
 		    	   
 	    if (this-> _function-> post () != NULL) {
 		postVar = this-> _function-> postVar ()-> templateExpReplace ({})-> to<IVar> ();
-		postVar-> info = new ISymbol (postVar-> token, Table::instance ().retInfo ().info-> type-> clone ());
+		postVar-> info = new ISymbol (postVar-> token, postVar, Table::instance ().retInfo ().info-> type ()-> clone ());
 		Table::instance ().insert (postVar-> info);
 		post = this-> _function-> post ()-> block ();
 	    }

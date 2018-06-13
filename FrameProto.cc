@@ -125,8 +125,8 @@ namespace semantic {
 			return false;
 		    }
 		} else {
-		    if (auto tu = this-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
-		    	if (auto tu2 = scd-> _tmps [it]-> info-> type-> to <ITupleInfo> ()) {
+		    if (auto tu = this-> _tmps [it]-> info-> type ()-> to <ITupleInfo> ()) {
+		    	if (auto tu2 = scd-> _tmps [it]-> info-> type ()-> to <ITupleInfo> ()) {
 		    	    if (tu2-> isFake () != tu-> isFake ()) return false;
 			    if (tu-> getParams ().size () != tu2-> getParams ().size ()) return false;
 		    	    for (auto it : Ymir::r (0, tu-> getParams ().size ())) {
@@ -135,14 +135,14 @@ namespace semantic {
 		    		    return false;
 		    	    }
 		    	} else return false;
-		    } else if (this-> _tmps [it]-> info-> type-> simpleTypeString () != scd-> _tmps [it]-> info-> type-> simpleTypeString ()) {
+		    } else if (this-> _tmps [it]-> info-> type ()-> simpleTypeString () != scd-> _tmps [it]-> info-> type ()-> simpleTypeString ()) {
 		    	return false;
 		    }
 		}
 	    }
 
 	    for (auto it : Ymir::r (0, this-> _vars.size ())) {		
-	    	if (this-> _vars [it]-> info-> type-> simpleTypeString () != scd-> _vars  [it]-> info-> type-> simpleTypeString ()) {
+	    	if (this-> _vars [it]-> info-> type ()-> simpleTypeString () != scd-> _vars  [it]-> info-> type ()-> simpleTypeString ()) {
 	    	    return false;
 	    	}
 	    }
@@ -158,9 +158,9 @@ namespace semantic {
 	    std::vector <std::string> attrs;
 	    for (auto it : this-> _closure) {
 		if (this-> _isMoved)
-		    types.push_back (it-> info-> type);
+		    types.push_back (it-> info-> type ());
 		else
-		    types.push_back (new (Z0) IRefInfo (false, it-> info-> type));
+		    types.push_back (new (Z0) IRefInfo (false, it-> info-> type ()));
 		attrs.push_back (it-> info-> sym.getStr ());
 	    }
 	    
@@ -174,7 +174,7 @@ namespace semantic {
     Ymir::Tree IFrameProto::toGeneric () {
 	std::vector <tree> fndecl_type_params (this-> _vars.size ());
 	for (uint i = 0 ; i < this-> _vars.size () ; i++) {
-	    fndecl_type_params [i] = this-> _vars [i]-> info-> type-> toGeneric ().getTree ();
+	    fndecl_type_params [i] = this-> _vars [i]-> info-> type ()-> toGeneric ().getTree ();
 	}
 
 	Ymir::Tree closureType = createClosureType ();
@@ -187,7 +187,7 @@ namespace semantic {
 	
 	std::string ident = Namespace (this-> space (), this-> _name).toString ();
 	std::string ident_ASM = Mangler::mangle_function (this-> _name, this);		;
-	tree ret = this-> _type-> type-> toGeneric ().getTree ();
+	tree ret = this-> _type-> type ()-> toGeneric ().getTree ();
 	tree fndecl_type;
 	if (this-> isCVariadic ()) {
 	    fndecl_type = build_varargs_function_type_array (ret, 0, fndecl_type_params.data ());

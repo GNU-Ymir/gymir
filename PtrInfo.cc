@@ -28,7 +28,7 @@ namespace semantic {
 	}
 	
 	Ymir::Tree InstCast (Word locus, InfoType, Expression elem, Expression typeExpr) {
-	    auto type = typeExpr-> info-> type-> toGeneric ();
+	    auto type = typeExpr-> info-> type ()-> toGeneric ();
 	    auto lexp = elem-> toGeneric ();
 	    return fold_convert_loc (locus.getLocus (), type.getTree (), lexp.getTree ());
 	}
@@ -60,7 +60,7 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 	    
-	    auto inner = left-> info-> type-> to<IPtrInfo> ()-> content ()-> toGeneric ();
+	    auto inner = left-> info-> type ()-> to<IPtrInfo> ()-> content ()-> toGeneric ();
 	    
 	    auto leftExp = left-> toGeneric ();
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
@@ -69,13 +69,13 @@ namespace semantic {
 		return type-> buildUnaryOp (
 		    locus,
 		    type,
-		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp)
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type (), leftExp)
 		);
 	    } else if (type-> binopFoo) {
 		return type-> buildBinaryOp (
 		    locus,
 		    type,
-		    new (Z0)  ITreeExpression (left-> token, left-> info-> type, leftExp),
+		    new (Z0)  ITreeExpression (left-> token, left-> info-> type (), leftExp),
 		    new (Z0)  ITreeExpression (locus, type, Ymir::Tree ())
 		);
 	    } else {
@@ -89,7 +89,7 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
-	    auto innerType = left-> info-> type-> to<IPtrInfo> ()-> content ();
+	    auto innerType = left-> info-> type ()-> to<IPtrInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
 	    auto leftExp = left-> toGeneric ();
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
@@ -117,7 +117,7 @@ namespace semantic {
 	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);
 	    type-> multFoo = getAndRemoveBack (type-> nextMult);
 
-	    auto innerType = left-> info-> type-> to<IPtrInfo> ()-> content ();
+	    auto innerType = left-> info-> type ()-> to<IPtrInfo> ()-> content ();
 	    auto inner = innerType-> toGeneric ();	    
 	    auto leftExp = left-> toGeneric ();
 	    leftExp = getPointerUnref (locus.getLocus (), leftExp, inner, 0);
@@ -195,12 +195,12 @@ namespace semantic {
 	    return NULL;	    
 	}	    	    
 
-	if (auto ot = tmps [0]-> info-> type-> to<IStructCstInfo> ()) {
+	if (auto ot = tmps [0]-> info-> type ()-> to<IStructCstInfo> ()) {
 	    auto type = ot-> TempOp ({});
 	    if (type == NULL) return NULL;
 	    return new (Z0) IPtrInfo (false, type);
 	} else {
-	    return new (Z0) IPtrInfo (false, tmps [0]-> info-> type);
+	    return new (Z0) IPtrInfo (false, tmps [0]-> info-> type ());
 	}
     }
 
@@ -225,7 +225,7 @@ namespace semantic {
 
     InfoType IPtrInfo::UnaryOp (Word op) {
 	if (op == Token::STAR) return Unref (op);
-	else if (op == Token::AND && !this-> isConst ()) return toPtr ();
+	else if (op == Token::AND && this-> isLvalue ()) return toPtr ();
 	else if (op == Token::DPLUS) {
 	    auto ret = this-> cloneConst ();
 	    ret-> unopFoo = PtrUtils::InstPPlus;
@@ -235,7 +235,7 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::Affect (syntax::Expression right) {
-	auto type = right-> info-> type-> to<IPtrInfo> ();
+	auto type = right-> info-> type ()-> to<IPtrInfo> ();
 	if (type != NULL && type-> _content-> isSame (this-> _content)) {
 	    auto ret = new (Z0)  IPtrInfo (false, this-> _content-> clone ());
 	    ret-> binopFoo = &PtrUtils::InstAffect;
@@ -249,7 +249,7 @@ namespace semantic {
 	    auto ret = new (Z0)  IPtrInfo (false, type-> _content-> clone ());
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
-	} else if (right-> info-> type-> is <INullInfo> ()) {
+	} else if (right-> info-> type ()-> is <INullInfo> ()) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
@@ -258,7 +258,7 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type-> is<IUndefInfo> ()) {
+	if (left-> info-> type ()-> is<IUndefInfo> ()) {
 	    auto ret = new (Z0)  IPtrInfo (false, this-> _content-> clone ());
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
@@ -267,7 +267,7 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::Plus (syntax::Expression right) {
-	if (right-> info-> type-> is<IFixedInfo> ()) {
+	if (right-> info-> type ()-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	    ptr-> binopFoo = &PtrUtils::InstPlus;
 	    return ptr;
@@ -276,7 +276,7 @@ namespace semantic {
     }
     
     InfoType IPtrInfo::Sub (syntax::Expression right) {
-	if (right-> info-> type-> is<IFixedInfo> ()) {
+	if (right-> info-> type ()-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	    ptr-> binopFoo = &PtrUtils::InstSub;
 	    return ptr;
@@ -285,7 +285,7 @@ namespace semantic {
     }
 
     InfoType IPtrInfo::PlusRight (syntax::Expression right) {
-	if (right-> info-> type-> is<IFixedInfo> ()) {
+	if (right-> info-> type ()-> is<IFixedInfo> ()) {
 	    auto ptr = new (Z0)  IPtrInfo (this-> isConst (), this-> _content-> clone ());
 	    ptr-> binopFoo = &PtrUtils::InstPlusRight;
 	    return ptr;
@@ -295,11 +295,11 @@ namespace semantic {
     
 
     InfoType IPtrInfo::Is (syntax::Expression right) {
-	if (right-> info-> type-> is <IPtrInfo> ()) {
+	if (right-> info-> type ()-> is <IPtrInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
-	} else if (right-> info-> type-> is <INullInfo> ()) {
+	} else if (right-> info-> type ()-> is <INullInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
@@ -308,11 +308,11 @@ namespace semantic {
     }
     
     InfoType IPtrInfo::NotIs (syntax::Expression right) {
-	if (right-> info-> type-> is <IPtrInfo> ()) {
+	if (right-> info-> type ()-> is <IPtrInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
-	} else if (right-> info-> type-> is <INullInfo> ()) {
+	} else if (right-> info-> type ()-> is <INullInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
@@ -344,7 +344,7 @@ namespace semantic {
 	if (var-> isType ()) {
 	    auto type = var-> asType ();
 	    if (type) {
-		auto ret = type-> info-> type;
+		auto ret = type-> info-> type ();
 		ret-> unopFoo = &PtrUtils::InstUnref;
 		ret-> binopFoo = &PtrUtils::InstUnrefTyped;
 		return ret;
@@ -403,7 +403,7 @@ namespace semantic {
 	    ptr-> binopFoo = &PtrUtils::InstCast;
 	    return ptr;
 	} else if (auto ref = other-> to<IRefInfo> ()) {
-	    if (!this-> isConst () && this-> isSame (ref-> content ())) {
+	    if (this-> isLvalue () && this-> isSame (ref-> content ())) {
 		auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
 		aux-> binopFoo = &FixedUtils::InstAddr;
 		return aux;

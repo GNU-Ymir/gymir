@@ -25,6 +25,12 @@ namespace syntax {
 	
 	void print (int nb = 0) override;
 
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IExpression::getIds ();
+	    ids.push_back (TYPEID (IConstRange));
+	    return ids;
+	}
+	
 	virtual ~IConstRange ();
 	
     private:

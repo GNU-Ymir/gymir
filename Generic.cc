@@ -337,7 +337,7 @@ namespace Ymir {
     }
     
     void declareGlobal (Symbol sym, syntax::Expression value) {
-	auto type_tree = sym-> type-> toGeneric ();
+	auto type_tree = sym-> type ()-> toGeneric ();
 	auto name = Mangler::mangle_global (Namespace (sym-> space (), sym-> sym.getStr ()).toString ());
 	tree decl = build_decl (
 	    sym-> sym.getLocus (),
@@ -419,7 +419,7 @@ namespace Ymir {
     }
     
     void declareGlobalExtern (Symbol sym) {
-	auto type_tree = sym-> type-> toGeneric ();
+	auto type_tree = sym-> type ()-> toGeneric ();
 	auto name = Mangler::mangle_global (Namespace (sym-> space (), sym-> sym.getStr ()).toString ());
 	tree decl = build_decl (
 	    sym-> sym.getLocus (),

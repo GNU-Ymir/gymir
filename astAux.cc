@@ -259,7 +259,7 @@ namespace syntax {
     std::vector <semantic::InfoType> IParamList::getParamTypes () {
 	std::vector<semantic::InfoType> paramTypes;
 	for (auto it : this-> params) {
-	    paramTypes.push_back (it-> info-> type);
+	    paramTypes.push_back (it-> info-> type ());
 	}
 	return paramTypes;
     }
@@ -382,7 +382,7 @@ namespace syntax {
 	IVar (token),
 	_type (type)
     {
-	this-> info = new (Z0)  ISymbol (token, type);
+	this-> info = new (Z0)  ISymbol (token, this, type);
     }    
 
     IType::~IType () {
@@ -394,7 +394,7 @@ namespace syntax {
     }
 
     Expression IVar::onClone () {
-	return new (Z0) IType (this-> token, this-> info-> type);
+	return new (Z0) IType (this-> token, this-> info-> type ());
     }
     
     Expression IType::onClone () {
@@ -402,7 +402,7 @@ namespace syntax {
     }
 
     Expression IArrayAlloc::onClone () {
-	return new (Z0) IType (this-> token, this-> info-> type);
+	return new (Z0) IType (this-> token, this-> info-> type ());
     }
     
     std::vector <std::string> IType::getIds () {
@@ -412,8 +412,8 @@ namespace syntax {
     }
 
     std::string IType::prettyPrint () {
-	if (this-> info && this-> info-> type)
-	    return this-> info-> type-> typeString ();
+	if (this-> info && this-> info-> type ())
+	    return this-> info-> type ()-> typeString ();
 	else
 	    return this-> token.getStr ();
     }    
@@ -951,7 +951,7 @@ namespace syntax {
     bool IPar::isLvalue () {
 	if (this-> _score-> proto && this-> _score-> proto-> isLvalue ())
 	    return true;
-	return this-> info-> type-> is<IRefInfo> ();
+	return this-> info-> type ()-> is<IRefInfo> ();
     }
     
     IPar::~IPar () {
@@ -1038,7 +1038,7 @@ namespace syntax {
 	IExpression (locus),	
 	_content (content)
     {
-	this-> info = new (Z0)  ISymbol (locus, info);
+	this-> info = new (Z0)  ISymbol (locus, this, info);
     }
 
     void ITreeExpression::print (int) {}
@@ -1416,7 +1416,7 @@ namespace syntax {
     IExpression* IExpression::clone () {
 	auto ret = this-> onClone ();
 	if (this-> info && ret != this) 
-	    ret-> info = new (Z0)  ISymbol (this-> info-> sym, this-> info-> type ? this-> info-> type-> clone () : NULL);
+	    ret-> info = new (Z0)  ISymbol (this-> info-> sym, ret, this-> info-> type () ? this-> info-> type ()-> clone () : NULL);
 	return ret;
     }
 
@@ -2069,7 +2069,7 @@ namespace syntax {
     MacroCall IMacroCall::solve (const std::map <std::string, Expression> & values) {
 	auto expr = this-> left-> expression ();
 	if (expr == NULL) return NULL;	
-	auto mac = expr-> info-> type-> to <IMacroInfo> ();
+	auto mac = expr-> info-> type ()-> to <IMacroInfo> ();
 	if (mac == NULL) {
 	    Ymir::Error::notAMacro (this-> left-> token);
 	    return NULL;
@@ -2083,7 +2083,7 @@ namespace syntax {
 
 	if (!semantic::Table::instance ().addCall (this-> token)) return NULL;
 	semantic::Table::instance ().enterPhantomBlock ();
-	Table::instance ().retInfo ().info = new (Z0) ISymbol (this-> token, new (Z0) IVoidInfo ());
+	Table::instance ().retInfo ().info = new (Z0) ISymbol (this-> token, NULL, new (Z0) IVoidInfo ());
 
 	Block block = (Block) soluce.block-> templateExpReplace (soluce.elements);
 	if (!block) return NULL;

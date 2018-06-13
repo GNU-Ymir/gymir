@@ -195,7 +195,7 @@ namespace semantic {
 	
 	bool adds = false;
 	for (auto it : others) {
-	    if (auto fun = it-> type-> to<IFunctionInfo> ()) {
+	    if (auto fun = it-> type ()-> to<IFunctionInfo> ()) {
 		if (!fun-> _alone) {
 		    alls.push_back (fun-> _info);
 		    if (fun-> _info == this-> _info) adds = true;
@@ -207,7 +207,7 @@ namespace semantic {
     }
 
     InfoType IFunctionInfo::BinaryOpRight (Word op, syntax::Expression left) {
-	if (op == Token::EQUAL && left-> info-> type-> is <IUndefInfo> ()) {
+	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {
 	    auto frames = getFrames ();
 	    if (frames.size () == 1) {//&& frames [0]-> isPure ()) {
 		auto infoTypes = frames [0]-> getParamTypes ();
@@ -319,7 +319,7 @@ namespace semantic {
 
 	verifErrors ();
 	if (info == NULL) return NULL;
-	right-> ret = info-> type ()-> type-> clone ();
+	right-> ret = info-> type ()-> type ()-> clone ();
 	right-> ret-> value () = info-> type ()-> value ();
 
 	return right;
@@ -355,7 +355,7 @@ namespace semantic {
 	
 	verifErrors ();
 	if (info == NULL) return NULL;
-	right-> ret = info-> type ()-> type-> clone ();
+	right-> ret = info-> type ()-> type ()-> clone ();
 	right-> ret-> value () = info-> type ()-> value ();
 
 	return right;

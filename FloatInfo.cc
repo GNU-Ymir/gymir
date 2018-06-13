@@ -63,7 +63,7 @@ namespace semantic {
 
     InfoType IFloatInfo::UnaryOp (Word op) {
 	if (op == Token::MINUS) return Inv (op);
-	else if (op == Token::AND) return toPtr (op);
+	else if (op == Token::AND && this-> isLvalue ()) return toPtr (op);
 	return NULL;
     }
 
@@ -130,8 +130,8 @@ namespace semantic {
 		ret-> binopFoo = FloatUtils::InstCast;
 		return ret;
 	    }
-	} else if (other-> is<IRefInfo> () && !this-> isConst ()) {
-	    auto aux = new (Z0)  IRefInfo (false, this-> clone ());
+	} else if (other-> is<IRefInfo> () && this-> isLvalue ()) {
+	    auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
 	    aux-> binopFoo = FloatUtils::InstAddr;
 	    return aux;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
@@ -162,12 +162,12 @@ namespace semantic {
     }
 	
     InfoType IFloatInfo::Affect (syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot-> _type) {
 		auto f = new (Z0)  IFloatInfo (false, this-> _type);
 		f-> binopFoo = &FloatUtils::InstAffect;
 		return f;
-	    } else if (right-> info-> type-> is<IFixedInfo> ()) {
+	    } else if (right-> info-> type ()-> is<IFixedInfo> ()) {
 		auto f = new (Z0)  IFloatInfo (false, this-> _type);
 		f-> binopFoo = &FloatUtils::InstAffect;
 		return f;
@@ -177,7 +177,7 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type-> is<IUndefInfo> ()) {
+	if (left-> info-> type ()-> is<IUndefInfo> ()) {
 	    auto fl = new (Z0)  IFloatInfo (false, this-> _type);
 	    fl-> binopFoo = &FloatUtils::InstAffect;
 	    return fl;
@@ -306,7 +306,7 @@ namespace semantic {
     }
     
     InfoType IFloatInfo::opAff (Word, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFloatInfo> ()) {
 	    if (ot-> _type <= this-> _type) {
 		auto ret = this-> clone ();
 		ret-> binopFoo = &FloatUtils::InstReaff;
@@ -317,27 +317,27 @@ namespace semantic {
     }
     
     InfoType IFloatInfo::opNorm (Word op, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot->_type) {
 		auto ret = this-> cloneConst ();
 		ret-> binopFoo = &FloatUtils::InstNormal;
 		if (this-> value ())
-		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 
 		return ret;
 	    } else {
 		auto ret = ot-> cloneConst ();
 		ret-> binopFoo = &FloatUtils::InstNormalRight;
 		if (this-> value ())
-		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 
 		return ret;
 	    }
-	} else if (right-> info-> type-> is<IFixedInfo> ()) {
+	} else if (right-> info-> type ()-> is<IFixedInfo> ()) {
 	    auto fl = this-> cloneConst ();
 	    fl-> binopFoo = &FloatUtils::InstNormal;
 	    if (this-> value ())
-		fl-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		fl-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 
 	    return fl;
 	} 
@@ -345,27 +345,27 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::opTest (Word op, syntax::Expression right) {
-	if (auto ot = right-> info-> type-> to<IFloatInfo> ()) {
+	if (auto ot = right-> info-> type ()-> to<IFloatInfo> ()) {
 	    if (this-> _type >= ot-> _type) {
 		auto ret = new (Z0)  IBoolInfo (true);
 		ret-> binopFoo = FloatUtils::InstTest;
 		if (this-> value ())
-		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 
 		return ret;
 	    } else {
 		auto ret = new (Z0)  IBoolInfo (true);
 		if (this-> value ())
-		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		    ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 
 		ret-> binopFoo = FloatUtils::InstTestRight;
 		return ret;
 	    }
-	} else if (right-> info-> type-> is<IFixedInfo> ()) {
+	} else if (right-> info-> type ()-> is<IFixedInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = FloatUtils::InstTest;
 	    if (this-> value ())
-		ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type-> value ());
+		ret-> value () = this-> value ()-> BinaryOp (op, right-> info-> type ()-> value ());
 
 	    return ret;
 	}
@@ -373,7 +373,7 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::opNormRight (Word, syntax::Expression right) {
-	if (right-> info-> type-> is<IFixedInfo> ()) {
+	if (right-> info-> type ()-> is<IFixedInfo> ()) {
 	    auto fl = this-> cloneConst ();
 	    fl-> binopFoo = FloatUtils::InstNormalRight;
 	    return fl;
@@ -382,7 +382,7 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::opTestRight (Word, syntax::Expression right) {
-	if (right-> info-> type-> is<IFixedInfo> ()) {
+	if (right-> info-> type ()-> is<IFixedInfo> ()) {
 	    auto ret = new (Z0)  IBoolInfo (true);
 	    ret-> binopFoo = FloatUtils::InstTestRight;
 	    return ret;
@@ -495,7 +495,7 @@ namespace semantic {
 	}
 
 	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
-	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
+	    return TYPE_SIZE_UNIT (elem-> info-> type ()-> toGeneric ().getTree ());
 	}
 	
     }

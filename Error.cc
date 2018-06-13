@@ -1008,7 +1008,7 @@ namespace Ymir {
     }
     
     void Error::returnVoid (const Word& word, semantic::Symbol type) {
-	auto msg = format (getString (ReturnVoid), YELLOW, type-> type-> typeString ().c_str (), RESET);
+	auto msg = format (getString (ReturnVoid), YELLOW, type-> type ()->  typeString ().c_str (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
@@ -1020,7 +1020,7 @@ namespace Ymir {
     
     void Error::incompatibleTypes (const Word& where, semantic::Symbol type, semantic::InfoType other) {
 	auto str = getString (IncompatibleTypes);
-	auto msg = format (str, YELLOW, type-> type-> typeString ().c_str (), RESET,
+	auto msg = format (str, YELLOW, type-> type ()->  typeString ().c_str (), RESET,
 			   YELLOW, other-> typeString ().c_str (), RESET
 	);
 	
@@ -1036,7 +1036,7 @@ namespace Ymir {
 
     void Error::incompatibleTypes (const Word& where, semantic::Symbol type, std::string other) {
 	auto str = getString (IncompatibleTypes);
-	auto msg = format (str, YELLOW, type-> type-> typeString ().c_str (), RESET,
+	auto msg = format (str, YELLOW, type-> type ()->  typeString ().c_str (), RESET,
 			   YELLOW, other.c_str (), RESET
 	);
 	
@@ -1131,8 +1131,8 @@ namespace Ymir {
 	auto str = getString (UndefinedOp);
 	auto msg = format (str,
 			   YELLOW, op.getStr ().c_str (), RESET,
-			   YELLOW, left-> type-> typeString ().c_str (), RESET,
-			   YELLOW, right-> type-> typeString ().c_str (), RESET
+			   YELLOW, left-> type ()-> typeString ().c_str (), RESET,
+			   YELLOW, right-> type ()-> typeString ().c_str (), RESET
 	);
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -1148,7 +1148,7 @@ namespace Ymir {
 	auto str = getString (UndefinedOpUnary);
 	auto msg = format (str,
 			   YELLOW, op.getStr ().c_str (), RESET,
-			   YELLOW, left-> type-> typeString ().c_str (), RESET
+			   YELLOW, left-> type ()-> typeString ().c_str (), RESET
 	);
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -1164,7 +1164,7 @@ namespace Ymir {
 	auto str = getString (UndefinedOp);
 	auto msg = format (str,
 			   YELLOW, op.getStr ().c_str (), RESET,
-			   YELLOW, left-> type-> typeString ().c_str (), RESET,
+			   YELLOW, left-> type ()-> typeString ().c_str (), RESET,
 			   YELLOW, right-> typeString ().c_str (), RESET
 	);
 	

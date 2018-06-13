@@ -19,6 +19,12 @@ namespace syntax {
 	
 	Expression expression () override;
 
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IExpression::getIds ();
+	    ids.push_back (TYPEID (ITypeOf));
+	    return ids;
+	}
+	
 	std::string prettyPrint () override;
 	
 	void print (int nb = 0) override;

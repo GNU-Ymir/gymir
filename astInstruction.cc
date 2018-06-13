@@ -108,9 +108,9 @@ namespace syntax {
 		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
 		    auto type = bin-> getRight ()-> expression ();
 		    if (type == NULL) return NULL;
-		    aux-> info = new (Z0) ISymbol (aux-> token, type-> info-> type-> clone ());
+		    aux-> info = new (Z0) ISymbol (aux-> token, aux, type-> info-> type ()-> clone ());
 		    aux-> info-> isConst (true);
-		    aux-> info-> value () = type-> info-> type-> value ();
+		    aux-> info-> value () = type-> info-> type ()-> value ();
 		    if (!aux-> info-> isImmutable ()) {
 			Ymir::Error::notImmutable (this-> token, type-> info);
 			return NULL;
@@ -123,7 +123,7 @@ namespace syntax {
 		    return NULL;
 		}		    
 	    } else if (this-> decos.size () > (uint) id && this-> decos [id] == Keys::CONST) {
-		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
+		aux-> info = new (Z0)  ISymbol (aux-> token, aux, new (Z0)  IUndefInfo ());
 		aux-> info-> isConst (true);
 		Table::instance ().insert (aux-> info);
 		if (this-> insts [id] == NULL) {
@@ -139,7 +139,7 @@ namespace syntax {
 		auto space = Table::instance ().space ();
 		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
 		    auto type = bin-> getRight ()-> expression ();
-		    aux-> info = new (Z0) ISymbol (aux-> token, type-> info-> type-> clone ());
+		    aux-> info = new (Z0) ISymbol (aux-> token, aux, type-> info-> type ()-> clone ());
 		    aux-> info-> isConst (false);
 		    aux-> info-> value () = NULL;
 		    Table::instance ().insert (aux-> info);
@@ -150,7 +150,7 @@ namespace syntax {
 		    return NULL;
 		}		
 	    } else {
-		aux-> info = new (Z0)  ISymbol (aux-> token, new (Z0)  IUndefInfo ());
+		aux-> info = new (Z0)  ISymbol (aux-> token, aux, new (Z0)  IUndefInfo ());
 		aux-> info-> isConst (false);
 		Table::instance ().insert (aux-> info);
 		auxDecl-> decls.push_back (aux);
@@ -167,7 +167,7 @@ namespace syntax {
     Instruction IAssert::instruction () {
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
-	if (!expr-> info-> type-> isSame (new (Z0)  IBoolInfo (true))) {
+	if (!expr-> info-> type ()-> isSame (new (Z0)  IBoolInfo (true))) {
 	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
 	    return NULL;
 	}
@@ -176,7 +176,7 @@ namespace syntax {
 	if (this-> msg) {
 	    msg = this-> msg-> expression ();
 	    if (msg == NULL) return NULL;
-	    if (!msg-> info-> type-> isSame (new (Z0) IStringInfo (true))) {
+	    if (!msg-> info-> type ()-> isSame (new (Z0) IStringInfo (true))) {
 		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0) IStringInfo (true));
 		return NULL;
 	    }
@@ -241,7 +241,7 @@ namespace syntax {
 	if (this-> test != NULL) {
 	    auto expr = this-> test-> expression ();
 	    if (expr == NULL) return NULL;
-	    auto type = expr-> info-> type-> CompOp (new (Z0)  IBoolInfo (true));
+	    auto type = expr-> info-> type ()-> CompOp (new (Z0)  IBoolInfo (true));
 	    
 	    if (type == NULL) {
 		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
@@ -300,11 +300,11 @@ namespace syntax {
     }
     
     Instruction IFor::immutable (Expression expr) {
-	if (expr-> info-> type-> is<IRangeInfo> () && this-> var.size () == 1) {
+	if (expr-> info-> type ()-> is<IRangeInfo> () && this-> var.size () == 1) {
 	    return immutableRange (this-> var, expr);
-	} else if (expr-> info-> type-> is <ITupleInfo> () && this-> var.size () == 1) {
+	} else if (expr-> info-> type ()-> is <ITupleInfo> () && this-> var.size () == 1) {
 	    return immutableTuple (this-> var, expr);
-	} else if (expr-> info-> type-> is <IMacroRepeatInfo> () && this-> var.size () == 1) {
+	} else if (expr-> info-> type ()-> is <IMacroRepeatInfo> () && this-> var.size () == 1) {
 	    return immutableMacro (this-> var, expr);
 	}
 	
@@ -313,7 +313,7 @@ namespace syntax {
     }
 
     Instruction IFor::immutableTupleFake (std::vector <Var> & vars, Expression expr) {
-	auto tu = expr-> info-> type-> to <ITupleInfo> ();
+	auto tu = expr-> info-> type ()-> to <ITupleInfo> ();
 	auto ctuple = expr-> to <IConstTuple> ();
 	Table::instance ().enterBlock ();
 	Block bl = new (Z0) IBlock (this-> token, {}, {});
@@ -327,7 +327,7 @@ namespace syntax {
     }
     
     Instruction IFor::immutableTuple (std::vector <Var> & vars, Expression expr) {
-	auto tu = expr-> info-> type-> to <ITupleInfo> ();
+	auto tu = expr-> info-> type ()-> to <ITupleInfo> ();
 	if (tu-> isFake ()) return immutableTupleFake (vars, expr);
 	
 	Table::instance ().enterBlock ();
@@ -337,7 +337,7 @@ namespace syntax {
 	expr = expr-> expression ();
 	
 	auto aux = new (Z0) IVar ({this-> token, "_"});	
-	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IRefInfo (true, expr-> info-> type-> clone ()));
+	aux-> info = new (Z0) ISymbol (aux-> token, aux, new (Z0) IRefInfo (true, expr-> info-> type ()-> clone ()));
 	Table::instance ().insert (aux-> info);
 	varDecl-> getDecls ().push_back (aux);
 	varDecl-> getInsts ().push_back ((new (Z0) IAffectGeneric (this-> token,
@@ -351,12 +351,12 @@ namespace syntax {
 	    Table::instance ().enterBlock ();
 	    auto index = new (Z0) IFixedInfo (true, FixedConst::UINT);
 	    index-> value () = new (Z0) IFixedValue (FixedConst::UINT, i, i);
-	    auto indexVal = index-> value ()-> toYmir (new (Z0) ISymbol (var-> token, index));
+	    auto indexVal = index-> value ()-> toYmir (new (Z0) ISymbol (var-> token, var, index));
 	    auto currentVal = (new (Z0) IDot (this-> token, aux, indexVal))-> expression ();
 
-	    var-> info = new (Z0) ISymbol (var-> token, new (Z0) IRefInfo (this-> _const [0],
-									   this-> _const [0] ?
-									   currentVal-> info-> type-> cloneConst () : currentVal-> info-> type-> clone ())
+	    var-> info = new (Z0) ISymbol (var-> token, var, new (Z0) IRefInfo (this-> _const [0],
+										this-> _const [0] ?
+										currentVal-> info-> type ()-> cloneConst () : currentVal-> info-> type ()-> clone ())
 	    );
 	    
 	    Table::instance ().insert (var-> info);
@@ -377,7 +377,7 @@ namespace syntax {
     }
     
     Instruction IFor::immutableRange (std::vector <Var> & vars, Expression expr) {
-	auto range = expr-> info-> type-> to <IRangeInfo> ();
+	auto range = expr-> info-> type ()-> to <IRangeInfo> ();
 	if (!range-> leftValue () || !range-> rightValue ()) {
 	    Ymir::Error::notImmutable (this-> token, expr-> info);
 	    return NULL;
@@ -392,7 +392,7 @@ namespace syntax {
 		    auto var = vars [0]-> templateExpReplace ({});
 		    auto index = range-> content ()-> cloneConst ();
 		    index-> value () = new (Z0) IFixedValue (li-> getType (), i, i);
-		    var-> info = new (Z0) ISymbol (var-> token, index);
+		    var-> info = new (Z0) ISymbol (var-> token, var, index);
 		    Table::instance ().enterBlock ();
 		    Table::instance ().insert (var-> info);
 		    bl-> getInsts ().push_back (this-> block-> block ());
@@ -404,7 +404,7 @@ namespace syntax {
 		    auto var = vars [0]-> templateExpReplace ({});
 		    auto index = range-> content ()-> cloneConst ();
 		    index-> value () = new (Z0) IFixedValue (li-> getType (), i, i);
-		    var-> info = new (Z0) ISymbol (var-> token, index);
+		    var-> info = new (Z0) ISymbol (var-> token, var, index);
 		    Table::instance ().enterBlock ();
 		    Table::instance ().insert (var-> info);
 		    bl-> getInsts ().push_back (this-> block-> block ());
@@ -420,12 +420,12 @@ namespace syntax {
     }
 
     Instruction IFor::immutableMacro (std::vector <Var> & vars, Expression expr) {
-	auto rep = expr-> info-> type-> to <IMacroRepeatInfo> ();
+	auto rep = expr-> info-> type ()-> to <IMacroRepeatInfo> ();
 	Block bl = new (Z0) IBlock (this-> token, {}, {});
 	for (ulong i = 0 ; i < rep-> getLen () ; i++) {
 	    auto var = vars [0]-> templateExpReplace ({});
 	    auto index = rep-> getValue (i);
-	    var-> info = new (Z0) ISymbol (var-> token, index);
+	    var-> info = new (Z0) ISymbol (var-> token, var, index);
 	    Table::instance ().enterBlock ();
 	    Table::instance ().insert (var-> info);
 	    bl-> getInsts ().push_back (this-> block-> block ());
@@ -453,15 +453,15 @@ namespace syntax {
 		    Ymir::Error::shadowingVar (var [it]-> token, info-> sym);
 		    return NULL;
 		}
-
-		var [it]-> info = new (Z0) ISymbol (var [it]-> token, new (Z0) IUndefInfo ());
+		
+		var [it]-> info = new (Z0) ISymbol (var [it]-> token, var [it], new (Z0) IUndefInfo ());
 		var [it]-> info-> isConst (false);
 		var [it]-> info-> value () = NULL;
 		if (!this-> isStatic)
 		    Table::instance ().insert (var [it]-> info);
 	    }
 	
-	    auto type = expr-> info-> type-> ApplyOp (var);
+	    auto type = expr-> info-> type ()-> ApplyOp (var);
 	    if (type == NULL) {
 		Table::instance ().quitBlock ();
 		auto call = findOpApply ();
@@ -474,7 +474,7 @@ namespace syntax {
 	    Table::instance ().retInfo ().currentBlock () = "for";
 	    Table::instance ().retInfo ().changed () = true;
 	    for (auto it : Ymir::r (0, this-> var.size ())) {
-		var [it]-> info-> type-> isConst (this-> _const [it]);
+		var [it]-> info-> type ()-> isConst (this-> _const [it]);
 	    }
 	    
 	    Block bl = this-> block-> block ();
@@ -535,7 +535,7 @@ namespace syntax {
     Instruction IWhile::instruction () {
 	auto expr = this-> test-> expression ();
 	if (expr == NULL) return NULL;
-	auto type = expr-> info-> type-> CompOp (new (Z0)  IBoolInfo (true));
+	auto type = expr-> info-> type ()-> CompOp (new (Z0)  IBoolInfo (true));
 
 	if (type == NULL) {
 	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
@@ -561,7 +561,7 @@ namespace syntax {
 	    auto un = this-> elem-> to <IUnary> ();
 	    if (un-> token == Token::AND) {
 		auto sym = un-> getElem ();
-		if (!sym-> info-> type-> is<IRefInfo> ()) {
+		if (!sym-> info-> type ()-> is<IRefInfo> ()) {
 		    if (Table::instance ().isFrameLocal (sym-> info)) {
 			Ymir::Error::returnLocalAddr (sym-> info-> sym, this-> token);
 		    }
@@ -577,21 +577,21 @@ namespace syntax {
 	    this-> elem-> inside = this;
 	    aux-> elem = this-> elem-> expression ();
 	    if (aux-> elem == NULL) return NULL;
-	    if (aux-> elem-> info-> type-> is <IVoidInfo> ()) {
+	    if (aux-> elem-> info-> type ()-> is <IVoidInfo> ()) {
 		Ymir::Error::returnVoid (this-> token, aux-> elem-> info);
 		return NULL;
 	    }
 	    
-	    auto type = aux-> elem-> info-> type-> CompOp (Table::instance ().retInfo ().info-> type);	    
+	    auto type = aux-> elem-> info-> type ()-> CompOp (Table::instance ().retInfo ().info-> type ());	    
 	    if (type == NULL) {		
-		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
+		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type ());
 		return NULL;
 	    }
 	    
-	    if (Table::instance ().retInfo ().info-> type-> is <IUndefInfo> ())
-		Table::instance ().retInfo ().info-> type = type;
+	    if (Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
+		Table::instance ().retInfo ().info-> type (type);
 	    
-	    if (type-> isSame (aux-> elem-> info-> type)) {		
+	    if (type-> isSame (aux-> elem-> info-> type ())) {		
 		if (!Table::instance ().retInfo ().changed ()) {
 		    Table::instance ().retInfo ().info-> value () =
 			aux-> elem-> info-> value ();
@@ -604,16 +604,16 @@ namespace syntax {
 	    if (Table::instance ().retInfo ().deco == Keys::CONST)
 	    	aux-> caster-> isConst (true);
 
-	    if (!aux-> caster-> ConstVerif (Table::instance ().retInfo ().info-> type)) {
-		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type);
+	    if (!aux-> caster-> ConstVerif (Table::instance ().retInfo ().info-> type ())) {
+		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type ());
 		return NULL;		    
 	    }	    
 	} else {
-	    if (!Table::instance ().retInfo ().info-> type-> is<IUndefInfo> () &&
-		!Table::instance ().retInfo ().info-> type-> is<IVoidInfo> ())
+	    if (!Table::instance ().retInfo ().info-> type ()-> is<IUndefInfo> () &&
+		!Table::instance ().retInfo ().info-> type ()-> is<IVoidInfo> ())
 		Ymir::Error::noValueNonVoidFunction (this-> token);
 	    else
-		Table::instance ().retInfo ().info-> type = new (Z0)  IVoidInfo ();
+		Table::instance ().retInfo ().info-> type (new (Z0)  IVoidInfo ());
 	}
 	
 	aux-> verifLocal ();
@@ -638,11 +638,11 @@ namespace syntax {
     Instruction ITupleDest::instruction () {
 	auto right = this-> right-> expression ();
 	if (right == NULL) return NULL;
-	if (!right-> info-> type-> is<ITupleInfo> ()) {	    
+	if (!right-> info-> type ()-> is<ITupleInfo> ()) {	    
 	    return this-> Incompatible (right-> info);
 	}
 
-	auto tupleType = right-> info-> type-> to <ITupleInfo> ();
+	auto tupleType = right-> info-> type ()-> to <ITupleInfo> ();
 	Word aff {this-> token.getLocus (), Token::EQUAL};
 	std::vector <Expression> insts;
 
@@ -662,7 +662,7 @@ namespace syntax {
 		return NULL;
 	    }
 
-	    aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IUndefInfo ());
+	    aux-> info = new (Z0) ISymbol (aux-> token, aux, new (Z0) IUndefInfo ());
 	    aux-> info-> isConst (false);
 	    auxDecl-> decls.push_back (aux);
 	    
@@ -671,7 +671,7 @@ namespace syntax {
 		std::vector <Expression> last;
 		for (auto it_ : Ymir::r (i, tupleType-> nbParams ())) {
 		    auto exp = new (Z0) IExpand (right-> token, right, it_);
-		    exp-> info = new (Z0) ISymbol (exp-> token, tupleType-> getParams () [it_]-> clone ());
+		    exp-> info = new (Z0) ISymbol (exp-> token, exp, tupleType-> getParams () [it_]-> clone ());
 		    last.push_back (exp);
 		}
 
@@ -679,7 +679,7 @@ namespace syntax {
 		auxDecl-> insts.push_back ((new (Z0) IBinary (aff, new (Z0) IVar (this-> decls [i]-> token), ctuple))-> expression ());
 	    } else {
 		auto exp = new (Z0) IExpand (right-> token, right, i);
-		exp-> info = new (Z0) ISymbol (exp-> token, tupleType-> getParams () [i]-> clone ());
+		exp-> info = new (Z0) ISymbol (exp-> token, exp, tupleType-> getParams () [i]-> clone ());
 		auxDecl-> insts.push_back ((new (Z0) IBinary (aff, new (Z0) IVar (it-> token), exp))-> expression ());
 	    }
 	    i ++;
@@ -693,8 +693,8 @@ namespace syntax {
 	auto aux = new (Z0) IVar ({expr-> token, "_"});
 	auto expr = this-> expr-> expression ();
 	if (expr == NULL) return NULL;
-	aux-> info = new (Z0) ISymbol (aux-> token, new (Z0) IRefInfo (expr-> info-> isConst ()
-								       , expr-> info-> type-> clone ()));
+	aux-> info = new (Z0) ISymbol (aux-> token, aux, new (Z0) IRefInfo (expr-> info-> isConst ()
+									    , expr-> info-> type ()-> clone ()));
 	Table::instance ().insert (aux-> info);
 	
 	Word affTok {this-> token, Token::EQUAL};

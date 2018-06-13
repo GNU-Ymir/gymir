@@ -84,12 +84,12 @@ namespace semantic {
     InfoType ITupleInfo::create (Word, const std::vector<syntax::Expression> & templates) {
 	auto tuple = new (Z0)  ITupleInfo (false);
 	for (auto it : Ymir::r (0, templates.size ())) {
-	    if (auto ot = templates [it]-> info-> type-> to <IStructCstInfo> ()) {
+	    if (auto ot = templates [it]-> info-> type ()-> to <IStructCstInfo> ()) {
 		auto type = ot-> TempOp ({});
 		if (type == NULL) return NULL;
 		tuple-> params.push_back (type);
 	    } else {
-		tuple-> params.push_back (templates [it]-> info-> type);
+		tuple-> params.push_back (templates [it]-> info-> type ());
 	    }
 	}
 	return tuple;
@@ -130,7 +130,7 @@ namespace semantic {
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
 	} else if (auto ref = other->to <IRefInfo> ()) {
-	    if (!this-> isConst () && ref-> content ()-> isSame (this)) {
+	    if (this-> isLvalue () && ref-> content ()-> isSame (this)) {
 		auto aux = new (Z0)  IRefInfo (false, this-> clone ());
 		aux-> binopFoo = &TupleUtils::InstAddr;
 		return aux;
@@ -152,7 +152,7 @@ namespace semantic {
     }
 		
     InfoType ITupleInfo::UnaryOp (Word op) {
-	if (op == Token::AND) {
+	if (op == Token::AND && this-> isLvalue ()) {
 	    auto ret = new (Z0) IPtrInfo (this-> isConst (), this-> clone ());
 	    ret-> binopFoo = &TupleUtils::InstAddr;
 	    return ret;
@@ -296,7 +296,7 @@ namespace semantic {
 
     InfoType ITupleInfo::Affect (Word, Expression right) {
 	if (this-> isType ()) return NULL;
-	if (auto tuple = right-> info-> type-> to <ITupleInfo> ()) {
+	if (auto tuple = right-> info-> type ()-> to <ITupleInfo> ()) {
 	    if (!this-> isSame (tuple)) return NULL;
 	    auto ret = this-> CompOp (tuple);
 	    if (ret) ret = tuple-> ConstVerif (this);
@@ -310,7 +310,7 @@ namespace semantic {
     
     InfoType ITupleInfo::AffectRight (Word, Expression left) {
 	if (this-> isType ()) return NULL;
-	if (left-> info-> type-> is <IUndefInfo> ()) {
+	if (left-> info-> type ()-> is <IUndefInfo> ()) {
 	    auto ret = new (Z0)  ITupleInfo (false);
 	    for (auto it : this-> params) {
 		ret-> params.push_back (it-> clone ());
@@ -385,7 +385,7 @@ namespace semantic {
 	    auto rtree = Ymir::getExpr (list, elem);
 	    auto ltype = type-> toGeneric ();
 	    if (rtree.getType ().getTree () == ltype.getTree ())
-	    	return Ymir::compoundExpr (loc, list, rtree);
+	    	//return Ymir::compoundExpr (loc, list, rtree);
 	    else {
 		auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
 		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
@@ -399,7 +399,7 @@ namespace semantic {
 	}
 
 	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
-	    return TYPE_SIZE_UNIT (elem-> info-> type-> toGeneric ().getTree ());
+	    return TYPE_SIZE_UNIT (elem-> info-> type ()-> toGeneric ().getTree ());
 	}
 	
 	Tree InstCastFake (Word locus, InfoType type, Expression elem, Expression) {
@@ -410,7 +410,7 @@ namespace semantic {
 
 	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
 	    auto info = type-> to <ITupleInfo> ();
-	    auto elemInfo = elem-> info-> type-> to <ITupleInfo> ();
+	    auto elemInfo = elem-> info-> type ()-> to <ITupleInfo> ();
 	    
 	    for (auto it : Ymir::r (0, info-> nbParams ())) {
 		auto laux = getField (loc, ltree, it);
@@ -423,8 +423,8 @@ namespace semantic {
 								  );
 		
 		list.append (buildTree (
-					MODIFY_EXPR, loc, void_type_node, laux, relem
-					));		
+		    MODIFY_EXPR, loc, void_type_node, laux, relem
+		));		
 	    }
 	    
 	    return Ymir::compoundExpr (locus.getLocus (), list.getTree (), ltree);			    
@@ -462,10 +462,10 @@ namespace semantic {
 
 	    auto loc = locus.getLocus ();
 	    InfoType innerType;
-	    if (left-> info-> type-> is <IAggregateInfo> ())
-		innerType = left-> info-> type-> to <IAggregateInfo> ()-> getImpl ()-> getParams () [toget];
+	    if (left-> info-> type ()-> is <IAggregateInfo> ())
+		innerType = left-> info-> type ()-> to <IAggregateInfo> ()-> getImpl ()-> getParams () [toget];
 	    else
-		innerType = left-> info-> type-> to <ITupleInfo> ()-> getParams () [toget];
+		innerType = left-> info-> type ()-> to <ITupleInfo> ()-> getParams () [toget];
 	    
 	    Ymir::TreeStmtList list;
 	    auto leftExp = Ymir::getExpr (list, left);

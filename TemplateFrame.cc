@@ -107,8 +107,8 @@ namespace semantic {
 	    auto type = func-> getType ()-> toType ();
 	    if (type) {
 		ret = type-> info;
-		if (func-> getRetDeco () == Keys::REF && !ret-> type-> is <IRefInfo> ()) {
-		    ret-> type = new (Z0) IRefInfo (false, ret-> type);
+		if (func-> getRetDeco () == Keys::REF && !ret-> type ()-> is <IRefInfo> ()) {
+		    ret-> type (new (Z0) IRefInfo (false, ret-> type ()));
 		}
 		lvalue = (func-> getRetDeco () == Keys::MUTABLE || func-> getRetDeco () == Keys::REF);
 	    }

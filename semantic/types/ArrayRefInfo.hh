@@ -70,6 +70,10 @@ namespace semantic {
 	InfoType content ();
 
 	InfoType getTemplate (ulong nb) override;
+
+	Symbol& symbol () override;
+
+	bool isLvalue () override;
 	
     };
 

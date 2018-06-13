@@ -84,7 +84,7 @@ namespace semantic {
 	    auto infoTypes = this-> getParamTypes ();
 	    auto ret = this-> validate (infoTypes);
 	    if (ret != NULL) {
-		return ret-> type ()-> type-> cloneConst ();
+		return ret-> type ()-> type ()-> cloneConst ();
 	    }	    
 	} 
 	return new (Z0) IUndefInfo ();

@@ -503,8 +503,8 @@ namespace syntax {
 		clo-> token.setLocus (this-> token.getLocus ());
 		if (auto t = clo-> to <IType> ()) {
 		    t-> deco = this-> deco;
-		    if (this-> deco == Keys::REF && !clo-> info-> type-> is <semantic::IRefInfo> ()) {
-			t-> info-> type = new semantic::IRefInfo (t-> info-> isConst (), t-> info-> type);
+		    if (this-> deco == Keys::REF && !clo-> info-> type ()-> is <semantic::IRefInfo> ()) {
+			t-> info-> type (new semantic::IRefInfo (t-> info-> isConst (), t-> info-> type ()));
 		    }
 		    ret = t;
 		    break;

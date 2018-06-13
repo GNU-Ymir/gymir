@@ -30,10 +30,10 @@ namespace semantic {
 		Ymir::Error::takeATypeAsTemplate (tok);
 	    else {
 		auto ptr = new (Z0) IPtrFuncInfo (false);
-		ptr-> ret = templates [0]-> info-> type;
+		ptr-> ret = templates [0]-> info-> type ();
 		if (templates.size () > 1) {
 		    for (auto it : Ymir::r (1, templates.size ())) {
-			ptr-> params.push_back (templates [it]-> info-> type);
+			ptr-> params.push_back (templates [it]-> info-> type ());
 		    }
 		}
 		return ptr;
@@ -46,10 +46,10 @@ namespace semantic {
 		Ymir::Error::takeATypeAsTemplate (tok);
 	    else {
 		auto ptr = new (Z0) IPtrFuncInfo (false);
-		ptr-> ret = templates [0]-> info-> type;
+		ptr-> ret = templates [0]-> info-> type ();
 		if (templates.size () > 1) {
 		    for (auto it : Ymir::r (1, templates.size ())) {
-			ptr-> params.push_back (templates [it]-> info-> type);
+			ptr-> params.push_back (templates [it]-> info-> type ());
 		    }
 		}
 		ptr-> isDelegate () = true;

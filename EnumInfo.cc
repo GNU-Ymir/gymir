@@ -65,7 +65,7 @@ namespace semantic {
 	Tree InstMembers (Word locus, InfoType type, Expression elem) {
 	    Ymir::TreeStmtList list;
 	    ArrayInfo info = type-> to <IArrayInfo> ();
-	    auto encst = elem-> info-> type-> to <IEnumCstInfo> ();
+	    auto encst = elem-> info-> type ()-> to <IEnumCstInfo> ();
 	    Ymir::Tree innerType = info-> content ()-> toGeneric ();
 	    auto intExpr = new (Z0) IFixed (locus, FixedConst::ULONG);
 	    intExpr-> setUValue (encst-> values.size ());
@@ -133,14 +133,14 @@ namespace semantic {
 
 	    InfoType inner = type;
 	    
-	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    auto linfo = left-> info-> type ()-> to <IEnumInfo> ();
 	    if (linfo) {
-		left-> info-> type = linfo-> content ();
+		left-> info-> type (linfo-> content ());
 		left-> info-> value () = NULL;
 
-		left-> info-> type-> binopFoo = linfo-> binopFoo;
-		left-> info-> type-> unopFoo = linfo-> unopFoo;
-		left-> info-> type-> multFoo = linfo-> multFoo;
+		left-> info-> type ()-> binopFoo = linfo-> binopFoo;
+		left-> info-> type ()-> unopFoo = linfo-> unopFoo;
+		left-> info-> type ()-> multFoo = linfo-> multFoo;
 	    }
 
 	    return type-> buildMultOp (
@@ -155,14 +155,14 @@ namespace semantic {
 
 	    InfoType inner = type;
 	    
-	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    auto linfo = left-> info-> type ()-> to <IEnumInfo> ();
 	    if (linfo) {
-		left-> info-> type = linfo-> content ();
+		left-> info-> type (linfo-> content ());
 		left-> info-> value () = NULL;
 
-		left-> info-> type-> binopFoo = linfo-> binopFoo;
-		left-> info-> type-> unopFoo = linfo-> unopFoo;
-		left-> info-> type-> multFoo = linfo-> multFoo;
+		left-> info-> type ()-> binopFoo = linfo-> binopFoo;
+		left-> info-> type ()-> unopFoo = linfo-> unopFoo;
+		left-> info-> type ()-> multFoo = linfo-> multFoo;
 	    }
 
 	    return type-> buildBinaryOp (
@@ -177,14 +177,14 @@ namespace semantic {
 
 	    InfoType inner = type;
 	    
-	    auto rinfo = right-> info-> type-> to <IEnumInfo> ();
+	    auto rinfo = right-> info-> type ()-> to <IEnumInfo> ();
 	    if (rinfo) {
-		right-> info-> type = rinfo-> content ();
+		right-> info-> type (rinfo-> content ());
 		right-> info-> value () = NULL;
 
-		right-> info-> type-> binopFoo = rinfo-> binopFoo;
-		right-> info-> type-> unopFoo = rinfo-> unopFoo;
-		right-> info-> type-> multFoo = rinfo-> multFoo;
+		right-> info-> type ()-> binopFoo = rinfo-> binopFoo;
+		right-> info-> type ()-> unopFoo = rinfo-> unopFoo;
+		right-> info-> type ()-> multFoo = rinfo-> multFoo;
 	    }
 	    
 	    return type-> buildBinaryOp (
@@ -199,23 +199,23 @@ namespace semantic {
 
 	    InfoType inner = type;
 	    
-	    auto rinfo = right-> info-> type-> to <IEnumInfo> ();
+	    auto rinfo = right-> info-> type ()-> to <IEnumInfo> ();
 	    if (rinfo) {
-		right-> info-> type = rinfo-> content ();
+		right-> info-> type (rinfo-> content ());
 		right-> info-> value () = NULL;
 
-		right-> info-> type-> binopFoo = rinfo-> binopFoo;
-		right-> info-> type-> unopFoo = rinfo-> unopFoo;
-		right-> info-> type-> multFoo = rinfo-> multFoo;
+		right-> info-> type ()-> binopFoo = rinfo-> binopFoo;
+		right-> info-> type ()-> unopFoo = rinfo-> unopFoo;
+		right-> info-> type ()-> multFoo = rinfo-> multFoo;
 	    }
 
-	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    auto linfo = left-> info-> type ()-> to <IEnumInfo> ();
 	    if (linfo) {
-		left-> info-> type = linfo-> content ();
+		left-> info-> type (linfo-> content ());
 		left-> info-> value () = NULL;
-		left-> info-> type-> binopFoo = linfo-> binopFoo;
-		left-> info-> type-> unopFoo = linfo-> unopFoo;
-		left-> info-> type-> multFoo = linfo-> multFoo;
+		left-> info-> type ()-> binopFoo = linfo-> binopFoo;
+		left-> info-> type ()-> unopFoo = linfo-> unopFoo;
+		left-> info-> type ()-> multFoo = linfo-> multFoo;
 	    }
 
 	    return type-> buildBinaryOp (
@@ -230,14 +230,14 @@ namespace semantic {
 
 	    InfoType inner = type;
 
-	    auto linfo = left-> info-> type-> to <IEnumInfo> ();
+	    auto linfo = left-> info-> type ()-> to <IEnumInfo> ();
 	    if (linfo) { 
-		left-> info-> type = linfo-> content ();
+		left-> info-> type (linfo-> content ());
 		left-> info-> value () = NULL;
 		
-		left-> info-> type-> binopFoo = linfo-> binopFoo;
-		left-> info-> type-> unopFoo = linfo-> unopFoo;
-		left-> info-> type-> multFoo = linfo-> multFoo;
+		left-> info-> type ()-> binopFoo = linfo-> binopFoo;
+		left-> info-> type ()-> unopFoo = linfo-> unopFoo;
+		left-> info-> type ()-> multFoo = linfo-> multFoo;
 	    }
 	    
 	    if (type-> unopFoo) {
@@ -395,7 +395,7 @@ namespace semantic {
     }
 
     InfoType IEnumInfo::BinaryOpRight (Word op, syntax::Expression left) {
-	if (left-> info-> type-> is<IUndefInfo> ()) {
+	if (left-> info-> type ()-> is<IUndefInfo> ()) {
 	    auto ret = this-> clone ()-> to <IEnumInfo> ();
 	    ret-> _content = this-> _content-> BinaryOpRight (op, left);
 	    ret-> binopFoo = ret-> content ()-> binopFoo;
@@ -406,7 +406,7 @@ namespace semantic {
 	if (aux != NULL) {
 	    return aux;
 	} else {
-	    return left-> info-> type-> BinaryOp (op, this-> _content);
+	    return left-> info-> type ()-> BinaryOp (op, this-> _content);
 	}
 	return NULL;	
     }

@@ -41,13 +41,13 @@ namespace semantic {
 
     InfoType IBoolInfo::UnaryOp (Word op) {
 	if (op == Token::NOT) {
-	    auto ret = new (Z0)  IBoolInfo (true);
+	    auto ret = new (Z0)  IBoolInfo (false);
 	    ret-> unopFoo = FixedUtils::InstNot;
 	    //ret-> lintInstS.push_back (FixedUtils::InstXor);
 	    if (this-> value ())
 		ret-> value () = this-> value ()-> UnaryOp (op);
 	    return ret;
-	} else if (op == Token::AND) return Ptr (op);
+	} else if (op == Token::AND && this-> isLvalue ()) return Ptr (op);
 	return NULL;
     }
 
@@ -84,6 +84,12 @@ namespace semantic {
 	    return bl;
 	} else if (auto en = other-> to<IEnumInfo> ()) {
 	    return this-> CompOp (en-> content ());
+	} else if (auto ref = other-> to <IRefInfo> ()) {
+	    if ((this-> isLvalue () && !this-> isConst ()) && this-> isSame (ref-> content ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAddr;
+		return aux;
+	    }
 	}
 	return NULL;
     }
@@ -99,7 +105,7 @@ namespace semantic {
     }
 
     InfoType IBoolInfo::Affect (syntax::Expression right) {
-	if (right-> info-> type-> is<IBoolInfo> ()) {
+	if (right-> info-> type ()-> is<IBoolInfo> ()) {
 	    auto b = new (Z0)  IBoolInfo (this-> isConst ());
 	    b-> binopFoo = FixedUtils::InstAffect;
 	    return b;
@@ -108,7 +114,7 @@ namespace semantic {
     }
 
     InfoType IBoolInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type-> is<IUndefInfo> ()) {
+	if (left-> info-> type ()-> is<IUndefInfo> ()) {
 	    auto b = new (Z0)  IBoolInfo (this-> isConst ());	    
 	    b-> binopFoo = FixedUtils::InstAffect;
 	    return b;
@@ -117,8 +123,8 @@ namespace semantic {
     }
 
     InfoType IBoolInfo::opNorm (Word op, syntax::Expression right) {
-	if (right-> info-> type-> is<IBoolInfo> ()) {
-	    auto b = new (Z0)  IBoolInfo (true);
+	if (right-> info-> type ()-> is<IBoolInfo> ()) {
+	    auto b = new (Z0)  IBoolInfo (false);
 	    b-> binopFoo = &FixedUtils::InstNormal;
 	    if (this-> value ()) {
 		b-> value () = this-> value ()-> BinaryOp (op, right-> info-> value ());
@@ -129,8 +135,8 @@ namespace semantic {
     }
 
     InfoType IBoolInfo::opReaff (Word, syntax::Expression right) {
-	if (right-> info-> type-> is<IBoolInfo> ()) {
-	    auto b = new (Z0)  IBoolInfo (true);
+	if (right-> info-> type ()-> is<IBoolInfo> ()) {
+	    auto b = new (Z0)  IBoolInfo (false);
 	    b-> binopFoo = &FixedUtils::InstReaff;
 	    return b;
 	}
@@ -138,13 +144,13 @@ namespace semantic {
     }
     
     InfoType IBoolInfo::Init () {
-	auto ret = new (Z0)  IBoolInfo (true);
+	auto ret = new (Z0)  IBoolInfo (false);
 	ret-> value () = new (Z0) IBoolValue (false);
 	return ret;
     }
 
     InfoType IBoolInfo::SizeOf () {	
-	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
+	auto ret = new (Z0)  IFixedInfo (false, FixedConst::UINT);
 	ret-> unopFoo = FixedUtils::InstSizeOf;
 	return ret;
     }

@@ -58,7 +58,7 @@ namespace semantic {
 	    auto finalParams = IFrame::computeParams (vars, params);
 	    auto ret = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _const-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());	    
 	    if (ret) {
-		ret-> type ()-> type = object;
+		ret-> type ()-> type (object);
 	    }
 	    return ret;	
 	} else if (this-> _method) {
@@ -145,7 +145,7 @@ namespace semantic {
 	for (auto it : Ymir::r (0, vars.size ())) {
 	    auto info = vars [it]-> var ();
 	    if (info != NULL)
-		types.push_back (info-> info-> type);
+		types.push_back (info-> info-> type ());
 	}
        	
 	this-> _proto = validate (types);

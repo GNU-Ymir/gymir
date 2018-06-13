@@ -17,6 +17,8 @@ namespace semantic {
 
 	Ymir::Tree InstApply (Word word, InfoType, std::vector <syntax::Var> & vars, syntax::Block bl, syntax::Expression expr);
 	
+	Ymir::Tree InstAddr (Word locus, InfoType, syntax::Expression elem, syntax::Expression);
+	
     }
 
 }

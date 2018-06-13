@@ -27,6 +27,12 @@ namespace syntax {
 	Expression getElem ();
 	
 	bool isLvalue () override;
+
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IExpression::getIds ();
+	    ids.push_back (TYPEID (IUnary));
+	    return ids;
+	}
 	
 	Ymir::Tree toGeneric () override;
 

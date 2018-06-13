@@ -122,8 +122,8 @@ namespace semantic {
 	    ParamList params = paramsExp-> to <IParamList> ();
 	    auto fn = left-> toGeneric ();
 	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
-	    auto func = left-> info-> type-> to<IPtrFuncInfo> ();
-	    if (auto ref = left-> info-> type-> to <IRefInfo> ()) {
+	    auto func = left-> info-> type ()-> to<IPtrFuncInfo> ();
+	    if (auto ref = left-> info-> type ()-> to <IRefInfo> ()) {
 		func = ref-> content ()-> to<IPtrFuncInfo> ();
 	    }
 	    
@@ -205,7 +205,7 @@ namespace semantic {
 
     ApplicationScore IPtrFuncInfo::CallType (Word token, syntax::ParamList params) {
 	if (params-> getParams ().size () == 1) {
-	    auto treat = params-> getParams () [0]-> info-> type-> CompOp (this);
+	    auto treat = params-> getParams () [0]-> info-> type ()-> CompOp (this);
 	    if (treat == NULL) return NULL;
 	    auto score = new (Z0) IApplicationScore (token);
 	    score-> treat.push_back (treat);
@@ -231,7 +231,7 @@ namespace semantic {
 	auto score = new (Z0) IApplicationScore (token);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    InfoType info = this-> params [it];
-	    auto type = params-> getParams() [it]-> info-> type-> CompOp (info);
+	    auto type = params-> getParams() [it]-> info-> type ()-> CompOp (info);
 	    if (type) type = type-> ConstVerif (info);
 	    if (type) {
 		score-> score += 1;
@@ -247,11 +247,11 @@ namespace semantic {
     }
 
     InfoType IPtrFuncInfo::Affect (syntax::Expression right) {
-	if (this-> isSame (right-> info-> type)) {
+	if (this-> isSame (right-> info-> type ())) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &PtrUtils::InstAffect;
 	    return ret;
-	} else if (right-> info-> type-> is <INullInfo> ()) {
+	} else if (right-> info-> type ()-> is <INullInfo> ()) {
 	    auto ret = this-> clone ();
 	    if (this-> isDelegate ()) {
 		ret-> binopFoo = &PtrUtils::InstAffect;
@@ -259,8 +259,8 @@ namespace semantic {
 		ret-> binopFoo = &PtrFuncUtils::InstAffectDelegate;
 	    }
 	    return ret;
-	} else if (right-> info-> type-> is <IFunctionInfo> ()) {
-	    auto ret = right-> info-> type-> CompOp (this);
+	} else if (right-> info-> type ()-> is <IFunctionInfo> ()) {
+	    auto ret = right-> info-> type ()-> CompOp (this);
 	    if (ret && ret-> isSame (this)) {
 		ret-> nextBinop.push_back (ret-> binopFoo);		
 		ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
@@ -271,7 +271,7 @@ namespace semantic {
     }
     
     InfoType IPtrFuncInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type-> is <IUndefInfo> ()) {
+	if (left-> info-> type ()-> is <IUndefInfo> ()) {
 	    auto ret = this-> clone ();
 	    if (this-> isDelegate ()) {
 		ret-> binopFoo = &PtrFuncUtils::InstAffectDelegate;
@@ -297,11 +297,11 @@ namespace semantic {
     }
 
     InfoType IPtrFuncInfo::Is (syntax::Expression right) {
-	if (right-> info-> type-> isSame (this)) {
+	if (right-> info-> type ()-> isSame (this)) {
 	    auto ret = new (Z0) IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
-	} else if (right-> info-> type-> is <INullInfo> ()) {
+	} else if (right-> info-> type ()-> is <INullInfo> ()) {
 	    auto ret = new (Z0) IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
@@ -310,11 +310,11 @@ namespace semantic {
     }
     
     InfoType IPtrFuncInfo::NotIs (syntax::Expression right) {
-	if (right-> info-> type-> isSame (this)) {
+	if (right-> info-> type ()-> isSame (this)) {
 	    auto ret = new (Z0) IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;
-	} else if (right-> info-> type-> is <INullInfo> ()) {
+	} else if (right-> info-> type ()-> is <INullInfo> ()) {
 	    auto ret = new (Z0) IBoolInfo (true);
 	    ret-> binopFoo = &FixedUtils::InstTest;
 	    return ret;

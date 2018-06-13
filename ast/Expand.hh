@@ -22,6 +22,12 @@ namespace syntax {
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IExpression::getIds ();
+	    ids.push_back (TYPEID (IExpand));
+	    return ids;
+	}
 	
 	Ymir::Tree toGeneric () override;
 	
