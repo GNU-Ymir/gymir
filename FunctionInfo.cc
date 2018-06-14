@@ -61,7 +61,7 @@ namespace semantic {
 		auto lastInfo = it-> lastInfoDecl ();
 	    
 		list.append (buildTree (
-		    MODIFY_EXPR, BUILTINS_LOCATION, void_type_node, field, lastInfo
+		    MODIFY_EXPR, loc, void_type_node, field, lastInfo
 		));
 	    }
 	

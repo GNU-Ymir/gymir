@@ -1343,7 +1343,13 @@ namespace syntax {
 	);
 	this-> expr-> print (nb + 4);
     }
-   
+
+    std::string IExpand::prettyPrint () {
+	if (auto tu = this-> expr-> to <IConstTuple> ()) {
+	    return tu-> getExprs () [this-> it]-> prettyPrint ();
+	} else return this-> expr-> prettyPrint ();
+    }
+    
     IReturn::IReturn (Word ident) : IInstruction (ident), elem (NULL), caster (NULL) {}
     
     IReturn::IReturn (Word ident, Expression elem) :

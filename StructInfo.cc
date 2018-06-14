@@ -65,12 +65,12 @@ namespace semantic {
 		auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
 		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
-		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		auto result = build_call_expr_loc (loc.getLocus (), tmemcopy, 3, ptrl, ptrr, size);
 		list.append (result);
 		
 		return Ymir::compoundExpr (loc.getLocus (), list, ltree);
 	    } else {
-		return rtree;
+	    	return rtree;
 	    }
 	}
 
@@ -86,7 +86,7 @@ namespace semantic {
 	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
 	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
 	    
-	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
+	    auto result = build_call_expr_loc (loc, tmemset, 3, addr, integer_zero_node, size);
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
 	
@@ -106,7 +106,7 @@ namespace semantic {
 		auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
 		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
-		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		auto result = build_call_expr_loc (loc.getLocus (), tmemcopy, 3, ptrl, ptrr, size);
 		list.append (result);
 		return Ymir::compoundExpr (loc.getLocus (), list, ltree);
 	    } else {
@@ -753,7 +753,7 @@ namespace semantic {
 	return NULL;
     }
     
-    std::string IStructInfo::onlyNameTypeString () {
+    std::string IStructInfo::onlyNameTypeString (bool simple) {
 	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
 	if (this-> tmpsDone.size () != 0) buf.write ("!(");
 	for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
@@ -773,7 +773,8 @@ namespace semantic {
 		buf.write (", ");	    
 	}
 	if (this-> tmpsDone.size () != 0) buf.write (")");
-	buf.write ("S");
+	if (simple)
+	    buf.write ("S");
 	return buf.str ();
     }
 
@@ -781,7 +782,7 @@ namespace semantic {
 	static std::map <InfoType, bool> dones;
 	if (dones.find (this) == dones.end ()) {
 	    dones [this] = true;
-	    auto ret = this-> onlyNameTypeString ();
+	    auto ret = this-> onlyNameTypeString (false);
 	    dones.erase (this);
 	    return ret;
 	} else return "_";

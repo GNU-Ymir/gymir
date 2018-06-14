@@ -144,7 +144,7 @@ namespace semantic {
 
 	Namespace & getSpace ();
 
-	std::string onlyNameTypeString ();
+	std::string onlyNameTypeString (bool simple = true);
 	
 	std::string innerTypeString () override;
 	

@@ -367,7 +367,6 @@ namespace syntax {
 	std::vector <tree> params (this-> params.size ());
 	for (uint i = 0 ; i < this-> params.size () ; i++) {
 	    Ymir::Tree elist;
-	    
 	    if (treat [i] && treat [i]-> binopFoo) {
 		elist = treat [i]-> buildCastOp (
 		    this-> params [i]-> token,
@@ -758,17 +757,26 @@ namespace syntax {
 	auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), tuple_type);
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    auto field = Ymir::getField (loc, aux, it);
-	    auto ret =
-		buildTree (
-		    MODIFY_EXPR, loc, void_type_node, field,
-		    this-> casters [it]-> buildBinaryOp (
-			this-> params [it]-> token,
-			this-> casters [it],
-			this-> params [it],
-			new (Z0)  ITreeExpression (this-> token, type_inner [it], Ymir::Tree ())
+	    auto right = this-> casters [it]-> buildBinaryOp (
+		this-> params [it]-> token,
+		type_inner [it],
+		this-> params [it],
+		new (Z0)  ITreeExpression (this-> token, type_inner [it], Ymir::Tree ())
+	    );
+	    if (right.getType () == field.getType ()) {
+		list.append (
+		    buildTree (
+			MODIFY_EXPR, loc, void_type_node, field, right			
 		    )
 		);
-	    list.append (ret);
+	    } else {
+		auto ptrl = Ymir::getAddr (loc, field).getTree ();
+		auto ptrr = Ymir::getAddr (loc, right).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (field.getType ().getTree ());	    
+		auto result = build_call_expr_loc (loc, tmemcopy, 3, ptrl, ptrr, size);
+		list.append (result);
+	    }	    
 	}
 	
 	return Ymir::compoundExpr (loc, list.getTree (), aux);
@@ -856,7 +864,6 @@ namespace syntax {
 		get_identifier (var-> token.getStr ().c_str ()),
 		type_tree.getTree ()
 	    );
-
 	    
 	    DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();	    
 	    var-> info-> treeDecl (decl);
@@ -865,9 +872,10 @@ namespace syntax {
 	    
 	    if (aff != NULL) {
 		aff-> info-> value () = NULL;
-		list.append (aff-> toGeneric ());
+	    	list.append (aff-> toGeneric ());
 	    }
 	}
+
 	
 	return list.getTree ();
     }    

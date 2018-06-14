@@ -115,7 +115,7 @@ namespace semantic {
 		auto l = ot-> params [it];
 		ret-> params.push_back (l-> clone ());
 	    }
-	    
+
 	    ret-> _isUnion = this-> _isUnion;
 	    ret-> binopFoo = &TupleUtils::InstCast;
 	    return ret;
@@ -276,7 +276,7 @@ namespace semantic {
 	IInfoType::printConst (false);
 	auto name = this-> innerTypeString ();
 	IInfoType::printConst (true);
-	auto tuple_type_node = IFinalFrame::getDeclaredType (name.c_str ());
+	Ymir::Tree tuple_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (tuple_type_node.isNull ()) {
 	    if (this-> params.size () != 0) {
 		if (this-> _isUnion)
@@ -364,16 +364,18 @@ namespace semantic {
 	    Ymir::TreeStmtList list;
 	    auto ltree = Ymir::getExpr (list, left);
 	    auto rtree = Ymir::getExpr (list, right);
-	    if (ltree.getType ().getTree () == rtree.getType ().getTree ()) {
-		return Ymir::compoundExpr (loc, list, buildTree (
+	    if (ltree.getType () == rtree.getType ()) {
+		list.append (buildTree (
 		    MODIFY_EXPR, loc, ltree.getType (), ltree, rtree
-		));		
+		));
+		
+		return Ymir::compoundExpr (loc, list, ltree);		
 	    } else {
 		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
 		auto ptrr = Ymir::getAddr (loc, rtree).getTree ();
 		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
-		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		auto result = build_call_expr_loc (loc, tmemcopy, 3, ptrl, ptrr, size);
 		list.append (result);
 		return Ymir::compoundExpr (loc, list, ltree);
 	    }	   
@@ -383,16 +385,16 @@ namespace semantic {
 	    location_t loc = locus.getLocus ();
 	    Ymir::TreeStmtList list;
 	    auto rtree = Ymir::getExpr (list, elem);
-	    auto ltype = type-> toGeneric ();
-	    if (rtree.getType ().getTree () == ltype.getTree ())
-	    	//return Ymir::compoundExpr (loc, list, rtree);
-	    else {
+	    auto ltype = type-> toGeneric ();	    
+	    if (rtree.getType ().getTree () == ltype.getTree ()) {
+	    	return Ymir::compoundExpr (loc, list, rtree);
+	    } else {
 		auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
 		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
 		auto ptrr = Ymir::getAddr (loc, rtree).getTree ();
 		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
-		auto result = build_call_expr (tmemcopy, 3, ptrl, ptrr, size);
+		auto result = build_call_expr_loc (loc, tmemcopy, 3, ptrl, ptrr, size);
 		list.append (result);
 		return Ymir::compoundExpr (loc, list, ltree);
 	    }
@@ -416,11 +418,11 @@ namespace semantic {
 		auto laux = getField (loc, ltree, it);
 		auto raux = getField (loc, rtree, it);
 		auto relem = info-> getParams () [it]-> buildCastOp (
-								  locus,
-								  info-> getParams ()[it],
-								  new (Z0) ITreeExpression (locus, elemInfo-> getParams ()[it], raux),
-								  new (Z0) ITreeExpression (locus, info-> getParams ()[it], Ymir::Tree ())
-								  );
+		    locus,
+		    info-> getParams ()[it],
+		    new (Z0) ITreeExpression (locus, elemInfo-> getParams ()[it], raux),
+		    new (Z0) ITreeExpression (locus, info-> getParams ()[it], Ymir::Tree ())
+		);
 		
 		list.append (buildTree (
 		    MODIFY_EXPR, loc, void_type_node, laux, relem
@@ -449,7 +451,7 @@ namespace semantic {
 	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
 	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
 	    
-	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
+	    auto result = build_call_expr_loc (loc, tmemset, 3, addr, integer_zero_node, size);
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
 
