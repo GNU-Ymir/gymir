@@ -190,6 +190,21 @@ namespace Ymir {
 	return record_type;
     }
 
+    Tree getFieldDecl (Tree type, std::string name) {
+	Tree field_decl = TYPE_FIELDS (type.getTree ());
+	while (!field_decl.isNull ()) {
+	    Tree decl_name = DECL_NAME (field_decl.getTree ());
+	    std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));
+	    if (field_name == name) break;
+	    else 
+		field_decl = TREE_CHAIN (field_decl.getTree ());
+	}
+	if (field_decl.isNull ()) 
+	    Ymir::Error::assert ((std::string ("undef attr ") + name).c_str ());
+	
+	return field_decl.getTree ();
+    }
+
     
     Tree getField (location_t loc, Tree obj, std::string name) {
 	if (obj.getType ().getTreeCode () == POINTER_TYPE) {

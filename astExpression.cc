@@ -887,6 +887,7 @@ namespace syntax {
 	if (this-> params.size () == 0) {
 	    aux-> info = new (Z0)  ISymbol (aux-> token, aux, new (Z0)  IArrayInfo (false, new (Z0)  IVoidInfo ()));	    
 	} else {
+	    auto val = new (Z0) IArrayValue ();
 	    for (uint i = 0 ; i < this-> params.size (); i++) {
 		auto expr = this-> params [i]-> expression ();
 		if (expr == NULL) return NULL;
@@ -895,6 +896,13 @@ namespace syntax {
 		    for (auto it : par-> getParams ())
 			aux-> params.push_back (it);
 		} else aux-> params.push_back (expr);
+
+		if (expr-> info-> value ()) {
+		    val-> addValue (expr-> info-> value ());
+		} else {
+		    delete val;
+		    val = NULL;
+		}
 	    }
 
 	    if (aux-> params.size () == 1)  {
@@ -916,11 +924,12 @@ namespace syntax {
 	    }
 
 	    auto type = aux-> validate ();
-	    if (!type) return NULL;
+	    if (!type) return NULL;	    
 	    type-> isConst (false);
 	    auto arrayType = new (Z0)  IArrayInfo (false, type);
 	    
 	    aux-> info = new (Z0)  ISymbol (aux-> token, aux, arrayType);
+	    aux-> info-> value () = val;
 	    arrayType-> isStatic (true, aux-> params.size ());	    
 	}
 	return aux;

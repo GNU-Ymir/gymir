@@ -12,6 +12,7 @@
 #include <ymir/semantic/value/FixedValue.hh>
 #include <ymir/semantic/value/StringValue.hh>
 #include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/value/ArrayValue.hh>
 
 namespace semantic {
 
@@ -866,4 +867,88 @@ namespace semantic {
 
     }
 
+
+    IArrayValue::IArrayValue () {}
+    
+    void IArrayValue::addValue (Value val) {
+	this-> _values.push_back (val);
+    }
+
+    Value IArrayValue::BinaryOp (Word op, Value other) {
+	if (other == NULL) return NULL;
+	if (op == Token::TILDE) {
+	    if (auto ot = other-> to <IArrayValue> ()) {
+		auto ret = new (Z0) IArrayValue ();
+		for (auto & it : this-> _values) ret-> addValue (it);
+		for (auto & it : ot-> _values) ret-> addValue (it);
+		return ret;
+	    }	    
+	}
+	return NULL;
+    }
+
+    Value IArrayValue::AccessOp (syntax::Expression expr) {
+	if (expr-> info-> value () == NULL) return NULL;
+	else if (auto fix = expr-> info-> value ()-> to <IFixedValue> ()) {
+	    auto index = fix-> getUValue ();
+	    if (index >= this-> _values.size ()) {
+		Ymir::Error::overflowArray (expr-> token, index, this-> _values.size ());
+		return NULL;
+	    } else {
+		return this-> _values [index]-> clone ();
+	    }
+	}
+	return NULL;
+    }
+
+    const char* IArrayValue::getId () {
+	return IArrayValue::id ();
+    }
+
+    Value IArrayValue::getLen () {
+	return NULL;
+    }
+
+    std::string IArrayValue::toString () {
+	Ymir::OutBuffer buf ("[");
+	for (auto it : Ymir::r (0, this-> _values.size ())) {
+	    buf.write (this-> _values [it]-> toString ());
+	    if (it < (int) this-> _values.size () - 1)
+		buf.write (", ");
+	}
+	return buf.str ();
+    }
+
+    syntax::Expression IArrayValue::toYmir (Symbol sym) {
+	vec <constructor_elt, va_gc> * elms = NULL;
+	int i = 0;
+	auto vtype = sym-> type ()-> toGeneric ();
+	auto arrayInner = sym-> type ()-> to <IArrayInfo> ()-> content ();
+	for (auto it : this-> _values) {
+	    auto sym_ = new (Z0) ISymbol (sym-> sym, NULL, arrayInner);
+	    CONSTRUCTOR_APPEND_ELT (elms, size_int (i), it-> toYmir (sym_)-> toGeneric ().getTree ());
+	    i ++;
+	}
+	return new (Z0) ITreeExpression (sym-> sym, sym-> type (), build_constructor (vtype.getTree (), elms));
+    }
+
+    bool IArrayValue::equals (Value val) {
+	if (auto ot = val-> to <IArrayValue> ()) {
+	    if (this-> _values.size () != ot-> _values.size ()) return false;
+	    for (auto it : Ymir::r (0, this-> _values.size ())) {
+		if (!this-> _values [it]-> equals (ot-> _values [it]))
+		    return false;
+	    }
+	    return true;
+	} else return false;
+    }
+
+    Value IArrayValue::clone () {
+	auto other = new (Z0) IArrayValue ();
+	for (auto & it : this-> _values) {
+	    other-> addValue (it-> clone ());
+	}
+	return other;
+    }
+    
 }

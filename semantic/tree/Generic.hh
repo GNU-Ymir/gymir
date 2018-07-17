@@ -21,9 +21,11 @@ namespace Ymir {
         
     Tree makeField (semantic::InfoType type, std::string name);
     
-    Tree getField (location_t locus, Tree obj, std::string name);
+    Tree getField (location_t locus, Tree obj, std::string name);    
 
     Tree getField (location_t locus, Tree obj, ulong it);
+    
+    Tree getFieldDecl (Tree type, std::string name);
     
     Tree makeUnion (std::string name, const std::vector<semantic::InfoType> & types, const std::vector<std::string>& attrs);
     

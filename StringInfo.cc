@@ -98,9 +98,14 @@ namespace semantic {
     }
     
     syntax::Expression IStringValue::toYmir (Symbol sym) {
-	auto ret = new (Z0) syntax::IString (sym-> sym, this-> value);
-	ret-> info = sym;
-	return ret;
+	auto lit = build_string_literal (this-> value.length () + 1, this-> value.c_str ());
+	vec<constructor_elt, va_gc> * elms = NULL;
+	auto type = sym-> type ()-> toGeneric ();
+	auto sym_ = new (Z0) ISymbol (sym-> sym, NULL, new (Z0) IFixedInfo (true, FixedConst::ULONG));
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (type, "len").getTree (), (new (Z0) IFixedValue (FixedConst::ULONG, this-> value.length (), 0))-> toYmir (sym_)-> toGeneric ().getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (type, "ptr").getTree (), lit);
+	
+	return new (Z0) syntax::ITreeExpression (sym-> sym, sym-> type (), build_constructor (type.getTree (), elms));
     }
 
     
