@@ -78,16 +78,21 @@ namespace semantic {
 	    return left-> toGeneric ();
 	}
 
-	Tree InstInit (Word locus, InfoType type, Expression) {
-	    auto loc = locus.getLocus ();
-	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
-	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
-				  
-	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
-	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
+	Tree InstInit (Word locus, InfoType type, Expression expression) {
+	    auto ttype = type-> toGeneric ();
+	    auto decls = Ymir::getFieldDecls (ttype);
+	    vec <constructor_elt, va_gc> * elms = NULL;
+	    auto initVar = new (Z0) IVar (Word {UNKNOWN_LOCATION, "init"});
+	    for (auto it : decls) {
+		Tree decl_name = DECL_NAME (it.getTree ());
+		std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));
+		auto field_var = new (Z0) IVar (Word {UNKNOWN_LOCATION, field_name});
+		auto local = new (Z0) IDColon (locus, expression, initVar);
+		local-> info = new (Z0) ISymbol (locus, local, type-> DotOp (field_var)-> DColonOp (initVar));		
+		CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), local-> toGeneric ().getTree ());
+	    }
 	    
-	    auto result = build_call_expr_loc (loc, tmemset, 3, addr, integer_zero_node, size);
-	    return Ymir::compoundExpr (loc, result, ltree);
+	    return build_constructor (ttype.getTree (), elms);
 	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression right) {

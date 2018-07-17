@@ -205,6 +205,17 @@ namespace Ymir {
 	return field_decl.getTree ();
     }
 
+    std::vector <Tree> getFieldDecls (Tree type) {
+	Tree field_decl = TYPE_FIELDS (type.getTree ());
+	std::vector <Tree> decls;
+	while (!field_decl.isNull ()) {
+	    decls.push_back (field_decl.getTree ());
+	    field_decl = TREE_CHAIN (field_decl.getTree ());
+	}
+	
+	return decls;
+    }
+    
     
     Tree getField (location_t loc, Tree obj, std::string name) {
 	if (obj.getType ().getTreeCode () == POINTER_TYPE) {

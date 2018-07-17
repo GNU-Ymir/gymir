@@ -195,7 +195,7 @@ namespace semantic {
 
     InfoType IFloatInfo::Init () {
 	auto ret = this-> cloneConst ();
-	ret-> value () = new (Z0) IFloatValue (this-> _type, 0.0f, 0.0);
+	ret-> value () = new (Z0) IFloatValue (this-> _type, NAN, NAN);
 	return ret;
     }
 
