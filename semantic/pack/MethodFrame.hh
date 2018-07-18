@@ -66,6 +66,7 @@ namespace semantic {
 	
 	bool & isVirtual ();
 
+	syntax::TypeMethod getMethod ();	
 
     private :
 

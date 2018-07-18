@@ -51,8 +51,7 @@ namespace semantic {
 	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
 	Table::instance ().enterBlock ();
 	auto object = this-> _info-> TempOp ({});
-	if (object == NULL) return NULL;
-		
+	if (object == NULL) return NULL;		
 	auto params = params_;
 	params.insert (params.begin (), new (Z0) IRefInfo (false, object));
 	
@@ -202,6 +201,10 @@ namespace semantic {
 	return this-> _isExtern;
     }
 
+    syntax::TypeMethod IMethodFrame::getMethod () {
+	return this-> _method;
+    }
+    
     bool& IMethodFrame::isVirtual () {
 	return this-> _isVirtual;
     }

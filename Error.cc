@@ -1338,6 +1338,35 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
+    void Error::noOverride (const Word & token) {
+	std::string msg = format (getString (NoOverride), YELLOW, token.getStr (), RESET); 
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::implicitOverride (const Word & token, const Word & token2) {
+	std::string msg = format (getString (ImplicitOverride));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : ";
+	aux = addLine (aux, token2);	
+
+	ErrorMsg errorMsg = {msg + aux, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }    
+
+    
+    
     void Error::ambiguousAccess (const Word & token, const Word & def, semantic::InfoType aggr) {
 	std::string msg = format (getString (AmbiguousAccess), YELLOW, aggr-> typeString (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

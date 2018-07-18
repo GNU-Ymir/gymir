@@ -13,7 +13,9 @@ namespace semantic {
 
 	Tree InstCall (Word token, InfoType type, Expression left, Expression right, ApplicationScore score) {
 	    auto params = right-> to <IParamList> ();
-	    std::vector <tree> args = params-> toGenericParams (params-> getTreats ());
+	    
+	    std::vector <InfoType> treats (params-> getTreats ().begin () + 1, params-> getTreats ().end ());
+	    std::vector <tree> args = params-> toGenericParams (treats);
 	    auto ltree = left-> toGeneric ();
 	    args.insert (args.begin (), getAddr (ltree).getTree ());
 	    std::vector <tree> types;

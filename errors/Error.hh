@@ -123,6 +123,8 @@ namespace Ymir {
 	    CannotOverride,
 	    AmbiguousAccess,
 	    MustCallSuper,
+	    ImplicitOverride,
+	    NoOverride,
 	    LAST_ERROR
 	};
 
@@ -329,6 +331,10 @@ namespace Ymir {
 	static void cannotOverride (const Word&, semantic::InfoType);
 	
 	static void mustCallSuperConstructor (const Word&, semantic::InfoType);
+
+	static void implicitOverride (const Word&, const Word&);
+
+	static void noOverride (const Word&);
 
 	static void ambiguousAccess (const Word&, const Word&, semantic::InfoType);
 	

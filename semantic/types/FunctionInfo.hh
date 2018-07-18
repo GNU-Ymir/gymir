@@ -20,6 +20,7 @@ namespace semantic {
 	bool _isLambda = false;
 	bool _isConstr = false;
 	bool _isVirtual = false;
+	bool _isOver = false;
 	
 	static int nbTmpsCreation;// = 0;
 	static bool needToReset;// = true;
@@ -74,6 +75,8 @@ namespace semantic {
 	bool& isConstr ();
 
 	bool& isVirtual ();
+
+	bool& isOver ();
 	
 	InfoType toPtr (Word op);
 	

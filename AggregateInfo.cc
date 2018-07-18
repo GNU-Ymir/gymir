@@ -13,6 +13,9 @@
 #include <ymir/semantic/types/RefInfo.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/utils/StructUtils.hh>
+#include <ymir/semantic/pack/MethodFrame.hh>
+#include <ymir/ast/TypedVar.hh>
+
 
 using namespace syntax;   
 
@@ -122,7 +125,8 @@ namespace semantic {
 	    return NULL;
 	    //return this-> getScore (tmps);
 	}
-	
+
+	if (this-> _info) return this-> _info-> clone ();	
 	if (this-> _tmps.size () != tmps.size ()) return NULL;
 
 	auto name = Namespace (this-> _space, this-> _name).toString ();
@@ -155,9 +159,11 @@ namespace semantic {
 	if (this-> _anc) anc = this-> _anc-> TempOp ({});
 	if (anc) info-> _anc = anc-> to <IAggregateInfo> ();
 	
-	// info-> setTmps (this-> tmpsDone); TODO
-	inProgress.erase (name);
+	info-> _allMethods = info-> getMethods ();
+	this-> _info = info;	    
 	
+	// info-> setTmps (this-> tmpsDone); TODO
+	inProgress.erase (name);	
 	return info-> clone ();	    
     }
 
@@ -365,6 +371,7 @@ namespace semantic {
 	ret-> _destr = this-> _destr;
 	ret-> _staticMeth = this-> _staticMeth;
 	ret-> _methods = this-> _methods;
+	ret-> _allMethods = this-> _allMethods;
 	if (this-> _anc)
 	    ret-> _anc = this-> _anc;
 	ret-> isConst (this-> isConst ());
@@ -448,6 +455,12 @@ namespace semantic {
 		return ret;
 	    }
 	}
+
+	if (this-> getAncestor ()) {
+	    if (auto ret = this-> getAncestor ()-> CompOp (other)) {
+		return ret;
+	    }
+	}
 	return NULL;
     }
 
@@ -484,12 +497,14 @@ namespace semantic {
 	std::vector <Frame> frames;
 	std::vector <int> index;
 	int i = 0;
-	for (auto it : this-> _methods) {
+	for (auto it : this-> _allMethods) {
 	    if (it-> name () == var-> token.getStr ()) {
 		frames.push_back (it-> frame ());
 		index.push_back (i);
 	    }
-	    i ++;
+	    
+	    if (it-> isVirtual ())
+		i ++;
 	}
 	
 	if (frames.size () != 0) {
@@ -535,11 +550,56 @@ namespace semantic {
 	auto array_type = build_array_type (innerType-> toGeneric ().getTree (), range_type);
 	return array_type;
     }
+
+    std::vector <FunctionInfo> IAggregateInfo::getMethods () {
+	if (!this-> getAncestor ()) return this-> _methods;
+	auto method = this-> getAncestor ()-> _allMethods;
+	std::vector <FunctionInfo> toAdd;
+	for (auto mt : this-> _methods) {
+	    bool changed = false;
+	    for (auto & it : method) {
+		auto name = it-> name ();
+		if (mt-> name () == it-> name ()) {
+		    auto lparams = mt-> frame ()-> to <IMethodFrame> ()-> getMethod ()-> getParams ();
+		    auto rparams = it-> frame ()-> to <IMethodFrame> ()-> getMethod ()-> getParams ();
+		    if (lparams.size ()  != rparams.size ()) continue;
+		    for (auto it : Ymir::r (0, lparams.size ())) {
+			if (lparams [it]-> is <ITypedVar> () && rparams [it]-> is <ITypedVar> ()) {
+			    if (!lparams [it]-> to <ITypedVar> ()-> getType ()-> CompOp (rparams [it]-> to <ITypedVar> ()-> getType ()))
+				continue;
+			} else continue;
+		    }
+
+		    if (!mt-> isOver ()) {
+			Ymir::Error::implicitOverride (
+			    mt-> frame ()-> func ()-> getIdent (),
+			    it-> frame ()-> func ()-> getIdent ()
+			);
+		    }
+		    changed = true;
+		    it = mt;
+		    break;
+		}		
+	    }
+	    
+	    if (!changed) {
+		if (mt-> isOver ()) {
+		    Ymir::Error::noOverride (mt-> frame ()-> func ()-> getIdent ());
+		}
+		
+		toAdd.push_back (mt);
+	    }
+	}
+	method.insert (method.end (), toAdd.begin (), toAdd.end ());
+	return method;   
+    }
     
     Ymir::Tree IAggregateInfo::buildVtableEnum (Ymir::Tree vtype) {
 	vec<constructor_elt, va_gc> * elms = NULL;
 	int i = 0;
-	for (auto it : this-> _methods) {
+	
+	auto methods = this-> _allMethods;
+	for (auto it : methods) {
 	    if (it-> isVirtual ()) {
 		CONSTRUCTOR_APPEND_ELT (elms, size_int (i), it-> frame ()-> validate ()-> toGeneric ().getTree ());
 		i ++;

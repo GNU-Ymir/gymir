@@ -145,6 +145,8 @@ namespace Ymir {
 		phrases [CannotImpl] = "Aggregate type cannot implement type %%%";
 		phrases [CannotOverride] = "Aggregate type cannot override type %%%";
 		phrases [MustCallSuper] = "Must call the super constructor of type %%% first";
+		phrases [ImplicitOverride] = "Cannot implicitly override method";
+		phrases [NoOverride] = "Method %%% do not override anything";
 		phrases [AmbiguousAccess] = "Ambiguous access of field for type %%%";
 		init = true;
 	    } 

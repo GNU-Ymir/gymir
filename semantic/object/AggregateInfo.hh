@@ -43,6 +43,7 @@ namespace semantic {
 	bool _isExternal;
 	bool _isFailure = false;
 	bool _isOver;
+	InfoType _info = NULL;
 	
 	syntax::TypeCreator _creator;
 	IAggregateCstInfo* _anc = NULL;
@@ -116,6 +117,7 @@ namespace semantic {
 	std::vector <FunctionInfo> _contrs;
 	Frame _destr;
 	std::vector <FunctionInfo> _methods;
+	std::vector <FunctionInfo> _allMethods;
 	std::vector <FunctionInfo> _staticMeth;
 	
 	std::vector <syntax::Expression> tmpsDone;
@@ -194,6 +196,8 @@ namespace semantic {
 	Ymir::Tree buildVtableType ();
 	
 	Ymir::Tree buildVtableEnum (Ymir::Tree vtype);
+
+	std::vector <FunctionInfo> getMethods ();
 	
     };
 

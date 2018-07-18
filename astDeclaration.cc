@@ -1403,6 +1403,7 @@ namespace syntax {
 	if (addable) {
 	    FrameTable::instance ().insert (fr);
 	    func-> isVirtual () = true;
+	    func-> isOver () = this-> _isOver;
 	}
 	
 	func-> set (fr);	

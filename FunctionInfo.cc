@@ -494,6 +494,10 @@ namespace semantic {
     bool& IFunctionInfo::isVirtual () {
 	return this-> _isVirtual;
     }
+
+    bool& IFunctionInfo::isOver () {
+	return this-> _isOver;
+    }
     
     std::string IFunctionInfo::name () {
 	return this-> _name;
