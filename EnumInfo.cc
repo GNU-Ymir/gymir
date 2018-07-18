@@ -288,6 +288,8 @@ namespace semantic {
 	
 	if (var-> token == "members")
 	    return GetMembers ();
+	if (var-> token == "init")
+	    return Init ();
 	
 	return NULL;
     }
@@ -303,7 +305,7 @@ namespace semantic {
     }
 
     InfoType IEnumCstInfo::create () {
-	return new (Z0) IEnumInfo (false, this-> _space, this-> _name, this-> type-> cloneOnExit ());
+	return new (Z0) IEnumInfo (false, this-> _space, this-> _name, this, this-> type-> cloneOnExit ());
     }
 
     InfoType IEnumCstInfo::TempOp (const std::vector<::syntax::Expression> & tmps) {
@@ -351,7 +353,7 @@ namespace semantic {
     }
 
     InfoType IEnumCstInfo::GetAttrib (ulong nb) {
-	auto type = new (Z0)  IEnumInfo (true, this-> _space, this-> _name, this-> type-> clone ());
+	auto type = new (Z0)  IEnumInfo (true, this-> _space, this-> _name, this, this-> type-> clone ());
 	if (this-> values [nb]-> info-> isImmutable ()) {
 	    type-> getContent ()-> value () = this-> values [nb]-> info-> value ();
 	}
@@ -368,12 +370,19 @@ namespace semantic {
 	type-> unopFoo = EnumUtils::InstMembers;
 	return type;
     }
+
+    InfoType IEnumCstInfo::Init () {
+	if (this-> values.size () >= 1)
+	    return GetAttrib (0);
+	return NULL;
+    }
     
-    IEnumInfo::IEnumInfo (bool isConst, Namespace space, std::string name, InfoType type) :
+    IEnumInfo::IEnumInfo (bool isConst, Namespace space, std::string name, EnumCstInfo father, InfoType type) :
 	IInfoType (isConst),
 	_name (name),
-	_space (space),
-	_content (type)
+	_space (space),	
+	_content (type),
+	_info (father)
     {
 	this-> _content-> isConst (this-> isConst ());
     }
@@ -424,6 +433,10 @@ namespace semantic {
     }
 
     InfoType IEnumInfo::DColonOp (syntax::Var var) {
+	if (var-> token == "init" && !var-> hasTemplate ()) {
+	    return this-> _info-> Init ();
+	}
+	
 	return this-> _content-> DColonOp (var);       
     }
 
@@ -555,7 +568,7 @@ namespace semantic {
     }
     
     InfoType IEnumInfo::onClone () {
-	auto ret = new (Z0)  IEnumInfo (this-> isConst (), this-> _space, this-> _name, this-> _content-> clone ());
+	auto ret = new (Z0)  IEnumInfo (this-> isConst (), this-> _space, this-> _name, this-> _info, this-> _content-> clone ());
 	ret-> value = this-> value;
 	return ret;
     }

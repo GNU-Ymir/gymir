@@ -6,6 +6,12 @@
 
 namespace semantic {
 
+    class IEnumInfo;
+    class IEnumCstInfo;
+    
+    typedef IEnumCstInfo* EnumCstInfo;
+    typedef IEnumInfo* EnumInfo;
+    
     class IEnumCstInfo : public IInfoType {
 
 	std::string _name;
@@ -13,6 +19,8 @@ namespace semantic {
 	
     public:
 
+	friend IEnumInfo;
+	
 	std::vector <InfoType> comps;
 	std::vector <std::string> names;
 	std::vector <syntax::Expression> values;
@@ -57,6 +65,8 @@ namespace semantic {
 	InfoType GetAttrib (ulong nb);
 
 	InfoType GetMembers ();
+
+	InfoType Init ();
 	
     };
 
@@ -69,10 +79,11 @@ namespace semantic {
 
 	InfoType comp;
 	syntax::Expression value;
+	EnumCstInfo _info;
 	
     public:
 
-	IEnumInfo (bool, Namespace, std::string, InfoType);
+	IEnumInfo (bool, Namespace, std::string, EnumCstInfo, InfoType);
 
 	std::string& name ();
 
@@ -137,9 +148,5 @@ namespace semantic {
 	
     };
 
-    
-
-    typedef IEnumCstInfo* EnumCstInfo;
-    typedef IEnumInfo* EnumInfo;
-    
+        
 }

@@ -27,8 +27,7 @@ namespace semantic {
 	    tree access;
 	    if (score-> proto == NULL) {
 		auto vtable = getField (token.getLocus (), ltree, Keys::VTABLE_FIELD);
-		auto ptr_size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (build_pointer_type (void_type_node)));
-		auto nb = score-> methIndex * ptr_size;
+		auto nb = score-> methIndex;
 		auto padd = build_int_cst_type (long_unsigned_type_node, nb);
 		access = Ymir::getPointerUnref (token.getLocus (), vtable, ptr_type, padd).getTree ();
 	    } else {
