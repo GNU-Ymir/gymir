@@ -42,12 +42,16 @@ namespace semantic {
 	bool _isUnion;
 	bool _isExternal;
 	bool _isFailure = false;
-
+	bool _isOver;
+	
 	syntax::TypeCreator _creator;
+	IAggregateCstInfo* _anc = NULL;
 	
     public :
 
-	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion);
+	friend IAggregateInfo;
+	
+	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion, bool isOver);
 	
 	std::vector <FunctionInfo> & getConstructors ();
 
@@ -116,8 +120,10 @@ namespace semantic {
 	
 	std::vector <syntax::Expression> tmpsDone;
 	AggregateCstInfo _id = NULL;
+	AggregateInfo _anc = NULL;
 	TupleInfo _impl;
 	bool _isExternal;
+	bool _static = false;
 	
 	friend IAggregateCstInfo;
 
@@ -165,6 +171,8 @@ namespace semantic {
 
 	std::vector <InfoType> getTemplate (ulong, ulong) override;
 
+	AggregateInfo getAncestor ();
+	
 	static const char * id () {
 	    return "IAggregateInfo";
 	}
@@ -176,6 +184,10 @@ namespace semantic {
 	InfoType SizeOf ();
 
 	InfoType Method (syntax::Var);
+
+	InfoType Super ();
+
+	InfoType Init ();
 	
 	//InfoType Name ();
 

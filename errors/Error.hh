@@ -120,7 +120,9 @@ namespace Ymir {
 	    NeedAllType,
 	    StaticMethodInit,
 	    CannotImpl,
+	    CannotOverride,
 	    AmbiguousAccess,
+	    MustCallSuper,
 	    LAST_ERROR
 	};
 
@@ -323,6 +325,10 @@ namespace Ymir {
 	static void staticMethodInit (const Word&);
 
 	static void cannotImpl (const Word&, semantic::InfoType);
+
+	static void cannotOverride (const Word&, semantic::InfoType);
+	
+	static void mustCallSuperConstructor (const Word&, semantic::InfoType);
 
 	static void ambiguousAccess (const Word&, const Word&, semantic::InfoType);
 	

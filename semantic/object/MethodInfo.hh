@@ -11,11 +11,11 @@ namespace semantic {
 	std::string _name;
 	std::vector <Frame> _frames;
 	std::vector <int> _index;
-
+	bool _isDynamic = true;
 	
     public :
 
-	IMethodInfo (AggregateInfo info, std::string name, const std::vector <Frame> & frames, const std::vector <int> & index);
+	IMethodInfo (AggregateInfo info, std::string name, const std::vector <Frame> & frames, const std::vector <int> & index, bool isStatic = false);
 
 	bool isSame (InfoType) override;
 

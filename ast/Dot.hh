@@ -21,6 +21,8 @@ namespace syntax {
 	
 	Expression getLeft ();
 
+	Expression getRight ();
+
 	Ymir::Tree toGeneric () override;
 
 	std::string prettyPrint () override;

@@ -892,6 +892,10 @@ namespace syntax {
     Expression IDot::getLeft () {
 	return this-> left;
     }   
+
+    Expression IDot::getRight () {
+	return this-> right;
+    }
     
     IDotCall::IDotCall (Instruction inside, Word token, Expression call, Expression firstPar) :
 	IExpression (token),

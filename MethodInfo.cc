@@ -43,12 +43,13 @@ namespace semantic {
 
     }
     
-    IMethodInfo::IMethodInfo (AggregateInfo info, std::string name, const std::vector <Frame> & frames, const std::vector <int> & index) :
+    IMethodInfo::IMethodInfo (AggregateInfo info, std::string name, const std::vector <Frame> & frames, const std::vector <int> & index, bool isStatic) :
 	IInfoType (true),
 	_info (info),
 	_name (name),
 	_frames (frames),
-	_index (index)
+	_index (index),
+	_isDynamic (!isStatic)
     {}
 
     bool IMethodInfo::isSame (InfoType) {
@@ -56,7 +57,7 @@ namespace semantic {
     }
 
     InfoType IMethodInfo::onClone () {
-	return new (Z0) IMethodInfo (this-> _info, this-> _name, this-> _frames, this-> _index);
+	return new (Z0) IMethodInfo (this-> _info, this-> _name, this-> _frames, this-> _index, !this-> _isDynamic);
     }
 
     ApplicationScore IMethodInfo::CallAndThrow (Word tok, const std::vector <InfoType> & params, InfoType & retType) {
@@ -101,7 +102,7 @@ namespace semantic {
 		Ymir::Error::callUnsafeInSafe (tok);
 	    FrameProto info = right-> toValidate-> validate (right, fparams);
 	    retType = info-> type ()-> type ();
-	    if (!right-> toValidate-> is <IMethodFrame> () || !right-> toValidate-> to <IMethodFrame> ()-> isVirtual ()) {
+	    if (!right-> toValidate-> is <IMethodFrame> () || !right-> toValidate-> to <IMethodFrame> ()-> isVirtual () || !this-> _isDynamic) {
 		right-> proto = info;
 	    }
 	    
@@ -113,7 +114,7 @@ namespace semantic {
 	    
 	    FrameProto info = goods [0]-> validate (right, fparams);
 	    retType = info-> type ()-> type ();
-	    if (!goods [0]-> is <IMethodFrame> () || !goods [0]-> to<IMethodFrame> ()-> isVirtual ()) {
+	    if (!goods [0]-> is <IMethodFrame> () || !goods [0]-> to<IMethodFrame> ()-> isVirtual () || !this-> _isDynamic) {
 		right-> proto = info;
 	    }
 	    

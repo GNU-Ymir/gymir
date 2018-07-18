@@ -143,6 +143,8 @@ namespace Ymir {
 		phrases [NeedAllType] = "All type must be known in constructor";
 		phrases [StaticMethodInit] = "The keyword %init% is reserved for constructors; Note that constructors are always named %self%";
 		phrases [CannotImpl] = "Aggregate type cannot implement type %%%";
+		phrases [CannotOverride] = "Aggregate type cannot override type %%%";
+		phrases [MustCallSuper] = "Must call the super constructor of type %%% first";
 		phrases [AmbiguousAccess] = "Ambiguous access of field for type %%%";
 		init = true;
 	    } 

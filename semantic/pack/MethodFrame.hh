@@ -34,6 +34,7 @@ namespace semantic {
 	std::string _name;
 	bool _isExtern = false;
 	bool _isVirtual = true;
+	bool _echec = false;
 	FrameProto _proto;
 	
     public:
@@ -64,6 +65,11 @@ namespace semantic {
 	bool& isExtern ();
 	
 	bool & isVirtual ();
+
+
+    private :
+
+	bool verifCallSuper ();
 	
     };
 	

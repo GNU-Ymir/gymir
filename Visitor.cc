@@ -674,9 +674,9 @@ namespace syntax {
 
 	bool isUnion = false;
 	std::vector <Expression> who;
-	if (form == TypeForm::IMPL) {
+	if (form == TypeForm::IMPL || form == TypeForm::OVER) {
 	    who.push_back (visitExpression ());	    
-	}
+	} 
 	
 	this-> lambdaPossible = save;
 	auto type = new (Z0) ITypeCreator (ident, form, who, temps, isUnion);

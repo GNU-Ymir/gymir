@@ -1313,7 +1313,31 @@ namespace Ymir {
 	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+    
+    void Error::cannotOverride (const Word & token, semantic::InfoType type) {
+	std::string msg = format (getString (CannotOverride), YELLOW, type-> typeString (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
 
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::mustCallSuperConstructor (const Word & token, semantic::InfoType type) {
+	std::string msg = format (getString (MustCallSuper), YELLOW, type-> typeString (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::ambiguousAccess (const Word & token, const Word & def, semantic::InfoType aggr) {
 	std::string msg = format (getString (AmbiguousAccess), YELLOW, aggr-> typeString (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

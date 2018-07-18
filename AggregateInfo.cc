@@ -36,10 +36,14 @@ namespace semantic {
 	    return Tree ();
 	}
 
+	Tree InstAncestor (Word, InfoType, Expression elem, Expression) {
+	    return elem-> toGeneric ();
+	}
+	
 	Tree InstGetMethod (Word, InfoType, Expression left, Expression) {
 	    return left-> toGeneric ();
 	}
-
+       	
 	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
 	    auto type = t-> cloneOnExitWithInfo ();
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
@@ -62,7 +66,7 @@ namespace semantic {
 	
     }
     
-    IAggregateCstInfo::IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion) :
+    IAggregateCstInfo::IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion, bool isOver) :
 	IInfoType (true),
 	_space (space),
 	_locId (locId),
@@ -70,7 +74,8 @@ namespace semantic {
 	_contrs ({}), _destr (NULL), _methods ({}), _staticMeth ({}),
 	_tmps (tmps),
 	_impl (self),
-	_isUnion (isUnion)
+	_isUnion (isUnion),
+	_isOver (isOver)
 	
     {}
 
@@ -146,6 +151,10 @@ namespace semantic {
 	    info-> _destr = this-> _destr-> frame ();
 	info-> _staticMeth = this-> _staticMeth;
 	info-> _methods = this-> _methods;
+	InfoType anc = NULL;
+	if (this-> _anc) anc = this-> _anc-> TempOp ({});
+	if (anc) info-> _anc = anc-> to <IAggregateInfo> ();
+	
 	// info-> setTmps (this-> tmpsDone); TODO
 	inProgress.erase (name);
 	
@@ -262,17 +271,36 @@ namespace semantic {
 	Table::instance ().templateNamespace () = currentSpace;
 	
 	auto type = this-> _impl [0]-> toType ();
-	if (type == NULL) return NULL;
-
-	auto str = type-> info-> type ()-> to <ITupleInfo> ();
-	if (str == NULL) {
-	    str = new (Z0) ITupleInfo (false, false, this-> _isUnion);
-	    str-> addParam (type-> info-> type ());
+	if (type == NULL) {
+	    Table::instance ().setCurrentSpace (currentSpace);
+	    Table::instance ().templateNamespace () = last;
+	    return NULL;
 	}
 
-	Table::instance ().setCurrentSpace (currentSpace);
-	Table::instance ().templateNamespace () = last;
-	return str;		
+	if (this-> _isOver) {
+	    if (this-> _anc == NULL) {
+		auto agg = type-> info-> type ()-> to <IAggregateInfo> ();
+		if (agg == NULL) {
+		    Ymir::Error::cannotOverride (this-> _locId, type-> info-> type ());
+		    Table::instance ().setCurrentSpace (currentSpace);
+		    Table::instance ().templateNamespace () = last;
+		    return NULL;
+		}
+		this-> _anc = agg-> _id;
+	    }
+	    Table::instance ().setCurrentSpace (currentSpace);
+	    Table::instance ().templateNamespace () = last;
+	    return this-> _anc-> constructImpl ();
+	} else {	
+	    auto str = type-> info-> type ()-> to <ITupleInfo> ();
+	    if (str == NULL) {
+		str = new (Z0) ITupleInfo (false, false, this-> _isUnion);
+		str-> addParam (type-> info-> type ());
+	    }
+	    Table::instance ().setCurrentSpace (currentSpace);
+	    Table::instance ().templateNamespace () = last;
+	    return str;		
+	}	
     }    
     
     IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExtern) :
@@ -337,6 +365,8 @@ namespace semantic {
 	ret-> _destr = this-> _destr;
 	ret-> _staticMeth = this-> _staticMeth;
 	ret-> _methods = this-> _methods;
+	if (this-> _anc)
+	    ret-> _anc = this-> _anc;
 	ret-> isConst (this-> isConst ());
 	
 	return ret;
@@ -361,6 +391,9 @@ namespace semantic {
     }
     
     InfoType IAggregateInfo::DotOp (Var var) {
+	if (!var-> hasTemplate () && var-> token.getStr () == Keys::SUPER && this-> getAncestor () != NULL) 
+	    return Super ();
+	
 	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
 	if (ret == NULL) {
 	    return this-> Method (var);
@@ -384,6 +417,7 @@ namespace semantic {
     
     InfoType IAggregateInfo::DColonOp (Var var) {
 	if (var-> hasTemplate ()) return NULL;
+	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
 	//if (var-> token == "name") return Name ();
 	for (auto it : this-> _staticMeth) {
@@ -438,6 +472,13 @@ namespace semantic {
 	ret-> unopFoo = StructUtils::InstSizeOf;
 	return ret;
     }
+
+    InfoType IAggregateInfo::Super () {
+	auto ret = this-> _anc-> clone ()-> to <IAggregateInfo> ();
+	ret-> binopFoo = AggregateUtils::InstAncestor;
+	ret-> _static = true;
+	return ret;
+    }
     
     InfoType IAggregateInfo::Method (Var var) {
 	std::vector <Frame> frames;
@@ -452,12 +493,24 @@ namespace semantic {
 	}
 	
 	if (frames.size () != 0) {
-	    auto meth = new (Z0) IMethodInfo (this, var-> token.getStr (), frames, index);
-	    meth-> binopFoo = AggregateUtils::InstGetMethod;
+	    auto meth = new (Z0) IMethodInfo (this, var-> token.getStr (), frames, index, this-> _static);
+	    meth-> binopFoo = AggregateUtils::InstGetMethod;	    
 	    return meth;
 	} else return NULL;
     }
 
+    InfoType IAggregateInfo::Init () {
+	if (this-> _id-> _contrs.size () == 0) {
+	    return NULL;
+	} else {
+	    std::vector <Frame> frames;
+	    for (auto it : this-> _id-> _contrs)
+		frames.push_back (it-> frame ());
+	    auto ret = new (Z0) IFunctionInfo (this-> _id-> _space, "init", frames);
+	    ret-> isConstr () = true;
+	    return ret;
+	}
+    }    
 
     TupleInfo IAggregateInfo::getImpl () {
 	return this-> _impl;
@@ -537,9 +590,13 @@ namespace semantic {
     void IAggregateInfo::setTmps (const std::vector <Expression> & tmps) {
 	this-> tmpsDone = tmps;
     }
-
+    
     InfoType IAggregateInfo::getTemplate (ulong) {
 	return NULL;
+    }
+
+    AggregateInfo IAggregateInfo::getAncestor () {
+	return this-> _anc;
     }
     
     std::vector <InfoType> IAggregateInfo::getTemplate (ulong, ulong) {

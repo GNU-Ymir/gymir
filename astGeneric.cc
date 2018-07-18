@@ -427,20 +427,36 @@ namespace syntax {
 		return this-> callInline (args);
 	    } else if (this-> _left-> info-> type ()-> is <IFunctionInfo> () &&
 		       this-> _left-> info-> type ()-> to <IFunctionInfo> ()-> isConstr ()) {
-		auto ltree = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> _score-> ret-> toGeneric ());
+
+		Ymir::Tree ltree;
+		bool obj = false;
+		if (auto dcol = this-> _left-> to <IDColon> ()) {
+		    if (dcol-> getLeft ()-> info-> type ()-> is <IAggregateInfo> ()) {
+			obj = true;
+			ltree = dcol-> getLeft ()-> toGeneric ();
+		    }
+		}
+		    
+		if (!obj) {
+		    ltree = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> _score-> ret-> toGeneric ());
+		}
+		
 		args.insert (args.begin (), getAddr (ltree).getTree ());
 		Ymir::TreeStmtList list;
 		Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
-		auto vtable = Ymir::getAddr (this-> _score-> ret-> to <IAggregateInfo> ()-> getVtable ());
-		auto vfield = Ymir::getField (this-> token.getLocus (), ltree, Keys::VTABLE_FIELD);
-		list.append (
-		    Ymir::buildTree (MODIFY_EXPR,
-				     this-> token.getLocus (),
-				     void_type_node,
-				     vfield,
-				     convert (vfield.getType ().getTree (), vtable.getTree ())
-		    )
-		);
+
+		if (!obj) {
+		    auto vtable = Ymir::getAddr (this-> _score-> ret-> to <IAggregateInfo> ()-> getVtable ());
+		    auto vfield = Ymir::getField (this-> token.getLocus (), ltree, Keys::VTABLE_FIELD);
+		    list.append (
+			Ymir::buildTree (MODIFY_EXPR,
+					 this-> token.getLocus (),
+					 void_type_node,
+					 vfield,
+					 convert (vfield.getType ().getTree (), vtable.getTree ())
+			)
+		    );
+		}
 		
 		list.append (build_call_array_loc (this-> token.getLocus (),
 						   void_type_node,

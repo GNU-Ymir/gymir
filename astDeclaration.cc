@@ -1224,8 +1224,7 @@ namespace syntax {
 	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
-
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
 	if (this-> _destr.size () > 1)
 	    Ymir::Error::multipleDestr (this-> _ident);
 	
@@ -1250,9 +1249,7 @@ namespace syntax {
 		}
 	    }
 
-	    if (this-> _tmps.size () == 0) {
-		FrameTable::instance ().insert (type);
-	    }
+	    FrameTable::instance ().insert (type);	    
 	} else {
 	    type-> creator () = this;
 	}
@@ -1268,7 +1265,7 @@ namespace syntax {
 	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
 
 	if (this-> _destr.size () > 1) 
 	    Ymir::Error::multipleDestr (this-> _ident);
@@ -1294,9 +1291,7 @@ namespace syntax {
 		}
 	    }
 
-	    if (this-> _tmps.size () == 0) {
-		FrameTable::instance ().insert (type);
-	    }	
+	    FrameTable::instance ().insert (type);	    	
 	} else {
 	    type-> creator () = this;
 	}
@@ -1312,7 +1307,7 @@ namespace syntax {
 	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
 	type-> isExtern () = true;
 	
 	if (this-> _destr.size () > 1) 
