@@ -464,13 +464,15 @@ namespace syntax {
 						   args.size (),
 						   args.data ()
 		));
-		    
-		if (auto frame = this-> _score-> ret-> to<IAggregateInfo> ()-> getDestructor ()) {
-		    auto proto = frame-> validate ();
-		    std::vector <tree> params = {getAddr (ltree).getTree ()};
-		    auto destr = build_call_array_loc (this-> token.getLocus (), void_type_node, proto-> toGeneric ().getTree (), 1, params.data ());
-		    auto block = new (Z0) IBlock (this-> token, {}, {new (Z0) ITreeExpression (this-> token, NULL, destr)});
-		    IBlock::getCurrentBlock ()-> addFinally (block);
+
+		if (!obj) {
+		    if (auto frame = this-> _score-> ret-> to<IAggregateInfo> ()-> getDestructor ()) {
+			auto proto = frame-> validate ();
+			std::vector <tree> params = {getAddr (ltree).getTree ()};
+			auto destr = build_call_array_loc (this-> token.getLocus (), void_type_node, proto-> toGeneric ().getTree (), 1, params.data ());
+			auto block = new (Z0) IBlock (this-> token, {}, {new (Z0) ITreeExpression (this-> token, NULL, destr)});
+			IBlock::getCurrentBlock ()-> addFinally (block);
+		    }
 		}
 		return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), ltree);
 	    } 

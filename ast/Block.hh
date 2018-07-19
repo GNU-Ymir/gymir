@@ -21,6 +21,7 @@ namespace syntax {
 	Word ident;
 	std::vector <Declaration> decls;
 	std::vector <Instruction> insts;
+	std::vector <Instruction> _preFinally;
 	std::vector <IBlock*> finally;
 	std::vector <Var> inlines;
 	Expression value;
@@ -41,6 +42,8 @@ namespace syntax {
 
 	void addFinally (IBlock * insts);
 
+	void addFinallyAtSemantic (Instruction inst);
+	
 	void addInline (Var var);
 	
 	Instruction instruction () override;

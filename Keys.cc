@@ -94,6 +94,8 @@ std::string     Keys::INIT       = "init";
 std::string     Keys::DELETE     = "delete";
 std::string     Keys::VTABLE_FIELD = "0__vtbl";
 std::string     Keys::SUPER      = "super";
+std::string     Keys::DISPOSE    = "~self";
+
 std::string Version::DEBUG = "debug";
 std::string Version::UNIX = "unix";
 std::string Version::x84_64 = "x86_64";

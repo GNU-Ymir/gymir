@@ -83,8 +83,22 @@ namespace semantic {
 	    return this-> _proto;
 	} else {
 	    std::vector <Var> vars = {new (Z0) IVar (this-> _dest-> getIdent ())};
+	    auto ident = this-> _dest-> getIdent ();
 	    auto finalParams = IFrame::computeParams (vars, params);
-	    this-> _proto = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _dest-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());
+	    if (object-> to <IAggregateInfo> ()-> getAncestor () != NULL) {
+		auto frame = object-> to <IAggregateInfo> ()-> getAncestor ()-> getDestructor ();
+		if (frame) {
+		    auto call = new (Z0) IPar ({ident.getLocus (), Token::LPAR}, {ident.getLocus (), Token::RPAR},					       
+					       new (Z0) IDot ({ident.getLocus (), Token::DOT},
+							      new (Z0) IDot ({ident.getLocus (), Token::DOT}, vars [0], new (Z0) IVar ({ident.getLocus (), Keys::SUPER}))
+							      , new (Z0) IVar ({ident.getLocus (), Keys::DISPOSE})
+					       ),
+					       new (Z0) IParamList ({ident.getLocus(), "()"}, {})
+		    );
+		    this-> _dest-> getBlock ()-> addFinallyAtSemantic (call);
+		}
+	    }	    
+	    this-> _proto = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _dest-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());	    
 	    return this-> _proto;
 	}
     }
@@ -121,11 +135,15 @@ namespace semantic {
 	if (this-> _const) {	   
 	    vars = this-> _const-> getParams ();
 	    ident = this-> _const-> getIdent ();
-	} else {
+	} else if (this-> _method) {
 	    vars = this-> _method-> getParams ();
 	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
 	    
 	    ident = this-> _method-> getIdent ();
+	} else {
+	    vars = {new (Z0) IVar (this-> _dest-> getIdent ())};
+	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
+	    ident = this-> _dest-> getIdent ();
 	}
 
 	auto ret = IFrame::isApplicable (ident, vars, params);

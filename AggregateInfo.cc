@@ -87,7 +87,11 @@ namespace semantic {
     }
 
     FunctionInfo & IAggregateCstInfo::getDestructor () {
-	return this-> _destr;
+	if (this-> _destr != NULL || !this-> _anc) {
+	    return this-> _destr;
+	} else {
+	    return this-> _anc-> getDestructor ();
+	}
     }
 
     std::vector <FunctionInfo> & IAggregateCstInfo::getMethods () {
@@ -355,7 +359,9 @@ namespace semantic {
     }
 
     Frame IAggregateInfo::getDestructor () {
-	return this-> _destr;
+	if (this-> _destr || !this-> _anc)
+	    return this-> _destr;
+	else return this-> _anc-> getDestructor ();
     }   
     
     InfoType IAggregateInfo::ConstVerif (InfoType type) {
@@ -400,6 +406,11 @@ namespace semantic {
     InfoType IAggregateInfo::DotOp (Var var) {
 	if (!var-> hasTemplate () && var-> token.getStr () == Keys::SUPER && this-> getAncestor () != NULL) 
 	    return Super ();
+	if (var-> token.getStr () == Keys::DISPOSE) {
+	    auto ret = new (Z0) IMethodInfo (this, var-> token.getStr (), {this-> getDestructor ()}, {0}, true);
+	    ret-> binopFoo = &AggregateUtils::InstGetMethod;
+	    return ret;
+	}
 	
 	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
 	if (ret == NULL) {

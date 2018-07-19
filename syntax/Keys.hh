@@ -95,4 +95,5 @@ struct Keys {
     static std::string  DELETE;
     static std::string  VTABLE_FIELD;
     static std::string  SUPER;
+    static std::string  DISPOSE;
 };

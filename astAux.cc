@@ -43,6 +43,10 @@ namespace syntax {
 	}
     }
 
+    void IBlock::addFinallyAtSemantic (Instruction inst) {
+	this-> _preFinally.push_back (inst);
+    }
+    
     void IBlock::addInline (Var var) {
 	this-> inlines.push_back (var);
     }

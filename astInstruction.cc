@@ -76,6 +76,14 @@ namespace syntax {
 		}
 	    }	    	    
 	}
+
+	for (auto it : this-> _preFinally) {
+	    auto ret = it-> instruction ();
+	    if (ret != NULL) {
+		ret-> father () = bl;
+		bl-> addFinally (new (Z0) IBlock (this-> ident, {}, {ret}));
+	    }
+	}
 	
 	bl-> insts = insts;
 	return bl;    
