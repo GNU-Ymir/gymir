@@ -399,6 +399,14 @@ namespace semantic {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstAffect;
 	    return ret;
+	} else if (op == Token::EQUAL && left-> info-> type ()-> is <IAggregateInfo> ()) {
+	    if (left-> info-> type ()-> isSame (this)) {
+		auto ret = left-> info-> type ()-> clone ();
+		ret-> binopFoo = &StructUtils::InstAffect;
+		return ret;
+	    } else if (this-> getAncestor () != NULL) {
+		return this-> getAncestor ()-> BinaryOpRight (op, left);
+	    }
 	}
 	return NULL;
     }
