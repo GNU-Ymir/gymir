@@ -35,6 +35,7 @@ namespace semantic {
 	bool _isExtern = false;
 	bool _isVirtual = true;
 	bool _echec = false;
+	bool _needConst = false;
 	FrameProto _proto;
 	
     public:
@@ -66,6 +67,8 @@ namespace semantic {
 	
 	bool & isVirtual ();
 
+	bool& needConst ();
+	
 	syntax::TypeMethod getMethod ();	
 
     private :

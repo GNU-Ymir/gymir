@@ -1350,6 +1350,30 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::selfAlwaysInfered (const Word & token) {
+	std::string msg = format (getString (SelfAlwaysInfered)); 
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::selfAlwaysRef (const Word & token) {
+	std::string msg = format (getString (SelfAlwaysRef)); 
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }    
+    
     void Error::implicitOverride (const Word & token, const Word & token2) {
 	std::string msg = format (getString (ImplicitOverride));
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

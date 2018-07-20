@@ -51,7 +51,8 @@ namespace semantic {
 	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
 	Table::instance ().enterBlock ();
 	auto object = this-> _info-> TempOp ({});
-	if (object == NULL) return NULL;		
+	if (object == NULL) return NULL;
+	object-> isConst (this-> _needConst);
 	auto params = params_;
 	params.insert (params.begin (), new (Z0) IRefInfo (false, object));
 	
@@ -225,6 +226,10 @@ namespace semantic {
     
     bool& IMethodFrame::isVirtual () {
 	return this-> _isVirtual;
+    }
+
+    bool& IMethodFrame::needConst () {
+	return this-> _needConst;
     }
 
 }

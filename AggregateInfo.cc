@@ -419,7 +419,8 @@ namespace semantic {
 	    ret-> binopFoo = &AggregateUtils::InstGetMethod;
 	    return ret;
 	}
-	
+
+	this-> _impl-> isConst (this-> isConst ());
 	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
 	if (ret == NULL) {
 	    return this-> Method (var);
@@ -432,6 +433,7 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::DotExpOp (Expression right) {
+	this-> _impl-> isConst (this-> isConst ());
 	auto ret = this-> _impl-> DotExpOp (right);
 	if (ret != NULL) {
 	    ret-> isConst (this-> isConst ());

@@ -1368,18 +1368,29 @@ namespace syntax {
 
 	bool addable = this-> tmps.size () == 0;
 	method = false;
+	bool needConst = false;
 	if (this-> params.size () > 0) {
 	    if (this-> params [0]-> token.getStr () == Keys::SELF) method = true;
-	    if (method)
+	    if (method) {
+		if (this-> params [0]-> is <ITypedVar> ()) {
+		    Ymir::Error::selfAlwaysInfered (this-> params [0]-> token);
+		    return NULL;
+		} else if (this-> params [0]-> deco.getStr () == Keys::CONST) {
+		    needConst = true;
+		} else if (this-> params [0]-> deco.getStr () == Keys::REF) {
+		    Ymir::Error::selfAlwaysRef (this-> params [0]-> token);
+		}
+		
 		for (auto it : Ymir::r (1, this-> params.size ())) {
 		    if (!this-> params [it]-> is <ITypedVar> ())
 			addable = false;
 		}
-	    else
+	    } else {
 		for (auto it : Ymir::r (0, this-> params.size ())) {
 		    if (!this-> params [it]-> is<ITypedVar> ())
 			addable = false;
 		}
+	    }
 	}
 	
 	if (!method && this-> name () == Keys::INIT) {
@@ -1392,6 +1403,7 @@ namespace syntax {
 	    fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
 	    fr-> to <IMethodFrame> ()-> isExtern () = isExternal;
 	    fr-> to <IMethodFrame> ()-> isVirtual () = addable;
+	    fr-> to <IMethodFrame> ()-> needConst () = needConst;
 	} else if (addable) {
 	    if (!isExternal)
 		fr = new (Z0) IPureFrame (space, this);

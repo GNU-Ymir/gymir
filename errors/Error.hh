@@ -125,6 +125,8 @@ namespace Ymir {
 	    MustCallSuper,
 	    ImplicitOverride,
 	    NoOverride,
+	    SelfAlwaysInfered,
+	    SelfAlwaysRef,
 	    LAST_ERROR
 	};
 
@@ -336,6 +338,10 @@ namespace Ymir {
 
 	static void noOverride (const Word&);
 
+	static void selfAlwaysInfered (const Word&);
+
+	static void selfAlwaysRef (const Word&);
+	
 	static void ambiguousAccess (const Word&, const Word&, semantic::InfoType);
 	
 	static void activeError (bool);	

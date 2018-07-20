@@ -147,6 +147,8 @@ namespace Ymir {
 		phrases [MustCallSuper] = "Must call the super constructor of type %%% first";
 		phrases [ImplicitOverride] = "Cannot implicitly override method";
 		phrases [NoOverride] = "Method %%% do not override anything";
+		phrases [SelfAlwaysInfered] = "self parameter's type is always infered";
+		phrases [SelfAlwaysRef] = "self parameter's type is always a reference";
 		phrases [AmbiguousAccess] = "Ambiguous access of field for type %%%";
 		init = true;
 	    } 
