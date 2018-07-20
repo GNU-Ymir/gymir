@@ -135,6 +135,10 @@ namespace syntax {
 	void declare (semantic::Module) override;
 
 	void declareAsExtern (semantic::Module) override;
+
+    private :
+
+	bool verifUdasMeth ();
 	
     };
     

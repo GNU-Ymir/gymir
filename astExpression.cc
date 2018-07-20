@@ -6,7 +6,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/Array.hh>
 #include <ymir/utils/Options.hh>
-
+#include <ymir/semantic/object/MethodInfo.hh>
 
 namespace syntax {
     using namespace semantic;
@@ -144,7 +144,7 @@ namespace syntax {
 		    this-> inside = call;
 		    return call-> expression ();
 		}
-	    }
+	    } 
 		
 	    std::vector <Expression> tmps;
 	    for (auto it : this-> templates) {
@@ -539,8 +539,10 @@ namespace syntax {
 	    return aux-> left;
 	} else if ((!aux-> left-> isLvalue () || aux-> left-> info-> isConst ()) && !aux-> left-> info-> type ()-> is <IUndefInfo> ()) {
 	    bool fail = true;
-	    if (auto ref = aux-> left-> info-> type ()-> to<IRefInfo> ()) 
+	    if (auto ref = aux-> left-> info-> type ()-> to<IRefInfo> ())  {
 		if (ref-> content ()-> is <IUndefInfo> ()) fail = false;
+	    } else if (aux-> left-> info-> type () -> is <IMethodInfo> ()) fail = false;
+	    
 	    if (fail) {
 		Ymir::Error::notLValue (aux-> left-> token);
 		return NULL;
@@ -1080,6 +1082,7 @@ namespace syntax {
     }
 
     Expression IDot::expression () {
+	if (this-> _isDone) return this;
 	auto aux = new (Z0)  IDot (this-> token, this-> left-> expression (), this-> right-> templateExpReplace ({}));
 	if (aux-> left == NULL) return NULL;
 	else if (aux-> left-> info-> type ()-> is<IUndefInfo> ()) {
@@ -1098,6 +1101,17 @@ namespace syntax {
 	    } else if (type == NULL) {
 		Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
 		return NULL;		
+	    } else if (type-> is <IMethodInfo> () && type-> to <IMethodInfo> ()-> isAttribute () && ((this-> inside && !this-> inside-> is <IPar> ()))) {
+		auto isLeftAff = this-> inside-> is <IBinary> () && this-> inside-> to <IBinary> ()-> getLeft () == this && this-> inside-> token.getStr () == Token::EQUAL;
+		if (!isLeftAff) {
+		    type-> to <IMethodInfo> ()-> eraseNonAttrib ();
+		    aux-> info = new (Z0)  ISymbol (aux-> token, aux, type);
+		    aux-> _isDone = true;
+		    auto params = new (Z0) IParamList (this-> token, {});
+		    auto call = new (Z0) IPar (this-> token, this-> token, aux, params, true);
+		    aux-> inside = call;
+		    return call-> expression ();
+		}
 	    }
 	    aux-> info = new (Z0)  ISymbol (aux-> token, aux, type);
 	    return aux;

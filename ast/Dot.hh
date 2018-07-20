@@ -10,7 +10,8 @@ namespace syntax {
     class IDot : public IExpression {
 	
 	Expression left, right;
-
+	bool _isDone = false;
+	
     public:
 
 	IDot (Word word, Expression left, Expression right);

@@ -4,13 +4,14 @@
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/MethodFrame.hh>
+#include <ymir/ast/ParamList.hh>
 
 namespace semantic {
 
     namespace MethodUtils {
 	using namespace Ymir;
 	using namespace syntax;
-
+	
 	Tree InstCall (Word token, InfoType type, Expression left, Expression right, ApplicationScore score) {
 	    auto params = right-> to <IParamList> ();
 	    
@@ -43,6 +44,13 @@ namespace semantic {
 					 args.data ());	    
 	}
 
+	Tree InstCallOnBinary (Word token, InfoType type, Expression left, Expression right) {
+	    auto params = new (Z0) IParamList (token, {right});
+	    auto score = type-> appScore;	    
+	    params-> getTreats () = score-> treat;
+	    return InstCall (token, type, left, params, score);
+	}
+	
     }
     
     IMethodInfo::IMethodInfo (AggregateInfo info, std::string name, const std::vector <Frame> & frames, const std::vector <int> & index, bool isStatic) :
@@ -62,6 +70,28 @@ namespace semantic {
 	return new (Z0) IMethodInfo (this-> _info, this-> _name, this-> _frames, this-> _index, !this-> _isDynamic);
     }
 
+
+    InfoType IMethodInfo::BinaryOp (Word op, syntax::Expression right) {
+	if (op == Token::EQUAL && this-> isAttribute ()) {
+	    auto params = new (Z0) syntax::IParamList (op, {right});
+	    this-> eraseNonAttrib ();
+	    auto score = this-> CallOp (op, params);
+	    if (score) {
+		auto ret = score-> ret;
+		ret-> appScore = score;
+		ret-> binopFoo = &MethodUtils::InstCallOnBinary;
+		ret-> multFoo = NULL;
+		return ret;
+	    }
+	}
+	return NULL;
+    }
+
+    InfoType IMethodInfo::BinaryOpRight (Word, syntax::Expression) {
+	return NULL;
+    }
+
+    
     ApplicationScore IMethodInfo::CallAndThrow (Word tok, const std::vector <InfoType> & params, InfoType & retType) {
 	std::vector <ApplicationScore> total;
 	for (auto it : this-> _frames) {
@@ -159,4 +189,24 @@ namespace semantic {
 	return IMethodInfo::id ();
     }            
     
+    void IMethodInfo::eraseNonAttrib () {
+	std::vector <Frame> frames;
+	std::vector <int> index;
+	for (auto it : Ymir::r (0, this-> _frames.size ())) { 
+	    if (this-> _frames [it]-> has (Keys::ATTRIBUTE)) {
+		frames.push_back (this-> _frames [it]);
+		index.push_back (it);
+	    }
+	}
+	this-> _frames = frames;
+	this-> _index = index;
+    }
+
+    bool IMethodInfo::isAttribute () {
+	for (auto it : this-> _frames) {
+	    if (it-> has (Keys::ATTRIBUTE)) return true;
+	}
+	return false;
+    }
+
 }

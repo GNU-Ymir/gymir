@@ -21,6 +21,10 @@ namespace semantic {
 
 	InfoType onClone () override;
 
+	InfoType BinaryOp (Word op, syntax::Expression right) override;
+
+	InfoType BinaryOpRight (Word op, syntax::Expression left) override;
+	
 	std::vector <Frame> getFrames ();
 
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
@@ -37,6 +41,11 @@ namespace semantic {
 
 	const char* getId () override;	
 
+
+	void eraseNonAttrib ();
+	
+	bool isAttribute ();	
+	
     private :
 
 	ApplicationScore CallAndThrow (Word tok, const std::vector <InfoType> & params, InfoType & ret);

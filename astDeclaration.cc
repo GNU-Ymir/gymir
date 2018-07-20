@@ -782,6 +782,16 @@ namespace syntax {
 	return true;
     }
 
+    bool ITypeMethod::verifUdasMeth () {
+	for (auto it : this-> attrs) {
+	    if (it != Keys::ATTRIBUTE && it != Keys::SAFE) {
+		Ymir::Error::undefUda (this-> ident, it);
+		return false;
+	    }
+	}
+	return true;
+    }
+
     
     void IEnum::declare () {
 	auto exist = Table::instance ().getLocal (this-> ident.getStr ());
@@ -1364,6 +1374,7 @@ namespace syntax {
     }
 
     InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method, bool isExternal) {
+	if (!this-> verifUdasMeth ()) return NULL;
 	auto space = Namespace (info-> space (), info-> name ());
 
 	bool addable = this-> tmps.size () == 0;

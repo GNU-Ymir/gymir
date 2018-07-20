@@ -261,7 +261,8 @@ namespace semantic {
 	UnopLint unopFoo = NULL;
 	MultLint multFoo = NULL;
 	ApplyLint applyFoo = NULL;
-
+	ApplicationScore appScore = NULL;
+	
 	std::list <BinopLint> nextBinop;
 	std::list <UnopLint> nextUnop;
 	std::list <MultLint> nextMult;

@@ -5,6 +5,7 @@
 #include <ymir/semantic/object/AggregateInfo.hh>
 #include <ymir/ast/Par.hh>
 #include <ymir/ast/Dot.hh>
+#include <ymir/ast/TypedVar.hh>
 
 using namespace syntax;
 
@@ -47,9 +48,10 @@ namespace semantic {
     FrameProto IMethodFrame::validate (const std::vector <InfoType> & params_) {
 	if (this-> _echec) return NULL;
 	else if (this-> _proto) return this-> _proto;
-	
+
 	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
 	Table::instance ().enterBlock ();
+
 	auto object = this-> _info-> TempOp ({});
 	if (object == NULL) return NULL;
 	object-> isConst (this-> _needConst);
@@ -63,11 +65,11 @@ namespace semantic {
 	    vars.insert (vars.begin (), new (Z0) IVar (this-> _const-> getIdent ()));
 	    auto finalParams = IFrame::computeParams (vars, params);
 	    if (object-> to <IAggregateInfo> ()-> getAncestor () != NULL)
-		if (!verifCallSuper ()) {
-		    Ymir::Error::mustCallSuperConstructor (this-> _const-> getIdent (), object-> to <IAggregateInfo> ()-> getAncestor ());
-		    this-> _echec = true;
-		    return NULL;
-		}
+	    	if (!verifCallSuper ()) {
+	    	    Ymir::Error::mustCallSuperConstructor (this-> _const-> getIdent (), object-> to <IAggregateInfo> ()-> getAncestor ());
+	    	    this-> _echec = true;
+	    	    return NULL;
+	    	}
 	    
 	    auto ret = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _const-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());	    
 	    if (ret) {
@@ -103,10 +105,13 @@ namespace semantic {
 	    return this-> _proto;
 	}
     }
-
+    
     ApplicationScore IMethodFrame::isApplicable (ParamList params) {
 	auto object = this-> _info-> TempOp ({});
 	if (object == NULL) return NULL;
+
+	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
+	Table::instance ().enterBlock ();
 	
 	auto types = params-> getParamTypes ();
 	std::vector <Var> vars;
@@ -163,7 +168,8 @@ namespace semantic {
 	if (object == NULL) return NULL;
 	std::vector <Var> vars;
 	std::vector <InfoType> types;
-	if (this-> _proto != NULL) return this-> _proto;	
+	if (this-> _proto != NULL) return this-> _proto;
+	
 	if (this-> _const) {
 	    vars = this-> _const-> getParams ();
 	    types.push_back (new (Z0) IRefInfo (false, object));
@@ -177,9 +183,9 @@ namespace semantic {
 	}
 		
 	for (auto it : Ymir::r (0, vars.size ())) {
-	    auto info = vars [it]-> var ();
+	    auto info = vars [it]-> to <ITypedVar> ()-> getType ();
 	    if (info != NULL)
-		types.push_back (info-> info-> type ());
+		types.push_back (info);
 	}
        	
 	this-> _proto = validate (types);
