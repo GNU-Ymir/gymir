@@ -12,6 +12,10 @@ namespace syntax {
     public:
 
 	ITreeExpression (Word locus, semantic::InfoType info, Ymir::Tree content);
+
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+	
+	Expression expression ();
 	
 	Ymir::Tree toGeneric () override;
 	

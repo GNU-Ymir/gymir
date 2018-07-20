@@ -196,7 +196,7 @@ namespace semantic {
 		}
 	    }
 	}
-		
+	
 	auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);	
 	auto func = this-> _function-> templateReplace (res.elements);
 	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {

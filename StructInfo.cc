@@ -88,8 +88,12 @@ namespace semantic {
 		std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));
 		auto field_var = new (Z0) IVar (Word {UNKNOWN_LOCATION, field_name});
 		auto local = new (Z0) IDColon (locus, expression, initVar);
-		local-> info = new (Z0) ISymbol (locus, local, type-> DotOp (field_var)-> DColonOp (initVar));		
-		CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), local-> toGeneric ().getTree ());
+		if (field_name != Keys::UNDER) { // Struct vide
+		    local-> info = new (Z0) ISymbol (locus, local, type-> DotOp (field_var)-> DColonOp (initVar));		
+		    CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), local-> toGeneric ().getTree ());
+		} else {
+		    CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), build_int_cst_type (unsigned_char_type_node, 0));
+		}
 	    }
 	    
 	    return build_constructor (ttype.getTree (), elms);
@@ -203,7 +207,7 @@ namespace semantic {
     
     InfoType IStructCstInfo::Init () {
 	std::vector <syntax::Expression> exp;
-	auto ret = this-> TempOp (exp);
+	auto ret = this-> TempOp (exp);	
 	if (ret == NULL) return NULL;
 	ret-> unopFoo = StructUtils::InstInit;
 	return ret;

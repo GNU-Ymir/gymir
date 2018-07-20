@@ -1049,6 +1049,14 @@ namespace syntax {
 	this-> info = new (Z0)  ISymbol (locus, this, info);
     }
 
+    Expression ITreeExpression::templateExpReplace (const std::map <std::string, Expression>&) {
+	return this;
+    }
+
+    Expression ITreeExpression::expression () {
+	return this;
+    }
+    
     void ITreeExpression::print (int) {}
     
     IIf::IIf (Word word, Expression test, Block block, bool isStatic) :
@@ -1436,6 +1444,7 @@ namespace syntax {
 
     Expression IExpression::templateExpReplace (const std::map <std::string, Expression>&) {
 	this-> print (0);
+	println (this-> token);
 	Ymir::Error::assert ((std::string ("TODO") + this-> getIds ().back ()).c_str ());
 	return NULL;	    
     }
