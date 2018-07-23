@@ -127,6 +127,7 @@ namespace Ymir {
 	    NoOverride,
 	    SelfAlwaysInfered,
 	    SelfAlwaysRef,
+	    PrivateMemberWithinThisContext,
 	    LAST_ERROR
 	};
 
@@ -341,6 +342,8 @@ namespace Ymir {
 	static void selfAlwaysInfered (const Word&);
 
 	static void selfAlwaysRef (const Word&);
+	
+	static void privateMemberWithinThisContext (const std::string & str, const Word&);
 	
 	static void ambiguousAccess (const Word&, const Word&, semantic::InfoType);
 	

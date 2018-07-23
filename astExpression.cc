@@ -1082,7 +1082,6 @@ namespace syntax {
     }
 
     Expression IDot::expression () {
-	if (this-> _isDone) return this;
 	auto aux = new (Z0)  IDot (this-> token, this-> left-> expression (), this-> right-> templateExpReplace ({}));
 	if (aux-> left == NULL) return NULL;
 	else if (aux-> left-> info-> type ()-> is<IUndefInfo> ()) {
@@ -1106,7 +1105,6 @@ namespace syntax {
 		if (!isLeftAff) {
 		    type-> to <IMethodInfo> ()-> eraseNonAttrib ();
 		    aux-> info = new (Z0)  ISymbol (aux-> token, aux, type);
-		    aux-> _isDone = true;
 		    auto params = new (Z0) IParamList (this-> token, {});
 		    auto call = new (Z0) IPar (this-> token, this-> token, aux, params, true);
 		    aux-> inside = call;

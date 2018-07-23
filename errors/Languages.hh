@@ -150,6 +150,7 @@ namespace Ymir {
 		phrases [SelfAlwaysInfered] = "self parameter's type is always infered";
 		phrases [SelfAlwaysRef] = "self parameter's type is always a reference";
 		phrases [AmbiguousAccess] = "Ambiguous access of field for type %%%";
+		phrases [PrivateMemberWithinThisContext] = "type %%% member %%% is private within current context";
 		init = true;
 	    } 
 	    return phrases;

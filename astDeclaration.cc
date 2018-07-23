@@ -1363,7 +1363,8 @@ namespace syntax {
 	}
 	auto fr = new (Z0) IMethodFrame (space, Keys::INIT,  info, this);
 	fr-> isExtern () = isExternal;
-	
+	fr-> isPrivate () = (this-> _prot != InnerProtection::PUBLIC);
+		
 	auto func = new (Z0) IFunctionInfo (space, Keys::INIT);
 
 	if (addable && !isExternal)
@@ -1421,7 +1422,9 @@ namespace syntax {
 	    else
 		fr = new (Z0) IExternFrame (space, "", this-> toProto ());
 	} else fr = new (Z0) IUnPureFrame (space, this);
-	    
+
+	fr-> isPrivate () = (this-> _prot != InnerProtection::PUBLIC);
+	
 	auto func = new (Z0) IFunctionInfo (space, this-> name ());
 	if (addable) {
 	    FrameTable::instance ().insert (fr);
@@ -1437,6 +1440,7 @@ namespace syntax {
 	auto space = Namespace (info-> space (), info-> name ());
 	auto fr = new (Z0) IMethodFrame (space, Keys::DELETE, info, this);
 	fr-> isExtern () = isExternal;
+	fr-> isPrivate () = (this-> _prot != InnerProtection::PUBLIC);
 	
 	auto func = new (Z0) IFunctionInfo (space, Keys::DELETE);
 

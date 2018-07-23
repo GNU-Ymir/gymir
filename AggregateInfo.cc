@@ -207,7 +207,7 @@ namespace semantic {
     }
 
     InfoType IAggregateCstInfo::DColonOp (Var var) {
-	if (var-> token == "init") return Init ();
+	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
 	for (auto it : this-> _staticMeth) {
 	    if (it-> name () == var-> token.getStr ()) {
@@ -260,16 +260,27 @@ namespace semantic {
 	return this-> _locId;	
     }
     
-    InfoType IAggregateCstInfo::Init () {
+    InfoType IAggregateCstInfo::Init (Var var) {
 	if (this-> _contrs.size () == 0) {
 	    return NULL;
 	} else {
 	    std::vector <Frame> frames;
-	    for (auto it : this-> _contrs)
-		frames.push_back (it-> frame ());
-	    auto ret = new (Z0) IFunctionInfo (this-> _space, "init", frames);
-	    ret-> isConstr () = true;
-	    return ret;
+	    bool hasPrivate = false;
+	    for (auto it : this-> _contrs) {
+		if (it-> frame ()-> isPrivate () && !this-> inPrivateContext ()) {
+		    hasPrivate = true;
+		} else 
+		    frames.push_back (it-> frame ());
+	    }
+	    
+	    if (hasPrivate) {
+		Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
+		return NULL;
+	    } else {	    
+		auto ret = new (Z0) IFunctionInfo (this-> _space, "init", frames);
+		ret-> isConstr () = true;
+		return ret;
+	    }
 	}
     }
 
@@ -313,6 +324,11 @@ namespace semantic {
 	}	
     }    
     
+    bool IAggregateCstInfo::inPrivateContext () {
+	auto space = Table::instance ().getCurrentSpace ();
+	return space.innerMods () [space.innerMods ().size () - 2] == this-> _name;
+    }
+
     IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExtern) :
 	IInfoType (false),
 	_space (space),
@@ -412,9 +428,11 @@ namespace semantic {
     }
     
     InfoType IAggregateInfo::DotOp (Var var) {
-	if (!var-> hasTemplate () && var-> token.getStr () == Keys::SUPER && this-> getAncestor () != NULL) 
-	    return Super ();
-	if (var-> token.getStr () == Keys::DISPOSE) {
+	if (!var-> hasTemplate () && var-> token.getStr () == Keys::SUPER && this-> getAncestor () != NULL)  {
+	    if (this-> inPrivateContext ())
+		return Super ();
+	    else { Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token); return NULL; }
+	} if (var-> token.getStr () == Keys::DISPOSE) {
 	    auto ret = new (Z0) IMethodInfo (this, var-> token.getStr (), {this-> getDestructor ()}, {0}, true);
 	    ret-> binopFoo = &AggregateUtils::InstGetMethod;
 	    return ret;
@@ -422,9 +440,13 @@ namespace semantic {
 
 	this-> _impl-> isConst (this-> isConst ());
 	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
-	if (ret == NULL) {
-	    return this-> Method (var);
-	} else {
+	
+	if (ret == NULL || !this-> inPrivateContext ()) {	    
+	    auto fin = this-> Method (var);
+	    if (fin) return fin;
+	    else if (ret) { Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token); return NULL; }
+	    return NULL;
+	} else {	    
 	    ret-> isConst (this-> isConst ());
 	    ret-> nextBinop.push_back (ret-> binopFoo);
 	    ret-> binopFoo = &AggregateUtils::InstUnref;
@@ -436,16 +458,21 @@ namespace semantic {
 	this-> _impl-> isConst (this-> isConst ());
 	auto ret = this-> _impl-> DotExpOp (right);
 	if (ret != NULL) {
-	    ret-> isConst (this-> isConst ());
-	    ret-> nextBinop.push_back (ret-> binopFoo);
-	    ret-> binopFoo = &AggregateUtils::InstUnref;
+	    if (!this-> inPrivateContext ()) {
+		Ymir::Error::privateMemberWithinThisContext (this-> typeString (), right-> token);
+		return NULL;
+	    } else {
+		ret-> isConst (this-> isConst ());
+		ret-> nextBinop.push_back (ret-> binopFoo);
+		ret-> binopFoo = &AggregateUtils::InstUnref;
+	    }
 	}
 	return ret;
     }
     
     InfoType IAggregateInfo::DColonOp (Var var) {
 	if (var-> hasTemplate ()) return NULL;
-	if (var-> token == "init") return Init ();
+	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
 	//if (var-> token == "name") return Name ();
 	for (auto it : this-> _staticMeth) {
@@ -518,10 +545,15 @@ namespace semantic {
 	std::vector <Frame> frames;
 	std::vector <int> index;
 	int i = 0;
+	bool hasPrivate = false;
 	for (auto it : this-> _allMethods) {
 	    if (it-> name () == var-> token.getStr ()) {
-		frames.push_back (it-> frame ());
-		index.push_back (i);
+		if (!this-> inPrivateContext () && it-> frame ()-> isPrivate ()) {
+		    hasPrivate = true;
+		} else {
+		    frames.push_back (it-> frame ());
+		    index.push_back (i);
+		}
 	    }
 	    
 	    if (it-> isVirtual ())
@@ -532,19 +564,32 @@ namespace semantic {
 	    auto meth = new (Z0) IMethodInfo (this, var-> token.getStr (), frames, index, this-> _static);
 	    meth-> binopFoo = AggregateUtils::InstGetMethod;	    
 	    return meth;
-	} else return NULL;
+	} else if (hasPrivate) {
+	    Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
+	}
+	return NULL;
     }
 
-    InfoType IAggregateInfo::Init () {
+    InfoType IAggregateInfo::Init (Var var) {
 	if (this-> _id-> _contrs.size () == 0) {
 	    return NULL;
 	} else {
 	    std::vector <Frame> frames;
+	    bool hasPrivate = false;
 	    for (auto it : this-> _id-> _contrs)
-		frames.push_back (it-> frame ());
-	    auto ret = new (Z0) IFunctionInfo (this-> _id-> _space, "init", frames);
-	    ret-> isConstr () = true;
-	    return ret;
+		if (it-> frame ()-> isPrivate () && !this-> inPrivateContext ()) {
+		    hasPrivate = true;
+		} else 
+		    frames.push_back (it-> frame ());
+	    
+	    if (hasPrivate) {
+		Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
+		return NULL;
+	    } else {	    
+		auto ret = new (Z0) IFunctionInfo (this-> _id-> _space, "init", frames);
+		ret-> isConstr () = true;
+		return ret;
+	    }
 	}
     }    
 
@@ -686,6 +731,15 @@ namespace semantic {
 
     const char * IAggregateInfo::getId () {
 	return IAggregateInfo::id ();
+    }
+    
+    bool IAggregateInfo::inPrivateContext () {
+	auto space = Table::instance ().getCurrentSpace ();
+	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	    return true;
+	} else if (this-> _anc) {
+	    return this-> _anc-> inPrivateContext ();
+	} else return false;
     }
     
     

@@ -1373,6 +1373,20 @@ namespace Ymir {
 	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }    
+
+
+    void Error::privateMemberWithinThisContext (const std::string & str, const Word & token) {
+	std::string msg = format (getString (PrivateMemberWithinThisContext), YELLOW, str, RESET, YELLOW, token.getStr (), RESET); 
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }    
+
     
     void Error::implicitOverride (const Word & token, const Word & token2) {
 	std::string msg = format (getString (ImplicitOverride));

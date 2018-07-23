@@ -98,13 +98,15 @@ namespace semantic {
 
     private :
 
-	InfoType Init ();
+	InfoType Init (::syntax::Var var);
 
 	InfoType SizeOf ();
 
 	TupleInfo constructImpl (); 
 
 	bool recursiveGet (InfoType, InfoType);
+
+	bool inPrivateContext ();
 	
     };
 
@@ -189,7 +191,7 @@ namespace semantic {
 
 	InfoType Super ();
 
-	InfoType Init ();
+	InfoType Init (::syntax::Var);
 	
 	//InfoType Name ();
 
@@ -198,6 +200,8 @@ namespace semantic {
 	Ymir::Tree buildVtableEnum (Ymir::Tree vtype);
 
 	std::vector <FunctionInfo> getMethods ();
+
+	bool inPrivateContext ();
 	
     };
 
