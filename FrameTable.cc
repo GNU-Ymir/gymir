@@ -134,6 +134,16 @@ namespace semantic {
     std::vector <Symbol> & FrameTable::externals () {
 	return this-> _externals;
     }
+
+    bool FrameTable::isSuccessor (Namespace space, AggregateCstInfo info) {
+	for (auto it : this-> _aggrs) {
+	    auto _space = Namespace (it-> space (), it-> name ());
+	    if (space == _space) {
+		return it-> isSuccessor (info);
+	    }
+	}
+	return false;
+    }
     
     std::vector <tree> declArguments (Ymir::Tree func) {
 	std::vector <tree> vars;
@@ -268,6 +278,7 @@ namespace semantic {
 	return list.getTree ();
     }
 
+       
     void FrameTable::purge () {
 	this-> _finals.clear ();
 	this-> _finalTemplates.clear ();
@@ -275,4 +286,6 @@ namespace semantic {
 	this-> _protos.clear ();
     }
     
+
+
 }

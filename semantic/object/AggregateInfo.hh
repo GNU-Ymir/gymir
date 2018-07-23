@@ -86,6 +86,8 @@ namespace semantic {
 	
 	std::string name ();
 
+	bool isSuccessor (IAggregateCstInfo *info);
+	
 	syntax::TypeCreator& creator ();
 	
 	static const char * id () {
@@ -107,7 +109,12 @@ namespace semantic {
 	bool recursiveGet (InfoType, InfoType);
 
 	bool inPrivateContext ();
-	
+
+	bool inProtectedContext ();
+
+	bool isMine (Namespace space);
+
+	bool isProtectedForMe (Namespace space);
     };
 
     class IAggregateInfo : public IInfoType {
@@ -202,6 +209,12 @@ namespace semantic {
 	std::vector <FunctionInfo> getMethods ();
 
 	bool inPrivateContext ();
+
+	bool inProtectedContext ();
+
+	bool isMine (Namespace space);
+
+	bool isProtectedForMe (Namespace space);
 	
     };
 

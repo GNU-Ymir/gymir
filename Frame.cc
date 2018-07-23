@@ -579,6 +579,14 @@ namespace semantic {
     bool& IFrame::isPrivate () {
 	return this-> _isPrivate;
     }
+
+    bool& IFrame::isInnerPrivate () {
+	return this-> _isInnerPrivate;
+    }
+
+    bool& IFrame::isInnerProtected () {
+	return this-> _isInnerProtected;
+    }
     
     Word IFrame::ident () {
 	return this-> _function-> getIdent ();

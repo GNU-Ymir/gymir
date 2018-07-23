@@ -45,6 +45,8 @@ namespace semantic {
 	int _currentScore;        
 	bool _isInternal = false;	
 	bool _isPrivate = false;
+	bool _isInnerPrivate = false;
+	bool _isInnerProtected = false;
 	bool _isVariadic = false;
 	std::string _externLang;
 	std::string _externLangSpace;
@@ -106,6 +108,10 @@ namespace semantic {
 	
 	virtual bool& isPrivate ();
 
+	bool& isInnerPrivate ();
+
+	bool& isInnerProtected ();
+	
 	std::string & externLang ();
 
 	std::string & externLangSpace ();

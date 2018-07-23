@@ -92,6 +92,8 @@ namespace semantic {
 	std::vector <syntax::Global> & globals ();
 
 	std::vector <Symbol> & externals ();
+
+	bool isSuccessor (Namespace space, AggregateCstInfo info);
 	
 	void addMain ();
 	

@@ -11,13 +11,15 @@ namespace semantic {
 	std::vector <std::string> names;
 
 	Namespace () {}
-
+       	
     public:
 	
 	Namespace (std::string name);
 
 	Namespace (const Namespace &space, std::string name);
 
+	Namespace (const std::vector <std::string> &names);
+	
 	friend bool operator== (const Namespace &self, const Namespace &other);
 
 	friend bool operator!= (const Namespace &self, const Namespace &other);

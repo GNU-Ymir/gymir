@@ -211,9 +211,21 @@ namespace semantic {
 	if (var-> token == "sizeof") return SizeOf ();
 	for (auto it : this-> _staticMeth) {
 	    if (it-> name () == var-> token.getStr ()) {
-		auto ret = it-> clone ();
-		ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
-		return ret;
+		bool hasPrivate = false;
+		if (it-> frame ()-> isInnerPrivate () && (!this-> isMine (it-> frame ()-> space ()) || (!this-> inPrivateContext ()))) {
+		    hasPrivate = true;
+		} else if (it-> frame ()-> isInnerProtected () && (!this-> isProtectedForMe (it-> frame ()-> space ()) || (!this-> inProtectedContext ()))) {
+		    hasPrivate = true;
+		}
+
+		if (!hasPrivate) {
+		    auto ret = it-> clone ();
+		    ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
+		    return ret;
+		} else {
+		    Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
+		    return NULL;
+		}
 	    }	    		
 	}
 	return NULL;
@@ -248,6 +260,13 @@ namespace semantic {
 	return this-> _name;
     }
 
+    bool IAggregateCstInfo::isSuccessor (AggregateCstInfo info) {
+	if (this-> _anc) {
+	    if (this-> _anc-> isSame (info)) return true;
+	    else return this-> _anc-> isSuccessor (info);
+	} else return false;
+    }
+
     TypeCreator& IAggregateCstInfo::creator () {
 	return this-> _creator;
     }
@@ -267,7 +286,9 @@ namespace semantic {
 	    std::vector <Frame> frames;
 	    bool hasPrivate = false;
 	    for (auto it : this-> _contrs) {
-		if (it-> frame ()-> isPrivate () && !this-> inPrivateContext ()) {
+		if (it-> frame ()-> isInnerPrivate () && !this-> inPrivateContext ()) {
+		    hasPrivate = true;
+		} else if (it-> frame ()-> isInnerProtected () && !this-> inProtectedContext ()) {
 		    hasPrivate = true;
 		} else 
 		    frames.push_back (it-> frame ());
@@ -323,19 +344,47 @@ namespace semantic {
 	    return str;		
 	}	
     }    
+
+    bool IAggregateCstInfo::inProtectedContext () {
+	auto space = Table::instance ().getCurrentSpace ();
+	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	    return true;
+	} else if (this-> _anc) {
+	    auto ret = this-> _anc-> inPrivateContext ();
+	    if (ret) return true;
+	}
+	
+	std::vector <std::string> name (space.innerMods ().begin (), space.innerMods ().end () - 1);
+	return FrameTable::instance ().isSuccessor (Namespace (name), this);		   	
+    }
     
     bool IAggregateCstInfo::inPrivateContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	return space.innerMods () [space.innerMods ().size () - 2] == this-> _name;
+	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	    return true;
+	}
+	return false;
     }
 
+
+    bool IAggregateCstInfo::isMine (Namespace space) {
+	return Namespace (this-> _space, this-> _name) == space;
+    }
+
+    bool IAggregateCstInfo::isProtectedForMe (Namespace space) {
+	if (isMine (space)) return true;
+	if (this-> _anc) return this-> _anc-> isProtectedForMe (space);
+	return false;
+    }
+
+    
     IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExtern) :
 	IInfoType (false),
 	_space (space),
 	_name (name),
 	tmpsDone (tmpsDone),
 	_id (from),
-	_isExternal (isExtern)	
+	_isExternal (isExtern)
     {}
 
     bool IAggregateInfo::isSame (InfoType other) {
@@ -441,7 +490,7 @@ namespace semantic {
 	this-> _impl-> isConst (this-> isConst ());
 	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
 	
-	if (ret == NULL || !this-> inPrivateContext ()) {	    
+	if (ret == NULL || !this-> inProtectedContext ()) {	    
 	    auto fin = this-> Method (var);
 	    if (fin) return fin;
 	    else if (ret) { Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token); return NULL; }
@@ -548,7 +597,9 @@ namespace semantic {
 	bool hasPrivate = false;
 	for (auto it : this-> _allMethods) {
 	    if (it-> name () == var-> token.getStr ()) {
-		if (!this-> inPrivateContext () && it-> frame ()-> isPrivate ()) {
+		if (it-> frame ()-> isInnerPrivate () && (!this-> isMine (it-> frame ()-> space ()) || !this-> inPrivateContext ())) {
+		    hasPrivate = true;
+		} else if (it-> frame ()-> isInnerProtected () && (!this-> isProtectedForMe (it-> frame ()-> space ()) || !this-> inProtectedContext ())) {
 		    hasPrivate = true;
 		} else {
 		    frames.push_back (it-> frame ());
@@ -577,7 +628,9 @@ namespace semantic {
 	    std::vector <Frame> frames;
 	    bool hasPrivate = false;
 	    for (auto it : this-> _id-> _contrs)
-		if (it-> frame ()-> isPrivate () && !this-> inPrivateContext ()) {
+		if (it-> frame ()-> isInnerPrivate () && !this-> inPrivateContext ()) {
+		    hasPrivate = true;
+		} else if (it-> frame ()-> isInnerProtected () && !this-> inProtectedContext ()) {
 		    hasPrivate = true;
 		} else 
 		    frames.push_back (it-> frame ());
@@ -737,9 +790,31 @@ namespace semantic {
 	auto space = Table::instance ().getCurrentSpace ();
 	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
 	    return true;
+	}
+	return false;
+    }
+
+    bool IAggregateInfo::inProtectedContext () {
+	auto space = Table::instance ().getCurrentSpace ();
+	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	    return true;
 	} else if (this-> _anc) {
-	    return this-> _anc-> inPrivateContext ();
-	} else return false;
+	    auto ret = this-> _anc-> inPrivateContext ();
+	    if (ret) return true;
+	}
+	
+	std::vector <std::string> name (space.innerMods ().begin (), space.innerMods ().end () - 1);
+	return FrameTable::instance ().isSuccessor (Namespace (name), this-> _id);		   	
+    }
+
+    bool IAggregateInfo::isMine (Namespace space) {
+	return Namespace (this-> _space, this-> _name) == space;
+    }
+
+    bool IAggregateInfo::isProtectedForMe (Namespace space) {
+	if (isMine (space)) return true;
+	if (this-> _anc) return this-> _anc-> isProtectedForMe (space);
+	return false;
     }
     
     

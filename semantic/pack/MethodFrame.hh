@@ -34,6 +34,8 @@ namespace semantic {
 	std::string _name;
 	bool _isExtern = false;
 	bool _isVirtual = true;
+	bool _isInnerPrivate = false;
+	bool _isInnerProtected = false;
 	bool _echec = false;
 	bool _needConst = false;
 	FrameProto _proto;

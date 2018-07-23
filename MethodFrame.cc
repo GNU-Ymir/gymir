@@ -109,9 +109,6 @@ namespace semantic {
     ApplicationScore IMethodFrame::isApplicable (ParamList params) {
 	auto object = this-> _info-> TempOp ({});
 	if (object == NULL) return NULL;
-
-	Table::instance ().enterFrame (this-> _space, this-> _name, this-> templateParams (), this-> attributes (), false);
-	Table::instance ().enterBlock ();
 	
 	auto types = params-> getParamTypes ();
 	std::vector <Var> vars;
@@ -125,7 +122,7 @@ namespace semantic {
 	    
 	    ident = this-> _method-> getIdent ();
 	}
-	
+
 	auto ret = IFrame::isApplicable (ident, vars, types);
 	if (ret)
 	    ret-> ret = object;
@@ -151,6 +148,7 @@ namespace semantic {
 	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
 	    ident = this-> _dest-> getIdent ();
 	}
+	
 
 	auto ret = IFrame::isApplicable (ident, vars, params);
 	if (ret) 

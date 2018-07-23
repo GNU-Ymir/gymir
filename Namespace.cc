@@ -33,6 +33,10 @@ namespace semantic {
 	);	
     }
 
+    Namespace::Namespace (const std::vector <std::string> & names)
+	: names (names)
+    {}
+    
     bool operator!= (const Namespace &fst, const Namespace &scd) {
 	return !(fst == scd);
     }
