@@ -724,7 +724,7 @@ namespace semantic {
 	    if (it-> isVirtual ())
 		i ++;
 	}
-	println (var, " ", index);
+
 	if (frames.size () != 0) {
 	    auto meth = new (Z0) IMethodInfo (this, var-> token.getStr (), frames, index, this-> _static);
 	    meth-> binopFoo = AggregateUtils::InstGetMethod;	    
