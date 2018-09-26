@@ -192,11 +192,11 @@ namespace semantic {
     void IMethodInfo::eraseNonAttrib () {
 	std::vector <Frame> frames;
 	std::vector <int> index;
-	if (this-> _name != "#cpy") {// Constructeur de copie
+	if (this-> _name != Keys::COPY) {// Constructeur de copie
 	    for (auto it : Ymir::r (0, this-> _frames.size ())) { 
 		if (this-> _frames [it]-> has (Keys::ATTRIBUTE)) {
 		    frames.push_back (this-> _frames [it]);
-		    index.push_back (it);
+		    index.push_back (this-> _index [it]);
 		}
 	    }
 	    this-> _frames = frames;
