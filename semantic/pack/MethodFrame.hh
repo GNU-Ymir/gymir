@@ -38,6 +38,7 @@ namespace semantic {
 	bool _isInnerProtected = false;
 	bool _echec = false;
 	bool _needConst = false;
+	bool _isCopy = false;
 	FrameProto _proto;
 	
     public:
@@ -70,6 +71,8 @@ namespace semantic {
 	bool & isVirtual ();
 
 	bool& needConst ();
+
+	bool& isCopy ();
 	
 	syntax::TypeMethod getMethod ();	
 

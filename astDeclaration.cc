@@ -1356,15 +1356,19 @@ namespace syntax {
     InfoType ITypeConstructor::declare (AggregateCstInfo info, bool isExternal) {
 	auto space = Namespace (info-> space (), info-> name ());
 	bool addable = true;
-	for (auto it : this-> _params) {
-	    if (!it-> is<ITypedVar> ()) {
-		addable = false;
+	if (!this-> _isCopy) 
+	    for (auto it : this-> _params) {
+		if (!it-> is<ITypedVar> ()) {
+		    addable = false;
+		}
 	    }
-	}
-	auto fr = new (Z0) IMethodFrame (space, Keys::INIT,  info, this);
+
+	
+	auto fr = new (Z0) IMethodFrame (space, this-> _isCopy ? Keys::COPY : Keys::INIT,  info, this);
 	fr-> isExtern () = isExternal;
 	fr-> isInnerPrivate () = (this-> _prot == InnerProtection::PRIVATE);
 	fr-> isInnerProtected () = (this-> _prot == InnerProtection::PROTECTED);
+	fr-> isCopy () = this-> _isCopy;
 		
 	auto func = new (Z0) IFunctionInfo (space, Keys::INIT);
 
