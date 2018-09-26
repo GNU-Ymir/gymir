@@ -65,7 +65,85 @@ namespace semantic {
 		right
 	    ));
 	}
+	
+	Ymir::Tree InstCopyCstAff (Word loc, InfoType, Expression left, Expression right) {
+	    auto rtree = right-> toGeneric ();
+	    auto ltree = left-> toGeneric ();
+	    Ymir::TreeStmtList list;
+	    auto meth = right-> info-> type ()-> to <IAggregateInfo> ()-> cpyCstr ();
+	    auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
+	    auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
+	    auto vtable = Ymir::getAddr (right-> info-> type ()-> to <IAggregateInfo> ()-> getVtable ());
+	    auto vfield = Ymir::getField (loc.getLocus (), ltree, Keys::VTABLE_FIELD);
+	    list.append (
+		Ymir::buildTree (MODIFY_EXPR,
+				 loc.getLocus (),
+				 void_type_node,
+				 vfield,
+				 convert (vfield.getType ().getTree (), vtable.getTree ())
+		)
+	    );
 
+	    auto fn = meth-> validate ()-> toGeneric ();
+	    std::vector <tree> args = {ptrl, ptrr};
+	    list.append (build_call_array_loc (loc.getLocus (),
+					       void_type_node,
+					       fn.getTree (),
+					       2,
+					       args.data ()));
+	    
+	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), ltree);	    
+	}
+	
+	Ymir::Tree InstGetCpy (Word loc, InfoType type, Expression left, Expression) {
+	    auto rtree = left-> toGeneric ();
+	    Ymir::TreeStmtList list;
+	    auto meth = type-> to <IAggregateInfo> ()-> cpyCstr ();
+	    auto ltree = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), type-> toGeneric ());
+	    auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
+	    auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
+	    auto vtable = Ymir::getAddr (type-> to <IAggregateInfo> ()-> getVtable ());
+	    auto vfield = Ymir::getField (loc.getLocus (), ltree, Keys::VTABLE_FIELD);
+	    list.append (
+		Ymir::buildTree (MODIFY_EXPR,
+				 loc.getLocus (),
+				 void_type_node,
+				 vfield,
+				 convert (vfield.getType ().getTree (), vtable.getTree ())
+		)
+	    );
+
+	    auto fn = meth-> validate ()-> toGeneric ();
+	    std::vector <tree> args = {ptrl, ptrr};
+	    list.append (build_call_array_loc (loc.getLocus (),
+					       void_type_node,
+					       fn.getTree (),
+					       2,
+					       args.data ()));
+	    
+	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), ltree);
+	}
+	
+	Ymir::Tree InstCast (Word loc, InfoType type, Expression elem, Expression) {	    
+	    auto toType = type->  toGeneric ();
+	    auto rtree = elem-> toGeneric ();
+	    if (toType != rtree.getType ()) {
+		Ymir::TreeStmtList list;
+		auto ltree = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), toType);
+		auto ptrl = Ymir::getAddr (loc.getLocus (), ltree).getTree ();
+		auto ptrr = Ymir::getAddr (loc.getLocus (), rtree).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
+		auto result = build_call_expr_loc (loc.getLocus (), tmemcopy, 3, ptrl, ptrr, size);
+		list.append (result);
+		
+		return Ymir::compoundExpr (loc.getLocus (), list, ltree);
+	    } else {
+	    	return rtree;
+	    }
+	}
+
+	
 	
     }
     
@@ -453,24 +531,56 @@ namespace semantic {
     InfoType IAggregateInfo::BinaryOp (Word op, Expression right) {
 	if (op == Token::EQUAL && right-> info-> type ()-> isSame (this)) {
 	    auto ret = this-> clone ();
-	    ret-> binopFoo = &StructUtils::InstAffect;
+	    if (this-> hasCopyCstr ()) 
+		ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
+	    else 
+		ret-> binopFoo = &StructUtils::InstAffect;	    
 	    return ret;
 	}
 	return NULL;
     }
 
     InfoType IAggregateInfo::BinaryOpRight (Word op, Expression left) {
-	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {
+	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {	    
 	    auto ret = this-> clone ();
-	    ret-> binopFoo = &StructUtils::InstAffect;
+	    if (this-> hasCopyCstr ())
+		ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
+	    else 
+		ret-> binopFoo = &StructUtils::InstAffect;
 	    return ret;
 	} else if (op == Token::EQUAL && left-> info-> type ()-> is <IAggregateInfo> ()) {
 	    if (left-> info-> type ()-> isSame (this)) {
 		auto ret = left-> info-> type ()-> clone ();
-		ret-> binopFoo = &StructUtils::InstAffect;
+		if (this-> hasCopyCstr ())
+		    ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
+		else
+		    ret-> binopFoo = &StructUtils::InstAffect;
 		return ret;
 	    } else if (this-> getAncestor () != NULL) {
-		return this-> getAncestor ()-> BinaryOpRight (op, left);
+		return this-> getAncestor ()-> BinaryOpRightCpy (op, left, this-> hasCopyCstr ());
+	    }
+	}
+	return NULL;
+    }
+
+    InfoType IAggregateInfo::BinaryOpRightCpy (Word op, Expression left, bool hasCpy) {
+	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {	    
+	    auto ret = this-> clone ();
+	    if (this-> hasCopyCstr ())
+		ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
+	    else 
+		ret-> binopFoo = &StructUtils::InstAffect;
+	    return ret;
+	} else if (op == Token::EQUAL && left-> info-> type ()-> is <IAggregateInfo> ()) {
+	    if (left-> info-> type ()-> isSame (this)) {
+		auto ret = left-> info-> type ()-> clone ();
+		if (hasCpy)
+		    ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
+		else
+		    ret-> binopFoo = &StructUtils::InstAffect;
+		return ret;
+	    } else if (this-> getAncestor () != NULL) {
+		return this-> getAncestor ()-> BinaryOpRightCpy (op, left, this-> hasCopyCstr ());
 	    }
 	}
 	return NULL;
@@ -535,15 +645,19 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::CompOp (InfoType other) {
-	if (this-> isSame (other)) {
-	    auto ret = this-> clone ();
-	    ret-> isConst (this-> isConst ());
-	    ret-> binopFoo = &StructUtils::InstCast;
-	    return ret;
-	} else if (other-> is <IUndefInfo> ()) {
-	    auto ret = this-> clone ();
-	    ret-> binopFoo = &StructUtils::InstCast;
-	    return ret;
+	if (this-> isSame (other) || other-> is <IUndefInfo> ()) {
+	    if (this-> hasCopyCstr ()) {
+		auto ret = this-> clone ();
+		//auto meth = new (Z0) IMethodInfo (this, Keys::COPY, {this-> cpyCstr ()}, {0}, false);
+		ret-> isConst (this-> isConst ());
+		ret-> binopFoo = AggregateUtils::InstGetCpy;
+		return ret;
+	    } else {
+		auto ret = this-> clone ();
+		ret-> isConst (this-> isConst ());
+		ret-> binopFoo = &AggregateUtils::InstCast;
+		return ret;
+	    }
 	} else if (auto ref = other-> to <IRefInfo> ()) {
 	    if (this-> isSame (ref-> content ())) {
 		auto ret = new (Z0) IRefInfo (this-> isConst (), ref-> content ()-> clone ());
@@ -817,5 +931,22 @@ namespace semantic {
 	return false;
     }
     
-    
+    bool IAggregateInfo::hasCopyCstr () {
+	for (auto it : this-> _id-> _contrs) {	    
+	    if (it-> frame ()-> to<IMethodFrame> ()-> isCopy ()) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    Frame IAggregateInfo::cpyCstr () {
+	for (auto it : this-> _id-> _contrs) {
+	    if (it-> frame ()-> to<IMethodFrame> ()-> isCopy ()) {
+		return it-> frame ();
+	    }
+	}
+	return NULL;
+    }
+
 }

@@ -80,10 +80,11 @@ namespace syntax {
 	Word _ident;
 	std::vector <Var> _params;
 	Block _block;
+	bool _isCopy;
 	
     public :
 
-	ITypeConstructor (Word ident, const std::vector <Var> & params, Block block);
+	ITypeConstructor (Word ident, const std::vector <Var> & params, Block block, bool isCopy);
 
 	InnerProtection & getProtection ();
 

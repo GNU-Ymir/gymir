@@ -701,14 +701,21 @@ namespace syntax {
 	auto word = this-> lex.next ({Token::LPAR});
 	word = this-> lex.next ();
 	if (word != Token::RPAR) {
-	    this-> lex.rewind ();
-	    while (true) {
-		params.push_back (visitVarDeclaration ());
-		word = this-> lex.next ({Token::RPAR, Token::COMA});
-		if (word == Token::RPAR) break;
+	    if (word == Keys::SELF) {
+		auto name = visitIdentifiant ();
+		this-> lex.next ({Token::RPAR});
+		params.push_back (new (Z0) IVar (name));
+		return new (Z0) ITypeConstructor (begin, params, visitBlock (), true);
+	    } else {
+		this-> lex.rewind ();
+		while (true) {
+		    params.push_back (visitVarDeclaration ());
+		    word = this-> lex.next ({Token::RPAR, Token::COMA});
+		    if (word == Token::RPAR) break;
+		}
 	    }
 	}
-	return new (Z0) ITypeConstructor (begin, params, visitBlock ());
+	return new (Z0) ITypeConstructor (begin, params, visitBlock (), false);
     }
 
     TypeDestructor Visitor::visitTypeDestructor () {	

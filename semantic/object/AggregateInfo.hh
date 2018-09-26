@@ -183,6 +183,8 @@ namespace semantic {
 	std::vector <InfoType> getTemplate (ulong, ulong) override;
 
 	AggregateInfo getAncestor ();
+
+	Frame cpyCstr ();
 	
 	static const char * id () {
 	    return "IAggregateInfo";
@@ -215,6 +217,10 @@ namespace semantic {
 	bool isMine (Namespace space);
 
 	bool isProtectedForMe (Namespace space);
+
+	bool hasCopyCstr ();
+	
+	InfoType BinaryOpRightCpy (Word, syntax::Expression, bool);
 	
     };
 

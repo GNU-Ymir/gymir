@@ -114,8 +114,12 @@ namespace semantic {
 	std::vector <Var> vars;
 	Word ident;
 	if (this-> _const) {
-	    vars = this-> _const-> getParams ();
 	    ident = this-> _const-> getIdent ();
+	    if (this-> _isCopy) {
+		vars = {new (Z0) IVar (this-> _const-> getIdent ())};
+		vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
+	    } else 
+		vars = this-> _const-> getParams ();
 	} else {
 	    vars = this-> _method-> getParams ();
 	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
@@ -136,8 +140,13 @@ namespace semantic {
 	std::vector <Var> vars;
 	Word ident;
 	if (this-> _const) {	   
-	    vars = this-> _const-> getParams ();
 	    ident = this-> _const-> getIdent ();
+	    if (this-> _isCopy) {
+		vars = {new (Z0) IVar (this-> _const-> getIdent ())};
+		vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
+	    } else {
+		vars = this-> _const-> getParams ();
+	    }
 	} else if (this-> _method) {
 	    vars = this-> _method-> getParams ();
 	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
@@ -179,11 +188,15 @@ namespace semantic {
 	    this-> _proto = validate ({new (Z0) IRefInfo (false, object)});
 	    return this-> _proto;
 	}
-		
-	for (auto it : Ymir::r (0, vars.size ())) {
-	    auto info = vars [it]-> to <ITypedVar> ()-> getType ();
-	    if (info != NULL)
-		types.push_back (info);
+
+	if (this-> _isCopy) {
+	    types.push_back (new (Z0) IRefInfo (true, object));
+	} else {
+	    for (auto it : Ymir::r (0, vars.size ())) {
+		auto info = vars [it]-> to <ITypedVar> ()-> getType ();
+		if (info != NULL)
+		    types.push_back (info);
+	    }
 	}
        	
 	this-> _proto = validate (types);
@@ -232,6 +245,10 @@ namespace semantic {
 	return this-> _isVirtual;
     }
 
+    bool& IMethodFrame::isCopy () {
+	return this-> _isCopy;
+    }
+    
     bool& IMethodFrame::needConst () {
 	return this-> _needConst;
     }

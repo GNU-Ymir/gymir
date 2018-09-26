@@ -2156,10 +2156,11 @@ namespace syntax {
 	return this-> _methods;
     }
     
-    ITypeConstructor::ITypeConstructor (Word ident, const std::vector <Var> & params, Block block) :
+    ITypeConstructor::ITypeConstructor (Word ident, const std::vector <Var> & params, Block block, bool isCopy) :
 	_ident (ident),
 	_params (params),
-	_block (block)
+	_block (block),
+	_isCopy (isCopy)
     {}
 
     InnerProtection& ITypeConstructor::getProtection () {
