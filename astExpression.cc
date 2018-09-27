@@ -114,9 +114,16 @@ namespace syntax {
 	return call-> expression ();
     }    
 
-    Expression IVar::expression (Symbol sym) {
+    Expression IVar::expression (Symbol sym) {	
+	if (sym-> type ()-> is<IAliasCstInfo> ()) {
+	    auto aux = sym-> type ()-> to <IAliasCstInfo> ()-> expression ();
+	    if (aux == NULL) return NULL;
+	    return aux;
+	}
+	
 	auto aux = new (Z0) IVar (this-> token);
-	aux-> info = sym;
+	aux-> info = sym;	
+	
 	if (this-> templates.size () != 0) {
 	    if (this-> inside && this-> inside-> is <IDot> ()) {
 		if (auto dt = this-> inside-> to<IDot> ()) {
@@ -162,6 +169,7 @@ namespace syntax {
 		return NULL;
 	    }
 
+	    
 	    aux-> templates = tmps;
 	    aux-> info = new (Z0)  ISymbol (aux-> info-> sym, aux, type);
 	}
@@ -179,6 +187,7 @@ namespace syntax {
 		return NULL;
 	    } else {		
 		auto ret = this-> expression (sym);
+		if (ret == NULL) return NULL;
 		if (Table::instance ().parentFrame (sym) && ret-> is<IVar> ()) {
 		    auto var = ret-> to <IVar> ();
 		    if (!var-> isType ()) {

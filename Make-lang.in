@@ -89,6 +89,7 @@ ymir_OBJS = \
 	ymir/AggregateInfo.o \
 	ymir/MethodFrame.o \
 	ymir/MethodInfo.o \
+	ymir/AliasInfo.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

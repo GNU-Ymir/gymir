@@ -97,4 +97,5 @@ struct Keys {
     static std::string  COPY;
     static std::string  SUPER;
     static std::string  DISPOSE;
+    static std::string  ALIAS;
 };

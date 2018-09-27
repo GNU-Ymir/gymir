@@ -125,6 +125,7 @@ namespace syntax {
 	std::vector <Word> visitAttributes ();	
 	Declaration visitProto (Word, std::string);
 	std::vector<Declaration> visitExternBlock (Word, std::string, bool);
+	Alias visitAlias ();
 	
 	Word visitFromExtern ();
 	Expression visitConstTuple ();

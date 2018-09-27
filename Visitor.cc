@@ -87,7 +87,7 @@ namespace syntax {
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 			       Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
-			       Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::TYPE
+			       Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::TYPE, Keys::ALIAS
 	};
 	
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -169,7 +169,7 @@ namespace syntax {
 			syntaxError (tok,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE, Keys::ALIAS
 					     }
 			);
 		    } else 
@@ -264,7 +264,7 @@ namespace syntax {
 		syntaxError (token,
 			     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 				     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION, Keys::TYPE
+				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION, Keys::TYPE, Keys::ALIAS
 				     }
 		);
 	    } else {
@@ -344,10 +344,11 @@ namespace syntax {
     	else if (token == Keys::SELF) return visitSelf ();
 	else if (token == Token::TILDE) return visitDestSelf ();
 	else if (token == Keys::TYPE) return visitTypeCreator ();
+	else if (token == Keys::ALIAS) return visitAlias ();
     	else if (fatal) syntaxError (token,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE
+					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE, Keys::ALIAS
 					     }
 	);
     	else this-> lex.rewind ();
@@ -1318,6 +1319,7 @@ namespace syntax {
 		else if (next == Keys::EXTERN) decls.push_back (visitExternBl ());
 		else if (next == Keys::STRUCT) decls.push_back (visitStruct ());
 		else if (next == Keys::UNION) decls.push_back (visitStruct (true));
+		else if (next == Keys::ALIAS) decls.push_back (visitAlias ());
 		else if (next == Token::LACC) {
 		    this-> lex.rewind ();
 		    insts.push_back (visitBlock ());		
@@ -2692,5 +2694,13 @@ namespace syntax {
 	
 	return new (Z0)  IFor (begin, id, vars, iter, visitBlock (), _const);
     }       
+
+    Alias Visitor::visitAlias () {
+	auto ident = visitIdentifiant ();
+	this-> lex.next ({Token::EQUAL});
+	auto value = this-> visitExpression ();
+	this-> lex.next ({Token::SEMI_COLON});
+	return new (Z0) IAlias (ident, value);	
+    }
     
 };

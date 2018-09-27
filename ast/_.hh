@@ -60,3 +60,4 @@
 #include "StringOf.hh"
 #include "AffectGeneric.hh"
 #include "TypeCreator.hh"
+#include "Alias.hh"

@@ -1666,6 +1666,16 @@ namespace syntax {
 	for (auto it : values)
 	    delete it;
     }
+
+    IAlias::IAlias (Word ident, Expression value) :
+	_ident (ident),
+	_value (value)
+    {
+	this-> is_public (true);
+    }
+
+    void IAlias::print (int) {	
+    }
     
     ITypeOf::ITypeOf (Word begin, Expression expr, bool mut) :
 	IExpression (begin),

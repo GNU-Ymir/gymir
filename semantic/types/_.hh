@@ -23,3 +23,4 @@
 #include "StructInfo.hh"
 #include "ModuleInfo.hh"
 #include "MacroInfo.hh"
+#include "AliasInfo.hh"

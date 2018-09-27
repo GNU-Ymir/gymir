@@ -280,8 +280,10 @@ namespace semantic {
     }
 
     InfoType IInfoType::onlyInMod (Module mod) {
-	auto ret = this-> clone ();
+	auto value = this-> value ();
+	auto ret = this-> cloneOnExitWithInfo ();
 	if (ret) {
+	    ret-> value () = value;
 	    ret-> _onlyInMe = mod;
 	    ret-> _toGet = this-> _toGet;
 	}

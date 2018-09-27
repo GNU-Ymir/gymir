@@ -828,8 +828,7 @@ namespace syntax {
 			return;
 		    }			
 		}
-	    }
-	    
+	    }	    
 	    Table::instance ().insert (sym);	    
 	}
     }
@@ -853,7 +852,7 @@ namespace syntax {
 	    auto space = mod-> space ();
 	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type ());
 	    auto sym = new (Z0) ISymbol (this-> ident, NULL, en);
-	    sym-> isPublic () = true;
+	    sym-> isPublic () = this-> is_public ();
 
 	    for (auto i : Ymir::r (0, this-> names.size ())) {
 		if (i == 0 && fst) {
@@ -895,7 +894,7 @@ namespace syntax {
 	    auto space = mod-> space ();
 	    auto en = new (Z0) IEnumCstInfo (space, this-> ident.getStr (), type-> type ());
 	    auto sym = new (Z0) ISymbol (this-> ident, NULL, en);
-	    sym-> isPublic () = true;
+	    sym-> isPublic () = this-> is_public ();
 
 	    for (auto i : Ymir::r (0, this-> names.size ())) {
 		if (i == 0 && fst) {
@@ -1232,6 +1231,7 @@ namespace syntax {
 	auto it = Table::instance ().getLocal (this-> _ident.getStr ());
 	if (it != NULL) {
 	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
+	    return;
 	}
 
 	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
@@ -1273,10 +1273,11 @@ namespace syntax {
 	auto it = mod-> get (this-> _ident.getStr ());
 	if (it != NULL) {
 	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
+	    return;
 	}
 
 	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
-
+	
 	if (this-> _destr.size () > 1) 
 	    Ymir::Error::multipleDestr (this-> _ident);
 	
@@ -1307,6 +1308,7 @@ namespace syntax {
 	}
 	
 	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
+	sym-> isPublic () = this-> is_public ();
 	mod-> insert (sym);
     }
     
@@ -1349,6 +1351,7 @@ namespace syntax {
 	}
 	
 	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
+	sym-> isPublic () = this-> is_public ();
 	mod-> insert (sym);
     }
     
@@ -1468,5 +1471,47 @@ namespace syntax {
     void ITypeMethod::declareAsExtern (semantic::Module) {
 	Ymir::Error::assert ("!!?");
     }
+    
+    void IAlias::declare () {
+	auto space = Table::instance ().space ();
+	auto exist = Table::instance ().getLocal (this-> _ident.getStr ());
+	if (exist) {
+	    Ymir::Error::shadowingVar (this-> _ident, exist-> sym);
+	    return;
+	}
+
+	auto type = new (Z0) IAliasCstInfo (this-> _ident, space, this-> _value);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
+	Table::instance ().insert (sym);		
+    }
+
+    void IAlias::declare (semantic::Module mod) {
+	auto space = mod-> space ();
+	auto exist = mod-> get (this-> _ident.getStr ());
+	if (exist != NULL) {
+	    Ymir::Error::shadowingVar (this-> _ident, exist-> sym);
+	    return;
+	}
+
+	auto type = new (Z0) IAliasCstInfo (this-> _ident, space, this-> _value);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);
+    }
+    
+    void IAlias::declareAsExtern (semantic::Module mod) {
+	auto space = mod-> space ();
+	auto exist = mod-> get (this-> _ident.getStr ());
+	if (exist != NULL) {
+	    Ymir::Error::shadowingVar (this-> _ident, exist-> sym);
+	    return;
+	}
+
+	auto type = new (Z0) IAliasCstInfo (this-> _ident, space, this-> _value);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, type);
+	sym-> isPublic () = this-> is_public ();
+	mod-> insert (sym);
+    }
+   
     
 }
