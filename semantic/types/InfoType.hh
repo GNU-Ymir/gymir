@@ -60,11 +60,6 @@ namespace semantic {
     
     class IInfoType  {
 	
-	typedef Ymir::Tree (*BinopLint) (Word, IInfoType*, syntax::Expression, syntax::Expression);
-	typedef Ymir::Tree (*MultLint) (Word, IInfoType*, syntax::Expression, syntax::Expression, ApplicationScore);
-	typedef Ymir::Tree (*UnopLint) (Word, IInfoType*, syntax::Expression);
-
-	typedef Ymir::Tree (*ApplyLint) (Word, IInfoType*, std::vector <syntax::Var>&, syntax::Block, syntax::Expression);
 	
 	bool _isConst = false;
 	bool _isLValue = false;
@@ -77,6 +72,12 @@ namespace semantic {
 	static bool __need__Print_CONST__;
     protected:
 
+	typedef Ymir::Tree (*BinopLint) (Word, IInfoType*, syntax::Expression, syntax::Expression);
+	typedef Ymir::Tree (*MultLint) (Word, IInfoType*, syntax::Expression, syntax::Expression, ApplicationScore);
+	typedef Ymir::Tree (*UnopLint) (Word, IInfoType*, syntax::Expression);
+
+	typedef Ymir::Tree (*ApplyLint) (Word, IInfoType*, std::vector <syntax::Var>&, syntax::Block, syntax::Expression);
+	
 	bool _isType = false;
 	Module _onlyInMe = NULL;
 

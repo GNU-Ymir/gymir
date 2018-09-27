@@ -1249,6 +1249,8 @@ namespace syntax {
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
 
+	    type-> getAlias () = this-> _alias;
+
 	    for (auto meth : this-> _methods) {
 		bool isMethod = false;
 		auto info_ = meth-> declare (type, isMethod);
@@ -1292,6 +1294,8 @@ namespace syntax {
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
 
+	    type-> getAlias () = this-> _alias;
+		    
 	    for (auto meth : this-> _methods) {
 		bool isMethod = false;
 		auto info_ = meth-> declare (type, isMethod);
@@ -1336,6 +1340,8 @@ namespace syntax {
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
 
+	    type-> getAlias () = this-> _alias;
+	    
 	    for (auto meth : this-> _methods) {
 		bool isMethod = false;
 		auto info_ = meth-> declare (type, isMethod, true);
@@ -1512,6 +1518,10 @@ namespace syntax {
 	sym-> isPublic () = this-> is_public ();
 	mod-> insert (sym);
     }
-   
+
+    void ITypeAlias::declare () {}
+    void ITypeAlias::declare (semantic::Module) {}
+    void ITypeAlias::declareAsExtern (semantic::Module) {}
+    
     
 }

@@ -25,6 +25,7 @@ namespace syntax {
 	TypeConstructor visitTypeConstructor ();
 	TypeDestructor visitTypeDestructor ();
 	TypeMethod visitTypeMethod ();
+	TypeAlias visitTypeAlias ();
 	void visitTypePrivate (TypeCreator type);
 	void visitTypeProtected (TypeCreator type);
 	

@@ -684,10 +684,12 @@ namespace syntax {
 	
 	this-> lex.next ({Token::LACC});
 	while (true) {
-	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED});
+	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED, Keys::LET});
 	    if (next == Keys::SELF) type-> getConstructors ().push_back (visitTypeConstructor ());
 	    else if (next == Keys::OVER || next == Keys::DEF)
 		type-> getMethods ().push_back (visitTypeMethod ());
+	    else if (next == Keys::LET)
+		type-> getAlias ().push_back (visitTypeAlias ());
 	    else if (next == Token::TILDE) type-> getDestructors ().push_back (visitTypeDestructor ());
 	    else if (next == Keys::PRIVATE) visitTypePrivate (type);		
 	    else if (next == Keys::PROTECTED) visitTypeProtected (type);
@@ -726,6 +728,24 @@ namespace syntax {
 	return new (Z0) ITypeDestructor (begin, visitBlock ());
     }
 
+    TypeAlias Visitor::visitTypeAlias () {
+	auto next = this-> lex.next ();
+	bool isConst = false;
+	if (next == Keys::CONST) isConst = true;
+	else this-> lex.rewind ();
+	
+	auto name = visitIdentifiant ();
+	this-> lex.next ({Token::COLON});
+						  
+	this-> lex.next ({Keys::SELF});
+	this-> lex.next ({Token::DOT});
+	this-> lex.rewind (2);
+	auto value = visitExpression ();
+	this-> lex.next ({Token::SEMI_COLON});
+	
+	return new (Z0) ITypeAlias (name, value, isConst);
+    }
+    
     TypeMethod Visitor::visitTypeMethod () {
 	auto over = (this-> lex.rewind ().next () == Keys::OVER);
 	auto function = visitFunction ();

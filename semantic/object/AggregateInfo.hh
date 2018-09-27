@@ -14,6 +14,9 @@ namespace syntax {
 
     class ITypeCreator;
     typedef ITypeCreator* TypeCreator;
+
+    class ITypeAlias;
+    typedef ITypeAlias* TypeAlias;
 }
 
 namespace semantic {
@@ -44,6 +47,8 @@ namespace semantic {
 	bool _isFailure = false;
 	bool _isOver;
 	InfoType _info = NULL;
+
+	std::vector <syntax::TypeAlias> _alias;
 	
 	syntax::TypeCreator _creator;
 	IAggregateCstInfo* _anc = NULL;
@@ -62,6 +67,8 @@ namespace semantic {
 
 	std::vector <FunctionInfo> & getStaticMethods ();
 
+	std::vector <syntax::TypeAlias> & getAlias ();
+	
 	Namespace space ();
 	
 	bool isSame (InfoType) override;
@@ -135,6 +142,7 @@ namespace semantic {
 	TupleInfo _impl;
 	bool _isExternal;
 	bool _static = false;
+	bool _hasExemption = false;
 	
 	friend IAggregateCstInfo;
 
@@ -184,6 +192,8 @@ namespace semantic {
 
 	AggregateInfo getAncestor ();
 
+	bool& hasExemption ();
+	
 	Frame cpyCstr ();
 	
 	static const char * id () {
@@ -221,6 +231,8 @@ namespace semantic {
 	bool hasCopyCstr ();
 	
 	InfoType BinaryOpRightCpy (Word, syntax::Expression, bool);
+
+	InfoType AliasOp (syntax::Var var);
 	
     };
 

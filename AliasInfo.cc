@@ -35,6 +35,11 @@ namespace semantic {
 	return value;
     }
     
+    AliasCstInfo IAliasCstInfo::replace (const std::map <std::string, Expression> & repl) {
+	auto ret = this-> _value-> templateExpReplace (repl);
+	return new (Z0) IAliasCstInfo (this-> _ident, this-> _space, ret);
+    }
+
     std::string IAliasCstInfo::innerTypeString () {
 	return "alias(" + this-> _ident.getStr () + ")";
     }

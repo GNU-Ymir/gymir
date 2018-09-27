@@ -33,13 +33,15 @@ namespace syntax {
     class ITypeConstructor;
     class ITypeDestructor;
     class ITypeMethod;
-
+    class ITypeAlias;
+    
     typedef IFunction* Function;
     typedef ITypeCreator* TypeCreator;
     typedef ITypeConstructor* TypeConstructor;
     typedef ITypeDestructor* TypeDestructor;
     typedef ITypeMethod* TypeMethod; 
-        
+    typedef ITypeAlias* TypeAlias;
+    
     class ITypeCreator : public IDeclaration {
     protected:
 
@@ -51,7 +53,8 @@ namespace syntax {
 	std::vector <TypeConstructor> _constr;
 	std::vector <TypeDestructor> _destr;
 	std::vector <TypeMethod> _methods;
-
+	std::vector <TypeAlias> _alias;
+	
 	bool _isUnion;
 	
     public:
@@ -64,6 +67,8 @@ namespace syntax {
 
 	std::vector <TypeMethod> & getMethods ();		
 
+	std::vector <TypeAlias> & getAlias ();
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;
@@ -140,6 +145,32 @@ namespace syntax {
     private :
 
 	bool verifUdasMeth ();
+	
+    };
+
+    class ITypeAlias : public IDeclaration {
+
+	Word _ident;
+	
+	Expression _value;
+	
+	bool _isConst;
+
+    public :
+
+	ITypeAlias (Word ident, Expression value, bool isConst);
+
+	void declare () override;
+
+	void declare (semantic::Module) override;
+
+	void declareAsExtern (semantic::Module) override;
+
+	Word getIdent ();
+
+	Expression getValue ();
+
+	bool isConst ();
 	
     };
     

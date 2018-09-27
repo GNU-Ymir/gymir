@@ -2165,6 +2165,10 @@ namespace syntax {
     std::vector <TypeMethod> & ITypeCreator::getMethods () {
 	return this-> _methods;
     }
+
+    std::vector <TypeAlias> & ITypeCreator::getAlias () {
+	return this-> _alias;
+    }
     
     ITypeConstructor::ITypeConstructor (Word ident, const std::vector <Var> & params, Block block, bool isCopy) :
 	_ident (ident),
@@ -2215,4 +2219,31 @@ namespace syntax {
     InnerProtection& ITypeMethod::getProtection () {
 	return this-> _prot;
     }
+
+    ITypeAlias::ITypeAlias (Word ident, Expression value, bool isConst) :
+	_ident (ident),
+	_value (value),
+	_isConst (isConst)
+    {
+    }
+
+    Word ITypeAlias::getIdent () {
+	return this-> _ident;
+    }
+
+    Expression ITypeAlias::getValue () {
+	return this-> _value;
+    }
+
+    bool ITypeAlias::isConst () {
+	return this-> _isConst;
+    }
+
+    IEvaluatedExpr::IEvaluatedExpr (Expression value) :
+	IExpression (value-> token),
+	_value (value)
+    {}
+
+    void IEvaluatedExpr::print (int) {}
+    
 }

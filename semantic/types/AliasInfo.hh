@@ -36,6 +36,8 @@ namespace semantic {
 	bool isType () override;
 
 	syntax::Expression expression ();
+
+	IAliasCstInfo* replace (const std::map <std::string, syntax::Expression> &);	
 	
 	static const char* id () {
 	    return "IAliasCstInfo";

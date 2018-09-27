@@ -1119,6 +1119,13 @@ namespace syntax {
 		    aux-> inside = call;
 		    return call-> expression ();
 		}
+	    } else if (type-> is <IAliasCstInfo> ()) {
+		if (aux-> left-> info-> type ()-> is <IAggregateInfo> ())
+		    aux-> left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = true;
+		else if (aux-> left-> info-> type ()-> is <IRefInfo> ())
+		    aux-> left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = true;
+
+		return type-> to <IAliasCstInfo> ()-> replace ({{Keys::SELF, new (Z0) IEvaluatedExpr (aux-> left)}})-> expression ();
 	    }
 	    aux-> info = new (Z0)  ISymbol (aux-> token, aux, type);
 	    return aux;
@@ -1825,4 +1832,10 @@ namespace syntax {
 	ret-> info = new (Z0) ISymbol (this-> token, ret, new (Z0) IVoidInfo ());
 	return ret;
     }
+
+    Expression IEvaluatedExpr::expression () {
+	return this-> _value;
+    }
+    
+    
 }

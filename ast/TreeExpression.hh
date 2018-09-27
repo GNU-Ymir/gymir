@@ -23,5 +23,22 @@ namespace syntax {
 
     };
 
+    class IEvaluatedExpr : public IExpression {
+
+	Expression _value;
+	
+    public :
+
+	IEvaluatedExpr (Expression value);
+
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+	
+	Expression expression ();
+
+	void print (int id = 0) override;
+	
+	
+    };
+    
     
 }

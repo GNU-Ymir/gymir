@@ -646,5 +646,9 @@ namespace syntax {
 	return new (Z0) IMacroToken (this-> token, this-> value);
     }
 
+    Expression IEvaluatedExpr::templateExpReplace (const std::map <std::string, Expression> &) {
+	return new (Z0) IEvaluatedExpr (this-> _value);
+    }
+    
     
 }

@@ -15,6 +15,7 @@
 #include <ymir/semantic/utils/StructUtils.hh>
 #include <ymir/semantic/pack/MethodFrame.hh>
 #include <ymir/ast/TypedVar.hh>
+#include <ymir/ast/Binary.hh>
 
 
 using namespace syntax;   
@@ -46,7 +47,7 @@ namespace semantic {
 	Tree InstGetMethod (Word, InfoType, Expression left, Expression) {
 	    return left-> toGeneric ();
 	}
-       	
+	
 	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
 	    auto type = t-> cloneOnExitWithInfo ();
 	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
@@ -164,6 +165,10 @@ namespace semantic {
 	return this-> _contrs;
     }
 
+    std::vector <TypeAlias> & IAggregateCstInfo::getAlias () {
+	return this-> _alias;
+    }
+    
     FunctionInfo & IAggregateCstInfo::getDestructor () {
 	if (this-> _destr != NULL || !this-> _anc) {
 	    return this-> _destr;
@@ -596,11 +601,16 @@ namespace semantic {
 	    ret-> binopFoo = &AggregateUtils::InstGetMethod;
 	    return ret;
 	}
-
+	
 	this-> _impl-> isConst (this-> isConst ());
 	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
+	bool alias = false;
+	if (ret == NULL && !this-> _hasExemption) {
+	    ret = this-> AliasOp (var);
+	    alias = true;
+	}
 	
-	if (ret == NULL || !this-> inProtectedContext ()) {	    
+	if (ret == NULL || (!this-> inProtectedContext () && !alias)) {	    
 	    auto fin = this-> Method (var);
 	    if (fin) return fin;
 	    else if (ret) { Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token); return NULL; }
@@ -704,6 +714,15 @@ namespace semantic {
 	return ret;
     }
     
+    InfoType IAggregateInfo::AliasOp (Var var) {
+	for (auto it : this-> _id-> getAlias ()) {
+	    if (it-> getIdent ().getStr () == var-> token.getStr ()) {
+		return new (Z0) IAliasCstInfo (var-> token, this-> _space, it-> getValue ());
+	    }
+	}
+	return NULL;
+    }
+
     InfoType IAggregateInfo::Method (Var var) {
 	std::vector <Frame> frames;
 	std::vector <int> index;
@@ -891,6 +910,10 @@ namespace semantic {
     AggregateInfo IAggregateInfo::getAncestor () {
 	return this-> _anc;
     }
+
+    bool& IAggregateInfo::hasExemption () {
+	return this-> _hasExemption;
+    }
     
     std::vector <InfoType> IAggregateInfo::getTemplate (ulong, ulong) {
 	return {};
@@ -901,6 +924,7 @@ namespace semantic {
     }
     
     bool IAggregateInfo::inPrivateContext () {
+	if (this-> _hasExemption) return true;
 	auto space = Table::instance ().getCurrentSpace ();
 	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
 	    return true;
