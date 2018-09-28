@@ -753,9 +753,15 @@ namespace syntax {
     }
 
     void Visitor::visitTypePrivate (TypeCreator type) {
-	this-> lex.next ({Token::LACC});
+	bool mult = false;
+	auto next = this-> lex.next ();
+	if (next == Token::LACC) mult = true;
+	else this-> lex.rewind ();
 	while (true) {
-	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER});
+	    Word next;
+	    if (mult) next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
+	    else next = this-> lex.next ({Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
+	    
 	    if (next == Keys::SELF) {
 		auto cst = visitTypeConstructor ();
 		cst-> getProtection () = InnerProtection::PRIVATE;
@@ -764,14 +770,26 @@ namespace syntax {
 		auto cst = visitTypeMethod ();
 		cst-> getProtection () = InnerProtection::PRIVATE;
 		type-> getMethods ().push_back (cst);
+	    } else if (next == Keys::LET) {
+		auto cst = visitTypeAlias ();
+		cst-> getProtection () = InnerProtection::PRIVATE;
+		type-> getAlias ().push_back (cst);
 	    } else break;
+	    if (!mult) break;
 	}
     }
     
-    void Visitor::visitTypeProtected (TypeCreator type) {	
-	this-> lex.next ({Token::LACC});
+    void Visitor::visitTypeProtected (TypeCreator type) {
+	bool mult = false;
+
+	auto next = this-> lex.next ();
+	if (next == Token::LACC) mult = true;
+	else this-> lex.rewind ();
+	
 	while (true) {
-	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER});
+	    Word next;
+	    if (mult) next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
+	    else next = this-> lex.next ({Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
 	    if (next == Keys::SELF) {
 		auto cst = visitTypeConstructor ();
 		cst-> getProtection () = InnerProtection::PROTECTED;
@@ -780,7 +798,12 @@ namespace syntax {
 		auto cst = visitTypeMethod ();
 		cst-> getProtection () = InnerProtection::PROTECTED;
 		type-> getMethods ().push_back (cst);
+	    } else if (next == Keys::LET) {
+		auto cst = visitTypeAlias ();
+		cst-> getProtection () = InnerProtection::PROTECTED;
+		type-> getAlias ().push_back (cst);
 	    } else break;
+	    if (!mult) break;
 	}
     } 
 

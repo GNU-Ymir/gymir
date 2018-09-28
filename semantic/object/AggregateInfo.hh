@@ -134,6 +134,7 @@ namespace semantic {
 	Frame _destr;
 	std::vector <FunctionInfo> _methods;
 	std::vector <FunctionInfo> _allMethods;
+	std::vector <syntax::TypeAlias> _allAlias;
 	std::vector <FunctionInfo> _staticMeth;
 	
 	std::vector <syntax::Expression> tmpsDone;
@@ -220,6 +221,8 @@ namespace semantic {
 
 	std::vector <FunctionInfo> getMethods ();
 
+	std::vector <syntax::TypeAlias> getAllAlias ();
+	
 	bool inPrivateContext ();
 
 	bool inProtectedContext ();

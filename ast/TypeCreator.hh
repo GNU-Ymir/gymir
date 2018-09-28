@@ -156,10 +156,22 @@ namespace syntax {
 	
 	bool _isConst;
 
+	InnerProtection _prot = InnerProtection::PUBLIC;
+
+	semantic::Namespace _space;
+	
     public :
 
 	ITypeAlias (Word ident, Expression value, bool isConst);
 
+	InnerProtection & getProtection ();
+
+	bool isPrivate ();
+
+	bool isProtected ();
+
+	semantic::Namespace & space ();
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;

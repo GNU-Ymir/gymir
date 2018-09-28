@@ -1248,8 +1248,21 @@ namespace syntax {
 		if (res)
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
-
-	    type-> getAlias () = this-> _alias;
+	    
+	    for (auto alias : this-> _alias) {
+		alias-> space () = Namespace (type-> space (), type-> name ());
+		bool error = false;
+		for (auto __al : type-> getAlias ()) {
+		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
+			Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+			error = true;
+			break;
+		    }
+		}
+		if (!error) 
+		    type-> getAlias ().push_back (alias);
+	    }
+	    
 
 	    for (auto meth : this-> _methods) {
 		bool isMethod = false;
@@ -1294,8 +1307,20 @@ namespace syntax {
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
 
-	    type-> getAlias () = this-> _alias;
-		    
+	    for (auto alias : this-> _alias) {
+		alias-> space () = Namespace (type-> space (), type-> name ());
+		bool error = false;
+		for (auto __al : type-> getAlias ()) {
+		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
+			Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+			error = true;
+			break;
+		    }
+		}
+		if (!error) 
+		    type-> getAlias ().push_back (alias);
+	    }
+	    
 	    for (auto meth : this-> _methods) {
 		bool isMethod = false;
 		auto info_ = meth-> declare (type, isMethod);
@@ -1340,7 +1365,20 @@ namespace syntax {
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
 
-	    type-> getAlias () = this-> _alias;
+	    
+	    for (auto alias : this-> _alias) {
+		alias-> space () = Namespace (type-> space (), type-> name ());
+		bool error = false;
+		for (auto __al : type-> getAlias ()) {
+		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
+			Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+			error = true;
+			break;
+		    }
+		}
+		if (!error) 
+		    type-> getAlias ().push_back (alias);
+	    }
 	    
 	    for (auto meth : this-> _methods) {
 		bool isMethod = false;

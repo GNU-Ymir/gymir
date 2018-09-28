@@ -1125,7 +1125,18 @@ namespace syntax {
 		else if (aux-> left-> info-> type ()-> is <IRefInfo> ())
 		    aux-> left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = true;
 
-		return type-> to <IAliasCstInfo> ()-> replace ({{Keys::SELF, new (Z0) IEvaluatedExpr (aux-> left)}})-> expression ();
+		auto ret = type-> to <IAliasCstInfo> ()-> replace ({{Keys::SELF, new (Z0) IEvaluatedExpr (aux-> left)}})-> expression ();
+
+		if (ret != NULL) {
+		    ret-> info-> type ()-> isConst (type-> isConst ());
+		    ret-> token = aux-> right-> token;
+		}
+		
+		if (aux-> left-> info-> type ()-> is <IAggregateInfo> ())
+		    aux-> left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = false;
+		else if (aux-> left-> info-> type ()-> is <IRefInfo> ())
+		    aux-> left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = false;
+		return ret;
 	    }
 	    aux-> info = new (Z0)  ISymbol (aux-> token, aux, type);
 	    return aux;

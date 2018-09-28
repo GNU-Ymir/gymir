@@ -2222,8 +2222,9 @@ namespace syntax {
 
     ITypeAlias::ITypeAlias (Word ident, Expression value, bool isConst) :
 	_ident (ident),
-	_value (value),
-	_isConst (isConst)
+	_value (value),	
+	_isConst (isConst),
+	_space ("")
     {
     }
 
@@ -2237,6 +2238,22 @@ namespace syntax {
 
     bool ITypeAlias::isConst () {
 	return this-> _isConst;
+    }
+
+    InnerProtection & ITypeAlias::getProtection () {
+	return this-> _prot;
+    }
+    
+    bool ITypeAlias::isPrivate () {
+	return this-> _prot == InnerProtection::PRIVATE;
+    }
+    
+    bool ITypeAlias::isProtected () {
+	return this-> _prot == InnerProtection::PROTECTED;
+    }
+    
+    semantic::Namespace & ITypeAlias::space () {
+	return this-> _space;
     }
 
     IEvaluatedExpr::IEvaluatedExpr (Expression value) :

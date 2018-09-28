@@ -247,6 +247,7 @@ namespace semantic {
 	if (anc) info-> _anc = anc-> to <IAggregateInfo> ();
 	
 	info-> _allMethods = info-> getMethods ();
+	info-> _allAlias = info-> getAllAlias ();
 	this-> _info = info;	    
 	
 	// info-> setTmps (this-> tmpsDone); TODO
@@ -526,6 +527,7 @@ namespace semantic {
 	ret-> _staticMeth = this-> _staticMeth;
 	ret-> _methods = this-> _methods;
 	ret-> _allMethods = this-> _allMethods;
+	ret-> _allAlias = this-> _allAlias;
 	if (this-> _anc)
 	    ret-> _anc = this-> _anc;
 	ret-> isConst (this-> isConst ());
@@ -607,7 +609,11 @@ namespace semantic {
 	bool alias = false;
 	if (ret == NULL && !this-> _hasExemption) {
 	    ret = this-> AliasOp (var);
-	    alias = true;
+	    if (ret) {
+		ret-> nextBinop.push_back (ret-> binopFoo);
+		ret-> binopFoo = &AggregateUtils::InstUnref;
+		return ret;
+	    }
 	}
 	
 	if (ret == NULL || (!this-> inProtectedContext () && !alias)) {	    
@@ -715,11 +721,24 @@ namespace semantic {
     }
     
     InfoType IAggregateInfo::AliasOp (Var var) {
-	for (auto it : this-> _id-> getAlias ()) {
+	bool hasPrivate = false;
+	for (auto it : this-> _allAlias) {	    
 	    if (it-> getIdent ().getStr () == var-> token.getStr ()) {
-		return new (Z0) IAliasCstInfo (var-> token, this-> _space, it-> getValue ());
+		if (it-> isPrivate () && (!this-> isMine (it-> space ()) || !this-> inPrivateContext ()))
+		    hasPrivate = true;
+		else if (it-> isProtected () && (!this-> isProtectedForMe (it-> space ()) || !this-> inProtectedContext ()))
+		    hasPrivate = true;
+		else {
+		    auto ret = new (Z0) IAliasCstInfo (var-> token, this-> _space, it-> getValue ());
+
+		    ret-> isConst (this-> isConst ());
+		    if (it-> isConst ()) ret-> isConst (it-> isConst ());
+		    return ret;
+		}
 	    }
 	}
+	if (hasPrivate)
+	    Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
 	return NULL;
     }
 
@@ -803,6 +822,36 @@ namespace semantic {
 	return array_type;
     }
 
+    std::vector <TypeAlias> IAggregateInfo::getAllAlias () {
+	std::vector <TypeAlias> alias;
+	if (this-> getAncestor ()) 
+	    alias = this-> getAncestor ()-> _allAlias;
+	auto clone = this-> clone ()-> to <IAggregateInfo> ();
+	clone-> _hasExemption = true;
+	
+	for (auto it : this-> _id-> getAlias ()) {
+	    auto name = it-> getIdent ().getStr ();
+	    bool error = false;
+	    for (auto anc : alias) {
+		if (name == anc-> getIdent ().getStr ()) {
+		    Ymir::Error::shadowingVar (it-> getIdent (), anc-> getIdent ());
+		    error = true;
+		    break;
+		}
+	    }
+	    
+	    if (!error) {
+		auto ign = new (Z0) IExpression (it-> getIdent ());
+		ign-> info = new (Z0) ISymbol (it-> getIdent (), ign, clone);
+		auto expr = new (Z0) IEvaluatedExpr (ign);
+		auto eval = new (Z0) IAliasCstInfo (it-> getIdent (), this-> _space, it-> getValue ());
+		if (eval-> replace ({{Keys::SELF, expr}})-> expression () != NULL)
+		    alias.push_back (it);
+	    }
+	}
+	return alias;
+    }
+    
     std::vector <FunctionInfo> IAggregateInfo::getMethods () {
 	if (!this-> getAncestor ()) return this-> _methods;
 	auto method = this-> getAncestor ()-> _allMethods;
