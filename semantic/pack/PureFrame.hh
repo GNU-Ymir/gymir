@@ -32,6 +32,7 @@ namespace semantic {
 
 	InfoType getRetType () override;
 	
+	
 	static const char* id () {
 	    return "IPureFrame";
 	}

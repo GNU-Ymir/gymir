@@ -41,6 +41,7 @@ namespace semantic {
 	std::vector <FunctionInfo> _staticMeth;
 
 	std::vector <syntax::Expression> _tmps;
+	std::vector <syntax::Expression> _tmpsDone;
 	std::vector <syntax::Expression> _impl;
 	bool _isUnion;
 	bool _isExternal;
@@ -51,6 +52,8 @@ namespace semantic {
 	std::vector <syntax::TypeAlias> _alias;
 	
 	syntax::TypeCreator _creator;
+	Namespace _templateSpace;
+	
 	IAggregateCstInfo* _anc = NULL;
 	
     public :
@@ -71,6 +74,8 @@ namespace semantic {
 	
 	Namespace space ();
 	
+	Namespace & templateSpace ();
+
 	bool isSame (InfoType) override;
 
 	InfoType onClone () override;
@@ -80,6 +85,8 @@ namespace semantic {
 	InfoType TempOp (const std::vector <::syntax::Expression> &) override;
 
 	std::string typeString () override;
+
+	std::string simpleTypeString () override;
 
 	std::string innerTypeString () override;
 
@@ -96,6 +103,8 @@ namespace semantic {
 	bool isSuccessor (IAggregateCstInfo *info);
 	
 	syntax::TypeCreator& creator ();
+
+	std::vector <syntax::Expression> & tmpsDone ();
 	
 	static const char * id () {
 	    return "IAggregateCstInfo";
@@ -122,6 +131,8 @@ namespace semantic {
 	bool isMine (Namespace space);
 
 	bool isProtectedForMe (Namespace space);
+
+	InfoType getScore (const std::vector <syntax::Expression>&);
     };
 
     class IAggregateInfo : public IInfoType {
@@ -236,6 +247,7 @@ namespace semantic {
 	InfoType BinaryOpRightCpy (Word, syntax::Expression, bool);
 
 	InfoType AliasOp (syntax::Var var);
+
 	
     };
 

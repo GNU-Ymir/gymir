@@ -68,6 +68,10 @@ namespace syntax {
 	std::vector <TypeMethod> & getMethods ();		
 
 	std::vector <TypeAlias> & getAlias ();
+
+	semantic::InfoType declare (semantic::Namespace, const std::vector <Expression> &tmps);
+
+	Declaration templateDeclReplace (const std::map <std::string, Expression> &) override;
 	
 	void declare () override;
 
@@ -76,6 +80,16 @@ namespace syntax {
 	void declareAsExtern (semantic::Module) override;
 
 	void print (int) override {}
+
+	static const char* id () {
+	    return "ITypeCreator";
+	}
+
+	std::vector<std::string> getIds () override {
+	    auto vec = IDeclaration::getIds ();
+	    vec.push_back (ITypeCreator::id ());
+	    return vec;
+	}
 	
     };
 
@@ -96,6 +110,8 @@ namespace syntax {
 	std::vector <Var> & getParams ();
 
 	Block& getBlock ();
+
+	ITypeConstructor* templateDeclReplace (const std::map <std::string, Expression>& tmps);
 	
 	semantic::InfoType declare (semantic::AggregateCstInfo info, bool isExternal = false);
 
@@ -118,8 +134,10 @@ namespace syntax {
 	Word & getIdent ();
 
 	Block & getBlock ();
-	
-	semantic::InfoType declare (semantic::AggregateCstInfo info, bool isExternal = false);		
+
+	semantic::InfoType declare (semantic::AggregateCstInfo info, bool isExternal = false);
+
+	ITypeDestructor* templateDeclReplace (const std::map <std::string, Expression>& tmps);
 	
     };
 
@@ -136,6 +154,8 @@ namespace syntax {
 	
 	semantic::InfoType declare (semantic::AggregateCstInfo info, bool & isStatic, bool isExternal = false);
 
+	ITypeMethod* templateDeclReplace (const std::map <std::string, Expression>& tmps) override;
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;
@@ -178,6 +198,8 @@ namespace syntax {
 
 	void declareAsExtern (semantic::Module) override;
 
+	ITypeAlias* templateDeclReplace (const std::map <std::string, Expression> &) override;
+	
 	Word getIdent ();
 
 	Expression getValue ();

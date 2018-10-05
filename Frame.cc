@@ -597,6 +597,20 @@ namespace semantic {
 	    if (it == attrs) return true;
 	return NULL;
     }
+
+    void IFrame::validateClone (Frame ret) {
+	ret-> _currentScore = this-> _currentScore;
+	ret-> _isInternal = this-> _isInternal;
+	ret-> _isPrivate = this-> _isPrivate;
+	ret-> _isInnerProtected = this-> _isInnerProtected;
+	ret-> _isInnerPrivate = this-> _isInnerPrivate;
+	ret-> _isVariadic = this-> _isVariadic;
+	ret-> _externLangSpace = this-> _externLangSpace;
+	ret-> _externLang = this-> _externLang;
+	ret-> tempParams = this-> tempParams;
+	ret-> _attributes = this-> _attributes;
+	ret-> _imutSpace = this-> _imutSpace;
+    }
     
     std::vector <syntax::Expression> & IFrame::templateParams () {
 	return this-> tempParams;

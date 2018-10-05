@@ -38,7 +38,7 @@ namespace semantic {
 	ApplicationScore isApplicable  (::syntax::ParamList params) override;
 
 	ApplicationScore isApplicable  (const std::vector <InfoType> & params) override;
-
+		
 	FrameProto validate () override ;
 
 	FrameProto validate (::syntax::ParamList) override;

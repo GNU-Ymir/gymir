@@ -1,6 +1,12 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
+namespace syntax {
+    class IExpression;
+    typedef IExpression* Expression;
+}
 
 namespace semantic {
 
@@ -32,5 +38,7 @@ namespace Mangler {
     std::string mangle_var (std::string);
 
     std::string mangle_global (std::string);
+
+    std::string mangle_template_list (const std::vector <syntax::Expression> &);
     
 }

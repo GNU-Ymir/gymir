@@ -47,8 +47,8 @@ namespace semantic {
 
 	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeMethod);
 	
-	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeDestructor);	
-	
+	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeDestructor);	       
+
 	FrameProto validate (const std::vector <InfoType> & params) override;
 
 	FrameProto validate (syntax::ParamList params) override;
@@ -59,6 +59,8 @@ namespace semantic {
 
 	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
 
+	InfoType & getInfo ();
+	
 	
 	static const char * id () {
 	    return "IMethodFrame";
@@ -81,5 +83,7 @@ namespace semantic {
 	bool verifCallSuper ();
 	
     };
-	
+
+    typedef IMethodFrame* MethodFrame;
+    
 }

@@ -154,7 +154,8 @@ namespace semantic {
 	Table::instance ().programNamespace () = ancSpace;
 	return this-> _fr;	
     }
-
+    
+    
     const char* IExternFrame::getId () {
 	return IExternFrame::id ();
     }

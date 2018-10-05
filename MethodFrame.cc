@@ -226,9 +226,11 @@ namespace semantic {
 	
 	return false;
     }
-    
 
-    
+    InfoType& IMethodFrame::getInfo () {
+	return this-> _info;
+    }
+           
     const char* IMethodFrame::getId () {
 	return IMethodFrame::id ();
     }

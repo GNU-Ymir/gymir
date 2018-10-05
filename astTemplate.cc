@@ -269,7 +269,8 @@ namespace syntax {
     Declaration IFunction::templateDeclReplace (const map <string, Expression>& tmps) {
 	return this-> templateReplace (tmps);
     }
-
+  
+    
     Declaration IModDecl::templateDeclReplace (const map <string, Expression> & tmps) {
 	std::vector <Declaration> decls;
 	for (auto it : this-> decls) {
@@ -316,6 +317,62 @@ namespace syntax {
 	return ret;
     }
 
+    Declaration ITypeCreator::templateDeclReplace (const map <string, Expression> & values) {
+	std::vector <Expression> who;
+	for (auto it : this-> _who) who.push_back (it-> templateExpReplace (values));
+
+	std::vector <TypeConstructor> constr;
+	for (auto it : this-> _constr) constr.push_back (it-> templateDeclReplace (values));
+
+	std::vector <TypeDestructor> destr;
+	for (auto it : this-> _destr) destr.push_back (it-> templateDeclReplace (values));
+
+	std::vector <TypeMethod> methods;
+	for (auto it : this-> _methods) methods.push_back (it-> templateDeclReplace (values));
+	
+	std::vector <TypeAlias> alias;
+	for (auto it : this-> _alias) alias.push_back (it-> templateDeclReplace (values));
+
+	auto ret = new (Z0) ITypeCreator (this-> _ident, this-> _form, who, {}, this-> _isUnion);
+	ret-> getConstructors () = constr;
+	ret-> getDestructors () = destr;
+	ret-> getMethods () = methods;
+	ret-> getAlias () = alias;
+	
+	return ret;
+    }
+    
+    TypeConstructor ITypeConstructor::templateDeclReplace (const map<string, Expression> &tmps) {
+	vector <Var> params;
+	for (auto it : this-> _params)
+	    params.push_back (it-> templateExpReplace (tmps)-> to <IVar> ());
+
+	auto block = this-> _block-> templateReplace (tmps)-> to <IBlock> ();
+	auto ret = new (Z0) ITypeConstructor (this-> _ident, params, block, this-> _isCopy);
+	ret-> _prot = this-> _prot;
+	return ret;
+    }
+
+    TypeDestructor ITypeDestructor::templateDeclReplace (const map <string, Expression> & tmps) {
+	auto block = this-> _block-> templateReplace (tmps)-> to <IBlock> ();
+	auto ret = new (Z0) ITypeDestructor (this-> _ident, block);
+	ret-> _prot = this-> _prot;
+	return ret;
+    }
+
+    TypeMethod ITypeMethod::templateDeclReplace (const map <string, Expression> & tmps) {
+	auto ret = new (Z0) ITypeMethod (IFunction::templateDeclReplace (tmps)-> to <IFunction> (), this-> _isOver);
+	ret-> _prot = this-> _prot;
+	return ret;
+    }
+
+    TypeAlias ITypeAlias::templateDeclReplace (const map <string, Expression> & tmps) {
+	auto ret = new (Z0) ITypeAlias (this-> _ident, this-> _value-> templateExpReplace (tmps), this-> _isConst);
+	ret-> _prot = this-> _prot;
+	return ret;
+    }
+    
+    
     Instruction IIf::templateReplace (const map <string, Expression>& values) {
 	Expression test = NULL;
 	if (this-> test)

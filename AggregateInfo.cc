@@ -19,6 +19,7 @@
 
 
 using namespace syntax;   
+using namespace std;
 
 namespace semantic {
 
@@ -157,7 +158,8 @@ namespace semantic {
 	_tmps (tmps),
 	_impl (self),
 	_isUnion (isUnion),
-	_isOver (isOver)
+	_isOver (isOver),
+	_templateSpace ("")
 	
     {}
 
@@ -188,6 +190,10 @@ namespace semantic {
     Namespace IAggregateCstInfo::space () {
 	return this-> _space;
     }
+
+    Namespace& IAggregateCstInfo::templateSpace () {
+	return this-> _templateSpace;
+    }
     
     bool IAggregateCstInfo::isSame (InfoType other) {
 	if (other == this) return true;
@@ -209,8 +215,7 @@ namespace semantic {
 	static std::map <std::string, AggregateInfo> validated;
 
 	if (this-> _tmps.size () != 0) {
-	    return NULL;
-	    //return this-> getScore (tmps);
+	    return this-> getScore (tmps);
 	}
 
 	if (this-> _info) return this-> _info-> clone ();	
@@ -255,6 +260,19 @@ namespace semantic {
 	return info-> clone ();	    
     }
 
+    InfoType IAggregateCstInfo::getScore (const std::vector <syntax::Expression> & tmps) {
+	auto res = TemplateSolver::instance ().solve (this-> _tmps, tmps);
+	if (!res.valid || !TemplateSolver::instance ().isSolved (this-> _tmps, res))
+	    return NULL;
+	
+	auto creator = this-> _creator-> templateDeclReplace (res.elements)-> to <ITypeCreator> ();
+	auto tmpsDone = TemplateSolver::instance ().solved (this-> _tmps, res);
+	auto ret = creator-> declare (this-> _space, tmpsDone)-> to <IAggregateCstInfo> ();
+
+	
+	return ret;
+    }
+    
     bool IAggregateCstInfo::recursiveGet (InfoType who, InfoType where) {
 	if (who-> isSame (where)) return true;
 	if (auto str = where-> to <IStructInfo> ()) {
@@ -316,15 +334,66 @@ namespace semantic {
     }
     
     std::string IAggregateCstInfo::typeString () {
-	return Namespace (this-> _space, this-> _name).toString ();
+	if (this-> _tmpsDone.size () == 0) 
+	    return Namespace (this-> _space, this-> _name).toString ();
+	else {
+	    Ymir::OutBuffer buf (Namespace(this-> _space, this-> _name).toString ());
+	    buf.write ("!(");
+	    int i = 0;
+	    for (auto it : this-> _tmpsDone) {
+		if (i != 0) buf.write (", ");
+		if (it-> info) {
+		    if (it-> info-> isImmutable ()) buf.write (it-> info-> value ()-> toString ());
+		    else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
+			if (tu-> isFake ())
+			    for (auto it : tu-> getParams ())
+				buf.write (it-> value ()-> toString ());
+			else buf.write (it-> info-> typeString ());
+		    } else buf.write ( it-> info-> typeString ());
+		}
+	    }
+	    buf.write (").", this-> _templateSpace.toString ());
+	    return buf.str ();
+	}
     }
 
+    std::string IAggregateCstInfo::simpleTypeString () {
+	if (this-> _tmpsDone.size () == 0) 
+	    return Namespace (this-> _space, this-> _name + "A").toString ();
+	else {
+	    Ymir::OutBuffer buf (Namespace(this-> _space, this-> _name).toString ());
+	    buf.write ("!(");
+	    int i = 0;
+	    for (auto it : this-> _tmpsDone) {
+		if (i != 0) buf.write (", ");
+		if (it-> info) {
+		    if (it-> info-> isImmutable ()) buf.write (it-> info-> value ()-> toString ());
+		    else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
+			if (tu-> isFake ())
+			    for (auto it : tu-> getParams ())
+				buf.write (it-> value ()-> toString ());
+			else buf.write (it-> info-> simpleTypeString ());
+		    } else buf.write ( it-> info-> simpleTypeString ());
+		}
+	    }
+	    buf.write (")A.", this-> _templateSpace.toString ());
+	    return buf.str ();
+	}
+    }
+    
     std::string IAggregateCstInfo::innerTypeString () {
-	return Namespace (this-> _space, this-> _name).toString ();
+	return simpleTypeString ();
     }    
     
     std::string IAggregateCstInfo::innerSimpleTypeString () {
-	return Namespace (this-> _space, this-> _name).toString ();
+	if (this-> _tmpsDone.size () == 0) {
+	    return Namespace (this-> _space, this-> _name + "A").toString ();   
+	} else {
+	    Ymir::OutBuffer buf (Namespace(this-> _space, this-> _name).toString ());
+	    buf.write (Mangler::mangle_template_list (this-> _tmpsDone));
+	    buf.write ("A.", this-> _templateSpace.toString ());
+	    return buf.str ();
+	}
     }
 
     Ymir::Tree IAggregateCstInfo::toGeneric () {
@@ -353,6 +422,10 @@ namespace semantic {
 
     TypeCreator& IAggregateCstInfo::creator () {
 	return this-> _creator;
+    }
+
+    std::vector <Expression> & IAggregateCstInfo::tmpsDone () {
+	return this-> _tmpsDone;
     }
     
     const char* IAggregateCstInfo::getId () {
@@ -431,7 +504,14 @@ namespace semantic {
 
     bool IAggregateCstInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	string name_ = "";
+	if (this-> _tmpsDone.size () != 0)
+	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
+	else
+	    name_ = space.innerMods () [space.innerMods ().size () - 2];
+	println (name_, " ", space.innerMods ());
+	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
+	if (name_ == this-> _name) {
 	    return true;
 	} else if (this-> _anc) {
 	    auto ret = this-> _anc-> inPrivateContext ();
@@ -444,7 +524,14 @@ namespace semantic {
     
     bool IAggregateCstInfo::inPrivateContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	string name = "";
+	if (this-> _tmpsDone.size () != 0)
+	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
+	else
+	    name = space.innerMods () [space.innerMods ().size () - 2];
+	println (name, " ", space.innerMods ());
+	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
+	if (name == this-> _name) {
 	    return true;
 	}
 	return false;
@@ -474,13 +561,13 @@ namespace semantic {
     bool IAggregateInfo::isSame (InfoType other) {
 	if (auto ot = other-> to <IAggregateInfo> ()) {
 	    if (this-> _space == ot-> _space && this-> _name == ot-> _name && this-> _id-> getLocId ().isSame (ot-> _id-> getLocId ())) {
-		if (this-> tmpsDone.size () != ot-> tmpsDone.size ()) {
+		if (this-> _id-> tmpsDone ().size () != ot-> _id-> tmpsDone ().size ()) {
 		    return false;		    
 		}
-
-		for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
-		    if (auto ps = this-> tmpsDone [it]-> to <IParamList> ()) {
-			if (auto ps2 = ot-> tmpsDone [it]-> to <IParamList> ()) {
+		
+		for (auto it : Ymir::r (0, this-> _id-> tmpsDone ().size ())) {
+		    if (auto ps = this-> _id-> tmpsDone () [it]-> to <IParamList> ()) {
+			if (auto ps2 = ot-> _id-> tmpsDone () [it]-> to <IParamList> ()) {
 			    if (ps-> getParams ().size () != ps2-> getParams ().size ()) {
 				return false;
 			    }
@@ -493,10 +580,10 @@ namespace semantic {
 			    return false;
 			}
 		    } else {
-			if (ot-> tmpsDone [it]-> is <IParamList> ()) {
+			if (ot-> _id-> tmpsDone () [it]-> is <IParamList> ()) {
 			    return false;
 			}
-			if (!this-> tmpsDone [it]-> info-> type ()-> isSame (ot-> tmpsDone [it]-> info-> type ())) {
+			if (!this-> _id-> tmpsDone () [it]-> info-> type ()-> isSame (ot-> _id-> tmpsDone () [it]-> info-> type ())) {
 			    return false;
 			}
 		    }
@@ -700,11 +787,38 @@ namespace semantic {
     }
 
     std::string IAggregateInfo::innerTypeString () {
-	return Namespace (this-> _space, this-> _name).toString ();
+	if (this-> _id-> tmpsDone ().size () == 0) {
+	    return Namespace (this-> _space, this-> _name).toString ();   
+	} else {
+	    Ymir::OutBuffer buf (Namespace(this-> _space, this-> _name).toString ());
+	    buf.write ("!(");
+	    int i = 0;
+	    for (auto it : this-> _id-> tmpsDone ()) {
+		if (i != 0) buf.write (", ");
+		if (it-> info) {
+		    if (it-> info-> isImmutable ()) buf.write (it-> info-> value ()-> toString ());
+		    else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
+			if (tu-> isFake ())
+			    for (auto it : tu-> getParams ())
+				buf.write (it-> value ()-> toString ());
+			else buf.write (it-> info-> typeString ());
+		    } else buf.write ( it-> info-> typeString ());
+		}
+	    }
+	    buf.write (").", this-> _id-> templateSpace ().toString ());
+	    return buf.str ();
+	}
     }
 
     std::string IAggregateInfo::innerSimpleTypeString () {
-	return Namespace (this-> _space, this-> _name + "A").toString ();
+	if (this-> _id-> tmpsDone ().size () == 0) {
+	    return Namespace (this-> _space, this-> _name + "A").toString ();   
+	} else {
+	    Ymir::OutBuffer buf (Namespace(this-> _space, this-> _name).toString ());
+	    buf.write (Mangler::mangle_template_list (this-> _id-> tmpsDone ()));
+	    buf.write ("A.", this-> _id-> templateSpace ().toString ());
+	    return buf.str ();
+	}
     }
 
     InfoType IAggregateInfo::SizeOf () {
@@ -975,7 +1089,14 @@ namespace semantic {
     bool IAggregateInfo::inPrivateContext () {
 	if (this-> _hasExemption) return true;
 	auto space = Table::instance ().getCurrentSpace ();
-	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	string name = "";
+	if (this-> _id-> tmpsDone ().size () != 0)
+	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
+	else
+	    name = space.innerMods () [space.innerMods ().size () - 2];
+	println (name, " ", space.innerMods ());
+	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
+	if (name == this-> _name) {
 	    return true;
 	}
 	return false;
@@ -983,7 +1104,14 @@ namespace semantic {
 
     bool IAggregateInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	if (space.innerMods () [space.innerMods ().size () - 2] == this-> _name) {
+	string name_ = "";
+	if (this-> _id-> tmpsDone ().size () != 0)
+	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
+	else
+	    name_ = space.innerMods () [space.innerMods ().size () - 2];
+	println (name_, " ", space.innerMods ());
+	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
+	if (name_ == this-> _name) {
 	    return true;
 	} else if (this-> _anc) {
 	    auto ret = this-> _anc-> inPrivateContext ();

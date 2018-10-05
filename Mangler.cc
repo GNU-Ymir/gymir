@@ -255,6 +255,22 @@ namespace Mangler {
 	return ss.str ();
     }
     
+    std::string mangle_template_list (const std::vector <syntax::Expression> & exprs) {
+	Ymir::OutBuffer buf;
+	for (auto it : exprs) {
+	    if (it-> info) {
+		if (it-> info-> isImmutable ()) buf.write ("N", mangle_var (it-> info-> value ()-> toString ()));
+		else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
+		    if (tu-> isFake ())
+			for (auto it : tu-> getParams ())
+			    buf.write ("N", it-> value ()-> toString ());
+		    else buf.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
+		} else buf.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
+	    }
+	}
+	return buf.str ();
+    }
+
     std::string mangle_functionv (std::string& name, ::semantic::FrameProto frame) {
 	auto space = frame-> space ().toString ();
 	OutBuffer ss;

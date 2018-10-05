@@ -37,6 +37,7 @@ namespace semantic {
 	return params;
     }
     
+
     FrameProto IUnPureFrame::validate (ParamList params) {
 	return this-> validate (params-> getParamTypes ());
     }

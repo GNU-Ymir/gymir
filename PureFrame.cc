@@ -96,6 +96,7 @@ namespace semantic {
     bool IPureFrame::isPure () {
 	return true;
     }
+
     
     std::vector <InfoType> IPureFrame::getParamTypes () {
 	std::vector <InfoType> params;

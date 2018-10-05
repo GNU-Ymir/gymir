@@ -1239,6 +1239,7 @@ namespace syntax {
 	    Ymir::Error::multipleDestr (this-> _ident);
 	
 	if (this-> _tmps.size () == 0) {
+	    
 	    if (this-> _destr.size () == 1) {
 		type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
 	    }
@@ -1283,6 +1284,54 @@ namespace syntax {
 	Table::instance ().insert (sym);
     }
 
+    InfoType ITypeCreator::declare (Namespace space, const std::vector <syntax::Expression> & tmps) {
+	auto tmpSpace = Table::instance ().getCurrentSpace ();
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
+	type-> templateSpace () = tmpSpace;
+	type-> tmpsDone () = tmps;
+	
+	if (this-> _destr.size () > 1)
+	    Ymir::Error::multipleDestr (this-> _ident);
+	
+	if (this-> _destr.size () == 1) {
+	    type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
+	}
+
+	for (auto cst : this-> _constr) {
+	    auto res = cst-> declare  (type);
+	    if (res)
+		type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
+	}
+	
+	for (auto alias : this-> _alias) {
+	    alias-> space () = Namespace (type-> space (), type-> name ());
+	    bool error = false;
+	    for (auto __al : type-> getAlias ()) {
+		if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
+		    Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+		    error = true;
+		    break;
+		}
+	    }
+	    if (!error) 
+		type-> getAlias ().push_back (alias);
+	}
+	    
+
+	for (auto meth : this-> _methods) {
+	    bool isMethod = false;
+	    auto info_ = meth-> declare (type, isMethod);
+	    if (info_) {
+		auto info = info_-> to <IFunctionInfo> ();
+		if (!isMethod) type-> getStaticMethods ().push_back (info);
+		else type-> getMethods ().push_back (info);
+	    }
+	}
+
+	FrameTable::instance ().insert (type);	    
+	return type;
+    }
+    
     void ITypeCreator::declare (semantic::Module mod) {
 	auto space = mod-> space ();
 	auto it = mod-> get (this-> _ident.getStr ());
@@ -1401,7 +1450,7 @@ namespace syntax {
     
     
     InfoType ITypeConstructor::declare (AggregateCstInfo info, bool isExternal) {
-	auto space = Namespace (info-> space (), info-> name ());
+	auto space = Namespace (info-> typeString ());
 	bool addable = true;
 	if (!this-> _isCopy) 
 	    for (auto it : this-> _params) {
@@ -1428,7 +1477,7 @@ namespace syntax {
 
     InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method, bool isExternal) {
 	if (!this-> verifUdasMeth ()) return NULL;
-	auto space = Namespace (info-> space (), info-> name ());
+	auto space = Namespace (info-> typeString ());
 
 	bool addable = this-> tmps.size () == 0;
 	method = false;
@@ -1490,7 +1539,7 @@ namespace syntax {
     }
 
     InfoType ITypeDestructor::declare (AggregateCstInfo info, bool isExternal) {
-	auto space = Namespace (info-> space (), info-> name ());
+	auto space = Namespace (info-> typeString ());
 	auto fr = new (Z0) IMethodFrame (space, Keys::DELETE, info, this);
 	fr-> isExtern () = isExternal;
 	fr-> isInnerPrivate () = (this-> _prot == InnerProtection::PRIVATE);

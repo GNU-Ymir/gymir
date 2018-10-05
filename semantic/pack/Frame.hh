@@ -154,6 +154,8 @@ namespace semantic {
 		
 	FrameProto validate (Namespace space, Namespace from, const std::vector<syntax::Var> & finalParams, bool isVariadic, bool isExtern = false);
 	
+	void validateClone (IFrame * frame);
+
     };
 
     typedef IFrame* Frame;
