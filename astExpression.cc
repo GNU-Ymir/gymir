@@ -277,6 +277,15 @@ namespace syntax {
 		    else if (this-> deco == Keys::CONST) t_info-> isConst (true);
 		    return new (Z0)  IType (this-> token, t_info);
 		}
+	    } else if (sym && sym-> type ()-> is <IAliasCstInfo> ()) {
+		auto aux = sym-> type ()-> to <IAliasCstInfo> ()-> expression ();
+		if (aux != NULL && aux-> isType ()) {
+		    auto t_info = aux-> info-> type ();
+		    if (this-> deco == Keys::REF)
+			t_info = new (Z0)  IRefInfo (false, t_info);
+		    else if (this-> deco == Keys::CONST) t_info-> isConst (true);
+		    return new (Z0)  IType (this-> token, t_info);		    
+		}
 	    }
 	    
 	    if (!sym)
