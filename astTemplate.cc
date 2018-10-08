@@ -267,7 +267,7 @@ namespace syntax {
     }
 
     Declaration IFunction::templateDeclReplace (const map <string, Expression>& tmps) {
-	return this-> templateReplace (tmps);
+	return IFunction::templateReplace (tmps);
     }
   
     
@@ -366,6 +366,10 @@ namespace syntax {
 	return ret;
     }
 
+    TypeMethod ITypeMethod::templateReplace (const map<string, Expression> & tmps) {
+	return this-> templateDeclReplace (tmps);
+    }
+    
     TypeAlias ITypeAlias::templateDeclReplace (const map <string, Expression> & tmps) {
 	auto ret = new (Z0) ITypeAlias (this-> _ident, this-> _value-> templateExpReplace (tmps), this-> _isConst);
 	ret-> _prot = this-> _prot;

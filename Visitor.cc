@@ -345,6 +345,7 @@ namespace syntax {
 	else if (token == Token::TILDE) return visitDestSelf ();
 	else if (token == Keys::TYPE) return visitTypeCreator ();
 	else if (token == Keys::ALIAS) return visitAlias ();
+	else if (token == Keys::TRAIT) return visitTrait ();
     	else if (fatal) syntaxError (token,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
@@ -1363,6 +1364,7 @@ namespace syntax {
 		else if (next == Keys::STRUCT) decls.push_back (visitStruct ());
 		else if (next == Keys::UNION) decls.push_back (visitStruct (true));
 		else if (next == Keys::ALIAS) decls.push_back (visitAlias ());
+		else if (next == Keys::TRAIT) decls.push_back (visitTrait ());
 		else if (next == Token::LACC) {
 		    this-> lex.rewind ();
 		    insts.push_back (visitBlock ());		
@@ -2744,6 +2746,49 @@ namespace syntax {
 	auto value = this-> visitExpression ();
 	this-> lex.next ({Token::SEMI_COLON});
 	return new (Z0) IAlias (ident, value);	
+    }
+
+    TraitProto Visitor::visitTraitProto () {
+	auto ident = visitIdentifiant ();
+	bool isSelf = false;
+	std::vector <Expression> params;
+	this-> lex.next ({Token::LPAR});
+	auto next = this-> lex.next ();
+	if (next == Keys::SELF) {
+	    isSelf = true;
+	    next = this-> lex.next ({Token::RPAR, Token::COMA});
+	}
+	if (next != Token::RPAR) {
+	    while (true) {
+		params.push_back (visitLeftOpSimple ());
+		if (this-> lex.next ({Token::COMA, Token::RPAR}) == Token::RPAR) break;
+	    }
+	}
+
+	Expression type = NULL;
+	next = this-> lex.next ({Token::ARROW, Token::SEMI_COLON});
+	if (next == Token::ARROW) {
+	    type = visitLeftOpSimple ();
+	    this-> lex.next ({Token::SEMI_COLON});
+	}
+	
+	return TraitProto {ident, params, isSelf, type};
+    }
+    
+    Trait Visitor::visitTrait () {
+	auto ident = visitIdentifiant ();
+	this-> lex.next ({Token::LACC});
+	std::vector <TypedVar> vars;
+	std::vector <TraitProto> protos;
+	while (true) {
+	    auto next = this-> lex.next ({Token::RACC, Keys::LET, Keys::DEF});
+	    if (next == Keys::LET) {
+		vars.push_back (visitTypedVarDeclaration ());
+		this-> lex.next ({Token::SEMI_COLON});
+	    } else if (next == Keys::DEF) protos.push_back (visitTraitProto ());
+	    else break;
+	}
+	return new (Z0) ITrait (ident, protos, vars);
     }
     
 };

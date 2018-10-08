@@ -8,6 +8,7 @@
 #include <ymir/utils/Options.hh>
 #include <ymir/semantic/object/MethodInfo.hh>
 
+
 namespace syntax {
     using namespace semantic;
 
@@ -145,6 +146,7 @@ namespace syntax {
 		    }
 		    if (!sym-> type ()-> is <IFunctionInfo> ()) doCall = false;
 		}
+
 		if (doCall) {
 		    auto params = new (Z0)  IParamList (this-> token, {});
 		    auto call = new (Z0)  IPar (this-> token, this-> token, this, params, true);
@@ -162,10 +164,10 @@ namespace syntax {
 			tmps.push_back (it);
 		else tmps.push_back (elem);
 	    }
-
+	    
 	    auto type = aux-> info-> type ()-> TempOp (tmps);
 	    if (type == NULL) {
-		Ymir::Error::notATemplate (this-> token, tmps);
+		Ymir::Error::notATemplate (this-> token, tmps, aux-> info-> type ()-> typeString ());
 		return NULL;
 	    }
 
@@ -234,7 +236,7 @@ namespace syntax {
 		}
 		auto type = aux-> info-> type ()-> TempOp (tmps);
 		if (type == NULL) {
-		    Ymir::Error::notATemplate (this-> token, tmps);
+		    Ymir::Error::notATemplate (this-> token, tmps, aux-> info-> type ()-> typeString ());
 		    return NULL;
 		}
 		aux-> templates = tmps;
@@ -726,22 +728,24 @@ namespace syntax {
 	
 	Word word {this-> token, Keys::OPBINARY};
 	auto var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
-	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
+	auto params = new (Z0)  IParamList (this-> token, {this-> right});
+	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> left, var);
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto call = new (Z0)  IPar (tok, tok2, var, params, false);
+	auto call = new (Z0)  IPar (tok, tok2, dot, params, false);
 	auto res = call-> expression ();	
 	auto errors = Ymir::Error::caught ();
 	Ymir::Error::activeError (true);
 	
 	if (errors.size () != 0) {
-	    Ymir::Error::activeError (false);
+	    //Ymir::Error::activeError (false);
 	    word = Word (this-> token.getLocus (), Keys::OPBINARYR);
 	    var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
-	    params = new (Z0)  IParamList (this-> token, {aux-> right, aux-> left});
-	    call = new (Z0)  IPar (tok, tok2, var, params, false);
+	    dot = new (Z0) IDot ({this-> token, Token::DOT}, aux-> right, var);
+	    params = new (Z0)  IParamList (this-> token, {aux-> left});
+	    call = new (Z0)  IPar (tok, tok2, dot, params, false);
 	    res = call-> expression ();
 	    auto errors2 = Ymir::Error::caught ();
-	    Ymir::Error::activeError (true);
+	    //Ymir::Error::activeError (true);
 	    if (errors2.size () != 0) {
 		for (auto it : errors) printf ("%s\n", it.msg.c_str ());
 		return NULL;
@@ -1089,7 +1093,24 @@ namespace syntax {
 		Ymir::Error::undefAttr (this-> token, left-> info, var);
 		return NULL;
 	    }
-
+	    
+	    if (var-> hasTemplate ()) {
+		std::vector <Expression> tmps;
+		for (auto it : var-> getTemplates ()) {
+		    auto elem = it-> expression ();
+		    if (elem == NULL) return NULL;
+		    else if (auto par = elem-> to <IParamList> ())
+			for (auto it : par-> getParams ()) tmps.push_back (it);
+		    else tmps.push_back (elem);
+		}
+		
+		auto type_ = type-> TempOp (tmps);
+		if (type_ == NULL) {
+		    Ymir::Error::notATemplate (var-> token, var-> getTemplates (), type-> typeString ());
+		    return NULL;
+		} else type = type_;
+	    }
+	    
 	    if (type-> isType ()) return new (Z0) IType (this-> token, type);
 	    else {
 		auto aux = new (Z0)  IDColon (this-> token, this-> left-> expression (), this-> right);
@@ -1115,6 +1136,22 @@ namespace syntax {
 		    return NULL;
 		}
 		return (new (Z0)  IDotCall (this-> inside, this-> right-> token, call, aux-> left))-> expression ();
+	    } else if (type != NULL && var-> hasTemplate ()) {
+
+		std::vector <Expression> tmps;
+		for (auto it : var-> getTemplates ()) {
+		    auto elem = it-> expression ();
+		    if (elem == NULL) return NULL;
+		    else if (auto par = elem-> to <IParamList> ())
+			for (auto it : par-> getParams ()) tmps.push_back (it);
+		    else tmps.push_back (elem);
+		}
+
+		auto type_ = type-> TempOp (tmps);
+		if (type_ == NULL) {
+		    Ymir::Error::notATemplate (var-> token, var-> getTemplates (), type-> typeString ());
+		    return NULL;
+		} else type = type_;
 	    } else if (type == NULL) {
 		Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
 		return NULL;		

@@ -61,3 +61,4 @@
 #include "AffectGeneric.hh"
 #include "TypeCreator.hh"
 #include "Alias.hh"
+#include "Trait.hh"

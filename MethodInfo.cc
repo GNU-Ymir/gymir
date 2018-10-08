@@ -172,6 +172,24 @@ namespace semantic {
 	return right;
     }
 
+    InfoType IMethodInfo::TempOp (const std::vector <syntax::Expression> & params) {
+	auto clone = this-> cloneOnExitWithInfo ()-> to <IMethodInfo> ();
+	std::vector <Frame> ret;
+	for (auto it : this-> _frames) {
+	    if (auto aux = it-> TempOp (params)) {
+		ret.push_back (aux);
+	    }
+	}
+
+	if (ret.size () != 0) {
+	    clone-> _frames = ret;
+	    return clone;
+	}
+	return NULL;
+    }
+    
+    
+    
     std::string IMethodInfo::typeString () {
 	return this-> innerTypeString ();
     }

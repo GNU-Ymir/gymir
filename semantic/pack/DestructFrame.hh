@@ -28,24 +28,25 @@ namespace syntax {
 
 namespace semantic {
     
-    class IMethodFrame : public IFrame {
+    class IDestructFrame : public IFrame {
 	
 	semantic::InfoType _info;
-	syntax::TypeMethod _method;
-	
+
+	syntax::TypeDestructor _dest;	
 	std::string _name;
 	bool _isExtern = false;
-	bool _isVirtual = true;
+
 	bool _isInnerPrivate = false;
 	bool _isInnerProtected = false;
+
 	bool _echec = false;
 	bool _needConst = false;
+	
 	FrameProto _proto;
 	
     public:
-
-	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeMethod);
 	
+	IDestructFrame (Namespace, std::string, InfoType, syntax::TypeDestructor);	       
 
 	FrameProto validate (const std::vector <InfoType> & params) override;
 
@@ -57,27 +58,24 @@ namespace semantic {
 
 	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
 	
-	InfoType & getInfo ();
-	
+	InfoType & getInfo ();	
 	
 	static const char * id () {
-	    return "IMethodFrame";
+	    return "IDestructFrame";
 	}
 	
 	virtual const char* getId ();	
 
 	bool& isExtern ();
 	
-	bool & isVirtual ();
-
 	bool& needConst ();
-	
-	syntax::TypeMethod getMethod ();	
+
 
     private :
- 	
+
+	
     };
 
-    typedef IMethodFrame* MethodFrame;
+    typedef IDestructFrame* DestructFrame;
     
 }

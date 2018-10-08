@@ -2262,5 +2262,24 @@ namespace syntax {
     {}
 
     void IEvaluatedExpr::print (int) {}
+
+
+    ITrait::ITrait (Word ident, std::vector <TraitProto> protos, std::vector <TypedVar> attrs) :
+	_ident (ident),
+	_protos (protos),
+	_attrs (attrs)
+    {}
+
+    std::vector <TraitProto> & ITrait::getProtos () {
+	return this-> _protos;
+    }
+
+    std::vector <TypedVar> & ITrait::getAttrs () {
+	return this-> _attrs;
+    }
+
+    Word & ITrait::getIdent () {
+	return this-> _ident;
+    }
     
 }

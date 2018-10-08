@@ -29,6 +29,8 @@ namespace semantic {
 
 	ApplicationScore CallOp (Word, syntax::ParamList) override;
 
+	InfoType TempOp (const std::vector<syntax::Expression>&) override;
+	
 	std::string typeString () override;
 	
 	std::string innerTypeString () override;

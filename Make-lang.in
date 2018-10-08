@@ -88,6 +88,9 @@ ymir_OBJS = \
 	ymir/MacroSolver.o \
 	ymir/AggregateInfo.o \
 	ymir/MethodFrame.o \
+	ymir/ConstructFrame.o \
+	ymir/DestructFrame.o \
+	ymir/TemplateMethFrame.o \
 	ymir/MethodInfo.o \
 	ymir/AliasInfo.o \
 	$(END)	

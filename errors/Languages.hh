@@ -87,8 +87,8 @@ namespace Ymir {
 		phrases [UndefVar] = "Undefined identifier '%%%'";
 		phrases [UndefVar2] = "Undefined identifier '%%%', maybe '%%%' was meant";
 		phrases [UninitVar] = "Variable '%%%' does not have type";
-		phrases [UseAsVar] = "'%%%' do not identify a variable";
-		phrases [UseAsType] = "'%%%' do not identify a type";
+		phrases [UseAsVar] = "'%%%' does not identify a variable";
+		phrases [UseAsType] = "'%%%' does not identify a type";
 		phrases [CannotBeVoid] = "'%%%' can't be of type void";
 		phrases [UndefinedOpMult] = "Operator '%%%%' is undefined for type '%%%' and (%)";
 		phrases [UndefinedOp] = "Operator '%%%' between types '%%%' and '%%%' doesn't exist";
@@ -126,7 +126,7 @@ namespace Ymir {
 		phrases [OverflowArray] = "Out of range %%% > %%%";
 		phrases [MoreErrors] = "... (and % more, -v to show)\n";
 		phrases [LabelingImmutableFor] = "Cannot label an immutable for";
-		phrases [NotAMacro] = "%%% do not identify a macro";
+		phrases [NotAMacro] = "%%% does not identify a macro";
 		phrases [MacroResolution] = "Macro resolution %%% failed";
 		phrases [NoLet] = "Malformed statement %%%";
 		phrases [UndefUda] = "Undefined attribute %%% for %%%";
@@ -142,15 +142,19 @@ namespace Ymir {
 		phrases [MultiDestr] = "A type cannot have multiple destructors";
 		phrases [NeedAllType] = "All type must be known in constructor";
 		phrases [StaticMethodInit] = "The keyword %init% is reserved for constructors; Note that constructors are always named %self%";
+		phrases [StaticMethodOver] = "Cannot override a non-virtual function";
 		phrases [CannotImpl] = "Aggregate type cannot implement type %%%";
 		phrases [CannotOverride] = "Aggregate type cannot override type %%%";
 		phrases [MustCallSuper] = "Must call the super constructor of type %%% first";
 		phrases [ImplicitOverride] = "Cannot implicitly override method";
-		phrases [NoOverride] = "Method %%% do not override anything";
+		phrases [NoOverride] = "Method %%% does not override anything";
 		phrases [SelfAlwaysInfered] = "self parameter's type is always infered";
 		phrases [SelfAlwaysRef] = "self parameter's type is always a reference";
 		phrases [AmbiguousAccess] = "Ambiguous access of field for type %%%";
 		phrases [PrivateMemberWithinThisContext] = "type %%% member %%% is private within current context";
+		phrases [OverTemplateMethodDuo] = "Cannot override a non-virtual template method";
+		phrases [OverTemplateMethod] = "Template method cannot override a super method";
+
 		init = true;
 	    } 
 	    return phrases;

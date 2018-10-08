@@ -54,9 +54,9 @@ namespace syntax {
 
 	std::vector <Word> & getAttributes ();
 
-	Declaration templateDeclReplace (const std::map <std::string, Expression>& tmps);
+	virtual Declaration templateDeclReplace (const std::map <std::string, Expression>& tmps);
 	
-	IFunction* templateReplace (const std::map <std::string, Expression>& tmps);
+	virtual IFunction* templateReplace (const std::map <std::string, Expression>& tmps);
 	
 	Expression getType ();
 

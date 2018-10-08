@@ -155,6 +155,8 @@ namespace syntax {
 	semantic::InfoType declare (semantic::AggregateCstInfo info, bool & isStatic, bool isExternal = false);
 
 	ITypeMethod* templateDeclReplace (const std::map <std::string, Expression>& tmps) override;
+
+	ITypeMethod* templateReplace (const std::map <std::string, Expression> & tmps) override;
 	
 	void declare () override;
 

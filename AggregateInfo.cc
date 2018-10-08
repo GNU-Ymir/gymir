@@ -13,7 +13,7 @@
 #include <ymir/semantic/types/RefInfo.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/utils/StructUtils.hh>
-#include <ymir/semantic/pack/MethodFrame.hh>
+#include <ymir/semantic/pack/ConstructFrame.hh>
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/ast/Binary.hh>
 
@@ -311,25 +311,35 @@ namespace semantic {
     InfoType IAggregateCstInfo::DColonOp (Var var) {
 	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
+	std::vector <Frame> frames;
+	std::vector <Word> hasPrivate;
 	for (auto it : this-> _staticMeth) {
 	    if (it-> name () == var-> token.getStr ()) {
-		bool hasPrivate = false;
+		bool isPrivate = false;
 		if (it-> frame ()-> isInnerPrivate () && (!this-> isMine (it-> frame ()-> space ()) || (!this-> inPrivateContext ()))) {
-		    hasPrivate = true;
+		    isPrivate = true;
 		} else if (it-> frame ()-> isInnerProtected () && (!this-> isProtectedForMe (it-> frame ()-> space ()) || (!this-> inProtectedContext ()))) {
-		    hasPrivate = true;
+		    isPrivate = true;
 		}
 
-		if (!hasPrivate) {
-		    auto ret = it-> clone ();
-		    ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
-		    return ret;
+		if (!isPrivate) {
+		    frames.push_back (it-> frame ());
 		} else {
-		    Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
-		    return NULL;
+		    hasPrivate.push_back (it-> frame ()-> ident ());
 		}
 	    }	    		
 	}
+
+	if (frames.size () == 0 && hasPrivate.size () != 0) {
+	    for (auto it : hasPrivate)
+		Ymir::Error::privateMemberWithinThisContext (this-> typeString (), it);
+	    return NULL;
+	} else if (frames.size () != 0) {
+	    auto ret = new (Z0) IFunctionInfo (this-> _space, var-> token.getStr (), frames);
+	    ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
+	    return ret;
+	}
+	
 	return NULL;
     }
     
@@ -490,12 +500,18 @@ namespace semantic {
 	    Table::instance ().setCurrentSpace (currentSpace);
 	    Table::instance ().templateNamespace () = last;
 	    return this-> _anc-> constructImpl ();
-	} else {	
+	} else {	    
 	    auto str = type-> info-> type ()-> to <ITupleInfo> ();
 	    if (str == NULL) {
 		str = new (Z0) ITupleInfo (false, false, this-> _isUnion);
 		str-> addParam (type-> info-> type ());
 	    }
+
+	    for (auto mt : this-> _methods) {
+		if (mt-> isOver ())
+		    Ymir::Error::noOverride (mt-> frame ()-> func ()-> getIdent ());
+	    }
+	    
 	    Table::instance ().setCurrentSpace (currentSpace);
 	    Table::instance ().templateNamespace () = last;
 	    return str;		
@@ -509,7 +525,6 @@ namespace semantic {
 	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
 	else
 	    name_ = space.innerMods () [space.innerMods ().size () - 2];
-	println (name_, " ", space.innerMods ());
 	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
 	if (name_ == this-> _name) {
 	    return true;
@@ -529,7 +544,6 @@ namespace semantic {
 	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
 	else
 	    name = space.innerMods () [space.innerMods ().size () - 2];
-	println (name, " ", space.innerMods ());
 	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
 	if (name == this-> _name) {
 	    return true;
@@ -737,12 +751,17 @@ namespace semantic {
 	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
 	//if (var-> token == "name") return Name ();
+	std::vector <Frame> frames;
 	for (auto it : this-> _staticMeth) {
 	    if (it-> name () == var-> token.getStr ()) {
-		auto ret = it-> clone ();
-		ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
-		return ret;
+		frames.push_back (it-> frame ());		
 	    }	    		
+	}
+	
+	if (frames.size () != 0) {
+	    auto ret = new (Z0) IFunctionInfo (this-> _space, var-> token.getStr (), frames);
+	    ret-> unopFoo = &AggregateUtils::InstGetStaticMeth;
+	    return ret;
 	}
 	return NULL;
     }
@@ -971,12 +990,17 @@ namespace semantic {
 	auto method = this-> getAncestor ()-> _allMethods;
 	std::vector <FunctionInfo> toAdd;
 	for (auto mt : this-> _methods) {
+	    if (mt-> frame ()-> func ()-> getTemplates ().size () != 0 && mt-> isOver ()) {
+		Ymir::Error::overTemplateMethod (mt-> frame ()-> func ()-> getIdent ());
+		continue;
+	    }
+	    
 	    bool changed = false;
 	    for (auto & it : method) {
 		auto name = it-> name ();
 		if (mt-> name () == it-> name ()) {
-		    auto lparams = mt-> frame ()-> to <IMethodFrame> ()-> getMethod ()-> getParams ();
-		    auto rparams = it-> frame ()-> to <IMethodFrame> ()-> getMethod ()-> getParams ();
+		    auto lparams = mt-> frame ()-> func ()-> getParams ();
+		    auto rparams = it-> frame ()-> func ()-> getParams ();
 		    if (lparams.size ()  != rparams.size ()) continue;
 		    for (auto it : Ymir::r (0, lparams.size ())) {
 			if (lparams [it]-> is <ITypedVar> () && rparams [it]-> is <ITypedVar> ()) {
@@ -991,6 +1015,12 @@ namespace semantic {
 			    it-> frame ()-> func ()-> getIdent ()
 			);
 		    }
+
+		    if (it-> frame ()-> func ()-> getTemplates ().size () != 0) {
+			Ymir::Error::overTemplateMethod (mt-> frame ()-> func ()-> getIdent (), it-> frame ()-> func ()-> getIdent ());
+			break;
+		    }
+		    
 		    changed = true;
 		    it = mt;
 		    break;
@@ -1094,7 +1124,6 @@ namespace semantic {
 	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
 	else
 	    name = space.innerMods () [space.innerMods ().size () - 2];
-	println (name, " ", space.innerMods ());
 	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
 	if (name == this-> _name) {
 	    return true;
@@ -1109,7 +1138,6 @@ namespace semantic {
 	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
 	else
 	    name_ = space.innerMods () [space.innerMods ().size () - 2];
-	println (name_, " ", space.innerMods ());
 	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
 	if (name_ == this-> _name) {
 	    return true;
@@ -1134,7 +1162,7 @@ namespace semantic {
     
     bool IAggregateInfo::hasCopyCstr () {
 	for (auto it : this-> _id-> _contrs) {	    
-	    if (it-> frame ()-> to<IMethodFrame> ()-> isCopy ()) {
+	    if (it-> frame ()-> is <IConstructFrame> () && it-> frame ()-> to<IConstructFrame> ()-> isCopy ()) {
 		return true;
 	    }
 	}
@@ -1143,7 +1171,7 @@ namespace semantic {
 
     Frame IAggregateInfo::cpyCstr () {
 	for (auto it : this-> _id-> _contrs) {
-	    if (it-> frame ()-> to<IMethodFrame> ()-> isCopy ()) {
+	    if (it-> frame ()-> is <IConstructFrame> () && it-> frame ()-> to<IConstructFrame> ()-> isCopy ()) {
 		return it-> frame ();
 	    }
 	}

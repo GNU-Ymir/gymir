@@ -15,6 +15,7 @@
 #include <ymir/semantic/value/LambdaValue.hh>
 #include <unistd.h>
 #include <dirent.h>
+#include <ymir/semantic/pack/TemplateMethFrame.hh>
 
 namespace syntax {
 
@@ -1460,7 +1461,7 @@ namespace syntax {
 	    }
 
 	
-	auto fr = new (Z0) IMethodFrame (space, this-> _isCopy ? Keys::COPY : Keys::INIT,  info, this);
+	auto fr = new (Z0) IConstructFrame (space, this-> _isCopy ? Keys::COPY : Keys::INIT,  info, this);
 	fr-> isExtern () = isExternal;
 	fr-> isInnerPrivate () = (this-> _prot == InnerProtection::PRIVATE);
 	fr-> isInnerProtected () = (this-> _prot == InnerProtection::PROTECTED);
@@ -1505,6 +1506,11 @@ namespace syntax {
 		}
 	    }
 	}
+
+	if (!method && this-> _isOver) {
+	    Ymir::Error::staticMethodOver (this-> ident);
+	    return NULL;
+	}
 	
 	if (!method && this-> name () == Keys::INIT) {
 	    Ymir::Error::staticMethodInit (this-> ident);
@@ -1513,34 +1519,43 @@ namespace syntax {
 	
 	Frame fr = NULL;
 	if (method) {
-	    fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
-	    fr-> to <IMethodFrame> ()-> isExtern () = isExternal;
-	    fr-> to <IMethodFrame> ()-> isVirtual () = addable;
-	    fr-> to <IMethodFrame> ()-> needConst () = needConst;
+	    if (this-> tmps.size () == 0) {
+		fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
+		fr-> to <IMethodFrame> ()-> isExtern () = isExternal;
+		fr-> to <IMethodFrame> ()-> isVirtual () = addable;
+		fr-> to <IMethodFrame> ()-> needConst () = needConst;
+	    }  else {
+		fr = new (Z0) ITemplateMethFrame (space, this-> name (), info, this);
+		fr-> to <ITemplateMethFrame> ()-> isExtern () = isExternal;
+		fr-> to <ITemplateMethFrame> ()-> isVirtual () = addable;
+		fr-> to <ITemplateMethFrame> ()-> needConst () = needConst;
+	    }	    
 	} else if (addable) {
 	    if (!isExternal)
 		fr = new (Z0) IPureFrame (space, this);
 	    else
 		fr = new (Z0) IExternFrame (space, "", this-> toProto ());
-	} else fr = new (Z0) IUnPureFrame (space, this);
+	} else if (this-> tmps.size () != 0)
+	    fr = new (Z0) ITemplateFrame (space, this);
+	else fr = new (Z0) IUnPureFrame (space, this);
 
 	fr-> isInnerPrivate () = (this-> _prot == InnerProtection::PRIVATE);
 	fr-> isInnerProtected () = (this-> _prot == InnerProtection::PROTECTED);
-	
-	auto func = new (Z0) IFunctionInfo (space, this-> name ());
+
+	FunctionInfo func = new (Z0) IFunctionInfo (space, this-> name ());	
 	if (addable) {
 	    FrameTable::instance ().insert (fr);
 	    func-> isVirtual () = true;
-	    func-> isOver () = this-> _isOver;
 	}
 	
+	func-> isOver () = this-> _isOver;       
 	func-> set (fr);	
 	return func;
     }
 
     InfoType ITypeDestructor::declare (AggregateCstInfo info, bool isExternal) {
 	auto space = Namespace (info-> typeString ());
-	auto fr = new (Z0) IMethodFrame (space, Keys::DELETE, info, this);
+	auto fr = new (Z0) IDestructFrame (space, Keys::DELETE, info, this);
 	fr-> isExtern () = isExternal;
 	fr-> isInnerPrivate () = (this-> _prot == InnerProtection::PRIVATE);
 	fr-> isInnerProtected () = (this-> _prot == InnerProtection::PROTECTED);
@@ -1609,6 +1624,11 @@ namespace syntax {
     void ITypeAlias::declare () {}
     void ITypeAlias::declare (semantic::Module) {}
     void ITypeAlias::declareAsExtern (semantic::Module) {}
+    
+
+    void ITrait::declare () {}
+    void ITrait::declare (semantic::Module) {}
+    void ITrait::declareAsExtern (semantic::Module) {}
     
     
 }

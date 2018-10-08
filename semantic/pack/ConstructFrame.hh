@@ -28,40 +28,39 @@ namespace syntax {
 
 namespace semantic {
     
-    class IMethodFrame : public IFrame {
+    class IConstructFrame : public IFrame {
 	
 	semantic::InfoType _info;
-	syntax::TypeMethod _method;
-	
+	syntax::TypeConstructor _const;
+
 	std::string _name;
 	bool _isExtern = false;
-	bool _isVirtual = true;
 	bool _isInnerPrivate = false;
 	bool _isInnerProtected = false;
+	
 	bool _echec = false;
 	bool _needConst = false;
+	bool _isCopy = false;
 	FrameProto _proto;
 	
     public:
 
-	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeMethod);
-	
+	IConstructFrame (Namespace, std::string, InfoType, syntax::TypeConstructor);
 
 	FrameProto validate (const std::vector <InfoType> & params) override;
 
 	FrameProto validate (syntax::ParamList params) override;
 
 	FrameProto validate () override;
-
+	
 	ApplicationScore isApplicable (syntax::ParamList params) override;
 
 	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
 	
 	InfoType & getInfo ();
-	
-	
+		
 	static const char * id () {
-	    return "IMethodFrame";
+	    return "IConstructFrame";
 	}
 	
 	virtual const char* getId ();	
@@ -71,13 +70,15 @@ namespace semantic {
 	bool & isVirtual ();
 
 	bool& needConst ();
-	
-	syntax::TypeMethod getMethod ();	
 
+	bool& isCopy ();
+	
     private :
- 	
+
+	bool verifCallSuper ();
+		
     };
 
-    typedef IMethodFrame* MethodFrame;
+    typedef IConstructFrame* ConstructFrame;
     
 }

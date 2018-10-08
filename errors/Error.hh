@@ -119,6 +119,7 @@ namespace Ymir {
 	    MultiDestr,
 	    NeedAllType,
 	    StaticMethodInit,
+	    StaticMethodOver,
 	    CannotImpl,
 	    CannotOverride,
 	    AmbiguousAccess,
@@ -128,6 +129,8 @@ namespace Ymir {
 	    SelfAlwaysInfered,
 	    SelfAlwaysRef,
 	    PrivateMemberWithinThisContext,
+	    OverTemplateMethod,
+	    OverTemplateMethodDuo,
 	    LAST_ERROR
 	};
 
@@ -181,7 +184,7 @@ namespace Ymir {
 	
 	static void notATemplate (const Word&);
 
-	static void notATemplate (const Word&, std::vector <syntax::Expression>&);
+	static void notATemplate (const Word&, std::vector <syntax::Expression>&, std::string);
 
 	static void notImmutable (const Word &, semantic::Symbol);
 
@@ -329,6 +332,8 @@ namespace Ymir {
 
 	static void staticMethodInit (const Word&);
 
+	static void staticMethodOver (const Word&);
+
 	static void cannotImpl (const Word&, semantic::InfoType);
 
 	static void cannotOverride (const Word&, semantic::InfoType);
@@ -336,6 +341,10 @@ namespace Ymir {
 	static void mustCallSuperConstructor (const Word&, semantic::InfoType);
 
 	static void implicitOverride (const Word&, const Word&);
+
+	static void overTemplateMethod (const Word&);
+	
+	static void overTemplateMethod (const Word&, const Word&);
 
 	static void noOverride (const Word&);
 

@@ -293,7 +293,7 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
     
-    void Error::notATemplate (const Word& word, std::vector <syntax::Expression> & exprs) {
+    void Error::notATemplate (const Word& word, std::vector <syntax::Expression> & exprs, std::string type) {
 	std::vector <std::string> ops = {
 	    Keys::OPBINARY, Keys::OPBINARYR, Keys::OPACCESS, Keys::OPRANGE,
 	    Keys::OPTEST, Keys::OPUNARY, Keys::OPEQUAL, Keys::OPCALL, Keys::OPASSIGN
@@ -301,7 +301,7 @@ namespace Ymir {
 
 	auto str = getString (NotATemplate2);	
 	OutBuffer buf ("(", exprs, ")");
-	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET, YELLOW, buf.str ().c_str (), RESET);
+	auto msg = format (str, YELLOW, type, RESET, YELLOW, buf.str ().c_str (), RESET);
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
 
@@ -1302,6 +1302,18 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::staticMethodOver (const Word & token) {
+	std::string msg = format (getString (StaticMethodOver));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::cannotImpl (const Word & token, semantic::InfoType type) {
 	std::string msg = format (getString (CannotImpl), YELLOW, type-> typeString (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
@@ -1403,8 +1415,33 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }    
 
-    
-    
+    void Error::overTemplateMethod (const Word & token, const Word & token2) {
+	std::string msg = format (getString (OverTemplateMethodDuo));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : ";
+	aux = addLine (aux, token2);
+	
+	ErrorMsg errorMsg = {msg + aux, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);	
+    }
+
+    void Error::overTemplateMethod (const Word & token) {
+	std::string msg = format (getString (OverTemplateMethod));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+	
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);	
+    }
+          
     void Error::ambiguousAccess (const Word & token, const Word & def, semantic::InfoType aggr) {
 	std::string msg = format (getString (AmbiguousAccess), YELLOW, aggr-> typeString (), RESET);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

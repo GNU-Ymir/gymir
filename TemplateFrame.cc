@@ -19,7 +19,8 @@ namespace semantic {
     ITemplateFrame::ITemplateFrame (Namespace space, Function func) :
 	IFrame (space, func)
     {
-	this-> name = func-> getIdent ().getStr ();
+	if (func)
+	    this-> name = func-> getIdent ().getStr ();
     }
 
     bool ITemplateFrame::isPure () {
@@ -138,7 +139,7 @@ namespace semantic {
 	auto tScope = Table::instance ().templateNamespace ();
 	Table::instance ().setCurrentSpace (Namespace (this-> space (), this-> _function-> name ()));
 	Table::instance ().templateNamespace () = globSpace;
-	
+
 	auto ret = getScoreTempOp (params);
 
 	Table::instance ().setCurrentSpace (globSpace);

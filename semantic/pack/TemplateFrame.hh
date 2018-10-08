@@ -35,23 +35,23 @@ namespace semantic {
 
 	ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args) override;
 
-	ApplicationScore isApplicable (syntax::ParamList params) override;
+	virtual ApplicationScore isApplicable (syntax::ParamList params) override;
 
-	ApplicationScore isApplicable (const std::vector<InfoType> & params) override;
+	virtual ApplicationScore isApplicable (const std::vector<InfoType> & params) override;
 
-	FrameProto validate (const std::vector<InfoType> & params) override;
+	virtual FrameProto validate (const std::vector<InfoType> & params) override;
 
-	FrameProto validate (syntax::ParamList params) override;
+	virtual FrameProto validate (syntax::ParamList params) override;
 
-	FrameProto validate (ApplicationScore score, const std::vector<InfoType> & params) override;
+	virtual FrameProto validate (ApplicationScore score, const std::vector<InfoType> & params) override;
 
-	FrameProto validate () override;
+	virtual FrameProto validate () override;
 
 	Frame TempOp (const std::vector<syntax::Expression> & params) override;
 
 	const char * getId () override;
 	
-    private : 
+    protected : 
 
 	ApplicationScore isApplicableVariadic (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & params);	
 
@@ -61,7 +61,7 @@ namespace semantic {
 
 	ApplicationScore getScoreVaridadic (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
 
-	Frame getScoreTempOp (const std::vector <syntax::Expression> & params);
+	virtual Frame getScoreTempOp (const std::vector <syntax::Expression> & params);
 	
 	std::string computeName (std::string name);
 

@@ -375,8 +375,12 @@ namespace semantic {
 	}
 
 	if (ret.size () != 0) {
-	    return new (Z0)  IFunctionInfo (this-> _space, this-> _name, ret);
+	    auto fin = this-> cloneOnExitWithInfo ()-> to <IFunctionInfo> ();
+	    fin-> _fromTemplates = ret;
+	    fin-> _alone = false;
+	    return fin;
 	}
+	
 	return NULL;
     }
 

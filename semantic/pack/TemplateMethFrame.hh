@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Frame.hh"
+//#include "Frame.hh"
 #include "FrameProto.hh"
 #include "UnPureFrame.hh"
 #include "PureFrame.hh"
@@ -28,7 +28,7 @@ namespace syntax {
 
 namespace semantic {
     
-    class IMethodFrame : public IFrame {
+    class ITemplateMethFrame : public ITemplateFrame {
 	
 	semantic::InfoType _info;
 	syntax::TypeMethod _method;
@@ -44,15 +44,10 @@ namespace semantic {
 	
     public:
 
-	IMethodFrame (Namespace, std::string, InfoType, syntax::TypeMethod);
+	ITemplateMethFrame (Namespace, std::string, InfoType, syntax::TypeMethod);
+
+	FrameProto validate (ApplicationScore score, const std::vector<InfoType> & params);
 	
-
-	FrameProto validate (const std::vector <InfoType> & params) override;
-
-	FrameProto validate (syntax::ParamList params) override;
-
-	FrameProto validate () override;
-
 	ApplicationScore isApplicable (syntax::ParamList params) override;
 
 	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
@@ -61,7 +56,7 @@ namespace semantic {
 	
 	
 	static const char * id () {
-	    return "IMethodFrame";
+	    return "ITemplateMethFrame";
 	}
 	
 	virtual const char* getId ();	
@@ -74,10 +69,12 @@ namespace semantic {
 	
 	syntax::TypeMethod getMethod ();	
 
-    private :
- 	
+    protected:
+	
+	Frame getScoreTempOp (const std::vector <syntax::Expression>& params) override;
+	
     };
 
-    typedef IMethodFrame* MethodFrame;
+    typedef ITemplateMethFrame* TemplateMethFrame;
     
 }

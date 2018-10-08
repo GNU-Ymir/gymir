@@ -15,3 +15,6 @@
 #include <ymir/semantic/pack/ExternFrame.hh>
 #include <ymir/semantic/pack/LambdaFrame.hh>
 #include <ymir/semantic/pack/TemplateFrame.hh>
+#include <ymir/semantic/pack/MethodFrame.hh>
+#include <ymir/semantic/pack/ConstructFrame.hh>
+#include <ymir/semantic/pack/DestructFrame.hh>

@@ -6,39 +6,18 @@
 #include <ymir/ast/Par.hh>
 #include <ymir/ast/Dot.hh>
 #include <ymir/ast/TypedVar.hh>
+#include <ymir/semantic/value/BoolValue.hh>
 
 using namespace syntax;
+using namespace std;
 
 namespace semantic {
-
-    IMethodFrame::IMethodFrame (Namespace space, std::string name, InfoType type, TypeConstructor cst):
-	IFrame (space, NULL),
-	_info (type),
-        _const (cst),
-	_method (NULL),
-	_dest (NULL),
-	_name (name),
-	_proto (NULL)
-    {}
 
 
     IMethodFrame::IMethodFrame (Namespace space, std::string name, InfoType type, TypeMethod meth):
 	IFrame (space, meth),
 	_info (type),
-	_const (NULL),
 	_method (meth),
-        _dest (NULL),
-	_name (name),
-	_proto (NULL)
-    {}
-
-    
-    IMethodFrame::IMethodFrame (Namespace space, std::string name, InfoType type, TypeDestructor dst):
-	IFrame (space, NULL),
-	_info (type),
-	_const (NULL),
-	_method (NULL),
-        _dest (dst),
 	_name (name),
 	_proto (NULL)
     {}
@@ -60,50 +39,12 @@ namespace semantic {
 	
 	auto from = Table::instance ().globalNamespace ();
 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _name));
-	if (this-> _const != NULL) {
-	    auto vars = this-> _const-> getParams ();
-	    vars.insert (vars.begin (), new (Z0) IVar (this-> _const-> getIdent ()));
-	    auto finalParams = IFrame::computeParams (vars, params);
-	    if (object-> to <IAggregateInfo> ()-> getAncestor () != NULL)
-	    	if (!verifCallSuper ()) {
-	    	    Ymir::Error::mustCallSuperConstructor (this-> _const-> getIdent (), object-> to <IAggregateInfo> ()-> getAncestor ());
-	    	    this-> _echec = true;
-	    	    return NULL;
-	    	}
+	auto vars = this-> _method-> getParams ();	    
+	auto finalParams = IFrame::computeParams (vars, params);
 	    
-	    auto ret = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _const-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());	    
-	    if (ret) {
-		ret-> type ()-> type (object);
-	    }
-	    this-> _proto = ret;
-	    return this-> _proto;	
-	} else if (this-> _method) {
-	    auto vars = this-> _method-> getParams ();	    
-	    auto finalParams = IFrame::computeParams (vars, params);
-	    
-	    if (this-> _isVirtual) from = this-> _space;
-	    this-> _proto = IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern () && this-> _isVirtual);
-	    return this-> _proto;
-	} else {
-	    std::vector <Var> vars = {new (Z0) IVar (this-> _dest-> getIdent ())};
-	    auto ident = this-> _dest-> getIdent ();
-	    auto finalParams = IFrame::computeParams (vars, params);
-	    if (object-> to <IAggregateInfo> ()-> getAncestor () != NULL) {
-		auto frame = object-> to <IAggregateInfo> ()-> getAncestor ()-> getDestructor ();
-		if (frame) {
-		    auto call = new (Z0) IPar ({ident.getLocus (), Token::LPAR}, {ident.getLocus (), Token::RPAR},					       
-					       new (Z0) IDot ({ident.getLocus (), Token::DOT},
-							      new (Z0) IDot ({ident.getLocus (), Token::DOT}, vars [0], new (Z0) IVar ({ident.getLocus (), Keys::SUPER}))
-							      , new (Z0) IVar ({ident.getLocus (), Keys::DISPOSE})
-					       ),
-					       new (Z0) IParamList ({ident.getLocus(), "()"}, {})
-		    );
-		    this-> _dest-> getBlock ()-> addFinallyAtSemantic (call);
-		}
-	    }	    
-	    this-> _proto = IFrame::validate (this-> _name, this-> _space, finalParams, this-> _dest-> getBlock (), new (Z0) IVoidInfo (), this-> isExtern ());	    
-	    return this-> _proto;
-	}
+	if (this-> _isVirtual) from = this-> _space;
+	this-> _proto = IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern () && this-> _isVirtual);
+	return this-> _proto;
     }
     
     ApplicationScore IMethodFrame::isApplicable (ParamList params) {
@@ -112,24 +53,15 @@ namespace semantic {
 	
 	auto types = params-> getParamTypes ();
 	std::vector <Var> vars;
-	Word ident;
-	if (this-> _const) {
-	    ident = this-> _const-> getIdent ();
-	    if (this-> _isCopy) {
-		vars = {new (Z0) IVar (this-> _const-> getIdent ())};
-		vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
-	    } else 
-		vars = this-> _const-> getParams ();
-	} else {
-	    vars = this-> _method-> getParams ();
-	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
-	    
-	    ident = this-> _method-> getIdent ();
-	}
+	vars = this-> _method-> getParams ();
+	vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
+	
+	auto ident = this-> _method-> getIdent ();	
 
 	auto ret = IFrame::isApplicable (ident, vars, types);
 	if (ret)
 	    ret-> ret = object;
+	
 	return ret;
     }
 
@@ -138,34 +70,18 @@ namespace semantic {
 	if (object == NULL) return NULL;
 	
 	std::vector <Var> vars;
-	Word ident;
-	if (this-> _const) {	   
-	    ident = this-> _const-> getIdent ();
-	    if (this-> _isCopy) {
-		vars = {new (Z0) IVar (this-> _const-> getIdent ())};
-		vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
-	    } else {
-		vars = this-> _const-> getParams ();
-	    }
-	} else if (this-> _method) {
-	    vars = this-> _method-> getParams ();
-	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
+	vars = this-> _method-> getParams ();
+	vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
 	    
-	    ident = this-> _method-> getIdent ();
-	} else {
-	    vars = {new (Z0) IVar (this-> _dest-> getIdent ())};
-	    vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
-	    ident = this-> _dest-> getIdent ();
-	}
+	auto ident = this-> _method-> getIdent ();
 	
-
 	auto ret = IFrame::isApplicable (ident, vars, params);
 	if (ret) 
 	    ret-> ret = object;
 	
 	return ret;
     }
-
+        
     FrameProto IMethodFrame::validate (ParamList params) {
 	return this-> validate (params-> getParamTypes ());
     }
@@ -176,56 +92,22 @@ namespace semantic {
 	std::vector <Var> vars;
 	std::vector <InfoType> types;
 	if (this-> _proto != NULL) return this-> _proto;
-	
-	if (this-> _const) {
-	    vars = this-> _const-> getParams ();
-	    types.push_back (new (Z0) IRefInfo (false, object));
-	} else if (this-> _method) {
-	    vars = this-> _method-> getParams ();
-	    vars = std::vector <Var> (vars.begin () + 1, vars.end ());
-	    types.push_back (new (Z0) IRefInfo (false, object));
-	} else {
-	    this-> _proto = validate ({new (Z0) IRefInfo (false, object)});
-	    return this-> _proto;
-	}
+		
+	vars = this-> _method-> getParams ();
+	vars = std::vector <Var> (vars.begin () + 1, vars.end ());
+	types.push_back (new (Z0) IRefInfo (false, object));	
 
-	if (this-> _isCopy) {
-	    types.push_back (new (Z0) IRefInfo (true, object));
-	} else {
-	    for (auto it : Ymir::r (0, vars.size ())) {
-		auto info = vars [it]-> to <ITypedVar> ()-> getType ();
-		if (info != NULL)
-		    types.push_back (info);
-	    }
-	}
+
+	for (auto it : Ymir::r (0, vars.size ())) {
+	    auto info = vars [it]-> to <ITypedVar> ()-> getType ();
+	    if (info != NULL)
+		types.push_back (info);
+	}	
        	
 	this-> _proto = validate (types);
 	return this-> _proto;
     }
 
-    bool IMethodFrame::verifCallSuper () {
-	auto block = this-> _const-> getBlock ();
-	auto insts = block-> getInsts ();
-	if (insts.size () == 0) return false;
-	auto fst = insts [0];
-	if (auto par = fst-> to <IPar> ()) {
-	    auto left = par-> left ();
-	    if (auto dcol = left-> to <IDColon> ()) {
-		auto lcol = dcol-> getLeft ();
-		auto rcol = dcol-> getRight ();
-		if (rcol-> to <IVar> () == NULL || rcol-> token.getStr () != Keys::INIT) return false;
-		if (auto dot = lcol-> to <IDot> ()) {
-		    auto ldot = dot-> getLeft ();
-		    auto rdot = dot-> getRight ();
-		    if (ldot-> to <IVar> () == NULL || ldot-> token.getStr () != Keys::SELF) return false;
-		    if (rdot-> to <IVar> () == NULL || rdot-> token.getStr () != Keys::SUPER) return false;
-		    return true;
-		}
-	    }
-	}
-	
-	return false;
-    }
 
     InfoType& IMethodFrame::getInfo () {
 	return this-> _info;
@@ -246,14 +128,100 @@ namespace semantic {
     bool& IMethodFrame::isVirtual () {
 	return this-> _isVirtual;
     }
-
-    bool& IMethodFrame::isCopy () {
-	return this-> _isCopy;
-    }
     
     bool& IMethodFrame::needConst () {
 	return this-> _needConst;
     }
 
+    // Frame IMethodFrame::TempOp (const std::vector <Expression> & params) {
+    // 	this-> currentScore () = 0;
+    // 	if (this-> _method == NULL) return NULL;
+    // 	if (params.size () > this-> _method-> getTemplates ().size ()) {
+    // 	    if (this-> _method-> getTemplates ().size () == 0) return NULL;
+    // 	    if (!this-> _method-> getTemplates ().back ()-> is<IVariadicVar> ())
+    // 		return NULL;
+    // 	}
+
+    // 	auto globSpace = Table::instance ().space ();
+    // 	auto tScope = Table::instance ().templateNamespace ();
+    // 	Table::instance ().setCurrentSpace (Namespace (this-> _space, this-> _method-> name ()));
+    // 	Table::instance ().templateNamespace () = globSpace;
+
+    // 	auto ret = getScoreTempOp (params);
+
+    // 	Table::instance ().setCurrentSpace (globSpace);
+    // 	Table::instance ().templateNamespace () = tScope;
+    // 	return ret;
+    // }
+
+    // bool IMethodFrame::validateTest (syntax::Expression test) {
+    // 	if (test) {
+    // 	    auto res = test-> expression ();
+    // 	    if (!res) return false;
+    // 	    if (!res-> info-> isImmutable ()) {
+    // 		Ymir::Error::notImmutable (test-> token, res-> info);
+    // 		return false;
+    // 	    } else if (!res-> info-> value ()-> is<IBoolValue> ()) {
+    // 		Ymir::Error::incompatibleTypes (res-> token, res-> info, new (Z0) IBoolInfo (true));
+    // 		return false;
+    // 	    } else if (!res-> info-> value ()-> to <IBoolValue> ()-> isTrue ()) {
+    // 		return false;
+    // 	    }
+    // 	}
+    // 	return true;
+    // }
+    
+    // Frame IMethodFrame::getScoreTempOp (const std::vector <Expression> & params) {
+    // 	std::vector <InfoType> totals;
+    // 	std::vector <Expression> finals;
+    // 	std::vector <Expression> vars;
+
+    // 	totals.resize (this-> _method-> getTemplates ().size ());
+    // 	auto res = TemplateSolver::instance (). solve (this-> _method-> getTemplates (), params);
+
+    // 	if (!res.valid) return NULL;
+    // 	for (auto &it : res.elements) {
+    // 	    if (it.second-> info) {
+    // 		if (it.second-> info-> isImmutable ()) {
+    // 		    it.second = it.second-> info-> value ()-> toYmir (it.second-> info);		
+    // 		} else {
+    // 		    it.second = it.second-> templateExpReplace ({});
+    // 		    if (!it.second) return NULL;
+    // 		}
+    // 	    }
+    // 	}
+
+    // 	auto auxTmps = TemplateSolver::instance ().solved (this-> _function-> getTemplates (), res.elements);	
+    // 	auto meth = this-> _method-> templateReplace (res.elements);
+    // 	if (TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), res)) {
+    // 	    if (meth-> getTest ()) {
+    // 		auto valid = meth-> getTest ()-> templateExpReplace (res.elements);
+    // 		if (!validateTest (valid)) return NULL;
+    // 		else res.score += 1;
+    // 	    }
+	    
+    // 	    auto ret = new (Z0)  IMethodFrame (this-> _space, this-> _name, this-> _info, meth);
+    // 	    ret-> isVirtual () = false;
+    // 	    ret-> attributes () = this-> attributes ();
+	    
+    // 	    ret-> currentScore () = this-> currentScore () + res.score;	    
+    // 	    ret-> templateParams () = this-> templateParams ();
+    // 	    ret-> templateParams ().insert (ret-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
+    // 	    return ret;	    
+    // 	} else {
+    // 	    meth-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
+    // 	    auto aux = new (Z0)  IMethodFrame (this-> _space, this-> _name, this-> _info, meth);
+    // 	    aux-> isVirtual () = false;
+    // 	    aux-> attributes () = this-> attributes ();
+	    
+    // 	    aux-> templateParams () = this-> templateParams ();
+    // 	    aux-> templateParams ().insert (aux-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
+    // 	    aux-> _currentScore = this-> currentScore () + res.score;
+    // 	    return aux;
+    // 	}	
+       	
+    // }
+    
+    
 }
 

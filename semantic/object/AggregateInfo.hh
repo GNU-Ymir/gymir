@@ -68,8 +68,12 @@ namespace semantic {
 
 	std::vector <FunctionInfo> & getMethods ();
 
+	FunctionInfo getMeth (std::string name);
+	
 	std::vector <FunctionInfo> & getStaticMethods ();
 
+	FunctionInfo getStaticMeth (std::string name);
+	
 	std::vector <syntax::TypeAlias> & getAlias ();
 	
 	Namespace space ();
