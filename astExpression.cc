@@ -104,13 +104,12 @@ namespace syntax {
     Expression IAccess::findOpAccess () {
 	Word word (this-> token.getLocus (), Keys::OPACCESS);
 	auto var = new (Z0)  IVar (word);
-	std::vector <Expression> params = {this-> left};
-	params.insert (params.end (), this-> params-> getParams ().begin (),
-		       this-> params-> getParams ().end ());
 
+
+	auto left = new (Z0) IDot ({this-> token, Token::DOT}, this-> left, var);
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto finalParams = new (Z0)  IParamList (this-> token, params);
-	auto call = new (Z0)  IPar (tok, tok2, var, finalParams, true);
+	auto finalParams = new (Z0)  IParamList (this-> token, this-> params-> getParams ());
+	auto call = new (Z0)  IPar (tok, tok2, left, finalParams, true);
 	
 	return call-> expression ();
     }    
@@ -709,11 +708,11 @@ namespace syntax {
     Expression IBinary::findOpAssign (Binary, bool mandatory) {
 	Word word (this-> token.getLocus (), Keys::OPASSIGN);
 	auto var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
-	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
+	auto params = new (Z0)  IParamList (this-> token, {this-> right});
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> left, var);
+	auto call = new (Z0)  IPar (tok, tok2, dot, params, false);
 	
-	auto call = new (Z0)  IPar (tok, tok2, var, params, false);
-
 	if (!mandatory) Ymir::Error::activeError (false);
 	auto res = call-> expression ();
 	if (!mandatory) Ymir::Error::activeError (true);
@@ -737,7 +736,7 @@ namespace syntax {
 	Ymir::Error::activeError (true);
 	
 	if (errors.size () != 0) {
-	    //Ymir::Error::activeError (false);
+	    Ymir::Error::activeError (false);
 	    word = Word (this-> token.getLocus (), Keys::OPBINARYR);
 	    var = new (Z0)  IVar (word, {new (Z0)  IString (this-> token, this-> token.getStr ())});
 	    dot = new (Z0) IDot ({this-> token, Token::DOT}, aux-> right, var);
@@ -745,9 +744,9 @@ namespace syntax {
 	    call = new (Z0)  IPar (tok, tok2, dot, params, false);
 	    res = call-> expression ();
 	    auto errors2 = Ymir::Error::caught ();
-	    //Ymir::Error::activeError (true);
-	    if (errors2.size () != 0) {
-		for (auto it : errors) printf ("%s\n", it.msg.c_str ());
+	    Ymir::Error::activeError (true);
+	    if (res == NULL) {
+		for (auto it : errors) fprintf (stderr, "%s\n", it.msg.c_str ());
 		return NULL;
 	    }
 	}	
@@ -756,13 +755,35 @@ namespace syntax {
     }
 
     Expression IBinary::findOpTest (Binary) {
+	Ymir::Error::activeError (false);
 	Word word {this-> token.getLocus (), Keys::OPTEST};
 	auto var = new (Z0) IVar (word, {new (Z0) IString (this-> token, this-> token.getStr ())});
-	auto params = new (Z0) IParamList (this-> token, {this-> left, this-> right});
+	auto params = new (Z0) IParamList (this-> token, {this-> right});
+	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> left, var);
+	
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto call = new (Z0) IPar (tok, tok2, var, params, false);
+	auto call = new (Z0) IPar (tok, tok2, dot, params, false);
 	auto res = call-> expression ();
-	if (res == NULL) return NULL;
+	auto errors = Ymir::Error::caught ();
+	Ymir::Error::activeError (true);
+	if (res == NULL) {
+	    Ymir::Error::activeError (false);
+	    Word word {this-> token.getLocus (), Keys::OPTEST};
+	    
+	    var = new (Z0) IVar (word, {new (Z0) IString ({this-> token, this-> oppositeTest (this-> token)})});
+	    params = new (Z0) IParamList (this-> token, {this-> left});
+	    dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> right, var);
+	
+	    call = new (Z0) IPar (tok, tok2, dot, params, false);
+	    res = call-> expression ();
+	    auto errors2 = Ymir::Error::caught ();
+	    Ymir::Error::activeError (true);
+	    
+	    if (res == NULL) {
+		for (auto it : errors) fprintf (stderr, "%s\n", it.msg.c_str ());
+		return NULL;
+	    }
+	}
 
 	if (res-> info-> type ()-> is <IBoolInfo> ()) return res;
 	else if (auto dec = res-> info-> type ()-> to <IFixedInfo> ()) {
@@ -781,9 +802,11 @@ namespace syntax {
 
 	Word word (this-> token.getLocus (), Keys::OPEQUAL);
 	auto var = new (Z0)  IVar (word);
-	auto params = new (Z0)  IParamList (this-> token, {this-> left, this-> right});
+	auto params = new (Z0)  IParamList (this-> token, {this-> right});
+	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> left, var);
+	
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto call = new (Z0)  IPar (tok, tok2, var, params, false);
+	auto call = new (Z0)  IPar (tok, tok2, dot, params, false);
 	Expression res = NULL;
 	if (this-> token == Token::DEQUAL) {
 	    res = call-> expression ();
@@ -798,8 +821,10 @@ namespace syntax {
 	    Ymir::Error::activeError (false);
 	    word = Word (this-> token.getLocus (), Keys::OPEQUAL);
 	    var = new (Z0)  IVar (word);
-	    params = new (Z0)  IParamList (this-> token, {this-> right, this-> left});
-	    call = new (Z0)  IPar (this-> token, this-> token, var, params, false);
+	    params = new (Z0)  IParamList (this-> token, {this-> left});
+	    dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> right, var);
+	    
+	    call = new (Z0)  IPar (this-> token, this-> token, dot, params, false);
 	    if (this-> token == Token::DEQUAL) {
 		res = call-> expression ();
 	    } else {
@@ -808,8 +833,8 @@ namespace syntax {
 	    }
 	    auto errors2 = Ymir::Error::caught ();
 	    Ymir::Error::activeError (true);
-	    if (errors2.size () != 0) {
-		for (auto it : errors) printf ("%s\n", it.msg.c_str ());
+	    if (res == NULL) {
+		for (auto it : errors) fprintf (stderr, "%s\n", it.msg.c_str ());
 		return NULL;
 	    }
 	}	
@@ -822,6 +847,19 @@ namespace syntax {
 	return canFind (std::vector <std::string> {Token::INF, Token::SUP, Token::INF_EQUAL, Token::SUP_EQUAL, Token::NOT_INF, Token::NOT_SUP, Token::NOT_INF_EQUAL, Token::NOT_SUP_EQUAL}, elem.getStr ());
     }
 
+    std::string IBinary::oppositeTest (Word elem) {
+	if (elem == Token::INF) return Token::SUP_EQUAL;
+	if (elem ==  Token::SUP ) return Token::INF_EQUAL;
+	if (elem ==  Token::INF_EQUAL ) return Token::SUP;
+	if (elem ==  Token::SUP_EQUAL ) return Token::INF;
+	if (elem ==  Token::NOT_INF ) return Token::INF;
+	if (elem ==  Token::NOT_SUP ) return Token::SUP;
+	if (elem ==  Token::NOT_SUP_EQUAL ) return Token::SUP_EQUAL;
+	if (elem ==  Token::NOT_INF_EQUAL ) return Token::INF_EQUAL;
+	Ymir::Error::assert (elem.getStr ().c_str ());
+	return "";
+    }
+    
     bool IBinary::isEq (Word elem) {
 	return elem == Token::DEQUAL || elem == Token::NOT_EQUAL;
     }

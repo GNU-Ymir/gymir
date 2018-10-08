@@ -56,6 +56,7 @@ namespace syntax {
 	Expression findOpEqual (IBinary*);
 
 	bool isTest (Word);
+	std::string oppositeTest (Word);
 	bool isEq (Word);
 	
     };
