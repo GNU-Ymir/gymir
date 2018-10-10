@@ -7,6 +7,7 @@
 #include <ymir/utils/Array.hh>
 #include <ymir/utils/Options.hh>
 #include <ymir/semantic/object/MethodInfo.hh>
+#include <ymir/semantic/object/TraitInfo.hh>
 
 
 namespace syntax {
@@ -1643,10 +1644,14 @@ namespace syntax {
 		linfo = ref-> content ();
 
 	    auto res = linfo-> isSame (rtype);
+	    if (!res && rtype-> is<ITraitInfo> ()) {
+		res = rtype-> to <ITraitInfo> ()-> validate (linfo);
+	    }
+	    
 	    auto type = new (Z0) IBoolInfo (true);
 	    aux-> info = new (Z0) ISymbol (this-> token, aux, type);
 	    aux-> info-> value () = new (Z0) IBoolValue (res);
-	    return aux;
+	    return aux;	    
 	} else {
 	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> expType);
 	    if (aux-> left == NULL) return NULL;

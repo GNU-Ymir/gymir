@@ -521,10 +521,14 @@ namespace semantic {
     bool IAggregateCstInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
 	string name_ = "";
-	if (this-> _tmpsDone.size () != 0)
+	if (this-> _tmpsDone.size () != 0) {
+	    if (space.innerMods ().size () < 2 + this-> _templateSpace.innerMods ().size ()) return false;
 	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
-	else
+	} else {
+	    if (space.innerMods ().size () < 2) return false;
 	    name_ = space.innerMods () [space.innerMods ().size () - 2];
+	}
+	
 	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
 	if (name_ == this-> _name) {
 	    return true;
@@ -540,10 +544,14 @@ namespace semantic {
     bool IAggregateCstInfo::inPrivateContext () {
 	auto space = Table::instance ().getCurrentSpace ();
 	string name = "";
-	if (this-> _tmpsDone.size () != 0)
+	if (this-> _tmpsDone.size () != 0) {
+	    if (space.innerMods ().size () < 2 + this-> _templateSpace.innerMods ().size ()) return false;
 	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
-	else
+	} else {
+	    if (space.innerMods ().size () < 2) return false;
 	    name = space.innerMods () [space.innerMods ().size () - 2];
+	}
+	
 	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
 	if (name == this-> _name) {
 	    return true;
@@ -985,6 +993,10 @@ namespace semantic {
 	return alias;
     }
     
+    std::vector <FunctionInfo> IAggregateInfo::getAllMethods () {
+	return this-> _allMethods;
+    }
+
     std::vector <FunctionInfo> IAggregateInfo::getMethods () {
 	if (!this-> getAncestor ()) return this-> _methods;
 	auto method = this-> getAncestor ()-> _allMethods;
@@ -1002,13 +1014,19 @@ namespace semantic {
 		    auto lparams = mt-> frame ()-> func ()-> getParams ();
 		    auto rparams = it-> frame ()-> func ()-> getParams ();
 		    if (lparams.size ()  != rparams.size ()) continue;
+		    bool valid = true;
 		    for (auto it : Ymir::r (0, lparams.size ())) {
 			if (lparams [it]-> is <ITypedVar> () && rparams [it]-> is <ITypedVar> ()) {
-			    if (!lparams [it]-> to <ITypedVar> ()-> getType ()-> CompOp (rparams [it]-> to <ITypedVar> ()-> getType ()))
-				continue;
-			} else continue;
+			    if (!lparams [it]-> to <ITypedVar> ()-> getType ()-> CompOp (rparams [it]-> to <ITypedVar> ()-> getType ())) {
+				valid = false;
+				break;
+			    }
+			} else {
+			    valid = false;
+			    break;
+			}
 		    }
-
+		    if (!valid) continue;
 		    if (!mt-> isOver ()) {
 			Ymir::Error::implicitOverride (
 			    mt-> frame ()-> func ()-> getIdent (),
@@ -1120,10 +1138,13 @@ namespace semantic {
 	if (this-> _hasExemption) return true;
 	auto space = Table::instance ().getCurrentSpace ();
 	string name = "";
-	if (this-> _id-> tmpsDone ().size () != 0)
+	if (this-> _id-> tmpsDone ().size () != 0) {
+	    if (space.innerMods ().size () < 2 + this-> _id-> templateSpace ().innerMods ().size ()) return false;
 	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
-	else
+	} else {
+	    if (space.innerMods ().size () < 2) return false;
 	    name = space.innerMods () [space.innerMods ().size () - 2];
+	}
 	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
 	if (name == this-> _name) {
 	    return true;
@@ -1134,10 +1155,14 @@ namespace semantic {
     bool IAggregateInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
 	string name_ = "";
-	if (this-> _id-> tmpsDone ().size () != 0)
+	if (this-> _id-> tmpsDone ().size () != 0) {
+	    if (space.innerMods ().size () < 2 + this-> _id-> templateSpace ().innerMods ().size ()) return false;
 	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
-	else
+	} else {
+	    if (space.innerMods ().size () < 2) return false;
 	    name_ = space.innerMods () [space.innerMods ().size () - 2];
+	}
+	
 	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
 	if (name_ == this-> _name) {
 	    return true;

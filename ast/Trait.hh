@@ -38,7 +38,7 @@ namespace syntax {
 	std::vector <TypedVar> & getAttrs ();
 
 	Word & getIdent ();
-
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;

@@ -206,6 +206,8 @@ namespace semantic {
 
 	std::vector <InfoType> getTemplate (ulong, ulong) override;
 
+	std::vector <FunctionInfo> getAllMethods ();
+	
 	AggregateInfo getAncestor ();
 
 	bool& hasExemption ();

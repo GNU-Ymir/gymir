@@ -1626,7 +1626,20 @@ namespace syntax {
     void ITypeAlias::declareAsExtern (semantic::Module) {}
     
 
-    void ITrait::declare () {}
+    void ITrait::declare () {
+	auto space = Table::instance ().space ();
+
+	auto it = Table::instance ().getLocal (this-> _ident.getStr ());
+	if (it != NULL) {
+	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
+	    return;
+	}
+	
+	auto info = new (Z0) ITraitInfo (space, this);
+	Table::instance ().insert (new (Z0) ISymbol (this-> _ident, NULL, info));	
+    }
+
+    
     void ITrait::declare (semantic::Module) {}
     void ITrait::declareAsExtern (semantic::Module) {}
     
