@@ -1303,7 +1303,7 @@ namespace syntax {
 	    auto type = aux-> _left-> info-> type ()-> CallOp (aux-> _left-> token, aux-> params);	    
 
 	    if (type == NULL) {
-		auto call = !this-> _opCall ? findOpCall () : NULL;
+		auto call = (!this-> _opCall && !aux-> _left-> info-> type ()-> is<IFunctionInfo> ()) ? findOpCall () : NULL;
 		if (call == NULL) {
 		    if (this-> token.getStr () != this-> end.getStr ())
 			Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
@@ -1353,13 +1353,15 @@ namespace syntax {
     Expression IPar::findOpCall () {
 	Word word (this-> token.getLocus (), Keys::OPCALL);
 	auto var = new (Z0) IVar (word);
-	std::vector <Expression> params = {this-> _left};
-	params.insert (params.end (), this-> params-> getParams ().begin (),
-		       this-> params-> getParams ().end ());
+	//std::vector <Expression> params = {this-> _left};
+	//params.insert (params.end (), this-> params-> getParams ().begin (),
+	//this-> params-> getParams ().end ());
 
+	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> _left, var);
+    
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto finalParams = new (Z0)  IParamList (this-> token, params);
-	auto call = new (Z0)  IPar (tok, tok2, var, finalParams, true);
+	auto finalParams = new (Z0)  IParamList (this-> token, this-> params-> getParams ());
+	auto call = new (Z0)  IPar (tok, tok2, dot, finalParams, true);
 	
 	return call-> expression ();
     }

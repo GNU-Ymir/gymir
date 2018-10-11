@@ -36,6 +36,8 @@ namespace semantic {
 	StructInfo _info;
 	
 	bool _isPublic;
+
+	friend IStructInfo;
 	
     public:
 
@@ -93,7 +95,7 @@ namespace semantic {
 
 	bool recursiveGet (InfoType info, InfoType where);
 	
-	InfoType Init ();
+	InfoType Init (syntax::Var var);
 
 	InfoType Name ();
 
@@ -111,7 +113,7 @@ namespace semantic {
 	IStructCstInfo* _id = NULL;
 	std::vector <Word> _udas;
 	bool _isUnion;
-	
+
 	friend IStructCstInfo;
 
     public:

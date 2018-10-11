@@ -7,6 +7,7 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/object/AggregateInfo.hh>
+#include <ymir/ast/_.hh>
 
 namespace semantic {
 
@@ -78,6 +79,18 @@ namespace semantic {
 	    return left-> toGeneric ();
 	}
 
+	Ymir::Tree emptyInit (Word locus, Ymir::Tree type) {
+	    auto loc = locus.getLocus ();
+	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type);
+	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
+				  
+	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
+	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
+	    
+	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
+	    return Ymir::compoundExpr (loc, result, ltree);
+	}
+	
 	Tree InstInit (Word locus, InfoType type, Expression expression) {
 	    auto ttype = type-> toGeneric ();
 	    auto decls = Ymir::getFieldDecls (ttype);
@@ -86,11 +99,21 @@ namespace semantic {
 	    for (auto it : decls) {
 		Tree decl_name = DECL_NAME (it.getTree ());
 		std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));
-		auto field_var = new (Z0) IVar (Word {UNKNOWN_LOCATION, field_name});
-		auto local = new (Z0) IDColon (locus, expression, initVar);
+		auto field_var = new (Z0) IVar (Word {locus, field_name});
+		Expression local = new (Z0) IDColon (locus, expression, initVar);
 		if (field_name != Keys::UNDER) { // Struct vide
-		    local-> info = new (Z0) ISymbol (locus, local, type-> DotOp (field_var)-> DColonOp (initVar));		
-		    CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), local-> toGeneric ().getTree ());
+		    local-> info = new (Z0) ISymbol (locus, local, type-> DotOp (field_var)-> DColonOp (initVar));
+		    if (local-> info-> type () == NULL) {
+			Ymir::Error::undefAttr (locus, new (Z0) ISymbol (field_var-> token, field_var, type-> DotOp (field_var)), initVar);
+			local = NULL;
+		    } else if (local-> info-> type ()-> is<IFunctionInfo> () && local-> info-> type ()-> to <IFunctionInfo> () -> isConstr ()) {
+			local = (new (Z0) IPar (locus, locus, new (Z0) IEvaluatedExpr (local), new (Z0) IParamList (locus, {})))-> expression ();
+		    }
+		    
+		    if (local != NULL) 
+			CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), local-> toGeneric ().getTree ());
+		    else
+			CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), emptyInit (locus, type-> DotOp (field_var)-> toGeneric ()).getTree ());
 		} else {
 		    CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), build_int_cst_type (unsigned_char_type_node, 0));
 		}
@@ -193,7 +216,7 @@ namespace semantic {
 	    if (ret == NULL) return NULL;
 	    return ret-> StringOf ();
 	}
-	if (var-> token == "init") return Init ();
+	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "name") return Name ();
 	return NULL;
@@ -205,11 +228,24 @@ namespace semantic {
 	return str;
     }	
     
-    InfoType IStructCstInfo::Init () {
+    InfoType IStructCstInfo::Init (Var var) {
 	std::vector <syntax::Expression> exp;
 	auto ret = this-> TempOp (exp);	
 	if (ret == NULL) return NULL;
 	ret-> unopFoo = StructUtils::InstInit;
+	for (auto it : Ymir::r (0, ret-> to <IStructInfo> ()-> types.size ())) {
+	    auto type = ret-> to <IStructInfo> ()-> types [it];
+	    auto attr = ret-> to <IStructInfo> ()-> attrs [it];
+	    auto init = type-> DColonOp (var);
+	    if (init == NULL) return NULL;
+	    else if (init-> is <IFunctionInfo> () && init-> to <IFunctionInfo> ()-> isConstr ()) {
+		auto tok = this-> params [it]-> typeExp ()-> token;
+		auto left = new (Z0) IVar ({tok});
+		left-> info = new (Z0) ISymbol (left-> token, left, init);
+		auto par = (new (Z0) IPar ({tok, Token::LPAR}, {tok, Token::RPAR}, new (Z0) IEvaluatedExpr (left), new (Z0) IParamList (tok, {})))-> expression ();
+		if (par == NULL) return NULL;
+	    }
+	}
 	return ret;
     }
     

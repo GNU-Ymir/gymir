@@ -185,12 +185,9 @@ namespace semantic {
     }
     
     InfoType IArrayInfo::Init () {
-	if (!this-> _isStatic) {
-	    auto ret = this-> clone ();
-	    ret-> unopFoo = ArrayUtils::InstInit;
-	    return ret;
-	}
-	return NULL;
+	auto ret = this-> clone ();
+	ret-> unopFoo = ArrayUtils::InstInit;
+	return ret;
     }
     
     InfoType IArrayInfo::Ptr () {
@@ -863,7 +860,6 @@ namespace semantic {
 	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
-	
 
     }
 
