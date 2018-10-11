@@ -154,6 +154,7 @@ namespace Ymir {
 		phrases [PrivateMemberWithinThisContext] = "type %%% member %%% is private within current context";
 		phrases [OverTemplateMethodDuo] = "Cannot override a non-virtual template method";
 		phrases [OverTemplateMethod] = "Template method cannot override a super method";
+		phrases [OverPrivateMethod] = "Private method are not virtual and cannot override";
 
 		init = true;
 	    } 

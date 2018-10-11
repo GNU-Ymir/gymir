@@ -1430,6 +1430,33 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);	
     }
 
+    void Error::overPrivateMethod (const Word & token, const Word & token2) {
+	std::string msg = format (getString (OverPrivateMethod));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : ";
+	aux = addLine (aux, token2);
+	
+	ErrorMsg errorMsg = {msg + aux, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);	
+    }
+
+    void Error::overPrivateMethod (const Word & token) {
+	std::string msg = format (getString (OverPrivateMethod));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+	
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);	
+    }
+    
     void Error::overTemplateMethod (const Word & token) {
 	std::string msg = format (getString (OverTemplateMethod));
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

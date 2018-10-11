@@ -1305,7 +1305,7 @@ namespace syntax {
 	}
 	
 	for (auto alias : this-> _alias) {
-	    alias-> space () = Namespace (type-> space (), type-> name ());
+	    alias-> space () = Namespace (type-> typeString ());
 	    bool error = false;
 	    for (auto __al : type-> getAlias ()) {
 		if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
@@ -1358,7 +1358,7 @@ namespace syntax {
 	    }
 
 	    for (auto alias : this-> _alias) {
-		alias-> space () = Namespace (type-> space (), type-> name ());
+		alias-> space () = Namespace (type-> typeString ());
 		bool error = false;
 		for (auto __al : type-> getAlias ()) {
 		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
@@ -1417,7 +1417,7 @@ namespace syntax {
 
 	    
 	    for (auto alias : this-> _alias) {
-		alias-> space () = Namespace (type-> space (), type-> name ());
+		alias-> space () = Namespace (type-> typeString ());
 		bool error = false;
 		for (auto __al : type-> getAlias ()) {
 		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
@@ -1522,12 +1522,12 @@ namespace syntax {
 	    if (this-> tmps.size () == 0) {
 		fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
 		fr-> to <IMethodFrame> ()-> isExtern () = isExternal;
-		fr-> to <IMethodFrame> ()-> isVirtual () = addable;
+		fr-> to <IMethodFrame> ()-> isVirtual () = addable && (this-> _prot != InnerProtection::PRIVATE);;
 		fr-> to <IMethodFrame> ()-> needConst () = needConst;
 	    }  else {
 		fr = new (Z0) ITemplateMethFrame (space, this-> name (), info, this);
 		fr-> to <ITemplateMethFrame> ()-> isExtern () = isExternal;
-		fr-> to <ITemplateMethFrame> ()-> isVirtual () = addable;
+		fr-> to <ITemplateMethFrame> ()-> isVirtual () = addable && (this-> _prot != InnerProtection::PRIVATE);
 		fr-> to <ITemplateMethFrame> ()-> needConst () = needConst;
 	    }	    
 	} else if (addable) {
@@ -1545,7 +1545,7 @@ namespace syntax {
 	FunctionInfo func = new (Z0) IFunctionInfo (space, this-> name ());	
 	if (addable) {
 	    FrameTable::instance ().insert (fr);
-	    func-> isVirtual () = true;
+	    func-> isVirtual () = !fr-> isInnerPrivate ();
 	}
 	
 	func-> isOver () = this-> _isOver;       

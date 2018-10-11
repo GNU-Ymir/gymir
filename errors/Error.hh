@@ -131,6 +131,7 @@ namespace Ymir {
 	    PrivateMemberWithinThisContext,
 	    OverTemplateMethod,
 	    OverTemplateMethodDuo,
+	    OverPrivateMethod,
 	    LAST_ERROR
 	};
 
@@ -345,6 +346,10 @@ namespace Ymir {
 	static void overTemplateMethod (const Word&);
 	
 	static void overTemplateMethod (const Word&, const Word&);
+	
+	static void overPrivateMethod (const Word&, const Word&);
+
+	static void overPrivateMethod (const Word&);
 
 	static void noOverride (const Word&);
 

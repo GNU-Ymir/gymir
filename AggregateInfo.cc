@@ -521,47 +521,25 @@ namespace semantic {
     bool IAggregateCstInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
 	string name_ = "";
-	if (this-> _tmpsDone.size () != 0) {
-	    if (space.innerMods ().size () < 2 + this-> _templateSpace.innerMods ().size ()) return false;
-	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
-	} else {
-	    if (space.innerMods ().size () < 2) return false;
-	    name_ = space.innerMods () [space.innerMods ().size () - 2];
-	}
-	
-	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
-	if (name_ == this-> _name) {
-	    return true;
-	} else if (this-> _anc) {
+	auto myspace = Namespace (this-> typeString ());
+	if (myspace.isSubOf (space)) return true;
+	else if (this-> _anc) {
 	    auto ret = this-> _anc-> inPrivateContext ();
 	    if (ret) return true;
 	}
 	
-	std::vector <std::string> name (space.innerMods ().begin (), space.innerMods ().end () - 1);
-	return FrameTable::instance ().isSuccessor (Namespace (name), this);		   	
+	return false;
     }
     
     bool IAggregateCstInfo::inPrivateContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	string name = "";
-	if (this-> _tmpsDone.size () != 0) {
-	    if (space.innerMods ().size () < 2 + this-> _templateSpace.innerMods ().size ()) return false;
-	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _templateSpace.innerMods ().size ()];
-	} else {
-	    if (space.innerMods ().size () < 2) return false;
-	    name = space.innerMods () [space.innerMods ().size () - 2];
-	}
-	
-	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
-	if (name == this-> _name) {
-	    return true;
-	}
-	return false;
+	auto myspace = Namespace (this-> typeString ());
+	return myspace.isSubOf (space);
     }
 
 
     bool IAggregateCstInfo::isMine (Namespace space) {
-	return Namespace (this-> _space, this-> _name) == space;
+	return Namespace (this-> typeString ()) == space;
     }
 
     bool IAggregateCstInfo::isProtectedForMe (Namespace space) {
@@ -865,9 +843,9 @@ namespace semantic {
 	bool hasPrivate = false;
 	for (auto it : this-> _allAlias) {	    
 	    if (it-> getIdent ().getStr () == var-> token.getStr ()) {
-		if (it-> isPrivate () && (!this-> isMine (it-> space ()) || !this-> inPrivateContext ()))
+		if (it-> isPrivate () && (!this-> isMine (it-> space ()) || !this-> inPrivateContext ())) {
 		    hasPrivate = true;
-		else if (it-> isProtected () && (!this-> isProtectedForMe (it-> space ()) || !this-> inProtectedContext ()))
+		} else if (it-> isProtected () && (!this-> isProtectedForMe (it-> space ()) || !this-> inProtectedContext ()))
 		    hasPrivate = true;
 		else {
 		    auto ret = new (Z0) IAliasCstInfo (var-> token, this-> _space, it-> getValue ());
@@ -1015,7 +993,7 @@ namespace semantic {
 		    auto rparams = it-> frame ()-> func ()-> getParams ();
 		    if (lparams.size ()  != rparams.size ()) continue;
 		    bool valid = true;
-		    for (auto it : Ymir::r (0, lparams.size ())) {
+		    for (auto it : Ymir::r (1, lparams.size ())) {
 			if (lparams [it]-> is <ITypedVar> () && rparams [it]-> is <ITypedVar> ()) {
 			    if (!lparams [it]-> to <ITypedVar> ()-> getType ()-> CompOp (rparams [it]-> to <ITypedVar> ()-> getType ())) {
 				valid = false;
@@ -1039,6 +1017,14 @@ namespace semantic {
 			break;
 		    }
 		    
+		    if (it-> frame ()-> isInnerPrivate ()) {
+			Ymir::Error::overPrivateMethod (it-> frame ()-> func ()-> getIdent (), mt-> frame ()-> func ()-> getIdent ());
+			break;
+		    } else if (mt-> frame ()-> isInnerProtected ()) {
+			Ymir::Error::overPrivateMethod (mt-> frame ()-> func ()-> getIdent ());
+			break;
+		    }
+		    		    
 		    changed = true;
 		    it = mt;
 		    break;
@@ -1137,46 +1123,23 @@ namespace semantic {
     bool IAggregateInfo::inPrivateContext () {
 	if (this-> _hasExemption) return true;
 	auto space = Table::instance ().getCurrentSpace ();
-	string name = "";
-	if (this-> _id-> tmpsDone ().size () != 0) {
-	    if (space.innerMods ().size () < 2 + this-> _id-> templateSpace ().innerMods ().size ()) return false;
-	    name = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
-	} else {
-	    if (space.innerMods ().size () < 2) return false;
-	    name = space.innerMods () [space.innerMods ().size () - 2];
-	}
-	if (name.find ("!") != std::string::npos) name = name.substr (0, name.find ("!"));
-	if (name == this-> _name) {
-	    return true;
-	}
-	return false;
+	auto myspace = Namespace (this-> typeString ());
+	return myspace.isSubOf (space);
     }
 
     bool IAggregateInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	string name_ = "";
-	if (this-> _id-> tmpsDone ().size () != 0) {
-	    if (space.innerMods ().size () < 2 + this-> _id-> templateSpace ().innerMods ().size ()) return false;
-	    name_ = space.innerMods () [space.innerMods ().size () - 2 - this-> _id-> templateSpace ().innerMods ().size ()];
-	} else {
-	    if (space.innerMods ().size () < 2) return false;
-	    name_ = space.innerMods () [space.innerMods ().size () - 2];
-	}
-	
-	if (name_.find ("!") != std::string::npos) name_ = name_.substr (0, name_.find ("!"));
-	if (name_ == this-> _name) {
-	    return true;
-	} else if (this-> _anc) {
-	    auto ret = this-> _anc-> inPrivateContext ();
+	auto myspace = Namespace (this-> typeString ());
+	if (myspace.isSubOf (space)) return true;
+	else if (this-> _anc) {
+	    auto ret = this-> _anc-> inProtectedContext ();
 	    if (ret) return true;
 	}
-	
-	std::vector <std::string> name (space.innerMods ().begin (), space.innerMods ().end () - 1);
-	return FrameTable::instance ().isSuccessor (Namespace (name), this-> _id);		   	
+	return false;
     }
 
     bool IAggregateInfo::isMine (Namespace space) {
-	return Namespace (this-> _space, this-> _name) == space;
+	return Namespace (this-> typeString ()) == space;
     }
 
     bool IAggregateInfo::isProtectedForMe (Namespace space) {
