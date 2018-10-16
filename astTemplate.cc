@@ -394,7 +394,10 @@ namespace syntax {
 	auto left = this-> left-> templateExpReplace (values);
 	if (this-> type) {
 	    auto right = this-> type-> templateExpReplace (values);
-	    return new (Z0)  IIs (this-> token, left, right);
+	    std::vector <Expression> tmps;
+	    for (auto it : this-> tmps)
+		tmps.push_back (it-> templateExpReplace (values));
+	    return new (Z0)  IIs (this-> token, left, right, tmps);
 	} else {
 	    return new (Z0)  IIs (this-> token, left, this-> expType);
 	}	    

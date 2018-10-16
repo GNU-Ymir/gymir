@@ -88,6 +88,7 @@ namespace Ymir {
 		phrases [UndefVar2] = "Undefined identifier '%%%', maybe '%%%' was meant";
 		phrases [UninitVar] = "Variable '%%%' does not have type";
 		phrases [UseAsVar] = "'%%%' does not identify a variable";
+		phrases [UseAsTrait] = "'%%%' does not identify a trait";
 		phrases [UseAsType] = "'%%%' does not identify a type";
 		phrases [CannotBeVoid] = "'%%%' can't be of type void";
 		phrases [UndefinedOpMult] = "Operator '%%%%' is undefined for type '%%%' and (%)";

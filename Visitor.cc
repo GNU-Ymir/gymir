@@ -1098,10 +1098,10 @@ namespace syntax {
 		auto type = visitLeftOpSimple ();
 		return new (Z0)  ITypedVar (ident, type, deco);
 	    }
-	} else if (next == Keys::OF && deco.isEof ()) {
+	} else if ((next == Keys::OF || next == Keys::TRAIT) && deco.isEof ()) {
 	    temps = true;
 	    auto type = visitLeftOpSimple ();
-	    return new (Z0)  IOfVar (ident, type);	    
+	    return new (Z0)  IOfVar (ident, type, next == Keys::TRAIT);	    
 	} else if (next == Token::TDOT) {
 	    cont = false;
 	    temps = true;
@@ -1867,8 +1867,18 @@ namespace syntax {
 	} else {
 	    this-> lex.rewind ();
 	    auto type = visitLeftOpSimple ();
-	    next = this-> lex.next ({Token::RPAR});
-	    return new (Z0)  IIs (begin, expr, type);
+	    next = this-> lex.next ({Token::COMA,Token::RPAR});
+	    if (next == Token::COMA) {
+		std::vector <Expression> temps;
+		while (true) {
+		    bool templates = true, cont = true;
+		    temps.push_back (visitOf (templates, cont));
+		    next = this-> lex.next ({Token::RPAR, Token::COMA});
+		    if (next == Token::RPAR) break;
+		}
+		return new (Z0) IIs (begin, expr, type, temps);
+	    }
+	    return new (Z0)  IIs (begin, expr, type, {});
 	}
     }
 

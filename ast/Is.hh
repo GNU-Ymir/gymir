@@ -9,12 +9,13 @@
 namespace syntax {
 
     class IIs : public IExpression {
+	std::vector <Expression> tmps;
 	Expression left, type;
 	Word expType;
 
     public:
 
-	IIs (Word begin, Expression expr, Expression type);
+	IIs (Word begin, Expression expr, Expression type, std::vector <Expression> tmps);
 
 	IIs (Word begin, Expression expr, Word type);
 	

@@ -1,4 +1,5 @@
 #include <ymir/semantic/pack/TemplateSolver.hh>
+#include <ymir/semantic/object/TraitInfo.hh>
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/OutBuffer.hh>
@@ -702,24 +703,41 @@ namespace semantic {
 	auto typedParam = param-> to <ITypedVar> ();
 	if (typedParam) typeVar = typedParam-> typeExp ();
 	else typeVar = param;
-		
-	auto res = this-> solveInside (tmps, elem-> typeVar (), type);
-	if (res.valid) {
-	    if ((typedParam && typedParam-> getDeco () == Keys::CONST) || res.type-> isConst ())
+	if (elem-> isTrait ()) {
+	    auto traitInfo = elem-> typeVar ()-> expression ();
+	    if (traitInfo == NULL || !traitInfo-> info-> type ()-> is<semantic::ITraitInfo> ()) {
+		Ymir::Error::useAsTrait (elem-> typeVar ()-> token);
+		return TemplateSolution (0, false);
+	    }
+
+	    if (!traitInfo-> info-> type ()-> to <ITraitInfo> ()-> validate (type))
+		return TemplateSolution (0, false);
+	    auto type_ = type-> cloneOnExit ();
+	    if ((typedParam && typedParam-> getDeco () == Keys::CONST) || type-> isConst ())
 		isConst = true;
-	    res.type-> isConst (isConst);
-	}
-	
-	if (!res.valid || !type-> CompOp (res.type))
-	    return TemplateSolution (0, false);
-	else {
-	    auto type_ = res.type;//type-> cloneOnExit ();	    
 	    type_-> isConst (isConst);
 	    map<string, Expression> ret = {{elem-> token.getStr (), new (Z0)  IType (typeVar-> token, type_)}};
-	    if (!merge (res.score, res.elements, ret))
+	    	    
+	    return TemplateSolution {__VAR__, true, type, ret};
+	} else {
+	    auto res = this-> solveInside (tmps, elem-> typeVar (), type);
+	    if (res.valid) {
+		if ((typedParam && typedParam-> getDeco () == Keys::CONST) || res.type-> isConst ())
+		    isConst = true;
+		res.type-> isConst (isConst);
+	    }
+	
+	    if (!res.valid || !type-> CompOp (res.type))
 		return TemplateSolution (0, false);
-	    res.score += __VAR__;
-	    return res;
+	    else {
+		auto type_ = res.type;//type-> cloneOnExit ();	    
+		type_-> isConst (isConst);
+		map<string, Expression> ret = {{elem-> token.getStr (), new (Z0)  IType (typeVar-> token, type_)}};
+		if (!merge (res.score, res.elements, ret))
+		    return TemplateSolution (0, false);
+		res.score += __VAR__;
+		return res;
+	    }
 	}
 	
     }

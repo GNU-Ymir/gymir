@@ -1630,30 +1630,26 @@ namespace syntax {
     
     Expression IIs::expression () {
 	if (this-> type) {
-	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> type-> toType ());
-	    if (aux-> type == NULL || aux-> left == NULL) return NULL;
-	    
-	    auto rtype = aux-> type-> info-> type ();
-	    while (auto ref = rtype-> to <IRefInfo> ()) rtype = ref-> content ();
-	    
-	    if (aux-> left-> info-> type ()-> is<IUndefInfo> ()) {
-		Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
+	    auto aux = this-> left-> expression ();
+	    if (aux == NULL) return NULL;
+	    	    
+	    if (aux-> info-> type ()-> is<IUndefInfo> ()) {
+		Ymir::Error::uninitVar (aux-> token, aux-> info-> sym);
 		return NULL;
 	    }
 	    
-	    auto linfo = aux-> left-> info-> type ();
-	    if (auto ref = linfo-> to <IRefInfo> ())
-		linfo = ref-> content ();
+	    auto typedVar = new (Z0) ITypedVar (this-> left-> token, this-> type);
+	    Ymir::log ("Template solving for ", aux-> token, " start");
+	    TemplateSolution res = TemplateSolver::instance ().solve (this-> tmps, typedVar, aux-> info-> type ());
+	    Ymir::log ("Soluce for : (", this-> tmps, ") (", typedVar-> prettyPrint (), ") with (", aux-> info-> type (), ") : ", res.toString ());
+	    Ymir::log ("Template solving for ", aux-> token, " end");
 
-	    auto res = linfo-> isSame (rtype);
-	    if (!res && rtype-> is<ITraitInfo> ()) {
-		res = rtype-> to <ITraitInfo> ()-> validate (linfo);
-	    }
-	    
+	    auto ret = new (Z0) IBool (this-> token);
+	    ret-> getValue () = res.valid;
 	    auto type = new (Z0) IBoolInfo (true);
-	    aux-> info = new (Z0) ISymbol (this-> token, aux, type);
-	    aux-> info-> value () = new (Z0) IBoolValue (res);
-	    return aux;	    
+	    ret-> info = new (Z0) ISymbol (this-> token, aux, type);
+	    ret-> info-> value () = new (Z0) IBoolValue (res.valid);
+	    return ret;	    
 	} else {
 	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> expType);
 	    if (aux-> left == NULL) return NULL;

@@ -73,6 +73,7 @@ namespace Ymir {
 	    UndefinedOpMult,
 	    UseAsVar,
 	    UseAsType,
+	    UseAsTrait,
 	    IncompatibleTypes,
 	    BreakOutSide,
 	    BreakRefUndef,
@@ -286,6 +287,8 @@ namespace Ymir {
 	static void implicitModule (const Word&);
 
 	static void useAsVar (const Word&, semantic::Symbol);
+
+	static void useAsTrait (const Word&);
 
 	static void cannotBeVoid (const Word&);
 	

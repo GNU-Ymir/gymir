@@ -14,7 +14,7 @@ namespace semantic {
 	_space (space),
 	_info (info)
     {
-	this-> isType (true);
+	this-> isType (false);
     }
 
     bool ITraitInfo::isSame (InfoType o) {

@@ -1599,8 +1599,9 @@ namespace syntax {
 	    delete it;
     }
        
-    IIs::IIs (Word begin, Expression expr, Expression type) :
+    IIs::IIs (Word begin, Expression expr, Expression type, std::vector <Expression> tmps) :
 	IExpression (begin),
+	tmps (tmps),
 	left (expr),
 	type (type),
 	expType (Word::eof ())

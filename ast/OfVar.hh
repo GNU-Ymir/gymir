@@ -10,12 +10,14 @@ namespace syntax {
     class IOfVar : public IVar {
 
 	Expression type;
-
+	bool _isTrait = false;
+	
     public:
 
-	IOfVar (Word ident, Expression type) :
+	IOfVar (Word ident, Expression type, bool isTrait = false) :
 	    IVar (ident),
-	    type (type)
+	    type (type),
+	    _isTrait (isTrait)
 	{}
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
@@ -36,6 +38,10 @@ namespace syntax {
 	
 	Expression typeVar () {
 	    return this-> type;
+	}
+
+	bool isTrait () {
+	    return this-> _isTrait;
 	}
 	
 	void print (int nb = 0) override {
