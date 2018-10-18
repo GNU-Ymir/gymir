@@ -263,6 +263,7 @@ namespace syntax {
     std::vector <semantic::InfoType> IParamList::getParamTypes () {
 	std::vector<semantic::InfoType> paramTypes;
 	for (auto it : this-> params) {
+	    it-> info-> type ()-> symbol () = it-> info;
 	    paramTypes.push_back (it-> info-> type ());
 	}
 	return paramTypes;

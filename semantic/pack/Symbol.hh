@@ -14,12 +14,20 @@ namespace syntax {
 }
 
 namespace semantic {
-
+    
     class IInfoType;
     typedef IInfoType* InfoType;
 
     class IValue;
     typedef IValue* Value;
+
+    struct DeclSymbol {
+	ulong lifetime = 0;
+	ulong closureLifeTime = 0;
+	
+	static DeclSymbol init ();
+
+    };
     
     class ISymbol  {
 
@@ -31,7 +39,8 @@ namespace semantic {
 	Namespace _space;
 	bool _isClosured = false;
 	bool _isInline = false;
-
+	DeclSymbol _decl;
+	
 	InfoType _type;
 	
     public:
@@ -39,6 +48,8 @@ namespace semantic {
 	Word sym;
 	syntax::Expression _from = NULL;
 	
+	ISymbol (Word word, DeclSymbol sym, syntax::Expression from, InfoType);
+
 	ISymbol (Word word, syntax::Expression from, InfoType);
 	
 	bool isConst ();
@@ -51,6 +62,12 @@ namespace semantic {
 
 	bool& isClosured ();
 
+	ulong lifeTime ();
+
+	ulong& closureLifeTime ();
+
+	DeclSymbol getDeclSym ();
+	
 	bool & isInline ();
 	
 	Value & value ();

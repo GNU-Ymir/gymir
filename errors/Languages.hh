@@ -156,7 +156,7 @@ namespace Ymir {
 		phrases [OverTemplateMethodDuo] = "Cannot override a non-virtual template method";
 		phrases [OverTemplateMethod] = "Template method cannot override a super method";
 		phrases [OverPrivateMethod] = "Private method are not virtual and cannot override";
-
+		phrases [ClosureVarLifetime] = "Closure var '%%%' does not live long enough";
 		init = true;
 	    } 
 	    return phrases;

@@ -235,6 +235,10 @@ namespace semantic {
 	this-> _local.push_front ({});
 	this-> _retInfo.enterBlock ();
     }
+
+    ulong FrameScope::getCurrentLifeTime () {
+	return this-> _local.size ();
+    }
     
     void FrameScope::setContext (const std::vector <Word> & context) {
 	this-> _context = context;

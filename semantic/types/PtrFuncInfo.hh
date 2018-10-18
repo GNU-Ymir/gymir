@@ -14,6 +14,7 @@ namespace semantic {
 	InfoType ret;
 	ApplicationScore score;
 	bool _isDelegate, _forcedDelegate = false;
+	std::vector <Symbol> _closures;
 	
     public:
 
@@ -61,6 +62,10 @@ namespace semantic {
 	InfoType BinaryOp (Word token, syntax::Expression right) override;
 
 	InfoType BinaryOpRight (Word token, syntax::Expression right) override;
+	
+	void addClosure (const std::vector <Symbol>&);
+
+	std::vector <Symbol> closures ();
 	
 	InfoType onClone () override;
 

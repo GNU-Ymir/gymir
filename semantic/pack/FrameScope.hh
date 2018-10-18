@@ -126,6 +126,8 @@ namespace semantic {
 
 	void enterBlock ();
 
+	ulong getCurrentLifeTime ();
+	
 	void addOpen (Namespace space);
 
 	void setContext (const std::vector<Word> & context);

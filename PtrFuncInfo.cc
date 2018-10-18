@@ -260,7 +260,7 @@ namespace semantic {
 	    }
 	    return ret;
 	} else if (right-> info-> type ()-> is <IFunctionInfo> ()) {
-	    auto ret = right-> info-> type ()-> CompOp (this);
+	    auto ret = right-> info-> type ()-> CompOp (this);	   
 	    if (ret && ret-> isSame (this)) {
 		ret-> nextBinop.push_back (ret-> binopFoo);		
 		ret-> binopFoo = &PtrFuncUtils::InstAffectComp;
@@ -286,11 +286,11 @@ namespace semantic {
     InfoType IPtrFuncInfo::CompOp (InfoType other) {
 	if (other-> isSame (this) || other-> is <IUndefInfo> ()) {
 	    auto ptr = other-> is <IUndefInfo> () ? this-> clone () : other-> clone ();
-	    if (this-> isDelegate ()) 
+	    if (this-> isDelegate ()) {
 		ptr-> binopFoo = &PtrFuncUtils::InstCastDelegate;
-	    else 
+	    } else {
 		ptr-> binopFoo = &PtrUtils::InstCast;
-	    
+	    }
 	    return ptr;
 	}
 	return NULL;
@@ -354,9 +354,22 @@ namespace semantic {
 	aux-> ret = this-> ret-> clone ();
 	aux-> score = this-> score;
 	aux-> _isDelegate = this-> _isDelegate;
+
+	for (auto it : this-> _closures)
+	    aux-> _closures.push_back (it);
+	
 	return aux;
     }
 
+    void IPtrFuncInfo::addClosure (const std::vector <Symbol> & syms) {
+	for (auto it : syms)
+	    this-> _closures.push_back (it);
+    }
+
+    std::vector <Symbol> IPtrFuncInfo::closures () {
+	return this-> _closures;
+    }
+    
     InfoType IPtrFuncInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "obj" && this-> isDelegate ()) {

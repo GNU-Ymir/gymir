@@ -356,6 +356,23 @@ namespace semantic {
 	}
     }
 
+    bool Table::verifyClosureLifeTime (ulong id, const std::vector <Symbol> & closure) {
+	for (auto it : closure) {
+	    if (id < it-> closureLifeTime ()) {
+		Ymir::Error::closureVarLifetime (it-> sym, it);
+		return false;
+	    }
+	}
+	return true;
+    }
+
+    ulong Table::getCurrentLifeTime () {
+	if (!this-> _frameTable.empty ()) {
+	    return this-> _frameTable.front ().getCurrentLifeTime ();
+	}
+	return 0;
+    }
+    
     std::vector <Namespace> Table::modules () {
 	std::vector <Namespace> spaces;
 	for (auto it : this-> _importations) {

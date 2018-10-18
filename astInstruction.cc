@@ -576,6 +576,14 @@ namespace syntax {
 		}
 	    }
 	}
+	if (this-> elem-> info-> type ()-> is <IPtrFuncInfo> ()) {
+	    auto func = this-> elem-> info-> type ()-> to<IPtrFuncInfo> ();
+	    if (func-> isDelegate ()) {
+		if (!Table::instance ().verifyClosureLifeTime (0, func-> closures ())) {
+		    Ymir::Error::here (this-> token);
+		}
+	    }
+	}
     }
     
     Instruction IReturn::instruction () {

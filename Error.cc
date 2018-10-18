@@ -1018,6 +1018,29 @@ namespace Ymir {
 	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
+    void Error::closureVarLifetime (const Word& word, semantic::Symbol) {
+	auto msg = format (getString (ClosureVarLifetime), YELLOW, word.getStr (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    void Error::here (const Word & word) {
+	auto msg = std::string (getString (Here));
+	auto aux = std::string (BLUE) + "Note" + std::string (RESET) + " : " + msg;
+	aux = addLine (aux, word);
+	
+	ErrorMsg errorMsg = {aux, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);    
+    }
     
     void Error::returnVoid (const Word& word, semantic::Symbol type) {
 	auto msg = format (getString (ReturnVoid), YELLOW, type-> type ()->  typeString ().c_str (), RESET);

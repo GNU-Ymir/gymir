@@ -104,6 +104,10 @@ namespace semantic {
 
 	void closeModuleForSpace (Namespace from, Namespace to);
 
+	bool verifyClosureLifeTime (ulong id, const std::vector <Symbol> & closure);
+
+	ulong getCurrentLifeTime ();
+	
 	std::vector <Namespace> modules ();
 
 	std::vector <Namespace> modulesAndForeigns ();

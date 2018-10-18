@@ -3,11 +3,28 @@
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/ast/Expression.hh>
+#include <ymir/semantic/pack/Table.hh>
 
 namespace semantic {
 
     ulong ISymbol::__nbTmp__ = 0;
+
+    DeclSymbol DeclSymbol::init () {
+	return DeclSymbol {Table::instance ().getCurrentLifeTime (), 0};
+    }    
     
+    ISymbol::ISymbol (Word word, DeclSymbol sym, syntax::Expression from, InfoType type) :
+	_space (""),
+	_type (type),
+	sym (word),
+	_from (from)
+    {
+	this-> isPublic () = true;
+	if (this-> _type)
+	    this-> _type-> symbol () = this;
+	this-> _decl = sym;
+    }
+
     ISymbol::ISymbol (Word word, syntax::Expression from, InfoType type) :
 	_space (""),
 	_type (type),
@@ -17,7 +34,9 @@ namespace semantic {
 	this-> isPublic () = true;
 	if (this-> _type)
 	    this-> _type-> symbol () = this;
+	this-> _decl = DeclSymbol::init ();
     }
+
     
     bool ISymbol::isConst () {
 	return this-> _type-> isConst ();
@@ -34,7 +53,19 @@ namespace semantic {
     bool& ISymbol::isClosured () {
 	return this-> _isClosured;
     }
+    
+    ulong ISymbol::lifeTime () {
+	return this-> _decl.lifetime;
+    }
 
+    ulong& ISymbol::closureLifeTime () {
+	return this-> _decl.closureLifeTime;
+    }
+
+    DeclSymbol ISymbol::getDeclSym () {
+	return this-> _decl;
+    }
+    
     bool& ISymbol::isInline () {
 	return this-> _isInline;
     }

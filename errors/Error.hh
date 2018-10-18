@@ -133,6 +133,7 @@ namespace Ymir {
 	    OverTemplateMethod,
 	    OverTemplateMethodDuo,
 	    OverPrivateMethod,
+	    ClosureVarLifetime,
 	    LAST_ERROR
 	};
 
@@ -319,6 +320,10 @@ namespace Ymir {
 	static void returnVoid (const Word&, semantic::Symbol);
 
 	static void missingReturn (const Word&, semantic::Symbol);
+
+	static void closureVarLifetime (const Word&, semantic::Symbol);
+
+	static void here (const Word&);
 	
 	static void unreachableStmt (const Word&);
 

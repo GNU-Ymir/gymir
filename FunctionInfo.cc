@@ -217,8 +217,20 @@ namespace semantic {
 		ret-> getParams () = infoTypes;
 		ret-> getType () = score-> ret-> clone ();
 		ret-> getScore () = score;
+		
 		ret-> isDelegate () = score-> proto-> isDelegate ();
-		if (ret-> isDelegate ()) {
+		if (ret-> isDelegate ()) {			 
+		    if (!score-> proto-> attached ()-> isMoved ()) {
+			std::vector <Symbol> closures;
+			for (auto it : score-> proto-> attached ()-> closure ())
+			    closures.push_back (it-> info);
+			
+			if (Table::instance ().verifyClosureLifeTime (			
+			    left-> info-> lifeTime (),
+			    closures
+			))			    
+			    ret-> addClosure (closures);
+		    }
 		    ret-> nextBinop.push_back (&FunctionUtils::InstAffectDelegate);
 		} else {
 		    ret-> nextBinop.push_back (&FunctionUtils::InstAffect);
@@ -403,8 +415,19 @@ namespace semantic {
 	    if (!score-> proto-> isDelegate ()) ret-> forcedDelegate () = true;
 
 	    if (ret-> isDelegate () && !ot-> isDelegate ()) return NULL;
-	    if (ot-> isDelegate ()) score-> proto-> isForcedDelegate ();	    
-	    if (ret-> isDelegate ()) {
+	    if (ot-> isDelegate ()) score-> proto-> isForcedDelegate ();
+	    if (ret-> isDelegate ()) {       	
+		if (!score-> proto-> attached ()-> isMoved ()) {
+		    std::vector <Symbol> closures;
+		    for (auto it : score-> proto-> attached ()-> closure ())
+			closures.push_back (it-> info);
+		    
+		    if (!other-> symbol () || Table::instance ().verifyClosureLifeTime (			
+			other-> symbol ()-> lifeTime (),
+			closures
+		    ))
+			ret-> addClosure (closures);
+		}
 		ret-> binopFoo = &FunctionUtils::InstAffectDelegate;
 	    } else {
 		ret-> binopFoo = &FunctionUtils::InstAffect;
