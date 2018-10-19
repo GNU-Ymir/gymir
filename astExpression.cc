@@ -609,6 +609,14 @@ namespace syntax {
 		return NULL;			    
 	    }
 	    aux-> isRight = true;
+	} 
+
+	if (aux-> right-> info-> type ()-> is <IPtrFuncInfo> ()) {
+	    auto func = aux-> right-> info-> type ()-> to <IPtrFuncInfo> ();
+	    if (func-> isDelegate ()) {
+		if (!Table::instance ().verifyClosureLifeTime (aux-> left-> info-> lifeTime (), func-> closures ()))
+		    Ymir::Error::here (this-> token);
+	    }
 	}
 	
 	aux-> info = new (Z0)  ISymbol (aux-> token, aux-> left-> info-> getDeclSym (), aux, type);

@@ -22,7 +22,7 @@ namespace syntax {
 	Block block;
 	Expression expr;
 	ulong id;
-	bool _isMoved = false;
+	bool _isMoved = true;
 	
 	std::vector <semantic::Frame> frame; 
 

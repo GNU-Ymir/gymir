@@ -1790,7 +1790,7 @@ namespace syntax {
 	    return new (Z0)  IIgnore (tok);
 	else if (tok == Keys::STRINGOF) 
 	    return visitStringOf ();
-	else if (tok == Keys::MOVE) {
+	else if (tok == Keys::REF) {
 	    return visitLambdaMove ();
 	} else this-> lex.rewind ();
 	return NULL;
@@ -2323,7 +2323,7 @@ namespace syntax {
 	    lambda = new (Z0)  ILambdaFunc (begin, params, block);
 	} else return NULL;
 	
-	lambda-> isMoved () = true;
+	lambda-> isMoved () = false;
 	return lambda;
     }    
 
