@@ -576,7 +576,8 @@ namespace syntax {
 		}
 	    }
 	}
-	if (this-> elem-> info-> type ()-> is <IPtrFuncInfo> ()) {
+	
+	if (this-> elem && this-> elem-> info && this-> elem-> info-> type ()-> is <IPtrFuncInfo> ()) {
 	    auto func = this-> elem-> info-> type ()-> to<IPtrFuncInfo> ();
 	    if (func-> isDelegate ()) {
 		if (!Table::instance ().verifyClosureLifeTime (0, func-> closures ())) {

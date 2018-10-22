@@ -501,7 +501,7 @@ namespace syntax {
 	}
 	
 	Unary unary = new (Z0)  IUnary (this-> token, elem);
-	DeclSymbol sym = (this-> token == Token::DMINUS || this-> token == Token::DPLUS || this-> token == Token::AND) ? this-> elem-> info-> getDeclSym () : DeclSymbol::init ();
+	DeclSymbol sym = (this-> token == Token::DMINUS || this-> token == Token::DPLUS || this-> token == Token::AND) ? elem-> info-> getDeclSym () : DeclSymbol::init ();
 	
 	unary-> info = new (Z0)  ISymbol (this-> token, sym, unary, type);
 	return unary;
@@ -1663,10 +1663,16 @@ namespace syntax {
 	    Ymir::log ("Template solving for ", aux-> token, " end");
 
 	    auto ret = new (Z0) IBool (this-> token);
-	    ret-> getValue () = res.valid;
+	    //ret-> getValue () = res.valid;
+	    bool iis = false;
+	    if (res.valid) {
+		auto expr = this-> type-> templateExpReplace (res.elements)-> toType ();
+		iis = aux-> info-> type ()-> isSame (expr-> info-> type ());
+	    }
+	    
 	    auto type = new (Z0) IBoolInfo (true);
 	    ret-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, type);
-	    ret-> info-> value () = new (Z0) IBoolValue (res.valid);
+	    ret-> info-> value () = new (Z0) IBoolValue (iis);
 	    return ret;	    
 	} else {
 	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> expType);
