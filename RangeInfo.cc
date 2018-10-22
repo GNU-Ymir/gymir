@@ -51,6 +51,7 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "fst") return Fst ();
 	if (var-> token == "scd") return Scd ();
+	if (var-> token == "step") return Step ();
 	else if (var-> token == "sizeof") {
 	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
 	    ret-> unopFoo = FixedUtils::InstSizeOf;
@@ -141,6 +142,10 @@ namespace semantic {
 	return NULL;
     }
 
+    bool& IRangeInfo::isInclusive () {
+	return this-> _include;
+    }
+    
     Value & IRangeInfo::leftValue () {
 	return this-> left;
     }
@@ -162,12 +167,23 @@ namespace semantic {
 	cst-> binopFoo = &RangeUtils::InstScd;
 	return cst;
     }
-
+    
+    InfoType IRangeInfo::Step () {
+	auto cst = this-> _content-> cloneOnExit ();
+	cst = new (Z0) IArrayRefInfo (this-> isConst (), cst);	
+	cst-> binopFoo = &RangeUtils::InstStep;
+	return cst;
+    }
+    
     Ymir::Tree IRangeInfo::toGenericStatic (std::string innerName, Ymir::Tree inner) {
 	std::string name = simpleTypeStringStatic (innerName);
 	Ymir::Tree range_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (range_type_node.isNull ()) {
-	    range_type_node = Ymir::makeStructType (name, 2,
+	    range_type_node = Ymir::makeStructType (name, 4,
+						    get_identifier ("in"),
+						    boolean_type_node,
+						    get_identifier ("step"),
+						    inner.getTree (),
 						    get_identifier ("fst"),
 						    inner.getTree (),				      
 						    get_identifier ("scd"),
@@ -184,7 +200,11 @@ namespace semantic {
 	std::string name = this-> simpleTypeString ();
 	Ymir::Tree range_type_node = IFinalFrame::getDeclaredType (name.c_str ());
 	if (range_type_node.isNull ()) {
-	    range_type_node = Ymir::makeStructType (name, 2,
+	    range_type_node = Ymir::makeStructType (name, 4,
+						    get_identifier ("in"),
+						    boolean_type_node,
+						    get_identifier ("step"),
+						    inner.getTree (),
 						    get_identifier ("fst"),
 						    inner.getTree (),				      
 						    get_identifier ("scd"),
@@ -212,44 +232,53 @@ namespace semantic {
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();
 
-	    auto lfst = getField (loc, ltree, "fst"), lscd = getField (loc, ltree, "scd");
-	    auto rfst = getField (loc, rtree, "fst"), rscd = getField (loc, rtree, "scd");
-
-	    list.append (buildTree (
-		MODIFY_EXPR, loc, void_type_node, lfst.getTree (), rfst.getTree ()
-	    ));
-
-	    list.append (buildTree (
-		MODIFY_EXPR, loc, void_type_node, lscd.getTree (), rscd.getTree ()
-	    ));
-	    
-	    return Ymir::compoundExpr (loc, list.getTree (), ltree);
+	    if (ltree.getType () != rtree.getType ()) {
+		auto ptrl = Ymir::getAddr (loc, ltree).getTree ();
+		auto ptrr = Ymir::getAddr (loc, rtree).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());	    
+		auto result = build_call_expr_loc (loc, tmemcopy, 3, ptrl, ptrr, size);
+		list.append (result);
+		return Ymir::compoundExpr (loc, list, ltree);
+	    } else {
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, ltree, rtree 
+		));
+		return Ymir::compoundExpr (loc, list, ltree);
+	    }	    
 	}
 	
 	Tree InstIn (Word locus, InfoType, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
 	    auto rtree = right-> toGeneric ();
+	    auto inclusive = getField (loc, rtree, "in"); //right-> info-> type ()-> to<IRangeInfo> ()-> isInclusive ();
 	    auto rfst = getField (loc, rtree, "fst"), rscd = getField (loc, rtree, "scd");
 
 	    tree_code left_fst = OperatorUtils::toGeneric (Token::INF_EQUAL);
-	    tree_code left_scd = OperatorUtils::toGeneric (Token::SUP);
+	    tree_code ge_scd = OperatorUtils::toGeneric (Token::SUP_EQUAL), gt_scd = OperatorUtils::toGeneric (Token::SUP);
 	    tree_code left_and = OperatorUtils::toGeneric (Token::AND);
 	    
 	    auto left_test = buildTree (
 		left_and, loc, boolean_type_node,
 		buildTree (left_fst, loc, boolean_type_node, rfst, ltree),
-		buildTree (left_scd, loc, boolean_type_node, rscd, ltree)
+		buildTree (COND_EXPR, loc, boolean_type_node, inclusive, 
+			   buildTree (ge_scd, loc, boolean_type_node, rscd, ltree),
+			   buildTree (gt_scd, loc, boolean_type_node, rscd, ltree)
+		)
 	    );
 
 	    tree_code right_fst = OperatorUtils::toGeneric (Token::SUP_EQUAL);
-	    tree_code right_scd = OperatorUtils::toGeneric (Token::INF);
+	    tree_code le_scd = OperatorUtils::toGeneric (Token::INF_EQUAL), lt_scd = OperatorUtils::toGeneric (Token::INF);
 	    tree_code right_and = OperatorUtils::toGeneric (Token::AND);
 	    
 	    auto right_test = buildTree (
 		right_and, loc, boolean_type_node,
 		buildTree (right_fst, loc, boolean_type_node, rfst, ltree),
-		buildTree (right_scd, loc, boolean_type_node, rscd, ltree)
+		buildTree (COND_EXPR, loc, boolean_type_node, inclusive, 
+			   buildTree (le_scd, loc, boolean_type_node, rscd, ltree),
+			   buildTree (lt_scd, loc, boolean_type_node, rscd, ltree)
+		)
 	    );
 
 	    tree_code test_op = OperatorUtils::toGeneric (Token::INF);
@@ -258,9 +287,8 @@ namespace semantic {
 	    );
 	    
 	    auto result = buildTree (
-		COND_EXPR, loc, void_type_node, test, left_test, right_test
+	    	COND_EXPR, loc, boolean_type_node, test, left_test, right_test
 	    );
-	    
 	    return result;
 	}
 
@@ -276,6 +304,12 @@ namespace semantic {
 	    return getField (loc, ltree, "scd");
 	}
 	
+	Tree InstStep (Word locus, InfoType, Expression left, Expression) {
+	    location_t loc = locus.getLocus ();
+	    auto ltree = left-> toGeneric ();
+	    return getField (loc, ltree, "step");
+	}
+
 	Tree InstCast (Word, InfoType, Expression left, Expression) {
 	    return left-> toGeneric ();
 	}
@@ -285,9 +319,11 @@ namespace semantic {
 	    auto range = iter-> toGeneric ();
 	    auto rangeInfo = (RangeInfo) iter-> info-> type ();
 	    auto innerInfo = rangeInfo-> content ()-> toGeneric ();
+	    auto inclusive = getField (loc, range, "in");
+	    auto one = getField (loc, range, "step");
 	    auto scd = getField (loc, range, "scd");
 	    auto begin = getField (loc, range, "fst");
-	    auto one = convert (innerInfo.getTree (), build_int_cst_type (integer_type_node, 1));
+	    //auto one = convert (innerInfo.getTree (), build_int_cst_type (integer_type_node, 1));
 	    
 	    auto it = makeAuxVar (loc, ISymbol::getLastTmp (), innerInfo);
 	    auto var = vars [0]-> toGeneric ();
@@ -295,7 +331,18 @@ namespace semantic {
 	    Ymir::TreeStmtList list, begin_part;
 	    
 	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, it, begin));
-	    Ymir::Tree bool_expr = buildTree (NE_EXPR, loc, boolean_type_node, it, scd);
+	    Ymir::Tree bool2_expr = buildTree (LT_EXPR, loc, boolean_type_node, begin, scd);
+	    Ymir::Tree bool_expr;
+	    auto lt_expr = buildTree (LT_EXPR, loc, boolean_type_node, it, scd);
+	    auto gt_expr = buildTree (GT_EXPR, loc, boolean_type_node, it, scd);
+	    auto le_expr = buildTree (LE_EXPR, loc, boolean_type_node, it, scd);
+	    auto ge_expr = buildTree (GE_EXPR, loc, boolean_type_node, it, scd);
+	    
+	    bool_expr = buildTree (COND_EXPR, loc, boolean_type_node, inclusive, 
+				   buildTree (COND_EXPR, loc, boolean_type_node, bool2_expr, le_expr, ge_expr),
+				   buildTree (COND_EXPR, loc, boolean_type_node, bool2_expr, lt_expr, gt_expr)
+	    );
+	    
 	    
 	    Ymir::Tree test_label = Ymir::makeLabel (loc, "test");
 	    Ymir::Tree begin_label = Ymir::makeLabel (loc, "begin");
@@ -327,7 +374,7 @@ namespace semantic {
 	     	)
 	    );
 	    
-	    Ymir::Tree bool2_expr = buildTree (LT_EXPR, loc, boolean_type_node, begin, scd);
+	    //Ymir::Tree bool2_expr = buildTree (LT_EXPR, loc, boolean_type_node, begin, scd);
 	    begin_part.append (Ymir::buildTree (COND_EXPR, iter-> token.getLocus (), void_type_node, bool2_expr, add_expr, sub_expr));
 	    
 	    list.append (begin_part.getTree ());	    

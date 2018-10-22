@@ -30,12 +30,21 @@ Word::Word (const Word & other, std::string str) :
     column (other.column)
 {}
 
+Word::Word (const Word & other, std::string str, long len) :
+    str (str),
+    locFile (other.locFile),
+    line (other.line),
+    column (other.column),
+    _length (len)
+{}
+
 
 Word::Word (const Word & other) :
     str (other.str),
     locFile (other.locFile),
     line (other.line),
-    column (other.column)
+    column (other.column),
+    _length (other._length)
 {}
 
 Word::Word () :	

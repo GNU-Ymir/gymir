@@ -11,13 +11,14 @@ namespace syntax {
     
     class IConstRange : public IExpression {
 	Expression left, right;
+	bool _inner = false;
 	//Semantic::InfoType content;
 	ubyte lorr = 0;
 	//Semantic::InfoType caster = NULL;
 
     public:
 	
-	IConstRange (Word token, Expression left, Expression right);
+	IConstRange (Word token, Expression left, Expression right, bool inner = false);
 
 	Expression expression () override;
 

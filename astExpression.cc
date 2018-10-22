@@ -684,17 +684,22 @@ namespace syntax {
     Expression IBinary::normal (Binary aux) {	
 	if (!this-> info) {
 	    if (aux == NULL) {
-		aux = new (Z0) IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
+		auto left = this-> left, right = this-> right;
+		if (this-> _autoCaster) {
+		    left = new (Z0) ICast ({left-> token, Keys::CAST, left-> token.length ()}, this-> _autoCaster, left);
+		    right = new (Z0) ICast ({right-> token, Keys::CAST, right-> token.length ()}, this-> _autoCaster, right);
+		}
+		
+		aux = new (Z0) IBinary (this-> token, left-> expression (), right-> expression ());
 	    }
-	    
+
 	    if (simpleVerif (aux)) return NULL;
 	    if (aux-> left-> info-> type ()-> is<IUndefInfo> ()) {
 		Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
 		return NULL;
 	    }
-
-	    auto type = aux-> left-> info-> type ()-> BinaryOp (this-> token, aux-> right);
-
+	    
+	    auto type = aux-> left-> info-> type ()-> BinaryOp (this-> token, aux-> right);	    
 	    if (type == NULL) {
 		type = aux-> right-> info-> type ()-> BinaryOpRight (this-> token, aux-> left);
 		if (type == NULL) {

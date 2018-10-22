@@ -252,14 +252,28 @@ namespace semantic {
     }
     
     DestructSolution DestructSolver::solveBinary (Binary left, Expression right) {
-	if (left-> token != Token::PIPE) return solveNormal (left, right);
+	if (left-> token != Token::PIPE && left-> token != Token::TDOT && left-> token != Token::DDOT)
+	    return solveNormal (left, right);
 
-	auto soluceLeft = solve (left-> getLeft (), right);
-	if (!soluceLeft.valid) return DestructSolution (0, false);
-	auto soluceRight = solve (left-> getRight (), right);
-	if (!soluceRight.valid || !merge (soluceLeft, soluceRight, Token::DPIPE))
-	    return DestructSolution (0, false);
-	return soluceLeft;
+	if (left-> token == Token::PIPE) {
+	    auto soluceLeft = solve (left-> getLeft (), right);
+	    if (!soluceLeft.valid) return DestructSolution (0, false);
+	    auto soluceRight = solve (left-> getRight (), right);
+	    if (!soluceRight.valid || !merge (soluceLeft, soluceRight, Token::DPIPE))
+		return DestructSolution (0, false);
+	    return soluceLeft;
+	} else {
+	    Word tok = {left-> token, Keys::IN};
+	    Expression bin = new (Z0) IBinary (tok, right, left);
+	    bin = bin-> expression ();
+	    if (!bin) return DestructSolution (0, false);
+	    DestructSolution soluce {__VALUE__, true};
+	    soluce.test = bin;
+	    if (bin-> info-> value ()) {
+		soluce.immutable = bin-> info-> value ()-> to <IBoolValue> ()-> isTrue ();
+	    }
+	    return soluce;
+	}
     }
 
 

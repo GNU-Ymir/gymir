@@ -10,12 +10,13 @@ namespace syntax {
     class IBinary : public IExpression {
 
 	Expression left, right;
+	Expression _autoCaster;
 	
 	bool isRight = false;
 
     public :
 
-	IBinary (Word word, Expression left, Expression right);
+	IBinary (Word word, Expression left, Expression right, Expression ctype = NULL);
 
 	Expression expression () override;
 
@@ -25,6 +26,8 @@ namespace syntax {
 
 	Expression& getRight ();
 
+	Expression& getAutoCast ();
+	
 	Ymir::Tree toGeneric () override;
 	
 	void print (int nb = 0) override;

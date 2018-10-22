@@ -13,6 +13,7 @@ namespace semantic {
 
 	InfoType _content = NULL;
 	Value left, right;
+	bool _include = false;
 	
     public:
 
@@ -64,6 +65,8 @@ namespace semantic {
 	
 	InfoType onClone () override;
 
+	bool & isInclusive ();
+	
 	Value & leftValue ();
 
 	Value & rightValue ();
@@ -85,6 +88,8 @@ namespace semantic {
 	InfoType Fst ();
 
 	InfoType Scd ();
+	
+	InfoType Step ();
 	
     };
 

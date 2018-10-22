@@ -127,6 +127,7 @@ namespace syntax {
 	Declaration visitProto (Word, std::string);
 	std::vector<Declaration> visitExternBlock (Word, std::string, bool);
 	Alias visitAlias ();
+	Expression visitAutoCaster ();
 	Trait visitTrait ();
 	TraitProto visitTraitProto ();
 

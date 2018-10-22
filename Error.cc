@@ -116,9 +116,9 @@ namespace Ymir {
 			  Error::RESET,
 			  line.substr (0, column - 1).c_str (),
 			  Error::YELLOW,
-			  substr (line, column - 1, column + word.getStr ().length () - 1).c_str (),
+			  substr (line, column - 1, column + word.length () - 1).c_str (),
 			  Error::RESET,
-			  substr (line, column + word.getStr ().length () - 1, line.length ()).c_str ()
+			  substr (line, column + word.length () - 1, line.length ()).c_str ()
 	    );
 
 	    if (line [line.length () - 1] != '\n') ss << "\n";	    	    
@@ -132,7 +132,7 @@ namespace Ymir {
 		else ss << ' ';
 	    }
 	    
-	    ss << rightJustify ("", word.getStr ().length (), '^');
+	    ss << rightJustify ("", word.length (), '^');
 	    ss << "\n";
 	} else {
 	    std::string leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
@@ -176,8 +176,8 @@ namespace Ymir {
 
 	    std::string mid, mid2;
 	    auto locCol1 = LOCATION_COLUMN (locus), locCol2 = LOCATION_COLUMN (locus2);
-	    auto end1 = computeMid (mid, word.getStr (), line, locCol1 - 1, locCol1 + word.getStr ().size () - 1);
-	    auto end2 = computeMid (mid2, word2.getStr (), line, locCol2 - 1, locCol2 + word2.getStr ().size () - 1);
+	    auto end1 = computeMid (mid, word.getStr (), line, locCol1 - 1, locCol1 + word.length () - 1);
+	    auto end2 = computeMid (mid2, word2.getStr (), line, locCol2 - 1, locCol2 + word2.length () - 1);
 
 	    ss << format ("%% | %%%%%%%%%%",
 			  Error::BOLD,

@@ -58,8 +58,14 @@ namespace syntax {
     Expression IBinary::templateExpReplace (const map <string, Expression>& values) {
 	auto left = this-> left-> templateExpReplace (values);
 	auto right = this-> right-> templateExpReplace (values);
+	Expression autoCast = NULL;
+	if (this-> _autoCaster) {
+	    autoCast = this-> _autoCaster-> templateExpReplace (values);
+	    if (autoCast == NULL) return NULL;
+	}
+	
 	if (left == NULL || right == NULL) return NULL;
-	return new (Z0)  IBinary (this-> token, left, right);
+	return new (Z0)  IBinary (this-> token, left, right, autoCast);
     }
 
     Expression IBlock::templateExpReplace (const map <string, Expression>& values) {

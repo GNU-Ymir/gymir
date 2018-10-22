@@ -62,6 +62,11 @@ namespace semantic {
 	if (op == Token::RIGHTD) return opNorm(op, right);
 	if (op == Token::PERCENT) return opNorm(op, right);
 	if (op == Token::DDOT) return opRange (op, right);
+	if (op == Token::TDOT) {
+	    InfoType info = opRange (op, right);
+	    if (info != NULL && info-> is <IRangeInfo> ()) info-> to <IRangeInfo> ()-> isInclusive () = true;
+	    return info;
+	}
 	return NULL;
     }
 
@@ -505,15 +510,16 @@ namespace semantic {
 	    );
 	}
 
-	Ymir::Tree InstRange (Word locus, InfoType, Expression left, Expression right) {
+	Ymir::Tree InstRange (Word locus, InfoType info, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    TreeStmtList list;
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());
 	    auto type = IRangeInfo::toGenericStatic (left-> info-> type ()-> simpleTypeString (), left-> info-> type ()-> toGeneric ());
-	    	    
+	    auto inclusive = info-> to <IRangeInfo> ()-> isInclusive ();
+	    
 	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), type);
-	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
+	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd"), in = getField (loc, aux, "in"), step = getField (loc, aux, "step");
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, fst.getType (), fst, ltree
 	    ));
@@ -522,20 +528,29 @@ namespace semantic {
 		MODIFY_EXPR, loc, scd.getType (), scd, rtree
 	    ));
 
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, in.getType (), in, build_int_cst_type (in.getType ().getTree (), inclusive)
+	    ));
+
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, step.getType (), step, build_int_cst_type (step.getType ().getTree (), 1)
+	    ));
+
 	    return Ymir::compoundExpr (loc, list.getTree (), aux);
 	}
 
 	
-	Ymir::Tree InstRangeRight (Word locus, InfoType, Expression left, Expression right) {
+	Ymir::Tree InstRangeRight (Word locus, InfoType info, Expression left, Expression right) {
 	    location_t loc = locus.getLocus ();
 	    TreeStmtList list;
 	    auto rtree = right-> toGeneric ();
 	    Ymir::Tree ltree = convert (rtree.getType ().getTree (), left-> toGeneric ().getTree ());
 	    	    
 	    auto type = IRangeInfo::toGenericStatic (right-> info-> type ()-> simpleTypeString (), right-> info-> type ()-> toGeneric ());
+	    auto inclusive = info-> to <IRangeInfo> ()-> isInclusive ();
 	    	    
 	    auto aux = makeAuxVar (loc, ISymbol::getLastTmp (), type);
-	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd");
+	    auto fst = getField (loc, aux, "fst"), scd = getField (loc, aux, "scd"), in = getField (loc, aux, "in"), step = getField (loc, aux, "step");
 	    
 	    list.append (buildTree (
 		MODIFY_EXPR, loc, fst.getType (), fst, ltree
@@ -545,6 +560,14 @@ namespace semantic {
 		MODIFY_EXPR, loc, scd.getType (), scd, rtree
 	    ));
 
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, in.getType (), in, build_int_cst_type (in.getType ().getTree (), inclusive)
+	    ));
+
+	    list.append (buildTree (
+		MODIFY_EXPR, loc, step.getType (), step, build_int_cst_type (step.getType ().getTree (), 1)
+	    ));
+	    
 	    return Ymir::compoundExpr (loc, list.getTree (), aux);
 	}
 

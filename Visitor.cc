@@ -66,7 +66,7 @@ namespace syntax {
 	    Token::INF, Token::SUP, Token::INF_EQUAL,
 	    Token::SUP_EQUAL, Token::NOT_EQUAL, Token::NOT_INF,
 	    Token::NOT_INF_EQUAL, Token::NOT_SUP,
-	    Token::NOT_SUP_EQUAL, Token::DEQUAL, Token::DDOT
+	    Token::NOT_SUP_EQUAL, Token::DEQUAL, Token::DDOT, Token::TDOT
 	};
 
 	this-> lowOp = {Token::PLUS, Token::PIPE, Token::LEFTD,
@@ -860,7 +860,7 @@ namespace syntax {
 	if (word != Token::RPAR) {
 	    this-> lex.rewind ();
 	    while (true) {
-		auto constante = visitConstante ();
+		auto constante = visitConstanteSimple ();
 		if (constante == NULL)
 		    temps.push_back (visitOf (templates, cont));
 		else {
@@ -1248,7 +1248,7 @@ namespace syntax {
 		}
 	    } else if (next != Token::LCRO && next != Keys::IS) {
 		this-> lex.rewind ();
-		auto constante = visitConstante ();
+		auto constante = visitConstanteSimple ();
 		if (constante != NULL) 
 		    params.push_back (constante);
 		else {
@@ -1544,8 +1544,9 @@ namespace syntax {
 	auto left = visitUlow ();
 	auto tok = this-> lex.next ();
 	if (find (expOp, tok)) {
+	    auto ctype = visitAutoCaster ();
 	    auto right = visitUlow ();
-	    return visitExpression (new (Z0)  IBinary (tok, left, right));
+	    return visitExpression (new (Z0)  IBinary (tok, left, right, ctype));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1553,8 +1554,9 @@ namespace syntax {
     Expression Visitor::visitExpression (Expression left) {
 	auto tok = this-> lex.next ();
 	if (find (expOp, tok)) {
+	    auto ctype = visitAutoCaster ();	    
 	    auto right = visitUlow ();
-	    return visitExpression (new (Z0)  IBinary (tok, left, right));
+	    return visitExpression (new (Z0)  IBinary (tok, left, right, ctype));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1563,15 +1565,17 @@ namespace syntax {
 	auto left = visitLow ();
 	auto tok = this-> lex.next ();
 	if (find (ulowOp, tok) || tok == Keys::IS) {
+	    auto ctype = visitAutoCaster ();
 	    auto right = visitLow ();
-	    return visitUlow (new (Z0)  IBinary (tok, left, right));
+	    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 	} else {
 	    if (tok == Token::NOT) {
 		auto suite = this-> lex.next ();
 		if (suite == Keys::IS) {
+		    auto ctype = visitAutoCaster ();
 		    auto right = visitLow ();
 		    tok.setStr (Keys::NOT_IS);
-		    return visitUlow (new (Z0)  IBinary (tok, left, right));
+		    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 		} else this-> lex.rewind ();
 	    }
 	    this-> lex.rewind ();
@@ -1582,20 +1586,19 @@ namespace syntax {
     Expression Visitor::visitUlow (Expression left) {
 	auto tok = this-> lex.next ();
 	if (find (ulowOp, tok) || tok == Keys::IS) {
-	    auto right = visitLow ();
-	    return visitUlow (new (Z0)  IBinary (tok, left, right));
+	    auto ctype = visitAutoCaster ();
+	    auto right = visitLow ();	    
+	    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 	} else {
 	    if (tok == Token::NOT) {
 		auto suite = this-> lex.next ();
 		if (suite == Keys::IS) {
+		    auto ctype = visitAutoCaster ();
 		    auto right = visitLow ();
 		    tok.setStr (Keys::NOT_IS);
-		    return visitUlow (new (Z0)  IBinary (tok, left, right));
+		    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 		} else this-> lex.rewind ();
-	    } else if (tok == Token::DDOT) {
-		auto right = visitLow ();
-		return visitHigh (new (Z0)  IConstRange (tok, left, right));
-	    } 
+	    }
 	    this-> lex.rewind ();
 	}
 	return left;
@@ -1605,8 +1608,9 @@ namespace syntax {
 	auto left = visitHigh ();
 	auto tok = this-> lex.next ();
 	if (find (lowOp, tok)) {
+	    auto ctype = visitAutoCaster ();
 	    auto right = visitHigh ();
-	    return visitLow (new (Z0)  IBinary (tok, left, right));
+	    return visitLow (new (Z0)  IBinary (tok, left, right, ctype));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1614,8 +1618,9 @@ namespace syntax {
     Expression Visitor::visitLow (Expression left) {
 	auto tok = this-> lex.next ();
 	if (find (lowOp, tok)) {
+	    auto ctype = visitAutoCaster ();
 	    auto right = visitHigh ();
-	    return visitLow (new (Z0)  IBinary (tok, left, right));
+	    return visitLow (new (Z0)  IBinary (tok, left, right, ctype));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1624,11 +1629,13 @@ namespace syntax {
     	auto left = visitPth ();
     	auto tok = this-> lex.next ();
     	if (find (highOp, tok)) {
+	    auto ctype = visitAutoCaster ();
     	    auto right = visitPth ();
-    	    return visitHigh (new (Z0)  IBinary (tok, left, right));
+    	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
     	} else if (tok == Keys::IN) {
+	    auto ctype = visitAutoCaster ();
 	    auto right = visitPth ();
-	    return visitHigh (new (Z0)  IBinary (tok, left, right));
+	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
 	} else this-> lex.rewind ();
     	return left;
     }
@@ -1636,11 +1643,13 @@ namespace syntax {
     Expression Visitor::visitHigh (Expression left) {
 	auto tok = this-> lex.next ();
 	if (find (highOp, tok)) {
+	    auto ctype = visitAutoCaster ();
 	    auto right = visitPth ();
-	    return visitHigh (new (Z0)  IBinary (tok, left, right));
+	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
 	} else if (tok == Keys::IN) {
+	    auto ctype = visitAutoCaster ();
 	    auto right = visitPth ();
-	    return visitHigh (new (Z0)  IBinary (tok, left, right));
+	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
 	} else this-> lex.rewind ();
 	return left;
     }
@@ -1818,8 +1827,7 @@ namespace syntax {
 	else this-> lex.rewind ();
 	return NULL;
     }
-
-    
+        
     Expression Visitor::visitExpand () {
 	this-> lex.rewind ();
 	auto begin = this-> lex.next ();
@@ -2758,6 +2766,23 @@ namespace syntax {
 	return new (Z0) IAlias (ident, value);	
     }
 
+    Expression Visitor::visitAutoCaster () {
+	auto next = this-> lex.next ();
+	if (next == Token::COLON) {
+	    bool need_par = true;
+	    next = this-> lex.next ();
+	    if (next != Token::LPAR) {
+		need_par = false;
+		this-> lex.rewind ();
+	    }
+	    auto expr = this-> visitLeftOpSimple ();
+	    if (need_par) this-> lex.next ({Token::RPAR});
+	    return expr;
+	}
+	this-> lex.rewind ();
+	return NULL;
+    }
+    
     TraitProto Visitor::visitTraitProto () {
 	auto ident = visitIdentifiant ();
 	bool isSelf = false;

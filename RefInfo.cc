@@ -225,11 +225,19 @@ namespace semantic {
 	    aux = this-> _content-> BinaryOp (token, type-> _content);
 	    refRight = type-> _content;	    
 	} else aux = this-> _content-> BinaryOp (token, right);
+	
 	if (aux != NULL) {
 	    if (refRight != NULL) aux = addUnrefDouble (aux);
 	    else aux = addUnref (aux);
 	    return aux;
+	} else {
+	    aux = right-> info-> type ()-> BinaryOpRight (token, this-> _content);
+	    if (!aux) return NULL;
+	    if (refRight != NULL) aux = addUnrefDouble (aux);
+	    else aux = addUnref (aux);
+	    return aux;
 	}
+	
 	return NULL;
     }
 

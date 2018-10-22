@@ -523,10 +523,11 @@ namespace syntax {
 	    delete msg;
     }
     
-    IBinary::IBinary (Word word, Expression left, Expression right) :
+    IBinary::IBinary (Word word, Expression left, Expression right, Expression ctype) :
 	IExpression (word),
 	left (left),
-	right (right)
+	right (right),
+	_autoCaster (ctype)
     {
 	if (this-> left) this-> left-> inside = this;
 	if (this-> right) this-> right-> inside = this;	    
@@ -545,6 +546,10 @@ namespace syntax {
 	return this-> right;
     }
 
+    Expression& IBinary::getAutoCast () {
+	return this-> _autoCaster;
+    }
+    
     bool IBinary::isLvalue () {
 	if (this-> token == Token::EQUAL) return true;
 	return false;
@@ -834,10 +839,11 @@ namespace syntax {
 	return this-> params.size ();
     }    
 	
-    IConstRange::IConstRange (Word token, Expression left, Expression right) :
+    IConstRange::IConstRange (Word token, Expression left, Expression right, bool inner) :
 	IExpression (token),
 	left (left),
-	right (right)
+	right (right),
+	_inner (inner)
     {
 	this-> left-> inside = this;
 	this-> right-> inside = this;

@@ -27,6 +27,11 @@ namespace semantic {
 	if (op == Token::PLUS) return opNorm (op, right);
 	if (op == Token::MINUS) return opNorm (op, right);
 	if (op == Token::DDOT) return opRange (op, right);
+	if (op == Token::TDOT) {
+	    InfoType info = opRange (op, right);
+	    if (info != NULL && info-> is <IRangeInfo> ()) info-> to <IRangeInfo> ()-> isInclusive () = true;
+	    return info;
+	}
 	return NULL;
     }
 

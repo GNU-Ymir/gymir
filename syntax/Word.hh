@@ -17,12 +17,15 @@ struct Word {
     std::string locFile;
     ulong line;
     ulong column;
+    long _length = -1;
     
 public:
 
     Word (location_t locus, std::string str);
 
     Word (const Word & other, std::string str);
+
+    Word (const Word & other, std::string str, long len);
     
     Word (location_t locus, const char* str);
     
@@ -40,6 +43,11 @@ public:
 	return this-> str;
     }
 
+    long length () const {
+	if (this-> _length == -1) return this-> str.length ();
+	return this-> _length;
+    }
+    
     void setStr (std::string other) {
 	this-> str = other;	
     }
