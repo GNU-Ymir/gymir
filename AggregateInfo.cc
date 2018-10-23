@@ -521,7 +521,7 @@ namespace semantic {
     bool IAggregateCstInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
 	string name_ = "";
-	auto myspace = Namespace (this-> typeString ());
+	auto myspace = Namespace (this-> innerTypeString ());
 	if (myspace.isSubOf (space)) return true;
 	else if (this-> _anc) {
 	    auto ret = this-> _anc-> inPrivateContext ();
@@ -533,7 +533,7 @@ namespace semantic {
     
     bool IAggregateCstInfo::inPrivateContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	auto myspace = Namespace (this-> typeString ());
+	auto myspace = Namespace (this-> innerTypeString ());
 	return myspace.isSubOf (space);
     }
 
@@ -1123,13 +1123,13 @@ namespace semantic {
     bool IAggregateInfo::inPrivateContext () {
 	if (this-> _hasExemption) return true;
 	auto space = Table::instance ().getCurrentSpace ();
-	auto myspace = Namespace (this-> typeString ());
+	auto myspace = Namespace (this-> innerTypeString ());
 	return myspace.isSubOf (space);
     }
 
     bool IAggregateInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
-	auto myspace = Namespace (this-> typeString ());
+	auto myspace = Namespace (this-> innerTypeString ());
 	if (myspace.isSubOf (space)) return true;
 	else if (this-> _anc) {
 	    auto ret = this-> _anc-> inProtectedContext ();
@@ -1139,7 +1139,7 @@ namespace semantic {
     }
 
     bool IAggregateInfo::isMine (Namespace space) {
-	return Namespace (this-> typeString ()) == space;
+	return Namespace (this-> innerTypeString ()) == space;
     }
 
     bool IAggregateInfo::isProtectedForMe (Namespace space) {

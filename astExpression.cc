@@ -1333,13 +1333,14 @@ namespace syntax {
 		return NULL;
 	    }
 
-	    if (type-> treat.size () != aux-> params-> getParams ().size ()) {
+	    if (type-> treat.size () != aux-> params-> getParams ().size () ||
+		(aux-> _left-> info-> type ()-> is <IMethodInfo> () && type-> isMethod && type-> treat.size () != aux-> params-> getParams ().size () + 1)) {
 		bool need = true;
 		if (aux-> _left-> info-> type ()-> is <IFunctionInfo> () && aux-> _left-> info-> type ()-> to <IFunctionInfo> ()-> isConstr ())
 		    need = false;
 		else if (type-> isMethod && type-> treat.size () == aux-> params-> getParams ().size () + 1)
 		    need = false;
-
+		
 		if (need)
 		    tuplingParams (type, aux);
 	    }
@@ -1385,8 +1386,8 @@ namespace syntax {
     }
     
     void IPar::tuplingParams (ApplicationScore score, Par par) {
-	std::vector <Expression> lasts (par-> params-> getParams ().begin () + score-> treat.size () - 1, par-> params-> getParams ().end ());
 	auto lastInfo = score-> treat.back ()-> to<ITupleInfo> ();
+	std::vector <Expression> lasts (par-> params-> getParams ().end () - lastInfo-> nbParams (), par-> params-> getParams ().end ());
 	auto ctuple = new (Z0) IConstTuple (par-> token, par-> token, lasts);
 	ctuple-> info = new (Z0) ISymbol (par-> token, DeclSymbol::init (), ctuple, lastInfo);
 	for (auto it : lastInfo-> getParams ()) {
@@ -1394,7 +1395,7 @@ namespace syntax {
 	}
 	
 	score-> treat.back () = lastInfo-> asNoFake ();
-	std::vector <Expression> alls (par-> params-> getParams ().begin (), par-> params-> getParams ().begin () + score-> treat.size () - 1);
+	std::vector <Expression> alls (par-> params-> getParams ().begin (), par-> params-> getParams ().end () - lastInfo-> nbParams ());
 	alls.push_back (ctuple);
 	par-> params-> getParams () = alls;
     }

@@ -52,7 +52,7 @@ namespace semantic {
 
 
 	auto from = Table::instance ().globalNamespace ();
-	Ymir::log ("Validate template function : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());
+	Ymir::log ("Validate template method : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());
 	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), tmps, this-> _isVariadic, this-> _function-> pre (), this-> _function-> post (), this-> _function-> postVar ());
 	proto-> isLvalue () = lvalue;
 	return proto;
@@ -69,7 +69,7 @@ namespace semantic {
 	vars [0] = (Var) vars [0]-> setType (new (Z0) IRefInfo (false, object));
 	
 	auto ident = this-> _method-> getIdent ();	
-
+	Ymir::log ("isApplicable ?", this-> _method-> getIdent ());
 	auto ret = ITemplateFrame::isApplicable (ident, vars, types);
 	if (ret)
 	    ret-> ret = object;
@@ -166,6 +166,56 @@ namespace semantic {
 	    aux-> _currentScore = this-> currentScore () + res.score;
 	    return aux;
 	}	
+    }
+
+
+    ApplicationScore ITemplateMethFrame::getScoreVaridadic (Word ident, const vector<Var> & attrs, const vector<InfoType> & params) {
+	if (attrs.size () == 0)  
+	    return NULL;
+	else if (auto tvar = attrs.back()-> to<ITypedVar> ()) {
+	    auto last = this-> _method-> getTemplates ().back ();
+	    if (!last-> is<IVariadicVar> ()) return NULL;
+
+	    std::vector <InfoType> others (params.begin () + attrs.size () - 1, params.end ());
+	    TemplateSolution res (0, true);
+	    
+	    if (auto var = tvar-> typeExp ()-> to<IVar> ()) 
+		res = TemplateSolver::instance ().solveVariadic (this-> _method-> getTemplates (), var, others);
+	    else {
+		res = TemplateSolver::instance ().solveVariadic (this-> _method-> getTemplates (), tvar-> typeExp (), others);
+	    }
+	    if (!res.valid) return NULL;
+	    Ymir::log ("Variadic soluce for : {", attrs, " | ", params, "} : ", res.elements);
+	    map <string, Expression> attrTmps;
+	    vector <Var> auxAttrs (attrs.begin (), attrs.end () - 1);
+	    vector <InfoType> auxParams (params.begin (), params.begin () + attrs.size () - 1);
+	    auto realAttrs = transformParams (res.score, auxAttrs, auxParams, attrTmps);
+	    if (realAttrs.size () != auxAttrs.size ()) return NULL;
+
+	    if (!TemplateSolver::instance ().merge (res.score, res.elements, attrTmps)) return NULL;
+	    auto func = this-> _method-> templateReplace (res.elements);
+	    if (!TemplateSolver::instance ().isSolved (this-> _method-> getTemplates (), res)) return NULL;
+	    auto frame = new (Z0) ITemplateMethFrame (this-> _space, this-> _name, this-> _info, func);
+	    
+	    frame-> templateParams () = this-> templateParams ();	    
+	    auto auxTmps = TemplateSolver::instance ().solved (this-> _method-> getTemplates (), res.elements);
+	    frame-> templateParams ().insert (frame-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
+	    frame-> isVariadic (true);
+	    std::vector<InfoType> types (params.begin (), params.begin () + attrs.size () - 1);
+	    	    
+	    auto tuple = new (Z0) ITupleInfo (false);
+	    tuple-> setFake ();
+	    tuple-> getParams () = others;	    
+	    types.push_back (tuple);
+	    auto score = frame-> getScoreSimple (ident, func-> getParams (), types, false);
+	    if (score) {
+		score-> score += res.score;
+		score-> toValidate = frame;
+	    }
+	    
+	    return score;	
+	}
+	return NULL;
     }
 
     

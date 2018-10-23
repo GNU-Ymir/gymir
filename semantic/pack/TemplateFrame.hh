@@ -33,7 +33,7 @@ namespace semantic {
 	
 	bool& isExtern ();
 
-	ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args) override;
+	virtual ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args) override;
 
 	virtual ApplicationScore isApplicable (syntax::ParamList params) override;
 
@@ -59,7 +59,7 @@ namespace semantic {
 
 	ApplicationScore getScoreSimple (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args, bool transform = true);
 
-	ApplicationScore getScoreVaridadic (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
+	virtual ApplicationScore getScoreVaridadic (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args);
 
 	virtual Frame getScoreTempOp (const std::vector <syntax::Expression> & params);
 	

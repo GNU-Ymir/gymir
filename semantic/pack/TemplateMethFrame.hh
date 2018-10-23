@@ -72,7 +72,8 @@ namespace semantic {
     protected:
 	
 	Frame getScoreTempOp (const std::vector <syntax::Expression>& params) override;
-	
+
+	ApplicationScore getScoreVaridadic (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args) override;
     };
 
     typedef ITemplateMethFrame* TemplateMethFrame;

@@ -90,7 +90,7 @@ namespace semantic {
 	return this-> name;
     }
     
-    FrameProto ITemplateFrame::validate (ApplicationScore score, const vector<InfoType> & params)  {
+    FrameProto ITemplateFrame::validate (ApplicationScore score, const vector<InfoType> & params)  {	
 	if (this-> _isExtern) return validateExtern ();
 	else if (this-> _isPure) return validate ();
 

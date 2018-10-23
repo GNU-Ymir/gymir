@@ -1518,6 +1518,7 @@ namespace syntax {
 	}
 	
 	Frame fr = NULL;
+
 	if (method) {
 	    if (this-> tmps.size () == 0) {
 		fr = new (Z0) IMethodFrame (space, this-> name (), info, this);
