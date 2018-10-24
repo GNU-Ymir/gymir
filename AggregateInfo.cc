@@ -1144,7 +1144,22 @@ namespace semantic {
 	this-> tmpsDone = tmps;
     }
     
-    InfoType IAggregateInfo::getTemplate (ulong) {
+    InfoType IAggregateInfo::getTemplate (ulong nb) {
+	ulong current = 0;
+	for (auto it : Ymir::r (0, this-> _id-> _tmpsDone.size ())) {
+	    if (auto par = this-> _id-> _tmpsDone [it]-> to <IParamList> ()) {
+		if (current <= nb && nb < current + par-> getParams ().size ()) {
+		    auto index = nb - current;
+		    return par-> getParamTypes () [index]-> clone ();
+		} else {
+		    current += par-> getParams ().size ();
+		}		
+	    } else {
+		if (current == nb)
+		    return this-> _id-> _tmpsDone [current]-> info-> type ();
+		current ++;
+	    }	    
+	}
 	return NULL;
     }
 
@@ -1156,8 +1171,19 @@ namespace semantic {
 	return this-> _hasExemption;
     }
     
-    std::vector <InfoType> IAggregateInfo::getTemplate (ulong, ulong) {
-	return {};
+    std::vector <InfoType> IAggregateInfo::getTemplate (ulong bef, ulong af) {
+	std::vector <InfoType> types;
+	ulong it = bef;
+	while (true) {
+	    auto tmp = this-> getTemplate (it);
+	    if (tmp == NULL) break;
+	    types.push_back (tmp);
+	    it ++;
+	}
+
+	if ((int) types.size () - (int) af < 0) return {NULL};
+	types.resize (types.size () - af);
+	return types;
     }
 
     const char * IAggregateInfo::getId () {
