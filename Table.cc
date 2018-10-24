@@ -165,16 +165,10 @@ namespace semantic {
 	    ret = this-> _frameTable.front ().get (name);
 	    if (ret) return ret;
 	}
-	if (name == "abort")
-	    Ymir::log ("Global : ", this-> _globalScope.toString());
 	
 	if (ret == NULL) ret = this-> _globalScope.get (name);
 	if (ret == NULL) {
-	    //Ymir::log ("Get All mod from : ", getCurrentSpace (), " and : ", this-> _templateScope.front (), " {");
 	    auto mods = this-> getAllMod (getCurrentSpace ());
-	    // for (auto i : mods)
-	    // 	Ymir::log ("\t", i-> space ());
-	    // Ymir::log ("}");
 	    for (auto it : mods) {
 		ret = it->  getFor (name, getCurrentSpace ());
 		if (ret != NULL) return ret;

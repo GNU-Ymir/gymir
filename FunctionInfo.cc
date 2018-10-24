@@ -185,7 +185,7 @@ namespace semantic {
 	return ret;
     }
     
-    std::vector <Frame> IFunctionInfo::getFrames () {	
+    std::vector <Frame> IFunctionInfo::getFrames () {
 	if (this-> _alone) return {this-> _info};
 	if (this-> _fromTemplates.size () != 0) return this-> _fromTemplates;
 	std::vector <Frame> alls;
@@ -202,7 +202,8 @@ namespace semantic {
 		}		
 	    }
 	}
-	if (!adds) alls.push_back (this-> _info);	
+	
+	if (!adds) alls.push_back (this-> _info);
 	return alls;
     }
 
@@ -257,7 +258,7 @@ namespace semantic {
     ApplicationScore IFunctionInfo::CallAndThrow (Word tok, const std::vector <InfoType> & params, FrameProto & info) {
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
-
+	
 	for (auto it : frames) {
 	    total.push_back (it-> isApplicable (params));	    
 	}

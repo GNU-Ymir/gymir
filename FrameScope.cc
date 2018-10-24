@@ -225,6 +225,7 @@ namespace semantic {
     FrameReturnInfo FrameReturnInfo::__empty__;
 
     FrameScope::FrameScope (Namespace space) :
+	_friend (NULL),
 	_space (space)
     {
 	this-> _retInfo.currentBlock () = "";

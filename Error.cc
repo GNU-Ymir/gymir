@@ -22,6 +22,7 @@ namespace Ymir {
     jmp_buf Error::ex_buf__;    
     
     unsigned long Error::nb_errors (0);
+#define MAX_ERROR 50
     
     std::vector <ErrorMsg> Error::__caught__;
     std::vector <bool> Error::__isEnable__ = {true};
@@ -262,7 +263,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -274,7 +278,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -289,7 +296,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -314,7 +324,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -327,7 +340,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -338,7 +354,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
     }
 
@@ -349,7 +368,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
     }
             
@@ -361,7 +383,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -372,7 +397,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -383,7 +411,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -394,7 +425,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -409,7 +443,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};	
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());	    
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -420,7 +457,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -431,7 +471,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -442,7 +485,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -453,7 +499,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -465,7 +514,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -476,7 +528,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -487,7 +542,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -498,7 +556,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -509,7 +570,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -526,7 +590,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -543,7 +610,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -560,7 +630,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -573,7 +646,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());	    
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fail ("%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -585,20 +661,26 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, true, false};
 	if (__isEnable__.back ()) {	    
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
     void Error::syntaxError (const Word& word, const Word& word2) {
 	auto str = getString (SyntaxError);
 	auto msg = RED + std::string ("Error") + RESET + std::string (" : ") + format (str, word2.getStr().c_str (),
-			   YELLOW, word.getStr ().c_str (), RESET);
+										       YELLOW, word.getStr ().c_str (), RESET);
 	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -606,15 +688,18 @@ namespace Ymir {
     void Error::syntaxErrorFor (const Word& word, const Word& word2) {
 	auto str = getString (SyntaxErrorFor);
 	auto msg = RED + std::string ("Error") + RESET + std::string (" : ") + format (str,
-			   YELLOW, word.getStr ().c_str (), RESET,
-			   YELLOW, word2.getStr ().c_str (), RESET
+										       YELLOW, word.getStr ().c_str (), RESET,
+										       YELLOW, word2.getStr ().c_str (), RESET
 	);
 	
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -631,7 +716,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -642,7 +730,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fail ("%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fail ("%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -653,7 +744,10 @@ namespace Ymir {
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -664,7 +758,10 @@ namespace Ymir {
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -680,7 +777,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -692,7 +792,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -707,7 +810,10 @@ namespace Ymir {
 	msg = addLine (msg, word);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -719,7 +825,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -729,7 +838,10 @@ namespace Ymir {
 	msg = addLine (msg, loc);
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -739,7 +851,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -751,7 +866,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());	    
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -763,7 +881,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -779,7 +900,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -797,7 +921,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -810,7 +937,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -822,7 +952,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -834,7 +967,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -846,7 +982,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -858,7 +997,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -870,7 +1012,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
 
@@ -882,7 +1027,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
 
@@ -894,7 +1042,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
 
@@ -905,7 +1056,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
 
@@ -916,7 +1070,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
 
@@ -927,7 +1084,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
     
@@ -939,7 +1099,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
     
@@ -951,7 +1114,10 @@ namespace Ymir {
 	ErrorMsg erroMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
 	} else __caught__.push_back (erroMsg);
     }
     
@@ -962,7 +1128,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -973,7 +1142,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -984,7 +1156,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1015,7 +1190,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1026,7 +1204,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1038,7 +1219,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);    
     }
     
@@ -1049,7 +1233,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }    
     
@@ -1065,7 +1252,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1081,7 +1271,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1097,7 +1290,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1110,7 +1306,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1136,7 +1335,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());	    
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());	    
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1158,7 +1360,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1175,7 +1380,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }	
 
@@ -1191,7 +1399,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }	
     
@@ -1208,7 +1419,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }	
 
@@ -1226,7 +1440,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1252,7 +1469,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
         
@@ -1266,7 +1486,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1280,7 +1503,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1297,7 +1523,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + msg2, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1309,7 +1538,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1321,7 +1553,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1333,7 +1568,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1345,7 +1583,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1357,7 +1598,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1369,7 +1613,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1381,7 +1628,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1393,7 +1643,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1405,7 +1658,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
 
@@ -1417,7 +1673,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }    
 
@@ -1430,7 +1689,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }    
 
@@ -1446,7 +1708,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }    
 
@@ -1461,7 +1726,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
     }
 
@@ -1476,7 +1744,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
     }
 
@@ -1488,7 +1759,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
     }
     
@@ -1500,7 +1774,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);	
     }
           
@@ -1515,7 +1792,10 @@ namespace Ymir {
 	ErrorMsg errorMsg = {msg + aux, false, false};
 	if (__isEnable__.back ()) {
 	    Error::instance ().nb_errors ++;
-	    fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
     

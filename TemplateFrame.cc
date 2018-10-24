@@ -104,6 +104,7 @@ namespace semantic {
 	vector <Var> finalParams = IFrame::computeParams (func-> getParams (), params);
 	Symbol ret = NULL;
 	bool lvalue = false;
+	auto from = Table::instance ().globalNamespace ();
 	if (func-> getType ()) {
 	    auto type = func-> getType ()-> toType ();
 	    if (type) {
@@ -115,10 +116,9 @@ namespace semantic {
 	    }
 	}
 
+	Ymir::log ("Validate template function : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());	
+	FrameProto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), tmps, this-> _isVariadic, this-> _function-> pre (), this-> _function-> post (), this-> _function-> postVar ());	
 
-	auto from = Table::instance ().globalNamespace ();
-	Ymir::log ("Validate template function : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());
-	auto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), tmps, this-> _isVariadic, this-> _function-> pre (), this-> _function-> post (), this-> _function-> postVar ());
 	proto-> isLvalue () = lvalue;
 	return proto;
     }
@@ -311,8 +311,10 @@ namespace semantic {
 		    return NULL;
 		if (realAttrs.size () != attrs.size ()) return NULL;
 	    } else realAttrs = attrs;
-	    
+
 	    for (auto it : Ymir::r (0, args.size ())) {
+		auto CONST_SAME_TMP = this-> CONST_SAME_TMP;
+		auto SAME_TMP = this-> SAME_TMP;
 		InfoType info = NULL;
 		auto param = realAttrs [it];
 		if (auto tvar = param-> to <ITypedVar> ()) {

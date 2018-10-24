@@ -265,12 +265,56 @@ namespace semantic {
 	if (!res.valid || !TemplateSolver::instance ().isSolved (this-> _tmps, res))
 	    return NULL;
 	
-	auto creator = this-> _creator-> templateDeclReplace (res.elements)-> to <ITypeCreator> ();
 	auto tmpsDone = TemplateSolver::instance ().solved (this-> _tmps, res);
-	auto ret = creator-> declare (this-> _space, tmpsDone)-> to <IAggregateCstInfo> ();
-
+	auto ret = findAlreadySolve (tmpsDone);
+	if (!ret) {
+	    auto creator = this-> _creator-> templateDeclReplace (res.elements)-> to <ITypeCreator> ();
+	    ret = creator-> declare (this-> _space, tmpsDone)-> to <IAggregateCstInfo> ();
+	    addAlreadySolve (tmpsDone, ret);
+	}
 	
 	return ret;
+    }
+
+    InfoType IAggregateCstInfo::findAlreadySolve (std::vector <syntax::Expression>& tmpsDone) {
+	for (auto it_ : Ymir::r (0, this-> _solvedTmps.size ())) {
+	    auto tmps = this-> _solvedTmps [it_];
+	    if (tmpsDone.size () != tmps.size ()) continue;
+	    bool success = true;
+	    for (auto it : Ymir::r (0, tmpsDone.size ())) {
+		if (auto ps = tmpsDone  [it]-> to <IParamList> ()) {
+		    if (auto ps2 = tmps [it]-> to <IParamList> ()) {
+			if (ps-> getParams ().size () != ps2-> getParams ().size ()) {
+			    success = false;
+			    break;
+			}
+			for (auto it_ : Ymir::r (0, ps-> getParams ().size ())) {
+			    if (!ps-> getParams ()[it_]-> info-> type ()-> isSame (ps2-> getParams () [it_]-> info-> type ())) {
+				success = false;
+				break;
+			    }
+			}
+		    } else {
+			success = false;
+			break;	   
+		    }
+		} else {
+		    if (tmpsDone [it]-> is <IParamList> ()) {
+			success = false; break;
+		    }
+		    if (!tmpsDone [it]-> info-> type ()-> isSame (tmps [it]-> info-> type ())) {
+			success = false; break;
+		    }
+		}		
+	    }
+	    if (success) return this-> _solved [it_];
+	}
+	return NULL;
+    }
+
+    void IAggregateCstInfo::addAlreadySolve (std::vector <syntax::Expression> & tmpsDone, InfoType type) {
+	this-> _solvedTmps.push_back (tmpsDone);
+	this-> _solved.push_back (type);
     }
     
     bool IAggregateCstInfo::recursiveGet (InfoType who, InfoType where) {

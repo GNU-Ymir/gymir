@@ -39,10 +39,15 @@ namespace semantic {
 	FunctionInfo _destr;
 	std::vector <FunctionInfo> _methods;
 	std::vector <FunctionInfo> _staticMeth;
-
+	
 	std::vector <syntax::Expression> _tmps;
 	std::vector <syntax::Expression> _tmpsDone;
 	std::vector <syntax::Expression> _impl;
+
+	std::vector <std::vector <syntax::Expression>> _solvedTmps;
+	std::vector <InfoType> _solved;
+
+	
 	bool _isUnion;
 	bool _isExternal;
 	bool _isFailure = false;
@@ -137,6 +142,11 @@ namespace semantic {
 	bool isProtectedForMe (Namespace space);
 
 	InfoType getScore (const std::vector <syntax::Expression>&);
+
+	InfoType findAlreadySolve (std::vector <syntax::Expression>&);
+
+	void addAlreadySolve (std::vector <syntax::Expression>&, InfoType);
+	
     };
 
     class IAggregateInfo : public IInfoType {

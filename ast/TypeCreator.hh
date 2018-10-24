@@ -152,7 +152,7 @@ namespace syntax {
 	
 	InnerProtection & getProtection ();
 	
-	semantic::InfoType declare (semantic::AggregateCstInfo info, bool & isStatic, bool isExternal = false);
+	semantic::InfoType declare (semantic::AggregateCstInfo info, bool & isStatic, bool isExternal = false, bool fromTemplate = false);
 
 	ITypeMethod* templateDeclReplace (const std::map <std::string, Expression>& tmps) override;
 

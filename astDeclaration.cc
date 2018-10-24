@@ -1476,11 +1476,11 @@ namespace syntax {
 	return func;
     }
 
-    InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method, bool isExternal) {
+    InfoType ITypeMethod::declare (AggregateCstInfo info, bool& method, bool isExternal, bool fromTemplate) {
 	if (!this-> verifUdasMeth ()) return NULL;
 	auto space = Namespace (info-> typeString ());
 
-	bool addable = this-> tmps.size () == 0;
+	bool addable = this-> tmps.size () == 0 && !fromTemplate;
 	method = false;
 	bool needConst = false;
 	if (this-> params.size () > 0) {
@@ -1544,7 +1544,7 @@ namespace syntax {
 	fr-> isInnerProtected () = (this-> _prot == InnerProtection::PROTECTED);
 
 	FunctionInfo func = new (Z0) IFunctionInfo (space, this-> name ());	
-	if (addable) {
+	if (addable) {	    
 	    FrameTable::instance ().insert (fr);
 	    func-> isVirtual () = !fr-> isInnerPrivate ();
 	}

@@ -5,7 +5,7 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/value/_.hh>
 #include <ymir/ast/Tuple.hh>
-
+#include <ymir/semantic/object/AggregateInfo.hh>
 
 namespace semantic {
     using namespace syntax;
@@ -941,6 +941,11 @@ namespace semantic {
 	    auto clo = new (Z0) IType (right-> token, ty-> TempOp (ignore));
 	    map<string, Expression> value =  {{left-> token.getStr (), clo}};
 	    return TemplateSolution (__VAR__, true, type, value);
+	} else if (auto ty = type-> to <IAggregateCstInfo> ()) {
+	    vector <Expression> ignore;
+	    auto clo = new (Z0) IType (right-> token, ty-> TempOp (ignore));
+	    map<string, Expression> value =  {{left-> token.getStr (), clo}};
+	    return TemplateSolution (__VAR__, true, type, value);
 	}
 	return TemplateSolution (0, false);
     }
@@ -959,6 +964,7 @@ namespace semantic {
 	if (auto all = right-> to <IArrayAlloc> ()) info = all-> info-> type ();
 	else if (auto v = right-> to <IVar> ()) {
 	    if (v-> info-> type ()-> is <IStructCstInfo> ()) info = v-> info-> type ()-> TempOp ({});
+	    else if (v-> info-> type ()-> is <IAggregateCstInfo> ()) info = v-> info-> type ()-> TempOp ({});
 	}
 	
 	if (auto type = right-> to<IType> ()) info = type-> info-> type ();

@@ -52,6 +52,7 @@ namespace syntax {
 	Expression normal (IBinary* = NULL);
 	bool simpleVerif (IBinary*);
 	bool canOverOpAssign (IBinary*);
+	bool canOverOpBinary (IBinary*);
 	
 	Expression findOpBinary (IBinary*);
 	Expression findOpAssign (IBinary*, bool mandatory = true);

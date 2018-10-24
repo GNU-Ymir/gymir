@@ -58,7 +58,7 @@ namespace semantic {
 	} else if (attrs.size () == args.size ()) {
 	    for (auto it : Ymir::r (0, args.size ())) {
 		auto CONST_SAME = this-> CONST_SAME;
-		auto SAME = this-> SAME;
+		auto SAME = this-> SAME;		
 		InfoType info = NULL;
 		auto param = attrs [it];
 		if (auto tvar = param-> to<ITypedVar> ()) {
@@ -544,7 +544,7 @@ namespace semantic {
     }
 
     std::string IFrame::getName () {
-	Ymir::Error::assert ("TODO");
+	//Ymir::Error::assert ("TODO");
 	return "";
     }
     

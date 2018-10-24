@@ -72,10 +72,10 @@ namespace Ymir {
 	    
 	    uint i = 0;
 	    while (i < FrameTable::instance ().pures ().size ()) {
-	    auto it = FrameTable::instance ().pures () [i];
-	    it-> validate ();
-	    i++;
-	}
+		auto it = FrameTable::instance ().pures () [i];
+		it-> validate ();
+		i++;
+	    }
 	    
 	    if (Ymir::Error::nb_errors > 0)
 		Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);	

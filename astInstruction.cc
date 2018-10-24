@@ -709,6 +709,7 @@ namespace syntax {
 	Table::instance ().enterBlock ();
 	auto aux = new (Z0) IVar ({expr-> token, "_"});
 	auto expr = this-> expr-> expression ();
+
 	if (expr == NULL) return NULL;
 	aux-> info = new (Z0) ISymbol (aux-> token, aux, new (Z0) IRefInfo (expr-> info-> isConst ()
 									    , expr-> info-> type ()-> clone ()));

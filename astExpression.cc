@@ -551,6 +551,23 @@ namespace syntax {
 	return false;
     }
 
+    bool IBinary::canOverOpBinary (Binary aux) {	
+	if (aux-> left-> info-> type ()-> is <IArrayInfo> ()) return true;
+	if (aux-> left-> info-> type ()-> is <ITupleInfo> ()) return true;
+	if (aux-> left-> info-> type ()-> is <IAggregateInfo> ()) return true;
+	if (aux-> left-> info-> type ()-> is <IStructInfo> ()) return true;
+	if (auto ref = aux-> left-> info-> type ()-> to <IRefInfo> ())
+	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> () || ref-> content ()-> is<IArrayInfo> ();
+	
+	if (aux-> right-> info-> type ()-> is <IArrayInfo> ()) return true;
+	if (aux-> right-> info-> type ()-> is <ITupleInfo> ()) return true;
+	if (aux-> right-> info-> type ()-> is <IAggregateInfo> ()) return true;
+	if (aux-> right-> info-> type ()-> is <IStructInfo> ()) return true;
+	if (auto ref = aux-> right-> info-> type ()-> to <IRefInfo> ())
+	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> () || ref-> content ()-> is <IArrayInfo> ();
+	return false;	
+    }
+
     Expression IBinary::affect () {
 	auto aux = new (Z0)  IBinary (this-> token, this-> left-> expression (), this-> right-> expression ());
 	if (simpleVerif (aux)) return NULL;
@@ -704,7 +721,7 @@ namespace syntax {
 		type = aux-> right-> info-> type ()-> BinaryOpRight (this-> token, aux-> left);
 		if (type == NULL) {
 		    Expression call = NULL;
-		    if (canOverOpAssign (aux))
+		    if (canOverOpBinary (aux))
 			call = findOpBinary (aux);
 		    if (!call) {
 			Ymir::Error::undefinedOp (this-> token, aux-> left-> info, aux-> right-> info);
@@ -978,9 +995,9 @@ namespace syntax {
 			aux-> params.push_back (it);
 		} else aux-> params.push_back (expr);
 
-		if (expr-> info-> value ()) {
+		if (val && expr-> info-> value ()) {
 		    val-> addValue (expr-> info-> value ());
-		} else {
+		} else if (val) {
 		    delete val;
 		    val = NULL;
 		}
@@ -1212,8 +1229,8 @@ namespace syntax {
 	    } else if (type == NULL) {
 		Ymir::Error::undefAttr (this-> token, aux-> left-> info, var);
 		return NULL;		
-	    } else if (type-> is <IMethodInfo> () && type-> to <IMethodInfo> ()-> isAttribute () && ((this-> inside && !this-> inside-> is <IPar> ()))) {
-		auto isLeftAff = this-> inside-> is <IBinary> () && this-> inside-> to <IBinary> ()-> getLeft () == this && this-> inside-> token.getStr () == Token::EQUAL;
+	    } else if (type-> is <IMethodInfo> () && type-> to <IMethodInfo> ()-> isAttribute () && (!this-> inside || (this-> inside && !this-> inside-> is <IPar> ()))) {
+		auto isLeftAff = this-> inside && this-> inside-> is <IBinary> () && this-> inside-> to <IBinary> ()-> getLeft () == this && this-> inside-> token.getStr () == Token::EQUAL;
 		if (!isLeftAff) {
 		    type-> to <IMethodInfo> ()-> eraseNonAttrib ();
 		    aux-> info = new (Z0)  ISymbol (aux-> token, aux-> left-> info-> getDeclSym (), aux, type);
@@ -1476,6 +1493,7 @@ namespace syntax {
 	//auto undef = new (Z0)  IUndefInfo ();
 	for (auto it : this-> params) {
 	    auto expr = it-> expression ();
+	    if (expr == NULL) return NULL;
 	    if (expr-> isType ()) return this-> asType ();
 	    if (expr == NULL) return NULL;
 	    if (auto par = expr-> to <IParamList> ()) {

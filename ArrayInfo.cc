@@ -766,15 +766,15 @@ namespace semantic {
 		    auto ptr = Ymir::getField (loc.getLocus (), array, "ptr");
 		    elem = getPointerUnref (loc.getLocus (), ptr, inner, index);
 		}
-	    }	    
-
+	    }
+	    
 	    return Ymir::buildTree (
 		MODIFY_EXPR, loc.getLocus (),
 		void_type_node, var,
 		varType-> buildBinaryOp (
 		    loc,
 		    varType,
-		    new (Z0) ITreeExpression (loc, ((ArrayInfo) arrayType)-> content (), elem),
+		    new (Z0) ITreeExpression (loc, arrayType-> to <IArrayInfo> ()-> content (), elem),
 		    new (Z0) ITreeExpression (loc, varType, var)	
 		)
 	    );
