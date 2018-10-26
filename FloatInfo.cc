@@ -130,10 +130,12 @@ namespace semantic {
 		ret-> binopFoo = FloatUtils::InstCast;
 		return ret;
 	    }
-	} else if (other-> is<IRefInfo> () && this-> isLvalue ()) {
-	    auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
-	    aux-> binopFoo = FloatUtils::InstAddr;
-	    return aux;
+	} else if (auto ref = other-> to<IRefInfo> ()) {
+	    if (this-> isLvalue () && this-> isSame (ref-> content ())) {	    
+		auto aux = new (Z0)  IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = FloatUtils::InstAddr;
+		return aux;
+	    }
 	} else if (auto en = other-> to<IEnumInfo> ()) {
 	    return this-> CompOp (en-> content ());
 	}

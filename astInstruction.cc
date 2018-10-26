@@ -731,6 +731,7 @@ namespace syntax {
 	    auto res = semantic::DestructSolver::instance ().solve (this-> values [it], aux);	    
 	    if (res.valid) {
 		soluce.push_back (res);
+		Table::instance ().retInfo ().currentBlock () = "if";
 		Table::instance ().enterBlock ();
 		for (auto it_ : res.created) {
 		    Table::instance ().insert (it_-> info);

@@ -260,7 +260,7 @@ namespace semantic {
 	std::vector <Frame> frames = getFrames ();
 	
 	for (auto it : frames) {
-	    total.push_back (it-> isApplicable (params));	    
+	    total.push_back (it-> isApplicable (params));
 	}
 
 	std::vector <Frame> goods;

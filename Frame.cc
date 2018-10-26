@@ -55,7 +55,7 @@ namespace semantic {
 	    score-> score = AFF;
 	    score-> score += this-> currentScore ();
 	    return score;
-	} else if (attrs.size () == args.size ()) {
+	} else if (attrs.size () == args.size ()) {	    
 	    for (auto it : Ymir::r (0, args.size ())) {
 		auto CONST_SAME = this-> CONST_SAME;
 		auto SAME = this-> SAME;		

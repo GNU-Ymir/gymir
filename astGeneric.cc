@@ -72,6 +72,44 @@ namespace syntax {
 	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.bind_expr.getTree ());
 	}      
     }
+    
+    Ymir::Tree IBlock::toGenericPreEntered (std::vector <Ymir::Tree> toAdd) {
+	if (this-> value != NULL) {
+	    return this-> toGenericValue ();
+	}
+	
+	IBlock::currentBlock.push_back (this);
+	for (auto it : this-> inlines) {
+	    if (!it-> info-> type ()-> is <IUndefInfo> ())
+		Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
+	}
+	
+	for (auto it : this-> insts) {
+	    auto inst = it-> toGeneric ();
+	    Ymir::getStackStmtList ().back ().append (inst);    
+	}
+
+	for (auto it : toAdd)
+	    Ymir::getStackStmtList ().back ().append (it);
+	
+	IBlock::currentBlock.pop_back ();
+	auto body = Ymir::leaveBlock ();
+	if (this-> finally.size () == 0)
+	    return body.bind_expr;
+
+	if (this-> finally.size () == 1) {
+	    auto finally = this-> finally [0]-> toGeneric ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.getTree ());
+	} else {
+	    Ymir::enterBlock ();
+	    for (auto it : this-> finally) {
+		auto inst = it-> toGeneric ();
+		Ymir::getStackStmtList ().back ().append (inst);
+	    }
+	    auto finally = Ymir::leaveBlock ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.bind_expr.getTree ());
+	}      
+    }
 
     Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
 	auto last = this-> insts.back ()-> to <IExpression> ();
@@ -300,13 +338,15 @@ namespace syntax {
 		this-> info-> type (),
 		this-> expr
 	    );
-	} else {
+	} else if (this-> info-> type ()-> binopFoo) {
 	    return this-> info-> type ()-> buildBinaryOp (
 		this-> token,
 		this-> info-> type (),
 		this-> expr,
 		new (Z0)  ITreeExpression (this-> token, this-> info-> type (), Ymir::Tree ())
 	    );
+	} else {
+	    return this-> expr-> toGeneric ();
 	}
     }
     
@@ -1020,8 +1060,8 @@ namespace syntax {
 	auto decl = Ymir::makeAuxVar (this-> aux-> token.getLocus (), ISymbol::getLastTmp (), this-> aux-> info-> type ()-> toGeneric ());
 	
 	this-> aux-> info-> treeDecl (decl);
-	list.append (this-> binAux-> toGeneric ());	
-
+	list.append (this-> binAux-> toGeneric ());
+	
 	return list.getTree ();
     }
 
@@ -1176,12 +1216,13 @@ namespace syntax {
     }
 
     Ymir::Tree IAffectGeneric::toGeneric () {
+	auto rtree = this-> right-> toGeneric ();
 	return Ymir::buildTree (
 	    MODIFY_EXPR,
 	    this-> token.getLocus (),
 	    void_type_node,
 	    this-> left-> toGeneric (),
-	    this-> _addr ? Ymir::getAddr (this-> right-> toGeneric ()) : this-> right-> toGeneric ()
+	    this-> _addr ? Ymir::getAddr (rtree) : rtree
 	);
     }
     

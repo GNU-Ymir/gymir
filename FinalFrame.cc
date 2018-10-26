@@ -253,31 +253,32 @@ namespace semantic {
 	}
 	
 	__inlining__.push_back (this);
-	list.append (declInlineArgs (params));
+	Ymir::enterBlock ();
+	Ymir::getStackStmtList ().back ().append (declInlineArgs (params));
 	auto endLabel = Ymir::makeLabel (BUILTINS_LOCATION, "end");
 	if (!this-> _type-> type ()-> is <IVoidInfo> ()) {
 	    tree ret = this-> _type-> type ()-> toGeneric ().getTree ();
 	    auto var = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), ret);
 	    IFinalFrame::__isInlining__.push_back (var);
 	    IFinalFrame::__endLabel__.push_back (endLabel);
-	    auto inside = this-> _block-> toGeneric ();
-	    list.append (inside.getTree ());
+	    auto inside = this-> _block-> toGenericPreEntered (
+		{Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel)}
+	    );
+	    
 	    IFinalFrame::__isInlining__.pop_back ();
 	    IFinalFrame::__endLabel__.pop_back ();
-	    list.append (Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel));
 	    __inlining__.pop_back ();
-	    
-	    return Ymir::compoundExpr (BUILTINS_LOCATION, list.getTree (), var);
+	    return Ymir::compoundExpr (BUILTINS_LOCATION, inside, var);
 	} else {
 	    IFinalFrame::__isInlining__.push_back (Ymir::Tree ());
 	    IFinalFrame::__endLabel__.push_back (endLabel);
-	    auto inside = this-> _block-> toGeneric ();
-	    list.append (inside.getTree ());
+	    auto inside = this-> _block-> toGenericPreEntered (
+		{Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel)}
+	    );
 	    IFinalFrame::__isInlining__.pop_back ();
 	    IFinalFrame::__endLabel__.pop_back ();
-	    list.append (Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel));
 	    __inlining__.pop_back ();
-	    return list.getTree ();
+	    return inside;
 	}
     }
 

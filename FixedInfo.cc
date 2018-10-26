@@ -101,7 +101,6 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::CastOp (InfoType other) {
-	if (this-> isSame (other)) return this;
 	if (other-> is<IBoolInfo> ()) {
 	    auto aux = new (Z0)  IBoolInfo (this-> isConst ());
 	    aux-> binopFoo = FixedUtils::InstCast;

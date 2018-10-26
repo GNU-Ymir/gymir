@@ -61,6 +61,8 @@ namespace syntax {
 	std::vector <Instruction> & getInsts ();
 	
 	std::vector <semantic::Symbol> allInnerDecls () override;
+
+	Ymir::Tree toGenericPreEntered (std::vector <Ymir::Tree>);
 	
 	Ymir::Tree toGeneric () override;
 

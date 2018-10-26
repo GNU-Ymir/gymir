@@ -212,7 +212,7 @@ namespace semantic {
 	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> _space, func);
 	    else ret = new (Z0)  IPureFrame (this-> _space, func);
 	    ret-> attributes () = this-> attributes ();
-	    
+
 	    ret-> currentScore () = this-> currentScore () + res.score;	    
 	    ret-> templateParams () = this-> templateParams ();
 	    ret-> templateParams ().insert (ret-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
