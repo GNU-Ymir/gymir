@@ -1039,7 +1039,7 @@ namespace syntax {
     
     void ISelf::declare () {
 	if (Table::instance ().constructor () != NULL) {
-	    Ymir::Error::shadowingVar (
+	    Ymir::Error::multipleStaticInit (
 		this-> ident,
 		Table::instance ().constructor ()-> ident ()
 	    );
@@ -1236,10 +1236,19 @@ namespace syntax {
 	}
 
 	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
-	if (this-> _destr.size () > 1)
+	if (this-> _destr.size () > 1) {
 	    Ymir::Error::multipleDestr (this-> _ident);
+	    return;
+	}
 	
 	if (this-> _tmps.size () == 0) {
+
+	    if (this-> _staticConstruct.size () >= 2) {
+		Ymir::Error::multipleStaticInit (this-> _staticConstruct [0]-> token,
+						 this-> _staticConstruct [1]-> token);
+		return;
+	    } else if (this-> _staticConstruct.size () == 1)	    
+		type-> getStaticBlock () = this-> _staticConstruct [0];
 	    
 	    if (this-> _destr.size () == 1) {
 		type-> getDestructor () = this-> _destr [0]-> declare (type)-> to <IFunctionInfo> ();
@@ -1261,8 +1270,12 @@ namespace syntax {
 			break;
 		    }
 		}
-		if (!error) 
-		    type-> getAlias ().push_back (alias);
+		
+		if (!error) {
+		    if (alias-> isStatic ()) type-> getStaticVars ().push_back (alias);
+		    else 
+			type-> getAlias ().push_back (alias);
+		}
 	    }
 	    
 

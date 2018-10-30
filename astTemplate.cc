@@ -21,9 +21,9 @@ namespace syntax {
     }
 
     Expression IAccess::templateExpReplace (const map <string, Expression>& values) {
-	auto params = (ParamList) this-> params-> templateExpReplace (values);
-	auto left = this-> left-> templateExpReplace (values);
-	return new (Z0)  IAccess (this-> token, this-> end, left, params);
+	auto params = (ParamList) this-> _params-> templateExpReplace (values);
+	auto left = this-> _left-> templateExpReplace (values);
+	return new (Z0)  IAccess (this-> token, this-> _end, left, params);
     }
 
     Expression IStructCst::templateExpReplace (const map <string, Expression>& values) {
@@ -34,30 +34,30 @@ namespace syntax {
     }    
     
     Expression IArrayAlloc::templateExpReplace (const map <string, Expression>& values) {
-	auto type = this-> type-> templateExpReplace (values);	
-	auto size = this-> size-> templateExpReplace (values);	
-	return new (Z0)  IArrayAlloc (this-> token, type, size, this-> isImmutable);
+	auto type = this-> _type-> templateExpReplace (values);	
+	auto size = this-> _size-> templateExpReplace (values);	
+	return new (Z0)  IArrayAlloc (this-> token, type, size, this-> _isImmutable);
     }
 
     Instruction IAssert::templateReplace (const map <string, Expression>& values) {
-	if (this-> msg != NULL) {
+	if (this-> _msg != NULL) {
 	    return new (Z0)  IAssert (this-> token,
-				     this-> expr-> templateExpReplace (values),
-				     this-> msg-> templateExpReplace (values),
-				     this-> isStatic
+				     this-> _expr-> templateExpReplace (values),
+				     this-> _msg-> templateExpReplace (values),
+				     this-> _isStatic
 	    );
 	} else {
 	    return new (Z0)  IAssert (this-> token,
-				     this-> expr-> templateExpReplace (values),
+				     this-> _expr-> templateExpReplace (values),
 				     NULL,
-				     this-> isStatic
+				     this-> _isStatic
 	    );
 	}
     }
 
     Expression IBinary::templateExpReplace (const map <string, Expression>& values) {
-	auto left = this-> left-> templateExpReplace (values);
-	auto right = this-> right-> templateExpReplace (values);
+	auto left = this-> _left-> templateExpReplace (values);
+	auto right = this-> _right-> templateExpReplace (values);
 	Expression autoCast = NULL;
 	if (this-> _autoCaster) {
 	    autoCast = this-> _autoCaster-> templateExpReplace (values);
@@ -71,11 +71,11 @@ namespace syntax {
     Expression IBlock::templateExpReplace (const map <string, Expression>& values) {
 	vector <Declaration> decls;
 	vector <Instruction> insts;
-	for (auto it : this-> decls) {
+	for (auto it : this-> _decls) {
 	    decls.push_back (it-> templateDeclReplace (values));
 	}
 	
-	for (auto it : this-> insts) {
+	for (auto it : this-> _insts) {
 	    auto res = it-> templateReplace (values);
 	    if (!res) return NULL;
 	    insts.push_back (res);
@@ -89,19 +89,19 @@ namespace syntax {
     }
     
     Instruction IBreak::templateReplace (const map <string, Expression>&) {
-	return new (Z0)  IBreak (this-> token, this-> ident);	
+	return new (Z0)  IBreak (this-> token, this-> _ident);	
     }
 
     Expression ICast::templateExpReplace (const map <string, Expression>& values) {
-	auto type = this-> type-> templateExpReplace (values);
-	auto expr = this-> expr-> templateExpReplace (values);
+	auto type = this-> _type-> templateExpReplace (values);
+	auto expr = this-> _expr-> templateExpReplace (values);
 	return new (Z0)  ICast (this-> token, type, expr);
     }
 
     Expression IFixed::templateExpReplace (const map <string, Expression>&) {
-	auto ret = new (Z0)  IFixed (this-> token, this-> type, FixedMode::BUILTINS);
-	ret-> setUValue (this-> uvalue);
-	ret-> setValue (this-> value);
+	auto ret = new (Z0)  IFixed (this-> token, this-> _type, FixedMode::BUILTINS);
+	ret-> setUValue (this-> _uvalue);
+	ret-> setValue (this-> _value);
 	return ret;
     }
 
@@ -221,7 +221,7 @@ namespace syntax {
 	
 	auto iter = this-> iter-> templateExpReplace (values);
 
-	if (this-> isStatic && iter-> is <IMacroRepeat> () && vars.size () == 1) {
+	if (this-> _isStatic && iter-> is <IMacroRepeat> () && vars.size () == 1) {
 	    auto rep = iter-> to <IMacroRepeat> ();
 	    auto bl = new (Z0) IBlock (this-> block-> token, {}, {});
 	    for (ulong i = 0 ; i < rep-> getSolution ().size () ; i++) {
@@ -247,7 +247,7 @@ namespace syntax {
 	
 	auto block = (Block) this-> block-> templateReplace (values);
 	auto ret = new (Z0)  IFor (this-> token, this-> id, vars, iter, block, this-> _const);
-	ret-> isStatic = this-> isStatic;
+	ret-> _isStatic = this-> _isStatic;
 	return ret;
     }
 
@@ -377,7 +377,7 @@ namespace syntax {
     }
     
     TypeAlias ITypeAlias::templateDeclReplace (const map <string, Expression> & tmps) {
-	auto ret = new (Z0) ITypeAlias (this-> _ident, this-> _value-> templateExpReplace (tmps), this-> _isConst);
+	auto ret = new (Z0) ITypeAlias (this-> _ident, this-> _value-> templateExpReplace (tmps), this-> _isConst, this-> _isStatic);
 	ret-> _prot = this-> _prot;
 	return ret;
     }
@@ -393,7 +393,7 @@ namespace syntax {
 	if (this-> else_)
 	    _else = (If) this-> else_-> templateReplace (values);
 	
-	return new (Z0)  IIf (this-> token, test, block, _else, this-> isStatic);
+	return new (Z0)  IIf (this-> token, test, block, _else, this-> _isStatic);
     }
 
     Expression IIs::templateExpReplace (const map <string, Expression>& values) {

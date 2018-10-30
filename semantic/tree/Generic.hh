@@ -38,6 +38,8 @@ namespace Ymir {
     Tree makeTuple (std::string name, const std::vector<semantic::InfoType> & types);
 
     Tree makeStructType (std::string name, int nbFields, ...);
+
+    Tree makeAuxVar (location_t locus, const std::string& name, Ymir::Tree type);
     
     Tree makeAuxVar (location_t locus, ulong id, Ymir::Tree type);
 

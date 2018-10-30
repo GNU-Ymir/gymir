@@ -58,7 +58,7 @@ namespace Ymir {
 	    return new (Z0) syntax::IProgram (Word::eof (), {});
 	}
     }
-
+    
     void Parser::semantic_time (syntax::Program prg) {
 	TRY {
 	    Table::instance ().purge ();

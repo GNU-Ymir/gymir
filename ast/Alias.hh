@@ -6,6 +6,13 @@
 
 namespace syntax {
 
+    /**
+     * \struct IAlias
+     * This class represent the syntax node of an alias declaration
+     * \verbatim
+     alias := 'alias' Identifier '=' expression ';'
+     \endverbatim
+     */
     class IAlias : public IDeclaration {
 
 	Word _ident;
@@ -13,6 +20,10 @@ namespace syntax {
 
     public :
 
+	/**
+	 * \param ident the identifier of the alias
+	 * \param value the value of the alias
+	 */
 	IAlias (Word ident, Expression value);
 
 	void declare () override;

@@ -87,7 +87,8 @@ namespace syntax {
 			       Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 			       Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 			       Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
-			       Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::TYPE, Keys::ALIAS
+			       Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::TYPE, Keys::ALIAS,
+			       Keys::STATIC
 	};
 	
 	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
@@ -685,7 +686,7 @@ namespace syntax {
 	
 	this-> lex.next ({Token::LACC});
 	while (true) {
-	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED, Keys::LET});
+	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED, Keys::LET, Keys::STATIC});
 	    if (next == Keys::SELF) type-> getConstructors ().push_back (visitTypeConstructor ());
 	    else if (next == Keys::OVER || next == Keys::DEF)
 		type-> getMethods ().push_back (visitTypeMethod ());
@@ -694,6 +695,7 @@ namespace syntax {
 	    else if (next == Token::TILDE) type-> getDestructors ().push_back (visitTypeDestructor ());
 	    else if (next == Keys::PRIVATE) visitTypePrivate (type);		
 	    else if (next == Keys::PROTECTED) visitTypeProtected (type);
+	    else if (next == Keys::STATIC) type-> getStaticConstructs ().push_back (visitTypeStaticConstruct ());
 	    else break;
 	}
 	return type;
@@ -722,6 +724,12 @@ namespace syntax {
 	return new (Z0) ITypeConstructor (begin, params, visitBlock (), false);
     }
 
+    Block Visitor::visitTypeStaticConstruct () {
+	this-> lex.next ({Token::LPAR});
+	this-> lex.next ({Token::RPAR});
+	return visitBlock ();
+    }
+    
     TypeDestructor Visitor::visitTypeDestructor () {	
 	Word begin = this-> lex.next ({Keys::SELF});
 	this-> lex.next ({Token::LPAR});
@@ -731,20 +739,27 @@ namespace syntax {
 
     TypeAlias Visitor::visitTypeAlias () {
 	auto next = this-> lex.next ();
-	bool isConst = false;
+	bool isConst = false, isStatic = false;
 	if (next == Keys::CONST) isConst = true;
+	else if (next == Keys::STATIC) isStatic = true;
 	else this-> lex.rewind ();
 	
 	auto name = visitIdentifiant ();
 	this-> lex.next ({Token::COLON});
-						  
-	this-> lex.next ({Keys::SELF});
-	this-> lex.next ({Token::DOT});
-	this-> lex.rewind (2);
-	auto value = visitExpression ();
+
+	Expression value = NULL;
+	if (isStatic) value = visitLeftOpSimple ();
+	else {
+	    this-> lex.next ({Keys::SELF});
+	    this-> lex.next ({Token::DOT});
+	    this-> lex.rewind (2);
+	    
+	    value = visitExpression ();
+	}
+	
 	this-> lex.next ({Token::SEMI_COLON});
 	
-	return new (Z0) ITypeAlias (name, value, isConst);
+	return new (Z0) ITypeAlias (name, value, isStatic, isConst);
     }
     
     TypeMethod Visitor::visitTypeMethod () {

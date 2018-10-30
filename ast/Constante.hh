@@ -22,24 +22,46 @@ enum class FloatConst {
 };
 
 namespace syntax {
-
+    /**
+     * \param ct a type
+     * \return true if and only if the type has a representation for negative number
+     */
     bool isSigned (FixedConst ct);
 
+    /**
+     * \return the name of the type ct
+     */
     std::string name (FixedConst ct);
 
+    /**
+     * \return the simple name of the type ct
+     */
     std::string sname (FixedConst ct);
-    
-    class IFixed : public IExpression {
-	FixedConst type;
 
-	ulong uvalue;
-	ulong value;
-	FixedMode mode;
+    /**
+     * \struct IFixed
+     * The syntaxic node representation of a integer constante
+     */
+    class IFixed : public IExpression {
+	FixedConst _type;
+
+	ulong _uvalue;
+	ulong _value;
+	FixedMode _mode;
 	
     public:
-	
+
+	/**
+	 * \param word the location of the constante
+	 * \param type the type of the constante
+	 */
 	IFixed (Word word, FixedConst type);
 
+	/**
+	 * \param word the location of the constante
+	 * \param type the type of the constante
+	 * \param mode the encryption of the constante
+	 */
 	IFixed (Word word, FixedConst type, FixedMode mode);
 
 	Expression expression () override;
@@ -66,6 +88,9 @@ namespace syntax {
 	
 	std::string prettyPrint () override;
 
+	/**
+	 * \return the constante string without any '_'
+	 */
 	std::string removeUnder (); 
 	
     private:

@@ -118,6 +118,7 @@ namespace Ymir {
 	    UnPureExternC,
 	    ImplicitModule,
 	    MultiDestr,
+	    MultiStaticInit,
 	    NeedAllType,
 	    StaticMethodInit,
 	    StaticMethodOver,
@@ -336,6 +337,8 @@ namespace Ymir {
 	static void noValueNonVoidFunction (const Word&);
 
 	static void multipleDestr (const Word &);
+
+	static void multipleStaticInit (const Word &, const Word&);
 
 	static void needAllTypeConstr (const Word&);
 

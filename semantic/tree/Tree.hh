@@ -207,9 +207,13 @@ namespace Ymir {
     std::vector <BlockChain>& getStackBlockChain ();
     std::map <std::string, Tree>& getLoopLabelsNamed ();
     std::vector <Tree>& getLoopLabels ();
+    std::map <void*, Tree>& getAssocTree ();
     
     
     void enterBlock ();
+    void enterFrame ();
+    
+    void quitFrame ();
     TreeSymbolMapping leaveBlock ();    
     Tree& currentContext ();
 };

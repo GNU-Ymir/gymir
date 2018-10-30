@@ -25,15 +25,15 @@ namespace syntax {
     }
 
     Expression IBlock::getLastExpr () {
-	if (this-> insts.size () != 0) {
-	    return this-> insts.back ()-> to <IExpression> ();
+	if (this-> _insts.size () != 0) {
+	    return this-> _insts.back ()-> to <IExpression> ();
 	}
 	return NULL;
     }
 
     std::vector <Symbol> IBlock::allInnerDecls () {
 	std::vector <Symbol> allInner;
-	for (auto it : this-> insts) {
+	for (auto it : this-> _insts) {
 	    auto decls = it-> allInnerDecls ();
 	    allInner.insert (allInner.end (), decls.begin (), decls.end ());
 	}
@@ -44,14 +44,14 @@ namespace syntax {
 	std::vector <Instruction> insts;
 	auto bl = new (Z0)  IBlock (this-> token, {}, {});
 	
-	if (!this-> ident.isEof ()) 
-	    Table::instance ().retInfo ().setIdent (this-> ident);
+	if (!this-> _ident.isEof ()) 
+	    Table::instance ().retInfo ().setIdent (this-> _ident);
 
-	for (auto it : this-> decls) {
+	for (auto it : this-> _decls) {
 	    it-> declareAsInternal ();
 	}
 
-	for (auto it : this-> insts) {
+	for (auto it : this-> _insts) {
 	    if (Table::instance ().retInfo ().hasReturned () ||
 		Table::instance ().retInfo ().hasBreaked ()) {
 		auto fail = true;
@@ -81,11 +81,11 @@ namespace syntax {
 	    auto ret = it-> instruction ();
 	    if (ret != NULL) {
 		ret-> father () = bl;
-		bl-> addFinally (new (Z0) IBlock (this-> ident, {}, {ret}));
+		bl-> addFinally (new (Z0) IBlock (this-> _ident, {}, {ret}));
 	    }
 	}
 	
-	bl-> insts = insts;
+	bl-> _insts = insts;
 	return bl;    
     }
     
@@ -173,7 +173,7 @@ namespace syntax {
     }
 
     Instruction IAssert::instruction () {
-	auto expr = this-> expr-> expression ();
+	auto expr = this-> _expr-> expression ();
 	if (expr == NULL) return NULL;
 	if (!expr-> info-> type ()-> isSame (new (Z0)  IBoolInfo (true))) {
 	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0)  IBoolInfo (true));
@@ -181,8 +181,8 @@ namespace syntax {
 	}
 	
 	Expression msg = NULL;
-	if (this-> msg) {
-	    msg = this-> msg-> expression ();
+	if (this-> _msg) {
+	    msg = this-> _msg-> expression ();
 	    if (msg == NULL) return NULL;
 	    if (!msg-> info-> type ()-> isSame (new (Z0) IStringInfo (true))) {
 		Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0) IStringInfo (true));
@@ -190,7 +190,7 @@ namespace syntax {
 	    }
 	}
 
-	if (this-> isStatic) {
+	if (this-> _isStatic) {
 	    if (msg && !msg-> info-> isImmutable ()) {
 		Ymir::Error::notImmutable (this-> token, msg-> info);
 	    }
@@ -206,7 +206,7 @@ namespace syntax {
 	    if (!expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ())
 		Table::instance ().retInfo ().returned ();
 	}
-	return new (Z0)  IAssert (this-> token, expr, msg, this-> isStatic);
+	return new (Z0)  IAssert (this-> token, expr, msg, this-> _isStatic);
     }
     
     std::vector <semantic::Symbol> IAssert::allInnerDecls () {
@@ -218,22 +218,22 @@ namespace syntax {
     }
 
     Instruction IBreak::instruction () {
-	auto aux = new (Z0)  IBreak (this-> token, this-> ident);
+	auto aux = new (Z0)  IBreak (this-> token, this-> _ident);
 	Table::instance ().retInfo ().breaked ();
-	if (this-> ident.isEof ()) {
+	if (this-> _ident.isEof ()) {
 	    auto nb = Table::instance ().retInfo ().rewind (std::vector <std::string> {"while", "for"});
 	    if (nb == -1) {
 		Ymir::Error::breakOutSide (this-> token);
 		return NULL;
 	    } else {
-		aux-> nbBlock = nb;
+		aux-> _nbBlock = nb;
 	    }
 	} else {
-	    auto nb = Table::instance ().retInfo ().rewind (this-> ident.getStr ());
+	    auto nb = Table::instance ().retInfo ().rewind (this-> _ident.getStr ());
 	    if (nb == -1) {
-		Ymir::Error::breakRefUndef (this-> ident);
+		Ymir::Error::breakRefUndef (this-> _ident);
 		return NULL;
-	    } else aux-> nbBlock = nb;
+	    } else aux-> _nbBlock = nb;
 	}
 	return aux;
     }    
@@ -257,7 +257,7 @@ namespace syntax {
 	    }
 
 
-	    if (this-> isStatic) {
+	    if (this-> _isStatic) {
 		if (!expr-> info-> isImmutable ()) {
 		    Ymir::Error::notImmutable (this-> token, expr-> info);
 		    return NULL;
@@ -265,7 +265,7 @@ namespace syntax {
 		    return this-> block-> instruction ();
 		} else {
 		    if (this-> else_) {
-			this-> else_-> isStatic  = this-> isStatic;
+			this-> else_-> _isStatic  = this-> _isStatic;
 			return this-> else_-> instruction ();
 		    }
 		    else return new (Z0)  IBlock (this-> block-> token, {}, {});
@@ -285,7 +285,7 @@ namespace syntax {
 	    }
 	    return _if;
 	} else {
-	    if (!this-> isStatic) {
+	    if (!this-> _isStatic) {
 		Table::instance ().retInfo ().currentBlock () = "else";
 		Table::instance ().retInfo ().changed () = true;
 	    
@@ -343,8 +343,9 @@ namespace syntax {
 	auto varDecl = new IVarDecl (this-> token, {}, {}, {});
 	bl-> getInsts ().push_back (varDecl);
 	expr = expr-> expression ();
-	
-	auto aux = new (Z0) IVar ({this-> token, "_"});	
+
+	auto name = Ymir::OutBuffer ("_", ISymbol::getLastTmp ()).str () ;
+	auto aux = new (Z0) IVar ({{this-> token, name} , name});	
 	aux-> info = new (Z0) ISymbol (aux-> token, aux, new (Z0) IRefInfo (true, expr-> info-> type ()-> clone ()));
 	Table::instance ().insert (aux-> info);
 	varDecl-> getDecls ().push_back (aux);
@@ -445,13 +446,13 @@ namespace syntax {
     Instruction IFor::instruction () {
 	auto expr = this-> iter-> expression ();
 	if (expr == NULL) return NULL;
-	if (!this-> id.isEof () && !this-> isStatic)
+	if (!this-> id.isEof () && !this-> _isStatic)
 	    Table::instance ().retInfo ().setIdent (this-> id);
-	else if (!this-> id.isEof () && this-> isStatic) {
+	else if (!this-> id.isEof () && this-> _isStatic) {
 	    Ymir::Error::labelingImmutableFor (this-> id);
 	}
 	
-	if (!this-> isStatic) {
+	if (!this-> _isStatic) {
 	    Table::instance ().enterBlock ();
 	    std::vector <Var> var (this-> var.size ());
 	    for (auto it : Ymir::r (0, this-> var.size ())) {
@@ -465,7 +466,7 @@ namespace syntax {
 		var [it]-> info = new (Z0) ISymbol (var [it]-> token, var [it], new (Z0) IUndefInfo ());
 		var [it]-> info-> isConst (false);
 		var [it]-> info-> value () = NULL;
-		if (!this-> isStatic)
+		if (!this-> _isStatic)
 		    Table::instance ().insert (var [it]-> info);
 	    }
 	
@@ -707,7 +708,9 @@ namespace syntax {
 
     Instruction IMatch::instruction () {
 	Table::instance ().enterBlock ();
-	auto aux = new (Z0) IVar ({expr-> token, "_"});
+	auto name = Ymir::OutBuffer ("_", ISymbol::getLastTmp ()).str ();
+
+	auto aux = new (Z0) IVar ({{this-> token, name}, name});
 	auto expr = this-> expr-> expression ();
 
 	if (expr == NULL) return NULL;

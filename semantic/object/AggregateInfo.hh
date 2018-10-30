@@ -17,6 +17,9 @@ namespace syntax {
 
     class ITypeAlias;
     typedef ITypeAlias* TypeAlias;
+
+    class IBlock;
+    typedef IBlock* Block;
 }
 
 namespace semantic {
@@ -39,6 +42,7 @@ namespace semantic {
 	FunctionInfo _destr;
 	std::vector <FunctionInfo> _methods;
 	std::vector <FunctionInfo> _staticMeth;
+	syntax::Block _staticBlock;
 	
 	std::vector <syntax::Expression> _tmps;
 	std::vector <syntax::Expression> _tmpsDone;
@@ -55,6 +59,7 @@ namespace semantic {
 	InfoType _info = NULL;
 
 	std::vector <syntax::TypeAlias> _alias;
+	std::vector <syntax::TypeAlias> _staticVars;
 	
 	syntax::TypeCreator _creator;
 	Namespace _templateSpace;
@@ -77,6 +82,10 @@ namespace semantic {
 	
 	std::vector <FunctionInfo> & getStaticMethods ();
 
+	std::vector <syntax::TypeAlias> & getStaticVars ();
+
+	syntax::Block & getStaticBlock ();
+	
 	FunctionInfo getStaticMeth (std::string name);
 	
 	std::vector <syntax::TypeAlias> & getAlias ();

@@ -2,6 +2,7 @@
 #include <ymir/ast/Function.hh>
 #include <ymir/ast/TypeCreator.hh>
 #include <ymir/ast/Var.hh>
+#include <ymir/ast/Block.hh>
 #include <ymir/semantic/object/MethodInfo.hh>
 #include <ymir/ast/ParamList.hh>
 #include <ymir/semantic/types/_.hh>
@@ -185,6 +186,14 @@ namespace semantic {
 
     std::vector <FunctionInfo> & IAggregateCstInfo::getStaticMethods () {
 	return this-> _staticMeth;
+    }
+
+    std::vector <TypeAlias> & IAggregateCstInfo::getStaticVars () {
+	return this-> _staticVars;
+    }
+    
+    Block & IAggregateCstInfo::getStaticBlock () {
+	return this-> _staticBlock;
     }
 
     Namespace IAggregateCstInfo::space () {

@@ -9,7 +9,7 @@ namespace syntax {
 
     class ISelf : public IFunction {
 
-	Word ident;
+	//Word ident;
 
     public:
 
@@ -30,7 +30,7 @@ namespace syntax {
 
     class IDestSelf : public IFunction {
 
-	Word ident;
+	//Word ident;
 
     public:
 

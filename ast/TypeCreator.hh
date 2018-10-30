@@ -52,6 +52,7 @@ namespace syntax {
 	std::vector <Expression> _tmps;
 	std::vector <TypeConstructor> _constr;
 	std::vector <TypeDestructor> _destr;
+	std::vector <Block> _staticConstruct;
 	std::vector <TypeMethod> _methods;
 	std::vector <TypeAlias> _alias;
 	
@@ -65,6 +66,8 @@ namespace syntax {
 
 	std::vector <TypeDestructor> & getDestructors ();
 
+	std::vector <Block> & getStaticConstructs ();
+	
 	std::vector <TypeMethod> & getMethods ();		
 
 	std::vector <TypeAlias> & getAlias ();
@@ -178,13 +181,15 @@ namespace syntax {
 	
 	bool _isConst;
 
+	bool _isStatic;
+
 	InnerProtection _prot = InnerProtection::PUBLIC;
 
 	semantic::Namespace _space;
 	
     public :
 
-	ITypeAlias (Word ident, Expression value, bool isConst);
+	ITypeAlias (Word ident, Expression value, bool isConst, bool isStatic);
 
 	InnerProtection & getProtection ();
 
@@ -192,6 +197,8 @@ namespace syntax {
 
 	bool isProtected ();
 
+	bool isStatic ();
+	
 	semantic::Namespace & space ();
 	
 	void declare () override;

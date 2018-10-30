@@ -30,8 +30,8 @@ namespace syntax {
     class IInstruction  {
     protected:
 
-	Block parent;	
-	bool isStatic;
+	Block _parent;	
+	bool _isStatic;
 
     public:
 
@@ -44,11 +44,11 @@ namespace syntax {
 	virtual void print (int nb = 0) = 0;
 
 	Block& father () {
-	    return this-> parent;
+	    return this-> _parent;
 	}
 	
 	void setStatic (bool is) {
-	    this-> isStatic = is;
+	    this-> _isStatic = is;
 	}
 	
 	virtual std::vector <std::string> getIds () {

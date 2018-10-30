@@ -7,15 +7,29 @@
 
 namespace syntax {
 
+    /**
+     * \struct IBreak
+     * Syntaxic node representation of a Break instruction 
+     * \verbatim
+     break := 'break' (Identifier)? ';'
+     \endverbatim
+     */
     class IBreak : public IInstruction {
-
-	Word ident;
-	ulong nbBlock;
+	
+	Word _ident;
+	ulong _nbBlock;
 
     public:
 	
+	/**
+	 * \param token the location of the break
+	 */
 	IBreak (Word token);
 
+	/**
+	 * \param token the location of the break
+	 * \param ident the identifier of the break
+	 */
 	IBreak (Word token, Word ident);
 
 	Instruction instruction () override;

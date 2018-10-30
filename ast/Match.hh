@@ -86,11 +86,11 @@ namespace syntax {
 	
 	Ymir::Tree declareVars (std::vector <Var> vars, std::vector <Expression> caster);	
 
-	Ymir::Tree validateBlock (Expression test, Block bl, Ymir::Tree endLabel, Ymir::Tree elsePart, Ymir::Tree affectPart);
+	Ymir::Tree validateBlock (Expression test, Block bl, Ymir::Tree elsePart, Ymir::Tree affectPart);
 
-	Ymir::Tree validateBlockExpr (Expression test, Block bl, semantic::InfoType caster, Ymir::Tree res, Ymir::Tree endLabel, Ymir::Tree elsePart, Ymir::Tree affectPart);
+	Ymir::Tree validateBlockExpr (Expression test, Block bl, semantic::InfoType caster, Ymir::Tree res, Ymir::Tree elsePart, Ymir::Tree affectPart);
 
-	Ymir::Tree toGenericExpression (Ymir::TreeStmtList list, Ymir::Tree, Ymir::Tree);
+	Ymir::Tree toGenericExpression (Ymir::TreeStmtList list, Ymir::Tree);
 	
 	semantic::InfoType validate (std::vector <semantic::Symbol> & syms);	
 

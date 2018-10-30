@@ -9,10 +9,10 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 	
-	for (auto it : this-> decls)
+	for (auto it : this-> _decls)
 	    it-> print (nb + 4);
 	
-	for (auto it : this-> insts)
+	for (auto it : this-> _insts)
 	    it-> print (nb + 4);	
     }
 
@@ -116,9 +116,9 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 	    
-	if (this-> type)
-	    this-> type-> print (nb + 4);
-	this-> size-> print (nb + 4);
+	if (this-> _type)
+	    this-> _type-> print (nb + 4);
+	this-> _size-> print (nb + 4);
     }	
 
     
@@ -129,8 +129,8 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 	    
-	this-> expr-> print (nb + 4);
-	if (this-> msg) this-> msg-> print (nb + 4);
+	this-> _expr-> print (nb + 4);
+	if (this-> _msg) this-> _msg-> print (nb + 4);
     }	
 
     void IBinary::print (int nb) {
@@ -140,8 +140,8 @@ namespace syntax {
 	);	
 
 	if (this-> info) printf (" -> %s", this-> info-> typeString ().c_str ());	
-	this-> left-> print (nb + 4);
-	this-> right-> print (nb + 4);
+	this-> _left-> print (nb + 4);
+	this-> _right-> print (nb + 4);
     }	
 
     void IFixed::print (int nb) {
@@ -184,8 +184,8 @@ namespace syntax {
 
     void ICast::print (int nb) {
 	printf ("\n%*c<Cast> %s", nb, ' ', this-> token.toString ().c_str ());
-	this-> type-> print (nb + 4);
-	this-> expr-> print (nb + 4);	
+	this-> _type-> print (nb + 4);
+	this-> _expr-> print (nb + 4);	
     }
 
     void IConstArray::print (int nb) {

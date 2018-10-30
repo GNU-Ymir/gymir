@@ -1544,6 +1544,24 @@ namespace Ymir {
 		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
+    void Error::multipleStaticInit (const Word & token, const Word & pred) {
+	std::string msg = format (getString (MultiStaticInit));
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	auto msg2 = std::string (BLUE) + "Note" + std::string (RESET) + " : ";
+	msg2 = addLine (msg2, pred);
+	
+	ErrorMsg errorMsg = {msg + msg2, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
     
     void Error::needAllTypeConstr (const Word & token) {
 	std::string msg = format (getString (NeedAllType));

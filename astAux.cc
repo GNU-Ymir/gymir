@@ -5,14 +5,15 @@
 #include <ymir/syntax/Token.hh>
 #include <ymir/semantic/pack/Table.hh>
 
+
 namespace syntax {
 
     using namespace semantic;
 
     ulong ILambdaFunc::__nbLambda__ = 0;
 
-    std::map <Expression, Ymir::Tree> IExpand::__values__;
-    std::vector <Block> IBlock::currentBlock;
+    std::list <Block> IBlock::__currentBlock__;
+
     
     std::string IInstruction::prettyPrint () {	
 	Ymir::OutBuffer buf ("TODO {", this-> getIds (), "}");
@@ -21,12 +22,12 @@ namespace syntax {
     }
     
     Word& IBlock::getIdent () {
-	return this-> ident;
+	return this-> _ident;
     }
 
     std::string IBlock::prettyPrint () {
 	Ymir::OutBuffer buf ("{\n");
-	for (auto it : this-> insts) {	    
+	for (auto it : this-> _insts) {	    
 	    buf.write (it-> prettyPrint ());
 	    if (it-> is<IExpression> ())
 		buf.write (";");
@@ -37,9 +38,9 @@ namespace syntax {
     }
     
     void IBlock::addFinally (Block block) {
-	if (block-> insts.size () != 0) {
-	    if (!block-> insts [0]-> is<INone> () || block-> insts.size () != 1)
-		this-> finally.push_back (block);
+	if (block-> _insts.size () != 0) {
+	    if (!block-> _insts [0]-> is<INone> () || block-> _insts.size () != 1)
+		this-> _finally.push_back (block);
 	}
     }
 
@@ -48,22 +49,22 @@ namespace syntax {
     }
     
     void IBlock::addInline (Var var) {
-	this-> inlines.push_back (var);
+	this-> _inlines.push_back (var);
     }
         
     std::vector <Instruction>& IBlock::getInsts () {
-	return this-> insts;
+	return this-> _insts;
     }
     
     Block IBlock::getCurrentBlock () {
-	return currentBlock.back ();
+	return __currentBlock__.front ();
     }
 
     IBlock::~IBlock ()  {
-	for (auto it : decls)
+	for (auto it : _decls)
 	    delete it;
 	    
-	for (auto it : insts)
+	for (auto it : _insts)
 	    delete it;
     }    
 
@@ -467,36 +468,36 @@ namespace syntax {
     
     IArrayAlloc::IArrayAlloc (Word token, Expression type, Expression size, bool isImmutable) :
 	IExpression (token),
-	type (type),
-	size (size),
-	isImmutable (isImmutable)
+	_type (type),
+	_size (size),
+	_isImmutable (isImmutable)
     {
-	if (this-> size)
-	    this-> size-> inside = this;
-	if (this-> type)
-	    this-> type-> inside = this;
+	if (this-> _size)
+	    this-> _size-> inside = this;
+	if (this-> _type)
+	    this-> _type-> inside = this;
     }    
 
     Expression IArrayAlloc::getType () {
-	return this-> type;
+	return this-> _type;
     }
 
     Expression IArrayAlloc::getSize () {
-	return this-> size;
+	return this-> _size;
     }
     
     std::string IArrayAlloc::prettyPrint () {
-	return Ymir::format ("[% ; %]", this-> type-> prettyPrint ().c_str (),
-			     this-> size-> prettyPrint ().c_str ());
+	return Ymir::format ("[% ; %]", this-> _type-> prettyPrint ().c_str (),
+			     this-> _size-> prettyPrint ().c_str ());
     }
 
     IArrayAlloc::~IArrayAlloc () {
-	delete type;
-	type = NULL;
-	delete size;
-	size = NULL;
-	if (cster)
-	    delete cster;
+	delete _type;
+	_type = NULL;
+	delete _size;
+	_size = NULL;
+	if (_cster)
+	    delete _cster;
     }
 
     
@@ -508,42 +509,42 @@ namespace syntax {
     
     IAssert::IAssert (Word token, Expression test, Expression msg, bool isStatic) :
 	IInstruction (token),
-	expr (test),
-	msg (msg)
+	_expr (test),
+	_msg (msg)
     {
-	this-> expr-> inside = this;
-	if (this-> msg)
-	    this-> msg-> inside = this;
-	this-> isStatic = isStatic;
+	this-> _expr-> inside = this;
+	if (this-> _msg)
+	    this-> _msg-> inside = this;
+	this-> _isStatic = isStatic;
     }
 
     IAssert::~IAssert ()  {
-	delete expr;
-	if (msg)
-	    delete msg;
+	delete _expr;
+	if (_msg)
+	    delete _msg;
     }
     
     IBinary::IBinary (Word word, Expression left, Expression right, Expression ctype) :
 	IExpression (word),
-	left (left),
-	right (right),
+	_left (left),
+	_right (right),
 	_autoCaster (ctype)
     {
-	if (this-> left) this-> left-> inside = this;
-	if (this-> right) this-> right-> inside = this;	    
+	if (this-> _left) this-> _left-> inside = this;
+	if (this-> _right) this-> _right-> inside = this;	    
     }
 
     IBinary::~IBinary () {
-	if (this-> left) delete left;
-	if (this-> right) delete right;	    
+	if (this-> _left) delete _left;
+	if (this-> _right) delete _right;	    
     }        
     
     Expression& IBinary::getLeft () {
-	return this-> left;
+	return this-> _left;
     }
 
     Expression& IBinary::getRight () {
-	return this-> right;
+	return this-> _right;
     }
 
     Expression& IBinary::getAutoCast () {
@@ -562,31 +563,31 @@ namespace syntax {
     }
 
     std::string IBinary::prettyPrint () {
-	return Ymir::OutBuffer ("(", this-> left, " ", this-> token.getStr (), " ", this-> right, ")").str ();
+	return Ymir::OutBuffer ("(", this-> _left, " ", this-> token.getStr (), " ", this-> _right, ")").str ();
     }
     
     IFixed::IFixed (Word word, FixedConst type) :
 	IExpression (word),
-	type (type),
-	mode (FixedMode::BUILTINS)
+	_type (type),
+	_mode (FixedMode::BUILTINS)
     {
-	if (this-> mode == FixedMode::DECIMAL) {
-	    if (isSigned (this-> type)) this-> value = this-> convertS ();	
-	    else this-> uvalue = this-> convertU ();
+	if (this-> _mode == FixedMode::DECIMAL) {
+	    if (isSigned (this-> _type)) this-> _value = this-> convertS ();	
+	    else this-> _uvalue = this-> convertU ();
 	}
     }
 
     IFixed::IFixed (Word word, FixedConst type, FixedMode mode) :
 	IExpression (word),
-	type (type),
-	mode (mode)
+	_type (type),
+	_mode (mode)
     {
-	if (this-> mode == FixedMode::DECIMAL) {
-	    if (isSigned (this-> type)) this-> value = this-> convertS ();	
-	    else this-> uvalue = this-> convertU ();
-	} else if (this-> mode == FixedMode::HEXA) {
-	    if (isSigned (this-> type)) this-> value = this-> convertSX ();
-	    else this-> uvalue = this-> convertUX ();
+	if (this-> _mode == FixedMode::DECIMAL) {
+	    if (isSigned (this-> _type)) this-> _value = this-> convertS ();	
+	    else this-> _uvalue = this-> convertU ();
+	} else if (this-> _mode == FixedMode::HEXA) {
+	    if (isSigned (this-> _type)) this-> _value = this-> convertSX ();
+	    else this-> _uvalue = this-> convertUX ();
 	}
     }
 
@@ -607,7 +608,7 @@ namespace syntax {
 	    overflow = true;
 	}
 	
-	switch (this-> type) {
+	switch (this-> _type) {
 	case FixedConst::UBYTE : overflow = value > UCHAR_MAX; break;
 	case FixedConst::USHORT : overflow = value > USHRT_MAX; break;
 	case FixedConst::UINT : overflow = value > UINT_MAX; break;
@@ -615,7 +616,7 @@ namespace syntax {
 	}
 
 	if (overflow) {
-	    Ymir::Error::overflow (this-> token, name (this-> type));
+	    Ymir::Error::overflow (this-> token, name (this-> _type));
 	}
 	return value;
     }
@@ -630,7 +631,7 @@ namespace syntax {
 	    overflow = true;
 	}
 	
-	switch (this-> type) {
+	switch (this-> _type) {
 	case FixedConst::BYTE : overflow = value > SCHAR_MAX || value < SCHAR_MIN; break;
 	case FixedConst::SHORT : overflow = value > SHRT_MAX || value < SHRT_MIN; break;
 	case FixedConst::INT : overflow = value > INT_MAX || value < INT_MIN; break;
@@ -638,7 +639,7 @@ namespace syntax {
 	}
 
 	if (overflow) {
-	    Ymir::Error::overflow (this-> token, name (this-> type));
+	    Ymir::Error::overflow (this-> token, name (this-> _type));
 	} 
 	return value;
     }
@@ -652,7 +653,7 @@ namespace syntax {
 	    overflow = true;
 	}
 	
-	switch (this-> type) {
+	switch (this-> _type) {
 	case FixedConst::UBYTE : overflow = value > UCHAR_MAX; break;
 	case FixedConst::USHORT : overflow = value > USHRT_MAX; break;
 	case FixedConst::UINT : overflow = value > UINT_MAX; break;
@@ -660,7 +661,7 @@ namespace syntax {
 	}
 
 	if (overflow) {
-	    Ymir::Error::overflow (this-> token, name (this-> type));
+	    Ymir::Error::overflow (this-> token, name (this-> _type));
 	}
 	return value;
     }
@@ -674,7 +675,7 @@ namespace syntax {
 	    overflow = true;
 	}
 	
-	switch (this-> type) {
+	switch (this-> _type) {
 	case FixedConst::BYTE : overflow = value > SCHAR_MAX || value < SCHAR_MIN; break;
 	case FixedConst::SHORT : overflow = value > SHRT_MAX || value < SHRT_MIN; break;
 	case FixedConst::INT : overflow = value > INT_MAX || value < INT_MIN; break;
@@ -682,25 +683,25 @@ namespace syntax {
 	}
 
 	if (overflow) {
-	    Ymir::Error::overflow (this-> token, name (this-> type));
+	    Ymir::Error::overflow (this-> token, name (this-> _type));
 	} 
 	return value;
     }
     
     void IFixed::setUValue (ulong val) {
-	this-> uvalue = val;
+	this-> _uvalue = val;
     }
 
     void IFixed::setValue (long val) {
-	this-> value = val;
+	this-> _value = val;
     }
 
 
     std::string IFixed::prettyPrint () {
-	if (isSigned (this-> type))
-	    return Ymir::OutBuffer (this-> value).str ();
+	if (isSigned (this-> _type))
+	    return Ymir::OutBuffer (this-> _value).str ();
 	else
-	    return Ymir::OutBuffer (this-> uvalue).str ();
+	    return Ymir::OutBuffer (this-> _uvalue).str ();
     }
     
     
@@ -801,26 +802,26 @@ namespace syntax {
     }
     
     IBreak::IBreak (Word token) : IInstruction (token) {
-	this-> ident.setEof ();
+	this-> _ident.setEof ();
     }
 
     IBreak::IBreak (Word token, Word ident) :
 	IInstruction (token),
-	ident (ident) {
+	_ident (ident) {
     }
 
     
     ICast::ICast (Word begin, Expression type, Expression expr) :
 	IExpression (begin),
-	type (type),
-	expr (expr) {
-	this-> type-> inside = this;
-	this-> expr-> inside = this;
+	_type (type),
+	_expr (expr) {
+	this-> _type-> inside = this;
+	this-> _expr-> inside = this;
     }
 
     ICast::~ICast () {
-	delete type;
-	delete expr;
+	delete _type;
+	delete _expr;
     }
     
     IConstArray::IConstArray (Word token, const std::vector<Expression> & params) :
@@ -1074,7 +1075,7 @@ namespace syntax {
     {
 	if (this-> test)
 	    this-> test-> inside = this;
-	this-> isStatic = isStatic;
+	this-> _isStatic = isStatic;
     }
     
     IIf::IIf (Word word, Expression test, Block block, If else_, bool isStatic) : 
@@ -1085,23 +1086,23 @@ namespace syntax {
     {
 	if (this-> test)
 	    this-> test-> inside = this;
-	this-> isStatic = isStatic;
+	this-> _isStatic = isStatic;
 	if (this-> else_)
-	    this-> else_-> isStatic = isStatic;
+	    this-> else_-> _isStatic = isStatic;
     }    
     
     void IIf::print (int nb) {
 	if (this-> test) {
 	    printf ("\n%*c<%sIf> %s",			
 		    nb, ' ',
-		    this-> isStatic ? "static_" : "",
+		    this-> _isStatic ? "static_" : "",
 		    this-> token.toString ().c_str ()
 	    );		
 	    this-> test-> print (nb + 4);		
 	} else {
 	    printf ("\n%*c<%sElse> %s",
 		    nb, ' ',
-		    this-> isStatic ? "static_" : "",
+		    this-> _isStatic ? "static_" : "",
 		    this-> token.toString ().c_str ()
 	    );
 	}
@@ -1241,17 +1242,17 @@ namespace syntax {
     
     IAccess::IAccess (Word word, Word end, Expression left, ParamList params) :
 	IExpression (word),
-	end (end),
-	params (params),
-	left (left)	    
+	_end (end),
+	_params (params),
+	_left (left)	    
     {
-	this-> left-> inside = this;
-	this-> params-> inside = this;
+	this-> _left-> inside = this;
+	this-> _params-> inside = this;
     }
 	
     IAccess::IAccess (Word word, Word end) :
 	IExpression (word),
-	end (end)
+	_end (end)
     {
     }
 
@@ -1260,23 +1261,23 @@ namespace syntax {
     }
     
     std::string IAccess::prettyPrint () {
-	return Ymir::OutBuffer (this-> left-> prettyPrint (), "[", this-> params-> prettyPrint (), "]").str ();	
+	return Ymir::OutBuffer (this-> _left-> prettyPrint (), "[", this-> _params-> prettyPrint (), "]").str ();	
     }
     
     IAccess::~IAccess () {
-	delete params;
-	delete left;
-	for (auto &it : treats)
+	delete _params;
+	delete _left;
+	for (auto &it : _treats)
 	    delete it;
-	treats.clear ();
+	_treats.clear ();
     }
     
     Expression IAccess::getLeft () {
-	return this-> left;
+	return this-> _left;
     }
     
     std::vector <Expression> IAccess::getParams () {
-	return this-> params-> getParams ();
+	return this-> _params-> getParams ();
     }
        
     void IAccess::print (int nb) {
@@ -1284,8 +1285,8 @@ namespace syntax {
 		nb, ' ',
 		this-> token.toString ().c_str ()
 	);
-	this-> left-> print (nb + 4);
-	this-> params-> print (nb + 4);
+	this-> _left-> print (nb + 4);
+	this-> _params-> print (nb + 4);
     }
           
     IConstTuple::IConstTuple (Word word, Word end, const std::vector<Expression> & params) :
@@ -2141,15 +2142,15 @@ namespace syntax {
 
     IAffectGeneric::IAffectGeneric (Word word, Expression left, Expression right, bool addr) :
 	IExpression (word),
-	left (left),
-	right (right),
+	_left (left),
+	_right (right),
 	_addr (addr)
     {}
 
     IFakeDecl::IFakeDecl (Word word, Var left, Expression right, bool const_, bool addr) :
 	IExpression (word),
-	left (left),
-	right (right),
+	_left (left),
+	_right (right),
 	_addr (addr),
 	_const (const_)
     {}
@@ -2170,6 +2171,10 @@ namespace syntax {
 	return this-> _destr;
     }
 
+    std::vector <Block> & ITypeCreator::getStaticConstructs () {
+	return this-> _staticConstruct;
+    }
+    
     std::vector <TypeMethod> & ITypeCreator::getMethods () {
 	return this-> _methods;
     }
@@ -2228,10 +2233,11 @@ namespace syntax {
 	return this-> _prot;
     }
 
-    ITypeAlias::ITypeAlias (Word ident, Expression value, bool isConst) :
+    ITypeAlias::ITypeAlias (Word ident, Expression value, bool isConst, bool isStatic) :
 	_ident (ident),
 	_value (value),	
 	_isConst (isConst),
+	_isStatic (isStatic),
 	_space ("")
     {
     }
@@ -2248,6 +2254,10 @@ namespace syntax {
 	return this-> _isConst;
     }
 
+    bool ITypeAlias::isStatic () {
+	return this-> _isStatic;
+    }
+    
     InnerProtection & ITypeAlias::getProtection () {
 	return this-> _prot;
     }

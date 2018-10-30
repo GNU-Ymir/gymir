@@ -10,8 +10,6 @@ namespace syntax {
     class IExpand : public IExpression {
 	Expression expr;
 	ulong it;
-
-	static std::map <syntax::Expression, Ymir::Tree> __values__;
 	
     public :
 

@@ -10,6 +10,7 @@ namespace Ymir {
     std::vector <BlockChain> stack_block_chain;
     std::map <std::string, Tree> loopLabelsNamed;
     std::vector <Tree> loopLabels;
+    std::vector <std::map <void*, Ymir::Tree> > assocTree;
     
     void enterBlock () {
 	stack_stmt_list.push_back (TreeStmtList ());
@@ -66,6 +67,18 @@ namespace Ymir {
 
     std::vector <Tree> & getLoopLabels () {
 	return loopLabels;
+    }
+
+    std::map <void*, Tree> & getAssocTree () {
+	return assocTree.back ();
+    }
+
+    void enterFrame () {
+	assocTree.push_back ({});
+    }
+
+    void quitFrame () {
+	assocTree.pop_back ();
     }
     
     Tree& currentContext () {

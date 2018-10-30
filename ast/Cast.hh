@@ -7,14 +7,25 @@
 
 namespace syntax {
 
+    /**
+     * \struct ICast
+     * The syntaxic node representation of a cast expression
+     * \verbatim
+     cast := 'cast' '!' type '(' expression ')'
+     \endverbatim
+     */
     class ICast : public IExpression {
 
-	Expression type;
-	Expression expr;
-	//Token deco;
+	Expression _type;
+	Expression _expr;
 
     public:
 
+	/**
+	 * \param begin the location of the cast
+	 * \param type the type to cast into
+	 * \param expr the expression to cast
+	 */
 	ICast (Word begin, Expression type, Expression expr);
 
 	Expression expression () override;

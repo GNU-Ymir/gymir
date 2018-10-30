@@ -7,14 +7,27 @@
 
 namespace syntax {
 
+    /**
+     * \struct IAssert
+     * The syntaxic node representation of an assert instruction 
+     * \verbatim
+     assert := ('cte')? 'assert' '(' expression (',' expression)? ')'
+     \endverbatim
+     */
     class IAssert : public IInstruction {
 
-	Expression expr;
+	Expression _expr;
 
-	Expression msg;
+	Expression _msg;
 
     public :
 
+	/**
+	 * \param token the location of the instruction
+	 * \param test the test of the assertion
+	 * \param msg the message to print if the assertion failed
+	 * \param isStatic is the assertion at compile time ?
+	 */
 	IAssert (Word token, Expression test, Expression msg, bool isStatic = false);
 	
 	Instruction instruction () override;

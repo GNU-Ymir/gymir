@@ -267,6 +267,21 @@ namespace Ymir {
 	);
 
     }
+
+    Ymir::Tree makeAuxVar (location_t locus, const std::string &name, Ymir::Tree type) {
+	Ymir::Tree decl = build_decl (
+	    locus,
+	    VAR_DECL,	    
+	    get_identifier (name.c_str ()),
+	    type.getTree ()
+	);
+
+	DECL_CONTEXT (decl.getTree ()) = IFinalFrame::currentFrame ().getTree ();
+	Ymir::getStackVarDeclChain ().back ().append (decl);
+	return compoundExpr (locus,
+			     buildTree (DECL_EXPR, locus, void_type_node, decl),
+			     decl);
+    }
     
     Ymir::Tree makeAuxVar (location_t locus, ulong id, Ymir::Tree type) {
 	OutBuffer buf ;

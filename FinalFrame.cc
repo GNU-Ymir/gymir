@@ -243,7 +243,7 @@ namespace semantic {
 	return list.getTree ();
     }
     
-    Ymir::Tree IFinalFrame::callInline (Word where, std::vector <tree> params) {
+    Ymir::Tree IFinalFrame::callInline (Word where, std::vector <tree> params) {	
 	Ymir::TreeStmtList list;
 	for (auto it : __inlining__) {
 	    if (it == this) {
@@ -251,34 +251,37 @@ namespace semantic {
 		return build_int_cst_type (long_unsigned_type_node, 0);	   
 	    }
 	}
-	
+
+	Ymir::enterFrame ();
 	__inlining__.push_back (this);
-	Ymir::enterBlock ();
-	Ymir::getStackStmtList ().back ().append (declInlineArgs (params));
+	list.append (declInlineArgs (params));
 	auto endLabel = Ymir::makeLabel (BUILTINS_LOCATION, "end");
 	if (!this-> _type-> type ()-> is <IVoidInfo> ()) {
 	    tree ret = this-> _type-> type ()-> toGeneric ().getTree ();
 	    auto var = Ymir::makeAuxVar (BUILTINS_LOCATION, ISymbol::getLastTmp (), ret);
 	    IFinalFrame::__isInlining__.push_back (var);
 	    IFinalFrame::__endLabel__.push_back (endLabel);
-	    auto inside = this-> _block-> toGenericPreEntered (
-		{Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel)}
-	    );
-	    
+	    auto inside = this-> _block-> toGeneric ();
+	    list.append (inside.getTree ());
 	    IFinalFrame::__isInlining__.pop_back ();
 	    IFinalFrame::__endLabel__.pop_back ();
+	    list.append (Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel));
 	    __inlining__.pop_back ();
-	    return Ymir::compoundExpr (BUILTINS_LOCATION, inside, var);
+	    
+	    Ymir::quitFrame ();
+	    return Ymir::compoundExpr (BUILTINS_LOCATION, list.getTree (), var);
 	} else {
 	    IFinalFrame::__isInlining__.push_back (Ymir::Tree ());
 	    IFinalFrame::__endLabel__.push_back (endLabel);
-	    auto inside = this-> _block-> toGenericPreEntered (
-		{Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel)}
-	    );
+	    auto inside = this-> _block-> toGeneric ();
+	    list.append (inside.getTree ());
 	    IFinalFrame::__isInlining__.pop_back ();
 	    IFinalFrame::__endLabel__.pop_back ();
+	    list.append (Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, endLabel));
 	    __inlining__.pop_back ();
-	    return inside;
+
+	    Ymir::quitFrame ();
+	    return list.getTree ();
 	}
     }
 
@@ -297,6 +300,7 @@ namespace semantic {
     void IFinalFrame::finalize () {
 	if (this-> isInline ()) return;
 	
+	Ymir::enterFrame ();
 	ISymbol::resetNbTmp ();
 	__declared__.clear ();
 	__contextToAdd__.clear ();
@@ -401,7 +405,9 @@ namespace semantic {
 	TREE_PUBLIC (fn_decl) = 1;
 	TREE_STATIC (fn_decl) = 1;
 
-	if (Ymir::Error::nb_errors > lastErrors)
+	Ymir::quitFrame ();
+	
+	if (Ymir::Error::nb_errors > lastErrors) 
 	    return;
 	
 	gimplify_function_tree (fn_decl);
