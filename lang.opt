@@ -33,3 +33,7 @@ YMIR Joined Separate
 
 -standalone
 YMIR Driver Alias(stalone)
+
+fdoc
+YMIR Driver
+Generate Documentation.

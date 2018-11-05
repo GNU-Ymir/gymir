@@ -39,7 +39,7 @@ public:
     
     location_t getLocus () const;
     
-    std::string getStr () const {
+    const std::string &getStr () const {
 	return this-> str;
     }
 

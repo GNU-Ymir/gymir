@@ -12,19 +12,45 @@ namespace semantic {
 
 namespace syntax {
 
+
+    /**
+     * \struct IConstArray
+     * The syntaxic node representation of a const array
+     * \verbatim
+     const_array := '[' (expression (',' expression)*)? ']' 
+     \endverbatim
+     */
     class IConstArray : public IExpression {
+	
+	/** The expressions contained in the const array*/
 	std::vector <Expression> params;
+
+	/** 
+	 * Generated at semantic analyses 
+	 * This array is used to cast the parameters in the right common type 
+	 */
 	std::vector <semantic::InfoType> casters;
 	
     public:
 
+	/**
+	 * \param token the location of the array
+	 * \param params the value contained inside the array
+	 */
 	IConstArray (Word token, const std::vector <Expression> &params);
 
 	Expression expression () override;
 	
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;	
-	int nbParams ();
 
+	/**
+	 * \return the number of parameters of the array
+	 */
+	int getNbParams ();
+
+	/**
+	 * \return the nb'th parameters
+	 */
 	Expression getParam (int nb);
 	
 	static const char * id () {

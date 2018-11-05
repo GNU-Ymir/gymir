@@ -103,24 +103,25 @@ namespace syntax {
     /**
        program := declaration | public | private
     */
-    Program Visitor::visitProgram () {	
-	auto token = this-> lex.next ();
+    Program Visitor::visitProgram () {
+	std::string docs;
+	auto token = this-> lex.nextWithDocs (docs);
 	this-> lex.rewind ();
 	std::vector<Declaration> decls;
 	while (!token.isEof ()) {
-	    auto decl = visitDeclaration (false);
+	    auto decl = visitDeclaration (docs, false);
 	    if (decl != NULL) decls.push_back (decl);
 	    else if (token == Keys::PUBLIC) {
-		auto pub_decls = visitPublicBlock ();
+		auto pub_decls = visitPublicBlock (docs);
 		for (auto it : pub_decls) decls.push_back (it);
 	    } else if (token == Keys::PRIVATE) {
-		auto prv_decls = visitPrivateBlock ();
+		auto prv_decls = visitPrivateBlock (docs);
 		for (auto it : prv_decls) decls.push_back (it);
 	    } else if (token == Keys::VERSION) {
 		auto ver_decls = visitVersionGlob ();
 		for (auto it : ver_decls) decls.push_back (it);
 	    } else if (token == Keys::EXTERN) {
-		auto ext_decls = visitExtern ();
+		auto ext_decls = visitExtern (docs);
 		for (auto it : ext_decls) decls.push_back (it);
 	    } else {
 		this-> lex.next ();
@@ -130,8 +131,8 @@ namespace syntax {
 				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION, Keys::TYPE
 				     }
 		);
-	    }
-	    token = this-> lex.next ();
+	    }	    
+	    token = this-> lex.nextWithDocs (docs);
 	    this-> lex.rewind ();
 	}
 	auto last = this-> lex.fileLocus ();
@@ -141,29 +142,30 @@ namespace syntax {
     /**
        public := 'public' (declaration | ('{' declaration* '}'))
     */
-    std::vector<Declaration> Visitor::visitPublicBlock () {
+    std::vector<Declaration> Visitor::visitPublicBlock (std::string & docs) {
 	auto begin = this-> lex.next ();
     	auto next = this-> lex.next ();
 	std::vector <Declaration> decls;
     	if (next == Token::LACC) {
     	    while (true) {
-    		auto decl = visitDeclaration (false);
+		std::string innerDocs;
+    		auto decl = visitDeclaration (innerDocs, false);
     		if (decl) {
     		    decls.push_back (decl);
-    		    decls.back ()-> is_public (true);
+    		    decls.back ()-> setPublic (true);
     		} else {
-    		    auto tok = this-> lex.next ();
+    		    auto tok = this-> lex.nextWithDocs (innerDocs);
 		    if (tok == Keys::VERSION) {
 			auto ver_decls = visitVersionGlob ();
 			for (auto it : ver_decls) {
-			    it-> is_public (true);
+			    it-> setPublic (true);
 			    decls.push_back (it);
 			}
 		    } else if (tok == Keys::EXTERN)  {
 			this-> lex.rewind (); 
-			auto ext_decls = visitExtern ();
+			auto ext_decls = visitExtern (innerDocs);
 			for (auto it : ext_decls) {
-			    it-> is_public (true);
+			    it-> setPublic (true);
 			    decls.push_back (it);
 			}
 		    } else if (tok != Token::RACC) {
@@ -180,11 +182,11 @@ namespace syntax {
     	} else {
 	    this-> lex.rewind ();
 	    if (next == Keys::EXTERN) {
-		decls = visitExtern ();
-		for (auto it : decls) it-> is_public (true);
+		decls = visitExtern (docs);
+		for (auto it : decls) it-> setPublic (true);
 	    } else {
-		decls.push_back (visitDeclaration (true));
-		decls.back ()-> is_public (true);
+		decls.push_back (visitDeclaration (docs, true));
+		decls.back ()-> setPublic (true);
 	    }
     	}
     	return decls;
@@ -193,29 +195,30 @@ namespace syntax {
     /**
        private := 'private' (declaration | ('{' declaration* '}'))
     */
-    std::vector<Declaration> Visitor::visitPrivateBlock () {
+    std::vector<Declaration> Visitor::visitPrivateBlock (std::string & docs) {
 	auto begin = this-> lex.next ();
     	auto next = this-> lex.next ();
 	std::vector <Declaration> decls;
     	if (next == Token::LACC) {
     	    while (true) {
-    		auto decl = visitDeclaration (false);
+		std::string innerDocs;
+    		auto decl = visitDeclaration (innerDocs, false);
     		if (decl) {
     		    decls.push_back (decl);
-    		    decls.back ()-> is_public (false);
+    		    decls.back ()-> setPublic (false);
     		} else {
-    		    auto tok = this-> lex.next ();
+    		    auto tok = this-> lex.nextWithDocs (innerDocs);
 		    if (tok == Keys::VERSION) {
 			auto ver_decls = visitVersionGlob ();
 			for (auto it : ver_decls) {
-			    it-> is_public (false);
+			    it-> setPublic (false);
 			    decls.push_back (it);
 			}
 		    } else if (tok == Keys::EXTERN)  {
 			this-> lex.rewind ();
-			auto ext_decls = visitExtern ();
+			auto ext_decls = visitExtern (innerDocs);
 			for (auto it : ext_decls) {
-			    it-> is_public (false);
+			    it-> setPublic (false);
 			    decls.push_back (it);
 			}
 		    } else if (tok != Token::RACC)
@@ -231,11 +234,11 @@ namespace syntax {
     	} else {	    
 	    this-> lex.rewind ();
 	    if (next == Keys::EXTERN) {
-		decls = visitExtern ();
-		for (auto it : decls) it-> is_public (false);
+		decls = visitExtern (docs);
+		for (auto it : decls) it-> setPublic (false);
 	    } else {
-		decls.push_back (visitDeclaration (true));
-		decls.back ()-> is_public (false);
+		decls.push_back (visitDeclaration (docs, true));
+		decls.back ()-> setPublic (false);
 	    }
     	}
     	return decls;
@@ -244,21 +247,22 @@ namespace syntax {
 
     std::vector <Declaration> Visitor::visitDeclBlock () {
 	std::vector <Declaration> decls;
-	auto token = this-> lex.next ({Token::LACC});
+	std::string docs;
+	auto token = this-> lex.nextWithDocs (docs, {Token::LACC});
 	while (true) {
-	    auto decl = visitDeclaration (false);
+	    auto decl = visitDeclaration (docs, false);
 	    if (decl != NULL) decls.push_back (decl);
 	    else if (token == Keys::PUBLIC) {
-		auto pub_decls = visitPublicBlock ();
+		auto pub_decls = visitPublicBlock (docs);
 		for (auto it : pub_decls) decls.push_back (it);
 	    } else if (token == Keys::PRIVATE) {
-		auto prv_decls = visitPrivateBlock ();
+		auto prv_decls = visitPrivateBlock (docs);
 		for (auto it : prv_decls) decls.push_back (it);
 	    } else if (token == Keys::VERSION) {
 		auto ver_decls = visitVersionGlob ();
 		for (auto it : ver_decls) decls.push_back (it);
 	    } else if (token == Keys::EXTERN)  {
-		auto ext_decls = visitExtern ();
+		auto ext_decls = visitExtern (docs);
 		for (auto it : ext_decls) decls.push_back (it);
 	    } else if (token != Token::RACC) {
 		this-> lex.next ();
@@ -273,7 +277,7 @@ namespace syntax {
 		break;
 	    }
 	    
-	    token = this-> lex.next ();
+	    token = this-> lex.nextWithDocs (docs);
 	    this-> lex.rewind ();
 	}
 	return decls;
@@ -330,23 +334,27 @@ namespace syntax {
        | impl
        
     */
-    Declaration Visitor::visitDeclaration (bool fatal) {
-    	auto token = this-> lex.next ();
-    	if (token == Keys::DEF) return visitFunction ();
-	else if (token == Keys::MACRO) return visitMacro ();
+    Declaration Visitor::visitDeclaration (std::string docs, bool fatal) {
+	Word token;
+	if (docs == "")
+	    token = this-> lex.nextWithDocs (docs);
+	else token = this-> lex.next ();
+
+    	if (token == Keys::DEF) return visitFunction (docs);
+	else if (token == Keys::MACRO) return visitMacro (docs);
 	else if (token == Keys::USE) return visitUse ();
-	else if (token == Keys::MOD) return visitModule ();
+	else if (token == Keys::MOD) return visitModule (docs);
     	else if (token == Keys::IMPORT) return visitImport ();
-    	else if (token == Keys::STRUCT) return visitStruct ();
-	else if (token == Keys::UNION) return visitStruct (true);
-    	else if (token == Keys::ENUM) return visitEnum ();
-    	else if (token == Keys::STATIC) return visitGlobal ();
-	else if (token == Keys::IMMUTABLE) return visitGlobalImut ();
-    	else if (token == Keys::SELF) return visitSelf ();
-	else if (token == Token::TILDE) return visitDestSelf ();
-	else if (token == Keys::TYPE) return visitTypeCreator ();
-	else if (token == Keys::ALIAS) return visitAlias ();
-	else if (token == Keys::TRAIT) return visitTrait ();
+    	else if (token == Keys::STRUCT) return visitStruct (docs);
+	else if (token == Keys::UNION) return visitStruct (docs, true);
+    	else if (token == Keys::ENUM) return visitEnum (docs);
+    	else if (token == Keys::STATIC) return visitGlobal (docs);
+	else if (token == Keys::IMMUTABLE) return visitGlobalImut (docs);
+    	else if (token == Keys::SELF) return visitSelf (docs);
+	else if (token == Token::TILDE) return visitDestSelf (docs);
+	else if (token == Keys::TYPE) return visitTypeCreator (docs);
+	else if (token == Keys::ALIAS) return visitAlias (docs);
+	else if (token == Keys::TRAIT) return visitTrait (docs);
     	else if (fatal) syntaxError (token,
 				     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
@@ -357,20 +365,27 @@ namespace syntax {
     	return NULL;
     }
 
-    Macro Visitor::visitMacro () {
+    Macro Visitor::visitMacro (std::string & docs) {
 	auto ident = visitIdentifiant ();
 	auto word = this-> lex.next ({Token::LACC});
 	std::vector <MacroExpr> exprs;
 	std::vector <Block> blocks;
-	while (true) {	    
-	    exprs.push_back (visitMacroExpression ());
-	    blocks.push_back (visitBlock ());	    
-	    auto next = this-> lex.next ();
-	    if (next == Token::RACC)
-		break;
-	    else this-> lex.rewind ();
+	std::vector <std::string> innerDocs;
+	std::string current;
+	auto next = this-> lex.nextWithDocs (current);
+	if (next != Token::RACC) {
+	    this-> lex.rewind ();
+	    while (true) {
+		innerDocs.push_back (current);
+		exprs.push_back (visitMacroExpression ());
+		blocks.push_back (visitBlock ());	    
+		next = this-> lex.nextWithDocs (current);
+		if (next == Token::RACC)
+		    break;
+		else this-> lex.rewind ();
+	    }
 	}
-	return new (Z0) IMacro (ident, exprs, blocks);
+	return new (Z0) IMacro (ident, docs, innerDocs, exprs, blocks);
     }
 
     MacroExpr Visitor::visitMacroExpression (bool in_repeat) {
@@ -436,7 +451,7 @@ namespace syntax {
 	return new (Z0) IMacroToken (begin, value);
     }
     
-    ModDecl Visitor::visitModule () {
+    ModDecl Visitor::visitModule (std::string & docs) {
 	auto ident = visitIdentifiant ();
 	auto word = this-> lex.next ({Token::DOT, Token::SEMI_COLON, Token::LACC, Token::LPAR});
 	if (word != Token::LACC && word != Token::LPAR) {
@@ -454,7 +469,7 @@ namespace syntax {
 		    word = this-> lex.next ({Token::DOT, Token::SEMI_COLON});
 		}
 	    }		
-	    return new (Z0) IModDecl (ident);
+	    return new (Z0) IModDecl (ident, docs);
 	} else {
 	    std::vector <Expression> templates;
 	    if (word == Token::LPAR) {
@@ -464,27 +479,28 @@ namespace syntax {
 	    
 	    std::vector <Declaration> decls;
 	    while (true) {
-		auto decl = visitDeclaration (false);
+		std::string innerDocs;
+		auto decl = visitDeclaration (innerDocs, false);
 		if (decl) decls.push_back (decl);
 		else {
-		    auto tok = this-> lex.next ({Token::RACC, Keys::PRIVATE, Keys::PUBLIC, Keys::VERSION, Keys::EXTERN});
+		    auto tok = this-> lex.nextWithDocs (innerDocs, {Token::RACC, Keys::PRIVATE, Keys::PUBLIC, Keys::VERSION, Keys::EXTERN});
 		    this-> lex.rewind ();
 		    if (tok == Keys::PRIVATE) {
-			auto prv_decls = visitPrivateBlock ();
+			auto prv_decls = visitPrivateBlock (innerDocs);
 			for (auto it : prv_decls) decls.push_back (it);
 		    } else if (tok == Keys::PUBLIC) {
-			auto pub_decls = visitPublicBlock ();
+			auto pub_decls = visitPublicBlock (innerDocs);
 			for (auto it : pub_decls) decls.push_back (it);
 		    } else if (tok == Keys::VERSION) {			
 			auto ver_decls = visitVersionGlob ();
 			for (auto it : ver_decls) decls.push_back (it);
 		    } else if (tok == Keys::EXTERN) {
-			auto ext_decls = visitExtern ();
+			auto ext_decls = visitExtern (innerDocs);
 			for (auto it : ext_decls) decls.push_back (it);
 		    }  else { this-> lex.next (); break; }
 		}
 	    }
-	    auto ret = new (Z0) IModDecl (ident, decls);
+	    auto ret = new (Z0) IModDecl (ident, docs, decls);
 	    ret-> getTemplates () = templates;
 	    return ret;
 	}
@@ -493,31 +509,31 @@ namespace syntax {
     /**
        self := 'self' '(' ')' block
     */
-    Self Visitor::visitSelf () {
+    Self Visitor::visitSelf (std::string & docs) {
 	auto begin = this->lex.rewind ().next ();
 	this-> lex.next ({Token::LPAR});
 	this-> lex.next ({Token::RPAR});
-	return new (Z0)  ISelf (begin, visitBlock ());
+	return new (Z0)  ISelf (begin, docs, visitBlock ());
     }
 
-    DestSelf Visitor::visitDestSelf () {
+    DestSelf Visitor::visitDestSelf (std::string & docs) {
 	auto begin = this-> lex.next ();
 	this-> lex.next ({Token::LPAR});
 	this-> lex.next ({Token::RPAR});
-	return new (Z0)  IDestSelf (begin, visitBlock ());
+	return new (Z0)  IDestSelf (begin, docs, visitBlock ());
     }
     
     /**
        global := 'static' identifiant (('=' expression) | (':' type)) ';'
     */
-    Global Visitor::visitGlobal () {
+    Global Visitor::visitGlobal (std::string & docs) {
 	auto begin = this-> lex.rewind ().next ();
 	auto ident = visitIdentifiant ();
 	auto next = this-> lex.next ({Token::EQUAL, Token::COLON});
 	if (next == Token::EQUAL) {
 	    auto expr = visitExpression ();
 	    this-> lex.next ({Token::SEMI_COLON});
-	    return new (Z0)  IGlobal (ident, expr);
+	    return new (Z0)  IGlobal (ident, docs, expr);
 	} else {
 	    Expression type;
 	    next = this-> lex.next ();
@@ -527,18 +543,18 @@ namespace syntax {
 		type = visitType ();
 	    }
 	    this-> lex.next ({Token::SEMI_COLON});
-	    return new (Z0)  IGlobal (ident, NULL, type);
+	    return new (Z0)  IGlobal (ident, docs, NULL, type);
 	}
     }
 
-    Global Visitor::visitGlobalImut () {
+    Global Visitor::visitGlobalImut (std::string & docs) {
 	auto begin = this-> lex.rewind ().next ();
 	auto ident = visitIdentifiant ();
 	auto next = this-> lex.next ({Token::EQUAL});
 
 	auto expr = visitExpression ();
 	this-> lex.next ({Token::SEMI_COLON});
-	auto ret = new (Z0)  IGlobal (ident, expr);
+	auto ret = new (Z0)  IGlobal (ident, docs, expr);
 	ret-> isImut () = true;
 	return ret;
     }
@@ -607,7 +623,7 @@ namespace syntax {
 	return expr;
     }
 
-    Struct Visitor::visitStruct (bool isUnion) {
+    Struct Visitor::visitStruct (std::string & docs, bool isUnion) {
 	Word word = this-> lex.next (), ident;
 	std::vector <Var> exps;
 	std::vector <Expression> temps;
@@ -622,10 +638,13 @@ namespace syntax {
 	    word = this-> lex.next ({Token::PIPE});
 	}
 	
+	std::vector <std::string> docName;	
 	if (word == Token::PIPE) {
 	    while (true) {
 		exps.push_back (visitStructVarDeclaration ());
-		word = this-> lex.next ({Token::ARROW, Token::PIPE});
+		std::string currentDoc;
+		word = this-> lex.nextWithDocs (currentDoc, {Token::ARROW, Token::PIPE});
+		docName.push_back (currentDoc);
 		if (word == Token::ARROW) break;
 	    }
 	    ident = visitIdentifiant ();
@@ -634,10 +653,10 @@ namespace syntax {
 	    ident = visitIdentifiant ();
 	    this-> lex.next ({Token::SEMI_COLON});    
 	}
-	return new (Z0)  IStruct (ident, temps, exps, udas, isUnion);
+	return new (Z0)  IStruct (ident, docs, docName, temps, exps, udas, isUnion);
     }
 
-    Enum Visitor::visitEnum () {
+    Enum Visitor::visitEnum (std::string & docs) {
 	std::vector<Word> names;
 	std::vector<Expression> values;
 	auto word = this-> lex.next ();
@@ -646,20 +665,23 @@ namespace syntax {
 	if (word == Token::COLON) type = visitType ();
 	else this-> lex.rewind ();
 	word = this-> lex.next ({Token::PIPE});
-	while (true) {
+	std::vector <std::string> docName;
+	while (true) {	    
 	    names.push_back (visitIdentifiant ());
 	    auto next = this-> lex.next ({Token::COLON});
 	    values.push_back (visitPth ());
-	    next = this-> lex.next ({Token::ARROW, Token::PIPE});
+	    std::string currentDoc;
+	    next = this-> lex.nextWithDocs (currentDoc, {Token::ARROW, Token::PIPE});
+	    docName.push_back (currentDoc);
 	    if (next == Token::ARROW || next.isEof ()) break;
 	}
 	
 	ident = visitIdentifiant ();       	    
 	word = this-> lex.next ({Token::SEMI_COLON});	
-	return new (Z0)  IEnum (ident, type, names, values);
+	return new (Z0)  IEnum (ident, docs, type, docName, names, values);
     }
 
-    TypeCreator Visitor::visitTypeCreator () {
+    TypeCreator Visitor::visitTypeCreator (std::string & docs) {
 	std::vector <Expression> temps;
 	auto ident = visitIdentifiant ();
 	auto word = this-> lex.next ({Token::LPAR, Keys::OVER, Keys::IMPL});
@@ -682,19 +704,20 @@ namespace syntax {
 	} 
 	
 	this-> lambdaPossible = save;
-	auto type = new (Z0) ITypeCreator (ident, form, who, temps, isUnion);
+	auto type = new (Z0) ITypeCreator (ident, docs, form, who, temps, isUnion);
 	
 	this-> lex.next ({Token::LACC});
 	while (true) {
-	    auto next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED, Keys::LET, Keys::STATIC});
+	    std::string innerDocs;
+	    auto next = this-> lex.nextWithDocs (innerDocs, {Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED, Keys::LET, Keys::STATIC});
 	    if (next == Keys::SELF) type-> getConstructors ().push_back (visitTypeConstructor ());
 	    else if (next == Keys::OVER || next == Keys::DEF)
-		type-> getMethods ().push_back (visitTypeMethod ());
+		type-> getMethods ().push_back (visitTypeMethod (innerDocs));
 	    else if (next == Keys::LET)
-		type-> getAlias ().push_back (visitTypeAlias ());
+		type-> getAlias ().push_back (visitTypeAlias (innerDocs));
 	    else if (next == Token::TILDE) type-> getDestructors ().push_back (visitTypeDestructor ());
-	    else if (next == Keys::PRIVATE) visitTypePrivate (type);		
-	    else if (next == Keys::PROTECTED) visitTypeProtected (type);
+	    else if (next == Keys::PRIVATE) visitTypePrivate (innerDocs, type);		
+	    else if (next == Keys::PROTECTED) visitTypeProtected (innerDocs, type);
 	    else if (next == Keys::STATIC) type-> getStaticConstructs ().push_back (visitTypeStaticConstruct ());
 	    else break;
 	}
@@ -737,7 +760,7 @@ namespace syntax {
 	return new (Z0) ITypeDestructor (begin, visitBlock ());
     }
 
-    TypeAlias Visitor::visitTypeAlias () {
+    TypeAlias Visitor::visitTypeAlias (std::string & docs) {
 	auto next = this-> lex.next ();
 	bool isConst = false, isStatic = false;
 	if (next == Keys::CONST) isConst = true;
@@ -759,23 +782,24 @@ namespace syntax {
 	
 	this-> lex.next ({Token::SEMI_COLON});
 	
-	return new (Z0) ITypeAlias (name, value, isStatic, isConst);
+	return new (Z0) ITypeAlias (name, docs, value, isStatic, isConst);
     }
     
-    TypeMethod Visitor::visitTypeMethod () {
+    TypeMethod Visitor::visitTypeMethod (std::string & docs) {
 	auto over = (this-> lex.rewind ().next () == Keys::OVER);
-	auto function = visitFunction ();
+	auto function = visitFunction (docs);
 	return new (Z0) ITypeMethod (function, over);
     }
 
-    void Visitor::visitTypePrivate (TypeCreator type) {
+    void Visitor::visitTypePrivate (std::string & docs, TypeCreator type) {
 	bool mult = false;
 	auto next = this-> lex.next ();
 	if (next == Token::LACC) mult = true;
 	else this-> lex.rewind ();
 	while (true) {
 	    Word next;
-	    if (mult) next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
+	    
+	    if (mult) next = this-> lex.nextWithDocs (docs, {Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
 	    else next = this-> lex.next ({Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
 	    
 	    if (next == Keys::SELF) {
@@ -783,11 +807,11 @@ namespace syntax {
 		cst-> getProtection () = InnerProtection::PRIVATE;
 		type-> getConstructors ().push_back (cst);
 	    } else if (next == Keys::OVER || next == Keys::DEF) {
-		auto cst = visitTypeMethod ();
+		auto cst = visitTypeMethod (docs);
 		cst-> getProtection () = InnerProtection::PRIVATE;
 		type-> getMethods ().push_back (cst);
 	    } else if (next == Keys::LET) {
-		auto cst = visitTypeAlias ();
+		auto cst = visitTypeAlias (docs);
 		cst-> getProtection () = InnerProtection::PRIVATE;
 		type-> getAlias ().push_back (cst);
 	    } else break;
@@ -795,7 +819,7 @@ namespace syntax {
 	}
     }
     
-    void Visitor::visitTypeProtected (TypeCreator type) {
+    void Visitor::visitTypeProtected (std::string & docs, TypeCreator type) {
 	bool mult = false;
 
 	auto next = this-> lex.next ();
@@ -804,18 +828,18 @@ namespace syntax {
 	
 	while (true) {
 	    Word next;
-	    if (mult) next = this-> lex.next ({Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
+	    if (mult) next = this-> lex.nextWithDocs (docs, {Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
 	    else next = this-> lex.next ({Keys::SELF, Keys::DEF, Keys::OVER, Keys::LET});
 	    if (next == Keys::SELF) {
 		auto cst = visitTypeConstructor ();
 		cst-> getProtection () = InnerProtection::PROTECTED;
 		type-> getConstructors ().push_back (cst);
 	    } else if (next == Keys::OVER || next == Keys::DEF) {
-		auto cst = visitTypeMethod ();
+		auto cst = visitTypeMethod (docs);
 		cst-> getProtection () = InnerProtection::PROTECTED;
 		type-> getMethods ().push_back (cst);
 	    } else if (next == Keys::LET) {
-		auto cst = visitTypeAlias ();
+		auto cst = visitTypeAlias (docs);
 		cst-> getProtection () = InnerProtection::PROTECTED;
 		type-> getAlias ().push_back (cst);
 	    } else break;
@@ -856,7 +880,7 @@ namespace syntax {
     /**
        function := 'def' Identifiant ('(' var (',') var)* ')' )? '(' (var (',' var)*)? ')' (':' type)? '{' block '}'
     */
-    Function Visitor::visitFunction () {
+    Function Visitor::visitFunction (std::string & docs) {
 	std::vector <Word> attrs;
 	auto next = this-> lex.next ();
 	if (next == Token::AT) attrs = visitAttributes ();
@@ -925,14 +949,14 @@ namespace syntax {
 	    next = this-> lex.next ();
 	    this-> lex.rewind ();
 	    if (next == Keys::PRE || next == Keys::POST || next == Keys::BODY) {
-		return visitContract (ident, attrs, type, retDeco, exps, temps, test);
+		return visitContract (ident, docs, attrs, type, retDeco, exps, temps, test);
 	    } 
 	}
 	this-> lex.rewind ();
-	return new (Z0)  IFunction (ident, attrs, type, retDeco, exps, temps, test, visitBlock ());
+	return new (Z0)  IFunction (ident, docs, attrs, type, retDeco, exps, temps, test, visitBlock ());
     }
 
-    Function Visitor::visitContract (Word ident, std::vector<Word> & attrs, Expression type, Word retDeco, std::vector<Var> & exps, std::vector <Expression> & temps, Expression test) {
+    Function Visitor::visitContract (Word ident, std::string & docs, std::vector<Word> & attrs, Expression type, Word retDeco, std::vector<Var> & exps, std::vector <Expression> & temps, Expression test) {
 	Function func = NULL;
 	Block pre = NULL, post = NULL;
 	Var var = NULL;
@@ -944,7 +968,7 @@ namespace syntax {
 		pre = visitBlock ();
 	    } else if (next == Keys::BODY && !dones [1]) {
 		dones [1] = true;
-		func = new (Z0) IFunction (ident, attrs, type, retDeco, exps, temps, test, visitBlock ());
+		func = new (Z0) IFunction (ident, docs, attrs, type, retDeco, exps, temps, test, visitBlock ());
 	    } else if (next == Keys::POST && !dones [2]) {
 		dones [2] = true;
 		next = this-> lex.next ({Token::LPAR});
@@ -966,7 +990,7 @@ namespace syntax {
 	return func;
     }
 
-    Declaration Visitor::visitProto (Word from, std::string space) {
+    Declaration Visitor::visitProto (Word from, std::string & docs, std::string space) {
 	bool isVariadic = false;
 	auto ident = visitIdentifiant ();
 	std::vector <Var> exps;
@@ -974,9 +998,9 @@ namespace syntax {
 	if (word == Token::COLON) {
 	    auto type = visitLeftOpSimple ();
 	    this-> lex.next ({Token::SEMI_COLON});
-	    auto ret = new (Z0) IGlobal (ident, type, true);
-	    ret-> from = from.getStr ();
-	    ret-> space = space;
+	    auto ret = new (Z0) IGlobal (ident, docs, type, true);
+	    ret-> setFrom (from.getStr ());
+	    ret-> setSpace (space);
 	    return ret;
 	} 
 	word = this-> lex.next ();
@@ -1006,7 +1030,7 @@ namespace syntax {
 	    word = this-> lex.next ({Token::SEMI_COLON});
 	}
 	
-	auto ret = new (Z0)  IProto (ident, type, deco, exps, space, isVariadic);
+	auto ret = new (Z0)  IProto (ident, docs, type, deco, exps, space, isVariadic);
 	ret-> from = from.getStr ();
 	return ret;
     }
@@ -1026,11 +1050,12 @@ namespace syntax {
     
     std::vector <Declaration> Visitor::visitExternBlock (Word from, std::string space, bool onlyProto) {
 	std::vector <Declaration> decls;
-	while (true) {	   
-	    auto next = this-> lex.next ({Keys::EXTERN, Keys::DEF, Token::RACC});
-	    if (next == Keys::EXTERN) decls.push_back (visitProto (from, space));
+	while (true) {
+	    std::string docs;
+	    auto next = this-> lex.nextWithDocs (docs, {Keys::EXTERN, Keys::DEF, Token::RACC});
+	    if (next == Keys::EXTERN) decls.push_back (visitProto (from, docs, space));
 	    else if (next == Keys::DEF && !onlyProto) {
-		auto func = this-> visitFunction ()-> to<IFunction> ();
+		auto func = this-> visitFunction (docs)-> to<IFunction> ();
 		func-> externLang () = from.getStr ();
 		func-> externLangSpace () = space;
 		decls.push_back (func);
@@ -1044,7 +1069,7 @@ namespace syntax {
 	return decls;
     }
 
-    std::vector <Declaration> Visitor::visitExtern () {
+    std::vector <Declaration> Visitor::visitExtern (std::string & docs) {
 	auto begin = this-> lex.next ();
 	auto word = this-> lex.next ();
 	Word from = Word::eof ();
@@ -1065,7 +1090,7 @@ namespace syntax {
 	    return visitExternBlock (from, space, from != Keys::CLANG);
 	} else {
 	    this-> lex.rewind ();
-	    return {visitProto (from, space)};
+	    return {visitProto (from, docs, space)};
 	}
     }    
     
@@ -1083,7 +1108,8 @@ namespace syntax {
 		this-> lex.next ({Token::RPAR});
 	    }
 	} else this-> lex.rewind ();
-	return visitProto (from, space);
+	std::string docs = "";
+	return visitProto (from, docs, space);
     }
 
     /**
@@ -1372,14 +1398,15 @@ namespace syntax {
 	    std::vector <Declaration> decls;
 	    std::vector <Instruction> insts;
 	    while (true) {
-		auto next = this-> lex.next ();
+		std::string docs;
+		auto next = this-> lex.nextWithDocs (docs);
 		if (next == Keys::IMPORT) decls.push_back (visitImport ());
 		else if (next == Keys::USE) decls.push_back (visitUse ());
 		else if (next == Keys::EXTERN) decls.push_back (visitExternBl ());
-		else if (next == Keys::STRUCT) decls.push_back (visitStruct ());
-		else if (next == Keys::UNION) decls.push_back (visitStruct (true));
-		else if (next == Keys::ALIAS) decls.push_back (visitAlias ());
-		else if (next == Keys::TRAIT) decls.push_back (visitTrait ());
+		else if (next == Keys::STRUCT) decls.push_back (visitStruct (docs));
+		else if (next == Keys::UNION) decls.push_back (visitStruct (docs, true));
+		else if (next == Keys::ALIAS) decls.push_back (visitAlias (docs));
+		else if (next == Keys::TRAIT) decls.push_back (visitTrait (docs));
 		else if (next == Token::LACC) {
 		    this-> lex.rewind ();
 		    insts.push_back (visitBlock ());		
@@ -2302,12 +2329,6 @@ namespace syntax {
 	
 	word = this-> lex.next ({Token::ARROW});
 	auto ret = visitLeftOpSimple ();
-	// word = this-> lex.next ();
-	// if (word == Token::LACC) {
-	//     auto expr = visitExpression ();
-	//     word = this-> lex.next ({Token::RACC});
-	//     return new (Z0)  IFuncPtr (begin, params, ret, expr);
-	// } else this-> lex.rewind ();
 	return new (Z0)  IFuncPtr (begin, params, ret);
     }
 
@@ -2773,12 +2794,12 @@ namespace syntax {
 	return new (Z0)  IFor (begin, id, vars, iter, visitBlock (), _const);
     }       
 
-    Alias Visitor::visitAlias () {
+    Alias Visitor::visitAlias (std::string & docs) {
 	auto ident = visitIdentifiant ();
 	this-> lex.next ({Token::EQUAL});
 	auto value = this-> visitExpression ();
 	this-> lex.next ({Token::SEMI_COLON});
-	return new (Z0) IAlias (ident, value);	
+	return new (Z0) IAlias (ident, docs, value);	
     }
 
     Expression Visitor::visitAutoCaster () {
@@ -2825,7 +2846,7 @@ namespace syntax {
 	return TraitProto {ident, params, isSelf, type};
     }
     
-    Trait Visitor::visitTrait () {
+    Trait Visitor::visitTrait (std::string & docs) {
 	auto ident = visitIdentifiant ();
 	this-> lex.next ({Token::LACC});
 	std::vector <TypedVar> vars;
@@ -2838,7 +2859,7 @@ namespace syntax {
 	    } else if (next == Keys::DEF) protos.push_back (visitTraitProto ());
 	    else break;
 	}
-	return new (Z0) ITrait (ident, protos, vars);
+	return new (Z0) ITrait (ident, docs, protos, vars);
     }
     
 };

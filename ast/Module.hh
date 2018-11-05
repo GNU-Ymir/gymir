@@ -14,19 +14,21 @@ namespace syntax {
 	
     public :
 
-	IModDecl (Word ident) :
+	IModDecl (Word ident, const std::string & docs) :
+	    IDeclaration (docs),
 	    ident (ident),
 	    _isGlobal (true)
 	{
-	    this-> is_public (true);
+	    this-> setPublic (true);
 	}
 
-	IModDecl (Word ident, std::vector <Declaration> & decls) :
+	IModDecl (Word ident, const std::string & docs, std::vector <Declaration> & decls) :
+	    IDeclaration (docs),
 	    ident (ident),
 	    _isGlobal (false),
 	    decls (decls)
 	{
-	    this-> is_public (true);
+	    this-> setPublic (true);
 	}
 
 	std::vector <Expression> & getTemplates ();
@@ -34,6 +36,8 @@ namespace syntax {
 	std::vector <Declaration> & getDecls ();
 	
 	Declaration templateDeclReplace (const std::map <std::string, Expression>& tmps);
+
+	Ymir::json generateDocs () override;
 	
 	void declare () override;
 

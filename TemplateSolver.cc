@@ -444,7 +444,7 @@ namespace semantic {
     
     TemplateSolution TemplateSolver::solve (const vector <Expression> &tmps, ConstArray param, InfoType type, bool isConst) {
 	Ymir::log ("Solve ConstArray : ", tmps, "|", param, "|", type, "|", isConst);
-	if (param-> nbParams () != 1) return TemplateSolution (0, false);
+	if (param-> getNbParams () != 1) return TemplateSolution (0, false);
 	if (!type-> is <IArrayInfo> ()) {
 	    if (auto ptr = type-> to<IRefInfo> ()) {
 		if (!ptr-> content ()-> is <IArrayInfo> ())

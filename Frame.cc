@@ -133,7 +133,7 @@ namespace semantic {
 	    lvalue = (Table::instance ().retInfo ().deco == Keys::MUTABLE || Table::instance ().retInfo ().deco == Keys::REF);
 	}
 	
-	auto proto = new (Z0)  IFrameProto (this-> _function-> name (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams, this-> _attributes);
+	auto proto = new (Z0)  IFrameProto (this-> _function-> getName (), this-> _space, Table::instance ().retInfo ().info, finalParams, this-> tempParams, this-> _attributes);
 	proto-> externLang () = this-> _externLang;
 	proto-> externLangSpace () = this-> _externLangSpace;
 	
@@ -163,8 +163,8 @@ namespace semantic {
 	    }
 
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
-					    this-> _space, this-> _function-> name (),
-					    finalParams, block, this-> tempParams);
+						   this-> _space, this-> _function-> getName (),
+						   finalParams, block, this-> tempParams);
 	    
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);

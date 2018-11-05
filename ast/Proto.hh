@@ -18,15 +18,19 @@ namespace syntax {
 	std::string space;
 	bool _isVariadic;
 	
+	semantic::Frame _frame;
+	
     public:
 
 	Word ident;
 	std::string from;
 	
-	IProto (Word ident, const std::vector <Var>& params, bool isVariadic);
+	IProto (Word ident, const std::string & docs, const std::vector <Var>& params, bool isVariadic);
 
-	IProto (Word ident, Expression type, Word retDeco, const std::vector <Var>& params, std::string space, bool isVariadic);
+	IProto (Word ident, const std::string & docs, Expression type, Word retDeco, const std::vector <Var>& params, std::string space, bool isVariadic);
 
+	Ymir::json generateDocs () override;
+	
 	void declare () override;
 	
 	void declare (semantic::Module) override;

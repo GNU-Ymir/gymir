@@ -7,20 +7,42 @@
 
 namespace syntax {
 
+    /**
+     * \struct IDColon
+     * The syntaxic representation of a double colon expression
+     * \verbatim
+     dcolon := expression '::' expression
+     \endverbatim
+     */
     class IDColon : public IExpression {
 
-	Expression left, right;
+	/** The left operand */
+	Expression _left;
+
+	/** The right operand */
+	Expression _right;
 
     public:
 
+	/**
+	 * \param token the location of the operator
+	 * \left the left operand
+	 * \right the right operand
+	 */
 	IDColon (Word token, Expression left, Expression right);
 
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
+	/**
+	 * \return the left operand
+	 */
 	Expression getLeft ();
 
+	/**
+	 * \return the right operand
+	 */
 	Expression getRight ();
 	
 	Ymir::Tree toGeneric () override;

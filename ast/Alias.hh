@@ -17,15 +17,17 @@ namespace syntax {
 
 	Word _ident;
 	Expression _value;
-
+	
     public :
 
 	/**
 	 * \param ident the identifier of the alias
 	 * \param value the value of the alias
 	 */
-	IAlias (Word ident, Expression value);
+	IAlias (Word ident, std::string & docs, Expression value);
 
+	Ymir::json generateDocs () override;
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;

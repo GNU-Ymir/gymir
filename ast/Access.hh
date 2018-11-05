@@ -54,7 +54,7 @@ namespace syntax {
 	Expression expression () override;
 
 	/**
-	 * \brief Replace the different occurence of the variable by template expression \n
+	 * \brief Replace the different occurence of the variable by template expression
 	 * \brief Generally called after, template resolution
 	 * \param values an associative array, string => Expression representing the template association
 	 * \return an untyped expression where all occurence found in values are replaced

@@ -31,7 +31,7 @@ namespace syntax {
 
     public:
 
-	ITrait (Word ident, std::vector <TraitProto> protos, std::vector <TypedVar> attrs);
+	ITrait (Word ident, std::string & docs, std::vector <TraitProto> protos, std::vector <TypedVar> attrs);
 
 	std::vector <TraitProto> & getProtos ();
 
@@ -53,7 +53,7 @@ namespace syntax {
 
 	std::vector <std::string> getIds () override {
 	    auto vec = IDeclaration::getIds ();
-	    vec.push_back (ITypeCreator::id ());
+	    vec.push_back (ITrait::id ());
 	    return vec;
 	}	
     };

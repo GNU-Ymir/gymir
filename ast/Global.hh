@@ -13,26 +13,68 @@ namespace semantic {
 
 namespace syntax {
 
+    /**
+     * \struct IGlobal
+     * The syntaxic node representation of a global variable     
+     * \verbatim
+     global := 'static' identifier (':' type | '=' expression) ';'
+     \endverbatim
+     */
     class IGlobal : public IDeclaration {
 
-	Word ident;
-	Expression expr, type;
-	bool isExternal;
+	/** The identifier if the var */
+	Word _ident;
+
+	/** The value, may be NULL */
+	Expression _expr;
+
+	/** The type, may be NULL */
+	Expression _type;
+
+	/** is this var external */
+	bool _isExternal;
+
+	/** Is this variable usable as an immutable one */
 	bool _isImut = false;
+
+	/** the type information of the variable */
+	semantic::Symbol _sym;
+
+	/** The external language */
+	std::string _from;
+
+	/** The external space */
+	std::string _space;
 	
     public:
 
-	semantic::Symbol sym;
-	std::string from;
-	std::string space;
+	/** 
+	 * \param ident the identifier of the var
+	 * \param docs the related comments 
+	 * \param expr the value, could be NULL
+	 * \param type the type, could be NULL if expr is not NULL
+	 */
+	IGlobal (Word ident, const std::string & docs, Expression expr, Expression type = NULL);
 
-	IGlobal (Word ident, Expression expr, Expression type = NULL);
+	/** 
+	 * \param ident the identifier of the var
+	 * \param docs the related comments 
+	 * \param type the type
+	 * \param isExternal 
+	 */
+	IGlobal (Word ident, const std::string & docs, Expression type, bool isExternal);
 
-	IGlobal (Word ident, Expression type, bool isExternal);
+	Ymir::json generateDocs ();
 
+	/** 
+	 * \return get or set the imutability of this variable
+	 */
 	bool & isImut ();
 
-	bool fromC ();
+	/**
+	 * \return is this variable an external C language global variable
+	 */
+	bool isFromC ();
 
 	void declare () override;
 	
@@ -41,7 +83,14 @@ namespace syntax {
 	void declareAsExtern (semantic::Module) override;
 
 	Declaration templateDeclReplace (const std::map <std::string, Expression>&) override;
+
+	void setFrom (const std::string & from);
+
+	void setSpace (const std::string & space);
 	
+	/**
+	 * \return the value
+	 */
 	Expression getExpr ();
 	
 	void print (int nb = 0) override;

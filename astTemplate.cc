@@ -106,18 +106,18 @@ namespace syntax {
     }
 
     Expression IChar::templateExpReplace (const map <string, Expression>&) {
-	return new (Z0) IChar (this-> token, this-> code);
+	return new (Z0) IChar (this-> token, this-> _code);
     }
 
     Expression IFloat::templateExpReplace (const map <string, Expression>&) {
-	auto ret = new (Z0)  IFloat (this-> token, this-> suite);
+	auto ret = new (Z0)  IFloat (this-> token, this-> _suite);
 	ret-> _type = this-> _type;
-	ret-> totale = this-> totale;
+	ret-> _totale = this-> _totale;
 	return ret;
     }
 
     Expression IString::templateExpReplace (const map <string, Expression>&) {
-	return new (Z0)  IString (this-> token, this-> content);	
+	return new (Z0)  IString (this-> token, this-> _content);	
     }
 
     Expression IBool::templateExpReplace (const map <string, Expression>&) {
@@ -139,15 +139,9 @@ namespace syntax {
 	return new (Z0)  IConstArray (this-> token, params);
     }
     
-    Expression IConstRange::templateExpReplace (const map <string, Expression>& values) {
-	auto left = this-> left-> templateExpReplace (values);
-	auto right = this-> right-> templateExpReplace (values);
-	return new (Z0)  IConstRange (this-> token, left, right);
-    }
-
     Expression IDColon::templateExpReplace (const map <string, Expression>& values) {
-	auto left = this-> left-> templateExpReplace (values);
-	auto right = this-> right-> templateExpReplace (values);
+	auto left = this-> _left-> templateExpReplace (values);
+	auto right = this-> _right-> templateExpReplace (values);
 	return new (Z0)  IDColon (this-> token, left, right);
     }
 
@@ -165,15 +159,15 @@ namespace syntax {
 	for (auto it : this-> _params)
 	    params.push_back ((Var) it-> templateExpReplace (exps));
 	
-	auto ret = new (Z0) IProto (this-> ident, type, _retDeco, params, this-> from, this-> isVariadic ());
+	auto ret = new (Z0) IProto (this-> ident, this-> getDocs (), type, _retDeco, params, this-> from, this-> isVariadic ());
 	ret-> from = this-> from;
-	ret-> is_public (this-> is_public ());
+	ret-> setPublic (this-> isPublic ());
 	return ret;
     }
     
     Expression IDot::templateExpReplace (const map <string, Expression>& values) {
-	auto left = this-> left-> templateExpReplace (values);
-	auto right = this-> right-> templateExpReplace (values);
+	auto left = this-> _left-> templateExpReplace (values);
+	auto right = this-> _right-> templateExpReplace (values);
 	if (auto rep = left-> to<IMacroRepeat> ()) {
 	    if (auto fx = right-> to <IFixed> ()) {
 		auto val = fx-> expression ()-> info-> value ()-> to<semantic::IFixedValue> ()-> getValue ();
@@ -210,28 +204,28 @@ namespace syntax {
     }
 
     Expression IExpand::templateExpReplace (const map <string, Expression>& values) {
-	auto expr = this-> expr-> templateExpReplace (values);
+	auto expr = this-> _expr-> templateExpReplace (values);
 	return new (Z0)  IExpand (this-> token, expr);
     }
 
     Instruction IFor::templateReplace (const map <string, Expression>& values) {
 	vector <Var> vars;
-	for (auto it : this-> var)
+	for (auto it : this-> _var)
 	    vars.push_back ((Var) it-> templateExpReplace (values));
 	
-	auto iter = this-> iter-> templateExpReplace (values);
+	auto iter = this-> _iter-> templateExpReplace (values);
 
 	if (this-> _isStatic && iter-> is <IMacroRepeat> () && vars.size () == 1) {
 	    auto rep = iter-> to <IMacroRepeat> ();
-	    auto bl = new (Z0) IBlock (this-> block-> token, {}, {});
+	    auto bl = new (Z0) IBlock (this-> _block-> token, {}, {});
 	    for (ulong i = 0 ; i < rep-> getSolution ().size () ; i++) {
 		auto id = vars [0]-> token.getStr ();
 		auto index = rep-> getSolution () [i];
 		for (auto & it : index.elements)
 		    it.second = it.second-> templateExpReplace (values);
-		auto elem = new (Z0) IMacroRepeat (this-> block-> token, NULL, NULL, false);
+		auto elem = new (Z0) IMacroRepeat (this-> _block-> token, NULL, NULL, false);
 		elem-> addSolution (index);
-		auto block = this-> block-> templateExpReplace ({{id, elem}});
+		auto block = this-> _block-> templateExpReplace ({{id, elem}});
 		if (block == NULL) return NULL;
 		
 		block = block-> templateExpReplace (values);
@@ -245,15 +239,15 @@ namespace syntax {
 	    return bl;
 	}
 	
-	auto block = (Block) this-> block-> templateReplace (values);
-	auto ret = new (Z0)  IFor (this-> token, this-> id, vars, iter, block, this-> _const);
+	auto block = (Block) this-> _block-> templateReplace (values);
+	auto ret = new (Z0)  IFor (this-> token, this-> _id, vars, iter, block, this-> _const);
 	ret-> _isStatic = this-> _isStatic;
 	return ret;
     }
 
     Expression IFuncPtr::templateExpReplace (const map <string, Expression>& values) {
 	vector <Expression> params;
-	for (auto it : this-> params) {
+	for (auto it : this-> _params) {
 	    auto elem = it-> templateExpReplace (values);
 	    if (auto ps = elem-> to <IParamList> ()) {
 		for (auto it_ : ps-> getParams ()) {
@@ -264,12 +258,12 @@ namespace syntax {
 	    }
 	}
 	
-	auto ret = this-> ret-> templateExpReplace (values);
-	if (this-> expr) {
-	    auto expr = this-> expr-> templateExpReplace (values);
-	    return new (Z0)  IFuncPtr (this-> token, params, ret, expr);
-	} else
-	    return new (Z0)  IFuncPtr (this-> token, params, ret);
+	auto ret = this-> _ret-> templateExpReplace (values);
+	// if (this-> expr) {
+	//     auto expr = this-> expr-> templateExpReplace (values);
+	//     return new (Z0)  IFuncPtr (this-> token, params, ret, expr);
+	// } else
+	return new (Z0)  IFuncPtr (this-> token, params, ret);
     }
 
     Declaration IFunction::templateDeclReplace (const map <string, Expression>& tmps) {
@@ -284,8 +278,8 @@ namespace syntax {
 	    if (r != NULL) 
 		decls.push_back (r);
 	}
-	auto ret = new (Z0) IModDecl (this-> ident, decls);
-	ret-> is_public (this-> is_public ());
+	auto ret = new (Z0) IModDecl (this-> ident, this-> getDocs (), decls);
+	ret-> setPublic (this-> isPublic ());
 	return ret;
     }
     
@@ -295,31 +289,31 @@ namespace syntax {
 	    params.push_back (it-> templateExpReplace (tmps)-> to<IVar> ());
 	}
 	
-	auto ret = new (Z0) IStruct (this-> ident, this-> tmps, params, this-> _udas);
-	ret-> is_public (this-> is_public ());
+	auto ret = new (Z0) IStruct (this-> ident, this-> getDocs (), this-> _innerDocs, this-> tmps, params, this-> _udas);
+	ret-> setPublic (this-> isPublic ());
 	return ret;
     }
     
     Function IFunction::templateReplace (const map <string, Expression>& values) {
 	Expression type = NULL;
-	if (this-> type)
-	    type = this-> type-> templateExpReplace (values);
+	if (this-> _type)
+	    type = this-> _type-> templateExpReplace (values);
 
 	vector <Var> params;
-	for (auto it : this-> params)
+	for (auto it : this-> _params)
 	    params.push_back (it-> templateExpReplace (values)-> to <IVar> ());
 
 	Expression test = NULL;
-	if (this-> test)
-	    test = this-> test-> templateExpReplace (values);
+	if (this-> _test)
+	    test = this-> _test-> templateExpReplace (values);
 
 	vector <Expression> tmps;
-	for (auto it : this-> tmps) 
+	for (auto it : this-> _tmps) 
 	    tmps.push_back (it-> templateExpReplace (values));
 
-	auto block = (Block) this-> block-> templateReplace (values);
-	auto ret = new (Z0)  IFunction (this-> ident, this-> attrs, type, retDeco, params, tmps, test, block);
-	ret-> is_public (this-> is_public ());
+	auto block = (Block) this-> _block-> templateReplace (values);
+	auto ret = new (Z0)  IFunction (this-> _ident, this-> getDocs (), this-> _attrs, type, this-> _retDeco, params, tmps, test, block);
+	ret-> setPublic (this-> isPublic ());
 	return ret;
     }
 
@@ -339,7 +333,7 @@ namespace syntax {
 	std::vector <TypeAlias> alias;
 	for (auto it : this-> _alias) alias.push_back (it-> templateDeclReplace (values));
 
-	auto ret = new (Z0) ITypeCreator (this-> _ident, this-> _form, who, {}, this-> _isUnion);
+	auto ret = new (Z0) ITypeCreator (this-> _ident, this-> getDocs (), this-> _form, who, {}, this-> _isUnion);
 	ret-> getConstructors () = constr;
 	ret-> getDestructors () = destr;
 	ret-> getMethods () = methods;
@@ -377,7 +371,7 @@ namespace syntax {
     }
     
     TypeAlias ITypeAlias::templateDeclReplace (const map <string, Expression> & tmps) {
-	auto ret = new (Z0) ITypeAlias (this-> _ident, this-> _value-> templateExpReplace (tmps), this-> _isConst, this-> _isStatic);
+	auto ret = new (Z0) ITypeAlias (this-> _ident, this-> getDocs (), this-> _value-> templateExpReplace (tmps), this-> _isConst, this-> _isStatic);
 	ret-> _prot = this-> _prot;
 	return ret;
     }
@@ -385,15 +379,15 @@ namespace syntax {
     
     Instruction IIf::templateReplace (const map <string, Expression>& values) {
 	Expression test = NULL;
-	if (this-> test)
-	    test = this-> test-> templateExpReplace (values);
+	if (this-> _test)
+	    test = this-> _test-> templateExpReplace (values);
 
-	auto block = (Block) this-> block-> templateReplace (values);
-	If _else = NULL;
-	if (this-> else_)
-	    _else = (If) this-> else_-> templateReplace (values);
+	auto block = (Block) this-> _block-> templateReplace (values);
+	If else_ = NULL;
+	if (this-> _else)
+	    else_ = (If) this-> _else-> templateReplace (values);
 	
-	return new (Z0)  IIf (this-> token, test, block, _else, this-> _isStatic);
+	return new (Z0)  IIf (this-> token, test, block, else_, this-> _isStatic);
     }
 
     Expression IIs::templateExpReplace (const map <string, Expression>& values) {
@@ -506,10 +500,10 @@ namespace syntax {
     }
 
     Declaration IGlobal::templateDeclReplace (const map <string, Expression>& values) {
-	if (this-> expr) {
-	    return new (Z0) IGlobal (this-> ident, this-> expr-> templateExpReplace (values));
+	if (this-> _expr) {
+	    return new (Z0) IGlobal (this-> _ident, this-> getDocs (), this-> _expr-> templateExpReplace (values));
 	} else {	    
-	    return new (Z0) IGlobal (this-> ident, this-> type-> templateExpReplace (values), this-> isExternal);
+	    return new (Z0) IGlobal (this-> _ident, this-> getDocs (), this-> _type-> templateExpReplace (values), this-> _isExternal);
 	}
     }
 
@@ -642,7 +636,7 @@ namespace syntax {
     Declaration IUse::templateDeclReplace (const map <string, Expression> & values) {
 	auto mod = this-> mod-> templateExpReplace (values);
 	auto ret = new (Z0) IUse (this-> loc, mod);
-	ret-> is_public (this-> is_public ());
+	ret-> setPublic (this-> isPublic ());
 	return ret;
     }
 
@@ -651,7 +645,7 @@ namespace syntax {
     }
 
     Declaration IImport::templateDeclReplace (const map <string, Expression> &) {
-	return new (Z0) IImport (this-> ident, this-> params);
+	return new (Z0) IImport (this-> _ident, this-> _params);
     }
        
     Expression IMacroCall::templateExpReplace (const std::map <std::string, Expression>& values) {

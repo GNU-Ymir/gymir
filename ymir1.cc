@@ -90,6 +90,7 @@ ymir_init_options (unsigned int argc, cl_decoded_option * decoded_options)
 	case OPT_ggdb : Options::instance ().isDebug () = true; break;
 	case OPT_v : Options::instance ().isVerbose () = true; break;
 	case OPT_stalone : Options::instance ().isStandalone () = true; break;
+	case OPT_fdoc : Options::instance ().generateDocs () = true; break;
 	}
     }
 }
@@ -135,7 +136,9 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 	Options::instance ().isVerbose () = true;
     } else if (code == OPT_stalone) 
 	Options::instance ().isStandalone () = true;
-    else {
+    else if (code == OPT_fdoc) {
+	Options::instance ().generateDocs () = true;	
+    } else {
 	return false;
     }
     

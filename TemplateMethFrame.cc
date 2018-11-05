@@ -156,7 +156,7 @@ namespace semantic {
 	    ret-> templateParams ().insert (ret-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
 	    return ret;	    
 	} else {
-	    func-> getTemplates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
+	    func-> templates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
 	    auto aux = new (Z0)  ITemplateMethFrame (this-> _space, this-> _name, this-> _info, func);
 	    aux-> attributes () = this-> attributes ();
 	    aux-> isVirtual () = false;

@@ -239,15 +239,15 @@ namespace syntax {
     }    
 
     std::vector <semantic::Symbol> IIf::allInnerDecls () {
-	auto ret = this-> block-> allInnerDecls ();
-	auto el = this-> else_-> allInnerDecls ();
+	auto ret = this-> _block-> allInnerDecls ();
+	auto el = this-> _else-> allInnerDecls ();
 	ret.insert (ret.begin (), el.begin (), el.end ());
 	return ret;
     }
     
     Instruction IIf::instruction () {
-	if (this-> test != NULL) {
-	    auto expr = this-> test-> expression ();
+	if (this-> _test != NULL) {
+	    auto expr = this-> _test-> expression ();
 	    if (expr == NULL) return NULL;
 	    auto type = expr-> info-> type ()-> CompOp (new (Z0)  IBoolInfo (true));
 	    
@@ -262,58 +262,58 @@ namespace syntax {
 		    Ymir::Error::notImmutable (this-> token, expr-> info);
 		    return NULL;
 		} else if (expr-> info-> value ()-> to<IBoolValue> ()-> isTrue ()) {
-		    return this-> block-> instruction ();
+		    return this-> _block-> instruction ();
 		} else {
-		    if (this-> else_) {
-			this-> else_-> _isStatic  = this-> _isStatic;
-			return this-> else_-> instruction ();
+		    if (this-> _else) {
+			this-> _else-> _isStatic  = this-> _isStatic;
+			return this-> _else-> instruction ();
 		    }
-		    else return new (Z0)  IBlock (this-> block-> token, {}, {});
+		    else return new (Z0)  IBlock (this-> _block-> token, {}, {});
 		}
 	    }
 	    
 	    Table::instance ().retInfo ().currentBlock () = "if";
 	    Table::instance ().retInfo ().changed () = true;
-	    Block bl = this-> block-> block ();
-	    If _if;
-	    if (this-> else_ != NULL) {
-		_if = new (Z0)  IIf (this-> token, expr, bl, (If) this-> else_-> instruction ());
-		_if-> info = type;
+	    Block bl = this-> _block-> block ();
+	    If if_;
+	    if (this-> _else != NULL) {
+		if_ = new (Z0)  IIf (this-> token, expr, bl, (If) this-> _else-> instruction ());
+		if_-> _info = type;
 	    } else {
-		_if = new (Z0)  IIf (this-> token, expr, bl);
-		_if-> info = type;
+		if_ = new (Z0)  IIf (this-> token, expr, bl);
+		if_-> _info = type;
 	    }
-	    return _if;
+	    return if_;
 	} else {
 	    if (!this-> _isStatic) {
 		Table::instance ().retInfo ().currentBlock () = "else";
 		Table::instance ().retInfo ().changed () = true;
 	    
-		Block bl = this-> block-> block ();
-		If _if = new (Z0)  IIf (this-> token, NULL, bl);
-		return _if;
+		Block bl = this-> _block-> block ();
+		If if_ = new (Z0)  IIf (this-> token, NULL, bl);
+		return if_;
 	    } else {
-		return this-> block-> instruction ();
+		return this-> _block-> instruction ();
 	    }
 	}
     }
 
     std::vector <semantic::Symbol> IFor::allInnerDecls () {
 	std::vector <Symbol> syms;
-	for (auto it : this-> var)
+	for (auto it : this-> _var)
 	    syms.push_back (it-> info);
-	auto bl = this-> block-> allInnerDecls ();
+	auto bl = this-> _block-> allInnerDecls ();
 	syms.insert (syms.end (), bl.begin (), bl.end ());
 	return syms;
     }
     
     Instruction IFor::immutable (Expression expr) {
-	if (expr-> info-> type ()-> is<IRangeInfo> () && this-> var.size () == 1) {
-	    return immutableRange (this-> var, expr);
-	} else if (expr-> info-> type ()-> is <ITupleInfo> () && this-> var.size () == 1) {
-	    return immutableTuple (this-> var, expr);
-	} else if (expr-> info-> type ()-> is <IMacroRepeatInfo> () && this-> var.size () == 1) {
-	    return immutableMacro (this-> var, expr);
+	if (expr-> info-> type ()-> is<IRangeInfo> () && this-> _var.size () == 1) {
+	    return immutableRange (this-> _var, expr);
+	} else if (expr-> info-> type ()-> is <ITupleInfo> () && this-> _var.size () == 1) {
+	    return immutableTuple (this-> _var, expr);
+	} else if (expr-> info-> type ()-> is <IMacroRepeatInfo> () && this-> _var.size () == 1) {
+	    return immutableMacro (this-> _var, expr);
 	}
 	
 	Ymir::Error::undefinedOp (this-> token, expr-> info);
@@ -327,7 +327,7 @@ namespace syntax {
 	Block bl = new (Z0) IBlock (this-> token, {}, {});
 	for (auto it : Ymir::r (0, tu-> nbParams ())) {
 	    std::map<std::string, Expression> res = {{vars [0]-> token.getStr (), tu-> getParams ()[it]-> value ()-> toYmir (ctuple-> getExprs ()[it]-> info)}};
-	    auto currentBl = this-> block-> templateReplace (res)-> to<IBlock> ();
+	    auto currentBl = this-> _block-> templateReplace (res)-> to<IBlock> ();
 	    bl-> getInsts ().push_back (currentBl-> block ());
 	}
 	Table::instance ().quitBlock ();
@@ -378,7 +378,7 @@ namespace syntax {
 								  true
 	    ))-> expression ());
 	    
-	    bl-> getInsts ().push_back (this-> block-> block ());
+	    bl-> getInsts ().push_back (this-> _block-> block ());
 	    Table::instance ().quitBlock ();
 	}
 	Table::instance ().quitBlock ();
@@ -404,7 +404,7 @@ namespace syntax {
 		    var-> info = new (Z0) ISymbol (var-> token, var, index);
 		    Table::instance ().enterBlock ();
 		    Table::instance ().insert (var-> info);
-		    bl-> getInsts ().push_back (this-> block-> block ());
+		    bl-> getInsts ().push_back (this-> _block-> block ());
 		    Table::instance ().quitBlock ();
 		}
 	    } else {
@@ -416,7 +416,7 @@ namespace syntax {
 		    var-> info = new (Z0) ISymbol (var-> token, var, index);
 		    Table::instance ().enterBlock ();
 		    Table::instance ().insert (var-> info);
-		    bl-> getInsts ().push_back (this-> block-> block ());
+		    bl-> getInsts ().push_back (this-> _block-> block ());
 		    Table::instance ().quitBlock ();
 		}
 	    }
@@ -437,26 +437,26 @@ namespace syntax {
 	    var-> info = new (Z0) ISymbol (var-> token, var, index);
 	    Table::instance ().enterBlock ();
 	    Table::instance ().insert (var-> info);
-	    bl-> getInsts ().push_back (this-> block-> block ());
+	    bl-> getInsts ().push_back (this-> _block-> block ());
 	    Table::instance ().quitBlock ();
 	}
 	return bl;
     }
     
     Instruction IFor::instruction () {
-	auto expr = this-> iter-> expression ();
+	auto expr = this-> _iter-> expression ();
 	if (expr == NULL) return NULL;
-	if (!this-> id.isEof () && !this-> _isStatic)
-	    Table::instance ().retInfo ().setIdent (this-> id);
-	else if (!this-> id.isEof () && this-> _isStatic) {
-	    Ymir::Error::labelingImmutableFor (this-> id);
+	if (!this-> _id.isEof () && !this-> _isStatic)
+	    Table::instance ().retInfo ().setIdent (this-> _id);
+	else if (!this-> _id.isEof () && this-> _isStatic) {
+	    Ymir::Error::labelingImmutableFor (this-> _id);
 	}
 	
 	if (!this-> _isStatic) {
 	    Table::instance ().enterBlock ();
-	    std::vector <Var> var (this-> var.size ());
-	    for (auto it : Ymir::r (0, this-> var.size ())) {
-		var [it] = (Var) this-> var [it]-> templateExpReplace ({});
+	    std::vector <Var> var (this-> _var.size ());
+	    for (auto it : Ymir::r (0, this-> _var.size ())) {
+		var [it] = (Var) this-> _var [it]-> templateExpReplace ({});
 		auto info = Table::instance ().get (var [it]-> token.getStr ());
 		if (info && Table::instance ().sameFrame (info)) {
 		    Ymir::Error::shadowingVar (var [it]-> token, info-> sym);
@@ -482,14 +482,14 @@ namespace syntax {
 
 	    Table::instance ().retInfo ().currentBlock () = "for";
 	    Table::instance ().retInfo ().changed () = true;
-	    for (auto it : Ymir::r (0, this-> var.size ())) {
+	    for (auto it : Ymir::r (0, this-> _var.size ())) {
 		var [it]-> info-> type ()-> isConst (this-> _const [it]);
 	    }
 	    
-	    Block bl = this-> block-> block ();
+	    Block bl = this-> _block-> block ();
 	    Table::instance ().quitBlock ();
-	    auto aux = new (Z0) IFor (this-> token, this-> id, var, expr, bl, this-> _const);
-	    aux-> ret = type;
+	    auto aux = new (Z0) IFor (this-> token, this-> _id, var, expr, bl, this-> _const);
+	    aux-> _ret = type;
 	    return aux;
 	} else {
 	    return this-> immutable (expr);	    
@@ -504,13 +504,13 @@ namespace syntax {
 	
 	auto block = new (Z0) IBlock (this-> token,  {}, {});
 	auto nbVar = new (Z0) IFixed (this-> token, FixedConst::INT);
-	nbVar-> setValue ((int) this-> var.size ());
-	auto params = new (Z0) IParamList (this-> token, {this-> iter});
+	nbVar-> setValue ((int) this-> _var.size ());
+	auto params = new (Z0) IParamList (this-> token, {this-> _iter});
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
 	auto begin = new (Z0) IPar (tok, tok2, new (Z0) IVar (beginW, {nbVar}), params);
 
 	auto decl = new (Z0) IVarDecl (this-> token, {}, {}, {});
-	auto iterator = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", this-> var [0]-> token.getStr ()).str ()});
+	auto iterator = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", this-> _var [0]-> token.getStr ()).str ()});
 
 	decl-> getDecls ().push_back (iterator);
 	decl-> getInsts ().push_back (new (Z0) IBinary ({this-> token, Token::EQUAL},
@@ -518,15 +518,15 @@ namespace syntax {
 
 	block-> getInsts ().push_back (decl);	
 	auto innerBlock = new (Z0) IBlock (this-> token, {}, {});
-	for (auto it : Ymir::r (0, this-> var.size ())) {
-	    auto var = this-> var [it]-> templateExpReplace ({})-> to <IVar> ();
+	for (auto it : Ymir::r (0, this-> _var.size ())) {
+	    auto var = this-> _var [it]-> templateExpReplace ({})-> to <IVar> ();
 	    auto val = new (Z0) IFixed (this-> token, FixedConst::INT);
 	    val-> setValue ((int) it);
 	    auto right = new (Z0) IPar (tok, tok2, new (Z0) IVar (getW, {val}), new (Z0) IParamList (this-> token, {iterator}));
 	    innerBlock-> getInsts ().push_back (new (Z0) IFakeDecl (this-> token, var, right, this-> _const [it], true));
 	}
 	
-	innerBlock-> getInsts ().push_back (this-> block-> templateExpReplace ({}));	
+	innerBlock-> getInsts ().push_back (this-> _block-> templateExpReplace ({}));	
 	innerBlock-> getInsts ().push_back (new (Z0) IPar (tok, tok2, new (Z0) IVar (nextW), new (Z0) IParamList (this-> token, {iterator})));	
 	block-> getInsts ().push_back (new (Z0) IWhile (this-> token,
 							new (Z0) IUnary ({this-> token, Token::NOT},

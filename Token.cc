@@ -64,8 +64,15 @@ std::string Token::ANTI = "\\";
 std::string Token::LCOMM1 = "#*";
 std::string Token::RCOMM1 = "*#";
 std::string Token::LCOMM2 = "//";
+
 std::string Token::LCOMM3 = "/*";
 std::string Token::RCOMM3 = "*/";
+
+std::string Token::LCOMM4 = "/**";
+
+std::string Token::LCOMM5 = "/++";
+std::string Token::RCOMM5 = "+/";
+
 std::string Token::GUILL = "\"";
 std::string Token::APOS = "'";
 std::string Token::TAB = "\t";

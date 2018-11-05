@@ -36,9 +36,11 @@ namespace Ymir {
 	lexer (filename, file,
 	       {Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB},
 	       {
-		   {Token::LCOMM1, Token::RCOMM1},
-		       {Token::LCOMM2, Token::RETURN},
-			   {Token::LCOMM3, Token::RCOMM3}
+		   {Token::LCOMM1, {Token::RCOMM1, ""}},
+		       {Token::LCOMM2, {Token::RETURN, ""}},
+			   {Token::LCOMM3, {Token::RCOMM3, ""}},
+			       {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
+				   {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}} 
 	       }
 	)
     {
@@ -59,7 +61,7 @@ namespace Ymir {
 	}
     }
     
-    void Parser::semantic_time (syntax::Program prg) {
+    void Parser::semantic_time (syntax::Program prg, Ymir::json& docs) {
 	TRY {
 	    Table::instance ().purge ();
 	    FrameTable::instance ().purge ();
@@ -76,9 +78,15 @@ namespace Ymir {
 		it-> validate ();
 		i++;
 	    }
+
+
 	    
 	    if (Ymir::Error::nb_errors > 0)
-		Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);	
+		Ymir::Error::end ("NB Error : %d", Ymir::Error::nb_errors);
+	    else		
+		if (Options::instance ().generateDocs ()) {
+		    docs.push (prg-> generateDocs ());
+		}
 	} CATCH {}
     }
 
@@ -99,23 +107,37 @@ namespace Ymir {
     
 };
 
-static void ymir_parse_file (const char * filename);
+static void ymir_parse_file (const char * filename, Ymir::json &);
 
 void ymir_parse_files (int num_files, const char ** files) {
+    if (Options::instance ().generateDocs ()) {
+	remove (Options::instance ().docFileName ().c_str ());
+    }
+
+    Ymir::json jsonDoc;
     for (int i = 0; i < num_files; i++)
-	ymir_parse_file ( files[i] );
+	ymir_parse_file ( files[i] , jsonDoc );
+
+    
+    if (Options::instance ().generateDocs ()) {   
+	FILE * docs = fopen (Options::instance ().docFileName ().c_str (), "a+");
+	auto gen = jsonDoc.dump ();
+	fwrite (gen.c_str (), sizeof(char), gen.length (), docs);
+	fclose (docs);
+    }
+
 }
 
-static void ymir_parse_file (const char * filename) {
+static void ymir_parse_file (const char * filename, Ymir::json& docs) {
     FILE * file = fopen (filename, "r");
-
+    
     if (file == NULL) 
 	fatal_error (UNKNOWN_LOCATION, "cannot open filename %s: %m", filename);
 
     Ymir::Parser parser (filename, file);
     auto prg = parser.syntax_analyse ();
     fclose (file);
-    
-    parser.semantic_time (prg);
+        
+    parser.semantic_time (prg, docs);
     parser.lint_time ();    
 }

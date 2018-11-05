@@ -19,7 +19,7 @@ namespace lexical {
     */
     struct Lexer {
 
-	Lexer (const char * filename, FILE * file, std::vector<std::string> skips, std::vector <std::pair <std::string, std::string> > comments);
+	Lexer (const char * filename, FILE * file, std::vector<std::string> skips, std::map <std::string, std::pair <std::string, std::string> > comments);
 	
 	std::string getFilename () const;
 
@@ -31,9 +31,15 @@ namespace lexical {
 
 	Lexer& next (Word &word);
 
+	Lexer& nextWithDocs (std::string & , Word &word);
+
+	Word nextWithDocs (std::string & docs);
+	
 	Word next ();
 
 	Word next (std::vector <std::string> mandatories);
+
+	Word nextWithDocs (std::string & docs, std::vector <std::string> mandatories);
 	
 	virtual Lexer& rewind (ulong nb = 1);
 
@@ -51,7 +57,9 @@ namespace lexical {
 
 	Lexer& get (Word &word);
 
-	bool isComment (Word elem, std::string &retour);
+	Lexer& getWithDocs (std::string & docs, Word &word);
+
+	bool isComment (Word elem, std::string &retour, std::string & ign);
 
 	bool isSkip (Word elem);
 
@@ -72,8 +80,9 @@ namespace lexical {
 	
 	std::map <std::string, bool> skips;
 	std::vector <std::string> tokens;	
-	std::vector <std::pair<std::string, std::string> > comments;	
+	std::map <std::string, std::pair<std::string, std::string> > comments;
 	std::vector <Word> reads;
+	std::vector <std::string> docs;
 	
 	long current;
 	FILE * file;

@@ -42,6 +42,8 @@ namespace syntax {
 		it-> print (nb + 4);
 	    printf ("\n");
 	}	
+
+	Ymir::json generateDocs ();
 	
 	virtual ~IProgram () {
 	    for (auto it : decls)

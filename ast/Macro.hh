@@ -25,6 +25,8 @@ namespace syntax {
 
 	IMacroElement (Word ident) : IExpression (ident) {}
 
+	virtual Ymir::json generateDocs () = 0;
+	
 	virtual std::vector <Word> toTokens (bool& success);
 	
 	virtual IMacroElement* clone () = 0;
@@ -41,6 +43,8 @@ namespace syntax {
 	IMacroExpr (Word begin, Word end, std::vector <IMacroElement*> elements);
 
 	std::vector <IMacroElement*> & getElements ();
+
+	Ymir::json generateDocs ();
 	
     };
 
@@ -51,6 +55,8 @@ namespace syntax {
 	
 	IMacroToken* clone () override;
 
+	Ymir::json generateDocs () override;
+	
 	std::vector <Word> toTokens (bool& success) override;
 	
 	std::string & getValue ();
@@ -78,6 +84,8 @@ namespace syntax {
 	
 	IMacroRepeat (Word ident, IMacroExpr * content, IMacroToken * pass, bool atLeastOneTime);
 
+	Ymir::json generateDocs () override;
+	
 	IMacroRepeat* clone () override;
 
 	IMacroToken* getClose ();
@@ -119,6 +127,8 @@ namespace syntax {
 
 	IMacroVar (Word name, IMacroToken* type);
 
+	Ymir::json generateDocs () override;
+	
 	IMacroVar* clone () override;
 
 	std::vector <Word> toTokens (bool& success) override;
@@ -151,6 +161,8 @@ namespace syntax {
 
 	semantic::MacroSolution& getSoluce ();
 
+	Ymir::json generateDocs () override;
+
 	IMacroEnum* clone () override;
 	
 	std::vector <Word> toTokens (bool& success) override;
@@ -172,17 +184,20 @@ namespace syntax {
 
     class IMacro : public IDeclaration {
 	Word ident;
+	std::vector <std::string> _innerDocs;
 	std::vector <IMacroExpr*> _exprs;
 	std::vector <Block> _blocks;
 	
     public:
 
-	IMacro (Word ident, std::vector <IMacroExpr*> _exprs, std::vector <Block> _blocks);
+	IMacro (Word ident, std::string & docs, std::vector <std::string> innerDocs, std::vector <IMacroExpr*> _exprs, std::vector <Block> _blocks);
 	void declare () override;
 	
 	void declare (semantic::Module) override;
 	
 	void declareAsExtern (semantic::Module) override;
+
+	Ymir::json generateDocs () override;
 	
 	std::vector <IMacroExpr*>& getExprs ();
 

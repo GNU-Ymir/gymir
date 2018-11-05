@@ -14,6 +14,10 @@ bool & Options::isStandalone () {
     return this-> _isStandalone;
 }
 
+bool & Options::generateDocs () {
+    return this-> _needDocs;
+}
+
 void Options::setExecutable (const char * path) {
     this-> _executable = path;
     auto index = this-> _executable.find_last_of ("/");
@@ -26,6 +30,10 @@ void Options::setPrefix (const char * path) {
 	this-> _prefixIncludeDir += "/include/";
     else
 	this-> _prefixIncludeDir += "include/";
+}
+
+std::string & Options::docFileName () {
+    return this-> _docFileName;
 }
 
 std::string & Options::prefixIncludeDir () {

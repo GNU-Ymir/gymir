@@ -101,68 +101,124 @@ namespace syntax {
     }
     
     
-    IFunction::IFunction (Word ident, const std::vector <Word> & attrs, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
-	ident (ident),
-	type (NULL),
-	params (params),
-	tmps (tmps),
-	attrs (attrs),
-	block (block),
-	test (test)
+    IFunction::IFunction (Word ident, const std::string & docs, const std::vector <Word> & attrs, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
+	IDeclaration (docs),
+	_ident (ident),
+	_type (NULL),
+	_params (params),
+	_tmps (tmps),
+	_attrs (attrs),
+	_block (block),
+	_test (test)
     {
-	this-> is_public (true);
+	this-> setPublic (true);
     }    
 	
-    IFunction::IFunction (Word ident, const std::vector <Word> & attrs, Expression type, Word retDeco, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
-	ident (ident),
-	type (type),
-	retDeco (retDeco),
-	params (params),
-	tmps (tmps),
-	attrs (attrs),
-	block (block),
-	test (test)	    
+    IFunction::IFunction (Word ident, const std::string & docs, const std::vector <Word> & attrs, Expression type, Word retDeco, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
+	IDeclaration (docs),
+	_ident (ident),
+	_type (type),
+	_retDeco (retDeco),
+	_params (params),
+	_tmps (tmps),
+	_attrs (attrs),
+	_block (block),
+	_test (test)	    
     {
-	this-> is_public (true);
+	this-> setPublic (true);
     }
 
+    Ymir::json IFunction::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> _ident.getStr ();
+	o ["line"] = this-> _ident.line;
+	o ["char"] = this-> _ident.column;
+	o ["comment"] = this-> getDocs ();
+	
+	if (this-> _frame && this-> _frame-> is <IPureFrame> ()) {
+	    o ["kind"] = "function";
+	    auto proto = this-> _frame-> validate ();
+	    o ["type"] = proto-> type ()-> typeString ();
+	    for (auto it : proto-> vars ()) {
+		Ymir::json param;
+		param ["name"] = it-> token.getStr ();
+		param ["type"] = it-> info-> typeString ();
+		o ["parameters"].push (param);
+	    }	    
+	} else {
+	    o ["kind"] = "template";
+	    if (this-> _type) 
+		o ["type"] = this-> _retDeco.getStr () + this-> _type-> prettyPrint ();
+	    
+	    for (auto it : this-> _params) {
+		Ymir::json param;
+		param ["name"] = it-> token.getStr ();
+		if (it-> is <ITypedVar> ()) 
+		    param ["type"] = it-> to <ITypedVar> ()-> typeExp ()-> prettyPrint ();
+		o ["parameters"].push (param);
+	    }
+
+	    for (auto it : this-> _tmps) {
+		Ymir::json param;
+		param ["value"] = it-> prettyPrint ();
+		if (it-> is <IOfVar> ()) 
+		    param ["kind"] = "of_var";
+		else if (it-> is <IVariadicVar> ())
+		    param ["kind"] = "variadic_var";
+		else if (it-> is <IVar> ())
+		    param ["kind"] = "variable";
+		else param ["kind"] = "const";
+		o ["members"].push (param);
+	    }
+	}
+	return o;
+    }
+    
     IFunction::~IFunction () {
-	if (type) delete type;
-	for (auto it : params)
+	if (this-> _type) delete this-> _type;
+	for (auto it : this-> _params)
 	    delete it;
-	for (auto it : tmps)
+	for (auto it : this-> _tmps)
 	    delete it;
 	
-	if (block) delete block;
-	if (test) delete test;
+	if (this-> _block) delete this-> _block;
+	if (this-> _test) delete this-> _test;
     }
        
     Word IFunction::getIdent () {
-	return this-> ident;
+	return this-> _ident;
     }
 
-    std::vector <Var>& IFunction::getParams () {
-	return this-> params;
+    std::vector <Var>& IFunction::params () {
+	return this-> _params;
     }
     
-    std::vector <Expression>& IFunction::getTemplates () {
-	return this-> tmps;
+    const std::vector <Var>& IFunction::getParams () {
+	return this-> _params;
+    }
+    
+    std::vector <Expression>& IFunction::templates () {
+	return this-> _tmps;
+    }
+    
+    const std::vector <Expression>& IFunction::getTemplates () {
+	return this-> _tmps;
     }
 
-    std::vector <Word> & IFunction::getAttributes () {
-	return this-> attrs;
+    const std::vector <Word> & IFunction::getAttributes () {
+	return this-> _attrs;
     }
     
     Expression IFunction::getTest () {
-	return this-> test;
+	return this-> _test;
     }
     
     Expression IFunction::getType () {
-	return this-> type;
+	return this-> _type;
     }
 
     Word IFunction::getRetDeco () {
-	return this-> retDeco;
+	return this-> _retDeco;
     }
     
     Block& IFunction::post () {
@@ -195,24 +251,24 @@ namespace syntax {
 	return this-> _externLangSpace;
     }
 
-    std::string IFunction::name () {
-	return this-> ident.getStr ();
+    const std::string& IFunction::getName () {
+	return this-> _ident.getStr ();
     }
 
-    void IFunction::name (std::string &other) {
-	this-> ident.setStr (other);
+    void IFunction::setName (std::string &other) {
+	this-> _ident.setStr (other);
     }
 
-    void IFunction::name (const char* other) {
-	this-> ident.setStr (other);
+    void IFunction::setName (const char* other) {
+	this-> _ident.setStr (other);
     }
     
     Block IFunction::getBlock () {
-	return this-> block;
+	return this-> _block;
     }
 
     bool IFunction::has (const std::string & str) {
-	for (auto & it : this-> attrs) {
+	for (auto & it : this-> _attrs) {
 	    if (it.getStr () == str) return true;
 	}
 	return false;
@@ -222,7 +278,7 @@ namespace syntax {
 	IExpression (ident),
 	params (params)
     {}
-
+    
     std::string IParamList::prettyPrint () {
 	Ymir::OutBuffer buf;
 	for (auto it : Ymir::r (0, this-> params.size ())) {
@@ -235,16 +291,13 @@ namespace syntax {
 
     std::string IFuncPtr::prettyPrint () {
 	Ymir::OutBuffer buf (this-> token.getStr (), " (");
-	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    buf.write (this-> params [it]-> prettyPrint ());
-	    if (it < (int) this-> params.size () - 1)
+	for (auto it : Ymir::r (0, this-> _params.size ())) {
+	    buf.write (this-> _params [it]-> prettyPrint ());
+	    if (it < (int) this-> _params.size () - 1)
 		buf.write (", ");
 	}
 	buf.write (")-> ");
-	buf.write (this-> ret-> prettyPrint ());
-	if (this-> expr) {
-	    buf.write ("(", this-> prettyPrint (), ")");
-	}
+	buf.write (this-> _ret-> prettyPrint ());
 	return buf.str ();
     }
     
@@ -707,71 +760,71 @@ namespace syntax {
     
     IChar::IChar (Word word, ubyte code) :
 	IExpression (word),
-	code (code) {
+	_code (code) {
     }
     
     char IChar::toChar () {
-	return code;
+	return this-> _code;
     }
 
     std::string IChar::prettyPrint () {
-	return Ymir::OutBuffer ((char) this-> code).str ();
+	return Ymir::OutBuffer ((char) this-> _code).str ();
     }
 
     IFloat::IFloat (Word word) : IExpression (word), _type (FloatConst::DOUBLE) {
-	this-> totale = "0." + word.getStr ();
+	this-> _totale = "0." + word.getStr ();
     }
     
     IFloat::IFloat (Word word, std::string suite) :
 	IExpression (word),
-	suite (suite),
+	_suite (suite),
 	_type (FloatConst::DOUBLE)
     {
-	this-> totale = this-> token.getStr () + "." + suite;
+	this-> _totale = this-> token.getStr () + "." + suite;
     }
 
     IFloat::IFloat (Word word, std::string suite, FloatConst type) :
 	IExpression (word),
-	suite (suite),
+	_suite (suite),
 	_type (type)
     {
-	this-> totale = this-> token.getStr () + "." + suite;
+	this-> _totale = this-> token.getStr () + "." + suite;
     }
 
     IFloat::IFloat (Word word, FloatConst type) :
 	IExpression (word),
-	suite (""),
+	_suite (""),
 	_type (type)
     {
-	this-> totale = "0." + this-> token.getStr ();
+	this-> _totale = "0." + this-> token.getStr ();
     }
 
     void IFloat::setValue (float val) {
-	this-> totale = Ymir::OutBuffer (val).str ();
+	this-> _totale = Ymir::OutBuffer (val).str ();
     }
 
     void IFloat::setValue (double val) {
-	this-> totale = Ymir::OutBuffer (val).str ();
+	this-> _totale = Ymir::OutBuffer (val).str ();
     }    
 
     std::string IFloat::getValue () {
-	return this-> totale;
+	return this-> _totale;
     }
     
     std::string IFloat::prettyPrint () {
-	return this-> totale;
+	return this-> _totale;
     }
 
     IBool::IBool (Word token) : IExpression (token) {
-	this-> value = token == Keys::TRUE_;
+	this-> _value = token == Keys::TRUE_;
     }
     
     std::string IBool::prettyPrint () {	
 	return this-> token.getStr ();
     }
 
-    bool &IBool::getValue () {
-	return this-> value;
+    bool &IBool::value () {
+	return this-> _value;
     }
     
     std::string INull::prettyPrint () {
@@ -784,15 +837,15 @@ namespace syntax {
     
     IString::IString (Word word, std::string content) :
 	IExpression (word),
-	content (content)
+	_content (content)
     {}
     
     std::string IString::getStr () {
-	return this-> content;
+	return this-> _content;
     }
 
     std::string IString::prettyPrint () {
-	return Ymir::OutBuffer ("\"", this-> content, "\"").str ();
+	return Ymir::OutBuffer ("\"", this-> _content, "\"").str ();
     }
     
     std::vector <std::string> IString::getIds () {
@@ -836,65 +889,50 @@ namespace syntax {
 	    delete it;
     }
     
-    int IConstArray::nbParams () {
+    int IConstArray::getNbParams () {
 	return this-> params.size ();
     }    
-	
-    IConstRange::IConstRange (Word token, Expression left, Expression right, bool inner) :
-	IExpression (token),
-	left (left),
-	right (right),
-	_inner (inner)
-    {
-	this-> left-> inside = this;
-	this-> right-> inside = this;
-    }
-
-    IConstRange::~IConstRange () {
-	delete left;
-	delete right;
-    }    
-    
+	    
     IDColon::IDColon (Word token, Expression left, Expression right) :
 	IExpression (token),
-	left (left),
-	right (right)
+	_left (left),
+	_right (right)
     {}
 
     std::string IDColon::prettyPrint () {
-	return Ymir::OutBuffer (this-> left-> prettyPrint (), "::", this-> right-> prettyPrint ()).str ();
+	return Ymir::OutBuffer (this-> _left-> prettyPrint (), "::", this-> _right-> prettyPrint ()).str ();
     }
 
     Expression IDColon::getLeft () {
-	return this-> left;
+	return this-> _left;
     }
     
     Expression IDColon::getRight () {
-	return this-> right;
+	return this-> _right;
     }
     
     IDColon::~IDColon () {	
-	delete left;
-	delete right;	
+	delete this-> _left;
+	delete this-> _right;	
     }
     
     
     IDot::IDot (Word word, Expression left, Expression right) :
 	IExpression (word),
-	left (left),
-	right (right)
+	_left (left),
+	_right (right)
     {
-	if (this-> left) this-> left-> inside = this;
-	//if (this-> right) this-> right-> inside = this;
+	if (this-> _left) this-> _left-> inside = this;
+	//if (this-> right) this-> _right-> inside = this;
     }
 
     std::string IDot::prettyPrint () {
-	return Ymir::OutBuffer (this-> left-> prettyPrint (), ".", this-> right-> prettyPrint ()).str ();
+	return Ymir::OutBuffer (this-> _left-> prettyPrint (), ".", this-> _right-> prettyPrint ()).str ();
     }
     
     IDot::~IDot () {
-	delete left;
-	delete right;
+	delete this-> _left;
+	delete this-> _right;
     }
     
     bool IDot::isLvalue () {
@@ -902,11 +940,11 @@ namespace syntax {
     }
     
     Expression IDot::getLeft () {
-	return this-> left;
+	return this-> _left;
     }   
 
     Expression IDot::getRight () {
-	return this-> right;
+	return this-> _right;
     }
     
     IDotCall::IDotCall (Instruction inside, Word token, Expression call, Expression firstPar) :
@@ -993,7 +1031,8 @@ namespace syntax {
 	return this-> _dotCall;
     }
         
-    IProto::IProto (Word ident, const std::vector<Var> & params, bool isVariadic) :
+    IProto::IProto (Word ident, const std::string & docs, const std::vector<Var> & params, bool isVariadic) :
+	IDeclaration (docs),
 	_type (NULL),
 	_params (params),
 	space (""),
@@ -1001,7 +1040,8 @@ namespace syntax {
 	ident (ident)
     {}
 
-    IProto::IProto (Word ident, Expression type, Word retDeco, const std::vector<Var> & params, std::string space, bool isVariadic) :
+    IProto::IProto (Word ident, const std::string & docs, Expression type, Word retDeco, const std::vector<Var> & params, std::string space, bool isVariadic) :
+	IDeclaration (docs),
 	_type (type),
 	_retDeco (retDeco),
 	_params (params),
@@ -1010,12 +1050,34 @@ namespace syntax {
 	ident (ident)
     {}
 
+       
     IProto::~IProto () {
 	if (_type) delete _type;
 	for (auto it : _params)
 	    delete it;
     }
     
+    Ymir::json IProto::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> ident.getStr ();
+	o ["line"] = this-> ident.line;
+	o ["char"] = this-> ident.column;
+	o ["comment"] = this-> getDocs ();
+	o ["kind"] = "function";
+	auto proto = this-> _frame-> validate ();
+	o ["type"] = proto-> type ()-> typeString ();
+	for (auto it : proto-> vars ()) {
+	    Ymir::json param;
+	    param ["name"] = it-> token.getStr ();
+	    param ["type"] = it-> info-> typeString ();
+	    o ["parameters"].push (param);
+	}
+	o ["linkage"] = this-> from;
+	if (this-> space != "")
+	    o ["space"] = this-> space;
+	return o;
+    }
+
     bool& IProto::isVariadic () {
 	return this-> _isVariadic;
     }
@@ -1069,36 +1131,36 @@ namespace syntax {
     
     IIf::IIf (Word word, Expression test, Block block, bool isStatic) :
 	IInstruction (word),
-	test (test),
-	block (block),
-	else_ (NULL)
+	_test (test),
+	_block (block),
+	_else (NULL)
     {
-	if (this-> test)
-	    this-> test-> inside = this;
+	if (this-> _test)
+	    this-> _test-> inside = this;
 	this-> _isStatic = isStatic;
     }
     
     IIf::IIf (Word word, Expression test, Block block, If else_, bool isStatic) : 
 	IInstruction (word),
-	test (test),
-	block (block),
-	else_ (else_)
+	_test (test),
+	_block (block),
+	_else (else_)
     {
-	if (this-> test)
-	    this-> test-> inside = this;
+	if (this-> _test)
+	    this-> _test-> inside = this;
 	this-> _isStatic = isStatic;
-	if (this-> else_)
-	    this-> else_-> _isStatic = isStatic;
+	if (this-> _else)
+	    this-> _else-> _isStatic = isStatic;
     }    
     
     void IIf::print (int nb) {
-	if (this-> test) {
+	if (this-> _test) {
 	    printf ("\n%*c<%sIf> %s",			
 		    nb, ' ',
 		    this-> _isStatic ? "static_" : "",
 		    this-> token.toString ().c_str ()
 	    );		
-	    this-> test-> print (nb + 4);		
+	    this-> _test-> print (nb + 4);		
 	} else {
 	    printf ("\n%*c<%sElse> %s",
 		    nb, ' ',
@@ -1107,28 +1169,28 @@ namespace syntax {
 	    );
 	}
 
-	this-> block-> print (nb + 4);
-	if (this-> else_)
-	    this-> else_-> print (nb + 8);	    
+	this-> _block-> print (nb + 4);
+	if (this-> _else)
+	    this-> _else-> print (nb + 8);	    
     }
 
     IFor::IFor (Word token, Word id, const std::vector<Var> & var, Expression iter, Block bl, std::vector <bool> _const) :
 	IInstruction (token),
-	id (id),
-	var (var),
-	iter (iter),
-	block (bl),
+	_id (id),
+	_var (var),
+	_iter (iter),
+	_block (bl),
 	_const (_const)
     {
-	this-> iter-> inside = this;
+	this-> _iter-> inside = this;
     }
 
     
     IFor::~IFor ()  {
-	for (auto it : var)
+	for (auto it : this-> _var)
 	    delete it;
-	delete iter;
-	delete block;
+	delete this-> _iter;
+	delete this-> _block;
     }
     
     void IFor::print (int nb) {
@@ -1136,12 +1198,12 @@ namespace syntax {
 		nb, ' ',
 		this-> token.toString ().c_str ()
 	);
-	for (auto it : this-> var) {
+	for (auto it : this-> _var) {
 	    it-> print (nb + 4);
 	}
 
-	this-> iter-> print (nb + 5);
-	this-> block-> print (nb + 4);
+	this-> _iter-> print (nb + 5);
+	this-> _block-> print (nb + 4);
     }
 
 
@@ -1346,18 +1408,18 @@ namespace syntax {
 
     IExpand::IExpand (Word begin, Expression expr) :
 	IExpression (begin),
-	expr (expr)
+	_expr (expr)
     {}
 	
     IExpand::IExpand (Word begin, Expression expr, ulong it) :
 	IExpression (begin),
-	expr (expr),
-	it (it)
+	_expr (expr),
+	_it (it)
     {}
     
 	
     IExpand::~IExpand () {
-	delete expr;
+	delete this-> _expr;
     }
     
     void IExpand::print (int nb) {
@@ -1365,13 +1427,13 @@ namespace syntax {
 	       nb, ' ',
 	       this-> token.toString ().c_str ()
 	);
-	this-> expr-> print (nb + 4);
+	this-> _expr-> print (nb + 4);
     }
 
     std::string IExpand::prettyPrint () {
-	if (auto tu = this-> expr-> to <IConstTuple> ()) {
-	    return tu-> getExprs () [this-> it]-> prettyPrint ();
-	} else return this-> expr-> prettyPrint ();
+	if (auto tu = this-> _expr-> to <IConstTuple> ()) {
+	    return tu-> getExprs () [this-> _it]-> prettyPrint ();
+	} else return this-> _expr-> prettyPrint ();
     }
     
     IReturn::IReturn (Word ident) : IInstruction (ident), elem (NULL), caster (NULL) {}
@@ -1547,27 +1609,25 @@ namespace syntax {
     }
 
 
-    IFuncPtr::IFuncPtr (Word begin, std::vector <Expression> params, Expression type, Expression expr) :
+    IFuncPtr::IFuncPtr (Word begin, std::vector <Expression> params, Expression type) :
 	IExpression (begin),
-	params (params),
-	ret (type),
-	expr (expr)
+	_params (params),
+	_ret (type)
     {
-	this-> ret-> inside = this;
-	if (this-> expr)
-	    this-> expr-> inside = this;
+	this-> _ret-> inside = this;
     }    
 
-    std::vector <Expression> & IFuncPtr::getParams () {
-	return this-> params;
+
+    // std::vector <Expression> & IFuncPtr::params () {
+    // 	return this-> _params;
+    // }
+
+    const std::vector <Expression> & IFuncPtr::getParams () {
+	return this-> _params;
     }
 
     Expression IFuncPtr::getRet () {
-	return this-> ret;
-    }
-
-    Expression IFuncPtr::body () {
-	return this-> expr;
+	return this-> _ret;
     }
     
     const char * IFuncPtr::id () {
@@ -1582,22 +1642,22 @@ namespace syntax {
 
     
     IFuncPtr::~IFuncPtr () {
-	for (auto it : params)
+	for (auto it : this-> _params)
 	    delete it;
-	delete ret;
-	if (expr)
-	    delete expr;
+	delete this-> _ret;
     }
     
 
-    IStruct::IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas, bool isUnion) :
+    IStruct::IStruct (Word ident, const std::string & docs, std::vector <std::string> innerDocs, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas, bool isUnion) :
+	IDeclaration (docs),
 	ident (ident),
+	_innerDocs (innerDocs),
 	params (params),
 	tmps (tmps),
 	_udas (udas),
 	_isUnion (isUnion)
     {
-	this-> isPublic = true;
+	this-> _isPublic = true;
     }
 
     IStruct::~IStruct () {
@@ -1606,7 +1666,53 @@ namespace syntax {
 	for (auto it : tmps)
 	    delete it;
     }
-       
+
+    Ymir::json IStruct::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> ident.getStr ();
+	o ["kind"] = "struct";
+	o ["line"] = this-> ident.line;
+	o ["char"] = this-> ident.column;
+	if (this-> tmps.size () != 0) {
+	    for (auto it : this-> tmps) {
+		Ymir::json param;
+		param ["value"] = it-> prettyPrint ();
+		if (it-> is <IOfVar> ()) 
+		    param ["kind"] = "of_var";
+		else if (it-> is <IVariadicVar> ())
+		    param ["kind"] = "variadic_var";
+		else if (it-> is <IVar> ())
+		    param ["kind"] = "variable";
+		else param ["kind"] = "const";
+		if (it-> is <IVar> ()) {
+		    param ["name"] = it-> token.getStr ();
+		}
+		o ["parameters"].push (param);
+	    }
+
+	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		Ymir::json elem;
+		elem ["name"] = this-> params [it]-> token.getStr ();
+		elem ["type"] = this-> params [it]-> to <ITypedVar> ()-> typeExp ()-> prettyPrint ();
+		elem ["comment"] = this-> _innerDocs [it];
+		o ["members"].push (elem);
+	    }
+	    
+	} else {
+	    auto info = this-> _info-> type ()-> TempOp ({})-> to <IStructInfo> ();
+	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		Ymir::json elem;
+		elem ["name"] = this-> params [it]-> token.getStr ();
+		elem ["type"] = info-> getTypes () [it]-> typeString ();
+		elem ["comment"] = this-> _innerDocs [it];
+		o ["members"].push (elem);
+	    }
+	}
+	
+	o ["comment"] = this-> getDocs ();
+	return o;
+    }
+    
     IIs::IIs (Word begin, Expression expr, Expression type, std::vector <Expression> tmps) :
 	IExpression (begin),
 	tmps (tmps),
@@ -1662,27 +1768,70 @@ namespace syntax {
 	if (right) delete right;
     }
     
-    IEnum::IEnum (Word ident, Expression type, std::vector <Word> names, std::vector <Expression> values) :
+    IEnum::IEnum (Word ident, const std::string & docs, Expression type, std::vector <std::string> docName, std::vector <Word> names, std::vector <Expression> values) :
+	IDeclaration (docs),
 	ident (ident),
-	type (type),
-	names (names),
-	values (values)
+	_type (type),
+	_docs (docName),
+	_names (names),
+	_values (values)
     {
-	this-> is_public (true);
+	this-> setPublic (true);
     }
 
+    Ymir::json IEnum::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> ident.getStr ();
+	o ["kind"] = "enum";
+	o ["line"] = this-> ident.line;
+	o ["char"] = this-> ident.column;
+	o ["comment"] = this-> getDocs ();
+	if (this-> _info && this-> _info-> type ()-> is <IEnumCstInfo> ()) {
+	    auto names = this-> _info-> type ()-> to <IEnumCstInfo> ()-> getNames ();
+	    auto values = this-> _info-> type ()-> to <IEnumCstInfo> ()-> getValues ();
+	    o ["baseDeco"] = this-> _info-> type ()-> to <IEnumCstInfo> ()-> type-> typeString ();
+	    for (auto it : Ymir::r (0, names.size ())) {
+		Ymir::json member;
+		member ["kind"] = "enum member";
+		member ["name"] = names [it];
+		if (this-> _docs [it] != "") member ["comment"] = this-> _docs [it];
+		if (values [it]-> info && values [it]-> info-> isImmutable ()) {
+		    member ["value"] = values [it]-> info-> value ()-> toString ();
+		} else {
+		    member ["value"] = values [it]-> prettyPrint ();
+		}
+		
+		o ["members"].push (member);
+	    }
+	}
+	return o;
+    }
+    
     IEnum::~IEnum () {
-	for (auto it : values)
+	for (auto it : _values)
 	    delete it;
     }
 
-    IAlias::IAlias (Word ident, Expression value) :
+    IAlias::IAlias (Word ident, std::string & docs, Expression value) :
+	IDeclaration (docs),
 	_ident (ident),
 	_value (value)
     {
-	this-> is_public (true);
+	this-> setPublic (true);
     }
 
+    Ymir::json IAlias::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> _ident.getStr ();
+	o ["kind"] = "variable";
+	o ["line"] = this-> _ident.line;
+	o ["char"] = this-> _ident.column;
+	o ["comment"] = this-> getDocs ();
+	o ["deco"] = "S5alias";
+	o ["init"] = this-> _value-> prettyPrint ();
+	return o;
+    }
+    
     void IAlias::print (int) {	
     }
     
@@ -1752,48 +1901,107 @@ namespace syntax {
 	    delete it;
     }
     
-    IGlobal::IGlobal (Word ident, Expression type, bool isExternal) :
-	ident (ident),
-	expr (NULL),
-	type (type),
-	isExternal (isExternal)
+    IGlobal::IGlobal (Word ident, const std::string & docs, Expression type, bool isExternal) :
+	IDeclaration (docs),
+	_ident (ident),
+	_expr (NULL),
+	_type (type),
+	_isExternal (isExternal)
     {}
 
-    IGlobal::IGlobal (Word ident, Expression expr, Expression type) :
-	ident (ident),
-	expr (expr),
-	type (type)
+    IGlobal::IGlobal (Word ident, const std::string & docs, Expression expr, Expression type) :
+	IDeclaration (docs),
+	_ident (ident),
+	_expr (expr),
+	_type (type)
     {}
 
+    Ymir::json IGlobal::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> _ident.getStr ();
+	o ["kind"] = "variable";
+	if (this-> _isExternal) {
+	    Ymir::json cl;
+	    cl = "extern";
+	    o ["storageClass"].push (cl);
+	} else {
+	    Ymir::json cl;
+	    cl = "static";
+	    o ["storageClass"].push (cl);
+	}
+
+	if (this-> _sym && this-> _sym-> type ()) {
+	    o ["deco"] = this-> _sym-> typeString ();
+	}
+
+	if (this-> _expr) {
+	    o ["init"] = this-> _expr-> prettyPrint ();
+	}
+	
+	o ["comment"] = this-> getDocs ();
+	
+	return o;
+    }
+    
     bool & IGlobal::isImut () {
 	return this-> _isImut;
     }
 
-    bool IGlobal::fromC () {
-	return this-> from == "C";
+    void IGlobal::setFrom (const std::string & from) {
+	this-> _from = from;
+    }
+
+    void IGlobal::setSpace (const std::string & space) {
+	this-> _space = space;
+    }
+    
+    bool IGlobal::isFromC () {
+	return this-> _from == Keys::CLANG;
     }
 
     Expression IGlobal::getExpr () {
-	return this-> expr;
+	return this-> _expr;
     }
     
     IGlobal::~IGlobal () {
-	if (type) delete type;
-	if (expr) delete expr;
+	if (this-> _type) delete this-> _type;
+	if (this-> _expr) delete this-> _expr;
+    }
+           
+    Ymir::json IModDecl::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> ident.getStr ();
+	
+	if (this-> tmps.size () == 0)
+	    o ["kind"] = "module";
+	else {
+	    o ["kind"] = "template";
+	    for (auto it : this-> tmps) {
+		Ymir::json param;
+		param ["value"] = it-> prettyPrint ();
+		if (it-> is <IOfVar> ()) 
+		    param ["kind"] = "of_var";
+		else if (it-> is <IVariadicVar> ())
+		    param ["kind"] = "variadic_var";
+		else if (it-> is <IVar> ())
+		    param ["kind"] = "variable";
+		else param ["kind"] = "const";
+		if (it-> is <IVar> ()) {
+		    param ["name"] = it-> token.getStr ();
+		}
+		
+		o ["parameters"].push (param);
+	    }
+	}
+	
+	for (auto decl : this-> decls) {
+	    o ["members"].push (decl-> generateDocs ());
+	}
+	
+	return o;
     }
 
-    
-    
-    IConstructor::IConstructor (Word token, std::vector <Var> params, Block bl) :
-	IFunction (Word (token.getLocus(), token.getStr () + "__cst__"),
-		   {},
-		   params,
-		   {}, NULL, bl)	    	    
-    {
-	this-> params.insert (this-> params.begin (), new (Z0) IVar (token));
-    }
-    
-	
+
     std::vector <Expression> & IModDecl::getTemplates () {
 	return this-> tmps;
     }
@@ -1839,12 +2047,77 @@ namespace syntax {
 	return this-> elements;
     }
     
-    IMacro::IMacro (Word ident, std::vector <MacroExpr> exprs, std::vector <Block> blocks) :
+    IMacro::IMacro (Word ident, std::string & docs, std::vector <std::string> innerDocs, std::vector <MacroExpr> exprs, std::vector <Block> blocks) :
+	IDeclaration (docs),
 	ident (ident),
+	_innerDocs (innerDocs),
 	_exprs (exprs),
 	_blocks (blocks)
     {}
-        
+
+    Ymir::json IMacro::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> ident.getStr ();
+	o ["kind"] = "macro";
+	o ["comment"] = this-> getDocs ();
+	for (auto it : Ymir::r (0, this-> _exprs.size ())) {
+	    Ymir::json expr = this-> _exprs [it]-> generateDocs ();;
+	    expr ["comment"] = this-> _innerDocs [it];
+	    o ["members"].push (expr);
+	}
+	return o;
+    }
+
+    Ymir::json IMacroExpr::generateDocs () {
+	Ymir::json o;
+	for (auto elem : this-> elements) {
+	    o ["parameters"].push (elem-> generateDocs ());
+	}
+	return o;
+    }
+    
+    Ymir::json IMacroToken::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> token.getStr ();
+	o ["value"] = this-> value;
+	o ["kind"] = "macro token";
+	return o;
+    }
+
+    Ymir::json IMacroRepeat::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> token.getStr ();
+	o ["kind"] = "macro repeat";
+	o ["at_least_one_time"] = this-> oneTime ? "true" : "false";
+	o ["content"] = this-> content-> generateDocs ();
+	o ["pass"] = this-> pass-> generateDocs ();
+	return o;
+    }
+
+    Ymir::json IMacroVar::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> name.getStr ();
+	if (this-> _token)
+	    o ["token"] = this-> _token-> generateDocs ();
+	o ["kind"] = "macro var";
+	switch (this-> type) {
+	case MacroVarConst::EXPR : o ["type"] = "expr"; break;
+	case MacroVarConst::IDENT : o ["type"] = "ident"; break;
+	case MacroVarConst::BLOCK : o ["type"] = "block"; break;
+	case MacroVarConst::TOKEN : o ["type"] = "token"; break;
+	}
+	return o;
+    }
+
+    Ymir::json IMacroEnum::generateDocs () {
+	Ymir::json o;
+	o ["name"] = this-> token.getStr ();
+	o ["kind"] = "enum";
+	for (auto it : this-> _elems)
+	    o ["members"].push (it-> generateDocs ());
+	return o;
+    }
+    
     std::vector <MacroExpr>& IMacro::getExprs () {
 	return this-> _exprs;
     }
@@ -2155,7 +2428,9 @@ namespace syntax {
 	_const (const_)
     {}
 
-    ITypeCreator::ITypeCreator (Word ident, TypeForm form, const std::vector <Expression> & who, const std::vector <Expression> & tmps, bool isUnion) {
+    ITypeCreator::ITypeCreator (Word ident, const std::string & docs, TypeForm form, const std::vector <Expression> & who, const std::vector <Expression> & tmps, bool isUnion) :
+	IDeclaration (docs)
+    {
 	this-> _ident = ident;
 	this-> _form = form;
 	this-> _who = who;
@@ -2233,7 +2508,8 @@ namespace syntax {
 	return this-> _prot;
     }
 
-    ITypeAlias::ITypeAlias (Word ident, Expression value, bool isConst, bool isStatic) :
+    ITypeAlias::ITypeAlias (Word ident, const std::string & docs, Expression value, bool isConst, bool isStatic) :
+	IDeclaration (docs),
 	_ident (ident),
 	_value (value),	
 	_isConst (isConst),
@@ -2282,7 +2558,8 @@ namespace syntax {
     void IEvaluatedExpr::print (int) {}
 
 
-    ITrait::ITrait (Word ident, std::vector <TraitProto> protos, std::vector <TypedVar> attrs) :
+    ITrait::ITrait (Word ident, std::string & docs, std::vector <TraitProto> protos, std::vector <TypedVar> attrs) :
+	IDeclaration (docs),
 	_ident (ident),
 	_protos (protos),
 	_attrs (attrs)
@@ -2299,5 +2576,60 @@ namespace syntax {
     Word & ITrait::getIdent () {
 	return this-> _ident;
     }
+
+    std::string & IDeclaration::docs () {
+	return this-> _docs;
+    }
     
+    const std::string & IDeclaration::getDocs () {
+	return this-> _docs;
+    }
+
+    Ymir::json IDeclaration::generateDocs () {
+	return Ymir::json::undef ();
+    }    
+
+    Ymir::json IProgram::generateDocs () {
+	Ymir::json o;
+	std::string name = this-> locus.getFile ();
+	auto dot = name.find_last_of ('.');
+	if (dot != name.npos && name.substr (dot, name.length () - dot) == ".yr") {
+	    name = name.substr (0, dot);
+	}
+	
+	o ["name"] = name;
+	o ["file"] = this-> locus.getFile ();
+	o ["kind"] = "module";
+	
+	if (this-> decls.size () != 0) {
+	    if (auto mod = this-> decls [0]-> to <IModDecl> ()) {
+		if (mod-> isGlobal ()) o ["name"] = mod-> getIdent ().getStr ();
+	    }
+	}
+	
+	for (auto decl : this-> decls) {
+	    o ["members"].push (decl-> generateDocs ());
+	}
+		
+	return o;
+    }
+    
+    Ymir::json ISelf::generateDocs () {
+	auto o = IFunction::generateDocs ();
+	Ymir::json cl;
+	cl = "static";
+	o ["storageClass"].push (cl);
+	return o;
+    }
+
+    Ymir::json IDestSelf::generateDocs () {
+	auto o = IFunction::generateDocs ();
+	Ymir::json cl;
+	cl = "static";
+	o ["storageClass"].push (cl);
+	return o;
+    }
+
+    
+
 }

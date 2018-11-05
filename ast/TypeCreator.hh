@@ -60,7 +60,7 @@ namespace syntax {
 	
     public:
 
-	ITypeCreator (Word ident, TypeForm form, const std::vector <Expression> & who, const std::vector <Expression> & tmps, bool isUnion);
+	ITypeCreator (Word ident, const std::string & docs, TypeForm form, const std::vector <Expression> & who, const std::vector <Expression> & tmps, bool isUnion);
 
 	std::vector <TypeConstructor> & getConstructors ();
 
@@ -189,7 +189,7 @@ namespace syntax {
 	
     public :
 
-	ITypeAlias (Word ident, Expression value, bool isConst, bool isStatic);
+	ITypeAlias (Word ident, const std::string & docs, Expression value, bool isConst, bool isStatic);
 
 	InnerProtection & getProtection ();
 

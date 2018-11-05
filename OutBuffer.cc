@@ -9,7 +9,8 @@
 
 
 namespace Ymir {    
-    
+   
+
     void OutBuffer::write_ (const char* cs) {
 	auto cslen = strlen (cs);
 	if (capacity < len + cslen) {

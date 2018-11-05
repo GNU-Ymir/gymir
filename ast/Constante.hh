@@ -41,6 +41,9 @@ namespace syntax {
     /**
      * \struct IFixed
      * The syntaxic node representation of a integer constante
+     * \verbatim
+     fixed := ([0-9])+('_' [0-9])*
+     \endverbatim
      */
     class IFixed : public IExpression {
 	FixedConst _type;
@@ -95,27 +98,58 @@ namespace syntax {
 	
     private:
 
+	/**
+	 * \brief Convert the string value (read from syntax analyses) to ulong	   
+	 */
 	ulong convertU ();
+
+	/**
+	 * \brief Convert the string value (read from syntax analyses) to long	   
+	*/
 	long convertS ();
 
+	/**
+	 * \brief Convert the string value (read from syntax analyses) to ulong from hexadecimal encoding
+	*/
 	ulong convertUX ();
+
+	/**
+	 * \brief Convert the string value (read from syntax analyses) to long from hexadecimal encoding
+	*/
 	long convertSX ();
 	
     };
 
     typedef unsigned char ubyte;
-    
+
+    /**
+     * \struct IChar
+     * The syntaxic node representation of a char constante
+     * \verbatim
+     char := '\'' inner_char '\''
+     inner_char := [.] | ('\\' ('0' [0-8]+ | 'x' ([0-9]|[a-e]|[A-E])+ | escape_char))
+     escape_char := ('a' | 'b' | 'f' | 'n' | 'r' | 't' | 'v' | '\\' | '\'' | '"' | '?') 
+     \endverbatim
+     */
     class IChar : public IExpression {
-	ubyte code;
+	/** The value of the constante */
+	ubyte _code;
 
     public:
 
+	/**
+	 * \param word the location of the constante
+	 * \param code the value of the constante
+	 */
 	IChar (Word word, ubyte code);
 
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
+	/**
+	 * \brief Convert this constante to a char value
+	 */
 	char toChar ();
 	
 	Ymir::Tree toGeneric () override;
@@ -125,30 +159,70 @@ namespace syntax {
 	std::string prettyPrint () override;
     };
 
+    /**
+     * \struct IFloat
+     * The syntaxic node representation of a floating point constante
+     * \verbatim
+     float := (((fixed)? '.' fixed) | (fixed '.' (fixed)?) ('f')?
+     \endverbatim
+     */
     class IFloat : public IExpression {
 
-	std::string suite;
-	std::string totale;
+	/** The decimal part of this constante */
+	std::string _suite;
+
+	/** The value of the constante (including the decimal part) */
+	std::string _totale;
+
+	/** The type of constante (float, double) */
 	FloatConst _type;
 	
     public:
 
+	/**
+	 * \param word the location of the constante
+	 */
 	IFloat (Word word);
-	
+
+	/**
+	 * \param word the location of the constante
+	 * \param suite the decimal part of the constante
+	 */
 	IFloat (Word word, std::string suite);
-	
+
+	/**
+	 * \param word the location of the constante
+	 * \param suite the decimal part of the constante
+	 * \param type the type of constante
+	 */
 	IFloat (Word word, std::string suite, FloatConst type);
 
+	/**
+	 * \param word the location of the constante
+	 * \param type the type of the constante
+	 */
 	IFloat (Word word, FloatConst type);
 	
 	Expression expression () override;
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
+	/**
+	 * \brief Set the value of the the constante 
+	 * \param val the new value
+	 */
 	void setValue (float val);
 
+
+	/**
+	 * \brief Set the value of the the constante 
+	 * \param val the new value
+	 */
 	void setValue (double val);
 
+	/**
+	 * \return a string encoding of the constante
+	 */
 	std::string getValue ();
 	
 	Ymir::Tree toGeneric () override;
@@ -159,13 +233,24 @@ namespace syntax {
 	
     };
 
-
+    /**
+     * \struct IString
+     * The syntaxic node representation of a string constante
+     * \verbatim
+     string := '\"' char* '\"'
+     \endverbatim
+     */
     class IString : public IExpression {
-
-	std::string content;
+	
+	/** The content of the string */
+	std::string _content;
 	
     public :
 
+	/**
+	 * \param word the location of the constante
+	 * \param content the value
+	 */
 	IString (Word word, std::string content);
 	
 	Expression expression () override;
@@ -188,6 +273,9 @@ namespace syntax {
 	
     private:
 
+	/**
+	 * \return the short value of an escaping char in octal 
+	 */
 	static short getFromOc (std::string elem, ulong & index) {
 	    auto fst = elem [index + 1];
 	    index += 2;
@@ -209,6 +297,9 @@ namespace syntax {
 	    return total;
 	}
 
+	/**
+	 * \return the short value of an escaping char in hexa
+	 */
 	static short getFromLX (std::string elem, ulong & index) {
 	    index += 2;
 	    int size = 0;
@@ -232,6 +323,9 @@ namespace syntax {
 	    return total;
 	}
 
+	/**
+	 * \return the index where the the char <em>what</em> can be found
+	 */
 	static int find (const char* where, char what) {
 	    int i = 0;
 	    while (*where != '\0') {
@@ -243,7 +337,12 @@ namespace syntax {
 	}
 
     public:
-	
+
+	/**
+	 * \param current a string
+	 * \param index the current index 
+	 * \return the char encoded at index <em>index</em>, (including escaping representation)
+	 */
 	static short isChar (std::string &current, ulong &index) {
 	    static char escape[] = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '"', '?', '\0'};
 	    static short values[] = {7, 8, 12, 10, 13, 9, 11, 92, 39, 34, 63};
@@ -265,14 +364,26 @@ namespace syntax {
 	
     };
         
+    /**
+     * \struct IBool
+     * The syntaxic node representation of a boolean constante     
+     * \verbatim
+     bool := 'true' | 'false'
+     \endverbatim
+     */
     class IBool : public IExpression {
 
-	bool value;
+	/** The value of the constante */
+	bool _value;
 	
     public :
+
+	/**
+	 * \param token the location of the constante
+	 */
 	IBool (Word token);
 	
-	bool& getValue ();
+	bool& value ();
 
 	Expression expression () override;
 
@@ -290,9 +401,19 @@ namespace syntax {
 	std::string prettyPrint () override;
     };    
 
+    /**
+     * \struct INull
+     * The syntaxic node representation of a null constante
+     * \verbatim
+     null := 'null'
+     \endverbatim
+     */
     class INull : public IExpression {
     public:
 
+	/**
+	 * \param token the location of the constante
+	 */
 	INull (Word token) : IExpression (token) {
 	}
 
@@ -313,8 +434,20 @@ namespace syntax {
 	
     };
 
+
+    /**
+     * \struct IIgnore
+     * The syntaxic node representation of an ignore constante
+     * \verbatim
+     ignore := '_'
+     \endverbatim
+     */
     class IIgnore : public IExpression {
     public:
+	
+	/**
+	 * \param token the location of the constante
+	 */
 	IIgnore (Word token)
 	    : IExpression (token)
 	{}

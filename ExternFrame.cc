@@ -26,7 +26,7 @@ namespace semantic {
     {
 	__extFrames__.push_back (this);
 	_externSpace = space.toString ();
-	this-> _name = func-> name ();
+	this-> _name = func-> getName ();
     }
 
     ApplicationScore IExternFrame::isApplicable (const std::vector<InfoType> & params) {

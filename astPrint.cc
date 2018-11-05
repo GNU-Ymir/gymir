@@ -19,32 +19,32 @@ namespace syntax {
     void IFunction::print (int nb) {
 	printf ("\n%*c<Function> %s ",
 		nb, ' ',
-		this-> ident.toString ().c_str ()
+		this-> _ident.toString ().c_str ()
 	);
-	if (this-> type) {
+	if (this-> _type) {
 	    printf ("\n%*c ->", nb, ' ');
-	    this-> type-> print (nb + 4);
+	    this-> _type-> print (nb + 4);
 	}
 
-	if (this-> test) {
+	if (this-> _test) {
 	    printf ("\n%*c if (", nb + 2, ' ');
-	    this-> test-> print (nb + 4);
+	    this-> _test-> print (nb + 4);
 	    printf ("\n%*c )", nb + 2, ' ');
 	}
 	    
 	printf ("\n%*c !( ", nb + 2, ' ');
-	for (auto it : this-> tmps) {
+	for (auto it : this-> _tmps) {
 	    it-> print (nb + 4);
 	}
 	printf ("\n%*c )", nb + 2, ' ');
 
 	printf ("\n%*c (", nb + 2, ' ');
-	for (auto it : this-> params) {
+	for (auto it : this-> _params) {
 	    it-> print (nb + 4);
 	}
 	printf ("\n%*c )", nb + 2, ' ');
 
-	this-> block-> print (nb + 6);	    	    
+	this-> _block-> print (nb + 6);	    	    
     }
        
 	
@@ -155,7 +155,7 @@ namespace syntax {
 	printf ("\n%*c<Char> %s %d:(%c)",
 		nb, ' ',
 		this-> token.toString ().c_str (),
-		this-> code, (char) (this-> code)
+		this-> _code, (char) (this-> _code)
 	);
     }
 
@@ -163,7 +163,7 @@ namespace syntax {
     void IFloat::print (int nb) {
 	printf ("\n%*c<Float> %s [%s]",
 		nb, ' ', this-> token.toString ().c_str (),
-		this-> totale.c_str ()
+		this-> _totale.c_str ()
 	);
     }
     
@@ -171,7 +171,7 @@ namespace syntax {
 	printf ("\n%*c<String> %s : [%s]",
 		nb, ' ',
 		this-> token.toString ().c_str (),
-		this-> content.c_str ()
+		this-> _content.c_str ()
 	);	    
     }    
     	
@@ -195,23 +195,14 @@ namespace syntax {
 	);
     }	
     
-    void IConstRange::print (int nb) {
-	printf ("\n%*c<ConstRange> %s",
-		nb, ' ',
-		this-> token.toString ().c_str ()
-	);
-	this-> left-> print (nb + 4);
-	this-> right-> print (nb + 4);
-    }
-    
-
+   
     void IDColon::print (int nb) {
 	printf ("\n%*c<DColon> %s",
 		nb, ' ',
 		this-> token.toString ().c_str ()
 	);
-	this-> left-> print (nb + 4);
-	this-> right-> print (nb + 4);
+	this-> _left-> print (nb + 4);
+	this-> _right-> print (nb + 4);
     }
 
     
@@ -220,8 +211,8 @@ namespace syntax {
 		nb, ' ',
 		this-> token.toString ().c_str ()
 	);
-	this-> left-> print (nb + 4);
-	this-> right-> print (nb + 4);
+	this-> _left-> print (nb + 4);
+	this-> _right-> print (nb + 4);
     }
 
     void IDotCall::print (int nb) {
@@ -289,12 +280,11 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 	    
-	for (auto it : this-> params) {
+	for (auto it : this-> _params) {
 	    it-> print (nb + 4);
 	}
-	this-> ret-> print (nb + 5);
-	if (this-> expr)
-	    this->expr-> print (nb + 5);
+	
+	this-> _ret-> print (nb + 5);
     }
 
     void IStruct::print (int nb)  {
@@ -349,11 +339,11 @@ namespace syntax {
 		this-> ident.toString ().c_str ()
 	);
 	
-	for (int i = 0 ; i < (int) this-> names.size (); i++) {
+	for (int i = 0 ; i < (int) this-> _names.size (); i++) {
 	    printf ("\n%*c%s ", nb + 4, ' ',
-		    this-> names [i].toString ().c_str ());
+		    this-> _names [i].toString ().c_str ());
 	    
-	    this-> values [i]-> print (nb + 8);
+	    this-> _values [i]-> print (nb + 8);
 	}
     }
 
@@ -392,27 +382,15 @@ namespace syntax {
     void IGlobal::print (int nb) {
 	printf ("\n%*c<Global> %s",
 		nb, ' ',
-		this-> ident.toString ().c_str ()
+		this-> _ident.toString ().c_str ()
 	);
 
-	if (this-> expr)
-	    this-> expr-> print (nb + 4);
+	if (this-> _expr)
+	    this-> _expr-> print (nb + 4);
 	    
-	if (this-> type)
-	    this-> type-> print (nb + 4);
+	if (this-> _type)
+	    this-> _type-> print (nb + 4);
     }
 
-		
-    void IConstructor::print (int nb) {
-	printf ("\n%*c<Constructor> %s",
-		nb, ' ',
-		this-> ident.toString ().c_str ()
-	);
-	
-	for (auto it : this-> params) {
-	    it-> print (nb + 4);
-	}
-	this-> block-> print (nb + 8);
-    }
-    
+		    
 }

@@ -22,7 +22,7 @@ namespace semantic {
     }
 
     InfoType IAliasCstInfo::TempOp (const std::vector<::syntax::Expression> &) {
-	Ymir::Error::assert ("TODO");
+	//Ymir::Error::assert ("TODO");
 	return NULL;
     }
 

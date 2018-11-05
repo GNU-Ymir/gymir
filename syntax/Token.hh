@@ -73,6 +73,9 @@ struct Token {
     static std::string 	TAB;
     static std::string	LCOMM3;
     static std::string	RCOMM3;
+    static std::string	LCOMM4;
+    static std::string	LCOMM5;
+    static std::string	RCOMM5;
     static std::string 	ARROW;
     static std::string 	BSTRING;
     static std::string 	ESTRING;
@@ -88,7 +91,7 @@ struct Token {
 		COLON,		DOLLAR,		EQUAL,		DEQUAL,		STAR,		STAR_EQUAL,	PERCENT,	PERCENT_EQUAL,
 		XOR,		XOR_EQUAL,	DXOR_EQUAL,	DXOR,		TILDE,		TILDE_EQUAL,	AT,		DARROW,
 		SHARP,		SPACE,		RETURN,		RRETURN, ANTI, 	LCOMM1,		RCOMM1,		LCOMM2,
-		GUILL,		APOS,		TAB,		LCOMM3,		RCOMM3,		ARROW,		BSTRING,	ESTRING,	DCOLON, BROK_SPACE
+		GUILL,		APOS,		TAB,		LCOMM3,		RCOMM3,		LCOMM4, LCOMM5, RCOMM5, ARROW,		BSTRING,	ESTRING,	DCOLON, BROK_SPACE
 		};
     }
     

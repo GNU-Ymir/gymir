@@ -29,7 +29,7 @@ namespace lexical {
     Lexer :: Lexer (const char * filename,
 		    FILE * file, 
 		    std::vector <std::string> skips,
-		    std::vector <std::pair <std::string, std::string> > comments
+		    std::map <std::string, std::pair <std::string, std::string> > comments
     ) :
 	line (1),
 	column (1),
@@ -93,12 +93,31 @@ namespace lexical {
 	}
     }
 
+    Lexer& Lexer::nextWithDocs (std::string & docs, Word &word) {
+	if (this-> current >= (long) (this-> reads.size ()) - 1) {
+	    return this-> getWithDocs (docs, word);
+	} else {
+	    do {
+		this-> current ++;
+		word = this-> reads [this-> current];
+		docs = this-> docs [this-> current];
+	    } while (isSkip (word) && this-> current < (long) (this-> reads.size ()) - 1);
+	    if (isSkip (word)) return this-> getWithDocs (docs, word);	    
+	    return *this;
+	}
+    }
+    
+    Word Lexer::nextWithDocs (std::string & docs) {
+	Word word;
+	this-> nextWithDocs (docs, word);
+	return word;
+    }
+    
     Word Lexer::next () {
 	Word word;
 	this-> next (word);
 	return word;
     }
-
 
     std::string join (std::vector <std::string> elems) {
 	std::stringstream ss;
@@ -123,6 +142,19 @@ namespace lexical {
 	return Word::eof (this-> filename);
     }
 
+    Word Lexer::nextWithDocs (std::string & docs, std::vector <std::string> mandatories) {
+	Word word;
+	this-> nextWithDocs (docs, word);
+	for (auto it : mandatories) {
+	    if (it == word.getStr ()) return word;
+	}
+	
+	this-> rewind ();
+	Ymir::Error::syntaxError (word, join (mandatories).c_str ());
+	
+	return Word::eof (this-> filename);
+    }
+    
     Lexer& Lexer::rewind (ulong nb) {
 	this-> current -= nb;
 	if (this-> current < -1) this-> current = -1;
@@ -138,15 +170,25 @@ namespace lexical {
     }
 
     Lexer& Lexer::get (Word &word) {
+	Ymir::OutBuffer buf;
 	do {
 	    if (!getWord (word)) {
 		word.setEof (this-> filename);
 		break;
 	    } else {
-		std::string com;
-		while (isComment (word, com) && this-> enableComment) {
+		std::string com, ign;
+		bool line_break = false;
+		while (isComment (word, com, ign) && this-> enableComment) {
 		    do {
 			getWord (word);
+			if (word.getStr () != com && !word.isEof ()) {
+			    if (word.getStr () == Token::RETURN || word.getStr () == Token::RRETURN) {
+				buf.write ("\\n"); line_break = true;
+			    } else if (!line_break || (word.getStr () != ign && line_break)) {
+				line_break = line_break ? word.getStr () == Token::SPACE : false;
+				buf.write (word.getStr ());
+			    }
+			}
 		    } while (word.getStr () != com && !word.isEof ());
 		    getWord (word);
 		}
@@ -154,18 +196,54 @@ namespace lexical {
 	} while (isSkip (word) && !word.isEof ());
 
 	this-> reads.push_back (word);
+	this-> docs.push_back (buf.str ());
 	this-> current ++;
 	return *this;
     }
 
-    bool Lexer::isComment (Word elem, std::string & retour) {
-	for (auto it : this-> comments) {
-	    if (it.first == elem.getStr ()) {
-		retour = it.second;
-		return true;
+    Lexer& Lexer::getWithDocs (std::string & docs, Word &word) {
+	docs = "";
+	Ymir::OutBuffer buf;
+	do {
+	    if (!getWord (word)) {
+		word.setEof (this-> filename);
+		break;
+	    } else {
+		std::string com, ign;
+		bool line_break = false;
+		while (isComment (word, com, ign) && this-> enableComment) {
+		    do {
+			getWord (word);
+			if (word.getStr () != com && !word.isEof ()) {
+			    if (word.getStr () == Token::RETURN || word.getStr () == Token::RRETURN) {
+				buf.write ("\\n");
+				line_break = true;
+			    } else if ((line_break && word.getStr () != ign) || !line_break) {
+				line_break = line_break ? word.getStr () == Token::SPACE : false;
+				buf.write (word.getStr ());
+			    }
+			}
+		    } while (word.getStr () != com && !word.isEof ());
+		    getWord (word);
+		}
 	    }
+	} while (isSkip (word) && !word.isEof ());
+
+	docs = buf.str ();
+	this-> reads.push_back (word);
+	this-> docs.push_back (docs);
+	this-> current ++;
+	return *this;
+    }
+    
+    bool Lexer::isComment (Word elem, std::string & retour, std::string & ignore) {
+	auto end_comm = this-> comments.find (elem.getStr ());
+	if (end_comm == this-> comments.end ()) return false;
+	else {
+	    retour = end_comm-> second.first;
+	    ignore = end_comm-> second.second;
+	    return true;
 	}
-	return false;
     }
 
     bool Lexer::isSkip (Word elem) {
@@ -222,9 +300,12 @@ namespace lexical {
 	Lexer ("", NULL,
 	       {Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB},
 	       {
-		   {Token::LCOMM1, Token::RCOMM1},
-		       {Token::LCOMM2, Token::RETURN},
-			   {Token::LCOMM3, Token::RCOMM3}
+		   {Token::LCOMM1, {Token::RCOMM1, ""}},
+		       {Token::LCOMM2, {Token::RETURN, ""}},
+			   {Token::LCOMM3, {Token::RCOMM3, ""}},
+			       {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
+				   {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}} 
+
 	       }),
 	words (words),
 	fake_current (0)	

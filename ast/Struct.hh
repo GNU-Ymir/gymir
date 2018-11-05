@@ -11,14 +11,19 @@ namespace syntax {
     class IStruct : public IDeclaration {
 	
 	Word ident;
+	std::vector <std::string> _innerDocs;
 	std::vector<Var> params;
 	std::vector<Expression> tmps;
 	std::vector <Word> _udas;
 	bool _isUnion;
+	semantic::Symbol _info;
+
 	
     public:
 
-	IStruct (Word ident, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas, bool isUnion = false);
+	IStruct (Word ident, const std::string & docs, std::vector <std::string> innerDocs, std::vector <Expression> tmps, std::vector <Var> params, std::vector <Word> udas, bool isUnion = false);
+
+	Ymir::json generateDocs () override;
 	
 	void declare () override;
 	

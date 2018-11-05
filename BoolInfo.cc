@@ -239,7 +239,7 @@ namespace semantic {
 
     syntax::Expression IBoolValue::toYmir (Symbol sym) {
 	auto ret = new (Z0) syntax::IBool (sym-> sym);
-	ret-> getValue () = this-> value;
+	ret-> value () = this-> value;
 	ret-> info = sym;
 	return ret;
     }

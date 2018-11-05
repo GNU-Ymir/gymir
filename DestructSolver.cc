@@ -125,7 +125,7 @@ namespace semantic {
     DestructSolution DestructSolver::solveIgnore (Expression right) {
 	DestructSolution soluce {__VAR__, true};
 	auto test = new (Z0) IBool (right-> token);
-	test-> getValue () = true;	
+	test-> value () = true;	
 	soluce.test = test-> expression ();
 	soluce.immutable = true;
 	return soluce;
@@ -168,7 +168,7 @@ namespace semantic {
     	soluce.created.push_back (aux);
     	soluce.caster.push_back (bin);
     	auto test = new (Z0) IBool (var-> token);
-    	test-> getValue () = true;
+    	test-> value () = true;
     	soluce.test = test-> expression ();
     	soluce.immutable = true;
 	

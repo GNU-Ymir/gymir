@@ -210,11 +210,11 @@ namespace syntax {
     }
 
     Ymir::Tree IChar::toGeneric () {
-	return build_int_cst_type (unsigned_char_type_node, this-> code);
+	return build_int_cst_type (unsigned_char_type_node, this-> _code);
     }
     
     Ymir::Tree IBool::toGeneric () {
-	return build_int_cst_type (boolean_type_node, this-> value);
+	return build_int_cst_type (boolean_type_node, this-> _value);
     }
 
     Ymir::Tree IFloat::toGeneric () {
@@ -492,7 +492,7 @@ namespace syntax {
     }
     
     Ymir::Tree IString::toGeneric () {
-	return build_string_literal (this-> content.length () + 1, this-> content.c_str ());       
+	return build_string_literal (this-> _content.length () + 1, this-> _content.c_str ());       
     }
 
     Ymir::Tree IConstArray::toGeneric () {
@@ -561,8 +561,8 @@ namespace syntax {
 	return this-> info-> type ()-> buildBinaryOp (
 	    this-> token,
 	    this-> info-> type (),
-	    this-> left,
-	    this-> right
+	    this-> _left,
+	    this-> _right
 	);
     }    
 
@@ -575,7 +575,7 @@ namespace syntax {
 	return this-> info-> type ()-> buildUnaryOp (
 	    this-> token,
 	    this-> info-> type (),
-	    this-> left
+	    this-> _left
 	);
     }    
     
@@ -588,36 +588,36 @@ namespace syntax {
     }
 
     Ymir::Tree IIf::toGeneric () {
-	if (this-> test != NULL) {
-	    Ymir::Tree bool_expr = this-> test-> toGeneric ();
+	if (this-> _test != NULL) {
+	    Ymir::Tree bool_expr = this-> _test-> toGeneric ();
 	    Ymir::Tree thenLabel = Ymir::makeLabel (this-> token.getLocus (), "then");
 	    Ymir::Tree endLabel  = Ymir::makeLabel (this-> token.getLocus (), "end_if");
-	    Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, thenLabel);
-	    Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, endLabel);
+	    Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, this-> _test-> token.getLocus (), void_type_node, thenLabel);
+	    Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, this-> _test-> token.getLocus (), void_type_node, endLabel);
 	    Ymir::Tree goto_else, elseLabel;
 	    
-	    if (this-> else_) {
+	    if (this-> _else) {
 		elseLabel = Ymir::makeLabel (this-> token.getLocus (), "else");
-		goto_else = Ymir::buildTree (GOTO_EXPR, this-> test-> token.getLocus (), void_type_node, elseLabel);
+		goto_else = Ymir::buildTree (GOTO_EXPR, this-> _test-> token.getLocus (), void_type_node, elseLabel);
 	    } else {
 		goto_else = goto_end;
 	    }
 	    
 	    Ymir::TreeStmtList list;
-	    Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, this-> test-> token.getLocus (), void_type_node, bool_expr, goto_then, goto_else);
+	    Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, this-> _test-> token.getLocus (), void_type_node, bool_expr, goto_then, goto_else);
 	    list.append (cond_expr);
 	    
-	    Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, this-> block-> token.getLocus (), void_type_node, thenLabel);
+	    Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, this-> _block-> token.getLocus (), void_type_node, thenLabel);
 
 	    list.append (then_label_expr);
-	    Ymir::Tree then_part = this-> block-> toGeneric ();
+	    Ymir::Tree then_part = this-> _block-> toGeneric ();
 	    list.append (then_part);
 	    list.append (goto_end);
 	    
-	    if (this-> else_) {		
-		Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, this-> else_-> token.getLocus (), void_type_node, elseLabel);
+	    if (this-> _else) {		
+		Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, this-> _else-> token.getLocus (), void_type_node, elseLabel);
 		list.append (else_label_expr);
-		Ymir::Tree else_part = this-> else_-> toGeneric ();
+		Ymir::Tree else_part = this-> _else-> toGeneric ();
 		list.append (else_part);
 		list.append (goto_end);
 	    }
@@ -627,14 +627,14 @@ namespace syntax {
 
 	    return  list.getTree ();
 	} else {
-	    return this-> block-> toGeneric ();
+	    return this-> _block-> toGeneric ();
 	}
     }
 
     Ymir::Tree IFor::toGeneric () {
 	Ymir::TreeStmtList list;
-	for (int i = 0; i < (int) this-> var.size () ; i++) {
-	    auto var = this-> var [i];
+	for (int i = 0; i < (int) this-> _var.size () ; i++) {
+	    auto var = this-> _var [i];
 	    auto type_tree = var-> info-> type ()-> toGeneric ();
 	    Ymir::Tree decl = build_decl (
 		var-> token.getLocus (),
@@ -651,15 +651,15 @@ namespace syntax {
 	}
 	Ymir::Tree end_label = Ymir::makeLabel (this-> token.getLocus (), "end");
 	Ymir::getLoopLabels ().push_back (end_label);
-	if (!this-> id.isEof ())
-	    Ymir::getLoopLabelsNamed () [this-> id.getStr ()] = end_label;
+	if (!this-> _id.isEof ())
+	    Ymir::getLoopLabelsNamed () [this-> _id.getStr ()] = end_label;
 	
-	list.append (this-> ret-> buildApplyOp (this-> token, this-> ret, this-> var, this-> block, this-> iter));
+	list.append (this-> _ret-> buildApplyOp (this-> token, this-> _ret, this-> _var, this-> _block, this-> _iter));
 	Ymir::Tree end_expr = Ymir::buildTree (LABEL_EXPR, this-> token.getLocus (), void_type_node, end_label);	
 	list.append (end_expr);
 	Ymir::getLoopLabels ().pop_back ();
-	if (!this-> id.isEof ())
-	    Ymir::getLoopLabelsNamed ().erase (this-> id.getStr ());
+	if (!this-> _id.isEof ())
+	    Ymir::getLoopLabelsNamed ().erase (this-> _id.getStr ());
 
 	return list.getTree ();
     }
@@ -807,20 +807,20 @@ namespace syntax {
     Ymir::Tree IExpand::toGeneric () {
 	location_t loc = this-> token.getLocus ();
 	Ymir::Tree elemTree;
-	auto it = Ymir::getAssocTree ().find ((void*) this-> expr);
+	auto it = Ymir::getAssocTree ().find ((void*) this-> _expr);
 	if (it == Ymir::getAssocTree ().end ()) {
-	    elemTree = this-> expr-> toGeneric ();
-	    Ymir::getAssocTree () [(void*) this-> expr] = elemTree;
+	    elemTree = this-> _expr-> toGeneric ();
+	    Ymir::getAssocTree () [(void*) this-> _expr] = elemTree;
 	} else {
 	    elemTree = it-> second;
 	}
 
-	if (auto ref = this-> expr-> info-> type ()-> to <IRefInfo> ()) {
+	if (auto ref = this-> _expr-> info-> type ()-> to <IRefInfo> ()) {
 	    auto inner = ref-> content ()-> toGeneric ();
 	    elemTree = getPointerUnref (loc, elemTree, inner, 0);
 	}
 	
-	return getField (loc, elemTree, this-> it);
+	return getField (loc, elemTree, this-> _it);
     }
 
     Ymir::Tree IReturn::toGeneric () {
@@ -862,16 +862,7 @@ namespace syntax {
     }
 
     Ymir::Tree IFuncPtr::toGeneric () {
-	if (this-> expr != NULL) {
-	    return this-> info-> type ()-> buildBinaryOp (
-		this-> token,
-		this-> info-> type (),
-		this-> expr,
-		new (Z0) ITreeExpression (this-> token, this-> info-> type (), Ymir::Tree ())
-	    );
-	} else {
-	    return build_int_cst_type (long_unsigned_type_node, 0);	   
-	}
+	return build_int_cst_type (long_unsigned_type_node, 0);	   
     }
 
     Ymir::Tree ITupleDest::toGeneric () {

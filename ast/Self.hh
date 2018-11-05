@@ -13,10 +13,12 @@ namespace syntax {
 
     public:
 
-	ISelf (Word ident, Block block) :
-	    IFunction (ident, {}, {}, {}, NULL, block)
+	ISelf (Word ident, std::string & docs, Block block) :
+	    IFunction (ident, docs, {}, {}, {}, NULL, block)
 	{}
 
+	Ymir::json generateDocs () override;
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;
@@ -34,10 +36,12 @@ namespace syntax {
 
     public:
 
-	IDestSelf (Word ident, Block block) :
-	    IFunction ({ident, "~" + ident.getStr ()}, {}, {}, {}, NULL, block)
+	IDestSelf (Word ident, std::string & docs, Block block) :
+	    IFunction ({ident, "~" + ident.getStr ()}, docs, {}, {}, {}, NULL, block)
 	{}
 
+	Ymir::json generateDocs () override;
+	
 	void declare () override;
 
 	void declare (semantic::Module) override;

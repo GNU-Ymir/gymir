@@ -52,13 +52,13 @@ namespace semantic {
 		    }
 		} else {
 		    auto str = Word (tok.getLocus (), "string");
-		    this-> _function-> getParams () [0] = new (Z0)  ITypedVar (tok,
+		    this-> _function-> params () [0] = new (Z0)  ITypedVar (tok,
 									       new (Z0)  IArrayVar (tok, new (Z0)  IVar (str))
 		    );
 		}	    
 	    } else if (this-> _function-> getParams ().size () != 0) {
 		Ymir::Error::mainPrototype (this-> _function-> getIdent ());
-		this-> _function-> getParams () = {};
+		this-> _function-> params () = {};
 	    }
 	} else {
 	    if (this-> _function-> getParams ().size () == 2) {
@@ -70,7 +70,7 @@ namespace semantic {
 		    }
 		} else {
 		    auto i32 = Word (tok, "i32");
-		    this-> _function-> getParams ()[0] = new (Z0) ITypedVar (tok, new (Z0) IVar (i32));
+		    this-> _function-> params ()[0] = new (Z0) ITypedVar (tok, new (Z0) IVar (i32));
 		}
 
 		tok = this-> _function-> getParams ()[1]-> token;
@@ -82,11 +82,11 @@ namespace semantic {
 		} else {
 		    auto pchar = Word (tok, "char");
 		    auto p = Word (tok, "p");
-		    this-> _function-> getParams ()[1] = new (Z0) ITypedVar (tok, new (Z0) IVar (p, {new (Z0) IVar (p, {new (Z0) IVar (pchar)})}));
+		    this-> _function-> params ()[1] = new (Z0) ITypedVar (tok, new (Z0) IVar (p, {new (Z0) IVar (p, {new (Z0) IVar (pchar)})}));
 		}		
 	    } else if (this-> _function-> getParams ().size () != 0) {
 		Ymir::Error::mainPrototype (this-> _function-> getIdent ());
-		this-> _function-> getParams () = {};
+		this-> _function-> params () = {};
 	    }
 	}
 	this-> pass = true;

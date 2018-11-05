@@ -7,6 +7,7 @@
 
 #include "syntax/_.hh"
 #include <stdio.h>
+#include <ymir/utils/json.hpp>
 
 /**
  * Main function of the plugin, called by GCC internals
@@ -42,7 +43,7 @@ namespace Ymir {
 	 *  Fill the FrameTable informations (create all the required frames for code generation)
 	 * \param program the program that will be analyzed	 
 	 */
-	void semantic_time (syntax::Program program);
+	void semantic_time (syntax::Program program, Ymir::json&);
 
 	/**
 	 * \brief Code generation\n

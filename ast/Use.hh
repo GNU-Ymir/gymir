@@ -13,6 +13,7 @@ namespace syntax {
     public :
 
 	IUse (Word loc, Expression mod) :
+	    IDeclaration (""),
 	    loc (loc),
 	    mod (mod)
 	{
