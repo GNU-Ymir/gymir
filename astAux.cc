@@ -276,14 +276,14 @@ namespace syntax {
     
     IParamList::IParamList (Word ident, const std::vector<Expression> & params) :
 	IExpression (ident),
-	params (params)
+	_params (params)
     {}
     
     std::string IParamList::prettyPrint () {
 	Ymir::OutBuffer buf;
-	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    buf.write (this-> params [it]-> prettyPrint ());
-	    if (it < (int) this-> params.size () - 1)
+	for (auto it : Ymir::r (0, this-> _params.size ())) {
+	    buf.write (this-> _params [it]-> prettyPrint ());
+	    if (it < (int) this-> _params.size () - 1)
 		buf.write (", ");
 	}
 	return buf.str ();
@@ -302,21 +302,29 @@ namespace syntax {
     }
     
     IParamList::~IParamList () {
-	for (auto it : params)
+	for (auto it : this-> _params)
 	    delete it;
     }
     
-    std::vector <Expression>& IParamList::getParams () {
-	return this-> params;
+    std::vector <Expression>& IParamList::params () {
+	return this-> _params;
     }
     
-    std::vector <semantic::InfoType>& IParamList::getTreats () {
-	return this-> treats;
+    const std::vector <Expression>& IParamList::getParams () {
+	return this-> _params;
+    }
+    
+    std::vector <semantic::InfoType>& IParamList::treats () {
+	return this-> _treats;
+    }
+
+    const std::vector <semantic::InfoType>& IParamList::getTreats () {
+	return this-> _treats;
     }
     
     std::vector <semantic::InfoType> IParamList::getParamTypes () {
 	std::vector<semantic::InfoType> paramTypes;
-	for (auto it : this-> params) {
+	for (auto it : this-> _params) {
 	    it-> info-> type ()-> symbol () = it-> info;
 	    paramTypes.push_back (it-> info-> type ());
 	}
@@ -977,8 +985,8 @@ namespace syntax {
     
     IPar::IPar (Word word, Word end) :
 	IExpression (word),
-	end (end),
-	params (NULL),
+	_end (end),
+	_params (NULL),
 	_left (NULL),
 	_dotCall (NULL),
 	_opCall (false),
@@ -987,19 +995,19 @@ namespace syntax {
 
     IPar::IPar (Word word, Word end, Expression left, ParamList params, bool fromOpCall) :
 	IExpression (word),
-	end (end),
-	params (params),
+	_end (end),
+	_params (params),
 	_left (left),
 	_dotCall (NULL),
 	_opCall (fromOpCall),
 	_score (NULL)
     {
 	this-> _left-> inside = this;
-	this-> params-> inside = this;	    	    
+	this-> _params-> inside = this;	    	    
     }
 
     std::string IPar::prettyPrint () {
-	return Ymir::OutBuffer (this-> _left-> prettyPrint (), "(", this-> params-> prettyPrint (), ")").str ();	
+	return Ymir::OutBuffer (this-> _left-> prettyPrint (), "(", this-> _params-> prettyPrint (), ")").str ();	
     }
 
     bool IPar::isLvalue () {
@@ -1009,14 +1017,14 @@ namespace syntax {
     }
     
     IPar::~IPar () {
-	delete params;
-	delete _left;
-	if (_dotCall) delete _dotCall;
-	if (_score) delete _score;
+	delete this-> _params;
+	delete this-> _left;
+	if (this-> _dotCall) delete this-> _dotCall;
+	if (this-> _score) delete this-> _score;
     }
     
     ParamList& IPar::paramList () {
-	return this-> params;
+	return this-> _params;
     }
     
     Expression& IPar::left () {
@@ -1035,9 +1043,9 @@ namespace syntax {
 	IDeclaration (docs),
 	_type (NULL),
 	_params (params),
-	space (""),
+	_space (""),
 	_isVariadic (isVariadic),
-	ident (ident)
+	_ident (ident)
     {}
 
     IProto::IProto (Word ident, const std::string & docs, Expression type, Word retDeco, const std::vector<Var> & params, std::string space, bool isVariadic) :
@@ -1045,23 +1053,23 @@ namespace syntax {
 	_type (type),
 	_retDeco (retDeco),
 	_params (params),
-	space (space),
+	_space (space),
 	_isVariadic (isVariadic),
-	ident (ident)
+	_ident (ident)
     {}
 
        
     IProto::~IProto () {
-	if (_type) delete _type;
-	for (auto it : _params)
+	if (this-> _type) delete this-> _type;
+	for (auto it : this-> _params)
 	    delete it;
     }
     
     Ymir::json IProto::generateDocs () {
 	Ymir::json o;
-	o ["name"] = this-> ident.getStr ();
-	o ["line"] = this-> ident.line;
-	o ["char"] = this-> ident.column;
+	o ["name"] = this-> _ident.getStr ();
+	o ["line"] = this-> _ident.line;
+	o ["char"] = this-> _ident.column;
 	o ["comment"] = this-> getDocs ();
 	o ["kind"] = "function";
 	auto proto = this-> _frame-> validate ();
@@ -1072,9 +1080,9 @@ namespace syntax {
 	    param ["type"] = it-> info-> typeString ();
 	    o ["parameters"].push (param);
 	}
-	o ["linkage"] = this-> from;
-	if (this-> space != "")
-	    o ["space"] = this-> space;
+	o ["linkage"] = this-> _from;
+	if (this-> _space != "")
+	    o ["space"] = this-> _space;
 	return o;
     }
 
@@ -1094,16 +1102,20 @@ namespace syntax {
 	return this-> _retDeco;
     }
 
-    std::string IProto::name () {
-	return this-> ident.getStr ();
+    const Word & IProto::getIdent () {
+	return this-> _ident;
+    }
+    
+    const std::string & IProto::getName () {
+	return this-> _ident.getStr ();
     }
 
     std::string & IProto::externLang () {
-	return this-> from;
+	return this-> _from;
     }
 
     std::string & IProto::externLangSpace () {
-	return this-> space;
+	return this-> _space;
     }
     
     std::vector <std::string> IConstArray::getIds () {
@@ -1128,6 +1140,24 @@ namespace syntax {
     }
     
     void ITreeExpression::print (int) {}
+
+    ISemanticConst::ISemanticConst (Word locus, semantic::InfoType type, semantic::InfoType auxType) :
+	IExpression (locus),
+	_type (type),
+	_auxType (auxType)
+    {
+	this-> info = new (Z0) ISymbol (locus, this, type);
+    }
+
+    Expression ISemanticConst::templateExpReplace (const std::map <std::string, Expression>&) {
+	return this;
+    }
+
+    Expression ISemanticConst::expression () {
+	return this;
+    }
+    
+    void ISemanticConst::print (int) {}
     
     IIf::IIf (Word word, Expression test, Block block, bool isStatic) :
 	IInstruction (word),
@@ -1293,7 +1323,7 @@ namespace syntax {
 	return this-> left;
     }
     
-    std::vector <Expression> & IStructCst::getExprs () {
+    const std::vector <Expression> & IStructCst::getExprs () {
 	return this-> params-> getParams ();
     }
     
@@ -1436,29 +1466,33 @@ namespace syntax {
 	} else return this-> _expr-> prettyPrint ();
     }
     
-    IReturn::IReturn (Word ident) : IInstruction (ident), elem (NULL), caster (NULL) {}
+    IReturn::IReturn (Word ident) : IInstruction (ident), _elem (NULL), _caster (NULL) {}
     
     IReturn::IReturn (Word ident, Expression elem) :
 	IInstruction (ident),	
-	elem (elem),
-	caster (NULL)
+	_elem (elem),
+	_caster (NULL)
     {}
 
     Expression IReturn::getExpr () {
-	return this-> elem;
+	return this-> _elem;
     }
 
     bool& IReturn::isUseless () {
 	return this-> _isUseless;
     }
     
-    InfoType& IReturn::getCaster () {
-	return this-> caster;
+    InfoType& IReturn::caster () {
+	return this-> _caster;
+    }
+
+    InfoType IReturn::getCaster () {
+	return this-> _caster;
     }
     
     IReturn::~IReturn () {
-	if (caster) delete caster;
-	if (elem) delete elem;
+	if (this-> _caster) delete this-> _caster;
+	if (this-> _elem) delete this-> _elem;
     }
     
     void IReturn::print (int nb) {
@@ -1467,8 +1501,8 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 	
-	if (this-> elem)
-	    this-> elem-> print (nb + 4);
+	if (this-> _elem)
+	    this-> _elem-> print (nb + 4);
     }    
 
     IArrayVar::IArrayVar (Word token, Expression content) :
@@ -1536,44 +1570,44 @@ namespace syntax {
     
     ILambdaFunc::ILambdaFunc (Word begin, std::vector <Var> params, Var type, Block block) : 
 	IExpression (begin),
-	params (params),
-	ret (type),
-	block (block),
-	id (getLastNb ())
+	_params (params),
+	_ret (type),
+	_block (block),
+	_id (getLastNb ())
     {}
 
     ILambdaFunc::ILambdaFunc (Word begin, std::vector <semantic::Frame> frame) : 
 	IExpression (begin),	
-	params (),
-	ret (NULL),
-	block (NULL),
-	id (0),
-	frame (frame)
+	_params (),
+	_ret (NULL),
+	_block (NULL),
+	_id (0),
+	_frame (frame)
     {}
 
     
     ILambdaFunc::ILambdaFunc (Word begin, std::vector <Var> params, Block block) : 
 	IExpression (begin),
-	params (params),
-	ret (NULL),
-	block (block),
-	id (getLastNb ())
+	_params (params),
+	_ret (NULL),
+	_block (block),
+	_id (getLastNb ())
     {}
 	
     ILambdaFunc::ILambdaFunc (Word begin, std::vector <Var> params, Expression ret) :
 	IExpression (begin),
-	params (params),
-	ret (NULL),
-	block (NULL),
-	expr (ret),
-	id (getLastNb ())
+	_params (params),
+	_ret (NULL),
+	_block (NULL),
+	_expr (ret),
+	_id (getLastNb ())
     {}
 
     std::string ILambdaFunc::prettyPrint () {
-	auto ident = Ymir::OutBuffer ("Lambda_", this-> id, " (");
-	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    ident.write (this-> params [it]-> prettyPrint ());
-	    if (it < (int) this-> params.size () - 1)
+	auto ident = Ymir::OutBuffer ("Lambda_", this-> _id, " (");
+	for (auto it : Ymir::r (0, this-> _params.size ())) {
+	    ident.write (this-> _params [it]-> prettyPrint ());
+	    if (it < (int) this-> _params.size () - 1)
 		ident.write (", ");
 	}
 	ident.write (")");
@@ -1584,16 +1618,16 @@ namespace syntax {
 	return this-> _isMoved;
     }
     
-    std::vector <Var> & ILambdaFunc::getParams () {
-	return this-> params;
+    const std::vector <Var> & ILambdaFunc::getParams () {
+	return this-> _params;
     }
     
     Expression ILambdaFunc::getExpr () {
-	return this-> expr;
+	return this-> _expr;
     }
 
     Block ILambdaFunc::getBlock () {
-	return this-> block;
+	return this-> _block;
     }
     
     ulong ILambdaFunc::getLastNb () {
@@ -1602,10 +1636,10 @@ namespace syntax {
     }
     
     ILambdaFunc::~ILambdaFunc () {
-	for (auto it : params) delete it;
-	if (ret) delete ret;
-	if (block) delete block;
-	if (expr) delete expr;
+	for (auto it : this-> _params) delete it;
+	if (this-> _ret) delete this-> _ret;
+	if (this-> _block) delete this-> _block;
+	if (this-> _expr) delete this-> _expr;
     }
 
 
@@ -1715,34 +1749,36 @@ namespace syntax {
     
     IIs::IIs (Word begin, Expression expr, Expression type, std::vector <Expression> tmps) :
 	IExpression (begin),
-	tmps (tmps),
-	left (expr),
-	type (type),
-	expType (Word::eof ())
+	_tmps (tmps),
+	_left (expr),
+	_type (type),
+	_expType (Word::eof ())
     {
-	if (left) this-> left-> inside = this;
-	if (type) this-> type-> inside = this;
+	if (this-> _left) this-> _left-> inside = this;
+	if (this-> _type) this-> _type-> inside = this;
     }
 
     IIs::IIs (Word begin, Expression expr, Word type) :
 	IExpression (begin),
-	left (expr),
-	type (NULL),
-	expType (type)
+	_left (expr),
+	_type (NULL),
+	_expType (type)
     {
-	if (left) this-> left-> inside = this;
+	if (this-> _left) this-> _left-> inside = this;
     }
 
     std::string IIs::prettyPrint () {
-	if (this-> type)
-	    return Ymir::OutBuffer ("is (", this-> left-> prettyPrint (), " : ", this-> type-> prettyPrint (), ")").str ();
+	if (this-> _type)
+	    return Ymir::OutBuffer ("is (", this-> _left-> prettyPrint (), " : ", this-> _type-> prettyPrint (), ")").str ();
 	else
-	    return Ymir::OutBuffer ("is (", this-> left-> prettyPrint (), " : ", this-> expType.getStr (), ")").str ();
+	    return Ymir::OutBuffer ("is (", this-> _left-> prettyPrint (), " : ", this-> _expType.getStr (), ")").str ();
     }
     
     IIs::~IIs () {
-	delete left;
-	if (type) delete type;
+	delete this-> _left;
+	if (this-> _type) delete this-> _type;
+	for (auto it : this-> _tmps)
+	    delete it;
     }
 
     ITupleDest::ITupleDest (Word token, bool isVariadic, std::vector <Var> decls, Expression right) :
@@ -1861,43 +1897,24 @@ namespace syntax {
     IStringOf::~IStringOf () {
 	delete expr;
     }
-
-    IMatchPair::IMatchPair (Word token, Expression left, Expression right) :
-	IExpression (token),
-	left (left),
-	right (right)
-    {}
-
-    Expression IMatchPair::getLeft () {
-	return this-> left;
-    }
-
-    Expression IMatchPair::getRight () {
-	return this-> right;
-    }    
-    
-    IMatchPair::~IMatchPair () {
-	delete left;
-	delete right;
-    }
     	
-    IMatch::IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block) :
+    IMatch::IMatch (Word word, Expression expr, const std::vector<Expression> &values, const std::vector <Block> &block) :
 	IExpression (word),
-	expr (expr),
-	values (values),
-	block (block)
+	_expr (expr),
+	_values (values),
+	_block (block)
     {}
     
     IMatch::IMatch (Word word, Expression expr) :
 	IExpression (word),
-	expr (expr)
+	_expr (expr)
     {}
 
     IMatch::~IMatch () {
-	delete expr;
-	for (auto it : values)
+	delete this-> _expr;
+	for (auto it : this-> _values)
 	    delete it;
-	for (auto it : block)
+	for (auto it : this-> _block)
 	    delete it;
     }
     
@@ -1970,13 +1987,13 @@ namespace syntax {
            
     Ymir::json IModDecl::generateDocs () {
 	Ymir::json o;
-	o ["name"] = this-> ident.getStr ();
+	o ["name"] = this-> _ident.getStr ();
 	
-	if (this-> tmps.size () == 0)
+	if (this-> _tmps.size () == 0)
 	    o ["kind"] = "module";
 	else {
 	    o ["kind"] = "template";
-	    for (auto it : this-> tmps) {
+	    for (auto it : this-> _tmps) {
 		Ymir::json param;
 		param ["value"] = it-> prettyPrint ();
 		if (it-> is <IOfVar> ()) 
@@ -1994,25 +2011,28 @@ namespace syntax {
 	    }
 	}
 	
-	for (auto decl : this-> decls) {
+	for (auto decl : this-> _decls) {
 	    o ["members"].push (decl-> generateDocs ());
 	}
 	
 	return o;
     }
 
-
-    std::vector <Expression> & IModDecl::getTemplates () {
-	return this-> tmps;
+    std::vector <Expression> & IModDecl::templates () {
+	return this-> _tmps;
+    }
+    
+    const std::vector <Expression> & IModDecl::getTemplates () {
+	return this-> _tmps;
     }
 
-    std::vector <Declaration> & IModDecl::getDecls () {
-	return this-> decls;
+    const std::vector <Declaration> & IModDecl::getDecls () {
+	return this-> _decls;
     }
     
     IScope::IScope (Word token, Block block) :
 	IInstruction (token),
-	block (block)
+	_block (block)
     {}
 
     Expression IConstArray::getParam (int nb) {
@@ -2032,7 +2052,7 @@ namespace syntax {
 
     IPragma::IPragma (Word token, ParamList params) :
 	IExpression (token),
-	params (params)
+	_params (params)
     {}
 
     std::string IPragma::prettyPrint () {
@@ -2040,16 +2060,16 @@ namespace syntax {
     }
     
     IMacroExpr::IMacroExpr (Word, Word, std::vector <MacroElement> elements) :
-	elements (elements)
+	_elements (elements)
     {}
 
-    std::vector <MacroElement> &IMacroExpr::getElements () {
-	return this-> elements;
+    const std::vector <MacroElement> &IMacroExpr::getElements () {
+	return this-> _elements;
     }
     
-    IMacro::IMacro (Word ident, std::string & docs, std::vector <std::string> innerDocs, std::vector <MacroExpr> exprs, std::vector <Block> blocks) :
+    IMacro::IMacro (Word ident, const std::string & docs, std::vector <std::string> innerDocs, const std::vector <MacroExpr> &exprs, const std::vector <Block> & blocks) :
 	IDeclaration (docs),
-	ident (ident),
+	_ident (ident),
 	_innerDocs (innerDocs),
 	_exprs (exprs),
 	_blocks (blocks)
@@ -2057,7 +2077,7 @@ namespace syntax {
 
     Ymir::json IMacro::generateDocs () {
 	Ymir::json o;
-	o ["name"] = this-> ident.getStr ();
+	o ["name"] = this-> _ident.getStr ();
 	o ["kind"] = "macro";
 	o ["comment"] = this-> getDocs ();
 	for (auto it : Ymir::r (0, this-> _exprs.size ())) {
@@ -2070,7 +2090,7 @@ namespace syntax {
 
     Ymir::json IMacroExpr::generateDocs () {
 	Ymir::json o;
-	for (auto elem : this-> elements) {
+	for (auto elem : this-> _elements) {
 	    o ["parameters"].push (elem-> generateDocs ());
 	}
 	return o;
@@ -2079,7 +2099,7 @@ namespace syntax {
     Ymir::json IMacroToken::generateDocs () {
 	Ymir::json o;
 	o ["name"] = this-> token.getStr ();
-	o ["value"] = this-> value;
+	o ["value"] = this-> _value;
 	o ["kind"] = "macro token";
 	return o;
     }
@@ -2088,9 +2108,9 @@ namespace syntax {
 	Ymir::json o;
 	o ["name"] = this-> token.getStr ();
 	o ["kind"] = "macro repeat";
-	o ["at_least_one_time"] = this-> oneTime ? "true" : "false";
-	o ["content"] = this-> content-> generateDocs ();
-	o ["pass"] = this-> pass-> generateDocs ();
+	o ["at_least_one_time"] = this-> _oneTime ? "true" : "false";
+	o ["content"] = this-> _content-> generateDocs ();
+	o ["pass"] = this-> _pass-> generateDocs ();
 	return o;
     }
 
@@ -2100,7 +2120,7 @@ namespace syntax {
 	if (this-> _token)
 	    o ["token"] = this-> _token-> generateDocs ();
 	o ["kind"] = "macro var";
-	switch (this-> type) {
+	switch (this-> _type) {
 	case MacroVarConst::EXPR : o ["type"] = "expr"; break;
 	case MacroVarConst::IDENT : o ["type"] = "ident"; break;
 	case MacroVarConst::BLOCK : o ["type"] = "block"; break;
@@ -2118,11 +2138,11 @@ namespace syntax {
 	return o;
     }
     
-    std::vector <MacroExpr>& IMacro::getExprs () {
+    const std::vector <MacroExpr>& IMacro::getExprs () {
 	return this-> _exprs;
     }
 
-    std::vector <Block>& IMacro::getBlocks () {
+    const std::vector <Block>& IMacro::getBlocks () {
 	return this-> _blocks;
     }
 
@@ -2143,31 +2163,31 @@ namespace syntax {
     
     IMacroVar::IMacroVar (Word name, MacroVarConst type) :
 	IMacroElement (name),
-	type (type),
+	_type (type),
 	_token (NULL),
 	name (name)
     {}
 
     IMacroVar::IMacroVar (Word name, MacroToken type) :
 	IMacroElement (name),
-	type (MacroVarConst::TOKEN),
+	_type (MacroVarConst::TOKEN),
 	_token (type),
 	name (name)
     {}
 
     
     std::vector <Word> IMacroVar::toTokens (bool& success) {
-	if (auto elem = this-> content-> to<IMacroElement> ()) {
+	if (auto elem = this-> _content-> to<IMacroElement> ()) {
 	    return elem-> toTokens (success);
-	} else if (this-> content-> to<IVar> () && this-> type == MacroVarConst::IDENT) {
-	    return {this-> content-> token};
+	} else if (this-> _content-> to<IVar> () && this-> _type == MacroVarConst::IDENT) {
+	    return {this-> _content-> token};
 	}
 	return IMacroElement::toTokens (success);
     }
     
     std::string IMacroVar::prettyPrint () {
-	if (this-> content) {
-	    return Ymir::OutBuffer ("[", this-> content-> prettyPrint (), "]").str ();
+	if (this-> _content) {
+	    return Ymir::OutBuffer ("[", this-> _content-> prettyPrint (), "]").str ();
 	} else {
 	    return Ymir::OutBuffer (this-> name, ": null").str (); 
 	}
@@ -2184,7 +2204,7 @@ namespace syntax {
     }
 
     MacroVarConst IMacroVar::getType () {
-	return this-> type;
+	return this-> _type;
     }
 
     MacroToken IMacroVar::getToken () {
@@ -2192,29 +2212,29 @@ namespace syntax {
     }
     
     void IMacroVar::setContent (Expression expr) {
-	this-> content = expr;
+	this-> _content = expr;
     }
     
     MacroVar IMacroVar::clone () {
-	return new (Z0) IMacroVar (this-> name, this-> type);
+	return new (Z0) IMacroVar (this-> name, this-> _type);
     }
     
     IMacroToken::IMacroToken (Word tok, std::string value) :
 	IMacroElement (tok),
-	value (value)
+	_value (value)
     {}
 
     std::vector <Word> IMacroToken::toTokens (bool& success) {
 	success = true;
-	return {{this-> token, this-> value}};	
+	return {{this-> token, this-> _value}};	
     }
     
     std::string IMacroToken::prettyPrint () {
-	return this-> value;
+	return this-> _value;
     }
 
-    std::string & IMacroToken::getValue () {
-	return this-> value;
+    const std::string & IMacroToken::getValue () {
+	return this-> _value;
     }
     
     const char* IMacroToken::id () {
@@ -2228,21 +2248,21 @@ namespace syntax {
     }
     
     MacroToken IMacroToken::clone () {
-	return new (Z0) IMacroToken (this-> token, this-> value);
+	return new (Z0) IMacroToken (this-> token, this-> _value);
     }
        
     IMacroRepeat::IMacroRepeat (Word ident, MacroExpr content, MacroToken pass, bool oneTime) :
 	IMacroElement (ident),
-	content (content),
-	pass (pass),
-	oneTime (oneTime),
+	_content (content),
+	_pass (pass),
+	_oneTime (oneTime),
 	ident (ident)
     {}
 
     std::vector <Word> IMacroRepeat::toTokens (bool& success) {
 	std::vector <Word> tokens;
 	success = true;
-	for (auto soluce : this-> soluce) {
+	for (auto soluce : this-> _soluce) {
 	    for (auto it : soluce.elements) {
 		if (auto elem = it.second-> to<IMacroElement> ()) {
 		    auto current = elem-> toTokens (success);
@@ -2258,7 +2278,7 @@ namespace syntax {
     
     std::string IMacroRepeat::prettyPrint () {
 	Ymir::OutBuffer buf ("(");
-	for (auto it : this-> soluce) {
+	for (auto it : this-> _soluce) {
 	    buf.write (it.elements);
 	}
 	buf.write (")");
@@ -2266,27 +2286,27 @@ namespace syntax {
     }
         
     MacroRepeat IMacroRepeat::clone () {
-	return new (Z0) IMacroRepeat (this-> ident, this-> content, this-> pass, this-> oneTime);
+	return new (Z0) IMacroRepeat (this-> ident, this-> _content, this-> _pass, this-> _oneTime);
     }
     
     MacroToken IMacroRepeat::getClose () {
-	return this-> pass;
+	return this-> _pass;
     }
 
     MacroExpr IMacroRepeat::getExpr () {
-	return this-> content;
+	return this-> _content;
     }
 
     bool IMacroRepeat::isOneTime () {
-	return this-> oneTime;
+	return this-> _oneTime;
     }
 
     void IMacroRepeat::addSolution (semantic::MacroSolution soluce) {
-	this-> soluce.push_back (soluce);
+	this-> _soluce.push_back (soluce);
     }
 
-    std::vector <semantic::MacroSolution>& IMacroRepeat::getSolution () {
-	return this-> soluce;
+    const std::vector <semantic::MacroSolution>& IMacroRepeat::getSolution () {
+	return this-> _soluce;
     }
     
     const char* IMacroRepeat::id () {
@@ -2305,7 +2325,7 @@ namespace syntax {
     {}
 
     semantic::MacroSolution& IMacroEnum::getSoluce () {
-	return this-> soluce;
+	return this-> _soluce;
     }
 
     const std::vector <MacroExpr> & IMacroEnum::getElems () {
@@ -2315,7 +2335,7 @@ namespace syntax {
     std::vector<Word> IMacroEnum::toTokens (bool& success) {
 	std::vector <Word> tokens;
 	success = true;
-	for (auto it : this-> soluce.elements) {
+	for (auto it : this-> _soluce.elements) {
 	    if (auto elem = it.second-> to <IMacroElement> ()) {
 		auto current = elem-> toTokens (success);
 		if (!success) return IMacroElement::toTokens (success);
@@ -2329,7 +2349,7 @@ namespace syntax {
 
     std::string IMacroEnum::prettyPrint () {
 	Ymir::OutBuffer buf ("(");
-	buf.write (this-> soluce.elements);	
+	buf.write (this-> _soluce.elements);	
 	buf.write (")");
 	return buf.str ();
     }
@@ -2350,21 +2370,21 @@ namespace syntax {
     
     IMacroCall::IMacroCall (Word begin, Word end, Expression left, std::vector<Word> content) :
 	IExpression (begin),
-	end (end),
-	left (left),
-	content (content)
+	_end (end),
+	_left (left),
+	_content (content)
     {}
 
-    std::vector <Word> & IMacroCall::getTokens () {
-	return this-> content;
+    const std::vector <Word> & IMacroCall::getTokens () {
+	return this-> _content;
     }
 
     std::string IMacroCall::prettyPrint () {
-	if (this-> bl)
-	    return this-> bl-> prettyPrint ();
+	if (this-> _bl)
+	    return this-> _bl-> prettyPrint ();
 	else {
-	    Ymir::OutBuffer buf (this-> left-> prettyPrint (), ": {");
-	    for (auto it : this-> content)
+	    Ymir::OutBuffer buf (this-> _left-> prettyPrint (), ": {");
+	    for (auto it : this-> _content)
 		buf.write (it.getStr ());
 	    buf.write ("}");
 	    return buf.str ();
@@ -2372,7 +2392,7 @@ namespace syntax {
     }
     
     void IMacroCall::setSolution (std::map <std::string, Expression> exprs) {
-	this-> soluce = exprs;
+	this-> _soluce = exprs;
     }
     
     std::vector <std::string> IMacroCall::getIds () {
@@ -2382,17 +2402,17 @@ namespace syntax {
     }
 
     MacroCall IMacroCall::solve (const std::map <std::string, Expression> & values) {
-	auto expr = this-> left-> expression ();
+	auto expr = this-> _left-> expression ();
 	if (expr == NULL) return NULL;	
 	auto mac = expr-> info-> type ()-> to <IMacroInfo> ();
 	if (mac == NULL) {
-	    Ymir::Error::notAMacro (this-> left-> token);
+	    Ymir::Error::notAMacro (this-> _left-> token);
 	    return NULL;
 	}
 	
 	auto soluce = mac-> resolve (this);
 	if (!soluce.valid) {
-	    Ymir::Error::macroResolution (this-> left-> token);
+	    Ymir::Error::macroResolution (this-> _left-> token);
 	    return NULL;
 	}
 
@@ -2407,9 +2427,9 @@ namespace syntax {
 	if (!block) return NULL;
 
 	semantic::Table::instance ().quitFrame ();
-	auto aux = new (Z0) IMacroCall (this-> token, this-> end, this-> left-> templateExpReplace ({}), this-> content);
+	auto aux = new (Z0) IMacroCall (this-> token, this-> _end, this-> _left-> templateExpReplace ({}), this-> _content);
 	aux-> setSolution (soluce.elements);
-	aux-> bl = block;	
+	aux-> _bl = block;	
 	return aux;
     }
 
@@ -2591,23 +2611,23 @@ namespace syntax {
 
     Ymir::json IProgram::generateDocs () {
 	Ymir::json o;
-	std::string name = this-> locus.getFile ();
+	std::string name = this-> _locus.getFile ();
 	auto dot = name.find_last_of ('.');
 	if (dot != name.npos && name.substr (dot, name.length () - dot) == ".yr") {
 	    name = name.substr (0, dot);
 	}
 	
 	o ["name"] = name;
-	o ["file"] = this-> locus.getFile ();
+	o ["file"] = this-> _locus.getFile ();
 	o ["kind"] = "module";
 	
-	if (this-> decls.size () != 0) {
-	    if (auto mod = this-> decls [0]-> to <IModDecl> ()) {
+	if (this-> _decls.size () != 0) {
+	    if (auto mod = this-> _decls [0]-> to <IModDecl> ()) {
 		if (mod-> isGlobal ()) o ["name"] = mod-> getIdent ().getStr ();
 	    }
 	}
 	
-	for (auto decl : this-> decls) {
+	for (auto decl : this-> _decls) {
 	    o ["members"].push (decl-> generateDocs ());
 	}
 		

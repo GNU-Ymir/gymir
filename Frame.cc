@@ -360,7 +360,7 @@ namespace semantic {
 	    Block block = NULL;
 	    if (!exprBlock-> info-> type ()-> is<IVoidInfo> ()) {
 		auto ret = new (Z0) IReturn (_block-> token, exprBlock);
-		ret-> getCaster () = exprBlock-> info-> type ()-> CompOp (Table::instance ().retInfo ().info-> type ());
+		ret-> caster () = exprBlock-> info-> type ()-> CompOp (Table::instance ().retInfo ().info-> type ());
 		block = new (Z0) IBlock (exprBlock-> token, {}, {ret});
 	    } else {		    
 		block = new (Z0) IBlock (exprBlock-> token, {}, {exprBlock});

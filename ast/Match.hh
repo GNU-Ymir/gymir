@@ -13,48 +13,61 @@ namespace semantic {
 
 namespace syntax {
 
-    struct IMatchPair : public IExpression {
-	Expression left, right;
-
-    public:
-
-	IMatchPair (Word token, Expression left, Expression right);
-	
-	void print (int nb = 0) override;
-
-	Expression getLeft ();
-
-	Expression getRight ();
-		
-	static const char * id () {
-	    return TYPEID (IMatch);
-	}
-	
-	std::vector <std::string> getIds () override {
-	    auto ret = IExpression::getIds ();
-	    ret.push_back (TYPEID (IMatch));
-	    return ret;
-	}
-	
-	virtual ~IMatchPair ();
-	
-    };
-    
+    /** 
+     * \struct IMatch
+     * The syntaxic node representation of a match
+     * \verbatim
+     match := 'match' expression '{' (match_expression '=>' block)+ '}'
+     \endverbatim
+     */
     class IMatch : public IExpression {
-	Expression expr;
-	std::vector<Expression> values;
-	std::vector<Block> block;
-
-	std::vector <semantic::InfoType> casters;
 	
-	std::vector <semantic::DestructSolution> soluce;
-	Expression aux, binAux;
+	/** The expression that will be used for pattern matching */
+	Expression _expr;
+
+	/** The different values to test */
+	std::vector<Expression> _values;
+
+	/** The block associated to the values */
+	std::vector<Block> _block;
+
+	/** The casters expression (produced at semantic) */
+	std::vector <semantic::InfoType> _casters;
+
+	/** The different solutions */
+	std::vector <semantic::DestructSolution> _soluce;
+
+	/** 
+	 * Expression produced at semantic time 
+	 * This one is used to get a reference to the real expression, and evaluate it only one time 
+	 * when there are multiple values in the match
+	 * \verbatim
+	 match (foo ()) { // The foo function will be called only one time, and value store into '_' (this-> _aux)
+	     (1, 2) => println (12);
+	     (2, 3) => println (23); 
+	 }
+	 \endverbatim
+	 */	
+	Expression _aux;
+
+	/** The affectation of the auxiliary var */
+	Expression _binAux;
 	
     public:
 
+	/**
+	 * \param word the location of the expression
+	 * \param expr the expression that will be used for matching 
+	 */
 	IMatch (Word word, Expression expr);
-	
-	IMatch (Word word, Expression expr, std::vector<Expression> values, std::vector <Block> block);
+
+	/**
+	 * \param word the location of the expression
+	 * \param expr the expression that will be used for matching 
+	 * \param values the list of values (patterns)
+	 * \param block the list of block associated to the values
+	 */
+	IMatch (Word word, Expression expr, const std::vector<Expression> &values, const std::vector <Block> &block);
 
 	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 
@@ -81,7 +94,7 @@ namespace syntax {
 	virtual ~IMatch ();
 
     private:
-
+	
 	Ymir::Tree declareAndAffectAux ();
 	
 	Ymir::Tree declareVars (std::vector <Var> vars, std::vector <Expression> caster);	
@@ -97,5 +110,5 @@ namespace syntax {
     };
 
     typedef IMatch* Match;
-    typedef IMatchPair* MatchPair;
+
 }

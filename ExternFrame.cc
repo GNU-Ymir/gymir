@@ -16,7 +16,7 @@ namespace semantic {
     {
 	__extFrames__.push_back (this);
 	_externSpace = space.toString ();
-	this-> _name = func-> name ();
+	this-> _name = func-> getName ();
     }
 
     IExternFrame::IExternFrame (Namespace space, ::syntax::Function func) :
@@ -32,13 +32,13 @@ namespace semantic {
     ApplicationScore IExternFrame::isApplicable (const std::vector<InfoType> & params) {
 	if (this-> _proto == NULL) return IFrame::isApplicable (params);
 	if (this-> _proto-> isVariadic ()) return isApplicableVariadic (params);
-	else return IFrame::isApplicable (this-> _proto-> ident, this-> _proto-> params (), params);
+	else return IFrame::isApplicable (this-> _proto-> getIdent (), this-> _proto-> params (), params);
     }
     
     ApplicationScore IExternFrame::isApplicable (ParamList params) {
 	if (this-> _proto == NULL) return IFrame::isApplicable (params);
 	if (this-> _proto-> isVariadic ()) return isApplicableVariadic (params-> getParamTypes ());
-	else return IFrame::isApplicable (this-> _proto-> ident, this-> _proto-> params (), params-> getParamTypes ());
+	else return IFrame::isApplicable (this-> _proto-> getIdent (), this-> _proto-> params (), params-> getParamTypes ());
     }
 
     ApplicationScore IExternFrame::isApplicableVariadic (const std::vector <InfoType> & ftypes) {
@@ -46,7 +46,7 @@ namespace semantic {
 	if (ftypes.size () >= this-> _proto-> params ().size ()) {
 	    types = {ftypes.begin (), ftypes.begin () + this-> _proto-> params ().size ()};
 	} else types = ftypes;
-	auto ret = IFrame::isApplicable (this-> _proto-> ident, this-> _proto-> params (), types);
+	auto ret = IFrame::isApplicable (this-> _proto-> getIdent (), this-> _proto-> params (), types);
 	
 	if (ret != NULL) {
 	    for (auto it __attribute__((unused)) : Ymir::r (this-> _proto-> params ().size (), ftypes.size ())) {
@@ -103,7 +103,7 @@ namespace semantic {
     }
 
     Word IExternFrame::ident () {
-	if (this-> _proto) return this-> _proto-> ident;
+	if (this-> _proto) return this-> _proto-> getIdent ();
 	return IFrame::ident ();
     }
 

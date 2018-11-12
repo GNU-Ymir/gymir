@@ -2,9 +2,11 @@
 #include <ymir/semantic/tree/Tree.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
+#include <ymir/semantic/utils/TupleUtils.hh>
 #include <ymir/semantic/value/_.hh>
 #include <ymir/syntax/Keys.hh>
 #include <climits>
+
 
 namespace semantic {
 
@@ -126,7 +128,7 @@ namespace semantic {
 	return NULL;
     }
 	
-    InfoType IFixedInfo::CompOp (InfoType other) {
+    InfoType IFixedInfo::CompOp (InfoType other) {	
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &FixedUtils::InstCast;
@@ -147,7 +149,7 @@ namespace semantic {
 		ret-> binopFoo = FixedUtils::InstCast;
 		return ret;
 	    }
-	}
+	} 	
 	return NULL;
     }
 
@@ -439,6 +441,17 @@ namespace semantic {
     namespace FixedUtils {
 	using namespace syntax;
 	using namespace Ymir;
+
+	template <typename T>
+	T getAndRemoveBack (std::list <T> &list) {
+	    if (list.size () != 0) {
+		auto last = list.back ();	    
+		list.pop_back ();
+		return last;
+	    } else {
+		return (T) NULL;
+	    }
+	}
 	
 	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto loc = locus.getLocus ();
@@ -605,6 +618,7 @@ namespace semantic {
 	    auto lexp = elem-> toGeneric ();
 	    return convert (type.getTree (), lexp.getTree ());
 	}
+
 	
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());

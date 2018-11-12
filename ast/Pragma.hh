@@ -7,15 +7,27 @@
 
 namespace syntax {
 
+    /**
+     * \struct IPragma
+     * Pragma operation 
+     * \verbatim
+     pragma := '__pragma' '(' prg_type ',' param_list ')'
+     prg_type := 'compile' | 'msg' 
+     \endverbatim     
+     */
     class IPragma : public IExpression {
-
-	ParamList params;
+	
+	ParamList _params;
 	
 	static const std::string COMPILE;// = "compile";
 	static const std::string MSG;// = "msg";
 
     public :
 
+	/**
+	 * \param token, the location and type of the pragma
+	 * \params the parameters of the pragma 
+	 */
 	IPragma (Word token, ParamList params);
 	
 	Expression expression () override;
@@ -39,8 +51,15 @@ namespace syntax {
 	
     private :
 
+	/**
+	 * \brief execute a display at compile time
+	 */
 	void executeMsg ();
 
+	/**
+	 * \brief transform errors of compilation into boolean
+	 * \return iif there is no errors, return a BoolValue (true), BoolValue (false) otherwise
+	 */
 	Expression executeCompile ();       
 	
     };

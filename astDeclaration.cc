@@ -242,19 +242,19 @@ namespace syntax {
     }
     
     void IModDecl::declare () {
-	auto get = Table::instance ().getLocal (this-> ident.getStr ());
+	auto get = Table::instance ().getLocal (this-> _ident.getStr ());
 	if (get != NULL) {
-	    Ymir::Error::shadowingVar (this-> ident, get-> sym);
+	    Ymir::Error::shadowingVar (this-> _ident, get-> sym);
 	    return;
 	}
 	if (this-> isGlobal ()) {
-	    Ymir::Error::moduleNotFirst (this-> ident);
-	} else if (this-> tmps.size () == 0) {
+	    Ymir::Error::moduleNotFirst (this-> _ident);
+	} else if (this-> _tmps.size () == 0) {
 	    auto globSpace = Table::instance ().space ();
-	    auto space = Namespace (Table::instance ().space (), this-> ident.getStr ());
+	    auto space = Namespace (Table::instance ().space (), this-> _ident.getStr ());
 	    auto mod = Table::instance ().addModule (space);
 	    std::vector <Use> later;
-	    for (auto it : this-> decls) {
+	    for (auto it : this-> _decls) {
 		if (auto use = it-> to<IUse> ())
 		    later.push_back (use);
 		else it-> declare (mod);
@@ -263,7 +263,7 @@ namespace syntax {
 	    for (auto it : later)
 		it-> declare (mod);
 	    
-	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (mod));
+	    auto sym = new (Z0) ISymbol (this-> _ident, NULL, new (Z0) IModuleInfo (mod));
 	    sym-> isPublic () = this-> isPublic ();
 	    Table::instance ().insert (sym);
 	    //TODO insert ModuleAccessor
@@ -271,26 +271,26 @@ namespace syntax {
 	} else {
 	    auto globSpace = Table::instance ().space ();
 
-	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (globSpace, this));
+	    auto sym = new (Z0) ISymbol (this-> _ident, NULL, new (Z0) IModuleInfo (globSpace, this));
 	    sym-> isPublic () = this-> isPublic ();
 	    Table::instance ().insert (sym);	    
 	}
     }
     
     void IModDecl::declare (semantic::Module mod) {
-	auto get = mod-> get (this-> ident.getStr ());
+	auto get = mod-> get (this-> _ident.getStr ());
 	if (get != NULL) {
-	    Ymir::Error::shadowingVar (this-> ident, get-> sym);
+	    Ymir::Error::shadowingVar (this-> _ident, get-> sym);
 	    return;
 	}
 	if (this-> isGlobal ()) {
-	    Ymir::Error::moduleNotFirst (this-> ident);
-	} else if (this-> tmps.size () == 0) {
+	    Ymir::Error::moduleNotFirst (this-> _ident);
+	} else if (this-> _tmps.size () == 0) {
 	    auto globSpace = mod-> space ();
-	    auto space = Namespace (mod-> space (), this-> ident.getStr ());
+	    auto space = Namespace (mod-> space (), this-> _ident.getStr ());
 	    auto mod_ = Table::instance ().addModule (space);
 	    std::vector <Use> later;
-	    for (auto it : this-> decls) {
+	    for (auto it : this-> _decls) {
 		if (auto use = it-> to<IUse> ())
 		    later.push_back (use);
 		else it-> declare (mod_);
@@ -299,33 +299,33 @@ namespace syntax {
 	    for (auto it : later)
 		it-> declare (mod_);
 	    mod-> addOpen (space);
-	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (mod_));
+	    auto sym = new (Z0) ISymbol (this-> _ident, NULL, new (Z0) IModuleInfo (mod_));
 	    sym-> isPublic () = this-> isPublic ();
 	    mod-> insert (sym);
 	} else {
 	    auto globSpace = mod-> space ();
-	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (globSpace, this));
+	    auto sym = new (Z0) ISymbol (this-> _ident, NULL, new (Z0) IModuleInfo (globSpace, this));
 	    sym-> isPublic () = this-> isPublic ();
 	    mod-> insert (sym);	    
 	}
     }
     
     void IModDecl::declareAsExtern (semantic::Module mod) {
-	auto get = mod-> get (this-> ident.getStr ());
+	auto get = mod-> get (this-> _ident.getStr ());
 	if (get != NULL) {
-	    Ymir::Error::shadowingVar (this-> ident, get-> sym);
+	    Ymir::Error::shadowingVar (this-> _ident, get-> sym);
 	    return;
 	}
 
 	if (this-> isGlobal ()) {
-	    Ymir::Error::moduleNotFirst (this-> ident);
-	} else if (this-> tmps.size () == 0) {	
+	    Ymir::Error::moduleNotFirst (this-> _ident);
+	} else if (this-> _tmps.size () == 0) {	
 	    auto globSpace = mod-> space ();
-	    auto space = Namespace (mod-> space (), this-> ident.getStr ());
+	    auto space = Namespace (mod-> space (), this-> _ident.getStr ());
 	    auto mod_ = Table::instance ().addModule (space);
 
 	    std::vector <Use> later;
-	    for (auto it : this-> decls) {
+	    for (auto it : this-> _decls) {
 		if (auto use = it-> to<IUse> ())
 		    later.push_back (use);
 		else it-> declareAsExtern (mod_);
@@ -334,12 +334,12 @@ namespace syntax {
 	    for (auto it : later)
 		it-> declareAsExtern (mod_);
 	    
-	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (mod_));
+	    auto sym = new (Z0) ISymbol (this-> _ident, NULL, new (Z0) IModuleInfo (mod_));
 	    sym-> isPublic () = this-> isPublic ();
 	    mod-> insert (sym);
 	} else {
 	    auto globSpace = mod-> space ();
-	    auto sym = new (Z0) ISymbol (this-> ident, NULL, new (Z0) IModuleInfo (globSpace, this));
+	    auto sym = new (Z0) ISymbol (this-> _ident, NULL, new (Z0) IModuleInfo (globSpace, this));
 	    sym-> isPublic () = this-> isPublic ();
 	    mod-> insert (sym);	    
 	} 
@@ -367,7 +367,7 @@ namespace syntax {
 	}
     }
     
-    bool IProgram::verifyMatch (Word & loc, std::string file, std::string mod) {
+    bool IProgram::verifyMatch (const Word & loc, std::string file, std::string mod) {
 	while (mod.length () != 0) {
 	    std::string f1, f2;
 	    detachFile (f1, file);
@@ -381,7 +381,7 @@ namespace syntax {
     }
     
     void IProgram::declare () {
-	std::string name = this-> locus.getFile ();
+	std::string name = this-> _locus.getFile ();
 	auto dot = name.find_last_of ('.');
 	if (dot != name.npos && name.substr (dot, name.length () - dot) == ".yr") {
 	    name = name.substr (0, dot);
@@ -392,8 +392,8 @@ namespace syntax {
 	Table::instance ().addForeignModule (Table::instance ().globalNamespace ());
 	
 	auto begin = 0;
-	if (this-> decls.size () != 0) {
-	    if (auto mod = this-> decls [0]-> to <IModDecl> ()) {
+	if (this-> _decls.size () != 0) {
+	    if (auto mod = this-> _decls [0]-> to <IModDecl> ()) {
 		if (mod-> isGlobal () && verifyMatch (mod-> getIdent (), name, mod-> getIdent ().getStr ())) {
 		    auto str = mod-> getIdent ().getStr ();
 		    auto space = Mangler::mangle_file (str);
@@ -408,10 +408,10 @@ namespace syntax {
 	this-> importAllCoreFiles ();
 	
 	std::vector <Use> later;
-	for (auto it : Ymir::r (begin, this-> decls.size ())) {
-	    if (auto use = this-> decls [it]-> to <IUse> ()) {
+	for (auto it : Ymir::r (begin, this-> _decls.size ())) {
+	    if (auto use = this-> _decls [it]-> to <IUse> ()) {
 		later.push_back (use);
-	    } else this-> decls [it]-> declare ();
+	    } else this-> _decls [it]-> declare ();
 	}	    
 
 	for (auto it : later)
@@ -425,8 +425,8 @@ namespace syntax {
 
 	Table::instance ().setCurrentSpace (Namespace (Mangler::mangle_file (name)));
 	auto begin = 0;
-	if (this-> decls.size () != 0) {
-	    if (auto mod_ = this-> decls [0]-> to <IModDecl> ()) {
+	if (this-> _decls.size () != 0) {
+	    if (auto mod_ = this-> _decls [0]-> to <IModDecl> ()) {
 		if (mod_-> isGlobal () && verifyMatch (mod_-> getIdent (), name, mod_-> getIdent ().getStr ())) { 
 		    auto str = mod_-> getIdent ().getStr ();
 		    auto space = Mangler::mangle_file (str);
@@ -439,10 +439,10 @@ namespace syntax {
 	this-> importAllCoreFilesAsExtern (mod);
 
 	std::vector <Use> later;
-	for (auto it : Ymir::r (begin, this-> decls.size ())) {
-	    if (auto use = this-> decls [it]-> to <IUse> ()) {
+	for (auto it : Ymir::r (begin, this-> _decls.size ())) {
+	    if (auto use = this-> _decls [it]-> to <IUse> ()) {
 		later.push_back (use);
-	    } else this-> decls [it]-> declareAsExtern (mod);
+	    } else this-> _decls [it]-> declareAsExtern (mod);
 	}	    
 
 	for (auto it : later)
@@ -506,21 +506,21 @@ namespace syntax {
     }
     
     void IProto::declare () {
-	Namespace space (this-> space != "" ? this-> space : Table::instance ().space ());
+	Namespace space (this-> _space != "" ? this-> _space : Table::instance ().space ());
 		
-	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
-	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
+	auto fr = new (Z0)  IExternFrame (space, this-> _from, this);
+	auto fun = new (Z0)  IFunctionInfo (space, this-> _ident.getStr ());
 	fun-> set (fr);
 	this-> _frame = fr;
-	Table::instance ().insert (new (Z0)  ISymbol (this-> ident, NULL, fun));
+	Table::instance ().insert (new (Z0)  ISymbol (this-> _ident, NULL, fun));
     }
 
     void IProto::declare (semantic::Module mod) {       
-	Namespace space (this-> space != "" ? this-> space : mod-> space ());
+	Namespace space (this-> _space != "" ? this-> _space : mod-> space ());
 		
-	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
-	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
-	auto sym = new (Z0)  ISymbol (this-> ident, NULL, fun);
+	auto fr = new (Z0)  IExternFrame (space, this-> _from, this);
+	auto fun = new (Z0)  IFunctionInfo (space, this-> _ident.getStr ());
+	auto sym = new (Z0)  ISymbol (this-> _ident, NULL, fun);
 	sym-> isPublic () = this-> isPublic ();
 	fun-> set (fr);
 	this-> _frame = fr;
@@ -528,11 +528,11 @@ namespace syntax {
     }
     
     void IProto::declareAsExtern (semantic::Module mod) {
-	Namespace space (this-> space != "" ? this-> space : mod-> space ());
-	auto fr = new (Z0)  IExternFrame (space, this-> from, this);
+	Namespace space (this-> _space != "" ? this-> _space : mod-> space ());
+	auto fr = new (Z0)  IExternFrame (space, this-> _from, this);
 	fr-> isPrivate () = !this-> _isPublic;
-	auto fun = new (Z0)  IFunctionInfo (space, this-> ident.getStr ());
-	auto sym = new (Z0)  ISymbol (this-> ident, NULL, fun);
+	auto fun = new (Z0)  IFunctionInfo (space, this-> _ident.getStr ());
+	auto sym = new (Z0)  ISymbol (this-> _ident, NULL, fun);
 	sym-> isPublic () = this-> isPublic ();
 	fun-> set (fr);
 	mod-> insert (sym);
@@ -1201,40 +1201,40 @@ namespace syntax {
 
     void IMacro::declare () {
 	auto space = Table::instance ().space ();
-	auto it = Table::instance ().getLocal (this-> ident.getStr ());
+	auto it = Table::instance ().getLocal (this-> _ident.getStr ());
 	if (it != NULL) {
-	    Ymir::Error::shadowingVar (ident, it-> sym);
+	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	    return;
 	}
 
-	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
-	Table::instance ().insert (new (Z0) ISymbol (this-> ident, NULL, mac));
+	auto mac = new (Z0) IMacroInfo (space, this-> _ident.getStr (), this);
+	Table::instance ().insert (new (Z0) ISymbol (this-> _ident, NULL, mac));
     }
 
     void IMacro::declare (semantic::Module mod) {
 	auto space = mod-> space ();
-	auto it = mod-> get (this-> ident.getStr ());
+	auto it = mod-> get (this-> _ident.getStr ());
 	if (it != NULL) {
-	    Ymir::Error::shadowingVar (ident, it-> sym);
+	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	    return;
 	}
 
-	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
-	auto sym = new (Z0) ISymbol (this-> ident, NULL, mac);
+	auto mac = new (Z0) IMacroInfo (space, this-> _ident.getStr (), this);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, mac);
 	sym-> isPublic () = this-> isPublic ();
 	mod-> insert (sym);
     }
 	    
     void IMacro::declareAsExtern (semantic::Module mod) {
 	auto space = mod-> space ();
-	auto it = mod-> get (this-> ident.getStr ());
+	auto it = mod-> get (this-> _ident.getStr ());
 	if (it != NULL) {
-	    Ymir::Error::shadowingVar (ident, it-> sym);
+	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	    return;
 	}
 
-	auto mac = new (Z0) IMacroInfo (space, this-> ident.getStr (), this);
-	auto sym = new (Z0) ISymbol (this-> ident, NULL, mac);
+	auto mac = new (Z0) IMacroInfo (space, this-> _ident.getStr (), this);
+	auto sym = new (Z0) ISymbol (this-> _ident, NULL, mac);
 	sym-> isPublic () = this-> isPublic ();
 	mod-> insert (sym);
     }

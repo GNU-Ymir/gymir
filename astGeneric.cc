@@ -354,9 +354,9 @@ namespace syntax {
 	} else {
 	    IParamList params (this-> _params-> token, {});
 	    for (auto it : Ymir::r (0, args.size ())) {
-		params.getParams ().push_back (new (Z0)  ITreeExpression (this-> _params-> getParams () [it]-> token,
-									 this-> _params-> getParams () [it]-> info-> type (),
-									 args [it]));
+		params.params ().push_back (new (Z0)  ITreeExpression (this-> _params-> getParams () [it]-> token,
+									  this-> _params-> getParams () [it]-> info-> type (),
+									  args [it]));
 	    }
 	    return this-> info-> type ()-> buildMultOp (
 		this-> token,
@@ -369,18 +369,18 @@ namespace syntax {
     }
     
     std::vector <tree> IParamList::toGenericParams (const std::vector <semantic::InfoType>& treat) {
-	std::vector <tree> params (this-> params.size ());
-	for (uint i = 0 ; i < this-> params.size () ; i++) {
+	std::vector <tree> params (this-> _params.size ());
+	for (uint i = 0 ; i < this-> _params.size () ; i++) {
 	    Ymir::Tree elist;
 	    if (treat [i] && treat [i]-> binopFoo) {
 		elist = treat [i]-> buildCastOp (
-		    this-> params [i]-> token,
+		    this-> _params [i]-> token,
 		    treat [i],
-		    this-> params [i],
-		    new (Z0)  ITreeExpression (this-> params [i]-> token, treat [i], Ymir::Tree ())
+		    this-> _params [i],
+		    new (Z0)  ITreeExpression (this-> _params [i]-> token, treat [i], Ymir::Tree ())
 		);
 	    } else {
-		elist = this-> params [i]-> toGeneric ();
+		elist = this-> _params [i]-> toGeneric ();
 	    }
 	    params [i] = elist.getTree ();
 	}
@@ -388,7 +388,7 @@ namespace syntax {
     }
     
     Ymir::Tree IStructCst::toGeneric () {
-	this-> params-> getTreats () = this-> score-> treat;
+	this-> params-> treats () = this-> score-> treat;
 	return this-> score-> ret-> buildMultOp (
 	    this-> token,
 	    this-> score-> ret,
@@ -410,16 +410,16 @@ namespace syntax {
 	}
 
 	if (this-> _score-> ret-> multFoo) {
-	    this-> params-> getTreats () = this-> _score-> treat;
+	    this-> _params-> treats () = this-> _score-> treat;
 	    return this-> _score-> ret-> buildMultOp (
 		this-> token,
 		this-> _score-> ret,
 		this-> _left,
-		this-> params,
+		this-> _params,
 		this-> _score
 	    );
 	} else {
-	    std::vector <tree> args = this-> params-> toGenericParams (this-> _score-> treat);
+	    std::vector <tree> args = this-> _params-> toGenericParams (this-> _score-> treat);
 	    if (this-> _score-> proto-> isCVariadic ()) {
 		for (auto & it : args) {
 		    it = Ymir::promote (it);
@@ -583,6 +583,14 @@ namespace syntax {
 	return this-> _content;
     }
 
+    Ymir::Tree ISemanticConst::toGeneric () {
+	return this-> info-> type ()-> buildUnaryOp (
+	    this-> token,
+	    this-> info-> type (),
+	    new (Z0) ITreeExpression (this-> token, this-> _auxType, Ymir::Tree ())
+	);
+    }
+    
     Ymir::Tree INull::toGeneric () {
 	return build_int_cst_type (long_unsigned_type_node, 0);
     }
@@ -830,25 +838,25 @@ namespace syntax {
 	    tlvalue = DECL_RESULT (IFinalFrame::currentFrame ().getTree ());
 	else tlvalue = IFinalFrame::isInlining ();
 	
-	if (this-> elem != NULL) {
-	    this-> caster-> isConst (false);
-	    if (this-> caster-> unopFoo) {
-		res = this-> caster-> buildUnaryOp (
+	if (this-> _elem != NULL) {
+	    this-> _caster-> isConst (false);
+	    if (this-> _caster-> unopFoo) {
+		res = this-> _caster-> buildUnaryOp (
 		    this-> token,
-		    this-> caster,
-		    this-> elem
+		    this-> _caster,
+		    this-> _elem
 		);
 	    } else {
-		res = this-> caster-> buildCastOp (
+		res = this-> _caster-> buildCastOp (
 		    this-> token,
-		    this-> caster,
-		    this-> elem,
-		    new (Z0)  ITreeExpression (this-> token, this-> caster, Ymir::Tree ())
+		    this-> _caster,
+		    this-> _elem,
+		    new (Z0)  ITreeExpression (this-> token, this-> _caster, Ymir::Tree ())
 		);
 	    }
 	}
 	
-	auto set_result = this-> elem != NULL ?
+	auto set_result = this-> _elem != NULL ?
 	    buildTree (MODIFY_EXPR, this-> token.getLocus (), void_type_node, tlvalue, res) :
 	    Ymir::Tree ();
 	if (IFinalFrame::endLabel ().isNull ()) 
@@ -1022,11 +1030,11 @@ namespace syntax {
     
     Ymir::Tree IMatch::declareAndAffectAux () {
 	Ymir::TreeStmtList list;
-	auto decl = Ymir::makeAuxVar (this-> aux-> token.getLocus (), ISymbol::getLastTmp (), this-> aux-> info-> type ()-> toGeneric ());
+	auto decl = Ymir::makeAuxVar (this-> _aux-> token.getLocus (), ISymbol::getLastTmp (), this-> _aux-> info-> type ()-> toGeneric ());
 	    
-	this-> aux-> info-> treeDecl (decl.getOperand (1));
+	this-> _aux-> info-> treeDecl (decl.getOperand (1));
 	Ymir::getStackStmtList ().back ().append (decl.getOperand (0));
-	list.append (this-> binAux-> toGeneric ());
+	list.append (this-> _binAux-> toGeneric ());
 	
 	return list.getTree ();
     }
@@ -1036,16 +1044,16 @@ namespace syntax {
 	auto aux = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> info-> type ()-> toGeneric ());
 	list.append (declareAndAffectAux ());	
 	
-	for (auto it : Ymir::r (this-> soluce.size (), 0)) {
+	for (auto it : Ymir::r (this-> _soluce.size (), 0)) {
 	    Ymir::Tree affectPart = declareVars (
-		this-> soluce [it - 1].created,
-		this-> soluce [it - 1].caster
+		this-> _soluce [it - 1].created,
+		this-> _soluce [it - 1].caster
 	    );	    
 	    
 	    elsePart = validateBlockExpr (
-		this-> soluce [it - 1].test,
-		this-> block [it - 1],
-		this-> casters [it - 1],
+		this-> _soluce [it - 1].test,
+		this-> _block [it - 1],
+		this-> _casters [it - 1],
 		aux,
 		elsePart,
 		affectPart	    
@@ -1066,15 +1074,15 @@ namespace syntax {
 	}
 	
 	list.append (declareAndAffectAux ());	
-	for (auto it : Ymir::r (this-> soluce.size (), 0)) {
+	for (auto it : Ymir::r (this-> _soluce.size (), 0)) {
 	    Ymir::Tree affectPart = declareVars (
-		this-> soluce [it - 1].created,
-		this-> soluce [it - 1].caster
+		this-> _soluce [it - 1].created,
+		this-> _soluce [it - 1].caster
 	    );	    
 	    
 	    elsePart = validateBlock (
-		this-> soluce [it - 1].test,
-		this-> block [it - 1],
+		this-> _soluce [it - 1].test,
+		this-> _block [it - 1],
 		elsePart,
 		affectPart	    
 	    );	    

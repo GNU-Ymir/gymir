@@ -32,6 +32,10 @@ namespace semantic {
 	return this-> _isFake;
     }
 
+    bool ITupleInfo::isUnion () {
+	return this-> _isUnion;
+    }
+    
     InfoType ITupleInfo::asNoFake () {
 	auto ret = this-> cloneOnExitWithInfo ();
 	if (this-> binopFoo && this-> binopFoo == TupleUtils::InstCastFake) {
@@ -431,6 +435,40 @@ namespace semantic {
 	    
 	    return Ymir::compoundExpr (locus.getLocus (), list.getTree (), ltree);			    
 	}	
+
+	Ymir::Tree InstCastTuple (Word locus, InfoType tuple, Expression elem, Expression) {
+	    auto loc = locus.getLocus ();
+	    auto type = tuple-> to <ITupleInfo> ()-> getParams () [tuple-> toGet ()];
+	    type-> binopFoo = getAndRemoveBack (tuple-> nextBinop);
+	    type-> nextBinop = tuple-> nextBinop;
+
+	    type-> unopFoo = getAndRemoveBack (tuple-> nextUnop);
+	    type-> nextUnop = tuple-> nextUnop;
+	    
+	    auto ltype = tuple-> toGeneric ();
+	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ltype);
+	    auto lelem = Ymir::getField (loc, ltree, tuple-> toGet ());
+
+	    auto val = type-> buildCastOp (
+		locus, type, elem, new (Z0) ITreeExpression (locus, type, Ymir::Tree ())
+	    );
+
+	    Ymir::TreeStmtList list;
+	    if (lelem.getType () == val.getType ()) {
+		list.append (buildTree (
+		    MODIFY_EXPR, loc, void_type_node, lelem, val
+		));
+	    } else {
+		auto ptrl = Ymir::getAddr (loc, lelem).getTree ();
+		auto ptrr = Ymir::getAddr (loc, val).getTree ();
+		tree tmemcopy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+		tree size = TYPE_SIZE_UNIT (lelem.getType ().getTree ());
+		auto result = build_call_expr_loc (loc, tmemcopy, 3, ptrl, ptrr, size);
+		list.append (result);
+	    }
+	    
+	    return Ymir::compoundExpr (loc, list, ltree);
+	}
 	
 	Tree InstGet (Word locus, InfoType, Expression left, Expression index) {
 	    location_t loc = locus.getLocus ();

@@ -12,6 +12,8 @@ namespace semantic {
 	
 	Ymir::Tree InstCastFake (Word locus, InfoType, syntax::Expression elem, syntax::Expression typeExpr);
 
+	Ymir::Tree InstCastTuple (Word locus, InfoType, syntax::Expression elem, syntax::Expression type);
+	
 	Ymir::Tree InstGet (Word locus, InfoType type, syntax::Expression elem, syntax::Expression index);
 	
 	Ymir::Tree InstGetAggr (Word locus, InfoType type, syntax::Expression elem, syntax::Expression index);

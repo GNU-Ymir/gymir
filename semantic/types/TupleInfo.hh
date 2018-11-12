@@ -55,7 +55,9 @@ namespace semantic {
 	void setFake ();
 
 	bool isFake ();
-	      
+
+	bool isUnion ();
+	
 	InfoType asNoFake ();
 	
 	std::vector <InfoType> &getParams ();

@@ -49,6 +49,29 @@ namespace semantic {
 	Tree InstGetMethod (Word, InfoType, Expression left, Expression) {
 	    return left-> toGeneric ();
 	}
+
+	Tree InstGetVtableCTE (Word, InfoType, Expression elem) {
+	    auto rtype = elem-> info-> type ()-> to <IAggregateInfo> ();
+	    auto vtable = rtype-> getVtable ();
+	    return Ymir::getAddr (vtable);
+	}
+
+	Tree InstGetVtable (Word locus, InfoType, Expression elem, Expression) {
+	    auto ltree = elem-> toGeneric ();
+	    return getField (locus.getLocus (), ltree, Keys::VTABLE_FIELD);
+	}
+	
+	Tree InstCompVtable (Word locus, InfoType, Expression left, Expression right) {
+	    auto rtype = right-> info-> type ()-> to <IAggregateInfo> ();
+	    auto vtable = rtype-> getVtable ();
+	    auto ltree = left-> toGeneric ();
+	    
+	    auto ltable = getField (locus.getLocus (), ltree, Keys::VTABLE_FIELD);
+	    tree_code code = OperatorUtils::toGeneric (locus);
+	    return Ymir::buildTree (
+		code, locus.getLocus (), boolean_type_node, ltable, vtable
+	    );
+	}
 	
 	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
 	    auto type = t-> cloneOnExitWithInfo ();
@@ -218,7 +241,7 @@ namespace semantic {
     InfoType IAggregateCstInfo::onClone () {
 	return this;
     }
-        
+    
     InfoType IAggregateCstInfo::TempOp (const std::vector <Expression> & tmps) {
 	static std::map <std::string, AggregateInfo> inProgress;
 	static std::map <std::string, AggregateInfo> validated;
@@ -734,6 +757,12 @@ namespace semantic {
     }
     
     InfoType IAggregateInfo::DotOp (Var var) {
+	if (var-> token == Keys::VTABLE_FIELD) {
+	    auto ret = new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ());
+	    ret-> binopFoo = AggregateUtils::InstGetVtable;
+	    return ret;
+	}
+	
 	if (!var-> hasTemplate () && var-> token.getStr () == Keys::SUPER && this-> getAncestor () != NULL)  {
 	    if (this-> inPrivateContext ())
 		return Super ();
@@ -789,6 +818,11 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
+	if (var-> token == Keys::VTABLE_FIELD) {
+	    auto ret = new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ());
+	    ret-> unopFoo = AggregateUtils::InstGetVtableCTE;
+	    return ret;
+	}
 	//if (var-> token == "name") return Name ();
 	std::vector <Frame> frames;
 	for (auto it : this-> _staticMeth) {
@@ -1110,7 +1144,8 @@ namespace semantic {
 	
 	return build_constructor (vtype.getTree (), elms);
     }
-    
+   
+
     Ymir::Tree IAggregateInfo::getVtable () {
 	auto tname = this-> simpleTypeString ();
 	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();

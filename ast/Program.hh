@@ -13,32 +13,40 @@ namespace semantic {
 
 namespace syntax {
     
-
-
+    /**
+     * \struct IProgram
+     * The root of an abstract syntax tree
+     */
     class IProgram  {
 
-	std::vector <Declaration> decls;
-	Word locus;
+	/** The list of declaration inside the program */	
+	std::vector <Declaration> _decls;
+
+	/** The location of the file (filename) */
+	Word _locus;
 
     public:
 
+	/** 
+	 * \param token The location of the file (filename)
+	 * \param decls the declaration inside the program
+	 */
 	IProgram (Word token, std::vector <Declaration> decls) :
-	    decls (decls),
-	    locus (token)
+	    _decls (decls),
+	    _locus (token)
 	{}
 
 	void declare ();	
 	void declareAsExtern (std::string, semantic::Module);
-
 	
 	
 	void print (int nb = 0) {
 	    printf ("\n%*c<Program> %s",
 		    nb, ' ',
-		    this-> locus.toString ().c_str ()
+		    this-> _locus.toString ().c_str ()
 	    );
 	    
-	    for (auto it : this-> decls)
+	    for (auto it : this-> _decls)
 		it-> print (nb + 4);
 	    printf ("\n");
 	}	
@@ -46,13 +54,13 @@ namespace syntax {
 	Ymir::json generateDocs ();
 	
 	virtual ~IProgram () {
-	    for (auto it : decls)
+	    for (auto it : this-> _decls)
 		delete it;
 	}
 
     private:
 
-	bool verifyMatch (Word & loc, std::string file, std::string mod);
+	bool verifyMatch (const Word & loc, std::string file, std::string mod);
 	void detachFile (std::string & file, std::string & path);
 	void detachSpace (std::string & file, std::string & path);
 	void importAllCoreFiles ();

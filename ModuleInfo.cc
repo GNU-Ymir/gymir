@@ -63,7 +63,7 @@ namespace semantic {
 	    }
 	    name.write (")");
 	    
-	    mod-> getIdent ().setStr (name.str ());
+	    mod-> ident ().setStr (name.str ());
 	    auto globSpace = Table::instance ().space ();
 	    auto space = Namespace (this-> space, mod-> getIdent ().getStr ());
 	    auto mod_ = Table::instance ().addModule (space);

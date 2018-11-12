@@ -7,13 +7,17 @@
 
 namespace syntax {
 
+    /**
+     * \struct ISelf
+     * The syntaxic node representation of a module constructor
+     * \verbatim
+     self := 'self' '(' ')' block
+     \endverbatim
+     */
     class ISelf : public IFunction {
-
-	//Word ident;
-
     public:
 
-	ISelf (Word ident, std::string & docs, Block block) :
+	ISelf (Word ident, const std::string & docs, Block block) :
 	    IFunction (ident, docs, {}, {}, {}, NULL, block)
 	{}
 
@@ -30,13 +34,18 @@ namespace syntax {
 		
     };
 
+    
+    /**
+     * \struct ISelf
+     * The syntaxic node representation of a module destructor
+     * \verbatim
+     dself := '~' 'self' '(' ')' block
+     \endverbatim
+     */
     class IDestSelf : public IFunction {
-
-	//Word ident;
-
     public:
 
-	IDestSelf (Word ident, std::string & docs, Block block) :
+	IDestSelf (Word ident, const std::string & docs, Block block) :
 	    IFunction ({ident, "~" + ident.getStr ()}, docs, {}, {}, {}, NULL, block)
 	{}
 

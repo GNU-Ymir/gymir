@@ -15,17 +15,34 @@ namespace semantic {
 
 namespace syntax {
 
+    /**
+     * \struct ILambdaFunc
+     * The syntaxic node representation of a lambda function
+     */
     class ILambdaFunc : public IExpression {
 
-	std::vector <Var> params;
-	Var ret;
-	Block block;
-	Expression expr;
-	ulong id;
-	bool _isMoved = true;
-	
-	std::vector <semantic::Frame> frame; 
+	/** The parameters of the function */
+	std::vector <Var> _params;
 
+	/** The return type of the function, may be NULL */
+	Var _ret;
+
+	/** The block of instruction, is NULL iif _expr != NULL */
+	Block _block;
+
+	/** The result expression of the function */
+	Expression _expr;
+
+	/** The uniq id of this lambda function */
+	ulong _id;
+
+	/** True if this function has a moved closure (false means the closure vars are by reference) */
+	bool _isMoved = true;
+
+	/** The associated frames */
+	std::vector <semantic::Frame> _frame; 
+
+	/** The number of declared lambda function */
 	static ulong __nbLambda__;
 	
     public:
@@ -44,7 +61,7 @@ namespace syntax {
 
 	bool& isMoved ();
 	
-	std::vector <Var> & getParams ();
+	const std::vector <Var> & getParams ();
 
 	Ymir::Tree toGeneric () override {
 	    return Ymir::Tree ();

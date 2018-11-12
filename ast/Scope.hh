@@ -7,12 +7,24 @@
 
 namespace syntax {
 
+    /**
+     * \struct IScope
+     * A scope exit instruction
+     * \verbatim
+     scope_exit := 'on' '(' Identifier ')' '=>' block
+     \endverbatim
+     */
     class IScope : public IInstruction {
 
-	Block block;
+	/** The block to execute when the event arrive */
+	Block _block;
 	
     public:
-	
+
+	/**
+	 * \param token the location and type of event
+	 * \param block the block to execute when the event arrives
+	 */
 	IScope (Word token, Block block);
 
 	Instruction instruction () override;

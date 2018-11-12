@@ -4,7 +4,6 @@
 #include <ymir/ast/Var.hh>
 
 namespace syntax {
-    class IMatchPair;
     class IBinary;
     class IConstTuple;
     class IStructCst;
@@ -51,8 +50,6 @@ namespace semantic {
 	DestructSolution solve (syntax::Expression left, syntax::Expression right);
 	
 	DestructSolution solveNormal (syntax::Expression left, syntax::Expression right);
-
-	DestructSolution solvePair (syntax::IMatchPair* left, syntax::Expression right);
 
 	DestructSolution solveBinary (syntax::IBinary* bin, syntax::Expression right);
 

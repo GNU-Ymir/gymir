@@ -1263,7 +1263,7 @@ namespace syntax {
     
     bool IPar::simpleVerif (Par& aux) {
 	if (aux-> _left == NULL ||
-	    aux-> params == NULL ||
+	    aux-> _params == NULL ||
 	    aux-> _left-> info == NULL ||
 	    aux-> _left-> info-> type () == NULL) {
 	    return true;
@@ -1283,10 +1283,10 @@ namespace syntax {
     }
 
     Expression IPar::expression () {
-	auto aux = new (Z0)  IPar (this-> token, this-> end);
+	auto aux = new (Z0)  IPar (this-> token, this-> _end);
 	if (this-> info == NULL) {
-	    if (auto p = this-> params-> expression ()) 
-		aux-> params = p-> to<IParamList> ();
+	    if (auto p = this-> _params-> expression ()) 
+		aux-> _params = p-> to<IParamList> ();
 	    else return NULL;
 	    
 	    aux-> _left = this-> _left-> expression ();	    
@@ -1294,31 +1294,31 @@ namespace syntax {
 
 	    if (auto dcall = aux-> _left-> to<IDotCall> ()) {
 		aux-> _left = dcall-> call ();
-		aux-> params-> getParams ().insert (aux-> params-> getParams ().begin (), dcall-> firstPar ());
+		aux-> _params-> params ().insert (aux-> _params-> getParams ().begin (), dcall-> firstPar ());
 		aux-> _dotCall = dcall;
 	    }
 
-	    auto type = aux-> _left-> info-> type ()-> CallOp (aux-> _left-> token, aux-> params);	    
+	    auto type = aux-> _left-> info-> type ()-> CallOp (aux-> _left-> token, aux-> _params);	    
 
 	    if (type == NULL) {
 		auto call = (!this-> _opCall && !aux-> _left-> info-> type ()-> is<IFunctionInfo> ()) ? findOpCall () : NULL;
 		if (call == NULL) {
-		    if (this-> token.getStr () != this-> end.getStr ())
-			Ymir::Error::undefinedOp (this-> token, this-> end, aux-> _left-> info, aux-> params);
+		    if (this-> token.getStr () != this-> _end.getStr ())
+			Ymir::Error::undefinedOp (this-> token, this-> _end, aux-> _left-> info, aux-> _params);
 		    else
-			Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> params);
+			Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> _params);
 		    return NULL;
 		} else return call;
 	    } else if (type-> ret == NULL) {
 		return NULL;
 	    }
 
-	    if (type-> treat.size () != aux-> params-> getParams ().size () ||
-		(aux-> _left-> info-> type ()-> is <IMethodInfo> () && type-> isMethod && type-> treat.size () != aux-> params-> getParams ().size () + 1)) {
+	    if (type-> treat.size () != aux-> _params-> getParams ().size () ||
+		(aux-> _left-> info-> type ()-> is <IMethodInfo> () && type-> isMethod && type-> treat.size () != aux-> _params-> getParams ().size () + 1)) {
 		bool need = true;
 		if (aux-> _left-> info-> type ()-> is <IFunctionInfo> () && aux-> _left-> info-> type ()-> to <IFunctionInfo> ()-> isConstr ())
 		    need = false;
-		else if (type-> isMethod && type-> treat.size () == aux-> params-> getParams ().size () + 1)
+		else if (type-> isMethod && type-> treat.size () == aux-> _params-> getParams ().size () + 1)
 		    need = false;
 		
 		if (need)
@@ -1341,7 +1341,7 @@ namespace syntax {
 	} else {
 	    aux-> _left = this-> _left;
 	    aux-> _score = this-> _score;
-	    aux-> params = this-> params;
+	    aux-> _params = this-> _params;
 	    aux-> _dotCall = this-> _dotCall;
 	    aux-> _opCall = this-> _opCall;
 	    aux-> info = this-> info;
@@ -1359,7 +1359,7 @@ namespace syntax {
 	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> _left, var);
     
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto finalParams = new (Z0)  IParamList (this-> token, this-> params-> getParams ());
+	auto finalParams = new (Z0)  IParamList (this-> token, this-> _params-> getParams ());
 	auto call = new (Z0)  IPar (tok, tok2, dot, finalParams, true);
 	
 	return call-> expression ();
@@ -1367,7 +1367,7 @@ namespace syntax {
     
     void IPar::tuplingParams (ApplicationScore score, Par par) {
 	auto lastInfo = score-> treat.back ()-> to<ITupleInfo> ();
-	std::vector <Expression> lasts (par-> params-> getParams ().end () - lastInfo-> nbParams (), par-> params-> getParams ().end ());
+	std::vector <Expression> lasts (par-> _params-> getParams ().end () - lastInfo-> nbParams (), par-> _params-> getParams ().end ());
 	auto ctuple = new (Z0) IConstTuple (par-> token, par-> token, lasts);
 	ctuple-> info = new (Z0) ISymbol (par-> token, DeclSymbol::init (), ctuple, lastInfo);
 	for (auto it : lastInfo-> getParams ()) {
@@ -1375,27 +1375,27 @@ namespace syntax {
 	}
 	
 	score-> treat.back () = lastInfo-> asNoFake ();
-	std::vector <Expression> alls (par-> params-> getParams ().begin (), par-> params-> getParams ().end () - lastInfo-> nbParams ());
+	std::vector <Expression> alls (par-> _params-> getParams ().begin (), par-> _params-> getParams ().end () - lastInfo-> nbParams ());
 	alls.push_back (ctuple);
-	par-> params-> getParams () = alls;
+	par-> _params-> params () = alls;
     }
     
     Expression IParamList::expression () {
 	auto aux = new (Z0)  IParamList (this-> token, {});
-	for (auto it : Ymir::r (0, this-> params.size ())) {
-	    this-> params [it]-> inside = this;
-	    Expression ex_it = this-> params [it]-> expression ();
+	for (auto it : Ymir::r (0, this-> _params.size ())) {
+	    this-> _params [it]-> inside = this;
+	    Expression ex_it = this-> _params [it]-> expression ();
 	    if (ex_it == NULL || ex_it-> info == NULL || ex_it-> info-> type () == NULL) return NULL;
 	    if (auto ex = ex_it-> to<IParamList> ()) {
-		for (auto it : ex-> params) {
-		    aux-> params.push_back (it);
-		    if (aux-> params.back ()-> info-> type ()-> is<IUndefInfo> ()) {
-			Ymir::Error::uninitVar (aux-> params.back ()-> token, aux-> params.back ()-> info-> sym);
+		for (auto it : ex-> _params) {
+		    aux-> _params.push_back (it);
+		    if (aux-> _params.back ()-> info-> type ()-> is<IUndefInfo> ()) {
+			Ymir::Error::uninitVar (aux-> _params.back ()-> token, aux-> _params.back ()-> info-> sym);
 			return NULL;
 		    }
 		}
 	    } else {
-		aux-> params.push_back (ex_it);
+		aux-> _params.push_back (ex_it);
 		if (ex_it-> info-> type ()-> is<IUndefInfo> ()) {
 		    Ymir::Error::uninitVar (ex_it-> token, ex_it-> info-> sym);
 		    return NULL;
@@ -1540,30 +1540,30 @@ namespace syntax {
     Expression ILambdaFunc::expression () {
 	auto space = Table::instance ().space ();
 	auto aux = new (Z0) ILambdaFunc (this-> token, {});
-	if (this-> expr)
-	    aux-> expr = this-> expr-> templateExpReplace ({});
-	if (this-> block) aux-> block = (Block) this-> block-> templateReplace ({});
-	if (this-> ret) aux-> ret = (Var) this-> ret-> templateExpReplace ({});
+	if (this-> _expr)
+	    aux-> _expr = this-> _expr-> templateExpReplace ({});
+	if (this-> _block) aux-> _block = (Block) this-> _block-> templateReplace ({});
+	if (this-> _ret) aux-> _ret = (Var) this-> _ret-> templateExpReplace ({});
 	bool isPure = true;
-	for (auto it : this-> params) {
-	    aux-> params.push_back ((Var) it-> templateExpReplace ({}));
-	    if (!aux-> params.back ()-> is <ITypedVar> ())
+	for (auto it : this-> _params) {
+	    aux-> _params.push_back ((Var) it-> templateExpReplace ({}));
+	    if (!aux-> _params.back ()-> is <ITypedVar> ())
 		isPure = false;
 	}
 	
-	if (this-> frame.size () == 0) {
+	if (this-> _frame.size () == 0) {
 	    auto ident = Ymir::OutBuffer ("Lambda_", this-> id).str ();
 	    auto fr = new (Z0) ILambdaFrame (space, ident, aux);
 	    fr-> isPure (isPure);
 	    fr-> isMoved () = this-> _isMoved;
-	    aux-> frame = {fr};
+	    aux-> _frame = {fr};
 	} else {
-	    aux-> frame = this-> frame;
+	    aux-> _frame = this-> _frame;
 	}
 	
-	auto fun = new (Z0) IFunctionInfo (aux-> frame [0]-> space (), "", aux-> frame);	
+	auto fun = new (Z0) IFunctionInfo (aux-> _frame [0]-> space (), "", aux-> _frame);	
 	fun-> isLambda () = true;
-	fun-> value () = new (Z0) ILambdaValue (aux-> frame);
+	fun-> value () = new (Z0) ILambdaValue (aux-> _frame);
 	aux-> info = new (Z0) ISymbol (aux-> token, DeclSymbol::init (), aux, fun);
 	return aux;
     }
@@ -1614,8 +1614,8 @@ namespace syntax {
     }
     
     Expression IIs::expression () {
-	if (this-> type) {
-	    auto aux = this-> left-> expression ();
+	if (this-> _type) {
+	    auto aux = this-> _left-> expression ();
 	    if (aux == NULL) return NULL;
 	    	    
 	    if (aux-> info-> type ()-> is<IUndefInfo> ()) {
@@ -1623,18 +1623,18 @@ namespace syntax {
 		return NULL;
 	    }
 	    
-	    auto typedVar = new (Z0) ITypedVar (this-> left-> token, this-> type);
+	    auto typedVar = new (Z0) ITypedVar (this-> _left-> token, this-> _type);
 	    Ymir::log ("Template solving for ", aux-> token, " start");
-	    TemplateSolution res = TemplateSolver::instance ().solve (this-> tmps, typedVar, aux-> info-> type ());
-	    Ymir::log ("Soluce for : (", this-> tmps, ") (", typedVar-> prettyPrint (), ") with (", aux-> info-> type (), ") : ", res.toString ());
+	    TemplateSolution res = TemplateSolver::instance ().solve (this-> _tmps, typedVar, aux-> info-> type ());
+	    Ymir::log ("Soluce for : (", this-> _tmps, ") (", typedVar-> prettyPrint (), ") with (", aux-> info-> type (), ") : ", res.toString ());
 	    Ymir::log ("Template solving for ", aux-> token, " end");
 
 	    auto ret = new (Z0) IBool (this-> token);
 	    //ret-> getValue () = res.valid;
 	    bool iis = false;
 	    if (res.valid) {
-		auto expr = this-> type-> templateExpReplace (res.elements)-> toType ();
-		iis = aux-> info-> type ()-> isSame (expr-> info-> type ());
+		auto expr = this-> _type-> templateExpReplace (res.elements)-> toType ();
+		iis = aux-> info-> type ()-> isSame (expr-> info-> type ());		
 	    }
 	    
 	    auto type = new (Z0) IBoolInfo (true);
@@ -1642,27 +1642,32 @@ namespace syntax {
 	    ret-> info-> value () = new (Z0) IBoolValue (iis);
 	    return ret;	    
 	} else {
-	    auto aux = new (Z0) IIs (this-> token, this-> left-> expression (), this-> expType);
-	    if (aux-> left == NULL) return NULL;
-	    else if (aux-> left-> info-> type ()-> is<IUndefInfo> ()) {
-		Ymir::Error::uninitVar (aux-> left-> token, aux-> left-> info-> sym);
+	    auto aux = new (Z0) IIs (this-> token, this-> _left-> expression (), this-> _expType);
+	    if (aux-> _left == NULL) return NULL;
+	    else if (aux-> _left-> info-> type ()-> is<IUndefInfo> ()) {
+		Ymir::Error::uninitVar (aux-> _left-> token, aux-> _left-> info-> sym);
 		return NULL;
 	    }
 	    auto type = new (Z0) IBoolInfo (true);
 	    aux-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, type);
-	    if (this-> expType == Keys::FUNCTION) {
+	    if (this-> _expType == Keys::FUNCTION) {
 		aux-> info-> value () = new (Z0) IBoolValue (
-		    aux-> left-> info-> type ()-> is <IPtrFuncInfo> () ||
-		    aux-> left-> info-> type ()-> is <IFunctionInfo> ()
+		    aux-> _left-> info-> type ()-> is <IPtrFuncInfo> () ||
+		    aux-> _left-> info-> type ()-> is <IFunctionInfo> ()
 		);
-	    } else if (this-> expType == Keys::TUPLE) {
+	    } else if (this-> _expType == Keys::TUPLE) {
 		aux-> info-> value () = new (Z0) IBoolValue (
-		    aux-> left-> info-> type ()-> is <ITupleInfo> ()
+		    aux-> _left-> info-> type ()-> is <ITupleInfo> ()
 		);
-	    } else if (this-> expType == Keys::STRUCT) {
+	    } else if (this-> _expType == Keys::STRUCT) {
 		aux-> info-> value () = new (Z0) IBoolValue (
-		    aux-> left-> info-> type ()-> is <IStructInfo> () ||
-		    aux-> left-> info-> type ()-> is <IStructCstInfo> () 
+		    aux-> _left-> info-> type ()-> is <IStructInfo> () ||
+		    aux-> _left-> info-> type ()-> is <IStructCstInfo> () 
+		);
+	    } else if (this-> _expType == Keys::TYPE) {
+		aux-> info-> value () = new (Z0) IBoolValue (
+		    aux-> _left-> info-> type ()-> is <IAggregateCstInfo> () ||
+		    aux-> _left-> info-> type ()-> is <IAggregateInfo> ()
 		);
 	    } else {
 		Ymir::Error::assert ("");
@@ -1692,7 +1697,7 @@ namespace syntax {
     
     std::vector <semantic::Symbol> IMatch::allInnerDecls () {
 	std::vector <Symbol> syms;
-	for (auto it : this-> soluce) {
+	for (auto it : this-> _soluce) {
 	    for (auto it_ : it.created)
 		syms.push_back (it_-> info);
 	}
@@ -1701,8 +1706,8 @@ namespace syntax {
     
     Expression IMatch::expression () {
 	Table::instance ().enterBlock ();
-	auto aux = new (Z0) IVar ({expr-> token, "_"});
-	auto expr = this-> expr-> expression ();
+	auto aux = new (Z0) IVar ({this-> _expr-> token, "_"});
+	auto expr = this-> _expr-> expression ();
 	if (expr == NULL) return NULL;
 	
 	aux-> info = new (Z0) ISymbol (aux-> token, DeclSymbol::init (), aux, new (Z0) IRefInfo (expr-> info-> isConst ()
@@ -1718,8 +1723,8 @@ namespace syntax {
 	std::vector <Block> results;
 	std::vector <Symbol> syms;
 	//bool unreachable = false;
-	for (auto it : Ymir::r (0, this-> values.size ())) {
-	    auto res = semantic::DestructSolver::instance ().solve (this-> values [it], aux);
+	for (auto it : Ymir::r (0, this-> _values.size ())) {
+	    auto res = semantic::DestructSolver::instance ().solve (this-> _values [it], aux);
 	    if (res.valid) {
 		soluce.push_back (res);
 		Table::instance ().enterBlock ();
@@ -1727,7 +1732,7 @@ namespace syntax {
 		    Table::instance ().insert (it-> info);
 		}
 
-		auto bl = this-> block [it]-> block ();
+		auto bl = this-> _block [it]-> block ();
 		auto expr = bl-> getLastExpr ();
 		if (expr == NULL) {
 		    Ymir::Error::uninitVar (bl-> token, bl-> token);
@@ -1743,10 +1748,10 @@ namespace syntax {
 	
 	Table::instance ().quitBlock ();
 	auto ret = new (Z0) IMatch (this-> token, expr);
-	ret-> aux = aux;
-	ret-> binAux = binAux;
-	ret-> soluce = soluce;
-	ret-> block = results;
+	ret-> _aux = aux;
+	ret-> _binAux = binAux;
+	ret-> _soluce = soluce;
+	ret-> _block = results;
 	auto type = ret-> validate (syms);
 	if (type == NULL) return NULL;
 	ret-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), ret, type);
@@ -1755,7 +1760,7 @@ namespace syntax {
 
     InfoType IMatch::validate (std::vector <Symbol> & params) {
 	if (params.size () == 0) return new (Z0) IVoidInfo ();
-	this-> casters.clear ();
+	this-> _casters.clear ();
 	InfoType successType = NULL;
 	for (auto fst : Ymir::r (0, params.size ())) {
 	    std::vector <InfoType> casters (params.size ());
@@ -1775,13 +1780,13 @@ namespace syntax {
 	    }
 
 	    if (success) {
-		this-> casters = casters;
+		this-> _casters = casters;
 		successType = casters [fst];
 		break;
 	    }	    
 	}
 
-	if (this-> casters.size () != params.size ()) {
+	if (this-> _casters.size () != params.size ()) {
 	    for (auto it : Ymir::r (1, params.size ())) {
 		if (!params [it]-> type ()-> CompOp (params [0]-> type ())) {
 		    Ymir::Error::incompatibleTypes (this-> token, params [it], params [0]-> type ());
@@ -1806,7 +1811,7 @@ namespace syntax {
 
     void IPragma::executeMsg () {
 	Ymir::OutBuffer buf;
-	auto l = this-> params-> expression ();
+	auto l = this-> _params-> expression ();
 	if (l) {
 	    auto list = l-> to <IParamList> ();
 	    for (auto it : list-> getParams ()) {
@@ -1820,7 +1825,7 @@ namespace syntax {
 
     Expression IPragma::executeCompile () {
 	Ymir::Error::activeError (false);
-	this-> params-> expression ();
+	this-> _params-> expression ();
 	auto errors = Ymir::Error::caught ();
 	Ymir::Error::activeError (true);
 	auto ret = new (Z0) IPragma (this-> token, NULL);
@@ -1834,7 +1839,7 @@ namespace syntax {
     }
     
     Expression IMacroCall::expression () {
-	if (auto block = this-> bl) {
+	if (auto block = this-> _bl) {
 	    if (!Table::instance ().addCall (this-> token)) return NULL;
 	    auto nbErrors = Ymir::Error::nb_errors;
 	    Table::instance ().enterPhantomBlock ();
@@ -1843,8 +1848,8 @@ namespace syntax {
 	    Table::instance ().quitFrame ();
 	    
 	    if (Ymir::Error::nb_errors != nbErrors) {
-		Ymir::OutBuffer buf (this-> soluce);		
-		Ymir::Error::templateCreation (this-> left-> token, buf.str ());		
+		Ymir::OutBuffer buf (this-> _soluce);		
+		Ymir::Error::templateCreation (this-> _left-> token, buf.str ());		
 		return NULL;
 	    }
 	    
@@ -1858,7 +1863,7 @@ namespace syntax {
     }
 
     Expression IMacroVar::expression () {
-	return this-> content-> expression ();
+	return this-> _content-> expression ();
     }
 
     Expression IBlock::expression () {
@@ -1887,9 +1892,9 @@ namespace syntax {
     }
 
     Expression IMacroToken::expression () {
-	auto aux = new (Z0) IString (this-> token, this-> value);
+	auto aux = new (Z0) IString (this-> token, this-> _value);
 	aux-> info = new (Z0) ISymbol (this-> token, aux, new (Z0) IStringInfo (true, true));
-	aux-> info-> value () = new (Z0) IStringValue (this-> value);
+	aux-> info-> value () = new (Z0) IStringValue (this-> _value);
 	return aux;
     }
 

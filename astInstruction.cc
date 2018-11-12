@@ -566,8 +566,8 @@ namespace syntax {
     }    
 
     void IReturn::verifLocal () {
-	if (this-> elem && this-> elem-> is <IUnary> ()) {
-	    auto un = this-> elem-> to <IUnary> ();
+	if (this-> _elem && this-> _elem-> is <IUnary> ()) {
+	    auto un = this-> _elem-> to <IUnary> ();
 	    if (un-> token == Token::AND) {
 		auto sym = un-> getElem ();
 		if (!sym-> info-> type ()-> is<IRefInfo> ()) {
@@ -578,8 +578,8 @@ namespace syntax {
 	    }
 	}
 	
-	if (this-> elem && this-> elem-> info && this-> elem-> info-> type ()-> is <IPtrFuncInfo> ()) {
-	    auto func = this-> elem-> info-> type ()-> to<IPtrFuncInfo> ();
+	if (this-> _elem && this-> _elem-> info && this-> _elem-> info-> type ()-> is <IPtrFuncInfo> ()) {
+	    auto func = this-> _elem-> info-> type ()-> to<IPtrFuncInfo> ();
 	    if (func-> isDelegate ()) {
 		if (!Table::instance ().verifyClosureLifeTime (0, func-> closures ())) {
 		    Ymir::Error::here (this-> token);
@@ -591,39 +591,39 @@ namespace syntax {
     Instruction IReturn::instruction () {
 	auto aux = new (Z0)  IReturn (this-> token);
 	Table::instance ().retInfo ().returned ();
-	if (this-> elem != NULL) {
-	    this-> elem-> inside = this;
-	    aux-> elem = this-> elem-> expression ();
-	    if (aux-> elem == NULL) return NULL;
-	    if (aux-> elem-> info-> type ()-> is <IVoidInfo> ()) {
-		Ymir::Error::returnVoid (this-> token, aux-> elem-> info);
+	if (this-> _elem != NULL) {
+	    this-> _elem-> inside = this;
+	    aux-> _elem = this-> _elem-> expression ();
+	    if (aux-> _elem == NULL) return NULL;
+	    if (aux-> _elem-> info-> type ()-> is <IVoidInfo> ()) {
+		Ymir::Error::returnVoid (this-> token, aux-> _elem-> info);
 		return NULL;
 	    }
 	    
-	    auto type = aux-> elem-> info-> type ()-> CompOp (Table::instance ().retInfo ().info-> type ());	    
+	    auto type = aux-> _elem-> info-> type ()-> CompOp (Table::instance ().retInfo ().info-> type ());	    
 	    if (type == NULL) {		
-		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type ());
+		Ymir::Error::incompatibleTypes (this-> token, aux-> _elem-> info, Table::instance ().retInfo ().info-> type ());
 		return NULL;
 	    }
 	    
 	    if (Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().info-> type (type);
 	    
-	    if (type-> isSame (aux-> elem-> info-> type ())) {		
+	    if (type-> isSame (aux-> _elem-> info-> type ())) {		
 		if (!Table::instance ().retInfo ().changed ()) {
 		    Table::instance ().retInfo ().info-> value () =
-			aux-> elem-> info-> value ();
+			aux-> _elem-> info-> value ();
 		} else
 		    Table::instance ().retInfo ().info-> value () = NULL;
 		Table::instance ().retInfo ().changed () = true;
 	    }
 	    	    	    
-	    aux-> caster = type-> cloneOnExitWithInfo ();
+	    aux-> _caster = type-> cloneOnExitWithInfo ();
 	    if (Table::instance ().retInfo ().deco == Keys::CONST)
-	    	aux-> caster-> isConst (true);
+	    	aux-> _caster-> isConst (true);
 
-	    if (!aux-> caster-> ConstVerif (Table::instance ().retInfo ().info-> type ())) {
-		Ymir::Error::incompatibleTypes (this-> token, aux-> elem-> info, Table::instance ().retInfo ().info-> type ());
+	    if (!aux-> _caster-> ConstVerif (Table::instance ().retInfo ().info-> type ())) {
+		Ymir::Error::incompatibleTypes (this-> token, aux-> _elem-> info, Table::instance ().retInfo ().info-> type ());
 		return NULL;		    
 	    }	    
 	} else {
@@ -711,7 +711,7 @@ namespace syntax {
 	auto name = Ymir::OutBuffer ("_", ISymbol::getLastTmp ()).str ();
 
 	auto aux = new (Z0) IVar ({{this-> token, name}, name});
-	auto expr = this-> expr-> expression ();
+	auto expr = this-> _expr-> expression ();
 
 	if (expr == NULL) return NULL;
 	aux-> info = new (Z0) ISymbol (aux-> token, aux, new (Z0) IRefInfo (expr-> info-> isConst ()
@@ -726,12 +726,12 @@ namespace syntax {
 	std::vector <semantic::DestructSolution> soluce;
 	std::vector <Block> blocks;
 	bool unreachable = false;
-	for (auto it : Ymir::r (0, this-> values.size ())) {
+	for (auto it : Ymir::r (0, this-> _values.size ())) {
 	    Table::instance ().enterBlock ();
 	    if (unreachable) {
-		Ymir::Error::unreachableStmtWarn (this-> values [it]-> token);
+		Ymir::Error::unreachableStmtWarn (this-> _values [it]-> token);
 	    } 
-	    auto res = semantic::DestructSolver::instance ().solve (this-> values [it], aux);	    
+	    auto res = semantic::DestructSolver::instance ().solve (this-> _values [it], aux);	    
 	    if (res.valid) {
 		soluce.push_back (res);
 		Table::instance ().retInfo ().currentBlock () = "if";
@@ -739,7 +739,7 @@ namespace syntax {
 		for (auto it_ : res.created) {
 		    Table::instance ().insert (it_-> info);
 		}
-		blocks.push_back (this-> block [it]-> block ());		
+		blocks.push_back (this-> _block [it]-> block ());		
 		Table::instance ().quitBlock ();
 		unreachable = res.immutable;
 	    }
@@ -748,22 +748,27 @@ namespace syntax {
 
 	Table::instance ().quitBlock ();
 	auto ret = new (Z0) IMatch (this-> token, expr);	
-	ret-> aux = aux;		
-	ret-> binAux = binAux;
-	ret-> soluce = soluce;
-	ret-> block = blocks;
+	ret-> _aux = aux;		
+	ret-> _binAux = binAux;
+	ret-> _soluce = soluce;
+	ret-> _block = blocks;
 	return ret;
     }
 
     std::vector <semantic::Symbol> IScope::allInnerDecls () {
-	return this-> block-> allInnerDecls ();
+	return this-> _block-> allInnerDecls ();
     }
     
     Instruction IScope::instruction () {
-	Table::instance ().retInfo ().currentBlock () = "if";
-	auto ret = block-> block ();
-	this-> father ()-> addFinally (ret);	
-	return new (Z0) INone (this-> token);
+	if (this-> token == Keys::EXIT) {
+	    Table::instance ().retInfo ().currentBlock () = "if";
+	    auto ret = this-> _block-> block ();
+	    this-> father ()-> addFinally (ret);	
+	    return new (Z0) INone (this-> token);
+	} else {
+	    Ymir::Error::undefinedScopeEvent (this-> token);
+	    return NULL;
+	}
     }
     
 

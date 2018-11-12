@@ -704,9 +704,9 @@ namespace semantic {
 	if (typedParam) typeVar = typedParam-> typeExp ();
 	else typeVar = param;
 	if (elem-> isTrait ()) {
-	    auto traitInfo = elem-> typeVar ()-> expression ();
+	    auto traitInfo = elem-> getTypeVar ()-> expression ();
 	    if (traitInfo == NULL || !traitInfo-> info-> type ()-> is<semantic::ITraitInfo> ()) {
-		Ymir::Error::useAsTrait (elem-> typeVar ()-> token);
+		Ymir::Error::useAsTrait (elem-> getTypeVar ()-> token);
 		return TemplateSolution (0, false);
 	    }
 
@@ -720,7 +720,7 @@ namespace semantic {
 	    	    
 	    return TemplateSolution {__VAR__, true, type, ret};
 	} else {
-	    auto res = this-> solveInside (tmps, elem-> typeVar (), type);
+	    auto res = this-> solveInside (tmps, elem-> getTypeVar (), type);
 	    if (res.valid) {
 		if ((typedParam && typedParam-> getDeco () == Keys::CONST) || res.type-> isConst ())
 		    isConst = true;
@@ -970,7 +970,7 @@ namespace semantic {
 	if (auto type = right-> to<IType> ()) info = type-> info-> type ();
 	if (!info) return TemplateSolution (0, false);
 
-	auto res = this-> solveInside (tmps, left-> typeVar (), info);
+	auto res = this-> solveInside (tmps, left-> getTypeVar (), info);
 	if (!res.valid || !res.type-> CompOp (info))
 	    return TemplateSolution (0, false);
 	else {

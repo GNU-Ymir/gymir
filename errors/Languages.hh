@@ -158,6 +158,7 @@ namespace Ymir {
 		phrases [OverTemplateMethod] = "Template method cannot override a super method";
 		phrases [OverPrivateMethod] = "Private method are not virtual and cannot override";
 		phrases [ClosureVarLifetime] = "Closure var '%%%' does not live long enough";
+		phrases [UndefinedScopeEvent] = "'%%%' is not a scope event";
 		init = true;
 	    } 
 	    return phrases;

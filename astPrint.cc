@@ -54,7 +54,7 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 
-	for (auto it : this-> params) {
+	for (auto it : this-> _params) {
 	    it-> print (nb + 4);
 	}	    
     }
@@ -232,14 +232,14 @@ namespace syntax {
 	);
 	
 	this-> _left-> print (nb + 4);
-	this-> params-> print (nb + 4);
+	this-> _params-> print (nb + 4);
     }
 
     void IProto::print (int nb) {
 	printf ("\n%*c<Proto> %s%s",
 		nb, ' ',
-		this-> space.c_str (),
-		this-> ident.toString ().c_str ()
+		this-> _space.c_str (),
+		this-> _ident.toString ().c_str ()
 	);
 	
 	for (auto it : this-> _params) {
@@ -256,21 +256,21 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 	    
-	for (auto it : this-> params) {
+	for (auto it : this-> _params) {
 	    it-> print (nb + 4);
 	}
 	printf ("\n%*c ) %s ",
 		nb, ' ',
-		this-> ret ? "->" : "=>"
+		this-> _ret ? "->" : "=>"
 	);
 	    
-	if (this-> ret) {
-	    this-> ret-> print (nb + 4);
-	    this-> block-> print (nb + 8);
-	} else if (this-> block) {
-	    this-> block-> print (nb + 4);
+	if (this-> _ret) {
+	    this-> _ret-> print (nb + 4);
+	    this-> _block-> print (nb + 8);
+	} else if (this-> _block) {
+	    this-> _block-> print (nb + 4);
 	} else {
-	    this-> expr-> print (nb + 8);
+	    this-> _expr-> print (nb + 8);
 	}	    		    
     }
 
@@ -310,10 +310,10 @@ namespace syntax {
 		this-> token.toString ().c_str ()
 	);
 	
-	this-> left-> print (nb + 4);
-	if (this-> type) this-> type-> print (nb + 4);
+	this-> _left-> print (nb + 4);
+	if (this-> _type) this-> _type-> print (nb + 4);
 	else
-	    printf (": %s", this-> expType.toString ().c_str ());	    
+	    printf (": %s", this-> _expType.toString ().c_str ());	    
     }
 	
     void ITupleDest::print (int nb) {
@@ -354,28 +354,17 @@ namespace syntax {
 	);
 	this-> expr-> print (nb + 4);
     }
-	    
-
-    void IMatchPair::print (int nb) {
-	printf ("\n%*c<MatchPair> %s",
-		nb, ' ',
-		this-> token.toString ().c_str ()
-	);
-	
-	this-> left-> print (nb + 4);
-	this-> right-> print (nb + 4);
-    }
-        	
+	            	
     void IMatch::print (int nb) {
 	printf ("\n%*c<Match> %s", 
 		nb, ' ',
 		this-> token.toString ().c_str ()
 	);
-	this-> expr-> print (nb + 4);
+	this-> _expr-> print (nb + 4);
 	    
-	for (int i = 0 ; i < (int) this-> values.size () ; i++) {
-	    this-> values [i]-> print (nb + 8);
-	    this-> block [i]-> print (nb + 8);
+	for (int i = 0 ; i < (int) this-> _values.size () ; i++) {
+	    this-> _values [i]-> print (nb + 8);
+	    this-> _block [i]-> print (nb + 8);
 	}
     }	
 

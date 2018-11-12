@@ -1,6 +1,7 @@
 #include <ymir/semantic/pack/DestructSolver.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/value/BoolValue.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/_.hh>
 
@@ -52,9 +53,7 @@ namespace semantic {
     }
     
     DestructSolution DestructSolver::solve (Expression left, Expression right) {
-	if (auto mpair = left-> to <IMatchPair> ()) {
-	    return solvePair (mpair, right);
-	} else if (auto bin = left-> to <IBinary> ()) {
+	if (auto bin = left-> to <IBinary> ()) {
 	    return solveBinary (bin, right);
 	} else if (auto var = left-> to <IVar> ()) {
 	    return solveVar (var, right);
@@ -175,38 +174,6 @@ namespace semantic {
     	return soluce;	
     }
     
-    DestructSolution DestructSolver::solvePair (MatchPair pair, Expression right) {
-	auto lvalue = pair-> getLeft ()-> expression ();
-	auto rvalue = pair-> getRight ()-> expression ();
-
-	if (lvalue == NULL || rvalue == NULL) return DestructSolution (0, false);
-
-	if (!lvalue-> info-> type ()-> CompOp (rvalue-> info-> type ())) {
-	    Ymir::Error::incompatibleTypes (pair-> token, lvalue-> info, rvalue-> info-> type ());
-	    return DestructSolution (0, false);
-	}
-
-	if (!right-> info-> type ()-> CompOp (lvalue-> info-> type ()))
-	    return DestructSolution (0, false);
-
-	Word tokLeft {pair-> token, Token::SUP_EQUAL};
-	Expression binLeft = (new (Z0) IBinary (tokLeft, right, lvalue))-> expression ();
-	if (binLeft == NULL) return DestructSolution (0, false);
-
-	Word tokRight {pair-> token, Token::INF_EQUAL};
-	Expression binRight = (new (Z0) IBinary (tokRight, right, rvalue))-> expression ();
-	if (binRight == NULL) return DestructSolution (0, false);
-
-	Word dand {pair-> token, Token::DAND};
-	Expression bin = (new (Z0) IBinary (dand, binLeft, binRight))-> expression ();	
-	if (!bin) return DestructSolution (0, false);
-	DestructSolution soluce {__VALUE__, true};
-	soluce.test = bin;
-	if (bin-> info-> value ()) {
-	    soluce.immutable = bin-> info-> value ()-> to <IBoolValue> ()-> isTrue ();
-	}
-	return soluce;
-    }
         
     DestructSolution DestructSolver::solveNormal (Expression left, Expression right) {
 	auto value = left-> expression ();
@@ -243,12 +210,35 @@ namespace semantic {
 
 	if (auto ref = ltype-> to <IRefInfo> ())
 	    ltype = ref-> content ();
-	
+		
 	if (ltype-> isSame (rtype)) {
 	    auto var = new (Z0) IVar (left-> token);
 	    var-> deco = left-> deco;
 	    return solveVar (var, right, false);
-	} else return DestructSolution (0, false);
+	} else if ((ltype-> is<IAggregateCstInfo> () || ltype-> is <IAggregateInfo> ()) && rtype-> is<IAggregateInfo> ()) {
+	    if (ltype-> is<IAggregateCstInfo> ())
+		ltype = ltype-> TempOp ({});
+	    
+	    if (ltype-> CompOp (rtype) != NULL) {
+		Word tok = {left-> token, Keys::IS};
+		auto vtableVar = new (Z0) IVar ({left-> token, Keys::VTABLE_FIELD});
+		auto vtable = ltype-> DColonOp (vtableVar);
+		auto leftExpr = new (Z0) ISemanticConst (tok, vtable, ltype-> clone ());
+		
+		auto rightExpr = new (Z0) IDot (left-> token, right, vtableVar);		    
+		Expression bin = new (Z0) IBinary (tok, leftExpr, rightExpr);
+		
+		auto test = bin-> expression ();
+		DestructSolution soluce {__VAR__, true};
+		soluce.test = test;
+		auto var = new (Z0) IVar (left-> token);
+		auto varsoluce = solveVar (var, right, false);
+		if (!varsoluce.valid || !merge (soluce, varsoluce, Token::AND))
+		    return DestructSolution {0, false};
+		return soluce;
+	    }
+	}
+	return DestructSolution (0, false);
     }
     
     DestructSolution DestructSolver::solveBinary (Binary left, Expression right) {

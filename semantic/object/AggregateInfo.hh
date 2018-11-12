@@ -101,7 +101,7 @@ namespace semantic {
 	InfoType DColonOp (syntax::Var) override;
 
 	InfoType TempOp (const std::vector <::syntax::Expression> &) override;
-
+	
 	std::string typeString () override;
 
 	std::string simpleTypeString () override;
@@ -214,7 +214,7 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 
 	TupleInfo getImpl ();
-	
+
 	Ymir::Tree getVtable ();
 	
 	Ymir::Tree toGeneric () override;	

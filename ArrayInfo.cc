@@ -7,6 +7,7 @@
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/utils/ArrayUtils.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
+#include <ymir/semantic/utils/TupleUtils.hh>
 #include <ymir/semantic/tree/Generic.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/value/FixedValue.hh>
@@ -327,7 +328,7 @@ namespace semantic {
 	    return this-> CompOp (en-> content ());
 	} else if (other-> is<INullInfo> ()) {
 	    return this-> clone ();	    
-	}	    
+	}
 	return NULL;
     }
 

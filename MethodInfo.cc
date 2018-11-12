@@ -47,7 +47,7 @@ namespace semantic {
 	Tree InstCallOnBinary (Word token, InfoType type, Expression left, Expression right) {
 	    auto params = new (Z0) IParamList (token, {right});
 	    auto score = type-> appScore;	    
-	    params-> getTreats () = score-> treat;
+	    params-> treats () = score-> treat;
 	    return InstCall (token, type, left, params, score);
 	}
 	

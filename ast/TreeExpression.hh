@@ -40,5 +40,24 @@ namespace syntax {
 	
     };
     
+    class ISemanticConst : public IExpression {
+
+	semantic::InfoType _type;
+	semantic::InfoType _auxType;
+	
+    public :
+
+	ISemanticConst (Word locus, semantic::InfoType type, semantic::InfoType auxType);
+
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
+	
+	Expression expression ();
+
+	Ymir::Tree toGeneric ();
+	
+	void print (int id = 0) override;
+
+    };
+
     
 }

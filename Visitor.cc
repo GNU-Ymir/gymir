@@ -501,7 +501,7 @@ namespace syntax {
 		}
 	    }
 	    auto ret = new (Z0) IModDecl (ident, docs, decls);
-	    ret-> getTemplates () = templates;
+	    ret-> templates () = templates;
 	    return ret;
 	}
     }
@@ -1031,7 +1031,7 @@ namespace syntax {
 	}
 	
 	auto ret = new (Z0)  IProto (ident, docs, type, deco, exps, space, isVariadic);
-	ret-> from = from.getStr ();
+	ret-> externLang () = from.getStr ();
 	return ret;
     }
 
@@ -2603,12 +2603,7 @@ namespace syntax {
 		    return var;
 		}
 
-		auto expr = visitExpression ();
-		auto next = this-> lex.next ();
-		if (next == Token::TDOT) {
-		    auto res = visitExpression ();
-		    return new (Z0) IMatchPair (next, expr, res);
-		} else this-> lex.rewind ();
+		auto expr = visitExpression ();;
 		return expr;
 	    }
 	}
@@ -2665,7 +2660,7 @@ namespace syntax {
     }
 
     Scope Visitor::visitScope () {
-	auto begin = this->lex.next ();
+	auto begin = this-> visitIdentifiant ();
 	auto next = this-> lex.next ({Token::LACC, Token::DARROW});
 	if (next == Token::LACC) this-> lex.rewind ();
 	return new (Z0) IScope (begin, visitBlock ());

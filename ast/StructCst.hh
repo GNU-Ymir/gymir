@@ -50,7 +50,7 @@ namespace syntax {
 	    return ret;
 	}
 
-	std::vector <Expression> & getExprs ();
+	const std::vector <Expression> & getExprs ();
 
 	Expression getLeft ();
 	

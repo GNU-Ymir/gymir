@@ -8,15 +8,43 @@
 
 namespace syntax {
 
+    /**
+     * \struct IIs
+     * The syntaxic node representation of a is expression
+     * \verbatim
+     is := 'is' '(' expression ':' (expression (',' template_param)*) | 'fn' | 'tuple' | 'struct' | 'type' ')'
+     template_param := Constante | Identifier 'of' expression | Identifier ':' expression | Identifier 
+     \endverbatim
+     */
     class IIs : public IExpression {
-	std::vector <Expression> tmps;
-	Expression left, type;
-	Word expType;
+	
+	/** The template parameters */
+	std::vector <Expression> _tmps;
+
+	/** The left operand */
+	Expression _left;
+
+	/** The type (right operand), may be NULL */
+	Expression _type;
+
+	/** The type (right operand), equals to Word::eof (), iif _type != NULL */
+	Word _expType;
 
     public:
 
+	/**
+	 * \param begin the location of this expression
+	 * \param expr the expression to evaluated
+	 * \param type the type we expect to test 
+	 * \param tmps the templates parameters
+	 */
 	IIs (Word begin, Expression expr, Expression type, std::vector <Expression> tmps);
 
+	/**
+	 * \param begin the location of this expression
+	 * \param expr the expression to evaluated
+	 * \param type the type we expect to test 
+	 */
 	IIs (Word begin, Expression expr, Word type);
 	
 	Expression expression () override;

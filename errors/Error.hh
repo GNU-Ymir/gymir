@@ -135,6 +135,7 @@ namespace Ymir {
 	    OverTemplateMethodDuo,
 	    OverPrivateMethod,
 	    ClosureVarLifetime,
+	    UndefinedScopeEvent,
 	    LAST_ERROR
 	};
 
@@ -287,6 +288,8 @@ namespace Ymir {
 	static void uninitVar (const Word&, const Word&);
 
 	static void implicitModule (const Word&);
+
+	static void undefinedScopeEvent (const Word&);
 
 	static void useAsVar (const Word&, semantic::Symbol);
 
