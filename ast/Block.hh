@@ -15,8 +15,11 @@ namespace semantic {
 namespace syntax {
     
     class IDeclaration;
+    class IFailureBlock;
+    class ITypedVar;
+    
     typedef IDeclaration* Declaration;
-
+    
     /**
      * \struct IBlock
      * Syntaxic node representation of a block
@@ -31,6 +34,7 @@ namespace syntax {
 	std::vector <Instruction> _insts;
 	std::vector <Instruction> _preFinally;
 	std::vector <IBlock*> _finally;
+	std::vector <IFailureBlock*> _failures;
 	std::vector <Var> _inlines;
 	Expression _value;
 
@@ -68,11 +72,14 @@ namespace syntax {
 	 */
 	void addFinallyAtSemantic (Instruction inst);
 
+	void addFailure (IFailureBlock* block);
+	
 	/**
 	 * ??
 	 */
 	void addInline (Var var);
 	
+
 	Instruction instruction () override;
 
 	Expression expression () override;
@@ -135,6 +142,28 @@ namespace syntax {
 	
     };
 
+
+    /**
+     * \struct IFailureBlock
+     * syntaxic node representation of a failure block
+     * \verbatim
+     failure_block := 'on' 'failure' ('(' typed_var ')')? block
+     \endverbatim
+     */
+    class IFailureBlock : public IExpression {       
+	
+	friend IBlock;
+
+	IBlock* _block;
+	ITypedVar* _var;
+
+    public :
+	
+	IFailureBlock (Word locus, IBlock * block, ITypedVar *var);
+       		
+    };
+
+    typedef IFailureBlock* FailureBlock;
     typedef IBlock* Block;
     
 }

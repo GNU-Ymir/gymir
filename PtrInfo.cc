@@ -6,6 +6,7 @@
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/FixedValue.hh>
 #include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 
 namespace semantic {
 
@@ -197,6 +198,10 @@ namespace semantic {
 
 	if (auto ot = tmps [0]-> info-> type ()-> to<IStructCstInfo> ()) {
 	    auto type = ot-> TempOp ({});
+	    if (type == NULL) return NULL;
+	    return new (Z0) IPtrInfo (false, type);
+	} else if (auto ag = tmps [0]-> info-> type ()-> to <IAggregateCstInfo> ()) {
+	    auto type = ag-> TempOp ({});
 	    if (type == NULL) return NULL;
 	    return new (Z0) IPtrInfo (false, type);
 	} else {
@@ -486,7 +491,9 @@ namespace semantic {
     
 
     Ymir::Tree IPtrInfo::toGeneric () {
-	if (this-> _content-> to<IStructInfo> ()) {
+	if (this-> _content-> to<IStructInfo> () ||
+	    this-> _content-> to <IAggregateInfo> ()
+	) {
 	    return build_pointer_type (
 		void_type_node
 	    );

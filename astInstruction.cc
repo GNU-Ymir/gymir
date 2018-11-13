@@ -765,6 +765,11 @@ namespace syntax {
 	    auto ret = this-> _block-> block ();
 	    this-> father ()-> addFinally (ret);	
 	    return new (Z0) INone (this-> token);
+	} else if (this-> token == Keys::FAILURE) {
+	    Table::instance ().retInfo ().currentBlock () = "if";
+	    auto ret = this-> _block-> block ();
+	    this-> father ()-> addFailure (new (Z0) IFailureBlock (this-> token, ret, NULL));	
+	    return new (Z0) INone (this-> token);
 	} else {
 	    Ymir::Error::undefinedScopeEvent (this-> token);
 	    return NULL;

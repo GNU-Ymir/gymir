@@ -46,7 +46,7 @@ namespace Ymir {
     Tree makeLabel (location_t loc, std::string &name);
 
     Tree makeLabel (location_t loc, const char* name);
-
+    
     Tree makeVectorCst (Tree, std::string name, std::vector <Tree> values);
     
     Tree getArrayRef (location_t, Tree array, Tree inner, ulong index);
@@ -86,7 +86,8 @@ namespace Ymir {
     Tree getExpr (TreeStmtList& list, Tree arg);
 
     Tree getExpr (TreeStmtList& list, syntax::Expression arg);
-    
+
+    Tree callLib (location_t loc, const std::string & name, Tree ret, std::vector <Tree> params);
 }
 
 //tree convert (tre

@@ -8,6 +8,7 @@
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/object/AggregateInfo.hh>
 #include <ymir/ast/_.hh>
+#include <set>
 
 namespace semantic {
 
@@ -89,6 +90,36 @@ namespace semantic {
 	    
 	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
 	    return Ymir::compoundExpr (loc, result, ltree);
+	}
+
+	Tree InstInitUnion (Word locus, InfoType type, Expression expression) {
+	    auto ttype = type-> toGeneric ();
+	    auto decls = Ymir::getFieldDecls (ttype);
+	    vec <constructor_elt, va_gc> * elms = NULL;
+	    auto initVar = new (Z0) IVar (Word {UNKNOWN_LOCATION, "init"});
+	    auto it = decls [0];
+	    Tree decl_name = DECL_NAME (it.getTree ());
+	    std::string field_name (IDENTIFIER_POINTER (decl_name.getTree ()));
+	    auto field_var = new (Z0) IVar (Word {locus, field_name});
+	    Expression local = new (Z0) IDColon (locus, expression, initVar);
+	    if (field_name != Keys::UNDER) { // Struct vide
+		local-> info = new (Z0) ISymbol (locus, local, type-> DotOp (field_var)-> DColonOp (initVar));
+		if (local-> info-> type () == NULL) {
+		    Ymir::Error::undefAttr (locus, new (Z0) ISymbol (field_var-> token, field_var, type-> DotOp (field_var)), initVar);
+		    local = NULL;
+		} else if (local-> info-> type ()-> is<IFunctionInfo> () && local-> info-> type ()-> to <IFunctionInfo> () -> isConstr ()) {
+		    local = (new (Z0) IPar (locus, locus, new (Z0) IEvaluatedExpr (local), new (Z0) IParamList (locus, {})))-> expression ();
+		}
+		    
+		if (local != NULL) 
+		    CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), local-> toGeneric ().getTree ());
+		else
+		    CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), emptyInit (locus, type-> DotOp (field_var)-> toGeneric ()).getTree ());
+	    } else {
+		CONSTRUCTOR_APPEND_ELT (elms, it.getTree (), build_int_cst_type (unsigned_char_type_node, 0));
+	    }	    
+	    
+	    return build_constructor (ttype.getTree (), elms);
 	}
 	
 	Tree InstInit (Word locus, InfoType type, Expression expression) {
@@ -232,7 +263,11 @@ namespace semantic {
 	std::vector <syntax::Expression> exp;
 	auto ret = this-> TempOp (exp);	
 	if (ret == NULL) return NULL;
-	ret-> unopFoo = StructUtils::InstInit;
+	if (this-> _isUnion) 
+	    ret-> unopFoo = StructUtils::InstInitUnion;
+	else
+	    ret-> unopFoo = StructUtils::InstInit;
+	
 	for (auto it : Ymir::r (0, ret-> to <IStructInfo> ()-> types.size ())) {
 	    auto type = ret-> to <IStructInfo> ()-> types [it];
 	    auto attr = ret-> to <IStructInfo> ()-> attrs [it];
@@ -618,16 +653,19 @@ namespace semantic {
 	auto str = other-> to <IStructInfo> ();
 	if (str == NULL || !str-> isSame (this)) return NULL;
 	
-	static std::vector <InfoType> dones;
-	if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
-	    dones.push_back (this);
+	static std::set <InfoType> dones;
+	if (dones.find (this) == dones.end ()) {
+	    dones.insert (this);
 	    for (auto it : Ymir::r (0, this-> types.size ())) {
 		if (!this-> types [it]-> ConstVerif (str-> types [it])) {
-		    if (!str-> needKeepConst ())
+		    if (!str-> needKeepConst ()) {
+			dones.erase (this);
 			return NULL;
+		    }
 		}
 	    }
-	} 
+	}
+	dones.erase (this);
 	return this;
     }
 
@@ -740,7 +778,10 @@ namespace semantic {
     
     InfoType IStructInfo::Init () {
 	auto ret = this-> clone ();
-	ret-> unopFoo = StructUtils::InstInit;
+	if (this-> _isUnion) 
+	    ret-> unopFoo = StructUtils::InstInitUnion;
+	else
+	    ret-> unopFoo = StructUtils::InstInit;
 	return ret;
     }
 

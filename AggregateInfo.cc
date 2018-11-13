@@ -17,7 +17,7 @@
 #include <ymir/semantic/pack/ConstructFrame.hh>
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/ast/Binary.hh>
-
+#include <set>
 
 using namespace syntax;   
 using namespace std;
@@ -50,6 +50,10 @@ namespace semantic {
 	    return left-> toGeneric ();
 	}
 
+	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
+	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
+	}
+	
 	Tree InstGetVtableCTE (Word, InfoType, Expression elem) {
 	    auto rtype = elem-> info-> type ()-> to <IAggregateInfo> ();
 	    auto vtable = rtype-> getVtable ();
@@ -677,15 +681,24 @@ namespace semantic {
     }   
     
     InfoType IAggregateInfo::ConstVerif (InfoType type) {
-	if (auto aggr = type-> to <IAggregateInfo> ())
-	    if (this-> _impl-> ConstVerif (aggr-> _impl))
-		return this;
+	if (auto aggr = type-> to <IAggregateInfo> ()) {
+	    static std::set <InfoType> dones;
+	    if (dones.find (this) == dones.end ()) {
+		dones.insert (this);
+		if (!this-> _impl-> ConstVerif (aggr-> _impl)) {
+		    dones.erase (this);
+		    return NULL;
+		}
+	    }
+	    dones.erase (this);
+	    return this;
+	}
 	return NULL;
     }
 
     InfoType IAggregateInfo::onClone () {
 	auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone, this-> _isExternal);
-	ret-> _impl = this-> _impl-> clone ()-> to <ITupleInfo> ();
+	ret-> _impl = this-> _impl;//> clone ()-> to <ITupleInfo> ();
 	ret-> _destr = this-> _destr;
 	ret-> _staticMeth = this-> _staticMeth;
 	ret-> _methods = this-> _methods;
@@ -870,6 +883,15 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IAggregateInfo::UnaryOp (Word op) {
+	if (op == Token::AND && this-> isLvalue ()) {
+	    auto ret = new (Z0) IPtrInfo (this-> isConst (), this-> clone ());
+	    ret-> binopFoo = &AggregateUtils::InstAddr;
+	    return ret;
+	}
+	return NULL;
+    }
+    
     std::string IAggregateInfo::getName () {
 	return this-> _name;
     }

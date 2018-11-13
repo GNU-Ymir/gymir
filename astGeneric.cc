@@ -36,7 +36,7 @@ namespace syntax {
 	Ymir::getStackStmtList ().back ().append (list);
 	return res;
     }
-
+    
     Ymir::Tree IBlock::toGeneric () {
 	if (this-> _value != NULL) {
 	    return this-> toGenericValue ();

@@ -150,11 +150,7 @@ namespace Mangler {
     
     std::string mangle_global (std::string name) {
 	auto res = mangle_namespace (name);
-	for (int i = 0 ; i < (int) res.length () ; i++) {
-	    if (res [i] < '0' || res [i] > '9')
-		return res.substr (i);
-	}
-	return res;
+	return "_Y" + res;
     }
 
     std::string mangle_function_C (std::string & name, semantic::FrameProto) {

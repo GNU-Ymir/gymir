@@ -197,6 +197,8 @@ namespace semantic {
 	
 	InfoType BinaryOpRight (Word, syntax::Expression) override;
 
+	InfoType UnaryOp (Word op);
+	
 	InfoType DotOp (syntax::Var) override;
 
 	InfoType DotExpOp (syntax::Expression right) override;

@@ -44,6 +44,10 @@ namespace syntax {
 	}
     }
 
+    void IBlock::addFailure (FailureBlock block) {
+	this-> _failures.push_back (block);
+    }
+    
     void IBlock::addFinallyAtSemantic (Instruction inst) {
 	this-> _preFinally.push_back (inst);
     }
@@ -2650,6 +2654,12 @@ namespace syntax {
 	return o;
     }
 
-    
+
+    IFailureBlock::IFailureBlock (Word locus, Block block, TypedVar var) :
+	IExpression (locus),
+	_block (block),
+	_var (var)
+    {
+    }
 
 }

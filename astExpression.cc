@@ -272,6 +272,8 @@ namespace syntax {
 		auto t_info = sym-> type ()-> TempOp (tmps);
 		if (t_info && t_info-> is<IStructCstInfo> ())
 		    t_info = t_info-> TempOp ({});
+		else if (t_info && t_info-> is <IAggregateCstInfo> ())
+		    t_info = t_info-> TempOp ({});
 		if (t_info != NULL) {
 		    if (this-> deco == Keys::REF)
 			t_info = new (Z0)  IRefInfo (false, t_info);
@@ -1015,6 +1017,7 @@ namespace syntax {
 		    auto inner = expr-> info-> type ();
 		    if (expr-> info-> type ()-> is <IEnumCstInfo> ()) inner = inner-> TempOp ({});
 		    else if (expr-> info-> type ()-> is <IStructCstInfo> ()) inner = inner-> TempOp ({});
+		    else if (expr-> info-> type ()-> is <IAggregateCstInfo> ()) inner = inner-> TempOp ({});
 		    return new (Z0)  IType (tok, new (Z0)  IArrayInfo (false, inner));				
 		}
 	    }

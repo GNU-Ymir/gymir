@@ -44,6 +44,8 @@ namespace semantic {
 	    
 	if (this-> _isVirtual) from = this-> _space;
 	this-> _proto = IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern () && this-> _isVirtual);
+	if (this-> _isVirtual && this-> _proto && this-> _proto-> type ())
+	    this-> _proto-> type ()-> value () = NULL;
 	return this-> _proto;
     }
     

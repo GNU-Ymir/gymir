@@ -546,7 +546,20 @@ namespace Ymir {
 	return arg;
     }
 
-    
+    Tree callLib (location_t locus, const std::string & name, Tree ret, std::vector <Tree> params) {
+	std::vector <tree> fndecl_type_params (params.size ());
+	std::vector <tree> real_params (params.size ());
+	for (auto it : Ymir::r (0, params.size ())) {
+	    fndecl_type_params [it] = params [it].getType ().getTree ();
+	    real_params [it] = params [it].getTree ();
+	}
+	
+	tree fndecl_type = build_function_type_array (ret.getTree (), fndecl_type_params.size (), fndecl_type_params.data ());
+	tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
+	tree fn = build1 (ADDR_EXPR, build_pointer_type (fndecl_type), fndecl);
+	return build_call_array_loc (locus, ret.getTree (), fn, real_params.size (), real_params.data ());
+    }
+        
 }
 
 
