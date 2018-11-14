@@ -104,6 +104,20 @@ namespace syntax {
 	return "none";
     }
     
+    std::string infoname (FixedConst ct) {
+	switch (ct) {
+	case FixedConst::BYTE : return "I8_info";
+	case FixedConst::UBYTE : return "U8_info";
+	case FixedConst::SHORT : return "I16_info";
+	case FixedConst::USHORT: return "U16_info";
+	case FixedConst::INT : return "I32_info";
+	case FixedConst::UINT : return "U32_info";
+	case FixedConst::LONG : return "I64_info";
+	case FixedConst::ULONG : return "U64_info";
+	}
+	return "none";
+    }
+
     
     IFunction::IFunction (Word ident, const std::string & docs, const std::vector <Word> & attrs, const std::vector<Var> & params, const std::vector <Expression>& tmps, Expression test, Block block) :
 	IDeclaration (docs),

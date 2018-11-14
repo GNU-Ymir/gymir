@@ -12,6 +12,9 @@
 
 namespace semantic {
 
+    class IAggregateCstInfo;
+    typedef IAggregateCstInfo* AggregateCstInfo;
+    
     class Table {
 
 	std::list <FrameScope> _frameTable;
@@ -75,7 +78,14 @@ namespace semantic {
 	Symbol get (std::string name);
 
 	std::vector <Symbol> getAll (std::string name);
+	
+	/**
+	 * \return the inner language definition of TypeInfo, cf. core.info
+	 */
+	AggregateCstInfo getTypeInfo ();
 
+	AggregateCstInfo getTypeInfo (std::string name); 
+	
 	Symbol getLocal (std::string name);
 
 	bool isFrameLocal (Symbol sym);

@@ -137,7 +137,7 @@ namespace semantic {
 	proto-> externLang () = this-> _externLang;
 	proto-> externLangSpace () = this-> _externLangSpace;
 	
-	if (!FrameTable::instance ().existsProto (proto)) {
+	if (!FrameTable::instance ().existsFinal (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
@@ -276,7 +276,7 @@ namespace semantic {
 	    Table::instance ().retInfo ().info = ret;
 		
 	auto proto = new (Z0)  IFrameProto (name.getStr (), finalNamespace, Table::instance ().retInfo ().info, params, tmps, this-> _attributes);
-	auto exists = FrameTable::instance ().existsProto (proto);
+	auto exists = FrameTable::instance ().existsFinal (proto);
 	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
@@ -328,7 +328,7 @@ namespace semantic {
 	    verifyReturn (name, proto-> type (), Table::instance ().retInfo ());
 	    Table::instance ().quitFrame ();
 	    return proto;
-	} else if (!exists)
+	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);
 	
 	Table::instance ().quitBlock ();
@@ -346,7 +346,7 @@ namespace semantic {
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
 
-	auto exists = FrameTable::instance ().existsProto (proto);
+	auto exists = FrameTable::instance ().existsFinal (proto);
 	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
@@ -384,7 +384,7 @@ namespace semantic {
 	    Table::instance ().quitBlock ();
 	    Table::instance ().quitFrame ();
 	    return proto;
-	} else if (!exists)
+	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);
 	
 	Table::instance ().quitBlock ();
@@ -401,7 +401,7 @@ namespace semantic {
 	Table::instance ().retInfo ().info = new (Z0) ISymbol (Word::eof (), NULL, retType);
 
 	auto proto = new (Z0) IFrameProto (name, space, Table::instance ().retInfo ().info, params, {}, this-> _attributes);
-	auto exists = FrameTable::instance ().existsProto (proto);
+	auto exists = FrameTable::instance ().existsFinal (proto);
 	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
@@ -431,7 +431,7 @@ namespace semantic {
 	    Table::instance ().quitBlock ();
 	    Table::instance ().quitFrame ();
 	    return proto;
-	} else if (!exists)
+	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);
 	
 	Table::instance ().quitBlock ();
@@ -466,7 +466,7 @@ namespace semantic {
 
 	auto proto = new (Z0)  IFrameProto (this-> _function-> getIdent ().getStr (), finalNamespace, Table::instance ().retInfo ().info, params, this-> tempParams, this-> _attributes);
 
-	auto exists = FrameTable::instance ().existsProto (proto);
+	auto exists = FrameTable::instance ().existsFinal (proto);
 	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
@@ -517,7 +517,7 @@ namespace semantic {
 	    verifyReturn (this-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
 	    Table::instance ().quitFrame ();
 	    return proto;
-	} else if (!exists)
+	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);
 	
 	Table::instance ().quitBlock ();

@@ -148,7 +148,7 @@ namespace semantic {
 	    }
 	    
 	    MethodFrame ret = new (Z0)  IMethodFrame (this-> _space, this-> _name, this-> _info, func);
-	    ret-> isVirtual () = false;
+	    ret-> isVirtual (false);
 	    ret-> attributes () = this-> attributes ();
 	    
 	    ret-> currentScore () = this-> currentScore () + res.score;	    

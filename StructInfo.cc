@@ -664,8 +664,8 @@ namespace semantic {
 		    }
 		}
 	    }
+	    dones.erase (this);	    
 	}
-	dones.erase (this);
 	return this;
     }
 

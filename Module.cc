@@ -46,7 +46,8 @@ namespace semantic {
     }
 
     void IModule::addOpen (const Namespace& space) {
-	this-> _opens.push_back (space);       
+	if (this-> _space != space)
+	    this-> _opens.push_back (space);       
     }
 
     void IModule::close (const Namespace& space) {

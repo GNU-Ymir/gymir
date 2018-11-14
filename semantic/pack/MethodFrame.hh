@@ -66,9 +66,13 @@ namespace semantic {
 	
 	virtual const char* getId ();	
 
-	bool& isExtern ();
+	bool isExtern ();
+
+	void isExtern (bool);
 	
-	bool & isVirtual ();
+	bool isVirtual ();
+
+	void isVirtual (bool);
 
 	bool& needConst ();
 	

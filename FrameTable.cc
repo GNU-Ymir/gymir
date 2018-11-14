@@ -76,6 +76,16 @@ namespace semantic {
 	return NULL;
     }
 
+    bool FrameTable::existsFinal (FrameProto & proto) {
+	for (auto it : this-> _protos) {
+	    if (it-> equals (proto) && it-> attached () != NULL) {
+		proto-> type () = it-> type ();
+		return true;
+	    }
+	}
+	return false;
+    }
+    
     
     void FrameTable::identify (StructInfo) {
 	// auto name = info-> onlyNameTypeString ();
@@ -122,7 +132,7 @@ namespace semantic {
     std::vector <FinalFrame>& FrameTable::templates () {
 	return this-> _finalTemplates;
     }
-
+    
     std::vector <StructCstInfo> & FrameTable::structs () {
 	return this-> _structs;
     }

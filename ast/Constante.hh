@@ -39,6 +39,11 @@ namespace syntax {
     std::string sname (FixedConst ct);
 
     /**
+     * \return the infotype name of the type ct
+     */
+    std::string infoname (FixedConst ct);
+    
+    /**
      * \struct IFixed
      * The syntaxic node representation of a integer constante
      * \verbatim

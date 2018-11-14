@@ -507,7 +507,7 @@ namespace syntax {
     
     void IProto::declare () {
 	Namespace space (this-> _space != "" ? this-> _space : Table::instance ().space ());
-		
+
 	auto fr = new (Z0)  IExternFrame (space, this-> _from, this);
 	auto fun = new (Z0)  IFunctionInfo (space, this-> _ident.getStr ());
 	fun-> set (fr);
@@ -517,7 +517,7 @@ namespace syntax {
 
     void IProto::declare (semantic::Module mod) {       
 	Namespace space (this-> _space != "" ? this-> _space : mod-> space ());
-		
+
 	auto fr = new (Z0)  IExternFrame (space, this-> _from, this);
 	auto fun = new (Z0)  IFunctionInfo (space, this-> _ident.getStr ());
 	auto sym = new (Z0)  ISymbol (this-> _ident, NULL, fun);
@@ -529,6 +529,7 @@ namespace syntax {
     
     void IProto::declareAsExtern (semantic::Module mod) {
 	Namespace space (this-> _space != "" ? this-> _space : mod-> space ());
+	
 	auto fr = new (Z0)  IExternFrame (space, this-> _from, this);
 	fr-> isPrivate () = !this-> _isPublic;
 	auto fun = new (Z0)  IFunctionInfo (space, this-> _ident.getStr ());
@@ -696,6 +697,7 @@ namespace syntax {
 		    Ymir::Error::permissionDenied (name);
 		}
 	    }
+	    
 	    Table::instance ().openModuleForSpace (space, globSpace);
 	    Table::instance ().setCurrentSpace (globSpace);
 	    if (Ymir::Error::nb_errors - nbErrorBeg) {
@@ -1547,8 +1549,8 @@ namespace syntax {
 	if (method) {
 	    if (this-> _tmps.size () == 0) {
 		fr = new (Z0) IMethodFrame (space, this-> getName (), info, this);
-		fr-> to <IMethodFrame> ()-> isExtern () = isExternal;
-		fr-> to <IMethodFrame> ()-> isVirtual () = addable && (this-> _prot != InnerProtection::PRIVATE);;
+		fr-> to <IMethodFrame> ()-> isExtern (isExternal);
+		fr-> to <IMethodFrame> ()-> isVirtual (addable && (this-> _prot != InnerProtection::PRIVATE));
 		fr-> to <IMethodFrame> ()-> needConst () = needConst;
 	    }  else {
 		fr = new (Z0) ITemplateMethFrame (space, this-> getName (), info, this);
@@ -1568,8 +1570,9 @@ namespace syntax {
 	fr-> isInnerPrivate () = (this-> _prot == InnerProtection::PRIVATE);
 	fr-> isInnerProtected () = (this-> _prot == InnerProtection::PROTECTED);
 
-	FunctionInfo func = new (Z0) IFunctionInfo (space, this-> getName ());	
-	if (addable) {	    
+	FunctionInfo func = new (Z0) IFunctionInfo (space, this-> getName ());
+	
+	if (addable) {
 	    FrameTable::instance ().insert (fr);
 	    func-> isVirtual () = !fr-> isInnerPrivate ();
 	}

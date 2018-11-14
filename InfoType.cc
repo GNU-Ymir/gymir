@@ -12,6 +12,13 @@
 
 namespace semantic {
 
+    namespace TypeUtils {
+	
+	std::string core_file = "core.info";
+		
+    }
+    
+    
     std::map <std::string, InfoType> IInfoType::__alias__;
     bool IInfoType::__need__Print_CONST__ = true;
     

@@ -4,6 +4,7 @@
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/ast/Constante.hh>
 #include <ymir/syntax/Keys.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 #include "print-tree.h"
 
 
@@ -69,6 +70,7 @@ namespace semantic {
 	if (var-> token.getStr () == "init") return Init ();
 	if (var-> token.getStr () == "sizeof") return SizeOf ();
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;
     }
     
@@ -152,6 +154,12 @@ namespace semantic {
     InfoType IBoolInfo::SizeOf () {	
 	auto ret = new (Z0)  IFixedInfo (false, FixedConst::UINT);
 	ret-> unopFoo = FixedUtils::InstSizeOf;
+	return ret;
+    }
+
+    InfoType IBoolInfo::TypeInfo () {
+	auto ret = Table::instance ().getTypeInfo ()-> TempOp ({});
+	ret-> unopFoo = FixedUtils::InstTypeInfoBool;
 	return ret;
     }
     

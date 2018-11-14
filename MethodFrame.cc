@@ -43,7 +43,8 @@ namespace semantic {
 	auto finalParams = IFrame::computeParams (vars, params);
 	    
 	if (this-> _isVirtual) from = this-> _space;
-	this-> _proto = IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern () && this-> _isVirtual);
+	this-> _proto = IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern ());
+	
 	if (this-> _isVirtual && this-> _proto && this-> _proto-> type ())
 	    this-> _proto-> type ()-> value () = NULL;
 	return this-> _proto;
@@ -119,7 +120,11 @@ namespace semantic {
 	return IMethodFrame::id ();
     }
 
-    bool& IMethodFrame::isExtern () {
+    void IMethodFrame::isExtern (bool isE) {
+	this-> _isExtern = isE;
+    }
+    
+    bool IMethodFrame::isExtern () {
 	return this-> _isExtern;
     }
 
@@ -127,8 +132,12 @@ namespace semantic {
 	return this-> _method;
     }
     
-    bool& IMethodFrame::isVirtual () {
+    bool IMethodFrame::isVirtual () {
 	return this-> _isVirtual;
+    }
+
+    void IMethodFrame::isVirtual (bool isVirt) {
+	this-> _isVirtual = isVirt;
     }
     
     bool& IMethodFrame::needConst () {

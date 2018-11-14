@@ -4,6 +4,7 @@
 #include <ymir/utils/Array.hh>
 #include <ymir/ast/ParamList.hh>
 #include <ymir/semantic/value/Value.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 
 namespace semantic {
 
@@ -178,13 +179,27 @@ namespace semantic {
 	return ret;
     }
 
+    AggregateCstInfo Table::getTypeInfo () {
+	auto mod = this-> get ("core")-> type ()-> to <IModuleInfo> ();
+	auto infoMod = mod-> get ()-> get ("info")-> type ()-> to <IModuleInfo> ();
+	auto ret = infoMod-> get ()-> get ("TypeInfo");
+	return ret-> type ()-> to <IAggregateCstInfo> ();
+    }
+    
+    AggregateCstInfo Table::getTypeInfo (std::string name) {
+	auto mod = this-> get ("core")-> type ()-> to <IModuleInfo> ();
+	auto infoMod = mod-> get ()-> get ("info")-> type ()-> to <IModuleInfo> ();
+	auto ret = infoMod-> get ()-> get (name);
+	return ret-> type ()-> to <IAggregateCstInfo> ();
+    }
+    
     std::vector <Symbol> Table::getAll (std::string name) {
 	std::vector <Symbol> alls;
 	Namespace last = this-> getCurrentSpace ();
 	if (!this-> _frameTable.empty ()) {
 	    alls = this-> _frameTable.front ().getAll (name);
 	}
-
+	
 	auto aux = this-> _globalScope.getAll (name);
 	alls.insert (alls.end (), aux.begin (), aux.end ());
 	auto mods = this-> getAllMod (getCurrentSpace ());
@@ -329,15 +344,16 @@ namespace semantic {
     }
 
     void Table::openModuleForSpace (Namespace from, Namespace to) {
-	for (auto it : this-> _importations) {
-	    if (it-> space () == from) {
-		it-> addOpen (to);
-		if (!this-> _frameTable.empty ())
-		    this-> _frameTable.front ().addOpen (it-> space ());
-		
-		break;
-	    }	    
-	}
+	if (from != to) 
+	    for (auto it : this-> _importations) {
+		if (it-> space () == from) {
+		    it-> addOpen (to);
+		    if (!this-> _frameTable.empty ())
+			this-> _frameTable.front ().addOpen (it-> space ());
+		    
+		    break;
+		}	    
+	    }	
     }
 
     void Table::closeModuleForSpace (Namespace from, Namespace to) {

@@ -258,7 +258,7 @@ namespace semantic {
     ApplicationScore IFunctionInfo::CallAndThrow (Word tok, const std::vector <InfoType> & params, FrameProto & info) {
 	std::vector <ApplicationScore> total;
 	std::vector <Frame> frames = getFrames ();
-	
+
 	for (auto it : frames) {
 	    total.push_back (it-> isApplicable (params));
 	}

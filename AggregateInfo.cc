@@ -684,31 +684,43 @@ namespace semantic {
 	if (auto aggr = type-> to <IAggregateInfo> ()) {
 	    static std::set <InfoType> dones;
 	    if (dones.find (this) == dones.end ()) {
-		dones.insert (this);
-		if (!this-> _impl-> ConstVerif (aggr-> _impl)) {
+		dones.insert (this);				
+		if (this-> _impl-> ConstVerif (aggr-> _impl) == NULL) {
 		    dones.erase (this);
 		    return NULL;
-		}
+		} else {
+		    dones.erase (this);
+		    return this;
+		}       	    
 	    }
-	    dones.erase (this);
 	    return this;
 	}
 	return NULL;
     }
 
     InfoType IAggregateInfo::onClone () {
-	auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone, this-> _isExternal);
-	ret-> _impl = this-> _impl;//> clone ()-> to <ITupleInfo> ();
-	ret-> _destr = this-> _destr;
-	ret-> _staticMeth = this-> _staticMeth;
-	ret-> _methods = this-> _methods;
-	ret-> _allMethods = this-> _allMethods;
-	ret-> _allAlias = this-> _allAlias;
-	if (this-> _anc)
-	    ret-> _anc = this-> _anc;
-	ret-> isConst (this-> isConst ());
+	if (this-> _impl == NULL) // In type construction (e.g. TempOp ({...}))
+	    return this;
+	    
+	static std::map <InfoType, InfoType> dones;
+	if (dones.find (this) == dones.end ()) {
+	    auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone, this-> _isExternal);
+	    dones [this] = ret;
+	    ret-> _impl = this-> _impl-> clone ()-> to <ITupleInfo> ();
+	    dones.erase (this);
+	    ret-> _destr = this-> _destr;
+	    ret-> _staticMeth = this-> _staticMeth;
+	    ret-> _methods = this-> _methods;
+	    ret-> _allMethods = this-> _allMethods;
+	    ret-> _allAlias = this-> _allAlias;
+	    if (this-> _anc)
+		ret-> _anc = this-> _anc;
+	    ret-> isConst (this-> isConst ());
+	    return ret;
+	} else {
+	    return dones [this];
+	}
 	
-	return ret;
     }
 
     InfoType IAggregateInfo::BinaryOp (Word op, Expression right) {
@@ -1095,6 +1107,7 @@ namespace semantic {
 	    }
 	    
 	    bool changed = false;
+	    auto from = Table::instance ().globalNamespace ();
 	    for (auto & it : method) {
 		auto name = it-> name ();
 		if (mt-> name () == it-> name ()) {
@@ -1102,9 +1115,13 @@ namespace semantic {
 		    auto rparams = it-> frame ()-> func ()-> getParams ();
 		    if (lparams.size ()  != rparams.size ()) continue;
 		    bool valid = true;
+		    
+		    Table::instance ().setCurrentSpace (Namespace (it-> frame ()-> space (), it-> name ()));
 		    for (auto it : Ymir::r (1, lparams.size ())) {
 			if (lparams [it]-> is <ITypedVar> () && rparams [it]-> is <ITypedVar> ()) {
-			    if (!lparams [it]-> to <ITypedVar> ()-> getType ()-> CompOp (rparams [it]-> to <ITypedVar> ()-> getType ())) {
+			    auto ltype = lparams [it]-> to <ITypedVar> ()-> getType ();
+			    auto rtype = rparams [it]-> to <ITypedVar> ()-> getType ();
+			    if (ltype == NULL || rtype == NULL || !ltype-> CompOp (rtype)) {
 				valid = false;
 				break;
 			    }
@@ -1112,7 +1129,9 @@ namespace semantic {
 			    valid = false;
 			    break;
 			}
-		    }
+		    }		    
+		    Table::instance ().setCurrentSpace (from);
+		    
 		    if (!valid) continue;
 		    if (!mt-> isOver ()) {
 			Ymir::Error::implicitOverride (
@@ -1137,9 +1156,9 @@ namespace semantic {
 		    changed = true;
 		    it = mt;
 		    break;
-		}		
+		}
 	    }
-	    
+	    	    
 	    if (!changed) {
 		if (mt-> isOver ()) {
 		    Ymir::Error::noOverride (mt-> frame ()-> func ()-> getIdent ());

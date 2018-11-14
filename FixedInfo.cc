@@ -5,6 +5,8 @@
 #include <ymir/semantic/utils/TupleUtils.hh>
 #include <ymir/semantic/value/_.hh>
 #include <ymir/syntax/Keys.hh>
+#include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 #include <climits>
 
 
@@ -165,6 +167,7 @@ namespace semantic {
 	if (var-> token == "min") return Min ();
 	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;
     }
 
@@ -416,6 +419,12 @@ namespace semantic {
 	return ret;	
     }
 
+    InfoType IFixedInfo::TypeInfo () {
+	auto ret = Table::instance ().getTypeInfo ()-> TempOp ({});
+	ret-> unopFoo = FixedUtils::InstTypeInfo;
+	return ret;
+    }
+    
     bool IFixedInfo::isSigned () {
 	return syntax::isSigned (this-> _type);
     }
@@ -626,6 +635,47 @@ namespace semantic {
 
 	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
 	    return TYPE_SIZE_UNIT (elem-> info-> type ()-> toGeneric ().getTree ());
+	}
+       	
+	Ymir::Tree InstTypeInfo (Word loc, InfoType ret, Expression elem) {
+	    auto fixed = elem-> info-> type ()-> to <IFixedInfo> ();
+	    return InstTypeInfoNamed (loc, ret, elem, syntax::infoname (fixed-> type ()));
+	}
+
+	Ymir::Tree InstTypeInfoBool (Word loc, InfoType ret, Expression elem) {
+	    return InstTypeInfoNamed (loc, ret, elem, "Bool_info");
+	}
+
+	Ymir::Tree InstTypeInfoChar (Word loc, InfoType ret, Expression elem) {
+	    return InstTypeInfoNamed (loc, ret, elem, "Char_info");
+	}
+
+	Ymir::Tree InstTypeInfoNamed (Word loc, InfoType ret, Expression, const std::string & type_name) {
+	    AggregateCstInfo info = Table::instance ().getTypeInfo (type_name); 
+	    auto initMeth = info-> getConstructors ()[0];
+	    auto proto = initMeth-> to <IFunctionInfo> ()-> frame ()-> validate ();
+	    
+	    Ymir::TreeStmtList list;
+	    auto rtype = info-> TempOp ({})-> to <IAggregateInfo> ();
+	    auto ltype = ret-> toGeneric ();
+	    
+	    auto obj = Ymir::makeAuxVar (loc.getLocus (), ISymbol::getLastTmp (), ltype);
+	    auto vtable = Ymir::getAddr (rtype-> getVtable ());
+	    auto vfield = Ymir::getField (loc.getLocus (), obj, Keys::VTABLE_FIELD);
+
+	    list.append (Ymir::buildTree (MODIFY_EXPR,
+					  loc.getLocus (), void_type_node,
+					  vfield, convert (vfield.getType ().getTree (), vtable.getTree ())));
+	    std::vector <tree> args = {Ymir::getAddr (obj).getTree ()};
+	    auto fn = proto-> toGeneric ();
+	    
+	    list.append (
+		build_call_array_loc (loc.getLocus (),
+				      void_type_node,
+				      fn.getTree (), args.size (), args.data ())
+	    );
+	    
+	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), obj);
 	}
 	
     }

@@ -75,13 +75,16 @@ namespace semantic {
 
 	bool existsProto (FrameProto&);
 
+	bool existsFinal (FrameProto&);
+
 	FrameProto getProto (FrameProto&);
 
 	//StructCstInfo existsStruct (std::string);
 
 	void identify (StructInfo info);
-	
-	std::vector <StructCstInfo> & structs ();
+
+
+	std::vector <StructCstInfo> & structs ();	
 	
 	std::vector <Frame> & pures ();
 

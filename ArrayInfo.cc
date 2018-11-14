@@ -335,7 +335,7 @@ namespace semantic {
     InfoType IArrayInfo::ConstVerif (InfoType other) {
 	if (auto ot = other-> to<IArrayInfo> ()) {
 	    if (other-> isConst ()) return this;
-	    if (!this-> _content-> ConstVerif (ot-> _content)) return NULL;
+	    if (this-> _content-> ConstVerif (ot-> _content) == NULL) return NULL;
 	    else if (this-> _content-> isConst () && !ot-> _content-> isConst ())
 		return NULL;
 	    else if (this-> isConst () && !ot-> isConst () && !this-> _content-> isConst ())
@@ -385,7 +385,7 @@ namespace semantic {
 	    return std::string ("[") + this-> _content-> typeString () + "]";
 	}
     }
-
+    
     std::string IArrayInfo::innerSimpleTypeString () {
 	if (this-> _isStatic) {
 	    return Ymir::OutBuffer ("A", this-> _size, Mangler::mangle_type (this-> _content, this-> _content-> simpleTypeString ())).str ();
