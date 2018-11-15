@@ -158,15 +158,22 @@ namespace semantic {
     }
 
     InfoType IBoolInfo::TypeInfo () {
-	auto ret = Table::instance ().getTypeInfo ()-> TempOp ({});
+	auto ret = Table::instance ().getTypeInfoType ()-> TempOp ({});
 	ret-> unopFoo = FixedUtils::InstTypeInfoBool;
 	return ret;
-    }
+    }    
     
     const char* IBoolInfo::getId () {
 	return IBoolInfo::id ();
     }
 
+    Ymir::Tree IBoolInfo::genericConstructor () {
+	auto ret = new (Z0) syntax::IBool (Word::eof ());
+	ret-> value () = false;	
+	ret-> info = new (Z0) ISymbol (Word::eof (), ret, this);
+	return ret-> toGeneric ();    
+    }
+    
     Ymir::Tree IBoolInfo::toGeneric () {
 	return boolean_type_node;
     }

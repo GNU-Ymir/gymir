@@ -85,6 +85,8 @@ namespace semantic {
 	
 	Ymir::Tree toGeneric () override;
 
+	Ymir::Tree genericConstructor () override;
+	
 	ulong nbTemplates () override;
 	
 	InfoType getTemplate (ulong i);

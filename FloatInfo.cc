@@ -400,6 +400,17 @@ namespace semantic {
 	if (this-> _type == FloatConst::FLOAT) return float_type_node;
 	else return double_type_node;
     }
+
+    Ymir::Tree IFloatInfo::genericConstructor () {
+	auto ret = new (Z0)  IFloat (Word::eof (), this-> _type);
+	if (this-> _type == FloatConst::FLOAT)
+	    ret-> setValue (NAN);
+	else
+	    ret-> setValue (NAN);
+	auto sym = new (Z0) ISymbol (Word::eof (), ret, this);
+	ret-> info = sym;
+	return ret-> toGeneric ();
+    }
    
     namespace FloatUtils {
 

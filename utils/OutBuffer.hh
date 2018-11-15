@@ -6,6 +6,7 @@
 #include <map>
 #include <ymir/utils/Range.hh>
 #include <vector>
+#include <set>
 #include <type_traits>
 
 namespace syntax {
@@ -132,6 +133,18 @@ namespace Ymir {
 		if (it < (int) elem.size () - 1)
 		    write (", ");
 	    }
+	}
+
+	template <typename T>
+	void write_ (const std::set <T> &elem) {
+	    int i = 0;
+	    write ("{");
+	    for (auto &it : elem) {
+		if (i != 0) write (", ");
+		write_ (it);
+		i++;
+	    }
+	    write ("}");
 	}
 
 	template <typename K, typename V>	

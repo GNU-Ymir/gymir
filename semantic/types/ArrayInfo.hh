@@ -61,6 +61,8 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 
 	Ymir::Tree toGeneric () override;
+
+	Ymir::Tree genericConstructor ();
 	
 	InfoType getTemplate (ulong) override;
 
@@ -96,6 +98,8 @@ namespace semantic {
 
 	InfoType TypeId ();
 
+	InfoType TypeInfo (syntax::Var);
+	
 	InfoType TupleOf ();
 
 	InfoType Access (syntax::Expression, InfoType&);

@@ -106,14 +106,14 @@ namespace syntax {
     
     std::string infoname (FixedConst ct) {
 	switch (ct) {
-	case FixedConst::BYTE : return "I8_info";
-	case FixedConst::UBYTE : return "U8_info";
-	case FixedConst::SHORT : return "I16_info";
-	case FixedConst::USHORT: return "U16_info";
-	case FixedConst::INT : return "I32_info";
-	case FixedConst::UINT : return "U32_info";
-	case FixedConst::LONG : return "I64_info";
-	case FixedConst::ULONG : return "U64_info";
+	case FixedConst::BYTE : return "i8_info";
+	case FixedConst::UBYTE : return "u8_info";
+	case FixedConst::SHORT : return "i16_info";
+	case FixedConst::USHORT: return "u16_info";
+	case FixedConst::INT : return "i32_info";
+	case FixedConst::UINT : return "u32_info";
+	case FixedConst::LONG : return "i64_info";
+	case FixedConst::ULONG : return "u64_info";
 	}
 	return "none";
     }

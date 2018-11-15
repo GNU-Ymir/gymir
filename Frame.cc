@@ -140,7 +140,8 @@ namespace semantic {
 	if (!FrameTable::instance ().existsFinal (proto)) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
-
+	    
+	    FrameTable::instance ().addInValidation (proto);
 	    FrameTable::instance ().insert (proto);
 
 	    Block pre = NULL, post = NULL; Var postVar = NULL;
@@ -189,6 +190,8 @@ namespace semantic {
 	    verifyReturn (this-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
 	    
 	    Table::instance ().quitFrame ();
+	    FrameTable::instance ().isValidated (proto);
+	    
 	    return proto;
 	}
 	
@@ -280,7 +283,9 @@ namespace semantic {
 	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
-		    
+
+
+	    FrameTable::instance ().addInValidation (proto);
 	    FrameTable::instance ().insert (proto);
 
 	    Block pre = NULL, post = NULL; Var postVar = NULL;
@@ -327,6 +332,8 @@ namespace semantic {
 	    Table::instance ().quitBlock ();
 	    verifyReturn (name, proto-> type (), Table::instance ().retInfo ());
 	    Table::instance ().quitFrame ();
+	    FrameTable::instance ().isValidated (proto);
+	    
 	    return proto;
 	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);
@@ -350,11 +357,15 @@ namespace semantic {
 	if (!exists && !isExtern) {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
-
+	    
+	    FrameTable::instance ().addInValidation (proto);
 	    FrameTable::instance ().insert (proto);
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    auto exprBlock = _block-> expression ();
-	    if (exprBlock == NULL) return NULL;
+	    if (exprBlock == NULL) {
+		FrameTable::instance ().isValidated (proto);
+		return NULL;
+	    }
 	    
 	    Table::instance ().retInfo ().info-> type (exprBlock-> info-> type ());
 	    Block block = NULL;
@@ -383,6 +394,8 @@ namespace semantic {
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
 	    Table::instance ().quitBlock ();
 	    Table::instance ().quitFrame ();
+	    FrameTable::instance ().isValidated (proto);
+	    
 	    return proto;
 	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);
@@ -406,6 +419,7 @@ namespace semantic {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
+	    FrameTable::instance ().addInValidation (proto);	    
 	    FrameTable::instance ().insert (proto);
 	    Table::instance ().retInfo ().currentBlock () = "true";
 	    auto block = _block-> block ();	    
@@ -430,6 +444,8 @@ namespace semantic {
 	    finFrame-> file () = LOCATION_FILE (_block-> token.getLocus ());
 	    Table::instance ().quitBlock ();
 	    Table::instance ().quitFrame ();
+	    FrameTable::instance ().isValidated (proto);
+	    
 	    return proto;
 	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);
@@ -471,6 +487,7 @@ namespace semantic {
 	    if (!Table::instance ().retInfo ().info-> type ()-> is <IUndefInfo> ())
 		Table::instance ().retInfo ().isImmutable () = true;
 
+	    FrameTable::instance ().addInValidation (proto);
 	    FrameTable::instance ().insert (proto);
 
 	    Block pre = NULL, post = NULL; Var postVar = NULL;
@@ -516,6 +533,8 @@ namespace semantic {
 	    Table::instance ().quitBlock ();
 	    verifyReturn (this-> _function-> getIdent (), proto-> type (), Table::instance ().retInfo ());
 	    Table::instance ().quitFrame ();
+	    FrameTable::instance ().isValidated (proto);
+	    
 	    return proto;
 	} else if (!FrameTable::instance ().existsProto (proto))
 	    FrameTable::instance ().insert (proto);

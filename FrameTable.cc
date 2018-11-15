@@ -76,14 +76,24 @@ namespace semantic {
 	return NULL;
     }
 
-    bool FrameTable::existsFinal (FrameProto & proto) {
+    bool FrameTable::existsFinal (FrameProto & proto) {	
 	for (auto it : this-> _protos) {
-	    if (it-> equals (proto) && it-> attached () != NULL) {
-		proto-> type () = it-> type ();
-		return true;
+	    if (it-> equals (proto)) {
+		if (this-> _inValidation.find (it) != this->_inValidation.end () || it-> attached () != NULL) {
+		    proto-> type () = it-> type ();
+		    return true;
+		}	    
 	    }
 	}
 	return false;
+    }
+
+    void FrameTable::addInValidation (FrameProto proto) {
+	this-> _inValidation.insert (proto);
+    }
+
+    void FrameTable::isValidated (FrameProto proto) {
+	this-> _inValidation.erase (proto);
     }
     
     

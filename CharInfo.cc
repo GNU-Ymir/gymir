@@ -256,4 +256,10 @@ namespace semantic {
 	return char_type_node;
     }
 
+    Ymir::Tree ICharInfo::genericConstructor () {
+	auto ret = new (Z0) syntax::IChar (Word::eof (), '\0');
+	ret-> info = new (Z0) ISymbol (Word::eof (), ret, this);
+	return ret-> toGeneric ();    
+    }
+
 }

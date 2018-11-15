@@ -71,7 +71,7 @@ namespace semantic {
 	return this-> _globalVars;
     }
 
-    void Table::enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> & tmps, const std::vector <Word> & context, bool internal) {
+    void Table::enterFrame (Namespace space, const std::string & name, std::vector <syntax::Expression> & tmps, const std::vector <Word> & context, bool internal) {
 	Ymir::OutBuffer buf ("0_", name);
 	if (tmps.size () != 0) {
 	    buf.write ("(");
@@ -157,7 +157,7 @@ namespace semantic {
 	IExternFrame::clear ();
     }
 
-    Symbol Table::get (std::string name) {
+    Symbol Table::get (const std::string & name) {
 	Symbol ret;
 	Namespace last = this-> getCurrentSpace ();
 	if (name == "abort")
@@ -179,21 +179,28 @@ namespace semantic {
 	return ret;
     }
 
-    AggregateCstInfo Table::getTypeInfo () {
+    AggregateCstInfo Table::getTypeInfoType () {
 	auto mod = this-> get ("core")-> type ()-> to <IModuleInfo> ();
 	auto infoMod = mod-> get ()-> get ("info")-> type ()-> to <IModuleInfo> ();
 	auto ret = infoMod-> get ()-> get ("TypeInfo");
 	return ret-> type ()-> to <IAggregateCstInfo> ();
     }
-    
-    AggregateCstInfo Table::getTypeInfo (std::string name) {
+
+    AggregateCstInfo Table::getTypeInfoType (const std::string & name) {
 	auto mod = this-> get ("core")-> type ()-> to <IModuleInfo> ();
 	auto infoMod = mod-> get ()-> get ("info")-> type ()-> to <IModuleInfo> ();
 	auto ret = infoMod-> get ()-> get (name);
 	return ret-> type ()-> to <IAggregateCstInfo> ();
+    }    
+    
+    Symbol Table::getTypeInfoSymbol (const std::string &name) {
+	auto mod = this-> get ("core")-> type ()-> to <IModuleInfo> ();
+	auto infoMod = mod-> get ()-> get ("info")-> type ()-> to <IModuleInfo> ();
+	auto ret = infoMod-> get ()-> get (name);
+	return ret;
     }
     
-    std::vector <Symbol> Table::getAll (std::string name) {
+    std::vector <Symbol> Table::getAll (const std::string& name) {
 	std::vector <Symbol> alls;
 	Namespace last = this-> getCurrentSpace ();
 	if (!this-> _frameTable.empty ()) {
@@ -220,7 +227,7 @@ namespace semantic {
 	return false;
     }
     
-    Symbol Table::getLocal (std::string name) {
+    Symbol Table::getLocal (const std::string & name) {
 	Symbol ret;
 	Namespace last = this-> _space;
 	if (!this-> _frameTable.empty ()) {
@@ -242,7 +249,7 @@ namespace semantic {
 	return ret;
     }
 
-    Symbol Table::local (std::string name) {
+    Symbol Table::local (const std::string & name) {
 	Symbol ret;
 	Namespace last = this-> _space;
 	if (!this-> _frameTable.empty ()) {
@@ -254,7 +261,7 @@ namespace semantic {
 	return ret;
     }
 
-    Symbol Table::getAlike (std::string name) {
+    Symbol Table::getAlike (const std::string & name) {
 	for (auto it : this-> _frameTable) {
 	    if (it.space ().isSubOf (this-> _space)) {
 		auto ret = it.getAlike (name);

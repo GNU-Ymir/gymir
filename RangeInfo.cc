@@ -216,6 +216,16 @@ namespace semantic {
 	return range_type_node;
     }
 
+    Ymir::Tree IRangeInfo::genericConstructor () {
+	auto vtype = this-> toGeneric ();
+	vec <constructor_elt, va_gc> * elms = NULL;
+	CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (vtype, "in").getTree (), build_int_cst_type (unsigned_char_type_node, 0));
+	CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (vtype, "step").getTree (), this-> _content-> genericConstructor ().getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (vtype, "fst").getTree (), this-> _content-> genericConstructor ().getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (vtype, "scd").getTree (), this-> _content-> genericConstructor ().getTree ());
+	return build_constructor (vtype.getTree (), elms);
+    }
+    
     InfoType IRangeInfo::getTemplate (ulong i) {
 	if (i == 0) return this-> _content;
 	return NULL;

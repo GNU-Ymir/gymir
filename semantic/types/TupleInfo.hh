@@ -47,6 +47,8 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 	
 	Ymir::Tree toGeneric () override;
+
+	Ymir::Tree genericConstructor () override;
 	
 	void addParam (InfoType info);
 

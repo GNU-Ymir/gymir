@@ -540,7 +540,7 @@ namespace syntax {
 	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) type = visitFuncPtrSimple (next);
 	    else {
 		this-> lex.rewind ();
-		type = visitType ();
+		type = visitLeftOpSimple ();
 	    }
 	    this-> lex.next ({Token::SEMI_COLON});
 	    return new (Z0)  IGlobal (ident, docs, NULL, type);

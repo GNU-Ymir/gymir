@@ -154,6 +154,8 @@ namespace semantic {
 
 	Ymir::Tree toGeneric () override;
 
+	Ymir::Tree genericConstructor () override;
+	
 	void setTypes (std::vector <InfoType> types);
 
 	void setAttribs (std::vector <std::string> names);

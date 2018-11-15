@@ -491,6 +491,18 @@ namespace semantic {
 	} else return ptr;	
     }
 
+    Ymir::Tree IPtrFuncInfo::genericConstructor () {
+	if (!this-> isDelegate ()) {
+	    return build_int_cst_type (long_unsigned_type_node, 0);
+	} else {
+	    vec <constructor_elt, va_gc> * elms = NULL;
+	    auto vtype = this-> toGeneric ().getTree ();
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, "obj").getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, "ptr").getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    return build_constructor (vtype, elms);
+	}
+    }
+    
     const char * IPtrFuncInfo::getId () {
 	return IPtrFuncInfo::id ();
     }

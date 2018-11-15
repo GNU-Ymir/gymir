@@ -62,6 +62,10 @@ namespace Ymir {
     Tree getAddr (location_t, Tree elem);
 
     void declareGlobal (semantic::Symbol sym, syntax::Expression);
+
+    void declareGlobalWeak (semantic::Symbol sym, syntax::Expression);
+
+    Ymir::Tree declareGlobalWeak (const std::string &name, Ymir::Tree type, Ymir::Tree value);
     
     void declareGlobalExtern (semantic::Symbol sym);
 

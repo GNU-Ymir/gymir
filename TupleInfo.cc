@@ -293,7 +293,22 @@ namespace semantic {
 	}
 	return tuple_type_node;
     }
-	    
+
+    Ymir::Tree ITupleInfo::genericConstructor () {
+	vec<constructor_elt, va_gc> * elms = NULL;
+	auto vtype = this-> toGeneric ();
+	auto fields = Ymir::getFieldDecls (vtype);
+	if (this-> params.size () != 0) {
+	    for (auto it : Ymir::r (0, this-> params.size ())) {
+		if (!this-> params [it]-> is <IVoidInfo> ())
+		    CONSTRUCTOR_APPEND_ELT (elms, fields [it].getTree (), this-> params [it]-> genericConstructor ().getTree ());
+	    }
+	} else {
+	    CONSTRUCTOR_APPEND_ELT (elms, fields [0].getTree (), build_int_cst_type (char_type_node, 0));
+	}
+	return build_constructor (vtype.getTree (), elms);
+    }
+    
     const char* ITupleInfo::getId () {
 	return ITupleInfo::id ();
     }

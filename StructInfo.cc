@@ -194,6 +194,34 @@ namespace semantic {
 	    return TYPE_SIZE_UNIT (type);
 	}
 
+	Ymir::Tree InstTypeInfo (Word, InfoType type, Expression elem) {
+	    auto str = elem-> info-> type ();
+	    if (str-> is <IStructCstInfo> ()) str = str-> TempOp ({});
+	    auto innerValue = str-> genericConstructor ();
+	    auto innerType = str-> toGeneric ();
+	    auto innerGlob = declareGlobalWeak (str-> simpleTypeString () + "__init", innerType, innerValue);
+	    	    
+	    auto typeTree = type-> toGeneric ();	    
+	    auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	    vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	    // {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	    auto fields = getFieldDecls (implTree);
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), getAddr (innerGlob).getTree ());
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    
+	    auto struct_info_type = Table::instance ().getTypeInfoType ("Struct_info")-> TempOp ({})-> to <IAggregateInfo> ();
+	    auto vtable = struct_info_type-> getVtable ();
+	    
+	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	    auto name = "core.info." + str-> simpleTypeString () + "_info";
+	    auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	    return glob;
+	}
+
+	
     }
        
     IStructCstInfo::IStructCstInfo (Word locId, Namespace space, string name, vector <Expression> &tmps, vector <Word> attrs, bool isUnion) :
@@ -250,6 +278,11 @@ namespace semantic {
 	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "name") return Name ();
+	if (var-> token == "typeinfo") {
+	    auto ret = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	    ret-> unopFoo = StructUtils::InstTypeInfo;
+	    return ret;
+	}	
 	return NULL;
     }
 
@@ -767,6 +800,11 @@ namespace semantic {
 	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "name") return Name ();
+	if (var-> token == "typeinfo") {
+	    auto ret = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	    ret-> unopFoo = StructUtils::InstTypeInfo;
+	    return ret;
+	}	 
 	return NULL;
     }
 
@@ -994,6 +1032,19 @@ namespace semantic {
 	return str_type_node;
     }
 
+    Ymir::Tree IStructInfo::genericConstructor () {
+	vec<constructor_elt, va_gc> * elms = NULL;
+	auto vtype = this-> toGeneric ();
+	if (this-> types.size () != 0) {
+	    for (auto it : Ymir::r (0, this-> types.size ())) {
+		CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (vtype, this-> attrs [it]).getTree (), this-> types [it]-> genericConstructor ().getTree ());
+	    }
+	} else {
+	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (vtype, "_").getTree (), build_int_cst_type (char_type_node, 0));
+	}
+	return build_constructor (vtype.getTree (), elms);
+    }
+    
     Ymir::Tree IStructCstInfo::toGeneric () {
 	return void_type_node;
     }

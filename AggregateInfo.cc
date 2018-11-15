@@ -799,9 +799,9 @@ namespace semantic {
 	}
 	
 	this-> _impl-> isConst (this-> isConst ());
-	auto ret = this-> _impl-> DotOpAggr (this-> _id-> getLocId (), this, var);
+	InfoType ret = NULL; //this-> _impl-> DotOp (this-> _id-> getLocId (), this, var);
 	bool alias = false;
-	if (ret == NULL && !this-> _hasExemption) {
+	if (!this-> _hasExemption) {
 	    ret = this-> AliasOp (var);
 	    if (ret) {
 		ret-> nextBinop.push_back (ret-> binopFoo);
@@ -1191,12 +1191,17 @@ namespace semantic {
 	auto tname = this-> simpleTypeString ();
 	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();
 	auto vtable = Ymir::getVtable (vname);
+
 	if (vtable.isNull ()) {
 	    auto vtype = buildVtableType ();
 	    if (!this-> _isExternal) {
 		auto vec = buildVtableEnum (vtype);
 		vtable = declareVtable (vname, vtype, vec);
 	    } else vtable = declareVtableExtern (vname, vtype);
+	} else if (!this-> _isExternal && DECL_EXTERNAL (vtable.getTree ()) == 1) {
+	    auto vtype = buildVtableType ();
+	    auto vec = buildVtableEnum (vtype);
+	    vtable = declareVtable (vname, vtype, vec);
 	}
 	return vtable;
     }
@@ -1225,6 +1230,17 @@ namespace semantic {
 	return this-> _impl-> toGeneric ();
     }
 
+
+    Ymir::Tree IAggregateInfo::genericConstructor () {
+	vec<constructor_elt, va_gc> * elms = NULL;
+	auto vtable = this-> getVtable ();
+	auto vtype = this-> toGeneric ();
+	auto fields = Ymir::getFieldDecls (vtype);
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, "_0").getTree (), this-> _impl-> genericConstructor ().getTree ());
+	return build_constructor (vtype.getTree (), elms);	
+    }
+    
     void IAggregateInfo::setTmps (const std::vector <Expression> & tmps) {
 	this-> tmpsDone = tmps;
     }

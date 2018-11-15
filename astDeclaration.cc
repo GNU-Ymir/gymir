@@ -935,8 +935,8 @@ namespace syntax {
 	    if (this-> _expr == NULL) return;
 
 	    if (!this-> _expr-> info-> isImmutable ()) {
-		Ymir::Error::notImmutable (this-> _expr-> token, this-> _expr-> info);
-		return;
+	    	Ymir::Error::notImmutable (this-> _expr-> token, this-> _expr-> info);
+	    	return;
 	    }
 
 	    this-> _sym-> type (this-> _expr-> info-> type ()-> clone ());

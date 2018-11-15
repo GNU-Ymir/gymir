@@ -74,10 +74,10 @@ namespace semantic {
 	return this-> _isCVariadic;
     }
 
-    FinalFrame & IFrameProto::attached () {
+    FinalFrame& IFrameProto::attached () {
 	return this-> _attached;
     }
-
+    
     bool& IFrameProto::isLvalue () {
 	return this-> _isLvalue;
     }

@@ -169,6 +169,33 @@ namespace semantic {
 	    auto inner = type-> toGeneric ();
 	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
 	}
+
+	Ymir::Tree InstTypeInfo (Word locus, InfoType type, Expression elem) {
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);	    
+	    auto ptrInfo = elem-> info-> type ()-> to <IPtrInfo> ();
+	    auto inner = type-> buildUnaryOp (
+		locus, type, new (Z0) ITreeExpression (locus, ptrInfo-> content (), Ymir::Tree ())
+	    );
+
+	    auto typeTree = type-> toGeneric ();
+	    auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	    vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	    // {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	    auto fields = getFieldDecls (implTree);
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
+	    
+	    auto ptr_info_type = Table::instance ().getTypeInfoType ("Ptr_info")-> TempOp ({})-> to <IAggregateInfo> ();
+	    auto vtable = ptr_info_type-> getVtable ();
+	    
+	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	    auto name = "core.info." + ptrInfo-> simpleTypeString () + "_info";
+	    auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	    return glob;
+	}
 	
 
     }
@@ -375,6 +402,13 @@ namespace semantic {
 	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
 	    ret-> unopFoo = FixedUtils::InstSizeOf;
 	    return ret;	
+	} else if (var-> token == "typeinfo") {
+	    auto ret = this-> _content-> DColonOp (var);
+	    if (ret != NULL) {
+	        ret-> nextUnop.push_back (ret-> unopFoo);
+	        ret-> unopFoo = PtrUtils::InstTypeInfo;
+	    }
+	    return ret;
 	}
 	return NULL;
     }
@@ -502,6 +536,10 @@ namespace semantic {
 		this-> _content-> toGeneric ().getTree ()
 	    );
 	}
+    }
+
+    Ymir::Tree IPtrInfo::genericConstructor () {
+	return build_int_cst_type (long_unsigned_type_node, 0);
     }
     
     InfoType IPtrInfo::getTemplate (ulong nb) {

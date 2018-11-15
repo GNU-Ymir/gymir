@@ -8,6 +8,7 @@
 #include <ymir/utils/Mangler.hh>
 #include <ymir/semantic/types/RefInfo.hh>
 #include <ymir/semantic/types/PtrInfo.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 #include "toplev.h"
 
 using namespace semantic;
@@ -399,13 +400,14 @@ namespace Ymir {
 	    else
 		DECL_INITIAL (decl) = value-> toGeneric ().getTree ();
 	} else {
-	    DECL_INITIAL (decl) = error_mark_node;
+	    auto type = sym-> type ();
+	    DECL_INITIAL (decl) = type-> genericConstructor ().getTree ();
 	}
 	
 	push_decl (decl);
-	sym-> treeDecl (decl);
+	sym-> treeDecl (decl);	
     }
-
+        
     Ymir::Tree declareVtable (const std::string & name, Tree type, Tree value) {	
 	tree decl = build_decl (
 	    UNKNOWN_LOCATION,
@@ -421,6 +423,7 @@ namespace Ymir {
 	DECL_USER_ALIGN (decl) = true;
 	DECL_EXTERNAL (decl) = 0;
 	DECL_PRESERVE_P (decl) = 1;
+	DECL_WEAK (decl) = 1;
 	TREE_PUBLIC (decl) = 1;
 	
 	DECL_INITIAL (decl) = value.getTree ();	
@@ -444,6 +447,7 @@ namespace Ymir {
 	DECL_USER_ALIGN (decl) = true;
 	DECL_EXTERNAL (decl) = 1;
 	DECL_PRESERVE_P (decl) = 1;
+	DECL_WEAK (decl) = 1;
 	TREE_PUBLIC (decl) = 1;
 	
 	push_decl (decl);
@@ -451,6 +455,37 @@ namespace Ymir {
 	return decl;
     }
 
+    void declareGlobalWeak (Symbol sym, syntax::Expression value) {
+	declareGlobal (sym, value);
+	DECL_WEAK (sym-> treeDecl ().getTree ()) = 1;
+    }
+
+    Ymir::Tree declareGlobalWeak (const std::string & name, Ymir::Tree type_tree, Ymir::Tree value) {
+	static std::map <std::string, Tree> dones;
+	
+	if (dones.find (name) == dones.end ()) {
+	    auto globName = Mangler::mangle_global (name);
+	    tree decl = build_decl (
+		BUILTINS_LOCATION,
+		VAR_DECL,
+		get_identifier (globName.c_str ()),
+		type_tree.getTree ()
+	    );
+
+	    TREE_STATIC (decl) = 1;
+	    TREE_USED (decl) = 1;
+	    DECL_EXTERNAL (decl) = 0;
+	    DECL_PRESERVE_P (decl) = 1;
+	    TREE_PUBLIC (decl) = 1;
+	    DECL_WEAK (decl) = 1;
+	    DECL_INITIAL (decl) = value.getTree ();
+	    push_decl (decl);
+	    dones [name] = decl;
+	    return decl;
+	}
+	
+	return dones [name];
+    }    
     
     Tree getVtable (const std::string & name) {
 	auto it = Ymir::__vtable__.find (name);
@@ -474,6 +509,22 @@ namespace Ymir {
 	//DECL_EXTERNAL (decl) = 1;
 	//TREE_PUBLIC (decl) = 1;
 	sym-> treeDecl (decl);
+    }
+
+    Ymir::Tree declareGlobalExtern (const std::string & name, Ymir::Tree type_tree) {
+	auto globName = Mangler::mangle_global (name);
+	tree decl = build_decl (
+	    BUILTINS_LOCATION,
+	    VAR_DECL,
+	    get_identifier (globName.c_str ()),
+	    type_tree.getTree ()
+	);
+
+	TREE_STATIC (decl) = 1;
+	//TREE_USED (decl) = 1;
+	//DECL_EXTERNAL (decl) = 1;
+	//TREE_PUBLIC (decl) = 1;
+	return decl;
     }
     
     void finishCompilation () {

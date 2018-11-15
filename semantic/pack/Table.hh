@@ -53,7 +53,7 @@ namespace semantic {
 
 	std::vector <syntax::Global> globalVars ();
 
-	void enterFrame (Namespace space, std::string name, std::vector <syntax::Expression> &tmps, const std::vector <Word> & context, bool internal);
+	void enterFrame (Namespace space, const std::string & name, std::vector <syntax::Expression> &tmps, const std::vector <Word> & context, bool internal);
 
 	bool hasCurrentContext (const std::string & uda);
 	
@@ -75,28 +75,30 @@ namespace semantic {
 
 	void purge ();
 
-	Symbol get (std::string name);
+	Symbol get (const std::string &name);
 
-	std::vector <Symbol> getAll (std::string name);
+	std::vector <Symbol> getAll (const std::string &name);
 	
 	/**
 	 * \return the inner language definition of TypeInfo, cf. core.info
 	 */
-	AggregateCstInfo getTypeInfo ();
+	AggregateCstInfo getTypeInfoType ();
 
-	AggregateCstInfo getTypeInfo (std::string name); 
+	AggregateCstInfo getTypeInfoType (const std::string &name);
+
+	Symbol getTypeInfoSymbol (const std::string &name); 
 	
-	Symbol getLocal (std::string name);
+	Symbol getLocal (const std::string &name);
 
 	bool isFrameLocal (Symbol sym);
 	
-	Symbol local (std::string name);
+	Symbol local (const std::string &name);
 
 	bool sameFrame (Symbol sym);
 
 	bool parentFrame (Symbol sym);
 
-	Symbol getAlike (std::string name);
+	Symbol getAlike (const std::string & name);
 
 	FrameReturnInfo& retInfo ();
 	

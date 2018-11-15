@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/utils/Array.hh>
+#include <set>
 
 namespace Ymir {
     struct Tree;
@@ -40,6 +41,7 @@ namespace semantic {
 	std::vector <FinalFrame> _finals;
 	std::vector <FinalFrame> _finalTemplates;
 	std::vector <FrameProto> _protos;
+	std::set <FrameProto> _inValidation;
 	std::vector <StructCstInfo> _structs;
 	std::vector <AggregateCstInfo> _aggrs;
 	std::map <std::string, std::vector <StructInfo> > _structIds;	
@@ -83,7 +85,10 @@ namespace semantic {
 
 	void identify (StructInfo info);
 
+	void addInValidation (FrameProto proto);
 
+	void isValidated (FrameProto proto);
+	
 	std::vector <StructCstInfo> & structs ();	
 	
 	std::vector <Frame> & pures ();

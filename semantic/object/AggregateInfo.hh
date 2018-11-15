@@ -219,7 +219,9 @@ namespace semantic {
 
 	Ymir::Tree getVtable ();
 	
-	Ymir::Tree toGeneric () override;	
+	Ymir::Tree toGeneric () override;
+
+	Ymir::Tree genericConstructor () override;	
 	
 	void setTmps (const std::vector <syntax::Expression> & tmps);
 

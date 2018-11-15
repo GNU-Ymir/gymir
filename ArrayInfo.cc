@@ -14,6 +14,7 @@
 #include <ymir/semantic/value/StringValue.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/value/ArrayValue.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 
 namespace semantic {
 
@@ -176,9 +177,19 @@ namespace semantic {
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
+	if (var-> token == "typeinfo") return TypeInfo (var);
 	return NULL;
     }
 
+    InfoType IArrayInfo::TypeInfo (syntax::Var var) {
+	auto ret = this-> _content-> DColonOp (var);
+	if (ret != NULL) {
+	    ret-> nextUnop.push_back (ret-> unopFoo);
+	    ret-> unopFoo = ArrayUtils::InstTypeInfo;
+	}
+	return ret;
+    }
+    
     InfoType IArrayInfo::SizeOf () {
 	auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
 	ret-> unopFoo = FixedUtils::InstSizeOf;
@@ -376,6 +387,25 @@ namespace semantic {
 	    Ymir::Tree array_type = build_array_type (innerType.getTree (), range_type.getTree ());
 	    return array_type;
 	}
+    }
+
+    Ymir::Tree IArrayInfo::genericConstructor () {
+	if (this-> value ()) {
+	    auto sym = new (Z0) ISymbol (Word::eof (), NULL, this);
+	    return this-> value ()-> toYmir (sym)-> toGeneric ();
+	}
+	
+	vec<constructor_elt, va_gc> * elms = NULL;
+	auto vtype = this-> toGeneric ();
+	if (!this-> _isStatic) {
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, "len").getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, "ptr").getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	} else {
+	    for (auto it : Ymir::r (0, this-> _size)) {
+		CONSTRUCTOR_APPEND_ELT (elms, size_int (it), this-> _content-> genericConstructor ().getTree ());
+	    }
+	}
+	return build_constructor (vtype.getTree (), elms);
     }
     
     std::string IArrayInfo::innerTypeString () {
@@ -862,6 +892,44 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc, result, ltree);
 	}
 
+	template <typename T>
+	T getAndRemoveBack (std::list <T> &list) {
+	    if (list.size () != 0) {
+		auto last = list.back ();	    
+		list.pop_back ();
+		return last;
+	    } else {
+		return NULL;
+	    }
+	}
+
+	Ymir::Tree InstTypeInfo (Word locus, InfoType type, Expression elem) {
+	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);	    
+	    auto arrayInfo = elem-> info-> type ()-> to <IArrayInfo> ();
+	    auto inner = type-> buildUnaryOp (
+		locus, type, new (Z0) ITreeExpression (locus, arrayInfo-> content (), Ymir::Tree ())
+	    );
+
+	    auto typeTree = type-> toGeneric ();
+	    auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	    vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	    // {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	    auto fields = getFieldDecls (implTree);
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
+	    
+	    auto array_info_type = Table::instance ().getTypeInfoType ("Array_info")-> TempOp ({})-> to <IAggregateInfo> ();
+	    auto vtable = array_info_type-> getVtable ();
+	    
+	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	    auto name = "core.info." + arrayInfo-> simpleTypeString () + "_info";
+	    auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	    return glob;
+	}
+	
     }
 
 

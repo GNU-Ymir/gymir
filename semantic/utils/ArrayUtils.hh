@@ -38,6 +38,8 @@ namespace semantic {
 	
 	Ymir::Tree InstInit (Word locus, semantic::InfoType type, syntax::Expression);
 
+	Ymir::Tree InstTypeInfo (Word locus, semantic::InfoType type, syntax::Expression);
+
     }
 
 }

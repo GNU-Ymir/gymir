@@ -212,6 +212,8 @@ namespace semantic {
 	
 	virtual Ymir::Tree toGeneric ();
 
+	virtual Ymir::Tree genericConstructor ();
+
 	virtual Ymir::Tree getInitFnPtr ();	    
 	
 	virtual InfoType getTemplate (ulong);

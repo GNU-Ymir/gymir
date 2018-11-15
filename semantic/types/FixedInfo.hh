@@ -63,6 +63,8 @@ namespace semantic {
 	bool isSigned ();
 	
 	Ymir::Tree toGeneric () override;
+
+	Ymir::Tree genericConstructor () override;
 	
     private:
 
