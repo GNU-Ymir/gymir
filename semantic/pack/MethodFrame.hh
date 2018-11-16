@@ -35,6 +35,7 @@ namespace semantic {
 	
 	std::string _name;
 	bool _isExtern = false;
+	bool _isPure = true;
 	bool _isVirtual = true;
 	bool _isInnerPrivate = false;
 	bool _isInnerProtected = false;
@@ -58,7 +59,12 @@ namespace semantic {
 	ApplicationScore isApplicable (const std::vector <InfoType> & params) override;
 	
 	InfoType & getInfo ();
-	
+
+	bool isPure () const;
+
+	void isPure (bool);
+
+	bool isWeak () const override;
 	
 	static const char * id () {
 	    return "IMethodFrame";

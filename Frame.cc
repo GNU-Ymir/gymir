@@ -165,7 +165,7 @@ namespace semantic {
 
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 						   this-> _space, this-> _function-> getName (),
-						   finalParams, block, this-> tempParams);
+						   finalParams, block, this-> tempParams, this-> isWeak ());
 	    
 	    finFrame-> closure () = Table::instance ().retInfo ().closure;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
@@ -270,7 +270,7 @@ namespace semantic {
 	Table::instance ().templateNamespace () = from;
 	
 	Namespace finalNamespace = space;
-	if (from != space) finalNamespace = Namespace (space, from.toString ());
+	//if (from != space) finalNamespace = Namespace (space);//, from.toString ());
 				
 	Ymir::log ("Validate function : ", name, " in space : ",  Table::instance ().getCurrentSpace ());
 	if (ret == NULL) 
@@ -309,7 +309,7 @@ namespace semantic {
 		    
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 						   finalNamespace, name.getStr (),
-						   params, block, tmps);
+						   params, block, tmps, this-> isWeak ());
 		    
 	    finFrame-> isVariadic () = isVariadic;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
@@ -378,7 +378,7 @@ namespace semantic {
 	    }
 	    
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
-						  space, name, params, block, {});
+						  space, name, params, block, {}, this-> isWeak ());
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    proto-> isLvalue () = false;
 	    
@@ -428,7 +428,7 @@ namespace semantic {
 		Table::instance ().retInfo ().info-> type (new (Z0)  IVoidInfo ());
 	    
 	    auto finFrame = new (Z0) IFinalFrame (Table::instance ().retInfo ().info,
-						  space, name, params, block, {});
+						  space, name, params, block, {}, this-> isWeak ());
 	    
 	    proto-> type () = Table::instance ().retInfo ().info;
 	    proto-> isLvalue () = false;
@@ -459,7 +459,7 @@ namespace semantic {
     
     FrameProto IFrame::validate (Namespace space, Namespace from, const std::vector<Var> & params, bool isVariadic, bool isExtern) {
 	Namespace finalNamespace = space;
-	if (from != space) finalNamespace = Namespace (space, from.toString ());
+	//if (from != space) finalNamespace = Namespace (space, from.toString ());
 
 	Table::instance ().templateNamespace () = from;
 	bool lvalue = false;
@@ -510,7 +510,7 @@ namespace semantic {
 
 	    auto finFrame = new (Z0)  IFinalFrame (Table::instance ().retInfo ().info,
 						   finalNamespace, this-> _function-> getIdent ().getStr (),
-						   params, block, this-> tempParams);
+						   params, block, this-> tempParams, this-> isWeak ());
 
 	    finFrame-> isVariadic () = isVariadic;
 	    finFrame-> isInline () = this-> has (Keys::INLINE);
@@ -562,6 +562,14 @@ namespace semantic {
 	return this-> _isVariadic;
     }
 
+    bool IFrame::isWeak () const {
+	return this-> _isWeak;
+    }
+
+    void IFrame::isWeak (bool isWeak) {
+	this-> _isWeak = isWeak;
+    }
+    
     std::string IFrame::getName () {
 	//Ymir::Error::assert ("TODO");
 	return "";

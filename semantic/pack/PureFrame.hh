@@ -13,7 +13,7 @@ namespace semantic {
 	bool isValid = false;
 	bool pass = false;
 	bool _isExternC = false;
-	
+
     public:
 
 	IPureFrame (Namespace space, syntax::Function fun);

@@ -40,7 +40,7 @@ namespace semantic {
     std::vector <Ymir::Tree> IFinalFrame::__endLabel__;
     std::vector <FinalFrame> IFinalFrame::__inlining__;
     
-    IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, const std::vector<syntax::Var> & vars, syntax::Block bl, const std::vector <syntax::Expression>& tmps) :
+    IFinalFrame::IFinalFrame (Symbol type, Namespace space, std::string name, const std::vector<syntax::Var> & vars, syntax::Block bl, const std::vector <syntax::Expression>& tmps, bool isWeak) :
 	_type (type),
 	_file (""),
 	_space (space),
@@ -49,7 +49,8 @@ namespace semantic {
 	_tmps (tmps),
 	_isVariadic (false),
 	_isInline (false),
-	_block (bl)
+	_block (bl),
+	_isWeak (isWeak)
     {}
     
     std::string &IFinalFrame::name () {
@@ -80,6 +81,10 @@ namespace semantic {
 	return this-> _isMoved;
     }
 
+    bool& IFinalFrame::isWeak () {
+	return this-> _isWeak;
+    }
+    
     std::string& IFinalFrame::externLang () {
 	return this-> _externLang;
     }
@@ -401,7 +406,8 @@ namespace semantic {
 
 	DECL_EXTERNAL (fn_decl) = 0;
 	DECL_PRESERVE_P (fn_decl) = 1;
-
+	DECL_WEAK (fn_decl) = this-> _isWeak ? 1 : 0;
+	
 	TREE_PUBLIC (fn_decl) = 1;
 	TREE_STATIC (fn_decl) = 1;
 

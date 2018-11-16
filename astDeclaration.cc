@@ -1551,6 +1551,7 @@ namespace syntax {
 		fr = new (Z0) IMethodFrame (space, this-> getName (), info, this);
 		fr-> to <IMethodFrame> ()-> isExtern (isExternal);
 		fr-> to <IMethodFrame> ()-> isVirtual (addable && (this-> _prot != InnerProtection::PRIVATE));
+		fr-> to <IMethodFrame> ()-> isPure (addable);
 		fr-> to <IMethodFrame> ()-> needConst () = needConst;
 	    }  else {
 		fr = new (Z0) ITemplateMethFrame (space, this-> getName (), info, this);

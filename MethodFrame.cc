@@ -43,10 +43,17 @@ namespace semantic {
 	auto finalParams = IFrame::computeParams (vars, params);
 	    
 	if (this-> _isVirtual) from = this-> _space;
-	this-> _proto = IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern ());
+	if (!this-> _isPure) {
+	    auto proto = IFrame::validate (this-> _space, from, finalParams, false);
+	    if (this-> _isVirtual && this-> _proto && this-> _proto-> type ())
+		proto-> type ()-> value () = NULL;
+	    return proto;
+	} else {
+	    this-> _proto = IFrame::validate (this-> _space, from, finalParams, false, this-> isExtern ());
 	
-	if (this-> _isVirtual && this-> _proto && this-> _proto-> type ())
-	    this-> _proto-> type ()-> value () = NULL;
+	    if (this-> _isVirtual && this-> _proto && this-> _proto-> type ())
+		this-> _proto-> type ()-> value () = NULL;
+	}
 	return this-> _proto;
     }
     
@@ -128,6 +135,18 @@ namespace semantic {
 	return this-> _isExtern;
     }
 
+    bool IMethodFrame::isPure () const {
+	return this-> _isPure;
+    }
+
+    void IMethodFrame::isPure (bool isPure) {
+	this-> _isPure = isPure;
+    }
+
+    bool IMethodFrame::isWeak () const {
+	return !this-> _isPure;
+    }
+    
     syntax::TypeMethod IMethodFrame::getMethod () {
 	return this-> _method;
     }

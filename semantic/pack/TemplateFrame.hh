@@ -33,6 +33,8 @@ namespace semantic {
 	
 	bool& isExtern ();
 
+	bool isWeak () const override;
+	
 	virtual ApplicationScore isApplicable (Word ident, const std::vector<syntax::Var> & attrs, const std::vector<InfoType> & args) override;
 
 	virtual ApplicationScore isApplicable (syntax::ParamList params) override;

@@ -38,6 +38,7 @@ namespace semantic {
 	bool _isMoved = false;
 	std::string _externLang = "";
 	syntax::Block _block;
+	bool _isWeak = false;
 	syntax::Block _pre = NULL, _post = NULL;
 	syntax::Var _postVar = NULL;
 	
@@ -52,7 +53,7 @@ namespace semantic {
 	
     public:
 
-	IFinalFrame (Symbol, Namespace, std::string, const std::vector<syntax::Var> &, syntax::Block, const std::vector<syntax::Expression>&) ;
+	IFinalFrame (Symbol, Namespace, std::string, const std::vector<syntax::Var> &, syntax::Block, const std::vector<syntax::Expression>&, bool isWeak) ;
 
 	std::string& name ();
 
@@ -63,10 +64,12 @@ namespace semantic {
 	Symbol type ();
 
 	bool& isVariadic ();
-
+	
 	bool& isInline ();
 
 	bool& isMoved ();
+
+	bool& isWeak ();
 	
 	std::string& externLang ();
 

@@ -22,6 +22,8 @@ namespace semantic {
 	std::vector <InfoType> getParamTypes () override;
 	
 	std::string getName () override;
+
+	bool isWeak () const override;
 	
 	static const char * id () {
 	    return "IUnPureFrame";

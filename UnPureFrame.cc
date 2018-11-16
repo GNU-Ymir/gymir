@@ -39,6 +39,10 @@ namespace semantic {
     }
     
 
+    bool IUnPureFrame::isWeak () const {
+	return true;
+    }
+    
     FrameProto IUnPureFrame::validate (ParamList params) {
 	return this-> validate (params-> getParamTypes ());
     }

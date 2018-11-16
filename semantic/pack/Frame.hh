@@ -48,6 +48,7 @@ namespace semantic {
 	bool _isInnerPrivate = false;
 	bool _isInnerProtected = false;
 	bool _isVariadic = false;
+	bool _isWeak = false;
 	std::string _externLang;
 	std::string _externLangSpace;
 	
@@ -84,6 +85,10 @@ namespace semantic {
 
 	virtual void isVariadic (bool isVariadic);
 
+	virtual bool isWeak () const;
+
+	virtual void isWeak (bool);
+	
 	static void verifyReturn (Word token, Symbol ret, FrameReturnInfo infos);
 	
 	virtual ApplicationScore isApplicable (syntax::ParamList params);

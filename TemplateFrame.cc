@@ -35,6 +35,10 @@ namespace semantic {
 	return this-> _isExtern;
     }
 
+    bool ITemplateFrame::isWeak () const {
+	return true;
+    }
+    
     ApplicationScore ITemplateFrame::isApplicable (Word ident, const vector<Var> & attrs, const vector <InfoType> &args)  {
 	if (args.size () > this-> _function-> getParams ().size ())
 	    return this-> isApplicableVariadic (ident, attrs, args);
@@ -118,7 +122,7 @@ namespace semantic {
 
 	Ymir::log ("Validate template function : ", this-> _function-> getIdent (), " in space : ",  Table::instance ().getCurrentSpace ());	
 	FrameProto proto = IFrame::validate (this-> _function-> getIdent (), this-> _space, from, ret, finalParams, func-> getBlock (), tmps, this-> _isVariadic, this-> _function-> pre (), this-> _function-> post (), this-> _function-> postVar ());	
-
+	
 	proto-> isLvalue () = lvalue;
 	return proto;
     }
@@ -210,9 +214,10 @@ namespace semantic {
 	    Frame ret;
 	    if (!this-> _isPure) ret = new (Z0)  IUnPureFrame (this-> _space, func);
 	    else if (this-> _isExtern) ret = new (Z0)  IExternFrame (this-> _space, func);
-	    else ret = new (Z0)  IPureFrame (this-> _space, func);
+	    else ret = new (Z0)  IPureFrame (this-> _space, func);	    
 	    ret-> attributes () = this-> attributes ();
 
+	    ret-> isWeak (true);
 	    ret-> currentScore () = this-> currentScore () + res.score;	    
 	    ret-> templateParams () = this-> templateParams ();
 	    ret-> templateParams ().insert (ret-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
@@ -221,7 +226,7 @@ namespace semantic {
 	    func-> templates () = TemplateSolver::instance ().unSolved (this-> _function-> getTemplates (), res);
 	    auto aux = new (Z0)  ITemplateFrame (this-> _space, func);
 	    aux-> attributes () = this-> attributes ();
-	    
+
 	    aux-> templateParams () = this-> templateParams ();
 	    aux-> templateParams ().insert (aux-> templateParams ().end (), auxTmps.begin (), auxTmps.end ());
 	    aux-> _currentScore = this-> currentScore () + res.score;
