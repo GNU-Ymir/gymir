@@ -266,7 +266,7 @@ namespace semantic {
 
     std::string ITupleInfo::innerSimpleTypeString () {
 	Ymir::OutBuffer buf;
-	buf.write ("T");
+	buf.write ("T", this-> params.size (), "T");
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (Mangler::mangle_type (this-> params [it], this-> params [it]-> simpleTypeString ()));
 	    if (this-> _isUnion) {

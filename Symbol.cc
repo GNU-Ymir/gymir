@@ -129,8 +129,8 @@ namespace semantic {
     }
     
     std::string ISymbol::simpleTypeString () {
-	if (this-> _type-> isConst ())
-	    return std::string ("c") + this-> _type-> simpleTypeString ();
+	// if (this-> _type-> isConst ())
+	//     return std::string ("c") + this-> _type-> simpleTypeString ();
 	return this-> _type-> simpleTypeString ();
     }
 

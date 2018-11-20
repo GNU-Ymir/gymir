@@ -877,7 +877,7 @@ namespace semantic {
 	return NULL;
     }
     
-    std::string IStructInfo::onlyNameTypeString (bool simple) {
+    std::string IStructInfo::onlyNameTypeString (bool) {
 	Ymir::OutBuffer buf (this-> space.toString (), ".", this-> name);
 	if (this-> tmpsDone.size () != 0) buf.write ("!(");
 	for (auto it : Ymir::r (0, this-> tmpsDone.size ())) {
@@ -897,8 +897,8 @@ namespace semantic {
 		buf.write (", ");	    
 	}
 	if (this-> tmpsDone.size () != 0) buf.write (")");
-	if (simple)
-	    buf.write ("S");
+	// if (simple)
+	//     buf.write ("S");
 	return buf.str ();
     }
 
@@ -926,7 +926,7 @@ namespace semantic {
     
     std::string IStructInfo::innerSimpleTypeString () {
 	std::string buf = this-> onlyNameTypeString ();
-	return Ymir::OutBuffer (buf.length (), buf).str ();
+	return buf;
     }
 
     void IStructInfo::setTypes (std::vector <InfoType> types) {

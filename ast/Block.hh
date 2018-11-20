@@ -110,6 +110,8 @@ namespace syntax {
 	
 	Ymir::Tree toGeneric () override;
 
+	Ymir::Tree toGenericNoFailure ();
+
 	/**
 	 * \brief Generate the generic code, when the block is used as an expression
 	 * \param type the type of the block

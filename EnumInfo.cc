@@ -313,8 +313,8 @@ namespace semantic {
 	return create ();
     }
     
-    std::string IEnumCstInfo::innerSimpleTypeString () {
-	return Ymir::format ("%%", Namespace (this-> _space.toString (), this-> _name).toString (), "E");
+    std::string IEnumCstInfo::innerSimpleTypeString () {	
+	return Ymir::format ("%.%", this-> _space.toString (), this-> _name);	
     }
 
     std::string IEnumCstInfo::innerTypeString () {
@@ -544,7 +544,7 @@ namespace semantic {
     
     std::string IEnumInfo::innerSimpleTypeString () {
 	auto name = Namespace (this-> _space.toString (), this-> _name);
-	return Ymir::format ("%%", name, "E");
+	return Ymir::format ("%", name);
     }
 
     std::string IEnumInfo::innerTypeString () {

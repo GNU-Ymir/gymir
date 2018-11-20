@@ -36,8 +36,8 @@ namespace syntax {
 	Ymir::getStackStmtList ().back ().append (list);
 	return res;
     }
-    
-    Ymir::Tree IBlock::toGeneric () {
+
+    Ymir::Tree IBlock::toGenericNoFailure () {       
 	if (this-> _value != NULL) {
 	    return this-> toGenericValue ();
 	}
@@ -73,6 +73,53 @@ namespace syntax {
 	}      
     }
     
+    Ymir::Tree IBlock::toGeneric () {
+	if (this-> _failures.size () == 0) return this-> toGenericNoFailure ();
+	auto loc = this-> token.getLocus ();
+	
+	auto jmp_type = Ymir::makeEmptyTuple (200);
+	Ymir::TreeStmtList list;
+	auto buf = Ymir::makeAuxVar (loc, "buf", jmp_type);
+	auto res = Ymir::makeAuxVar (loc, "res", unsigned_type_node);
+
+
+	list.append (buildTree (MODIFY_EXPR,
+				loc,
+				void_type_node,
+				res,
+				Ymir::callLib (loc, "setjmp", unsigned_type_node, {Ymir::getAddr (buf)})
+	));
+	
+	auto bool_expr = Ymir::callLib (loc, "_y_exc_push", unsigned_char_type_node, {Ymir::getAddr (buf), res});
+	Ymir::Tree thenLabel = Ymir::makeLabel (loc, "then");
+	Ymir::Tree endLabel = Ymir::makeLabel (loc, "end_if");
+	Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, loc, void_type_node, thenLabel);
+	Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, loc, void_type_node, endLabel);
+	auto elseLabel = Ymir::makeLabel (this-> token.getLocus (), "else");
+	auto goto_else = Ymir::buildTree (GOTO_EXPR, loc, void_type_node, elseLabel);
+
+	Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, loc, void_type_node, bool_expr, goto_then, goto_else);
+	list.append (cond_expr);
+	    
+	Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, thenLabel);
+
+	list.append (then_label_expr);
+	Ymir::Tree then_part = this-> toGenericNoFailure ();
+	list.append (then_part);
+	list.append (goto_end);
+
+	Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, elseLabel);
+	list.append (else_label_expr);
+	Ymir::Tree else_part = this-> _failures [0]-> _block-> toGeneric ();
+	list.append (else_part);
+	list.append (goto_end);
+
+	Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, endLabel);
+	list.append (endif_label_expr);
+
+	return  list.getTree ();	
+    }
+
     Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
 	auto last = this-> _insts.back ()-> to <IExpression> ();
 	this-> _insts.pop_back ();

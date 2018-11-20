@@ -33,6 +33,8 @@ namespace Ymir {
     
     Tree makeTuple (std::string name, const std::vector<semantic::InfoType> & types, const std::vector<std::string>& attrs, bool packed = false);
 
+    Tree makeEmptyTuple (ulong size);
+        
     Tree makeUnion (std::string name, const std::vector<semantic::InfoType> & types);
 
     Tree makeTuple (std::string name, const std::vector<semantic::InfoType> & types);

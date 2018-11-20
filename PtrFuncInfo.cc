@@ -429,8 +429,9 @@ namespace semantic {
 
     std::string IPtrFuncInfo::innerSimpleTypeString () {
 	Ymir::OutBuffer buf;
-	if (this-> isDelegate ()) buf.write ("DG");
-	else buf.write ("PF");
+	if (this-> isDelegate ()) buf.write ("CD");
+	else buf.write ("C");
+	
 	for (auto it : Ymir::r (0, this-> params.size ())) {
 	    buf.write (Mangler::mangle_type (this-> params [it], this-> params [it]-> simpleTypeString ()));
 	}

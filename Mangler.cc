@@ -60,7 +60,8 @@ namespace Mangler {
     }
     
     std::string mangle_type (InfoType type, std::string name) {
-	if (type-> is <IAggregateInfo> () || type-> is <IStructInfo> ()) return mangle_namespace (name);
+	if (type-> is <IAggregateInfo> () || type-> is <IStructInfo> ()) return mangle_struct (name, 'S');
+	else if (type-> is<IEnumInfo> ()) return mangle_struct (name, 'E');
 	auto res = replace (name, {'(', ')', ',', '\''}, {'N', 'N', 'U', 'G'});
 	OutBuffer fin;
 	for (auto it : res) {
@@ -115,6 +116,24 @@ namespace Mangler {
 	return "";    
     }
     
+    std::string mangle_struct (std::string name, char fill) {
+	OutBuffer ss;
+	ss.write (fill);
+	while (true) {
+	    auto index = name.find (".");
+	    if (index != name.npos) {
+		auto curr = mangle_var (name.substr (0, index));
+		name = name.substr (index + 1, name.length () - (index + 1));
+		ss.write (curr);
+	    } else {
+		ss.write (mangle_var (name));
+		break;
+	    }
+	}
+	ss.write (fill);
+	return ss.str ();
+    }
+
     std::string mangle_namespace (std::string name) {
 	OutBuffer ss;
 	while (true) {

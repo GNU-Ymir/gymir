@@ -9,6 +9,8 @@
 #include <ymir/semantic/types/RefInfo.hh>
 #include <ymir/semantic/types/PtrInfo.hh>
 #include <ymir/semantic/object/AggregateInfo.hh>
+#include <ymir/semantic/types/ArrayInfo.hh>
+#include <ymir/semantic/types/CharInfo.hh>
 #include "toplev.h"
 
 using namespace semantic;
@@ -137,6 +139,13 @@ namespace Ymir {
 	return record_type;
     }
 
+    Tree makeEmptyTuple (ulong size) {
+	auto inner = new (Z0) IArrayInfo (false, new (Z0) ICharInfo (false));
+	inner-> isStatic (true, size);
+	
+	return makeTuple ("empty_tuple", {inner}, {}, false);
+    }
+    
     Tree makeUnion (std::string name, const std::vector <InfoType>& types) {
 	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
 	tree record_type = make_node (UNION_TYPE);
