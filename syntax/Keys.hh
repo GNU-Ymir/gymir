@@ -36,6 +36,7 @@ struct Keys {
     static std::string  OPBINARY; 
     static std::string  OPBINARYR; 
     static std::string  ASSERT;
+    static std::string  THROW_K;
     static std::string  SCOPE; 
     static std::string  STATIC; 
     static std::string  OPACCESS;

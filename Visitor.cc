@@ -79,7 +79,7 @@ namespace syntax {
 	this-> suiteElem = {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON, Token::LACC, Token::COLON};
 	this-> afUnary = {Token::DPLUS, Token::DMINUS};	
 	this-> befUnary = {Token::MINUS, Token::AND, Token::STAR, Token::NOT};
-	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::SCOPE,
+	this-> forbiddenIds = {Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::THROW_K, Keys::SCOPE,
 			       Keys::DEF, Keys::IF, Keys::RETURN, Keys::PRAGMA, 
 			       Keys::FOR,  Keys::WHILE, Keys::BREAK,
 			       Keys::MATCH, Keys::IN, Keys::ELSE, Keys::DELEGATE, 
@@ -1431,6 +1431,7 @@ namespace syntax {
 	else if (tok == Keys::LET) return visitLet ();
 	else if (tok == Keys::BREAK) return visitBreak ();
 	else if (tok == Keys::ASSERT) return visitAssert ();
+	else if (tok == Keys::THROW_K) return visitThrow ();
 	else if (tok == Keys::PRAGMA) return visitPragma ();
 	else if (tok == Keys::SCOPE) return visitScope ();
 	else if (tok == Keys::VERSION) return visitVersion ();
@@ -1440,8 +1441,9 @@ namespace syntax {
 	    if (tok == Keys::IF) inst = visitIf ();
 	    else if (tok == Keys::FOR) inst = visitFor ();
 	    else if (tok == Keys::ASSERT) inst = visitAssert ();
+	    else if (tok == Keys::THROW_K) inst = visitThrow ();
 	    else {
-		syntaxError (tok, {Keys::IF, Keys::ASSERT, Keys::FOR});
+		syntaxError (tok, {Keys::IF, Keys::ASSERT, Keys::FOR, Keys::THROW_K});
 		return NULL;
 	    }
 	    inst-> setStatic (true);
@@ -2662,8 +2664,34 @@ namespace syntax {
     Scope Visitor::visitScope () {
 	auto begin = this-> visitIdentifiant ();
 	auto next = this-> lex.next ({Token::LACC, Token::DARROW});
-	if (next == Token::LACC) this-> lex.rewind ();
-	return new (Z0) IScope (begin, visitBlock ());
+	if (next == Token::LACC) {
+	    if (begin == Keys::FAILURE && canVisitVarDeclaration ()) {
+		std::vector <TypedVar> vars;
+		std::vector <Block> blocks;
+		Block none = NULL;
+		while (true) {
+		    next = this-> lex.next ();
+		    if (next == Keys::UNDER) {
+			if (none != NULL) syntaxError (next);			
+			else {
+			    this-> lex.next ({Token::DARROW});
+			    none = visitBlock ();
+			}
+		    } else if (next == Token::RACC) { break;
+		    } else {
+			this-> lex.rewind ();
+			auto last = this-> lambdaPossible;
+			this-> lambdaPossible = false;		    
+			vars.push_back (visitStructVarDeclaration ());
+			this-> lambdaPossible = last;
+			next = this-> lex.next ({Token::DARROW});
+			blocks.push_back (visitBlock ());
+		    }
+		}
+		return new (Z0) IScopeFailure (begin, vars, blocks, none);
+	    } else this-> lex.rewind ();
+	}
+	return new (Z0) IScope (begin, visitBlock ());	
     }
     
     Assert Visitor::visitAssert () {
@@ -2681,6 +2709,14 @@ namespace syntax {
 	return new (Z0)  IAssert (begin, expr, msg);
     }
 
+    Throw Visitor::visitThrow () {
+	this-> lex.rewind ();
+	auto begin = this-> lex.next ();
+	auto expr = visitExpression ();
+	this-> lex.next ({Token::SEMI_COLON});
+	return new (Z0) IThrow (begin, expr);
+    }
+    
     Pragma Visitor::visitPragma () {
 	auto next = this-> lex.next ({Token::LPAR});
 	auto id = visitIdentifiant ();

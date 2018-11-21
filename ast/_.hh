@@ -51,6 +51,7 @@
 #include "StringOf.hh"
 #include "StructCst.hh"
 #include "Struct.hh"
+#include "Throw.hh"
 #include "Trait.hh"
 #include "TreeExpression.hh"
 #include "TupleDest.hh"

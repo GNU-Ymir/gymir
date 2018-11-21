@@ -311,6 +311,11 @@ namespace semantic {
 	return NULL;
     }
 
+    Ymir::Tree IInfoType::genericTypeInfo () {
+	Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
+	return NULL;
+    }
+
     Ymir::Tree IInfoType::genericConstructor () {
 	Ymir::Error::assert ((std::string ("TODO") + this-> getId ()).c_str ());
 	return Ymir::Tree ();

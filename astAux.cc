@@ -44,6 +44,10 @@ namespace syntax {
 	}
     }
 
+    void IBlock::addFinalFailure (Block block) {
+	this-> _finalFailure.push_back (block);	
+    }
+        
     void IBlock::addFailure (FailureBlock block) {
 	this-> _failures.push_back (block);
     }
@@ -602,6 +606,18 @@ namespace syntax {
 	if (_msg)
 	    delete _msg;
     }
+
+    IThrow::IThrow (Word token, Expression test) :
+	IInstruction (token),
+	_expr (test)
+    {
+	this-> _expr-> inside = this;
+    }
+
+    IThrow::~IThrow ()  {
+	delete _expr;
+    }
+
     
     IBinary::IBinary (Word word, Expression left, Expression right, Expression ctype) :
 	IExpression (word),
@@ -2053,6 +2069,12 @@ namespace syntax {
 	_block (block)
     {}
 
+    IScopeFailure::IScopeFailure (Word token, const std::vector <TypedVar> & vars, const std::vector <Block> & block, Block any) :
+	IScope (token, any),
+	_vars (vars),
+	_blocks (block)
+    {}	
+    
     Expression IConstArray::getParam (int nb) {
 	return this-> params [nb];
     }

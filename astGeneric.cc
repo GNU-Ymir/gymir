@@ -1,7 +1,6 @@
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/_.hh>
-#include <ymir/semantic/tree/Tree.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/semantic/types/_.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
@@ -10,6 +9,7 @@
 #include <ymir/semantic/utils/ArrayUtils.hh>
 #include <ymir/semantic/utils/FunctionUtils.hh>
 #include <ymir/semantic/object/AggregateInfo.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 #include "print-tree.h"
 #include <ymir/semantic/value/_.hh>
 
@@ -77,7 +77,7 @@ namespace syntax {
 	if (this-> _failures.size () == 0) return this-> toGenericNoFailure ();
 	auto loc = this-> token.getLocus ();
 	
-	auto jmp_type = Ymir::makeEmptyTuple (200);
+	auto jmp_type = Ymir::makeEmptyTuple (Ymir::Runtime::JMP_BUF_SIZE);
 	Ymir::TreeStmtList list;
 	auto buf = Ymir::makeAuxVar (loc, "buf", jmp_type);
 	auto res = Ymir::makeAuxVar (loc, "res", unsigned_type_node);
@@ -87,10 +87,10 @@ namespace syntax {
 				loc,
 				void_type_node,
 				res,
-				Ymir::callLib (loc, "setjmp", unsigned_type_node, {Ymir::getAddr (buf)})
+				Ymir::callLib (loc, Ymir::Runtime::SETJMP, unsigned_type_node, {Ymir::getAddr (buf)})
 	));
 	
-	auto bool_expr = Ymir::callLib (loc, "_y_exc_push", unsigned_char_type_node, {Ymir::getAddr (buf), res});
+	auto bool_expr = Ymir::callLib (loc, Ymir::Runtime::EXC_PUSH, unsigned_char_type_node, {Ymir::getAddr (buf), res});
 	Ymir::Tree thenLabel = Ymir::makeLabel (loc, "then");
 	Ymir::Tree endLabel = Ymir::makeLabel (loc, "end_if");
 	Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, loc, void_type_node, thenLabel);
@@ -110,8 +110,24 @@ namespace syntax {
 
 	Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, elseLabel);
 	list.append (else_label_expr);
-	Ymir::Tree else_part = this-> _failures [0]-> _block-> toGeneric ();
-	list.append (else_part);
+	Ymir::Tree elsePart;
+	
+	if (this-> _finalFailure.size () != 0) {
+	    Ymir::TreeStmtList listElse;
+	    for (auto it : this-> _finalFailure)
+		listElse.append (it-> toGeneric ());
+	    elsePart = listElse.getTree ();
+	} else {
+	    Ymir::TreeStmtList listElse;
+	    listElse.append (Ymir::callLib (loc, Ymir::Runtime::EXC_RETHROW, void_type_node, {}));
+	    elsePart = listElse.getTree ();
+	}
+	
+	for (auto it : Ymir::r (this-> _failures.size (), 0)) {
+	    elsePart = this-> _failures [it - 1]-> toGeneric (elsePart);
+	}
+	
+	list.append (elsePart);
 	list.append (goto_end);
 
 	Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, endLabel);
@@ -120,6 +136,62 @@ namespace syntax {
 	return  list.getTree ();	
     }
 
+    Ymir::Tree IFailureBlock::toGeneric (Ymir::Tree elsePart) {
+	if (this-> _var == NULL) {
+	    return this-> _block-> toGeneric ();
+	} else {
+	    auto loc = this-> token.getLocus ();
+	    Ymir::TreeStmtList list;
+	    auto type = this-> _var-> info-> type ()-> toGeneric ();
+	    auto aux = Ymir::makeAuxVar (this-> token.getLocus (),
+					 this-> _var-> token.getStr (), type);
+
+	    list.append (aux.getOperand (0));
+	    this-> _var-> info-> treeDecl (aux.getOperand (1));
+	    auto typeinfo = this-> _var-> info-> type ()-> genericTypeInfo ();
+
+	    auto ptr = new (Z0) IPtrInfo (false, this-> _var-> info-> type ());	    
+	    auto ret = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), ptr-> toGeneric ());
+	    list.append (Ymir::buildTree (
+		MODIFY_EXPR, loc,
+		void_type_node, ret, Ymir::callLib (loc, Ymir::Runtime::EXC_CHECK_TYPE, ptr-> toGeneric (), {Ymir::getAddr (typeinfo)})
+	    ));
+	    
+	    Ymir::Tree thenLabel = Ymir::makeLabel (loc, "then");
+	    Ymir::Tree endLabel = Ymir::makeLabel (loc, "end_if");
+	    Ymir::Tree goto_then = Ymir::buildTree (GOTO_EXPR, loc, void_type_node, thenLabel);
+	    Ymir::Tree goto_end = Ymir::buildTree (GOTO_EXPR, loc, void_type_node, endLabel);
+	    auto elseLabel = Ymir::makeLabel (this-> token.getLocus (), "else");
+	    auto goto_else = Ymir::buildTree (GOTO_EXPR, loc, void_type_node, elseLabel);
+
+	    auto zero = new (Z0) INull (this-> token);
+	    auto bool_expr = FixedUtils::InstTest ({this-> token, Keys::NOT_IS}, NULL, new (Z0) ITreeExpression (this-> token, ptr, ret), zero); 
+	    Ymir::Tree cond_expr = Ymir::buildTree (COND_EXPR, loc, void_type_node, bool_expr, goto_then, goto_else);
+	    list.append (cond_expr);
+	    
+	    Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, thenLabel);
+
+	    list.append (then_label_expr);
+	    list.append (Ymir::buildTree (MODIFY_EXPR, loc, void_type_node,
+	    				  this-> _var-> info-> treeDecl (),
+	    				  Ymir::getPointerUnref (loc, ret, this-> _var-> info-> treeDecl ().getType (), 0))
+	    );
+	    
+	    Ymir::Tree then_part = this-> _block-> toGeneric ();
+	    list.append (then_part);
+	    list.append (goto_end);
+
+	    Ymir::Tree else_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, elseLabel);
+	    list.append (else_label_expr);	    
+	    list.append (elsePart);
+	    list.append (goto_end);
+	
+	    Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, endLabel);
+	    list.append (endif_label_expr);
+	    return list.getTree ();
+	}
+    }
+    
     Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
 	auto last = this-> _insts.back ()-> to <IExpression> ();
 	this-> _insts.pop_back ();
@@ -1141,6 +1213,49 @@ namespace syntax {
 	return list.getTree ();
     }
 
+    Ymir::Tree IThrow::toGeneric () {	
+	auto expr = this-> _expr-> toGeneric ();
+	auto loc = this-> token.getLocus ();
+
+	Ymir::TreeStmtList list;
+	auto ptr_type = build_pointer_type (expr.getType ().getTree ());
+	auto fn = InternalFunction::getMalloc ();
+	auto byte_len = TYPE_SIZE_UNIT (expr.getType ().getTree ());
+	auto alloc = build_call_array_loc (loc, ptr_type, fn.getTree (), 1, &byte_len);
+
+	auto aux_var = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ptr_type);
+	auto aux_decl = aux_var.getOperand (1);
+	list.append (aux_var.getOperand (0));
+	list.append (buildTree (
+	    MODIFY_EXPR, loc, ptr_type, aux_decl, alloc
+	));
+
+	auto ptrr = Ymir::getAddr (loc, expr).getTree ();
+	
+	tree tmemcpy = builtin_decl_explicit (BUILT_IN_MEMCPY);
+	list.append (build_call_expr (tmemcpy, 3, aux_decl.getTree (), ptrr, byte_len));
+
+	auto typeinfo = this-> _expr-> info-> type ()-> genericTypeInfo ();
+
+	std::string file_name = this-> token.getFile ();
+	list.append (
+	    Ymir::callLib (
+		loc,
+		Ymir::Runtime::EXC_THROW,
+		void_type_node,
+		{
+		    Ymir::Tree (build_string_literal (file_name.length() + 1, file_name.c_str ())),
+			build_int_cst_type (long_unsigned_type_node, 0),
+			build_int_cst_type (integer_type_node, this-> token.line),
+			Ymir::getAddr (typeinfo),
+			aux_decl
+			}
+	    )
+	);
+			   
+	return list.getTree ();
+    }
+    
     Ymir::Tree IAssert::callPrint (Ymir::Tree msgTree) {
 	auto fn = InternalFunction::getYError ().getTree ();
 	

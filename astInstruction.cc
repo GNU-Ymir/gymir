@@ -209,7 +209,21 @@ namespace syntax {
 	return new (Z0)  IAssert (this-> token, expr, msg, this-> _isStatic);
     }
     
+    Instruction IThrow::instruction () {
+	if (Table::instance ().hasCurrentContext (Keys::SAFE)) {
+	    Ymir::Error::throwInSafe (this-> token);
+	}
+	
+	auto expr = this-> _expr-> expression ();
+	if (expr == NULL) return NULL;
+	return new (Z0) IThrow (this-> token, expr);
+    }
+
     std::vector <semantic::Symbol> IAssert::allInnerDecls () {
+	return {};
+    }
+    
+    std::vector <semantic::Symbol> IThrow::allInnerDecls () {
 	return {};
     }
 
@@ -768,7 +782,7 @@ namespace syntax {
 	} else if (this-> token == Keys::FAILURE) {
 	    Table::instance ().retInfo ().currentBlock () = "if";
 	    auto ret = this-> _block-> block ();
-	    this-> father ()-> addFailure (new (Z0) IFailureBlock (this-> token, ret, NULL));	
+	    this-> father ()-> addFinalFailure (ret);	    
 	    return new (Z0) INone (this-> token);
 	} else {
 	    Ymir::Error::undefinedScopeEvent (this-> token);
@@ -776,6 +790,42 @@ namespace syntax {
 	}
     }
     
+    std::vector <semantic::Symbol> IScopeFailure::allInnerDecls () {	
+	return {};
+    }
+    
+    Instruction IScopeFailure::instruction () {
+	for (auto it : Ymir::r (0, this-> _vars.size ())) {
+	    auto var = this-> _vars [it]-> templateExpReplace ({})-> to <ITypedVar> ();
+	    Table::instance ().retInfo ().currentBlock () = "if";
+	    Table::instance ().enterBlock ();
 
+	    
+	    auto type = var-> getType ();
+	    if (type == NULL) return NULL;
+	    auto info = Table::instance ().get (var-> token.getStr ());
+	    if (info && Table::instance ().sameFrame (info)) {
+		Ymir::Error::shadowingVar (var-> token, info-> sym);
+		return NULL;
+	    }
+	    
+	    var-> info = new (Z0) ISymbol (var-> token, var, type);
+	    var-> info-> value () = NULL;
+	    Table::instance ().insert (var-> info);
+	    
+	    auto ret = this-> _blocks [it]-> block ();
+	    Table::instance ().quitBlock ();
+	    this-> father ()-> addFailure (new (Z0) IFailureBlock (this-> token, ret, var));	
+	}
+
+	if (this-> _block) {
+	    Table::instance ().retInfo ().currentBlock () = "if";
+	    auto ret = this-> _block-> block ();
+	    this-> father ()-> addFinalFailure (ret);	    
+	}
+	
+	return new (Z0) INone (this-> token);
+    }
+    
 }
 

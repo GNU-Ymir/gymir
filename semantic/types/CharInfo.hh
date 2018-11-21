@@ -41,6 +41,8 @@ namespace semantic {
 	Ymir::Tree toGeneric () override;
 
 	Ymir::Tree genericConstructor () override;
+
+	Ymir::Tree genericTypeInfo () override;
 	
 	static const char* id () {
 	    return "ICharInfo";

@@ -107,6 +107,7 @@ namespace Ymir {
 	    MacroResolution,
 	    NoLet,
 	    UnrefInSafe,
+	    ThrowInSafe,
 	    CallFuncPtrInSafe,
 	    OutOfRange,
 	    DynamicAccess,
@@ -118,6 +119,7 @@ namespace Ymir {
 	    UnPureExternC,
 	    ImplicitModule,
 	    MultiDestr,
+	    MultiScopeFailure,
 	    MultiStaticInit,
 	    NeedAllType,
 	    StaticMethodInit,
@@ -200,6 +202,8 @@ namespace Ymir {
 	static void takeATypeAsTemplate (const Word&);
 
 	static void unrefInSafe (const Word&);
+
+	static void throwInSafe (const Word&);
 		
 	static void callFuncPtrInSafe (const Word&);
 
@@ -340,7 +344,7 @@ namespace Ymir {
 	static void noValueNonVoidFunction (const Word&);
 
 	static void multipleDestr (const Word &);
-
+	
 	static void multipleStaticInit (const Word &, const Word&);
 
 	static void needAllTypeConstr (const Word&);

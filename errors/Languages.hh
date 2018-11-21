@@ -131,7 +131,8 @@ namespace Ymir {
 		phrases [MacroResolution] = "Macro resolution %%% failed";
 		phrases [NoLet] = "Malformed statement %%%";
 		phrases [UndefUda] = "Undefined attribute %%% for %%%";
-		phrases [UnrefInSafe] = "Cannot unref pointer in @safe context"; 
+		phrases [UnrefInSafe] = "Cannot unref pointer in @safe context";
+		phrases [ThrowInSafe] = "Cannot throw in @safe context"; 
 		phrases [CallFuncPtrInSafe] = "Cannot call function pointer in @safe context";
 		phrases [OutOfRange] = "The index is out of range %%% < %%%";
 		phrases [DynamicAccess] = "Cannot make a dynamic access in @safe context";

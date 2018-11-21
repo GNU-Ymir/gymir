@@ -35,6 +35,7 @@ std::string     Keys::UNDER	= "_";
 std::string     Keys::OPBINARY	= "opBinary";
 std::string     Keys::OPBINARYR = "opBinaryRight";
 std::string     Keys::ASSERT	= "assert";
+std::string     Keys::THROW_K	= "throw";
 std::string     Keys::STATIC    = "static";
 std::string     Keys::OPACCESS	= "opIndex";
 std::string     Keys::OPAPPLYBEGIN   = "opIter";

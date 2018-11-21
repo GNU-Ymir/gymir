@@ -1,6 +1,6 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/ast/ParamList.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/semantic/value/StringValue.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
@@ -209,7 +209,7 @@ namespace semantic {
 	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), getAddr (innerGlob).getTree ());
 	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
 	    
-	    auto struct_info_type = Table::instance ().getTypeInfoType ("Struct_info")-> TempOp ({})-> to <IAggregateInfo> ();
+	    auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::STRUCT_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
 	    auto vtable = struct_info_type-> getVtable ();
 	    
 	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   

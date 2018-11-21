@@ -15,7 +15,8 @@ namespace syntax {
      \endverbatim
      */
     class IScope : public IInstruction {
-
+    protected:
+	
 	/** The block to execute when the event arrive */
 	Block _block;
 	
@@ -30,6 +31,7 @@ namespace syntax {
 	Instruction instruction () override;
 
 	Instruction templateReplace (const std::map <std::string, Expression> &) override;
+	
 	std::vector <semantic::Symbol> allInnerDecls () override;
 	
 	void print (int) override {}
@@ -46,5 +48,40 @@ namespace syntax {
 	
     };
 
+    /**
+     * \struct IScopeFailure
+     * A scope failure instruction
+     * \verbatim
+     scope_failure := 'on' 'failure' (('=>' block) | '{' (typed_var block)* '}')
+     \endverbatim
+     */
+    class IScopeFailure : public IScope {
+
+	std::vector <TypedVar> _vars;
+	std::vector <Block> _blocks;
+
+    public :
+
+	IScopeFailure (Word token, const std::vector <TypedVar> & vars, const std::vector <Block> & block, Block any = NULL);
+
+	Instruction instruction () override;
+
+	Instruction templateReplace (const std::map <std::string, Expression> &) override;
+	
+	std::vector <semantic::Symbol> allInnerDecls () override;
+	
+	static const char * id () {
+	    return TYPEID (IScopeFailure);
+	}
+	
+	virtual std::vector <std::string> getIds () override {
+	    auto ids = IScope::getIds ();
+	    ids.push_back (TYPEID (IScopeFailure));
+	    return ids;
+	}
+	
+    };
+
+    typedef IScopeFailure* ScopeFailure;
     typedef IScope* Scope;
 }

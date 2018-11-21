@@ -133,6 +133,15 @@ namespace syntax {
 	if (this-> _msg) this-> _msg-> print (nb + 4);
     }	
 
+    void IThrow::print (int nb) {
+	printf ("\n%*c<Throw> %s",
+		nb, ' ',
+		this-> token.toString ().c_str ()
+	);
+	    
+	this-> _expr-> print (nb + 4);
+    }	
+    
     void IBinary::print (int nb) {
 	printf ("\n%*c<Binary> : %s",
 		nb, ' ',

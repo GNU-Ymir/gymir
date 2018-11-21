@@ -418,6 +418,20 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::throwInSafe (const Word& word) {
+	std::string msg = getString (ThrowInSafe);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+    
     void Error::callFuncPtrInSafe (const Word& word) {
 	std::string msg = getString (CallFuncPtrInSafe);
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + msg;

@@ -177,6 +177,12 @@ namespace semantic {
     Ymir::Tree IBoolInfo::toGeneric () {
 	return boolean_type_node;
     }
+
+    Ymir::Tree IBoolInfo::genericTypeInfo () {
+	Symbol sym  = Table::instance ().getTypeInfoSymbol ("bool_info");
+	auto rtree = sym-> treeDecl ();
+	return rtree;
+    }
     
     IBoolValue::IBoolValue (bool value) :
 	value (value)

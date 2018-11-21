@@ -54,7 +54,15 @@ namespace syntax {
 	    );
 	}
     }
+    
+    Instruction IThrow::templateReplace (const map <string, Expression>& values) {
+	return new (Z0)  IThrow (this-> token,
+				 this-> _expr-> templateExpReplace (values)
+	);	
+    }
 
+    
+    
     Expression IBinary::templateExpReplace (const map <string, Expression>& values) {
 	auto left = this-> _left-> templateExpReplace (values);
 	auto right = this-> _right-> templateExpReplace (values);
@@ -86,6 +94,17 @@ namespace syntax {
 
     Instruction IScope::templateReplace (const map <string, Expression> & values) {
 	return new (Z0) IScope (this-> token, (Block) this-> _block-> templateReplace (values));
+    }
+
+    Instruction IScopeFailure::templateReplace (const map <string, Expression> & values) {
+	std::vector <TypedVar> vars;
+	std::vector <Block> blocks;
+	for (auto it : this-> _vars) vars.push_back (it-> templateExpReplace (values)-> to <ITypedVar> ());
+	for (auto it : this-> _blocks) blocks.push_back (it-> templateReplace (values)-> to <IBlock> ());
+	return new (Z0) IScopeFailure (this-> token, vars, blocks,
+				       this-> _block != NULL ?
+				       this-> _block-> templateReplace (values) -> to<IBlock> ()
+				       : NULL);
     }
     
     Instruction IBreak::templateReplace (const map <string, Expression>&) {

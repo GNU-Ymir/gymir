@@ -407,6 +407,30 @@ namespace semantic {
 	}
 	return build_constructor (vtype.getTree (), elms);
     }
+
+    Ymir::Tree IArrayInfo::genericTypeInfo () {	
+	auto inner = this-> _content-> genericTypeInfo ();
+
+	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	auto typeTree = type-> toGeneric ();
+	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	// {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	auto fields = getFieldDecls (implTree);
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
+	    
+	auto array_info_type = Table::instance ().getTypeInfoType ("Array_info")-> TempOp ({})-> to <IAggregateInfo> ();
+	auto vtable = array_info_type-> getVtable ();
+	    
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	auto name = "core.info." + this-> simpleTypeString () + "_info";
+	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	return glob;
+    }
     
     std::string IArrayInfo::innerTypeString () {
 	if (this-> _isStatic) {

@@ -451,6 +451,14 @@ namespace semantic {
 	auto type = this-> toGeneric ();
 	return build_int_cst_type (type.getTree (), 0);
     }
+
+
+    Ymir::Tree IFixedInfo::genericTypeInfo () {
+	Symbol sym  = Table::instance ().getTypeInfoSymbol (syntax::infoname (this-> type ()));
+	auto rtree = sym-> treeDecl ();
+	return rtree;
+    }
+
     
     namespace FixedUtils {
 	using namespace syntax;

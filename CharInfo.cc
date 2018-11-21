@@ -262,4 +262,10 @@ namespace semantic {
 	return ret-> toGeneric ();    
     }
 
+    Ymir::Tree ICharInfo::genericTypeInfo () {
+	Symbol sym  = Table::instance ().getTypeInfoSymbol ("char_info");
+	auto rtree = sym-> treeDecl ();
+	return rtree;
+    }
+    
 }

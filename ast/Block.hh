@@ -35,6 +35,7 @@ namespace syntax {
 	std::vector <Instruction> _preFinally;
 	std::vector <IBlock*> _finally;
 	std::vector <IFailureBlock*> _failures;
+	std::vector <IBlock*> _finalFailure;
 	std::vector <Var> _inlines;
 	Expression _value;
 
@@ -72,6 +73,12 @@ namespace syntax {
 	 */
 	void addFinallyAtSemantic (Instruction inst);
 
+	/**
+	 * \brief Add failure instruction at the block failure in any cases
+	 * \param insts a block of instruction
+	 */
+	void addFinalFailure (IBlock* insts);
+	
 	void addFailure (IFailureBlock* block);
 	
 	/**
@@ -162,7 +169,9 @@ namespace syntax {
     public :
 	
 	IFailureBlock (Word locus, IBlock * block, ITypedVar *var);
-       		
+
+	Ymir::Tree toGeneric (Ymir::Tree elsePart);
+	
     };
 
     typedef IFailureBlock* FailureBlock;

@@ -110,6 +110,7 @@ namespace syntax {
 	Instruction visitIf ();
 	If visitElse ();
 	Assert visitAssert ();
+	Throw visitThrow ();
 	Scope visitScope ();
 	Pragma visitPragma ();
 	Instruction visitReturn ();
