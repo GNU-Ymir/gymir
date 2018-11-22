@@ -1,6 +1,6 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FloatUtils.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/value/_.hh>
@@ -411,7 +411,18 @@ namespace semantic {
 	ret-> info = sym;
 	return ret-> toGeneric ();
     }
-   
+
+    Ymir::Tree IFloatInfo::genericTypeInfo () {
+	Symbol sym;
+	if (this-> _type == FloatConst::FLOAT) {
+	    sym  = Table::instance ().getTypeInfoSymbol (Ymir::Runtime::FLOAT_INFO);
+	} else {
+	    sym  = Table::instance ().getTypeInfoSymbol (Ymir::Runtime::DOUBLE_INFO);
+	}
+	auto rtree = sym-> treeDecl ();
+	return rtree;
+    }
+    
     namespace FloatUtils {
 
 	using namespace Ymir;

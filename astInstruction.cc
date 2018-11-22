@@ -216,7 +216,24 @@ namespace syntax {
 	
 	auto expr = this-> _expr-> expression ();
 	if (expr == NULL) return NULL;
-	return new (Z0) IThrow (this-> token, expr);
+
+	auto type = expr-> info-> type ()-> CompOp (new (Z0) IUndefInfo ());
+	if (type == NULL) {
+	    Ymir::Error::incompatibleTypes (this-> token, expr-> info, new (Z0) IUndefInfo ());
+	    return NULL;
+	}
+
+	if (auto func = expr-> info-> type ()-> to <IPtrFuncInfo> ()) {
+	    if (func-> isDelegate ()) {
+		if (!Table::instance ().verifyClosureLifeTime (0, func-> closures ())) {
+		    Ymir::Error::here (this-> token);
+		}
+	    }
+	}
+	
+	auto aux = new (Z0) IThrow (this-> token, expr);
+	aux-> _caster = type-> cloneOnExitWithInfo ();
+	return aux;
     }
 
     std::vector <semantic::Symbol> IAssert::allInnerDecls () {

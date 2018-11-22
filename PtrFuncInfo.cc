@@ -1,9 +1,10 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/ast/ParamList.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/semantic/pack/Table.hh>
 
 namespace semantic {
@@ -24,16 +25,8 @@ namespace semantic {
 	    return build_int_cst_type (long_unsigned_type_node, 0);	   
 	}
 	
-	Tree InstInitDelegate (Word locus, InfoType type, Expression) {
-	    auto loc = locus.getLocus ();
-	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
-	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
-				  
-	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
-	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
-	    
-	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
-	    return Ymir::compoundExpr (loc, result, ltree);
+	Tree InstInitDelegate (Word, InfoType type, Expression) {
+	    return type-> genericConstructor ();
 	}
 
 	Tree InstGetObj (Word locus, InfoType, Expression left, Expression) {
@@ -105,7 +98,7 @@ namespace semantic {
 	    auto rtree = type-> buildBinaryOp (
 		loc, type, left, right
 	    );
-
+	    
 	    if (ltree.getType ().getTree () == rtree.getType ().getTree ()) 
 		return buildTree (MODIFY_EXPR, loc.getLocus (), ltree.getType (), ltree, rtree);
 	    else {		
@@ -502,6 +495,37 @@ namespace semantic {
 	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, "ptr").getTree (), build_int_cst_type (long_unsigned_type_node, 0));
 	    return build_constructor (vtype, elms);
 	}
+    }
+
+    Ymir::Tree IPtrFuncInfo::genericTypeInfo () {
+	auto name = this-> innerSimpleTypeString ();
+	auto infoName = Ymir::Runtime::TYPE_INFO_MODULE + "." + name + "_info";
+	auto innerName = Ymir::Runtime::TYPE_INFO_MODULE + "." + name + "_init";
+	
+	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	auto typeTree = type-> toGeneric ();
+	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();	
+	auto fields = getFieldDecls (implTree);
+	
+	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	AggregateInfo ptr_info_type;
+	if (this-> isDelegate ()) {
+	    ptr_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::DELEGATE_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	} else {
+	    ptr_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::FUNC_PTR_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	}
+
+	auto inner = Ymir::declareGlobalWeak (innerName, unsigned_char_type_node, build_int_cst_type (unsigned_char_type_node, 0));
+	
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), getAddr (inner).getTree ());
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	
+	auto vtable = ptr_info_type-> getVtable ();
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+	
+	auto glob = Ymir::declareGlobalWeak (infoName, typeTree, build_constructor (typeTree.getTree (), elms));
+	return glob;
     }
     
     const char * IPtrFuncInfo::getId () {

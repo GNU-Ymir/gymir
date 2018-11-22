@@ -1227,7 +1227,6 @@ namespace semantic {
 	}
 	
 	return ttype;
-	return this-> _impl-> toGeneric ();
     }
 
 
@@ -1236,9 +1235,9 @@ namespace semantic {
 	auto vtable = this-> getVtable ();
 	auto vtype = this-> toGeneric ();
 	auto fields = Ymir::getFieldDecls (vtype);
-	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());
-	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (vtype, "_0").getTree (), this-> _impl-> genericConstructor ().getTree ());
-	return build_constructor (vtype.getTree (), elms);	
+	CONSTRUCTOR_APPEND_ELT (elms, fields [0].getTree (), Ymir::getAddr (vtable).getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, fields [1].getTree (), this-> _impl-> genericConstructor ().getTree ());
+	return build_constructor (vtype.getTree (), elms);
     }
     
     void IAggregateInfo::setTmps (const std::vector <Expression> & tmps) {

@@ -1214,13 +1214,23 @@ namespace syntax {
     }
 
     Ymir::Tree IThrow::toGeneric () {	
-	auto expr = this-> _expr-> toGeneric ();
 	auto loc = this-> token.getLocus ();
+	Ymir::Tree res;
+	if (this-> _caster-> unopFoo) {
+	    res = this-> _caster-> buildUnaryOp (
+		this-> token, this-> _caster, this-> _expr
+	    );
+	} else {
+	    res = this-> _caster-> buildCastOp (
+		this-> token, this-> _caster, this-> _expr,
+		new (Z0) ITreeExpression (this-> token, this-> _caster, Ymir::Tree ())
+	    );
+	}
 
 	Ymir::TreeStmtList list;
-	auto ptr_type = build_pointer_type (expr.getType ().getTree ());
+	auto ptr_type = build_pointer_type (res.getType ().getTree ());
 	auto fn = InternalFunction::getMalloc ();
-	auto byte_len = TYPE_SIZE_UNIT (expr.getType ().getTree ());
+	auto byte_len = TYPE_SIZE_UNIT (res.getType ().getTree ());
 	auto alloc = build_call_array_loc (loc, ptr_type, fn.getTree (), 1, &byte_len);
 
 	auto aux_var = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), ptr_type);
@@ -1230,12 +1240,12 @@ namespace syntax {
 	    MODIFY_EXPR, loc, ptr_type, aux_decl, alloc
 	));
 
-	auto ptrr = Ymir::getAddr (loc, expr).getTree ();
+	auto ptrr = Ymir::getAddr (loc, res).getTree ();
 	
 	tree tmemcpy = builtin_decl_explicit (BUILT_IN_MEMCPY);
 	list.append (build_call_expr (tmemcpy, 3, aux_decl.getTree (), ptrr, byte_len));
 
-	auto typeinfo = this-> _expr-> info-> type ()-> genericTypeInfo ();
+	auto typeinfo = this-> _caster-> genericTypeInfo ();
 
 	std::string file_name = this-> token.getFile ();
 	list.append (

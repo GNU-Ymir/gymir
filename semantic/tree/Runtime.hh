@@ -14,6 +14,21 @@ namespace Ymir {
 	static int JMP_BUF_SIZE;
 
 	static std::string STRUCT_INFO;
+	static std::string BOOL_INFO;
+	static std::string CHAR_INFO;
+	static std::string FLOAT_INFO;
+	static std::string DOUBLE_INFO;
+		
+	static std::string ARRAY_INFO_STATIC;
+	static std::string ARRAY_INFO_DYNAMIC;
+
+	static std::string DELEGATE_INFO;
+	static std::string FUNC_PTR_INFO;
+
+	static std::string TYPE_INFO_MODULE;
+	static std::string TYPE_INFO_SUFFIX;
+
+
     };
        
 }

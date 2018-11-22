@@ -98,6 +98,8 @@ namespace semantic {
 	ApplicationScore CallAndThrow (Word tok, const std::vector <InfoType>& params, FrameProto & info);
 
 	ApplicationScore CallOp (Word, const std::vector<InfoType> &);
+
+	InfoType Affect ();
 	
     };
 

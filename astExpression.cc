@@ -1555,7 +1555,7 @@ namespace syntax {
 	}
 	
 	if (this-> _frame.size () == 0) {
-	    auto ident = Ymir::OutBuffer ("Lambda_", this-> id).str ();
+	    auto ident = Ymir::OutBuffer ("Lambda_", this-> _id).str ();
 	    auto fr = new (Z0) ILambdaFrame (space, ident, aux);
 	    fr-> isPure (isPure);
 	    fr-> isMoved () = this-> _isMoved;

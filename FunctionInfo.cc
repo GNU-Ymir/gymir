@@ -242,9 +242,43 @@ namespace semantic {
 		return ret;	
 	    }
 	}
-	return NULL;
+	return this-> CompOp (left-> info-> type ());
     }
 
+    InfoType IFunctionInfo::Affect () {
+	auto frames = getFrames ();
+	if (frames.size () == 1) {//&& frames [0]-> isPure ()) {
+	    auto infoTypes = frames [0]-> getParamTypes ();
+	    auto score = this-> CallOp (Word::eof (), infoTypes);
+	    if (score == NULL || score-> ret == NULL) return NULL;
+	    auto ret = new (Z0) IPtrFuncInfo (true);
+	    ret-> getParams () = infoTypes;
+	    ret-> getType () = score-> ret-> clone ();
+	    ret-> getScore () = score;
+		
+	    ret-> isDelegate () = score-> proto-> isDelegate ();
+	    if (ret-> isDelegate ()) {			 
+		if (!score-> proto-> attached ()-> isMoved ()) {
+		    std::vector <Symbol> closures;
+		    for (auto it : score-> proto-> attached ()-> closure ())
+			closures.push_back (it-> info);
+
+		    if (Table::instance ().verifyClosureLifeTime (			
+			0,
+			closures
+		    ))
+			ret-> addClosure (closures);					
+		}
+		ret-> binopFoo = (&FunctionUtils::InstAffectDelegate);
+	    } else {
+		ret-> binopFoo = (&FunctionUtils::InstAffect);
+	    }
+				
+	    return ret;	
+	}
+	return NULL;
+    }
+    
     ApplicationScore IFunctionInfo::verifErrors () {
 	if (itsUpToMe) {
 	    itsUpToMe = false;
@@ -423,17 +457,27 @@ namespace semantic {
 		    for (auto it : score-> proto-> attached ()-> closure ())
 			closures.push_back (it-> info);
 		    
-		    if (!other-> symbol () || Table::instance ().verifyClosureLifeTime (			
-			other-> symbol ()-> lifeTime (),
-			closures
-		    ))
+		    if (!other-> symbol ()) {
+			if (Table::instance ().verifyClosureLifeTime (			
+			    other-> symbol ()-> lifeTime (),
+			    closures
+			))
 			ret-> addClosure (closures);
+		    } else {
+			if (Table::instance ().verifyClosureLifeTime (			
+			    0,
+			    closures
+			))
+			    ret-> addClosure (closures);			
+		    }
 		}
 		ret-> binopFoo = &FunctionUtils::InstAffectDelegate;
 	    } else {
 		ret-> binopFoo = &FunctionUtils::InstAffect;
 	    }
 	    return ret;	
+	} else if (other-> is <IUndefInfo> ()) {
+	    return this-> Affect ();
 	}
 	return NULL;
     }

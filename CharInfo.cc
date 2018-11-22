@@ -1,4 +1,5 @@
 #include <ymir/semantic/types/_.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/FixedValue.hh>
 #include <ymir/semantic/pack/Table.hh>
@@ -263,7 +264,7 @@ namespace semantic {
     }
 
     Ymir::Tree ICharInfo::genericTypeInfo () {
-	Symbol sym  = Table::instance ().getTypeInfoSymbol ("char_info");
+	Symbol sym  = Table::instance ().getTypeInfoSymbol (Ymir::Runtime::CHAR_INFO);
 	auto rtree = sym-> treeDecl ();
 	return rtree;
     }

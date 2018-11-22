@@ -2,6 +2,7 @@
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/BoolValue.hh>
 #include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/ast/Constante.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/object/AggregateInfo.hh>
@@ -179,7 +180,7 @@ namespace semantic {
     }
 
     Ymir::Tree IBoolInfo::genericTypeInfo () {
-	Symbol sym  = Table::instance ().getTypeInfoSymbol ("bool_info");
+	Symbol sym  = Table::instance ().getTypeInfoSymbol (Ymir::Runtime::BOOL_INFO);
 	auto rtree = sym-> treeDecl ();
 	return rtree;
     }

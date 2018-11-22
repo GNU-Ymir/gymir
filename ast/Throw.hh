@@ -17,7 +17,8 @@ namespace syntax {
     class IThrow : public IInstruction {
 
 	Expression _expr;
-
+	semantic::InfoType _caster = NULL;
+	
     public :
 
 	/**

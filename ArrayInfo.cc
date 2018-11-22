@@ -8,7 +8,7 @@
 #include <ymir/semantic/utils/ArrayUtils.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/utils/TupleUtils.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/value/FixedValue.hh>
 #include <ymir/semantic/value/StringValue.hh>
@@ -417,16 +417,26 @@ namespace semantic {
 	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
 	// {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
 	auto fields = getFieldDecls (implTree);
-	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
-	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
+	AggregateInfo array_info_type = NULL;  
+	
+	if (this-> _isStatic) {
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, this-> _size));
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
 	    
-	auto array_info_type = Table::instance ().getTypeInfoType ("Array_info")-> TempOp ({})-> to <IAggregateInfo> ();
+	    array_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::ARRAY_INFO_STATIC)-> TempOp ({})-> to <IAggregateInfo> (); 
+	} else {
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
+	    
+	    array_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::ARRAY_INFO_DYNAMIC)-> TempOp ({})-> to <IAggregateInfo> ();
+	}
+	
 	auto vtable = array_info_type-> getVtable ();
 	    
 	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
 	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
 
-	auto name = "core.info." + this-> simpleTypeString () + "_info";
+	auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> simpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
 	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
 
 	return glob;
@@ -904,16 +914,8 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc.getLocus (), list.getTree (), aux);
 	}
 	
-	Ymir::Tree InstInit (Word locus, InfoType type, Expression) {
-	    auto loc = locus.getLocus ();
-	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
-	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
-				  
-	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
-	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
-	    
-	    auto result = build_call_expr (tmemset, 3, addr, integer_zero_node, size);
-	    return Ymir::compoundExpr (loc, result, ltree);
+	Ymir::Tree InstInit (Word, InfoType type, Expression) {
+	    return type-> genericConstructor ();
 	}
 
 	template <typename T>

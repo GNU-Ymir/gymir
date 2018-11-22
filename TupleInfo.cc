@@ -299,13 +299,27 @@ namespace semantic {
 	auto vtype = this-> toGeneric ();
 	auto fields = Ymir::getFieldDecls (vtype);
 	if (this-> params.size () != 0) {
-	    for (auto it : Ymir::r (0, this-> params.size ())) {
-		if (!this-> params [it]-> is <IVoidInfo> ())
-		    CONSTRUCTOR_APPEND_ELT (elms, fields [it].getTree (), this-> params [it]-> genericConstructor ().getTree ());
+	    if (this-> _isUnion) {
+		ulong max_size = 0, index = 0;
+		Ymir::Tree value;
+		for (auto it : Ymir::r (0, this-> params.size ())) {
+		    auto type = this-> params [it]-> toGeneric ();
+		    if (TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type.getTree ())) > max_size) { 
+			value = this-> params [it]-> genericConstructor ();
+			max_size = TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type.getTree ()));
+			index = it;
+		    }
+		}
+		CONSTRUCTOR_APPEND_ELT (elms, fields [index].getTree (), value.getTree ());	    
+	    } else {
+		for (auto it : Ymir::r (0, this-> params.size ())) {
+		    if (!this-> params [it]-> is <IVoidInfo> ())
+			CONSTRUCTOR_APPEND_ELT (elms, fields [it].getTree (), this-> params [it]-> genericConstructor ().getTree ());
+		}
 	    }
 	} else {
 	    CONSTRUCTOR_APPEND_ELT (elms, fields [0].getTree (), build_int_cst_type (char_type_node, 0));
-	}
+	}    
 	return build_constructor (vtype.getTree (), elms);
     }
     
@@ -496,16 +510,8 @@ namespace semantic {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}	
 
-	Tree InstInit (Word locus, InfoType type, Expression) {
-	    auto loc = locus.getLocus ();
-	    auto ltree = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), type-> toGeneric ());
-	    auto addr = Ymir::getAddr (loc, ltree).getTree ();
-				  
-	    auto size = TYPE_SIZE_UNIT (ltree.getType ().getTree ());
-	    tree tmemset = builtin_decl_explicit (BUILT_IN_MEMSET);
-	    
-	    auto result = build_call_expr_loc (loc, tmemset, 3, addr, integer_zero_node, size);
-	    return Ymir::compoundExpr (loc, result, ltree);
+	Tree InstInit (Word, InfoType type, Expression) {
+	    return type-> genericConstructor ();
 	}
 
 	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
