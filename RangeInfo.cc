@@ -2,10 +2,12 @@
 #include <ymir/errors/Error.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
+#include <ymir/semantic/pack/Table.hh>
 #include <ymir/semantic/value/Value.hh>
 #include <ymir/semantic/utils/RangeUtils.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 using namespace syntax;
 
 namespace semantic {
@@ -230,6 +232,32 @@ namespace semantic {
 	if (i == 0) return this-> _content;
 	return NULL;
     }
+
+    Ymir::Tree IRangeInfo::genericTypeInfo () {
+	auto inner = this-> content ()-> genericTypeInfo ();
+
+	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	auto typeTree = type-> toGeneric ();
+	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	// {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	auto fields = Ymir::getFieldDecls (implTree);
+	
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
+	    
+	auto ptr_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::RANGE_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	auto vtable = ptr_info_type-> getVtable ();
+	    
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> innerSimpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
+	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	return glob;
+    }
+    
     
     namespace RangeUtils {
 	using namespace syntax;

@@ -70,6 +70,8 @@ namespace semantic {
 
 	Ymir::Tree toGeneric () override;
 	
+	Ymir::Tree genericTypeInfo () override;
+
 	const char* getId () override;
 
 	InfoType content ();

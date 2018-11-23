@@ -6,7 +6,7 @@
 #include <ymir/semantic/object/MethodInfo.hh>
 #include <ymir/ast/ParamList.hh>
 #include <ymir/semantic/types/_.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/ast/TreeExpression.hh>
@@ -1229,6 +1229,32 @@ namespace semantic {
 	return ttype;
     }
 
+    Ymir::Tree IAggregateInfo::genericTypeInfo () {
+	auto innerGlob = this-> getVtable ();		
+	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	auto typeTree = type-> toGeneric ();
+	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	// {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	auto fields = Ymir::getFieldDecls (implTree);
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), Ymir::getAddr (innerGlob).getTree ());
+	if (this-> _anc) {
+	    auto ancTree = this-> _anc-> genericTypeInfo ();
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), Ymir::getAddr (ancTree).getTree ());
+	} else
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    
+	auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::AGGREGATE_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	auto vtable = struct_info_type-> getVtable ();
+	    
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> simpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
+	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	return glob;
+    }	
 
     Ymir::Tree IAggregateInfo::genericConstructor () {
 	vec<constructor_elt, va_gc> * elms = NULL;

@@ -194,31 +194,10 @@ namespace semantic {
 	    return TYPE_SIZE_UNIT (type);
 	}
 
-	Ymir::Tree InstTypeInfo (Word, InfoType type, Expression elem) {
+	Ymir::Tree InstTypeInfo (Word, InfoType, Expression elem) {
 	    auto str = elem-> info-> type ();
 	    if (str-> is <IStructCstInfo> ()) str = str-> TempOp ({});
-	    auto innerValue = str-> genericConstructor ();
-	    auto innerType = str-> toGeneric ();
-	    auto innerGlob = declareGlobalWeak (str-> simpleTypeString () + "__init", innerType, innerValue);
-	    	    
-	    auto typeTree = type-> toGeneric ();	    
-	    auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
-	    vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
-	    // {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
-	    auto fields = getFieldDecls (implTree);
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), getAddr (innerGlob).getTree ());
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
-	    
-	    auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::STRUCT_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
-	    auto vtable = struct_info_type-> getVtable ();
-	    
-	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
-	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
-
-	    auto name = "core.info." + str-> simpleTypeString () + "_info";
-	    auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
-
-	    return glob;
+	    return str-> genericTypeInfo ();
 	}
 
 	
@@ -1045,6 +1024,32 @@ namespace semantic {
 	return build_constructor (vtype.getTree (), elms);
     }
     
+    Ymir::Tree IStructInfo::genericTypeInfo () {
+	    auto innerValue = this-> genericConstructor ();
+	    auto innerType = this-> toGeneric ();
+	    auto innerGlob = Ymir::declareGlobalWeak (this-> simpleTypeString () + "__init", innerType, innerValue);
+
+	    auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	    auto typeTree = type-> toGeneric ();
+	    auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	    vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	    // {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	    auto fields = Ymir::getFieldDecls (implTree);
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), Ymir::getAddr (innerGlob).getTree ());
+	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    
+	    auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::STRUCT_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	    auto vtable = struct_info_type-> getVtable ();
+	    
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	    auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> simpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
+	    auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	    return glob;
+    }	
+
     Ymir::Tree IStructCstInfo::toGeneric () {
 	return void_type_node;
     }

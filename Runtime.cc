@@ -16,11 +16,17 @@ namespace Ymir {
     std::string Runtime::TYPE_INFO_SUFFIX = "_info";
 
     std::string Runtime::STRUCT_INFO = "Struct_info";
+    std::string Runtime::TUPLE_INFO = "Tuple_info";
+    std::string Runtime::AGGREGATE_INFO = "Aggregate_info";
     std::string Runtime::CHAR_INFO = "char_info";
     std::string Runtime::BOOL_INFO = "bool_info";
-    std::string Runtime::FLOAT_INFO = "float_info";
-    std::string Runtime::DOUBLE_INFO = "double_info";
+    std::string Runtime::FLOAT_INFO = "f32_info";
+    std::string Runtime::DOUBLE_INFO = "f64_info";
 
     std::string Runtime::FUNC_PTR_INFO = "FuncPtr_info";
     std::string Runtime::DELEGATE_INFO = "Delegate_info";
+
+    std::string Runtime::PTR_INFO = "Ptr_info";
+    std::string Runtime::RANGE_INFO = "Range_info";
+    std::string Runtime::REF_INFO = "Ref_info";
 }

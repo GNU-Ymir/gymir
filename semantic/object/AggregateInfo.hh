@@ -111,7 +111,7 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 
 	Ymir::Tree toGeneric () override;
-
+	
 	bool isType () override;
 
 	bool& isExtern ();
@@ -222,6 +222,8 @@ namespace semantic {
 	Ymir::Tree toGeneric () override;
 
 	Ymir::Tree genericConstructor () override;	
+
+	Ymir::Tree genericTypeInfo () override;
 	
 	void setTmps (const std::vector <syntax::Expression> & tmps);
 

@@ -1,7 +1,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/utils/Range.hh>
 #include <ymir/ast/Expression.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/semantic/utils/TupleUtils.hh>
 #include <ymir/ast/Var.hh>
 #include <ymir/utils/OutBuffer.hh>
@@ -9,6 +9,9 @@
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/semantic/value/_.hh>
 #include <ymir/semantic/object/AggregateInfo.hh>
+#include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
+#include <ymir/syntax/Keys.hh>
 using namespace syntax;
 
 namespace semantic {
@@ -322,6 +325,32 @@ namespace semantic {
 	}    
 	return build_constructor (vtype.getTree (), elms);
     }
+
+    Ymir::Tree ITupleInfo::genericTypeInfo () {
+	auto innerValue = this-> genericConstructor ();
+	auto innerType = this-> toGeneric ();
+	auto innerGlob = Ymir::declareGlobalWeak (this-> simpleTypeString () + "__init", innerType, innerValue);
+
+	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	auto typeTree = type-> toGeneric ();
+	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	// {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	auto fields = Ymir::getFieldDecls (implTree);
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), Ymir::getAddr (innerGlob).getTree ());
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	    
+	auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::TUPLE_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	auto vtable = struct_info_type-> getVtable ();
+	    
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> simpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
+	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	return glob;
+    }	
     
     const char* ITupleInfo::getId () {
 	return ITupleInfo::id ();

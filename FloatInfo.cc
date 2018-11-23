@@ -415,10 +415,11 @@ namespace semantic {
     Ymir::Tree IFloatInfo::genericTypeInfo () {
 	Symbol sym;
 	if (this-> _type == FloatConst::FLOAT) {
-	    sym  = Table::instance ().getTypeInfoSymbol (Ymir::Runtime::FLOAT_INFO);
+	    sym = Table::instance ().getTypeInfoSymbol (Ymir::Runtime::FLOAT_INFO);
 	} else {
 	    sym  = Table::instance ().getTypeInfoSymbol (Ymir::Runtime::DOUBLE_INFO);
 	}
+	
 	auto rtree = sym-> treeDecl ();
 	return rtree;
     }

@@ -1246,7 +1246,7 @@ namespace syntax {
 	list.append (build_call_expr (tmemcpy, 3, aux_decl.getTree (), ptrr, byte_len));
 
 	auto typeinfo = this-> _caster-> genericTypeInfo ();
-
+	
 	std::string file_name = this-> token.getFile ();
 	list.append (
 	    Ymir::callLib (

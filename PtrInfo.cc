@@ -1,7 +1,7 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/utils/PtrUtils.hh>
-#include <ymir/semantic/tree/Generic.hh>
+#include <ymir/semantic/tree/_.hh>
 #include <ymir/ast/TreeExpression.hh>
 #include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/value/FixedValue.hh>
@@ -170,31 +170,8 @@ namespace semantic {
 	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
 	}
 
-	Ymir::Tree InstTypeInfo (Word locus, InfoType type, Expression elem) {
-	    type-> unopFoo = getAndRemoveBack (type-> nextUnop);	    
-	    auto ptrInfo = elem-> info-> type ()-> to <IPtrInfo> ();
-	    auto inner = type-> buildUnaryOp (
-		locus, type, new (Z0) ITreeExpression (locus, ptrInfo-> content (), Ymir::Tree ())
-	    );
-
-	    auto typeTree = type-> toGeneric ();
-	    auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
-	    vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
-	    // {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
-	    auto fields = getFieldDecls (implTree);
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
-	    
-	    auto ptr_info_type = Table::instance ().getTypeInfoType ("Ptr_info")-> TempOp ({})-> to <IAggregateInfo> ();
-	    auto vtable = ptr_info_type-> getVtable ();
-	    
-	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
-	    CONSTRUCTOR_APPEND_ELT (elms, getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
-
-	    auto name = "core.info." + ptrInfo-> simpleTypeString () + "_info";
-	    auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
-
-	    return glob;
+	Ymir::Tree InstTypeInfo (Word, InfoType, Expression elem) {
+	    return elem-> info-> type ()-> genericTypeInfo ();
 	}
 	
 
@@ -538,6 +515,31 @@ namespace semantic {
 	}
     }
 
+    Ymir::Tree IPtrInfo::genericTypeInfo () {
+	auto inner = this-> content ()-> genericTypeInfo ();
+
+	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	auto typeTree = type-> toGeneric ();
+	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
+	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	// {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
+	auto fields = Ymir::getFieldDecls (implTree);
+	
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), getAddr (inner).getTree ());
+	    
+	auto ptr_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::PTR_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	auto vtable = ptr_info_type-> getVtable ();
+	    
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+
+	auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> innerSimpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
+	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
+
+	return glob;
+    }
+    
     Ymir::Tree IPtrInfo::genericConstructor () {
 	return build_int_cst_type (long_unsigned_type_node, 0);
     }

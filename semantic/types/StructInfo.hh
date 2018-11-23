@@ -74,7 +74,7 @@ namespace semantic {
 	std::string innerSimpleTypeString () override;
 
 	Ymir::Tree toGeneric () override;
-
+	
 	bool isType () override;
 	
 	void isPublic (bool);
@@ -155,6 +155,8 @@ namespace semantic {
 	Ymir::Tree toGeneric () override;
 
 	Ymir::Tree genericConstructor () override;
+
+	Ymir::Tree genericTypeInfo ();
 	
 	void setTypes (std::vector <InfoType> types);
 
