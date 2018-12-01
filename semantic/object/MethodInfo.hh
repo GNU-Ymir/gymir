@@ -13,6 +13,8 @@ namespace semantic {
 	std::vector <int> _index;
 	bool _isDynamic = true;
 	
+	bool itsUpToMe = false;
+
     public :
 
 	IMethodInfo (AggregateInfo info, std::string name, const std::vector <Frame> & frames, const std::vector <int> & index, bool isStatic = false);
@@ -50,6 +52,8 @@ namespace semantic {
 	
     private :
 
+	ApplicationScore verifErrors ();
+	
 	ApplicationScore CallAndThrow (Word tok, const std::vector <InfoType> & params, InfoType & ret);
 	
     };

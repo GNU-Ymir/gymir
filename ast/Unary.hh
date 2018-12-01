@@ -42,6 +42,12 @@ namespace syntax {
 
 	virtual ~IUnary ();
 	
+    private :
+
+	Expression findOpUnary (Expression elem);
+
+	bool canOverOpUnary (Expression elem);
+	
     };
 
     typedef IUnary* Unary;

@@ -248,6 +248,7 @@ namespace semantic {
 	return NULL;
     }
     
+
     InfoType IArrayInfo::Access (syntax::Expression expr, InfoType& treat) {
 	treat = expr-> info-> type ()-> CompOp (new (Z0)  IFixedInfo (true, FixedConst::LONG));
 	if (treat == NULL) {
@@ -955,9 +956,19 @@ namespace semantic {
 
 	    return glob;
 	}
+
+	Ymir::Tree InstEquals (Word locus, InfoType, Expression left, Expression right) {
+	    Ymir::TreeStmtList list;
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = right-> toGeneric ();
+	    auto ret = Ymir::callLib (locus.getLocus (), Ymir::Runtime::MEM_EQ_ARRAY, integer_type_node, {ltree, rtree});
+	    tree_code code = OperatorUtils::toGeneric (locus);
+	    return Ymir::buildTree (
+		code, locus.getLocus (), boolean_type_node, integer_zero_node, ret
+	    );
+	}
 	
     }
-
 
     IArrayValue::IArrayValue () {}
     

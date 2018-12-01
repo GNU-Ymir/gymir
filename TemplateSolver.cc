@@ -1052,7 +1052,7 @@ namespace semantic {
 	}
 	
 	map<string, Expression> elems = {{Ymir::OutBuffer (it).str (), right}};
-	return TemplateSolution (__VAR__, true, elem-> info-> type (), elems);
+	return TemplateSolution (__VALUE__, true, elem-> info-> type (), elems);
     }
 
     TemplateSolution TemplateSolver::solve (const vector <Var> &tmps, const vector <Expression> &params) {
@@ -1088,7 +1088,7 @@ namespace semantic {
 		if (elem != types.end () && elem-> second == NULL)
 		    return false;
 		else if (elem == types.end ()) return false;
-	    } else {
+	    } else if (it-> is <IVar> ()) {		
 		auto elem = types.find (it-> token.getStr ());
 		if (elem != types.end () && elem-> second == NULL)
 		    return false;

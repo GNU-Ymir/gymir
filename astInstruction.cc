@@ -536,9 +536,11 @@ namespace syntax {
 	auto block = new (Z0) IBlock (this-> token,  {}, {});
 	auto nbVar = new (Z0) IFixed (this-> token, FixedConst::INT);
 	nbVar-> setValue ((int) this-> _var.size ());
-	auto params = new (Z0) IParamList (this-> token, {this-> _iter});
+	auto params = new (Z0) IParamList (this-> token, {});
 	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
-	auto begin = new (Z0) IPar (tok, tok2, new (Z0) IVar (beginW, {nbVar}), params);
+	auto var = new (Z0) IVar (beginW, {nbVar});
+	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> _iter, var);
+	auto begin = new (Z0) IPar (tok, tok2, dot, params);
 
 	auto decl = new (Z0) IVarDecl (this-> token, {}, {}, {});
 	auto iterator = new (Z0) IVar ({this-> token, Ymir::OutBuffer ("#", this-> _var [0]-> token.getStr ()).str ()});
@@ -553,15 +555,19 @@ namespace syntax {
 	    auto var = this-> _var [it]-> templateExpReplace ({})-> to <IVar> ();
 	    auto val = new (Z0) IFixed (this-> token, FixedConst::INT);
 	    val-> setValue ((int) it);
-	    auto right = new (Z0) IPar (tok, tok2, new (Z0) IVar (getW, {val}), new (Z0) IParamList (this-> token, {iterator}));
+	    auto getDot = new (Z0) IDot ({this-> token, Token::DOT}, iterator, new (Z0) IVar (getW, {val}));
+	    auto right = new (Z0) IPar (tok, tok2, getDot, new (Z0) IParamList (this-> token, {}));
 	    innerBlock-> getInsts ().push_back (new (Z0) IFakeDecl (this-> token, var, right, this-> _const [it], true));
 	}
 	
-	innerBlock-> getInsts ().push_back (this-> _block-> templateExpReplace ({}));	
-	innerBlock-> getInsts ().push_back (new (Z0) IPar (tok, tok2, new (Z0) IVar (nextW), new (Z0) IParamList (this-> token, {iterator})));	
+	innerBlock-> getInsts ().push_back (this-> _block-> templateExpReplace ({}));
+	auto nextDot = new (Z0) IDot ({this-> token, Token::DOT}, iterator, new (Z0) IVar (nextW));
+	auto endDot = new (Z0) IDot ({this-> token, Token::DOT}, iterator, new (Z0) IVar (endW));
+	
+	innerBlock-> getInsts ().push_back (new (Z0) IPar (tok, tok2, nextDot, new (Z0) IParamList (this-> token, {})));	
 	block-> getInsts ().push_back (new (Z0) IWhile (this-> token,
 							new (Z0) IUnary ({this-> token, Token::NOT},
-									 new (Z0) IPar (tok, tok2, new (Z0) IVar (endW), new (Z0) IParamList (this-> token, {iterator}))
+									 new (Z0) IPar (tok, tok2, endDot, new (Z0) IParamList (this-> token, {}))
 							),
 							innerBlock));
 	
@@ -791,7 +797,7 @@ namespace syntax {
     }
     
     Instruction IScope::instruction () {
-	if (this-> token == Keys::EXIT) {
+	if (this-> token == Keys::SUCCESS) {
 	    Table::instance ().retInfo ().currentBlock () = "if";
 	    auto ret = this-> _block-> block ();
 	    this-> father ()-> addFinally (ret);	

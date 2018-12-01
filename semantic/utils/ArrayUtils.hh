@@ -40,6 +40,8 @@ namespace semantic {
 
 	Ymir::Tree InstTypeInfo (Word locus, semantic::InfoType type, syntax::Expression);
 
+	Ymir::Tree InstEquals (Word locus, semantic::InfoType type, syntax::Expression, syntax::Expression);
+	
     }
 
 }

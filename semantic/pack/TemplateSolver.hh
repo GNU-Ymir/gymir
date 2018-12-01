@@ -43,6 +43,7 @@ namespace semantic {
 
 	ulong __VAR__ = 2;
 	ulong __ARRAY__ = 4;
+	ulong __VALUE__ = 4;
 	ulong __FUN__ = 2;
 	static TemplateSolver __instance__;
 	

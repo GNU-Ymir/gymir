@@ -92,6 +92,7 @@ struct Keys {
     static std::string  VERSION;
     static std::string  TYPE;
     static std::string  EXIT;
+    static std::string  SUCCESS;
     static std::string  FAILURE;
     static std::string  INIT;
     static std::string  DELETE;

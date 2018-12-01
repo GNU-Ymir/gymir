@@ -496,8 +496,16 @@ namespace syntax {
 
 	auto type = elem-> info-> type ()-> UnaryOp (this-> token);
 	if (type == NULL) {
-	    Ymir::Error::undefinedOp (this-> token, elem-> info);
-	    return NULL;
+	    Expression call = NULL;
+	    if (canOverOpUnary (elem)) {
+		call = findOpUnary (elem);
+	    }
+	    
+	    if (!call) {
+		Ymir::Error::undefinedOp (this-> token, elem-> info);
+		return NULL;
+	    }
+	    return call;
 	}
 	
 	Unary unary = new (Z0)  IUnary (this-> token, elem);
@@ -507,6 +515,26 @@ namespace syntax {
 	return unary;
     }
 
+    bool IUnary::canOverOpUnary (Expression elem) {
+	if (elem-> info-> type ()-> is <IAggregateInfo> ()) return true;
+	if (elem-> info-> type ()-> is <IStructInfo> ()) return true;
+	if (auto ref = elem-> info-> type ()-> to <IRefInfo> ()) {
+	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> ();
+	}
+	return false;
+    }
+    
+    Expression IUnary::findOpUnary (Expression elem) {
+	Word word = {this-> token, Keys::OPUNARY};
+	auto var = new (Z0) IVar (word, {new (Z0) IString (this-> token, this-> token.getStr ())});
+	auto params = new (Z0) IParamList (this-> token, {});
+	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, elem, var);
+	Word tok {this-> token, Token::LPAR}, tok2 {this-> token, Token::RPAR};
+	auto call = new (Z0)  IPar (tok, tok2, dot, params, false);
+
+	return call-> expression ();	
+    }
+    
     Expression IBinary::expression () {
 	if (this-> token == Token::EQUAL) {
 	    return affect ();
@@ -543,6 +571,13 @@ namespace syntax {
 	return false;
     }
     
+    bool IBinary::canOverOpAssignConstr (Binary aux) {
+	if (aux-> _left-> info-> type ()-> is <IStructInfo> ()) return true;
+	if (auto ref = aux-> _left-> info-> type ()-> to <IRefInfo> ())
+	    return ref-> content ()-> is <IStructInfo> ();
+	return false;
+    }
+
     bool IBinary::canOverOpAssign (Binary aux) {
 	if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ()) return true;
 	if (aux-> _left-> info-> type ()-> is <IStructInfo> ()) return true;
@@ -557,14 +592,14 @@ namespace syntax {
 	if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ()) return true;
 	if (aux-> _left-> info-> type ()-> is <IStructInfo> ()) return true;
 	if (auto ref = aux-> _left-> info-> type ()-> to <IRefInfo> ())
-	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> () || ref-> content ()-> is<IArrayInfo> ();
+	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> () || ref-> content ()-> is<IArrayInfo> () || ref-> content ()-> is <ITupleInfo> ();
 	
 	if (aux-> _right-> info-> type ()-> is <IArrayInfo> ()) return true;
 	if (aux-> _right-> info-> type ()-> is <ITupleInfo> ()) return true;
 	if (aux-> _right-> info-> type ()-> is <IAggregateInfo> ()) return true;
 	if (aux-> _right-> info-> type ()-> is <IStructInfo> ()) return true;
 	if (auto ref = aux-> _right-> info-> type ()-> to <IRefInfo> ())
-	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> () || ref-> content ()-> is <IArrayInfo> ();
+	    return ref-> content ()-> is <IStructInfo> () || ref-> content ()-> is <IAggregateInfo> () || ref-> content ()-> is <IArrayInfo> () || ref-> content ()-> is <ITupleInfo> ();
 	return false;	
     }
 
@@ -621,6 +656,10 @@ namespace syntax {
 		
 		aux-> _left-> info-> type (type);
 		aux-> _left-> info-> isConst (aux-> _right-> info-> type ()-> needKeepConst ());
+
+		if (canOverOpAssignConstr (aux)) {		    
+		    if (auto call = findOpAssign (aux, false)) return call;
+		}
 	    } else if (type == NULL) {
 		Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> _right-> info);
 		return NULL;			    
@@ -793,6 +832,7 @@ namespace syntax {
     Expression IBinary::findOpTest (Binary) {
 	Ymir::Error::activeError (false);
 	Word word {this-> token.getLocus (), Keys::OPTEST};
+	auto operat = this-> token.getStr ();
 	auto var = new (Z0) IVar (word, {new (Z0) IString (this-> token, this-> token.getStr ())});
 	auto params = new (Z0) IParamList (this-> token, {this-> _right});
 	auto dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> _left, var);
@@ -805,7 +845,8 @@ namespace syntax {
 	if (res == NULL) {
 	    Ymir::Error::activeError (false);
 	    Word word {this-> token.getLocus (), Keys::OPTEST};
-	    
+	    operat = this-> oppositeTest (this-> token);
+
 	    var = new (Z0) IVar (word, {new (Z0) IString ({this-> token, this-> oppositeTest (this-> token)})});
 	    params = new (Z0) IParamList (this-> token, {this-> _left});
 	    dot = new (Z0) IDot ({this-> token, Token::DOT}, this-> _right, var);
@@ -826,8 +867,8 @@ namespace syntax {
 	    auto fx = new (Z0) IFixed (this-> token, dec-> type ());
 	    fx-> setValue (0);
 	    fx-> setUValue (0);
-	    auto bin = new (Z0) IBinary (this-> token, res, fx-> expression ());
-	    bin-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), bin, bin-> _left-> info-> type ()-> BinaryOp (this-> token, bin-> _right));
+	    auto bin = new (Z0) IBinary ({this-> token, operat}, res, fx-> expression ());
+	    bin-> info = new (Z0) ISymbol ({this-> token, operat}, DeclSymbol::init (), bin, bin-> _left-> info-> type ()-> BinaryOp ({this-> token, operat}, bin-> _right));
 	    return bin;
 	}
 	return NULL;	
@@ -850,6 +891,7 @@ namespace syntax {
 	    res = new (Z0) IUnary ({this-> token.getLocus (), Token::NOT}, call);
 	    res = res-> expression ();
 	}
+	
 	auto errors = Ymir::Error::caught ();
 	Ymir::Error::activeError (true);
 	

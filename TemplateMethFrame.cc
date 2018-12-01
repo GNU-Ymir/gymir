@@ -124,7 +124,9 @@ namespace semantic {
 	std::vector <Expression> vars;
 
 	totals.resize (this-> _function-> getTemplates ().size ());
+	Ymir::log ("Begin solving TempOp method ", this-> _function-> getIdent ());
 	auto res = TemplateSolver::instance (). solve (this-> _function-> getTemplates (), params);
+	Ymir::log ("End solving TempOp method", this-> _function-> getIdent (), " ", res.toString ());
 
 	if (!res.valid) return NULL;
 	for (auto &it : res.elements) {

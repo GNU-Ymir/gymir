@@ -92,6 +92,7 @@ std::string     Keys::VERSION    = "version";
 std::string     Keys::TYPE       = "type";
 std::string     Keys::EXIT       = "exit";
 std::string     Keys::FAILURE       = "failure";
+std::string     Keys::SUCCESS       = "success";
 std::string     Keys::INIT       = "init";
 std::string     Keys::DELETE     = "delete";
 std::string     Keys::VTABLE_FIELD = "0__vtbl";

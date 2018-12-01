@@ -391,6 +391,11 @@ namespace semantic {
     InfoType IAggregateCstInfo::DColonOp (Var var) {
 	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
+	if (var-> token == "typeid"){
+	    if (auto str = this-> TempOp ({}))		
+		return str-> StringOf ();
+	    return NULL;
+	}
 	std::vector <Frame> frames;
 	std::vector <Word> hasPrivate;
 	for (auto it : this-> _staticMeth) {
@@ -727,7 +732,7 @@ namespace semantic {
 	if (op == Token::EQUAL && right-> info-> type ()-> isSame (this)) {
 	    auto ret = this-> clone ();
 	    if (this-> hasCopyCstr ()) 
-		ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
+	    	ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
 	    else 
 		ret-> binopFoo = &StructUtils::InstAffect;	    
 	    return ret;
@@ -843,6 +848,7 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "init") return Init (var);
 	if (var-> token == "sizeof") return SizeOf ();
+	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == Keys::VTABLE_FIELD) {
 	    auto ret = new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ());
 	    ret-> unopFoo = AggregateUtils::InstGetVtableCTE;

@@ -21,13 +21,13 @@ namespace semantic {
 	bool _isConstr = false;
 	bool _isVirtual = false;
 	bool _isOver = false;
-	
-	static int nbTmpsCreation;// = 0;
-	static bool needToReset;// = true;
 	bool itsUpToMe = false;
 	
     public:
 
+	static int nbTmpsCreation;// = 0;
+	static bool needToReset;// = true;
+	
 	IFunctionInfo (Namespace, std::string);
 
 	IFunctionInfo (Namespace, std::string, const std::vector<Frame> & infos);

@@ -34,6 +34,8 @@ namespace Ymir {
 	static std::string TYPE_INFO_MODULE;
 	static std::string TYPE_INFO_SUFFIX;
 
+	static std::string MEM_EQ_ARRAY;
+	static std::string MEM_CMP_ARRAY;
 
     };
        

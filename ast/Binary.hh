@@ -104,6 +104,11 @@ namespace syntax {
 	 */
 	bool simpleVerif (IBinary*);
 
+	/*
+	 * \brief Check if the operator is capable of overidde the assign operator when constructing the left operand
+	 */
+	bool canOverOpAssignConstr (IBinary*);
+
 	/**
 	 * \brief Check if the operator is capable of overidde the assign operator	 
 	 */

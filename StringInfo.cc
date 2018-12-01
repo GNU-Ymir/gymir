@@ -16,6 +16,20 @@ namespace semantic {
 	IArrayInfo (isConst, new (Z0) ICharInfo (inner))
     {
     }
+
+    InfoType IStringInfo::BinaryOp (Word op, syntax::Expression right) {
+	if (op == Token::DEQUAL) {
+	    if (right-> info-> type ()-> isSame (this)) {
+		if (this-> value ()) {
+		    auto aux = new (Z0) IBoolInfo (true);
+		    aux-> value () = this-> value ()-> BinaryOp (op, right-> info-> value ());
+		    aux-> binopFoo = &ArrayUtils::InstEquals;
+		    return aux;
+		}
+	    }
+	}
+	return IArrayInfo::BinaryOp (op, right);
+    }
     
     InfoType IStringInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (op == Token::EQUAL) {
@@ -59,6 +73,10 @@ namespace semantic {
 	if (op == Token::TILDE) {
 	    if (auto ot = other-> to <IStringValue> ()) {
 		return new (Z0) IStringValue ((this-> value + ot-> value).c_str ());
+	    }
+	} else if (op == Token::DEQUAL) {
+	    if (auto ot = other-> to <IStringValue> ()) {
+		return new (Z0) IBoolValue (this-> value == ot-> value);
 	    }
 	}
 	return NULL;

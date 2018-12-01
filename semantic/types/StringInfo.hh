@@ -29,6 +29,8 @@ namespace semantic {
 	bool isConst () override;
 	
 	void isConst (bool isConst) override;
+
+	InfoType BinaryOp (Word tok, syntax::Expression right) override;
 	
 	InfoType BinaryOpRight (Word tok, syntax::Expression left) override;
 	

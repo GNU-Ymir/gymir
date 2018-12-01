@@ -94,9 +94,10 @@ namespace semantic {
 		    else score-> score += changed ? CHANGE : AFF;
 		    score-> treat.push_back (type);
 		} else return NULL;
-	    }	    
-	    Ymir::log ("Call : ", ident, " with ", args, " result : ", score-> score);
+	    }
+	    
 	    score-> score += this-> currentScore ();
+	    Ymir::log ("Call : ", ident, " with ", args, " result : ", score-> score);
 	    return score;
 	}
 	return NULL;

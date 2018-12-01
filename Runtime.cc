@@ -29,4 +29,7 @@ namespace Ymir {
     std::string Runtime::PTR_INFO = "Ptr_info";
     std::string Runtime::RANGE_INFO = "Range_info";
     std::string Runtime::REF_INFO = "Ref_info";
+
+    std::string Runtime::MEM_EQ_ARRAY = "_y_mem_equals_array";
+    std::string Runtime::MEM_CMP_ARRAY = "_y_mem_cmp_array";
 }

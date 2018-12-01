@@ -188,8 +188,9 @@ namespace semantic {
 	std::vector <Expression> vars;
 
 	totals.resize (this-> _function-> getTemplates ().size ());
+	Ymir::log ("Begin solving TempOp ", this-> _function-> getIdent ());
 	auto res = TemplateSolver::instance (). solve (this-> _function-> getTemplates (), params);
-
+	Ymir::log ("End solving TempOp ", this-> _function-> getIdent (), " ", res.toString ());
 	if (!res.valid) return NULL;
 	for (auto &it : res.elements) {
 	    if (it.second-> info) {
@@ -355,9 +356,11 @@ namespace semantic {
 		    score-> treat.push_back (type);
 		} else return NULL;				
 	    }
-	    
+
+	    score-> score += this-> currentScore ();
+	    Ymir::log ("Call : ", ident, " with ", args, " result : ", score-> score);
 	    score-> tmps = tmps;
-	    return score;
+	    return score;	    
 	}
 	return NULL;
     }
