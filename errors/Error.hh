@@ -138,6 +138,7 @@ namespace Ymir {
 	    OverPrivateMethod,
 	    ClosureVarLifetime,
 	    UndefinedScopeEvent,
+	    VersionOnlyGlob,
 	    LAST_ERROR
 	};
 
@@ -188,6 +189,8 @@ namespace Ymir {
 	static void moduleNotFirst (const Word &);
 
 	static void moduleDontMatch (const Word &);
+
+	static void versionDeclarationGlob (const Word&);
 	
 	static void notATemplate (const Word&);
 

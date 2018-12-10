@@ -1845,6 +1845,11 @@ namespace syntax {
     }
 
 
+    Expression IIf::expression () {
+	Ymir::Error::assert ("TODO");
+	return NULL;
+    }
+    
     Expression IPragma::expression () {
 	if (this-> token.getStr () == COMPILE) return executeCompile ();
 	if (this-> token.getStr () == MSG) executeMsg ();
@@ -1917,7 +1922,7 @@ namespace syntax {
 	if (expr != NULL && expr-> info && !expr-> info-> type ()-> is <IVoidInfo> ()) {
 	    bl-> info = new (Z0) ISymbol (bl-> token, bl, expr-> info-> type ()-> clone ());
 	    bl-> _value = expr;
-	    bl-> _insts.pop_back ();
+	    bl-> removeInst (expr);
 	} else {
 	    bl-> info = new (Z0) ISymbol (bl-> token, bl, new (Z0) IVoidInfo ());
 	}

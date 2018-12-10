@@ -394,9 +394,8 @@ namespace syntax {
 	ret-> _prot = this-> _prot;
 	return ret;
     }
-    
-    
-    Instruction IIf::templateReplace (const map <string, Expression>& values) {
+        
+    Expression IIf::templateExpReplace (const map <string, Expression>& values) {
 	Expression test = NULL;
 	if (this-> _test)
 	    test = this-> _test-> templateExpReplace (values);
@@ -404,7 +403,7 @@ namespace syntax {
 	auto block = (Block) this-> _block-> templateReplace (values);
 	If else_ = NULL;
 	if (this-> _else)
-	    else_ = (If) this-> _else-> templateReplace (values);
+	    else_ = (If) this-> _else-> templateExpReplace (values);
 	
 	return new (Z0)  IIf (this-> token, test, block, else_, this-> _isStatic);
     }

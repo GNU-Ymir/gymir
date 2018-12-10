@@ -96,9 +96,15 @@ namespace semantic {
 	    }
 	    return soluce;
 	    
-	}
+	}//  else if (auto agg = type-> to <IAggregateInfo> ()) {
+	//     return solveAggCst (left, right, agg);
+	// }
 	return DestructSolution (0, false);
     }
+    
+    // DestructSolution DestructSolver::solveAggCst (StructCst left, Expression right, AggregateInfo info) {
+	
+    // }
     
     DestructSolution DestructSolver::solveTuple (ConstTuple left, Expression right) {
 	InfoType type = right-> info-> type ();

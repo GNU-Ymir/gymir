@@ -102,17 +102,23 @@ std::string     Keys::COPY       = "0__cpy";
 std::string     Keys::ALIAS      = "alias";
 
 std::string Version::DEBUG = "debug";
-std::string Version::UNIX = "unix";
-std::string Version::x84_64 = "x86_64";
-std::string Version::LINUX = "linux";
-std::string Version::GNU_LINUX = "gnu_linux";
-std::string Version::AMD64 = "amd64";
+// std::string Version::UNIX = "unix";
+// std::string Version::x84_64 = "x86_64";
+// std::string Version::LINUX = "linux";
+// std::string Version::GNU_LINUX = "gnu_linux";
+// std::string Version::AMD64 = "amd64";
 
+
+std::set <std::string> Version::__userDefs__;
 
 bool Version::isOn (const std::string & version) {
     if (version == Version::DEBUG)
 	return Options::instance ().isDebug ();    
-    return false;
+    return __userDefs__.find (version) != __userDefs__.end ();
+}
+
+void Version::addVersion (const std::string & version) {
+    __userDefs__.insert (version);
 }
 
 

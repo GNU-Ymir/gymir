@@ -22,7 +22,7 @@ namespace syntax {
      if := 'if' expression block ('else' if | 'else' block)?
      \endverbatim
      */
-    class IIf : public IInstruction {
+    class IIf : public IExpression {
 
 	/** The expression to test, may be null in the case of only else statment */
 	Expression _test;
@@ -56,8 +56,10 @@ namespace syntax {
 	IIf (Word word, Expression test, Block block, If else_, bool isStatic = false);
 
 	Instruction instruction () override;	
+
+	Expression expression () override;
 	
-	Instruction templateReplace (const std::map <std::string, Expression>&) override;
+	Expression templateExpReplace (const std::map <std::string, Expression>&) override;
 	
 	std::vector <semantic::Symbol> allInnerDecls () override;
 	

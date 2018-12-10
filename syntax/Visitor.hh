@@ -17,8 +17,8 @@ namespace syntax {
 	Program visitProgram ();
 	std::vector<Declaration> visitPublicBlock (std::string&);
 	std::vector<Declaration> visitPrivateBlock (std::string&);
-	std::vector<Declaration> visitVersionGlob ();
-	std::vector<Declaration> visitDeclBlock ();
+	std::vector<Declaration> visitVersionGlob (bool globalBlock = false);
+	std::vector<Declaration> visitDeclBlock (bool globalBlock = false);
 	Declaration visitDeclaration (std::string, bool);
 
 	TypeCreator visitTypeCreator (std::string & docs);
@@ -52,6 +52,8 @@ namespace syntax {
 	TypedVar visitStructVarDeclaration ();
 	TypedVar visitTypedVarDeclaration ();
 	bool canVisitVarDeclaration ();
+	bool canVisitIgnore ();
+	bool canVisitNamedExpr ();
 	Var visitDecoType (const Word&);
 	Var visitType ();
 	Word visitIdentifiant ();

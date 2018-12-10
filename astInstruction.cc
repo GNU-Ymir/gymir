@@ -26,7 +26,11 @@ namespace syntax {
 
     Expression IBlock::getLastExpr () {
 	if (this-> _insts.size () != 0) {
-	    return this-> _insts.back ()-> to <IExpression> ();
+	    for (auto it : Ymir::r (this-> _insts.size (), 0)) {
+		if (!this-> _insts [it - 1]-> is <IScope> () && !this-> _insts [it - 1]-> is <INone> ()) {
+		    return this-> _insts [it - 1]-> to <IExpression> ();
+		}
+	    }
 	}
 	return NULL;
     }
@@ -806,6 +810,11 @@ namespace syntax {
 	    Table::instance ().retInfo ().currentBlock () = "if";
 	    auto ret = this-> _block-> block ();
 	    this-> father ()-> addFinalFailure (ret);	    
+	    return new (Z0) INone (this-> token);
+	} else if (this-> token == Keys::EXIT) {
+	    Table::instance ().retInfo ().currentBlock () = "if";
+	    auto ret = this-> _block-> block ();
+	    this-> father ()-> addExit (ret);	    
 	    return new (Z0) INone (this-> token);
 	} else {
 	    Ymir::Error::undefinedScopeEvent (this-> token);

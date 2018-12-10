@@ -160,6 +160,7 @@ namespace Ymir {
 		phrases [OverPrivateMethod] = "Private method are not virtual and cannot override";
 		phrases [ClosureVarLifetime] = "Closure var '%%%' does not live long enough";
 		phrases [UndefinedScopeEvent] = "'%%%' is not a scope event";
+		phrases [VersionOnlyGlob] = "version conditions can only be declared at module scope";
 		init = true;
 	    } 
 	    return phrases;

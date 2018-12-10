@@ -37,7 +37,16 @@ namespace syntax {
 	return res;
     }
 
-    Ymir::Tree IBlock::toGenericNoFailure () {       
+    Ymir::Tree IBlock::toGenericValue (Ymir::Tree & res) {
+	auto expr = this-> _value;	
+	this-> _value = NULL;
+	this-> _insts.push_back (expr);
+	InfoType type;
+	auto list = toGenericExpr (type, res);
+	return list;
+    }
+
+    Ymir::Tree IBlock::toGenericNoFailure () {
 	if (this-> _value != NULL) {
 	    return this-> toGenericValue ();
 	}
@@ -56,11 +65,14 @@ namespace syntax {
 	
 	IBlock::__currentBlock__.pop_front ();
 	auto body = Ymir::leaveBlock ();
-	if (this-> _finally.size () == 0)
+	if (this-> _finally.size () == 0 && this-> _exit.size () == 0)
 	    return body.bind_expr;
 
-	if (this-> _finally.size () == 1) {
+	if (this-> _finally.size () == 1 && this-> _exit.size () == 0) {
 	    auto finally = this-> _finally [0]-> toGeneric ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.getTree ());
+	} else if (this-> _finally.size () == 0 && this-> _exit.size () == 1) {
+	    auto finally = this-> _exit [0]-> toGeneric ();
 	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.getTree ());
 	} else {
 	    Ymir::enterBlock ();
@@ -68,13 +80,21 @@ namespace syntax {
 		auto inst = it-> toGeneric ();
 		Ymir::getStackStmtList ().back ().append (inst);
 	    }
+
+	    for (auto it : this-> _exit)
+		Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
+	    
 	    auto finally = Ymir::leaveBlock ();
 	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.bind_expr.getTree ());
 	}      
     }
     
     Ymir::Tree IBlock::toGeneric () {
-	if (this-> _failures.size () == 0) return this-> toGenericNoFailure ();
+	if (this-> _failures.size () == 0 &&
+	    this-> _exit.size () == 0 &&
+	    this-> _finalFailure.size () == 0) return this-> toGenericNoFailure ();
+
+	Ymir::Tree res_value;	
 	auto loc = this-> token.getLocus ();
 	
 	auto jmp_type = Ymir::makeEmptyTuple (Ymir::Runtime::JMP_BUF_SIZE);
@@ -103,8 +123,12 @@ namespace syntax {
 	    
 	Ymir::Tree then_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, thenLabel);
 
-	list.append (then_label_expr);
-	Ymir::Tree then_part = this-> toGenericNoFailure ();
+	list.append (then_label_expr);       
+	Ymir::Tree then_part;
+	if (this-> _value == NULL) 
+	    then_part = this-> toGenericNoFailure ();
+	else then_part = this-> toGenericValue (res_value);
+	
 	list.append (then_part);
 	list.append (goto_end);
 
@@ -116,9 +140,15 @@ namespace syntax {
 	    Ymir::TreeStmtList listElse;
 	    for (auto it : this-> _finalFailure)
 		listElse.append (it-> toGeneric ());
+	    for (auto it : this-> _exit)
+		listElse.append (it-> toGeneric ());
+	    
 	    elsePart = listElse.getTree ();
 	} else {
 	    Ymir::TreeStmtList listElse;
+	    for (auto it : this-> _exit)
+		listElse.append (it-> toGeneric ());
+	    
 	    listElse.append (Ymir::callLib (loc, Ymir::Runtime::EXC_RETHROW, void_type_node, {}));
 	    elsePart = listElse.getTree ();
 	}
@@ -133,6 +163,11 @@ namespace syntax {
 	Ymir::Tree endif_label_expr = Ymir::buildTree (LABEL_EXPR, loc, void_type_node, endLabel);
 	list.append (endif_label_expr);
 
+	if (!res_value.isNull ()) {
+	    Ymir::getStackStmtList ().back ().append (list.getTree ());
+	    return res_value;
+	}
+	
 	return  list.getTree ();	
     }
 
@@ -195,45 +230,40 @@ namespace syntax {
     Ymir::Tree IBlock::toGenericExpr (InfoType & type, Ymir::Tree & expr) {
 	auto last = this-> _insts.back ()-> to <IExpression> ();
 	this-> _insts.pop_back ();
-	if (!last-> info-> value ()) {
-	    auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type ()-> toGeneric ());	
-	    Ymir::enterBlock ();
-	    IBlock::__currentBlock__.push_front (this);
-	    for (auto it : this-> _insts) {
-		it-> father () = this;
-		auto inst = it-> toGeneric ();
-		Ymir::getStackStmtList ().back ().append (inst);    
-	    }
-	    type = last-> info-> type ();
-	    expr = last-> toGeneric ();
-
-	    Ymir::getStackStmtList ().back ().append (
-		buildTree (MODIFY_EXPR,
-			   this-> token.getLocus (),
-			   expr.getType (),
-			   res, expr)
-	    );
+	auto res = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), last-> info-> type ()-> toGeneric ());
+	if (this-> _failures.size () != 0 || this-> _finalFailure.size () != 0 || this-> _exit.size () != 0) 
+	    DECL_INITIAL (res.getOperand (1).getTree ()) = last-> info-> type ()-> genericConstructor ().getTree ();
 	
-	    expr = res;
-	} else {
-	    Ymir::enterBlock ();
-	    IBlock::__currentBlock__.push_front (this);
-	    for (auto it : this-> _insts) {
-		it-> father () = this;
-		auto inst = it-> toGeneric ();
-		Ymir::getStackStmtList ().back ().append (inst);    
-	    }
-	    type = last-> info-> type ();
-	    expr = last-> toGeneric ();	    
+	Ymir::enterBlock ();
+	IBlock::__currentBlock__.push_front (this);
+	for (auto it : this-> _insts) {
+	    it-> father () = this;
+	    auto inst = it-> toGeneric ();
+	    Ymir::getStackStmtList ().back ().append (inst);    
 	}
+	    
+	type = last-> info-> type ();
+	expr = last-> toGeneric ();
+
+	Ymir::getStackStmtList ().back ().append (
+	    buildTree (MODIFY_EXPR,
+		       this-> token.getLocus (),
+		       expr.getType (),
+		       res, expr)
+	);
+	
+	expr = res;
 
 	IBlock::__currentBlock__.pop_front ();
 	auto body = Ymir::leaveBlock ();
-	if (this-> _finally.size () == 0)
+	if (this-> _finally.size () == 0 && this-> _exit.size () == 0)
 	    return body.bind_expr;
 
-	if (this-> _finally.size () == 1) {
+	if (this-> _finally.size () == 1 && this-> _exit.size () == 0) {
 	    auto finally = this-> _finally [0]-> toGeneric ();
+	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.getTree ());
+	} else if (this-> _finally.size () == 0 && this-> _exit.size () == 1) {
+	    auto finally = this-> _exit [0]-> toGeneric ();
 	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.getTree ());
 	} else {
 	    Ymir::enterBlock ();
@@ -241,9 +271,13 @@ namespace syntax {
 		auto inst = it-> toGeneric ();
 		Ymir::getStackStmtList ().back ().append (inst);
 	    }
+
+	    for (auto it : this-> _exit)
+		Ymir::getStackStmtList ().back ().append (it-> toGeneric ());
+	    
 	    auto finally = Ymir::leaveBlock ();
 	    return build2 (TRY_FINALLY_EXPR, void_type_node, body.bind_expr.getTree (), finally.bind_expr.getTree ());
-	}
+	}      
     }
         
     Ymir::Tree IVarDecl::toGeneric () {
@@ -1153,8 +1187,10 @@ namespace syntax {
 	    
 	this-> _aux-> info-> treeDecl (decl.getOperand (1));
 	Ymir::getStackStmtList ().back ().append (decl.getOperand (0));
-	list.append (this-> _binAux-> toGeneric ());
+	this-> _aux-> info-> value () = NULL;
 	
+	list.append (this-> _binAux-> toGeneric ());
+
 	return list.getTree ();
     }
 

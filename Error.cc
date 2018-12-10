@@ -284,6 +284,20 @@ namespace Ymir {
 		fprintf (stderr, "%s", errorMsg.msg.c_str ());
 	} else __caught__.push_back (errorMsg);
     }
+
+    void Error::versionDeclarationGlob (const Word& word) {
+	auto str = getString (VersionOnlyGlob);
+	auto msg = std::string (RED) + "Error" + std::string (RESET) + " : " + str;
+	msg = addLine (msg, word);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
     
     void Error::moduleDontMatch (const Word& word) {
 	auto str = getString (ModuleDontMatch);

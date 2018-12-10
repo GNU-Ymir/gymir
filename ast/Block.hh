@@ -33,9 +33,19 @@ namespace syntax {
 	std::vector <Declaration> _decls;
 	std::vector <Instruction> _insts;
 	std::vector <Instruction> _preFinally;
+
+	/** Final instruction, on success scope */
 	std::vector <IBlock*> _finally;
+
+	/** final instruction, on exit scope */
+	std::vector <IBlock*> _exit;
+
+	/** On failure scope */
 	std::vector <IFailureBlock*> _failures;
+
+	/** On Failure catching all */
 	std::vector <IBlock*> _finalFailure;
+	
 	std::vector <Var> _inlines;
 	Expression _value;
 
@@ -80,6 +90,11 @@ namespace syntax {
 	void addFinalFailure (IBlock* insts);
 	
 	void addFailure (IFailureBlock* block);
+
+	/**
+	 * \brief Add exit instruction at the scope end	 
+	 */
+	void addExit (IBlock* insts);
 	
 	/**
 	 * ??
@@ -128,6 +143,10 @@ namespace syntax {
 
 	Ymir::Tree toGenericValue ();
 
+	Ymir::Tree toGenericValue (Ymir::Tree&);
+
+	void removeInst (Instruction inst);
+	
 	/**
 	 * \return the last expression of the block (forming the value of the block)
 	 */

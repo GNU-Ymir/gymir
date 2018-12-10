@@ -55,6 +55,10 @@ namespace syntax {
     void IBlock::addFinallyAtSemantic (Instruction inst) {
 	this-> _preFinally.push_back (inst);
     }
+
+    void IBlock::addExit (Block bl) {
+	this-> _exit.push_back (bl);
+    }
     
     void IBlock::addInline (Var var) {
 	this-> _inlines.push_back (var);
@@ -62,6 +66,13 @@ namespace syntax {
         
     std::vector <Instruction>& IBlock::getInsts () {
 	return this-> _insts;
+    }
+
+    void IBlock::removeInst (Instruction inst) {
+	std::vector <Instruction> res;
+	for (auto it : this-> _insts)
+	    if (it != inst) res.push_back (it);
+	this-> _insts = res;
     }
     
     Block IBlock::getCurrentBlock () {
@@ -1194,7 +1205,7 @@ namespace syntax {
     void ISemanticConst::print (int) {}
     
     IIf::IIf (Word word, Expression test, Block block, bool isStatic) :
-	IInstruction (word),
+	IExpression (word),
 	_test (test),
 	_block (block),
 	_else (NULL)
@@ -1205,7 +1216,7 @@ namespace syntax {
     }
     
     IIf::IIf (Word word, Expression test, Block block, If else_, bool isStatic) : 
-	IInstruction (word),
+	IExpression (word),
 	_test (test),
 	_block (block),
 	_else (else_)

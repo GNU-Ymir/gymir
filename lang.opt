@@ -37,3 +37,9 @@ YMIR Driver Alias(stalone)
 fdoc
 YMIR Driver
 Generate Documentation.
+
+b
+YMIR Joined Separate
+
+-build
+YMIR Driver Alias(b)

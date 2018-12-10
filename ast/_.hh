@@ -35,6 +35,7 @@
 #include "Instruction.hh"
 #include "Is.hh"
 #include "LambdaFunc.hh"
+#include "NamedExpression.hh"
 #include "Macro.hh"
 #include "Match.hh"
 #include "Mixin.hh"

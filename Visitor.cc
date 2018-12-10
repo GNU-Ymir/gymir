@@ -118,7 +118,7 @@ namespace syntax {
 		auto prv_decls = visitPrivateBlock (docs);
 		for (auto it : prv_decls) decls.push_back (it);
 	    } else if (token == Keys::VERSION) {
-		auto ver_decls = visitVersionGlob ();
+		auto ver_decls = visitVersionGlob (true);
 		for (auto it : ver_decls) decls.push_back (it);
 	    } else if (token == Keys::EXTERN) {
 		auto ext_decls = visitExtern (docs);
@@ -156,7 +156,8 @@ namespace syntax {
     		} else {
     		    auto tok = this-> lex.nextWithDocs (innerDocs);
 		    if (tok == Keys::VERSION) {
-			auto ver_decls = visitVersionGlob ();
+			this-> lex.rewind ();
+			auto ver_decls = visitVersionGlob (false);
 			for (auto it : ver_decls) {
 			    it-> setPublic (true);
 			    decls.push_back (it);
@@ -184,7 +185,13 @@ namespace syntax {
 	    if (next == Keys::EXTERN) {
 		decls = visitExtern (docs);
 		for (auto it : decls) it-> setPublic (true);
-	    } else {
+	    } else if (next == Keys::VERSION) {
+		auto ver_decls = visitVersionGlob (false);
+		for (auto it : ver_decls) {
+		    it-> setPublic (true);
+		    decls.push_back (it);
+		}
+	    } else  {
 		decls.push_back (visitDeclaration (docs, true));
 		decls.back ()-> setPublic (true);
 	    }
@@ -209,7 +216,8 @@ namespace syntax {
     		} else {
     		    auto tok = this-> lex.nextWithDocs (innerDocs);
 		    if (tok == Keys::VERSION) {
-			auto ver_decls = visitVersionGlob ();
+			this-> lex.rewind ();
+			auto ver_decls = visitVersionGlob (false);
 			for (auto it : ver_decls) {
 			    it-> setPublic (false);
 			    decls.push_back (it);
@@ -227,8 +235,9 @@ namespace syntax {
 					     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
 					     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::TYPE
 					     }
-			);			
-    		    break;
+			);
+		    else 
+			break;
     		}
     	    }
     	} else {	    
@@ -236,6 +245,12 @@ namespace syntax {
 	    if (next == Keys::EXTERN) {
 		decls = visitExtern (docs);
 		for (auto it : decls) it-> setPublic (false);
+	    } else if (next == Keys::VERSION) {
+		auto ver_decls = visitVersionGlob (false);
+		for (auto it : ver_decls) {
+		    it-> setPublic (false);
+		    decls.push_back (it);
+		}
 	    } else {
 		decls.push_back (visitDeclaration (docs, true));
 		decls.back ()-> setPublic (false);
@@ -245,7 +260,7 @@ namespace syntax {
     }
 
 
-    std::vector <Declaration> Visitor::visitDeclBlock () {
+    std::vector <Declaration> Visitor::visitDeclBlock (bool globalBlock) {
 	std::vector <Declaration> decls;
 	std::string docs;
 	auto token = this-> lex.nextWithDocs (docs, {Token::LACC});
@@ -259,7 +274,7 @@ namespace syntax {
 		auto prv_decls = visitPrivateBlock (docs);
 		for (auto it : prv_decls) decls.push_back (it);
 	    } else if (token == Keys::VERSION) {
-		auto ver_decls = visitVersionGlob ();
+		auto ver_decls = visitVersionGlob (globalBlock);
 		for (auto it : ver_decls) decls.push_back (it);
 	    } else if (token == Keys::EXTERN)  {
 		auto ext_decls = visitExtern (docs);
@@ -283,12 +298,25 @@ namespace syntax {
 	return decls;
     }
         
-    std::vector <Declaration> Visitor::visitVersionGlob () {
+    std::vector <Declaration> Visitor::visitVersionGlob (bool globalBlock) {
 	auto begin = this-> lex.next ();
+	auto next = this-> lex.next ();	
+	if (next == Token::EQUAL) {
+	    auto type = this-> visitIdentifiant ();
+	    this-> lex.next ({Token::SEMI_COLON});
+	    if (!globalBlock) {
+		Ymir::Error::versionDeclarationGlob (next);
+	    } else {
+		Version::addVersion (type.getStr ());
+	    }
+	    return {};
+	}
+	
+	this-> lex.rewind ();		
 	auto type = this-> visitIdentifiant ();
 	
 	if (Version::isOn (type.getStr ())) {
-	    auto bl = visitDeclBlock ();
+	    auto bl = visitDeclBlock (globalBlock);
 	    auto next = this-> lex.next ();
 	    if (next == Keys::ELSE) {
 		this-> lex.next ({Token::LACC});
@@ -314,7 +342,7 @@ namespace syntax {
 
 	    auto next = this-> lex.next ();
 	    if (next == Keys::ELSE) {
-		return visitDeclBlock ();
+		return visitDeclBlock (globalBlock);
 	    } else {
 		this-> lex.rewind ();
 		return {};
@@ -1214,6 +1242,31 @@ namespace syntax {
 	return ret;
     }
 
+    /**
+       vardecl := var (':' type)?
+    */
+    bool Visitor::canVisitNamedExpr () {
+	auto nb = this-> lex.tell ();
+	auto ret = false;
+	
+	if (canVisitIdentifiant ()) {
+	    auto ident = visitIdentifiant ();
+	    Word next = this-> lex.next ();
+	    if (next == Token::ARROW) {
+		ret = true;
+	    }
+	}
+	
+	this-> lex.seek (nb);
+	return ret;
+    }
+    
+    bool Visitor::canVisitIgnore () {
+	auto next = this-> lex.next ();
+	this-> lex.rewind ();
+	return next == Keys::UNDER;
+    }
+    
     Var Visitor::visitDecoType (const Word& begin) {
 	auto next = this-> lex.next ();
 	Expression type = NULL;
@@ -1462,7 +1515,7 @@ namespace syntax {
 	}	
     }
 
-    Instruction Visitor::visitVersion () {
+    Instruction Visitor::visitVersion () {	
 	auto ver = this-> visitIdentifiant ();
 	if (Version::isOn (ver.getStr ())) {
 	    auto bl = this-> visitBlock ();
@@ -1494,7 +1547,7 @@ namespace syntax {
 		return this-> visitBlock ();
 	    } else {
 		this-> lex.rewind ();
-		return {};
+		return new (Z0) INone (ver);
 	    }
 	}
     }
@@ -2125,8 +2178,6 @@ namespace syntax {
 	    return visitConstArray ();
 	} else if (word == Keys::FUNCTION || word == Keys::DELEGATE) {
 	    return visitFuncPtr (word);
-	} else if (word == Keys::MIXIN) {
-	    return visitMixin ();
 	} else  if (word == Keys::MATCH) {
 	    return visitMatch ();
 	} else if (word == Keys::PRAGMA) {
@@ -2597,6 +2648,10 @@ namespace syntax {
 	    this-> lex.rewind ();
 	    if (canVisitVarDeclaration ()) {
 		return visitVarDeclaration ();
+	    } else if (canVisitNamedExpr ()) {
+		this-> lex.next ();
+		this-> lex.next ({Token::ARROW});
+		return new (Z0) INamedExpression (begin, visitMatchExpression ());
 	    } else {
 		if (begin == Keys::REF) {
 		    this-> lex.next ();
@@ -2605,7 +2660,7 @@ namespace syntax {
 		    return var;
 		}
 
-		auto expr = visitExpression ();;
+		auto expr = visitExpression ();
 		return expr;
 	    }
 	}
@@ -2665,7 +2720,7 @@ namespace syntax {
 	auto begin = this-> visitIdentifiant ();
 	auto next = this-> lex.next ({Token::LACC, Token::DARROW});
 	if (next == Token::LACC) {
-	    if (begin == Keys::FAILURE && canVisitVarDeclaration ()) {
+	    if (begin == Keys::FAILURE && (canVisitVarDeclaration () || canVisitIgnore ())) {
 		std::vector <TypedVar> vars;
 		std::vector <Block> blocks;
 		Block none = NULL;

@@ -478,7 +478,7 @@ namespace semantic {
 	Ymir::Tree InstAffect (Word locus, InfoType, Expression left, Expression right) {
 	    auto loc = locus.getLocus ();
 	    auto ltree = left-> toGeneric ();
-	    auto rtree = right-> toGeneric ();
+	    auto rtree = right-> toGeneric ();	    
 	    rtree = convert (ltree.getType ().getTree (), rtree.getTree ());
 	    return Ymir::buildTree (
 		MODIFY_EXPR, loc, ltree.getType (), ltree, rtree
