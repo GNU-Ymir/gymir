@@ -47,6 +47,15 @@ Word::Word (const Word & other) :
     _length (other._length)
 {}
 
+Word& Word::operator=(const Word& other) {
+    this-> str = other.str;
+    this-> locFile = other.locFile;
+    this-> line = other.line;
+    this-> column = other.column;
+    this-> _length = other._length;
+    return *this;
+}
+
 Word::Word () :	
     str (""),
     locFile (""),

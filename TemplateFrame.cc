@@ -313,8 +313,11 @@ namespace semantic {
 		Ymir::log ("Template solving for ", ident, " start");
 		realAttrs = transformParams (score-> score, attrs, args, tmps);
 		Ymir::log ("Template solving for ", ident, " end");
-		if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), tmps))
+		Ymir::log ("Template Soluce for  ", ident, " is : ", tmps);
+		if (!TemplateSolver::instance ().isSolved (this-> _function-> getTemplates (), tmps)) {
+		    Ymir::log ("Template Soluce for  ", ident, " is not valid ");
 		    return NULL;
+		} else Ymir::log ("Template Soluce for  ", ident, " is valid ");
 		if (realAttrs.size () != attrs.size ()) return NULL;
 	    } else realAttrs = attrs;
 

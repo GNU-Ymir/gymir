@@ -33,6 +33,8 @@ public:
     
     Word ();
     
+    Word& operator=(const Word&);
+    
     void setLocus (location_t locus);
 
     void setLocus (std::string filename, ulong line, ulong column);

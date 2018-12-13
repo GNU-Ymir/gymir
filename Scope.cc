@@ -58,7 +58,7 @@ namespace semantic {
 	auto min = 3UL < name.length () ? 3UL : name.length ();
 	Symbol ret = NULL;
 	for (auto& it : this-> local) {
-	    auto diff = get_edit_distance (it.first.c_str (), it.first.length (), name.c_str (), name.length ());
+	    auto diff = levenshtein_distance (it.first.c_str (), it.first.length (), name.c_str (), name.length ());
 	    if (diff < min && diff < name.length ()) {
 		ret = it.second [0];
 		min = diff;
@@ -72,7 +72,7 @@ namespace semantic {
 	Symbol ret = NULL;
 	for (auto& it : this-> local) {
 	    if (it.second[0]->  isPublic ()) {
-		auto diff = get_edit_distance (it.first.c_str (), it.first.length (), name.c_str (), name.length ());
+		auto diff = levenshtein_distance (it.first.c_str (), it.first.length (), name.c_str (), name.length ());
 		if (diff < min && diff < name.length ()) {
 		    ret = it.second [0];
 		    min = diff;

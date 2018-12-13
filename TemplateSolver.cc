@@ -1082,6 +1082,7 @@ namespace semantic {
     }
 
     bool TemplateSolver::isSolved (const vector <Expression> &args, map <string, Expression> &types) {
+	ulong nb = 0;
 	for (auto it : args) {
 	    if (auto type = it-> to <ITypedVar> ()) {
 		auto elem = types.find (type-> token.getStr ());
@@ -1093,7 +1094,12 @@ namespace semantic {
 		if (elem != types.end () && elem-> second == NULL)
 		    return false;
 		else if (elem == types.end ()) return false;
+	    } else {
+		Ymir::OutBuffer buf;
+		buf.write (nb);
+		if (types.find (buf.str ()) == types.end ()) return false;
 	    }
+	    nb ++;
 	}
 	return true;
     }
