@@ -72,39 +72,101 @@ namespace semantic {
 	while (auto ref = type-> to <IRefInfo> ()) type = ref-> content ();	
 	if (auto str = type-> to <IStructInfo> ()) {
 	    DestructSolution soluce {0, true};
-	    auto type = left-> getLeft ()-> expression ();
-	    if (type == NULL) return DestructSolution (0, false);
-	    if (!type-> isType ()) {
-		Ymir::Error::useAsType (type-> token);
-		return DestructSolution (0, false);
-	    }
-	    
-	    auto strCst = type-> info-> type ()-> to <IStructCstInfo> ();
-	    if (!strCst) return DestructSolution (0, false);	    
-	    if (left-> getExprs ().size () != str-> getTypes ().size ()) {
-	    	return DestructSolution {0, false};
+	    if (!left-> getLeft ()-> is<IIgnore> ()) {
+		auto type = left-> getLeft ()-> toType ();
+		if (!str-> isSame (type-> info-> type ())) return DestructSolution (0, false);		
 	    }
 
-	    for (auto it : Ymir::r (0, str-> getTypes ().size ())) {
-		auto exp = new (Z0) IExpand (right-> token, right, it);		
-		exp-> info = new (Z0) ISymbol (exp-> token, exp, str-> getTypes  ()[it]-> clone ());
-		exp-> info-> isConst (right-> info-> isConst ());
+	    std::set <int> toSkip;
+	    uint current = 0, it = 0;
+	    while (current < left-> getExprs ().size () && it < str-> getTypes ().size ()) {
+		if (auto named = left-> getExprs () [current]-> to <INamedExpression> ()) {
+		    auto itnamed = str-> indexOf (named-> token.getStr ());
+		    if (itnamed == -1) {
+			// The type is the same as the structure, but it does not have any attr 'named-> token'
+			if (!left-> getLeft ()-> is <IIgnore> ())
+			    Ymir::Error::undefAttr (named-> token, right-> info, new (Z0) IVar (named-> token));
+			return DestructSolution (0, false);
+		    }
+		    
+		    toSkip.insert (itnamed);
+		    auto exp = new (Z0) IExpand (right-> token, right, itnamed);		
+		    exp-> info = new (Z0) ISymbol (exp-> token, exp, str-> getTypes  ()[itnamed]-> clone ());
+		    exp-> info-> isConst (right-> info-> isConst ());
+		    
+		    auto res = solve (named-> getValue (), exp);
+		    if (!res.valid || !merge (soluce, res, Token::AND))
+			return DestructSolution {0, false};
+		    
+		} else {
+		    if (toSkip.find (it) != toSkip.end ()) {
+			it += 1;
+			continue;
+		    }
+
+		    auto exp = new (Z0) IExpand (right-> token, right, it);		
+		    exp-> info = new (Z0) ISymbol (exp-> token, exp, str-> getTypes  ()[it]-> clone ());
+		    exp-> info-> isConst (right-> info-> isConst ());
+		    
+		    auto res = solve (left-> getExprs () [current], exp);
+		    if (!res.valid || !merge (soluce, res, Token::AND))
+			return DestructSolution {0, false};
+		    it += 1;
+		}
 		
-		auto res = solve (left-> getExprs () [it], exp);
-		if (!res.valid || !merge (soluce, res, Token::AND))
-		    return DestructSolution {0, false};
+		current += 1;			
 	    }
+	    
+	    if (current != left-> getExprs ().size ())
+		return DestructSolution (0, false);
 	    return soluce;
 	    
-	}//  else if (auto agg = type-> to <IAggregateInfo> ()) {
-	//     return solveAggCst (left, right, agg);
-	// }
+	} else if (type-> is <IAggregateInfo> ()) {
+	    return solveAggCst (left, right);
+	}
 	return DestructSolution (0, false);
     }
     
-    // DestructSolution DestructSolver::solveAggCst (StructCst left, Expression right, AggregateInfo info) {
+    DestructSolution DestructSolver::solveAggCst (StructCst left, Expression right) {
+	DestructSolution soluce {0, true};
+	if (!left-> getLeft ()-> is <IIgnore> ()) {
+	    InfoType rtype = right-> info-> type ();
+	    while (auto ref = rtype-> to <IRefInfo> ()) rtype = ref-> content ();
+	    
+	    auto ltype = left-> getLeft ()-> toType ();
+	    if (ltype == NULL || !ltype-> info-> type ()-> is <IAggregateInfo> ()) return DestructSolution (0, false);	    
+	    auto retType = rtype-> to <IAggregateInfo> ()-> isTyped (ltype-> info-> type ()-> to <IAggregateInfo> ());
+	    
+	    DestructSolution res {__VAR__, true};
+	    res.test = new (Z0) IBinary (left-> token, right, ltype);
+	    res.test-> info = new (Z0) ISymbol (left-> token, DeclSymbol::init (), res.test, retType);
+	    
+	    res.immutable = false;
+	    if (!merge (soluce, res, Token::AND))
+		return DestructSolution (0, false);
+	}
 	
-    // }
+	for (auto it : Ymir::r (0, left-> getExprs ().size ())) {
+	    if (!left-> getExprs ()[it]-> is <INamedExpression> ()) {
+		if (!left-> getLeft ()-> is <IIgnore> ()) 
+		    Ymir::Error::aggMatchOnlyNamed (left-> getExprs ()[it]-> token);
+		
+		return DestructSolution (0, false);
+	    }
+	    auto named = left-> getExprs ()[it]-> to <INamedExpression> ();
+
+	    auto dotExp = new (Z0) IDot ({named-> token, Token::DOT}, right, new (Z0) IVar (named-> token));
+	    auto exp = (dotExp)-> expression (); 
+	    //dotExp-> info = exp-> info;
+	    if (exp == NULL) return DestructSolution (0, false);
+	    
+	    auto res = solve (named-> getValue (), exp);
+	    if (!res.valid || !merge (soluce, res, Token::AND))
+		return DestructSolution (0, false);
+	}
+	
+	return soluce;
+    }
     
     DestructSolution DestructSolver::solveTuple (ConstTuple left, Expression right) {
 	InfoType type = right-> info-> type ();
@@ -225,18 +287,9 @@ namespace semantic {
 	    if (ltype-> is<IAggregateCstInfo> ())
 		ltype = ltype-> TempOp ({});
 	    
-	    if (ltype-> CompOp (rtype) != NULL) {
-		Word tok = {left-> token, Keys::IS};
-		auto vtableVar = new (Z0) IVar ({left-> token, Keys::VTABLE_FIELD});
-		auto vtable = ltype-> DColonOp (vtableVar);
-		auto leftExpr = new (Z0) ISemanticConst (tok, vtable, ltype-> clone ());
-		
-		auto rightExpr = new (Z0) IDot (left-> token, right, vtableVar);		    
-		Expression bin = new (Z0) IBinary (tok, leftExpr, rightExpr);
-		
-		auto test = bin-> expression ();
+	    if (ltype-> CompOp (rtype) != NULL || rtype-> CompOp (ltype) != NULL) {
 		DestructSolution soluce {__VAR__, true};
-		soluce.test = test;
+		//soluce.test = test;
 		auto var = new (Z0) IVar (left-> token);
 		auto varsoluce = solveVar (var, right, false);
 		if (!varsoluce.valid || !merge (soluce, varsoluce, Token::AND))

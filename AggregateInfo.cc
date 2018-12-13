@@ -17,7 +17,9 @@
 #include <ymir/semantic/pack/ConstructFrame.hh>
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/ast/Binary.hh>
+#include <ymir/semantic/value/BoolValue.hh>
 #include <set>
+
 
 using namespace syntax;   
 using namespace std;
@@ -75,6 +77,32 @@ namespace semantic {
 	    return Ymir::buildTree (
 		code, locus.getLocus (), boolean_type_node, ltable, vtable
 	    );
+	}
+
+	Tree InstIsTypedStatic (Word locus, InfoType type, Expression left, Expression right) {
+	    auto ltable = InstGetVtable (locus, type, left, NULL);
+
+	    auto ptr_type = build_pointer_type (void_type_node);
+
+	    // The table info is the first element of the vtable
+	    auto ltype = Ymir::getPointerUnref (locus.getLocus (), ltable, ptr_type, 0);
+	    
+	    auto rtype = Ymir::getAddr (right-> info-> type ()-> genericTypeInfo ());
+	    return callLib (locus.getLocus (), Runtime::COMPARE_TYPEINFO, boolean_type_node, {ltype, rtype});
+	}
+
+	Tree InstCastDyn (Word locus, InfoType type, Expression left, Expression) {
+	    auto rtype = Ymir::getAddr (type-> genericTypeInfo ());
+	    auto lelem = left-> toGeneric ();
+	    auto innerType = type-> toGeneric ();
+	    auto ptrType = build_pointer_type (innerType.getTree ());
+
+	    Ymir::TreeStmtList list;
+	    Ymir::Tree casted = Ymir::getExpr (list, callLib (locus.getLocus (), Runtime::DYNAMIC_CAST, ptrType, {Ymir::getAddr (lelem), rtype}));
+	    
+	    return Ymir::compoundExpr (locus.getLocus (),
+				       list,
+				       Ymir::getPointerUnref (locus.getLocus (), casted, innerType, 0));
 	}
 	
 	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
@@ -633,6 +661,8 @@ namespace semantic {
 	return false;
     }
 
+
+    bool IAggregateInfo::__exempted__ = false;
     
     IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExtern) :
 	IInfoType (false),
@@ -806,7 +836,7 @@ namespace semantic {
 	this-> _impl-> isConst (this-> isConst ());
 	InfoType ret = NULL; //this-> _impl-> DotOp (this-> _id-> getLocId (), this, var);
 	bool alias = false;
-	if (!this-> _hasExemption) {
+	if (!this-> _hasExemption && !__exempted__) {
 	    ret = this-> AliasOp (var);
 	    if (ret) {
 		ret-> nextBinop.push_back (ret-> binopFoo);
@@ -870,6 +900,20 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IAggregateInfo::CastOp (InfoType other) {
+	if (this-> isSame (other)) {
+	    return this;
+	} else if (auto ret = this-> CompOp (other)) {
+	    return ret;
+	} else if (other-> is <IAggregateInfo> () && (other-> CompOp (this))) {
+	    auto ret = other-> clone ();
+	    ret-> isConst (this-> isConst ());
+	    ret-> binopFoo = &AggregateUtils::InstCastDyn;
+	    return ret;
+	}
+	return NULL;
+    }
+
     InfoType IAggregateInfo::CompOp (InfoType other) {
 	if (this-> isSame (other) || other-> is <IUndefInfo> ()) {
 	    if (this-> hasCopyCstr ()) {
@@ -901,6 +945,18 @@ namespace semantic {
 	return NULL;
     }
 
+    InfoType IAggregateInfo::isTyped (AggregateInfo other) {
+	if (this-> CompOp (other)) {
+	    auto ret = new (Z0) IBoolInfo (true);
+	    ret-> value () = new (Z0) IBoolValue (true);
+	    return ret;
+	} else if (other-> CompOp (this)) {
+	    auto ret = new (Z0) IBoolInfo (true);
+	    ret-> binopFoo = &AggregateUtils::InstIsTypedStatic;
+	    return ret;
+	} else return NULL;
+    }
+    
     InfoType IAggregateInfo::UnaryOp (Word op) {
 	if (op == Token::AND && this-> isLvalue ()) {
 	    auto ret = new (Z0) IPtrInfo (this-> isConst (), this-> clone ());
@@ -975,8 +1031,7 @@ namespace semantic {
 		} else if (it-> isProtected () && (!this-> isProtectedForMe (it-> space ()) || !this-> inProtectedContext ()))
 		    hasPrivate = true;
 		else {
-		    auto ret = new (Z0) IAliasCstInfo (var-> token, this-> _space, it-> getValue ());
-
+		    auto ret = new (Z0) IAliasCstInfo (var-> token, this-> _space, it-> getValue ()-> templateExpReplace ({}));
 		    ret-> isConst (this-> isConst ());
 		    if (it-> isConst ()) ret-> isConst (it-> isConst ());
 		    return ret;
@@ -1049,7 +1104,7 @@ namespace semantic {
     }
     
     Ymir::Tree IAggregateInfo::buildVtableType () {
-	int size = 0;
+	int size = 1; // The last element is a pointer to the typeinfo
 	for (auto it : this-> _methods) {
 	    if (it-> isVirtual ())
 		size ++;
@@ -1067,7 +1122,7 @@ namespace semantic {
 	auto array_type = build_array_type (innerType-> toGeneric ().getTree (), range_type);
 	return array_type;
     }
-
+    
     std::vector <TypeAlias> IAggregateInfo::getAllAlias () {
 	std::vector <TypeAlias> alias;
 	if (this-> getAncestor ()) 
@@ -1179,8 +1234,9 @@ namespace semantic {
     
     Ymir::Tree IAggregateInfo::buildVtableEnum (Ymir::Tree vtype) {
 	vec<constructor_elt, va_gc> * elms = NULL;
-	int i = 0;
-	
+	int i = 1;
+
+	CONSTRUCTOR_APPEND_ELT (elms, size_int (0), Ymir::getAddr (this-> genericTypeInfo ()).getTree ());	
 	auto methods = this-> _allMethods;
 	for (auto it : methods) {
 	    if (it-> isVirtual ()) {
@@ -1188,23 +1244,23 @@ namespace semantic {
 		i ++;
 	    }
 	}
-	
+
 	return build_constructor (vtype.getTree (), elms);
     }
    
 
-    Ymir::Tree IAggregateInfo::getVtable () {
+    Ymir::Tree IAggregateInfo::getVtable (bool external) {
 	auto tname = this-> simpleTypeString ();
 	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();
 	auto vtable = Ymir::getVtable (vname);
 
 	if (vtable.isNull ()) {
 	    auto vtype = buildVtableType ();
-	    if (!this-> _isExternal) {
+	    if (!this-> _isExternal && !external) {
 		auto vec = buildVtableEnum (vtype);
 		vtable = declareVtable (vname, vtype, vec);
 	    } else vtable = declareVtableExtern (vname, vtype);
-	} else if (!this-> _isExternal && DECL_EXTERNAL (vtable.getTree ()) == 1) {
+	} else if (!this-> _isExternal && DECL_EXTERNAL (vtable.getTree ()) == 1 && !external) {
 	    auto vtype = buildVtableType ();
 	    auto vec = buildVtableEnum (vtype);
 	    vtable = declareVtable (vname, vtype, vec);
@@ -1219,7 +1275,7 @@ namespace semantic {
 	if (ttype.isNull ()) {
 	    std::vector <InfoType> types = {new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()), this-> _impl};
 	    auto attrs = {Keys::VTABLE_FIELD};
-
+	    
 	    ttype = Ymir::makeTuple (tname, types, attrs); 
 	    IFinalFrame::declareType (tname, ttype);
 	    
@@ -1236,7 +1292,7 @@ namespace semantic {
     }
 
     Ymir::Tree IAggregateInfo::genericTypeInfo () {
-	auto innerGlob = this-> getVtable ();		
+	auto innerGlob = this-> getVtable (true);		
 	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
 	auto typeTree = type-> toGeneric ();
 	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
@@ -1302,6 +1358,10 @@ namespace semantic {
     bool& IAggregateInfo::hasExemption () {
 	return this-> _hasExemption;
     }
+
+    bool& IAggregateInfo::exempted () {
+	return __exempted__;
+    }
     
     std::vector <InfoType> IAggregateInfo::getTemplate (ulong bef, ulong af) {
 	std::vector <InfoType> types;
@@ -1323,7 +1383,7 @@ namespace semantic {
     }
     
     bool IAggregateInfo::inPrivateContext () {
-	if (this-> _hasExemption) return true;
+	if (this-> _hasExemption || __exempted__) return true;
 	auto space = Table::instance ().getCurrentSpace ();
 	auto myspace = Namespace (this-> innerTypeString ());
 	return myspace.isSubOf (space);

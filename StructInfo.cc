@@ -660,7 +660,7 @@ namespace semantic {
 	}
 	return false;
     }    
-    
+        
     InfoType IStructInfo::ConstVerif (InfoType other) {	
 	auto str = other-> to <IStructInfo> ();
 	if (str == NULL || !str-> isSame (this)) return NULL;
@@ -749,6 +749,15 @@ namespace semantic {
 	return score;
     }
     
+    int IStructInfo::indexOf (const std::string & name) {
+	for (auto it : Ymir::r (0, this-> attrs.size ())) {
+	    if (name == this-> attrs [it]) {
+		return it;
+	    }
+	}
+	return -1;
+    }
+
     InfoType IStructInfo::DotOp (syntax::Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	for (auto it : Ymir::r (0, this-> attrs.size ())) {

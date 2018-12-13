@@ -583,18 +583,18 @@ namespace syntax {
 	    } else if (this-> _score-> proto-> has (Keys::INLINE)) {
 		return this-> callInline (args);
 	    } else if (this-> _left-> info-> type ()-> is <IFunctionInfo> () &&
-		       this-> _left-> info-> type ()-> to <IFunctionInfo> ()-> isConstr ()) {
+		       this-> _left-> info-> type ()-> to <IFunctionInfo> ()-> isConstr ()) { // Calling a constructor of an object
 
 		Ymir::Tree ltree;
 		bool obj = false;
-		if (auto dcol = this-> _left-> to <IDColon> ()) {
+		if (auto dcol = this-> _left-> to <IDColon> ()) { // When constructing the parent of an object 
 		    if (dcol-> getLeft ()-> info-> type ()-> is <IAggregateInfo> ()) {
 			obj = true;
 			ltree = dcol-> getLeft ()-> toGeneric ();
 		    }
 		}
 		    
-		if (!obj) {
+		if (!obj) { // Constructing a new object 
 		    ltree = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> _score-> ret-> toGeneric ());
 		}
 		
@@ -602,15 +602,14 @@ namespace syntax {
 		Ymir::TreeStmtList list;
 		Ymir::Tree fn = this-> _score-> proto-> toGeneric ();
 
-		if (!obj) {
-		    auto vtable = Ymir::getAddr (this-> _score-> ret-> to <IAggregateInfo> ()-> getVtable ());
-		    auto vfield = Ymir::getField (this-> token.getLocus (), ltree, Keys::VTABLE_FIELD);
+		
+		if (!obj) { // The object has never been constructed, we instantiate to genericConstructor before calling the constructor
 		    list.append (
 			Ymir::buildTree (MODIFY_EXPR,
 					 this-> token.getLocus (),
 					 void_type_node,
-					 vfield,
-					 convert (vfield.getType ().getTree (), vtable.getTree ())
+					 ltree,
+					 this-> _score-> ret-> genericConstructor ()
 			)
 		    );
 		}
@@ -622,7 +621,7 @@ namespace syntax {
 						   args.data ()
 		));
 
-		if (!obj) {
+		if (!obj) { // It is a new object for this scope, we need to destruct it at the end of the scope
 		    if (auto frame = this-> _score-> ret-> to<IAggregateInfo> ()-> getDestructor ()) {
 			auto proto = frame-> validate ();
 			std::vector <tree> params = {getAddr (ltree).getTree ()};

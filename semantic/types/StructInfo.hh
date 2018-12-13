@@ -136,6 +136,11 @@ namespace semantic {
 
 	InfoType DotOp (syntax::Var) override;
 
+	/**
+	 * \return the index of the attribute named 'name' or -1 if it does not exist
+	 */
+	int indexOf (const std::string& name);
+	
 	InfoType DColonOp (syntax::Var) override;
 	
 	InfoType CompOp (InfoType) override;

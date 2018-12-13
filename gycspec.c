@@ -47,10 +47,10 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	if (decoded_options [i].opt_index == OPT_l) {
 	    if (arg != NULL && (strcmp (arg, LIBGC) == 0)) need_gc = false;	    
 	} else if (decoded_options [i].opt_index == OPT_SPECIAL_input_file) {
-	    yr_file_found = true; break;
-	} else if (decoded_options [i].opt_index == OPT_stalone) {
+	    yr_file_found = true;
+	} else if (decoded_options [i].opt_index == OPT_nomidgardlib) {
 	    need_gc = false;
-	    need_libs = false; break;
+	    need_libs = false;
 	}	    	
     }
     
@@ -64,7 +64,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		new_decoded_options [i] = decoded_options [i];
 	    i ++;
 	}
-
+	
 	if (need_gc) {
 	    generate_option (OPT_l, LIBGC, 1, CL_DRIVER, &new_decoded_options [i]);
 	    added_libraries ++;

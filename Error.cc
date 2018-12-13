@@ -1351,8 +1351,9 @@ namespace Ymir {
 	    Error::instance ().nb_errors ++;
 	    if (Error::instance ().nb_errors > MAX_ERROR)
 		fail ("%s", errorMsg.msg.c_str ());
-	    else 
+	    else {
 		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    }
 	} else __caught__.push_back (errorMsg);
     }
     
@@ -1741,6 +1742,21 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }    
 
+    void Error::aggMatchOnlyNamed (const Word & token) {
+	std::string msg = format (getString (AggMatchOnlyNamed)); 
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }    
+
 
     void Error::privateMemberWithinThisContext (const std::string & str, const Word & token) {
 	std::string msg = format (getString (PrivateMemberWithinThisContext), YELLOW, str, RESET, YELLOW, token.getStr (), RESET); 
@@ -1754,6 +1770,7 @@ namespace Ymir {
 		fail ("%s", errorMsg.msg.c_str ());
 	    else 
 		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	    Ymir::Error::assert ("");
 	} else __caught__.push_back (errorMsg);
     }    
 

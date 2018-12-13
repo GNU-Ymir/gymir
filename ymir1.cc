@@ -90,9 +90,9 @@ ymir_init_options (unsigned int argc, cl_decoded_option * decoded_options)
 	case OPT_g :
 	case OPT_ggdb : Options::instance ().isDebug () = true; break;
 	case OPT_v : Options::instance ().isVerbose () = true; break;
-	case OPT_stalone : Options::instance ().isStandalone () = true; break;
+	case OPT_nostdinc : Options::instance ().isStandalone () = true; break;
 	case OPT_fdoc : Options::instance ().generateDocs () = true; break;
-	case OPT_b : Version::addVersion (decoded_options [i].arg); break;
+	case OPT_fversion_ : Version::addVersion (decoded_options [i].arg); break;
 	}
     }
 }
@@ -136,11 +136,11 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 	Ymir::log ("Change prefix : ", Options::instance ().prefixIncludeDir ());
     } else if (code == OPT_v) {
 	Options::instance ().isVerbose () = true;
-    } else if (code == OPT_stalone) 
+    } else if (code == OPT_nostdinc) 
 	Options::instance ().isStandalone () = true;
     else if (code == OPT_fdoc) {
 	Options::instance ().generateDocs () = true;	
-    } else if (code == OPT_b) {
+    } else if (code == OPT_fversion_) {
 	Version::addVersion (arg);
     } else {
 	return false;

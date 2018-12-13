@@ -25,6 +25,20 @@ namespace syntax {
 	    IExpression (ident),
 	    _value (value)
 	{}
+
+	Expression getValue () {
+	    return this-> _value;
+	}
+
+	static const char * id () {
+	    return TYPEID (INamedExpression);
+	}
+	
+	std::vector <std::string> getIds () {
+	    auto ret = IExpression::getIds ();
+	    ret.push_back (TYPEID (INamedExpression));
+	    return ret;
+	}
 	
     };
 

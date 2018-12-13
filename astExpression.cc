@@ -545,8 +545,11 @@ namespace syntax {
 			Token::DXOR_EQUAL, Token::TILDE_EQUAL
 			}, this-> token.getStr ())) {
 	    return reaff ();
-	} else if (this-> token.getStr () == Token::PIPE)
+	} else if (this-> token.getStr () == Token::PIPE) {
 	    return bitwiseOr ();
+	} else if (this-> token.getStr () == Keys::NOT_OF ||
+		   this-> token.getStr () == Keys::OF)
+	    return of ();
 	return normal ();
     }
 
@@ -1203,81 +1206,87 @@ namespace syntax {
     }
 
     Expression IDot::expression () {
-	auto aux = new (Z0)  IDot (this-> token, this-> _left-> expression (), this-> _right-> templateExpReplace ({}));
-	if (aux-> _left == NULL) return NULL;
-	else if (aux-> _left-> info-> type ()-> is<IUndefInfo> ()) {
-	    Ymir::Error::uninitVar (aux-> _left-> token, aux-> _left-> info-> sym);
-	    return NULL;
-	} else if (auto var = aux-> _right-> to<IVar> ()) {
-	    auto type = aux-> _left-> info-> type ()-> DotOp (var);
-	    if (type == NULL && ((this-> inside && this-> inside-> is <IPar> ()) || var-> hasTemplate ())) {
-		var-> inside = aux;
-		auto call = var-> expression ();
-		if (call == NULL || call-> isType () || call-> info-> type ()-> is<IUndefInfo> ()) {
-		    Ymir::Error::undefAttr (this-> token, aux-> _left-> info, var);
-		    return NULL;
-		}
-		return (new (Z0)  IDotCall (this-> inside, this-> _right-> token, call, aux-> _left))-> expression ();
-	    } else if (type != NULL && var-> hasTemplate ()) {
-
-		std::vector <Expression> tmps;
-		for (auto it : var-> getTemplates ()) {
-		    auto elem = it-> expression ();
-		    if (elem == NULL) return NULL;
-		    else if (auto par = elem-> to <IParamList> ())
-			for (auto it : par-> getParams ()) tmps.push_back (it);
-		    else tmps.push_back (elem);
-		}
-
-		auto type_ = type-> TempOp (tmps);
-		if (type_ == NULL) {
-		    Ymir::Error::notATemplate (var-> token, var-> getTemplates (), type-> typeString ());
-		    return NULL;
-		} else type = type_;
-	    } else if (type == NULL) {
-		Ymir::Error::undefAttr (this-> token, aux-> _left-> info, var);
-		return NULL;		
-	    } else if (type-> is <IMethodInfo> () && type-> to <IMethodInfo> ()-> isAttribute () && (!this-> inside || (this-> inside && !this-> inside-> is <IPar> ()))) {
-		auto isLeftAff = this-> inside && this-> inside-> is <IBinary> () && this-> inside-> to <IBinary> ()-> getLeft () == this && this-> inside-> token.getStr () == Token::EQUAL;
-		if (!isLeftAff) {
-		    type-> to <IMethodInfo> ()-> eraseNonAttrib ();
-		    aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);
-		    auto params = new (Z0) IParamList (this-> token, {});
-		    auto call = new (Z0) IPar (this-> token, this-> token, aux, params, true);
-		    aux-> inside = call;
-		    return call-> expression ();
-		}
-	    } else if (type-> is <IAliasCstInfo> ()) {
-		if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ())
-		    aux-> _left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = true;
-		else if (aux-> _left-> info-> type ()-> is <IRefInfo> ())
-		    aux-> _left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = true;
-
-		auto ret = type-> to <IAliasCstInfo> ()-> replace ({{Keys::SELF, new (Z0) IEvaluatedExpr (aux-> _left)}})-> expression ();
-
-		if (ret != NULL) {
-		    ret-> info-> type ()-> isConst (type-> isConst ());
-		    ret-> token = aux-> _right-> token;
-		}
-		
-		if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ())
-		    aux-> _left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = false;
-		else if (aux-> _left-> info-> type ()-> is <IRefInfo> ())
-		    aux-> _left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = false;
-		return ret;
-	    }
-	    aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);
-	    return aux;
-	} else {
-	    aux-> _right = aux-> _right-> expression ();
-	    if (aux-> _right == NULL) return NULL;
-	    auto type = aux-> _left-> info-> type ()-> DotExpOp (aux-> _right);
-	    if (type == NULL) {
-		Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> _right-> info);
+	if (!this-> info) {
+	    auto aux = new (Z0)  IDot (this-> token, this-> _left-> expression (), this-> _right-> templateExpReplace ({}));
+	    if (aux-> _left == NULL) return NULL;
+	    else if (aux-> _left-> info-> type ()-> is<IUndefInfo> ()) {
+		Ymir::Error::uninitVar (aux-> _left-> token, aux-> _left-> info-> sym);
 		return NULL;
+	    } else if (auto var = aux-> _right-> to<IVar> ()) {
+		auto type = aux-> _left-> info-> type ()-> DotOp (var);
+		if (type == NULL && ((this-> inside && this-> inside-> is <IPar> ()) || var-> hasTemplate ())) {
+		    var-> inside = aux;
+		    auto call = var-> expression ();
+		    if (call == NULL || call-> isType () || call-> info-> type ()-> is<IUndefInfo> ()) {
+			Ymir::Error::undefAttr (this-> token, aux-> _left-> info, var);
+			return NULL;
+		    }
+		    return (new (Z0)  IDotCall (this-> inside, this-> _right-> token, call, aux-> _left))-> expression ();
+		} else if (type != NULL && var-> hasTemplate ()) {
+
+		    std::vector <Expression> tmps;
+		    for (auto it : var-> getTemplates ()) {
+			auto elem = it-> expression ();
+			if (elem == NULL) return NULL;
+			else if (auto par = elem-> to <IParamList> ())
+			    for (auto it : par-> getParams ()) tmps.push_back (it);
+			else tmps.push_back (elem);
+		    }
+
+		    auto type_ = type-> TempOp (tmps);
+		    if (type_ == NULL) {
+			Ymir::Error::notATemplate (var-> token, var-> getTemplates (), type-> typeString ());
+			return NULL;
+		    } else type = type_;
+		} else if (type == NULL) {
+		    Ymir::Error::undefAttr (this-> token, aux-> _left-> info, var);
+		    return NULL;		
+		} else if (type-> is <IMethodInfo> () && type-> to <IMethodInfo> ()-> isAttribute () && (!this-> inside || (this-> inside && !this-> inside-> is <IPar> ()))) {
+		    auto isLeftAff = this-> inside && this-> inside-> is <IBinary> () && this-> inside-> to <IBinary> ()-> getLeft () == this && this-> inside-> token.getStr () == Token::EQUAL;
+		    if (!isLeftAff) {
+			type-> to <IMethodInfo> ()-> eraseNonAttrib ();
+			aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);
+			auto params = new (Z0) IParamList (this-> token, {});
+			auto call = new (Z0) IPar (this-> token, this-> token, aux, params, true);
+			aux-> inside = call;
+			return call-> expression ();
+		    }
+		} else if (type-> is <IAliasCstInfo> ()) {
+		    if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ())
+			aux-> _left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = true;
+		    else if (aux-> _left-> info-> type ()-> is <IRefInfo> ())
+			aux-> _left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = true;
+
+		    auto ret = type-> to <IAliasCstInfo> ()-> replace ({{Keys::SELF, new (Z0) IEvaluatedExpr (aux-> _left)}})-> expression ();
+
+		    if (ret != NULL) {
+			ret-> info-> type ()-> isConst (type-> isConst ());
+			ret-> token = aux-> _right-> token;
+		    }
+		
+		    if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ())
+			aux-> _left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = false;
+		    else if (aux-> _left-> info-> type ()-> is <IRefInfo> ())
+			aux-> _left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = false;
+		    return ret;
+		}
+		aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);
+		return aux;
+	    } else {
+		aux-> _right = aux-> _right-> expression ();
+		if (aux-> _right == NULL) return NULL;
+		auto type = aux-> _left-> info-> type ()-> DotExpOp (aux-> _right);
+		if (type == NULL) {
+		    Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> _right-> info);
+		    return NULL;
+		}
+		aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);
+		return aux;
 	    }
-	    aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);
-	    return aux;
+	} else {
+	    auto ret = new (Z0) IDot (this-> token, this-> _left, this-> _right);
+	    ret-> info = this-> info;
+	    return ret;
 	}
     }
 
@@ -1657,6 +1666,52 @@ namespace syntax {
 	aux-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, score-> ret);
 	return aux;	
     }
+
+    Expression IBinary::of () {
+	if (this-> token.getStr () == Keys::NOT_OF) {
+	    this-> token.setStr (Keys::OF);
+	    auto unary = new (Z0) IUnary ({this-> token, Token::NOT}, this);
+	    return unary-> expression ();
+	}
+	
+	Expression type;
+	if (auto v = this-> _right-> to<IVar> ()) {
+	    type = v-> asType ();
+	} else type = this-> _right-> expression ();
+
+	auto expr = this-> _left-> expression ();
+	if (!type || !expr) return NULL;
+	else if (!expr-> isExpression ()) {
+	    Ymir::Error::useAsVar (expr-> token, expr-> info);
+	    return NULL;
+	} else if (!type-> isType ()) {
+	    Ymir::Error::useAsType (type-> token);
+	    return NULL;
+	}
+
+	if (expr-> info-> type ()-> isSame (type-> info-> type ())) {
+	    auto aux = new IBool (this-> token);
+	    aux-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, new (Z0) IBoolInfo (true));
+	    aux-> value () = true;
+	    return aux;
+	} else {
+	    if (expr-> info-> type ()-> is <IAggregateInfo> () &&
+		type-> info-> type ()-> is <IAggregateInfo> ()) {
+		auto retType = expr-> info-> type ()-> to <IAggregateInfo> ()-> isTyped (type-> info-> type ()-> to <IAggregateInfo> ());
+		if (retType != NULL) {
+		    auto ret = new (Z0) IBinary (this-> token, expr, type);		
+		    ret-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), ret, retType);
+		    return ret;
+		}
+	    }
+	}
+	
+	auto aux = new IBool (this-> token);
+	aux-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, new (Z0) IBoolInfo (true));
+	aux-> value () = false;
+	return aux;
+    }
+    
     
     Expression IIs::expression () {
 	if (this-> _type) {
@@ -1685,6 +1740,7 @@ namespace syntax {
 	    auto type = new (Z0) IBoolInfo (true);
 	    ret-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, type);
 	    ret-> info-> value () = new (Z0) IBoolValue (iis);
+	    ret-> value () = iis;
 	    return ret;	    
 	} else {
 	    auto aux = new (Z0) IIs (this-> token, this-> _left-> expression (), this-> _expType);

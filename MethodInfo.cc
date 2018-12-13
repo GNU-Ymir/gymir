@@ -17,7 +17,10 @@ namespace semantic {
 	    
 	    std::vector <InfoType> treats (params-> getTreats ().begin () + 1, params-> getTreats ().end ());
 	    std::vector <tree> args = params-> toGenericParams (treats);
-	    auto ltree = left-> toGeneric ();
+
+	    Ymir::TreeStmtList list;
+	    auto ltree = Ymir::getExpr (list, left-> toGeneric ());
+
 	    args.insert (args.begin (), getAddr (ltree).getTree ());
 	    std::vector <tree> types;
 	    for (auto it : args)
@@ -30,18 +33,21 @@ namespace semantic {
 	    tree access;
 	    if (score-> proto == NULL) {
 		auto vtable = getField (token.getLocus (), ltree, Keys::VTABLE_FIELD);
-		auto nb = score-> methIndex;
+		auto nb = score-> methIndex + 1; // The first one is the typeinfo
 		auto padd = build_int_cst_type (long_unsigned_type_node, nb);
 		access = Ymir::getPointerUnref (token.getLocus (), vtable, ptr_type, padd).getTree ();
 	    } else {
 		access = score-> proto-> toGeneric ().getTree ();
 	    }
 	     
-	    return build_call_array_loc (token.getLocus (),
+	    return Ymir::compoundExpr (token.getLocus (),
+				       list,
+				       build_call_array_loc (token.getLocus (),
 					 type-> toGeneric ().getTree (),
 					 access,
 					 args.size (),
-					 args.data ());	    
+					 args.data ())
+	    );	    
 	}
 
 	Tree InstCallOnBinary (Word token, InfoType type, Expression left, Expression right) {

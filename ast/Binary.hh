@@ -94,6 +94,12 @@ namespace syntax {
 	Expression bitwiseOr ();
 
 	/**
+	 * \brief semantic analyse of a 'of' operator \n
+	 * It can return a binary test, or a bool constante
+	 */
+	Expression of ();
+	
+	/**
 	 * \brief semantic analyse of all the remaining operators
 	 */
 	Expression normal (IBinary* = NULL);

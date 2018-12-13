@@ -62,6 +62,8 @@ namespace semantic {
 	DestructSolution solveIgnore (syntax::Expression right);
 
 	DestructSolution solveStructCst (syntax::IStructCst* str, syntax::Expression right);
+
+	DestructSolution solveAggCst (syntax::IStructCst* str, syntax::Expression right);
 	
     private :
 	

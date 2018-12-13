@@ -132,6 +132,7 @@ namespace Ymir {
 	    NoOverride,
 	    SelfAlwaysInfered,
 	    SelfAlwaysRef,
+	    AggMatchOnlyNamed,
 	    PrivateMemberWithinThisContext,
 	    OverTemplateMethod,
 	    OverTemplateMethodDuo,
@@ -379,6 +380,8 @@ namespace Ymir {
 	static void selfAlwaysRef (const Word&);
 	
 	static void privateMemberWithinThisContext (const std::string & str, const Word&);
+
+	static void aggMatchOnlyNamed (const Word&);
 	
 	static void ambiguousAccess (const Word&, const Word&, semantic::InfoType);
 	

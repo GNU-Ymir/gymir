@@ -23,7 +23,7 @@ struct Keys {
     static std::string  DELEGATE; 
     static std::string  LET; 
     static std::string  IS; 
-    static std::string  NOT_IS; 
+    static std::string  NOT_IS;
     static std::string  ANTI; 
     static std::string  LX; 
     static std::string  EXTERN; 
@@ -57,7 +57,8 @@ struct Keys {
     static std::string  REF; 
     static std::string  PROTECTED; 
     static std::string  MIXIN; 
-    static std::string  OF; 
+    static std::string  OF;
+    static std::string  NOT_OF;
     static std::string  SELF; 
     static std::string  OPASSIGN; 
     static std::string  TRAIT; 

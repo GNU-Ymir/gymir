@@ -161,6 +161,7 @@ namespace Ymir {
 		phrases [ClosureVarLifetime] = "Closure var '%%%' does not live long enough";
 		phrases [UndefinedScopeEvent] = "'%%%' is not a scope event";
 		phrases [VersionOnlyGlob] = "version conditions can only be declared at module scope";
+		phrases [AggMatchOnlyNamed] = "match on object requires the use of named expression";
 		init = true;
 	    } 
 	    return phrases;

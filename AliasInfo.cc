@@ -1,5 +1,6 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/ast/_.hh>
+#include <ymir/ast/TreeExpression.hh>
 
 namespace semantic {
 
@@ -29,9 +30,11 @@ namespace semantic {
     Expression IAliasCstInfo::expression () {
 	auto globSpace = Table::instance ().space ();
 	Table::instance ().setCurrentSpace (this-> _space);
+	
 	this-> _value-> inside = new (Z0) syntax::IExpression (this-> _ident);
 	auto value = this-> _value-> expression ();
 	Table::instance ().setCurrentSpace (globSpace);
+       	
 	return value;
     }
     

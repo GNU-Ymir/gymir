@@ -22,8 +22,12 @@
 Language
 YMIR
 
-stalone
-YMIR Driver
+nomidgardlib
+Driver
+
+nostdinc
+YMIR
+; Documented in C
 
 I
 YMIR Joined Separate
@@ -31,15 +35,8 @@ YMIR Joined Separate
 iprefix
 YMIR Joined Separate
 
--standalone
-YMIR Driver Alias(stalone)
-
 fdoc
 YMIR Driver
-Generate Documentation.
 
-b
-YMIR Joined Separate
-
--build
-YMIR Driver Alias(b)
+fversion=
+YMIR Joined RejectNegative

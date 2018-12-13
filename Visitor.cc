@@ -267,33 +267,34 @@ namespace syntax {
 	while (true) {
 	    auto decl = visitDeclaration (docs, false);
 	    if (decl != NULL) decls.push_back (decl);
-	    else if (token == Keys::PUBLIC) {
-		auto pub_decls = visitPublicBlock (docs);
-		for (auto it : pub_decls) decls.push_back (it);
-	    } else if (token == Keys::PRIVATE) {
-		auto prv_decls = visitPrivateBlock (docs);
-		for (auto it : prv_decls) decls.push_back (it);
-	    } else if (token == Keys::VERSION) {
-		auto ver_decls = visitVersionGlob (globalBlock);
-		for (auto it : ver_decls) decls.push_back (it);
-	    } else if (token == Keys::EXTERN)  {
-		auto ext_decls = visitExtern (docs);
-		for (auto it : ext_decls) decls.push_back (it);
-	    } else if (token != Token::RACC) {
-		this-> lex.next ();
-		syntaxError (token,
-			     {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
-				     Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
-				     Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION, Keys::TYPE, Keys::ALIAS
-				     }
-		);
-	    } else {
-		this-> lex.next ();
-		break;
+	    else {
+		token = this-> lex.nextWithDocs (docs);
+		this-> lex.rewind ();
+		if (token == Keys::PUBLIC) {
+		    auto pub_decls = visitPublicBlock (docs);
+		    for (auto it : pub_decls) decls.push_back (it);
+		} else if (token == Keys::PRIVATE) {
+		    auto prv_decls = visitPrivateBlock (docs);
+		    for (auto it : prv_decls) decls.push_back (it);
+		} else if (token == Keys::VERSION) {
+		    auto ver_decls = visitVersionGlob (globalBlock);
+		    for (auto it : ver_decls) decls.push_back (it);
+		} else if (token == Keys::EXTERN)  {
+		    auto ext_decls = visitExtern (docs);
+		    for (auto it : ext_decls) decls.push_back (it);
+		} else if (token != Token::RACC) {
+		    this-> lex.next ();
+		    syntaxError (token,
+				 {Keys::DEF, Keys::MACRO, Keys::USE, Keys::MOD, Keys::IMPORT,
+					 Keys::EXTERN, Keys::STRUCT, Keys::UNION, Keys::ENUM,
+					 Keys::STATIC, Keys::IMMUTABLE, Keys::SELF, (Token::TILDE + Keys::SELF), Keys::VERSION, Keys::TYPE, Keys::ALIAS
+					 }
+		    );
+		} else {
+		    token = this-> lex.next ();
+		    break;
+		}
 	    }
-	    
-	    token = this-> lex.nextWithDocs (docs);
-	    this-> lex.rewind ();
 	}
 	return decls;
     }
@@ -314,7 +315,7 @@ namespace syntax {
 	
 	this-> lex.rewind ();		
 	auto type = this-> visitIdentifiant ();
-	
+
 	if (Version::isOn (type.getStr ())) {
 	    auto bl = visitDeclBlock (globalBlock);
 	    auto next = this-> lex.next ();
@@ -1340,7 +1341,7 @@ namespace syntax {
 			break;
 		    }
 		}
-	    } else if (next != Token::LCRO && next != Keys::IS) {
+	    } else if (next != Token::LCRO && next != Keys::IS && next != Keys::OF) {
 		this-> lex.rewind ();
 		auto constante = visitConstanteSimple ();
 		if (constante != NULL) 
@@ -1661,17 +1662,17 @@ namespace syntax {
     Expression Visitor::visitUlow () {
 	auto left = visitLow ();
 	auto tok = this-> lex.next ();
-	if (find (ulowOp, tok) || tok == Keys::IS) {
+	if (find (ulowOp, tok) || tok == Keys::IS || tok == Keys::OF) {
 	    auto ctype = visitAutoCaster ();
 	    auto right = visitLow ();
 	    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 	} else {
 	    if (tok == Token::NOT) {
 		auto suite = this-> lex.next ();
-		if (suite == Keys::IS) {
+		if (suite == Keys::IS || suite == Keys::OF) {
 		    auto ctype = visitAutoCaster ();
 		    auto right = visitLow ();
-		    tok.setStr (Keys::NOT_IS);
+		    tok.setStr (Token::NOT + suite.getStr ());
 		    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 		} else this-> lex.rewind ();
 	    }
@@ -1682,17 +1683,17 @@ namespace syntax {
 
     Expression Visitor::visitUlow (Expression left) {
 	auto tok = this-> lex.next ();
-	if (find (ulowOp, tok) || tok == Keys::IS) {
+	if (find (ulowOp, tok) || tok == Keys::IS || tok == Keys::OF) {
 	    auto ctype = visitAutoCaster ();
 	    auto right = visitLow ();	    
 	    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 	} else {
 	    if (tok == Token::NOT) {
 		auto suite = this-> lex.next ();
-		if (suite == Keys::IS) {
+		if (suite == Keys::IS || suite == Keys::OF) {
 		    auto ctype = visitAutoCaster ();
 		    auto right = visitLow ();
-		    tok.setStr (Keys::NOT_IS);
+		    tok.setStr (Token::NOT + suite.getStr ());
 		    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
 		} else this-> lex.rewind ();
 	    }
@@ -2160,6 +2161,7 @@ namespace syntax {
 	    } else this-> lex.rewind ();
 	    return constante;
 	}
+	
 	auto left = visitLeftOp ();
 	tok = this-> lex.next ();
 	if (find (afUnary, tok)) {
@@ -2183,7 +2185,8 @@ namespace syntax {
 	} else if (word == Keys::PRAGMA) {
 	    return visitPragma ();
 	} else this-> lex.rewind ();
-	auto var = visitVar ();
+
+	auto var = visitVar ();	
 	auto next = this-> lex.next ();
 	if (find (suiteElem, next)) 
 	    return visitSuite (next, var);
@@ -2213,6 +2216,7 @@ namespace syntax {
 		} else if (word == Keys::FUNCTION || word == Keys::DELEGATE) {
 		    return self-> visitFuncPtr (word);
 		} else self-> lex.rewind ();
+		
 		auto var = self-> visitVar ();
 		auto next = self-> lex.next ();
 		if (find (self-> suiteElem, next)) 
@@ -2324,7 +2328,15 @@ namespace syntax {
 	word = this-> lex.next ({Token::LPAR});
 	auto expr = visitExpression ();
 	word = this-> lex.next ({Token::RPAR});
-	return new (Z0)  ICast (begin, type, expr);	
+	auto retour = new (Z0)  ICast (begin, type, expr);
+
+	next = this-> lex.next ();
+	if (find (suiteElem, next))
+	    return visitSuite (next, retour);
+	else if (find (afUnary, next))
+	    return visitAfter (next, retour);
+	this-> lex.rewind ();
+	return retour;
     }
     
 

@@ -178,6 +178,8 @@ namespace semantic {
 	bool _isExternal;
 	bool _static = false;
 	bool _hasExemption = false;
+
+	static bool __exempted__;
 	
 	friend IAggregateCstInfo;
 
@@ -207,6 +209,8 @@ namespace semantic {
 
 	InfoType CompOp (InfoType) override;
 
+	InfoType CastOp (InfoType) override;
+
 	std::string getName ();
 
 	Namespace & getSpace ();
@@ -217,7 +221,7 @@ namespace semantic {
 
 	TupleInfo getImpl ();
 
-	Ymir::Tree getVtable ();
+	Ymir::Tree getVtable (bool external = false);
 	
 	Ymir::Tree toGeneric () override;
 
@@ -235,7 +239,11 @@ namespace semantic {
 	
 	AggregateInfo getAncestor ();
 
+	InfoType isTyped (IAggregateInfo*);
+	
 	bool& hasExemption ();
+
+	static bool& exempted ();
 	
 	Frame cpyCstr ();
 	
