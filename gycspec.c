@@ -2,6 +2,7 @@
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
+#include "opt-suggestions.h"
 #include "gcc.h"
 #include "tm.h"
 #include "opts.h"

@@ -105,7 +105,9 @@ ymir.all.cross:
  
 ymir.start.encap: gyc$(exeext)
 ymir.rest.encap:
- 
+
+selftest-ymir:
+
 ymir.install-common: installdirs
 	-rm -f $(DESTDIR)$(bindir)/$(GYC_INSTALL_NAME)$(exeext)
 	$(INSTALL_PROGRAM) gyc$(exeext) $(DESTDIR)$(bindir)/$(GYC_INSTALL_NAME)$(exeext)
@@ -128,7 +130,8 @@ ymir.mostlyclean:
 ymir.clean:
 ymir.distclean:
 ymir.maintainer-clean:
- 
+
+
 # make uninstall
 ymir.uninstall:
 
