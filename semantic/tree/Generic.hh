@@ -72,6 +72,12 @@ namespace Ymir {
     void declareGlobalExtern (semantic::Symbol sym);
 
     Tree declareVtable (const std::string&, Tree type, Tree value);
+
+    /**
+     * Declare a local vtable with no value
+     * The value has to be set later, for recursivity reason
+     */
+    Tree declareVtable (const std::string&, Tree type);
     
     Tree declareVtableExtern (const std::string&, Tree type);
 

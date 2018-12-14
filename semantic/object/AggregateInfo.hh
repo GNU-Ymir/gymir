@@ -221,7 +221,7 @@ namespace semantic {
 
 	TupleInfo getImpl ();
 
-	Ymir::Tree getVtable (bool external = false);
+	Ymir::Tree getVtable ();
 	
 	Ymir::Tree toGeneric () override;
 

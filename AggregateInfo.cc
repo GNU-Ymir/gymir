@@ -1247,23 +1247,25 @@ namespace semantic {
 
 	return build_constructor (vtype.getTree (), elms);
     }
-   
-
-    Ymir::Tree IAggregateInfo::getVtable (bool external) {
+    
+    Ymir::Tree IAggregateInfo::getVtable () {
 	auto tname = this-> simpleTypeString ();
 	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();
 	auto vtable = Ymir::getVtable (vname);
 
 	if (vtable.isNull ()) {
 	    auto vtype = buildVtableType ();
-	    if (!this-> _isExternal && !external) {
-		auto vec = buildVtableEnum (vtype);
-		vtable = declareVtable (vname, vtype, vec);
+	    if (!this-> _isExternal) {
+		// The vtable is declared, recursive access will succeed
+		vtable = declareVtable (vname, vtype); 
+		auto vec = buildVtableEnum (vtype); // This construction can create recursive access
+		DECL_INITIAL (vtable.getTree ()) = vec.getTree ();
 	    } else vtable = declareVtableExtern (vname, vtype);
-	} else if (!this-> _isExternal && DECL_EXTERNAL (vtable.getTree ()) == 1 && !external) {
-	    auto vtype = buildVtableType ();
-	    auto vec = buildVtableEnum (vtype);
-	    vtable = declareVtable (vname, vtype, vec);
+	} else if (!this-> _isExternal && DECL_EXTERNAL (vtable.getTree ()) == 1) {
+	    DECL_EXTERNAL (vtable.getTree ()) = 0; // Prevent recursive infinite loop
+	    auto vtype = vtable.getType ();
+	    auto vec = buildVtableEnum (vtype); // Will recursivly call getVtable 
+	    DECL_INITIAL (vtable.getTree ()) = vec.getTree ();
 	}
 	return vtable;
     }
@@ -1278,21 +1280,16 @@ namespace semantic {
 	    
 	    ttype = Ymir::makeTuple (tname, types, attrs); 
 	    IFinalFrame::declareType (tname, ttype);
-	    
-	    if (Ymir::getVtable (vname).isNull ()) {
-		auto vtype = buildVtableType ();
-		if (!this-> _isExternal) {
-		    auto vec = buildVtableEnum (vtype);
-		    declareVtable (vname, vtype, vec);
-		} else declareVtableExtern (vname, vtype);
-	    }
+
+	    // Declare the vtable
+	    this-> getVtable ();
 	}
 	
 	return ttype;
     }
 
     Ymir::Tree IAggregateInfo::genericTypeInfo () {
-	auto innerGlob = this-> getVtable (true);		
+	auto innerGlob = this-> getVtable ();		
 	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
 	auto typeTree = type-> toGeneric ();
 	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();

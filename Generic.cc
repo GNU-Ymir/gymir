@@ -417,7 +417,7 @@ namespace Ymir {
 	sym-> treeDecl (decl);	
     }
         
-    Ymir::Tree declareVtable (const std::string & name, Tree type, Tree value) {	
+    Ymir::Tree declareVtable (const std::string & name, Tree type, Tree value) {		
 	tree decl = build_decl (
 	    UNKNOWN_LOCATION,
 	    VAR_DECL,
@@ -436,6 +436,29 @@ namespace Ymir {
 	TREE_PUBLIC (decl) = 1;
 	
 	DECL_INITIAL (decl) = value.getTree ();	
+	push_decl (decl);
+	Ymir::__vtable__ [name] = decl;
+	return decl;
+    }
+
+    Ymir::Tree declareVtable (const std::string & name, Tree type) {		
+	tree decl = build_decl (
+	    UNKNOWN_LOCATION,
+	    VAR_DECL,
+	    get_identifier(name.c_str ()),
+	    type.getTree ()
+	);
+
+	TREE_STATIC (decl) = 1;
+	DECL_ARTIFICIAL (decl) = 1;
+	TREE_READONLY (decl) = 1;
+	SET_DECL_ALIGN (decl, TARGET_VTABLE_ENTRY_ALIGN);
+	DECL_USER_ALIGN (decl) = true;
+	DECL_EXTERNAL (decl) = 0;
+	DECL_PRESERVE_P (decl) = 1;
+	DECL_WEAK (decl) = 1;
+	TREE_PUBLIC (decl) = 1;
+	
 	push_decl (decl);
 	Ymir::__vtable__ [name] = decl;
 	return decl;
