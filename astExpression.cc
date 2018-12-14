@@ -463,7 +463,9 @@ namespace syntax {
     }
 
     Expression IArrayAlloc::staticArray () {
-	auto aux = new (Z0)  IArrayAlloc (this-> token, this-> _type-> toType (), this-> _size-> expression ());	
+	auto aux = new (Z0)  IArrayAlloc (this-> token, this-> _type-> toType (), this-> _size-> expression ());
+	if (aux-> _type == NULL) return NULL;
+	
 	auto ul = new (Z0)  ISymbol (this-> token, DeclSymbol::init (), this, new (Z0)  IFixedInfo (true, FixedConst::ULONG));
 	auto cmp = aux-> _size-> info-> type ()-> CompOp (ul-> type ());
 	if (cmp == NULL) {
