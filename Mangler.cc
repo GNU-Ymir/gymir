@@ -226,7 +226,7 @@ namespace Mangler {
 		} else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
 		    if (tu-> isFake ())
 			for (auto it : tu-> getParams ())
-			    ss.write ("N", it-> value ()-> toString ());
+			    ss.write ("N", mangle_var (it-> value ()-> toString ()));
 		    else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 		} else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	    }
@@ -257,7 +257,7 @@ namespace Mangler {
 		else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
 		    if (tu-> isFake ())
 			for (auto it : tu-> getParams ())
-			    ss.write ("N", it-> value ()-> toString ());
+			    ss.write ("N", mangle_var (it-> value ()-> toString ()));
 		    else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 		} else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	    }
@@ -278,7 +278,7 @@ namespace Mangler {
 		else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
 		    if (tu-> isFake ())
 			for (auto it : tu-> getParams ())
-			    buf.write ("N", it-> value ()-> toString ());
+			    buf.write ("N", mangle_var (it-> value ()-> toString ()));
 		    else buf.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 		} else buf.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	    }
@@ -295,7 +295,7 @@ namespace Mangler {
 	    else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
 		if (tu-> isFake ())
 		    for (auto it : tu-> getParams ())
-			ss.write ("N", it-> value ()-> toString ());
+			ss.write ("N", mangle_var (it-> value ()-> toString ()));
 		else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	    } else ss.write ("N", mangle_type (it-> info-> type (), it-> info-> simpleTypeString ()));
 	}

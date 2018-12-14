@@ -140,6 +140,7 @@ namespace Ymir {
 	    ClosureVarLifetime,
 	    UndefinedScopeEvent,
 	    VersionOnlyGlob,
+	    VariadicMustBeLast,
 	    LAST_ERROR
 	};
 
@@ -375,6 +376,8 @@ namespace Ymir {
 
 	static void noOverride (const Word&);
 
+	static void variadicMustBeLast (const Word&);
+	
 	static void selfAlwaysInfered (const Word&);
 
 	static void selfAlwaysRef (const Word&);

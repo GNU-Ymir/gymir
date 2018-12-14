@@ -219,7 +219,8 @@ namespace syntax {
 
     bool IFunction::verifyTemplates () {		
 	std::vector <Word> dones;
-	for (auto it : this-> _tmps) {
+	uint i = 0;
+	for (auto it : this-> _tmps) {	    
 	    if (auto var = it-> to <IVar> ()) {
 		for (auto w : dones) {
 		    if (var-> token.getStr () == w.getStr ()) {
@@ -228,7 +229,14 @@ namespace syntax {
 		    }
 		}
 		dones.push_back (var-> token);
-	    }
+		
+		if (it-> is <IVariadicVar> () && i != this-> _tmps.size () - 1) {
+		    Ymir::Error::variadicMustBeLast (it-> token);
+		    return false;
+		}
+	    }	    
+	    
+	    i += 1;
 	}
 	return false;
     }

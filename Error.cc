@@ -1712,6 +1712,22 @@ namespace Ymir {
 	} else __caught__.push_back (errorMsg);
     }
 
+    void Error::variadicMustBeLast (const Word & token) {
+	std::string msg = format (getString (VariadicMustBeLast), YELLOW, token.getStr (), RESET); 
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, token);
+
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }
+
+    
     void Error::selfAlwaysInfered (const Word & token) {
 	std::string msg = format (getString (SelfAlwaysInfered)); 
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

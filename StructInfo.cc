@@ -496,7 +496,17 @@ namespace semantic {
 	auto res = TemplateSolver::instance ().solve (this-> tmps, tmps);
 	if (!res.valid || !TemplateSolver::instance ().isSolved (this-> tmps, res))
 	    return NULL;
-
+	for (auto & it : res.elements) {
+	    if (it.second-> info) {
+		if (it.second-> info-> isImmutable ()) {
+		    it.second = it.second-> info-> value ()-> toYmir (it.second-> info);
+		} else {
+		    it.second = it.second-> templateExpReplace ({});
+		    if (!it.second) return NULL;
+		}
+	    }
+	}
+	
 	std::vector <syntax::TypedVar> params;
 	for (auto it : this-> params) {
 	    params.push_back (it-> templateExpReplace (res.elements)-> to <ITypedVar> ());
@@ -509,9 +519,9 @@ namespace semantic {
 	std::vector <syntax::Expression> tmpsDone = TemplateSolver::instance ().solved (this-> tmps, res);
 	ret-> tmpsDone = tmpsDone;
 	
-	for (auto &it : ret-> tmpsDone) {	    
-	    it = it-> templateExpReplace ({});
-	}
+	// for (auto &it : ret-> tmpsDone) {	    
+	//     it = it-> templateExpReplace ({});
+	// }
 	
 	return ret;	
     }
@@ -878,7 +888,21 @@ namespace semantic {
 		}
 		buf.write ("}");
 	    } else {
-		buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+		if (this-> tmpsDone [it]-> info-> isImmutable ())
+		    buf.write (this-> tmpsDone [it]-> info-> value ()-> toString ());
+		else if (auto tu = this-> tmpsDone [it]-> info-> type ()-> to <ITupleInfo> ()) {
+		    if (tu-> isFake ()) {
+			buf.write ("{");
+			int i = 0;
+			for (auto tuit : tu-> getParams ()) {
+			    if (i != 0) buf.write (", ");
+			    buf.write (tuit-> value ()-> toString ());
+			    i ++;
+			}
+			buf.write ("}");
+		    } else buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
+		} else 
+		    buf.write (this-> tmpsDone [it]-> info-> typeString ().c_str ());
 	    }
 	    
 	    if (it < (int) this-> tmpsDone.size () - 1)

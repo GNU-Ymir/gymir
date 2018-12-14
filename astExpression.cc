@@ -1754,10 +1754,23 @@ namespace syntax {
 	    auto type = new (Z0) IBoolInfo (true);
 	    aux-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, type);
 	    if (this-> _expType == Keys::FUNCTION) {
-		aux-> info-> value () = new (Z0) IBoolValue (
-		    aux-> _left-> info-> type ()-> is <IPtrFuncInfo> () ||
-		    aux-> _left-> info-> type ()-> is <IFunctionInfo> ()
-		);
+		if (auto fn = aux-> _left-> info-> type ()-> to <IPtrFuncInfo> ()) {
+		    aux-> info-> value () = new (Z0) IBoolValue (			
+			!fn-> isDelegate ()
+		    );
+		} else {
+		    aux-> info-> value () = new (Z0) IBoolValue (			
+			aux-> _left-> info-> type ()-> is <IFunctionInfo> ()
+		    );
+		}
+	    } else if (this-> _expType == Keys::DELEGATE) {
+		if (auto fn = aux-> _left-> info-> type ()-> to <IPtrFuncInfo> ()) {
+		    aux-> info-> value () = new (Z0) IBoolValue (			
+			fn-> isDelegate ()
+		    );
+		} else {
+		    aux-> info-> value () = new (Z0) IBoolValue (false);			
+		}
 	    } else if (this-> _expType == Keys::TUPLE) {
 		aux-> info-> value () = new (Z0) IBoolValue (
 		    aux-> _left-> info-> type ()-> is <ITupleInfo> ()

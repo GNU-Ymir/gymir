@@ -162,6 +162,7 @@ namespace Ymir {
 		phrases [UndefinedScopeEvent] = "'%%%' is not a scope event";
 		phrases [VersionOnlyGlob] = "version conditions can only be declared at module scope";
 		phrases [AggMatchOnlyNamed] = "match on object requires the use of named expression";
+		phrases [VariadicMustBeLast] = "template variadic parameter must be last one";
 		init = true;
 	    } 
 	    return phrases;

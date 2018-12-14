@@ -994,7 +994,7 @@ namespace semantic {
 	    map <string, Expression> ret = {{var-> token.getStr(), expr-> info-> value ()-> toYmir (expr-> info)}};
 	    return TemplateSolution {0, true, expr-> info-> type ()-> cloneOnExit (), ret};
 	} else {
-	    Ymir::Error::assert ("TODO");
+	    return TemplateSolution (0, false);
 	}
 	return TemplateSolution (0, false);
     }

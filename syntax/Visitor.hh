@@ -6,18 +6,81 @@
 
 namespace syntax {
 
+    /**
+     * \struct Visitor
+     * This structure transform a lexer into a AST In the following
+     * documentation, *consume* function means that the function needs
+     * to be position on the keyword, when *uncosume* ones are
+     * position just after.  For example the function for 
+     
+     * \verbatim 
+     'public' '{' declaration* '}' 
+     \endverbatim
+
+     * is marked *consume*, if it will begin by
+     * reading 'public', and *uncosume* if it begin by '{'.     
+     */
     struct Visitor {
 
 	static bool failure;
-	
+
+	/** 
+	 * \param lexer the lexer to transform
+	 */
 	Visitor (lexical::Lexer & lexer);
 
+	/**
+	 * \brief This function always return a valid (syntax) program 
+	 * If the syntax is not valid an syntax error occurs
+	 * \return A valid AST filled by the lexer
+	 */
 	Program visit ();
-	
+
+	/**
+	 * alias of visit 
+	 */
 	Program visitProgram ();
+
+	/**
+	 * *consume*
+	 * Visit a public declaration block 
+	 * \param the documentation above the public keyword
+	 * \verbatim
+	 public_block := 'public' ('{' declaration* '}') | declaration
+	 \endverbatim
+	 */
 	std::vector<Declaration> visitPublicBlock (std::string&);
+
+	/**
+	 * *consume*
+	 * Visit a private declaration block 
+	 * \param the documentation above the public keyword
+	 * \verbatim
+	 public_block := 'private' ('{' declaration* '}') | declaration
+	 \endverbatim
+	*/
 	std::vector<Declaration> visitPrivateBlock (std::string&);
+
+	/**
+	 * *consume*
+	 * Visit a version block, or tag affectation.
+	 * \param globalBlock if false, throw \e versionDeclarationGlob if it is a tag affectation
+	 * \verbatim
+	 version_glob := 'version' (identifier ('{' declaration* '}') | declaration) |
+	                           '=' identifier ';'
+	 \endverbatim
+	 */
 	std::vector<Declaration> visitVersionGlob (bool globalBlock = false);
+
+	
+	/**
+	 * Only used inside visitVersionGlob 
+	 * Visit a list of declaration
+	 * \param globalBlock if false, throw \e versionDeclarationGlob if it visit a versionGlob 
+	 * \verbatim
+	 
+	 \endverbatim
+	 */
 	std::vector<Declaration> visitDeclBlock (bool globalBlock = false);
 	Declaration visitDeclaration (std::string, bool);
 
@@ -66,14 +129,20 @@ namespace syntax {
 	Expression visitExpressionOutSide ();
 	Expression visitExpressionUlt ();
 	Expression visitExpressionUlt (Expression left);
-	Expression visitExpression ();
-	Expression visitExpression (Expression left);
-	Expression visitUlow ();
-	Expression visitUlow (Expression left);
-	Expression visitLow ();
-	Expression visitLow (Expression left);
-	Expression visitHigh ();
-	Expression visitHigh (Expression left);
+	
+	Expression visitExpression (int priority = 0);
+	Expression visitExpression (Expression left, int priority = 0);
+	
+	// Expression visitExpression ();
+	// Expression visitExpression (Expression left);
+	// Expression visitUlow ();
+	// Expression visitUlow (Expression left);
+	// Expression visitLow ();
+	// Expression visitLow (Expression left);
+	// Expression visitHigh ();
+	// Expression visitHigh (Expression left);
+
+	
 	Expression visitPth ();
 	Expression visitPthPar (const Word& token);
 	Expression visitConstante ();
@@ -141,12 +210,15 @@ namespace syntax {
 	Expression visitConstTuple (Expression begin);
 	
     private:
+	std::vector <std::vector <std::string> > operators;
+	std::vector <std::vector <std::string> > specialOperators;
 	
 	std::vector <std::string> ultimeOp;
 	std::vector <std::string> expOp;
 	std::vector <std::string> ulowOp;
 	std::vector <std::string> lowOp;
 	std::vector <std::string> highOp;
+
 	std::vector <std::string> befUnary;
 	std::vector <std::string> afUnary;
 	std::vector <std::string> suiteElem;

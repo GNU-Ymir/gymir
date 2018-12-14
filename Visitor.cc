@@ -60,21 +60,33 @@ namespace syntax {
 			   Token::PERCENT_EQUAL, Token::XOR_EQUAL,
 			   Token::DXOR_EQUAL, Token::TILDE_EQUAL};
 
-	this-> expOp = {Token::DPIPE, Token::DAND};
-		
-	this-> ulowOp = {
-	    Token::INF, Token::SUP, Token::INF_EQUAL,
-	    Token::SUP_EQUAL, Token::NOT_EQUAL, Token::NOT_INF,
-	    Token::NOT_INF_EQUAL, Token::NOT_SUP,
-	    Token::NOT_SUP_EQUAL, Token::DEQUAL, Token::DDOT, Token::TDOT
+
+	this-> operators = {
+	    {Token::DPIPE},
+	    {Token::DAND},
+	    {Token::INF, Token::SUP, Token::INF_EQUAL,
+	     Token::SUP_EQUAL, Token::NOT_EQUAL,
+	     Token::NOT_INF, Token::NOT_INF_EQUAL, Token::NOT_SUP,
+	     Token::NOT_SUP_EQUAL, Token::DEQUAL, Keys::OF, Keys::IS, Keys::IN},
+	    {Token::TDOT, Token::DDOT},
+	    {Token::LEFTD, Token::RIGHTD},
+	    {Token::PIPE, Token::XOR, Token::AND},
+	    {Token::PLUS, Token::TILDE, Token::MINUS},
+	    {Token::STAR, Token::PERCENT, Token::DIV},
+	    {Token::DXOR}	    
 	};
 
-	this-> lowOp = {Token::PLUS, Token::PIPE, Token::LEFTD,
-			Token::XOR, Token::TILDE, Token::MINUS,
-			Token::RIGHTD};
-
-	this-> highOp = {Token::DIV, Token::AND, Token::STAR, Token::PERCENT,
-			 Token::DXOR};
+	this-> specialOperators = {
+	    {}, 
+	    {},
+	    {Keys::OF, Keys::IS, Keys::IN},
+	    {},
+	    {},
+	    {},
+	    {},
+	    {}, 
+	    {}
+	};
 	
 	this-> suiteElem = {Token::LPAR, Token::LCRO, Token::DOT, Token::DCOLON, Token::LACC, Token::COLON};
 	this-> afUnary = {Token::DPLUS, Token::DMINUS};	
@@ -1620,7 +1632,7 @@ namespace syntax {
     }
 
     Expression Visitor::visitExpressionUlt () {
-	auto left = visitExpression ();
+	auto left = visitExpression (0);
 	auto tok = this-> lex.next ();
 	if (find (ultimeOp, tok)) {
 	    auto right = visitExpressionUlt ();
@@ -1637,43 +1649,42 @@ namespace syntax {
 	} else this-> lex.rewind ();
 	return left;
     }
-    
-    Expression Visitor::visitExpression () {
-	auto left = visitUlow ();
-	auto tok = this-> lex.next ();
-	if (find (expOp, tok)) {
-	    auto ctype = visitAutoCaster ();
-	    auto right = visitUlow ();
-	    return visitExpression (new (Z0)  IBinary (tok, left, right, ctype));
-	} else this-> lex.rewind ();
-	return left;
-    }
 
-    Expression Visitor::visitExpression (Expression left) {
+    Expression Visitor::visitExpression (int priority) {
+	if ((uint) priority == this-> operators.size ()) return visitPth ();	
+	auto left = visitExpression (priority + 1);
 	auto tok = this-> lex.next ();
-	if (find (expOp, tok)) {
-	    auto ctype = visitAutoCaster ();	    
-	    auto right = visitUlow ();
-	    return visitExpression (new (Z0)  IBinary (tok, left, right, ctype));
-	} else this-> lex.rewind ();
-	return left;
-    }
-    
-    Expression Visitor::visitUlow () {
-	auto left = visitLow ();
-	auto tok = this-> lex.next ();
-	if (find (ulowOp, tok) || tok == Keys::IS || tok == Keys::OF) {
+	if (find (this-> operators [priority], tok)) {
 	    auto ctype = visitAutoCaster ();
-	    auto right = visitLow ();
-	    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
+	    auto right = visitExpression (priority + 1);
+	    return visitExpression (new (Z0) IBinary (tok, left, right, ctype), priority);
 	} else {
 	    if (tok == Token::NOT) {
 		auto suite = this-> lex.next ();
-		if (suite == Keys::IS || suite == Keys::OF) {
+		if (find (this-> specialOperators [priority], suite)) {
 		    auto ctype = visitAutoCaster ();
-		    auto right = visitLow ();
-		    tok.setStr (Token::NOT + suite.getStr ());
-		    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
+		    auto right = visitExpression (priority + 1);
+		    return visitExpression (new (Z0) IBinary (tok, left, right, ctype), priority);
+		} else this-> lex.rewind ();
+	    }
+	    this-> lex.rewind ();
+	}
+	return left;
+    }
+    
+    Expression Visitor::visitExpression (Expression left, int priority) {
+	auto tok = this-> lex.next ();
+	if (find (this-> operators [priority], tok)) {
+	    auto ctype = visitAutoCaster ();
+	    auto right = visitExpression (priority + 1);
+	    return visitExpression (new (Z0) IBinary (tok, left, right, ctype), priority);
+	} else {
+	    if (tok == Token::NOT) {
+		auto suite = this-> lex.next ();
+		if (find (this-> specialOperators [priority], suite)) {
+		    auto ctype = visitAutoCaster ();
+		    auto right = visitExpression (priority + 1);
+		    return visitExpression (new (Z0) IBinary (tok, left, right, ctype), priority);
 		} else this-> lex.rewind ();
 	    }
 	    this-> lex.rewind ();
@@ -1681,77 +1692,7 @@ namespace syntax {
 	return left;
     }
 
-    Expression Visitor::visitUlow (Expression left) {
-	auto tok = this-> lex.next ();
-	if (find (ulowOp, tok) || tok == Keys::IS || tok == Keys::OF) {
-	    auto ctype = visitAutoCaster ();
-	    auto right = visitLow ();	    
-	    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
-	} else {
-	    if (tok == Token::NOT) {
-		auto suite = this-> lex.next ();
-		if (suite == Keys::IS || suite == Keys::OF) {
-		    auto ctype = visitAutoCaster ();
-		    auto right = visitLow ();
-		    tok.setStr (Token::NOT + suite.getStr ());
-		    return visitUlow (new (Z0)  IBinary (tok, left, right, ctype));
-		} else this-> lex.rewind ();
-	    }
-	    this-> lex.rewind ();
-	}
-	return left;
-    }
-
-    Expression Visitor::visitLow () {
-	auto left = visitHigh ();
-	auto tok = this-> lex.next ();
-	if (find (lowOp, tok)) {
-	    auto ctype = visitAutoCaster ();
-	    auto right = visitHigh ();
-	    return visitLow (new (Z0)  IBinary (tok, left, right, ctype));
-	} else this-> lex.rewind ();
-	return left;
-    }
-
-    Expression Visitor::visitLow (Expression left) {
-	auto tok = this-> lex.next ();
-	if (find (lowOp, tok)) {
-	    auto ctype = visitAutoCaster ();
-	    auto right = visitHigh ();
-	    return visitLow (new (Z0)  IBinary (tok, left, right, ctype));
-	} else this-> lex.rewind ();
-	return left;
-    }
-
-    Expression Visitor::visitHigh () {
-    	auto left = visitPth ();
-    	auto tok = this-> lex.next ();
-    	if (find (highOp, tok)) {
-	    auto ctype = visitAutoCaster ();
-    	    auto right = visitPth ();
-    	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
-    	} else if (tok == Keys::IN) {
-	    auto ctype = visitAutoCaster ();
-	    auto right = visitPth ();
-	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
-	} else this-> lex.rewind ();
-    	return left;
-    }
-
-    Expression Visitor::visitHigh (Expression left) {
-	auto tok = this-> lex.next ();
-	if (find (highOp, tok)) {
-	    auto ctype = visitAutoCaster ();
-	    auto right = visitPth ();
-	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
-	} else if (tok == Keys::IN) {
-	    auto ctype = visitAutoCaster ();
-	    auto right = visitPth ();
-	    return visitHigh (new (Z0)  IBinary (tok, left, right, ctype));
-	} else this-> lex.rewind ();
-	return left;
-    }
-    
+        
     Expression Visitor::visitPth () {
 	auto tok = this-> lex.next ();
 	if (find (befUnary, tok)) {
@@ -1966,27 +1907,33 @@ namespace syntax {
 	this-> lambdaPossible = true;
 	next = this-> lex.next ({Token::COLON});
 	next = this-> lex.next ();
-	if (next == Keys::FUNCTION || next == Keys::STRUCT || next == Keys::TUPLE || next == Keys::DELEGATE) {
+	if (next == Keys::FUNCTION || next == Keys::STRUCT || next == Keys::TUPLE || next == Keys::DELEGATE || next == Keys::TYPE) {
 	    auto expType = next;
-	    next = this-> lex.next ({Token::RPAR});
-	    return new (Z0)  IIs (begin, expr, expType);
-	} else {
-	    this-> lex.rewind ();
-	    auto type = visitLeftOpSimple ();
-	    next = this-> lex.next ({Token::COMA,Token::RPAR});
-	    if (next == Token::COMA) {
-		std::vector <Expression> temps;
-		while (true) {
-		    bool templates = true, cont = true;
-		    temps.push_back (visitOf (templates, cont));
-		    next = this-> lex.next ({Token::RPAR, Token::COMA});
-		    if (next == Token::RPAR) break;
-		}
-		return new (Z0) IIs (begin, expr, type, temps);
-	    }
-	    return new (Z0)  IIs (begin, expr, type, {});
+	    if (next == Keys::FUNCTION || next == Keys::DELEGATE) {
+		next = this-> lex.next ({Token::RPAR, Token::LPAR});
+	    } else next = this-> lex.next ({Token::RPAR});
+	    
+	    if (next == Token::RPAR) {
+		return new (Z0)  IIs (begin, expr, expType);
+	    } else this-> lex.rewind ();
 	}
+	
+	this-> lex.rewind ();
+	auto type = visitLeftOpSimple ();
+	next = this-> lex.next ({Token::COMA,Token::RPAR});
+	if (next == Token::COMA) {
+	    std::vector <Expression> temps;
+	    while (true) {
+		bool templates = true, cont = true;
+		temps.push_back (visitOf (templates, cont));
+		next = this-> lex.next ({Token::RPAR, Token::COMA});
+		if (next == Token::RPAR) break;
+	    }
+	    return new (Z0) IIs (begin, expr, type, temps);
+	}
+	return new (Z0)  IIs (begin, expr, type, {});
     }
+    
 
     Expression Visitor::visitNumericOrVar () {
 	auto tok = this-> lex.next ();

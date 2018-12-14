@@ -468,10 +468,16 @@ namespace semantic {
 		if (it-> info) {
 		    if (it-> info-> isImmutable ()) buf.write (it-> info-> value ()-> toString ());
 		    else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
-			if (tu-> isFake ())
-			    for (auto it : tu-> getParams ())
+			if (tu-> isFake ()) {
+			    buf.write ("{");
+			    int i = 0;
+			    for (auto it : tu-> getParams ()) {
+				if (i != 0) buf.write (", ");
 				buf.write (it-> value ()-> toString ());
-			else buf.write (it-> info-> typeString ());
+				i += 1;
+			    }
+			    buf.write ("}");
+			} else buf.write (it-> info-> typeString ());
 		    } else buf.write ( it-> info-> typeString ());
 		}
 	    }
@@ -492,10 +498,16 @@ namespace semantic {
 		if (it-> info) {
 		    if (it-> info-> isImmutable ()) buf.write (it-> info-> value ()-> toString ());
 		    else if (auto tu = it-> info-> type ()-> to <ITupleInfo> ()) {
-			if (tu-> isFake ())
-			    for (auto it : tu-> getParams ())
+			if (tu-> isFake ()) {
+			    buf.write ("{");
+			    int i = 0;
+			    for (auto it : tu-> getParams ()) {
+				if (i != 0) buf.write (", ");
 				buf.write (it-> value ()-> toString ());
-			else buf.write (it-> info-> simpleTypeString ());
+				i += 1;
+			    }
+			    buf.write ("}");
+			} else buf.write (it-> info-> simpleTypeString ());
 		    } else buf.write ( it-> info-> simpleTypeString ());
 		}
 	    }
