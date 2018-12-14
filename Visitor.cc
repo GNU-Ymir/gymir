@@ -1664,7 +1664,7 @@ namespace syntax {
 		if (find (this-> specialOperators [priority], suite)) {
 		    auto ctype = visitAutoCaster ();
 		    auto right = visitExpression (priority + 1);
-		    return visitExpression (new (Z0) IBinary (tok, left, right, ctype), priority);
+		    return visitExpression (new (Z0) IBinary ({tok, tok.getStr () + suite.getStr ()}, left, right, ctype), priority);
 		} else this-> lex.rewind ();
 	    }
 	    this-> lex.rewind ();
@@ -1684,7 +1684,7 @@ namespace syntax {
 		if (find (this-> specialOperators [priority], suite)) {
 		    auto ctype = visitAutoCaster ();
 		    auto right = visitExpression (priority + 1);
-		    return visitExpression (new (Z0) IBinary (tok, left, right, ctype), priority);
+		    return visitExpression (new (Z0) IBinary ({tok, tok.getStr () + suite.getStr ()}, left, right, ctype), priority);
 		} else this-> lex.rewind ();
 	    }
 	    this-> lex.rewind ();
