@@ -89,7 +89,7 @@ namespace syntax {
 	TypeDestructor visitTypeDestructor ();
 	Block visitTypeStaticConstruct ();
 	TypeMethod visitTypeMethod (std::string & docs);
-	TypeAlias visitTypeAlias (std::string & docs);
+	TypeAttr visitTypeAttr (std::string & docs);
 	void visitTypePrivate (std::string & docs, TypeCreator type);
 	void visitTypeProtected (std::string & docs, TypeCreator type);
 	

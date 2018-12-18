@@ -141,6 +141,7 @@ namespace Ymir {
 	    UndefinedScopeEvent,
 	    VersionOnlyGlob,
 	    VariadicMustBeLast,
+	    AttrInHeirStatic,
 	    LAST_ERROR
 	};
 
@@ -377,6 +378,8 @@ namespace Ymir {
 	static void noOverride (const Word&);
 
 	static void variadicMustBeLast (const Word&);
+
+	static void attributeInHeirStatic (const Word&);
 	
 	static void selfAlwaysInfered (const Word&);
 

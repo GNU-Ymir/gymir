@@ -1254,11 +1254,6 @@ namespace syntax {
 			return call-> expression ();
 		    }
 		} else if (type-> is <IAliasCstInfo> ()) {
-		    if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ())
-			aux-> _left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = true;
-		    else if (aux-> _left-> info-> type ()-> is <IRefInfo> ())
-			aux-> _left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = true;
-
 		    auto ret = type-> to <IAliasCstInfo> ()-> replace ({{Keys::SELF, new (Z0) IEvaluatedExpr (aux-> _left)}})-> expression ();
 
 		    if (ret != NULL) {
@@ -1266,10 +1261,6 @@ namespace syntax {
 			ret-> token = aux-> _right-> token;
 		    }
 		
-		    if (aux-> _left-> info-> type ()-> is <IAggregateInfo> ())
-			aux-> _left-> info-> type ()-> to<IAggregateInfo> ()-> hasExemption () = false;
-		    else if (aux-> _left-> info-> type ()-> is <IRefInfo> ())
-			aux-> _left-> info-> type ()-> to <IRefInfo> ()-> content ()-> to<IAggregateInfo> ()-> hasExemption () = false;
 		    return ret;
 		}
 		aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);

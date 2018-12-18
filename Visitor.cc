@@ -725,29 +725,24 @@ namespace syntax {
     TypeCreator Visitor::visitTypeCreator (std::string & docs) {
 	std::vector <Expression> temps;
 	auto ident = visitIdentifiant ();
-	auto word = this-> lex.next ({Token::LPAR, Keys::OVER, Keys::IMPL});
-	TypeForm form = TypeForm::OVER; 
+	auto word = this-> lex.next ({Token::LPAR, Keys::OVER, Token::LACC});
 	if (word == Token::LPAR) {
 	    temps = visitTemplateStruct ();
-	    word = this-> lex.next ({Keys::OVER, Keys::IMPL});
-	    form = (word == Keys::OVER) ? TypeForm::OVER : TypeForm::IMPL;
-	} else {	    
-	    form = (word == Keys::OVER) ? TypeForm::OVER : TypeForm::IMPL;
+	    word = this-> lex.next ({Keys::OVER, Token::LACC});	    
 	}
-
+	
 	auto save = this-> lambdaPossible;
 	this-> lambdaPossible = false;
 
-	bool isUnion = false;
-	std::vector <Expression> who;
-	if (form == TypeForm::IMPL || form == TypeForm::OVER) {
-	    who.push_back (visitExpression ());	    
-	} 
+	Expression who = NULL;
+	if (word == Keys::OVER) {
+	    who = visitExpression ();	    
+	    this-> lex.next ({Token::LACC});
+	}
 	
 	this-> lambdaPossible = save;
-	auto type = new (Z0) ITypeCreator (ident, docs, form, who, temps, isUnion);
-	
-	this-> lex.next ({Token::LACC});
+	auto type = new (Z0) ITypeCreator (ident, docs, who, temps);
+       
 	while (true) {
 	    std::string innerDocs;
 	    auto next = this-> lex.nextWithDocs (innerDocs, {Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED, Keys::LET, Keys::STATIC});
@@ -755,7 +750,7 @@ namespace syntax {
 	    else if (next == Keys::OVER || next == Keys::DEF)
 		type-> getMethods ().push_back (visitTypeMethod (innerDocs));
 	    else if (next == Keys::LET)
-		type-> getAlias ().push_back (visitTypeAlias (innerDocs));
+		type-> getAttrs ().push_back (visitTypeAttr (innerDocs));
 	    else if (next == Token::TILDE) type-> getDestructors ().push_back (visitTypeDestructor ());
 	    else if (next == Keys::PRIVATE) visitTypePrivate (innerDocs, type);		
 	    else if (next == Keys::PROTECTED) visitTypeProtected (innerDocs, type);
@@ -801,7 +796,7 @@ namespace syntax {
 	return new (Z0) ITypeDestructor (begin, visitBlock ());
     }
 
-    TypeAlias Visitor::visitTypeAlias (std::string & docs) {
+    TypeAttr Visitor::visitTypeAttr (std::string & docs) {
 	auto next = this-> lex.next ();
 	bool isConst = false, isStatic = false;
 	if (next == Keys::CONST) isConst = true;
@@ -811,19 +806,10 @@ namespace syntax {
 	auto name = visitIdentifiant ();
 	this-> lex.next ({Token::COLON});
 
-	Expression value = NULL;
-	if (isStatic) value = visitLeftOpSimple ();
-	else {
-	    this-> lex.next ({Keys::SELF});
-	    this-> lex.next ({Token::DOT});
-	    this-> lex.rewind (2);
-	    
-	    value = visitExpression ();
-	}
-	
+	Expression type = visitLeftOpSimple ();	
 	this-> lex.next ({Token::SEMI_COLON});
 	
-	return new (Z0) ITypeAlias (name, docs, value, isStatic, isConst);
+	return new (Z0) ITypeAttr (name, docs, type, isStatic, isConst);
     }
     
     TypeMethod Visitor::visitTypeMethod (std::string & docs) {
@@ -852,9 +838,9 @@ namespace syntax {
 		cst-> getProtection () = InnerProtection::PRIVATE;
 		type-> getMethods ().push_back (cst);
 	    } else if (next == Keys::LET) {
-		auto cst = visitTypeAlias (docs);
+		auto cst = visitTypeAttr (docs);
 		cst-> getProtection () = InnerProtection::PRIVATE;
-		type-> getAlias ().push_back (cst);
+		type-> getAttrs ().push_back (cst);
 	    } else break;
 	    if (!mult) break;
 	}
@@ -880,9 +866,9 @@ namespace syntax {
 		cst-> getProtection () = InnerProtection::PROTECTED;
 		type-> getMethods ().push_back (cst);
 	    } else if (next == Keys::LET) {
-		auto cst = visitTypeAlias (docs);
+		auto cst = visitTypeAttr (docs);
 		cst-> getProtection () = InnerProtection::PROTECTED;
-		type-> getAlias ().push_back (cst);
+		type-> getAttrs ().push_back (cst);
 	    } else break;
 	    if (!mult) break;
 	}

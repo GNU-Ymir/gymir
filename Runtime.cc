@@ -15,6 +15,10 @@ namespace Ymir {
     std::string Runtime::TYPE_INFO_MODULE = "core.info";
     std::string Runtime::TYPE_INFO_SUFFIX = "_info";
 
+    std::string Runtime::VTABLE_FIELD_TYPEINFO = "vtable";
+    std::string Runtime::LEN_FIELD_TYPEINFO = "len";
+    std::string Runtime::C_O_A_TYPEINFO = "c_o_a";
+    
     std::string Runtime::STRUCT_INFO = "Struct_info";
     std::string Runtime::TUPLE_INFO = "Tuple_info";
     std::string Runtime::AGGREGATE_INFO = "Aggregate_info";
@@ -34,4 +38,7 @@ namespace Ymir {
     std::string Runtime::MEM_CMP_ARRAY = "_y_mem_cmp_array";
     std::string Runtime::COMPARE_TYPEINFO = "_y_cmp_typeinfo";
     std::string Runtime::DYNAMIC_CAST = "_y_dynamic_cast";
+
+    
+    
 }

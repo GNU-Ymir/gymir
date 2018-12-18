@@ -105,25 +105,6 @@ namespace semantic {
 				       Ymir::getPointerUnref (locus.getLocus (), casted, innerType, 0));
 	}
 	
-	Ymir::Tree InstUnref (Word locus, InfoType t, Expression left, Expression right) {
-	    auto type = t-> cloneOnExitWithInfo ();
-	    type-> binopFoo = getAndRemoveBack (type-> nextBinop);
-
-	    auto loc = locus.getLocus ();
-	    auto innerType = left-> info-> type ()-> to <IAggregateInfo> ()-> getImpl ();
-	    
-	    Ymir::TreeStmtList list;
-	    auto leftExp = Ymir::getExpr (list, left);
-	    leftExp = getField (locus.getLocus (), leftExp, 1);
-	    
-	    return Ymir::compoundExpr (loc, list, type-> buildBinaryOp (
-		locus,
-		type,
-		new (Z0) ITreeExpression (left-> token, innerType, leftExp),
-		right
-	    ));
-	}
-	
 	Ymir::Tree InstCopyCstAff (Word loc, InfoType, Expression left, Expression right) {
 	    auto rtree = right-> toGeneric ();
 	    auto ltree = left-> toGeneric ();
@@ -205,16 +186,14 @@ namespace semantic {
 	
     }
     
-    IAggregateCstInfo::IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion, bool isOver) :
+    IAggregateCstInfo::IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, syntax::Expression over) :
 	IInfoType (true),
 	_space (space),
 	_locId (locId),
 	_name (name),
 	_contrs ({}), _destr (NULL), _methods ({}), _staticMeth ({}),
 	_tmps (tmps),
-	_impl (self),
-	_isUnion (isUnion),
-	_isOver (isOver),
+	_ancExpr (over),
 	_templateSpace ("")
 	
     {}
@@ -223,8 +202,8 @@ namespace semantic {
 	return this-> _contrs;
     }
 
-    std::vector <TypeAlias> & IAggregateCstInfo::getAlias () {
-	return this-> _alias;
+    std::vector <TypeAttr> & IAggregateCstInfo::getAttrs () {
+	return this-> _attrs;
     }
     
     FunctionInfo & IAggregateCstInfo::getDestructor () {
@@ -243,8 +222,8 @@ namespace semantic {
 	return this-> _staticMeth;
     }
 
-    std::vector <TypeAlias> & IAggregateCstInfo::getStaticVars () {
-	return this-> _staticVars;
+    std::vector <TypeAttr> & IAggregateCstInfo::getStaticVars () {
+	return this-> _staticAttrs;
     }
     
     Block & IAggregateCstInfo::getStaticBlock () {
@@ -276,52 +255,97 @@ namespace semantic {
     
     InfoType IAggregateCstInfo::TempOp (const std::vector <Expression> & tmps) {
 	static std::map <std::string, AggregateInfo> inProgress;
-	static std::map <std::string, AggregateInfo> validated;
-
+	
+	if (this-> _ancExpr) {
+	    auto aggType = this-> _ancExpr-> toType ();
+	    if (aggType == NULL) return NULL;
+	    auto agg = aggType-> info-> type ()-> to <IAggregateInfo> ();
+	    if (agg == NULL) {
+		Ymir::Error::cannotOverride (this-> _locId, aggType-> info-> type ());
+		return NULL;
+	    } else this-> _anc = agg-> _id;
+	}
+	
 	if (this-> _tmps.size () != 0) {
 	    return this-> getScore (tmps);
 	}
 
-	if (this-> _info) return this-> _info-> clone ();	
 	if (this-> _tmps.size () != tmps.size ()) return NULL;
 
 	auto name = Namespace (this-> _space, this-> _name).toString ();
-	auto valid = validated.find (name);
-	if (valid != validated.end ()) return valid-> second-> clone ();
+
 	auto inside = inProgress.find (name);
 	if (inside != inProgress.end ()) return inside-> second;
 	
-	auto info = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {}, this-> _isExternal);
-	inProgress [name] = info;
+	auto last = Table::instance ().templateNamespace ();
+	auto currentSpace = Table::instance ().space ();
 	
-	auto str = this-> constructImpl ();
-	if (str == NULL) {
-	    inProgress [name] = NULL;
-	    return NULL;
+	this-> _info = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {}, this-> _isExternal);
+	inProgress [name] = this-> _info;
+
+	AggregateInfo anc = NULL;
+	if (this-> _anc) {
+	    auto ancInfo = this-> _anc-> TempOp ({});
+	    if (ancInfo == NULL) return NULL;
+	    else anc = ancInfo-> to <IAggregateInfo> ();
 	}
 	
-	if (recursiveGet (info, str)) {
-	    inProgress [name] = NULL;
-	    Ymir::Error::recursiveNoSize (this-> _impl [0]-> token);
+	if (this-> _anc && this-> _attrs.size () != 0 && !this-> _isDynamic) {
+	    Ymir::Error::attributeInHeirStatic (this-> _attrs [0]-> getIdent ());
 	    return NULL;
 	}
+
+	if (anc) {
+	    for (auto it : anc-> getTypes ()) this-> _info-> getTypes ().push_back (it);
+	    for (auto it : anc-> getAttrs ()) this-> _info-> getAttrs ().push_back (it);
+	    for (auto it : anc-> getInnerProts ()) this-> _info-> getInnerProts ().push_back (it);
+	    for (auto it : anc-> getAttrSpaces ()) this-> _info-> getAttrSpaces ().push_back (it);
+	}
+
+	auto typeSpace = Namespace (this-> _info-> innerTypeString ());
+	for (auto it : Ymir::r (0, this-> _attrs.size ())) {
+	    Table::instance ().setCurrentSpace (this-> _space);
+	    Table::instance ().templateNamespace () = currentSpace;
 	    
-	info-> _impl = str;
+	    Type info = this-> _attrs [it]-> getType ()-> toType ();
+	    if (info) {
+		if (recursiveGet (this-> _info, info-> type ())) {
+		    Table::instance ().setCurrentSpace (currentSpace);
+		    Table::instance ().templateNamespace () = last;
+		    Ymir::Error::recursiveNoSize (this-> _attrs [it]-> getIdent ());
+		    inProgress [name] = NULL;
+		    return NULL;
+		}
+
+		if (this-> _attrs [it]-> isConst ())
+		    info-> type ()-> isConst (true);
+		
+		this-> _info-> getTypes ().push_back (info-> type ());
+		this-> _info-> getAttrs ().push_back (this-> _attrs [it]-> getIdent ().getStr ());
+		this-> _info-> getInnerProts ().push_back (this-> _attrs [it]-> getProtection ());
+		this-> _info-> getAttrSpaces ().push_back (typeSpace);
+	    } else {
+		Table::instance ().setCurrentSpace (currentSpace);
+		Table::instance ().templateNamespace () = last;
+		inProgress [name] = NULL;
+		return NULL;
+	    }	    
+	}
+
+	Table::instance ().setCurrentSpace (currentSpace);
+	Table::instance ().templateNamespace () = last;
+		    
 	if (this-> _destr)
-	    info-> _destr = this-> _destr-> frame ();
-	info-> _staticMeth = this-> _staticMeth;
-	info-> _methods = this-> _methods;
-	InfoType anc = NULL;
-	if (this-> _anc) anc = this-> _anc-> TempOp ({});
-	if (anc) info-> _anc = anc-> to <IAggregateInfo> ();
+	    this-> _info-> _destr = this-> _destr-> frame ();
+	this-> _info-> _staticMeth = this-> _staticMeth;
+	this-> _info-> _methods = this-> _methods;
+	if (anc) this-> _info-> _anc = anc-> to <IAggregateInfo> ();
 	
-	info-> _allMethods = info-> getMethods ();
-	info-> _allAlias = info-> getAllAlias ();
-	this-> _info = info;	    
-	
-	// info-> setTmps (this-> tmpsDone); TODO
+	this-> _info-> _allMethods = this-> _info-> getMethods ();
+
+       
 	inProgress.erase (name);	
-	return info-> clone ();	    
+	return this-> _info-> clone ();	    
     }
 
     InfoType IAggregateCstInfo::getScore (const std::vector <syntax::Expression> & tmps) {
@@ -394,7 +418,10 @@ namespace semantic {
 	    }
 	    return false;
 	} else if (auto agg = where-> to <IAggregateInfo> ()) {
-	    return recursiveGet (who, agg-> getImpl ());
+	    for (auto it : agg-> getTypes ()) {
+		if (recursiveGet (who, it)) return true;
+	    }
+	    return false;
 	} else if (auto cstr = where-> to <IStructCstInfo> ()) {
 	    return recursiveGet (who, cstr-> TempOp ({}));
 	} else if (auto cagg = where-> to <IAggregateCstInfo> ()) {
@@ -413,6 +440,7 @@ namespace semantic {
 	    ret-> unopFoo = StructUtils::InstSizeOfCst;
 	    return ret;
 	}
+	
 	return NULL;
     }
 
@@ -597,52 +625,6 @@ namespace semantic {
 	}
     }
 
-    TupleInfo IAggregateCstInfo::constructImpl () {
-	auto last = Table::instance ().templateNamespace ();
-	auto currentSpace = Table::instance ().space ();
-	
-	Table::instance ().setCurrentSpace (this-> _space);
-	Table::instance ().templateNamespace () = currentSpace;
-	
-	auto type = this-> _impl [0]-> toType ();
-	if (type == NULL) {
-	    Table::instance ().setCurrentSpace (currentSpace);
-	    Table::instance ().templateNamespace () = last;
-	    return NULL;
-	}
-
-	if (this-> _isOver) {
-	    if (this-> _anc == NULL) {
-		auto agg = type-> info-> type ()-> to <IAggregateInfo> ();
-		if (agg == NULL) {
-		    Ymir::Error::cannotOverride (this-> _locId, type-> info-> type ());
-		    Table::instance ().setCurrentSpace (currentSpace);
-		    Table::instance ().templateNamespace () = last;
-		    return NULL;
-		}
-		this-> _anc = agg-> _id;
-	    }
-	    Table::instance ().setCurrentSpace (currentSpace);
-	    Table::instance ().templateNamespace () = last;
-	    return this-> _anc-> constructImpl ();
-	} else {	    
-	    auto str = type-> info-> type ()-> to <ITupleInfo> ();
-	    if (str == NULL) {
-		str = new (Z0) ITupleInfo (false, false, this-> _isUnion);
-		str-> addParam (type-> info-> type ());
-	    }
-
-	    for (auto mt : this-> _methods) {
-		if (mt-> isOver ())
-		    Ymir::Error::noOverride (mt-> frame ()-> func ()-> getIdent ());
-	    }
-	    
-	    Table::instance ().setCurrentSpace (currentSpace);
-	    Table::instance ().templateNamespace () = last;
-	    return str;		
-	}	
-    }    
-
     bool IAggregateCstInfo::inProtectedContext () {
 	auto space = Table::instance ().getCurrentSpace ();
 	string name_ = "";
@@ -673,8 +655,6 @@ namespace semantic {
 	return false;
     }
 
-
-    bool IAggregateInfo::__exempted__ = false;
     
     IAggregateInfo::IAggregateInfo (AggregateCstInfo from, Namespace space, std::string name, const std::vector <syntax::Expression> & tmpsDone, bool isExtern) :
 	IInfoType (false),
@@ -732,13 +712,6 @@ namespace semantic {
 	    static std::set <InfoType> dones;
 	    if (dones.find (this) == dones.end ()) {
 		dones.insert (this);				
-		if (this-> _impl-> ConstVerif (aggr-> _impl) == NULL) {
-		    dones.erase (this);
-		    return NULL;
-		} else {
-		    dones.erase (this);
-		    return this;
-		}       	    
 	    }
 	    return this;
 	}
@@ -746,20 +719,24 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::onClone () {
-	if (this-> _impl == NULL) // In type construction (e.g. TempOp ({...}))
-	    return this;
-	    
 	static std::map <InfoType, InfoType> dones;
 	if (dones.find (this) == dones.end ()) {
 	    auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone, this-> _isExternal);
 	    dones [this] = ret;
-	    ret-> _impl = this-> _impl-> clone ()-> to <ITupleInfo> ();
+
 	    dones.erase (this);
 	    ret-> _destr = this-> _destr;
 	    ret-> _staticMeth = this-> _staticMeth;
 	    ret-> _methods = this-> _methods;
 	    ret-> _allMethods = this-> _allMethods;
-	    ret-> _allAlias = this-> _allAlias;
+
+	    for (auto it : Ymir::r (0, this-> _types.size ())) {
+		ret-> _attrs.push_back (this-> _attrs [it]);
+		ret-> _types.push_back (this-> _types [it]);
+		ret-> _prots.push_back (this-> _prots [it]);
+		ret-> _attrSpaces.push_back (this-> _attrSpaces [it]);
+	    }
+	    
 	    if (this-> _anc)
 		ret-> _anc = this-> _anc;
 	    ret-> isConst (this-> isConst ());
@@ -834,6 +811,25 @@ namespace semantic {
 	    ret-> binopFoo = AggregateUtils::InstGetVtable;
 	    return ret;
 	}
+
+	bool hasPrivate = false;
+	for (auto it : Ymir::r (0, this-> _attrs.size ())) {
+	    if (var-> token == this-> _attrs [it]) {
+		if (this-> _prots [it] == InnerProtection::PRIVATE && (!this-> isMine (this-> _attrSpaces [it]) || !this-> inPrivateContext ())) {
+		    hasPrivate = true;
+		} else if (this-> _prots [it] == InnerProtection::PROTECTED && (!this-> isProtectedForMe (this-> _attrSpaces [it]) || !this-> inProtectedContext ())) {
+		    hasPrivate = true;
+		} else {		
+		    auto ret = this-> _types [it]-> clone ();
+		    if (this-> isConst ()) {
+			ret-> isConst (true);
+		    } else ret-> isConst (this-> _types [it]-> isConst ());
+		    ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
+		    ret-> binopFoo = &StructUtils::InstGet;
+		    return ret;
+		}
+	    }
+	}
 	
 	if (!var-> hasTemplate () && var-> token.getStr () == Keys::SUPER && this-> getAncestor () != NULL)  {
 	    if (this-> inPrivateContext ())
@@ -845,46 +841,15 @@ namespace semantic {
 	    return ret;
 	}
 	
-	this-> _impl-> isConst (this-> isConst ());
-	InfoType ret = NULL; //this-> _impl-> DotOp (this-> _id-> getLocId (), this, var);
-	bool alias = false;
-	if (!this-> _hasExemption && !__exempted__) {
-	    ret = this-> AliasOp (var);
-	    if (ret) {
-		ret-> nextBinop.push_back (ret-> binopFoo);
-		ret-> binopFoo = &AggregateUtils::InstUnref;
-		return ret;
-	    }
+	auto fin = this-> Method (var);
+	if (fin) return fin;
+	else if (hasPrivate) {
+	    Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
 	}
 	
-	if (ret == NULL || (!this-> inProtectedContext () && !alias)) {	    
-	    auto fin = this-> Method (var);
-	    if (fin) return fin;
-	    else if (ret) { Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token); return NULL; }
-	    return NULL;
-	} else {	    
-	    ret-> isConst (this-> isConst ());
-	    ret-> nextBinop.push_back (ret-> binopFoo);
-	    ret-> binopFoo = &AggregateUtils::InstUnref;
-	    return ret;
-	}
+	return NULL;
     }
 
-    InfoType IAggregateInfo::DotExpOp (Expression right) {
-	this-> _impl-> isConst (this-> isConst ());
-	auto ret = this-> _impl-> DotExpOp (right);
-	if (ret != NULL) {
-	    if (!this-> inPrivateContext ()) {
-		Ymir::Error::privateMemberWithinThisContext (this-> typeString (), right-> token);
-		return NULL;
-	    } else {
-		ret-> isConst (this-> isConst ());
-		ret-> nextBinop.push_back (ret-> binopFoo);
-		ret-> binopFoo = &AggregateUtils::InstUnref;
-	    }
-	}
-	return ret;
-    }
     
     InfoType IAggregateInfo::DColonOp (Var var) {
 	if (var-> hasTemplate ()) return NULL;
@@ -1034,32 +999,13 @@ namespace semantic {
 	return ret;
     }
     
-    InfoType IAggregateInfo::AliasOp (Var var) {
-	bool hasPrivate = false;
-	for (auto it : this-> _allAlias) {	    
-	    if (it-> getIdent ().getStr () == var-> token.getStr ()) {
-		if (it-> isPrivate () && (!this-> isMine (it-> space ()) || !this-> inPrivateContext ())) {
-		    hasPrivate = true;
-		} else if (it-> isProtected () && (!this-> isProtectedForMe (it-> space ()) || !this-> inProtectedContext ()))
-		    hasPrivate = true;
-		else {
-		    auto ret = new (Z0) IAliasCstInfo (var-> token, this-> _space, it-> getValue ()-> templateExpReplace ({}));
-		    ret-> isConst (this-> isConst ());
-		    if (it-> isConst ()) ret-> isConst (it-> isConst ());
-		    return ret;
-		}
-	    }
-	}
-	if (hasPrivate)
-	    Ymir::Error::privateMemberWithinThisContext (this-> typeString (), var-> token);
-	return NULL;
-    }
 
     InfoType IAggregateInfo::Method (Var var) {
 	std::vector <Frame> frames;
 	std::vector <int> index;
 	int i = 0;
 	bool hasPrivate = false;
+	
 	for (auto it : this-> _allMethods) {
 	    if (it-> name () == var-> token.getStr ()) {
 		if (it-> frame ()-> isInnerPrivate () && (!this-> isMine (it-> frame ()-> space ()) || !this-> inPrivateContext ())) {
@@ -1110,10 +1056,6 @@ namespace semantic {
 	    }
 	}
     }    
-
-    TupleInfo IAggregateInfo::getImpl () {
-	return this-> _impl;
-    }
     
     Ymir::Tree IAggregateInfo::buildVtableType () {
 	int size = 1; // The last element is a pointer to the typeinfo
@@ -1135,40 +1077,28 @@ namespace semantic {
 	return array_type;
     }
     
-    std::vector <TypeAlias> IAggregateInfo::getAllAlias () {
-	std::vector <TypeAlias> alias;
-	if (this-> getAncestor ()) 
-	    alias = this-> getAncestor ()-> _allAlias;
-	auto clone = this-> clone ()-> to <IAggregateInfo> ();
-	clone-> _hasExemption = true;
-	
-	for (auto it : this-> _id-> getAlias ()) {
-	    auto name = it-> getIdent ().getStr ();
-	    bool error = false;
-	    for (auto anc : alias) {
-		if (name == anc-> getIdent ().getStr ()) {
-		    Ymir::Error::shadowingVar (it-> getIdent (), anc-> getIdent ());
-		    error = true;
-		    break;
-		}
-	    }
-	    
-	    if (!error) {
-		auto ign = new (Z0) IExpression (it-> getIdent ());
-		ign-> info = new (Z0) ISymbol (it-> getIdent (), ign, clone);
-		auto expr = new (Z0) IEvaluatedExpr (ign);
-		auto eval = new (Z0) IAliasCstInfo (it-> getIdent (), this-> _space, it-> getValue ());
-		if (eval-> replace ({{Keys::SELF, expr}})-> expression () != NULL)
-		    alias.push_back (it);
-	    }
-	}
-	return alias;
-    }
     
     std::vector <FunctionInfo> IAggregateInfo::getAllMethods () {
 	return this-> _allMethods;
     }
 
+    std::vector <InfoType> & IAggregateInfo::getTypes () {
+	return this-> _types;
+    }
+
+    std::vector <std::string> & IAggregateInfo::getAttrs () {
+	return this-> _attrs;
+    }
+
+    std::vector <syntax::InnerProtection> & IAggregateInfo::getInnerProts () {
+	return this-> _prots;
+    }
+
+    std::vector <Namespace> & IAggregateInfo::getAttrSpaces () {
+	return this-> _attrSpaces;
+    }
+    
+    
     std::vector <FunctionInfo> IAggregateInfo::getMethods () {
 	if (!this-> getAncestor ()) return this-> _methods;
 	auto method = this-> getAncestor ()-> _allMethods;
@@ -1287,9 +1217,14 @@ namespace semantic {
 	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();
 	auto ttype = IFinalFrame::getDeclaredType (tname.c_str ());
 	if (ttype.isNull ()) {
-	    std::vector <InfoType> types = {new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()), this-> _impl};
-	    auto attrs = {Keys::VTABLE_FIELD};
-	    
+	    std::vector <InfoType> types = {new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ())};
+	    std::vector <std::string> attrs = {Keys::VTABLE_FIELD};
+
+	    for (auto it : Ymir::r (0, this-> _types.size ())) {
+		types.push_back (this-> _types [it]);
+		attrs.push_back (this-> _attrs [it]);
+	    }
+			    
 	    ttype = Ymir::makeTuple (tname, types, attrs); 
 	    IFinalFrame::declareType (tname, ttype);
 
@@ -1304,22 +1239,20 @@ namespace semantic {
 	auto innerGlob = this-> getVtable ();		
 	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
 	auto typeTree = type-> toGeneric ();
-	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
-	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
-	// {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
-	auto fields = Ymir::getFieldDecls (implTree);
-	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), Ymir::getAddr (innerGlob).getTree ());
-	if (this-> _anc) {
-	    auto ancTree = this-> _anc-> genericTypeInfo ();
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), Ymir::getAddr (ancTree).getTree ());
-	} else
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
-	    
+	
+	vec <constructor_elt, va_gc> * elms = NULL;
 	auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::AGGREGATE_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
 	auto vtable = struct_info_type-> getVtable ();
 	    
-	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
-	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::VTABLE_FIELD_TYPEINFO).getTree (), Ymir::getAddr (innerGlob).getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::LEN_FIELD_TYPEINFO).getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	if (this-> _anc) {
+	    auto ancTree = this-> _anc-> genericTypeInfo ();
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::C_O_A_TYPEINFO).getTree (), Ymir::getAddr (ancTree).getTree ());
+	} else {
+	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::C_O_A_TYPEINFO).getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	}
 
 	auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> simpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
 	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
@@ -1333,7 +1266,11 @@ namespace semantic {
 	auto vtype = this-> toGeneric ();
 	auto fields = Ymir::getFieldDecls (vtype);
 	CONSTRUCTOR_APPEND_ELT (elms, fields [0].getTree (), Ymir::getAddr (vtable).getTree ());
-	CONSTRUCTOR_APPEND_ELT (elms, fields [1].getTree (), this-> _impl-> genericConstructor ().getTree ());
+
+	for (auto it : Ymir::r (0, this-> _attrs.size ())) {
+	    CONSTRUCTOR_APPEND_ELT (elms, fields [it + 1].getTree (), this-> _types [it]-> genericConstructor ().getTree ());
+	}
+	
 	return build_constructor (vtype.getTree (), elms);
     }
     
@@ -1363,14 +1300,6 @@ namespace semantic {
     AggregateInfo IAggregateInfo::getAncestor () {
 	return this-> _anc;
     }
-
-    bool& IAggregateInfo::hasExemption () {
-	return this-> _hasExemption;
-    }
-
-    bool& IAggregateInfo::exempted () {
-	return __exempted__;
-    }
     
     std::vector <InfoType> IAggregateInfo::getTemplate (ulong bef, ulong af) {
 	std::vector <InfoType> types;
@@ -1392,7 +1321,6 @@ namespace semantic {
     }
     
     bool IAggregateInfo::inPrivateContext () {
-	if (this-> _hasExemption || __exempted__) return true;
 	auto space = Table::instance ().getCurrentSpace ();
 	auto myspace = Namespace (this-> innerTypeString ());
 	return myspace.isSubOf (space);

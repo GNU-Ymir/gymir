@@ -403,7 +403,6 @@ namespace semantic {
 
     InfoType IStructCstInfo::TempOp (const std::vector <syntax::Expression> & tmps) {
 	static std::map <std::string, StructInfo> inProgress;
-	static std::map <std::string, StructInfo> validated;
 	
 	if (this-> tmps.size () != 0) {
 	    return this-> getScore (tmps);
@@ -412,9 +411,7 @@ namespace semantic {
 	if (this-> tmps.size () != tmps.size ()) return NULL;
 	
 	auto name = Namespace (this-> space, this-> onlyNameTypeString ()).toString ();
-	auto valid = validated.find (name);
 	
-	if (valid != validated.end ()) return valid-> second-> clone ();	
 	auto inside = inProgress.find (name);
 	if (inside != inProgress.end ()) return inside-> second;
 	
@@ -454,7 +451,6 @@ namespace semantic {
 	this-> _info-> setTmps (this-> tmpsDone);
 	
 	inProgress.erase (name);
-	// validated [name] = this-> _info;
 	return this-> _info-> clone ();
     }
 
@@ -471,7 +467,10 @@ namespace semantic {
 	    }
 	    return false;
 	} else if (auto agg = where-> to <IAggregateInfo> ()) {
-	    return recursiveGet (who, agg-> getImpl ());
+	    for (auto it : agg-> getTypes ()) {
+		if (recursiveGet (who, it)) return true;
+	    }
+	    return false;
 	} else if (auto cstr = where-> to <IStructCstInfo> ()) {
 	    return recursiveGet (who, cstr-> TempOp ({}));
 	} else if (auto cagg = where-> to <IAggregateCstInfo> ()) {
@@ -1058,29 +1057,27 @@ namespace semantic {
     }
     
     Ymir::Tree IStructInfo::genericTypeInfo () {
-	    auto innerValue = this-> genericConstructor ();
-	    auto innerType = this-> toGeneric ();
-	    auto innerGlob = Ymir::declareGlobalWeak (this-> simpleTypeString () + "__init", innerType, innerValue);
+	auto innerValue = this-> genericConstructor ();
+	auto innerType = this-> toGeneric ();
+	auto innerGlob = Ymir::declareGlobalWeak (this-> simpleTypeString () + "__init", innerType, innerValue);
 
-	    auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
-	    auto typeTree = type-> toGeneric ();
-	    auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();
-	    vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
-	    // {__0_vtable : vtable ptr type, _0 : null, _1 : inner}
-	    auto fields = Ymir::getFieldDecls (implTree);
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), Ymir::getAddr (innerGlob).getTree ());
-	    CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	auto typeTree = type-> toGeneric ();
+
+	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
 	    
-	    auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::STRUCT_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
-	    auto vtable = struct_info_type-> getVtable ();
+	auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::STRUCT_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
+	auto vtable = struct_info_type-> getVtable ();
 	    
-	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
-	    CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::VTABLE_FIELD_TYPEINFO).getTree (), Ymir::getAddr (innerGlob).getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::LEN_FIELD_TYPEINFO).getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::C_O_A_TYPEINFO).getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	
+	auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> simpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
+	auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
 
-	    auto name = Ymir::Runtime::TYPE_INFO_MODULE + "." + this-> simpleTypeString () + Ymir::Runtime::TYPE_INFO_SUFFIX;
-	    auto glob = Ymir::declareGlobalWeak (name, typeTree, build_constructor (typeTree.getTree (), elms));
-
-	    return glob;
+	return glob;
     }	
 
     Ymir::Tree IStructCstInfo::toGeneric () {

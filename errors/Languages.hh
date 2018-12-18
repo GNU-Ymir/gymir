@@ -163,6 +163,7 @@ namespace Ymir {
 		phrases [VersionOnlyGlob] = "version conditions can only be declared at module scope";
 		phrases [AggMatchOnlyNamed] = "match on object requires the use of named expression";
 		phrases [VariadicMustBeLast] = "template variadic parameter must be last one";
+		phrases [AttrInHeirStatic] = "Cannot add attributes in heir static type";
 		init = true;
 	    } 
 	    return phrases;

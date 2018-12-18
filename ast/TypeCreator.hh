@@ -17,11 +17,6 @@ namespace semantic {
 
 namespace syntax {
 
-    enum class TypeForm {
-	OVER,
-	IMPL
-    };
-
     enum class InnerProtection {
 	PUBLIC,
 	PRIVATE,
@@ -33,34 +28,31 @@ namespace syntax {
     class ITypeConstructor;
     class ITypeDestructor;
     class ITypeMethod;
-    class ITypeAlias;
+    class ITypeAttr;
     
     typedef IFunction* Function;
     typedef ITypeCreator* TypeCreator;
     typedef ITypeConstructor* TypeConstructor;
     typedef ITypeDestructor* TypeDestructor;
     typedef ITypeMethod* TypeMethod; 
-    typedef ITypeAlias* TypeAlias;
+    typedef ITypeAttr* TypeAttr;
     
     class ITypeCreator : public IDeclaration {
     protected:
 
 	Word _ident;
-	TypeForm _form;
 	
-	std::vector <Expression> _who;
+	Expression _who;
 	std::vector <Expression> _tmps;
 	std::vector <TypeConstructor> _constr;
 	std::vector <TypeDestructor> _destr;
 	std::vector <Block> _staticConstruct;
 	std::vector <TypeMethod> _methods;
-	std::vector <TypeAlias> _alias;
-	
-	bool _isUnion;
-	
+	std::vector <TypeAttr> _attrs;
+		
     public:
 
-	ITypeCreator (Word ident, const std::string & docs, TypeForm form, const std::vector <Expression> & who, const std::vector <Expression> & tmps, bool isUnion);
+	ITypeCreator (Word ident, const std::string & docs, Expression who, const std::vector <Expression> & tmps);
 
 	std::vector <TypeConstructor> & getConstructors ();
 
@@ -70,7 +62,7 @@ namespace syntax {
 	
 	std::vector <TypeMethod> & getMethods ();		
 
-	std::vector <TypeAlias> & getAlias ();
+	std::vector <TypeAttr> & getAttrs ();
 
 	semantic::InfoType declare (semantic::Namespace, const std::vector <Expression> &tmps);
 
@@ -173,11 +165,11 @@ namespace syntax {
 	
     };
 
-    class ITypeAlias : public IDeclaration {
+    class ITypeAttr : public IDeclaration {
 
 	Word _ident;
 	
-	Expression _value;
+	Expression _type;
 	
 	bool _isConst;
 
@@ -189,7 +181,7 @@ namespace syntax {
 	
     public :
 
-	ITypeAlias (Word ident, const std::string & docs, Expression value, bool isConst, bool isStatic);
+	ITypeAttr (Word ident, const std::string & docs, Expression type, bool isConst, bool isStatic);
 
 	InnerProtection & getProtection ();
 
@@ -207,11 +199,11 @@ namespace syntax {
 
 	void declareAsExtern (semantic::Module) override;
 
-	ITypeAlias* templateDeclReplace (const std::map <std::string, Expression> &) override;
+	ITypeAttr* templateDeclReplace (const std::map <std::string, Expression> &) override;
 	
 	Word getIdent ();
 
-	Expression getValue ();
+	Expression getType ();
 
 	bool isConst ();
 	

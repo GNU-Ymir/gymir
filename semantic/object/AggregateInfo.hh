@@ -6,6 +6,13 @@
 #include <ymir/semantic/types/TupleInfo.hh>
 
 namespace syntax {
+
+    enum class InnerProtection;
+    // 	PUBLIC,
+    // 	PRIVATE,
+    // 	PROTECTED
+    // };
+
     class ITypedVar;
     typedef ITypedVar* TypedVar;
 
@@ -15,8 +22,8 @@ namespace syntax {
     class ITypeCreator;
     typedef ITypeCreator* TypeCreator;
 
-    class ITypeAlias;
-    typedef ITypeAlias* TypeAlias;
+    class ITypeAttr;
+    typedef ITypeAttr* TypeAttr;
 
     class IBlock;
     typedef IBlock* Block;
@@ -46,20 +53,18 @@ namespace semantic {
 	
 	std::vector <syntax::Expression> _tmps;
 	std::vector <syntax::Expression> _tmpsDone;
-	std::vector <syntax::Expression> _impl;
+	syntax::Expression _ancExpr;
 
 	std::vector <std::vector <syntax::Expression>> _solvedTmps;
 	std::vector <InfoType> _solved;
-
 	
-	bool _isUnion;
 	bool _isExternal;
 	bool _isFailure = false;
-	bool _isOver;
-	InfoType _info = NULL;
+	bool _isDynamic = false;
+	IAggregateInfo* _info = NULL;
 
-	std::vector <syntax::TypeAlias> _alias;
-	std::vector <syntax::TypeAlias> _staticVars;
+	std::vector <syntax::TypeAttr> _attrs;
+	std::vector <syntax::TypeAttr> _staticAttrs;
 	
 	syntax::TypeCreator _creator;
 	Namespace _templateSpace;
@@ -70,7 +75,7 @@ namespace semantic {
 
 	friend IAggregateInfo;
 	
-	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, const std::vector <syntax::Expression> & self, bool isUnion, bool isOver);
+	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, syntax::Expression over);
 	
 	std::vector <FunctionInfo> & getConstructors ();
 
@@ -82,13 +87,13 @@ namespace semantic {
 	
 	std::vector <FunctionInfo> & getStaticMethods ();
 
-	std::vector <syntax::TypeAlias> & getStaticVars ();
+	std::vector <syntax::TypeAttr> & getStaticVars ();
 
 	syntax::Block & getStaticBlock ();
 	
 	FunctionInfo getStaticMeth (std::string name);
 	
-	std::vector <syntax::TypeAlias> & getAlias ();
+	std::vector <syntax::TypeAttr> & getAttrs ();
 	
 	Namespace space ();
 	
@@ -138,8 +143,6 @@ namespace semantic {
 
 	InfoType SizeOf ();
 
-	TupleInfo constructImpl (); 
-
 	bool recursiveGet (InfoType, InfoType);
 
 	bool inPrivateContext ();
@@ -168,18 +171,21 @@ namespace semantic {
 	Frame _destr;
 	std::vector <FunctionInfo> _methods;
 	std::vector <FunctionInfo> _allMethods;
-	std::vector <syntax::TypeAlias> _allAlias;
+	
+	std::vector <std::string> _attrs;
+	std::vector <Namespace> _attrSpaces;
+	std::vector <syntax::InnerProtection> _prots;
+	
+	std::vector <InfoType> _types;
+
 	std::vector <FunctionInfo> _staticMeth;
 	
 	std::vector <syntax::Expression> tmpsDone;
 	AggregateCstInfo _id = NULL;
 	AggregateInfo _anc = NULL;
-	TupleInfo _impl;
+	
 	bool _isExternal;
 	bool _static = false;
-	bool _hasExemption = false;
-
-	static bool __exempted__;
 	
 	friend IAggregateCstInfo;
 
@@ -202,8 +208,6 @@ namespace semantic {
 	InfoType UnaryOp (Word op);
 	
 	InfoType DotOp (syntax::Var) override;
-
-	InfoType DotExpOp (syntax::Expression right) override;
 	
 	InfoType DColonOp (syntax::Var) override;
 
@@ -218,8 +222,6 @@ namespace semantic {
 	std::string innerTypeString () override;
 
 	std::string innerSimpleTypeString () override;
-
-	TupleInfo getImpl ();
 
 	Ymir::Tree getVtable ();
 	
@@ -239,12 +241,16 @@ namespace semantic {
 	
 	AggregateInfo getAncestor ();
 
-	InfoType isTyped (IAggregateInfo*);
-	
-	bool& hasExemption ();
+	std::vector <InfoType>& getTypes ();
 
-	static bool& exempted ();
+	std::vector <std::string> & getAttrs ();
+
+	std::vector <syntax::InnerProtection>& getInnerProts ();
+
+	std::vector <Namespace> & getAttrSpaces ();
 	
+	InfoType isTyped (IAggregateInfo*);
+		
 	Frame cpyCstr ();
 	
 	static const char * id () {
@@ -270,8 +276,6 @@ namespace semantic {
 	Ymir::Tree buildVtableEnum (Ymir::Tree vtype);
 
 	std::vector <FunctionInfo> getMethods ();
-
-	std::vector <syntax::TypeAlias> getAllAlias ();
 	
 	bool inPrivateContext ();
 
@@ -284,8 +288,6 @@ namespace semantic {
 	bool hasCopyCstr ();
 	
 	InfoType BinaryOpRightCpy (Word, syntax::Expression, bool);
-
-	InfoType AliasOp (syntax::Var var);
 
 	
     };

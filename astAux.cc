@@ -2499,14 +2499,12 @@ namespace syntax {
 	_const (const_)
     {}
 
-    ITypeCreator::ITypeCreator (Word ident, const std::string & docs, TypeForm form, const std::vector <Expression> & who, const std::vector <Expression> & tmps, bool isUnion) :
+    ITypeCreator::ITypeCreator (Word ident, const std::string & docs, Expression who, const std::vector <Expression> & tmps) :
 	IDeclaration (docs)
     {
 	this-> _ident = ident;
-	this-> _form = form;
 	this-> _who = who;
 	this-> _tmps = tmps;
-	this-> _isUnion = isUnion;
     }
 
     std::vector <TypeConstructor> & ITypeCreator::getConstructors () {
@@ -2525,8 +2523,8 @@ namespace syntax {
 	return this-> _methods;
     }
 
-    std::vector <TypeAlias> & ITypeCreator::getAlias () {
-	return this-> _alias;
+    std::vector <TypeAttr> & ITypeCreator::getAttrs () {
+	return this-> _attrs;
     }
     
     ITypeConstructor::ITypeConstructor (Word ident, const std::vector <Var> & params, Block block, bool isCopy) :
@@ -2579,45 +2577,45 @@ namespace syntax {
 	return this-> _prot;
     }
 
-    ITypeAlias::ITypeAlias (Word ident, const std::string & docs, Expression value, bool isConst, bool isStatic) :
+    ITypeAttr::ITypeAttr (Word ident, const std::string & docs, Expression type, bool isConst, bool isStatic) :
 	IDeclaration (docs),
 	_ident (ident),
-	_value (value),	
+	_type (type),	
 	_isConst (isConst),
 	_isStatic (isStatic),
 	_space ("")
     {
     }
 
-    Word ITypeAlias::getIdent () {
+    Word ITypeAttr::getIdent () {
 	return this-> _ident;
     }
 
-    Expression ITypeAlias::getValue () {
-	return this-> _value;
+    Expression ITypeAttr::getType () {
+	return this-> _type;
     }
 
-    bool ITypeAlias::isConst () {
+    bool ITypeAttr::isConst () {
 	return this-> _isConst;
     }
 
-    bool ITypeAlias::isStatic () {
+    bool ITypeAttr::isStatic () {
 	return this-> _isStatic;
     }
     
-    InnerProtection & ITypeAlias::getProtection () {
+    InnerProtection & ITypeAttr::getProtection () {
 	return this-> _prot;
     }
     
-    bool ITypeAlias::isPrivate () {
+    bool ITypeAttr::isPrivate () {
 	return this-> _prot == InnerProtection::PRIVATE;
     }
     
-    bool ITypeAlias::isProtected () {
+    bool ITypeAttr::isProtected () {
 	return this-> _prot == InnerProtection::PROTECTED;
     }
     
-    semantic::Namespace & ITypeAlias::space () {
+    semantic::Namespace & ITypeAttr::space () {
 	return this-> _space;
     }
 

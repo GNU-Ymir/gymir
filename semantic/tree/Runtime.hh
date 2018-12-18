@@ -24,6 +24,10 @@ namespace Ymir {
 	static std::string ARRAY_INFO_STATIC;
 	static std::string ARRAY_INFO_DYNAMIC;
 
+	static std::string VTABLE_FIELD_TYPEINFO;
+	static std::string LEN_FIELD_TYPEINFO;
+	static std::string C_O_A_TYPEINFO; 
+	
 	static std::string DELEGATE_INFO;
 	static std::string FUNC_PTR_INFO;
 

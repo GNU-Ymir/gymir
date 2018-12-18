@@ -33,21 +33,7 @@ namespace semantic {
 	for (auto tvar : this-> _info-> getAttrs ()) {
 	    auto type = tvar-> getType ();
 	    auto inAggr = info-> DotOp (tvar);
-	    if (!inAggr) return false;
-	    if (inAggr-> is <IAliasCstInfo> ()) {
-		info-> hasExemption () = true;
-		auto var = new (Z0) IVar ({tok, Keys::SELF});
-		var-> info = new (Z0) ISymbol ({tok, Keys::SELF}, var, info);
-		auto fake = new (Z0) IEvaluatedExpr (var);
-		
-		auto expr = inAggr-> to<IAliasCstInfo> ()-> replace ({{Keys::SELF, fake}})-> expression ();
-		
-		if (expr == NULL) return false;
-		inAggr = expr-> info-> type ();
-		info-> hasExemption () = false;
-	    }
-	    
-	    if (inAggr == NULL || !type-> isSame (inAggr)) return false;
+	    return false;
 	}
 
 	auto methods = info-> getAllMethods ();

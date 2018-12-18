@@ -1257,7 +1257,7 @@ namespace syntax {
 	    return;
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
 	if (this-> _destr.size () > 1) {
 	    Ymir::Error::multipleDestr (this-> _ident);
 	    return;
@@ -1282,21 +1282,21 @@ namespace syntax {
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
 	    
-	    for (auto alias : this-> _alias) {
-		alias-> space () = Namespace (type-> space (), type-> name ());
+	    for (auto attr : this-> _attrs) {
+		attr-> space () = Namespace (type-> space (), type-> name ());
 		bool error = false;
-		for (auto __al : type-> getAlias ()) {
-		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
-			Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+		for (auto __al : type-> getAttrs ()) {
+		    if (__al-> getIdent ().getStr () == attr-> getIdent ().getStr ()) {
+			Ymir::Error::shadowingVar (attr-> getIdent (), __al-> getIdent ());
 			error = true;
 			break;
 		    }
 		}
 		
 		if (!error) {
-		    if (alias-> isStatic ()) type-> getStaticVars ().push_back (alias);
+		    if (attr-> isStatic ()) type-> getStaticVars ().push_back (attr);
 		    else 
-			type-> getAlias ().push_back (alias);
+			type-> getAttrs ().push_back (attr);
 		}
 	    }
 	    
@@ -1322,7 +1322,7 @@ namespace syntax {
 
     InfoType ITypeCreator::declare (Namespace space, const std::vector <syntax::Expression> & tmps) {
 	auto tmpSpace = Table::instance ().getCurrentSpace ();
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
 	type-> templateSpace () = tmpSpace;
 	type-> tmpsDone () = tmps;
 	
@@ -1339,18 +1339,18 @@ namespace syntax {
 		type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	}
 	
-	for (auto alias : this-> _alias) {
-	    alias-> space () = Namespace (type-> typeString ());
+	for (auto attr : this-> _attrs) {
+	    attr-> space () = Namespace (type-> typeString ());
 	    bool error = false;
-	    for (auto __al : type-> getAlias ()) {
-		if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
-		    Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+	    for (auto __al : type-> getAttrs ()) {
+		if (__al-> getIdent ().getStr () == attr-> getIdent ().getStr ()) {
+		    Ymir::Error::shadowingVar (attr-> getIdent (), __al-> getIdent ());
 		    error = true;
 		    break;
 		}
 	    }
 	    if (!error) 
-		type-> getAlias ().push_back (alias);
+		type-> getAttrs ().push_back (attr);
 	}
 	    
 
@@ -1376,7 +1376,7 @@ namespace syntax {
 	    return;
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
 	
 	if (this-> _destr.size () > 1) 
 	    Ymir::Error::multipleDestr (this-> _ident);
@@ -1392,18 +1392,18 @@ namespace syntax {
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
 
-	    for (auto alias : this-> _alias) {
-		alias-> space () = Namespace (type-> typeString ());
+	    for (auto attr : this-> _attrs) {
+		attr-> space () = Namespace (type-> typeString ());
 		bool error = false;
-		for (auto __al : type-> getAlias ()) {
-		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
-			Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+		for (auto __al : type-> getAttrs ()) {
+		    if (__al-> getIdent ().getStr () == attr-> getIdent ().getStr ()) {
+			Ymir::Error::shadowingVar (attr-> getIdent (), __al-> getIdent ());
 			error = true;
 			break;
 		    }
 		}
 		if (!error) 
-		    type-> getAlias ().push_back (alias);
+		    type-> getAttrs ().push_back (attr);
 	    }
 	    
 	    for (auto meth : this-> _methods) {
@@ -1433,7 +1433,7 @@ namespace syntax {
 	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _isUnion, this-> _form == TypeForm::OVER);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
 	type-> isExtern () = true;
 	
 	if (this-> _destr.size () > 1) 
@@ -1449,20 +1449,19 @@ namespace syntax {
 		if (res)
 		    type-> getConstructors ().push_back (res-> to <IFunctionInfo> ());
 	    }
-
 	    
-	    for (auto alias : this-> _alias) {
-		alias-> space () = Namespace (type-> typeString ());
+	    for (auto attr : this-> _attrs) {
+		attr-> space () = Namespace (type-> typeString ());
 		bool error = false;
-		for (auto __al : type-> getAlias ()) {
-		    if (__al-> getIdent ().getStr () == alias-> getIdent ().getStr ()) {
-			Ymir::Error::shadowingVar (alias-> getIdent (), __al-> getIdent ());
+		for (auto __al : type-> getAttrs ()) {
+		    if (__al-> getIdent ().getStr () == attr-> getIdent ().getStr ()) {
+			Ymir::Error::shadowingVar (attr-> getIdent (), __al-> getIdent ());
 			error = true;
 			break;
 		    }
 		}
 		if (!error) 
-		    type-> getAlias ().push_back (alias);
+		    type-> getAttrs ().push_back (attr);
 	    }
 	    
 	    for (auto meth : this-> _methods) {
@@ -1659,9 +1658,9 @@ namespace syntax {
 	mod-> insert (sym);
     }
 
-    void ITypeAlias::declare () {}
-    void ITypeAlias::declare (semantic::Module) {}
-    void ITypeAlias::declareAsExtern (semantic::Module) {}
+    void ITypeAttr::declare () {}
+    void ITypeAttr::declare (semantic::Module) {}
+    void ITypeAttr::declareAsExtern (semantic::Module) {}
     
 
     void ITrait::declare () {

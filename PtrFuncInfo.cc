@@ -504,10 +504,8 @@ namespace semantic {
 	
 	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
 	auto typeTree = type-> toGeneric ();
-	auto implTree = type-> to<IAggregateInfo> ()-> getImpl ()-> toGeneric ();	
-	auto fields = getFieldDecls (implTree);
 	
-	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	vec <constructor_elt, va_gc> * elms = NULL;
 	AggregateInfo ptr_info_type;
 	if (this-> isDelegate ()) {
 	    ptr_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::DELEGATE_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
@@ -515,14 +513,12 @@ namespace semantic {
 	    ptr_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::FUNC_PTR_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
 	}
 
-	auto inner = Ymir::declareGlobalWeak (innerName, unsigned_char_type_node, build_int_cst_type (unsigned_char_type_node, 0));
-	
-	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [0].getTree (), getAddr (inner).getTree ());
-	CONSTRUCTOR_APPEND_ELT (tuple_elms, fields [1].getTree (), build_int_cst_type (long_unsigned_type_node, 0));
-	
+	auto inner = Ymir::declareGlobalWeak (innerName, unsigned_char_type_node, build_int_cst_type (unsigned_char_type_node, 0));       	
 	auto vtable = ptr_info_type-> getVtable ();
 	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Keys::VTABLE_FIELD).getTree (), Ymir::getAddr (vtable).getTree ());	   
-	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, "_0").getTree (), build_constructor (implTree.getTree (), tuple_elms));
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::VTABLE_FIELD_TYPEINFO).getTree (), getAddr (inner).getTree ());
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::LEN_FIELD_TYPEINFO).getTree (), build_int_cst_type (long_unsigned_type_node, 0));
+	CONSTRUCTOR_APPEND_ELT (elms, Ymir::getFieldDecl (typeTree, Ymir::Runtime::C_O_A_TYPEINFO).getTree (), build_int_cst_type (long_unsigned_type_node, 0));
 	
 	auto glob = Ymir::declareGlobalWeak (infoName, typeTree, build_constructor (typeTree.getTree (), elms));
 	return glob;

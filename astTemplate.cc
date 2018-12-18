@@ -337,8 +337,8 @@ namespace syntax {
     }
 
     Declaration ITypeCreator::templateDeclReplace (const map <string, Expression> & values) {
-	std::vector <Expression> who;
-	for (auto it : this-> _who) who.push_back (it-> templateExpReplace (values));
+	Expression who;
+	if (this-> _who) who = this-> _who-> templateExpReplace (values);
 
 	std::vector <TypeConstructor> constr;
 	for (auto it : this-> _constr) constr.push_back (it-> templateDeclReplace (values));
@@ -349,14 +349,14 @@ namespace syntax {
 	std::vector <TypeMethod> methods;
 	for (auto it : this-> _methods) methods.push_back (it-> templateDeclReplace (values));
 	
-	std::vector <TypeAlias> alias;
-	for (auto it : this-> _alias) alias.push_back (it-> templateDeclReplace (values));
+	std::vector <TypeAttr> attrs;
+	for (auto it : this-> _attrs) attrs.push_back (it-> templateDeclReplace (values));
 
-	auto ret = new (Z0) ITypeCreator (this-> _ident, this-> getDocs (), this-> _form, who, {}, this-> _isUnion);
+	auto ret = new (Z0) ITypeCreator (this-> _ident, this-> getDocs (), who, {});
 	ret-> getConstructors () = constr;
 	ret-> getDestructors () = destr;
 	ret-> getMethods () = methods;
-	ret-> getAlias () = alias;
+	ret-> getAttrs () = attrs;
 	
 	return ret;
     }
@@ -389,8 +389,8 @@ namespace syntax {
 	return this-> templateDeclReplace (tmps);
     }
     
-    TypeAlias ITypeAlias::templateDeclReplace (const map <string, Expression> & tmps) {
-	auto ret = new (Z0) ITypeAlias (this-> _ident, this-> getDocs (), this-> _value-> templateExpReplace (tmps), this-> _isConst, this-> _isStatic);
+    TypeAttr ITypeAttr::templateDeclReplace (const map <string, Expression> & tmps) {
+	auto ret = new (Z0) ITypeAttr (this-> _ident, this-> getDocs (), this-> _type-> templateExpReplace (tmps), this-> _isConst, this-> _isStatic);
 	ret-> _prot = this-> _prot;
 	return ret;
     }

@@ -24,7 +24,8 @@ namespace semantic {
 	Ymir::Tree InstSizeOf (Word, InfoType, syntax::Expression);
 
 	Ymir::Tree InstSizeOfCst (Word, InfoType, syntax::Expression);
-	
+
+	Ymir::Tree InstGet (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
     }
     
 }
