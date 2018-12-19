@@ -65,6 +65,7 @@ namespace semantic {
     InfoType IRangeInfo::DColonOp (Var var) {
 	if (var-> hasTemplate ()) return NULL;
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;       
     }
         

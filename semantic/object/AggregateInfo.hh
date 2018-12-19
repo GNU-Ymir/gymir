@@ -199,6 +199,8 @@ namespace semantic {
 	
 	InfoType ConstVerif (InfoType) override;
 
+	bool needKeepConst () override;
+	
 	InfoType onClone () override;
 
 	InfoType BinaryOp (Word, syntax::Expression) override;

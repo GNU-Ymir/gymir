@@ -169,10 +169,6 @@ namespace semantic {
 	    auto inner = type-> toGeneric ();
 	    return Ymir::getPointerUnref (locus.getLocus (), elem-> toGeneric (), inner, 0);
 	}
-
-	Ymir::Tree InstTypeInfo (Word, InfoType, Expression elem) {
-	    return elem-> info-> type ()-> genericTypeInfo ();
-	}
 	
 
     }
@@ -379,14 +375,7 @@ namespace semantic {
 	    auto ret = new (Z0)  IFixedInfo (true, FixedConst::UINT);
 	    ret-> unopFoo = FixedUtils::InstSizeOf;
 	    return ret;	
-	} else if (var-> token == "typeinfo") {
-	    auto ret = this-> _content-> DColonOp (var);
-	    if (ret != NULL) {
-	        ret-> nextUnop.push_back (ret-> unopFoo);
-	        ret-> unopFoo = PtrUtils::InstTypeInfo;
-	    }
-	    return ret;
-	}
+	} else if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;
     }
     

@@ -337,7 +337,7 @@ namespace syntax {
     }
 
     Declaration ITypeCreator::templateDeclReplace (const map <string, Expression> & values) {
-	Expression who;
+	Expression who = NULL;
 	if (this-> _who) who = this-> _who-> templateExpReplace (values);
 
 	std::vector <TypeConstructor> constr;

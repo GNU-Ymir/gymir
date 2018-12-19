@@ -9,6 +9,8 @@
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/value/_.hh>
+#include <ymir/semantic/pack/Table.hh>
+#include <ymir/semantic/object/AggregateInfo.hh>
 
 namespace semantic {
 
@@ -235,7 +237,15 @@ namespace semantic {
 	auto str = new (Z0) IStringInfo (true);
 	str-> value () = new (Z0)  IStringValue (this-> typeString ().c_str ());
 	return str;
-    }	
+    }
+
+    InfoType IInfoType::TypeInfo () {
+	auto ret = Table::instance ().getTypeInfoType ()-> TempOp ({});
+	ret-> unopFoo = [](Word, InfoType ret, syntax::Expression) {
+	    return ret-> genericTypeInfo ();
+	};
+	return ret;
+    }
 
     bool IInfoType::isImmutable () {
 	return false;

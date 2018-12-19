@@ -92,6 +92,7 @@ namespace semantic {
 	if (var-> token.getStr () == "init") return Init ();
 	if (var-> token.getStr () == "sizeof") return SizeOf ();
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;
     }
 

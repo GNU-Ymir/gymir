@@ -1,6 +1,7 @@
 #include "semantic/types/Creators.hh"
 #include "semantic/types/InfoType.hh"
 #include <semantic/types/_.hh>
+#include <semantic/object/_.hh>
 #include <syntax/Keys.hh>
 
 namespace semantic {
@@ -17,6 +18,9 @@ namespace semantic {
 	if (type-> is <IStructCstInfo> ()) {
 	    type = type-> TempOp ({});
 	    type-> isType (true);
+	} else if (type-> is <IAggregateCstInfo> ()) {
+	    type = type-> TempOp ({});
+	    type-> isType (true);
 	}
 	
 	if (type == NULL) return NULL;
@@ -31,6 +35,9 @@ namespace semantic {
 	
 	auto type = templates [0]-> info-> type ();
 	if (type-> is <IStructCstInfo> ()) {
+	    type = type-> TempOp ({});
+	    type-> isType (true);
+	} else if (type-> is <IAggregateCstInfo> ()) {
 	    type = type-> TempOp ({});
 	    type-> isType (true);
 	}

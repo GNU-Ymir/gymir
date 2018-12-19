@@ -15,13 +15,11 @@ namespace semantic {
 	return new (Z0)  INullInfo ();
     }
 
-    InfoType INullInfo::DotOp (syntax::Var var) {
-	if (var-> hasTemplate ()) return NULL;
+    InfoType INullInfo::DotOp (syntax::Var) {
 	return NULL;
     }
 
-    InfoType INullInfo::DColonOp (syntax::Var var) {
-	if (var-> hasTemplate ()) return NULL;
+    InfoType INullInfo::DColonOp (syntax::Var) {
 	return NULL;
     }
 

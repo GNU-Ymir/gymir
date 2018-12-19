@@ -403,7 +403,7 @@ namespace semantic {
 	    else
 		ret-> unopFoo = &PtrFuncUtils::InstInitDelegate;
 	    return ret;
-	}
+	} else if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;
     }
  	

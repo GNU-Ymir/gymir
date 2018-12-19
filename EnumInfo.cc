@@ -290,6 +290,10 @@ namespace semantic {
 	    return GetMembers ();
 	if (var-> token == "init")
 	    return Init ();
+	if (var-> token == "typeinfo" && this-> values.size () != 0) {
+	    auto attr = GetAttrib (0);
+	    return attr-> TypeInfo ();
+	}
 	
 	return NULL;
     }

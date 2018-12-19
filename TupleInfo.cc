@@ -232,6 +232,7 @@ namespace semantic {
 	if (var-> token == "arity") return Arity ();
 	if (var-> token == "init") return Init ();
 	if (var-> token == "sizeof") return SizeOf ();
+	if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;
     }
 
@@ -334,7 +335,7 @@ namespace semantic {
 	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
 	auto typeTree = type-> toGeneric ();
 
-	vec <constructor_elt, va_gc> * elms = NULL, * tuple_elms = NULL;
+	vec <constructor_elt, va_gc> * elms = NULL;
 	
 	auto struct_info_type = Table::instance ().getTypeInfoType (Ymir::Runtime::TUPLE_INFO)-> TempOp ({})-> to <IAggregateInfo> ();
 	auto vtable = struct_info_type-> getVtable ();

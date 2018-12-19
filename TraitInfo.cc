@@ -33,7 +33,8 @@ namespace semantic {
 	for (auto tvar : this-> _info-> getAttrs ()) {
 	    auto type = tvar-> getType ();
 	    auto inAggr = info-> DotOp (tvar);
-	    return false;
+
+	    if (!inAggr || !inAggr-> isSame (type)) return false;
 	}
 
 	auto methods = info-> getAllMethods ();

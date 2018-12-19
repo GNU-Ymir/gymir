@@ -277,8 +277,9 @@ namespace semantic {
 
     InfoType IRefInfo::DColonOp (syntax::Var var) {
 	auto aux = this-> _content-> DColonOp (var);
-	if (aux != NULL)
+	if (aux != NULL && var-> token != "typeinfo")
 	    return addUnref (aux);
+	else if (aux != NULL) return aux;
 	return NULL;
     }
 
@@ -342,7 +343,7 @@ namespace semantic {
     }
         
     std::string IRefInfo::innerTypeString () {
-	return std::string ("ref(") + this-> _content-> innerTypeString () + ")";
+	return std::string ("ref(") + this-> _content-> typeString () + ")";
     }
 
     std::string IRefInfo::innerSimpleTypeString () {

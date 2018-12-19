@@ -94,6 +94,7 @@ namespace semantic {
 	if (var-> token == "min_exp") return MinExp ();
 	if (var-> token == "sizeof") return SizeOf ();
 	if (var-> token == "typeid") return StringOf ();
+	if (var-> token == "typeinfo") return TypeInfo ();
 	return NULL;
     }
     

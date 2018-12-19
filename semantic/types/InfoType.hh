@@ -202,6 +202,8 @@ namespace semantic {
 	
 	virtual InfoType StringOf ();
 
+	virtual InfoType TypeInfo ();
+	
 	InfoType cloneOnExit ();
 
 	InfoType cloneOnExitWithInfo ();

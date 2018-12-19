@@ -99,8 +99,6 @@ namespace semantic {
 	InfoType Length ();
 
 	InfoType TypeId ();
-
-	InfoType TypeInfo (syntax::Var);
 	
 	InfoType TupleOf ();
 

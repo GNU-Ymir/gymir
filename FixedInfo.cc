@@ -418,12 +418,6 @@ namespace semantic {
 	ret-> unopFoo = FixedUtils::InstSizeOf;
 	return ret;	
     }
-
-    InfoType IFixedInfo::TypeInfo () {
-	auto ret = Table::instance ().getTypeInfoType ()-> TempOp ({});
-	ret-> unopFoo = FixedUtils::InstTypeInfo;
-	return ret;
-    }
     
     bool IFixedInfo::isSigned () {
 	return syntax::isSigned (this-> _type);
@@ -649,26 +643,7 @@ namespace semantic {
 	Ymir::Tree InstSizeOf (Word, InfoType, Expression elem) {	    
 	    return TYPE_SIZE_UNIT (elem-> info-> type ()-> toGeneric ().getTree ());
 	}
-       	
-	Ymir::Tree InstTypeInfo (Word loc, InfoType ret, Expression elem) {
-	    auto fixed = elem-> info-> type ()-> to <IFixedInfo> ();
-	    return InstTypeInfoNamed (loc, ret, elem, syntax::infoname (fixed-> type ()));
-	}
-
-	Ymir::Tree InstTypeInfoBool (Word loc, InfoType ret, Expression elem) {
-	    return InstTypeInfoNamed (loc, ret, elem, "bool_info");
-	}
-
-	Ymir::Tree InstTypeInfoChar (Word loc, InfoType ret, Expression elem) {
-	    return InstTypeInfoNamed (loc, ret, elem, "char_info");
-	}
-
-	Ymir::Tree InstTypeInfoNamed (Word, InfoType, Expression, const std::string & type_name) {
-	    Symbol sym  = Table::instance ().getTypeInfoSymbol (type_name);
-	    auto rtree = sym-> treeDecl ();
-	    return rtree;
-	}
-	
+       		
     }
 
 

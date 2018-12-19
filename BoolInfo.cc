@@ -157,12 +157,6 @@ namespace semantic {
 	ret-> unopFoo = FixedUtils::InstSizeOf;
 	return ret;
     }
-
-    InfoType IBoolInfo::TypeInfo () {
-	auto ret = Table::instance ().getTypeInfoType ()-> TempOp ({});
-	ret-> unopFoo = FixedUtils::InstTypeInfoBool;
-	return ret;
-    }    
     
     const char* IBoolInfo::getId () {
 	return IBoolInfo::id ();

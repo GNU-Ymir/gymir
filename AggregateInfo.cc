@@ -708,14 +708,41 @@ namespace semantic {
     }   
     
     InfoType IAggregateInfo::ConstVerif (InfoType type) {
+	while (auto ref = type-> to <IRefInfo> ())
+	    type = ref-> content ();
+	
 	if (auto aggr = type-> to <IAggregateInfo> ()) {
+	    if (!this-> isSame (aggr)) return NULL;
 	    static std::set <InfoType> dones;
 	    if (dones.find (this) == dones.end ()) {
-		dones.insert (this);				
+		dones.insert (this);
+		for (auto it : Ymir::r (0, this-> _types.size ())) {
+		    if (!this-> _types [it]-> ConstVerif (aggr-> _types [it])) {
+			if (!aggr-> needKeepConst ()) {
+			    dones.erase (this);
+			    return NULL;
+			}
+		    }
+		}
+		dones.erase (this);
 	    }
 	    return this;
 	}
 	return NULL;
+    }
+
+    bool IAggregateInfo::needKeepConst () {
+	if (this-> isConst ()) {
+	    static std::vector <InfoType> dones;
+	    if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
+		dones.push_back (this);
+		for (auto it : this-> _types) {
+		    if (it-> cloneConst ()-> needKeepConst ()) return true;
+		}
+		dones.erase (std::find (dones.begin (), dones.end (), this));
+	    }
+	}
+	return false;
     }
 
     InfoType IAggregateInfo::onClone () {
@@ -724,7 +751,6 @@ namespace semantic {
 	    auto ret = new (Z0) IAggregateInfo (this-> _id, this-> _space, this-> _name, this-> tmpsDone, this-> _isExternal);
 	    dones [this] = ret;
 
-	    dones.erase (this);
 	    ret-> _destr = this-> _destr;
 	    ret-> _staticMeth = this-> _staticMeth;
 	    ret-> _methods = this-> _methods;
@@ -740,6 +766,8 @@ namespace semantic {
 	    if (this-> _anc)
 		ret-> _anc = this-> _anc;
 	    ret-> isConst (this-> isConst ());
+
+	    dones.erase (this);	    
 	    return ret;
 	} else {
 	    return dones [this];
@@ -860,7 +888,7 @@ namespace semantic {
 	    auto ret = new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ());
 	    ret-> unopFoo = AggregateUtils::InstGetVtableCTE;
 	    return ret;
-	}
+	} else if (var-> token == "typeinfo") return TypeInfo ();
 	//if (var-> token == "name") return Name ();
 	std::vector <Frame> frames;
 	for (auto it : this-> _staticMeth) {
