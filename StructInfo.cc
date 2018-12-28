@@ -3,6 +3,7 @@
 #include <ymir/semantic/tree/_.hh>
 #include <ymir/ast/TypedVar.hh>
 #include <ymir/semantic/value/StringValue.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/pack/InternalFunction.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/utils/Mangler.hh>
@@ -180,6 +181,17 @@ namespace semantic {
 	    }
 	}
 
+	Tree InstAffectAddr (Word loc, InfoType, Expression left, Expression right) {
+	    Ymir::TreeStmtList list;	    
+	    auto ltree = Ymir::getExpr (list, left);
+	    auto rtree = Ymir::getExpr (list, right);
+	    list.append (buildTree (
+		MODIFY_EXPR, loc.getLocus (), void_type_node, ltree, Ymir::getAddr (loc.getLocus (), rtree) 
+	    ));
+	    
+	    return Ymir::compoundExpr (loc.getLocus (), list, ltree);	    
+	}
+	
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
@@ -863,6 +875,13 @@ namespace semantic {
     
     InfoType IStructInfo::BinaryOpRight (Word op, Expression left) {
 	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {
+	    auto un = left-> info-> type ()-> to <IUndefInfo> ();
+	    if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAffectAddr;
+		return aux;
+	    } else if (un-> willBeRef ()) return NULL;
+
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = &StructUtils::InstAffect;
 	    return ret;	    

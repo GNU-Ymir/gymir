@@ -634,6 +634,7 @@ namespace syntax {
 		return call;
 	}
 	
+	bool firstAff = false;
 	auto type = aux-> _left-> info-> type ()-> BinaryOp (this-> token, aux-> _right);	
 	if (type == NULL) {
 	    if (auto v = aux-> _left-> to <IVar> ()) {
@@ -654,13 +655,14 @@ namespace syntax {
 	    }  
 	    type = aux-> _right-> info-> type ()-> BinaryOpRight (this-> token, aux-> _left);	   
 	    if (aux-> _left-> info-> type ()-> is<IUndefInfo> ()) {
+		firstAff = true;
 		if (type == NULL) {
 		    Ymir::Error::undefinedOp (this-> token, aux-> _left-> info, aux-> _right-> info);
 		    return NULL;
 		}
 		
 		aux-> _left-> info-> type (type);
-		aux-> _left-> info-> isConst (aux-> _right-> info-> type ()-> needKeepConst ());
+		aux-> _left-> info-> isConst (aux-> _right-> info-> type ()-> needKeepConst ());		
 
 		if (canOverOpAssignConstr (aux)) {		    
 		    if (auto call = findOpAssign (aux, false)) return call;
@@ -678,6 +680,11 @@ namespace syntax {
 		if (!Table::instance ().verifyClosureLifeTime (aux-> _left-> info-> lifeTime (), func-> closures ()))
 		    Ymir::Error::here (this-> token);
 	    }
+	} else if (aux-> _right-> info-> type () -> isMutable ()) {
+	    if (!aux-> _left-> info-> type ()-> is <IRefInfo> () || !firstAff) {
+	    	Ymir::Error::implicitMemoryRef (this-> token, aux-> _right-> info);
+	    	return NULL;
+	    } 
 	}
 	
 	aux-> info = new (Z0)  ISymbol (aux-> token, aux-> _left-> info-> getDeclSym (), aux, type);
@@ -1369,9 +1376,10 @@ namespace syntax {
 		    need = false;
 		
 		if (need)
-		    tuplingParams (type, aux);
+		    tuplingParams (type, aux);	       
 	    }
-
+	    
+	    if (!verifyImplicitRef (type, aux)) return NULL;
 	    aux-> _score = type;
 	    aux-> info = new (Z0) ISymbol (this-> token, DeclSymbol::init (), aux, type-> ret);
 
@@ -1410,6 +1418,18 @@ namespace syntax {
 	auto call = new (Z0)  IPar (tok, tok2, dot, finalParams, true);
 	
 	return call-> expression ();
+    }
+
+    bool IPar::verifyImplicitRef (ApplicationScore score, Par par) {
+	for (auto it : Ymir::r (0, score-> treat.size ())) {
+	    if (par-> _params-> getParams () [it]-> info-> type ()-> isMutable ()) {
+		if (!score-> treat [it]-> is<IRefInfo> ()) {
+		    Ymir::Error::implicitMemoryRef (par-> _params-> getParams ()[it]-> token, par-> _params-> getParams ()[it]-> info);
+		    return false;
+		}
+	    }		
+	}
+	return true;
     }
     
     void IPar::tuplingParams (ApplicationScore score, Par par) {

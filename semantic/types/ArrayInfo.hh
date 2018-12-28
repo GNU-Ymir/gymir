@@ -96,6 +96,8 @@ namespace semantic {
 	
 	InfoType Ptr ();
 
+	InfoType Cpy ();
+
 	InfoType Length ();
 
 	InfoType TypeId ();

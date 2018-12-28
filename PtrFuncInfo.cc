@@ -264,7 +264,13 @@ namespace semantic {
     }
     
     InfoType IPtrFuncInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type ()-> is <IUndefInfo> ()) {
+	if (auto un = left-> info-> type ()-> to <IUndefInfo> ()) {
+	    if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		auto ret = new (Z0) IRefInfo (true, this-> clone ());
+		ret-> binopFoo = &FixedUtils::InstAffectAddr;
+		return ret;
+	    } else if (un-> willBeRef ()) return NULL;
+	    
 	    auto ret = this-> clone ();
 	    if (this-> isDelegate ()) {
 		ret-> binopFoo = &PtrFuncUtils::InstAffectDelegate;

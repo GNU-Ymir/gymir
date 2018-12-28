@@ -5,6 +5,12 @@ namespace semantic {
     IUndefInfo::IUndefInfo () :
 	IInfoType (true)
     {}
+    
+    IUndefInfo::IUndefInfo (bool willBeRef) :
+	IInfoType (true)
+    {
+	this-> _willBeRef = willBeRef;
+    }
 
     bool IUndefInfo::isSame (InfoType) {	
 	return false;
@@ -18,16 +24,29 @@ namespace semantic {
 	if (var-> hasTemplate ()) return NULL;
 	return NULL;
     }
+
+    bool IUndefInfo::willBeRef () {
+	return this-> _willBeRef;
+    }
     
     std::string IUndefInfo::typeString () {
+	if (this-> _willBeRef) {
+	    return "ref (undef)";
+	} 
 	return "undef";
     }
 
     std::string IUndefInfo::innerTypeString () {
+	if (this-> _willBeRef) {
+	    return "ref (undef)";
+	} 
 	return "undef";
     }
 
     std::string IUndefInfo::innerSimpleTypeString () {
+	if (this-> _willBeRef) {
+	    return "ref (undef)";
+	} 
 	return "undef";
     }
 

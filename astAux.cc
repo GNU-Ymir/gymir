@@ -2527,6 +2527,10 @@ namespace syntax {
 	return this-> _attrs;
     }
     
+    std::vector <Word> & ITypeCreator::getUdas () {
+	return this-> _udas;
+    }
+
     ITypeConstructor::ITypeConstructor (Word ident, const std::vector <Var> & params, Block block, bool isCopy) :
 	_ident (ident),
 	_params (params),

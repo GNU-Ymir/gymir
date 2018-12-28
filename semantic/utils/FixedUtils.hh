@@ -7,7 +7,9 @@ namespace semantic {
 
     namespace FixedUtils {
 	
-	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
+	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
+
+	Ymir::Tree InstAffectAddr (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
 	Ymir::Tree UnaryMinus (Word locus, InfoType, syntax::Expression left);
 

@@ -38,7 +38,11 @@ namespace Ymir {
     std::string Runtime::MEM_CMP_ARRAY = "_y_mem_cmp_array";
     std::string Runtime::COMPARE_TYPEINFO = "_y_cmp_typeinfo";
     std::string Runtime::DYNAMIC_CAST = "_y_dynamic_cast";
+    std::string Runtime::ALLOC_AND_AFF = "_y_alloc_and_aff";
 
+    std::string Runtime::MEM_INIT_ARRAY = "_y_mem_init";
+    std::string Runtime::NEW_ARRAY = "_y_new_array";
+    std::string Runtime::DUP_ARRAY = "_y_dup_array";
     
     
 }

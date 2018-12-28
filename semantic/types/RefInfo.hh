@@ -57,6 +57,8 @@ namespace semantic {
 	bool isConst () override;
 
 	void isConst (bool set) override;
+
+	bool isMutable () override;
 	
 	std::string innerTypeString () override;
 

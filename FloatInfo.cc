@@ -1,5 +1,6 @@
 #include <ymir/semantic/types/_.hh>
 #include <ymir/semantic/utils/FloatUtils.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/semantic/tree/_.hh>
 #include <ymir/syntax/Keys.hh>
 #include <ymir/semantic/pack/Table.hh>
@@ -180,7 +181,13 @@ namespace semantic {
     }
 
     InfoType IFloatInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type ()-> is<IUndefInfo> ()) {
+	if (auto un = left-> info-> type ()-> to<IUndefInfo> ()) {
+	    if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAffectAddr;
+		return aux;
+	    } else if (un-> willBeRef ()) return NULL;
+	    
 	    auto fl = new (Z0)  IFloatInfo (false, this-> _type);
 	    fl-> binopFoo = &FloatUtils::InstAffect;
 	    return fl;

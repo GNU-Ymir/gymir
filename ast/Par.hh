@@ -113,6 +113,8 @@ namespace syntax {
 	 */
 	bool simpleVerif (IPar*&);
 
+	bool verifyImplicitRef (semantic::ApplicationScore score, IPar* par);
+	
 	void tuplingParams (semantic::ApplicationScore score, IPar* par);
 
 	Ymir::Tree createClosureVar ();

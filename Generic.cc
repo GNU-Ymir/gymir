@@ -139,6 +139,39 @@ namespace Ymir {
 	return record_type;
     }
 
+    Tree makeTuple (std::string name, const std::vector <Ymir::Tree>& types, const std::vector<std::string> & attrs) {
+	tree fields_last = NULL_TREE, fields_begin = NULL_TREE;
+	tree record_type = make_node (RECORD_TYPE);
+	auto size = 0;
+	for (uint i = 0 ; i < types.size () ; i++) {
+	    tree ident;
+	    if (i >= attrs.size ()) {
+		OutBuffer buf;
+		buf.write ("_", (int) i - attrs.size ());
+		ident = get_identifier (buf.str ().c_str ());
+	    } else {
+		ident = get_identifier (attrs [i].c_str ());
+	    }
+	    
+	    tree type = types [i].getTree (); 
+	    
+	    size += TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type));
+	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
+	    DECL_CONTEXT (field) = record_type;
+
+	    if (fields_begin == NULL) fields_begin = field;
+	    if (fields_last != NULL) TREE_CHAIN (fields_last) = field;
+	    fields_last = field;
+	}
+
+	TYPE_NAME (record_type) = get_identifier (name.c_str ());
+	TREE_CHAIN (fields_last) = NULL_TREE;	
+	TYPE_FIELDS (record_type) = fields_begin;
+	layout_type (record_type);
+	
+	return record_type;
+    }
+
     Tree makeEmptyTuple (ulong size) {
 	auto inner = new (Z0) IArrayInfo (false, new (Z0) ICharInfo (false));
 	inner-> isStatic (true, size);

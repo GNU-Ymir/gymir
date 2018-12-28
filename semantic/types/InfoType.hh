@@ -64,6 +64,7 @@ namespace semantic {
 	bool _isConst = false;
 	bool _isLValue = false;
 	bool _isStatic = false;
+	
 	ulong _toGet;
 	Value _value = NULL;
 	Symbol _sym = NULL;
@@ -75,11 +76,11 @@ namespace semantic {
 	typedef Ymir::Tree (*BinopLint) (Word, IInfoType*, syntax::Expression, syntax::Expression);
 	typedef Ymir::Tree (*MultLint) (Word, IInfoType*, syntax::Expression, syntax::Expression, ApplicationScore);
 	typedef Ymir::Tree (*UnopLint) (Word, IInfoType*, syntax::Expression);
-
 	typedef Ymir::Tree (*ApplyLint) (Word, IInfoType*, std::vector <syntax::Var>&, syntax::Block, syntax::Expression);
 	
 	bool _isType = false;
 	Module _onlyInMe = NULL;
+	bool _isMutable = false;
 
     public:
 
@@ -146,6 +147,8 @@ namespace semantic {
 
 	virtual bool isLvalue ();
 	
+	virtual bool isMutable ();
+
 	static void printConst (bool needPrintConst = true);
 	
 	virtual std::string typeString ();
@@ -205,6 +208,8 @@ namespace semantic {
 	virtual InfoType TypeInfo ();
 	
 	InfoType cloneOnExit ();
+
+	InfoType cloneNoMutable ();
 
 	InfoType cloneOnExitWithInfo ();
 

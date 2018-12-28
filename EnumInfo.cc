@@ -409,6 +409,7 @@ namespace semantic {
 
     InfoType IEnumInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (left-> info-> type ()-> is<IUndefInfo> ()) {
+	    if (left-> info-> type ()-> to <IUndefInfo> ()-> willBeRef ()) return NULL;
 	    auto ret = this-> clone ()-> to <IEnumInfo> ();
 	    ret-> _content = this-> _content-> BinaryOpRight (op, left);
 	    ret-> binopFoo = ret-> content ()-> binopFoo;
@@ -450,6 +451,9 @@ namespace semantic {
 
     InfoType IEnumInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || this-> isSame (other)) {
+	    if (other-> is <IUndefInfo> () && other-> to <IUndefInfo> ()-> willBeRef ())
+		return NULL;
+	    
 	    auto rf = this-> clone ()-> to <IEnumInfo> ();
 	    auto ret = this-> _content-> CompOp (this-> _content);	    
 	    rf-> comp = ret;

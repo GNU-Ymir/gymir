@@ -209,6 +209,7 @@ namespace semantic {
 
     InfoType IFunctionInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {
+	    if (left-> info-> type ()-> to <IUndefInfo> ()-> willBeRef ()) return NULL;
 	    auto frames = getFrames ();
 	    if (frames.size () == 1) {//&& frames [0]-> isPure ()) {
 		auto infoTypes = frames [0]-> getParamTypes ();
@@ -477,6 +478,7 @@ namespace semantic {
 	    }
 	    return ret;	
 	} else if (other-> is <IUndefInfo> ()) {
+	    if (other-> to <IUndefInfo> ()-> willBeRef ()) return NULL;
 	    return this-> Affect ();
 	}
 	return NULL;

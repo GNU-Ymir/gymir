@@ -809,6 +809,15 @@ namespace syntax {
 	return true;
     }
 
+    bool ITypeCreator::verifUdas () {
+	for (auto it : this-> _udas) {
+	    if (it != Keys::DYNAMIC) {
+		Ymir::Error::undefUda (this-> _ident, it);
+		return false;
+	    }
+	}
+	return true;
+    }        
     
     void IEnum::declare () {
 	auto exist = Table::instance ().getLocal (this-> ident.getStr ());
@@ -1250,6 +1259,7 @@ namespace syntax {
     }
 
     void ITypeCreator::declare () {
+	if (!verifUdas ()) return;	
 	auto space = Table::instance ().space ();
 	auto it = Table::instance ().getLocal (this-> _ident.getStr ());
 	if (it != NULL) {
@@ -1257,7 +1267,7 @@ namespace syntax {
 	    return;
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _udas);
 	if (this-> _destr.size () > 1) {
 	    Ymir::Error::multipleDestr (this-> _ident);
 	    return;
@@ -1321,8 +1331,10 @@ namespace syntax {
     }
 
     InfoType ITypeCreator::declare (Namespace space, const std::vector <syntax::Expression> & tmps) {
+	verifUdas ();
+	
 	auto tmpSpace = Table::instance ().getCurrentSpace ();
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _udas);
 	type-> templateSpace () = tmpSpace;
 	type-> tmpsDone () = tmps;
 	
@@ -1369,6 +1381,7 @@ namespace syntax {
     }
     
     void ITypeCreator::declare (semantic::Module mod) {
+	if (!verifUdas ()) return;	
 	auto space = mod-> space ();
 	auto it = mod-> get (this-> _ident.getStr ());
 	if (it != NULL) {
@@ -1376,7 +1389,7 @@ namespace syntax {
 	    return;
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _udas);
 	
 	if (this-> _destr.size () > 1) 
 	    Ymir::Error::multipleDestr (this-> _ident);
@@ -1427,13 +1440,14 @@ namespace syntax {
     }
     
     void ITypeCreator::declareAsExtern (semantic::Module mod) {
+	if (!verifUdas ()) return;	
 	auto space = mod-> space ();
 	auto it = mod-> get (this-> _ident.getStr ());
 	if (it != NULL) {
 	    Ymir::Error::shadowingVar (this-> _ident, it-> sym);
 	}
 
-	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who);
+	auto type = new (Z0) IAggregateCstInfo (this-> _ident, space, this-> _ident.getStr (), this-> _tmps, this-> _who, this-> _udas);
 	type-> isExtern () = true;
 	
 	if (this-> _destr.size () > 1) 

@@ -30,6 +30,8 @@ namespace Ymir {
     std::vector<Tree> getFieldDecls (Tree type);
     
     Tree makeUnion (std::string name, const std::vector<semantic::InfoType> & types, const std::vector<std::string>& attrs);
+
+    Tree makeTuple (std::string name, const std::vector<Tree> & types, const std::vector<std::string>& attrs);
     
     Tree makeTuple (std::string name, const std::vector<semantic::InfoType> & types, const std::vector<std::string>& attrs, bool packed = false);
 

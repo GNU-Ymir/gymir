@@ -103,7 +103,7 @@ namespace syntax {
 			       Keys::STATIC
 	};
 	
-	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC};
+	this-> decoKeys = {Keys::IMMUTABLE, Keys::CONST, Keys::STATIC, Keys::REF};
 	this-> lambdaPossible = true;
 	this-> isInMatch = false;
     }
@@ -724,6 +724,12 @@ namespace syntax {
 
     TypeCreator Visitor::visitTypeCreator (std::string & docs) {
 	std::vector <Expression> temps;
+	std::vector <Word> udas;
+	auto next = this-> lex.next ();
+	if (next == Token::AT) {
+	    udas = visitAttributes ();
+	} else this-> lex.rewind ();
+	
 	auto ident = visitIdentifiant ();
 	auto word = this-> lex.next ({Token::LPAR, Keys::OVER, Token::LACC});
 	if (word == Token::LPAR) {
@@ -742,7 +748,8 @@ namespace syntax {
 	
 	this-> lambdaPossible = save;
 	auto type = new (Z0) ITypeCreator (ident, docs, who, temps);
-       
+	type-> getUdas () = udas;
+	
 	while (true) {
 	    std::string innerDocs;
 	    auto next = this-> lex.nextWithDocs (innerDocs, {Token::RACC, Keys::SELF, Keys::DEF, Keys::OVER, Token::TILDE, Keys::PRIVATE, Keys::PROTECTED, Keys::LET, Keys::STATIC});

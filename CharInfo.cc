@@ -109,6 +109,14 @@ namespace semantic {
 
     InfoType ICharInfo::CompOp (InfoType other) {
 	if (other-> is<IUndefInfo> () || other-> is<ICharInfo> ()) {
+	    if (auto un = other-> to <IUndefInfo> ()) {
+		if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		    auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		    aux-> binopFoo = &FixedUtils::InstAddr;
+		    return aux;
+		} else if (un-> willBeRef ()) return NULL;
+	    }
+	    
 	    auto ch = new (Z0)  ICharInfo (this-> isConst ());
 	    ch-> binopFoo = FixedUtils::InstCast;
 	    return ch;
@@ -142,7 +150,13 @@ namespace semantic {
     }
 
     InfoType ICharInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type ()-> is<IUndefInfo> ()) {
+	if (auto un = left-> info-> type ()-> to<IUndefInfo> ()) {
+	    if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAffectAddr;
+		return aux;
+	    } else if (un-> willBeRef ()) return NULL;
+	
 	    auto ch = new (Z0)  ICharInfo (this-> isConst ());
 	    ch-> binopFoo = &FixedUtils::InstAffect;
 	    return ch;

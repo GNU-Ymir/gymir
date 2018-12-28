@@ -101,6 +101,7 @@ std::string     Keys::SUPER      = "super";
 std::string     Keys::DISPOSE    = "~self";
 std::string     Keys::COPY       = "0__cpy";
 std::string     Keys::ALIAS      = "alias";
+std::string     Keys::DYNAMIC      = "dynamic";
 
 std::string Version::DEBUG = "debug";
 // std::string Version::UNIX = "unix";

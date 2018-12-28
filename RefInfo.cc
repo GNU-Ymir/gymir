@@ -341,6 +341,10 @@ namespace semantic {
     void IRefInfo::isConst (bool set) {
 	this-> _content-> isConst (set);
     }
+
+    bool IRefInfo::isMutable () {
+	return this-> _content-> isMutable ();
+    }
         
     std::string IRefInfo::innerTypeString () {
 	return std::string ("ref(") + this-> _content-> typeString () + ")";

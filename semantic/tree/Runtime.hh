@@ -42,6 +42,11 @@ namespace Ymir {
 	static std::string MEM_CMP_ARRAY;
 	static std::string COMPARE_TYPEINFO;
 	static std::string DYNAMIC_CAST;
+	static std::string ALLOC_AND_AFF;
+
+	static std::string MEM_INIT_ARRAY;
+	static std::string NEW_ARRAY;
+	static std::string DUP_ARRAY;
     };
        
 }

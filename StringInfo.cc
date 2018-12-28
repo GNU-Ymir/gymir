@@ -33,7 +33,15 @@ namespace semantic {
     
     InfoType IStringInfo::BinaryOpRight (Word op, syntax::Expression left) {
 	if (op == Token::EQUAL) {
-	    if (left-> info-> type ()-> is <IUndefInfo> ()) {
+	    if (auto un = left-> info-> type ()-> to <IUndefInfo> ()) {
+		if (un-> willBeRef ()) {
+		    auto ret = new (Z0) IRefInfo (false, this-> clone ());
+		    ret-> content ()-> value () = NULL;
+		    ret-> binopFoo = ArrayUtils::InstAffectAddr;
+		    ret-> isConst (this-> isConst ());
+		    return ret;
+		}
+
 		auto arr = this-> clone ();
 		arr-> binopFoo = &ArrayUtils::InstAffect;
 		return arr;

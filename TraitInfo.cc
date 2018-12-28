@@ -34,7 +34,12 @@ namespace semantic {
 	    auto type = tvar-> getType ();
 	    auto inAggr = info-> DotOp (tvar);
 
-	    if (!inAggr || !inAggr-> isSame (type)) return false;
+	    if (!inAggr) return false;
+	    else if (!inAggr-> isSame (type)) {		
+		if (auto meth = inAggr-> to <IMethodInfo> ()) {
+		    if (!meth-> isAttribute ()) return false;
+		}
+	    }
 	}
 
 	auto methods = info-> getAllMethods ();
@@ -46,9 +51,13 @@ namespace semantic {
 		if (type == NULL) return false;
 		params.push_back (type-> info-> type ());
 	    }
-	    auto retType = tmeth._ret-> toType ();
-	    if (!retType) return false;
-	    ret = retType-> info-> type ();
+	    
+	    if (tmeth._ret == NULL) ret = new (Z0) IVoidInfo ();
+	    else {
+		auto retType = tmeth._ret-> toType ();	    
+		if (!retType) return false;
+		ret = retType-> info-> type ();
+	    }
 
 	    bool changed = false;
 	    for (auto & it : methods) {

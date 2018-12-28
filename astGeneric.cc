@@ -593,9 +593,12 @@ namespace syntax {
 			ltree = dcol-> getLeft ()-> toGeneric ();
 		    }
 		}
-		    
-		if (!obj) { // Constructing a new object 
+
+		auto aggr = this-> _score-> ret-> to <IAggregateInfo> ();
+		if (!obj) { // Constructing a new object
 		    ltree = Ymir::makeAuxVar (this-> token.getLocus (), ISymbol::getLastTmp (), this-> _score-> ret-> toGeneric ());
+		    if (aggr-> isDynamic ()) {
+		    }
 		}
 		
 		args.insert (args.begin (), getAddr (ltree).getTree ());
@@ -612,6 +615,7 @@ namespace syntax {
 					 this-> _score-> ret-> genericConstructor ()
 			)
 		    );
+		    
 		}
 		
 		list.append (build_call_array_loc (this-> token.getLocus (),
@@ -882,29 +886,31 @@ namespace syntax {
 	}
     }
 
-    Ymir::Tree IArrayAlloc::staticGeneric (semantic::ArrayInfo, Ymir::Tree, Ymir::Tree array_type) {
+    Ymir::Tree IArrayAlloc::staticGeneric (semantic::ArrayInfo info, Ymir::Tree inner, Ymir::Tree array_type) {
 	Ymir::TreeStmtList list;
 	auto loc = this-> token.getLocus ();
 	auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), array_type);
 	auto addr = Ymir::getAddr (loc, aux);
-	tree memsetArgs [] = {addr.getTree (),
-			      build_int_cst_type (long_unsigned_type_node, 0),
-			      TYPE_SIZE_UNIT (aux.getType ().getTree ())};
+	std::vector <Ymir::Tree> memsetArgs = {addr.getTree (),
+					       Ymir::getAddr (info-> content ()-> genericConstructor ()),
+					       TYPE_SIZE_UNIT (inner.getTree ()), 
+					       TYPE_SIZE_UNIT (aux.getType ().getTree ())};
 	
 	return Ymir::compoundExpr (loc,
-				   build_call_array_loc (loc, void_type_node, InternalFunction::getYMemset ().getTree (), 3, memsetArgs),
+				   Ymir::callLib (loc, Ymir::Runtime::MEM_INIT_ARRAY, void_type_node, memsetArgs).getTree (),
 				   aux);
     }
     
-    Ymir::Tree IArrayAlloc::dynamicGeneric (semantic::ArrayInfo, Ymir::Tree innerType, Ymir::Tree array_type) {
+    Ymir::Tree IArrayAlloc::dynamicGeneric (semantic::ArrayInfo info, Ymir::Tree innerType, Ymir::Tree array_type) {
 	Ymir::TreeStmtList list;	
 	auto lenr = this-> _size-> toGeneric ();
-	std::vector <tree> args = {convert (long_unsigned_type_node, TYPE_SIZE_UNIT (innerType.getTree ())), lenr.getTree ()};
+	std::vector <Ymir::Tree> args = {convert (long_unsigned_type_node, TYPE_SIZE_UNIT (innerType.getTree ())), lenr.getTree (), Ymir::getAddr (info-> content ()-> genericConstructor ())};
 	
-	auto ptrr = build_call_array (
-	    build_pointer_type (void_type_node),
-	    semantic::InternalFunction::getYNewArray ().getTree (),
-	    args.size (), args.data ()
+	auto ptrr = Ymir::callLib (
+	    this-> token.getLocus (),
+	    Ymir::Runtime::NEW_ARRAY, 
+	    build_pointer_type (void_type_node),	    
+	    args
 	);				      
 
 	Ymir::Tree aux = Ymir::makeAuxVar (this-> token.getLocus (),
@@ -925,7 +931,7 @@ namespace syntax {
 	    MODIFY_EXPR, this-> token.getLocus (),
 	    void_type_node,
 	    ptrl,
-	    fold_convert (build_pointer_type (innerType.getTree ()), ptrr)
+	    fold_convert (build_pointer_type (innerType.getTree ()), ptrr.getTree ())
 	));
 
 	return Ymir::compoundExpr (this-> token.getLocus (), list.getTree (), aux);

@@ -3,6 +3,7 @@
 #include <ymir/ast/Expression.hh>
 #include <ymir/semantic/tree/_.hh>
 #include <ymir/semantic/utils/TupleUtils.hh>
+#include <ymir/semantic/utils/FixedUtils.hh>
 #include <ymir/ast/Var.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/pack/FinalFrame.hh>
@@ -371,7 +372,7 @@ namespace semantic {
     
     InfoType ITupleInfo::AffectRight (Word, Expression left) {
 	if (this-> isType ()) return NULL;
-	if (left-> info-> type ()-> is <IUndefInfo> ()) {
+	if (auto un = left-> info-> type ()-> to <IUndefInfo> ()) {
 	    auto ret = new (Z0)  ITupleInfo (false);
 	    for (auto it : this-> params) {
 		ret-> params.push_back (it-> clone ());
@@ -379,6 +380,13 @@ namespace semantic {
 
 	    ret-> _isUnion = this-> _isUnion;
 	    ret-> binopFoo = &TupleUtils::InstAffect;
+
+	    if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), ret);
+		aux-> binopFoo = &FixedUtils::InstAffectAddr;
+		return aux;
+	    } else if (un-> willBeRef ()) return NULL;
+
 	    return ret;
 	}
 	return NULL;

@@ -75,7 +75,7 @@ namespace semantic {
 
 	friend IAggregateInfo;
 	
-	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, syntax::Expression over);
+	IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, syntax::Expression over, const std::vector <Word> & udas);
 	
 	std::vector <FunctionInfo> & getConstructors ();
 
@@ -96,11 +96,13 @@ namespace semantic {
 	std::vector <syntax::TypeAttr> & getAttrs ();
 	
 	Namespace space ();
+
+	bool& isDynamic ();
 	
 	Namespace & templateSpace ();
 
 	bool isSame (InfoType) override;
-
+	
 	InfoType onClone () override;
 	
 	InfoType DColonOp (syntax::Var) override;
@@ -186,7 +188,8 @@ namespace semantic {
 	
 	bool _isExternal;
 	bool _static = false;
-	
+	bool _isDynamic = false;
+
 	friend IAggregateCstInfo;
 
     public:
@@ -229,6 +232,10 @@ namespace semantic {
 	
 	Ymir::Tree toGeneric () override;
 
+	Ymir::Tree genericDynInner ();
+
+	Ymir::Tree genericCstDynInner ();
+	
 	Ymir::Tree genericConstructor () override;	
 
 	Ymir::Tree genericTypeInfo () override;
@@ -250,6 +257,10 @@ namespace semantic {
 	std::vector <syntax::InnerProtection>& getInnerProts ();
 
 	std::vector <Namespace> & getAttrSpaces ();
+
+	bool& isDynamic ();
+
+	bool isMutable () override;
 	
 	InfoType isTyped (IAggregateInfo*);
 		

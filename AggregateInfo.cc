@@ -55,6 +55,7 @@ namespace semantic {
 	Ymir::Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
+
 	
 	Tree InstGetVtableCTE (Word, InfoType, Expression elem) {
 	    auto rtype = elem-> info-> type ()-> to <IAggregateInfo> ();
@@ -65,6 +66,19 @@ namespace semantic {
 	Tree InstGetVtable (Word locus, InfoType, Expression elem, Expression) {
 	    auto ltree = elem-> toGeneric ();
 	    return getField (locus.getLocus (), ltree, Keys::VTABLE_FIELD);
+	}
+
+	Tree InstGet (Word locus, InfoType, Expression left, Expression right) {
+	    location_t loc = locus.getLocus ();
+	    auto aggr = left-> info-> type ()-> to <IAggregateInfo> ();
+	    auto ltree = left-> toGeneric ();
+	    auto val = right-> token.getStr ();
+	    if (aggr-> isDynamic ()) {
+		auto data = getField (loc, ltree, "data");
+		return getField (loc, data, val.c_str ());
+	    } else {
+		return getField (loc, ltree, val.c_str ());
+	    }
 	}
 	
 	Tree InstCompVtable (Word locus, InfoType, Expression left, Expression right) {
@@ -186,7 +200,7 @@ namespace semantic {
 	
     }
     
-    IAggregateCstInfo::IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, syntax::Expression over) :
+    IAggregateCstInfo::IAggregateCstInfo (Word locId, Namespace space, std::string name, const std::vector <syntax::Expression> & tmps, syntax::Expression over, const std::vector <Word> & udas) :
 	IInfoType (true),
 	_space (space),
 	_locId (locId),
@@ -196,7 +210,10 @@ namespace semantic {
 	_ancExpr (over),
 	_templateSpace ("")
 	
-    {}
+    {
+	for (auto it : udas)
+	    if (it == Keys::DYNAMIC) this-> isDynamic () = true;
+    }
 
     std::vector <FunctionInfo> & IAggregateCstInfo::getConstructors () {
 	return this-> _contrs;
@@ -237,6 +254,10 @@ namespace semantic {
     Namespace& IAggregateCstInfo::templateSpace () {
 	return this-> _templateSpace;
     }
+
+    bool& IAggregateCstInfo::isDynamic () {
+	return this-> _isDynamic;
+    }
     
     bool IAggregateCstInfo::isSame (InfoType other) {
 	if (other == this) return true;
@@ -247,7 +268,6 @@ namespace semantic {
 	}
 	return false;
     }
-
 
     InfoType IAggregateCstInfo::onClone () {
 	return this;
@@ -281,6 +301,7 @@ namespace semantic {
 	auto currentSpace = Table::instance ().space ();
 	
 	this-> _info = new (Z0) IAggregateInfo (this, this-> _space, this-> _name, {}, this-> _isExternal);
+	this-> _info-> isDynamic () = this-> isDynamic ();
 	inProgress [name] = this-> _info;
 
 	AggregateInfo anc = NULL;
@@ -663,7 +684,9 @@ namespace semantic {
 	tmpsDone (tmpsDone),
 	_id (from),
 	_isExternal (isExtern)
-    {}
+    {
+	this-> _isMutable = true;
+    }
 
     bool IAggregateInfo::isSame (InfoType other) {
 	if (auto ot = other-> to <IAggregateInfo> ()) {
@@ -732,15 +755,8 @@ namespace semantic {
     }
 
     bool IAggregateInfo::needKeepConst () {
-	if (this-> isConst ()) {
-	    static std::vector <InfoType> dones;
-	    if (std::find (dones.begin (), dones.end (), this) == dones.end ()) {
-		dones.push_back (this);
-		for (auto it : this-> _types) {
-		    if (it-> cloneConst ()-> needKeepConst ()) return true;
-		}
-		dones.erase (std::find (dones.begin (), dones.end (), this));
-	    }
+	if (this-> isConst () && this-> isDynamic ()) {
+	    return true;
 	}
 	return false;
     }
@@ -766,7 +782,8 @@ namespace semantic {
 	    if (this-> _anc)
 		ret-> _anc = this-> _anc;
 	    ret-> isConst (this-> isConst ());
-
+	    ret-> isDynamic () = this-> isDynamic ();
+	    
 	    dones.erase (this);	    
 	    return ret;
 	} else {
@@ -788,13 +805,19 @@ namespace semantic {
     }
 
     InfoType IAggregateInfo::BinaryOpRight (Word op, Expression left) {
-	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {	    
-	    auto ret = this-> clone ();
-	    if (this-> hasCopyCstr ())
-		ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
-	    else 
-		ret-> binopFoo = &StructUtils::InstAffect;
-	    return ret;
+	if (op == Token::EQUAL && left-> info-> type ()-> is <IUndefInfo> ()) {
+	    if (left-> info-> type ()-> to <IUndefInfo> ()-> willBeRef ()) {
+		auto ret = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		ret-> binopFoo = &StructUtils::InstAffectAddr;
+		return ret;
+	    } else {
+		auto ret = this-> clone ();
+		if (this-> hasCopyCstr ())
+		    ret-> binopFoo = &AggregateUtils::InstCopyCstAff;
+		else 
+		    ret-> binopFoo = &StructUtils::InstAffect;
+		return ret;
+	    }
 	} else if (op == Token::EQUAL && left-> info-> type ()-> is <IAggregateInfo> ()) {
 	    if (left-> info-> type ()-> isSame (this)) {
 		auto ret = left-> info-> type ()-> clone ();
@@ -853,7 +876,7 @@ namespace semantic {
 			ret-> isConst (true);
 		    } else ret-> isConst (this-> _types [it]-> isConst ());
 		    ret = new (Z0) IArrayRefInfo (this-> isConst (), ret);
-		    ret-> binopFoo = &StructUtils::InstGet;
+		    ret-> binopFoo = &AggregateUtils::InstGet;
 		    return ret;
 		}
 	    }
@@ -921,17 +944,23 @@ namespace semantic {
 
     InfoType IAggregateInfo::CompOp (InfoType other) {
 	if (this-> isSame (other) || other-> is <IUndefInfo> ()) {
-	    if (this-> hasCopyCstr ()) {
-		auto ret = this-> clone ();
-		//auto meth = new (Z0) IMethodInfo (this, Keys::COPY, {this-> cpyCstr ()}, {0}, false);
-		ret-> isConst (this-> isConst ());
-		ret-> binopFoo = AggregateUtils::InstGetCpy;
+	    if (other-> is <IUndefInfo> () && other-> to <IUndefInfo> ()-> willBeRef () && !this-> isDynamic ()) {
+		auto ret = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		ret-> binopFoo = &StructUtils::InstAddr;
 		return ret;
 	    } else {
-		auto ret = this-> clone ();
-		ret-> isConst (this-> isConst ());
-		ret-> binopFoo = &AggregateUtils::InstCast;
-		return ret;
+		if (this-> hasCopyCstr ()) {
+		    auto ret = this-> clone ();
+		    //auto meth = new (Z0) IMethodInfo (this, Keys::COPY, {this-> cpyCstr ()}, {0}, false);
+		    ret-> isConst (this-> isConst ());
+		    ret-> binopFoo = AggregateUtils::InstGetCpy;		
+		    return ret;
+		} else {
+		    auto ret = this-> clone ();
+		    ret-> isConst (this-> isConst ());
+		    ret-> binopFoo = &AggregateUtils::InstCast;
+		    return ret;
+		}
 	    }
 	} else if (auto ref = other-> to <IRefInfo> ()) {
 	    if (this-> isSame (ref-> content ())) {
@@ -1125,7 +1154,14 @@ namespace semantic {
     std::vector <Namespace> & IAggregateInfo::getAttrSpaces () {
 	return this-> _attrSpaces;
     }
-    
+
+    bool& IAggregateInfo::isDynamic () {
+	return this-> _isDynamic;
+    }
+
+    bool IAggregateInfo::isMutable () {
+	return this-> _isDynamic;
+    }
     
     std::vector <FunctionInfo> IAggregateInfo::getMethods () {
 	if (!this-> getAncestor ()) return this-> _methods;
@@ -1245,15 +1281,38 @@ namespace semantic {
 	auto vname = Ymir::OutBuffer ("_YTV", Mangler::mangle_namespace (tname)).str ();
 	auto ttype = IFinalFrame::getDeclaredType (tname.c_str ());
 	if (ttype.isNull ()) {
-	    std::vector <InfoType> types = {new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ())};
-	    std::vector <std::string> attrs = {Keys::VTABLE_FIELD};
-
-	    for (auto it : Ymir::r (0, this-> _types.size ())) {
-		types.push_back (this-> _types [it]);
-		attrs.push_back (this-> _attrs [it]);
-	    }
+	    if (!this-> isDynamic ()) {
+		std::vector <InfoType> types = {new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ())};
+		std::vector <std::string> attrs = {Keys::VTABLE_FIELD};
+		
+		for (auto it : Ymir::r (0, this-> _types.size ())) {
+		    types.push_back (this-> _types [it]);
+		    attrs.push_back (this-> _attrs [it]);
+		}
 			    
-	    ttype = Ymir::makeTuple (tname, types, attrs); 
+		ttype = Ymir::makeTuple (tname, types, attrs);
+	    } else {
+		auto innerName = tname + "_inner";
+		auto innerType = IFinalFrame::getDeclaredType ((innerName).c_str ());
+		if (innerType.isNull ()) {
+		    std::vector <InfoType> innerTypes;
+		    std::vector <std::string> innerAttrs;
+
+		    for (auto it : Ymir::r (0, this-> _types.size ())) {
+			innerTypes.push_back (this-> _types [it]);
+			innerAttrs.push_back (this-> _attrs [it]);
+		    }
+		    
+		    innerType = Ymir::makeTuple (innerName, innerTypes, innerAttrs);
+		    IFinalFrame::declareType (innerName, innerType);
+		}
+		
+		std::vector <Ymir::Tree> types = {(new (Z0) IPtrInfo (true, new (Z0) IVoidInfo ()))-> toGeneric (), build_pointer_type (innerType.getTree ())};
+		std::vector <std::string> attrs = {Keys::VTABLE_FIELD, "data"};
+		
+		ttype = Ymir::makeTuple (tname, types, attrs);
+	    }
+	    
 	    IFinalFrame::declareType (tname, ttype);
 
 	    // Declare the vtable
@@ -1263,6 +1322,36 @@ namespace semantic {
 	return ttype;
     }
 
+    // Return the inner type of a dynamic object
+    Ymir::Tree IAggregateInfo::genericDynInner () {
+	auto tname = this-> simpleTypeString ();
+	auto innerName = tname + "_inner";
+	auto innerType = IFinalFrame::getDeclaredType (innerName.c_str ());
+	if (innerType.isNull ()) {
+	    std::vector <InfoType> innerTypes;
+	    std::vector <std::string> innerAttrs;
+
+	    for (auto it : Ymir::r (0, this-> _types.size ())) {
+		innerTypes.push_back (this-> _types [it]);
+		innerAttrs.push_back (this-> _attrs [it]);
+	    }
+		    
+	    innerType = Ymir::makeTuple (innerName, innerTypes, innerAttrs);
+	    IFinalFrame::declareType (innerName, innerType);
+	}
+	return innerType;
+    }    
+
+    Ymir::Tree IAggregateInfo::genericCstDynInner () {
+	auto type = this-> genericDynInner ();
+	vec<constructor_elt, va_gc> * elms = NULL;
+	auto fields = Ymir::getFieldDecls (type);
+	for (auto it : Ymir::r (0, this-> _attrs.size ())) {
+	    CONSTRUCTOR_APPEND_ELT (elms, fields [it].getTree (), this-> _types [it]-> genericConstructor ().getTree ());
+	}
+	return build_constructor (type.getTree (), elms);
+    }
+    
     Ymir::Tree IAggregateInfo::genericTypeInfo () {
 	auto innerGlob = this-> getVtable ();		
 	auto type = Table::instance ().getTypeInfoType ()-> TempOp ({});
@@ -1295,8 +1384,20 @@ namespace semantic {
 	auto fields = Ymir::getFieldDecls (vtype);
 	CONSTRUCTOR_APPEND_ELT (elms, fields [0].getTree (), Ymir::getAddr (vtable).getTree ());
 
-	for (auto it : Ymir::r (0, this-> _attrs.size ())) {
-	    CONSTRUCTOR_APPEND_ELT (elms, fields [it + 1].getTree (), this-> _types [it]-> genericConstructor ().getTree ());
+	if (this-> isDynamic ()) {
+	    auto innerType = this-> genericDynInner ();
+	    auto innerCst = this-> genericCstDynInner ();
+	    auto alloc = Ymir::callLib (BUILTINS_LOCATION,
+					Ymir::Runtime::ALLOC_AND_AFF,
+					build_pointer_type (innerType.getTree ()),
+					{TYPE_SIZE_UNIT (innerType.getTree ()), Ymir::getAddr (innerCst)}
+	    );
+
+	    CONSTRUCTOR_APPEND_ELT (elms, fields [1].getTree (), alloc.getTree ());	    
+	} else {
+	    for (auto it : Ymir::r (0, this-> _attrs.size ())) {
+		CONSTRUCTOR_APPEND_ELT (elms, fields [it + 1].getTree (), this-> _types [it]-> genericConstructor ().getTree ());
+	    }
 	}
 	
 	return build_constructor (vtype.getTree (), elms);

@@ -5,9 +5,14 @@
 namespace semantic {
 
     class IUndefInfo : public IInfoType {
+
+	bool _willBeRef = false;
+	
     public:
 
 	IUndefInfo ();
+
+	IUndefInfo (bool willBeRef);
 
 	bool isSame (InfoType) override;
 
@@ -15,6 +20,8 @@ namespace semantic {
 
 	InfoType DotOp (syntax::Var) override;
 
+	bool willBeRef ();
+	
 	std::string typeString () override;
 	
 	std::string innerTypeString () override;

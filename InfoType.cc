@@ -126,6 +126,10 @@ namespace semantic {
 	    return this-> _sym-> isLvalue ();
 	return true;// Si il n'y a pas d'expression associé, c'est du built-in donc lvalue
     }
+
+    bool IInfoType::isMutable () {
+	return this-> _isMutable;
+    }
     
     void IInfoType::printConst (bool need) {
 	__need__Print_CONST__ = need;
@@ -260,6 +264,15 @@ namespace semantic {
 	return ret;
     }
 
+    InfoType IInfoType::cloneNoMutable () {
+	auto ret = this-> clone ();
+	if (ret) {
+	    ret-> _isMutable = false;
+	}
+	return ret;
+    }
+
+    
     InfoType IInfoType::cloneOnExit () {
 	auto ret = this-> clone ();
 	if (ret) {

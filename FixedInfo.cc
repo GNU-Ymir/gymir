@@ -221,7 +221,13 @@ namespace semantic {
     }
 
     InfoType IFixedInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type ()-> is<IUndefInfo> ()) {
+	if (auto un = left-> info-> type ()-> to<IUndefInfo> ()) {
+	    if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAffectAddr;
+		return aux;
+	    } else if (un-> willBeRef ()) return NULL;
+
 	    auto i = new (Z0)  IFixedInfo (false, this-> _type);
 	    i-> binopFoo = &FixedUtils::InstAffect;
 	    return i;
@@ -479,6 +485,16 @@ namespace semantic {
 	    );
 	}
 
+	Ymir::Tree InstAffectAddr (Word locus, InfoType, Expression left, Expression right) {
+	    auto loc = locus.getLocus ();
+	    auto ltree = left-> toGeneric ();
+	    auto rtree = Ymir::getAddr (right-> toGeneric ());	    
+	    rtree = convert (ltree.getType ().getTree (), rtree.getTree ());
+	    return Ymir::buildTree (
+		MODIFY_EXPR, loc, ltree.getType (), ltree, rtree
+	    );
+	}
+	
 	Ymir::Tree InstReaff (Word locus, InfoType, Expression left, Expression right) {
 	    auto ltree = left-> toGeneric ();
 	    Ymir::Tree rtree = convert (ltree.getType ().getTree (), right-> toGeneric ().getTree ());

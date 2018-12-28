@@ -147,10 +147,26 @@ namespace syntax {
 		    aux-> info-> isConst (true);
 		    aux-> info-> value () = NULL;
 		}
+	    } else if (this-> decos.size () > (uint) id && this-> decos [id] == Keys::REF) {
+		if (this-> insts [id] == NULL) {
+		    Ymir::Error::refNoInit (it-> token);
+		    return NULL;
+		} else {
+		    aux-> info = new (Z0) ISymbol (aux-> token, aux, new (Z0) IUndefInfo (true));
+		    aux-> info-> isConst (false);
+		    Table::instance ().insert (aux-> info);
+		    
+		    auxDecl-> decls.push_back (aux);
+		    auxDecl-> insts.push_back (this-> insts [id]-> expression ());
+		    aux-> info-> type ()-> value () = NULL;
+		}
 	    } else if (this-> decos.size () > (uint) id && this-> decos [id] == Keys::STATIC) {
 		auto space = Table::instance ().space ();
-		if (auto bin = this-> insts [id]-> to<IBinary> ()) {
+		if (this-> insts [id] != NULL) {
+		    auto bin = this-> insts [id]-> to<IBinary> ();
 		    auto type = bin-> getRight ()-> expression ();
+		    if (type == NULL) return NULL;
+		    
 		    aux-> info = new (Z0) ISymbol (aux-> token, aux, type-> info-> type ()-> clone ());
 		    aux-> info-> isConst (false);
 		    aux-> info-> value () = NULL;

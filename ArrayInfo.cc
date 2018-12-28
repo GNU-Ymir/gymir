@@ -25,8 +25,7 @@ namespace semantic {
 	_isStatic (false),
 	_size (0),
 	_content (content)
-    {
-    }
+    {}
     
     InfoType IArrayInfo::content () {
 	return this-> _content;
@@ -74,7 +73,14 @@ namespace semantic {
     }
 
     InfoType IArrayInfo::AffectRight (Expression left) {
-	if (left-> info-> type ()-> is<IUndefInfo> ()) {
+	if (auto un = left-> info-> type ()-> to<IUndefInfo> ()) {
+	    if (un-> willBeRef ()) {
+	    	auto ret = new (Z0) IRefInfo (false, this-> clone ());
+		ret-> content ()-> value () = NULL;
+	    	ret-> binopFoo = ArrayUtils::InstAffectAddr;
+	    	return ret;
+	    }
+	    
 	    auto arr = this-> clone ();
 	    arr-> isConst (false);
 	    arr-> binopFoo = ArrayUtils::InstAffect;
@@ -168,6 +174,7 @@ namespace semantic {
 	if (var-> token == "len") return Length ();
 	if (var-> token == "typeid") return StringOf ();
 	if (var-> token == "ptr") return Ptr ();
+	if (var-> token == "cpy") return Cpy ();
 	//if (var-> token == "tupleof") return TupleOf ();
 	return NULL;
     }
@@ -201,6 +208,16 @@ namespace semantic {
 	return ret;
     }
 
+    InfoType IArrayInfo::Cpy () {
+	auto ret = this-> cloneNoMutable ();
+	if (this-> isStatic ()) {
+	    ret-> binopFoo = &ArrayUtils::InstToArray;	    
+	} else {
+	    ret-> binopFoo = &ArrayUtils::InstDuplicate;
+	}
+	return ret;
+    }
+    
     InfoType IArrayInfo::Length () {
 	auto elem = new (Z0)  IFixedInfo (true, FixedConst::ULONG);
 	elem-> binopFoo = ArrayUtils::InstLen;
@@ -278,7 +295,7 @@ namespace semantic {
 	ret-> _content-> isConst (this-> _content-> isConst ());
 	return ret;
     }
-
+    
     InfoType IArrayInfo::CastOp (InfoType other) {
 	auto type = other-> to<IArrayInfo> ();
 	if (type && type-> _content-> isSame (this-> _content)) {
@@ -310,7 +327,12 @@ namespace semantic {
 	    ret-> _content-> isConst (this-> _content-> isConst ());
 	    ret-> binopFoo = ArrayUtils::InstToArray;
 	    return ret;	    
-	} else if (other-> is<IUndefInfo> ()) {
+	} else if (auto un = other-> to<IUndefInfo> ()) {
+	    if (un-> willBeRef ()) {
+		auto ret = new (Z0) IRefInfo (false, this-> clone ());
+		ret-> binopFoo = &ArrayUtils::InstAddr;
+		return ret;
+	    }
 	    auto ret = this-> clone ();
 	    ret-> binopFoo = ArrayUtils::InstToArray;
 	    return ret;
@@ -325,6 +347,12 @@ namespace semantic {
 		    auto aux = new (Z0)  IRefInfo (false, this-> clone ());
 		    aux-> binopFoo = &ArrayUtils::InstAddr;
 		    return aux;
+		} else if (this-> isLvalue () && this-> _isStatic && !arr-> _isStatic) {
+		    if (this-> _content-> isSame (arr-> _content)) {
+			auto aux = new (Z0) IRefInfo (false, arr-> clone ());
+			aux-> binopFoo = &ArrayUtils::InstAddrStaticToDyn;
+			return aux;
+		    }
 		}
 	    }
 	} else if (auto en = other-> to<IEnumInfo> ()) {
@@ -462,6 +490,7 @@ namespace semantic {
 	this-> _isStatic = isStatic;
 	this-> _size = size;
     }
+
     
     bool IArrayInfo::isConst () {
 	return IInfoType::isConst ();
@@ -673,6 +702,17 @@ namespace semantic {
 		return Ymir::compoundExpr (loc, list, lexp);
 	    }
 	}	
+
+	Ymir::Tree InstAffectAddr (Word word, InfoType, Expression left, Expression right) {
+	    location_t loc = word.getLocus ();
+	    TreeStmtList list;	    
+	    auto lexp = Ymir::getExpr (list, left);
+	    auto rexp = Ymir::getExpr (list, right); 
+	    
+	    return Ymir::compoundExpr (loc, list, Ymir::buildTree (
+		MODIFY_EXPR, loc, lexp.getType (), lexp, Ymir::getAddr (loc, rexp)
+	    ));	    
+	}	
 	
 	Ymir::Tree InstAccessInt (Word word, InfoType, Expression left, Expression right) {
 	    Ymir::TreeStmtList list;
@@ -708,6 +748,29 @@ namespace semantic {
 	Tree InstAddr (Word locus, InfoType, Expression elem, Expression) {
 	    return Ymir::getAddr (locus.getLocus (), elem-> toGeneric ());
 	}
+
+	Tree InstAddrStaticToDyn (Word locus, InfoType type, Expression elem, Expression) {
+	    auto loc = locus.getLocus ();
+	    TreeStmtList list;
+	    
+	    auto rexp = Ymir::getExpr (list, elem);
+	    auto lenr = getLen (loc, NULL, rexp);
+	    auto ptrr = getPtr (loc, NULL, rexp);
+	    auto toType = type-> to <IRefInfo> ()-> content ()-> toGeneric ();
+	    
+	    auto aux = Ymir::makeAuxVar (loc, ISymbol::getLastTmp (), toType);
+	    auto ptrl = getField (loc, aux, "ptr");
+	    auto lenl = getField (loc, aux, "len");
+	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, lenl, lenr));
+	    list.append (buildTree (MODIFY_EXPR, loc, void_type_node, ptrl, ptrr));
+	    
+	    
+	    return Ymir::compoundExpr (
+		loc,
+		list.getTree (),
+		Ymir::getAddr (locus.getLocus (), aux)
+	    );
+	}	
 	
 	Tree InstConcat (Word locus, InfoType retType, Expression left, Expression right) {
 	    Ymir::TreeStmtList list; 
@@ -768,11 +831,11 @@ namespace semantic {
 	    return Ymir::compoundExpr (loc, list.getTree (), lexp);
 	}
 	
-	Tree InstToArray (Word locus, InfoType, Expression elem, Expression type) {
+	Tree InstToArray (Word locus, InfoType type, Expression elem, Expression) {
 	    auto loc = locus.getLocus ();
 	    TreeStmtList list;
 	    auto rexp = Ymir::getExpr (list, elem);
-	    auto toType = type-> info-> type ()-> toGeneric ();
+	    auto toType = type-> toGeneric ();
 
 	    if (toType != rexp.getType () && toType.getTreeCode () == RECORD_TYPE) {		
 		Tree auxVar = makeAuxVar (loc, ISymbol::getLastTmp (), toType);
@@ -796,6 +859,26 @@ namespace semantic {
 	    }		
 	}
 
+	Tree InstDuplicate (Word locus, InfoType type, Expression elem, Expression) {
+	    auto loc = locus.getLocus ();	    
+	    TreeStmtList list;
+	    auto ltree = Ymir::getExpr (list, elem-> toGeneric ());
+	    auto ptrl = getPtr (loc, NULL, ltree);
+	    auto lenl = getLen  (loc, NULL, ltree);
+	    Ymir::Tree inner = elem-> info-> type ()-> to<IArrayInfo> ()-> content ()-> toGeneric ();
+	    std::vector <Ymir::Tree> args = {Ymir::Tree (TYPE_SIZE_UNIT (inner.getTree ())), lenl, ptrl};
+	    	    
+	    return Ymir::compoundExpr (loc,
+				       list, 
+				       Ymir::callLib (
+					   loc, 
+					   Ymir::Runtime::DUP_ARRAY,
+					   type-> toGeneric (),
+					   args
+				       )
+	    );
+	}
+	
 	Tree affectIndex (Word &loc, Tree index, Tree array, Tree var, InfoType arrayType, InfoType varType) {
 	    Ymir::Tree elem;
 	    if (auto ainfo = arrayType-> to<IArrayInfo> ()) {

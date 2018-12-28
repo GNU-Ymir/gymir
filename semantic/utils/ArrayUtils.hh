@@ -8,6 +8,8 @@ namespace semantic {
 
 	Ymir::Tree InstAffect (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
 
+	Ymir::Tree InstAffectAddr (Word locus, InfoType, syntax::Expression left, syntax::Expression right);
+
 	Ymir::Tree InstAffectNull (Word locus, InfoType, syntax::Expression left, syntax::Expression right);	
 
 	Ymir::Tree InstPtr (Word locus, InfoType, syntax::Expression left);
@@ -24,11 +26,15 @@ namespace semantic {
 
 	Ymir::Tree InstAddr (Word word, InfoType, syntax::Expression elem, syntax::Expression);
 
+	Ymir::Tree InstAddrStaticToDyn (Word word, InfoType, syntax::Expression elem, syntax::Expression);
+
 	Ymir::Tree InstConcat (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
 	Ymir::Tree InstConcatAff (Word word, InfoType, syntax::Expression left, syntax::Expression right);
 
 	Ymir::Tree InstToArray (Word word, InfoType, syntax::Expression elem, syntax::Expression type);
+
+	Ymir::Tree InstDuplicate (Word word, InfoType, syntax::Expression elem, syntax::Expression type);
 
 	Ymir::Tree InstToString (Word word, InfoType type, syntax::Expression elem, syntax::Expression);
 	

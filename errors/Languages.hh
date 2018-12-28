@@ -105,6 +105,7 @@ namespace Ymir {
 		phrases [BreakRefUndef] = "Loop identifier '%%%' doesn't exist";
 		phrases [ConstNoInit] = "Const declaration '%%%' with no initial value";
 		phrases [StaticNoInit] = "Static declaration '%%%' with no initial value";
+		phrases [RefNoInit] = "Ref declaration '%%%' with no initial affectation";
 		phrases [ImmutNoInit] = "Immutable declaration '%%%' with no initial value";
 		phrases [NotLValue] = "'%%%' is not a lvalue";
 		phrases [NoValueNonVoid] = "Function exit without value in a non void function";
@@ -164,6 +165,7 @@ namespace Ymir {
 		phrases [AggMatchOnlyNamed] = "match on object requires the use of named expression";
 		phrases [VariadicMustBeLast] = "template variadic parameter must be last one";
 		phrases [AttrInHeirStatic] = "Cannot add attributes in heir static type";
+		phrases [ImplicitMemoryRef] = "Implicit memory referencing for type %%%";
 		init = true;
 	    } 
 	    return phrases;

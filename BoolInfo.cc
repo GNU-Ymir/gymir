@@ -82,6 +82,14 @@ namespace semantic {
 
     InfoType IBoolInfo::CompOp (InfoType other) {
 	if (other-> is<IBoolInfo> () || other-> is<IUndefInfo> ()) {
+	    if (auto un = other-> to<IUndefInfo> ()) {
+		if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		    auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		    aux-> binopFoo = &FixedUtils::InstAddr;
+		    return aux;
+		} else if (un-> willBeRef ()) return NULL;
+	    }
+	    
 	    auto bl = new (Z0)  IBoolInfo (this-> isConst ());
 	    bl-> binopFoo = FixedUtils::InstCast;
 	    return bl;
@@ -117,7 +125,13 @@ namespace semantic {
     }
 
     InfoType IBoolInfo::AffectRight (syntax::Expression left) {
-	if (left-> info-> type ()-> is<IUndefInfo> ()) {
+	if (auto un = left-> info-> type ()-> to<IUndefInfo> ()) {
+	    if (un-> willBeRef () && (this-> isLvalue () && !this-> isConst ())) {
+		auto aux = new (Z0) IRefInfo (this-> isConst (), this-> clone ());
+		aux-> binopFoo = &FixedUtils::InstAffectAddr;
+		return aux;
+	    } else if (un-> willBeRef ()) return NULL;
+	    
 	    auto b = new (Z0)  IBoolInfo (this-> isConst ());	    
 	    b-> binopFoo = FixedUtils::InstAffect;
 	    return b;

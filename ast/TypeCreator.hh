@@ -49,7 +49,8 @@ namespace syntax {
 	std::vector <Block> _staticConstruct;
 	std::vector <TypeMethod> _methods;
 	std::vector <TypeAttr> _attrs;
-		
+	std::vector <Word> _udas;
+	
     public:
 
 	ITypeCreator (Word ident, const std::string & docs, Expression who, const std::vector <Expression> & tmps);
@@ -64,6 +65,8 @@ namespace syntax {
 
 	std::vector <TypeAttr> & getAttrs ();
 
+	std::vector <Word> & getUdas ();
+	
 	semantic::InfoType declare (semantic::Namespace, const std::vector <Expression> &tmps);
 
 	Declaration templateDeclReplace (const std::map <std::string, Expression> &) override;
@@ -86,6 +89,10 @@ namespace syntax {
 	    return vec;
 	}
 	
+    private :
+
+	bool verifUdas ();
+
     };
 
     class ITypeConstructor {

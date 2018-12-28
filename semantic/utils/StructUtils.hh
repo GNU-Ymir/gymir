@@ -19,6 +19,8 @@ namespace semantic {
 
 	Ymir::Tree InstAffect (Word, InfoType, syntax::Expression, syntax::Expression);
 
+	Ymir::Tree InstAffectAddr (Word, InfoType, syntax::Expression, syntax::Expression);
+
 	Ymir::Tree InstAddr (Word, InfoType, syntax::Expression, syntax::Expression);
 
 	Ymir::Tree InstSizeOf (Word, InfoType, syntax::Expression);

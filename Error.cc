@@ -1077,6 +1077,22 @@ namespace Ymir {
 	} else __caught__.push_back (erroMsg);
     }
 
+    void Error::refNoInit (const Word& word) {
+	auto str = getString (RefNoInit);
+	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, word);
+	ErrorMsg erroMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", erroMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", erroMsg.msg.c_str ());
+	} else __caught__.push_back (erroMsg);
+    }
+
+    
     void Error::immutNoInit (const Word& word) {
 	auto str = getString (ImmutNoInit);
 	auto msg = format (str, YELLOW, word.getStr ().c_str (), RESET);
@@ -1417,6 +1433,25 @@ namespace Ymir {
 			   YELLOW, op.getStr ().c_str (), RESET,
 			   YELLOW, left-> type ()-> typeString ().c_str (), RESET,
 			   YELLOW, right-> type ()-> typeString ().c_str (), RESET
+	);
+	
+	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);
+	msg = addLine (msg, op);
+	ErrorMsg errorMsg = {msg, false, false};
+	if (__isEnable__.back ()) {
+	    Error::instance ().nb_errors ++;
+	    if (Error::instance ().nb_errors > MAX_ERROR)
+		fail ("%s", errorMsg.msg.c_str ());
+	    else 
+		fprintf (stderr, "%s", errorMsg.msg.c_str ());
+	} else __caught__.push_back (errorMsg);
+    }	
+    
+    void Error::implicitMemoryRef (const Word& op, semantic::Symbol right) {
+	auto str = getString (ImplicitMemoryRef);
+	auto msg = format (str,
+			   YELLOW, right-> type ()-> typeString ().c_str (), RESET,
+			   YELLOW, RESET
 	);
 	
 	msg = std::string (RED) + "Error" + std::string (RESET) + " : " + std::string (msg);

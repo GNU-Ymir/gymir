@@ -69,6 +69,7 @@ namespace Ymir {
 	    UndefUda,
 	    UninitVar,
 	    UndefinedOp,
+	    ImplicitMemoryRef,
 	    UndefinedOpUnary,
 	    UndefinedOpMult,
 	    UseAsVar,
@@ -82,6 +83,7 @@ namespace Ymir {
 	    TemplateInferTypeNote,
 	    ConstNoInit,
 	    StaticNoInit,
+	    RefNoInit,
 	    ImmutNoInit,
 	    NotLValue,
 	    NoValueNonVoid,
@@ -277,6 +279,8 @@ namespace Ymir {
 
 	static void staticNoInit (const Word&);
 
+	static void refNoInit (const Word&);
+
 	static void immutNoInit (const Word&);
 	
 	static void labelingImmutableFor (const Word&);
@@ -318,6 +322,8 @@ namespace Ymir {
 	static void undefinedOp (const Word&, semantic::Symbol, syntax::ParamList);
 
 	static void undefinedOp (const Word&, semantic::Symbol, semantic::Symbol);
+
+	static void implicitMemoryRef (const Word&, semantic::Symbol);
 
 	static void undefinedOp (const Word&, semantic::Symbol, semantic::InfoType);
 	
