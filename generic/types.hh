@@ -1,0 +1,10 @@
+#pragma once
+
+#define ubyte_type_node unsigned_char_type_node
+#define byte_type_node signed_char_type_node
+#define ushort_type_node short_unsigned_type_node
+#define short_type_node short_integer_type_node
+#define int_type_node integer_type_node
+#define uint_type_node unsigned_type_node
+#define long_type_node long_integer_type_node
+#define ulong_type_node long_unsigned_type_node

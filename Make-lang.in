@@ -22,79 +22,8 @@ gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 # The compiler proper
  
 ymir_OBJS = \
-	ymir/astExpression.o \
-	ymir/FixedInfo.o \
-	ymir/Token.o \
-	ymir/VoidInfo.o \
 	ymir/ymir1.o \
-	ymir/UndefInfo.o \
-	ymir/ArrayInfo.o \
-	ymir/InfoType.o \
-	ymir/StringInfo.o \
-	ymir/CharInfo.o \
-	ymir/OutBuffer.o \
-	ymir/PureFrame.o \
-	ymir/Symbol.o \
-	ymir/astAux.o \
-	ymir/Scope.o \
-	ymir/RangeInfo.o \
-	ymir/PtrFuncInfo.o \
-	ymir/Visitor.o \
-	ymir/RefInfo.o \
-	ymir/NullInfo.o \
-	ymir/Lexer.o \
-	ymir/PtrInfo.o \
-	ymir/Module.o \
-	ymir/Frame.o \
-	ymir/FunctionInfo.o \
-	ymir/ExternFrame.o \
-	ymir/BoolInfo.o \
-	ymir/Range.o \
-	ymir/Word.o \
-	ymir/Error.o \
-	ymir/FloatInfo.o \
-	ymir/FrameProto.o \
-	ymir/Namespace.o \
-	ymir/FinalFrame.o \
-	ymir/astPrint.o \
-	ymir/astInstruction.o \
-	ymir/astDeclaration.o \
-	ymir/Table.o \
-	ymir/FrameTable.o \
-	ymir/EnumInfo.o \
-	ymir/Parser.o \
-	ymir/Creators.o \
-	ymir/FrameScope.o \
-	ymir/Mangler.o \
-	ymir/Keys.o \
-	ymir/Value.o \
-	ymir/Tree.o \
-	ymir/astGeneric.o \
-	ymir/Generic.o \
-	ymir/InternalFunction.o \
-	ymir/TupleInfo.o \
-	ymir/UnPureFrame.o \
-	ymir/IgnoreInfo.o \
-	ymir/TemplateSolver.o \
-	ymir/TemplateFrame.o \
-	ymir/astTemplate.o \
 	ymir/memory.o \
-	ymir/LambdaFrame.o \
-	ymir/StructInfo.o \
-	ymir/DestructSolver.o \
-	ymir/Options.o \
-	ymir/ModuleInfo.o \
-	ymir/MacroInfo.o \
-	ymir/MacroSolver.o \
-	ymir/AggregateInfo.o \
-	ymir/MethodFrame.o \
-	ymir/ConstructFrame.o \
-	ymir/DestructFrame.o \
-	ymir/TemplateMethFrame.o \
-	ymir/MethodInfo.o \
-	ymir/AliasInfo.o \
-	ymir/TraitInfo.o \
-	ymir/Runtime.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
