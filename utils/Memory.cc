@@ -1,4 +1,4 @@
-#include <ymir/utils/memory.hh>
+#include <ymir/utils/Memory.hh>
 #include <string.h>
 #include <cstdlib>
 
