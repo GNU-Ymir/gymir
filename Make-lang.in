@@ -40,6 +40,7 @@ ymir_OBJS = \
 	ymir/Exception.o \
 	ymir/Enum.o \
 	ymir/Memory.o \
+	ymir/Parser.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
@@ -106,6 +107,14 @@ ymir/%.o: ymir/utils/%.cc
 	  $(YPOSTCOMPILE)
 
 ymir/%.o: ymir/errors/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/%.o: ymir/parsing/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/%.o: ymir/syntax/%.cc
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 

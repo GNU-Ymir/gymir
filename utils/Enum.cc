@@ -8,17 +8,24 @@ std::vector<std::string> splitString(const std::string& str, char sep) {
     std::vector<std::string> vecString;
     OutBuffer buf;
     int i = 0;
-    
+
+    bool cuttable = true;
     while (i < str.length ())
 	{
-	    if (str [i] == sep) {
+	    if (str [i] == sep && cuttable) {
 		vecString.push_back(buf.str ());
 		buf = OutBuffer ();
-	    } else {
+	    } else if (str [i] == '"') {
+		cuttable = !cuttable;
 		buf.write (str [i]);
-	    }
+	    } else buf.write (str [i]);
+	    i += 1;
 	}
 
+    // We add the last word
+    if (buf.str ().length () != 0)
+	vecString.push_back (buf.str ());
+    
     return vecString;
 }
 
@@ -37,7 +44,11 @@ std::string strip (const std::string & elem) {
 		    end.write (' ');
 	    } else begin = true;
 	    end.write (it);
+	    nb = 0;
 	}
     }
-    return end.str ();
+    auto result = end.str ();
+    if (result [0] == '"' && result [result.length () - 1] == '"')
+	return result.substr (1, result.length () - 2);
+    return result;
 }

@@ -15,6 +15,7 @@
 #include "langhooks-def.h"
 #include "common/common-target.h"
 #include <ymir/generic/types.hh>
+#include <ymir/parsing/Parser.hh>
 
 
 /* Language-dependent contents of a type.  */
@@ -135,7 +136,7 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 static void
 ymir_langhook_parse_file (void)
 {
-    // ymir_parse_files (num_in_fnames, in_fnames);
+    ymir_parse_files (num_in_fnames, in_fnames);
 }
  
 static tree

@@ -38,7 +38,7 @@ std::string strip (const std::string & elem);
 		int i = 0;						\
 		for (auto it : splits) {				\
 		    std::vector <std::string> value = splitString (it, '='); \
-		    MapName [i] = (T) value [1];			\
+		    MapName [i] = strip ((T) value [1]);		\
 		    i ++;						\
 		}							\
 	    }								\

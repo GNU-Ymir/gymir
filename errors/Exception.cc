@@ -1,4 +1,5 @@
 #include <ymir/errors/Exception.hh>
+#include <ymir/errors/Error.hh>
 
 const char *exc_file;
 const char *exc_function;
@@ -9,7 +10,9 @@ volatile unsigned exc_tries;
 /* This is the global stack of catchers. */
 struct exc_stack *exc_global;
 
-void exc_print (FILE *stream, const char *file, const char *function, unsigned line,
+std::vector <std::string> errors;
+
+void excPrint (FILE *stream, const char *file, const char *function, unsigned line,
 		   int code)
 {
     fprintf (stream, "Exception in file \"%s\", at line %u",
@@ -28,7 +31,7 @@ void exc_print (FILE *stream, const char *file, const char *function, unsigned l
     fprintf (stream, "\n");
 }
 
-int exc_push (jmp_buf *j, int returned) {
+int excPush (jmp_buf *j, int returned) {
     static exc_stack *head;
     if (returned != 0) { // Le jmp a déjà été déclaré, on est revenu dessus suite à un throw
 	return 0;	
@@ -45,13 +48,13 @@ int exc_push (jmp_buf *j, int returned) {
     return 1;     
 }
 
-void exc_pop (jmp_buf *j) {
+void excPop (jmp_buf *j) {
     struct exc_stack *stored = exc_global;
 
     if (stored == NULL)
 	{	    
 	    fprintf (stderr, "Unhandled exception\n");
-	    exc_print (stderr, exc_file, exc_function,
+	    excPrint (stderr, exc_file, exc_function,
 		       exc_line, exc_code);
 	    
 	    raise (SIGABRT);
@@ -71,7 +74,7 @@ void exc_pop (jmp_buf *j) {
     free (stored);
 }
 
-void exc_throw (const char *file, const char *function, unsigned line, int code) {
+void excThrow (const char *file, const char *function, unsigned line, int code, const std::string& msg) {
     jmp_buf j;
 
     exc_file = file;
@@ -79,24 +82,32 @@ void exc_throw (const char *file, const char *function, unsigned line, int code)
     exc_line = line;
 
     /* Pop for jumping. */
-    exc_pop (&j);
+    excPop (&j);
     exc_code = code;
-   
+    errors.push_back (msg);
+    
     /* LONGJUMP to J with nonzero value. */
     longjmp (j, 1);
 }
 
-void exc_rethrow () {
+void excRethrow () {
     jmp_buf j;
-    exc_pop (&j);
+    excPop (&j);
    
     /* LONGJUMP to J with nonzero value. */
     longjmp (j, 1);
 }
 
-bool exc_check_error (int code) {
+bool excCheckError (int code) {
     if (code == exc_code) {
 	return true;
     }
     return false;
+}
+
+void printErrors () {
+    for (auto it : errors) {
+	fprintf (stderr, "%s\n", it.c_str ());
+    }
+    errors.clear ();
 }

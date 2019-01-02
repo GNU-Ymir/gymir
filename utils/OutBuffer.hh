@@ -107,7 +107,7 @@ namespace Ymir {
 			writeMult (s, f, args...);
 		    } else if (*s == '(') { // %(r)
 			auto color = *(s + 1);
-			s += 2;
+			s += 3; // (r)
 			switch (color) {
 			case 'r' : write (Colors::get (RED)); break;
 			case 'b' : write (Colors::get (BLUE)); break;
