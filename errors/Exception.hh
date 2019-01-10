@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <vector>
 
 /**
  * \file Exception.hh
@@ -73,6 +74,11 @@ bool excCheckError (int code);
 void printErrors ();
 
 /**
+ * \brief Clear all the errors since the last clear
+ */
+void clearErrors ();
+
+/**
  * \return the last error in the list of errors
  */
 std::string& getLastError ();
@@ -81,15 +87,17 @@ std::string& getLastError ();
  * Define a try block 
  * \verbatim
  TRY {
-     foo ();
+ foo ();
  } FINALLY;
  \endverbatim
 */
-#define TRY					\
-    jmp_buf buf;				\
-    int res = setjmp (buf);			\
-    if (excPush (&buf, res)) 			
-
+#define TRY								\
+    jmp_buf buf;							\
+    int res = setjmp (buf);						\
+    if (excPush (&buf, res))						\
+	for (int END = 1 ; END == 1 ; END = 0, excPop (&buf))		\
+						
+					       
 /**
  * Define a catch of a kind of exception
  * \verbatim
@@ -100,8 +108,9 @@ std::string& getLastError ();
  } FINALLY;
  \endverbatim
 */
-#define CATCH(TYPE)				\
-    else if (excCheckError ((int) TYPE))	\
+#define CATCH(TYPE)					\
+    else if (excCheckError ((int) TYPE))		\
+
 	
 
 /**
@@ -120,9 +129,10 @@ std::string& getLastError ();
 /**
  * Place at the end of a try block (mandatory)
  * Will rethrow uncaught exception
+ * In the case where nothing happend, we remove the jmp_buf from the list
  */
-#define FINALLY					\
-    else excRethrow ()
+#define FINALLY								\
+    else { excRethrow (); }						\
 
 /**
  * Throw a new expression 
@@ -138,3 +148,9 @@ std::string& getLastError ();
  */
 #define PRINT_ERRORS()				\
     printErrors ();
+
+/**
+ * \brief Clear all the error message that append since the last clear
+ */
+#define CLEAR_ERRORS()				\
+    clearErrors ();

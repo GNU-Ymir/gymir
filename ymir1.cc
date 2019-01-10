@@ -55,7 +55,8 @@ union GTY ((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE"),
  
 struct GTY (()) language_function
 {
-  int dummy;
+
+    int dummy;
 };
  
 /* Language hooks.  */

@@ -1,6 +1,10 @@
 #include <ymir/errors/Error.hh>
 #include <string>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Colors.hh>
+#include <execinfo.h>
+
+using namespace lexing;
 
 namespace Ymir {
     namespace Error {
@@ -38,7 +42,7 @@ namespace Ymir {
 	
 	ulong computeMid (std::string& mid, const std::string& word, const std::string& line, ulong begin, ulong end) {
 	    auto end2 = begin;
-	    for (auto it = 0 ; it < (int) word.size () < end - begin ? word.size () : end - begin; it ++) {
+	    for (auto it = 0 ; it < (int) (word.size () < end - begin) ? word.size () : end - begin; it ++) {
 		if (word [it] != line [begin + it]) break;
 		else end2 ++;
 	    }
@@ -67,15 +71,113 @@ namespace Ymir {
 	    buf.write (toJustify);
 	    return buf.str ();
 	}
-    	
-	std::string addLine (const std::string & msg, const Word & word) {
-	    
+
+	void addLineEof (OutBuffer & buf, const Word & word) {
+	    auto locus = word.getLocus ();
+	    std::string leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+	    auto padd = center ("", leftLine.length (), ' ');
+	    buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+			       Colors::get (BOLD),
+			       word.getFile (),
+			       LOCATION_LINE (locus),
+			       LOCATION_COLUMN (locus),
+			       Colors::get (RESET),
+			       Colors::get (BOLD),
+			       padd,
+			       Colors::get (RESET)
+	    ));
+
+	    buf.write (format ("%% | %%\n", Colors::get (BOLD), padd, Colors::get (RESET), "'EOF'"));
+	    buf.write (format ("%% | %\n", Colors::get (BOLD), padd, Colors::get (RESET)));
 	}
 	
-	void halt (const char * format) {
-	    fprintf (stderr, "%s", Ymir::format ("%(r) : %\n", "Assert", "abort").c_str ());
-	    raise (SIGABRT);
+	void addLine (OutBuffer & buf, const Word & word) {
+	    auto locus = word.getLocus ();
+	    auto line = getLine (locus, word.getFile ().c_str ());
+	    if (line.length () > 0) {
+		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+		auto padd = center ("", leftLine.length (), ' ');
+		buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+				   Colors::get (BOLD),
+				   word.getFile ().c_str (),
+				   LOCATION_LINE (locus),
+				   LOCATION_COLUMN (locus),
+				   Colors::get (RESET),
+				   Colors::get (BOLD),
+				   padd,
+				   Colors::get (RESET)));
+
+		auto column = LOCATION_COLUMN (locus);
+		buf.write (format ("%% | %%%(y)%",
+				   Colors::get (BOLD), leftLine, Colors::get (RESET),
+				   line.substr (0, column - 1),
+				   substr (line, column - 1, column + word.length () - 1),
+				   substr (line, column + word.length () - 1, line.length ())
+		));
+
+		if (line [line.length () - 1] != '\n') buf.write ('\n');
+		buf.write (format ("%% | %", Colors::get (BOLD), padd, Colors::get (RESET)));
+		for (auto it = 0 ; it < column - 1 ; it++) {
+		    if (line [it] == '\t') buf.write ('\t');
+		    else buf.write (' ');
+		}
+		
+		buf.write (rightJustify ("", word.length (), '^'));
+		buf.write ('\n');
+	    } else addLineEof (buf, word);
+	}
+
+	
+	std::string addLine (const std::string & msg, const lexing::Word & word) {
+	    OutBuffer buf;
+	    buf.write (msg);
+	    addLine (buf, word);
+	    return buf.str ();
 	}
 	
     }
+
+
+    bool runCommand (char *sys) {
+	auto fp = popen (sys, "r");
+	if (fp == NULL) return false;	
+    
+	char path[255];
+	memset (path, 0, 255 - 1);    
+	fprintf (stderr, "in function : ");
+	auto func = fgets (path, 255 - 1, fp);
+	fprintf (stderr, "%s", func);
+	fprintf (stderr, "\t%s", fgets (path, 255 - 1, fp));    
+	pclose (fp);
+	return true;
+    }
+
+    void bt_print () {    		
+	void *trace[16];
+	char **messages = (char **)NULL;
+	int i, trace_size = 0;
+
+	trace_size = backtrace(trace, 16);
+	messages = backtrace_symbols(trace, trace_size);
+	/* skip first stack frame (points here) */
+	fprintf(stderr, "[bt] Execution path:\n");
+	for (i=2; i<trace_size; ++i)
+	    {
+		fprintf(stderr, "[bt] #%d ", i - 1);
+		/* find first occurence of '(' or ' ' in message[i] and assume
+		 * everything before that is the file name. (Don't go beyond 0 though
+		 * (string terminator)*/
+		size_t p = 0;
+		while(messages[i][p] != '(' && messages[i][p] != ' '
+		      && messages[i][p] != 0)
+		    ++p;
+
+		char syscom[256];
+		snprintf(syscom, 256, "addr2line %p -f -e %.*s", trace[i], (int) p, messages[i]);
+		if (!runCommand (syscom))
+		    fprintf (stderr, "%s %p\n", messages [i], trace [i]);
+	    }
+
+    }
+
 }

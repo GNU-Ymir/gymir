@@ -82,7 +82,7 @@ namespace Ymir {
     }
     
     
-    void OutBuffer::write_ (const Word & word) {
+    void OutBuffer::write_ (const lexing::Word & word) {
 	this-> write (word.toString ());
     }
 

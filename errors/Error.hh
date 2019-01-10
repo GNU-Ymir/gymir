@@ -35,6 +35,11 @@ namespace Ymir {
 	return buf.str ();
     }
     
+    /**
+     * \brief print the backtrace into stderr
+     */
+    void bt_print ();
+
     namespace Error {
 	
 	/** 
@@ -44,7 +49,7 @@ namespace Ymir {
 	    \param word the location of the line	
 	    \return a new string, with line information
 	*/
-	std::string addLine (const std::string&, const Word& word);
+	std::string addLine (const std::string&, const lexing::Word& word);
 
 	/**
 	   \brief cause the compiler to abort due to internal error
@@ -53,15 +58,19 @@ namespace Ymir {
 	void halt (const char* format = NULL);
 
 	template <typename ... TArgs>
-	void occur (const Word & loc, const std::string &content, TArgs ... args) {
+	void occur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);
+	    bt_print ();
 	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 
 	template <typename ... TArgs>
 	void occur (const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    
+	    //bt_print ();
+
 	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 	
@@ -71,9 +80,12 @@ namespace Ymir {
 	   \param args the parameters of the format
 	*/
 	template <typename ... TArgs>
-	void fail (const Word & loc, const std::string & content, TArgs ... args) {
+	void fail (const lexing::Word & loc, const std::string & content, TArgs ... args) {
 	    auto msg = format (std::string ("%(r) : ") + content, "Error", args...);
 	    msg = addLine (msg, loc);
+
+	    //bt_print ();
+
 	    THROW ((int) ErrorCode::FAIL, msg);
 	}
 
@@ -94,9 +106,12 @@ namespace Ymir {
 	   \param args the parameters to pass to format	   
 	*/
 	template <typename ... TArgs>
-	void fatal (const Word& word, const std::string & content, TArgs ... args) {
+	void fatal (const lexing::Word& word, const std::string & content, TArgs ... args) {
 	    std::string aux = format (std::string ("%(r) : ") + content, "Error", args...);
 	    aux = addLine (aux, word);
+
+	    //bt_print ();
+
 	    THROW ((int) ErrorCode::FATAL, aux);
 	}
 
@@ -107,7 +122,7 @@ namespace Ymir {
 	   \param args the parameter of the format
 	 */
 	template <typename ... TArgs>
-	void note (const Word& word, const std::string& format_, TArgs ... args) {
+	void note (const lexing::Word& word, const std::string& format_, TArgs ... args) {
 	    std::string aux = format ("%(b) : " + format_, "Note", args...);
 	    aux = addLine (aux, word);
 	    std::string & msg = getLastError ();

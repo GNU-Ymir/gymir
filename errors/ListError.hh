@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/utils/Enum.hh>
+#include <ymir/utils/StringEnum.hh>
 
 namespace Ymir {
 
@@ -22,8 +22,10 @@ namespace Ymir {
     */
     DECLARE_ENUM_HEADER (ExternalError, std::string,			         
 			 SYNTAX_ERROR_AT, // syntax error a specific location
-			 NO_SUCH_FILE,
-			 COMPILATION_END
+			 SYNTAX_ERROR_AT_SIMPLE, // syntax error a specific location
+			 NO_SUCH_FILE,			 
+			 COMPILATION_END,
+			 DYNAMIC_CAST_FAILED
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

@@ -8,7 +8,7 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/errors/_.hh>
 
-namespace lexical {
+namespace lexing {
 
     using namespace Ymir;
     
@@ -26,6 +26,16 @@ namespace lexical {
 	    else max *= 2;      
 	}
     }  
+
+    Lexer::Lexer () :
+	line (0),
+	column (0),
+	enableComment (false),
+	current (-1)
+    {
+	this-> filename = "";
+	this-> file = NULL;
+    }
     
     Lexer :: Lexer (const char * filename,
 		    FILE * file, 
@@ -138,7 +148,7 @@ namespace lexical {
 	}
 	
 	this-> rewind ();
-	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str ());
+	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.str);
 	
 	return Word::eof (this-> filename);
     }
@@ -151,7 +161,7 @@ namespace lexical {
 	}
 	
 	this-> rewind ();
-	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str ());
+	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.str);
 	
 	return Word::eof (this-> filename);
     }

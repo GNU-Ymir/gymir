@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/syntax/Module.hh>
+#include <ymir/syntax/Declaration.hh>
 #include <string>
 
 /**
@@ -59,7 +59,7 @@ namespace Ymir {
 	std::string _path;
 
 	/// The module produce by syntaxic analyse
-	syntax::Module _module;
+	syntax::Declaration _module;
 			
     };
     

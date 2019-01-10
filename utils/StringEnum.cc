@@ -1,4 +1,4 @@
-#include <ymir/utils/Enum.hh>
+#include <ymir/utils/StringEnum.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Range.hh>
 
@@ -10,7 +10,7 @@ std::vector<std::string> splitString(const std::string& str, char sep) {
     int i = 0;
 
     bool cuttable = true;
-    while (i < str.length ())
+    while (i < (int) str.length ())
 	{
 	    if (str [i] == sep && cuttable) {
 		vecString.push_back(buf.str ());
@@ -40,7 +40,7 @@ std::string strip (const std::string & elem) {
 	    }
 	} else {
 	    if (begin) {
-		for (auto i : Ymir::r (0, nb))
+		for (auto __attribute__ ((unused)) i : Ymir::r (0, nb))
 		    end.write (' ');
 	    } else begin = true;
 	    end.write (it);

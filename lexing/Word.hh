@@ -10,137 +10,150 @@
 #include <ymir/utils/Memory.hh>
 #include <ymir/lexing/Token.hh>
 
-/**
- * \struct A word is a string with location information
- */
-struct Word {
-
-    /// The content of the word
-    std::string str;
-
-    /// The file where the word is located
-    std::string locFile;
-
-    /// The line where the word is located
-    ulong line;
-
-    /// The column where the word is located
-    ulong column;
-
-    /// The length of the word (may differ with str.length ())
-    long _length = -1;
-    
-public:
-
+namespace lexing {
     /**
-     * Construct a word from a GCC internal location information
-     * \param locus the location
-     * \param str the content
+     * \struct A word is a string with location information
      */
-    Word (location_t locus, const std::string &str);
+    struct Word {
 
-    /**
-     * Copy a second word location 
-     * \param str the content of the word
-     */
-    Word (const Word & other, const std::string &str);
+	/// The content of the word
+	std::string str;
 
-    /**
-     * Copy a second word location 
-     * \param str the content of the word
-     * \param len the length overriding word content length
-     */
-    Word (const Word & other, std::string str, long len);
-    
-    Word (const Word & other);
+	/// The file where the word is located
+	std::string locFile;
 
-    /**
-     * EOF
-     */
-    Word ();
-    
-    Word& operator=(const Word&);
-    
-    void setLocus (location_t locus);
+	/// The line where the word is located
+	ulong line;
 
-    void setLocus (std::string filename, ulong line, ulong column);
-    
-    location_t getLocus () const;
-    
-    const std::string &getStr () const {
-	return this-> str;
-    }
+	/// The column where the word is located
+	ulong column;
 
-    long length () const {
-	if (this-> _length == -1) return this-> str.length ();
-	return this-> _length;
-    }
+	/// The length of the word (may differ with str.length ())
+	long _length = -1;
     
-    void setStr (std::string other) {
-	this-> str = other;	
-    }
+    public:
 
-    std::string getFile () const;  
+	/**
+	 * Construct a word from a GCC internal location information
+	 * \param locus the location
+	 * \param str the content
+	 */
+	Word (location_t locus, const std::string &str);
+
+	/**
+	 * Copy a second word location 
+	 * \param str the content of the word
+	 */
+	Word (const Word & other, const std::string &str);
+
+	/**
+	 * Copy a second word location 
+	 * \param str the content of the word
+	 * \param len the length overriding word content length
+	 */
+	Word (const Word & other, std::string str, long len);
     
-    static Word eof (std::string file) {
-	auto ret = Word {};
-	ret.str = "";
-	ret.line = 0;
-	ret.locFile = file;
-	return ret;
-    }
+	Word (const Word & other);
 
-    static Word eof () {
-	auto ret = Word {};
-	ret.str = "";
-	ret.line = 0;
-	return ret;
-    }
+	/**
+	 * EOF
+	 */
+	Word ();
     
-    bool isEof () const {
-	return this-> line == 0 && this-> str == "";
-    }
-
-    void setEof () {
-	this-> line = 0;
-	this-> str = "";
-    }
+	Word& operator=(const Word&);
     
-    void setEof (std::string file) {
-	this-> line = 0;
-	this-> str = "";
-	this-> locFile = file;
-    }
+	void setLocus (location_t locus);
 
-    bool isToken () const;
+	void setLocus (std::string filename, ulong line, ulong column);
     
-    bool isSame (const Word& other) const;
-
-    friend bool operator== (const Word& elem, const char* sec) {
-	return elem.getStr () == sec;
-    }
+	location_t getLocus () const;
     
-    friend bool operator== (const Word& elem, std::string& sec) {
-	return elem.getStr () == sec;
-    }
+	const std::string &getStr () const {
+	    return this-> str;
+	}
 
-    friend bool operator== (const Word& elem, const Word& sec) {
-	return elem.getStr () == sec.getStr ();
-    }
-
-    friend bool operator!= (const Word& elem, const Word& sec) {
-	return elem.getStr () != sec.getStr ();
-    }
-
-    friend bool operator!= (const Word& elem, const char* sec) {
-	return elem.getStr () != sec;
-    }
+	long length () const {
+	    if (this-> _length == -1) return this-> str.length ();
+	    return this-> _length;
+	}
     
-    friend bool operator!= (const Word& elem, std::string& sec) {
-	return elem.getStr () != sec;
-    }
-    
-    std::string toString () const;    
-    
-};
+	void setStr (std::string other) {
+	    this-> str = other;	
+	}
 
+	std::string getFile () const;  
+    
+	static Word eof (std::string file) {
+	    auto ret = Word {};
+	    ret.str = "";
+	    ret.line = 0;
+	    ret.locFile = file;
+	    return ret;
+	}
+
+	static Word eof () {
+	    auto ret = Word {};
+	    ret.str = "";
+	    ret.line = 0;
+	    return ret;
+	}
+    
+	bool isEof () const {
+	    return this-> line == 0 && this-> str == "";
+	}
+
+	void setEof () {
+	    this-> line = 0;
+	    this-> str = "";
+	}
+    
+	void setEof (std::string file) {
+	    this-> line = 0;
+	    this-> str = "";
+	    this-> locFile = file;
+	}
+
+	bool isToken () const;
+    
+	bool isSame (const Word& other) const;
+
+	bool is (const std::vector<std::string> & vals);
+	
+	friend bool operator== (const Word& elem, const char* sec) {
+	    return elem.getStr () == sec;
+	}
+    
+	friend bool operator== (const Word& elem, std::string& sec) {
+	    return elem.getStr () == sec;
+	}
+
+	friend bool operator== (const Word& elem, const Word& sec) {
+	    return elem.getStr () == sec.getStr ();
+	}
+
+	friend bool operator!= (const Word& elem, const Word& sec) {
+	    return elem.getStr () != sec.getStr ();
+	}
+
+	friend bool operator!= (const Word& elem, const char* sec) {
+	    return elem.getStr () != sec;
+	}
+    
+	friend bool operator!= (const Word& elem, std::string& sec) {
+	    return elem.getStr () != sec;
+	}
+
+	friend Word operator+ (const Word & left, const Word & right) {
+	    return {left, left.str + right.str};	    
+	}
+
+	Word& operator+= (const Word & right) {
+	    this-> str += right.str;
+	    return *this;
+	}
+	
+	std::string toString () const;    
+    
+    };
+
+}

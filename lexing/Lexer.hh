@@ -11,7 +11,7 @@
 #include <map>
 #include <stdlib.h>
 
-namespace lexical {
+namespace lexing {
 
     /**
      * This class allows you to analyze a file and return the Token associated with each element. It is the main element of lexical analysis 
@@ -19,6 +19,11 @@ namespace lexical {
     */
     struct Lexer {
 
+	/**
+	 * \brief Empty lexer, always EOF
+	 */
+	Lexer ();
+	
 	/**
 	 * \param filename the name of the file
 	 * \param file the file (already opened)
@@ -140,7 +145,7 @@ namespace lexical {
 	 * \brief Tell if the word is a comment 
 	 * \brief if it is, return the closing token
 	 * \param retour the closing token
-	 * \param ign the token ignore at each line in this comments for exemple (*, for comment \/* *\/)
+	 * \param ign the token ignore at each line in this comments for exemple (*, for comment multiline comment)
 	 */
 	bool isComment (const Word& elem, std::string &retour, std::string & ign);
 

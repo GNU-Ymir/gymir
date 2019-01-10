@@ -1,0 +1,55 @@
+#pragma once
+
+#include <ymir/syntax/Expression.hh>
+
+namespace syntax {
+
+    /**
+     * \struct MultOperator
+     * There are three different mult operator 
+     * Par, Access and Template
+     */
+    class MultOperator : public IExpression {
+
+	/** The location of the expression ('[', '(' or '!(' token) */
+	lexing::Word _location;
+
+	/** The location of the end of this expression (']' or ')' token) */
+	lexing::Word _end;
+
+	/** The element that is accessed */
+	Expression _element;
+
+	/** The parameters of the access */
+	std::vector <Expression> _params;
+	
+    private :
+
+	friend Expression;
+
+	MultOperator ();
+
+    public :
+
+	/**
+	 * \brief Make a copy of a mult operator
+	 * \param op the operator to copy
+	 */
+	static Expression init (const MultOperator & op);
+
+	/**
+	 * \brief Create a new Multiple operator
+	 * \param location the location of the operation 
+	 * \param end the end of the operation
+	 * \param element the left operand
+	 * \param params the parameters of the operation
+	 */
+	static Expression init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params);
+	
+	Expression clone () const override;
+
+	bool isOf (const IExpression * type) const override;
+	
+    };
+
+}

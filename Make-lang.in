@@ -20,27 +20,79 @@ gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 	  $(EXTRA_GCC_LIBS) $(LIBS)
 
 
-YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_DFLAGS) -o $@
-YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo
+YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_CXXFLAGS) -o $@
+YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo 
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
-YLINKER = $(CXX) $(NO_PIE_FLAG) -lstdc++
+YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++
 
 # The compiler proper
  
 ymir_OBJS = \
 	ymir/ymir1.o \
-	ymir/Word.o \
-	ymir/Token.o \
-	ymir/Range.o \
-	ymir/Lexer.o \
-	ymir/Error.o \
-	ymir/OutBuffer.o \
-	ymir/Colors.o	 \
-	ymir/ListError.o \
-	ymir/Exception.o \
-	ymir/Enum.o \
-	ymir/Memory.o \
-	ymir/Parser.o \
+	ymir/lexing_Word.o \
+	ymir/lexing_Token.o \
+	ymir/util_Range.o \
+	ymir/lexing_Lexer.o \
+	ymir/error_Error.o \
+	ymir/util_OutBuffer.o \
+	ymir/util_Colors.o	 \
+	ymir/error_ListError.o \
+	ymir/error_Exception.o \
+	ymir/util_StringEnum.o \
+	ymir/util_Memory.o \
+	ymir/parsing_Parser.o \
+	ymir/decl_Module.o \
+	ymir/syntax_Declaration.o \
+	ymir/syntax_Expression.o \
+	ymir/syntax_Decorator.o \
+	ymir/decl_Enum.o \
+	ymir/decl_ExternBlock.o \
+	ymir/decl_Block.o \
+	ymir/decl_Alias.o \
+	ymir/decl_Function.o \
+	ymir/decl_Template.o \
+	ymir/decl_Global.o \
+	ymir/decl_Import.o \
+	ymir/decl_Struct.o \
+	ymir/decl_Trait.o \
+	ymir/decl_Use.o \
+	ymir/decl_Class.o \
+	ymir/decl_Macro.o \
+	ymir/decl_ExpressionWrapper.o \
+	ymir/expr_Assert.o \
+	ymir/expr_Break.o \
+	ymir/expr_For.o \
+	ymir/expr_Return.o \
+	ymir/expr_Scope.o \
+	ymir/expr_Throw.o \
+	ymir/expr_VarDecl.o \
+	ymir/expr_While.o \
+	ymir/expr_MultOperator.o \
+	ymir/expr_ArrayAlloc.o \
+	ymir/expr_Binary.o \
+	ymir/expr_Block.o \
+	ymir/expr_Bool.o \
+	ymir/expr_Cast.o \
+	ymir/expr_Char.o \
+	ymir/expr_List.o \
+	ymir/expr_Set.o \
+	ymir/expr_Intrinsics.o \
+	ymir/expr_Fixed.o \
+	ymir/expr_Float.o \
+	ymir/expr_FuncPtr.o \
+	ymir/expr_If.o \
+	ymir/expr_Ignore.o \
+	ymir/expr_Is.o \
+	ymir/expr_Lambda.o \
+	ymir/expr_MacroCall.o \
+	ymir/expr_Match.o \
+	ymir/expr_Null.o \
+	ymir/expr_OfVar.o \
+	ymir/expr_VariadicVar.o \
+	ymir/expr_Pragma.o \
+	ymir/expr_String.o \
+	ymir/syntax_Visitor.o \
+	ymir/syntax_Keys.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
@@ -98,23 +150,35 @@ ymir.stageprofile: stageprofile-start
 ymir.stagefeedback: stagefeedback-start
 	-mv ymir/*$(objext) stagefeedback/ymir
 
-ymir/%.o: ymir/lexing/%.cc
+ymir/lexing_%.o: ymir/lexing/%.cc 
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 
-ymir/%.o: ymir/utils/%.cc
+ymir/util_%.o: ymir/utils/%.cc
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 
-ymir/%.o: ymir/errors/%.cc
+ymir/error_%.o: ymir/errors/%.cc
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 
-ymir/%.o: ymir/parsing/%.cc
+ymir/parsing_%.o: ymir/parsing/%.cc
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 
-ymir/%.o: ymir/syntax/%.cc
+ymir/syntax_%.o: ymir/syntax/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/decl_%.o: ymir/syntax/declaration/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/expr_%.o: ymir/syntax/expression/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/syntax_%.o: ymir/syntax/visitor/%.cc
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 

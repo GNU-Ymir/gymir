@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ymir/utils/Colors.hh>
-#include <ymir/utils/Enum.hh>
+#include <ymir/utils/StringEnum.hh>
 #include <ymir/utils/Memory.hh>
 #include <string>
 #include <map>
@@ -10,7 +10,9 @@
 #include <set>
 #include <type_traits>
 
-struct Word;
+namespace lexing {
+    struct Word;
+}
 
 namespace Ymir {
 
@@ -171,7 +173,7 @@ namespace Ymir {
 		write ("*(", *elem, ")");
 	}
 	
-	void write_ (const Word& word);	
+	void write_ (const lexing::Word& word);	
 		
 	void write_ (const char * str);
 	

@@ -4,7 +4,8 @@
 #include <vector>
 
 /**
- * \struct The list of token
+ * \struct Token 
+ * The list of token
  * implemented in lexing/Token.cc
  */
 struct Token {    

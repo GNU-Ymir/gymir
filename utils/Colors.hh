@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/utils/Enum.hh>
+#include <ymir/utils/StringEnum.hh>
 
 /**
  * \enum Colors

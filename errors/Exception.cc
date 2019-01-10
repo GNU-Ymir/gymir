@@ -13,7 +13,7 @@ struct exc_stack *exc_global;
 std::vector <std::string> errors;
 
 void excPrint (FILE *stream, const char *file, const char *function, unsigned line,
-		   int code)
+	       int)
 {
     fprintf (stream, "Exception in file \"%s\", at line %u",
 	     file, line);
@@ -33,7 +33,7 @@ void excPrint (FILE *stream, const char *file, const char *function, unsigned li
 
 int excPush (jmp_buf *j, int returned) {
     static exc_stack *head;
-    if (returned != 0) { // Le jmp a déjà été déclaré, on est revenu dessus suite à un throw
+    if (returned != 0) { // The jmp buffer has already been declared, we are comming back there due to a throw
 	return 0;	
     }
 
@@ -93,13 +93,15 @@ void excThrow (const char *file, const char *function, unsigned line, int code, 
 void excRethrow () {
     jmp_buf j;
     excPop (&j);
-   
+
     /* LONGJUMP to J with nonzero value. */
     longjmp (j, 1);
+
 }
 
 bool excCheckError (int code) {
     if (code == exc_code) {
+	exc_code = 1;
 	return true;
     }
     return false;
@@ -109,5 +111,10 @@ void printErrors () {
     for (auto it : errors) {
 	fprintf (stderr, "%s\n", it.c_str ());
     }
+    errors.clear ();
+}
+
+void clearErrors () {
+    exc_code = -1;
     errors.clear ();
 }
