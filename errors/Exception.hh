@@ -19,6 +19,8 @@
 struct exc_stack
 {
     unsigned num;
+    int line;
+    const char * file;
     jmp_buf j;
     struct exc_stack *prev;
 };
@@ -38,7 +40,7 @@ void excPrint (FILE *stream, const char *file, const char *function, unsigned li
  * \brief enter en new try catch block
  * \brief Use TRY {} FINALLY; block for simplication
  */
-int excPush (jmp_buf *j, int returned);
+int excPush (jmp_buf *j, int returned, int line, const char * file);
 
 /**
  * \brief Depop the list of try catch block and jump to the first one
@@ -94,7 +96,7 @@ std::string& getLastError ();
 #define TRY								\
     jmp_buf buf;							\
     int res = setjmp (buf);						\
-    if (excPush (&buf, res))						\
+    if (excPush (&buf, res, __LINE__, __FILE__))			\
 	for (int END = 1 ; END == 1 ; END = 0, excPop (&buf))		\
 						
 					       

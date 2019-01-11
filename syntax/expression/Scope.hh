@@ -56,15 +56,11 @@ namespace syntax {
      */
     class ScopeFailure : public Scope {
 
-	/** The name of the catching variables */
-	std::vector <lexing::Word> _names;
-
 	/** The types of the catching variables */
 	std::vector <Expression> _types;
 
 	/** The content for each catching variables */
 	std::vector <Expression> _contents;
-
 
     private :
 
@@ -81,7 +77,7 @@ namespace syntax {
 	static Expression init (const ScopeFailure & scope);
 
 
-	static Expression init (const lexing::Word & location, const std::vector <lexing::Word> & names, const std::vector <Expression> &types, const std::vector <Expression> & contents);
+	static Expression init (const lexing::Word & location, const std::vector <Expression> &types, const std::vector <Expression> & contents);
 
 	Expression clone () const override;
 

@@ -18,6 +18,8 @@ namespace syntax {
 
 	/** The decimal part of the float */
 	lexing::Word _decPart;
+
+	lexing::Word _suffix;
 	
     private :
 
@@ -29,7 +31,7 @@ namespace syntax {
 
 	static Expression init (const Float & blk);
 
-	static Expression init (const lexing::Word & token, const lexing::Word & decPart);
+	static Expression init (const lexing::Word & token, const lexing::Word & decPart, const lexing::Word & suff);
 
 	Expression clone () const override;
 

@@ -7,12 +7,14 @@ namespace syntax {
     Expression Fixed::init (const Fixed & alloc) {
 	auto ret = new (Z0) Fixed ();
 	ret-> _token = alloc._token;
+	ret-> _suffix = alloc._suffix;
 	return Expression {ret};
     }
 
-    Expression Fixed::init (const lexing::Word & location) {
+    Expression Fixed::init (const lexing::Word & location, const lexing::Word & suffix) {
 	auto ret = new (Z0) Fixed ();
 	ret-> _token = location;
+	ret-> _suffix = suffix;
 	return Expression {ret};
     }
 

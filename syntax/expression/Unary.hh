@@ -5,31 +5,32 @@
 namespace syntax {
 
     /**
-     * \struct Fixed
+     * \struct Unary
      * Representation of an binary operator 
      * \verbatim
      binary := expression op(':' expression)? expression 
      \endverbatim 
      */
-    class Fixed : public IExpression {
+    class Unary : public IExpression {
 
 	/** The location of the allocation */
-	lexing::Word _token;
+	lexing::Word _op;
 
-	/** The suffix, can be eof */
-	lexing::Word _suffix;
-	
+
+	/** The size of the allocation */
+	Expression _content;
+
     private :
 
 	friend Expression;
 
-	Fixed ();
+	Unary ();
 
     public :
 
-	static Expression init (const Fixed & blk);
+	static Expression init (const Unary & alloc);
 
-	static Expression init (const lexing::Word & token, const lexing::Word & suff);
+	static Expression init (const lexing::Word & op, const Expression &content);
 
 	Expression clone () const override;
 

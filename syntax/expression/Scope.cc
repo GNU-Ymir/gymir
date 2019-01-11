@@ -35,17 +35,15 @@ namespace syntax {
 	auto ret = new (Z0) ScopeFailure ();
 	ret-> _location = other._location;
 	ret-> _content = other._content;
-	ret-> _names = other._names;
 	ret-> _types = other._types;
 	ret-> _contents = other._contents;
 	return Expression {ret};
     }
 
-    Expression ScopeFailure::init (const lexing::Word & location, const std::vector <lexing::Word> & names, const std::vector <Expression> &types, const std::vector <Expression> & contents) {
+    Expression ScopeFailure::init (const lexing::Word & location, const std::vector <Expression> &types, const std::vector <Expression> & contents) {
 	auto ret = new (Z0) ScopeFailure ();
 	ret-> _location = location;
 	ret-> _content = Expression::empty ();
-	ret-> _names = names;
 	ret-> _types = types;
 	ret-> _contents = contents;
 	return Expression {ret};

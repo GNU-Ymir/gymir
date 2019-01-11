@@ -7,14 +7,16 @@ namespace syntax {
     Expression Float::init (const Float & alloc) {
 	auto ret = new (Z0) Float ();
 	ret-> _token = alloc._token;
-	ret-> _token = alloc._decPart;
+	ret-> _decPart = alloc._decPart;
+	ret-> _suffix = alloc._suffix;
 	return Expression {ret};
     }
 
-    Expression Float::init (const lexing::Word & location, const lexing::Word & decPart) {
+    Expression Float::init (const lexing::Word & location, const lexing::Word & decPart, const lexing::Word & suffix) {
 	auto ret = new (Z0) Float ();
 	ret-> _token = location;
 	ret-> _decPart = decPart;
+	ret-> _suffix = suffix;
 	return Expression {ret};
     }
 

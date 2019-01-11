@@ -10,7 +10,7 @@ namespace syntax {
      */
     class Lambda : public IExpression {
 
-	/** The location of the allocation */
+	/** The location of the allocation (ref or eof ())*/
 	lexing::Word _op;
 
 	Function::Prototype _proto;

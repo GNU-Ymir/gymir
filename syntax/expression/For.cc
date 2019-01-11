@@ -10,18 +10,16 @@ namespace syntax {
     Expression For::init (const For & for_) {
 	auto ret = new (Z0) For ();
 	ret-> _location = for_._location;
-	ret-> _names = for_._names;
-	ret-> _decos = for_._decos;
+	ret-> _vars = for_._vars;
 	ret-> _iter = for_._iter;
 	ret-> _block = for_._block;
 	return Expression {ret};
     }
 
-    Expression For::init (const lexing::Word & location, const std::vector <lexing::Word> & names, const std::vector <std::vector <Decorator> > & decos, const Expression & iter, const Expression & block) {
+    Expression For::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & iter, const Expression & block) {
 	auto ret = new (Z0) For ();
 	ret-> _location = location;
-	ret-> _names = names;
-	ret-> _decos = decos;
+	ret-> _vars = vars;
 	ret-> _iter = iter;
 	ret-> _block = block;
 	return Expression {ret};

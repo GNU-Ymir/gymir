@@ -20,11 +20,8 @@ namespace syntax {
 	/** The location of the for loop */
 	lexing::Word _location;
 
-	/** The names of the iterators */
-	std::vector <lexing::Word> _names;
-
-	/** The decorators of the iterators */
-	std::vector <std::vector <Decorator> > _decos;
+	/** The list of variable declared (iterator) in the for loop */
+	std::vector <Expression> _vars;
 
 	/** The expression on which the for loop will iter */
 	Expression _iter;
@@ -49,12 +46,11 @@ namespace syntax {
 	/**
 	 * \brief Create a new for loop
 	 * \param location the position of the loop
-	 * \param names the names of the iterators
-	 * \param decos the decorators of the iterators (const, ref...)
+	 * \param vars the names of the iterators
 	 * \param iter the expression on which the for loop will iter
 	 * \param block the content of the loop
 	 */
-	static Expression init (const lexing::Word & location, const std::vector <lexing::Word> & names, const std::vector <std::vector <Decorator> > & decos, const Expression & iter, const Expression & block);
+	static Expression init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & iter, const Expression & block);
 
 	Expression clone () const override;
 

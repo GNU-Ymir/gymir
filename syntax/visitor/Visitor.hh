@@ -14,17 +14,19 @@ namespace syntax {
      * In the following documentation, is simple syntax is used to represent the syntax recognize by each function
      * A more accomplished work is required to use this element as the effective grammar of the language
      * But this simple version gives us a overview of the grammar
+     * A rule beginning with a upper case character, is a final one, it depends on no other rules
      * Just some basic definition of the operator used : 
-     - := is for definition 
-     - (x)?  means x can appear or not
-     - (x)* means x can appear a arbitrary number of time from 0 to infinity
-     - (x)+ means x can appear a arbitrary number of time, but at least one time
-     - x | y means we can get x or y
-     - x y means x and then y
-     - 'token' means the token 'token' written out
-     -  (x, y)! means x and y must appear, but the order is not important
-     -  x |& y means x or y, or both of them, in the respected order if both appears
-     -  x |! y means x or y, or both of them, in any order
+     - \c := is for definition 
+     - \c (x)?  means x can appear or not
+     - \c (x)* means x can appear a arbitrary number of time from 0 to infinity
+     - \c (x)+ means x can appear a arbitrary number of time, but at least one time
+     - <tt>x | y</tt> means we can get x or y
+     - <tt>x y</tt> means x and then y
+     - <tt>'token'</tt> means the token 'token' written out
+     -  <tt>(x, y)!</tt> means x and y must appear, but the order is not important
+     -  <tt>x |& y</tt> means x or y, or both of them, in the respected order if both appears
+     -  <tt>x |! y</tt> means x or y, or both of them, in any order
+     -  <tt>[a-Z]</tt> means any alphabetic char, can be used with anything between the <tt>[]</tt>
 
      * Consuming function and not consuming function are represented in this class: 
 
@@ -35,9 +37,26 @@ namespace syntax {
      */
     class Visitor {
 
+	/** The lexer used to perform the lexical analyses */
 	lexing::Lexer _lex;
 
+	/** All the keys that cannot be indentifier */
 	std::vector <std::string> _forbiddenKeys;	
+
+	/** the binary operators sorted by priority (0 to 10) */
+	std::vector <std::vector <std::string> > _operators;
+
+	/** the special binary operators (!of, !is ...) sorted by priority (0 to 10) */
+	std::vector <std::vector <std::string> > _specialOperators;
+
+	/** The unary operators that can be applied directly to operand */
+	std::vector <std::string> _operand_op;
+
+	/** The suffix int */
+	std::vector <std::string> _fixedSuffixes;
+
+	/** The suffix float */
+	std::vector <std::string> _floatSuffix;
 	
     private :
 
@@ -218,6 +237,14 @@ namespace syntax {
 	std::vector <Expression> visitTemplateParameters ();
 
 	/**
+	 * \brief Return a set of expression used inside a param list
+	 * \verbatim
+	 param_list := (expression:(0) (',' expression:(0))*)?
+	 \endverbatim
+	 */
+	std::vector <Expression> visitParamList ();	
+	
+	/**
 	 * \brief Visit the Custom attributes associated to declarations
 	 * This function is not a consuming one
 	 * \verbatim
@@ -241,14 +268,273 @@ namespace syntax {
 	 * \verbatim
 	 var_decl := (('ref')?, ('const')?, ('cte')?, ('static')?, ('mut')?)! Identifier (':' expression)? ('=' expression)?
 	 \endverbatim
+	 * \param withValue is true if we can have an affectation ('=' expression)?
 	 */
-	Expression visitSingleVarDeclaration ();	
+	Expression visitSingleVarDeclaration (bool mandType = false, bool withValue = true);	
+
 
 	/**
-	 * \brief Visit an single expression 
+	 * \return true iif, a var declaration is following
+	 * \param mandatoryType is the type mandatory in this declaration ?
+	 * \param withValue is the value present in this declaration ?
 	 */
-	Expression visitExpression ();
-	       	
+	bool canVisitSingleVarDeclaration (bool mandatoryType, bool withValue);
+	
+	/**
+	 * \brief Visit an single expression 
+	 * \verbatim
+	 expression:(priority) := (expression:(priority + 1) operator:(priority) expression:(priority + 1)) (operator:(priority) expression:(priority))?
+	 expression:(11) := operand:(0)
+
+	 operator:(0)  := '||'
+	 operator:(1)  := '&&'
+	 operator:(2)  := '<' | '>' | '<=' | '>=' | '!=' | '!<' | '!>' | '!<=' | '!>=' | '==' | (('!')? ('of' | 'is' | 'in'))
+	 operator:(3)  := '...' | '..' 
+	 operator:(4)  := '<<' | '>>'
+	 operator:(5)  := '|' | '^' | '&'
+	 operator:(6)  := '+' | '~' | '-'
+	 operator:(7)  := '*' | '%' | '/'
+	 operator:(8)  := '^^'
+	 operator:(9)  := '.'
+	 operator:(10) := '::'
+	 \endverbatim
+	 * \param priority, the priority of the expression (used to get the set of operators usable at this instant)	 
+	 */
+	Expression visitExpression (uint priority = 0);
+
+
+	/**
+	 * \brief Used to simplificate the writting of visitExpression 
+	 * \param left the left operand (already read)
+	 * \param the priority of the operation
+	 */
+	Expression visitExpression (const Expression & left, uint priority = 0);
+	
+	/**
+	 * \brief Visit an operand (which has higher priority than every expression of visitExpression)
+	 * \brief Some of the operand, may sound weird (like let, or break), if they are syntaxically correct, at semantic time use them as value will create a failure
+	 * \brief I think at the moment when i write this documentation, (no type system implemented yet) that it will be easier this way (after a previous version of the compiler, where there was a syntaxic dinstinction between instruction and expression)
+	 * To better understand what it implies, the following code is syntaxically correct but does not mean anything :
+	 * \verbatim
+	 let a = 12 + let b = 89
+	 \endverbatim
+	 * \verbatim
+	 operand:(0) := (operand_op_bef)? operand:(1)
+	 operand:(1) := operand:(2) (mult_next)?
+	 operand_op_bef := '&' | '*' | '-'
+	 mult_op :=  '(' expression:(0) (',' expression:(0))* ')' | 
+	             '[' expression:(0) (',' expression:(0))* ']' 
+
+	 operand:(2) := literal      | 
+	                array        |
+	                tuple        |
+			lambda       |
+			block        |
+			if           |
+			while        |
+			for          |
+			match        |
+			var_decl_set |
+			break        |
+			assert       |
+			throw        |
+			pragma       |
+			scope        |
+			version      | 
+			return 			
+	 
+	 \endverbatim
+	 */
+	Expression visitOperand0 ();
+
+	/**
+	 * \brief Used to factorize visitOperand
+	 */
+	Expression visitOperand1 ();	
+
+	/**
+	 * \brief Used to factorize visitOperand
+	 */
+	Expression visitOperand2 ();
+	
+	/**
+	 * \brief Visit a literal expression 
+	 * \verbatim
+	 literal := Int | float | String | Char | Bool | '_'
+	 Int := [0-9]([0-9] | '_')*
+	 float := Int '.' (Int)? | (Int)? '.' Int
+	 String := '"' [.]* '"'
+	 Char := '\'' [.] '\''
+	 Bool := 'true' | 'false'
+	 \endverbatim
+	 */
+	Expression visitLiteral ();
+
+
+	/**
+	 * \brief Visit a numeric literal
+	 */
+	Expression visitNumeric ();
+
+	/**
+	 * \brief Verif that content is well formed for a numeric value
+	 * \brief Throw syntax error on loc if not 
+	 * \param loc the location of the literal
+	 * \param content the content to check
+	 * \return the numeric is in a hexadecimal form
+	 */
+	bool verifNumeric (const lexing::Word & loc, const std::string& content);
+
+
+	/**
+	 * \brief Visit a float literal
+	 * \brief Read only the decimal part
+	 * \param begin is the beginning part of the float
+	 */
+	Expression visitFloat (const lexing::Word & begin);
+	
+	/**
+	 * \brief Visit an array literal, it can be either a real literal or an array allocator
+	 * \verbatim
+	 array := allocator | array_literal 
+	 allocator := '[' expression:(0) ';' expression:(0) ']'
+	 array_literal := '[' (expression:(0) (',' expression:(0))*)? ']'
+	 \endverbatim
+	 */
+	Expression visitArray ();
+
+	/**
+	 * \brief Visit a tuple literal, or an simple expression surrounded with '(' ')'
+	 * \verbatim
+	 tuple := '(' (expression:(0) ((',' expression:(0))* | ','))? ')'
+	 \endverbatim
+	 */
+	Expression visitTuple ();
+
+	/**
+	 * \brief Visit a lambda function definition 
+	 * \verbatim
+	 lambda := ('ref')? function_proto '=>' expression 
+	 \endverbatim
+	 */
+	Expression visitLambda ();
+	
+	/**
+	 * \brief Visit a if expression
+	 * \verbatim
+	 if := 'if' expression:(0) expression:(0) ('else' if)?
+	 \endverbatim
+	 */
+	Expression visitIf ();
+
+
+	/**
+	 * \brief Visit a while loop expression 
+	 * \verbatim
+	 while := 'while' expression:(0) expression:(0)      |
+	          'do' expression:(0) 'while' expression:(0) 
+	 \endverbatim
+	 */
+	Expression visitWhile ();
+
+	/**
+	 * \brief Visit a for loop
+	 * \verbatim
+	 for := 'for' var_decl (',' var_decl)* 'in' expression:(0) expression:(0)
+	 \endverbatim
+	 */
+	Expression visitFor ();
+
+	/**
+	 * \brief Visit a match expression 
+	 * \verbatim
+	 match := 'match' expression:(0) '{' (match_pattern '=>' expression:(0))+ '}'
+	 match_pattern := match_pattern_content ('if' expression:(0))?
+	 match_pattern_content := expression:(0)                                |
+	                          var_decl                                      |
+				  expression:(0) '{' match_pattern_content* '}' |
+				  '(' match_pattern_content* ')'                |
+	 \endverbatim
+	 */
+	Expression visitMatch ();
+
+
+	/**
+	 * \brief Visit a break
+	 * \verbatim
+	 break := 'break' (expression:(0))?
+	 \endverbatim
+	 */
+	Expression visitBreak ();
+
+	/**
+	 * \brief Visit an assertion 
+	 * \verbatim
+	 assert := ('cte')? 'assert' expression:(0) ('=>' expression:(0))
+	 \endverbatim
+	 */
+	Expression visitAssert ();
+
+	
+	/**
+	 * \brief Visit a throw
+	 * \verbatim
+	 throw := 'throw' expression:(0)
+	 \endverbatim
+	 */
+	Expression visitThrow ();
+
+	/**
+	 * \brief Visit a pragma
+	 * \verbatim
+	 pargma := '__pragma' '(' param_set ')'
+	 \endverbatim
+	 */
+	Expression visitPragma ();
+
+	/**
+	 * \brief Visit a scope guard
+	 * \verbatim
+	 scope := 'on' ('exit' | 'failure' | 'success') '=>' expression:(0) |
+	          'on' 'failure' '=>' '{' (var_decl '=>' expression:(0))+ '}'	
+	 \endverbatim
+	 */
+	Expression visitScope ();
+
+	/**
+	 * \brief Visit a version manager
+	 * \verbatim
+	 version := 'version' Identifier expression:(0) ('else' expression:(0))
+	 \endverbatim
+	 */
+	Expression visitVersion ();
+
+	/**
+	 * \brief Visit a return expression
+	 * \verbatim
+	 return := 'return' expression:(0) 
+	 \endverbatim
+	 */
+	Expression visitReturn ();
+	
+	/**
+	 * \brief Visit a block of expression 
+	 * \verbatim
+	 block := '{' (expression:(0) | ';')* '}'
+	 \endverbatim
+	 */
+	Expression visitBlock ();
+
+
+	/**
+	 * \brief Visit a var declaration
+	 * \verbatim
+	 var := Identifier (('!' expression:(0)) | '!' '(' expression:(0) (',' expression:(0))* ')')?
+	 \endverbatim
+	 */
+	Expression visitVar ();
+	
+	
 	/**
 	 * \brief Visit a namespace set 
 	 * \verbatim

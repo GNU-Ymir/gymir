@@ -23,6 +23,7 @@ namespace Ymir {
     DECLARE_ENUM_HEADER (ExternalError, std::string,			         
 			 SYNTAX_ERROR_AT, // syntax error a specific location
 			 SYNTAX_ERROR_AT_SIMPLE, // syntax error a specific location
+			 SYNTAX_ERROR_MISSING_TEMPL_PAR,
 			 NO_SUCH_FILE,			 
 			 COMPILATION_END,
 			 DYNAMIC_CAST_FAILED

@@ -31,8 +31,9 @@ void excPrint (FILE *stream, const char *file, const char *function, unsigned li
     fprintf (stream, "\n");
 }
 
-int excPush (jmp_buf *j, int returned) {
+int excPush (jmp_buf *j, int returned, int line, const char * file) {
     static exc_stack *head;
+    println ("Pushing : ", file, ":", line);
     if (returned != 0) { // The jmp buffer has already been declared, we are comming back there due to a throw
 	return 0;	
     }
@@ -42,6 +43,8 @@ int excPush (jmp_buf *j, int returned) {
     head = new exc_stack ();
     memcpy (&head->j, j, sizeof (jmp_buf));
     head->num = exc_tries;
+    head-> file = file;
+    head-> line = line;
     head->prev = exc_global;
     exc_global = head;
 
@@ -50,7 +53,6 @@ int excPush (jmp_buf *j, int returned) {
 
 void excPop (jmp_buf *j) {
     struct exc_stack *stored = exc_global;
-
     if (stored == NULL)
 	{	    
 	    fprintf (stderr, "Unhandled exception\n");
@@ -68,7 +70,8 @@ void excPop (jmp_buf *j) {
 	       copied rawely.  This is true in GLIBC, as I know. */
 	    memcpy (j, &stored->j, sizeof (jmp_buf));
 	}
-        
+    
+    println ("Poping : ", stored-> file, ":", stored-> line);
     /* While with MALLOC, free.  When using obstacks it is better not to
        free and hold up. */
     free (stored);
@@ -97,6 +100,10 @@ void excRethrow () {
     /* LONGJUMP to J with nonzero value. */
     longjmp (j, 1);
 
+}
+
+namespace Ymir {
+    void bt_print ();
 }
 
 bool excCheckError (int code) {
