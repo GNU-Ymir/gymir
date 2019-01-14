@@ -54,7 +54,7 @@ namespace syntax {
 	 * \brief Mandatory function used by proxy polymoprhism system
 	 */
 	Declaration clone () const override;
-
+	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */

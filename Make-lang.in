@@ -61,6 +61,7 @@ ymir_OBJS = \
 	ymir/decl_ExpressionWrapper.o \
 	ymir/expr_Assert.o \
 	ymir/expr_Break.o \
+	ymir/expr_Dollar.o \
 	ymir/expr_For.o \
 	ymir/expr_Return.o \
 	ymir/expr_Scope.o \

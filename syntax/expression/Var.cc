@@ -7,6 +7,7 @@ namespace syntax {
     Expression Var::init (const Var & alloc) {
 	auto ret = new (Z0) Var ();
 	ret-> _token = alloc._token;
+	ret-> _decos = alloc._decos;
 	return Expression {ret};
     }
     
@@ -15,7 +16,14 @@ namespace syntax {
 	ret-> _token = location;
 	return Expression {ret};
     }
-
+    
+    Expression Var::init (const lexing::Word & location, const std::vector<Decorator> & decos) {
+	auto ret = new (Z0) Var ();
+	ret-> _token = location;
+	ret-> _decos = decos;
+	return Expression {ret};
+    }
+    
     Expression Var::clone () const {
 	return Var::init (*this);
     }

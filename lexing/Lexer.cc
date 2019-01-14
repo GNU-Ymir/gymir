@@ -165,6 +165,16 @@ namespace lexing {
 	
 	return Word::eof (this-> filename);
     }
+
+    Word Lexer::consumeIf (const std::vector <std::string> & optional) {
+	auto word = this-> next ();
+	for (auto it : optional) {
+	    if (it == word.getStr ()) return word;
+	}
+	
+	this-> rewind ();
+	return {word, ""};
+    }
     
     Lexer& Lexer::rewind (ulong nb) {
 	this-> current -= nb;

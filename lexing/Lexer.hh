@@ -96,6 +96,14 @@ namespace lexing {
 	 */
 	Word nextWithDocs (std::string & docs, const std::vector <std::string> &mandatories);
 
+
+	/**
+	 * \brief Consume the next token if it is inside the optional token list
+	 * \brief Otherwise does nothing
+	 * \return the next token, or an empty word position at the current file location
+	 */
+	Word consumeIf (const std::vector <std::string> & optional);
+	
 	/**
 	 * \brief rewind to previous word
 	 * \warning (does not include the skiped words)

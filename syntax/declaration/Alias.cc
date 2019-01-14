@@ -42,4 +42,10 @@ namespace syntax {
 	this-> _value = value;
     }
 
+    void Alias::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*", i, '\t');
+	stream.writeln ("<Alias> : ", this-> _ident);
+	this-> _value.treePrint (stream, i + 1);
+    }
+
 }

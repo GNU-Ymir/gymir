@@ -36,4 +36,10 @@ namespace syntax {
     Expression & ExpressionWrapper::getContent () {
 	return this-> _content;
     }
+
+    void ExpressionWrapper::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*", i, '\t');
+	stream.writeln ("<Expression> : ");	
+    }
+    
 }

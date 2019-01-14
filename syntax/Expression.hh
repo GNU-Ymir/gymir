@@ -15,6 +15,12 @@ namespace syntax {
 
 	virtual bool isOf (const IExpression * type) const = 0;
 
+	/**
+	 * \brief Print the expression into the buffer 
+	 * \brief Debugging purpose only
+	 */
+	virtual void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
+	
 	virtual ~IExpression ();
 	
     };
@@ -51,6 +57,7 @@ namespace syntax {
 	    }
 	}
 
+	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
 	
     };       
 

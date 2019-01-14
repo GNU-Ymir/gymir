@@ -39,6 +39,8 @@ namespace syntax {
 
 	Declaration clone () const override;
 
+	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
+	
 	bool isOf (const IDeclaration * type) const override;
 	
     };

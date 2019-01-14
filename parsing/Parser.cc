@@ -52,6 +52,11 @@ namespace Ymir {
 	
 	auto visitor = Visitor::init (this-> _path, file);
 	this-> _module = visitor.visitModGlobal ();
+
+	Ymir::OutBuffer stream;
+	this-> _module.treePrint (stream);
+
+	println (stream.str ());
     }
 
     void Parser::semanticTime () {

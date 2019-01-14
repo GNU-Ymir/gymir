@@ -43,6 +43,12 @@ namespace Ymir {
 	void writef (const char * s, F f, T ... args) {
 	    mwritef (s, f, args...);
 	}
+
+	template <typename F, typename ... T>
+	void writefln (const char * s, F f, T ... args) {
+	    mwritef (s, f, args...);
+	    write ('\n');
+	}
 	
 	template <typename F, typename ... T>
 	void write (F f, T ... args) {

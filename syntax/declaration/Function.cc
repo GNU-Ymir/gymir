@@ -27,6 +27,17 @@ namespace syntax {
 	return Function::Prototype::init (*this);
     }
     
+    void Function::Prototype::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*", i, '\t');
+	stream.writeln ("<Parameters> : ");
+	for (auto & it : this->_parameters)
+	    it.treePrint (stream, i + 1);
+
+	stream.writef ("%*", i, '\t');
+	stream.writeln ("<Return> : ");
+	this-> _retType.treePrint (stream, i + 1);
+    }
+
     void Function::Prototype::addParameter (const Expression & param) {
 	this-> _parameters.push_back (param);
     }
@@ -73,6 +84,15 @@ namespace syntax {
 	return Function::Body::init (*this);
     }
 
+    void Function::Body::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<In>", i, '\t');
+	this-> _inner.treePrint (stream, i + 1);
+	stream.writefln ("%*<Out>", i, '\t');
+	this-> _outer.treePrint (stream, i + 1);
+	stream.writefln ("%*<Body>", i, '\t');
+	this-> _body.treePrint (stream, i + 1);
+    }
+    
     void Function::Body::setBody (const Expression & body) {
 	this-> _body = body;
     }
@@ -115,6 +135,20 @@ namespace syntax {
 
     Declaration Function::clone () const {
 	return Function::init (*this);
+    }
+
+    void Function::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Function>", i, '\t');
+	stream.writeln (this-> _name, " @{", this-> _cas, "}");
+
+	stream.writefln ("%*<Test>", i + 1, '\t');	
+	this-> _test.treePrint (stream, i + 2);
+
+	stream.writefln ("%*<Proto>", i + 1, '\t');	
+	this-> _proto.treePrint (stream, i + 2);
+
+	stream.writefln ("%*<Body>", i + 1, '\t');	
+	this-> _body.treePrint (stream, i + 2);
     }
     
     bool Function::isOf (const IDeclaration * type) const {

@@ -8,6 +8,7 @@
 #include <ymir/syntax/expression/Break.hh>
 #include <ymir/syntax/expression/Cast.hh>
 #include <ymir/syntax/expression/Char.hh>
+#include <ymir/syntax/expression/Dollar.hh>
 #include <ymir/syntax/expression/Fixed.hh>
 #include <ymir/syntax/expression/Float.hh>
 #include <ymir/syntax/expression/For.hh>

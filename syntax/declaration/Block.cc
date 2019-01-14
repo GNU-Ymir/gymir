@@ -30,6 +30,15 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IDeclaration::isOf (type);
     }	    
+    
+    void DeclBlock::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*", i, '\t');
+	stream.writeln ("<Block> : ", this-> _token, " ", this-> _isPrivate ? "private" : "public");
+	
+	for (auto & it : this-> _inner) {
+	    it.treePrint (stream, i + 1);
+	}
+    }
 
       
 }

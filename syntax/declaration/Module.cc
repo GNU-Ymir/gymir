@@ -51,5 +51,14 @@ namespace syntax {
     void Module::isGlobal (bool is) {
 	this-> _isGlobal = is;
     }
+
+    void Module::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Module>", i, '\t');
+	stream.writeln (this-> _ident);
+
+	for (auto & it : this-> _decls) {
+	    it.treePrint (stream, i + 1);
+	}
+    }
     
 }

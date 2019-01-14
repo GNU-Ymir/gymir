@@ -557,6 +557,12 @@ namespace syntax {
 	 * \return true if the next token is an identifier 
 	 */
 	bool canVisitIdentifier ();
+
+	/**
+	 * \brief Return true if function does not throw anything if calling
+	 * \brief Reset the cursor location of the file to entry point in all cases
+	 */
+	bool can (Expression (Visitor::*func)());
 	
     };
     

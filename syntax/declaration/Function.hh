@@ -65,6 +65,8 @@ namespace syntax {
 	     */
 	    Prototype clone () const; 
 
+	    void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
+	    
 	    /**
 	     * \brief Add a new parameter to the prototype
 	     * \param name the name of the parameter
@@ -131,6 +133,8 @@ namespace syntax {
 	    static Body init (const Expression & inner, const Expression & body, const Expression & outer, const lexing::Word & name);
 
 	    Body clone () const;
+
+	    void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
 	    
 	    /**
 	     * \brief Set the body of the expression
@@ -203,6 +207,8 @@ namespace syntax {
 	 */
 	Declaration clone () const override;
 
+	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
+	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */

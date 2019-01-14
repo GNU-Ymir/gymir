@@ -68,6 +68,8 @@ namespace syntax {
 	 */
 	Declaration clone () const override;
 
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */

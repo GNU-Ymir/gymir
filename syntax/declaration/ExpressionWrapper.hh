@@ -43,12 +43,14 @@ namespace syntax {
 	 * \param value the value of the variable
 	 */
 	static Declaration init (const Expression & content);
-
+	
 	/**
 	 * \brief Mandatory function used by proxy polymoprhism system
 	 */
 	Declaration clone () const override;
 
+	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
+	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */

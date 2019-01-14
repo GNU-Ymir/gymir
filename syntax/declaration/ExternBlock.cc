@@ -33,5 +33,11 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }	    
 
-      
+    void ExternBlock::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*", i, '\t');
+	stream.writeln ("<Extern> : ", this-> _location, " ", this-> _from, " ", this-> _space);
+	
+	this-> _content.treePrint (stream, i + 1);
+    }
+    
 }

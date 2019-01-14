@@ -15,10 +15,22 @@ namespace syntax {
 	return ExpressionWrapper::init (value);
     }
     
+    void Expression::treePrint (Ymir::OutBuffer & stream, int i)  const {	
+	if (this-> _value == NULL) {
+	    stream.writef ("%*", i, '\t');
+	    stream.writeln ("<null>");
+	} else this-> _value-> treePrint (stream, i);
+    }
+
     bool IExpression::isOf (const IExpression *) const {
 	return false;
     }
 
+    void IExpression::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<TODO>", i, '\t');
+    }
+    
+    
     IExpression::~IExpression () {}
 
 

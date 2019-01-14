@@ -58,5 +58,17 @@ namespace syntax {
     void Enum::setType (const Expression & expr) {
 	this-> _type = expr;
     }
+
+    void Enum::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*", i, '\t');
+	stream.writeln ("<Enum> : ", this-> _ident, ":");
+	this-> _type.treePrint (stream, i + 1);
+	
+	for (auto it : Ymir::r (0, this-> _names.size ())) {
+	    stream.writef ("%*", i + 1, '\t');
+	    stream.writeln ("<EnumValue> : ", this-> _names [it], ":");
+	    this-> _values [it].treePrint (stream, i + 2);
+	}
+    }
     
 }

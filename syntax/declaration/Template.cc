@@ -26,6 +26,15 @@ namespace syntax {
     Declaration Template::clone () const {
 	return Template::init (*this);
     }
+
+    void Template::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<Template>", i, '\t');
+	stream.writefln ("%*<Params>", i + 1, '\t');
+	for (auto & it : this-> _parameters)
+	    it.treePrint (stream, i + 2);
+	stream.writefln ("%*<Content>", i + 1, '\t');
+	this-> _content.treePrint (stream, i + 2);
+    }	
     
     bool Template::isOf (const IDeclaration * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];

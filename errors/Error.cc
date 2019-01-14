@@ -153,31 +153,30 @@ namespace Ymir {
     }
 
     void bt_print () {    		
-	void *trace[16];
-	char **messages = (char **)NULL;
-	int i, trace_size = 0;
+	// void *trace[16];
+	// char **messages = (char **)NULL;
+	// int i, trace_size = 0;
 
-	trace_size = backtrace(trace, 16);
-	messages = backtrace_symbols(trace, trace_size);
-	/* skip first stack frame (points here) */
-	fprintf(stderr, "[bt] Execution path:\n");
-	for (i=2; i<trace_size; ++i)
-	    {
-		fprintf(stderr, "[bt] #%d ", i - 1);
-		/* find first occurence of '(' or ' ' in message[i] and assume
-		 * everything before that is the file name. (Don't go beyond 0 though
-		 * (string terminator)*/
-		size_t p = 0;
-		while(messages[i][p] != '(' && messages[i][p] != ' '
-		      && messages[i][p] != 0)
-		    ++p;
+	// trace_size = backtrace(trace, 16);
+	// messages = backtrace_symbols(trace, trace_size);
+	// /* skip first stack frame (points here) */
+	// fprintf(stderr, "[bt] Execution path:\n");
+	// for (i=2; i<trace_size; ++i)
+	//     {
+	// 	fprintf(stderr, "[bt] #%d ", i - 1);
+	// 	/* find first occurence of '(' or ' ' in message[i] and assume
+	// 	 * everything before that is the file name. (Don't go beyond 0 though
+	// 	 * (string terminator)*/
+	// 	size_t p = 0;
+	// 	while(messages[i][p] != '(' && messages[i][p] != ' '
+	// 	      && messages[i][p] != 0)
+	// 	    ++p;
 
-		char syscom[256];
-		snprintf(syscom, 256, "addr2line %p -f -e %.*s", trace[i], (int) p, messages[i]);
-		if (!runCommand (syscom))
-		    fprintf (stderr, "%s %p\n", messages [i], trace [i]);
-	    }
-
+	// 	char syscom[256];
+	// 	snprintf(syscom, 256, "addr2line %p -f -e %.*s", trace[i], (int) p, messages[i]);
+	// 	if (!runCommand (syscom))
+	// 	    fprintf (stderr, "%s %p\n", messages [i], trace [i]);
+	//     }
     }
 
 }
