@@ -29,4 +29,9 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
     
+    void Char::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Char> ", i, '\t');
+	stream.writeln (this-> _location, " ", this-> _sequence);
+    }
+    
 }

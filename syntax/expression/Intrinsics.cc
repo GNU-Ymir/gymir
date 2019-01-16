@@ -31,4 +31,11 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
     
+
+    void Intrinsics::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Intrisics> ", i, '\t');
+	stream.writeln (this-> _op);
+	this-> _value.treePrint (stream, i + 1);
+    }
+
 }

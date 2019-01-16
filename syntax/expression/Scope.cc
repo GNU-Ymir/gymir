@@ -29,6 +29,12 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    void Scope::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Scope> ", i, '\t');
+	stream.writeln (this-> _location);
+	this-> _content.treePrint (stream, i + 1);
+    }    
+    
     ScopeFailure::ScopeFailure () {}
 
     Expression ScopeFailure::init (const ScopeFailure & other) {

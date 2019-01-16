@@ -91,6 +91,11 @@ namespace syntax {
 	 * \param isGlobal is this module a global one ?
 	 */
 	void isGlobal (bool isGlobal);
+
+	/**
+	 * \return the identifier of the module
+	 */
+	const lexing::Word & getIdent () const;
 	
     };    
 

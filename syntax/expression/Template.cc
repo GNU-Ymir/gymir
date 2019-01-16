@@ -41,6 +41,13 @@ namespace syntax {
     void TemplateCall::setContent (const Expression& content) {
 	this-> _content = content;
     }
-    
+
+    void TemplateCall::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<TemplateCall>", i, '\t');
+	stream.writefln ("%*<Params>", i + 1, '\t');
+	for (auto & it : this-> _parameters)
+	    it.treePrint (stream, i + 2);
+	this-> _content.treePrint (stream, i + 1);
+    }
     
 }

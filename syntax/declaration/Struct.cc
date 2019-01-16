@@ -10,18 +10,17 @@ namespace syntax {
 
     Declaration Struct::init (const Struct & str) {
 	auto ret = new (Z0) Struct ();
-	ret-> _varNames = str._varNames;
-	ret-> _varTypes = str._varTypes;
+	ret-> _decls = str._decls;
 	ret-> _cas = str._cas;
 	ret-> _name = str._name;
 	return Declaration {ret};
     }
 
-    Declaration Struct::init (const lexing::Word & name, const std::vector <lexing::Word> & names, const std::vector <Expression> & types) {
+    Declaration Struct::init (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & types) {
 	auto ret = new (Z0) Struct ();
 	ret-> _name = name;
-	ret-> _varNames = names;
-	ret-> _varTypes = types;
+	ret-> _cas = attrs;
+	ret-> _decls = types;
 	return Declaration {ret};
     }
 
@@ -36,17 +35,22 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }	    
 
+    void Struct::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Struct> ", i, '\t');
+	stream.writeln (this-> _name, " @{", this-> _cas, "}");
+
+	for (auto & it : this-> _decls) {
+	    it.treePrint (stream, i + 1);
+	}
+    }
+
+    
     void Struct::addCustomAttribute (const lexing::Word & ca) {
 	this-> _cas.push_back (ca);
     }
 
     void Struct::setName (const lexing::Word & name) {
 	this-> _name = name;
-    }
-
-    void Struct::addAttribute (const lexing::Word & name, const Expression & type) {
-	this-> _varNames.push_back (name);
-	this-> _varTypes.push_back (type);
     }
     
 }

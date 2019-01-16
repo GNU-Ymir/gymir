@@ -30,5 +30,10 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
+
+    void Float::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Float> ", i, '\t');
+	stream.writeln (this-> _token, " ", this-> _decPart, " ", this-> _suffix);
+    }
     
 }

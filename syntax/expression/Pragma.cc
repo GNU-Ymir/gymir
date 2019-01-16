@@ -28,5 +28,12 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
+
+    void Pragma::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Pragma> ", i, '\t');
+	stream.writeln (this-> _token);
+	for (auto & it : this-> _params)
+	    it.treePrint (stream, i + 1);
+    }
     
 }

@@ -30,4 +30,9 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    void Throw::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<Throw> ", i, '\t');
+	this-> _value.treePrint (stream, i + 1);
+    }
+    
 }

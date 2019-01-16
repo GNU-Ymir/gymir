@@ -11,20 +11,16 @@ namespace syntax {
     Declaration Trait::init (const Trait & tr) {
 	auto ret = new (Z0) Trait ();
 	ret-> _name = tr._name;
-	ret-> _varNames = tr._varNames;
-	ret-> _varTypes = tr._varTypes;
-	ret-> _protoNames = tr._protoNames;
-	ret-> _prototypes = tr._prototypes;
+	ret-> _inner = tr._inner;
+	ret-> _isMixin = tr._isMixin;
 	return Declaration {ret};
     }
 
-    Declaration Trait::init (const lexing::Word & name, const std::vector <lexing::Word> & varNames, const std::vector <Expression> &varTypes, const std::vector <lexing::Word> & protoNames, const std::vector <Function::Prototype> & protos) {
+    Declaration Trait::init (const lexing::Word & name, const std::vector <Declaration> & decls, bool isMixin) {
 	auto ret = new (Z0) Trait ();
 	ret-> _name = name;
-	ret-> _varNames = varNames;
-	ret-> _varTypes = varTypes;
-	ret-> _protoNames = protoNames;
-	ret-> _prototypes = protos;
+	ret-> _inner = decls;
+	ret-> _isMixin = isMixin;
 	return Declaration {ret};
     }
 
@@ -38,5 +34,13 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IDeclaration::isOf (type);
     }	    
+    
+    void Trait::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Trait> ", i, '\t');
+	stream.writeln (this-> _name, " mixin : ", this-> _isMixin);
+
+	for (auto & it : this-> _inner)
+	    it.treePrint (stream, i + 1);
+    }
 
 }

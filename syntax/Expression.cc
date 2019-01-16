@@ -11,6 +11,10 @@ namespace syntax {
 	return Expression {nullptr};
     }
 
+    bool Expression::isEmpty () {
+	return this-> _value == nullptr;
+    }
+    
     Declaration Expression::toDeclaration (const Expression & value) {
 	return ExpressionWrapper::init (value);
     }

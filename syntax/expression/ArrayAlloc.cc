@@ -35,5 +35,15 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
+
+    void ArrayAlloc::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<ArrayAlloc> ", i, '\t');
+	stream.writeln (this-> _isDynamic ? "true" : "false");
+	stream.writefln ("%*<Type> ", i + 1, '\t');
+	this-> _left.treePrint (stream, i + 2);
+
+	stream.writefln ("%*<Size> ", i + 1, '\t');
+	this-> _size.treePrint (stream, i + 2);
+    }
     
 }

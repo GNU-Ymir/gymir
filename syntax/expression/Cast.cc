@@ -34,4 +34,9 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
     
+    void Cast::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Cast>", i, '\t');
+	this-> _type.treePrint (stream, i + 1);
+	this-> _content.treePrint (stream, i + 1);
+    }
 }

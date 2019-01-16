@@ -18,7 +18,7 @@ namespace syntax {
     class Import : public IDeclaration {
 
 	/** The module to import */
-	std::vector <lexing::Word> _module;
+	lexing::Word _module;
 
 	/** The name for rename import (may be empty ()) */
 	lexing::Word _as;
@@ -47,7 +47,7 @@ namespace syntax {
 	 * \param module the module import
 	 * \param as the name for renamed import
 	 */
-	static Declaration init (const std::vector <lexing::Word> & module, const lexing::Word & as);
+	static Declaration init (const lexing::Word & module, const lexing::Word & as);
 
 	/**
 	 * \brief Create a clone of the import, mandatory function for proxy polymorphism
@@ -59,11 +59,14 @@ namespace syntax {
 	 */
 	bool isOf (const IDeclaration* type) const override;
 
+
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+	
 	/**
 	 * \brief Change the module to import
 	 * \param name the name of the module
 	 */
-	void setModule (const std::vector <lexing::Word> & name);
+	void setModule (const lexing::Word & name);
 
 	/**
 	 * \brief Change the name of the import

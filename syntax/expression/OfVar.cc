@@ -28,5 +28,10 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
-    
+
+    void OfVar::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<OfVar> ", i, '\t');
+	stream.writeln (this-> _token);
+	this-> _right.treePrint (stream, i + 1);
+    }
 }

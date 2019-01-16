@@ -33,7 +33,7 @@ void excPrint (FILE *stream, const char *file, const char *function, unsigned li
 
 int excPush (jmp_buf *j, int returned, int line, const char * file) {
     static exc_stack *head;
-    println ("Pushing : ", file, ":", line);
+
     if (returned != 0) { // The jmp buffer has already been declared, we are comming back there due to a throw
 	return 0;	
     }
@@ -71,7 +71,7 @@ void excPop (jmp_buf *j) {
 	    memcpy (j, &stored->j, sizeof (jmp_buf));
 	}
     
-    println ("Poping : ", stored-> file, ":", stored-> line);
+
     /* While with MALLOC, free.  When using obstacks it is better not to
        free and hold up. */
     free (stored);

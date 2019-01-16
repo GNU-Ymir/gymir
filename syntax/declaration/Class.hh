@@ -21,7 +21,7 @@ namespace syntax {
 	 * It could be : 
 	 * - function 
 	 * - vardecl (inside a wrapper, as VarDecl is an expression)
-	 * constructor and destructor are function with keyword name (self, or ~self), that return void
+	 * constructor and destructor are function with keyword name (self, or self~), that return void
 	 */
 	std::vector <Declaration> _innerDeclaration;
 

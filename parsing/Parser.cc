@@ -4,9 +4,10 @@
 #include <ymir/syntax/declaration/Function.hh>
 #include <ymir/syntax/declaration/Module.hh>
 #include <ymir/syntax/visitor/Visitor.hh>
+#include <ymir/semantic/visitor/Visitor.hh>
 
 using namespace Ymir;
-using namespace syntax;
+
 
 void ymir_parse_file (const char * filename) {
     Ymir::Parser parser (filename);
@@ -50,17 +51,13 @@ namespace Ymir {
 	auto file = fopen (this-> _path.c_str (), "r");
 	if (file == NULL) Error::occur (ExternalError::get (NO_SUCH_FILE), _path);
 	
-	auto visitor = Visitor::init (this-> _path, file);
+	auto visitor = syntax::Visitor::init (this-> _path, file);
 	this-> _module = visitor.visitModGlobal ();
-
-	Ymir::OutBuffer stream;
-	this-> _module.treePrint (stream);
-
-	println (stream.str ());
     }
 
     void Parser::semanticTime () {
-	// TODO
+	auto visitor = semantic::Visitor::init ();
+	visitor.visit (this-> _module);
     }
 
     void Parser::lintTime () {

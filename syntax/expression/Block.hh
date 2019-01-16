@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/syntax/Expression.hh>
+#include <ymir/syntax/Declaration.hh>
 
 namespace syntax {
 
@@ -22,6 +23,9 @@ namespace syntax {
 	/** The content of the block */
 	std::vector <Expression> _content;
 
+	/** The declaration done inside the block */
+	std::vector <Declaration> _decls;
+	
     private :
 
 	friend Expression;
@@ -32,9 +36,11 @@ namespace syntax {
 
 	static Expression init (const Block & blk);
 
-	static Expression init (const lexing::Word & op, const lexing::Word & end, const std::vector <Expression> & conetent);
+	static Expression init (const lexing::Word & op, const lexing::Word & end, const std::vector <Declaration> & decls, const std::vector <Expression> & conetent);
 
 	Expression clone () const override;
+
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	bool isOf (const IExpression * type) const override;
 	

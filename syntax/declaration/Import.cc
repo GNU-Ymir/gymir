@@ -15,7 +15,7 @@ namespace syntax {
 	return Declaration {ret};
     }
 
-    Declaration Import::init (const std::vector <lexing::Word> & module, const lexing::Word & as) {
+    Declaration Import::init (const lexing::Word & module, const lexing::Word & as) {
 	auto ret = new (Z0) Import ();
 	ret-> _module = module;
 	ret-> _as = as;
@@ -33,7 +33,12 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }
 
-    void Import::setModule (const std::vector <lexing::Word> & name) {
+    void Import::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Import> ", i, '\t');
+	stream.writeln (this-> _module, " as ", this-> _as);	
+    }    
+    
+    void Import::setModule (const lexing::Word & name) {
 	this-> _module = name;
     }
 

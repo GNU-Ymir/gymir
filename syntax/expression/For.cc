@@ -36,5 +36,14 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
     
+    void For::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<For>", i, '\t');
+	stream.writefln ("%*<Vars>", i + 1, '\t');
+	for (auto & it : this-> _vars)
+	    it.treePrint (stream, i + 2);
 
+	stream.writefln ("%*<Iter>", i + 1, '\t');
+	this-> _iter.treePrint (stream, i + 2);
+	this-> _block.treePrint (stream, i + 1);
+    }
 }

@@ -26,5 +26,9 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
+
+    void Ignore::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<Ignore>", i, '\t');
+    }
     
 }

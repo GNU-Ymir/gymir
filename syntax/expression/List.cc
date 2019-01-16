@@ -31,5 +31,10 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
-    
+    void List::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<List> ", i, '\t');
+	stream.writeln (this-> _location, " ", this-> _end);
+	for (auto & it : this-> _params)
+	    it.treePrint (stream, i + 1);
+    }
 }

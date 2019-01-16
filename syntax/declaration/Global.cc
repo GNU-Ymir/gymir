@@ -4,8 +4,7 @@ namespace syntax {
 
 
     Global::Global () :
-	_value (Expression::empty ()),
-	_type (Expression::empty ())
+	_decl (Expression::empty ())
     {}
 
     Declaration Global::init () {
@@ -14,17 +13,15 @@ namespace syntax {
 
     Declaration Global::init (const Global & gl) {
 	auto ret = new (Z0) Global ();
-	ret-> _ident = gl._ident;
-	ret-> _value = gl._value;
-	ret-> _type = gl._type;
+	ret-> _location = gl._location;
+	ret-> _decl = gl._decl;
 	return Declaration {ret};
     }
 
-    Declaration Global::init (const lexing::Word & ident, const Expression & type, const Expression & value) {
+    Declaration Global::init (const lexing::Word & location, const Expression & decl) {
 	auto ret = new (Z0) Global ();
-	ret-> _ident = ident;
-	ret-> _type = type;
-	ret-> _value = value;
+	ret-> _location = location;
+	ret-> _decl = decl;
 	return Declaration {ret};
     }
 
@@ -39,16 +36,10 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }
 
-    void Global::setName (const lexing::Word & name) {
-	this-> _ident = name;
+    void Global::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Global>", i, '\t');
+	stream.writeln (" ", this-> _location);       
+	this-> _decl.treePrint (stream, i + 2);
     }
-
-    void Global::setValue (const Expression & value) {
-	this-> _value = value;
-    }
-
-    void Global::setType (const Expression & type) {
-	this-> _type = type;
-    }
-    
+        
 }

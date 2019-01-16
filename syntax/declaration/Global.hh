@@ -16,13 +16,10 @@ namespace syntax {
     class Global : public IDeclaration {
 
 	/** The name of the variable */
-	lexing::Word _ident;
-
-	/** The value of the variable (may be empty () if !_type.empty ())*/
-	Expression _value;
+	lexing::Word _location;
 
 	/** The type of the variable (may be empty () if !_value.empty ())*/
-	Expression _type;
+	Expression _decl;
 
     private :
 
@@ -44,11 +41,10 @@ namespace syntax {
 
 	/**
 	 * \brief Init a new global var
-	 * \param ident the name of the variable
-	 * \param type the type of the variable
-	 * \param value the value of the variable
+	 * \param location the location of the declaration 
+	 * \param decl the var_decl
 	 */
-	static Declaration init (const lexing::Word & ident, const Expression & type, const Expression & value);
+	static Declaration init (const lexing::Word & location, const Expression & decl);
 
 	/**
 	 * \brief Mandatory function used by proxy polymoprhism system
@@ -59,25 +55,8 @@ namespace syntax {
 	 * \brief Polymorphism dynamic casting
 	 */
 	bool isOf (const IDeclaration * type) const override;
-	
-	/**
-	 * \brief Change the name of the variable
-	 * \param name the new name of the variable
-	 */
-	void setName (const lexing::Word & name);
 
-	/**
-	 * \brief Set the value of the global var
-	 * \param value the new value
-	 */
-	void setValue (const Expression & value);
-
-
-	/**
-	 * \brief Set the type of the global
-	 * \param type the new type
-	 */
-	void setType (const Expression & type);
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
     };
     

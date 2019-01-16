@@ -36,5 +36,12 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
+
+    void If::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<If> ", i, '\t');
+	this-> _test.treePrint (stream, i + 1);
+	this-> _content.treePrint (stream, i + 1);
+	this-> _else.treePrint (stream, i + 1);
+    }
     
 }

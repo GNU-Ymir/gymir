@@ -34,9 +34,6 @@ namespace Ymir {
 	/**
 	 * \param beg the value of the first element 
 	 * \param end the value of the end
-	 * \verbatim
-	 for (int i = beg ; i < end ; i++) { }
-	 \endverbatim
 	 */
 	Range (long beg, long end);
     

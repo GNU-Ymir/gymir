@@ -57,6 +57,14 @@ namespace syntax {
 
 	/** The suffix float */
 	std::vector <std::string> _floatSuffix;
+
+	/** The list of instricts */
+	std::vector <std::string> _intrisics;
+
+	/** The list of declarable things 
+	 * (for convinience, just adding something in this list won't result something usefull) 
+	*/
+	std::vector <std::string> _declarations;
 	
     private :
 
@@ -88,21 +96,21 @@ namespace syntax {
 
 	/**
 	 * \brief Visit a private or public block
-	 * \param isPrivate the returned block will be private ?
 	 * \verbatim
 	 protection := ('private' | 'public') declaration_block
 	 declaration_block := declaration | '{' declaration* '}'
 	 \endverbatim
+	 * \param isPrivate the returned block will be private ?
 	 */
 	Declaration visitProtectionBlock (bool isPrivate);
 
 	/**
 	 * \brief Visit a version block
-	 * \param global This boolean is set to true if we are in a block where we can define new version words 
 	 * \verbatim
-	 version_glob ? (global) := ('=' Identifier ';') | version_glob ? (!global)
-	 version_glob ? (!global) := Identifier declaration_block ('else' declaration_block)?
+	 version_glob:(global) := ('=' Identifier ';') | version_glob ? (!global)
+	 version_glob:(!global) := Identifier declaration_block ('else' declaration_block)?
 	 \endverbatim
+	 * \param global This boolean is set to true if we are in a block where we can define new version words 
 	 */
 	Declaration visitVersionGlob (bool global);
 
@@ -110,10 +118,10 @@ namespace syntax {
 	 * \brief Used to factorize function visitVersionGlob (bool)
 	 * \brief Called when !global, or equivalent
 	 * \verbatim
-	 version_block := version_glob ? (!global)
+	 version_block := version_glob:(!global)
 	 \endverbatim
 	 */
-	Declaration visitVersionGlobBlock ();
+	Declaration visitVersionGlobBlock (bool global);
 	
 	/**
 	 * \brief Visit an extern element
@@ -128,14 +136,14 @@ namespace syntax {
 	 * \verbatim
 	 declaration := alias    |
 	                class    | 
-			enum     |
-			function |
-			global   |
-			import   |
-			macro    |
-			struct   |
-			trait    |
-			use      |
+	                enum     |
+                        function |
+                        global   |
+                        import   |
+                        macro    |
+                        struct   |
+                        trait    |
+                        use     
 	 \endverbatim
 	 */
 	Declaration visitDeclaration ();
@@ -155,6 +163,14 @@ namespace syntax {
 	 */
 	Declaration visitClass ();	
 
+	/**
+	 * \brief Return a class content
+	 * \verbatim
+	 class_block := class_content*
+	 \endverbatim
+	 */
+	std::vector<Declaration> visitClassBlock ();
+	
 	/**
 	 * \brief Return a class content
 	 * \verbatim
@@ -198,6 +214,24 @@ namespace syntax {
 	 */
 	Declaration visitProtectionClassBlock (bool isPrivate);
 
+
+	/**
+	 * \brief Visit a mixin usage
+	 * \verbatim
+	 mixin := 'mixin' operand:(0) (';')?
+	 \endverbatim
+	 */
+	Declaration visitClassMixin ();
+
+	/**
+	 * \brief Visit a enumeration declaration
+	 * \verbatim
+	 enum := 'enum' (parameters)+ '->' Identifier (templates)?
+	 parameters := '|' Identifier '=' expression
+	 \endverbatim	 
+	 */
+	Declaration visitEnum ();
+	
 	/**
 	 * \brief Visit a function declaration 
 	 * \verbatim
@@ -205,7 +239,7 @@ namespace syntax {
 	 \endverbatim
 	 */
 	Declaration visitFunction ();
-
+	
 	/**
 	 * \brief Visit a function prototype
 	 * \verbatim
@@ -236,6 +270,61 @@ namespace syntax {
 	 */
 	std::vector <Expression> visitTemplateParameters ();
 
+
+	/**
+	 * \brief Visit a global var declaration 
+	 * \verbatim
+	 global := 'static' var_decl (';')?
+	 \endverbatim
+	 */
+	Declaration visitGlobal ();
+
+
+	/**
+	 * \brief Visit a importation declaration
+	 * \verbatim
+	 import := 'import' import_name (',' import_name)* (';')?
+	 import_name := space ('as' Identifier)?
+	 \endverbatim
+	 */
+	Declaration visitImport ();
+
+
+	/**
+	 * \brief Visit a local module (inside another module file)
+	 * \verbatim
+	 module := 'mod' Identifier (templates)? '{' (version | private | public | declaration)* '}'
+	 \endverbatim
+	 */
+	Declaration visitLocalMod ();
+
+
+	/**
+	 * \brief Visit a struct declaration 
+	 * \verbatim
+	 struct := 'struct' ('|' var_decl)* '->' name (templates)?
+	 \endverbatim
+	 */
+	Declaration visitStruct ();
+
+
+	/**
+	 * \brief Visit a trait declaration 
+	 * \verbatim
+	 trait := ('mixin' | 'trait') Identifier (templates)? '{' class_content '}'
+	 \endverbatim
+	 */
+	Declaration visitTrait ();
+
+
+	/**
+	 * \brief Visit a use declaration
+	 * \verbatim
+	 use := 'use' expression (';')?
+	 \endverbatim
+	 */
+	Declaration visitUse ();
+	
 	/**
 	 * \brief Return a set of expression used inside a param list
 	 * \verbatim
@@ -288,7 +377,8 @@ namespace syntax {
 
 	 operator:(0)  := '||'
 	 operator:(1)  := '&&'
-	 operator:(2)  := '<' | '>' | '<=' | '>=' | '!=' | '!<' | '!>' | '!<=' | '!>=' | '==' | (('!')? ('of' | 'is' | 'in'))
+	 operator:(2)  := '<' | '>' | '<=' | '>=' | '!=' | '!<' | '!>' | '!<=' | '!>=' | '==' | 
+	                  (('!')? ('of' | 'is' | 'in'))
 	 operator:(3)  := '...' | '..' 
 	 operator:(4)  := '<<' | '>>'
 	 operator:(5)  := '|' | '^' | '&'
@@ -440,7 +530,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a for loop
 	 * \verbatim
-	 for := 'for' var_decl (',' var_decl)* 'in' expression:(0) expression:(0)
+	 for := 'for' var_decl (',' var_decl)* 'in' expression:(9) expression:(0)
 	 \endverbatim
 	 */
 	Expression visitFor ();
@@ -452,7 +542,7 @@ namespace syntax {
 	 match_pattern := match_pattern_content ('if' expression:(0))?
 	 match_pattern_content := expression:(0)                                |
 	                          var_decl                                      |
-				  expression:(0) '{' match_pattern_content* '}' |
+				  expression:(9) '{' match_pattern_content* '}' |
 				  '(' match_pattern_content* ')'                |
 	 \endverbatim
 	 */
@@ -462,7 +552,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a break
 	 * \verbatim
-	 break := 'break' (expression:(0))?
+	 break := 'break' (expression:(9))?
 	 \endverbatim
 	 */
 	Expression visitBreak ();
@@ -470,7 +560,7 @@ namespace syntax {
 	/**
 	 * \brief Visit an assertion 
 	 * \verbatim
-	 assert := ('cte')? 'assert' expression:(0) ('=>' expression:(0))
+	 assert := ('cte')? 'assert' expression:(0) ('=>' expression:(9))
 	 \endverbatim
 	 */
 	Expression visitAssert ();
@@ -479,7 +569,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a throw
 	 * \verbatim
-	 throw := 'throw' expression:(0)
+	 throw := 'throw' expression:(9)
 	 \endverbatim
 	 */
 	Expression visitThrow ();
@@ -504,7 +594,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a version manager
 	 * \verbatim
-	 version := 'version' Identifier expression:(0) ('else' expression:(0))
+	 version := 'version' Identifier expression:(0) ('else' expression:(0))?
 	 \endverbatim
 	 */
 	Expression visitVersion ();
@@ -563,7 +653,15 @@ namespace syntax {
 	 * \brief Reset the cursor location of the file to entry point in all cases
 	 */
 	bool can (Expression (Visitor::*func)());
+
+
+	/**
+	 * \brief Ignore a block of content (skip all token between '{' and '}')	 
+	 */
+	void ignoreBlock ();
 	
     };
+
+
     
 }

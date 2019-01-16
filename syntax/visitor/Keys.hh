@@ -54,6 +54,7 @@ struct Keys {
     static std::string  OPEQUAL; 
     static std::string  OPCALL; 
     static std::string  TYPEOF;
+    static std::string  SIZEOF;
     static std::string  STRINGOF; 
     static std::string  CONST; 
     static std::string  IMMUTABLE;
@@ -108,4 +109,5 @@ struct Keys {
     static std::string  DISPOSE;
     static std::string  ALIAS;
     static std::string  DYNAMIC;
+    static std::string  AS;
 };

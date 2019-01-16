@@ -33,5 +33,11 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
+
+    void Lambda::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<Lambda>", i, '\t');
+	this-> _proto.treePrint (stream, i + 1);
+	this-> _content.treePrint (stream, i + 1);
+    }
     
 }

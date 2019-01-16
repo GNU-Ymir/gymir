@@ -33,5 +33,13 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    void MultOperator::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<MultOperator> ", i, '\t');
+	stream.writeln (this-> _location, " ", this-> _end);
+	this-> _element.treePrint (stream, i + 1);
+	stream.writefln ("%*<Params> ", i + 1, '\t');
+	for (auto & it : this-> _params)
+	    it.treePrint (stream, i + 2);
+    }
     
 }

@@ -39,6 +39,15 @@ public:
 	return *this;
     }
 
+    bool isRef () {
+	return this-> _ownership == false;
+    }
+    
+    void setRef (T * a) {
+	this-> _value = a;
+	this-> _ownership = false;
+    }
+    
     I clone () const {
 	if (this-> _value != nullptr)
 	    return this-> _value-> clone ();

@@ -60,5 +60,9 @@ namespace syntax {
 	    it.treePrint (stream, i + 1);
 	}
     }
+
+    const lexing::Word & Module::getIdent () const {
+	return this-> _ident;
+    }
     
 }

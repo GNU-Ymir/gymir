@@ -22,6 +22,9 @@ namespace syntax {
 	/** The content of the template block */
 	Declaration _content;
 
+	/** The test of the template */
+	Expression _test;
+	
     private :
 
 	friend Declaration; // Needed for dynamic casting
@@ -47,6 +50,14 @@ namespace syntax {
 	 * \param content the content declaration
 	 */
 	static Declaration init (const std::vector <Expression> & params, const Declaration & content);
+
+	
+	/**
+	 * \brief Create an initialized template 
+	 * \param params the template parameters
+	 * \param content the content declaration
+	 */
+	static Declaration init (const std::vector <Expression> & params, const Declaration & content, const Expression & test);
 
 	/**
 	 * \brief Mandatory function used for proxy polymoprhism system

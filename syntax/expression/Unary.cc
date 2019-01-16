@@ -30,5 +30,11 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
+
+    void Unary::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<Unary>", i, '\t');
+	stream.writeln (this-> _op);
+	this-> _content.treePrint (stream, i + 1);
+    }
     
 }

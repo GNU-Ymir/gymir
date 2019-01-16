@@ -36,6 +36,8 @@ namespace syntax {
 
 	static Expression empty ();
 
+	bool isEmpty ();
+	
 	/**
 	 * Transform the expression into a declaration
 	 */
@@ -47,14 +49,14 @@ namespace syntax {
 	 */
 	template <typename T>
 	T& to () {	    
-	    if (this-> _value == NULL)
+	    if (this-> _value == NULL) 
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");
 	    else {
 		T t;
 		if (!this-> _value-> isOf (&t))
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-		return *((T*) this-> _value);
 	    }
+	    return *((T*) this-> _value);	    
 	}
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;

@@ -27,5 +27,9 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    void Set::treePrint (Ymir::OutBuffer & stream, int i) const {
+	for (auto & it : this-> _params)
+	    it.treePrint (stream, i);
+    }
     
 }

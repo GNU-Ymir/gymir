@@ -12,7 +12,8 @@
 
 namespace lexing {
     /**
-     * \struct A word is a string with location information
+     * \struct Word 
+     * A word is a string with location information
      */
     struct Word {
 

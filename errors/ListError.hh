@@ -24,9 +24,12 @@ namespace Ymir {
 			 SYNTAX_ERROR_AT, // syntax error a specific location
 			 SYNTAX_ERROR_AT_SIMPLE, // syntax error a specific location
 			 SYNTAX_ERROR_MISSING_TEMPL_PAR,
+			 SYNTAX_ERROR_IF_ON_NON_TEMPLATE,
 			 NO_SUCH_FILE,			 
 			 COMPILATION_END,
-			 DYNAMIC_CAST_FAILED
+			 DYNAMIC_CAST_FAILED,
+			 NULL_PTR,
+			 INSERT_NO_TABLE
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

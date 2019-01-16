@@ -5,6 +5,7 @@
 #include <ymir/errors/ListError.hh>
 #include <ymir/syntax/declaration/_.hh>
 #include <ymir/syntax/expression/_.hh>
+#include <ymir/global/State.hh>
 
 using namespace Ymir;
 
@@ -73,6 +74,17 @@ namespace syntax {
 	    {},
 	    {}
 	};
+
+	visit._declarations = {
+	    Keys::ALIAS, Keys::TYPE, Keys::ENUM,
+	    Keys::DEF, Keys::STATIC, Keys::IMPORT,
+	    Keys::MACRO, Keys::MOD, Keys::STRUCT,
+	    Keys::TRAIT, Keys::USE, Keys::MIXIN
+	};
+
+	visit._intrisics = {
+	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF
+	};
 	
 	visit._operand_op = {
 	    Token::MINUS, Token::AND, Token::STAR, Token::NOT
@@ -90,7 +102,7 @@ namespace syntax {
 	    auto next = this-> _lex.consumeIf ({Keys::MOD});
 	    if (next == Keys::MOD) {
 		space = visitNamespace ();
-		this-> _lex.next ({Token::SEMI_COLON});
+		this-> _lex.consumeIf ({Token::SEMI_COLON});
 	    } 
 	} CATCH (ErrorCode::EXTERNAL) {
 	    CLEAR_ERRORS ();
@@ -103,7 +115,7 @@ namespace syntax {
 	    if (token == Keys::PUBLIC || token == Keys::PRIVATE) {
 		decls.push_back (visitProtectionBlock (token == Keys::PRIVATE));
 	    } else if (token == Keys::VERSION) {
-		decls.push_back (visitVersionGlob (false));
+		decls.push_back (visitVersionGlob (true));
 	    } else if (!token.isEof ()) {
 		decls.push_back (visitDeclaration ());
 	    }
@@ -113,7 +125,7 @@ namespace syntax {
 	ret.to<Module> ().isGlobal (true);
 	return ret;
     }
-
+    
     Declaration Visitor::visitProtectionBlock (bool isPrivate) {
 	auto location = this-> _lex.rewind ().next ();
 	std::vector <Declaration> decls;
@@ -131,26 +143,57 @@ namespace syntax {
     }
 
     Declaration Visitor::visitVersionGlob (bool global) {
-	if (!global) return visitVersionGlobBlock ();
+	if (!global) return visitVersionGlobBlock (global);
 	
 	auto location = this-> _lex.rewind ().next ();
 	auto token = this-> _lex.consumeIf ({Token::EQUAL});
 	if (token == Token::EQUAL) {
 	    auto type = visitIdentifier ();
-	    this-> _lex.next ({Token::SEMI_COLON});
-	    Error::halt ("%(r) - need version", "TODO");
+	    this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    global::State::instance ().activateVersion (type.str);
 	    return Declaration::empty ();
 	} else {
-	    return visitVersionGlobBlock ();
+	    return visitVersionGlobBlock (global);
 	}	
     }
 
-    Declaration Visitor::visitVersionGlobBlock () {
+    Declaration Visitor::visitVersionGlobBlock (bool global) {
 	auto location = this-> _lex.rewind ().next ();
 	auto ident = visitIdentifier ();
-
-	Error::halt ("%(r) - need version", "TODO");
-	return Declaration::empty ();
+	std::vector <Declaration> decls;
+	
+	if (global::State::instance ().isVersionActive (ident.str)) {
+	    auto token = this-> _lex.next ({Token::LACC});
+	
+	    do {
+		token = this-> _lex.consumeIf ({Keys::PUBLIC, Keys::PRIVATE, Keys::VERSION, Token::RACC});
+		if (token == Keys::PUBLIC || token == Keys::PRIVATE) {
+		    decls.push_back (visitProtectionBlock (token == Keys::PRIVATE));
+		} else if (token == Keys::VERSION) {
+		    decls.push_back (visitVersionGlob (global));
+		} else if (token != Token::RACC) {
+		    decls.push_back (visitDeclaration ());
+		}
+	    } while (token != Token::RACC);
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) ignoreBlock ();
+	} else {
+	    ignoreBlock ();
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
+		auto token = this-> _lex.next ({Token::LACC});	
+		do {
+		    token = this-> _lex.consumeIf ({Keys::PUBLIC, Keys::PRIVATE, Keys::VERSION, Token::RACC});
+		    if (token == Keys::PUBLIC || token == Keys::PRIVATE) {
+			decls.push_back (visitProtectionBlock (token == Keys::PRIVATE));
+		    } else if (token == Keys::VERSION) {
+			decls.push_back (visitVersionGlob (global));
+		    } else if (token != Token::RACC) {
+			decls.push_back (visitDeclaration ());
+		    }
+		} while (token != Token::RACC);
+	    }
+	}
+	
+	return DeclBlock::init (location, decls, false);
     }
 
 
@@ -172,20 +215,20 @@ namespace syntax {
     }
 
     Declaration Visitor::visitDeclaration () {
-	auto declarations = {Keys::ALIAS, Keys::TYPE, Keys::ENUM, Keys::DEF, Keys::STATIC, Keys::IMPORT, Keys::MACRO, Keys::MOD, Keys::STRUCT, Keys::TRAIT, Keys::USE};
-	auto location = this-> _lex.next (declarations);	
+	auto location = this-> _lex.next (this-> _declarations);	
 
 	if (location == Keys::ALIAS) return visitAlias ();
 	if (location == Keys::TYPE) return visitClass ();
-	// if (location == Keys::ENUM) return visitEnum ();
+	if (location == Keys::ENUM) return visitEnum ();
 	if (location == Keys::DEF) return visitFunction ();
-	// if (location == Keys::STATIC) return visitGlobal ();
-	// if (location == Keys::IMPORT) return visitImport ();
+	if (location == Keys::STATIC) return visitGlobal ();
+	if (location == Keys::IMPORT) return visitImport ();
 	// if (location == Keys::MACRO) return visitMacro ();
-	// if (location == Keys::MOD) return visitLocalMod ();
-	// if (location == Keys::STRUCT) return visitStruct ();
-	// if (location == Keys::TRAIT) return visitTrait ();
-	// if (location == Keys::USE) return visitUse ();
+	if (location == Keys::MOD) return visitLocalMod ();
+	if (location == Keys::STRUCT) return visitStruct ();
+	if (location == Keys::TRAIT) return visitTrait ();
+	if (location == Keys::MIXIN) return visitTrait ();
+	if (location == Keys::USE) return visitUse ();
 	else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Declaration::empty ();
@@ -214,9 +257,19 @@ namespace syntax {
 	auto token = this-> _lex.consumeIf ({Keys::OVER});	
 	if (token == Keys::OVER) 
 	    ancestor = visitExpression ();
+	
+	auto decls = visitClassBlock ();
 
-	this-> _lex.next ({Token::LACC});
+	if (!templates.empty ()) {
+	    return Template::init (templates, Class::init (name, ancestor, decls));
+	} else
+	    return Class::init (name, ancestor, decls);
+    }
+
+    std::vector <Declaration> Visitor::visitClassBlock () {
 	std::vector <Declaration> decls;
+	
+	auto token = this-> _lex.next ({Token::LACC});
 	do {
 	    token = this-> _lex.consumeIf ({Keys::PRIVATE, Keys::PROTECTED, Keys::VERSION, Token::RACC, Token::SEMI_COLON});
 	    if (token == Keys::PRIVATE || token == Keys::PROTECTED) {
@@ -227,13 +280,9 @@ namespace syntax {
 		decls.push_back (visitClassContent ());
 	    } 
 	} while (token != Token::RACC);
-
-	if (!templates.empty ()) {
-	    return Template::init (templates, Class::init (name, ancestor, decls));
-	} else
-	    return Class::init (name, ancestor, decls);
+	return decls;
     }
-
+    
     Declaration Visitor::visitProtectionClassBlock (bool isPrivate) {
 	auto location = this-> _lex.rewind ().next ();
 	std::vector <Declaration> decls;
@@ -251,16 +300,41 @@ namespace syntax {
 	return DeclBlock::init (location, decls, isPrivate);
     }
 
+    void Visitor::ignoreBlock () {
+	auto token = this-> _lex.next ({Token::LACC});
+	int close = 1;
+	do {
+	    token = this-> _lex.next ();
+	    if (token == Token::LACC) close += 1;
+	    if (token == Token::RACC) {
+		close -= 1;
+	    } else if (token.isEof ())
+		Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+	} while (close != 0);
+    }
+
+    
+    
     Declaration Visitor::visitVersionClass () {
 	auto location = this-> _lex.rewind ().next ();
 	auto ident = visitIdentifier ();
-
-	Error::halt ("%(r) - need version", "TODO");
-	return Declaration::empty ();
+	std::vector <Declaration> decls;
+	if (global::State::instance ().isVersionActive (ident.str)) {
+	    decls = visitClassBlock ();
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
+		ignoreBlock ();
+	    }	   
+	} else {
+	    ignoreBlock ();
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
+		decls = visitClassBlock ();
+	    }
+	}   
+	return DeclBlock::init (location, decls, false);
     }
     
     Declaration Visitor::visitClassContent () {
-	auto token = this-> _lex.next ({Keys::DEF, Keys::LET, Keys::SELF});
+	auto token = this-> _lex.next ({Keys::DEF, Keys::LET, Keys::SELF, Keys::MIXIN});
 	if (token == Keys::SELF) {
 	    if (this-> _lex.consumeIf ({Token::TILDE}) == Token::TILDE)
 		return visitClassDestructor ();
@@ -270,10 +344,19 @@ namespace syntax {
 	} else if (token == Keys::LET) {
 	    this-> _lex.rewind ();
 	    return Expression::toDeclaration (visitVarDeclaration ());
+	} else if (token == Keys::MIXIN) {
+	    return visitClassMixin ();
 	} else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Declaration::empty ();	
 	}
+    }
+
+    Declaration Visitor::visitClassMixin () {
+	auto location = this-> _lex.rewind ().next ({Keys::MIXIN});
+	auto content = visitExpression (9); // (priority of dot operator)
+	this-> _lex.consumeIf ({Token::SEMI_COLON});
+	return Mixin::init (location, content);
     }
 
     Declaration Visitor::visitClassConstructor () {
@@ -303,13 +386,44 @@ namespace syntax {
 	return Function::init (location, Function::Prototype::init ({}, Expression::empty ()), body);	
     }
 
+    Declaration Visitor::visitEnum () {
+	auto location = this-> _lex.rewind ().next ({Keys::ENUM});
+	Expression type (Expression::empty ());
+	if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
+	    type = visitExpression (9);
+	
+	lexing::Word end;
+	std::vector <lexing::Word> identifiers;
+	std::vector <Expression> values;
+	do {
+	    end = this-> _lex.next ({Token::ARROW, Token::PIPE});
+	    if (end != Token::ARROW) {
+		identifiers.push_back (visitIdentifier ());
+		if (this-> _lex.consumeIf ({Token::EQUAL}) == Token::EQUAL)
+		    values.push_back (visitExpression (9));
+		else values.push_back (Expression::empty ());
+	    }
+	} while (end != Token::ARROW);
+
+	auto name = visitIdentifier ();
+	auto templates = visitTemplateParameters ();
+	this-> _lex.consumeIf ({Token::SEMI_COLON});
+	if (templates.size () != 0) {
+	    return Template::init (templates, Enum::init (name, type, identifiers, values));
+	} else return Enum::init (name, type, identifiers, values);
+    }    
+    
     Declaration Visitor::visitFunction () {       
 	auto location = this-> _lex.rewind ().next ();
 
 	Expression test (Expression::empty ());
 	
 	auto token = this-> _lex.consumeIf ({Keys::IF});
-	if (token == Keys::IF) test = visitExpression ();
+	lexing::Word ifLoc;
+	if (token == Keys::IF) {
+	    ifLoc = token;
+	    test = visitExpression ();
+	}
 
 	auto attribs = visitAttributes ();
 	auto name = visitIdentifier ();
@@ -329,8 +443,13 @@ namespace syntax {
 	auto function = Function::init (name, proto, body);
 	function.to <Function> ().setCustomAttributes (attribs);
 
-	if (templates.size () != 0) return Template::init (templates, function);
-	else return function;
+	if (templates.size () != 0) {
+	    return Template::init (templates, function, test);
+	} else {
+	    if (!test.isEmpty ())
+		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE)); 
+	    return function;
+	}
     }
 
     Function::Prototype Visitor::visitFunctionPrototype () {
@@ -365,7 +484,12 @@ namespace syntax {
 	    name = visitIdentifier ();
 	    out = visitExpression ();
 	} else this-> _lex.rewind ();
-	
+
+	if (in.isEmpty () && out.isEmpty ()) {
+	    token = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    if (token == Token::SEMI_COLON)
+		return Function::Body::init (in, Expression::empty (), out, name);	
+	}
 	return Function::Body::init (in, visitExpression (), out, name);	
     }
 
@@ -388,6 +512,98 @@ namespace syntax {
 	    this-> _lex.rewind ();
 	    return {visitIdentifier ()};
 	}	
+    }
+
+    Declaration Visitor::visitGlobal () {
+	auto location = this-> _lex.rewind ().next ();
+	auto decl = visitSingleVarDeclaration ();
+	this-> _lex.consumeIf ({Token::SEMI_COLON});
+	return Global::init (location, decl);
+    }
+
+    Declaration Visitor::visitImport () {
+	auto location = this-> _lex.rewind ().next ();
+	lexing::Word token;
+	std::vector <Declaration> imports;
+	do {
+	    auto space = visitNamespace ();
+	    lexing::Word as;
+	    
+	    token = this-> _lex.consumeIf ({Token::COMA, Keys::AS});
+	    if (token == Keys::AS) {
+		as = visitIdentifier ();
+		token = this-> _lex.consumeIf ({Token::COMA});
+	    }
+	    
+	    imports.push_back (Import::init (space, as));
+	} while (token == Token::COMA);
+
+	this-> _lex.consumeIf ({Token::SEMI_COLON});
+	return DeclBlock::init (location, imports, false);
+    }
+
+    Declaration Visitor::visitLocalMod () {
+	auto name = visitIdentifier ();
+	auto templates = visitTemplateParameters ();
+	auto token = this-> _lex.next ({Token::LACC});
+	std::vector <Declaration> decls;
+	
+	do {
+	    token = this-> _lex.consumeIf ({Keys::PUBLIC, Keys::PRIVATE, Keys::VERSION, Token::RACC});
+	    if (token == Keys::PUBLIC || token == Keys::PRIVATE) {
+		decls.push_back (visitProtectionBlock (token == Keys::PRIVATE));
+	    } else if (token == Keys::VERSION) {
+		decls.push_back (visitVersionGlob (false));
+	    } else if (token != Token::RACC) {
+		decls.push_back (visitDeclaration ());
+	    }
+	} while (token != Token::RACC);
+
+	if (templates.size () != 0) {
+	    return Template::init (templates, Module::init (name, decls));
+	} else return Module::init (name, decls);
+    }
+
+    Declaration Visitor::visitStruct () {
+	auto location = this-> _lex.rewind ().next ({Keys::STRUCT});
+	lexing::Word end;
+	std::vector <Expression> vars;
+	std::vector <lexing::Word> attrs = visitAttributes ();
+	do {
+	    end = this-> _lex.next ({Token::ARROW, Token::PIPE});
+	    if (end != Token::ARROW) {
+		vars.push_back (visitSingleVarDeclaration (true, false));
+		if (this-> _lex.consumeIf ({Token::EQUAL}) == Token::EQUAL)
+		    vars.back ().to <VarDecl> ().setValue (visitExpression (9));		
+	    }
+	} while (end != Token::ARROW);
+	auto name = visitIdentifier ();
+	auto templates = visitTemplateParameters ();
+	this-> _lex.consumeIf ({Token::SEMI_COLON});
+	if (templates.size () != 0) {
+	    return Template::init (templates, Struct::init (name, attrs, vars));
+	} else return Struct::init (name, attrs, vars);
+    }
+
+    Declaration Visitor::visitTrait () {
+	auto location = this-> _lex.rewind ().next ();
+	auto name = visitIdentifier ();
+	auto templates = visitTemplateParameters ();
+
+	auto token = this-> _lex.next ({Token::LACC});
+	std::vector <Declaration> decls = visitClassBlock ();
+	
+	if (!templates.empty ()) {
+	    return Template::init (templates, Trait::init (name, decls, location == Keys::MIXIN));
+	} else return Trait::init (name, decls, location == Keys::MIXIN);	
+    }
+
+    Declaration Visitor::visitUse () {
+	auto location = this-> _lex.rewind ().next ({Keys::USE});
+	auto content = visitExpression (9);
+	this-> _lex.consumeIf ({Token::SEMI_COLON});
+	
+	return Use::init (location, content);
     }
     
     std::vector <Expression> Visitor::visitTemplateParameters () {
@@ -413,9 +629,9 @@ namespace syntax {
 			    list.push_back (VariadicVar::init (name, false));
 			} else {
 			    this-> _lex.rewind (2);
-			    list.push_back (visitOperand0 ());
+			    list.push_back (visitExpression (9));
 			}
-		    } else list.push_back (visitOperand0 ());
+		    } else list.push_back (visitExpression (9));
 		    
 		    token = this-> _lex.next ({Token::RPAR, Token::COMA});
 		} while (token != Token::RPAR);
@@ -522,6 +738,11 @@ namespace syntax {
 	if (begin == Keys::SCOPE)   return visitScope ();
 	if (begin == Keys::VERSION) return visitVersion ();
 	if (begin == Keys::RETURN)  return visitReturn ();
+	if (begin.is (this-> _intrisics)) {
+	    auto loc = this-> _lex.next ();
+	    return Intrinsics::init (loc, visitExpression (9));
+	}
+	
 	if (can (&Visitor::visitVar))  return visitVar ();       
 	return visitLiteral ();
     }    
@@ -556,7 +777,8 @@ namespace syntax {
 	}
     }
 
-    Expression Visitor::visitBlock () {
+    Expression Visitor::visitBlock () {	
+	std::vector <Declaration> decls;	
 	std::vector <Expression> content;
 	auto begin = this-> _lex.next ({Token::LACC});
 
@@ -564,10 +786,14 @@ namespace syntax {
 	do {
 	    end = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
 	    if (end != Token::RACC && end != Token::SEMI_COLON) {
-		content.push_back (visitExpression ());
+		if (this-> _lex.consumeIf (this-> _declarations).str != "") {
+		    this-> _lex.rewind ();
+		    decls.push_back (visitDeclaration ());
+		} else 
+		    content.push_back (visitExpression ());
 	    }
 	} while (end != Token::RACC);
-	return Block::init (begin, end, content);
+	return Block::init (begin, end, decls, content);
     }    
 
     Expression Visitor::visitIf () {
@@ -659,7 +885,21 @@ namespace syntax {
     }
         
     Expression Visitor::visitVersion () {
-	Error::halt ("%(r) - need version", "TODO");
+	auto location = this-> _lex.next ({Keys::VERSION});
+	auto ident = visitIdentifier ();
+	if (global::State::instance ().isVersionActive (ident.str)) {
+	    auto value = visitBlock ();
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
+		ignoreBlock ();
+	    }
+	    return value;
+	} else {
+	    ignoreBlock ();
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
+		return visitBlock ();
+	    }
+	}
+	
 	return Expression::empty ();
     }
 
@@ -688,7 +928,7 @@ namespace syntax {
 		this-> _lex.next ({Token::RPAR});
 		return TemplateCall::init (list, Var::init (name));
 	    } else {
-		inVar = true; // Cannot have template parameters for inner type : A!(A!B) is Ok, not $A!A!B
+		inVar = true; // Cannot have template parameters for inner type : A!(A!B) is Ok, not A!A!B
 		this-> _lex.rewind ();
 		auto ret = TemplateCall::init ({visitExpression ()}, Var::init (name, decos));
 		inVar = false;
@@ -891,7 +1131,7 @@ namespace syntax {
 	else token = this-> _lex.next ();
 	
 	if (token == Token::COLON) {
-	    type = visitOperand0 ();
+	    type = visitExpression (9);
 	    token = this-> _lex.next ();
 	} 
 

@@ -36,4 +36,25 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    void VarDecl::treePrint (Ymir::OutBuffer & stream, int i) const {
+	std::vector<std::string> decosName;
+	for (auto it : this-> _decos)
+	    switch (it) {
+	    case Decorator::REF : decosName.push_back ("ref"); break;
+	    case Decorator::CONST : decosName.push_back ("const"); break;
+	    case Decorator::MUT : decosName.push_back ("mut"); break;
+	    case Decorator::STATIC : decosName.push_back ("static"); break;
+	    case Decorator::CTE : decosName.push_back ("cte"); break;
+	    }
+	
+	stream.writef ("%*<VarDecl> : ", i, '\t');
+	stream.writeln (this-> _name, "{", decosName, "}");
+	this->_type.treePrint (stream, i + 1);
+	this->_value.treePrint (stream, i + 1);
+    }
+
+    void VarDecl::setValue (const Expression & value) {
+	this-> _value = value;
+    }
+    
 }

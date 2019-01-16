@@ -64,6 +64,9 @@ namespace syntax {
 	 * \brief Change the content of the template
 	 */
 	void setContent (const Expression & content);
+
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+	
     };    
 
 }

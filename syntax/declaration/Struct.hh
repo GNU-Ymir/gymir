@@ -18,11 +18,8 @@ namespace syntax {
      */
     class Struct : public IDeclaration {
 
-	/** The name of the attributes */
-	std::vector <lexing::Word> _varNames;
-
-	/** The types of the attributes */
-	std::vector <Expression> _varTypes;
+	/** The declaration of the attributes */
+	std::vector <Expression> _decls;
 
 	/** The CAs (custom attributes) of the struct */
 	std::vector <lexing::Word> _cas;
@@ -51,11 +48,10 @@ namespace syntax {
 	/**
 	 * \brief Create a new struct
 	 * \param name the name of the structure
-	 * \param names the names of the attributes
-	 * \param types the types of the attributes
+	 * \param attrs the attributes of the struct
+	 * \param decl the declaration of the struct
 	 */
-	static Declaration init (const lexing::Word & name, const std::vector <lexing::Word> & names, const std::vector <Expression> & types);
-
+	static Declaration init (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
 
 	/**
 	 * Mandatory function for proxy polymoprhism system
@@ -67,6 +63,9 @@ namespace syntax {
 	 */
 	bool isOf (const IDeclaration * type) const override;
 
+
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+	
 	/**
 	 * \brief add a custom attribute to the struct
 	 * \param ca the custom attr
@@ -77,14 +76,6 @@ namespace syntax {
 	 * Change the name of the struct
 	 */
 	void setName (const lexing::Word & name);
-
-
-	/**
-	 * Add a new attribute to the struct
-	 * \param name the name of the attribute
-	 * \param type the type of the attribute
-	 */
-	void addAttribute (const lexing::Word & name, const Expression & type);
 	
     };
 

@@ -16,7 +16,7 @@
 #include "common/common-target.h"
 #include <ymir/generic/types.hh>
 #include <ymir/parsing/Parser.hh>
-
+#include <ymir/global/State.hh>
 
 /* Language-dependent contents of a type.  */
  
@@ -126,7 +126,7 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
     } else if (code == OPT_fdoc) {
 	// dump documentation
     } else if (code == OPT_fversion_) {
-	// enable version
+	global::State::instance ().activateVersion (arg);
     } else {
 	return false;
     }

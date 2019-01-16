@@ -34,5 +34,14 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }    
+
+    void TupleDest::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writef ("%*<TupleDest>", i, '\t');
+	stream.writeln (this-> _isVariadic ? "..." : "");
+	stream.writefln ("%*<Params>", i + 1, '\t');
+	for (auto & it : this-> _vars)
+	    it.treePrint (stream, i + 2);
+	this-> _value.treePrint (stream, i + 1);
+    }
     
 }

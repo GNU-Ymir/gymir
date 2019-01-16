@@ -48,6 +48,8 @@ namespace syntax {
 	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
+
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
     };
     

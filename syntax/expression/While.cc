@@ -33,5 +33,10 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
-    
+
+    void While::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<While>", i, '\t');
+	this-> _test.treePrint (stream, i + 1);
+	this-> _content.treePrint (stream, i + 1);
+    }
 }
