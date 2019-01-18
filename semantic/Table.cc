@@ -17,6 +17,9 @@ namespace semantic {
     Table ITable::clone () {
 	auto ret = new (Z0) ITable (this-> _attached);
 	ret-> _syms = this-> _syms;
+	for (auto & it : this-> _syms)
+	    it.second.setReferent (&this-> _proxy);
+	
 	return ret;
     }
 
@@ -25,17 +28,22 @@ namespace semantic {
     }
 
     void ITable::setAttach (ISymbol * attach) {
+	this-> _attached = attach;
 	this-> _proxy.setRef (attach);
     }
     
     void ITable::insert (const Symbol & sym) {
 	auto & name  = sym.getName ().str;
-	this-> _syms.emplace (name, sym);
+	Symbol toInsert = sym;
+	toInsert.setReferent (&this-> _proxy);
+	this-> _syms.emplace (name, toInsert);
     }
 
     const Symbol & ITable::get (const std::string & name) const {
 	auto ptr = this-> _syms.find (name);
-	if (ptr != this-> _syms.end ()) return ptr-> second;
+	if (ptr != this-> _syms.end ()) {
+	    return ptr-> second;
+	}
 	else return Symbol::__empty__;
     }
 

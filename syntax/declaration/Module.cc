@@ -64,5 +64,13 @@ namespace syntax {
     const lexing::Word & Module::getIdent () const {
 	return this-> _ident;
     }
+
+    bool Module::isGlobal () const {
+	return this-> _isGlobal;
+    }
+
+    const std::vector <Declaration> & Module::getDeclarations () const {
+	return this-> _decls;
+    }
     
 }

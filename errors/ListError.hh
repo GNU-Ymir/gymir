@@ -29,7 +29,11 @@ namespace Ymir {
 			 COMPILATION_END,
 			 DYNAMIC_CAST_FAILED,
 			 NULL_PTR,
-			 INSERT_NO_TABLE
+			 INSERT_NO_TABLE,
+			 WRONG_MODULE_NAME,
+			 SHADOWING_DECL,
+			 UNDEFINED_CA,
+			 PACKED_AND_UNION
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

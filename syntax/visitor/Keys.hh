@@ -88,7 +88,7 @@ struct Keys {
     static std::string  PACKED;
     static std::string  SAFE;
     static std::string  NOGC;
-    static std::string  FUNCTIONAL;
+    static std::string  PURE;
     static std::string  TRUSTED;
     static std::string  PRE;
     static std::string  POST;

@@ -145,11 +145,21 @@ namespace lexing {
 	}
 
 	friend Word operator+ (const Word & left, const Word & right) {
-	    return {left, left.str + right.str};	    
+	    if (!left.isEof ()) 
+		return {left, left.str + right.str};
+	    return right;
 	}
 
 	Word& operator+= (const Word & right) {
-	    this-> str += right.str;
+	    if (!this-> isEof ()) {
+		this-> str += right.str;
+	    } else {
+		this-> str = right.str;
+		this-> locFile = right.locFile;
+		this-> line = right.line;
+		this-> column = right.column;
+		this-> _length = right._length;
+	    }
 	    return *this;
 	}
 	

@@ -49,8 +49,16 @@ namespace syntax {
 	this-> _cas.push_back (ca);
     }
 
+    const std::vector <lexing::Word> & Struct::getCustomAttributes () const {
+	return this-> _cas;
+    }
+    
     void Struct::setName (const lexing::Word & name) {
 	this-> _name = name;
+    }
+
+    const lexing::Word & Struct::getName () const {
+	return this-> _name;
     }
     
 }

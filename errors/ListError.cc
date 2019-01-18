@@ -10,6 +10,10 @@ namespace Ymir {
 			    COMPILATION_END = "",
 			    DYNAMIC_CAST_FAILED = "dynamic cast failed : %",
 			    NULL_PTR = "try to unref a null pointer",
-			    INSERT_NO_TABLE = "insertion of a symbol in an entity that cannot be a referent"
+			    INSERT_NO_TABLE = "insertion of a symbol in an entity that cannot be a referent",
+			    WRONG_MODULE_NAME = "module named %(y) must be placed in file named %(y)",
+			    SHADOWING_DECL = "declaration of %(y) shadow another declaration",
+			    UNDEFINED_CA = "custom attribute %(y), does not exist in this context",
+			    PACKED_AND_UNION = "structure could not be packed and union at the same time"
     );    
 }

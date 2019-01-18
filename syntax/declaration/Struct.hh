@@ -76,6 +76,17 @@ namespace syntax {
 	 * Change the name of the struct
 	 */
 	void setName (const lexing::Word & name);
+
+	/**
+	 * \return the name and location of the declaration
+	 */
+	const lexing::Word & getName () const ;
+
+
+	/**
+	 * \return the list of custom attributes
+	 */
+	const std::vector <lexing::Word> & getCustomAttributes () const;
 	
     };
 

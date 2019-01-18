@@ -96,6 +96,16 @@ namespace syntax {
 	 * \return the identifier of the module
 	 */
 	const lexing::Word & getIdent () const;
+
+	/**
+	 * \return is this module global ?
+	 */
+	bool isGlobal () const;
+
+	/**
+	 * \return the list of declaration of the module
+	 */
+	const std::vector <Declaration> & getDeclarations () const;
 	
     };    
 

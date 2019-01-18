@@ -219,12 +219,22 @@ namespace syntax {
 	 * \param ca the custom attr
 	 */
 	void addCustomAttribute (const lexing::Word & ca);
-
+	
 	/**
 	 * \brief Set the set of custom attributes 
 	 */
 	void setCustomAttributes (const std::vector <lexing::Word> & cas);
-		
+
+	/**
+	 * \return the list of custom attributs
+	 */
+	const std::vector <lexing::Word> & getCustomAttributes () const;
+	
+	/**
+	 * \return the name and location of the function
+	 */
+	const lexing::Word & getName () const;
+
 	/**
 	 * \brief Change the name of the function
 	 * \param name the name of the function

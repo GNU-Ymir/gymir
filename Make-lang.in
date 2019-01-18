@@ -103,6 +103,9 @@ ymir_OBJS = \
 	ymir/semantic_Table.o \
 	ymir/semantic_Module.o \
 	ymir/semantic_Visitor.o \
+	ymir/semantic_Function.o \
+	ymir/util_Path.o \
+	ymir/semantic_Struct.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

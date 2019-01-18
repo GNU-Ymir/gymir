@@ -134,6 +134,12 @@ namespace Ymir {
 	    addLine (buf, word);
 	    return buf.str ();
 	}
+
+	std::string createNote (const lexing::Word & word) {
+	    std::string aux = format ("%(b) : ", "Note");
+	    aux = addLine (aux, word);
+	    return aux;
+	}
 	
     }
 

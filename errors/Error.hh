@@ -61,16 +61,20 @@ namespace Ymir {
 	void occur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);
-	    bt_print ();
 	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 
 	template <typename ... TArgs>
-	void occur (const std::string &content, TArgs ... args) {
+	void occurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    
-	    //bt_print ();
+	    msg = addLine (msg, loc);
+	    THROW ((int) ErrorCode::EXTERNAL, msg + note);
+	}
 
+	
+	template <typename ... TArgs>
+	void occur (const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);	   
 	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 	
@@ -128,6 +132,12 @@ namespace Ymir {
 	    std::string & msg = getLastError ();
 	    msg += aux;
 	}
+
+	/**
+	   \brief Create a note message
+	   \param word the location of the note
+	 */
+	std::string createNote (const lexing::Word& word);
 	
 	/**
 	   \brief Cause the compiler to abort due to internal error

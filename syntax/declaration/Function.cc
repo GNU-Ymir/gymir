@@ -158,6 +158,10 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }	    
 
+    const lexing::Word & Function::getName () const {
+	return this-> _name;
+    }
+    
     void Function::addCustomAttribute (const lexing::Word & ca) {
 	this-> _cas.push_back (ca);
     }
@@ -166,6 +170,10 @@ namespace syntax {
 	this-> _cas = cas;
     }
     
+    const std::vector <lexing::Word> & Function::getCustomAttributes () const {
+	return this-> _cas;
+    }
+
     void Function::setName (const lexing::Word & name) {
 	this-> _name = name;
     }

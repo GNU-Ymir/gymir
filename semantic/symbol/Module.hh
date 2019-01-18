@@ -35,7 +35,11 @@ namespace semantic {
 
 	void insert (const Symbol & sym) override;
 
-	const Symbol & get (const std::string & name) const;
+	std::vector <Symbol> get (const std::string & name) const;
+
+	const Symbol & getLocal (const std::string & name) const override;
+	
+	bool equals (const Symbol & other) const override;
 	
     };
     

@@ -21,7 +21,7 @@ namespace semantic {
 	lexing::Word _name;
 
 	/** The symbol in which the symbol is declared */
-	/** This information is set at insertion time */
+	/** This information is set at getting time */
 	Symbol * _referent;
 	
     private :
@@ -65,11 +65,17 @@ namespace semantic {
 
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
-	 * \brief If this symbol does not know any symbol named name, 
-	 * \brief It will ask it's referent 
-	 * \return the symbol or a empty one, if it does not exists
+	 * \brief It will ask it's referent recursively
+	 * \return a list of symbol, or an empty list if it does not exists
 	 */
-	virtual const Symbol & get (const std::string & name) const ;
+	virtual std::vector <Symbol> get (const std::string & name) const ;
+
+	/**
+	 * \brief Find a symbol named name in the table of this symbol
+	 * \brief Does not call it's referent
+	 * \return a symbol, may be empty
+	 */
+	virtual const Symbol & getLocal (const std::string & name) const;
 	
 	/**
 	 * \brief In the symbol hierarchy, each symbol is attached to a referent
@@ -83,15 +89,26 @@ namespace semantic {
 	const Symbol & getReferent () const;
 
 	/**
+	 * \brief change the referent of the symbol
+	 */
+	void setReferent (Symbol * sym);
+	
+	/**
 	 * \brief A mutable version 
 	 * \deprecated 
 	 */
 	Symbol& getReferent ();
+
+	/**
+	 * \return is this symbol the same as other (no only address, or type)
+	 */
+	virtual bool equals (const Symbol & other) const = 0;
+
 	
 	/** Virtual but does not do anything */
 	virtual ~ISymbol ();
     };
-
+       
 
     /**
      * \struct Symbol
@@ -131,14 +148,34 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	const Symbol & get (const std::string & name) const;
+	std::vector <Symbol> get (const std::string & name) const;
+
+	/**
+	 * Proxy function for symbol
+	 */
+	const Symbol & getLocal (const std::string & name) const;
+	
+	/**
+	 * Proxy function for symbol
+	 */
+	const Symbol & getReferent () const;
+
+	/**
+	 * Proxy Function for symbol
+	 */
+	void setReferent (Symbol * ref);
+	
+	/**
+	 * Proxy function for symbol
+	 */
+	bool equals (const Symbol & other) const ;
 	
 	/**
 	 * \brief Cast the content pointer into the type (if possible)
 	 * \brief Raise an internal error if that is not possible
 	 */
 	template <typename T>
-	T& to () {	    
+	T& to ()  {	    
 	    if (this-> _value == NULL)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
 
@@ -148,12 +185,12 @@ namespace semantic {
 	    return *((T*) this-> _value);	    
 	}
 
-		/**
+	/**
 	 * \brief Cast the content pointer into the type (if possible)
 	 * \brief Raise an internal error if that is not possible
 	 */
 	template <typename T>
-	const T& to () const {	    
+	const T& to () const  {	    
 	    if (this-> _value == NULL)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
 
@@ -163,6 +200,18 @@ namespace semantic {
 	    return *((T*) this-> _value);	    
 	}
 
+	/**
+	 * \brief Tell if the inner type inside the proxy is of type T
+	 */
+	template <typename T>
+	bool is () const  {	    
+	    if (this-> _value == NULL)
+		return false;
+
+	    T t;
+	    return this-> _value-> isOf (&t); 			    
+	}
+	
     };
     
 }

@@ -34,11 +34,27 @@ namespace semantic {
 	this-> _table.insert (sym);
     }
 
-    const Symbol & Module::get (const std::string & name) const {
+    std::vector <Symbol> Module::get (const std::string & name) const {
+	auto vec = getReferent ().get (name);
 	const Symbol & local = this-> _table.get (name);
-	if (local.isEmpty ()) return getReferent ().get (name);
-	else return local;
+	if (!local.isEmpty ())
+	    vec.push_back (local);
+	return vec;
     }
 
+    const Symbol & Module::getLocal (const std::string & name) const {
+	return this-> _table.get (name);
+    }
+    
+    bool Module::equals (const Symbol & other) const {
+	println (other.is <Module> ());
+	println (this-> getName (), " ", other.getName (), " == ", this-> getName () == other.getName ());
+	if (!other.is<Module> ()) return false;
+	if (this-> getName () == other.getName ()) {
+	    return this-> getReferent ().equals (other.getReferent ());
+	} else 
+	    return false;
+    }
+    
     
 }

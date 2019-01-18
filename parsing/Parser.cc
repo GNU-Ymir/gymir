@@ -57,7 +57,7 @@ namespace Ymir {
 
     void Parser::semanticTime () {
 	auto visitor = semantic::Visitor::init ();
-	visitor.visit (this-> _module);
+	auto ret = visitor.visit (this-> _module);
     }
 
     void Parser::lintTime () {
