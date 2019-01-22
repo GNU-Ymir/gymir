@@ -60,5 +60,10 @@ namespace syntax {
     const lexing::Word & Struct::getName () const {
 	return this-> _name;
     }
+
     
+    const std::vector <Expression> & Struct::getDeclarations () const {
+	return this-> _decls;
+    }
+
 }

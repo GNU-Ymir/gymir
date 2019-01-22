@@ -12,25 +12,22 @@ namespace syntax {
     Declaration Enum::init (const Enum & en) {
 	auto ret = new (Z0) Enum ();
 	ret-> _ident = en._ident;
-	ret-> _names = en._names;
 	ret-> _values = en._values;
 	ret-> _type = en._type;
 	return Declaration {ret};
     }
 
-    Declaration Enum::init (const lexing::Word & ident, const Expression& type, const std::vector<lexing::Word> & names, const std::vector <Expression> & values) {
+    Declaration Enum::init (const lexing::Word & ident, const Expression& type,  const std::vector <Expression> & values) {
 	auto ret = new (Z0) Enum ();
 	ret-> _ident = ident;
 	ret-> _type = type;
-	ret-> _names = names;
 	ret-> _values = values;
 	return Declaration {ret};
     }
     
-    Declaration Enum::init (const lexing::Word & ident, const std::vector<lexing::Word> & names, const std::vector <Expression> & values) {
+    Declaration Enum::init (const lexing::Word & ident, const std::vector <Expression> & values) {
 	auto ret = new (Z0) Enum ();
 	ret-> _ident = ident;
-	ret-> _names = names;
 	ret-> _values = values;
 	return Declaration {ret};
     }
@@ -46,12 +43,15 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }	    
 
-    void Enum::setIdent (const lexing::Word & ident) {
+    void Enum::setName (const lexing::Word & ident) {
 	this-> _ident = ident;
     }
 
-    void Enum::addValue (const lexing::Word & name, const Expression & value) {
-	this-> _names.push_back (name);
+    const lexing::Word & Enum::getName () const {
+	return this-> _ident;
+    }
+    
+    void Enum::addValue (const Expression & value) {
 	this-> _values.push_back (value);
     }
 
@@ -59,15 +59,23 @@ namespace syntax {
 	this-> _type = expr;
     }
 
+    const Expression & Enum::getType () const {
+	return this-> _type;
+    }
+
+    const std::vector <Expression> & Enum::getValues () const {
+	return this-> _values;
+    }
+    
     void Enum::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<Enum> : ", this-> _ident, ":");
 	this-> _type.treePrint (stream, i + 1);
 	
-	for (auto it : Ymir::r (0, this-> _names.size ())) {
+	for (auto & it : this-> _values) {
 	    stream.writef ("%*", i + 1, '\t');
-	    stream.writeln ("<EnumValue> : ", this-> _names [it], ":");
-	    this-> _values [it].treePrint (stream, i + 2);
+	    stream.writeln ("<EnumValue> : ");
+	    it.treePrint (stream, i + 2);
 	}
     }
     

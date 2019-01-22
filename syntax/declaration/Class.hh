@@ -62,7 +62,22 @@ namespace syntax {
 	 * Mandatory function for dynamic casting
 	 */
 	bool isOf (const IDeclaration * type) const override;
-				
+
+	/**
+	 * \return the name and location of the class
+	 */
+	const lexing::Word & getName () const;
+	
+	/**
+	 * \return the expression defining the ancestor of the class definition
+	 */
+	const Expression & getAncestor () const;
+
+	/**
+	 * \return all the declaration inside the class 
+	 */
+	const std::vector <Declaration> & getDeclarations () const;
+	
     };
     
 

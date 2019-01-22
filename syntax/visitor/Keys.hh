@@ -64,7 +64,8 @@ struct Keys {
     static std::string  MIXIN; 
     static std::string  OF;
     static std::string  NOT_OF;
-    static std::string  SELF; 
+    static std::string  SELF;
+    static std::string  SELF_TILDE; 
     static std::string  OPASSIGN; 
     static std::string  TRAIT; 
     static std::string  IMPL; 

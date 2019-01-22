@@ -59,6 +59,26 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	void setValue (const Expression & value);
+
+	/**
+	 * \return the name and location of the declaration
+	 */
+	const lexing::Word & getName () const;
+
+	/**
+	 * \return the type of the declaration
+	 */
+	const Expression & getType () const;
+
+	/**
+	 * \return the value of the declaration
+	 */
+	const Expression & getValue () const;
+
+	/**
+	 * \return the decorators of the declaration
+	 */
+	const std::vector <Decorator> & getDecos () const;
 	
     };
     

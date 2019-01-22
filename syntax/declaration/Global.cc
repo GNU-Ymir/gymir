@@ -36,6 +36,10 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }
 
+    const Expression & Global::getContent () const {
+	return this-> _decl;
+    }
+    
     void Global::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Global>", i, '\t');
 	stream.writeln (" ", this-> _location);       

@@ -50,4 +50,9 @@ namespace syntax {
 	stream.writef ("%*<Var> : ", i, '\t');
 	stream.writeln (this-> _token, "{", decosName, "}");
     }
+
+    const lexing::Word & Var::getName () const {
+	return this-> _token;
+    }
+    
 }

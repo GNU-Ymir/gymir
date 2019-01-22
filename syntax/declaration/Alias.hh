@@ -66,13 +66,23 @@ namespace syntax {
 	 * \brief Set the identifier of the alias
 	 * \param ident the new identifier 
 	 */
-	void setIdent (const lexing::Word & ident);
+	void setName (const lexing::Word & ident);
 
+	/**
+	 * \return the identifier of the alias
+	 */
+	const lexing::Word & getName () const;	
+	
 	/**
 	 * \brief Set the value of the alias
 	 * \param value the value of the alias
 	 */
-	void setValue (const Expression & value);
+	void setValue (const Expression & value);	
+
+	/**
+	 * \return the value of the alias
+	 */
+	const Expression & getValue () const ;
 	
     };    
 

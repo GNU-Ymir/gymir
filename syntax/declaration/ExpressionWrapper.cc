@@ -33,7 +33,7 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }
 
-    Expression & ExpressionWrapper::getContent () {
+    const Expression & ExpressionWrapper::getContent () const {
 	return this-> _content;
     }
 

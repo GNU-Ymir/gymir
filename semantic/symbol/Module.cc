@@ -45,6 +45,10 @@ namespace semantic {
     const Symbol & Module::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }
+
+    const std::vector <Symbol> & Module::getAllLocal () const {
+	return this-> _table.getAll ();
+    }
     
     bool Module::equals (const Symbol & other) const {
 	println (other.is <Module> ());

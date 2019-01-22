@@ -4,7 +4,9 @@
 #include <ymir/syntax/declaration/Function.hh>
 #include <ymir/syntax/declaration/Module.hh>
 #include <ymir/syntax/visitor/Visitor.hh>
-#include <ymir/semantic/visitor/Visitor.hh>
+#include <ymir/semantic/declarator/Visitor.hh>
+#include <ymir/semantic/validator/Visitor.hh>
+#include <ymir/semantic/generator/Visitor.hh>
 
 using namespace Ymir;
 
@@ -34,7 +36,6 @@ namespace Ymir {
 	TRY {
 	    syntaxicTime ();
 	    semanticTime ();
-	    lintTime ();
 	} CATCH (ErrorCode::FAIL) {
 	    PRINT_ERRORS ();
 	    Error::end (ExternalError::get (COMPILATION_END));
@@ -56,12 +57,18 @@ namespace Ymir {
     }
 
     void Parser::semanticTime () {
-	auto visitor = semantic::Visitor::init ();
-	auto ret = visitor.visit (this-> _module);
-    }
+	auto declarator = semantic::declarator::Visitor::init ();
+	auto module = declarator.visit (this-> _module);
 
-    void Parser::lintTime () {
-	// TODO
+	auto validator = semantic::validator::Visitor::init ();
+	validator.validate (module);
+
+	auto generator = semantic::generator::Visitor::init ();
+	for (auto & gen : validator.getGenerators ()) {
+	    generator.generate (gen);
+	}
+	
+	generator.finalize ();
     }
     
 }

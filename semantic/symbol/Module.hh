@@ -38,6 +38,8 @@ namespace semantic {
 	std::vector <Symbol> get (const std::string & name) const;
 
 	const Symbol & getLocal (const std::string & name) const override;
+
+	const std::vector <Symbol> & getAllLocal () const;
 	
 	bool equals (const Symbol & other) const override;
 	

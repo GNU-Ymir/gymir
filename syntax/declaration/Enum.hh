@@ -19,10 +19,7 @@ namespace syntax {
 	/** The identifier of the enumeration */
 	lexing::Word _ident;
 
-	/** The identifiers inside the enumeration declaration */
-	std::vector <lexing::Word> _names;
-
-	/** The values (right operands) inside the enumeration declaration */
+	/** The values (var_decls) inside the enumeration declaration */
 	std::vector <Expression> _values;
 
 	/** The type of the expression (might be empty) */
@@ -44,20 +41,18 @@ namespace syntax {
 	/**
 	 * \brief Create a new enumeration
 	 * \param ident the name and location of the enumeration
-	 * \param names the names inside the enum
 	 * \param values the values inside the enum
 	 */
-	static Declaration init (const lexing::Word& ident, const std::vector <lexing::Word> & names, const std::vector <Expression> & values);
+	static Declaration init (const lexing::Word& ident, const std::vector <Expression> & values);
 
 
 	/**
 	 * \brief Create a new enumeration
 	 * \param ident the name and location of the enumeration
 	 * \param type the type of the enumeration
-	 * \param names the names inside the enum
 	 * \param values the values inside the enum
 	 */
-	static Declaration init (const lexing::Word& ident, const Expression & type, const std::vector <lexing::Word> & names, const std::vector <Expression> & values);
+	static Declaration init (const lexing::Word& ident, const Expression & type, const std::vector <Expression> & values);
 
 	/**
 	 * \brief Create a new enum from another one
@@ -83,22 +78,35 @@ namespace syntax {
 	 * \brief set the identifier of the enum
 	 * \param ident the new name of the enum
 	 */
-	void setIdent (const lexing::Word& ident);
-
+	void setName (const lexing::Word& ident);
 
 	/**
+	 * \return the name and location of the enum
+	 */
+	const lexing::Word & getName () const;
+		
+	/**
 	 * \brief Add a new attribute to the enum
-	 * \param name the name of the attrbibute
 	 * \param value the value of the attrbibute
 	 */
-	void addValue (const lexing::Word& name, const Expression& value);
-
+	void addValue (const Expression& value);
 
 	/**
 	 * \brief Change the type of the enum
 	 * \param expr the new type of the enum
 	 */
 	void setType (const Expression& expr);
+
+	/**
+	 * \return the type of the enumeration
+	 */
+	const Expression & getType () const;
+
+	/**
+	 * \return the different values declared inside the enumeration
+	 */
+	const std::vector <Expression> & getValues () const;
+	
     };
     
 }

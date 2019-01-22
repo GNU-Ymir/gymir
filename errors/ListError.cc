@@ -14,6 +14,9 @@ namespace Ymir {
 			    WRONG_MODULE_NAME = "module named %(y) must be placed in file named %(y)",
 			    SHADOWING_DECL = "declaration of %(y) shadow another declaration",
 			    UNDEFINED_CA = "custom attribute %(y), does not exist in this context",
-			    PACKED_AND_UNION = "structure could not be packed and union at the same time"
+			    PACKED_AND_UNION = "structure could not be packed and union at the same time",
+			    VAR_DECL_WITH_NOTHING = "var declaration must at least have a type or a value",
+			    INCOMPATIBLE_TYPES = "incompatible types %(y) and %(y)",
+			    UNDEF_TYPE = "undefined type %(y)"
     );    
 }

@@ -27,20 +27,18 @@ namespace syntax {
     public : 
 
 	/**
-	 * \brief Create an empty global var
+	 * \brief Create an empty wrapper
 	 */
 	static Declaration init ();
 
 	/**
-	 * \brief Copy another global var
+	 * \brief Copy another expression wrapper
 	 */
 	static Declaration init (const ExpressionWrapper & gl);
 
 	/**
-	 * \brief Init a new global var
-	 * \param ident the name of the variable
-	 * \param type the type of the variable
-	 * \param value the value of the variable
+	 * \brief Init a wrapper for content
+	 * \param content the content of the wrapper
 	 */
 	static Declaration init (const Expression & content);
 	
@@ -55,11 +53,11 @@ namespace syntax {
 	 * \brief Polymorphism dynamic casting
 	 */
 	bool isOf (const IDeclaration * type) const override;
-
+	
 	/**
 	 * \return the content of the wrapper
 	 */
-	Expression & getContent ();
+	const Expression & getContent () const;
 	
     };
     

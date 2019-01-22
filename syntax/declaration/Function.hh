@@ -80,6 +80,11 @@ namespace syntax {
 	     * \param decos the decorator of the return type
 	     */
 	    void setType (const Expression & type);
+
+	    /**
+	     * \return the list of parameters of the prototype
+	     */
+	    const std::vector <Expression> & getParameters () const;
 	    
 	};
 
@@ -247,6 +252,11 @@ namespace syntax {
 	 */
 	void setPrototype (const Prototype & proto);
 
+	/**
+	 * \return the prototype of the function
+	 */
+	const Prototype & getPrototype () const;
+	
 	/**
 	 * \brief Set the body of the function
 	 * \param body the body of the function

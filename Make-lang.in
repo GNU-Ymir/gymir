@@ -102,10 +102,23 @@ ymir_OBJS = \
 	ymir/semantic_Symbol.o \
 	ymir/semantic_Table.o \
 	ymir/semantic_Module.o \
-	ymir/semantic_Visitor.o \
+	ymir/declarator_Visitor.o \
 	ymir/semantic_Function.o \
 	ymir/util_Path.o \
 	ymir/semantic_Struct.o \
+	ymir/semantic_Alias.o \
+	ymir/semantic_Class.o \
+	ymir/semantic_Enum.o \
+	ymir/semantic_VarDecl.o \
+	ymir/validator_Visitor.o \
+	ymir/semantic_Generator.o \
+	ymir/generator_Type.o \
+	ymir/generator_Value.o \
+	ymir/generator_Integer.o \
+	ymir/generator_Visitor.o \
+	ymir/generator_GlobalVar.o \
+	ymir/generic_Tree.o \
+	ymir/generic_StmtList.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
@@ -207,7 +220,23 @@ ymir/semantic_%.o: ymir/semantic/symbol/%.cc
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 
-ymir/semantic_%.o: ymir/semantic/visitor/%.cc
+ymir/declarator_%.o: ymir/semantic/declarator/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/validator_%.o: ymir/semantic/validator/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/generator_%.o: ymir/semantic/generator/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/generator_%.o: ymir/semantic/generator/type/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/generic_%.o: ymir/tree/%.cc
 	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 

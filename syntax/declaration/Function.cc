@@ -42,6 +42,10 @@ namespace syntax {
 	this-> _parameters.push_back (param);
     }
 
+    const std::vector <Expression> & Function::Prototype::getParameters () const {
+	return this-> _parameters;
+    }
+
     void Function::Prototype::setType (const Expression & type) {
 	this-> _retType = type;
     }
@@ -182,6 +186,10 @@ namespace syntax {
 	this-> _proto = proto;
     }
 
+    const Function::Prototype & Function::getPrototype () const {
+	return this-> _proto;
+    }
+    
     void Function::setBody (const Body & body) {
 	this-> _body = body;
     }

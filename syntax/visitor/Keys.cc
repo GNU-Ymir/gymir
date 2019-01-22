@@ -57,6 +57,7 @@ std::string     Keys::MIXIN	= "mixin";
 std::string     Keys::OF	= "of";
 std::string     Keys::NOT_OF	= "!of";
 std::string     Keys::SELF	= "self";
+std::string     Keys::SELF_TILDE= "self~";
 std::string     Keys::OPASSIGN	= "opAssign";
 std::string     Keys::TRAIT	= "trait";
 std::string     Keys::IMPL	= "impl";

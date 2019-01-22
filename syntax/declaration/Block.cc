@@ -40,5 +40,8 @@ namespace syntax {
 	}
     }
 
-      
+    const std::vector <Declaration> & DeclBlock::getDeclarations () const {
+	return this-> _inner;
+    }
+    
 }

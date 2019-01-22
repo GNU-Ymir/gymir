@@ -16,8 +16,16 @@ namespace semantic {
      */
     class ITable {
 
-	/** All the symbol declared inside the current table */
-	std::map <std::string, Symbol> _syms;
+	/** 
+	 * All the symbol declared inside the current table 
+	 * The order of insertion is respected
+	 * When new insertion is made, it replace the ancient symbol 
+	 * It means that if we have inserted symbol the following way : 
+	 *  - [d : 1, b : 2, c : 8], 
+	 * When inserting b : 9, the result will be  
+	 *  - [d : 1, b : 9, c : 8]
+	 */
+	std::vector <Symbol> _syms;
 
 	/** 
 	 * The symbol possessing this table 
@@ -76,6 +84,11 @@ namespace semantic {
 	 * \param name the name of the symbol
 	 */
 	const Symbol & get (const std::string & name) const;
+
+	/**
+	 * \return the list of all declared symbol inside the table
+	 */
+	const std::vector <Symbol> & getAll () const;
 	
     };
 
@@ -109,6 +122,11 @@ namespace semantic {
 	const Symbol & get (const std::string & name) const;
 	
 	/**
+	 * \return the list of all symbols declared inside the table
+	 */
+	const std::vector <Symbol> & getAll () const;
+	
+	/**
 	 * Proxy function for ITable
 	 */
 	Symbol & getAttach ();
@@ -117,8 +135,8 @@ namespace semantic {
 	 * Proxy function for ITable
 	 */
 	void setAttach (ISymbol * attach);
-	
-	
+       
+
     };   
     
     

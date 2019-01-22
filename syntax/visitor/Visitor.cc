@@ -378,7 +378,10 @@ namespace syntax {
     }
     
     Declaration Visitor::visitClassDestructor () {
-	auto location = this-> _lex.rewind (2).next () + this-> _lex.next (); // Get ~self
+	auto location = this-> _lex.rewind (2).next ();
+	this-> _lex.next ();
+	location.str = Keys::SELF_TILDE;
+	
 	this-> _lex.next ({Token::LPAR});
 	this-> _lex.next ({Token::RPAR});
 	
@@ -393,15 +396,14 @@ namespace syntax {
 	    type = visitExpression (9);
 	
 	lexing::Word end;
-	std::vector <lexing::Word> identifiers;
 	std::vector <Expression> values;
 	do {
 	    end = this-> _lex.next ({Token::ARROW, Token::PIPE});
 	    if (end != Token::ARROW) {
-		identifiers.push_back (visitIdentifier ());
+		auto name = visitIdentifier ();
 		if (this-> _lex.consumeIf ({Token::EQUAL}) == Token::EQUAL)
-		    values.push_back (visitExpression (9));
-		else values.push_back (Expression::empty ());
+		    values.push_back (VarDecl::init (name, {}, Expression::empty (), visitExpression (9)));
+		else values.push_back (VarDecl::init (name, {}, Expression::empty (), Expression::empty ()));
 	    }
 	} while (end != Token::ARROW);
 
@@ -409,13 +411,13 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (templates, Enum::init (name, type, identifiers, values));
-	} else return Enum::init (name, type, identifiers, values);
+	    return Template::init (templates, Enum::init (name, type, values));
+	} else return Enum::init (name, type, values);
     }    
     
     Declaration Visitor::visitFunction () {       
 	auto location = this-> _lex.rewind ().next ();
-
+	
 	Expression test (Expression::empty ());
 	
 	auto token = this-> _lex.consumeIf ({Keys::IF});
@@ -427,10 +429,12 @@ namespace syntax {
 
 	auto attribs = visitAttributes ();
 	auto name = visitIdentifier ();
-
+	if (name == Keys::SELF)
+	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.str);
+	
 	auto befTemplates = this-> _lex.tell ();
 	auto templates = visitTemplateParameters ();
-
+	
 	token = this-> _lex.next ();
 	if (token != Token::LPAR) {
 	    templates.clear ();

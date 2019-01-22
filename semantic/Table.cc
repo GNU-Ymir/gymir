@@ -18,7 +18,7 @@ namespace semantic {
 	auto ret = new (Z0) ITable (this-> _attached);
 	ret-> _syms = this-> _syms;
 	for (auto & it : this-> _syms)
-	    it.second.setReferent (&this-> _proxy);
+	    it.setReferent (&this-> _proxy);
 	
 	return ret;
     }
@@ -33,18 +33,28 @@ namespace semantic {
     }
     
     void ITable::insert (const Symbol & sym) {
-	auto & name  = sym.getName ().str;
 	Symbol toInsert = sym;
 	toInsert.setReferent (&this-> _proxy);
-	this-> _syms.emplace (name, toInsert);
+	for (auto & s : this-> _syms) {
+	    if (s.getName ().str == toInsert.getName ().str) {
+		s = toInsert;
+		return;
+	    }
+	}
+
+	this-> _syms.push_back (toInsert);
     }
 
     const Symbol & ITable::get (const std::string & name) const {
-	auto ptr = this-> _syms.find (name);
-	if (ptr != this-> _syms.end ()) {
-	    return ptr-> second;
+	for (auto & s : this-> _syms) {
+	    if (s.getName ().str == name) return s;
 	}
-	else return Symbol::__empty__;
+	
+	return Symbol::__empty__;
+    }
+
+    const std::vector <Symbol> & ITable::getAll () const {
+	return this-> _syms;
     }
 
     Table::Table (ITable * table) : Proxy<ITable, Table> (table)
@@ -80,6 +90,12 @@ namespace semantic {
 	if (this-> _value == nullptr)
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	return this-> _value-> get (name);
+    }
+
+    const std::vector <Symbol> & Table::getAll () const {
+	if (this-> _value == nullptr)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	return this-> _value-> getAll ();
     }
     
 }

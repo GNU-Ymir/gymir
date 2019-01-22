@@ -82,12 +82,15 @@ namespace syntax {
 	 */
 	const lexing::Word & getName () const ;
 
-
 	/**
 	 * \return the list of custom attributes
 	 */
 	const std::vector <lexing::Word> & getCustomAttributes () const;
-	
+
+	/**
+	 * \return the declaration of the attributes
+	 */
+	const std::vector <Expression> & getDeclarations () const;
     };
 
 }

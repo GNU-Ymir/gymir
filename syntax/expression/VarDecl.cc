@@ -56,5 +56,21 @@ namespace syntax {
     void VarDecl::setValue (const Expression & value) {
 	this-> _value = value;
     }
+
+    const lexing::Word & VarDecl::getName () const {
+	return this-> _name;
+    }
+
+    const Expression & VarDecl::getType () const {
+	return this-> _type;
+    }
+
+    const Expression & VarDecl::getValue () const {
+	return this-> _value;
+    }
+
+    const std::vector <Decorator> & VarDecl::getDecos () const {
+	return this-> _decos;
+    }
     
 }

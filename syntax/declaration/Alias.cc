@@ -34,14 +34,22 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }	    
     
-    void Alias::setIdent (const lexing::Word & ident) {
+    void Alias::setName (const lexing::Word & ident) {
 	this-> _ident = ident;
     }
 
+    const lexing::Word & Alias::getName () const {
+	return this-> _ident;
+    }    
+    
     void Alias::setValue (const Expression & value) {
 	this-> _value = value;
     }
 
+    const Expression & Alias::getValue () const {
+	return this-> _value;
+    }
+    
     void Alias::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<Alias> : ", this-> _ident);

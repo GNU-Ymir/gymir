@@ -8,15 +8,12 @@
 namespace semantic {
 
     class Struct : public ISymbol {
-
+	
 	/** The symbol declared in the structure (basically the attributes) */
 	Table _table;
 
 	/** The list of overloading structures */
 	std::vector <Symbol> _overload;
-
-	/** The syntax struct */
-	syntax::Declaration _content;
 
 	/** Is this structure data packed (<=> _isUnion == false) */
 	bool _isPacked;
@@ -30,11 +27,11 @@ namespace semantic {
 
 	Struct ();
 
-	Struct (const lexing::Word & name, const syntax::Struct & str);
+	Struct (const lexing::Word & name);
 
     public :
 
-	static Symbol init (const lexing::Word & name, const syntax::Struct & str);
+	static Symbol init (const lexing::Word & name);
 
 	Symbol clone () const override;
 

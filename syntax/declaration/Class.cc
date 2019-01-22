@@ -34,5 +34,17 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IDeclaration::isOf (type);
     }	    
+
+    const lexing::Word & Class::getName () const {
+	return this-> _name;
+    }
+
+    const Expression & Class::getAncestor () const {
+	return this-> _over;
+    }
+
+    const std::vector <Declaration> & Class::getDeclarations () const {
+	return this-> _innerDeclaration;
+    }
     
 }

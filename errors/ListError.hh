@@ -33,7 +33,10 @@ namespace Ymir {
 			 WRONG_MODULE_NAME,
 			 SHADOWING_DECL,
 			 UNDEFINED_CA,
-			 PACKED_AND_UNION
+			 PACKED_AND_UNION,
+			 VAR_DECL_WITH_NOTHING,
+			 INCOMPATIBLE_TYPES,
+			 UNDEF_TYPE
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

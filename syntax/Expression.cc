@@ -11,7 +11,7 @@ namespace syntax {
 	return Expression {nullptr};
     }
 
-    bool Expression::isEmpty () {
+    bool Expression::isEmpty () const {
 	return this-> _value == nullptr;
     }
     

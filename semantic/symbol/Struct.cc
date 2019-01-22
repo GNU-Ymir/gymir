@@ -6,19 +6,17 @@ namespace semantic {
     Struct::Struct () :
 	ISymbol (lexing::Word::eof ()),
 	_table (ITable::init (this)),
-	_overload (),
-	_content (syntax::Declaration::empty ())
+	_overload ()
     {}
 
-    Struct::Struct (const lexing::Word & name, const syntax::Struct & str) :
+    Struct::Struct (const lexing::Word & name) :
 	ISymbol (name),
 	_table (ITable::init (this)),
-	_overload (),
-	_content (syntax::Declaration {str.clone ()})
+	_overload ()
     {}
 
-    Symbol Struct::init (const lexing::Word & name, const syntax::Struct & str) {
-	return Symbol {new (Z0) Struct (name, str)};
+    Symbol Struct::init (const lexing::Word & name) {
+	return Symbol {new (Z0) Struct (name)};
     }
 
     Symbol Struct::clone () const {
@@ -62,7 +60,7 @@ namespace semantic {
 	    return this-> getReferent ().equals (other.getReferent ());
 	} else return false;
     }
-
+    
     bool Struct::isUnion () const {
 	return this-> _isUnion;
     }

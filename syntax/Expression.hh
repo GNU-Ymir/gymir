@@ -36,7 +36,7 @@ namespace syntax {
 
 	static Expression empty ();
 
-	bool isEmpty ();
+	bool isEmpty () const;
 	
 	/**
 	 * Transform the expression into a declaration
@@ -58,7 +58,35 @@ namespace syntax {
 	    }
 	    return *((T*) this-> _value);	    
 	}
+	
+	/**
+	 * \brief Cast the content pointer the type (if possible)
+	 * Raise an internal error if that impossible
+	 */
+	template <typename T>
+	const T& to () const {	    
+	    if (this-> _value == NULL) 
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");
+	    else {
+		T t;
+		if (!this-> _value-> isOf (&t))
+		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+	    }
+	    return *((const T*) this-> _value);	    
+	}
+	
+	/**
+	 * \brief Tell if the inner type inside the proxy is of type T
+	 */
+	template <typename T>
+	bool is () const {	    
+	    if (this-> _value == NULL)
+		return false;
 
+	    T t;
+	    return this-> _value-> isOf (&t); 			    
+	}
+	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
 	
     };       
