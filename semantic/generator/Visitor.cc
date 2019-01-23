@@ -11,7 +11,8 @@ namespace semantic {
 	static GTY(()) vec<tree, va_gc> *globalDeclarations;
 	
 	Visitor::Visitor () :
-	    _globalContext (Tree::empty ())
+	    _globalContext (Tree::empty ()),
+	    _currentContext (Tree::empty ())
 	{}
 
 	Visitor Visitor::init () {
@@ -33,6 +34,12 @@ namespace semantic {
 		    generateGlobalVar (var);
 		    return;
 		);
+
+		of (Frame, frame,
+		    generateFrame (frame);
+		    return;
+		);
+
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -46,6 +53,7 @@ namespace semantic {
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Tree::empty ();
 	}
 	
 	void Visitor::generateGlobalVar (const GlobalVar & var) {
@@ -57,11 +65,65 @@ namespace semantic {
 	    decl.isStatic (true);
 	    decl.isUsed (true);
 	    decl.isExternal (false);
-	    decl.preservePointer (true);
+	    decl.isPreserved (true);
 	    decl.isPublic (true);
 	    decl.setDeclContext (getGlobalContext ());
 
 	    vec_safe_push (globalDeclarations, decl.getTree ());
+	}
+
+	void Visitor::generateFrame (const Frame & frame) {
+	    std::vector <Tree> args;
+	    for (auto i : Ymir::r (0, args.size ())) {
+		args.push_back (generateType (frame.getParams () [i].to<ParamVar> ().getType ()));
+	    }
+
+	    Tree ret = generateType (frame.getType ());	    
+	    Tree fntype = Tree::functionType (ret, args);
+	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
+
+	    setCurrentContext (fn_decl);
+
+	    std::list <Tree> arglist;
+	    for (auto & p : frame.getParams ())
+		arglist.push_back (generateParamVar (p.to<ParamVar> ()));
+	    
+	    fn_decl.setDeclArguments (arglist);
+	    
+	    enterBlock ();
+	    auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
+	    fn_decl.setResultDecl (resultDecl);
+	    
+	    auto fnTree = quitBlock (lexing::Word::eof (), Tree::empty ());
+	    auto fnBlock = fnTree.block;
+	    fnBlock.setBlockSuperContext (fn_decl);	    
+	    
+	    fn_decl.setDeclInitial (fnBlock);	    
+	    fn_decl.setDeclSavedTree (fnTree.bind_expr);
+
+	    fn_decl.isExternal (false);
+	    fn_decl.isPreserved (true);
+	    fn_decl.isWeak (true);
+
+	    fn_decl.isPublic (true);
+	    fn_decl.isStatic (true);
+
+	    gimplify_function_tree (fn_decl.getTree ());
+	    cgraph_node::finalize_function (fn_decl.getTree (), true);
+	    setCurrentContext (Tree::empty ());
+	}
+	
+	Tree Visitor::generateParamVar (const ParamVar & var) {
+	    auto type = generateType (var.getType ());
+	    auto name = var.getName ();
+	    
+	    auto decl = Tree::paramDecl (var.getLocation (), name, type);
+	    
+	    decl.setDeclContext (getCurrentContext ());
+	    decl.setArgType (decl.getType ());
+	    decl.isUsed (true);
+	    
+	    return decl;
 	}
 
 	Tree Visitor::generateIntegerType (const Integer & type) {
@@ -90,7 +152,7 @@ namespace semantic {
 	    stackBlockChain.push_back (generic::BlockChain ());
 	}
 	
-	generic::TreeSymbolMapping Visitor::quitBlock (const location_t & loc, const generic::Tree & content) {
+	generic::TreeSymbolMapping Visitor::quitBlock (const lexing::Word & loc, const generic::Tree & content) {
 	    auto varDecl = stackVarDeclChain.back ();
 	    auto blockChain = stackBlockChain.back ();
 
@@ -103,8 +165,8 @@ namespace semantic {
 		stackBlockChain.back ().append (block);
 	    }
 
-	    for (tree it = blockChain.first.getTree () ; it != NULL_TREE ; it = BLOCK_CHAIN (it)) {
-		BLOCK_SUPERCONTEXT (it) = block.getTree ();
+	    for (auto it : blockChain) {
+		it.setBlockSuperContext (block);
 	    }
 
 	    auto bind = generic::Tree::build (BIND_EXPR, loc, generic::Tree::voidType (), varDecl.first, content, block);
@@ -114,7 +176,6 @@ namespace semantic {
 	void Visitor::enterFrame () {
 	    // ?
 	}
-
 
 	void Visitor::quitFrame () {
 	    // ?
@@ -129,8 +190,12 @@ namespace semantic {
 	}
 	
 	const generic::Tree & Visitor::getCurrentContext () const {	    
+	    return this-> _currentContext;
 	}
 
+	void Visitor::setCurrentContext (const Tree & tr) {
+	    this-> _currentContext = tr;
+	}
 	
     }
     

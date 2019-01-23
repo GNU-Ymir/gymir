@@ -57,7 +57,7 @@ namespace semantic {
 	    Visitor (); 
 
 	public :
-
+	    
 	    /**
 	     * \brief Create an empty visitor
 	     */
@@ -113,7 +113,7 @@ namespace semantic {
 	     * \brief Transform a global var declaration into semantic tree
 	     */
 	    semantic::Symbol visitGlobal (const syntax::Global & glob);
-	
+	    
 	private :
 
 	    /**

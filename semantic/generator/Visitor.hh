@@ -24,6 +24,9 @@ namespace semantic {
 
 	    /** The global context of the generation */
 	    generic::Tree _globalContext;
+
+	    /** The global context of the generation */
+	    generic::Tree _currentContext;
 	    
 	private :
 
@@ -58,6 +61,18 @@ namespace semantic {
 	    void generateGlobalVar (const GlobalVar & var);
 
 	    /**
+	     * \brief Generate a new frame from a frame generator
+	     * \param frame the frame to generate
+	     */
+	    void generateFrame (const Frame & frame);
+	    
+	    /**
+	     * \brief Generate the declaration of a param var
+	     * \return the declaration
+	     */
+	    generic::Tree  generateParamVar (const ParamVar & var);
+
+	    /**
 	     * \brief Transform a type from generator to gimple
 	     */
 	    generic::Tree generateType (const Generator & gen);
@@ -76,7 +91,7 @@ namespace semantic {
 	    /** 
 	     * Quit the last block and return its symbol mapping 
 	    */
-	    generic::TreeSymbolMapping quitBlock (const location_t & loc, const generic::Tree &);
+	    generic::TreeSymbolMapping quitBlock (const lexing::Word & loc, const generic::Tree &);
 
 	    /**
 	     * Enter a new Frame
@@ -97,9 +112,14 @@ namespace semantic {
 	     * \return the tree reprensenting the current context of definition
 	     */
 	    const generic::Tree & getCurrentContext () const;
+
+	    /**
+	     * \brief Change the current context for definition
+	     */
+	    void setCurrentContext (const generic::Tree & tr);
 	    
 	};
-	
+
     }
     
 }

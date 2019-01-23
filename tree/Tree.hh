@@ -34,6 +34,7 @@
 #include <ymir/errors/ListError.hh>
 
 #include <vector>
+#include <list>
 #include <map>
 
 
@@ -56,44 +57,97 @@ namespace generic {
 
     public :
 
+	/**
+	 * \brief Initialize a tree from a gimple one
+	 * \param loc the location of the declaration
+	 * \param t the content of the generation 
+	 */
 	static Tree init (const location_t & loc, const tree & t);
-	    		
-	static Tree error ();
 
+	/**
+	 * \brief Create an error tree
+	 */
+	static Tree error ();
+	
+	/**
+	 * \brief Create an empty tree (different from error)
+	 */
 	static Tree empty ();
 
-	static Tree block (const location_t & loc, const Tree & vars, const Tree & chain);
+	/**
+	 * \brief Create a block (gimple definition of a block)
+	 * \param vars the stack declaration of vars
+	 * \param chain the block chain 
+	 */
+	static Tree block (const lexing::Word & loc, const Tree & vars, const Tree & chain);
 
+	/**
+	 * \brief Create a tree type of type void 
+	 */
 	static Tree voidType ();
 
-	static Tree varDecl (const location_t & loc, const std::string & name, const Tree & type);
-
+	/**
+	 * \brief Create a new var declaration 
+	 * \param loc the location of the var, (frontend version)
+	 * \param name the name of the var
+	 * \param type the type of the var
+	 */
 	static Tree varDecl (const lexing::Word & loc, const std::string & name, const Tree & type);
+
+	/**
+	 * \brief Create a new parameter var declaration (for frame declaration)
+	 * \param loc the location of the parameter
+	 * \param name the name of the parameter
+	 * \param type the type of the param
+	 */
+	static Tree paramDecl (const lexing::Word & loc, const std::string & name, const Tree & type);
+
+	/**
+	 * \brief Create a new function type
+	 * \param retType the type returned by the function 
+	 * \param params the parameter types of the function
+	 */
+	static Tree functionType (const Tree & retType, const std::vector <Tree> & params);
+
+	/**
+	 * \brief Create a new function declaration 
+	 * \param location the location of the frame
+	 * \param name the name of the frame
+	 * \param type the type of the frame
+	 */
+	static Tree functionDecl (const lexing::Word & location, const std::string & name, const Tree & type);
+
+	/**
+	 * \brief Create a result declaration
+	 * \param location the location of the declaration
+	 * \param type the type of the declaration
+	 */
+	static Tree resultDecl (const lexing::Word & location, const Tree & type);
 	
 	/**
 	 * \brief Build a tree of 1 operands
 	 */
-	static Tree build (tree_code tc, const location_t & loc, const Tree & type, const Tree & t1);
+	static Tree build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1);
     
 	/**
 	 * \brief Build a tree of 2 operands
 	 */
-	static Tree build (tree_code tc, const location_t & loc, const Tree & type, const Tree & t1, const Tree & t2);
+	static Tree build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1, const Tree & t2);
 
 	/**
 	 * \brief Build a tree of 3 operands
 	 */
-	static Tree build (tree_code tc, const location_t & loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3);
+	static Tree build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3);
 
 	/**
 	 * \brief Build a tree of 4 operands
 	 */
-	static Tree build (tree_code tc, const location_t & loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3, const Tree & t4);
+	static Tree build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3, const Tree & t4);
 
 	/**
 	 * \brief Build a tree of 5 operands
 	 */
-	static Tree build (tree_code tc, location_t loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3, const Tree & t4, const Tree & t5);
+	static Tree build (tree_code tc, lexing::Word loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3, const Tree & t4, const Tree & t5);
 
 	/**
 	 * \return the location of the tree (for debuging infos)
@@ -119,22 +173,134 @@ namespace generic {
 	 * \return the kind of tree 
 	 */
 	tree_code getTreeCode () const;
-	
+
+	/**
+	 * \return this tree is an error tree ?
+	 */
 	bool isError () const;
 
+	/**
+	 * \return this tree contains nothing ? 
+	 */
 	bool isEmpty () const;
 
+	/**
+	 * \brief Associated to a declaration 
+	 * \return is this a static symbol ?
+	 */
+	bool isStatic () const;
+	
+	/**
+	 * \brief set the declaration static information
+	 */
 	void isStatic (bool);
 
+	/**
+	 * \brief Associated to labels
+	 * \brief I don't really understand the meaning of this 
+	 * \brief but, it tells if this label is used
+	 */
+	bool isUsed () const;
+
+	/**
+	 * \brief Set the used information of a label 
+	 */
 	void isUsed (bool);
 
+	/** 
+	 * \brief Associated to a declaration or a label
+	 * \return this tree is externally declared
+	 */
+	bool isExternal () const;
+
+	/**
+	 * \brief set the external information 
+	 * \brief true, means it is not declared in this tree
+	 */
 	void isExternal (bool);
 
-	void preservePointer (bool);
+	/**
+	 * \return Tell if this declaration needs to be preserved
+	 */
+	bool isPreserved () const;
+	
+	/**
+	 * \brief Set to true, means that this declaration needs to be preserved
+	 */
+	void isPreserved (bool);
 
+	/**
+	 * \return Is this declaration public ?
+	 */
+	bool isPublic () const;
+
+	/**
+	 * \brief Set to true, means this symbol can be accessed from outside
+	 */
 	void isPublic (bool);
 
+	/**
+	 * \return the declaration context
+	 */
+	Tree getDeclContext () const;
+	
+	/**
+	 * \brief Change the declaration context of this declaration
+	 */
 	void setDeclContext (const Tree & context);
+
+	/**
+	 * \return the initial value of the declaration 
+	 */
+	Tree getDeclInitial () const;
+
+	/**
+	 * \brief set the initial value of the declaration
+	 */
+	void setDeclInitial (const Tree & init);
+
+	/**
+	 * \brief Used within a function declaration 
+	 * \brief the saved tree is the content of the function
+	 */
+	Tree getDeclSavedTree () const;
+	
+	/**
+	 * \brief Used within a function declaration 
+	 * \brief the saved tree is the content of the function
+	 */
+	void setDeclSavedTree (const Tree & saved);
+
+	/**
+	 * \brief Is this declaration a weak one ?
+	 */
+	bool isWeak () const;
+
+	/**
+	 * \brief Set the weak information of the function
+	 */
+	void isWeak (bool);
+
+	/**
+	 * \brief Set the declaration arguments
+	 * \param args a list of PARM_DECL
+	 */
+	void setDeclArguments (const std::list <Tree> & args);
+
+	/**
+	 * \brief Change the arg type of the declaration
+	 */
+	void setArgType (const Tree & type);
+	
+	/**
+	 * \brief Set the result declaration
+	 */
+	void setResultDecl (const Tree & result);
+
+	/**
+	 * \brief Change the super context of a block
+	 */
+	void setBlockSuperContext (const Tree & context);
 	
 	/**
 	 * \return the type of this tree
@@ -155,78 +321,5 @@ namespace generic {
     inline bool operator != (Tree t1, Tree t2) {
 	return !(t1 == t2);
     }
-
-
-    // struct TreeStmtList {
-
-    // public:
-
-    // 	TreeStmtList () : list (alloc_stmt_list ()) {}
-    // 	TreeStmtList (Tree t) : list (t.getTree ()) {}
-
-    // 	void append (Tree t) {
-    // 	    if (!t.isNull ())
-    // 		append_to_statement_list (t.getTree (), &list);
-    // 	}
-
-    // 	tree getTree () const {
-    // 	    return list;
-    // 	}
-
-    // private:
-
-    // 	tree list;
-	
-    // };
-
-    // template <typename Append>
-    // struct TreeChainBase {
-
-    // 	Tree first;
-    // 	Tree last;
-
-    // 	TreeChainBase ()
-    // 	    : first (),
-    // 	      last ()
-    // 	{}
-
-
-    // 	void append (Tree t) {
-    // 	    gcc_assert (!t.isNull());
-    // 	    if (first.isNull ()) {
-    // 		first = last = t;
-    // 	    } else {
-    // 		Append () (last, t);
-    // 		last = t;
-    // 	    }
-    // 	}	
-    // };
-
-    // struct tree_chain_append {
-    // 	void operator () (Tree t, Tree a) {
-    // 	    TREE_CHAIN (t.getTree ()) = a.getTree ();
-    // 	}
-    // };
-
-
-    // struct block_chain_append {
-    // 	void operator () (Tree t, Tree a) {
-    // 	    BLOCK_CHAIN (t.getTree ()) = a.getTree ();
-    // 	}
-    // };
-    
-    // struct TreeChain : TreeChainBase <tree_chain_append> {};
-    // struct BlockChain : TreeChainBase <block_chain_append> {};
-
-
-    // struct TreeSymbolMapping {
-    // 	Tree bind_expr;
-    // 	Tree block;
-	
-    // 	TreeSymbolMapping (Tree bind, Tree block) :
-    // 	    bind_expr (bind),
-    // 	    block (block) {
-    // 	}
-    // };
 
 }

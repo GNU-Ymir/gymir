@@ -76,5 +76,9 @@ namespace semantic {
     void Function::isSafe (bool is) {
 	this-> _isSafe = is;
     }
+
+    const syntax::Function & Function::getContent () const {
+	return this-> _content.to <syntax::Function> ();
+    }
     
 }

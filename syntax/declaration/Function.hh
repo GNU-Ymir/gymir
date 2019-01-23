@@ -85,7 +85,12 @@ namespace syntax {
 	     * \return the list of parameters of the prototype
 	     */
 	    const std::vector <Expression> & getParameters () const;
-	    
+
+	    /**
+	     * \return the type of the prototype
+	     */
+	    const Expression & getType () const;	    
+
 	};
 
 	/**

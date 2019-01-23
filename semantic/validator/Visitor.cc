@@ -48,8 +48,33 @@ namespace semantic {
 	    }
 	}
 
-	void Visitor::validateFunction (const semantic::Function &) {
+	void Visitor::validateFunction (const semantic::Function & func) {
+	    auto & function = func.getContent ();
+	    std::vector <Generator> params;
+
+	    enterBlock ();
+	    for (auto & param : function.getPrototype ().getParameters ()) {
+		auto var = param.to <syntax::VarDecl> ();
+		if (!var.getType ().isEmpty ()) {
+		    auto type = validateType (var.getType ());
+		    if (!var.getDecos ().empty ()) {
+			Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		    }
+
+		    params.push_back (ParamVar::init (var.getName (), var.getName ().str, type));
+		    insertLocal (var.getName ().str, params.back ());
+		} else {
+		    quitBlock ();
+		    return; // This function is uncomplete, we can't validate it
+		}
+	    }
 	    
+	    Generator retType (Generator::empty ());
+	    if (!function.getPrototype ().getType ().isEmpty ())
+		retType = validateType (function.getPrototype ().getType ());
+	    
+	    quitBlock ();
+	    insertNewGenerator (Frame::init (function.getName (), function.getName ().str, params, retType, Generator::empty ()));
 	}
 
 	void Visitor::validateVarDecl (const semantic::VarDecl & var) {
@@ -94,15 +119,14 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateTypeVar (const syntax::Var & var) {
-	    auto intName = {"i8", "i16", "i32", "i64", "isize",
-			    "u8", "u16", "u32", "u64", "usize"};
+	    auto intName = {"i8", "i16", "i32", "i64",
+			    "u8", "u16", "u32", "u64"};
 	    if (std::find (intName.begin (), intName.end (), var.getName ().str) != intName.end ()) {
 		auto size = var.getName ().str.substr (1);
 		if (size == "8") return Integer::init (var.getName (), 8, var.getName ().str[0] == 'i');
 		if (size == "16") return Integer::init (var.getName (), 16, var.getName ().str[0] == 'i');
 		if (size == "32") return Integer::init (var.getName (), 32, var.getName ().str[0] == 'i');
 		if (size == "64") return Integer::init (var.getName (), 64, var.getName ().str[0] == 'i');
-		if (size == "size") return Integer::init (var.getName (), -1, var.getName ().str[0] == 'i');
 	    }
 	    
 	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().str);
@@ -117,7 +141,23 @@ namespace semantic {
 	void Visitor::insertNewGenerator (const Generator & generator) {
 	    this-> _list.push_back (generator);
 	}
-	
+
+	void Visitor::enterBlock () {
+	    this-> _symbols.push_back ({});
+	}
+
+	void Visitor::quitBlock () {
+	    if (this-> _symbols.empty ())
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    this-> _symbols.pop_back ();
+	}
+
+	void Visitor::insertLocal (const std::string & name, const Generator & gen) {
+	    if (this-> _symbols.empty ())
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    this-> _symbols.back ().emplace (name, gen);
+	}       
+
     }
     
 }

@@ -46,6 +46,10 @@ namespace syntax {
 	return this-> _parameters;
     }
 
+    const Expression & Function::Prototype::getType () const {
+	return this-> _retType;
+    }
+    
     void Function::Prototype::setType (const Expression & type) {
 	this-> _retType = type;
     }

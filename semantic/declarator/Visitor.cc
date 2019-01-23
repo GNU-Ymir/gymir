@@ -232,6 +232,7 @@ namespace semantic {
 	}
 
 	void Visitor::pushReferent (const Symbol & sym) {
+	    println ("Pushing ref");
 	    this-> _referent.push_front (sym);
 	}
 
@@ -241,7 +242,7 @@ namespace semantic {
 
 	    // We can't get a reference since the pop_front will erase the data
 	    auto /** & */ ret = this-> _referent.front ();
-	
+
 	    this-> _referent.pop_front ();
 	    return ret;
 	}
@@ -251,7 +252,6 @@ namespace semantic {
 		return this-> _referent.front ();
 	    else return Symbol::__empty__;
 	}
-    
 
     }
     

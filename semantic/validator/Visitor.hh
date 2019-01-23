@@ -32,6 +32,8 @@ namespace semantic {
 
 	    /** The list of generator produced by the search */
 	    std::vector <generator::Generator> _list;
+
+	    std::vector <std::map <std::string, generator::Generator> > _symbols;
 	    
 	private :
 
@@ -98,6 +100,12 @@ namespace semantic {
 	private :
 
 	    void insertNewGenerator (const generator::Generator & generator);
+
+	    void enterBlock ();
+
+	    void insertLocal (const std::string & name, const generator::Generator & local);
+	    
+	    void quitBlock ();
 	    
 	};
 	       
