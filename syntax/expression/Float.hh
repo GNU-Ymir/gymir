@@ -13,9 +13,6 @@ namespace syntax {
      */
     class Float : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _token;
-
 	/** The decimal part of the float */
 	lexing::Word _decPart;
 
@@ -26,10 +23,10 @@ namespace syntax {
 	friend Expression;
 
 	Float ();
+	
+	Float (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Float & blk);
 
 	static Expression init (const lexing::Word & token, const lexing::Word & decPart, const lexing::Word & suff);
 

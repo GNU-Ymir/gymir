@@ -123,6 +123,32 @@ namespace generic {
 	 * \param type the type of the declaration
 	 */
 	static Tree resultDecl (const lexing::Word & location, const Tree & type);
+
+	/**
+	 * \brief Create an affectation instruction from right to left
+	 */
+	static Tree affect (const lexing::Word & location, const Tree & left, const Tree & right);
+	
+	/**
+	 * \brief Create a compound expression (we can see that as a list of expression -> left; right)
+	 */
+	static Tree compound (const lexing::Word & location, const Tree & left, const Tree & right);
+
+	/**
+	 * \brief Create a uint cst
+	 */
+	static Tree buildIntCst (const lexing::Word & loc, ulong value, const Tree & type);
+
+	/**
+	 * \brief create a int cst
+	 */
+	static Tree buildIntCst (const lexing::Word & loc, long value, const Tree & type);
+
+	/**
+	 * \brief Create a return stmt
+	 * \param resultDecl we need the result declaration of the current frame to perform a return stmt
+	 */
+	static Tree returnStmt (const lexing::Word & loc, const Tree & resultDecl, const Tree & value);
 	
 	/**
 	 * \brief Build a tree of 1 operands

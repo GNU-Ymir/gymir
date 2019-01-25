@@ -2,6 +2,7 @@
 
 #include <ymir/utils/Proxy.hh>
 #include <ymir/errors/Error.hh>
+#include <ymir/lexing/Word.hh>
 
 namespace syntax {
 
@@ -9,8 +10,15 @@ namespace syntax {
     class Declaration;
     
     class IExpression {
-    public:
 
+	lexing::Word _location;
+	
+    protected :
+
+	IExpression (const lexing::Word & location);
+	
+    public:	
+	
 	virtual Expression clone () const = 0;
 
 	virtual bool isOf (const IExpression * type) const = 0;
@@ -20,6 +28,11 @@ namespace syntax {
 	 * \brief Debugging purpose only
 	 */
 	virtual void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
+
+	/**
+	 * \return the location of the expression
+	 */
+	const lexing::Word & getLocation () const;
 	
 	virtual ~IExpression ();
 	
@@ -42,6 +55,11 @@ namespace syntax {
 	 * Transform the expression into a declaration
 	 */
 	static Declaration toDeclaration (const Expression & expr);
+
+	/**
+	 * Proxy method
+	 */
+	const lexing::Word & getLocation () const;
 	
 	/**
 	 * \brief Cast the content pointer the type (if possible)

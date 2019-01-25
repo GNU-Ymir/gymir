@@ -9,9 +9,6 @@ namespace syntax {
      */
     class OfVar : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _token;
-
 	Expression _right;
 	
     private :
@@ -19,10 +16,10 @@ namespace syntax {
 	friend Expression;
 
 	OfVar ();
+	
+	OfVar (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const OfVar & blk);
 
 	static Expression init (const lexing::Word & token, const Expression & type);
 

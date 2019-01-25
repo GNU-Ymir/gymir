@@ -9,18 +9,15 @@ namespace syntax {
      */
     class Match : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _token;
-
     private :
 
 	friend Expression;
 
 	Match ();
+	
+	Match (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Match & blk);
 
 	static Expression init (const lexing::Word & token);
 

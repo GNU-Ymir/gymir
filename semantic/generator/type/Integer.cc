@@ -29,8 +29,11 @@ namespace semantic {
 	    return Type::isOf (type);	
 	}
 
-	bool Integer::equals (const Generator &) const {
-	    return false;
+	bool Integer::equals (const Generator & gen) const {
+	    if (!gen.is <Integer> ()) return false;
+	    auto integer = gen.to<Integer> ();
+	    return this-> _size == integer._size &&
+		this-> _isSigned == integer._isSigned;
 	}
 
 	std::string Integer::typeName () const {

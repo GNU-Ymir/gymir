@@ -15,9 +15,6 @@ namespace syntax {
      */
     class Intrinsics : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _op;
-
 	/** The left operand, can be a type or a value */
 	Expression _value;
 
@@ -26,10 +23,10 @@ namespace syntax {
 	friend Expression;
 
 	Intrinsics ();
+	
+	Intrinsics (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Intrinsics & alloc);
 
 	static Expression init (const lexing::Word & op, const Expression & value);
 

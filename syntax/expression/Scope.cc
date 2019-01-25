@@ -2,24 +2,24 @@
 
 namespace syntax {
 
-    Scope::Scope () : _content (Expression::empty ()) {}
+    Scope::Scope (const lexing::Word& loc) :
+	IExpression (loc),
+	_content (Expression::empty ())
+    {}
 
-    Expression Scope::init (const Scope & scope) {
-	auto ret = new (Z0) Scope ();
-	ret-> _location = scope._location;
-	ret-> _content = scope._content;
-	return Expression {ret};    
-    }
-
+    Scope::Scope () :
+	IExpression (lexing::Word::eof ()),
+	_content (Expression::empty ())
+    {}
+    
     Expression Scope::init (const lexing::Word & location, const Expression & content) {
-	auto ret = new (Z0) Scope ();
-	ret-> _location = location;
+	auto ret = new (Z0) Scope (location);
 	ret-> _content = content;
 	return Expression {ret};
     }
 
     Expression Scope::clone () const {
-	return Scope::init (*this);
+	return Expression {new Scope (*this)};
     }
 
     bool Scope::isOf (const IExpression * type) const {
@@ -31,24 +31,18 @@ namespace syntax {
 
     void Scope::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Scope> ", i, '\t');
-	stream.writeln (this-> _location);
+	stream.writeln (this-> getLocation ());
 	this-> _content.treePrint (stream, i + 1);
     }    
     
+    ScopeFailure::ScopeFailure (const lexing::Word & loc) :
+	Scope (loc)
+    {}
+
     ScopeFailure::ScopeFailure () {}
-
-    Expression ScopeFailure::init (const ScopeFailure & other) {
-	auto ret = new (Z0) ScopeFailure ();
-	ret-> _location = other._location;
-	ret-> _content = other._content;
-	ret-> _types = other._types;
-	ret-> _contents = other._contents;
-	return Expression {ret};
-    }
-
+    
     Expression ScopeFailure::init (const lexing::Word & location, const std::vector <Expression> &types, const std::vector <Expression> & contents) {
-	auto ret = new (Z0) ScopeFailure ();
-	ret-> _location = location;
+	auto ret = new (Z0) ScopeFailure (location);
 	ret-> _content = Expression::empty ();
 	ret-> _types = types;
 	ret-> _contents = contents;
@@ -56,7 +50,7 @@ namespace syntax {
     }
 
     Expression ScopeFailure::clone () const {
-	return ScopeFailure::init (*this);
+	return Expression {new ScopeFailure (*this)};
     }
 
     bool ScopeFailure::isOf (const IExpression * type) const {

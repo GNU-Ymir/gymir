@@ -6,3 +6,4 @@
 #include <ymir/semantic/generator/Type.hh>
 #include <ymir/semantic/generator/Value.hh>
 #include <ymir/semantic/generator/type/_.hh>
+#include <ymir/semantic/generator/value/_.hh>

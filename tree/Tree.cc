@@ -97,6 +97,40 @@ namespace generic {
 	);			
     }    
 
+    Tree Tree::affect (const lexing::Word & loc, const Tree & left, const Tree & right) {
+	return Tree::build (MODIFY_EXPR, loc, left.getType (), left,
+			    Tree::init (
+				loc.getLocus (),
+				convert (left.getType ().getTree (), right.getTree ())
+			    )
+	);
+    }
+
+    Tree Tree::compound (const lexing::Word & loc, const Tree & left, const Tree & right) {
+	if (left.isEmpty ()) return right;
+	if (right.isEmpty ()) return left;
+	return Tree::init (loc.getLocus (),
+			   fold_build2_loc (loc.getLocus (), COMPOUND_EXPR,
+					    left.getType ().getTree (), right.getTree (),
+					    left.getTree ())
+	);
+    }
+    
+
+    Tree Tree::buildIntCst (const lexing::Word & loc, ulong value, const Tree & type) {
+	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
+    }
+    
+    Tree Tree::buildIntCst (const lexing::Word & loc, long value, const Tree & type) {
+	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
+    }
+    
+
+    Tree Tree::returnStmt (const lexing::Word & loc, const Tree & result_decl, const Tree & value) {
+	auto inside = Tree::build (MODIFY_EXPR, loc, Tree::voidType (), result_decl, value); 
+	return Tree::build (RETURN_EXPR, loc, Tree::voidType (), inside);	
+    }
+    
     Tree Tree::build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1) {
 	return Tree::init (loc.getLocus (), build1_loc (loc.getLocus (), tc, type.getTree (), t1.getTree ()));
     }
@@ -256,6 +290,113 @@ namespace generic {
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	return Tree::init (this-> _loc, TREE_OPERAND (this-> _t, i));
     }
-
-    
+      
 }
+
+/**
+ * Mandatory Implementation from GCC internals
+ */
+tree convert (tree type, tree expr) {
+    tree e = expr;
+    enum tree_code code = TREE_CODE (type);
+    const char *invalid_conv_diag;
+    tree ret;
+    location_t loc = EXPR_LOCATION (expr);
+
+    if (type == error_mark_node
+	|| error_operand_p (expr))
+	return error_mark_node;
+
+    if ((invalid_conv_diag
+	 = targetm.invalid_conversion (TREE_TYPE (expr), type)))
+	{
+	    error ("%s", invalid_conv_diag);
+	    return error_mark_node;
+	}
+
+    if (type == TREE_TYPE (expr))
+	return expr;
+    ret = targetm.convert_to_type (type, expr);
+    if (ret)
+	return ret;
+
+    STRIP_TYPE_NOPS (e);
+
+    if (TYPE_MAIN_VARIANT (type) == TYPE_MAIN_VARIANT (TREE_TYPE (expr))
+	&& (TREE_CODE (TREE_TYPE (expr)) != COMPLEX_TYPE
+	    || TREE_CODE (e) == COMPLEX_EXPR))
+	return fold_convert_loc (loc, type, expr);
+    if (TREE_CODE (TREE_TYPE (expr)) == ERROR_MARK)
+	return error_mark_node;
+    if (TREE_CODE (TREE_TYPE (expr)) == VOID_TYPE)
+	{
+	    error ("void value not ignored as it ought to be");
+	    return error_mark_node;
+	}
+
+    switch (code)
+	{
+	case VOID_TYPE:
+	    return fold_convert_loc (loc, type, e);
+
+	case INTEGER_TYPE:
+	case ENUMERAL_TYPE:
+	    if (sanitize_flags_p (SANITIZE_FLOAT_CAST)
+		&& current_function_decl != NULL_TREE
+		&& TREE_CODE (TREE_TYPE (expr)) == REAL_TYPE
+		&& COMPLETE_TYPE_P (type))
+		{
+		    expr = save_expr (expr);
+		    tree check = ubsan_instrument_float_cast (loc, type, expr);
+		    expr = fold_build1 (FIX_TRUNC_EXPR, type, expr);
+		    if (check == NULL_TREE)
+			return expr;
+		    return fold_build2 (COMPOUND_EXPR, TREE_TYPE (expr), check, expr);
+		}
+	    ret = convert_to_integer (type, e);
+	    goto maybe_fold;
+
+	case BOOLEAN_TYPE:
+	    return fold_convert_loc
+		(loc, type, expr);
+
+	case POINTER_TYPE:
+	case REFERENCE_TYPE:
+	    ret = convert_to_pointer (type, e);
+	    goto maybe_fold;
+
+	case REAL_TYPE:
+	    ret = convert_to_real (type, e);
+	    goto maybe_fold;
+
+	case FIXED_POINT_TYPE:
+	    ret = convert_to_fixed (type, e);
+	    goto maybe_fold;
+
+	case COMPLEX_TYPE:
+	    ret = convert_to_complex (type, e);
+	    goto maybe_fold;
+
+	case VECTOR_TYPE:
+	    ret = convert_to_vector (type, e);
+	    goto maybe_fold;
+
+	case RECORD_TYPE:
+	case UNION_TYPE:
+	    if (lang_hooks.types_compatible_p (type, TREE_TYPE (expr)))
+		return e;
+	    break;
+
+	default:
+	    break;
+
+	maybe_fold:
+	    if (TREE_CODE (ret) != C_MAYBE_CONST_EXPR)
+		ret = fold (ret);
+	    return ret;
+	}
+
+    error ("conversion to non-scalar type requested");
+    return error_mark_node;
+}
+

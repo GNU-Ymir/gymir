@@ -11,7 +11,7 @@ namespace syntax {
      * A template is formed from any expression that can possess template parameters (a var only)
      */
     class TemplateCall : public IExpression {
-
+		
 	/** The template parameter of the declaration */
 	std::vector <Expression> _parameters;
 
@@ -21,28 +21,19 @@ namespace syntax {
     private :
 
 	friend Expression; // Needed for dynamic casting
-	
+
 	TemplateCall ();
 	
+	TemplateCall (const lexing::Word & loc);
+	
     public :
-
-	/**
-	 * \brief Create an empty template
-	 */
-	static Expression init ();
-
-	/**
-	 * \brief Create a template from another one
-	 * \param tmpl the template to copy
-	 */
-	static Expression init (const TemplateCall & tmpl);
 
 	/**
 	 * \brief Create an initialized template 
 	 * \param params the template parameters
 	 * \param content the content declaration
 	 */
-	static Expression init (const std::vector <Expression> & params, const Expression & content);
+	static Expression init (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & content);
 
 	/**
 	 * \brief Mandatory function used for proxy polymoprhism system

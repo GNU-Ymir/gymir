@@ -12,9 +12,6 @@ namespace syntax {
      \endverbatim 
      */
     class Assert : public IExpression {
-
-	/** The location of the assert */
-	lexing::Word _location;
 	
 	/** The test of the assert */
 	Expression _test;
@@ -25,16 +22,12 @@ namespace syntax {
     private :
 
 	friend Expression;
-	
+
 	Assert ();
 	
+	Assert (const lexing::Word & loc);
+	
     public :
-
-	/**
-	 * \brief Make a copy 
-	 * \param asrt the assert to copy
-	 */
-	static Expression init (const Assert & asrt);
 
 	/**
 	 * \brief Create a new assertion 

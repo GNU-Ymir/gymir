@@ -30,10 +30,10 @@ namespace syntax {
 	friend Expression;
 
 	Binary ();
+	
+	Binary (const lexing::Word& loc);
 
     public :
-
-	static Expression init (const Binary & alloc);
 
 	static Expression init (const lexing::Word & op, const Expression & left, const Expression &right, const Expression & type);
 

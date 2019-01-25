@@ -13,9 +13,6 @@ namespace syntax {
      */
     class Break : public IExpression {
 
-	/** The location of the break */
-	lexing::Word _location;
-
 	/** The value of the break */
 	Expression _value;
 
@@ -24,14 +21,10 @@ namespace syntax {
 	friend Expression;
 
 	Break ();
+	
+	Break (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy
-	 * \param brk the break to copy
-	 */
-	static Expression init (const Break & brk);
 
 	/**
 	 * \brief Initialize a new break expression 

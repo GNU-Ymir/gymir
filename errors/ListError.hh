@@ -36,7 +36,9 @@ namespace Ymir {
 			 PACKED_AND_UNION,
 			 VAR_DECL_WITH_NOTHING,
 			 INCOMPATIBLE_TYPES,
-			 UNDEF_TYPE
+			 UNDEF_TYPE,
+			 UNREACHBLE_STATEMENT,
+			 OVERFLOW
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

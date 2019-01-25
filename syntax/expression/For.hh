@@ -17,9 +17,6 @@ namespace syntax {
      */
     class For : public IExpression {
 
-	/** The location of the for loop */
-	lexing::Word _location;
-
 	/** The list of variable declared (iterator) in the for loop */
 	std::vector <Expression> _vars;
 
@@ -34,14 +31,10 @@ namespace syntax {
 	friend Expression;
 
 	For ();
+	
+	For (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a for 
-	 * \param for_ the expression to copy
-	 */
-	static Expression init (const For & for_);
 
 	/**
 	 * \brief Create a new for loop

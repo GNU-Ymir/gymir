@@ -15,8 +15,6 @@ namespace syntax {
     class Scope : public IExpression {
     protected:
 	
-	lexing::Word _location;
-
 	Expression _content;
 
     protected :
@@ -24,14 +22,10 @@ namespace syntax {
 	friend Expression;
 
 	Scope ();
+	
+	Scope (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a scope 
-	 * \param scope the expression to copy
-	 */
-	static Expression init (const Scope & scope);
 
 	/**
 	 * \brief Create a new Scope 
@@ -69,15 +63,10 @@ namespace syntax {
 	friend Expression;
 
 	ScopeFailure ();
+	
+	ScopeFailure (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a scope failure 
-	 * \param scope the scope to copy
-	 */
-	static Expression init (const ScopeFailure & scope);
-
 
 	static Expression init (const lexing::Word & location, const std::vector <Expression> &types, const std::vector <Expression> & contents);
 

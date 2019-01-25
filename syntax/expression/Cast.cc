@@ -3,28 +3,26 @@
 namespace syntax {
 
     Cast::Cast () :
+	IExpression (lexing::Word::eof ()),
+	_type (Expression::empty ()),
+	_content (Expression::empty ())
+    {}
+    
+    Cast::Cast (const lexing::Word & loc) :
+	IExpression (loc),
 	_type (Expression::empty ()),
 	_content (Expression::empty ())
     {}
 
-    Expression Cast::init (const Cast & alloc) {
-	auto ret = new (Z0) Cast ();
-	ret-> _op = alloc._op;
-	ret-> _type = alloc._type;
-	ret-> _content = alloc._content;
-	return Expression {ret};
-    }
-
     Expression Cast::init (const lexing::Word & location, const Expression & type, const Expression & content) {
-	auto ret = new (Z0) Cast ();
-	ret-> _op = location;
+	auto ret = new (Z0) Cast (location);
 	ret-> _type = type;
 	ret-> _content = content;
 	return Expression {ret};
     }
 
     Expression Cast::clone () const {
-	return Cast::init (*this);
+	return Expression {new (Z0) Cast (*this)};
     }
 
     bool Cast::isOf (const IExpression * type) const {

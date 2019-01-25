@@ -21,20 +21,16 @@ namespace syntax {
 	friend Expression;
 
 	Set ();
+	
+	Set (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a mult operator
-	 * \param op the operator to copy
-	 */
-	static Expression init (const Set & op);
 
 	/**
 	 * \brief Create a new Multiple operator
 	 * \param params the parameters of the operation
 	 */
-	static Expression init (const std::vector <Expression> & params);
+	static Expression init (const lexing::Word & loc, const std::vector <Expression> & params);
 	
 	Expression clone () const override;
 

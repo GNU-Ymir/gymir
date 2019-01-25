@@ -3,22 +3,20 @@
 namespace syntax {
 
     For::For () :
+	IExpression (lexing::Word::eof ()),
+	_iter (Expression::empty ()),
+	_block (Expression::empty ())
+    {}
+    
+    For::For (const lexing::Word & loc) :
+	IExpression (loc),
 	_iter (Expression::empty ()),
 	_block (Expression::empty ())
     {}
 
-    Expression For::init (const For & for_) {
-	auto ret = new (Z0) For ();
-	ret-> _location = for_._location;
-	ret-> _vars = for_._vars;
-	ret-> _iter = for_._iter;
-	ret-> _block = for_._block;
-	return Expression {ret};
-    }
 
     Expression For::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & iter, const Expression & block) {
-	auto ret = new (Z0) For ();
-	ret-> _location = location;
+	auto ret = new (Z0) For (location);
 	ret-> _vars = vars;
 	ret-> _iter = iter;
 	ret-> _block = block;
@@ -26,7 +24,7 @@ namespace syntax {
     }
 
     Expression For::clone () const {
-	return For::init (*this);
+	return Expression {new (Z0) For (*this)};
     }
 
     bool For::isOf (const IExpression * type) const {

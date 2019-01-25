@@ -2,24 +2,22 @@
 
 namespace syntax {
 
-    Char::Char () {}
-
-    Expression Char::init (const Char & alloc) {
-	auto ret = new (Z0) Char ();
-	ret-> _location = alloc._location;
-	ret-> _sequence = alloc._sequence;
-	return Expression {ret};
-    }
+    Char::Char () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Char::Char (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Char::init (const lexing::Word & location, const std::string & sequence) {
-	auto ret = new (Z0) Char ();	
-	ret-> _location = location;
+	auto ret = new (Z0) Char (location);	
 	ret-> _sequence = sequence;
 	return Expression {ret};
     }
 
     Expression Char::clone () const {
-	return Char::init (*this);
+	return Expression {new (Z0) Char (*this)};
     }
 
     bool Char::isOf (const IExpression * type) const {
@@ -31,7 +29,7 @@ namespace syntax {
     
     void Char::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Char> ", i, '\t');
-	stream.writeln (this-> _location, " ", this-> _sequence);
+	stream.writeln (this-> getLocation (), " ", this-> _sequence);
     }
     
 }

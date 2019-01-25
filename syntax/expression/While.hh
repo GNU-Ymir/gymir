@@ -13,9 +13,6 @@ namespace syntax {
      */
     class While : public IExpression {
 
-	/** The location of the loop */
-	lexing::Word _location;
-
 	/** The test of the loop */
 	Expression _test;
 
@@ -27,14 +24,10 @@ namespace syntax {
 	friend Expression;
 
 	While ();
+	
+	While (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a while loop
-	 * \param wh the loop to copy
-	 */
-	static Expression init (const While & wh);
 
 	/**
 	 * \brief Create a new while loop

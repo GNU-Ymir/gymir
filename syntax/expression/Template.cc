@@ -2,29 +2,25 @@
 
 namespace syntax {
 
-    TemplateCall::TemplateCall () : _content (Expression::empty ())
+    TemplateCall::TemplateCall () :
+	IExpression (lexing::Word::eof ()),
+	_content (Expression::empty ())
     {}
     
-    Expression TemplateCall::init () {
-	return Expression {new (Z0) TemplateCall ()};
-    }
-
-    Expression TemplateCall::init (const TemplateCall & tmpl) {
-	auto ret = new (Z0) TemplateCall ();
-	ret-> _parameters = tmpl._parameters;
-	ret-> _content = tmpl._content;
-	return Expression {ret};
-    }
-
-    Expression TemplateCall::init (const std::vector <Expression> & params, const Expression & content) {
-	auto ret = new (Z0) TemplateCall ();
+    TemplateCall::TemplateCall (const lexing::Word & loc) :
+	IExpression (loc),
+	_content (Expression::empty ())
+    {}    
+    
+    Expression TemplateCall::init (const lexing::Word & location, const std::vector <Expression> & params, const Expression & content) {
+	auto ret = new (Z0) TemplateCall (location);
 	ret-> _parameters = params;
 	ret-> _content = content;
 	return Expression {ret};
     }
 
     Expression TemplateCall::clone () const {
-	return TemplateCall::init (*this);
+	return Expression {new TemplateCall (*this)};
     }
     
     bool TemplateCall::isOf (const IExpression * type) const {

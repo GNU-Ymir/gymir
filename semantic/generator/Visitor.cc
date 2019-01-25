@@ -93,8 +93,16 @@ namespace semantic {
 	    enterBlock ();
 	    auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
 	    fn_decl.setResultDecl (resultDecl);
+
+	    auto value = generateValue (frame.getContent ());
+	    if (!frame.getType ().is<Void> () && frame.getType ().equals (frame.getContent ().to <Value> ().getType ())) {
+		TreeStmtList list = TreeStmtList::init ();
+		list.append (value.getOperand (0));
+		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value.getOperand (1)));
+		value = list.toTree ();
+	    }
 	    
-	    auto fnTree = quitBlock (lexing::Word::eof (), Tree::empty ());
+	    auto fnTree = quitBlock (lexing::Word::eof (), value);
 	    auto fnBlock = fnTree.block;
 	    fnBlock.setBlockSuperContext (fn_decl);	    
 	    
@@ -146,7 +154,57 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Tree::empty ();
 	}
+
+	Tree Visitor::generateValue (const Generator & gen) {
+	    match (gen) {
+		of (Block, block,
+		    return generateBlock (block);
+		);
+
+		of (Fixed, fixed,
+		    return generateFixed (fixed);
+		);
+	    }
+
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Tree::empty ();
+	}
 	
+	Tree Visitor::generateBlock (const Block & block) {
+	    TreeStmtList list = TreeStmtList::init ();
+	    Tree last (Tree::empty ());
+	    Tree var (Tree::empty ());
+	    if (!block.getType ().is<Void> ()) {
+		var = Tree::varDecl (block.getLocation (), "_", generateType (block.getType ()));
+	    }
+
+	    enterBlock ();
+	    for (auto & it : block.getContent ()) {
+		if (!last.isEmpty ()) list.append (last);
+		last = generateValue (it);
+	    }
+
+	    if (!block.getType ().is<Void> ()) {
+		list.append (Tree::affect (block.getLocation (), var, last));
+		auto binding = quitBlock (block.getLocation (), list.toTree ());
+		return Tree::compound (block.getLocation (),
+				       var, 
+				       binding.bind_expr);
+	    } else {
+		if (!last.isEmpty ())
+		    list.append (last);
+		return quitBlock (block.getLocation (), list.toTree ()).block;
+	    }    
+	}	
+	
+	Tree Visitor::generateFixed (const Fixed & fixed) {
+	    auto type = generateType (fixed.getType ());
+	    if (fixed.getType ().to <Integer> ().isSigned ()) 
+		return Tree::buildIntCst (fixed.getLocation (), fixed.getUI ().i, type);
+	    else
+		return Tree::buildIntCst (fixed.getLocation (), fixed.getUI ().u, type);
+	}
+
 	void Visitor::enterBlock () {
 	    stackVarDeclChain.push_back (generic::TreeChain ());
 	    stackBlockChain.push_back (generic::BlockChain ());

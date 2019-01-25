@@ -13,10 +13,6 @@ namespace syntax {
      */
     class Unary : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _op;
-
-
 	/** The size of the allocation */
 	Expression _content;
 
@@ -25,10 +21,10 @@ namespace syntax {
 	friend Expression;
 
 	Unary ();
+	
+	Unary (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Unary & alloc);
 
 	static Expression init (const lexing::Word & op, const Expression &content);
 

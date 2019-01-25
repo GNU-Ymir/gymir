@@ -3,22 +3,21 @@
 namespace syntax {
 
     Binary::Binary () :
+	IExpression (lexing::Word::eof ()),
+	_left (Expression::empty ()),
+	_right (Expression::empty ()),
+	_type (Expression::empty ())
+    {}
+    
+    Binary::Binary (const lexing::Word & loc) :
+	IExpression (loc),
 	_left (Expression::empty ()),
 	_right (Expression::empty ()),
 	_type (Expression::empty ())
     {}
 
-    Expression Binary::init (const Binary & alloc) {
-	auto ret = new (Z0) Binary ();
-	ret-> _op = alloc._op;
-	ret-> _left = alloc._left;
-	ret-> _right = alloc._right;
-	ret-> _type = alloc._type;
-	return Expression {ret};
-    }
-
     Expression Binary::init (const lexing::Word & location, const Expression & left, const Expression & right, const Expression & type) {
-	auto ret = new (Z0) Binary ();
+	auto ret = new (Z0) Binary (location);
 	ret-> _op = location;
 	ret-> _left = left;
 	ret-> _right = right;
@@ -27,7 +26,7 @@ namespace syntax {
     }
 
     Expression Binary::clone () const {
-	return Binary::init (*this);
+	return Expression {new (Z0) Binary (*this)};
     }
 
     bool Binary::isOf (const IExpression * type) const {

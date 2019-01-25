@@ -232,7 +232,6 @@ namespace semantic {
 	}
 
 	void Visitor::pushReferent (const Symbol & sym) {
-	    println ("Pushing ref");
 	    this-> _referent.push_front (sym);
 	}
 

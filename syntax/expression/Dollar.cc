@@ -2,22 +2,20 @@
 
 namespace syntax {
 
-    Dollar::Dollar () {}
-
-    Expression Dollar::init (const Dollar & alloc) {
-	auto ret = new (Z0) Dollar ();
-	ret-> _token = alloc._token;
-	return Expression {ret};
-    }
+    Dollar::Dollar () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Dollar::Dollar (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Dollar::init (const lexing::Word & location) {
-	auto ret = new (Z0) Dollar ();
-	ret-> _token = location;
-	return Expression {ret};
+	return Expression {new (Z0) Dollar (location)};
     }
 
     Expression Dollar::clone () const {
-	return Dollar::init (*this);
+	return Expression {new (Z0) Dollar (*this)};
     }
 
     bool Dollar::isOf (const IExpression * type) const {

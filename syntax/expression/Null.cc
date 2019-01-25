@@ -2,22 +2,20 @@
 
 namespace syntax {
 
-    Null::Null () {}
-
-    Expression Null::init (const Null & alloc) {
-	auto ret = new (Z0) Null ();
-	ret-> _token = alloc._token;
-	return Expression {ret};
-    }
+    Null::Null () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Null::Null (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Null::init (const lexing::Word & location) {
-	auto ret = new (Z0) Null ();
-	ret-> _token = location;
-	return Expression {ret};
+	return Expression {new (Z0) Null (location)};
     }
 
     Expression Null::clone () const {
-	return Null::init (*this);
+	return Expression {new Null (*this)};
     }
 
     bool Null::isOf (const IExpression * type) const {

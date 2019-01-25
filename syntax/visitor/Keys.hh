@@ -111,4 +111,13 @@ struct Keys {
     static std::string  ALIAS;
     static std::string  DYNAMIC;
     static std::string  AS;
+    static std::string  I8;
+    static std::string  I16;
+    static std::string  I64;
+
+    static std::string  U8;
+    static std::string  U16;
+    static std::string  U32;
+    static std::string  U64;
+
 };

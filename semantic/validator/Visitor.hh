@@ -91,7 +91,18 @@ namespace semantic {
 	     * \return a tree containing the result of the value
 	     */
 	    generator::Generator validateValue (const syntax::Expression & value);
-	    
+
+	    /**
+	     * \brief Validate a block of expression
+	     * \return a tree containing the result of the block
+	     */
+	    generator::Generator validateBlock (const syntax::Block & block);
+
+	    /**
+	     * \brief Validate an fixed const integer value
+	     */
+	    generator::Generator validateFixed (const syntax::Fixed & fixed);	    
+
 	    /**
 	     * \return the list of generator produced by semantic validation
 	     */

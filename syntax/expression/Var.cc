@@ -2,30 +2,26 @@
 
 namespace syntax {
 
-    Var::Var ()  {}
-
-    Expression Var::init (const Var & alloc) {
-	auto ret = new (Z0) Var ();
-	ret-> _token = alloc._token;
-	ret-> _decos = alloc._decos;
-	return Expression {ret};
-    }
+    Var::Var () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Var::Var (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
     
     Expression Var::init (const lexing::Word & location) {
-	auto ret = new (Z0) Var ();
-	ret-> _token = location;
-	return Expression {ret};
+	return Expression {new (Z0) Var (location)};
     }
     
     Expression Var::init (const lexing::Word & location, const std::vector<Decorator> & decos) {
-	auto ret = new (Z0) Var ();
-	ret-> _token = location;
+	auto ret = new (Z0) Var (location);
 	ret-> _decos = decos;
 	return Expression {ret};
     }
     
     Expression Var::clone () const {
-	return Var::init (*this);
+	return Expression {new Var (*this)};
     }
 
     bool Var::isOf (const IExpression * type) const {
@@ -48,11 +44,11 @@ namespace syntax {
 	    }
 	
 	stream.writef ("%*<Var> : ", i, '\t');
-	stream.writeln (this-> _token, "{", decosName, "}");
+	stream.writeln (this-> getLocation (), "{", decosName, "}");
     }
 
     const lexing::Word & Var::getName () const {
-	return this-> _token;
+	return this-> getLocation ();
     }
     
 }

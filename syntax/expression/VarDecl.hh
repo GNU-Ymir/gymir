@@ -34,14 +34,10 @@ namespace syntax {
 	friend Expression;
 
 	VarDecl ();
+	
+	VarDecl (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of vardecl
-	 * \param decl the declaration to copy
-	 */
-	static Expression init (const VarDecl & decl);
 
 	/**
 	 * \brief Create a new VarDecl

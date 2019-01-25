@@ -13,9 +13,6 @@ namespace syntax {
      */
     class If : public IExpression {
 
-	/** The location of the loop */
-	lexing::Word _location;
-
 	/** The test of the loop */
 	Expression _test;
 
@@ -30,11 +27,11 @@ namespace syntax {
 	friend Expression;
 
 	If ();
+	
+	If (const lexing::Word & loc);
 
     public :
 	 
-	static Expression init (const If & wh);
-
 	/**
 	 * \brief Create a new if 
 	 * \param location the location of the loop

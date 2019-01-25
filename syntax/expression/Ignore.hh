@@ -12,19 +12,15 @@ namespace syntax {
      \endverbatim 
      */
     class Ignore : public IExpression {
-
-	/** The location of the allocation */
-	lexing::Word _token;
-
     private :
 
 	friend Expression;
 
 	Ignore ();
 
-    public :
+	Ignore (const lexing::Word & loc);
 
-	static Expression init (const Ignore & blk);
+    public :
 
 	static Expression init (const lexing::Word & token);
 

@@ -3,28 +3,26 @@
 namespace syntax {
 
     Lambda::Lambda () :
+	IExpression (lexing::Word::eof ()),
+	_proto (Function::Prototype::init ()),
+	_content (Expression::empty ())
+    {}
+    
+    Lambda::Lambda (const lexing::Word & loc) :
+	IExpression (loc),
 	_proto (Function::Prototype::init ()),
 	_content (Expression::empty ())
     {}
 
-    Expression Lambda::init (const Lambda & alloc) {
-	auto ret = new (Z0) Lambda ();
-	ret-> _op = alloc._op;
-	ret-> _proto = alloc._proto;
-	ret-> _content = alloc._content;
-	return Expression {ret};
-    }
-
     Expression Lambda::init (const lexing::Word & location, const Function::Prototype & proto, const Expression & content) {
-	auto ret = new (Z0) Lambda ();
-	ret-> _op = location;
+	auto ret = new (Z0) Lambda (location);
 	ret-> _proto = proto;
 	ret-> _content = content;
 	return Expression {ret};
     }
 
     Expression Lambda::clone () const {
-	return Lambda::init (*this);
+	return Expression {new Lambda (*this)};
     }
 
     bool Lambda::isOf (const IExpression * type) const {

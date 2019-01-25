@@ -2,24 +2,22 @@
 
 namespace syntax {
 
-    VariadicVar::VariadicVar () {}
-
-    Expression VariadicVar::init (const VariadicVar & alloc) {
-	auto ret = new (Z0) VariadicVar ();
-	ret-> _token = alloc._token;
-	ret-> _isValue = alloc._isValue;
-	return Expression {ret};
-    }
+    VariadicVar::VariadicVar () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    VariadicVar::VariadicVar (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
     
     Expression VariadicVar::init (const lexing::Word & location, bool isValue) {
-	auto ret = new (Z0) VariadicVar ();
-	ret-> _token = location;
+	auto ret = new (Z0) VariadicVar (location);
 	ret-> _isValue = isValue;
 	return Expression {ret};
     }
 
     Expression VariadicVar::clone () const {
-	return VariadicVar::init (*this);
+	return Expression {new VariadicVar (*this)};
     }
 
     bool VariadicVar::isOf (const IExpression * type) const {
@@ -32,6 +30,6 @@ namespace syntax {
 
     void VariadicVar::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<VariadicVar> ", i, '\t');
-	stream.writeln (this-> _token, ' ', this-> _isValue);
+	stream.writeln (this-> getLocation (), ' ', this-> _isValue);
     }
 }

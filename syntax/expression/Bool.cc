@@ -2,22 +2,20 @@
 
 namespace syntax {
 
-    Bool::Bool () {}
-
-    Expression Bool::init (const Bool & alloc) {
-	auto ret = new (Z0) Bool ();
-	ret-> _token = alloc._token;
-	return Expression {ret};
-    }
+    Bool::Bool () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Bool::Bool (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Bool::init (const lexing::Word & location) {
-	auto ret = new (Z0) Bool ();
-	ret-> _token = location;
-	return Expression {ret};
+	return Expression {new (Z0) Bool (location)};
     }
 
     Expression Bool::clone () const {
-	return Bool::init (*this);
+	return Expression {new (Z0) Bool (*this)};
     }
 
     bool Bool::isOf (const IExpression * type) const {
@@ -29,7 +27,7 @@ namespace syntax {
 
     void Bool::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Bool> ", i, '\t');
-	stream.writeln (this-> _token);
+	stream.writeln (this-> getLocation ());
     }
     
 }

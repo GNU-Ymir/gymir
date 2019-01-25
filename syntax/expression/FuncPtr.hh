@@ -6,9 +6,6 @@ namespace syntax {
 
     class FuncPtr : public IExpression {
 
-	/** The location of the expression ('[' or '(' token) */
-	lexing::Word _location;
-
 	/** The parameters of the function */
 	std::vector <Expression> _params;
 
@@ -20,14 +17,10 @@ namespace syntax {
 	friend Expression;
 
 	FuncPtr ();
+	
+	FuncPtr (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a mult operator
-	 * \param op the operator to copy
-	 */
-	static Expression init (const FuncPtr & op);
 
 	/**
 	 * \brief Create a new Multiple operator

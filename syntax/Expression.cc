@@ -4,6 +4,10 @@
 
 namespace syntax {
 
+    IExpression::IExpression (const lexing::Word & location) :
+	_location (location)
+    {}
+    
     Expression::Expression (IExpression * expr) : Proxy<IExpression, Expression> (expr)
     {}
 
@@ -30,10 +34,19 @@ namespace syntax {
 	return false;
     }
 
+    const lexing::Word & IExpression::getLocation () const {
+	return this-> _location;
+    }    
+
+    const lexing::Word & Expression::getLocation () const {
+	if (this-> _value == nullptr)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	return this-> _value-> getLocation ();
+    }    
+    
     void IExpression::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<TODO>", i, '\t');
-    }
-    
+    }    
     
     IExpression::~IExpression () {}
 

@@ -3,28 +3,26 @@
 namespace syntax {
 
     Assert::Assert () :
+	IExpression (lexing::Word::eof ()),
+	_test (Expression::empty ()),
+	_msg (Expression::empty ())
+    {}
+    
+    Assert::Assert (const lexing::Word & loc) :
+	IExpression (loc),
 	_test (Expression::empty ()),
 	_msg (Expression::empty ())
     {}
 
-    Expression Assert::init (const Assert & asrt) {
-	auto ret = new (Z0) Assert ();
-	ret-> _location = asrt._location;
-	ret-> _test = asrt._test;
-	ret-> _msg = asrt._msg;
-	return Expression {ret};
-    }
-    
     Expression Assert::init (const lexing::Word & loc, const Expression & test, const Expression & msg) {
-	auto ret = new (Z0) Assert ();
-	ret-> _location = loc;
+	auto ret = new (Z0) Assert (loc);
 	ret-> _test = test;
 	ret-> _msg = msg;
 	return Expression {ret};
     }
 
     Expression Assert::clone () const {
-	return Assert::init (*this);
+	return Expression {new (Z0) Assert (*this)};
     }
 
     bool Assert::isOf (const IExpression * type) const {

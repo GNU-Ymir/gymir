@@ -13,9 +13,6 @@ namespace syntax {
      */
     class Return : public IExpression {
 
-	/** The location of the return expression */
-	lexing::Word _location;
-
 	/** The value to return */
 	Expression _value;
 
@@ -24,14 +21,10 @@ namespace syntax {
 	friend IExpression;
 
 	Return ();
+	
+	Return (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of another return expression
-	 * \param ret the expression to copy
-	 */
-	static Expression init (const Return & ret);
 
 	/**
 	 * \brief Create a new return expression 

@@ -2,22 +2,22 @@
 
 namespace syntax {
 
-    Set::Set () {}
+    Set::Set () :
+	IExpression (lexing::Word::eof ())
+    {}    
+    
+    Set::Set (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
-    Expression Set::init (const Set & op) {
-	auto ret = new (Z0) Set ();
-	ret-> _params = op._params;
-	return Expression {ret};
-    }
-
-    Expression Set::init (const std::vector <Expression> & params) {
-	auto ret = new (Z0) Set ();
+    Expression Set::init (const lexing::Word & location, const std::vector <Expression> & params) {
+	auto ret = new (Z0) Set (location);
 	ret-> _params = params;
 	return Expression {ret};
     }
 
     Expression Set::clone () const {
-	return Set::init (*this);
+	return Expression {new Set (*this)};
     }
 
     bool Set::isOf (const IExpression * type) const {

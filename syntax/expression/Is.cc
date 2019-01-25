@@ -2,26 +2,25 @@
 
 namespace syntax {
 
-    Is::Is () : _element (Expression::empty ()) {}
-
-    Expression Is::init (const Is & op) {
-	auto ret = new (Z0) Is ();
-	ret-> _location = op._location;
-	ret-> _element = op._element;
-	ret-> _params = op._params;
-	return Expression {ret};
-    }
+    Is::Is () :
+	IExpression (lexing::Word::eof ()),
+	_element (Expression::empty ())
+    {}
+    
+    Is::Is (const lexing::Word & loc) :
+	IExpression (loc),
+	_element (Expression::empty ())
+    {}
 
     Expression Is::init (const lexing::Word & location, const Expression & element, const std::vector <Expression> & params) {
-	auto ret = new (Z0) Is ();
-	ret-> _location = location;
+	auto ret = new (Z0) Is (location);
 	ret-> _element = element;
 	ret-> _params = params;
 	return Expression {ret};
     }
 
     Expression Is::clone () const {
-	return Is::init (*this);
+	return Expression {new Is (*this)};
     }
 
     bool Is::isOf (const IExpression * type) const {

@@ -2,25 +2,24 @@
 
 namespace syntax {
 
-    Return::Return () : _value (Expression::empty ())
+    Return::Return () :
+	IExpression (lexing::Word::eof ()),
+	_value (Expression::empty ())
+    {}
+    
+    Return::Return (const lexing::Word & loc) :
+	IExpression (loc),
+	_value (Expression::empty ())
     {}
 
-    Expression Return::init (const Return & aux) {
-	auto ret = new (Z0) Return ();
-	ret-> _location = aux._location;
-	ret-> _value = aux._value;
-	return Expression {ret};
-    }
-
     Expression Return::init (const lexing::Word & location, const Expression & value) {
-	auto ret = new (Z0) Return ();
-	ret-> _location = location;
+	auto ret = new (Z0) Return (location);
 	ret-> _value = value;
 	return Expression {ret};
     }
 
     Expression Return::clone () const {
-	return Return::init (*this);
+	return Expression {new Return (*this)};
     }
 
     bool Return::isOf (const IExpression * type) const {

@@ -8,19 +8,15 @@ namespace syntax {
      * \struct Dollar
      */
     class Dollar : public IExpression {
-
-	/** The location of the allocation */
-	lexing::Word _token;
-
     private :
 
 	friend Expression;
 
 	Dollar ();
+	
+	Dollar (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Dollar & blk);
 
 	static Expression init (const lexing::Word & token);
 

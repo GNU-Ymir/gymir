@@ -2,26 +2,23 @@
 
 namespace syntax {
 
-    List::List () {}
-
-    Expression List::init (const List & op) {
-	auto ret = new (Z0) List ();
-	ret-> _location = op._location;
-	ret-> _end = op._end;
-	ret-> _params = op._params;
-	return Expression {ret};
-    }
+    List::List () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    List::List (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression List::init (const lexing::Word & location, const lexing::Word & end, const std::vector <Expression> & params) {
-	auto ret = new (Z0) List ();
-	ret-> _location = location;
+	auto ret = new (Z0) List (location);
 	ret-> _end = end;
 	ret-> _params = params;
 	return Expression {ret};
     }
 
     Expression List::clone () const {
-	return List::init (*this);
+	return Expression {new List (*this)};
     }
 
     bool List::isOf (const IExpression * type) const {
@@ -33,7 +30,7 @@ namespace syntax {
 
     void List::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<List> ", i, '\t');
-	stream.writeln (this-> _location, " ", this-> _end);
+	stream.writeln (this-> getLocation (), " ", this-> _end);
 	for (auto & it : this-> _params)
 	    it.treePrint (stream, i + 1);
     }

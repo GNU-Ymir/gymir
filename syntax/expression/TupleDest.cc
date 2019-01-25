@@ -3,21 +3,17 @@
 namespace syntax {
 
     TupleDest::TupleDest () :
+	IExpression (lexing::Word::eof ()),
 	_value (Expression::empty ())
     {}
-
-    Expression TupleDest::init (const TupleDest & dest) {
-	auto ret = new (Z0) TupleDest ();
-	ret-> _location = dest._location;
-	ret-> _vars = dest._vars;
-	ret-> _value = dest._value;
-	ret-> _isVariadic = dest._isVariadic;
-	return Expression {ret};
-    }
+    
+    TupleDest::TupleDest (const lexing::Word & loc) :
+	IExpression (loc),
+	_value (Expression::empty ())
+    {}
     
     Expression TupleDest::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & value, bool isVariadic) {
-	auto ret = new (Z0) TupleDest ();
-	ret-> _location = location;
+	auto ret = new (Z0) TupleDest (location);
 	ret-> _vars = vars;
 	ret-> _value = value;
 	ret-> _isVariadic = isVariadic;
@@ -25,7 +21,7 @@ namespace syntax {
     }
 
     Expression TupleDest::clone () const {
-	return TupleDest::init (*this);
+	return Expression {new TupleDest (*this)};
     }
 
     Expression TupleDest::isOf (const IExpression * type) const {

@@ -18,6 +18,10 @@ namespace semantic {
 	    return Generator{new (Z0) Value (*this)};
 	}
 	
+	void Value::setType (const Generator & type) {
+	    this-> _type = type;
+	}
+
 	const Generator & Value::getType () const {
 	    return this-> _type;
 	}
@@ -33,7 +37,22 @@ namespace semantic {
 	    return false;
 	}
 
+	bool Value::isBreaker () const {
+	    return this-> _breaker;
+	}
 
+	void Value::isBreaker (bool breaker) {
+	    this-> _breaker = breaker;
+	}
+
+	bool Value::isReturner () const {
+	    return this-> _returner;
+	}
+
+	void Value::isReturner (bool returner) {
+	    this-> _returner = returner;
+	}
+	
     }
     
 }

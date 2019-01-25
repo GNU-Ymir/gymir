@@ -2,24 +2,22 @@
 
 namespace syntax {
 
-    Fixed::Fixed () {}
-
-    Expression Fixed::init (const Fixed & alloc) {
-	auto ret = new (Z0) Fixed ();
-	ret-> _token = alloc._token;
-	ret-> _suffix = alloc._suffix;
-	return Expression {ret};
-    }
+    Fixed::Fixed () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Fixed::Fixed (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Fixed::init (const lexing::Word & location, const lexing::Word & suffix) {
-	auto ret = new (Z0) Fixed ();
-	ret-> _token = location;
+	auto ret = new (Z0) Fixed (location);
 	ret-> _suffix = suffix;
 	return Expression {ret};
     }
 
     Expression Fixed::clone () const {
-	return Fixed::init (*this);
+	return Expression {new (Z0) Fixed (*this)};
     }
 
     bool Fixed::isOf (const IExpression * type) const {
@@ -31,7 +29,12 @@ namespace syntax {
 
     void Fixed::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Fixed> ", i, '\t');
-	stream.writeln (this-> _token, " ", this-> _suffix);
+	stream.writeln (this-> getLocation (), " ", this-> _suffix);
     }
     
+
+    const lexing::Word & Fixed::getSuffix () const {
+	return this-> _suffix;
+    }
+
 }

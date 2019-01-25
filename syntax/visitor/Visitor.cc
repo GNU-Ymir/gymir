@@ -89,7 +89,11 @@ namespace syntax {
 	visit._operand_op = {
 	    Token::MINUS, Token::AND, Token::STAR, Token::NOT
 	};
-
+	
+	visit._fixedSuffixes = {
+	    Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::U32, Keys::I64, Keys::U64
+	};
+	
 	return visit;
     }
 
@@ -930,11 +934,11 @@ namespace syntax {
 		inVar = false;
 		auto list = visitParamList ();
 		this-> _lex.next ({Token::RPAR});
-		return TemplateCall::init (list, Var::init (name));
+		return TemplateCall::init (name, list, Var::init (name));
 	    } else {
 		inVar = true; // Cannot have template parameters for inner type : A!(A!B) is Ok, not A!A!B
 		this-> _lex.rewind ();
-		auto ret = TemplateCall::init ({visitExpression ()}, Var::init (name, decos));
+		auto ret = TemplateCall::init (name, {visitExpression ()}, Var::init (name, decos));
 		inVar = false;
 		return ret;
 	    }
@@ -1018,23 +1022,23 @@ namespace syntax {
 
     Expression Visitor::visitNumeric () {
 	auto begin = this-> _lex.next ();	
-	if (begin.str.length () >= 3) {
-	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 2)};
-	    suffix.column += begin.str.length () - 2;
+	if (begin.str.length () >= 5) {
+	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 4)};
+	    suffix.column += begin.str.length () - 4;
 	    
 	    if (suffix.is (this-> _fixedSuffixes)) {
-		auto value = begin.str.substr (0, begin.str.length () - 2);
+		auto value = begin.str.substr (0, begin.str.length () - 4);
 		verifNumeric (begin, value);
 		return Fixed::init ({begin, value}, suffix);
 	    }
 	}
 	
-	if (begin.str.length () >= 2) {
-	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 1)};
-	    suffix.column += begin.str.length () - 1;
+	if (begin.str.length () >= 4) {
+	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 3)};
+	    suffix.column += begin.str.length () - 3;
 	    
 	    if (suffix.is (this-> _fixedSuffixes)) {
-		auto value = begin.str.substr (0, begin.str.length () - 1);
+		auto value = begin.str.substr (0, begin.str.length () - 3);
 		verifNumeric (begin, value);
 		return Fixed::init ({begin, value}, suffix);
 	    }
@@ -1065,7 +1069,7 @@ namespace syntax {
 		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.str);
 		}
 	    }
-	    return false;
+	    return true;
 	}	    
     }    
 
@@ -1117,7 +1121,7 @@ namespace syntax {
 
 	this-> _lex.rewind (); // The last token read wasn't a coma
 	if (decls.size () == 1) return decls [0];
-	else return Set::init (decls);
+	else return Set::init (location, decls);
     }    
 
     Expression Visitor::visitSingleVarDeclaration (bool mandType, bool withValue) {

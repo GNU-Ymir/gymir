@@ -13,9 +13,6 @@ namespace syntax {
      */
     class Throw : public IExpression {
 
-	/** The location of the expression */
-	lexing::Word _location;
-
 	/** The value that is thrown */
 	Expression _value;
 
@@ -24,14 +21,10 @@ namespace syntax {
 	friend Expression;
 
 	Throw ();
+	
+	Throw (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of the throw
-	 * \param thr the content of the throw
-	 */
-	static Expression init (const Throw & thr);
 
 	/**
 	 * \brief Create a new throw expression

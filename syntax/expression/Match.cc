@@ -2,22 +2,20 @@
 
 namespace syntax {
 
-    Match::Match () {}
-
-    Expression Match::init (const Match & alloc) {
-	auto ret = new (Z0) Match ();
-	ret-> _token = alloc._token;
-	return Expression {ret};
-    }
-
+    Match::Match () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Match::Match (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
+    
     Expression Match::init (const lexing::Word & location) {
-	auto ret = new (Z0) Match ();
-	ret-> _token = location;
-	return Expression {ret};
+	return Expression {new (Z0) Match (location)};
     }
 
     Expression Match::clone () const {
-	return Match::init (*this);
+	return Expression {new Match (*this)};
     }
 
     bool Match::isOf (const IExpression * type) const {

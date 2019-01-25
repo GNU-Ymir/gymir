@@ -2,24 +2,24 @@
 
 namespace syntax {
 
-    OfVar::OfVar () : _right (Expression::empty ()) {}
-
-    Expression OfVar::init (const OfVar & alloc) {
-	auto ret = new (Z0) OfVar ();
-	ret-> _token = alloc._token;
-	ret-> _right = alloc._right;
-	return Expression {ret};
-    }
+    OfVar::OfVar () :
+	IExpression (lexing::Word::eof ()),
+	_right (Expression::empty ())
+    {}
     
+    OfVar::OfVar (const lexing::Word & loc) :
+	IExpression (loc),
+	_right (Expression::empty ())
+    {}
+        
     Expression OfVar::init (const lexing::Word & location, const Expression & type) {
-	auto ret = new (Z0) OfVar ();
-	ret-> _token = location;
+	auto ret = new (Z0) OfVar (location);
 	ret-> _right = type;
 	return Expression {ret};
     }
 
     Expression OfVar::clone () const {
-	return OfVar::init (*this);
+	return Expression {new OfVar (*this)};
     }
 
     bool OfVar::isOf (const IExpression * type) const {
@@ -31,7 +31,7 @@ namespace syntax {
 
     void OfVar::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<OfVar> ", i, '\t');
-	stream.writeln (this-> _token);
+	stream.writeln (this-> getLocation ());
 	this-> _right.treePrint (stream, i + 1);
     }
 }

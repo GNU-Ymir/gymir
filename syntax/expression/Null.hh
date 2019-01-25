@@ -8,19 +8,15 @@ namespace syntax {
      * \struct Null
      */
     class Null : public IExpression {
-
-	/** The location of the allocation */
-	lexing::Word _token;
-
     private :
 
 	friend Expression;
 
 	Null ();
+	
+	Null (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Null & blk);
 
 	static Expression init (const lexing::Word & token);
 

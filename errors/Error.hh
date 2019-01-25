@@ -150,6 +150,19 @@ namespace Ymir {
 	    fprintf (stderr, "%s\n", msg.c_str ());
 	    raise (SIGABRT);
 	}
+
+	/**
+	   \brief Cause the compiler to abort due to internal error
+	   \param format_ a string to format with parameters
+	   \param args the parameters
+	*/
+	template <typename ... TArgs>
+	void halt (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Assert", args...);
+	    msg = addLine (msg, loc);
+	    fprintf (stderr, "%s\n", msg.c_str ());	    
+	    raise (SIGABRT);
+	}
 	
     }
     

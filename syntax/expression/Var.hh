@@ -9,9 +9,6 @@ namespace syntax {
      * \struct Var
      */
     class Var : public IExpression {
-	
-	/** The location of the allocation */
-	lexing::Word _token;
 
 	/** The decorator of the var if any (ref, const ...) */
 	std::vector <Decorator> _decos;
@@ -21,10 +18,10 @@ namespace syntax {
 	friend Expression;
 
 	Var ();
+	
+	Var (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Var & blk);
 
 	static Expression init (const lexing::Word & token);
 

@@ -2,25 +2,24 @@
 
 namespace syntax {
 
-    Break::Break () : _value (Expression::empty ()) {
-    }
-
-    Expression Break::init (const Break & brk) {
-	auto br = new (Z0) Break ();
-	br-> _location = brk._location;
-	br-> _value = brk._value;
-	return Expression {br};
-    }
+    Break::Break () :
+	IExpression (lexing::Word::eof ()),
+	_value (Expression::empty ())
+    {}
+    
+    Break::Break (const lexing::Word & loc) :
+	IExpression (loc),
+	_value (Expression::empty ())
+    {}
 
     Expression Break::init (const lexing::Word & location, const Expression & value) {
-	auto br = new (Z0) Break ();
-	br-> _location = location;
+	auto br = new (Z0) Break (location);
 	br-> _value = value;
 	return Expression {br};	
     }
     
     Expression Break::clone () const {
-	return Break::init (*this);
+	return Expression {new (Z0) Break (*this)};
     }
 
     bool Break::isOf (const IExpression * type) const {

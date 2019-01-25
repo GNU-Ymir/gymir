@@ -1,25 +1,24 @@
 #include <ymir/syntax/expression/If.hh>
 
 namespace syntax {
-
+        
     If::If () :
+	IExpression (lexing::Word::eof ()),
 	_test (Expression::empty ()),
 	_content (Expression::empty ()),
 	_else (Expression::empty ())
     {}
 
-    Expression If::init (const If & wh) {
-	auto ret = new (Z0) If ();
-	ret-> _location = wh._location;
-	ret-> _test = wh._test;
-	ret-> _content = wh._content;
-	ret-> _else = wh._else;
-	return Expression {ret};
-    }
-
+    If::If (const lexing::Word & loc) :
+	IExpression (loc),
+	_test (Expression::empty ()),
+	_content (Expression::empty ()),
+	_else (Expression::empty ())
+    {}
+    
+   
     Expression If::init (const lexing::Word & location, const Expression & test, const Expression & content, const Expression & elsePart) {
-	auto ret = new (Z0) If ();
-	ret-> _location = location;
+	auto ret = new (Z0) If (location);
 	ret-> _test = test;
 	ret-> _content = content;
 	ret-> _else = elsePart;
@@ -27,7 +26,7 @@ namespace syntax {
     }
 
     Expression If::clone () const {
-	return If::init (*this);
+	return Expression {new If (*this)};
     }
 
     bool If::isOf (const IExpression * type) const {

@@ -9,9 +9,6 @@ namespace syntax {
      */
     class MacroCall : public IExpression {
 
-	/** The location */
-	lexing::Word _location;
-
 	/** The left operand (macro) */
 	Expression _left;
 
@@ -23,10 +20,10 @@ namespace syntax {
 	friend Expression;
 
 	MacroCall ();
+	
+	MacroCall (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const MacroCall & blk);
 
 	static Expression init (const lexing::Word & location, const Expression & left, const std::vector <lexing::Word> & content);
 

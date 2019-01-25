@@ -13,9 +13,6 @@ namespace syntax {
      */
     class ArrayAlloc : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _location;
-
 	/** The left operand, can be a type or a value */
 	Expression _left;
 
@@ -32,9 +29,9 @@ namespace syntax {
 
 	ArrayAlloc ();
 
-    public :
+	ArrayAlloc (const lexing::Word & loc);
 
-	static Expression init (const ArrayAlloc & alloc);
+    public :
 
 	static Expression init (const lexing::Word & location, const Expression & left, const Expression &size, bool isDynamic = false);
 

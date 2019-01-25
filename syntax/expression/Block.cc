@@ -2,20 +2,16 @@
 
 namespace syntax {
 
-    Block::Block () {}
-
-    Expression Block::init (const Block & alloc) {
-	auto ret = new (Z0) Block ();
-	ret-> _begin = alloc._begin;
-	ret-> _end = alloc._end;
-	ret-> _decls = alloc._decls;
-	ret-> _content = alloc._content;
-	return Expression {ret};
-    }
+    Block::Block () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Block::Block (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Block::init (const lexing::Word & location, const lexing::Word & end, const std::vector <Declaration> & decls, const std::vector <Expression> & content) {
-	auto ret = new (Z0) Block ();
-	ret-> _begin = location;
+	auto ret = new (Z0) Block (location);
 	ret-> _end = end;
 	ret-> _decls = decls;
 	ret-> _content = content;
@@ -23,7 +19,7 @@ namespace syntax {
     }
 
     Expression Block::clone () const {
-	return Block::init (*this);
+	return Expression {new (Z0) Block (*this)};
     }
 
     bool Block::isOf (const IExpression * type) const {
@@ -42,4 +38,8 @@ namespace syntax {
 	    it.treePrint (stream, i + 1);
     }
     
+    const std::vector <Expression> & Block::getContent () const {
+	return this-> _content;
+    }
+
 }

@@ -17,6 +17,8 @@ namespace Ymir {
 			    PACKED_AND_UNION = "structure could not be packed and union at the same time",
 			    VAR_DECL_WITH_NOTHING = "var declaration must at least have a type or a value",
 			    INCOMPATIBLE_TYPES = "incompatible types %(y) and %(y)",
-			    UNDEF_TYPE = "undefined type %(y)"
+			    UNDEF_TYPE = "undefined type %(y)",
+			    UNREACHBLE_STATEMENT = "unreachable statement",
+			    OVERFLOW = "overflow capacity for type %(y)"
     );    
 }

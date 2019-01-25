@@ -13,9 +13,6 @@ namespace syntax {
      */
     class Cast : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _op;
-
 	/** The left operand, can be a type or a value */
 	Expression _type;
 
@@ -27,10 +24,10 @@ namespace syntax {
 	friend Expression;
 
 	Cast ();
+	
+	Cast (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Cast & alloc);
 
 	static Expression init (const lexing::Word & op, const Expression & type, const Expression &content);
 

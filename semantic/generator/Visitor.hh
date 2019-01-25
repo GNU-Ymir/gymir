@@ -80,6 +80,20 @@ namespace semantic {
 	    
 	    generic::Tree generateIntegerType (const Integer & type);
 	    
+	    /**
+	     * \brief Transform a value to gimple
+	     */
+	    generic::Tree generateValue (const Generator & gen);
+
+	    /**
+	     * \brief Transform a block into gimple
+	     */
+	    generic::Tree generateBlock (const Block & bl);
+
+	    /**
+	     * \brief Transform a fixed value into gimple
+	     */
+	    generic::Tree generateFixed (const Fixed & fixed);
 	    
 	private :
 

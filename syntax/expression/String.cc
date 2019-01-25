@@ -2,24 +2,22 @@
 
 namespace syntax {
 
-    String::String () {}
-
-    Expression String::init (const String & alloc) {
-	auto ret = new (Z0) String ();
-	ret-> _location = alloc._location;
-	ret-> _sequence = alloc._sequence;
-	return Expression {ret};
-    }
+    String::String () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    String::String (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression String::init (const lexing::Word & location, const std::string & sequence) {
-	auto ret = new (Z0) String ();	
-	ret-> _location = location;
+	auto ret = new (Z0) String (location);	
 	ret-> _sequence = sequence;
 	return Expression {ret};
     }
 
     Expression String::clone () const {
-	return String::init (*this);
+	return Expression {new String (*this)};
     }
 
     bool String::isOf (const IExpression * type) const {
@@ -31,7 +29,7 @@ namespace syntax {
 
     void String::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<String> ", i, '\t');
-	stream.writeln (this-> _location, " ", this-> _sequence);
+	stream.writeln (this-> getLocation (), " ", this-> _sequence);
     }
     
 }

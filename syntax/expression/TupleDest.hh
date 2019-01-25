@@ -15,9 +15,6 @@ namespace syntax {
 
     class TupleDest : public IExpression {
 
-	/** The location of the tuple destructor */
-	lexing::Word _location;
-
 	/** The list of the var decl (basically VarDecl)*/
 	std::vector <Expression> _vars;
 
@@ -32,15 +29,10 @@ namespace syntax {
 	friend Expression;
 
 	TupleDest ();
+	
+	TupleDest (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a tuple destructor
-	 * \param dest the destructor 
-	 */
-	static Expression init (const TupleDest &dest);
-
 
 	/**
 	 * \brief Create a new instance of TupleDest

@@ -9,18 +9,15 @@ namespace syntax {
      */
     class Bool : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _token;
-
     private :
 
 	friend Expression;
 
 	Bool ();
 
-    public :
+	Bool (const lexing::Word & loc);
 
-	static Expression init (const Bool & blk);
+    public :
 
 	static Expression init (const lexing::Word & token);
 

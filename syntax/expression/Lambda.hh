@@ -10,9 +10,6 @@ namespace syntax {
      */
     class Lambda : public IExpression {
 
-	/** The location of the allocation (ref or eof ())*/
-	lexing::Word _op;
-
 	Function::Prototype _proto;
 	
 	/** The content of the function */
@@ -23,10 +20,10 @@ namespace syntax {
 	friend Expression;
 
 	Lambda ();
+	
+	Lambda (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Lambda & alloc);
 
 	static Expression init (const lexing::Word & op, const Function::Prototype & proto, const Expression & content);
 

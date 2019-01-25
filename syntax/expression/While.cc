@@ -3,28 +3,26 @@
 namespace syntax {
 
     While::While () :
+	IExpression (lexing::Word::eof ()),
+	_test (Expression::empty ()),
+	_content (Expression::empty ())
+    {}    
+    
+    While::While (const lexing::Word & loc) :
+	IExpression (loc),
 	_test (Expression::empty ()),
 	_content (Expression::empty ())
     {}
 
-    Expression While::init (const While & wh) {
-	auto ret = new (Z0) While ();
-	ret-> _location = wh._location;
-	ret-> _test = wh._test;
-	ret-> _content = wh._content;
-	return Expression {ret};
-    }
-
     Expression While::init (const lexing::Word & location, const Expression & test, const Expression & content) {
-	auto ret = new (Z0) While ();
-	ret-> _location = location;
+	auto ret = new (Z0) While (location);
 	ret-> _test = test;
 	ret-> _content = content;
 	return Expression {ret};
     }
 
     Expression While::clone () const {
-	return While::init (*this);
+	return Expression {new While (*this)};
     }
 
     bool While::isOf (const IExpression * type) const {

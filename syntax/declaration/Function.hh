@@ -153,11 +153,15 @@ namespace syntax {
 	    void setBody (const Expression & body);
 
 	    /**
+	     * \return the body
+	     */
+	    const Expression & getBody () const;
+	    
+	    /**
 	     * \brief Set the inner contract part 
 	     * \param inner 
 	     */
 	    void setInner (const Expression & inner);
-
 
 	    /**
 	     * \brief Set the outer contract part 
@@ -165,6 +169,17 @@ namespace syntax {
 	     * \param name the name of the variable in the out block
 	     */
 	    void setOuter (const Expression & outer, const lexing::Word & name);
+
+	    /**
+	     * \return the inner contract part
+	     */
+	    const Expression & getInner () const;
+
+	    /**
+	     * \return the outer contract part
+	     */
+	    const Expression& getOuter () const;
+
 	};
 
     private :
@@ -267,7 +282,11 @@ namespace syntax {
 	 * \param body the body of the function
 	 */
 	void setBody (const Body & body);
-	
+
+	/**
+	 * \return the body of the function
+	 */
+	const Body & getBody () const;
     };
     
 }

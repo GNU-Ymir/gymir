@@ -2,24 +2,22 @@
 
 namespace syntax {
 
-    Pragma::Pragma () {}
-
-    Expression Pragma::init (const Pragma & alloc) {
-	auto ret = new (Z0) Pragma ();
-	ret-> _token = alloc._token;
-	ret-> _params = alloc._params;
-	return Expression {ret};
-    }
+    Pragma::Pragma () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Pragma::Pragma (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Pragma::init (const lexing::Word & location, const std::vector <Expression> & params) {
-	auto ret = new (Z0) Pragma ();
-	ret-> _token = location;
+	auto ret = new (Z0) Pragma (location);
 	ret-> _params = params;
 	return Expression {ret};
     }
 
     Expression Pragma::clone () const {
-	return Pragma::init (*this);
+	return Expression {new Pragma (*this)};
     }
 
     bool Pragma::isOf (const IExpression * type) const {
@@ -31,7 +29,7 @@ namespace syntax {
 
     void Pragma::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Pragma> ", i, '\t');
-	stream.writeln (this-> _token);
+	stream.writeln (this-> getLocation ());
 	for (auto & it : this-> _params)
 	    it.treePrint (stream, i + 1);
     }

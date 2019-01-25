@@ -3,21 +3,19 @@
 namespace syntax {
 
     VarDecl::VarDecl () :
+	IExpression (lexing::Word::eof ()),
+	_type (Expression::empty ()),
+	_value (Expression::empty ())
+    {}
+    
+    VarDecl::VarDecl (const lexing::Word & loc) :
+	IExpression (loc),
 	_type (Expression::empty ()),
 	_value (Expression::empty ())
     {}
 
-    Expression VarDecl::init (const VarDecl & decl) {
-	auto ret = new (Z0) VarDecl ();
-	ret-> _name = decl._name;
-	ret-> _value = decl._value;
-	ret-> _type = decl._type;
-	ret-> _decos = decl._decos;
-	return Expression {ret};
-    }
-
     Expression VarDecl::init (const lexing::Word & name, const std::vector <Decorator> & decos, const Expression & type, const Expression & value) {
-	auto ret = new (Z0) VarDecl ();
+	auto ret = new (Z0) VarDecl (name);
 	ret-> _name = name;
 	ret-> _value = value;
 	ret-> _type = type;
@@ -26,7 +24,7 @@ namespace syntax {
     }
 
     Expression VarDecl::clone () const {
-	return VarDecl::init (*this);
+	return Expression {new VarDecl (*this)};
     }
 
     bool VarDecl::isOf (const IExpression * type) const {

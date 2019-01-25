@@ -2,20 +2,18 @@
 
 namespace syntax {
 
-    MultOperator::MultOperator () : _element (Expression::empty ()) {}
-
-    Expression MultOperator::init (const MultOperator & op) {
-	auto ret = new (Z0) MultOperator ();
-	ret-> _location = op._location;
-	ret-> _end = op._end;
-	ret-> _element = op._element;
-	ret-> _params = op._params;
-	return Expression {ret};
-    }
+    MultOperator::MultOperator () :
+	IExpression (lexing::Word::eof ()),
+	_element (Expression::empty ())
+    {}
+    
+    MultOperator::MultOperator (const lexing::Word & loc) :
+	IExpression (loc),
+	_element (Expression::empty ())
+    {}
 
     Expression MultOperator::init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params) {
-	auto ret = new (Z0) MultOperator ();
-	ret-> _location = location;
+	auto ret = new (Z0) MultOperator (location);
 	ret-> _end = end;
 	ret-> _element = element;
 	ret-> _params = params;
@@ -23,7 +21,7 @@ namespace syntax {
     }
 
     Expression MultOperator::clone () const {
-	return MultOperator::init (*this);
+	return Expression {new MultOperator (*this)};
     }
 
     bool MultOperator::isOf (const IExpression * type) const {
@@ -35,7 +33,7 @@ namespace syntax {
 
     void MultOperator::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<MultOperator> ", i, '\t');
-	stream.writeln (this-> _location, " ", this-> _end);
+	stream.writeln (this-> getLocation (), " ", this-> _end);
 	this-> _element.treePrint (stream, i + 1);
 	stream.writefln ("%*<Params> ", i + 1, '\t');
 	for (auto & it : this-> _params)

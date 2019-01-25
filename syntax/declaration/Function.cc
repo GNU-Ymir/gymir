@@ -105,13 +105,25 @@ namespace syntax {
 	this-> _body = body;
     }
 
+    const Expression & Function::Body::getBody () const {
+	return this-> _body;
+    }
+    
     void Function::Body::setInner (const Expression & inner) {
 	this-> _inner = inner;
     }
 
+    const Expression & Function::Body::getInner () const {
+	return this-> _inner;
+    }
+    
     void Function::Body::setOuter (const Expression & outer, const lexing::Word & name) {
 	this-> _outer = outer;
 	this-> _outerName = name;
+    }
+
+    const Expression & Function::Body::getOuter () const {
+	return this-> _outer;
     }
     
     Function::Function () :
@@ -198,4 +210,8 @@ namespace syntax {
 	this-> _body = body;
     }
 
+    const Function::Body & Function::getBody () const {
+	return this-> _body;
+    }
+    
 }

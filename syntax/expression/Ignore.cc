@@ -2,22 +2,20 @@
 
 namespace syntax {
 
-    Ignore::Ignore () {}
-
-    Expression Ignore::init (const Ignore & alloc) {
-	auto ret = new (Z0) Ignore ();
-	ret-> _token = alloc._token;
-	return Expression {ret};
-    }
+    Ignore::Ignore () :
+	IExpression (lexing::Word::eof ())
+    {}
+    
+    Ignore::Ignore (const lexing::Word & loc) :
+	IExpression (loc)
+    {}
 
     Expression Ignore::init (const lexing::Word & location) {
-	auto ret = new (Z0) Ignore ();
-	ret-> _token = location;
-	return Expression {ret};
+	return Expression {new (Z0) Ignore (location)};
     }
 
     Expression Ignore::clone () const {
-	return Ignore::init (*this);
+	return Expression {new (Z0) Ignore (*this)};
     }
 
     bool Ignore::isOf (const IExpression * type) const {

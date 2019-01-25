@@ -2,26 +2,25 @@
 
 namespace syntax {
 
-    FuncPtr::FuncPtr () : _ret (Expression::empty ()) {}
-
-    Expression FuncPtr::init (const FuncPtr & op) {
-	auto ret = new (Z0) FuncPtr ();
-	ret-> _location = op._location;
-	ret-> _ret = op._ret;
-	ret-> _params = op._params;
-	return Expression {ret};
-    }
-
+    FuncPtr::FuncPtr () :	
+	IExpression (lexing::Word::eof ()),
+	_ret (Expression::empty ())
+    {}
+    
+    FuncPtr::FuncPtr (const lexing::Word & loc) :
+	IExpression (loc),
+	_ret (Expression::empty ())
+    {}
+    
     Expression FuncPtr::init (const lexing::Word & location, const Expression & retType, const std::vector <Expression> & params) {
-	auto ret = new (Z0) FuncPtr ();
-	ret-> _location = location;
+	auto ret = new (Z0) FuncPtr (location);
 	ret-> _ret = retType;
 	ret-> _params = params;
 	return Expression {ret};
     }
 
     Expression FuncPtr::clone () const {
-	return FuncPtr::init (*this);
+	return Expression {new FuncPtr (*this)};
     }
 
     bool FuncPtr::isOf (const IExpression * type) const {

@@ -9,8 +9,6 @@ namespace syntax {
      */
     class Is : public IExpression {
 
-	lexing::Word _location;
-
 	/** The element to test */
 	Expression _element;
 
@@ -22,14 +20,10 @@ namespace syntax {
 	friend Expression;
 
 	Is ();
+	
+	Is (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a mult operator
-	 * \param op the operator to copy
-	 */
-	static Expression init (const Is & op);
 
 	/**
 	 * \brief Create a new Multiple operator

@@ -1,24 +1,21 @@
 #include <ymir/syntax/expression/ArrayAlloc.hh>
 
 namespace syntax {
-
+   
     ArrayAlloc::ArrayAlloc () :
+	IExpression (lexing::Word::eof ()),
 	_left (Expression::empty ()),
 	_size (Expression::empty ())
     {}
 
-    Expression ArrayAlloc::init (const ArrayAlloc & alloc) {
-	auto ret = new (Z0) ArrayAlloc ();
-	ret-> _location = alloc._location;
-	ret-> _left = alloc._left;
-	ret-> _size = alloc._size;
-	ret-> _isDynamic = alloc._isDynamic;
-	return Expression {ret};
-    }
+    ArrayAlloc::ArrayAlloc (const lexing::Word & loc) :
+	IExpression (loc),
+	_left (Expression::empty ()),
+	_size (Expression::empty ())
+    {}
 
     Expression ArrayAlloc::init (const lexing::Word & location, const Expression & left, const Expression &size, bool isDynamic) {
-	auto ret = new (Z0) ArrayAlloc ();
-	ret-> _location = location;
+	auto ret = new (Z0) ArrayAlloc (location);
 	ret-> _left = left;
 	ret-> _size = size;
 	ret-> _isDynamic = isDynamic;
@@ -26,7 +23,7 @@ namespace syntax {
     }
 
     Expression ArrayAlloc::clone () const {
-	return ArrayAlloc::init (*this);
+	return Expression {new ArrayAlloc (*this)};
     }
 
     bool ArrayAlloc::isOf (const IExpression * type) const {

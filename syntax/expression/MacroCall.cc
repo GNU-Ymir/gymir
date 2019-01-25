@@ -2,26 +2,25 @@
 
 namespace syntax {
 
-    MacroCall::MacroCall () : _left (Expression::empty ()) {}
-
-    Expression MacroCall::init (const MacroCall & alloc) {
-	auto ret = new (Z0) MacroCall ();
-	ret-> _location = alloc._location;
-	ret-> _left = alloc._left;
-	ret-> _content = alloc._content;
-	return Expression {ret};
-    }
+    MacroCall::MacroCall () :
+	IExpression (lexing::Word::eof ()),
+	_left (Expression::empty ())
+    {}
+    
+    MacroCall::MacroCall (const lexing::Word & loc) :
+	IExpression (loc),
+	_left (Expression::empty ())
+    {}
 
     Expression MacroCall::init (const lexing::Word & location, const Expression & left, const std::vector <lexing::Word> & content) {
-	auto ret = new (Z0) MacroCall ();
-	ret-> _location = location;
+	auto ret = new (Z0) MacroCall (location);
 	ret-> _left = left;
 	ret-> _content = content;
 	return Expression {ret};
     }
 
     Expression MacroCall::clone () const {
-	return MacroCall::init (*this);
+	return Expression {new MacroCall (*this)};
     }
 
     bool MacroCall::isOf (const IExpression * type) const {

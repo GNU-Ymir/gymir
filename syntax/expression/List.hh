@@ -12,9 +12,6 @@ namespace syntax {
      */
     class List : public IExpression {
 
-	/** The location of the expression ('[' or '(' token) */
-	lexing::Word _location;
-
 	/** The location of the end of this expression (']' or ')' token) */
 	lexing::Word _end;
 
@@ -26,14 +23,10 @@ namespace syntax {
 	friend Expression;
 
 	List ();
+	
+	List (const lexing::Word & loc);
 
     public :
-
-	/**
-	 * \brief Make a copy of a mult operator
-	 * \param op the operator to copy
-	 */
-	static Expression init (const List & op);
 
 	/**
 	 * \brief Create a new Multiple operator

@@ -14,9 +14,6 @@ namespace syntax {
      */
     class Block : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _begin;
-
 	/** The end of the block */
 	lexing::Word _end;
 
@@ -31,10 +28,10 @@ namespace syntax {
 	friend Expression;
 
 	Block ();
+	
+	Block (const lexing::Word & loc);
 
     public :
-
-	static Expression init (const Block & blk);
 
 	static Expression init (const lexing::Word & op, const lexing::Word & end, const std::vector <Declaration> & decls, const std::vector <Expression> & conetent);
 
@@ -43,6 +40,11 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	bool isOf (const IExpression * type) const override;
+
+	/**
+	 * \return the list of expression the block contains
+	 */
+	const std::vector <Expression> & getContent () const;
 	
     };    
 
