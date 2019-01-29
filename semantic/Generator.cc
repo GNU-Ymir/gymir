@@ -4,15 +4,28 @@ namespace semantic {
     namespace generator {
 
 	Generator Generator::__empty__ (Generator::empty ());
+	uint IGenerator::__lastId__ = 0;
 	
 	IGenerator::IGenerator () :
 	    _location (lexing::Word::eof ()),
 	    _name ("")
-	{}
+	{
+	    this-> _uniqId = __lastId__;
+	    __lastId__ ++ ;
+	}
 	
 	IGenerator::IGenerator (const lexing::Word & location, const std::string & name) :
 	    _location (location),
 	    _name (name)
+	{
+	    this-> _uniqId = __lastId__;
+	    __lastId__ ++ ;
+	}
+
+	IGenerator::IGenerator (const IGenerator & other) :
+	    _location (other._location),
+	    _name (other._name),
+	    _uniqId (other._uniqId)
 	{}
 
 	bool IGenerator::isOf (const IGenerator *) const {
@@ -23,6 +36,14 @@ namespace semantic {
 	    return this-> _name;
 	}
 
+	uint IGenerator::getUniqId () const {
+	    return this-> _uniqId;
+	}
+
+	void IGenerator::resetIdCount () {
+	    __lastId__ = 0;
+	}
+	
 	const lexing::Word & IGenerator::getLocation () const {
 	    return this-> _location;
 	}
@@ -56,6 +77,15 @@ namespace semantic {
 	    if (this-> _value == nullptr) return other._value == nullptr;
 	    else return this-> _value-> equals (other);
 	}	
-	
+
+	void Generator::resetIdCount () {
+	    IGenerator::resetIdCount ();
+	}
+
+	uint Generator::getUniqId () const {
+	    if (this-> _value == nullptr)
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return this-> _value-> getUniqId ();	    
+	}
     }
 }

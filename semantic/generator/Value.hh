@@ -19,12 +19,12 @@ namespace semantic {
 	    /**
 	     * this value is set to true if the current generator break the closest loop scope in any case
 	     */
-	    bool _breaker;
+	    bool _breaker = false;
 
 	    /**
 	     * this value is set to true if the current generator close the frame in any case
 	     */
-	    bool _returner;
+	    bool _returner = false;
 	    
 	protected : 
 
@@ -32,7 +32,9 @@ namespace semantic {
 
 	    Value ();
 
-	    Value (const Generator & type);	    	    
+	    Value (const lexing::Word & loc, const Generator & type);
+
+	    Value (const lexing::Word & loc, const std::string & name, const Generator & type);
 	    
 	public :
 

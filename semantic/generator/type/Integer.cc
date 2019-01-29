@@ -39,11 +39,11 @@ namespace semantic {
 	std::string Integer::typeName () const {
 	    if (this-> _isSigned) {
 		if (this-> _size >= 0)
-		    return Ymir::OutBuffer ("u", this-> _size).str ();
+		    return Ymir::OutBuffer ("i", this-> _size).str ();
 		return "usize";
 	    } else {
 		if (this-> _size >= 0)
-		    return Ymir::OutBuffer ("i", this-> _size).str ();
+		    return Ymir::OutBuffer ("u", this-> _size).str ();
 		return "isize";
 	    }
 	}	

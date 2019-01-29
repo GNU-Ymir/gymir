@@ -31,5 +31,9 @@ namespace syntax {
 	for (auto & it : this-> _params)
 	    it.treePrint (stream, i);
     }
+
+    const std::vector <Expression> Set::getContent () const {
+	return this-> _params;
+    }
     
 }

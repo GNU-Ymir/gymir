@@ -20,11 +20,11 @@ namespace semantic {
 
 	    Block ();
 
-	    Block (const Generator & type, const std::vector <Generator> & content);	    	    
+	    Block (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content);	    	    
 	    
 	public :
 
-	    static Generator init (const Generator & type, const std::vector <Generator> & values);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern

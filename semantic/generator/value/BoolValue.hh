@@ -10,30 +10,22 @@ namespace semantic {
 	 * A block possess a list of expression 
 	 * it has also a type, (as any value)
 	 */
-	class Fixed : public Value {
-
-	public :
-	    
-	    union UI {
-		ulong u;		
-		long i;
-	    };
-	    
+	class BoolValue : public Value {	    
 	private :
 	    
-	    UI _value;
+	    bool _value;
 	    
 	protected : 
 
 	    friend Generator;
 
-	    Fixed ();
+	    BoolValue ();
 
-	    Fixed (const lexing::Word & loc, const Generator & type, UI value);	    	    
+	    BoolValue (const lexing::Word & loc, const Generator & type, bool value);	    	    
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Generator & type, UI value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, bool value);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -53,7 +45,7 @@ namespace semantic {
 	    /**
 	     * \return the value of the fixed const, can be signed or unsigned depending on the type
 	     */
-	    UI getUI () const;
+	    bool getValue () const;
 
 	    
 	};	

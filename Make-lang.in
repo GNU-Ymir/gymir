@@ -111,6 +111,7 @@ ymir_OBJS = \
 	ymir/semantic_Enum.o \
 	ymir/semantic_VarDecl.o \
 	ymir/validator_Visitor.o \
+	ymir/validator_BinaryVisitor.o \
 	ymir/semantic_Generator.o \
 	ymir/generator_Type.o \
 	ymir/generator_Value.o \
@@ -124,6 +125,14 @@ ymir_OBJS = \
 	ymir/generator_Frame.o \
 	ymir/generator_Block.o \
 	ymir/generator_Fixed.o \
+	ymir/generator_Binary.o \
+	ymir/generator_BinaryInt.o \
+	ymir/generator_VarRef.o \
+	ymir/generator_VarDecl.o \
+	ymir/generator_Set.o \
+	ymir/generator_Bool.o \
+	ymir/generator_BinaryBool.o \
+	ymir/generator_BoolValue.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

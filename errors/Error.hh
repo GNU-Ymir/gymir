@@ -65,6 +65,20 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
+	std::string makeWarn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);
+	    msg = addLine (msg, loc);
+	    return msg;
+	}
+	
+	template <typename ... TArgs>
+	void warn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);
+	    msg = addLine (msg, loc);
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	}
+
+	template <typename ... TArgs>
 	void occurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);
@@ -75,6 +89,12 @@ namespace Ymir {
 	template <typename ... TArgs>
 	void occur (const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);	   
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	}
+
+	template <typename ... TArgs>
+	void warn (const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);
 	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 	

@@ -33,6 +33,8 @@ namespace semantic {
 	    /** The list of generator produced by the search */
 	    std::vector <generator::Generator> _list;
 
+	    std::vector <std::set <std::string> > _usedSyms;
+	    
 	    std::vector <std::map <std::string, generator::Generator> > _symbols;
 	    
 	private :
@@ -99,10 +101,41 @@ namespace semantic {
 	    generator::Generator validateBlock (const syntax::Block & block);
 
 	    /**
+	     * \brief Validate a set of expression
+	     * \return a tree containing the result of the block
+	     */
+	    generator::Generator validateSet (const syntax::Set & set);
+	    
+	    /**
 	     * \brief Validate an fixed const integer value
 	     */
 	    generator::Generator validateFixed (const syntax::Fixed & fixed);	    
 
+	    /**
+	     * \brief Validate a const bool value
+	     */
+	    generator::Generator validateBool (const syntax::Bool & b);
+	    
+	    /**
+	     * \brief Validate a binary expression 
+	     * \brief This generation is a bit complex as it depends on the type of the operands
+	     * \brief All binary operations are handled into BinaryVisitor class
+	     */
+	    generator::Generator validateBinary (const syntax::Binary & bin);
+	    
+	    /**
+	     * \brief Validate a var 
+	     * \brief It will check all the local reference
+	     * \brief If no local reference are found, it will find the symbol inside the table of the current frame
+	     * \brief And then produce the generator for this symbol
+	     */
+	    generator::Generator validateVar (const syntax::Var & var);
+
+	    /**
+	     * \brief Validate a var declaration inside a block (or a frame)
+	     */
+	    generator::Generator validateVarDeclValue (const syntax::VarDecl & decl);
+	    
 	    /**
 	     * \return the list of generator produced by semantic validation
 	     */
@@ -115,6 +148,8 @@ namespace semantic {
 	    void enterBlock ();
 
 	    void insertLocal (const std::string & name, const generator::Generator & local);
+
+	    const generator::Generator & getLocal (const std::string & name) ;
 	    
 	    void quitBlock ();
 	    

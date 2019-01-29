@@ -7,6 +7,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
+#include <ymir/utils/Scope.hh>
 
 /**
  * \file Exception.hh
@@ -60,6 +61,17 @@ void excPop (jmp_buf *j);
 void excThrow (const char *file, const char *function, unsigned line, int code, const std::string& msg);
 
 /**
+ * \brief Throw a previous exception (that has been catch)
+ * \param file the file where the exception is located (source file)
+ * \param function the function that throws the exception 
+ * \param line the line of the exception 
+ * \param code the type of exception
+ * \param msg the list of messages of the exception
+ * \brief use RETHROW macro for simplification
+*/
+void excThrow (const char *file, const char *function, unsigned line, int code, const std::vector<std::string> & msg);
+
+/**
  * \brief Rethrow a previous exception
  * \brief It used in FINALLY, to rethrow if none of the catching have successfully catch this exception
  */
@@ -86,6 +98,11 @@ void clearErrors ();
 std::string& getLastError ();
 
 /**
+ * \return the list of current errors
+ */
+const std::vector<std::string> & getErrors ();
+
+/**
  * Define a try block 
  * \verbatim
  TRY {
@@ -93,12 +110,13 @@ std::string& getLastError ();
  } FINALLY;
  \endverbatim
 */
-#define TRY								\
+#define TRY(BLOCK)							\
     jmp_buf buf;							\
     int res = setjmp (buf);						\
-    if (excPush (&buf, res, __LINE__, __FILE__))			\
-	for (int END = 1 ; END == 1 ; END = 0, excPop (&buf))		\
-						
+    if (excPush (&buf, res, __LINE__, __FILE__)) {			\
+	Ymir::Scope end ([&]() {excPop (&buf);});			\
+	BLOCK;								\
+    }						
 					       
 /**
  * Define a catch of a kind of exception
@@ -143,7 +161,7 @@ std::string& getLastError ();
  * \param msg the message of the exception
  */
 #define THROW(code, msg)					\
-    excThrow(__FILE__, __FUNCTION__, __LINE__, code, msg)
+    excThrow(__FILE__, __FUNCTION__, __LINE__, (int) code, msg)
 
 /**
  * \brief Print the messages of all the thrown exceptions
@@ -156,3 +174,8 @@ std::string& getLastError ();
  */
 #define CLEAR_ERRORS()				\
     clearErrors ();
+
+#define GET_ERRORS_AND_CLEAR(name)			\
+    std::vector<std::string> name = getErrors ();	\
+    CLEAR_ERRORS ();
+    

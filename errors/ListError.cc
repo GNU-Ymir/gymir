@@ -19,6 +19,10 @@ namespace Ymir {
 			    INCOMPATIBLE_TYPES = "incompatible types %(y) and %(y)",
 			    UNDEF_TYPE = "undefined type %(y)",
 			    UNREACHBLE_STATEMENT = "unreachable statement",
-			    OVERFLOW = "overflow capacity for type %(y)"
+			    OVERFLOW = "overflow capacity for type %(y)",
+			    UNDEFINED_BIN_OP = "undefined operator %(y) for types %(y) and %(y)",
+			    UNDEF_VAR = "undefined symbol %(y)",
+			    NEVER_USED = "symbol %(y) declared but never used",
+			    VOID_VAR = "cannot declare var of type void"
     );    
 }

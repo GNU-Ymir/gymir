@@ -1,4 +1,5 @@
 #include <ymir/semantic/validator/Visitor.hh>
+#include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <string>
 #include <algorithm>
@@ -81,7 +82,20 @@ namespace semantic {
 		)
 		    Ymir::Error::halt ("%(r) - TODO contract", "Critical");
 		
-		auto body = validateValue (function.getBody ().getBody ()); 
+		auto body = validateValue (function.getBody ().getBody ());
+
+		if (!body.to<Value> ().isReturner () && (!retType.isEmpty () && !retType.is<Void> ())) {
+		    if (!body.to <Value> ().getType ().equals (retType))
+			Ymir::Error::occur (body.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    body.to <Value> ().getType ().to <Type> ().typeName (),
+					    retType.to <Type> ().typeName ()
+			);
+		}
+
+		if (retType.isEmpty ()) {
+		    retType = body.to<Value> ().getType ();
+		}		
+		
 		quitBlock ();
 		insertNewGenerator (Frame::init (function.getName (), function.getName ().str, params, retType, body));
 		
@@ -122,6 +136,27 @@ namespace semantic {
 		of (syntax::Fixed, fixed,
 		    return validateFixed (fixed);
 		);
+
+		of (syntax::Bool, b,
+		    return validateBool (b);
+		);
+		
+		of (syntax::Binary, binary,
+		    return validateBinary (binary);
+		);
+
+		of (syntax::Var, var,
+		    return validateVar (var);
+		);
+
+		of (syntax::VarDecl, var,
+		    return validateVarDeclValue (var);
+		);
+
+		of (syntax::Set, set,
+		    return validateSet (set);
+		);
+		
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -133,23 +168,73 @@ namespace semantic {
 	    Generator type (Void::init (block.getLocation ()));
 	    bool breaker = false, returner = false;
 	    enterBlock ();
+
+	    std::vector <std::string> errors;
+	    for (int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
+		TRY (
+		    if (returner || breaker) {			
+			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
+		    }
+		    
+		    auto value = validateValue (block.getContent () [i]);
+		    
+		    if (value.to <Value> ().isReturner ()) returner = true;
+		    if (value.to <Value> ().isBreaker ()) breaker = true;
+		    type = value.to <Value> ().getType ();
+		    
+		    values.push_back (value);		    
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+		} FINALLY;
+	    }
+
+	    TRY (
+		quitBlock ();
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } FINALLY;
 	    
-	    for (auto & expr : block.getContent ()) {
-		if (returner || breaker)
-		    Error::occur (expr.getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
-
-		auto value = validateValue (expr);
-		if (value.to <Value> ().isReturner ()) returner = true;
-		if (value.to <Value> ().isBreaker ()) breaker = true;
-		type = value.to <Value> ().getType ();
-
-		values.push_back (value);
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
 	    }
 	    
-	    quitBlock ();
-	    return Block::init (type, values);
+	    return Block::init (block.getLocation (), type, values);
 	}	
 
+	Generator Visitor::validateSet (const syntax::Set & set) {
+	    std::vector <Generator> values;
+	    Generator type (Void::init (set.getLocation ()));
+	    bool breaker = false, returner = false;
+
+	    std::vector <std::string> errors;
+	    for (int i = 0 ; i < (int) set.getContent ().size () ; i ++) {
+		TRY (
+		    if (returner || breaker) {			
+			Error::occur (set.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
+		    }
+		    
+		    auto value = validateValue (set.getContent () [i]);
+		    
+		    if (value.to <Value> ().isReturner ()) returner = true;
+		    if (value.to <Value> ().isBreaker ()) breaker = true;
+		    type = value.to <Value> ().getType ();
+		    
+		    values.push_back (value);		    
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+		} FINALLY;
+	    }
+
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
+
+	    return Set::init (set.getLocation (), type, values);
+	}
+	
 	Generator Visitor::validateFixed (const syntax::Fixed & fixed) {
 	    struct Anonymous {
 
@@ -232,8 +317,71 @@ namespace semantic {
 	    if (integer.isSigned ()) value.i = Anonymous::convertS (fixed.getLocation (), integer);
 	    else value.u = Anonymous::convertU (fixed.getLocation (), integer);	    
 	    
-	    return Fixed::init (type, value);
+	    return Fixed::init (fixed.getLocation (), type, value);
 	}       
+
+	Generator Visitor::validateBool (const syntax::Bool & b) {
+	    return BoolValue::init (b.getLocation (), Bool::init (b.getLocation ()), b.getLocation () == Keys::TRUE_);
+	}
+	
+	Generator Visitor::validateBinary (const syntax::Binary & bin) {
+	    auto binVisitor = BinaryVisitor::init (*this);
+	    return binVisitor.validate (bin);
+	}
+	
+	Generator Visitor::validateVar (const syntax::Var & var) {
+	    auto & gen = getLocal (var.getName ().str);
+	    if (gen.isEmpty ()) {
+		Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().str);
+	    }
+
+	    // The gen that we got can be either a param decl or a var decl
+	    if (gen.is <ParamVar> ()) {
+		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId ());
+	    } else if (gen.is <generator::VarDecl> ()) {
+		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<generator::VarDecl> ().getVarType (), gen.getUniqId ());		
+	    } 
+
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Generator::empty ();
+	}
+
+	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {
+	    auto & gen = getLocal (var.getName ().str);
+	    if (!gen.isEmpty ()) {
+		auto note = Ymir::Error::createNote (gen.getLocation ());
+		Error::occurAndNote (var.getLocation (), note, ExternalError::get (SHADOWING_DECL), var.getName ().str);
+	    }
+
+	    if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
+		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
+	    }
+
+	    Generator value (Generator::empty ());
+	    if (!var.getValue ().isEmpty ()) value = validateValue (var.getValue ());
+
+	    Generator type (Generator::empty ());
+	    if (!var.getType ().isEmpty ()) type = validateType (var.getType ());
+
+	    if (!type.isEmpty () && !value.isEmpty ()) {
+		if (!type.equals (value.to <Value> ().getType ())) {
+		    Ymir::Error::occur (value.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					value.to <Value> ().getType ().to <Type> ().typeName (),
+					type.to <Type> ().typeName ()
+		    );
+		}
+	    } else if (type.isEmpty ()) {
+		type = value.to <Value> ().getType ();
+	    }
+
+	    if (type.is<Void> ()) {
+		Ymir::Error::occur (type.getLocation (), ExternalError::get (VOID_VAR));
+	    }
+	    
+	    auto ret = generator::VarDecl::init (var.getLocation (), var.getName ().str, type, value);
+	    insertLocal (var.getName ().str, ret);
+	    return ret;
+	}
 	
 	Generator Visitor::validateType (const syntax::Expression & type) {
 	    match (type) {
@@ -255,7 +403,10 @@ namespace semantic {
 		if (size == "16") return Integer::init (var.getName (), 16, var.getName ().str[0] == 'i');
 		if (size == "32") return Integer::init (var.getName (), 32, var.getName ().str[0] == 'i');
 		if (size == "64") return Integer::init (var.getName (), 64, var.getName ().str[0] == 'i');
-	    }
+	    } else if (var.getName ().str == "void") {
+		return Void::init (var.getName ());
+	    } else if (var.getName ().str == "bool")
+		return Bool::init (var.getName ());
 	    
 	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().str);
 	    return Generator::empty ();
@@ -271,13 +422,27 @@ namespace semantic {
 	}
 
 	void Visitor::enterBlock () {
+	    this-> _usedSyms.push_back ({});
 	    this-> _symbols.push_back ({});
 	}
 
 	void Visitor::quitBlock () {
 	    if (this-> _symbols.empty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+
+	    std::vector <std::string> errors;
+	    for (auto & sym : this-> _symbols.back ()) {
+		if (this-> _usedSyms.back ().find (sym.first) == this-> _usedSyms.back ().end ()) {
+		    errors.push_back (Error::makeWarn (sym.second.getLocation (), ExternalError::get (NEVER_USED), sym.second.getName ()));
+		}
+	    }
+
+	    this-> _usedSyms.pop_back ();
 	    this-> _symbols.pop_back ();
+
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
 	}
 
 	void Visitor::insertLocal (const std::string & name, const Generator & gen) {
@@ -286,6 +451,18 @@ namespace semantic {
 	    this-> _symbols.back ().emplace (name, gen);
 	}       
 
+	const Generator & Visitor::getLocal (const std::string & name) {
+	    for (auto it : Ymir::r (0, this-> _symbols.size ())) {
+		auto ptr = this-> _symbols [it].find (name); 		    
+		if (ptr != this-> _symbols [it].end ()) {
+		    this-> _usedSyms [it].insert (name);
+		    return ptr-> second;
+		}		
+	    }
+	    
+	    return Generator::__empty__;
+	}
+	
     }
     
 }

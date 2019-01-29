@@ -5,16 +5,16 @@ namespace semantic {
     namespace generator {
 
 	Block::Block () :
-	    Value (Generator::empty ())
+	    Value ()
 	{}
 
-	Block::Block (const Generator & type, const std::vector <Generator> & content) :
-	    Value (type),
+	Block::Block (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) :
+	    Value (loc, type),
 	    _content (content)
 	{}
        
-	Generator Block::init (const Generator & type, const std::vector <Generator> & values) {
-	    return Generator {new (Z0) Block (type, values)};
+	Generator Block::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {
+	    return Generator {new (Z0) Block (loc, type, values)};
 	}
 
 	Generator Block::clone () const {

@@ -27,6 +27,9 @@ namespace semantic {
 
 	    /** The global context of the generation */
 	    generic::Tree _currentContext;
+
+	    /** The declaration of the local var for each frame */
+	    std::vector <std::map <uint, generic::Tree> > _declarators;
 	    
 	private :
 
@@ -77,9 +80,11 @@ namespace semantic {
 	     */
 	    generic::Tree generateType (const Generator & gen);
 
-	    
+	    /**
+	     * \brief Generate a tree representation of an integer type
+	     */
 	    generic::Tree generateIntegerType (const Integer & type);
-	    
+
 	    /**
 	     * \brief Transform a value to gimple
 	     */
@@ -91,9 +96,39 @@ namespace semantic {
 	    generic::Tree generateBlock (const Block & bl);
 
 	    /**
+	     * \brief Transform a block into gimple
+	     */
+	    generic::Tree generateSet (const Set & set);
+
+	    /**
 	     * \brief Transform a fixed value into gimple
 	     */
 	    generic::Tree generateFixed (const Fixed & fixed);
+
+	    /**
+	     * \brief Transform a fixed value into gimple
+	     */
+	    generic::Tree generateBool (const BoolValue & b);
+
+	    /**
+	     * \brief Transform a binary int generator into gimple
+	     */
+	    generic::Tree generateBinaryInt (const BinaryInt & bin);
+
+	    /**
+	     * \brief Transform a binary int generator into gimple
+	     */
+	    generic::Tree generateBinaryBool (const BinaryBool & bin);
+
+	    /**
+	     * \brief Transform a var ref into gimple
+	     */
+	    generic::Tree generateVarRef (const VarRef & var);
+
+	    /**
+	     * \brief Transform a var decl into gimple
+	     */
+	    generic::Tree generateVarDecl (const VarDecl & var);
 	    
 	private :
 
@@ -131,6 +166,16 @@ namespace semantic {
 	     * \brief Change the current context for definition
 	     */
 	    void setCurrentContext (const generic::Tree & tr);
+
+	    /**
+	     * \brief Add a new vardecl for future var referencing 
+	     */
+	    void insertDeclarator (uint id, const generic::Tree & decl);
+
+	    /**
+	     * \brief Get a var declarator
+	     */
+	    generic::Tree getDeclarator (uint id);
 	    
 	};
 

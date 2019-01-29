@@ -33,10 +33,10 @@ namespace Ymir {
     
     void Parser::run () {
 	std::vector <std::string> errors;
-	TRY {
+	TRY (
 	    syntaxicTime ();
 	    semanticTime ();
-	} CATCH (ErrorCode::FAIL) {
+	) CATCH (ErrorCode::FAIL) {
 	    PRINT_ERRORS ();
 	    Error::end (ExternalError::get (COMPILATION_END));
 	} CATCH (ErrorCode::FATAL) {

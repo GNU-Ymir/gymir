@@ -102,13 +102,13 @@ namespace syntax {
 	lexing::Word space;
 	lexing::Word token;
 	auto beginPos = this-> _lex.tell ();
-	TRY {
+	TRY (
 	    auto next = this-> _lex.consumeIf ({Keys::MOD});
 	    if (next == Keys::MOD) {
 		space = visitNamespace ();
 		this-> _lex.consumeIf ({Token::SEMI_COLON});
 	    } 
-	} CATCH (ErrorCode::EXTERNAL) {
+	) CATCH (ErrorCode::EXTERNAL) {
 	    CLEAR_ERRORS ();
 	    space = lexing::Word::eof ();
 	    this-> _lex.seek (beginPos);
@@ -619,7 +619,7 @@ namespace syntax {
 	auto begin = this-> _lex.tell ();
 	auto token = this-> _lex.next ();
 	if (token == Token::LPAR) {
-	    TRY {
+	    TRY (
 		do {
 		    if (canVisitIdentifier ()) {
 			auto name = visitIdentifier ();
@@ -643,7 +643,7 @@ namespace syntax {
 		    
 		    token = this-> _lex.next ({Token::RPAR, Token::COMA});
 		} while (token != Token::RPAR);
-	    } CATCH (ErrorCode::EXTERNAL) {
+	    ) CATCH (ErrorCode::EXTERNAL) {
 		CLEAR_ERRORS ();
 		this-> _lex.seek (begin);
 		return {};	
@@ -719,10 +719,11 @@ namespace syntax {
 	if (begin == Token::LPAR) {
 	    auto loc = this-> _lex.tell ();
 	    Expression lambda (Expression::empty ());
-	    TRY {
+	    TRY (
 	    	// Could not return directly because of scope guard
-	    	lambda = visitLambda ();
-	    } CATCH (ErrorCode::EXTERNAL) {
+		// The problem has been solved since, but no need to change that
+	    	lambda = visitLambda ();		
+	    ) CATCH (ErrorCode::EXTERNAL) {
 	    	CLEAR_ERRORS ();
 		
 	    	this-> _lex.seek (loc);
@@ -953,9 +954,9 @@ namespace syntax {
     std::vector <Expression> Visitor::visitParamList () {
 	std::vector <Expression> params;
 	auto begin = this-> _lex.tell ();
-	TRY {
+	TRY (
 	    params.push_back (visitExpression ());
-	} CATCH (ErrorCode::EXTERNAL) {
+	) CATCH (ErrorCode::EXTERNAL) {
 	    CLEAR_ERRORS ();
 	    this-> _lex.seek (begin);
 	    return {};
@@ -1152,9 +1153,9 @@ namespace syntax {
 
     bool Visitor::canVisitSingleVarDeclaration (bool mandType, bool withValue) {
 	auto begin = this-> _lex.tell ();
-	TRY {
+	TRY (
 	    visitSingleVarDeclaration (mandType, withValue);
-	} CATCH (ErrorCode::EXTERNAL) {
+	) CATCH (ErrorCode::EXTERNAL) {
 	    CLEAR_ERRORS ();
 	    this-> _lex.seek (begin);
 	    return false;
@@ -1229,9 +1230,9 @@ namespace syntax {
 
     bool Visitor::can (Expression (Visitor::*func)()) {
 	auto begin = this-> _lex.tell ();
-	TRY {
+	TRY (
 	    (*this.*func) ();
-	} CATCH (ErrorCode::EXTERNAL) {
+	) CATCH (ErrorCode::EXTERNAL) {
 	    CLEAR_ERRORS ();
 	    this-> _lex.seek (begin);
 	    return false;

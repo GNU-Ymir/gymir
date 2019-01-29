@@ -87,6 +87,11 @@ namespace generic {
 	static Tree voidType ();
 
 	/**
+	 * \brief Create a tree type of type bool
+	 */
+	static Tree boolType ();
+	
+	/**
 	 * \brief Create a new var declaration 
 	 * \param loc the location of the var, (frontend version)
 	 * \param name the name of the var
@@ -94,6 +99,13 @@ namespace generic {
 	 */
 	static Tree varDecl (const lexing::Word & loc, const std::string & name, const Tree & type);
 
+	/**
+	 * \brief Create a declaration expression
+	 * \param loc the location 
+	 * \param decl the declaration content (VAR_DECL, ...)
+	 */
+	static Tree declExpr (const lexing::Word & loc, const Tree & decl);	
+	
 	/**
 	 * \brief Create a new parameter var declaration (for frame declaration)
 	 * \param loc the location of the parameter
@@ -128,7 +140,17 @@ namespace generic {
 	 * \brief Create an affectation instruction from right to left
 	 */
 	static Tree affect (const lexing::Word & location, const Tree & left, const Tree & right);
-	
+
+	/**
+	 * \brief Create a binary expression
+	 * \param location the location of the operation
+	 * \param code the code of the operator
+	 * \param type the type of the operation
+	 * \param left the left operand
+	 * \param right the right operand
+	 */
+	static Tree binary (const lexing::Word & location, tree_code code, const Tree & type, const Tree & left, const Tree & right);
+		
 	/**
 	 * \brief Create a compound expression (we can see that as a list of expression -> left; right)
 	 */
@@ -334,9 +356,27 @@ namespace generic {
 	Tree getType () const;
 
 	/**
+	 * \brief Applicable to a type
+	 * \return the size of the type, in number of byte
+	 */
+	uint getSize () const;
+	
+	/**
 	 * \return the i eme operand of this tree
 	 */
 	Tree getOperand (int i) const;
+
+	/**
+	 * \return the list of operation in case of compound expr
+	 * \return an empty tree otherwise
+	 */
+	Tree getList () const;
+
+	/**
+	 * \return the value part of a compound expr
+	 * \return the tree, if it is not a compound expression
+	 */
+	Tree getValue () const;
 	
     };
    

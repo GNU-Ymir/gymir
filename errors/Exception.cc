@@ -93,6 +93,23 @@ void excThrow (const char *file, const char *function, unsigned line, int code, 
     longjmp (j, 1);
 }
 
+void excThrow (const char *file, const char *function, unsigned line, int code, const std::vector<std::string> & msg) {
+    jmp_buf j;
+
+    exc_file = file;
+    exc_function = function;
+    exc_line = line;
+
+    /* Pop for jumping. */
+    excPop (&j);
+    exc_code = code;
+    errors = msg;
+    
+    /* LONGJUMP to J with nonzero value. */
+    longjmp (j, 1);
+}
+
+
 void excRethrow () {
     jmp_buf j;
     excPop (&j);
@@ -124,4 +141,8 @@ void printErrors () {
 void clearErrors () {
     exc_code = -1;
     errors.clear ();
+}
+
+const std::vector <std::string> & getErrors () {    
+    return errors;
 }

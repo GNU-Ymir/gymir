@@ -9,3 +9,10 @@ if (ref.is<X> ()) {				\
     LMD						\
  }						
 						
+#define string_match(X)				\
+    auto & ref = X;
+
+#define eq(V, RESULT)				\
+    if (ref == V) {				\
+	RESULT;					\
+    }

@@ -1,15 +1,13 @@
 #pragma once
 
-#include <ymir/semantic/Generator.hh>
+#include <ymir/semantic/generator/Value.hh>
 
 namespace semantic {
     namespace generator {
 
-	class ParamVar : public IGenerator {
-	private :
+	class ParamVar : public Value {	    
 
-	    /** The type of the generator */
-	    Generator _type;
+	    std::string _name;
 
 	private :
 
@@ -27,7 +25,7 @@ namespace semantic {
 	     * \param name the name of the param var (unmangled, but with location information included)
 	     * \param type the type of the var
 	     */
-	    static Generator init (const lexing::Word & locatio, const std::string & name, const Generator & type);
+	    static Generator init (const lexing::Word & location, const std::string & name, const Generator & type);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -44,10 +42,6 @@ namespace semantic {
 	     */
 	    virtual bool equals (const Generator & other) const ;	    
 	    
-	    /** 
-	     * \return the type of the var
-	     */
-	    const Generator & getType () const;
 	    
 	};
 	

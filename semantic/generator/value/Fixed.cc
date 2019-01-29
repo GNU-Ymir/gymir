@@ -5,16 +5,16 @@ namespace semantic {
     namespace generator {
 
 	Fixed::Fixed () :
-	    Value (Generator::empty ())
+	    Value ()
 	{}
 
-	Fixed::Fixed (const Generator & type, UI value) :
-	    Value (type),
+	Fixed::Fixed (const lexing::Word & loc, const Generator & type, UI value) :
+	    Value (loc, type),
 	    _value (value)
 	{}
        
-	Generator Fixed::init (const Generator & type, UI value) {
-	    return Generator {new (Z0) Fixed (type, value)};
+	Generator Fixed::init (const lexing::Word & loc, const Generator & type, UI value) {
+	    return Generator {new (Z0) Fixed (loc, type, value)};
 	}
 
 	Generator Fixed::clone () const {

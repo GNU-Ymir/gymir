@@ -44,5 +44,13 @@ namespace syntax {
 	this-> _left.treePrint (stream, i + 1);
 	this-> _right.treePrint (stream, i + 1);
     }
+
+    const Expression & Binary::getLeft () const {
+	return this-> _left;
+    }
+
+    const Expression & Binary::getRight () const {
+	return this-> _right;
+    }
     
 }

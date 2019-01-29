@@ -34,6 +34,11 @@ namespace semantic {
 	    /** The name of the generator */
 	    std::string _name;
 
+	    /** The id of the generator */
+	    uint _uniqId; 
+
+	    static uint __lastId__;
+	    
 	private :
 
 	    friend Generator;
@@ -48,6 +53,9 @@ namespace semantic {
 	     */
 	    IGenerator (const lexing::Word & location, const std::string & name);
 
+	    /** Copy construction */
+	    IGenerator (const IGenerator & other);
+	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
 	     */
@@ -59,7 +67,7 @@ namespace semantic {
 	    virtual bool isOf (const IGenerator * type) const = 0;	    
 
 	    /**
-	     * \return is this symbol the same as other (no only address, or type)
+	     * \return is this generator the same as other (no only address, or type)
 	     */
 	    virtual bool equals (const Generator & other) const = 0;
 
@@ -72,6 +80,16 @@ namespace semantic {
 	     * \return the name of the generator
 	     */
 	    const std::string & getName () const;
+
+	    /**
+	     * \return the id of the generator
+	     */
+	    uint getUniqId () const;
+
+	    /**
+	     * \brief Reset the count of uniq ids
+	     */
+	    static void resetIdCount ();
 	    
 	    /** Virtual but does not do anything */
 	    virtual ~IGenerator ();
@@ -99,19 +117,29 @@ namespace semantic {
 	    bool isEmpty () const;
 
 	    /**
-	     * Proxy function for symbol
+	     * Proxy function for generator
 	     */
 	    bool equals (const Generator & other) const ;
 
 	    /**
-	     * Proxy function for symbol
+	     * Proxy function for generator
 	     */
 	    const lexing::Word & getLocation () const;
 
 	    /**
-	     * Proxy function for symbol
+	     * Proxy function for generator
 	     */
 	    const std::string & getName () const;
+
+	    /**
+	     * Proxy function for generator
+	     */
+	    uint getUniqId () const;
+	    
+	    /**
+	     * Proxy function for generator
+	     */
+	    static void resetIdCount ();
 	    
 	    /**
 	     * \brief Cast the content pointer into the type (if possible)

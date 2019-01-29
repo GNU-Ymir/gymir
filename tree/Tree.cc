@@ -37,6 +37,10 @@ namespace generic {
     Tree Tree::voidType () {
 	return Tree::init (UNKNOWN_LOCATION, void_type_node);
     }
+
+    Tree Tree::boolType () {
+	return Tree::init (UNKNOWN_LOCATION, unsigned_char_type_node);
+    }
     
     Tree Tree::varDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
 	return Tree::init (loc.getLocus (),
@@ -47,6 +51,10 @@ namespace generic {
 			       type.getTree ()
 			   )
 	);
+    }
+
+    Tree Tree::declExpr (const lexing::Word & loc, const Tree & decl) {
+	return Tree::build (DECL_EXPR, loc, Tree::voidType (), decl);	
     }
     
     Tree Tree::paramDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
@@ -106,6 +114,24 @@ namespace generic {
 	);
     }
 
+    Tree Tree::binary (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
+	if (left.getType ().getSize () > right.getType ().getSize ()) {
+	    return Tree::build (code, loc, type, left,
+				Tree::init (
+				    loc.getLocus (),
+				    convert (left.getType ().getTree (), right.getTree ())
+				)
+	    );
+	} else {
+	    return Tree::build (code, loc, type,
+				Tree::init (
+				    loc.getLocus (),
+				    convert (right.getType ().getTree (), left.getTree ())
+				), right
+	    );
+	}
+    }
+    
     Tree Tree::compound (const lexing::Word & loc, const Tree & left, const Tree & right) {
 	if (left.isEmpty ()) return right;
 	if (right.isEmpty ()) return left;
@@ -285,12 +311,34 @@ namespace generic {
 	return Tree::init (this-> _loc, TREE_TYPE (this-> _t));
     }
 
+    uint Tree::getSize () const {
+	if (this-> _t == NULL_TREE)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	return TREE_INT_CST_LOW (TYPE_SIZE_UNIT (this-> _t));
+    }    
+    
     Tree Tree::getOperand (int i) const {
 	if (this-> _t == NULL_TREE)
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	return Tree::init (this-> _loc, TREE_OPERAND (this-> _t, i));
     }
-      
+
+    Tree Tree::getList () const {
+	if (this-> _t == NULL_TREE)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	if (this-> getTreeCode () == COMPOUND_EXPR) {
+	    return this-> getOperand (0);
+	} else return Tree::empty ();
+    }
+
+    Tree Tree::getValue () const {
+	if (this-> _t == NULL_TREE)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	if (this-> getTreeCode () == COMPOUND_EXPR) {
+	    return this-> getOperand (1);
+	} else return *this;
+    }
+    
 }
 
 /**

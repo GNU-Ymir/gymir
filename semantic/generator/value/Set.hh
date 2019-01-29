@@ -10,30 +10,21 @@ namespace semantic {
 	 * A block possess a list of expression 
 	 * it has also a type, (as any value)
 	 */
-	class Fixed : public Value {
-
-	public :
+	class Set : public Value {	    	    
 	    
-	    union UI {
-		ulong u;		
-		long i;
-	    };
-	    
-	private :
-	    
-	    UI _value;
+	    std::vector <Generator> _content;
 	    
 	protected : 
 
 	    friend Generator;
 
-	    Fixed ();
+	    Set ();
 
-	    Fixed (const lexing::Word & loc, const Generator & type, UI value);	    	    
+	    Set (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content);	    	    
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Generator & type, UI value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -51,14 +42,17 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;	    
 
 	    /**
-	     * \return the value of the fixed const, can be signed or unsigned depending on the type
+	     * \return the list of expression defined in the block
 	     */
-	    UI getUI () const;
+	    const std::vector <Generator> & getContent () const;
 
+	    /**
+	     * \brief Set the list of expression of the block
+	     */
+	    void setContent (const std::vector <Generator> & expressions);
 	    
 	};	
-	
+
     }
        
 }
-

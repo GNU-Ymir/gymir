@@ -9,8 +9,13 @@ namespace semantic {
 	    _type (Generator::empty ())
 	{}
 
-	Value::Value (const Generator & type) :
-	    IGenerator (lexing::Word::eof (), ""),
+	Value::Value (const lexing::Word & loc, const Generator & type) :
+	    IGenerator (loc, loc.str),
+	    _type (type)
+	{}
+
+	Value::Value (const lexing::Word & loc, const std::string & name, const Generator & type) :
+	    IGenerator (loc, name),
 	    _type (type)
 	{}
 	

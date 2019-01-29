@@ -49,7 +49,15 @@ namespace semantic {
 	    match (gen) {
 		of (Integer, i,
 		    return generateIntegerType (i);
+		);		
+
+		of (Void, v ATTRIBUTE_UNUSED,
+		    return Tree::voidType ();
 		);
+
+		of (Bool, b ATTRIBUTE_UNUSED,
+		    return Tree::boolType ();
+		);		
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -83,6 +91,7 @@ namespace semantic {
 	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
 
 	    setCurrentContext (fn_decl);
+	    enterFrame ();
 
 	    std::list <Tree> arglist;
 	    for (auto & p : frame.getParams ())
@@ -97,8 +106,8 @@ namespace semantic {
 	    auto value = generateValue (frame.getContent ());
 	    if (!frame.getType ().is<Void> () && frame.getType ().equals (frame.getContent ().to <Value> ().getType ())) {
 		TreeStmtList list = TreeStmtList::init ();
-		list.append (value.getOperand (0));
-		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value.getOperand (1)));
+		list.append (value.getList ());
+		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value.getValue ()));
 		value = list.toTree ();
 	    }
 	    
@@ -119,17 +128,20 @@ namespace semantic {
 	    gimplify_function_tree (fn_decl.getTree ());
 	    cgraph_node::finalize_function (fn_decl.getTree (), true);
 	    setCurrentContext (Tree::empty ());
+	    quitFrame ();
 	}
 	
 	Tree Visitor::generateParamVar (const ParamVar & var) {
 	    auto type = generateType (var.getType ());
 	    auto name = var.getName ();
-	    
+
 	    auto decl = Tree::paramDecl (var.getLocation (), name, type);
 	    
 	    decl.setDeclContext (getCurrentContext ());
 	    decl.setArgType (decl.getType ());
 	    decl.isUsed (true);
+
+	    insertDeclarator (var.getUniqId (), decl);
 	    
 	    return decl;
 	}
@@ -161,8 +173,32 @@ namespace semantic {
 		    return generateBlock (block);
 		);
 
+		of (Set, set,
+		    return generateSet (set);
+		);
+		
 		of (Fixed, fixed,
 		    return generateFixed (fixed);
+		);
+
+		of (BoolValue, b,
+		    return generateBool (b);
+		);
+
+		of (BinaryInt, i,
+		    return generateBinaryInt (i);
+		);
+
+		of (BinaryBool, b,
+		    return generateBinaryBool (b);
+		);
+		
+		of (VarRef, var,
+		    return generateVarRef (var);
+		);
+
+		of (VarDecl, decl,
+		    return generateVarDecl (decl);
 		);
 	    }
 
@@ -191,12 +227,36 @@ namespace semantic {
 				       var, 
 				       binding.bind_expr);
 	    } else {
-		if (!last.isEmpty ())
-		    list.append (last);
-		return quitBlock (block.getLocation (), list.toTree ()).block;
+		list.append (last);
+		return quitBlock (block.getLocation (), list.toTree ()).bind_expr;
 	    }    
 	}	
-	
+
+	Tree Visitor::generateSet (const Set & set) {
+	    TreeStmtList list = TreeStmtList::init ();
+	    Tree last (Tree::empty ());
+	    Tree var (Tree::empty ());
+	    if (!set.getType ().is<Void> ()) {
+		var = Tree::varDecl (set.getLocation (), "_", generateType (set.getType ()));
+	    }
+
+	    for (auto & it : set.getContent ()) {
+		if (!last.isEmpty ()) list.append (last);
+		last = generateValue (it);
+	    }
+
+	    if (!set.getType ().is<Void> ()) {
+		list.append (Tree::affect (set.getLocation (), var, last));
+		auto binding = list.toTree ();
+		return Tree::compound (set.getLocation (),
+				       var, 
+				       binding);
+	    } else {
+		list.append (last);
+		return list.toTree ();
+	    }    
+	}	
+		
 	Tree Visitor::generateFixed (const Fixed & fixed) {
 	    auto type = generateType (fixed.getType ());
 	    if (fixed.getType ().to <Integer> ().isSigned ()) 
@@ -205,6 +265,92 @@ namespace semantic {
 		return Tree::buildIntCst (fixed.getLocation (), fixed.getUI ().u, type);
 	}
 
+	Tree Visitor::generateBool (const BoolValue & b) {
+	    auto type = generateType (b.getType ());
+	    return Tree::buildIntCst (b.getLocation (), (ulong) b.getValue (), type);
+	}
+	
+	Tree Visitor::generateBinaryInt (const BinaryInt & bin) {
+	    auto left = generateValue (bin.getLeft ());
+	    auto right = generateValue (bin.getRight ());
+
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+
+	    tree_code code = LSHIFT_EXPR; // Fake default affectation to avoid warning
+	    switch (bin.getOperator ()) {
+	    case Binary::Operator::LEFT_SHIFT : code = LSHIFT_EXPR; break;
+	    case Binary::Operator::RIGHT_SHIFT : code = RSHIFT_EXPR; break;
+	    case Binary::Operator::BIT_OR : code = BIT_IOR_EXPR; break;
+	    case Binary::Operator::BIT_AND : code = BIT_AND_EXPR; break;
+	    case Binary::Operator::BIT_XOR : code = BIT_XOR_EXPR; break;
+	    case Binary::Operator::ADD : code = PLUS_EXPR; break;
+	    case Binary::Operator::SUB : code = MINUS_EXPR; break;
+	    case Binary::Operator::MUL : code = MULT_EXPR; break;
+	    case Binary::Operator::DIV : code = TRUNC_DIV_EXPR; break;
+	    case Binary::Operator::MODULO : code = TRUNC_MOD_EXPR; break;
+	    case Binary::Operator::INF : code = LT_EXPR; break;
+	    case Binary::Operator::SUP : code = GT_EXPR; break;
+	    case Binary::Operator::INF_EQUAL : code = LE_EXPR; break;
+	    case Binary::Operator::SUP_EQUAL : code = GE_EXPR; break;
+	    case Binary::Operator::EQUAL : code = EQ_EXPR; break;
+	    case Binary::Operator::NOT_EQUAL : code = NE_EXPR; break;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+	    }
+
+	    auto type = generateType (bin.getType ());
+	    
+	    auto value = Tree::binary (bin.getLocation (), code, type, left.getValue (), right.getValue ());	    
+	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+	    return ret;
+	}
+
+	Tree Visitor::generateBinaryBool (const BinaryBool & bin) {
+	    auto left = generateValue (bin.getLeft ());
+	    auto right = generateValue (bin.getRight ());
+	    TreeStmtList list = TreeStmtList::init ();
+
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+
+	    tree_code code = LSHIFT_EXPR; // Fake default affectation to avoid warning
+	    switch (bin.getOperator ()) {
+	    case Binary::Operator::AND : code = TRUTH_ANDIF_EXPR; break;
+	    case Binary::Operator::OR : code = TRUTH_ORIF_EXPR; break;
+	    case Binary::Operator::EQUAL : code = EQ_EXPR; break;
+	    case Binary::Operator::NOT_EQUAL : code = NE_EXPR; break;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+	    }
+
+	    auto type = generateType (bin.getType ());
+	    auto value = Tree::binary (bin.getLocation (), code, type, left.getValue (), right.getValue ());
+	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+	    return ret;
+	}
+	
+	generic::Tree Visitor::generateVarRef (const VarRef & var) {
+	    return this-> getDeclarator (var.getRefId ());
+	}	
+
+	generic::Tree Visitor::generateVarDecl (const VarDecl & var) {
+	    auto type = generateType (var.getVarType ());
+	    auto name = var.getName ();
+
+	    auto decl = Tree::varDecl (var.getLocation (), name, type);
+	    if (!var.getVarValue ().isEmpty ())
+		decl.setDeclInitial (generateValue (var.getVarValue ()));
+
+	    decl.setDeclContext (getCurrentContext ());
+	    stackVarDeclChain.back ().append (decl);
+	    
+	    insertDeclarator (var.getUniqId (), decl);
+	    return Tree::declExpr (var.getLocation (), decl);
+	}
+
+	
 	void Visitor::enterBlock () {
 	    stackVarDeclChain.push_back (generic::TreeChain ());
 	    stackBlockChain.push_back (generic::BlockChain ());
@@ -232,19 +378,44 @@ namespace semantic {
 	}
 
 	void Visitor::enterFrame () {
-	    // ?
+	    this-> _declarators.push_back ({});
 	}
 
 	void Visitor::quitFrame () {
-	    // ?
+	    if (this-> _declarators.empty ()) {
+		Ymir::Error::halt ("%(r) Quit non existing frame", "Critical");
+	    }
+	    
+	    this-> _declarators.pop_back ();
 	}
-
+	
 	const generic::Tree & Visitor::getGlobalContext () {
 	    if (this-> _globalContext.isEmpty ()) {
 		this-> _globalContext = Tree::init (UNKNOWN_LOCATION, build_translation_unit_decl (NULL_TREE));
 	    }
 	    
 	    return this-> _globalContext;
+	}
+
+	void Visitor::insertDeclarator (uint id, const generic::Tree & decl) {
+	    if (this-> _declarators.empty ()) {
+		Ymir::Error::halt ("%(r) insert a declarator from outside a frame", "Critical");
+	    }
+	    
+	    this-> _declarators.back ().emplace (id, decl);
+	}
+
+	Tree Visitor::getDeclarator (uint id) {
+	    if (this-> _declarators.empty ()) {
+		Ymir::Error::halt ("%(r) get a declarator from outside a frame", "Critical");
+	    }
+
+	    auto ptr = this-> _declarators.back ().find (id);
+	    if (ptr == this-> _declarators.back ().end ()) {
+		Ymir::Error::halt ("%(r) undefined declarators %(y)", "Critical", (int) id);
+	    }
+
+	    return ptr-> second;
 	}
 	
 	const generic::Tree & Visitor::getCurrentContext () const {	    
