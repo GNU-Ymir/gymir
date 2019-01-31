@@ -45,12 +45,16 @@ namespace syntax {
 	};
 	
 	visit._operators = {
+	    {
+		Token::EQUAL, Token::DIV_AFF, Token::MINUS_AFF,
+		Token::PLUS_AFF, Token::STAR_AFF,
+		Token::PERCENT_AFF, Token::TILDE_AFF,
+		Token::LEFTD_AFF, Token::RIGHTD_AFF
+	    },
 	    {Token::DPIPE},
 	    {Token::DAND},
 	    {Token::INF, Token::SUP, Token::INF_EQUAL,
-	     Token::SUP_EQUAL, Token::NOT_EQUAL,
-	     Token::NOT_INF, Token::NOT_INF_EQUAL, Token::NOT_SUP,
-	     Token::NOT_SUP_EQUAL, Token::DEQUAL, Keys::OF, Keys::IS, Keys::IN},
+	     Token::SUP_EQUAL, Token::NOT_EQUAL, Token::DEQUAL, Keys::OF, Keys::IS, Keys::IN},
 	    {Token::TDOT, Token::DDOT},
 	    {Token::LEFTD, Token::RIGHTD},
 	    {Token::PIPE, Token::XOR, Token::AND},
@@ -62,6 +66,7 @@ namespace syntax {
 	};
 
 	visit._specialOperators = {
+	    {},
 	    {}, 
 	    {},
 	    {Keys::OF, Keys::IS, Keys::IN},
@@ -92,6 +97,14 @@ namespace syntax {
 	
 	visit._fixedSuffixes = {
 	    Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::U32, Keys::I64, Keys::U64
+	};
+
+	visit._floatSuffix = {
+	    Keys::FLOAT_S
+	};
+
+	visit._charSuffix = {
+	    Keys::C8
 	};
 	
 	return visit;
@@ -358,7 +371,7 @@ namespace syntax {
 
     Declaration Visitor::visitClassMixin () {
 	auto location = this-> _lex.rewind ().next ({Keys::MIXIN});
-	auto content = visitExpression (9); // (priority of dot operator)
+	auto content = visitExpression (10); // (priority of dot operator)
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	return Mixin::init (location, content);
     }
@@ -397,7 +410,7 @@ namespace syntax {
 	auto location = this-> _lex.rewind ().next ({Keys::ENUM});
 	Expression type (Expression::empty ());
 	if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
-	    type = visitExpression (9);
+	    type = visitExpression (10);
 	
 	lexing::Word end;
 	std::vector <Expression> values;
@@ -406,7 +419,7 @@ namespace syntax {
 	    if (end != Token::ARROW) {
 		auto name = visitIdentifier ();
 		if (this-> _lex.consumeIf ({Token::EQUAL}) == Token::EQUAL)
-		    values.push_back (VarDecl::init (name, {}, Expression::empty (), visitExpression (9)));
+		    values.push_back (VarDecl::init (name, {}, Expression::empty (), visitExpression (10)));
 		else values.push_back (VarDecl::init (name, {}, Expression::empty (), Expression::empty ()));
 	    }
 	} while (end != Token::ARROW);
@@ -582,7 +595,7 @@ namespace syntax {
 	    if (end != Token::ARROW) {
 		vars.push_back (visitSingleVarDeclaration (true, false));
 		if (this-> _lex.consumeIf ({Token::EQUAL}) == Token::EQUAL)
-		    vars.back ().to <VarDecl> ().setValue (visitExpression (9));		
+		    vars.back ().to <VarDecl> ().setValue (visitExpression (10));		
 	    }
 	} while (end != Token::ARROW);
 	auto name = visitIdentifier ();
@@ -608,7 +621,7 @@ namespace syntax {
 
     Declaration Visitor::visitUse () {
 	auto location = this-> _lex.rewind ().next ({Keys::USE});
-	auto content = visitExpression (9);
+	auto content = visitExpression (10);
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	
 	return Use::init (location, content);
@@ -637,9 +650,9 @@ namespace syntax {
 			    list.push_back (VariadicVar::init (name, false));
 			} else {
 			    this-> _lex.rewind (2);
-			    list.push_back (visitExpression (9));
+			    list.push_back (visitExpression (10));
 			}
-		    } else list.push_back (visitExpression (9));
+		    } else list.push_back (visitExpression (10));
 		    
 		    token = this-> _lex.next ({Token::RPAR, Token::COMA});
 		} while (token != Token::RPAR);
@@ -749,7 +762,7 @@ namespace syntax {
 	if (begin == Keys::RETURN)  return visitReturn ();
 	if (begin.is (this-> _intrisics)) {
 	    auto loc = this-> _lex.next ();
-	    return Intrinsics::init (loc, visitExpression (9));
+	    return Intrinsics::init (loc, visitExpression (10));
 	}
 	
 	if (can (&Visitor::visitVar))  return visitVar ();       
@@ -1012,7 +1025,7 @@ namespace syntax {
 	                                               return visitNumeric ();
 	if (tok == Token::DOT)                         return visitFloat (lexing::Word::eof ());
 	//if (tok == Token::GUILL)                       return visitString ();
-	//if (tok == Token::APOS)                        return visitChar ();
+	if (tok == Token::APOS)                        return visitChar ();
 	if (tok == Keys::TRUE_ || tok == Keys::FALSE_) return Bool::init (this-> _lex.next ());
 	if (tok == Keys::NULL_)                        return Null::init (this-> _lex.next ());
 	if (tok == Token::DOLLAR)                      return Dollar::init (this-> _lex.next ());
@@ -1023,17 +1036,6 @@ namespace syntax {
 
     Expression Visitor::visitNumeric () {
 	auto begin = this-> _lex.next ();	
-	if (begin.str.length () >= 5) {
-	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 4)};
-	    suffix.column += begin.str.length () - 4;
-	    
-	    if (suffix.is (this-> _fixedSuffixes)) {
-		auto value = begin.str.substr (0, begin.str.length () - 4);
-		verifNumeric (begin, value);
-		return Fixed::init ({begin, value}, suffix);
-	    }
-	}
-	
 	if (begin.str.length () >= 4) {
 	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 3)};
 	    suffix.column += begin.str.length () - 3;
@@ -1045,12 +1047,24 @@ namespace syntax {
 	    }
 	}
 	
+	if (begin.str.length () >= 3) {
+	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 2)};
+	    suffix.column += begin.str.length () - 2;
+	    
+	    if (suffix.is (this-> _fixedSuffixes)) {
+		auto value = begin.str.substr (0, begin.str.length () - 2);
+		verifNumeric (begin, value);
+		return Fixed::init ({begin, value}, suffix);
+	    }
+	}
+	
 	auto value = begin.str;
 	if (!verifNumeric (begin, value)) {
-	    auto next = this-> _lex.next ();
-	    this-> _lex.rewind ();
-	    if (next == Token::DOT) return visitFloat (begin);
-	    else {
+	    auto next = this-> _lex.consumeIf ({Token::DOT});
+	    if (next == Token::DOT) {
+		this-> _lex.rewind ();
+		return visitFloat (begin);
+	    } else {
 		return Fixed::init (begin, lexing::Word::eof ());
 	    }
 	} return Fixed::init (begin, lexing::Word::eof ());
@@ -1070,7 +1084,7 @@ namespace syntax {
 		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.str);
 		}
 	    }
-	    return true;
+	    return false;
 	}	    
     }    
 
@@ -1110,6 +1124,38 @@ namespace syntax {
 	} else this-> _lex.rewind ();
 	return Float::init (begin, lexing::Word::eof (), lexing::Word::eof ());
     }
+
+    Expression Visitor::visitChar () {
+	auto begin = this-> _lex.next ();
+	// We disable the skip of space and tabulation and comments
+	this-> _lex.skipEnable (Token::SPACE, false);
+	this-> _lex.skipEnable (Token::TAB, false);		
+	this-> _lex.skipEnable (Token::RETURN, false);
+	this-> _lex.skipEnable (Token::RRETURN, false);
+	
+	this-> _lex.commentEnable (false);
+	lexing::Word cursor = lexing::Word::eof ();
+	lexing::Word all = lexing::Word::eof ();
+	do {
+	    cursor = this-> _lex.next ();
+	    if (cursor == Token::RETURN || cursor == Token::RRETURN || cursor.isEof ()) {
+		Error::occur (cursor, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+	    } else if (cursor != Token::APOS) {
+		all += cursor;
+	    }
+	} while (cursor != Token::APOS);
+	
+	auto format = this-> _lex.consumeIf (this-> _charSuffix);
+	
+	// We restore the skip and comments
+	this-> _lex.skipEnable (Token::SPACE, true);
+	this-> _lex.skipEnable (Token::TAB, true);
+	this-> _lex.skipEnable (Token::RETURN, true);
+	this-> _lex.skipEnable (Token::RRETURN, true);
+	this-> _lex.commentEnable (true);
+	
+	return Char::init (begin, cursor, all, format);
+    }
     
     Expression Visitor::visitVarDeclaration () {
 	auto location = this-> _lex.next ({Keys::LET});
@@ -1140,7 +1186,7 @@ namespace syntax {
 	else token = this-> _lex.next ();
 	
 	if (token == Token::COLON) {
-	    type = visitExpression (9);
+	    type = visitExpression (10);
 	    token = this-> _lex.next ();
 	} 
 

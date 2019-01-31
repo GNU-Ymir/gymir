@@ -81,10 +81,11 @@ namespace semantic {
 	    generic::Tree generateType (const Generator & gen);
 
 	    /**
-	     * \brief Generate a tree representation of an integer type
+	     * \brief Generate the initial value of the type 
+	     * \param type the type that will give a initial value
 	     */
-	    generic::Tree generateIntegerType (const Integer & type);
-
+	    generic::Tree generateInitValueForType (const Generator & type);	    
+	    
 	    /**
 	     * \brief Transform a value to gimple
 	     */
@@ -111,6 +112,21 @@ namespace semantic {
 	    generic::Tree generateBool (const BoolValue & b);
 
 	    /**
+	     * \brief Transform a float value into gimple
+	     */
+	    generic::Tree generateFloat (const FloatValue & f);
+
+	    /**
+	     * \brief Transform a float value into gimple
+	     */
+	    generic::Tree generateChar (const CharValue & f);
+	    
+	    /**
+	     * \brief Transform an affectation into gimple
+	     */
+	    generic::Tree generateAffect (const Affect & aff);
+	    
+	    /**
 	     * \brief Transform a binary int generator into gimple
 	     */
 	    generic::Tree generateBinaryInt (const BinaryInt & bin);
@@ -119,6 +135,11 @@ namespace semantic {
 	     * \brief Transform a binary int generator into gimple
 	     */
 	    generic::Tree generateBinaryBool (const BinaryBool & bin);
+	    
+	    /**
+	     * \brief Transform a binary int generator into gimple
+	     */
+	    generic::Tree generateBinaryFloat (const BinaryFloat & bin);
 
 	    /**
 	     * \brief Transform a var ref into gimple

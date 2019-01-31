@@ -36,7 +36,7 @@ namespace semantic {
 	    std::vector <std::set <std::string> > _usedSyms;
 	    
 	    std::vector <std::map <std::string, generator::Generator> > _symbols;
-	    
+	    	    
 	private :
 
 	    /** 
@@ -115,6 +115,16 @@ namespace semantic {
 	     * \brief Validate a const bool value
 	     */
 	    generator::Generator validateBool (const syntax::Bool & b);
+
+	    /**
+	     * \brief Validate a const floating value
+	     */
+	    generator::Generator validateFloat (const syntax::Float & f);
+
+	    /**
+	     * \brief Validate a literal char
+	     */
+	    generator::Generator validateChar (const syntax::Char & c);
 	    
 	    /**
 	     * \brief Validate a binary expression 

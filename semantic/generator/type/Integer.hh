@@ -6,8 +6,16 @@ namespace semantic {
     namespace generator {
 
 	class Integer : public Type {
-	    /** The precision of this int type (8/16/32/64/-1) */
-	    /** -1 means the biggest representable int */
+	public :
+
+	    static std::vector <std::string> NAMES;
+
+	    static long INIT;
+	    
+	private : 
+
+	    /** The precision of this int type (8/16/32/64/0) */
+	    /** 0 means the biggest representable int */
 	    int _size; 
 
 	    /** */

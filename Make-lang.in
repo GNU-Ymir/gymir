@@ -133,6 +133,12 @@ ymir_OBJS = \
 	ymir/generator_Bool.o \
 	ymir/generator_BinaryBool.o \
 	ymir/generator_BoolValue.o \
+	ymir/generator_Float.o \
+	ymir/generator_Affect.o \
+	ymir/generator_FloatValue.o \
+	ymir/generator_BinaryFloat.o \
+	ymir/generator_Char.o \
+	ymir/generator_CharValue.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

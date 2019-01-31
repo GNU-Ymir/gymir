@@ -90,6 +90,25 @@ namespace generic {
 	 * \brief Create a tree type of type bool
 	 */
 	static Tree boolType ();
+
+	/**
+	 * \brief Create a tree type of integer type
+	 * \param size the number of bit of the type (assume its 8, 16, 32, 64 or 0)
+	 * \param isSigned if true, the generated type will be capable of encoding negative numbers
+	 */
+	static Tree intType (int size, bool isSigned);
+	
+	/**
+	 * \brief Create a tree type of floating type
+	 * \param size the number of bit of the type (assume its 32, 64 or 0)
+	 */
+	static Tree floatType (int size);
+
+	/**
+	 * \brief Create a tree type of char type
+	 * \param size the number of bit of the type (assume its 8, 16, 32 or 0)
+	 */
+	static Tree charType (int size);
 	
 	/**
 	 * \brief Create a new var declaration 
@@ -165,6 +184,22 @@ namespace generic {
 	 * \brief create a int cst
 	 */
 	static Tree buildIntCst (const lexing::Word & loc, long value, const Tree & type);
+
+	/**
+	 * \brief Create a float const
+	 * \param value the value is encoded in a string to prevent approximation
+	 */
+	static Tree buildFloatCst (const lexing::Word & loc, const std::string & value, const Tree & type);
+
+	/**
+	 * \brief Generate a bool const
+	 */
+	static Tree buildBoolCst (const lexing::Word & loc, bool value);
+	
+	/**
+	 * \brief Generate a bool const
+	 */
+	static Tree buildCharCst (const lexing::Word & loc, uint value, const Tree & type);
 
 	/**
 	 * \brief Create a return stmt

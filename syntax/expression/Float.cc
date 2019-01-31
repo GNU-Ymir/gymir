@@ -32,5 +32,19 @@ namespace syntax {
 	stream.writef ("%*<Float> ", i, '\t');
 	stream.writeln (this-> getLocation (), " ", this-> _decPart, " ", this-> _suffix);
     }
+
+    std::string Float::getValue () const {
+	if (this-> _decPart.isEof ()) {
+	    return this-> getLocation ().str + "0";
+	} else if (this-> getLocation () == Token::DOT) {
+	    return "0." + this-> _decPart.str;
+	} else {
+	    return this-> getLocation ().str + "." + this-> _decPart.str;
+	}
+    }
+
+    const lexing::Word & Float::getSuffix () const {
+	return this-> _suffix;
+    }
     
 }

@@ -35,6 +35,17 @@ namespace syntax {
 	bool isOf (const IExpression * type) const override;
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+	/**
+	 * \return the value encoded into a string
+	 */
+	std::string getValue () const;
+
+	/**
+	 * \return the suffix of the float
+	 */
+	const lexing::Word & getSuffix () const;
+
     };    
 
 }

@@ -15,10 +15,8 @@ struct Token {
     static std::string	DDOT; 
     static std::string	TDOT;
     static std::string	AND;
-    static std::string	AND_AFF;
     static std::string	DAND;
     static std::string	PIPE;
-    static std::string	PIPE_EQUAL;
     static std::string	DPIPE;
     static std::string	MINUS;
     static std::string	MINUS_AFF;
@@ -36,10 +34,6 @@ struct Token {
     static std::string 	RIGHTD;
     static std::string 	NOT;
     static std::string 	NOT_EQUAL;
-    static std::string 	NOT_INF;
-    static std::string 	NOT_INF_EQUAL;
-    static std::string 	NOT_SUP;
-    static std::string 	NOT_SUP_EQUAL;
     static std::string 	LPAR;
     static std::string 	RPAR;
     static std::string 	LCRO;
@@ -54,15 +48,14 @@ struct Token {
     static std::string 	EQUAL;
     static std::string 	DEQUAL;
     static std::string 	STAR;
-    static std::string 	STAR_EQUAL;
+    static std::string 	STAR_AFF;
     static std::string 	PERCENT;
-    static std::string 	PERCENT_EQUAL; 
+    static std::string 	PERCENT_AFF; 
     static std::string 	XOR;
-    static std::string 	XOR_EQUAL;
     static std::string 	DXOR;
-    static std::string 	DXOR_EQUAL;
+    static std::string 	DXOR_AFF;
     static std::string 	TILDE;
-    static std::string 	TILDE_EQUAL;
+    static std::string 	TILDE_AFF;
     static std::string 	AT;
     static std::string 	DARROW;
     static std::string 	SHARP;
@@ -88,13 +81,12 @@ struct Token {
     static std::string  BROK_SPACE;
     
     static std::vector <std::string> members () {
-	return {DIV,		DIV_AFF,	DOT,		DDOT,		TDOT,		AND,		AND_AFF,	DAND,		PIPE,	PIPE_EQUAL,
+	return {DIV,		DIV_AFF,	DOT,		DDOT,		TDOT,		AND,		DAND,		PIPE,
 		DPIPE,		MINUS,		MINUS_AFF,	DMINUS,		PLUS,		PLUS_AFF,	DPLUS,		INF,
 		INF_EQUAL,	LEFTD,		LEFTD_AFF,	SUP,		SUP_EQUAL,	RIGHTD,		RIGHTD_AFF,
-		NOT,		NOT_EQUAL,	NOT_INF,	NOT_INF_EQUAL,	NOT_SUP,	NOT_SUP_EQUAL,
-		LPAR,		RPAR,		LCRO,		RCRO,		LACC,		RACC,		INTEG,		COMA,		SEMI_COLON,
-		COLON,		DOLLAR,		EQUAL,		DEQUAL,		STAR,		STAR_EQUAL,	PERCENT,	PERCENT_EQUAL,
-		XOR,		XOR_EQUAL,	DXOR_EQUAL,	DXOR,		TILDE,		TILDE_EQUAL,	AT,		DARROW,
+		NOT,		NOT_EQUAL,	LPAR,		RPAR,		LCRO,		RCRO,		LACC,		RACC,		INTEG,		COMA,		SEMI_COLON,
+		COLON,		DOLLAR,		EQUAL,		DEQUAL,		STAR,		STAR_AFF,	PERCENT,	PERCENT_AFF,
+		XOR,		DXOR_AFF,	DXOR,		TILDE,		TILDE_AFF,	AT,		DARROW,
 		SHARP,		SPACE,		RETURN,		RRETURN, ANTI, 	LCOMM1,		RCOMM1,		LCOMM2,
 		GUILL,		APOS,		TAB,		LCOMM3,		RCOMM3,		LCOMM4, LCOMM5, RCOMM5, ARROW,		BSTRING,	ESTRING,	DCOLON, BROK_SPACE
 		};

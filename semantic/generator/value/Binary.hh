@@ -24,10 +24,6 @@ namespace semantic {
 		INF_EQUAL, // <=
 		SUP_EQUAL, // >=
 		NOT_EQUAL, // !=
-		NOT_INF, // !<
-		NOT_SUP, // !>
-		NOT_INF_EQUAL, // !<=
-		NOT_SUP_EQUAL, // !>=
 		EQUAL, // ==
 		LEFT_SHIFT, // <<
 		RIGHT_SHIFT, // >>

@@ -50,13 +50,28 @@ namespace semantic {
 	    generator::Generator validateMathOperation (generator::Binary::Operator op, const syntax::Binary & expression);
 
 	    /**
-	     * \brief Validate a binary math operation with a integer on the left operand
+	     * \brief Validate a mathematic operation from two operands 
+	     * \brief mathematics operations are in opposition to logical operations
+	     */
+	    generator::Generator validateMathOperation (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a binary math operation with an integer on the left operand
 	     * \param op the operator of the expression 
 	     * \param expression the syntaxic node that will produce the generator
-	     * \param left the left operand that we assume to be a Integer value
+	     * \param left the left operand that we assume to be an Integer value
 	     * \param right the right operand that we don't know the type yet
 	     */
 	    generator::Generator validateMathIntLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a binary math operation with a float on the left operand
+	     * \param op the operator of the expression 
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we assume to be a Float value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateMathFloatLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 	    
 	    /**
 	     * \brief Validate a logical operation from two operands
@@ -74,6 +89,15 @@ namespace semantic {
 	    generator::Generator validateLogicalIntLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
 	    /**
+	     * \brief Validate a binary logical operation with a float on the left operand
+	     * \param op the operator of the expression 
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand assumed to be a Float value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateLogicalFloatLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+	    
+	    /**
 	     * \brief Validate a binary logical operation with a bool on the left operand
 	     * \param op the operator of the expression 
 	     * \param expression the syntaxic node that will produce the generator
@@ -82,12 +106,21 @@ namespace semantic {
 	     */
 	    generator::Generator validateLogicalBoolLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 	    
+	    /**
+	     * \brief Validate an affectation, the pre operation is a mathetical one (or concat, but its considered math)
+	     * \param op the additional operation to perfom before affectation (can be LAST_OP, meaning no pre operation)
+	     * \param expression the binary expression 
+	     */
+	    generator::Generator validateAffectation (generator::Binary::Operator op, const syntax::Binary & expression);
+
 	private :
 
 	    /**
 	     * \brief Transform a token into a binary operator
+	     * \param word the token containing the op
+	     * \param isAff returned value, set to true if this operator is a affectation
 	     */
-	    generator::Binary::Operator toOperator (const lexing::Word & word);
+	    generator::Binary::Operator toOperator (const lexing::Word & word, bool & isAff);
 
 	    /**
 	     * \return is this operator a mathematic operator

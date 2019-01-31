@@ -105,11 +105,13 @@ std::string     Keys::ALIAS      = "alias";
 std::string     Keys::DYNAMIC    = "dynamic";
 std::string     Keys::AS         = "as";
 
-std::string     Keys::I8         = "_i8";
-std::string     Keys::I16         = "_i16";
-std::string     Keys::I64         = "_i64";
+std::string     Keys::I8         = "i8";
+std::string     Keys::I16         = "i16";
+std::string     Keys::I64         = "i64";
 
-std::string     Keys::U8         = "_u8";
-std::string     Keys::U16         = "_u16";
-std::string     Keys::U32         = "_u32";
-std::string     Keys::U64         = "_u64";
+std::string     Keys::U8         = "u8";
+std::string     Keys::U16         = "u16";
+std::string     Keys::U32         = "u32";
+std::string     Keys::U64         = "u64";
+std::string     Keys::FLOAT_S     = "f";
+std::string     Keys::C8          = "c8";

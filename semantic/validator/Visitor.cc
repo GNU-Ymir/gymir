@@ -141,6 +141,14 @@ namespace semantic {
 		    return validateBool (b);
 		);
 		
+		of (syntax::Float, f,
+		    return validateFloat (f);
+		);
+
+		of (syntax::Char, c,
+		    return validateChar (c);
+		);
+		
 		of (syntax::Binary, binary,
 		    return validateBinary (binary);
 		);
@@ -323,6 +331,139 @@ namespace semantic {
 	Generator Visitor::validateBool (const syntax::Bool & b) {
 	    return BoolValue::init (b.getLocation (), Bool::init (b.getLocation ()), b.getLocation () == Keys::TRUE_);
 	}
+
+	Generator Visitor::validateFloat (const syntax::Float & f) {
+	    Generator type (Generator::empty ());
+	    if (f.getSuffix () == Keys::FLOAT_S) type = Float::init (f.getLocation (), 32);
+	    else {
+		type = Float::init (f.getLocation (), 64);
+	    }
+
+	    return FloatValue::init (f.getLocation (), type, f.getValue ());
+	}
+
+	Generator Visitor::validateChar (const syntax::Char & c) {
+	    struct Anonymous {
+		
+		static size_t utf8_codepoint_size(uint8_t text) {
+		    // According to utf-8 documentation, a continuous char begin with 10xxxxxx,
+		    // Meaning 01101000 10111111 is 1 in length, and 0111111 11010100 is 2 in length
+		    
+		    if((text & 0b10000000) == 0) {
+			return 1;
+		    }
+
+		    if((text & 0b11100000) == 0b11000000) {
+			return 2;
+		    }
+
+		    if((text & 0b11110000) == 0b11100000) {
+			return 3;
+		    }
+		    
+		    return 4;
+		}
+
+		static std::vector <uint> utf8_to_utf32(const std::string & text) {
+		    std::vector <uint> res;
+		    size_t i = 0;
+
+		    for (size_t n = 0; i < text.length (); n++) {
+			size_t byte_count = utf8_codepoint_size(text[i]);
+			
+			uint a = 0, b = 0, c = 0, d = 0;
+			uint a_mask, b_mask, c_mask, d_mask;
+			a_mask = b_mask = c_mask = d_mask = 0b00111111;
+			
+			switch(byte_count) {
+			case 4 : {
+			    a = text [i]; b = text [i + 1]; c = text [i + 2]; d = text [i + 3];
+			    a_mask = 0b00000111;
+			} break;
+			case 3 : {
+			    b = text [i]; c = text [i + 1]; d = text [i + 2];
+			    b_mask = 0b00001111;
+			} break;
+			case 2 : {
+			    c = text [i]; d = text [i + 1];
+			    c_mask = 0b00011111;
+			} break;
+			
+			case 1 : {
+			    d = text [i];
+			    d_mask = 0b01111111;
+			} break;
+			}
+			
+			uint b0 = a & a_mask;
+			uint b1 = b & b_mask;
+			uint b2 = c & c_mask;
+			uint b3 = d & d_mask;
+			res.push_back ((b0 << 18) | (b1 << 12) | (b2 << 6) | b3);
+
+			i += byte_count;
+		    }
+
+		    return res;
+		}
+	       		
+		static std::string escapeChar (const lexing::Word & loc, const std::string & content) {
+		    OutBuffer buf;
+		    int it = 0;
+		    static std::vector <char> escape = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '\"', '"', '?', '\0'};
+		    static std::vector <uint> values = {7, 8, 12, 10, 13, 9, 11, 92, 39, 34, 63};
+		    
+		    while (it < (int) content.size ()) {
+			if (it == '\\') {
+			    if (it + 1 < (int) content.size ()) {
+				it += 1;				
+				auto pos = std::find (escape.begin (), escape.end (), content [it]) - escape.begin ();
+				if (pos >= (int) escape.size ()) {
+				    auto real_loc = loc;
+				    real_loc.column += it;
+				    Error::occur (real_loc, ExternalError::get (UNDEFINED_ESCAPE));
+				}
+				
+				buf.write ((char) values [pos]);				
+			    } else {
+				auto real_loc = loc;
+				real_loc.column += it;
+				Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
+			    }
+			} else buf.write (content [it]);
+			it ++;
+		    }
+		    return buf.str ();
+		}
+		
+		static uint convert (const lexing::Word & loc, const lexing::Word & content, int size) {
+		    auto str = // escapeChar (loc, 
+					   content.str;
+		    if (size == 32) {
+			std::vector <uint> utf_32 = utf8_to_utf32 (str);
+			if (utf_32.size () != 1) {		    
+			    Ymir::Error::occur (loc, ExternalError::get (MALFORMED_CHAR), "c32", utf_32.size ());
+			}
+			return utf_32 [0];
+		    } else if (size == 8) {
+			if (str.length () != 1)
+			    Ymir::Error::occur (loc, ExternalError::get (MALFORMED_CHAR), "c8", str.length ());
+			return str [0] & 0b01111111;
+		    }
+		    
+		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		    return 0;
+		}
+		    
+	    };
+	    
+	    Generator type (Generator::empty ());	    
+	    if (c.getSuffix () == Keys::C8) type = Char::init (c.getLocation (), 8);
+	    if (c.getSuffix () == "") type = Char::init (c.getLocation (), 32);
+	    
+	    uint value = Anonymous::convert (c.getLocation (), c.getSequence (), type.to<Char> ().getSize ());	   
+	    return CharValue::init (c.getLocation (), type, value);
+	}
 	
 	Generator Visitor::validateBinary (const syntax::Binary & bin) {
 	    auto binVisitor = BinaryVisitor::init (*this);
@@ -395,18 +536,21 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateTypeVar (const syntax::Var & var) {
-	    auto intName = {"i8", "i16", "i32", "i64",
-			    "u8", "u16", "u32", "u64"};
-	    if (std::find (intName.begin (), intName.end (), var.getName ().str) != intName.end ()) {
+	    if (std::find (Integer::NAMES.begin (), Integer::NAMES.end (), var.getName ().str) != Integer::NAMES.end ()) {
 		auto size = var.getName ().str.substr (1);
-		if (size == "8") return Integer::init (var.getName (), 8, var.getName ().str[0] == 'i');
-		if (size == "16") return Integer::init (var.getName (), 16, var.getName ().str[0] == 'i');
-		if (size == "32") return Integer::init (var.getName (), 32, var.getName ().str[0] == 'i');
-		if (size == "64") return Integer::init (var.getName (), 64, var.getName ().str[0] == 'i');
-	    } else if (var.getName ().str == "void") {
+		
+		// According to c++ documentation atoi return 0, if the conversion failed
+		return Integer::init (var.getName (), std::atoi (size.c_str ()), var.getName ().str[0] == 'i');
+	    } else if (var.getName ().str == Void::NAME) {
 		return Void::init (var.getName ());
-	    } else if (var.getName ().str == "bool")
+	    } else if (var.getName ().str == Bool::NAME) {
 		return Bool::init (var.getName ());
+	    } else if (std::find (Float::NAMES.begin (), Float::NAMES.end (), var.getName ().str) != Float::NAMES.end ()) {
+		auto size = var.getName ().str.substr (1);
+		return Float::init (var.getName (), std::atoi (size.c_str ())); 
+	    } else if (std::find (Char::NAMES.begin (), Char::NAMES.end (), var.getName ().str) != Char::NAMES.end ()) {
+		return Char::init (var.getName (), std::atoi (var.getName ().str.substr (1).c_str ()));
+	    }
 	    
 	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().str);
 	    return Generator::empty ();

@@ -5,24 +5,31 @@
 namespace semantic {
     namespace generator {
 
-	class Bool : public Type {
+	class Char : public Type {
 	public :
-	    
-	    static std::string NAME;
 
-	    static bool INIT;
+	    static std::vector <std::string> NAMES;
+
+	    /// Value of char are encoded in uint to prevent truncation
+	    static uint INIT;
 	    
-	private :	    
-	    
+	private : 
+
+	    /** The precision of this float type (8/16/32/0) */
+	    /** 0 means the biggest representable char */
+	    int _size; 
+
+	private :
+
 	    friend Generator;
 
-	    Bool ();	    
+	    Char ();	    
 
-	    Bool (const lexing::Word & loc);
+	    Char (const lexing::Word & loc, int size);
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc);
+	    static Generator init (const lexing::Word & loc, int size);
 
 	    Generator clone () const override;
 
@@ -37,6 +44,8 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;
 	    
 	    std::string typeName () const override;
+
+	    int getSize () const;
 	    
 	};
        

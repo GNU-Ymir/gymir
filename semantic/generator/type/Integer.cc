@@ -4,6 +4,13 @@
 namespace semantic {
     namespace generator {
 
+	std::vector <std::string> Integer::NAMES = {
+	    "i8", "i16", "i32", "i64", "isize",
+	    "u8", "u16", "u32", "u64", "usize"
+	};
+
+	long Integer::INIT = 0;
+	
 	Integer::Integer () :
 	    Type ()		  
 	{}
@@ -38,13 +45,13 @@ namespace semantic {
 
 	std::string Integer::typeName () const {
 	    if (this-> _isSigned) {
-		if (this-> _size >= 0)
+		if (this-> _size > 0)
 		    return Ymir::OutBuffer ("i", this-> _size).str ();
-		return "usize";
-	    } else {
-		if (this-> _size >= 0)
-		    return Ymir::OutBuffer ("u", this-> _size).str ();
 		return "isize";
+	    } else {
+		if (this-> _size > 0)
+		    return Ymir::OutBuffer ("u", this-> _size).str ();
+		return "usize";
 	    }
 	}	
     

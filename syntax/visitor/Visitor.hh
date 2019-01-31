@@ -58,6 +58,9 @@ namespace syntax {
 	/** The suffix float */
 	std::vector <std::string> _floatSuffix;
 
+	/** The suffix char */
+	std::vector <std::string> _charSuffix;
+
 	/** The list of instricts */
 	std::vector <std::string> _intrisics;
 
@@ -373,20 +376,20 @@ namespace syntax {
 	 * \brief Visit an single expression 
 	 * \verbatim
 	 expression:(priority) := (expression:(priority + 1) operator:(priority) expression:(priority + 1)) (operator:(priority) expression:(priority))?
-	 expression:(11) := operand:(0)
-
-	 operator:(0)  := '||'
-	 operator:(1)  := '&&'
-	 operator:(2)  := '<' | '>' | '<=' | '>=' | '!=' | '!<' | '!>' | '!<=' | '!>=' | '==' | 
-	                  (('!')? ('of' | 'is' | 'in'))
-	 operator:(3)  := '...' | '..' 
-	 operator:(4)  := '<<' | '>>'
-	 operator:(5)  := '|' | '^' | '&'
-	 operator:(6)  := '+' | '~' | '-'
-	 operator:(7)  := '*' | '%' | '/'
-	 operator:(8)  := '^^'
-	 operator:(9)  := '.'
-	 operator:(10) := '::'
+	 expression:(12) := operand:(0)
+	 
+	 operator:(0)  := '=' | '-=' | '/=' | '*=' | '+='
+	 operator:(1)  := '||'
+	 operator:(2)  := '&&'
+	 operator:(3)  := '<' | '>' | '<=' | '>=' | '!=' | '==' | (('!')? ('of' | 'is' | 'in'))
+	 operator:(4)  := '...' | '..' 
+	 operator:(5)  := '<<' | '>>'
+	 operator:(6)  := '|' | '^' | '&'
+	 operator:(7)  := '+' | '~' | '-'
+	 operator:(8)  := '*' | '%' | '/'
+	 operator:(9)  := '^^'
+	 operator:(10)  := '.'
+	 operator:(11) := '::'
 	 \endverbatim
 	 * \param priority, the priority of the expression (used to get the set of operators usable at this instant)	 
 	 */
@@ -475,13 +478,18 @@ namespace syntax {
 	 */
 	bool verifNumeric (const lexing::Word & loc, const std::string& content);
 
-
 	/**
 	 * \brief Visit a float literal
 	 * \brief Read only the decimal part
 	 * \param begin is the beginning part of the float
 	 */
 	Expression visitFloat (const lexing::Word & begin);
+
+	/**
+	 * \brief Visit a char literal 
+	 * \brief Does not verify the integrity of the content, it will be checked at semantic time
+	 */
+	Expression visitChar ();
 	
 	/**
 	 * \brief Visit an array literal, it can be either a real literal or an array allocator
@@ -530,7 +538,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a for loop
 	 * \verbatim
-	 for := 'for' var_decl (',' var_decl)* 'in' expression:(9) expression:(0)
+	 for := 'for' var_decl (',' var_decl)* 'in' expression:(10) expression:(0)
 	 \endverbatim
 	 */
 	Expression visitFor ();
@@ -542,7 +550,7 @@ namespace syntax {
 	 match_pattern := match_pattern_content ('if' expression:(0))?
 	 match_pattern_content := expression:(0)                                |
 	                          var_decl                                      |
-				  expression:(9) '{' match_pattern_content* '}' |
+				  expression:(10) '{' match_pattern_content* '}' |
 				  '(' match_pattern_content* ')'                |
 	 \endverbatim
 	 */
@@ -552,7 +560,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a break
 	 * \verbatim
-	 break := 'break' (expression:(9))?
+	 break := 'break' (expression:(10))?
 	 \endverbatim
 	 */
 	Expression visitBreak ();
@@ -560,7 +568,7 @@ namespace syntax {
 	/**
 	 * \brief Visit an assertion 
 	 * \verbatim
-	 assert := ('cte')? 'assert' expression:(0) ('=>' expression:(9))
+	 assert := ('cte')? 'assert' expression:(0) ('=>' expression:(10))
 	 \endverbatim
 	 */
 	Expression visitAssert ();
@@ -569,7 +577,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a throw
 	 * \verbatim
-	 throw := 'throw' expression:(9)
+	 throw := 'throw' expression:(10)
 	 \endverbatim
 	 */
 	Expression visitThrow ();

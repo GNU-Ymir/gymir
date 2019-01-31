@@ -5,24 +5,33 @@
 namespace semantic {
     namespace generator {
 
-	class Bool : public Type {
+	class Float : public Type {
 	public :
-	    
-	    static std::string NAME;
 
-	    static bool INIT;
+	    static std::vector <std::string> NAMES;
+
+	    /// Value of floating point are encoded in string to prevent approximation
+	    static std::string INIT;
+
+	    static std::string NOT_A_NUMBER;
 	    
-	private :	    
-	    
+	private : 
+
+	    /** The precision of this float type (32/64/0) */
+	    /** 0 means the biggest representable float */
+	    int _size; 
+
+	private :
+
 	    friend Generator;
 
-	    Bool ();	    
+	    Float ();	    
 
-	    Bool (const lexing::Word & loc);
+	    Float (const lexing::Word & loc, int size);
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc);
+	    static Generator init (const lexing::Word & loc, int size);
 
 	    Generator clone () const override;
 
@@ -37,6 +46,8 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;
 	    
 	    std::string typeName () const override;
+
+	    int getSize () const;
 	    
 	};
        

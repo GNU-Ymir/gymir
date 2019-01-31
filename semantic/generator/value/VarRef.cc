@@ -11,7 +11,9 @@ namespace semantic {
 	    Value (location, type),
 	    _name (name),
 	    _refId (id)
-	{}
+	{
+	    this-> isLvalue (true);
+	}
 
 	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id) {
 	    return Generator {new (Z0) VarRef (location, name, type, id)};

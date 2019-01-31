@@ -4,6 +4,10 @@
 namespace semantic {
     namespace generator {
 
+	std::string Bool::NAME = "bool";
+
+	bool Bool::INIT = false;
+	
 	Bool::Bool () :
 	    Type ()		  
 	{}
@@ -32,7 +36,7 @@ namespace semantic {
 	}
 
 	std::string Bool::typeName () const {
-	    return "bool";
+	    return Bool::NAME;
 	}	
     	
     }

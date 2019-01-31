@@ -42,7 +42,11 @@ namespace Ymir {
 			 UNDEFINED_BIN_OP,
 			 UNDEF_VAR,
 			 NEVER_USED,
-			 VOID_VAR
+			 VOID_VAR,
+			 NOT_A_LVALUE,
+			 UNDEFINED_ESCAPE,
+			 UNTERMINATED_SEQUENCE,
+			 MALFORMED_CHAR
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

@@ -48,7 +48,7 @@ namespace semantic {
 	Tree Visitor::generateType (const Generator & gen) {
 	    match (gen) {
 		of (Integer, i,
-		    return generateIntegerType (i);
+		    return Tree::intType (i.getSize (), i.isSigned ());
 		);		
 
 		of (Void, v ATTRIBUTE_UNUSED,
@@ -57,12 +57,50 @@ namespace semantic {
 
 		of (Bool, b ATTRIBUTE_UNUSED,
 		    return Tree::boolType ();
-		);		
+		);
+		
+		of (Float, f,
+		    return Tree::floatType (f.getSize ());
+		);
+
+		of (Char, c,
+		    return Tree::charType (c.getSize ());
+		);
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Tree::empty ();
 	}
+
+	Tree Visitor::generateInitValueForType (const Generator & type) {
+	    match (type) {
+
+		of (Integer, i,
+		    return Tree::buildIntCst (i.getLocation (), Integer::INIT, generateType (type));
+		);
+
+		of (Void, v ATTRIBUTE_UNUSED,
+		    Ymir::Error::halt ("%(r) - reaching impossible point - value for a void", "Critical");
+		);
+
+		of (Bool, b,
+		    return Tree::buildBoolCst (b.getLocation (), Bool::INIT);
+		);
+
+		of (Float, f,
+		    return Tree::buildFloatCst (f.getLocation (), Float::INIT, generateType (type));
+		);
+
+		of (Char, c,
+		    return Tree::buildCharCst (c.getLocation (), Char::INIT, generateType (type));
+		);
+		
+	    }	    
+
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Tree::empty ();
+	}
+	
 	
 	void Visitor::generateGlobalVar (const GlobalVar & var) {
 	    auto type = generateType (var.getType ());
@@ -145,28 +183,7 @@ namespace semantic {
 	    
 	    return decl;
 	}
-
-	Tree Visitor::generateIntegerType (const Integer & type) {
-	    if (type.isSigned ()) {
-		switch (type.getSize ()) {
-		case 8 : return Tree::init (type.getLocation ().getLocus (), signed_char_type_node);
-		case 16 : return Tree::init (type.getLocation ().getLocus (), short_integer_type_node);
-		case 32 : return Tree::init (type.getLocation ().getLocus (), integer_type_node);
-		case 64 : return Tree::init (type.getLocation ().getLocus (), long_integer_type_node);
-		}
-	    } else {
-		switch (type.getSize ()) {
-		case 8 : return Tree::init (type.getLocation ().getLocus (), unsigned_char_type_node);
-		case 16 : return Tree::init (type.getLocation ().getLocus (), short_unsigned_type_node);
-		case 32 : return Tree::init (type.getLocation ().getLocus (), unsigned_type_node);
-		case 64 : return Tree::init (type.getLocation ().getLocus (), long_unsigned_type_node);
-		}
-	    }
-	    
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Tree::empty ();
-	}
-
+	
 	Tree Visitor::generateValue (const Generator & gen) {
 	    match (gen) {
 		of (Block, block,
@@ -185,12 +202,28 @@ namespace semantic {
 		    return generateBool (b);
 		);
 
+		of (FloatValue, f,
+		    return generateFloat (f);
+		);
+
+		of (CharValue, c,
+		    return generateChar (c);
+		);
+		
+		of (Affect, aff,
+		    return generateAffect (aff);
+		);
+		
 		of (BinaryInt, i,
 		    return generateBinaryInt (i);
 		);
 
 		of (BinaryBool, b,
 		    return generateBinaryBool (b);
+		);
+
+		of (BinaryFloat, f,
+		    return generateBinaryFloat (f);
 		);
 		
 		of (VarRef, var,
@@ -269,7 +302,30 @@ namespace semantic {
 	    auto type = generateType (b.getType ());
 	    return Tree::buildIntCst (b.getLocation (), (ulong) b.getValue (), type);
 	}
+
+	Tree Visitor::generateFloat (const FloatValue & f) {
+	    auto type = generateType (f.getType ());
+	    return Tree::buildFloatCst (f.getLocation (), f.getValue (), type);
+	}
+
+	Tree Visitor::generateChar (const CharValue & c) {
+	    auto type = generateType (c.getType ());
+	    return Tree::buildCharCst (c.getLocation (), c.getValue (), type);
+	}
 	
+	Tree Visitor::generateAffect (const Affect & aff) {
+	    auto left = generateValue (aff.getWho ());
+	    auto right = generateValue (aff.getValue ());
+
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+
+	    auto value = Tree::affect (aff.getLocation (), left.getValue (), right.getValue ());
+	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
+	    return ret;
+	}
+
 	Tree Visitor::generateBinaryInt (const BinaryInt & bin) {
 	    auto left = generateValue (bin.getLeft ());
 	    auto right = generateValue (bin.getRight ());
@@ -330,6 +386,37 @@ namespace semantic {
 	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
 	    return ret;
 	}
+
+	Tree Visitor::generateBinaryFloat (const BinaryFloat & bin) {
+	    auto left = generateValue (bin.getLeft ());
+	    auto right = generateValue (bin.getRight ());
+
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+	    
+	    tree_code code = PLUS_EXPR; // Fake default affectation to avoid warning
+	    switch (bin.getOperator ()) {;
+	    case Binary::Operator::ADD : code = PLUS_EXPR; break;
+	    case Binary::Operator::SUB : code = MINUS_EXPR; break;
+	    case Binary::Operator::MUL : code = MULT_EXPR; break;
+	    case Binary::Operator::DIV : code = RDIV_EXPR; break;
+		
+	    case Binary::Operator::INF : code = LT_EXPR; break;
+	    case Binary::Operator::SUP : code = GT_EXPR; break;
+	    case Binary::Operator::INF_EQUAL : code = LE_EXPR; break;
+	    case Binary::Operator::SUP_EQUAL : code = GE_EXPR; break;
+	    case Binary::Operator::EQUAL : code = EQ_EXPR; break;
+	    case Binary::Operator::NOT_EQUAL : code = NE_EXPR; break;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+	    }
+	    
+	    auto type = generateType (bin.getType ());
+	    auto value = Tree::binary (bin.getLocation (), code, type, left.getValue (), right.getValue ());
+	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+	    return ret;	    
+	}
 	
 	generic::Tree Visitor::generateVarRef (const VarRef & var) {
 	    return this-> getDeclarator (var.getRefId ());
@@ -342,6 +429,8 @@ namespace semantic {
 	    auto decl = Tree::varDecl (var.getLocation (), name, type);
 	    if (!var.getVarValue ().isEmpty ())
 		decl.setDeclInitial (generateValue (var.getVarValue ()));
+	    else 
+		decl.setDeclInitial (generateInitValueForType (var.getVarType ()));	    
 
 	    decl.setDeclContext (getCurrentContext ());
 	    stackVarDeclChain.back ().append (decl);

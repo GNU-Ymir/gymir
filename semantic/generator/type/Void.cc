@@ -4,6 +4,8 @@
 namespace semantic {
     namespace generator {
 
+	std::string Void::NAME = "void";
+	
 	Void::Void () :
 	    Type ()		  
 	{}

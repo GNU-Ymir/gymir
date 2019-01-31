@@ -57,6 +57,14 @@ namespace semantic {
 	void Value::isReturner (bool returner) {
 	    this-> _returner = returner;
 	}
+
+	bool Value::isLvalue () const {
+	    return this-> _isLvalue;
+	}
+
+	void Value::isLvalue (bool is) {
+	    this-> _isLvalue = is;
+	}
 	
     }
     

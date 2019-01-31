@@ -6,6 +6,10 @@ namespace semantic {
     namespace generator {
 
 	class Void : public Type {
+	public :
+
+	    static std::string NAME;
+
 	private :
 
 	    friend Generator;

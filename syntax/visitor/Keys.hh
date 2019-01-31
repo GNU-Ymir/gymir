@@ -120,4 +120,6 @@ struct Keys {
     static std::string  U32;
     static std::string  U64;
 
+    static std::string  FLOAT_S;
+    static std::string  C8;
 };

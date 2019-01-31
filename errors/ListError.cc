@@ -23,6 +23,10 @@ namespace Ymir {
 			    UNDEFINED_BIN_OP = "undefined operator %(y) for types %(y) and %(y)",
 			    UNDEF_VAR = "undefined symbol %(y)",
 			    NEVER_USED = "symbol %(y) declared but never used",
-			    VOID_VAR = "cannot declare var of type void"
+			    VOID_VAR = "cannot declare var of type void",
+			    NOT_A_LVALUE = "not a lvalue",
+			    UNDEFINED_ESCAPE = "undefined escape sequence",
+			    UNTERMINATED_SEQUENCE = "unterminated escape sequence",
+			    MALFORMED_CHAR = "malformed literal, number of %(y) is %(y)"
     );    
 }

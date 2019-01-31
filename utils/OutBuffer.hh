@@ -185,6 +185,8 @@ namespace Ymir {
 	
 	void write_ (const std::string&);
 
+	void write_ (uint);
+	
 	void write_ (int);
 	
 	void write_ (long);

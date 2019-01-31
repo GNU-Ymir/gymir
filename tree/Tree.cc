@@ -41,6 +41,43 @@ namespace generic {
     Tree Tree::boolType () {
 	return Tree::init (UNKNOWN_LOCATION, unsigned_char_type_node);
     }
+
+    Tree Tree::intType (int size, bool isSigned) {
+	if (isSigned) {
+	    switch (size) {
+	    case 8 : return Tree::init (UNKNOWN_LOCATION, signed_char_type_node);
+	    case 16 : return Tree::init (UNKNOWN_LOCATION, short_integer_type_node);
+	    case 32 : return Tree::init (UNKNOWN_LOCATION, integer_type_node);
+	    case 64 : return Tree::init (UNKNOWN_LOCATION, long_integer_type_node);
+	    default : return Tree::init (UNKNOWN_LOCATION, long_integer_type_node);
+	    }
+	} else {
+	    switch (size) {
+	    case 8 : return Tree::init (UNKNOWN_LOCATION, unsigned_char_type_node);
+	    case 16 : return Tree::init (UNKNOWN_LOCATION, short_unsigned_type_node);
+	    case 32 : return Tree::init (UNKNOWN_LOCATION, unsigned_type_node);
+	    case 64 : return Tree::init (UNKNOWN_LOCATION, long_unsigned_type_node);
+	    default : return Tree::init (UNKNOWN_LOCATION, long_unsigned_type_node);	       
+	    } 
+	}
+    }
+
+    Tree Tree::floatType (int size) {
+	switch (size) {
+	case 32: return Tree::init (UNKNOWN_LOCATION, float_type_node);
+	case 64: return Tree::init (UNKNOWN_LOCATION, double_type_node);
+	default : return Tree::init (UNKNOWN_LOCATION, double_type_node);
+	}
+    }
+
+    Tree Tree::charType (int size) {
+	switch (size) {
+	case 8 : return Tree::init (UNKNOWN_LOCATION, unsigned_char_type_node);
+	case 16 : return Tree::init (UNKNOWN_LOCATION, short_unsigned_type_node);
+	case 32 : return Tree::init (UNKNOWN_LOCATION, unsigned_type_node);
+	default : return Tree::init (UNKNOWN_LOCATION, unsigned_type_node);	    
+	}
+    }
     
     Tree Tree::varDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
 	return Tree::init (loc.getLocus (),
@@ -150,8 +187,24 @@ namespace generic {
     Tree Tree::buildIntCst (const lexing::Word & loc, long value, const Tree & type) {
 	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
     }
-    
 
+    Tree Tree::buildFloatCst (const lexing::Word & loc, const std::string & value, const Tree & type) {
+	REAL_VALUE_TYPE real_value;
+	auto str = value;
+	if (str == "INF") str = "Inf";
+	if (str == "NAN") str = "QNaN";
+	real_from_string (&real_value, str.c_str ());
+	return Tree::init (loc.getLocus (), build_real (type.getTree (), real_value));
+    }    
+
+    Tree Tree::buildBoolCst (const lexing::Word & loc, bool value) {
+	return Tree::init (loc.getLocus (), build_int_cst_type (unsigned_char_type_node, (ulong) value));
+    }
+
+    Tree Tree::buildCharCst (const lexing::Word & loc, uint value, const Tree & type) {
+	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
+    }
+    
     Tree Tree::returnStmt (const lexing::Word & loc, const Tree & result_decl, const Tree & value) {
 	auto inside = Tree::build (MODIFY_EXPR, loc, Tree::voidType (), result_decl, value); 
 	return Tree::build (RETURN_EXPR, loc, Tree::voidType (), inside);	
