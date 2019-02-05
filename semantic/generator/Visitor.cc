@@ -46,32 +46,50 @@ namespace semantic {
 	}	
 
 	Tree Visitor::generateType (const Generator & gen) {
+	    Tree type = Tree::empty ();
 	    match (gen) {
 		of (Integer, i,
-		    return Tree::intType (i.getSize (), i.isSigned ());
+		    type = Tree::intType (i.getSize (), i.isSigned ());
 		);		
 
 		of (Void, v ATTRIBUTE_UNUSED,
-		    return Tree::voidType ();
+		    type = Tree::voidType ();
 		);
 
 		of (Bool, b ATTRIBUTE_UNUSED,
-		    return Tree::boolType ();
+		    type = Tree::boolType ();
 		);
 		
 		of (Float, f,
-		    return Tree::floatType (f.getSize ());
+		    type = Tree::floatType (f.getSize ());
 		);
 
 		of (Char, c,
-		    return Tree::charType (c.getSize ());
+		    type = Tree::charType (c.getSize ());
+		);
+
+		of (Array, array,
+		    type = generateArrayType (array);
 		);
 	    }
 	    
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Tree::empty ();
+	    if (type.isEmpty ())
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+
+	    if (gen.to <Type> ().isRef ())
+		type = Tree::pointerType (type);
+	    
+	    return type;
 	}
 
+	Tree Visitor::generateArrayType (const Array & array) {
+	    if (array.size () != -1) {
+		return Tree::staticArray (generateType (array.getInner ()), array.size ());
+	    } else {
+		return Tree::dynArray (generateType (array.getInner ()));
+	    }
+	}
+	
 	Tree Visitor::generateInitValueForType (const Generator & type) {
 	    match (type) {
 
@@ -145,7 +163,10 @@ namespace semantic {
 	    if (!frame.getType ().is<Void> () && frame.getType ().equals (frame.getContent ().to <Value> ().getType ())) {
 		TreeStmtList list = TreeStmtList::init ();
 		list.append (value.getList ());
-		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value.getValue ()));
+		value = value.getValue ();
+		if (!resultDecl.getType ().isPointerType ()) value = value.toDirect ();
+		
+		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value));
 		value = list.toTree ();
 	    }
 	    
@@ -233,6 +254,26 @@ namespace semantic {
 		of (VarDecl, decl,
 		    return generateVarDecl (decl);
 		);
+
+		of (Referencer, _ref,
+		    return generateReferencer (_ref);
+		);
+
+		of (Conditional, cond,
+		    return generateConditional (cond);
+		);
+
+		of (ArrayValue, val,
+		    return generateArrayValue (val);
+		);
+
+		of (Copier, copy,
+		    return generateCopier (copy);
+		);
+
+		of (None, none ATTRIBUTE_UNUSED,
+		    return Tree::empty ();
+		);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -245,6 +286,8 @@ namespace semantic {
 	    Tree var (Tree::empty ());
 	    if (!block.getType ().is<Void> ()) {
 		var = Tree::varDecl (block.getLocation (), "_", generateType (block.getType ()));
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
 	    }
 
 	    enterBlock ();
@@ -254,7 +297,11 @@ namespace semantic {
 	    }
 
 	    if (!block.getType ().is<Void> ()) {
-		list.append (Tree::affect (block.getLocation (), var, last));
+		list.append (last.getList ());
+		auto value = last.getValue ();
+		if (!var.getType ().isPointerType ()) value = value.toDirect ();
+
+		list.append (Tree::affect (block.getLocation (), var, value));		
 		auto binding = quitBlock (block.getLocation (), list.toTree ());
 		return Tree::compound (block.getLocation (),
 				       var, 
@@ -320,8 +367,10 @@ namespace semantic {
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
 	    list.append (right.getList ());
-
-	    auto value = Tree::affect (aff.getLocation (), left.getValue (), right.getValue ());
+	    auto lvalue = aff.getWho ().to <Value> ().getType ().to <Type> ().isRef () ? left.getValue ().toDirect () : left.getValue ();
+	    auto rvalue = aff.getValue ().to <Value> ().getType ().to <Type> ().isRef () ? right.getValue ().toDirect () : right.getValue ();
+	    
+	    auto value = Tree::affect (aff.getLocation (), lvalue, rvalue);
 	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
 	    return ret;
 	}
@@ -357,8 +406,11 @@ namespace semantic {
 	    }
 
 	    auto type = generateType (bin.getType ());
+
+	    auto lvalue = left.getValue ().toDirect (); // We want an int, but it can be a ref to a int
+	    auto rvalue = right.getValue ().toDirect ();
 	    
-	    auto value = Tree::binary (bin.getLocation (), code, type, left.getValue (), right.getValue ());	    
+	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);	    
 	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
 	    return ret;
 	}
@@ -381,8 +433,11 @@ namespace semantic {
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }
 
+	    auto lvalue = left.getValue ().toDirect ();
+	    auto rvalue = right.getValue ().toDirect ();
+	    
 	    auto type = generateType (bin.getType ());
-	    auto value = Tree::binary (bin.getLocation (), code, type, left.getValue (), right.getValue ());
+	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);
 	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
 	    return ret;
 	}
@@ -412,8 +467,11 @@ namespace semantic {
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }
 	    
+	    auto lvalue = left.getValue ().toDirect ();
+	    auto rvalue = right.getValue ().toDirect ();
+	    
 	    auto type = generateType (bin.getType ());
-	    auto value = Tree::binary (bin.getLocation (), code, type, left.getValue (), right.getValue ());
+	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);
 	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
 	    return ret;	    
 	}
@@ -427,9 +485,12 @@ namespace semantic {
 	    auto name = var.getName ();
 
 	    auto decl = Tree::varDecl (var.getLocation (), name, type);
-	    if (!var.getVarValue ().isEmpty ())
-		decl.setDeclInitial (generateValue (var.getVarValue ()));
-	    else 
+	    if (!var.getVarValue ().isEmpty ()) {
+		if (!var.getVarType ().to <Type> ().isRef ())
+		    decl.setDeclInitial (generateValue (var.getVarValue ()).toDirect ());
+		else
+		    decl.setDeclInitial (generateValue (var.getVarValue ()));		
+	    } else 
 		decl.setDeclInitial (generateInitValueForType (var.getVarType ()));	    
 
 	    decl.setDeclContext (getCurrentContext ());
@@ -439,6 +500,70 @@ namespace semantic {
 	    return Tree::declExpr (var.getLocation (), decl);
 	}
 
+	generic::Tree Visitor::generateReferencer (const Referencer & ref) {
+	    auto inner = generateValue (ref.getWho ());
+	    if (ref.getWho ().to <Value> ().getType ().to <Type> ().isRef ())
+		return inner;
+
+	    auto type = generateType (ref.getType ());
+	    return Tree::buildAddress (ref.getLocation (), inner, type);
+	}	
+
+	generic::Tree Visitor::generateConditional (const Conditional & cond) {
+	    auto test = generateValue (cond.getTest ());
+	    Tree var (Tree::empty ());
+	    if (!cond.getType ().is<Void> ()) {
+		var = Tree::varDecl (cond.getLocation (), "_", generateType (cond.getType ()));
+	    }
+
+	    auto content = generateValue (cond.getContent ());
+	    if (!var.isEmpty ()) {
+		TreeStmtList list = TreeStmtList::init ();
+		list.append (content.getList ());
+		auto value = content.getValue ();
+		if (!var.getType ().isPointerType ()) value = value.toDirect ();
+		
+		list.append (Tree::affect (cond.getLocation (), var, value));
+		content = list.toTree ();
+	    }
+	    
+	    auto elsePart = Tree::empty ();
+	    if (!cond.getElse ().isEmpty ()) {
+		elsePart = generateValue (cond.getElse ());
+		if (!var.isEmpty ()) {
+		    TreeStmtList list = TreeStmtList::init ();
+		    list.append (elsePart.getList ());
+		    auto value = elsePart.getValue ();
+		    if (!var.getType ().isPointerType ()) value = value.toDirect ();
+		
+		    list.append (Tree::affect (cond.getLocation (), var, value));
+		    elsePart = list.toTree ();
+		}	
+	    }
+
+	    return Tree::compound (cond.getLocation (),
+				   var,
+				   Tree::conditional (cond.getLocation (), getCurrentContext (), test, content, elsePart)
+	    );
+	}
+
+	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
+	    auto type = generateType (val.getType ());
+	    std::vector <Tree> params;
+	    for (auto it : val.getContent ()) {
+		params.push_back (generateValue (it));
+	    }
+	    return Tree::constructIndexed (val.getLocation (), type, params);
+	}
+
+	generic::Tree Visitor::generateCopier (const Copier & copy) {
+	    auto inner = generateValue (copy.getWho ());
+	    if (copy.getType ().is <Array> () && copy.getType ().to <Array> ().isStatic ())
+		return inner;
+	    
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Tree::empty ();
+	}
 	
 	void Visitor::enterBlock () {
 	    stackVarDeclChain.push_back (generic::TreeChain ());

@@ -216,7 +216,7 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl & stdecl) {
-	    auto decl = VarDecl::init (stdecl.getName (), stdecl.getDecos (), stdecl.getType (), stdecl.getValue ());
+	    auto decl = VarDecl::init (stdecl.getName (), stdecl.getDecorators (), stdecl.getType (), stdecl.getValue ());
 	    auto symbol = getReferent ().getLocal (stdecl.getName ().str);
 	    if (!symbol.isEmpty ()) {
 		auto note = Ymir::Error::createNote (symbol.getName ());

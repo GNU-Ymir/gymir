@@ -631,6 +631,13 @@ namespace syntax {
 	 \endverbatim
 	 */
 	Expression visitVar ();
+
+	/**
+	 * \brief Visit a decorated expression 
+	 * \verbatim 
+	 deco_expr := ('ref' | 'const' | 'copy' | 'cte' | 'mut')+ expression:(9)
+	 */
+	Expression visitDecoratedExpression ();
 	
 	
 	/**

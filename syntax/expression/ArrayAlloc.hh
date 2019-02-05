@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/syntax/Expression.hh>
+#include <ymir/syntax/Decorator.hh>
 
 namespace syntax {
 
@@ -22,7 +23,6 @@ namespace syntax {
 	/** Is this array allocated on heap ? ('new' token) */
 	bool _isDynamic;
 
-
     private :
 
 	friend Expression;
@@ -40,7 +40,22 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
 	bool isOf (const IExpression * type) const override;
-	
+
+	/**
+	 * \return the left part of the allocation (could be a type or any expression)
+	 */
+	const Expression & getLeft () const;
+
+	/**
+	 * \return the size part of the allocation
+	 */
+	const Expression & getSize () const;
+
+	/**
+	 * \return is this allocation dynamic (declared with the new token)
+	 */
+	bool isDynamic () const;
+		
     };    
 
 }

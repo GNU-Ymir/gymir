@@ -27,7 +27,7 @@ namespace syntax {
 	Expression _value;
 
 	/** The decorators of the variable (ref, const ...) */
-	std::vector <Decorator> _decos;
+	std::vector <DecoratorWord> _decos;
 
     private :
 
@@ -46,7 +46,7 @@ namespace syntax {
 	 * \param type the type of the var (may be empty ())
 	 * \param value the value of the var (may be empty ())
 	 */
-	static Expression init (const lexing::Word & name, const std::vector <Decorator> & decos, const Expression & type, const Expression & value);
+	static Expression init (const lexing::Word & name, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value);
 	
 	Expression clone () const override;
 
@@ -72,9 +72,19 @@ namespace syntax {
 	const Expression & getValue () const;
 
 	/**
+	 * \return true iif the decorator is present in the var declaration
+	 */
+	bool hasDecorator (Decorator deco) const;
+
+	/**
+	 * \return the decorator 
+	 */
+	const DecoratorWord & getDecorator (Decorator deco) const;
+
+	/**
 	 * \return the decorators of the declaration
 	 */
-	const std::vector <Decorator> & getDecos () const;
+	const std::vector <DecoratorWord> & getDecorators () const;
 	
     };
     

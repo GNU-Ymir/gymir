@@ -65,7 +65,15 @@ namespace semantic {
 	void Value::isLvalue (bool is) {
 	    this-> _isLvalue = is;
 	}
-	
+
+	bool Value::isLocal () const {
+	    return this-> _isLocal;
+	}
+
+	void Value::isLocal (bool is) {
+	    this-> _isLocal = is;
+	}
+
     }
     
 }

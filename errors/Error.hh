@@ -70,7 +70,16 @@ namespace Ymir {
 	    msg = addLine (msg, loc);
 	    return msg;
 	}
-	
+
+	/**
+	 * \brief Throw a warning error
+	 * \brief A program needs to compile with no warning and no error at all
+	 * \brief Warning means the compilation could have continue, but we don't wan't to, to force the user to have a well formed program
+	 * \param loc the location of the warning
+	 * \param content the content text of the warning
+	 * \param args the format arguments
+	 * \throw ErrorCode::EXTERNAL
+	 */
 	template <typename ... TArgs>
 	void warn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
 	    auto msg = format ("%(y) : " + content, "Warning", args...);
@@ -153,6 +162,19 @@ namespace Ymir {
 	    msg += aux;
 	}
 
+	/**
+	   \brief Print a note error on the error stream
+	   \param word the location of the note
+	   \param format_ the content of the note
+	   \param args the parameter of the format
+	 */
+	template <typename ... TArgs>
+	std::string createNote (const lexing::Word& word, const std::string& format_, TArgs ... args) {
+	    std::string aux = format ("%(b) : " + format_, "Note", args...);
+	    aux = addLine (aux, word);
+	    return aux;
+	}
+	
 	/**
 	   \brief Create a note message
 	   \param word the location of the note

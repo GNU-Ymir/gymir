@@ -76,7 +76,7 @@ namespace semantic {
 	     * \brief Validate a global var declaration 
 	     */
 	    void validateVarDecl (const semantic::VarDecl & vardecl);
-
+	    
 	    /**
 	     * \brief validate an expression, that produce a type
 	     * \return a tree containing the resulting type
@@ -84,9 +84,19 @@ namespace semantic {
 	    generator::Generator validateType (const syntax::Expression & type);
 
 	    /**
+	     * \brief Validate a decorated type
+	     */
+	    generator::Generator validateTypeDecorated (const syntax::DecoratedExpression & type);
+	    
+	    /**
 	     * \brief Validate the var using it as a type
 	     */
 	    generator::Generator validateTypeVar (const syntax::Var & var);
+
+	    /**
+	     * \brief Validate an array allocation as a type
+	     */
+	    generator::Generator validateTypeArrayAlloc (const syntax::ArrayAlloc & alloc);
 
 	    /**
 	     * \brief validate an expression, that produce a value
@@ -147,10 +157,59 @@ namespace semantic {
 	    generator::Generator validateVarDeclValue (const syntax::VarDecl & decl);
 	    
 	    /**
+	     * \brief Validate a decorated expression
+	     */
+	    generator::Generator validateDecoratedExpression (const syntax::DecoratedExpression & dec_expr);
+
+	    /**
+	     * \brief Validate an if expression 
+	     * \return as always a generator 
+	     * \warning the generator is not always a if expression, for optimization purpose (such as the test is always false, ...)
+	     */
+	    generator::Generator validateIfExpression (const syntax::If & _if);
+
+	    /**
+	     * \brief Validate a list, it could be either : 
+	     * \brief - an array
+	     * \brief - a tuple
+	     * \brief - an array type
+	     * \brief - a tuple type
+	     */
+	    generator::Generator validateList (const syntax::List & list);
+
+	    /**
+	     * \brief Validate intricisics, it could be either :  
+	     * \brief - a copy
+	     * \brief - an expand
+	     * \brief - type informations ...
+	     */
+	    generator::Generator validateIntrinsics (const syntax::Intrinsics & intr);
+
+	    /**
+	     * \brief Validate the copy intrinsics
+	     */
+	    generator::Generator validateCopy (const syntax::Intrinsics & intr);
+	    
+	    /**
+	     * \brief validate an array literal
+	     */
+	    generator::Generator validateArray (const syntax::List & list);
+	    
+	    
+	    /**
 	     * \return the list of generator produced by semantic validation
 	     */
 	    const std::vector <generator::Generator> & getGenerators () const;
 
+	    /**
+	     * \brief this function is called each time a copy is performed
+	     * \param type the type result of the copy 
+	     * \param gen the generator that will produce the affectation 
+	     * \brief This function verify that the mutability of gen is preserved
+	     * \brief And that no implicit operation are performed
+	     */
+	    void verifyMemoryOwner (const generator::Generator & type, const generator::Generator & gen);
+	    
 	private :
 
 	    void insertNewGenerator (const generator::Generator & generator);
@@ -163,6 +222,11 @@ namespace semantic {
 	    
 	    void quitBlock ();
 	    
+	    /**
+	     * \brief execute the content of the generator in order to retreive the compile time value 
+	     */
+	    generator::Generator retreiveValue (const generator::Generator & gen);
+
 	};
 	       
     }

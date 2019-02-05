@@ -5,24 +5,27 @@
 namespace semantic {
     namespace generator {
 
-	class Bool : public Type {
+	class Array : public Type {
+
+	    Generator _inner;
+	    
+	    int _size;
+	    
 	public :
 	    
 	    static std::string NAME;
-
-	    static bool INIT;
 	    
 	private :	    
 	    
 	    friend Generator;
 
-	    Bool ();	    
+	    Array ();	    
 
-	    Bool (const lexing::Word & loc);
+	    Array (const lexing::Word & loc, const Generator & innerType, int size);
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc);
+	    static Generator init (const lexing::Word & loc, const Generator & innerType, int size);
 
 	    Generator clone () const override;
 
@@ -36,8 +39,23 @@ namespace semantic {
 	     */
 	    bool equals (const Generator & other) const override;
 
-	    
 	    std::string typeName () const override;
+
+	    /**
+	     * \return the inner type of the array
+	     */
+	    const Generator & getInner () const;
+
+	    /**
+	     * \return is this a static array type ?
+	     */
+	    int size () const;
+
+	    /**
+	     * \return the array is static ?
+	     */
+	    bool isStatic () const;
+
 	    
 	};
        

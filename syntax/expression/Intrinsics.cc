@@ -1,4 +1,5 @@
 #include <ymir/syntax/expression/Intrinsics.hh>
+#include <ymir/syntax/visitor/Keys.hh>
 
 namespace syntax {
     
@@ -35,4 +36,12 @@ namespace syntax {
 	this-> _value.treePrint (stream, i + 1);
     }
 
+    const Expression & Intrinsics::getContent () const {
+	return this-> _value;
+    }
+    
+    bool Intrinsics::isCopy () const {
+	return this-> getLocation () == Keys::COPY;
+    }
+    
 }

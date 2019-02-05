@@ -8,6 +8,7 @@
 #include <ymir/syntax/expression/Break.hh>
 #include <ymir/syntax/expression/Cast.hh>
 #include <ymir/syntax/expression/Char.hh>
+#include <ymir/syntax/expression/DecoratedExpression.hh>
 #include <ymir/syntax/expression/Dollar.hh>
 #include <ymir/syntax/expression/Fixed.hh>
 #include <ymir/syntax/expression/Float.hh>
@@ -33,6 +34,7 @@
 #include <ymir/syntax/expression/Throw.hh>
 #include <ymir/syntax/expression/TupleDest.hh>
 #include <ymir/syntax/expression/Unary.hh>
+#include <ymir/syntax/expression/Unit.hh>
 #include <ymir/syntax/expression/VarDecl.hh>
 #include <ymir/syntax/expression/Var.hh>
 #include <ymir/syntax/expression/VariadicVar.hh>

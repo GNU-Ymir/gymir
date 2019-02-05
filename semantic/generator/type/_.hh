@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ymir/semantic/generator/type/Array.hh>
 #include <ymir/semantic/generator/type/Bool.hh>
 #include <ymir/semantic/generator/type/Char.hh>
 #include <ymir/semantic/generator/type/Float.hh>

@@ -5,12 +5,16 @@ namespace semantic {
 
 	ParamVar::ParamVar () :
 	    Value (lexing::Word::eof (), Generator::empty ())
-	{}
+	{
+	    this-> isLocal (false);
+	}
 
 	ParamVar::ParamVar (const lexing::Word & location, const std::string & name, const Generator & type) :
 	    Value (location, name, type),
 	    _name (name)
-	{}
+	{
+	    this-> isLocal (false);
+	}
 
 	Generator ParamVar::init (const lexing::Word & location, const std::string & name, const Generator & type) {
 	    return Generator {new (Z0) ParamVar (location, name, type)};

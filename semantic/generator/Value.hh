@@ -32,6 +32,11 @@ namespace semantic {
 	     */
 	    bool _isLvalue = false;
 
+	    /**
+	     * This value is set to true, if the current generator has been declared and constructed in the frame
+	     */
+	    bool _isLocal = true;
+	    
 	protected : 
 
 	    friend Generator;
@@ -97,6 +102,11 @@ namespace semantic {
 	     */
 	    bool isLvalue () const;
 
+	    /**
+	     * \return does this generator has been constructed in the frame ?	     
+	     */
+	    bool isLocal () const;
+	    
 	protected:
 
 	    /**
@@ -104,6 +114,12 @@ namespace semantic {
 	     */
 	    void isLvalue (bool is);
 	    
+
+	    /**
+	     * \brief Change the locality of the value
+	     */
+	    void isLocal (bool is);
+
 	};	
 
     }

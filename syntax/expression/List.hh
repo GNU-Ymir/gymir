@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/syntax/Expression.hh>
+#include <ymir/syntax/Decorator.hh>
 
 namespace syntax {
 
@@ -42,7 +43,22 @@ namespace syntax {
 	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+	/**
+	 * \return are the surrounded tokens parentheses ?
+	 */
+	bool isTuple () const;
+
+	/**
+	 * \return are the surrounded tokens brackets ?
+	 */
+	bool isArray () const;
 	
+	/**
+	 * \return the list of parameters inside the different token
+	 */
+	const std::vector <Expression> & getParameters () const;
+		
     };
 
 }

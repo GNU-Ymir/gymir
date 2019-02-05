@@ -34,4 +34,18 @@ namespace syntax {
 	for (auto & it : this-> _params)
 	    it.treePrint (stream, i + 1);
     }
+
+
+    bool List::isTuple () const {
+	return this-> _end == Token::RPAR;
+    }
+
+    bool List::isArray () const {
+	return this-> _end == Token::RCRO;
+    }
+
+    const std::vector <Expression> & List::getParameters () const {
+	return this-> _params;
+    }    
+    
 }

@@ -42,5 +42,17 @@ namespace syntax {
 	this-> _content.treePrint (stream, i + 1);
 	this-> _else.treePrint (stream, i + 1);
     }
+
+    const Expression & If::getTest () const {
+	return this-> _test;
+    }
+
+    const Expression & If::getContent () const {
+	return this-> _content;
+    }
+
+    const Expression & If::getElsePart () const {
+	return this-> _else;
+    }
     
 }

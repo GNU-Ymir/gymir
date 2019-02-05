@@ -10,26 +10,28 @@ namespace semantic {
 	 * \struct Binary 
 	 * Binary operations on ints
 	 */
-	class Affect : public Value {
+	class Conditional : public Value {
 
-	    Generator _who;
+	    Generator _test;
 
-	    Generator _value;	    
+	    Generator _content;
+
+	    Generator _else;
 
 	private :
 
 	    friend Generator;
 	    
-	    Affect ();
+	    Conditional ();
 
-	    Affect (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    Conditional (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_);
 
 	public :
 
 	    /**
-	     * \brief Generate a new affectation
+	     * \brief Generate a 
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -47,15 +49,20 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;	    
 
 	    /** 
-	     * \return the left operand of the operation
+	     * \return the test of the condition
 	     */
-	    const Generator & getWho () const;
+	    const Generator & getTest () const;
 
 	    /**
-	     * \return the right operand of the operation
+	     * \return the content to execute if the test if valid
 	     */
-	    const Generator & getValue () const;
+	    const Generator & getContent () const;
 
+	    /**
+	     * \return the content to execute if the test is not valid
+	     */
+	    const Generator & getElse () const;
+	    
 	};
 	
     }

@@ -1,4 +1,5 @@
 #include <ymir/tree/Tree.hh>
+#include <ymir/tree/StmtList.hh>
 
 namespace generic {
 
@@ -78,6 +79,22 @@ namespace generic {
 	default : return Tree::init (UNKNOWN_LOCATION, unsigned_type_node);	    
 	}
     }
+
+    Tree Tree::staticArray (const Tree & inner, int size) {
+	auto len = build_int_cst_type (long_unsigned_type_node, size - 1);
+	auto begin = build_int_cst_type (long_unsigned_type_node, 0);
+	auto range = Tree::init (UNKNOWN_LOCATION, build_range_type (integer_type_node, fold (begin), fold (len)));
+	auto array_type = Tree::init (UNKNOWN_LOCATION, build_array_type (inner.getTree (), range.getTree ()));
+	return array_type;
+    }
+
+    Tree Tree::dynArray (const Tree & inner) {
+	return Tree::empty ();
+    }   
+    
+    Tree Tree::pointerType (const Tree & innerType) {
+	return Tree::init (UNKNOWN_LOCATION, build_pointer_type (innerType.getTree ()));
+    }
     
     Tree Tree::varDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
 	return Tree::init (loc.getLocus (),
@@ -143,14 +160,48 @@ namespace generic {
     }    
 
     Tree Tree::affect (const lexing::Word & loc, const Tree & left, const Tree & right) {
-	return Tree::build (MODIFY_EXPR, loc, left.getType (), left,
-			    Tree::init (
-				loc.getLocus (),
-				convert (left.getType ().getTree (), right.getTree ())
-			    )
-	);
+	if (left.getType ().isScalar ()) {
+	    return Tree::build (MODIFY_EXPR, loc, left.getType (), left,
+				Tree::init (
+				    loc.getLocus (),
+				    convert (left.getType ().getTree (), right.getTree ())
+				)
+	    );
+	} else {
+	    if (left.getType () == right.getType ())
+		return Tree::build (MODIFY_EXPR, loc, left.getType (), left, right);
+
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+	    
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
+	    
+	    auto ptrl = Tree::buildAddress (loc, lvalue, Tree::pointerType (lvalue.getType ()));
+	    auto ptrr = Tree::buildAddress (loc, rvalue, Tree::pointerType (rvalue.getType ()));
+	    
+	    auto tmemcopy = Tree::init (UNKNOWN_LOCATION, builtin_decl_explicit (BUILT_IN_MEMCPY));
+	    auto size = Tree::init (UNKNOWN_LOCATION, TYPE_SIZE_UNIT (lvalue.getType ().getTree ()));
+	    return Tree::compound (
+		loc,
+		lvalue,
+		Tree::init (loc.getLocus (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ())));
+		
+		
+	}
     }
 
+    Tree Tree::buildCall (const lexing::Word & loc, const Tree & type, const Tree & fn, const std::vector <Tree> & params) {
+	std::vector <tree> real_params;
+	for (auto it : params)
+	    real_params.push_back (it.getTree ());
+	
+	return Tree::init (loc.getLocus (),
+			   build_call_array_loc (loc.getLocus (), type.getTree (), fn.getTree (), real_params.size (), real_params.data ())
+	);
+    }
+    
     Tree Tree::binary (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
 	if (left.getType ().getSize () > right.getType ().getSize ()) {
 	    return Tree::build (code, loc, type, left,
@@ -178,8 +229,70 @@ namespace generic {
 					    left.getTree ())
 	);
     }
-    
 
+    Tree Tree::constructIndexed (const lexing::Word & loc, const Tree & type, const std::vector <Tree> & params) {
+	vec <constructor_elt, va_gc> * elms = NULL;
+	for (auto it : Ymir::r (0, params.size ())) {
+	    CONSTRUCTOR_APPEND_ELT (elms, size_int (it), params [it].getTree ());
+	}
+
+	return Tree::init (loc.getLocus (), build_constructor (type.getTree (), elms));
+    }
+    
+    Tree Tree::conditional (const lexing::Word & loc, const Tree & context, const Tree & test, const Tree & left, const Tree & right) {
+	Tree thenLabel = Tree::makeLabel (loc, context, "then");
+	Tree endLabel  = Tree::makeLabel (loc, context, "end_if");
+	Tree gotoThen  = Tree::gotoExpr  (loc, thenLabel);
+	Tree gotoEnd   = Tree::gotoExpr  (loc, endLabel);
+
+	Tree gotoElse = Tree::empty (), elseLabel = Tree::empty ();
+	if (!right.isEmpty ()) {
+	    elseLabel = Tree::makeLabel (loc, context, "else");
+	    gotoElse = Tree::gotoExpr (loc, elseLabel);
+	} else {
+	    gotoElse = gotoEnd;
+	}
+
+	TreeStmtList list = TreeStmtList::init ();
+	list.append (Tree::condExpr (loc, test, gotoThen, gotoElse));
+	list.append (Tree::labelExpr (loc, thenLabel));
+	list.append (left);
+	list.append (gotoEnd);
+
+	if (!right.isEmpty ()) {
+	    list.append (Tree::labelExpr (loc, elseLabel));
+	    list.append (right);
+	    list.append (gotoEnd);
+	}
+	
+	list.append (Tree::labelExpr (loc, endLabel));
+	return list.toTree ();
+    }    
+
+    Tree Tree::makeLabel (const lexing::Word & loc, const Tree & context, const std::string & name) {
+	auto decl = Tree::init (loc.getLocus (), build_decl (loc.getLocus (), LABEL_DECL, get_identifier (name.c_str ()), void_type_node));
+	decl.setDeclContext (context);
+	return decl;
+    }
+
+    Tree Tree::gotoExpr (const lexing::Word & loc, const Tree & label) {
+	return Tree::build (
+	    GOTO_EXPR, loc, Tree::voidType (), label 	
+	);
+    }
+
+    Tree Tree::labelExpr (const lexing::Word & loc, const Tree & label) {
+	return Tree::build (
+	    LABEL_EXPR, loc, Tree::voidType (), label	
+	);			   
+    }    
+
+    Tree Tree::condExpr (const lexing::Word & loc, const Tree & test, const Tree & gotoS, const Tree & gotoF) {
+	return Tree::build (
+	    COND_EXPR, loc, Tree::voidType (), test, gotoS, gotoF	    
+	);
+    }
+    
     Tree Tree::buildIntCst (const lexing::Word & loc, ulong value, const Tree & type) {
 	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
     }
@@ -200,9 +313,15 @@ namespace generic {
     Tree Tree::buildBoolCst (const lexing::Word & loc, bool value) {
 	return Tree::init (loc.getLocus (), build_int_cst_type (unsigned_char_type_node, (ulong) value));
     }
-
+    
     Tree Tree::buildCharCst (const lexing::Word & loc, uint value, const Tree & type) {
 	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
+    }
+
+    Tree Tree::buildAddress (const lexing::Word & loc, const Tree & value, const Tree & type) {
+	auto aux_value = value;
+	aux_value.isAddressable (true);
+	return Tree::build (ADDR_EXPR, loc, type, aux_value);
     }
     
     Tree Tree::returnStmt (const lexing::Word & loc, const Tree & result_decl, const Tree & value) {
@@ -290,6 +409,14 @@ namespace generic {
 	DECL_PRESERVE_P (this-> _t) = pre;
     }
 
+    bool Tree::isAddressable () const {
+	return TREE_ADDRESSABLE (this-> _t) == 1;
+    }
+
+    void Tree::isAddressable (bool is) {
+	TREE_ADDRESSABLE (this-> _t) = is;
+    }
+    
     bool Tree::isPublic () const {
 	return TREE_PUBLIC (this-> _t) == 1;
     }
@@ -339,6 +466,14 @@ namespace generic {
 	DECL_WEAK (this-> _t) = is;
     }
 
+    bool Tree::isScalar () const {
+	if (this-> _t == NULL_TREE)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	
+	return getTreeCode () != RECORD_TYPE &&
+	    getTreeCode () != ARRAY_TYPE ;	    
+    }    
+    
     void Tree::setDeclArguments (const std::list <Tree> & args) {
 	tree arglist = NULL_TREE; 
 	for (auto & it : args)
@@ -389,7 +524,34 @@ namespace generic {
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	if (this-> getTreeCode () == COMPOUND_EXPR) {
 	    return this-> getOperand (1);
-	} else return *this;
+	} else {
+	    return *this;
+	}
+    }
+
+    Tree Tree::toDirect () const {
+	if (this-> _t == NULL_TREE)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	if (this-> getType ().isPointerType ()) {
+	    return this-> buildPointerUnref (0);
+	} else
+	    return *this;
+    }
+
+    bool Tree::isPointerType () const {
+	return this-> getTreeCode () == POINTER_TYPE;
+    }
+
+    Tree Tree::buildPointerUnref (int index) const {
+	auto inner = TREE_TYPE (this-> getType ().getTree ());
+	auto element_size = TYPE_SIZE_UNIT (inner);
+	tree it = build_int_cst_type (long_unsigned_type_node, index);
+	it = fold_convert_loc (this-> _loc, size_type_node, it);
+	auto offset = fold_build2_loc (this-> _loc, MULT_EXPR, size_type_node, it, element_size);
+
+	it = convert_to_ptrofftype (offset);
+	tree addr = build2 (POINTER_PLUS_EXPR, this-> getType ().getTree (), this-> _t, it);
+	return Tree::init (this-> _loc, build2 (MEM_REF, inner, addr, build_int_cst (this-> getType ().getTree (), 0)));
     }
     
 }

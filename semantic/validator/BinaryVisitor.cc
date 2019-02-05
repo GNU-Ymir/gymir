@@ -167,7 +167,7 @@ namespace semantic {
 		TRY (
 
 		    // match (right.to <Value>.getType ()) {
-			
+		    
 		    // }		    
 
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
@@ -275,11 +275,18 @@ namespace semantic {
 	    if (op != Binary::Operator::LAST_OP) {
 		right = validateMathOperation (op, expression, left, right);
 	    }
-	    
+	   	    
 	    if (!left.to <Value> ().isLvalue ()) 
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));	    
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
 
-	    if (left.to<Value> ().getType ().equals (right.to<Value> ().getType ()))
+	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) 
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));	    
+
+	    if (left.to <Value> ().getType ().to <Type> ().isComplex ()) {
+		this-> _context.verifyMemoryOwner (left.to <Value> ().getType (), right);
+	    }
+
+	    if (left.to<Value> ().getType ().to <Type> ().isCompatible (right.to<Value> ().getType ()))
 		// TODO verification of the constancy or imutability of the left operand
 		
 		return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);
@@ -292,7 +299,29 @@ namespace semantic {
 
 	    return Generator::empty ();	    
 	}
-	
+
+	// Generator BinaryVisitor::validateAffectationCopy (const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	//     if (!right.is <Referencer> () && !right.is <Copier> ()) {
+	// 	Ymir::Error::occur (expression.getLocation (), ExternalError::get (IMPLICIT_COPY),
+	// 			    right.to <Value> ().getType ().to <Type> ().typeName ());
+	//     }
+
+	//     auto & leftType = left.to <Value> ().getType ();
+	//     if (leftType.is<Array> () && leftType.to <Array> ().isStatic () && right.is<Referencer> ()) {
+	// 	Ymir::Error::occur (left.getLocation (), ExternalError::get (STATIC_ARRAY_REF));
+	//     }
+
+	//     if (left.to<Value> ().getType ().to <Type> ().isCompatible (right.to<Value> ().getType ()))		
+	// 	return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);
+	//     else
+	// 	Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+	// 			    expression.getLocation ().str,
+	// 			    left.to <Value> ().getType ().to <Type> ().typeName (),
+	// 			    right.to <Value> ().getType ().to <Type> ().typeName ()
+	// 	);
+
+	//     return Generator::empty ();	  
+	// }	
 	
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {
 	    string_match (loc.str) {

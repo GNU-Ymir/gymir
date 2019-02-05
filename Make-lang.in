@@ -96,6 +96,7 @@ ymir_OBJS = \
 	ymir/syntax_Visitor.o \
 	ymir/syntax_Keys.o \
 	ymir/expr_Var.o \
+	ymir/expr_DecoratedExpression.o \
 	ymir/expr_Unary.o \
 	ymir/expr_Template.o \
 	ymir/global_State.o \
@@ -139,6 +140,14 @@ ymir_OBJS = \
 	ymir/generator_BinaryFloat.o \
 	ymir/generator_Char.o \
 	ymir/generator_CharValue.o \
+	ymir/generator_Referencer.o \
+	ymir/generator_Conditional.o \
+	ymir/generator_Array.o \
+	ymir/generator_ArrayValue.o \
+	ymir/generator_Copier.o \
+	ymir/expr_Unit.o \
+	ymir/generator_None.o \
+	ymir/validator_CompileTime.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

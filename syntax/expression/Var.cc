@@ -13,13 +13,7 @@ namespace syntax {
     Expression Var::init (const lexing::Word & location) {
 	return Expression {new (Z0) Var (location)};
     }
-    
-    Expression Var::init (const lexing::Word & location, const std::vector<Decorator> & decos) {
-	auto ret = new (Z0) Var (location);
-	ret-> _decos = decos;
-	return Expression {ret};
-    }
-    
+        
     Expression Var::clone () const {
 	return Expression {new Var (*this)};
     }
@@ -32,19 +26,9 @@ namespace syntax {
     }
 
 
-    void Var::treePrint (Ymir::OutBuffer & stream, int i) const {
-	std::vector<std::string> decosName;
-	for (auto it : this-> _decos)
-	    switch (it) {
-	    case Decorator::REF : decosName.push_back ("ref"); break;
-	    case Decorator::CONST : decosName.push_back ("const"); break;
-	    case Decorator::MUT : decosName.push_back ("mut"); break;
-	    case Decorator::STATIC : decosName.push_back ("static"); break;
-	    case Decorator::CTE : decosName.push_back ("cte"); break;
-	    }
-	
+    void Var::treePrint (Ymir::OutBuffer & stream, int i) const {	
 	stream.writef ("%*<Var> : ", i, '\t');
-	stream.writeln (this-> getLocation (), "{", decosName, "}");
+	stream.writeln (this-> getLocation ());
     }
 
     const lexing::Word & Var::getName () const {

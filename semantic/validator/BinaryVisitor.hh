@@ -113,6 +113,13 @@ namespace semantic {
 	     */
 	    generator::Generator validateAffectation (generator::Binary::Operator op, const syntax::Binary & expression);
 
+	    /**
+	     * \brief Validate an affectation on complex type (arrays, tuple, struct ...)
+	     * \brief implicit Copy and reference are forbidden
+	     * \brief This ensure that right is a Referencer or a Copier
+	     */
+	    generator::Generator validateAffectationCopy (const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
 	private :
 
 	    /**

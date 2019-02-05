@@ -81,6 +81,11 @@ namespace semantic {
 	    generic::Tree generateType (const Generator & gen);
 
 	    /**
+	     * \brief Generate an array type (static or dynamic)
+	     */
+	    generic::Tree generateArrayType (const Array & array);
+	    
+	    /**
 	     * \brief Generate the initial value of the type 
 	     * \param type the type that will give a initial value
 	     */
@@ -122,6 +127,11 @@ namespace semantic {
 	    generic::Tree generateChar (const CharValue & f);
 	    
 	    /**
+	     * \brief Transform an array value into gimple
+	     */
+	    generic::Tree generateArrayValue (const ArrayValue & arr);
+
+	    /**
 	     * \brief Transform an affectation into gimple
 	     */
 	    generic::Tree generateAffect (const Affect & aff);
@@ -150,6 +160,21 @@ namespace semantic {
 	     * \brief Transform a var decl into gimple
 	     */
 	    generic::Tree generateVarDecl (const VarDecl & var);
+
+	    /**
+	     * \brief Transform a referencer into gimple
+	     */
+	    generic::Tree generateReferencer (const Referencer & ref);
+
+	    /**
+	     * \brief Transform a conditional expression into gimple
+	     */
+	    generic::Tree generateConditional (const Conditional & cond);
+
+	    /**
+	     * \brief Transform a copier into a gimple tree
+	     */
+	    generic::Tree generateCopier (const Copier & copy);
 	    
 	private :
 

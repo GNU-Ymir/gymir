@@ -17,14 +17,29 @@ namespace syntax {
 	STATIC, 
 	CTE
     };
-    
-    namespace Decorators {
 
-	std::vector <std::string> members ();
+    class DecoratorWord {
 
-	Decorator init (const lexing::Word & content);
+	Decorator _value;
+
+	lexing::Word _loc;
+
+    private :
+
+	DecoratorWord (const lexing::Word & loc, Decorator deco);
+	
+    public :
+	
+	static std::vector <std::string> members ();
+	
+	static DecoratorWord init (const lexing::Word & content);
+
+	const lexing::Word & getLocation () const;
+
+	Decorator getValue () const;
+	
 	
     };
-
-
+    
+       
 }

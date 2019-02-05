@@ -47,6 +47,21 @@ namespace syntax {
 	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+	/**
+	 * \return the test of the if 
+	 */
+	const Expression & getTest () const;
+
+	/**
+	 * \return the content of the if expression 
+	 */
+	const Expression & getContent () const;
+
+	/**
+	 * \return the else part of the if
+	 */
+	const Expression & getElsePart () const;
 	
     };
     

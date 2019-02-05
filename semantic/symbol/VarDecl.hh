@@ -9,7 +9,7 @@ namespace semantic {
     class VarDecl : public ISymbol {
 
 	/** the decorator of the var */
-	std::vector <syntax::Decorator> _decos;
+	std::vector <syntax::DecoratorWord> _decos;
 	
 	/** The type of the decl */
 	syntax::Expression _type;
@@ -23,11 +23,11 @@ namespace semantic {
 
 	VarDecl ();
 
-	VarDecl (const lexing::Word & name, const std::vector <syntax::Decorator> & decos, const syntax::Expression & type, const syntax::Expression & value);
+	VarDecl (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value);
 
     public : 
 
-	static Symbol init (const lexing::Word & name, const std::vector <syntax::Decorator> & decos, const syntax::Expression & type, const syntax::Expression & value);
+	static Symbol init (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value);
 
 	Symbol clone () const override;
 

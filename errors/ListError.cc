@@ -27,6 +27,22 @@ namespace Ymir {
 			    NOT_A_LVALUE = "not a lvalue",
 			    UNDEFINED_ESCAPE = "undefined escape sequence",
 			    UNTERMINATED_SEQUENCE = "unterminated escape sequence",
-			    MALFORMED_CHAR = "malformed literal, number of %(y) is %(y)"
+			    MALFORMED_CHAR = "malformed literal, number of %(y) is %(y)",
+			    IMPLICIT_REFERENCE = "implicit referencing of type %(y) is not allowed",
+			    IMPLICIT_COPY = "implicit memory copy of type %(y) is not allowed",
+			    IMMUTABLE_LVALUE = "left operand is immutable",
+			    DISCARD_CONST = "discard the constant qualifier is prohibited",
+			    USELESS_DECORATOR = "useless decorator",
+			    DECO_OUT_OF_CONTEXT = "decorator %(y) is unusable in this context",
+			    MUTABLE_CONST_PARAM = "a parameter cannot be mutable, if it is not a reference",
+			    MUTABLE_CONST_RETURN = "a return value cannot be mutable, if it is not a reference",
+			    RETURN_LOCAL_REFERENCE = "expression does not live long enough",
+			    BORROWED_HERE = "borrow occured here",
+			    CONFLICT_DECORATOR = "conflicting decorator",
+			    REF_NO_VALUE = "%(y) declared as a reference but not initialized",
+			    STATIC_ARRAY_REF = "left operand is a static array, it cannot store a reference to a dynamic array",
+			    NO_COPY_EXIST = "no copy exists for type %(y)",
+			    REF_NOT_TYPE = "use a reference as a value",
+			    USE_AS_TYPE = "expression used as type"
     );    
 }

@@ -10,26 +10,24 @@ namespace semantic {
 	 * \struct Binary 
 	 * Binary operations on ints
 	 */
-	class Affect : public Value {
+	class ArrayValue : public Value {
 
-	    Generator _who;
-
-	    Generator _value;	    
+	    std::vector <Generator> _content;
 
 	private :
 
 	    friend Generator;
 	    
-	    Affect ();
+	    ArrayValue ();
 
-	    Affect (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    ArrayValue (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content);
 
 	public :
 
 	    /**
 	     * \brief Generate a new affectation
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -47,14 +45,9 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;	    
 
 	    /** 
-	     * \return the left operand of the operation
+	     * \return the content of the literal
 	     */
-	    const Generator & getWho () const;
-
-	    /**
-	     * \return the right operand of the operation
-	     */
-	    const Generator & getValue () const;
+	    const std::vector<Generator> & getContent () const;
 
 	};
 	

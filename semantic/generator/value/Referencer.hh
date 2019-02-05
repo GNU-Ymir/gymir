@@ -8,28 +8,28 @@ namespace semantic {
 
 	/**
 	 * \struct Binary 
-	 * Binary operations on ints
+	 * Transform a value to a reference to this value
+	 * The value must be a lvalue
 	 */
-	class Affect : public Value {
+	class Referencer : public Value {
 
 	    Generator _who;
-
-	    Generator _value;	    
 
 	private :
 
 	    friend Generator;
 	    
-	    Affect ();
+	    Referencer ();
 
-	    Affect (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    Referencer (const lexing::Word & loc, const Generator & type, const Generator & who);
 
 	public :
 
 	    /**
-	     * \brief Generate a new affectation
+	     * \brief Generate a new Binary on int
+	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -50,11 +50,6 @@ namespace semantic {
 	     * \return the left operand of the operation
 	     */
 	    const Generator & getWho () const;
-
-	    /**
-	     * \return the right operand of the operation
-	     */
-	    const Generator & getValue () const;
 
 	};
 	

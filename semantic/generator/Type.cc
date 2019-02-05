@@ -27,9 +27,38 @@ namespace semantic {
 	    return false;
 	}
 
+	bool Type::isCompatible (const Generator & gen) const {
+	    return this-> equals (gen);
+	}
+	
 	std::string Type::typeName () const {
 	    return "undef";
 	}	
+
+	bool Type::isRef () const {
+	    return this-> _isRef;
+	}
+
+	bool Type::isMutable () const {
+	    return this-> _isMutable;
+	}
+
+	bool Type::isComplex () const {
+	    return this-> _isComplex;
+	}
+	
+	void Type::isRef (bool is) {
+	    this-> _isRef = is;
+	}
+	
+	void Type::isMutable (bool is) {
+	    this-> _isMutable = is;
+	}
+
+	void Type::isComplex (bool is) {
+	    this-> _isComplex = is;
+	}
+	
     }
     
 }

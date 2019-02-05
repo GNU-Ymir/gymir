@@ -1,4 +1,5 @@
 #include <ymir/syntax/expression/VarDecl.hh>
+#include <algorithm>
 
 namespace syntax {
 
@@ -14,7 +15,7 @@ namespace syntax {
 	_value (Expression::empty ())
     {}
 
-    Expression VarDecl::init (const lexing::Word & name, const std::vector <Decorator> & decos, const Expression & type, const Expression & value) {
+    Expression VarDecl::init (const lexing::Word & name, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value) {
 	auto ret = new (Z0) VarDecl (name);
 	ret-> _name = name;
 	ret-> _value = value;
@@ -37,7 +38,7 @@ namespace syntax {
     void VarDecl::treePrint (Ymir::OutBuffer & stream, int i) const {
 	std::vector<std::string> decosName;
 	for (auto it : this-> _decos)
-	    switch (it) {
+	    switch (it.getValue ()) {
 	    case Decorator::REF : decosName.push_back ("ref"); break;
 	    case Decorator::CONST : decosName.push_back ("const"); break;
 	    case Decorator::MUT : decosName.push_back ("mut"); break;
@@ -67,7 +68,23 @@ namespace syntax {
 	return this-> _value;
     }
 
-    const std::vector <Decorator> & VarDecl::getDecos () const {
+    bool VarDecl::hasDecorator (Decorator deco) const {
+	for (auto it : Ymir::r (0, this-> _decos.size ())) {
+	    if (this-> _decos [it].getValue () == deco) return true;
+	}
+	return false;
+    }
+
+    const DecoratorWord & VarDecl::getDecorator (Decorator deco) const {
+	for (auto it : Ymir::r (0, this-> _decos.size ())) {
+	    if (this-> _decos [it].getValue () == deco) return this-> _decos [it];
+	}
+	
+	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	return this-> _decos [0];
+    }
+    
+    const std::vector <DecoratorWord> & VarDecl::getDecorators () const {
 	return this-> _decos;
     }
     

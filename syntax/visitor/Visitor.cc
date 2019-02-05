@@ -764,6 +764,9 @@ namespace syntax {
 	    auto loc = this-> _lex.next ();
 	    return Intrinsics::init (loc, visitExpression (10));
 	}
+	if (begin.is (DecoratorWord::members ())) {
+	    return visitDecoratedExpression ();
+	}
 	
 	if (can (&Visitor::visitVar))  return visitVar ();       
 	return visitLiteral ();
@@ -805,16 +808,21 @@ namespace syntax {
 	auto begin = this-> _lex.next ({Token::LACC});
 
 	lexing::Word end;
+	bool last = false;
 	do {
 	    end = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
 	    if (end != Token::RACC && end != Token::SEMI_COLON) {
+		last = false;
 		if (this-> _lex.consumeIf (this-> _declarations).str != "") {
 		    this-> _lex.rewind ();
 		    decls.push_back (visitDeclaration ());
 		} else 
 		    content.push_back (visitExpression ());
-	    }
+	    } else if (end == Token::SEMI_COLON)
+		last = true;
 	} while (end != Token::RACC);
+	
+	if (last) content.push_back (Unit::init (end));
 	return Block::init (begin, end, decls, content);
     }    
 
@@ -930,15 +938,29 @@ namespace syntax {
 	return Return::init (location, visitExpression ());
     }
     
+    Expression Visitor::visitDecoratedExpression () {
+	std::vector<DecoratorWord> decos;
+
+	lexing::Word token = this-> _lex.next (DecoratorWord::members ());
+	while (token.is (DecoratorWord::members ())) {
+	    auto deco = DecoratorWord::init (token);
+	    for (auto d : decos) {
+		if (d.getValue () == deco.getValue ()) {
+		    auto note = Ymir::Error::createNote (d.getLocation ());
+		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		}
+	    }
+	    
+	    decos.push_back (deco);
+	    token = this-> _lex.consumeIf (DecoratorWord::members ());	    
+	}
+	
+	auto content = visitExpression (10);
+	return DecoratedExpression::init (content.getLocation (), decos, content);	
+    }
+
     Expression Visitor::visitVar () {
 	static bool inVar = false;
-	std::vector<Decorator> decos;
-
-	lexing::Word token = this-> _lex.consumeIf (Decorators::members ());
-	while (token.is (Decorators::members ())) {
-	    decos.push_back (Decorators::init (token));
-	    token = this-> _lex.consumeIf (Decorators::members ());	    
-	}
 	
 	auto name = visitIdentifier ();
 	auto next = this-> _lex.next ();
@@ -952,7 +974,7 @@ namespace syntax {
 	    } else {
 		inVar = true; // Cannot have template parameters for inner type : A!(A!B) is Ok, not A!A!B
 		this-> _lex.rewind ();
-		auto ret = TemplateCall::init (name, {visitExpression ()}, Var::init (name, decos));
+		auto ret = TemplateCall::init (name, {visitExpression ()}, Var::init (name));
 		inVar = false;
 		return ret;
 	    }
@@ -961,7 +983,7 @@ namespace syntax {
 	}
 	
 	this-> _lex.rewind ();
-	return Var::init (name, decos);
+	return Var::init (name);
     }       
 
     std::vector <Expression> Visitor::visitParamList () {
@@ -1172,13 +1194,21 @@ namespace syntax {
     }    
 
     Expression Visitor::visitSingleVarDeclaration (bool mandType, bool withValue) {
-	std::vector<Decorator> decos;
+	std::vector<DecoratorWord> decos;
 	Expression type (Expression::empty ()), value (Expression::empty ());
 	
-	lexing::Word token = this-> _lex.consumeIf (Decorators::members ());
-	while (token.is (Decorators::members ())) {
-	    decos.push_back (Decorators::init (token));
-	    token = this-> _lex.consumeIf (Decorators::members ());	    
+	lexing::Word token = this-> _lex.consumeIf (DecoratorWord::members ());
+	while (token.is (DecoratorWord::members ())) {
+	    auto deco = DecoratorWord::init (token);
+	    for (auto d : decos) {
+		if (d.getValue () == deco.getValue ()) {
+		    auto note = Ymir::Error::createNote (d.getLocation ());
+		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		}
+	    }
+	    
+	    decos.push_back (deco);
+	    token = this-> _lex.consumeIf (DecoratorWord::members ());	    
 	}
 
 	auto name = visitIdentifier ();

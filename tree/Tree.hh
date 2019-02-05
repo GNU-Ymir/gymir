@@ -97,6 +97,11 @@ namespace generic {
 	 * \param isSigned if true, the generated type will be capable of encoding negative numbers
 	 */
 	static Tree intType (int size, bool isSigned);
+
+	/**
+	 * \brief Create a pointer type
+	 */
+	static Tree pointerType (const Tree & inner);
 	
 	/**
 	 * \brief Create a tree type of floating type
@@ -109,6 +114,16 @@ namespace generic {
 	 * \param size the number of bit of the type (assume its 8, 16, 32 or 0)
 	 */
 	static Tree charType (int size);
+	
+	/**
+	 * \brief Create an static array type of size size
+	 */
+	static Tree staticArray (const Tree & inner, int size);
+
+	/**
+	 * \brief Create a dynamic array type
+	 */
+	static Tree dynArray (const Tree & inner);
 	
 	/**
 	 * \brief Create a new var declaration 
@@ -176,6 +191,35 @@ namespace generic {
 	static Tree compound (const lexing::Word & location, const Tree & left, const Tree & right);
 
 	/**
+	 * Create an array constructor 
+	 */
+	static Tree constructIndexed (const lexing::Word & loc, const Tree & type, const std::vector <Tree> & values);
+	
+	/**
+	 * \brief Generate a conditional jump
+	 * \brief if the test test is true, jump to left, and jump to right otherwise
+	 * \brief jump to end is perform after left and right, in any case 
+	 * \verbatim
+	 begin :  
+	     test => goto left
+	     goto right 
+	 left : 
+	      left 
+	      goto end
+	 right : 
+	      right 
+	      goto end
+	 end:
+	 \endverbatim
+	 */
+	static Tree conditional (const lexing::Word & location, const Tree & context, const Tree & test, const Tree & left, const Tree & right);
+
+	/**
+	 * \brief Create a conditional jump
+	 */
+	static Tree condExpr (const lexing::Word & loc, const Tree & test, const Tree & gotoS, const Tree & gotoF);
+	
+	/**
 	 * \brief Create a uint cst
 	 */
 	static Tree buildIntCst (const lexing::Word & loc, ulong value, const Tree & type);
@@ -202,10 +246,38 @@ namespace generic {
 	static Tree buildCharCst (const lexing::Word & loc, uint value, const Tree & type);
 
 	/**
+	 * \brief Generate the address pointer of value
+	 * \param loc the location 
+	 * \param value the value from which we wan't to get an address
+	 * \param type the type of the address (assumed a pointer type)
+	 */
+	static Tree buildAddress (const lexing::Word & loc, const Tree & value, const Tree & type) ;	
+
+	/**
+	 * \brief Build a function call
+	 */
+	static Tree buildCall (const lexing::Word & loc, const Tree & type, const Tree & fn, const std::vector <Tree> & params);
+	
+	/**
 	 * \brief Create a return stmt
 	 * \param resultDecl we need the result declaration of the current frame to perform a return stmt
 	 */
 	static Tree returnStmt (const lexing::Word & loc, const Tree & resultDecl, const Tree & value);
+	
+	/**
+	 * \brief Create a label
+	 */
+	static Tree makeLabel (const lexing::Word & loc, const Tree & context, const std::string & name);
+
+	/**
+	 * \brief create a goto label expression
+	 */
+	static Tree gotoExpr (const lexing::Word & loc, const Tree & label);
+
+	/**
+	 * \brief Create a label expression, that can be placed in a stmt
+	 */
+	static Tree labelExpr (const lexing::Word & loc, const Tree & label);
 	
 	/**
 	 * \brief Build a tree of 1 operands
@@ -313,6 +385,16 @@ namespace generic {
 	void isPreserved (bool);
 
 	/**
+	 * \return Tell if we can create an address from this tree
+	 */
+	bool isAddressable () const;
+
+	/**
+	 * \brief Set to true, means we can create an address from this tree
+	 */
+	void isAddressable (bool);
+	
+	/**
 	 * \return Is this declaration public ?
 	 */
 	bool isPublic () const;
@@ -365,6 +447,11 @@ namespace generic {
 	void isWeak (bool);
 
 	/**
+	 * \brief Applied to a type, tell if it is a scalar one
+	 */
+	bool isScalar () const;
+	
+	/**
 	 * \brief Set the declaration arguments
 	 * \param args a list of PARM_DECL
 	 */
@@ -391,6 +478,11 @@ namespace generic {
 	Tree getType () const;
 
 	/**
+	 * \return this type encode a pointer type ?
+	 */
+	bool isPointerType () const;
+	
+	/**
 	 * \brief Applicable to a type
 	 * \return the size of the type, in number of byte
 	 */
@@ -412,6 +504,16 @@ namespace generic {
 	 * \return the tree, if it is not a compound expression
 	 */
 	Tree getValue () const;
+	
+	/**
+	 * \return the value of the true, if it is a pointer value, unref it
+	 */
+	Tree toDirect () const;
+
+	/**
+	 * \return create a pointer unref at index 
+	 */
+	Tree buildPointerUnref (int index) const;
 	
     };
    
