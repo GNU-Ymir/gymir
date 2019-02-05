@@ -848,8 +848,8 @@ namespace semantic {
 				    gen.to <Value> ().getType ().to <Type> ().typeName ()
 		);	    
 
-	    // We can asset that, a block, and an arrayvalue have already perform the copy, it is not mandatory for them to force it
-	    if (type.to<Type> ().isComplex () && !(gen.is <Referencer> () || gen.is <Copier> () || gen.is<ArrayValue> () || gen.is <Block> ())) {
+	    // We can asset that, a block, and an arrayvalue have already perform the copy, it is not mandatory for them to force it, as well as conditional
+	    if (type.to<Type> ().isComplex () && !(gen.is <Referencer> () || gen.is <Copier> () || gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> ())) {
 		Ymir::Error::occur (gen.getLocation (), ExternalError::get (IMPLICIT_COPY),
 				    gen.to <Value> ().getType ().to <Type> ().typeName ());
 	    }

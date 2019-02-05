@@ -514,6 +514,8 @@ namespace semantic {
 	    Tree var (Tree::empty ());
 	    if (!cond.getType ().is<Void> ()) {
 		var = Tree::varDecl (cond.getLocation (), "_", generateType (cond.getType ()));
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
 	    }
 
 	    auto content = generateValue (cond.getContent ());
