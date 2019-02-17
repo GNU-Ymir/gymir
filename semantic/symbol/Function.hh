@@ -59,7 +59,7 @@ namespace semantic {
 	void isSafe (bool is);
 	
 	const syntax::Function & getContent () const;
-
+	
     };    
 
 }

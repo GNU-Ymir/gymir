@@ -50,8 +50,6 @@ namespace semantic {
     }
     
     bool Module::equals (const Symbol & other) const {
-	println (other.is <Module> ());
-	println (this-> getName (), " ", other.getName (), " == ", this-> getName () == other.getName ());
 	if (!other.is<Module> ()) return false;
 	if (this-> getName () == other.getName ()) {
 	    return this-> getReferent ().equals (other.getReferent ());

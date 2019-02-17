@@ -531,6 +531,10 @@ namespace generic {
     void Tree::isAddressable (bool is) {
 	TREE_ADDRESSABLE (this-> _t) = is;
     }
+
+    void Tree::asmName (const std::string & name) {
+	SET_DECL_ASSEMBLER_NAME (this-> _t, get_identifier (name.c_str ()));
+    }
     
     bool Tree::isPublic () const {
 	return TREE_PUBLIC (this-> _t) == 1;

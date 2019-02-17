@@ -147,7 +147,7 @@ namespace semantic {
 		}
 		
 		quitBlock ();
-		insertNewGenerator (Frame::init (function.getName (), function.getName ().str, params, retType, body, needFinalReturn));
+		insertNewGenerator (Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn));
 		
 	    } else quitBlock ();
 	}
@@ -680,7 +680,7 @@ namespace semantic {
 	    else retType = Void::init (func.getName ());	    
 	    exitForeign ();
 	    
-	    return FrameProto::init (function.getName (), retType, params);
+	    return FrameProto::init (function.getName (), func.getRealName (), retType, params);
 	}
 	
 	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {

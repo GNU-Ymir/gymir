@@ -11,14 +11,15 @@ namespace semantic {
 	    _type (Generator::empty ())
 	{}
 
-	FrameProto::FrameProto (const lexing::Word & loc, const Generator & type, const std::vector<Generator> & params) :
+	FrameProto::FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params) :
 	    Value (loc, Void::init (loc)),
 	    _params (params),
-	    _type (type)
+	    _type (type),
+	    _name (name)
 	{}
 	
-	Generator FrameProto::init (const lexing::Word & loc, const Generator & type, const std::vector<Generator> & params) {
-	    return Generator {new FrameProto (loc, type, params)};
+	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params) {
+	    return Generator {new FrameProto (loc, name, type, params)};
 	}
     
 	Generator FrameProto::clone () const {
@@ -49,6 +50,10 @@ namespace semantic {
 
 	const Generator & FrameProto::getReturnType () const {
 	    return this-> _type;
+	}
+
+	const std::string & FrameProto::getName () const {
+	    return this-> _name;
 	}
 	
     }

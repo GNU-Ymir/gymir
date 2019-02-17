@@ -100,6 +100,11 @@ namespace semantic {
 	Symbol& getReferent ();
 
 	/**
+	 * \return the space name of the symbol
+	 */
+	virtual std::string getRealName () const;
+	
+	/**
 	 * \return is this symbol the same as other (no only address, or type)
 	 */
 	virtual bool equals (const Symbol & other) const = 0;
@@ -164,6 +169,11 @@ namespace semantic {
 	 * Proxy Function for symbol
 	 */
 	void setReferent (Symbol * ref);
+
+	/**
+	 * \return the space name of the symbol
+	 */
+	std::string getRealName () const;
 	
 	/**
 	 * Proxy function for symbol

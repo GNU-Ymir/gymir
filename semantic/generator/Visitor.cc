@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/Visitor.hh>
+#include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/Match.hh>
 #include "toplev.h"
 
@@ -168,7 +169,8 @@ namespace semantic {
 	    Tree ret = generateType (frame.getType ());	    
 	    Tree fntype = Tree::functionType (ret, args);
 	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
-
+	    fn_decl.asmName (Mangler::init ().mangleFrame (frame));
+	    
 	    setCurrentContext (fn_decl);
 	    enterFrame ();
 
@@ -781,9 +783,10 @@ namespace semantic {
 		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
 
 	    auto type = generateType (proto.getReturnType ());
-	    return Tree::buildFrameProto (proto.getLocation (), type, proto.getLocation ().str, params);
+	    auto name = Mangler::init ().mangleFrameProto (proto);
+	    return Tree::buildFrameProto (proto.getLocation (), type, name, params);
 	}
-
+    
 	generic::Tree Visitor::generateCall (const Call & cl) {
 	    std::vector <Tree> results;
 	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {

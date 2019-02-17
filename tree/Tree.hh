@@ -466,6 +466,11 @@ namespace generic {
 	void isAddressable (bool);
 	
 	/**
+	 * \brief Change the assemble name of the tree
+	 */
+	void asmName (const std::string & name);
+
+	/**
 	 * \return Is this declaration public ?
 	 */
 	bool isPublic () const;

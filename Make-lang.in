@@ -113,6 +113,7 @@ ymir_OBJS = \
 	ymir/generator_GlobalVar.o \
 	ymir/generator_Integer.o \
 	ymir/generator_Loop.o \
+	ymir/generator_Mangler.o \
 	ymir/generator_MultSym.o \
 	ymir/generator_NamedGenerator.o \
 	ymir/generator_None.o \

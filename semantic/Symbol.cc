@@ -48,6 +48,16 @@ namespace semantic {
     void ISymbol::setReferent (Symbol * ref) {
 	this-> _referent = ref;
     }
+
+    std::string ISymbol::getRealName () const {
+	if (this-> _referent == nullptr) return this-> _name.str;
+	else {
+	    auto ft = this-> _referent-> getRealName ();
+	    if (ft != "")
+		return ft + "::" + this-> _name.str;
+	    else return this-> _name.str;
+	}
+    }
     
     ISymbol::~ISymbol () {}
 
@@ -93,6 +103,13 @@ namespace semantic {
 	    this-> _value-> setReferent (ref);
     }
     
+    std::string Symbol::getRealName () const {
+	if (this-> _value != nullptr) return this-> _value-> getRealName ();
+	else {
+	    return "";
+	}
+    }
+
     std::vector <Symbol> Symbol::getLocal (const std::string & name) const {
 	if (this-> _value == nullptr) return {};
 	else return this-> _value-> getLocal (name);

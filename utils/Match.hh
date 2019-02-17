@@ -6,12 +6,12 @@
 #define of(X, x, LMD)				\
 if (ref.is<X> ()) {				\
     auto & x = ref.to <X> ();			\
-    LMD						\
+    LMD;					\
  }						
 
 #define of_u(X, LMD)				\
 if (ref.is<X> ()) {				\
-    LMD						\
+    LMD;					\
  }						
 
 #define string_match(X)				\
