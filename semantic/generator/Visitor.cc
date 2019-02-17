@@ -69,7 +69,18 @@ namespace semantic {
 		);
 
 		of (Array, array,
-		    type = generateArrayType (array);
+		    type = Tree::staticArray (generateType (array.getInners () [0]), array.getSize ());
+		);
+
+		of (Slice, slice,
+		    type = Tree::sliceType (generateType (slice.getInners () [0]));
+		);
+
+		of (Tuple, tu, {
+			std::vector <Tree> inner;
+			for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
+			type = Tree::tupleType ({}, inner);
+		    }
 		);
 	    }
 	    
@@ -80,14 +91,6 @@ namespace semantic {
 		type = Tree::pointerType (type);
 	    
 	    return type;
-	}
-
-	Tree Visitor::generateArrayType (const Array & array) {
-	    if (array.size () != -1) {
-		return Tree::staticArray (generateType (array.getInner ()), array.size ());
-	    } else {
-		return Tree::dynArray (generateType (array.getInner ()));
-	    }
 	}
 	
 	Tree Visitor::generateInitValueForType (const Generator & type) {
@@ -112,7 +115,27 @@ namespace semantic {
 		of (Char, c,
 		    return Tree::buildCharCst (c.getLocation (), Char::INIT, generateType (type));
 		);
-		
+
+		of (Array, a,
+		    return Tree::constructIndexed0 (
+			a.getLocation (),
+			generateType (type),
+			generateInitValueForType (a.getInners () [0]),
+			a.getSize ()
+		    );
+		);
+
+		of (Slice, s,
+		    return Tree::constructField (
+			s.getLocation (),
+			generateType (type),
+			{"len", "ptr"},
+			{
+			    Tree::buildSizeCst (Integer::INIT),
+			    Tree::buildIntCst (s.getLocation (), Integer::INIT, Tree::pointerType (generateType (s.getInners () [0])))
+			}
+		    );
+		);
 	    }	    
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -159,16 +182,17 @@ namespace semantic {
 	    auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
 	    fn_decl.setResultDecl (resultDecl);
 
-	    auto value = generateValue (frame.getContent ());
-	    if (!frame.getType ().is<Void> () && frame.getType ().equals (frame.getContent ().to <Value> ().getType ())) {
+	    Tree value (Tree::empty ());
+	    if (frame.needFinalReturn ()) {
 		TreeStmtList list = TreeStmtList::init ();
+		value = castTo (frame.getType (), frame.getContent ());
 		list.append (value.getList ());
 		value = value.getValue ();
 		if (!resultDecl.getType ().isPointerType ()) value = value.toDirect ();
-		
+
 		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value));
 		value = list.toTree ();
-	    }
+	    } else value = generateValue (frame.getContent ());
 	    
 	    auto fnTree = quitBlock (lexing::Word::eof (), value);
 	    auto fnBlock = fnTree.block;
@@ -263,6 +287,14 @@ namespace semantic {
 		    return generateConditional (cond);
 		);
 
+		of (Loop, loop,
+		    return generateLoop (loop);
+		);
+
+		of (Break, br,
+		    return generateBreak (br);
+		);
+		
 		of (ArrayValue, val,
 		    return generateArrayValue (val);
 		);
@@ -271,18 +303,54 @@ namespace semantic {
 		    return generateCopier (copy);
 		);
 
+		of (Aliaser, al,
+		    return generateAliaser (al);
+		);
+
 		of (None, none ATTRIBUTE_UNUSED,
 		    return Tree::empty ();
 		);
+
+		of (ArrayAccess, access,
+		    return generateArrayAccess (access);
+		);
+
+		of (SliceAccess, access,
+		    return generateSliceAccess (access);
+		);
+
+		of (UnaryBool, ub,
+		    return generateUnaryBool (ub);
+		);
+
+		of (UnaryInt, ui,
+		    return generateUnaryInt (ui);
+		);
+
+		of (UnaryFloat, uf,
+		    return generateUnaryFloat (uf);
+		);
+
+		of (TupleValue, tu,
+		    return generateTupleValue (tu);
+		);
+
+		of (Call, cl,
+		    return generateCall (cl);
+		);
+
+		of (FrameProto, pr,
+		    return generateFrameProto (pr);
+		);
 	    }
 
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    Ymir::Error::halt ("%(r) - reaching impossible point %(y)", "Critical", identify (gen));
 	    return Tree::empty ();
 	}
 	
 	Tree Visitor::generateBlock (const Block & block) {
 	    TreeStmtList list = TreeStmtList::init ();
-	    Tree last (Tree::empty ());
+	    Generator last (Generator::empty ());
 	    Tree var (Tree::empty ());
 	    if (!block.getType ().is<Void> ()) {
 		var = Tree::varDecl (block.getLocation (), "_", generateType (block.getType ()));
@@ -292,13 +360,14 @@ namespace semantic {
 
 	    enterBlock ();
 	    for (auto & it : block.getContent ()) {
-		if (!last.isEmpty ()) list.append (last);
-		last = generateValue (it);
+		if (!last.isEmpty ()) list.append (generateValue (last));
+		last = it;
 	    }
 
 	    if (!block.getType ().is<Void> ()) {
-		list.append (last.getList ());
-		auto value = last.getValue ();
+		auto value = castTo (block.getType (), last);
+		list.append (value.getList ());
+		value = value.getValue ();
 		if (!var.getType ().isPointerType ()) value = value.toDirect ();
 
 		list.append (Tree::affect (block.getLocation (), var, value));		
@@ -307,7 +376,8 @@ namespace semantic {
 				       var, 
 				       binding.bind_expr);
 	    } else {
-		list.append (last);
+		if (!last.isEmpty ())
+		    list.append (generateValue (last));
 		return quitBlock (block.getLocation (), list.toTree ()).bind_expr;
 	    }    
 	}	
@@ -362,7 +432,7 @@ namespace semantic {
 	
 	Tree Visitor::generateAffect (const Affect & aff) {
 	    auto left = generateValue (aff.getWho ());
-	    auto right = generateValue (aff.getValue ());
+	    auto right = castTo (aff.getWho ().to <Value> ().getType (), aff.getValue ());
 
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
@@ -476,6 +546,69 @@ namespace semantic {
 	    return ret;	    
 	}
 	
+	generic::Tree Visitor::generateUnaryInt (const UnaryInt & un) {
+	    auto value = generateValue (un.getOperand ());
+	    auto type = generateType (un.getType ());
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (value.getList ());
+
+	    value = value.getValue ();
+
+	    tree_code code = NEGATE_EXPR;
+	    switch (un.getOperator ()) {
+	    case Unary::Operator::MINUS : code = NEGATE_EXPR; break;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+	    }
+	    
+	    return Tree::compound (
+		un.getLocation (),
+		Tree::unary (un.getLocation (), code, type, value),
+		list.toTree ()
+	    );
+	}
+
+	generic::Tree Visitor::generateUnaryFloat (const UnaryFloat & un) {
+	    auto value = generateValue (un.getOperand ());
+	    auto type = generateType (un.getType ());
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (value.getList ());
+
+	    value = value.getValue ().toDirect ();
+
+	    tree_code code = NEGATE_EXPR;
+	    switch (un.getOperator ()) {
+	    case Unary::Operator::MINUS : code = NEGATE_EXPR; break;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+	    }
+	    
+	    return Tree::compound (
+		un.getLocation (),
+		Tree::unary (un.getLocation (), code, type, value),
+		list.toTree ()
+	    );
+	}
+
+	generic::Tree Visitor::generateUnaryBool (const UnaryBool & un) {
+	    if (un.getOperator () == Unary::Operator::NOT) {
+		auto value = generateValue (un.getOperand ());
+		auto type = generateType (un.getType ());
+		TreeStmtList list = TreeStmtList::init ();
+		list.append (value.getList ());
+		value = value.getValue ().toDirect ();
+
+		return Tree::compound (
+		    un.getLocation (),
+		    Tree::binary (un.getLocation (), BIT_XOR_EXPR, type, value, Tree::buildBoolCst (un.getLocation (), true)),
+		    list.toTree ()
+		);
+	    } else {
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return Tree::empty ();
+	    }
+	}
+	
 	generic::Tree Visitor::generateVarRef (const VarRef & var) {
 	    return this-> getDeclarator (var.getRefId ());
 	}	
@@ -487,7 +620,7 @@ namespace semantic {
 	    auto decl = Tree::varDecl (var.getLocation (), name, type);
 	    if (!var.getVarValue ().isEmpty ()) {
 		if (!var.getVarType ().to <Type> ().isRef ())
-		    decl.setDeclInitial (generateValue (var.getVarValue ()).toDirect ());
+		    decl.setDeclInitial (castTo (var.getVarType (), var.getVarValue ()).toDirect ());
 		else
 		    decl.setDeclInitial (generateValue (var.getVarValue ()));		
 	    } else 
@@ -517,30 +650,31 @@ namespace semantic {
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
 	    }
-
-	    auto content = generateValue (cond.getContent ());
+	    	    
+	    Tree content (Tree::empty ());
 	    if (!var.isEmpty ()) {
 		TreeStmtList list = TreeStmtList::init ();
+		content = castTo (cond.getType (), cond.getContent ());
 		list.append (content.getList ());
 		auto value = content.getValue ();
 		if (!var.getType ().isPointerType ()) value = value.toDirect ();
 		
 		list.append (Tree::affect (cond.getLocation (), var, value));
 		content = list.toTree ();
-	    }
+	    } else content = generateValue (cond.getContent ());
 	    
 	    auto elsePart = Tree::empty ();
 	    if (!cond.getElse ().isEmpty ()) {
-		elsePart = generateValue (cond.getElse ());
 		if (!var.isEmpty ()) {
 		    TreeStmtList list = TreeStmtList::init ();
+		    elsePart = castTo (cond.getType (), cond.getElse ());
 		    list.append (elsePart.getList ());
 		    auto value = elsePart.getValue ();
 		    if (!var.getType ().isPointerType ()) value = value.toDirect ();
 		
 		    list.append (Tree::affect (cond.getLocation (), var, value));
 		    elsePart = list.toTree ();
-		}	
+		} else elsePart = generateValue (cond.getElse ());
 	    }
 
 	    return Tree::compound (cond.getLocation (),
@@ -549,22 +683,210 @@ namespace semantic {
 	    );
 	}
 
+	generic::Tree Visitor::generateLoop (const Loop & loop) {
+	    Tree var (Tree::empty ());
+	    Tree test (Tree::empty ());
+	    if (!loop.getTest ().isEmpty ())
+		test = generateValue (loop.getTest ());
+	    if (!loop.getType ().is<Void> ()) {
+		var = Tree::varDecl (loop.getLocation (), "_", generateType (loop.getType ()));
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
+	    }
+
+	    auto end_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "end");	    
+	    enterLoop (end_label, var);
+	    Tree content (Tree::empty ());
+
+	    // The last value is not used when we have a loop {} expression
+	    // So, we have to verify if the loop has a test 
+	    if (!var.isEmpty () && !loop.getContent ().to <Value> ().isBreaker () && !test.isEmpty ()) {
+		TreeStmtList list = TreeStmtList::init ();
+		content = castTo (loop.getType (), loop.getContent ());
+		list.append (content.getList ());
+		auto value = content.getValue ();
+		if (!var.getType ().isPointerType ()) value = value.toDirect ();
+		list.append (Tree::affect (loop.getLocation (), var, value));
+		content = list.toTree ();
+	    } else content = generateValue (loop.getContent ());
+	    quitLoop ();
+	    
+	    TreeStmtList all = TreeStmtList::init ();
+	    auto begin_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "begin");
+	    auto test_label = Tree::makeLabel (loop.getLocation (), getCurrentContext (), "test");
+	    
+	    if (!loop.isDo () && !test.isEmpty ())
+		all.append (Tree::gotoExpr (loop.getLocation (), test_label));
+	    
+	    all.append (Tree::labelExpr (loop.getLocation (), begin_label));
+	    all.append (content);
+	    if (!test.isEmpty ()) {
+		all.append (Tree::labelExpr (loop.getLocation (), test_label));
+		all.append (Tree::condExpr (loop.getLocation (),
+					    test,
+					    Tree::gotoExpr (loop.getLocation (), begin_label),
+					    Tree::gotoExpr (loop.getLocation (), end_label)
+		));
+	    } else {
+		all.append  (Tree::gotoExpr (loop.getLocation (), begin_label));
+	    }
+
+	    all.append (Tree::labelExpr (loop.getLocation (), end_label));
+	    return Tree::compound (loop.getLocation (),
+				  var, 
+				  all.toTree ()
+	    );
+	}
+
+	generic::Tree Visitor::generateBreak (const Break & br) {
+	    TreeStmtList list = TreeStmtList::init ();
+	    if (!br.getValue ().to <Value> ().getType ().is<Void> ()) {
+	    	auto value = generateValue (br.getValue ());		
+	    	list.append (
+	    	    Tree::affect (br.getLocation (),
+	    			  this-> _loopVars.back (),
+	    			  value)
+	    	);
+	    }
+	    	    
+	    list.append (Tree::gotoExpr (br.getLocation (), this-> _loopLabels.back ()));
+	    return list.toTree ();
+	}
+	
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
 	    auto type = generateType (val.getType ());
+	    auto inner = generateType (val.getType ().to <Array> ().getInners () [0]);
 	    std::vector <Tree> params;
 	    for (auto it : val.getContent ()) {
-		params.push_back (generateValue (it));
+		auto value = inner.isPointerType () ? generateValue (it) : generateValue (it).toDirect ();
+		params.push_back (value);
 	    }
 	    return Tree::constructIndexed (val.getLocation (), type, params);
 	}
 
+	generic::Tree Visitor::generateTupleValue (const TupleValue & val) {
+	    auto type = generateType (val.getType ());
+	    std::vector <Tree> params;
+	    for (auto it : val.getContent ()) {
+		auto inner = generateType (it.to<Value> ().getType ());
+		auto value = inner.isPointerType () ? generateValue (it) : generateValue (it).toDirect ();
+		params.push_back (value);
+	    }
+	    return Tree::constructField (val.getLocation (), type, {}, params);
+	}	
+
+	generic::Tree Visitor::generateFrameProto (const FrameProto & proto) {
+	    std::vector <Tree> params;
+	    for (auto & it : proto.getParameters ())
+		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
+
+	    auto type = generateType (proto.getReturnType ());
+	    return Tree::buildFrameProto (proto.getLocation (), type, proto.getLocation ().str, params);
+	}
+
+	generic::Tree Visitor::generateCall (const Call & cl) {
+	    std::vector <Tree> results;
+	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {
+		results.push_back (castTo (cl.getTypes () [it], cl.getParameters () [it]));
+	    }
+
+	    auto fn = generateValue (cl.getFrame ());
+	    auto type = generateType (cl.getType ());
+	    return Tree::buildCall (cl.getLocation (), type, fn , results);
+	}
+	
 	generic::Tree Visitor::generateCopier (const Copier & copy) {
-	    auto inner = generateValue (copy.getWho ());
-	    if (copy.getType ().is <Array> () && copy.getType ().to <Array> ().isStatic ())
+	    auto inner = generateValue (copy.getWho ()).toDirect ();
+	    if (copy.getType ().is <Array> ())
 		return inner;
+
+	    if (copy.getType ().is <Slice> ()) {
+		ulong size = generateType (copy.getType ().to <Slice> ().getInners () [0]).getSize ();
+		return Tree::buildCall (
+		    copy.getLocation (),
+		    generateType (copy.getType ()),
+		    "__yxa_duplicate_slice",
+		    {inner, Tree::buildSizeCst (size)}
+		);
+	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Tree::empty ();
+	}
+
+	generic::Tree Visitor::generateAliaser (const Aliaser & als) {
+	    return castTo (als.getType (), als.getWho ());
+	}	
+	
+	generic::Tree Visitor::generateArrayAccess (const ArrayAccess & access) {
+	    auto left = generateValue (access.getArray ());
+	    auto right = generateValue (access.getIndex ());
+
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+
+	    auto lvalue = left.getValue ().toDirect (), rvalue = right.getValue ().toDirect ();
+	    
+	    return Tree::compound (
+		access.getLocation (),
+		Tree::buildArrayRef (access.getLocation (), lvalue, rvalue),
+		list.toTree ()
+	    );
+	}
+	
+	generic::Tree Visitor::generateSliceAccess (const SliceAccess & access) {
+	    auto left = generateValue (access.getSlice ());
+	    auto right = generateValue (access.getIndex ());
+
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+
+	    auto lvalue = left.getValue ().toDirect (), rvalue = right.getValue ().toDirect ();
+	    ulong size = generateType (access.getSlice ().to <Value> ().getType ().to <Slice> ().getInners () [0]).getSize ();
+	    
+	    auto indexType = Tree::sizeType ();
+	    auto index = Tree::binary (access.getLocation (), MULT_EXPR, indexType, rvalue, Tree::buildSizeCst (size));
+	    auto data_field = lvalue.getField ("ptr");
+	    
+	    auto ptr = Tree::binaryDirect (access.getLocation (), POINTER_PLUS_EXPR, data_field.getType (), data_field, index);
+	    return ptr.buildPointerUnref (0);
+	}
+	
+	generic::Tree Visitor::castTo (const Generator & type, const Generator & val) {
+	    auto value = generateValue (val);
+	    if (type.is <Slice> ()) {
+		if (val.to <Value> ().getType ().is <Array> ()) {		    
+		    auto inner = generateType (type.to <Slice> ().getInners () [0]);
+		    auto aux_type = type;
+		    aux_type.to <Type> ().isRef (false);
+		    auto ret = Tree::constructField (
+			type.getLocation (),
+			generateType (aux_type), 
+			{"len", "ptr"},
+			{
+			    value.getType ().getArraySize (),
+			    Tree::buildAddress (type.getLocation (), value, Tree::pointerType (inner))
+			}
+		    );
+		    
+		    if (val.is <Copier> ()) {
+			auto list = ret.getList ();
+			ulong size = generateType (type.to <Slice> ().getInners () [0]).getSize ();
+			return
+			    Tree::compound (val.getLocation (), 
+					    Tree::buildCall (
+						val.getLocation (),
+						generateType (aux_type),
+						"__yxa_duplicate_slice",
+						{ret.getValue (), Tree::buildIntCst (val.getLocation (), size, Tree::intType (64, false))}						
+					    ), list);
+		    } else return ret;
+		}
+	    }
+	    
+	    return value;
 	}
 	
 	void Visitor::enterBlock () {
@@ -593,6 +915,16 @@ namespace semantic {
 	    return generic::TreeSymbolMapping (bind, block);
 	}
 
+	void Visitor::enterLoop (const Tree & label, const Tree & var) {
+	    this-> _loopLabels.push_back (label);
+	    this-> _loopVars.push_back (var);
+	}
+
+	void Visitor::quitLoop () {
+	    this-> _loopVars.pop_back ();
+	    this-> _loopLabels.pop_back ();
+	}	
+	
 	void Visitor::enterFrame () {
 	    this-> _declarators.push_back ({});
 	}
@@ -642,6 +974,46 @@ namespace semantic {
 	    this-> _currentContext = tr;
 	}
 	
+
+	std::string Visitor::identify (const Generator & gen) {
+	    match (gen) {
+		of_u (Array, return "Array";);
+		of_u (Bool, return "Bool";);
+		of_u (Char, return "Char";);
+		of_u (Float, return "Float";);
+		of_u (Integer, return "Integer";);
+		of_u (Slice, return "Slice";);
+		of_u (Void, return "Void";);
+		of_u (Affect, return "Affect";);
+		of_u (Aliaser, return "Aliaser";);
+		of_u (ArrayAccess, return "ArrayAccess";);
+		of_u (ArrayValue, return "ArrayValue";);
+		of_u (BinaryBool, return "BinaryBool";);
+		of_u (BinaryFloat, return "BinaryFloat";);
+		of_u (BinaryInt, return "BinaryInt";);
+		of_u (Binary, return "Binary";);
+		of_u (Block, return "Block";);
+		of_u (BoolValue, return "BoolValue";);
+		of_u (CharValue, return "CharValue";);
+		of_u (Conditional, return "Conditional";);
+		of_u (Copier, return "Copier";);
+		of_u (Fixed, return "Fixed";);
+		of_u (FloatValue, return "FloatValue";);
+		of_u (None, return "None";);
+		of_u (ParamVar, return "ParamVar";);
+		of_u (Referencer, return "Referencer";);
+		of_u (Set, return "Set";);
+		of_u (SliceAccess, return "SliceAccess";);
+		of_u (UnaryBool, return "UnaryBool";);
+		of_u (UnaryFloat, return "UnaryFloat";);
+		of_u (UnaryInt, return "UnaryInt";);
+		of_u (Unary, return "Unary";);
+		of_u (VarDecl, return "VarDecl";);
+		of_u (VarRef, return "VarRef";);
+	    }
+	    return "empty";
+	}
+
     }
     
 }

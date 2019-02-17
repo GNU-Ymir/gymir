@@ -68,6 +68,12 @@ namespace syntax {
 	 * (for convinience, just adding something in this list won't result something usefull) 
 	*/
 	std::vector <std::string> _declarations;
+
+	/**
+	 * The list of declarable things inside a block
+	 * It is a subset of _declarations
+	 */
+	std::vector <std::string> _declarationsBlock;
 	
     private :
 
@@ -331,10 +337,12 @@ namespace syntax {
 	/**
 	 * \brief Return a set of expression used inside a param list
 	 * \verbatim
-	 param_list := (expression:(0) (',' expression:(0))*)?
+	 param_list := (param (',' param)*)?
+	 param := expression:(0) | '?' Identifier '=' expression:(0)
 	 \endverbatim
+	 * \param withNamed set to true if we can have named expression 
 	 */
-	std::vector <Expression> visitParamList ();	
+	std::vector <Expression> visitParamList (bool withNamed = false);	
 	
 	/**
 	 * \brief Visit the Custom attributes associated to declarations
@@ -529,12 +537,18 @@ namespace syntax {
 	/**
 	 * \brief Visit a while loop expression 
 	 * \verbatim
-	 while := 'while' expression:(0) expression:(0)      |
-	          'do' expression:(0) 'while' expression:(0) 
+	 while := 'while' expression:(0) expression:(0)
 	 \endverbatim
 	 */
 	Expression visitWhile ();
 
+	/**
+	 * \brief Visit a do while loop expression
+	 * \verbatim
+	 do_while := 'do' expression:(0) 'while' expression:(0)
+	 */
+	Expression visitDoWhile ();
+	
 	/**
 	 * \brief Visit a for loop
 	 * \verbatim

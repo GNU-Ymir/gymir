@@ -16,9 +16,6 @@ namespace semantic {
 	/** The symbol table associated to the module */
 	Table _table;
 
-	/** The list of overloading function */
-	std::vector <Symbol> _overload;
-
 	/** The syntaxic function */
 	syntax::Declaration _content;
 
@@ -49,11 +46,7 @@ namespace semantic {
 
 	void insert (const Symbol & sym) override;
 
-	const std::vector <Symbol> & getOverloading () const;
-
-	const Symbol & getLocal (const std::string & name) const override;
-	
-	void setOverloading (const std::vector <Symbol> & overs); 
+	std::vector <Symbol> getLocal (const std::string & name) const override;
 	
 	std::vector <Symbol> get (const std::string & name) const override;
 

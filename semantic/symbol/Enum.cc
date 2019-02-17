@@ -6,14 +6,12 @@ namespace semantic {
     Enum::Enum () :
 	ISymbol (lexing::Word::eof ()),
 	_table (ITable::init (this)),
-	_overload (),
 	_type (syntax::Expression::empty ())
     {}
 
     Enum::Enum (const lexing::Word & name, const syntax::Expression & type) :
 	ISymbol (name),
 	_table (ITable::init (this)),
-	_overload (),
 	_type (type)
     {}
 
@@ -32,27 +30,18 @@ namespace semantic {
 	return ISymbol::isOf (type);	
     }
 
-    const std::vector <Symbol> & Enum::getOverloading () const {
-	return this-> _overload;
-    }
-
-    void Enum::setOverloading (const std::vector <Symbol> & overs) {
-	this-> _overload = overs;
-    }
-
     void Enum::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }
 
     std::vector <Symbol> Enum::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	const Symbol & local = this-> _table.get (name);
-	if (!local.isEmpty ())
-	    vec.push_back (local);
+	auto local = this-> _table.get (name);
+	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
 
-    const Symbol & Enum::getLocal (const std::string & name) const {
+    std::vector <Symbol> Enum::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }
 

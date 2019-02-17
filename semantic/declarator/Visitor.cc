@@ -85,15 +85,12 @@ namespace semantic {
 	semantic::Symbol Visitor::visitFunction (const syntax::Function & func) {
 	    auto function = Function::init (func.getName (), func);
 	
-	    auto symbol = getReferent ().getLocal (func.getName ().str);
-	
-	    if (symbol.is <Function> () && func.getName () != Keys::SELF_TILDE) {
-		auto vec = symbol.to <Function> ().getOverloading ();
-		vec.push_back (symbol);
-		function.to<Function> ().setOverloading (vec);
-	    } else if (!symbol.isEmpty ()) {	    
-		auto note = Ymir::Error::createNote (symbol.getName ());
-		Ymir::Error::occurAndNote (func.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), func.getName ().str);
+	    auto symbols = getReferent ().getLocal (func.getName ().str);
+	    for (auto & symbol : symbols) {
+		if (!symbol.is <Function> () && func.getName () != Keys::SELF_TILDE) {
+		    auto note = Ymir::Error::createNote (symbol.getName ());
+		    Ymir::Error::occurAndNote (func.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), func.getName ().str);
+		}
 	    }
 	
 	    for (auto & ca : func.getCustomAttributes ()) {
@@ -119,15 +116,13 @@ namespace semantic {
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str) {
 	    auto structure = Struct::init (str.getName ());
 	
-	    auto symbol = getReferent ().getLocal (str.getName ().str);	
-	    if (symbol.is <Struct> ()) {
-		auto vec = symbol.to <Struct> ().getOverloading ();
-		vec.push_back (symbol);
-		structure.to <Struct> ().setOverloading (vec);
-	    } else if (!symbol.isEmpty ()) {
-		auto note = Ymir::Error::createNote (symbol.getName ());
-		Ymir::Error::occurAndNote (str.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), str.getName ().str);
-	    }
+	    auto symbols = getReferent ().getLocal (str.getName ().str);	
+	    for (auto & symbol : symbols) {
+		if (!symbol.is <Struct> ()) {
+		    auto note = Ymir::Error::createNote (symbol.getName ());
+		    Ymir::Error::occurAndNote (str.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), str.getName ().str);
+		}
+	    } 
 	
 	    for (auto & ca : str.getCustomAttributes ()) {
 		if (ca == Keys::PACKED) {
@@ -154,11 +149,11 @@ namespace semantic {
 	semantic::Symbol Visitor::visitAlias (const syntax::Alias & stal) {
 	    auto alias = Alias::init (stal.getName (), stal.getValue ());
 
-	    auto symbol = getReferent ().getLocal (stal.getName ().str);
-	    if (!symbol.isEmpty ()) {
-		auto note = Ymir::Error::createNote (symbol.getName ());
+	    auto symbols = getReferent ().getLocal (stal.getName ().str);
+	    if (!symbols.size () != 0) {
+		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stal.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stal.getName ().str);
-	    }
+	    }	    
 
 	    getReferent ().insert (alias);
 	    return alias;
@@ -176,14 +171,12 @@ namespace semantic {
 	semantic::Symbol Visitor::visitClass (const syntax::Class & stcls) {
 	    auto cls = Class::init (stcls.getName (), stcls.getAncestor ());
 	
-	    auto symbol = getReferent ().getLocal (stcls.getName ().str);	
-	    if (symbol.is <Class> ()) {
-		auto vec = symbol.to <Class> ().getOverloading ();
-		vec.push_back (symbol);
-		cls.to <Class> ().setOverloading (vec);
-	    } else if (!symbol.isEmpty ()) {
-		auto note = Ymir::Error::createNote (symbol.getName ());
-		Ymir::Error::occurAndNote (stcls.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stcls.getName ().str);
+	    auto symbols = getReferent ().getLocal (stcls.getName ().str);
+	    for (auto & symbol : symbols) {
+		if (!symbol.is <Class> ()) {
+		    auto note = Ymir::Error::createNote (symbol.getName ());
+		    Ymir::Error::occurAndNote (stcls.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stcls.getName ().str);
+		}
 	    }
 
 	    pushReferent (cls);
@@ -198,9 +191,9 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum & stenm) {
 	    auto enm = Enum::init (stenm.getName (), stenm.getType ());
-	    auto symbol = getReferent ().getLocal (stenm.getName ().str);
-	    if (!symbol.isEmpty ()) {
-		auto note = Ymir::Error::createNote (symbol.getName ());
+	    auto symbols = getReferent ().getLocal (stenm.getName ().str);
+	    if (!symbols.size () != 0) {
+		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stenm.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stenm.getName ().str);
 	    }
 
@@ -217,9 +210,9 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl & stdecl) {
 	    auto decl = VarDecl::init (stdecl.getName (), stdecl.getDecorators (), stdecl.getType (), stdecl.getValue ());
-	    auto symbol = getReferent ().getLocal (stdecl.getName ().str);
-	    if (!symbol.isEmpty ()) {
-		auto note = Ymir::Error::createNote (symbol.getName ());
+	    auto symbols = getReferent ().getLocal (stdecl.getName ().str);
+	    if (symbols.size () != 0) {
+		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stdecl.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stdecl.getName ().str);
 	    }
 

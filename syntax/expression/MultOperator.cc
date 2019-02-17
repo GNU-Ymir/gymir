@@ -39,5 +39,17 @@ namespace syntax {
 	for (auto & it : this-> _params)
 	    it.treePrint (stream, i + 2);
     }
+
+    const lexing::Word & MultOperator::getEnd () const {
+	return this-> _end;
+    }
+
+    const Expression & MultOperator::getLeft () const {
+	return this-> _element;
+    }
+
+    const std::vector <Expression> & MultOperator::getRights () const {
+	return this-> _params;
+    }
     
 }

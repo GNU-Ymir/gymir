@@ -7,16 +7,17 @@ namespace semantic {
 	    Value (lexing::Word::eof (), Generator::empty ())
 	{}
 
-	VarRef::VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint id) :
+	VarRef::VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable) :
 	    Value (location, type),
 	    _name (name),
-	    _refId (id)
+	    _refId (id),
+	    _isMutable (isMutable)
 	{
-	    this-> isLvalue (true);
+	    this-> isLvalue (this-> _isMutable);
 	}
 
-	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id) {
-	    return Generator {new (Z0) VarRef (location, name, type, id)};
+	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable) {
+	    return Generator {new (Z0) VarRef (location, name, type, id, isMutable)};
 	}
 
 	Generator VarRef::clone () const {

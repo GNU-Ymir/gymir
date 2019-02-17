@@ -43,5 +43,9 @@ namespace syntax {
     bool Intrinsics::isCopy () const {
 	return this-> getLocation () == Keys::COPY;
     }
+
+    bool Intrinsics::isAlias () const {
+	return this-> getLocation () == Keys::ALIAS;
+    }
     
 }

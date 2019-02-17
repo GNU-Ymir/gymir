@@ -8,18 +8,20 @@ namespace semantic {
 	    Value (lexing::Word::eof (), Generator::empty ()),
 	    _name (""),
 	    _type (Generator::empty ()),
-	    _value (Generator::empty ())
+	    _value (Generator::empty ()),
+	    _isMutable (false)
 	{}
 
-	VarDecl::VarDecl (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value) :
+	VarDecl::VarDecl (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value, bool isMutable) :
 	    Value (location, Void::init (location)),
 	    _name (name),
 	    _type (type),
-	    _value (value)
+	    _value (value),
+	    _isMutable (isMutable)
 	{}
 
-	Generator VarDecl::init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value) {
-	    return Generator {new (Z0) VarDecl (location, name, type, value)};
+	Generator VarDecl::init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value, bool isMutable) {
+	    return Generator {new (Z0) VarDecl (location, name, type, value, isMutable)};
 	}
 
 	Generator VarDecl::clone () const {
@@ -42,13 +44,16 @@ namespace semantic {
 		    ;
 	}
 
-
 	const Generator & VarDecl::getVarType () const {
 	    return this-> _type;
 	}
 
 	const Generator & VarDecl::getVarValue () const {
 	    return this-> _value;
+	}
+
+	bool VarDecl::isMutable () const {
+	    return this-> _isMutable;
 	}
 	
     }

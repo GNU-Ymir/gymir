@@ -14,7 +14,7 @@ namespace semantic {
 	    Value (loc, type),
 	    _who (who),
 	    _value (value)
-	{}
+	{}	
 	
 	Generator Affect::init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value) {
 	    return Generator {new Affect (loc, type, who, value)};
@@ -45,7 +45,6 @@ namespace semantic {
 	const Generator & Affect::getValue () const {
 	    return this-> _value;
 	}
-
 	
     }
     

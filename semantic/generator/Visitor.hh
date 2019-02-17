@@ -30,6 +30,10 @@ namespace semantic {
 
 	    /** The declaration of the local var for each frame */
 	    std::vector <std::map <uint, generic::Tree> > _declarators;
+
+	    std::list <generic::Tree> _loopLabels;
+
+	    std::list <generic::Tree> _loopVars;
 	    
 	private :
 
@@ -79,11 +83,6 @@ namespace semantic {
 	     * \brief Transform a type from generator to gimple
 	     */
 	    generic::Tree generateType (const Generator & gen);
-
-	    /**
-	     * \brief Generate an array type (static or dynamic)
-	     */
-	    generic::Tree generateArrayType (const Array & array);
 	    
 	    /**
 	     * \brief Generate the initial value of the type 
@@ -95,7 +94,7 @@ namespace semantic {
 	     * \brief Transform a value to gimple
 	     */
 	    generic::Tree generateValue (const Generator & gen);
-
+	    
 	    /**
 	     * \brief Transform a block into gimple
 	     */
@@ -132,6 +131,21 @@ namespace semantic {
 	    generic::Tree generateArrayValue (const ArrayValue & arr);
 
 	    /**
+	     * \brief Transform a tuple value into gimple
+	     */
+	    generic::Tree generateTupleValue (const TupleValue & arr);
+
+	    /**
+	     * \brief Transform a frame proto into gimple
+	     */
+	    generic::Tree generateFrameProto (const FrameProto & proto);
+
+	    /**
+	     * \brief Transform a frame call into gimple
+	     */
+	    generic::Tree generateCall (const Call & cl);
+	    
+	    /**
 	     * \brief Transform an affectation into gimple
 	     */
 	    generic::Tree generateAffect (const Affect & aff);
@@ -151,6 +165,21 @@ namespace semantic {
 	     */
 	    generic::Tree generateBinaryFloat (const BinaryFloat & bin);
 
+	    /**
+	     * \brief Transform a unary int generator into gimple
+	     */
+	    generic::Tree generateUnaryInt (const UnaryInt & un);
+	    
+	    /**
+	     * \brief Transform a unary float generator into gimple
+	     */
+	    generic::Tree generateUnaryFloat (const UnaryFloat & un);
+
+	    /**
+	     * \brief Transform a unary bool generator into gimple
+	     */
+	    generic::Tree generateUnaryBool (const UnaryBool & un);
+	    
 	    /**
 	     * \brief Transform a var ref into gimple
 	     */
@@ -172,9 +201,34 @@ namespace semantic {
 	    generic::Tree generateConditional (const Conditional & cond);
 
 	    /**
+	     * \brief Transform a loop expression into gimple 
+	     */
+	    generic::Tree generateLoop (const Loop & loop);
+	    
+	    /**
+	     * \brief Transform a break expression into gimple 
+	     */
+	    generic::Tree generateBreak (const Break & loop);
+	    
+	    /**
 	     * \brief Transform a copier into a gimple tree
 	     */
 	    generic::Tree generateCopier (const Copier & copy);
+
+	    /**
+	     * \brief Transform a copier into a gimple tree
+	     */
+	    generic::Tree generateAliaser (const Aliaser & als);
+
+	    /**
+	     * \brief Transform an array access into gimple
+	     */
+	    generic::Tree generateArrayAccess (const ArrayAccess & access);
+
+	    /**
+	     * \brief Transform an slice access into gimple
+	     */
+	    generic::Tree generateSliceAccess (const SliceAccess & access);
 	    
 	private :
 
@@ -188,6 +242,18 @@ namespace semantic {
 	    */
 	    generic::TreeSymbolMapping quitBlock (const lexing::Word & loc, const generic::Tree &);
 
+	    /**
+	     * \brief Enter a new loop
+	     * \param endLabel the label to jump in case of a break
+	     * \param var where to store the value in case of a break
+	     */
+	    void enterLoop (const generic::Tree & endLabel, const generic::Tree & var);
+
+	    /**
+	     * \brief Quit a loop (normally)
+	     */
+	    void quitLoop ();
+	    
 	    /**
 	     * Enter a new Frame
 	     */
@@ -222,6 +288,17 @@ namespace semantic {
 	     * \brief Get a var declarator
 	     */
 	    generic::Tree getDeclarator (uint id);
+	    
+	    /**
+	     * \brief transform the value of value into type
+	     */
+	    generic::Tree castTo (const Generator & type, const Generator & value);
+
+	    /**
+	     * \brief Identifiy the type of the gen
+	     * \return its name
+	     */
+	    std::string identify (const Generator & gen);
 	    
 	};
 

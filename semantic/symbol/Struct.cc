@@ -5,14 +5,12 @@ namespace semantic {
 
     Struct::Struct () :
 	ISymbol (lexing::Word::eof ()),
-	_table (ITable::init (this)),
-	_overload ()
+	_table (ITable::init (this))
     {}
 
     Struct::Struct (const lexing::Word & name) :
 	ISymbol (name),
-	_table (ITable::init (this)),
-	_overload ()
+	_table (ITable::init (this))
     {}
 
     Symbol Struct::init (const lexing::Word & name) {
@@ -30,27 +28,18 @@ namespace semantic {
 	return ISymbol::isOf (type);	
     }
 
-    const std::vector <Symbol> & Struct::getOverloading () const {
-	return this-> _overload;
-    }
-
-    void Struct::setOverloading (const std::vector <Symbol> & overs) {
-	this-> _overload = overs;
-    }
-
     void Struct::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }
 
     std::vector <Symbol> Struct::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	const Symbol & local = this-> _table.get (name);
-	if (!local.isEmpty ())
-	    vec.push_back (local);
+	auto local = this-> _table.get (name);
+	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
 
-    const Symbol & Struct::getLocal (const std::string & name) const {
+    std::vector <Symbol> Struct::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }
 

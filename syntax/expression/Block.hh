@@ -45,6 +45,11 @@ namespace syntax {
 	 * \return the list of expression the block contains
 	 */
 	const std::vector <Expression> & getContent () const;
+
+	/**
+	 * \return the closing token of the block
+	 */
+	const lexing::Word & getEnd () const;
 	
     };    
 

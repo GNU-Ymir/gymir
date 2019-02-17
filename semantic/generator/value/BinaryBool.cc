@@ -15,15 +15,15 @@ namespace semantic {
 	    Binary (loc, op, type, left, right)
 	{
 	    if (!left.to<Value> ().getType ().is<Bool> ()) {
-		Ymir::Error::halt ("%(r) Malformed BinaryBool, left operand type is : %(y)", "Critical", left.to<Value> ().getType ().to<Type> ().typeName ());
+		Ymir::Error::halt ("%(r) Malformed BinaryBool, left operand type is : %(y)", "Critical", left.to<Value> ().getType ().to<Type> ().getTypeName ());
 	    }
 
 	    if (!right.to<Value> ().getType ().is <Bool> ()) {
-		Ymir::Error::halt ("%(r) Malformed BinaryBool, right operand type is : %(y)", "Critical", right.to<Value> ().getType ().to<Type> ().typeName ());
+		Ymir::Error::halt ("%(r) Malformed BinaryBool, right operand type is : %(y)", "Critical", right.to<Value> ().getType ().to<Type> ().getTypeName ());
 	    }
 
 	    if (!type.is <Bool> ()) {
-		Ymir::Error::halt ("%(r) Malformed BinaryBool, type is : %(y)", "Critical", type.to <Type> ().typeName ());
+		Ymir::Error::halt ("%(r) Malformed BinaryBool, type is : %(y)", "Critical", type.to <Type> ().getTypeName ());
 	    }
 	    
 	}

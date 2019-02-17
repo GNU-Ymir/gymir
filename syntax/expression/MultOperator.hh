@@ -45,6 +45,21 @@ namespace syntax {
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
+	/**
+	 * \return the location of the closing token of the expression
+	 */
+	const lexing::Word & getEnd () const;
+
+	/**
+	 * \return the left operand of the expression
+	 */
+	const Expression & getLeft () const;
+
+	/**
+	 * \return the right operands of the expression (between the operator tokens)
+	 */
+	const std::vector <Expression> & getRights () const;
+	
     };
 
 }

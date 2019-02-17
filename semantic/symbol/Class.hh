@@ -11,9 +11,6 @@ namespace semantic {
 	/** The symbol declared in the class (the attributes, methods ...) */
 	Table _table;
 
-	/** The list of overloading structures */
-	std::vector <Symbol> _overload;
-
 	/** The ancestor of the class */
 	syntax::Expression _ancestor;
 
@@ -37,12 +34,8 @@ namespace semantic {
 
 	std::vector <Symbol> get (const std::string & name) const override;
 
-	const Symbol & getLocal (const std::string & name) const override;
+	std::vector <Symbol> getLocal (const std::string & name) const override;
 	
-	const std::vector <Symbol> & getOverloading () const;
-
-	void setOverloading (const std::vector <Symbol> & overs) ;
-
 	bool equals (const Symbol & other) const override;
 
 	

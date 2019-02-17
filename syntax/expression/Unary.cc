@@ -34,5 +34,13 @@ namespace syntax {
 	stream.writeln (this-> getLocation ());
 	this-> _content.treePrint (stream, i + 1);
     }
+
+    const lexing::Word & Unary::getOperator () const {
+	return this-> getLocation ();
+    }
+    
+    const Expression & Unary::getContent () const {
+	return this-> _content;
+    }
     
 }

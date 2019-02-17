@@ -42,4 +42,8 @@ namespace syntax {
 	return this-> _content;
     }
 
+    const lexing::Word & Block::getEnd () const {
+	return this-> _end;
+    }
+    
 }

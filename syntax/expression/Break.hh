@@ -39,6 +39,11 @@ namespace syntax {
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
+	/** 
+	 * \return the value of the breaker
+	 */
+	const Expression & getValue () const;
+	
     };
 
 }

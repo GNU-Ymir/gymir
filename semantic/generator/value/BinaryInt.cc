@@ -15,16 +15,16 @@ namespace semantic {
 	    Binary (loc, op, type, left, right)
 	{
 	    if (!left.to<Value> ().getType ().is<Integer> ()) {
-		Ymir::Error::halt ("%(r) Malformed BinaryInt, left operand type is : %(y)", "Critical", left.to<Value> ().getType ().to<Type> ().typeName ());
+		Ymir::Error::halt ("%(r) Malformed BinaryInt, left operand type is : %(y)", "Critical", left.to<Value> ().getType ().to<Type> ().getTypeName ());
 	    }
 
 	    if (!right.to<Value> ().getType ().is <Integer> ()) {
-		Ymir::Error::halt ("%(r) Malformed BinaryInt, right operand type is : %(y)", "Critical", right.to<Value> ().getType ().to<Type> ().typeName ());
+		Ymir::Error::halt ("%(r) Malformed BinaryInt, right operand type is : %(y)", "Critical", right.to<Value> ().getType ().to<Type> ().getTypeName ());
 	    }
 
 	    // All the operation we can do on ints produce int or bool
 	    if (!type.is <Integer> () && !type.is <Bool> ()) {
-		Ymir::Error::halt ("%(r) Malformed BinaryInt, type is : %(y)", "Critical", type.to <Type> ().typeName ());
+		Ymir::Error::halt ("%(r) Malformed BinaryInt, type is : %(y)", "Critical", type.to <Type> ().getTypeName ());
 	    }
 	    
 	}

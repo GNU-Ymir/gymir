@@ -75,7 +75,7 @@ namespace semantic {
 	 * \brief Does not call it's referent
 	 * \return a symbol, may be empty
 	 */
-	virtual const Symbol & getLocal (const std::string & name) const;
+	virtual std::vector <Symbol> getLocal (const std::string & name) const;
 	
 	/**
 	 * \brief In the symbol hierarchy, each symbol is attached to a referent
@@ -153,7 +153,7 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	const Symbol & getLocal (const std::string & name) const;
+	std::vector <Symbol> getLocal (const std::string & name) const;
 	
 	/**
 	 * Proxy function for symbol

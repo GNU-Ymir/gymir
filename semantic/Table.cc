@@ -35,22 +35,16 @@ namespace semantic {
     void ITable::insert (const Symbol & sym) {
 	Symbol toInsert = sym;
 	toInsert.setReferent (&this-> _proxy);
-	for (auto & s : this-> _syms) {
-	    if (s.getName ().str == toInsert.getName ().str) {
-		s = toInsert;
-		return;
-	    }
-	}
-
 	this-> _syms.push_back (toInsert);
     }
 
-    const Symbol & ITable::get (const std::string & name) const {
+    std::vector <Symbol> ITable::get (const std::string & name) const {
+	std::vector <Symbol> rets;
 	for (auto & s : this-> _syms) {
-	    if (s.getName ().str == name) return s;
+	    if (s.getName ().str == name) rets.push_back (s);
 	}
 	
-	return Symbol::__empty__;
+	return rets;
     }
 
     const std::vector <Symbol> & ITable::getAll () const {
@@ -86,7 +80,7 @@ namespace semantic {
 	this-> _value-> insert (sym);
     }
     
-    const Symbol & Table::get (const std::string & name) const {	
+    std::vector <Symbol> Table::get (const std::string & name) const {	
 	if (this-> _value == nullptr)
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	return this-> _value-> get (name);

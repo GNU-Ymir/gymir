@@ -37,6 +37,8 @@ namespace semantic {
 		DIV, // /
 		MODULO, // %
 		EXP, // ^^
+		RANGE, // ..
+		TRANGE, // ...
 		LAST_OP
 	    };	    
 

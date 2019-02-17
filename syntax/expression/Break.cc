@@ -33,5 +33,9 @@ namespace syntax {
 	stream.writefln ("%*<Break>", i, '\t');
 	this-> _value.treePrint (stream, i + 1);
     }
+
+    const Expression & Break::getValue () const {
+	return this-> _value;
+    }
     
 }

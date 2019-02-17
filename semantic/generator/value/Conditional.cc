@@ -16,7 +16,19 @@ namespace semantic {
 	    _test (test),
 	    _content (content),
 	    _else (else_)				    
-	{}
+	{
+	    if (!else_.isEmpty ()) {
+		this-> isBreaker (
+		    this-> _content.to <Value> ().isBreaker () &&
+		    this-> _else.to <Value> ().isBreaker ()
+		);
+		
+	    	this-> isReturner (
+		    this-> _content.to <Value> ().isBreaker () &&
+		    this-> _else.to <Value> ().isReturner ()
+		);
+	    }
+	}	
 	
 	Generator Conditional::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_) {
 	    return Generator {new Conditional (loc, type, test, content, else_)};

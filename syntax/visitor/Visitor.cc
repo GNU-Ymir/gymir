@@ -86,9 +86,15 @@ namespace syntax {
 	    Keys::MACRO, Keys::MOD, Keys::STRUCT,
 	    Keys::TRAIT, Keys::USE, Keys::MIXIN
 	};
+	
+	visit._declarationsBlock = {
+	    Keys::TYPE, Keys::ENUM,  Keys::DEF,
+	    Keys::IMPORT, Keys::STRUCT, Keys::TRAIT,
+	    Keys::USE, Keys::MIXIN
+	};
 
 	visit._intrisics = {
-	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF
+	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF, Keys::ALIAS
 	};
 	
 	visit._operand_op = {
@@ -717,7 +723,7 @@ namespace syntax {
 	auto value = visitOperand2 ();
 	auto location = this-> _lex.next ();
 	if (location == Token::LPAR || location == Token::LCRO) {
-	    auto params = visitParamList ();
+	    auto params = visitParamList (location == Token::LPAR);
 	    lexing::Word end;
 	    if (location == Token::LPAR) end = this-> _lex.next ({Token::RPAR});
 	    else end = this-> _lex.next ({Token::RCRO});
@@ -749,7 +755,9 @@ namespace syntax {
 	if (begin == Token::LCRO)   return visitArray ();
 	if (begin == Token::LACC)   return visitBlock ();
 	if (begin == Keys::IF)      return visitIf ();
+	if (begin == Keys::DO)      return visitDoWhile ();
 	if (begin == Keys::WHILE)   return visitWhile ();
+	if (begin == Keys::LOOP)    return visitWhile ();
 	if (begin == Keys::FOR)     return visitFor ();
 	if (begin == Keys::MATCH)   return visitMatch ();
 	if (begin == Keys::LET)     return visitVarDeclaration ();
@@ -813,7 +821,7 @@ namespace syntax {
 	    end = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
 	    if (end != Token::RACC && end != Token::SEMI_COLON) {
 		last = false;
-		if (this-> _lex.consumeIf (this-> _declarations).str != "") {
+		if (this-> _lex.consumeIf (this-> _declarationsBlock).str != "") {
 		    this-> _lex.rewind ();
 		    decls.push_back (visitDeclaration ());
 		} else 
@@ -842,10 +850,21 @@ namespace syntax {
     }
 
     Expression Visitor::visitWhile () {
-	auto location = this-> _lex.next ({Keys::WHILE});
-	return While::init (location, visitExpression (), visitExpression ());
+	auto location = this-> _lex.next ({Keys::WHILE, Keys::LOOP});
+	Expression test (Expression::empty ());
+	if (location != Keys::LOOP) test = visitExpression ();
+	auto content = visitExpression ();
+	return While::init (location, test, content);
     }
 
+    Expression Visitor::visitDoWhile () {
+	auto location = this-> _lex.next ({Keys::DO});
+	auto content = visitExpression ();
+	this-> _lex.next ({Keys::WHILE});
+	auto test = visitExpression ();
+	return While::init (location, test, content, true);
+    }
+    
     Expression Visitor::visitFor () {
 	std::vector <Expression> decls;
 	auto location = this-> _lex.next ({Keys::FOR});
@@ -986,11 +1005,23 @@ namespace syntax {
 	return Var::init (name);
     }       
 
-    std::vector <Expression> Visitor::visitParamList () {
+    std::vector <Expression> Visitor::visitParamList (bool withNamed) {
 	std::vector <Expression> params;
 	auto begin = this-> _lex.tell ();
 	TRY (
-	    params.push_back (visitExpression ());
+	    bool done = false;
+	    if (withNamed) {
+		auto lex = this-> _lex.consumeIf ({Token::INTEG});
+		if (lex == Token::INTEG) {
+		    done = true;
+		    auto name = visitIdentifier ();
+		    this-> _lex.next ({Token::EQUAL});
+		    auto inner = visitExpression ();
+		    params.push_back (NamedExpression::init (name, inner));
+		}
+	    }
+	    if (!done)
+		params.push_back (visitExpression ());
 	) CATCH (ErrorCode::EXTERNAL) {
 	    CLEAR_ERRORS ();
 	    this-> _lex.seek (begin);
@@ -999,7 +1030,20 @@ namespace syntax {
 
 	auto token = this-> _lex.next ();
 	while (token == Token::COMA) {
-	    params.push_back (visitExpression ());
+	    bool done = false;
+	    if (withNamed) {
+		auto lex = this-> _lex.consumeIf ({Token::INTEG});
+		if (lex == Token::INTEG) {
+		    done = true;
+		    auto name = visitIdentifier ();
+		    this-> _lex.next ({Token::EQUAL});
+		    auto inner = visitExpression ();
+		    params.push_back (NamedExpression::init (name, inner));
+		}
+	    }
+	    if (!done)
+		params.push_back (visitExpression ());
+
 	    token = this-> _lex.next ();
 	}
 	

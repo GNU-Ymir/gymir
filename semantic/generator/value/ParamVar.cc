@@ -9,15 +9,16 @@ namespace semantic {
 	    this-> isLocal (false);
 	}
 
-	ParamVar::ParamVar (const lexing::Word & location, const std::string & name, const Generator & type) :
-	    Value (location, name, type),
-	    _name (name)
+	ParamVar::ParamVar (const lexing::Word & location, const Generator & type, bool isMutable) :
+	    Value (location, type),
+	    _isMutable (isMutable)
 	{
 	    this-> isLocal (false);
+	    this-> isLvalue (isMutable);
 	}
 
-	Generator ParamVar::init (const lexing::Word & location, const std::string & name, const Generator & type) {
-	    return Generator {new (Z0) ParamVar (location, name, type)};
+	Generator ParamVar::init (const lexing::Word & location, const Generator & type, bool isMutable) {
+	    return Generator {new (Z0) ParamVar (location, type, isMutable)};
 	}
 
 	Generator ParamVar::clone () const {
@@ -38,5 +39,10 @@ namespace semantic {
 		    this-> getType ().equals (other.to<ParamVar> ().getType ());
 	}
 
+
+	bool ParamVar::isMutable () const {
+	    return this-> _isMutable;
+	}
+	
     }
 }

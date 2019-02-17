@@ -14,6 +14,8 @@ namespace semantic {
 	    Generator _type;
 
 	    Generator _content;
+
+	    bool _needFinalReturn;
 	    
 	private :
 
@@ -21,7 +23,7 @@ namespace semantic {
 	    
 	    Frame ();
 
-	    Frame (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content);
+	    Frame (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn);
 
 	public :
 
@@ -32,8 +34,9 @@ namespace semantic {
 	     * \param params the parameters of the frame
 	     * \param type the type of the frame
 	     * \param content the content to execute when calling this frame
+	     * \param needFinalReturn the frame needs to add a return statement at the end of the function ?
 	     */
-	    static Generator init (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content);
+	    static Generator init (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -64,6 +67,11 @@ namespace semantic {
 	     * \return the content of the frame
 	     */
 	    const Generator & getContent () const;
+
+	    /**
+	     * \return Does this function needs a final return at the end ?
+	     */
+	    bool needFinalReturn () const;
 	    
 	};
 	

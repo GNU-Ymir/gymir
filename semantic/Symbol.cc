@@ -31,8 +31,8 @@ namespace semantic {
 	return this-> getReferent ().get (name);
     }
 
-    const Symbol & ISymbol::getLocal (const std::string &) const {
-	return Symbol::__empty__;
+    std::vector <Symbol> ISymbol::getLocal (const std::string &) const {
+	return {};
     }    
 
     const Symbol& ISymbol::getReferent () const {
@@ -93,8 +93,8 @@ namespace semantic {
 	    this-> _value-> setReferent (ref);
     }
     
-    const Symbol & Symbol::getLocal (const std::string & name) const {
-	if (this-> _value == nullptr) return Symbol::__empty__;
+    std::vector <Symbol> Symbol::getLocal (const std::string & name) const {
+	if (this-> _value == nullptr) return {};
 	else return this-> _value-> getLocal (name);
     }
     

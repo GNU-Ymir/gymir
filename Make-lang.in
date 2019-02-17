@@ -28,126 +28,147 @@ YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++
 # The compiler proper
  
 ymir_OBJS = \
-	ymir/ymir1.o \
-	ymir/lexing_Word.o \
-	ymir/lexing_Token.o \
-	ymir/util_Range.o \
-	ymir/lexing_Lexer.o \
-	ymir/error_Error.o \
-	ymir/util_OutBuffer.o \
-	ymir/util_Colors.o	 \
-	ymir/error_ListError.o \
-	ymir/error_Exception.o \
-	ymir/util_StringEnum.o \
-	ymir/util_Memory.o \
-	ymir/parsing_Parser.o \
-	ymir/decl_Module.o \
-	ymir/syntax_Declaration.o \
-	ymir/syntax_Expression.o \
-	ymir/syntax_Decorator.o \
-	ymir/decl_Enum.o \
-	ymir/decl_ExternBlock.o \
-	ymir/decl_Block.o \
 	ymir/decl_Alias.o \
+	ymir/decl_Block.o \
+	ymir/decl_Class.o \
+	ymir/decl_Enum.o \
+	ymir/decl_ExpressionWrapper.o \
+	ymir/decl_ExternBlock.o \
 	ymir/decl_Function.o \
-	ymir/decl_Template.o \
-	ymir/decl_Mixin.o \
 	ymir/decl_Global.o \
 	ymir/decl_Import.o \
+	ymir/decl_Macro.o \
+	ymir/decl_Mixin.o \
+	ymir/decl_Module.o \
 	ymir/decl_Struct.o \
+	ymir/decl_Template.o \
 	ymir/decl_Trait.o \
 	ymir/decl_Use.o \
-	ymir/decl_Class.o \
-	ymir/decl_Macro.o \
-	ymir/decl_ExpressionWrapper.o \
-	ymir/expr_Assert.o \
-	ymir/expr_Break.o \
-	ymir/expr_Dollar.o \
-	ymir/expr_For.o \
-	ymir/expr_Return.o \
-	ymir/expr_Scope.o \
-	ymir/expr_Throw.o \
-	ymir/expr_VarDecl.o \
-	ymir/expr_While.o \
-	ymir/expr_MultOperator.o \
+	ymir/declarator_Visitor.o \
+	ymir/error_Error.o \
+	ymir/error_Exception.o \
+	ymir/error_ListError.o \
 	ymir/expr_ArrayAlloc.o \
+	ymir/expr_Assert.o \
 	ymir/expr_Binary.o \
 	ymir/expr_Block.o \
 	ymir/expr_Bool.o \
+	ymir/expr_Break.o \
 	ymir/expr_Cast.o \
 	ymir/expr_Char.o \
-	ymir/expr_List.o \
-	ymir/expr_Set.o \
-	ymir/expr_Intrinsics.o \
+	ymir/expr_DecoratedExpression.o \
+	ymir/expr_Dollar.o \
 	ymir/expr_Fixed.o \
 	ymir/expr_Float.o \
+	ymir/expr_For.o \
 	ymir/expr_FuncPtr.o \
 	ymir/expr_If.o \
 	ymir/expr_Ignore.o \
+	ymir/expr_Intrinsics.o \
 	ymir/expr_Is.o \
 	ymir/expr_Lambda.o \
+	ymir/expr_List.o \
 	ymir/expr_MacroCall.o \
 	ymir/expr_Match.o \
+	ymir/expr_MultOperator.o \
+	ymir/expr_NamedExpression.o \
 	ymir/expr_Null.o \
 	ymir/expr_OfVar.o \
-	ymir/expr_VariadicVar.o \
 	ymir/expr_Pragma.o \
+	ymir/expr_Return.o \
+	ymir/expr_Scope.o \
+	ymir/expr_Set.o \
 	ymir/expr_String.o \
-	ymir/syntax_Visitor.o \
-	ymir/syntax_Keys.o \
-	ymir/expr_Var.o \
-	ymir/expr_DecoratedExpression.o \
-	ymir/expr_Unary.o \
 	ymir/expr_Template.o \
+	ymir/expr_Throw.o \
+	ymir/expr_Unary.o \
+	ymir/expr_Unit.o \
+	ymir/expr_Var.o \
+	ymir/expr_VarDecl.o \
+	ymir/expr_VariadicVar.o \
+	ymir/expr_While.o \
+	ymir/generator_Affect.o \
+	ymir/generator_Aliaser.o \
+	ymir/generator_Array.o \
+	ymir/generator_ArrayAccess.o \
+	ymir/generator_ArrayValue.o \
+	ymir/generator_Binary.o \
+	ymir/generator_BinaryBool.o \
+	ymir/generator_BinaryFloat.o \
+	ymir/generator_BinaryInt.o \
+	ymir/generator_Block.o \
+	ymir/generator_Bool.o \
+	ymir/generator_BoolValue.o \
+	ymir/generator_Break.o \
+	ymir/generator_Call.o \
+	ymir/generator_Char.o \
+	ymir/generator_CharValue.o \
+	ymir/generator_Conditional.o \
+	ymir/generator_Copier.o \
+	ymir/generator_Fixed.o \
+	ymir/generator_Float.o \
+	ymir/generator_FloatValue.o \
+	ymir/generator_Frame.o \
+	ymir/generator_FrameProto.o \
+	ymir/generator_GlobalVar.o \
+	ymir/generator_Integer.o \
+	ymir/generator_Loop.o \
+	ymir/generator_MultSym.o \
+	ymir/generator_NamedGenerator.o \
+	ymir/generator_None.o \
+	ymir/generator_ParamVar.o \
+	ymir/generator_ProtoVar.o \
+	ymir/generator_Referencer.o \
+	ymir/generator_Set.o \
+	ymir/generator_Slice.o \
+	ymir/generator_SliceAccess.o \
+	ymir/generator_Tuple.o \
+	ymir/generator_TupleValue.o \
+	ymir/generator_Type.o \
+	ymir/generator_Unary.o \
+	ymir/generator_UnaryBool.o \
+	ymir/generator_UnaryFloat.o \
+	ymir/generator_UnaryInt.o \
+	ymir/generator_Value.o \
+	ymir/generator_VarDecl.o \
+	ymir/generator_VarRef.o \
+	ymir/generator_Visitor.o \
+	ymir/generator_Void.o \
+	ymir/generic_StmtList.o \
+	ymir/generic_Tree.o \
 	ymir/global_State.o \
-	ymir/semantic_Symbol.o \
-	ymir/semantic_Table.o \
-	ymir/semantic_Module.o \
-	ymir/declarator_Visitor.o \
-	ymir/semantic_Function.o \
-	ymir/util_Path.o \
-	ymir/semantic_Struct.o \
+	ymir/lexing_Lexer.o \
+	ymir/lexing_Token.o \
+	ymir/lexing_Word.o \
+	ymir/parsing_Parser.o \
 	ymir/semantic_Alias.o \
 	ymir/semantic_Class.o \
 	ymir/semantic_Enum.o \
-	ymir/semantic_VarDecl.o \
-	ymir/validator_Visitor.o \
-	ymir/validator_BinaryVisitor.o \
+	ymir/semantic_Function.o \
 	ymir/semantic_Generator.o \
-	ymir/generator_Type.o \
-	ymir/generator_Value.o \
-	ymir/generator_Integer.o \
-	ymir/generator_Void.o \
-	ymir/generator_Visitor.o \
-	ymir/generator_GlobalVar.o \
-	ymir/generic_Tree.o \
-	ymir/generic_StmtList.o \
-	ymir/generator_ParamVar.o \
-	ymir/generator_Frame.o \
-	ymir/generator_Block.o \
-	ymir/generator_Fixed.o \
-	ymir/generator_Binary.o \
-	ymir/generator_BinaryInt.o \
-	ymir/generator_VarRef.o \
-	ymir/generator_VarDecl.o \
-	ymir/generator_Set.o \
-	ymir/generator_Bool.o \
-	ymir/generator_BinaryBool.o \
-	ymir/generator_BoolValue.o \
-	ymir/generator_Float.o \
-	ymir/generator_Affect.o \
-	ymir/generator_FloatValue.o \
-	ymir/generator_BinaryFloat.o \
-	ymir/generator_Char.o \
-	ymir/generator_CharValue.o \
-	ymir/generator_Referencer.o \
-	ymir/generator_Conditional.o \
-	ymir/generator_Array.o \
-	ymir/generator_ArrayValue.o \
-	ymir/generator_Copier.o \
-	ymir/expr_Unit.o \
-	ymir/generator_None.o \
+	ymir/semantic_Module.o \
+	ymir/semantic_Struct.o \
+	ymir/semantic_Symbol.o \
+	ymir/semantic_Table.o \
+	ymir/semantic_VarDecl.o \
+	ymir/syntax_Declaration.o \
+	ymir/syntax_Decorator.o \
+	ymir/syntax_Expression.o \
+	ymir/syntax_Keys.o \
+	ymir/syntax_Visitor.o \
+	ymir/util_Colors.o	 \
+	ymir/util_Memory.o \
+	ymir/util_OutBuffer.o \
+	ymir/util_Path.o \
+	ymir/util_Range.o \
+	ymir/util_StringEnum.o \
+	ymir/validator_BinaryVisitor.o \
+	ymir/validator_BracketVisitor.o \
+	ymir/validator_CallVisitor.o \
 	ymir/validator_CompileTime.o \
+	ymir/validator_UnaryVisitor.o \
+	ymir/validator_Visitor.o \
+	ymir/ymir1.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

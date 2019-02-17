@@ -7,25 +7,24 @@ namespace semantic {
 
 	class ParamVar : public Value {	    
 
-	    std::string _name;
-
+	    bool _isMutable;
+	    
 	private :
 
 	    friend Generator;
 	    
 	    ParamVar ();
 
-	    ParamVar (const lexing::Word & location, const std::string & name, const Generator & type);
+	    ParamVar (const lexing::Word & location, const Generator & type, bool isMutable);
 
 	public :
 
 	    /**
 	     * \brief Create a param var 
 	     * \param location the location of the param var (for debug info)
-	     * \param name the name of the param var (unmangled, but with location information included)
 	     * \param type the type of the var
 	     */
-	    static Generator init (const lexing::Word & location, const std::string & name, const Generator & type);
+	    static Generator init (const lexing::Word & location, const Generator & type, bool isMutable);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -42,6 +41,10 @@ namespace semantic {
 	     */
 	    virtual bool equals (const Generator & other) const ;	    
 	    
+	    /**
+	     * \return has this var been declared mutable ?
+	     */
+	    bool isMutable () const;
 	    
 	};
 	

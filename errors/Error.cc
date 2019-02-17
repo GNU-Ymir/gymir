@@ -135,6 +135,100 @@ namespace Ymir {
 	    return buf.str ();
 	}
 
+	void addTwoLines (OutBuffer & buf, const Word & word, const Word & end) {
+	    auto locus = word.getLocus ();
+	    auto line = getLine (locus, word.getFile ().c_str ());
+	    if (line.length () > 0) {
+		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+		auto padd = center ("", leftLine.length (), ' ');
+		buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+				   Colors::get (BOLD),
+				   word.getFile ().c_str (),
+				   LOCATION_LINE (locus),
+				   LOCATION_COLUMN (locus),
+				   Colors::get (RESET),
+				   Colors::get (BOLD),
+				   padd,
+				   Colors::get (RESET)));
+
+		auto column = LOCATION_COLUMN (locus);
+		buf.write (format ("%% | %%%(y)%",
+				   Colors::get (BOLD), leftLine, Colors::get (RESET),
+				   line.substr (0, column - 1),
+				   substr (line, column - 1, column + word.length () - 1),
+				   substr (line, column + word.length () - 1, line.length ())
+		));
+
+		if (line [line.length () - 1] != '\n') buf.write ('\n');
+		buf.write (format ("%%...%", Colors::get (BOLD), padd, Colors::get (RESET)));
+		for (auto it = 0 ; it < column - 1 ; it++) {
+		    if (line [it] == '\t') buf.write ('\t');
+		    else buf.write (' ');
+		}
+		
+		buf.write (rightJustify ("", word.length (), '^'));
+		addLine (buf, end);
+	    } else addLineEof (buf, word);
+	}
+	
+	void addLine (OutBuffer & buf, const Word & word, const Word & end) {
+	    if (word.line != end.line) {
+		addTwoLines (buf, word, end);
+		return;
+	    }
+	    
+	    auto locus = word.getLocus (), locus2 = end.getLocus ();
+	    auto line = getLine (locus, word.getFile ().c_str ());
+	    if (line.length () > 0) {
+		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+		auto padd = center ("", leftLine.length (), ' ');
+		buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+				   Colors::get (BOLD),
+				   word.getFile ().c_str (),
+				   LOCATION_LINE (locus),
+				   LOCATION_COLUMN (locus),
+				   Colors::get (RESET),
+				   Colors::get (BOLD),
+				   padd,
+				   Colors::get (RESET)));
+
+
+		auto column = LOCATION_COLUMN (locus);
+		auto column2 = LOCATION_COLUMN (locus2);
+		buf.write (format ("%% | %%%(y)%%(y)%",
+				   Colors::get (BOLD), leftLine, Colors::get (RESET),
+				   line.substr (0, column - 1),
+				   substr (line, column - 1, column + word.length () - 1),
+				   substr (line, column + word.length () - 1, column2 - 1), 
+				   substr (line, column2 - 1, column2 + end.length () - 1),
+				   substr (line, column2 + end.length () - 1, line.length ())
+		));
+		
+		if (line [line.length () - 1] != '\n') buf.write ('\n');
+		buf.write (format ("%% | %", Colors::get (BOLD), padd, Colors::get (RESET)));
+		for (auto it = 0 ; it < column - 1 ; it++) {
+		    if (line [it] == '\t') buf.write ('\t');
+		    else buf.write (' ');
+		}
+	       		
+		buf.write (rightJustify ("", word.length (), '^'));
+		for (auto it = column + word.length () - 1 ; it < column2 - 1 ; it++) {
+		    if (line [it] == '\t') buf.write ('\t');
+		    else buf.write (' ');
+		}
+		
+		buf.write (rightJustify ("", end.length (), '^'));				
+		buf.write ('\n');
+	    } else addLineEof (buf, word);	    
+	}	
+	
+	std::string addLine (const std::string & msg, const lexing::Word & word, const lexing::Word & end) {
+	    OutBuffer buf;
+	    buf.write (msg);
+	    addLine (buf, word, end);
+	    return buf.str ();
+	}
+	
 	std::string createNote (const lexing::Word & word) {
 	    std::string aux = format ("%(b) : ", "Note");
 	    aux = addLine (aux, word);

@@ -11,6 +11,11 @@ namespace semantic {
 
 	    /** The id of the generator that will produce the declaration */
 	    uint _refId;
+
+	    /**
+	     * is it a reference to a mutable variable ?
+	     */
+	    bool _isMutable;
 	    
 	private :
 
@@ -18,7 +23,7 @@ namespace semantic {
 	    
 	    VarRef ();
 
-	    VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint refId);
+	    VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint refId, bool isMutable);
 
 	public :
 
@@ -29,7 +34,7 @@ namespace semantic {
 	     * \param type the type of the var
 	     * \param refId the id of the generator that will declare the var
 	     */
-	    static Generator init (const lexing::Word & locatio, const std::string & name, const Generator & type, uint refId);
+	    static Generator init (const lexing::Word & locatio, const std::string & name, const Generator & type, uint refId, bool isMutable);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -50,7 +55,12 @@ namespace semantic {
 	     * \return the id of the generator that will produce the var declaration
 	     */
 	    uint getRefId () const;
-	    	    
+
+	    /**
+	     * \return is i a reference to a mutable var ?
+	     */
+	    bool isMutable () const;	    
+
 	};
 	
     }

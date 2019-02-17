@@ -35,6 +35,7 @@ namespace semantic {
 	Generator BinaryVisitor::validateMathOperation (Binary::Operator op, const syntax::Binary & expression) {
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    auto right = this-> _context.validateValue (expression.getRight ());
+		
 	    return validateMathOperation (op, expression, left, right);
 	}
 	
@@ -64,8 +65,8 @@ namespace semantic {
 
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 					expression.getLocation ().str,
-					left.to <Value> ().getType ().to <Type> ().typeName (),
-					right.to <Value> ().getType ().to <Type> ().typeName ()
+					left.to <Value> ().getType ().to <Type> ().getTypeName (),
+					right.to <Value> ().getType ().to <Type> ().getTypeName ()
 		    );
 		    
 		) CATCH (ErrorCode::EXTERNAL) {		    
@@ -78,8 +79,8 @@ namespace semantic {
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().typeName (),
-				right.to <Value> ().getType ().to <Type> ().typeName ()
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
 	    
 	    return Generator::empty ();
@@ -97,14 +98,15 @@ namespace semantic {
 					    Integer::init (expression.getLocation (), max, leftType.isSigned ()),
 					    left, right
 		    );
+		    
 		}		
 	    }
 	    
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().typeName (),
-				right.to <Value> ().getType ().to <Type> ().typeName ()
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
 	    
 	    return Generator::empty ();
@@ -119,7 +121,7 @@ namespace semantic {
 		const Float & leftType = left.to <Value> ().getType ().to <Float> ();
 		const Float & rightType = right.to <Value> ().getType ().to <Float> ();
 		
-		auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();
+		auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();		
 		return BinaryFloat::init (expression.getLocation (),
 					  op,
 					  Float::init (expression.getLocation (), max),
@@ -131,8 +133,8 @@ namespace semantic {
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().typeName (),
-				right.to <Value> ().getType ().to <Type> ().typeName ()
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
 	    
 	    return Generator::empty ();
@@ -142,7 +144,7 @@ namespace semantic {
 	Generator BinaryVisitor::validateLogicalOperation (Binary::Operator op, const syntax::Binary & expression) {
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    auto right = this-> _context.validateValue (expression.getRight ());
-	    	    
+	    
 	    std::vector <std::string> errors;
 	    TRY (
 
@@ -172,8 +174,8 @@ namespace semantic {
 
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 					expression.getLocation ().str,
-					left.to <Value> ().getType ().to <Type> ().typeName (),
-					right.to <Value> ().getType ().to <Type> ().typeName ()
+					left.to <Value> ().getType ().to <Type> ().getTypeName (),
+					right.to <Value> ().getType ().to <Type> ().getTypeName ()
 		    );
 		    
 		) CATCH (ErrorCode::EXTERNAL) {		    
@@ -186,8 +188,8 @@ namespace semantic {
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().typeName (),
-				right.to <Value> ().getType ().to <Type> ().typeName ()
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
 	    
 	    return Generator::empty ();	    
@@ -202,7 +204,7 @@ namespace semantic {
 		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
 		const Integer & leftType = left.to <Value> ().getType ().to <Integer> ();
 		const Integer & rightType = right.to <Value> ().getType ().to <Integer> ();
-
+		
 		if (leftType.isSigned () == rightType.isSigned ()) {
 		    return BinaryInt::init (expression.getLocation (),
 					    op,
@@ -214,8 +216,8 @@ namespace semantic {
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().typeName (),
-				right.to <Value> ().getType ().to <Type> ().typeName ()
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
 	    
 	    return Generator::empty ();
@@ -238,8 +240,8 @@ namespace semantic {
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().typeName (),
-				right.to <Value> ().getType ().to <Type> ().typeName ()
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
 	    
 	    return Generator::empty ();
@@ -261,8 +263,8 @@ namespace semantic {
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().typeName (),
-				right.to <Value> ().getType ().to <Type> ().typeName ()
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
 	    
 	    return Generator::empty ();
@@ -283,9 +285,9 @@ namespace semantic {
 		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));	    
 
 	    if (left.to <Value> ().getType ().to <Type> ().isComplex ()) {
-		this-> _context.verifyMemoryOwner (left.to <Value> ().getType (), right);
+		this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);
 	    }
-
+	    
 	    if (left.to<Value> ().getType ().to <Type> ().isCompatible (right.to<Value> ().getType ()))
 		// TODO verification of the constancy or imutability of the left operand
 		
@@ -293,35 +295,12 @@ namespace semantic {
 	    else
 		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				    expression.getLocation ().str,
-				    left.to <Value> ().getType ().to <Type> ().typeName (),
-				    right.to <Value> ().getType ().to <Type> ().typeName ()
+				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
 		);
 
 	    return Generator::empty ();	    
 	}
-
-	// Generator BinaryVisitor::validateAffectationCopy (const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	//     if (!right.is <Referencer> () && !right.is <Copier> ()) {
-	// 	Ymir::Error::occur (expression.getLocation (), ExternalError::get (IMPLICIT_COPY),
-	// 			    right.to <Value> ().getType ().to <Type> ().typeName ());
-	//     }
-
-	//     auto & leftType = left.to <Value> ().getType ();
-	//     if (leftType.is<Array> () && leftType.to <Array> ().isStatic () && right.is<Referencer> ()) {
-	// 	Ymir::Error::occur (left.getLocation (), ExternalError::get (STATIC_ARRAY_REF));
-	//     }
-
-	//     if (left.to<Value> ().getType ().to <Type> ().isCompatible (right.to<Value> ().getType ()))		
-	// 	return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);
-	//     else
-	// 	Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-	// 			    expression.getLocation ().str,
-	// 			    left.to <Value> ().getType ().to <Type> ().typeName (),
-	// 			    right.to <Value> ().getType ().to <Type> ().typeName ()
-	// 	);
-
-	//     return Generator::empty ();	  
-	// }	
 	
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {
 	    string_match (loc.str) {
@@ -354,6 +333,8 @@ namespace semantic {
 		eq (Token::DIV, return Binary::Operator::DIV;);
 		eq (Token::PERCENT, return Binary::Operator::MODULO;);
 		eq (Token::DXOR, return Binary::Operator::EXP;);
+		eq (Token::DDOT, return Binary::Operator::RANGE;);
+		eq (Token::TDOT, return Binary::Operator::TRANGE;);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");

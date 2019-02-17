@@ -46,6 +46,10 @@ namespace syntax {
 	 */
 	bool isCopy () const;
 
+	/**
+	 * \return is it an alias ?
+	 */
+	bool isAlias () const;
 	
     };    
 

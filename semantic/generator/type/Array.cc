@@ -3,26 +3,23 @@
 
 namespace semantic {
     namespace generator {
-
-	std::string Array::NAME = "[";
 	
 	Array::Array () :
 	    Type (),
-	    _inner (Generator::empty ()),
-	    _size (false)
+	    _size ()
 	{
 	    this-> isComplex (true);
 	}
 
-	Array::Array (const lexing::Word & loc, const Generator & inner, int size) :
+	Array::Array (const lexing::Word & loc, const Generator & inner, uint size) :
 	    Type (loc, loc.str),
-	    _inner (inner),
 	    _size (size)
 	{
 	    this-> isComplex (true);
+	    this-> setInners ({inner});
 	}
 
-	Generator Array::init (const lexing::Word & loc, const Generator & inner, int size) {
+	Generator Array::init (const lexing::Word & loc, const Generator & inner, uint size) {
 	    return Generator {new (Z0) Array (loc, inner, size)};
 	}
 
@@ -40,28 +37,17 @@ namespace semantic {
 	bool Array::equals (const Generator & gen) const {
 	    if (!gen.is<Array> ()) return false;
 	    auto array = gen.to <Array> ();
-	    return this-> _inner.equals (array._inner) && this-> _size == array._size;
+	    return this-> getInners () [0].equals (array.getInners () [0]) && this-> _size == array._size;
 	}
 
 	std::string Array::typeName () const {
 	    Ymir::OutBuffer buf;
-	    if (this-> _size != -1) 
-		buf.write ("[", this-> _inner.to<Type> ().typeName (), " ; ", this-> _size, "]");
-	    else
-		buf.write ("[", this-> _inner.to <Type> ().typeName (), "]");	    
+	    buf.write ("[", this-> getInners () [0].to<Type> ().getTypeName (this-> isMutable ()), " ; ", (int) this-> _size, "]");
 	    return buf.str ();
 	}	
 
-	const Generator & Array::getInner () const {
-	    return this-> _inner;
-	}
-
-	int Array::size () const {
+	uint Array::getSize () const {
 	    return this-> _size;
-	}
-
-	bool Array::isStatic () const {
-	    return this-> _size != -1;
 	}
 	
     }

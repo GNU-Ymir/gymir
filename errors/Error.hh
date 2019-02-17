@@ -51,6 +51,15 @@ namespace Ymir {
 	*/
 	std::string addLine (const std::string&, const lexing::Word& word);
 
+	/** 
+	    \brief add the line information on the error
+	    \brief Only add underline information if the word string is equals to the line at the correct location
+	    \param the chain to which the line information is append
+	    \param word the location of the line	
+	    \return a new string, with line information
+	*/
+	std::string addLine (const std::string&, const lexing::Word& word, const lexing::Word & end);
+
 	/**
 	   \brief cause the compiler to abort due to internal error
 	   \param the message, can be NULL
@@ -64,6 +73,22 @@ namespace Ymir {
 	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 
+	template <typename ... TArgs>
+	void occur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc, end);
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	}
+
+
+	template <typename ... TArgs>
+	std::string makeOccur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc, end);
+	    return msg;
+	}
+
+	
 	template <typename ... TArgs>
 	std::string makeWarn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
 	    auto msg = format ("%(y) : " + content, "Warning", args...);

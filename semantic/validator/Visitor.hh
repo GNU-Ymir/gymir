@@ -32,10 +32,13 @@ namespace semantic {
 
 	    /** The list of generator produced by the search */
 	    std::vector <generator::Generator> _list;
-
-	    std::vector <std::set <std::string> > _usedSyms;
 	    
-	    std::vector <std::map <std::string, generator::Generator> > _symbols;
+	    /** The list of loop breaks types (when inside a loop) cf enterLoop and quitLoop */
+	    std::list <generator::Generator> _loopBreakTypes;
+	    
+	    std::vector <std::vector <std::set <std::string> > > _usedSyms;
+	    
+	    std::vector <std::vector <std::map <std::string, generator::Generator> > > _symbols;
 	    	    
 	private :
 
@@ -99,10 +102,27 @@ namespace semantic {
 	    generator::Generator validateTypeArrayAlloc (const syntax::ArrayAlloc & alloc);
 
 	    /**
+	     * \brief Validate a slice type from an array literal
+	     */
+	    generator::Generator validateTypeSlice (const syntax::List & array);
+	    
+	    /**
+	     * \brief Validate a tuple type from a tuple literal
+	     */
+	    generator::Generator validateTypeTuple (const syntax::List & tuple);	    
+	    
+	    /**
 	     * \brief validate an expression, that produce a value
+	     * \brief If the value is a breaker or a returner throw an error
 	     * \return a tree containing the result of the value
 	     */
 	    generator::Generator validateValue (const syntax::Expression & value);
+
+	    /**
+	     * \brief validate an expression, that produce a value
+	     * \return a tree containing the result of the value
+	     */
+	    generator::Generator validateValueNoReachable (const syntax::Expression & value);
 
 	    /**
 	     * \brief Validate a block of expression
@@ -139,9 +159,15 @@ namespace semantic {
 	    /**
 	     * \brief Validate a binary expression 
 	     * \brief This generation is a bit complex as it depends on the type of the operands
-	     * \brief All binary operations are handled into BinaryVisitor class
+	     * \brief All binary operations are handled by BinaryVisitor class
 	     */
 	    generator::Generator validateBinary (const syntax::Binary & bin);
+
+	    /**
+	     * \brief Validate a unary expression
+	     * \brief All unary operations are handled by UnaryVisitor class
+	     */
+	    generator::Generator validateUnary (const syntax::Unary & un);
 	    
 	    /**
 	     * \brief Validate a var 
@@ -151,6 +177,19 @@ namespace semantic {
 	     */
 	    generator::Generator validateVar (const syntax::Var & var);
 
+	    /**
+	     * \brief Transform global extern symbol into valid generators
+	     * \param loc the location of the reference to those symbols
+	     * \param multSym the list of symbols
+	     */
+	    generator::Generator validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym);
+
+	    /**
+	     * \brief Validate the prototype of a function in order to refer to it
+	     * \param func the function prototype to validate
+	     */
+	    generator::Generator validateFunctionProto (const semantic::Function & func);
+	    
 	    /**
 	     * \brief Validate a var declaration inside a block (or a frame)
 	     */
@@ -168,6 +207,18 @@ namespace semantic {
 	     */
 	    generator::Generator validateIfExpression (const syntax::If & _if);
 
+	    
+	    /**
+	     * \brief Validate a while expression 
+	     * \return as always a generator 
+	     */
+	    generator::Generator validateWhileExpression (const syntax::While & _wh);
+
+	    /**
+	     * \brief Validate a break expression
+	     */
+	    generator::Generator validateBreak (const syntax::Break & br);
+	    
 	    /**
 	     * \brief Validate a list, it could be either : 
 	     * \brief - an array
@@ -184,16 +235,36 @@ namespace semantic {
 	     * \brief - type informations ...
 	     */
 	    generator::Generator validateIntrinsics (const syntax::Intrinsics & intr);
-
+	    
 	    /**
 	     * \brief Validate the copy intrinsics
 	     */
 	    generator::Generator validateCopy (const syntax::Intrinsics & intr);
+
+	    /**
+	     * \brief Validate the alias intrinsics
+	     */
+	    generator::Generator validateAlias (const syntax::Intrinsics & intr);
+	    
+	    /**
+	     * \brief Validate a mult operator
+	     * \brief A mult operator is an operator with one left operand and multiple right operand
+	     * \brief It can be either :
+	     * \brief - Brackets
+	     * \brief - Parentheses
+	     */
+	    generator::Generator validateMultOperator (const syntax::MultOperator & mult);
+
 	    
 	    /**
 	     * \brief validate an array literal
 	     */
 	    generator::Generator validateArray (const syntax::List & list);
+
+	    /**
+	     * \brief validate an tuple literal
+	     */
+	    generator::Generator validateTuple (const syntax::List & list);
 	    
 	    
 	    /**
@@ -203,30 +274,89 @@ namespace semantic {
 
 	    /**
 	     * \brief this function is called each time a copy is performed
+	     * \param loc the location of the affectation
 	     * \param type the type result of the copy 
 	     * \param gen the generator that will produce the affectation 
+	     * \param construct is this a construction ? (ref are not affected yet)
 	     * \brief This function verify that the mutability of gen is preserved
 	     * \brief And that no implicit operation are performed
 	     */
-	    void verifyMemoryOwner (const generator::Generator & type, const generator::Generator & gen);
+	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct);
 	    
 	private :
 
+	    void enterForeign ();
+
+	    void exitForeign ();
+
+	    
+	    /**
+	     * \brief Insert a new Generator that has passed the semantic validation
+	     * \brief All the symbol passed here, will be transformed at generation time
+	     * \param generator the valid generator
+	     */
 	    void insertNewGenerator (const generator::Generator & generator);
 
+	    /**
+	     * \brief Enter a new scope
+	     */
 	    void enterBlock ();
 
+	    /**
+	     * \brief insert a new symbol in the frame local scope
+	     * \param name the name of the symbol
+	     * \param local the symbol 
+	     */
 	    void insertLocal (const std::string & name, const generator::Generator & local);
 
+	    /**
+	     * \brief Get a localy declared symbol
+	     * \param name the name of the symbol to get
+	     */
 	    const generator::Generator & getLocal (const std::string & name) ;
-	    
+
+	    /**
+	     * \brief Exit a scope
+	     */
 	    void quitBlock ();
+
+	    /** 
+	     * Enter a new breakable loop 
+	     */
+	    void enterLoop ();
+	    
+	    /** 
+	     * quit a breakable loop
+	     * \return the type of the inner breakers
+	     */
+	    generator::Generator quitLoop ();
+	    
+	    /**
+	     * \return the loop type
+	     */
+	    const generator::Generator & getCurrentLoopType () const;
+
+	    /**
+	     * \brief Change the type of the current loop
+	     */
+	    void setCurrentLoopType (const generator::Generator & type);
+
+	    /**
+	     * \return !this-> _loopBreakTypes.empty ()
+	     */
+	    bool isInLoop () const;
 	    
 	    /**
 	     * \brief execute the content of the generator in order to retreive the compile time value 
 	     */
 	    generator::Generator retreiveValue (const generator::Generator & gen);
 
+	    /**
+	     * \brief Retreive a globally declared symbol (outside of the frame, or inner declared but not local just private)
+	     * \param name the name of the symbol to retreive
+	     */
+	    std::vector <Symbol> getGlobal (const std::string & name);
+	    
 	};
 	       
     }

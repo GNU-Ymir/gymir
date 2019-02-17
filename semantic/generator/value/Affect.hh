@@ -55,7 +55,7 @@ namespace semantic {
 	     * \return the right operand of the operation
 	     */
 	    const Generator & getValue () const;
-
+	    
 	};
 	
     }

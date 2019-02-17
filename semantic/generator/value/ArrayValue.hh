@@ -1,14 +1,14 @@
 #pragma once
 
-#include <ymir/semantic/generator/value/Binary.hh>
+#include <ymir/semantic/generator/Value.hh>
 
 namespace semantic {
 
     namespace generator {
 
 	/**
-	 * \struct Binary 
-	 * Binary operations on ints
+	 * \struct ArrayValue
+	 * ArrayValue is an array literal
 	 */
 	class ArrayValue : public Value {
 

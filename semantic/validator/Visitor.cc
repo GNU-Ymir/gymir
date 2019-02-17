@@ -1,7 +1,10 @@
 #include <ymir/semantic/validator/Visitor.hh>
 #include <ymir/semantic/validator/BinaryVisitor.hh>
+#include <ymir/semantic/validator/BracketVisitor.hh>
+#include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/semantic/validator/CompileTime.hh>
 #include <ymir/syntax/visitor/Keys.hh>
+#include <ymir/semantic/validator/UnaryVisitor.hh>
 #include <string>
 #include <algorithm>
 
@@ -13,7 +16,9 @@ namespace semantic {
 	using namespace Ymir;       
 	
 	Visitor::Visitor ()
-	{}
+	{
+	    enterForeign ();
+	}
 
 	Visitor Visitor::init () {
 	    return Visitor ();
@@ -22,27 +27,33 @@ namespace semantic {
 	void Visitor::validate (const semantic::Symbol & sym) {	    
 	    match (sym) {
 		of (semantic::Module, mod, {
+			this-> _referent.push_back (sym);
 			validateModule (mod);
+			this-> _referent.pop_back ();
 			return;
 		    }
 		);
 
 		of (semantic::Function, func, {
+			this-> _referent.push_back (sym);
 			validateFunction (func);
+			this-> _referent.pop_back ();
 			return;
 		    }
 		);
 
 		of (semantic::VarDecl, decl, {
+			this-> _referent.push_back (sym);			
 			validateVarDecl (decl);
+			this-> _referent.pop_back ();
 			return;
 		    }
 		);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	}
-
+	}      
+	
 	void Visitor::validateModule (const semantic::Module & mod) {
 	    const std::vector <Symbol> & syms = mod.getAllLocal ();
 	    std::vector <Generator> ret;
@@ -55,38 +66,59 @@ namespace semantic {
 	void Visitor::validateFunction (const semantic::Function & func) {
 	    auto & function = func.getContent ();
 	    std::vector <Generator> params;
-
+	    
 	    enterBlock ();
 	    for (auto & param : function.getPrototype ().getParameters ()) {
 		auto var = param.to <syntax::VarDecl> ();
+		Generator type (Generator::empty ()), value (Generator::empty ());
 		if (!var.getType ().isEmpty ()) {
-		    auto type = validateType (var.getType ());
-
-		    for (auto & deco : var.getDecorators ()) {
-			switch (deco.getValue ()) {
-			case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
-			case syntax::Decorator::MUT : type.to <Type> ().isMutable (true); break;
-			default :
-			    Ymir::Error::occur (deco.getLocation (),
-						ExternalError::get (DECO_OUT_OF_CONTEXT),
-						deco.getLocation ().str
-			    );
-			}
-		    }
-			
-		    if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
-			Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
-					    ExternalError::get (MUTABLE_CONST_PARAM)
+		    type = validateType (var.getType ());
+		}
+		
+		if (!var.getValue ().isEmpty ()) {
+		    value = validateValue (var.getValue ());
+		    if (!type.isEmpty () && !type.equals (value.to <Value> ().getType ()))
+			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    type.to <Type> ().getTypeName (),
+					    value.to <Value> ().getType ().to<Type> ().getTypeName ()
 			);
+		    else {
+			type = value.to <Value> ().getType ();
+			type.to <Type> ().isMutable (false);
 		    }
-		    
-		    params.push_back (ParamVar::init (var.getName (), var.getName ().str, type));
-		    insertLocal (var.getName ().str, params.back ());
-		} else {
+		}
+		
+		if (type.isEmpty ()) {
 		    quitBlock ();
 		    return; // This function is uncomplete, we can't validate it
 		}
-	    }
+		
+		bool isMutable = false;
+		for (auto & deco : var.getDecorators ()) {
+		    switch (deco.getValue ()) {
+		    case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
+		    case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
+		    default :
+			Ymir::Error::occur (deco.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    deco.getLocation ().str
+			);
+		    }
+		}
+			
+		if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
+		    Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
+					ExternalError::get (MUTABLE_CONST_PARAM)
+		    );
+		}
+
+		if (!value.isEmpty ()) {		    
+		    verifyMemoryOwner (value.getLocation (), type, value, true);
+		}
+		
+		params.push_back (ParamVar::init (var.getName (), type, isMutable));
+		insertLocal (var.getName ().str, params.back ());
+	    }	    
 	    
 	    Generator retType (Generator::empty ());
 	    if (!function.getPrototype ().getType ().isEmpty ()) 
@@ -101,18 +133,21 @@ namespace semantic {
 		    Ymir::Error::halt ("%(r) - TODO contract", "Critical");
 		
 		auto body = validateValue (function.getBody ().getBody ());
-
+		bool needFinalReturn = false;
+		
 		if (!body.to<Value> ().isReturner ()) {
-		    verifyMemoryOwner (retType, body);
+		    verifyMemoryOwner (body.getLocation (), retType, body, true);
 		    
 		    if (retType.to <Type> ().isRef () && (!body.to <Value> ().getType ().to <Type> ().isRef () || !body.to <Value> ().isLocal ())) {
 			auto note = Ymir::Error::createNote (retType.getLocation (), ExternalError::get (BORROWED_HERE));
 			Ymir::Error::occurAndNote (body.getLocation (), note, ExternalError::get (RETURN_LOCAL_REFERENCE));
 		    }
+		    
+		    needFinalReturn = !retType.is<Void> ();
 		}
 		
 		quitBlock ();
-		insertNewGenerator (Frame::init (function.getName (), function.getName ().str, params, retType, body));
+		insertNewGenerator (Frame::init (function.getName (), function.getName ().str, params, retType, body, needFinalReturn));
 		
 	    } else quitBlock ();
 	}
@@ -126,7 +161,7 @@ namespace semantic {
 	    }
 
 	    if (!var.getValue ().isEmpty ()) {
-		value = validateValue (var.getValue ());
+		value = validateValue (var.getValue ());		
 	    }
 
 	    if (type.isEmpty () && value.isEmpty ()) {
@@ -134,15 +169,25 @@ namespace semantic {
 	    }
 
 	    if (!value.isEmpty () && !type.isEmpty ()) {
-		if (!type.equals (value.to<Value> ().getType ())) {
-		    Error::occur (var.getName (), ExternalError::get (INCOMPATIBLE_TYPES), type.to<Type> ().typeName (), value.to<Value> ().getType ().to<Type> ().typeName ());
+		if (!type.to <Type> ().isCompatible (value.to<Value> ().getType ())) {
+		    Error::occur (var.getName (), ExternalError::get (INCOMPATIBLE_TYPES), type.to<Type> ().getTypeName (), value.to<Value> ().getType ().to<Type> ().getTypeName ());
 		}
 	    }
 
 	    insertNewGenerator (GlobalVar::init (var.getName (), var.getName ().str, type, value));
 	}
 
-	Generator Visitor::validateValue (const syntax::Expression & value) {
+	Generator Visitor::validateValue (const syntax::Expression & expr) {
+	    auto value = validateValueNoReachable (expr);
+	    if (value.to <Value> ().isBreaker ())
+		Ymir::Error::occur (value.getLocation (), ExternalError::get (BREAK_INSIDE_EXPR));
+	    else if (value.to <Value> ().isReturner ())
+		Ymir::Error::occur (value.getLocation (), ExternalError::get (RETURN_INSIDE_EXPR));
+	    
+	    return value;
+	}
+	
+	Generator Visitor::validateValueNoReachable (const syntax::Expression & value) {
 	    match (value) {
 		of (syntax::Block, block,
 		    return validateBlock (block);
@@ -188,6 +233,14 @@ namespace semantic {
 		    return validateIfExpression (_if);
 		);
 
+		of (syntax::While, _while,
+		    return validateWhileExpression (_while);
+		);
+
+		of (syntax::Break, _break,
+		    return validateBreak (_break);
+		);
+
 		of (syntax::List, list,
 		    return validateList (list);
 		);
@@ -198,6 +251,19 @@ namespace semantic {
 
 		of (syntax::Unit, u,
 		    return None::init (u.getLocation ());
+		);
+
+		of (syntax::MultOperator, mult,
+		    return validateMultOperator (mult);
+		);
+
+		of (syntax::Unary, un,
+		    return validateUnary (un);
+		);
+
+		of (syntax::NamedExpression, named,
+		    auto inner = validateValue (named.getContent ());
+		    return NamedGenerator::init (named.getLocation (), inner);
 		);
 	    }
 
@@ -214,11 +280,11 @@ namespace semantic {
 	    std::vector <std::string> errors;
 	    for (int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
 		TRY (
-		    if (returner || breaker) {			
+		    if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
 			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
 		    }
 		    
-		    auto value = validateValue (block.getContent () [i]);
+		    auto value = validateValueNoReachable (block.getContent () [i]);
 		    
 		    if (value.to <Value> ().isReturner ()) returner = true;
 		    if (value.to <Value> ().isBreaker ()) breaker = true;
@@ -244,9 +310,11 @@ namespace semantic {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
 
-	    if (!type.is<Void> ()) verifyMemoryOwner (type, values.back());
-	    
-	    return Block::init (block.getLocation (), type, values);
+	    if (!type.is<Void> ()) verifyMemoryOwner (block.getEnd (), type, values.back(), false);	    
+	    auto ret = Block::init (block.getLocation (), type, values);
+	    ret.to <Value> ().isBreaker (breaker);
+	    ret.to <Value> ().isReturner (returner);
+	    return ret;
 	}	
 
 	Generator Visitor::validateSet (const syntax::Set & set) {
@@ -301,7 +369,7 @@ namespace semantic {
 		    }
 		    
 		    if (overflow || value > getMaxU (type))
-			Error::occur (loc, ExternalError::get (OVERFLOW), type.typeName ());
+			Error::occur (loc, ExternalError::get (OVERFLOW), type.getTypeName (), val);
 		    
 		    return value;
 		}
@@ -317,7 +385,7 @@ namespace semantic {
 		    }
 		    
 		    if (overflow || value > getMaxS (type))
-			Error::occur (loc, ExternalError::get (OVERFLOW), type.typeName ());
+			Error::occur (loc, ExternalError::get (OVERFLOW), type.getTypeName (), val);
 		    
 		    return value;
 		}
@@ -358,6 +426,7 @@ namespace semantic {
 	    if (fixed.getSuffix () == Keys::I64) type = Integer::init (fixed.getLocation (), 64, true);
 
 	    auto integer = type.to<Integer> ();
+	    type.to <Type> ().isMutable (true);
 	    Fixed::UI value;
 	    
 	    if (integer.isSigned ()) value.i = Anonymous::convertS (fixed.getLocation (), integer);
@@ -507,24 +576,113 @@ namespace semantic {
 	    auto binVisitor = BinaryVisitor::init (*this);
 	    return binVisitor.validate (bin);
 	}
+
+	Generator Visitor::validateUnary (const syntax::Unary & un) {
+	    auto unVisitor = UnaryVisitor::init (*this);
+	    return unVisitor.validate (un);
+	}
 	
 	Generator Visitor::validateVar (const syntax::Var & var) {
 	    auto & gen = getLocal (var.getName ().str);
 	    if (gen.isEmpty ()) {
-		Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().str);
+		auto sym = getGlobal (var.getName ().str);
+		if (sym.empty ()) 
+		    Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().str);
+		return validateMultSym (var.getLocation (), sym);
 	    }
 
 	    // The gen that we got can be either a param decl or a var decl
 	    if (gen.is <ParamVar> ()) {
-		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId ());
+		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId (), gen.to<ParamVar> ().isMutable ());
 	    } else if (gen.is <generator::VarDecl> ()) {
-		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<generator::VarDecl> ().getVarType (), gen.getUniqId ());		
+		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<generator::VarDecl> ().getVarType (), gen.getUniqId (), gen.to<generator::VarDecl> ().isMutable ());		
 	    } 
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
+	
+	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {
+	    std::vector <Generator> gens;
+	    for (auto & sym : multSym) {
+		match (sym) {
+		    of (semantic::Function, func, {
+			    gens.push_back (validateFunctionProto (func));
+			    continue;
+			}
+		    );
+		}
+		
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    }
 
+	    if (gens.size () == 1) return gens [0];
+	    else return MultSym::init (loc, gens);
+	}
+
+	Generator Visitor::validateFunctionProto (const semantic::Function & func) {
+	    std::vector <Generator> params;
+	    enterForeign ();
+	    auto & function = func.getContent ();
+	    for (auto & param : function.getPrototype ().getParameters ()) {
+		auto var = param.to <syntax::VarDecl> ();
+		Generator type (Generator::empty ()), value (Generator::empty ());
+		if (!var.getType ().isEmpty ()) {
+		    type = validateType (var.getType ());
+		}
+		
+		if (!var.getValue ().isEmpty ()) {
+		    value = validateValue (var.getValue ());
+		    if (!type.isEmpty () && !type.equals (value.to <Value> ().getType ()))
+			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    type.to <Type> ().getTypeName (),
+					    value.to <Value> ().getType ().to<Type> ().getTypeName ()
+			);
+		    else {
+			type = value.to <Value> ().getType ();
+			type.to <Type> ().isMutable (false);
+		    }
+		}
+		
+		if (type.isEmpty ()) {
+		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		}
+		
+		bool isMutable = false;
+		for (auto & deco : var.getDecorators ()) {
+		    switch (deco.getValue ()) {
+		    case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
+		    case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
+		    default :
+			Ymir::Error::occur (deco.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    deco.getLocation ().str
+			);
+		    }
+		}
+			
+		if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
+		    Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
+					ExternalError::get (MUTABLE_CONST_PARAM)
+		    );
+		}
+
+		if (!value.isEmpty ()) {		    
+		    verifyMemoryOwner (value.getLocation (), type, value, true);
+		}
+				    
+		params.push_back (ProtoVar::init (var.getName (), type, value, isMutable));		
+	    }	    
+
+	    Generator retType (Generator::empty ());
+	    if (!function.getPrototype ().getType ().isEmpty ())
+		retType = validateType (function.getPrototype ().getType ());
+	    else retType = Void::init (func.getName ());	    
+	    exitForeign ();
+	    
+	    return FrameProto::init (function.getName (), retType, params);
+	}
+	
 	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {
 	    auto & gen = getLocal (var.getName ().str);
 	    if (!gen.isEmpty ()) {
@@ -547,10 +705,11 @@ namespace semantic {
 		type.to<Type> ().isRef (false);
 	    }
 
+	    bool isMutable = false;
 	    for (auto & deco : var.getDecorators ()) {
 		switch (deco.getValue ()) {
 		case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
-		case syntax::Decorator::MUT : type.to <Type> ().isMutable (true); break;
+		case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
 		default :
 		    Ymir::Error::occur (deco.getLocation (),
 					ExternalError::get (DECO_OUT_OF_CONTEXT),
@@ -559,26 +718,19 @@ namespace semantic {
 		}
 	    }
 
+	    if (!isMutable) type.to <Type> ().isMutable (false);	    
+	    type.to <Type> ().isLocal (true);
 	    if (!value.isEmpty ()) {
-		verifyMemoryOwner (type, value);
-		if (type.to <Type> ().isRef () && !value.is <Referencer> ()) {
-		    if (value.to<Value> ().isLvalue ()) {
-			Ymir::Error::occur (value.getLocation (), ExternalError::get (IMPLICIT_REFERENCE),
-					    value.to <Value> ().getType ().to <Type> ().typeName ()
-			);
-		    } else {
-			Ymir::Error::occur (value.getLocation (), ExternalError::get (NOT_A_LVALUE));	    
-		    }
-		}
+		verifyMemoryOwner (value.getLocation (), type, value, true);
 	    }
 
 	    if (type.is<Void> ()) {
-		Ymir::Error::occur (type.getLocation (), ExternalError::get (VOID_VAR));
+		Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
 	    } else if (type.to <Type> ().isRef () && value.isEmpty ()) {
 		Ymir::Error::occur (var.getName (), ExternalError::get (REF_NO_VALUE), var.getName ().str);
-	    }
+	    } 
 	    
-	    auto ret = generator::VarDecl::init (var.getLocation (), var.getName ().str, type, value);
+	    auto ret = generator::VarDecl::init (var.getLocation (), var.getName ().str, type, value, isMutable);
 	    insertLocal (var.getName ().str, ret);
 	    return ret;
 	}
@@ -622,26 +774,87 @@ namespace semantic {
 		
 		if (!test.to<Value> ().getType ().is <Bool> ()) {
 		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					test.to <Value> ().getType ().to <Type> ().typeName (),
+					test.to <Value> ().getType ().to <Type> ().getTypeName (),
 					Bool::NAME
 		    );
 		}
 	    }
 
-	    auto content = validateValue (_if.getContent ());
+	    auto content = validateValueNoReachable (_if.getContent ());
 	    auto type = content.to <Value> ().getType ();
 
 	    if (!_if.getElsePart ().isEmpty ()) {
-		auto _else = validateValue (_if.getElsePart ());
+		auto _else = validateValueNoReachable (_if.getElsePart ());
 		if (!_else.to<Value> ().getType ().equals (type)) type = Void::init (_if.getLocation ());
 		return Conditional::init (_if.getLocation (), type, test, content, _else);	    
 	    } else
 		return Conditional::init (_if.getLocation (), Void::init (_if.getLocation ()), test, content, Generator::empty ());
 	}
 
+	Generator Visitor::validateWhileExpression (const syntax::While & _wh) {
+	    Generator test (Generator::empty ());
+	    if (!_wh.getTest ().isEmpty ()) {
+		test = validateValue (_wh.getTest ());
+		if (!test.to <Value> ().getType ().is <Bool> ()) {
+		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					test.to <Value> ().getType ().to <Type> ().getTypeName (),
+					Bool::NAME
+		    );
+		}
+	    }
+	    
+	    enterLoop ();
+	    auto content = validateValueNoReachable (_wh.getContent ());
+	    auto breakType = quitLoop ();
+	    Generator type (Generator::empty ());
+	    if (!test.isEmpty ()) {
+		type = content.to <Value> ().getType ();
+
+		if (!breakType.isEmpty () && !content.to <Value> ().isBreaker () && !type.equals (breakType)) {
+		    auto note = Ymir::Error::createNote (breakType.getLocation ());
+		    Ymir::Error::occurAndNote (content.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+					       type.to <Type> ().getTypeName (),
+					       breakType.to <Type> ().getTypeName ()
+		    );				    
+		} else if (content.to <Value> ().isBreaker ()) {
+		    type = breakType;
+		}
+	    } else {
+		if (breakType.isEmpty ()) type = Void::init (_wh.getLocation ());
+		else type = breakType;
+	    }
+
+	    return Loop::init (_wh.getLocation (), type, test, content, _wh.isDo ());	    
+	}	
+
+	Generator Visitor::validateBreak (const syntax::Break & _break) {
+	    if (!this-> isInLoop ())
+		Ymir::Error::occur (_break.getLocation (), ExternalError::get (BREAK_NO_LOOP));
+				    
+	    Generator value = Generator::empty ();
+	    Generator type = Generator::empty ();
+	    if (!_break.getValue ().isEmpty ()) {
+		value = validateValue (_break.getValue ());
+		type = value.to <Value> ().getType ();
+	    } else type = Void::init (_break.getLocation ());
+
+	    auto loop_type = getCurrentLoopType ();
+	    if (loop_type.isEmpty ()) setCurrentLoopType (type);
+	    else if (!loop_type.equals (type)) {
+		auto note = Ymir::Error::createNote (loop_type.getLocation ());
+		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+					   type.to <Type> ().getTypeName (),
+					   loop_type.to <Type> ().getTypeName ()
+		);				    
+	    }
+	    
+	    return Break::init (_break.getLocation (), Void::init (_break.getLocation ()), value);
+	}
+	
 	Generator Visitor::validateList (const syntax::List & list) {
 	    if (list.isArray ()) return validateArray (list);
-
+	    if (list.isTuple ()) return validateTuple (list);
+	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
@@ -649,48 +862,100 @@ namespace semantic {
 	Generator Visitor::validateArray (const syntax::List & list) {
 	    std::vector <Generator> params;
 	    for (auto it : list.getParameters ()) {
-		params.push_back (validateValue (it));		
-		// if (params.size () != 1 && !params.back ().to<Value> ().getType ().equals (params [0].to <Value> ().getType ())) {
-		//     auto note = Ymir::Error::createNote (list.getLocation ());
-		//     Ymir::Error::occurAndNote (params.back ().getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-		// 			       params.back ().to <Value> ().getType ().to <Type> ().typeName (),
-		// 			       params [0].to <Value> ().getType ().to <Type> ().typeName ()
-		//     );		   
-		// }
-		verifyMemoryOwner (params [0].to <Value> ().getType (), params.back ());
+		params.push_back (validateValue (it));
+		verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
 	    }
 
 	    Generator innerType (Void::init (list.getLocation ()));
 	    if (params.size () != 0)
-		innerType = params [0].to <Value> ().getType ();
-
+		innerType = params [0].to <Value> ().getType ();	    
+	    innerType.to <Type> ().isRef (false);
+	    
 	    // An array literal is always static
-	    auto type = Array::init (list.getLocation (), innerType, params.size ());	    
+	    auto type = Array::init (list.getLocation (), innerType, params.size ());
+	    type.to <Type> ().isMutable (true); // Array constant are mutable by default (not lvalue), to ease simple affectation
+	    type.to <Type> ().isLocal (true); // Array constant are declared in the stack, so they are local
 	    return ArrayValue::init (list.getLocation (), type, params);
 	}	
 
+	Generator Visitor::validateTuple (const syntax::List & list) {
+	    std::vector <Generator> params;
+	    std::vector <Generator> types;
+	    for (auto it : list.getParameters ()) {
+		params.push_back (validateValue (it));
+		auto type = params.back ().to <Value> ().getType ();
+		type.to <Type> ().isRef (false);
+		types.push_back (type);
+		verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+	    }
+	    
+	    auto type = Tuple::init (list.getLocation (), types);
+	    type.to <Type> ().isMutable (true); // Tuple are mutable by default (not lvalue)
+	    type.to <Type> ().isLocal (true); //
+	    return TupleValue::init (list.getLocation (), type, params);	    
+	}
+	
 	Generator Visitor::validateIntrinsics (const syntax::Intrinsics & intr) {
 	    if (intr.isCopy ()) return validateCopy (intr);
+	    if (intr.isAlias ()) return validateAlias (intr);
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
-
+       	
 	Generator Visitor::validateCopy (const syntax::Intrinsics & intr) {
 	    auto content = validateValue (intr.getContent ());
 
-	    if (content.to <Value> ().getType ().is <Array> ()) {
-		return Copier::init (intr.getLocation (), content.to <Value> ().getType (), content);
+	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {
+		auto type = content.to <Value> ().getType ().to <Type> ().toMutable ();
+		type.to<Type> ().isLocal (false);
+		
+		// The copy is done on the first level, so we don't have the right to change the mutability of inner data
+		return Copier::init (intr.getLocation (), type, content);
 	    } else {
 		Ymir::Error::occur (
 		    intr.getLocation (),
 		    ExternalError::get (NO_COPY_EXIST),
-		    content.to<Value> ().getType ().to <Type> ().typeName ()
+		    content.to<Value> ().getType ().to <Type> ().getTypeName ()
 		);
 		
 		return Generator::empty ();		
+	    }	    
+	}
+
+	Generator Visitor::validateAlias (const syntax::Intrinsics & intr) {
+	    auto content = validateValue (intr.getContent ());
+
+	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {
+		auto type = content.to <Value> ().getType ();
+		if (type.is <Array> ()) {
+		    type = Slice::init (intr.getLocation (), type.to<Array> ().getInners () [0]);
+		    type.to<Type> ().isMutable (content.to <Value> ().getType ().to <Type> ().isMutable ());
+		}
+		return Aliaser::init (intr.getLocation (), type, content);
+	    } else {
+		Ymir::Error::occur (
+		    intr.getLocation (),
+		    ExternalError::get (NO_ALIAS_EXIST),
+		    content.to <Value> ().getType ().to <Type> ().getTypeName ()
+		);
 	    }
-	}	
+	    
+	    return Generator::empty ();
+	}
+
+	Generator Visitor::validateMultOperator (const syntax::MultOperator & op) {
+	    if (op.getEnd () == Token::RCRO) {
+		auto bracketVisitor = BracketVisitor::init (*this);
+		return bracketVisitor.validate (op);
+	    } else if (op.getEnd () == Token::RPAR) {
+		auto callVisitor = CallVisitor::init (*this);
+		return callVisitor.validate (op);
+	    }
+
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Generator::empty ();
+	}
 	
 	Generator Visitor::validateType (const syntax::Expression & type) {
 	    match (type) {
@@ -706,6 +971,12 @@ namespace semantic {
 		    return validateTypeArrayAlloc (array);
 		);
 
+		of (syntax::List, list,
+		    if (list.isArray ())
+			return validateTypeSlice (list);
+		    if (list.isTuple ())
+			return validateTypeTuple (list);
+		);
 	    }
 	    
 	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
@@ -763,13 +1034,7 @@ namespace semantic {
 		    );		
 		}
 	    }
-
-	    if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
-		Ymir::Error::occur (expr.getDecorator (syntax::Decorator::MUT).getLocation (),
-				    ExternalError::get (MUTABLE_CONST_RETURN)
-		);
-	    }
-	    
+	    	   	    
 	    return type;
 	}
 
@@ -783,14 +1048,30 @@ namespace semantic {
 	    Generator value = retreiveValue (size);
 	    if (!value.is <Fixed> ()) {
 		Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-				    value.to <Value> ().getType ().to <Type> ().typeName (),
-				    (Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().typeName ()
+				    value.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    (Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().getTypeName ()
 		);
 	    }
 	    
 	    return Array::init (alloc.getLocation (), type, value.to <Fixed> ().getUI ().u);	    
 	}
+
+	Generator Visitor::validateTypeSlice (const syntax::List & list) {
+	    if (list.getParameters ().size () != 1)
+		Ymir::Error::occur (list.getLocation (), ExternalError::get (USE_AS_TYPE));
+
+	    auto type = validateType (list.getParameters () [0]);
+	    return Slice::init (list.getLocation (), type);	    
+	}
 	
+	Generator Visitor::validateTypeTuple (const syntax::List & list) {
+	    std::vector <Generator> inners;
+	    for (auto & it : list.getParameters ())
+		inners.push_back (validateType (it));
+
+	    return Tuple::init (list.getLocation (), inners);
+	}	
+
 	const std::vector <generator::Generator> & Visitor::getGenerators () const {
 	    return this-> _list;
 	}
@@ -798,42 +1079,74 @@ namespace semantic {
 	void Visitor::insertNewGenerator (const Generator & generator) {
 	    this-> _list.push_back (generator);
 	}
-
+	
 	void Visitor::enterBlock () {
-	    this-> _usedSyms.push_back ({});
-	    this-> _symbols.push_back ({});
+	    this-> _usedSyms.back ().push_back ({});
+	    this-> _symbols.back ().push_back ({});
 	}
-
+	
 	void Visitor::quitBlock () {
-	    if (this-> _symbols.empty ())
+	    if (this-> _symbols.back ().empty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 
 	    std::vector <std::string> errors;
-	    for (auto & sym : this-> _symbols.back ()) {
-		if (this-> _usedSyms.back ().find (sym.first) == this-> _usedSyms.back ().end ()) {
+	    for (auto & sym : this-> _symbols.back ().back ()) {
+		if (this-> _usedSyms.back ().back ().find (sym.first) == this-> _usedSyms.back ().back ().end ()) {
 		    errors.push_back (Error::makeWarn (sym.second.getLocation (), ExternalError::get (NEVER_USED), sym.second.getName ()));
 		}
 	    }
 
-	    this-> _usedSyms.pop_back ();
-	    this-> _symbols.pop_back ();
+	    this-> _usedSyms.back ().pop_back ();
+	    this-> _symbols.back ().pop_back ();
 
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
 	}
 
+	void Visitor::enterForeign () {
+	    this-> _usedSyms.push_back ({});
+	    this-> _symbols.push_back ({});
+	}
+
+	void Visitor::exitForeign () {
+	    this-> _usedSyms.pop_back ();
+	    this-> _symbols.pop_back ();
+	}
+	
+	void Visitor::enterLoop () {
+	    this-> _loopBreakTypes.push_back (Generator::empty ());	    
+	}
+
+	Generator Visitor::quitLoop () {
+	    auto last = this-> _loopBreakTypes.back ();
+	    this-> _loopBreakTypes.pop_back ();
+	    return last;
+	}
+
+	const Generator & Visitor::getCurrentLoopType () const {
+	    return this-> _loopBreakTypes.back ();
+	}
+
+	void Visitor::setCurrentLoopType (const Generator & type) {
+	    this-> _loopBreakTypes.back () = type;
+	}
+
+	bool Visitor::isInLoop () const {
+	    return !this-> _loopBreakTypes.empty ();
+	}
+	
 	void Visitor::insertLocal (const std::string & name, const Generator & gen) {
-	    if (this-> _symbols.empty ())
+	    if (this-> _symbols.back ().empty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    this-> _symbols.back ().emplace (name, gen);
+	    this-> _symbols.back ().back ().emplace (name, gen);
 	}       
 
 	const Generator & Visitor::getLocal (const std::string & name) {
-	    for (auto it : Ymir::r (0, this-> _symbols.size ())) {
-		auto ptr = this-> _symbols [it].find (name); 		    
-		if (ptr != this-> _symbols [it].end ()) {
-		    this-> _usedSyms [it].insert (name);
+	    for (auto it : Ymir::r (0, this-> _symbols.back ().size ())) {
+		auto ptr = this-> _symbols.back () [it].find (name); 		    
+		if (ptr != this-> _symbols.back () [it].end ()) {
+		    this-> _usedSyms.back () [it].insert (name);
 		    return ptr-> second;
 		}		
 	    }
@@ -841,27 +1154,81 @@ namespace semantic {
 	    return Generator::__empty__;
 	}
 
-	void Visitor::verifyMemoryOwner (const Generator & type, const Generator & gen) {
+	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
 	    if (!type.to <Type> ().isCompatible (gen.to <Value> ().getType ()))
-		Ymir::Error::occur (gen.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-				    type.to <Type> ().typeName (),
-				    gen.to <Value> ().getType ().to <Type> ().typeName ()
+		Ymir::Error::occur (loc, ExternalError::get (INCOMPATIBLE_TYPES),
+				    type.to <Type> ().getTypeName (),
+				    gen.to <Value> ().getType ().to <Type> ().getTypeName ()
 		);	    
 
-	    // We can asset that, a block, and an arrayvalue have already perform the copy, it is not mandatory for them to force it, as well as conditional
-	    if (type.to<Type> ().isComplex () && !(gen.is <Referencer> () || gen.is <Copier> () || gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> ())) {
-		Ymir::Error::occur (gen.getLocation (), ExternalError::get (IMPLICIT_COPY),
-				    gen.to <Value> ().getType ().to <Type> ().typeName ());
+
+	    if (!construct && gen.is<Referencer> ()) {
+		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
+	    } else {
+		if (type.to <Type> ().isRef ()) {
+		    if (!type.equals (gen.to<Value> ().getType ()))
+			Ymir::Error::occur (gen.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    type.to<Type> ().getTypeName (),
+					    gen.to <Value> ().getType ().to <Type> ().getTypeName ()
+			);
+		    		
+		    if (!gen.is<Referencer> ()) {
+			if (gen.to<Value> ().isLvalue ()) {
+			    Ymir::Error::occur (gen.getLocation (), ExternalError::get (IMPLICIT_REFERENCE),
+						gen.to<Value> ().getType ().to <Type> ().getTypeName ()
+			    );
+			} else {
+			    Ymir::Error::occur (gen.getLocation (), ExternalError::get (NOT_A_LVALUE));
+			}
+		    }
+		}
 	    }
 
-	    if (!type.to<Type> ().isRef () && type.is<Array> () && type.to <Array> ().isStatic () && gen.is <Referencer> ())
-		Ymir::Error::occur (gen.getLocation (), ExternalError::get (STATIC_ARRAY_REF));
+	    // Tuple copy is by default, as we cannot alias a tuple
+	    if (gen.to <Value> ().getType ().is <Tuple> ()) {
+		auto tu = gen.to<Value> ().getType ().to <Type> ().toMutable ();
+		auto llevel = type.to <Type> ().mutabilityLevel ();
+		auto rlevel = tu.to <Type> ().mutabilityLevel ();
+		if (llevel > rlevel) {
+		    Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
+					llevel, rlevel
+		    );
+		}
+	    } else {	    
+		// Verify copy ownership
+		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional
+		if (type.to<Type> ().isComplex () && !(gen.is <Copier> () || gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is <Aliaser> ())) {
+		    if (!(construct && gen.is<Referencer> () && type.to<Type> ().isRef ()))
+			Ymir::Error::occur (loc, ExternalError::get (IMPLICIT_COPY),
+					    gen.to <Value> ().getType ().to <Type> ().getTypeName ());
+		}
+
+		// Verify mutability
+		if (type.to<Type> ().isComplex ()) {
+		    auto llevel = type.to <Type> ().mutabilityLevel ();
+		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+		    if (llevel > rlevel) {
+			Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
+					    llevel, rlevel
+			);
+		    }
+		}
+	    }
+
+	    // TODO Verify locality
+	    // if (!type.to<Type> ().isLocal () && gen.to <Value> ().getType ().to <Type> ().isLocal ()) {
+	    // 	Ymir::Error::occur (loc, ExternalError::get (DISCARD_LOCALITY));				    
+	    // }
 	}
 
 
 	Generator Visitor::retreiveValue (const Generator & gen) {
 	    auto compile_time = CompileTime::init (*this);
 	    return compile_time.execute (gen);
+	}
+
+	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {
+	    return this-> _referent.back ().get (name);
 	}
 	
     }

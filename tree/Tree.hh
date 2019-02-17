@@ -99,9 +99,30 @@ namespace generic {
 	static Tree intType (int size, bool isSigned);
 
 	/**
+	 * \brief Create a size type
+	 * \brief The size (in bytes) of a size type depend on the target arch
+	 */
+	static Tree sizeType ();
+	
+	/**
 	 * \brief Create a pointer type
 	 */
 	static Tree pointerType (const Tree & inner);
+
+	/**
+	 * \brief Create a tuple type
+	 * \param attrs the name of the fields (if attrs < types, the fields name will be their index)
+	 * \param types the type of each field
+	 */
+	static Tree tupleType (const std::vector <std::string> & attrs, const std::vector <Tree> & types);
+
+	/**
+	 * \brief Create a tuple type
+	 * \param name the name of the tuple type
+	 * \param attrs the name of the fields (if attrs < types, the fields name will be their index)
+	 * \param types the type of each field
+	 */
+	static Tree tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types);
 	
 	/**
 	 * \brief Create a tree type of floating type
@@ -121,10 +142,11 @@ namespace generic {
 	static Tree staticArray (const Tree & inner, int size);
 
 	/**
-	 * \brief Create a dynamic array type
+	 * \brief A slice is a language native type, that's why this function exists
+	 * \brief but it will result the same if you call tupleType ({ulongType, pointerType (inner)});
 	 */
-	static Tree dynArray (const Tree & inner);
-	
+	static Tree sliceType (const Tree & inner);
+		
 	/**
 	 * \brief Create a new var declaration 
 	 * \param loc the location of the var, (frontend version)
@@ -176,7 +198,7 @@ namespace generic {
 	static Tree affect (const lexing::Word & location, const Tree & left, const Tree & right);
 
 	/**
-	 * \brief Create a binary expression
+	 * \brief Create a binary expression, (convert the operand in order to have the same type on each)
 	 * \param location the location of the operation
 	 * \param code the code of the operator
 	 * \param type the type of the operation
@@ -184,7 +206,22 @@ namespace generic {
 	 * \param right the right operand
 	 */
 	static Tree binary (const lexing::Word & location, tree_code code, const Tree & type, const Tree & left, const Tree & right);
-		
+
+	/**
+	 * \brief Create a binary expression without conversion
+	 * \param location the location of the operation
+	 * \param code the code of the operator
+	 * \param type the type of the operation
+	 * \param left the left operand
+	 * \param right the right operand
+	 */
+	static Tree binaryDirect (const lexing::Word & location, tree_code code, const Tree & type, const Tree & left, const Tree & right);
+
+	/**
+	 * \brief Build an unary expression
+	 */
+	static Tree unary (const lexing::Word & location, tree_code code, const Tree & type, const Tree & operand);
+	
 	/**
 	 * \brief Create a compound expression (we can see that as a list of expression -> left; right)
 	 */
@@ -194,6 +231,16 @@ namespace generic {
 	 * Create an array constructor 
 	 */
 	static Tree constructIndexed (const lexing::Word & loc, const Tree & type, const std::vector <Tree> & values);
+
+	/**
+	 * Create an array constructor with the same value at each index
+	 */
+	static Tree constructIndexed0 (const lexing::Word & loc, const Tree & type, const Tree & value, uint size);
+
+	/**
+	 * Create a constructor for tuple type
+	 */
+	static Tree constructField (const lexing::Word & loc, const Tree & type, const std::vector <std::string> & names, const std::vector <Tree> & values);
 	
 	/**
 	 * \brief Generate a conditional jump
@@ -223,12 +270,17 @@ namespace generic {
 	 * \brief Create a uint cst
 	 */
 	static Tree buildIntCst (const lexing::Word & loc, ulong value, const Tree & type);
-
+	
 	/**
 	 * \brief create a int cst
 	 */
 	static Tree buildIntCst (const lexing::Word & loc, long value, const Tree & type);
 
+	/**
+	 * \brief create a size cst
+	 */
+	static Tree buildSizeCst (ulong size);
+	
 	/**
 	 * \brief Create a float const
 	 * \param value the value is encoded in a string to prevent approximation
@@ -257,6 +309,25 @@ namespace generic {
 	 * \brief Build a function call
 	 */
 	static Tree buildCall (const lexing::Word & loc, const Tree & type, const Tree & fn, const std::vector <Tree> & params);
+	
+	/**
+	 * \brief Build a function call from a function name only
+	 */
+	static Tree buildCall (const lexing::Word & loc, const Tree & type, const std::string & fn, const std::vector <Tree> & params);
+
+	/**
+	 * \brief Build a function pointer to a frame
+	 */
+	static Tree buildFrameProto (const lexing::Word & loc, const Tree & type, const std::string & name, const std::vector <Tree> & args);
+	
+	/**
+	 * \brief Build an array ref
+	 * \param loc the location 
+	 * \param array the array to reference
+	 * \param index the index of the reference
+	 * \return an array type with the inner type of the array
+	 */
+	static Tree buildArrayRef (const lexing::Word & loc, const Tree & array, const Tree & index);
 	
 	/**
 	 * \brief Create a return stmt
@@ -487,7 +558,18 @@ namespace generic {
 	 * \return the size of the type, in number of byte
 	 */
 	uint getSize () const;
-	
+
+	/**
+	 * \brief Applicable to a type
+	 * \return the size of the array in number of element
+	 */
+	Tree getArraySize () const;
+
+	/**
+	 * \return true if this is a type and it is an array (static array only)
+	 */
+	bool isArrayType () const; 
+
 	/**
 	 * \return the i eme operand of this tree
 	 */
@@ -514,7 +596,11 @@ namespace generic {
 	 * \return create a pointer unref at index 
 	 */
 	Tree buildPointerUnref (int index) const;
-	
+
+	/**
+	 * \brief return the field on a tuple type
+	 */
+	Tree getField (const std::string & name) const ;
     };
    
     inline bool operator == (Tree t1, Tree t2) {

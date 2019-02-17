@@ -10,15 +10,16 @@ namespace semantic {
 	    _content (Generator::empty ())
 	{}
 	
-	Frame::Frame (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content) :
+	Frame::Frame (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn) :
 	    IGenerator (location, name),
 	    _params (params),
 	    _type (type),
-	    _content (content)
+	    _content (content),
+	    _needFinalReturn (needFinalReturn)	    
 	{}
 
-	Generator Frame::init (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content) {
-	    return Generator {new (Z0) Frame (location, name, params, type, content)};
+	Generator Frame::init (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn) {
+	    return Generator {new (Z0) Frame (location, name, params, type, content, needFinalReturn)};
 	}
 
 	Generator Frame::clone () const {
@@ -50,5 +51,9 @@ namespace semantic {
 		return other.getName () == this-> getName ();
 	}
 
+	bool Frame::needFinalReturn () const {
+	    return this-> _needFinalReturn;
+	}
+	
     }
 }

@@ -83,7 +83,7 @@ namespace semantic {
 	 * \brief This informations can be retreived inside the symbol
 	 * \param name the name of the symbol
 	 */
-	const Symbol & get (const std::string & name) const;
+	std::vector <Symbol> get (const std::string & name) const;
 
 	/**
 	 * \return the list of all declared symbol inside the table
@@ -119,7 +119,7 @@ namespace semantic {
 	/** 
 	 * Proxy function for ITable
 	 */
-	const Symbol & get (const std::string & name) const;
+	std::vector <Symbol>  get (const std::string & name) const;
 	
 	/**
 	 * \return the list of all symbols declared inside the table

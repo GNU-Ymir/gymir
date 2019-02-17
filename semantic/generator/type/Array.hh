@@ -5,15 +5,14 @@
 namespace semantic {
     namespace generator {
 
+	/**
+	 * \struct Array
+	 * An array type , this type is always static (we know the size at the compile time)
+	 * Dynamic arrays are defined by Slice
+	 */
 	class Array : public Type {
-
-	    Generator _inner;
 	    
-	    int _size;
-	    
-	public :
-	    
-	    static std::string NAME;
+	    uint _size;	   
 	    
 	private :	    
 	    
@@ -21,11 +20,11 @@ namespace semantic {
 
 	    Array ();	    
 
-	    Array (const lexing::Word & loc, const Generator & innerType, int size);
+	    Array (const lexing::Word & loc, const Generator & innerType, uint size);
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Generator & innerType, int size);
+	    static Generator init (const lexing::Word & loc, const Generator & innerType, uint size);
 
 	    Generator clone () const override;
 
@@ -40,22 +39,11 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;
 
 	    std::string typeName () const override;
-
-	    /**
-	     * \return the inner type of the array
-	     */
-	    const Generator & getInner () const;
-
+	    
 	    /**
 	     * \return is this a static array type ?
 	     */
-	    int size () const;
-
-	    /**
-	     * \return the array is static ?
-	     */
-	    bool isStatic () const;
-
+	    uint getSize () const;
 	    
 	};
        

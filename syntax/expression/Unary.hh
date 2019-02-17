@@ -33,6 +33,16 @@ namespace syntax {
 	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+	/**
+	 * \return the operator of the expression
+	 */
+	const lexing::Word & getOperator () const;
+	
+	/**
+	 * \return the content of the Unary
+	 */
+	const Expression & getContent () const;
 	
     };    
 

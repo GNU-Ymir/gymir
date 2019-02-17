@@ -7,14 +7,12 @@ namespace semantic {
     Function::Function () :
 	ISymbol (lexing::Word::eof ()),
 	_table (ITable::init (this)),
-	_overload (),
 	_content (syntax::Declaration::empty ())
     {}
 
     Function::Function (const lexing::Word & name, const syntax::Function & func) :
 	ISymbol (name),
 	_table (ITable::init (this)),
-	_overload (),
 	_content (syntax::Declaration {func.clone ()})
     {}
 
@@ -33,27 +31,18 @@ namespace semantic {
 	return ISymbol::isOf (type);
     }
 
-    const std::vector <Symbol> & Function::getOverloading () const {
-	return this-> _overload;
-    }
-    
-    void Function::setOverloading (const std::vector <Symbol> & overs) {
-	this-> _overload = overs;
-    }
-
     void Function::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }
 
     std::vector<Symbol> Function::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	const Symbol & local = this-> _table.get (name);
-	if (!local.isEmpty ())
-	    vec.push_back (local);
+	auto local = this-> _table.get (name);
+	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
 
-    const Symbol & Function::getLocal (const std::string & name) const {
+    std::vector <Symbol> Function::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }
     

@@ -11,7 +11,7 @@ namespace semantic {
 	/**
 	 * \struct BinaryVisitor
 	 * This visitor is used to validate any binary expression 
-	 * An binary expression is pretty complex and depends on the type 
+	 * A binary expression is pretty complex and depends on the type 
 	 * That's why a special visitor is used
 	 */
 	class BinaryVisitor {
@@ -138,6 +138,11 @@ namespace semantic {
 	     * \return is this operator a logic operator
 	     */
 	    bool isLogical (generator::Binary::Operator op);	    
+
+	    /**
+	     * \return is this operator a range operator
+	     */
+	    bool isRange (generator::Binary::Operator op);
 	    
 	};	
 	

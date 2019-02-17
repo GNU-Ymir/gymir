@@ -36,13 +36,12 @@ namespace semantic {
 
     std::vector <Symbol> Module::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	const Symbol & local = this-> _table.get (name);
-	if (!local.isEmpty ())
-	    vec.push_back (local);
+	auto local = this-> _table.get (name);
+	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
 
-    const Symbol & Module::getLocal (const std::string & name) const {
+    std::vector<Symbol> Module::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }
 

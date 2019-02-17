@@ -12,6 +12,8 @@ namespace semantic {
 	    Generator _type;
 
 	    Generator _value;
+
+	    bool _isMutable;
 	    
 	private :
 
@@ -19,7 +21,7 @@ namespace semantic {
 	    
 	    VarDecl ();
 
-	    VarDecl (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value);
+	    VarDecl (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value, bool isMutable);
 
 	public :
 
@@ -30,7 +32,7 @@ namespace semantic {
 	     * \param type the type of the var
 	     * \param refId the id of the generator that will declare the var
 	     */
-	    static Generator init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value);
+	    static Generator init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value, bool isMutable);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -58,6 +60,11 @@ namespace semantic {
 	     */
 	    const Generator & getVarValue () const;
 
+	    /**
+	     * \return has this var been declared mutable ?
+	     */
+	    bool isMutable () const;
+	    
 	};
        	
     }
