@@ -5,16 +5,22 @@ namespace semantic {
 
     Enum::Enum () :
 	ISymbol (lexing::Word::eof ()),
-	_table (ITable::init (this)),
+	_table (this),
 	_type (syntax::Expression::empty ())
     {}
 
     Enum::Enum (const lexing::Word & name, const syntax::Expression & type) :
 	ISymbol (name),
-	_table (ITable::init (this)),
+	_table (this),
 	_type (type)
     {}
 
+    Enum::Enum (const Enum & other) :
+	ISymbol (other),
+	_table (other._table.clone (this)),
+	_type (other._type)
+    {}
+    
     Symbol Enum::init (const lexing::Word & name, const syntax::Expression & type) {
 	return Symbol {new (Z0) Enum (name, type)};
     }
@@ -32,6 +38,10 @@ namespace semantic {
 
     void Enum::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
+    }
+
+    void Enum::replace (const Symbol & sym) {
+	this-> _table.replace (sym);
     }
 
     std::vector <Symbol> Enum::get (const std::string & name) const {
@@ -52,4 +62,12 @@ namespace semantic {
 	} else return false;
     }
 
+    std::string Enum::formatTree (int i) const {
+	Ymir::OutBuffer buf;
+	buf.writefln ("%*- %", i, "|\t", this-> getName ());
+	for (auto & it : this-> _table.getAll ()) {
+	    buf.write (it.formatTree (i + 1));
+	}
+	return buf.str ();
+    }
 }

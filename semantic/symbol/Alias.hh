@@ -30,7 +30,8 @@ namespace semantic {
 	bool equals (const Symbol & other) const override;
 
 	const syntax::Expression & getValue () const;
-	
+
+	std::string formatTree (int padd) const override;
     };
     
 }

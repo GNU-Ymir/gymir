@@ -114,6 +114,7 @@ ymir_OBJS = \
 	ymir/generator_Integer.o \
 	ymir/generator_Loop.o \
 	ymir/generator_Mangler.o \
+	ymir/generator_ModuleAccess.o \
 	ymir/generator_MultSym.o \
 	ymir/generator_NamedGenerator.o \
 	ymir/generator_None.o \
@@ -148,6 +149,7 @@ ymir_OBJS = \
 	ymir/semantic_Function.o \
 	ymir/semantic_Generator.o \
 	ymir/semantic_Module.o \
+	ymir/semantic_ModRef.o \
 	ymir/semantic_Struct.o \
 	ymir/semantic_Symbol.o \
 	ymir/semantic_Table.o \
@@ -169,6 +171,7 @@ ymir_OBJS = \
 	ymir/validator_CompileTime.o \
 	ymir/validator_UnaryVisitor.o \
 	ymir/validator_Visitor.o \
+	ymir/validator_SubVisitor.o \
 	ymir/ymir1.o \
 	$(END)	
 

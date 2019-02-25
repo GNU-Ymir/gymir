@@ -1,25 +1,23 @@
 #pragma once
 
 #include <ymir/semantic/generator/Value.hh>
+#include <ymir/semantic/symbol/ModRef.hh>
 
 namespace semantic {
 
     namespace generator {
-	class FrameProto : public Value {
 
-	    std::vector <Generator> _params;
-	    
-	    Generator _type;
+	class ModuleAccess : public Value {
 
-	    std::string _name;
+	    Symbol _ref;
 	    
 	private :
 
 	    friend Generator;
 	    
-	    FrameProto ();
+	    ModuleAccess ();
 
-	    FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params);
+	    ModuleAccess (const lexing::Word & loc, const Symbol & ref);
 
 	public :
 
@@ -27,7 +25,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params);
+	    static Generator init (const lexing::Word & loc, const Symbol & ref);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -47,18 +45,12 @@ namespace semantic {
 	    /**
 	     * \return the return type of the frame prototype
 	     */
-	    const Generator & getReturnType () const;
-		
-	    /**
-	     * \return the parameters of the frame
-	     */
-	    const std::vector<Generator> & getParameters () const;
+	    std::vector <Symbol> getLocal (const std::string & name) const;
 
 	    /**
-	     * \return the name of the frame associated with the prototype
+	     * \return the module reference that is accessed by this generator
 	     */
-	    const std::string & getName () const;
-
+	    const Symbol & getModRef () const;
 	};
 	
     }

@@ -23,6 +23,8 @@ namespace semantic {
 
 	Enum (const lexing::Word & name, const syntax::Expression & type);
 
+	Enum (const Enum & other);
+	
     public :
 
 	static Symbol init (const lexing::Word & name, const syntax::Expression & type);
@@ -33,11 +35,16 @@ namespace semantic {
 
 	void insert (const Symbol & sym) override;
 
+	void replace (const Symbol & sym) override;	
+
 	std::vector <Symbol> get (const std::string & name) const override;
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
 
 	bool equals (const Symbol & other) const override;
+
+	std::string formatTree (int padd) const override;
+	
     };
 
 }

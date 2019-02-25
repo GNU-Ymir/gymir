@@ -22,6 +22,8 @@ namespace semantic {
 
 	Class (const lexing::Word & name, const syntax::Expression & ancestor);
 
+	Class (const Class & other);
+	
     public :
 	
 	static Symbol init (const lexing::Word & name, const syntax::Expression & ancestor);
@@ -31,13 +33,16 @@ namespace semantic {
 	bool isOf (const ISymbol * type) const override;
 
 	void insert (const Symbol & sym) override;
-
+	
+	void replace (const Symbol & sym) override;	
+	
 	std::vector <Symbol> get (const std::string & name) const override;
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
 	
 	bool equals (const Symbol & other) const override;
 
+	std::string formatTree (int padd) const override;
 	
     };
     

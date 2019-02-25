@@ -53,6 +53,11 @@ namespace Ymir {
 	Path fileName () const;
 
 	/**
+	 * \return the list of file and directory composing the path
+	 */
+	std::vector <std::string> getFiles () const;
+	
+	/**
 	 * \brief Transform the path into a string
 	 * \param file_sep the string to use between files
 	 */

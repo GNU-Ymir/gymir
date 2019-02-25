@@ -5,6 +5,7 @@
 #include <ymir/semantic/validator/CompileTime.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/UnaryVisitor.hh>
+#include <ymir/semantic/validator/SubVisitor.hh>
 #include <string>
 #include <algorithm>
 
@@ -27,7 +28,7 @@ namespace semantic {
 	void Visitor::validate (const semantic::Symbol & sym) {	    
 	    match (sym) {
 		of (semantic::Module, mod, {
-			this-> _referent.push_back (sym);
+			this-> _referent.push_back (sym);			
 			validateModule (mod);
 			this-> _referent.pop_back ();
 			return;
@@ -49,17 +50,21 @@ namespace semantic {
 			return;
 		    }
 		);
+
+		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	}      
 	
 	void Visitor::validateModule (const semantic::Module & mod) {
-	    const std::vector <Symbol> & syms = mod.getAllLocal ();
-	    std::vector <Generator> ret;
+	    if (!mod.isExtern ()) {
+		const std::vector <Symbol> & syms = mod.getAllLocal ();
+		std::vector <Generator> ret;
 
-	    for (auto & it : syms) {
-		validate (it);
+		for (auto & it : syms) {
+		    validate (it);
+		}
 	    }
 	}
 
@@ -545,7 +550,7 @@ namespace semantic {
 		
 		static uint convert (const lexing::Word & loc, const lexing::Word & content, int size) {
 		    auto str = // escapeChar (loc, 
-					   content.str;
+			content.str;
 		    if (size == 32) {
 			std::vector <uint> utf_32 = utf8_to_utf32 (str);
 			if (utf_32.size () != 1) {		    
@@ -573,8 +578,13 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateBinary (const syntax::Binary & bin) {
-	    auto binVisitor = BinaryVisitor::init (*this);
-	    return binVisitor.validate (bin);
+	    if (bin.getLocation () == Token::DCOLON) {
+		auto subVisitor = SubVisitor::init (*this);
+		return subVisitor.validate (bin);
+	    } else {
+		auto binVisitor = BinaryVisitor::init (*this);
+		return binVisitor.validate (bin);
+	    }
 	}
 
 	Generator Visitor::validateUnary (const syntax::Unary & un) {
@@ -607,10 +617,19 @@ namespace semantic {
 	    for (auto & sym : multSym) {
 		match (sym) {
 		    of (semantic::Function, func, {
+			    this-> _referent.push_back (sym);
 			    gens.push_back (validateFunctionProto (func));
+			    this-> _referent.pop_back ();
 			    continue;
 			}
 		    );
+
+		    of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
+			    gens.push_back (ModuleAccess::init (loc, sym));
+			    continue;
+			}
+		    );
+
 		}
 		
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -621,66 +640,102 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateFunctionProto (const semantic::Function & func) {
-	    std::vector <Generator> params;
 	    enterForeign ();
+	    std::vector <Generator> params;
+	    static std::list <lexing::Word> __validating__; 
 	    auto & function = func.getContent ();
+	    std::vector <std::string> errors;
+	    bool no_value = false;
+	    for (auto func_loc : __validating__) {
+		// If there is a foward reference, we can't validate the values
+		if (func_loc.isSame (func.getName ())) no_value = true;		    
+	    }
+
+	    __validating__.push_back (func.getName ());
 	    for (auto & param : function.getPrototype ().getParameters ()) {
-		auto var = param.to <syntax::VarDecl> ();
-		Generator type (Generator::empty ()), value (Generator::empty ());
-		if (!var.getType ().isEmpty ()) {
-		    type = validateType (var.getType ());
-		}
-		
-		if (!var.getValue ().isEmpty ()) {
-		    value = validateValue (var.getValue ());
-		    if (!type.isEmpty () && !type.equals (value.to <Value> ().getType ()))
-			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					    type.to <Type> ().getTypeName (),
-					    value.to <Value> ().getType ().to<Type> ().getTypeName ()
-			);
-		    else {
-			type = value.to <Value> ().getType ();
-			type.to <Type> ().isMutable (false);
-		    }
-		}
-		
-		if (type.isEmpty ()) {
-		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-		}
-		
-		bool isMutable = false;
-		for (auto & deco : var.getDecorators ()) {
-		    switch (deco.getValue ()) {
-		    case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
-		    case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
-		    default :
-			Ymir::Error::occur (deco.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
-					    deco.getLocation ().str
-			);
-		    }
-		}
-			
-		if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
-		    Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
-					ExternalError::get (MUTABLE_CONST_PARAM)
-		    );
-		}
+		TRY (
+		    auto var = param.to <syntax::VarDecl> ();
+		    Generator type (Generator::empty ()); // C++ macros are a mystery to me.
+		    // You just can't declare two vars in a row !!
 
-		if (!value.isEmpty ()) {		    
-		    verifyMemoryOwner (value.getLocation (), type, value, true);
-		}
-				    
-		params.push_back (ProtoVar::init (var.getName (), type, value, isMutable));		
+		    Generator value (Generator::empty ());
+		    
+		    if (!var.getType ().isEmpty ()) {
+		    	type = validateType (var.getType ());
+		    }
+		    		
+		    if (!var.getValue ().isEmpty () && !no_value) {
+			value = validateValue (var.getValue ());
+			if (!type.isEmpty () && !type.equals (value.to <Value> ().getType ()))
+		    	    Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		    				type.to <Type> ().getTypeName (),
+		    				value.to <Value> ().getType ().to<Type> ().getTypeName ()
+		    	    );
+		    	else {
+		    	    type = value.to <Value> ().getType ();
+		    	    type.to <Type> ().isMutable (false);
+		    	}
+		    }
+
+		    if (var.getType ().isEmpty () && no_value && !var.getValue ().isEmpty ()) {
+			Ymir::Error::occur (var.getLocation (), ExternalError::get (FORWARD_REFERENCE_VAR));
+		    }		    
+		
+		    if (type.isEmpty ()) {
+			// TODO, create frame prototype for uncomplete functions
+		    	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		    }
+		
+		    bool isMutable = false;
+		    for (auto & deco : var.getDecorators ()) {
+		    	switch (deco.getValue ()) {
+		    	case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
+		    	case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
+		    	default :
+		    	    Ymir::Error::occur (deco.getLocation (),
+		    				ExternalError::get (DECO_OUT_OF_CONTEXT),
+		    				deco.getLocation ().str
+		    	    );
+		    	}
+		    }
+		
+		    if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
+		    	Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
+		    			    ExternalError::get (MUTABLE_CONST_PARAM)
+		    	);
+		    }
+		
+		    if (!value.isEmpty ()) {		    
+		    	verifyMemoryOwner (value.getLocation (), type, value, true);
+		    }
+		
+		    params.push_back (ProtoVar::init (var.getName (), type, value, isMutable));
+		    
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    errors.push_back (Ymir::Error::createNote (param.getLocation ()));
+		} FINALLY;
 	    }	    
-
-	    Generator retType (Generator::empty ());
-	    if (!function.getPrototype ().getType ().isEmpty ())
-		retType = validateType (function.getPrototype ().getType ());
-	    else retType = Void::init (func.getName ());	    
-	    exitForeign ();
 	    
-	    return FrameProto::init (function.getName (), func.getRealName (), retType, params);
+	    Generator retType (Generator::empty ());
+	    TRY (
+		if (!function.getPrototype ().getType ().isEmpty ())
+		    retType = validateType (function.getPrototype ().getType ());
+		else retType = Void::init (func.getName ());
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } FINALLY;
+
+	    __validating__.pop_back ();
+	    exitForeign ();
+
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);		
+	    }
+	    
+	    return FrameProto::init (function.getName (), func.getRealName (), retType, params);	    
 	}
 	
 	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {
@@ -1085,7 +1140,7 @@ namespace semantic {
 	    this-> _symbols.back ().push_back ({});
 	}
 	
-	void Visitor::quitBlock () {
+	void Visitor::quitBlock () {	    
 	    if (this-> _symbols.back ().empty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 

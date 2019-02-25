@@ -69,11 +69,21 @@ namespace syntax {
 	void setModule (const lexing::Word & name);
 
 	/**
+	 * \return the module to import
+	 */
+	const lexing::Word & getModule () const;
+	
+	/**
 	 * \brief Change the name of the import
 	 * \param name the rename name
 	 */
 	void setName (const lexing::Word & name);
-	
+
+	/**
+	 * \return the relative path of the module to import
+	 */
+	std::string getPath () const;
+
     };
     
 }

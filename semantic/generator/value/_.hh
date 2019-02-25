@@ -19,6 +19,7 @@
 #include <ymir/semantic/generator/value/FloatValue.hh>
 #include <ymir/semantic/generator/value/FrameProto.hh>
 #include <ymir/semantic/generator/value/Loop.hh>
+#include <ymir/semantic/generator/value/ModuleAccess.hh>
 #include <ymir/semantic/generator/value/MultSym.hh>
 #include <ymir/semantic/generator/value/NamedGenerator.hh>
 #include <ymir/semantic/generator/value/None.hh>

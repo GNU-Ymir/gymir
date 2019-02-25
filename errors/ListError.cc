@@ -48,6 +48,8 @@ namespace Ymir {
 			    UNDEFINED_CALL_OP		    = "call operator is not defined for type %(y) and {%(y)}",
 			    UNDEFINED_ESCAPE		    = "undefined escape sequence",
 			    UNDEFINED_UN_OP		    = "undefined operator %(y) for type %(y)",
+			    UNDEFINED_SUB_PART              = "undefined sub symbol %(y)",
+			    UNDEFINED_SUB_PART_FOR              = "undefined sub symbol %(y) for module %(y)",
 			    UNDEF_TYPE			    = "undefined type %(y)",
 			    UNDEF_VAR			    = "undefined symbol %(y)",
 			    UNREACHBLE_STATEMENT	    = "unreachable statement",
@@ -56,6 +58,7 @@ namespace Ymir {
 			    USE_AS_TYPE			    = "expression used as type",
 			    VAR_DECL_WITH_NOTHING	    = "var declaration must at least have a type or a value",
 			    VOID_VAR			    = "cannot declare var of type void",
-			    WRONG_MODULE_NAME		    = "module named %(y) must be placed in file named %(y)",
+			    WRONG_MODULE_NAME		    = "module named %(y) must be placed in file named %(y)",			    
+			    FORWARD_REFERENCE_VAR           = "the type cannot be infered, as it depends on a forward reference"
     );    
 }

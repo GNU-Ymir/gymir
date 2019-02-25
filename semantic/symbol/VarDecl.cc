@@ -45,5 +45,10 @@ namespace semantic {
     const syntax::Expression & VarDecl::getType () const {
 	return this-> _type;
     }
-    
+
+    std::string VarDecl::formatTree (int i) const {
+	Ymir::OutBuffer buf;
+	buf.writefln ("%*- %", i, "|\t", this-> getName ());
+	return buf.str ();
+    }
 }

@@ -4,24 +4,29 @@ namespace semantic {
 
     Class::Class () :
 	ISymbol (lexing::Word::eof ()), 
-	_table (ITable::init (this)),
+	_table (this),
 	_ancestor (syntax::Expression::empty ())
     {}
 
     Class::Class (const lexing::Word & name, const syntax::Expression & ancestor) :
 	ISymbol (name),
-	_table (ITable::init (this)),
+	_table (this),
 	_ancestor (ancestor)
     {}
 
+    Class::Class (const Class & other) :
+	ISymbol (other),
+	_table (other._table.clone (this)),
+	_ancestor (other._ancestor)
+    {}
+    
     Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor) {
 	return Symbol {new (Z0) Class (name, ancestor)};
     }
 
     Symbol Class::clone () const {
-	return Class::init (this-> getName (), this-> _ancestor);
+	return Symbol {new Class (*this)};
     }
-
     
     bool Class::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
@@ -32,6 +37,10 @@ namespace semantic {
 
     void Class::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
+    }
+    
+    void Class::replace (const Symbol & sym) {
+	this-> _table.replace (sym);
     }
 
     std::vector <Symbol> Class::get (const std::string & name) const {
@@ -51,5 +60,13 @@ namespace semantic {
 	    return this-> getReferent ().equals (other.getReferent ());
 	} else return false;
     }
-
+    
+    std::string Class::formatTree (int i) const {
+	Ymir::OutBuffer buf;
+	buf.writefln ("%*- %", i, "|\t", this-> getName ());
+	for (auto & it : this-> _table.getAll ()) {
+	    buf.write (it.formatTree (i + 1));
+	}
+	return buf.str ();
+    }
 }

@@ -61,8 +61,6 @@ namespace syntax {
 	    {Token::PLUS, Token::TILDE, Token::MINUS},
 	    {Token::STAR, Token::PERCENT, Token::DIV},
 	    {Token::DXOR},
-	    {Token::DOT},
-	    {Token::DCOLON}
 	};
 
 	visit._specialOperators = {
@@ -76,8 +74,6 @@ namespace syntax {
 	    {},
 	    {}, 
 	    {},
-	    {},
-	    {}
 	};
 
 	visit._declarations = {
@@ -728,11 +724,28 @@ namespace syntax {
 	    if (location == Token::LPAR) end = this-> _lex.next ({Token::RPAR});
 	    else end = this-> _lex.next ({Token::RCRO});
 	    return MultOperator::init (location, end, value, params);
-	} else this-> _lex.rewind ();
+	} this-> _lex.rewind ();
 	return value;
     }
 
     Expression Visitor::visitOperand2 () {
+	auto value = visitOperand3 ();
+	return visitOperand2 (value);
+    }
+
+    Expression Visitor::visitOperand2 (const Expression & value) {
+	auto next = this-> _lex.next ();
+	if (next == Token::DCOLON) {
+	    auto right = visitOperand3 ();
+	    return visitOperand2 (Binary::init (next, value, right, Expression::empty ()));
+	} else if (next == Token::DOT) {
+	    auto right = visitOperand3 ();
+	    return visitOperand2 (Binary::init (next, value, right, Expression::empty ()));
+	} this-> _lex.rewind ();
+	return value;
+    }
+    
+    Expression Visitor::visitOperand3 () {
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
 	if (begin == Token::LPAR) {
@@ -772,6 +785,7 @@ namespace syntax {
 	    auto loc = this-> _lex.next ();
 	    return Intrinsics::init (loc, visitExpression (10));
 	}
+	
 	if (begin.is (DecoratorWord::members ())) {
 	    return visitDecoratedExpression ();
 	}

@@ -67,6 +67,8 @@ namespace Ymir {
 			 UNDEFINED_CALL_OP,
 			 UNDEFINED_ESCAPE,
 			 UNDEFINED_UN_OP,
+			 UNDEFINED_SUB_PART,
+			 UNDEFINED_SUB_PART_FOR,
 			 UNDEF_TYPE,
 			 UNDEF_VAR,
 			 UNREACHBLE_STATEMENT,
@@ -76,6 +78,8 @@ namespace Ymir {
 			 VAR_DECL_WITH_NOTHING,
 			 VOID_VAR,
 			 WRONG_MODULE_NAME,
+			 MULTIPLE_IMPORT,
+			 FORWARD_REFERENCE_VAR
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

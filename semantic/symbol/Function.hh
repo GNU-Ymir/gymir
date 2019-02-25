@@ -36,6 +36,8 @@ namespace semantic {
 
 	Function (const lexing::Word & name, const syntax::Function & func);
 
+	Function (const Function & other);
+	
     public :
 
 	static Symbol init (const lexing::Word & name, const syntax::Function & func);
@@ -45,6 +47,8 @@ namespace semantic {
 	bool isOf (const ISymbol * type) const override;
 
 	void insert (const Symbol & sym) override;
+
+	void replace (const Symbol & sym) override;	
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
 	
@@ -59,6 +63,13 @@ namespace semantic {
 	void isSafe (bool is);
 	
 	const syntax::Function & getContent () const;
+
+	/**
+	 * \brief Override the space name, to avoid spacing the name of main function
+	 */
+	std::string getRealName () const override;
+
+	std::string formatTree (int padd) const override;
 	
     };    
 

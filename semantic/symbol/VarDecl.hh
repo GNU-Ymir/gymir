@@ -38,7 +38,8 @@ namespace semantic {
 	const syntax::Expression & getValue () const;
 	
 	const syntax::Expression & getType () const;
-	
+
+	std::string formatTree (int padd) const override;
     };
     
 }

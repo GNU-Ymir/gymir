@@ -1,27 +1,32 @@
-
 #include <ymir/semantic/symbol/Function.hh>
-
+#include <ymir/syntax/visitor/Keys.hh>
 
 namespace semantic {
 
     Function::Function () :
 	ISymbol (lexing::Word::eof ()),
-	_table (ITable::init (this)),
+	_table (this),
 	_content (syntax::Declaration::empty ())
     {}
 
     Function::Function (const lexing::Word & name, const syntax::Function & func) :
 	ISymbol (name),
-	_table (ITable::init (this)),
+	_table (this),
 	_content (syntax::Declaration {func.clone ()})
     {}
 
+    Function::Function (const Function & other) :
+	ISymbol (other),
+	_table (other._table.clone (this)), 
+	_content (other._content)
+    {}
+    
     Symbol Function::init (const lexing::Word & name, const syntax::Function & func) {
-	return Symbol {new (Z0) Function (name, func)};
+	return Symbol {new Function (name, func)};
     }
 
     Symbol Function::clone () const {
-	return Symbol {new (Z0) Function (*this)};
+	return Symbol {new Function (*this)};
     }
 
     bool Function::isOf (const ISymbol * type) const {
@@ -33,6 +38,10 @@ namespace semantic {
 
     void Function::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
+    }
+    
+    void Function::replace (const Symbol & sym) {
+	this-> _table.replace (sym);
     }
 
     std::vector<Symbol> Function::get (const std::string & name) const {
@@ -69,5 +78,18 @@ namespace semantic {
     const syntax::Function & Function::getContent () const {
 	return this-> _content.to <syntax::Function> ();
     }
+
+    std::string Function::getRealName () const {
+	if (this-> getName ().str == Keys::MAIN) return this-> getName ().str;
+	else return ISymbol::getRealName ();
+    }
     
+    std::string Function::formatTree (int i) const {
+	Ymir::OutBuffer buf;
+	buf.writefln ("%*- %", i, "|\t", this-> getName ());
+	for (auto & it : this-> _table.getAll ()) {
+	    buf.write (it.formatTree (i + 1));
+	}
+	return buf.str ();
+    }
 }

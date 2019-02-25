@@ -1,4 +1,5 @@
 #include <ymir/syntax/declaration/Import.hh>
+#include <ymir/utils/Path.hh>
 
 namespace syntax {
 
@@ -46,4 +47,13 @@ namespace syntax {
 	this-> _as = name;
     }
 
+    const lexing::Word & Import::getModule () const {
+	return this-> _module;
+    }
+    
+    std::string Import::getPath () const {
+	auto path = Ymir::Path {this-> _module.str, "::"};
+	return path.toString ();
+    }
+        
 }
