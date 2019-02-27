@@ -7,7 +7,7 @@ ymir: ymir1$(exeext)
  
 .PHONY: ymir
 
-GYC_INCLUDES = -I$(srcdir)/include -I$(srcdir)/ 
+GYC_INCLUDES = -I$(srcdir)/../include -I$(srcdir)/ -I$(srcdir)/gcc -I../gcc -I$(srcdir)/../libcpp/include
 
 CFLAGS-ymir/gycspec.o += $(DRIVER_DEFINES)
 
@@ -18,83 +18,158 @@ gyc$(exeext): $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a $(LIBDEPS)
 	+$(LINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GYC_INCLUDES) -o $@ \
 	  $(GYC_OBJS) $(EXTRA_GCC_OBJS) libcommon-target.a \
 	  $(EXTRA_GCC_LIBS) $(LIBS)
-		    
+
+
+YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_CXXFLAGS) -o $@
+YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo 
+YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
+YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++
+
 # The compiler proper
  
 ymir_OBJS = \
-	ymir/astExpression.o \
-	ymir/FixedInfo.o \
-	ymir/Token.o \
-	ymir/VoidInfo.o \
+	ymir/decl_Alias.o \
+	ymir/decl_Block.o \
+	ymir/decl_Class.o \
+	ymir/decl_Enum.o \
+	ymir/decl_ExpressionWrapper.o \
+	ymir/decl_ExternBlock.o \
+	ymir/decl_Function.o \
+	ymir/decl_Global.o \
+	ymir/decl_Import.o \
+	ymir/decl_Macro.o \
+	ymir/decl_Mixin.o \
+	ymir/decl_Module.o \
+	ymir/decl_Struct.o \
+	ymir/decl_Template.o \
+	ymir/decl_Trait.o \
+	ymir/decl_Use.o \
+	ymir/declarator_Visitor.o \
+	ymir/error_Error.o \
+	ymir/error_Exception.o \
+	ymir/error_ListError.o \
+	ymir/expr_ArrayAlloc.o \
+	ymir/expr_Assert.o \
+	ymir/expr_Binary.o \
+	ymir/expr_Block.o \
+	ymir/expr_Bool.o \
+	ymir/expr_Break.o \
+	ymir/expr_Cast.o \
+	ymir/expr_Char.o \
+	ymir/expr_DecoratedExpression.o \
+	ymir/expr_Dollar.o \
+	ymir/expr_Fixed.o \
+	ymir/expr_Float.o \
+	ymir/expr_For.o \
+	ymir/expr_FuncPtr.o \
+	ymir/expr_If.o \
+	ymir/expr_Ignore.o \
+	ymir/expr_Intrinsics.o \
+	ymir/expr_Is.o \
+	ymir/expr_Lambda.o \
+	ymir/expr_List.o \
+	ymir/expr_MacroCall.o \
+	ymir/expr_Match.o \
+	ymir/expr_MultOperator.o \
+	ymir/expr_NamedExpression.o \
+	ymir/expr_Null.o \
+	ymir/expr_OfVar.o \
+	ymir/expr_Pragma.o \
+	ymir/expr_Return.o \
+	ymir/expr_Scope.o \
+	ymir/expr_Set.o \
+	ymir/expr_String.o \
+	ymir/expr_Template.o \
+	ymir/expr_Throw.o \
+	ymir/expr_Unary.o \
+	ymir/expr_Unit.o \
+	ymir/expr_Var.o \
+	ymir/expr_VarDecl.o \
+	ymir/expr_VariadicVar.o \
+	ymir/expr_While.o \
+	ymir/generator_Affect.o \
+	ymir/generator_Aliaser.o \
+	ymir/generator_Array.o \
+	ymir/generator_ArrayAccess.o \
+	ymir/generator_ArrayValue.o \
+	ymir/generator_Binary.o \
+	ymir/generator_BinaryBool.o \
+	ymir/generator_BinaryFloat.o \
+	ymir/generator_BinaryInt.o \
+	ymir/generator_Block.o \
+	ymir/generator_Bool.o \
+	ymir/generator_BoolValue.o \
+	ymir/generator_Break.o \
+	ymir/generator_Call.o \
+	ymir/generator_Char.o \
+	ymir/generator_CharValue.o \
+	ymir/generator_Conditional.o \
+	ymir/generator_Copier.o \
+	ymir/generator_Fixed.o \
+	ymir/generator_Float.o \
+	ymir/generator_FloatValue.o \
+	ymir/generator_Frame.o \
+	ymir/generator_FrameProto.o \
+	ymir/generator_GlobalVar.o \
+	ymir/generator_Integer.o \
+	ymir/generator_Loop.o \
+	ymir/generator_Mangler.o \
+	ymir/generator_MultSym.o \
+	ymir/generator_NamedGenerator.o \
+	ymir/generator_None.o \
+	ymir/generator_ParamVar.o \
+	ymir/generator_ProtoVar.o \
+	ymir/generator_Referencer.o \
+	ymir/generator_Set.o \
+	ymir/generator_Slice.o \
+	ymir/generator_SliceAccess.o \
+	ymir/generator_Tuple.o \
+	ymir/generator_TupleValue.o \
+	ymir/generator_Type.o \
+	ymir/generator_Unary.o \
+	ymir/generator_UnaryBool.o \
+	ymir/generator_UnaryFloat.o \
+	ymir/generator_UnaryInt.o \
+	ymir/generator_Value.o \
+	ymir/generator_VarDecl.o \
+	ymir/generator_VarRef.o \
+	ymir/generator_Visitor.o \
+	ymir/generator_Void.o \
+	ymir/generic_StmtList.o \
+	ymir/generic_Tree.o \
+	ymir/global_State.o \
+	ymir/lexing_Lexer.o \
+	ymir/lexing_Token.o \
+	ymir/lexing_Word.o \
+	ymir/parsing_Parser.o \
+	ymir/semantic_Alias.o \
+	ymir/semantic_Class.o \
+	ymir/semantic_Enum.o \
+	ymir/semantic_Function.o \
+	ymir/semantic_Generator.o \
+	ymir/semantic_Module.o \
+	ymir/semantic_Struct.o \
+	ymir/semantic_Symbol.o \
+	ymir/semantic_Table.o \
+	ymir/semantic_VarDecl.o \
+	ymir/syntax_Declaration.o \
+	ymir/syntax_Decorator.o \
+	ymir/syntax_Expression.o \
+	ymir/syntax_Keys.o \
+	ymir/syntax_Visitor.o \
+	ymir/util_Colors.o	 \
+	ymir/util_Memory.o \
+	ymir/util_OutBuffer.o \
+	ymir/util_Path.o \
+	ymir/util_Range.o \
+	ymir/util_StringEnum.o \
+	ymir/validator_BinaryVisitor.o \
+	ymir/validator_BracketVisitor.o \
+	ymir/validator_CallVisitor.o \
+	ymir/validator_CompileTime.o \
+	ymir/validator_UnaryVisitor.o \
+	ymir/validator_Visitor.o \
 	ymir/ymir1.o \
-	ymir/UndefInfo.o \
-	ymir/ArrayInfo.o \
-	ymir/InfoType.o \
-	ymir/StringInfo.o \
-	ymir/CharInfo.o \
-	ymir/OutBuffer.o \
-	ymir/PureFrame.o \
-	ymir/Symbol.o \
-	ymir/astAux.o \
-	ymir/Scope.o \
-	ymir/RangeInfo.o \
-	ymir/PtrFuncInfo.o \
-	ymir/Visitor.o \
-	ymir/RefInfo.o \
-	ymir/NullInfo.o \
-	ymir/Lexer.o \
-	ymir/PtrInfo.o \
-	ymir/Module.o \
-	ymir/Frame.o \
-	ymir/FunctionInfo.o \
-	ymir/ExternFrame.o \
-	ymir/BoolInfo.o \
-	ymir/Range.o \
-	ymir/Word.o \
-	ymir/Error.o \
-	ymir/FloatInfo.o \
-	ymir/FrameProto.o \
-	ymir/Namespace.o \
-	ymir/FinalFrame.o \
-	ymir/astPrint.o \
-	ymir/astInstruction.o \
-	ymir/astDeclaration.o \
-	ymir/Table.o \
-	ymir/FrameTable.o \
-	ymir/EnumInfo.o \
-	ymir/Parser.o \
-	ymir/Creators.o \
-	ymir/FrameScope.o \
-	ymir/Mangler.o \
-	ymir/Keys.o \
-	ymir/Value.o \
-	ymir/Tree.o \
-	ymir/astGeneric.o \
-	ymir/Generic.o \
-	ymir/InternalFunction.o \
-	ymir/TupleInfo.o \
-	ymir/UnPureFrame.o \
-	ymir/IgnoreInfo.o \
-	ymir/TemplateSolver.o \
-	ymir/TemplateFrame.o \
-	ymir/astTemplate.o \
-	ymir/memory.o \
-	ymir/LambdaFrame.o \
-	ymir/StructInfo.o \
-	ymir/DestructSolver.o \
-	ymir/Options.o \
-	ymir/ModuleInfo.o \
-	ymir/MacroInfo.o \
-	ymir/MacroSolver.o \
-	ymir/AggregateInfo.o \
-	ymir/MethodFrame.o \
-	ymir/ConstructFrame.o \
-	ymir/DestructFrame.o \
-	ymir/TemplateMethFrame.o \
-	ymir/MethodInfo.o \
-	ymir/AliasInfo.o \
-	ymir/TraitInfo.o \
-	ymir/Runtime.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
@@ -151,3 +226,72 @@ ymir.stageprofile: stageprofile-start
 	-mv ymir/*$(objext) stageprofile/ymir
 ymir.stagefeedback: stagefeedback-start
 	-mv ymir/*$(objext) stagefeedback/ymir
+
+ymir/lexing_%.o: ymir/lexing/%.cc 
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/util_%.o: ymir/utils/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/error_%.o: ymir/errors/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/parsing_%.o: ymir/parsing/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/syntax_%.o: ymir/syntax/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/decl_%.o: ymir/syntax/declaration/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/expr_%.o: ymir/syntax/expression/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/syntax_%.o: ymir/syntax/visitor/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/global_%.o: ymir/global/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/semantic_%.o: ymir/semantic/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/semantic_%.o: ymir/semantic/symbol/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/declarator_%.o: ymir/semantic/declarator/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/validator_%.o: ymir/semantic/validator/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/generator_%.o: ymir/semantic/generator/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/generator_%.o: ymir/semantic/generator/type/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/generator_%.o: ymir/semantic/generator/value/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
+ymir/generic_%.o: ymir/tree/%.cc
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+

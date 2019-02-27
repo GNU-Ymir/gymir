@@ -1,0 +1,41 @@
+#include <ymir/syntax/expression/Lambda.hh>
+
+namespace syntax {
+
+    Lambda::Lambda () :
+	IExpression (lexing::Word::eof ()),
+	_proto (Function::Prototype::init ()),
+	_content (Expression::empty ())
+    {}
+    
+    Lambda::Lambda (const lexing::Word & loc) :
+	IExpression (loc),
+	_proto (Function::Prototype::init ()),
+	_content (Expression::empty ())
+    {}
+
+    Expression Lambda::init (const lexing::Word & location, const Function::Prototype & proto, const Expression & content) {
+	auto ret = new (Z0) Lambda (location);
+	ret-> _proto = proto;
+	ret-> _content = content;
+	return Expression {ret};
+    }
+
+    Expression Lambda::clone () const {
+	return Expression {new Lambda (*this)};
+    }
+
+    bool Lambda::isOf (const IExpression * type) const {
+	auto vtable = reinterpret_cast <const void* const *> (type) [0];
+	Lambda thisType; // That's why we cannot implement it for all class
+	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
+	return IExpression::isOf (type);
+    }
+
+    void Lambda::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<Lambda>", i, '\t');
+	this-> _proto.treePrint (stream, i + 1);
+	this-> _content.treePrint (stream, i + 1);
+    }
+    
+}

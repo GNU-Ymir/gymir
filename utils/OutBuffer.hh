@@ -1,7 +1,8 @@
 #pragma once
 
-#include <ymir/utils/memory.hh>
-#include <ymir/utils/Options.hh>
+#include <ymir/utils/Colors.hh>
+#include <ymir/utils/StringEnum.hh>
+#include <ymir/utils/Memory.hh>
 #include <string>
 #include <map>
 #include <ymir/utils/Range.hh>
@@ -9,23 +10,17 @@
 #include <set>
 #include <type_traits>
 
-namespace syntax {
-    class IExpression;
-    typedef IExpression* Expression;
-}
-
-struct Word;
-
-namespace semantic {
-    class IInfoType;
-    typedef IInfoType* InfoType;
-
-    struct Namespace;
-    
+namespace lexing {
+    struct Word;
 }
 
 namespace Ymir {
-    
+
+    /**
+     * \class OutBuffer
+     * This class is used to append string content     
+     * implemented in OutBuffer.cc
+     */
     class OutBuffer  {
     private :
 	
@@ -48,6 +43,12 @@ namespace Ymir {
 	void writef (const char * s, F f, T ... args) {
 	    mwritef (s, f, args...);
 	}
+
+	template <typename F, typename ... T>
+	void writefln (const char * s, F f, T ... args) {
+	    mwritef (s, f, args...);
+	    write ('\n');
+	}
 	
 	template <typename F, typename ... T>
 	void write (F f, T ... args) {
@@ -68,7 +69,6 @@ namespace Ymir {
 	    write ('\n');
 	}
 	
-
 	std::string str () {
 	    return std::string (current, len);
 	}
@@ -110,9 +110,22 @@ namespace Ymir {
 		    ++s ;
 		} else if (*s == '%') {
 		    s++;
-		    if (*(s + 1) == '*') {
+		    if (*s == '*') {
 			s++;
 			writeMult (s, f, args...);
+		    } else if (*s == '(') { // %(r)
+			auto color = *(s + 1);
+			s += 3; // (r)
+			switch (color) {
+			case 'r' : write (Colors::get (RED)); break;
+			case 'b' : write (Colors::get (BLUE)); break;
+			case 'y' : write (Colors::get (YELLOW)); break;
+			case 'g' : write (Colors::get (GREEN)); break;
+			case 'B' : write (Colors::get (BOLD)); break;
+			}
+			write (f);
+			write (Colors::get (RESET));
+			mwritef (s, args...);
 		    } else {			
 			write (f);
 			mwritef (s, args...);
@@ -158,19 +171,22 @@ namespace Ymir {
 	    }
 	    write ("}");
 	}
-	
-	void write_ (const Word& word);	
-	
-	void write_ (syntax::Expression expr);
 
-	void write_ (semantic::InfoType type);
-
-	void write_ (semantic::Namespace& space);
+	template <typename T>
+	void write_ (const T* elem) {
+	    if (elem == NULL) write ("null");
+	    else
+		write ("*(", *elem, ")");
+	}
 	
+	void write_ (const lexing::Word& word);	
+		
 	void write_ (const char * str);
 	
 	void write_ (const std::string&);
 
+	void write_ (uint);
+	
 	void write_ (int);
 	
 	void write_ (long);
@@ -208,10 +224,10 @@ void print (T ... args) {
 }
 
 
-namespace Ymir {
-    template <typename ... T>
-    void log (T ... args) {
-	if (Options::instance ().isVerbose ())
-	    println (args...);
-    }
-}
+// namespace Ymir {
+//     template <typename ... T>
+//     void log (T ... args) {
+// 	if (Options::instance ().isVerbose ())
+// 	    println (args...);
+//     }
+// }

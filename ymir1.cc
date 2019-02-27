@@ -14,11 +14,9 @@
 #include "langhooks.h"
 #include "langhooks-def.h"
 #include "common/common-target.h"
-#include <ymir/semantic/tree/Tree.hh>
-#include <ymir/utils/Options.hh>
-#include <ymir/utils/Version.hh>
-#include "Parser.hh"
-
+#include <ymir/generic/types.hh>
+#include <ymir/parsing/Parser.hh>
+#include <ymir/global/State.hh>
 
 /* Language-dependent contents of a type.  */
  
@@ -57,7 +55,8 @@ union GTY ((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE"),
  
 struct GTY (()) language_function
 {
-  int dummy;
+
+    int dummy;
 };
  
 /* Language hooks.  */
@@ -82,19 +81,7 @@ ymir_langhook_init (void)
 static void
 ymir_init_options (unsigned int argc, cl_decoded_option * decoded_options)
 {
-    Options::instance ().setExecutable (decoded_options [0].arg);
-    Ymir::log ("prefix : ", Options::instance ().prefixIncludeDir ());
-    for (unsigned int i = 0 ; i < argc ; i++) {
-	//const char * arg = decoded_options [i].arg;
-	switch (decoded_options [i].opt_index) {
-	case OPT_g :
-	case OPT_ggdb : Options::instance ().isDebug () = true; break;
-	case OPT_v : Options::instance ().isVerbose () = true; break;
-	case OPT_nostdinc : Options::instance ().isStandalone () = true; break;
-	case OPT_fdoc : Options::instance ().generateDocs () = true; break;
-	case OPT_fversion_ : Version::addVersion (decoded_options [i].arg); break;
-	}
-    }
+    // Options OPT_l and cie...
 }
 
 static void
@@ -128,20 +115,18 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 		   const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
 {
     opt_code code = (opt_code) scode;
-    if (code == OPT_I)
-	Options::instance ().addIncludeDir (arg);
-    else if (code == OPT_iprefix) {
-	Ymir::log ("Change prefix from : ", Options::instance ().prefixIncludeDir ());
-	Options::instance ().setPrefix (arg);
-	Ymir::log ("Change prefix : ", Options::instance ().prefixIncludeDir ());
+    if (code == OPT_I) {
+	// Add include dir
+    } else if (code == OPT_iprefix) {
+	// set prefix 
     } else if (code == OPT_v) {
-	Options::instance ().isVerbose () = true;
-    } else if (code == OPT_nostdinc) 
-	Options::instance ().isStandalone () = true;
-    else if (code == OPT_fdoc) {
-	Options::instance ().generateDocs () = true;	
+	// set verbose 
+    } else if (code == OPT_nostdinc)  {
+	// no std include 
+    } else if (code == OPT_fdoc) {
+	// dump documentation
     } else if (code == OPT_fversion_) {
-	Version::addVersion (arg);
+	global::State::instance ().activateVersion (arg);
     } else {
 	return false;
     }
@@ -152,7 +137,7 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 static void
 ymir_langhook_parse_file (void)
 {
-  ymir_parse_files (num_in_fnames, in_fnames);
+    ymir_parse_files (num_in_fnames, in_fnames);
 }
  
 static tree

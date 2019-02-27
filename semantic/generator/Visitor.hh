@@ -1,0 +1,307 @@
+#pragma once
+
+#include <ymir/tree/_.hh>
+#include <ymir/semantic/generator/_.hh>
+
+namespace semantic {
+
+    namespace generator {
+
+	/**
+	 * \struct Visitor
+	 * This last visitor is the final visitor
+	 * It will traverse all the generators produced by semantic analyses and translate them into gimple
+	 * This visitor is called at lint time (lint meaning intermediate language)
+	 * This part is the only part that is GCC dependent
+	 */
+	class Visitor {
+
+	    /** The list of var decl for each blocks */
+	    std::vector <generic::TreeChain> stackVarDeclChain;
+
+	    /** The list of block currently entered */
+	    std::vector <generic::BlockChain> stackBlockChain;	    	    
+
+	    /** The global context of the generation */
+	    generic::Tree _globalContext;
+
+	    /** The global context of the generation */
+	    generic::Tree _currentContext;
+
+	    /** The declaration of the local var for each frame */
+	    std::vector <std::map <uint, generic::Tree> > _declarators;
+
+	    std::list <generic::Tree> _loopLabels;
+
+	    std::list <generic::Tree> _loopVars;
+	    
+	private :
+
+	    Visitor ();
+
+	public :
+
+	    /**
+	     * Does nothing special
+	     * It is private for homogeneity reason
+	     * We wan't all class to be initialized the same way	     
+	     */
+	    static Visitor init () ;
+
+	    /**
+	     * Finalize the generation 
+	     * Declare the remaining symbol into GCC memory
+	     * (global declaration needs to be dones at the end ?)
+	     */
+	    void finalize ();	    
+	    
+	    /**
+	     * \brief Generate gimple tree from a generator
+	     * \brief Traverse all inner generator 
+	     */
+	    void generate (const Generator & gen);
+
+	    /**
+	     * \brief Generate a new symbol from a global var generator
+	     * \param var the variable to generate
+	     */
+	    void generateGlobalVar (const GlobalVar & var);
+
+	    /**
+	     * \brief Generate a new frame from a frame generator
+	     * \param frame the frame to generate
+	     */
+	    void generateFrame (const Frame & frame);
+	    
+	    /**
+	     * \brief Generate the declaration of a param var
+	     * \return the declaration
+	     */
+	    generic::Tree  generateParamVar (const ParamVar & var);
+
+	    /**
+	     * \brief Transform a type from generator to gimple
+	     */
+	    generic::Tree generateType (const Generator & gen);
+	    
+	    /**
+	     * \brief Generate the initial value of the type 
+	     * \param type the type that will give a initial value
+	     */
+	    generic::Tree generateInitValueForType (const Generator & type);	    
+	    
+	    /**
+	     * \brief Transform a value to gimple
+	     */
+	    generic::Tree generateValue (const Generator & gen);
+	    
+	    /**
+	     * \brief Transform a block into gimple
+	     */
+	    generic::Tree generateBlock (const Block & bl);
+
+	    /**
+	     * \brief Transform a block into gimple
+	     */
+	    generic::Tree generateSet (const Set & set);
+
+	    /**
+	     * \brief Transform a fixed value into gimple
+	     */
+	    generic::Tree generateFixed (const Fixed & fixed);
+
+	    /**
+	     * \brief Transform a fixed value into gimple
+	     */
+	    generic::Tree generateBool (const BoolValue & b);
+
+	    /**
+	     * \brief Transform a float value into gimple
+	     */
+	    generic::Tree generateFloat (const FloatValue & f);
+
+	    /**
+	     * \brief Transform a float value into gimple
+	     */
+	    generic::Tree generateChar (const CharValue & f);
+	    
+	    /**
+	     * \brief Transform an array value into gimple
+	     */
+	    generic::Tree generateArrayValue (const ArrayValue & arr);
+
+	    /**
+	     * \brief Transform a tuple value into gimple
+	     */
+	    generic::Tree generateTupleValue (const TupleValue & arr);
+
+	    /**
+	     * \brief Transform a frame proto into gimple
+	     */
+	    generic::Tree generateFrameProto (const FrameProto & proto);
+
+	    /**
+	     * \brief Transform a frame call into gimple
+	     */
+	    generic::Tree generateCall (const Call & cl);
+	    
+	    /**
+	     * \brief Transform an affectation into gimple
+	     */
+	    generic::Tree generateAffect (const Affect & aff);
+	    
+	    /**
+	     * \brief Transform a binary int generator into gimple
+	     */
+	    generic::Tree generateBinaryInt (const BinaryInt & bin);
+
+	    /**
+	     * \brief Transform a binary int generator into gimple
+	     */
+	    generic::Tree generateBinaryBool (const BinaryBool & bin);
+	    
+	    /**
+	     * \brief Transform a binary int generator into gimple
+	     */
+	    generic::Tree generateBinaryFloat (const BinaryFloat & bin);
+
+	    /**
+	     * \brief Transform a unary int generator into gimple
+	     */
+	    generic::Tree generateUnaryInt (const UnaryInt & un);
+	    
+	    /**
+	     * \brief Transform a unary float generator into gimple
+	     */
+	    generic::Tree generateUnaryFloat (const UnaryFloat & un);
+
+	    /**
+	     * \brief Transform a unary bool generator into gimple
+	     */
+	    generic::Tree generateUnaryBool (const UnaryBool & un);
+	    
+	    /**
+	     * \brief Transform a var ref into gimple
+	     */
+	    generic::Tree generateVarRef (const VarRef & var);
+
+	    /**
+	     * \brief Transform a var decl into gimple
+	     */
+	    generic::Tree generateVarDecl (const VarDecl & var);
+
+	    /**
+	     * \brief Transform a referencer into gimple
+	     */
+	    generic::Tree generateReferencer (const Referencer & ref);
+
+	    /**
+	     * \brief Transform a conditional expression into gimple
+	     */
+	    generic::Tree generateConditional (const Conditional & cond);
+
+	    /**
+	     * \brief Transform a loop expression into gimple 
+	     */
+	    generic::Tree generateLoop (const Loop & loop);
+	    
+	    /**
+	     * \brief Transform a break expression into gimple 
+	     */
+	    generic::Tree generateBreak (const Break & loop);
+	    
+	    /**
+	     * \brief Transform a copier into a gimple tree
+	     */
+	    generic::Tree generateCopier (const Copier & copy);
+
+	    /**
+	     * \brief Transform a copier into a gimple tree
+	     */
+	    generic::Tree generateAliaser (const Aliaser & als);
+
+	    /**
+	     * \brief Transform an array access into gimple
+	     */
+	    generic::Tree generateArrayAccess (const ArrayAccess & access);
+
+	    /**
+	     * \brief Transform an slice access into gimple
+	     */
+	    generic::Tree generateSliceAccess (const SliceAccess & access);
+	    
+	private :
+
+	    /**
+	     * Enter a new block 
+	     */
+	    void enterBlock () ;
+
+	    /** 
+	     * Quit the last block and return its symbol mapping 
+	    */
+	    generic::TreeSymbolMapping quitBlock (const lexing::Word & loc, const generic::Tree &);
+
+	    /**
+	     * \brief Enter a new loop
+	     * \param endLabel the label to jump in case of a break
+	     * \param var where to store the value in case of a break
+	     */
+	    void enterLoop (const generic::Tree & endLabel, const generic::Tree & var);
+
+	    /**
+	     * \brief Quit a loop (normally)
+	     */
+	    void quitLoop ();
+	    
+	    /**
+	     * Enter a new Frame
+	     */
+	    void enterFrame ();
+
+	    /**
+	     * Close the lastFrame 
+	     */
+	    void quitFrame ();
+
+	    /**
+	     * \return the tree reprensenting the global context of definition
+	     */
+	    const generic::Tree & getGlobalContext ();
+	    
+	    /**
+	     * \return the tree reprensenting the current context of definition
+	     */
+	    const generic::Tree & getCurrentContext () const;
+
+	    /**
+	     * \brief Change the current context for definition
+	     */
+	    void setCurrentContext (const generic::Tree & tr);
+
+	    /**
+	     * \brief Add a new vardecl for future var referencing 
+	     */
+	    void insertDeclarator (uint id, const generic::Tree & decl);
+
+	    /**
+	     * \brief Get a var declarator
+	     */
+	    generic::Tree getDeclarator (uint id);
+	    
+	    /**
+	     * \brief transform the value of value into type
+	     */
+	    generic::Tree castTo (const Generator & type, const Generator & value);
+
+	    /**
+	     * \brief Identifiy the type of the gen
+	     * \return its name
+	     */
+	    std::string identify (const Generator & gen);
+	    
+	};
+
+    }
+    
+}

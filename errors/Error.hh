@@ -5,486 +5,232 @@
 #include "coretypes.h"
 #include "input.h"
 #include "diagnostic.h"
-#include "../syntax/Word.hh"
+#include <ymir/lexing/Word.hh>
 #include <cmath>
 #include <ymir/utils/OutBuffer.hh>
-#include <setjmp.h>
-
-#define INCLUDE_STRING
-
-#define TRY if( !setjmp(Ymir::Error::ex_buf__) )
-#define CATCH else 
-#define THROW longjmp(Ymir::Error::ex_buf__, 1)
-
-namespace semantic {
-    class ISymbol;
-    typedef ISymbol* Symbol;
-
-    class IInfoType;
-    typedef IInfoType* InfoType;
-}
-
-namespace syntax {
-    class IParamList;
-    typedef IParamList* ParamList;
-
-    class IVar;
-    typedef IVar* Var;    
-}
+#include <ymir/errors/ListError.hh>
+#include <ymir/errors/Exception.hh>
 
 namespace Ymir {
-
-    enum Language {
-	FR,
-	EN
-    };
     
-    namespace Private {
-	enum ErrorType {
-	    NotATemplate = 1,
-	    NotATemplate2,
-	    TakeAType,
-	    SyntaxError,
-	    SyntaxErrorFor,
-	    SyntaxError2,
-	    EscapeChar,
-	    EndOfFile,
-	    Unterminated,
-	    TemplateSpecialisation,
-	    TemplateCreation,
-	    TemplateCreationWith,
-	    TemplateCreation2,
-	    MoreErrors,
-	    And,
-	    Here,
-	    RecursiveExpansion,
-	    RecursiveNoSize,
-	    RecursiveInline, 
-	    MultipleLoopName,
-	    ShadowingVar,
-	    ShadowingVar2,
-	    UnknownType,
-	    UndefVar,
-	    UndefVar2,
-	    UndefUda,
-	    UninitVar,
-	    UndefinedOp,
-	    ImplicitMemoryRef,
-	    UndefinedOpUnary,
-	    UndefinedOpMult,
-	    UseAsVar,
-	    UseAsType,
-	    UseAsTrait,
-	    IncompatibleTypes,
-	    BreakOutSide,
-	    BreakRefUndef,
-	    UndefinedAttr,
-	    TemplateInferType,
-	    TemplateInferTypeNote,
-	    ConstNoInit,
-	    StaticNoInit,
-	    RefNoInit,
-	    ImmutNoInit,
-	    NotLValue,
-	    NoValueNonVoid,
-	    ReturnVoid,
-	    UnreachableStmt,
-	    MissingReturn,
-	    ModuleDontExist,
-	    ImportError,
-	    PermissionDenied,
-	    NotImmutable,
-	    MainPrototype,
-	    MainPrototypeStand,
-	    MainInModule,
-	    ModuleNotFirst,
-	    ModuleDontMatch,
-	    AssertFailure,
-	    AssertFailure2,
-	    ScopeExitEnd,
-	    Overflow,
-	    OverflowArray,
-	    LabelingImmutableFor,
-	    NotAMacro,
-	    MacroResolution,
-	    NoLet,
-	    UnrefInSafe,
-	    ThrowInSafe,
-	    CallFuncPtrInSafe,
-	    OutOfRange,
-	    DynamicAccess,
-	    AllocationInSafe,
-	    CallUnsafeInSafe,
-	    LineInstruction,
-	    CannotBeVoid,
-	    AddrLocalVar,
-	    UnPureExternC,
-	    ImplicitModule,
-	    MultiDestr,
-	    MultiScopeFailure,
-	    MultiStaticInit,
-	    NeedAllType,
-	    StaticMethodInit,
-	    StaticMethodOver,
-	    CannotImpl,
-	    CannotOverride,
-	    AmbiguousAccess,
-	    MustCallSuper,
-	    ImplicitOverride,
-	    NoOverride,
-	    SelfAlwaysInfered,
-	    SelfAlwaysRef,
-	    AggMatchOnlyNamed,
-	    PrivateMemberWithinThisContext,
-	    OverTemplateMethod,
-	    OverTemplateMethodDuo,
-	    OverPrivateMethod,
-	    ClosureVarLifetime,
-	    UndefinedScopeEvent,
-	    VersionOnlyGlob,
-	    VariadicMustBeLast,
-	    AttrInHeirStatic,
-	    LAST_ERROR
-	};
-
-	const char * getString (ErrorType, Language ln = EN);
-    };
-
-    
-    std::string addLine (std::string, const Word& word);    
-    bool isVerbose ();
-    
+    /**
+       \brief format a string with simple system
+       \brief replace all the % token with the first parameter (recursivly)
+     */
     template <typename ... T> 
     std::string format (std::string left, T... params) {
 	OutBuffer buf;
 	buf.writef (left.c_str (), params...);
 	return buf.str ();
     }
-    
+
+    /** 
+       \brief format a string with simple system
+       \brief replace all the % token with the first parameter (recursivly)
+     */
     template <typename ... T> 
     std::string format (const char* left, T... params) {
 	OutBuffer buf;
 	buf.writef (left, params...);
 	return buf.str ();
     }
-      
-    struct ErrorMsg {
-	std::string msg;
-	bool isFatal;
-	bool isWarning;       	
-    };
     
-    struct Error {
+    /**
+     * \brief print the backtrace into stderr
+     */
+    void bt_print ();
 
-	static const char*	RESET;	//= "\u001B[0m";
-	static const char*	PURPLE;	//= "\u001B[1;35m";
-	static const char*	BLUE;	//= "\u001B[1;36m";
-	static const char*	YELLOW;	//= "\u001B[1;33m";
-	static const char*	RED;	//= "\u001B[1;31m";
-	static const char*	GREEN;	// = "\u001B[1;32m";
-	static const char*	BOLD;	// = "\u001B[1;50m";
+    namespace Error {
 	
-	static unsigned long nb_errors;// (0);
-	static jmp_buf ex_buf__;
-	
-	static void mainPrototype (const Word&);
+	/** 
+	    \brief add the line information on the error
+	    \brief Only add underline information if the word string is equals to the line at the correct location
+	    \param the chain to which the line information is append
+	    \param word the location of the line	
+	    \return a new string, with line information
+	*/
+	std::string addLine (const std::string&, const lexing::Word& word);
+
+	/** 
+	    \brief add the line information on the error
+	    \brief Only add underline information if the word string is equals to the line at the correct location
+	    \param the chain to which the line information is append
+	    \param word the location of the line	
+	    \return a new string, with line information
+	*/
+	std::string addLine (const std::string&, const lexing::Word& word, const lexing::Word & end);
+
+	/**
+	   \brief cause the compiler to abort due to internal error
+	   \param the message, can be NULL
+	*/
+	void halt (const char* format = NULL);
 
-	static void mainInModule (const Word&);
-
-	static void moduleNotFirst (const Word &);
-
-	static void moduleDontMatch (const Word &);
-
-	static void versionDeclarationGlob (const Word&);
-	
-	static void notATemplate (const Word&);
-
-	static void notATemplate (const Word&, std::vector <syntax::Expression>&, std::string);
-
-	static void notImmutable (const Word &, semantic::Symbol);
-
-	static void assertFailure (const Word &, const char* msg);
-
-	static void assertFailure (const Word &);
-	
-	static void takeATypeAsTemplate (const Word&);
-
-	static void unrefInSafe (const Word&);
-
-	static void throwInSafe (const Word&);
-		
-	static void callFuncPtrInSafe (const Word&);
-
-	static void returnLocalAddr (const Word&, const Word&);
-	
-	static void outOfRange (const Word&, ulong size, ulong index);
-
-	static void dynamicAccess (const Word&);
-
-	static void allocationInSafe (const Word&);
-
-	static void callUnsafeInSafe (const Word&);
-
-	static void unpureExternC (const Word&);
-	
-	static void syntaxError (const Word&);
-
-	static void syntaxErrorFor (const Word&, const Word&);
-
-	static void syntaxErrorFor (const Word&);
-
-	static void syntaxError (const Word&, const char*);
-
-	static void syntaxError (const Word&, const Word&);
-
-	static void escapeError (const Word&);
-
-	static void endOfFile (const Word&);
-
-	static void unterminated (const Word&);
-
-	static void overflow (const Word&, std::string);
-
-	static void overflowArray (const Word&, ulong index, ulong len);
-
-	static void templateSpecialisation (const Word&, const Word&);
-	
-	static void templateCreation (const Word&);
-
-	static void templateCreation (const Word&, std::string tmps);
-
-	static void templateCreation2 (const Word&, ulong nb);
-
-	static void moduleDontExist (const Word&, const Word&);
-
-	static void importError (const Word&);
-
-	static void permissionDenied (std::string&);
-	
-	static void recursiveExpansion (const Word&);
-
-	static void recursiveInlining (const Word&);
-
-	static void recursiveNoSize (const Word&);
-
-	static void unknownType (const Word&);
-
-	static void multipleLoopName (const Word&, const Word&);
-
-	static void shadowingVar (const Word&, const Word&);
-
-	static void shadowingVar (const Word&, const Word&, bool isPublic);
-
-	static void constNoInit (const Word&);
-
-	static void staticNoInit (const Word&);
-
-	static void refNoInit (const Word&);
-
-	static void immutNoInit (const Word&);
-	
-	static void labelingImmutableFor (const Word&);
-
-	static void notAMacro (const Word&);
-
-	static void macroResolution (const Word&);
-
-	static void notLValue (const Word&);
-
-	static void noLet (const Word&);
-	
-	static void undefVar (const Word&, semantic::Symbol);
-
-	static void undefAttr (const Word&, semantic::Symbol, syntax::Var);
-
-	static void undefUda (const Word&, const Word&);
-	
-	static void uninitVar (const Word&, const Word&);
-
-	static void implicitModule (const Word&);
-
-	static void undefinedScopeEvent (const Word&);
-
-	static void useAsVar (const Word&, semantic::Symbol);
-
-	static void useAsTrait (const Word&);
-
-	static void cannotBeVoid (const Word&);
-	
-	static void breakRefUndef (const Word&);
-
-	static void breakOutSide (const Word&);
-	
-	static void useAsType (const Word&);
-	
-	static void undefinedOp (const Word&, const Word&, semantic::Symbol, syntax::ParamList);
-
-	static void undefinedOp (const Word&, semantic::Symbol, syntax::ParamList);
-
-	static void undefinedOp (const Word&, semantic::Symbol, semantic::Symbol);
-
-	static void implicitMemoryRef (const Word&, semantic::Symbol);
-
-	static void undefinedOp (const Word&, semantic::Symbol, semantic::InfoType);
-	
-	static void undefinedOp (const Word&, semantic::Symbol);
-
-	static void incompatibleTypes (const Word&, semantic::Symbol, semantic::InfoType);
-
-	static void incompatibleTypes (const Word&, semantic::Symbol, std::string);
-
-	static void incompatibleTypes (const Word&, std::string, std::string);
-
-	static void templateInferType (const Word&, const Word&);
-
-	static void returnVoid (const Word&, semantic::Symbol);
-
-	static void missingReturn (const Word&, semantic::Symbol);
-
-	static void closureVarLifetime (const Word&, semantic::Symbol);
-
-	static void here (const Word&);
-	
-	static void unreachableStmt (const Word&);
-
-	static void scopeExitEnd (const Word&);
-	
-	static void unreachableStmtWarn (const Word&);
-
-	static void lineInstructionWarn (const Word&);
-	
-	static void noValueNonVoidFunction (const Word&);
-
-	static void multipleDestr (const Word &);
-	
-	static void multipleStaticInit (const Word &, const Word&);
-
-	static void needAllTypeConstr (const Word&);
-
-	static void staticMethodInit (const Word&);
-
-	static void staticMethodOver (const Word&);
-
-	static void cannotImpl (const Word&, semantic::InfoType);
-
-	static void cannotOverride (const Word&, semantic::InfoType);
-	
-	static void mustCallSuperConstructor (const Word&, semantic::InfoType);
-
-	static void implicitOverride (const Word&, const Word&);
-
-	static void overTemplateMethod (const Word&);
-	
-	static void overTemplateMethod (const Word&, const Word&);
-	
-	static void overPrivateMethod (const Word&, const Word&);
-
-	static void overPrivateMethod (const Word&);
-
-	static void noOverride (const Word&);
-
-	static void variadicMustBeLast (const Word&);
-
-	static void attributeInHeirStatic (const Word&);
-	
-	static void selfAlwaysInfered (const Word&);
-
-	static void selfAlwaysRef (const Word&);
-	
-	static void privateMemberWithinThisContext (const std::string & str, const Word&);
-
-	static void aggMatchOnlyNamed (const Word&);
-	
-	static void ambiguousAccess (const Word&, const Word&, semantic::InfoType);
-	
-	static void activeError (bool);	
-		
-	static std::vector <ErrorMsg>& caught ();
-
-	static void assert (const char* format);
-	
 	template <typename ... TArgs>
-	static void assert (const char * format_, TArgs ... args) {
-	    return __instance__.assert_ (format_, args...);
+	void occur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc);
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 
 	template <typename ... TArgs>
-	static void fail (const char * format_, TArgs ... args) {	    
-	    //fatal_error (UNKNOWN_LOCATION, format_, args...);
-	    fprintf (stderr, format_, args...);
-	    THROW;
+	void occur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc, end);
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	}
+
+
+	template <typename ... TArgs>
+	std::string makeOccur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc, end);
+	    return msg;
+	}
+
+	
+	template <typename ... TArgs>
+	std::string makeWarn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);
+	    msg = addLine (msg, loc);
+	    return msg;
+	}
+
+	/**
+	 * \brief Throw a warning error
+	 * \brief A program needs to compile with no warning and no error at all
+	 * \brief Warning means the compilation could have continue, but we don't wan't to, to force the user to have a well formed program
+	 * \param loc the location of the warning
+	 * \param content the content text of the warning
+	 * \param args the format arguments
+	 * \throw ErrorCode::EXTERNAL
+	 */
+	template <typename ... TArgs>
+	void warn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);
+	    msg = addLine (msg, loc);
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 
 	template <typename ... TArgs>
-	static void end (const char * format_, TArgs ... args) {	    
-	    fatal_error (UNKNOWN_LOCATION, format_, args...);
-	}
-	
-	static bool thrown () {
-	    return nb_errors != 0;
+	void occurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc);
+	    THROW ((int) ErrorCode::EXTERNAL, msg + note);
 	}
 
-	static Error instance () {
-	    return __instance__;
-	}	
-	    
-    private:
 	
 	template <typename ... TArgs>
-	void fatal_ (const Word& word, const char * format_, TArgs ... args) {
-	    std::string aux = format (format_, args...);
-	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
+	void occur (const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);	   
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	}
+
+	template <typename ... TArgs>
+	void warn (const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	}
+	
+	/**
+	   \brief Cause a throw FAIL_ERROR
+	   \param format_ the content of the error
+	   \param args the parameters of the format
+	*/
+	template <typename ... TArgs>
+	void fail (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format (std::string ("%(r) : ") + content, "Error", args...);
+	    msg = addLine (msg, loc);
+
+	    //bt_print ();
+
+	    THROW ((int) ErrorCode::FAIL, msg);
+	}
+
+	/**
+	   \brief Stop the compilation (fatal_error, no throw)
+	   \param format_ the message
+	   \param args the parameters to use in format for the message
+	*/
+	template <typename ... TArgs>
+	void end (const std::string& format_, TArgs ... args) {	    
+	    fatal_error (UNKNOWN_LOCATION, format (format_, args...).c_str ());
+	}       
+
+	/**
+	   \brief throw a FATAL_ERROR
+	   \param word the location 
+	   \param format_ the message
+	   \param args the parameters to pass to format	   
+	*/
+	template <typename ... TArgs>
+	void fatal (const lexing::Word& word, const std::string & content, TArgs ... args) {
+	    std::string aux = format (std::string ("%(r) : ") + content, "Error", args...);
 	    aux = addLine (aux, word);
-	    fprintf (stderr, "%s", aux.c_str ());
-	    THROW;
-	}
-		
-	template <typename ... TArgs>
-	static void fatal (const Word& word, const char * format_, TArgs ... args) {
-	    __instance__.fatal_ (word, format_, args...);
+
+	    //bt_print ();
+
+	    THROW ((int) ErrorCode::FATAL, aux);
 	}
 
+	/**
+	   \brief Print a note error on the error stream
+	   \param word the location of the note
+	   \param format_ the content of the note
+	   \param args the parameter of the format
+	 */
 	template <typename ... TArgs>
-	void append_ (const Word& word, const char * format_, TArgs ... args) {
-	    std::string aux = format (format_, args...);
-	    aux = std::string (RED) + "Error" + std::string (RESET) + " : " + aux;
+	void note (const lexing::Word& word, const std::string& format_, TArgs ... args) {
+	    std::string aux = format ("%(b) : " + format_, "Note", args...);
 	    aux = addLine (aux, word);
-	    fprintf (stderr, "%s", aux.c_str ());
-	    nb_errors ++;
+	    std::string & msg = getLastError ();
+	    msg += aux;
 	}
 
+	/**
+	   \brief Print a note error on the error stream
+	   \param word the location of the note
+	   \param format_ the content of the note
+	   \param args the parameter of the format
+	 */
 	template <typename ... TArgs>
-	static void append (const Word& word, const char * format_, TArgs ... args) {
-	    __instance__.append_ (word, format_, args...);
+	std::string createNote (const lexing::Word& word, const std::string& format_, TArgs ... args) {
+	    std::string aux = format ("%(b) : " + format_, "Note", args...);
+	    aux = addLine (aux, word);
+	    return aux;
 	}
 	
-	template <typename ... TArgs>
-	void note_ (const Word& word, const char * format_, TArgs ... args) {
-	    std::string aux = format (format_, args...);
-	    aux = std::string (BLUE) + "Note" + std::string (RESET) + " : " + aux;
-	    aux = addLine (aux, word);
-	    printf ("%s", aux.c_str ());	    
-	}
-
-	template <typename ... TArgs>
-	static void note (const Word& word, const char * format_, TArgs ... args) {
-	    __instance__.note_ (word, format_, args...);
-	}
+	/**
+	   \brief Create a note message
+	   \param word the location of the note
+	 */
+	std::string createNote (const lexing::Word& word);
 	
+	/**
+	   \brief Cause the compiler to abort due to internal error
+	   \param format_ a string to format with parameters
+	   \param args the parameters
+	*/
 	template <typename ... TArgs>
-	void assert_ (const char * format_, TArgs ... args) {	    
-	    fprintf (stderr, "%sAssert%s : %s\n", RED, RESET, format (format_, args...).c_str ());
+	void halt (const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Assert", args...);
+	    fprintf (stderr, "%s\n", msg.c_str ());
 	    raise (SIGABRT);
-	}	
+	}
 
-	static bool isEnable ();	    	
+	/**
+	   \brief Cause the compiler to abort due to internal error
+	   \param format_ a string to format with parameters
+	   \param args the parameters
+	*/
+	template <typename ... TArgs>
+	void halt (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Assert", args...);
+	    msg = addLine (msg, loc);
+	    fprintf (stderr, "%s\n", msg.c_str ());	    
+	    raise (SIGABRT);
+	}
 	
-    private:
-
-	static std::vector <bool> __isEnable__;
-	static std::vector <ErrorMsg> __caught__;
-	static Error __instance__;
-	
-    };
+    }
     
 }
