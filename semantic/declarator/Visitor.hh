@@ -45,8 +45,10 @@ namespace semantic {
        
 	    Context _context = Context::INNER;
 
-	    std::list <Symbol> _referent;	
-	
+	    std::list <Symbol> _referent;
+
+	    static std::set <std::string> __imported__;
+	    
 	private : 
 
 	    /** 
@@ -73,6 +75,11 @@ namespace semantic {
 	     */
 	    semantic::Symbol visitModule (const syntax::Module & mod);
 
+	    /**
+	     * \brief Create the sub module when creating a global module with a complexe path
+	     */
+	    void createSubModules (const lexing::Word & loc, const std::vector <std::string> & names, semantic::Symbol & last);
+	    
 	    /**
 	     * \brief Transform a function into a semantic tree
 	     */
@@ -114,6 +121,11 @@ namespace semantic {
 	     */
 	    semantic::Symbol visitGlobal (const syntax::Global & glob);
 	    
+	    /**
+	     * \brief Transform an import into a semantic tree
+	     */
+	    semantic::Symbol visitImport (const syntax::Import & imp);
+
 	private :
 
 	    /**

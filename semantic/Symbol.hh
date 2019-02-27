@@ -22,13 +22,13 @@ namespace semantic {
 
 	/** The symbol in which the symbol is declared */
 	/** This information is set at getting time */
-	Symbol * _referent;
-	
+	ISymbol * _referent = nullptr;
+       	
     private :
 	
 	/** Only used for dynamic cast */
 	ISymbol ();
-
+	
 	friend Symbol;
 	
     public :
@@ -44,6 +44,11 @@ namespace semantic {
 	 * \return the name and location of the symbol
 	 */
 	const lexing::Word & getName () const;
+
+	/**
+	 * \brief Change the name of the symbol
+	 */
+	void setName (const std::string & name);
 	
 	/** 
 	 * \brief Mandatory function used inside proxy design pattern
@@ -59,10 +64,17 @@ namespace semantic {
 	 * \brief Insert a new symbol in the current one
 	 * \brief This is working for some kind of symbol only
 	 * \brief If this function is not overriden, it will result into an exception throw
-	 * \param sym the symbol to launch
+	 * \param sym the symbol to insert
 	 */
 	virtual void insert (const Symbol & sym);
 
+	/**
+	 * \brief Insert a new symbol in the current one
+	 * \brief It will work like insert, but ensure that there is only one occurence of the symbol
+	 * \brief sym the symbol to insert 
+	 */
+	virtual void replace (const Symbol & sym);
+	
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
 	 * \brief It will ask it's referent recursively
@@ -86,19 +98,13 @@ namespace semantic {
 	 * \return the symbol in which the symbol can be retreived	 
 	 * \return Can return an empty symbol, if this symbol is a global one (modules only)
 	 */
-	const Symbol & getReferent () const;
+	Symbol getReferent () const;
 
 	/**
 	 * \brief change the referent of the symbol
 	 */
-	void setReferent (Symbol * sym);
+	void setReferent (ISymbol * sym);
 	
-	/**
-	 * \brief A mutable version 
-	 * \deprecated 
-	 */
-	Symbol& getReferent ();
-
 	/**
 	 * \return the space name of the symbol
 	 */
@@ -108,7 +114,11 @@ namespace semantic {
 	 * \return is this symbol the same as other (no only address, or type)
 	 */
 	virtual bool equals (const Symbol & other) const = 0;
-
+	
+	/**
+	 * \return a formated string of the hierarchy of the modules and all declared symbols
+	 */
+	virtual std::string formatTree (int padd) const = 0;
 	
 	/** Virtual but does not do anything */
 	virtual ~ISymbol ();
@@ -125,6 +135,9 @@ namespace semantic {
 	
 	/** For convinience an empty symbol is declared to avoid segmentation fault on unreferenced symbol */
 	static Symbol __empty__;
+
+	/** This list containes the imported modules */
+	static std::map <std::string, Symbol> __imported__;
 	
     public:
 
@@ -146,10 +159,20 @@ namespace semantic {
 	const lexing::Word & getName () const;
 
 	/**
+	 * \brief Change the name of the symbol
+	 */
+	void setName (const std::string & name);
+	
+	/**
 	 * Proxy function for symbol
 	 */
 	void insert (const Symbol & sym);
 
+	/**
+	 * Proxy function for symbol
+	 */
+	void replace (const Symbol & sym);
+	
 	/**
 	 * Proxy function for symbol
 	 */
@@ -163,12 +186,12 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	const Symbol & getReferent () const;
+	Symbol getReferent () const;
 
 	/**
 	 * Proxy Function for symbol
 	 */
-	void setReferent (Symbol * ref);
+	void setReferent (ISymbol * ref);
 
 	/**
 	 * \return the space name of the symbol
@@ -179,6 +202,36 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	bool equals (const Symbol & other) const ;
+
+	/**
+	 * \return a formated string of the hierarchy of the modules and all declared symbols
+	 */
+	std::string formatTree (int padd = 0) const;
+	
+	/**
+	 * \return The module named name, empty symbol if the module was not imported
+	 */
+	static const Symbol & getModule (const std::string & name);
+
+	/**
+	 * \brief Add a new known module (if the module already exists, it will erase it)
+	 * \param name the name of the module
+	 * \param sym the symbol containing the module
+	 */
+	static void registerModule (const std::string & name, const Symbol & sym);
+
+	/**
+	 * \brief Get a imported sub module, by its path name
+	 * \param path the path to the module
+	 * \return a module (or empty)
+	 */
+	static Symbol getModuleByPath (const std::string & path);
+	
+	/**
+	 * \return The list of all declared modules
+	 */
+	static const std::map <std::string, Symbol> & getAllModules ();
+
 	
 	/**
 	 * \brief Cast the content pointer into the type (if possible)

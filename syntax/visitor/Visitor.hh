@@ -384,7 +384,7 @@ namespace syntax {
 	 * \brief Visit an single expression 
 	 * \verbatim
 	 expression:(priority) := (expression:(priority + 1) operator:(priority) expression:(priority + 1)) (operator:(priority) expression:(priority))?
-	 expression:(12) := operand:(0)
+	 expression:(10) := operand:(0)
 	 
 	 operator:(0)  := '=' | '-=' | '/=' | '*=' | '+='
 	 operator:(1)  := '||'
@@ -396,8 +396,6 @@ namespace syntax {
 	 operator:(7)  := '+' | '~' | '-'
 	 operator:(8)  := '*' | '%' | '/'
 	 operator:(9)  := '^^'
-	 operator:(10)  := '.'
-	 operator:(11) := '::'
 	 \endverbatim
 	 * \param priority, the priority of the expression (used to get the set of operators usable at this instant)	 
 	 */
@@ -457,6 +455,16 @@ namespace syntax {
 	 * \brief Used to factorize visitOperand
 	 */
 	Expression visitOperand2 ();
+
+	/**
+	 * \brief Used to factorize visitOperand
+	 */
+	Expression visitOperand2 (const Expression & value);
+	
+	/**
+	 * \brief Used to factorize visitOperand
+	 */
+	Expression visitOperand3 ();
 	
 	/**
 	 * \brief Visit a literal expression 

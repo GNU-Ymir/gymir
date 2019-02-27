@@ -26,6 +26,8 @@ namespace semantic {
 
 	Struct (const lexing::Word & name);
 
+	Struct (const Struct & str);
+	
     public :
 
 	static Symbol init (const lexing::Word & name);
@@ -36,6 +38,8 @@ namespace semantic {
 
 	void insert (const Symbol & sym) override;
 
+	void replace (const Symbol & sym) override;	
+	
 	std::vector <Symbol> get (const std::string & name) const override;
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
@@ -50,6 +54,7 @@ namespace semantic {
 
 	bool isUnion () const;
 	
+	std::string formatTree (int padd) const override;
     };
 
 }

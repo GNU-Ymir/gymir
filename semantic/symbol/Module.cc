@@ -4,13 +4,17 @@ namespace semantic {
 
     Module::Module () :
 	ISymbol (lexing::Word::eof ()),
-	_table (ITable::init (this))
+	_table (this)
     {}
     
     Module::Module (const lexing::Word & name) :
 	ISymbol (name),
-	_table (ITable::init (this))
-	
+	_table (this)	
+    {}
+
+    Module::Module (const Module & mod) :
+	ISymbol (mod),
+	_table (mod._table.clone (this))
     {}
 
     Symbol Module::init (const lexing::Word & name) {
@@ -18,9 +22,7 @@ namespace semantic {
     }
 
     Symbol Module::clone () const {
-	auto ret = new (Z0) Module (*this);
-	ret-> _table.setAttach (ret);
-	return Symbol {ret};
+	return Symbol {new Module (*this)};
     }
 
     bool Module::isOf (const ISymbol * type) const {
@@ -34,9 +36,14 @@ namespace semantic {
 	this-> _table.insert (sym);
     }
 
+    void Module::replace (const Symbol & sym) {
+	this-> _table.replace (sym);
+    }
+
     std::vector <Symbol> Module::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
 	auto local = this-> _table.get (name);
+	
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
@@ -57,5 +64,21 @@ namespace semantic {
 	    return false;
     }
     
+    bool Module::isExtern () const {
+	return this-> _isExtern;
+    }
+
+    void Module::isExtern (bool is) {
+	this-> _isExtern = is;
+    }
+
+    std::string Module::formatTree (int i) const {
+	Ymir::OutBuffer buf;
+	buf.writefln ("%*- %", i, "|\t", this-> getName ());
+	for (auto & it : this-> _table.getAll ()) {
+	    buf.write (it.formatTree (i + 1));
+	}
+	return buf.str ();
+    }
     
 }

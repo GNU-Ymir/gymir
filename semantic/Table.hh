@@ -14,7 +14,7 @@ namespace semantic {
      * \brief The class Table is used to store the symbols declared somewhere
      * \brief It can be anything that derived from type Symbol
      */
-    class ITable {
+    class Table {
 
 	/** 
 	 * All the symbol declared inside the current table 
@@ -32,20 +32,14 @@ namespace semantic {
 	 * This symbol cannot be nullptr
 	 */
 	ISymbol* _attached; 
-
-	/** 
-	 * The proxy, this one will contain the attached but in referencing mode 
-	 * meaning it does not have the right to free the attach
-	 */
-	Symbol _proxy;
-	
-    private : 
-
-	friend Table;
-	
-	ITable (ISymbol * attached);
-
+		
     public :
+
+	/**
+	 * Please use it only for construction of Table field (see example in semantic/symbol/Class)
+	 * This class is a special one, that cannot be proxied, and cannot act as if it is
+	 */
+	Table (ISymbol * attached);
 	
 	/**
 	 * \brief Create an empty table
@@ -56,12 +50,12 @@ namespace semantic {
 	/**
 	 * \brief make a copy of the table, and all symbols
 	 */
-	Table clone ();
+	Table clone (ISymbol * attached) const;
 
 	/**
 	 * \return the symbol in which the table is attached
 	 */
-	Symbol & getAttach ();
+	ISymbol* getAttach ();
 
 	/**
 	 * \brief Change the attach of the table
@@ -75,6 +69,13 @@ namespace semantic {
 	 */
 	void insert (const Symbol & sym);
 
+	/**
+	 * \brief Insert a new symbol in the table
+	 * \brief if the symbol already exists, it will replace it
+	 * \param sym the symbol to insert
+	 */
+	void replace (const Symbol & sym);
+	
 	/**
 	 * \brief Get a symbol from this table
 	 * \brief As you can see in the type returned, you only can get symbol by value
@@ -90,54 +91,6 @@ namespace semantic {
 	 */
 	const std::vector <Symbol> & getAll () const;
 	
-    };
-
-    class Table : public Proxy <ITable, Table> {
-    public  :
-
-	/**
-	 * \brief Create a proxy for a table value
-	 * \param table the table 
-	 */
-	Table (ITable * table);
-
-	/**
-	 * \brief Proxy function for ITable
-	 */
-	static Table init (ISymbol * sym);
-	
-	/**
-	 * \brief Create an empty table	 
-	 */
-	static Table empty ();
-
-	/** 
-	 * Proxy function for ITable
-	 */
-	void insert (const Symbol & sym);
-
-	/** 
-	 * Proxy function for ITable
-	 */
-	std::vector <Symbol>  get (const std::string & name) const;
-	
-	/**
-	 * \return the list of all symbols declared inside the table
-	 */
-	const std::vector <Symbol> & getAll () const;
-	
-	/**
-	 * Proxy function for ITable
-	 */
-	Symbol & getAttach ();
-	
-	/**
-	 * Proxy function for ITable
-	 */
-	void setAttach (ISymbol * attach);
-       
-
-    };   
-    
+    };    
     
 }

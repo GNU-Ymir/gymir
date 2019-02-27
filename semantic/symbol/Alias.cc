@@ -38,4 +38,9 @@ namespace semantic {
 	return this-> _value;
     }   
 
+    std::string Alias::formatTree (int i) const {
+	Ymir::OutBuffer buf;
+	buf.writefln ("%*- %", i, "|\t", this-> getName ());
+	return buf.str ();
+    }
 }

@@ -1,14 +1,17 @@
 #include <ymir/semantic/declarator/Visitor.hh>
+#include <ymir/syntax/visitor/Visitor.hh>
 #include <ymir/semantic/symbol/_.hh>
 #include <ymir/utils/Path.hh>
 #include <ymir/syntax/visitor/Keys.hh>
-
+#include <algorithm>
 
 using namespace Ymir;
 
 namespace semantic {
 
     namespace declarator {
+
+	std::set <std::string> Visitor::__imported__;
 	
 	Visitor::Visitor () {}
     
@@ -45,7 +48,11 @@ namespace semantic {
 		of (syntax::Global, glb,
 		    return visitGlobal (glb);
 		);
-	    
+
+		of (syntax::Import, im,
+		    return visitImport (im);
+		);
+		
 		of (syntax::ExpressionWrapper, wrap, {
 			match (wrap.getContent ()) {
 			    of (syntax::VarDecl, decl,
@@ -64,24 +71,67 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitModule (const syntax::Module & mod) {
-	    if (mod.isGlobal () && !mod.getIdent ().isEof ()) {
+	    auto path = Path {mod.getIdent ().str, "::"};
+	    if (mod.isGlobal ()) {
 		auto file_location = Path {mod.getIdent ().locFile}.stripExtension ();
-		if (!Path {mod.getIdent ().str, "::"}.isRelativeFrom (file_location)) {
+		__imported__.emplace (file_location.toString ());
+		if (!mod.getIdent ().isEof () && !Path {mod.getIdent ().str, "::"}.isRelativeFrom (file_location)) {
 		    Ymir::Error::occur (mod.getIdent (), ExternalError::get (WRONG_MODULE_NAME), mod.getIdent ().str, Path {mod.getIdent ().str, "::"}.toString () + ".yr");
-		}
+		}		
 	    }
-	
-	    pushReferent (Module::init (mod.getIdent ()));	
+
+
+	    pushReferent (Module::init ({mod.getIdent (), path.fileName ().toString ()}));	    
+	    getReferent ().insert (ModRef::init (mod.getIdent (), path.getFiles ()));
+	    
 	    for (auto & it : mod.getDeclarations ()) {
 		visit (it);
 	    }
 
 	    auto ret = popReferent ();
-	    getReferent ().insert (ret);
-	
+	    auto modules = path.getFiles ();
+	    if (mod.isGlobal () && modules.size () != 1) {
+		auto glob = Symbol::getModule (modules [0]);
+		if (glob.isEmpty ()) {
+		    glob = Module::init ({mod.getIdent (), modules [0]});
+		    pushReferent (glob);
+		} else pushReferent (glob);
+		
+		createSubModules (mod.getIdent (), std::vector <std::string> (modules.begin () + 1, modules.end ()), ret);
+		
+		glob = popReferent ();
+		Symbol::registerModule (modules [0], glob);
+		ret = glob;
+	    } else if (mod.isGlobal ()) {
+		Symbol::registerModule (modules [0], ret);
+	    } else getReferent ().insert (ret);
+	    
 	    return ret;
 	}
 
+	void Visitor::createSubModules (const lexing::Word & loc, const std::vector <std::string> & names, semantic::Symbol & last) {
+	    if (names.size () == 1) {
+		getReferent ().insert (last);
+	    } else if (names.size () != 0) {
+		auto symbols = getReferent ().getLocal (names [0]);
+		for (auto & sym : symbols) {
+		    if (sym.is <Module> ()) {
+			pushReferent (sym);
+			std::vector<std::string> modules (names.begin () + 1, names.end ());
+			createSubModules (loc, modules, last);
+			auto mod = popReferent ();
+			getReferent ().insert (mod);
+			return;
+		    }
+		}
+		pushReferent (Module::init ({loc, names [0]}));
+		std::vector<std::string> modules (names.begin () + 1, names.end ());
+		createSubModules (loc, modules, last);
+		auto mod = popReferent ();
+		getReferent ().insert (mod);
+	    }
+	}
+	
 	semantic::Symbol Visitor::visitFunction (const syntax::Function & func) {
 	    auto function = Function::init (func.getName (), func);
 	
@@ -224,6 +274,35 @@ namespace semantic {
 	    return visit (syntax::ExpressionWrapper::init (stglob.getContent ()));	
 	}
 
+	semantic::Symbol Visitor::visitImport (const syntax::Import & imp) {
+	    auto path = Path {imp.getModule ().str, "::"};
+	    if (__imported__ .find (path.toString ()) == __imported__.end ()) {
+		auto file_path = imp.getPath () + ".yr";
+		auto file = fopen (file_path.c_str (), "r");
+		if (file == NULL) 
+		    Error::occur (imp.getModule (), ExternalError::get (NO_SUCH_FILE), path.toString ());
+
+		// We add a fake module, to prevent infinite import loops
+		__imported__.emplace (path.toString ());
+		auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
+		declarator::Visitor::init ().visit (synt_module);
+	    }
+
+	    auto files = path.getFiles ();
+	    auto symbols = getReferent ().getLocal (files [0]);
+	    auto ref = ModRef::init ({imp.getModule (), files [0]}, files);
+	    
+	    for (auto & sym : symbols) {
+	    	if (sym.is <ModRef> ()) {
+	    	    ref = ref.to<ModRef> ().merge (sym.to<ModRef> ());
+	    	    break;
+	    	}
+	    }
+
+	    getReferent ().replace (ref);
+	    return ref;	    		    
+	}	
+	
 	void Visitor::pushReferent (const Symbol & sym) {
 	    this-> _referent.push_front (sym);
 	}

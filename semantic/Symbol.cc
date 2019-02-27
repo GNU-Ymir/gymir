@@ -1,9 +1,13 @@
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/semantic/Table.hh>
+#include <ymir/utils/Path.hh>
+#include <ymir/semantic/symbol/Module.hh>
 
 namespace semantic {
 
     Symbol Symbol::__empty__ (Symbol::empty ());
+    
+    std::map <std::string, Symbol> Symbol::__imported__;
     
     ISymbol::ISymbol () :
 	_name (lexing::Word::eof ()),
@@ -22,8 +26,16 @@ namespace semantic {
     const lexing::Word & ISymbol::getName () const {
 	return this-> _name;
     }
-        
+
+    void ISymbol::setName (const std::string & name) {
+	this-> _name = {this-> _name, name};
+    }
+    
     void ISymbol::insert (const Symbol &) {
+	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+    }
+
+    void ISymbol::replace (const Symbol &) {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
 
@@ -35,17 +47,14 @@ namespace semantic {
 	return {};
     }    
 
-    const Symbol& ISymbol::getReferent () const {
-	if (this-> _referent == nullptr) return Symbol::__empty__;
-	else return *this-> _referent;
+    Symbol ISymbol::getReferent () const {
+	Symbol ret (Symbol::empty ());
+	if (this-> _referent == nullptr) return ret;       
+	ret.setRef (this-> _referent);
+	return ret;
     }
     
-    Symbol& ISymbol::getReferent () {
-	if (this-> _referent == nullptr) return Symbol::__empty__;
-	else return *this-> _referent;
-    }        
-
-    void ISymbol::setReferent (Symbol * ref) {
+    void ISymbol::setReferent (ISymbol * ref) {
 	this-> _referent = ref;
     }
 
@@ -78,6 +87,12 @@ namespace semantic {
 	return this-> _value-> getName ();
     }
 
+    void Symbol::setName (const std::string & name) {	
+	if (this-> _value == nullptr)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	return this-> _value-> setName (name);
+    }
+
     void Symbol::insert (const Symbol & sym) {
 	if (this-> _value != nullptr)
 	    this-> _value-> insert (sym);
@@ -86,19 +101,27 @@ namespace semantic {
 	}
     }
 
+    void Symbol::replace (const Symbol & sym) {
+	if (this-> _value != nullptr)
+	    this-> _value-> replace (sym);
+	else {
+	    // We don't do anything, it is more convinient for global modules
+	}
+    }
+    
     std::vector <Symbol> Symbol::get (const std::string & name) const {
 	if (this-> _value == nullptr)
 	    return {};
 	return this-> _value-> get (name);
     }
 
-    const Symbol & Symbol::getReferent () const {
+    Symbol Symbol::getReferent () const {
 	if (this-> _value == nullptr)
 	    return Symbol::__empty__;
 	return this-> _value-> getReferent ();
     }
 
-    void Symbol::setReferent (Symbol * ref) {
+    void Symbol::setReferent (ISymbol * ref) {
 	if (this-> _value != nullptr)
 	    this-> _value-> setReferent (ref);
     }
@@ -120,6 +143,43 @@ namespace semantic {
 	return this-> _value-> equals (other);
     }
 
+    std::string Symbol::formatTree (int padd) const {
+	if (this-> _value == nullptr) return "";
+	return this-> _value-> formatTree (padd);
+    }
+    
+    const Symbol & Symbol::getModule (const std::string & name) {
+	auto sym = __imported__.find (name);
+	if (sym == __imported__.end ()) return Symbol::__empty__;
+	else return sym-> second;
+    }
 
+    Symbol Symbol::getModuleByPath (const std::string & path_) {
+	auto path = Ymir::Path {path_, "::"};
+	auto mod = Symbol::getModule (path.getFiles () [0]);
+	auto files = path.getFiles ();
+	auto submods = std::vector <std::string> {files.begin () + 1, files.end ()};
+	for (auto & name : submods) {
+	    auto inners = mod.getLocal (name);
+	    bool succeed = false;
+	    for (auto & inner_sym : inners) {
+		if (inner_sym.is <Module> ()) {
+		    succeed = true;
+		    mod = inner_sym;
+		}
+	    }
+	    if (!succeed) return Symbol::__empty__;
+	}
+	return mod;
+    }
+    
+    void Symbol::registerModule (const std::string & name, const Symbol & sym) {
+	__imported__.erase (name); // We start by erase it, if it exists
+	__imported__.emplace (name, sym);
+    }
+
+    const std::map <std::string, Symbol> & Symbol::getAllModules () {
+	return __imported__;
+    }
     
 }

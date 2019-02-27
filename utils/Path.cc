@@ -53,8 +53,9 @@ namespace Ymir {
 	if (this-> _files.size () > absolute._files.size ())
 	    return false;
 
-	for (int i = this-> _files.size () - 1 ; i >= 0 ; i --) {
-	    if (this-> _files [i] != absolute._files [i]) return false;
+	auto flen = this-> _files.size (), alen = absolute._files.size (); 
+	for (int i = 1 ; i <= (int) this-> _files.size () ; i ++) {
+	    if (this-> _files [flen - i] != absolute._files [alen - i]) return false;
 	}
 	
 	return true;
@@ -74,7 +75,11 @@ namespace Ymir {
 	else {
 	    return Path {{this-> _files[this-> _files.size () - 1]}};
 	}
-    }    
+    }
+
+    std::vector <std::string> Path::getFiles () const {
+	return this-> _files;
+    }
 
     std::string Path::toString (const std::string & file_sep) const {
 	Ymir::OutBuffer buf;

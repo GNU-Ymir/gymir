@@ -5,14 +5,19 @@ namespace semantic {
 
     Struct::Struct () :
 	ISymbol (lexing::Word::eof ()),
-	_table (ITable::init (this))
+	_table (this)
     {}
 
     Struct::Struct (const lexing::Word & name) :
 	ISymbol (name),
-	_table (ITable::init (this))
+	_table (this)
     {}
 
+    Struct::Struct (const Struct & ot) :
+	ISymbol (ot),
+	_table (ot._table.clone (this))
+    {}
+    
     Symbol Struct::init (const lexing::Word & name) {
 	return Symbol {new (Z0) Struct (name)};
     }
@@ -31,7 +36,11 @@ namespace semantic {
     void Struct::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }
-
+    
+    void Struct::replace (const Symbol & sym) {
+	this-> _table.replace (sym);
+    }
+    
     std::vector <Symbol> Struct::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
 	auto local = this-> _table.get (name);
@@ -66,4 +75,12 @@ namespace semantic {
 	this-> _isPacked = is;
     }
 
+    std::string Struct::formatTree (int i) const {
+	Ymir::OutBuffer buf;
+	buf.writefln ("%*- %", i, "|\t", this-> getName ());
+	for (auto & it : this-> _table.getAll ()) {
+	    buf.write (it.formatTree (i + 1));
+	}
+	return buf.str ();
+    }
 }
