@@ -32,13 +32,13 @@ namespace semantic {
     
     void Table::insert (const Symbol & sym) {
 	Symbol toInsert = sym;
-	toInsert.setReferent (this-> _attached);
+	toInsert.setReferent (Symbol {this-> _attached});
 	this-> _syms.push_back (toInsert);
     }
 
     void Table::replace (const Symbol & sym) {
 	Symbol toInsert = sym;
-	toInsert.setReferent (this-> _attached);
+	toInsert.setReferent (Symbol {this-> _attached});
 	for (auto it : Ymir::r (0, this-> _syms.size ())) {
 	    if (this-> _syms [it].getName ().str == sym.getName ().str) {
 		this-> _syms [it] = sym;

@@ -6,7 +6,7 @@
 namespace semantic {
 
     Symbol Symbol::__empty__ (Symbol::empty ());
-    
+        
     std::map <std::string, Symbol> Symbol::__imported__;
     
     ISymbol::ISymbol () :
@@ -48,16 +48,13 @@ namespace semantic {
     }    
 
     Symbol ISymbol::getReferent () const {
-	Symbol ret (Symbol::empty ());
-	if (this-> _referent == nullptr) return ret;       
-	ret.setRef (this-> _referent);
-	return ret;
+	return Symbol {this-> _referent};
     }
     
-    void ISymbol::setReferent (ISymbol * ref) {
-	this-> _referent = ref;
+    void ISymbol::setReferent (const Symbol & ref) {
+	this-> _referent = ref.getRef ();
     }
-
+    
     std::string ISymbol::getRealName () const {
 	if (this-> _referent == nullptr) return this-> _name.str;
 	else {
@@ -70,7 +67,7 @@ namespace semantic {
     
     ISymbol::~ISymbol () {}
 
-    Symbol::Symbol (ISymbol * value) : Proxy<ISymbol, Symbol> (value)
+    Symbol::Symbol (ISymbol * value) : RefProxy<ISymbol, Symbol> (value)
     {}
     
     Symbol Symbol::empty () {
@@ -121,7 +118,7 @@ namespace semantic {
 	return this-> _value-> getReferent ();
     }
 
-    void Symbol::setReferent (ISymbol * ref) {
+    void Symbol::setReferent (const Symbol & ref) {
 	if (this-> _value != nullptr)
 	    this-> _value-> setReferent (ref);
     }
@@ -180,6 +177,10 @@ namespace semantic {
 
     const std::map <std::string, Symbol> & Symbol::getAllModules () {
 	return __imported__;
+    }
+
+    void Symbol::clearModule () {
+	__imported__.clear ();
     }
     
 }

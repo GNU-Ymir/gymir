@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/utils/Proxy.hh>
+#include <ymir/utils/Ref.hh>
 #include <ymir/lexing/Word.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/errors/ListError.hh>
@@ -22,7 +22,7 @@ namespace semantic {
 
 	/** The symbol in which the symbol is declared */
 	/** This information is set at getting time */
-	ISymbol * _referent = nullptr;
+	ISymbol* _referent;
        	
     private :
 	
@@ -103,7 +103,7 @@ namespace semantic {
 	/**
 	 * \brief change the referent of the symbol
 	 */
-	void setReferent (ISymbol * sym);
+	void setReferent (const Symbol &sym);
 	
 	/**
 	 * \return the space name of the symbol
@@ -130,7 +130,7 @@ namespace semantic {
      * A symbol is anything that we can refer to at the semantic time
      * Or everything that can store informations about sub symbols (blocks for example) 
      */
-    class Symbol : public Proxy <ISymbol, Symbol> {
+    class Symbol : public RefProxy <ISymbol, Symbol> {
     public: 
 	
 	/** For convinience an empty symbol is declared to avoid segmentation fault on unreferenced symbol */
@@ -191,7 +191,7 @@ namespace semantic {
 	/**
 	 * Proxy Function for symbol
 	 */
-	void setReferent (ISymbol * ref);
+	void setReferent (const Symbol & ref);
 
 	/**
 	 * \return the space name of the symbol
@@ -226,6 +226,9 @@ namespace semantic {
 	 * \return a module (or empty)
 	 */
 	static Symbol getModuleByPath (const std::string & path);
+
+	/**Temporary function */
+	static void clearModule ();
 	
 	/**
 	 * \return The list of all declared modules

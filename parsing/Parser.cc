@@ -7,6 +7,8 @@
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/validator/Visitor.hh>
 #include <ymir/semantic/generator/Visitor.hh>
+#include <ymir/utils/Ref.hh>
+#include <ymir/semantic/Symbol.hh>
 
 using namespace Ymir;
 
@@ -45,7 +47,7 @@ namespace Ymir {
 	} CATCH (ErrorCode::EXTERNAL) {
 	    PRINT_ERRORS ();
 	    Error::end (ExternalError::get (COMPILATION_END));
-	} FINALLY; // Internal Error are not catched
+	} FINALLY; // Internal Error are not catched	
     }
     
     void Parser::syntaxicTime () {

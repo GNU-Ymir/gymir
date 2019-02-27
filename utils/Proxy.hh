@@ -31,8 +31,8 @@ public:
 	I a (ot.clone ());
 	a._ownership = false;
 
-	// if (this-> _ownership && this-> _value != nullptr)
-	//     delete this-> _value;
+	if (this-> _ownership && this-> _value != nullptr)
+	    delete this-> _value;
 	
 	this-> _value = a._value;
 	
@@ -55,8 +55,8 @@ public:
     }
     
     virtual ~Proxy<T, I> () {
-	// if (this-> _ownership && this-> _value != nullptr)
-	//     delete this-> _value;
+	if (this-> _ownership && this-> _value != nullptr)
+	    delete this-> _value;
     }
     
 };
