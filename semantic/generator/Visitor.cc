@@ -235,114 +235,118 @@ namespace semantic {
 	    match (gen) {
 		of (Block, block,
 		    return generateBlock (block);
-		);
+		)
 
-		of (Set, set,
+		else of (Set, set,
 		    return generateSet (set);
-		);
+		)
 		
-		of (Fixed, fixed,
+		else of (Fixed, fixed,
 		    return generateFixed (fixed);
-		);
+		)
 
-		of (BoolValue, b,
+		else of (BoolValue, b,
 		    return generateBool (b);
-		);
+		)
 
-		of (FloatValue, f,
+		else of (FloatValue, f,
 		    return generateFloat (f);
-		);
+		)
 
-		of (CharValue, c,
+		else of (CharValue, c,
 		    return generateChar (c);
-		);
+		)
 		
-		of (Affect, aff,
+		else of (Affect, aff,
 		    return generateAffect (aff);
-		);
+		)
 		
-		of (BinaryInt, i,
+		else of (BinaryInt, i,
 		    return generateBinaryInt (i);
-		);
+		)
 
-		of (BinaryBool, b,
+		else of (BinaryBool, b,
 		    return generateBinaryBool (b);
-		);
+		)
 
-		of (BinaryFloat, f,
+		else of (BinaryFloat, f,
 		    return generateBinaryFloat (f);
-		);
+		)
 		
-		of (VarRef, var,
+		else of (VarRef, var,
 		    return generateVarRef (var);
-		);
+		)
 
-		of (VarDecl, decl,
+		else of (VarDecl, decl,
 		    return generateVarDecl (decl);
-		);
+		)
 
-		of (Referencer, _ref,
+		else of (Referencer, _ref,
 		    return generateReferencer (_ref);
-		);
+		)
 
-		of (Conditional, cond,
+		else of (Conditional, cond,
 		    return generateConditional (cond);
-		);
+		)
 
-		of (Loop, loop,
+		else of (Loop, loop,
 		    return generateLoop (loop);
-		);
+		)
 
-		of (Break, br,
+		else of (Break, br,
 		    return generateBreak (br);
-		);
+		)
 		
-		of (ArrayValue, val,
+		else of (ArrayValue, val,
 		    return generateArrayValue (val);
-		);
+		)
 
-		of (Copier, copy,
+		else of (Copier, copy,
 		    return generateCopier (copy);
-		);
+		)
 
-		of (Aliaser, al,
+		else of (Aliaser, al,
 		    return generateAliaser (al);
-		);
+		)
 
-		of (None, none ATTRIBUTE_UNUSED,
+		else of (None, none ATTRIBUTE_UNUSED,
 		    return Tree::empty ();
-		);
+		)
 
-		of (ArrayAccess, access,
+		else of (ArrayAccess, access,
 		    return generateArrayAccess (access);
-		);
+		)
 
-		of (SliceAccess, access,
+		else of (SliceAccess, access,
 		    return generateSliceAccess (access);
-		);
+		)
 
-		of (UnaryBool, ub,
+		else of (UnaryBool, ub,
 		    return generateUnaryBool (ub);
-		);
+		)
 
-		of (UnaryInt, ui,
+		else of (UnaryInt, ui,
 		    return generateUnaryInt (ui);
-		);
+		)
 
-		of (UnaryFloat, uf,
+		else of (UnaryFloat, uf,
 		    return generateUnaryFloat (uf);
-		);
+		)
 
-		of (TupleValue, tu,
+		else of (TupleValue, tu,
 		    return generateTupleValue (tu);
-		);
+		)
 
-		of (Call, cl,
+		else of (Call, cl,
 		    return generateCall (cl);
-		);
+		)
 
-		of (FrameProto, pr,
+		else of (FrameProto, pr,
 		    return generateFrameProto (pr);
+		)
+
+		else of (TupleAccess, acc,
+		    return generateTupleAccess (acc);
 		);
 	    }
 
@@ -786,7 +790,13 @@ namespace semantic {
 	    auto name = Mangler::init ().mangleFrameProto (proto);
 	    return Tree::buildFrameProto (proto.getLocation (), type, name, params);
 	}
-    
+
+	generic::Tree Visitor::generateTupleAccess (const TupleAccess & acc) {
+	    auto elem = castTo (acc.getTuple ().to <Value> ().getType (), acc.getTuple ());
+	    auto field = Ymir::format ("_%", acc.getIndex ());
+	    return elem.getField (field);
+	}
+	
 	generic::Tree Visitor::generateCall (const Call & cl) {
 	    std::vector <Tree> results;
 	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {

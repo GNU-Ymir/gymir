@@ -52,6 +52,6 @@ namespace semantic {
 	    buf.write (")");
 	    return buf.str ();
 	}
-		
+	
     }
 }

@@ -28,6 +28,7 @@
 #include <ymir/semantic/generator/value/Referencer.hh>
 #include <ymir/semantic/generator/value/Set.hh>
 #include <ymir/semantic/generator/value/SliceAccess.hh>
+#include <ymir/semantic/generator/value/TupleAccess.hh>
 #include <ymir/semantic/generator/value/TupleValue.hh>
 #include <ymir/semantic/generator/value/Unary.hh>
 #include <ymir/semantic/generator/value/UnaryBool.hh>

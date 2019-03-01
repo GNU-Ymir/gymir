@@ -125,6 +125,7 @@ ymir_OBJS = \
 	ymir/generator_Slice.o \
 	ymir/generator_SliceAccess.o \
 	ymir/generator_Tuple.o \
+	ymir/generator_TupleAccess.o \
 	ymir/generator_TupleValue.o \
 	ymir/generator_Type.o \
 	ymir/generator_Unary.o \
@@ -148,8 +149,8 @@ ymir_OBJS = \
 	ymir/semantic_Enum.o \
 	ymir/semantic_Function.o \
 	ymir/semantic_Generator.o \
-	ymir/semantic_Module.o \
 	ymir/semantic_ModRef.o \
+	ymir/semantic_Module.o \
 	ymir/semantic_Struct.o \
 	ymir/semantic_Symbol.o \
 	ymir/semantic_Table.o \
@@ -164,16 +165,17 @@ ymir_OBJS = \
 	ymir/util_OutBuffer.o \
 	ymir/util_Path.o \
 	ymir/util_Range.o \
+	ymir/util_Ref.o \
 	ymir/util_StringEnum.o \
 	ymir/validator_BinaryVisitor.o \
 	ymir/validator_BracketVisitor.o \
 	ymir/validator_CallVisitor.o \
 	ymir/validator_CompileTime.o \
+	ymir/validator_DotVisitor.o \
+	ymir/validator_SubVisitor.o \
 	ymir/validator_UnaryVisitor.o \
 	ymir/validator_Visitor.o \
-	ymir/validator_SubVisitor.o \
 	ymir/ymir1.o \
-	ymir/util_Ref.o \
 	$(END)	
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)

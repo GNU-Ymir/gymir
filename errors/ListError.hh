@@ -50,6 +50,7 @@ namespace Ymir {
 			 NO_SUCH_FILE,
 			 NULL_PTR,
 			 OVERFLOW,
+			 OVERFLOW_ARITY,			 
 			 PACKED_AND_UNION,
 			 REF_NOT_TYPE,
 			 REF_NO_EFFECT,

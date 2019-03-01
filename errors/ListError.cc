@@ -31,6 +31,7 @@ namespace Ymir {
 			    NO_SUCH_FILE		    = "%(y) no such file, or permission denied",
 			    NULL_PTR			    = "try to unref a null pointer",
 			    OVERFLOW			    = "overflow capacity for type %(y) = %(y)",
+			    OVERFLOW_ARITY                  = "tuple access out of bound (%(y)), tuple arity is %(y)",
 			    PACKED_AND_UNION		    = "structure could not be packed and union at the same time",
 			    REF_NOT_TYPE		    = "use a reference as a value",
 			    REF_NO_EFFECT		    = "the creation of ref has no effect on left operand",

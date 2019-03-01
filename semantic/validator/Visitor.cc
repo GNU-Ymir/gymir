@@ -6,6 +6,7 @@
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/UnaryVisitor.hh>
 #include <ymir/semantic/validator/SubVisitor.hh>
+#include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <string>
 #include <algorithm>
@@ -659,6 +660,9 @@ namespace semantic {
 	    if (bin.getLocation () == Token::DCOLON) {
 		auto subVisitor = SubVisitor::init (*this);
 		return subVisitor.validate (bin);
+	    } else if (bin.getLocation () == Token::DOT) {
+		auto dotVisitor = DotVisitor::init (*this);
+		return dotVisitor.validate (bin);
 	    } else {
 		auto binVisitor = BinaryVisitor::init (*this);
 		return binVisitor.validate (bin);

@@ -141,6 +141,11 @@ namespace semantic {
 	    generic::Tree generateFrameProto (const FrameProto & proto);
 
 	    /**
+	     * \brief Transform a tuple access into gimple
+	     */
+	    generic::Tree generateTupleAccess (const TupleAccess & acc);
+	    
+	    /**
 	     * \brief Transform a frame call into gimple
 	     */
 	    generic::Tree generateCall (const Call & cl);

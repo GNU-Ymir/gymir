@@ -27,7 +27,7 @@ namespace semantic {
 	public :
 
 	    /**
-	     * \brief Generate a new affectation
+	     * \brief Generate a slice access
 	     */
 	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & slice, const Generator & index);
 	    

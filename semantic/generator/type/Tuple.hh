@@ -39,8 +39,7 @@ namespace semantic {
 	    /** 
 	     * \return the name of the type formatted
 	     */
-	    std::string typeName () const override;
-	    
+	    std::string typeName () const override;	    
 	    
 	};
 
