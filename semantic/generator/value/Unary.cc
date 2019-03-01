@@ -44,6 +44,19 @@ namespace semantic {
 	Unary::Operator Unary::getOperator () const {
 	    return this-> _operator;
 	}
+
+	std::string Unary::prettyString () const {
+	    std::string op;
+	    switch (this-> _operator) {
+	    case Operator::NOT : op = "!"; break;
+	    case Operator::MINUS : op = "-"; break;
+	    case Operator::UNREF : op = "*"; break;
+	    case Operator::ADDR : op = "&"; break;
+	    default : op = "??"; break;
+	    }
+
+	    return Ymir::format ("%(%)", op, this-> _operand.prettyString ());
+	}
 	
     }
     

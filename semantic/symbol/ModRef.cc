@@ -67,11 +67,15 @@ namespace semantic {
 	    auto & i = i_.to<ModRef> ();
 	    bool add = true;
 	    for (auto & j_ : other._table.getAll ()) {
-		auto & j = j_.to<ModRef> ();
-		if (j._name == i._name && j._table.getAll ().size () != 0 && i._table.getAll ().size () != 0) {
-		    add = false;
-		    ret.push_back (i.merge (j));
-		    break;
+		auto & j = j_.to<ModRef> ();		
+		if (j._name == i._name) {
+		    if ((j._table.getAll ().size () != 0 && i._table.getAll ().size () != 0) ||
+			(j._table.getAll ().size () == 0 && i._table.getAll ().size () == 0) 
+		    ) {
+			add = false;
+			ret.push_back (i.merge (j));
+			break;
+		    } 
 		}
 	    }
 	    if (add) ret.push_back (i_);
@@ -82,9 +86,13 @@ namespace semantic {
 	    bool add = true;
 	    for (auto & z_ : ret) {
 		auto & z = z_.to<ModRef> ();
-		if (j._name == z._name && j._table.getAll ().size () != 0 && z._table.getAll ().size () != 0) {
-		    add = false;
-		    break;
+		if (j._name == z._name) {
+		    if ((j._table.getAll ().size () != 0 && z._table.getAll ().size () != 0) ||
+			(j._table.getAll ().size () == 0 && z._table.getAll ().size () == 0)
+		    ) {
+			add = false;
+			break;
+		    }
 		}
 	    }
 	    if (add) ret.push_back (j_);

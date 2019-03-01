@@ -65,6 +65,7 @@ namespace semantic {
 	     */
 	    bool isMutable () const;
 	    
+	    std::string prettyString () const override;
 	};
        	
     }

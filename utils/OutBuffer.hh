@@ -223,6 +223,9 @@ void print (T ... args) {
     printf ("%s", Ymir::OutBuffer (args...).str ().c_str ());
 }
 
+namespace Ymir {
+    std::string entab (const std::string & value);
+}
 
 // namespace Ymir {
 //     template <typename ... T>

@@ -6,6 +6,7 @@
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/UnaryVisitor.hh>
 #include <ymir/semantic/validator/SubVisitor.hh>
+#include <ymir/semantic/declarator/Visitor.hh>
 #include <string>
 #include <algorithm>
 
@@ -28,25 +29,59 @@ namespace semantic {
 	void Visitor::validate (const semantic::Symbol & sym) {	    
 	    match (sym) {
 		of (semantic::Module, mod, {
+			std::vector <std::string> errors;
 			this-> _referent.push_back (sym);			
-			validateModule (mod);
+			TRY (
+			    validateModule (mod);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+			
 			this-> _referent.pop_back ();
+			
+			if (errors.size () != 0) {
+			    THROW (ErrorCode::EXTERNAL, errors);
+			}
 			return;
 		    }
 		);
 
 		of (semantic::Function, func, {
-			this-> _referent.push_back (sym);
-			validateFunction (func);
+			std::vector <std::string> errors;
+			this-> _referent.push_back (sym);			
+			TRY (
+			    validateFunction (func);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+			
 			this-> _referent.pop_back ();
+			
+			if (errors.size () != 0) {
+			    THROW (ErrorCode::EXTERNAL, errors);
+			}
 			return;
 		    }
 		);
 
 		of (semantic::VarDecl, decl, {
+			std::vector <std::string> errors;
 			this-> _referent.push_back (sym);			
-			validateVarDecl (decl);
+			TRY (
+			    validateVarDecl (decl);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+			
 			this-> _referent.pop_back ();
+			
+			if (errors.size () != 0) {
+			    THROW (ErrorCode::EXTERNAL, errors);
+			}
+
 			return;
 		    }
 		);
@@ -278,12 +313,27 @@ namespace semantic {
 
 	Generator Visitor::validateBlock (const syntax::Block & block) {
 	    std::vector <Generator> values;
+	    
 	    Generator type (Void::init (block.getLocation ()));
 	    bool breaker = false, returner = false;
-	    enterBlock ();
-
 	    std::vector <std::string> errors;
-	    for (int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
+	    Symbol decl (Symbol::empty ());
+	    { // We enter a sub scope to prevent TRY catch buffer shadow at compile time
+		TRY (
+		    enterBlock ();
+		    decl = validateInnerModule (block.getDeclModule ());
+		    if (!decl.isEmpty ()) {
+			this-> _referent.push_back (decl);
+		    }		   
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    decl = Symbol::empty ();
+		} FINALLY;
+	    }
+
+	    // i is not really volatile, but the compiler seems to want it to be (due to TRY CATCHS)
+	    for (volatile int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
 		TRY (
 		    if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
 			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
@@ -304,12 +354,17 @@ namespace semantic {
 		} FINALLY;
 	    }
 
-	    TRY (
-		quitBlock ();
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors.insert (errors.end (), msgs.begin (), msgs.end ());
-	    } FINALLY;
+	    {
+		TRY (
+		    if (!decl.isEmpty ()) {
+			this-> _referent.pop_back ();
+		    }
+		    quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
@@ -322,6 +377,29 @@ namespace semantic {
 	    return ret;
 	}	
 
+	Symbol Visitor::validateInnerModule (const syntax::Declaration & decl) {
+	    if (decl.isEmpty ()) return Symbol::empty ();
+	    auto sym = declarator::Visitor::init ().visit (decl);
+	    if (!sym.isEmpty ()) {		
+		this-> _referent.back ().insert (sym);
+		std::vector <std::string> errors;
+		enterForeign ();
+		TRY (
+		    this-> validate (sym);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;   
+		exitForeign ();
+
+		if (errors.size () != 0) {
+		    THROW (ErrorCode::EXTERNAL, errors);
+		}
+		
+	    }
+	    return sym;
+	}
+	
 	Generator Visitor::validateSet (const syntax::Set & set) {
 	    std::vector <Generator> values;
 	    Generator type (Void::init (set.getLocation ()));
@@ -612,7 +690,7 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 	
-	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {
+	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {	    
 	    std::vector <Generator> gens;
 	    for (auto & sym : multSym) {
 		match (sym) {
@@ -629,7 +707,12 @@ namespace semantic {
 			    continue;
 			}
 		    );
-
+		    
+		    of (semantic::Module, mod ATTRIBUTE_UNUSED, {
+			    gens.push_back (ModuleAccess::init (loc, sym));
+			    continue;
+			}
+		    );
 		}
 		
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -638,7 +721,7 @@ namespace semantic {
 	    if (gens.size () == 1) return gens [0];
 	    else return MultSym::init (loc, gens);
 	}
-
+	
 	Generator Visitor::validateFunctionProto (const semantic::Function & func) {
 	    enterForeign ();
 	    std::vector <Generator> params;

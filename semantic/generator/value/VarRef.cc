@@ -43,5 +43,11 @@ namespace semantic {
 	    return this-> _refId;
 	}
 
+	std::string VarRef::prettyString () const {
+	    if (this-> _isMutable) 
+		return Ymir::format ("mut %", this-> _name);
+	    else
+		return this-> _name;
+	}
     }
 }

@@ -55,6 +55,15 @@ namespace semantic {
 	bool VarDecl::isMutable () const {
 	    return this-> _isMutable;
 	}
+
+	std::string VarDecl::prettyString () const {
+	    auto val = this-> _value.prettyString ();
+	    auto type = this-> _type.prettyString ();
+	    if (this-> _isMutable) {
+		return Ymir::format ("let mut % : % = %", this-> _name, type, val);
+	    } else
+		return Ymir::format ("let % : % = %", this-> _name, type, val);
+	}
 	
     }
 }

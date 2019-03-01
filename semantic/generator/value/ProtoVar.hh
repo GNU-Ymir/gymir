@@ -53,6 +53,7 @@ namespace semantic {
 	     */
 	    const Generator & getValue () const;
 	    
+	    std::string prettyString () const override;
 	};
 	
     }

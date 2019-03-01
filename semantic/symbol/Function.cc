@@ -57,7 +57,7 @@ namespace semantic {
     
     bool Function::equals (const Symbol & other) const {
 	if (!other.is <Function> ()) return false;
-	if (other.getName () == this-> getName ()) {
+	if (other.getName ().isSame (this-> getName ())) {
 	    return this-> getReferent ().equals (other.getReferent ());
 	} else
 	    return false;

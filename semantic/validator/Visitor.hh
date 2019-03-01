@@ -131,6 +131,12 @@ namespace semantic {
 	    generator::Generator validateBlock (const syntax::Block & block);
 
 	    /**
+	     * \brief Validate an inner declaration of a module
+	     * \param decl the module to declare, and validate
+	     */
+	    semantic::Symbol validateInnerModule (const syntax::Declaration & decl);
+	    
+	    /**
 	     * \brief Validate a set of expression
 	     * \return a tree containing the result of the block
 	     */
@@ -183,7 +189,8 @@ namespace semantic {
 	     * \param multSym the list of symbols
 	     */
 	    generator::Generator validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym);
-
+	    
+	    
 	    /**
 	     * \brief Validate the prototype of a function in order to refer to it
 	     * \param func the function prototype to validate
@@ -356,6 +363,8 @@ namespace semantic {
 	     * \param name the name of the symbol to retreive
 	     */
 	    std::vector <Symbol> getGlobal (const std::string & name);
+
+	private :
 	    
 	};
 	       

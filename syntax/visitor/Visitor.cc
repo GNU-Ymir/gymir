@@ -845,7 +845,11 @@ namespace syntax {
 	} while (end != Token::RACC);
 	
 	if (last) content.push_back (Unit::init (end));
-	return Block::init (begin, end, decls, content);
+	if (decls.size () != 0) {
+	    return Block::init (begin, end, Module::init ({begin, "_"}, decls), content);
+	} else {
+	    return Block::init (begin, end, Declaration::empty (), content);
+	}
     }    
 
     Expression Visitor::visitIf () {

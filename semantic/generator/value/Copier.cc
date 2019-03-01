@@ -38,7 +38,10 @@ namespace semantic {
 	const Generator & Copier::getWho () const {
 	    return this-> _who;
 	}
-	
+
+	std::string Copier::prettyString () const {
+	    return Ymir::format ("copy %", this-> _who.prettyString ());
+	}
     }
     
 }

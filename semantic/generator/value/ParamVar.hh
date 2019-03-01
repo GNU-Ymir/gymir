@@ -45,7 +45,8 @@ namespace semantic {
 	     * \return has this var been declared mutable ?
 	     */
 	    bool isMutable () const;
-	    
+
+	    std::string prettyString () const override;
 	};
 	
     }

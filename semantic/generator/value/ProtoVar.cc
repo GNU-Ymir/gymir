@@ -52,5 +52,13 @@ namespace semantic {
 	    return this-> _value;
 	}
 	
+	std::string ProtoVar::prettyString () const {
+	    std::string value;
+	    if (!this-> _value.isEmpty ()) value = Ymir::format (" = %", this-> _value.prettyString ());
+	    if (this-> _isMutable) 
+		return Ymir::format ("mut % : %%", this-> getLocation ().str, this-> getType ().prettyString (), value);
+	    else
+		return Ymir::format ("% : %%", this-> getLocation ().str, this-> getType ().prettyString (), value);
+	}
     }
 }

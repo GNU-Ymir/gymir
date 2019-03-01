@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/Fixed.hh>
+#include <ymir/semantic/generator/type/Integer.hh>
 
 namespace semantic {
 
@@ -38,6 +39,13 @@ namespace semantic {
 
 	Fixed::UI Fixed::getUI () const {
 	    return this-> _value;
+	}
+
+	std::string Fixed::prettyString () const {
+	    if (this-> getType ().to <Integer> ().isSigned ()) {
+		return Ymir::format ("%", this-> _value.i);
+	    } else
+		return Ymir::format ("%", this-> _value.u);
 	}
 	
     }

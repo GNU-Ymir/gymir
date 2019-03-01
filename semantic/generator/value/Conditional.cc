@@ -64,6 +64,13 @@ namespace semantic {
 	const Generator & Conditional::getElse () const {
 	    return this-> _else;
 	}
+
+	std::string Conditional::prettyString () const {
+	    if (this-> _else.isEmpty ()) 
+		return Ymir::format ("if (%) %", this-> _test.prettyString (), this-> _content.prettyString ());
+	    else
+		return Ymir::format ("if (%) %\nelse %", this-> _test.prettyString (), this-> _content.prettyString (), this-> _else.prettyString ());
+	}
 	
     }
     

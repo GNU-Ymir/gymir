@@ -38,6 +38,10 @@ namespace semantic {
 	uint CharValue::getValue () const {
 	    return this-> _value;
 	}
+
+	std::string CharValue::prettyString () const {
+	    return Ymir::format ("%", this-> _value);
+	}
 	
     }
     

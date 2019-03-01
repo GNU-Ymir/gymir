@@ -52,7 +52,17 @@ namespace semantic {
 	bool Loop::isDo () const {
 	    return this-> _isDo;
 	}
-	
+
+	std::string Loop::prettyString () const {
+	    if (this-> _test.isEmpty ()) {
+		return Ymir::format ("loop %", this-> _content.prettyString ());		
+	    } else {
+		return Ymir::format ("while (%) %",
+				     this-> _test.prettyString (),
+				     this-> _content.prettyString ()
+		);		
+	    }
+	}
     }
     
 }

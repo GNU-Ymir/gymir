@@ -42,7 +42,10 @@ namespace semantic {
 	const std::vector <Generator> & MultSym::getGenerators () const {
 	    return this-> _gens;
 	}
-	
+
+	std::string MultSym::prettyString () const {
+	    return "";
+	}
     }
     
 }

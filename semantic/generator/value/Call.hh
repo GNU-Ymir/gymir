@@ -63,6 +63,8 @@ namespace semantic {
 	     */
 	    const std::vector <Generator> & getParameters () const;
 	    
+	    std::string prettyString () const override;
+	    
 	};
 	
     }

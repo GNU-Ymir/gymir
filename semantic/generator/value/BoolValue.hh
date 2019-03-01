@@ -47,6 +47,7 @@ namespace semantic {
 	     */
 	    bool getValue () const;
 
+	    std::string prettyString () const override;
 	    
 	};	
 	

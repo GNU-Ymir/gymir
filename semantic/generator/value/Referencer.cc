@@ -46,7 +46,10 @@ namespace semantic {
 	const Generator & Referencer::getWho () const {
 	    return this-> _who;
 	}
-	
+
+	std::string Referencer::prettyString () const {
+	    return Ymir::format ("ref %", this-> _who.prettyString ());
+	}
     }
     
 }

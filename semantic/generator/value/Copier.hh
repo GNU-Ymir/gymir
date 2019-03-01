@@ -51,6 +51,7 @@ namespace semantic {
 	     */
 	    const Generator & getWho () const;
 
+	    std::string prettyString () const override;
 	};
 	
     }

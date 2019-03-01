@@ -51,6 +51,8 @@ namespace semantic {
 	     * \return the module reference that is accessed by this generator
 	     */
 	    const Symbol & getModRef () const;
+
+	    std::string prettyString () const override;
 	};
 	
     }

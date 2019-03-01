@@ -112,8 +112,8 @@ namespace semantic {
 			for (auto & it : rights_)
 			    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
 			
-			auto note = Ymir::Error::createNote (used_gen.getLocation ());
-			note += Ymir::Error::createNote (it.getLocation ());
+			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), used_gen.getLocation (), used_gen.prettyString ()) + '\n';
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ());
 			Ymir::Error::occurAndNote (expression.getLocation (), note,
 						   ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
 						   it.to<FrameProto> ().getName (),
@@ -130,15 +130,39 @@ namespace semantic {
 	    std::vector <std::string> names;
 	    for (auto & it : rights)
 		names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
+
+	    std::string leftName;
+	    match (left) {
+		of (FrameProto, proto, leftName = proto.getName ())
+		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+	    }
 	    
 	    errors.push_back (Ymir::Error::makeOccur (
 		expression.getLocation (),
 		expression.getEnd (),
 		ExternalError::get (UNDEFINED_CALL_OP),
-		left.to <Value> ().getType ().to <Type> ().getTypeName (),
+		leftName,
 		names
 	    ));
 
+	    {
+		match (left) {		    
+		    of (MultSym,    sym,   {
+			    for (auto & it : sym.getGenerators ()) {
+				errors.push_back (
+				    Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ())
+				);
+			    }
+			})
+		    else {
+			errors.push_back (
+			    Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), left.getLocation (), left.prettyString ())
+			);
+		    }
+		}
+	    }
+	    
 	    THROW (ErrorCode::EXTERNAL, errors);
 	}
 

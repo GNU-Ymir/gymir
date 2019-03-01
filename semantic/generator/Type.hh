@@ -161,6 +161,11 @@ namespace semantic {
 	     */
 	    void isLocal (bool local);
 
+	    /**
+	     * \brief Override it for all type -> return getTypeName ();
+	     */
+	    std::string prettyString () const override final;
+	    
 	protected: 
 
 	    /**

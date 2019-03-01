@@ -50,7 +50,9 @@ namespace semantic {
 	     * \return the left operand of the operation
 	     */
 	    const Generator & getValue () const;
-
+	    
+	    std::string prettyString () const override;
+	    
 	};
 	
     }

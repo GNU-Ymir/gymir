@@ -21,7 +21,7 @@ namespace syntax {
 	std::vector <Expression> _content;
 
 	/** The declaration done inside the block */
-	std::vector <Declaration> _decls;
+	Declaration _declModule;
 	
     private :
 
@@ -33,7 +33,7 @@ namespace syntax {
 
     public :
 
-	static Expression init (const lexing::Word & op, const lexing::Word & end, const std::vector <Declaration> & decls, const std::vector <Expression> & conetent);
+	static Expression init (const lexing::Word & op, const lexing::Word & end, const Declaration & decls, const std::vector <Expression> & conetent);
 
 	Expression clone () const override;
 
@@ -46,6 +46,11 @@ namespace syntax {
 	 */
 	const std::vector <Expression> & getContent () const;
 
+	/**
+	 * \return the list of declaration of the block
+	 */
+	const Declaration & getDeclModule () const;
+	
 	/**
 	 * \return the closing token of the block
 	 */

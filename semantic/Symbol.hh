@@ -23,7 +23,11 @@ namespace semantic {
 	/** The symbol in which the symbol is declared */
 	/** This information is set at getting time */
 	ISymbol* _referent;
-       	
+
+	/** The list of usable symbols for symbol search */
+	/** This list is intended to be used only in the proxy symbol */
+	std::map <std::string, Symbol> _used;
+	
     private :
 	
 	/** Only used for dynamic cast */
@@ -75,6 +79,20 @@ namespace semantic {
 	 */
 	virtual void replace (const Symbol & sym);
 	
+
+	/**
+	 * \brief Allows the use of an externally declared symbol for searching (in get (string) function)
+	 * \brief Basically this method is called when importing a module, or with use_stmt
+	 * \param name the name of the symbol (its path)
+	 * \param use this symbol possess a table of symbols, that we have the right to access (publically)		
+	 */
+	virtual void use (const std::string & name, const Symbol & use);
+	
+	/**
+	 * \brief Does the opposite of use (name, _);
+	 */
+	virtual void unuse (const std::string & name);	
+
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
 	 * \brief It will ask it's referent recursively
@@ -88,6 +106,11 @@ namespace semantic {
 	 * \return a symbol, may be empty
 	 */
 	virtual std::vector <Symbol> getLocal (const std::string & name) const;
+
+	/**
+	 * \return the list of used symbols
+	 */
+	const std::map <std::string, Symbol> & getUsedSymbols () const;
 	
 	/**
 	 * \brief In the symbol hierarchy, each symbol is attached to a referent
@@ -172,6 +195,16 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	void replace (const Symbol & sym);
+
+	/**
+	 * Proxy function for symbol
+	 */
+	void use (const std::string & name, const Symbol & sym);
+	
+	/**
+	 * Proxy function for symbol
+	 */
+	void unuse (const std::string & name);
 	
 	/**
 	 * Proxy function for symbol
@@ -204,6 +237,12 @@ namespace semantic {
 	bool equals (const Symbol & other) const ;
 
 	/**
+	 * \brief This function will check if the symbols are the same (in ref terms)
+	 * \param other the symbol on which to test the equivalence
+	 */
+	bool isSameRef (const Symbol & other) const ;
+	
+	/**
 	 * \return a formated string of the hierarchy of the modules and all declared symbols
 	 */
 	std::string formatTree (int padd = 0) const;
@@ -227,8 +266,6 @@ namespace semantic {
 	 */
 	static Symbol getModuleByPath (const std::string & path);
 
-	/**Temporary function */
-	static void clearModule ();
 	
 	/**
 	 * \return The list of all declared modules
@@ -277,7 +314,16 @@ namespace semantic {
 	    T t;
 	    return this-> _value-> isOf (&t); 			    
 	}
-	
+
+    private :
+	/**
+	 * \brief It can happens that symbols can be accessed by multiple points
+	 * \brief This will result of a multiple definition of the same symbol
+	 * \brief This function will merge all equivalent symbols to prevent this to happen
+	 * \param multSym a list of symbols (basically returned by get or getLocal function)
+	 * \return a list of uniq symbols
+	 */
+	static std::vector <Symbol> mergeEqSymbols (const std::vector <Symbol> & multSym);	
     };
     
 }

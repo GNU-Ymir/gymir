@@ -56,6 +56,8 @@ namespace semantic {
 	     */
 	    const Generator & getIndex () const;
 	    
+	    std::string prettyString () const override;
+
 	};
 	
     }

@@ -51,6 +51,37 @@ namespace semantic {
 	Binary::Operator Binary::getOperator () const {
 	    return this-> _operator;
 	}
+
+	std::string Binary::prettyString () const {
+	    std::string op;
+	    switch (this-> _operator) {
+	    case Operator::OR : op = "||"; break;
+	    case Operator::AND : op = "&&"; break;
+	    case Operator::INF : op = "<"; break;
+	    case Operator::SUP : op = ">"; break;
+	    case Operator::INF_EQUAL : op = "<="; break;
+	    case Operator::SUP_EQUAL : op = ">="; break;
+	    case Operator::NOT_EQUAL : op = "!="; break;
+	    case Operator::EQUAL : op = "=="; break;
+	    case Operator::LEFT_SHIFT : op = "<<"; break;
+	    case Operator::RIGHT_SHIFT : op = ">>"; break;
+	    case Operator::BIT_OR : op = "|"; break;
+	    case Operator::BIT_AND : op = "&"; break;
+	    case Operator::BIT_XOR : op = "^"; break;
+	    case Operator::ADD : op = "+"; break;
+	    case Operator::CONCAT : op = "~"; break;
+	    case Operator::SUB : op = "-"; break;
+	    case Operator::MUL : op = "*"; break;
+	    case Operator::DIV : op = "/"; break;
+	    case Operator::MODULO : op = "%"; break;
+	    case Operator::EXP : op = "^^"; break;
+	    case Operator::RANGE : op = ".."; break;
+	    case Operator::TRANGE : op = "..."; break;
+	    default : op = "??"; break;
+	    }
+	    
+	    return Ymir::format ("(% % %)", this-> _left.prettyString (), op, this-> _right.prettyString ());
+	}
 	
     }
     

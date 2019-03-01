@@ -43,6 +43,10 @@ namespace semantic {
 	const Symbol & ModuleAccess::getModRef () const {
 	    return this-> _ref;
 	}
+
+	std::string ModuleAccess::prettyString () const {
+	    return Ymir::format ("%::", this-> getLocation ().str);
+	}
 	
     }
     

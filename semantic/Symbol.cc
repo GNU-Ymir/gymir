@@ -39,6 +39,19 @@ namespace semantic {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
 
+    void ISymbol::use (const std::string & name, const Symbol & sym) {
+	auto ptr = this-> _used.find (name);
+	if (ptr == this-> _used.end ()) {
+	    this-> _used.emplace (name, sym);
+	} else {
+	    ptr-> second = sym;
+	}
+    }
+
+    void ISymbol::unuse (const std::string & name) {
+	this-> _used.erase (name);
+    }
+    
     std::vector <Symbol> ISymbol::get (const std::string & name) const {
 	return this-> getReferent ().get (name);
     }
@@ -47,6 +60,10 @@ namespace semantic {
 	return {};
     }    
 
+    const std::map <std::string, Symbol> & ISymbol::getUsedSymbols () const {
+	return this-> _used;
+    }
+    
     Symbol ISymbol::getReferent () const {
 	return Symbol {this-> _referent};
     }
@@ -106,10 +123,35 @@ namespace semantic {
 	}
     }
     
+    void Symbol::use (const std::string & name, const Symbol & sym) {
+	if (this-> _value != nullptr)
+	    this-> _value-> use (name, sym);
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+    }    
+
+    void Symbol::unuse (const std::string & name) {
+	if (this-> _value != nullptr)
+	    this-> _value-> unuse (name);
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+    }
+    
     std::vector <Symbol> Symbol::get (const std::string & name) const {
 	if (this-> _value == nullptr)
 	    return {};
-	return this-> _value-> get (name);
+
+	auto ret = this-> _value-> get (name);
+	for (auto & it : this-> _value-> getUsedSymbols ()) {
+	    auto local_ret = it.second.get (name);
+	    ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	}
+	
+	return Symbol::mergeEqSymbols (ret);
     }
 
     Symbol Symbol::getReferent () const {
@@ -140,9 +182,22 @@ namespace semantic {
 	return this-> _value-> equals (other);
     }
 
+    bool Symbol::isSameRef (const Symbol & other) const {
+	if (this-> _value == nullptr) return false;
+	return this-> _value == other._value;
+    }
+
     std::string Symbol::formatTree (int padd) const {
 	if (this-> _value == nullptr) return "";
-	return this-> _value-> formatTree (padd);
+	auto ret = this-> _value-> formatTree (padd);
+	if (this-> _value-> getUsedSymbols ().size () != 0) {
+	    Ymir::OutBuffer buf (ret);
+	    buf.writefln ("%*- %", padd, "|\t", "USED : ");
+	    for (auto & it : this-> _value-> getUsedSymbols ()) {
+		buf.writefln ("%*- %", padd + 1, "|\t", it.first);
+	    }	
+	    return buf.str ();
+	} return ret;
     }
     
     const Symbol & Symbol::getModule (const std::string & name) {
@@ -179,8 +234,17 @@ namespace semantic {
 	return __imported__;
     }
 
-    void Symbol::clearModule () {
-	__imported__.clear ();
+    std::vector <Symbol> Symbol::mergeEqSymbols (const std::vector <Symbol> & multSym) {
+	std::vector <Symbol> result;
+	for (auto & it : multSym) {
+	    bool add = true;
+	    for (auto & zt : result)
+		if (zt.isSameRef (it)) { add = false; break; }
+	    if (add)
+		result.push_back (it);
+	}
+	return result;
     }
+
     
 }

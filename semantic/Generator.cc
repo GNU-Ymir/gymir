@@ -43,6 +43,10 @@ namespace semantic {
 	void IGenerator::resetIdCount () {
 	    __lastId__ = 0;
 	}
+
+	std::string IGenerator::prettyString () const {
+	    return "";
+	}
 	
 	const lexing::Word & IGenerator::getLocation () const {
 	    return this-> _location;
@@ -80,6 +84,11 @@ namespace semantic {
 
 	void Generator::resetIdCount () {
 	    IGenerator::resetIdCount ();
+	}
+
+	std::string Generator::prettyString () const {
+	    if (this-> _value == nullptr) return "";
+	    return this-> _value-> prettyString ();
 	}
 
 	uint Generator::getUniqId () const {

@@ -2,6 +2,7 @@
 #include <sstream>
 #include <algorithm>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Colors.hh>
 
 namespace lexing {
     Word::Word (location_t locus, const std::string &str) :
@@ -84,16 +85,8 @@ namespace lexing {
 
     std::string Word::toString () const {
 	if (this-> isEof ()) return ":\u001B[32meof\u001B[0m()";
-	auto reset = "\u001B[0m";
-	auto purple = "\u001B[36m";
-	auto green = "\u001B[32m";
-	std::stringstream out;
-	out << ":" << green << this-> str << reset << "(" 
-	    << this-> locFile.c_str () << " -> "
-	    << purple<< this-> line
-	    << reset << ", "
-	    << purple << this-> column << reset << ")";
-	return out.str ();
+	Ymir::OutBuffer buf (Colors::get (BOLD), this-> str, " --> ", this-> locFile.c_str (), ":(", this-> line, ",", this-> column, ")", Colors::get (RESET));
+	return buf.str ();
     }
 
     std::string Word::getFile () const {

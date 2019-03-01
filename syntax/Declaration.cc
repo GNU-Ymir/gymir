@@ -17,8 +17,12 @@ namespace syntax {
 	return Declaration {nullptr};
     }
 
+    bool Declaration::isEmpty () const {
+	return this-> _value == nullptr;
+    }
+    
     void Declaration::treePrint (Ymir::OutBuffer & stream, int i) const {	
-	if (this-> _value == NULL) {
+	if (this-> _value == nullptr) {
 	    stream.writef ("%*", i, '\t');
 	    stream.writeln ("<null>");
 	} else this-> _value-> treePrint (stream, i);

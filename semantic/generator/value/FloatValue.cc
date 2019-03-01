@@ -38,6 +38,10 @@ namespace semantic {
 	const std::string & FloatValue::getValue () const {
 	    return this-> _value;
 	}
+
+	std::string FloatValue::prettyString () const {
+	    return Ymir::format ("%", this-> _value);
+	}
 	
     }
     

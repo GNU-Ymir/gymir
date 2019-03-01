@@ -42,6 +42,10 @@ namespace semantic {
 	const Generator & Break::getValue () const {
 	    return this-> _value;
 	}
+
+	std::string Break::prettyString () const {
+	    return Ymir::format ("break ", this-> _value.prettyString ());
+	}
 	
     }
     

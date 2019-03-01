@@ -59,6 +59,8 @@ namespace semantic {
 	     */
 	    const std::string & getName () const;
 
+	    std::string prettyString () const override;
+	    
 	};
 	
     }

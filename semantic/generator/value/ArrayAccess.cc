@@ -48,7 +48,10 @@ namespace semantic {
 	const Generator & ArrayAccess::getIndex () const {
 	    return this-> _index;
 	}
-	
+
+	std::string ArrayAccess::prettyString () const {
+	    return Ymir::format ("% [%]", this-> _array.prettyString (), this-> _index.prettyString ());
+	}
     }
     
 }

@@ -61,6 +61,13 @@ namespace semantic {
 	const std::vector <Generator> & Call::getParameters () const {
 	    return this-> _params;
 	}
+
+	std::string Call::prettyString () const {
+	    std::vector <std::string> params;
+	    for (auto & it : this-> _params)
+		params.push_back (it.prettyString ());
+	    return Ymir::format ("% (%)", this-> _frame.prettyString (), params);
+	}
 	
     }
     

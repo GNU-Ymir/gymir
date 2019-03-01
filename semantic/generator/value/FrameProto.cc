@@ -55,7 +55,16 @@ namespace semantic {
 	const std::string & FrameProto::getName () const {
 	    return this-> _name;
 	}
-	
+
+	std::string FrameProto::prettyString () const {
+	    std::vector <std::string> content;
+	    for (auto & it : this-> _params) {
+		content.push_back (Ymir::entab (it.prettyString ()));		
+		if (content.back ().size () != 0 && content.back ().back () == '\n')
+		    content.back () = content.back ().substr (0, content.back ().size () - 1);
+	    }
+	    return Ymir::format ("% (%)-> %", this-> _name, content, this-> _type.prettyString ());
+	}
     }
     
 }

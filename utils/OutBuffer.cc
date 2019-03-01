@@ -130,5 +130,19 @@ namespace Ymir {
     void OutBuffer::throwError () {
 	//Ymir::Error::assert ("error");
     }
+
+    std::string entab (const std::string & value) {
+	Ymir::OutBuffer buf;
+	ulong i = 0;
+	for (auto & c : value) {
+	    buf.write (c);
+	    i += 1;
+	    
+	    if (c == '\n' && i != value.size ()) buf.write ('\t');
+	    else if (c == '\r' && i != value.size ()) buf.write ('\t');
+	}
+	return buf.str ();
+    }
+
     
 }

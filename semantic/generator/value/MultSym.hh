@@ -48,6 +48,8 @@ namespace semantic {
 	     * \return the list of generators of the mult reference
 	     */
 	    const std::vector <Generator> & getGenerators () const;
+
+	    std::string prettyString () const override;
 	    
 	};
 	

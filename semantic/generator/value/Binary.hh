@@ -95,6 +95,8 @@ namespace semantic {
 	     */
 	    Operator getOperator () const;
 	    
+	    std::string prettyString () const override;
+	    
 	};	
 
     }

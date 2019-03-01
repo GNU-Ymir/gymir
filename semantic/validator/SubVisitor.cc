@@ -23,6 +23,14 @@ namespace semantic {
 	    match (left) {
 		of (MultSym, mult, return validateMultSym (expression, mult));
 		of (ModuleAccess, acc, return validateModuleAccess (expression, acc));
+		of (FrameProto, proto,
+		    {
+			auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
+			Ymir::Error::occur (expression.getLocation (),
+					    ExternalError::get (UNDEFINED_SUB_PART_FOR),
+					    right, proto.getLocation ().str);
+		    }
+		);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -61,6 +69,7 @@ namespace semantic {
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
 	}
 
+	
     }    
 
 }

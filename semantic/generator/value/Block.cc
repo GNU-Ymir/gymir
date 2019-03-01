@@ -47,6 +47,19 @@ namespace semantic {
 	void Block::setContent (const std::vector<Generator> & content) {
 	    this-> _content = content;
 	}
+
+	std::string Block::prettyString () const {
+	    Ymir::OutBuffer buf ("{");
+	    ulong i = 0;
+	    for (auto & it : this-> _content) {
+		buf.write (Ymir::entab ("\n" + it.prettyString ()));
+		i += 1;
+		if (i != this-> _content.size ())
+		    buf.write (";");
+	    }
+	    buf.writeln ("\n}");
+	    return buf.str ();
+	}
 	
     }
     

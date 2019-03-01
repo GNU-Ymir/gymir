@@ -55,7 +55,7 @@ namespace semantic {
 	     */
 	    UI getUI () const;
 
-	    
+	    std::string prettyString () const override;	    
 	};	
 	
     }

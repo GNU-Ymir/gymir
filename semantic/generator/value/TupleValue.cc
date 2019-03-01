@@ -42,7 +42,13 @@ namespace semantic {
 	const std::vector <Generator> & TupleValue::getContent () const {
 	    return this-> _content;
 	}
-	
+
+	std::string TupleValue::prettyString () const {
+	    std::vector <std::string> content;
+	    for (auto & it : this-> _content)
+		content.push_back (it.prettyString ());
+	    return Ymir::format ("(%)", content);
+	}
     }
     
 }

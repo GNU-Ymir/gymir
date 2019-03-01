@@ -152,15 +152,8 @@ namespace semantic {
 		}
 	    }	
 
-
-	    pushReferent (function);
-	    for (auto & it : func.getPrototype ().getParameters ()) {
-		visit (syntax::ExpressionWrapper::init (it));
-	    }
-	
-	    auto ret = popReferent ();	
-	    getReferent ().insert (ret);
-	    return ret;
+	    getReferent ().insert (function);
+	    return function;
 	}        
 
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str) {
@@ -287,20 +280,9 @@ namespace semantic {
 		auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
 		declarator::Visitor::init ().visit (synt_module);
 	    }
-
-	    auto files = path.getFiles ();
-	    auto symbols = getReferent ().getLocal (files [0]);
-	    auto ref = ModRef::init ({imp.getModule (), files [0]}, files);
 	    
-	    for (auto & sym : symbols) {
-	    	if (sym.is <ModRef> ()) {
-	    	    ref = ref.to<ModRef> ().merge (sym.to<ModRef> ());
-	    	    break;
-	    	}
-	    }
-
-	    getReferent ().replace (ref);
-	    return ref;	    		    
+	    getReferent ().use (imp.getModule ().str , Symbol::getModuleByPath (imp.getModule ().str));
+	    return Symbol::empty ();	    		    
 	}	
 	
 	void Visitor::pushReferent (const Symbol & sym) {

@@ -201,6 +201,18 @@ namespace Ymir {
 	}
 	
 	/**
+	   \brief Print a note error on the error stream
+	   \param word the location of the note
+	   \param format_ the content of the note
+	   \param args the parameter of the format
+	 */
+	template <typename ... TArgs>
+	std::string createNoteOneLine (const std::string& format_, TArgs ... args) {
+	    std::string aux = format ("%(b) : " + format_, "Note", args...);
+	    return aux;
+	}
+	
+	/**
 	   \brief Create a note message
 	   \param word the location of the note
 	 */

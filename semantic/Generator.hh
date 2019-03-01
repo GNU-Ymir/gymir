@@ -90,6 +90,11 @@ namespace semantic {
 	     * \brief Reset the count of uniq ids
 	     */
 	    static void resetIdCount ();
+
+	    /**
+	     * \return a formatted string representing the generator in Ymir like syntax
+	     */
+	    virtual std::string prettyString () const;
 	    
 	    /** Virtual but does not do anything */
 	    virtual ~IGenerator ();
@@ -140,6 +145,11 @@ namespace semantic {
 	     * Proxy function for generator
 	     */
 	    static void resetIdCount ();
+
+	    /**
+	     * Proxy function for generator
+	     */
+	    std::string prettyString () const;
 	    
 	    /**
 	     * \brief Cast the content pointer into the type (if possible)

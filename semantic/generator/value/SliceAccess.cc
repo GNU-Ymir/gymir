@@ -48,7 +48,10 @@ namespace semantic {
 	const Generator & SliceAccess::getIndex () const {
 	    return this-> _index;
 	}
-	
+
+	std::string SliceAccess::prettyString () const {
+	    return Ymir::format ("% [%]", this-> _slice.prettyString (), this-> _index.prettyString ());
+	}
     }
     
 }

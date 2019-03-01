@@ -36,7 +36,11 @@ namespace semantic {
 	bool BoolValue::getValue () const {
 	    return this-> _value;
 	}
-	
+
+	std::string BoolValue::prettyString () const {
+	    if (this-> _value) return "true";
+	    return "false";
+	}
     }
     
 }

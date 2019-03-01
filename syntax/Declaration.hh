@@ -55,7 +55,12 @@ namespace syntax {
 	 * \brief Create an empty declaration (ptr to null)
 	 */
 	static Declaration empty ();
-		
+
+	/**
+	 * \brief Does this proxy refer to nothing ?
+	 */
+	bool isEmpty () const;
+
 	/**
 	 * \brief Cast the content pointer into the type (if possible)
 	 * Raise an internal error if that impossible

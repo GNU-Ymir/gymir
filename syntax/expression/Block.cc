@@ -3,18 +3,20 @@
 namespace syntax {
 
     Block::Block () :
-	IExpression (lexing::Word::eof ())
+	IExpression (lexing::Word::eof ()),
+	_declModule (Declaration::empty ())
     {}
     
     Block::Block (const lexing::Word & loc) :
-	IExpression (loc)
+	IExpression (loc),
+	_declModule (Declaration::empty ())
     {}
 
-    Expression Block::init (const lexing::Word & location, const lexing::Word & end, const std::vector <Declaration> & decls, const std::vector <Expression> & content) {
+    Expression Block::init (const lexing::Word & location, const lexing::Word & end, const Declaration & declModule, const std::vector <Expression> & content) {
 	auto ret = new (Z0) Block (location);
 	ret-> _end = end;
-	ret-> _decls = decls;
 	ret-> _content = content;
+	ret-> _declModule = declModule;
 	return Expression {ret};
     }
 
@@ -31,8 +33,7 @@ namespace syntax {
 
     void Block::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Block>", i, '\t');
-	for (auto & it : this-> _decls)
-	    it.treePrint (stream, i + 1);
+	this-> _declModule.treePrint (stream, i + 1);
 	
 	for (auto & it : this-> _content)
 	    it.treePrint (stream, i + 1);
@@ -42,6 +43,10 @@ namespace syntax {
 	return this-> _content;
     }
 
+    const Declaration & Block::getDeclModule () const {
+	return this-> _declModule;
+    }
+    
     const lexing::Word & Block::getEnd () const {
 	return this-> _end;
     }

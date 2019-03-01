@@ -38,6 +38,9 @@ namespace semantic {
 	const Generator & NamedGenerator::getContent () const {
 	    return this-> _content;
 	}
-    
+
+	std::string NamedGenerator::prettyString () const {
+	    return Ymir::format ("?% = %", this-> getLocation ().str, this-> _content.prettyString ());
+	}
     }
 }

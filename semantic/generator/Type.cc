@@ -37,11 +37,15 @@ namespace semantic {
 		return "mut " + inner;
 	    return inner;
 	}
-
+	
 	std::string Type::typeName () const {
 	    return "undef";
 	}	
 
+	std::string Type::prettyString () const {
+	    return this-> getTypeName ();
+	}
+	
 	bool Type::isRef () const {
 	    return this-> _isRef;
 	}

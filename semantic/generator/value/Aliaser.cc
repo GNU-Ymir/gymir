@@ -38,6 +38,10 @@ namespace semantic {
 	const Generator & Aliaser::getWho () const {
 	    return this-> _who;
 	}
+
+	std::string Aliaser::prettyString () const {
+	    return Ymir::format ("alias %", this-> _who.prettyString ());
+	}
 	
     }
     

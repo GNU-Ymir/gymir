@@ -6,6 +6,7 @@ namespace Ymir {
 			    BORROWED_HERE		    = "borrow occured here",
 			    BREAK_INSIDE_EXPR		    = "break here will result in an undefined behavior",
 			    BREAK_NO_LOOP		    = "break statement must be placed inside a loop",
+			    CANDIDATE_ARE                   = "candidate % : %",
 			    COMPILATION_END		    = "",
 			    COMPILE_TIME_UNKNOWN	    = "the value of this expression is required, but could not be known at compile time",
 			    CONFLICT_DECORATOR		    = "conflicting decorator",
@@ -14,6 +15,7 @@ namespace Ymir {
 			    DISCARD_CONST_LEVEL		    = "discard the constant qualifier is prohibited, left operand mutability level is %(y) but must be at most %(y)",
 			    DISCARD_LOCALITY		    = "discard the locality is prohibited",
 			    DYNAMIC_CAST_FAILED		    = "dynamic cast failed : %",
+			    FORWARD_REFERENCE_VAR           = "the type cannot be infered, as it depends on a forward reference",
 			    IMMUTABLE_LVALUE		    = "left operand is immutable",
 			    IMPLICIT_COPY		    = "implicit memory copy of type %(y) is not allowed",
 			    IMPLICIT_REFERENCE		    = "implicit referencing of type %(y) is not allowed",
@@ -47,9 +49,9 @@ namespace Ymir {
 			    UNDEFINED_CA		    = "custom attribute %(y), does not exist in this context",
 			    UNDEFINED_CALL_OP		    = "call operator is not defined for type %(y) and {%(y)}",
 			    UNDEFINED_ESCAPE		    = "undefined escape sequence",
-			    UNDEFINED_UN_OP		    = "undefined operator %(y) for type %(y)",
 			    UNDEFINED_SUB_PART              = "undefined sub symbol %(y)",
-			    UNDEFINED_SUB_PART_FOR              = "undefined sub symbol %(y) for module %(y)",
+			    UNDEFINED_SUB_PART_FOR          = "undefined sub symbol %(y) for module %(y)",
+			    UNDEFINED_UN_OP		    = "undefined operator %(y) for type %(y)",
 			    UNDEF_TYPE			    = "undefined type %(y)",
 			    UNDEF_VAR			    = "undefined symbol %(y)",
 			    UNREACHBLE_STATEMENT	    = "unreachable statement",
@@ -59,6 +61,5 @@ namespace Ymir {
 			    VAR_DECL_WITH_NOTHING	    = "var declaration must at least have a type or a value",
 			    VOID_VAR			    = "cannot declare var of type void",
 			    WRONG_MODULE_NAME		    = "module named %(y) must be placed in file named %(y)",			    
-			    FORWARD_REFERENCE_VAR           = "the type cannot be infered, as it depends on a forward reference"
     );    
 }

@@ -62,7 +62,8 @@ namespace semantic {
 	     * \return the content to execute if the test is not valid
 	     */
 	    const Generator & getElse () const;
-	    
+
+	    std::string prettyString () const override;
 	};
 	
     }

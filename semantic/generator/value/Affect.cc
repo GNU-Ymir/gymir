@@ -45,7 +45,10 @@ namespace semantic {
 	const Generator & Affect::getValue () const {
 	    return this-> _value;
 	}
-	
+
+	std::string Affect::prettyString () const {
+	    return Ymir::format ("% = %", this-> _who.prettyString (), this-> _value.prettyString ());
+	}
     }
     
 }
