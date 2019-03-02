@@ -16,6 +16,9 @@ namespace semantic {
 	     * is it a reference to a mutable variable ?
 	     */
 	    bool _isMutable;
+
+	    /** If the this refer to a const var, it could have a compile time value */
+	    Generator _value;
 	    
 	private :
 
@@ -23,7 +26,7 @@ namespace semantic {
 	    
 	    VarRef ();
 
-	    VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint refId, bool isMutable);
+	    VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint refId, bool isMutable, const Generator & value);
 
 	public :
 
@@ -34,7 +37,7 @@ namespace semantic {
 	     * \param type the type of the var
 	     * \param refId the id of the generator that will declare the var
 	     */
-	    static Generator init (const lexing::Word & locatio, const std::string & name, const Generator & type, uint refId, bool isMutable);
+	    static Generator init (const lexing::Word & locatio, const std::string & name, const Generator & type, uint refId, bool isMutable, const Generator & value);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -61,6 +64,11 @@ namespace semantic {
 	     */
 	    bool isMutable () const;	    
 
+	    /**
+	     * \return the value of the ref (if any, it could be empty ())
+	     */
+	    const Generator & getValue () const;
+	    
 	    std::string prettyString () const override;
 	};
 	

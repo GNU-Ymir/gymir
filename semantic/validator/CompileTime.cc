@@ -20,53 +20,61 @@ namespace semantic {
 	    match (gen) {
 		of (Fixed, f ATTRIBUTE_UNUSED,
 		    return gen;
-		);
-
-		of (ArrayValue, v ATTRIBUTE_UNUSED,
+		)
+		    
+		else of (ArrayValue, v ATTRIBUTE_UNUSED,
 		    return gen;
-		);
-
-		of (CharValue, c ATTRIBUTE_UNUSED,
+		)
+			 
+		else of (CharValue, c ATTRIBUTE_UNUSED,
 		    return gen;
-		);
-
-		of (FloatValue, f ATTRIBUTE_UNUSED,
+		)
+			     
+		else of (FloatValue, f ATTRIBUTE_UNUSED,
 		    return gen;
-		);
+		)
 
-		of (None, n ATTRIBUTE_UNUSED,
+		else of (None, n ATTRIBUTE_UNUSED,
 		    return gen;
-		);
+		)
 
-		of (Affect, aff,
+		else of (Affect, aff,
 		    return executeAffect (aff);
-		);
+		)
 
-		of (ArrayAccess, arr,
+		else of (ArrayAccess, arr,
 		    return executeArrayAccess (arr);
-		);
+		)
 
-		of (BinaryInt, bin,
+		else of (BinaryInt, bin,
 		    return executeBinaryInt (bin);
-		);
+		)
 
-		of (BinaryFloat, fl,
+		else of (UnaryInt, una,
+		    return executeUnaryInt (una);
+		)
+			 
+		else of (BinaryFloat, fl,
 		    return executeBinaryFloat (fl);
-		);
+		)
 
-		of (Conditional, cd,
+		else of (Conditional, cd,
 		    return executeConditional (cd);
-		);
+		)
 
-		of (Set, st,
+		else of (Set, st,
 		    return executeSet (st);
-		);
+		) 			 
 
-		// of (VarDecl, vdecl,
-		//     return executeVarDecl (vdecl);
-		// );
+                else of (Block, bl,
+		     return executeBlock (bl);
+		)
+			 
+		else of (generator::VarDecl, vdecl,
+		    return executeVarDecl (vdecl);
+		)
 
-		of (VarRef, vref,
+		else of (VarRef, vref,
 		    return executeVarRef (vref);
 		);
 		
@@ -117,7 +125,7 @@ namespace semantic {
 	    return 0;
 	}
 	
-	ulong getMinU (const Integer & type) {
+	ulong getMinU (const Integer &) {
 	    return 0;
 	}
 		
@@ -147,6 +155,7 @@ namespace semantic {
 	    case Binary::Operator::MODULO : return left % right;
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return T ();
 	    }	    
 	}
 	
@@ -161,6 +170,7 @@ namespace semantic {
 	    case Binary::Operator::NOT_EQUAL : return left != right; 
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return false;
 	    }
 	}
 	
@@ -201,7 +211,47 @@ namespace semantic {
 		return BoolValue::init (binInt.getLocation (), Bool::init (binInt.getLocation ()), res);
 	    }
 	}
+
+
+	template <typename T>
+	T applyUnaInt (Unary::Operator op, T elem) {
+	    switch (op) {
+	    case Unary::Operator::MINUS : return -elem;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return T ();
+	    }	    
+	}
 	
+	generator::Generator CompileTime::executeUnaryInt (const generator::UnaryInt & unaInt) {
+	    auto elem = this-> execute (unaInt.getOperand ()).to <Fixed> ().getUI ();
+	    if (unaInt.getType ().is <Integer> ()) {
+		bool isSigned = unaInt.getType ().to <Integer> ().isSigned ();
+		std::string type = unaInt.getType ().to <Integer> ().typeName ();
+		
+		long maxI = getMaxS (unaInt.getType ().to <Integer> ());
+		ulong maxU = getMaxU (unaInt.getType ().to <Integer> ());
+
+		long minI = getMinS (unaInt.getType ().to <Integer> ());
+		ulong minU = getMinU (unaInt.getType ().to <Integer> ());
+		
+		Fixed::UI result;
+		if (isSigned) {
+		    result.i = applyUnaInt <long> (unaInt.getOperator (), elem.i);
+		} else
+		    result.u = applyUnaInt <ulong> (unaInt.getOperator (), elem.u);
+
+				
+		if (isSigned && (result.i > maxI || result.i < minI))
+		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::get (OVERFLOW), type, result.i);
+		else if (!isSigned && (result.u > maxU || result.u < minU))
+		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::get (OVERFLOW), type, result.u);
+
+		return Fixed::init (unaInt.getLocation (), unaInt.getType (), result);
+	    } else
+		return Generator::empty ();
+	}
+
 	template <typename T>
 	T applyBinFloat (Binary::Operator op, T left, T right) {
 	    switch (op) {
@@ -211,6 +261,7 @@ namespace semantic {
 	    case Binary::Operator::DIV : return left / right;
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return T ();
 	    }	    
 	}
 	
@@ -225,6 +276,7 @@ namespace semantic {
 	    case Binary::Operator::NOT_EQUAL : return left != right; 
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return false;
 	    }
 	}
 	
@@ -241,19 +293,37 @@ namespace semantic {
 	}
 
 	generator::Generator CompileTime::executeConditional (const generator::Conditional & conditional) {
+	    auto test = this-> execute (conditional.getTest ());
+	    if (test.isEmpty () || !test.is <BoolValue> ())
+		return Generator::empty ();
+
+	    auto isTrue = test.to <BoolValue> ().getValue ();
+	    if (isTrue) {
+		return this-> execute (conditional.getContent ());		
+	    } else if (!conditional.getElse ().isEmpty ())
+		return this-> execute (conditional.getElse ());
+	    
 	    return Generator::empty ();
 	}
 
-	generator::Generator CompileTime::executeSet (const generator::Set & set) {
+	generator::Generator CompileTime::executeSet (const generator::Set &) {
 	    return Generator::empty ();
 	}
 
-	generator::Generator CompileTime::executeVarDecl (const generator::VarDecl & decl) {
+	generator::Generator CompileTime::executeBlock (const generator::Block & block) {
+	    if (block.getType ().is <Void> ()) 
+		return Generator::empty ();
+	    else return this-> execute (block.getContent ().back ());			       
+	}
+	
+	generator::Generator CompileTime::executeVarDecl (const generator::VarDecl &) {
 	    return Generator::empty ();
 	}
 
 	generator::Generator CompileTime::executeVarRef (const generator::VarRef & ref) {
-	    return Generator::empty ();
+	    if (ref.getValue ().isEmpty ())
+		return Generator::empty ();
+	    else return this-> execute (ref.getValue ());
 	}
 
     }

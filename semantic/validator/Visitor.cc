@@ -685,9 +685,12 @@ namespace semantic {
 
 	    // The gen that we got can be either a param decl or a var decl
 	    if (gen.is <ParamVar> ()) {
-		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId (), gen.to<ParamVar> ().isMutable ());
+		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId (), gen.to<ParamVar> ().isMutable (), Generator::empty ());
 	    } else if (gen.is <generator::VarDecl> ()) {
-		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<generator::VarDecl> ().getVarType (), gen.getUniqId (), gen.to<generator::VarDecl> ().isMutable ());		
+		Generator value (Generator::empty ());
+		if (!gen.to <generator::VarDecl> ().isMutable ())
+		    value = gen.to <generator::VarDecl> ().getVarValue ();
+		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<generator::VarDecl> ().getVarType (), gen.getUniqId (), gen.to<generator::VarDecl> ().isMutable (), value);		
 	    } 
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");

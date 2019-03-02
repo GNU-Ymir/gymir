@@ -49,6 +49,11 @@ namespace semantic {
 	     * \brief Two operands needs to be compile time known
 	     */
 	    generator::Generator executeBinaryInt (const generator::BinaryInt & binInt);
+
+	    /**
+	     * \brief Execute an unary int expression
+	     */
+	    generator::Generator executeUnaryInt (const generator::UnaryInt & unaInt);
 	    
 	    /**
 	     * \brief Execute a binary float expression
@@ -65,6 +70,11 @@ namespace semantic {
 	     * \brief Execute a set of expression at compile time
 	     */
 	    generator::Generator executeSet (const generator::Set & set);
+
+	    /**
+	     * \brief Execute a block of expression at compile time
+	     */
+	    generator::Generator executeBlock (const generator::Block & bl);
 
 	    /**
 	     * \brief execute a var ref at compile time

@@ -4,20 +4,25 @@ namespace semantic {
     namespace generator {
 
 	VarRef::VarRef () :
-	    Value (lexing::Word::eof (), Generator::empty ())
+	    Value (lexing::Word::eof (), Generator::empty ()),
+	    _name (""),
+	    _refId (0),
+	    _isMutable (false),
+	    _value (Generator::empty ())
 	{}
 
-	VarRef::VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable) :
+	VarRef::VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value) :
 	    Value (location, type),
 	    _name (name),
 	    _refId (id),
-	    _isMutable (isMutable)
+	    _isMutable (isMutable),
+	    _value (value)
 	{
 	    this-> isLvalue (this-> _isMutable);
 	}
 
-	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable) {
-	    return Generator {new (Z0) VarRef (location, name, type, id, isMutable)};
+	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value) {
+	    return Generator {new (Z0) VarRef (location, name, type, id, isMutable, value)};
 	}
 
 	Generator VarRef::clone () const {
@@ -43,6 +48,10 @@ namespace semantic {
 	    return this-> _refId;
 	}
 
+	const Generator & VarRef::getValue () const {
+	    return this-> _value;
+	}
+	
 	std::string VarRef::prettyString () const {
 	    if (this-> _isMutable) 
 		return Ymir::format ("mut %", this-> _name);
