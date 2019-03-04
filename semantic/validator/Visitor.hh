@@ -39,7 +39,11 @@ namespace semantic {
 	    std::vector <std::vector <std::set <std::string> > > _usedSyms;
 	    
 	    std::vector <std::vector <std::map <std::string, generator::Generator> > > _symbols;
-	    	    
+
+	    /** The list of declared and usable structures */
+	    std::vector <semantic::Symbol>     _structSyms;
+	    std::vector <generator::Generator> _structs;
+	    
 	private :
 
 	    /** 
@@ -79,6 +83,12 @@ namespace semantic {
 	     * \brief Validate a global var declaration 
 	     */
 	    void validateVarDecl (const semantic::VarDecl & vardecl);
+
+	    /**
+	     * \brief Validate a struct declaration
+	     * \brief unlike, function or var decl, this will not create any generator, but just check the integrity of the structure
+	     */
+	    generator::Generator validateStruct (const semantic::Symbol & str);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type
@@ -189,7 +199,13 @@ namespace semantic {
 	     * \param multSym the list of symbols
 	     */
 	    generator::Generator validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym);
-	    
+
+	    /**
+	     * \brief Transform global extern symbol into valid generators
+	     * \param loc the location of the reference to those symbols
+	     * \param multSym the list of symbols
+	     */
+	    generator::Generator validateMultSymType (const lexing::Word & loc, const std::vector <Symbol> & multSym);  
 	    
 	    /**
 	     * \brief Validate the prototype of a function in order to refer to it
@@ -327,6 +343,12 @@ namespace semantic {
 	     */
 	    void quitBlock ();
 
+	    /**
+	     * \brief Ignore all the local var declared in the current block
+	     * \return all the local var discarded
+	     */
+	    std::map <std::string, generator::Generator> discardAllLocals ();
+	    
 	    /** 
 	     * Enter a new breakable loop 
 	     */
@@ -363,8 +385,10 @@ namespace semantic {
 	     * \param name the name of the symbol to retreive
 	     */
 	    std::vector <Symbol> getGlobal (const std::string & name);
-
+	    
 	private :
+
+	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
 	    
 	};
 	       

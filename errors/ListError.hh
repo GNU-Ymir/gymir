@@ -47,6 +47,7 @@ namespace Ymir {
 			 NOT_A_LVALUE,
 			 NO_ALIAS_EXIST,
 			 NO_COPY_EXIST,
+			 NO_SIZE_FORWARD_REF,
 			 NO_SUCH_FILE,
 			 NULL_PTR,
 			 OVERFLOW,

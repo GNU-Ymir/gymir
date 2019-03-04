@@ -67,7 +67,23 @@ namespace semantic {
 	     * \brief Find the right parameter assoc to the var
 	     */
 	    generator::Generator findParameter (std::vector<generator::Generator> & params, const generator::ProtoVar & var);
+	    
+	    /**
+	     * \brief Validate a call expression on a frame proto
+	     * \param expression the call expression 
+	     * \param proto the prototype to use
+	     * \param params the parameter that will be passed to the function 
+	     * \param score the final score of the call 
+	     * \brief It does not throw an exception on failure, 
+	     * \brief It will return a empty generator and a score of -1
+	     */
+	    generator::Generator validateStructCst (const syntax::MultOperator & expression, const generator::Struct & str, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
 
+	    /**
+	     * \brief Find the right parameter assoc to the var
+	     */
+	    generator::Generator findParameterStruct (std::vector<generator::Generator> & params, const generator::VarDecl & var);	    
+	    
 	    /**
 	     * \brief Validate a mult sym 
 	     * \brief A mult sym regroups a list of frameproto

@@ -28,6 +28,7 @@ namespace Ymir {
 			    NOT_A_LVALUE		    = "not a lvalue",
 			    NO_ALIAS_EXIST		    = "cannot alias type %(y)",
 			    NO_COPY_EXIST		    = "no copy exists for type %(y)",
+			    NO_SIZE_FORWARD_REF             = "field has no size because of forward reference",
 			    NO_SUCH_FILE		    = "%(y) no such file, or permission denied",
 			    NULL_PTR			    = "try to unref a null pointer",
 			    OVERFLOW			    = "overflow capacity for type %(y) = %(y)",

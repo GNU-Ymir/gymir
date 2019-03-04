@@ -1,5 +1,6 @@
 #include <ymir/semantic/generator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
+#include <ymir/semantic/symbol/Struct.hh>
 #include <ymir/utils/Match.hh>
 #include "toplev.h"
 
@@ -51,36 +52,48 @@ namespace semantic {
 	    match (gen) {
 		of (Integer, i,
 		    type = Tree::intType (i.getSize (), i.isSigned ());
-		);		
+		)		
 
-		of (Void, v ATTRIBUTE_UNUSED,
+		else of (Void, v ATTRIBUTE_UNUSED,
 		    type = Tree::voidType ();
-		);
+		)
 
-		of (Bool, b ATTRIBUTE_UNUSED,
+		else of (Bool, b ATTRIBUTE_UNUSED,
 		    type = Tree::boolType ();
-		);
+		)
 		
-		of (Float, f,
+		else of (Float, f,
 		    type = Tree::floatType (f.getSize ());
-		);
+		)
 
-		of (Char, c,
+		else of (Char, c,
 		    type = Tree::charType (c.getSize ());
-		);
+		)
 
-		of (Array, array,
+		else of (Array, array,
 		    type = Tree::staticArray (generateType (array.getInners () [0]), array.getSize ());
-		);
+		)
 
-		of (Slice, slice,
+		else of (Slice, slice,
 		    type = Tree::sliceType (generateType (slice.getInners () [0]));
-		);
+		)
 
-		of (Tuple, tu, {
+		else of (Tuple, tu, {
 			std::vector <Tree> inner;
 			for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
 			type = Tree::tupleType ({}, inner);
+		    }
+		)
+			 
+		else of (StructRef, st, {
+			auto gen = st.getRef ().to <semantic::Struct> ().getGenerator ();
+			std::vector <Tree> inner;
+			std::vector <std::string> fields;
+			for (auto & it : gen.to <generator::Struct> ().getFields ()) {
+			    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
+			    fields.push_back (it.to <generator::VarDecl> ().getName ());
+			}
+			type = Tree::tupleType (fields, inner);
 		    }
 		);
 	    }
@@ -347,6 +360,10 @@ namespace semantic {
 
 		else of (TupleAccess, acc,
 		    return generateTupleAccess (acc);
+		)
+
+		else of (StructCst, cst,
+		    return generateStructCst (cst);
 		);
 	    }
 
@@ -806,6 +823,18 @@ namespace semantic {
 	    auto fn = generateValue (cl.getFrame ());
 	    auto type = generateType (cl.getType ());
 	    return Tree::buildCall (cl.getLocation (), type, fn , results);
+	}
+
+	generic::Tree Visitor::generateStructCst (const StructCst & cl) {
+	    std::vector <std::string> names;
+	    std::vector <Tree> results;
+	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {
+		names.push_back (cl.getStr ().to <generator::Struct> ().getFields () [it].getName ());
+		results.push_back (castTo (cl.getTypes () [it], cl.getParameters () [it]));
+	    }
+
+	    auto type = generateType (cl.getType ());
+	    return Tree::constructField (cl.getLocation (), type, names, results);
 	}
 	
 	generic::Tree Visitor::generateCopier (const Copier & copy) {

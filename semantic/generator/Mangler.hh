@@ -120,6 +120,11 @@ namespace semantic {
 	     */
 	    std::string mangleVoidT (const Void & v) const ;
 
+	    /**
+	     * \brief Mangle a struct type
+	     */
+	    std::string mangleStructRef (const StructRef & r) const;
+	    
 	private : 
 
 	    /**

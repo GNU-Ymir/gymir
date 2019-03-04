@@ -87,6 +87,26 @@ namespace semantic {
 		    }
 		);
 
+		of (semantic::Struct, str ATTRIBUTE_UNUSED, {
+			std::vector <std::string> errors;
+			this-> _referent.push_back (sym);			
+			TRY (
+			    validateStruct (sym);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+			
+			this-> _referent.pop_back ();
+			
+			if (errors.size () != 0) {
+			    THROW (ErrorCode::EXTERNAL, errors);
+			}
+
+			return;			
+		    }
+		);
+		
 		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);
 	    }
 
@@ -190,7 +210,11 @@ namespace semantic {
 		quitBlock ();
 		insertNewGenerator (Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn));
 		
-	    } else quitBlock ();
+	    } else {
+		// If the function has no body, it is normal that none of the parameters are used
+		this-> discardAllLocals ();
+		quitBlock ();
+	    }
 	}
 
 	void Visitor::validateVarDecl (const semantic::VarDecl & var) {
@@ -218,6 +242,64 @@ namespace semantic {
 	    insertNewGenerator (GlobalVar::init (var.getName (), var.getName ().str, type, value));
 	}
 
+	generator::Generator Visitor::validateStruct (const semantic::Symbol & str) {
+	    if (str.to <semantic::Struct> ().getGenerator ().isEmpty ()) {
+		auto sym = str;
+		auto gen = generator::Struct::init (sym.getName (), sym);
+		sym.to <semantic::Struct> ().setGenerator (gen);
+		this-> _referent.push_back (sym);
+		this-> enterBlock ();
+	    
+		std::vector <std::string> fields;
+		std::vector <generator::Generator> types;
+		for (auto & it : sym.to<semantic::Struct> ().getFields ()) {
+		    this-> validateValue (it);
+		}
+
+		auto syms = this-> discardAllLocals ();
+		
+		this-> quitBlock ();
+		this-> _referent.pop_back ();
+
+		std::vector <Generator> fieldsDecl;
+		for (auto & it : sym.to <semantic::Struct> ().getFields ()) {
+		    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().str);		    
+		    fieldsDecl.push_back (gen-> second);
+		}
+		
+		gen.to <generator::Struct> ().setFields (fieldsDecl);
+		for (auto & it : gen.to <generator::Struct> ().getFields ()) {
+		    verifyRecursivity (it.getLocation (), it.to <generator::VarDecl> ().getVarType (), sym);
+		}
+		
+		sym.to <semantic::Struct> ().setGenerator (gen);
+		return StructRef::init (str.getName (), sym);
+	    }
+	    
+	    return StructRef::init (str.getName (), str);
+	}
+
+	void Visitor::verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const semantic::Symbol & sym) const {
+	    match (gen) {
+		of (StructRef, str_ref, {
+			if (str_ref.isRefOf (sym)) {
+			    auto note = Ymir::Error::createNote (sym.getName ());
+			    Ymir::Error::occurAndNote (loc, note, ExternalError::get (NO_SIZE_FORWARD_REF));
+			} else {
+			    auto & str = str_ref.getRef ().to <semantic::Struct> ().getGenerator ();
+			    for (auto & it : str.to<generator::Struct> ().getFields ()) {
+				verifyRecursivity (loc, it.to <generator::VarDecl> ().getVarType (), sym);
+			    }
+			}
+		    })
+		else of (Type, t, {
+			if (t.isComplex ()) {
+			    for (auto & it : t.getInners ()) verifyRecursivity (loc, it, sym);
+			}
+		    });
+	    }
+	}
+	
 	Generator Visitor::validateValue (const syntax::Expression & expr) {
 	    auto value = validateValueNoReachable (expr);
 	    if (value.to <Value> ().isBreaker ())
@@ -707,19 +789,25 @@ namespace semantic {
 			    this-> _referent.pop_back ();
 			    continue;
 			}
-		    );
+		    )
 
-		    of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
+		    else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
 			    gens.push_back (ModuleAccess::init (loc, sym));
 			    continue;
 			}
-		    );
+		    )
 		    
-		    of (semantic::Module, mod ATTRIBUTE_UNUSED, {
+		    else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
 			    gens.push_back (ModuleAccess::init (loc, sym));
 			    continue;
 			}
-		    );
+		    )
+
+		    else of (semantic::Struct, st ATTRIBUTE_UNUSED, {
+			    auto str_ref = validateStruct (sym);
+			    gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
+			    continue;
+			});
 		}
 		
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -727,6 +815,18 @@ namespace semantic {
 
 	    if (gens.size () == 1) return gens [0];
 	    else return MultSym::init (loc, gens);
+	}
+
+	Generator Visitor::validateMultSymType (const lexing::Word &, const std::vector <Symbol> & multSym) {
+	    if (multSym.size () != 1) return Generator::empty ();	    
+	    match (multSym [0]) {		    
+		of (semantic::Struct, st ATTRIBUTE_UNUSED, {
+			return validateStruct (multSym [0]);
+		    });
+	    }
+	    
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Generator::empty ();
 	}
 	
 	Generator Visitor::validateFunctionProto (const semantic::Function & func) {
@@ -879,7 +979,7 @@ namespace semantic {
 	    insertLocal (var.getName ().str, ret);
 	    return ret;
 	}
-
+	
 	Generator Visitor::validateDecoratedExpression (const syntax::DecoratedExpression & dec_expr) {
 	    auto inner = validateValue (dec_expr.getContent ());
 	    if (dec_expr.hasDecorator (syntax::Decorator::MUT)) {
@@ -1143,6 +1243,12 @@ namespace semantic {
 		return Float::init (var.getName (), std::atoi (size.c_str ())); 
 	    } else if (std::find (Char::NAMES.begin (), Char::NAMES.end (), var.getName ().str) != Char::NAMES.end ()) {
 		return Char::init (var.getName (), std::atoi (var.getName ().str.substr (1).c_str ()));
+	    } else {
+		auto syms = getGlobal (var.getName ().str);
+		if (!syms.empty ()) {
+		    auto ret = validateMultSymType (var.getLocation (), syms);
+		    if (!ret.isEmpty ()) return ret;
+		}
 	    }
 	    
 	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().str);
@@ -1249,6 +1355,12 @@ namespace semantic {
 	    }
 	}
 
+	std::map <std::string, generator::Generator> Visitor::discardAllLocals () {
+	    auto ret = this-> _symbols.back ().back ();
+	    this-> _symbols.back ().back () = {};
+	    return ret;
+	}
+	
 	void Visitor::enterForeign () {
 	    this-> _usedSyms.push_back ({});
 	    this-> _symbols.push_back ({});
@@ -1375,7 +1487,7 @@ namespace semantic {
 	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {
 	    return this-> _referent.back ().get (name);
 	}
-	
+
     }
     
 }

@@ -157,14 +157,12 @@ namespace semantic {
 	}        
 
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str) {
-	    auto structure = Struct::init (str.getName ());
+	    auto structure = Struct::init (str.getName (), str.getDeclarations ());
 	
 	    auto symbols = getReferent ().getLocal (str.getName ().str);	
 	    for (auto & symbol : symbols) {
-		if (!symbol.is <Struct> ()) {
-		    auto note = Ymir::Error::createNote (symbol.getName ());
-		    Ymir::Error::occurAndNote (str.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), str.getName ().str);
-		}
+		auto note = Ymir::Error::createNote (symbol.getName ());
+		Ymir::Error::occurAndNote (str.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), str.getName ().str);		
 	    } 
 	
 	    for (auto & ca : str.getCustomAttributes ()) {
@@ -179,14 +177,8 @@ namespace semantic {
 		}
 	    }	
 
-	    pushReferent (structure);
-	    for (auto & it : str.getDeclarations ()) {
-		visit (syntax::ExpressionWrapper::init (it));
-	    }
-	
-	    auto ret = popReferent ();	
-	    getReferent ().insert (ret);
-	    return ret;
+	    getReferent ().insert (structure);
+	    return structure;
 	}
 
 	semantic::Symbol Visitor::visitAlias (const syntax::Alias & stal) {

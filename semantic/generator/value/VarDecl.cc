@@ -60,9 +60,9 @@ namespace semantic {
 	    auto val = this-> _value.prettyString ();
 	    auto type = this-> _type.prettyString ();
 	    if (this-> _isMutable) {
-		return Ymir::format ("let mut % : % = %", this-> _name, type, val);
+		return Ymir::format ("let mut % : %%%", this-> _name, type, this-> _value.isEmpty () ? "" : " = ", val);
 	    } else
-		return Ymir::format ("let % : % = %", this-> _name, type, val);
+		return Ymir::format ("let % : %%%", this-> _name, type, this-> _value.isEmpty () ? "" : " = ", val);
 	}
 	
     }

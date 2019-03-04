@@ -36,14 +36,15 @@ namespace semantic {
 	std::string Mangler::mangleType (const Generator & gen, bool fatherMut) const {
 	    std::string result = "";
 	    match (gen) {
-		of (Array, ar, result = mangleArrayT (ar));
-		of (Bool, b, result = mangleBoolT (b));
-		of (Char, c, result = mangleCharT (c));
-		of (Float, f, result = mangleFloatT (f));
-		of (Integer, i, result = mangleIntegerT (i));
-		of (Slice, sl, result = mangleSliceT (sl));
-		of (Tuple, tl, result = mangleTupleT (tl));
-		of (Void, v, result = mangleVoidT (v));
+		of (Array, ar, result = mangleArrayT (ar))
+		else of (Bool, b, result = mangleBoolT (b))
+		else of (Char, c, result = mangleCharT (c))
+		else of (Float, f, result = mangleFloatT (f))
+		else of (Integer, i, result = mangleIntegerT (i))
+		else of (Slice, sl, result = mangleSliceT (sl))
+		else of (Tuple, tl, result = mangleTupleT (tl))
+		else of (Void, v, result = mangleVoidT (v))
+		else of (StructRef, r, result = mangleStructRef (r))
 	    }
 	    
 	    if (result == "")
@@ -144,15 +145,15 @@ namespace semantic {
 	}
 
 	std::string Mangler::mangleCharT (const Char & c) const {
-	    return c.getTypeName ();
+	    return c.getTypeName (false);
 	}
 
 	std::string Mangler::mangleFloatT (const Float & f) const {
-	    return f.getTypeName ();
+	    return f.getTypeName (false);
 	}
 
 	std::string Mangler::mangleIntegerT (const Integer & i) const {
-	    return i.getTypeName ();
+	    return i.getTypeName (false);
 	}
 
 	std::string Mangler::mangleSliceT (const Slice & s) const {
@@ -174,6 +175,13 @@ namespace semantic {
 
 	std::string Mangler::mangleVoidT (const Void &) const {
 	    return "v";
+	}
+
+	std::string Mangler::mangleStructRef (const StructRef & ref) const {
+	    Ymir::OutBuffer buf;
+	    auto splits = split (ref.getTypeName (false), "::");
+	    for (auto & it : splits) buf.write (it.length (), it);
+	    return buf.str ();
 	}
 	
 	std::vector <std::string> Mangler::split (const std::string & str, const std::string & delim) const {
