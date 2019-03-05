@@ -126,6 +126,7 @@ ymir_OBJS = \
 	ymir/generator_SliceAccess.o \
 	ymir/generator_StructRef.o \
 	ymir/generator_Struct.o \
+	ymir/generator_StructAccess.o \
 	ymir/generator_StructCst.o \
 	ymir/generator_Tuple.o \
 	ymir/generator_TupleAccess.o \

@@ -23,17 +23,10 @@ namespace semantic {
 	    match (left) {
 		of (MultSym, mult, return validateMultSym (expression, mult));
 		of (ModuleAccess, acc, return validateModuleAccess (expression, acc));
-		of (FrameProto, proto,
-		    {
-			auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
-			Ymir::Error::occur (expression.getLocation (),
-					    ExternalError::get (UNDEFINED_SUB_PART_FOR),
-					    right, proto.getLocation ().str);
-		    }
-		);
 	    }
 
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str);
+	    
 	    return Generator::empty ();
 	}
 
@@ -48,9 +41,7 @@ namespace semantic {
 	    }
 
 	    if (syms.size () == 0) {
-		Ymir::Error::occur (expression.getLocation (),
-				    ExternalError::get (UNDEFINED_SUB_PART),
-				    right);
+		this-> error (expression, mult.clone (), right);
 	    }
 
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
@@ -60,15 +51,29 @@ namespace semantic {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    std::vector <Symbol> syms = acc.getLocal (right);
 	    if (syms.size () == 0) {
-		Ymir::Error::occur (expression.getLocation (),
-				    ExternalError::get (UNDEFINED_SUB_PART_FOR),
-				    right, acc.getModRef ().getRealName ()
-		);
+		this-> error (expression, acc.clone (), right);
 	    }
 	    
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
 	}
 
+	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right) {
+	    std::string leftName;
+	    match (left) {
+		of (FrameProto, proto, leftName = proto.getName ())
+		else of (generator::Struct, str, leftName = str.getName ())
+		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
+	    }
+
+	    Ymir::Error::occur (
+		expression.getLocation (),
+		ExternalError::get (UNDEFINED_SUB_PART_FOR),
+		right,
+		leftName
+	    );
+	}
+	
 	
     }    
 

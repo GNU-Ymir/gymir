@@ -1,5 +1,6 @@
 #include <ymir/semantic/generator/value/Struct.hh>
 #include <ymir/semantic/generator/type/Void.hh>
+#include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/utils/OutBuffer.hh>
 
 namespace semantic {
@@ -47,6 +48,14 @@ namespace semantic {
 
 	std::string Struct::getName () const {
 	    return this-> _ref.getRealName ();
+	}
+	
+	Generator Struct::getFieldType (const std::string & name) const {
+	    for (auto & it : this-> _fields) {
+		if (it.to <generator::VarDecl> ().getName () == name)
+		    return it.to <generator::VarDecl> ().getVarType ();
+	    }
+	    return Generator::empty ();
 	}
 	
 	std::string Struct::prettyString () const {

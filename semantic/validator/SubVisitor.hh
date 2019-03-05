@@ -47,6 +47,11 @@ namespace semantic {
 	     * \brief Validate a module access
 	     */
 	    generator::Generator validateModuleAccess (const syntax::Binary &expression, const generator::ModuleAccess & acc);
+
+	private :
+
+	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);
+	    
 	};
 
     }

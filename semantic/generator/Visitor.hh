@@ -144,6 +144,11 @@ namespace semantic {
 	     * \brief Transform a tuple access into gimple
 	     */
 	    generic::Tree generateTupleAccess (const TupleAccess & acc);
+	    
+	    /**
+	     * \brief Transform a struct access into gimple
+	     */
+	    generic::Tree generateStructAccess (const StructAccess & acc);
 
 	    /**
 	     * \brief Transform a struct construction into gimple

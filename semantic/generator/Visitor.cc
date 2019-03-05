@@ -362,6 +362,10 @@ namespace semantic {
 		    return generateTupleAccess (acc);
 		)
 
+		else of (StructAccess, acc,
+		   return generateStructAccess (acc);
+		)
+			 
 		else of (StructCst, cst,
 		    return generateStructCst (cst);
 		);
@@ -813,7 +817,12 @@ namespace semantic {
 	    auto field = Ymir::format ("_%", acc.getIndex ());
 	    return elem.getField (field);
 	}
-	
+
+	generic::Tree Visitor::generateStructAccess (const StructAccess & acc) {
+	    auto elem = castTo (acc.getStruct ().to <Value> ().getType (), acc.getStruct ());
+	    return elem.getField (acc.getField ());
+	}
+
 	generic::Tree Visitor::generateCall (const Call & cl) {
 	    std::vector <Tree> results;
 	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {

@@ -44,6 +44,12 @@ namespace semantic {
 	     * \param left the value of type tuple
 	     */
 	    generator::Generator validateTuple (const syntax::Binary & expression, const generator::Generator & left);
+
+	    generator::Generator validateStruct (const syntax::Binary & expression, const generator::Generator & left);
+
+	private :
+
+	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);
 	    
 	};
 

@@ -65,6 +65,11 @@ namespace semantic {
 	     */
 	    void setFields (const std::vector <generator::Generator> & fields);
 
+	    /**
+	     * \return the type of a given field or an empty generator 	     
+	     */
+	    Generator  getFieldType (const std::string & name) const;
+	    
 	    std::string getName () const;
 	    
 	    std::string prettyString () const override;
