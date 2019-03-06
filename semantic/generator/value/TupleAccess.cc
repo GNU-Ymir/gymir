@@ -6,13 +6,17 @@ namespace semantic {
 
 	TupleAccess::TupleAccess () :
 	    _tuple (Generator::empty ())
-	{}
+	{
+	    this-> isLvalue (true);
+	}
 
 	TupleAccess::TupleAccess (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint index) :
 	    Value (loc, type),
 	    _tuple (tuple),
 	    _index (index)
-	{}
+	{
+	    this-> isLvalue (true);
+	}
 
 
 	Generator TupleAccess::init (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint index) {

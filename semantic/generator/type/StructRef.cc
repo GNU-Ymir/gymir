@@ -1,5 +1,7 @@
 #include <ymir/semantic/generator/type/StructRef.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/semantic/symbol/Struct.hh>
+#include <ymir/semantic/generator/value/Struct.hh>
 
 namespace semantic {
     namespace generator {
@@ -12,7 +14,13 @@ namespace semantic {
 	StructRef::StructRef (const lexing::Word & loc, const Symbol & ref) :
 	    Type (loc, loc.str),
 	    _ref (ref)
-	{}
+	{
+	    if (!this-> _ref.isEmpty ()) { // A structure is complex iif one of its field is complex
+		this-> isComplex (
+		    this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()
+		);
+	    }
+	}
 
 	Generator StructRef::init (const lexing::Word&  loc, const Symbol & ref) {
 	    return Generator {new (Z0) StructRef (loc, ref)};

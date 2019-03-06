@@ -69,12 +69,27 @@ namespace semantic {
 	     * \return the type of a given field or an empty generator 	     
 	     */
 	    Generator  getFieldType (const std::string & name) const;
-	    
+
+	    /**
+	     * \return the name of the structure (the symbolic one, meaning its space name)
+	     */
 	    std::string getName () const;
-	    
+
+	    /**
+	     *
+	     */
 	    std::string prettyString () const override;
 
+	    /**
+	     * \return the symbol responsible of the declaration of this structure prototype
+	     */
 	    const Symbol&  getRef () const;
+
+	    /**
+	     * \return does this structure have at least one complex field ? 
+	     */
+	    bool hasComplexField () const;
+	    
 	};
     }
     

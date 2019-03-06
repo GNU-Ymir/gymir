@@ -71,5 +71,14 @@ namespace semantic {
 	const Symbol & Struct::getRef () const {
 	    return this-> _ref;
 	}
+
+	bool Struct::hasComplexField () const {
+	    for (auto & it : this-> _fields) {
+		if (it.to <generator::VarDecl> ().getVarType ().to<Type> ().isComplex ())
+		    return true;
+	    }
+	    return false;
+	}
+	
     }
 }

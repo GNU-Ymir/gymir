@@ -1442,7 +1442,8 @@ namespace semantic {
 	    }
 
 	    // Tuple copy is by default, as we cannot alias a tuple
-	    if (gen.to <Value> ().getType ().is <Tuple> ()) {
+	    // Same for structures
+	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <StructRef> ()) {
 		auto tu = gen.to<Value> ().getType ().to <Type> ().toMutable ();
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
@@ -1450,7 +1451,7 @@ namespace semantic {
 		    Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
 					llevel, rlevel
 		    );
-		}
+		}		
 	    } else {	    
 		// Verify copy ownership
 		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional

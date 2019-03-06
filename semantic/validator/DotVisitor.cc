@@ -40,7 +40,8 @@ namespace semantic {
 	    if (expression.getRight ().is <syntax::Var> ()) 
 		this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str);
 	    else {
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		auto right = this-> _context.validateValue (expression.getRight ());
+		this-> error (expression, left, right.to <Value> ().prettyString ());
 	    }
 	    //} FINALLY;
 
@@ -68,6 +69,14 @@ namespace semantic {
 		Ymir::Error::occur (index.getLocation (), ExternalError::get (OVERFLOW_ARITY), index_val, tu_inners.size ());
 	    }
 	    auto type = tu_inners [index_val];
+	    if (
+		left.to <Value> ().isLvalue () &&
+		left.to <Value> ().getType ().to <Type> ().isMutable () &&
+		type.to <Type> ().isMutable ()
+	    )
+		type.to <Type> ().isMutable (true);
+	    else
+		type.to<Type> ().isMutable (false);
 	    
 	    return TupleAccess::init (expression.getLocation (), type, left, index_val);
 	}
@@ -80,6 +89,15 @@ namespace semantic {
 	    auto field_type = str.to <generator::Struct> ().getFieldType (name);
 	    if (field_type.isEmpty ()) return Generator::empty ();
 	    else {
+		if (
+		    left.to <Value> ().isLvalue () &&
+		    left.to <Value> ().getType ().to <Type> ().isMutable () &&
+		    field_type.to <Type> ().isMutable ()
+		)
+		    field_type.to <Type> ().isMutable (true);
+		else
+		    field_type.to<Type> ().isMutable (false);
+		
 		return StructAccess::init (expression.getLocation (), field_type, left, name);
 	    }	    
 	}
