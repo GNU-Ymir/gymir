@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/semantic/generator/Value.hh>
+#include <ymir/semantic/generator/Frame.hh>
 
 namespace semantic {
 
@@ -12,6 +13,8 @@ namespace semantic {
 	    Generator _type;
 
 	    std::string _name;
+
+	    Frame::ManglingStyle _style = Frame::ManglingStyle::Y;
 	    
 	private :
 
@@ -60,6 +63,18 @@ namespace semantic {
 	    const std::string & getName () const;
 
 	    std::string prettyString () const override;
+
+
+	    /**
+	     * \return the mangling style of the frame
+	     */
+	    Frame::ManglingStyle getManglingStyle () const;
+
+	    /**
+	     * \brief Change the mangling style of the frame 
+	     */
+	    void setManglingStyle (Frame::ManglingStyle style);
+	    
 	    
 	};
 	

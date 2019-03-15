@@ -80,7 +80,7 @@ namespace syntax {
 	    Keys::ALIAS, Keys::TYPE, Keys::ENUM,
 	    Keys::DEF, Keys::STATIC, Keys::IMPORT,
 	    Keys::MACRO, Keys::MOD, Keys::STRUCT,
-	    Keys::TRAIT, Keys::USE, Keys::MIXIN
+	    Keys::TRAIT, Keys::USE, Keys::MIXIN, Keys::EXTERN
 	};
 	
 	visit._declarationsBlock = {
@@ -242,6 +242,7 @@ namespace syntax {
 	if (location == Keys::DEF) return visitFunction ();
 	if (location == Keys::STATIC) return visitGlobal ();
 	if (location == Keys::IMPORT) return visitImport ();
+	if (location == Keys::EXTERN) return visitExtern ();
 	// if (location == Keys::MACRO) return visitMacro ();
 	if (location == Keys::MOD) return visitLocalMod ();
 	if (location == Keys::STRUCT) return visitStruct ();
@@ -405,7 +406,7 @@ namespace syntax {
 	this-> _lex.next ({Token::RPAR});
 	
 	auto body = visitFunctionBody ();
-	return Function::init (location, Function::Prototype::init ({}, Expression::empty ()), body);	
+	return Function::init (location, Function::Prototype::init ({}, Expression::empty (), false), body);	
     }
 
     Declaration Visitor::visitEnum () {
@@ -478,19 +479,23 @@ namespace syntax {
     Function::Prototype Visitor::visitFunctionPrototype () {
 	std::vector <Expression> vars;
 	auto token = this-> _lex.next ({Token::LPAR});
+	bool isVariadic = false;
 	do {
-	    token = this-> _lex.consumeIf ({Token::RPAR});
-	    if (token != Token::RPAR) {
+	    token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
+	    if (token == Token::TDOT) {
+		isVariadic = true;
+		token = this-> _lex.next ({Token::RPAR});
+	    } else if (token != Token::RPAR) {
 		vars.push_back (visitSingleVarDeclaration (false, true));
-		token = this-> _lex.next ({Token::RPAR, Token::COMA});
-	    }	    	    
+		token = this-> _lex.next ({Token::RPAR, Token::COMA, Token::TDOT});
+	    } 	    	     
 	} while (token != Token::RPAR);
 	
 	token = this-> _lex.consumeIf ({Token::ARROW});
 	if (token == Token::ARROW) 
-	    return Function::Prototype::init (vars, visitExpression ());
+	    return Function::Prototype::init (vars, visitExpression (), isVariadic);
 	else 
-	    return Function::Prototype::init (vars, Expression::empty ());
+	    return Function::Prototype::init (vars, Expression::empty (), isVariadic);
     }
 
     Function::Body Visitor::visitFunctionBody () {

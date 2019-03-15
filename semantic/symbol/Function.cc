@@ -84,6 +84,14 @@ namespace semantic {
 	else return ISymbol::getRealName ();
     }
     
+    void Function::setExternalLanguage (const std::string & name) {
+	this-> _externLanguage = name;
+    }
+
+    const std::string & Function::getExternalLanguage () const {
+	return this-> _externLanguage;
+    }
+
     std::string Function::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());

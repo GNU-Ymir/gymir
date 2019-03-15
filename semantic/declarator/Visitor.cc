@@ -41,6 +41,10 @@ namespace semantic {
 		    return visitBlock (bl);
 		);
 
+		of (syntax::ExternBlock, ex_bl,
+		    return visitExtern (ex_bl);
+		);
+		
 		of (syntax::Class, cls,
 		    return visitClass (cls);
 		);
@@ -132,7 +136,7 @@ namespace semantic {
 	    }
 	}
 	
-	semantic::Symbol Visitor::visitFunction (const syntax::Function & func) {
+	semantic::Symbol Visitor::visitFunction (const syntax::Function & func, bool isExtern) {
 	    auto function = Function::init (func.getName (), func);
 	
 	    auto symbols = getReferent ().getLocal (func.getName ().str);
@@ -150,8 +154,12 @@ namespace semantic {
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
 		}
-	    }	
+	    }
 
+	    if (!isExtern || !func.getBody ().getBody ().isEmpty ()) {
+		if (func.getPrototype ().isVariadic ()) Ymir::Error::occur (func.getName (), ExternalError::get (DECL_VARIADIC_FUNC));
+	    }
+	    
 	    getReferent ().insert (function);
 	    return function;
 	}        
@@ -203,6 +211,38 @@ namespace semantic {
 	    return Symbol::empty ();
 	}
 
+	semantic::Symbol Visitor::visitExtern (const syntax::ExternBlock & ex_block) {
+	    if (ex_block.getFrom () == Keys::CLANG) {
+		if (!ex_block.getSpace ().isEof ()) 
+		    Ymir::Error::occur (ex_block.getSpace (), ExternalError::get (SPACE_EXTERN_C));
+		for (const syntax::Declaration & ex_decl : ex_block.getDeclaration ().to <syntax::DeclBlock> ().getDeclarations ()) {
+		    match (ex_decl) {
+			of (syntax::Function, func,
+			    auto decl = visitFunction (func, true);
+			    decl.to <semantic::Function> ().setExternalLanguage (ex_block.getFrom ().str);
+			) 
+
+			else of (syntax::ExpressionWrapper, wrap, {
+				match (wrap.getContent ()) {
+				    of (syntax::VarDecl, decl,
+					visitVarDecl (decl);
+					continue;
+				    );		    
+				}
+			    		
+				Error::halt ("%(r) - reaching impossible point", "Critical");
+				return Symbol::empty ();
+			    }
+			) else
+			    Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
+		    }
+		}
+	    } else
+		Error::halt ("%(r) - reaching impossible point", "Critical");
+	    
+	    return Symbol::empty ();
+	}
+	
 	semantic::Symbol Visitor::visitClass (const syntax::Class & stcls) {
 	    auto cls = Class::init (stcls.getName (), stcls.getAncestor ());
 	

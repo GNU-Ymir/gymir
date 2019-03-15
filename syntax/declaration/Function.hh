@@ -30,6 +30,9 @@ namespace syntax {
 	    /** The return type of the function (a VarDecl) */
 	    Expression _retType;
 
+	    /** Some C function can be variadic, a Ymir function cannot */
+	    bool _isVariadic;
+	    
 	private:
 
 	    Prototype ();
@@ -56,7 +59,7 @@ namespace syntax {
 	     * \param retType the return type of the function 
 	     * \param retDeco the decorators of the return type
 	     */
-	    static Prototype init (const std::vector <Expression> & vars, const Expression & retType);
+	    static Prototype init (const std::vector <Expression> & vars, const Expression & retType, bool isVariadic);
 
 
 	    /**
@@ -82,6 +85,12 @@ namespace syntax {
 	    void setType (const Expression & type);
 
 	    /**
+	     * \brief Set the variadic information of this prototype
+	     * \param is if true, this prototype is considered variadic
+	     */
+	    void isVariadic (bool is);
+	    
+	    /**
 	     * \return the list of parameters of the prototype
 	     */
 	    const std::vector <Expression> & getParameters () const;
@@ -91,6 +100,10 @@ namespace syntax {
 	     */
 	    const Expression & getType () const;	    
 
+	    /**
+	     * \return is this prototype variadic ?
+	     */
+	    bool isVariadic () const;
 	};
 
 	/**

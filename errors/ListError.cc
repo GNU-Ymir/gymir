@@ -10,6 +10,7 @@ namespace Ymir {
 			    COMPILATION_END		    = "",
 			    COMPILE_TIME_UNKNOWN	    = "the value of this expression is required, but could not be known at compile time",
 			    CONFLICT_DECORATOR		    = "conflicting decorator",
+			    DECL_VARIADIC_FUNC              = "cannot declare a variadic function",
 			    DECO_OUT_OF_CONTEXT		    = "decorator %(y) is unusable in this context",
 			    DISCARD_CONST		    = "discard the constant qualifier is prohibited",
 			    DISCARD_CONST_LEVEL		    = "discard the constant qualifier is prohibited, left operand mutability level is %(y) but must be at most %(y)",
@@ -17,6 +18,7 @@ namespace Ymir {
 			    DYNAMIC_CAST_FAILED		    = "dynamic cast failed : %",
 			    FORWARD_REFERENCE_VAR           = "the type cannot be infered, as it depends on a forward reference",
 			    IMMUTABLE_LVALUE		    = "left operand is immutable",
+			    IMPOSSIBLE_EXTERN               = "impossible extern declaration",
 			    IMPLICIT_COPY		    = "implicit memory copy of type %(y) is not allowed",
 			    IMPLICIT_REFERENCE		    = "implicit referencing of type %(y) is not allowed",
 			    INCOMPATIBLE_TYPES		    = "incompatible types %(y) and %(y)",
@@ -40,6 +42,7 @@ namespace Ymir {
 			    RETURN_INSIDE_EXPR		    = "return here will result in an undefined behavior", 
 			    RETURN_LOCAL_REFERENCE	    = "expression does not live long enough",
 			    SHADOWING_DECL		    = "declaration of %(y) shadow another declaration",
+			    SPACE_EXTERN_C                  = "extern C cannot be namespaced",
 			    SPECIALISATION_WOTK_WITH_BOTH   = "%(y) called with {%(y)} work with both",
 			    STATIC_ARRAY_REF		    = "left operand is a static array, it cannot store a reference to a dynamic array",
 			    SYNTAX_ERROR_AT		    = "[%] expected, when %(y) found",	// syntax error a specific location

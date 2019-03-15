@@ -28,6 +28,12 @@ namespace semantic {
 		    
 		else of (StructRef, st ATTRIBUTE_UNUSED,
 		    ret = validateStruct (expression, left);
+		)
+		else of (Array, arr ATTRIBUTE_UNUSED,
+		     ret = validateArray (expression, left);
+		)
+		else of (Slice, sl ATTRIBUTE_UNUSED,
+		     ret = validateSlice (expression, left);
 		);
 	    }
 
@@ -102,6 +108,33 @@ namespace semantic {
 	    }	    
 	}
 
+	Generator DotVisitor::validateArray (const syntax::Binary & expression, const Generator & left) {
+	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+
+	    if (name == "len") {
+		Fixed::UI u; u.u = left.to <Value> ().getType ().to <Array> ().getSize ();
+		return Fixed::init (
+		    expression.getLocation (),
+		    Integer::init (expression.getLocation (), 64, false),
+		    u
+		);
+	    }
+	    return Generator::empty ();
+	}
+
+	Generator DotVisitor::validateSlice (const syntax::Binary & expression, const Generator & left) {
+	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+
+	    if (name == "len") {
+		return StructAccess::init (expression.getLocation (),
+					   Integer::init (expression.getLocation (), 64, false),
+					   left, name);
+	    }
+	    return Generator::empty ();
+	}
+	
 	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right) {
 	    std::string leftName;
 	    match (left) {

@@ -27,6 +27,8 @@ namespace semantic {
 
 	/** Is this function safe ? (it means cannot crash the program) */
 	bool _isSafe;
+
+	std::string _externLanguage;
 	
     private :
 
@@ -69,6 +71,16 @@ namespace semantic {
 	 */
 	std::string getRealName () const override;
 
+	/**
+	 * \brief Change the external language (for external function declaration)
+	 */
+	void setExternalLanguage (const std::string & name);
+	
+	/**
+	 * \return the external language of the declaration
+	 */
+	const std::string & getExternalLanguage () const;
+	
 	std::string formatTree (int padd) const override;
 	
     };    

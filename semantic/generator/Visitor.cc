@@ -172,7 +172,7 @@ namespace semantic {
 
 	    vec_safe_push (globalDeclarations, decl.getTree ());
 	}
-
+	
 	void Visitor::generateFrame (const Frame & frame) {
 	    std::vector <Tree> args;
 	    for (auto i : Ymir::r (0, args.size ())) {
@@ -815,12 +815,12 @@ namespace semantic {
 	generic::Tree Visitor::generateTupleAccess (const TupleAccess & acc) {
 	    auto elem = castTo (acc.getTuple ().to <Value> ().getType (), acc.getTuple ());
 	    auto field = Ymir::format ("_%", acc.getIndex ());
-	    return elem.getField (field);
+	    return elem.toDirect ().getField (field);
 	}
 
 	generic::Tree Visitor::generateStructAccess (const StructAccess & acc) {
 	    auto elem = castTo (acc.getStruct ().to <Value> ().getType (), acc.getStruct ());
-	    return elem.getField (acc.getField ());
+	    return elem.toDirect ().getField (acc.getField ());
 	}
 
 	generic::Tree Visitor::generateCall (const Call & cl) {

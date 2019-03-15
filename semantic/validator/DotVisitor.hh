@@ -47,6 +47,10 @@ namespace semantic {
 
 	    generator::Generator validateStruct (const syntax::Binary & expression, const generator::Generator & left);
 
+	    generator::Generator validateArray (const syntax::Binary & expression, const generator::Generator & left);
+
+	    generator::Generator validateSlice (const syntax::Binary & expression, const generator::Generator & left);
+
 	private :
 
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);

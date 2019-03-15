@@ -6,6 +6,14 @@ namespace semantic {
     namespace generator {
 
 	class Frame : public IGenerator {
+	public :
+
+	    enum class ManglingStyle {
+		C,
+		CXX,
+		Y
+	    };
+
 	private :
 	    
 	    std::vector <Generator> _params;
@@ -16,6 +24,8 @@ namespace semantic {
 	    Generator _content;
 
 	    bool _needFinalReturn;
+
+	    ManglingStyle _style = ManglingStyle::Y;
 	    
 	private :
 
@@ -72,6 +82,16 @@ namespace semantic {
 	     * \return Does this function needs a final return at the end ?
 	     */
 	    bool needFinalReturn () const;
+
+	    /**
+	     * \return the mangling style of the frame
+	     */
+	    ManglingStyle getManglingStyle () const;
+
+	    /**
+	     * \brief Change the mangling style of the frame 
+	     */
+	    void setManglingStyle (ManglingStyle style);
 	    
 	};
 	

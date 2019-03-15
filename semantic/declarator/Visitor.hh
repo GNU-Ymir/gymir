@@ -83,7 +83,7 @@ namespace semantic {
 	    /**
 	     * \brief Transform a function into a semantic tree
 	     */
-	    semantic::Symbol visitFunction (const syntax::Function & func);
+	    semantic::Symbol visitFunction (const syntax::Function & func, bool isExtern = false);
 
 	    /**
 	     * \brief Transform a struct into a semantic tree
@@ -101,6 +101,12 @@ namespace semantic {
 	     */
 	    semantic::Symbol visitBlock (const syntax::DeclBlock & block);
 
+	    /**
+	     * \brief Transform a list of external declaration into semantic tree
+	     * \return always an empty symbol
+	     */
+	    semantic::Symbol visitExtern (const syntax::ExternBlock & ex_block);
+	    
 	    /**
 	     * \brief Transform a class declarator into a semantic tree
 	     */

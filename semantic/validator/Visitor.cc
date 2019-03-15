@@ -123,10 +123,29 @@ namespace semantic {
 		}
 	    }
 	}
-
+	
+	void Visitor::createMainFunction (const lexing::Word & loc) {
+	    auto frame_proto = FrameProto::init (loc, Keys::MAIN, Void::init (loc), {});
+	    auto itype       = Integer::init (loc, 32, true);
+	    Fixed::UI i; i.i = 0;
+	    auto content = Block::init (
+		loc,
+		itype,
+		{
+		    Call::init (loc, frame_proto.to <FrameProto> ().getReturnType (), frame_proto, {}, {}),
+		    Fixed::init (loc, itype, i)
+		}
+	    );
+	    
+	    auto main_frame = Frame::init (loc, Keys::MAIN, {}, itype, content, true);
+	    main_frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
+	    insertNewGenerator (main_frame);
+	}	
+	
 	void Visitor::validateFunction (const semantic::Function & func) {
 	    auto & function = func.getContent ();
 	    std::vector <Generator> params;
+	    if (function.getName () == Keys::MAIN) createMainFunction (function.getName ());
 	    
 	    enterBlock ();
 	    for (auto & param : function.getPrototype ().getParameters ()) {
@@ -166,8 +185,9 @@ namespace semantic {
 			);
 		    }
 		}
-			
-		if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
+
+		// Excpetion slice can be mutable even if it is not a reference, that is the only exception
+		if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef () && !type.is<Slice> ()) {
 		    Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
 					ExternalError::get (MUTABLE_CONST_PARAM)
 		    );
@@ -208,8 +228,17 @@ namespace semantic {
 		}
 		
 		quitBlock ();
-		insertNewGenerator (Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn));
-		
+		if (func.getExternalLanguage () == "") 
+		    insertNewGenerator (Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn));
+		else {
+		    auto frame = Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn);
+		    auto ln = func.getExternalLanguage ();
+		    if (ln == Keys::CLANG) 
+			frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
+		    else if (ln == Keys::CPPLANG)
+			frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::CXX);
+		    insertNewGenerator (frame);
+		}
 	    } else {
 		// If the function has no body, it is normal that none of the parameters are used
 		this-> discardAllLocals ();
@@ -888,8 +917,9 @@ namespace semantic {
 		    	    );
 		    	}
 		    }
-		
-		    if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef ()) {
+		    
+		    // Exception slice can be mutable even if it is not a reference, that is the only exception
+		    if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef () && !type.is <Slice> ()) {
 		    	Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
 		    			    ExternalError::get (MUTABLE_CONST_PARAM)
 		    	);
@@ -924,8 +954,18 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);		
 	    }
-	    
-	    return FrameProto::init (function.getName (), func.getRealName (), retType, params);	    
+
+	    if (func.getExternalLanguage () == "") 
+		return FrameProto::init (function.getName (), func.getRealName (), retType, params);
+	    else {
+		auto frame = FrameProto::init (function.getName (), func.getRealName (), retType, params);
+		auto ln = func.getExternalLanguage ();
+		if (ln == Keys::CLANG) 
+		    frame.to <FrameProto> ().setManglingStyle (Frame::ManglingStyle::C);
+		else if (ln == Keys::CPPLANG)
+		    frame.to <FrameProto> ().setManglingStyle (Frame::ManglingStyle::CXX);
+		return frame;
+	    }
 	}
 	
 	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {
@@ -997,19 +1037,26 @@ namespace semantic {
 		if (inner.to <Value> ().isLvalue ()) {
 		    if (!inner.to <Value> ().getType ().to <Type> ().isMutable ())
 			Ymir::Error::occur (inner.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));
-		    
-		    auto type = inner.to <Value> ().getType ();
-		    type.to <Type> ().isRef (true);
-		    return Referencer::init (dec_expr.getLocation (), type, inner);
+
+		    if (!inner.is<Referencer> ()) {
+			auto type = inner.to <Value> ().getType ();
+			type.to <Type> ().isRef (true);
+			inner = Referencer::init (dec_expr.getLocation (), type, inner);
+		    } 
 		} else {
 		    Ymir::Error::occur (inner.getLocation (),
 					ExternalError::get (NOT_A_LVALUE)
 		    );
 		}
 	    }
-	    
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Generator::empty ();
+
+	    if (dec_expr.hasDecorator (syntax::Decorator::CONST)) {
+		auto type = inner.to<Value> ().getType ();
+		type.to <Type> ().isMutable (false);
+		inner.to<Value> ().setType (type);
+	    }
+
+	    return inner;
 	}
 
 	Generator Visitor::validateIfExpression (const syntax::If & _if) {
@@ -1151,9 +1198,16 @@ namespace semantic {
 	Generator Visitor::validateCopy (const syntax::Intrinsics & intr) {
 	    auto content = validateValue (intr.getContent ());
 
-	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {
+	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {		
 		auto type = content.to <Value> ().getType ().to <Type> ().toMutable ();
 		type.to<Type> ().isLocal (false);
+		if (type.is <Array> ()) {
+		    if (type.is <Array> ()) {
+			type = Slice::init (intr.getLocation (), type.to<Array> ().getInners () [0]);
+			type.to<Type> ().isMutable (content.to <Value> ().getType ().to <Type> ().isMutable ());
+		    }
+		    content = Aliaser::init (intr.getLocation (), type, content);
+		}
 		
 		// The copy is done on the first level, so we don't have the right to change the mutability of inner data
 		return Copier::init (intr.getLocation (), type, content);
@@ -1443,7 +1497,8 @@ namespace semantic {
 
 	    // Tuple copy is by default, as we cannot alias a tuple
 	    // Same for structures
-	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <StructRef> ()) {
+	    // And for arrays (but left op)
+	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <StructRef> () || type.is<Array> ()) {
 		auto tu = gen.to<Value> ().getType ().to <Type> ().toMutable ();
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
@@ -1452,13 +1507,16 @@ namespace semantic {
 					llevel, rlevel
 		    );
 		}		
-	    } else {	    
+	    } else {
 		// Verify copy ownership
 		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional
-		if (type.to<Type> ().isComplex () && !(gen.is <Copier> () || gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is <Aliaser> ())) {
-		    if (!(construct && gen.is<Referencer> () && type.to<Type> ().isRef ()))
-			Ymir::Error::occur (loc, ExternalError::get (IMPLICIT_COPY),
-					    gen.to <Value> ().getType ().to <Type> ().getTypeName ());
+		if (type.to<Type> ().isComplex () && !gen.is <Copier> ()) {
+		    if (!(gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is <Aliaser> ())
+			|| !(type.to<Type> ().equals (gen.to <Value> ().getType ()))) {
+			if (!(construct && gen.is<Referencer> () && type.to<Type> ().isRef ()))
+			    Ymir::Error::occur (loc, ExternalError::get (IMPLICIT_COPY),
+						gen.to <Value> ().getType ().to <Type> ().getTypeName ());
+		    }
 		}
 
 		// Verify mutability

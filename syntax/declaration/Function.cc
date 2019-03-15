@@ -13,13 +13,15 @@ namespace syntax {
 	Prototype ret;
 	ret._parameters = proto._parameters;
 	ret._retType = proto._retType;
+	ret._isVariadic = false;
 	return ret;
     }
 
-    Function::Prototype Function::Prototype::init (const std::vector <Expression> & parameters, const Expression& retType) {
+    Function::Prototype Function::Prototype::init (const std::vector <Expression> & parameters, const Expression& retType, bool isVariadic) {
 	Prototype ret;
 	ret._parameters = parameters;
 	ret._retType = retType;
+	ret._isVariadic = isVariadic;
 	return ret;
     }
 
@@ -54,6 +56,14 @@ namespace syntax {
 	this-> _retType = type;
     }
 
+    void Function::Prototype::isVariadic (bool is) {
+	this-> _isVariadic = is;
+    }
+
+    bool Function::Prototype::isVariadic () const {
+	return this-> _isVariadic;
+    }
+    
     Function::Body::Body () :
 	_body (Expression::empty ()),
 	_inner (Expression::empty ()),

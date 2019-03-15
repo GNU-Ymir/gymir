@@ -54,6 +54,14 @@ namespace semantic {
 	bool Frame::needFinalReturn () const {
 	    return this-> _needFinalReturn;
 	}
+
+	void Frame::setManglingStyle (Frame::ManglingStyle style) {
+	    this-> _style = style;
+	}
+
+	Frame::ManglingStyle Frame::getManglingStyle () const {
+	    return this-> _style;
+	}
 	
     }
 }

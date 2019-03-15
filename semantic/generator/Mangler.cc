@@ -57,31 +57,43 @@ namespace semantic {
 	}
 	
 	std::string Mangler::mangleFrame (const Frame & fr) const {
-	    auto name = fr.getName ();
-	    std::vector <std::string> splits = split (name, "::");
+	    if (fr.getManglingStyle () == Frame::ManglingStyle::Y) {
+		auto name = fr.getName ();
+		std::vector <std::string> splits = split (name, "::");
 
-	    OutBuffer buf;
-	    buf.write (Mangler::YMIR_PREFIX);
-	    for (auto & it : splits) buf.write (it.length (), it);
-	    buf.write (Mangler::YMIR_FUNCTION);
+		OutBuffer buf;
+		buf.write (Mangler::YMIR_PREFIX);
+		for (auto & it : splits) buf.write (it.length (), it);
+		buf.write (Mangler::YMIR_FUNCTION);
 
-	    for (auto & p : fr.getParams ()) buf.write (mangle (p.to <ParamVar> ().getType ()));
-	    buf.write (Mangler::YMIR_FUNCTION_RET, mangle (fr.getType ()));
-	    return buf.str ();
+		for (auto & p : fr.getParams ()) buf.write (mangle (p.to <ParamVar> ().getType ()));
+		buf.write (Mangler::YMIR_FUNCTION_RET, mangle (fr.getType ()));
+		return buf.str ();
+	    } else {
+		auto name = fr.getName ();
+		std::vector <std::string> splits = split (name, "::");
+		return splits.back ();
+	    }
 	}
 
 	std::string Mangler::mangleFrameProto (const FrameProto & proto) const {
-	    auto name = proto.getName ();
-	    std::vector <std::string> splits = split (name, "::");
+	    if (proto.getManglingStyle () == Frame::ManglingStyle::Y) {
+		auto name = proto.getName ();
+		std::vector <std::string> splits = split (name, "::");
 	    
-	    OutBuffer buf;
-	    buf.write (Mangler::YMIR_PREFIX);
-	    for (auto & it : splits) buf.write (it.length (), it);
-	    buf.write (Mangler::YMIR_FUNCTION);
+		OutBuffer buf;
+		buf.write (Mangler::YMIR_PREFIX);
+		for (auto & it : splits) buf.write (it.length (), it);
+		buf.write (Mangler::YMIR_FUNCTION);
 
-	    for (auto & p : proto.getParameters ()) buf.write (mangle (p.to <ProtoVar> ().getType ()));
-	    buf.write (Mangler::YMIR_FUNCTION_RET, mangle (proto.getReturnType ()));
-	    return buf.str ();
+		for (auto & p : proto.getParameters ()) buf.write (mangle (p.to <ProtoVar> ().getType ()));
+		buf.write (Mangler::YMIR_FUNCTION_RET, mangle (proto.getReturnType ()));
+		return buf.str ();
+	    } else {
+		auto name = proto.getName ();
+		std::vector <std::string> splits = split (name, "::");
+		return splits.back ();
+	    }
 	}
 	
 	std::string Mangler::mangleGlobalVar (const GlobalVar & v) const {

@@ -65,6 +65,14 @@ namespace semantic {
 	    }
 	    return Ymir::format ("% (%)-> %", this-> _name, content, this-> _type.prettyString ());
 	}
+	
+	void FrameProto::setManglingStyle (Frame::ManglingStyle style) {
+	    this-> _style = style;
+	}
+
+	Frame::ManglingStyle FrameProto::getManglingStyle () const {
+	    return this-> _style;
+	}
     }
     
 }

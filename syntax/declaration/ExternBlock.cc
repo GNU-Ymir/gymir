@@ -39,5 +39,21 @@ namespace syntax {
 	
 	this-> _content.treePrint (stream, i + 1);
     }
+
+    const lexing::Word & ExternBlock::getLocation () const {
+	return this-> _location;
+    }
+    
+    const Declaration & ExternBlock::getDeclaration () const {
+	return this-> _content;
+    }
+
+    const lexing::Word & ExternBlock::getSpace () const {
+	return this-> _space;	
+    }
+
+    const lexing::Word & ExternBlock::getFrom () const {
+	return this-> _from;
+    }
     
 }
