@@ -44,4 +44,17 @@ namespace syntax {
 	this-> _iter.treePrint (stream, i + 2);
 	this-> _block.treePrint (stream, i + 1);
     }
+
+    const Expression & For::getIter () const {
+	return this-> _iter;
+    }
+
+    const Expression & For::getBlock () const {
+	return this-> _block;
+    }
+
+    const std::vector <Expression> & For::getVars () const {
+	return this-> _vars;
+    }
+    
 }

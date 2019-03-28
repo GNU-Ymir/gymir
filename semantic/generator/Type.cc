@@ -107,7 +107,7 @@ namespace semantic {
 	    } else {
 		std::vector <Generator> inners;
 		for (auto & it : this-> getInners ())
-		    inners.push_back (it.to <Type> ().toLevelMinusOne ());
+		    inners.push_back (it.to <Type> ().toLevelMinusOne (this-> isMutable ()));
 		
 		Generator ret = Generator {this-> clone ()};
 		ret.to<Type> ().isMutable (true);
@@ -116,8 +116,8 @@ namespace semantic {
 	    }
 	}	
 
-	Generator Type::toLevelMinusOne () const {
-	    if (this-> isMutable ()) return Generator {this-> clone ()};
+	Generator Type::toLevelMinusOne (bool fatherMut) const {
+	    if (this-> isMutable () && fatherMut) return Generator {this-> clone ()};
 	    if (!this-> isComplex ()) return this-> toMutable ();
 	    else {
 		std::vector<Generator> inners = this-> getInners ();

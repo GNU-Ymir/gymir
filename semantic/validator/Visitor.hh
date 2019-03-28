@@ -238,6 +238,12 @@ namespace semantic {
 	    generator::Generator validateWhileExpression (const syntax::While & _wh);
 
 	    /**
+	     * \brief Validate a for expression
+	     * \return as always a generator
+	     */
+	    generator::Generator validateForExpression (const syntax::For & _for);
+	    
+	    /**
 	     * \brief Validate a break expression
 	     */
 	    generator::Generator validateBreak (const syntax::Break & br);
@@ -306,7 +312,7 @@ namespace semantic {
 	     */
 	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct);
 	    
-	private :
+	public :
 
 	    void enterForeign ();
 

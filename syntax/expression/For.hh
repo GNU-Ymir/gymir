@@ -50,6 +50,12 @@ namespace syntax {
 	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+	const Expression & getIter () const;
+
+	const Expression & getBlock () const;
+
+	const std::vector <Expression> & getVars () const;
 	
     };
     

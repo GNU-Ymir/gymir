@@ -171,7 +171,7 @@ namespace semantic {
 	    /**
 	     * \brief Used in toMutable, apply the level - 1 operation
 	     */
-	    virtual Generator toLevelMinusOne () const;
+	    virtual Generator toLevelMinusOne (bool fatherMut) const;
 	    
 	    /**
 	     * \brief if (is) the type is complex 

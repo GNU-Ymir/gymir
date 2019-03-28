@@ -650,7 +650,7 @@ namespace semantic {
 		    decl.setDeclInitial (castTo (var.getVarType (), var.getVarValue ()).toDirect ());
 		else
 		    decl.setDeclInitial (generateValue (var.getVarValue ()));		
-	    } else 
+	    } else if (var.isAutoInit ())
 		decl.setDeclInitial (generateInitValueForType (var.getVarType ()));	    
 
 	    decl.setDeclContext (getCurrentContext ());
@@ -827,6 +827,9 @@ namespace semantic {
 	    std::vector <Tree> results;
 	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {
 		results.push_back (castTo (cl.getTypes () [it], cl.getParameters () [it]));
+		auto type = generateType (cl.getTypes () [it]);
+		if (!type.isPointerType ())
+		    results.back () = results.back ().toDirect ();
 	    }
 
 	    auto fn = generateValue (cl.getFrame ());

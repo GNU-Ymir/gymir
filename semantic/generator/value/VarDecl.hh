@@ -14,6 +14,8 @@ namespace semantic {
 	    Generator _value;
 
 	    bool _isMutable;
+
+	    bool _autoInit = true;
 	    
 	private :
 
@@ -64,6 +66,16 @@ namespace semantic {
 	     * \return has this var been declared mutable ?
 	     */
 	    bool isMutable () const;
+
+	    /**
+	       
+	     */
+	    void isAutoInit (bool is);
+	    
+	    /**
+	     * \return if it has no init value, do we initialize it with default init value ? 
+	     */
+	    bool isAutoInit () const;
 	    
 	    std::string prettyString () const override;
 	};

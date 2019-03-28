@@ -277,7 +277,7 @@ namespace semantic {
 	    if (op != Binary::Operator::LAST_OP) {
 		right = validateMathOperation (op, expression, left, right);
 	    }
-	   	    
+	    
 	    if (!left.to <Value> ().isLvalue ()) 
 		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
 

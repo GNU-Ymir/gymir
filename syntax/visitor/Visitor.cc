@@ -722,17 +722,21 @@ namespace syntax {
 
     Expression Visitor::visitOperand1 () {
 	auto value = visitOperand2 ();
+	return visitOperand1 (value);
+    }
+
+    Expression Visitor::visitOperand1 (const Expression & value) {
 	auto location = this-> _lex.next ();
 	if (location == Token::LPAR || location == Token::LCRO) {
 	    auto params = visitParamList (location == Token::LPAR);
 	    lexing::Word end;
 	    if (location == Token::LPAR) end = this-> _lex.next ({Token::RPAR});
 	    else end = this-> _lex.next ({Token::RCRO});
-	    return MultOperator::init (location, end, value, params);
+	    return visitOperand1 (MultOperator::init (location, end, value, params));
 	} this-> _lex.rewind ();
-	return value;
+	return value;	
     }
-
+    
     Expression Visitor::visitOperand2 () {
 	auto value = visitOperand3 ();
 	return visitOperand2 (value);

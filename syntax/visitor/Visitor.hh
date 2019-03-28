@@ -454,6 +454,11 @@ namespace syntax {
 	/**
 	 * \brief Used to factorize visitOperand
 	 */
+	Expression visitOperand1 (const Expression & value);
+	
+	/**
+	 * \brief Used to factorize visitOperand
+	 */
 	Expression visitOperand2 ();
 
 	/**

@@ -70,7 +70,7 @@ namespace Ymir {
 	void occur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);
-	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	    THROW ((int) ErrorCode::EXTERNAL, msg);	    
 	}
 
 	template <typename ... TArgs>

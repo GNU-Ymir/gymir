@@ -139,9 +139,9 @@ namespace semantic {
 	semantic::Symbol Visitor::visitFunction (const syntax::Function & func, bool isExtern) {
 	    auto function = Function::init (func.getName (), func);
 	
-	    auto symbols = getReferent ().getLocal (func.getName ().str);
+	    auto symbols = getReferent ().getLocal (func.getName ().str);	    
 	    for (auto & symbol : symbols) {
-		if (!symbol.is <Function> () && func.getName () != Keys::SELF_TILDE) {
+		if (!symbol.is <Function> () && !symbol.is <Module> () && !symbol.is <ModRef> () && func.getName () != Keys::SELF_TILDE) {
 		    auto note = Ymir::Error::createNote (symbol.getName ());
 		    Ymir::Error::occurAndNote (func.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), func.getName ().str);
 		}

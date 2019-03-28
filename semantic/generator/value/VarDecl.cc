@@ -56,6 +56,14 @@ namespace semantic {
 	    return this-> _isMutable;
 	}
 
+	bool VarDecl::isAutoInit () const {
+	    return this-> _autoInit;
+	}
+
+	void VarDecl::isAutoInit (bool is) {
+	    this-> _autoInit = is;
+	}	
+	
 	std::string VarDecl::prettyString () const {
 	    auto val = this-> _value.prettyString ();
 	    auto type = this-> _type.prettyString ();

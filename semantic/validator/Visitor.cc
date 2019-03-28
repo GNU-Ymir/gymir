@@ -2,6 +2,7 @@
 #include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/semantic/validator/BracketVisitor.hh>
 #include <ymir/semantic/validator/CallVisitor.hh>
+#include <ymir/semantic/validator/ForVisitor.hh>
 #include <ymir/semantic/validator/CompileTime.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/UnaryVisitor.hh>
@@ -389,6 +390,10 @@ namespace semantic {
 		    return validateWhileExpression (_while);
 		);
 
+		of (syntax::For, _for,
+		    return validateForExpression (_for);
+		);
+		
 		of (syntax::Break, _break,
 		    return validateBreak (_break);
 		);
@@ -1119,6 +1124,11 @@ namespace semantic {
 	    return Loop::init (_wh.getLocation (), type, test, content, _wh.isDo ());	    
 	}	
 
+	Generator Visitor::validateForExpression (const syntax::For & _for) {
+	    auto forVisitor = ForVisitor::init (*this);
+	    return forVisitor.validate (_for);
+	}
+	
 	Generator Visitor::validateBreak (const syntax::Break & _break) {
 	    if (!this-> isInLoop ())
 		Ymir::Error::occur (_break.getLocation (), ExternalError::get (BREAK_NO_LOOP));
@@ -1198,14 +1208,18 @@ namespace semantic {
 	Generator Visitor::validateCopy (const syntax::Intrinsics & intr) {
 	    auto content = validateValue (intr.getContent ());
 
-	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {		
-		auto type = content.to <Value> ().getType ().to <Type> ().toMutable ();
+	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {
+		auto type = content.to<Value> ().getType ();
+		type.to <Type> ().isMutable (false);
+		type = type.to <Type> ().toMutable ();
 		type.to<Type> ().isLocal (false);
+		
 		if (type.is <Array> ()) {
 		    if (type.is <Array> ()) {
 			type = Slice::init (intr.getLocation (), type.to<Array> ().getInners () [0]);
-			type.to<Type> ().isMutable (content.to <Value> ().getType ().to <Type> ().isMutable ());
+			type.to<Type> ().isMutable (true);
 		    }
+		    
 		    content = Aliaser::init (intr.getLocation (), type, content);
 		}
 		
