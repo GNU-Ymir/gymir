@@ -50,56 +50,38 @@ namespace semantic {
 	    }
 	}
 
-	Generator ForVisitor::validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value) {
+	Generator ForVisitor::validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value_, int level) {
 	    auto var = val.to<syntax::VarDecl> ();
 	    
 	    Generator type (Generator::empty ());
 	    auto innerType = array.to <Value> ().getType ().to <Type> ().getInners () [0];
 	    if (!var.getType ().isEmpty ()) {
 		type = this-> _context.validateType (var.getType ());
-		if (!type.to <Type> ().isCompatible (innerType))
-		    Ymir::Error::occur (expression.getLocation (),
-					ExternalError::get (INCOMPATIBLE_TYPES),
-					type.to <Type> ().getTypeName (),
-					innerType.to <Type> ().getTypeName ()
-		    );	    
+		this-> _context.verifyCompatibleType (type, innerType);
 	    } else type = innerType;
 
 	    type.to<Type> ().isMutable (false);
 	    bool isMutable = false, isRef = false;
-	    for (auto & deco : var.getDecorators ()) {
-		switch (deco.getValue ()) {
-		case syntax::Decorator::REF : { type.to <Type> ().isRef (true); isRef = true; } break;
-		case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
-		default :
-		    Ymir::Error::occur (deco.getLocation (),
-					ExternalError::get (DECO_OUT_OF_CONTEXT),
-					deco.getLocation ().str
-		    );
-		}
-	    }
-
-	    if (type.to<Type> ().isMutable () && !type.to<Type> ().isRef () && !type.is <Slice> ()) {
-		Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
-				    ExternalError::get (MUTABLE_CONST_ITER)
-		);
-	    }
-
-	    // index can be mutable iif array is mutable, and inner is mutable
-	    if (type.to<Type> ().isMutable ()) {
-		if (!array.to <Value> ().isLvalue ()) {
-		    Ymir::Error::occur (array.getLocation (), ExternalError::get (NOT_A_LVALUE));
-		} else if (!array.to <Value> ().getType ().to<Type> ().isMutable () || !innerType.to<Type> ().isMutable ()) {
-		    Ymir::Error::occur (array.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));
-		}
-	    }
-
-	    auto ret = Generator::empty ();
+	    this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
+	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_ITER);
+	    
+	    auto value = Generator::empty ();
 	    auto loc = var.getLocation ();
 	    if (!isRef)
-		ret = generator::VarDecl::init (loc, var.getName ().str, type, value, isMutable);
-	    else 
-		ret = generator::VarDecl::init (loc, var.getName ().str, type, Referencer::init (loc, type, value), isMutable);
+		value = value_;
+	    else {
+		if (level < 2)
+		    Ymir::Error::occur (expression.getIter ().getLocation (),
+					ExternalError::get (DISCARD_CONST_LEVEL),
+					2, level
+		    );
+		
+		value = Referencer::init (loc, type, value_);
+	    }
+	    
+	    this-> _context.verifyMemoryOwner (loc, type, value, true);	    
+	    
+	    auto ret = generator::VarDecl::init (loc, var.getName ().str, type, value, isMutable);
 	    this-> _context.insertLocal (var.getName ().str, ret);
 	    return ret;
 	}
@@ -108,7 +90,6 @@ namespace semantic {
 	    std::vector <std::string> errors;
 	    std::vector<Generator> value = {};
 	    auto test = Generator::empty ();
-	    
 	    auto loc = val.getLocation ();
 	    {
 		TRY (
@@ -135,7 +116,11 @@ namespace semantic {
 
 		    auto innerType = array.to <Value> ().getType ().to <Array> ().getInners () [0];
 		    auto indexVal = ArrayAccess::init (loc, innerType, array, iter);
-		    innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal));		    
+		    // Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
+		    bool canBeRef = array.to <Value> ().isLvalue ();
+		    auto level = array.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
+		    
+		    innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));		    
 		    innerValues.push_back (this-> _context.validateValue (expression.getBlock ()));
 		    
 		    innerValues.push_back (Affect::init (

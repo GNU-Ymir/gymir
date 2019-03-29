@@ -158,41 +158,22 @@ namespace semantic {
 		
 		if (!var.getValue ().isEmpty ()) {
 		    value = validateValue (var.getValue ());
-		    if (!type.isEmpty () && !type.equals (value.to <Value> ().getType ()))
-			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					    type.to <Type> ().getTypeName (),
-					    value.to <Value> ().getType ().to<Type> ().getTypeName ()
-			);
+		    if (!type.isEmpty ())
+			verifySameType (type, value.to <Value> ().getType ());
 		    else {
 			type = value.to <Value> ().getType ();
 			type.to <Type> ().isMutable (false);
 		    }
 		}
-		
+
 		if (type.isEmpty ()) {
 		    quitBlock ();
 		    return; // This function is uncomplete, we can't validate it
 		}
 		
-		bool isMutable = false;
-		for (auto & deco : var.getDecorators ()) {
-		    switch (deco.getValue ()) {
-		    case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
-		    case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
-		    default :
-			Ymir::Error::occur (deco.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
-					    deco.getLocation ().str
-			);
-		    }
-		}
-
-		// Excpetion slice can be mutable even if it is not a reference, that is the only exception
-		if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef () && !type.is<Slice> ()) {
-		    Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
-					ExternalError::get (MUTABLE_CONST_PARAM)
-		    );
-		}
+		bool isMutable = false, isRef = false;
+		applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
+		verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);				
 
 		if (!value.isEmpty ()) {		    
 		    verifyMemoryOwner (value.getLocation (), type, value, true);
@@ -219,11 +200,11 @@ namespace semantic {
 		
 		if (!body.to<Value> ().isReturner ()) {
 		    verifyMemoryOwner (body.getLocation (), retType, body, true);
-		    
-		    if (retType.to <Type> ().isRef () && (!body.to <Value> ().getType ().to <Type> ().isRef () || !body.to <Value> ().isLocal ())) {
-			auto note = Ymir::Error::createNote (retType.getLocation (), ExternalError::get (BORROWED_HERE));
-			Ymir::Error::occurAndNote (body.getLocation (), note, ExternalError::get (RETURN_LOCAL_REFERENCE));
-		    }
+		    // verifyLocality ();
+		    // if (retType.to <Type> ().isRef () && (!body.to <Value> ().getType ().to <Type> ().isRef () || !body.to <Value> ().isLocal ())) {
+		    // 	auto note = Ymir::Error::createNote (retType.getLocation (), ExternalError::get (BORROWED_HERE));
+		    // 	Ymir::Error::occurAndNote (body.getLocation (), note, ExternalError::get (RETURN_LOCAL_REFERENCE));
+		    // }
 		    
 		    needFinalReturn = !retType.is<Void> ();
 		}
@@ -264,9 +245,7 @@ namespace semantic {
 	    }
 
 	    if (!value.isEmpty () && !type.isEmpty ()) {
-		if (!type.to <Type> ().isCompatible (value.to<Value> ().getType ())) {
-		    Error::occur (var.getName (), ExternalError::get (INCOMPATIBLE_TYPES), type.to<Type> ().getTypeName (), value.to<Value> ().getType ().to<Type> ().getTypeName ());
-		}
+		verifyCompatibleType (type, value.to<Value> ().getType ());
 	    }
 
 	    insertNewGenerator (GlobalVar::init (var.getName (), var.getName ().str, type, value));
@@ -890,11 +869,8 @@ namespace semantic {
 		    		
 		    if (!var.getValue ().isEmpty () && !no_value) {
 			value = validateValue (var.getValue ());
-			if (!type.isEmpty () && !type.equals (value.to <Value> ().getType ()))
-		    	    Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-		    				type.to <Type> ().getTypeName (),
-		    				value.to <Value> ().getType ().to<Type> ().getTypeName ()
-		    	    );
+			if (!type.isEmpty ()) 
+			    verifyCompatibleType (type, value.to <Value> ().getType ());
 		    	else {
 		    	    type = value.to <Value> ().getType ();
 		    	    type.to <Type> ().isMutable (false);
@@ -911,17 +887,8 @@ namespace semantic {
 		    }
 		
 		    bool isMutable = false;
-		    for (auto & deco : var.getDecorators ()) {
-		    	switch (deco.getValue ()) {
-		    	case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
-		    	case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
-		    	default :
-		    	    Ymir::Error::occur (deco.getLocation (),
-		    				ExternalError::get (DECO_OUT_OF_CONTEXT),
-		    				deco.getLocation ().str
-		    	    );
-		    	}
-		    }
+		    bool isRef = false;
+		    applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
 		    
 		    // Exception slice can be mutable even if it is not a reference, that is the only exception
 		    if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef () && !type.is <Slice> ()) {
@@ -995,18 +962,8 @@ namespace semantic {
 		type.to<Type> ().isRef (false);
 	    }
 
-	    bool isMutable = false;
-	    for (auto & deco : var.getDecorators ()) {
-		switch (deco.getValue ()) {
-		case syntax::Decorator::REF : type.to <Type> ().isRef (true); break;
-		case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
-		default :
-		    Ymir::Error::occur (deco.getLocation (),
-					ExternalError::get (DECO_OUT_OF_CONTEXT),
-					deco.getLocation ().str
-		    );
-		}
-	    }
+	    bool isMutable = false, isRef = false;
+	    applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
 
 	    if (!isMutable) type.to <Type> ().isMutable (false);	    
 	    type.to <Type> ().isLocal (true);
@@ -1480,23 +1437,14 @@ namespace semantic {
 	}
 
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
-	    if (!type.to <Type> ().isCompatible (gen.to <Value> ().getType ()))
-		Ymir::Error::occur (loc, ExternalError::get (INCOMPATIBLE_TYPES),
-				    type.to <Type> ().getTypeName (),
-				    gen.to <Value> ().getType ().to <Type> ().getTypeName ()
-		);	    
-
+	    verifyCompatibleType (type, gen.to <Value> ().getType ());
 
 	    if (!construct && gen.is<Referencer> ()) {
 		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
 	    } else {
 		if (type.to <Type> ().isRef ()) {
-		    if (!type.equals (gen.to<Value> ().getType ()))
-			Ymir::Error::occur (gen.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					    type.to<Type> ().getTypeName (),
-					    gen.to <Value> ().getType ().to <Type> ().getTypeName ()
-			);
-		    		
+		    verifySameType (type, gen.to <Value> ().getType ());
+		    
 		    if (!gen.is<Referencer> ()) {
 			if (gen.to<Value> ().isLvalue ()) {
 			    Ymir::Error::occur (gen.getLocation (), ExternalError::get (IMPLICIT_REFERENCE),
@@ -1551,6 +1499,47 @@ namespace semantic {
 	    // }
 	}
 
+
+	void Visitor::applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, Generator & type, bool & isRef, bool & isMutable) {
+	    isMutable = false;
+	    isRef = false;
+	    for (auto & deco : decos) {
+		switch (deco.getValue ()) {
+		case syntax::Decorator::REF : { type.to <Type> ().isRef (true); isRef = true; } break;
+		case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
+		default :
+		    Ymir::Error::occur (deco.getLocation (),
+					ExternalError::get (DECO_OUT_OF_CONTEXT),
+					deco.getLocation ().str
+		    );
+		}
+	    }	    
+	}
+
+	void Visitor::verifyMutabilityRefParam (const lexing::Word & loc, const Generator & type, Ymir::ExternalErrorValue error) {
+	    // Exception slice can be mutable even if it is not a reference, that is the only exception
+	    if (type.to<Type> ().isMutable () && !type.to<Type> ().isRef () && !type.is <Slice> ()) {
+		Ymir::Error::occur (loc, ExternalError::get (error));
+	    }	    
+	}
+
+	void Visitor::verifySameType (const Generator & left, const Generator & right) {
+	    if (!left.equals (right)) {
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    left.to<Type> ().getTypeName (),
+				    right.to <Type> ().getTypeName ()
+		);
+	    }
+	}
+
+	void Visitor::verifyCompatibleType (const Generator & left, const Generator & right) {
+	    if (!left.to<Type> ().isCompatible (right)) {
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    left.to<Type> ().getTypeName (),
+				    right.to <Type> ().getTypeName ()
+		);
+	    }
+	}	
 
 	Generator Visitor::retreiveValue (const Generator & gen) {
 	    auto compile_time = CompileTime::init (*this);

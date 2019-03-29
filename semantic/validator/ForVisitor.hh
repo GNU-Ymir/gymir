@@ -54,7 +54,7 @@ namespace semantic {
 	    /**
 	     * Validate the var declaration of the iterator in case of by value array iteration
 	     */
-	    generator::Generator validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value);
+	    generator::Generator validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value, int level);
 	    
 	    
 	    generator::Generator iterateArrayByIndexAndValue (const syntax::For & expression, const generator::Generator & value, const syntax::Expression & index, const syntax::Expression & val);

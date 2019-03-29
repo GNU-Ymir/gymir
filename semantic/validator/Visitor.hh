@@ -84,6 +84,7 @@ namespace semantic {
 	     */
 	    void validateVarDecl (const semantic::VarDecl & vardecl);
 
+	    
 	    /**
 	     * \brief Validate a struct declaration
 	     * \brief unlike, function or var decl, this will not create any generator, but just check the integrity of the structure
@@ -311,6 +312,39 @@ namespace semantic {
 	     * \brief And that no implicit operation are performed
 	     */
 	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct);
+
+
+	    /**
+	     * \brief Applicable to the type of a vardecl, 
+	     * \param decos the decorators of the variable (and not of the type)
+	     * \param type the type of the var declaration
+	     * \return isRef ref decorator found
+	     * \return isMutable mut decorator found
+	     */
+	    void applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, generator::Generator & type, bool & isRef, bool & isMutable);
+
+	    /**
+	     * \brief Verify that a parameter (of a function, or a for loop or ...) is mutable iif it is a reference
+	     * \brief There is some exception, you must call this function to verify the correct behavior
+	     * \param loc the location of the variable declaration
+	     * \param type the type of the var
+	     * \param error the error to throw, (in case of error) 
+	     */
+	    void verifyMutabilityRefParam (const lexing::Word & loc, const generator::Generator & type, Ymir::ExternalErrorValue error);
+
+	    /**
+	     * \brief Throw an exception if left.equals (right) is false
+	     * \param left a type
+	     * \param rigth a type
+	     */
+	    void verifySameType (const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Throw an exception if left.isCompatible (right) is false
+	     * \param left a type
+	     * \param right a type
+	     */
+	    void verifyCompatibleType (const generator::Generator & left, const generator::Generator & right);
 	    
 	public :
 
