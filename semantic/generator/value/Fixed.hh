@@ -58,7 +58,19 @@ namespace semantic {
 	    std::string prettyString () const override;	    
 	};	
 	
+	/**
+	 * \brief Create a Fixed generator, of type usize
+	 * \param value the content of the constant
+	 */
+	Generator ufixed (ulong value);
+
+	/**
+	 * \brief Create a fixed generator of type isize
+	 * \param value the content of the constant
+	 */
+	Generator ifixed (long value);
+    
     }
-       
+
 }
 

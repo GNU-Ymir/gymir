@@ -128,13 +128,13 @@ namespace semantic {
 	void Visitor::createMainFunction (const lexing::Word & loc) {
 	    auto frame_proto = FrameProto::init (loc, Keys::MAIN, Void::init (loc), {});
 	    auto itype       = Integer::init (loc, 32, true);
-	    Fixed::UI i; i.i = 0;
+	    auto zero        = ufixed (0);
 	    auto content = Block::init (
 		loc,
-		itype,
+		zero.to<Value> ().getType (),
 		{
 		    Call::init (loc, frame_proto.to <FrameProto> ().getReturnType (), frame_proto, {}, {}),
-		    Fixed::init (loc, itype, i)
+			zero
 		}
 	    );
 	    
@@ -941,11 +941,7 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {
-	    auto & gen = getLocal (var.getName ().str);
-	    if (!gen.isEmpty ()) {
-		auto note = Ymir::Error::createNote (gen.getLocation ());
-		Error::occurAndNote (var.getLocation (), note, ExternalError::get (SHADOWING_DECL), var.getName ().str);
-	    }
+	    verifyShadow (var.getName ());
 
 	    if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
 		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
@@ -1541,6 +1537,14 @@ namespace semantic {
 	    }
 	}	
 
+	void Visitor::verifyShadow (const lexing::Word & name) {
+	    auto & gen = getLocal (name.str);
+	    if (!gen.isEmpty ()) {
+		auto note = Ymir::Error::createNote (gen.getLocation ());
+		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.str);
+	    }
+	}
+	
 	Generator Visitor::retreiveValue (const Generator & gen) {
 	    auto compile_time = CompileTime::init (*this);
 	    return compile_time.execute (gen);

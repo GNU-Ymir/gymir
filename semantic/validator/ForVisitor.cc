@@ -44,14 +44,15 @@ namespace semantic {
 		    vars.size ()
 		);
 	    } else if (vars.size () == 1) {
-		return iterateArrayByValue (expression, value, vars [0]);
+		return iterateArray (expression, value, syntax::Expression::empty (), vars [0]);
 	    } else { 
-		return iterateArrayByIndexAndValue (expression, value, vars [0], vars [1]);
+		return iterateArray (expression, value, vars [0], vars [1]);
 	    }
 	}
 
 	Generator ForVisitor::validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value_, int level) {
 	    auto var = val.to<syntax::VarDecl> ();
+	    this-> _context.verifyShadow (var.getName ());
 	    
 	    Generator type (Generator::empty ());
 	    auto innerType = array.to <Value> ().getType ().to <Type> ().getInners () [0];
@@ -86,36 +87,92 @@ namespace semantic {
 	    return ret;
 	}
 	
-	Generator ForVisitor::iterateArrayByValue (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val) {
+	std::vector <Generator> ForVisitor::createIndexVar (const syntax::For &, const syntax::VarDecl & decl) {
+	    this-> _context.verifyShadow (decl.getName ());
+	    if (decl.getDecorators ().size () != 0) {
+		auto deco = decl.getDecorators ()[0];
+		Ymir::Error::occur (deco.getLocation (),
+				    ExternalError::get (DECO_OUT_OF_CONTEXT),
+				    deco.getLocation ().str
+		);
+	    }
+	    
+	    auto loc = decl.getLocation ();
+	    auto zero = ufixed (0);	    
+	    auto type = zero.to<Value> ().getType ();
+	    
+	    if (!decl.getType ().isEmpty ()) {
+		type = this-> _context.validateType (decl.getType ());
+		this-> _context.verifyCompatibleType (type, Integer::init (loc, -1, false));
+	    } 
+
+	    auto var = generator::VarDecl::init (loc,
+						 decl.getName ().str,
+						 type,
+						 zero,
+						 false
+	    );
+	    
+	    auto ref = VarRef::init (loc,
+				     decl.getName ().str,
+				     type, 
+				     var.getUniqId (),
+				     false,
+				     Generator::empty ()
+	    );
+
+	    this-> _context.insertLocal (decl.getName ().str, var);
+	    
+	    return {var, ref};
+	}       
+
+	std::vector <Generator> ForVisitor::createIndexVar (const syntax::For & expression, const std::string & name) {	    
+	    auto zero = ufixed (0);
+	    auto loc = expression.getLocation ();
+	    auto var = generator::VarDecl::init (loc,
+						 name,
+						 zero.to <Value> ().getType (),
+						 zero,
+						 false
+	    );
+
+	    auto ref = VarRef::init (loc,
+				     name,
+				     zero.to<Value> ().getType (),
+				     var.getUniqId (),
+				     false,
+				     Generator::empty ()
+	    );
+	    
+	    return {var, ref};
+	}       
+
+	
+	Generator ForVisitor::iterateArray (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & index, const syntax::Expression & val) {
 	    std::vector <std::string> errors;
 	    std::vector<Generator> value = {};
-	    auto test = Generator::empty ();
-	    auto loc = val.getLocation ();
 	    {
 		TRY (
+		    auto loc = val.getLocation ();
 		    this-> _context.enterBlock ();
-		    Fixed::UI ui; ui.u = 0;
-		    auto iterType = Integer::init (loc, 64, false);
-		    value.push_back (
-			generator::VarDecl::init (loc, "_iter",
-						  iterType,
-						  Fixed::init (loc, iterType, ui),
-						  false
-			)
-		    );
-
-		    ui.u = array.to <Value> ().getType ().to <Array> ().getSize ();
-		    auto len = Fixed::init (loc, iterType, ui);
-		    ui.u = 1;
-		    auto one = Fixed::init (loc, iterType, ui);
-
-		    auto iter = VarRef::init (loc, "_iter", iterType, value.back ().getUniqId (), false, Generator::empty ());
-		    test = BinaryInt::init (loc, Binary::Operator::INF, Bool::init (loc), iter, len);
+		    std::vector <Generator> vars;
+		    if (index.isEmpty ()) 
+			vars = createIndexVar (expression, "_iter");
+		    else vars = createIndexVar (expression, index.to<syntax::VarDecl> ());		    
+		    
+		    value.push_back (vars [0]);
+		    
+		    auto len = ufixed (array.to <Value> ().getType ().to <Array> ().getSize ()) ;
+		    auto one = ufixed (1);
+		    
+		    auto iter = vars [1];
+		    auto test = BinaryInt::init (loc, Binary::Operator::INF, Bool::init (loc), iter, len);
 
 		    std::vector <Generator> innerValues;
 
 		    auto innerType = array.to <Value> ().getType ().to <Array> ().getInners () [0];
 		    auto indexVal = ArrayAccess::init (loc, innerType, array, iter);
+		    
 		    // Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
 		    bool canBeRef = array.to <Value> ().isLvalue ();
 		    auto level = array.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
@@ -124,7 +181,7 @@ namespace semantic {
 		    innerValues.push_back (this-> _context.validateValue (expression.getBlock ()));
 		    
 		    innerValues.push_back (Affect::init (
-			loc, iterType, iter, BinaryInt::init (loc, Binary::Operator::ADD, iterType, iter, one)
+			loc, iter.to<Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, one.to<Value> ().getType (), iter, one)
 		    ));
 		    value.push_back (Loop::init (expression.getLocation (), Void::init (expression.getLocation ()), test, Block::init (expression.getLocation (), Void::init (expression.getLocation ()), innerValues), false));
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -148,11 +205,7 @@ namespace semantic {
 	    
 	    return Block::init (expression.getLocation (), Void::init (expression.getLocation ()), value);
 	}
-	
-	Generator ForVisitor::iterateArrayByIndexAndValue (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & index, const syntax::Expression & val) {
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Generator::empty ();	    
-	}
+       
 	
 	Generator ForVisitor::validateSlice (const syntax::For & expression, const generator::Generator & value) {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");

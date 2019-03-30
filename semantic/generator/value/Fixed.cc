@@ -48,6 +48,28 @@ namespace semantic {
 		return Ymir::format ("%", this-> _value.u);
 	}
 	
+	Generator ufixed (ulong value) {
+	    Fixed::UI ui; ui.u = value;
+	    auto loc = lexing::Word::eof ();
+	    return Fixed::init (
+		loc,
+		Integer::init (loc, -1, false),
+		ui 
+	    );
+	}
+
+	Generator ifixed (long value) {
+	    Fixed::UI ui; ui.i = value;
+	    auto loc = lexing::Word::eof ();
+	    return Fixed::init (
+		loc,
+		Integer::init (loc, -1, true),
+		ui
+	    );
+	}	
+
     }
+
+    
     
 }

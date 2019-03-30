@@ -345,6 +345,12 @@ namespace semantic {
 	     * \param right a type
 	     */
 	    void verifyCompatibleType (const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Throw an exception if there is already some var named name
+	     * \param name the forbidden name
+	     */
+	    void verifyShadow (const lexing::Word & name);
 	    
 	public :
 

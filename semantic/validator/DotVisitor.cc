@@ -113,12 +113,7 @@ namespace semantic {
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 
 	    if (name == "len") {
-		Fixed::UI u; u.u = left.to <Value> ().getType ().to <Array> ().getSize ();
-		return Fixed::init (
-		    expression.getLocation (),
-		    Integer::init (expression.getLocation (), 64, false),
-		    u
-		);
+		return ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());		
 	    }
 	    return Generator::empty ();
 	}
