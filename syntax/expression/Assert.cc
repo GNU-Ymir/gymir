@@ -32,6 +32,14 @@ namespace syntax {
 	return IExpression::isOf (type);
     }	    
 
+    const Expression & Assert::getTest () const {
+	return this-> _test;
+    }
+
+    const Expression & Assert::getMsg () const {
+	return this-> _msg;
+    }
+    
     void Assert::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Assert> ", i, '\t');
 	this-> _test.treePrint (stream, i + 1);

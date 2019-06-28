@@ -107,8 +107,10 @@ namespace semantic {
 			return;			
 		    }
 		);
-		
-		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);
+
+		/** Nothing to do for those kind of symbols */
+		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);		
+		of (semantic::Template, x ATTRIBUTE_UNUSED, return);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -143,7 +145,7 @@ namespace semantic {
 	    insertNewGenerator (main_frame);
 	}	
 	
-	void Visitor::validateFunction (const semantic::Function & func) {
+	void Visitor::validateFunction (const semantic::Function & func, bool isWeak) {
 	    auto & function = func.getContent ();
 	    std::vector <Generator> params;
 	    if (function.getName () == Keys::MAIN) createMainFunction (function.getName ());
@@ -180,6 +182,7 @@ namespace semantic {
 		}
 		
 		params.push_back (ParamVar::init (var.getName (), type, isMutable));
+		verifyShadow (var.getName ());
 		insertLocal (var.getName ().str, params.back ());
 	    }	    
 	    
@@ -219,6 +222,9 @@ namespace semantic {
 			frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
 		    else if (ln == Keys::CPPLANG)
 			frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::CXX);
+
+		    frame.to <Frame> ().isWeak (isWeak);
+		    
 		    insertNewGenerator (frame);
 		}
 	    } else {
@@ -820,6 +826,11 @@ namespace semantic {
 			    auto str_ref = validateStruct (sym);
 			    gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
 			    continue;
+			})
+			     
+		    else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
+			    gens.push_back (TemplateRef::init (loc, sym));
+			    continue;
 			});
 		}
 		
@@ -1242,6 +1253,10 @@ namespace semantic {
 			return validateTypeSlice (list);
 		    if (list.isTuple ())
 			return validateTypeTuple (list);
+		);
+		
+		of (TemplateSyntaxWrapper, tmplSynt,
+		    return tmplSynt.getContent ();
 		);
 	    }
 	    

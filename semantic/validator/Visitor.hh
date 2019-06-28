@@ -77,7 +77,7 @@ namespace semantic {
 	    /**
 	     * \brief Validate a function
 	     */
-	    void validateFunction (const semantic::Function & func);
+	    void validateFunction (const semantic::Function & func, bool isWeak = false);
 
 	    /**
 	     * \brief Validate a global var declaration 

@@ -2,6 +2,7 @@
 
 #include <ymir/syntax/Declaration.hh>
 #include <ymir/syntax/declaration/_.hh>
+#include <ymir/syntax/expression/_.hh>
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/utils/Match.hh>
 #include <ymir/syntax/expression/VarDecl.hh>
@@ -132,8 +133,11 @@ namespace semantic {
 	     */
 	    semantic::Symbol visitImport (const syntax::Import & imp);
 
-	private :
-
+	    /**
+	     * \brief Transform a template declaration into semantic tree
+	     */
+	    semantic::Symbol visitTemplate (const syntax::Template & tep);
+	    
 	    /**
 	     * \brief Push a referent symbol
 	     * \brief This symbol is the current symbol table that will be filled

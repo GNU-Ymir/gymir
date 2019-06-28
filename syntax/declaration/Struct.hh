@@ -71,7 +71,7 @@ namespace syntax {
 	 * \param ca the custom attr
 	 */
 	void addCustomAttribute (const lexing::Word & ca);
-
+	
 	/**
 	 * Change the name of the struct
 	 */

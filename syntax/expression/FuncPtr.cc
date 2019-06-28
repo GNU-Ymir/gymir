@@ -30,5 +30,13 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    const Expression & FuncPtr::getRet () const {
+	return this-> _ret;
+    }
+
+    const std::vector <Expression> & FuncPtr::getParams () const {
+	return this-> _params;
+    }
+    
     
 }

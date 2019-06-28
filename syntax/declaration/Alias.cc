@@ -55,5 +55,5 @@ namespace syntax {
 	stream.writeln ("<Alias> : ", this-> _ident);
 	this-> _value.treePrint (stream, i + 1);
     }
-
+    
 }

@@ -56,6 +56,10 @@ namespace semantic {
 		of (syntax::Import, im,
 		    return visitImport (im);
 		);
+
+		of (syntax::Template, tep,
+		    return visitTemplate (tep);
+		);
 		
 		of (syntax::ExpressionWrapper, wrap, {
 			match (wrap.getContent ()) {
@@ -141,7 +145,7 @@ namespace semantic {
 	
 	    auto symbols = getReferent ().getLocal (func.getName ().str);	    
 	    for (auto & symbol : symbols) {
-		if (!symbol.is <Function> () && !symbol.is <Module> () && !symbol.is <ModRef> () && func.getName () != Keys::SELF_TILDE) {
+		if (!symbol.is <Function> () && !symbol.is <Module> () && !symbol.is <ModRef> () && func.getName () != Keys::SELF_TILDE && !symbol.is <Template> ()) {
 		    auto note = Ymir::Error::createNote (symbol.getName ());
 		    Ymir::Error::occurAndNote (func.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), func.getName ().str);
 		}
@@ -316,6 +320,47 @@ namespace semantic {
 	    getReferent ().use (imp.getModule ().str , Symbol::getModuleByPath (imp.getModule ().str));
 	    return Symbol::empty ();	    		    
 	}	
+	
+	semantic::Symbol Visitor::visitTemplate (const syntax::Template & tep) {
+	    std::vector <lexing::Word> used;
+	    for (auto & par : tep.getParams ()) {
+		match (par) {
+		    of (syntax::VariadicVar, vr, 
+			for (auto & use : used) {
+			    if (use.str == vr.getLocation ().str) {
+				Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.str);
+			    }
+			}
+			used.push_back (vr.getLocation ());
+		    ) else of (syntax::OfVar, vr,
+			       for (auto & use : used) {
+				   if (use.str == vr.getLocation ().str) {
+				       Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.str);
+				   }
+			       }
+			       used.push_back (vr.getLocation ());
+		    ) else of (syntax::VarDecl, vr,
+			       for (auto & use : used) {
+				   if (use.str == vr.getLocation ().str) {
+				       Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.str);
+				   }
+			       }
+			       used.push_back (vr.getLocation ());
+		    ) else of (syntax::Var, vr, 
+			       for (auto & use : used) {
+				   if (use.str == vr.getLocation ().str) {
+				       Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.str);
+				   }
+			       }
+			       used.push_back (vr.getLocation ());
+		    );			       
+		}		
+	    }
+	    
+	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent ());
+	    getReferent ().insert (sym);
+	    return sym;
+	}
 	
 	void Visitor::pushReferent (const Symbol & sym) {
 	    this-> _referent.push_front (sym);

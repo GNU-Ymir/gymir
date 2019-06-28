@@ -115,6 +115,8 @@ ymir_OBJS = \
 	ymir/generator_Loop.o \
 	ymir/generator_Mangler.o \
 	ymir/generator_ModuleAccess.o \
+	ymir/generator_TemplateRef.o \
+	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_MultSym.o \
 	ymir/generator_NamedGenerator.o \
 	ymir/generator_None.o \
@@ -141,6 +143,7 @@ ymir_OBJS = \
 	ymir/generator_VarRef.o \
 	ymir/generator_Visitor.o \
 	ymir/generator_Void.o \
+	ymir/generator_NoneType.o \
 	ymir/generic_StmtList.o \
 	ymir/generic_Tree.o \
 	ymir/global_State.o \
@@ -151,6 +154,7 @@ ymir_OBJS = \
 	ymir/semantic_Alias.o \
 	ymir/semantic_Class.o \
 	ymir/semantic_Enum.o \
+	ymir/semantic_Template.o \
 	ymir/semantic_Function.o \
 	ymir/semantic_Generator.o \
 	ymir/semantic_ModRef.o \
@@ -179,6 +183,7 @@ ymir_OBJS = \
 	ymir/validator_DotVisitor.o \
 	ymir/validator_SubVisitor.o \
 	ymir/validator_UnaryVisitor.o \
+	ymir/validator_TemplateVisitor.o \
 	ymir/validator_Visitor.o \
 	ymir/ymir1.o \
 	$(END)	

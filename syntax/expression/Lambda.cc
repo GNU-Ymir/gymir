@@ -37,5 +37,13 @@ namespace syntax {
 	this-> _proto.treePrint (stream, i + 1);
 	this-> _content.treePrint (stream, i + 1);
     }
+
+    const syntax::Function::Prototype & Lambda::getProto () const {
+	return this-> _proto;
+    }
+
+    const Expression & Lambda::getContent () const {
+	return this-> _content;
+    }
     
 }

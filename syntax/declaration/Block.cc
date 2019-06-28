@@ -39,7 +39,15 @@ namespace syntax {
 	    it.treePrint (stream, i + 1);
 	}
     }
+    
+    const lexing::Word & DeclBlock::getLocation () const {
+	return this-> _token;
+    }
 
+    bool DeclBlock::isPrivate () const {
+	return this-> _isPrivate;
+    }
+    
     const std::vector <Declaration> & DeclBlock::getDeclarations () const {
 	return this-> _inner;
     }

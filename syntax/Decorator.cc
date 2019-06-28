@@ -27,6 +27,10 @@ namespace syntax {
 	return DecoratorWord (content, Decorator::REF);
     }
 
+    DecoratorWord DecoratorWord::init (Decorator deco) {
+	return DecoratorWord (lexing::Word::eof (), deco);
+    }
+    
     const lexing::Word & DecoratorWord::getLocation () const {
 	return this-> _loc;
     }

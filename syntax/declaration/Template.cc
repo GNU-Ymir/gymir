@@ -2,7 +2,10 @@
 
 namespace syntax {
 
-    Template::Template () : _content (Declaration::empty ()), _test (Expression::empty ())
+    Template::Template () :
+	_loc (lexing::Word::eof ()),
+	_content (Declaration::empty ()),
+	_test (Expression::empty ())
     {}
     
     Declaration Template::init () {
@@ -11,21 +14,24 @@ namespace syntax {
 
     Declaration Template::init (const Template & tmpl) {
 	auto ret = new (Z0) Template ();
+	ret-> _loc = tmpl._loc;
 	ret-> _parameters = tmpl._parameters;
 	ret-> _content = tmpl._content;
 	ret-> _test = tmpl._test;
 	return Declaration {ret};
     }
 
-    Declaration Template::init (const std::vector <Expression> & params, const Declaration & content) {
+    Declaration Template::init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content) {
 	auto ret = new (Z0) Template ();
+	ret-> _loc = loc;
 	ret-> _parameters = params;
 	ret-> _content = content;
 	return Declaration {ret};
     }
     
-    Declaration Template::init (const std::vector <Expression> & params, const Declaration & content, const Expression & test) {
+    Declaration Template::init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test) {
 	auto ret = new (Z0) Template ();
+	ret-> _loc = loc;
 	ret-> _parameters = params;
 	ret-> _content = content;
 	ret-> _test = test;
@@ -37,7 +43,8 @@ namespace syntax {
     }
 
     void Template::treePrint (Ymir::OutBuffer & stream, int i) const {
-	stream.writefln ("%*<Template>", i, '\t');
+	stream.writef ("%*<Template>", i, '\t');
+	stream.writeln (this-> _loc);
 	stream.writefln ("%*<Test>", i + 1, '\t');
 	this-> _test.treePrint (stream, i + 2);
 	stream.writefln ("%*<Params>", i + 1, '\t');
@@ -61,6 +68,21 @@ namespace syntax {
     void Template::setContent (const Declaration& content) {
 	this-> _content = content;
     }
-    
+
+    const lexing::Word & Template::getLocation () const {
+	return this-> _loc;
+    }
+
+    const std::vector <Expression> & Template::getParams () const {
+	return this-> _parameters;
+    }
+
+    const Declaration & Template::getContent () const {
+	return this-> _content;
+    }
+
+    const Expression & Template::getTest () const {
+	return this-> _test;
+    }    
     
 }

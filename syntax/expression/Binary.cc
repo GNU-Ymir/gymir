@@ -52,5 +52,9 @@ namespace syntax {
     const Expression & Binary::getRight () const {
 	return this-> _right;
     }
+
+    const Expression & Binary::getType () const {
+	return this-> _type;
+    }
     
 }

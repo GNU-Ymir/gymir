@@ -60,6 +60,8 @@ namespace syntax {
 	 * \brief Return the content var declaration
 	 */
 	const Expression & getContent () const;
+
+	const lexing::Word & getLocation () const;
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	

@@ -1,4 +1,5 @@
 #include <ymir/semantic/validator/CallVisitor.hh>
+#include <ymir/semantic/validator/TemplateVisitor.hh>
 
 namespace semantic {
 
@@ -24,6 +25,16 @@ namespace semantic {
 
 	    int score = 0;
 	    std::vector <std::string> errors;
+	    auto ret = validate (expression, left, rights, score, errors);
+	    
+	    if (ret.isEmpty ()) {
+		this-> error (expression, left, rights, errors);
+		return Generator::empty ();
+	    } else return ret;
+	}
+
+
+	generator::Generator CallVisitor::validate (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights, int & score, std::vector <std::string> & errors) {
 	    if (left.is <FrameProto> ()) {
 		auto gen = validateFrameProto (expression, left.to<FrameProto> (), rights, score, errors);
 		if (!gen.isEmpty ()) return gen;
@@ -33,9 +44,25 @@ namespace semantic {
 	    } else if (left.is <MultSym> ()) {
 		auto gen = validateMultSym (expression, left.to <MultSym> (), rights, score, errors);
 		if (!gen.isEmpty ()) return gen;
+	    } else if (left.is <generator::TemplateRef> ()) {
+		Symbol sym (Symbol::empty ());
+		Generator proto_gen (Generator::empty ());
+		auto gen = validateTemplateRef (expression, left.to <TemplateRef> (), rights, score, errors, sym, proto_gen);
+		if (!gen.isEmpty ()) {
+		    TRY (
+			this-> _context.validate (sym);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
+			msgs.insert (msgs.begin (), Ymir::Error::createNote (expression.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
+			THROW (ErrorCode::EXTERNAL, msgs);
+		    } FINALLY;
+		    return gen;
+		}
 	    }
-
-	    this-> error (expression, left, rights, errors);
+	    
+	    if (!left.is<MultSym> ()) 
+		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), left.getLocation (), left.prettyString ()));	    
 	    return Generator::empty ();
 	}
 
@@ -63,6 +90,7 @@ namespace semantic {
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
 		} FINALLY;
 	    }
 
@@ -152,20 +180,24 @@ namespace semantic {
 	    return toRet;	    
 	}
 	
-	generator::Generator CallVisitor::validateMultSym (const syntax::MultOperator & expression, const MultSym & sym, const std::vector <Generator> & rights_, int & score, std::vector <std::string> &) {
-	    Generator final_gen (Generator::empty ());
+	generator::Generator CallVisitor::validateMultSym (const syntax::MultOperator & expression, const MultSym & sym, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
+	    Generator final_gen (Generator::empty ());	    
 	    Generator used_gen (Generator::empty ());
+	    Generator proto_gen (Generator::empty ());
+	    Symbol templSym (Symbol::empty ());
 	    score = -1;
+	    bool fromTempl = true;
 	    for (auto & it : sym.getGenerators ()) {
 		int current = 0;
-		std::vector <std::string> errors;
+		std::vector <std::string> local_errors;
 		if (it.is <FrameProto> ()) {
 		    auto gen = validateFrameProto (expression, it.to <FrameProto> (), rights_, current, errors);
-		    if (!gen.isEmpty () && current > score) {
+		    if (!gen.isEmpty () && (current > score || fromTempl)) {// simple function can take the token on 1. less scored 2. every templates
 			score = current;
 			final_gen = gen;
 			used_gen = it;
-		    } else if (!gen.isEmpty () && current == score) {
+			fromTempl = false;
+		    } else if (!gen.isEmpty () && current == score && !fromTempl) {
 			std::vector <std::string> names;
 			for (auto & it : rights_)
 			    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
@@ -176,13 +208,93 @@ namespace semantic {
 						   ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
 						   it.to<FrameProto> ().getName (),
 						   names
-			);
+			); 
+		    } else {
+			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()));
+			errors.insert (errors.begin (), local_errors.begin (), local_errors.end ());
+		    }
+		} else if (it.is <TemplateRef> ()) {
+		    Symbol _sym (Symbol::empty ());
+		    Generator _proto_gen (Generator::empty ());
+		    auto gen = validateTemplateRef (expression, it.to <TemplateRef> (), rights_, current, local_errors, _sym, _proto_gen);
+
+		    if (!gen.isEmpty () && current > score && fromTempl) { // Can only take the token over less scored template function
+			score = current;
+			final_gen = gen;
+			used_gen = it;
+			proto_gen = _proto_gen;
+			fromTempl = true;
+			templSym = _sym;
+		    } else if (!gen.isEmpty () && current == score && fromTempl) {
+			std::vector <std::string> names;
+			for (auto & it : rights_)
+			    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
+			
+			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), used_gen.getLocation (), used_gen.prettyString ()) + '\n';
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ());
+			Ymir::Error::occurAndNote (expression.getLocation (), note,
+						   ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
+						   it.to<FrameProto> ().getName (),
+						   names
+			); 
+		    } else {
+			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.to <TemplateRef> ().getTemplateRef ().getName (), it.prettyString ()));
+			errors.insert (errors.begin (), local_errors.begin (), local_errors.end ());
 		    }
 		}
 	    }
+	    
+	    if (!templSym.isEmpty () && fromTempl) {
+		TRY (
+		    this-> _context.validate (templSym);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
+		    msgs.insert (msgs.begin (), Ymir::Error::createNote (expression.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
+		    THROW (ErrorCode::EXTERNAL, msgs);
+		} FINALLY;
+	    }
+	    
 	    return final_gen;
 	}
-							   
+
+	generator::Generator CallVisitor::validateTemplateRef (const syntax::MultOperator & expression, const generator::TemplateRef & ref, const std::vector <generator::Generator> & rights_, int & score, std::vector <std::string> & errors, Symbol & _sym, Generator & proto_gen) {
+	    const Symbol & sym = ref.getTemplateRef ();
+	    if (!sym.to<semantic::Template> ().getDeclaration ().is <syntax::Function> ()) return Generator::empty ();
+	    
+	    std::vector <Generator> params;
+	    std::vector <Generator> rights = rights_;
+	    for (auto & it : sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ()) {
+		Generator value (Generator::empty ());
+		auto var = it.to<syntax::VarDecl> ();
+		
+		if (!var.getValue ().isEmpty ())
+		    value = this-> _context.validateValue (var.getValue ());
+		
+		auto type = Void::init (var.getName ());
+		bool isMutable = false, isRef = false;
+		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
+		
+		auto param = findParameter (rights, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable).to<ProtoVar> ());
+		if (param.isEmpty ()) return Generator::empty ();
+		params.push_back (param.to <Value> ().getType ());
+	    }
+
+	    auto templateVisitor = TemplateVisitor::init (this-> _context);
+
+	    // The solution is a function transformed generated by template specialisation (if it succeed)
+	    auto soluce = templateVisitor.validateFromImplicit (ref, params, score, _sym);
+
+	    if (!soluce.isEmpty ()) {
+		int _score;
+		proto_gen = soluce;
+		auto res = validateFrameProto (expression, soluce.to<FrameProto> (), rights_, _score, errors);
+		score += _score;
+		return res;
+	    }
+	    
+	    return Generator::empty ();	    
+	}							   
 	
 	void CallVisitor::error (const syntax::MultOperator & expression, const Generator & left, const std::vector <Generator> & rights, std::vector <std::string> & errors) {	    
 	    std::vector <std::string> names;
@@ -197,30 +309,14 @@ namespace semantic {
 		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
 	    }
 	    
-	    errors.push_back (Ymir::Error::makeOccur (
+	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
 		expression.getLocation (),
 		expression.getEnd (),
 		ExternalError::get (UNDEFINED_CALL_OP),
 		leftName,
 		names
 	    ));
-
-	    {
-		match (left) {		    
-		    of (MultSym,    sym,   {
-			    for (auto & it : sym.getGenerators ()) {
-				errors.push_back (
-				    Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ())
-				);
-			    }
-			})
-		    else {
-			errors.push_back (
-			    Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), left.getLocation (), left.prettyString ())
-			);
-		    }
-		}
-	    }
+	    
 	    
 	    THROW (ErrorCode::EXTERNAL, errors);
 	}

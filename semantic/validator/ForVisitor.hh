@@ -52,7 +52,7 @@ namespace semantic {
 	     * \param array the value to iterate
 	     * \param index the index var (could be empty)
 	     * \param val the declaration of the iterator (by values)
-	     * \varbatim
+	     * \verbatim
 	     for i, ref mut j in array { }
 	     
 	     // => iterateArray (<for...>, <array>, <i>, <ref mut j>)

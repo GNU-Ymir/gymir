@@ -56,6 +56,10 @@ namespace syntax {
 	 */
 	void setContent (const Expression & content);
 
+	const std::vector <Expression> & getParameters () const;
+
+	const Expression & getContent () const;
+
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
     };    

@@ -263,7 +263,7 @@ namespace syntax {
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	
 	if (!templates.empty ()) {
-	    return Template::init (templates, Alias::init (name, value));
+	    return Template::init (name, templates, Alias::init (name, value));
 	} else 
 	    return Alias::init (name, value);
     }
@@ -281,7 +281,7 @@ namespace syntax {
 	auto decls = visitClassBlock ();
 
 	if (!templates.empty ()) {
-	    return Template::init (templates, Class::init (name, ancestor, decls));
+	    return Template::init (name, templates, Class::init (name, ancestor, decls));
 	} else
 	    return Class::init (name, ancestor, decls);
     }
@@ -392,7 +392,7 @@ namespace syntax {
 	auto proto = visitFunctionPrototype ();
 	auto body = visitFunctionBody ();
 	if (templates.size () != 0) {
-	    return Template::init (templates, Function::init (location, proto, body));
+	    return Template::init (location, templates, Function::init (location, proto, body));
 	} else 
 	    return Function::init (location, proto, body);
     }
@@ -431,7 +431,7 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (templates, Enum::init (name, type, values));
+	    return Template::init (name, templates, Enum::init (name, type, values));
 	} else return Enum::init (name, type, values);
     }    
     
@@ -468,7 +468,7 @@ namespace syntax {
 	function.to <Function> ().setCustomAttributes (attribs);
 
 	if (templates.size () != 0) {
-	    return Template::init (templates, function, test);
+	    return Template::init (name, templates, function, test);
 	} else {
 	    if (!test.isEmpty ())
 		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE)); 
@@ -588,7 +588,7 @@ namespace syntax {
 	} while (token != Token::RACC);
 
 	if (templates.size () != 0) {
-	    return Template::init (templates, Module::init (name, decls));
+	    return Template::init (name, templates, Module::init (name, decls));
 	} else return Module::init (name, decls);
     }
 
@@ -609,7 +609,7 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (templates, Struct::init (name, attrs, vars));
+	    return Template::init (name, templates, Struct::init (name, attrs, vars));
 	} else return Struct::init (name, attrs, vars);
     }
 
@@ -622,7 +622,7 @@ namespace syntax {
 	std::vector <Declaration> decls = visitClassBlock ();
 	
 	if (!templates.empty ()) {
-	    return Template::init (templates, Trait::init (name, decls, location == Keys::MIXIN));
+	    return Template::init (name, templates, Trait::init (name, decls, location == Keys::MIXIN));
 	} else return Trait::init (name, decls, location == Keys::MIXIN);	
     }
 

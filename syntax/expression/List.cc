@@ -47,5 +47,9 @@ namespace syntax {
     const std::vector <Expression> & List::getParameters () const {
 	return this-> _params;
     }    
+
+    const lexing::Word & List::getEnd () const {
+	return this-> _end;
+    }
     
 }

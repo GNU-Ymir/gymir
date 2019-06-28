@@ -193,6 +193,8 @@ namespace syntax {
 	     */
 	    const Expression& getOuter () const;
 
+	    const lexing::Word & getOuterName () const;
+
 	};
 
     private :

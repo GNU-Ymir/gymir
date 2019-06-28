@@ -34,4 +34,8 @@ namespace syntax {
 	stream.writeln (this-> getLocation ());
 	this-> _right.treePrint (stream, i + 1);
     }
+
+    const Expression & OfVar::getType () const {
+	return this-> _right;
+    }
 }

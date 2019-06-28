@@ -36,10 +36,13 @@ namespace syntax {
 	 * \param msg the message of the assertion
 	 */
 	static Expression init (const lexing::Word & location, const Expression & test, const Expression & msg);
-
 	
 	Expression clone () const override;
 
+	const Expression & getTest () const;
+
+	const Expression & getMsg () const;
+	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
 	bool isOf (const IExpression * type) const override;

@@ -104,6 +104,7 @@ namespace syntax {
 	}
 	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
+
 	
     };    
 

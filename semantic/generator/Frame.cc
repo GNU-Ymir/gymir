@@ -62,6 +62,14 @@ namespace semantic {
 	Frame::ManglingStyle Frame::getManglingStyle () const {
 	    return this-> _style;
 	}
+
+	void Frame::isWeak (bool is) {
+	    this-> _isWeak = is;
+	}
+
+	bool Frame::isWeak () const {
+	    return this-> _isWeak;
+	}
 	
     }
 }

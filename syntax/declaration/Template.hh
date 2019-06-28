@@ -16,6 +16,8 @@ namespace syntax {
      */
     class Template : public IDeclaration {
 
+	lexing::Word _loc;
+	
 	/** The template parameter of the declaration */
 	std::vector <Expression> _parameters;
 
@@ -49,7 +51,7 @@ namespace syntax {
 	 * \param params the template parameters
 	 * \param content the content declaration
 	 */
-	static Declaration init (const std::vector <Expression> & params, const Declaration & content);
+	static Declaration init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content);
 
 	
 	/**
@@ -57,7 +59,7 @@ namespace syntax {
 	 * \param params the template parameters
 	 * \param content the content declaration
 	 */
-	static Declaration init (const std::vector <Expression> & params, const Declaration & content, const Expression & test);
+	static Declaration init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test);
 
 	/**
 	 * \brief Mandatory function used for proxy polymoprhism system
@@ -81,6 +83,27 @@ namespace syntax {
 	 * \brief Change the content of the template
 	 */
 	void setContent (const Declaration & content);
+
+	/**
+	 * \return the location of the template definition
+	 */
+	const lexing::Word & getLocation () const;
+	
+	/**
+	 * \return the list of template parameters of the declarations
+	 */
+	const std::vector <Expression> & getParams () const;
+
+	/**
+	 * \return the content of the declaration
+	 */
+	const Declaration & getContent () const;
+
+	/**
+	 * \return the test of the template (or empty)
+	 */
+	const Expression & getTest () const;
+	
     };    
 
 }

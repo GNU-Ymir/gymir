@@ -1,30 +1,32 @@
 #pragma once
 
 #include <ymir/semantic/generator/Value.hh>
-#include <ymir/semantic/symbol/ModRef.hh>
+#include <ymir/semantic/symbol/Template.hh>
 
 namespace semantic {
 
     namespace generator {
 
-	class ModuleAccess : public Value {
+	class TemplateRef : public Value {
 
 	    Symbol _ref;
-	    
+
 	private :
 
 	    friend Generator;
-	    
-	    ModuleAccess ();
 
-	    ModuleAccess (const lexing::Word & loc, const Symbol & ref);
+	    TemplateRef ();
+
+	    TemplateRef (const lexing::Word & loc, const Symbol & ref);
 
 	public :
 
 	    /**
+	     * \brief Generate a new TemplateRef access
+	     
 	     */
 	    static Generator init (const lexing::Word & loc, const Symbol & ref);
-	    
+
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
 	     */
@@ -41,15 +43,17 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;	    
 
 	    /**
+	     * \return the return type of the frame prototype
 	     */
 	    std::vector <Symbol> getLocal (const std::string & name) const;
 
 	    /**
 	     * \return the module reference that is accessed by this generator
 	     */
-	    const Symbol & getModRef () const;
+	    const Symbol & getTemplateRef () const;
 
 	    std::string prettyString () const override;
+	    
 	};
 	
     }

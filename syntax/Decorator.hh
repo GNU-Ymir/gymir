@@ -34,6 +34,8 @@ namespace syntax {
 	
 	static DecoratorWord init (const lexing::Word & content);
 
+	static DecoratorWord init (Decorator deco);
+
 	const lexing::Word & getLocation () const;
 
 	Decorator getValue () const;

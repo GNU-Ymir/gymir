@@ -45,5 +45,13 @@ namespace syntax {
 	    it.treePrint (stream, i + 2);
 	this-> _content.treePrint (stream, i + 1);
     }
+
+    const std::vector<Expression> & TemplateCall::getParameters () const {
+	return this-> _parameters;
+    }
+
+    const Expression & TemplateCall::getContent () const {
+	return this-> _content;
+    }
     
 }

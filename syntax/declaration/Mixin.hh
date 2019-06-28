@@ -51,6 +51,11 @@ namespace syntax {
 	 */
 	bool isOf (const IDeclaration * type) const override;
 
+	const lexing::Word & getLocation () const;
+
+	const Expression & getMixin () const;
+
+	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
     };

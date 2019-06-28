@@ -38,5 +38,13 @@ namespace syntax {
 	stream.writefln ("%*<Use> ", i, '\t');
 	this-> _module.treePrint (stream, i + 1);
     }
+
+    const lexing::Word & Use::getLocation () const {
+	return this-> _location;
+    }
+
+    const Expression & Use::getModule () const {
+	return this-> _module;
+    }
     
 }

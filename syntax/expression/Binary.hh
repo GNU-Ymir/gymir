@@ -53,6 +53,7 @@ namespace syntax {
 	 */
 	const Expression & getRight () const;
 	
+	const Expression & getType () const;
     };    
 
 }

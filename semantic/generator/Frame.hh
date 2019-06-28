@@ -26,6 +26,8 @@ namespace semantic {
 	    bool _needFinalReturn;
 
 	    ManglingStyle _style = ManglingStyle::Y;
+
+	    bool _isWeak = false;
 	    
 	private :
 
@@ -92,6 +94,11 @@ namespace semantic {
 	     * \brief Change the mangling style of the frame 
 	     */
 	    void setManglingStyle (ManglingStyle style);
+
+
+	    void isWeak (bool is);
+
+	    bool isWeak () const;
 	    
 	};
 	

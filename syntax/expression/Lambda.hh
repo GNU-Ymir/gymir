@@ -33,6 +33,10 @@ namespace syntax {
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
+	const Function::Prototype & getProto () const;
+
+	const Expression & getContent () const;
+
     };    
 
 }

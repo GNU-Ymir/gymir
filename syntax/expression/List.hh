@@ -58,7 +58,9 @@ namespace syntax {
 	 * \return the list of parameters inside the different token
 	 */
 	const std::vector <Expression> & getParameters () const;
-		
+
+
+	const lexing::Word & getEnd () const;
     };
 
 }

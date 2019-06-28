@@ -31,6 +31,8 @@
 #include <ymir/semantic/generator/value/Struct.hh>
 #include <ymir/semantic/generator/value/StructAccess.hh>
 #include <ymir/semantic/generator/value/StructCst.hh>
+#include <ymir/semantic/generator/value/TemplateRef.hh>
+#include <ymir/semantic/generator/value/TemplateSyntaxWrapper.hh>
 #include <ymir/semantic/generator/value/TupleAccess.hh>
 #include <ymir/semantic/generator/value/TupleValue.hh>
 #include <ymir/semantic/generator/value/Unary.hh>

@@ -33,6 +33,10 @@ namespace syntax {
 	
 	Expression clone () const override;
 
+	const Expression & getRet () const;
+
+	const std::vector <Expression> & getParams () const;
+	
 	bool isOf (const IExpression * type) const override;
 	
     };

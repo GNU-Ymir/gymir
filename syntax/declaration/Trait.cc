@@ -43,4 +43,16 @@ namespace syntax {
 	    it.treePrint (stream, i + 1);
     }
 
+    const lexing::Word & Trait::getName () const {
+	return this-> _name;
+    }
+
+    const std::vector<Declaration> & Trait::getInners () const {
+	return this-> _inner;
+    }
+
+    bool Trait::isMixin () const {
+	return this-> _isMixin;
+    }
+    
 }

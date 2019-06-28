@@ -40,6 +40,10 @@ namespace syntax {
 	return this-> _decl;
     }
     
+    const lexing::Word & Global::getLocation () const {
+	return this-> _location;
+    }
+
     void Global::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Global>", i, '\t');
 	stream.writeln (" ", this-> _location);       

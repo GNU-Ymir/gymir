@@ -135,6 +135,10 @@ namespace syntax {
     const Expression & Function::Body::getOuter () const {
 	return this-> _outer;
     }
+
+    const lexing::Word & Function::Body::getOuterName () const {
+	return this-> _outerName;
+    }
     
     Function::Function () :
 	_test (Expression::empty ()),

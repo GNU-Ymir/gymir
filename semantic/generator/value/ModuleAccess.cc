@@ -1,5 +1,5 @@
 #include <ymir/semantic/generator/value/ModuleAccess.hh>
-#include <ymir/semantic/generator/type/Void.hh>
+#include <ymir/semantic/generator/type/NoneType.hh>
 
 namespace semantic {
 
@@ -11,7 +11,7 @@ namespace semantic {
 	{}
 
 	ModuleAccess::ModuleAccess (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, Void::init (loc)),
+	    Value (loc, NoneType::init (loc)),
 	    _ref (ref)
 	{}
 	

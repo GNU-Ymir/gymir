@@ -64,6 +64,12 @@ namespace syntax {
 	bool isOf (const IDeclaration * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+	const lexing::Word & getName () const;
+
+	const std::vector <Declaration> & getInners () const;
+
+	bool isMixin () const;
     };
 
     

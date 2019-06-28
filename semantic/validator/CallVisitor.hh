@@ -39,6 +39,12 @@ namespace semantic {
 
 	    /**
 	     * \brief Validate a call expression and return a generator
+	     * \brief validate left, and params value, and then call the second validate function
+	     */
+	    generator::Generator validate (const syntax::MultOperator & expression);
+
+	    /**
+	     * \brief Validate a call expression and return a generator
 	     * \brief This validation is done as follow : 
 	     * \brief If left operand type is FrameProto : 
 	     * \brief - Apply call of left operand
@@ -50,8 +56,8 @@ namespace semantic {
 	     * \brief - Search for operator overloading
 	     * \brief Else throw an error
 	     */
-	    generator::Generator validate (const syntax::MultOperator & expression);
-
+	    generator::Generator validate (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors);
+	    
 	    /**
 	     * \brief Validate a call expression on a frame proto
 	     * \param expression the call expression 
@@ -91,6 +97,14 @@ namespace semantic {
 	     */
 	    generator::Generator validateMultSym (const syntax::MultOperator & expression, const generator::MultSym & sym, const std::vector<generator::Generator> & params, int & score, std::vector<std::string> & errors);	    
 
+	    /**
+	     * \brief Validate a template ref 
+	     * \brief a template ref can be called if refer to a function 
+	     * \brief It will start by solving the template params with the types of the parameters
+	     */
+	    generator::Generator validateTemplateRef (const syntax::MultOperator & expression, const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
+
+	    
 	    /**
 	     * Throw an undefined op error
 	     */

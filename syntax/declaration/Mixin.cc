@@ -27,6 +27,14 @@ namespace syntax {
 	return Mixin::init (*this);
     }
 
+    const lexing::Word & Mixin::getLocation () const {
+	return this-> _location;
+    }
+
+    const Expression & Mixin::getMixin () const {
+	return this-> _mixin;
+    }
+    
     bool Mixin::isOf (const IDeclaration * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Mixin thisType; // That's why we cannot implement it for all class
@@ -39,4 +47,5 @@ namespace syntax {
 	this-> _mixin.treePrint (stream, i + 1);
     }
     
+
 }

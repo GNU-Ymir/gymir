@@ -218,7 +218,7 @@ namespace semantic {
 
 	    fn_decl.isExternal (false);
 	    fn_decl.isPreserved (true);
-	    fn_decl.isWeak (true);
+	    fn_decl.isWeak (frame.isWeak ());
 
 	    fn_decl.isPublic (true);
 	    fn_decl.isStatic (true);
