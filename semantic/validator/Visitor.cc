@@ -1236,16 +1236,16 @@ namespace semantic {
 	
 	Generator Visitor::validateType (const syntax::Expression & type) {
 	    match (type) {
+		of (syntax::ArrayAlloc, array,
+		    return validateTypeArrayAlloc (array);
+		);
+
 		of (syntax::Var, var,
 		    return validateTypeVar (var);
 		);
 
 		of (syntax::DecoratedExpression, dec_expr,
 		    return validateTypeDecorated (dec_expr);
-		);
-
-		of (syntax::ArrayAlloc, array,
-		    return validateTypeArrayAlloc (array);
 		);
 
 		of (syntax::List, list,

@@ -51,6 +51,10 @@ namespace semantic {
 	const lexing::Word & IGenerator::getLocation () const {
 	    return this-> _location;
 	}
+
+	void IGenerator::changeLocation (const lexing::Word & loc) {
+	    this-> _location = loc;
+	}
 	
 	IGenerator::~IGenerator () {}
 
@@ -76,6 +80,12 @@ namespace semantic {
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	    return this-> _value-> getLocation ();
 	}	
+
+	void Generator::changeLocation (const lexing::Word & loc) {
+	    if (this-> _value == nullptr)
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return this-> _value-> changeLocation (loc);
+	}
 	
 	bool Generator::equals (const Generator & other) const {
 	    if (this-> _value == nullptr) return other._value == nullptr;

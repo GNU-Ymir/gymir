@@ -19,7 +19,8 @@ namespace semantic {
 	class TemplateVisitor {
 
 	    enum Scores {
-		SCORE_VAR = 1
+		SCORE_VAR = 1,
+		SCORE_TYPE = 2
 	    };
 	    
 	    struct Mapper {
@@ -51,9 +52,11 @@ namespace semantic {
 	    /**
 	     * \brief Validate Template expression from implicit specialistion (call operator) 
 	     * \param ref the reference of the template declaration
+	     * \param valueParams the parameters passed at the template 
 	     * \param types the types of the parameters of the implicit call
+	     * \param finalParams by return reference, the parameters to pass at the template symbol for final validation after template specialization
 	     */
-	    generator::Generator validateFromImplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & types, int & score, Symbol & sym) const;
+	    generator::Generator validateFromImplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & valueParams, const std::vector <generator::Generator> & types, int & score, Symbol & sym, std::vector <generator::Generator> & finalParams) const;
 
 
 	    /**
@@ -63,7 +66,7 @@ namespace semantic {
 	     * \param type the type used for implicit specialization
 	     * \return a Mapper, which stores the modifications to apply
 	     */
-	    Mapper validateVarDeclFromImplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const generator::Generator & type) const;
+	    Mapper validateVarDeclFromImplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const std::vector <generator::Generator> & types, int & consumed) const;
 
 	    /**
 	     * \brief Validate a type template specialization from implicit context
@@ -72,7 +75,7 @@ namespace semantic {
 	     * \param params type the type used for implicit specialization
 	     * \return a Mapper, which stores the modifications to apply
 	     */
-	    Mapper validateTypeFromImplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const generator::Generator & type) const;
+	    Mapper validateTypeFromImplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const std::vector <generator::Generator> & types, int & consumed) const;
 
 
 	    /**
@@ -81,7 +84,15 @@ namespace semantic {
 	     * \param left one of the template parameters \in params
 	     * \param type the type that will make the specialization
 	     */
-	    Mapper applyTypeFromExplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const generator::Generator & type) const;
+	    Mapper applyTypeFromExplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const std::vector <generator::Generator> & types, int & consumed) const;
+
+	    /**
+	     * \brief Validate a type template specialization from explicit context on an OfVar
+	     * \param params the template parameters (T : [R], R, ...)
+	     * \param left one of the template parameters \in params, which is a OfVar
+	     * \param type the type that will make the specialization
+	     */
+	    Mapper applyTypeFromExplicitOfVar (const std::vector <syntax::Expression> & params, const syntax::OfVar & var, const generator::Generator & types) const;
 
 	    /**
 	     * \brief Find the expression named name in the list of params (direct access)

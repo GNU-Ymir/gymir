@@ -66,6 +66,7 @@ namespace Ymir {
 			    UNDEF_VAR			    = "undefined symbol %(y)",
 			    UNREACHBLE_STATEMENT	    = "unreachable statement",
 			    UNTERMINATED_SEQUENCE	    = "unterminated escape sequence",
+			    UNRESOLVED_TEMPLATE             = "unresolved template",
 			    USELESS_DECORATOR		    = "useless decorator",
 			    USE_AS_TYPE			    = "expression used as type",
 			    VAR_DECL_WITH_NOTHING	    = "var declaration must at least have a type or a value",

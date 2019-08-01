@@ -88,6 +88,13 @@ namespace Ymir {
 	    return msg;
 	}
 
+	template <typename ... TArgs>
+	std::string makeOccur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc);
+	    return msg;
+	}
+	
 	
 	template <typename ... TArgs>
 	std::string makeWarn (const lexing::Word & loc, const std::string & content, TArgs ... args) {

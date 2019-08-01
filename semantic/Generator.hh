@@ -77,6 +77,11 @@ namespace semantic {
 	    const lexing::Word & getLocation () const;
 
 	    /**
+	     * Change the location of the generator (useful for templates)
+	     */
+	    void changeLocation (const lexing::Word & loc);
+	    
+	    /**
 	     * \return the name of the generator
 	     */
 	    const std::string & getName () const;
@@ -131,6 +136,11 @@ namespace semantic {
 	     */
 	    const lexing::Word & getLocation () const;
 
+	    /**
+	     * Proxy function for generator
+	     */
+	    void changeLocation (const lexing::Word & loc);
+	    
 	    /**
 	     * Proxy function for generator
 	     */
