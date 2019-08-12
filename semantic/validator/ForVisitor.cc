@@ -43,6 +43,7 @@ namespace semantic {
 		    value.to <Value> ().getType ().to <Type> ().getTypeName (),
 		    vars.size ()
 		);
+		return Generator::empty ();
 	    } else if (vars.size () == 1) {
 		return iterateArray (expression, value, syntax::Expression::empty (), vars [0]);
 	    } else { 
@@ -207,7 +208,7 @@ namespace semantic {
 	}
        
 	
-	Generator ForVisitor::validateSlice (const syntax::For & expression, const generator::Generator & value) {
+	Generator ForVisitor::validateSlice (const syntax::For & expression ATTRIBUTE_UNUSED, const generator::Generator & value ATTRIBUTE_UNUSED) {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}	

@@ -20,8 +20,14 @@ namespace semantic {
 	generator::Generator CallVisitor::validate (const syntax::MultOperator & expression) {
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    std::vector <Generator> rights;
-	    for (auto & it : expression.getRights ()) 
-		rights.push_back (this-> _context.validateValue (it));
+	    for (auto & it : expression.getRights ()) {
+		auto val = this-> _context.validateValue (it);
+		if (val.is<List> ()) {
+		    for (auto & g_it : val.to <List> ().getParameters ())
+			rights.push_back (g_it);
+		} else 
+		    rights.push_back (val);
+	    }
 
 	    int score = 0;
 	    std::vector <std::string> errors;
@@ -67,7 +73,7 @@ namespace semantic {
 	}
 
 	generator::Generator CallVisitor::validateFrameProto (const syntax::MultOperator & expression, const FrameProto & proto, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
-	    score = -1;
+	    score = 0;
 	    std::vector <Generator> params;
 	    std::vector <Generator> rights = rights_;
 	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
@@ -77,6 +83,7 @@ namespace semantic {
 	    }
 	    
 	    if (rights.size () != 0) return Generator::empty ();
+	    
 	    std::vector <Generator> types;
 	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 		TRY (		    
@@ -87,6 +94,7 @@ namespace semantic {
 			true
 		    );
 		    types.push_back (proto.getParameters () [it].to <Value> ().getType ());
+		    score += Scores::SCORE_TYPE;		   
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -94,9 +102,7 @@ namespace semantic {
 		} FINALLY;
 	    }
 
-	    if (errors.size () != 0) return Generator::empty ();
-	    
-	    score = 0;
+	    if (errors.size () != 0) return Generator::empty ();	   
 	    return Call::init (expression.getLocation (), proto.getReturnType (), proto.clone (), types, params);
 	}
        
@@ -246,7 +252,7 @@ namespace semantic {
 	    
 	    if (!templSym.isEmpty () && fromTempl) {
 		TRY (
-		    this-> _context.validate (templSym);
+		    this-> _context.validateTemplateSymbol (templSym);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
@@ -304,7 +310,7 @@ namespace semantic {
 		int _score;
 		proto_gen = soluce;
 		auto res = validateFrameProto (expression, soluce.to<FrameProto> (), finalParams, _score, errors);
-		score += _score;
+		score += _score;		
 		return res;
 	    }
 	    

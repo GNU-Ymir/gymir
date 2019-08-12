@@ -50,7 +50,11 @@ namespace syntax {
 	 * \return is it an alias ?
 	 */
 	bool isAlias () const;
-	
+
+	/**
+	 * \return is it an expand ?
+	 */
+	bool isExpand () const; 
     };    
 
 }

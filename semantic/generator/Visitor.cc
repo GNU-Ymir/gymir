@@ -368,6 +368,10 @@ namespace semantic {
 			 
 		else of (StructCst, cst,
 		    return generateStructCst (cst);
+		)
+
+		else of (StructRef, rf ATTRIBUTE_UNUSED,
+		    return Tree::empty ();
 		);
 	    }
 

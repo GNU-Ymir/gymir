@@ -140,7 +140,7 @@ namespace semantic {
 	    }
 	}
 	
-	semantic::Symbol Visitor::visitFunction (const syntax::Function & func, bool isExtern) {
+	semantic::Symbol Visitor::visitFunction (const syntax::Function & func, bool isExtern, bool insert) {
 	    auto function = Function::init (func.getName (), func);
 	
 	    auto symbols = getReferent ().getLocal (func.getName ().str);	    
@@ -163,12 +163,13 @@ namespace semantic {
 	    if (!isExtern || !func.getBody ().getBody ().isEmpty ()) {
 		if (func.getPrototype ().isVariadic ()) Ymir::Error::occur (func.getName (), ExternalError::get (DECL_VARIADIC_FUNC));
 	    }
-	    
-	    getReferent ().insert (function);
+
+	    if (insert) 
+		getReferent ().insert (function);
 	    return function;
 	}        
 
-	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str) {
+	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str, bool insert) {
 	    auto structure = Struct::init (str.getName (), str.getDeclarations ());
 	
 	    auto symbols = getReferent ().getLocal (str.getName ().str);	
@@ -187,9 +188,10 @@ namespace semantic {
 		if (structure.to <Struct> ().isUnion () && structure.to <Struct> ().isPacked ()) {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::PACKED_AND_UNION));
 		}
-	    }	
-
-	    getReferent ().insert (structure);
+	    }
+	    
+	    if (insert)
+		getReferent ().insert (structure);	    
 	    return structure;
 	}
 

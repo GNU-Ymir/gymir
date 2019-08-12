@@ -112,6 +112,7 @@ ymir_OBJS = \
 	ymir/generator_FrameProto.o \
 	ymir/generator_GlobalVar.o \
 	ymir/generator_Integer.o \
+	ymir/generator_List.o \
 	ymir/generator_Loop.o \
 	ymir/generator_Mangler.o \
 	ymir/generator_ModuleAccess.o \

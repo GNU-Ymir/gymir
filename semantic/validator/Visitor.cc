@@ -9,6 +9,7 @@
 #include <ymir/semantic/validator/SubVisitor.hh>
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
+#include <ymir/semantic/generator/Mangler.hh>
 #include <string>
 #include <algorithm>
 
@@ -39,7 +40,7 @@ namespace semantic {
 			    GET_ERRORS_AND_CLEAR (msgs);
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
-			
+		       			
 			this-> _referent.pop_back ();
 			
 			if (errors.size () != 0) {
@@ -127,18 +128,29 @@ namespace semantic {
 	    }
 	}
 	
-	void Visitor::createMainFunction (const lexing::Word & loc) {
-	    auto frame_proto = FrameProto::init (loc, Keys::MAIN, Void::init (loc), {});
+	void Visitor::createMainFunction (const lexing::Word & loc, const generator::Generator & retType) {
 	    auto itype       = Integer::init (loc, 32, true);
-	    auto zero        = ufixed (0);
-	    auto content = Block::init (
-		loc,
-		zero.to<Value> ().getType (),
-		{
-		    Call::init (loc, frame_proto.to <FrameProto> ().getReturnType (), frame_proto, {}, {}),
-			zero
-		}
-	    );
+	    auto frame_proto = FrameProto::init (loc, Keys::MAIN, retType, {});
+	    Generator content (Generator::empty ());
+	    if (retType.is <Void> ()) {
+		auto zero        = ufixed (0);
+		content = Block::init (
+		    loc,
+		    zero.to<Value> ().getType (),
+		    {
+			Call::init (loc, frame_proto.to <FrameProto> ().getReturnType (), frame_proto, {}, {}),
+			    zero
+			    }
+		);
+	    } else {
+		content = Block::init (
+		    loc,
+		    frame_proto.to <FrameProto> ().getReturnType (),
+		    {
+			Call::init (loc, frame_proto.to <FrameProto> ().getReturnType (), frame_proto, {}, {})
+			    }
+		);
+	    }
 	    
 	    auto main_frame = Frame::init (loc, Keys::MAIN, {}, itype, content, true);
 	    main_frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
@@ -148,7 +160,6 @@ namespace semantic {
 	void Visitor::validateFunction (const semantic::Function & func, bool isWeak) {
 	    auto & function = func.getContent ();
 	    std::vector <Generator> params;
-	    if (function.getName () == Keys::MAIN) createMainFunction (function.getName ());
 	    
 	    enterBlock ();
 	    for (auto & param : function.getPrototype ().getParameters ()) {
@@ -187,9 +198,19 @@ namespace semantic {
 	    }	    
 	    
 	    Generator retType (Generator::empty ());
-	    if (!function.getPrototype ().getType ().isEmpty ()) 
+	    if (!function.getPrototype ().getType ().isEmpty ()) {
 		retType = validateType (function.getPrototype ().getType ());
-	    else retType = Void::init (func.getName ());
+		if (function.getName () == Keys::MAIN) {
+		    auto itype       = Integer::init (func.getName (), 32, true);
+		    if (!itype.to <Type> ().isCompatible (retType)) {
+			Ymir::Error::occur (function.getPrototype ().getType ().getLocation (),
+					    ExternalError::get (INCOMPATIBLE_TYPES),
+					    itype.to <Type> ().getTypeName (),
+					    retType.to <Type> ().getTypeName ()
+			);
+		    }
+		}
+	    } else retType = Void::init (func.getName ());
 	    
 	    
 	    if (!function.getBody ().getBody ().isEmpty ()) {
@@ -202,15 +223,11 @@ namespace semantic {
 		bool needFinalReturn = false;
 		
 		if (!body.to<Value> ().isReturner ()) {
-		    verifyMemoryOwner (body.getLocation (), retType, body, true);
-		    // verifyLocality ();
-		    // if (retType.to <Type> ().isRef () && (!body.to <Value> ().getType ().to <Type> ().isRef () || !body.to <Value> ().isLocal ())) {
-		    // 	auto note = Ymir::Error::createNote (retType.getLocation (), ExternalError::get (BORROWED_HERE));
-		    // 	Ymir::Error::occurAndNote (body.getLocation (), note, ExternalError::get (RETURN_LOCAL_REFERENCE));
-		    // }
-		    
+		    verifyMemoryOwner (body.getLocation (), retType, body, true);		    
 		    needFinalReturn = !retType.is<Void> ();
 		}
+
+		if (function.getName () == Keys::MAIN) createMainFunction (function.getName (), retType);
 		
 		quitBlock ();
 		if (func.getExternalLanguage () == "") 
@@ -324,13 +341,26 @@ namespace semantic {
 	    
 	    return value;
 	}
+
+	Generator Visitor::validateCteValue (const syntax::Expression & value) {
+	    match (value) {
+		of (syntax::If, fi,
+		    return validateCteIfExpression (fi);
+		) else of (syntax::Block, bl ATTRIBUTE_UNUSED,
+		    return validateValue (value);
+		) else {
+		    Ymir::Error::occur (value.getLocation (), ExternalError::get (CANNOT_BE_CTE));
+		}		    
+	    }
+	    return Generator::empty ();
+	}
 	
 	Generator Visitor::validateValueNoReachable (const syntax::Expression & value) {
 	    match (value) {
 		of (syntax::Block, block,
 		    return validateBlock (block);
 		);
-
+		
 		of (syntax::Fixed, fixed,
 		    return validateFixed (fixed);
 		);
@@ -362,7 +392,7 @@ namespace semantic {
 		of (syntax::Set, set,
 		    return validateSet (set);
 		);
-
+		
 		of (syntax::DecoratedExpression, dec_expr,
 		    return validateDecoratedExpression (dec_expr);
 		);
@@ -383,6 +413,10 @@ namespace semantic {
 		    return validateBreak (_break);
 		);
 
+		// of (syntax::Return, _return,
+		//     return validateReturn (_return);
+		// );
+		
 		of (syntax::List, list,
 		    return validateList (list);
 		);
@@ -442,6 +476,11 @@ namespace semantic {
 		    }
 		    
 		    auto value = validateValueNoReachable (block.getContent () [i]);
+
+		    if (i != (int) block.getContent ().size () - 1 && isUseless (value))
+			// if the expression is not the last, it cannot be a useless one, as it is not use as the value of the block
+			// So, if it is a useless expression, that perform no value change, or anything, we throw an error
+			Ymir::Error::occur (block.getContent ()[i].getLocation (), ExternalError::get(USELESS_EXPR));
 		    
 		    if (value.to <Value> ().isReturner ()) returner = true;
 		    if (value.to <Value> ().isBreaker ()) breaker = true;
@@ -449,7 +488,7 @@ namespace semantic {
 		    type.to <Type> ().isRef (false);
 		    type.to <Type> ().isMutable (false);
 		    
-		    values.push_back (value);		    
+		    values.push_back (value);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
@@ -472,7 +511,10 @@ namespace semantic {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
 
-	    if (!type.is<Void> ()) verifyMemoryOwner (block.getEnd (), type, values.back(), false);	    
+	    if (!type.is<Void> ()) verifyMemoryOwner (block.getEnd (), type, values.back(), false);
+	    else if (type.is<Void> () && values.size () != 0 && !values.back ().is <None> ())
+		Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID));
+		    
 	    auto ret = Block::init (block.getLocation (), type, values);
 	    ret.to <Value> ().isBreaker (breaker);
 	    ret.to <Value> ().isReturner (returner);
@@ -500,6 +542,24 @@ namespace semantic {
 		
 	    }
 	    return sym;
+	}
+
+	void Visitor::validateTemplateSymbol (const semantic::Symbol & sym) {
+	    this-> _referent.push_back (sym.getRef ());
+	    std::vector <std::string> errors;
+	    enterForeign ();
+	    TRY (
+		this-> validate (sym);		
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } FINALLY;   
+	    exitForeign ();
+
+	    this-> _referent.pop_back ();
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
 	}
 	
 	Generator Visitor::validateSet (const syntax::Set & set) {
@@ -805,7 +865,7 @@ namespace semantic {
 		    of (semantic::Function, func, {
 			    this-> _referent.push_back (sym);
 			    gens.push_back (validateFunctionProto (func));
-			    this-> _referent.pop_back ();
+			    this-> _referent.pop_back ();			    
 			    continue;
 			}
 		    )
@@ -990,7 +1050,13 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateDecoratedExpression (const syntax::DecoratedExpression & dec_expr) {
-	    auto inner = validateValue (dec_expr.getContent ());
+	    Generator inner = Generator::empty ();
+	    if (dec_expr.hasDecorator (syntax::Decorator::CTE)) {
+		inner = validateCteValue (dec_expr.getContent ());
+	    } else {
+		inner = validateValue (dec_expr.getContent ());
+	    }
+	    
 	    if (dec_expr.hasDecorator (syntax::Decorator::MUT)) {
 		if (!inner.to<Value> ().getType ().to<Type> ().isMutable ()) 
 		    Ymir::Error::occur (dec_expr.getDecorator (syntax::Decorator::MUT).getLocation (),
@@ -1052,6 +1118,27 @@ namespace semantic {
 		return Conditional::init (_if.getLocation (), Void::init (_if.getLocation ()), test, content, Generator::empty ());
 	}
 
+	
+	Generator Visitor::validateCteIfExpression (const syntax::If & _if) {
+	    Generator test (Generator::empty ());
+	    if (!_if.getTest ().isEmpty ()) {
+		auto test = validateValue (_if.getTest ());
+		auto value = retreiveValue (test);
+		if (!value.is<BoolValue> ()) {
+		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					test.to <Value> ().getType ().to <Type> ().getTypeName (),
+					Bool::NAME
+		    );
+		    return Generator::empty ();
+		}
+		if (value.to <BoolValue> ().getValue ()) {
+		    return validateValueNoReachable (_if.getContent ());
+		} else if (!_if.getElsePart ().isEmpty ()) {
+		    return validateCteValue (_if.getElsePart ());
+		} else return Block::init (_if.getLocation (), Void::init (_if.getLocation ()), {});
+	    } else return validateValueNoReachable (_if.getContent ());
+	}	
+	
 	Generator Visitor::validateWhileExpression (const syntax::While & _wh) {
 	    Generator test (Generator::empty ());
 	    if (!_wh.getTest ().isEmpty ()) {
@@ -1128,8 +1215,16 @@ namespace semantic {
 	Generator Visitor::validateArray (const syntax::List & list) {
 	    std::vector <Generator> params;
 	    for (auto it : list.getParameters ()) {
-		params.push_back (validateValue (it));
-		verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
+		auto val = validateValue (it);
+		if (val.is<List> ()) {
+		    for (auto & g_it : val.to <List> ().getParameters ()) {
+			params.push_back (g_it);
+			verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
+		    }
+		} else {
+		    params.push_back (val);
+		    verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
+		}
 	    }
 
 	    Generator innerType (Void::init (list.getLocation ()));
@@ -1148,11 +1243,22 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::vector <Generator> types;
 	    for (auto it : list.getParameters ()) {
-		params.push_back (validateValue (it));
-		auto type = params.back ().to <Value> ().getType ();
-		type.to <Type> ().isRef (false);
-		types.push_back (type);
-		verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+		auto val = validateValue (it);
+		if (val.is <List> ()) {
+		    for (auto & g_it : val.to<List> ().getParameters ()) {
+			params.push_back (g_it);
+			auto type = params.back ().to <Value> ().getType ();
+			type.to <Type> ().isRef (false);
+			types.push_back (type);
+			verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+		    }
+		} else {
+		    params.push_back (val);
+		    auto type = params.back ().to <Value> ().getType ();
+		    type.to <Type> ().isRef (false);
+		    types.push_back (type);
+		    verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+		}
 	    }
 	    
 	    auto type = Tuple::init (list.getLocation (), types);
@@ -1164,7 +1270,8 @@ namespace semantic {
 	Generator Visitor::validateIntrinsics (const syntax::Intrinsics & intr) {
 	    if (intr.isCopy ()) return validateCopy (intr);
 	    if (intr.isAlias ()) return validateAlias (intr);
-
+	    if (intr.isExpand ()) return validateExpand (intr);
+	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
@@ -1219,6 +1326,28 @@ namespace semantic {
 	    }
 	    
 	    return Generator::empty ();
+	}
+
+	Generator Visitor::validateExpand (const syntax::Intrinsics & intr) {
+	    auto content = validateValue (intr.getContent ());
+	    if (content.to<Value> ().getType ().is<Tuple> ()) {
+		auto type = Void::init (intr.getLocation ());
+		std::vector <Generator> expanded;
+		auto & tu_inners = content.to <Value> ().getType ().to<Tuple> ().getInners ();
+		for (auto it : Ymir::r (0, tu_inners.size ())) {
+		    auto type = tu_inners [it];
+		    if (content.to<Value> ().isLvalue () &&
+			content.to <Value> ().getType ().to <Type> ().isMutable () &&
+			type.to <Type> ().isMutable ())
+			type.to <Type> ().isMutable (true);
+		    else type.to<Type> ().isMutable (false);
+		    
+		    expanded.push_back (TupleAccess::init (intr.getLocation (), type, content, it));
+		}
+		return List::init (intr.getLocation (), type, expanded);
+	    } else {
+		return content;
+	    }
 	}
 
 	Generator Visitor::validateMultOperator (const syntax::MultOperator & op) {
@@ -1556,8 +1685,9 @@ namespace semantic {
 	    auto & gen = getLocal (name.str);
 	    if (!gen.isEmpty ()) {
 		auto note = Ymir::Error::createNote (gen.getLocation ());
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.str);
-	    }
+	    }	    
 	}
 	
 	Generator Visitor::retreiveValue (const Generator & gen) {
@@ -1565,10 +1695,45 @@ namespace semantic {
 	    return compile_time.execute (gen);
 	}
 
-	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {
-	    return this-> _referent.back ().get (name);
+	const Generator & Visitor::retreiveFrameFromProto (const FrameProto & proto) {
+	    auto name = Mangler::init ().mangleFrameProto (proto);
+	    for (auto & it : this-> _list) {
+		if (it.is<Frame> ()) {
+		    auto sec_name = Mangler::init ().mangleFrame (it.to <Frame> ());
+		    if (sec_name == name) return it;
+		}
+	    }
+	    return Generator::__empty__;
 	}
 
+	bool Visitor::insertTemplateProto (const FrameProto & proto) {
+	    auto name = Mangler::init ().mangleFrameProto (proto);
+	    for (auto & it : this-> _templateProtos) {
+		auto sec_name = Mangler::init ().mangleFrameProto (it);
+		if (sec_name == name) return false;
+	    }
+	    
+	    this-> _templateProtos.push_back (proto);
+	    return true;
+	}
+	
+	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {
+	    return this-> _referent.back ().get (name);
+	}	
+	
+	bool Visitor::isUseless (const Generator & value) {
+	    match (value) {
+		of (Affect, af ATTRIBUTE_UNUSED,  return false;);
+		of (Block,  bl ATTRIBUTE_UNUSED,  return false;);
+		of (Break,  br ATTRIBUTE_UNUSED,  return false;);
+		of (Call,   cl ATTRIBUTE_UNUSED,  return false;);
+		of (Conditional, c ATTRIBUTE_UNUSED, return false;);
+		of (Loop,   lp ATTRIBUTE_UNUSED,  return false;);
+		of (generator::VarDecl, vd ATTRIBUTE_UNUSED, return false;);
+	    }
+	    return true;
+	}	
+	
     }
     
 }

@@ -84,12 +84,12 @@ namespace semantic {
 	    /**
 	     * \brief Transform a function into a semantic tree
 	     */
-	    semantic::Symbol visitFunction (const syntax::Function & func, bool isExtern = false);
+	    semantic::Symbol visitFunction (const syntax::Function & func, bool isExtern = false, bool insert = true);
 
 	    /**
 	     * \brief Transform a struct into a semantic tree
 	     */
-	    semantic::Symbol visitStruct (const syntax::Struct & str);
+	    semantic::Symbol visitStruct (const syntax::Struct & str, bool insert = true);
 
 	    /**
 	     * \brief Transform an alias into a semantic tree

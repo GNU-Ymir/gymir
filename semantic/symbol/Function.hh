@@ -82,6 +82,7 @@ namespace semantic {
 	const std::string & getExternalLanguage () const;
 	
 	std::string formatTree (int padd) const override;
+
 	
     };    
 

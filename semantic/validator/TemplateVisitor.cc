@@ -48,11 +48,11 @@ namespace semantic {
 		    syntaxTempl = replaceSyntaxTempl (syntaxTempl, globalMapper.mapping);
 
 		    if (current_consumed == 1) {
-			finalParams.push_back (valueParams [consumed]);
+			finalParams.push_back (NamedGenerator::init (syntaxParams [it].getLocation (), valueParams [consumed]));
 		    } else {
 			// Create a tuple containing the number of types consumed
 			auto tupleType = Tuple::init (syntaxParams [it].getLocation (), std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + current_consumed));
-			finalParams.push_back (TupleValue::init (syntaxParams [it].getLocation (), tupleType, std::vector <Generator> (valueParams.begin () + consumed, valueParams.begin () + consumed + current_consumed)));
+			finalParams.push_back (NamedGenerator::init (syntaxParams [it].getLocation (), TupleValue::init (syntaxParams [it].getLocation (), tupleType, std::vector <Generator> (valueParams.begin () + consumed, valueParams.begin () + consumed + current_consumed))));
 		    }
 		    consumed += current_consumed;
 		}		
@@ -79,8 +79,8 @@ namespace semantic {
 		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), globalMapper.mapping);
 		auto visit = declarator::Visitor::init ();
 		visit.pushReferent (ref.getTemplateRef ().getReferent ());
-		symbol = visit.visit (func);
-		return this-> _context.validateMultSym (ref.getLocation (), {symbol});
+		symbol = visit.visitFunction (func.to <syntax::Function> ());		
+		return this-> _context.validateFunctionProto (symbol.to <semantic::Function> ());
 	    } 
 	    
 	    return Generator::empty ();
@@ -110,7 +110,7 @@ namespace semantic {
 			mapper.score = 0;			    
 			return mapper;
 		    }
-		) else of (List, lst, {
+		) else of (syntax::List, lst, {
 			consumed += 1;
 			auto type = types [0];
 			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == lst.getParameters ().size ()) {
@@ -180,7 +180,8 @@ namespace semantic {
 	    OutBuffer buf;
 	    leftT.treePrint (buf, 0);
 	    println (buf.str ());
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Mapper ();
 	}
 
 	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicitOfVar (const std::vector <Expression> & params, const OfVar & ofv, const generator::Generator & type) const {
@@ -203,7 +204,7 @@ namespace semantic {
 			    return mapper;
 			}
 		    }
-		) else of (List, lst, {
+		) else of (syntax::List, lst, {
 			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == lst.getParameters ().size ()) {
 			    Mapper mapper;
 			    auto syntaxParam = lst.getParameters ();
@@ -250,7 +251,8 @@ namespace semantic {
 	    OutBuffer buf;
 	    ofv.getType ().treePrint (buf, 0);
 	    println (buf.str ());
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Mapper ();
 	}
 	
 	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const generator::Generator & gen) const {
@@ -470,6 +472,7 @@ namespace semantic {
 		element.treePrint (buf, 0);
 		println (buf.str ());
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		return Expression::empty ();
 	    } else return element;
 	}
 
@@ -571,13 +574,32 @@ namespace semantic {
 		decl.treePrint (buf, 0);
 		println (buf.str ());
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		return Declaration::empty ();
 	    } else return decl;
 	}
 
 	syntax::Function::Prototype TemplateVisitor::replaceAll (const syntax::Function::Prototype & proto, const std::map <std::string, Expression> & mapping) const {
 	    std::vector <Expression> vars;
-	    for (auto & it : proto.getParameters ()) 
-		vars.push_back (replaceAll (it, mapping));
+	    for (auto & it : proto.getParameters ()) {
+		if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
+		    /** As we are in a template function, it can be possible that the type of the value is not compatible, with the infered type of the var
+		     * We want the following exemple to successfully compile :
+		     * --------
+		     * def foo (T) (a : T = 12) ...
+		     * ...
+		     * foo (?a=[1, 2, 3])
+		     * --------
+		     */
+		    vars.push_back (replaceAll (syntax::VarDecl::init (
+			it.getLocation (),
+			it.to <syntax::VarDecl> ().getDecorators (),
+			it.to <syntax::VarDecl> ().getType (),
+			syntax::Expression::empty ()
+		    ), mapping));
+		} else {
+		    vars.push_back (replaceAll (it, mapping));
+		}
+	    }
 	    return syntax::Function::Prototype::init (vars, replaceAll (proto.getType (), mapping), proto.isVariadic ());
 	    
 	}

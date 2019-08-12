@@ -34,6 +34,10 @@ namespace semantic {
 		    return gen;
 		)
 
+		else of (BoolValue, f ATTRIBUTE_UNUSED,
+		    return gen;
+		)
+			 
 		else of (None, n ATTRIBUTE_UNUSED,
 		    return gen;
 		)
@@ -76,8 +80,11 @@ namespace semantic {
 
 		else of (VarRef, vref,
 		    return executeVarRef (vref);
-		);
-		
+		)
+
+		else of (Call, cll,
+		    return executeCall (cll);
+		);	       
 	    }
 	    
 	    Ymir::Error::occur (
@@ -326,6 +333,21 @@ namespace semantic {
 	    else return this-> execute (ref.getValue ());
 	}
 
+	generator::Generator CompileTime::executeCall (const generator::Call & call) {
+	    if (call.getParameters ().size () != 0) {
+		return Generator::empty ();
+	    } else {
+		return this-> executeFrame (call.getFrame ().to <generator::FrameProto> ());
+	    }
+	}
+
+	generator::Generator CompileTime::executeFrame (const generator::FrameProto & fr) {
+	    auto & frame = this-> _context.retreiveFrameFromProto (fr);
+	    if (!frame.isEmpty ()) 
+		return this-> execute (frame.to<Frame> ().getContent ());
+	    else return Generator::empty ();
+	}
+	
     }
     
 }

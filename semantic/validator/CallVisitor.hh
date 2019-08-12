@@ -19,6 +19,10 @@ namespace semantic {
 	 */
 	class CallVisitor {
 
+	    enum Scores {
+		SCORE_TYPE = 3
+	    };
+	    
 	    Visitor & _context;
 
 	private :

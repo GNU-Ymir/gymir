@@ -79,7 +79,7 @@ ymir_langhook_init (void)
 
 
 static void
-ymir_init_options (unsigned int argc, cl_decoded_option * decoded_options)
+ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decoded_options ATTRIBUTE_UNUSED)
 {
     // Options OPT_l and cie...
 }

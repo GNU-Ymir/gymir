@@ -85,6 +85,16 @@ namespace semantic {
 	     * \brief Execute a var reference (return the value of the assiociated vardecl, if it is immutable)
 	     */
 	    generator::Generator executeVarRef (const generator::VarRef & ref);
+
+	    /**
+	     * \brief Execute a frame call at compile time
+	     */
+	    generator::Generator executeCall (const generator::Call & call);
+
+	    /**
+	     * \brief Execute a frame at compile time (used in executeCall)
+	     */
+	    generator::Generator executeFrame (const generator::FrameProto & fr);
 	    
 	};
 	

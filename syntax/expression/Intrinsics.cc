@@ -47,5 +47,9 @@ namespace syntax {
     bool Intrinsics::isAlias () const {
 	return this-> getLocation () == Keys::ALIAS;
     }
+
+    bool Intrinsics::isExpand () const {
+	return this-> getLocation () == Keys::EXPAND;
+    }
     
 }
