@@ -38,4 +38,8 @@ namespace syntax {
     const Expression & OfVar::getType () const {
 	return this-> _right;
     }
+
+    std::string OfVar::prettyString () const {
+	return this-> getLocation ().str + " of " + this-> _right.prettyString ();
+    }
 }

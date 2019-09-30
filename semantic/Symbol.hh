@@ -73,6 +73,14 @@ namespace semantic {
 	virtual void insert (const Symbol & sym);
 
 	/**
+	 * \brief Insert a template symbol 
+	 * \brief This is working for some kind of symbol only
+	 * \brief Unlike classic insert, a template symbol cannot be retreived
+	 * \para sym the symbol to insert
+	 */
+	virtual void insertTemplate (const Symbol & sym);
+	
+	/**
 	 * \brief Insert a new symbol in the current one
 	 * \brief It will work like insert, but ensure that there is only one occurence of the symbol
 	 * \brief sym the symbol to insert 
@@ -132,6 +140,11 @@ namespace semantic {
 	 * \return the space name of the symbol
 	 */
 	virtual std::string getRealName () const;
+
+	/** 
+	 * \brief Used for inner mangling only, for the moment, the only application is for template solution 
+	 */
+	virtual std::string getMangledName () const;
 	
 	/**
 	 * \return is this symbol the same as other (no only address, or type)
@@ -194,6 +207,11 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
+	void insertTemplate (const Symbol & sym);
+	
+	/**
+	 * Proxy function for symbol
+	 */
 	void replace (const Symbol & sym);
 
 	/**
@@ -230,6 +248,11 @@ namespace semantic {
 	 * \return the space name of the symbol
 	 */
 	std::string getRealName () const;
+
+	/** 
+	 * \brief Used for inner mangling only, for the moment, the only application is for template solution 
+	 */
+	std::string getMangledName () const;
 	
 	/**
 	 * Proxy function for symbol

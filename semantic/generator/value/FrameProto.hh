@@ -15,6 +15,8 @@ namespace semantic {
 	    std::string _name;
 
 	    Frame::ManglingStyle _style = Frame::ManglingStyle::Y;
+
+	    std::string _mangleName;
 	    
 	private :
 
@@ -74,7 +76,11 @@ namespace semantic {
 	     * \brief Change the mangling style of the frame 
 	     */
 	    void setManglingStyle (Frame::ManglingStyle style);
-	    
+
+
+	    void setMangledName (const std::string & name);
+
+	    const std::string & getMangledName () const;
 	    
 	};
 	

@@ -39,6 +39,10 @@ namespace semantic {
     void Function::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }
+
+    void Function::insertTemplate (const Symbol & sym) {
+	this-> _table.insertTemplate (sym);
+    }
     
     void Function::replace (const Symbol & sym) {
 	this-> _table.replace (sym);
@@ -82,6 +86,11 @@ namespace semantic {
     std::string Function::getRealName () const {
 	if (this-> getName ().str == Keys::MAIN) return this-> getName ().str;
 	else return ISymbol::getRealName ();
+    }
+
+    std::string Function::getMangledName () const {
+	if (this-> getName ().str == Keys::MAIN) return this-> getName ().str;
+	else return ISymbol::getMangledName ();
     }
     
     void Function::setExternalLanguage (const std::string & name) {

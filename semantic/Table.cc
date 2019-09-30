@@ -36,6 +36,12 @@ namespace semantic {
 	this-> _syms.push_back (toInsert);
     }
 
+    void Table::insertTemplate (const Symbol & sym) {
+	Symbol toInsert = sym;
+	toInsert.setReferent (Symbol {this-> _attached});
+	this-> _templates.push_back (toInsert);
+    }
+
     void Table::replace (const Symbol & sym) {
 	Symbol toInsert = sym;
 	toInsert.setReferent (Symbol {this-> _attached});

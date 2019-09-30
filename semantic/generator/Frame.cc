@@ -15,7 +15,7 @@ namespace semantic {
 	    _params (params),
 	    _type (type),
 	    _content (content),
-	    _needFinalReturn (needFinalReturn)	    
+	    _needFinalReturn (needFinalReturn)
 	{}
 
 	Generator Frame::init (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn) {
@@ -69,6 +69,14 @@ namespace semantic {
 
 	bool Frame::isWeak () const {
 	    return this-> _isWeak;
+	}
+
+	void Frame::setMangledName (const std::string & mangleName) {
+	    this-> _mangleName = mangleName;
+	}
+
+	const std::string& Frame::getMangledName () const {
+	    return this-> _mangleName;
 	}
 	
     }

@@ -30,6 +30,11 @@ namespace syntax {
 	} else this-> _value-> treePrint (stream, i);
     }
 
+    std::string Expression::prettyString () const {
+	if (this-> _value == NULL) return "";
+	else return this-> _value-> prettyString ();
+    }
+
     bool IExpression::isOf (const IExpression *) const {
 	return false;
     }
@@ -46,7 +51,11 @@ namespace syntax {
     
     void IExpression::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<TODO>", i, '\t');
-    }    
+    }
+
+    std::string IExpression::prettyString () const {
+	return "";
+    }
     
     IExpression::~IExpression () {}
 

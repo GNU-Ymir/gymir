@@ -34,5 +34,9 @@ namespace syntax {
     const lexing::Word & Var::getName () const {
 	return this-> getLocation ();
     }
+
+    std::string Var::prettyString () const {
+	return this-> getLocation ().str;
+    }
     
 }

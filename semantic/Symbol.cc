@@ -35,6 +35,10 @@ namespace semantic {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
 
+    void ISymbol::insertTemplate (const Symbol &) {
+	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+    }
+
     void ISymbol::replace (const Symbol &) {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
@@ -82,6 +86,16 @@ namespace semantic {
 	}
     }
     
+    std::string ISymbol::getMangledName () const {
+	if (this-> _referent == nullptr) return this-> _name.str;
+	else {
+	    auto ft = this-> _referent-> getMangledName ();
+	    if (ft != "")
+		return ft + "::" + this-> _name.str;
+	    else return this-> _name.str;
+	}
+    }
+
     ISymbol::~ISymbol () {}
 
     Symbol::Symbol (ISymbol * value) : RefProxy<ISymbol, Symbol> (value)
@@ -115,6 +129,14 @@ namespace semantic {
 	}
     }
 
+    void Symbol::insertTemplate (const Symbol & sym) {
+	if (this-> _value != nullptr) {
+	    this-> _value-> insertTemplate (sym);
+	} else {
+	    // We don't do anything, it is more convinient for global modules
+	}
+    }
+    
     void Symbol::replace (const Symbol & sym) {
 	if (this-> _value != nullptr)
 	    this-> _value-> replace (sym);
@@ -167,6 +189,13 @@ namespace semantic {
     
     std::string Symbol::getRealName () const {
 	if (this-> _value != nullptr) return this-> _value-> getRealName ();
+	else {
+	    return "";
+	}
+    }
+
+    std::string Symbol::getMangledName () const {
+	if (this-> _value != nullptr) return this-> _value-> getMangledName ();
 	else {
 	    return "";
 	}

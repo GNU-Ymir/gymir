@@ -58,7 +58,7 @@ namespace semantic {
 	
 	std::string Mangler::mangleFrame (const Frame & fr) const {
 	    if (fr.getManglingStyle () == Frame::ManglingStyle::Y) {
-		auto name = fr.getName ();
+		auto name = fr.getMangledName ();
 		std::vector <std::string> splits = split (name, "::");
 
 		OutBuffer buf;
@@ -78,7 +78,7 @@ namespace semantic {
 
 	std::string Mangler::mangleFrameProto (const FrameProto & proto) const {
 	    if (proto.getManglingStyle () == Frame::ManglingStyle::Y) {
-		auto name = proto.getName ();
+		auto name = proto.getMangledName ();
 		std::vector <std::string> splits = split (name, "::");
 	    
 		OutBuffer buf;

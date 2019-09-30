@@ -105,8 +105,17 @@ namespace semantic {
 	generator::Generator CompileTime::executeArrayAccess (const generator::ArrayAccess & acc) {
 	    auto array = this-> execute (acc.getArray ());
 	    auto index = this-> execute (acc.getIndex ());
-
-	    // everything has alreagy been validated, we assume that index is a Fixed, and array an array
+	    if (!index.is <Fixed> ())
+		Ymir::Error::occur (
+		    index.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		); 
+	    if (!array.is <ArrayValue> ())
+		Ymir::Error::occur (
+		    array.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		); 
+	    
 	    return array.to<ArrayValue> ().getContent ()[index.to<Fixed> ().getUI ().u];
 	}
 
@@ -182,8 +191,22 @@ namespace semantic {
 	}
 	
 	generator::Generator CompileTime::executeBinaryInt (const generator::BinaryInt & binInt) {
-	    auto left = this-> execute (binInt.getLeft ()).to<Fixed> ().getUI ();
-	    auto right = this-> execute (binInt.getRight ()).to<Fixed> ().getUI ();
+	    auto leftEx = this-> execute (binInt.getLeft ());
+	    auto rightEx = this-> execute (binInt.getRight ());
+	    if (!leftEx.is<Fixed> ())
+		Ymir::Error::occur (
+		    leftEx.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+	    
+	    if (!rightEx.is<Fixed> ())
+		Ymir::Error::occur (
+		    rightEx.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+	    
+	    auto left = leftEx.to<Fixed> ().getUI ();
+	    auto right = rightEx.to<Fixed> ().getUI ();
 	    if (binInt.getType ().is<Integer> ()) {
 		bool isSigned = binInt.getType ().to <Integer> ().isSigned ();
 		std::string type = binInt.getType ().to <Integer> ().typeName ();
@@ -231,7 +254,14 @@ namespace semantic {
 	}
 	
 	generator::Generator CompileTime::executeUnaryInt (const generator::UnaryInt & unaInt) {
-	    auto elem = this-> execute (unaInt.getOperand ()).to <Fixed> ().getUI ();
+	    auto elemEx = this-> execute (unaInt.getOperand ());
+	    if (!elemEx.is<Fixed> ())
+		Ymir::Error::occur (
+		    elemEx.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+	    
+	    auto elem = elemEx.to <Fixed> ().getUI ();
 	    if (unaInt.getType ().is <Integer> ()) {
 		bool isSigned = unaInt.getType ().to <Integer> ().isSigned ();
 		std::string type = unaInt.getType ().to <Integer> ().typeName ();
@@ -255,8 +285,13 @@ namespace semantic {
 		    Ymir::Error::occur (unaInt.getLocation (), ExternalError::get (OVERFLOW), type, result.u);
 
 		return Fixed::init (unaInt.getLocation (), unaInt.getType (), result);
-	    } else
+	    } else {
+		Ymir::Error::occur (
+		    unaInt.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
 		return Generator::empty ();
+	    }
 	}
 
 	template <typename T>
@@ -288,8 +323,23 @@ namespace semantic {
 	}
 	
 	generator::Generator CompileTime::executeBinaryFloat (const generator::BinaryFloat & binFloat) {
-	    auto left = strtod (this-> execute (binFloat.getLeft ()).to<FloatValue> ().getValue ().c_str (), NULL);
-	    auto right = strtod (this-> execute (binFloat.getRight ()).to<FloatValue> ().getValue ().c_str (), NULL);
+	    auto leftEx = this-> execute (binFloat.getLeft ());
+	    auto rightEx = this-> execute (binFloat.getRight ());
+	    if (!leftEx.is<FloatValue> ())
+		Ymir::Error::occur (
+		    leftEx.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+	    if (!rightEx.is<FloatValue> ())
+		Ymir::Error::occur (
+		    rightEx.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+
+	    
+	    auto left = strtod (leftEx.to<FloatValue> ().getValue ().c_str (), NULL);
+	    auto right = strtod (rightEx.to<FloatValue> ().getValue ().c_str (), NULL);
+	    
 	    if (binFloat.getType ().is<Float> ()) {
 		auto res = applyBinFloat (binFloat.getOperator (), left, right);		
 		return FloatValue::init (binFloat.getLocation (), binFloat.getType (), format ("%", res));
@@ -302,39 +352,62 @@ namespace semantic {
 	generator::Generator CompileTime::executeConditional (const generator::Conditional & conditional) {
 	    auto test = this-> execute (conditional.getTest ());
 	    if (test.isEmpty () || !test.is <BoolValue> ())
-		return Generator::empty ();
+		Ymir::Error::occur (
+		    conditional.getTest ().getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
 
 	    auto isTrue = test.to <BoolValue> ().getValue ();
 	    if (isTrue) {
 		return this-> execute (conditional.getContent ());		
 	    } else if (!conditional.getElse ().isEmpty ())
 		return this-> execute (conditional.getElse ());
-	    
+
+	    Ymir::Error::occur (
+		conditional.getLocation (),
+		ExternalError::get (COMPILE_TIME_UNKNOWN)
+	    );
 	    return Generator::empty ();
 	}
 
-	generator::Generator CompileTime::executeSet (const generator::Set &) {
+	generator::Generator CompileTime::executeSet (const generator::Set & set) {
+	    Ymir::Error::occur (
+		set.getLocation (),
+		ExternalError::get (COMPILE_TIME_UNKNOWN)
+	    );
 	    return Generator::empty ();
 	}
 
 	generator::Generator CompileTime::executeBlock (const generator::Block & block) {
-	    if (block.getType ().is <Void> ()) 
+	    if (block.getType ().is <Void> ())
 		return Generator::empty ();
 	    else return this-> execute (block.getContent ().back ());			       
 	}
 	
-	generator::Generator CompileTime::executeVarDecl (const generator::VarDecl &) {
+	generator::Generator CompileTime::executeVarDecl (const generator::VarDecl & decl) {
+	    Ymir::Error::occur (
+		decl.getLocation (),
+		ExternalError::get (COMPILE_TIME_UNKNOWN)
+	    );
 	    return Generator::empty ();
 	}
 
 	generator::Generator CompileTime::executeVarRef (const generator::VarRef & ref) {
-	    if (ref.getValue ().isEmpty ())
+	    if (ref.getValue ().isEmpty ()) {
+		Ymir::Error::occur (
+		    ref.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
 		return Generator::empty ();
-	    else return this-> execute (ref.getValue ());
+	    } else return this-> execute (ref.getValue ());
 	}
 
 	generator::Generator CompileTime::executeCall (const generator::Call & call) {
 	    if (call.getParameters ().size () != 0) {
+		Ymir::Error::occur (
+		    call.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
 		return Generator::empty ();
 	    } else {
 		return this-> executeFrame (call.getFrame ().to <generator::FrameProto> ());
@@ -342,10 +415,28 @@ namespace semantic {
 	}
 
 	generator::Generator CompileTime::executeFrame (const generator::FrameProto & fr) {
+	    static int nb_recurse = 0;
+	    for (auto & it : this-> _knownValues) {
+		if (fr.equals (it.first)) return it.second;
+	    }
+	    
 	    auto & frame = this-> _context.retreiveFrameFromProto (fr);
-	    if (!frame.isEmpty ()) 
-		return this-> execute (frame.to<Frame> ().getContent ());
-	    else return Generator::empty ();
+	    if (!frame.isEmpty ()) {
+		nb_recurse += 1;
+		if (nb_recurse >= CompileConstante::LIMIT_RECURSE_CALL) {
+		    Ymir::Error::occur (fr.getLocation (), ExternalError::get (CALL_RECURSION));
+		}
+		auto ret = this-> execute (frame.to<Frame> ().getContent ());
+		this-> _knownValues.push_back (std::pair <Generator, Generator> (fr.clone (), ret));
+		nb_recurse -= 1;
+		return ret;
+	    } else {
+		Ymir::Error::occur (
+		    fr.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+		return Generator::empty ();
+	    }
 	}
 	
     }

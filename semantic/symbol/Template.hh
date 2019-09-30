@@ -41,6 +41,8 @@ namespace semantic {
 	const std::vector<syntax::Expression> & getParams () const;
 	
 	std::string formatTree (int padd) const override;
+
+	std::string prettyString () const;
 	
     };
         

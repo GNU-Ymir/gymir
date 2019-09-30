@@ -54,4 +54,15 @@ namespace syntax {
 	return this-> _content;
     }
     
+    std::string TemplateCall::prettyString () const {
+	Ymir::OutBuffer stream;
+	Ymir::OutBuffer inner;
+	int i = 0;
+	for (auto & x : this-> _parameters) {
+	    if (i != 0) inner.write (",");
+	    inner.writef ("%", x.prettyString ());
+	}
+	stream.writef ("%!(%)", this-> _content.prettyString (), inner.str ());
+	return stream.str ();
+    }
 }

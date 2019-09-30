@@ -50,6 +50,8 @@ namespace semantic {
 
 	void insert (const Symbol & sym) override;
 
+	void insertTemplate (const Symbol & sym) override;
+
 	void replace (const Symbol & sym) override;	
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
@@ -71,6 +73,8 @@ namespace semantic {
 	 */
 	std::string getRealName () const override;
 
+	std::string getMangledName () const override;
+	
 	/**
 	 * \brief Change the external language (for external function declaration)
 	 */

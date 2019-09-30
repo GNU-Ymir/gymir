@@ -27,6 +27,7 @@ namespace Ymir {
 	char * current = NULL;
 	ulong len = 0;
 	ulong capacity = 0;
+	std::vector <std::string> _currentColor;
 	
     public:
 
@@ -117,14 +118,16 @@ namespace Ymir {
 			auto color = *(s + 1);
 			s += 3; // (r)
 			switch (color) {
-			case 'r' : write (Colors::get (RED)); break;
-			case 'b' : write (Colors::get (BLUE)); break;
-			case 'y' : write (Colors::get (YELLOW)); break;
-			case 'g' : write (Colors::get (GREEN)); break;
-			case 'B' : write (Colors::get (BOLD)); break;
+			case 'r' : this-> _currentColor.push_back (Colors::get (RED)); break;
+			case 'b' : this-> _currentColor.push_back (Colors::get (BLUE)); break;
+			case 'y' : this-> _currentColor.push_back (Colors::get (YELLOW)); break;
+			case 'g' : this-> _currentColor.push_back (Colors::get (GREEN)); break;
+			case 'B' : this-> _currentColor.push_back (Colors::get (BOLD)); break;
 			}
+			write (this-> _currentColor.back ());
 			write (f);
 			write (Colors::get (RESET));
+			this-> _currentColor.pop_back ();
 			mwritef (s, args...);
 		    } else {			
 			write (f);
@@ -143,8 +146,13 @@ namespace Ymir {
 	void write_ (const std::vector <T> &elem) {
 	    for (auto it : Ymir::r (0, elem.size ())) {
 		write_ (elem [it]);
-		if (it < (int) elem.size () - 1)
+		if (it < (int) elem.size () - 1) {
+		    if (this-> _currentColor.size () != 0)
+			write (Colors::get (RESET));
 		    write (", ");
+		    if (this-> _currentColor.size () != 0)
+			write (this-> _currentColor.back ());
+		}
 	    }
 	}
 
@@ -153,7 +161,13 @@ namespace Ymir {
 	    int i = 0;
 	    write ("{");
 	    for (auto &it : elem) {
-		if (i != 0) write (", ");
+		if (i != 0) {
+		    if (this-> _currentColor.size () != 0)
+			write (Colors::get (RESET));
+		    write (", ");
+		    if (this-> _currentColor.size () != 0)
+			write (this-> _currentColor.back ());
+		}
 		write_ (it);
 		i++;
 	    }
@@ -166,8 +180,13 @@ namespace Ymir {
 	    for (auto it = elem.begin () ; it != elem.end ();) {
 		write (it-> first, " : ", it-> second);
 		it ++;
-		if (it != elem.end ())
+		if (it != elem.end ()) {
+		    if (this-> _currentColor.size () != 0)
+			write (Colors::get (RESET));
 		    write (", ");
+		    if (this-> _currentColor.size () != 0)
+			write (this-> _currentColor.back ());
+		}
 	    }
 	    write ("}");
 	}

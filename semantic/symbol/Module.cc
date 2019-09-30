@@ -36,6 +36,11 @@ namespace semantic {
 	this-> _table.insert (sym);
     }
 
+    
+    void Module::insertTemplate (const Symbol & sym) {
+	this-> _table.insertTemplate (sym);
+    }
+
     void Module::replace (const Symbol & sym) {
 	this-> _table.replace (sym);
     }

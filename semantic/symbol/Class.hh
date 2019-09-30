@@ -33,6 +33,8 @@ namespace semantic {
 	bool isOf (const ISymbol * type) const override;
 
 	void insert (const Symbol & sym) override;
+
+	void insertTemplate (const Symbol & sym) override;
 	
 	void replace (const Symbol & sym) override;	
 	

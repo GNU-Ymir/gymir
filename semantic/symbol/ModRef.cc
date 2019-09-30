@@ -55,6 +55,10 @@ namespace semantic {
     void ModRef::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }   
+
+    void ModRef::insertTemplate (const Symbol & sym) {
+	this-> _table.insertTemplate (sym);
+    }   
     
     bool ModRef::equals (const Symbol & other) const {
 	if (!other.is<ModRef> ()) return false;

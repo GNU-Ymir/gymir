@@ -39,7 +39,11 @@ namespace semantic {
     void Enum::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }
-
+    
+    void Enum::insertTemplate (const Symbol & sym) {
+	this-> _table.insertTemplate (sym);
+    }
+    
     void Enum::replace (const Symbol & sym) {
 	this-> _table.replace (sym);
     }

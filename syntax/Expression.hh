@@ -30,6 +30,11 @@ namespace syntax {
 	virtual void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
 
 	/**
+	 * \brief Create a pretty print of the expression
+	 */
+	virtual std::string prettyString () const;
+	
+	/**
 	 * \return the location of the expression
 	 */
 	const lexing::Word & getLocation () const;
@@ -106,6 +111,8 @@ namespace syntax {
 	}
 	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
+
+	std::string prettyString () const;
 	
     };       
 

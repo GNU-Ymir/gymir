@@ -36,6 +36,7 @@ namespace semantic {
 	bool FrameProto::equals (const Generator & gen) const {
 	    if (!gen.is <FrameProto> ()) return false;
 	    auto fr = gen.to<FrameProto> ();
+	    if (fr.getMangledName () != this-> getMangledName ()) return false;
 	    if (fr.getParameters ().size () != this-> _params.size ()) return false;
 	    if (!fr.getReturnType ().equals (this-> _type)) return false;
 	    for (auto it : Ymir::r (0, this-> _params.size ())) {
@@ -72,6 +73,14 @@ namespace semantic {
 
 	Frame::ManglingStyle FrameProto::getManglingStyle () const {
 	    return this-> _style;
+	}
+
+	void FrameProto::setMangledName (const std::string & name) {
+	    this-> _mangleName = name;
+	}
+
+	const std::string & FrameProto::getMangledName () const {	    
+	    return this-> _mangleName;
 	}
     }
     

@@ -50,5 +50,17 @@ namespace semantic {
 	buf.writefln ("%*- <T> %", i, "|\t", this-> getName ());
 	return buf.str ();
     }
+
+    std::string Template::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.writef ("% (", this-> getName ().str);
+	for (auto it : Ymir::r (0, this-> _params.size ())) {
+	    if (it != 0)
+		buf.write (", ");
+	    buf.write (this-> _params [it].prettyString ());
+	}
+	buf.write (")");
+	return buf.str ();
+    }
     
 }

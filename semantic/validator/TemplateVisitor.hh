@@ -49,6 +49,17 @@ namespace semantic {
 	     */
 	    static TemplateVisitor init (Visitor & context);
 
+
+	    /**
+	     * \brief Validate a template from template call explicit specialization
+	     * \param ref the template reference used in the call
+	     * \param params the parameters passed at the call
+	     */
+	    semantic::Symbol validateFromExplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score);
+
+
+	    Mapper validateParamTemplFromExplicit (const std::vector <syntax::Expression> & paramTempl, const syntax::Expression & param, const std::vector <generator::Generator> & values, int & consumed);
+	    
 	    /**
 	     * \brief Validate Template expression from implicit specialistion (call operator) 
 	     * \param ref the reference of the template declaration
@@ -79,6 +90,25 @@ namespace semantic {
 
 
 	    /**
+	     * \brief Validate a type template specialization from implicit context
+	     * \param params the template parameters
+	     * \param cl a template call from a vardecl, (a : X!(T))
+	     * \param type the type associated to this vardecl for implicit specialization
+	     * \return a Mapper, which store the modification to apply
+	     */
+	    Mapper validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const generator::Generator & type, int & consumed) const;
+
+	    
+	    /**
+	     * \brief Validate a type template specialization from implicit context
+	     * \param params the template parameters
+	     * \param cl a template call from a vardecl, (a : X!(T))
+	     * \param the symbol of the template solution 
+	     * \return a Mapper, which store the modification to apply
+	     */
+	    Mapper validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & tmplS, int & consumed) const;
+
+	    /**
 	     * \brief Validate a type template specialization from explicit context
 	     * \param params the template parameters (T : [R], R, ...)
 	     * \param left one of the template parameters \in params
@@ -103,9 +133,16 @@ namespace semantic {
 	    
 	    /**
 	     * \brief Create syntax tree from generator type
-	     * \brief Reverse the compilation
+	     * \brief Reverse the compilation (kind of, it just return a SyntaxWrapper for a generator)
 	     */
 	    syntax::Expression createSyntaxType (const lexing::Word & loc, const generator::Generator & type) const;
+
+
+	    /**
+	     * \brief Create syntax tree from generator value
+	     * \brief Reverse the compilation (kind of, it just return a SyntaxWrapper for a generator)
+	     */
+	    syntax::Expression createSyntaxValue (const lexing::Word & loc, const generator::Generator & type) const;
 
 	private :
 
@@ -143,9 +180,18 @@ namespace semantic {
 	     * \param mapping the mapper of the template specialization
 	     */
 	    std::vector <syntax::Expression> replaceSyntaxTempl (const std::vector <syntax::Expression> & elements, const std::map <std::string, syntax::Expression> & mapping) const;
+
+
+	    /**
+	     * \brief Return the first templatesolution in a tree of symbol (the closest to the root)
+	     * \param symbol the symbol to test
+	     */
+	    semantic::Symbol getFirstTemplateSolution (const semantic::Symbol & symbol) const;
+
+	    std::vector <syntax::Expression> sort (const std::vector <syntax::Expression> & exprs, const std::map <std::string, syntax::Expression> & mapping) const;
 	    
 	};
-
+	
     }
 
 }

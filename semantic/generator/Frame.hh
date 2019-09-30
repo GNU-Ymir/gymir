@@ -28,6 +28,8 @@ namespace semantic {
 	    ManglingStyle _style = ManglingStyle::Y;
 
 	    bool _isWeak = false;
+
+	    std::string _mangleName;
 	    
 	private :
 
@@ -95,6 +97,14 @@ namespace semantic {
 	     */
 	    void setManglingStyle (ManglingStyle style);
 
+	    /**
+	     * \brief Change the mangle name (mangle only the space)
+	     */
+	    void setMangledName (const std::string & name);
+
+	    
+	    const std::string & getMangledName () const;
+	    
 
 	    void isWeak (bool is);
 

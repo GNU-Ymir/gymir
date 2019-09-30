@@ -156,6 +156,7 @@ ymir_OBJS = \
 	ymir/semantic_Class.o \
 	ymir/semantic_Enum.o \
 	ymir/semantic_Template.o \
+	ymir/semantic_TemplateSolution.o \
 	ymir/semantic_Function.o \
 	ymir/semantic_Generator.o \
 	ymir/semantic_ModRef.o \

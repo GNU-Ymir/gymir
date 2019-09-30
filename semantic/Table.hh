@@ -27,6 +27,12 @@ namespace semantic {
 	 */
 	std::vector <Symbol> _syms;
 
+	/**
+	 * All the template symbol declared inside the current table
+	 *
+	 */
+	std::vector <Symbol> _templates;
+
 	/** 
 	 * The symbol possessing this table 
 	 * This symbol cannot be nullptr
@@ -69,6 +75,13 @@ namespace semantic {
 	 */
 	void insert (const Symbol & sym);
 
+	/**
+	 * \brief Insert a new template symbol in the table
+	 * \brief Unlike classic insert, this symbol cannot be retreived with get
+	 * \param sym the symbol to insert
+	 */
+	void insertTemplate (const Symbol & sym);
+	
 	/**
 	 * \brief Insert a new symbol in the table
 	 * \brief if the symbol already exists, it will replace it

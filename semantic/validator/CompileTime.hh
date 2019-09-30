@@ -6,11 +6,17 @@
 namespace semantic {
 
     namespace validator {
-
+	
 	class CompileTime {
 
+	    enum CompileConstante {
+		LIMIT_RECURSE_CALL = 300
+	    };
+	    
 	    Visitor & _context;
 
+	    std::vector <std::pair <generator::Generator, generator::Generator> > _knownValues;
+	    
 	private :
 
 	    /**
