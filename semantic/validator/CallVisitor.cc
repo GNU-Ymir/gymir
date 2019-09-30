@@ -56,7 +56,7 @@ namespace semantic {
 		auto gen = validateTemplateRef (expression, left.to <TemplateRef> (), rights, score, errors, sym, proto_gen);
 		if (!gen.isEmpty ()) {
 		    TRY (
-			this-> _context.validate (sym);
+			this-> _context.validateTemplateSymbol (sym);
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
@@ -193,29 +193,20 @@ namespace semantic {
 	    Symbol templSym (Symbol::empty ());
 	    score = -1;
 	    bool fromTempl = true;
+	    std::map <int, std::vector <Generator>> nonTemplScores;
+	    std::map <int, std::vector <Symbol>> templScores;
 	    for (auto & it : sym.getGenerators ()) {
 		int current = 0;
 		std::vector <std::string> local_errors;
 		if (it.is <FrameProto> ()) {
-		    auto gen = validateFrameProto (expression, it.to <FrameProto> (), rights_, current, errors);
+		    auto gen = validateFrameProto (expression, it.to <FrameProto> (), rights_, current, local_errors);
+		    if (!gen.isEmpty ()) nonTemplScores[current].push_back (gen);
 		    if (!gen.isEmpty () && (current > score || fromTempl)) {// simple function can take the token on 1. less scored 2. every templates
 			score = current;
 			final_gen = gen;
 			used_gen = it;
 			fromTempl = false;
-		    } else if (!gen.isEmpty () && current == score && !fromTempl) {
-			std::vector <std::string> names;
-			for (auto & it : rights_)
-			    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
-			
-			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), used_gen.getLocation (), used_gen.prettyString ()) + '\n';
-			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ());
-			Ymir::Error::occurAndNote (expression.getLocation (), note,
-						   ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
-						   it.to<FrameProto> ().getName (),
-						   names
-			); 
-		    } else {
+		    } else if (gen.isEmpty ()) {
 			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()));
 			errors.insert (errors.begin (), local_errors.begin (), local_errors.end ());
 		    }
@@ -223,7 +214,7 @@ namespace semantic {
 		    Symbol _sym (Symbol::empty ());
 		    Generator _proto_gen (Generator::empty ());
 		    auto gen = validateTemplateRef (expression, it.to <TemplateRef> (), rights_, current, local_errors, _sym, _proto_gen);
-
+		    if (!gen.isEmpty ()) templScores [current].push_back (_sym);
 		    if (!gen.isEmpty () && current > score && fromTempl) { // Can only take the token over less scored template function
 			score = current;
 			final_gen = gen;
@@ -231,19 +222,7 @@ namespace semantic {
 			proto_gen = _proto_gen;
 			fromTempl = true;
 			templSym = _sym;
-		    } else if (!gen.isEmpty () && current == score && fromTempl) {
-			std::vector <std::string> names;
-			for (auto & it : rights_)
-			    names.push_back (it.to <Value> ().getType ().to <Type> ().getTypeName ());
-			
-			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), used_gen.getLocation (), used_gen.prettyString ()) + '\n';
-			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ());
-			Ymir::Error::occurAndNote (expression.getLocation (), note,
-						   ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
-						   it.to<FrameProto> ().getName (),
-						   names
-			); 
-		    } else {
+		    } else if (gen.isEmpty ()) {
 			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.to <TemplateRef> ().getTemplateRef ().getName (), it.prettyString ()));
 			errors.insert (errors.begin (), local_errors.begin (), local_errors.end ());
 		    }
@@ -251,6 +230,24 @@ namespace semantic {
 	    }
 	    
 	    if (!templSym.isEmpty () && fromTempl) {
+		auto element_on_scores = templScores.find (score);
+		if (element_on_scores-> second.size () != 1) {
+		    std::string leftName = sym.getLocation ().str;
+		    std::vector<std::string> names;
+		    for (auto & it : rights_)
+			names.push_back (it.prettyString ());
+			
+		    std::string note;
+		    for (auto & it : element_on_scores-> second)
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getName (), this-> _context.validateMultSym (sym.getLocation (), {it}).prettyString ()) + '\n';
+		    Ymir::Error::occurAndNote (expression.getLocation (),
+					       note,
+					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
+					       leftName,
+					       names);
+
+		}
+		
 		TRY (
 		    this-> _context.validateTemplateSymbol (templSym);
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -259,8 +256,25 @@ namespace semantic {
 		    msgs.insert (msgs.begin (), Ymir::Error::createNote (expression.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
 		    THROW (ErrorCode::EXTERNAL, msgs);
 		} FINALLY;
+	    } else if (!final_gen.isEmpty ()) {
+		auto element_on_scores = nonTemplScores.find (score);
+		if (element_on_scores-> second.size () != 1) {
+		    std::string leftName = sym.getLocation ().str;
+		    std::vector<std::string> names;
+		    for (auto & it : rights_)
+			names.push_back (it.prettyString ());
+			
+		    std::string note;
+		    for (auto & it : element_on_scores-> second)
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()) + '\n';
+		    Ymir::Error::occurAndNote (expression.getLocation (),
+					       note,
+					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
+					       leftName,
+					       names);
+
+		}
 	    }
-	    
 	    return final_gen;
 	}
 
