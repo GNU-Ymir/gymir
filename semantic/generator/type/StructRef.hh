@@ -45,6 +45,8 @@ namespace semantic {
 	    const Symbol & getRef () const;
 	    
 	    std::string typeName () const override;
+
+	    std::string getMangledName () const;
 	    
 	};	
 	

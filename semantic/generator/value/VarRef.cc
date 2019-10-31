@@ -18,7 +18,7 @@ namespace semantic {
 	    _isMutable (isMutable),
 	    _value (value)
 	{
-	    this-> isLvalue (this-> _isMutable);
+	    this-> isLvalue (true);
 	}
 
 	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value) {

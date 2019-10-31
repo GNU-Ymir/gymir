@@ -34,7 +34,10 @@ namespace semantic {
 	std::string Type::getTypeName (bool isParentMutable) const {
 	    auto inner = this-> typeName ();
 	    if (this-> _isMutable && isParentMutable)
-		return "mut " + inner;
+		inner = "mut " + inner;
+	    if (this-> _isRef)
+		inner = "ref " + inner;
+	    
 	    return inner;
 	}
 	

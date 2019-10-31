@@ -191,7 +191,7 @@ namespace semantic {
 
 	std::string Mangler::mangleStructRef (const StructRef & ref) const {
 	    Ymir::OutBuffer buf;
-	    auto splits = split (ref.getTypeName (false), "::");
+	    auto splits = split (ref.getMangledName (), "::");
 	    for (auto & it : splits) buf.write (it.length (), it);
 	    return buf.str ();
 	}

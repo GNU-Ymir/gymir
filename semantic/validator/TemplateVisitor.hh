@@ -124,6 +124,14 @@ namespace semantic {
 	     */
 	    Mapper applyTypeFromExplicitOfVar (const std::vector <syntax::Expression> & params, const syntax::OfVar & var, const generator::Generator & types) const;
 
+
+	    /**
+	     * \brief Validate a decorated expression specialization from implicit context
+	     * \param params the template parameters (T : [R], R, ...)
+	     * \param expr the decorated expression 
+	     */
+	    Mapper applyTypeFromDecoratedExpression (const std::vector <syntax::Expression> & params, const syntax::DecoratedExpression & expr, const std::vector <generator::Generator> & types, int & consumed) const; 
+	    
 	    /**
 	     * \brief Find the expression named name in the list of params (direct access)
 	     * \param name the name of the expression to find
@@ -135,7 +143,7 @@ namespace semantic {
 	     * \brief Create syntax tree from generator type
 	     * \brief Reverse the compilation (kind of, it just return a SyntaxWrapper for a generator)
 	     */
-	    syntax::Expression createSyntaxType (const lexing::Word & loc, const generator::Generator & type) const;
+	    syntax::Expression createSyntaxType (const lexing::Word & loc, const generator::Generator & type, bool isMutable = false, bool isRef = false) const;
 
 
 	    /**

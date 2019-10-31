@@ -1020,7 +1020,7 @@ namespace syntax {
 	    } else {
 		inVar = true; // Cannot have template parameters for inner type : A!(A!B) is Ok, not A!A!B
 		this-> _lex.rewind ();
-		auto ret = TemplateCall::init (name, {visitExpression ()}, Var::init (name));
+		auto ret = TemplateCall::init (name, {visitOperand3 ()}, Var::init (name));
 		inVar = false;
 		return ret;
 	    }
@@ -1282,7 +1282,11 @@ namespace syntax {
 	    token = this-> _lex.consumeIf (DecoratorWord::members ());	    
 	}
 
-	auto name = visitIdentifier ();
+	lexing::Word name = this-> _lex.consumeIf ({Keys::UNDER});
+	if (name != Keys::UNDER) {
+	    name = visitIdentifier ();
+	}
+	
 	if (mandType) token = this-> _lex.next ({Token::COLON});
 	else token = this-> _lex.next ();
 	

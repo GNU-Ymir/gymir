@@ -73,8 +73,7 @@ namespace semantic {
 		    if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().equals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ()))
 			return false;
 		}
-	    }	    
-	    
+	    }
 	    return this-> getReferent ().equals (other.getReferent ());
 	} else 
 	    return false;

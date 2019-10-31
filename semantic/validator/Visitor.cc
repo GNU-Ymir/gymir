@@ -228,8 +228,10 @@ namespace semantic {
 		}
 		
 		params.push_back (ParamVar::init (var.getName (), type, isMutable));
-		verifyShadow (var.getName ());
-		insertLocal (var.getName ().str, params.back ());
+		if (var.getName () != Keys::UNDER) {
+		    verifyShadow (var.getName ());		
+		    insertLocal (var.getName ().str, params.back ());
+		}
 	    }	    
 	    
 	    Generator retType (Generator::empty ());
@@ -306,11 +308,12 @@ namespace semantic {
 	    insertNewGenerator (GlobalVar::init (var.getName (), var.getName ().str, type, value));
 	}
 
-	generator::Generator Visitor::validateStruct (const semantic::Symbol & str) {
+	generator::Generator Visitor::validateStruct (const semantic::Symbol & str) {	    
 	    if (str.to <semantic::Struct> ().getGenerator ().isEmpty ()) {
 		auto sym = str;
 		auto gen = generator::Struct::init (sym.getName (), sym);
 		sym.to <semantic::Struct> ().setGenerator (gen);
+		enterForeign ();
 		this-> _referent.push_back (sym);
 		this-> enterBlock ();
 	    
@@ -324,7 +327,8 @@ namespace semantic {
 		
 		this-> quitBlock ();
 		this-> _referent.pop_back ();
-
+		exitForeign ();
+		
 		std::vector <Generator> fieldsDecl;
 		for (auto & it : sym.to <semantic::Struct> ().getFields ()) {
 		    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().str);		    
@@ -961,14 +965,18 @@ namespace semantic {
 	    else return MultSym::init (loc, gens);
 	}
 
-	Generator Visitor::validateMultSymType (const lexing::Word &, const std::vector <Symbol> & multSym) {
+	Generator Visitor::validateMultSymType (const lexing::Word & loc, const std::vector <Symbol> & multSym) {
 	    if (multSym.size () != 1) return Generator::empty ();	    
 	    match (multSym [0]) {		    
 		of (semantic::Struct, st ATTRIBUTE_UNUSED, {
 			return validateStruct (multSym [0]);
 		    });
+		of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
+			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			return Generator::empty ();
+		    });
 	    }
-	    
+
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
@@ -1070,7 +1078,8 @@ namespace semantic {
 	}    
 	
 	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {
-	    verifyShadow (var.getName ());
+	    if (var.getName () != Keys::UNDER)
+		verifyShadow (var.getName ());
 
 	    if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
 		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
@@ -1103,7 +1112,8 @@ namespace semantic {
 	    } 
 	    
 	    auto ret = generator::VarDecl::init (var.getLocation (), var.getName ().str, type, value, isMutable);
-	    insertLocal (var.getName ().str, ret);
+	    if (var.getName () != Keys::UNDER)
+		insertLocal (var.getName ().str, ret);
 	    return ret;
 	}
 	
@@ -1128,8 +1138,10 @@ namespace semantic {
 
 	    if (dec_expr.hasDecorator (syntax::Decorator::REF)) {
 		if (inner.to <Value> ().isLvalue ()) {
-		    if (!inner.to <Value> ().getType ().to <Type> ().isMutable ())
-			Ymir::Error::occur (inner.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));
+		    // if (!inner.to <Value> ().getType ().to <Type> ().isMutable ()) {
+		    // 	Ymir::Error::occur (inner.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));
+		    // } // We allow this, since we want to pass element by const reference to function, or variable
+		    // The mutability will verify if we are allowed to do a reference of the element
 
 		    if (!inner.is<Referencer> ()) {
 			auto type = inner.to <Value> ().getType ();
@@ -1736,7 +1748,7 @@ namespace semantic {
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
 	    verifyCompatibleType (type, gen.to <Value> ().getType ());
 
-	    if (!construct && gen.is<Referencer> ()) {
+	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
 		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
 	    } else {
 		if (type.to <Type> ().isRef ()) {
@@ -1777,9 +1789,9 @@ namespace semantic {
 						gen.to <Value> ().getType ().to <Type> ().getTypeName ());
 		    }
 		}
-
+		
 		// Verify mutability
-		if (type.to<Type> ().isComplex ()) {
+		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {
 		    auto llevel = type.to <Type> ().mutabilityLevel ();
 		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 		    if (llevel > rlevel) {
@@ -1841,8 +1853,7 @@ namespace semantic {
 	void Visitor::verifyShadow (const lexing::Word & name) {
 	    auto & gen = getLocal (name.str);
 	    if (!gen.isEmpty ()) {		
-		auto note = Ymir::Error::createNote (gen.getLocation ());
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		auto note = Ymir::Error::createNote (gen.getLocation ());		
 		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.str);
 	    }	    
 	}

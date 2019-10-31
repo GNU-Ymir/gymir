@@ -248,7 +248,12 @@ namespace semantic {
 			int current_consumed = 0;
 			return validateTypeFromTemplCall (params, cl, types [0], current_consumed);
 		    }
-		);		
+		) else of (DecoratedExpression, dc, {
+			consumed += 1;
+			int current_consumed = 0;
+			return applyTypeFromDecoratedExpression (params, dc, types, current_consumed);
+		    }
+		);
 	    }
 
 	    OutBuffer buf;
@@ -257,7 +262,7 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Mapper {};
 	}
-
+	
 	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall  & cl, const generator::Generator & type, int & consumed) const {
 	    Generator currentType = type;
 	    // We get the first templateCall in the expression
@@ -364,7 +369,10 @@ namespace semantic {
 			} else {
 			    int consumed = 0;
 			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
-			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), type));
+			    auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
+			    auto genType = this-> _context.validateType (realType);
+			    
+			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
 			    return mapper;
 			}
 		    }
@@ -408,8 +416,17 @@ namespace semantic {
 						type.to<Type> ().getTypeName ());
 			}
 		    }
+		) else of (DecoratedExpression, dc, {
+			int current_consumed = 0;
+			Mapper mapper = applyTypeFromDecoratedExpression (params, dc, {type}, current_consumed);
+			Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
+			auto genType = this-> _context.validateType (realType);
+			this-> _context.verifySameType (genType, type);
+			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType, dc.hasDecorator (syntax::Decorator::MUT)));
+			mapper.score += Scores::SCORE_TYPE;
+			return mapper;
+		    }
 		);
-		
 	    }
 
 	    OutBuffer buf;
@@ -418,11 +435,40 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Mapper ();
 	}
+
+	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromDecoratedExpression (const std::vector <Expression> & params, const DecoratedExpression & expr, const std::vector <generator::Generator> & types, int & consumed) const {
+	    if (expr.hasDecorator (syntax::Decorator::CTE) || expr.hasDecorator (syntax::Decorator::REF))
+		return Mapper ();	    
+
+	    auto result = validateTypeFromImplicit (params, expr.getContent (), types, consumed);
+	    if (result.succeed) {
+		std::map<std::string, syntax::Expression> maps;
+		for (auto & it : result.mapping) {
+		    match (it.second) {
+			of (TemplateSyntaxWrapper, syn, {
+				auto content = syn.getContent ();
+				if (content.is <Type> ()) {
+				    if (expr.hasDecorator (syntax::Decorator::MUT))
+					content.to <Type> ().isMutable (true);
+
+				    if (expr.hasDecorator (syntax::Decorator::CONST))
+					content.to <Type> ().isMutable (false);				    
+				}
+				maps.emplace (it.first, TemplateSyntaxWrapper::init (syn.getLocation (), content));
+			    }
+			) else {
+			    maps.emplace (it.first, it.second);
+			}
+		    }
+		}
+		return Mapper {true, result.score, maps};
+	    } else return Mapper ();	    
+	}
 	
-	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const generator::Generator & gen) const {
+	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const generator::Generator & gen, bool isMutable, bool isRef) const {
 	    Generator type = gen;
-	    type.to <Type> ().isMutable (false);
-	    type.to <Type> ().isRef (false);
+	    type.to <Type> ().isMutable (isMutable);
+	    type.to <Type> ().isRef (isRef);
 	    type.changeLocation (location);
 	    return TemplateSyntaxWrapper::init (location, type);
 	}
@@ -445,12 +491,7 @@ namespace semantic {
 		    ) else of (VariadicVar, var, {
 			    if (var.getLocation ().str == name) return it;
 			}
-		    ) else {
-			OutBuffer buf;
-			it.treePrint (buf, 0);
-			println (buf.str ());
-			Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
-		    }
+		    ); // We don't do anything for the rest of expression types as they do not refer to types
 		}
 	    }
 	    return Expression::empty ();

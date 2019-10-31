@@ -40,7 +40,7 @@ namespace semantic {
 	bool StructRef::equals (const Generator & gen) const {
 	    if (!gen.is<StructRef> ()) return false;
 	    auto str = gen.to <StructRef> ();
-	    return this-> _ref.isSameRef (str._ref);
+	    return this-> _ref.equals (str._ref);
 	}
 
 	bool StructRef::isRefOf (const Symbol & sym) const {
@@ -53,7 +53,11 @@ namespace semantic {
 	
 	std::string StructRef::typeName () const {
 	    return Ymir::format ("%", this-> _ref.getRealName ());
-	}       
+	}
+
+	std::string StructRef::getMangledName () const {
+	    return Ymir::format ("%", this-> _ref.getMangledName ());
+	}
 	
     }
 }
