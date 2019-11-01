@@ -187,7 +187,7 @@ namespace semantic {
 	    /**
 	     * \brief Validate an fixed const integer value
 	     */
-	    generator::Generator validateFixed (const syntax::Fixed & fixed);	    
+	    static generator::Generator validateFixed (const syntax::Fixed & fixed);	    
 
 	    /**
 	     * \brief Validate a const bool value

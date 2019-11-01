@@ -911,25 +911,83 @@ namespace semantic {
 
 		    return res;
 		}
+
+		static void getUnicodeChar(int & nb, unsigned int code, char chars[5]) {
+		    if (code <= 0x7F) {
+			chars[0] = (code & 0x7F); chars[1] = '\0';
+			nb = 1;
+		    } else if (code <= 0x7FF) {
+			// one continuation byte
+			chars[1] = 0x80 | (code & 0x3F); code = (code >> 6);
+			chars[0] = 0xC0 | (code & 0x1F);
+			chars[2] = '\0';
+			nb = 2;
+		    } else if (code <= 0xFFFF) {
+			// two continuation bytes
+			chars[2] = 0x80 | (code & 0x3F); code = (code >> 6);
+			chars[1] = 0x80 | (code & 0x3F); code = (code >> 6);
+			chars[0] = 0xE0 | (code & 0xF); chars[3] = '\0';
+			nb = 3;
+		    } else if (code <= 0x10FFFF) {
+			// three continuation bytes
+			chars[3] = 0x80 | (code & 0x3F); code = (code >> 6);
+			chars[2] = 0x80 | (code & 0x3F); code = (code >> 6);
+			chars[1] = 0x80 | (code & 0x3F); code = (code >> 6);
+			chars[0] = 0xF0 | (code & 0x7); chars[4] = '\0';
+			nb = 4;
+		    } else {
+			// unicode replacement character
+			chars[2] = 0xEF; chars[1] = 0xBF; chars[0] = 0xBD;
+			chars[3] = '\0';
+			nb = 3;
+		    }
+		}
+		
+		static void escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, OutBuffer & buf, const std::string & size) {
+		    auto fst = content.find_first_of ('{');
+		    auto scd = content.find_first_of ('}');
+		    if (fst == std::string::npos || scd == std::string::npos)  {
+			auto real_loc = loc;
+			real_loc.column += it;
+			Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
+		    }
+
+		    auto inner = content.substr (fst + 1, scd - fst - 1);
+		    
+		    auto fixed = syntax::Fixed::init (lexing::Word {loc, inner}, lexing::Word {loc, size});
+		    auto gen = validateFixed (fixed.to<syntax::Fixed> ());
+		    auto ui = (uint) gen.to <Fixed> ().getUI ().u;
+
+		    char chars[5];
+		    int nb = 0;
+		    getUnicodeChar (nb, ui, chars);
+		    for (int i = 0 ; i < nb; i++)			
+			buf.write (chars[i]);
+		    
+		    it = scd + 1;
+		}
 	       		
 		static std::string escapeChar (const lexing::Word & loc, const std::string & content) {
 		    OutBuffer buf;
 		    int it = 0;
-		    static std::vector <char> escape = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '\"', '"', '?', '\0'};
+		    static std::vector <char> escape = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '\"', '"', '?'};
 		    static std::vector <uint> values = {7, 8, 12, 10, 13, 9, 11, 92, 39, 34, 63};
 		    
 		    while (it < (int) content.size ()) {
-			if (it == '\\') {
+			if (content [it] == '\\') {
 			    if (it + 1 < (int) content.size ()) {
-				it += 1;				
-				auto pos = std::find (escape.begin (), escape.end (), content [it]) - escape.begin ();
-				if (pos >= (int) escape.size ()) {
-				    auto real_loc = loc;
-				    real_loc.column += it;
-				    Error::occur (real_loc, ExternalError::get (UNDEFINED_ESCAPE));
+				it += 1;
+				if (content [it] == 'u') escapeUnicode (loc, it, content, buf, Keys::U32);
+				else {
+				    auto pos = std::find (escape.begin (), escape.end (), content [it]) - escape.begin ();
+				    if (pos >= (int) escape.size ()) {
+					auto real_loc = loc;
+					real_loc.column += it;
+					Error::occur (real_loc, ExternalError::get (UNDEFINED_ESCAPE));
+				    }
+				    
+				    buf.write ((char) values [pos]);
 				}
-				
-				buf.write ((char) values [pos]);				
 			    } else {
 				auto real_loc = loc;
 				real_loc.column += it;
@@ -942,10 +1000,9 @@ namespace semantic {
 		}
 		
 		static uint convert (const lexing::Word & loc, const lexing::Word & content, int size) {
-		    auto str = // escapeChar (loc, 
-			content.str;
+		    auto str =  escapeChar (loc, content.str);
 		    if (size == 32) {
-			std::vector <uint> utf_32 = utf8_to_utf32 (str);
+			std::vector <uint> utf_32 = utf8_to_utf32 (str);			
 			if (utf_32.size () != 1) {		    
 			    Ymir::Error::occur (loc, ExternalError::get (MALFORMED_CHAR), "c32", utf_32.size ());
 			}
