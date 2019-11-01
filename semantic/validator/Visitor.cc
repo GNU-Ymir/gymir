@@ -130,6 +130,25 @@ namespace semantic {
 			return;			
 		    }
 		);
+
+		of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+			std::vector <std::string> errors;
+			this-> _referent.push_back (sym);
+			TRY (
+			    validateEnum (sym);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+			
+			this-> _referent.pop_back ();
+			if (errors.size () != 0) {
+			    THROW (ErrorCode::EXTERNAL, errors);
+			}
+
+			return;
+		    }
+		);
 		
 		/** Nothing to do for those kind of symbols */
 		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);		
@@ -226,6 +245,10 @@ namespace semantic {
 		if (!value.isEmpty ()) {		    
 		    verifyMemoryOwner (value.getLocation (), type, value, true);
 		}
+
+		if (type.is <NoneType> () || type.is<Void> ()) {
+		    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+		}
 		
 		params.push_back (ParamVar::init (var.getName (), type, isMutable));
 		if (var.getName () != Keys::UNDER) {
@@ -313,21 +336,31 @@ namespace semantic {
 		auto sym = str;
 		auto gen = generator::Struct::init (sym.getName (), sym);
 		sym.to <semantic::Struct> ().setGenerator (gen);
+		std::vector <std::string> errors;
+		std::map <std::string, generator::Generator> syms;
 		enterForeign ();
-		this-> _referent.push_back (sym);
-		this-> enterBlock ();
-	    
-		std::vector <std::string> fields;
-		std::vector <generator::Generator> types;
-		for (auto & it : sym.to<semantic::Struct> ().getFields ()) {
-		    this-> validateValue (it);
-		}
-
-		auto syms = this-> discardAllLocals ();
-		
-		this-> quitBlock ();
-		this-> _referent.pop_back ();
+		TRY (
+		    this-> _referent.push_back (sym);
+		    this-> enterBlock ();
+		    
+		    std::vector <std::string> fields;
+		    std::vector <generator::Generator> types;
+		    for (auto & it : sym.to<semantic::Struct> ().getFields ()) {
+			this-> validateValue (it);
+		    }
+		    
+		    syms = this-> discardAllLocals ();
+		    
+		    this-> quitBlock ();
+		    this-> _referent.pop_back ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;		
 		exitForeign ();
+		
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
 		
 		std::vector <Generator> fieldsDecl;
 		for (auto & it : sym.to <semantic::Struct> ().getFields ()) {
@@ -340,11 +373,80 @@ namespace semantic {
 		    verifyRecursivity (it.getLocation (), it.to <generator::VarDecl> ().getVarType (), sym);
 		}
 		
-		sym.to <semantic::Struct> ().setGenerator (gen);
+ 		sym.to <semantic::Struct> ().setGenerator (gen);
 		return StructRef::init (str.getName (), sym);
 	    }
 	    
 	    return StructRef::init (str.getName (), str);
+	}
+
+	generator::Generator Visitor::validateEnum (const semantic::Symbol & en) {
+	    if (en.to<semantic::Enum> ().getGenerator ().isEmpty ()) {
+		auto sym = en;
+		auto gen = generator::Enum::init (sym.getName (), sym);
+		sym.to<semantic::Enum> ().setGenerator (gen);
+
+		Generator type (Generator::empty ());
+		std::vector <std::string> errors;
+		std::map <std::string, generator::Generator> syms;		
+
+		enterForeign ();
+		TRY (		
+		    this-> _referent.push_back (en);
+		    this-> enterBlock ();
+
+		    if (!sym.to<semantic::Enum>().getType ().isEmpty ())
+			type = validateType (sym.to<semantic::Enum> ().getType ());
+		    
+		    std::vector <std::string> fields;
+		    if (sym.to<semantic::Enum> ().getFields ().size () == 0) {
+			// Error
+		    }
+		    
+		    for (auto & it : sym.to <semantic::Enum> ().getFields ()) {
+			match (it) {
+			    of (syntax::VarDecl, decl, {
+				    if (decl.getValue ().isEmpty ()) {
+					Ymir::Error::occur (decl.getName (), ExternalError::get (EN_NO_VALUE), decl.getName ().str);
+				    }
+				}
+			    );
+			}
+			
+			auto val = this-> validateValue (it);
+			if (type.isEmpty ()) type = val.to <generator::VarDecl> ().getVarType ();
+			else verifyCompatibleType (type, val.to<generator::VarDecl> ().getVarType ());
+		    }
+
+		    syms = this-> discardAllLocals ();
+		    
+		    this-> quitBlock ();
+		    this-> _referent.pop_back ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;		
+		exitForeign ();
+		
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
+
+		std::vector <Generator> fieldsDecl;
+		for (auto & it : sym.to <semantic::Enum> ().getFields ()) {
+		    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().str);		    
+		    fieldsDecl.push_back (gen-> second);
+		}
+
+		gen.to <generator::Enum> ().setFields (fieldsDecl);
+		gen.to <generator::Enum> ().setType (type);
+
+		println (type.prettyString ());
+		
+		sym.to <semantic::Enum> ().setGenerator (gen);
+		return EnumRef::init (en.getName (), sym);
+	    }
+
+	    return EnumRef::init (en.getName (), en);
 	}
 
 	void Visitor::verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const semantic::Symbol & sym) const {
@@ -938,7 +1040,12 @@ namespace semantic {
 			    gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
 			    continue;
 			})
-			     
+
+   		    else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+			    auto en_ref = validateEnum (sym);
+			    gens.push_back (en_ref.to<EnumRef> ().getRef ().to<semantic::Enum> ().getGenerator ());
+			    continue;
+			})
 		    else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
 			    gens.push_back (TemplateRef::init (sym.getName (), sym));
 			    continue;
@@ -970,6 +1077,9 @@ namespace semantic {
 	    match (multSym [0]) {		    
 		of (semantic::Struct, st ATTRIBUTE_UNUSED, {
 			return validateStruct (multSym [0]);
+		    });
+		of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+			return validateEnum (multSym [0]);
 		    });
 		of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
 			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
@@ -1039,7 +1149,11 @@ namespace semantic {
 		    if (!value.isEmpty ()) {		    
 		    	verifyMemoryOwner (value.getLocation (), type, value, true);
 		    }
-		
+
+		    if (type.is <NoneType> () || type.is<Void> ()) {
+			Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+		    }
+		    
 		    params.push_back (ProtoVar::init (var.getName (), type, value, isMutable));
 		    
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -1105,7 +1219,7 @@ namespace semantic {
 		verifyMemoryOwner (value.getLocation (), type, value, true);
 	    }
 
-	    if (type.is<Void> ()) {
+	    if (type.is<NoneType> () || type.is<Void> ()) {
 		Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
 	    } else if (type.to <Type> ().isRef () && value.isEmpty ()) {
 		Ymir::Error::occur (var.getName (), ExternalError::get (REF_NO_VALUE), var.getName ().str);
@@ -1339,6 +1453,7 @@ namespace semantic {
 
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {
 	    auto value = this-> validateValue (tcl.getContent ());
+	    
 	    std::vector <std::string> errors;
 	    std::vector <Generator> params;
 	    for (auto & it : tcl.getParameters ()) {
@@ -1745,7 +1860,7 @@ namespace semantic {
 	    return Generator::__empty__;
 	}
 
-	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
+	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {	    
 	    verifyCompatibleType (type, gen.to <Value> ().getType ());
 
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {

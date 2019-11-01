@@ -45,6 +45,7 @@ namespace semantic {
 		else of (Tuple, tl, result = mangleTupleT (tl))
 		else of (Void, v, result = mangleVoidT (v))
 		else of (StructRef, r, result = mangleStructRef (r))
+		else of (EnumRef, r, result = mangleEnumRef (r))
 	    }
 	    
 	    if (result == "")
@@ -190,6 +191,13 @@ namespace semantic {
 	}
 
 	std::string Mangler::mangleStructRef (const StructRef & ref) const {
+	    Ymir::OutBuffer buf;
+	    auto splits = split (ref.getMangledName (), "::");
+	    for (auto & it : splits) buf.write (it.length (), it);
+	    return buf.str ();
+	}
+
+	std::string Mangler::mangleEnumRef (const EnumRef & ref) const {
 	    Ymir::OutBuffer buf;
 	    auto splits = split (ref.getMangledName (), "::");
 	    for (auto & it : splits) buf.write (it.length (), it);

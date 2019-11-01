@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <set>
 
 namespace global {
 
@@ -16,6 +17,8 @@ namespace global {
 	 * + or via syntax 'version = X'
 	 */
 	std::vector <std::string> _activeVersion;
+
+	std::set <std::string> _includeDir;
 	
     private :
 
@@ -45,6 +48,17 @@ namespace global {
 	void activateVersion (const std::string & version);
 	
 
+	/**
+	 * \brief Add include dir path to the include sir possible includes -I options
+	 * \param dir the directory to include
+	 */
+	void addIncludeDir (const std::string & dir);
+
+	/**
+	 * \return the list of include directories
+	 */
+	const std::set <std::string> & getIncludeDirs () const ;
+	
     };
    
 }

@@ -24,5 +24,12 @@ namespace global {
 	if (!isVersionActive (version))
 	    this-> _activeVersion.push_back (version);
     }
-    
+
+    void State::addIncludeDir (const std::string & dir) {
+	this-> _includeDir.emplace (dir);
+    }
+
+    const std::set <std::string> & State::getIncludeDirs () const {
+	return this-> _includeDir;
+    }
 }

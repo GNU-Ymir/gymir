@@ -469,7 +469,7 @@ namespace syntax {
 	/**
 	 * \brief Used to factorize visitOperand
 	 */
-	Expression visitOperand3 ();
+	Expression visitOperand3 (bool canBeTemplateCall = true);
 	
 	/**
 	 * \brief Visit a literal expression 
@@ -657,8 +657,26 @@ namespace syntax {
 	 var := Identifier (('!' expression:(0)) | '!' '(' expression:(0) (',' expression:(0))* ')')?
 	 \endverbatim
 	 */
+	Expression visitVar (bool canBeTemplateCall);
+
+	
+	/**
+	 * \brief Visit a var declaration
+	 * \brief duplicate of visitVar (true), to be able to use can (&visitVar)
+	 * \verbatim
+	 var := Identifier template_call
+	 \endverbatim
+	 */
 	Expression visitVar ();
 
+	/**
+	 * \brief visit a template call, on elem
+	 * \verbatim 
+	 template_call := (('!' expression:(0)) | '!' '(' expression:(0) (',' expression:(0))* ')')?
+	 \endverbatim
+	*/
+	Expression visitTemplateCall (const Expression & elem);
+	
 	/**
 	 * \brief Visit a decorated expression 
 	 * \verbatim 

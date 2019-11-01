@@ -6,23 +6,29 @@ namespace semantic {
     Enum::Enum () :
 	ISymbol (lexing::Word::eof ()),
 	_table (this),
-	_type (syntax::Expression::empty ())
+	_type (syntax::Expression::empty ()),
+	_fields ({}),
+	_gen (generator::Generator::empty ())
     {}
 
-    Enum::Enum (const lexing::Word & name, const syntax::Expression & type) :
+    Enum::Enum (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type) :
 	ISymbol (name),
 	_table (this),
-	_type (type)
+	_type (type),
+	_fields (values),
+	_gen (generator::Generator::empty ())
     {}
 
     Enum::Enum (const Enum & other) :
 	ISymbol (other),
 	_table (other._table.clone (this)),
-	_type (other._type)
+	_type (other._type),
+	_fields (other._fields),
+	_gen (other._gen)
     {}
     
-    Symbol Enum::init (const lexing::Word & name, const syntax::Expression & type) {
-	return Symbol {new (Z0) Enum (name, type)};
+    Symbol Enum::init (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type) {
+	return Symbol {new (Z0) Enum (name, values, type)};
     }
 
     Symbol Enum::clone () const {
@@ -59,6 +65,14 @@ namespace semantic {
 	return this-> _table.get (name);
     }
 
+    const syntax::Expression & Enum::getType () const {
+	return this-> _type;
+    }
+    
+    const std::vector <syntax::Expression> & Enum::getFields () const {
+	return this-> _fields;
+    }
+    
     bool Enum::equals (const Symbol & other) const {
 	if (!other.is <Enum> ()) return false;
 	if (other.getName () == this-> getName ()) {
@@ -74,4 +88,13 @@ namespace semantic {
 	}
 	return buf.str ();
     }
+
+    const generator::Generator & Enum::getGenerator () const {
+	return this-> _gen;
+    }
+
+    void Enum::setGenerator (const generator::Generator & gen) {
+	this-> _gen = gen;
+    }
+    
 }

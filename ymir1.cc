@@ -117,6 +117,8 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
     opt_code code = (opt_code) scode;
     if (code == OPT_I) {
 	// Add include dir
+	global::State::instance ().addIncludeDir (arg);
+	
     } else if (code == OPT_iprefix) {
 	// set prefix 
     } else if (code == OPT_v) {

@@ -3,6 +3,7 @@
 #include <ymir/semantic/symbol/_.hh>
 #include <ymir/utils/Path.hh>
 #include <ymir/syntax/visitor/Keys.hh>
+#include <ymir/global/State.hh>
 #include <algorithm>
 
 using namespace Ymir;
@@ -59,6 +60,10 @@ namespace semantic {
 
 		of (syntax::Template, tep,
 		    return visitTemplate (tep);
+		);
+
+		of (syntax::Enum, en,
+		    return visitEnum (en);
 		);
 		
 		of (syntax::ExpressionWrapper, wrap, {
@@ -271,9 +276,9 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum & stenm) {
-	    auto enm = Enum::init (stenm.getName (), stenm.getType ());
+	    auto enm = Enum::init (stenm.getName (), stenm.getValues (), stenm.getType ());
 	    auto symbols = getReferent ().getLocal (stenm.getName ().str);
-	    if (!symbols.size () != 0) {
+	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stenm.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stenm.getName ().str);
 	    }
@@ -307,16 +312,41 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visitImport (const syntax::Import & imp) {
 	    auto path = Path {imp.getModule ().str, "::"};
+	    bool success = false;
+	    
 	    if (__imported__ .find (path.toString ()) == __imported__.end ()) {
 		auto file_path = imp.getPath () + ".yr";
 		auto file = fopen (file_path.c_str (), "r");
-		if (file == NULL) 
-		    Error::occur (imp.getModule (), ExternalError::get (NO_SUCH_FILE), path.toString ());
+		if (file != NULL) {
+		    success = true;
+		    // We add a fake module, to prevent infinite import loops
+		    __imported__.emplace (path.toString ());
+		    auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
+		    declarator::Visitor::init ().visit (synt_module);
+		}
+	    } else success = true;
+	    
+	    if (!success) {
+		for (auto & it : global::State::instance ().getIncludeDirs ()) {
+		    path = Path::build (it, Path {imp.getModule ().str, "::"}.toString ());
+		    if (__imported__.find (path.toString ()) == __imported__.end ()) {
+			auto file_path = path.toString () + ".yr";
+			println (file_path);
+			
+			auto file = fopen (file_path.c_str (), "r");
+			if (file != NULL) {
+			    success = true;
+			    // We add a fake module, to prevent infinite import loops
+			    __imported__.emplace (path.toString ());
+			    auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
+			    declarator::Visitor::init ().visit (synt_module);
+			    break;
+			}
+		    }
+		}
 
-		// We add a fake module, to prevent infinite import loops
-		__imported__.emplace (path.toString ());
-		auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
-		declarator::Visitor::init ().visit (synt_module);
+		if (!success)
+		    Error::occur (imp.getModule (), ExternalError::get (NO_SUCH_FILE), path.toString ());
 	    }
 	    
 	    getReferent ().use (imp.getModule ().str , Symbol::getModuleByPath (imp.getModule ().str));
@@ -363,6 +393,7 @@ namespace semantic {
 	    getReferent ().insert (sym);
 	    return sym;
 	}
+
 	
 	void Visitor::pushReferent (const Symbol & sym) {
 	    this-> _referent.push_front (sym);

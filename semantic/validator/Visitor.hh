@@ -96,10 +96,17 @@ namespace semantic {
 	     */
 	    void validateVarDecl (const semantic::VarDecl & vardecl);
 
-	    
+	    /**
+	     * \brief Validate an enum declaration
+	     * \brief Unlike, function or var decl, this will not create any generator, but just check the integrity of the enum
+	     * \return An EnumRef
+	     */
+	    generator::Generator validateEnum (const semantic::Symbol & en); 
+
 	    /**
 	     * \brief Validate a struct declaration
 	     * \brief unlike, function or var decl, this will not create any generator, but just check the integrity of the structure
+	     * \return A StructRef
 	     */
 	    generator::Generator validateStruct (const semantic::Symbol & str);
 	    

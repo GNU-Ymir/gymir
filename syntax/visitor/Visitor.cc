@@ -745,16 +745,16 @@ namespace syntax {
     Expression Visitor::visitOperand2 (const Expression & value) {
 	auto next = this-> _lex.next ();
 	if (next == Token::DCOLON) {
-	    auto right = visitOperand3 ();
-	    return visitOperand2 (Binary::init (next, value, right, Expression::empty ()));
+	    auto right =  visitOperand3 (false);	    
+	    return visitOperand2 (visitTemplateCall (Binary::init (next, value, right, Expression::empty ())));
 	} else if (next == Token::DOT) {
-	    auto right = visitOperand3 ();
+	    auto right = visitOperand3 (false);
 	    return visitOperand2 (Binary::init (next, value, right, Expression::empty ()));
 	} this-> _lex.rewind ();
 	return value;
     }
     
-    Expression Visitor::visitOperand3 () {
+    Expression Visitor::visitOperand3 (bool canBeTemplateCall) {
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
 	if (begin == Token::LPAR) {
@@ -799,7 +799,7 @@ namespace syntax {
 	    return visitDecoratedExpression ();
 	}
 	
-	if (can (&Visitor::visitVar))  return visitVar ();       
+	if (can (&Visitor::visitVar))  return visitVar (canBeTemplateCall);       
 	return visitLiteral ();
     }    
 
@@ -1006,22 +1006,32 @@ namespace syntax {
     }
 
     Expression Visitor::visitVar () {
-	static bool inVar = false;
-	
+	return visitVar (true);
+    }
+	    
+    Expression Visitor::visitVar (bool canBeTemplateCall) {	
 	auto name = visitIdentifier ();
+	if (canBeTemplateCall) {
+	    return visitTemplateCall (Var::init (name));
+	} else return Var::init (name);	
+    }
+
+    Expression Visitor::visitTemplateCall (const Expression & left) {
+	static bool inTmpCall = false;
 	auto next = this-> _lex.next ();
-	if (!inVar && next == Token::NOT) {
+	auto begin = next;
+	if (!inTmpCall && next == Token::NOT) {
 	    next = this-> _lex.next ();
 	    if (next == Token::LPAR) {
-		inVar = false;
+		inTmpCall = false;
 		auto list = visitParamList ();
 		this-> _lex.next ({Token::RPAR});
-		return TemplateCall::init (name, list, Var::init (name));
+		return TemplateCall::init (begin, list, left);
 	    } else {
-		inVar = true; // Cannot have template parameters for inner type : A!(A!B) is Ok, not A!A!B
+		inTmpCall = true;
 		this-> _lex.rewind ();
-		auto ret = TemplateCall::init (name, {visitOperand3 ()}, Var::init (name));
-		inVar = false;
+		auto ret = TemplateCall::init (begin, {visitOperand3 ()}, left);
+		inTmpCall = false;
 		return ret;
 	    }
 	} else if (next == Token::NOT) {
@@ -1029,8 +1039,8 @@ namespace syntax {
 	}
 	
 	this-> _lex.rewind ();
-	return Var::init (name);
-    }       
+	return left;
+    }
 
     std::vector <Expression> Visitor::visitParamList (bool withNamed) {
 	std::vector <Expression> params;

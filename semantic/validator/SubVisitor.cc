@@ -23,6 +23,7 @@ namespace semantic {
 	    match (left) {
 		of (MultSym, mult, return validateMultSym (expression, mult));
 		of (ModuleAccess, acc, return validateModuleAccess (expression, acc));
+		of (generator::Enum, en, return validateEnum (expression, en));
 	    }
 
 	    this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str);
@@ -57,11 +58,23 @@ namespace semantic {
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
 	}
 
+	Generator SubVisitor::validateEnum (const syntax::Binary & expression, const generator::Enum & en) {
+	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto val = en.getFieldValue (right);
+	    if (val.isEmpty ()) {
+		this-> error (expression, en.clone (), right);
+	    }
+	    
+	    val.to<Value> ().setType (EnumRef::init (en.getLocation (), en.getRef ()));
+	    return val;
+	}
+
 	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right) {
 	    std::string leftName;
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())
 		else of (generator::Struct, str, leftName = str.getName ())
+		else of  (generator::Enum, en, leftName = en.getName ())
 		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
 		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
 	    }

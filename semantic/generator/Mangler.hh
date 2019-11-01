@@ -124,6 +124,11 @@ namespace semantic {
 	     * \brief Mangle a struct type
 	     */
 	    std::string mangleStructRef (const StructRef & r) const;
+
+	    /**
+	     * \brief Mangle a enum type
+	     */
+	    std::string mangleEnumRef (const EnumRef & r) const;
 	    
 	private : 
 

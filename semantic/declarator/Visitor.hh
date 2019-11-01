@@ -156,6 +156,8 @@ namespace semantic {
 	     */
 	    Symbol & getReferent ();
 
+
+	    
 	};
 
     }

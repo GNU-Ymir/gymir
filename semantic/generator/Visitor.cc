@@ -1,6 +1,8 @@
 #include <ymir/semantic/generator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/semantic/symbol/Struct.hh>
+#include <ymir/semantic/symbol/Enum.hh>
+
 #include <ymir/utils/Match.hh>
 #include "toplev.h"
 
@@ -95,7 +97,12 @@ namespace semantic {
 			}
 			type = Tree::tupleType (fields, inner);
 		    }
-		);
+		)
+			 
+		else of (EnumRef, en, {
+			auto _type = en.getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ().getType ();
+			type = generateType (_type);			
+		    });
 	    }
 	    
 	    if (type.isEmpty ())

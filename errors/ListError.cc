@@ -46,6 +46,7 @@ namespace Ymir {
 			    REF_NOT_TYPE		    = "use a reference as a value",
 			    REF_NO_EFFECT		    = "the creation of ref has no effect on left operand",
 			    REF_NO_VALUE		    = "%(y) declared as a reference but not initialized",
+			    EN_NO_VALUE                     = "%(y) declared in enum, but has no value",
 			    RETURN_INSIDE_EXPR		    = "return here will result in an undefined behavior", 
 			    RETURN_LOCAL_REFERENCE	    = "expression does not live long enough",
 			    SHADOWING_DECL		    = "declaration of %(y) shadow another declaration",

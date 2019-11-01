@@ -48,6 +48,11 @@ namespace semantic {
 	     */
 	    generator::Generator validateModuleAccess (const syntax::Binary &expression, const generator::ModuleAccess & acc);
 
+	    /**
+	     * \brief Validate an enum access
+	     */
+	    generator::Generator validateEnum (const syntax::Binary & expression, const generator::Enum & en);
+	    
 	private :
 
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);
