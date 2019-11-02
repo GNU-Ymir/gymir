@@ -382,8 +382,10 @@ namespace semantic {
 			}
 			
 			auto val = this-> validateValue (it);
-			if (type.isEmpty ()) type = val.to <generator::VarDecl> ().getVarType ();
-			else verifyCompatibleType (type, val.to<generator::VarDecl> ().getVarType ());
+			if (type.isEmpty ()) {
+			    type = val.to <generator::VarDecl> ().getVarType ();
+			    type.changeLocation (gen.getLocation ());
+			} else verifyCompatibleType (type, val.to<generator::VarDecl> ().getVarType ());
 		    }
 
 		    syms = this-> discardAllLocals ();
@@ -405,16 +407,16 @@ namespace semantic {
 		    fieldsDecl.push_back (gen-> second);
 		}
 
+		type.to <Type> ().setProxy (EnumRef::init (en.getName (), sym));
 		gen.to <generator::Enum> ().setFields (fieldsDecl);
 		gen.to <generator::Enum> ().setType (type);
-
-		println (type.prettyString ());
 		
 		sym.to <semantic::Enum> ().setGenerator (gen);
-		return EnumRef::init (en.getName (), sym);
+	       		
+		return type;
 	    }
 
-	    return EnumRef::init (en.getName (), en);
+	    return en.to <semantic::Enum> ().getGenerator ().to <semantic::generator::Enum> ().getType ();
 	}
 
 	void Visitor::verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const semantic::Symbol & sym) const {
@@ -441,7 +443,8 @@ namespace semantic {
 	Generator Visitor::validateValue (const syntax::Expression & expr) {
 	    auto value = validateValueNoReachable (expr);
 	    if (!value.is <Value> ()) {
-		Ymir::Error::occur (value.getLocation (), ExternalError::get (USE_AS_VALUE));
+		auto note = Ymir::Error::createNote (expr.getLocation ());
+		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (USE_AS_VALUE));
 	    }
 	    
 	    if (value.to <Value> ().isBreaker ())
@@ -792,7 +795,7 @@ namespace semantic {
 	    if (fixed.getSuffix () == Keys::I64) type = Integer::init (fixed.getLocation (), 64, true);
 
 	    auto integer = type.to<Integer> ();
-	    type.to <Type> ().isMutable (true);
+	    //type.to <Type> ().isMutable (true);
 	    Fixed::UI value;
 	    
 	    if (integer.isSigned ()) value.i = Anonymous::convertS (fixed.getLocation (), integer);
@@ -1066,9 +1069,9 @@ namespace semantic {
 			    continue;
 			})
 
-   		    else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+		    else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
 			    auto en_ref = validateEnum (sym);
-			    gens.push_back (en_ref.to<EnumRef> ().getRef ().to<semantic::Enum> ().getGenerator ());
+			    gens.push_back (en_ref.to <Type> ().getProxy ().to <EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ());
 			    continue;
 			})
 		    else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
@@ -1445,7 +1448,7 @@ namespace semantic {
 	    auto type = Array::init (list.getLocation (), innerType, params.size ());
 	    type.to <Type> ().isMutable (true); // Array constant are mutable by default (not lvalue), to ease simple affectation
 	    type.to <Type> ().isLocal (true); // Array constant are declared in the stack, so they are local
-	    return ArrayValue::init (list.getLocation (), type, params);
+	    return ArrayValue::init (list.getLocation (), type.to <Type> ().toMutable (), params);
 	}	
 
 	Generator Visitor::validateTuple (const syntax::List & list) {
@@ -1891,7 +1894,7 @@ namespace semantic {
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
 		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
 	    } else {
-		if (type.to <Type> ().isRef ()) {
+		if (type.to <Type> ().isRef () && construct) {
 		    verifySameType (type, gen.to <Value> ().getType ());
 		    
 		    if (!gen.is<Referencer> ()) {
@@ -1974,20 +1977,49 @@ namespace semantic {
 
 	void Visitor::verifySameType (const Generator & left, const Generator & right) {
 	    if (!left.equals (right)) {
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-				    left.to<Type> ().getTypeName (),
-				    right.to <Type> ().getTypeName ()
-		);
+		if (left.getLocation ().line == right.getLocation ().line) 
+		    Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					left.to<Type> ().getTypeName (),
+					right.to <Type> ().getTypeName ()
+		    );
+		else {
+		    auto note = Ymir::Error::createNote (right.getLocation ());
+		    Ymir::Error::occur (left.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+					left.to<Type> ().getTypeName (),
+					right.to <Type> ().getTypeName ()
+		    );
+		}
 	    }
 	}
 
 	void Visitor::verifyCompatibleType (const Generator & left, const Generator & right) {
+	    bool error = false;
+	    std::string leftName;
 	    if (!left.to<Type> ().isCompatible (right)) {
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-				    left.to<Type> ().getTypeName (),
-				    right.to <Type> ().getTypeName ()
-		);
+		error = true;
+		leftName = left.to<Type> ().getTypeName ();
 	    }
+
+	    if (!left.to <Type> ().getProxy ().isEmpty () && !left.to <Type> ().getProxy ().to <Type> ().isCompatible (right.to <Type> ().getProxy ())) {
+		error = true;
+		leftName = left.to<Type> ().getProxy ().to <Type> ().getTypeName ();
+	    }
+
+	    if (error) {
+		if (left.getLocation ().line == right.getLocation ().line) 
+		    Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					leftName, 
+					right.to <Type> ().getTypeName ()
+		    );
+		else {
+		    auto note = Ymir::Error::createNote (right.getLocation ());
+		    Ymir::Error::occurAndNote (left.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+					       leftName,
+					       right.to <Type> ().getTypeName ()
+		    );
+		}
+	    }
+
 	}	
 
 	void Visitor::verifyShadow (const lexing::Word & name) {

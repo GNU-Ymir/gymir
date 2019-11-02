@@ -537,11 +537,8 @@ namespace semantic {
 	}	
 		
 	Tree Visitor::generateFixed (const Fixed & fixed) {
-	    auto type = generateType (fixed.getType ());
-	    if (fixed.getType ().to <Integer> ().isSigned ()) 
-		return Tree::buildIntCst (fixed.getLocation (), fixed.getUI ().i, type);
-	    else
-		return Tree::buildIntCst (fixed.getLocation (), fixed.getUI ().u, type);
+	    auto type = generateType (fixed.getType ());	    
+	    return Tree::buildIntCst (fixed.getLocation (), fixed.getUI ().u, type);
 	}
 
 	Tree Visitor::generateBool (const BoolValue & b) {
@@ -961,7 +958,7 @@ namespace semantic {
 		return Tree::buildCall (
 		    copy.getLocation (),
 		    generateType (copy.getType ()),
-		    "__yxa_duplicate_slice",
+		    global::CoreNames::get (DUPL_SLICE),
 		    {inner, Tree::buildSizeCst (size)}
 		);
 	    }

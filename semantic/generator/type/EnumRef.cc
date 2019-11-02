@@ -23,7 +23,7 @@ namespace semantic {
 	Generator EnumRef::clone () const {
 	    return Generator {new (Z0) EnumRef (*this)};
 	}
-
+	
 	bool EnumRef::isOf (const IGenerator * type) const {
 	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	    EnumRef thisEnum; // That's why we cannot implement it for all class
@@ -40,7 +40,7 @@ namespace semantic {
 	bool EnumRef::isRefOf (const Symbol & sym) const {
 	    return this-> _ref.isSameRef (sym);
 	}
-
+	
 	const Symbol & EnumRef::getRef () const {
 	    return this-> _ref;
 	}

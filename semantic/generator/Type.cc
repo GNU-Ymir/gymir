@@ -5,11 +5,23 @@ namespace semantic {
     namespace generator {
 
 	Type::Type () :
-	    IGenerator (lexing::Word::eof (), "")
+	    IGenerator (lexing::Word::eof (), ""),
+	    _isRef (false),
+	    _isComplex (false),
+	    _isLocal (false),
+	    _isMutable (false),
+	    _inners ({}),
+	    _proxy (Generator::empty ())
 	{}
 
 	Type::Type (const lexing::Word & loc, const std::string & name) :
-	    IGenerator (loc, name)
+	    IGenerator (loc, name),
+	    _isRef (false),
+	    _isComplex (false),
+	    _isLocal (false),
+	    _isMutable (false),
+	    _inners ({}),
+	    _proxy (Generator::empty ())
 	{}
 	
 	Generator Type::clone () const {
@@ -150,7 +162,16 @@ namespace semantic {
 
 	    return level;	    
 	}
+
+	void Type::setProxy (const Generator & proxy) {
+	    this-> _proxy = proxy;
+	}
+
+	const Generator & Type::getProxy () const {
+	    return this-> _proxy;
+	}	
 	
     }
+
     
 }

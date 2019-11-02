@@ -32,6 +32,7 @@ namespace semantic {
 		else of (Array, arr ATTRIBUTE_UNUSED,
 		     ret = validateArray (expression, left);
 		)
+
 		else of (Slice, sl ATTRIBUTE_UNUSED,
 		     ret = validateSlice (expression, left);
 		);

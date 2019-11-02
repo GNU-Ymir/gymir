@@ -64,8 +64,12 @@ namespace semantic {
 	    if (val.isEmpty ()) {
 		this-> error (expression, en.clone (), right);
 	    }
+
+	    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
+	    auto type = val.to <Value> ().getType ();
+	    type.to <Type> ().setProxy (prox);
+	    val.to <Value> ().setType (type);
 	    
-	    val.to<Value> ().setType (EnumRef::init (en.getLocation (), en.getRef ()));
 	    return val;
 	}
 

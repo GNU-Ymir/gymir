@@ -48,6 +48,9 @@ namespace semantic {
 
 	    /** The list of inner type (applicable iif _isComplex) */
 	    std::vector <Generator> _inners;
+
+	    /** The proxy of the type, used for Enum  */
+	    Generator _proxy;
 	    
 	protected :
 
@@ -161,6 +164,19 @@ namespace semantic {
 	     */
 	    void isLocal (bool local);
 
+	    /** 
+	     * \brief Set the proxy of the type, used in Enum 
+	     * \warning not the same proxy as the design pattern
+	     * \param gen, an EnumRef, that proxy the type
+	     */
+	    void setProxy (const Generator & gen);
+
+	    /**
+	     * \warning not the same proxy as the design pattern
+	     * \return the proxy of the type (if it is an enum)
+	     */
+	    const Generator & getProxy () const;
+	    
 	    /**
 	     * \brief Override it for all type -> return getTypeName ();
 	     */

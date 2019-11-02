@@ -29,7 +29,7 @@ namespace semantic {
 	    static Generator init (const lexing::Word & loc, const Symbol & ref);
 
 	    Generator clone () const override;
-
+	    
 	    /**
 	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
 	     */
@@ -39,7 +39,7 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    bool equals (const Generator & other) const override;
-
+    
 	    bool isRefOf (const Symbol & sym) const;
 
 	    const Symbol & getRef () const;

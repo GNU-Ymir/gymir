@@ -9,7 +9,8 @@ namespace global {
 
     DECLARE_ENUM_HEADER (CoreNames, std::string,
 			 RUN_MAIN,
-			 RUN_MAIN_DEBUG
+			 RUN_MAIN_DEBUG,
+			 DUPL_SLICE
     );
     
 }
