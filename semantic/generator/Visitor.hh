@@ -67,6 +67,14 @@ namespace semantic {
 	     */
 	    void generateGlobalVar (const GlobalVar & var);
 
+
+	    /**
+	     * \brief Generate the call of the _Ymain function from the runtime of Ymir
+	     * \param isVoid is the main function declared as void?
+	     * \param name the asmName of the function main
+	     */
+	    void generateMainCall (bool isVoid, const std::string & name);
+	    
 	    /**
 	     * \brief Generate a new frame from a frame generator
 	     * \param frame the frame to generate
@@ -79,6 +87,16 @@ namespace semantic {
 	     */
 	    generic::Tree  generateParamVar (const ParamVar & var);
 
+	    /**
+	     * \brief Generate a param var
+	     * \Warning the declarator will not have any id, so it will not be inserted
+	     * \Warning and therefore we cannot retreive it with a VarRef, yout will need to conserve the declaration if you want to use it 
+	     * \param name the name of the parameter
+	     * \param type the type of the parameter
+	     * \return a tree containing a paramVar
+	     */
+	    generic::Tree generateParamVar (const std::string & name, const generic::Tree & type);
+	    
 	    /**
 	     * \brief Transform a type from generator to gimple
 	     */

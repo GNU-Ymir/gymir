@@ -19,6 +19,10 @@ namespace semantic {
 	    return Mangler ();
 	}
 
+	std::string Mangler::getYmirPrefix () {
+	    return YMIR_PREFIX;
+	}
+	
 	std::string Mangler::mangle (const generator::Generator & gen) const {
 	    match (gen) {
 		of (Frame, fr, return mangleFrame (fr));

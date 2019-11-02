@@ -19,6 +19,10 @@ namespace global {
 	std::vector <std::string> _activeVersion;
 
 	std::set <std::string> _includeDir;
+
+	bool _isDebug = false;
+
+	bool _isVerbose = false;
 	
     private :
 
@@ -45,14 +49,33 @@ namespace global {
 	 * \brief Activate a new version controller
 	 * \param version the name of the version controller
 	 */
-	void activateVersion (const std::string & version);
-	
+	void activateVersion (const std::string & version);	
 
 	/**
 	 * \brief Add include dir path to the include sir possible includes -I options
 	 * \param dir the directory to include
 	 */
 	void addIncludeDir (const std::string & dir);
+
+	/**
+	 * \brief If debug, activate the debug mode, desactivate it otherwise
+	 */
+	void activateDebug (bool debug);
+
+	/**
+	 * \brief If verb, activate the verbose mode, desactivate it otherwise
+	 */
+	void activateVerbose (bool verb);
+
+	/**
+	 * \brief tell if the debug mode is active (option -g or -ggdb)
+	 */
+	bool isDebugActive () const;
+	
+	/**
+	 * \return tell if the verbose mode is active (option --verbose)
+	 */
+	bool isVerboseActive () const;
 
 	/**
 	 * \return the list of include directories

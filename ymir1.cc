@@ -81,6 +81,15 @@ ymir_langhook_init (void)
 static void
 ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decoded_options ATTRIBUTE_UNUSED)
 {
+    for (unsigned int i = 0 ; i < argc ; i++) {
+	//const char * arg = decoded_options [i].arg;
+	switch (decoded_options [i].opt_index) {
+	case OPT_g :
+	case OPT_ggdb : global::State::instance ().activateDebug (true); break;
+	case OPT_v : global::State::instance ().activateVerbose (true); break;
+	}
+    }
+    
     // Options OPT_l and cie...
 }
 

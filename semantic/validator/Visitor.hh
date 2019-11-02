@@ -503,11 +503,6 @@ namespace semantic {
 	private :
 
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
-
-	    /**
-	     * \brief Create the main function symbol that will call the actual main of the program
-	     */
-	    void createMainFunction (const lexing::Word & loc, const generator::Generator & retType);
 	    
 	};
 	       

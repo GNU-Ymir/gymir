@@ -4,7 +4,12 @@
 #include <ymir/semantic/symbol/Enum.hh>
 
 #include <ymir/utils/Match.hh>
+#include <ymir/global/Core.hh>
+#include <ymir/global/State.hh>
+#include <ymir/syntax/visitor/Keys.hh>
+
 #include "toplev.h"
+using namespace global;
 
 namespace semantic {
 
@@ -180,7 +185,79 @@ namespace semantic {
 	    vec_safe_push (globalDeclarations, decl.getTree ());
 	}
 	
-	void Visitor::generateFrame (const Frame & frame) {
+	void Visitor::generateMainCall (bool isVoid, const std::string & mainName) {
+	    auto argcT = Tree::intType (64, false);
+	    auto argvT = Tree::pointerType (Tree::pointerType (Tree::charType (8)));
+	    std::vector <Tree> args = {argcT, argvT};
+	    
+	    auto ret = Tree::intType (32, true);
+
+	    Tree fnType = Tree::functionType (ret, args);
+	    Tree fn_decl = Tree::functionDecl (lexing::Word::eof (), Keys::MAIN, fnType);
+	    auto asmName = Keys::MAIN;
+	    fn_decl.asmName (asmName);
+
+	    setCurrentContext (fn_decl);
+	    enterFrame ();
+
+	    auto argc = generateParamVar ("argc", argcT);
+	    auto argv = generateParamVar ("argv", argvT);
+	    std::list <Tree> argsList = {argc, argv};
+
+	    fn_decl.setDeclArguments (argsList);
+
+	    enterBlock ();
+	    auto resultDecl = Tree::resultDecl (lexing::Word::eof (), ret);
+	    fn_decl.setResultDecl (resultDecl);
+	    TreeStmtList list = TreeStmtList::init ();
+	    std::string name;
+	    if (global::State::instance ().isDebugActive ()) {
+		name = global::CoreNames::get (RUN_MAIN_DEBUG);
+	    } else name = global::CoreNames::get (RUN_MAIN);
+	    
+
+	    Tree mainRet = ret;
+	    if (isVoid) mainRet = Tree::voidType ();
+
+	    auto proto = Tree::buildFrameProto (lexing::Word::eof (), mainRet, mainName, {});
+	    
+	    auto call = Tree::buildCall (
+		lexing::Word::eof (),
+		mainRet,
+		name,
+		{argc, argv, proto}
+	    );
+
+	    if (!isVoid)
+		list.append (Tree::returnStmt (lexing::Word::eof (), resultDecl, call));
+	    else {
+		list.append (call);
+		list.append (Tree::returnStmt (
+		    lexing::Word::eof (), resultDecl,
+		    Tree::buildIntCst (lexing::Word::eof (), (ulong) 0, ret)
+		));
+	    }
+	    
+	    Tree value = list.toTree ();
+
+	    auto fnTree = quitBlock (lexing::Word::eof (), value);
+	    auto fnBlock = fnTree.block;
+	    fnBlock.setBlockSuperContext (fn_decl);
+
+	    fn_decl.setDeclInitial (fnBlock);
+	    fn_decl.setDeclSavedTree (fnTree.bind_expr);
+	    fn_decl.isExternal (false);
+	    fn_decl.isPreserved (true);
+	    fn_decl.isPublic (true);
+	    fn_decl.isStatic (true);
+
+	    gimplify_function_tree (fn_decl.getTree ());
+	    cgraph_node::finalize_function (fn_decl.getTree (), true);
+	    setCurrentContext (Tree::empty ());
+	    quitFrame ();	    	    
+	}
+
+	void Visitor::generateFrame (const Frame & frame) {	    	    	    
 	    std::vector <Tree> args;
 	    for (auto i : Ymir::r (0, args.size ())) {
 		args.push_back (generateType (frame.getParams () [i].to<ParamVar> ().getType ()));
@@ -189,7 +266,11 @@ namespace semantic {
 	    Tree ret = generateType (frame.getType ());	    
 	    Tree fntype = Tree::functionType (ret, args);
 	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
-	    fn_decl.asmName (Mangler::init ().mangleFrame (frame));
+	    auto asmName = Mangler::init ().mangleFrame (frame);
+	    fn_decl.asmName (asmName);
+	   	    
+	    if (frame.getName () == Keys::MAIN) 
+		generateMainCall (frame.getType ().is <Void> (), asmName);
 	    
 	    setCurrentContext (fn_decl);
 	    enterFrame ();
@@ -247,6 +328,16 @@ namespace semantic {
 	    decl.isUsed (true);
 
 	    insertDeclarator (var.getUniqId (), decl);
+	    
+	    return decl;
+	}
+
+	Tree Visitor::generateParamVar (const std::string & name, const Tree & type) {
+	    auto decl = Tree::paramDecl (lexing::Word::eof (), name, type);
+	    
+	    decl.setDeclContext (getCurrentContext ());
+	    decl.setArgType (decl.getType ());
+	    decl.isUsed (true);
 	    
 	    return decl;
 	}

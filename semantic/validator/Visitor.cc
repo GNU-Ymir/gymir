@@ -180,36 +180,6 @@ namespace semantic {
 	    nb_recur_template -= 1;
 	}
 	
-	void Visitor::createMainFunction (const lexing::Word & loc, const generator::Generator & retType) {
-	    auto itype       = Integer::init (loc, 32, true);
-	    auto frame_proto = FrameProto::init (loc, Keys::MAIN, retType, {});
-	    frame_proto.to<FrameProto> ().setMangledName (Keys::MAIN);
-	    
-	    Generator content (Generator::empty ());
-	    if (retType.is <Void> ()) {
-		auto zero        = ufixed (0);
-		content = Block::init (
-		    loc,
-		    zero.to<Value> ().getType (),
-		    {
-			Call::init (loc, frame_proto.to <FrameProto> ().getReturnType (), frame_proto, {}, {}),
-			    zero
-			    }
-		);
-	    } else {
-		content = Block::init (
-		    loc,
-		    frame_proto.to <FrameProto> ().getReturnType (),
-		    {
-			Call::init (loc, frame_proto.to <FrameProto> ().getReturnType (), frame_proto, {}, {})
-			    }
-		);
-	    }
-	    
-	    auto main_frame = Frame::init (loc, Keys::MAIN, {}, itype, content, true);
-	    main_frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
-	    insertNewGenerator (main_frame);
-	}	
 	
 	void Visitor::validateFunction (const semantic::Function & func, bool isWeak) {
 	    auto & function = func.getContent ();
@@ -286,8 +256,6 @@ namespace semantic {
 		    verifyMemoryOwner (body.getLocation (), retType, body, true);		    
 		    needFinalReturn = !retType.is<Void> ();
 		}
-
-		if (function.getName () == Keys::MAIN) createMainFunction (function.getName (), retType);
 		
 		quitBlock ();
 		auto frame = Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn);

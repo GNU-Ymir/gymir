@@ -29,6 +29,11 @@ namespace semantic {
 	    static Mangler init ();
 
 	    /**
+	     * \return the prefix that will be put in the begining of mangled Ymir function
+	     */
+	    static std::string getYmirPrefix ();
+	    
+	    /**
 	     * \brief Mangle the name of a given generator
 	     * \param gen the generator
 	     * \return the name of the generator

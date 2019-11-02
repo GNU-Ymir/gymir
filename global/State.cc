@@ -32,4 +32,21 @@ namespace global {
     const std::set <std::string> & State::getIncludeDirs () const {
 	return this-> _includeDir;
     }
+
+    void State::activateVerbose (bool verb) {
+	this-> _isVerbose = verb;
+    }
+
+    bool State::isVerboseActive () const {
+	return this-> _isVerbose;
+    }
+
+    void State::activateDebug (bool debug) {
+	this-> _isDebug = debug;
+    }
+
+    bool State::isDebugActive () const {
+	return this-> _isDebug;
+    }
+    
 }

@@ -150,6 +150,7 @@ ymir_OBJS = \
 	ymir/generic_StmtList.o \
 	ymir/generic_Tree.o \
 	ymir/global_State.o \
+	ymir/global_Core.o \
 	ymir/lexing_Lexer.o \
 	ymir/lexing_Token.o \
 	ymir/lexing_Word.o \
