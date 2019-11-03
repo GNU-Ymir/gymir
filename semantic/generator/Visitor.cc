@@ -448,6 +448,10 @@ namespace semantic {
 		    return generateTupleValue (tu);
 		)
 
+		else of (StringValue, str,
+		     return generateStringValue (str);
+		)
+			 
 		else of (Call, cl,
 		    return generateCall (cl);
 		)
@@ -901,6 +905,11 @@ namespace semantic {
 	    return Tree::constructField (val.getLocation (), type, {}, params);
 	}	
 
+	generic::Tree Visitor::generateStringValue (const StringValue & str) {
+	    auto inner = str.getType ().to <Array> ().getInners () [0];
+	    return Tree::buildStringLiteral (str.getLocation (), str.getValue ().data (), str.getLen (), inner.to <Char> ().getSize ());
+	}
+	
 	generic::Tree Visitor::generateFrameProto (const FrameProto & proto) {
 	    std::vector <Tree> params;
 	    for (auto & it : proto.getParameters ())
@@ -1010,11 +1019,24 @@ namespace semantic {
 	generic::Tree Visitor::castTo (const Generator & type, const Generator & val) {
 	    auto value = generateValue (val);
 	    if (type.is <Slice> ()) {
-		if (val.to <Value> ().getType ().is <Array> ()) {		    
-		    auto inner = generateType (type.to <Slice> ().getInners () [0]);
-		    auto aux_type = type;
-		    aux_type.to <Type> ().isRef (false);
-		    auto ret = Tree::constructField (
+		auto inner = generateType (type.to <Slice> ().getInners () [0]);
+		auto aux_type = type;
+		aux_type.to <Type> ().isRef (false);
+		
+		generic::Tree ret (generic::Tree::empty ());
+		if (value.getType ().isStringType ()) {
+		    auto chType = type.to <Slice> ().getInners ()[0];
+		    ret = Tree::constructField (
+			type.getLocation (),
+			generateType (aux_type), 
+			{"len", "ptr"},
+			{
+			    value.getStringSize (chType.to<Char> ().getSize ()),
+			    value
+			}
+		    );
+		} else if (val.to <Value> ().getType ().is <Array> ()) {		    
+		    ret = Tree::constructField (
 			type.getLocation (),
 			generateType (aux_type), 
 			{"len", "ptr"},
@@ -1022,21 +1044,23 @@ namespace semantic {
 			    value.getType ().getArraySize (),
 			    Tree::buildAddress (type.getLocation (), value, Tree::pointerType (inner))
 			}
-		    );
-		    
-		    if (val.is <Copier> ()) {
-			auto list = ret.getList ();
-			ulong size = generateType (type.to <Slice> ().getInners () [0]).getSize ();
-			return
-			    Tree::compound (val.getLocation (), 
-					    Tree::buildCall (
-						val.getLocation (),
-						generateType (aux_type),
-						"__yxa_duplicate_slice",
-						{ret.getValue (), Tree::buildIntCst (val.getLocation (), size, Tree::intType (64, false))}						
-					    ), list);
-		    } else return ret;
+		    );		    
+		} else {
+		    ret = value;
 		}
+		
+		if (val.is <Copier> ()) {
+		    auto list = ret.getList ();
+		    ulong size = generateType (type.to <Slice> ().getInners () [0]).getSize ();
+		    return
+			Tree::compound (val.getLocation (), 
+					Tree::buildCall (
+					    val.getLocation (),
+					    generateType (aux_type),
+					    global::CoreNames::get (DUPL_SLICE),
+					    {ret.getValue (), Tree::buildIntCst (val.getLocation (), size, Tree::intType (64, false))}						
+					), list);
+		} else return ret;
 	    }
 	    
 	    return value;

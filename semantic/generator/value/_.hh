@@ -30,6 +30,7 @@
 #include <ymir/semantic/generator/value/Referencer.hh>
 #include <ymir/semantic/generator/value/Set.hh>
 #include <ymir/semantic/generator/value/SliceAccess.hh>
+#include <ymir/semantic/generator/value/StringValue.hh>
 #include <ymir/semantic/generator/value/Struct.hh>
 #include <ymir/semantic/generator/value/StructAccess.hh>
 #include <ymir/semantic/generator/value/StructCst.hh>

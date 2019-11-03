@@ -169,7 +169,24 @@ namespace semantic {
 	    }
 	    return buf.str ();
 	}
-		
+
+	std::vector<char> UtfVisitor::toString (const std::vector <uint> & content) {
+	    std::vector<char> buf;
+	    for (auto & it : content) {
+		char * c = (char*) &it;
+		for (auto j : Ymir::r (0, 4)) {
+		    buf.push_back (c [j]);
+		}
+	    }
+	    
+	    buf.push_back ((char) (0));
+	    buf.push_back ((char) (0));
+	    buf.push_back ((char) (0));
+	    buf.push_back ((char) (0)); // utf_32 0
+	    println (buf.size ());
+	    return buf;
+	}
+	
 	uint UtfVisitor::convertChar (const lexing::Word & loc, const lexing::Word & content, int size) {
 	    auto str =  escapeChar (loc, content.str, size == 32 ? Keys::U32 : Keys::U8);
 	    if (size == 32) {
@@ -186,6 +203,24 @@ namespace semantic {
 		    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return 0;
+	}
+
+	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const lexing::Word & content, int size, int & len) {
+	    auto str = escapeChar (loc, content.str, size == 32 ? Keys::U32 : Keys::U8);
+	    if (size == 32) {
+		std::vector <uint> utf_32 = utf8_to_utf32 (str);
+		auto ret = toString (utf_32);
+		len = (utf_32.size () + 1);
+		return ret;
+	    } else if (size == 8) {
+		std::vector<char> ret;
+		for(auto it: str) ret.push_back (it);
+		len = str.length ();
+		return ret;
+	    }
+	    
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return {};
 	}
 	
     }

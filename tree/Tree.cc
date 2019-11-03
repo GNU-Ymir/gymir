@@ -412,6 +412,10 @@ namespace generic {
 	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
     }
 
+    Tree Tree::buildStringLiteral (const lexing::Word & loc, const char * lit, ulong size, uint innerSize) {
+	return Tree::init (loc.getLocus (), build_string_literal (size * innerSize, lit));
+    }
+    
     Tree Tree::buildSizeCst (ulong value) {
 	return Tree::init (UNKNOWN_LOCATION, build_int_cst_type (long_unsigned_type_node, value));
     }
@@ -636,8 +640,28 @@ namespace generic {
 			       ).getTree ()
 			   )
 	);
+	
     }
 
+    Tree Tree::getStringSize (uint inner) const {	
+	auto t = getOperand (0).getOperand (0);
+	return Tree::init (BUILTINS_LOCATION,
+			   convert (
+			       long_unsigned_type_node,
+			       Tree::init (BUILTINS_LOCATION,
+					   build_int_cst_type (
+					       long_unsigned_type_node,
+					       (TREE_STRING_LENGTH (t.getTree ()) / inner) - 1
+					   )
+			       ).getTree ()
+			   ));   	
+    }
+    
+    bool Tree::isStringType () const {
+	return this-> getTreeCode () == POINTER_TYPE
+	    && TYPE_MAIN_VARIANT (TREE_TYPE (this-> getTree ())) == char_type_node;       
+    }
+    
     bool Tree::isArrayType () const {
 	return this-> getTreeCode () == ARRAY_TYPE;
     }
@@ -720,6 +744,10 @@ namespace generic {
 	    Tree::init(UNKNOWN_LOCATION, field_decl),
 	    Tree::empty ()
 	);    
+    }
+
+    void Tree::print () const {
+	debug_tree (this-> getTree ());
     }
     
 }

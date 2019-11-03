@@ -490,6 +490,10 @@ namespace semantic {
 		of (syntax::Char, c,
 		    return validateChar (c);
 		);
+
+		of (syntax::String, s,
+		    return validateString (s);
+		);
 		
 		of (syntax::Binary, binary,
 		    return validateBinary (binary);
@@ -822,7 +826,7 @@ namespace semantic {
 	Generator Visitor::validateChar (const syntax::Char & c) {	  	    
 	    Generator type (Generator::empty ());	    
 	    if (c.getSuffix () == Keys::C8) type = Char::init (c.getLocation (), 8);
-	    if (c.getSuffix () == "") type = Char::init (c.getLocation (), 32);
+	    else type = Char::init (c.getLocation (), 32);
 
 	    auto visitor = UtfVisitor::init (*this);
 	    
@@ -1257,7 +1261,19 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateString (const syntax::String & str) {
-	    return Generator::empty ();
+	    Generator inner (Generator::empty ());
+	    if (str.getSuffix () == Keys::S8) inner = Char::init (str.getLocation (), 8);
+	    else inner = Char::init (str.getLocation (), 32);
+
+	    auto visitor = UtfVisitor::init (*this);
+	    int len = 0;
+	    auto value = visitor.convertString (str.getLocation (), str.getSequence (), inner.to <Char> ().getSize (), len);
+
+	    auto type = Array::init (str.getLocation (), inner, len);
+	    type.to <Type> ().isMutable (false);
+	    type.to <Type> ().isLocal (false);
+	    
+	    return StringValue::init (str.getLocation (), type, value, len);		
 	}
 	
 	Generator Visitor::validateArray (const syntax::List & list) {

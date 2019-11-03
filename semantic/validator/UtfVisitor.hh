@@ -42,7 +42,7 @@ namespace semantic {
 	     * \param content the content o the string literal
 	     * \param size the type of the inner content (8, 16, 32)
 	     */
-	    std::vector <uint> convertString (const lexing::Word& loc, const lexing::Word & content, int size);
+	    std::vector<char> convertString (const lexing::Word& loc, const lexing::Word & content, int size, int & len);
 
 	private :
 
@@ -54,7 +54,9 @@ namespace semantic {
 
 	    void escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, Ymir::OutBuffer & buf, const std::string & size);
 
-	    std::string escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size);
+	    std::vector<char> toString (const std::vector <uint> & content);
+	    
+	    std::string escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size);	    
 	    
 	};
 	

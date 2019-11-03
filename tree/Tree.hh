@@ -277,6 +277,11 @@ namespace generic {
 	static Tree buildIntCst (const lexing::Word & loc, long value, const Tree & type);
 
 	/**
+	 * \brief create a string literal
+	 */
+	static Tree buildStringLiteral (const lexing::Word & loc, const char * content, ulong size, uint innerSize);
+	
+	/**
 	 * \brief create a size cst
 	 */
 	static Tree buildSizeCst (ulong size);
@@ -571,10 +576,21 @@ namespace generic {
 	Tree getArraySize () const;
 
 	/**
+	 * \param inner the inner size of the string (1, 4)
+	 * \return the size of a literal string
+	 */
+	Tree getStringSize (uint inner) const;
+	
+	/**
 	 * \return true if this is a type and it is an array (static array only)
 	 */
 	bool isArrayType () const; 
 
+	/**
+	 * \return true if this is a type and it is a string
+	 */
+	bool isStringType () const;
+	
 	/**
 	 * \return the i eme operand of this tree
 	 */
@@ -606,6 +622,12 @@ namespace generic {
 	 * \brief return the field on a tuple type
 	 */
 	Tree getField (const std::string & name) const ;
+
+	/**
+	 * \brief print the tree for debug information
+	 */
+	void print () const;
+	
     };
    
     inline bool operator == (Tree t1, Tree t2) {

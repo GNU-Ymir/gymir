@@ -154,6 +154,11 @@ namespace semantic {
 	    generic::Tree generateTupleValue (const TupleValue & arr);
 
 	    /**
+	     * \brief Transform a string value into gimple
+	     */
+	    generic::Tree generateStringValue (const StringValue & str);
+	    
+	    /**
 	     * \brief Transform a frame proto into gimple
 	     */
 	    generic::Tree generateFrameProto (const FrameProto & proto);
