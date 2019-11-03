@@ -9,6 +9,7 @@
 #include <ymir/semantic/validator/SubVisitor.hh>
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/validator/TemplateVisitor.hh>
+#include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <string>
@@ -718,7 +719,7 @@ namespace semantic {
 	    return Set::init (set.getLocation (), type, values);
 	}
 	
-	Generator Visitor::validateFixed (const syntax::Fixed & fixed) {
+	Generator Visitor::validateFixed (const syntax::Fixed & fixed, int base) {
 	    struct Anonymous {
 
 		static std::string removeUnder (const std::string & value) {
@@ -727,10 +728,10 @@ namespace semantic {
 		    return aux;
 		}
 		
-		static ulong convertU (const lexing::Word & loc, const Integer & type) { 
+		static ulong convertU (const lexing::Word & loc, const Integer & type, int base) { 
 		    char * temp = nullptr; errno = 0; // errno !!
 		    auto val = removeUnder (loc.str);
-		    ulong value = std::strtoul (val.c_str (), &temp, 0);
+		    ulong value = std::strtoul (val.c_str (), &temp, base);
 		    bool overflow = false;
 		    if (temp == val.c_str () || *temp != '\0' ||
 			((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
@@ -743,10 +744,10 @@ namespace semantic {
 		    return value;
 		}
 		
-		static long convertS (const lexing::Word & loc, const Integer & type) {
+		static long convertS (const lexing::Word & loc, const Integer & type, int base) {
 		    char * temp = nullptr; errno = 0; // errno !!
 		    auto val = removeUnder (loc.str);
-		    ulong value = std::strtol (val.c_str (), &temp, 0);
+		    ulong value = std::strtol (val.c_str (), &temp, base);
 		    bool overflow = false;
 		    if (temp == val.c_str () || *temp != '\0' ||
 			((value == 0 || value == ULONG_MAX) && errno == ERANGE)) {
@@ -798,12 +799,12 @@ namespace semantic {
 	    //type.to <Type> ().isMutable (true);
 	    Fixed::UI value;
 	    
-	    if (integer.isSigned ()) value.i = Anonymous::convertS (fixed.getLocation (), integer);
-	    else value.u = Anonymous::convertU (fixed.getLocation (), integer);	    
+	    if (integer.isSigned ()) value.i = Anonymous::convertS (fixed.getLocation (), integer, base);
+	    else value.u = Anonymous::convertU (fixed.getLocation (), integer, base);	    
 	    
 	    return Fixed::init (fixed.getLocation (), type, value);
 	}       
-
+	
 	Generator Visitor::validateBool (const syntax::Bool & b) {
 	    return BoolValue::init (b.getLocation (), Bool::init (b.getLocation ()), b.getLocation () == Keys::TRUE_);
 	}
@@ -818,183 +819,14 @@ namespace semantic {
 	    return FloatValue::init (f.getLocation (), type, f.getValue ());
 	}
 
-	Generator Visitor::validateChar (const syntax::Char & c) {
-	    struct Anonymous {
-		
-		static size_t utf8_codepoint_size(uint8_t text) {
-		    // According to utf-8 documentation, a continuous char begin with 10xxxxxx,
-		    // Meaning 01101000 10111111 is 1 in length, and 0111111 11010100 is 2 in length
-		    
-		    if((text & 0b10000000) == 0) {
-			return 1;
-		    }
-
-		    if((text & 0b11100000) == 0b11000000) {
-			return 2;
-		    }
-
-		    if((text & 0b11110000) == 0b11100000) {
-			return 3;
-		    }
-		    
-		    return 4;
-		}
-
-		static std::vector <uint> utf8_to_utf32(const std::string & text) {
-		    std::vector <uint> res;
-		    size_t i = 0;
-
-		    for (size_t n = 0; i < text.length (); n++) {
-			size_t byte_count = utf8_codepoint_size(text[i]);
-			
-			uint a = 0, b = 0, c = 0, d = 0;
-			uint a_mask, b_mask, c_mask, d_mask;
-			a_mask = b_mask = c_mask = d_mask = 0b00111111;
-			
-			switch(byte_count) {
-			case 4 : {
-			    a = text [i]; b = text [i + 1]; c = text [i + 2]; d = text [i + 3];
-			    a_mask = 0b00000111;
-			} break;
-			case 3 : {
-			    b = text [i]; c = text [i + 1]; d = text [i + 2];
-			    b_mask = 0b00001111;
-			} break;
-			case 2 : {
-			    c = text [i]; d = text [i + 1];
-			    c_mask = 0b00011111;
-			} break;
-			
-			case 1 : {
-			    d = text [i];
-			    d_mask = 0b01111111;
-			} break;
-			}
-			
-			uint b0 = a & a_mask;
-			uint b1 = b & b_mask;
-			uint b2 = c & c_mask;
-			uint b3 = d & d_mask;
-			res.push_back ((b0 << 18) | (b1 << 12) | (b2 << 6) | b3);
-
-			i += byte_count;
-		    }
-
-		    return res;
-		}
-
-		static void getUnicodeChar(int & nb, unsigned int code, char chars[5]) {
-		    if (code <= 0x7F) {
-			chars[0] = (code & 0x7F); chars[1] = '\0';
-			nb = 1;
-		    } else if (code <= 0x7FF) {
-			// one continuation byte
-			chars[1] = 0x80 | (code & 0x3F); code = (code >> 6);
-			chars[0] = 0xC0 | (code & 0x1F);
-			chars[2] = '\0';
-			nb = 2;
-		    } else if (code <= 0xFFFF) {
-			// two continuation bytes
-			chars[2] = 0x80 | (code & 0x3F); code = (code >> 6);
-			chars[1] = 0x80 | (code & 0x3F); code = (code >> 6);
-			chars[0] = 0xE0 | (code & 0xF); chars[3] = '\0';
-			nb = 3;
-		    } else if (code <= 0x10FFFF) {
-			// three continuation bytes
-			chars[3] = 0x80 | (code & 0x3F); code = (code >> 6);
-			chars[2] = 0x80 | (code & 0x3F); code = (code >> 6);
-			chars[1] = 0x80 | (code & 0x3F); code = (code >> 6);
-			chars[0] = 0xF0 | (code & 0x7); chars[4] = '\0';
-			nb = 4;
-		    } else {
-			// unicode replacement character
-			chars[2] = 0xEF; chars[1] = 0xBF; chars[0] = 0xBD;
-			chars[3] = '\0';
-			nb = 3;
-		    }
-		}
-		
-		static void escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, OutBuffer & buf, const std::string & size) {
-		    auto fst = content.find_first_of ('{');
-		    auto scd = content.find_first_of ('}');
-		    if (fst == std::string::npos || scd == std::string::npos)  {
-			auto real_loc = loc;
-			real_loc.column += it;
-			Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
-		    }
-
-		    auto inner = content.substr (fst + 1, scd - fst - 1);
-		    
-		    auto fixed = syntax::Fixed::init (lexing::Word {loc, inner}, lexing::Word {loc, size});
-		    auto gen = validateFixed (fixed.to<syntax::Fixed> ());
-		    auto ui = (uint) gen.to <Fixed> ().getUI ().u;
-
-		    char chars[5];
-		    int nb = 0;
-		    getUnicodeChar (nb, ui, chars);
-		    for (int i = 0 ; i < nb; i++)			
-			buf.write (chars[i]);
-		    
-		    it = scd + 1;
-		}
-	       		
-		static std::string escapeChar (const lexing::Word & loc, const std::string & content) {
-		    OutBuffer buf;
-		    int it = 0;
-		    static std::vector <char> escape = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '\"', '"', '?'};
-		    static std::vector <uint> values = {7, 8, 12, 10, 13, 9, 11, 92, 39, 34, 63};
-		    
-		    while (it < (int) content.size ()) {
-			if (content [it] == '\\') {
-			    if (it + 1 < (int) content.size ()) {
-				it += 1;
-				if (content [it] == 'u') escapeUnicode (loc, it, content, buf, Keys::U32);
-				else {
-				    auto pos = std::find (escape.begin (), escape.end (), content [it]) - escape.begin ();
-				    if (pos >= (int) escape.size ()) {
-					auto real_loc = loc;
-					real_loc.column += it;
-					Error::occur (real_loc, ExternalError::get (UNDEFINED_ESCAPE));
-				    }
-				    
-				    buf.write ((char) values [pos]);
-				}
-			    } else {
-				auto real_loc = loc;
-				real_loc.column += it;
-				Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
-			    }
-			} else buf.write (content [it]);
-			it ++;
-		    }
-		    return buf.str ();
-		}
-		
-		static uint convert (const lexing::Word & loc, const lexing::Word & content, int size) {
-		    auto str =  escapeChar (loc, content.str);
-		    if (size == 32) {
-			std::vector <uint> utf_32 = utf8_to_utf32 (str);			
-			if (utf_32.size () != 1) {		    
-			    Ymir::Error::occur (loc, ExternalError::get (MALFORMED_CHAR), "c32", utf_32.size ());
-			}
-			return utf_32 [0];
-		    } else if (size == 8) {
-			if (str.length () != 1)
-			    Ymir::Error::occur (loc, ExternalError::get (MALFORMED_CHAR), "c8", str.length ());
-			return str [0] & 0b01111111;
-		    }
-		    
-		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-		    return 0;
-		}
-		    
-	    };
-	    
+	Generator Visitor::validateChar (const syntax::Char & c) {	  	    
 	    Generator type (Generator::empty ());	    
 	    if (c.getSuffix () == Keys::C8) type = Char::init (c.getLocation (), 8);
 	    if (c.getSuffix () == "") type = Char::init (c.getLocation (), 32);
+
+	    auto visitor = UtfVisitor::init (*this);
 	    
-	    uint value = Anonymous::convert (c.getLocation (), c.getSequence (), type.to<Char> ().getSize ());	   
+	    uint value = visitor.convertChar (c.getLocation (), c.getSequence (), type.to<Char> ().getSize ());	   
 	    return CharValue::init (c.getLocation (), type, value);
 	}
 	
@@ -1423,6 +1255,10 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
+
+	Generator Visitor::validateString (const syntax::String & str) {
+	    return Generator::empty ();
+	}
 	
 	Generator Visitor::validateArray (const syntax::List & list) {
 	    std::vector <Generator> params;
@@ -1450,7 +1286,7 @@ namespace semantic {
 	    type.to <Type> ().isLocal (true); // Array constant are declared in the stack, so they are local
 	    return ArrayValue::init (list.getLocation (), type.to <Type> ().toMutable (), params);
 	}	
-
+	
 	Generator Visitor::validateTuple (const syntax::List & list) {
 	    std::vector <Generator> params;
 	    std::vector <Generator> types;

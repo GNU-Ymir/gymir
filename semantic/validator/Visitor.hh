@@ -187,8 +187,9 @@ namespace semantic {
 	    /**
 	     * \brief Validate an fixed const integer value
 	     */
-	    static generator::Generator validateFixed (const syntax::Fixed & fixed);	    
+	    generator::Generator validateFixed (const syntax::Fixed & fixed, int base = 0);	    
 
+	    
 	    /**
 	     * \brief Validate a const bool value
 	     */
@@ -203,6 +204,11 @@ namespace semantic {
 	     * \brief Validate a literal char
 	     */
 	    generator::Generator validateChar (const syntax::Char & c);
+
+	    /**
+	     * \brief Validate a string literal
+	     */
+	    generator::Generator validateString (const syntax::String & s);
 	    
 	    /**
 	     * \brief Validate a binary expression 

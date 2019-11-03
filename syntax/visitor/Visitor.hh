@@ -61,6 +61,9 @@ namespace syntax {
 	/** The suffix char */
 	std::vector <std::string> _charSuffix;
 
+	/** The suffix of string */
+	std::vector <std::string> _stringSuffix;
+	
 	/** The list of instricts */
 	std::vector <std::string> _intrisics;
 
@@ -511,6 +514,12 @@ namespace syntax {
 	 * \brief Does not verify the integrity of the content, it will be checked at semantic time
 	 */
 	Expression visitChar ();
+
+	/**
+	 * \brief Visit a String literal
+	 * \brief Does not verify the integrity of the content, it will be checked at semantic time
+	 */
+	Expression visitString ();
 	
 	/**
 	 * \brief Visit an array literal, it can be either a real literal or an array allocator

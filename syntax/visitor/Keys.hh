@@ -15,6 +15,8 @@ struct Keys {
     static std::string  BODY;
     static std::string  BREAK; 
     static std::string  C8;
+    static std::string  C16;
+    static std::string  C32;
     static std::string  CAST; 
     static std::string  CLANG;
     static std::string  CONST; 
@@ -93,7 +95,10 @@ struct Keys {
     static std::string  PUBLIC; 
     static std::string  PURE;
     static std::string  REF; 
-    static std::string  RETURN; 
+    static std::string  RETURN;
+    static std::string  S8;
+    static std::string  S16;
+    static std::string  S32;
     static std::string  SAFE;
     static std::string  SCOPE; 
     static std::string  SELF;

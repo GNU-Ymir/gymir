@@ -6,14 +6,15 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    String::String (const lexing::Word & loc) :
-	IExpression (loc)
+    String::String (const lexing::Word & loc, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix) :
+	IExpression (loc),
+	_end (end),
+	_sequence (sequence),
+	_suffix (suffix)
     {}
 
-    Expression String::init (const lexing::Word & location, const std::string & sequence) {
-	auto ret = new (Z0) String (location);	
-	ret-> _sequence = sequence;
-	return Expression {ret};
+    Expression String::init (const lexing::Word & location, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix) {
+	return Expression {new String (location, end, sequence, suffix)};	
     }
 
     Expression String::clone () const {
@@ -26,10 +27,18 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }
-
+    
     void String::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<String> ", i, '\t');
 	stream.writeln (this-> getLocation (), " ", this-> _sequence);
+    }
+
+    const lexing::Word & String::getSuffix () const {
+	return this-> _suffix;
+    }
+    
+    const lexing::Word & String::getSequence () const {
+	return this-> _sequence;
     }
     
 }

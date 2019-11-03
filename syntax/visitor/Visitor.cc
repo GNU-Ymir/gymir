@@ -106,7 +106,11 @@ namespace syntax {
 	};
 
 	visit._charSuffix = {
-	    Keys::C8
+	    Keys::C8, Keys::C16, Keys::C32
+	};
+
+	visit._stringSuffix = {
+	    Keys::S8, Keys::S16, Keys::S32
 	};
 	
 	return visit;
@@ -1129,6 +1133,7 @@ namespace syntax {
 	if (tok == Token::DOT)                         return visitFloat (lexing::Word::eof ());
 	//if (tok == Token::GUILL)                       return visitString ();
 	if (tok == Token::APOS)                        return visitChar ();
+	if (tok == Token::GUILL)                       return visitString ();
 	if (tok == Keys::TRUE_ || tok == Keys::FALSE_) return Bool::init (this-> _lex.next ());
 	if (tok == Keys::NULL_)                        return Null::init (this-> _lex.next ());
 	if (tok == Token::DOLLAR)                      return Dollar::init (this-> _lex.next ());
@@ -1258,6 +1263,37 @@ namespace syntax {
 	this-> _lex.commentEnable (true);
 	
 	return Char::init (begin, cursor, all, format);
+    }
+
+    Expression Visitor::visitString () {
+	auto begin = this-> _lex.next ();
+
+	this-> _lex.skipEnable (Token::SPACE,   false);
+	this-> _lex.skipEnable (Token::TAB,     false);
+	this-> _lex.skipEnable (Token::RETURN,  false);
+	this-> _lex.skipEnable (Token::RRETURN, false);
+	this-> _lex.commentEnable (false);
+
+	lexing::Word cursor = lexing::Word::eof ();
+	lexing::Word all    = lexing::Word::eof ();
+	do {
+	    cursor = this-> _lex.next ();
+	    if (cursor.isEof ()) {
+		Error::occur (cursor, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+	    } else if (cursor != begin) {
+		all += cursor;
+	    } 
+	} while (cursor != begin);
+
+	auto format = this-> _lex.consumeIf (this-> _stringSuffix);
+	
+	this-> _lex.skipEnable (Token::SPACE,   true);
+	this-> _lex.skipEnable (Token::TAB,     true);
+	this-> _lex.skipEnable (Token::RETURN,  true);
+	this-> _lex.skipEnable (Token::RRETURN, true);
+	this-> _lex.commentEnable (true);
+
+	return String::init (begin, cursor, all, format);
     }
     
     Expression Visitor::visitVarDeclaration () {
