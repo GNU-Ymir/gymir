@@ -412,8 +412,9 @@ namespace generic {
 	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
     }
 
-    Tree Tree::buildStringLiteral (const lexing::Word & loc, const char * lit, ulong size, uint innerSize) {
-	return Tree::init (loc.getLocus (), build_string_literal (size * innerSize, lit));
+    Tree Tree::buildStringLiteral (const lexing::Word & loc, const char * lit, ulong len, int size) {
+	println ((long) lit, " ", len, " ", size);
+	return Tree::init (loc.getLocus (), build_string_literal (len * (size / 8), lit));
     }
     
     Tree Tree::buildSizeCst (ulong value) {
@@ -643,7 +644,7 @@ namespace generic {
 	
     }
 
-    Tree Tree::getStringSize (uint inner) const {	
+    Tree Tree::getStringSize (int inner) const {	
 	auto t = getOperand (0).getOperand (0);
 	return Tree::init (BUILTINS_LOCATION,
 			   convert (
@@ -651,7 +652,7 @@ namespace generic {
 			       Tree::init (BUILTINS_LOCATION,
 					   build_int_cst_type (
 					       long_unsigned_type_node,
-					       (TREE_STRING_LENGTH (t.getTree ()) / inner) - 1
+					       (TREE_STRING_LENGTH (t.getTree ()) / (inner / 8)) - 1
 					   )
 			       ).getTree ()
 			   ));   	

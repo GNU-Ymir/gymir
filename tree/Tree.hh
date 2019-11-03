@@ -279,7 +279,7 @@ namespace generic {
 	/**
 	 * \brief create a string literal
 	 */
-	static Tree buildStringLiteral (const lexing::Word & loc, const char * content, ulong size, uint innerSize);
+	static Tree buildStringLiteral (const lexing::Word & loc, const char * content, ulong size, int innerSize);
 	
 	/**
 	 * \brief create a size cst
@@ -576,10 +576,10 @@ namespace generic {
 	Tree getArraySize () const;
 
 	/**
-	 * \param inner the inner size of the string (1, 4)
+	 * \param inner the inner size of the string (8, 32)
 	 * \return the size of a literal string
 	 */
-	Tree getStringSize (uint inner) const;
+	Tree getStringSize (int inner) const;
 	
 	/**
 	 * \return true if this is a type and it is an array (static array only)

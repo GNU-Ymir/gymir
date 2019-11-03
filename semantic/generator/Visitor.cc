@@ -907,7 +907,11 @@ namespace semantic {
 
 	generic::Tree Visitor::generateStringValue (const StringValue & str) {
 	    auto inner = str.getType ().to <Array> ().getInners () [0];
-	    return Tree::buildStringLiteral (str.getLocation (), str.getValue ().data (), str.getLen (), inner.to <Char> ().getSize ());
+	    auto len = str.getLen ();
+	    auto size = inner.to<Char> ().getSize ();
+	    const char * data = str.getValue ().data ();
+	    println ((long) data, " ", len, " ", size);
+	    return Tree::buildStringLiteral (str.getLocation (), data, len, size);
 	}
 	
 	generic::Tree Visitor::generateFrameProto (const FrameProto & proto) {

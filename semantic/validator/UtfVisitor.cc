@@ -183,7 +183,6 @@ namespace semantic {
 	    buf.push_back ((char) (0));
 	    buf.push_back ((char) (0));
 	    buf.push_back ((char) (0)); // utf_32 0
-	    println (buf.size ());
 	    return buf;
 	}
 	
@@ -215,7 +214,8 @@ namespace semantic {
 	    } else if (size == 8) {
 		std::vector<char> ret;
 		for(auto it: str) ret.push_back (it);
-		len = str.length ();
+		ret.push_back ('\0');
+		len = ret.size ();
 		return ret;
 	    }
 	    
