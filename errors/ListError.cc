@@ -17,6 +17,7 @@ namespace Ymir {
 			    DISCARD_CONST		    = "discard the constant qualifier is prohibited",
 			    DISCARD_CONST_LEVEL		    = "discard the constant qualifier is prohibited, left operand mutability level is %(y) but must be at most %(y)",
 			    DISCARD_LOCALITY		    = "discard the locality is prohibited",
+			    DIRECT_COPY_STRING_LIT          = "cannot make a direct copy of a string literal, you must make an alias or a copy of it", 
 			    DYNAMIC_CAST_FAILED		    = "dynamic cast failed : %",
 			    FORWARD_REFERENCE_VAR           = "the type cannot be infered, as it depends on a forward reference",
 			    IMMUTABLE_LVALUE		    = "left operand is immutable",

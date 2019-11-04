@@ -413,7 +413,6 @@ namespace generic {
     }
 
     Tree Tree::buildStringLiteral (const lexing::Word & loc, const char * lit, ulong len, int size) {
-	println ((long) lit, " ", len, " ", size);
 	return Tree::init (loc.getLocus (), build_string_literal (len * (size / 8), lit));
     }
     

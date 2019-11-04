@@ -1761,6 +1761,11 @@ namespace semantic {
 		}
 	    }
 
+	    // We cannot make a direct copy of a stringvalue, we must use an alias or a copy
+	    if (gen.is <StringValue> ()) {
+		Ymir::Error::occur (loc, ExternalError::get (DIRECT_COPY_STRING_LIT));
+	    }
+	    
 	    // Tuple copy is by default, as we cannot alias a tuple
 	    // Same for structures
 	    // And for arrays (but left op)

@@ -910,7 +910,6 @@ namespace semantic {
 	    auto len = str.getLen ();
 	    auto size = inner.to<Char> ().getSize ();
 	    const char * data = str.getValue ().data ();
-	    println ((long) data, " ", len, " ", size);
 	    return Tree::buildStringLiteral (str.getLocation (), data, len, size);
 	}
 	
