@@ -14,6 +14,12 @@ namespace semantic {
 	private :
 	    
 	    std::string _value;
+
+	    float _valFloat = 0;
+
+	    double _valDouble = 0;
+
+	    bool _isStr;
 	    
 	protected : 
 
@@ -21,11 +27,19 @@ namespace semantic {
 
 	    FloatValue ();
 
-	    FloatValue (const lexing::Word & loc, const Generator & type, const std::string & value);	    	    
+	    FloatValue (const lexing::Word & loc, const Generator & type, const std::string & value);
+
+	    FloatValue (const lexing::Word & loc, const Generator & type, float valFloat);
+
+	    FloatValue (const lexing::Word & loc, const Generator & type, double valDouble);
 	    
 	public :
 
 	    static Generator init (const lexing::Word & loc, const Generator & type, const std::string & value);
+
+	    static Generator init (const lexing::Word & loc, const Generator & type, float valFloat);
+	    
+	    static Generator init (const lexing::Word & loc, const Generator & type, double valDouble);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -46,6 +60,21 @@ namespace semantic {
 	     * \return the value of the float const 
 	     */
 	    const std::string & getValue () const;
+
+	    /**
+	     * \return the value is encoded in a string
+	     */
+	    bool isStr () const;
+
+	    /**
+	     * \return the value encoded in a float
+	     */
+	    float getValueFloat () const;
+
+	    /**
+	     * \return the value encoded in a double
+	     */
+	    double getValueDouble () const;
 
 	    std::string prettyString () const override;
 	};	

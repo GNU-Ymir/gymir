@@ -8,7 +8,7 @@ namespace semantic {
     namespace validator {
 	
 	class CompileTime {
-
+	    
 	    enum CompileConstante {
 		LIMIT_RECURSE_CALL = 300
 	    };

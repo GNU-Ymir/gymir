@@ -39,7 +39,10 @@ namespace semantic {
 	    
 	    /** The list of loop breaks types (when inside a loop) cf enterLoop and quitLoop */
 	    std::list <generator::Generator> _loopBreakTypes;
-	    
+
+	    /** The backup of the loop break when entering a foreign */
+	    std::list <std::list <generator::Generator> > _loopSaved;
+
 	    std::vector <std::vector <std::set <std::string> > > _usedSyms;
 	    
 	    std::vector <std::vector <std::map <std::string, generator::Generator> > > _symbols;
@@ -94,7 +97,7 @@ namespace semantic {
 	    /**
 	     * \brief Validate a global var declaration 
 	     */
-	    void validateVarDecl (const semantic::VarDecl & vardecl);
+	    void validateVarDecl (const semantic::Symbol & sym);
 
 	    /**
 	     * \brief Validate an enum declaration
@@ -127,6 +130,11 @@ namespace semantic {
 	    generator::Generator validateTypeVar (const syntax::Var & var);
 
 	    /**
+	     * \brief Validate the unary using it as a type (for &() for example)
+	     */
+	    generator::Generator validateTypeUnary (const syntax::Unary & var);
+
+	    /**
 	     * \brief Validate an array allocation as a type
 	     */
 	    generator::Generator validateTypeArrayAlloc (const syntax::ArrayAlloc & alloc);
@@ -146,7 +154,7 @@ namespace semantic {
 	     * \brief If the value is a breaker or a returner throw an error
 	     * \return a tree containing the result of the value
 	     */
-	    generator::Generator validateValue (const syntax::Expression & value);
+	    generator::Generator validateValue (const syntax::Expression & value, bool canBeType = false);
 
 	    /**
 	     * \brief Validate an compile time expression , that produce a value
@@ -292,6 +300,11 @@ namespace semantic {
 	     * \brief Validate a break expression
 	     */
 	    generator::Generator validateBreak (const syntax::Break & br);
+
+	    /**
+	     * \brief Validate a return expression
+	     */
+	    generator::Generator validateReturn (const syntax::Return & rt);
 	    
 	    /**
 	     * \brief Validate a list, it could be either : 
@@ -470,6 +483,16 @@ namespace semantic {
 	     */
 	    void setCurrentLoopType (const generator::Generator & type);
 
+	    /**
+	     * \brief Return the type of the current fn
+	     */
+	    const generator::Generator & getCurrentFuncType () ;
+
+	    /**
+	     * \brief Set the type of the current fn
+	     */
+	    void setCurrentFuncType (const generator::Generator & type);
+	    
 	    /**
 	     * \return !this-> _loopBreakTypes.empty ()
 	     */

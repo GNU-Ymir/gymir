@@ -3,6 +3,7 @@
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/syntax/Expression.hh>
 #include <ymir/syntax/Decorator.hh>
+#include <ymir/semantic/Generator.hh>
 
 namespace semantic {
 
@@ -17,6 +18,9 @@ namespace semantic {
 	/** The content of the decl */
 	syntax::Expression _value;
 
+	/** The generator (created at validation time) */
+	generator::Generator _gen;
+	
     private :
 
 	friend Symbol;
@@ -39,6 +43,12 @@ namespace semantic {
 	
 	const syntax::Expression & getType () const;
 
+	void setGenerator (const generator::Generator & gen);
+
+	const generator::Generator & getGenerator () const;
+	
+	const std::vector <syntax::DecoratorWord> & getDecorators () const;
+	
 	std::string formatTree (int padd) const override;
     };
     

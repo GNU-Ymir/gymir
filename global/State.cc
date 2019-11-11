@@ -1,8 +1,10 @@
 #include <ymir/global/State.hh>
+#include <ymir/utils/Path.hh>
+#include <ymir/utils/OutBuffer.hh>
 #include <algorithm>
 
 namespace global {
-
+    
     State::State () {}
 
     State::State (const State &) {}
@@ -47,6 +49,20 @@ namespace global {
 
     bool State::isDebugActive () const {
 	return this-> _isDebug;
+    }
+
+    void State::setPrefix (const std::string & path) {
+	this-> _prefixPath = path;
+	this-> _includeDir.emplace (Ymir::Path::build (path, __includeInPrefix__).toString ());	
+	this-> _corePath = Ymir::Path::build (path, __includeInPrefix__).toString ();
+    }
+
+    const std::string & State::getCorePath () const {
+	return this-> _corePath;
+    }
+
+    const std::string & State::getPrefix () const {
+	return this-> _prefixPath;
     }
     
 }

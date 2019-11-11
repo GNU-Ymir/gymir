@@ -14,6 +14,12 @@ namespace semantic {
 	 */
 	class SubVisitor {
 
+	    static std::string __SIZEOF__;
+
+	    static std::string __INIT__;
+
+	    static std::string __TYPEID__;
+	    
 	    Visitor & _context;
 
 	private :
@@ -52,8 +58,22 @@ namespace semantic {
 	     * \brief Validate an enum access
 	     */
 	    generator::Generator validateEnum (const syntax::Binary & expression, const generator::Enum & en);
+
+	    /**
+	     * \brief Validate a type access for standard values
+	     */
+	    generator::Generator validateType (const syntax::Binary & expression, const generator::Generator & type);
 	    
-	private :
+	    generator::Generator validateArray (const syntax::Binary & expression, const generator::Generator & b);
+	    generator::Generator validateBool (const syntax::Binary & expression, const generator::Generator & b);
+	    generator::Generator validateChar (const syntax::Binary & expression, const generator::Generator & c);
+	    generator::Generator validateFloat (const syntax::Binary & expression, const generator::Generator & f);
+	    generator::Generator validateInteger (const syntax::Binary & expression, const generator::Generator & i);
+	    generator::Generator validatePointer (const syntax::Binary & expression, const generator::Generator & p);
+	    generator::Generator validateSlice (const syntax::Binary & expression, const generator::Generator & s);
+	    generator::Generator validateTuple (const syntax::Binary & expression, const generator::Generator & t);
+	    
+	private :	    
 
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);
 	    

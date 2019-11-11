@@ -39,18 +39,13 @@ namespace semantic {
 	    }
 
 	    if (!ret.isEmpty ()) return ret;
-	    // std::vector <std::string> errors;
-	    // TRY (
-	    // TODO DotCall
-	    // 	auto right = this-> _context.validateValue (expression.getRight ());
-	    // ) CATCH (ErrorCode::EXTERNAL) {
+	    
 	    if (expression.getRight ().is <syntax::Var> ()) 
 		this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str);
 	    else {
 		auto right = this-> _context.validateValue (expression.getRight ());
 		this-> error (expression, left, right.to <Value> ().prettyString ());
 	    }
-	    //} FINALLY;
 
 	    return Generator::empty ();
 	}
@@ -113,9 +108,10 @@ namespace semantic {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 
-	    if (name == "len") {
+	    if (name == Array::LEN_NAME) {
 		return ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());		
 	    }
+	    
 	    return Generator::empty ();
 	}
 
@@ -123,11 +119,21 @@ namespace semantic {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 
-	    if (name == "len") {
+	    if (name == Slice::LEN_NAME) {
 		return StructAccess::init (expression.getLocation (),
 					   Integer::init (expression.getLocation (), 64, false),
 					   left, name);
 	    }
+
+	    if (name == Slice::PTR_NAME) {
+		auto inner = left.to<Value> ().getType ().to <Slice> ().getInners ()[0];
+		return StructAccess::init (expression.getLocation (),
+					   Pointer::init (expression.getLocation (),
+							  inner
+					   ),
+					   left, name);
+	    }
+	    
 	    return Generator::empty ();
 	}
 	

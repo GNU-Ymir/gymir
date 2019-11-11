@@ -169,7 +169,7 @@ namespace generic {
 	 * \param type the type of the param
 	 */
 	static Tree paramDecl (const lexing::Word & loc, const std::string & name, const Tree & type);
-
+       	
 	/**
 	 * \brief Create a new function type
 	 * \param retType the type returned by the function 
@@ -293,6 +293,16 @@ namespace generic {
 	static Tree buildFloatCst (const lexing::Word & loc, const std::string & value, const Tree & type);
 
 	/**
+	 * \brief Create a float const
+	 */
+	static Tree buildFloatCst (const lexing::Word & loc, double value, const Tree & type);
+
+	/**
+	 * \brief Create a float const
+	 */
+	static Tree buildFloatCst (const lexing::Word & loc, float value, const Tree & type);
+
+	/**
 	 * \brief Generate a bool const
 	 */
 	static Tree buildBoolCst (const lexing::Word & loc, bool value);
@@ -390,6 +400,11 @@ namespace generic {
 	 */
 	void setLocus (const location_t & loc);
 
+	/**
+	 * \brief Promote the value of a tree, it is used for C variadic call	
+	 */
+	Tree promote () const;
+	
 	/**
 	 * \brief Break the proxy, and return the generic gimple tree
 	 */
@@ -548,6 +563,11 @@ namespace generic {
 	 */
 	void setResultDecl (const Tree & result);
 
+	/**
+	 * \brief Return the result decl of the tree
+	 */
+	Tree getResultDecl () const;
+	
 	/**
 	 * \brief Change the super context of a block
 	 */

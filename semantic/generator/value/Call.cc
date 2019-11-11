@@ -13,17 +13,18 @@ namespace semantic {
 	    this-> isLvalue (true);
 	}
 
-	Call::Call (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params) :
+	Call::Call (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & gen) :
 	    Value (loc, type),
 	    _frame (frame),
 	    _types (types),
-	    _params (params)
+	    _params (params),
+	    _addParams (gen)
 	{
 	    this-> isLvalue (true);
 	}
 	
-	Generator Call::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params) {
-	    return Generator {new Call (loc, type, frame, types, params)};
+	Generator Call::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & addParams) {
+	    return Generator {new Call (loc, type, frame, types, params, addParams)};
 	}
     
 	Generator Call::clone () const {
@@ -67,6 +68,10 @@ namespace semantic {
 	    for (auto & it : this-> _params)
 		params.push_back (it.prettyString ());
 	    return Ymir::format ("% (%)", this-> _frame.prettyString (), params);
+	}
+
+	const std::vector <Generator> & Call::getAddParameters () const {
+	    return this-> _addParams;
 	}
 	
     }

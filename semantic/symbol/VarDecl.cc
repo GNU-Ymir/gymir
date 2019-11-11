@@ -6,14 +6,16 @@ namespace semantic {
 	ISymbol (lexing::Word::eof ()),
 	_decos (),
 	_type (syntax::Expression::empty ()),
-	_value (syntax::Expression::empty ())
+	_value (syntax::Expression::empty ()),
+	_gen (generator::Generator::empty ())
     {}
 
     VarDecl::VarDecl (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value) :
 	ISymbol (name),
 	_decos (decos),
 	_type (type),
-	_value (value)
+	_value (value),
+	_gen (generator::Generator::empty ())
     {}
 
     Symbol VarDecl::clone () const {
@@ -45,7 +47,19 @@ namespace semantic {
     const syntax::Expression & VarDecl::getType () const {
 	return this-> _type;
     }
+    
+    const std::vector <syntax::DecoratorWord> & VarDecl::getDecorators () const {
+	return this-> _decos;
+    }
 
+    void VarDecl::setGenerator (const generator::Generator & gen) {
+	this-> _gen = gen;
+    }
+
+    const generator::Generator & VarDecl::getGenerator () const {
+	return this-> _gen;
+    }
+    
     std::string VarDecl::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());

@@ -11,15 +11,16 @@ namespace semantic {
 	    _type (Generator::empty ())
 	{}
 
-	FrameProto::FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params) :
+	FrameProto::FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic) :
 	    Value (loc, Void::init (loc)),
 	    _params (params),
 	    _type (type),
-	    _name (name)
+	    _name (name),
+	    _isCVariadic (isCVariadic)
 	{}
 	
-	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params) {
-	    return Generator {new FrameProto (loc, name, type, params)};
+	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic) {
+	    return Generator {new FrameProto (loc, name, type, params, isCVariadic)};
 	}
     
 	Generator FrameProto::clone () const {
@@ -81,6 +82,10 @@ namespace semantic {
 
 	const std::string & FrameProto::getMangledName () const {	    
 	    return this-> _mangleName;
+	}
+
+	bool FrameProto::isCVariadic () const {
+	    return this-> _isCVariadic;
 	}
     }
     

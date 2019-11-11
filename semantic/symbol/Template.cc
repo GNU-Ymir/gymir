@@ -6,17 +6,19 @@ namespace semantic {
     Template::Template () :
 	ISymbol (lexing::Word::eof ()),
 	_params ({}),
+	_test (syntax::Expression::empty ()),
 	_decl (syntax::Declaration::empty ())
     {}
 
-    Template::Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl) :
+    Template::Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test) :
 	ISymbol (loc),
 	_params (params),
+	_test (test),
 	_decl (decl)
     {}
     
-    Symbol Template::init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl) {
-	return Symbol {new (Z0) Template (loc, params, decl)};
+    Symbol Template::init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test) {
+	return Symbol {new (Z0) Template (loc, params, decl, test)};
     }
 
     Symbol Template::clone () const {
@@ -43,6 +45,10 @@ namespace semantic {
 
     const std::vector <syntax::Expression> & Template::getParams () const {
 	return this-> _params;
+    }
+
+    const syntax::Expression & Template::getTest () const {
+	return this-> _test;
     }
     
     std::string Template::formatTree (int i) const {

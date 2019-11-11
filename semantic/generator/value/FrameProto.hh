@@ -17,6 +17,8 @@ namespace semantic {
 	    Frame::ManglingStyle _style = Frame::ManglingStyle::Y;
 
 	    std::string _mangleName;
+
+	    bool _isCVariadic = false;
 	    
 	private :
 
@@ -24,7 +26,7 @@ namespace semantic {
 	    
 	    FrameProto ();
 
-	    FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params);
+	    FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic);
 
 	public :
 
@@ -32,7 +34,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -66,7 +68,6 @@ namespace semantic {
 
 	    std::string prettyString () const override;
 
-
 	    /**
 	     * \return the mangling style of the frame
 	     */
@@ -81,7 +82,8 @@ namespace semantic {
 	    void setMangledName (const std::string & name);
 
 	    const std::string & getMangledName () const;
-	    
+
+	    bool isCVariadic () const;
 	};
 	
     }

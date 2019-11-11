@@ -331,7 +331,6 @@ namespace semantic {
 		    path = Path::build (it, Path {imp.getModule ().str, "::"}.toString ());
 		    if (__imported__.find (path.toString ()) == __imported__.end ()) {
 			auto file_path = path.toString () + ".yr";
-			println (file_path);
 			
 			auto file = fopen (file_path.c_str (), "r");
 			if (file != NULL) {
@@ -389,7 +388,7 @@ namespace semantic {
 		}		
 	    }
 	    
-	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent ());
+	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent (), tep.getTest ());
 	    getReferent ().insert (sym);
 	    return sym;
 	}

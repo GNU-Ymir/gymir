@@ -106,11 +106,15 @@ namespace syntax {
 	};
 
 	visit._charSuffix = {
-	    Keys::C8, Keys::C16, Keys::C32
+	    Keys::C8, Keys::C32,
+	    Keys::UNDER + Keys::C8,
+	    Keys::UNDER + Keys::C32, 
 	};
 
 	visit._stringSuffix = {
-	    Keys::S8, Keys::S16, Keys::S32
+	    Keys::S8, Keys::S32,
+	    Keys::UNDER + Keys::S8,
+	    Keys::UNDER + Keys::S32, 
 	};
 	
 	return visit;
@@ -1186,6 +1190,13 @@ namespace syntax {
 		}
 	    }
 	    return true;
+	} else if (value.length () > 2 && value [0] == '0' && value [1] == 'o') {
+	    for (uint i = 2 ; i < value.length (); i++) {
+		if ((value [i] < '0' || value [i] > '7') && value [i] != Keys::UNDER [0]) {
+		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.str);
+		}
+	    }
+	    return true;
 	} else {
 	    for (uint i = 0 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && value [i] != Keys::UNDER [0]) {
@@ -1252,9 +1263,11 @@ namespace syntax {
 		all += cursor;
 	    }
 	} while (cursor != Token::APOS);
-	
+
 	auto format = this-> _lex.consumeIf (this-> _charSuffix);
-	
+	if (!format.isEof () && format.str [0] == '_') {
+	    format = lexing::Word {format, format.str.substr (1, format.str.length  ()- 1)};
+	}
 	// We restore the skip and comments
 	this-> _lex.skipEnable (Token::SPACE, true);
 	this-> _lex.skipEnable (Token::TAB, true);
@@ -1286,6 +1299,9 @@ namespace syntax {
 	} while (cursor != begin);
 
 	auto format = this-> _lex.consumeIf (this-> _stringSuffix);
+	if (!format.isEof () && format.str [0] == '_') {
+	    format = lexing::Word {format, format.str.substr (1, format.str.length  ()- 1)};
+	}
 	
 	this-> _lex.skipEnable (Token::SPACE,   true);
 	this-> _lex.skipEnable (Token::TAB,     true);

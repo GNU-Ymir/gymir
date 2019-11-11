@@ -9,6 +9,30 @@ namespace semantic {
 	std::string Float::NOT_A_NUMBER = "NAN";
 	
 	std::string Float::INIT = Float::NOT_A_NUMBER;
+
+	std::string Float::INF_NAME = "inf";
+
+	std::string Float::INF = "INF";
+
+	std::string Float::MIN_NAME = "min";
+
+	std::string Float::MAX_NAME = "max";
+
+	std::string Float::NAN_NAME = "nan";
+
+	std::string Float::DIG_NAME = "dig";
+
+	std::string Float::MANT_DIG_NAME = "mant_dig";
+
+	std::string Float::EPSILON_NAME = "epsilon";
+
+	std::string Float::MAX_10_EXP_NAME = "max_10_exp";
+
+	std::string Float::MAX_EXP_NAME = "max_exp";
+
+	std::string Float::MIN_10_EXP_NAME = "min_10_exp";
+
+	std::string Float::MIN_EXP_NAME = "min_exp";
 	
 	Float::Float () :
 	    Type ()		  

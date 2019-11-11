@@ -28,6 +28,9 @@ namespace semantic {
 	/** Is this function safe ? (it means cannot crash the program) */
 	bool _isSafe;
 
+	/** Is this function variadic */
+	bool _isVariadic;
+	
 	std::string _externLanguage;
 	
     private :
@@ -66,6 +69,8 @@ namespace semantic {
 
 	void isSafe (bool is);
 	
+	bool isVariadic () const;
+
 	const syntax::Function & getContent () const;
 
 	/**

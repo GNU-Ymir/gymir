@@ -71,11 +71,11 @@ namespace semantic {
 		    }
 		);
 
-		of (semantic::VarDecl, decl, {
+		of (semantic::VarDecl, decl ATTRIBUTE_UNUSED, {
 			std::vector <std::string> errors;
 			this-> _referent.push_back (sym);			
 			TRY (
-			    validateVarDecl (decl);
+			    validateVarDecl (sym);
 			) CATCH (ErrorCode::EXTERNAL) {
 			    GET_ERRORS_AND_CLEAR (msgs);
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -243,6 +243,7 @@ namespace semantic {
 		}
 	    } else retType = Void::init (func.getName ());
 	    
+	    this-> setCurrentFuncType (retType);
 	    
 	    if (!function.getBody ().getBody ().isEmpty ()) {
 		if (!function.getBody ().getInner ().isEmpty () ||
@@ -277,27 +278,49 @@ namespace semantic {
 	    }
 	}
 
-	void Visitor::validateVarDecl (const semantic::VarDecl & var) {
-	    Generator type (Generator::empty ());
-	    Generator value (Generator::empty ());
+	void Visitor::validateVarDecl (const semantic::Symbol & sym) {
+	    if (sym.to <semantic::VarDecl> ().getGenerator ().isEmpty ()) {
+		auto var = sym.to <semantic::VarDecl> ();
+		auto elemSym = sym;
+		
+		Generator type (Generator::empty ());
+		Generator value (Generator::empty ());
 	    
-	    if (!var.getType ().isEmpty ()) {
-		type = validateType (var.getType ());
-	    }
+		if (!var.getType ().isEmpty ()) {
+		    type = validateType (var.getType ());
+		}
 
-	    if (!var.getValue ().isEmpty ()) {
-		value = validateValue (var.getValue ());		
-	    }
+		if (!var.getValue ().isEmpty ()) {
+		    value = validateValue (var.getValue ());		
+		}
 
-	    if (type.isEmpty () && value.isEmpty ()) {
-		Error::occur (var.getName (), ExternalError::get (VAR_DECL_WITH_NOTHING), var.getName ().str);
-	    }
+		if (type.isEmpty () && value.isEmpty ()) {
+		    Error::occur (var.getName (), ExternalError::get (VAR_DECL_WITH_NOTHING), var.getName ().str);
+		}
 
-	    if (!value.isEmpty () && !type.isEmpty ()) {
-		verifyCompatibleType (type, value.to<Value> ().getType ());
-	    }
+		if (!value.isEmpty () && !type.isEmpty ()) {
+		    verifyCompatibleType (type, value.to<Value> ().getType ());
+		}
 
-	    insertNewGenerator (GlobalVar::init (var.getName (), var.getName ().str, type, value));
+		if (type.isEmpty ()) type = value.to <Value> ().getType ();
+
+		bool isMutable = false;
+		for (auto & deco : var.getDecorators ()) {
+		    switch (deco.getValue ()) {
+		    case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
+		    default :
+			Ymir::Error::occur (deco.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    deco.getLocation ().str
+			);
+		    }
+		}
+	    
+		auto glbVar = GlobalVar::init (var.getName (), var.getName ().str, isMutable, type, value);		
+		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);
+	    
+		insertNewGenerator (glbVar);
+	    }
 	}
 
 	generator::Generator Visitor::validateStruct (const semantic::Symbol & str) {	    
@@ -441,17 +464,15 @@ namespace semantic {
 	    }
 	}
 	
-	Generator Visitor::validateValue (const syntax::Expression & expr) {
+	Generator Visitor::validateValue (const syntax::Expression & expr, bool canBeType) {
 	    auto value = validateValueNoReachable (expr);
-	    if (!value.is <Value> ()) {
+	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
 		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (USE_AS_VALUE));
 	    }
 	    
-	    if (value.to <Value> ().isBreaker ())
+	    if (value.is <Value> () && value.to <Value> ().isBreaker ())
 		Ymir::Error::occur (value.getLocation (), ExternalError::get (BREAK_INSIDE_EXPR));
-	    else if (value.to <Value> ().isReturner ())
-		Ymir::Error::occur (value.getLocation (), ExternalError::get (RETURN_INSIDE_EXPR));
 	    
 	    return value;
 	}
@@ -564,6 +585,10 @@ namespace semantic {
 		    return validateTemplateCall (cl);
 		);
 
+		of (syntax::Return, rt,
+		    return validateReturn (rt);
+		);
+		
 		of (TemplateSyntaxWrapper, st,
 		    return st.getContent ()
 		);
@@ -735,6 +760,14 @@ namespace semantic {
 		static ulong convertU (const lexing::Word & loc, const Integer & type, int base) { 
 		    char * temp = nullptr; errno = 0; // errno !!
 		    auto val = removeUnder (loc.str);
+		    if (val.length () > 2 && val [0] == '0' && val [1] == Keys::LX[0]) {
+			val = val.substr (2, val.length () - 1);
+			base = 16;
+		    } else if (val.length () > 2 && val [0] == '0' && val [1] == 'o') {
+			val = val.substr (2, val.length () - 1);
+			base = 8;
+		    }
+		    
 		    ulong value = std::strtoul (val.c_str (), &temp, base);
 		    bool overflow = false;
 		    if (temp == val.c_str () || *temp != '\0' ||
@@ -751,6 +784,14 @@ namespace semantic {
 		static long convertS (const lexing::Word & loc, const Integer & type, int base) {
 		    char * temp = nullptr; errno = 0; // errno !!
 		    auto val = removeUnder (loc.str);
+		    if (val.length () > 2 && val [0] == '0' && val [1] == Keys::LX[0]) {
+			val = val.substr (2, val.length () - 1);
+			base = 16;
+		    } else if (val.length () > 2 && val [0] == '0' && val [1] == 'o') {
+			val = val.substr (2, val.length () - 1);
+			base = 8;
+		    }
+
 		    ulong value = std::strtol (val.c_str (), &temp, base);
 		    bool overflow = false;
 		    if (temp == val.c_str () || *temp != '\0' ||
@@ -856,8 +897,9 @@ namespace semantic {
 	    auto & gen = getLocal (var.getName ().str);
 	    if (gen.isEmpty ()) {
 		auto sym = getGlobal (var.getName ().str);
-		if (sym.empty ()) 
+		if (sym.empty ()) {
 		    Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().str);
+		}
 		return validateMultSym (var.getLocation (), sym);
 	    }
 
@@ -885,37 +927,30 @@ namespace semantic {
 			    this-> _referent.pop_back ();			    
 			    continue;
 			}
-		    )
-
-		    else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
+		    ) else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
+			    gens.push_back (ModuleAccess::init (loc, sym));
+			    continue;
+			}		    		    
+		    ) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
 			    gens.push_back (ModuleAccess::init (loc, sym));
 			    continue;
 			}
-		    )
-		    
-		    else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
-			    gens.push_back (ModuleAccess::init (loc, sym));
-			    continue;
-			}
-		    )
-
-		    else of (semantic::Struct, st ATTRIBUTE_UNUSED, {
+		    ) else of (semantic::Struct, st ATTRIBUTE_UNUSED, {
 			    auto str_ref = validateStruct (sym);
 			    gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
 			    continue;
-			})
+			}
 
-		    else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+		    ) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
 			    auto en_ref = validateEnum (sym);
 			    gens.push_back (en_ref.to <Type> ().getProxy ().to <EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ());
 			    continue;
-			})
-		    else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
+			}
+		    ) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
 			    gens.push_back (TemplateRef::init (sym.getName (), sym));
 			    continue;
-			})
-
-		    else of (semantic::TemplateSolution, sol, {
+			}
+		    ) else of (semantic::TemplateSolution, sol, {
 			    auto loc_gens = validateMultSym (loc, sol.getAllLocal ());
 			    match (loc_gens) {
 				of (MultSym, mlt_sym, {
@@ -925,7 +960,17 @@ namespace semantic {
 				}
 			    }
 			    continue;
-			}); 
+			}
+		    ) else of (semantic::VarDecl, decl, {
+			    validateVarDecl (sym);
+			    auto gen = decl.getGenerator ().to <GlobalVar> ();
+			    Generator value (Generator::empty ());
+			    if (!gen.isMutable ())
+				value = gen.getValue ();
+			    gens.push_back (VarRef::init (decl.getName (), decl.getName ().str, gen.getType (), gen.getUniqId (), gen.isMutable (), value));
+			    continue;
+			 }
+		     );
 		}
 
 		println (sym.formatTree ());
@@ -1045,7 +1090,7 @@ namespace semantic {
 	    }
 
 
-	    auto frame = FrameProto::init (function.getName (), func.getRealName (), retType, params);
+	    auto frame = FrameProto::init (function.getName (), func.getRealName (), retType, params, func.isVariadic ());
 	    auto ln = func.getExternalLanguage ();
 	    if (ln == Keys::CLANG) 
 		frame.to <FrameProto> ().setManglingStyle (Frame::ManglingStyle::C);
@@ -1251,7 +1296,31 @@ namespace semantic {
 	    
 	    return Break::init (_break.getLocation (), Void::init (_break.getLocation ()), value);
 	}
-	
+
+	Generator Visitor::validateReturn (const syntax::Return & rt) {
+	    Generator value = Generator::empty ();
+	    Generator type = Generator::empty ();
+	    if (!rt.getValue ().isEmpty ()) {
+	    	value = validateValue (rt.getValue ());
+	    	type = value.to <Value> ().getType ();
+	    } else type = Void::init (rt.getLocation ());
+
+	    auto fn_type = getCurrentFuncType ();
+	    if (fn_type.isEmpty ()) {
+		Ymir::Error::occur (rt.getLocation (), ExternalError::get (RETURN_NO_FRAME));
+	    }
+	    
+	    if (!fn_type.equals (type)) {
+	    	auto note = Ymir::Error::createNote (fn_type.getLocation ());
+	    	Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+	    				   type.to <Type> ().getTypeName (),
+	    				   fn_type.to <Type> ().getTypeName ()
+	    	);				    
+	    }
+	    
+	    return Return::init (rt.getLocation (), Void::init (rt.getLocation ()), value);
+	}
+	    
 	Generator Visitor::validateList (const syntax::List & list) {
 	    if (list.isArray ()) return validateArray (list);
 	    if (list.isTuple ()) return validateTuple (list);
@@ -1272,8 +1341,16 @@ namespace semantic {
 	    auto type = Array::init (str.getLocation (), inner, len);
 	    type.to <Type> ().isMutable (false);
 	    type.to <Type> ().isLocal (false);
+
+	    auto sliceType = Slice::init (str.getLocation (), inner);
+	    sliceType.to <Type> ().isMutable (false);
+	    sliceType.to <Type> ().isLocal (false);
 	    
-	    return StringValue::init (str.getLocation (), type, value, len);		
+	    return Aliaser::init (
+		str.getLocation (),
+		sliceType, 
+		StringValue::init (str.getLocation (), type, value, len)
+	    );
 	}
 	
 	Generator Visitor::validateArray (const syntax::List & list) {
@@ -1428,6 +1505,10 @@ namespace semantic {
 	    if (intr.isCopy ()) return validateCopy (intr);
 	    if (intr.isAlias ()) return validateAlias (intr);
 	    if (intr.isExpand ()) return validateExpand (intr);
+	    if (intr.isTypeof ()) {
+		auto elem = validateValue (intr.getContent ());
+		return elem.to <Value> ().getType ();
+	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
@@ -1534,6 +1615,10 @@ namespace semantic {
 		    return validateTypeDecorated (dec_expr);
 		);
 
+		of (syntax::Unary, un,
+		    return validateTypeUnary (un);
+		);
+
 		of (syntax::List, list,
 		    if (list.isArray ())
 			return validateTypeSlice (list);
@@ -1547,7 +1632,7 @@ namespace semantic {
 		
 	    }
 	    
-	    auto val = validateValue (type);
+	    auto val = validateValue (type, true);
 	    if (val.is<Type> ()) return val;
 	    if (val.is<generator::Struct> ())
 		return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
@@ -1581,6 +1666,16 @@ namespace semantic {
 	    }
 	    
 	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().str);
+	    return Generator::empty ();
+	}
+
+	Generator Visitor::validateTypeUnary (const syntax::Unary & un) {
+	    auto op = un.getOperator ();
+	    if (op == Token::AND) { // Pointer
+		auto inner = validateType (un.getContent ());
+		if (!inner.isEmpty ()) return Pointer::init (un.getLocation (), inner);
+	    }
+
 	    return Generator::empty ();
 	}
 
@@ -1693,11 +1788,15 @@ namespace semantic {
 	void Visitor::enterForeign () {
 	    this-> _usedSyms.push_back ({});
 	    this-> _symbols.push_back ({});
+	    this-> _loopSaved.push_back (this-> _loopBreakTypes);
+	    this-> _loopBreakTypes = {};
 	}
-
+	
 	void Visitor::exitForeign () {
 	    this-> _usedSyms.pop_back ();
 	    this-> _symbols.pop_back ();
+	    this-> _loopBreakTypes = this-> _loopSaved.back ();
+	    this-> _loopSaved.pop_back ();
 	}
 	
 	void Visitor::enterLoop () {
@@ -1718,6 +1817,15 @@ namespace semantic {
 	    this-> _loopBreakTypes.back () = type;
 	}
 
+	const Generator & Visitor::getCurrentFuncType () {
+	    return getLocal ("#{RET}");
+	}
+
+	void Visitor::setCurrentFuncType (const Generator & type) {
+	    this-> insertLocal ("#{RET}", type);
+	    this-> _usedSyms.back ().back ().insert ("#{RET}");
+	}
+	
 	bool Visitor::isInLoop () const {
 	    return !this-> _loopBreakTypes.empty ();
 	}
@@ -1760,16 +1868,11 @@ namespace semantic {
 		    }
 		}
 	    }
-
-	    // We cannot make a direct copy of a stringvalue, we must use an alias or a copy
-	    if (gen.is <StringValue> ()) {
-		Ymir::Error::occur (loc, ExternalError::get (DIRECT_COPY_STRING_LIT));
-	    }
 	    
 	    // Tuple copy is by default, as we cannot alias a tuple
 	    // Same for structures
 	    // And for arrays (but left op)
-	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <StructRef> () || type.is<Array> ()) {
+	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <StructRef> () || type.is<Array> () || type.is<Pointer> ()) {
 		auto tu = gen.to<Value> ().getType ().to <Type> ().toMutable ();
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
@@ -1781,12 +1884,19 @@ namespace semantic {
 	    } else {
 		// Verify copy ownership
 		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional
+
 		if (type.to<Type> ().isComplex () && !gen.is <Copier> ()) {
-		    if (!(gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is <Aliaser> ())
+		    if (!(gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is<Aliaser> ())
 			|| !(type.to<Type> ().equals (gen.to <Value> ().getType ()))) {
-			if (!(construct && gen.is<Referencer> () && type.to<Type> ().isRef ()))
-			    Ymir::Error::occur (loc, ExternalError::get (IMPLICIT_COPY),
-						gen.to <Value> ().getType ().to <Type> ().getTypeName ());
+
+			auto llevel = type.to <Type> ().mutabilityLevel (); // We can make an implicit alias only if we assure that the value won't be modified 
+			if (llevel > 0) {
+			    auto note = Ymir::Error::createNote (loc, ExternalError::get (IMPLICIT_ALIAS),
+								 gen.to <Value> ().getType ().to <Type> ().getTypeName ());
+			    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+						       llevel, 0
+			    );
+			}
 		    }
 		}
 		
@@ -1880,7 +1990,19 @@ namespace semantic {
 	}	
 
 	void Visitor::verifyShadow (const lexing::Word & name) {
-	    auto & gen = getLocal (name.str);
+	    if (std::find (Integer::NAMES.begin (), Integer::NAMES.end (), name.str) != Integer::NAMES.end ()) {
+		Error::occur  (name, ExternalError::get (IS_TYPE), name.str);
+	    } else if (name.str == Void::NAME) {
+		Error::occur  (name, ExternalError::get (IS_TYPE), name.str);
+	    } else if (name.str == Bool::NAME) {
+		Error::occur  (name, ExternalError::get (IS_TYPE), name.str);
+	    } else if (std::find (Float::NAMES.begin (), Float::NAMES.end (), name.str) != Float::NAMES.end ()) {
+		Error::occur  (name, ExternalError::get (IS_TYPE), name.str);
+	    } else if (std::find (Char::NAMES.begin (), Char::NAMES.end (), name.str) != Char::NAMES.end ()) {
+		Error::occur  (name, ExternalError::get (IS_TYPE), name.str);
+	    }
+	    
+	    auto & gen = getLocal (name.str);	    
 	    if (!gen.isEmpty ()) {		
 		auto note = Ymir::Error::createNote (gen.getLocation ());		
 		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.str);
@@ -1925,6 +2047,7 @@ namespace semantic {
 		of (Conditional, c ATTRIBUTE_UNUSED, return false;);
 		of (Loop,   lp ATTRIBUTE_UNUSED,  return false;);
 		of (generator::VarDecl, vd ATTRIBUTE_UNUSED, return false;);
+		of (Return, rt ATTRIBUTE_UNUSED, return false;);
 	    }
 	    return true;
 	}	

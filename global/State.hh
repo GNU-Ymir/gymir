@@ -20,6 +20,12 @@ namespace global {
 
 	std::set <std::string> _includeDir;
 
+	std::string __includeInPrefix__ = "include/ymir/";
+
+	std::string _corePath;
+	
+	std::string _prefixPath;
+	
 	bool _isDebug = false;
 
 	bool _isVerbose = false;
@@ -77,6 +83,22 @@ namespace global {
 	 */
 	bool isVerboseActive () const;
 
+	/**
+	 * \brief Set the prefix path dir
+	 * \brief set the core dir, and std include path
+	 */
+	void setPrefix (const std::string & path);
+
+	/**
+	 * \return the prefix path
+	 */
+	const std::string & getPrefix () const;
+
+	/**
+	 * \return the path of the core directory
+	 */
+	const std::string & getCorePath () const;
+	
 	/**
 	 * \return the list of include directories
 	 */

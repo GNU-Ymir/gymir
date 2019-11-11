@@ -277,7 +277,7 @@ namespace semantic {
 	    return Mapper ();
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & soluce, int & consumed) const {
+	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & soluce, int &) const {
 	    auto tmpls = sort (soluce.getTempls (), soluce.getParams ());
 	    Mapper mapper;
 	    auto syntaxParams = cl.getParameters ();
@@ -528,6 +528,9 @@ namespace semantic {
 			return syntax::Block::init (element.getLocation (), block.getEnd (), declMod, content);
 		    }
 		) else of (syntax::Bool, b ATTRIBUTE_UNUSED, return element;
+		) else of (syntax::Break, b, {
+			return syntax::Break::init (b.getLocation (), replaceAll (b.getValue (), mapping));
+		    }		
 		) else of (syntax::Cast, c,
 		     return syntax::Cast::init (
 			 element.getLocation (),

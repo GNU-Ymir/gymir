@@ -107,7 +107,13 @@ namespace semantic {
 		else of (EnumRef, en, {
 			auto _type = en.getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ().getType ();
 			type = generateType (_type);			
-		    });
+		    })
+
+	       else of (Pointer, pt, {
+		       auto inner = generateType (pt.getInners ()[0]);
+		       return Tree::pointerType (inner);
+		   }
+	       );
 	    }
 	    
 	    if (type.isEmpty ())
@@ -183,6 +189,7 @@ namespace semantic {
 	    decl.setDeclContext (getGlobalContext ());
 
 	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    insertGlobalDeclarator (var.getUniqId (), decl);
 	}
 	
 	void Visitor::generateMainCall (bool isVoid, const std::string & mainName) {
@@ -474,6 +481,10 @@ namespace semantic {
 
 		else of (StructRef, rf ATTRIBUTE_UNUSED,
 		    return Tree::empty ();
+		)
+
+		else of (Return, rt,
+		     return generateReturn (rt);
 		);
 	    }
 
@@ -550,9 +561,16 @@ namespace semantic {
 	    return Tree::buildIntCst (b.getLocation (), (ulong) b.getValue (), type);
 	}
 
-	Tree Visitor::generateFloat (const FloatValue & f) {
+	Tree Visitor::generateFloat (const FloatValue & f) {	    
 	    auto type = generateType (f.getType ());
-	    return Tree::buildFloatCst (f.getLocation (), f.getValue (), type);
+	    if (f.isStr ())
+		return Tree::buildFloatCst (f.getLocation (), f.getValue (), type);
+	    else {
+		if (f.getType ().to <Float> ().getSize () == 32) {
+		    return Tree::buildFloatCst (f.getLocation (), f.getValueFloat (), type);
+		} else
+		    return Tree::buildFloatCst (f.getLocation (), f.getValueDouble (), type);
+	    }
 	}
 
 	Tree Visitor::generateChar (const CharValue & c) {
@@ -882,6 +900,26 @@ namespace semantic {
 	    list.append (Tree::gotoExpr (br.getLocation (), this-> _loopLabels.back ()));
 	    return list.toTree ();
 	}
+
+	generic::Tree Visitor::generateReturn (const Return & ret) {
+	    TreeStmtList list = TreeStmtList::init ();
+	    if (!ret.getValue ().to <Value> ().getType ().is<Void> ()) {
+		auto value = generateValue (ret.getValue ());
+		list.append (value.getList ());
+		value = value.getValue ();
+		auto fr = getCurrentContext ();
+		auto resultDecl = fr.getResultDecl ();
+		
+		if (!resultDecl.getType ().isPointerType ()) value = value.toDirect ();
+		list.append (Tree::returnStmt (ret.getLocation (), resultDecl, value));
+	    } else {
+		auto fr = getCurrentContext ();
+		auto resultDecl = fr.getResultDecl ();
+		list.append (Tree::returnStmt (ret.getLocation (), resultDecl, Tree::empty ()));
+	    }
+	    
+	    return list.toTree ();
+	}
 	
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
 	    auto type = generateType (val.getType ());
@@ -943,6 +981,14 @@ namespace semantic {
 		    results.back () = results.back ().toDirect ();
 	    }
 
+	    for (auto & it : cl.getAddParameters ()) {
+		auto value = generateValue (it);
+		if (it.to <Value> ().getType ().to<Type> ().isRef ())
+		    results.push_back (value.toDirect ().promote ());
+		else
+		    results.push_back (value.promote ());
+	    }
+	    
 	    auto fn = generateValue (cl.getFrame ());
 	    auto type = generateType (cl.getType ());
 	    return Tree::buildCall (cl.getLocation (), type, fn , results);
@@ -1050,6 +1096,7 @@ namespace semantic {
 		    );		    
 		} else {
 		    ret = value;
+		    return value;
 		}
 		
 		if (val.is <Copier> ()) {
@@ -1125,6 +1172,10 @@ namespace semantic {
 	    return this-> _globalContext;
 	}
 
+	void Visitor::insertGlobalDeclarator (uint id, const generic::Tree & decl) {
+	    this-> _globalDeclarators.emplace (id, decl);
+	}
+	
 	void Visitor::insertDeclarator (uint id, const generic::Tree & decl) {
 	    if (this-> _declarators.empty ()) {
 		Ymir::Error::halt ("%(r) insert a declarator from outside a frame", "Critical");
@@ -1134,15 +1185,17 @@ namespace semantic {
 	}
 
 	Tree Visitor::getDeclarator (uint id) {
-	    if (this-> _declarators.empty ()) {
-		Ymir::Error::halt ("%(r) get a declarator from outside a frame", "Critical");
-	    }
-
+	    // if (this-> _declarators.empty ()) {
+	    // 	Ymir::Error::halt ("%(r) get a declarator from outside a frame", "Critical");
+	    // }
+	    
 	    auto ptr = this-> _declarators.back ().find (id);
 	    if (ptr == this-> _declarators.back ().end ()) {
-		Ymir::Error::halt ("%(r) undefined declarators %(y)", "Critical", (int) id);
+		ptr = this-> _globalDeclarators.find (id);
+		if (ptr == this-> _globalDeclarators.end ())
+		    Ymir::Error::halt ("%(r) undefined declarators %(y)", "Critical", (int) id);
 	    }
-
+	    
 	    return ptr-> second;
 	}
 	

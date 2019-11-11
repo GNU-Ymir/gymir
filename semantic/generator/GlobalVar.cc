@@ -9,20 +9,25 @@ namespace semantic {
 	    _value (Generator::empty ())
 	{}
 
-	GlobalVar::GlobalVar (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value) :
-	    IGenerator (location, name),
+	GlobalVar::GlobalVar (const lexing::Word & location, const std::string & name, bool isMutable, const Generator & type, const Generator & value) :
+	    IGenerator (location, name),	   
 	    _type (type),
-	    _value (value)
+	    _value (value),
+	    _isMutable (isMutable)
 	{}
 
-	Generator GlobalVar::init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value) {
-	    return Generator {new (Z0) GlobalVar (location, name, type, value)};
+	Generator GlobalVar::init (const lexing::Word & location, const std::string & name, bool isMutable, const Generator & type, const Generator & value) {
+	    return Generator {new (Z0) GlobalVar (location, name, isMutable, type, value)};
 	}
 
 	Generator GlobalVar::clone () const {
 	    return Generator {new (Z0) GlobalVar (*this)};
 	}
 
+	bool GlobalVar::isMutable () const {
+	    return this-> _isMutable;
+	}
+	
 	const Generator & GlobalVar::getType () const {
 	    return this-> _type;
 	}

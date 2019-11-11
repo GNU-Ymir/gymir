@@ -12,13 +12,15 @@ namespace semantic {
     Function::Function (const lexing::Word & name, const syntax::Function & func) :
 	ISymbol (name),
 	_table (this),
-	_content (syntax::Declaration {func.clone ()})
+	_content (syntax::Declaration {func.clone ()}),
+	_isVariadic (func.getPrototype ().isVariadic ())
     {}
 
     Function::Function (const Function & other) :
 	ISymbol (other),
 	_table (other._table.clone (this)), 
-	_content (other._content)
+	_content (other._content),
+	_isVariadic (other._isVariadic)
     {}
     
     Symbol Function::init (const lexing::Word & name, const syntax::Function & func) {
@@ -110,5 +112,9 @@ namespace semantic {
 	return buf.str ();
     }
 
+    bool Function::isVariadic () const {
+	return this-> _isVariadic;
+    }
+    
     
 }

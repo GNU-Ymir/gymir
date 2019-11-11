@@ -3,6 +3,10 @@
 
 namespace semantic {
     namespace generator {
+
+	std::string Array::LEN_NAME = "len";
+
+	std::string Array::INNER_NAME = "inner";
 	
 	Array::Array () :
 	    Type (),

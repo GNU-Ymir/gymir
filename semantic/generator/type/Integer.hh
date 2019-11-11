@@ -11,6 +11,12 @@ namespace semantic {
 	    static std::vector <std::string> NAMES;
 
 	    static long INIT;
+
+	    static std::string INIT_NAME;
+
+	    static std::string MAX_NAME;
+
+	    static std::string MIN_NAME;
 	    
 	private : 
 

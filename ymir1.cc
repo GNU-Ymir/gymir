@@ -129,7 +129,7 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 	global::State::instance ().addIncludeDir (arg);
 	
     } else if (code == OPT_iprefix) {
-	// set prefix 
+	global::State::instance ().setPrefix (arg);
     } else if (code == OPT_v) {
 	// set verbose 
     } else if (code == OPT_nostdinc)  {

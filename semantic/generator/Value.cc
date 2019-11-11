@@ -25,6 +25,7 @@ namespace semantic {
 	
 	void Value::setType (const Generator & type) {
 	    this-> _type = type;
+	    this-> _type.changeLocation (this-> getLocation ());
 	}
 
 	const Generator & Value::getType () const {

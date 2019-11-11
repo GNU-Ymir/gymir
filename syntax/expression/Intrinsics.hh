@@ -54,7 +54,13 @@ namespace syntax {
 	/**
 	 * \return is it an expand ?
 	 */
-	bool isExpand () const; 
+	bool isExpand () const;
+
+	/**
+	 * \return is it a typeof ?
+	 */
+	bool isTypeof () const;
+	
     };    
 
 }

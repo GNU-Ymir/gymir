@@ -1,5 +1,6 @@
 #include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/semantic/validator/TemplateVisitor.hh>
+#include <ymir/global/State.hh>
 
 namespace semantic {
 
@@ -18,8 +19,22 @@ namespace semantic {
 	}
 
 	generator::Generator CallVisitor::validate (const syntax::MultOperator & expression) {
-	    auto left = this-> _context.validateValue (expression.getLeft ());
+	    Generator left (Generator::empty ());
+	    std::vector <std::string> errors;
+	    {
+		TRY (
+		    left = this-> _context.validateValue (expression.getLeft ());
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+
 	    std::vector <Generator> rights;
+	    if (left.isEmpty ()) {
+		left = this-> validateDotCall (expression.getLeft (), rights, errors);
+	    }
+	    		
 	    for (auto & it : expression.getRights ()) {
 		auto val = this-> _context.validateValue (it);
 		if (val.is<List> ()) {
@@ -30,7 +45,7 @@ namespace semantic {
 	    }
 
 	    int score = 0;
-	    std::vector <std::string> errors;
+	    errors = {};
 	    auto ret = validate (expression, left, rights, score, errors);
 	    
 	    if (ret.isEmpty ()) {
@@ -75,6 +90,7 @@ namespace semantic {
 	generator::Generator CallVisitor::validateFrameProto (const syntax::MultOperator & expression, const FrameProto & proto, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
 	    score = 0;
 	    std::vector <Generator> params;
+	    std::vector <Generator> addParams;
 	    std::vector <Generator> rights = rights_;
 	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 		auto param = findParameter (rights, proto.getParameters () [it].to<ProtoVar> ());
@@ -82,28 +98,44 @@ namespace semantic {
 		params.push_back (param);
 	    }
 	    
-	    if (rights.size () != 0) return Generator::empty ();
+	    if (rights.size () != 0 && !proto.isCVariadic ()) return Generator::empty ();
+	    addParams = rights;
 	    
 	    std::vector <Generator> types;
 	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
-		TRY (		    
-		    this-> _context.verifyMemoryOwner (
-			params [it].getLocation (),
-			proto.getParameters () [it].to <Value> ().getType (),
-			params [it],
-			true
-		    );
-		    types.push_back (proto.getParameters () [it].to <Value> ().getType ());
-		    score += Scores::SCORE_TYPE;		   
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
-		} FINALLY;
+		{
+		    TRY (
+			this-> _context.verifyCompatibleType (
+			    proto.getParameters () [it].to <Value> ().getType (),
+			    params [it].to <Value> ().getType ()
+			);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors = {};
+			return Generator::empty ();
+		    } FINALLY;
+		}
+		
+		{
+		    TRY (		    
+			this-> _context.verifyMemoryOwner (
+			    params [it].getLocation (),
+			    proto.getParameters () [it].to <Value> ().getType (),
+			    params [it],
+			    true
+			);
+			types.push_back (proto.getParameters () [it].to <Value> ().getType ());
+			score += Scores::SCORE_TYPE;		   
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
+		    } FINALLY;
+		}
 	    }
 
 	    if (errors.size () != 0) return Generator::empty ();	   
-	    return Call::init (expression.getLocation (), proto.getReturnType (), proto.clone (), types, params);
+	    return Call::init (expression.getLocation (), proto.getReturnType (), proto.clone (), types, params, addParams);
 	}
        
 	generator::Generator CallVisitor::findParameter (std::vector <Generator> & params, const ProtoVar & var) {
@@ -192,6 +224,7 @@ namespace semantic {
 	    Generator proto_gen (Generator::empty ());
 	    Symbol templSym (Symbol::empty ());
 	    score = -1;
+	    int nbCand = 0;
 	    bool fromTempl = true;
 	    std::map <int, std::vector <Generator>> nonTemplScores;
 	    std::map <int, std::vector <Symbol>> templScores;
@@ -208,7 +241,7 @@ namespace semantic {
 			fromTempl = false;
 		    } else if (gen.isEmpty ()) {
 			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()));
-			errors.insert (errors.begin (), local_errors.begin (), local_errors.end ());
+			insertCandidate (nbCand, errors, local_errors);
 		    }
 		} else if (it.is <TemplateRef> ()) {
 		    Symbol _sym (Symbol::empty ());
@@ -224,7 +257,7 @@ namespace semantic {
 			templSym = _sym;
 		    } else if (gen.isEmpty ()) {
 			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.to <TemplateRef> ().getTemplateRef ().getName (), it.prettyString ()));
-			errors.insert (errors.begin (), local_errors.begin (), local_errors.end ());
+			insertCandidate (nbCand, errors, local_errors);
 		    }
 		}
 	    }
@@ -285,21 +318,42 @@ namespace semantic {
 	    std::vector <Generator> typeParams;
 	    std::vector <Generator> valueParams;
 	    std::vector <Generator> rights = rights_;
+
 	    for (auto & it : sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ()) {
 		Generator value (Generator::empty ());
 		auto var = it.to<syntax::VarDecl> ();
+		volatile bool failure = false;
 		
-		if (!var.getValue ().isEmpty ())
-		    value = this-> _context.validateValue (var.getValue ());
-		
-		auto type = Void::init (var.getName ());
-		bool isMutable = false, isRef = false;
-		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
-		
-		auto param = findParameter (rights, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable).to<ProtoVar> ());
-		if (param.isEmpty ()) return Generator::empty ();
-		typeParams.push_back (param.to <Value> ().getType ());
-		valueParams.push_back (param);
+		this-> _context.enterForeign ();		    // We enter a foreign, the value of a parameter var has no local context
+		TRY (
+		    this-> _context.enterBlock (); // it has no context but it need a block to be validated
+		    if (!var.getValue ().isEmpty ())
+			value = this-> _context.validateValue (var.getValue ());
+		    this-> _context.quitBlock ();
+
+		    auto type = Void::init (var.getName ());
+		    bool isMutable = false;
+		    bool isRef = false;
+		    this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
+		    
+		    auto param = findParameter (rights, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable).to<ProtoVar> ());
+		    if (param.isEmpty ())
+		    	failure = true;
+		    else {
+			typeParams.push_back (param.to <Value> ().getType ());
+			valueParams.push_back (param);
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.begin (), msgs.begin (), msgs.end ());
+		    return Generator::empty ();
+		} FINALLY;		     		
+
+		this-> _context.exitForeign (); // exiting the context to return to the context of the local frame
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
+
+		if (failure) return Generator::empty ();
 	    }
 
 	    for (auto & it : rights) { // Add the rests, for variadic templates 
@@ -330,6 +384,30 @@ namespace semantic {
 	    
 	    return Generator::empty ();	    
 	}							   
+
+	Generator CallVisitor::validateDotCall (const syntax::Expression & left, std::vector <Generator> & params, const std::vector <std::string> & errors) {
+	    match (left) {
+		of (syntax::Binary, bin, {
+			if (bin.getLocation () == Token::DOT) {
+			    bool success = true;
+			    Generator right (Generator::empty ());
+			    TRY (				
+				auto param = this-> _context.validateValue (bin.getLeft ());
+				right = this-> _context.validateValue (bin.getRight ());
+				params.push_back (param);
+			    ) CATCH (ErrorCode::EXTERNAL) {
+				GET_ERRORS_AND_CLEAR (msgs);
+				success = false;
+			    } FINALLY;
+			    if (success) return right;
+			}
+		    }
+		);		   		
+	    }
+	    
+	    THROW (ErrorCode::EXTERNAL, errors);
+	    return Generator::empty ();
+	}
 	
 	void CallVisitor::error (const syntax::MultOperator & expression, const Generator & left, const std::vector <Generator> & rights, std::vector <std::string> & errors) {	    
 	    std::vector <std::string> names;
@@ -356,6 +434,16 @@ namespace semantic {
 	    THROW (ErrorCode::EXTERNAL, errors);
 	}
 
+	void CallVisitor::insertCandidate (int & nb, std::vector <std::string> & errors, const std::vector <std::string> & candErrors) {	    
+	    if (nb == 3 && !global::State::instance ().isVerboseActive ()) {
+		errors.push_back (format ("     : %(B)", "..."));
+		errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CANDIDATES)));
+		nb += 1;
+	    } else if (nb < 3 || global::State::instance ().isVerboseActive ()) {
+		errors.insert (errors.begin (), candErrors.begin (), candErrors.end ());
+		nb += 1;
+	    }
+	}
 	
 
     }

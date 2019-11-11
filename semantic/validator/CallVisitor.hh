@@ -108,11 +108,21 @@ namespace semantic {
 	     */
 	    generator::Generator validateTemplateRef (const syntax::MultOperator & expression, const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
 
+
+	    /**
+	     * \brief Try to validate a dotCall expression
+	     * \param left the dot expression (or something else that will fail in any case, but this is handled)
+	     * \param params the parameter to fill with the left expression (a.b ()-> return b; and params.push (a))
+	     * \param errors the errors to throw in case of failure
+	     */
+	    generator::Generator validateDotCall (const syntax::Expression & left, std::vector<generator::Generator> & params, const std::vector<std::string> & errors);
 	    
 	    /**
 	     * Throw an undefined op error
 	     */
 	    static void error (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::vector <std::string> & errors);
+
+	    static void insertCandidate (int & nb, std::vector <std::string> & errors, const std::vector <std::string> & candErrors);
 	    
 	};
 	

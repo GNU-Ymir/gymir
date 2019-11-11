@@ -16,6 +16,8 @@ namespace semantic {
 
 	std::vector <syntax::Expression> _params;
 
+	syntax::Expression _test;
+	
 	syntax::Declaration _decl;
 
     private : 
@@ -24,11 +26,11 @@ namespace semantic {
 	
 	Template ();
 	
-	Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl);
+	Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test);
 	
     public :
 
-	static Symbol init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decls);
+	static Symbol init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decls, const syntax::Expression & test);
 
 	Symbol clone () const override;
 
@@ -39,6 +41,8 @@ namespace semantic {
 	const syntax::Declaration & getDeclaration () const;
 
 	const std::vector<syntax::Expression> & getParams () const;
+
+	const syntax::Expression & getTest () const;
 	
 	std::string formatTree (int padd) const override;
 

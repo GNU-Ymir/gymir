@@ -10,6 +10,12 @@ namespace semantic {
 	};
 
 	long Integer::INIT = 0;
+
+	std::string Integer::MIN_NAME = "min";
+
+	std::string Integer::MAX_NAME = "max";
+
+	std::string Integer::INIT_NAME = "init";
 	
 	Integer::Integer () :
 	    Type ()		  

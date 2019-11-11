@@ -51,5 +51,9 @@ namespace syntax {
     bool Intrinsics::isExpand () const {
 	return this-> getLocation () == Keys::EXPAND;
     }
+
+    bool Intrinsics::isTypeof () const {
+	return this-> getLocation () == Keys::TYPEOF;
+    }
     
 }

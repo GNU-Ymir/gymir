@@ -66,7 +66,7 @@ namespace semantic {
 	     * \brief Mandatory function used inside proxy design pattern
 	     */
 	    Generator clone () const override ;
-
+	    
 	    /**
 	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
 	     */

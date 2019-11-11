@@ -6,27 +6,27 @@ namespace semantic {
 
     namespace generator {
 
-	/**
-	 * \struct A slice is an array with a dynamic size
-	 * It can borrow data from static array, are allocated on the heap
-	 */
-	class Tuple : public Type {
-	public :
+	class Pointer : public Type {
+	public : 
 
-	    static std::string ARITY_NAME;
+	    static ulong INIT;
+	    
+	    static std::string INIT_NAME;
+	    
+	    static std::string INNER_NAME;
 	    
 	private : 
 
 	    friend Generator;
 
-	    Tuple ();
+	    Pointer ();
 
-	    Tuple (const lexing::Word & loc, const std::vector <Generator> & innerType);
+	    Pointer (const lexing::Word & loc, const Generator & innerType);
 
 	public : 
 
 
-	    static Generator init (const lexing::Word & loc, const std::vector <Generator> & innerType);
+	    static Generator init (const lexing::Word & loc, const Generator & innerType);
 	    
 	    Generator clone () const override;
 
@@ -39,11 +39,17 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    bool equals (const Generator & other) const override;
-	    
+
+	    /**
+	     * \return is this type compatible with other (assuming other is a type)
+	     */
+	    bool isCompatible (const Generator & other) const override;
+
 	    /** 
 	     * \return the name of the type formatted
 	     */
-	    std::string typeName () const override;	    
+	    std::string typeName () const override;
+
 	    
 	};
 

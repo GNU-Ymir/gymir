@@ -14,6 +14,30 @@ namespace semantic {
 	    static std::string INIT;
 
 	    static std::string NOT_A_NUMBER;
+
+	    static std::string NAN_NAME;
+
+	    static std::string INF_NAME;
+
+	    static std::string INF;
+
+	    static std::string MIN_NAME;
+
+	    static std::string MAX_NAME;
+
+	    static std::string DIG_NAME;
+
+	    static std::string MANT_DIG_NAME;
+
+	    static std::string EPSILON_NAME;
+
+	    static std::string MAX_10_EXP_NAME;
+
+	    static std::string MAX_EXP_NAME;
+
+	    static std::string MIN_10_EXP_NAME;
+
+	    static std::string MIN_EXP_NAME;
 	    
 	private : 
 

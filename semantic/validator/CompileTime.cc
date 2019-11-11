@@ -1,4 +1,5 @@
 #include <ymir/semantic/validator/CompileTime.hh>
+#include <ymir/global/State.hh>
 
 namespace semantic {
 
@@ -17,6 +18,11 @@ namespace semantic {
 	}
 
 	Generator CompileTime::execute (const Generator & gen) {
+	    static int nb_recurs = 0;
+	    nb_recurs += 1;
+	    
+	    std::vector <std::string> errors;
+	    TRY (
 	    match (gen) {
 		of (Fixed, f ATTRIBUTE_UNUSED,
 		    return gen;
@@ -86,11 +92,30 @@ namespace semantic {
 		    return executeCall (cll);
 		);	       
 	    }
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.begin (), msgs.begin (), msgs.end ());
+		if (nb_recurs <= 3 || global::State::instance ().isVerboseActive ()) {
+		    errors.insert (errors.begin (), Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IN_COMPILE_TIME_EXEC)));		    
+		} else {
+		    if (nb_recurs == 4) {
+			errors.push_back (Ymir::Error::createNoteOneLine ("    : %(B) ", "..."));
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));		    	
+		    }
+		}
+	    } FINALLY;
+
+	    nb_recurs -= 1;
 	    
-	    Ymir::Error::occur (
-		gen.getLocation (),
-		ExternalError::get (COMPILE_TIME_UNKNOWN)
-	    );
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+	    else {		
+		Ymir::Error::occur (
+		    gen.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+	    }
+	    
 	    return gen;
 	}
 

@@ -100,6 +100,7 @@ ymir_OBJS = \
 	ymir/generator_Bool.o \
 	ymir/generator_BoolValue.o \
 	ymir/generator_Break.o \
+	ymir/generator_Return.o \
 	ymir/generator_Call.o \
 	ymir/generator_Char.o \
 	ymir/generator_CharValue.o \
@@ -127,6 +128,7 @@ ymir_OBJS = \
 	ymir/generator_Referencer.o \
 	ymir/generator_Set.o \
 	ymir/generator_Slice.o \
+	ymir/generator_Pointer.o \
 	ymir/generator_SliceAccess.o \
 	ymir/generator_StructRef.o \
 	ymir/generator_Struct.o \

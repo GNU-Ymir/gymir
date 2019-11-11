@@ -28,6 +28,7 @@
 #include <ymir/semantic/generator/value/ParamVar.hh>
 #include <ymir/semantic/generator/value/ProtoVar.hh>
 #include <ymir/semantic/generator/value/Referencer.hh>
+#include <ymir/semantic/generator/value/Return.hh>
 #include <ymir/semantic/generator/value/Set.hh>
 #include <ymir/semantic/generator/value/SliceAccess.hh>
 #include <ymir/semantic/generator/value/StringValue.hh>

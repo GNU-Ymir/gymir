@@ -18,20 +18,22 @@ namespace semantic {
 	    
 	    std::vector <Generator> _params;
 
+	    std::vector <Generator> _addParams;
+	    
 	private :
 
 	    friend Generator;
 	    
 	    Call ();
 
-	    Call (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params);
+	    Call (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & addParams = {});
 
 	public :
 
 	    /**
 	     * \brief Generate a new affectation
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & addParams = {});
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -62,6 +64,11 @@ namespace semantic {
 	     * \return the parameters
 	     */
 	    const std::vector <Generator> & getParameters () const;
+	    
+	    /**
+	     * \return the list of additional params (only for C variadic call)
+	     */
+	    const std::vector <Generator> & getAddParameters () const;
 	    
 	    std::string prettyString () const override;
 	    

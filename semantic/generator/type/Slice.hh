@@ -34,6 +34,13 @@ namespace semantic {
 
 	public : 
 
+	    static std::string LEN_NAME;
+	    
+	    static std::string PTR_NAME;
+
+	    static std::string INNER_NAME;
+	    
+	public : 
 
 	    static Generator init (const lexing::Word & loc, const Generator & innerType);
 	    

@@ -31,6 +31,9 @@ namespace semantic {
 	    /** The declaration of the local var for each frame */
 	    std::vector <std::map <uint, generic::Tree> > _declarators;
 
+	    /** The declaration of the global var */
+	    std::map <uint, generic::Tree> _globalDeclarators;
+
 	    std::list <generic::Tree> _loopLabels;
 
 	    std::list <generic::Tree> _loopVars;
@@ -247,6 +250,11 @@ namespace semantic {
 	     * \brief Transform a break expression into gimple 
 	     */
 	    generic::Tree generateBreak (const Break & loop);
+
+	    /**
+	     * \brief Transform a return expression into gimple
+	     */
+	    generic::Tree generateReturn (const Return & ret);
 	    
 	    /**
 	     * \brief Transform a copier into a gimple tree
@@ -322,6 +330,11 @@ namespace semantic {
 	     */
 	    void insertDeclarator (uint id, const generic::Tree & decl);
 
+	    /**
+	     * \brief Add a new vardecl for future var ref in the global context
+	     */
+	    void insertGlobalDeclarator (uint id, const generic::Tree & decl);
+	    
 	    /**
 	     * \brief Get a var declarator
 	     */
