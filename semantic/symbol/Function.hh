@@ -61,6 +61,8 @@ namespace semantic {
 	
 	std::vector <Symbol> get (const std::string & name) const override;
 
+	std::vector <Symbol> getPublic (const std::string & name) const override;
+
 	bool equals (const Symbol & other) const override;
 
 	void isPure (bool is);

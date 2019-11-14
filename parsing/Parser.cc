@@ -61,7 +61,7 @@ namespace Ymir {
     void Parser::semanticTime () {
 	auto declarator = semantic::declarator::Visitor::init ();
 	auto module = declarator.visit (this-> _module);
-	
+
 	auto validator = semantic::validator::Visitor::init ();
 	validator.validate (module);
 

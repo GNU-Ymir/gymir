@@ -4,10 +4,12 @@
 #include <ymir/semantic/generator/value/Aliaser.hh>
 #include <ymir/semantic/generator/value/ArrayAccess.hh>
 #include <ymir/semantic/generator/value/ArrayValue.hh>
+#include <ymir/semantic/generator/value/ArrayAlloc.hh>
 #include <ymir/semantic/generator/value/Binary.hh>
 #include <ymir/semantic/generator/value/BinaryBool.hh>
 #include <ymir/semantic/generator/value/BinaryFloat.hh>
 #include <ymir/semantic/generator/value/BinaryInt.hh>
+#include <ymir/semantic/generator/value/BinaryPtr.hh>
 #include <ymir/semantic/generator/value/Block.hh>
 #include <ymir/semantic/generator/value/BoolValue.hh>
 #include <ymir/semantic/generator/value/Break.hh>
@@ -15,6 +17,8 @@
 #include <ymir/semantic/generator/value/CharValue.hh>
 #include <ymir/semantic/generator/value/Conditional.hh>
 #include <ymir/semantic/generator/value/Copier.hh>
+#include <ymir/semantic/generator/value/SizeOf.hh>
+#include <ymir/semantic/generator/value/Cast.hh>
 #include <ymir/semantic/generator/value/Enum.hh>
 #include <ymir/semantic/generator/value/Fixed.hh>
 #include <ymir/semantic/generator/value/FloatValue.hh>
@@ -28,9 +32,11 @@
 #include <ymir/semantic/generator/value/ParamVar.hh>
 #include <ymir/semantic/generator/value/ProtoVar.hh>
 #include <ymir/semantic/generator/value/Referencer.hh>
+#include <ymir/semantic/generator/value/RangeValue.hh>
 #include <ymir/semantic/generator/value/Return.hh>
 #include <ymir/semantic/generator/value/Set.hh>
 #include <ymir/semantic/generator/value/SliceAccess.hh>
+#include <ymir/semantic/generator/value/SliceValue.hh>
 #include <ymir/semantic/generator/value/StringValue.hh>
 #include <ymir/semantic/generator/value/Struct.hh>
 #include <ymir/semantic/generator/value/StructAccess.hh>

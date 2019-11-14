@@ -81,11 +81,12 @@ namespace semantic {
 	    /**
 	     * \brief Validate a call expression on a frame proto
 	     * \param expression the call expression 
-	     * \param proto the prototype to use
-	     * \param params the parameter that will be passed to the function 
+	     * \param str the structure to construct
+	     * \param params the parameter that will be passed to the constructor 
 	     * \param score the final score of the call 
 	     * \brief It does not throw an exception on failure, 
 	     * \brief It will return a empty generator and a score of -1
+	     * \brief All the errors will be store into errors
 	     */
 	    generator::Generator validateStructCst (const syntax::MultOperator & expression, const generator::Struct & str, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
 

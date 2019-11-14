@@ -54,6 +54,14 @@ namespace semantic {
 	return vec;
     }
 
+    std::vector <Symbol> TemplateSolution::getPublic (const std::string & name) const {
+	auto vec = getReferent ().getPublic (name);
+	auto local = this-> _table.getPublic (name);
+	
+	vec.insert (vec.begin (), local.begin (), local.end ());
+	return vec;
+    }
+    
     std::vector<Symbol> TemplateSolution::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }

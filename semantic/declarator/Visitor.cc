@@ -114,7 +114,7 @@ namespace semantic {
 		
 		glob = popReferent ();
 		Symbol::registerModule (modules [0], glob);
-		ret = glob;
+		return ret;
 	    } else if (mod.isGlobal ()) {
 		Symbol::registerModule (modules [0], ret);
 	    } else getReferent ().insert (ret);
@@ -204,7 +204,7 @@ namespace semantic {
 	    auto alias = Alias::init (stal.getName (), stal.getValue ());
 
 	    auto symbols = getReferent ().getLocal (stal.getName ().str);
-	    if (!symbols.size () != 0) {
+	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
 		Ymir::Error::occurAndNote (stal.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stal.getName ().str);
 	    }	    
@@ -214,12 +214,33 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock & block) {
+	    pushReferent (Module::init (block.getLocation ()));
 	    // A declaration block is just a list of declaration, we do not enter a new referent
 	    for (const syntax::Declaration & decl : block.getDeclarations ()) {
-		visit (decl);
+		visit (decl);		
 	    }
 
-	    return Symbol::empty ();
+	    auto ret = popReferent ();
+	    auto syms = ret.to <semantic::Module> ().getAllLocal ();
+	    if (!block.isPrivate ()) {
+		for (auto & it : syms)
+		    it.setPublic ();		
+	    }
+	    
+	    if (!getReferent ().isEmpty ()) {
+		for (auto & it : syms) {
+		    getReferent ().insert (it);
+		}
+
+		for (auto it : ret.getUsedSymbols ()) {
+		    if (!block.isPrivate ()) 
+			it.second.setPublic ();
+		    
+		    getReferent ().use (it.first, it.second);
+		}
+	    }
+	    
+	    return Symbol::empty ();	    
 	}
 
 	semantic::Symbol Visitor::visitExtern (const syntax::ExternBlock & ex_block) {
@@ -245,7 +266,7 @@ namespace semantic {
 				return Symbol::empty ();
 			    }
 			) else
-			    Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
+				 Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
 		    }
 		}
 	    } else
@@ -286,7 +307,8 @@ namespace semantic {
 	    pushReferent (enm);
 	    for (auto & it : stenm.getValues ()) {
 		// Inside an enum the vars are declared using a vardecl expression
-		visit (syntax::ExpressionWrapper::init (it));
+		auto en = visit (syntax::ExpressionWrapper::init (it));
+		en.setPublic ();
 	    }
 
 	    auto ret = popReferent ();
@@ -321,8 +343,20 @@ namespace semantic {
 		    success = true;
 		    // We add a fake module, to prevent infinite import loops
 		    __imported__.emplace (path.toString ());
-		    auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
-		    declarator::Visitor::init ().visit (synt_module);
+		    std::vector <std::string> errors;
+		    TRY (
+			auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
+			declarator::Visitor::init ().visit (synt_module);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		    
+		    if (errors.size () != 0) {
+			auto note = Ymir::Error::createNote (imp.getModule (), ExternalError::get (IN_IMPORT));
+			errors.push_back (note);
+			THROW (ErrorCode::EXTERNAL, errors);
+		    }
 		}
 	    } else success = true;
 	    
@@ -337,15 +371,29 @@ namespace semantic {
 			    success = true;
 			    // We add a fake module, to prevent infinite import loops
 			    __imported__.emplace (path.toString ());
-			    auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
-			    declarator::Visitor::init ().visit (synt_module);
+			    std::vector <std::string> errors;
+			    TRY (
+				auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
+				declarator::Visitor::init ().visit (synt_module);
+			    ) CATCH (ErrorCode::EXTERNAL) {
+				GET_ERRORS_AND_CLEAR (msgs);
+				errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			    } FINALLY;
+		    
+			    if (errors.size () != 0) {
+				auto note = Ymir::Error::createNote (imp.getModule (), ExternalError::get (IN_IMPORT));
+				errors.push_back (note);
+				THROW (ErrorCode::EXTERNAL, errors);
+			    }
 			    break;
 			}
-		    }
+		    } else success = true;
 		}
 
-		if (!success)
-		    Error::occur (imp.getModule (), ExternalError::get (NO_SUCH_FILE), path.toString ());
+		if (!success) {
+		    auto path = (Path {imp.getModule ().str, "::"}).toString () + ".yr";
+		    Error::occur (imp.getModule (), ExternalError::get (NO_SUCH_FILE), path);
+		}
 	    }
 	    
 	    getReferent ().use (imp.getModule ().str , Symbol::getModuleByPath (imp.getModule ().str));

@@ -51,8 +51,8 @@ namespace semantic {
 		of (generator::Enum, en, return validateEnum (expression, en));
 		of (Type, te ATTRIBUTE_UNUSED, return validateType (expression, left));
 	    }
-	    
-	    this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str);
+
+	    this-> error (expression, left, expression.getRight ());
 	    
 	    return Generator::empty ();
 	}
@@ -68,7 +68,7 @@ namespace semantic {
 	    }
 
 	    if (syms.size () == 0) {
-		this-> error (expression, mult.clone (), right);
+		this-> error (expression, mult.clone (), expression.getRight ());
 	    }
 
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
@@ -78,7 +78,7 @@ namespace semantic {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    std::vector <Symbol> syms = acc.getLocal (right);
 	    if (syms.size () == 0) {
-		this-> error (expression, acc.clone (), right);
+		this-> error (expression, acc.clone (), expression.getRight ());
 	    }
 	    
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
@@ -88,7 +88,7 @@ namespace semantic {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    auto val = en.getFieldValue (right);
 	    if (val.isEmpty ()) {
-		this-> error (expression, en.clone (), right);
+		this-> error (expression, en.clone (), expression.getRight ());
 	    }
 
 	    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
@@ -127,10 +127,7 @@ namespace semantic {
 		    }
 		}
 
-		if (expression.getRight ().is <syntax::Var> ())
-		    this-> error (expression, type, expression.getRight ().to <syntax::Var> ().getName ().str);
-		else
-		    this-> error (expression, type, expression.getRight ().getLocation ().str);
+		this-> error (expression, type, expression.getRight ());
 	    }
 	    
 	    return ret;
@@ -355,21 +352,35 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 	
-	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right) {
+	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right) {
 	    std::string leftName;
-	    match (left) {
-		of (FrameProto, proto, leftName = proto.getName ())
-		else of (generator::Struct, str, leftName = str.getName ())
-		else of  (generator::Enum, en, leftName = en.getName ())
-		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
-		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		else of (Type,       type,  leftName = type.getTypeName ());
+	    std::string rightName = "";
+	    {
+		match (left) {
+		    of (FrameProto, proto, leftName = proto.getName ())
+		    else of (generator::Struct, str, leftName = str.getName ())
+			else of  (generator::Enum, en, leftName = en.getName ())
+			    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+				else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+				    else of (Type,       type,  leftName = type.getTypeName ());
+		}
+	    }
+	    {
+		match (right) {
+		    of (syntax::Var, var, rightName = var.getName ().str);
+		}
+	    }
+	    
+	    if (rightName == "") {
+		auto val = this-> _context.retreiveValue (this-> _context.validateValue (right));
+		rightName = val.prettyString ();
 	    }
 
+	    
 	    Ymir::Error::occur (
 		expression.getLocation (),
 		ExternalError::get (UNDEFINED_SUB_PART_FOR),
-		right,
+		rightName,
 		leftName
 	    );
 	}

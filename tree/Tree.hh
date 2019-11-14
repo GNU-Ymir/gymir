@@ -206,6 +206,16 @@ namespace generic {
 	 * \param right the right operand
 	 */
 	static Tree binary (const lexing::Word & location, tree_code code, const Tree & type, const Tree & left, const Tree & right);
+	
+	/**
+	 * \brief Create a binary expression, (convert the operand in order to have the same type on each)
+	 * \param location the location of the operation
+	 * \param code the code of the operator
+	 * \param type the type of the operation
+	 * \param left the left operand
+	 * \param right the right operand
+	 */
+	static Tree binaryPtr (const lexing::Word & location, tree_code code, const Tree & type, const Tree & left, const Tree & right);
 
 	/**
 	 * \brief Create a binary expression without conversion
@@ -217,6 +227,12 @@ namespace generic {
 	 */
 	static Tree binaryDirect (const lexing::Word & location, tree_code code, const Tree & type, const Tree & left, const Tree & right);
 
+
+	/**
+	 * \brief Cast a value to a value type 'type'
+	 */
+	static Tree castTo (const lexing::Word & location, const Tree & type, const Tree & value);
+	
 	/**
 	 * \brief Build an unary expression
 	 */

@@ -113,6 +113,22 @@ namespace semantic {
 		       auto inner = generateType (pt.getInners ()[0]);
 		       return Tree::pointerType (inner);
 		   }
+	       ) else of (Range, rg, {
+		       std::vector <Tree> inner;
+		       inner.push_back (generateType (rg.getInners ()[0]));
+		       inner.push_back (generateType (rg.getInners ()[0]));
+		       if (rg.getInners () [0].is <Float> ())
+			   inner.push_back (generateType (rg.getInners ()[0]));
+		       else if (rg.getInners ()[0].is <Integer> ()) {
+			   inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Integer> ().getSize (), true)));
+		       } else if (rg.getInners ()[0].is <Char> ()) {
+			   inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Char> ().getSize (), true)));
+		       } else
+			   Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+
+		       inner.push_back (generateType (Bool::init (rg.getLocation ())));
+		       type = Tree::tupleType ({Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, inner);
+		   }
 	       );
 	    }
 	    
@@ -161,7 +177,7 @@ namespace semantic {
 		    return Tree::constructField (
 			s.getLocation (),
 			generateType (type),
-			{"len", "ptr"},
+			{Slice::LEN_NAME, Slice::PTR_NAME},
 			{
 			    Tree::buildSizeCst (Integer::INIT),
 			    Tree::buildIntCst (s.getLocation (), Integer::INIT, Tree::pointerType (generateType (s.getInners () [0])))
@@ -390,7 +406,10 @@ namespace semantic {
 		else of (BinaryFloat, f,
 		    return generateBinaryFloat (f);
 		)
-		
+		else of (BinaryPtr, ptr,
+		    return generateBinaryPtr (ptr);
+		)
+			 
 		else of (VarRef, var,
 		    return generateVarRef (var);
 		)
@@ -423,6 +442,10 @@ namespace semantic {
 		    return generateCopier (copy);
 		)
 
+		else of (SizeOf, size,
+		    return generateSizeOf (size);
+		)
+			 
 		else of (Aliaser, al,
 		    return generateAliaser (al);
 		)
@@ -460,31 +483,27 @@ namespace semantic {
 		)
 			 
 		else of (Call, cl,
-		    return generateCall (cl);
-		)
-
-		else of (FrameProto, pr,
-		    return generateFrameProto (pr);
-		)
-
-		else of (TupleAccess, acc,
-		    return generateTupleAccess (acc);
-		)
-
-		else of (StructAccess, acc,
-		   return generateStructAccess (acc);
-		)
-			 
-		else of (StructCst, cst,
-		    return generateStructCst (cst);
-		)
-
-		else of (StructRef, rf ATTRIBUTE_UNUSED,
+		    return generateCall (cl);		
+		) else of (FrameProto, pr,
+		    return generateFrameProto (pr);		
+		) else of (TupleAccess, acc,
+			   return generateTupleAccess (acc);		
+		) else of (StructAccess, acc,
+		   return generateStructAccess (acc);					 
+		) else of (StructCst, cst,
+		    return generateStructCst (cst);	       
+		) else of (StructRef, rf ATTRIBUTE_UNUSED,
 		    return Tree::empty ();
-		)
-
-		else of (Return, rt,
+		) else of (Return, rt,
 		     return generateReturn (rt);
+		) else of (RangeValue, rg,
+		     return generateRangeValue (rg);
+		) else of (SliceValue, sl,
+		     return generateSliceValue (sl);
+		) else of (Cast, cast,
+		      return generateCast (cast);
+		) else of (ArrayAlloc, alloc,
+		      return generateArrayAlloc (alloc);
 		);
 	    }
 
@@ -669,7 +688,7 @@ namespace semantic {
 	    list.append (right.getList ());
 	    
 	    tree_code code = PLUS_EXPR; // Fake default affectation to avoid warning
-	    switch (bin.getOperator ()) {;
+	    switch (bin.getOperator ()) {
 	    case Binary::Operator::ADD : code = PLUS_EXPR; break;
 	    case Binary::Operator::SUB : code = MINUS_EXPR; break;
 	    case Binary::Operator::MUL : code = MULT_EXPR; break;
@@ -692,6 +711,31 @@ namespace semantic {
 	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);
 	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
 	    return ret;	    
+	}
+
+	Tree Visitor::generateBinaryPtr (const BinaryPtr & bin) {
+	    auto left = generateValue (bin.getLeft ());
+	    auto right = generateValue (bin.getRight ());
+	    
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+	    tree_code code = PLUS_EXPR; // Fake default affectation to avoid warning
+	    switch (bin.getOperator ()) {
+	    case Binary::Operator::ADD : code = POINTER_PLUS_EXPR; break;
+	    case Binary::Operator::EQUAL : code = EQ_EXPR; break;
+	    case Binary::Operator::NOT_EQUAL : code = NE_EXPR; break;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+	    }
+
+	    auto lvalue = bin.getLeft ().to <Value> ().getType ().to <Type> ().isRef () ? left.getValue ().toDirect () : left.getValue ();
+	    auto rvalue = bin.getRight ().to <Value> ().getType ().to <Type> ().isRef () ? right.getValue ().toDirect () : right.getValue ();
+	    
+	    auto type = generateType (bin.getType ());
+	    auto value = Tree::binaryPtr (bin.getLocation (), code, type, lvalue, rvalue);
+	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+	    return ret;	    	    
 	}
 	
 	generic::Tree Visitor::generateUnaryInt (const UnaryInt & un) {
@@ -920,6 +964,71 @@ namespace semantic {
 	    
 	    return list.toTree ();
 	}
+
+	generic::Tree Visitor::generateRangeValue (const RangeValue & rng) {
+	    auto type = generateType (rng.getType ());
+	    std::vector <Tree> params = {
+		generateValue (rng.getLeft ()).toDirect (),
+		generateValue (rng.getRight ()).toDirect (),
+		generateValue (rng.getStep ()).toDirect (),
+		generateValue (rng.getIsFull ()).toDirect ()
+	    };
+	    return Tree::constructField (rng.getLocation (), type, {Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, params);
+	}
+
+	generic::Tree Visitor::generateSliceValue (const SliceValue & slc) {
+	    auto type = generateType (slc.getType ());
+	    auto ptrValue = generateValue (slc.getPtr ());
+	    if (slc.getPtr ().to <Value> ().getType ().to <Type> ().isRef ())
+		ptrValue = ptrValue.toDirect ();
+	    
+	    std::vector <Tree> params = {
+		generateValue (slc.getLen ()).toDirect (),
+		ptrValue
+	    };
+
+	    return Tree::constructField (slc.getLocation (), type, {Slice::LEN_NAME, Slice::PTR_NAME}, params);
+	}
+
+	generic::Tree Visitor::generateCast (const Cast & cast) {
+	    auto type = generateType (cast.getType ());
+	    auto who = generateValue (cast.getWho ());
+	    return Tree::castTo (cast.getLocation (), type, who);
+	}
+
+	generic::Tree Visitor::generateArrayAlloc (const ArrayAlloc & alloc) {
+	    auto value = generateValue (alloc.getDefaultValue ());
+	    auto size = generateValue (alloc.getInnerTypeSize ());
+	    auto valPtr = value;
+	    if (!alloc.getDefaultValue ().to <Value> ().getType ().to <Type> ().isRef ()) {
+	    	auto type = generateType (alloc.getDefaultValue ().to <Value> ().getType ());
+	    	valPtr = Tree::buildAddress (alloc.getLocation (), value, Tree::pointerType (type));
+	    }
+	    
+	    if (alloc.isDynamic ()) {
+		auto len = generateValue (alloc.getDynLen ());
+		return Tree::buildCall (
+		    alloc.getLocation (),
+		    generateType (alloc.getType ()),
+		    global::CoreNames::get (ARRAY_ALLOC),
+		    {valPtr, size, len}		
+		);
+	    } else {
+		std::vector <Tree> params;
+		TreeStmtList list = TreeStmtList::init ();
+		list.append (value.getList ());
+		for (auto it ATTRIBUTE_UNUSED : Ymir::r (0, alloc.getStaticLen ())) {
+		    params.push_back (value.getValue ());
+		}
+		auto type = generateType (alloc.getType ());
+		auto index = Tree::constructIndexed (alloc.getLocation (), type, params);
+		return Tree::compound (
+		    alloc.getLocation (),
+		    index,
+		    list.toTree ()
+		);
+	    }
+	}	
 	
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
 	    auto type = generateType (val.getType ());
@@ -1059,10 +1168,15 @@ namespace semantic {
 	    
 	    auto indexType = Tree::sizeType ();
 	    auto index = Tree::binary (access.getLocation (), MULT_EXPR, indexType, rvalue, Tree::buildSizeCst (size));
-	    auto data_field = lvalue.getField ("ptr");
+	    auto data_field = lvalue.getField (Slice::PTR_NAME);
 	    
 	    auto ptr = Tree::binaryDirect (access.getLocation (), POINTER_PLUS_EXPR, data_field.getType (), data_field, index);
 	    return ptr.buildPointerUnref (0);
+	}
+
+	generic::Tree Visitor::generateSizeOf (const SizeOf & size) {
+	    auto size_ = generateType (size.getWho ()).getSize ();
+	    return Tree::buildSizeCst (size_);
 	}
 	
 	generic::Tree Visitor::castTo (const Generator & type, const Generator & val) {
@@ -1078,7 +1192,7 @@ namespace semantic {
 		    ret = Tree::constructField (
 			type.getLocation (),
 			generateType (aux_type), 
-			{"len", "ptr"},
+			{Slice::LEN_NAME, Slice::PTR_NAME},
 			{
 			    value.getStringSize (chType.to<Char> ().getSize ()),
 			    value
@@ -1088,7 +1202,7 @@ namespace semantic {
 		    ret = Tree::constructField (
 			type.getLocation (),
 			generateType (aux_type), 
-			{"len", "ptr"},
+			{Slice::LEN_NAME, Slice::PTR_NAME},
 			{
 			    value.getType ().getArraySize (),
 			    Tree::buildAddress (type.getLocation (), value, Tree::pointerType (inner))

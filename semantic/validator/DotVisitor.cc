@@ -29,12 +29,17 @@ namespace semantic {
 		else of (StructRef, st ATTRIBUTE_UNUSED,
 		    ret = validateStruct (expression, left);
 		)
+			 
 		else of (Array, arr ATTRIBUTE_UNUSED,
 		     ret = validateArray (expression, left);
 		)
 
 		else of (Slice, sl ATTRIBUTE_UNUSED,
 		     ret = validateSlice (expression, left);
+		)
+			 
+		else of (Range, rng ATTRIBUTE_UNUSED,
+		    ret = validateRange (expression, left);
 		);
 	    }
 
@@ -135,6 +140,39 @@ namespace semantic {
 	    }
 	    
 	    return Generator::empty ();
+	}
+
+
+	Generator DotVisitor::validateRange (const syntax::Binary & expression, const Generator & left) {
+	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+
+	    if (name == Range::FST_NAME || name == Range::SCD_NAME) {
+		auto innerType = left.to <Value> ().getType ().to <Type> ().getInners ()[0];
+		innerType.to<Type> ().isMutable (false);
+		return StructAccess::init (expression.getLocation (),
+					   innerType,
+					   left, name);					   
+	    }
+
+	    if (name == Range::STEP_NAME) {
+		auto step_type = left.to<Value> ().getType ().to <Range> ().getStepType ();
+		step_type.to <Type> ().isMutable (left.to <Value> ().getType ().to <Type> ().isMutable ());
+		return StructAccess::init (expression.getLocation (),
+					   step_type,
+					   left, name);	
+	    }
+
+	    if (name == Range::FULL_NAME) {
+		auto full_type = Bool::init (expression.getLocation ());
+		full_type.to <Type> ().isMutable (false);
+		return StructAccess::init (expression.getLocation (),
+					   full_type,
+					   left, name);	
+		
+	    }
+	    
+	    return Generator::empty ();	    
 	}
 	
 	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right) {

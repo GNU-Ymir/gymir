@@ -50,11 +50,13 @@ namespace semantic {
 		else of (Void, v, result = mangleVoidT (v))
 		else of (StructRef, r, result = mangleStructRef (r))
 		else of (EnumRef, r, result = mangleEnumRef (r))
+		else of (Range, r, result = mangleRangeT (r))
+		else of (Pointer, p, result = manglePointerT (p));
 	    }
 	    
 	    if (result == "")
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-
+	    
 	    else if (fatherMut && gen.to <Type> ().isMutable ()) 
 		result = "x" + result;	    
 	    
@@ -206,6 +208,16 @@ namespace semantic {
 	    auto splits = split (ref.getMangledName (), "::");
 	    for (auto & it : splits) buf.write (it.length (), it);
 	    return buf.str ();
+	}
+
+	std::string Mangler::mangleRangeT (const Range & range) const {
+	    auto res = mangleType (range.getInners () [0], range.isMutable ());
+	    return format ("R%%", res.length (), res);	    
+	}
+
+	std::string Mangler::manglePointerT (const Pointer & ptr) const {
+	    auto res = mangleType (ptr.getInners () [0], ptr.isMutable ());
+	    return format ("P%%", res.length (), res);	    
 	}
 	
 	std::vector <std::string> Mangler::split (const std::string & str, const std::string & delim) const {

@@ -220,7 +220,7 @@ namespace syntax {
 	    }
 	}
 	
-	return DeclBlock::init (location, decls, false);
+	return DeclBlock::init (location, decls, true);
     }
 
 
@@ -358,7 +358,7 @@ namespace syntax {
 		decls = visitClassBlock ();
 	    }
 	}   
-	return DeclBlock::init (location, decls, false);
+	return DeclBlock::init (location, decls, true);
     }
     
     Declaration Visitor::visitClassContent () {
@@ -484,20 +484,32 @@ namespace syntax {
 	}
     }
 
-    Function::Prototype Visitor::visitFunctionPrototype () {
+    Function::Prototype Visitor::visitFunctionPrototype (bool isClosure) {
 	std::vector <Expression> vars;
-	auto token = this-> _lex.next ({Token::LPAR});
+	lexing::Word token;
+	if (isClosure)
+	     token = this-> _lex.next ({Token::PIPE});
+	else token = this-> _lex.next ({Token::LPAR});
+	
 	bool isVariadic = false;
 	do {
-	    token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
-	    if (token == Token::TDOT) {
-		isVariadic = true;
-		token = this-> _lex.next ({Token::RPAR});
-	    } else if (token != Token::RPAR) {
-		vars.push_back (visitSingleVarDeclaration (false, true));
-		token = this-> _lex.next ({Token::RPAR, Token::COMA, Token::TDOT});
-	    } 	    	     
-	} while (token != Token::RPAR);
+	    if (isClosure) {
+		token = this-> _lex.consumeIf ({Token::PIPE});
+		if (token != Token::PIPE) {
+		    vars.push_back (visitSingleVarDeclaration (false, false));
+		    token = this-> _lex.next ({Token::PIPE, Token::COMA, Token::TDOT});
+		}
+	    } else {
+		token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
+		if (token == Token::TDOT) {
+		    isVariadic = true;
+		    token = this-> _lex.next ({Token::RPAR});
+		} else if (token != Token::RPAR) {
+		    vars.push_back (visitSingleVarDeclaration (true, true));
+		    token = this-> _lex.next ({Token::RPAR, Token::COMA, Token::TDOT});
+		}
+	    }
+	} while ((isClosure && token != Token::PIPE) || (!isClosure && token != Token::RPAR));
 	
 	token = this-> _lex.consumeIf ({Token::ARROW});
 	if (token == Token::ARROW) 
@@ -575,7 +587,7 @@ namespace syntax {
 	} while (token == Token::COMA);
 
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
-	return DeclBlock::init (location, imports, false);
+	return DeclBlock::init (location, imports, true);
     }
 
     Declaration Visitor::visitLocalMod () {
@@ -741,6 +753,9 @@ namespace syntax {
 	    if (location == Token::LPAR) end = this-> _lex.next ({Token::RPAR});
 	    else end = this-> _lex.next ({Token::RCRO});
 	    return visitOperand1 (MultOperator::init (location, end, value, params));
+	} else if (location == Token::DOT) {
+	    auto right = visitOperand3 (false);
+	    return visitOperand1 (Binary::init (location, value, right, Expression::empty ()));
 	} this-> _lex.rewind ();
 	return value;	
     }
@@ -755,9 +770,6 @@ namespace syntax {
 	if (next == Token::DCOLON) {
 	    auto right =  visitOperand3 (false);	    
 	    return visitOperand2 (visitTemplateCall (Binary::init (next, value, right, Expression::empty ())));
-	} else if (next == Token::DOT) {
-	    auto right = visitOperand3 (false);
-	    return visitOperand2 (Binary::init (next, value, right, Expression::empty ()));
 	} this-> _lex.rewind ();
 	return value;
     }
@@ -765,23 +777,8 @@ namespace syntax {
     Expression Visitor::visitOperand3 (bool canBeTemplateCall) {
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
-	if (begin == Token::LPAR) {
-	    auto loc = this-> _lex.tell ();
-	    Expression lambda (Expression::empty ());
-	    TRY (
-	    	// Could not return directly because of scope guard
-		// The problem has been solved since, but no need to change that
-	    	lambda = visitLambda ();		
-	    ) CATCH (ErrorCode::EXTERNAL) {
-	    	CLEAR_ERRORS ();
-		
-	    	this-> _lex.seek (loc);
-		return visitTuple ();
-	    } FINALLY;
-	    
-	    return lambda;
-	}
-
+	if (begin == Token::PIPE)   return visitLambda ();
+	if (begin == Token::LPAR)   return visitTuple ();
 	if (begin == Token::LCRO)   return visitArray ();
 	if (begin == Token::LACC)   return visitBlock ();
 	if (begin == Keys::IF)      return visitIf ();
@@ -798,6 +795,7 @@ namespace syntax {
 	if (begin == Keys::SCOPE)   return visitScope ();
 	if (begin == Keys::VERSION) return visitVersion ();
 	if (begin == Keys::RETURN)  return visitReturn ();
+	if (begin == Keys::CAST)    return visitCast ();
 	if (begin.is (this-> _intrisics)) {
 	    auto loc = this-> _lex.next ();
 	    return Intrinsics::init (loc, visitExpression (10));
@@ -991,6 +989,16 @@ namespace syntax {
 	auto location = this-> _lex.next ();
 	return Return::init (location, visitExpression ());
     }
+
+    Expression Visitor::visitCast () {
+	auto location = this-> _lex.next ();
+	this-> _lex.next ({Token::NOT});
+	auto type = visitOperand3 ();
+	this-> _lex.next ({Token::LPAR});
+	auto inner = visitExpression ();
+	this-> _lex.next ({Token::RPAR});
+	return Cast::init (location, type, inner);
+    }
     
     Expression Visitor::visitDecoratedExpression () {
 	std::vector<DecoratorWord> decos;
@@ -1124,8 +1132,8 @@ namespace syntax {
     Expression Visitor::visitLambda () {
 	auto begin = this-> _lex.consumeIf ({Keys::REF});
 
-	auto proto = visitFunctionPrototype ();
-	this-> _lex.next ({Token::DARROW});
+	auto proto = visitFunctionPrototype (true);
+	this-> _lex.consumeIf ({Token::DARROW});
 	return Lambda::init (begin, proto, visitExpression ());
     }       
     
@@ -1317,8 +1325,15 @@ namespace syntax {
 	lexing::Word token;
 	std::vector <Expression> decls;
 	do {
-	    decls.push_back (visitSingleVarDeclaration ());
-	    token = this-> _lex.next ();
+	    auto tok = this-> _lex.consumeIf ({Token::LPAR});
+	    if (tok == Token::LPAR) {
+		decls.push_back (visitDestructVarDeclaration ());
+		token = this-> _lex.next ();
+		break;
+	    } else {
+		decls.push_back (visitSingleVarDeclaration ());
+		token = this-> _lex.next ();
+	    }
 	} while (token == Token::COMA);
 
 	this-> _lex.rewind (); // The last token read wasn't a coma
@@ -1362,7 +1377,59 @@ namespace syntax {
 	else this-> _lex.rewind ();
 	
 	return VarDecl::init (name, decos, type, value);
-    }    
+    }
+   
+    Expression Visitor::visitDestructVarDeclaration () {
+	auto begin = this-> _lex.rewind ().next ();
+	lexing::Word next;
+	std::vector <Expression> params;
+	bool isVariadic = false;
+	do {
+	    std::vector<DecoratorWord> decos;
+	    Expression type (Expression::empty ());
+
+	    lexing::Word token = this-> _lex.consumeIf (DecoratorWord::members ());
+	    while (token.is (DecoratorWord::members ())) {
+		auto deco = DecoratorWord::init (token);
+		for (auto d : decos) {
+		    if (d.getValue () == deco.getValue ()) {
+			auto note = Ymir::Error::createNote (d.getLocation ());
+			Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		    }
+		}
+	    
+		decos.push_back (deco);
+		token = this-> _lex.consumeIf (DecoratorWord::members ());
+	    }
+	    
+	    lexing::Word name = this-> _lex.consumeIf ({Keys::UNDER});
+	    if (name != Keys::UNDER) {
+		name = visitIdentifier ();
+	    }
+		
+		
+	    token = this-> _lex.next ();
+	    if (token == Token::COLON) {
+		type = visitExpression (10);
+	    } else this-> _lex.rewind ();
+	    
+	    params.push_back (VarDecl::init (name, decos, type, Expression::empty ()));
+
+	    if (params.size () == 1) 
+		next = this-> _lex.next ({Token::COMA, Token::RPAR});
+	    else {
+		next = this-> _lex.next ({Token::TDOT, Token::COMA, Token::RPAR});
+		if (next == Token::TDOT) {
+		    isVariadic = true;
+		    this-> _lex.next ({Token::RPAR});
+		}
+	    }
+	} while (next == Token::COMA);
+
+	this-> _lex.next ({Token::EQUAL});
+	
+	return DestructDecl::init (begin, params, visitExpression (), isVariadic);
+    }
 
     bool Visitor::canVisitSingleVarDeclaration (bool mandType, bool withValue) {
 	auto begin = this-> _lex.tell ();

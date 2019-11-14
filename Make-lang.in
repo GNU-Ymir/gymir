@@ -85,6 +85,7 @@ ymir_OBJS = \
 	ymir/expr_Unit.o \
 	ymir/expr_Var.o \
 	ymir/expr_VarDecl.o \
+	ymir/expr_DestructDecl.o \
 	ymir/expr_VariadicVar.o \
 	ymir/expr_While.o \
 	ymir/generator_Affect.o \
@@ -92,10 +93,14 @@ ymir_OBJS = \
 	ymir/generator_Array.o \
 	ymir/generator_ArrayAccess.o \
 	ymir/generator_ArrayValue.o \
+	ymir/generator_ArrayAlloc.o \
+	ymir/generator_Range.o \
+	ymir/generator_RangeValue.o \
 	ymir/generator_Binary.o \
 	ymir/generator_BinaryBool.o \
 	ymir/generator_BinaryFloat.o \
 	ymir/generator_BinaryInt.o \
+	ymir/generator_BinaryPtr.o \
 	ymir/generator_Block.o \
 	ymir/generator_Bool.o \
 	ymir/generator_BoolValue.o \
@@ -107,6 +112,8 @@ ymir_OBJS = \
 	ymir/generator_StringValue.o \
 	ymir/generator_Conditional.o \
 	ymir/generator_Copier.o \
+	ymir/generator_SizeOf.o \
+	ymir/generator_Cast.o \
 	ymir/generator_Fixed.o \
 	ymir/generator_Float.o \
 	ymir/generator_FloatValue.o \
@@ -128,6 +135,7 @@ ymir_OBJS = \
 	ymir/generator_Referencer.o \
 	ymir/generator_Set.o \
 	ymir/generator_Slice.o \
+	ymir/generator_SliceValue.o \
 	ymir/generator_Pointer.o \
 	ymir/generator_SliceAccess.o \
 	ymir/generator_StructRef.o \
@@ -184,6 +192,7 @@ ymir_OBJS = \
 	ymir/util_Ref.o \
 	ymir/util_StringEnum.o \
 	ymir/validator_BinaryVisitor.o \
+	ymir/validator_CastVisitor.o \
 	ymir/validator_BracketVisitor.o \
 	ymir/validator_CallVisitor.o \
 	ymir/validator_ForVisitor.o \

@@ -235,7 +235,7 @@ namespace semantic {
 
 			}
 		    }
-		) else of (ArrayAlloc, arr, {
+		) else of (syntax::ArrayAlloc, arr, {
 			auto type = types [0];
 			int current_consumed = 0;
 			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == 1) {
@@ -269,9 +269,18 @@ namespace semantic {
 	    match (currentType) {
 		of (StructRef, strRef, {
 			auto tmplSoluce = getFirstTemplateSolution (strRef.getRef ());
-			return validateTypeFromTemplCall (params, cl, tmplSoluce.to <TemplateSolution> (), consumed);
+			if (!tmplSoluce.isEmpty ())
+			    return validateTypeFromTemplCall (params, cl, tmplSoluce.to <TemplateSolution> (), consumed);
 		    }
-		) else return Mapper ();
+		) else of (Range, rng, { // Range are created by template Call
+			auto left = cl.getContent ();
+			if (left.is<syntax::Var> () && left.to <syntax::Var> ().getName () == Range::NAME) {
+			    if (cl.getParameters ().size () == 1) {
+				return validateTypeFromImplicit (params, cl.getParameters ()[0], {rng.getInners ()[0]}, consumed);
+			    }
+			}
+		    }
+		) return Mapper ();
 	    }	
 	    
 	    return Mapper ();
@@ -399,7 +408,7 @@ namespace semantic {
 						type.to<Type> ().getTypeName ());
 			}
 		    }
-		) else of (ArrayAlloc, arr, {
+		) else of (syntax::ArrayAlloc, arr, {
 			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == 1) {
 			    int consumed = 0;
 			    Mapper mapper = validateTypeFromImplicit (params, arr.getLeft (), {type.to <Type> ().getInners () [0]}, consumed);
@@ -500,8 +509,8 @@ namespace semantic {
 	Expression TemplateVisitor::replaceAll (const Expression & element, const std::map <std::string, Expression> & mapping) const {
 	    if (mapping.size () == 0) return element;
 	    match (element) {
-		of (ArrayAlloc, arr,
-		    return ArrayAlloc::init (
+		of (syntax::ArrayAlloc, arr,
+		    return syntax::ArrayAlloc::init (
 			element.getLocation (),
 			replaceAll (arr.getLeft (), mapping),
 			replaceAll (arr.getSize (), mapping),
@@ -728,6 +737,7 @@ namespace semantic {
 		) else of (syntax::Function, func, {
 			auto ret = syntax::Function::init (func.getName (), replaceAll (func.getPrototype (), mapping), replaceAll (func.getBody (), mapping));
 			ret.to <syntax::Function> ().setCustomAttributes (func.getCustomAttributes ());
+			ret.to <syntax::Function> ().setWeak ();
 			return ret;
 		    }
 		) else of (syntax::Global, glb, {

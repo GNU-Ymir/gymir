@@ -75,7 +75,7 @@ namespace semantic {
 	    
 	private :	    
 
-	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);
+	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right);
 	    
 	};
 

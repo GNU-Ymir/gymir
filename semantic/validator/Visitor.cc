@@ -6,6 +6,7 @@
 #include <ymir/semantic/validator/CompileTime.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/semantic/validator/UnaryVisitor.hh>
+#include <ymir/semantic/validator/CastVisitor.hh>
 #include <ymir/semantic/validator/SubVisitor.hh>
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/validator/TemplateVisitor.hh>
@@ -91,6 +92,24 @@ namespace semantic {
 		    }
 		);
 
+		of (semantic::Alias, alias ATTRIBUTE_UNUSED, {
+			std::vector <std::string> errors;
+			this-> _referent.push_back (sym);
+			TRY (
+			    validateAlias (sym);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());			    
+			} FINALLY;
+
+			this-> _referent.pop_back ();
+			if (errors.size () != 0) {
+			    THROW (ErrorCode::EXTERNAL, errors);
+			}
+			return;
+		    }
+		);
+		
 		of (semantic::Struct, str ATTRIBUTE_UNUSED, {
 			std::vector <std::string> errors;
 			this-> _referent.push_back (sym);			
@@ -226,7 +245,27 @@ namespace semantic {
 		    verifyShadow (var.getName ());		
 		    insertLocal (var.getName ().str, params.back ());
 		}
-	    }	    
+	    }
+
+	    if (function.getName () == Keys::MAIN) {		
+		if (params.size () > 1) {
+		    Ymir::Error::occur (params [1].getLocation (),
+					ExternalError::get (MAIN_FUNCTION_ONE_ARG));		    
+		} else if (params.size () == 1) {
+		    auto argtype =  Slice::init (func.getName (),
+						 Slice::init (
+						     func.getName (),
+						     Char::init (func.getName (), 8) // The input given by the task launcher is in utf8
+						 )
+		    );
+		    if (!argtype.to <Type> ().isCompatible (params [0].to <Value> ().getType ()))
+			Ymir::Error::occur (params [0].to <Value> ().getType ().getLocation (),
+					    ExternalError::get (INCOMPATIBLE_TYPES),
+					    argtype.to <Type> ().getTypeName (),
+					    params [0].to <Value> ().getType ().to <Type> ().getTypeName ()
+			);
+		}
+	    }
 	    
 	    Generator retType (Generator::empty ());
 	    if (!function.getPrototype ().getType ().isEmpty ()) {
@@ -239,7 +278,7 @@ namespace semantic {
 					    itype.to <Type> ().getTypeName (),
 					    retType.to <Type> ().getTypeName ()
 			);
-		    }
+		    }		    		    
 		}
 	    } else retType = Void::init (func.getName ());
 	    
@@ -267,7 +306,7 @@ namespace semantic {
 		else if (ln == Keys::CPPLANG)
 		    frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::CXX);
 		
-		frame.to <Frame> ().isWeak (isWeak);
+		frame.to <Frame> ().isWeak (isWeak || function.isWeak ());
 		frame.to <Frame> ().setMangledName (func.getMangledName ());
 
 		insertNewGenerator (frame);		
@@ -322,6 +361,34 @@ namespace semantic {
 		insertNewGenerator (glbVar);
 	    }
 	}
+	
+	generator::Generator Visitor::validateAlias (const semantic::Symbol & sym) {
+	    if (sym.to <semantic::Alias> ().getGenerator ().isEmpty ()) {
+		auto alias = sym.to <semantic::Alias> ();
+		auto elemSym = sym;
+
+		Generator elem (Generator::empty ());
+		TRY (
+		    elem = validateValue (alias.getValue (), true);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    elem = Generator::empty ();
+		} FINALLY;
+		
+		if (elem.isEmpty ())
+		    elem = validateType (alias.getValue ());
+		
+		if (elem.is <Value> ()) {
+		    auto type = elem.to <Value> ().getType ();
+		    type.to <Type> ().isMutable (false);
+		    elem.to <Value> ().setType (type);
+		}
+		
+		elemSym.to <semantic::Alias> ().setGenerator (elem);
+	    }
+
+	    return sym.to <semantic::Alias> ().getGenerator ();
+	}
 
 	generator::Generator Visitor::validateStruct (const semantic::Symbol & str) {	    
 	    if (str.to <semantic::Struct> ().getGenerator ().isEmpty ()) {
@@ -338,7 +405,7 @@ namespace semantic {
 		    std::vector <std::string> fields;
 		    std::vector <generator::Generator> types;
 		    for (auto & it : sym.to<semantic::Struct> ().getFields ()) {
-			this-> validateValue (it);
+			this-> validateVarDeclValue (it.to <syntax::VarDecl> (), false);
 		    }
 		    
 		    syms = this-> discardAllLocals ();
@@ -484,7 +551,7 @@ namespace semantic {
 		) else of (syntax::Block, bl ATTRIBUTE_UNUSED,
 		    return validateValue (value);
 		) else {
-		    return retreiveValue (validateValue (value));
+			return retreiveValue (validateValue (value));
 		}		    
 	    }
 	    return Generator::empty ();
@@ -592,7 +659,23 @@ namespace semantic {
 		of (TemplateSyntaxWrapper, st,
 		    return st.getContent ()
 		);
-		    
+
+		of (syntax::Cast, cst,
+		    return validateCast (cst);
+		);
+
+		of (syntax::ArrayAlloc, alloc,
+		    return validateArrayAlloc (alloc);
+		);
+
+		of (syntax::DestructDecl, destr,
+		    return validateDestructDecl (destr);
+		);
+
+		of (syntax::Lambda, lmbd,
+		    return validateLambda (lmbd);
+		);
+		
 	    }
 
 	    OutBuffer buf;
@@ -970,7 +1053,12 @@ namespace semantic {
 			    gens.push_back (VarRef::init (decl.getName (), decl.getName ().str, gen.getType (), gen.getUniqId (), gen.isMutable (), value));
 			    continue;
 			 }
-		     );
+		    ) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
+			    auto al_ref = validateAlias (sym);
+			    gens.push_back (al_ref);
+			    continue;
+			}
+		    );
 		}
 
 		println (sym.formatTree ());
@@ -993,7 +1081,13 @@ namespace semantic {
 		of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
 			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
 			return Generator::empty ();
-		    });
+		    }
+		);
+		
+		of (semantic::Alias, al ATTRIBUTE_UNUSED, {
+			return validateAlias (multSym [0]);
+		    }
+		);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -1100,16 +1194,19 @@ namespace semantic {
 	    return frame;
 	}    
 	
-	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var) {
+	Generator Visitor::validateVarDeclValue (const syntax::VarDecl & var, bool needInitValue) {
 	    if (var.getName () != Keys::UNDER)
 		verifyShadow (var.getName ());
 
-	    if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
+	    if (var.getValue ().isEmpty () && needInitValue) {
+		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
+	    } else if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
 		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
 	    }
 
 	    Generator value (Generator::empty ());
-	    if (!var.getValue ().isEmpty ()) value = validateValue (var.getValue ());
+	    if (!var.getValue ().isEmpty ())
+		value = validateValue (var.getValue ());
 
 	    Generator type (Generator::empty ());
 	    if (!var.getType ().isEmpty ()) {
@@ -1500,6 +1597,117 @@ namespace semantic {
 	    THROW (ErrorCode::EXTERNAL, errors);	   
 	    return Generator::empty ();	    
 	}
+
+	Generator Visitor::validateCast (const syntax::Cast & cast) {
+	    auto visitor = CastVisitor::init (*this);
+	    return visitor.validate (cast);
+	}
+
+	Generator Visitor::validateArrayAlloc (const syntax::ArrayAlloc & alloc) {
+	    if (alloc.isDynamic ()) {
+		auto value = validateValue (alloc.getLeft ());
+		verifyMemoryOwner (alloc.getLocation (), value.to <Value> ().getType (), value, false);
+		auto size = SizeOf::init (
+		    alloc.getLocation (),
+		    Integer::init (alloc.getLocation (), 0, false),
+		    value.to <Value> ().getType ()
+		);
+		
+		auto len = validateValue (alloc.getSize ());
+		auto type = Slice::init (alloc.getLocation (), value.to<Value> ().getType ());
+		type.to <Type> ().isMutable (true);
+		type.to <Type> ().isLocal (true);
+		
+		return ArrayAlloc::init (alloc.getLocation (), type.to<Type> ().toMutable (), value, size, len);
+	    } else {
+		auto value = validateValue (alloc.getLeft ());
+		verifyMemoryOwner (alloc.getLocation (), value.to <Value> ().getType (), value, false);
+		
+		auto size = SizeOf::init (
+		    alloc.getLocation (),
+		    Integer::init (alloc.getLocation (), 0, false),
+		    value.to <Value> ().getType ()
+		);
+		
+		auto len = retreiveValue (validateValue (alloc.getSize ()));
+		if (!len.is <Fixed> () || (len.to<Fixed> ().getType ().to <Integer> ().isSigned () && len.to <Fixed> ().getUI ().i < 0)) {
+		    Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					value.to <Value> ().getType ().to <Type> ().getTypeName (),
+					(Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().getTypeName ()
+		    );
+		}
+		
+		auto type = Array::init (alloc.getLocation (), value.to<Value> ().getType (), len.to <Fixed> ().getUI ().u);
+		type.to <Type> ().isMutable (true);
+		type.to <Type> ().isLocal (true);
+		return ArrayAlloc::init (alloc.getLocation (), type.to <Type> ().toMutable (), value, size, len.to <Fixed> ().getUI ().u);
+	    }
+	}
+
+	Generator Visitor::validateDestructDecl (const syntax::DestructDecl & decl) {
+	    auto value = validateValue (syntax::Intrinsics::init ({decl.getLocation (), Keys::EXPAND}, decl.getValue ()));
+	    match (value) {
+		of (List, lst, {
+			if ((decl.isVariadic () && lst.getParameters ().size () < decl.getParameters ().size ())
+			    || (!decl.isVariadic () && lst.getParameters ().size () != decl.getParameters ().size ())) {
+			    Ymir::Error::occur (decl.getLocation (),
+						ExternalError::get (MISMATCH_ARITY),
+						decl.getParameters ().size (),
+						lst.getParameters ().size ());			    
+			}
+
+			std::vector <Generator> values;
+			Generator type (Void::init (decl.getLocation ()));
+			for (int i = 0 ; i < (int) decl.getParameters ().size () ; i++) {
+			    if (i != (int) decl.getParameters ().size () - 1 || lst.getParameters ().size () == decl.getParameters ().size ()) {
+				auto varDecl = decl.getParameters ()[i];
+				varDecl.to <syntax::VarDecl> ().setValue (TemplateSyntaxWrapper::init (lst.getLocation (), lst.getParameters ()[i]));
+				values.push_back (validateValue (varDecl));
+			    } else {
+				std::vector <Generator> rest (lst.getParameters ().begin () + i, lst.getParameters ().end ());
+				std::vector <Generator> types;
+				for (auto & it : rest) {
+				    types.push_back (it.to<Value> ().getType ());
+				}
+				auto tupleType = Tuple::init (lst.getLocation (), types);
+				tupleType.to <Type> ().isMutable (true);
+				tupleType.to <Type> ().isLocal (true);
+				
+				auto varDecl = decl.getParameters ()[i];
+				varDecl.to<syntax::VarDecl> ().setValue (
+				    TemplateSyntaxWrapper::init (
+					lst.getLocation (),
+					TupleValue::init (
+					    lst.getLocation (),
+					    tupleType,
+					    rest
+					)));
+				
+				values.push_back (validateValue (varDecl));				
+			    }			    
+			}
+			return Set::init (decl.getLocation (), type, values);
+		    })
+		else {
+		    if (decl.getParameters ().size () != 1) {
+			Ymir::Error::occur (decl.getLocation (),
+					    ExternalError::get (OVERFLOW_ARITY),
+					    decl.getParameters ().size (),
+					    1);
+		    }
+		    auto varDecl = decl.getParameters () [0];
+		    varDecl.to<syntax::VarDecl> ().setValue (TemplateSyntaxWrapper::init (value.getLocation (), value));
+		    return validateValue (varDecl);
+		}
+	    }
+	    
+	    return Generator::empty ();
+	}
+
+	Generator Visitor::validateLambda (const syntax::Lambda & lmbd) {
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return Generator::empty ();
+	}
 	
 	Generator Visitor::validateIntrinsics (const syntax::Intrinsics & intr) {
 	    if (intr.isCopy ()) return validateCopy (intr);
@@ -1508,6 +1716,10 @@ namespace semantic {
 	    if (intr.isTypeof ()) {
 		auto elem = validateValue (intr.getContent ());
 		return elem.to <Value> ().getType ();
+	    }
+	    if (intr.isSizeof ()) {
+		auto elem = validateType (intr.getContent ());
+		return SizeOf::init (intr.getLocation (), Integer::init (intr.getLocation (), 0, false), elem);
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -1629,6 +1841,12 @@ namespace semantic {
 		of (TemplateSyntaxWrapper, tmplSynt,
 		    return tmplSynt.getContent ();
 		);
+
+		of (syntax::TemplateCall, tmpCall,
+		    auto gen = validateTypeTemplateCall (tmpCall);
+		    if (!gen.isEmpty ())
+			return gen;
+		);
 		
 	    }
 	    
@@ -1721,7 +1939,7 @@ namespace semantic {
 	    auto size = validateValue (alloc.getSize ());
 
 	    Generator value = retreiveValue (size);
-	    if (!value.is <Fixed> ()) {
+	    if (!value.is <Fixed> () || (value.to<Fixed> ().getType ().to <Integer> ().isSigned () && value.to <Fixed> ().getUI ().i < 0)) {
 		Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 				    value.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    (Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().getTypeName ()
@@ -1747,6 +1965,26 @@ namespace semantic {
 	    return Tuple::init (list.getLocation (), inners);
 	}	
 
+	Generator Visitor::validateTypeTemplateCall (const syntax::TemplateCall & call) {
+	    Generator innerType (Generator::empty ());
+	    if (call.getParameters ().size () == 1) {
+		innerType = validateType (call.getParameters ()[0]);
+	    }
+	    
+	    auto left = call.getContent ();
+	    match (left) {
+		of (syntax::Var, var, {
+			if (var.getName ().str == Range::NAME) {
+			    return Range::init (var.getName (), innerType);
+			}       	    		
+			Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().str);
+		    }
+		);
+	    }
+	    
+	    return Generator::empty ();
+	}
+	
 	const std::vector <generator::Generator> & Visitor::getGenerators () const {
 	    return this-> _list;
 	}
@@ -1872,7 +2110,7 @@ namespace semantic {
 	    // Tuple copy is by default, as we cannot alias a tuple
 	    // Same for structures
 	    // And for arrays (but left op)
-	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <StructRef> () || type.is<Array> () || type.is<Pointer> ()) {
+	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <Range> () || gen.to <Value> ().getType ().is <StructRef> () || type.is<Array> () || type.is<Pointer> ()) {
 		auto tu = gen.to<Value> ().getType ().to <Type> ().toMutable ();
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
@@ -2034,7 +2272,7 @@ namespace semantic {
 	    return true;
 	}
 	
-	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {
+	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {					       
 	    return this-> _referent.back ().get (name);
 	}	
 	
@@ -2048,6 +2286,7 @@ namespace semantic {
 		of (Loop,   lp ATTRIBUTE_UNUSED,  return false;);
 		of (generator::VarDecl, vd ATTRIBUTE_UNUSED, return false;);
 		of (Return, rt ATTRIBUTE_UNUSED, return false;);
+		of (Set, set ATTRIBUTE_UNUSED, return false;);
 	    }
 	    return true;
 	}	

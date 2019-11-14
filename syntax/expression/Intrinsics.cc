@@ -55,5 +55,9 @@ namespace syntax {
     bool Intrinsics::isTypeof () const {
 	return this-> getLocation () == Keys::TYPEOF;
     }
+
+    bool Intrinsics::isSizeof () const {
+	return this-> getLocation () == Keys::SIZEOF;
+    }
     
 }

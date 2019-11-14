@@ -297,15 +297,29 @@ namespace generic {
 	    );
 	}
     }
+
+    Tree Tree::binaryPtr (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
+	return Tree::build (code, loc, type, left,
+			    Tree::init (
+				loc.getLocus (),
+				convert_to_ptrofftype (right.getTree ())
+			    )
+	);
+    }
+
     
     Tree Tree::binaryDirect (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
 	return Tree::build (code, loc, type, left, right);
     }
 
+    Tree Tree::castTo (const lexing::Word & loc, const Tree & type, const Tree & value) {
+	return Tree::init (loc.getLocus (), convert (type.getTree (), value.getTree ()));
+    }
+    
     Tree Tree::unary (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & operand) {
 	return Tree::build (code, loc, type, operand);
     }
-
+    
     
     Tree Tree::compound (const lexing::Word & loc, const Tree & left, const Tree & right) {
 	if (left.isEmpty ()) return right;

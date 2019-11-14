@@ -254,11 +254,12 @@ namespace syntax {
 	
 	/**
 	 * \brief Visit a function prototype
+	 * \param isClosure if it is a closure the surronding token will be '||' instead of '()'
 	 * \verbatim
 	 function_proto := '(' var_decl* ')' ('->' expression)?
 	 \endverbatim
 	 */
-	Function::Prototype visitFunctionPrototype ();
+	Function::Prototype visitFunctionPrototype (bool isClosure = false);
 
 	/**
 	 * \brief Visit a function body
@@ -361,7 +362,7 @@ namespace syntax {
 	 * if multiple variable are declared in the same line, 
 	 * return a ExpressionList of VarDecl, and just a single VarDecl otherwise
 	 * \verbatim
-	 var_decl_set := 'let' var_decl (',' var_decl)* ';'
+	 var_decl_set := 'let' (destruct_decl | (var_decl (',' var_decl)*))';'
 	 \endverbatim
 	 */
 	Expression visitVarDeclaration ();
@@ -374,7 +375,7 @@ namespace syntax {
 	 * \param withValue is true if we can have an affectation ('=' expression)?
 	 */
 	Expression visitSingleVarDeclaration (bool mandType = false, bool withValue = true);	
-
+       
 
 	/**
 	 * \return true iif, a var declaration is following
@@ -382,6 +383,14 @@ namespace syntax {
 	 * \param withValue is the value present in this declaration ?
 	 */
 	bool canVisitSingleVarDeclaration (bool mandatoryType, bool withValue);
+
+	/**
+	 * \brief visit a destruct declaration
+	 * \verbatim
+	 destruct_decl = '(' var_decl:(no_value) (',' var_decl:(no_value)) ')' '=' expression:(0)
+	 \endverbatim
+	 */
+	Expression visitDestructVarDeclaration ();
 	
 	/**
 	 * \brief Visit an single expression 
@@ -650,6 +659,14 @@ namespace syntax {
 	 \endverbatim
 	 */
 	Expression visitReturn ();
+
+	/**
+	 * \brief Visit a cast expression 
+	 * \verbatim
+	 cast := 'cast' '!' expression:(0) '(' expression:(0) ')'
+	 \endverbatim
+	 */
+	Expression visitCast ();
 	
 	/**
 	 * \brief Visit a block of expression 

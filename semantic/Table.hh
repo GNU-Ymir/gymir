@@ -100,6 +100,17 @@ namespace semantic {
 	std::vector <Symbol> get (const std::string & name) const;
 
 	/**
+	 * \brief Get a symbol from this table
+	 * \brief As you can see in the type returned, you only can get symbol by value
+	 * \brief If you want to modify a symbol inside the table, you will need to reinsert it once modified
+	 * \brief It can happens sometimes, that you don't know from which table the symbol comes from
+	 * \brief This informations can be retreived inside the symbol
+	 * \brief Only return symbol that are marked public
+	 * \param name the name of the symbol
+	 */	
+	std::vector <Symbol> getPublic (const std::string & name) const;
+	
+	/**
 	 * \return the list of all declared symbol inside the table
 	 */
 	const std::vector <Symbol> & getAll () const;

@@ -38,5 +38,6 @@
 #include <ymir/syntax/expression/Unit.hh>
 #include <ymir/syntax/expression/Var.hh>
 #include <ymir/syntax/expression/VarDecl.hh>
+#include <ymir/syntax/expression/DestructDecl.hh>
 #include <ymir/syntax/expression/VariadicVar.hh>
 #include <ymir/syntax/expression/While.hh>

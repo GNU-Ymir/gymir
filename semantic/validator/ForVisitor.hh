@@ -42,9 +42,37 @@ namespace semantic {
 	    generator::Generator validate (const syntax::For & expression);
 
 	    /**
-	     * \brief Validate a for loop on an array
+	     * Validate the var declaration of the iterator in case of by value array iteration
 	     */
-	    generator::Generator validateArray (const syntax::For & expression, const generator::Generator & value);
+	    generator::Generator validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value, int level);
+
+
+	    /**
+	     * \brief Create a vardecl, and var ref for array and slice indexing
+	     * \brief Declare as well a variable to store the value of the array to prevent multi creation of the var
+	     * \param for the for loop
+	     * \param value the array value
+	     * \param name the name of the index var
+	     * \param {arrayVarDecl, vardecl, arrayVarRef, varref}
+	     */
+	    std::vector <generator::Generator> createIndexVar (const syntax::For & expression, const generator::Generator & value, const std::string & name);
+
+	    /**
+	     * \brief Create a vardecl, and var ref for array and slice indexing
+	     * \brief Declare as well a variable to store the value of the array to prevent multi creation of the var
+	     * \param for the for loop
+	     * \param value the array value
+	     * \param decl the name of the index var (index var)
+	     * \param {arrayVarDecl, vardecl, arrayVarRef, varref}
+	     */
+	    std::vector <generator::Generator> createIndexVar (const syntax::For & expression, const generator::Generator & value, const syntax::VarDecl & decl);	    
+	    
+	    
+	    /**
+	     * \brief Validate a for loop on a slice
+	     */
+	    generator::Generator validateSlice (const syntax::For & expression, const generator::Generator & value);
+
 
 	    /**
 	     * \brief Create the loop that iterate over an array
@@ -61,37 +89,14 @@ namespace semantic {
 	     // => iterateArray (<for...>, <array>, empty, <it>)
 	     \endverbatim
 	     */
-	    generator::Generator iterateArray (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & index, const syntax::Expression & val);
-
-	    /**
-	     * Validate the var declaration of the iterator in case of by value array iteration
-	     */
-	    generator::Generator validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value, int level);
-
-
-	    /**
-	     * \brief Create a vardecl, and var ref for array and slice indexing
-	     * \param for the for loop
-	     * \param name the name of the index var
-	     * \param {vardecl, varref}
-	     */
-	    std::vector <generator::Generator> createIndexVar (const syntax::For & expression, const std::string & name);
-
-	    /**
-	     * \brief Create a vardecl, and var ref for array and slice indexing
-	     * \param for the for loop
-	     * \param name the name of the index var
-	     * \param {vardecl, varref}
-	     */
-	    std::vector <generator::Generator> createIndexVar (const syntax::For & expression, const syntax::VarDecl & decl);	    
+	    generator::Generator iterateSlice (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & index, const syntax::Expression & val);
 	    
+	    generator::Generator validateRange (const syntax::For & expression, const generator::Generator & range);
+
+	    std::vector <generator::Generator> createIndexVarRange (const syntax::For & expression, const generator::Generator & range, const syntax::VarDecl & name);
+
+	    generator::Generator iterateRange (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index);	    
 	    
-	    /**
-	     * \brief Validate a for loop on a slice
-	     */
-	    generator::Generator validateSlice (const syntax::For & expression, const generator::Generator & value);
-
-
 	    /**
 	     * Throw an undefined op error
 	     */

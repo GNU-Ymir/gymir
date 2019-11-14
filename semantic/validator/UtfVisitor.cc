@@ -172,8 +172,8 @@ namespace semantic {
 
 	std::vector<char> UtfVisitor::toString (const std::vector <uint> & content) {
 	    std::vector<char> buf;
-	    for (auto & it : content) {
-		char * c = (char*) &it;
+	    for (auto const it : content) {
+		const char * c = (const char*) (&it); // To remove the warning
 		for (auto j : Ymir::r (0, 4)) {
 		    buf.push_back (c [j]);
 		}

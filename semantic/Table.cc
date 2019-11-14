@@ -65,6 +65,17 @@ namespace semantic {
 	return rets;
     }
 
+    std::vector <Symbol> Table::getPublic (const std::string & name) const {
+	std::vector <Symbol> rets;
+	for (auto & s : this-> _syms) {
+	    if (s.getName ().str == name && s.isPublic ()) {
+		rets.push_back (s);
+	    }
+	}
+	
+	return rets;
+    }
+    
     const std::vector <Symbol> & Table::getAll () const {
 	return this-> _syms;
     }

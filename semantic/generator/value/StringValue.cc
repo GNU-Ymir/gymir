@@ -45,7 +45,7 @@ namespace semantic {
 	}
 
 	std::string StringValue::prettyString () const {
-	    return Ymir::format ("%", this-> _value);
+	    return Ymir::format ("_");
 	}
 	
     }

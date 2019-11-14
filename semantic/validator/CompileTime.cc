@@ -115,7 +115,7 @@ namespace semantic {
 		    ExternalError::get (COMPILE_TIME_UNKNOWN)
 		);
 	    }
-	    
+
 	    return gen;
 	}
 
@@ -404,8 +404,13 @@ namespace semantic {
 	}
 
 	generator::Generator CompileTime::executeBlock (const generator::Block & block) {
-	    if (block.getType ().is <Void> ())
+	    if (block.getType ().is <Void> ()) {
+		Ymir::Error::occur (
+		    block.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
 		return Generator::empty ();
+	    }
 	    else return this-> execute (block.getContent ().back ());			       
 	}
 	

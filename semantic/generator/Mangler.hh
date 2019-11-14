@@ -134,6 +134,16 @@ namespace semantic {
 	     * \brief Mangle a enum type
 	     */
 	    std::string mangleEnumRef (const EnumRef & r) const;
+
+	    /**
+	     * \brief Mangle a range type
+	     */
+	    std::string mangleRangeT (const Range & r) const;
+
+	    /**
+	     * \brief Mangle a range type
+	     */
+	    std::string manglePointerT (const Pointer & ptr) const;
 	    
 	private : 
 

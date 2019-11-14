@@ -45,14 +45,43 @@ namespace semantic {
 	     */
 	    generator::Generator validateTuple (const syntax::Binary & expression, const generator::Generator & left);
 
+	    /**
+	     * \brief Validate the operator on a struct access
+	     * \param expression the bin expression
+	     * \param left the value of type struct
+	     */
 	    generator::Generator validateStruct (const syntax::Binary & expression, const generator::Generator & left);
 
+	    /**
+	     * \brief Validate the operator on a array access
+	     * \param expression the bin expression
+	     * \param left the value of type array
+	     */
 	    generator::Generator validateArray (const syntax::Binary & expression, const generator::Generator & left);
 
+	    /**
+	     * \brief Validate the operator on a slice access
+	     * \param expression the bin expression
+	     * \param left the value of type slice
+	     */
 	    generator::Generator validateSlice (const syntax::Binary & expression, const generator::Generator & left);
 
+
+	    /**
+	     * \brief Validate the operator on a range type 
+	     * \param expression the bin expression
+	     * \param left the value of type range
+	     */
+	    generator::Generator validateRange (const syntax::Binary & expression, const generator::Generator & left);	    
+	    
 	private :
 
+	    /**
+	     * \brief Throw the error, UNDEFINED_FIELD_FOR
+	     * \param expression the binary operator
+	     * \param left the left element
+	     * \param right the field we are trying to access
+	     */
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);
 	    
 	};

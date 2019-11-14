@@ -60,6 +60,11 @@ namespace syntax {
 	 * \return is it a typeof ?
 	 */
 	bool isTypeof () const;
+
+	/**
+	 * \return is it a sizeof ?
+	 */
+	bool isSizeof () const;
 	
     };    
 

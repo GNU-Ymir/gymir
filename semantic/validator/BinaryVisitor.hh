@@ -120,8 +120,16 @@ namespace semantic {
 	     */
 	    generator::Generator validateAffectationCopy (const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
-	private :
 
+	    /**
+	     * \brief Validate a range operation 
+	     * \param op the operator of the expression
+	     * \param expression the syntaxic node 
+	     */
+	    generator::Generator validateRangeOperation (generator::Binary::Operator op, const syntax::Binary & expression);
+	    
+	private :
+	    
 	    /**
 	     * \brief Transform a token into a binary operator
 	     * \param word the token containing the op

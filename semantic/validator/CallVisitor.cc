@@ -34,7 +34,7 @@ namespace semantic {
 	    if (left.isEmpty ()) {
 		left = this-> validateDotCall (expression.getLeft (), rights, errors);
 	    }
-	    		
+	    
 	    for (auto & it : expression.getRights ()) {
 		auto val = this-> _context.validateValue (it);
 		if (val.is<List> ()) {

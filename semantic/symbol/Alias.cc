@@ -4,12 +4,14 @@ namespace semantic {
 
     Alias::Alias () :
 	ISymbol (lexing::Word::eof ()),
-	_value (syntax::Expression::empty ())
+	_value (syntax::Expression::empty ()),
+	_gen (generator::Generator::empty ())
     {}
 
     Alias::Alias (const lexing::Word & name, const syntax::Expression & value) :
 	ISymbol (name),
-	_value (value)
+	_value (value),
+	_gen (generator::Generator::empty ())
     {}
 
     Symbol Alias::clone () const {
@@ -38,6 +40,14 @@ namespace semantic {
 	return this-> _value;
     }   
 
+    void Alias::setGenerator (const generator::Generator & gen) {
+	this-> _gen = gen;
+    }
+
+    const generator::Generator & Alias::getGenerator () const {
+	return this-> _gen;
+    }
+    
     std::string Alias::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());

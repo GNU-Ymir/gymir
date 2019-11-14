@@ -55,9 +55,21 @@ namespace semantic {
     void ISymbol::unuse (const std::string & name) {
 	this-> _used.erase (name);
     }
+
+    void ISymbol::setPublic () {
+	this-> _isPublic = true;
+    }
+
+    bool ISymbol::isPublic () const {
+	return this-> _isPublic;
+    }
     
     std::vector <Symbol> ISymbol::get (const std::string & name) const {
 	return this-> getReferent ().get (name);
+    }
+
+    std::vector <Symbol> ISymbol::getPublic (const std::string & name) const {
+	return this-> getReferent ().getPublic (name);
     }
 
     std::vector <Symbol> ISymbol::getLocal (const std::string &) const {
@@ -162,6 +174,26 @@ namespace semantic {
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	}
     }
+
+    void Symbol::setPublic () {
+	if (this-> _value != nullptr)
+	    this-> _value-> setPublic ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+    }
+
+    bool Symbol::isPublic () const {
+	if (this-> _value != nullptr)
+	    return this-> _value-> isPublic ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return false;
+	}
+    }
+
     
     std::vector <Symbol> Symbol::get (const std::string & name) const {
 	if (this-> _value == nullptr)
@@ -169,13 +201,54 @@ namespace semantic {
 
 	auto ret = this-> _value-> get (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    auto local_ret = it.second.get (name);
+	    auto local_ret = it.second.getUsed (name);
 	    ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
 	}
 	
 	return Symbol::mergeEqSymbols (ret);
     }
 
+    std::vector <Symbol> Symbol::getPublic (const std::string & name) const {
+	if (this-> _value == nullptr)
+	    return {};
+
+	auto ret = this-> _value-> getPublic (name);
+	for (auto & it : this-> _value-> getUsedSymbols ()) {
+	    if (it.second.isPublic ()) {
+		auto local_ret = it.second.getPublic (name);
+		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	    }	    
+	}
+	
+	return Symbol::mergeEqSymbols (ret);
+    }
+    
+    std::vector <Symbol> Symbol::getUsed (const std::string & name) const {
+	if (this-> _value == nullptr)
+	    return {};
+	
+	auto ret = this-> _value-> getPublic (name);
+	for (auto & it : this-> _value-> getUsedSymbols ()) {
+	    if (it.second.isPublic ()) {
+		auto local_ret = it.second.getUsed (name);
+		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	    }
+	}
+	
+	return Symbol::mergeEqSymbols (ret);
+    }
+
+    const std::map <std::string, Symbol> & Symbol::getUsedSymbols () const {
+	if (this-> _value != nullptr)
+	    return this-> _value-> getUsedSymbols ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return Symbol::__empty__.getUsedSymbols (); // ....
+	    // We don't get there anyway
+	}
+    }
+    
     Symbol Symbol::getReferent () const {
 	if (this-> _value == nullptr)
 	    return Symbol::__empty__;

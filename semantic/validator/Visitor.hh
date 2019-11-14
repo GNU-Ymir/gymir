@@ -99,6 +99,12 @@ namespace semantic {
 	     */
 	    void validateVarDecl (const semantic::Symbol & sym);
 
+
+	    /**
+	     * \brief Validate an alias
+	     */
+	    generator::Generator validateAlias   (const semantic::Symbol & sym);
+	    
 	    /**
 	     * \brief Validate an enum declaration
 	     * \brief Unlike, function or var decl, this will not create any generator, but just check the integrity of the enum
@@ -147,7 +153,12 @@ namespace semantic {
 	    /**
 	     * \brief Validate a tuple type from a tuple literal
 	     */
-	    generator::Generator validateTypeTuple (const syntax::List & tuple);	    
+	    generator::Generator validateTypeTuple (const syntax::List & tuple);
+
+	    /**
+	     * \brief Validate a template call type from a template call literal
+	     */
+	    generator::Generator validateTypeTemplateCall (const syntax::TemplateCall & tmpCall);	    
 	    
 	    /**
 	     * \brief validate an expression, that produce a value
@@ -262,8 +273,9 @@ namespace semantic {
 	    
 	    /**
 	     * \brief Validate a var declaration inside a block (or a frame)
+	     * \param needValue Is the value mandatory in this var declaration?
 	     */
-	    generator::Generator validateVarDeclValue (const syntax::VarDecl & decl);
+	    generator::Generator validateVarDeclValue (const syntax::VarDecl & decl, bool needValue = true);
 	    
 	    /**
 	     * \brief Validate a decorated expression
@@ -315,6 +327,26 @@ namespace semantic {
 	     */
 	    generator::Generator validateList (const syntax::List & list);
 
+	    /**
+	     * \brief Validate a cast expression
+	     */
+	    generator::Generator validateCast (const syntax::Cast & cast);
+
+	    /**
+	     * \brief Validate an array alloc
+	     */
+	    generator::Generator validateArrayAlloc (const syntax::ArrayAlloc & alloc);
+
+	    /**
+	     * \brief Validate a destruct declaration
+	     */
+	    generator::Generator validateDestructDecl (const syntax::DestructDecl & decl);
+
+	    /**
+	     * \brief Validate a lambda function	     
+	     */
+	    generator::Generator validateLambda (const syntax::Lambda & lmbd);
+	    
 	    /**
 	     * \brief Validate intricisics, it could be either :  
 	     * \brief - a copy

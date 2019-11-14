@@ -151,11 +151,7 @@ namespace syntax {
     }
 
     Declaration Function::init (const Function & func) {
-	auto ret = new (Z0) Function ();
-	ret-> _proto = func._proto;
-	ret-> _body = func._body;
-	ret-> _cas = func._cas;
-	ret-> _name = func._name;
+	auto ret = new (Z0) Function (func);
 	return Declaration {ret};
     }
 
@@ -226,6 +222,14 @@ namespace syntax {
 
     const Function::Body & Function::getBody () const {
 	return this-> _body;
+    }
+
+    void Function::setWeak () {
+	this-> _isWeak = true;
+    }
+
+    bool Function::isWeak () const {
+	return this-> _isWeak;
     }
     
 }

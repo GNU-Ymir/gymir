@@ -24,6 +24,8 @@ namespace semantic {
 		return validateMathOperation (op, expression);
 	    } else if (isLogical (op) && !isAff) {
 		return validateLogicalOperation (op, expression);
+	    } else if (isRange (op)) {
+		return validateRangeOperation (op, expression);
 	    } else if (isAff) {
 		return validateAffectation (op, expression);
 	    }
@@ -33,9 +35,16 @@ namespace semantic {
 	}
 
 	Generator BinaryVisitor::validateMathOperation (Binary::Operator op, const syntax::Binary & expression) {
-	    auto left = this-> _context.validateValue (expression.getLeft ());
-	    auto right = this-> _context.validateValue (expression.getRight ());
-		
+	    auto leftExp = expression.getLeft ();
+	    auto rightExp = expression.getRight ();
+	    if (!expression.getType ().isEmpty ()) {
+		leftExp = syntax::Cast::init (expression.getLocation (), expression.getType (), leftExp);
+		rightExp = syntax::Cast::init (expression.getLocation (), expression.getType (), rightExp);		
+	    }
+	    
+	    auto left = this-> _context.validateValue (leftExp);
+	    auto right = this-> _context.validateValue (rightExp);
+
 	    return validateMathOperation (op, expression, left, right);
 	}
 	
@@ -142,8 +151,16 @@ namespace semantic {
 
 	
 	Generator BinaryVisitor::validateLogicalOperation (Binary::Operator op, const syntax::Binary & expression) {
-	    auto left = this-> _context.validateValue (expression.getLeft ());
-	    auto right = this-> _context.validateValue (expression.getRight ());
+	    auto leftExp = expression.getLeft ();
+	    auto rightExp = expression.getRight ();
+	    if (!expression.getType ().isEmpty ()) {
+		leftExp = syntax::Cast::init (expression.getLocation (), expression.getType (), leftExp);
+		rightExp = syntax::Cast::init (expression.getLocation (), expression.getType (), rightExp);		
+	    }
+	    
+	    auto left = this-> _context.validateValue (leftExp);
+	    auto right = this-> _context.validateValue (rightExp);
+
 	    
 	    std::vector <std::string> errors;
 	    TRY (
@@ -270,7 +287,7 @@ namespace semantic {
 	    return Generator::empty ();
 	}	
 
-	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {
+	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    auto right = this-> _context.validateValue (expression.getRight ());
 
@@ -300,6 +317,123 @@ namespace semantic {
 		);
 
 	    return Generator::empty ();	    
+	}
+
+	Generator BinaryVisitor::validateRangeOperation (Binary::Operator op, const syntax::Binary & expression) {
+	    auto leftExp = expression.getLeft ();
+	    auto rightExp = expression.getRight ();
+	    if (!expression.getType ().isEmpty ()) {
+		leftExp = syntax::Cast::init (expression.getLocation (), expression.getType (), leftExp);
+		rightExp = syntax::Cast::init (expression.getLocation (), expression.getType (), rightExp);		
+	    }
+	    
+	    auto left = this-> _context.validateValue (leftExp);
+	    auto right = this-> _context.validateValue (rightExp);
+
+	    if (left.to <Value> ().getType ().to <Type> ().isCompatible (right.to <Value> ().getType ())) {
+		match (left.to <Value> ().getType ()) {
+		    of (Char, c_,
+			auto c = left.to <Value> ().getType ();
+			auto rangeType = Range::init (expression.getLocation (), c);
+
+			auto lVar = generator::VarDecl::init ({expression.getLocation (), "#1"}, "#1", c, left, false);
+			auto rVar = generator::VarDecl::init ({expression.getLocation (), "#2"}, "#2", c, right, false);
+			auto lVref = VarRef::init ({expression.getLocation (), "#1"}, "#1", c, lVar.getUniqId (), false, left);
+			auto rVref = VarRef::init ({expression.getLocation (), "#2"}, "#2", c, rVar.getUniqId (), false, right);
+
+			Fixed::UI hui;
+			Fixed::UI lui;
+			hui.i = 1;
+			lui.i = -1;
+			auto itype = Integer::init (expression.getLocation (), c_.getSize (), true);
+			auto hVal = Fixed::init (expression.getLocation (), itype, hui);
+			auto lVal = Fixed::init (expression.getLocation (), itype, lui);
+
+			auto bin = BinaryInt::init (expression.getLocation (),
+						    Binary::Operator::INF,
+						    Bool::init (expression.getLocation ()),
+						    lVref, rVref);
+			
+			auto step = Conditional::init (expression.getLocation (), itype, bin, hVal, lVal); 
+
+			auto isFull = BoolValue::init (expression.getLocation (), Bool::init (expression.getLocation ()), op == Binary::Operator::TRANGE);
+			auto rangeValue = RangeValue::init (expression.getLocation (), rangeType, lVref, rVref, step, isFull);
+
+			std::vector <Generator> actions;
+			actions.push_back (lVar);
+			actions.push_back (rVar);
+			actions.push_back (rangeValue);
+			
+			return Block::init (expression.getLocation (), rangeType, actions);
+		    ) else of (Float, f_ ATTRIBUTE_UNUSED,
+			       auto f = left.to <Value> ().getType ();
+			       auto rangeType = Range::init (expression.getLocation (), f);
+
+			       auto lVar = generator::VarDecl::init ({expression.getLocation (), "#1"}, "#1", f, left, false);
+			       auto rVar = generator::VarDecl::init ({expression.getLocation (), "#2"}, "#2", f, right, false);
+			       auto lVref = VarRef::init ({expression.getLocation (), "#1"}, "#1", f, lVar.getUniqId (), false, left);
+			       auto rVref = VarRef::init ({expression.getLocation (), "#2"}, "#2", f, rVar.getUniqId (), false, right);
+
+			       auto hVal = FloatValue::init (expression.getLocation (), f, 1.0f);
+			       auto lVal = FloatValue::init (expression.getLocation (), f, -1.0f);
+
+			       auto bin = BinaryFloat::init (expression.getLocation (),
+							     Binary::Operator::INF,
+							     Bool::init (expression.getLocation ()),
+							     lVref, rVref);
+			       
+			       auto step = Conditional::init (expression.getLocation (), f, bin, hVal, lVal); 
+
+			       auto isFull = BoolValue::init (expression.getLocation (), Bool::init (expression.getLocation ()), op == Binary::Operator::TRANGE);
+			       auto rangeValue = RangeValue::init (expression.getLocation (), rangeType, lVref, rVref, step, isFull);
+
+			       std::vector <Generator> actions;
+			       actions.push_back (lVar);
+			       actions.push_back (rVar);
+			       actions.push_back (rangeValue);
+			       return Block::init (expression.getLocation (), rangeType, actions);
+		    ) else of (Integer, i_,
+			       auto i = left.to <Value> ().getType ();
+			       auto rangeType = Range::init (expression.getLocation (), i);
+
+			       auto lVar = generator::VarDecl::init ({expression.getLocation (),"#1"}, "#1", i, left, false);
+			       auto rVar = generator::VarDecl::init ({expression.getLocation (), "#2"}, "#2", i, right, false);
+			       auto lVref = VarRef::init ({expression.getLocation (), "#1"}, "#1", i, lVar.getUniqId (), false, left);
+			       auto rVref = VarRef::init ({expression.getLocation (), "#2"}, "#2", i, rVar.getUniqId (), false, right);
+
+			       Fixed::UI hui;
+			       Fixed::UI lui;
+			       hui.i = 1; lui.i = -1;
+			       auto itype = Integer::init (expression.getLocation (), i_.getSize (), true);
+			       auto hVal = Fixed::init (expression.getLocation (), itype, hui);
+			       auto lVal = Fixed::init (expression.getLocation (), itype, lui);
+
+			       auto bin = BinaryInt::init (expression.getLocation (),
+							   Binary::Operator::INF,
+							   Bool::init (expression.getLocation ()),
+							   lVref, rVref);
+			       
+			       auto step = Conditional::init (expression.getLocation (), itype, bin, hVal, lVal); 
+
+			       auto isFull = BoolValue::init (expression.getLocation (), Bool::init (expression.getLocation ()), op == Binary::Operator::TRANGE);
+			       auto rangeValue = RangeValue::init (expression.getLocation (), rangeType, lVref, rVref, step, isFull);
+
+			       std::vector <Generator> actions;
+			       actions.push_back (lVar);
+			       actions.push_back (rVar);
+			       actions.push_back (rangeValue);
+			       return Block::init (expression.getLocation (), rangeType, actions);
+		    );
+		}
+	    }
+
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				expression.getLocation ().str,
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+	    );
+	    
+	    return Generator::empty ();
 	}
 	
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {
@@ -355,7 +489,11 @@ namespace semantic {
 	}
 	
 	bool BinaryVisitor::isLogical (Binary::Operator op) {
-	    return !isMath (op);
+	    return !isMath (op) && op != Binary::Operator::RANGE && op != Binary::Operator::TRANGE;
+	}
+
+	bool BinaryVisitor::isRange (Binary::Operator op) {
+	    return op == Binary::Operator::RANGE || op == Binary::Operator::TRANGE;
 	}
 	
     }

@@ -66,6 +66,51 @@ namespace semantic {
 		    innerType.to <Type> ().isMutable (false);
 
 		return SliceAccess::init (expression.getLocation (), innerType, left, right [0]);
+	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> ()) {
+		auto rtype = right [0].to <Value> ().getType ();
+		if (rtype.to <Type> ().getInners () [0].is<Integer> () &&
+		    rtype.to <Type> ().getInners () [0].to<Integer> ().getSize () == 64 &&
+		    !rtype.to <Type> ().getInners () [0].to<Integer> ().isSigned ()
+		) {
+		    auto innerType = rtype.to <Type> ().getInners ()[0];
+		    std::vector <Generator> gens;
+		    auto vdecl = generator::VarDecl::init (expression.getLocation (),
+							   "#right", rtype, right [0], false);
+		    auto vref = VarRef::init (expression.getLocation (), "#right", rtype, vdecl.getUniqId (), false, Generator::empty ());
+		    gens.push_back (vdecl);
+
+		    auto vldecl = generator::VarDecl::init (expression.getLocation (),
+							    "#left", left.to <Value> ().getType (), left, false);
+		    auto vlref = VarRef::init (expression.getLocation (), "#left", left.to <Value> ().getType (), vldecl.getUniqId (), false, Generator::empty ());
+		    gens.push_back (vldecl);
+		    
+		    auto l = TupleAccess::init (expression.getLocation (), innerType, vref, 0);
+		    auto r = TupleAccess::init (expression.getLocation (), innerType, vref, 1);
+		    auto len = BinaryInt::init (expression.getLocation (), Binary::Operator::SUB, innerType, r, l);
+
+		    auto ptrType = Pointer::init (expression.getLocation (), Void::init (
+			expression.getLocation ()
+		    ));
+
+		    auto lsize = BinaryInt::init (
+			expression.getLocation (), Binary::Operator::MUL,
+			innerType, 
+			TupleAccess::init (expression.getLocation (), innerType, vref, 0),
+			SizeOf::init (expression.getLocation (), innerType, left.to <Value> ().getType ().to <Type> ().getInners ()[0])
+		    );
+		    
+		    gens.push_back (SliceValue::init (
+			expression.getLocation (),
+			left.to <Value> ().getType (),
+			BinaryPtr::init (expression.getLocation (), Binary::Operator::ADD,
+					 ptrType,
+					 StructAccess::init (expression.getLocation (), ptrType, vlref, "ptr"),
+					 lsize
+			),
+			len
+		    ));
+		    return Block::init (expression.getLocation (), left.to <Value> ().getType (), gens);
+		}
 	    }
 
 	    BracketVisitor::error (expression, left, right);

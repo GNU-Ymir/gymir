@@ -27,6 +27,8 @@ namespace semantic {
 	/** The list of usable symbols for symbol search */
 	/** This list is intended to be used only in the proxy symbol */
 	std::map <std::string, Symbol> _used;
+
+	bool _isPublic = false;
 	
     private :
 	
@@ -102,12 +104,30 @@ namespace semantic {
 	virtual void unuse (const std::string & name);	
 
 	/**
+	 * \brief Set the symbol to public
+	 */
+	void setPublic ();
+
+	/**
+	 * \brief Is this symbol declared public ?
+	 */
+	bool isPublic () const;
+	
+	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
 	 * \brief It will ask it's referent recursively
 	 * \return a list of symbol, or an empty list if it does not exists
 	 */
 	virtual std::vector <Symbol> get (const std::string & name) const ;
 
+	/**
+	 * \brief Find a symbol named name, in the scope hierarchy
+	 * \brief It will ask to it's referent recursively
+	 * \brief It can only return symbols that are public
+	 * \return a list of symbols (all publics), or an empty list it it does not exists
+	 */
+	virtual std::vector <Symbol> getPublic (const std::string & name) const;	
+	
 	/**
 	 * \brief Find a symbol named name in the table of this symbol
 	 * \brief Does not call it's referent
@@ -223,12 +243,38 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	void unuse (const std::string & name);
+
+	/**
+	 * Proxy function for symbol
+	 */
+	void setPublic ();
+
+	/**
+	 * Proxy function for symbol
+	 */
+	bool isPublic () const;
 	
 	/**
 	 * Proxy function for symbol
 	 */
 	std::vector <Symbol> get (const std::string & name) const;
 
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector <Symbol> getPublic (const std::string & name) const;
+
+	/**
+	 * \warning not a proxy function
+	 * \brief search a symbol from a used symbol (*this* is currently in a list used in another symbol)
+	 */
+	std::vector <Symbol> getUsed (const std::string & name) const;
+
+	/**
+	 * Proxy function for symbol
+	 */
+	const std::map <std::string, Symbol> & getUsedSymbols () const;
+	
 	/**
 	 * Proxy function for symbol
 	 */

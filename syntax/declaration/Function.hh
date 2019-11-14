@@ -34,7 +34,7 @@ namespace syntax {
 	    bool _isVariadic;
 	    
 	private:
-
+	    
 	    Prototype ();
 	    
 	public:
@@ -89,6 +89,7 @@ namespace syntax {
 	     * \param is if true, this prototype is considered variadic
 	     */
 	    void isVariadic (bool is);
+
 	    
 	    /**
 	     * \return the list of parameters of the prototype
@@ -214,13 +215,19 @@ namespace syntax {
 	/** The name of the function */
 	lexing::Word _name;
 
+	/**
+	 * Is declared at semantic time validation (from template resolution for instance) 
+	 * and is therefore weak def
+	 */
+	bool _isWeak = false;
+	
     private :
 
 	friend Declaration; // Needed for dynamic casting 
 	
 	/** \brief Does nothing special, just to ensure that the function cannot be created without init */
 	Function ();
-
+	
     public:
 
 	/** 
@@ -302,6 +309,16 @@ namespace syntax {
 	 * \return the body of the function
 	 */
 	const Body & getBody () const;
+
+	/**
+	 * This definition is now weak
+	 */
+	void setWeak ();
+
+	/**
+	 * Is this function weak
+	 */
+	bool isWeak () const;
     };
     
 }
