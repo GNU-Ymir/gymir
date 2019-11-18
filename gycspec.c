@@ -100,9 +100,10 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 int
 lang_specific_pre_link (void)
 {
-    /* Not used for Tiny.  */
+    /* Not used for Ymir.  */
     return 0;
 }
  
 /* Number of extra output files that lang_specific_pre_link may generate.  */
-int lang_specific_extra_outfiles = 0; /* Not used for Tiny.  */
+int lang_specific_extra_outfiles = 0; /* Not used for Ymir.  */
+<
