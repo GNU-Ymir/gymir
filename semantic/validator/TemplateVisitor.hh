@@ -27,6 +27,7 @@ namespace semantic {
 		bool succeed;
 		uint score;
 		std::map <std::string, syntax::Expression> mapping;
+		std::vector <std::string> nameOrder;
 	    };		
 	    
 	    Visitor & _context;

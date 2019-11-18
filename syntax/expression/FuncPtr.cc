@@ -30,13 +30,20 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
-    const Expression & FuncPtr::getRet () const {
+    const Expression & FuncPtr::getRetType () const {
 	return this-> _ret;
     }
 
-    const std::vector <Expression> & FuncPtr::getParams () const {
+    const std::vector <Expression> & FuncPtr::getParameters () const {
 	return this-> _params;
     }
     
+    void FuncPtr::treePrint (Ymir::OutBuffer & stream, int i) const {
+	stream.writefln ("%*<FuncPtr> ", i, '\t');
+	this-> _ret.treePrint (stream, i + 1);
+	for (auto & it : this-> _params) {
+	    it.treePrint (stream, i + 2);
+	}
+    }
     
 }

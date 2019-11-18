@@ -34,8 +34,9 @@ namespace semantic {
 
 	    /**
 	     * \brief Validate the operation and return a generator
+	     * \param isFromCall if false, we ar allowed to make a dotCall to a templateCall ((10).to!string, for example)
 	     */
-	    generator::Generator validate (const syntax::Binary & expression);
+	    generator::Generator validate (const syntax::Binary & expression, bool isFromCall);
 
 
 	    /**
@@ -73,7 +74,20 @@ namespace semantic {
 	     * \param left the value of type range
 	     */
 	    generator::Generator validateRange (const syntax::Binary & expression, const generator::Generator & left);	    
-	    
+
+	    /**
+	     * \brief Validate an implicit dotTemplateCall
+	     * \brief a dotTemplateCall is as the following ((expression)'.' (var'!' params) [\'('], with 
+	     * \brief Or the following AST : 
+	     * \verbatim 
+	     <Any not {Call}> 
+	         <Dot> 
+                       <Any>
+		       <TemplateCall> 
+	     \endverbatim
+	     */
+	    generator::Generator validateDotTemplateCall (const syntax::Binary & expression, const generator::Generator & left);
+
 	private :
 
 	    /**

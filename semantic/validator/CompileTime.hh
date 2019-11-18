@@ -101,6 +101,12 @@ namespace semantic {
 	     * \brief Execute a frame at compile time (used in executeCall)
 	     */
 	    generator::Generator executeFrame (const generator::FrameProto & fr);
+
+	    /**
+	     * \brief Executeframe an addresser at compile time
+	     * \brief If the addresser is a funcPtr to a FrameProto we know it at compile time
+	     */
+	    generator::Generator executeAddresser (const generator::Generator & addr);
 	    
 	};
 	

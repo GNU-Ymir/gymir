@@ -21,7 +21,9 @@ namespace semantic {
 	std::vector <syntax::Expression> _templs;
 	
 	std::map <std::string, syntax::Expression> _params;
-
+	
+	std::vector <std::string> _nameOrder;
+	
     private : 
 
 	friend Symbol;
@@ -30,11 +32,11 @@ namespace semantic {
 
 	TemplateSolution (const TemplateSolution & mod);
 	
-	TemplateSolution (const lexing::Word & loc, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params);
+	TemplateSolution (const lexing::Word & loc, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders);
 	
     public :
 
-	static Symbol init (const lexing::Word & loc, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params);
+	static Symbol init (const lexing::Word & loc, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders);
 
 	Symbol clone () const override;
 

@@ -129,6 +129,15 @@ namespace semantic {
 		       inner.push_back (generateType (Bool::init (rg.getLocation ())));
 		       type = Tree::tupleType ({Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, inner);
 		   }
+	       ) else of (FuncPtr, fn, {
+		       auto retType = generateType (fn.getReturnType ());
+		       std::vector <Tree> params;
+		       for (auto & it : fn.getParamTypes ())
+			   params.push_back (generateType (it));
+		       type = Tree::pointerType (
+			   Tree::functionType (retType, params)
+		       );
+		   }
 	       );
 	    }
 	    
@@ -314,11 +323,10 @@ namespace semantic {
 		value = castTo (frame.getType (), frame.getContent ());
 		list.append (value.getList ());
 		value = value.getValue ();
-		if (!resultDecl.getType ().isPointerType ()) value = value.toDirect ();
 
 		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value));
 		value = list.toTree ();
-	    } else value = generateValue (frame.getContent ());
+	    } else value = generateValue (frame.getType (), frame.getContent ());
 	    
 	    auto fnTree = quitBlock (lexing::Word::eof (), value);
 	    auto fnBlock = fnTree.block;
@@ -364,8 +372,25 @@ namespace semantic {
 	    
 	    return decl;
 	}
-	
+
 	Tree Visitor::generateValue (const Generator & gen) {
+	    auto value = generateValueInner (gen);
+	    if (gen.to<Value> ().getType ().to <Type> ().isRef ())
+		value = value.toDirect ();
+	    return value;
+	}
+
+	Tree Visitor::generateValue (const Generator & type, const Generator & gen) {
+	    auto value = generateValueInner (gen);
+	    if (gen.to <Value> ().getType ().to <Type> ().isRef ()) {
+		if (!type.to <Type> ().isRef ())
+		    value = value.toDirect ();
+	    }
+	    return value;
+	}
+
+	
+	Tree Visitor::generateValueInner (const Generator & gen) {
 	    match (gen) {
 		of (Block, block,
 		    return generateBlock (block);
@@ -422,6 +447,10 @@ namespace semantic {
 		    return generateReferencer (_ref);
 		)
 
+		else of (Addresser, addr,
+		    return generateAddresser (addr);
+		)
+
 		else of (Conditional, cond,
 		    return generateConditional (cond);
 		)
@@ -474,6 +503,10 @@ namespace semantic {
 		    return generateUnaryFloat (uf);
 		)
 
+		else of (UnaryPointer, uf,
+		    return generateUnaryPointer (uf);
+		)
+
 		else of (TupleValue, tu,
 		    return generateTupleValue (tu);
 		)
@@ -484,26 +517,46 @@ namespace semantic {
 			 
 		else of (Call, cl,
 		    return generateCall (cl);		
-		) else of (FrameProto, pr,
+		)
+
+		else of (FrameProto, pr,
 		    return generateFrameProto (pr);		
-		) else of (TupleAccess, acc,
-			   return generateTupleAccess (acc);		
-		) else of (StructAccess, acc,
+		)
+
+		else of (TupleAccess, acc,
+		    return generateTupleAccess (acc);		
+		)
+
+		else of (StructAccess, acc,
 		   return generateStructAccess (acc);					 
-		) else of (StructCst, cst,
+		)
+
+		else of (StructCst, cst,
 		    return generateStructCst (cst);	       
-		) else of (StructRef, rf ATTRIBUTE_UNUSED,
+		)
+
+		else of (StructRef, rf ATTRIBUTE_UNUSED,
 		    return Tree::empty ();
-		) else of (Return, rt,
-		     return generateReturn (rt);
-		) else of (RangeValue, rg,
-		     return generateRangeValue (rg);
-		) else of (SliceValue, sl,
-		     return generateSliceValue (sl);
-		) else of (Cast, cast,
-		      return generateCast (cast);
-		) else of (ArrayAlloc, alloc,
-		      return generateArrayAlloc (alloc);
+		)
+
+		else of (Return, rt,
+		    return generateReturn (rt);
+		)
+
+		else of (RangeValue, rg,
+		    return generateRangeValue (rg);
+		)
+
+		else of (SliceValue, sl,
+		    return generateSliceValue (sl);
+		)
+
+		else of (Cast, cast,
+		    return generateCast (cast);
+		)
+
+		else of (ArrayAlloc, alloc,
+		    return generateArrayAlloc (alloc);
 		);
 	    }
 
@@ -531,7 +584,6 @@ namespace semantic {
 		auto value = castTo (block.getType (), last);
 		list.append (value.getList ());
 		value = value.getValue ();
-		if (!var.getType ().isPointerType ()) value = value.toDirect ();
 
 		list.append (Tree::affect (block.getLocation (), var, value));		
 		auto binding = quitBlock (block.getLocation (), list.toTree ());
@@ -600,12 +652,12 @@ namespace semantic {
 	Tree Visitor::generateAffect (const Affect & aff) {
 	    auto left = generateValue (aff.getWho ());
 	    auto right = castTo (aff.getWho ().to <Value> ().getType (), aff.getValue ());
-
+	    
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
 	    list.append (right.getList ());
-	    auto lvalue = aff.getWho ().to <Value> ().getType ().to <Type> ().isRef () ? left.getValue ().toDirect () : left.getValue ();
-	    auto rvalue = aff.getValue ().to <Value> ().getType ().to <Type> ().isRef () ? right.getValue ().toDirect () : right.getValue ();
+	    auto lvalue =  left.getValue ();
+	    auto rvalue =  right.getValue ();
 	    
 	    auto value = Tree::affect (aff.getLocation (), lvalue, rvalue);
 	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
@@ -643,9 +695,9 @@ namespace semantic {
 	    }
 
 	    auto type = generateType (bin.getType ());
-
-	    auto lvalue = left.getValue ().toDirect (); // We want an int, but it can be a ref to a int
-	    auto rvalue = right.getValue ().toDirect ();
+	    
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
 	    
 	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);	    
 	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
@@ -670,8 +722,8 @@ namespace semantic {
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }
 
-	    auto lvalue = left.getValue ().toDirect ();
-	    auto rvalue = right.getValue ().toDirect ();
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
 	    
 	    auto type = generateType (bin.getType ());
 	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);
@@ -704,8 +756,8 @@ namespace semantic {
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }
 	    
-	    auto lvalue = left.getValue ().toDirect ();
-	    auto rvalue = right.getValue ().toDirect ();
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
 	    
 	    auto type = generateType (bin.getType ());
 	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);
@@ -729,8 +781,8 @@ namespace semantic {
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }
 
-	    auto lvalue = bin.getLeft ().to <Value> ().getType ().to <Type> ().isRef () ? left.getValue ().toDirect () : left.getValue ();
-	    auto rvalue = bin.getRight ().to <Value> ().getType ().to <Type> ().isRef () ? right.getValue ().toDirect () : right.getValue ();
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
 	    
 	    auto type = generateType (bin.getType ());
 	    auto value = Tree::binaryPtr (bin.getLocation (), code, type, lvalue, rvalue);
@@ -766,7 +818,7 @@ namespace semantic {
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (value.getList ());
 
-	    value = value.getValue ().toDirect ();
+	    value = value.getValue ();
 
 	    tree_code code = NEGATE_EXPR;
 	    switch (un.getOperator ()) {
@@ -788,11 +840,30 @@ namespace semantic {
 		auto type = generateType (un.getType ());
 		TreeStmtList list = TreeStmtList::init ();
 		list.append (value.getList ());
-		value = value.getValue ().toDirect ();
+		value = value.getValue ();
 
 		return Tree::compound (
 		    un.getLocation (),
 		    Tree::binary (un.getLocation (), BIT_XOR_EXPR, type, value, Tree::buildBoolCst (un.getLocation (), true)),
+		    list.toTree ()
+		);
+	    } else {
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return Tree::empty ();
+	    }
+	}
+
+
+	generic::Tree Visitor::generateUnaryPointer (const UnaryPointer & un) {
+	    if (un.getOperator () == Unary::Operator::UNREF) {
+		auto value = generateValue (un.getOperand ());
+		TreeStmtList list = TreeStmtList::init ();
+		list.append (value.getList ());
+		value = value.getValue ();
+
+		return Tree::compound (
+		    un.getLocation (),
+		    value.buildPointerUnref (0),
 		    list.toTree ()
 		);
 	    } else {
@@ -811,10 +882,8 @@ namespace semantic {
 
 	    auto decl = Tree::varDecl (var.getLocation (), name, type);
 	    if (!var.getVarValue ().isEmpty ()) {
-		if (!var.getVarType ().to <Type> ().isRef ())
-		    decl.setDeclInitial (castTo (var.getVarType (), var.getVarValue ()).toDirect ());
-		else
-		    decl.setDeclInitial (generateValue (var.getVarValue ()));		
+		auto value = castTo (var.getVarType (), var.getVarValue ());
+		decl.setDeclInitial (value);
 	    } else if (var.isAutoInit ())
 		decl.setDeclInitial (generateInitValueForType (var.getVarType ()));	    
 
@@ -826,14 +895,24 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::generateReferencer (const Referencer & ref) {
-	    auto inner = generateValue (ref.getWho ());
+	    auto inner = castTo (ref.getType (), ref.getWho ());
 	    if (ref.getWho ().to <Value> ().getType ().to <Type> ().isRef ())
-		return inner;
+	    	return inner;
 
 	    auto type = generateType (ref.getType ());
 	    return Tree::buildAddress (ref.getLocation (), inner, type);
 	}	
 
+	generic::Tree Visitor::generateAddresser (const Addresser & addr) {
+	    auto inner = castTo (addr.getType (), addr.getWho ());
+	    auto type = generateType (addr.getType ());
+
+	    if (addr.getType ().is <FuncPtr> ()) // If it is a func pointer, we already get its address
+		return inner;
+	    else 
+		return Tree::buildAddress (addr.getLocation (), inner, type);
+	}
+	
 	generic::Tree Visitor::generateConditional (const Conditional & cond) {
 	    auto test = generateValue (cond.getTest ());
 	    Tree var (Tree::empty ());
@@ -849,7 +928,6 @@ namespace semantic {
 		content = castTo (cond.getType (), cond.getContent ());
 		list.append (content.getList ());
 		auto value = content.getValue ();
-		if (!var.getType ().isPointerType ()) value = value.toDirect ();
 		
 		list.append (Tree::affect (cond.getLocation (), var, value));
 		content = list.toTree ();
@@ -862,7 +940,6 @@ namespace semantic {
 		    elsePart = castTo (cond.getType (), cond.getElse ());
 		    list.append (elsePart.getList ());
 		    auto value = elsePart.getValue ();
-		    if (!var.getType ().isPointerType ()) value = value.toDirect ();
 		
 		    list.append (Tree::affect (cond.getLocation (), var, value));
 		    elsePart = list.toTree ();
@@ -897,7 +974,7 @@ namespace semantic {
 		content = castTo (loop.getType (), loop.getContent ());
 		list.append (content.getList ());
 		auto value = content.getValue ();
-		if (!var.getType ().isPointerType ()) value = value.toDirect ();
+
 		list.append (Tree::affect (loop.getLocation (), var, value));
 		content = list.toTree ();
 	    } else content = generateValue (loop.getContent ());
@@ -933,7 +1010,7 @@ namespace semantic {
 	generic::Tree Visitor::generateBreak (const Break & br) {
 	    TreeStmtList list = TreeStmtList::init ();
 	    if (!br.getValue ().to <Value> ().getType ().is<Void> ()) {
-	    	auto value = generateValue (br.getValue ());		
+	    	auto value = generateValue (br.getValue ());		 // Loop will never be lvalue, and therefore cannot return a ref
 	    	list.append (
 	    	    Tree::affect (br.getLocation (),
 	    			  this-> _loopVars.back (),
@@ -948,13 +1025,12 @@ namespace semantic {
 	generic::Tree Visitor::generateReturn (const Return & ret) {
 	    TreeStmtList list = TreeStmtList::init ();
 	    if (!ret.getValue ().to <Value> ().getType ().is<Void> ()) {
-		auto value = generateValue (ret.getValue ());
+		auto value = castTo (ret.getFunType (), ret.getValue ());
 		list.append (value.getList ());
 		value = value.getValue ();
 		auto fr = getCurrentContext ();
 		auto resultDecl = fr.getResultDecl ();
 		
-		if (!resultDecl.getType ().isPointerType ()) value = value.toDirect ();
 		list.append (Tree::returnStmt (ret.getLocation (), resultDecl, value));
 	    } else {
 		auto fr = getCurrentContext ();
@@ -968,10 +1044,10 @@ namespace semantic {
 	generic::Tree Visitor::generateRangeValue (const RangeValue & rng) {
 	    auto type = generateType (rng.getType ());
 	    std::vector <Tree> params = {
-		generateValue (rng.getLeft ()).toDirect (),
-		generateValue (rng.getRight ()).toDirect (),
-		generateValue (rng.getStep ()).toDirect (),
-		generateValue (rng.getIsFull ()).toDirect ()
+		generateValue (rng.getLeft ()),
+		generateValue (rng.getRight ()),
+		generateValue (rng.getStep ()),
+		generateValue (rng.getIsFull ())
 	    };
 	    return Tree::constructField (rng.getLocation (), type, {Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, params);
 	}
@@ -979,11 +1055,9 @@ namespace semantic {
 	generic::Tree Visitor::generateSliceValue (const SliceValue & slc) {
 	    auto type = generateType (slc.getType ());
 	    auto ptrValue = generateValue (slc.getPtr ());
-	    if (slc.getPtr ().to <Value> ().getType ().to <Type> ().isRef ())
-		ptrValue = ptrValue.toDirect ();
 	    
 	    std::vector <Tree> params = {
-		generateValue (slc.getLen ()).toDirect (),
+		generateValue (slc.getLen ()),
 		ptrValue
 	    };
 
@@ -1032,10 +1106,10 @@ namespace semantic {
 	
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
 	    auto type = generateType (val.getType ());
-	    auto inner = generateType (val.getType ().to <Array> ().getInners () [0]);
+	    //auto inner = generateType (val.getType ().to <Array> ().getInners () [0]);
 	    std::vector <Tree> params;
 	    for (auto it : val.getContent ()) {
-		auto value = inner.isPointerType () ? generateValue (it) : generateValue (it).toDirect ();
+		auto value = castTo (val.getType ().to<Type> ().getInners ()[0], it);
 		params.push_back (value);
 	    }
 	    return Tree::constructIndexed (val.getLocation (), type, params);
@@ -1044,9 +1118,9 @@ namespace semantic {
 	generic::Tree Visitor::generateTupleValue (const TupleValue & val) {
 	    auto type = generateType (val.getType ());
 	    std::vector <Tree> params;
-	    for (auto it : val.getContent ()) {
-		auto inner = generateType (it.to<Value> ().getType ());
-		auto value = inner.isPointerType () ? generateValue (it) : generateValue (it).toDirect ();
+	    for (auto it : Ymir::r (0, val.getContent ().size ())) {		    
+		//auto inner = generateType (it.to<Value> ().getType ());
+		auto value = castTo (val.getType().to<Type> ().getInners ()[it], val.getContent ()[it]);
 		params.push_back (value);
 	    }
 	    return Tree::constructField (val.getLocation (), type, {}, params);
@@ -1065,40 +1139,35 @@ namespace semantic {
 	    for (auto & it : proto.getParameters ())
 		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
 
+
 	    auto type = generateType (proto.getReturnType ());
 	    auto name = Mangler::init ().mangleFrameProto (proto);
 	    return Tree::buildFrameProto (proto.getLocation (), type, name, params);
 	}
 
 	generic::Tree Visitor::generateTupleAccess (const TupleAccess & acc) {
-	    auto elem = castTo (acc.getTuple ().to <Value> ().getType (), acc.getTuple ());
+	    auto elem = generateValue (acc.getTuple ());
 	    auto field = Ymir::format ("_%", acc.getIndex ());
-	    return elem.toDirect ().getField (field);
+	    return elem.getField (field);
 	}
 
 	generic::Tree Visitor::generateStructAccess (const StructAccess & acc) {
-	    auto elem = castTo (acc.getStruct ().to <Value> ().getType (), acc.getStruct ());
-	    return elem.toDirect ().getField (acc.getField ());
+	    auto elem = generateValue (acc.getStruct ());
+	    return elem.getField (acc.getField ());
 	}
 
 	generic::Tree Visitor::generateCall (const Call & cl) {
 	    std::vector <Tree> results;
 	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {
 		results.push_back (castTo (cl.getTypes () [it], cl.getParameters () [it]));
-		auto type = generateType (cl.getTypes () [it]);
-		if (!type.isPointerType ())
-		    results.back () = results.back ().toDirect ();
 	    }
 
 	    for (auto & it : cl.getAddParameters ()) {
-		auto value = generateValue (it);
-		if (it.to <Value> ().getType ().to<Type> ().isRef ())
-		    results.push_back (value.toDirect ().promote ());
-		else
-		    results.push_back (value.promote ());
+		auto value = generateValue (it);		
+		results.push_back (value.promote ());
 	    }
 	    
-	    auto fn = generateValue (cl.getFrame ());
+	    auto fn = generateValue (cl.getFrame ());	    
 	    auto type = generateType (cl.getType ());
 	    return Tree::buildCall (cl.getLocation (), type, fn , results);
 	}
@@ -1116,7 +1185,7 @@ namespace semantic {
 	}
 	
 	generic::Tree Visitor::generateCopier (const Copier & copy) {
-	    auto inner = generateValue (copy.getWho ()).toDirect ();
+	    auto inner = generateValue (copy.getWho ());
 	    if (copy.getType ().is <Array> ())
 		return inner;
 
@@ -1146,7 +1215,7 @@ namespace semantic {
 	    list.append (left.getList ());
 	    list.append (right.getList ());
 
-	    auto lvalue = left.getValue ().toDirect (), rvalue = right.getValue ().toDirect ();
+	    auto lvalue = left.getValue (), rvalue = right.getValue ();
 	    
 	    return Tree::compound (
 		access.getLocation (),
@@ -1163,7 +1232,7 @@ namespace semantic {
 	    list.append (left.getList ());
 	    list.append (right.getList ());
 
-	    auto lvalue = left.getValue ().toDirect (), rvalue = right.getValue ().toDirect ();
+	    auto lvalue = left.getValue (), rvalue = right.getValue ();
 	    ulong size = generateType (access.getSlice ().to <Value> ().getType ().to <Slice> ().getInners () [0]).getSize ();
 	    
 	    auto indexType = Tree::sizeType ();
@@ -1180,7 +1249,7 @@ namespace semantic {
 	}
 	
 	generic::Tree Visitor::castTo (const Generator & type, const Generator & val) {
-	    auto value = generateValue (val);
+	    auto value = generateValue (type, val);
 	    if (type.is <Slice> ()) {
 		auto inner = generateType (type.to <Slice> ().getInners () [0]);
 		auto aux_type = type;

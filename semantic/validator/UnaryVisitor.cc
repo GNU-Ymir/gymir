@@ -17,31 +17,49 @@ namespace semantic {
 	}
 
 	Generator UnaryVisitor::validate (const syntax::Unary & expression) {
-	    auto operand = this-> _context.validateValue (expression.getContent ());	    
-	    match (operand.to <Value> ().getType ()) {
-		of (Bool, b ATTRIBUTE_UNUSED,
-		    return validateBool (expression, operand);
-		);
+	    auto op = toOperator (expression.getOperator ());
+	    // If the operator is &, we want to have access to the adress of the function,
+	    // so it is forbidden to fast call any function (even if it is a dot templateCall)
+	    auto operand = this-> _context.validateValue (expression.getContent (), false, op == Unary::Operator::ADDR);
 
-		// of (Char, c ATTRIBUTE_UNUSED,
-		//     return validateChar (expression, operand);
-		// );
+	    if (op == Unary::Operator::ADDR) { // Pointer
+		match (operand) {
+		    of (FrameProto, proto ATTRIBUTE_UNUSED,
+			return validateFunctionPointer (expression, operand);
+		    ) else {
+			if (operand.to <Value> ().isLvalue ()) {
+			    auto type = Pointer::init (operand.getLocation (), operand.to<Value> ().getType ());
+			    type.to<Type> ().isMutable(true);
+			    return Addresser::init (expression.getLocation (), type, operand);
+			} else {
+			    Ymir::Error::occur (operand.getLocation (),
+						ExternalError::get (NOT_A_LVALUE)
+			    );
+			}
+		    }
+		}
+	    } else {	    	
+		match (operand.to <Value> ().getType ()) {
+		    of (Bool, b ATTRIBUTE_UNUSED,
+			return validateBool (expression, operand);
+		    );
 
-		of (Float, f ATTRIBUTE_UNUSED,
-		    return validateFloat (expression, operand);
-		);
+		    of (Float, f ATTRIBUTE_UNUSED,
+			return validateFloat (expression, operand);
+		    );
 
-		of (Integer, i ATTRIBUTE_UNUSED,
-		    return validateInt (expression, operand);
-		);		
+		    of (Integer, i ATTRIBUTE_UNUSED,
+			return validateInt (expression, operand);
+		    );
+
+
+		    of (Pointer, p ATTRIBUTE_UNUSED,
+			return validatePointer (expression, operand);
+		    );
+		}
 	    }
-
-	    // auto op = toOperator (expression.getOperator ());
-	    // if (op == Unary::Operand::ADDR) {
-	    // 	// TODO pointers
-	    // }
 	    
-	    UnaryVisitor::error (expression, operand);
+	    UnaryVisitor::error (expression, operand);	
 	    return Generator::empty ();	    
 	}
 
@@ -70,12 +88,51 @@ namespace semantic {
 	    
 	    error (un, operand);
 	    return Generator::empty ();
-	}	
+	}
+
+	Generator UnaryVisitor::validatePointer (const syntax::Unary & un, const Generator & operand) {
+	    auto op = toOperator (un.getOperator ());
+	    if (op == Unary::Operator::UNREF) {
+		this-> _context.verifySafety (un.getLocation ());
+		auto type = operand.to <Value> ().getType ().to <Type> ().getInners ()[0];
+		if (!operand.to <Value> ().getType ().to <Type> ().isMutable ())
+		    type.to<Type> ().isMutable (false);
+		return UnaryPointer::init (un.getLocation (),
+					   op,
+					   type,
+					   operand
+		);
+	    }
+
+	    error (un, operand);
+	    return Generator::empty ();
+	}
+
+	Generator UnaryVisitor::validateFunctionPointer (const syntax::Unary & un, const Generator & proto) {
+	    auto params = proto.to <FrameProto> ().getParameters ();
+	    auto ret = proto.to <FrameProto> ().getReturnType ();
+	    std::vector <Generator> paramTypes;
+	    for (auto & it : params) {
+		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+	    }
+	    
+	    auto funcType = FuncPtr::init (un.getLocation (), ret, paramTypes);
+	    return Addresser::init (un.getLocation (), funcType, proto);
+	}
 	
-	void UnaryVisitor::error (const syntax::Unary & un, const generator::Generator & operand) {
+	void UnaryVisitor::error (const syntax::Unary & un, const generator::Generator & left) {
+	    std::string leftName;
+	    match (left) {
+		of (FrameProto, proto, leftName = proto.getName ())
+		else of (generator::Struct, str, leftName = str.getName ())
+		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
+	    }
+	    
 	    Ymir::Error::occur (un.getLocation (),
 				ExternalError::get (UNDEFINED_UN_OP),
-				operand.to <Value> ().getType ().to <Type> ().getTypeName ()
+				un.getLocation ().str, 
+				leftName
 	    );
 	}	
 

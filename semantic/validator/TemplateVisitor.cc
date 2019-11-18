@@ -39,14 +39,35 @@ namespace semantic {
 		
 	    }
 
-	    if (consumed < (int) values.size () || !globalMapper.succeed)
-		return Symbol::empty ();
-	    else {
+	    if (!globalMapper.succeed || consumed < (int) values.size ()) {
+		return Symbol::empty ();	    
+	    } else if (syntaxTempl.size () != 0) { // Rest some template that are not validated
+		static int __tmpTemplate__ = 0;
+		__tmpTemplate__ += 1;
 		score = globalMapper.score;
 		auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), globalMapper.mapping);
+		auto final_test = replaceAll (sym.to <semantic::Template> ().getTest (), globalMapper.mapping);
+		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
+		auto sym = Template::init (ref.getLocation (), syntaxTempl, final_syntax, final_test);
+
+		auto merge = mergeMappers (prevMapper, globalMapper);
+		sym.to <Template> ().setPreviousSpecialization (merge.mapping);
+		sym.to <Template> ().setSpecNameOrder (merge.nameOrder);		
+		
+		ref.getTemplateRef ().getReferent ().insertTemplate (sym);
+		
+		return sym;
+	    } else {
+		score = globalMapper.score;
+		auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), globalMapper.mapping);
+		auto final_test = replaceAll (sym.to <semantic::Template> ().getTest (), globalMapper.mapping);
 		auto visit = declarator::Visitor::init ();
 		visit.pushReferent (ref.getTemplateRef ().getReferent ());
-		visit.pushReferent (TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), globalMapper.mapping));
+		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
+
+		auto merge = mergeMappers (prevMapper, globalMapper);
+		visit.pushReferent (TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder));
+		
 		auto sym = visit.visit (final_syntax);
 		auto glob = visit.popReferent ();
 		visit.getReferent ().insertTemplate (glob);
@@ -62,6 +83,7 @@ namespace semantic {
 			    mapper.succeed = true;
 			    mapper.score = Scores::SCORE_VAR;
 			    mapper.mapping.emplace (var.getName ().str, createSyntaxType (var.getName (), values [0]));
+			    mapper.nameOrder.push_back (var.getName ().str);
 			    consumed += 1;
 			    return mapper;
 			} else {
@@ -84,6 +106,7 @@ namespace semantic {
 			    auto mapper = validateTypeFromImplicit  (syntaxTempl, decl.getType (), {values [0].to <Value> ().getType ()}, consumed);
 			    if (mapper.succeed) {
 				mapper.mapping.emplace (decl.getName ().str, createSyntaxValue (decl.getName (), values [0]));
+				mapper.nameOrder.push_back (decl.getName ().str);
 			    }
 			    mapper.score += Scores::SCORE_VAR;
 			    return mapper;
@@ -105,8 +128,10 @@ namespace semantic {
 			
 			if (values.size () == 1) {
 			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().str);
 			} else {
 			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), Tuple::init (var.getLocation (), values)));
+			    mapper.nameOrder.push_back (var.getLocation ().str);
 			}
 			consumed += values.size ();
 			return mapper;
@@ -179,7 +204,10 @@ namespace semantic {
 		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), globalMapper.mapping);
 		auto visit = declarator::Visitor::init ();
 		visit.pushReferent (ref.getTemplateRef ().getReferent ());
-		visit.pushReferent (TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), globalMapper.mapping));
+		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to <Template> ().getSpecNameOrder ()};
+		auto merge = mergeMappers (prevMapper, globalMapper);
+		
+		visit.pushReferent (TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder));
 		auto sym_func = visit.visitFunction (func.to <syntax::Function> ());
 		symbol = visit.popReferent ();
 		visit.getReferent ().insertTemplate (symbol);
@@ -252,6 +280,27 @@ namespace semantic {
 			consumed += 1;
 			int current_consumed = 0;
 			return applyTypeFromDecoratedExpression (params, dc, types, current_consumed);
+		    }
+		) else of (syntax::FuncPtr, fPtr, {
+			consumed += 1;
+			auto type = types [0];
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == fPtr.getParameters ().size () + 1) {
+			    Mapper mapper;
+			    auto syntaxParams = fPtr.getParameters ();
+			    for (auto it : Ymir::r (0, syntaxParams.size ())) {
+				auto param = replaceAll (syntaxParams [it], mapper.mapping);
+				int current_consumed = 0;
+				auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners ()[it + 1]}, current_consumed); // On funcPtr type, the first one is the type
+				if (!mp.succeed) return mp;
+				mapper = mergeMappers (mapper, mp);
+			    }
+
+			    int current_consumed = 0;
+			    auto param = replaceAll (fPtr.getRetType (), mapper.mapping);
+			    auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners ()[0]}, current_consumed); // specialize the return type
+			    if (!mp.succeed) return mp;
+			    return mergeMappers (mapper, mp);
+			}
 		    }
 		);
 	    }
@@ -333,6 +382,7 @@ namespace semantic {
 			mapper.succeed = true;
 			mapper.score = Scores::SCORE_VAR;
 			mapper.mapping.emplace (var.getName ().str, createSyntaxType (var.getName (), types [0]));
+			mapper.nameOrder.push_back (var.getName ().str);
 			consumed += 1;
 			return mapper;
 		    }
@@ -346,8 +396,10 @@ namespace semantic {
 			mapper.score = Scores::SCORE_TYPE;
 			if (types.size () == 1) {
 			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().str);
 			} else {
 			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), Tuple::init (var.getLocation (), types)));
+			    mapper.nameOrder.push_back (var.getLocation ().str);
 			}
 			consumed += types.size ();
 			return mapper;
@@ -374,6 +426,7 @@ namespace semantic {
 			    mapper.succeed = true;
 			    mapper.score = Scores::SCORE_TYPE;
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), type));
+			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    return mapper;
 			} else {
 			    int consumed = 0;
@@ -382,6 +435,7 @@ namespace semantic {
 			    auto genType = this-> _context.validateType (realType);
 			    
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
+			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    return mapper;
 			}
 		    }
@@ -400,6 +454,7 @@ namespace semantic {
 			    auto genType = this-> _context.validateType (realType);
 			    this-> _context.verifySameType (genType, type);
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
+			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    mapper.score += Scores::SCORE_TYPE;
 			    return mapper;
 			} else {
@@ -417,6 +472,7 @@ namespace semantic {
 			    auto genType = this-> _context.validateType (realType);
 			    this-> _context.verifySameType (genType, type);
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
+			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    mapper.score += Scores::SCORE_TYPE;
 			    return mapper;
 			} else {
@@ -432,6 +488,7 @@ namespace semantic {
 			auto genType = this-> _context.validateType (realType);
 			this-> _context.verifySameType (genType, type);
 			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType, dc.hasDecorator (syntax::Decorator::MUT)));
+			mapper.nameOrder.push_back (ofv.getLocation ().str);
 			mapper.score += Scores::SCORE_TYPE;
 			return mapper;
 		    }
@@ -470,7 +527,7 @@ namespace semantic {
 			}
 		    }
 		}
-		return Mapper {true, result.score, maps};
+		return Mapper {true, result.score, maps, result.nameOrder};
 	    } else return Mapper ();	    
 	}
 	
@@ -570,10 +627,10 @@ namespace semantic {
 		    }
 		) else of (syntax::FuncPtr, fnp, {
 		     std::vector<Expression> params;
-		     for (auto & it : fnp.getParams ())
+		     for (auto & it : fnp.getParameters ())
 			 params.push_back (replaceAll (it, mapping));
 		     return syntax::FuncPtr::init (element.getLocation (),
-				     replaceAll (fnp.getRet (), mapping),
+				     replaceAll (fnp.getRetType (), mapping),
 				     params);
 		    }
 		) else of (syntax::If, fi,
@@ -592,7 +649,7 @@ namespace semantic {
 		) else of (syntax::Lambda, lmb,
 		     return syntax::Lambda::init (
 			 element.getLocation (),
-			 replaceAll (lmb.getProto (), mapping),
+			 replaceAll (lmb.getPrototype (), mapping),
 			 replaceAll (lmb.getContent (), mapping)
 		     );
 		) else of (syntax::List, lst, {
@@ -873,6 +930,9 @@ namespace semantic {
 	
 	TemplateVisitor::Mapper TemplateVisitor::mergeMappers (const TemplateVisitor::Mapper & left, const TemplateVisitor::Mapper & right) const {
 	    std::map <std::string, Expression> result = left.mapping;
+	    std::vector <std::string> nameOrder = left.nameOrder;
+	    nameOrder.insert (nameOrder.end (), right.nameOrder.begin (), right.nameOrder.end ());
+	    
 	    for (auto & it : right.mapping) {
 		if (result.find (it.first) != result.end ()) {		    
 		    Ymir::Error::halt ("%(r) - reaching impossible point, multiple definition of same template param", "Critical");	    
@@ -880,7 +940,7 @@ namespace semantic {
 		    result.emplace (it.first, it.second);
 		}
 	    }
-	    return Mapper {true, left.score + right.score, result};
+	    return Mapper {true, left.score + right.score, result, nameOrder};
 	}
 
 	std::vector <syntax::Expression> TemplateVisitor::sort (const std::vector <syntax::Expression> & exps, const std::map <std::string, syntax::Expression> & mapping) const {

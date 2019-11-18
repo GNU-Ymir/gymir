@@ -645,7 +645,7 @@ namespace generic {
 	Tree getValue () const;
 	
 	/**
-	 * \return the value of the true, if it is a pointer value, unref it
+	 * \return if it is a pointer value and a ref type, unref it
 	 */
 	Tree toDirect () const;
 

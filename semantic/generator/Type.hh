@@ -84,9 +84,10 @@ namespace semantic {
 
 	    /**
 	     * \param isParentMutable if the parent is not mutable dont print the mutability information (which is not accurate)
+	     * \param includeRef add the keyword ref if it is a ref ?
 	     * \return the typename of the type formatted
 	     */
-	    std::string getTypeName (bool isParentMutable = true) const;
+	    std::string getTypeName (bool isParentMutable = true, bool includeRef = true) const;
 	    
 	    /**
 	     * \return is this type a reference ?

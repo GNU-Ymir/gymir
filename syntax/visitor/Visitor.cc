@@ -497,7 +497,7 @@ namespace syntax {
 		token = this-> _lex.consumeIf ({Token::PIPE});
 		if (token != Token::PIPE) {
 		    vars.push_back (visitSingleVarDeclaration (false, false));
-		    token = this-> _lex.next ({Token::PIPE, Token::COMA, Token::TDOT});
+		    token = this-> _lex.next ({Token::PIPE, Token::COMA});
 		}
 	    } else {
 		token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
@@ -755,7 +755,7 @@ namespace syntax {
 	    return visitOperand1 (MultOperator::init (location, end, value, params));
 	} else if (location == Token::DOT) {
 	    auto right = visitOperand3 (false);
-	    return visitOperand1 (Binary::init (location, value, right, Expression::empty ()));
+	    return visitOperand1 (Binary::init (location, value, visitTemplateCall (right), Expression::empty ()));
 	} this-> _lex.rewind ();
 	return value;	
     }
@@ -777,25 +777,27 @@ namespace syntax {
     Expression Visitor::visitOperand3 (bool canBeTemplateCall) {
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
-	if (begin == Token::PIPE)   return visitLambda ();
-	if (begin == Token::LPAR)   return visitTuple ();
-	if (begin == Token::LCRO)   return visitArray ();
-	if (begin == Token::LACC)   return visitBlock ();
-	if (begin == Keys::IF)      return visitIf ();
-	if (begin == Keys::DO)      return visitDoWhile ();
-	if (begin == Keys::WHILE)   return visitWhile ();
-	if (begin == Keys::LOOP)    return visitWhile ();
-	if (begin == Keys::FOR)     return visitFor ();
-	if (begin == Keys::MATCH)   return visitMatch ();
-	if (begin == Keys::LET)     return visitVarDeclaration ();
-	if (begin == Keys::BREAK)   return visitBreak ();
-	if (begin == Keys::ASSERT)  return visitAssert ();
-	if (begin == Keys::THROW_K) return visitThrow ();
-	if (begin == Keys::PRAGMA)  return visitPragma ();
-	if (begin == Keys::SCOPE)   return visitScope ();
-	if (begin == Keys::VERSION) return visitVersion ();
-	if (begin == Keys::RETURN)  return visitReturn ();
-	if (begin == Keys::CAST)    return visitCast ();
+	if (begin == Keys::ASSERT)   return visitAssert ();
+	if (begin == Keys::BREAK)    return visitBreak ();
+	if (begin == Keys::CAST)     return visitCast ();
+	if (begin == Keys::DO)       return visitDoWhile ();
+	if (begin == Keys::FOR)      return visitFor ();
+	if (begin == Keys::FUNCTION) return visitFunctionType ();
+	if (begin == Keys::IF)       return visitIf ();
+	if (begin == Keys::LET)      return visitVarDeclaration ();
+	if (begin == Keys::LOOP)     return visitWhile ();
+	if (begin == Keys::MATCH)    return visitMatch ();
+	if (begin == Keys::PRAGMA)   return visitPragma ();
+	if (begin == Keys::RETURN)   return visitReturn ();
+	if (begin == Keys::SCOPE)    return visitScope ();
+	if (begin == Keys::THROW_K)  return visitThrow ();
+	if (begin == Keys::VERSION)  return visitVersion ();
+	if (begin == Keys::WHILE)    return visitWhile ();
+	if (begin == Token::LACC)    return visitBlock ();
+	if (begin == Token::LCRO)    return visitArray ();
+	if (begin == Token::LPAR)    return visitTuple ();
+	if (begin == Token::PIPE)    return visitLambda ();
+	
 	if (begin.is (this-> _intrisics)) {
 	    auto loc = this-> _lex.next ();
 	    return Intrinsics::init (loc, visitExpression (10));
@@ -1130,12 +1132,36 @@ namespace syntax {
     }
 
     Expression Visitor::visitLambda () {
-	auto begin = this-> _lex.consumeIf ({Keys::REF});
+	auto begin = this-> _lex.rewind ().next ();
 
 	auto proto = visitFunctionPrototype (true);
 	this-> _lex.consumeIf ({Token::DARROW});
 	return Lambda::init (begin, proto, visitExpression ());
     }       
+
+    Expression Visitor::visitFunctionType () {
+	auto begin = this-> _lex.next ();
+	auto open = this-> _lex.next ({Token::LPAR, Token::PIPE});
+	lexing::Word token;
+	std::vector <Expression> vars;
+	do {
+	    if (open == Token::PIPE) {
+		token = this-> _lex.consumeIf ({Token::PIPE});
+		if (token != Token::PIPE) {
+		    vars.push_back (visitExpression (10));
+		    token = this-> _lex.next ({Token::PIPE, Token::COMA});
+		}
+	    } else {
+		token = this-> _lex.consumeIf ({Token::RPAR});
+		if (token != Token::RPAR) {
+		    vars.push_back (visitExpression (10));
+		    token = this-> _lex.next ({Token::RPAR, Token::COMA});
+		}
+	    }
+	} while ((token != Token::PIPE && open == Token::PIPE) || (token != Token::RPAR && open == Token::LPAR));
+	token = this-> _lex.next ({Token::ARROW});
+	return FuncPtr::init (begin, visitExpression (), vars);
+    }
     
     Expression Visitor::visitLiteral () {
 	auto tok = this-> _lex.next ();

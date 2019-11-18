@@ -33,11 +33,13 @@ namespace syntax {
 	
 	Expression clone () const override;
 
-	const Expression & getRet () const;
+	const Expression & getRetType () const;
 
-	const std::vector <Expression> & getParams () const;
+	const std::vector <Expression> & getParameters () const;
 	
 	bool isOf (const IExpression * type) const override;
+
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
     };
 

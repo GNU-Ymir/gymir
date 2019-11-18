@@ -15,6 +15,10 @@ namespace syntax {
 	/** The content of the function */
 	Expression _content;
 
+	static ulong __lastId__;
+	
+	ulong _uniqId;
+	
     private :
 
 	friend Expression;
@@ -33,10 +37,12 @@ namespace syntax {
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
-	const Function::Prototype & getProto () const;
+	const Function::Prototype & getPrototype () const;
 
 	const Expression & getContent () const;
 
+	ulong getUniqId () const;
+	
     };    
 
 }

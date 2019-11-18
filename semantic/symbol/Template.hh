@@ -20,6 +20,12 @@ namespace semantic {
 	
 	syntax::Declaration _decl;
 
+	/** The template parameters performed by a previous template specialiation (but incomplete) Cf TemplateVisitor::validateFromExplicit:(else if syntaxTempl.size () != 0) */
+	std::map <std::string, syntax::Expression> _alreadyDone;
+
+	/** The order of _alreadyDone */
+	std::vector <std::string> _nameOrder;
+	
     private : 
 
 	friend Symbol;
@@ -40,9 +46,20 @@ namespace semantic {
 
 	const syntax::Declaration & getDeclaration () const;
 
-	const std::vector<syntax::Expression> & getParams () const;
+	const std::vector<syntax::Expression> & getParams () const;	
 
 	const syntax::Expression & getTest () const;
+
+	/**
+	 * \brief Set the previous template decl
+	 */
+	void setPreviousSpecialization (const std::map <std::string, syntax::Expression> & previous);
+
+	const std::map <std::string, syntax::Expression> & getPreviousSpecialization () const;
+	
+	const std::vector <std::string> & getSpecNameOrder () const;
+
+	void setSpecNameOrder (const std::vector <std::string> & nameOrder);	
 	
 	std::string formatTree (int padd) const override;
 

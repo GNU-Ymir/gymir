@@ -1,5 +1,6 @@
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/validator/CompileTime.hh>
+#include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
 
 namespace semantic {
@@ -17,9 +18,9 @@ namespace semantic {
 	    return DotVisitor (context);
 	}
 
-	Generator DotVisitor::validate (const syntax::Binary & expression) {	    
+	Generator DotVisitor::validate (const syntax::Binary & expression, bool isFromCall) {	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
-
+	    
 	    Generator ret (Generator::empty ());
 	    match (left.to <Value> ().getType ()) {
 		of (Tuple, tu ATTRIBUTE_UNUSED,
@@ -44,6 +45,9 @@ namespace semantic {
 	    }
 
 	    if (!ret.isEmpty ()) return ret;
+	    else if (expression.getRight ().is<syntax::TemplateCall> () && !isFromCall) {
+		return validateDotTemplateCall (expression, left);
+	    }
 	    
 	    if (expression.getRight ().is <syntax::Var> ()) 
 		this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str);
@@ -173,6 +177,22 @@ namespace semantic {
 	    }
 	    
 	    return Generator::empty ();	    
+	}
+
+	generator::Generator DotVisitor::validateDotTemplateCall (const syntax::Binary & expression, const generator::Generator & left) {
+	    auto call = CallVisitor::init (this-> _context);
+	    // We throw the errors of the call visitor,
+	    // if we are here, it is the only possible meaning of the expression
+	    // The user can't have mean something else, unless they made a syntax mistake
+	    
+	    auto elem = this-> _context.validateValue (expression.getRight (), false, true); // We are in a call finfine
+
+	    int score;
+	    std::vector <std::string> errors;
+	    auto ret = call.validate (expression.getLocation (), elem, {left}, score, errors);
+	    if (errors.size () != 0)
+		call.error (expression.getLocation (), elem, {left}, errors);
+	    return ret;
 	}
 	
 	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right) {

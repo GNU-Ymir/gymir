@@ -26,12 +26,14 @@ namespace semantic {
 	std::string Mangler::mangle (const generator::Generator & gen) const {
 	    match (gen) {
 		of (Frame, fr, return mangleFrame (fr));
+		of (FrameProto, proto, return mangleFrameProto (proto));
 		of (GlobalVar, v, return mangleGlobalVar (v));
 		of (BoolValue, bl, return mangleBoolV (bl));
 		of (CharValue, c, return mangleCharV (c));
 		of (Fixed, f, return mangleFixed (f));
 		of (FloatValue, fl, return mangleFloatV (fl));
 		of (TupleValue, tl, return mangleTupleV (tl));
+		of (Addresser, addr, return mangleAddrV (addr));
 	    }
 	    
 	    return mangleType (gen, true);
@@ -51,14 +53,20 @@ namespace semantic {
 		else of (StructRef, r, result = mangleStructRef (r))
 		else of (EnumRef, r, result = mangleEnumRef (r))
 		else of (Range, r, result = mangleRangeT (r))
-		else of (Pointer, p, result = manglePointerT (p));
+		else of (Pointer, p, result = manglePointerT (p))
+		else of (FuncPtr, f, result = mangleFuncPtrT (f));
+	    }
+
+	    if (result == "") {
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    }
 	    
-	    if (result == "")
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    
-	    else if (fatherMut && gen.to <Type> ().isMutable ()) 
-		result = "x" + result;	    
+	    else {
+		if (fatherMut && gen.to <Type> ().isMutable ()) 
+		    result = "x" + result;
+		if (gen.to <Type> ().isRef ())
+		    result = "R" + result;
+	    }
 	    
 	    return result;	    
 	}
@@ -93,7 +101,9 @@ namespace semantic {
 		for (auto & it : splits) buf.write (it.length (), it);
 		buf.write (Mangler::YMIR_FUNCTION);
 
-		for (auto & p : proto.getParameters ()) buf.write (mangle (p.to <ProtoVar> ().getType ()));
+		for (auto & p : proto.getParameters ())
+		    buf.write (mangle (p.to <ProtoVar> ().getType ()));
+			
 		buf.write (Mangler::YMIR_FUNCTION_RET, mangle (proto.getReturnType ()));
 		return buf.str ();
 	    } else {
@@ -150,6 +160,11 @@ namespace semantic {
 	    res.write ("T", inner.length (), inner);
 	    return res.str ();
 	}
+
+	std::string Mangler::mangleAddrV (const Addresser & addr) const {
+	    auto proto = addr.getWho ();
+	    return mangle (proto);
+	}
 	
 	std::string Mangler::mangleArrayT (const Array & arr) const {
 	    OutBuffer buf;
@@ -164,7 +179,7 @@ namespace semantic {
 	}
 
 	std::string Mangler::mangleCharT (const Char & c) const {
-	    return c.getTypeName (false);
+	    return c.getTypeName (false, false);
 	}
 
 	std::string Mangler::mangleFloatT (const Float & f) const {
@@ -172,7 +187,7 @@ namespace semantic {
 	}
 
 	std::string Mangler::mangleIntegerT (const Integer & i) const {
-	    return i.getTypeName (false);
+	    return i.getTypeName (false, false);
 	}
 
 	std::string Mangler::mangleSliceT (const Slice & s) const {
@@ -218,6 +233,14 @@ namespace semantic {
 	std::string Mangler::manglePointerT (const Pointer & ptr) const {
 	    auto res = mangleType (ptr.getInners () [0], ptr.isMutable ());
 	    return format ("P%%", res.length (), res);	    
+	}
+
+	std::string Mangler::mangleFuncPtrT (const FuncPtr & ptr) const {
+	    Ymir::OutBuffer buf;
+	    for (auto & it : ptr.getInners ()) {		
+		buf.write (format ("%", mangleType (it, false)));
+	    }
+	    return format ("FP%%", buf.str ().length (), buf.str ());
 	}
 	
 	std::vector <std::string> Mangler::split (const std::string & str, const std::string & delim) const {

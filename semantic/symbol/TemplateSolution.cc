@@ -16,15 +16,16 @@ namespace semantic {
 	_params (mod._params)
     {}
 
-    TemplateSolution::TemplateSolution (const lexing::Word & loc, const std::vector<syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params) :
+    TemplateSolution::TemplateSolution (const lexing::Word & loc, const std::vector<syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders) :
 	ISymbol (loc),
 	_table (this),
 	_templs (templs), 
-	_params (params)
+	_params (params),
+	_nameOrder (nameOrders)
     {}
     
-    Symbol TemplateSolution::init (const lexing::Word & name, const std::vector <syntax::Expression> & templs, const std::map <std::string, syntax::Expression> & mapping) {
-	return Symbol {new (Z0) TemplateSolution (name, templs, mapping)};
+    Symbol TemplateSolution::init (const lexing::Word & name, const std::vector <syntax::Expression> & templs, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & nameOrders) {
+	return Symbol {new (Z0) TemplateSolution (name, templs, mapping, nameOrders)};
     }
 
     Symbol TemplateSolution::clone () const {
@@ -82,6 +83,10 @@ namespace semantic {
 			return false;
 		}
 	    }
+	    if (_nameOrder.size () != ot._nameOrder.size ()) return false;
+	    for (auto it : Ymir::r (0, _nameOrder.size ())) {
+		if (_nameOrder [it] != ot._nameOrder [it]) return false;
+	    }
 	    return this-> getReferent ().equals (other.getReferent ());
 	} else 
 	    return false;
@@ -101,10 +106,10 @@ namespace semantic {
 	buf.writef ("%", this-> getName ().str);
 	int i = 0;
 	buf.write ("(");
-	for (auto & it : _params) {
+	for (auto & it : _nameOrder) {
 	    if (i != 0)
 		buf.write (",");
-	    buf.write (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ().prettyString ());
+	    buf.write (this-> _params.find (it)-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().prettyString ()); // [] on map discard const qualifier ?!!
 	    i += 1;
 	}
 	buf.write (")");
@@ -120,10 +125,9 @@ namespace semantic {
     std::string TemplateSolution::getMangledName () const {
 	Ymir::OutBuffer buf;
 	buf.write (this-> getName ().str);
-	buf.write ("T");
 	generator::Mangler mangler = generator::Mangler::init ();
-	for (auto & it : _params) {
-	    buf.write (mangler.mangle (it.second.to<generator::TemplateSyntaxWrapper> ().getContent ()));	   
+	for (auto & it : _nameOrder) {
+	    buf.write (Ymir::format ("N%", mangler.mangle (this-> _params.find (it)-> second.to<generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
 	}
 
 	if (this-> getReferent ().isEmpty ()) return buf.str ();

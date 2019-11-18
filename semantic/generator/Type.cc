@@ -43,11 +43,11 @@ namespace semantic {
 	    return this-> equals (gen);
 	}
 	
-	std::string Type::getTypeName (bool isParentMutable) const {
+	std::string Type::getTypeName (bool isParentMutable, bool includeRef) const {
 	    auto inner = this-> typeName ();
 	    if (this-> _isMutable && isParentMutable)
 		inner = "mut " + inner;
-	    if (this-> _isRef)
+	    if (this-> _isRef && includeRef)
 		inner = "ref " + inner;
 	    
 	    return inner;

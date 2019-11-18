@@ -2,17 +2,25 @@
 
 namespace syntax {
 
+    ulong Lambda::__lastId__ = 0;
+    
     Lambda::Lambda () :
 	IExpression (lexing::Word::eof ()),
 	_proto (Function::Prototype::init ()),
 	_content (Expression::empty ())
-    {}
+    {
+	this-> _uniqId = __lastId__ + 1;
+	__lastId__ ++;
+    }
     
     Lambda::Lambda (const lexing::Word & loc) :
 	IExpression (loc),
 	_proto (Function::Prototype::init ()),
 	_content (Expression::empty ())
-    {}
+    {
+	this-> _uniqId = __lastId__ + 1;
+	__lastId__ ++;
+    }
 
     Expression Lambda::init (const lexing::Word & location, const Function::Prototype & proto, const Expression & content) {
 	auto ret = new (Z0) Lambda (location);
@@ -38,12 +46,16 @@ namespace syntax {
 	this-> _content.treePrint (stream, i + 1);
     }
 
-    const syntax::Function::Prototype & Lambda::getProto () const {
+    const syntax::Function::Prototype & Lambda::getPrototype () const {
 	return this-> _proto;
     }
 
     const Expression & Lambda::getContent () const {
 	return this-> _content;
+    }
+
+    ulong Lambda::getUniqId () const {
+	return this-> _uniqId;
     }
     
 }

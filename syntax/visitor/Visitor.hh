@@ -555,6 +555,17 @@ namespace syntax {
 	 \endverbatim
 	 */
 	Expression visitLambda ();
+
+	/**
+	 * \brief Visit a func pointer type 
+	 * \verbatim
+	 funcType := ('fn' | 'dg') (
+                                      ('(' (expression:(10) (',' expression:(10))*)? ')') 
+	                            | ('|' (expression:(10) (',' expression:(10))*)? '|')
+                                   ) '->' expression:(10) 
+	 \endverbatim
+	 */
+	Expression visitFunctionType ();
 	
 	/**
 	 * \brief Visit a if expression

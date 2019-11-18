@@ -113,8 +113,22 @@ namespace semantic {
 	    
 	    /**
 	     * \brief Transform a value to gimple
+	     * \param gen the generator of the value
 	     */
 	    generic::Tree generateValue (const Generator & gen);
+
+	    /**
+	     * \brief Transform a value to gimple
+	     * \param type the type of the final expression
+	     * \param gen the generator of the value
+	     */
+	    generic::Tree generateValue (const Generator & type, const Generator & gen);
+
+	    /**
+	     * \brief Transform a value to gimple
+	     * \warning should be only called by generateValue
+	     */
+	    generic::Tree generateValueInner (const Generator & gen);
 	    
 	    /**
 	     * \brief Transform a block into gimple
@@ -225,6 +239,11 @@ namespace semantic {
 	     * \brief Transform a unary bool generator into gimple
 	     */
 	    generic::Tree generateUnaryBool (const UnaryBool & un);
+
+	    /**
+	     * \brief Transform a unary pointer generator into gimple
+	     */
+	    generic::Tree generateUnaryPointer (const UnaryPointer & un);
 	    
 	    /**
 	     * \brief Transform a var ref into gimple
@@ -240,6 +259,11 @@ namespace semantic {
 	     * \brief Transform a referencer into gimple
 	     */
 	    generic::Tree generateReferencer (const Referencer & ref);
+
+	    /**
+	     * \brief Transform a addresser into gimple
+	     */
+	    generic::Tree generateAddresser (const Addresser & addr);
 
 	    /**
 	     * \brief Transform a conditional expression into gimple

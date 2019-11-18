@@ -68,7 +68,21 @@ namespace semantic {
 	     * \param operand an operand (assumed to be an integer value)
 	     */
 	    generator::Generator validateInt (const syntax::Unary & un, const generator::Generator & operand);
-	   
+
+	    /**
+	     * \brief Validate the operation on a pointer
+	     * \param un the operation
+	     * \param operand an operand (assumed to be pointer value)
+	     */
+	    generator::Generator validatePointer (const syntax::Unary & un, const generator::Generator & operand);
+
+	    /**
+	     * \brief Validate a function pointer from frame proto
+	     * \param un the operation
+	     * \param proto the frame prototype
+	     */
+	    generator::Generator validateFunctionPointer (const syntax::Unary & un, const generator::Generator & proto);
+	    
 	private :
 
 	    /**

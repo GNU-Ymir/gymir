@@ -57,6 +57,7 @@ ymir_OBJS = \
 	ymir/expr_Cast.o \
 	ymir/expr_Char.o \
 	ymir/expr_DecoratedExpression.o \
+	ymir/expr_DestructDecl.o \
 	ymir/expr_Dollar.o \
 	ymir/expr_Fixed.o \
 	ymir/expr_Float.o \
@@ -85,17 +86,15 @@ ymir_OBJS = \
 	ymir/expr_Unit.o \
 	ymir/expr_Var.o \
 	ymir/expr_VarDecl.o \
-	ymir/expr_DestructDecl.o \
 	ymir/expr_VariadicVar.o \
 	ymir/expr_While.o \
+	ymir/generator_Addresser.o \
 	ymir/generator_Affect.o \
 	ymir/generator_Aliaser.o \
 	ymir/generator_Array.o \
 	ymir/generator_ArrayAccess.o \
-	ymir/generator_ArrayValue.o \
 	ymir/generator_ArrayAlloc.o \
-	ymir/generator_Range.o \
-	ymir/generator_RangeValue.o \
+	ymir/generator_ArrayValue.o \
 	ymir/generator_Binary.o \
 	ymir/generator_BinaryBool.o \
 	ymir/generator_BinaryFloat.o \
@@ -105,18 +104,18 @@ ymir_OBJS = \
 	ymir/generator_Bool.o \
 	ymir/generator_BoolValue.o \
 	ymir/generator_Break.o \
-	ymir/generator_Return.o \
 	ymir/generator_Call.o \
+	ymir/generator_Cast.o \
 	ymir/generator_Char.o \
 	ymir/generator_CharValue.o \
-	ymir/generator_StringValue.o \
 	ymir/generator_Conditional.o \
 	ymir/generator_Copier.o \
-	ymir/generator_SizeOf.o \
-	ymir/generator_Cast.o \
+	ymir/generator_Enum.o \
+	ymir/generator_EnumRef.o \
 	ymir/generator_Fixed.o \
 	ymir/generator_Float.o \
 	ymir/generator_FloatValue.o \
+	ymir/generator_FuncPtr.o \
 	ymir/generator_Frame.o \
 	ymir/generator_FrameProto.o \
 	ymir/generator_GlobalVar.o \
@@ -125,25 +124,29 @@ ymir_OBJS = \
 	ymir/generator_Loop.o \
 	ymir/generator_Mangler.o \
 	ymir/generator_ModuleAccess.o \
-	ymir/generator_TemplateRef.o \
-	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_MultSym.o \
 	ymir/generator_NamedGenerator.o \
 	ymir/generator_None.o \
+	ymir/generator_NoneType.o \
 	ymir/generator_ParamVar.o \
-	ymir/generator_ProtoVar.o \
-	ymir/generator_Referencer.o \
-	ymir/generator_Set.o \
-	ymir/generator_Slice.o \
-	ymir/generator_SliceValue.o \
 	ymir/generator_Pointer.o \
+	ymir/generator_ProtoVar.o \
+	ymir/generator_Range.o \
+	ymir/generator_RangeValue.o \
+	ymir/generator_Referencer.o \
+	ymir/generator_Return.o \
+	ymir/generator_Set.o \
+	ymir/generator_SizeOf.o \
+	ymir/generator_Slice.o \
 	ymir/generator_SliceAccess.o \
-	ymir/generator_StructRef.o \
+	ymir/generator_SliceValue.o \
+	ymir/generator_StringValue.o \
 	ymir/generator_Struct.o \
-	ymir/generator_EnumRef.o \
-	ymir/generator_Enum.o \
 	ymir/generator_StructAccess.o \
 	ymir/generator_StructCst.o \
+	ymir/generator_StructRef.o \
+	ymir/generator_TemplateRef.o \
+	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_Tuple.o \
 	ymir/generator_TupleAccess.o \
 	ymir/generator_TupleValue.o \
@@ -152,16 +155,16 @@ ymir_OBJS = \
 	ymir/generator_UnaryBool.o \
 	ymir/generator_UnaryFloat.o \
 	ymir/generator_UnaryInt.o \
+	ymir/generator_UnaryPointer.o \
 	ymir/generator_Value.o \
 	ymir/generator_VarDecl.o \
 	ymir/generator_VarRef.o \
 	ymir/generator_Visitor.o \
 	ymir/generator_Void.o \
-	ymir/generator_NoneType.o \
 	ymir/generic_StmtList.o \
 	ymir/generic_Tree.o \
-	ymir/global_State.o \
 	ymir/global_Core.o \
+	ymir/global_State.o \
 	ymir/lexing_Lexer.o \
 	ymir/lexing_Token.o \
 	ymir/lexing_Word.o \
@@ -169,8 +172,6 @@ ymir_OBJS = \
 	ymir/semantic_Alias.o \
 	ymir/semantic_Class.o \
 	ymir/semantic_Enum.o \
-	ymir/semantic_Template.o \
-	ymir/semantic_TemplateSolution.o \
 	ymir/semantic_Function.o \
 	ymir/semantic_Generator.o \
 	ymir/semantic_ModRef.o \
@@ -178,6 +179,8 @@ ymir_OBJS = \
 	ymir/semantic_Struct.o \
 	ymir/semantic_Symbol.o \
 	ymir/semantic_Table.o \
+	ymir/semantic_Template.o \
+	ymir/semantic_TemplateSolution.o \
 	ymir/semantic_VarDecl.o \
 	ymir/syntax_Declaration.o \
 	ymir/syntax_Decorator.o \
@@ -192,15 +195,15 @@ ymir_OBJS = \
 	ymir/util_Ref.o \
 	ymir/util_StringEnum.o \
 	ymir/validator_BinaryVisitor.o \
-	ymir/validator_CastVisitor.o \
 	ymir/validator_BracketVisitor.o \
 	ymir/validator_CallVisitor.o \
-	ymir/validator_ForVisitor.o \
+	ymir/validator_CastVisitor.o \
 	ymir/validator_CompileTime.o \
 	ymir/validator_DotVisitor.o \
+	ymir/validator_ForVisitor.o \
 	ymir/validator_SubVisitor.o \
-	ymir/validator_UnaryVisitor.o \
 	ymir/validator_TemplateVisitor.o \
+	ymir/validator_UnaryVisitor.o \
 	ymir/validator_UtfVisitor.o \
 	ymir/validator_Visitor.o \
 	ymir/ymir1.o \

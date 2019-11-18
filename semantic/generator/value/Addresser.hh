@@ -11,26 +11,25 @@ namespace semantic {
 	 * Transform a value to a reference to this value
 	 * The value must be a lvalue
 	 */
-	class Return : public Value {
+	class Addresser : public Value {
 
-	    Generator _frameType;
-	    
-	    Generator _value;
+	    Generator _who;
 
 	private :
 
 	    friend Generator;
 	    
-	    Return ();
+	    Addresser ();
 
-	    Return (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value);
+	    Addresser (const lexing::Word & loc, const Generator & type, const Generator & who);
 
 	public :
 
 	    /**
 	     * \brief Generate a new Binary on int
+	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -50,12 +49,7 @@ namespace semantic {
 	    /** 
 	     * \return the left operand of the operation
 	     */
-	    const Generator & getValue () const;
-
-	    /**
-	     * \return the type of the function 
-	     */
-	    const Generator & getFunType () const;
+	    const Generator & getWho () const;
 	    
 	    std::string prettyString () const override;
 	    

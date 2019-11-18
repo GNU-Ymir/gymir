@@ -26,69 +26,73 @@ namespace semantic {
 	    match (gen) {
 		of (Fixed, f ATTRIBUTE_UNUSED,
 		    return gen;
-		)
+		);
 		    
-		else of (ArrayValue, v ATTRIBUTE_UNUSED,
+		of (ArrayValue, v ATTRIBUTE_UNUSED,
 		    return gen;
-		)
+		);
 			 
-		else of (CharValue, c ATTRIBUTE_UNUSED,
+		of (CharValue, c ATTRIBUTE_UNUSED,
 		    return gen;
-		)
+		);
 			     
-		else of (FloatValue, f ATTRIBUTE_UNUSED,
+		of (FloatValue, f ATTRIBUTE_UNUSED,
 		    return gen;
-		)
+		);
 
-		else of (BoolValue, f ATTRIBUTE_UNUSED,
+		of (BoolValue, f ATTRIBUTE_UNUSED,
 		    return gen;
-		)
+		);
 			 
-		else of (None, n ATTRIBUTE_UNUSED,
+		of (None, n ATTRIBUTE_UNUSED,
 		    return gen;
-		)
+		);
 
-		else of (Affect, aff,
+		of (Affect, aff,
 		    return executeAffect (aff);
-		)
+		);
 
-		else of (ArrayAccess, arr,
+		of (ArrayAccess, arr,
 		    return executeArrayAccess (arr);
-		)
+		);
 
-		else of (BinaryInt, bin,
+		of (BinaryInt, bin,
 		    return executeBinaryInt (bin);
-		)
+		);
 
-		else of (UnaryInt, una,
+		of (UnaryInt, una,
 		    return executeUnaryInt (una);
-		)
+		);
 			 
-		else of (BinaryFloat, fl,
+		of (BinaryFloat, fl,
 		    return executeBinaryFloat (fl);
-		)
+		);
 
-		else of (Conditional, cd,
+		of (Conditional, cd,
 		    return executeConditional (cd);
-		)
+		);
 
-		else of (Set, st,
+		of (Set, st,
 		    return executeSet (st);
-		) 			 
+		);
 
-                else of (Block, bl,
-		     return executeBlock (bl);
-		)
+		of (Block, bl,
+		    return executeBlock (bl);
+		);
 			 
-		else of (generator::VarDecl, vdecl,
+		of (generator::VarDecl, vdecl,
 		    return executeVarDecl (vdecl);
-		)
+		);
 
-		else of (VarRef, vref,
+		of (VarRef, vref,
 		    return executeVarRef (vref);
-		)
-
-		else of (Call, cll,
+		);
+		
+		of (Addresser, addr ATTRIBUTE_UNUSED,
+		    return executeAddresser (gen);
+		);
+		
+		of (Call, cll,
 		    return executeCall (cll);
 		);	       
 	    }
@@ -467,6 +471,12 @@ namespace semantic {
 		);
 		return Generator::empty ();
 	    }
+	}
+
+	generator::Generator CompileTime::executeAddresser (const generator::Generator & addr) {
+	    if (addr.to<Value> ().getType ().is<FuncPtr> () && addr.to<Addresser> ().getWho ().is <FrameProto> ()) {
+		return addr;
+	    } else return Generator::empty ();
 	}
 	
     }

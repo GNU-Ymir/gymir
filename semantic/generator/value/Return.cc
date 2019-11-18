@@ -6,20 +6,22 @@ namespace semantic {
 
 	Return::Return () :
 	    Value (),
+	    _frameType (Generator::empty ()),
 	    _value (Generator::empty ())
 	{
 	    this-> isReturner (true);
 	}
 
-	Return::Return (const lexing::Word & loc, const Generator & type, const Generator & value) :
+	Return::Return (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value) :
 	    Value (loc, type),
+	    _frameType (fun_type),
 	    _value (value)
 	{
 	    this-> isReturner (true);
 	}
 	
-	Generator Return::init (const lexing::Word & loc, const Generator & type, const Generator & value) {
-	    return Generator {new Return (loc, type, value)};
+	Generator Return::init (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value) {
+	    return Generator {new Return (loc, type, fun_type, value)};
 	}
     
 	Generator Return::clone () const {
@@ -43,6 +45,10 @@ namespace semantic {
 	    return this-> _value;
 	}
 
+	const Generator & Return::getFunType () const {
+	    return this-> _frameType;
+	}
+	
 	std::string Return::prettyString () const {
 	    return Ymir::format ("return ", this-> _value.prettyString ());
 	}

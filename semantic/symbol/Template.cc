@@ -56,7 +56,23 @@ namespace semantic {
 	buf.writefln ("%*- <T> %", i, "|\t", this-> getName ());
 	return buf.str ();
     }
+    
+    void Template::setPreviousSpecialization (const std::map <std::string, syntax::Expression> & previous) {
+	this-> _alreadyDone = previous;
+    }
 
+    const std::map <std::string, syntax::Expression> & Template::getPreviousSpecialization () const {
+	return this-> _alreadyDone;
+    }
+
+    const std::vector <std::string> & Template::getSpecNameOrder () const {
+	return this-> _nameOrder;
+    }
+
+    void Template::setSpecNameOrder (const std::vector <std::string> & nameOrder) {
+	this-> _nameOrder = nameOrder;
+    }
+    
     std::string Template::prettyString () const {
 	Ymir::OutBuffer buf;
 	buf.writef ("% (", this-> getName ().str);

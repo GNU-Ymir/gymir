@@ -86,6 +86,11 @@ namespace semantic {
 	    std::string mangleTupleV (const TupleValue & tp) const;
 
 	    /**
+	     * \brief Mangle a addr value (func ptr)
+	     */
+	    std::string mangleAddrV (const Addresser & addr) const;
+	    
+	    /**
 	     * \brief Mangle an array type
 	     */
 	    std::string mangleArrayT (const Array & array) const;
@@ -141,9 +146,14 @@ namespace semantic {
 	    std::string mangleRangeT (const Range & r) const;
 
 	    /**
-	     * \brief Mangle a range type
+	     * \brief Mangle a pointer type
 	     */
 	    std::string manglePointerT (const Pointer & ptr) const;
+
+	    /**
+	     * \brief Mangle a function pointer type
+	     */
+	    std::string mangleFuncPtrT (const FuncPtr & ptr) const;
 	    
 	private : 
 

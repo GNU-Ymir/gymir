@@ -299,7 +299,7 @@ namespace semantic {
 		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
 
 	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) 
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));	    
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE), left.to <Value> ().getType ().to <Type> ().getTypeName ());	    
 
 	    if (left.to <Value> ().getType ().to <Type> ().isComplex ()) {
 		this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);
