@@ -204,84 +204,90 @@ namespace semantic {
 	void Visitor::validateFunction (const semantic::Function & func, bool isWeak) {
 	    auto & function = func.getContent ();
 	    std::vector <Generator> params;
+	    std::vector <std::string> errors;
+	    Generator retType (Generator::empty ());
+	    
 	    enterContext (function.getCustomAttributes ());
 	    
 	    enterBlock ();
-	    for (auto & param : function.getPrototype ().getParameters ()) {
-		auto var = param.to <syntax::VarDecl> ();
-		Generator type (Generator::empty ()), value (Generator::empty ());
-		if (!var.getType ().isEmpty ()) {
-		    type = validateType (var.getType ());
-		}
+	    {
+		TRY (
+		    for (auto & param : function.getPrototype ().getParameters ()) {
+			auto var = param.to <syntax::VarDecl> ();
+			Generator type (Generator::empty ());
+			Generator value (Generator::empty ());
+			if (!var.getType ().isEmpty ()) {
+			    type = validateType (var.getType ());
+			}
 		
-		if (!var.getValue ().isEmpty ()) {
-		    value = validateValue (var.getValue ());
-		    if (!type.isEmpty ())
-			verifySameType (type, value.to <Value> ().getType ());
-		    else {
-			type = value.to <Value> ().getType ();
-			type.to <Type> ().isMutable (false);
+			if (!var.getValue ().isEmpty ()) {
+			    value = validateValue (var.getValue ());
+			    if (!type.isEmpty ())
+				verifySameType (type, value.to <Value> ().getType ());
+			    else {
+				type = value.to <Value> ().getType ();
+				type.to <Type> ().isMutable (false);
+			    }
+			}
+		
+			bool isMutable = false;
+			bool isRef = false;
+			applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
+			verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);				
+
+			if (!value.isEmpty ()) {		    
+			    verifyMemoryOwner (value.getLocation (), type, value, true);
+			}
+
+			if (type.is <NoneType> () || type.is<Void> ()) {
+			    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+			}
+		
+			params.push_back (ParamVar::init (var.getName (), type, isMutable));
+			if (var.getName () != Keys::UNDER) {
+			    verifyShadow (var.getName ());		
+			    insertLocal (var.getName ().str, params.back ());
+			}
 		    }
-		}
 
-		if (type.isEmpty ()) {
-		    quitBlock ();
-		    return; // This function is uncomplete, we can't validate it
-		}
-		
-		bool isMutable = false, isRef = false;
-		applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
-		verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);				
-
-		if (!value.isEmpty ()) {		    
-		    verifyMemoryOwner (value.getLocation (), type, value, true);
-		}
-
-		if (type.is <NoneType> () || type.is<Void> ()) {
-		    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
-		}
-		
-		params.push_back (ParamVar::init (var.getName (), type, isMutable));
-		if (var.getName () != Keys::UNDER) {
-		    verifyShadow (var.getName ());		
-		    insertLocal (var.getName ().str, params.back ());
-		}
-	    }
-
-	    if (function.getName () == Keys::MAIN) {		
-		if (params.size () > 1) {
-		    Ymir::Error::occur (params [1].getLocation (),
-					ExternalError::get (MAIN_FUNCTION_ONE_ARG));		    
-		} else if (params.size () == 1) {
-		    auto argtype =  Slice::init (func.getName (),
-						 Slice::init (
-						     func.getName (),
-						     Char::init (func.getName (), 8) // The input given by the task launcher is in utf8
-						 )
-		    );
-		    if (!argtype.to <Type> ().isCompatible (params [0].to <Value> ().getType ()))
-			Ymir::Error::occur (params [0].to <Value> ().getType ().getLocation (),
-					    ExternalError::get (INCOMPATIBLE_TYPES),
-					    argtype.to <Type> ().getTypeName (),
-					    params [0].to <Value> ().getType ().to <Type> ().getTypeName ()
-			);
-		}
-	    }
+		    if (function.getName () == Keys::MAIN) {		
+			if (params.size () > 1) {
+			    Ymir::Error::occur (params [1].getLocation (),
+						ExternalError::get (MAIN_FUNCTION_ONE_ARG));		    
+			} else if (params.size () == 1) {
+			    auto argtype =  Slice::init (func.getName (),
+							 Slice::init (
+							     func.getName (),
+							     Char::init (func.getName (), 8) // The input given by the task launcher is in utf8
+							 )
+			    );
+			    if (!argtype.to <Type> ().isCompatible (params [0].to <Value> ().getType ()))
+				Ymir::Error::occur (params [0].to <Value> ().getType ().getLocation (),
+						    ExternalError::get (INCOMPATIBLE_TYPES),
+						    argtype.to <Type> ().getTypeName (),
+						    params [0].to <Value> ().getType ().to <Type> ().getTypeName ()
+				);
+			}
+		    }
 	    
-	    Generator retType (Generator::empty ());
-	    if (!function.getPrototype ().getType ().isEmpty ()) {
-		retType = validateType (function.getPrototype ().getType ());
-		if (function.getName () == Keys::MAIN) {
-		    auto itype       = Integer::init (func.getName (), 32, true);
-		    if (!itype.to <Type> ().isCompatible (retType)) {
-			Ymir::Error::occur (function.getPrototype ().getType ().getLocation (),
-					    ExternalError::get (INCOMPATIBLE_TYPES),
-					    itype.to <Type> ().getTypeName (),
-					    retType.to <Type> ().getTypeName ()
-			);
-		    }		    		    
-		}
-	    } else retType = Void::init (func.getName ());
+		    if (!function.getPrototype ().getType ().isEmpty ()) {
+			retType = validateType (function.getPrototype ().getType ());
+			if (function.getName () == Keys::MAIN) {
+			    auto itype       = Integer::init (func.getName (), 32, true);
+			    if (!itype.to <Type> ().isCompatible (retType)) {
+				Ymir::Error::occur (function.getPrototype ().getType ().getLocation (),
+						    ExternalError::get (INCOMPATIBLE_TYPES),
+						    itype.to <Type> ().getTypeName (),
+						    retType.to <Type> ().getTypeName ()
+				);
+			    }		    		    
+			}
+		    } else retType = Void::init (func.getName ());
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
 	    this-> setCurrentFuncType (retType);
 	    
@@ -292,15 +298,25 @@ namespace semantic {
 		    Ymir::Error::halt ("%(r) - TODO contract", "Critical");
 		
 		auto body = validateValue (function.getBody ().getBody ());
-		bool needFinalReturn = false;
+		volatile bool needFinalReturn = false;
 		
 		if (!body.to<Value> ().isReturner ()) {
 		    verifyMemoryOwner (body.getLocation (), retType, body, true);		    
 		    needFinalReturn = !retType.is<Void> ();
 		}
-		
-		quitBlock ();
+		{
+		    TRY (
+			quitBlock ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+	
 		exitContext ();
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
+		
 		auto frame = Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn);
 		auto ln = func.getExternalLanguage ();
 		if (ln == Keys::CLANG) 
@@ -315,8 +331,15 @@ namespace semantic {
 	    } else {
 		// If the function has no body, it is normal that none of the parameters are used
 		this-> discardAllLocals ();
-		quitBlock ();
+		TRY (
+		    quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
 		exitContext ();
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
 	    }
 	}
 
@@ -404,7 +427,6 @@ namespace semantic {
 		TRY (
 		    this-> _referent.push_back (sym);
 		    this-> enterBlock ();
-		    
 		    std::vector <std::string> fields;
 		    std::vector <generator::Generator> types;
 		    for (auto & it : sym.to<semantic::Struct> ().getFields ()) {
@@ -728,7 +750,7 @@ namespace semantic {
 		    decl = Symbol::empty ();
 		} FINALLY;
 	    }
-
+	    
 	    // i is not really volatile, but the compiler seems to want it to be (due to TRY CATCHS)
 	    for (volatile int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
 		TRY (
@@ -747,7 +769,7 @@ namespace semantic {
 		    if (value.to <Value> ().isBreaker ()) breaker = true;
 		    type = value.to <Value> ().getType ();
 		    type.to <Type> ().isRef (false);
-		    type.to <Type> ().isMutable (false);
+		    //type.to <Type> ().isMutable (false);
 		    
 		    values.push_back (value);
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -1056,7 +1078,7 @@ namespace semantic {
 			    gens.push_back (TemplateRef::init (sym.getName (), sym));
 			    continue;
 			}
-		    ) else of (semantic::TemplateSolution, sol, {
+		    ) else of (semantic::TemplateSolution, sol, {			    
 			    auto loc_gens = validateMultSym (loc, sol.getAllLocal ());
 			    match (loc_gens) {
 				of (MultSym, mlt_sym, {
@@ -1105,11 +1127,13 @@ namespace semantic {
 			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
 			return Generator::empty ();
 		    }
+		);	
+		of (semantic::Alias, al ATTRIBUTE_UNUSED, 
+		    return validateAlias (multSym [0]);		    
 		);
 		
-		of (semantic::Alias, al ATTRIBUTE_UNUSED, {
-			return validateAlias (multSym [0]);
-		    }
+		of (semantic::Function, func,
+		    return validateFunctionProto (func);
 		);
 	    }
 
@@ -1245,7 +1269,7 @@ namespace semantic {
 	    if (!isMutable) type.to <Type> ().isMutable (false);	    
 	    type.to <Type> ().isLocal (true);
 	    if (!value.isEmpty ()) {
-		verifyMemoryOwner (value.getLocation (), type, value, true);
+		verifyMemoryOwner (var.getLocation (), type, value, true);
 	    }
 
 	    if (type.is<NoneType> () || type.is<Void> ()) {
@@ -1413,6 +1437,8 @@ namespace semantic {
 					   loop_type.to <Type> ().getTypeName ()
 		);				    
 	    }
+
+	    if (!loop_type.is<Void> ()) verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
 	    
 	    return Break::init (_break.getLocation (), Void::init (_break.getLocation ()), value);
 	}
@@ -1426,9 +1452,6 @@ namespace semantic {
 	    } else type = Void::init (rt.getLocation ());
 
 	    auto fn_type = getCurrentFuncType ();
-	    //     if (fn_type.isEmpty ()) {
-	    // Ymir::Error::occur (rt.getLocation (), ExternalError::get (RETURN_NO_FRAME));
-	    //}
 
 	    if (fn_type.isEmpty ())
 		this-> setCurrentFuncType (type);	    
@@ -1439,6 +1462,8 @@ namespace semantic {
 	    				   fn_type.to <Type> ().getTypeName ()
 	    	);				    
 	    }
+
+	    if (!fn_type.is<Void> ()) verifyMemoryOwner (rt.getLocation (), fn_type, value, false);
 	    
 	    return Return::init (rt.getLocation (), Void::init (rt.getLocation ()), fn_type, value);
 	}
@@ -1547,15 +1572,24 @@ namespace semantic {
 	    }
 	    
 	    if (value.is <TemplateRef> ()) {
-		int score = -1;
-		auto templateVisitor = TemplateVisitor::init (*this);
-		auto sym = templateVisitor.validateFromExplicit (value.to <TemplateRef> (), params, score);
-		if (!sym.isEmpty ()) {
-		    this-> validateTemplateSymbol (sym);
-		    return this-> validateMultSym (value.getLocation (), {sym});
-		} else {
+		Generator ret (Generator::empty ());
+		TRY (
+		    int score = -1;
+		    auto templateVisitor = TemplateVisitor::init (*this);
+		    auto sym = templateVisitor.validateFromExplicit (value.to <TemplateRef> (), params, score);
+		    if (!sym.isEmpty ()) {
+			this-> validateTemplateSymbol (sym);
+			ret = this-> validateMultSym (value.getLocation (), {sym});
+		    } 		    
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+
+		if (ret.isEmpty ())
 		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
-		}
+		else return ret;
+		
 	    } else if (value.is<MultSym> ()) {
 		volatile int all_score = -1; // Not volatile, but due to longjmp the compiler prefers it to be
 		Symbol final_sym (Symbol::empty ());
@@ -1586,12 +1620,21 @@ namespace semantic {
 		}
 		
 		if (all_score != -1) {
-		    auto element_on_scores = loc_scores.find ((int) all_score);
-		    for (auto & it : element_on_scores-> second) {
-			this-> validateTemplateSymbol (it);
-		    }
+		    Generator ret (Generator::empty ());
+		    TRY (
+			auto element_on_scores = loc_scores.find ((int) all_score);
+			for (auto & it : element_on_scores-> second) {
+			    this-> validateTemplateSymbol (it);
+			}
 			    
-		    return this-> validateMultSym (value.getLocation (), element_on_scores-> second);
+			ret = this-> validateMultSym (value.getLocation (), element_on_scores-> second);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		    
+		    if (!ret.isEmpty ())
+			return ret;
 		}
 	    }
 
@@ -1600,7 +1643,7 @@ namespace semantic {
 		names.push_back (it.prettyString ());
 
 	    std::string leftName = value.getLocation ().str ;	    
-	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
+	    errors.insert (errors.end (), Ymir::Error::makeOccur (
 		tcl.getLocation (),
 		ExternalError::get (UNDEFINED_TEMPLATE_OP),
 		leftName,
@@ -1728,70 +1771,181 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::vector <Generator> paramsProto;
 	    std::vector <Generator> paramTypes;
+	    std::vector <std::string> errors;
+	    Generator body (Generator::empty ());
+	    Generator retType (Generator::empty ());
+
+	    volatile bool needFinalReturn = false;// mmmh, not understanding why, but gcc doesn't like it otherwise
+	    volatile bool uncomplete = false; // idem
+
 	    enterForeign ();
 	    enterBlock ();
-	    for (auto & param : function.getPrototype ().getParameters ()) {
-		auto var = param.to <syntax::VarDecl> ();
-		Generator type (Generator::empty ());
-		if (!var.getType ().isEmpty ()) {
-		    type = validateType (var.getType ());
-		} else
-		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    {
+		TRY (
+		    for (auto & param : function.getPrototype ().getParameters ()) {
+			auto var = param.to <syntax::VarDecl> ();
+			Generator type (Generator::empty ());
+			if (!var.getType ().isEmpty ()) {
+			    type = validateType (var.getType ());
+			} else {
+			    uncomplete = true;
+			}
 
-		bool isMutable = false, isRef = false;
-		applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
-		verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
-		if (type.is <NoneType> () || type.is<Void> ()) 
-		    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
-
-		params.push_back (ParamVar::init (var.getName (), type, isMutable));
-		paramsProto.push_back (ProtoVar::init (var.getName (), type, Generator::empty (), isMutable));
-		paramTypes.push_back (type);
-		if (var.getName () != Keys::UNDER) {
-		    verifyShadow (var.getName ());		
-		    insertLocal (var.getName ().str, params.back ());
-		}		
-	    }
-	    
-	    Generator retType (Generator::empty ());
-	    if (!function.getPrototype ().getType ().isEmpty ()) {
-		retType = validateType (function.getPrototype ().getType ());		
-	    }
-
-	    this-> setCurrentFuncType (retType);
-	    auto body = validateValue (function.getContent ());
-	    bool needFinalReturn = false;
-
-	    retType = this-> getCurrentFuncType ();
-	    
-	    if (!body.to<Value> ().isReturner ()) {
-		if (!retType.isEmpty ()) {
-		    verifyMemoryOwner (body.getLocation (), retType, body, true);		    
-		    needFinalReturn = !retType.is<Void> ();
-		} else {
-		    needFinalReturn = !body.to <Value> ().getType ().is<Void> ();
-		    retType = body.to <Value> ().getType ();
-		}
-	    }
+			bool isMutable = false;
+			bool isRef = false;
+			applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
+			if (!type.isEmpty ()) {
+			    verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
+			    if (type.is <NoneType> () || type.is<Void> ()) {
+				Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+			    }
+			}
 		
-	    quitBlock ();
+			params.push_back (ParamVar::init (var.getName (), type, isMutable));
+			paramsProto.push_back (ProtoVar::init (var.getName (), type, Generator::empty (), isMutable));
+			paramTypes.push_back (type);
+			if (var.getName () != Keys::UNDER) {
+			    verifyShadow (var.getName ());		
+			    insertLocal (var.getName ().str, params.back ());
+			}		
+		    }
+	   
+		    if (!function.getPrototype ().getType ().isEmpty ()) {
+			retType = validateType (function.getPrototype ().getType ());		
+		    }
+
+		    if (!uncomplete) {
+			this-> setCurrentFuncType (retType);
+			body = validateValue (function.getContent ());
+
+			retType = this-> getCurrentFuncType ();
+	    
+			if (!body.to<Value> ().isReturner ()) {
+			    if (!retType.isEmpty ()) {
+				verifyMemoryOwner (body.getLocation (), retType, body, true);		    
+				needFinalReturn = !retType.is<Void> ();
+			    } else {
+				needFinalReturn = !body.to <Value> ().getType ().is<Void> ();
+				retType = body.to <Value> ().getType ();
+			    }
+			}
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+	    
+	    if (uncomplete) this-> discardAllLocals ();
+
+	    {
+		TRY (
+		    quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+	    
 	    exitForeign ();
-	    auto frame = Frame::init ({function.getLocation (), name}, frameName, params, retType, body, needFinalReturn);
+	    
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+
+	    if (!uncomplete) {
+		auto frame = Frame::init ({function.getLocation (), name}, frameName, params, retType, body, needFinalReturn);
+		frame.to <Frame> ().isWeak (true);
+		frame.to <Frame> ().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));
+
+		insertNewGenerator (frame);
+	    
+		auto proto = FrameProto::init ({function.getLocation (), name}, frameName, retType, paramsProto, false);
+		proto.to<FrameProto>().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));	    
+	    
+		auto funcType = FuncPtr::init (function.getLocation (), retType, paramTypes);
+		funcType.to <Type> ().isMutable (true);
+	    
+		auto addr = Addresser::init (function.getLocation (), funcType, proto);
+		this-> _lambdas.emplace (frameName, addr);
+		return addr;
+	    } else {
+		auto proto = LambdaProto::init (function.getLocation (), frameName, retType, paramsProto, function.getContent ());
+		proto.to<LambdaProto>().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));	    
+		return proto;
+	    }
+	}
+
+	Generator Visitor::validateLambdaProto (const LambdaProto & proto, const std::vector <Generator> & types) {
+	    std::vector <Generator> params;
+	    std::vector <Generator> paramsProto;
+	    std::vector <std::string> errors;
+	    Generator body (Generator::empty ());
+	    Generator retType (proto.getReturnType ());
+
+	    volatile bool needFinalReturn = false;// mmmh, not understanding why, but gcc doesn't like it otherwise
+
+	    enterForeign ();
+	    enterBlock ();
+	    {
+		TRY (
+		    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
+			auto var = proto.getParameters ()[it].to <ProtoVar> ();
+			bool isMutable = types [it].to <Type> ().isMutable ();
+			params.push_back (ParamVar::init (var.getLocation (), types [it], isMutable));
+			paramsProto.push_back (ProtoVar::init (var.getLocation (), types [it], Generator::empty (), isMutable));
+			if (var.getName () != Keys::UNDER) {
+			    insertLocal (var.getName (), params.back ());
+			}		
+		    }
+
+		    this-> setCurrentFuncType (retType);
+		    body = validateValue (proto.getContent ());
+		    
+		    retType = this-> getCurrentFuncType ();
+	    
+		    if (!body.to<Value> ().isReturner ()) {
+			if (!retType.isEmpty ()) {
+			    verifyMemoryOwner (body.getLocation (), retType, body, true);		    
+			    needFinalReturn = !retType.is<Void> ();
+			} else {
+			    needFinalReturn = !body.to <Value> ().getType ().is<Void> ();
+			    retType = body.to <Value> ().getType ();
+			}
+		    }
+
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+		    
+	    }
+	    
+	    {
+		TRY ( // We want to guarantee that we exit the foreign at the end of this function 
+		    quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+	    
+	    exitForeign ();
+
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+
+	    auto frame = Frame::init (proto.getLocation (), proto.getName (), params, retType, body, needFinalReturn);
 	    frame.to <Frame> ().isWeak (true);
-	    frame.to <Frame> ().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));
+	    frame.to <Frame> ().setMangledName (proto.getMangledName ());
 
 	    insertNewGenerator (frame);
 	    
-	    auto proto = FrameProto::init ({function.getLocation (), name}, frameName, retType, paramsProto, false);
-	    proto.to<FrameProto>().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));	    
+	    auto frameProto = FrameProto::init (proto.getLocation (), proto.getName (), retType, paramsProto, false);
+	    frameProto.to<FrameProto>().setMangledName (proto.getMangledName ());	    
 	    
-	    auto funcType = FuncPtr::init (function.getLocation (), retType, paramTypes);
-	    funcType.to <Type> ().isMutable (true);
-	    
-	    auto addr = Addresser::init (function.getLocation (), funcType, proto);
-	    this-> _lambdas.emplace (frameName, addr);
-	    return addr;
+	    return frameProto;
 	}
+
 	
 	Generator Visitor::validateFuncPtr (const syntax::FuncPtr & ptr) {
 	    std::vector <Generator> params;
@@ -2197,6 +2351,7 @@ namespace semantic {
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {	    
 	    verifyCompatibleType (type, gen.to <Value> ().getType ());
 
+	    // Verify Implicit referencing
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
 		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
 	    } else {
@@ -2209,7 +2364,8 @@ namespace semantic {
 						gen.to<Value> ().getType ().to <Type> ().getTypeName ()
 			    );
 			} else {
-			    Ymir::Error::occur (gen.getLocation (), ExternalError::get (NOT_A_LVALUE));
+			    auto note = Ymir::Error::createNote (loc);
+			    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::get (NOT_A_LVALUE));
 			}
 		    }
 		}
@@ -2223,7 +2379,8 @@ namespace semantic {
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
 		if (llevel > rlevel) {
-		    Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
+		    auto note = Ymir::Error::createNote (gen.getLocation ());
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					llevel, rlevel
 		    );
 		}		
@@ -2231,18 +2388,27 @@ namespace semantic {
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
 		if (llevel > rlevel) {
-		    Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
+		    auto note = Ymir::Error::createNote (gen.getLocation ());
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					llevel, rlevel
 		    );
 		}		
 	    } else if (type.is<FuncPtr> ()) { // Yes, i know that's ugly, but easier to understand actually
-		auto llevel = type.to <Type> ().mutabilityLevel ();
-		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
-		if (llevel > rlevel) {
-		    Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
-					llevel, rlevel
-		    );
-		}		
+		// auto llevel = type.to <Type> ().mutabilityLevel ();
+		// auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
+		// if (llevel > rlevel) {
+		//     Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
+		// 			llevel, rlevel
+		//     );
+		// }		
+	    } else if (type.is<LambdaType> ()) {
+		if (!construct || !gen.is<LambdaProto> ()) {
+		    auto note = Ymir::Error::createNote (loc);
+		    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+		} else if (type.to <Type> ().isMutable ())
+		    Ymir::Error::occur (gen.getLocation (), ExternalError::get (DISCARD_CONST_LEVEL),
+					1, 0
+		    );	 
 	    } else {
 		// Verify copy ownership
 		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional
@@ -2253,7 +2419,7 @@ namespace semantic {
 
 			auto llevel = type.to <Type> ().mutabilityLevel (); // We can make an implicit alias only if we assure that the value won't be modified 
 			if (llevel > 0) {
-			    auto note = Ymir::Error::createNote (loc, ExternalError::get (IMPLICIT_ALIAS),
+			    auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
 								 gen.to <Value> ().getType ().to <Type> ().getTypeName ());
 			    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 						       llevel, 0
@@ -2267,7 +2433,8 @@ namespace semantic {
 		    auto llevel = type.to <Type> ().mutabilityLevel ();
 		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 		    if (llevel > rlevel) {
-			Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
+			auto note = Ymir::Error::createNote (gen.getLocation ());
+			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					    llevel, rlevel
 			);
 		    }
@@ -2286,8 +2453,16 @@ namespace semantic {
 	    isRef = false;
 	    for (auto & deco : decos) {
 		switch (deco.getValue ()) {
-		case syntax::Decorator::REF : { type.to <Type> ().isRef (true); isRef = true; } break;
-		case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
+		case syntax::Decorator::REF : {
+		    if (!type.isEmpty ())
+			type.to <Type> ().isRef (true);
+		    isRef = true;
+		} break;
+		case syntax::Decorator::MUT : {
+		    if (!type.isEmpty ())
+			type.to <Type> ().isMutable (true);
+		    isMutable = true;
+		} break;
 		default :
 		    Ymir::Error::occur (deco.getLocation (),
 					ExternalError::get (DECO_OUT_OF_CONTEXT),
@@ -2313,7 +2488,7 @@ namespace semantic {
 		    );
 		else {
 		    auto note = Ymir::Error::createNote (right.getLocation ());
-		    Ymir::Error::occur (left.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+		    Ymir::Error::occurAndNote (left.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
 					left.to<Type> ().getTypeName (),
 					right.to <Type> ().getTypeName ()
 		    );

@@ -32,8 +32,9 @@ namespace semantic {
 			    type.to<Type> ().isMutable(true);
 			    return Addresser::init (expression.getLocation (), type, operand);
 			} else {
-			    Ymir::Error::occur (operand.getLocation (),
-						ExternalError::get (NOT_A_LVALUE)
+			    auto note = Ymir::Error::createNote (expression.getLocation (), ExternalError::get (OF), operand.prettyString ());
+			    Ymir::Error::occurAndNote (operand.getLocation (), note,
+						       ExternalError::get (NOT_A_LVALUE)
 			    );
 			}
 		    }

@@ -139,6 +139,13 @@ namespace semantic {
 	     * \param params the template parameters (T : [R], R, ...)
 	     */
 	    syntax::Expression findExpression (const std::string & name, const std::vector <syntax::Expression> & params) const;
+
+	    /**
+	     * \brief Find the expression named name in the list of params (direct access)
+	     * \param name the name of the expression to find
+	     * \param params the template parameters (T : [R], R, ...)
+	     */
+	    syntax::Expression findExpressionValue (const std::string & name, const std::vector <syntax::Expression> & params) const;
 	    
 	    /**
 	     * \brief Create syntax tree from generator type
@@ -198,6 +205,14 @@ namespace semantic {
 	    semantic::Symbol getFirstTemplateSolution (const semantic::Symbol & symbol) const;
 
 	    std::vector <syntax::Expression> sort (const std::vector <syntax::Expression> & exprs, const std::map <std::string, syntax::Expression> & mapping) const;
+
+	    std::vector <std::string> sortNames (const std::vector <syntax::Expression> & exprs, const std::map <std::string, syntax::Expression> & mapping) const;
+
+	    std::map <std::string, syntax::Expression> validateLambdaProtos (const std::vector<syntax::Expression> & exprs, const std::map <std::string, syntax::Expression> & mapping) const;
+
+	    syntax::Expression  retreiveFuncPtr (const syntax::Expression & elem, const std::vector<syntax::Expression> & exprs) const;
+
+	    generator::Generator validateTypeOrEmpty (const syntax::Expression & type, const std::map <std::string, syntax::Expression> & mapping) const;
 	    
 	};
 	

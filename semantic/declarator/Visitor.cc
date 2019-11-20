@@ -435,7 +435,7 @@ namespace semantic {
 		}		
 	    }
 	    
-	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent (), tep.getTest ());
+	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent (), tep.getTest (), tep.getParams ());
 	    getReferent ().insert (sym);
 	    return sym;
 	}

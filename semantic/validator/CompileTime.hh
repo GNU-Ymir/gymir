@@ -103,10 +103,16 @@ namespace semantic {
 	    generator::Generator executeFrame (const generator::FrameProto & fr);
 
 	    /**
-	     * \brief Executeframe an addresser at compile time
+	     * \brief Execute an addresser at compile time
 	     * \brief If the addresser is a funcPtr to a FrameProto we know it at compile time
 	     */
 	    generator::Generator executeAddresser (const generator::Generator & addr);
+
+	    /**
+	     * \brief Execute lambda proto
+	     * \brief it is always known at compile time
+	     */
+	    generator::Generator executeLamdaProto (const generator::Generator & addr);
 	    
 	};
 	

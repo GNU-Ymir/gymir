@@ -58,6 +58,12 @@ namespace semantic {
 	    if (left.is <FrameProto> ()) {
 		auto gen = validateFrameProto (location, left.to<FrameProto> (), rights, score, errors);
 		if (!gen.isEmpty ()) return gen;
+	    } else if (left.is <LambdaProto> ()) {
+		auto gen = validateLambdaProto (location, left.to <LambdaProto> (), rights, score, errors);
+		if (!gen.isEmpty ()) return gen;
+	    } else if (left.is<VarRef> () && left.to<Value> ().getType ().is<LambdaType> ()) { // We stored the lambdaproto in a varref
+		auto gen = validateLambdaProto (location, left.to <VarRef> ().getValue ().to<LambdaProto> (), rights, score, errors);
+		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <generator::Struct> ()) {
 		auto gen = validateStructCst (location, left.to <generator::Struct> (), rights, score, errors);
 		if (!gen.isEmpty ()) return gen;
@@ -164,6 +170,62 @@ namespace semantic {
 	    return toRet;	    
 	}
 
+	generator::Generator CallVisitor::validateLambdaProto (const lexing::Word & location, const LambdaProto & proto, const std::vector <Generator> & rights, int & score, std::vector <std::string> & errors) {
+	    score = 0;
+	    std::vector <Generator> types;
+	    if (rights.size () != proto.getParameters ().size ()) return Generator::empty ();
+	    
+	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
+		if (proto.getParameters ()[it].to <Value> ().getType ().isEmpty ()) {
+		    types.push_back (rights [it].to<Value> ().getType ());
+		    types.back ().to <Type> ().isMutable (false);
+		    types.back ().to <Type> ().isRef (false);
+		} else {		    
+		    {
+			TRY (
+			    this-> _context.verifyCompatibleType (
+				proto.getParameters () [it].to <Value> ().getType (),
+				rights [it].to <Value> ().getType ()
+			    );
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors = {};
+			    return Generator::empty ();
+			} FINALLY;
+		    }
+		    
+		    {
+			TRY (		    
+			    this-> _context.verifyMemoryOwner (
+				rights [it].getLocation (),
+				proto.getParameters () [it].to <Value> ().getType (),
+				rights [it],
+				true
+			    );
+			    types.push_back (proto.getParameters () [it].to <Value> ().getType ());
+			    score += Scores::SCORE_TYPE;		   
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
+			} FINALLY;
+		    }
+		}
+	    }
+
+	    if (errors.size () != 0) return Generator::empty ();
+	    
+	    TRY (
+		auto frameProto = this-> _context.validateLambdaProto (proto, types);
+		return Call::init (location, frameProto.to<FrameProto> ().getReturnType (), frameProto.clone (), types, rights, {});
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } FINALLY;
+	    return Generator::empty ();
+	}
+
+	
 	generator::Generator CallVisitor::validateStructCst (const lexing::Word & location, const generator::Struct & str, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
 	    std::vector <Generator> params;
 	    std::vector <Generator> rights = rights_;
@@ -309,6 +371,21 @@ namespace semantic {
 			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.to <TemplateRef> ().getTemplateRef ().getName (), it.prettyString ()));
 			insertCandidate (nbCand, errors, local_errors);
 		    }
+		} else if (it.is <VarRef> () && it.to <VarRef> ().getValue ().is<LambdaProto> ()) {
+		    auto gen = validateLambdaProto (location, it.to<VarRef> ().getValue ().to <LambdaProto> (), rights_, current, local_errors);
+		    if (!gen.isEmpty ()) nonTemplScores[current].push_back (gen);
+		    if (!gen.isEmpty () && (current > score || fromTempl)) {
+			// simple function can take the token on 1. less scored 2. every templates
+			
+			score = current;
+			final_gen = gen;
+			used_gen = it;
+			fromTempl = false;
+		    } else if (gen.isEmpty ()) {
+			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()));
+			insertCandidate (nbCand, errors, local_errors);
+		    }
+   
 		}
 	    }
 	    

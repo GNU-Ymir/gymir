@@ -37,6 +37,11 @@ namespace semantic {
 	    std::list <generic::Tree> _loopLabels;
 
 	    std::list <generic::Tree> _loopVars;
+
+	    /**
+	     * List of defined frame, to prevent multiple definition of the same weak frame
+	     */
+	    std::set <std::string> _definedFrame;
 	    
 	private :
 

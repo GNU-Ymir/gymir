@@ -1132,8 +1132,9 @@ namespace syntax {
     }
 
     Expression Visitor::visitLambda () {
-	auto begin = this-> _lex.rewind ().next ();
-
+	auto begin = this-> _lex.next ();
+	this-> _lex.rewind ();
+	
 	auto proto = visitFunctionPrototype (true);
 	this-> _lex.consumeIf ({Token::DARROW});
 	return Lambda::init (begin, proto, visitExpression ());

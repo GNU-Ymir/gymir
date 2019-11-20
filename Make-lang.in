@@ -118,8 +118,10 @@ ymir_OBJS = \
 	ymir/generator_FuncPtr.o \
 	ymir/generator_Frame.o \
 	ymir/generator_FrameProto.o \
+	ymir/generator_LambdaProto.o \
 	ymir/generator_GlobalVar.o \
 	ymir/generator_Integer.o \
+	ymir/generator_LambdaType.o \
 	ymir/generator_List.o \
 	ymir/generator_Loop.o \
 	ymir/generator_Mangler.o \

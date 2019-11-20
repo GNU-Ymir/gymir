@@ -1,5 +1,7 @@
 #include <ymir/semantic/generator/value/FrameProto.hh>
 #include <ymir/semantic/generator/type/Void.hh>
+#include <ymir/semantic/generator/value/ProtoVar.hh>
+#include <ymir/semantic/generator/type/LambdaType.hh>
 
 namespace semantic {
 
@@ -8,17 +10,25 @@ namespace semantic {
 	FrameProto::FrameProto () :
 	    Value (),
 	    _params ({}),
-	    _type (Generator::empty ())
+	    _type (Generator::empty ())	    
 	{}
 
 	FrameProto::FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic) :
-	    Value (loc, Void::init (loc)),
+	    Value (loc, LambdaType::init (loc, type, getTypes (params))),
 	    _params (params),
 	    _type (type),
 	    _name (name),
 	    _isCVariadic (isCVariadic)
 	{}
-	
+
+	std::vector <Generator> FrameProto::getTypes (const std::vector <Generator> & params) {
+	    std::vector <Generator> types;
+	    for (auto & it : params) {
+		types.push_back (it.to <ProtoVar> ().getType ());		    
+	    }
+	    return types;
+	}
+		   
 	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic) {
 	    return Generator {new FrameProto (loc, name, type, params, isCVariadic)};
 	}

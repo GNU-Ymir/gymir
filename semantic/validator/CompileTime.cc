@@ -94,7 +94,11 @@ namespace semantic {
 		
 		of (Call, cll,
 		    return executeCall (cll);
-		);	       
+		);
+
+		of (LambdaProto, proto ATTRIBUTE_UNUSED,
+		    return executeLamdaProto (gen);
+		);
 	    }
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
@@ -477,6 +481,11 @@ namespace semantic {
 	    if (addr.to<Value> ().getType ().is<FuncPtr> () && addr.to<Addresser> ().getWho ().is <FrameProto> ()) {
 		return addr;
 	    } else return Generator::empty ();
+	}
+
+
+	generator::Generator CompileTime::executeLamdaProto (const generator::Generator & gen) {
+	    return gen;
 	}
 	
     }

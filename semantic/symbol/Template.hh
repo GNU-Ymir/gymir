@@ -25,6 +25,8 @@ namespace semantic {
 
 	/** The order of _alreadyDone */
 	std::vector <std::string> _nameOrder;
+
+	std::vector <syntax::Expression> _previousParams;
 	
     private : 
 
@@ -32,11 +34,11 @@ namespace semantic {
 	
 	Template ();
 	
-	Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test);
+	Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams);
 	
     public :
 
-	static Symbol init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decls, const syntax::Expression & test);
+	static Symbol init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decls, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams);
 
 	Symbol clone () const override;
 
@@ -46,7 +48,9 @@ namespace semantic {
 
 	const syntax::Declaration & getDeclaration () const;
 
-	const std::vector<syntax::Expression> & getParams () const;	
+	const std::vector<syntax::Expression> & getParams () const;
+
+	const std::vector<syntax::Expression> & getPreviousParams () const;	
 
 	const syntax::Expression & getTest () const;
 

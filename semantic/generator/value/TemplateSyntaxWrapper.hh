@@ -38,6 +38,8 @@ namespace semantic {
 	     * \return the content wrapped inside this fake syntax expression
 	     */
 	    const Generator& getContent () const;
+
+	    std::string prettyString () const override;
 	    
 	};
 	

@@ -300,52 +300,55 @@ namespace semantic {
 	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
 	    auto asmName = Mangler::init ().mangleFrame (frame);
 	    fn_decl.asmName (asmName);
-	   	    
-	    if (frame.getName () == Keys::MAIN) 
-		generateMainCall (frame.getType ().is <Void> (), asmName);
+	    if (!frame.isWeak () || this-> _definedFrame.find (asmName) == this-> _definedFrame.end ())	{	   	    
+		if (frame.getName () == Keys::MAIN) 
+		    generateMainCall (frame.getType ().is <Void> (), asmName);
 	    
-	    setCurrentContext (fn_decl);
-	    enterFrame ();
+		setCurrentContext (fn_decl);
+		enterFrame ();
 
-	    std::list <Tree> arglist;
-	    for (auto & p : frame.getParams ())
-		arglist.push_back (generateParamVar (p.to<ParamVar> ()));
+		std::list <Tree> arglist;
+		for (auto & p : frame.getParams ())
+		    arglist.push_back (generateParamVar (p.to<ParamVar> ()));
 	    
-	    fn_decl.setDeclArguments (arglist);
+		fn_decl.setDeclArguments (arglist);
 	    
-	    enterBlock ();
-	    auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
-	    fn_decl.setResultDecl (resultDecl);
+		enterBlock ();
+		auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
+		fn_decl.setResultDecl (resultDecl);
 
-	    Tree value (Tree::empty ());
-	    if (frame.needFinalReturn ()) {
-		TreeStmtList list = TreeStmtList::init ();
-		value = castTo (frame.getType (), frame.getContent ());
-		list.append (value.getList ());
-		value = value.getValue ();
+		Tree value (Tree::empty ());
+		if (frame.needFinalReturn ()) {
+		    TreeStmtList list = TreeStmtList::init ();
+		    value = castTo (frame.getType (), frame.getContent ());
+		    list.append (value.getList ());
+		    value = value.getValue ();
 
-		list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value));
-		value = list.toTree ();
-	    } else value = generateValue (frame.getType (), frame.getContent ());
+		    list.append (Tree::returnStmt (frame.getLocation (), resultDecl, value));
+		    value = list.toTree ();
+		} else value = generateValue (frame.getType (), frame.getContent ());
 	    
-	    auto fnTree = quitBlock (lexing::Word::eof (), value);
-	    auto fnBlock = fnTree.block;
-	    fnBlock.setBlockSuperContext (fn_decl);	    
+		auto fnTree = quitBlock (lexing::Word::eof (), value);
+		auto fnBlock = fnTree.block;
+		fnBlock.setBlockSuperContext (fn_decl);	    
 	    
-	    fn_decl.setDeclInitial (fnBlock);	    
-	    fn_decl.setDeclSavedTree (fnTree.bind_expr);
+		fn_decl.setDeclInitial (fnBlock);	    
+		fn_decl.setDeclSavedTree (fnTree.bind_expr);
 
-	    fn_decl.isExternal (false);
-	    fn_decl.isPreserved (true);
-	    fn_decl.isWeak (frame.isWeak ());
+		fn_decl.isExternal (false);
+		fn_decl.isPreserved (true);
+		fn_decl.isWeak (frame.isWeak ());
 
-	    fn_decl.isPublic (true);
-	    fn_decl.isStatic (true);
+		fn_decl.isPublic (true);
+		fn_decl.isStatic (true);
 
-	    gimplify_function_tree (fn_decl.getTree ());
-	    cgraph_node::finalize_function (fn_decl.getTree (), true);
-	    setCurrentContext (Tree::empty ());
-	    quitFrame ();
+		gimplify_function_tree (fn_decl.getTree ());
+		cgraph_node::finalize_function (fn_decl.getTree (), true);
+		this-> _definedFrame.emplace (asmName);
+		
+		setCurrentContext (Tree::empty ());
+		quitFrame ();
+	    }
 	}
 	
 	Tree Visitor::generateParamVar (const ParamVar & var) {
@@ -877,6 +880,8 @@ namespace semantic {
 	}	
 
 	generic::Tree Visitor::generateVarDecl (const VarDecl & var) {
+	    if (var.getVarType ().is<LambdaType> ()) return Tree::empty ();
+	    
 	    auto type = generateType (var.getVarType ());
 	    auto name = var.getName ();
 

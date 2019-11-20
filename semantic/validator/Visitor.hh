@@ -354,6 +354,11 @@ namespace semantic {
 	    generator::Generator validateLambda (const syntax::Lambda & lmbd);
 
 	    /**
+	     * \brief Validate a lambda proto that is validated by calling it
+	     */
+	    generator::Generator validateLambdaProto (const generator::LambdaProto & lmbd, const std::vector <generator::Generator> & types);
+
+	    /**
 	     * \brief Validate a func ptr type (fn or dg) into generate type
 	     */
 	    generator::Generator validateFuncPtr (const syntax::FuncPtr & ptr);

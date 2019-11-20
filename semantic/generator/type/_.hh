@@ -6,6 +6,7 @@
 #include <ymir/semantic/generator/type/Float.hh>
 #include <ymir/semantic/generator/type/FuncPtr.hh>
 #include <ymir/semantic/generator/type/Integer.hh>
+#include <ymir/semantic/generator/type/LambdaType.hh>
 #include <ymir/semantic/generator/type/NoneType.hh>
 #include <ymir/semantic/generator/type/Pointer.hh>
 #include <ymir/semantic/generator/type/Slice.hh>

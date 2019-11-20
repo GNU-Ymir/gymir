@@ -52,6 +52,24 @@ namespace syntax {
 	this->_value.treePrint (stream, i + 1);
     }
 
+    std::string VarDecl::prettyString () const {
+	Ymir::OutBuffer buf;
+	for (auto it : this-> _decos)
+	    switch (it.getValue ()) {
+	    case Decorator::REF : buf.write ("ref "); break;
+	    case Decorator::MUT : buf.write ("mut "); break;
+	    default : {} break;
+	    }
+	
+	buf.writef ("%", getLocation ().str);
+	if (!this-> _type.isEmpty ())
+	    buf.writef (" : %", this-> _type.prettyString ());
+	if (!this-> _value.isEmpty ())
+	    buf.writef (" = %", this-> _value.prettyString ());
+	return buf.str ();	
+    }
+    
+    
     void VarDecl::setValue (const Expression & value) {
 	this-> _value = value;
     }

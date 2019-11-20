@@ -37,6 +37,10 @@ namespace semantic {
 	const Generator & TemplateSyntaxWrapper::getContent() const {
 	    return this-> _content;
 	}
+
+	std::string TemplateSyntaxWrapper::prettyString () const {
+	    return this-> _content.prettyString ();
+	}
 	
     }
 

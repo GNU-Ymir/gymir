@@ -23,6 +23,7 @@
 #include <ymir/semantic/generator/value/Fixed.hh>
 #include <ymir/semantic/generator/value/FloatValue.hh>
 #include <ymir/semantic/generator/value/FrameProto.hh>
+#include <ymir/semantic/generator/value/LambdaProto.hh>
 #include <ymir/semantic/generator/value/List.hh>
 #include <ymir/semantic/generator/value/Loop.hh>
 #include <ymir/semantic/generator/value/ModuleAccess.hh>

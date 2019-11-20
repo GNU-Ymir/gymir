@@ -66,6 +66,7 @@ namespace Ymir {
 			 NO_SIZE_FORWARD_REF,
 			 NO_SUCH_FILE,
 			 NULL_PTR,
+			 OF, 
 			 OTHER_CALL,
 			 OTHER_CANDIDATES,
 			 OVERFLOW,

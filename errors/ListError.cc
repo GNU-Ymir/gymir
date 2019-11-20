@@ -47,6 +47,7 @@ namespace Ymir {
 			    NO_SIZE_FORWARD_REF             = "field has no size because of forward reference",
 			    NO_SUCH_FILE		    = "%(y) no such file, or permission denied",
 			    NULL_PTR			    = "try to unref a null pointer",
+			    OF                              = "of : %",
 			    OTHER_CALL                      = "there are further calls, use option -v to show them",
 			    OTHER_CANDIDATES                = "there are other candidates, use option -v to show them",
 			    OVERFLOW			    = "overflow capacity for type %(y) = %(y)",

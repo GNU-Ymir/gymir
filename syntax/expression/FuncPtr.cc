@@ -45,5 +45,16 @@ namespace syntax {
 	    it.treePrint (stream, i + 2);
 	}
     }
+
+    std::string FuncPtr::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.writef ("% (", this-> getLocation ().str);
+	for (auto it : Ymir::r (0, this-> _params.size ())) {
+	    if (it!= 0) buf.write (", ");
+	    buf.write (this-> _params [it].prettyString ());
+	}
+	buf.writef (")-> %", this-> _ret.prettyString ());
+	return buf.str ();
+    }
     
 }

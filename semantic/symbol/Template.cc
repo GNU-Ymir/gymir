@@ -10,15 +10,16 @@ namespace semantic {
 	_decl (syntax::Declaration::empty ())
     {}
 
-    Template::Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test) :
+    Template::Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams) :
 	ISymbol (loc),
 	_params (params),
 	_test (test),
-	_decl (decl)
+	_decl (decl),
+	_previousParams (previousParams)
     {}
     
-    Symbol Template::init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test) {
-	return Symbol {new (Z0) Template (loc, params, decl, test)};
+    Symbol Template::init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams) {
+	return Symbol {new (Z0) Template (loc, params, decl, test, previousParams)};
     }
 
     Symbol Template::clone () const {
@@ -47,6 +48,11 @@ namespace semantic {
 	return this-> _params;
     }
 
+    const std::vector <syntax::Expression> & Template::getPreviousParams () const {
+	return this-> _previousParams;
+    }
+
+    
     const syntax::Expression & Template::getTest () const {
 	return this-> _test;
     }

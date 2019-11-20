@@ -2,11 +2,19 @@
 
 #include <ymir/semantic/generator/Value.hh>
 #include <ymir/semantic/generator/Frame.hh>
+#include <ymir/syntax/Expression.hh>
 
 namespace semantic {
 
     namespace generator {
-	class FrameProto : public Value {
+
+	/**
+	 * \brief The LambdaProto unlike FrameProto store a uncomplete prototype to a lambda 
+	 * \brief It stores a syntaxic element that will be validated only when it will be called
+	 * \brief Its validation (done in the validator::Visitor will create a FrameProto and the frame that is associated
+	 * \brief LambdaProto cannot have access to closure and are completely cte 
+	 */
+	class LambdaProto : public Value {
 
 	    std::vector <Generator> _params;
 	    
@@ -18,15 +26,15 @@ namespace semantic {
 
 	    std::string _mangleName;
 
-	    bool _isCVariadic = false;
+	    syntax::Expression _content;
 	    
 	private :
 
 	    friend Generator;
 	    
-	    FrameProto ();
+	    LambdaProto ();
 
-	    FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic);
+	    LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content);
 
 	public :
 
@@ -34,7 +42,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -86,11 +94,14 @@ namespace semantic {
 
 	    const std::string & getMangledName () const;
 
-	    bool isCVariadic () const;
+	    /**
+	     * \return the content of the lambda proto
+	     */
+	    const syntax::Expression & getContent () const;
 
 	private :
 
-	    static std::vector <Generator> getTypes (const std::vector <generator::Generator> & params);
+	    static std::vector <Generator> getTypes (const std::vector <Generator> & gens);
 	    
 	};
 	
