@@ -1,5 +1,6 @@
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/Match.hh>
+#include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/utils/OutBuffer.hh>
 
 namespace semantic {
@@ -34,6 +35,8 @@ namespace semantic {
 		of (FloatValue, fl, return mangleFloatV (fl));
 		of (TupleValue, tl, return mangleTupleV (tl));
 		of (Addresser, addr, return mangleAddrV (addr));
+		of (StringValue, s, return mangleStringV (s));
+		of (Aliaser, a, return mangle (a.getWho ()));
 	    }
 	    
 	    return mangleType (gen, true);
@@ -58,6 +61,7 @@ namespace semantic {
 	    }
 
 	    if (result == "") {
+		println (gen.prettyString ());
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    }
 	    
@@ -136,7 +140,26 @@ namespace semantic {
 	    buf.write (c.getValue ());
 	    return buf.str ();
 	}
-
+	
+	std::string Mangler::mangleStringV (const StringValue & v) const {
+	    // Mangling string consist in convert it in utf8 and write it in hex mode
+	    // By default string
+	    OutBuffer buf;
+	    if (v.getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32) {		
+		auto res = validator::UtfVisitor::utf32_to_utf8 (v.getValue ());	    
+		for (auto & it : res) {
+		    buf.write ((uint8_t) it);
+		}
+	    } else {
+		for (auto & it : v.getValue ()) {
+		    buf.write ((uint8_t) it);
+		}
+	    }
+	    
+	    return format ("A%_%_%", buf.str().length (),
+			   v.getType ().to <Type> ().getInners ()[0].to <Char> ().getSize (), buf.str ());
+	}
+	
 	std::string Mangler::mangleFixed (const Fixed & f) const {
 	    OutBuffer buf;
 	    if (f.getType ().to <Integer> ().isSigned ())

@@ -61,6 +61,8 @@ namespace syntax {
 
 
 	const lexing::Word & getEnd () const;
+
+	std::string prettyString () const override;
     };
 
 }

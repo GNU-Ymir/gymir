@@ -222,6 +222,21 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return {};
 	}
+
+	std::vector <char> UtfVisitor::utf32_to_utf8 (const std::vector <char> & utf32) {
+	    std::vector <char> res;
+	    auto content = (const uint*) (utf32.data ());
+	    for (auto it : Ymir::r (0, utf32.size () / 4)) {
+		auto code = content [it];
+		int nb;
+		char chars [5];
+		getUnicodeChar (nb, code, chars);
+		for (auto j : Ymir::r (0, nb))
+		    res.push_back (chars [j]);
+	    }
+	    
+	    return res;
+	}
 	
     }
 }

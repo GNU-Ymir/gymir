@@ -72,10 +72,12 @@ namespace semantic {
 	    generator::Generator validatePointer (const syntax::Binary & expression, const generator::Generator & p);
 	    generator::Generator validateSlice (const syntax::Binary & expression, const generator::Generator & s);
 	    generator::Generator validateTuple (const syntax::Binary & expression, const generator::Generator & t);
+	    generator::Generator validateStruct (const syntax::Binary & expression, const generator::Generator & en);
 	    
 	private :	    
 
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right);
+	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::vector <std::string> & errors);
 	    
 	};
 

@@ -14,6 +14,8 @@ namespace lexing {
     struct Word;
 }
 
+typedef char ubyte ;
+
 namespace Ymir {
 
     /**
@@ -215,6 +217,8 @@ namespace Ymir {
 	void write_ (float);
 	
 	void write_ (char);
+
+	void write_ (uint8_t);
 
 	void write_ (double);
 		

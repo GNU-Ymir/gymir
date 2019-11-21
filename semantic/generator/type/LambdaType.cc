@@ -3,8 +3,6 @@
 
 namespace semantic {
     namespace generator {
-
-	std::string LambdaType::ARITY_NAME = "arity";
 	
 	LambdaType::LambdaType () :
 	    Type ()

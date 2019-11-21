@@ -48,6 +48,10 @@ namespace semantic {
 		    return gen;
 		);
 
+		of (StringValue, s ATTRIBUTE_UNUSED,
+		    return gen;
+		);
+		
 		of (Affect, aff,
 		    return executeAffect (aff);
 		);
@@ -91,6 +95,10 @@ namespace semantic {
 		of (Addresser, addr ATTRIBUTE_UNUSED,
 		    return executeAddresser (gen);
 		);
+
+		of (Aliaser, al ATTRIBUTE_UNUSED,
+		    return executeAlias (gen);
+		);
 		
 		of (Call, cll,
 		    return executeCall (cll);
@@ -117,7 +125,7 @@ namespace semantic {
 	    
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
-	    else {		
+	    else {
 		Ymir::Error::occur (
 		    gen.getLocation (),
 		    ExternalError::get (COMPILE_TIME_UNKNOWN)
@@ -484,6 +492,14 @@ namespace semantic {
 	}
 
 
+	generator::Generator CompileTime::executeAlias (const generator::Generator & alias) {
+	    auto inner = alias.to <Aliaser> ().getWho ();
+	    auto ret = this-> execute (inner);
+	    if (!ret.isEmpty ())
+		return alias;
+	    else return Generator::empty ();
+	}
+	
 	generator::Generator CompileTime::executeLamdaProto (const generator::Generator & gen) {
 	    return gen;
 	}

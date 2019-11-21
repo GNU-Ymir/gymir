@@ -669,8 +669,15 @@ namespace syntax {
 			    if (token == Token::TDOT) list.push_back (VariadicVar::init (name, true));
 			    else {
 				this-> _lex.rewind ();
-				list.push_back (VarDecl::init (name, {}, visitExpression (), Expression::empty ()));
+				auto type = visitExpression (10);
+				token = this-> _lex.consumeIf ({Token::EQUAL});
+				if (token == Token::EQUAL) {
+				    list.push_back (VarDecl::init (name, {}, type, visitExpression ()));
+				} else
+				    list.push_back (VarDecl::init (name, {}, type, Expression::empty ()));
 			    }
+			} else if (token == Token::EQUAL) {
+			    list.push_back (VarDecl::init (name, {}, Expression::empty (), visitExpression ()));
 			} else if (token == Keys::OF)
 			    list.push_back (OfVar::init (name, visitExpression ()));
 			else if (token == Token::TDOT) {
@@ -1170,7 +1177,6 @@ namespace syntax {
 	if ((tok.str [0] >= '0' && tok.str [0] <= '9') || (tok.str [0] == '_' && tok.str.length () != 1))
 	                                               return visitNumeric ();
 	if (tok == Token::DOT)                         return visitFloat (lexing::Word::eof ());
-	//if (tok == Token::GUILL)                       return visitString ();
 	if (tok == Token::APOS)                        return visitChar ();
 	if (tok == Token::GUILL)                       return visitString ();
 	if (tok == Keys::TRUE_ || tok == Keys::FALSE_) return Bool::init (this-> _lex.next ());
@@ -1317,9 +1323,9 @@ namespace syntax {
 	auto begin = this-> _lex.next ();
 
 	this-> _lex.skipEnable (Token::SPACE,   false);
-	this-> _lex.skipEnable (Token::TAB,     false);
-	this-> _lex.skipEnable (Token::RETURN,  false);
-	this-> _lex.skipEnable (Token::RRETURN, false);
+	// this-> _lex.skipEnable (Token::TAB,     false);
+	// this-> _lex.skipEnable (Token::RETURN,  false);
+	// this-> _lex.skipEnable (Token::RRETURN, false);
 	this-> _lex.commentEnable (false);
 
 	lexing::Word cursor = lexing::Word::eof ();
@@ -1339,9 +1345,9 @@ namespace syntax {
 	}
 	
 	this-> _lex.skipEnable (Token::SPACE,   true);
-	this-> _lex.skipEnable (Token::TAB,     true);
-	this-> _lex.skipEnable (Token::RETURN,  true);
-	this-> _lex.skipEnable (Token::RRETURN, true);
+	// this-> _lex.skipEnable (Token::TAB,     true); // Need to add the escape char to get a tab or a line break
+	// this-> _lex.skipEnable (Token::RETURN,  true);
+	// this-> _lex.skipEnable (Token::RRETURN, true);
 	this-> _lex.commentEnable (true);
 
 	return String::init (begin, cursor, all, format);

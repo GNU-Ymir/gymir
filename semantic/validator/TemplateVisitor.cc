@@ -48,13 +48,14 @@ namespace semantic {
 		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
 		
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
-
+		
 		if (syntaxTempl.size () != 0) { // Rest some template that are not validated
 		    static int __tmpTemplate__ = 0;
 		    __tmpTemplate__ += 1;
 		    score = merge.score;
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
 		    auto final_test = replaceAll (sym.to <semantic::Template> ().getTest (), merge.mapping);
+
 		    auto sym2 = Template::init (ref.getLocation (), syntaxTempl, final_syntax, final_test, sym.to <semantic::Template> ().getParams ());
 
 		    sym2.to <Template> ().setPreviousSpecialization (merge.mapping);
@@ -65,8 +66,8 @@ namespace semantic {
 		    return sym2;
 		} else {
 		    score = merge.score;
+		    finalValidation (sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
-		    auto final_test = replaceAll (sym.to <semantic::Template> ().getTest (), merge.mapping);
 		    auto visit = declarator::Visitor::init ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
 		
@@ -108,8 +109,29 @@ namespace semantic {
 		) else of (syntax::VarDecl, decl, {
 			if (values [0].is <Value> ()) {
 			    consumed += 1;
-			    auto current_consumed = 0;
-			    auto mapper = validateTypeFromImplicit  (syntaxTempl, decl.getType (), {values [0].to <Value> ().getType ()}, current_consumed);
+			    Mapper mapper;
+			    mapper.succeed = false;			    
+			    if (!decl.getValue ().isEmpty ()) {
+				auto value = this-> _context.retreiveValue (
+				    this-> _context.validateValue (decl.getValue ())
+				);
+				
+				if (!values [0].equals (value)) {
+				    auto note = Ymir::Error::createNote (values [0].getLocation ());
+				    Ymir::Error::occurAndNote (
+					value.getLocation (),
+					note,
+					ExternalError::get (INCOMPATIBLE_VALUES)
+				    );
+				}
+				mapper.succeed = true;
+			    }
+			    
+			    if (!decl.getType ().isEmpty ()) {			    
+				auto current_consumed = 0;
+				mapper = validateTypeFromImplicit  (syntaxTempl, decl.getType (), {values [0].to <Value> ().getType ()}, current_consumed);
+			    }
+
 			    if (mapper.succeed) {
 				mapper.mapping.emplace (decl.getName ().str, createSyntaxValue (decl.getName (), values [0]));
 				mapper.nameOrder.push_back (decl.getName ().str);
@@ -199,6 +221,7 @@ namespace semantic {
 		auto merge = mergeMappers (prevMapper, globalMapper);
 		
 		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
+		
 		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
 		
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
@@ -215,7 +238,9 @@ namespace semantic {
 		}
 		
 		score = merge.score;
+		finalValidation (sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
+		
 		auto visit = declarator::Visitor::init ();
 		visit.pushReferent (ref.getTemplateRef ().getReferent ());
 		
@@ -267,6 +292,7 @@ namespace semantic {
 				if (!mp.succeed) return mp;
 				mapper = mergeMappers (mapper, mp);
 			    }
+			    
 			    return mapper;
 			} else {
 			    Ymir::Error::occur (leftT.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
@@ -314,14 +340,18 @@ namespace semantic {
 			    return mergeMappers (mapper, mp);
 			} else return Mapper {};
 		    }
-		);
+		);	       
 	    }
 
-	    OutBuffer buf;
-	    leftT.treePrint (buf, 0);
-	    println (buf.str ());
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Mapper {};
+	    this-> _context.validateType (leftT);
+	    Mapper mapper;
+	    mapper.succeed = false;
+	    return mapper;
+	    // OutBuffer buf;
+	    // leftT.treePrint (buf, 0);
+	    // println (buf.str ());
+	    // Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    // return Mapper {};
 	}
 	
 	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall  & cl, const generator::Generator & type, int & consumed) const {
@@ -634,18 +664,18 @@ namespace semantic {
 			arr.isDynamic ()
 		    );
 		) else of (Assert, asr,
-		    return Assert::init (
-			element.getLocation (),
-			replaceAll (asr.getTest (), mapping),
-			replaceAll (asr.getMsg (), mapping)
-		    );
+			   return Assert::init (
+			       element.getLocation (),
+			       replaceAll (asr.getTest (), mapping),
+			       replaceAll (asr.getMsg (), mapping)
+			   );
 		) else of (syntax::Binary, bin,
-		    return syntax::Binary::init (
-			element.getLocation (),
-			replaceAll (bin.getLeft (), mapping),
-			replaceAll (bin.getRight (), mapping),
-			replaceAll (bin.getType (), mapping)
-		    );
+			   return syntax::Binary::init (
+			       element.getLocation (),
+			       replaceAll (bin.getLeft (), mapping),
+			       replaceAll (bin.getRight (), mapping),
+			       replaceAll (bin.getType (), mapping)
+			   );
 		) else of (syntax::Block, block, {
 			std::vector <Expression> content;
 			Declaration declMod = replaceAll (block.getDeclModule (), mapping);
@@ -658,154 +688,154 @@ namespace semantic {
 			return syntax::Break::init (b.getLocation (), replaceAll (b.getValue (), mapping));
 		    }		
 		) else of (syntax::Cast, c,
-		     return syntax::Cast::init (
-			 element.getLocation (),
-			 replaceAll (c.getType (), mapping),
-			 replaceAll (c.getContent (), mapping)
-		     );
+			   return syntax::Cast::init (
+			       element.getLocation (),
+			       replaceAll (c.getType (), mapping),
+			       replaceAll (c.getContent (), mapping)
+			   );
 		) else of (syntax::Char, c ATTRIBUTE_UNUSED, return element;
 		) else of (DecoratedExpression, dec, {
-		     return syntax::DecoratedExpression::init (
-			element.getLocation (),
-			dec.getDecorators (),
-			replaceAll (dec.getContent (), mapping)
-		     );
+			return syntax::DecoratedExpression::init (
+			    element.getLocation (),
+			    dec.getDecorators (),
+			    replaceAll (dec.getContent (), mapping)
+			);
 		    }
 		) else of (syntax::Dollar, dol ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::Fixed, fix ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::Float, fl ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::For, fr, {
-		     std::vector <Expression> vars;
-		     for (auto & it : fr.getVars ())
-			 vars.push_back (replaceAll (it, mapping));
-		     return syntax::For::init (
-			 element.getLocation (),
-			 vars,
-			 replaceAll (fr.getIter (), mapping),
-			 replaceAll (fr.getBlock (), mapping)
-		     );
+			std::vector <Expression> vars;
+			for (auto & it : fr.getVars ())
+			    vars.push_back (replaceAll (it, mapping));
+			return syntax::For::init (
+			    element.getLocation (),
+			    vars,
+			    replaceAll (fr.getIter (), mapping),
+			    replaceAll (fr.getBlock (), mapping)
+			);
 		    }
 		) else of (syntax::FuncPtr, fnp, {
-		     std::vector<Expression> params;
-		     for (auto & it : fnp.getParameters ())
-			 params.push_back (replaceAll (it, mapping));
-		     return syntax::FuncPtr::init (element.getLocation (),
-				     replaceAll (fnp.getRetType (), mapping),
-				     params);
+			std::vector<Expression> params;
+			for (auto & it : fnp.getParameters ())
+			    params.push_back (replaceAll (it, mapping));
+			return syntax::FuncPtr::init (element.getLocation (),
+						      replaceAll (fnp.getRetType (), mapping),
+						      params);
 		    }
 		) else of (syntax::If, fi,
-		     return syntax::If::init (
-			 element.getLocation (),
-			 replaceAll (fi.getTest (), mapping),
-			 replaceAll (fi.getContent (), mapping),
-			 replaceAll (fi.getElsePart (), mapping)
-		     );
+			   return syntax::If::init (
+			       element.getLocation (),
+			       replaceAll (fi.getTest (), mapping),
+			       replaceAll (fi.getContent (), mapping),
+			       replaceAll (fi.getElsePart (), mapping)
+			   );
 		) else of (syntax::Ignore, ig ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::Intrinsics, intr,
-		     return syntax::Intrinsics::init (
-			 element.getLocation (),
-			 replaceAll (intr.getContent (), mapping)
-		     );
+			   return syntax::Intrinsics::init (
+			       element.getLocation (),
+			       replaceAll (intr.getContent (), mapping)
+			   );
 		) else of (syntax::Lambda, lmb,
-		     return syntax::Lambda::init (
-			 element.getLocation (),
-			 replaceAll (lmb.getPrototype (), mapping),
-			 replaceAll (lmb.getContent (), mapping)
-		     );
+			   return syntax::Lambda::init (
+			       element.getLocation (),
+			       replaceAll (lmb.getPrototype (), mapping),
+			       replaceAll (lmb.getContent (), mapping)
+			   );
 		) else of (syntax::List, lst, {
-		     std::vector <Expression> params;
-		     for (auto & it : lst.getParameters ())
-			 params.push_back (replaceAll (it, mapping));
-		     return syntax::List::init (
-			 element.getLocation (),
-			 lst.getEnd (),
-			 params
-		     );
+			std::vector <Expression> params;
+			for (auto & it : lst.getParameters ())
+			    params.push_back (replaceAll (it, mapping));
+			return syntax::List::init (
+			    element.getLocation (),
+			    lst.getEnd (),
+			    params
+			);
 		    }
 		) else of (syntax::MultOperator, mlt, {
-		     std::vector <Expression> rights;
-		     for (auto & it : mlt.getRights ())
-			 rights.push_back (replaceAll (it, mapping));
-		     return syntax::MultOperator::init (
-			 element.getLocation (),
-			 mlt.getEnd (),
-			 replaceAll (mlt.getLeft (), mapping),
-			 rights
-		     );
+			std::vector <Expression> rights;
+			for (auto & it : mlt.getRights ())
+			    rights.push_back (replaceAll (it, mapping));
+			return syntax::MultOperator::init (
+			    element.getLocation (),
+			    mlt.getEnd (),
+			    replaceAll (mlt.getLeft (), mapping),
+			    rights
+			);
 		    }
 		) else of (syntax::NamedExpression, nmd,
-		     return syntax::NamedExpression::init (
-			 element.getLocation (),
-			 replaceAll (nmd.getContent (), mapping)
-		     );
+			   return syntax::NamedExpression::init (
+			       element.getLocation (),
+			       replaceAll (nmd.getContent (), mapping)
+			   );
 		) else of (syntax::Null, nl ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::OfVar, of,
-		     return syntax::OfVar::init (
-			 element.getLocation (),
-			 replaceAll (of.getType (), mapping)
-		     );
+			   return syntax::OfVar::init (
+			       element.getLocation (),
+			       replaceAll (of.getType (), mapping)
+			   );
 		) else of (syntax::Return, ret,
-		     return syntax::Return::init (
-			 element.getLocation (),
-			 replaceAll (ret.getValue (), mapping)
-		     );
+			   return syntax::Return::init (
+			       element.getLocation (),
+			       replaceAll (ret.getValue (), mapping)
+			   );
 		) else of (syntax::Set, set, {
-		     std::vector <Expression> content;
-		     for (auto & it : set.getContent ())
-			 content.push_back (replaceAll (it, mapping));
-		     return syntax::Set::init (
-			 element.getLocation (),
-			 content
-		     );
+			std::vector <Expression> content;
+			for (auto & it : set.getContent ())
+			    content.push_back (replaceAll (it, mapping));
+			return syntax::Set::init (
+			    element.getLocation (),
+			    content
+			);
 		    }
 		) else of (syntax::String, str ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::TemplateCall, tmpl, {
-		     std::vector <Expression> params;
-		     for (auto & it : tmpl.getParameters ())
-			 params.push_back (replaceAll (it, mapping));
-		     return syntax::TemplateCall::init (
-			 element.getLocation (),
-			 params,
-			 replaceAll (tmpl.getContent (), mapping)
-		     );
+			std::vector <Expression> params;
+			for (auto & it : tmpl.getParameters ())
+			    params.push_back (replaceAll (it, mapping));
+			return syntax::TemplateCall::init (
+			    element.getLocation (),
+			    params,
+			    replaceAll (tmpl.getContent (), mapping)
+			);
 		    }
 		) else of (TemplateSyntaxWrapper, wrp,
 			   return TemplateSyntaxWrapper::init (wrp.getLocation (), wrp.getContent ());
 		) else of (syntax::Unary, un,
-		     return syntax::Unary::init (element.getLocation (), replaceAll (un.getContent (), mapping));
+			   return syntax::Unary::init (element.getLocation (), replaceAll (un.getContent (), mapping));
 		) else of (syntax::Unit, uni ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::Var, var, {
-		     auto inner = mapping.find (var.getName ().str);
-		     if (inner != mapping.end ()) {
-			 if (inner-> second.is <TemplateSyntaxWrapper> ()) {
-			     auto tmplSynt = inner-> second.to <TemplateSyntaxWrapper> ();
-			     auto content = tmplSynt.getContent ();
-			     content.changeLocation (var.getLocation ());
-			     return TemplateSyntaxWrapper::init (var.getLocation (), content);
-			 }
-			 return inner-> second;
-		     }
-		     else return element;
+			auto inner = mapping.find (var.getName ().str);
+			if (inner != mapping.end ()) {
+			    if (inner-> second.is <TemplateSyntaxWrapper> ()) {
+				auto tmplSynt = inner-> second.to <TemplateSyntaxWrapper> ();
+				auto content = tmplSynt.getContent ();
+				content.changeLocation (var.getLocation ());
+				return TemplateSyntaxWrapper::init (var.getLocation (), content);
+			    }
+			    return inner-> second;
+			}
+			else return element;
 		    }
 		) else of (syntax::VarDecl, vdecl,
-		     return syntax::VarDecl::init (
-			 element.getLocation (),
-			 vdecl.getDecorators (),
-			 replaceAll (vdecl.getType (), mapping),
-			 replaceAll (vdecl.getValue (), mapping)
-		     );
+			   return syntax::VarDecl::init (
+			       element.getLocation (),
+			       vdecl.getDecorators (),
+			       replaceAll (vdecl.getType (), mapping),
+			       replaceAll (vdecl.getValue (), mapping)
+			   );
 		) else of (syntax::VariadicVar, vdvar ATTRIBUTE_UNUSED, {
 			auto inner = mapping.find (element.getLocation ().str);
 			if (inner != mapping.end ()) return inner-> second;
 			else return element;		    
 		    }
 		) else of (syntax::While, wh, 
-		     return syntax::While::init (
-			 element.getLocation (),
-			 replaceAll (wh.getTest (), mapping),
-			 replaceAll (wh.getContent (), mapping),
-			 wh.isDo ()
-		     );
+			   return syntax::While::init (
+			       element.getLocation (),
+			       replaceAll (wh.getTest (), mapping),
+			       replaceAll (wh.getContent (), mapping),
+			       wh.isDo ()
+			   );
 		);
 	    }
 	    
@@ -978,11 +1008,11 @@ namespace semantic {
 				results.push_back (it);
 			}
 		    ) else {
-			OutBuffer buf;
-			it.treePrint (buf, 0);
-			println (buf.str ());
-			Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
-		    }
+				    OutBuffer buf;
+				    it.treePrint (buf, 0);
+				    println (buf.str ());
+				    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
+				}
 		}
 	    }
 	    return results;
@@ -1020,11 +1050,11 @@ namespace semantic {
 			    results.push_back (mapping.find (var.getLocation ().str)-> second);
 			}
 		    ) else {
-			    OutBuffer buf;
-			    it.treePrint (buf, 0);
-			    println (buf.str ());
-			    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
-		    }
+				    OutBuffer buf;
+				    it.treePrint (buf, 0);
+				    println (buf.str ());
+				    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
+				}
 		}
 	    }
 	    return results;
@@ -1051,11 +1081,11 @@ namespace semantic {
 				results.push_back (var.getLocation ().str);
 			}
 		    ) else {
-			    OutBuffer buf;
-			    it.treePrint (buf, 0);
-			    println (buf.str ());
-			    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
-		    }
+				    OutBuffer buf;
+				    it.treePrint (buf, 0);
+				    println (buf.str ());
+				    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
+				}
 		}
 	    }
 	    return results;
@@ -1117,22 +1147,31 @@ namespace semantic {
 			    if (!successful) 
 				maps.emplace (it.first, it.second);
 			    else {
-				auto gen = this-> _context.validateLambdaProto (proto, types);
+				auto protoGen = this-> _context.validateLambdaProto (proto, types);
 				auto type = validateTypeOrEmpty (F.to<syntax::FuncPtr> ().getRetType (), mapping);
 				if (type.isEmpty ()) {
-				    toValidate.push_back ({F.to<syntax::FuncPtr> ().getRetType (), gen.to <FrameProto> ().getReturnType ()});
-				} else if (!gen.to <FrameProto> ().getReturnType ().equals (type)) {
-				    auto note = Ymir::Error::createNote (gen.to <FrameProto> ().getReturnType ().getLocation ());
+				    toValidate.push_back ({F.to<syntax::FuncPtr> ().getRetType (), protoGen.to <FrameProto> ().getReturnType ()});
+				} else if (!protoGen.to <FrameProto> ().getReturnType ().equals (type)) {
+				    auto note = Ymir::Error::createNote (protoGen.to <FrameProto> ().getReturnType ().getLocation ());
 				    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-							type.prettyString (),
-							gen.to <FrameProto> ().getReturnType ().prettyString ()
+							       type.prettyString (),
+							       protoGen.to <FrameProto> ().getReturnType ().prettyString ()
 				    );
 				}
-				maps.emplace (it.first, TemplateSyntaxWrapper::init (expr.getLocation (), gen));
+
+				auto params = protoGen.to <FrameProto> ().getParameters ();
+				auto ret = protoGen.to <FrameProto> ().getReturnType ();
+				std::vector <Generator> paramTypes;
+				for (auto & it : params) {
+				    paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+				}
+				
+				auto funcType = FuncPtr::init (expr.getLocation (), ret, paramTypes);
+				maps.emplace (it.first, TemplateSyntaxWrapper::init (expr.getLocation (), Addresser::init (expr.getLocation (), funcType, protoGen)));
 			    }
 			}
 		    } else maps.emplace (it.first, it.second);		    
-		} else maps.emplace (it.first, it.second);		    
+		}  else maps.emplace (it.first, it.second);		    
 	    }
 
 	    if (toValidate.size () != 0) {
@@ -1155,6 +1194,43 @@ namespace semantic {
 	    
 	    return maps;
 	}
+
+	void TemplateVisitor::finalValidation (const std::vector<syntax::Expression> & exprs, const Mapper & mapper, const syntax::Expression & test) const {
+	    for (auto & it : exprs) {
+		match (it) { 
+		    of (syntax::VarDecl, decl, { // it is a value, we need to check the type
+			    if (!decl.getType ().isEmpty ()) {
+				auto type = this-> _context.validateType (replaceAll (decl.getType (), mapper.mapping));
+				auto auxType = this-> _context.validateValue (mapper.mapping.find (decl.getName ().str)-> second);
+				this-> _context.verifySameType (type, auxType.to <Value> ().getType ());
+			    }
+			}
+		    );
+		}
+	    }
+
+	    if (!test.isEmpty ()) {
+		auto value = this-> _context.validateValue (replaceAll (test, mapper.mapping));
+		auto val = this-> _context.retreiveValue (value);
+		if (!val.is<BoolValue> ()) {
+		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					val.to <Value> ().getType ().to <Type> ().getTypeName (),
+					Bool::NAME
+		    );
+		}
+
+		if (!val.to <BoolValue> ().getValue ()) {
+		    std::vector <std::string> vec;
+		    for (auto & it : mapper.nameOrder) {
+			vec.push_back (format ("% -> %", it , mapper.mapping.find (it)-> second.prettyString ()));
+		    }
+		
+		    Ymir::Error::occur (test.getLocation (), ExternalError::get (TEMPLATE_TEST_FAILED), vec);
+		}
+	    }
+	}
+
+	
     }    
     
 }

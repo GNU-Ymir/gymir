@@ -27,6 +27,7 @@ namespace Ymir {
 			    IMPLICIT_REFERENCE		    = "implicit referencing of type %(y) is not allowed",
 			    IMPOSSIBLE_EXTERN               = "impossible extern declaration",
 			    INCOMPATIBLE_TYPES		    = "incompatible types %(y) and %(y)",
+			    INCOMPATIBLE_VALUES             = "incompatible values",
 			    INSERT_NO_TABLE		    = "insertion of a symbol in an entity that cannot be a referent",
 			    IN_COMPILE_TIME_EXEC            = "in compile time execution",
 			    IN_IMPORT                       = "in importation",
@@ -69,6 +70,7 @@ namespace Ymir {
 			    SYNTAX_ERROR_AT_SIMPLE	    = "%(y) unexpected",	// syntax error a specific location
 			    SYNTAX_ERROR_IF_ON_NON_TEMPLATE = "test on non template declaration",
 			    SYNTAX_ERROR_MISSING_TEMPL_PAR  = "multiple ! arguments are not allowed",
+			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
 			    UNDEFINED_BIN_OP		    = "undefined operator %(y) for types %(y) and %(y)",
 			    UNDEFINED_BRACKETS_OP	    = "index operator is not defined for type %(y) and {%(y)}",

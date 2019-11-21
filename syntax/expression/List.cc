@@ -51,5 +51,18 @@ namespace syntax {
     const lexing::Word & List::getEnd () const {
 	return this-> _end;
     }
+
+    std::string  List::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.write (this-> getLocation ().str);
+	int i = 0;
+	for (auto &it : this-> _params) {
+	    if (i != 0) buf.write (", ");
+	    buf.write (it.prettyString ());
+	    i ++;
+	}
+	buf.write (this-> _end.str);
+	return buf.str ();	    
+    }
     
 }

@@ -40,5 +40,9 @@ namespace syntax {
     const lexing::Word & String::getSequence () const {
 	return this-> _sequence;
     }
+
+    std::string String::prettyString () const {
+	return this-> _sequence.str;
+    }
     
 }

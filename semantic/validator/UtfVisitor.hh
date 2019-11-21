@@ -44,13 +44,15 @@ namespace semantic {
 	     */
 	    std::vector<char> convertString (const lexing::Word& loc, const lexing::Word & content, int size, int & len);
 
+	    static std::vector <char> utf32_to_utf8 (const std::vector<char> & utf32);
+
 	private :
 
 	    size_t utf8_codepoint_size (uint8_t text);
 	    
 	    std::vector <uint> utf8_to_utf32 (const std::string& text);
 
-	    void getUnicodeChar (int & nb, uint code, char chars[5]);
+	    static void getUnicodeChar (int & nb, uint code, char chars[5]);
 
 	    void escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, Ymir::OutBuffer & buf, const std::string & size);
 

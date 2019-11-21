@@ -44,6 +44,8 @@ namespace syntax {
 	 * \return the content of the char
 	 */
 	const lexing::Word & getSequence () const;
+
+	std::string prettyString () const override;
 	
     };    
 

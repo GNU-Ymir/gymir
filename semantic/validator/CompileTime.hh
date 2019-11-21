@@ -109,6 +109,12 @@ namespace semantic {
 	    generator::Generator executeAddresser (const generator::Generator & addr);
 
 	    /**
+	     * \brief Execute an alias at compile time 
+	     * \brief it can be an alias of a something known at compile time such as StringValue or ArrayValue
+	     */
+	    generator::Generator executeAlias (const generator::Generator & alias);
+	    
+	    /**
 	     * \brief Execute lambda proto
 	     * \brief it is always known at compile time
 	     */

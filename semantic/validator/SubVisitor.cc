@@ -38,17 +38,20 @@ namespace semantic {
 	    if (left.isEmpty ()) {
 		TRY (
 		    left = this-> _context.validateType (expression.getLeft ());		    
-		) CATCH (ErrorCode::EXTERNAL) {		    
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
 		} FINALLY;
 
 		if (left.isEmpty ())
 		    THROW (ErrorCode::EXTERNAL, errors);
-	    }	    
+	    }
 	    
+
 	    match (left) {
 		of (MultSym, mult, return validateMultSym (expression, mult));
 		of (ModuleAccess, acc, return validateModuleAccess (expression, acc));
 		of (generator::Enum, en, return validateEnum (expression, en));
+		of (generator::Struct, str ATTRIBUTE_UNUSED, return validateStruct(expression, left));
 		of (Type, te ATTRIBUTE_UNUSED, return validateType (expression, left));
 	    }
 
@@ -97,7 +100,7 @@ namespace semantic {
 	    val.to <Value> ().setType (type);
 	    
 	    return val;
-	}
+	}	
 
 	Generator SubVisitor::validateType (const syntax::Binary & expression, const Generator & type) {
 	    Generator ret (Generator::empty ());
@@ -109,7 +112,7 @@ namespace semantic {
 		else of (Integer, it ATTRIBUTE_UNUSED, ret = validateInteger (expression, type))
 		else of (Pointer, pt ATTRIBUTE_UNUSED, ret = validatePointer (expression, type))
 		else of (Slice, sl ATTRIBUTE_UNUSED, ret = validateSlice (expression, type))
-		else of (Tuple, tl ATTRIBUTE_UNUSED, ret = validateTuple (expression, type));				
+		else of (Tuple, tl ATTRIBUTE_UNUSED, ret = validateTuple (expression, type));
 	    }
 	    
 	    if (ret.isEmpty ()) {
@@ -351,6 +354,43 @@ namespace semantic {
 	    }
 	    return Generator::empty ();
 	}
+
+	Generator SubVisitor::validateStruct (const syntax::Binary & expression, const generator::Generator & t) {
+	    if (expression.getRight ().is <syntax::Var> ()) {
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		if (name == StructRef::INIT_NAME) {
+		    auto & fields = t.to <generator::Struct> ().getFields ();
+		    std::vector <Generator> params;
+		    std::vector <Generator> types;
+		    std::vector <std::string> errors;
+		    TRY (
+			for (auto & field : fields) {
+			    auto type = field.to <generator::VarDecl> ().getVarType ();
+			    types.push_back (type);
+			    auto bin = syntax::Binary::init (type.getLocation (), expression.getLeft (), expression.getRight (), syntax::Expression::empty ());
+			    params.push_back (validateType (bin.to<syntax::Binary> (), type));
+			}
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+
+		    if (errors.size () != 0) {
+			this-> error (expression, t, expression.getRight (), errors);
+		    }
+		    
+		    return StructCst::init (
+			expression.getLocation (),
+			StructRef::init (expression.getLocation (), t.to<generator::Struct> ().getRef ()),
+			t.clone (),
+			types,
+			params
+		    );
+		}
+	    }
+	    return Generator::empty ();
+	}
+
 	
 	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right) {
 	    std::string leftName;
@@ -383,6 +423,41 @@ namespace semantic {
 		rightName,
 		leftName
 	    );
+	}
+
+	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::vector <std::string> & errors) {
+	    std::string leftName;
+	    std::string rightName = "";
+	    {
+		match (left) {
+		    of (FrameProto, proto, leftName = proto.getName ())
+		    else of (generator::Struct, str, leftName = str.getName ())
+			else of  (generator::Enum, en, leftName = en.getName ())
+			    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+				else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+				    else of (Type,       type,  leftName = type.getTypeName ());
+		}
+	    }
+	    {
+		match (right) {
+		    of (syntax::Var, var, rightName = var.getName ().str);
+		}
+	    }
+	    
+	    if (rightName == "") {
+		auto val = this-> _context.retreiveValue (this-> _context.validateValue (right));
+		rightName = val.prettyString ();
+	    }
+
+	    
+	    errors.insert (errors.end (), Ymir::Error::makeOccur (
+		expression.getLocation (),
+		ExternalError::get (UNDEFINED_SUB_PART_FOR),
+		rightName,
+		leftName
+	    ));
+	    
+	    THROW (ErrorCode::EXTERNAL, errors);
 	}
 	
 	

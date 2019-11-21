@@ -1643,7 +1643,7 @@ namespace semantic {
 		names.push_back (it.prettyString ());
 
 	    std::string leftName = value.getLocation ().str ;	    
-	    errors.insert (errors.end (), Ymir::Error::makeOccur (
+	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
 		tcl.getLocation (),
 		ExternalError::get (UNDEFINED_TEMPLATE_OP),
 		leftName,

@@ -5,6 +5,8 @@
 
 namespace semantic {
     namespace generator {
+
+	std::string StructRef::INIT_NAME = "init";
 	
 	StructRef::StructRef () :
 	    Type (),

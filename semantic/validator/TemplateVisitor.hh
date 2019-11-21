@@ -213,6 +213,8 @@ namespace semantic {
 	    syntax::Expression  retreiveFuncPtr (const syntax::Expression & elem, const std::vector<syntax::Expression> & exprs) const;
 
 	    generator::Generator validateTypeOrEmpty (const syntax::Expression & type, const std::map <std::string, syntax::Expression> & mapping) const;
+
+	    void finalValidation (const std::vector<syntax::Expression> & exprs, const Mapper & mapping, const syntax::Expression & test) const;
 	    
 	};
 	

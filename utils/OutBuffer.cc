@@ -70,7 +70,16 @@ namespace Ymir {
 	sprintf (this-> current + this-> len, "%x", nb);
 	this-> len += len;
     }
-       
+
+    void OutBuffer::write_ (uint8_t nb) {
+	auto len = snprintf (NULL, 0, "%x", nb);
+	if (this-> capacity < this-> len + len) {
+	    resize (this-> len + len);
+	}
+
+	sprintf (this-> current + this-> len, "%x", nb);
+	this-> len += len;
+    }    
 
     void OutBuffer::write_ (double nb) {
 	auto len = snprintf (NULL, 0, "%A", nb);
@@ -90,7 +99,8 @@ namespace Ymir {
 	this-> current [this-> len] = c;
 	len += 1;
     }
-    
+
+       
     
     void OutBuffer::write_ (const lexing::Word & word) {
 	this-> write (word.toString ());

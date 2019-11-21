@@ -23,7 +23,10 @@ namespace semantic {
 	    StructRef ();
 
 	    StructRef (const lexing::Word & loc, const Symbol & ref);
+	public :
 
+	    static std::string INIT_NAME;
+	    
 	public :
 
 	    static Generator init (const lexing::Word & loc, const Symbol & ref);

@@ -71,6 +71,11 @@ namespace semantic {
 	    std::string mangleCharV (const CharValue & ch) const;
 
 	    /**
+	     * \brief Mangle a string value
+	     */
+	    std::string mangleStringV (const StringValue & str) const;
+
+	    /**
 	     * \brief Mangle an integer value
 	     */
 	    std::string mangleFixed (const Fixed & fx) const;
