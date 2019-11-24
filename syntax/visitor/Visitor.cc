@@ -1047,6 +1047,11 @@ namespace syntax {
 	auto begin = next;
 	if (!inTmpCall && next == Token::NOT) {
 	    next = this-> _lex.next ();
+	    if (next.is ({Keys::OF, Keys::IS, Keys::IN})) { // !is, !of and !in
+		this-> _lex.rewind ().rewind ();
+		return left;
+	    }
+	    
 	    if (next == Token::LPAR) {
 		inTmpCall = false;
 		auto list = visitParamList ();

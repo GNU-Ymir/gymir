@@ -70,12 +70,16 @@ namespace semantic {
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
 		    auto visit = declarator::Visitor::init ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
-		
-		    visit.pushReferent (TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder));
 
-		    auto sym = visit.visit (final_syntax);
-		    auto glob = visit.popReferent ();		
-		    visit.getReferent ().insertTemplate (glob);
+		    auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder);
+		    auto glob = getTemplateSolution (visit.getReferent (), soluce);
+		    if (glob.isEmpty ()) {
+			visit.pushReferent (soluce);
+			visit.visit (final_syntax);
+			glob = visit.popReferent ();		
+			visit.getReferent ().insertTemplate (glob);
+		    }
+		    
 		    return glob;
 		}
 	    }
@@ -243,12 +247,20 @@ namespace semantic {
 		
 		auto visit = declarator::Visitor::init ();
 		visit.pushReferent (ref.getTemplateRef ().getReferent ());
-		
-		visit.pushReferent (TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder));
-		auto sym_func = visit.visitFunction (func.to <syntax::Function> ());
-		symbol = visit.popReferent ();
-		visit.getReferent ().insertTemplate (symbol);
-		return this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+
+		auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder);
+		auto glob = getTemplateSolution (visit.getReferent (), soluce);
+		if (glob.isEmpty ()) {
+		    visit.pushReferent (soluce);
+		    auto sym_func = visit.visitFunction (func.to <syntax::Function> ());
+		    symbol = visit.popReferent ();
+		    visit.getReferent ().insertTemplate (symbol);
+		    return this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+		} else {
+		    symbol = glob;
+		    auto sym_func = symbol.getLocal (func.to<syntax::Function> ().getName ().str) [0];
+		    return this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+		}
 	    } 
 	    
 	    return Generator::empty ();
@@ -1230,6 +1242,15 @@ namespace semantic {
 	    }
 	}
 
+	const Symbol & TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
+	    for (auto & it : ref.getTemplates ()) {
+		if (it.to <TemplateSolution> ().getSolutionName () == solution.to <TemplateSolution> ().getSolutionName ())
+		    return it;
+	    }
+	    
+	    return Symbol::__empty__;
+	}
+	
 	
     }    
     

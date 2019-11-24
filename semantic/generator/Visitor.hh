@@ -226,9 +226,14 @@ namespace semantic {
 	    generic::Tree generateBinaryFloat (const BinaryFloat & bin);
 
 	    /**
-	     * \brief Transform a binary int generator into gimple
+	     * \brief Transform a binary ptr generator into gimple
 	     */
 	    generic::Tree generateBinaryPtr (const BinaryPtr & bin);
+	    
+	    /**
+	     * \brief Transform a binary char generator into gimple
+	     */
+	    generic::Tree generateBinaryChar (const BinaryChar & bin);
 
 	    /**
 	     * \brief Transform a unary int generator into gimple
@@ -309,6 +314,11 @@ namespace semantic {
 	     * \brief Generate an array allocation into gimple
 	     */
 	    generic::Tree generateArrayAlloc (const ArrayAlloc & alloc);
+
+	    /**
+	     * \brief Generate a null value
+	     */
+	    generic::Tree generateNullValue (const NullValue & nl);
 	    
 	    /**
 	     * \brief Transform a copier into a gimple tree

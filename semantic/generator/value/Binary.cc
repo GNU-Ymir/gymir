@@ -77,6 +77,8 @@ namespace semantic {
 	    case Operator::EXP : op = "^^"; break;
 	    case Operator::RANGE : op = ".."; break;
 	    case Operator::TRANGE : op = "..."; break;
+	    case Operator::IS : op = "is"; break;
+	    case Operator::NOT_IS : op = "!is"; break;
 	    default : op = "??"; break;
 	    }
 	    

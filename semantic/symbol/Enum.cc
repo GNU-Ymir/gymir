@@ -49,6 +49,10 @@ namespace semantic {
     void Enum::insertTemplate (const Symbol & sym) {
 	this-> _table.insertTemplate (sym);
     }
+
+    std::vector<Symbol> Enum::getTemplates () const {
+	return this-> _table.getTemplates ();
+    }    
     
     void Enum::replace (const Symbol & sym) {
 	this-> _table.replace (sym);

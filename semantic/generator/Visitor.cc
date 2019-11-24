@@ -109,10 +109,14 @@ namespace semantic {
 			type = generateType (_type);			
 		    })
 
-	       else of (Pointer, pt, {
-		       auto inner = generateType (pt.getInners ()[0]);
-		       return Tree::pointerType (inner);
-		   }
+		    else of (Pointer, pt, {
+			    if (pt.getInners()[0].is<StructRef> ()) {
+				return Tree::pointerType (Tree::voidType ());
+			    } else {
+				auto inner =generateType (pt.getInners ()[0]);
+				return Tree::pointerType (inner);
+			    }
+			}
 	       ) else of (Range, rg, {
 		       std::vector <Tree> inner;
 		       inner.push_back (generateType (rg.getInners ()[0]));
@@ -434,6 +438,11 @@ namespace semantic {
 		else of (BinaryFloat, f,
 		    return generateBinaryFloat (f);
 		)
+			 
+		else of (BinaryChar, ch,
+		    return generateBinaryChar (ch);
+		)
+			 
 		else of (BinaryPtr, ptr,
 		    return generateBinaryPtr (ptr);
 		)
@@ -560,6 +569,10 @@ namespace semantic {
 
 		else of (ArrayAlloc, alloc,
 		    return generateArrayAlloc (alloc);
+		)
+
+		else of (NullValue, nl,
+		    return generateNullValue (nl);
 		);
 	    }
 
@@ -734,6 +747,41 @@ namespace semantic {
 	    return ret;
 	}
 
+	Tree Visitor::generateBinaryChar (const BinaryChar & bin) {
+	    auto left = generateValue (bin.getLeft ());
+	    auto right = generateValue (bin.getRight ());
+
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (left.getList ());
+	    list.append (right.getList ());
+	    
+	    tree_code code = PLUS_EXPR; // Fake default affectation to avoid warning
+	    switch (bin.getOperator ()) {
+	    case Binary::Operator::ADD : code = PLUS_EXPR; break;
+	    case Binary::Operator::SUB : code = MINUS_EXPR; break;
+	    case Binary::Operator::MUL : code = MULT_EXPR; break;
+	    case Binary::Operator::DIV : code = RDIV_EXPR; break;
+		
+	    case Binary::Operator::INF : code = LT_EXPR; break;
+	    case Binary::Operator::SUP : code = GT_EXPR; break;
+	    case Binary::Operator::INF_EQUAL : code = LE_EXPR; break;
+	    case Binary::Operator::SUP_EQUAL : code = GE_EXPR; break;
+	    case Binary::Operator::EQUAL : code = EQ_EXPR; break;
+	    case Binary::Operator::NOT_EQUAL : code = NE_EXPR; break;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+	    }
+	    
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
+	    
+	    auto type = generateType (bin.getType ());
+	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);
+	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+	    return ret;	    
+	}
+
+	
 	Tree Visitor::generateBinaryFloat (const BinaryFloat & bin) {
 	    auto left = generateValue (bin.getLeft ());
 	    auto right = generateValue (bin.getRight ());
@@ -775,22 +823,31 @@ namespace semantic {
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
 	    list.append (right.getList ());
+	    bool isTest = false;
 	    tree_code code = PLUS_EXPR; // Fake default affectation to avoid warning
 	    switch (bin.getOperator ()) {
 	    case Binary::Operator::ADD : code = POINTER_PLUS_EXPR; break;
-	    case Binary::Operator::EQUAL : code = EQ_EXPR; break;
-	    case Binary::Operator::NOT_EQUAL : code = NE_EXPR; break;
+	    case Binary::Operator::SUB : code = POINTER_DIFF_EXPR; break;
+	    case Binary::Operator::IS : {isTest = true; code = EQ_EXPR;} break;
+	    case Binary::Operator::NOT_IS : {isTest = true; code = NE_EXPR;} break;		
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }
 
 	    auto lvalue = left.getValue ();
 	    auto rvalue = right.getValue ();
-	    
-	    auto type = generateType (bin.getType ());
-	    auto value = Tree::binaryPtr (bin.getLocation (), code, type, lvalue, rvalue);
-	    auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
-	    return ret;	    	    
+
+	    if (!isTest) {
+		auto type = generateType (bin.getType ());
+		auto value = Tree::binaryPtr (bin.getLocation (), code, type, lvalue, rvalue);
+		auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+		return ret;
+	    } else {
+		auto type = generateType (bin.getType ());
+		auto value = Tree::binaryPtrTest (bin.getLocation (), code, type, lvalue, rvalue);
+		auto ret = Tree::compound (bin.getLocation (), value, list.toTree ());
+		return ret;
+	    }
 	}
 	
 	generic::Tree Visitor::generateUnaryInt (const UnaryInt & un) {
@@ -864,9 +921,10 @@ namespace semantic {
 		list.append (value.getList ());
 		value = value.getValue ();
 
+		auto type = generateType (un.getType ());
 		return Tree::compound (
 		    un.getLocation (),
-		    value.buildPointerUnref (0),
+		    value.buildPointerUnref (type, 0),
 		    list.toTree ()
 		);
 	    } else {
@@ -1109,6 +1167,10 @@ namespace semantic {
 	    }
 	}	
 	
+	generic::Tree Visitor::generateNullValue (const NullValue & nl) {
+	    return Tree::buildPtrCst (nl.getLocation (), 0);
+	}
+
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
 	    auto type = generateType (val.getType ());
 	    //auto inner = generateType (val.getType ().to <Array> ().getInners () [0]);

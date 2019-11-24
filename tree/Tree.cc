@@ -307,6 +307,22 @@ namespace generic {
 	);
     }
 
+    Tree Tree::binaryPtrTest (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
+	auto ulong_type = Tree::intType (64, false);
+
+	return Tree::build (code, loc, type,
+			    Tree::init (
+				loc.getLocus (),
+				convert (ulong_type.getTree (), left.getTree ())
+			    ),
+			    Tree::init (
+				loc.getLocus (),
+				convert (ulong_type.getTree (), right.getTree ())
+			    )
+	);
+    }
+
+    
     
     Tree Tree::binaryDirect (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
 	return Tree::build (code, loc, type, left, right);
@@ -415,6 +431,14 @@ namespace generic {
     Tree Tree::condExpr (const lexing::Word & loc, const Tree & test, const Tree & gotoS, const Tree & gotoF) {
 	return Tree::build (
 	    COND_EXPR, loc, Tree::voidType (), test, gotoS, gotoF	    
+	);
+    }
+
+    Tree Tree::buildPtrCst (const lexing::Word & loc, ulong value) {
+	auto cst = Tree::buildIntCst (loc, value, Tree::intType (64, false)).getTree ();
+	return Tree::init (
+	    loc.getLocus (), 
+	    convert_to_ptrofftype (cst)
 	);
     }
     
@@ -766,6 +790,20 @@ namespace generic {
 	return Tree::init (this-> _loc, build2 (MEM_REF, inner, addr, build_int_cst (this-> getType ().getTree (), 0)));
     }
 
+
+    Tree Tree::buildPointerUnref (Tree type, int index) const {
+	auto ptrType = pointerType (type);
+	auto inner = type.getTree ();
+	auto element_size = TYPE_SIZE_UNIT (inner);
+	tree it = build_int_cst_type (long_unsigned_type_node, index);
+	it = fold_convert_loc (this-> _loc, size_type_node, it);
+	auto offset = fold_build2_loc (this-> _loc, MULT_EXPR, size_type_node, it, element_size);
+
+	it = convert_to_ptrofftype (offset);
+	tree addr = build2 (POINTER_PLUS_EXPR, ptrType.getTree (), this-> _t, it);
+	return Tree::init (this-> _loc, build2 (MEM_REF, inner, addr, build_int_cst (ptrType.getTree (), 0)));
+    }
+    
     Tree Tree::getField (const std::string & name) const {
 	if (this-> _t == NULL_TREE)
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));

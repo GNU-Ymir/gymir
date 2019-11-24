@@ -8,6 +8,7 @@
 #include <ymir/semantic/generator/value/ArrayValue.hh>
 #include <ymir/semantic/generator/value/Binary.hh>
 #include <ymir/semantic/generator/value/BinaryBool.hh>
+#include <ymir/semantic/generator/value/BinaryChar.hh>
 #include <ymir/semantic/generator/value/BinaryFloat.hh>
 #include <ymir/semantic/generator/value/BinaryInt.hh>
 #include <ymir/semantic/generator/value/BinaryPtr.hh>
@@ -30,6 +31,7 @@
 #include <ymir/semantic/generator/value/MultSym.hh>
 #include <ymir/semantic/generator/value/NamedGenerator.hh>
 #include <ymir/semantic/generator/value/None.hh>
+#include <ymir/semantic/generator/value/NullValue.hh>
 #include <ymir/semantic/generator/value/ParamVar.hh>
 #include <ymir/semantic/generator/value/ProtoVar.hh>
 #include <ymir/semantic/generator/value/RangeValue.hh>

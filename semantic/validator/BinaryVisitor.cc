@@ -1,6 +1,8 @@
 #include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
+#include <ymir/syntax/visitor/Keys.hh>
 #include <algorithm>
+
 
 namespace semantic {
 
@@ -26,9 +28,11 @@ namespace semantic {
 		return validateLogicalOperation (op, expression);
 	    } else if (isRange (op)) {
 		return validateRangeOperation (op, expression);
+	    } else if (isPointer (op)) {
+		return validatePointerOperation (op, expression);
 	    } else if (isAff) {
 		return validateAffectation (op, expression);
-	    }
+	    } 
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
@@ -59,6 +63,10 @@ namespace semantic {
 
 		    of (Float, f ATTRIBUTE_UNUSED,
 			return validateMathFloatLeft (op, expression, left, right);
+		    );
+
+		    of (Pointer, p ATTRIBUTE_UNUSED,
+			return validateMathPtrLeft (op, expression, left, right);
 		    );
 		}
 		
@@ -121,12 +129,42 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	Generator BinaryVisitor::validateMathPtrLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    std::vector <Binary::Operator> possible = {
+		Binary::Operator::ADD, Binary::Operator::SUB
+	    };
+	    	    
+	    if (right.to <Value> ().getType ().is <Integer> () &&
+		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
+		const Integer & rightType = right.to <Value> ().getType ().to <Integer> ();
+		
+		if (!rightType.isSigned ()) {
+		    return BinaryPtr::init (
+			expression.getLocation (),
+			op,
+			left.to <Value> ().getType (),
+			left, right
+		    );
+		    
+		}		
+	    }
+	    	    
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				expression.getLocation ().str,
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+	    );
+	    
+	    return Generator::empty ();
+	}	
+
 	Generator BinaryVisitor::validateMathFloatLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    std::vector <Binary::Operator> possible = {
 		Binary::Operator::ADD, Binary::Operator::SUB, Binary::Operator::MUL, Binary::Operator::DIV,
 	    };
 	    
-	    if (right.to <Value> ().getType ().is <Float> () && op != Binary::Operator::CONCAT) {
+	    if (right.to <Value> ().getType ().is <Float> () &&
+		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
 		const Float & leftType = left.to <Value> ().getType ().to <Float> ();
 		const Float & rightType = right.to <Value> ().getType ().to <Float> ();
 		
@@ -176,6 +214,10 @@ namespace semantic {
 
 		    of (Float, f ATTRIBUTE_UNUSED,
 			return validateLogicalFloatLeft (op, expression, left, right);
+		    );
+
+		    of (Char, c ATTRIBUTE_UNUSED,
+			return validateLogicalCharLeft (op, expression, left, right);
 		    );
 		}		
 		
@@ -240,6 +282,30 @@ namespace semantic {
 	    return Generator::empty ();
 	}	
 
+	Generator BinaryVisitor::validateLogicalCharLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
+			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
+			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
+
+	    if (right.to<Value> ().getType ().to <Type> ().isCompatible (left.to<Value> ().getType ()) &&		
+		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
+		
+		return BinaryChar::init (expression.getLocation (),
+					 op,
+					 Bool::init (expression.getLocation ()),
+					 left, right
+		);	    
+	    }
+
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				expression.getLocation ().str,
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+	    );
+	    
+	    return Generator::empty ();
+	}	
+	
 	Generator BinaryVisitor::validateLogicalFloatLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
 			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
@@ -435,6 +501,34 @@ namespace semantic {
 	    
 	    return Generator::empty ();
 	}
+
+	Generator BinaryVisitor::validatePointerOperation (Binary::Operator op, const syntax::Binary & expression) {
+	    auto leftExp = expression.getLeft ();
+	    auto rightExp = expression.getRight ();
+	    if (!expression.getType ().isEmpty ()) {
+		leftExp = syntax::Cast::init (expression.getLocation (), expression.getType (), leftExp);
+		rightExp = syntax::Cast::init (expression.getLocation (), expression.getType (), rightExp);		
+	    }
+	    
+	    auto left = this-> _context.validateValue (leftExp);
+	    auto right = this-> _context.validateValue (rightExp);
+
+	    if (left.to <Value> ().getType ().is <Pointer> ()) {		
+		auto lptr = left.to <Value> ().getType ();
+		auto rptr = right.to <Value> ().getType ();
+		if (lptr.to <Type> ().isCompatible (rptr)) 
+		    return BinaryPtr::init (expression.getLocation (),
+					    op,
+					    Bool::init (expression.getLocation ()),
+					    left, right);
+		else if (right.is<NullValue> ()) 
+		    return BinaryPtr::init (expression.getLocation (),
+					    op,
+					    Bool::init (expression.getLocation ()),
+					    left, right);
+	    }
+	    return Generator::empty ();
+	}
 	
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {
 	    string_match (loc.str) {
@@ -469,6 +563,8 @@ namespace semantic {
 		eq (Token::DXOR, return Binary::Operator::EXP;);
 		eq (Token::DDOT, return Binary::Operator::RANGE;);
 		eq (Token::TDOT, return Binary::Operator::TRANGE;);
+		eq (Keys::IS, return Binary::Operator::IS;);
+		eq (Keys::NOT_IS, return Binary::Operator::NOT_IS;);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -489,11 +585,20 @@ namespace semantic {
 	}
 	
 	bool BinaryVisitor::isLogical (Binary::Operator op) {
-	    return !isMath (op) && op != Binary::Operator::RANGE && op != Binary::Operator::TRANGE;
+	    auto impossible = {
+		Binary::Operator::TRANGE, Binary::Operator::RANGE,
+		Binary::Operator::IS, Binary::Operator::NOT_IS
+	    };
+	    return !isMath (op) &&
+		(std::find (impossible.begin (), impossible.end (), op) == impossible.end ());
 	}
 
 	bool BinaryVisitor::isRange (Binary::Operator op) {
 	    return op == Binary::Operator::RANGE || op == Binary::Operator::TRANGE;
+	}
+
+	bool BinaryVisitor::isPointer (Binary::Operator op) {
+	    return op == Binary::Operator::IS || op == Binary::Operator::NOT_IS;
 	}
 	
     }

@@ -81,6 +81,12 @@ namespace semantic {
 	 * \para sym the symbol to insert
 	 */
 	virtual void insertTemplate (const Symbol & sym);
+
+	
+	/**
+	 * \return all the inserted template solutions
+	 */
+	virtual std::vector <Symbol> getTemplates () const;
 	
 	/**
 	 * \brief Insert a new symbol in the current one
@@ -228,6 +234,11 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	void insertTemplate (const Symbol & sym);
+
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector <Symbol> getTemplates () const;
 	
 	/**
 	 * Proxy function for symbol

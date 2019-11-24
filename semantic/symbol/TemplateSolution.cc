@@ -122,6 +122,23 @@ namespace semantic {
 	}
     }
 
+    std::string TemplateSolution::getSolutionName () const {
+	Ymir::OutBuffer buf;
+	buf.writef ("%", this-> getName ().str);
+	int i = 0;
+	buf.write ("(");
+	for (auto & it : _nameOrder) {
+	    if (i != 0)
+		buf.write (",");
+	    buf.write (this-> _params.find (it)-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().prettyString ()); // [] on map discard const qualifier ?!!
+	    i += 1;
+	}
+	buf.write (")");
+	
+	return buf.str ();	
+    }
+
+    
     std::string TemplateSolution::getMangledName () const {
 	Ymir::OutBuffer buf;
 	buf.write (this-> getName ().str);

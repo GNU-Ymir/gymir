@@ -41,6 +41,11 @@ namespace semantic {
 	this-> _table.insertTemplate (sym);
     }
 
+    std::vector<Symbol> Module::getTemplates () const {
+	return this-> _table.getTemplates ();
+    }    
+
+
     void Module::replace (const Symbol & sym) {
 	this-> _table.replace (sym);
     }

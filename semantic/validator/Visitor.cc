@@ -261,12 +261,8 @@ namespace semantic {
 							     Char::init (func.getName (), 8) // The input given by the task launcher is in utf8
 							 )
 			    );
-			    if (!argtype.to <Type> ().isCompatible (params [0].to <Value> ().getType ()))
-				Ymir::Error::occur (params [0].to <Value> ().getType ().getLocation (),
-						    ExternalError::get (INCOMPATIBLE_TYPES),
-						    argtype.to <Type> ().getTypeName (),
-						    params [0].to <Value> ().getType ().to <Type> ().getTypeName ()
-				);
+			    
+			    verifyCompatibleTypeWithValue (argtype, params [0]);
 			}
 		    }
 	    
@@ -274,13 +270,7 @@ namespace semantic {
 			retType = validateType (function.getPrototype ().getType ());
 			if (function.getName () == Keys::MAIN) {
 			    auto itype       = Integer::init (func.getName (), 32, true);
-			    if (!itype.to <Type> ().isCompatible (retType)) {
-				Ymir::Error::occur (function.getPrototype ().getType ().getLocation (),
-						    ExternalError::get (INCOMPATIBLE_TYPES),
-						    itype.to <Type> ().getTypeName (),
-						    retType.to <Type> ().getTypeName ()
-				);
-			    }		    		    
+			    verifyCompatibleType (itype, retType);
 			}
 		    } else retType = Void::init (func.getName ());
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -291,7 +281,7 @@ namespace semantic {
 	    
 	    this-> setCurrentFuncType (retType);
 	    
-	    if (!function.getBody ().getBody ().isEmpty ()) {
+	    if (!function.getBody ().getBody ().isEmpty () && errors.size () == 0) {
 		if (!function.getBody ().getInner ().isEmpty () ||
 		    !function.getBody ().getOuter ().isEmpty ()
 		)
@@ -548,6 +538,8 @@ namespace semantic {
 			    }
 			}
 		    })
+		else of (Pointer, p ATTRIBUTE_UNUSED, // No forward problem on pointer types
+		)
 		else of (Type, t, {
 			if (t.isComplex ()) {
 			    for (auto & it : t.getInners ()) verifyRecursivity (loc, it, sym);
@@ -557,7 +549,13 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateValue (const syntax::Expression & expr, bool canBeType, bool fromCall) {
-	    auto value = validateValueNoReachable (expr, fromCall);
+	    Generator value (Generator::empty ());
+	    if (canBeType) 
+		value = validateValueNoReachable (expr, true);
+	    else
+		value = validateValueNoReachable (expr, fromCall);
+	    // If it can be a type, that means we are looking for a type, and that implicit call is not an option
+	    
 	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
 		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (USE_AS_VALUE));
@@ -720,12 +718,17 @@ namespace semantic {
 		of (syntax::FuncPtr, ptr,
 		    return validateFuncPtr (ptr);
 		);
+
+		of (syntax::Null, nl,
+		    return validateNullValue (nl);
+		);
 		
 	    }
 
 	    OutBuffer buf;
 	    value.treePrint (buf, 0);
 	    println (buf.str ());
+	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
@@ -1452,10 +1455,11 @@ namespace semantic {
 	    } else type = Void::init (rt.getLocation ());
 
 	    auto fn_type = getCurrentFuncType ();
-
-	    if (fn_type.isEmpty ())
-		this-> setCurrentFuncType (type);	    
-	    else if (!fn_type.equals (type)) {
+ 
+	    if (fn_type.isEmpty ()) {
+		this-> setCurrentFuncType (type);
+		fn_type = type;
+	    } else if (!fn_type.equals (type)) {
 	    	auto note = Ymir::Error::createNote (fn_type.getLocation ());
 	    	Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
 	    				   type.to <Type> ().getTypeName (),
@@ -1463,7 +1467,9 @@ namespace semantic {
 	    	);				    
 	    }
 
-	    if (!fn_type.is<Void> ()) verifyMemoryOwner (rt.getLocation (), fn_type, value, false);
+	    if (!fn_type.is<Void> ()) {
+		verifyMemoryOwner (rt.getLocation (), fn_type, value, false);
+	    }
 	    
 	    return Return::init (rt.getLocation (), Void::init (rt.getLocation ()), fn_type, value);
 	}
@@ -1556,7 +1562,7 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {
-	    auto value = this-> validateValue (tcl.getContent ());
+	    auto value = this-> validateValue (tcl.getContent (), false, true);
 	    
 	    std::vector <std::string> errors;
 	    std::vector <Generator> params;
@@ -1959,6 +1965,11 @@ namespace semantic {
 	    }
 	}
 
+	Generator Visitor::validateNullValue (const syntax::Null & nl) {
+	    auto type = Pointer::init (nl.getLocation (), Void::init (nl.getLocation ()));
+	    return NullValue::init (nl.getLocation (), type);
+	}
+	
 	Generator Visitor::validateIntrinsics (const syntax::Intrinsics & intr) {
 	    if (intr.isCopy ()) return validateCopy (intr);
 	    if (intr.isAlias ()) return validateAlias (intr);
@@ -2064,50 +2075,52 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateType (const syntax::Expression & type) {
+	    Generator val (Generator::empty ());
 	    match (type) {
 		of (syntax::ArrayAlloc, array,
-		    return validateTypeArrayAlloc (array);
+		    val = validateTypeArrayAlloc (array);
 		);
 
 		of (syntax::Var, var,
-		    return validateTypeVar (var);
+		    val = validateTypeVar (var);
 		);
 
 		of (syntax::DecoratedExpression, dec_expr,
-		    return validateTypeDecorated (dec_expr);
+		    val = validateTypeDecorated (dec_expr);
 		);
 
 		of (syntax::Unary, un,
-		    return validateTypeUnary (un);
+		    val = validateTypeUnary (un);
 		);
 
 		of (syntax::List, list,
 		    if (list.isArray ())
-			return validateTypeSlice (list);
+			val = validateTypeSlice (list);
 		    if (list.isTuple ())
-			return validateTypeTuple (list);
+			val = validateTypeTuple (list);
 		);
 		
 		of (TemplateSyntaxWrapper, tmplSynt,
-		    return tmplSynt.getContent ();
+		    val =  tmplSynt.getContent ();
 		);
 
 		of (syntax::TemplateCall, tmpCall,
-		    auto gen = validateTypeTemplateCall (tmpCall);
-		    if (!gen.isEmpty ())
-			return gen;
+		    val = validateTypeTemplateCall (tmpCall);		   
 		);
 		
 	    }
-	    
-	    auto val = validateValue (type, true);
+
+	    if (val.isEmpty ()) {		
+		val = validateValue (type, true, true); // Can't make a implicit call validation if we are looking for a type
+	    }
+
 	    if (val.is<Type> ()) return val;
 	    if (val.is<generator::Struct> ())
 		return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
 	    if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();
 	    
 	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
-	    return Generator::empty ();
+	    return Generator::empty ();	    	   
 	}
 
 	Generator Visitor::validateTypeVar (const syntax::Var & var) {
@@ -2215,19 +2228,18 @@ namespace semantic {
 	    return Tuple::init (list.getLocation (), inners);
 	}	
 
-	Generator Visitor::validateTypeTemplateCall (const syntax::TemplateCall & call) {
-	    Generator innerType (Generator::empty ());
-	    if (call.getParameters ().size () == 1) {
-		innerType = validateType (call.getParameters ()[0]);
-	    }
-	    
+	Generator Visitor::validateTypeTemplateCall (const syntax::TemplateCall & call) {	    
 	    auto left = call.getContent ();
 	    match (left) {
 		of (syntax::Var, var, {
+			Generator innerType (Generator::empty ());
+			if (call.getParameters ().size () == 1) {
+			    innerType = validateType (call.getParameters ()[0]);
+			}
+			
 			if (var.getName ().str == Range::NAME) {
 			    return Range::init (var.getName (), innerType);
-			}       	    		
-			Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().str);
+			}		       
 		    }
 		);
 	    }
@@ -2348,8 +2360,8 @@ namespace semantic {
 	    return Generator::__empty__;
 	}
 
-	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {	    
-	    verifyCompatibleType (type, gen.to <Value> ().getType ());
+	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
+	    verifyCompatibleTypeWithValue (type, gen);
 
 	    // Verify Implicit referencing
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
@@ -2378,7 +2390,7 @@ namespace semantic {
 		auto tu = gen.to<Value> ().getType ().to <Type> ().toMutable ();
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
-		if (llevel > rlevel) {
+		if (llevel > rlevel + 1) { // left operand can be mutable, but it can't modify inner right operand values
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
 		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					llevel, rlevel
@@ -2387,7 +2399,7 @@ namespace semantic {
 	    } else if (type.is<Pointer> ()) {
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
-		if (llevel > rlevel) {
+		if (llevel > rlevel + 1) {
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
 		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					llevel, rlevel
@@ -2432,7 +2444,7 @@ namespace semantic {
 		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {
 		    auto llevel = type.to <Type> ().mutabilityLevel ();
 		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
-		    if (llevel > rlevel) {
+		    if (llevel > rlevel + 1) {
 			auto note = Ymir::Error::createNote (gen.getLocation ());
 			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					    llevel, rlevel
@@ -2496,6 +2508,12 @@ namespace semantic {
 	    }
 	}
 
+	void Visitor::verifyCompatibleTypeWithValue (const Generator & type, const Generator & gen) {
+	    if (!gen.is <NullValue> () || !type.is <Pointer> ())
+		verifyCompatibleType (type, gen.to <Value> ().getType ());
+	}	
+
+	
 	void Visitor::verifyCompatibleType (const Generator & left, const Generator & right) {
 	    bool error = false;
 	    std::string leftName;
@@ -2503,7 +2521,7 @@ namespace semantic {
 		error = true;
 		leftName = left.to<Type> ().getTypeName ();
 	    }
-
+	    
 	    if (!left.to <Type> ().getProxy ().isEmpty () && !left.to <Type> ().getProxy ().to <Type> ().isCompatible (right.to <Type> ().getProxy ())) {
 		error = true;
 		leftName = left.to<Type> ().getProxy ().to <Type> ().getTypeName ();

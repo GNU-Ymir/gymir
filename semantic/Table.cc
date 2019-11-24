@@ -42,6 +42,10 @@ namespace semantic {
 	this-> _templates.push_back (toInsert);
     }
 
+    const std::vector <Symbol> & Table::getTemplates () const {
+	return this-> _templates;
+    }
+    
     void Table::replace (const Symbol & sym) {
 	Symbol toInsert = sym;
 	toInsert.setReferent (Symbol {this-> _attached});

@@ -59,6 +59,8 @@ namespace semantic {
 	std::string formatTree (int padd) const override;
 
 	std::string getRealName () const override;
+	
+	std::string getSolutionName () const;
 
 	std::string getMangledName () const override;
 

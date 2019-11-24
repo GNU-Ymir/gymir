@@ -362,6 +362,11 @@ namespace semantic {
 	     * \brief Validate a func ptr type (fn or dg) into generate type
 	     */
 	    generator::Generator validateFuncPtr (const syntax::FuncPtr & ptr);
+
+	    /**
+	     * \brief Validate a null value
+	     */
+	    generator::Generator validateNullValue (const syntax::Null & nl);
 	    
 	    /**
 	     * \brief Validate intricisics, it could be either :  
@@ -460,6 +465,14 @@ namespace semantic {
 	     * \param right a type
 	     */
 	    void verifyCompatibleType (const generator::Generator & left, const generator::Generator & right);
+
+	    
+	    /**
+	     * \brief Throw an exception if left.isCompatible (right.getType ()) is false
+	     * \param left a type
+	     * \param right a value
+	     */
+	    void verifyCompatibleTypeWithValue (const generator::Generator & left, const generator::Generator & right);
 
 	    /**
 	     * \brief Throw an exception if there is already some var named name

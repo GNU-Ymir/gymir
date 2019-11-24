@@ -81,6 +81,11 @@ namespace semantic {
 	 * \param sym the symbol to insert
 	 */
 	void insertTemplate (const Symbol & sym);
+
+	/**
+	 * \return the list of inserted templates
+	 */
+	const std::vector<Symbol> & getTemplates () const;
 	
 	/**
 	 * \brief Insert a new symbol in the table

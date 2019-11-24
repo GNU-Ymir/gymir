@@ -39,6 +39,8 @@ namespace semantic {
 		EXP, // ^^
 		RANGE, // ..
 		TRANGE, // ...
+		IS,
+		NOT_IS,
 		LAST_OP
 	    };	    
 

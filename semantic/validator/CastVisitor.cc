@@ -38,6 +38,10 @@ namespace semantic {
 			    return generator::Cast::init (expression.getLocation (), type, value);
 			}
 		    }
+		) else of (Pointer, ptr ATTRIBUTE_UNUSED, {
+			if (value.to <Value> ().getType ().is <Pointer> () && value.to <Value> ().getType ().to <Type> ().getInners ()[0].is <Void> ()) // One can cast &(void) in anything
+			    return generator::Cast::init (expression.getLocation (), type, value);
+		    }
 		);
 	    }
 

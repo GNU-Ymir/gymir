@@ -97,6 +97,7 @@ ymir_OBJS = \
 	ymir/generator_ArrayValue.o \
 	ymir/generator_Binary.o \
 	ymir/generator_BinaryBool.o \
+	ymir/generator_BinaryChar.o \
 	ymir/generator_BinaryFloat.o \
 	ymir/generator_BinaryInt.o \
 	ymir/generator_BinaryPtr.o \
@@ -129,6 +130,7 @@ ymir_OBJS = \
 	ymir/generator_MultSym.o \
 	ymir/generator_NamedGenerator.o \
 	ymir/generator_None.o \
+	ymir/generator_NullValue.o \
 	ymir/generator_NoneType.o \
 	ymir/generator_ParamVar.o \
 	ymir/generator_Pointer.o \

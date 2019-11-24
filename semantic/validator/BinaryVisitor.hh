@@ -72,6 +72,15 @@ namespace semantic {
 	     * \param right the right operand that we don't know the type yet
 	     */
 	    generator::Generator validateMathFloatLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a binary math operation with a ptr on the left operand
+	     * \param op the operator of the expression 
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we assume to be a Pointer value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateMathPtrLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 	    
 	    /**
 	     * \brief Validate a logical operation from two operands
@@ -88,6 +97,16 @@ namespace semantic {
 	     */
 	    generator::Generator validateLogicalIntLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
+
+	    /**
+	     * \brief Validate a binary logical operation with an char on the left operand
+	     * \param op the operator of the expression 
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand assumed to be an Char value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateLogicalCharLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+	    
 	    /**
 	     * \brief Validate a binary logical operation with a float on the left operand
 	     * \param op the operator of the expression 
@@ -127,6 +146,15 @@ namespace semantic {
 	     * \param expression the syntaxic node 
 	     */
 	    generator::Generator validateRangeOperation (generator::Binary::Operator op, const syntax::Binary & expression);
+
+
+	    /**
+	     * \brief Validate a pointer operation 
+	     * \param op the operator of the expression
+	     * \param expression the syntaxic node 
+	     */
+	    generator::Generator validatePointerOperation (generator::Binary::Operator op, const syntax::Binary & expression);
+	    
 	    
 	private :
 	    
@@ -151,6 +179,12 @@ namespace semantic {
 	     * \return is this operator a range operator
 	     */
 	    bool isRange (generator::Binary::Operator op);
+
+	    
+	    /**
+	     * \return is this operator a pointer operator
+	     */
+	    bool isPointer (generator::Binary::Operator op);
 	    
 	};	
 	

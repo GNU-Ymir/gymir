@@ -39,6 +39,11 @@ namespace semantic {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
 
+    std::vector<Symbol> ISymbol::getTemplates () const {
+	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+	return {};
+    }
+
     void ISymbol::replace (const Symbol &) {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
@@ -149,6 +154,15 @@ namespace semantic {
 	}
     }
     
+    std::vector <Symbol> Symbol::getTemplates () const {
+	if (this-> _value == nullptr) {
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+	
+	return this-> _value-> getTemplates ();
+    }
+
+    
     void Symbol::replace (const Symbol & sym) {
 	if (this-> _value != nullptr)
 	    this-> _value-> replace (sym);
@@ -201,8 +215,10 @@ namespace semantic {
 
 	auto ret = this-> _value-> get (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    auto local_ret = it.second.getUsed (name);
-	    ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	    if (!it.second.isEmpty ()) {
+		auto local_ret = it.second.getUsed (name);
+		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	    }
 	}
 	
 	return Symbol::mergeEqSymbols (ret);
@@ -214,7 +230,7 @@ namespace semantic {
 
 	auto ret = this-> _value-> getPublic (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    if (it.second.isPublic ()) {
+	    if (!it.second.isEmpty () && it.second.isPublic ()) {
 		auto local_ret = it.second.getPublic (name);
 		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
 	    }	    
@@ -229,7 +245,7 @@ namespace semantic {
 	
 	auto ret = this-> _value-> getPublic (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    if (it.second.isPublic ()) {
+	    if (!it.second.isEmpty () && it.second.isPublic ()) {
 		auto local_ret = it.second.getUsed (name);
 		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
 	    }
