@@ -17,7 +17,7 @@ namespace semantic {
 	}
 
 	Generator CastVisitor::validate (const syntax::Cast & expression) {
-	    auto type = this-> _context.validateType (expression.getType ());
+	    auto type = this-> _context.validateType (expression.getType (), true);
 	    auto value = this-> _context.validateValue (expression.getContent ());
 	    match (type) {
 		of (Integer, in ATTRIBUTE_UNUSED, {

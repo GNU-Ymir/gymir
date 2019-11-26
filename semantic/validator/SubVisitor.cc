@@ -37,7 +37,7 @@ namespace semantic {
 
 	    if (left.isEmpty ()) {
 		TRY (
-		    left = this-> _context.validateType (expression.getLeft ());		    
+		    left = this-> _context.validateType (expression.getLeft (), true);		    
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		} FINALLY;
@@ -46,7 +46,6 @@ namespace semantic {
 		    THROW (ErrorCode::EXTERNAL, errors);
 	    }
 	    
-
 	    match (left) {
 		of (MultSym, mult, return validateMultSym (expression, mult));
 		of (ModuleAccess, acc, return validateModuleAccess (expression, acc));
@@ -65,7 +64,7 @@ namespace semantic {
 	    std::vector <Symbol> syms;
 	    for (auto & gen : mult.getGenerators ()) {
 		if (gen.is<ModuleAccess> ()) {
-		    auto elems = gen.to <ModuleAccess> ().getLocal (right);
+		    auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
 		    syms.insert (syms.end (), elems.begin (), elems.end ());
 		} 
 	    }

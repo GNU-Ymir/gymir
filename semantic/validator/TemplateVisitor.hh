@@ -56,17 +56,17 @@ namespace semantic {
 	     * \param params the parameter of the template
 	     * \param valls the parameter pass to the call
 	     */
-	    Mapper validateFromExplicit (const std::vector <syntax::Expression> & params, const std::vector <generator::Generator> & calls);
+	    Mapper validateFromExplicit (const std::vector <syntax::Expression> & params, const std::vector <generator::Generator> & calls) const;
 	    
 	    /**
 	     * \brief Validate a template from template call explicit specialization
 	     * \param ref the template reference used in the call
 	     * \param params the parameters passed at the call
 	     */
-	    semantic::Symbol validateFromExplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score);	    
+	    semantic::Symbol validateFromExplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score) const;	    
 
 
-	    Mapper validateParamTemplFromExplicit (const std::vector <syntax::Expression> & paramTempl, const syntax::Expression & param, const std::vector <generator::Generator> & values, int & consumed);
+	    Mapper validateParamTemplFromExplicit (const std::vector <syntax::Expression> & paramTempl, const syntax::Expression & param, const std::vector <generator::Generator> & values, int & consumed) const;
 	    
 	    /**
 	     * \brief Validate Template expression from implicit specialistion (call operator) 
@@ -221,7 +221,7 @@ namespace semantic {
 
 	    generator::Generator validateTypeOrEmpty (const syntax::Expression & type, const std::map <std::string, syntax::Expression> & mapping) const;
 
-	    void finalValidation (const std::vector<syntax::Expression> & exprs, const Mapper & mapping, const syntax::Expression & test) const;
+	    void finalValidation (const Symbol & sym, const std::vector<syntax::Expression> & exprs, const Mapper & mapping, const syntax::Expression & test) const;
 
 	    const Symbol & getTemplateSolution (const Symbol & ref, const Symbol & solution) const;
 	    

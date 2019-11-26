@@ -53,7 +53,7 @@ namespace semantic {
 	    auto loc = lexing::Word::eof ();
 	    return Fixed::init (
 		loc,
-		Integer::init (loc, -1, false),
+		Integer::init (loc, 0, false),
 		ui 
 	    );
 	}
@@ -63,7 +63,25 @@ namespace semantic {
 	    auto loc = lexing::Word::eof ();
 	    return Fixed::init (
 		loc,
-		Integer::init (loc, -1, true),
+		Integer::init (loc, 0, true),
+		ui
+	    );
+	}	
+
+	Generator ufixed (const lexing::Word & loc, ulong value) {
+	    Fixed::UI ui; ui.u = value;
+	    return Fixed::init (
+		loc,
+		Integer::init (loc, 0, false),
+		ui 
+	    );
+	}
+
+	Generator ifixed (const lexing::Word & loc, long value) {
+	    Fixed::UI ui; ui.i = value;
+	    return Fixed::init (
+		loc,
+		Integer::init (loc, 0, true),
 		ui
 	    );
 	}	

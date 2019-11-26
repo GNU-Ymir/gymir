@@ -79,6 +79,11 @@ namespace semantic {
 	
 	void Type::isMutable (bool is) {	    
 	    this-> _isMutable = is;
+	    if (this-> _isComplex && !is) {
+		for (auto & it : this-> _inners)
+		    if (!it.isEmpty ())
+			it.to <Type> ().isMutable (false);
+	    }	    
 	}
 
 	void Type::isComplex (bool is) {

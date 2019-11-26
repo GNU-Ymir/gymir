@@ -319,8 +319,8 @@ namespace semantic {
 	    
 		enterBlock ();
 		auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
-		fn_decl.setResultDecl (resultDecl);
-
+		fn_decl.setResultDecl (resultDecl);	       
+		
 		Tree value (Tree::empty ());
 		if (frame.needFinalReturn ()) {
 		    TreeStmtList list = TreeStmtList::init ();

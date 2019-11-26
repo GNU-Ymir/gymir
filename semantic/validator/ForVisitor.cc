@@ -110,7 +110,7 @@ namespace semantic {
 	    
 	    if (!decl.getType ().isEmpty ()) {
 		type = this-> _context.validateType (decl.getType ());
-		this-> _context.verifyCompatibleType (type, Integer::init (loc, -1, false));
+		this-> _context.verifyCompatibleType (type, Integer::init (loc, 0, false));
 	    } 
 
 	    auto var = generator::VarDecl::init (loc,

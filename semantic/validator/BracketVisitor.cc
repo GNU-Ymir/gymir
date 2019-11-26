@@ -84,8 +84,8 @@ namespace semantic {
 		    auto vlref = VarRef::init (expression.getLocation (), "#left", left.to <Value> ().getType (), vldecl.getUniqId (), false, Generator::empty ());
 		    gens.push_back (vldecl);
 		    
-		    auto l = TupleAccess::init (expression.getLocation (), innerType, vref, 0);
-		    auto r = TupleAccess::init (expression.getLocation (), innerType, vref, 1);
+		    auto l = StructAccess::init (expression.getLocation (), innerType, vref, Range::FST_NAME);
+		    auto r = StructAccess::init (expression.getLocation (), innerType, vref, Range::SCD_NAME);
 		    auto len = BinaryInt::init (expression.getLocation (), Binary::Operator::SUB, innerType, r, l);
 
 		    auto ptrType = Pointer::init (expression.getLocation (), Void::init (
@@ -95,7 +95,7 @@ namespace semantic {
 		    auto lsize = BinaryInt::init (
 			expression.getLocation (), Binary::Operator::MUL,
 			innerType, 
-			TupleAccess::init (expression.getLocation (), innerType, vref, 0),
+			StructAccess::init (expression.getLocation (), innerType, vref, Range::FST_NAME),
 			SizeOf::init (expression.getLocation (), innerType, left.to <Value> ().getType ().to <Type> ().getInners ()[0])
 		    );
 		    

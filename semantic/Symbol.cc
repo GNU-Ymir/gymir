@@ -2,6 +2,7 @@
 #include <ymir/semantic/Table.hh>
 #include <ymir/utils/Path.hh>
 #include <ymir/semantic/symbol/Module.hh>
+#include <ymir/semantic/symbol/TemplateSolution.hh>
 
 namespace semantic {
 
@@ -147,7 +148,7 @@ namespace semantic {
     }
 
     void Symbol::insertTemplate (const Symbol & sym) {
-	if (this-> _value != nullptr) {
+	if (this-> _value != nullptr) {	    
 	    this-> _value-> insertTemplate (sym);
 	} else {
 	    // We don't do anything, it is more convinient for global modules

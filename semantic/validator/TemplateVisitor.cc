@@ -17,7 +17,7 @@ namespace semantic {
 	    return TemplateVisitor (context);
 	}
 	
-	TemplateVisitor::Mapper TemplateVisitor::validateFromExplicit (const std::vector <Expression> & params, const std::vector <Generator> & values) {
+	TemplateVisitor::Mapper TemplateVisitor::validateFromExplicit (const std::vector <Expression> & params, const std::vector <Generator> & values) const {
 	    auto syntaxTempl = params;
 	    Mapper globalMapper;
 	    int consumed = 0;
@@ -38,7 +38,7 @@ namespace semantic {
 	    return globalMapper;
 	}
 	
-	Symbol TemplateVisitor::validateFromExplicit (const TemplateRef & ref, const std::vector <Generator> & values, int & score) {
+	Symbol TemplateVisitor::validateFromExplicit (const TemplateRef & ref, const std::vector <Generator> & values, int & score) const {
 	    score = -1;
 	    const Symbol & sym = ref.getTemplateRef ();
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
@@ -74,10 +74,13 @@ namespace semantic {
 		    static int __tmpTemplate__ = 0;
 		    __tmpTemplate__ += 1;
 		    score = merge.score;
-		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
-		    auto final_test = replaceAll (sym.to <semantic::Template> ().getTest (), merge.mapping);
 
-		    auto sym2 = Template::init (ref.getLocation (), syntaxTempl, final_syntax, final_test, sym.to <semantic::Template> ().getParams ());
+		    auto sym2 = Template::init (ref.getLocation (),
+						syntaxTempl,
+						sym.to <semantic::Template> ().getDeclaration (),
+						sym.to <semantic::Template> ().getTest (),
+						sym.to <semantic::Template> ().getParams ()
+		    );
 
 		    sym2.to <Template> ().setPreviousSpecialization (merge.mapping);
 		    sym2.to <Template> ().setSpecNameOrder (merge.nameOrder);		
@@ -87,7 +90,7 @@ namespace semantic {
 		    return sym2;
 		} else {
 		    score = merge.score;
-		    finalValidation (sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
+		    finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
 		    auto visit = declarator::Visitor::init ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
@@ -97,7 +100,7 @@ namespace semantic {
 		    if (glob.isEmpty ()) {
 			visit.pushReferent (soluce);
 			visit.visit (final_syntax);
-			glob = visit.popReferent ();		
+			glob = visit.popReferent ();
 			visit.getReferent ().insertTemplate (glob);
 		    }
 		    
@@ -106,7 +109,7 @@ namespace semantic {
 	    }
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::validateParamTemplFromExplicit (const std::vector <syntax::Expression> & syntaxTempl, const syntax::Expression & param, const std::vector <Generator> & values, int & consumed) {
+	TemplateVisitor::Mapper TemplateVisitor::validateParamTemplFromExplicit (const std::vector <syntax::Expression> & syntaxTempl, const syntax::Expression & param, const std::vector <Generator> & values, int & consumed) const {
 	    match (param) {
 		of (Var, var, {
 			if (values [0].is<Type> ()) {
@@ -247,8 +250,7 @@ namespace semantic {
 		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to <Template> ().getSpecNameOrder ()};
 		auto merge = mergeMappers (prevMapper, globalMapper);
 		
-		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
-		
+		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);		
 		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
 		
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
@@ -265,7 +267,7 @@ namespace semantic {
 		}
 		
 		score = merge.score;
-		finalValidation (sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
+		finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
 		
 		auto visit = declarator::Visitor::init ();
@@ -339,9 +341,21 @@ namespace semantic {
 		) else of (syntax::ArrayAlloc, arr, {
 			auto type = types [0];
 			int current_consumed = 0;
-			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == 1) {
+			if (type.is <Array> ()) {
 			    consumed += 1;
-			    return validateTypeFromImplicit (params, arr.getLeft (), {type.to <Type> ().getInners () [0]}, current_consumed);			    
+			    auto ret = validateTypeFromImplicit (params, arr.getLeft (), {type.to <Type> ().getInners () [0]}, current_consumed);
+			    if (ret.succeed && arr.getSize ().is <syntax::Var> ()) {
+				Expression exp = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().str, params);
+				if (!exp.isEmpty ()) {
+				    auto local_consumed = 0;
+				    auto size = ufixed (arr.getSize ().getLocation (), type.to<Array> ().getSize ());
+				    
+				    auto auxMap = validateParamTemplFromExplicit (params, exp, {size}, local_consumed);
+				    ret = mergeMappers (ret, auxMap);
+				}
+			    }
+			    
+			    return ret;
 			} else return Mapper ();
 		    }
 		) else of (TemplateCall, cl, {
@@ -378,7 +392,7 @@ namespace semantic {
 		);	       
 	    }
 
-	    this-> _context.validateType (leftT);
+	    this-> _context.validateType (leftT, true);
 	    Mapper mapper;
 	    mapper.succeed = false;
 	    return mapper;
@@ -506,7 +520,7 @@ namespace semantic {
 		of (Var, var, {
 			auto expr = findExpression (var.getName ().str, params);
 			if (expr.isEmpty ()) {
-			    auto left = this-> _context.validateType (ofv.getType ());
+			    auto left = this-> _context.validateType (ofv.getType (), true);
 			    this-> _context.verifySameType (left, type);
 			    
 			    Mapper mapper;
@@ -521,7 +535,7 @@ namespace semantic {
 			    int consumed = 0;
 			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
 			    auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
-			    auto genType = this-> _context.validateType (realType);
+			    auto genType = this-> _context.validateType (realType, true);
 
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
@@ -541,7 +555,7 @@ namespace semantic {
 			    }
 			    
 			    Expression realType  = this-> replaceAll (ofv.getType (), mapper.mapping);
-			    auto genType = this-> _context.validateType (realType);
+			    auto genType = this-> _context.validateType (realType, true);
 			    this-> _context.verifySameType (genType, type);
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
@@ -580,12 +594,21 @@ namespace semantic {
 			}
 		    }		   
 		) else of (syntax::ArrayAlloc, arr, {
-			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == 1) {
+			if (type.is<Array> ()) {
 			    int consumed = 0;
 			    Mapper mapper = validateTypeFromImplicit (params, arr.getLeft (), {type.to <Type> ().getInners () [0]}, consumed);
+			    if (mapper.succeed && arr.getSize ().is <syntax::Var> ()) {
+				Expression expr = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().str, params);				
+				if (!expr.isEmpty ()) {
+				    int local_consumed = 0;
+				    auto size = ufixed (arr.getSize ().getLocation (), type.to <Array> ().getSize ()); 
+				    auto auxMap = validateParamTemplFromExplicit (params, expr, {size}, local_consumed);
+				    mapper = mergeMappers (mapper, auxMap);
+				}
+			    }
 			    
 			    Expression realType  = this-> replaceAll (ofv.getType (), mapper.mapping);
-			    auto genType = this-> _context.validateType (realType);
+			    auto genType = this-> _context.validateType (realType, true);
 			    this-> _context.verifySameType (genType, type);
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
@@ -603,7 +626,7 @@ namespace semantic {
 			int current_consumed = 0;
 			Mapper mapper = applyTypeFromDecoratedExpression (params, dc, {type}, current_consumed);
 			Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
-			auto genType = this-> _context.validateType (realType);
+			auto genType = this-> _context.validateType (realType, true);
 			this-> _context.verifySameType (genType, type);
 			this-> _context.verifyNotIsType (ofv.getLocation ());
 			
@@ -1062,16 +1085,16 @@ namespace semantic {
 				results.push_back (it);
 			}
 		    ) else of (syntax::OfVar, var, {
-			    if (mapping.find (var.getLocation ().str) == mapping.end ())
-				results.push_back (it);
+			    if (mapping.find (var.getLocation ().str) == mapping.end ()) 
+				results.push_back (replaceAll (it, mapping));			    
 			}
 		    ) else of (syntax::VariadicVar, var, {
 			    if (mapping.find (var.getLocation ().str) == mapping.end ())
 				results.push_back (it);
 			}
 		    ) else of (syntax::VarDecl, decl, {
-			    if (mapping.find (decl.getLocation ().str) == mapping.end ())
-				results.push_back (it);
+			    if (mapping.find (decl.getLocation ().str) == mapping.end ()) 
+				results.push_back (replaceAll (it, mapping));
 			}
 		    ) else {
 				    OutBuffer buf;
@@ -1177,7 +1200,7 @@ namespace semantic {
 	    auto param = replaceAll (type, mapping);	    
 	    Generator gen (Generator::empty ());
 	    TRY (
-		gen = this-> _context.validateType (param);
+		gen = this-> _context.validateType (param, true);
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 	    } FINALLY;
@@ -1261,12 +1284,12 @@ namespace semantic {
 	    return maps;
 	}
 
-	void TemplateVisitor::finalValidation (const std::vector<syntax::Expression> & exprs, const Mapper & mapper, const syntax::Expression & test) const {
+	void TemplateVisitor::finalValidation (const Symbol & context, const std::vector<syntax::Expression> & exprs, const Mapper & mapper, const syntax::Expression & test) const {
 	    for (auto & it : exprs) {
 		match (it) { 
 		    of (syntax::VarDecl, decl, { // it is a value, we need to check the type
 			    if (!decl.getType ().isEmpty ()) {
-				auto type = this-> _context.validateType (replaceAll (decl.getType (), mapper.mapping));
+				auto type = this-> _context.validateType (replaceAll (decl.getType (), mapper.mapping), true);
 				auto auxType = this-> _context.validateValue (mapper.mapping.find (decl.getName ().str)-> second);
 				this-> _context.verifySameType (type, auxType.to <Value> ().getType ());
 			    }
@@ -1276,7 +1299,7 @@ namespace semantic {
 	    }
 
 	    if (!test.isEmpty ()) {
-		auto value = this-> _context.validateValue (replaceAll (test, mapper.mapping));
+		auto value = this-> _context.validateTemplateTest (context, replaceAll (test, mapper.mapping));
 		auto val = this-> _context.retreiveValue (value);
 		if (!val.is<BoolValue> ()) {
 		    Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
@@ -1298,8 +1321,13 @@ namespace semantic {
 
 	const Symbol & TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
 	    for (auto & it : ref.getTemplates ()) {
-		if (it.to <TemplateSolution> ().getSolutionName () == solution.to <TemplateSolution> ().getSolutionName ())
+		if (it.is <TemplateSolution> () && // It can be a Template, from semi explicit validation 
+		    it.to <TemplateSolution> ().getSolutionName () == solution.to <TemplateSolution> ().getSolutionName ()
+		    && it.getName ().isSame (solution.getName ())) { // To be similar to template solution must have the same name at the same location
+
+
 		    return it;
+		}
 	    }
 	    
 	    return Symbol::__empty__;

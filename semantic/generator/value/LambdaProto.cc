@@ -22,9 +22,7 @@ namespace semantic {
 	    _type (type),
 	    _name (name),
 	    _content (content)
-	{
-	    
-	}
+	{}
 
 	std::vector <Generator> LambdaProto::getTypes (const std::vector <Generator> & params) {
 	    std::vector <Generator> types;

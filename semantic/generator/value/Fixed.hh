@@ -69,6 +69,18 @@ namespace semantic {
 	 * \param value the content of the constant
 	 */
 	Generator ifixed (long value);
+
+	/**
+	 * \brief Create a Fixed generator, of type usize
+	 * \param value the content of the constant
+	 */
+	Generator ufixed (const lexing::Word & location, ulong value);
+
+	/**
+	 * \brief Create a fixed generator of type isize
+	 * \param value the content of the constant
+	 */
+	Generator ifixed (const lexing::Word & location, long value);
     
     }
 

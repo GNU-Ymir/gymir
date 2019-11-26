@@ -94,7 +94,7 @@ namespace semantic {
 	     * \brief Validate a module
 	     */
 	    void validateTemplateSolution (const semantic::TemplateSolution & sol);
-
+	    
 	    /**
 	     * \brief Validate a function
 	     */
@@ -127,7 +127,15 @@ namespace semantic {
 	    
 	    /**
 	     * \brief validate an expression, that produce a type
-	     * \return a tree containing the resulting type
+	     * \return a generator containing the resulting type
+	     * \param lock if the return type is not mutable do we lock the mutability ?
+	     * \      if true, even if we set it to mutable later all the inner types will be immutable
+	     */
+	    generator::Generator validateType (const syntax::Expression & type, bool lock);
+
+	    /**
+	     * \brief validate an expression, that produce a type
+	     * \return a generator containing the resulting type
 	     */
 	    generator::Generator validateType (const syntax::Expression & type);
 
@@ -170,6 +178,14 @@ namespace semantic {
 	     * \brief Validate a template checker 
 	     */
 	    generator::Generator validateTemplateChecker (const syntax::TemplateChecker & tmpChecker);
+
+	    /**
+	     * \brief Validate a template test, a template test must be executed from the context of the template
+	     * \param context the context of the template definition
+	     * \param expr the test of the template
+	     * \return a generator (not cte, just validated)
+	     */
+	    generator::Generator validateTemplateTest (const Symbol & context, const syntax::Expression & expr);
 	    
 	    /**
 	     * \brief validate an expression, that produce a value
