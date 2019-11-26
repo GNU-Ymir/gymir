@@ -81,6 +81,7 @@ ymir_OBJS = \
 	ymir/expr_Set.o \
 	ymir/expr_String.o \
 	ymir/expr_Template.o \
+	ymir/expr_TemplateChecker.o \
 	ymir/expr_Throw.o \
 	ymir/expr_Unary.o \
 	ymir/expr_Unit.o \

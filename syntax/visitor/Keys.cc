@@ -103,6 +103,7 @@ std::string     Keys::STATIC	   = "static";
 std::string     Keys::STRINGOF	   = "stringof";
 std::string     Keys::SUCCESS      = "success";
 std::string     Keys::SUPER	   = "super";
+std::string     Keys::TEMPLATE     = "is";
 std::string     Keys::THROW_K	   = "throw";
 std::string     Keys::TRAIT	   = "trait";
 std::string     Keys::TRUE_	   = "true";

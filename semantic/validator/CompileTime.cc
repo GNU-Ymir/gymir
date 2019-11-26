@@ -64,6 +64,10 @@ namespace semantic {
 		    return executeBinaryInt (bin);
 		);
 
+		of (BinaryBool, bin,
+		    return executeBinaryBool (bin);
+		);
+
 		of (UnaryInt, una,
 		    return executeUnaryInt (una);
 		);
@@ -388,6 +392,36 @@ namespace semantic {
 		auto res = applyBinFloatBool<double> (binFloat.getOperator (), left, right);
 		return BoolValue::init (binFloat.getLocation (), Bool::init (binFloat.getLocation ()), res);
 	    }
+	}
+
+	bool applyBinBool (Binary::Operator op, bool left, bool right) {
+	    switch (op) {
+	    case Binary::Operator::EQUAL : return left == right;
+	    case Binary::Operator::NOT_EQUAL : return left != right;
+	    case Binary::Operator::AND : return left && right;
+	    case Binary::Operator::OR : return left || right;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return false;
+	    }
+	}
+
+	generator::Generator CompileTime::executeBinaryBool (const generator::BinaryBool & binBool) {
+	    auto leftEx = this-> execute (binBool.getLeft ());
+	    auto rightEx = this-> execute (binBool.getRight ());
+	    if (!leftEx.is <BoolValue> ())
+		Ymir::Error::occur (
+		    leftEx.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+	    if (!rightEx.is<BoolValue> ())
+		Ymir::Error::occur (
+		    leftEx.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+	    
+	    auto res = applyBinBool (binBool.getOperator (), leftEx.to <BoolValue> ().getValue (), rightEx.to <BoolValue> ().getValue ());
+	    return BoolValue::init (binBool.getLocation (), Bool::init (binBool.getLocation ()), res);
 	}
 
 	generator::Generator CompileTime::executeConditional (const generator::Conditional & conditional) {

@@ -68,6 +68,12 @@ namespace semantic {
 	    generator::Generator executeBinaryFloat (const generator::BinaryFloat & binFloat);
 
 	    /**
+	     * \brief Execute a binary bool expression
+	     * \brief Two operands needs to be compile time known
+	     */
+	    generator::Generator executeBinaryBool (const generator::BinaryBool & binFloat);
+
+	    /**
 	     * \brief Execute a conditional block at compile time
 	     */
 	    generator::Generator executeConditional (const generator::Conditional & conditional);

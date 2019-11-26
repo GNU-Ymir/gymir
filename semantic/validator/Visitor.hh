@@ -164,7 +164,12 @@ namespace semantic {
 	    /**
 	     * \brief Validate a template call type from a template call literal
 	     */
-	    generator::Generator validateTypeTemplateCall (const syntax::TemplateCall & tmpCall);	    
+	    generator::Generator validateTypeTemplateCall (const syntax::TemplateCall & tmpCall);
+
+	    /**
+	     * \brief Validate a template checker 
+	     */
+	    generator::Generator validateTemplateChecker (const syntax::TemplateChecker & tmpChecker);
 	    
 	    /**
 	     * \brief validate an expression, that produce a value
@@ -479,6 +484,12 @@ namespace semantic {
 	     * \param name the forbidden name
 	     */
 	    void verifyShadow (const lexing::Word & name);
+
+	    /**
+	     * \brief Throw an exception if name refer to a primitive type
+	     * \param the possibly forbidden name
+	     */
+	    void verifyNotIsType (const lexing::Word & name);
 
 	    /**
 	     * \brief Throw an exception if we are currently in a safe context

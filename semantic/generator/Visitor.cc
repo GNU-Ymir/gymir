@@ -667,14 +667,18 @@ namespace semantic {
 	
 	Tree Visitor::generateAffect (const Affect & aff) {
 	    auto left = generateValue (aff.getWho ());
-	    auto right = castTo (aff.getWho ().to <Value> ().getType (), aff.getValue ());
+	    // An affectation cannot generate ref copy
+	    auto leftType = aff.getWho ().to <Value> ().getType ();
+	    leftType.to<Type> ().isRef (false);
+	    
+	    auto right = castTo (leftType, aff.getValue ()); 
 	    
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
 	    list.append (right.getList ());
 	    auto lvalue =  left.getValue ();
 	    auto rvalue =  right.getValue ();
-	    
+	   	    
 	    auto value = Tree::affect (aff.getLocation (), lvalue, rvalue);
 	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
 	    return ret;

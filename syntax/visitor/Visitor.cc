@@ -787,6 +787,7 @@ namespace syntax {
 	if (begin == Keys::ASSERT)   return visitAssert ();
 	if (begin == Keys::BREAK)    return visitBreak ();
 	if (begin == Keys::CAST)     return visitCast ();
+	if (begin == Keys::TEMPLATE) return visitTemplateChecker ();
 	if (begin == Keys::DO)       return visitDoWhile ();
 	if (begin == Keys::FOR)      return visitFor ();
 	if (begin == Keys::FUNCTION) return visitFunctionType ();
@@ -1007,6 +1008,20 @@ namespace syntax {
 	auto inner = visitExpression ();
 	this-> _lex.next ({Token::RPAR});
 	return Cast::init (location, type, inner);
+    }
+
+    Expression Visitor::visitTemplateChecker () {
+	auto name = this-> _lex.next ();
+
+	this-> _lex.next ({Token::NOT});
+	this-> _lex.rewind ();
+	auto call = this-> visitTemplateCall (Var::init (name));
+	
+	this-> _lex.next ({Token::LPAR});
+	this-> _lex.rewind ();	
+	auto params = visitTemplateParameters ();
+	
+	return TemplateChecker::init (name, call.to <TemplateCall> ().getParameters (), params);
     }
     
     Expression Visitor::visitDecoratedExpression () {

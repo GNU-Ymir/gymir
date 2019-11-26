@@ -53,10 +53,17 @@ namespace semantic {
 
 	    /**
 	     * \brief Validate a template from template call explicit specialization
+	     * \param params the parameter of the template
+	     * \param valls the parameter pass to the call
+	     */
+	    Mapper validateFromExplicit (const std::vector <syntax::Expression> & params, const std::vector <generator::Generator> & calls);
+	    
+	    /**
+	     * \brief Validate a template from template call explicit specialization
 	     * \param ref the template reference used in the call
 	     * \param params the parameters passed at the call
 	     */
-	    semantic::Symbol validateFromExplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score);
+	    semantic::Symbol validateFromExplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score);	    
 
 
 	    Mapper validateParamTemplFromExplicit (const std::vector <syntax::Expression> & paramTempl, const syntax::Expression & param, const std::vector <generator::Generator> & values, int & consumed);

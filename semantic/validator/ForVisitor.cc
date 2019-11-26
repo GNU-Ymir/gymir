@@ -389,9 +389,15 @@ namespace semantic {
 
 		    std::vector <Generator> innerValues;
 		    innerValues.push_back (this->_context.validateValue (expression.getBlock ()));
-		    innerValues.push_back (Affect::init (
-			loc, iter.to <Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
-		    ));
+		    if (innerType.is<Float> ()) {
+			innerValues.push_back (Affect::init (
+			    loc, iter.to <Value> ().getType (), iter, BinaryFloat::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
+			));
+		    } else {
+			innerValues.push_back (Affect::init (
+			    loc, iter.to <Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
+			));
+		    }
 		    value.push_back (Loop::init (expression.getLocation (), Void::init (expression.getLocation ()), test, Block::init (expression.getLocation (), Void::init (loc), innerValues), false));		    
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);

@@ -680,6 +680,14 @@ namespace syntax {
 	Expression visitCast ();
 	
 	/**
+	 * \brief Visit a template checker expression 
+	 * \verbatim
+	 cast := 'template' ('!' expression:(0)) | '!' '(' expression:(0) (',' expression:0)* ')' '(' template_element+ ')'
+	 \endverbatim
+	 */
+	Expression visitTemplateChecker ();
+	
+	/**
 	 * \brief Visit a block of expression 
 	 * \verbatim
 	 block := '{' (expression:(0) | ';')* '}'

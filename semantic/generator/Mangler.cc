@@ -206,7 +206,7 @@ namespace semantic {
 	}
 
 	std::string Mangler::mangleFloatT (const Float & f) const {
-	    return f.getTypeName (false);
+	    return f.getTypeName (false, false);
 	}
 
 	std::string Mangler::mangleIntegerT (const Integer & i) const {

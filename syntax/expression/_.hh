@@ -32,6 +32,7 @@
 #include <ymir/syntax/expression/Set.hh>
 #include <ymir/syntax/expression/String.hh>
 #include <ymir/syntax/expression/Template.hh>
+#include <ymir/syntax/expression/TemplateChecker.hh>
 #include <ymir/syntax/expression/Throw.hh>
 #include <ymir/syntax/expression/TupleDest.hh>
 #include <ymir/syntax/expression/Unary.hh>

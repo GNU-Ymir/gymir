@@ -673,21 +673,26 @@ namespace semantic {
 		);
 
 		of (syntax::TemplateCall, cl, {
-			Generator _value (Generator::empty ());
-			if (!fromCall) { // If it is a template call from nowhere we can directly us function call on it
-			    TRY (
-				auto left = lexing::Word (cl.getLocation(), Token::LPAR);
-				auto right = lexing::Word (cl.getLocation(), Token::RPAR);
-				auto params = std::vector <syntax::Expression> ();
-				auto mult = syntax::MultOperator::init (left, right, value, params);
-				_value = validateValueNoReachable (mult, true);
-			    ) CATCH (ErrorCode::EXTERNAL) {
-				GET_ERRORS_AND_CLEAR (msgs);
-			    } FINALLY;
+			auto ret = validateTemplateCall (cl);
+			if (!fromCall && ret.is <FrameProto> ()) {
+			    std::vector <std::string> errors;
+			    int score;
+			    auto visit = CallVisitor::init (*this);			    
+			    ret = visit.validateFrameProto (cl.getLocation (), ret.to <FrameProto> (), {}, score, errors);
+			    if (errors.size () != 0) {
+				THROW (ErrorCode::EXTERNAL, errors);
+			    }			    
+			} else if (!fromCall && ret.is <generator::Struct> ()) {
+			    std::vector <std::string> errors;
+			    int score;
+			    auto visit = CallVisitor::init (*this);			    
+			    ret = visit.validateStructCst (cl.getLocation (), ret.to <generator::Struct> (), {}, score, errors);
+			    if (errors.size () != 0) {
+				THROW (ErrorCode::EXTERNAL, errors);
+			    }			    
 			}
 			
-			if (!_value.isEmpty ()) return _value;
-			return validateTemplateCall (cl);
+			return ret;
 		    }
 		);
 
@@ -722,7 +727,10 @@ namespace semantic {
 		of (syntax::Null, nl,
 		    return validateNullValue (nl);
 		);
-		
+
+		of (syntax::TemplateChecker, ch,
+		    return validateTemplateChecker (ch);
+		);
 	    }
 
 	    OutBuffer buf;
@@ -1561,6 +1569,34 @@ namespace semantic {
 	    return TupleValue::init (list.getLocation (), type, params);	    
 	}
 
+	Generator Visitor::validateTemplateChecker (const syntax::TemplateChecker & check) {
+	    std::vector<Generator> params;
+	    std::vector <std::string> errors;
+	    for (auto & it : check.getCalls ()) {
+		TRY (
+		    params.push_back (validateType (it));
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    auto val = validateValue (it);
+		    auto rvalue = retreiveValue (val);
+		    params.push_back (rvalue);
+		} FINALLY;
+	    }
+	    
+
+	    bool succeed = false;
+	    TRY (
+		auto visitor = TemplateVisitor::init (*this);
+		auto mapper = visitor.validateFromExplicit (check.getParameters (), params);
+		succeed = mapper.succeed;
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } FINALLY;
+
+	    return BoolValue::init (check.getLocation (), Bool::init (check.getLocation ()), succeed);
+	}
+	
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {
 	    auto value = this-> validateValue (tcl.getContent (), false, true);
 	    
@@ -2545,6 +2581,16 @@ namespace semantic {
 	}	
 
 	void Visitor::verifyShadow (const lexing::Word & name) {
+	    verifyNotIsType (name);
+	    
+	    auto & gen = getLocal (name.str);	    
+	    if (!gen.isEmpty ()) {		
+		auto note = Ymir::Error::createNote (gen.getLocation ());		
+		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.str);
+	    }	    
+	}
+
+	void Visitor::verifyNotIsType (const lexing::Word & name) {
 	    if (std::find (Integer::NAMES.begin (), Integer::NAMES.end (), name.str) != Integer::NAMES.end ()) {
 		Error::occur  (name, ExternalError::get (IS_TYPE), name.str);
 	    } else if (name.str == Void::NAME) {
@@ -2556,14 +2602,8 @@ namespace semantic {
 	    } else if (std::find (Char::NAMES.begin (), Char::NAMES.end (), name.str) != Char::NAMES.end ()) {
 		Error::occur  (name, ExternalError::get (IS_TYPE), name.str);
 	    }
-	    
-	    auto & gen = getLocal (name.str);	    
-	    if (!gen.isEmpty ()) {		
-		auto note = Ymir::Error::createNote (gen.getLocation ());		
-		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.str);
-	    }	    
 	}
-
+	
 	void Visitor::verifySafety (const lexing::Word & location) const {
 	    if (this-> _contextCas.empty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");

@@ -16,7 +16,28 @@ namespace semantic {
 	TemplateVisitor TemplateVisitor::init (Visitor & context) {
 	    return TemplateVisitor (context);
 	}
-
+	
+	TemplateVisitor::Mapper TemplateVisitor::validateFromExplicit (const std::vector <Expression> & params, const std::vector <Generator> & values) {
+	    auto syntaxTempl = params;
+	    Mapper globalMapper;
+	    int consumed = 0;
+	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) { 
+		auto currentElems = std::vector <Generator> (values.begin () + consumed, values.end ());
+		
+		int current_consumed = 0;
+		auto rest = std::vector<syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
+		auto mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
+		if (!mapper.succeed) return mapper;
+		else {
+		    globalMapper = mergeMappers (globalMapper, mapper);
+		    syntaxTempl = replaceSyntaxTempl (syntaxTempl, globalMapper.mapping);
+		    consumed += current_consumed;
+		}		
+	    }
+	    
+	    return globalMapper;
+	}
+	
 	Symbol TemplateVisitor::validateFromExplicit (const TemplateRef & ref, const std::vector <Generator> & values, int & score) {
 	    score = -1;
 	    const Symbol & sym = ref.getTemplateRef ();
@@ -92,6 +113,8 @@ namespace semantic {
 			    Mapper mapper;
 			    mapper.succeed = true;
 			    mapper.score = Scores::SCORE_VAR;
+			    this-> _context.verifyNotIsType (var.getName ());
+			    
 			    mapper.mapping.emplace (var.getName ().str, createSyntaxType (var.getName (), values [0]));
 			    mapper.nameOrder.push_back (var.getName ().str);
 			    consumed += 1;
@@ -489,6 +512,8 @@ namespace semantic {
 			    Mapper mapper;
 			    mapper.succeed = true;
 			    mapper.score = Scores::SCORE_TYPE;
+			    this-> _context.verifyNotIsType (ofv.getLocation ());
+			    
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), type));
 			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    return mapper;			
@@ -497,7 +522,8 @@ namespace semantic {
 			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
 			    auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType);
-			    
+
+			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
 			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    return mapper;			    
@@ -517,6 +543,8 @@ namespace semantic {
 			    Expression realType  = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType);
 			    this-> _context.verifySameType (genType, type);
+			    this-> _context.verifyNotIsType (ofv.getLocation ());
+			    
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
 			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    mapper.score += Scores::SCORE_TYPE;
@@ -559,6 +587,8 @@ namespace semantic {
 			    Expression realType  = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType);
 			    this-> _context.verifySameType (genType, type);
+			    this-> _context.verifyNotIsType (ofv.getLocation ());
+			    
 			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
 			    mapper.nameOrder.push_back (ofv.getLocation ().str);
 			    mapper.score += Scores::SCORE_TYPE;
@@ -575,6 +605,8 @@ namespace semantic {
 			Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 			auto genType = this-> _context.validateType (realType);
 			this-> _context.verifySameType (genType, type);
+			this-> _context.verifyNotIsType (ofv.getLocation ());
+			
 			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType, dc.hasDecorator (syntax::Decorator::MUT)));
 			mapper.nameOrder.push_back (ofv.getLocation ().str);
 			mapper.score += Scores::SCORE_TYPE;
@@ -836,6 +868,17 @@ namespace semantic {
 			       replaceAll (vdecl.getType (), mapping),
 			       replaceAll (vdecl.getValue (), mapping)
 			   );
+
+		) else of (syntax::DestructDecl, ddecl,
+			   std::vector <Expression> params;
+			   for (auto & it : ddecl.getParameters ())
+			       params.push_back (replaceAll (it, mapping));
+			   return syntax::DestructDecl::init (
+			       ddecl.getLocation (),
+			       params,
+			       replaceAll (ddecl.getValue (), mapping),
+			       ddecl.isVariadic ()
+			   );			   
 		) else of (syntax::VariadicVar, vdvar ATTRIBUTE_UNUSED, {
 			auto inner = mapping.find (element.getLocation ().str);
 			if (inner != mapping.end ()) return inner-> second;
@@ -847,6 +890,17 @@ namespace semantic {
 			       replaceAll (wh.getTest (), mapping),
 			       replaceAll (wh.getContent (), mapping),
 			       wh.isDo ()
+			   );
+		) else of (syntax::TemplateChecker, ch,
+			   std::vector <syntax::Expression> params;
+			   std::vector <syntax::Expression> calls;
+			   for (auto & it : ch.getCalls ())
+			       calls.push_back (replaceAll (it, mapping));
+			   for (auto & it : ch.getParameters ())
+			       params.push_back (replaceAll (it, mapping));
+			   return syntax::TemplateChecker::init (
+			       element.getLocation (),
+			       calls, params
 			   );
 		);
 	    }
