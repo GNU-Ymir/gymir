@@ -8,13 +8,19 @@ namespace semantic {
 	    Value ()
 	{}
 
-	Block::Block (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) :
+	Block::Block (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content, bool isLvalue) :
 	    Value (loc, type),
 	    _content (content)
-	{}
+	{
+	    this-> isLvalue (isLvalue);
+	}
        
 	Generator Block::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {
-	    return Generator {new (Z0) Block (loc, type, values)};
+	    return Generator {new (Z0) Block (loc, type, values, false)};
+	}
+
+	Generator LBlock::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {
+	    return Generator {new (Z0) Block (loc, type, values, true)};
 	}
 
 	Generator Block::clone () const {

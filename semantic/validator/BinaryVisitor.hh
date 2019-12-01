@@ -20,6 +20,11 @@ namespace semantic {
 
 	private :
 
+	    static std::string BINARY_OP_OVERRIDE;
+
+	    
+	private :
+
 	    /**
 	     * \brief As for any not proxied class, it does nothing special
 	     * \brief We just wan't all class to be initialized the same way
@@ -81,6 +86,26 @@ namespace semantic {
 	     * \param right the right operand that we don't know the type yet
 	     */
 	    generator::Generator validateMathPtrLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+	    
+	    /**
+	     * \brief Validate a binary math operation with an array on the left operand
+	     * \param op the operator of the expression 
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we assume to be a Pointer value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateMathArray (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+
+	    /**
+	     * \brief Validate a binary math operation with an slice on the left operand
+	     * \param op the operator of the expression 
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we assume to be a Pointer value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateMathSlice (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
 	    
 	    /**
 	     * \brief Validate a logical operation from two operands

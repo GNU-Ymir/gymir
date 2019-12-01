@@ -10,6 +10,9 @@ namespace semantic {
 
 	using namespace Ymir;
 	using namespace generator;
+
+	std::string BinaryVisitor::BINARY_OP_OVERRIDE = "binop";
+	
 	
 	BinaryVisitor::BinaryVisitor (Visitor & context) :
 	    _context (context) 
@@ -67,6 +70,16 @@ namespace semantic {
 
 		    of (Pointer, p ATTRIBUTE_UNUSED,
 			return validateMathPtrLeft (op, expression, left, right);
+		    );
+
+		    of (Array, a ATTRIBUTE_UNUSED,
+			auto ret = validateMathArray (op, expression, left, right);
+			if (!ret.isEmpty ()) return ret;
+		    );
+
+		    of (Slice, s ATTRIBUTE_UNUSED,
+			auto ret = validateMathSlice (op, expression, left, right);
+			if (!ret.isEmpty ()) return ret;
 		    );
 		}
 		
@@ -187,6 +200,63 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	Generator BinaryVisitor::validateMathArray (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    if (op == Binary::Operator::CONCAT) {
+		auto loc = expression.getLocation ();
+		auto leftSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, left));
+		syntax::Expression rightSynt (syntax::Expression::empty ()); 
+		if (right.to <Value> ().getType ().is <Array> ()) {
+		    rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+		} else if (right.to <Value> ().getType ().is <Slice> ()) {
+		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
+		} else return Generator::empty ();
+		
+		auto templ = syntax::TemplateCall::init (
+		    loc,
+		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
+		    syntax::Var::init ({loc, BinaryVisitor::BINARY_OP_OVERRIDE})
+		);
+		
+		auto call = syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    templ,
+		    {leftSynt, rightSynt}
+		);
+
+		return this-> _context.validateValue (call);
+	    }
+	    
+	    return Generator::empty ();
+	}
+	
+	Generator BinaryVisitor::validateMathSlice (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    if (op == Binary::Operator::CONCAT) {
+		auto loc = expression.getLocation ();
+		auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+		syntax::Expression rightSynt (syntax::Expression::empty ()); 
+		if (right.to <Value> ().getType ().is <Array> ()) {
+		    rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+		} else if (right.to <Value> ().getType ().is <Slice> ()) {
+		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
+		} else return Generator::empty ();
+		
+		auto templ = syntax::TemplateCall::init (
+		    loc,
+		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
+		    syntax::Var::init ({loc, BinaryVisitor::BINARY_OP_OVERRIDE})
+		);
+		
+		auto call = syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    templ,
+		    {leftSynt, rightSynt}
+		);
+
+		return this-> _context.validateValue (call);
+	    }
+	    
+	    return Generator::empty ();
+	}	
 	
 	Generator BinaryVisitor::validateLogicalOperation (Binary::Operator op, const syntax::Binary & expression) {
 	    auto leftExp = expression.getLeft ();

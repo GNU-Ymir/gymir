@@ -380,6 +380,11 @@ namespace generic {
 	 * \param resultDecl we need the result declaration of the current frame to perform a return stmt
 	 */
 	static Tree returnStmt (const lexing::Word & loc, const Tree & resultDecl, const Tree & value);
+
+	/*
+	 * \brief Create a return stmt
+	 */
+	static Tree returnStmt (const lexing::Word & loc);
 	
 	/**
 	 * \brief Create a label

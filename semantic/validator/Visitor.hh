@@ -170,6 +170,11 @@ namespace semantic {
 	    generator::Generator validateTypeTuple (const syntax::List & tuple);
 
 	    /**
+	     * \brief Validate a tuple type from a template syntax list
+	     */
+	    generator::Generator validateTypeTupleTemplate (const generator::TemplateSyntaxList & tuple);
+	    
+	    /**
 	     * \brief Validate a template call type from a template call literal
 	     */
 	    generator::Generator validateTypeTemplateCall (const syntax::TemplateCall & tmpCall);
@@ -353,6 +358,11 @@ namespace semantic {
 	     * \brief - a tuple type
 	     */
 	    generator::Generator validateList (const syntax::List & list);
+
+	    /**
+	     * \brief Validate a template generated list of generator (it will create a tuple)
+	     */
+	    generator::Generator validateListTemplate (const generator::TemplateSyntaxList & list);
 
 	    /**
 	     * \brief Validate a cast expression

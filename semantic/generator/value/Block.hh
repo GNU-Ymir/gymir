@@ -7,6 +7,14 @@ namespace semantic {
     namespace generator {
 
 	/**
+	 * A Lblock just generate a block, but as a lvalue
+	 */
+	class LBlock {	    	    	    	    
+	public : 
+	    static Generator init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values);
+	};	
+
+	/**
 	 * A block possess a list of expression 
 	 * it has also a type, (as any value)
 	 */
@@ -17,10 +25,11 @@ namespace semantic {
 	protected : 
 
 	    friend Generator;
+	    friend LBlock;
 
 	    Block ();
 
-	    Block (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content);	    	    
+	    Block (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content, bool isLvalue);	    	    	    
 	    
 	public :
 
@@ -54,6 +63,7 @@ namespace semantic {
 	    std::string prettyString () const override;
 	};	
 
+	
     }
        
 }

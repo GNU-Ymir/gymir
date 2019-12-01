@@ -98,18 +98,30 @@ namespace semantic {
 			StructAccess::init (expression.getLocation (), innerType, vref, Range::FST_NAME),
 			SizeOf::init (expression.getLocation (), innerType, left.to <Value> ().getType ().to <Type> ().getInners ()[0])
 		    );
+
+		    auto type = left.to <Value> ().getType ();
+		    if (
+			left.to <Value> ().isLvalue () &&
+			left.to <Value> ().getType ().to <Type> ().isMutable () &&
+			left.to <Value> ().getType ().to <Slice> ().getInners () [0].to <Type> ().isMutable ()
+		    )
+			type.to <Type> ().isMutable (true);
+		    else
+			type.to <Type> ().isMutable (false);
+		    
+		    type.to <Type> ().isRef (false);
 		    
 		    gens.push_back (SliceValue::init (
 			expression.getLocation (),
-			left.to <Value> ().getType (),
+			type, 
 			BinaryPtr::init (expression.getLocation (), Binary::Operator::ADD,
 					 ptrType,
-					 StructAccess::init (expression.getLocation (), ptrType, vlref, "ptr"),
+					 StructAccess::init (expression.getLocation (), ptrType, vlref, Slice::PTR_NAME),
 					 lsize
 			),
 			len
 		    ));
-		    return Block::init (expression.getLocation (), left.to <Value> ().getType (), gens);
+		    return LBlock::init (expression.getLocation (), type, gens);
 		}
 	    }
 

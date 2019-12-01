@@ -54,7 +54,7 @@ namespace global {
     void State::setPrefix (const std::string & path) {
 	this-> _prefixPath = path;
 	this-> _includeDir.emplace (Ymir::Path::build (path, __includeInPrefix__).toString ());	
-	this-> _corePath = Ymir::Path::build (path, __includeInPrefix__).toString ();
+	this-> _corePath = Ymir::Path::build (Ymir::Path::build (path, __includeInPrefix__), "core").toString ();
     }
 
     const std::string & State::getCorePath () const {

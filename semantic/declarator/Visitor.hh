@@ -156,7 +156,10 @@ namespace semantic {
 	     */
 	    Symbol & getReferent ();
 
-
+	    /**
+	     * \brief Import all the core files in the current referent
+	     */
+	    void importAllCoreFiles ();
 	    
 	};
 

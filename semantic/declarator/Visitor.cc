@@ -4,6 +4,7 @@
 #include <ymir/utils/Path.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/global/State.hh>
+#include <dirent.h>
 #include <algorithm>
 
 using namespace Ymir;
@@ -96,6 +97,8 @@ namespace semantic {
 
 	    pushReferent (Module::init ({mod.getIdent (), path.fileName ().toString ()}));	    
 	    getReferent ().insert (ModRef::init (mod.getIdent (), path.getFiles ()));
+	    
+	    if (mod.isGlobal ()) importAllCoreFiles ();	    
 	    
 	    for (auto & it : mod.getDeclarations ()) {
 		visit (it);
@@ -329,6 +332,55 @@ namespace semantic {
     
 	semantic::Symbol Visitor::visitGlobal (const syntax::Global & stglob) {
 	    return visit (syntax::ExpressionWrapper::init (stglob.getContent ()));	
+	}
+
+	std::map <std::string, std::string> dirEntries (const std::string & path, const std::string & init) {
+	    auto dir = opendir (path.data ());
+	    std::map <std::string, std::string> res;
+	    if (dir != NULL) {
+		auto entry = readdir (dir);
+		while (entry != NULL) {
+		    auto str = std::string (entry-> d_name);
+		    if (entry-> d_type == DT_DIR && str [0] != '.') {
+			auto ent = Ymir::Path::build (path, str).toString ();
+			auto entries = dirEntries (ent, Ymir::Path::build (init, str).toString ("::"));
+			for (auto & it :entries) res.emplace (it.first, it.second);
+		    } else if (str.length () >= 4 && str.substr (str.length () - 3, 3) == ".yr") {
+			auto name = str.substr (0, str.length () - 3);
+			res.emplace (Ymir::Path::build (path, name).toString (), Ymir::Path::build (init, name).toString ("::"));
+		    }
+		    entry = readdir (dir);
+		}
+	    }
+	    return res;
+	}	
+	
+	void Visitor::importAllCoreFiles () {
+	    auto dir = global::State::instance ().getCorePath ();
+	    auto entries = dirEntries (dir, "core");
+	    for (auto & it : entries) {
+		if (__imported__.find (it.first) == __imported__.end ()) {
+		    auto file_path = it.first + ".yr";
+			
+		    auto file = fopen (file_path.c_str (), "r");
+		    if (file != NULL) {
+			// We add a fake module, to prevent infinite import loops
+			__imported__.emplace (it.first);
+			std::vector <std::string> errors;
+			TRY (
+			    auto synt_module = syntax::Visitor::init (file_path, file).visitModGlobal ();
+			    declarator::Visitor::init ().visit (synt_module);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+		    
+			if (errors.size () != 0) 
+			    THROW (ErrorCode::EXTERNAL, errors);			
+		    }
+		}
+		getReferent ().use (it.second, Symbol::getModuleByPath (it.second));		
+	    }
 	}
 
 	semantic::Symbol Visitor::visitImport (const syntax::Import & imp) {

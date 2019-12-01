@@ -584,7 +584,7 @@ namespace semantic {
 	    
 	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
-		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
 	    }
 	    
 	    if (value.is <Value> () && value.to <Value> ().isBreaker ())
@@ -712,10 +712,11 @@ namespace semantic {
 			    std::vector <std::string> errors;
 			    int score;
 			    auto visit = CallVisitor::init (*this);			    
-			    ret = visit.validateStructCst (cl.getLocation (), ret.to <generator::Struct> (), {}, score, errors);
+			    auto sec_ret = visit.validateStructCst (cl.getLocation (), ret.to <generator::Struct> (), {}, score, errors);
 			    if (errors.size () != 0) {
 				THROW (ErrorCode::EXTERNAL, errors);
-			    }			    
+			    }
+			    if (!sec_ret.isEmpty ()) ret = sec_ret;
 			}
 			
 			return ret;
@@ -724,6 +725,10 @@ namespace semantic {
 
 		of (syntax::Return, rt,
 		    return validateReturn (rt);
+		);
+
+		of (TemplateSyntaxList, lst,
+		    return validateListTemplate (lst);
 		);
 		
 		of (TemplateSyntaxWrapper, st,
@@ -1292,8 +1297,9 @@ namespace semantic {
 	    }
 
 	    Generator value (Generator::empty ());
-	    if (!var.getValue ().isEmpty ())
+	    if (!var.getValue ().isEmpty ()) {
 		value = validateValue (var.getValue ());
+	    }
 
 	    Generator type (Generator::empty ());
 	    if (!var.getType ().isEmpty ()) {
@@ -1469,8 +1475,10 @@ namespace semantic {
 	    } else type = Void::init (_break.getLocation ());
 
 	    auto loop_type = getCurrentLoopType ();
-	    if (loop_type.isEmpty ()) setCurrentLoopType (type);
-	    else if (!loop_type.equals (type)) {
+	    if (loop_type.isEmpty ()) {
+		setCurrentLoopType (type);
+		loop_type = type;
+	    } else if (!loop_type.equals (type)) {
 		auto note = Ymir::Error::createNote (loop_type.getLocation ());
 		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
 					   type.to <Type> ().getTypeName (),
@@ -1519,6 +1527,13 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	Generator Visitor::validateListTemplate (const TemplateSyntaxList & lst) {
+	    std::vector <syntax::Expression> exprs;
+	    for (auto & it : lst.getContents ())
+		exprs.push_back (TemplateSyntaxWrapper::init (it.getLocation (), it));
+	    return validateTuple (syntax::List::init (lst.getLocation (), lst.getLocation (), exprs).to <syntax::List> ());
+	}
+	
 	Generator Visitor::validateString (const syntax::String & str) {
 	    Generator inner (Generator::empty ());
 	    if (str.getSuffix () == Keys::S8) inner = Char::init (str.getLocation (), 8);
@@ -2023,6 +2038,7 @@ namespace semantic {
 	    if (ptr.getLocation () == Keys::FUNCTION) {
 		for (auto & it : ptr.getParameters ())
 		    params.push_back (validateType (it, true));
+		
 		return FuncPtr::init (ptr.getLocation (), validateType (ptr.getRetType (), true), params);
 	    } else {
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -2171,6 +2187,10 @@ namespace semantic {
 		    if (list.isTuple ())
 			val = validateTypeTuple (list);
 		);
+
+		of (TemplateSyntaxList, tmplSynt,
+		    val = validateTypeTupleTemplate (tmplSynt);
+		);
 		
 		of (TemplateSyntaxWrapper, tmplSynt,
 		    val =  tmplSynt.getContent ();
@@ -2293,13 +2313,23 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateTypeTuple (const syntax::List & list) {
-	    std::vector <Generator> inners;
-	    for (auto & it : list.getParameters ())
-		inners.push_back (validateType (it, true));
-
-	    return Tuple::init (list.getLocation (), inners);
+	    std::vector <Generator> params;
+	    for (auto & it : list.getParameters ()) {
+		params.push_back (validateType (it, true));
+	    }
+	    
+	    return Tuple::init (list.getLocation (), params);
 	}	
 
+	Generator Visitor::validateTypeTupleTemplate (const TemplateSyntaxList & lst) {
+	    std::vector<Generator> params;
+	    for (auto & it : lst.getContents ()) {
+		params.push_back (validateType (TemplateSyntaxWrapper::init (it.getLocation (), it), true));
+	    }
+
+	    return Tuple::init (lst.getLocation (), params);
+	}
+	
 	Generator Visitor::validateTypeTemplateCall (const syntax::TemplateCall & call) {	    
 	    auto left = call.getContent ();
 	    match (left) {
@@ -2583,8 +2613,10 @@ namespace semantic {
 	}
 
 	void Visitor::verifyCompatibleTypeWithValue (const Generator & type, const Generator & gen) {
-	    if (!gen.is <NullValue> () || !type.is <Pointer> ())
-		verifyCompatibleType (type, gen.to <Value> ().getType ());
+	    if (gen.is <NullValue> () && type.is <Pointer> ()) return;
+	    else if (gen.is<ArrayValue> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
+
+	    verifyCompatibleType (type, gen.to <Value> ().getType ());
 	}	
 
 	

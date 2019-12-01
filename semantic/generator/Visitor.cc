@@ -1091,18 +1091,21 @@ namespace semantic {
 
 	generic::Tree Visitor::generateReturn (const Return & ret) {
 	    TreeStmtList list = TreeStmtList::init ();
-	    if (!ret.getValue ().to <Value> ().getType ().is<Void> ()) {
+	    if (!ret.getValue ().isEmpty ()) {
 		auto value = castTo (ret.getFunType (), ret.getValue ());
-		list.append (value.getList ());
-		value = value.getValue ();
 		auto fr = getCurrentContext ();
 		auto resultDecl = fr.getResultDecl ();
-		
-		list.append (Tree::returnStmt (ret.getLocation (), resultDecl, value));
+
+		if (ret.getFunType ().is<Void> ()) {
+		    list.append (value);
+		    list.append (Tree::returnStmt (ret.getLocation ()));
+		} else {
+		    list.append (value.getList ());
+		    value = value.getValue ();
+		    list.append (Tree::returnStmt (ret.getLocation (), resultDecl, value));
+		}
 	    } else {
-		auto fr = getCurrentContext ();
-		auto resultDecl = fr.getResultDecl ();
-		list.append (Tree::returnStmt (ret.getLocation (), resultDecl, Tree::empty ()));
+		list.append (Tree::returnStmt (ret.getLocation ()));
 	    }
 	    
 	    return list.toTree ();
@@ -1126,8 +1129,8 @@ namespace semantic {
 	    std::vector <Tree> params = {
 		generateValue (slc.getLen ()),
 		ptrValue
-	    };
-
+	    };	    
+	    
 	    return Tree::constructField (slc.getLocation (), type, {Slice::LEN_NAME, Slice::PTR_NAME}, params);
 	}
 
@@ -1335,19 +1338,31 @@ namespace semantic {
 			{Slice::LEN_NAME, Slice::PTR_NAME},
 			{
 			    value.getStringSize (chType.to<Char> ().getSize ()),
-			    value
-			}
+				value
+				}
 		    );
-		} else if (val.to <Value> ().getType ().is <Array> ()) {		    
-		    ret = Tree::constructField (
-			type.getLocation (),
-			generateType (aux_type), 
-			{Slice::LEN_NAME, Slice::PTR_NAME},
-			{
-			    value.getType ().getArraySize (),
-			    Tree::buildAddress (type.getLocation (), value, Tree::pointerType (inner))
-			}
-		    );		    
+		} else if (val.to <Value> ().getType ().is <Array> ()) {
+		    if (val.to<Value> ().getType ().to <Array> ().getInners ()[0].is <Void> ()) {
+			ret = Tree::constructField (
+			    type.getLocation (),
+			    generateType (aux_type), 
+			    {Slice::LEN_NAME, Slice::PTR_NAME},
+			    {
+				Tree::buildIntCst (val.getLocation (), (ulong) 0, Tree::intType (64, false)),
+				    Tree::buildPtrCst (val.getLocation (), 0)
+				    }
+			);
+		    } else {
+			ret = Tree::constructField (
+			    type.getLocation (),
+			    generateType (aux_type), 
+			    {Slice::LEN_NAME, Slice::PTR_NAME},
+			    {
+				value.getType ().getArraySize (),
+				    Tree::buildAddress (type.getLocation (), value, Tree::pointerType (inner))
+				    }
+			);
+		    }
 		} else {
 		    ret = value;
 		    return value;

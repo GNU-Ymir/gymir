@@ -109,7 +109,7 @@ namespace semantic {
 	for (auto & it : _nameOrder) {
 	    if (i != 0)
 		buf.write (",");
-	    buf.write (this-> _params.find (it)-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().prettyString ()); // [] on map discard const qualifier ?!!
+	    buf.write (this-> _params.find (it)-> second.prettyString ()); // [] on map discard const qualifier ?!!
 	    i += 1;
 	}
 	buf.write (")");
@@ -130,7 +130,7 @@ namespace semantic {
 	for (auto & it : _nameOrder) {
 	    if (i != 0)
 		buf.write (",");
-	    buf.write (this-> _params.find (it)-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().prettyString ()); // [] on map discard const qualifier ?!!
+	    buf.write (this-> _params.find (it)-> second.prettyString ()); // [] on map discard const qualifier ?!!
 	    i += 1;
 	}
 	buf.write (")");
@@ -144,7 +144,15 @@ namespace semantic {
 	buf.write (this-> getName ().str);
 	generator::Mangler mangler = generator::Mangler::init ();
 	for (auto & it : _nameOrder) {
-	    buf.write (Ymir::format ("N%", mangler.mangle (this-> _params.find (it)-> second.to<generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
+	    auto second = this-> _params.find (it)-> second;
+	    if (second.is <generator::TemplateSyntaxWrapper> ())
+		buf.write (Ymir::format ("N%", mangler.mangle (second.to<generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
+	    else {
+		Ymir::OutBuffer innerBuf;
+		for (auto & it : second.to <generator::TemplateSyntaxList> ().getContents ())
+		    innerBuf.writef ("N%", mangler.mangle (it));
+		buf.writef ("V%", innerBuf.str ());
+	    }
 	}
 
 	if (this-> getReferent ().isEmpty ()) return buf.str ();

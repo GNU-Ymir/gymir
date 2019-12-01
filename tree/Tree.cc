@@ -497,6 +497,10 @@ namespace generic {
 	auto inside = Tree::build (MODIFY_EXPR, loc, Tree::voidType (), result_decl, value); 
 	return Tree::build (RETURN_EXPR, loc, Tree::voidType (), inside);	
     }
+
+    Tree Tree::returnStmt (const lexing::Word & loc) {
+	return Tree::build (RETURN_EXPR, loc, Tree::voidType (), Tree::empty ());	
+    }
     
     Tree Tree::build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1) {
 	return Tree::init (loc.getLocus (), build1_loc (loc.getLocus (), tc, type.getTree (), t1.getTree ()));

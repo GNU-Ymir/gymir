@@ -152,6 +152,7 @@ ymir_OBJS = \
 	ymir/generator_StructRef.o \
 	ymir/generator_TemplateRef.o \
 	ymir/generator_TemplateSyntaxWrapper.o \
+	ymir/generator_TemplateSyntaxList.o \
 	ymir/generator_Tuple.o \
 	ymir/generator_TupleAccess.o \
 	ymir/generator_TupleValue.o \
