@@ -147,7 +147,30 @@ namespace semantic {
 		Fixed::UI value;
 		value.u = b.to <Array> ().getSize ();
 		return Fixed::init (b.getLocation (), type, value);	       		
-	    }
+	    } else if (name == Array::INIT) {
+		std::vector <Generator> params;
+		std::vector <std::string> errors;
+		TRY (
+		    auto bin = syntax::Binary::init (
+			b.to <Type> ().getInners ()[0].getLocation (),
+			expression.getLeft (),
+			expression.getRight (),
+			syntax::Expression::empty ()
+		    );
+		    
+		    auto inner = validateType (bin.to <syntax::Binary> (), b.to <Type> ().getInners ()[0]);
+		    for (auto it ATTRIBUTE_UNUSED : Ymir::r (0, b.to <Array> ().getSize ()))
+			params.push_back (inner);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+
+		if (errors.size () != 0) {
+		    this-> error (expression, b, expression.getRight (), errors);
+		}
+		return ArrayValue::init (expression.getLocation (), b, params);
+	    }	    
 	    
 	    return Generator::empty ();	    
 	}
@@ -328,6 +351,8 @@ namespace semantic {
 
 	    if (name == Slice::INNER_NAME) {
 		return s.to <Type> ().getInners () [0];
+	    } else if (name == Slice::INIT) {
+		return ArrayValue::init (expression.getLocation (), s, {});
 	    }
 
 	    return Generator::empty ();
@@ -349,6 +374,24 @@ namespace semantic {
 		    value.u = t.to<Tuple> ().getInners ().size ();
 		
 		    return Fixed::init (t.getLocation (), type, value);	       			
+		} else if (name == Tuple::INIT_NAME) {
+		    auto & fields = t.to <Type> ().getInners ();
+		    std::vector <std::string> errors;
+		    std::vector <Generator> params;		    
+		    TRY (
+			for (auto & field : fields) {
+			    auto bin = syntax::Binary::init (field.getLocation (), expression.getLeft (), expression.getRight (), syntax::Expression::empty ());
+			    params.push_back (validateType (bin.to <syntax::Binary> (), field));
+			}
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+
+		    if (errors.size () != 0) {
+			this-> error (expression, t, expression.getRight (), errors);
+		    }
+		    return TupleValue::init (expression.getLocation (), t, params);
 		}
 	    }
 	    return Generator::empty ();
@@ -398,10 +441,10 @@ namespace semantic {
 		match (left) {
 		    of (FrameProto, proto, leftName = proto.getName ())
 		    else of (generator::Struct, str, leftName = str.getName ())
-			else of  (generator::Enum, en, leftName = en.getName ())
-			    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
-				else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-				    else of (Type,       type,  leftName = type.getTypeName ());
+		    else of  (generator::Enum, en, leftName = en.getName ())
+		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+		    else of (Type,       type,  leftName = type.getTypeName ());
 		}
 	    }
 	    {
@@ -431,10 +474,10 @@ namespace semantic {
 		match (left) {
 		    of (FrameProto, proto, leftName = proto.getName ())
 		    else of (generator::Struct, str, leftName = str.getName ())
-			else of  (generator::Enum, en, leftName = en.getName ())
-			    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
-				else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-				    else of (Type,       type,  leftName = type.getTypeName ());
+		    else of  (generator::Enum, en, leftName = en.getName ())
+		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+		    else of (Type,       type,  leftName = type.getTypeName ());
 		}
 	    }
 	    {

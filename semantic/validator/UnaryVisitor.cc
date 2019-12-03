@@ -28,8 +28,10 @@ namespace semantic {
 			return validateFunctionPointer (expression, operand);
 		    ) else {
 			if (operand.to <Value> ().isLvalue ()) {
-			    auto type = Pointer::init (operand.getLocation (), operand.to<Value> ().getType ());
-			    type.to<Type> ().isMutable(true);
+			    auto inner = operand.to<Value> ().getType ();
+			    inner.to <Type> ().isRef (false);
+			    auto type = Pointer::init (operand.getLocation (), inner);
+			    type.to<Type> ().isMutable (true);
 			    return Addresser::init (expression.getLocation (), type, operand);
 			} else {
 			    auto note = Ymir::Error::createNote (expression.getLocation (), ExternalError::get (OF), operand.prettyString ());

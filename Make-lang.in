@@ -164,6 +164,7 @@ ymir_OBJS = \
 	ymir/generator_UnaryPointer.o \
 	ymir/generator_Value.o \
 	ymir/generator_VarDecl.o \
+	ymir/generator_UniqValue.o \
 	ymir/generator_VarRef.o \
 	ymir/generator_Visitor.o \
 	ymir/generator_Void.o \

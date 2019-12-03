@@ -8,6 +8,7 @@ namespace semantic {
 	std::string Slice::LEN_NAME = "len";
 	std::string Slice::PTR_NAME = "ptr";
 	std::string Slice::INNER_NAME = "inner";
+	std::string Slice::INIT = "init";
 	
 	Slice::Slice () :
 	    Type ()

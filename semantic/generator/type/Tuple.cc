@@ -5,6 +5,8 @@ namespace semantic {
     namespace generator {
 
 	std::string Tuple::ARITY_NAME = "arity";
+
+	std::string Tuple::INIT_NAME = "init";
 	
 	Tuple::Tuple () :
 	    Type ()

@@ -650,6 +650,16 @@ namespace semantic {
 	     * \return false if the proto already exists, true otherwise
 	     */
 	    bool insertTemplateSolution (const semantic::Symbol & sol);
+
+	    /**
+	     * \brief this-> _referent.push_back (sym)
+	     */
+	    void pushReferent (const semantic::Symbol & sym);
+
+	    /**
+	     * \brief this-> _referent.pop_back ()
+	     */
+	    void popReferent ();
 	    
 	private :
 

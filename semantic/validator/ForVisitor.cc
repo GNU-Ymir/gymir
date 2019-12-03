@@ -36,6 +36,11 @@ namespace semantic {
 		of (Range, r ATTRIBUTE_UNUSED,
 		    return validateRange (expression, value);
 		);
+
+		of (Tuple, t ATTRIBUTE_UNUSED,
+		    return validateTuple (expression, value);
+		);
+		
 	    }
 	    
 	    error (expression, value);
@@ -99,14 +104,10 @@ namespace semantic {
 	    auto loc = decl.getLocation ();
 	    auto zero = ufixed (0);	    
 	    auto type = zero.to<Value> ().getType ();
-	    auto rVar = generator::VarDecl::init (loc, "__",
-						  value.to <Value> ().getType (),
-						  value,
-						  false);
 
-	    auto rRef = VarRef::init (loc, "__", value.to <Value> ().getType (),
-				      rVar.getUniqId (),
-				      false, Generator::empty ());
+	    auto valType = value.to <Value> ().getType ();
+	    valType.to<Type> ().isRef (true);
+	    auto rRef = UniqValue::init (loc, valType, Referencer::init (loc, valType, value));
 	    
 	    if (!decl.getType ().isEmpty ()) {
 		type = this-> _context.validateType (decl.getType ());
@@ -131,20 +132,16 @@ namespace semantic {
 	    if (decl.getName () != Keys::UNDER)
 		this-> _context.insertLocal (decl.getName ().str, var);
 	    
-	    return {rVar, var, rRef, ref};
+	    return {var, rRef, ref};
 	}       
 
 	std::vector <Generator> ForVisitor::createIndexVar (const syntax::For & expression, const Generator & value, const std::string & name) {	    
 	    auto zero = ufixed (0);
 	    auto loc = expression.getLocation ();
-	    auto rVar = generator::VarDecl::init (loc, "__",
-						  value.to <Value> ().getType (),
-						  value,
-						  false);
+	    auto type = value.to <Value> ().getType ();
+	    type.to<Type> ().isRef (true);
 
-	    auto rRef = VarRef::init (loc, "__", value.to <Value> ().getType (),
-				      rVar.getUniqId (),
-				      false, Generator::empty ());
+	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, value));
 	    
 	    auto var = generator::VarDecl::init (loc,
 						 name,
@@ -161,7 +158,7 @@ namespace semantic {
 				     Generator::empty ()
 	    );
 	    
-	    return {rVar, var, rRef, ref};
+	    return {var, rRef, ref};
 	}                    
 	
 	Generator ForVisitor::validateSlice (const syntax::For & expression, const generator::Generator & value) {
@@ -192,13 +189,11 @@ namespace semantic {
 		    if (index.isEmpty ()) 
 			vars = createIndexVar (expression, value, "_iter");
 		    else vars = createIndexVar (expression, value, index.to<syntax::VarDecl> ());		    
-		    
 		    values.push_back (vars [0]);
-		    values.push_back (vars [1]);
+		    values.push_back (vars [1]); // We push it here to add the validation before the loop
 
-
-		    auto array = vars [2];
-		    auto iter = vars [3];
+		    auto array = vars [1];
+		    auto iter = vars [2];
 		    
 		    auto one = ufixed (1);		    
 		    auto len = StructAccess::init (loc, one.to <Value> ().getType (), array, "len");
@@ -211,8 +206,8 @@ namespace semantic {
 		    auto indexVal = SliceAccess::init (loc, innerType, array, iter);
 		    
 		    // Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
-		    bool canBeRef = array.to <Value> ().isLvalue ();
-		    auto level = array.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
+		    bool canBeRef = value.is <Aliaser> () || value.is<Referencer> () || value.to <Value> ().isLvalue ();
+		    auto level = value.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
 		    
 		    innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));		    
 		    innerValues.push_back (this-> _context.validateValue (expression.getBlock ()));
@@ -272,14 +267,10 @@ namespace semantic {
 	    }
 
 	    auto loc = decl.getLocation ();
-	    auto rVar = generator::VarDecl::init (loc, "__",
-						  range.to <Value> ().getType (),
-						  range,
-						  false);
-
-	    auto rRef = VarRef::init (loc, "__", range.to <Value> ().getType (),
-				      rVar.getUniqId (),
-				      false, Generator::empty ());
+	    auto type = range.to <Value> ().getType ();
+	    type.to<Type> ().isRef (true);
+	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, range));
+	    
 	    
 	    auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
 	    if (!decl.getType ().isEmpty ()) {
@@ -309,7 +300,7 @@ namespace semantic {
 	    if (decl.getName () != Keys::UNDER)
 		this-> _context.insertLocal (decl.getName ().str, var);
 	    
-	    return {rVar, var, rRef, ref};
+	    return {var, rRef, ref};
 	}       
 
 	
@@ -323,15 +314,15 @@ namespace semantic {
 		    auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
 		    auto vars = createIndexVarRange (expression, range, index.to <syntax::VarDecl> ());
 		    value.push_back (vars [0]);
-		    value.push_back (vars [1]);
+		    value.push_back (vars [1]); // We want the uniq value to be defined outside the loop
 		    
-		    auto rangeVar = vars [2];
+		    auto rangeVar = vars [1];
 		    auto left = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::FST_NAME);
 		    auto right = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::SCD_NAME);
 		    auto step = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::STEP_NAME);
 		    auto isFull = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::FULL_NAME);
 		    
-		    auto iter = vars [3];
+		    auto iter = vars [2];
 		    auto lTest = Generator::empty ();
 		    auto rTest = Generator::empty ();
 		    if (innerType.is <Float> ()) {
@@ -419,6 +410,137 @@ namespace semantic {
 	    }
 	    
 	    return Block::init (expression.getLocation (), Void::init (expression.getLocation ()), value);
+	}
+
+	Generator ForVisitor::validateTuple (const syntax::For & expression, const generator::Generator & tuple) {
+	    auto vars = expression.getVars ();
+	    if (vars.size () > 1) {
+		Ymir::Error::occur (
+		    tuple.getLocation (),
+		    ExternalError::get (NOT_ITERABLE_WITH),
+		    tuple.to <Value> ().getType ().to <Type> ().getTypeName (),
+		    vars.size ()
+		);
+		return Generator::empty ();
+	    } else {
+		return iterateTuple (expression, tuple, vars [0]);
+	    }
+	}
+
+	std::vector <Generator> ForVisitor::createIndexVarTuple (const syntax::For & expression, const Generator & innerTuple, const syntax::VarDecl & decl, int level) {
+	    if (decl.getName ().str != Keys::UNDER)
+		this-> _context.verifyShadow (decl.getName ());
+
+
+
+	    auto type = innerTuple.to <Value> ().getType ();
+	    if (!decl.getType ().isEmpty ())
+		type = this-> _context.validateType (decl.getType ());
+	    
+	    bool isMutable = false, isRef = false;	    
+	    this-> _context.applyDecoratorOnVarDeclType (decl.getDecorators (), type, isRef, isMutable);
+	    this-> _context.verifyMutabilityRefParam (decl.getLocation (), type, MUTABLE_CONST_ITER);		
+	    //this-> _context.verifyMemoryOwner (decl.getLocation (), type, innerTuple, true);
+	    
+	    auto loc = decl.getLocation ();
+
+	    auto value = innerTuple;
+	    if (isRef) {
+		if (level < 2)
+		    Ymir::Error::occur (expression.getIter ().getLocation (),
+					ExternalError::get (DISCARD_CONST_LEVEL),
+					2, level
+		    );
+		
+		value = Referencer::init (loc, type, innerTuple);	
+	    }
+	    
+	    auto var = generator::VarDecl::init (loc,
+						 decl.getName ().str,
+						 type, 
+						 value,
+						 isMutable
+	    );
+
+	    auto ref = VarRef::init (loc,
+				     decl.getName ().str,
+				     type,
+				     var.getUniqId (),
+				     false,
+				     Generator::empty ()
+	    );
+
+
+	    if (decl.getName () != Keys::UNDER)
+		this-> _context.insertLocal (decl.getName ().str, var);
+	    
+	    return {var, ref};
+
+	}
+	
+	Generator ForVisitor::iterateTuple (const syntax::For & expression, const Generator & value, const syntax::Expression & index) {
+	    std::vector <std::string> errors;
+	    // The iteration on tuple is done at compile time, we just replicate the block multiple times
+	    this-> _context.enterBlock ();
+	    auto type = value.to <Value> ().getType ();
+	    type.to<Type> ().isRef (true);
+	    auto loc = expression.getLocation ();
+	    
+	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, value));
+
+	    auto loopType = Generator::empty ();
+	    std::vector <Generator> innerValues;
+	    for (auto  it : Ymir::r (0, value.to <Value> ().getType ().to <Type> ().getInners ().size ())) {
+		auto currentType =  value.to <Value> ().getType ().to <Type> ().getInners () [it];
+		{
+		    TRY (
+			this-> _context.enterBlock ();
+			auto decl = index.to <syntax::VarDecl> ();
+			auto innerTuple = TupleAccess::init (index.getLocation (), currentType, rRef, it);
+			// Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
+			bool canBeRef = value.to <Value> ().isLvalue ();
+			auto level = type.to<Type> ().mutabilityLevel ();
+			
+			auto vars = createIndexVarTuple (expression, innerTuple, decl, canBeRef ? level : 0);
+			innerValues.push_back (vars [0]);
+			auto bl = this-> _context.validateValue (expression.getBlock ());
+			if (it == (int) type.to <Type> ().getInners ().size () - 1)
+			    loopType = bl.to <Value> ().getType ();
+			innerValues.push_back (bl);			
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+	    
+		{
+		    TRY (
+			this-> _context.quitBlock ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+
+		if (errors.size () != 0) {
+		    THROW (ErrorCode::EXTERNAL, errors);
+		}
+	    }
+
+	    {
+		TRY (
+		    this-> _context.quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+	    
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
+
+	    return Block::init (expression.getLocation (), loopType, innerValues); 	    
 	}
 	
 	void ForVisitor::error (const syntax::For &, const generator::Generator & value) {

@@ -1,4 +1,6 @@
 #include <ymir/semantic/symbol/Template.hh>
+#include <ymir/syntax/declaration/Function.hh>
+#include <ymir/utils/Match.hh>
 
 namespace semantic {
 
@@ -88,6 +90,24 @@ namespace semantic {
 	    buf.write (this-> _params [it].prettyString ());
 	}
 	buf.write (")");
+
+	match (this-> _decl) {
+	    of (syntax::Function, func, {
+		    buf.write ("(");
+		    int i = 0;
+		    for (auto & it : func.getPrototype ().getParameters ()) {
+			if (i != 0) buf.write (", ");
+			buf.write (it.prettyString ());
+			i += 1;
+		    }
+		    buf.write (")-> ");		    
+		    if (func.getPrototype ().getType ().isEmpty ())
+			buf.write ("void");
+		    else buf.write (func.getPrototype ().getType ().prettyString ());
+		}
+	    );
+	}
+	
 	return buf.str ();
     }
     

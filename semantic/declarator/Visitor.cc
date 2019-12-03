@@ -235,7 +235,7 @@ namespace semantic {
 		}
 
 		for (auto it : ret.getUsedSymbols ()) {
-		    if (!block.isPrivate ()) 
+		    if (!block.isPrivate () && !it.second.isEmpty ()) // Why it can be empty ? 
 			it.second.setPublic ();
 		    
 		    getReferent ().use (it.first, it.second);

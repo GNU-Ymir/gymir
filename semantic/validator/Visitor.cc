@@ -1173,7 +1173,20 @@ namespace semantic {
 			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
 			return Generator::empty ();
 		    }
-		);	
+		);
+
+		of (semantic::Module, mod ATTRIBUTE_UNUSED, {
+			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			return Generator::empty ();
+		    }
+		);
+
+		of (semantic::ModRef, mod ATTRIBUTE_UNUSED, {
+			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			return Generator::empty ();
+		    }
+		);
+		
 		of (semantic::Alias, al ATTRIBUTE_UNUSED, 
 		    return validateAlias (multSym [0]);		    
 		);
@@ -1181,8 +1194,10 @@ namespace semantic {
 		of (semantic::Function, func,
 		    return validateFunctionProto (func);
 		);
+		
 	    }
-
+	    
+	    // println (loc, ' ', multSym [0].formatTree ());
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
 	}
@@ -2121,7 +2136,11 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateExpand (const syntax::Intrinsics & intr) {
+	    std::vector <Generator> values;
 	    auto content = validateValue (intr.getContent ());
+	    auto type = content.to <Value> ().getType ();
+	    auto rref = UniqValue::init (intr.getLocation (), type, content);
+	    
 	    if (content.to<Value> ().getType ().is<Tuple> ()) {
 		auto type = Void::init (intr.getLocation ());
 		std::vector <Generator> expanded;
@@ -2134,7 +2153,7 @@ namespace semantic {
 			type.to <Type> ().isMutable (true);
 		    else type.to<Type> ().isMutable (false);
 		    
-		    expanded.push_back (TupleAccess::init (intr.getLocation (), type, content, it));
+		    expanded.push_back (TupleAccess::init (intr.getLocation (), type, rref, it));
 		}
 		return List::init (intr.getLocation (), type, expanded);
 	    } else {
@@ -2529,18 +2548,19 @@ namespace semantic {
 		if (type.to<Type> ().isComplex () && !gen.is <Copier> ()) {
 		    if (!(gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is<Aliaser> () || gen.is<Referencer> ())
 			|| !(type.to<Type> ().equals (gen.to <Value> ().getType ()))) {
-
-			auto llevel = type.to <Type> ().mutabilityLevel (); // We can make an implicit alias only if we assure that the value won't be modified 
-			if (llevel > 0) {
-			    auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
-								 gen.to <Value> ().getType ().to <Type> ().getTypeName ());
-			    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-						       llevel, 0
-			    );
+			if (!gen.is <ArrayValue> () || !gen.to<Value> ().getType ().to <Type> ().getInners ()[0].is<Void> ()) { // If it is a [void] value, no need to check mutability
+			    auto llevel = type.to <Type> ().mutabilityLevel (); // We can make an implicit alias only if we assure that the value won't be modified
+			    if (llevel > 0) {
+				auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
+								     gen.to <Value> ().getType ().to <Type> ().getTypeName ());
+				Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+							   llevel, 0
+				);
+			    }
 			}
 		    }
 		}
-		
+
 		// Verify mutability
 		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {		    
 		    auto llevel = type.to <Type> ().mutabilityLevel ();
@@ -2716,6 +2736,14 @@ namespace semantic {
 	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {					       
 	    return this-> _referent.back ().get (name);
 	}	
+
+	void Visitor::pushReferent (const semantic::Symbol & sym) {
+	    this-> _referent.push_back (sym);
+	}
+
+	void Visitor::popReferent () {
+	    this-> _referent.pop_back ();
+	}
 	
 	bool Visitor::isUseless (const Generator & value) {
 	    match (value) {

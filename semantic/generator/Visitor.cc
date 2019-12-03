@@ -573,6 +573,10 @@ namespace semantic {
 
 		else of (NullValue, nl,
 		    return generateNullValue (nl);
+		)
+
+		else of (UniqValue, uv,
+		     return generateUniqValue (uv);
 		);
 	    }
 
@@ -976,7 +980,9 @@ namespace semantic {
 
 	    if (addr.getType ().is <FuncPtr> ()) // If it is a func pointer, we already get its address
 		return inner;
-	    else 
+	    else if (addr.getWho ().to <Value> ().getType ().to <Type> ().isRef ())
+		return Tree::buildAddress (addr.getLocation (), inner.toDirect (), type);
+	    else
 		return Tree::buildAddress (addr.getLocation (), inner, type);
 	}
 	
@@ -1178,6 +1184,31 @@ namespace semantic {
 	    return Tree::buildPtrCst (nl.getLocation (), 0);
 	}
 
+	generic::Tree Visitor::generateUniqValue (const UniqValue & uniq) {
+	    auto ref = getDeclaratorOrEmpty (uniq.getRefId ());
+	    if (!ref.isEmpty ()) return ref;
+	    else {
+		auto type = generateType (uniq.getValue ().to <Value> ().getType ());
+		auto name = "_" + Ymir::format ("%", uniq.getRefId ());
+		auto decl = Tree::varDecl (uniq.getLocation (), name, type);
+		decl.setDeclInitial (castTo (uniq.getValue ().to <Value> ().getType (), uniq.getValue ()));
+		decl.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (decl);
+	    
+		insertDeclarator (uniq.getRefId (), decl);
+
+		TreeStmtList list = TreeStmtList::init ();
+		list.append (Tree::declExpr (uniq.getLocation (), decl));
+		list.append (decl);
+
+		return Tree::compound (
+		    uniq.getLocation (),
+		    decl,
+		    list.toTree ()
+		);
+	    }
+	}
+	
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
 	    auto type = generateType (val.getType ());
 	    //auto inner = generateType (val.getType ().to <Array> ().getInners () [0]);
@@ -1222,28 +1253,45 @@ namespace semantic {
 	generic::Tree Visitor::generateTupleAccess (const TupleAccess & acc) {
 	    auto elem = generateValue (acc.getTuple ());
 	    auto field = Ymir::format ("_%", acc.getIndex ());
-	    return elem.getField (field);
+	    return Tree::compound (
+		acc.getLocation (),
+		elem.getValue ().getField (field),
+		elem.getList ()
+	    );
 	}
 
 	generic::Tree Visitor::generateStructAccess (const StructAccess & acc) {
 	    auto elem = generateValue (acc.getStruct ());
-	    return elem.getField (acc.getField ());
+	    return Tree::compound (
+		acc.getLocation (),
+		elem.getValue ().getField (acc.getField ()),
+		elem.getList ()
+	    );
 	}
 
 	generic::Tree Visitor::generateCall (const Call & cl) {
 	    std::vector <Tree> results;
+	    TreeStmtList pre = TreeStmtList::init ();
+
 	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {
-		results.push_back (castTo (cl.getTypes () [it], cl.getParameters () [it]));
+		auto val = castTo (cl.getTypes () [it], cl.getParameters () [it]);		
+		results.push_back (val.getValue ());
+		pre.append (val.getList ());
 	    }
 
 	    for (auto & it : cl.getAddParameters ()) {
-		auto value = generateValue (it);		
-		results.push_back (value.promote ());
+		auto value = generateValue (it);
+		pre.append (value.getList ());
+		results.push_back (value.getValue ().promote ());
 	    }
 	    
 	    auto fn = generateValue (cl.getFrame ());	    
 	    auto type = generateType (cl.getType ());
-	    return Tree::buildCall (cl.getLocation (), type, fn , results);
+	    return Tree::compound (
+		cl.getLocation (), 
+		Tree::buildCall (cl.getLocation (), type, fn , results),
+		pre.toTree ()
+	    );
 	}
 
 	generic::Tree Visitor::generateStructCst (const StructCst & cl) {
@@ -1467,6 +1515,23 @@ namespace semantic {
 	    
 	    return ptr-> second;
 	}
+
+
+	Tree Visitor::getDeclaratorOrEmpty (uint id) {
+	    // if (this-> _declarators.empty ()) {
+	    // 	Ymir::Error::halt ("%(r) get a declarator from outside a frame", "Critical");
+	    // }
+	    
+	    auto ptr = this-> _declarators.back ().find (id);
+	    if (ptr == this-> _declarators.back ().end ()) {
+		ptr = this-> _globalDeclarators.find (id);
+		if (ptr == this-> _globalDeclarators.end ())
+		    return Tree::empty ();
+	    }
+	    
+	    return ptr-> second;
+	}
+
 	
 	const generic::Tree & Visitor::getCurrentContext () const {	    
 	    return this-> _currentContext;

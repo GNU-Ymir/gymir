@@ -319,6 +319,11 @@ namespace semantic {
 	     * \brief Generate a null value
 	     */
 	    generic::Tree generateNullValue (const NullValue & nl);
+
+	    /**
+	     * \brief Generate an uniq value
+	     */
+	    generic::Tree generateUniqValue (const UniqValue & uv);
 	    
 	    /**
 	     * \brief Transform a copier into a gimple tree
@@ -406,8 +411,14 @@ namespace semantic {
 	    
 	    /**
 	     * \brief Get a var declarator
+	     * \warning make the compiler crash if the id does not exist
 	     */
 	    generic::Tree getDeclarator (uint id);
+	    	    
+	    /**
+	     * \brief Get a var declarator or empty if not exist
+	     */
+	    generic::Tree getDeclaratorOrEmpty (uint id);
 	    
 	    /**
 	     * \brief transform the value of value into type

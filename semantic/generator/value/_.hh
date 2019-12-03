@@ -54,6 +54,7 @@
 #include <ymir/semantic/generator/value/UnaryBool.hh>
 #include <ymir/semantic/generator/value/UnaryFloat.hh>
 #include <ymir/semantic/generator/value/UnaryInt.hh>
-#include <ymir/semantic/generator/value/UnaryPointer.hh> 
+#include <ymir/semantic/generator/value/UnaryPointer.hh>
+#include <ymir/semantic/generator/value/UniqValue.hh> 
 #include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/semantic/generator/value/VarRef.hh>

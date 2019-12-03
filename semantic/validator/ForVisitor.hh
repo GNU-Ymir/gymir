@@ -95,7 +95,17 @@ namespace semantic {
 
 	    std::vector <generator::Generator> createIndexVarRange (const syntax::For & expression, const generator::Generator & range, const syntax::VarDecl & name);
 
-	    generator::Generator iterateRange (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index);	    
+	    generator::Generator iterateRange (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index);
+
+
+	    generator::Generator validateTuple (const syntax::For & expression, const generator::Generator & range);
+
+	    std::vector <generator::Generator> createIndexVarTuple (const syntax::For & expression, const generator::Generator & range, const syntax::VarDecl & name, int level);
+
+	    generator::Generator iterateTuple (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index);
+
+
+
 	    
 	    /**
 	     * Throw an undefined op error

@@ -97,6 +97,11 @@ namespace semantic {
 	    static void resetIdCount ();
 
 	    /**
+	     * \return a uniq id
+	     */
+	    static uint getLastId (); 
+	    
+	    /**
 	     * \return a formatted string representing the generator in Ymir like syntax
 	     */
 	    virtual std::string prettyString () const;
@@ -156,6 +161,12 @@ namespace semantic {
 	     */
 	    static void resetIdCount ();
 
+	    
+	    /**
+	     * Proxy function for generator
+	     */
+	    static uint getLastId ();
+	    
 	    /**
 	     * Proxy function for generator
 	     */

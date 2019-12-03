@@ -20,9 +20,12 @@ namespace semantic {
 	    auto type = this-> _context.validateType (expression.getType (), true);
 	    auto value = this-> _context.validateValue (expression.getContent ());
 	    match (type) {
-		of (Integer, in ATTRIBUTE_UNUSED, {
+		of (Integer, in, {
 			if (value.to <Value> ().getType ().is<Integer> ()) {
 			    type.to <Type> ().isMutable (value.to <Value> ().getType ().to <Type> ().isMutable ());
+			    return generator::Cast::init (expression.getLocation (), type, value);
+			} else if (value.to <Value> ().getType ().is<Char> () && !in.isSigned ()) {
+			    type.to <Type> ().isMutable (false);
 			    return generator::Cast::init (expression.getLocation (), type, value);
 			}
 		    }
@@ -38,8 +41,10 @@ namespace semantic {
 			    return generator::Cast::init (expression.getLocation (), type, value);
 			}
 		    }
-		) else of (Pointer, ptr ATTRIBUTE_UNUSED, {
+		) else of (Pointer, ptr , {
 			if (value.to <Value> ().getType ().is <Pointer> () && value.to <Value> ().getType ().to <Type> ().getInners ()[0].is <Void> ()) // One can cast &(void) in anything
+			    return generator::Cast::init (expression.getLocation (), type, value);
+			if (value.to <Value> ().getType ().is <Pointer> () && ptr.getInners ()[0].is <Void> ()) // One can cast anything to &(void)
 			    return generator::Cast::init (expression.getLocation (), type, value);
 		    }
 		);

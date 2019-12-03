@@ -26,13 +26,13 @@ namespace semantic {
 		
 		int current_consumed = 0;
 		auto rest = std::vector<syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
-		auto mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
+		auto mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);	
 		if (!mapper.succeed) return mapper;
 		else {
 		    globalMapper = mergeMappers (globalMapper, mapper);
 		    syntaxTempl = replaceSyntaxTempl (syntaxTempl, globalMapper.mapping);
 		    consumed += current_consumed;
-		}		
+		}		 
 	    }
 	    
 	    return globalMapper;
@@ -43,14 +43,29 @@ namespace semantic {
 	    const Symbol & sym = ref.getTemplateRef ();
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
 	    Mapper globalMapper;
-
+	    std::vector<std::string> errors;
 	    int consumed = 0;
 	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) { 
 		auto currentElems = std::vector <Generator> (values.begin () + consumed, values.end ());
 		
 		int current_consumed = 0;
 		auto rest = std::vector<syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
-		auto mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
+		Mapper mapper;
+		
+		TRY (
+		    mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors = msgs;
+		    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
+		    auto merge = mergeMappers (prevMapper, globalMapper);
+		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
+		} FINALLY;
+		
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
+		
+		
 		if (!mapper.succeed) return Symbol::empty ();
 		else {
 		    globalMapper = mergeMappers (globalMapper, mapper);
@@ -241,16 +256,34 @@ namespace semantic {
 	    if (syntaxParams.size () > types.size ()) return Generator::empty ();
 	    Mapper globalMapper;
 
-	    int consumed = 0;
+	    volatile int consumed = 0; // longjmp
+	    std::vector <std::string> errors;
+	    
 	    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 		auto param = replaceAll (syntaxParams [it], globalMapper.mapping);
 		auto current_types = std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + 1 + (types.size () - syntaxParams.size ()));
 		
 		int current_consumed = 0;
-		auto mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);		
+		Mapper mapper;
+		TRY (
+		    mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);		
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors = msgs;
+		    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
+		    auto merge = mergeMappers (prevMapper, globalMapper);
+		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
+		} FINALLY;
+		
+		if (errors.size () != 0) {
+		    break;
+		}
+
 		// We apply the mapper, to gain time
-		if (!mapper.succeed) return Generator::empty ();
-		else {
+		if (!mapper.succeed) {
+		    globalMapper.succeed = false;
+		    break;
+		} else {
 		    globalMapper = mergeMappers (globalMapper, mapper);
 		    syntaxTempl = replaceSyntaxTempl (syntaxTempl, globalMapper.mapping);
 
@@ -269,6 +302,9 @@ namespace semantic {
 	    for (auto it : Ymir::r (consumed, valueParams.size ())) {
 		finalParams.push_back (valueParams [it]);
 	    }
+
+	    if (errors.size () != 0) 
+		THROW (ErrorCode::EXTERNAL, errors);	    
 	    
 	    if (globalMapper.succeed) {
 		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to <Template> ().getSpecNameOrder ()};
@@ -304,11 +340,35 @@ namespace semantic {
 		    auto sym_func = visit.visitFunction (func.to <syntax::Function> ());
 		    symbol = visit.popReferent ();
 		    visit.getReferent ().insertTemplate (symbol);
-		    return this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+		    this-> _context.pushReferent (sym_func.getReferent ());
+		    Generator proto (Generator::empty ());
+		    TRY (
+			proto = this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		    this-> _context.popReferent ();
+		    
+		    if (errors.size () != 0) 
+			THROW (ErrorCode::EXTERNAL, errors);
+		    return proto;
 		} else {
 		    symbol = glob;
 		    auto sym_func = symbol.getLocal (func.to<syntax::Function> ().getName ().str) [0];
-		    return this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+		    Generator proto (Generator::empty ());
+		    this-> _context.pushReferent (sym_func.getReferent ());
+		    TRY (
+			proto = this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		    this-> _context.popReferent ();
+		    
+		    if (errors.size () != 0) 
+			THROW (ErrorCode::EXTERNAL, errors);
+		    return proto;		    
 		}
 	    } 
 	    
@@ -331,7 +391,18 @@ namespace semantic {
 			    mapper.succeed = true;
 			    mapper.score = 0;			    
 			    return mapper;
-			} else return applyTypeFromExplicit (params, expr, types, consumed);
+			} return applyTypeFromExplicit (params, expr, types, consumed);
+		    }
+		) else of (TemplateSyntaxList, lst, {
+			consumed += lst.getContents ().size ();
+			for (auto it : Ymir::r (0, lst.getContents ().size ())) {
+			    this-> _context.verifySameType (types [it], lst.getContents () [it]);
+			}
+			
+			Mapper mapper;
+			mapper.succeed = true;
+			mapper.score = 0;
+			return mapper;
 		    }
 		) else of (TemplateSyntaxWrapper, wp ATTRIBUTE_UNUSED, {
 			consumed += 1;
@@ -797,11 +868,29 @@ namespace semantic {
 			   );
 		) else of (syntax::Char, c ATTRIBUTE_UNUSED, return element;
 		) else of (DecoratedExpression, dec, {
-			return syntax::DecoratedExpression::init (
-			    element.getLocation (),
-			    dec.getDecorators (),
-			    replaceAll (dec.getContent (), mapping)
-			);
+			auto j = replaceAll (dec.getContent (), mapping);
+			if (j.is <TemplateSyntaxList> ()) { // need to set the decoration on each element
+			    std::vector <Expression> params;
+			    for (auto & z : j.to <TemplateSyntaxList> ().getContents ()) {
+				params.push_back (
+				    DecoratedExpression::init (
+					element.getLocation (),
+					dec.getDecorators (),
+					TemplateSyntaxWrapper::init (z.getLocation (), z))
+				);				
+			    }
+			    return syntax::List::init (
+				{element.getLocation (), Token::LPAR},
+				{element.getLocation (), Token::RPAR},
+				params
+			    );
+			} else {
+			    return syntax::DecoratedExpression::init (
+				element.getLocation (),
+				dec.getDecorators (),
+				j
+			    );
+			}
 		    }
 		) else of (syntax::Dollar, dol ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::Fixed, fix ATTRIBUTE_UNUSED, return element;
@@ -1409,8 +1498,22 @@ namespace semantic {
 	    
 	    return Symbol::__empty__;
 	}
+
+	std::string TemplateVisitor::partialResolutionNote (const lexing::Word & location, const Mapper & mapper) const {
+	    Ymir::OutBuffer buf;
+	    buf.write ("(");
+	    int i = 0;
+	    for (auto & it : mapper.nameOrder) {
+		if (i != 0)
+		    buf.write (",");
+		buf.writef ("% = %", it, mapper.mapping.find (it)-> second.prettyString ());
+		i += 1;
+	    }
+	    buf.write (")");
+	    return Ymir::Error::createNoteOneLine ("for : % with %", location, buf.str ());
+	}	
 	
-	
-    }    
+    }
+    
     
 }

@@ -44,6 +44,12 @@ namespace semantic {
 	    __lastId__ = 0;
 	}
 
+	uint IGenerator::getLastId () {
+	    auto ret = __lastId__;
+	    __lastId__ += 1;
+	    return ret;
+	}
+
 	std::string IGenerator::prettyString () const {
 	    return "";
 	}
@@ -96,6 +102,10 @@ namespace semantic {
 	    IGenerator::resetIdCount ();
 	}
 
+	uint Generator::getLastId () {
+	    return IGenerator::getLastId ();
+	}
+	
 	std::string Generator::prettyString () const {
 	    if (this-> _value == nullptr) return "";
 	    return this-> _value-> prettyString ();

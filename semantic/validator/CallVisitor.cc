@@ -119,7 +119,9 @@ namespace semantic {
 			);
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
-			errors = {};
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
+			//errors = {};
 			return Generator::empty ();
 		    } FINALLY;
 		}
@@ -503,10 +505,10 @@ namespace semantic {
 	    
 	    if (!soluce.isEmpty ()) {
 		int _score;
-		proto_gen = soluce;
-		auto res = validateFrameProto (location, soluce.to<FrameProto> (), finalParams, _score, errors);
+		proto_gen = soluce;	       
+		auto ret = validateFrameProto (location, soluce.to<FrameProto> (), finalParams, _score, errors);		
 		score += _score;		
-		return res;
+		return ret;
 	    }
 	    
 	    return Generator::empty ();	    

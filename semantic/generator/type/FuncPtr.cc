@@ -50,7 +50,7 @@ namespace semantic {
 
 	std::string FuncPtr::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.write ("fn(");
+	    buf.write ("&fn(");
 	    for (auto it : Ymir::r (1, this-> getInners ().size ())) {
 		if (it != 1) buf.write (", "); 
 		buf.write (this-> getInners ()[it].to <Type> ().getTypeName ());

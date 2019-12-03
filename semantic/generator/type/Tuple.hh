@@ -17,6 +17,8 @@ namespace semantic {
 	public :
 
 	    static std::string ARITY_NAME;
+
+	    static std::string INIT_NAME;
 	    
 	private : 
 

@@ -27,6 +27,8 @@ namespace semantic {
 	    static std::string LEN_NAME;
 
 	    static std::string INNER_NAME;
+
+	    static std::string INIT;
 	    
 	public : 
 	    

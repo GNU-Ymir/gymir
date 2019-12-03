@@ -5,8 +5,8 @@ namespace semantic {
     namespace generator {
 
 	std::string Array::LEN_NAME = "len";
-
 	std::string Array::INNER_NAME = "inner";
+	std::string Array::INIT = "init";
 	
 	Array::Array () :
 	    Type (),

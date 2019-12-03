@@ -32,4 +32,11 @@ namespace syntax {
 	stream.writef ("%*<VariadicVar> ", i, '\t');
 	stream.writeln (this-> getLocation (), ' ', this-> _isValue);
     }
+
+    std::string VariadicVar::prettyString () const {
+	if (this-> _isValue)
+	    return Ymir::format ("%:...", this-> getLocation ().str);
+	else
+	    return Ymir::format ("%...", this-> getLocation ().str);
+    }
 }

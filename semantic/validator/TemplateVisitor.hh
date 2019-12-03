@@ -231,6 +231,8 @@ namespace semantic {
 
 	    const Symbol & getTemplateSolution (const Symbol & ref, const Symbol & solution) const;
 	    
+	    std::string partialResolutionNote (const lexing::Word & loc, const Mapper & mapper) const;
+
 	};
 	
     }
