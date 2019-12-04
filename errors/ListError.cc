@@ -36,6 +36,7 @@ namespace Ymir {
 			    MAIN_FUNCTION_ONE_ARG           = "main function take at most one argument",
 			    MALFORMED_CHAR		    = "malformed literal, number of %(y) is %(y)",
 			    MISMATCH_ARITY                  = "mismatch arity in tuple destructor (%(y)) and (%(y))",
+			    MOVE_ONLY_CLOSURE               = "move is only usable for lambda closure",
 			    MUTABLE_CONST_ITER		    = "an iterator cannot be mutable, if it is not a reference",
 			    MUTABLE_CONST_PARAM		    = "a parameter cannot be mutable, if it is not a reference",
 			    MUTABLE_CONST_RETURN	    = "a return value cannot be mutable, if it is not a reference",

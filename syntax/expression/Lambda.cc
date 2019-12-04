@@ -79,4 +79,8 @@ namespace syntax {
 	return this-> _uniqId;
     }
     
+    std::string Lambda::prettyString () const {
+	return "lambda";
+    }
+    
 }

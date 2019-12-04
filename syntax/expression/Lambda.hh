@@ -54,6 +54,8 @@ namespace syntax {
 	bool isMoveClosure () const;
 
 	ulong getUniqId () const;
+
+	std::string prettyString () const override;
 	
     };    
 

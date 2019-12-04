@@ -809,9 +809,7 @@ namespace syntax {
 	if (begin.is (this-> _intrisics)) {
 	    auto loc = this-> _lex.next ();
 	    auto inner = visitExpression (10);
-	    if (inner.is <Lambda> () && begin == Keys::REF) {
-		return Lambda::refClosure (inner);
-	    } else if (inner.is<Lambda> () && begin == Keys::MOVE) {
+	    if (inner.is<Lambda> () && begin == Keys::MOVE) {
 		return Lambda::moveClosure (inner);
 	    }
 	    
@@ -1049,6 +1047,9 @@ namespace syntax {
 	}
 	
 	auto content = visitExpression (10);
+	// Lambda if deco is REF
+	if (content.is<Lambda> () && decos.size () == 1 && decos [0].getValue () == Decorator::REF)
+	    return Lambda::refClosure (content);
 	return DecoratedExpression::init (content.getLocation (), decos, content);	
     }
 

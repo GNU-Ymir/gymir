@@ -2024,28 +2024,28 @@ namespace semantic {
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 	    
-	    if (!closure.isEmpty ()) {
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-		return Generator::empty ();
-		// createClosure value
-		// And return a delegate 
-	    } else {
-		auto frame = Frame::init (proto.getLocation (), proto.getName (), params, retType, body, needFinalReturn);
-		frame.to <Frame> ().isWeak (true);
-		frame.to <Frame> ().setMangledName (proto.getMangledName ());
+	    // if (!closure.isEmpty ()) {
+	    // 	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    // 	return Generator::empty ();
+	    // 	// createClosure value
+	    // 	// And return a delegate 
+	    // } else {
+	    auto frame = Frame::init (proto.getLocation (), proto.getName (), params, retType, body, needFinalReturn);
+	    frame.to <Frame> ().isWeak (true);
+	    frame.to <Frame> ().setMangledName (proto.getMangledName ());
 
-		insertNewGenerator (frame);
+	    insertNewGenerator (frame);
 		
-		auto frameProto = FrameProto::init (proto.getLocation (), proto.getName (), retType, paramsProto, false);
-		frameProto.to<FrameProto>().setMangledName (proto.getMangledName ());
+	    auto frameProto = FrameProto::init (proto.getLocation (), proto.getName (), retType, paramsProto, false);
+	    frameProto.to<FrameProto>().setMangledName (proto.getMangledName ());
 		
-		auto funcType = FuncPtr::init (proto.getLocation (), frameProto.to <FrameProto> ().getReturnType (), types);
-		funcType.to <Type> ().isMutable (true);
+	    auto funcType = FuncPtr::init (proto.getLocation (), frameProto.to <FrameProto> ().getReturnType (), types);
+	    funcType.to <Type> ().isMutable (true);
 		
-		auto addr = Addresser::init (proto.getLocation (), funcType, frameProto);
-		insert_or_assign (this-> _lambdas, proto.getName (), addr);
-		return addr;
-	    }
+	    auto addr = Addresser::init (proto.getLocation (), funcType, frameProto);
+	    insert_or_assign (this-> _lambdas, proto.getName (), addr);
+	    return addr;
+		//}
 	}
 
 	
@@ -2078,6 +2078,11 @@ namespace semantic {
 	    if (intr.isSizeof ()) {
 		auto elem = validateType (intr.getContent (), true);
 		return SizeOf::init (intr.getLocation (), Integer::init (intr.getLocation (), 0, false), elem);
+	    }
+	    
+	    if (intr.isMove ()) {
+		Ymir::Error::occur (intr.getLocation (),
+				    ExternalError::get (MOVE_ONLY_CLOSURE));				    
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -2435,7 +2440,8 @@ namespace semantic {
 
 	Generator Visitor::getInClosure (const std::string & name) {
 	    if (!isInClosure ()) return Generator::__empty__;
-	    auto closureType = this-> getLocal ("#{CLOSURE-TYPE}", false);	    
+	    auto closureType = this-> getLocal ("#{CLOSURE-TYPE}", false);
+	    bool isRefClosure = this-> getLocal ("#{CLOSURE}").to <BoolValue> ().getValue ();
 	    auto field = closureType.to <Closure> ().getField (name);
 	    if (field.isEmpty ()) { // need to get it from upper closure
 		auto & syms = this-> _symbols [closureType.to <Closure> ().getIndex ()];
@@ -2450,6 +2456,9 @@ namespace semantic {
 			} else type = ptr-> second.to <Value> ().getType ();
 			
 			auto types = closureType.to <Type> ().getInners ();
+			type.to <Type> ().isMutable (false);
+			type.to <Type> ().isRef (isRefClosure);
+			
 			auto names = closureType.to <Closure> ().getNames ();
 			types.push_back (type);
 			names.push_back (name);

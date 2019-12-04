@@ -59,5 +59,9 @@ namespace syntax {
     bool Intrinsics::isSizeof () const {
 	return this-> getLocation () == Keys::SIZEOF;
     }
+
+    bool Intrinsics::isMove () const {
+	return this-> getLocation () == Keys::MOVE;
+    }
     
 }

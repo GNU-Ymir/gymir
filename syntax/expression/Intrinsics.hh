@@ -65,6 +65,11 @@ namespace syntax {
 	 * \return is it a sizeof ?
 	 */
 	bool isSizeof () const;
+
+	/**
+	 * \return is it a move
+	 */
+	bool isMove () const;
 	
     };    
 
