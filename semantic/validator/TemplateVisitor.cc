@@ -1402,7 +1402,8 @@ namespace semantic {
 			    if (!successful) 
 				maps.emplace (it.first, it.second);
 			    else {
-				auto protoGen = this-> _context.validateLambdaProto (proto, types);
+				// We assume that lambda closure cannot be known at compile time, and therefore this will always return a Addresser to a frameproto		
+				auto protoGen = this-> _context.validateLambdaProto (proto, types).to <Addresser> ().getWho ();		
 				auto type = validateTypeOrEmpty (F.to<syntax::FuncPtr> ().getRetType (), mapping);
 				if (type.isEmpty ()) {
 				    toValidate.push_back ({F.to<syntax::FuncPtr> ().getRetType (), protoGen.to <FrameProto> ().getReturnType ()});

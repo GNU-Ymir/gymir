@@ -16,12 +16,15 @@ namespace semantic {
 	{
 	}
 
-	LambdaProto::LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content) :
+	LambdaProto::LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index) :
 	    Value (loc, LambdaType::init (loc, type, getTypes (params))),
 	    _params (params),
 	    _type (type),
 	    _name (name),
-	    _content (content)
+	    _content (content),
+	    _isRefClosure (isRefClosure),
+	    _isMoveClosure (isMoveClosure),
+	    _index (index)
 	{}
 
 	std::vector <Generator> LambdaProto::getTypes (const std::vector <Generator> & params) {
@@ -32,8 +35,8 @@ namespace semantic {
 	    return types;
 	}
 	
-	Generator LambdaProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content) {
-	    return Generator {new LambdaProto (loc, name, type, params, content)};
+	Generator LambdaProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index) {
+	    return Generator {new LambdaProto (loc, name, type, params, content, isRefClosure, isMoveClosure, index)};
 	}
     
 	Generator LambdaProto::clone () const {
@@ -106,6 +109,18 @@ namespace semantic {
 
 	const syntax::Expression & LambdaProto::getContent () const {
 	    return this-> _content;
+	}
+
+	bool LambdaProto::isRefClosure () const {
+	    return this-> _isRefClosure;
+	}
+
+	bool LambdaProto::isMoveClosure () const {
+	    return this-> _isMoveClosure;	    
+	}
+
+	uint LambdaProto::getClosureIndex () const {
+	    return this-> _index;
 	}
 	
     }

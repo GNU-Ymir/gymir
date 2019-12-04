@@ -142,7 +142,13 @@ namespace semantic {
 			   Tree::functionType (retType, params)
 		       );
 		   }
-	       );
+	       ) else of (Closure, c, {
+		       std::vector <Tree> inner;
+		       std::vector <std::string> fields = c.getNames ();
+		       for (auto & it : c.getInners ()) inner.push_back (generateType (it));
+		       type = Tree::tupleType (fields, inner);
+		   }
+	       );		
 	    }
 	    
 	    if (type.isEmpty ())

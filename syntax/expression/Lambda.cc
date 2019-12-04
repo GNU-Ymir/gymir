@@ -29,6 +29,19 @@ namespace syntax {
 	return Expression {ret};
     }
 
+
+    Expression Lambda::refClosure (const syntax::Expression & expr) {
+	Lambda lmbd = expr.to <Lambda> ();
+	lmbd._isRefClosure = true;
+	return Expression {new (Z0) Lambda (lmbd)};
+    }
+
+    Expression Lambda::moveClosure (const syntax::Expression & expr) {
+	auto lmbd = expr.to <Lambda> ();
+	lmbd._isMoveClosure = true;
+	return Expression {new (Z0) Lambda (lmbd)};
+    }
+    
     Expression Lambda::clone () const {
 	return Expression {new Lambda (*this)};
     }
@@ -54,6 +67,14 @@ namespace syntax {
 	return this-> _content;
     }
 
+    bool Lambda::isMoveClosure () const {
+	return this-> _isMoveClosure;
+    }
+
+    bool Lambda::isRefClosure () const {
+	return this-> _isRefClosure;
+    }
+    
     ulong Lambda::getUniqId () const {
 	return this-> _uniqId;
     }

@@ -18,6 +18,10 @@ namespace syntax {
 	static ulong __lastId__;
 	
 	ulong _uniqId;
+
+	bool _isRefClosure = false;
+
+	bool _isMoveClosure = false;
 	
     private :
 
@@ -31,6 +35,10 @@ namespace syntax {
 
 	static Expression init (const lexing::Word & op, const Function::Prototype & proto, const Expression & content);
 
+	static Expression refClosure (const syntax::Expression & lmbd);
+
+	static Expression moveClosure (const syntax::Expression & lmbd);
+	
 	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
@@ -40,6 +48,10 @@ namespace syntax {
 	const Function::Prototype & getPrototype () const;
 
 	const Expression & getContent () const;
+
+	bool isRefClosure () const;
+
+	bool isMoveClosure () const;
 
 	ulong getUniqId () const;
 	

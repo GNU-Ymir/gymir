@@ -31,6 +31,12 @@ namespace semantic {
 		LIMIT_TEMPLATE_RECUR = 300
 	    };
 
+	    enum ClosureState {
+		NONE = 0,
+		REF = 1,
+		MOVE = 2
+	    };
+
 	    /** List of referent for symbol access and insertion */
 	    std::list <Symbol> _referent;	
 
@@ -60,6 +66,9 @@ namespace semantic {
 
 	    /** The already validated lambdas */
 	    std::map <std::string, generator::Generator> _lambdas;
+
+	    /** The current enclosed vars */
+	    std::vector <std::vector <generator::Generator> > _enclosed;
 	    
 	private :
 
@@ -535,7 +544,18 @@ namespace semantic {
 	     * \brief exit the foreign (Cf. enterForeign)
 	     */
 	    void exitForeign ();
+	    
+	    /**
+	     * \brief Enter a new closure
+	     */
+	    void enterClosure (bool isRefClosure, uint refId, uint index);
 
+	    /**
+	     * \brief Quit a closure
+	     * \returns all the enclosed vars
+	     */
+	    generator::Generator exitClosure ();
+	    
 	    /**
 	     * \brief enter a new context, 
 	     * \brief A context is a list of Cas (only used in a function)
@@ -571,7 +591,7 @@ namespace semantic {
 	     * \brief Get a localy declared symbol
 	     * \param name the name of the symbol to get
 	     */
-	    const generator::Generator & getLocal (const std::string & name) ;
+	    generator::Generator getLocal (const std::string & name, bool canBeInClosure = true) ;
 
 	    /**
 	     * \brief Exit a scope
@@ -608,7 +628,7 @@ namespace semantic {
 	    /**
 	     * \brief Return the type of the current fn
 	     */
-	    const generator::Generator & getCurrentFuncType () ;
+	    generator::Generator getCurrentFuncType () ;
 
 	    /**
 	     * \brief Set the type of the current fn
@@ -619,6 +639,21 @@ namespace semantic {
 	     * \return !this-> _loopBreakTypes.empty ()
 	     */
 	    bool isInLoop () const;
+
+	    /**
+	     * \return true if we are validating a closure
+	     */
+	    bool isInClosure ();
+
+	    /**
+	     * \return true if we are validating a closure and it is a ref one
+	     */
+	    bool isInRefClosure ();
+
+	    /**
+	     * \brief Get a variable in the encosed element
+	     */
+	    generator::Generator getInClosure (const std::string & name);
 	    
 	    /**
 	     * \brief execute the content of the generator in order to retreive the compile time value 
@@ -664,6 +699,8 @@ namespace semantic {
 	private :
 
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
+
+	    void printLocal () const;
 	    
 	};
 	       

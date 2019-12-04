@@ -14,16 +14,15 @@ namespace semantic {
 	    this-> isComplex (true);
 	}
 
-	Tuple::Tuple (const lexing::Word & loc, const std::vector <Generator> & inner, bool isFake) :
-	    Type (loc, loc.str),
-	    _isFake (isFake)
+	Tuple::Tuple (const lexing::Word & loc, const std::vector <Generator> & inner) :
+	    Type (loc, loc.str)
 	{
 	    this-> isComplex (true);
 	    this-> setInners (inner);
 	}
 
-	Generator Tuple::init (const lexing::Word & loc, const std::vector<Generator> & inner, bool isFake) {
-	    return Generator {new (Z0) Tuple (loc, inner, isFake)};
+	Generator Tuple::init (const lexing::Word & loc, const std::vector<Generator> & inner) {
+	    return Generator {new (Z0) Tuple (loc, inner)};
 	}
 
 	Generator Tuple::clone () const {
@@ -47,10 +46,6 @@ namespace semantic {
 	    return true;
 	}
 	
-	bool Tuple::isFake () const {
-	    return this-> _isFake;
-	}
-
 	std::string Tuple::typeName () const {
 	    Ymir::OutBuffer buf;
 	    buf.write ("(");

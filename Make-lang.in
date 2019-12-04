@@ -109,6 +109,7 @@ ymir_OBJS = \
 	ymir/generator_Call.o \
 	ymir/generator_Cast.o \
 	ymir/generator_Char.o \
+	ymir/generator_Closure.o \
 	ymir/generator_CharValue.o \
 	ymir/generator_Conditional.o \
 	ymir/generator_Copier.o \

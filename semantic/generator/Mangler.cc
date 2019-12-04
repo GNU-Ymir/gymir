@@ -57,12 +57,13 @@ namespace semantic {
 		else of (EnumRef, r, result = mangleEnumRef (r))
 		else of (Range, r, result = mangleRangeT (r))
 		else of (Pointer, p, result = manglePointerT (p))
-		else of (FuncPtr, f, result = mangleFuncPtrT (f));
+		else of (FuncPtr, f, result = mangleFuncPtrT (f))
+		else of (Closure, c, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
 	    }
 
 	    if (result == "") {
-		println (gen.prettyString ());
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		println (gen.to <Type> ().prettyString ());
+		 Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    }
 	    
 	    else {
@@ -264,6 +265,10 @@ namespace semantic {
 		buf.write (format ("%", mangleType (it, false)));
 	    }
 	    return format ("FP%%", buf.str ().length (), buf.str ());
+	}
+
+	std::string Mangler::mangleClosureT (const Closure &) const {
+	    return ""; 
 	}
 	
 	std::vector <std::string> Mangler::split (const std::string & str, const std::string & delim) const {

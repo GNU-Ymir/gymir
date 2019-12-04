@@ -219,7 +219,13 @@ namespace semantic {
 	    
 	    TRY (
 		auto frameProto = this-> _context.validateLambdaProto (proto, types);
-		return Call::init (location, frameProto.to<FrameProto> ().getReturnType (), frameProto.clone (), types, rights, {});
+		match (frameProto) {
+		    of (Addresser, addr, // Simple proto, no closure
+			return Call::init (location, addr.getWho ().to<FrameProto> ().getReturnType (), addr.getWho ().clone (), types, rights, {});
+		    );
+		}
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		return Generator::empty ();
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors.insert (errors.end (), msgs.begin (), msgs.end ());

@@ -40,6 +40,10 @@ namespace semantic {
 	    return this-> _uniqId;
 	}
 
+	void IGenerator::setUniqId (uint id)  {
+	    this-> _uniqId = id;
+	}
+	
 	void IGenerator::resetIdCount () {
 	    __lastId__ = 0;
 	}
@@ -116,5 +120,13 @@ namespace semantic {
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	    return this-> _value-> getUniqId ();	    
 	}
+       
+	void Generator::setUniqId (uint id) {
+	    if (this-> _value == nullptr)
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return this-> _value-> setUniqId (id);	    
+	}
+
+	
     }
 }

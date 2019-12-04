@@ -27,6 +27,12 @@ namespace semantic {
 	    std::string _mangleName;
 
 	    syntax::Expression _content;
+
+	    bool _isRefClosure;
+
+	    bool _isMoveClosure;
+
+	    bool _index; // Cf closure
 	    
 	private :
 
@@ -34,7 +40,7 @@ namespace semantic {
 	    
 	    LambdaProto ();
 
-	    LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content);
+	    LambdaProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index);
 
 	public :
 
@@ -42,7 +48,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -99,6 +105,22 @@ namespace semantic {
 	     */
 	    const syntax::Expression & getContent () const;
 
+	    /**
+	     * Is this lambda proto refer to a ref closure
+	     */
+	    bool isRefClosure () const;
+
+	    /**
+	     * Is this lambda refer to a lambda closure
+	     */
+	    bool isMoveClosure () const;
+
+	    /**
+	     * \return the index of the closure
+	     * \Cf generator::Closure
+	     */
+	    uint getClosureIndex () const;
+	    
 	private :
 
 	    static std::vector <Generator> getTypes (const std::vector <Generator> & gens);

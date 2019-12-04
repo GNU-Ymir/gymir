@@ -90,7 +90,7 @@ namespace syntax {
 	};
 
 	visit._intrisics = {
-	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF, Keys::ALIAS
+	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF, Keys::ALIAS, Keys::MOVE
 	};
 	
 	visit._operand_op = {
@@ -805,10 +805,17 @@ namespace syntax {
 	if (begin == Token::LCRO)    return visitArray ();
 	if (begin == Token::LPAR)    return visitTuple ();
 	if (begin == Token::PIPE)    return visitLambda ();
-	
+
 	if (begin.is (this-> _intrisics)) {
 	    auto loc = this-> _lex.next ();
-	    return Intrinsics::init (loc, visitExpression (10));
+	    auto inner = visitExpression (10);
+	    if (inner.is <Lambda> () && begin == Keys::REF) {
+		return Lambda::refClosure (inner);
+	    } else if (inner.is<Lambda> () && begin == Keys::MOVE) {
+		return Lambda::moveClosure (inner);
+	    }
+	    
+	    return Intrinsics::init (loc, inner);
 	}
 	
 	if (begin.is (DecoratorWord::members ())) {

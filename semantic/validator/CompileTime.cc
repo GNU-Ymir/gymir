@@ -535,6 +535,13 @@ namespace semantic {
 	}
 	
 	generator::Generator CompileTime::executeLamdaProto (const generator::Generator & gen) {
+	    if (gen.to <LambdaProto> ().isRefClosure () || gen.to<LambdaProto> ().isMoveClosure ()) {
+		Ymir::Error::occur (
+		    gen.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+		return Generator::empty ();
+	    }
 	    return gen;
 	}
 	

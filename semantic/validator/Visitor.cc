@@ -13,6 +13,7 @@
 #include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
+#include <ymir/utils/map.hh>
 #include <string>
 #include <algorithm>
 
@@ -1068,7 +1069,7 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateVar (const syntax::Var & var) {
-	    auto & gen = getLocal (var.getName ().str);
+	    auto gen = getLocal (var.getName ().str);
 	    if (gen.isEmpty ()) {
 		auto sym = getGlobal (var.getName ().str);
 		if (sym.empty ()) {
@@ -1085,7 +1086,8 @@ namespace semantic {
 		if (!gen.to <generator::VarDecl> ().isMutable ())
 		    value = gen.to <generator::VarDecl> ().getVarValue ();
 		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<generator::VarDecl> ().getVarType (), gen.getUniqId (), gen.to<generator::VarDecl> ().isMutable (), value);		
-	    } 
+	    } else if (gen.is <StructAccess> ()) // Closure
+		return gen;
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
@@ -1877,9 +1879,9 @@ namespace semantic {
 	    Generator body (Generator::empty ());
 	    Generator retType (Generator::empty ());
 
-	    volatile bool needFinalReturn = false;// mmmh, not understanding why, but gcc doesn't like it otherwise
 	    volatile bool uncomplete = false; // idem
-
+	    auto syms = this-> _symbols.size () - 1; // index of the last symbol is the current enclosure of the frame
+	    
 	    enterForeign ();
 	    enterBlock ();
 	    {
@@ -1916,29 +1918,13 @@ namespace semantic {
 			retType = validateType (function.getPrototype ().getType (), true);		
 		    }
 
-		    if (!uncomplete) {
-			this-> setCurrentFuncType (retType);
-			body = validateValue (function.getContent ());
-
-			retType = this-> getCurrentFuncType ();
-	    
-			if (!body.to<Value> ().isReturner ()) {
-			    if (!retType.isEmpty ()) {				
-				verifyMemoryOwner (body.getLocation (), retType, body, true);		    
-				needFinalReturn = !retType.is<Void> ();
-			    } else {
-				needFinalReturn = !body.to <Value> ().getType ().is<Void> ();
-				retType = body.to <Value> ().getType ();
-			    }
-			}
-		    }
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
-	    
-	    if (uncomplete) this-> discardAllLocals ();
+
+	    this-> discardAllLocals ();
 
 	    {
 		TRY (
@@ -1950,29 +1936,16 @@ namespace semantic {
 	    }
 	    
 	    exitForeign ();
-	    
+		
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 
-	    if (!uncomplete) {
-		auto frame = Frame::init ({function.getLocation (), name}, frameName, params, retType, body, needFinalReturn);
-		frame.to <Frame> ().isWeak (true);
-		frame.to <Frame> ().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));
+	    auto proto = LambdaProto::init (function.getLocation (), frameName, retType, paramsProto, function.getContent (), function.isRefClosure (), function.isMoveClosure (), syms);
+	    proto.to<LambdaProto>().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));	    
 
-		insertNewGenerator (frame);
-	    
-		auto proto = FrameProto::init ({function.getLocation (), name}, frameName, retType, paramsProto, false);
-		proto.to<FrameProto>().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));	    
-	    
-		auto funcType = FuncPtr::init (function.getLocation (), retType, paramTypes);
-		funcType.to <Type> ().isMutable (true);
-	    
-		auto addr = Addresser::init (function.getLocation (), funcType, proto);
-		this-> _lambdas.emplace (frameName, addr);
-		return addr;
+	    if (!uncomplete) {
+		return validateLambdaProto (proto.to <LambdaProto> (), paramTypes);
 	    } else {
-		auto proto = LambdaProto::init (function.getLocation (), frameName, retType, paramsProto, function.getContent ());
-		proto.to<LambdaProto>().setMangledName (format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name));	    
 		return proto;
 	    }
 	}
@@ -1998,10 +1971,22 @@ namespace semantic {
 			    insertLocal (var.getName (), params.back ());
 			}		
 		    }
-
-		    this-> setCurrentFuncType (retType);
-		    body = validateValue (proto.getContent ());
 		    
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;		    
+	    }
+	    
+	    volatile uint refId = 0;
+	    {
+		TRY (		    
+		    this-> setCurrentFuncType (retType);
+		    refId = Generator::getLastId ();
+		    if (proto.isRefClosure () || proto.isMoveClosure ())
+			this-> enterClosure (proto.isRefClosure (), refId, proto.getClosureIndex ());
+			    
+		    body = validateValue (proto.getContent ());		    
 		    retType = this-> getCurrentFuncType ();
 	    
 		    if (!body.to<Value> ().isReturner ()) {
@@ -2013,12 +1998,17 @@ namespace semantic {
 			    retType = body.to <Value> ().getType ();
 			}
 		    }
-
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-		    
+		} FINALLY;		    
+	    }
+
+	    Generator closure (Generator::empty ());
+	    if (proto.isRefClosure () || proto.isMoveClosure ()) {
+		closure = this-> exitClosure ();
+		params.insert (params.begin (), ParamVar::init ({lexing::Word::eof (), "#_closure"}, closure, false));
+		params [0].setUniqId (refId);
 	    }
 	    
 	    {
@@ -2031,20 +2021,31 @@ namespace semantic {
 	    }
 	    
 	    exitForeign ();
-
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
-
-	    auto frame = Frame::init (proto.getLocation (), proto.getName (), params, retType, body, needFinalReturn);
-	    frame.to <Frame> ().isWeak (true);
-	    frame.to <Frame> ().setMangledName (proto.getMangledName ());
-
-	    insertNewGenerator (frame);
 	    
-	    auto frameProto = FrameProto::init (proto.getLocation (), proto.getName (), retType, paramsProto, false);
-	    frameProto.to<FrameProto>().setMangledName (proto.getMangledName ());	    
-	    
-	    return frameProto;
+	    if (!closure.isEmpty ()) {
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		return Generator::empty ();
+		// createClosure value
+		// And return a delegate 
+	    } else {
+		auto frame = Frame::init (proto.getLocation (), proto.getName (), params, retType, body, needFinalReturn);
+		frame.to <Frame> ().isWeak (true);
+		frame.to <Frame> ().setMangledName (proto.getMangledName ());
+
+		insertNewGenerator (frame);
+		
+		auto frameProto = FrameProto::init (proto.getLocation (), proto.getName (), retType, paramsProto, false);
+		frameProto.to<FrameProto>().setMangledName (proto.getMangledName ());
+		
+		auto funcType = FuncPtr::init (proto.getLocation (), frameProto.to <FrameProto> ().getReturnType (), types);
+		funcType.to <Type> ().isMutable (true);
+		
+		auto addr = Addresser::init (proto.getLocation (), funcType, frameProto);
+		insert_or_assign (this-> _lambdas, proto.getName (), addr);
+		return addr;
+	    }
 	}
 
 	
@@ -2420,6 +2421,68 @@ namespace semantic {
 	    this-> _loopSaved.pop_back ();
 	}
 
+	void Visitor::enterClosure (bool isRef, uint refId, uint index) {
+	    insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE}", BoolValue::init (lexing::Word::eof (), Bool::init (lexing::Word::eof ()), isRef));
+	    this-> _usedSyms.back ()[0].insert ("#{CLOSURE}");
+
+	    insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-TYPE}", Closure::init (lexing::Word::eof (), {}, {}, index));
+	    this-> _usedSyms.back ()[0].insert ("#{CLOSURE-TYPE}");
+
+	    insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-VARREF}", VarRef::init (lexing::Word::eof (), "#{CLOSURE-VARREF}", Void::init (lexing::Word::eof ()), refId, false, Generator::empty ()));
+	    this-> _usedSyms.back () [0].insert ("#{CLOSURE-VARREF}");
+	    this-> _enclosed.push_back ({});	    
+	}
+
+	Generator Visitor::getInClosure (const std::string & name) {
+	    if (!isInClosure ()) return Generator::__empty__;
+	    auto closureType = this-> getLocal ("#{CLOSURE-TYPE}", false);	    
+	    auto field = closureType.to <Closure> ().getField (name);
+	    if (field.isEmpty ()) { // need to get it from upper closure
+		auto & syms = this-> _symbols [closureType.to <Closure> ().getIndex ()];
+		auto & used = this-> _usedSyms [closureType.to <Closure> ().getIndex ()]; 
+		for (auto _it : Ymir::r (0, syms.size ())) {
+		    auto ptr = syms [_it].find (name);
+		    if (ptr != syms [_it].end ()) {
+			used [_it].insert (name);
+			Generator type (Generator::empty ());
+			if (ptr-> second.is <generator::VarDecl> ()) {
+			    type = ptr-> second.to <generator::VarDecl> ().getVarType ();
+			} else type = ptr-> second.to <Value> ().getType ();
+			
+			auto types = closureType.to <Type> ().getInners ();
+			auto names = closureType.to <Closure> ().getNames ();
+			types.push_back (type);
+			names.push_back (name);
+
+			closureType = Closure::init (lexing::Word::eof (), types, names, closureType.to <Closure> ().getIndex ());
+			insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-TYPE}", closureType);
+			auto closureRef = this-> getLocal ("#{CLOSURE-VARREF}", false);
+			insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-VARREF}", VarRef::init (lexing::Word::eof (), "#{CLOSURE-VARREF}", closureType, closureRef.to <VarRef> ().getRefId (), false, Generator::empty ()));			
+			return StructAccess::init (lexing::Word::eof (), type, this-> getLocal ("#{CLOSURE-VARREF}", false), name);
+		    }
+		}
+	    } else {
+		auto closureRef = this-> getLocal ("#{CLOSURE-VARREF}", false);
+		return StructAccess::init (lexing::Word::eof (), field, closureRef, name);
+	    }
+
+	    return Generator::__empty__;
+	}	
+	
+	bool Visitor::isInClosure () {
+	    auto ret = this-> getLocal ("#{CLOSURE}", false);
+	    return !ret.isEmpty ();
+	}
+	
+	bool Visitor::isInRefClosure () {
+	    auto ret = this-> getLocal ("#{CLOSURE}", false);
+	    return !ret.isEmpty () && ret.to<BoolValue> ().getValue ();
+	}
+	
+	Generator Visitor::exitClosure () {
+	    return this-> getLocal ("#{CLOSURE-TYPE}", false);
+	}
+	
 	void Visitor::enterContext (const std::vector <lexing::Word> & Cas) {
 	    this-> _contextCas.push_back (Cas);
 	}
@@ -2449,13 +2512,13 @@ namespace semantic {
 	    this-> _loopBreakTypes.back () = type;
 	}
 
-	const Generator & Visitor::getCurrentFuncType () {
-	    return getLocal ("#{RET}");
+	Generator Visitor::getCurrentFuncType () {
+	    return getLocal ("#{RET}", false);
 	}
 
 	void Visitor::setCurrentFuncType (const Generator & type) {
-	    this-> insertLocal ("#{RET}", type);
-	    this-> _usedSyms.back ().back ().insert ("#{RET}");
+	    insert_or_assign (this-> _symbols.back () [0], "#{RET}", type);
+	    this-> _usedSyms.back () [0].insert ("#{RET}");
 	}
 	
 	bool Visitor::isInLoop () const {
@@ -2465,10 +2528,13 @@ namespace semantic {
 	void Visitor::insertLocal (const std::string & name, const Generator & gen) {
 	    if (this-> _symbols.back ().empty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    this-> _symbols.back ().back ().emplace (name, gen);
+	    if (this-> _symbols.back ().back ().find (name) == this-> _symbols.back ().back ().end ())
+		insert_or_assign (this-> _symbols.back ().back (), name, gen);
+	    else
+		insert_or_assign (this-> _symbols.back ().back (), name, gen);
 	}       
 
-	const Generator & Visitor::getLocal (const std::string & name) {
+	Generator Visitor::getLocal (const std::string & name, bool canBeInClosure) {
 	    for (auto _it : Ymir::r (0, this-> _symbols.back ().size ())) {
 		auto it = (this-> _symbols.back ().size () - _it) - 1;
 		auto ptr = this-> _symbols.back () [it].find (name); 		    
@@ -2477,8 +2543,21 @@ namespace semantic {
 		    return ptr-> second;
 		}		
 	    }
+
+	    if (canBeInClosure)
+		return this-> getInClosure (name);
 	    
 	    return Generator::__empty__;
+	}
+
+	void Visitor::printLocal () const {
+	    for (auto _it : Ymir::r (0, this-> _symbols.back ().size ())) {
+		println (Ymir::format ("%* {", (int) _it, '\t'));
+		for (auto it : this-> _symbols.back () [_it]) {		    
+		    println (Ymir::format ("%* %-> %", (int) (_it + 1), '\t', it.first, it.second.prettyString ()));
+		}
+		println (Ymir::format ("%* }", (int)_it, '\t'));
+	    }
 	}
 
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
@@ -2673,7 +2752,7 @@ namespace semantic {
 	void Visitor::verifyShadow (const lexing::Word & name) {
 	    verifyNotIsType (name);
 	    
-	    auto & gen = getLocal (name.str);	    
+	    auto gen = getLocal (name.str);	    
 	    if (!gen.isEmpty ()) {		
 		auto note = Ymir::Error::createNote (gen.getLocation ());		
 		Error::occurAndNote (name, note, ExternalError::get (SHADOWING_DECL), name.str);

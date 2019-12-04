@@ -3,33 +3,32 @@
 #include <ymir/semantic/generator/Type.hh>
 
 namespace semantic {
-
     namespace generator {
 
 	/**
-	 * \struct A slice is an array with a dynamic size
-	 * It can borrow data from static array, are allocated on the heap
+	 * \struct Delegate
+	 * An array type , this type is always static (we know the size at the compile time)
+	 * Dynamic arrays are defined by Slice
 	 */
-	class Tuple : public Type {	    
-	public :
-
-	    static std::string ARITY_NAME;
-
-	    static std::string INIT_NAME;
+	class Delegate : public Type {
+	private :	    
 	    
-	private : 
-
 	    friend Generator;
 
-	    Tuple ();
+	    Delegate ();	    
 
-	    Tuple (const lexing::Word & loc, const std::vector <Generator> & innerType);
-
-	public : 
-
-
-	    static Generator init (const lexing::Word & loc, const std::vector <Generator> & innerType);
+	    Delegate (const lexing::Word & loc, const Generator & funcPtr);
 	    
+	public :
+
+	    static std::string RET_NAME;
+
+	    static std::string PARAMS_NAME;
+	    
+	public : 
+	    
+	    static Generator init (const lexing::Word & loc, const Generator & funcPtr);
+
 	    Generator clone () const override;
 
 	    /**
@@ -41,14 +40,13 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    bool equals (const Generator & other) const override;
-	    
-	    /** 
-	     * \return the name of the type formatted
+
+	    /**
+	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
 	     */
 	    std::string typeName () const override;
 	    
 	};
-
+       
     }
-    
 }
