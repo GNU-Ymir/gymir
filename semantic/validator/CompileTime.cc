@@ -111,6 +111,18 @@ namespace semantic {
 		of (LambdaProto, proto ATTRIBUTE_UNUSED,
 		    return executeLamdaProto (gen);
 		);
+
+		of (TemplateRef, _ref ATTRIBUTE_UNUSED,
+		    return executeTemplateRef (gen);
+		);
+
+		of (FrameProto, proto ATTRIBUTE_UNUSED,
+		    return executeFrameProto (gen);
+		);
+		
+		of (MultSym, mult ATTRIBUTE_UNUSED,
+		    return executeMultSym (gen);
+		);
 	    }
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
@@ -544,7 +556,53 @@ namespace semantic {
 	    }
 	    return gen;
 	}
+
+	generator::Generator CompileTime::executeTemplateRef (const generator::Generator & gen) {
+	    if (!gen.to <TemplateRef> ().getTemplateRef ().to <semantic::Template> ().getDeclaration ().is <syntax::Function> ()) {
+		Ymir::Error::occur (
+		    gen.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+		return Generator::empty ();
+	    }
+	    return gen;
+	}
+
+
+	
+	generator::Generator CompileTime::executeMultSym (const generator::Generator & gen) {
+	    std::vector <Generator> mult;
+	    for (auto & it : gen.to <MultSym> ().getGenerators ()) {
+		TRY (
+		    auto ret = this-> execute (it);
+		    mult.push_back (ret);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		} FINALLY;
+	    }
+
+	    if (mult.size () == 0)
+		Ymir::Error::occur (
+		    gen.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+
+	    return MultSym::init (gen.getLocation (), mult);
+	}
+
+	generator::Generator CompileTime::executeFrameProto (const generator::Generator & proto) {
+	    auto params = proto.to <FrameProto> ().getParameters ();
+	    auto ret = proto.to <FrameProto> ().getReturnType ();
+	    std::vector <Generator> paramTypes;
+	    for (auto & it : params) {
+		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+	    }
+	    
+	    auto funcType = FuncPtr::init (proto.getLocation (), ret, paramTypes);
+	    return Addresser::init (proto.getLocation (), funcType, proto);
+	}
 	
     }
+   
     
 }

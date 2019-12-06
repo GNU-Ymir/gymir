@@ -51,20 +51,21 @@ namespace semantic {
 		int current_consumed = 0;
 		auto rest = std::vector<syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
 		Mapper mapper;
-		
+		bool succeed = true;
 		TRY (
 		    mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
 		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
+		    GET_ERRORS_AND_CLEAR (msgs);		    
 		    errors = msgs;
+		    succeed = false;
+		} FINALLY;
+		
+		if (!succeed) {
 		    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		    auto merge = mergeMappers (prevMapper, globalMapper);
 		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		} FINALLY;
-		
-		if (errors.size () != 0)
 		    THROW (ErrorCode::EXTERNAL, errors);
-		
+		}		
 		
 		if (!mapper.succeed) return Symbol::empty ();
 		else {
@@ -175,12 +176,24 @@ namespace semantic {
 			    if (!decl.getType ().isEmpty ()) {			    
 				auto current_consumed = 0;
 				mapper = validateTypeFromImplicit  (syntaxTempl, decl.getType (), {values [0].to <Value> ().getType ()}, current_consumed);
+				Generator type (Generator::empty ());
+				
+				// The type can be uncomplete, so it is enclosed it in a try catch
+				TRY (
+				    type = this-> _context.validateType (replaceAll (decl.getType (), mapper.mapping)); 
+				) CATCH (ErrorCode::EXTERNAL) {
+				    GET_ERRORS_AND_CLEAR (msgs);
+				} FINALLY;
+				
+				if (!type.isEmpty ())
+				    this-> _context.verifySameType (type, values [0].to <Value> ().getType ());
 			    }
 
-			    if (mapper.succeed) {
+			    if (mapper.succeed) {				
 				mapper.mapping.emplace (decl.getName ().str, createSyntaxValue (decl.getName (), values [0]));
 				mapper.nameOrder.push_back (decl.getName ().str);
 			    }
+			    
 			    mapper.score += Scores::SCORE_VAR;
 			    return mapper;
 			} else {
@@ -265,17 +278,19 @@ namespace semantic {
 		
 		int current_consumed = 0;
 		Mapper mapper;
+		bool succeed = true;
 		TRY (
 		    mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);		
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors = msgs;
+		    succeed = false;
+		} FINALLY;
+		
+		if (!succeed) {
 		    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		    auto merge = mergeMappers (prevMapper, globalMapper);
 		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		} FINALLY;
-		
-		if (errors.size () != 0) {
 		    break;
 		}
 
@@ -482,7 +497,16 @@ namespace semantic {
 			    auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners ()[0]}, current_consumed); // specialize the return type
 			    if (!mp.succeed) return mp;
 			    return mergeMappers (mapper, mp);
-			} else return Mapper {};
+			} else if (type.is <NoneType> ()) { // None type are accepted, it only refers to templateref i think
+			    // And in all cases will be validated in finalvalidation 
+			    Mapper mapper;
+			    mapper.succeed = true;
+			    return mapper;
+			} else {
+			    Mapper mapper;
+			    mapper.succeed = false;
+			    return mapper;
+			}
 		    }
 		);	       
 	    }
@@ -1380,54 +1404,70 @@ namespace semantic {
 	    std::map <std::string, syntax::Expression> maps;
 	    std::vector <std::pair <syntax::Expression, Generator> > toValidate;
 	    for (auto & it : mapping) {
-		if (it.second.is <TemplateSyntaxWrapper> () && it.second.to<TemplateSyntaxWrapper> ().getContent ().is <LambdaProto> ()) {
-		    auto proto = it.second.to<TemplateSyntaxWrapper> ().getContent ().to <LambdaProto> ();
-		    auto expr = this-> findExpressionValue (it.first, exprs);			
+		if ((it.second.is <TemplateSyntaxWrapper> () && it.second.to<TemplateSyntaxWrapper> ().getContent ().is <LambdaProto> ()) ||
+		    (it.second.is <TemplateSyntaxWrapper> () && it.second.to <TemplateSyntaxWrapper> ().getContent ().is <TemplateRef> ()) ||
+		    (it.second.is <TemplateSyntaxWrapper> () && it.second.to <TemplateSyntaxWrapper> ().getContent ().is <MultSym> ())
+		) {
+		    auto expr = this-> findExpressionValue (it.first, exprs);
+		    std::vector <Generator> types;
+		    bool successful = true;
+		    syntax::Expression retType (syntax::Expression::empty ());
 		    if (expr.is <syntax::VarDecl> ()) {
 			auto F = retreiveFuncPtr (expr.to <syntax::VarDecl> ().getType (), exprs);
 			if (F.is <syntax::FuncPtr> ()) {
 			    
 			    // If it is a funcPtr, it has the same number of var as the lambda,
 			    // it is assumed if we are here, the template spec has been successful
-			    std::vector <Generator> types;
-			    bool successful = true;
 			    for (auto & it : F.to <syntax::FuncPtr> ().getParameters ()) {				
 				auto type = validateTypeOrEmpty (it, mapping);
 				if (type.isEmpty ()) {
 				    successful = false;
 				    break;
 				} else types.push_back (type);
-			    }
-			    
-			    if (!successful) 
-				maps.emplace (it.first, it.second);
-			    else {
-				// We assume that lambda closure cannot be known at compile time, and therefore this will always return a Addresser to a frameproto		
-				auto protoGen = this-> _context.validateLambdaProto (proto, types).to <Addresser> ().getWho ();		
-				auto type = validateTypeOrEmpty (F.to<syntax::FuncPtr> ().getRetType (), mapping);
-				if (type.isEmpty ()) {
-				    toValidate.push_back ({F.to<syntax::FuncPtr> ().getRetType (), protoGen.to <FrameProto> ().getReturnType ()});
-				} else if (!protoGen.to <FrameProto> ().getReturnType ().equals (type)) {
-				    auto note = Ymir::Error::createNote (protoGen.to <FrameProto> ().getReturnType ().getLocation ());
-				    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-							       type.prettyString (),
-							       protoGen.to <FrameProto> ().getReturnType ().prettyString ()
-				    );
-				}
-
-				auto params = protoGen.to <FrameProto> ().getParameters ();
-				auto ret = protoGen.to <FrameProto> ().getReturnType ();
-				std::vector <Generator> paramTypes;
-				for (auto & it : params) {
-				    paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
-				}
-				
-				auto funcType = FuncPtr::init (expr.getLocation (), ret, paramTypes);
-				maps.emplace (it.first, TemplateSyntaxWrapper::init (expr.getLocation (), Addresser::init (expr.getLocation (), funcType, protoGen)));
-			    }
+			    }			    
 			}
-		    } else maps.emplace (it.first, it.second);		    
-		}  else maps.emplace (it.first, it.second);		    
+			if (successful) retType = F.to <syntax::FuncPtr> ().getRetType ();
+		    }
+		    
+		    if (!successful) {
+			maps.emplace (it.first, it.second);
+			continue;
+		    }
+
+		    Generator protoGen (Generator::empty ());
+		    if (it.second.to <TemplateSyntaxWrapper> ().getContent ().is <LambdaProto> ()) {
+			// We assume that lambda closure cannot be known at compile time, and therefore this will always return a Addresser to a frameproto
+			auto proto = it.second.to <TemplateSyntaxWrapper> ().getContent ().to <LambdaProto> ();
+			protoGen = this-> _context.validateLambdaProto (proto, types).to <Addresser> ().getWho ();
+		    } else if (it.second.to <TemplateSyntaxWrapper> ().getContent ().is <LambdaProto> ()) {
+			auto proto = it.second.to <TemplateSyntaxWrapper> ().getContent ();
+			protoGen = this-> _context.validateMultSymProto (MultSym::init (proto.getLocation (), {proto}), types);
+		    } else {
+			auto proto = it.second.to <TemplateSyntaxWrapper> ().getContent ();
+			protoGen = this-> _context.validateMultSymProto (proto, types); 
+		    }
+		    
+		    auto type = validateTypeOrEmpty (retType, mapping);
+		    if (type.isEmpty ()) {
+			toValidate.push_back ({retType, protoGen.to <FrameProto> ().getReturnType ()});
+		    } else if (!protoGen.to <FrameProto> ().getReturnType ().equals (type)) {
+			auto note = Ymir::Error::createNote (protoGen.to <FrameProto> ().getReturnType ().getLocation ());
+			Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+						   type.prettyString (),
+						   protoGen.to <FrameProto> ().getReturnType ().prettyString ()
+			);
+		    }
+
+		    auto params = protoGen.to <FrameProto> ().getParameters ();
+		    auto ret = protoGen.to <FrameProto> ().getReturnType ();
+		    std::vector <Generator> paramTypes;
+		    for (auto & it : params) {
+			paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+		    }
+				
+		    auto funcType = FuncPtr::init (expr.getLocation (), ret, paramTypes);
+		    maps.emplace (it.first, TemplateSyntaxWrapper::init (expr.getLocation (), Addresser::init (expr.getLocation (), funcType, protoGen)));		    
+		} else maps.emplace (it.first, it.second);		    
 	    }
 
 	    if (toValidate.size () != 0) {
@@ -1447,7 +1487,7 @@ namespace semantic {
 		
 		return validateLambdaProtos (exprs, mapper.mapping);
 	    }
-	    
+
 	    return maps;
 	}
 

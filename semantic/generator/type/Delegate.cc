@@ -5,7 +5,6 @@ namespace semantic {
     namespace generator {
 
 	std::string Delegate::RET_NAME = "ret";
-
 	std::string Delegate::PARAMS_NAME = "params";
 	
 	Delegate::Delegate () :

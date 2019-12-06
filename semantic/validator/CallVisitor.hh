@@ -118,6 +118,18 @@ namespace semantic {
 	    generator::Generator validateFunctionPointer (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
 	    
 	    /**
+	     * \brief Validate a Function pointer call
+	     * \param expression the call expression
+	     * \param gen the generator of the delegate value (assumed to be typed as Delegate)
+	     * \param params the parameters of the call
+	     * \brief It does not throw an exception on failure, 
+	     * \brief It will return a empty generator and a score of -1
+	     * \brief All the errors will be store into errors
+	     * \warning TODO, merge this function and validateFunctionPointer, these two functions do exaclty the same treatment and have only one different code line 
+	     */
+	    generator::Generator validateDelegate (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
+	    
+	    /**
 	     * \brief Validate a mult sym 
 	     * \brief A mult sym regroups a list of frameproto
 	     * \brief It will use the more specialized one

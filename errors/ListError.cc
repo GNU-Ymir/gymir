@@ -71,8 +71,8 @@ namespace Ymir {
 			    SYNTAX_ERROR_AT_SIMPLE	    = "%(y) unexpected",	// syntax error a specific location
 			    SYNTAX_ERROR_IF_ON_NON_TEMPLATE = "test on non template declaration",
 			    SYNTAX_ERROR_MISSING_TEMPL_PAR  = "multiple ! arguments are not allowed",
-			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
+			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
 			    UNDEFINED_BIN_OP		    = "undefined operator %(y) for types %(y) and %(y)",
 			    UNDEFINED_BRACKETS_OP	    = "index operator is not defined for type %(y) and {%(y)}",
 			    UNDEFINED_CA		    = "custom attribute %(y), does not exist in this context",

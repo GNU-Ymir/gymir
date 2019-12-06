@@ -1,5 +1,5 @@
 #include <ymir/semantic/generator/value/MultSym.hh>
-#include <ymir/semantic/generator/type/Void.hh>
+#include <ymir/semantic/generator/type/NoneType.hh>
 
 namespace semantic {
 
@@ -10,7 +10,7 @@ namespace semantic {
 	{}
 
 	MultSym::MultSym (const lexing::Word & loc, const std::vector <Generator> & gens) :
-	    Value (loc, Void::init (loc)),
+	    Value (loc, NoneType::init (loc)),
 	    _gens (gens)
 	{}	
 	
@@ -44,7 +44,14 @@ namespace semantic {
 	}
 
 	std::string MultSym::prettyString () const {
-	    return "";
+	    Ymir::OutBuffer buf;
+	    int i = 0;
+	    for (auto & it : this-> _gens) {
+		if (i != 0) buf.write (" or ");
+		buf.write (it.prettyString ());
+		i += 1;
+	    }
+	    return buf.str ();
 	}
     }
     

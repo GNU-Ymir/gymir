@@ -1086,8 +1086,10 @@ namespace semantic {
 		if (!gen.to <generator::VarDecl> ().isMutable ())
 		    value = gen.to <generator::VarDecl> ().getVarValue ();
 		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<generator::VarDecl> ().getVarType (), gen.getUniqId (), gen.to<generator::VarDecl> ().isMutable (), value);		
-	    } else if (gen.is <StructAccess> ()) // Closure
+	    } else if (gen.is <StructAccess> ()) {// Closure
+		gen.changeLocation (var.getLocation ());
 		return gen;
+	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
@@ -1123,7 +1125,7 @@ namespace semantic {
 			    continue;
 			}
 		    ) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
-			    gens.push_back (TemplateRef::init (sym.getName (), sym));
+			    gens.push_back (TemplateRef::init ({loc, sym.getName ().str}, sym));
 			    continue;
 			}
 		    ) else of (semantic::TemplateSolution, sol, {			    
@@ -1634,14 +1636,20 @@ namespace semantic {
 	    std::vector<Generator> params;
 	    std::vector <std::string> errors;
 	    for (auto & it : check.getCalls ()) {
+		bool succeed = true;
 		TRY (
-		    params.push_back (validateType (it, true));
+		    auto val = validateType (it, true);
+		    params.push_back (val);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
+		    succeed = false;
+		} FINALLY;
+		
+		if (!succeed) {
 		    auto val = validateValue (it);
 		    auto rvalue = retreiveValue (val);
 		    params.push_back (rvalue);
-		} FINALLY;
+		}
 	    }
 	    
 
@@ -1665,14 +1673,19 @@ namespace semantic {
 	    std::vector <std::string> errors;
 	    std::vector <Generator> params;
 	    for (auto & it : tcl.getParameters ()) {
+		bool succeed = true;
 		TRY (
 		    params.push_back (validateType (it, true));
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
+		    succeed = false;
+		} FINALLY;
+		
+		if (!succeed) {
 		    auto val = validateValue (it);
 		    auto rvalue = retreiveValue (val);
 		    params.push_back (rvalue);
-		} FINALLY;
+		} 
 	    }
 	    
 	    if (value.is <TemplateRef> ()) {
@@ -1697,13 +1710,14 @@ namespace semantic {
 	    } else if (value.is<MultSym> ()) {
 		volatile int all_score = -1; // Not volatile, but due to longjmp the compiler prefers it to be
 		Symbol final_sym (Symbol::empty ());
-		auto templateVisitor = TemplateVisitor::init (*this);
 		std::map <int, std::vector <Symbol>> loc_scores;
 		for (auto & elem : value.to <MultSym> ().getGenerators ()) {
 		    if (elem.is<TemplateRef> ()) {
 			int local_score = 0;
 			Symbol local_sym (Symbol::empty ());
+			bool succeed = true;
 			TRY (
+			    auto templateVisitor = TemplateVisitor::init (*this);
 			    local_sym = templateVisitor.validateFromExplicit (elem.to <TemplateRef> (), params, local_score);
 			    if (!local_sym.isEmpty ())
 				loc_scores [local_score].push_back (local_sym);
@@ -1711,8 +1725,9 @@ namespace semantic {
 			    GET_ERRORS_AND_CLEAR (msgs);
 			    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), elem.getLocation (), elem.prettyString ()));
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-			    continue;
+			    succeed = false;
 			} FINALLY;
+			if (!succeed) continue;
 			
 			if (local_score > all_score) {
 			    all_score = local_score;
@@ -2007,8 +2022,10 @@ namespace semantic {
 	    Generator closure (Generator::empty ());
 	    if (proto.isRefClosure () || proto.isMoveClosure ()) {
 		closure = this-> exitClosure ();
-		params.insert (params.begin (), ParamVar::init ({lexing::Word::eof (), "#_closure"}, closure, false));
-		params [0].setUniqId (refId);
+		if (closure.to <Closure> ().getNames ().size () != 0) {
+		    params.insert (params.begin (), ParamVar::init ({lexing::Word::eof (), "#_closure"}, closure, false));
+		    params [0].setUniqId (refId);
+		} else closure = Generator::empty ();
 	    }
 	    
 	    {
@@ -2023,13 +2040,7 @@ namespace semantic {
 	    exitForeign ();
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
-	    
-	    // if (!closure.isEmpty ()) {
-	    // 	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    // 	return Generator::empty ();
-	    // 	// createClosure value
-	    // 	// And return a delegate 
-	    // } else {
+
 	    auto frame = Frame::init (proto.getLocation (), proto.getName (), params, retType, body, needFinalReturn);
 	    frame.to <Frame> ().isWeak (true);
 	    frame.to <Frame> ().setMangledName (proto.getMangledName ());
@@ -2041,13 +2052,82 @@ namespace semantic {
 		
 	    auto funcType = FuncPtr::init (proto.getLocation (), frameProto.to <FrameProto> ().getReturnType (), types);
 	    funcType.to <Type> ().isMutable (true);
-		
 	    auto addr = Addresser::init (proto.getLocation (), funcType, frameProto);
 	    insert_or_assign (this-> _lambdas, proto.getName (), addr);
-	    return addr;
-		//}
+	    
+	    if (!closure.isEmpty ()) {
+		auto closureValue = validateClosureValue (closure, proto.isRefClosure (), proto.getClosureIndex ());
+		auto tupleType = Delegate::init (proto.getLocation (), funcType);		
+		auto tuple = DelegateValue::init (proto.getLocation (), tupleType, closureValue, addr);
+						       
+		return tuple;
+	    } else {		
+		return addr;
+	    }
 	}
 
+	Generator Visitor::validateMultSymProto (const Generator & sym, const std::vector <Generator> &types) {
+	    std::vector <Generator> valueParams;
+	    for (auto it : Ymir::r (0, types.size ())) {
+		valueParams.push_back (FakeValue::init (types [it].getLocation (), types [it]));
+	    }
+	    
+	    std::vector <std::string> errors;
+	    int score;
+	    auto call = CallVisitor::init (*this);	    
+	    auto ret = call.validate (sym.getLocation (), sym, valueParams, score, errors);
+	    if (ret.isEmpty ()) 
+		call.error ({sym.getLocation (), ""}, {sym.getLocation (), ""}, sym, valueParams, errors);
+	    
+	    return ret.to <Call> ().getFrame ();
+	}
+
+	Generator Visitor::validateClosureValue (const Generator & closureType, bool isRefClosure, uint closureIndex) {
+	    std::vector <Generator> innerTypes;
+	    std::vector <Generator> innerValues;
+	    auto loc = closureType.getLocation ();
+	    for (auto & name : closureType.to <Closure> ().getNames ()) {
+		auto & syms = this-> _symbols [closureIndex];
+		for (auto _it : Ymir::r (0, syms.size ())) {
+		    auto ptr = syms [_it].find (name);
+		    if (ptr != syms [_it].end ()) {
+			if (ptr-> second.is <ParamVar> ()) {
+			    auto type = ptr-> second.to <Value> ().getType ();
+			    auto varRef = VarRef::init (loc, name, type, ptr-> second.getUniqId (), false, Generator::empty ());
+			    if (isRefClosure) {
+				type.to <Type> ().isRef (true);
+				innerValues.push_back (Referencer::init (loc, type, varRef));
+			    } else
+				innerValues.push_back (varRef);
+			    
+			    innerTypes.push_back (type);
+			} else if (ptr-> second.is <generator::VarDecl> ()) {
+			    auto type = ptr-> second.to <generator::VarDecl> ().getVarType ();
+			    auto varRef = VarRef::init (loc, name, type, ptr-> second.getUniqId (), false, Generator::empty ());
+			    if (isRefClosure) {
+				type.to <Type> ().isRef (true);
+				innerValues.push_back (Referencer::init (loc, type, varRef));
+			    } else {
+				Generator value (Generator::empty ());
+				if (!ptr-> second.to <generator::VarDecl> ().isMutable ())
+				    value = ptr-> second.to <generator::VarDecl> ().getVarValue ();
+				varRef = VarRef::init (loc, name, type, ptr-> second.getUniqId (), false, value);
+				innerValues.push_back (varRef);
+			    }
+			    innerTypes.push_back (type);
+			} else if (ptr-> second.is <StructAccess> ()) {
+			    innerValues.push_back (ptr-> second);
+			    innerTypes.push_back (ptr-> second.to <Value> ().getType ());
+			}
+			break; // We found it, go to the the next enclosure
+		    }
+		}
+	    }
+	    
+	    auto tupleType = Tuple::init (loc, innerTypes);
+	    auto tupleValue = TupleValue::init (loc, tupleType, innerValues);
+	    return Copier::init (loc, Pointer::init (loc, Void::init (loc)), tupleValue);
+	}	
 	
 	Generator Visitor::validateFuncPtr (const syntax::FuncPtr & ptr) {
 	    std::vector <Generator> params;
@@ -2464,6 +2544,8 @@ namespace semantic {
 			names.push_back (name);
 
 			closureType = Closure::init (lexing::Word::eof (), types, names, closureType.to <Closure> ().getIndex ());
+			closureType.to <Type> ().isRef (true);
+			
 			insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-TYPE}", closureType);
 			auto closureRef = this-> getLocal ("#{CLOSURE-VARREF}", false);
 			insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-VARREF}", VarRef::init (lexing::Word::eof (), "#{CLOSURE-VARREF}", closureType, closureRef.to <VarRef> ().getRefId (), false, Generator::empty ()));			
@@ -2723,7 +2805,7 @@ namespace semantic {
 	void Visitor::verifyCompatibleTypeWithValue (const Generator & type, const Generator & gen) {
 	    if (gen.is <NullValue> () && type.is <Pointer> ()) return;
 	    else if (gen.is<ArrayValue> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
-
+	
 	    verifyCompatibleType (type, gen.to <Value> ().getType ());
 	}	
 

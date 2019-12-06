@@ -148,7 +148,13 @@ namespace semantic {
 		       for (auto & it : c.getInners ()) inner.push_back (generateType (it));
 		       type = Tree::tupleType (fields, inner);
 		   }
-	       );		
+	       ) else of (Delegate, d, {
+		       std::vector <Tree> inner;
+		       inner.push_back (Tree::pointerType (Tree::voidType ()));
+		       inner.push_back (generateType (d.getInners () [0]));
+		       type = Tree::tupleType ({}, inner); // delegate are unnamed tuple .0 closure, .1 funcptr
+		   }
+	       );
 	    }
 	    
 	    if (type.isEmpty ())
@@ -568,7 +574,11 @@ namespace semantic {
 		else of (SliceValue, sl,
 		    return generateSliceValue (sl);
 		)
-
+			 
+		else of (DelegateValue, dg,
+		    return generateDelegateValue (dg);
+		)
+			 
 		else of (Cast, cast,
 		    return generateCast (cast);
 		)
@@ -1146,6 +1156,16 @@ namespace semantic {
 	    return Tree::constructField (slc.getLocation (), type, {Slice::LEN_NAME, Slice::PTR_NAME}, params);
 	}
 
+	generic::Tree Visitor::generateDelegateValue (const DelegateValue & dlg) {
+	    auto type = generateType (dlg.getType ());
+	    std::vector <Tree> params = {
+		generateValue (dlg.getClosure ()),
+		generateValue (dlg.getFuncPtr ())
+	    };
+
+	    return Tree::constructField (dlg.getLocation (), type, {}, params);
+	}
+	
 	generic::Tree Visitor::generateCast (const Cast & cast) {
 	    auto type = generateType (cast.getType ());
 	    auto who = generateValue (cast.getWho ());
@@ -1290,14 +1310,26 @@ namespace semantic {
 		pre.append (value.getList ());
 		results.push_back (value.getValue ().promote ());
 	    }
-	    
-	    auto fn = generateValue (cl.getFrame ());	    
-	    auto type = generateType (cl.getType ());
-	    return Tree::compound (
-		cl.getLocation (), 
-		Tree::buildCall (cl.getLocation (), type, fn , results),
-		pre.toTree ()
-	    );
+
+	    if (cl.getFrame ().to <Value> ().getType ().is <Delegate> ()) { // Delegate are {&closure, &fn}, so we call it this way : &fn (&closure, types...)
+		auto fn = generateValue (cl.getFrame ());
+		pre.append (fn.getList ());
+		results.insert (results.begin (), fn.getField (Ymir::format ("_%", 0)));
+		auto type = generateType (cl.getType ());
+		return Tree::compound (
+		    cl.getLocation (),
+		    Tree::buildCall (cl.getLocation (), type, fn.getField (Ymir::format ("_%", 1)), results),
+		    pre.toTree ()
+		);
+	    } else {
+		auto fn = generateValue (cl.getFrame ());	    
+		auto type = generateType (cl.getType ());
+		return Tree::compound (
+		    cl.getLocation (), 
+		    Tree::buildCall (cl.getLocation (), type, fn , results),
+		    pre.toTree ()
+		);
+	    }
 	}
 
 	generic::Tree Visitor::generateStructCst (const StructCst & cl) {
@@ -1324,6 +1356,18 @@ namespace semantic {
 		    generateType (copy.getType ()),
 		    global::CoreNames::get (DUPL_SLICE),
 		    {inner, Tree::buildSizeCst (size)}
+		);
+	    }
+
+	    if (copy.getWho ().to <Value> ().getType ().is <Tuple> ()) { // Closure
+		auto innerType = generateType (copy.getWho ().to <Value> ().getType ());
+		auto ptrInnerType = Tree::pointerType (innerType);
+		inner = 	    Tree::buildAddress (copy.getLocation (), inner, ptrInnerType);
+		return Tree::buildCall (
+		    copy.getLocation (),
+		    generateType (copy.getType ()),
+		    global::CoreNames::get (DUPL_ANY),
+		    {inner, Tree::buildSizeCst (innerType.getSize ())}
 		);
 	    }
 	    

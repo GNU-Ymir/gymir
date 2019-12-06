@@ -113,12 +113,15 @@ ymir_OBJS = \
 	ymir/generator_CharValue.o \
 	ymir/generator_Conditional.o \
 	ymir/generator_Copier.o \
+	ymir/generator_DelegateValue.o \
 	ymir/generator_Enum.o \
 	ymir/generator_EnumRef.o \
+	ymir/generator_FakeValue.o \
 	ymir/generator_Fixed.o \
 	ymir/generator_Float.o \
 	ymir/generator_FloatValue.o \
 	ymir/generator_FuncPtr.o \
+	ymir/generator_Delegate.o \
 	ymir/generator_Frame.o \
 	ymir/generator_FrameProto.o \
 	ymir/generator_LambdaProto.o \

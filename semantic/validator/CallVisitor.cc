@@ -73,19 +73,25 @@ namespace semantic {
 	    } else if (left.to<Value> ().getType ().is<FuncPtr> ()) {
 		auto gen = validateFunctionPointer (location, left, rights, score, errors);
 		if (!gen.isEmpty ()) return gen;
+	    } else if (left.to <Value> ().getType ().is <Delegate> ()) {
+		auto gen = validateDelegate (location, left, rights, score, errors);
+		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <generator::TemplateRef> ()) {
 		Symbol sym (Symbol::empty ());
 		Generator proto_gen (Generator::empty ());
 		auto gen = validateTemplateRef (location, left.to <TemplateRef> (), rights, score, errors, sym, proto_gen);
 		if (!gen.isEmpty ()) {
+		    std::vector <std::string> local_errors;
 		    TRY (
 			this-> _context.validateTemplateSymbol (sym);
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
 			msgs.insert (msgs.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
-			THROW (ErrorCode::EXTERNAL, msgs);
+			errors = msgs;
+			gen = Generator::empty ();
 		    } FINALLY;
+		    
 		    return gen;
 		}
 	    }
@@ -100,19 +106,26 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::vector <Generator> addParams;
 	    std::vector <Generator> rights = rights_;
-	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
-		auto param = findParameter (rights, proto.getParameters () [it].to<ProtoVar> ());
-		if (param.isEmpty ()) return Generator::empty ();
-		params.push_back (param);
-	    }
+	    TRY (
+		for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
+		    auto param = findParameter (rights, proto.getParameters () [it].to<ProtoVar> ());
+		    if (param.isEmpty ()) return Generator::empty ();
+		    params.push_back (param);
+		}
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors = msgs;
+	    } FINALLY;
 	    
+	    if (errors.size () != 0) return Generator::empty ();	    
 	    if (rights.size () != 0 && !proto.isCVariadic ()) return Generator::empty ();
 	    addParams = rights;
 	    
 	    std::vector <Generator> types;
 	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 		{
-		    TRY (
+		    bool succeed = true;
+		    TRY (			
 			this-> _context.verifyCompatibleType (
 			    proto.getParameters () [it].to <Value> ().getType (),
 			    params [it].to <Value> ().getType ()
@@ -121,9 +134,10 @@ namespace semantic {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
-			//errors = {};
-			return Generator::empty ();
+			succeed = false;
 		    } FINALLY;
+		    
+		    if (!succeed) return Generator::empty ();
 		}
 		
 		{
@@ -149,32 +163,45 @@ namespace semantic {
 	}
        
 	generator::Generator CallVisitor::findParameter (std::vector <Generator> & params, const ProtoVar & var) {
+	    Generator ret (Generator::empty ());
 	    for (auto  it : Ymir::r (0, params.size ())) {
 		if (params [it].is <NamedGenerator> ()) {
 		    auto name = params [it].to <NamedGenerator> ().getLocation ();
 		    if (name.str == var.getLocation ().str) {
 			auto toRet = params [it].to <NamedGenerator> ().getContent ();
 			params.erase (params.begin () + it);
-			return toRet;
+			ret = toRet;
+			break;
 		    }
 		}
 	    }
 
-	    // If the var has a value, it is an optional argument
-	    if (!var.getValue ().isEmpty ()) return var.getValue ();
+	    if (ret.isEmpty ()) {
+		// If the var has a value, it is an optional argument
+		if (!var.getValue ().isEmpty ()) ret = var.getValue ();	    
+		else if (params.size () == 0) return Generator::empty ();
+		// If it does not have a value, it is a mandatory var, and its name cannot be the same as params [0] (we just verify that in the for loop)
+		else if (params [0].is <NamedGenerator> ()) return Generator::empty ();
+		else {
+		    ret = params [0];
+		    params.erase (params.begin ());
+		}
+	    }
 	    
-	    else if (params.size () == 0) return Generator::empty ();
-	    // If it does not have a value, it is a mandatory var, and its name cannot be the same as params [0] (we just verify that in the for loop)
-	    else if (params [0].is <NamedGenerator> ()) return Generator::empty ();
+	    if (ret.to <Value> ().getType ().is <LambdaType> () && var.getType ().is <FuncPtr> ()) {
+	    	if (ret.is <VarRef> ()) {
+	    	    return this-> _context.validateLambdaProto (ret.to <VarRef> ().getValue ().to <LambdaProto> (), var.getType ().to <FuncPtr> ().getParamTypes ());
+	    	} else if (ret.is <LambdaProto> ()) 		    
+	    	    return this-> _context.validateLambdaProto (ret.to<LambdaProto> (), var.getType ().to <FuncPtr> ().getParamTypes ());		     	    
+	    }
 	    
-	    auto toRet = params [0];
-	    params.erase (params.begin ());
-	    return toRet;	    
+	    return ret;	    
 	}
 
 	generator::Generator CallVisitor::validateLambdaProto (const lexing::Word & location, const LambdaProto & proto, const std::vector <Generator> & rights, int & score, std::vector <std::string> & errors) {
 	    score = 0;
 	    std::vector <Generator> types;
+	    std::vector <Generator> params = rights;
 	    if (rights.size () != proto.getParameters ().size ()) return Generator::empty ();
 	    
 	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
@@ -184,24 +211,25 @@ namespace semantic {
 		    types.back ().to <Type> ().isRef (false);
 		} else {		    
 		    {
+			bool succeed = true;
 			TRY (
 			    this-> _context.verifyCompatibleType (
 				proto.getParameters () [it].to <Value> ().getType (),
-				rights [it].to <Value> ().getType ()
+				params [it].to <Value> ().getType ()
 			    );
 			) CATCH (ErrorCode::EXTERNAL) {
 			    GET_ERRORS_AND_CLEAR (msgs);
-			    errors = {};
-			    return Generator::empty ();
+			    succeed = false;
 			} FINALLY;
+			if (!succeed) return Generator::empty ();
 		    }
 		    
 		    {
 			TRY (		    
 			    this-> _context.verifyMemoryOwner (
-				rights [it].getLocation (),
+				params [it].getLocation (),
 				proto.getParameters () [it].to <Value> ().getType (),
-				rights [it],
+				params [it],
 				true
 			    );
 			    types.push_back (proto.getParameters () [it].to <Value> ().getType ());
@@ -218,10 +246,12 @@ namespace semantic {
 	    if (errors.size () != 0) return Generator::empty ();
 	    
 	    TRY (
-		auto frameProto = this-> _context.validateLambdaProto (proto, types);
-		match (frameProto) {
+		auto gen = this-> _context.validateLambdaProto (proto, types);
+		match (gen) {
 		    of (Addresser, addr, // Simple proto, no closure
 			return Call::init (location, addr.getWho ().to<FrameProto> ().getReturnType (), addr.getWho ().clone (), types, rights, {});
+		    ) else of (DelegateValue, dl,
+			return Call::init (location, dl.getFuncPtr ().to <Addresser> ().getWho ().to <FrameProto> ().getReturnType (), gen, types, rights, {});
 		    );
 		}
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -298,6 +328,7 @@ namespace semantic {
 	    std::vector <Generator> types;
 	    for (auto it : Ymir::r (0, funcType.getParamTypes ().size ())) {
 		{
+		    bool succeed = true;
 		    TRY (
 			this-> _context.verifyCompatibleType (
 			    funcType.getParamTypes () [it],
@@ -306,8 +337,60 @@ namespace semantic {
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors = {};
-			return Generator::empty ();
+			succeed = false;
 		    } FINALLY;
+		    
+		    if (!succeed) return Generator::empty ();
+		}
+		
+		{
+		    TRY (		    
+			this-> _context.verifyMemoryOwner (
+			    params [it].getLocation (),
+			    funcType.getParamTypes () [it],
+			    params [it],
+			    true
+			);
+			types.push_back (funcType.getParamTypes () [it]);
+			score += Scores::SCORE_TYPE;		   
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), it, funcType.getTypeName ()));
+		    } FINALLY;
+		}
+	    }
+
+	    if (errors.size () != 0) return Generator::empty ();	   
+	    return Call::init (location,
+			       funcType.getReturnType (),
+			       gen,
+			       types,
+			       params,
+			       {}
+	    );
+	}
+
+	generator::Generator CallVisitor::validateDelegate (const lexing::Word & location, const Generator & gen, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
+	    score = 0;
+	    std::vector <Generator> params = rights_;
+	    auto funcType = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <FuncPtr> ();
+	    if (params.size () != funcType.getParamTypes ().size ()) return Generator::empty ();
+	    std::vector <Generator> types;
+	    for (auto it : Ymir::r (0, funcType.getParamTypes ().size ())) {
+		{
+		    bool succeed = true;
+		    TRY (			
+			this-> _context.verifyCompatibleType (
+			    funcType.getParamTypes () [it],
+			    params [it].to <Value> ().getType ()
+			);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors = {};
+			succeed = false;
+		    } FINALLY;
+		    if (!succeed) return Generator::empty ();
 		}
 		
 		{
@@ -338,7 +421,7 @@ namespace semantic {
 	    );
 	}
 	
-	generator::Generator CallVisitor::validateMultSym (const lexing::Word & location, const MultSym & sym, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
+	generator::Generator CallVisitor::validateMultSym (const lexing::Word & location, const MultSym & sym, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {	    
 	    Generator final_gen (Generator::empty ());	    
 	    Generator used_gen (Generator::empty ());
 	    Generator proto_gen (Generator::empty ());
@@ -361,6 +444,17 @@ namespace semantic {
 			fromTempl = false;
 		    } else if (gen.isEmpty ()) {
 			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()));
+			insertCandidate (nbCand, errors, local_errors);
+		    }
+		} else if (it.is <Addresser> () && it.to<Addresser> ().getType ().is <FuncPtr> ()) { // Template specialition can create multsym on funcptr
+		    auto gen = validate (location, it.to <Addresser> ().getWho (), rights_, current, local_errors);
+		    if (!gen.isEmpty ()) nonTemplScores[current].push_back (gen);
+		    if (!gen.isEmpty () && (current > score || fromTempl)) {// simple function can take the token on 1. less scored 2. every templates
+			score = current;
+			final_gen = gen;
+			used_gen = it;
+			fromTempl = false;
+		    } else if (gen.isEmpty ()) {
 			insertCandidate (nbCand, errors, local_errors);
 		    }
 		} else if (it.is <TemplateRef> ()) {
@@ -397,7 +491,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (!templSym.isEmpty () && fromTempl) {
+	    if (!templSym.isEmpty () && fromTempl) {		
 		auto element_on_scores = templScores.find (score);
 		if (element_on_scores-> second.size () != 1) {
 		    std::string leftName = sym.getLocation ().str;
@@ -416,14 +510,16 @@ namespace semantic {
 
 		}
 		
+		std::vector <std::string> local_errors;
 		TRY (
 		    this-> _context.validateTemplateSymbol (templSym);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
 		    msgs.insert (msgs.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
-		    THROW (ErrorCode::EXTERNAL, msgs);
-		} FINALLY;
+		    errors = msgs;
+		    final_gen = Generator::empty ();
+		} FINALLY;		
 	    } else if (!final_gen.isEmpty ()) {
 		auto element_on_scores = nonTemplScores.find (score);
 		if (element_on_scores-> second.size () != 1) {
@@ -458,7 +554,6 @@ namespace semantic {
 		Generator value (Generator::empty ());
 		auto var = it.to<syntax::VarDecl> ();
 		volatile bool failure = false;
-		
 		this-> _context.enterForeign ();		    // We enter a foreign, the value of a parameter var has no local context
 		TRY (
 		    this-> _context.enterBlock (); // it has no context but it need a block to be validated
@@ -481,13 +576,10 @@ namespace semantic {
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.begin (), msgs.begin (), msgs.end ());
-		    return Generator::empty ();
-		} FINALLY;		     		
-
+		    failure = true;
+		} FINALLY;
+		
 		this-> _context.exitForeign (); // exiting the context to return to the context of the local frame
-		if (errors.size () != 0)
-		    THROW (ErrorCode::EXTERNAL, errors);
-
 		if (failure) return Generator::empty ();
 	    }
 
@@ -498,24 +590,22 @@ namespace semantic {
 
 	    auto templateVisitor = TemplateVisitor::init (this-> _context);
 	    std::vector <Generator> finalParams;
-	    Generator soluce (Generator::empty ());
-	    
+	    bool succeed = true;
 	    TRY (
 		// The solution is a function transformed generated by template specialisation (if it succeed)
-		soluce = templateVisitor.validateFromImplicit (ref, valueParams, typeParams, score, _sym, finalParams);
+		proto_gen = templateVisitor.validateFromImplicit (ref, valueParams, typeParams, score, _sym, finalParams);
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors.insert (errors.begin (), msgs.begin (), msgs.end ());
-		return Generator::empty ();
+		succeed = false;
 	    } FINALLY;
 	    
-	    if (!soluce.isEmpty ()) {
-		int _score;
-		proto_gen = soluce;	       
-		auto ret = validateFrameProto (location, soluce.to<FrameProto> (), finalParams, _score, errors);		
+	    if (succeed) {
+		int _score;	       
+		auto ret = validateFrameProto (location, proto_gen.to<FrameProto> (), finalParams, _score, errors);		
 		score += _score;		
 		return ret;
-	    }
+	    } 
 	    
 	    return Generator::empty ();	    
 	}							   

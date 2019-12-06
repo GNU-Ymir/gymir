@@ -306,6 +306,11 @@ namespace semantic {
 	    generic::Tree generateSliceValue (const SliceValue & rg);
 
 	    /**
+	     * \brief Transform a delegate value into gimple
+	     */
+	    generic::Tree generateDelegateValue (const DelegateValue & rg);
+
+	    /**
 	     * \brief Transform a slice value into gimple
 	     */
 	    generic::Tree generateCast (const Cast & cast);	    	    

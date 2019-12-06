@@ -57,63 +57,50 @@ namespace semantic {
 	
 	Generator BinaryVisitor::validateMathOperation (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {	
 	    std::vector <std::string> errors;
+	    Generator ret (Generator::empty ());
 	    TRY (
 
 		match (left.to<Value> ().getType ()) {
 		    of (Integer, integer ATTRIBUTE_UNUSED,
-			return validateMathIntLeft (op, expression, left, right);
+			ret = validateMathIntLeft (op, expression, left, right);
 		    );
 
 		    of (Float, f ATTRIBUTE_UNUSED,
-			return validateMathFloatLeft (op, expression, left, right);
+			ret = validateMathFloatLeft (op, expression, left, right);
 		    );
 
 		    of (Pointer, p ATTRIBUTE_UNUSED,
-			return validateMathPtrLeft (op, expression, left, right);
+			ret = validateMathPtrLeft (op, expression, left, right);
 		    );
 
 		    of (Array, a ATTRIBUTE_UNUSED,
-			auto ret = validateMathArray (op, expression, left, right);
-			if (!ret.isEmpty ()) return ret;
+			ret = validateMathArray (op, expression, left, right);
 		    );
 
 		    of (Slice, s ATTRIBUTE_UNUSED,
-			auto ret = validateMathSlice (op, expression, left, right);
-			if (!ret.isEmpty ()) return ret;
+			ret = validateMathSlice (op, expression, left, right);
 		    );
 		}
 		
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors = msgs;
-
-		TRY (
-
-		    // match (right.to <Value>.getType ()) {
-			
-		    // }		    
-
-		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-					expression.getLocation ().str,
-					left.to <Value> ().getType ().to <Type> ().getTypeName (),
-					right.to <Value> ().getType ().to <Type> ().getTypeName ()
-		    );
-		    
-		) CATCH (ErrorCode::EXTERNAL) {		    
-		} FINALLY;
 	    } FINALLY;
-	    
+	    	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
-	    } 
-
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
-	    );
+	    }
 	    
-	    return Generator::empty ();
+	    if (!ret.isEmpty ()) return ret;	    
+	    else {
+		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				    expression.getLocation ().str,
+				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
+		);
+	    
+		return Generator::empty ();
+	    }
 	}
 
 	Generator BinaryVisitor::validateMathIntLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
@@ -269,59 +256,47 @@ namespace semantic {
 	    auto left = this-> _context.validateValue (leftExp);
 	    auto right = this-> _context.validateValue (rightExp);
 
-	    
+	    Generator ret (Generator::empty ());
 	    std::vector <std::string> errors;
 	    TRY (
 
 		match (left.to<Value> ().getType ()) {
 		    of (Integer, integer ATTRIBUTE_UNUSED,
-			return validateLogicalIntLeft (op, expression, left, right);
+			ret = validateLogicalIntLeft (op, expression, left, right);
 		    );
 
 		    of (Bool, b ATTRIBUTE_UNUSED,
-			return validateLogicalBoolLeft (op, expression, left, right);
+			ret = validateLogicalBoolLeft (op, expression, left, right);
 		    );
 
 		    of (Float, f ATTRIBUTE_UNUSED,
-			return validateLogicalFloatLeft (op, expression, left, right);
+			ret = validateLogicalFloatLeft (op, expression, left, right);
 		    );
 
 		    of (Char, c ATTRIBUTE_UNUSED,
-			return validateLogicalCharLeft (op, expression, left, right);
+			ret = validateLogicalCharLeft (op, expression, left, right);
 		    );
 		}		
 		
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors = msgs;
-
-		TRY (
-
-		    // match (right.to <Value>.getType ()) {
-		    
-		    // }		    
-
-		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-					expression.getLocation ().str,
-					left.to <Value> ().getType ().to <Type> ().getTypeName (),
-					right.to <Value> ().getType ().to <Type> ().getTypeName ()
-		    );
-		    
-		) CATCH (ErrorCode::EXTERNAL) {		    
-		} FINALLY;
 	    } FINALLY;
 	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    } 
 
-	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
-	    );
-	    
-	    return Generator::empty ();	    
+	    if (!ret.isEmpty  ()) return ret;
+	    else {
+		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				    expression.getLocation ().str,
+				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
+		);
+		
+		return Generator::empty ();
+	    }
 	}
 
 	Generator BinaryVisitor::validateLogicalIntLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {

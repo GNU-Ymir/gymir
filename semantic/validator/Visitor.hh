@@ -399,6 +399,17 @@ namespace semantic {
 	    generator::Generator validateLambdaProto (const generator::LambdaProto & lmbd, const std::vector <generator::Generator> & types);
 
 	    /**
+	     * \brief Validate a mult sym proto, 
+	     */
+	    generator::Generator validateMultSymProto (const generator::Generator & sym, const std::vector <generator::Generator> & types);	    
+	    
+	    /**
+	     * \brief Create the closure value, that will be passed in the delegate value 
+	     * \brief A closure value is a copy or a ref to all the enclosed variable in a tuple value that is then copied to heap	     
+	     */
+	    generator::Generator validateClosureValue (const generator::Generator & closureType, bool isrefClosure, uint closureIndex);
+	    
+	    /**
 	     * \brief Validate a func ptr type (fn or dg) into generate type
 	     */
 	    generator::Generator validateFuncPtr (const syntax::FuncPtr & ptr);

@@ -58,7 +58,7 @@ namespace semantic {
 		else of (Range, r, result = mangleRangeT (r))
 		else of (Pointer, p, result = manglePointerT (p))
 		else of (FuncPtr, f, result = mangleFuncPtrT (f))
-		else of (Closure, c, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
+		else of (Closure, c ATTRIBUTE_UNUSED, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
 	    }
 
 	    if (result == "") {

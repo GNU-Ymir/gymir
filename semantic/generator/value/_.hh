@@ -20,7 +20,9 @@
 #include <ymir/semantic/generator/value/CharValue.hh>
 #include <ymir/semantic/generator/value/Conditional.hh>
 #include <ymir/semantic/generator/value/Copier.hh>
+#include <ymir/semantic/generator/value/DelegateValue.hh>
 #include <ymir/semantic/generator/value/Enum.hh>
+#include <ymir/semantic/generator/value/FakeValue.hh>
 #include <ymir/semantic/generator/value/Fixed.hh>
 #include <ymir/semantic/generator/value/FloatValue.hh>
 #include <ymir/semantic/generator/value/FrameProto.hh>

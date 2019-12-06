@@ -125,6 +125,22 @@ namespace semantic {
 	     * \brief it is always known at compile time
 	     */
 	    generator::Generator executeLamdaProto (const generator::Generator & addr);
+
+	    /**
+	     * \brief Execute template ref 
+	     * \brief it is known iif it refer to a function
+	     */
+	    generator::Generator executeTemplateRef (const generator::Generator & addr);
+
+	    /**
+	     * \brief Execute a mult sym, a mult sym can be known at compile time, if it refers to elements that are known at compile time
+	     */
+	    generator::Generator executeMultSym (const generator::Generator & addr);
+
+	    /**
+	     * \brief Return a funcptr on the prototype
+	     */
+	    generator::Generator executeFrameProto (const generator::Generator & proto);
 	    
 	};
 	
