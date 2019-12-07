@@ -6,32 +6,25 @@ namespace semantic {
 
     namespace generator {
 
-	/**
-	 * \struct Binary 
-	 * Transform a value to a reference to this value
-	 * The value must be a lvalue
-	 */
-	class Copier : public Value {
 
-	    Generator _who;
-
-	    bool _isAny;
+	class Throw : public Value {
+	    
+	    Generator _value;
 
 	private :
 
 	    friend Generator;
 	    
-	    Copier ();
+	    Throw ();
 
-	    Copier (const lexing::Word & loc, const Generator & type, const Generator & who, bool isAny = false);
+	    Throw (const lexing::Word & loc, const Generator & value);
 
 	public :
 
 	    /**
 	     * \brief Generate a new Binary on int
-	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, bool isAny = false);
+	    static Generator init (const lexing::Word & loc, const Generator & value);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -49,13 +42,12 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;	    
 
 	    /** 
-	     * \return the left operand of the operation
+	     * \return the value that will be thrown
 	     */
-	    const Generator & getWho () const;
-
-	    bool isAny () const;
-
-	    std::string prettyString () const override;
+	    const Generator & getValue () const;
+	    
+	    std::string prettyString () const override;	    
+	    
 	};
 	
     }

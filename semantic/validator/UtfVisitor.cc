@@ -114,15 +114,15 @@ namespace semantic {
 	}
 		
 	void UtfVisitor::escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, OutBuffer & buf, const std::string & size) {
-	    auto fst = content.find_first_of ('{');
-	    auto scd = content.find_first_of ('}');
+	    auto fst = content.substr (it).find_first_of ('{');
+	    auto scd = content.substr (it).find_first_of ('}');
 	    if (fst == std::string::npos || scd == std::string::npos)  {
 		auto real_loc = loc;
 		real_loc.column += it;
 		Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
 	    }
 
-	    auto inner = content.substr (fst + 1, scd - fst - 1);
+	    auto inner = content.substr (it).substr (fst + 1, scd - fst - 1);
 		    
 	    auto fixed = syntax::Fixed::init (lexing::Word {loc, inner}, lexing::Word {loc, size});
 	    auto gen = this-> _context.validateFixed (fixed.to<syntax::Fixed> (), 16);
@@ -133,8 +133,8 @@ namespace semantic {
 	    getUnicodeChar (nb, ui, chars);
 	    for (int i = 0 ; i < nb; i++)			
 		buf.write (chars[i]);
-		    
-	    it = scd + 1;
+
+	    it = it + scd;
 
 	}
 	       		

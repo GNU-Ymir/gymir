@@ -614,6 +614,10 @@ namespace generic {
     void Tree::asmName (const std::string & name) {
 	SET_DECL_ASSEMBLER_NAME (this-> _t, get_identifier (name.c_str ()));
     }
+
+    std::string Tree::funcDeclName () const {
+	return std::string (IDENTIFIER_POINTER( DECL_NAME (this-> _t)));	    
+    }
     
     bool Tree::isPublic () const {
 	return TREE_PUBLIC (this-> _t) == 1;

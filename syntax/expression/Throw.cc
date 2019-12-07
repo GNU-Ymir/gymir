@@ -33,5 +33,9 @@ namespace syntax {
 	stream.writefln ("%*<Throw> ", i, '\t');
 	this-> _value.treePrint (stream, i + 1);
     }
+
+    const Expression & Throw::getValue () const {
+	return this-> _value;
+    }
     
 }

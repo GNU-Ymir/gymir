@@ -6,11 +6,6 @@ namespace semantic {
 
     namespace generator {
 
-	/**
-	 * \struct Binary 
-	 * Transform a value to a reference to this value
-	 * The value must be a lvalue
-	 */
 	class Return : public Value {
 
 	    Generator _frameType;

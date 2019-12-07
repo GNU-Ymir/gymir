@@ -12,7 +12,8 @@ namespace global {
 			 RUN_MAIN_DEBUG,
 			 DUPL_SLICE,
 			 ARRAY_ALLOC,
-			 DUPL_ANY
+			 DUPL_ANY,
+			 THROW
     );
     
 }

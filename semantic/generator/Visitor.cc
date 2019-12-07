@@ -593,6 +593,10 @@ namespace semantic {
 
 		else of (UniqValue, uv,
 		     return generateUniqValue (uv);
+		)
+
+		else of (Throw, th,
+		    return generateThrow (th);
 		);
 	    }
 
@@ -1234,6 +1238,24 @@ namespace semantic {
 		);
 	    }
 	}
+
+	generic::Tree Visitor::generateThrow (const Throw & thr) {
+	    auto value = generateValue (thr.getValue ());	    
+	    auto info = generateTypeInfo (thr.getValue ().to <Value> ().getType ().to <Type> ());
+	    auto file = thr.getLocation ().getFile ();
+	    auto lit = Tree::buildStringLiteral (thr.getLocation (), file.c_str (), file.length () + 1, 8);
+	    auto context = getCurrentContext ().funcDeclName ();
+	    auto func = Tree::buildStringLiteral (thr.getLocation (), context.c_str (), context.length () + 1, 8);
+	    
+	    auto line = Tree::buildIntCst (thr.getLocation (), (ulong) thr.getLocation ().line, Tree::intType (32, false));
+
+	    return Tree::buildCall (
+		thr.getLocation (),
+		Tree::voidType (),
+		global::CoreNames::get (THROW),
+		{lit, func, line, info, value}
+	    );
+	}
 	
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {
 	    auto type = generateType (val.getType ());
@@ -1346,33 +1368,35 @@ namespace semantic {
 	
 	generic::Tree Visitor::generateCopier (const Copier & copy) {
 	    auto inner = generateValue (copy.getWho ());
-	    if (copy.getType ().is <Array> ())
-		return inner;
+	    if (!copy.isAny ()) {
+		if (copy.getType ().is <Array> ())
+		    return inner;
 
-	    if (copy.getType ().is <Slice> ()) {
-		ulong size = generateType (copy.getType ().to <Slice> ().getInners () [0]).getSize ();
-		return Tree::buildCall (
-		    copy.getLocation (),
-		    generateType (copy.getType ()),
-		    global::CoreNames::get (DUPL_SLICE),
-		    {inner, Tree::buildSizeCst (size)}
-		);
+		if (copy.getType ().is <Slice> ()) {
+		    ulong size = generateType (copy.getType ().to <Slice> ().getInners () [0]).getSize ();
+		    return Tree::buildCall (
+			copy.getLocation (),
+			generateType (copy.getType ()),
+			global::CoreNames::get (DUPL_SLICE),
+			{inner, Tree::buildSizeCst (size)}
+		    );
+		}
 	    }
 
-	    if (copy.getWho ().to <Value> ().getType ().is <Tuple> ()) { // Closure
-		auto innerType = generateType (copy.getWho ().to <Value> ().getType ());
-		auto ptrInnerType = Tree::pointerType (innerType);
-		inner = 	    Tree::buildAddress (copy.getLocation (), inner, ptrInnerType);
-		return Tree::buildCall (
-		    copy.getLocation (),
-		    generateType (copy.getType ()),
-		    global::CoreNames::get (DUPL_ANY),
-		    {inner, Tree::buildSizeCst (innerType.getSize ())}
-		);
-	    }
-	    
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Tree::empty ();
+	    // Any type
+	    auto innerType = generateType (copy.getWho ().to <Value> ().getType ());
+	    auto ptrInnerType = Tree::pointerType (innerType);
+	    inner =  Tree::buildAddress (copy.getLocation (), inner, ptrInnerType);
+	    return Tree::buildCall (
+		copy.getLocation (),
+		generateType (copy.getType ()),
+		global::CoreNames::get (DUPL_ANY),
+		{inner, Tree::buildSizeCst (innerType.getSize ())}
+	    );
+	}
+
+	generic::Tree Visitor::generateTypeInfo (const Type & type) {
+	    return Tree::buildPtrCst (type.getLocation (), 0);
 	}
 
 	generic::Tree Visitor::generateAliaser (const Aliaser & als) {

@@ -194,6 +194,11 @@ namespace semantic {
 	    generator::Generator validateTemplateChecker (const syntax::TemplateChecker & tmpChecker);
 
 	    /**
+	     * \brief Validate a throw expression
+	     */
+	    generator::Generator validateThrow (const syntax::Throw & thr);
+	    
+	    /**
 	     * \brief Validate a template test, a template test must be executed from the context of the template
 	     * \param context the context of the template definition
 	     * \param expr the test of the template

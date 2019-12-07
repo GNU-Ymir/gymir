@@ -763,6 +763,10 @@ namespace semantic {
 		of (syntax::TemplateChecker, ch,
 		    return validateTemplateChecker (ch);
 		);
+
+		of (syntax::Throw, thr,
+		    return validateThrow (thr);
+		);
 	    }
 
 	    OutBuffer buf;
@@ -1665,6 +1669,14 @@ namespace semantic {
 	    } FINALLY;
 
 	    return BoolValue::init (check.getLocation (), Bool::init (check.getLocation ()), succeed);
+	}
+
+	Generator Visitor::validateThrow (const syntax::Throw & thr) {
+	    auto inner = this-> validateValue (thr.getValue ());
+	    auto type = inner.to <Value> ().getType ();
+	    type.to <Type> ().isRef (true);
+	    auto value = Copier::init (thr.getLocation (), type, inner, true);
+	    return Throw::init (thr.getLocation (), value);
 	}
 	
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {
@@ -2926,6 +2938,7 @@ namespace semantic {
 		of (generator::VarDecl, vd ATTRIBUTE_UNUSED, return false;);
 		of (Return, rt ATTRIBUTE_UNUSED, return false;);
 		of (Set, set ATTRIBUTE_UNUSED, return false;);
+		of (Throw, th ATTRIBUTE_UNUSED, return false;);
 	    }
 	    return true;
 	}	

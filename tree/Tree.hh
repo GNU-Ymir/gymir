@@ -527,6 +527,12 @@ namespace generic {
 	void asmName (const std::string & name);
 
 	/**
+	 * \return the name of the function decl
+	 * \warning this is assumed to be a funcdecl
+	 */
+	std::string funcDeclName () const;
+	
+	/**
 	 * \return Is this declaration public ?
 	 */
 	bool isPublic () const;

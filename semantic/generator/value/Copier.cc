@@ -9,13 +9,14 @@ namespace semantic {
 	    _who (Generator::empty ())
 	{}
 
-	Copier::Copier (const lexing::Word & loc, const Generator & type, const Generator & who) :
+	Copier::Copier (const lexing::Word & loc, const Generator & type, const Generator & who, bool isAny) :
 	    Value (loc, type),
-	    _who (who)
+	    _who (who),
+	    _isAny (isAny)
 	{}
 	
-	Generator Copier::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new Copier (loc, type, who)};
+	Generator Copier::init (const lexing::Word & loc, const Generator & type, const Generator & who, bool isAny) {
+	    return Generator {new Copier (loc, type, who, isAny)};
 	}
     
 	Generator Copier::clone () const {
@@ -39,6 +40,10 @@ namespace semantic {
 	    return this-> _who;
 	}
 
+	bool Copier::isAny () const {
+	    return this-> _isAny;
+	}
+	
 	std::string Copier::prettyString () const {
 	    return Ymir::format ("copy %", this-> _who.prettyString ());
 	}

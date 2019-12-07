@@ -164,6 +164,16 @@ namespace semantic {
 	     * \brief Transform a float value into gimple
 	     */
 	    generic::Tree generateChar (const CharValue & f);
+
+	    /**
+	     * \brief Transform a throw into gimple
+	     */
+	    generic::Tree generateThrow (const Throw & thr);
+
+	    /**
+	     * \brief Generate the type info of the type type
+	     */
+	    generic::Tree generateTypeInfo (const Type & type);
 	    
 	    /**
 	     * \brief Transform an array value into gimple
