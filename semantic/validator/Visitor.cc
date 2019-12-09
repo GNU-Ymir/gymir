@@ -1,4 +1,4 @@
-#include <ymir/semantic/validator/Visitor.hh>
+ #include <ymir/semantic/validator/Visitor.hh>
 #include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/semantic/validator/BracketVisitor.hh>
 #include <ymir/semantic/validator/CallVisitor.hh>
@@ -14,8 +14,11 @@
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/map.hh>
+#include <ymir/global/Core.hh>
 #include <string>
 #include <algorithm>
+
+using namespace global;
 
 namespace semantic {
 
@@ -767,6 +770,7 @@ namespace semantic {
 		of (syntax::Throw, thr,
 		    return validateThrow (thr);
 		);
+
 	    }
 
 	    OutBuffer buf;
@@ -797,29 +801,43 @@ namespace semantic {
 		    decl = Symbol::empty ();
 		} FINALLY;
 	    }
-	    
+
+	    std::vector <Generator> onExit;
+	    std::vector <Generator> onSuccess;
 	    // i is not really volatile, but the compiler seems to want it to be (due to TRY CATCHS)
 	    for (volatile int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
 		TRY (
-		    if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
-			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
-		    }
-		    
-		    auto value = validateValueNoReachable (block.getContent () [i]);
+		    if (block.getContent ()[i].is <syntax::Scope> ()) {
+			auto scope = block.getContent ()[i].to <syntax::Scope> ();
+			if (scope.isExit ()) {
+			    onExit.push_back (validateValue (scope.getContent()));
+			    if (onExit.back ().to <Value> ().isReturner ()) returner = true;
+			    if (onExit.back ().to <Value> ().isBreaker ()) breaker = true;
+			} else if (scope.isSuccess ()) {
+			    onSuccess.push_back (validateValue (scope.getContent ()));
+			    if (onSuccess.back ().to <Value> ().isReturner ()) returner = true;
+			    if (onSuccess.back ().to <Value> ().isBreaker ()) breaker = true;
+			}
+		    } else {
+			if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
+			    Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
+			}
+			auto value = validateValueNoReachable (block.getContent () [i]);
 
-		    if (i != (int) block.getContent ().size () - 1 && isUseless (value))
-			// if the expression is not the last, it cannot be a useless one, as it is not use as the value of the block
-			// So, if it is a useless expression, that perform no value change, or anything, we throw an error
-			Ymir::Error::warn (block.getContent ()[i].getLocation (), ExternalError::get(USELESS_EXPR));
+			if (i != (int) block.getContent ().size () - 1 && isUseless (value))
+			    // if the expression is not the last, it cannot be a useless one, as it is not use as the value of the block
+			    // So, if it is a useless expression, that perform no value change, or anything, we throw an error
+			    Ymir::Error::warn (block.getContent ()[i].getLocation (), ExternalError::get(USELESS_EXPR));
 		    
-		    if (value.to <Value> ().isReturner ()) returner = true;
-		    if (value.to <Value> ().isBreaker ()) breaker = true;
-		    type = value.to <Value> ().getType ();
-		    type.to <Type> ().isRef (false);
-		    if (!value.is<Aliaser> () && !value.is<Referencer> ())
-			type.to <Type> ().isMutable (false);
+			if (value.to <Value> ().isReturner ()) returner = true;
+			if (value.to <Value> ().isBreaker ()) breaker = true;
+			type = value.to <Value> ().getType ();
+			type.to <Type> ().isRef (false);
+			if (!value.is<Aliaser> () && !value.is<Referencer> ())
+			    type.to <Type> ().isMutable (false);
 		    
-		    values.push_back (value);
+			values.push_back (value);
+		    }
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
@@ -847,11 +865,17 @@ namespace semantic {
 	    }
 	    
 	    else if (type.is<Void> () && values.size () != 0 && !values.back ().is <None> () && isUseless (values.back ()))
-		Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID));
-		    
+		Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID));	    
+	    
 	    auto ret = Block::init (block.getLocation (), type, values);
 	    ret.to <Value> ().isBreaker (breaker);
 	    ret.to <Value> ().isReturner (returner);
+	    
+	    if (onSuccess.size () != 0) ret = SuccessScope::init (block.getLocation (), type, ret, onSuccess);
+	    if (onExit.size () != 0) {
+		auto jmp_buf_type = validateType (syntax::Var::init ({onExit [0].getLocation (), global::CoreNames::get (JMP_BUF_TYPE)}));
+		return ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit);
+	    }
 	    return ret;
 	}	
 
@@ -2728,7 +2752,7 @@ namespace semantic {
 		// Verify copy ownership
 		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional
 		if (type.to<Type> ().isComplex () && !gen.is <Copier> ()) {
-		    if (!(gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is<Aliaser> () || gen.is<Referencer> ())
+		    if (!(gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is<Aliaser> () || gen.is<Referencer> () || gen.is<ExitScope> () || gen.is <SuccessScope> ())
 			|| !(type.to<Type> ().equals (gen.to <Value> ().getType ()))) {
 			if (!gen.is <ArrayValue> () || !gen.to<Value> ().getType ().to <Type> ().getInners ()[0].is<Void> ()) { // If it is a [void] value, no need to check mutability
 			    auto llevel = type.to <Type> ().mutabilityLevel (); // We can make an implicit alias only if we assure that the value won't be modified
@@ -2939,6 +2963,7 @@ namespace semantic {
 		of (Return, rt ATTRIBUTE_UNUSED, return false;);
 		of (Set, set ATTRIBUTE_UNUSED, return false;);
 		of (Throw, th ATTRIBUTE_UNUSED, return false;);
+		of (ExitScope, ex ATTRIBUTE_UNUSED, return false;);
 	    }
 	    return true;
 	}	

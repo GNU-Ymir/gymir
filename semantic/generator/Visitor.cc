@@ -597,6 +597,14 @@ namespace semantic {
 
 		else of (Throw, th,
 		    return generateThrow (th);
+		)
+
+		else of (ExitScope, ex,
+		    return generateExitScope (ex);
+		)
+
+		else of (SuccessScope, succ,
+		    return generateSuccessScope (succ);
 		);
 	    }
 
@@ -1255,6 +1263,83 @@ namespace semantic {
 		global::CoreNames::get (THROW),
 		{lit, func, line, info, value}
 	    );
+	}
+
+	generic::Tree Visitor::generateExitScope (const ExitScope & scope) {
+	    TreeStmtList list (TreeStmtList::init ());
+	    enterBlock ();
+	    auto r_jmp = Tree::varDecl (scope.getLocation (), "#buf", generateType (scope.getJmpbufType ()));
+	    r_jmp.setDeclContext (getCurrentContext ());
+	    stackVarDeclChain.back ().append (r_jmp);
+	    	    
+	    auto i_type = Integer::init (scope.getLocation (), 32, false);	    
+	    auto r_res = Tree::varDecl (scope.getLocation (), "#ref", generateType (i_type));
+	    r_res.setDeclContext (getCurrentContext ());
+	    stackVarDeclChain.back ().append (r_res);
+	    
+	    list.append (r_jmp);
+	    list.append (r_res);
+	    list.append (
+	    	Tree::affect (
+	    	    scope.getLocation (),
+	    	    r_res,
+	    	    Tree::buildCall (scope.getLocation (), generateType (i_type), global::CoreNames::get (SET_JMP),  {Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ()))})
+	    	)
+	    ); // res = setjmp (buf);
+
+	    auto left = generateValue (scope.getWho ());
+	    Tree var (Tree::empty ());
+	    if (!scope.getType ().is <Void> ()) {
+		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getType ()));
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
+		left = Tree::affect (scope.getLocation (), var, left);
+	    }
+
+	    TreeStmtList right_part (TreeStmtList::init ());
+	    for (auto & it : scope.getValues ())
+		right_part.append (generateValue (it));	    
+	    right_part.append (Tree::buildCall (scope.getLocation (), Tree::voidType(), global::CoreNames::get (RETHROW), {}));
+	    auto right = right_part.toTree ();
+	    	    
+	    auto test = Tree::buildCall (
+		scope.getLocation (),
+		Tree::boolType (),
+		global::CoreNames::get (EXCEPT_PUSH),
+		{Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ())), r_res}
+	    );	    
+
+	    auto cond = Tree::conditional (scope.getLocation (), getCurrentContext (), test, left, right);
+	    list.append (cond);
+	    for (auto & it : scope.getValues ())
+		list.append (generateValue (it));
+	    
+	    auto binding = quitBlock (scope.getLocation (), list.toTree ());
+	    if (!scope.getType ().is <Void> ()) {
+		return Tree::compound (scope.getLocation (), var, binding.bind_expr);
+	    } else return binding.bind_expr;
+	}
+
+	generic::Tree Visitor::generateSuccessScope (const SuccessScope & scope) {
+	    TreeStmtList list (TreeStmtList::init ());
+	    enterBlock ();
+	    auto left = generateValue (scope.getWho ());
+	    Tree var (Tree::empty ());
+	    if (!scope.getType ().is<Void> ()) {
+		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getType ()));
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
+		left = Tree::affect (scope.getLocation (), var, left);
+	    }
+	    
+	    list.append (left);
+	    for (auto & it : scope.getValues ())
+		list.append (generateValue (it));
+	    
+	    auto binding = quitBlock (scope.getLocation (), list.toTree ());
+	    if (!scope.getType ().is <Void> ()) {
+		return Tree::compound (scope.getLocation (), var, binding.bind_expr);
+	    } else return binding.bind_expr;
 	}
 	
 	generic::Tree Visitor::generateArrayValue (const ArrayValue & val) {

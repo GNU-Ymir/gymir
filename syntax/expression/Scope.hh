@@ -38,7 +38,13 @@ namespace syntax {
 
 	virtual bool isOf (const IExpression * type) const override;
 
+	bool isExit () const;
+
+	bool isSuccess () const;
+
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+	const Expression & getContent () const;
 	
     };    
 

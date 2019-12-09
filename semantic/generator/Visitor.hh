@@ -171,6 +171,16 @@ namespace semantic {
 	    generic::Tree generateThrow (const Throw & thr);
 
 	    /**
+	     * \brief Transform an exit scope into gimple
+	     */
+	    generic::Tree generateExitScope (const ExitScope & scope);
+	    
+	    /**
+	     * \brief Transform an success scope into gimple
+	     */
+	    generic::Tree generateSuccessScope (const SuccessScope & scope);
+	    
+	    /**
 	     * \brief Generate the type info of the type type
 	     */
 	    generic::Tree generateTypeInfo (const Type & type);

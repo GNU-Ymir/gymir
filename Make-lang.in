@@ -103,6 +103,8 @@ ymir_OBJS = \
 	ymir/generator_BinaryInt.o \
 	ymir/generator_BinaryPtr.o \
 	ymir/generator_Block.o \
+	ymir/generator_SuccessScope.o \
+	ymir/generator_ExitScope.o \
 	ymir/generator_Bool.o \
 	ymir/generator_BoolValue.o \
 	ymir/generator_Break.o \

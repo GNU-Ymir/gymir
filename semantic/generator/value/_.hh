@@ -22,6 +22,7 @@
 #include <ymir/semantic/generator/value/Copier.hh>
 #include <ymir/semantic/generator/value/DelegateValue.hh>
 #include <ymir/semantic/generator/value/Enum.hh>
+#include <ymir/semantic/generator/value/ExitScope.hh>
 #include <ymir/semantic/generator/value/FakeValue.hh>
 #include <ymir/semantic/generator/value/Fixed.hh>
 #include <ymir/semantic/generator/value/FloatValue.hh>
@@ -47,6 +48,7 @@
 #include <ymir/semantic/generator/value/Struct.hh>
 #include <ymir/semantic/generator/value/StructAccess.hh>
 #include <ymir/semantic/generator/value/StructCst.hh>
+#include <ymir/semantic/generator/value/SuccessScope.hh>
 #include <ymir/semantic/generator/value/TemplateRef.hh>
 #include <ymir/semantic/generator/value/TemplateSyntaxWrapper.hh>
 #include <ymir/semantic/generator/value/TemplateSyntaxList.hh>

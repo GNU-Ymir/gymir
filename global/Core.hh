@@ -13,7 +13,11 @@ namespace global {
 			 DUPL_SLICE,
 			 ARRAY_ALLOC,
 			 DUPL_ANY,
-			 THROW
+			 THROW,
+			 SET_JMP,
+			 RETHROW,
+			 EXCEPT_PUSH,
+			 JMP_BUF_TYPE,
     );
     
 }

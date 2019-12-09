@@ -961,7 +961,7 @@ namespace syntax {
     Expression Visitor::visitScope () {
 	auto location = this-> _lex.next ();
 	auto name = visitIdentifier ();
-	this-> _lex.next ({Token::DARROW});
+	this-> _lex.consumeIf ({Token::DARROW}); // Arrow is not mandatory
 	if (name == Keys::FAILURE) {
 	    auto next = this-> _lex.next ();
 	    if (next != Token::LACC || !canVisitSingleVarDeclaration (true, false)) {

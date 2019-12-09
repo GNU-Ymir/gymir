@@ -1,4 +1,5 @@
 #include <ymir/syntax/expression/Scope.hh>
+#include <ymir/syntax/visitor/Keys.hh>
 
 namespace syntax {
 
@@ -29,11 +30,23 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    bool Scope::isExit () const {
+	return this-> getLocation ().str == Keys::EXIT;
+    }
+
+    bool Scope::isSuccess () const {
+	return this-> getLocation ().str == Keys::SUCCESS;
+    }
+
     void Scope::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Scope> ", i, '\t');
 	stream.writeln (this-> getLocation ());
 	this-> _content.treePrint (stream, i + 1);
     }    
+
+    const Expression& Scope::getContent () const {
+	return this-> _content;
+    }
     
     ScopeFailure::ScopeFailure (const lexing::Word & loc) :
 	Scope (loc)

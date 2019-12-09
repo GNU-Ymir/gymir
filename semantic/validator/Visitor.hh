@@ -197,6 +197,7 @@ namespace semantic {
 	     * \brief Validate a throw expression
 	     */
 	    generator::Generator validateThrow (const syntax::Throw & thr);
+
 	    
 	    /**
 	     * \brief Validate a template test, a template test must be executed from the context of the template
