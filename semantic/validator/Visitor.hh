@@ -37,6 +37,9 @@ namespace semantic {
 		MOVE = 2
 	    };
 
+	    static std::string TYPE_INFO;
+	    static std::string TYPE_IDS;
+
 	    /** List of referent for symbol access and insertion */
 	    std::list <Symbol> _referent;	
 
@@ -198,6 +201,15 @@ namespace semantic {
 	     */
 	    generator::Generator validateThrow (const syntax::Throw & thr);
 
+	    /**
+	     * \return the typeinfo of the type type
+	     */
+	    generator::Generator validateTypeInfo (const lexing::Word & loc, const generator::Generator & type);
+
+	    /**
+	     * \return the name of the field in TypeIDs for the type type
+	     */
+	    static std::string typeInfoName (const generator::Generator & type);
 	    
 	    /**
 	     * \brief Validate a template test, a template test must be executed from the context of the template
@@ -233,6 +245,14 @@ namespace semantic {
 	     */
 	    generator::Generator validateBlock (const syntax::Block & block);
 
+	    /**
+	     * \brief Validate a catch block
+	     * \brief return by ref the vardecls and actions to perform in case of catch
+	     * \brief All the actions must return the type type (if type !is void)
+	     */
+	    void validateCatchers (const syntax::Expression & catcher, std::vector <generator::Generator> & varDecl, std::vector <generator::Generator> & typeInfos, std::vector <generator::Generator> & actions, const generator::Generator& type);
+	    
+	    
 	    /**
 	     * \brief Validate an inner declaration of a module
 	     * \param decl the module to declare, and validate

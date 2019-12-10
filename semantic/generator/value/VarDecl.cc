@@ -4,6 +4,8 @@
 namespace semantic {
     namespace generator {
 
+	uint VarDecl::__lastId__ = 0;
+
 	VarDecl::VarDecl () :
 	    Value (lexing::Word::eof (), Generator::empty ()),
 	    _name (""),
@@ -18,7 +20,10 @@ namespace semantic {
 	    _type (type),
 	    _value (value),
 	    _isMutable (isMutable)
-	{}
+	{
+	    this-> _varRefId = __lastId__;
+	    __lastId__ += 1;
+	}
 
 	Generator VarDecl::init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value, bool isMutable) {
 	    return Generator {new (Z0) VarDecl (location, name, type, value, isMutable)};
@@ -62,7 +67,11 @@ namespace semantic {
 
 	void VarDecl::isAutoInit (bool is) {
 	    this-> _autoInit = is;
-	}	
+	}
+
+	uint VarDecl::getUniqId () const {
+	    return _varRefId;
+	}
 	
 	std::string VarDecl::prettyString () const {
 	    auto val = this-> _value.prettyString ();

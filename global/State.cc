@@ -51,6 +51,14 @@ namespace global {
 	return this-> _isDebug;
     }
 
+    void State::activateStandalone (bool stand) {
+	this-> _isStandalone = stand;
+    }
+    
+    bool State::isStandalone () const {
+	return this-> _isStandalone;
+    }
+
     void State::setPrefix (const std::string & path) {
 	this-> _prefixPath = path;
 	this-> _includeDir.emplace (Ymir::Path::build (path, __includeInPrefix__).toString ());	

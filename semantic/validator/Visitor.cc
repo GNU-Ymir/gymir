@@ -26,6 +26,9 @@ namespace semantic {
 
 	using namespace generator;
 	using namespace Ymir;       
+
+	std::string Visitor::TYPE_INFO = "TypeInfo";
+	std::string Visitor::TYPE_IDS = "TypeIDs";
 	
 	Visitor::Visitor ()
 	{
@@ -570,6 +573,7 @@ namespace semantic {
 		    })
 		else of (Pointer, p ATTRIBUTE_UNUSED, // No forward problem on pointer types
 		)
+		else of (Slice, s ATTRIBUTE_UNUSED, ) // No problem for slice, their size can be 0			 
 		else of (Type, t, {
 			if (t.isComplex ()) {
 			    for (auto & it : t.getInners ()) verifyRecursivity (loc, it, sym);
@@ -804,6 +808,12 @@ namespace semantic {
 
 	    std::vector <Generator> onExit;
 	    std::vector <Generator> onSuccess;
+	    std::vector <Generator> onFailure;
+	    std::vector <Generator> catchVars;
+	    std::vector <Generator> catchInfos;
+	    std::vector <Generator> catchActions;
+	    std::vector <syntax::Expression> toValidate;
+	    
 	    // i is not really volatile, but the compiler seems to want it to be (due to TRY CATCHS)
 	    for (volatile int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
 		TRY (
@@ -817,22 +827,27 @@ namespace semantic {
 			    onSuccess.push_back (validateValue (scope.getContent ()));
 			    if (onSuccess.back ().to <Value> ().isReturner ()) returner = true;
 			    if (onSuccess.back ().to <Value> ().isBreaker ()) breaker = true;
+			} else if (scope.isFailure ()) {
+			    onFailure.push_back (validateValue (scope.getContent ()));
+			} else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().str);
+			
+			if (i == (int) block.getContent ().size () - 1) { // Add Unit, scope guard does not have values
+			    values.push_back (None::init (scope.getLocation ()));
+			    type = Void::init (scope.getLocation ());
 			}
+		    } else if (block.getContent ()[i].is <syntax::Catch> ()) {
+			toValidate.push_back (block.getContent ()[i]);
 		    } else {
 			if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
 			    Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
 			}
 			auto value = validateValueNoReachable (block.getContent () [i]);
-
-			if (i != (int) block.getContent ().size () - 1 && isUseless (value))
-			    // if the expression is not the last, it cannot be a useless one, as it is not use as the value of the block
-			    // So, if it is a useless expression, that perform no value change, or anything, we throw an error
-			    Ymir::Error::warn (block.getContent ()[i].getLocation (), ExternalError::get(USELESS_EXPR));
 		    
 			if (value.to <Value> ().isReturner ()) returner = true;
 			if (value.to <Value> ().isBreaker ()) breaker = true;
 			type = value.to <Value> ().getType ();
 			type.to <Type> ().isRef (false);
+			type.changeLocation (block.getContent ()[i].getLocation ());
 			if (!value.is<Aliaser> () && !value.is<Referencer> ())
 			    type.to <Type> ().isMutable (false);
 		    
@@ -844,6 +859,23 @@ namespace semantic {
 		} FINALLY;
 	    }
 
+	    if (errors.size () == 0) {
+		for (auto it : Ymir::r (0, values.size () - 1))
+		    if (isUseless (values[it]))
+		    // if the expression is not the last, it cannot be a useless one, as it is not use as the value of the block
+		    // So, if it is a useless expression, that perform no value change, or anything, we throw an error
+			Ymir::Error::warn (values [it].getLocation (), ExternalError::get(USELESS_EXPR));
+		
+		for (auto & it : toValidate) { // Validation of the catchers
+		    TRY (
+			validateCatchers (it, catchVars, catchInfos, catchActions, type);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+		    } FINALLY;
+		}
+	    }
+	    
 	    {
 		TRY (
 		    if (!decl.isEmpty ()) {
@@ -872,12 +904,75 @@ namespace semantic {
 	    ret.to <Value> ().isReturner (returner);
 	    
 	    if (onSuccess.size () != 0) ret = SuccessScope::init (block.getLocation (), type, ret, onSuccess);
-	    if (onExit.size () != 0) {
-		auto jmp_buf_type = validateType (syntax::Var::init ({onExit [0].getLocation (), global::CoreNames::get (JMP_BUF_TYPE)}));
-		return ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit);
+	    if (onExit.size () != 0 || onFailure.size () != 0 || catchVars.size () != 0) {
+		auto jmp_buf_type = validateType (syntax::Var::init ({block.getLocation (), global::CoreNames::get (JMP_BUF_TYPE)}));
+		onFailure.insert (onFailure.end (), onExit.begin (), onExit.end ());
+		return ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit, onFailure, catchVars, catchInfos, catchActions);
 	    }
 	    return ret;
-	}	
+	}
+
+	void Visitor::validateCatchers (const syntax::Expression & catcher, std::vector <Generator> & varDecl, std::vector <Generator> & typeInfos, std::vector <Generator> & actions, const generator::Generator& typeBlock) {
+	    auto & vars = catcher.to <syntax::Catch> ().getVars ();
+	    auto & syntaxActions = catcher.to <syntax::Catch> ().getActions ();
+	    std::vector <std::string> errors;
+	    for (auto it : Ymir::r (0, vars.size ())) {
+		enterBlock ();
+		{
+		    TRY ( 
+			auto var = validateVarDeclValue (vars [it].to <syntax::VarDecl> (), false);
+			auto type = var.to <generator::VarDecl> ().getVarType ();
+			auto simpleType = type;
+			type.to <Type> ().isRef (true);
+			type.to <Type> ().isMutable (false);
+			simpleType.to <Type> ().isRef (false);
+			
+			var = generator::VarDecl::init (var.getLocation (), var.getName (), type, Generator::empty (), false);
+			if (var.getName () != Keys::UNDER)
+			    insertLocal (var.getName (), var);
+			
+			if (!var.to <generator::VarDecl> ().getVarType ().isEmpty ()) {
+			    for (auto & j : varDecl) {
+				if (type.to <Type> ().isCompatible (j.to <generator::VarDecl> ().getVarType ())) {
+				    auto note = Ymir::Error::createNote (j.getLocation ());
+				    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (CATCH_MULTIPLE_TIME), type.prettyString ());
+				}		    
+			    }			    
+			    typeInfos.push_back (validateTypeInfo (var.getLocation (), simpleType));
+			} else {
+			    for (auto & j : varDecl) {
+				if (j.to <generator::VarDecl> ().getName () == Keys::UNDER) {
+				    auto note = Ymir::Error::createNote (j.getLocation ());
+				    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (CATCH_MULTIPLE_TIME), "any");
+				}
+			    }
+			    typeInfos.push_back (None::init (catcher.getLocation ()));
+			}									 
+			varDecl.push_back (var);
+			auto value = validateValue (syntaxActions [it]);
+			if (!type.is<Void> ()) {
+			    verifyMemoryOwner (syntaxActions [it].getLocation (), typeBlock, value, false);
+			}
+			actions.push_back (value);						
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+		{
+		    TRY (
+			quitBlock ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+	    }
+	    
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
+	}
 
 	Symbol Visitor::validateInnerModule (const syntax::Declaration & decl) {
 	    if (decl.isEmpty ()) return Symbol::empty ();
@@ -1700,7 +1795,68 @@ namespace semantic {
 	    auto type = inner.to <Value> ().getType ();
 	    type.to <Type> ().isRef (true);
 	    auto value = Copier::init (thr.getLocation (), type, inner, true);
-	    return Throw::init (thr.getLocation (), value);
+	    auto info = validateTypeInfo (thr.getLocation (), inner.to<Value> ().getType ());
+	    return Throw::init (thr.getLocation (), info, value);
+	}
+
+	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type) {
+	    auto typeInfo = syntax::Var::init ({loc, Visitor::TYPE_INFO});
+	    auto str = validateType (typeInfo);
+
+	    auto typeIDs = syntax::Var::init ({loc, Visitor::TYPE_IDS});
+	    auto en_m = validateValue (typeIDs);
+	       
+	    std::vector <Generator> types = {
+		Integer::init (loc, 32, false),
+		Integer::init (loc, 0, false),
+		Slice::init (loc, str),
+		Slice::init (loc, Char::init (loc, 32))
+	    };
+	    
+	    std::vector <Generator> innerTypes;
+	    if (type.to <Type> ().isComplex ()) {
+		for (auto & it : type.to <Type> ().getInners ())
+		    innerTypes.push_back (validateTypeInfo (loc, it));
+	    }
+	    auto arrayType = Array::init (loc, str, innerTypes.size ());
+	    auto stringLit = syntax::String::init (loc, loc, {loc, type.prettyString ()}, lexing::Word::eof ());
+	    auto name = validateValue (stringLit);
+	    auto constName = Mangler::init ().mangle (type) + "_" + "name";
+
+	    
+	    std::vector <Generator> values = {
+		en_m.to <generator::Enum> ().getFieldValue (typeInfoName (type)),
+		SizeOf::init (loc, Integer::init (loc, 0, false), type),
+		ArrayValue::init (loc, arrayType, innerTypes),		
+		GlobalConstant::init (loc, constName, name.to <Value> ().getType (), name)
+	    };
+	    
+	    return StructCst::init (
+		loc,
+		str,
+		str.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().clone (),
+		types,
+		values
+	    );
+	}
+
+	std::string Visitor::typeInfoName (const Generator & type) {
+	    match (type) {
+		of (Array, ar ATTRIBUTE_UNUSED, return "ARRAY";);
+		of (Bool,  bo ATTRIBUTE_UNUSED, return "BOOL";);
+		of (Char,  ca ATTRIBUTE_UNUSED, return "CHAR";);
+		of (Closure,  cl ATTRIBUTE_UNUSED, return "CLOSURE";);
+		of (Float,  fl ATTRIBUTE_UNUSED, return "FLOAT";);
+		of (FuncPtr,  ptr ATTRIBUTE_UNUSED, return "FUNC_PTR";);
+		of (Integer,  i, if (i.isSigned ()) return "SIGNED_INT"; return "UNSIGNED_INT";);
+		of (Pointer,  ptr ATTRIBUTE_UNUSED, return "POINTER";);
+		of (Slice,  sl ATTRIBUTE_UNUSED, return "SLICE";);
+		of (StructRef,  sl ATTRIBUTE_UNUSED, return "STRUCT";);
+		of (Tuple,  tu ATTRIBUTE_UNUSED, return "TUPLE";);
+	    }
+	    
+	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    return "";
 	}
 	
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {

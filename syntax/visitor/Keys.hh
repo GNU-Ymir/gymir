@@ -17,7 +17,8 @@ struct Keys {
     static std::string  C8;
     static std::string  C16;
     static std::string  C32;
-    static std::string  CAST; 
+    static std::string  CAST;
+    static std::string  CATCH; 
     static std::string  CLANG;
     static std::string  CONST; 
     static std::string  COPY;

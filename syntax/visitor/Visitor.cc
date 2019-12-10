@@ -798,6 +798,7 @@ namespace syntax {
 	if (begin == Keys::PRAGMA)   return visitPragma ();
 	if (begin == Keys::RETURN)   return visitReturn ();
 	if (begin == Keys::SCOPE)    return visitScope ();
+	if (begin == Keys::CATCH)    return visitCatch ();
 	if (begin == Keys::THROW_K)  return visitThrow ();
 	if (begin == Keys::VERSION)  return visitVersion ();
 	if (begin == Keys::WHILE)    return visitWhile ();
@@ -962,25 +963,43 @@ namespace syntax {
 	auto location = this-> _lex.next ();
 	auto name = visitIdentifier ();
 	this-> _lex.consumeIf ({Token::DARROW}); // Arrow is not mandatory
-	if (name == Keys::FAILURE) {
-	    auto next = this-> _lex.next ();
-	    if (next != Token::LACC || !canVisitSingleVarDeclaration (true, false)) {
-		this-> _lex.rewind ();
-		return Scope::init (name, visitExpression ());
-	    } else {
-		std::vector<Expression> types, values;
-		do {
-		    types.push_back (visitSingleVarDeclaration (false));
-		    this-> _lex.next ({Token::DARROW});
-		    values.push_back (visitExpression ());
-		    next = this-> _lex.next ();
-		    if (next != Token::RACC) this-> _lex.rewind ();
-		} while (next != Token::RACC);
-		return ScopeFailure::init (location, types, values);
-	    }
-	} else return Scope::init (name, visitExpression ());
+	return Scope::init (name, visitExpression ());
     }
-        
+
+    Expression Visitor::visitCatch () {
+	auto begin = this-> _lex.next ();
+	auto next = this-> _lex.consumeIf ({Token::LACC});
+	std::vector <Expression> vars;
+	std::vector <Expression> actions;
+	if (next == Token::LACC) {
+	    do {
+		lexing::Word name = this-> _lex.consumeIf ({Keys::UNDER});
+		if (name != Keys::UNDER) {
+		    name = visitIdentifier ();
+		}
+		Expression type (Expression::empty ());
+		if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
+		    type = visitExpression (10);
+		vars.push_back (VarDecl::init (name, {}, type, Expression::empty ()));				    
+		this-> _lex.next ({Token::DARROW});
+		actions.push_back (visitExpression ());
+		next = this->_lex.consumeIf ({Token::RACC});
+	    } while (next != Token::RACC);	    
+	} else {
+	    lexing::Word name = this-> _lex.consumeIf ({Keys::UNDER});
+	    if (name != Keys::UNDER) {
+		name = visitIdentifier ();
+	    }
+	    Expression type (Expression::empty ());
+	    if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
+		type = visitExpression (10);
+	    vars.push_back (VarDecl::init (name, {}, type, Expression::empty ()));				    
+	    this-> _lex.next ({Token::DARROW});
+	    actions.push_back (visitExpression ());
+	}
+	return Catch::init (begin, vars, actions);
+    }
+    
     Expression Visitor::visitVersion () {
 	auto location = this-> _lex.next ({Keys::VERSION});
 	auto ident = visitIdentifier ();

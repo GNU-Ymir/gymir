@@ -10,7 +10,8 @@ namespace global {
 			    THROW          = "_yrt_exc_throw", // (char *file, char *function, unsigned line, TypeInfo* info, void* data)
 			    SET_JMP        = "setjmp",
 			    RETHROW        = "_yrt_exc_rethrow",
-			    EXCEPT_PUSH    = "_yrt_exc_push", // (jmp_buf *j, int returned) {
+			    EXCEPT_PUSH    = "_yrt_exc_push", // (jmp_buf *j, int returned)
+			    EXCEPT_GET_VALUE = "_yrt_exc_check_type", // void* (TypeInfo info)
 			    JMP_BUF_TYPE   = "_yrt_jmp_buf_type", 
     );
 }

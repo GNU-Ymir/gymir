@@ -13,6 +13,7 @@ namespace semantic {
 	std::string Mangler::YMIR_FUNCTION = "F";
 	std::string Mangler::YMIR_FUNCTION_RET = "Z";
 	std::string Mangler::YMIR_VAR = "V";
+	std::string Mangler::YMIR_CST = "CST";
 	
 	Mangler::Mangler () {}
 
@@ -131,6 +132,20 @@ namespace semantic {
 	    return buf.str ();
 	}
 
+	std::string Mangler::mangleGlobalConstant (const GlobalConstant & v) const {
+	    auto name = v.getName ();
+	    std::vector <std::string> splits = split (name, "::");
+
+	    OutBuffer buf;
+	    buf.write (Mangler::YMIR_PREFIX);
+	    for (auto & it : splits) buf.write (it.length (), it);
+	    buf.write (Mangler::YMIR_CST);
+
+	    buf.write (mangle (v.getType ()));
+	    return buf.str ();
+	}
+
+	
 	std::string Mangler::mangleBoolV (const BoolValue & b) const {
 	    if (b.getValue ()) return "b1";
 	    else return "b0";

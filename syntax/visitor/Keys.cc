@@ -14,6 +14,7 @@ std::string     Keys::C8	   = "c8";
 std::string     Keys::C16	   = "c16";
 std::string     Keys::C32	   = "c32";
 std::string     Keys::CAST	   = "cast";
+std::string     Keys::CATCH	   = "catch";
 std::string     Keys::CLANG	   = "C";
 std::string     Keys::CONST	   = "const";
 std::string     Keys::COPY	   = "copy";

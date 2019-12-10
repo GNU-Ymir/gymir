@@ -19,6 +19,8 @@ namespace semantic {
 	    static std::string __INIT__;
 
 	    static std::string __TYPEID__;
+
+	    static std::string __TYPEINFO__;
 	    
 	    Visitor & _context;
 

@@ -97,8 +97,9 @@ namespace semantic {
 
 	    pushReferent (Module::init ({mod.getIdent (), path.fileName ().toString ()}));	    
 	    getReferent ().insert (ModRef::init (mod.getIdent (), path.getFiles ()));
-	    
-	    if (mod.isGlobal ()) importAllCoreFiles ();	    
+
+	    if (mod.isGlobal () && !global::State::instance ().isStandalone ())
+		importAllCoreFiles ();	    
 	    
 	    for (auto & it : mod.getDeclarations ()) {
 		visit (it);

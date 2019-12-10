@@ -656,6 +656,14 @@ namespace syntax {
 	Expression visitScope ();
 
 	/**
+	 * \brief Visit a catch scope guard
+	 * \verbatim
+	 scope := 'catch' '{'? (var_decl '=>' expression)+ '}'?
+	 \endverbatim
+	 */
+	Expression visitCatch ();
+
+	/**
 	 * \brief Visit a version manager
 	 * \verbatim
 	 version := 'version' Identifier expression:(0) ('else' expression:(0))?

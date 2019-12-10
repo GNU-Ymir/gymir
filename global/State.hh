@@ -20,8 +20,8 @@ namespace global {
 
 	std::set <std::string> _includeDir;
 
-	std::string __includeInPrefix__ = "include/ymir/";
-
+	std::string __includeInPrefix__ = "include/ymir/";	
+	
 	std::string _corePath;
 	
 	std::string _prefixPath;
@@ -29,6 +29,8 @@ namespace global {
 	bool _isDebug = false;
 
 	bool _isVerbose = false;
+
+	bool _isStandalone = false;
 	
     private :
 
@@ -74,6 +76,11 @@ namespace global {
 	void activateVerbose (bool verb);
 
 	/**
+	 * \brief If stand, 
+	 */
+	void activateStandalone (bool stand);
+	
+	/**
 	 * \brief tell if the debug mode is active (option -g or -ggdb)
 	 */
 	bool isDebugActive () const;
@@ -83,6 +90,11 @@ namespace global {
 	 */
 	bool isVerboseActive () const;
 
+	/**
+	 * \return tell if we need to include core files
+	 */
+	bool isStandalone () const;
+	
 	/**
 	 * \brief Set the prefix path dir
 	 * \brief set the core dir, and std include path

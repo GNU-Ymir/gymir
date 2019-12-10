@@ -93,14 +93,19 @@ namespace semantic {
 		)
 			 
 		else of (StructRef, st, {
-			auto gen = st.getRef ().to <semantic::Struct> ().getGenerator ();
-			std::vector <Tree> inner;
-			std::vector <std::string> fields;
-			for (auto & it : gen.to <generator::Struct> ().getFields ()) {
-			    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
-			    fields.push_back (it.to <generator::VarDecl> ().getName ());
-			}
-			type = Tree::tupleType (fields, inner);
+			static std::set <std::string> current;
+			if (current.find (st.prettyString ()) == current.end ()) { // To prevent infinite loop for inner type validation
+			    current.emplace (st.prettyString ());
+			    auto gen = st.getRef ().to <semantic::Struct> ().getGenerator ();
+			    std::vector <Tree> inner;
+			    std::vector <std::string> fields;
+			    for (auto & it : gen.to <generator::Struct> ().getFields ()) {
+				inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
+				fields.push_back (it.to <generator::VarDecl> ().getName ());
+			    }
+			    type = Tree::tupleType (fields, inner);
+			    current.erase (st.prettyString ());
+			} else return Tree::voidType ();
 		    }
 		)
 			 
@@ -110,12 +115,8 @@ namespace semantic {
 		    })
 
 		    else of (Pointer, pt, {
-			    if (pt.getInners()[0].is<StructRef> ()) {
-				return Tree::pointerType (Tree::voidType ());
-			    } else {
-				auto inner =generateType (pt.getInners ()[0]);
-				return Tree::pointerType (inner);
-			    }
+			    auto inner = generateType (pt.getInners ()[0]);
+			    return Tree::pointerType (inner);			    
 			}
 	       ) else of (Range, rg, {
 		       std::vector <Tree> inner;
@@ -218,19 +219,48 @@ namespace semantic {
 	
 	void Visitor::generateGlobalVar (const GlobalVar & var) {
 	    auto type = generateType (var.getType ());
-	    auto name = var.getName (); //Mangler::mangleGlobal (var.getName ());
+	    auto name = Mangler::init ().mangleGlobalVar (var);
 
 	    Tree decl = Tree::varDecl (var.getLocation (), name, type);
-
+	    if (!var.getValue ().isEmpty ()) {
+		auto value = castTo (var.getType (), var.getValue ());
+		decl.setDeclInitial (value);
+	    } 
+ 
 	    decl.isStatic (true);
 	    decl.isUsed (true);
 	    decl.isExternal (false);
 	    decl.isPreserved (true);
 	    decl.isPublic (true);
 	    decl.setDeclContext (getGlobalContext ());
-
+	   
 	    vec_safe_push (globalDeclarations, decl.getTree ());
 	    insertGlobalDeclarator (var.getUniqId (), decl);
+	}
+
+	Tree Visitor::generateGlobalConstant (const GlobalConstant & cst) {
+	    static std::map <std::string, generic::Tree> __globalConstant__;
+	    auto name = Mangler::init ().mangleGlobalConstant (cst);
+	    auto res = __globalConstant__.find (name);
+	    if (res != __globalConstant__.end ()) return res-> second;
+	    
+	    auto type = generateType (cst.getType ());
+	    Tree decl = Tree::varDecl (cst.getLocation (), name, type);
+	    auto value = castTo (cst.getType (), cst.getValue ());
+	    decl.setDeclInitial (value);
+	    
+	    decl.isWeak (true);
+	    decl.isStatic (true);
+	    decl.isUsed (true);
+	    decl.isExternal (false);
+	    decl.isPreserved (true);
+	    decl.isPublic (true);	    
+	    decl.setDeclContext (getGlobalContext ());
+	    
+	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    __globalConstant__.emplace (name, decl);
+	    
+	    return decl;
 	}
 	
 	void Visitor::generateMainCall (bool isVoid, const std::string & mainName) {
@@ -605,6 +635,10 @@ namespace semantic {
 
 		else of (SuccessScope, succ,
 		    return generateSuccessScope (succ);
+		)
+			 
+		else of (GlobalConstant, cst,
+		    return generateGlobalConstant (cst);
 		);
 	    }
 
@@ -1248,8 +1282,8 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::generateThrow (const Throw & thr) {
-	    auto value = generateValue (thr.getValue ());	    
-	    auto info = generateTypeInfo (thr.getValue ().to <Value> ().getType ().to <Type> ());
+	    auto value = castTo (thr.getValue ().to <Value> ().getType (), thr.getValue ());	    
+	    auto info = generateValue (thr.getTypeInfo ());
 	    auto file = thr.getLocation ().getFile ();
 	    auto lit = Tree::buildStringLiteral (thr.getLocation (), file.c_str (), file.length () + 1, 8);
 	    auto context = getCurrentContext ().funcDeclName ();
@@ -1297,9 +1331,9 @@ namespace semantic {
 	    }
 
 	    TreeStmtList right_part (TreeStmtList::init ());
-	    for (auto & it : scope.getValues ())
+	    for (auto & it : scope.getFailure ())
 		right_part.append (generateValue (it));	    
-	    right_part.append (Tree::buildCall (scope.getLocation (), Tree::voidType(), global::CoreNames::get (RETHROW), {}));
+	    right_part.append (generateCatching (scope, var));
 	    auto right = right_part.toTree ();
 	    	    
 	    auto test = Tree::buildCall (
@@ -1311,7 +1345,7 @@ namespace semantic {
 
 	    auto cond = Tree::conditional (scope.getLocation (), getCurrentContext (), test, left, right);
 	    list.append (cond);
-	    for (auto & it : scope.getValues ())
+	    for (auto & it : scope.getSuccess ())
 		list.append (generateValue (it));
 	    
 	    auto binding = quitBlock (scope.getLocation (), list.toTree ());
@@ -1320,6 +1354,39 @@ namespace semantic {
 	    } else return binding.bind_expr;
 	}
 
+	generic::Tree Visitor::generateCatching (const ExitScope & scope, Tree varScope) {
+	    TreeStmtList glob (TreeStmtList::init ());
+	    auto last = Tree::buildCall (scope.getLocation (), Tree::voidType (), global::CoreNames::get (RETHROW), {});
+	    auto & vars = scope.getCatchingVars ();
+	    auto & infos = scope.getCatchingInfoTypes ();
+	    auto & actions = scope.getCatchingActions ();
+	    for (auto it : Ymir::r (0, vars.size ())) {
+		auto type = generateType (vars [it].to <generator::VarDecl> ().getVarType ());
+		auto var = Tree::varDecl (vars [it].getLocation (), vars [it].to <generator::VarDecl> ().getName (), type);
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
+		insertDeclarator (vars [it].getUniqId (), var);
+		glob.append (var);
+		
+		auto info = generateValue (infos [it]);
+		auto call = Tree::buildCall (vars [it].getLocation (), type, global::CoreNames::get (EXCEPT_GET_VALUE), {info});
+		auto left = Tree::compound (vars [it].getLocation (), var, Tree::affect (scope.getLocation (), var, call));
+		auto nul = Tree::buildPtrCst (vars [it].getLocation (), 0);
+		auto test = Tree::binaryPtrTest (vars [it].getLocation (), NE_EXPR, Tree::boolType (), left, nul);
+		
+		enterBlock ();
+		TreeStmtList list (TreeStmtList::init ());
+		if (!scope.getType ().is <Void> ()) 
+		    list.append (Tree::affect (scope.getLocation (), varScope, generateValue (actions [it])));
+		else
+		    list.append (generateValue (actions [it]));
+		auto binding = quitBlock (scope.getLocation (), list.toTree ());
+		last = Tree::conditional (scope.getLocation (), getCurrentContext (), test, binding.bind_expr, last);
+	    }
+	    return // Ymir::compound (scope.getLocation (), 
+		last;// , glob.toTree ());
+	}
+	
 	generic::Tree Visitor::generateSuccessScope (const SuccessScope & scope) {
 	    TreeStmtList list (TreeStmtList::init ());
 	    enterBlock ();
@@ -1480,10 +1547,6 @@ namespace semantic {
 	    );
 	}
 
-	generic::Tree Visitor::generateTypeInfo (const Type & type) {
-	    return Tree::buildPtrCst (type.getLocation (), 0);
-	}
-
 	generic::Tree Visitor::generateAliaser (const Aliaser & als) {
 	    return castTo (als.getType (), als.getWho ());
 	}	
@@ -1519,8 +1582,9 @@ namespace semantic {
 	    auto indexType = Tree::sizeType ();
 	    auto index = Tree::binary (access.getLocation (), MULT_EXPR, indexType, rvalue, Tree::buildSizeCst (size));
 	    auto data_field = lvalue.getField (Slice::PTR_NAME);
+	    auto type = Tree::pointerType (generateType (access.getType ()));
 	    
-	    auto ptr = Tree::binaryDirect (access.getLocation (), POINTER_PLUS_EXPR, data_field.getType (), data_field, index);
+	    auto ptr = Tree::binaryDirect (access.getLocation (), POINTER_PLUS_EXPR, type, data_field, index);
 	    return ptr.buildPointerUnref (0);
 	}
 

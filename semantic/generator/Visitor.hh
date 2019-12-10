@@ -74,8 +74,7 @@ namespace semantic {
 	     * \param var the variable to generate
 	     */
 	    void generateGlobalVar (const GlobalVar & var);
-
-
+	    
 	    /**
 	     * \brief Generate the call of the _Ymain function from the runtime of Ymir
 	     * \param isVoid is the main function declared as void?
@@ -88,6 +87,11 @@ namespace semantic {
 	     * \param frame the frame to generate
 	     */
 	    void generateFrame (const Frame & frame);
+
+	    /**
+	     * \brief Transform a global constant into gimple
+	     */
+	    generic::Tree generateGlobalConstant (const GlobalConstant & cst);
 	    
 	    /**
 	     * \brief Generate the declaration of a param var
@@ -174,16 +178,17 @@ namespace semantic {
 	     * \brief Transform an exit scope into gimple
 	     */
 	    generic::Tree generateExitScope (const ExitScope & scope);
+
+	    /**
+	     * \brief Generate the catching part of an exit scope
+	     * \param var the var containing the value of the scope
+	     */
+	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree var);
 	    
 	    /**
 	     * \brief Transform an success scope into gimple
 	     */
-	    generic::Tree generateSuccessScope (const SuccessScope & scope);
-	    
-	    /**
-	     * \brief Generate the type info of the type type
-	     */
-	    generic::Tree generateTypeInfo (const Type & type);
+	    generic::Tree generateSuccessScope (const SuccessScope & scope);	   
 	    
 	    /**
 	     * \brief Transform an array value into gimple

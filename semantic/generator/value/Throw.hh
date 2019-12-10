@@ -11,20 +11,22 @@ namespace semantic {
 	    
 	    Generator _value;
 
+	    Generator _typeInfo;
+	    
 	private :
 
 	    friend Generator;
 	    
 	    Throw ();
 
-	    Throw (const lexing::Word & loc, const Generator & value);
+	    Throw (const lexing::Word & loc, const Generator & typeInfo, const Generator & value);
 
 	public :
 
 	    /**
 	     * \brief Generate a new Binary on int
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & value);
+	    static Generator init (const lexing::Word & loc, const Generator & typeInfo, const Generator & value);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -45,6 +47,11 @@ namespace semantic {
 	     * \return the value that will be thrown
 	     */
 	    const Generator & getValue () const;
+
+	    /**
+	     * \return the generator of the typeinfo
+	     */
+	    const Generator & getTypeInfo () const;
 	    
 	    std::string prettyString () const override;	    
 	    

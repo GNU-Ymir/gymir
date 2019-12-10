@@ -87,6 +87,7 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
 	case OPT_g :
 	case OPT_ggdb : global::State::instance ().activateDebug (true); break;
 	case OPT_v : global::State::instance ().activateVerbose (true); break;
+	case OPT_nostdinc : global::State::instance ().activateStandalone (true); break;
 	}
     }
     
@@ -133,7 +134,8 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
     } else if (code == OPT_v) {
 	// set verbose 
     } else if (code == OPT_nostdinc)  {
-	// no std include 
+	// no std include
+	global::State::instance ().activateStandalone (true);
     } else if (code == OPT_fdoc) {
 	// dump documentation
     } else if (code == OPT_fversion_) {

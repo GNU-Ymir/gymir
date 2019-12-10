@@ -7,20 +7,22 @@ namespace semantic {
 
 	Throw::Throw () :
 	    Value (),
-	    _value (Generator::empty ())
+	    _value (Generator::empty ()),
+	    _typeInfo (Generator::empty ())
 	{
 	    this-> isReturner (true);
 	}
 
-	Throw::Throw (const lexing::Word & loc, const Generator & value) :
+	Throw::Throw (const lexing::Word & loc, const Generator & typeInfo, const Generator & value) :
 	    Value (loc, Void::init (loc)),
-	    _value (value)
+	    _value (value),
+	    _typeInfo (typeInfo)
 	{
 	    this-> isReturner (true);
 	}
 	
-	Generator Throw::init (const lexing::Word & loc, const Generator & value) {
-	    return Generator {new Throw (loc,  value)};
+	Generator Throw::init (const lexing::Word & loc, const Generator & typeInfo, const Generator & value) {
+	    return Generator {new Throw (loc,  typeInfo, value)};
 	}
     
 	Generator Throw::clone () const {
@@ -42,6 +44,10 @@ namespace semantic {
 
 	const Generator & Throw::getValue () const {
 	    return this-> _value;
+	}
+
+	const Generator & Throw::getTypeInfo () const {
+	    return this-> _typeInfo;
 	}
 
 	std::string Throw::prettyString () const {

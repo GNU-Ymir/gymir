@@ -7,6 +7,7 @@
 #include <ymir/syntax/expression/Bool.hh>
 #include <ymir/syntax/expression/Break.hh>
 #include <ymir/syntax/expression/Cast.hh>
+#include <ymir/syntax/expression/Catch.hh>
 #include <ymir/syntax/expression/Char.hh>
 #include <ymir/syntax/expression/DecoratedExpression.hh>
 #include <ymir/syntax/expression/Dollar.hh>

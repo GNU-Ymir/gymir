@@ -89,7 +89,7 @@ namespace semantic {
 	    /**
 	     * \return the id of the generator
 	     */
-	    uint getUniqId () const;
+	    virtual uint getUniqId () const;
 
 	    /**
 	     * \brief Change the id of the generator

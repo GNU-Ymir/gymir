@@ -16,6 +16,10 @@ namespace semantic {
 	    bool _isMutable;
 
 	    bool _autoInit = true;
+
+	    static uint __lastId__;
+
+	    uint _varRefId;
 	    
 	private :
 
@@ -76,6 +80,11 @@ namespace semantic {
 	     * \return if it has no init value, do we initialize it with default init value ? 
 	     */
 	    bool isAutoInit () const;
+
+	    /**
+	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
+	     */
+	    uint getUniqId () const override;
 	    
 	    std::string prettyString () const override;
 	};

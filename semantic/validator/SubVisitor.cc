@@ -14,6 +14,7 @@ namespace semantic {
 	std::string SubVisitor::__SIZEOF__ = "sizeof";
 	std::string SubVisitor::__INIT__ = "init";
 	std::string SubVisitor::__TYPEID__ = "typeid";
+	std::string SubVisitor::__TYPEINFO__ = "typeinfo";
 	
 	SubVisitor::SubVisitor (Visitor & context) :
 	    _context (context) 
@@ -126,6 +127,8 @@ namespace semantic {
 			);
 		
 			return this-> _context.validateValue (stringLit);
+		    } else if (name == __TYPEINFO__) {
+			return this-> _context.validateTypeInfo (expression.getRight ().getLocation (), type);
 		    }
 		}
 
@@ -429,6 +432,23 @@ namespace semantic {
 			params
 		    );
 		}
+
+		if (name == __TYPEID__) {		    
+		    auto stringLit = syntax::String::init (
+			expression.getLocation (),
+			expression.getLocation (),
+			lexing::Word {expression.getLocation (), t.prettyString ()},
+			lexing::Word::eof ()
+		    );
+		
+		    return this-> _context.validateValue (stringLit);
+		} else if (name == __TYPEINFO__) {
+		    return this-> _context.validateTypeInfo (
+			expression.getRight ().getLocation (),
+			StructRef::init (t.getLocation (), t.to <generator::Struct> ().getRef ())
+		    );
+		}
+		
 	    }
 	    return Generator::empty ();
 	}

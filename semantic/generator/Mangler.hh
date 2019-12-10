@@ -19,6 +19,8 @@ namespace semantic {
 	    static std::string YMIR_FUNCTION_RET;
 
 	    static std::string YMIR_VAR;
+
+	    static std::string YMIR_CST;
 	    
 	private :
 
@@ -54,6 +56,11 @@ namespace semantic {
 	     * \brief Mangle a global var name
 	     */
 	    std::string mangleGlobalVar (const GlobalVar & var) const;
+
+	    /**
+	     * \brief Mangle a global var constant
+	     */
+	    std::string mangleGlobalConstant (const GlobalConstant & cst) const;
 
 	    /**
 	     * \brief Mangle a type	     

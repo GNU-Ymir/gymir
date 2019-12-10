@@ -55,6 +55,7 @@ ymir_OBJS = \
 	ymir/expr_Bool.o \
 	ymir/expr_Break.o \
 	ymir/expr_Cast.o \
+	ymir/expr_Catch.o \
 	ymir/expr_Char.o \
 	ymir/expr_DecoratedExpression.o \
 	ymir/expr_DestructDecl.o \
@@ -125,6 +126,7 @@ ymir_OBJS = \
 	ymir/generator_FuncPtr.o \
 	ymir/generator_Delegate.o \
 	ymir/generator_Frame.o \
+	ymir/generator_GlobalConstant.o \
 	ymir/generator_FrameProto.o \
 	ymir/generator_LambdaProto.o \
 	ymir/generator_GlobalVar.o \
