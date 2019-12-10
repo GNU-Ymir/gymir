@@ -925,7 +925,9 @@ namespace semantic {
 			auto simpleType = type;
 			type.to <Type> ().isRef (true);
 			type.to <Type> ().isMutable (false);
+			
 			simpleType.to <Type> ().isRef (false);
+			simpleType.to <Type> ().isMutable (false);
 			
 			var = generator::VarDecl::init (var.getLocation (), var.getName (), type, Generator::empty (), false);
 			if (var.getName () != Keys::UNDER)
@@ -1793,9 +1795,13 @@ namespace semantic {
 	Generator Visitor::validateThrow (const syntax::Throw & thr) {
 	    auto inner = this-> validateValue (thr.getValue ());
 	    auto type = inner.to <Value> ().getType ();
+	    auto simpleType = inner.to<Value> ().getType ();
+	    simpleType.to <Type> ().isRef (false);
+	    simpleType.to <Type> ().isMutable (false);
+	    
 	    type.to <Type> ().isRef (true);
 	    auto value = Copier::init (thr.getLocation (), type, inner, true);
-	    auto info = validateTypeInfo (thr.getLocation (), inner.to<Value> ().getType ());
+	    auto info = validateTypeInfo (thr.getLocation (), simpleType);
 	    return Throw::init (thr.getLocation (), info, value);
 	}
 
