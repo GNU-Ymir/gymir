@@ -11,6 +11,7 @@
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/validator/TemplateVisitor.hh>
 #include <ymir/semantic/validator/UtfVisitor.hh>
+#include <ymir/semantic/validator/MatchVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/map.hh>
@@ -773,6 +774,10 @@ namespace semantic {
 
 		of (syntax::Throw, thr,
 		    return validateThrow (thr);
+		);
+
+		of (syntax::Match, match,
+		    return validateMatch (match);
 		);
 
 	    }
@@ -1805,6 +1810,11 @@ namespace semantic {
 	    return Throw::init (thr.getLocation (), info, value);
 	}
 
+	Generator Visitor::validateMatch (const syntax::Match & matcher) {
+	    auto visitor = MatchVisitor::init (*this);
+	    return visitor.validate (matcher);
+	}
+	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type) {
 	    auto typeInfo = syntax::Var::init ({loc, Visitor::TYPE_INFO});
 	    auto str = validateType (typeInfo);

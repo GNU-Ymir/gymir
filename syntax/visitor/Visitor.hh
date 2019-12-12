@@ -606,12 +606,16 @@ namespace syntax {
 	 match_pattern := match_pattern_content ('if' expression:(0))?
 	 match_pattern_content := expression:(0)                                |
 	                          var_decl                                      |
-				  expression:(10) '{' match_pattern_content* '}' |
+				  expression:(10) '(' match_pattern_content* ')' |
 				  '(' match_pattern_content* ')'                |
 	 \endverbatim
 	 */
 	Expression visitMatch ();
 
+	/**
+	 * \brief Visit a matcher expression
+	 */
+	Expression visitMatchExpression ();
 
 	/**
 	 * \brief Visit a break

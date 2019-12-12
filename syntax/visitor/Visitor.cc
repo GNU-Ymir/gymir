@@ -748,6 +748,10 @@ namespace syntax {
     }
 
     Expression Visitor::visitOperand1 () {
+	auto next = this-> _lex.next ();
+	this-> _lex.rewind ();
+	if (next == Token::LACC)  return visitBlock ();
+	
 	auto value = visitOperand2 ();
 	return visitOperand1 (value);
     }
@@ -802,7 +806,7 @@ namespace syntax {
 	if (begin == Keys::THROW_K)  return visitThrow ();
 	if (begin == Keys::VERSION)  return visitVersion ();
 	if (begin == Keys::WHILE)    return visitWhile ();
-	if (begin == Token::LACC)    return visitBlock ();
+	//if (begin == Token::LACC)    return visitBlock ();
 	if (begin == Token::LCRO)    return visitArray ();
 	if (begin == Token::LPAR)    return visitTuple ();
 	if (begin == Token::PIPE)    return visitLambda ();
@@ -928,10 +932,60 @@ namespace syntax {
     }
 
     Expression Visitor::visitMatch () {
-	Error::halt ("%(r) - need match", "TODO");
-	return Expression::empty ();
+	auto begin = this-> _lex.next ();
+	auto content = this-> visitExpression ();
+	auto next = this-> _lex.next ({Token::LACC});
+	std::vector <Expression> matchs;
+	std::vector <Expression> actions;
+	do {
+	    auto expr = visitMatchExpression ();
+	    this-> _lex.next ({Token::DARROW});
+	    auto action = visitExpression (10);
+	    this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    matchs.push_back (expr);
+	    actions.push_back (action);
+	    next = this-> _lex.consumeIf ({Token::RACC});	    
+	} while (next != Token::RACC);
+       
+	return Match::init (begin, content, matchs, actions);
     }    
 
+    Expression Visitor::visitMatchExpression () {
+	auto next = this-> _lex.next ();
+	this-> _lex.rewind ();
+	if (canVisitSingleVarDeclaration (true, true)) {
+	    auto ret = visitSingleVarDeclaration (true, true);
+	    return ret;
+	} else if (canVisitIdentifier () || next == Keys::UNDER) {
+	    auto name = this-> _lex.next ();
+	    next = this-> _lex.next ();
+	    if (next == Token::LPAR) {
+		std::vector <Expression> params;
+		auto end = this-> _lex.consumeIf ({Token::RPAR, Token::COMA});
+		while (end != Token::RPAR) {
+		    params.push_back (visitMatchExpression ());
+		    end = this-> _lex.next ({Token::COMA, Token::RPAR});
+		}
+		return MultOperator::init (name, end, Var::init (name), params);
+	    } else if (next == Token::ARROW) {
+		return NamedExpression::init (name, visitMatchExpression ());
+	    }
+	    this-> _lex.rewind ();
+	    return Var::init (name);
+	} else if (next == Token::LPAR) {
+	    this-> _lex.next (); // Consume LPAR
+	    std::vector <Expression> params;
+	    auto end = this-> _lex.consumeIf ({Token::RPAR, Token::COMA});
+	    while (end != Token::RPAR) {
+		params.push_back (visitMatchExpression ());
+		end = this-> _lex.next ({Token::COMA, Token::RPAR});
+	    }
+	    return List::init (next, end, params);
+	} else {
+	    return visitExpression ();
+	}
+    }
+    
     Expression Visitor::visitBreak () {
 	auto location = this-> _lex.next ({Keys::BREAK});
 	return Break::init (location, visitExpression());
@@ -1120,13 +1174,14 @@ namespace syntax {
 	TRY (
 	    bool done = false;
 	    if (withNamed) {
-		auto lex = this-> _lex.consumeIf ({Token::INTEG});
-		if (lex == Token::INTEG) {
-		    done = true;
+		if (canVisitIdentifier ()) {
+		    auto begin = this-> _lex.tell ();
 		    auto name = visitIdentifier ();
-		    this-> _lex.next ({Token::EQUAL});
-		    auto inner = visitExpression ();
-		    params.push_back (NamedExpression::init (name, inner));
+		    auto next = this-> _lex.consumeIf ({Token::ARROW});
+		    if (next == Token::ARROW) {
+			params.push_back (NamedExpression::init (name, visitExpression ()));
+			done = true;
+		    } else this-> _lex.seek (begin);
 		}
 	    }
 	    if (!done)
@@ -1141,13 +1196,14 @@ namespace syntax {
 	while (token == Token::COMA) {
 	    bool done = false;
 	    if (withNamed) {
-		auto lex = this-> _lex.consumeIf ({Token::INTEG});
-		if (lex == Token::INTEG) {
-		    done = true;
+		if (canVisitIdentifier ()) {
+		    auto begin = this-> _lex.tell ();
 		    auto name = visitIdentifier ();
-		    this-> _lex.next ({Token::EQUAL});
-		    auto inner = visitExpression ();
-		    params.push_back (NamedExpression::init (name, inner));
+		    auto next = this-> _lex.consumeIf ({Token::ARROW});
+		    if (next == Token::ARROW) {
+			params.push_back (NamedExpression::init (name, visitExpression ()));
+			done = true;
+		    } else this-> _lex.seek (begin);
 		}
 	    }
 	    if (!done)
@@ -1520,7 +1576,7 @@ namespace syntax {
 	    this-> _lex.seek (begin);
 	    return false;
 	} FINALLY;
-	
+	this-> _lex.seek (begin);	
 	return true;
     }
 

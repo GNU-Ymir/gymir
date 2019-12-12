@@ -11,11 +11,6 @@ namespace semantic {
 	/**
 	 * \struct CallVisitor
 	 * This visitor is responsible of the validation of the call operator
-	 * In Ymir, there are only two types that can use calls operator : 
-	 * - Array
-	 * - Slice
-	 * For the following types the operator can be overriden using the function name opIndex
-	 * - Class
 	 */
 	class CallVisitor {
 

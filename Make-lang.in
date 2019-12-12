@@ -221,6 +221,7 @@ ymir_OBJS = \
 	ymir/validator_TemplateVisitor.o \
 	ymir/validator_UnaryVisitor.o \
 	ymir/validator_UtfVisitor.o \
+	ymir/validator_MatchVisitor.o \
 	ymir/validator_Visitor.o \
 	ymir/ymir1.o \
 	$(END)	

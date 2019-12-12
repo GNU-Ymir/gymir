@@ -202,6 +202,11 @@ namespace semantic {
 	    generator::Generator validateThrow (const syntax::Throw & thr);
 
 	    /**
+	     * \brief Validate a match expression
+	     */
+	    generator::Generator validateMatch (const syntax::Match & matcher);
+	    
+	    /**
 	     * \return the typeinfo of the type type
 	     */
 	    generator::Generator validateTypeInfo (const lexing::Word & loc, const generator::Generator & type);
