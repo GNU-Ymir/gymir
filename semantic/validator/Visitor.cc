@@ -775,7 +775,7 @@ namespace semantic {
 		of (syntax::Throw, thr,
 		    return validateThrow (thr);
 		);
-
+		
 		of (syntax::Match, match,
 		    return validateMatch (match);
 		);

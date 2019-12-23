@@ -17,6 +17,7 @@ namespace global {
 			 SET_JMP,
 			 RETHROW,
 			 EXCEPT_PUSH,
+			 EXCEPT_POP,
 			 EXCEPT_GET_VALUE,
 			 JMP_BUF_TYPE,
     );

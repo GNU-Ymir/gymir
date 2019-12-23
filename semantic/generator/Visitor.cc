@@ -1321,7 +1321,7 @@ namespace semantic {
 	    	)
 	    ); // res = setjmp (buf);
 
-	    auto left = generateValue (scope.getWho ());
+	    auto left = generateValue (scope.getWho ());	    
 	    Tree var (Tree::empty ());
 	    if (!scope.getType ().is <Void> ()) {
 		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getType ()));
@@ -1330,6 +1330,8 @@ namespace semantic {
 		left = Tree::affect (scope.getLocation (), var, left);
 	    }
 
+	    TreeStmtList left_part (TreeStmtList::init ());
+	    left_part.append (left);
 	    TreeStmtList right_part (TreeStmtList::init ());
 	    for (auto & it : scope.getFailure ())
 		right_part.append (generateValue (it));	    
@@ -1341,7 +1343,16 @@ namespace semantic {
 		Tree::boolType (),
 		global::CoreNames::get (EXCEPT_PUSH),
 		{Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ())), r_res}
-	    );	    
+	    );
+
+	    auto pop = Tree::buildCall (
+		scope.getLocation (),
+		Tree::boolType (),
+		global::CoreNames::get (EXCEPT_POP),
+		{Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ())), r_res}
+	    );
+	    left_part.append (pop);
+	    left = left_part.toTree ();
 
 	    auto cond = Tree::conditional (scope.getLocation (), getCurrentContext (), test, left, right);
 	    list.append (cond);

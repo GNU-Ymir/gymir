@@ -11,6 +11,7 @@ namespace global {
 			    SET_JMP        = "setjmp",
 			    RETHROW        = "_yrt_exc_rethrow",
 			    EXCEPT_PUSH    = "_yrt_exc_push", // (jmp_buf *j, int returned)
+			    EXCEPT_POP     = "_yrt_exc_pop",
 			    EXCEPT_GET_VALUE = "_yrt_exc_check_type", // void* (TypeInfo info)
 			    JMP_BUF_TYPE   = "_yrt_jmp_buf_type", 
     );

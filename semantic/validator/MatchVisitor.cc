@@ -84,6 +84,8 @@ namespace semantic {
 		of (syntax::VarDecl, decl,
 		    return validateMatchVarDecl (value, decl, isMandatory);
 		);
+
+		// of (syntax::
 		
 		of (syntax::Var, var,		    
 		    if (var.getName () == Keys::UNDER) {
