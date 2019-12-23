@@ -1526,7 +1526,7 @@ namespace semantic {
 	    }
 	}
 
-	const Symbol & TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
+	Symbol TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
 	    for (auto & it : ref.getTemplates ()) {
 		if (it.is <TemplateSolution> () && // It can be a Template, from semi explicit validation 
 		    it.to <TemplateSolution> ().getSolutionName () == solution.to <TemplateSolution> ().getSolutionName ()

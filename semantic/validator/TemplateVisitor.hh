@@ -229,7 +229,7 @@ namespace semantic {
 
 	    void finalValidation (const Symbol & sym, const std::vector<syntax::Expression> & exprs, const Mapper & mapping, const syntax::Expression & test) const;
 
-	    const Symbol & getTemplateSolution (const Symbol & ref, const Symbol & solution) const;
+	    Symbol getTemplateSolution (const Symbol & ref, const Symbol & solution) const;
 	    
 	    std::string partialResolutionNote (const lexing::Word & loc, const Mapper & mapper) const;
 
