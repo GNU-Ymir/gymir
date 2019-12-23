@@ -41,7 +41,24 @@ namespace semantic {
 	     * \returns test, the validated test
 	     * \warning this will throw errors if failure, that have to be caught elsewhere to follow the behavior of a pattern matcher
 	     */
-	    generator::Generator validateMatch (const generator::Generator & value, const syntax::Expression & matcher);
+	    generator::Generator validateMatch (const generator::Generator & value, const syntax::Expression & matcher, bool & isMandatory);
+
+	    /**
+	     * \brief Validate a VarDecl
+	     * \returns test, the validated test
+	     */
+	    generator::Generator validateMatchVarDecl (const generator::Generator & value, const syntax::VarDecl & decl, bool & isMandatory);
+
+	    /**
+	     * \brief Validate a binaryExpr
+	     * \brief If it is a '|' or a '..' or '...', it must be validated by the pattern match otherwise it is validate normaly as any other expression
+	     */
+	    generator::Generator validateMatchBinary (const generator::Generator & value, const syntax::Binary & bin, bool & isMandatory);
+
+	    /**
+	     * \brief Validate anything else, that is not a pattern matching
+	     */
+	    generator::Generator validateMatchAnything (const generator::Generator & value, const syntax::Expression & any, bool & isMandatory);
 	    
 	};
 	    

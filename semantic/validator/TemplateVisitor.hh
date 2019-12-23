@@ -28,6 +28,19 @@ namespace semantic {
 		uint score;
 		std::map <std::string, syntax::Expression> mapping;
 		std::vector <std::string> nameOrder;
+
+		Mapper (bool succ, uint score) {
+		    this-> succeed = succ;
+		    this-> score = score;
+		}
+
+		Mapper (bool succ, uint score, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & names) {
+		    this-> succeed = succ;
+		    this-> score = score;
+		    this-> mapping = mapping;
+		    this-> nameOrder = names;
+		}
+		
 	    };		
 	    
 	    Visitor & _context;

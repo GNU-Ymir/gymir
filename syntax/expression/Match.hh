@@ -14,6 +14,8 @@ namespace syntax {
 	std::vector <Expression> _matchs;
 
 	std::vector <Expression> _actions;
+
+	bool _isFinal;
 	
     private :
 
@@ -21,11 +23,11 @@ namespace syntax {
 
 	Match ();
 	
-	Match (const lexing::Word & loc, const Expression & content,  const std::vector <Expression> & matchs, const std::vector <Expression> & actions);
+	Match (const lexing::Word & loc, const Expression & content,  const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal);
 
     public :
 
-	static Expression init (const lexing::Word & token, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions);
+	static Expression init (const lexing::Word & token, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal = true);
 
 	Expression clone () const override;
 
@@ -48,6 +50,8 @@ namespace syntax {
 
 	
 	void treePrint (Ymir::OutBuffer & buf, int i) const override;
+
+	bool isFinal () const;
 	
     };    
 

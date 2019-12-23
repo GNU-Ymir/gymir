@@ -123,6 +123,10 @@ namespace semantic {
 		of (MultSym, mult ATTRIBUTE_UNUSED,
 		    return executeMultSym (gen);
 		);
+
+		of (UniqValue, val,
+		    return execute (val.getValue ());
+		);
 	    }
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);

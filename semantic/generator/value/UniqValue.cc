@@ -13,8 +13,10 @@ namespace semantic {
 	    Value (location, type),
 	    _value (value),
 	    _refId (refId)	    
-	{}
-
+	{
+	    this-> isLvalue (true);
+	}
+	
 	Generator UniqValue::init (const lexing::Word & location, const Generator & type, const Generator & value) {
 	    return Generator {new (Z0) UniqValue (location, type, value, Generator::getLastId ())};
 	}

@@ -36,6 +36,7 @@ namespace Ymir {
 			    IS_TYPE                         = "cannot declare var named %(y), it is a type",
 			    MAIN_FUNCTION_ONE_ARG           = "main function take at most one argument",
 			    MALFORMED_CHAR		    = "malformed literal, number of %(y) is %(y)",
+			    MATCH_NO_DEFAULT                = "match of type %(y) has no default match case",
 			    MISMATCH_ARITY                  = "mismatch arity in tuple destructor (%(y)) and (%(y))",
 			    MOVE_ONLY_CLOSURE               = "move is only usable for lambda closure",
 			    MUTABLE_CONST_ITER		    = "an iterator cannot be mutable, if it is not a reference",

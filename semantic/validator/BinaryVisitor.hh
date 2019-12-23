@@ -18,7 +18,7 @@ namespace semantic {
 
 	    Visitor & _context;
 
-	private :
+	public :
 
 	    static std::string BINARY_OP_OVERRIDE;
 
@@ -180,16 +180,16 @@ namespace semantic {
 	     */
 	    generator::Generator validatePointerOperation (generator::Binary::Operator op, const syntax::Binary & expression);
 	    
-	    
-	private :
-	    
+	    	    
 	    /**
 	     * \brief Transform a token into a binary operator
 	     * \param word the token containing the op
 	     * \param isAff returned value, set to true if this operator is a affectation
 	     */
-	    generator::Binary::Operator toOperator (const lexing::Word & word, bool & isAff);
+	    static generator::Binary::Operator toOperator (const lexing::Word & word, bool & isAff);
 
+	private :
+	    
 	    /**
 	     * \return is this operator a mathematic operator
 	     */

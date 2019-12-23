@@ -1936,18 +1936,19 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			    succeed = false;
 			} FINALLY;
-			if (!succeed) continue;
-			
-			if (local_score > all_score) {
-			    all_score = local_score;
-			    final_sym = local_sym;
-			} else if (local_sym.isEmpty ()) {
-			    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), elem.getLocation (), elem.prettyString ()));
+
+			if (succeed) {
+			    if (local_score > all_score) {
+				all_score = local_score;
+				final_sym = local_sym;
+			    } else if (local_sym.isEmpty ()) {
+				errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), elem.getLocation (), elem.prettyString ()));
+			    }
 			}
 		    }
 		}
 		
-		if (all_score != -1) {
+		if (loc_scores.size () != 0) {
 		    Generator ret (Generator::empty ());
 		    TRY (
 			auto element_on_scores = loc_scores.find ((int) all_score);

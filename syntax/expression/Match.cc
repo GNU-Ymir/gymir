@@ -7,15 +7,16 @@ namespace syntax {
 	_content (Expression::empty ())
     {}
     
-    Match::Match (const lexing::Word & loc, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions) :
+    Match::Match (const lexing::Word & loc, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal) :
 	IExpression (loc),
 	_content (content),
 	_matchs (matchs),
-	_actions (actions)	
+	_actions (actions),
+	_isFinal (isFinal)
     {}
     
-    Expression Match::init (const lexing::Word & location, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions) {
-	return Expression {new (Z0) Match (location, content, matchs, actions)};
+    Expression Match::init (const lexing::Word & location, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal) {
+	return Expression {new (Z0) Match (location, content, matchs, actions, isFinal)};
     }
 
     Expression Match::clone () const {
@@ -50,6 +51,10 @@ namespace syntax {
 	    this-> _matchs [it].treePrint (stream, i + 2);
 	    this-> _actions [it].treePrint (stream, i + 2);
 	}
+    }
+
+    bool Match::isFinal () const {
+	return this-> _isFinal;
     }
     
 }
