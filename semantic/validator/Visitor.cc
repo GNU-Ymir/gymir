@@ -865,12 +865,13 @@ namespace semantic {
 	    }
 
 	    if (errors.size () == 0) {
-		for (auto it : Ymir::r (0, values.size () - 1))
-		    if (isUseless (values[it]))
-		    // if the expression is not the last, it cannot be a useless one, as it is not use as the value of the block
-		    // So, if it is a useless expression, that perform no value change, or anything, we throw an error
-			Ymir::Error::warn (values [it].getLocation (), ExternalError::get(USELESS_EXPR));
-		
+		if (values.size () != 0) {
+		    for (auto it : Ymir::r (0, values.size () - 1))
+			if (isUseless (values[it]))
+			    // if the expression is not the last, it cannot be a useless one, as it is not use as the value of the block
+			    // So, if it is a useless expression, that perform no value change, or anything, we throw an error
+			    Ymir::Error::warn (values [it].getLocation (), ExternalError::get(USELESS_EXPR));
+		}
 		for (auto & it : toValidate) { // Validation of the catchers
 		    TRY (
 			validateCatchers (it, catchVars, catchInfos, catchActions, type);
