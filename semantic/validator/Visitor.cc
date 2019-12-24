@@ -780,6 +780,13 @@ namespace semantic {
 		    return validateMatch (match);
 		);
 
+		of (syntax::Catch, cat,
+		    return validateCatchOutOfScope (cat); // Out of scope is useless
+		);
+
+		of (syntax::Scope, scope, 
+		    return validateScopeOutOfScope (scope); // Out of scope is useless
+		);
 	    }
 
 	    OutBuffer buf;
@@ -1814,6 +1821,16 @@ namespace semantic {
 	Generator Visitor::validateMatch (const syntax::Match & matcher) {
 	    auto visitor = MatchVisitor::init (*this);
 	    return visitor.validate (matcher);
+	}
+
+	Generator Visitor::validateCatchOutOfScope (const syntax::Catch & cat) {
+	    Ymir::Error::occur (cat.getLocation (), ExternalError::get (CATCH_OUT_OF_SCOPE));
+	    return Generator::empty ();
+	}
+
+	Generator Visitor::validateScopeOutOfScope (const syntax::Scope & scope) {
+	    Ymir::Error::occur (scope.getLocation (), ExternalError::get (SCOPE_OUT_OF_SCOPE));
+	    return Generator::empty ();
 	}
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type) {

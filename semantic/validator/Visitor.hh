@@ -205,6 +205,19 @@ namespace semantic {
 	     * \brief Validate a match expression
 	     */
 	    generator::Generator validateMatch (const syntax::Match & matcher);
+
+	    /**
+	     * \brief Validate a catch (this function must be called only if this catch is out from any scope)
+	     * \param cat the catcher to validate
+	     */
+	    generator::Generator validateCatchOutOfScope (const syntax::Catch & cat);
+
+
+	    /**
+	     * \brief Validate a scope guard (this function must be called only if this scope is out from any scope)
+	     * \param sc the scope guard to validate
+	     */
+	    generator::Generator validateScopeOutOfScope (const syntax::Scope & sc);
 	    
 	    /**
 	     * \return the typeinfo of the type type
