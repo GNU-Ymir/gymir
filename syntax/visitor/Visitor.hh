@@ -250,7 +250,7 @@ namespace syntax {
 	 function := 'def' ('if' expression)? (attributes)? Identifier (templates)? function_proto function_body
 	 \endverbatim
 	 */
-	Declaration visitFunction ();
+	Declaration visitFunction (bool isClass = false);
 	
 	/**
 	 * \brief Visit a function prototype
@@ -259,7 +259,7 @@ namespace syntax {
 	 function_proto := '(' var_decl* ')' ('->' expression)?
 	 \endverbatim
 	 */
-	Function::Prototype visitFunctionPrototype (bool isClosure = false);
+	Function::Prototype visitFunctionPrototype (bool isClosure = false, bool isClass = false);
 
 	/**
 	 * \brief Visit a function body
@@ -374,7 +374,7 @@ namespace syntax {
 	 \endverbatim
 	 * \param withValue is true if we can have an affectation ('=' expression)?
 	 */
-	Expression visitSingleVarDeclaration (bool mandType = false, bool withValue = true);	
+	Expression visitSingleVarDeclaration (bool mandType = false, bool withValue = true, bool isClass = false);	
        
 
 	/**

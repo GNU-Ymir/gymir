@@ -177,6 +177,26 @@ namespace semantic {
 			return;
 		    }
 		);
+
+		of (semantic::Class, cl ATTRIBUTE_UNUSED, {
+			std::vector <std::string> errors;
+			this-> _referent.push_back (sym);			
+			TRY (
+			    validateClass (sym);
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+			
+			this-> _referent.pop_back ();
+			
+			if (errors.size () != 0) {
+			    THROW (ErrorCode::EXTERNAL, errors);
+			}
+
+			return;			
+		    }		    
+		);
 		
 		/** Nothing to do for those kind of symbols */
 		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);		
@@ -395,6 +415,7 @@ namespace semantic {
 		for (auto & deco : var.getDecorators ()) {
 		    switch (deco.getValue ()) {
 		    case syntax::Decorator::MUT : { type.to <Type> ().isMutable (true); isMutable = true; } break;
+		    case syntax::Decorator::DMUT : { type = type.to <Type> ().toDeeplyMutable (); isMutable = true; } break;
 		    default :
 			Ymir::Error::occur (deco.getLocation (),
 					    ExternalError::get (DECO_OUT_OF_CONTEXT),
@@ -486,6 +507,19 @@ namespace semantic {
 	    }
 	    
 	    return StructRef::init (str.getName (), str);
+	}
+
+	generator::Generator Visitor::validateClass (const semantic::Symbol & cls) {
+	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty ()) {
+		// auto sym = cls;
+		// auto gen = generator::Class::init (cls.getName (), sym);
+		// sym.to <semantic::Struct> ().setGenerator (gen);
+		// std::vector <std::string> errors;
+		
+	    }
+
+	    //return ClassRef::init (cls.getName (), cls);
+	    return Generator::empty ();
 	}
 
 	generator::Generator Visitor::validateEnum (const semantic::Symbol & en) {
@@ -1393,7 +1427,9 @@ namespace semantic {
 		    
 		    // Exception slice can be mutable even if it is not a reference, that is the only exception
 		    if (type.to <Type> ().isMutable () && !type.to<Type> ().isRef () && !type.is <Slice> ()) {
-		    	Ymir::Error::occur (var.getDecorator (syntax::Decorator::MUT).getLocation (),
+			auto loc = var.getDecorator (syntax::Decorator::MUT);
+			if (loc.getLocation ().isEof ()) loc = var.getDecorator (syntax::Decorator::DMUT);
+		    	Ymir::Error::occur (loc.getLocation (),
 		    			    ExternalError::get (MUTABLE_CONST_PARAM)
 		    	);
 		    }
@@ -1506,6 +1542,17 @@ namespace semantic {
 		    );
 	    } 
 
+	    if (dec_expr.hasDecorator (syntax::Decorator::DMUT)) {
+		if (!inner.to<Value> ().getType ().to<Type> ().isMutable ()) 
+		    Ymir::Error::occur (dec_expr.getDecorator (syntax::Decorator::DMUT).getLocation (),
+					ExternalError::get (DISCARD_CONST)
+		    );
+		else
+		    Ymir::Error::warn (dec_expr.getDecorator (syntax::Decorator::DMUT).getLocation (),
+				       ExternalError::get (USELESS_DECORATOR)
+		    );
+	    } 
+	    
 	    if (dec_expr.hasDecorator (syntax::Decorator::REF)) {
 		if (inner.to <Value> ().isLvalue ()) {
 		    // if (!inner.to <Value> ().getType ().to <Type> ().isMutable ()) {
@@ -1739,7 +1786,7 @@ namespace semantic {
 	    auto type = Array::init (list.getLocation (), innerType, params.size ());
 	    type.to <Type> ().isMutable (true); // Array constant are mutable by default (not lvalue), to ease simple affectation
 	    type.to <Type> ().isLocal (true); // Array constant are declared in the stack, so they are local
-	    return ArrayValue::init (list.getLocation (), type.to <Type> ().toMutable (), params);
+	    return ArrayValue::init (list.getLocation (), type.to <Type> ().toDeeplyMutable (), params);
 	}	
 	
 	Generator Visitor::validateTuple (const syntax::List & list) {
@@ -2020,7 +2067,7 @@ namespace semantic {
 		type.to <Type> ().isMutable (true);
 		type.to <Type> ().isLocal (true);
 		
-		return ArrayAlloc::init (alloc.getLocation (), type.to<Type> ().toMutable (), value, size, len);
+		return ArrayAlloc::init (alloc.getLocation (), type.to<Type> ().toDeeplyMutable (), value, size, len);
 	    } else {
 		auto value = validateValue (alloc.getLeft ());
 		verifyMemoryOwner (alloc.getLocation (), value.to <Value> ().getType (), value, false);
@@ -2042,7 +2089,7 @@ namespace semantic {
 		auto type = Array::init (alloc.getLocation (), value.to<Value> ().getType (), len.to <Fixed> ().getUI ().u);
 		type.to <Type> ().isMutable (true);
 		type.to <Type> ().isLocal (true);
-		return ArrayAlloc::init (alloc.getLocation (), type.to <Type> ().toMutable (), value, size, len.to <Fixed> ().getUI ().u);
+		return ArrayAlloc::init (alloc.getLocation (), type.to <Type> ().toDeeplyMutable (), value, size, len.to <Fixed> ().getUI ().u);
 	    }
 	}
 
@@ -2402,7 +2449,7 @@ namespace semantic {
 	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {
 		auto type = content.to<Value> ().getType ();
 		type.to <Type> ().isMutable (false);
-		type = type.to <Type> ().toMutable ();
+		type = type.to <Type> ().toDeeplyMutable ();
 		type.to<Type> ().isLocal (false);
 		
 		if (type.is <Array> ()) {
@@ -2436,6 +2483,9 @@ namespace semantic {
 		    type = Slice::init (intr.getLocation (), type.to<Array> ().getInners () [0]);
 		    type.to<Type> ().isMutable (content.to <Value> ().getType ().to <Type> ().isMutable ());
 		}
+		return Aliaser::init (intr.getLocation (), type, content);
+	    } else if (content.to <Value> ().getType ().is <StructRef> () && content.to <Value> ().getType ().to <StructRef> ().hasComplexField ()) {
+		auto type = content.to <Value> ().getType ();
 		return Aliaser::init (intr.getLocation (), type, content);
 	    } else {
 		Ymir::Error::occur (
@@ -2606,7 +2656,15 @@ namespace semantic {
 		    }
 		    gotConstOrMut = expr.getDecorator (syntax::Decorator::MUT).getLocation ();
 		    type.to<Type> ().isMutable (true); break;
-		}		    
+		}
+		case syntax::Decorator::DMUT : {
+		    if (!gotConstOrMut.isEof ()) {
+			auto note = Ymir::Error::createNote (gotConstOrMut);
+			Ymir::Error::occur (expr.getDecorator (syntax::Decorator::DMUT).getLocation (), ExternalError::get (CONFLICT_DECORATOR));		    
+		    }
+		    gotConstOrMut = expr.getDecorator (syntax::Decorator::DMUT).getLocation ();
+		    type = type.to<Type> ().toDeeplyMutable (); break;
+		}
 		default :
 		    Ymir::Error::occur (deco.getLocation (),
 					ExternalError::get (DECO_OUT_OF_CONTEXT),
@@ -2900,12 +2958,21 @@ namespace semantic {
 		    }
 		}
 	    }
-	    
+
 	    // Tuple copy is by default, as we cannot alias a tuple
-	    // Same for structures
 	    // And for arrays (but left op)
-	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <Range> () || gen.to <Value> ().getType ().is <StructRef> () || type.is<Array> ()) {
-		auto tu = gen.to<Value> ().getType ().to <Type> ().toMutable ();
+	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <Range> () || type.is<Array> ()) {
+		auto tu = gen.to<Value> ().getType ();
+		auto llevel = type.to <Type> ().mutabilityLevel ();
+		auto rlevel = tu.to <Type> ().mutabilityLevel ();
+		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
+		    auto note = Ymir::Error::createNote (gen.getLocation ());
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+		    );
+		}		
+	    } else if (type.is <StructRef> () && !type.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
+		auto tu = gen.to<Value> ().getType ();
 		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
@@ -2942,8 +3009,10 @@ namespace semantic {
 	    } else {
 		// Verify copy ownership
 		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional
-		if (type.to<Type> ().isComplex () && !gen.is <Copier> ()) {
-		    if (!(gen.is<ArrayValue> () || gen.is <Block> () || gen.is <Conditional> () || gen.is<Aliaser> () || gen.is<Referencer> () || gen.is<ExitScope> () || gen.is <SuccessScope> ())
+		auto isComplex = type.to <Type> ().isComplex () || (type.is <StructRef> () && type.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ());
+		
+		if (isComplex && !gen.is <Copier> ()) {
+		    if (!(gen.is<ArrayValue> () || gen.is <StructCst> () || gen.is <Block> () || gen.is <Conditional> () || gen.is<Aliaser> () || gen.is<Referencer> () || gen.is<ExitScope> () || gen.is <SuccessScope> ())
 			|| !(type.to<Type> ().equals (gen.to <Value> ().getType ()))) {
 			if (!gen.is <ArrayValue> () || !gen.to<Value> ().getType ().to <Type> ().getInners ()[0].is<Void> ()) { // If it is a [void] value, no need to check mutability
 			    auto llevel = type.to <Type> ().mutabilityLevel (); // We can make an implicit alias only if we assure that the value won't be modified
@@ -2991,6 +3060,11 @@ namespace semantic {
 		case syntax::Decorator::MUT : {
 		    if (!type.isEmpty ())
 			type.to <Type> ().isMutable (true);
+		    isMutable = true;
+		} break;
+		case syntax::Decorator::DMUT : {
+		    if (!type.isEmpty ())
+			type = type.to <Type> ().toDeeplyMutable ();
 		    isMutable = true;
 		} break;
 		default :

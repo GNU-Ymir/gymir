@@ -3,6 +3,7 @@
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/syntax/Expression.hh>
 #include <ymir/semantic/Table.hh>
+#include <ymir/semantic/Generator.hh>
 
 namespace semantic {
 
@@ -14,6 +15,11 @@ namespace semantic {
 	/** The ancestor of the class */
 	syntax::Expression _ancestor;
 
+	/**
+	 * set at validation time, to prevent multiple time validation of the same symbol
+	 */
+	generator::Generator _gen;
+	
     private :
 
 	friend Symbol;
@@ -49,6 +55,18 @@ namespace semantic {
 	bool equals (const Symbol & other) const override;
 
 	std::string formatTree (int padd) const override;
+
+	/**
+	 * \brief This information is set at validation time
+	 * \return the generator (structure prototype)
+	 */
+	const generator::Generator & getGenerator () const;
+
+	/**
+	 * \brief This information is set at validation time
+	 * \brief set the generator (structure prototype)
+	 */
+	void setGenerator (const generator::Generator & gen);
 	
     };
     

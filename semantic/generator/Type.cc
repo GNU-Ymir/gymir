@@ -119,37 +119,19 @@ namespace semantic {
 		Ymir::Error::halt ("%(r) - Getting inner data of a simple type !", "Critical");
 	}
 	
-	Generator Type::toMutable () const {
-	    if (!this-> isComplex ()) {
-		Generator ret = Generator (this-> clone ());
-		ret.to<Type> ().isMutable (true);
-		return ret;
-	    } else {
+	Generator Type::toDeeplyMutable () const {
+	    Generator ret = Generator {this-> clone ()};
+	    ret.to<Type> ().isMutable (true);
+	    
+	    if (this-> isComplex ()) {
 		std::vector <Generator> inners;
 		for (auto & it : this-> getInners ())
-		    inners.push_back (it.to <Type> ().toLevelMinusOne (this-> isMutable ()));
-		
-		Generator ret = Generator {this-> clone ()};
-		ret.to<Type> ().isMutable (true);
-		ret.to <Type> ().setInners (inners);
-		return ret;
+		    inners.push_back (it.to <Type> ().toDeeplyMutable ());
+		ret.to <Type> ().setInners (inners);	    
 	    }
+	    	    
+	    return ret;	    
 	}	
-
-	Generator Type::toLevelMinusOne (bool fatherMut) const {
-	    if (this-> isMutable () && fatherMut) return Generator {this-> clone ()};
-	    if (!this-> isComplex ()) return this-> toMutable ();
-	    else {
-		std::vector<Generator> inners = this-> getInners ();
-		for (auto & it : inners) 
-		    it.to <Type> ().isMutable (false);
-		
-		Generator ret = Generator {this-> clone ()};
-		ret.to <Type> ().isMutable (true);
-		ret.to <Type> ().setInners (inners);
-		return ret;
-	    }
-	}
 
 	int Type::mutabilityLevel (int level) const {	    
 	    if (this-> isMutable ()) {

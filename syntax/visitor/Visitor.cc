@@ -40,7 +40,7 @@ namespace syntax {
 	    Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
 	    Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 	    Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
-	    Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::TYPE, Keys::ALIAS,
+	    Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::CLASS, Keys::ALIAS,
 	    Keys::STATIC
 	};
 	
@@ -77,14 +77,14 @@ namespace syntax {
 	};
 
 	visit._declarations = {
-	    Keys::ALIAS, Keys::TYPE, Keys::ENUM,
+	    Keys::ALIAS, Keys::CLASS, Keys::ENUM,
 	    Keys::DEF, Keys::STATIC, Keys::IMPORT,
 	    Keys::MACRO, Keys::MOD, Keys::STRUCT,
 	    Keys::TRAIT, Keys::USE, Keys::MIXIN, Keys::EXTERN
 	};
 	
 	visit._declarationsBlock = {
-	    Keys::TYPE, Keys::ENUM,  Keys::DEF,
+	    Keys::CLASS, Keys::ENUM,  Keys::DEF,
 	    Keys::IMPORT, Keys::STRUCT, Keys::TRAIT,
 	    Keys::USE, Keys::MIXIN
 	};
@@ -245,7 +245,7 @@ namespace syntax {
 	auto location = this-> _lex.next (this-> _declarations);	
 
 	if (location == Keys::ALIAS) return visitAlias ();
-	if (location == Keys::TYPE) return visitClass ();
+	if (location == Keys::CLASS) return visitClass ();
 	if (location == Keys::ENUM) return visitEnum ();
 	if (location == Keys::DEF) return visitFunction ();
 	if (location == Keys::STATIC) return visitGlobal ();
@@ -368,7 +368,7 @@ namespace syntax {
 		return visitClassDestructor ();
 	    else return visitClassConstructor ();
 	} else if (token == Keys::DEF) {
-	    return visitFunction ();	    
+	    return visitFunction (true);	    
 	} else if (token == Keys::LET) {
 	    this-> _lex.rewind ();
 	    return Expression::toDeclaration (visitVarDeclaration ());
@@ -443,7 +443,7 @@ namespace syntax {
 	} else return Enum::init (name, type, values);
     }    
     
-    Declaration Visitor::visitFunction () {       
+    Declaration Visitor::visitFunction (bool isClass) {       
 	auto location = this-> _lex.rewind ().next ();
 	
 	Expression test (Expression::empty ());
@@ -470,7 +470,7 @@ namespace syntax {
 	}
 	else this-> _lex.rewind ();
 
-	auto proto = visitFunctionPrototype ();
+	auto proto = visitFunctionPrototype (false, isClass);
 	auto body = visitFunctionBody ();
 	auto function = Function::init (name, proto, body);
 	function.to <Function> ().setCustomAttributes (attribs);
@@ -484,7 +484,7 @@ namespace syntax {
 	}
     }
 
-    Function::Prototype Visitor::visitFunctionPrototype (bool isClosure) {
+    Function::Prototype Visitor::visitFunctionPrototype (bool isClosure, bool isClass) {
 	std::vector <Expression> vars;
 	lexing::Word token;
 	if (isClosure)
@@ -505,7 +505,7 @@ namespace syntax {
 		    isVariadic = true;
 		    token = this-> _lex.next ({Token::RPAR});
 		} else if (token != Token::RPAR) {
-		    vars.push_back (visitSingleVarDeclaration (true, true));
+		    vars.push_back (visitSingleVarDeclaration (true, true, isClass && vars.size () == 0));
 		    token = this-> _lex.next ({Token::RPAR, Token::COMA, Token::TDOT});
 		}
 	    }
@@ -981,6 +981,15 @@ namespace syntax {
 		end = this-> _lex.next ({Token::COMA, Token::RPAR});
 	    }
 	    return List::init (next, end, params);
+	} else if (next == Token::LCRO) {
+	    this-> _lex.next ();
+	    std::vector <Expression> params;
+	    auto end = this-> _lex.consumeIf ({Token::RCRO});
+	    while (end != Token::RCRO) {
+		params.push_back (visitMatchExpression ());
+		end = this-> _lex.next ({Token::COMA, Token::RCRO});
+	    }
+	    return List::init (next, end, params);	    
 	} else {
 	    return visitExpression ();
 	}
@@ -1477,7 +1486,7 @@ namespace syntax {
 	else return Set::init (location, decls);
     }    
 
-    Expression Visitor::visitSingleVarDeclaration (bool mandType, bool withValue) {
+    Expression Visitor::visitSingleVarDeclaration (bool mandType, bool withValue, bool isClass) {
 	std::vector<DecoratorWord> decos;
 	Expression type (Expression::empty ()), value (Expression::empty ());
 	
@@ -1499,19 +1508,23 @@ namespace syntax {
 	if (name != Keys::UNDER) {
 	    name = visitIdentifier ();
 	}
-	
-	if (mandType) token = this-> _lex.next ({Token::COLON});
-	else token = this-> _lex.next ();
-	
-	if (token == Token::COLON) {
-	    type = visitExpression (10);
-	    token = this-> _lex.next ();
-	} 
 
-	if (token == Token::EQUAL && withValue)
-	    value = visitExpression ();
-	else this-> _lex.rewind ();
+	if (name != Keys::SELF || !isClass) {		
+	    if (name == Keys::SELF)
+		Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.str);
+	    
+	    if (mandType) token = this-> _lex.next ({Token::COLON});
+	    else token = this-> _lex.next ();
 	
+	    if (token == Token::COLON) {
+		type = visitExpression (10);
+		token = this-> _lex.next ();
+	    } 
+
+	    if (token == Token::EQUAL && withValue)
+		value = visitExpression ();
+	    else this-> _lex.rewind ();
+	}	
 	return VarDecl::init (name, decos, type, value);
     }
    

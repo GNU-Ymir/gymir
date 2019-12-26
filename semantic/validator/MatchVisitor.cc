@@ -38,10 +38,12 @@ namespace semantic {
 		this-> _context.enterBlock ();
 		{
 		    TRY (
-			test = this-> validateMatch (value, matchers [it], isMandatory);
+			bool local_mandatory = false;
+			test = this-> validateMatch (value, matchers [it], local_mandatory);
+			if (local_mandatory) isMandatory = true;
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
-			errors = msgs;
+			//errors = msgs;
 		    } FINALLY;
 		}
 		
@@ -85,7 +87,9 @@ namespace semantic {
 		    return validateMatchVarDecl (value, decl, isMandatory);
 		);
 
-		// of (syntax::
+		of (syntax::List, lst,
+		    return validateMatchList (value, lst, isMandatory);
+		);
 		
 		of (syntax::Var, var,		    
 		    if (var.getName () == Keys::UNDER) {
@@ -164,6 +168,54 @@ namespace semantic {
 	    return validateMatchAnything (value, bin.clone (), isMandatory);	    
 	}
 
+	Generator MatchVisitor::validateMatchList (const Generator & value, const syntax::List & lst, bool & isMandatory) {
+	    if (value.to <Value> ().getType ().is <Tuple> () && lst.getLocation () == Token::LPAR) {
+		if (value.to <Value> ().getType ().to <Type> ().getInners ().size () == lst.getParameters ().size ()) {
+		    isMandatory = true;
+		    Generator globTest (Generator::empty ());
+		    for (auto it : Ymir::r (0, value.to <Value> ().getType ().to <Type> ().getInners ().size ())) {
+			bool loc_mandatory = false;
+			auto acc = TupleAccess::init (lst.getLocation (), value.to <Value> ().getType ().to <Type> ().getInners ()[it], value, it);
+			auto loc_test = validateMatch (acc, lst.getParameters () [it], loc_mandatory);
+			isMandatory = isMandatory && loc_mandatory;
+			if (it == 0)
+			    globTest = loc_test;
+			else globTest = BinaryBool::init (lst.getLocation (),
+							  Binary::Operator::AND,
+							  Bool::init (lst.getLocation ()),
+							  globTest, loc_test);
+		    }
+		    
+		    if (globTest.isEmpty () && lst.getParameters ().size () == 0) // No params
+			return BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
+		    return globTest;
+		}
+	    } else if (value.to <Value> ().getType ().is <Array> () && lst.getLocation () == Token::LCRO) {
+		if (value.to <Value> ().getType ().to <Array> ().getSize () == lst.getParameters ().size ()) {
+		    isMandatory = true;
+		    Generator globTest (Generator::empty ());
+		    auto innerType = value.to <Value> ().getType ().to <Array> ().getInners ()[0];
+		    for (auto it : Ymir::r (0, value.to <Value> ().getType ().to <Type> ().getInners ().size ())) {
+			bool loc_mandatory = false;
+			auto acc = ArrayAccess::init (lst.getLocation (), innerType, value, ufixed (lst.getLocation (), it));
+			auto loc_test = validateMatch (acc, lst.getParameters ()[it], loc_mandatory);
+			isMandatory = isMandatory && loc_mandatory;
+			if (it == 0)
+			    globTest = loc_test;
+			else globTest = BinaryBool::init (lst.getLocation (),
+							  Binary::Operator::AND,
+							  Bool::init (lst.getLocation ()),
+							  globTest, loc_test);
+			if (globTest.isEmpty () && lst.getParameters ().size () == 0) // No params
+			    return BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
+			return globTest;
+		    }
+		}
+	    }
+	    
+	    return validateMatchAnything (value, lst.clone (), isMandatory);
+	}
+	
 	Generator MatchVisitor::validateMatchAnything (const Generator & value, const syntax::Expression & matcher, bool & isMandatory) {	    
 	    auto binVisitor = BinaryVisitor::init (this-> _context);
 	    auto fakeBinary = syntax::Binary::init ({matcher.getLocation (), Token::DEQUAL}, TemplateSyntaxWrapper::init (value.getLocation (), value), matcher, Expression::empty ());

@@ -14,6 +14,7 @@ namespace syntax {
 	REF,
 	CONST,
 	MUT,
+	DMUT,
 	STATIC, 
 	CTE
     };

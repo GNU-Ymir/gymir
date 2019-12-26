@@ -136,6 +136,14 @@ namespace semantic {
 	     * \return A StructRef
 	     */
 	    generator::Generator validateStruct (const semantic::Symbol & str);
+
+
+	    /**
+	     * \brief Validate a class declaration
+	     * \brief unlike function or vardel, this will not create any generator, but just check the integrity of the the class, and generate all the inner function of the class
+	     * \return A ClassRef
+	     */
+	    generator::Generator validateClass (const semantic::Symbol & cls);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type

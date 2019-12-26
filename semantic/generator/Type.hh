@@ -135,7 +135,7 @@ namespace semantic {
 	     \endverbatim
 	     * \return a mutable version of this type, ensuring there are no legal escapes for const discard
 	     */
-	    virtual Generator toMutable () const;
+	    virtual Generator toDeeplyMutable () const;
 
 	    /**
 	     * \brief the mutability level is used to compare two types of the same kind
@@ -152,7 +152,7 @@ namespace semantic {
 	     * \return the mutability level of the type
 	     */
 	    virtual int mutabilityLevel (int level = 0) const;
-	    
+	   	    
 	    /**
 	     * \return does this type refer to local data ? (simple type never does)
 	     */
@@ -185,10 +185,6 @@ namespace semantic {
 	    
 	protected: 
 
-	    /**
-	     * \brief Used in toMutable, apply the level - 1 operation
-	     */
-	    virtual Generator toLevelMinusOne (bool fatherMut) const;
 	    
 	    /**
 	     * \brief if (is) the type is complex 

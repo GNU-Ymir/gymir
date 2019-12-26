@@ -20,6 +20,7 @@ struct Keys {
     static std::string  CAST;
     static std::string  CATCH; 
     static std::string  CLANG;
+    static std::string  CLASS;
     static std::string  CONST; 
     static std::string  COPY;
     static std::string  CPPLANG;
@@ -66,7 +67,8 @@ struct Keys {
     static std::string  MIXIN; 
     static std::string  MOD;
     static std::string  MOVE;
-    static std::string  MUTABLE; 
+    static std::string  MUTABLE;
+    static std::string  DMUTABLE; 
     static std::string  NEW;
     static std::string  NOGC;
     static std::string  NOT_IS;
@@ -116,7 +118,6 @@ struct Keys {
     static std::string  TRUE_; 
     static std::string  TRUSTED;
     static std::string  TUPLE; 
-    static std::string  TYPE;
     static std::string  TYPEOF;
     static std::string  U16;
     static std::string  U32;

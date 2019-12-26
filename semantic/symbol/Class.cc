@@ -5,19 +5,22 @@ namespace semantic {
     Class::Class () :
 	ISymbol (lexing::Word::eof ()), 
 	_table (this),
-	_ancestor (syntax::Expression::empty ())
+	_ancestor (syntax::Expression::empty ()),
+	_gen (generator::Generator::empty ())
     {}
 
     Class::Class (const lexing::Word & name, const syntax::Expression & ancestor) :
 	ISymbol (name),
 	_table (this),
-	_ancestor (ancestor)
+	_ancestor (ancestor),
+	_gen (generator::Generator::empty ())
     {}
 
     Class::Class (const Class & other) :
 	ISymbol (other),
 	_table (other._table.clone (this)),
-	_ancestor (other._ancestor)
+	_ancestor (other._ancestor),
+	_gen (generator::Generator::empty ())
     {}
     
     Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor) {
@@ -84,4 +87,13 @@ namespace semantic {
 	}
 	return buf.str ();
     }
+
+    const generator::Generator & Class::getGenerator () const {
+	return this-> _gen;
+    }
+
+    void Class::setGenerator (const generator::Generator & gen) {
+	this-> _gen = gen;
+    }
+
 }

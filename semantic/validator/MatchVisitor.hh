@@ -56,6 +56,12 @@ namespace semantic {
 	    generator::Generator validateMatchBinary (const generator::Generator & value, const syntax::Binary & bin, bool & isMandatory);
 
 	    /**
+	     * \brief Valdiate a list expression
+	     * \brief This is used to match over a tuple, or a static array
+	     */
+	    generator::Generator validateMatchList (const generator::Generator & value, const syntax::List & lst, bool & isMandatory);
+	    
+	    /**
 	     * \brief Validate anything else, that is not a pattern matching
 	     */
 	    generator::Generator validateMatchAnything (const generator::Generator & value, const syntax::Expression & any, bool & isMandatory);

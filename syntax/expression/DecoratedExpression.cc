@@ -37,6 +37,7 @@ namespace syntax {
 	    case Decorator::REF : decosName.push_back ("ref"); break;
 	    case Decorator::CONST : decosName.push_back ("const"); break;
 	    case Decorator::MUT : decosName.push_back ("mut"); break;
+	    case Decorator::DMUT : decosName.push_back ("dmut"); break;
 	    case Decorator::STATIC : decosName.push_back ("static"); break;
 	    case Decorator::CTE : decosName.push_back ("cte"); break;
 	    }

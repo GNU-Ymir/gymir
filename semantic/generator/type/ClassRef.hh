@@ -8,10 +8,10 @@ namespace semantic {
 
 
 	/**
-	 * \struct StructRef
-	 * \cf Struct
+	 * \struct ClassRef
+	 * \cf Class
 	 */
-	class StructRef : public Type {
+	class ClassRef : public Type {
 
 	    /** The id of the structure refered */
 	    Symbol _ref;
@@ -20,9 +20,9 @@ namespace semantic {
 
 	    friend Generator;
 
-	    StructRef ();
+	    ClassRef ();
 
-	    StructRef (const lexing::Word & loc, const Symbol & ref);
+	    ClassRef (const lexing::Word & loc, const Symbol & ref);
 	public :
 
 	    static std::string INIT_NAME;
@@ -46,10 +46,6 @@ namespace semantic {
 	    bool isRefOf (const Symbol & sym) const;
 
 	    const Symbol & getRef () const;
-
-	    virtual int mutabilityLevel (int level) const override;
-
-	    bool hasComplexField () const;
 	    
 	    std::string typeName () const override;
 

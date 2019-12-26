@@ -19,7 +19,8 @@ namespace semantic {
 	{
 	    if (!this-> _ref.isEmpty ()) { // A structure is complex iif one of its field is complex
 		this-> isComplex (
-		    this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()
+		    true
+		    //this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()
 		);
 	    }
 	}
@@ -51,6 +52,24 @@ namespace semantic {
 
 	const Symbol & StructRef::getRef () const {
 	    return this-> _ref;
+	}
+
+	int StructRef::mutabilityLevel (int level) const {
+	    if (this-> isMutable ()) {
+		if (this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
+		    auto max = level;
+		    for (auto & it : this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
+			auto mut = it.to <Value> ().getType ().to <Type> ().mutabilityLevel (level + 1);
+			if (mut > max) max = mut;
+		    }
+		    return max;
+		}
+		return level + 1;
+	    } else return level;
+	}	
+
+	bool StructRef::hasComplexField () const {
+	    return this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ();
 	}
 	
 	std::string StructRef::typeName () const {

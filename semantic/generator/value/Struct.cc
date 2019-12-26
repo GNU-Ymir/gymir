@@ -74,7 +74,8 @@ namespace semantic {
 
 	bool Struct::hasComplexField () const {
 	    for (auto & it : this-> _fields) {
-		if (it.to <generator::VarDecl> ().getVarType ().to<Type> ().isComplex ())
+		auto & type = it.to <generator::VarDecl> ().getVarType ().to<Type> ();		
+		if (type.isComplex () && type.mutabilityLevel () != 0)
 		    return true;
 	    }
 	    return false;
