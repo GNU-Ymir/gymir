@@ -66,6 +66,11 @@ namespace syntax {
 	 */
 	bool isSizeof () const;
 
+	/**
+	 * \return is it a deep copy (dcopy) ?
+	 */
+	bool isDeepCopy () const;
+
 
 	/**
 	 * \return is it a move

@@ -30,6 +30,7 @@ namespace semantic {
 
 	std::string Visitor::TYPE_INFO = "TypeInfo";
 	std::string Visitor::TYPE_IDS = "TypeIDs";
+	std::string Visitor::DCOPY_OP_OVERRIDE = "deepCopy";
 	
 	Visitor::Visitor ()
 	{
@@ -2435,6 +2436,7 @@ namespace semantic {
 	    if (intr.isCopy ()) return validateCopy (intr);
 	    if (intr.isAlias ()) return validateAlias (intr);
 	    if (intr.isExpand ()) return validateExpand (intr);
+	    if (intr.isDeepCopy ()) return validateDeepCopy (intr);
 	    if (intr.isTypeof ()) {
 		auto elem = validateValue (intr.getContent ());
 		return elem.to <Value> ().getType ();
@@ -2494,20 +2496,24 @@ namespace semantic {
 		    type.to<Type> ().isMutable (content.to <Value> ().getType ().to <Type> ().isMutable ());
 		}
 		return Aliaser::init (intr.getLocation (), type, content);
-	    } else if (content.to <Value> ().getType ().to <Type> ().needExplicitAlias ()) {
-		auto type = content.to <Value> ().getType ();
-		return Aliaser::init (intr.getLocation (), type, content);
-	    } else {
-		Ymir::Error::occur (
-		    intr.getLocation (),
-		    ExternalError::get (NO_ALIAS_EXIST),
-		    content.to <Value> ().getType ().to <Type> ().getTypeName ()
-		);
 	    }
 	    
-	    return Generator::empty ();
+	    auto type = content.to <Value> ().getType ();
+	    return Aliaser::init (intr.getLocation (), type, content);	    	    
 	}
 
+	Generator Visitor::validateDeepCopy (const syntax::Intrinsics & intr) {
+	    auto loc = intr.getLocation ();
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		syntax::Var::init ({loc, Visitor::DCOPY_OP_OVERRIDE}),
+		{intr.getContent ()}	       
+	    );
+
+	    auto val = validateValue (call);
+	    return Aliaser::init (intr.getLocation (), val.to <Value> ().getType (), val);
+	}
+	
 	Generator Visitor::validateExpand (const syntax::Intrinsics & intr) {
 	    std::vector <Generator> values;
 	    auto content = validateValue (intr.getContent ());

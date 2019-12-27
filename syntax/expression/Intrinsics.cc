@@ -63,5 +63,9 @@ namespace syntax {
     bool Intrinsics::isMove () const {
 	return this-> getLocation () == Keys::MOVE;
     }
+
+    bool Intrinsics::isDeepCopy () const {
+	return this-> getLocation () == Keys::DCOPY;
+    }
     
 }

@@ -19,6 +19,7 @@ std::string     Keys::CLANG	   = "C";
 std::string     Keys::CLASS        = "class";
 std::string     Keys::CONST	   = "const";
 std::string     Keys::COPY	   = "copy";
+std::string     Keys::DCOPY	   = "dcopy";
 std::string     Keys::CPPLANG      = "C++";
 std::string     Keys::DEF	   = "def";
 std::string     Keys::DELEGATE	   = "dg";

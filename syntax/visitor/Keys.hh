@@ -23,6 +23,7 @@ struct Keys {
     static std::string  CLASS;
     static std::string  CONST; 
     static std::string  COPY;
+    static std::string  DCOPY;
     static std::string  CPPLANG;
     static std::string  DEF;
     static std::string  DELEGATE; 

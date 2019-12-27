@@ -90,7 +90,7 @@ namespace syntax {
 	};
 
 	visit._intrisics = {
-	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF, Keys::ALIAS, Keys::MOVE
+	    Keys::COPY, Keys::EXPAND, Keys::TYPEOF, Keys::SIZEOF, Keys::ALIAS, Keys::MOVE, Keys::DCOPY
 	};
 	
 	visit._operand_op = {

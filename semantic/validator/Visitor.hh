@@ -39,7 +39,8 @@ namespace semantic {
 
 	    static std::string TYPE_INFO;
 	    static std::string TYPE_IDS;
-
+	    static std::string DCOPY_OP_OVERRIDE;
+	    
 	    /** List of referent for symbol access and insertion */
 	    std::list <Symbol> _referent;	
 
@@ -483,6 +484,11 @@ namespace semantic {
 	     * \brief Validate the copy intrinsics
 	     */
 	    generator::Generator validateCopy (const syntax::Intrinsics & intr);
+
+	    /**
+	     * \brief Validate the deep copy intrinsics
+	     */
+	    generator::Generator validateDeepCopy (const syntax::Intrinsics & intr);
 
 	    /**
 	     * \brief Validate the alias intrinsics
