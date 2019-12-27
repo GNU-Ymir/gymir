@@ -124,6 +124,12 @@ namespace semantic {
 	    virtual void isMutable (bool is);
 
 	    /**
+	     * \brief Transform the type into the same type but deeply mutable (every sub type are also mutable)
+	     * \brief This is used when the keyword dmut is used
+	     */
+	    virtual Generator toDeeplyMutable () const;
+	    
+	    /**
 	     * \brief The rule is simple, const is transitive : 
 	     * \brief There are two different kind of type : 
 	     * \brief - Simple : X -> mut X
@@ -140,8 +146,8 @@ namespace semantic {
 	     \endverbatim
 	     * \return a mutable version of this type, ensuring there are no legal escapes for const discard
 	     */
-	    virtual Generator toDeeplyMutable () const;
-
+	    virtual Generator toMutable () const;
+	    
 	    /**
 	     * \brief the mutability level is used to compare two types of the same kind
 	     * example : 
@@ -190,6 +196,10 @@ namespace semantic {
 	    
 	protected: 
 
+	    /**
+	     * \brief Used in toMutable, apply the level - 1 operation
+	     */
+	    Generator toLevelMinusOne (bool isFatherMut) const;
 	    
 	    /**
 	     * \brief if (is) the type is complex 

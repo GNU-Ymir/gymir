@@ -1786,7 +1786,17 @@ namespace semantic {
 	    auto type = Array::init (list.getLocation (), innerType, params.size ());
 	    type.to <Type> ().isMutable (true); // Array constant are mutable by default (not lvalue), to ease simple affectation
 	    type.to <Type> ().isLocal (true); // Array constant are declared in the stack, so they are local
-	    return ArrayValue::init (list.getLocation (), type.to <Type> ().toDeeplyMutable (), params);
+
+	    innerType.to <Type> ().isMutable (true);
+	    auto slc = Slice::init (list.getLocation (), innerType);
+	    slc.to <Type> ().isMutable (true);
+	    
+	    return Copier::init (list.getLocation (),
+				 slc,
+				 Aliaser::init (list.getLocation (), slc,
+						ArrayValue::init (list.getLocation (), type.to <Type> ().toDeeplyMutable (), params)
+				 )
+	    );
 	}	
 	
 	Generator Visitor::validateTuple (const syntax::List & list) {
@@ -2449,7 +2459,7 @@ namespace semantic {
 	    if (content.to <Value> ().getType ().is <Array> () || content.to <Value> ().getType ().is <Slice> ()) {
 		auto type = content.to<Value> ().getType ();
 		type.to <Type> ().isMutable (false);
-		type = type.to <Type> ().toDeeplyMutable ();
+		type = type.to <Type> ().toMutable ();
 		type.to<Type> ().isLocal (false);
 		
 		if (type.is <Array> ()) {
