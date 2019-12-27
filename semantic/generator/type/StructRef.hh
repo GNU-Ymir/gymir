@@ -49,7 +49,12 @@ namespace semantic {
 
 	    virtual int mutabilityLevel (int level) const override;
 
-	    bool hasComplexField () const;
+	    /**
+	     * \return true if this struct contains type with explicit alias needed	     
+	     */
+	    bool needExplicitAlias () const override;
+
+	    const Generator & getExplicitAliasTypeLoc () const;
 	    
 	    std::string typeName () const override;
 

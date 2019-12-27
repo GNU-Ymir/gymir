@@ -45,6 +45,11 @@ namespace semantic {
 	     */
 	    bool isCompatible (const Generator & other) const override;
 
+	    /**
+	     * \return true, pointer points to data in foreign place, and need to give the ownership
+	     */
+	    bool needExplicitAlias () const override;
+	    
 	    /** 
 	     * \return the name of the type formatted
 	     */

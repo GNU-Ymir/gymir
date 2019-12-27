@@ -1,6 +1,7 @@
 #include <ymir/semantic/generator/type/StructRef.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/symbol/Struct.hh>
+#include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/semantic/generator/value/Struct.hh>
 
 namespace semantic {
@@ -68,8 +69,29 @@ namespace semantic {
 	    } else return level;
 	}	
 
-	bool StructRef::hasComplexField () const {
-	    return this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ();
+	bool StructRef::needExplicitAlias () const {
+	    for (auto & it : this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
+
+		auto mut = it.to <generator::VarDecl> ().isMutable ()
+		    && it.to <generator::VarDecl> ().getVarType ().to <Type> ().needExplicitAlias ();
+		
+		if (mut)
+		    return true;
+	    }
+	    
+	    return false;
+	}
+
+	const Generator & StructRef::getExplicitAliasTypeLoc () const {
+	    for (auto & it : this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {		
+		auto mut = it.to <generator::VarDecl> ().isMutable ()
+		    && it.to <generator::VarDecl> ().getVarType ().to <Type> ().needExplicitAlias ();
+		
+		if (mut)
+		    return it;
+	    }
+	    
+	    return Generator::__empty__;
 	}
 	
 	std::string StructRef::typeName () const {

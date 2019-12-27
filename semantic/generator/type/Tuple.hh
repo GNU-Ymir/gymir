@@ -41,7 +41,12 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    bool equals (const Generator & other) const override;
-	    
+
+	    /**
+	     * \return true if this tuple contains type with explicit alias needed	     
+	     */
+	    bool needExplicitAlias () const override;
+
 	    /** 
 	     * \return the name of the type formatted
 	     */

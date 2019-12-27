@@ -51,6 +51,10 @@ namespace semantic {
 		
 	    return this-> getInners () [0].to<Type> ().isCompatible (array.getInners () [0]);
 	}	
+
+	bool Slice::needExplicitAlias () const {
+	    return true;
+	}
 	
 	std::string Slice::typeName () const {
 	    Ymir::OutBuffer buf;

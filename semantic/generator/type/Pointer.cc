@@ -45,6 +45,10 @@ namespace semantic {
 	    return this-> getInners () [0].equals (array.getInners () [0]);
 	}
 
+	bool Pointer::needExplicitAlias () const {
+	    return true;
+	}
+	
 	bool Pointer::isCompatible (const Generator & gen) const {
 	    if (this-> equals (gen)) return true;
 	    if (!gen.is <Array> ()) return false;

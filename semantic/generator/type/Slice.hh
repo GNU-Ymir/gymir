@@ -58,6 +58,12 @@ namespace semantic {
 	     */
 	    bool equals (const Generator & other) const override;
 
+
+	    /**
+	     * \return true, the data of a slice are in the heap or in a place that is not copied when simple affectation is made
+	     */
+	    bool needExplicitAlias () const override;
+	    
 	    /**
 	     * \return is this type compatible with other (assuming other is a type)
 	     */

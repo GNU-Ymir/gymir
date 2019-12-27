@@ -2484,7 +2484,7 @@ namespace semantic {
 		    type.to<Type> ().isMutable (content.to <Value> ().getType ().to <Type> ().isMutable ());
 		}
 		return Aliaser::init (intr.getLocation (), type, content);
-	    } else if (content.to <Value> ().getType ().is <StructRef> () && content.to <Value> ().getType ().to <StructRef> ().hasComplexField ()) {
+	    } else if (content.to <Value> ().getType ().to <Type> ().needExplicitAlias ()) {
 		auto type = content.to <Value> ().getType ();
 		return Aliaser::init (intr.getLocation (), type, content);
 	    } else {
@@ -2937,8 +2937,9 @@ namespace semantic {
 	}
 
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
-	    verifyCompatibleTypeWithValue (type, gen);
-
+	    verifyCompatibleTypeWithValue (type, gen);	    
+	    verifyImplicitAlias (loc, type, gen);
+	    
 	    // Verify Implicit referencing
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
 		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
@@ -2990,14 +2991,7 @@ namespace semantic {
 					       llevel, std::max (1, rlevel)
 		    );
 		}		
-	    } else if (type.is<FuncPtr> ()) { // Yes, i know that's ugly, but easier to understand actually
-		// auto llevel = type.to <Type> ().mutabilityLevel ();
-		// auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
-		// if (llevel > rlevel) {
-		//     Ymir::Error::occur (loc, ExternalError::get (DISCARD_CONST_LEVEL),
-		// 			llevel, rlevel
-		//     );
-		// }		
+	    } else if (type.is<FuncPtr> ()) { // Yes, i know that's ugly, but easier to understand actually	
 	    } else if (type.is<LambdaType> ()) {
 		if (!construct || !gen.is<LambdaProto> ()) {
 		    auto note = Ymir::Error::createNote (loc);
@@ -3007,26 +3001,6 @@ namespace semantic {
 					1, 0
 		    );	 
 	    } else {
-		// Verify copy ownership
-		// We can asset that, a block, and an arrayvalue (and some others ...) have already perform the copy, it is not mandatory for them to force it, as well as conditional
-		auto isComplex = type.to <Type> ().isComplex () || (type.is <StructRef> () && type.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ());
-		
-		if (isComplex && !gen.is <Copier> ()) {
-		    if (!(gen.is<ArrayValue> () || gen.is <StructCst> () || gen.is <Block> () || gen.is <Conditional> () || gen.is<Aliaser> () || gen.is<Referencer> () || gen.is<ExitScope> () || gen.is <SuccessScope> ())
-			|| !(type.to<Type> ().equals (gen.to <Value> ().getType ()))) {
-			if (!gen.is <ArrayValue> () || !gen.to<Value> ().getType ().to <Type> ().getInners ()[0].is<Void> ()) { // If it is a [void] value, no need to check mutability
-			    auto llevel = type.to <Type> ().mutabilityLevel (); // We can make an implicit alias only if we assure that the value won't be modified
-			    if (llevel > 0) {
-				auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
-								     gen.to <Value> ().getType ().to <Type> ().getTypeName ());
-				Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-							   llevel, 0
-				);
-			    }
-			}
-		    }
-		}
-
 		// Verify mutability
 		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {		    
 		    auto llevel = type.to <Type> ().mutabilityLevel ();
@@ -3046,7 +3020,36 @@ namespace semantic {
 	    // }
 	}
 
+	void Visitor::verifyImplicitAlias (const lexing::Word & loc, const Generator & type, const Generator & gen) {
+	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias 
+	    if (gen.is<Copier> () || gen.is <Aliaser> () || gen.is <Referencer> ()) return; // It is aliased or copied, that's ok
+	    match (gen) {
+		of (ArrayValue, arr ATTRIBUTE_UNUSED, return);
+		of (StructCst, arr ATTRIBUTE_UNUSED, return);
+		of (Block, arr ATTRIBUTE_UNUSED, return);
+		of (Conditional, arr ATTRIBUTE_UNUSED, return);
+		of (ExitScope, arr ATTRIBUTE_UNUSED, return);
+		of (SuccessScope, arr ATTRIBUTE_UNUSED, return);
+	    }
+	    auto llevel = type.to <Type> ().mutabilityLevel ();
+	    
+	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
+	    if (llevel > 0) {
+		auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
+						     gen.to <Value> ().getType ().to <Type> ().getTypeName ());
 
+		if (type.is <StructRef> ()) {
+		    auto & varDecl = type.to <StructRef> ().getExplicitAliasTypeLoc ();
+		    note = note + Ymir::Error::createNote (varDecl.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
+							   varDecl.to <generator::VarDecl> ().getVarType ().prettyString ());
+		}
+		
+		Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					   llevel, 0
+		);
+	    }
+	}
+	
 	void Visitor::applyDecoratorOnVarDeclType (const std::vector <syntax::DecoratorWord> & decos, Generator & type, bool & isRef, bool & isMutable) {
 	    isMutable = false;
 	    isRef = false;

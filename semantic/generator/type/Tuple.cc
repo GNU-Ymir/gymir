@@ -45,6 +45,14 @@ namespace semantic {
 		
 	    return true;
 	}
+
+	bool Tuple::needExplicitAlias () const {
+	    for (auto it : Ymir::r (0, this-> getInners ().size ())) {
+		if (this-> getInners () [it].to <Type> ().needExplicitAlias ()
+		    && this-> getInners ()[it].to <Type> ().isMutable ()) return true;
+	    }
+	    return false;
+	}
 	
 	std::string Tuple::typeName () const {
 	    Ymir::OutBuffer buf;

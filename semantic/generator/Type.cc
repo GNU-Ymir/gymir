@@ -150,6 +150,10 @@ namespace semantic {
 	    return level;	    
 	}
 
+	bool Type::needExplicitAlias () const {
+	    return false;
+	}
+	
 	void Type::setProxy (const Generator & proxy) {
 	    this-> _proxy = proxy;
 	}

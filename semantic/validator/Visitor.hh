@@ -538,6 +538,11 @@ namespace semantic {
 
 
 	    /**
+	     * \brief Verify that if the type must be copied or aliased, the generator gives an explicitly alias construction
+	     */
+	    void verifyImplicitAlias (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen);
+
+	    /**
 	     * \brief Applicable to the type of a vardecl, 
 	     * \param decos the decorators of the variable (and not of the type)
 	     * \param type the type of the var declaration
