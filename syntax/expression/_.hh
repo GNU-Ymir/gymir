@@ -31,6 +31,7 @@
 #include <ymir/syntax/expression/Return.hh>
 #include <ymir/syntax/expression/Scope.hh>
 #include <ymir/syntax/expression/Set.hh>
+#include <ymir/syntax/expression/StructVar.hh>
 #include <ymir/syntax/expression/String.hh>
 #include <ymir/syntax/expression/Template.hh>
 #include <ymir/syntax/expression/TemplateChecker.hh>

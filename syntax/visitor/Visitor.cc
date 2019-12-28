@@ -686,7 +686,16 @@ namespace syntax {
 			    this-> _lex.rewind (2);
 			    list.push_back (visitExpression (10));
 			}
-		    } else list.push_back (visitExpression (10));
+		    } else {
+			auto x = this-> _lex.next ();
+			if (x == Keys::STRUCT) {
+			    auto name = visitIdentifier ();
+			    list.push_back (StructVar::init (name));
+			} else {
+			    this-> _lex.rewind ();
+			    list.push_back (visitExpression (10));
+			}
+		    }
 		    
 		    token = this-> _lex.next ({Token::RPAR, Token::COMA});
 		} while (token != Token::RPAR);

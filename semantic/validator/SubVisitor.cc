@@ -55,6 +55,12 @@ namespace semantic {
 		of (Type, te ATTRIBUTE_UNUSED, return validateType (expression, left));
 	    }
 
+	    if (left.is<Value> ()) {
+		match (left.to <Value> ().getType ()) {
+		    of (StructRef, str ATTRIBUTE_UNUSED, return validateStructValue (expression, left));
+		}
+	    }
+	    
 	    this-> error (expression, left, expression.getRight ());
 	    
 	    return Generator::empty ();
@@ -432,7 +438,7 @@ namespace semantic {
 			params
 		    );
 		}
-
+		
 		if (name == __TYPEID__) {		    
 		    auto stringLit = syntax::String::init (
 			expression.getLocation (),
@@ -447,9 +453,44 @@ namespace semantic {
 			expression.getRight ().getLocation (),
 			StructRef::init (t.getLocation (), t.to <generator::Struct> ().getRef ())
 		    );
-		}
+		} 
 		
 	    }
+	    return Generator::empty ();
+	}
+
+	Generator SubVisitor::validateStructValue (const syntax::Binary & expression, const generator::Generator & value) {
+	    auto & t = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
+	    if (expression.getRight ().is <syntax::Var> ()) {
+		auto opName = expression.getRight ().to <syntax::Var> ().getName ().str;
+		if (opName == StructRef::TUPLEOF) {
+		    auto & fields = t.to <generator::Struct> ().getFields ();
+		    std::vector <Generator> types;
+		    std::vector <Generator> params;
+		    std::vector <std::string> errors;
+		    TRY (
+			for (auto & field : fields) {
+			    auto type = field.to <generator::VarDecl> ().getVarType ();
+			    auto name = field.to <generator::VarDecl> ().getName ();
+			    type.to <Type> ().isMutable (false);
+			    params.push_back (StructAccess::init (expression.getLocation (), type, value, name));
+			    types.push_back (type);
+			}
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+
+		    if (errors.size () != 0) {
+			this-> error (expression, t, expression.getRight (), errors);
+		    }
+		    auto tuple = Tuple::init (expression.getLocation (), types);
+		    tuple.to <Type> ().isMutable (true);
+		    tuple.to <Type> ().isLocal (true);
+		    
+		    return TupleValue::init (expression.getLocation (), tuple, params); 
+		}
+	    }	    
 	    return Generator::empty ();
 	}
 

@@ -76,6 +76,7 @@ ymir_OBJS = \
 	ymir/expr_NamedExpression.o \
 	ymir/expr_Null.o \
 	ymir/expr_OfVar.o \
+	ymir/expr_StructVar.o \
 	ymir/expr_Pragma.o \
 	ymir/expr_Return.o \
 	ymir/expr_Scope.o \

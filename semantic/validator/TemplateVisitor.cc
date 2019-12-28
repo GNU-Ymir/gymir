@@ -150,6 +150,20 @@ namespace semantic {
 			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
 			}
 		    }
+		) else of (StructVar, var, {
+			if (values [0].is <Type> ()) {
+			    if (values [0].is <StructRef> ()) {
+				Mapper mapper (true, Scores::SCORE_VAR);
+				mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
+				mapper.nameOrder.push_back (var.getLocation ().str);
+				consumed += 1;
+				return mapper;
+			    } else return Mapper (false, 0);
+			} else {
+			    auto note = Ymir::Error::createNote (param.getLocation ());
+			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			}
+		    }
 		) else of (syntax::VarDecl, decl, {
 			if (values [0].is <Value> ()) {
 			    consumed += 1;
@@ -274,7 +288,7 @@ namespace semantic {
 		Mapper mapper (false, 0);
 		bool succeed = true;
 		TRY (
-		    mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);		
+		    mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors = msgs;
@@ -592,6 +606,23 @@ namespace semantic {
 			consumed += 1;
 			return applyTypeFromExplicitOfVar (params, var, types [0]);
 		    }
+		) else of (StructVar, var, {
+			if ((!types [0].isEmpty ()) && types [0].is <StructRef> ()) {
+			    Mapper mapper (true, Scores::SCORE_TYPE);
+			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    consumed += 1;
+			    return mapper;
+			} else if (!types [0].isEmpty ()) {
+			    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						var.prettyString (),
+						types [0].to<Type> ().getTypeName ());
+			} else
+			    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						var.prettyString (),
+						NoneType::init (var.getLocation ()).to <Type> ().getTypeName ());
+			return Mapper (false, 0);
+		    }
 		) else of (VariadicVar, var, {
 			Mapper mapper (true, Scores::SCORE_TYPE);
 			if (types.size () == 1) {
@@ -805,6 +836,9 @@ namespace semantic {
 		    ) else of (VariadicVar, var, {
 			    if (var.getLocation ().str == name) return it;
 			}
+		    ) else of (StructVar, var, {
+			    if (var.getLocation ().str == name) return it;
+			}
 		    ); // We don't do anything for the rest of expression types as they do not refer to types
 		}
 	    }
@@ -988,6 +1022,11 @@ namespace semantic {
 			return syntax::Set::init (
 			    element.getLocation (),
 			    content
+			);
+		    }
+		) else of (syntax::StructVar, var ATTRIBUTE_UNUSED, {
+			return syntax::StructVar::init (
+			    element.getLocation ()
 			);
 		    }
 		) else of (syntax::String, str ATTRIBUTE_UNUSED, return element;
@@ -1255,6 +1294,11 @@ namespace semantic {
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
+		    ) else of (syntax::StructVar, var, {
+			    if (mapping.find (var.getLocation ().str) == mapping.end ())
+				results.push_back (replaceAll (it, mapping));
+			    continue;
+			}
 		    );
 
 		} // else {
@@ -1303,6 +1347,9 @@ namespace semantic {
 		    ) else of (syntax::VarDecl, var, {
 			    results.push_back (mapping.find (var.getLocation ().str)-> second);
 			}
+		    ) else of (syntax::StructVar, var, {
+			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			}
 		    ) else {
 				    OutBuffer buf;
 				    it.treePrint (buf, 0);
@@ -1331,6 +1378,10 @@ namespace semantic {
 				results.push_back (var.getLocation ().str);
 			}
 		    ) else of (syntax::VarDecl, var, {
+			    if (mapping.find (var.getLocation ().str) != mapping.end ())
+				results.push_back (var.getLocation ().str);
+			}
+		    ) else of (syntax::StructVar, var, {
 			    if (mapping.find (var.getLocation ().str) != mapping.end ())
 				results.push_back (var.getLocation ().str);
 			}

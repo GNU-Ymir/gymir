@@ -8,6 +8,7 @@ namespace semantic {
     namespace generator {
 
 	std::string StructRef::INIT_NAME = "init";
+	std::string StructRef::TUPLEOF   = "tupleof";
 	
 	StructRef::StructRef () :
 	    Type (),

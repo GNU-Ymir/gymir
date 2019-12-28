@@ -26,6 +26,8 @@ namespace semantic {
 	public :
 
 	    static std::string INIT_NAME;
+
+	    static std::string TUPLEOF;
 	    
 	public :
 
