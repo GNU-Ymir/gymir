@@ -18,6 +18,7 @@
 #include <ymir/semantic/generator/value/Call.hh>
 #include <ymir/semantic/generator/value/Cast.hh>
 #include <ymir/semantic/generator/value/CharValue.hh>
+#include <ymir/semantic/generator/value/Class.hh>
 #include <ymir/semantic/generator/value/Conditional.hh>
 #include <ymir/semantic/generator/value/Copier.hh>
 #include <ymir/semantic/generator/value/DelegateValue.hh>

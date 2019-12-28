@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ymir/semantic/generator/Value.hh>
-#include <ymir/semantic/generator/type/StructRef.hh>
+#include <ymir/semantic/generator/type/ClassRef.hh>
 
 #include <ymir/semantic/Symbol.hh>
 

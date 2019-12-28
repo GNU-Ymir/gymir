@@ -67,6 +67,11 @@ namespace semantic {
 	 * \brief set the generator (structure prototype)
 	 */
 	void setGenerator (const generator::Generator & gen);
+
+	/**
+	 * return the ancestor of the class (might be empty)
+	 */
+	const syntax::Expression & getAncestor () const;
 	
     };
     

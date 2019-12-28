@@ -96,4 +96,8 @@ namespace semantic {
 	this-> _gen = gen;
     }
 
+    const syntax::Expression & Class::getAncestor () const {
+	return this-> _ancestor;
+    }
+    
 }

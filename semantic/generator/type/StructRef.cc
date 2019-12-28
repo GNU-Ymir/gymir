@@ -22,7 +22,6 @@ namespace semantic {
 	    if (!this-> _ref.isEmpty ()) { // A structure is complex iif one of its field is complex
 		this-> isComplex (
 		    true
-		    //this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()
 		);
 	    }
 	}

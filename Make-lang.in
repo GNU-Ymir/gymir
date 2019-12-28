@@ -156,9 +156,11 @@ ymir_OBJS = \
 	ymir/generator_SliceValue.o \
 	ymir/generator_StringValue.o \
 	ymir/generator_Struct.o \
+	ymir/generator_Class.o \
 	ymir/generator_StructAccess.o \
 	ymir/generator_StructCst.o \
 	ymir/generator_StructRef.o \
+	ymir/generator_ClassRef.o \
 	ymir/generator_TemplateRef.o \
 	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_TemplateSyntaxList.o \

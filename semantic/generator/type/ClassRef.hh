@@ -16,20 +16,25 @@ namespace semantic {
 	    /** The id of the structure refered */
 	    Symbol _ref;
 
+	    /**
+	     * The parent of the class, it can be empty
+	     */
+	    Generator _parent; 
+
 	private :
 
 	    friend Generator;
 
 	    ClassRef ();
 
-	    ClassRef (const lexing::Word & loc, const Symbol & ref);
+	    ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref);
 	public :
 
 	    static std::string INIT_NAME;
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Symbol & ref);
+	    static Generator init (const lexing::Word & loc, const Generator & parent, const Symbol & ref);
 
 	    Generator clone () const override;
 
@@ -44,6 +49,8 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;
 
 	    bool isRefOf (const Symbol & sym) const;
+
+	    bool needExplicitAlias () const override;
 
 	    const Symbol & getRef () const;
 	    

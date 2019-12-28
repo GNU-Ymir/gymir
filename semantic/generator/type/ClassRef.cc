@@ -10,22 +10,24 @@ namespace semantic {
 	
 	ClassRef::ClassRef () :
 	    Type (),
-	    _ref (Symbol::__empty__)
+	    _ref (Symbol::__empty__),
+	    _parent (Generator::empty ())
 	{}
 
-	ClassRef::ClassRef (const lexing::Word & loc, const Symbol & ref) :
+	ClassRef::ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref) :
 	    Type (loc, loc.str),
-	    _ref (ref)
+	    _ref (ref),
+	    _parent (parent)
 	{
 	    if (!this-> _ref.isEmpty ()) { // A structure is complex iif one of its field is complex
 		this-> isComplex (
-		    this-> _ref.to <semantic::Class> ().getGenerator ().to <generator::Class> ().hasComplexField ()
+		    true
 		);
 	    }
 	}
 
-	Generator ClassRef::init (const lexing::Word&  loc, const Symbol & ref) {
-	    return Generator {new (Z0) ClassRef (loc, ref)};
+	Generator ClassRef::init (const lexing::Word&  loc, const Generator & parent, const Symbol & ref) {
+	    return Generator {new (Z0) ClassRef (loc, parent, ref)};
 	}
 
 	Generator ClassRef::clone () const {
@@ -51,6 +53,10 @@ namespace semantic {
 
 	const Symbol & ClassRef::getRef () const {
 	    return this-> _ref;
+	}
+
+	bool ClassRef::needExplicitAlias () const {
+	    return true;
 	}
 	
 	std::string ClassRef::typeName () const {

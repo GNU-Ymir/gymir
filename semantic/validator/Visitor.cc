@@ -512,15 +512,14 @@ namespace semantic {
 
 	generator::Generator Visitor::validateClass (const semantic::Symbol & cls) {
 	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty ()) {
-		// auto sym = cls;
-		// auto gen = generator::Class::init (cls.getName (), sym);
-		// sym.to <semantic::Struct> ().setGenerator (gen);
-		// std::vector <std::string> errors;
 		
 	    }
 
-	    //return ClassRef::init (cls.getName (), cls);
-	    return Generator::empty ();
+	    Generator ancestor (Generator::empty ());
+	    if (!cls.to <semantic::Class> ().getAncestor ().isEmpty ())
+		ancestor = this-> validateType (cls.to <semantic::Class> ().getAncestor ());
+	    
+	    return ClassRef::init (cls.getName (), ancestor, cls);
 	}
 
 	generator::Generator Visitor::validateEnum (const semantic::Symbol & en) {
@@ -2607,6 +2606,14 @@ namespace semantic {
 	    if (val.is<Type> ()) return val;
 	    if (val.is<generator::Struct> ())
 		return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
+	    if (val.is <generator::Class> ()) {
+		Generator ancestor (Generator::empty ());
+		auto sym = val.to <generator::Class> ().getRef ();
+		if (!sym.to <semantic::Class> ().getAncestor ().isEmpty ())
+		    ancestor = this-> validateType (sym.to <semantic::Class> ().getAncestor ());
+		return ClassRef::init (type.getLocation (), ancestor, sym);
+	    }
+	    
 	    if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();
 	    
 	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));

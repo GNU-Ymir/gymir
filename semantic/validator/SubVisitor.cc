@@ -485,8 +485,8 @@ namespace semantic {
 			this-> error (expression, t, expression.getRight (), errors);
 		    }
 		    auto tuple = Tuple::init (expression.getLocation (), types);
-		    tuple.to <Type> ().isMutable (true);
-		    tuple.to <Type> ().isLocal (true);
+		    tuple.to <Type> ().isMutable (false); // Impossible to modify a struct via its tupleof
+		    tuple.to <Type> ().isLocal (false);
 		    
 		    return TupleValue::init (expression.getLocation (), tuple, params); 
 		}
