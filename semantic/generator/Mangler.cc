@@ -29,6 +29,7 @@ namespace semantic {
 	    match (gen) {
 		of (Frame, fr, return mangleFrame (fr));
 		of (FrameProto, proto, return mangleFrameProto (proto));
+		of (ConstructorProto, proto, return mangleConstructorProto (proto));
 		of (GlobalVar, v, return mangleGlobalVar (v));
 		of (BoolValue, bl, return mangleBoolV (bl));
 		of (CharValue, c, return mangleCharV (c));
@@ -55,6 +56,7 @@ namespace semantic {
 		else of (Tuple, tl, result = mangleTupleT (tl))
 		else of (Void, v, result = mangleVoidT (v))
 		else of (StructRef, r, result = mangleStructRef (r))
+		else of (ClassRef, r, result = mangleClassRef (r))
 		else of (EnumRef, r, result = mangleEnumRef (r))
 		else of (Range, r, result = mangleRangeT (r))
 		else of (Pointer, p, result = manglePointerT (p))
@@ -64,7 +66,7 @@ namespace semantic {
 
 	    if (result == "") {
 		println (gen.to <Type> ().prettyString ());
-		 Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    }
 	    
 	    else {
@@ -117,6 +119,24 @@ namespace semantic {
 		std::vector <std::string> splits = split (name, "::");
 		return splits.back ();
 	    }
+	}
+
+	std::string Mangler::mangleConstructorProto (const ConstructorProto & proto) const {
+	    auto name = proto.getMangledName ();
+	    std::vector <std::string> splits = split (name, "::");
+
+	    OutBuffer buf;
+	    buf.write (Mangler::YMIR_PREFIX);
+	    for (auto & it : splits) buf.write (it.length (), it);
+	    buf.write (Mangler::YMIR_FUNCTION);
+
+	    // a construct proto take the return type as first argument, but it is hidden
+	    buf.write (mangle (proto.getReturnType ())); 
+	    for (auto & p : proto.getParameters ())
+		buf.write (mangle (p.to <ProtoVar> ().getType ()));
+
+	    buf.write (Mangler::YMIR_FUNCTION_RET, mangle (proto.getReturnType ()));
+	    return buf.str ();
 	}
 	
 	std::string Mangler::mangleGlobalVar (const GlobalVar & v) const {
@@ -257,6 +277,13 @@ namespace semantic {
 	    return buf.str ();
 	}
 
+	std::string Mangler::mangleClassRef (const ClassRef & ref) const {
+	    Ymir::OutBuffer buf;
+	    auto splits = split (ref.getMangledName (), "::");
+	    for (auto & it : splits) buf.write (it.length (), it);
+	    return buf.str ();
+	}
+	
 	std::string Mangler::mangleEnumRef (const EnumRef & ref) const {
 	    Ymir::OutBuffer buf;
 	    auto splits = split (ref.getMangledName (), "::");

@@ -69,6 +69,16 @@ namespace semantic {
 	    generator::Generator validateFrameProto (const lexing::Word & location, const generator::FrameProto & proto, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
 
 	    /**
+	     * \brief Validate a call expression on a constructor proto
+	     * \param expression the call expression 
+	     * \param proto the prototype to use
+	     * \param params the parameter that will be passed to the function 
+	     * \param score the final score of the call 
+	     * \brief It does not throw an exception on failure, 
+	     * \brief It will return a empty generator and a score of -1
+	     */	    
+	    generator::Generator validateConstructorProto (const lexing::Word & location, const generator::ConstructorProto & proto, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors);	    	    
+	    /**
 	     * \brief Find the right parameter assoc to the var
 	     */
 	    generator::Generator findParameter (std::vector<generator::Generator> & params, const generator::ProtoVar & var);

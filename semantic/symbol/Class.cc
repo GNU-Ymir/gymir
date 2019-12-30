@@ -1,4 +1,6 @@
 #include <ymir/semantic/symbol/Class.hh>
+#include <ymir/semantic/symbol/Constructor.hh>
+#include <ymir/syntax/expression/Var.hh>
 
 namespace semantic {
 
@@ -6,6 +8,7 @@ namespace semantic {
 	ISymbol (lexing::Word::eof ()), 
 	_table (this),
 	_ancestor (syntax::Expression::empty ()),
+	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
@@ -13,6 +16,7 @@ namespace semantic {
 	ISymbol (name),
 	_table (this),
 	_ancestor (ancestor),
+	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
@@ -20,6 +24,7 @@ namespace semantic {
 	ISymbol (other),
 	_table (other._table.clone (this)),
 	_ancestor (other._ancestor),
+	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
     
@@ -78,6 +83,10 @@ namespace semantic {
 	    return this-> getReferent ().equals (other.getReferent ());
 	} else return false;
     }
+
+    const std::vector <Symbol> & Class::getAllLocal () const {
+	return this-> _table.getAll ();
+    }
     
     std::string Class::formatTree (int i) const {
 	Ymir::OutBuffer buf;
@@ -96,6 +105,14 @@ namespace semantic {
 	this-> _gen = gen;
     }
 
+    void Class::addField (const syntax::Expression & field) {
+	this-> _fields.push_back (field);
+    }
+
+    const std::vector<syntax::Expression> & Class::getFields () const {
+	return this-> _fields;
+    }
+    
     const syntax::Expression & Class::getAncestor () const {
 	return this-> _ancestor;
     }

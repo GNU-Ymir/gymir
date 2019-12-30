@@ -58,6 +58,9 @@ namespace semantic {
 	    if (left.is <FrameProto> ()) {
 		auto gen = validateFrameProto (location, left.to<FrameProto> (), rights, score, errors);
 		if (!gen.isEmpty ()) return gen;
+	    } else if (left.is <ConstructorProto> ()) {
+		auto gen = validateConstructorProto (location, left.to <ConstructorProto> (), rights, score, errors);
+		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <LambdaProto> ()) {
 		auto gen = validateLambdaProto (location, left.to <LambdaProto> (), rights, score, errors);
 		if (!gen.isEmpty ()) return gen;
@@ -127,6 +130,7 @@ namespace semantic {
 		    bool succeed = true;
 		    TRY (			
 			this-> _context.verifyCompatibleType (
+			    params [it].getLocation (),
 			    proto.getParameters () [it].to <Value> ().getType (),
 			    params [it].to <Value> ().getType ()
 			);
@@ -142,7 +146,7 @@ namespace semantic {
 		
 		{
 		    TRY (		    
-			this-> _context.verifyMemoryOwner (
+			this-> _context.verifyMemoryOwner (			    
 			    params [it].getLocation (),
 			    proto.getParameters () [it].to <Value> ().getType (),
 			    params [it],
@@ -161,6 +165,61 @@ namespace semantic {
 	    if (errors.size () != 0) return Generator::empty ();	   
 	    return Call::init (location, proto.getReturnType (), proto.clone (), types, params, addParams);
 	}
+
+	generator::Generator CallVisitor::validateConstructorProto (const lexing::Word & location, const ConstructorProto & proto, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
+	    score = 0;
+	    std::vector <Generator> params;
+	    std::vector <Generator> rights = rights_;
+	    TRY (
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors = msgs;
+	    } FINALLY;
+	    
+	    if (errors.size () != 0) return Generator::empty ();	    
+	    if (rights.size () != 0) return Generator::empty ();
+
+	    std::vector <Generator> types;
+	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
+		{
+		    bool succeed = true;
+		    TRY (			
+			this-> _context.verifyCompatibleType (
+			    params [it].getLocation (),
+			    proto.getParameters () [it].to <Value> ().getType (),
+			    params [it].to <Value> ().getType ()
+			);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
+			succeed = false;
+		    } FINALLY;
+		    
+		    if (!succeed) return Generator::empty ();
+		}
+		
+		{
+		    TRY (		    
+			this-> _context.verifyMemoryOwner (			    
+			    params [it].getLocation (),
+			    proto.getParameters () [it].to <Value> ().getType (),
+			    params [it],
+			    true
+			);
+			types.push_back (proto.getParameters () [it].to <Value> ().getType ());
+			score += Scores::SCORE_TYPE;		   
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
+		    } FINALLY;
+		}
+	    }
+
+	    if (errors.size () != 0) return Generator::empty ();	   
+	    return ClassCst::init (location, proto.getReturnType (), proto.clone (), types, params);
+	}	
        
 	generator::Generator CallVisitor::findParameter (std::vector <Generator> & params, const ProtoVar & var) {
 	    Generator ret (Generator::empty ());
@@ -214,6 +273,7 @@ namespace semantic {
 			bool succeed = true;
 			TRY (
 			    this-> _context.verifyCompatibleType (
+				params [it].getLocation (),
 				proto.getParameters () [it].to <Value> ().getType (),
 				params [it].to <Value> ().getType ()
 			    );
@@ -331,6 +391,7 @@ namespace semantic {
 		    bool succeed = true;
 		    TRY (
 			this-> _context.verifyCompatibleType (
+			    params [it].getLocation (),
 			    funcType.getParamTypes () [it],
 			    params [it].to <Value> ().getType ()
 			);
@@ -382,6 +443,7 @@ namespace semantic {
 		    bool succeed = true;
 		    TRY (			
 			this-> _context.verifyCompatibleType (
+			    params [it].getLocation (),
 			    funcType.getParamTypes () [it],
 			    params [it].to <Value> ().getType ()
 			);

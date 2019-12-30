@@ -28,6 +28,7 @@ namespace semantic {
 	    ClassRef ();
 
 	    ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref);
+
 	public :
 
 	    static std::string INIT_NAME;

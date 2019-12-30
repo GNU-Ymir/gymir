@@ -13,6 +13,8 @@ namespace semantic {
 	    Symbol _ref;
 
 	    std::vector <generator::Generator> _fields;
+
+	    std::vector <generator::Generator> _vtable;
 	    
 	private :
 
@@ -46,7 +48,27 @@ namespace semantic {
 	    std::string getName () const;
 
 	    /**
-	     *
+	     * \return the fields of the structure
+	     */
+	    const std::vector <generator::Generator> & getFields () const;
+
+	    /**
+	     * set the fields of the struct
+	     */
+	    void setFields (const std::vector <generator::Generator> & fields);
+
+	    /**
+	     * \brief Set the vtable of the class
+	     */
+	    void setVtable (const std::vector <generator::Generator> & vtable);
+
+	    /**
+	     * \return the vtable of the class
+	     */
+	    const std::vector <generator::Generator> & getVtable () const;
+	    
+	    /**
+	     * 
 	     */
 	    std::string prettyString () const override;
 

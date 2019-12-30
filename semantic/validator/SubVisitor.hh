@@ -75,6 +75,7 @@ namespace semantic {
 	    generator::Generator validateSlice (const syntax::Binary & expression, const generator::Generator & s);
 	    generator::Generator validateTuple (const syntax::Binary & expression, const generator::Generator & t);
 	    generator::Generator validateStruct (const syntax::Binary & expression, const generator::Generator & en);
+	    generator::Generator validateClass (const syntax::Binary & expression, const generator::Generator & en);
 	    generator::Generator validateStructValue (const syntax::Binary & expression, const generator::Generator & en);
 	    
 	private :	    

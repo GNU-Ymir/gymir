@@ -31,6 +31,7 @@ ymir_OBJS = \
 	ymir/decl_Alias.o \
 	ymir/decl_Block.o \
 	ymir/decl_Class.o \
+	ymir/decl_Constructor.o \
 	ymir/decl_Enum.o \
 	ymir/decl_ExpressionWrapper.o \
 	ymir/decl_ExternBlock.o \
@@ -111,9 +112,11 @@ ymir_OBJS = \
 	ymir/generator_BoolValue.o \
 	ymir/generator_Break.o \
 	ymir/generator_Call.o \
+	ymir/generator_ClassCst.o \
 	ymir/generator_Cast.o \
 	ymir/generator_Char.o \
 	ymir/generator_Closure.o \
+	ymir/generator_ConstructorProto.o \
 	ymir/generator_CharValue.o \
 	ymir/generator_Conditional.o \
 	ymir/generator_Copier.o \
@@ -190,6 +193,7 @@ ymir_OBJS = \
 	ymir/parsing_Parser.o \
 	ymir/semantic_Alias.o \
 	ymir/semantic_Class.o \
+	ymir/semantic_Constructor.o \
 	ymir/semantic_Enum.o \
 	ymir/semantic_Function.o \
 	ymir/semantic_Generator.o \

@@ -51,7 +51,7 @@ namespace semantic {
 		    auto content = this-> _context.validateValue (actions [it]);
 		    auto local_type = content.to <Value> ().getType ();
 		    if (type.isEmpty ()) type = local_type;
-		    else this-> _context.verifyCompatibleType (type, local_type);
+		    else this-> _context.verifyCompatibleType (content.getLocation (), type, local_type);
 		    
 		    result = Conditional::init (matchers [it].getLocation (), type, test, content, result);
 		}

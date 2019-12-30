@@ -1,5 +1,5 @@
 #include <ymir/semantic/generator/value/Struct.hh>
-#include <ymir/semantic/generator/type/Void.hh>
+#include <ymir/semantic/generator/type/NoneType.hh>
 #include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/utils/OutBuffer.hh>
 
@@ -13,7 +13,7 @@ namespace semantic {
 	}
 
 	Struct::Struct (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, loc.str, Void::init (loc)),
+	    Value (loc, loc.str, NoneType::init (loc, "struct " + ref.getRealName ())),
 	    _ref (ref)
 	{}
 

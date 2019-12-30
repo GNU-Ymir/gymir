@@ -10,12 +10,13 @@ namespace semantic {
 	    Type ()		  
 	{}
 
-	NoneType::NoneType (const lexing::Word & loc) :
-	    Type (loc, loc.str)
+	NoneType::NoneType (const lexing::Word & loc, const std::string & name) :
+	    Type (loc, loc.str),
+	    _name (name)
 	{}
 
-	Generator NoneType::init (const lexing::Word & loc) {
-	    return Generator {new (Z0) NoneType (loc)};
+	Generator NoneType::init (const lexing::Word & loc, const std::string & name) {
+	    return Generator {new (Z0) NoneType (loc, name)};
 	}
 
 	Generator NoneType::clone () const {
@@ -34,7 +35,7 @@ namespace semantic {
 	}
 
 	std::string NoneType::typeName () const {
-	    return "none";
+	    return this-> _name;
 	}	
 	
     }

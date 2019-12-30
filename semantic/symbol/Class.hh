@@ -14,7 +14,9 @@ namespace semantic {
 
 	/** The ancestor of the class */
 	syntax::Expression _ancestor;
-
+	
+	std::vector <syntax::Expression> _fields;
+	
 	/**
 	 * set at validation time, to prevent multiple time validation of the same symbol
 	 */
@@ -51,6 +53,8 @@ namespace semantic {
 	std::vector <Symbol> getPublic (const std::string & name) const override;
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
+
+	const std::vector <Symbol> & getAllLocal () const;
 	
 	bool equals (const Symbol & other) const override;
 
@@ -68,6 +72,10 @@ namespace semantic {
 	 */
 	void setGenerator (const generator::Generator & gen);
 
+	void addField (const syntax::Expression & field);
+
+	const std::vector<syntax::Expression> & getFields () const;
+	
 	/**
 	 * return the ancestor of the class (might be empty)
 	 */

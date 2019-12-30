@@ -177,6 +177,12 @@ namespace semantic {
 	    return function;
 	}        
 
+	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor & cs, const syntax::Expression & cl) {
+	    auto semcs = semantic::Constructor::init (cs.getName (), cs, cl);
+	    getReferent ().insert (semcs);
+	    return semcs;
+	}
+	
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str, bool insert) {
 	    auto structure = Struct::init (str.getName (), str.getDeclarations ());
 	
@@ -291,7 +297,23 @@ namespace semantic {
 
 	    pushReferent (cls);
 	    for (auto & it : stcls.getDeclarations ()) {
-		visit (it);
+		match (it) {
+		    of (syntax::ExpressionWrapper, wrap, {
+			    match (wrap.getContent ()) {
+				of (syntax::VarDecl, de ATTRIBUTE_UNUSED,
+				    cls.to <semantic::Class> ().addField (wrap.getContent ()))
+				else 
+				    Error::halt ("%(r) - reaching impossible point", "Critical");			
+			    }
+			}
+		    )
+		    else of (syntax::Constructor, cs, {
+			    visitConstructor (cs, syntax::Var::init (stcls.getName ()));
+			}
+		    ) else {			
+			visit (it);
+		    }
+		}
 	    }
 
 	    auto ret = popReferent ();

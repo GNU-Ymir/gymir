@@ -113,6 +113,11 @@ namespace semantic {
 	     * \brief Transform a type from generator to gimple
 	     */
 	    generic::Tree generateType (const Generator & gen);
+
+	    /**
+	     * \brief Generate a class Type
+	     */
+	    generic::Tree generateClassType (const ClassRef & gen);
 	    
 	    /**
 	     * \brief Generate the initial value of the type 
@@ -211,6 +216,11 @@ namespace semantic {
 	    generic::Tree generateFrameProto (const FrameProto & proto);
 
 	    /**
+	     * \brief Transform a constructor proto into gimple
+	     */
+	    generic::Tree generateConstructorProto (const ConstructorProto & proto);
+	    
+	    /**
 	     * \brief Transform a tuple access into gimple
 	     */
 	    generic::Tree generateTupleAccess (const TupleAccess & acc);
@@ -224,6 +234,11 @@ namespace semantic {
 	     * \brief Transform a struct construction into gimple
 	     */
 	    generic::Tree generateStructCst (const StructCst & cl);
+
+	    /**
+	     * \brief Transform a class construction into gimple
+	     */
+	    generic::Tree generateClassCst (const ClassCst & cl);
 	    
 	    /**
 	     * \brief Transform a frame call into gimple

@@ -51,6 +51,11 @@ namespace semantic {
 	     * \brief Mangle a frame prototype
 	     */
 	    std::string mangleFrameProto (const FrameProto & fr) const;
+
+	    /**
+	     * \brief Mangle a constructor prototype
+	     */
+	    std::string mangleConstructorProto (const ConstructorProto & pr) const;
 	    
 	    /**
 	     * \brief Mangle a global var name
@@ -146,6 +151,11 @@ namespace semantic {
 	     * \brief Mangle a struct type
 	     */
 	    std::string mangleStructRef (const StructRef & r) const;
+	    
+	    /**
+	     * \brief Mangle a class type
+	     */
+	    std::string mangleClassRef (const ClassRef & r) const;
 
 	    /**
 	     * \brief Mangle a enum type

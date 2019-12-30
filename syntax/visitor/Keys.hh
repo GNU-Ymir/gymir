@@ -129,6 +129,7 @@ struct Keys {
     static std::string  USE;
     static std::string  VERSION;
     static std::string  VTABLE_FIELD;
-    static std::string  WHILE; 
+    static std::string  WHILE;
+    static std::string  WITH;
     static std::string  YLANG;
 };

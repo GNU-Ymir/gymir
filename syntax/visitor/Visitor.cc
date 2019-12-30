@@ -364,9 +364,7 @@ namespace syntax {
     Declaration Visitor::visitClassContent () {
 	auto token = this-> _lex.next ({Keys::DEF, Keys::LET, Keys::SELF, Keys::MIXIN});
 	if (token == Keys::SELF) {
-	    if (this-> _lex.consumeIf ({Token::TILDE}) == Token::TILDE)
-		return visitClassDestructor ();
-	    else return visitClassConstructor ();
+	    return visitClassConstructor ();
 	} else if (token == Keys::DEF) {
 	    return visitFunction (true);	    
 	} else if (token == Keys::LET) {
@@ -398,11 +396,34 @@ namespace syntax {
 	} else this-> _lex.rewind ();
 
 	auto proto = visitFunctionPrototype ();
-	auto body = visitFunctionBody ();
+	token = this-> _lex.consumeIf ({Keys::WITH});
+	std::vector <std::pair <lexing::Word, Expression> > constructions;
+	std::vector <Expression> supers;
+	if (token == Keys::WITH) {
+	    while (token != Token::LACC) {
+		auto ident = this-> visitIdentifier ();
+		if (ident == Keys::SUPER ) {
+		    if (supers.size () != 0)
+			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.str);
+		    this-> _lex.next ({Token::LPAR});
+		    supers = visitParamList (true);
+		    this-> _lex.next ({Token::RPAR});
+		} else {
+		    this-> _lex.next ({Token::EQUAL});
+		    auto expr = this-> visitExpression (10);
+		    constructions.push_back ({ident, expr});
+		}
+
+		token = this-> _lex.next ({Token::LACC, Token::COMA});
+	    }
+	    this-> _lex.rewind (); // We rewind the LACC, since it is part of the following expression
+	}
+	
+	auto body = visitExpression ();
 	if (templates.size () != 0) {
-	    return Template::init (location, templates, Function::init (location, proto, body));
+	    return Template::init (location, templates, Constructor::init (location, proto, supers, constructions, body));
 	} else 
-	    return Function::init (location, proto, body);
+	    return Constructor::init (location, proto, supers, constructions, body);
     }
     
     Declaration Visitor::visitClassDestructor () {

@@ -58,7 +58,7 @@ namespace semantic {
 	    auto innerType = array.to <Value> ().getType ().to <Type> ().getInners () [0];
 	    if (!var.getType ().isEmpty ()) {
 		type = this-> _context.validateType (var.getType ());
-		this-> _context.verifyCompatibleType (type, innerType);
+		this-> _context.verifyCompatibleType (var.getLocation (), type, innerType);
 	    } else type = innerType;
 
 	    type.to<Type> ().isMutable (false);
@@ -111,7 +111,7 @@ namespace semantic {
 	    
 	    if (!decl.getType ().isEmpty ()) {
 		type = this-> _context.validateType (decl.getType ());
-		this-> _context.verifyCompatibleType (type, Integer::init (loc, 0, false));
+		this-> _context.verifyCompatibleType (decl.getLocation (), type, Integer::init (loc, 0, false));
 	    } 
 
 	    auto var = generator::VarDecl::init (loc,
@@ -275,7 +275,7 @@ namespace semantic {
 	    auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
 	    if (!decl.getType ().isEmpty ()) {
 		auto type = this-> _context.validateType (decl.getType ());
-		this-> _context.verifyCompatibleType (type, innerType);
+		this-> _context.verifyCompatibleType (decl.getLocation (), type, innerType);
 	    } 
 	    
 	    auto zero = StructAccess::init (loc, innerType, rRef, Range::FST_NAME);

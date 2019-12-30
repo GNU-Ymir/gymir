@@ -1,6 +1,7 @@
 #include <ymir/semantic/generator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/semantic/symbol/Struct.hh>
+#include <ymir/semantic/symbol/Class.hh>
 #include <ymir/semantic/symbol/Enum.hh>
 
 #include <ymir/utils/Match.hh>
@@ -109,6 +110,11 @@ namespace semantic {
 		    }
 		)
 			 
+		else of (ClassRef, cl, {
+			return generateClassType (cl);
+		    }
+		)
+			 
 		else of (EnumRef, en, {
 			auto _type = en.getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ().getType ();
 			type = generateType (_type);			
@@ -166,7 +172,27 @@ namespace semantic {
 	    
 	    return type;
 	}
-	
+
+	Tree Visitor::generateClassType (const ClassRef & ref) {	    
+	    static std::set <std::string> current;
+	    if (current.find (ref.prettyString ()) == current.end ()) { // To prevent infinite loop in type validation
+		current.emplace (ref.prettyString ());
+		auto gen = ref.getRef ().to <semantic::Class> ().getGenerator ();
+		std::vector <Tree> inner;
+		std::vector <std::string> fields;
+		fields.push_back ("#_vtable");
+		inner.push_back (Tree::pointerType (Tree::voidType ()));
+		for (auto & it : gen.to <generator::Class> ().getFields ()) {
+		    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
+		    fields.push_back (it.to <generator::VarDecl> ().getName ());
+		}
+		
+		auto type = Tree::pointerType (Tree::tupleType (fields, inner));
+		current.erase (ref.prettyString ());
+		return type;
+	    } else return Tree::voidType ();
+	}
+		
 	Tree Visitor::generateInitValueForType (const Generator & type) {
 	    match (type) {
 
@@ -572,9 +598,17 @@ namespace semantic {
 		else of (Call, cl,
 		    return generateCall (cl);		
 		)
-
+			 
+		else of (ClassCst, cs,
+		    return generateClassCst (cs);
+		)
+			 
 		else of (FrameProto, pr,
 		    return generateFrameProto (pr);		
+		)
+
+		else of (ConstructorProto, pr,
+		    return generateConstructorProto (pr);
 		)
 
 		else of (TupleAccess, acc,
@@ -641,7 +675,8 @@ namespace semantic {
 		    return generateGlobalConstant (cst);
 		);
 	    }
-
+	    
+	    println (gen.prettyString ());
 	    Ymir::Error::halt ("%(r) - reaching impossible point %(y)", "Critical", identify (gen));
 	    return Tree::empty ();
 	}
@@ -1461,6 +1496,17 @@ namespace semantic {
 	    return Tree::buildFrameProto (proto.getLocation (), type, name, params);
 	}
 
+	generic::Tree Visitor::generateConstructorProto (const ConstructorProto & proto) {
+	    std::vector <Tree> params;
+	    params.push_back (generateType (proto.getReturnType ()));
+	    for (auto & it : proto.getParameters ()) 
+		params.push_back (generateType (it.to <ProtoVar> ().getType ()));
+
+	    auto type = generateType (proto.getReturnType ());
+	    auto name = Mangler::init ().mangleConstructorProto (proto);
+	    return Tree::buildFrameProto (proto.getLocation (), type, name, params);
+	}
+
 	generic::Tree Visitor::generateTupleAccess (const TupleAccess & acc) {
 	    auto elem = generateValue (acc.getTuple ());
 	    auto field = Ymir::format ("_%", acc.getIndex ());
@@ -1511,10 +1557,38 @@ namespace semantic {
 		auto type = generateType (cl.getType ());
 		return Tree::compound (
 		    cl.getLocation (), 
-		    Tree::buildCall (cl.getLocation (), type, fn , results),
+		    Tree::buildCall (cl.getLocation (), type, fn, results),
 		    pre.toTree ()
 		);
 	    }
+	}
+
+	generic::Tree Visitor::generateClassCst (const ClassCst & cl) {
+	    std::vector <Tree> results;
+	    TreeStmtList pre = TreeStmtList::init ();
+	    for (auto it : Ymir::r (0, cl.getTypes ().size ())) {
+		auto val = castTo (cl.getTypes () [it], cl.getParameters () [it]);		
+		results.push_back (val.getValue ());
+		pre.append (val.getList ());
+	    }
+
+	    auto classType = generateType (cl.getType ());
+	    auto inner = classType.getType ();
+	    
+	    auto classValue = Tree::buildCall (
+		cl.getLocation (),
+		classType,
+		global::CoreNames::get (CLASS_ALLOC),
+		{Tree::buildSizeCst (inner.getSize ())}
+	    );
+	    
+	    results.insert (results.begin (), classValue);
+	    auto fn = generateValue (cl.getFrame ());
+	    return Tree::compound (
+		cl.getLocation (),
+		Tree::buildCall (cl.getLocation (), classType, fn, results),
+		pre.toTree ()
+	    );
 	}
 
 	generic::Tree Visitor::generateStructCst (const StructCst & cl) {

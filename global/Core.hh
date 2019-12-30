@@ -8,18 +8,19 @@
 namespace global {
 
     DECLARE_ENUM_HEADER (CoreNames, std::string,
+			 ARRAY_ALLOC,
+			 CLASS_ALLOC,
+			 DUPL_ANY,
+			 DUPL_SLICE,
+			 EXCEPT_GET_VALUE,
+			 EXCEPT_POP,
+			 EXCEPT_PUSH,
+			 JMP_BUF_TYPE,
+			 RETHROW,
 			 RUN_MAIN,
 			 RUN_MAIN_DEBUG,
-			 DUPL_SLICE,
-			 ARRAY_ALLOC,
-			 DUPL_ANY,
-			 THROW,
 			 SET_JMP,
-			 RETHROW,
-			 EXCEPT_PUSH,
-			 EXCEPT_POP,
-			 EXCEPT_GET_VALUE,
-			 JMP_BUF_TYPE,
+			 THROW,
     );
     
 }

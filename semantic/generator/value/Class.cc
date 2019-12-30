@@ -1,5 +1,5 @@
 #include <ymir/semantic/generator/value/Class.hh>
-#include <ymir/semantic/generator/type/Void.hh>
+#include <ymir/semantic/generator/type/NoneType.hh>
 #include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/utils/OutBuffer.hh>
 
@@ -13,7 +13,7 @@ namespace semantic {
 	}
 
 	Class::Class (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, loc.str, Void::init (loc)),
+	    Value (loc, loc.str, NoneType::init (loc, "class " + ref.getRealName ())),
 	    _ref (ref)
 	{}
 
@@ -38,18 +38,28 @@ namespace semantic {
 	    return this-> _ref.isSameRef (str._ref);
 	}
 
+	const std::vector <generator::Generator> & Class::getFields () const {
+	    return this-> _fields;
+	}
+
+	void Class::setFields (const std::vector <generator::Generator> & fields) {
+	    this-> _fields = fields;
+	}
+
+	const std::vector <generator::Generator> & Class::getVtable () const {
+	    return this-> _vtable;
+	}
+
+	void Class::setVtable (const std::vector <generator::Generator> & vtable) {
+	    this-> _vtable = vtable;
+	}
+	
 	std::string Class::getName () const {
 	    return this-> _ref.getRealName ();
 	}
 	
 	std::string Class::prettyString () const {
-	    std::vector <std::string> content;
-	    for (auto & it : this-> _fields) {
-		content.push_back (Ymir::entab (it.prettyString ()));
-		if (content.back ().size () != 0 && content.back ().back () == '\n')
-		    content.back () = content.back ().substr (0, content.back ().size () - 1);
-	    }
-	    return Ymir::format ("% (%)", this-> _ref.getRealName (), content);
+	    return Ymir::format ("%", this-> _ref.getRealName ());
 	}
 
 	const Symbol & Class::getRef () const {

@@ -114,6 +114,11 @@ namespace semantic {
 	    void validateFunction (const semantic::Function & func, bool isWeak = false);
 
 	    /**
+	     * \brief Validate a class constructor
+	     */
+	    void validateConstructor (const semantic::Constructor & cs);
+	    
+	    /**
 	     * \brief Validate a global var declaration 
 	     */
 	    void validateVarDecl (const semantic::Symbol & sym);
@@ -145,6 +150,14 @@ namespace semantic {
 	     * \return A ClassRef
 	     */
 	    generator::Generator validateClass (const semantic::Symbol & cls);
+
+	    /**
+	     * \brief Validate the internal declaration of a class
+	     * \param cls the symbol that declare the class
+	     * \param ancestor the ancestor of the class (might be empty)
+	     * \return the vtable of the class
+	     */
+	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & ancestor);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type
@@ -364,6 +377,32 @@ namespace semantic {
 	     * \param func the function prototype to validate
 	     */
 	    generator::Generator validateFunctionProto (const semantic::Function & func);
+
+	    /**
+	     * \brief Validate the prototyp of a constructor in order to refer to it
+	     * \param cs the constructor to validate
+	     */
+	    generator::Generator validateConstructorProto (const semantic::Constructor & cs);
+	    
+	    /**
+	     * \brief Validate the prototype of a function for the creation of a frameproto or a constructProto
+	     * \param loc the location of the function
+	     * \param proto the prototype of the function
+	     * \return param params (returned by ref), the validated parameter of the function
+	     * \return param retType (returned by ref), the validated type of the prototype (if any)
+	     * \param no_value if it is true, the var_decl of the params cannot have values (they won't be validated)
+	     */
+	    void validatePrototypeForProto (const lexing::Word & loc, const syntax::Function::Prototype & proto, bool no_value, std::vector <generator::Generator> & params, generator::Generator & retType);
+
+	    /**	      	       
+	     * \brief Validate the prototype of a function for the creation of a frame (function or constructor)
+	     * \param loc the location of the function
+	     * \param proto the prototype of the function
+	     * \return param params (returned by ref), the validated parameter of the function
+	     * \return param retType (returned by ref), the validated type of the prototype (if any)
+	     * \param no_value if it is true, the var_decl of the params cannot have values (they won't be validated)
+	     */
+	    void validatePrototypeForFrame (const lexing::Word & loc, const syntax::Function::Prototype & proto, std::vector <generator::Generator> & params, generator::Generator & retType);
 	    
 	    /**
 	     * \brief Validate a var declaration inside a block (or a frame)
@@ -578,7 +617,7 @@ namespace semantic {
 	     * \param left a type
 	     * \param right a type
 	     */
-	    void verifyCompatibleType (const generator::Generator & left, const generator::Generator & right);
+	    void verifyCompatibleType (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right);
 
 	    
 	    /**
@@ -586,7 +625,7 @@ namespace semantic {
 	     * \param left a type
 	     * \param right a value
 	     */
-	    void verifyCompatibleTypeWithValue (const generator::Generator & left, const generator::Generator & right);
+	    void verifyCompatibleTypeWithValue (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right);
 
 	    /**
 	     * \brief Throw an exception if there is already some var named name

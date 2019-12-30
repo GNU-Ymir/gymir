@@ -50,8 +50,9 @@ namespace semantic {
 	    match (left) {
 		of (MultSym, mult, return validateMultSym (expression, mult));
 		of (ModuleAccess, acc, return validateModuleAccess (expression, acc));
-		of (generator::Enum, en, return validateEnum (expression, en));
+		of (generator::Enum, en, return validateEnum (expression, en));		
 		of (generator::Struct, str ATTRIBUTE_UNUSED, return validateStruct(expression, left));
+		of (generator::Class, cl ATTRIBUTE_UNUSED, return validateClass (expression, left));
 		of (Type, te ATTRIBUTE_UNUSED, return validateType (expression, left));
 	    }
 
@@ -459,6 +460,43 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t) {
+	    if (expression.getRight ().is <syntax::Var> ()) {
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		if (name == ClassRef::INIT_NAME) {
+		    std::vector <Symbol> syms;
+		    for (auto & gen : t.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllLocal ()) {
+			match (gen) {
+			    of (semantic::Constructor, cst ATTRIBUTE_UNUSED,
+				syms.push_back (gen));
+			}
+		    }
+		    if (syms.size () != 0) 
+			return this-> _context.validateMultSym (expression.getLocation (), syms);
+		    else return Generator::empty ();
+		}
+		
+		if (name == __TYPEID__) {		    
+		    auto stringLit = syntax::String::init (
+			expression.getLocation (),
+			expression.getLocation (),
+			lexing::Word {expression.getLocation (), t.prettyString ()},
+			lexing::Word::eof ()
+		    );
+		
+		    return this-> _context.validateValue (stringLit);
+		} else if (name == __TYPEINFO__) {
+		    Generator cl = this-> _context.validateClass (t.to <generator::Class> ().getRef ());
+		    return this-> _context.validateTypeInfo (
+			expression.getRight ().getLocation (),
+			cl
+		    );
+		} 
+	    }
+
+	    return Generator::empty ();
+	}
+	
 	Generator SubVisitor::validateStructValue (const syntax::Binary & expression, const generator::Generator & value) {
 	    auto & t = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
 	    if (expression.getRight ().is <syntax::Var> ()) {

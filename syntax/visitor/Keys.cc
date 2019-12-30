@@ -124,4 +124,5 @@ std::string     Keys::USE	   = "use";
 std::string     Keys::VERSION	   = "version";
 std::string     Keys::VTABLE_FIELD = "0__vtbl";
 std::string     Keys::WHILE	   = "while";
+std::string     Keys::WITH         = "with";
 std::string     Keys::YLANG	   = "Y";

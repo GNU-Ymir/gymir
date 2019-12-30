@@ -6,7 +6,7 @@
 namespace semantic {
     namespace generator {
 
-	std::string ClassRef::INIT_NAME = "init";
+	std::string ClassRef::INIT_NAME = "new";
 	
 	ClassRef::ClassRef () :
 	    Type (),
