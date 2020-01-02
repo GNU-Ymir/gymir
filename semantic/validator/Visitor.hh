@@ -116,7 +116,13 @@ namespace semantic {
 	    /**
 	     * \brief Validate a class constructor
 	     */
-	    void validateConstructor (const semantic::Constructor & cs);
+	    void validateConstructor (const semantic::Constructor & cs, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
+
+	    /**
+	     * \brief Validate the pre construction instruction in a constructor
+	     * \return the list of instruction (a Block), to construct the super and attributes
+	     */
+	    generator::Generator validatePreConstructor (const semantic::Constructor & cs, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
 	    
 	    /**
 	     * \brief Validate a global var declaration 
@@ -157,7 +163,7 @@ namespace semantic {
 	     * \param ancestor the ancestor of the class (might be empty)
 	     * \return the vtable of the class
 	     */
-	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & ancestor);
+	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type
@@ -680,6 +686,11 @@ namespace semantic {
 	     * \brief Exit the context (Cf. enterContext)
 	     */
 	    void exitContext ();
+
+	    /**
+	     * \return does the current context include context
+	     */
+	    bool isInContext (const std::string & context);
 	    
 	    /**
 	     * \brief Insert a new Generator that has passed the semantic validation

@@ -7,6 +7,7 @@ namespace semantic {
 	ClassCst::ClassCst () :
 	    Value (),
 	    _frame (Generator::empty ()),
+	    _self (Generator::empty ()),
 	    _types ({}),
 	    _params ({})
 	{
@@ -16,6 +17,7 @@ namespace semantic {
 	ClassCst::ClassCst (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params) :
 	    Value (loc, type),
 	    _frame (frame),
+	    _self (Generator::empty ()),
 	    _types (types),
 	    _params (params)
 	{
@@ -62,6 +64,14 @@ namespace semantic {
 	    return this-> _params;
 	}
 
+	void ClassCst::setSelf (const Generator & self) {
+	    this-> _self = self;
+	}
+	
+	const Generator & ClassCst::getSelf () const {
+	    return this-> _self;
+	}
+	
 	std::string ClassCst::prettyString () const {
 	    std::vector <std::string> params;
 	    for (auto & it : this-> _params)

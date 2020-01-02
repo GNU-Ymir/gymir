@@ -116,5 +116,16 @@ namespace semantic {
     const syntax::Expression & Class::getAncestor () const {
 	return this-> _ancestor;
     }
+
+    void Class::setPrivate (const std::string & name) {
+	this-> _privates.push_back (name);
+    }
+
+    bool Class::isMarkedPrivate (const std::string & name) const {
+	for (auto & it : this-> _privates) {
+	    if (it == name) return true;
+	}
+	return false;
+    }
     
 }

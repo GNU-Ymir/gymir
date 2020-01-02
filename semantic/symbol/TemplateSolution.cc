@@ -1,7 +1,9 @@
 #include <ymir/semantic/symbol/TemplateSolution.hh>
 #include <ymir/semantic/generator/value/TemplateSyntaxWrapper.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Match.hh>
 #include <ymir/semantic/generator/Mangler.hh>
+#include <ymir/semantic/generator/Type.hh>
 
 namespace semantic {
 
@@ -152,16 +154,33 @@ namespace semantic {
 	generator::Mangler mangler = generator::Mangler::init ();
 	for (auto & it : _nameOrder) {
 	    auto second = this-> _params.find (it)-> second;
-	    if (second.is <generator::TemplateSyntaxWrapper> ())
-		buf.write (Ymir::format ("N%", mangler.mangle (second.to<generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
-	    else {
+	    if (second.is <generator::TemplateSyntaxWrapper> ()) {
+		match (second.to <generator::TemplateSyntaxWrapper> ().getContent ()) {
+		    of (generator::Type, t, {
+			    auto aux = t.clone ();
+			    aux.to <generator::Type> ().isMutable (false);
+			    buf.write (Ymir::format ("N%", mangler.mangle (aux))); // [] on map discard const qualifier ?!!	    
+			}
+		    ) else {
+			buf.write (Ymir::format ("N%", mangler.mangle (second.to <generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
+		    }
+		}
+	    } else {
 		Ymir::OutBuffer innerBuf;
-		for (auto & it : second.to <generator::TemplateSyntaxList> ().getContents ())
-		    innerBuf.writef ("N%", mangler.mangle (it));
+		for (auto & it : second.to <generator::TemplateSyntaxList> ().getContents ()) {
+		    match (it) {
+			of (generator::Type, t, {
+				auto aux = t.clone ();
+				aux.to <generator::Type> ().isMutable (false);
+				innerBuf.writef ("N%", mangler.mangle (aux));
+			    }
+			) else innerBuf.writef ("N%", mangler.mangle (it));
+		    }
+		}
 		buf.writef ("V%", innerBuf.str ());
 	    }
 	}
-
+	
 	if (this-> getReferent ().isEmpty ()) return buf.str ();
 	else {
 	    auto ft = this-> getReferent ().getMangledName ();

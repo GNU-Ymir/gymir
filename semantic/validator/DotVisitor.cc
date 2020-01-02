@@ -41,6 +41,10 @@ namespace semantic {
 			 
 		else of (Range, rng ATTRIBUTE_UNUSED,
 		    ret = validateRange (expression, left);
+		)
+
+		else of (ClassRef, cl ATTRIBUTE_UNUSED,
+		    ret = validateClass (expression, left);
 		);
 	    }
 
@@ -178,6 +182,41 @@ namespace semantic {
 	    
 	    return Generator::empty ();	    
 	}
+
+	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left) {
+	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto context = left.to <Value> ().getType ().to <Type> ().getTypeName (false, false);
+	    auto cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    auto prvContext = this-> _context.isInContext (context);
+	    int i = 0;
+	    while (!cl.isEmpty ()) {
+		if (i == 0 && prvContext) {
+		    auto type = cl.to <generator::Class> ().getFieldType (name);
+		    if (!type.isEmpty ())
+			return StructAccess::init (expression.getLocation (),
+						   type,
+						   left, name);
+		} else if (prvContext) {
+		    auto type = cl.to <generator::Class> ().getFieldTypeProtected (name);
+		    if (!type.isEmpty ())
+			return StructAccess::init (expression.getLocation (),
+						   type,
+						   left, name);		    
+		} else {
+		    // TODO
+		    // auto type = cl.to <generator::Class> ().getFieldTypePublic (name);
+		}
+		auto ancestor = cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAncestor ();
+		if (!ancestor.isEmpty ())
+		    cl = this-> _context.validateType (ancestor).to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+		else cl = Generator::empty ();
+		i += 1;
+	    }
+	    
+	    return Generator::empty ();
+	}
+	
 
 	generator::Generator DotVisitor::validateDotTemplateCall (const syntax::Binary & expression, const generator::Generator & left) {
 	    auto call = CallVisitor::init (this-> _context);

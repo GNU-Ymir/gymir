@@ -1,6 +1,8 @@
 #include <ymir/semantic/generator/value/Class.hh>
 #include <ymir/semantic/generator/type/NoneType.hh>
 #include <ymir/semantic/generator/value/VarDecl.hh>
+#include <ymir/semantic/symbol/Class.hh>
+#include <ymir/syntax/expression/VarDecl.hh>
 #include <ymir/utils/OutBuffer.hh>
 
 namespace semantic {
@@ -46,6 +48,49 @@ namespace semantic {
 	    this-> _fields = fields;
 	}
 
+	Generator Class::getFieldType (const std::string & name) const {
+	    Generator type (Generator::empty ());
+
+	    // Those fields contains all the fields of the class including ancestor
+	    for (auto & it: this-> _fields) { 
+		if (it.to <generator::VarDecl> ().getName () == name) {
+		    type = it.to <generator::VarDecl> ().getVarType ();
+		    break;
+		}
+	    }
+
+	    if (type.isEmpty ()) return type;
+	    
+	    // so we need to check that it belong to this class and not to an ancestor	    
+	    for (auto & it : this-> _ref.to <semantic::Class> ().getFields ()) {
+		if (it.to <syntax::VarDecl> ().getName ().str == name) return type;
+	    }
+	    return Generator::empty ();
+	}
+
+	Generator Class::getFieldTypeProtected (const std::string & name) const {
+	    Generator type (Generator::empty ());
+	    // Those fields contains all the fields of the class including ancestor
+	    for (auto & it: this-> _fields) {
+		if (it.to <generator::VarDecl> ().getName () == name) {
+		    type = it.to <generator::VarDecl> ().getVarType ();
+		    break;
+		}
+	    }
+
+	    if (type.isEmpty ()) return type;
+	    // so we need to check that it belong to this class and not to an ancestor	    
+	    for (auto & it : this-> _ref.to <semantic::Class> ().getFields ()) {
+		if (it.to <syntax::VarDecl> ().getName ().str == name) {
+		    if (this-> _ref.to <semantic::Class> ().isMarkedPrivate (name))
+			return Generator::empty ();
+		    return type;
+		}
+	    }
+	    return Generator::empty ();	    
+	}
+
+	
 	const std::vector <generator::Generator> & Class::getVtable () const {
 	    return this-> _vtable;
 	}

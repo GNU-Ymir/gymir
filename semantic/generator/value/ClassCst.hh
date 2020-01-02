@@ -14,9 +14,11 @@ namespace semantic {
 
 	    Generator _frame;
 
+	    Generator _self;
+	    
 	    std::vector <Generator> _types;
 	    
-	    std::vector <Generator> _params;
+	    std::vector <Generator> _params;	    
 	    
 	private :
 
@@ -62,6 +64,16 @@ namespace semantic {
 	     * \return the parameters
 	     */
 	    const std::vector <Generator> & getParameters () const;
+
+	    /**
+	     * \brief Set the self element
+	     */
+	    void setSelf (const Generator & gen);
+
+	    /**
+	     * \return the self element (if any, if not it will be constructed at generation time);
+	     */
+	    const Generator & getSelf () const;
 	    
 	    std::string prettyString () const override;
 	    

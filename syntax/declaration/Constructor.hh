@@ -29,13 +29,17 @@ namespace syntax {
 
 	Expression _body;
 
+	lexing::Word _explicitSuperCall;
+
+	lexing::Word _explicitSelfCall;
+	
     private : 
 
 	friend Declaration;
 
 	Constructor ();
 
-	Constructor (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body);
+	Constructor (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall);
 
     public :
 
@@ -47,7 +51,7 @@ namespace syntax {
 	 * \param constructions the constructions default value of the fields
 	 * \param body the body of the constructor
 	 */
-	static Declaration init (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body);
+	static Declaration init (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall);
 
 	/**
 	 * Mandatory function used for proxy polymoprhism system
@@ -65,6 +69,16 @@ namespace syntax {
 	const lexing::Word & getName () const;
 
 	/**
+	 * \return the list of parameters to pass for the construction of the super class
+	 */	
+	const std::vector <Expression> & getSuperParams () const;
+
+	/**
+	 * \return the list of affectation for field constructions
+	 */
+	const std::vector <std::pair <lexing::Word, Expression> > & getFieldConstruction () const;
+	
+	/**
 	 * \return the prototype of the constructor 
 	 * \warning constructor prototypes always have empty return type
 	 */
@@ -74,7 +88,19 @@ namespace syntax {
 	 * \return the body of the constructor
 	 */
 	const Expression & getBody () const;
-	
+
+	/**
+	 * \return the location of the explicit super call
+	 * \warning might be eof, if the super is not called
+	 */
+	const lexing::Word & getExplicitSuperCall () const;
+
+	/**
+	 * \return the location of the explicit self call
+	 * \warning might be eof, if the not other constructor is called
+	 */
+	const lexing::Word & getExplicitSelfCall () const;
+
     };
 
     

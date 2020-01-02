@@ -399,10 +399,20 @@ namespace syntax {
 	token = this-> _lex.consumeIf ({Keys::WITH});
 	std::vector <std::pair <lexing::Word, Expression> > constructions;
 	std::vector <Expression> supers;
+	lexing::Word getSuper = lexing::Word::eof ();
+	lexing::Word getSelf = lexing::Word::eof ();
 	if (token == Keys::WITH) {
 	    while (token != Token::LACC) {
 		auto ident = this-> visitIdentifier ();
-		if (ident == Keys::SUPER ) {
+		if (ident == Keys::SUPER) {
+		    getSuper = ident;
+		    if (supers.size () != 0)
+			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.str);
+		    this-> _lex.next ({Token::LPAR});
+		    supers = visitParamList (true);
+		    this-> _lex.next ({Token::RPAR});
+		} else if (ident == Keys::SELF) {
+		    getSelf = ident;
 		    if (supers.size () != 0)
 			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.str);
 		    this-> _lex.next ({Token::LPAR});
@@ -410,7 +420,7 @@ namespace syntax {
 		    this-> _lex.next ({Token::RPAR});
 		} else {
 		    this-> _lex.next ({Token::EQUAL});
-		    auto expr = this-> visitExpression (10);
+		    auto expr = this-> visitExpression ();
 		    constructions.push_back ({ident, expr});
 		}
 
@@ -421,9 +431,9 @@ namespace syntax {
 	
 	auto body = visitExpression ();
 	if (templates.size () != 0) {
-	    return Template::init (location, templates, Constructor::init (location, proto, supers, constructions, body));
+	    return Template::init (location, templates, Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf));
 	} else 
-	    return Constructor::init (location, proto, supers, constructions, body);
+	    return Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf);
     }
     
     Declaration Visitor::visitClassDestructor () {

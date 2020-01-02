@@ -76,6 +76,13 @@ namespace semantic {
 	    generator::Generator validateRange (const syntax::Binary & expression, const generator::Generator & left);	    
 
 	    /**
+	     * \brief Validate the operator on a class type
+	     * \param expression the bin expression
+	     * \param left the value of type ClassRef
+	     */
+	    generator::Generator validateClass (const syntax::Binary & expression, const generator::Generator & left);
+	    
+	    /**
 	     * \brief Validate an implicit dotTemplateCall
 	     * \brief a dotTemplateCall is as the following ((expression)'.' (var'!' params) [\'('], with 
 	     * \brief Or the following AST : 

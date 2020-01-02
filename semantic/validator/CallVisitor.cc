@@ -171,14 +171,19 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::vector <Generator> rights = rights_;
 	    TRY (
+		for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
+		    auto param = findParameter (rights, proto.getParameters () [it].to<ProtoVar> ());
+		    if (param.isEmpty ()) return Generator::empty ();
+		    params.push_back (param);
+		}
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors = msgs;
 	    } FINALLY;
-	    
+
 	    if (errors.size () != 0) return Generator::empty ();	    
 	    if (rights.size () != 0) return Generator::empty ();
-
+	    
 	    std::vector <Generator> types;
 	    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 		{
@@ -496,8 +501,11 @@ namespace semantic {
 	    for (auto & it : sym.getGenerators ()) {
 		int current = 0;
 		std::vector <std::string> local_errors;
-		if (it.is <FrameProto> ()) {
-		    auto gen = validateFrameProto (location, it.to <FrameProto> (), rights_, current, local_errors);
+		if (it.is <FrameProto> () || it.is <ConstructorProto> () || (it.is <Addresser> () && it.to<Addresser> ().getType ().is <FuncPtr> ())) {
+		    auto func = it;
+		    if (it.is <Addresser> ()) func = it.to <Addresser> ().getWho ();
+		    
+		    auto gen = validate (location, func, rights_, current, local_errors);
 		    if (!gen.isEmpty ()) nonTemplScores[current].push_back (gen);
 		    if (!gen.isEmpty () && (current > score || fromTempl)) {// simple function can take the token on 1. less scored 2. every templates
 			score = current;
@@ -505,18 +513,7 @@ namespace semantic {
 			used_gen = it;
 			fromTempl = false;
 		    } else if (gen.isEmpty ()) {
-			local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()));
-			insertCandidate (nbCand, errors, local_errors);
-		    }
-		} else if (it.is <Addresser> () && it.to<Addresser> ().getType ().is <FuncPtr> ()) { // Template specialition can create multsym on funcptr
-		    auto gen = validate (location, it.to <Addresser> ().getWho (), rights_, current, local_errors);
-		    if (!gen.isEmpty ()) nonTemplScores[current].push_back (gen);
-		    if (!gen.isEmpty () && (current > score || fromTempl)) {// simple function can take the token on 1. less scored 2. every templates
-			score = current;
-			final_gen = gen;
-			used_gen = it;
-			fromTempl = false;
-		    } else if (gen.isEmpty ()) {
+			//local_errors.insert (local_errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()));
 			insertCandidate (nbCand, errors, local_errors);
 		    }
 		} else if (it.is <TemplateRef> ()) {
@@ -728,6 +725,7 @@ namespace semantic {
 	    std::string leftName;
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())
+		else of (ConstructorProto, proto, leftName = proto.getName ())
 		else of (generator::Struct, str, leftName = str.getName ())
 		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
 		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())

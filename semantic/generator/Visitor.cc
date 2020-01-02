@@ -1519,6 +1519,11 @@ namespace semantic {
 
 	generic::Tree Visitor::generateStructAccess (const StructAccess & acc) {
 	    auto elem = generateValue (acc.getStruct ());
+	    if (acc.getStruct ().to <Value> ().getType ().is <ClassRef> ()) {
+		// If the type is a class, we need to unref it to access its inner fields
+		elem = elem.buildPointerUnref (0);
+	    }
+	    
 	    return Tree::compound (
 		acc.getLocation (),
 		elem.getValue ().getField (acc.getField ()),
@@ -1574,15 +1579,20 @@ namespace semantic {
 
 	    auto classType = generateType (cl.getType ());
 	    auto inner = classType.getType ();
+	    if (cl.getSelf ().isEmpty ()) {
+		auto classValue = Tree::buildCall (
+		    cl.getLocation (),
+		    classType,
+		    global::CoreNames::get (CLASS_ALLOC),
+		    {Tree::buildSizeCst (inner.getSize ())}
+		);
+		// TODO set the vtable
+		
+		results.insert (results.begin (), classValue);
+	    } else {
+		results.insert (results.begin (), generateValue (cl.getSelf ()));
+	    }
 	    
-	    auto classValue = Tree::buildCall (
-		cl.getLocation (),
-		classType,
-		global::CoreNames::get (CLASS_ALLOC),
-		{Tree::buildSizeCst (inner.getSize ())}
-	    );
-	    
-	    results.insert (results.begin (), classValue);
 	    auto fn = generateValue (cl.getFrame ());
 	    return Tree::compound (
 		cl.getLocation (),

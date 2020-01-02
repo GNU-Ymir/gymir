@@ -16,6 +16,9 @@ namespace semantic {
 	syntax::Expression _ancestor;
 	
 	std::vector <syntax::Expression> _fields;
+
+	/** The list of fields that are marked as private */
+	std::vector <std::string> _privates;
 	
 	/**
 	 * set at validation time, to prevent multiple time validation of the same symbol
@@ -72,9 +75,27 @@ namespace semantic {
 	 */
 	void setGenerator (const generator::Generator & gen);
 
+	/**
+	 * \brief Add a field in the class declaration
+	 */
 	void addField (const syntax::Expression & field);
 
+	/**
+	 * \brief Mark a field has private
+	 */
+	void setPrivate (const std::string & name);
+	
+	/**
+	 * \return the list of fields
+	 */
 	const std::vector<syntax::Expression> & getFields () const;
+
+	/**
+	 * \return true if the field is mark private
+	 * \warning if the fields does not exists in the class it will return false
+	 * \warning we assume that this function is called oif we are sure that the fields exists in the class
+	 */
+	bool isMarkedPrivate (const std::string & name) const;
 	
 	/**
 	 * return the ancestor of the class (might be empty)
