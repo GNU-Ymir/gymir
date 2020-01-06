@@ -362,11 +362,15 @@ namespace syntax {
     }
     
     Declaration Visitor::visitClassContent () {
-	auto token = this-> _lex.next ({Keys::DEF, Keys::LET, Keys::SELF, Keys::MIXIN});
+	auto token = this-> _lex.next ({Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::MIXIN});
 	if (token == Keys::SELF) {
 	    return visitClassConstructor ();
 	} else if (token == Keys::DEF) {
 	    return visitFunction (true);	    
+	} else if (token == Keys::OVER) {
+	    auto func = visitFunction (true);
+	    func.to <Function> ().setOver ();
+	    return func;
 	} else if (token == Keys::LET) {
 	    this-> _lex.rewind ();
 	    return Expression::toDeclaration (visitVarDeclaration ());
@@ -531,7 +535,8 @@ namespace syntax {
 		    token = this-> _lex.next ({Token::PIPE, Token::COMA});
 		}
 	    } else {
-		token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
+		if (!isClass || vars.size () > 0) // If we get a method prototype, we need at least one param
+		    token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
 		if (token == Token::TDOT) {
 		    isVariadic = true;
 		    token = this-> _lex.next ({Token::RPAR});
@@ -1549,8 +1554,8 @@ namespace syntax {
 	    name = visitIdentifier ();
 	}
 
-	if (name != Keys::SELF || !isClass) {		
-	    if (name == Keys::SELF)
+	if (name != Keys::SELF || !isClass) {
+	    if (name == Keys::SELF || isClass)
 		Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.str);
 	    
 	    if (mandType) token = this-> _lex.next ({Token::COLON});
@@ -1564,7 +1569,8 @@ namespace syntax {
 	    if (token == Token::EQUAL && withValue)
 		value = visitExpression ();
 	    else this-> _lex.rewind ();
-	}	
+	}
+	
 	return VarDecl::init (name, decos, type, value);
     }
    

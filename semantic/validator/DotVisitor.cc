@@ -2,6 +2,7 @@
 #include <ymir/semantic/validator/CompileTime.hh>
 #include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
+#include <ymir/utils/Path.hh>
 
 namespace semantic {
 
@@ -45,7 +46,7 @@ namespace semantic {
 
 		else of (ClassRef, cl ATTRIBUTE_UNUSED,
 		    ret = validateClass (expression, left);
-		);
+		); 		
 	    }
 
 	    if (!ret.isEmpty ()) return ret;
@@ -190,6 +191,8 @@ namespace semantic {
 	    auto cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    auto prvContext = this-> _context.isInContext (context);
 	    int i = 0;
+	    
+	    // Field
 	    while (!cl.isEmpty ()) {
 		if (i == 0 && prvContext) {
 		    auto type = cl.to <generator::Class> ().getFieldType (name);
@@ -213,6 +216,36 @@ namespace semantic {
 		else cl = Generator::empty ();
 		i += 1;
 	    }
+	    
+	    // Method
+	    cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    std::vector <Generator> syms;
+	    i = 0;
+	    for (auto & gen : cl.to <generator::Class> ().getVtable ()) {
+		if (Ymir::Path (gen.to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
+		    std::vector <Generator> types;
+		    for (auto & it : gen.to <FrameProto> ().getParameters ())
+			types.push_back (it.to <ProtoVar> ().getType ());
+		    
+		    auto delType = Delegate::init (gen.getLocation (), gen);
+		    syms.push_back (
+			DelegateValue::init ({expression.getLocation (), name}, delType, left,
+					     VtableAccess::init (expression.getLocation (),
+								 FuncPtr::init (expression.getLocation (),
+										gen.to <FrameProto> ().getReturnType (),
+										types),
+								 left,
+								 i
+					     )
+			)
+		    );
+		}
+		i += 1;
+	    }
+					    
+	    if (syms.size () != 0) 
+		return MultSym::init ({expression.getLocation (), name}, syms);
+	    
 	    
 	    return Generator::empty ();
 	}

@@ -7,25 +7,25 @@ namespace semantic {
 	ISymbol (lexing::Word::eof ()),
 	_table (this),
 	_content (syntax::Declaration::empty ()),
-	_class (syntax::Expression::empty ())
+	_class (Symbol::empty ())
     {}
 
-    Constructor::Constructor (const lexing::Word & name, const syntax::Constructor & func, const syntax::Expression & cl) :
+    Constructor::Constructor (const lexing::Word & name, const syntax::Constructor & func) :
 	ISymbol (name),
 	_table (this),
 	_content (syntax::Declaration {func.clone ()}),
-	_class (cl)
+	_class (Symbol::empty ())
     {}
 
     Constructor::Constructor (const Constructor & other) :
 	ISymbol (other),
 	_table (other._table.clone (this)), 
 	_content (other._content),
-	_class (other._class)
+	_class (Symbol::empty ())
     {}
     
-    Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func, const syntax::Expression & cl) {
-	return Symbol {new Constructor (name, func, cl)};
+    Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func) {
+	return Symbol {new Constructor (name, func)};
     }
 
     Symbol Constructor::clone () const {
@@ -104,7 +104,11 @@ namespace semantic {
 	return buf.str ();
     }
 
-    const syntax::Expression & Constructor::getClass () const {
+    void Constructor::setClass (const Symbol& sym) {
+	this-> _class = sym;
+    }
+
+    const Symbol & Constructor::getClass () const {
 	return this-> _class;
     }
     

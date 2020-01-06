@@ -112,15 +112,7 @@ namespace semantic {
 	}
 
 	Generator UnaryVisitor::validateFunctionPointer (const syntax::Unary & un, const Generator & proto) {
-	    auto params = proto.to <FrameProto> ().getParameters ();
-	    auto ret = proto.to <FrameProto> ().getReturnType ();
-	    std::vector <Generator> paramTypes;
-	    for (auto & it : params) {
-		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
-	    }
-	    
-	    auto funcType = FuncPtr::init (un.getLocation (), ret, paramTypes);
-	    return Addresser::init (un.getLocation (), funcType, proto);
+	    return Addresser::init (un.getLocation (), this-> _context.validateFunctionType (proto), proto);
 	}
 	
 	void UnaryVisitor::error (const syntax::Unary & un, const generator::Generator & left) {

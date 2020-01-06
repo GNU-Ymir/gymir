@@ -53,6 +53,7 @@ namespace semantic {
 		of (generator::Enum, en, return validateEnum (expression, en));		
 		of (generator::Struct, str ATTRIBUTE_UNUSED, return validateStruct(expression, left));
 		of (generator::Class, cl ATTRIBUTE_UNUSED, return validateClass (expression, left));
+		of (ClassRef,  cl, return validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator ()));
 		of (Type, te ATTRIBUTE_UNUSED, return validateType (expression, left));
 	    }
 
@@ -465,7 +466,7 @@ namespace semantic {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 		if (name == ClassRef::INIT_NAME) {
 		    std::vector <Symbol> syms;
-		    for (auto & gen : t.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllLocal ()) {
+		    for (auto & gen : t.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 			match (gen) {
 			    of (semantic::Constructor, cst ATTRIBUTE_UNUSED,
 				syms.push_back (gen));

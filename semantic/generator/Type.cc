@@ -164,10 +164,10 @@ namespace semantic {
 	    }
 	}
 	
-	int Type::mutabilityLevel (int level) const {	    
+	int Type::mutabilityLevel (int level) const {
 	    if (this-> isMutable ()) {
 		if (this-> isComplex ()) {
-		    auto max = level;
+		    auto max = level + 1;
 		    for (auto & it : this-> getInners ()) {
 			auto mut = it.to <Type> ().mutabilityLevel (level + 1);
 			if (mut > max) max = mut;

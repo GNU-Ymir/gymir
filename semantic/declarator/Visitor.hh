@@ -89,7 +89,7 @@ namespace semantic {
 	    /**
 	     * \brief Transform a constructor into a semantic tree
 	     */
-	    semantic::Symbol visitConstructor (const syntax::Constructor & cs, const syntax::Expression & cl);
+	    semantic::Symbol visitConstructor (const syntax::Constructor & cs);
 	    
 	    /**
 	     * \brief Transform a struct into a semantic tree

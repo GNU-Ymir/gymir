@@ -34,6 +34,7 @@
 #include <ymir/semantic/generator/value/LambdaProto.hh>
 #include <ymir/semantic/generator/value/List.hh>
 #include <ymir/semantic/generator/value/Loop.hh>
+#include <ymir/semantic/generator/value/MethodProto.hh>
 #include <ymir/semantic/generator/value/ModuleAccess.hh>
 #include <ymir/semantic/generator/value/MultSym.hh>
 #include <ymir/semantic/generator/value/NamedGenerator.hh>
@@ -67,3 +68,4 @@
 #include <ymir/semantic/generator/value/UniqValue.hh> 
 #include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/semantic/generator/value/VarRef.hh>
+#include <ymir/semantic/generator/value/VtableAccess.hh>

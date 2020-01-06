@@ -412,22 +412,8 @@ namespace semantic {
 	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) 
 		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE), left.to <Value> ().getType ().to <Type> ().getTypeName ());	    
 
-	    if (left.to <Value> ().getType ().to <Type> ().isComplex ()) {
-		this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);
-	    }
-	    
-	    if (left.to<Value> ().getType ().to <Type> ().isCompatible (right.to<Value> ().getType ()))
-		// TODO verification of the constancy or imutability of the left operand
-		
-		return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);
-	    else
-		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				    expression.getLocation ().str,
-				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
-		);
-
-	    return Generator::empty ();	    
+	    this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);	    
+	    return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);	    
 	}
 
 	Generator BinaryVisitor::validateRangeOperation (Binary::Operator op, const syntax::Binary & expression) {

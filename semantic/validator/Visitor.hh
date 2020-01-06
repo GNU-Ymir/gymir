@@ -114,15 +114,26 @@ namespace semantic {
 	    void validateFunction (const semantic::Function & func, bool isWeak = false);
 
 	    /**
+	     * \brief Validate a method
+	     */
+	    void validateMethod (const semantic::Function & func, const generator::Generator & cl);
+	    
+	    /**
+	     * \brief Validate a method prototype and put it in the vtable at the right place
+	     * \warning This does not validate the body of the method, see validateMethod 
+	     */
+	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, const std::vector <generator::Generator> & ancVtable);
+	    
+	    /**
 	     * \brief Validate a class constructor
 	     */
-	    void validateConstructor (const semantic::Constructor & cs, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
-
+	    void validateConstructor (const semantic::Constructor & cs, const generator::Generator & classType, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
+	    
 	    /**
 	     * \brief Validate the pre construction instruction in a constructor
 	     * \return the list of instruction (a Block), to construct the super and attributes
 	     */
-	    generator::Generator validatePreConstructor (const semantic::Constructor & cs, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
+	    generator::Generator validatePreConstructor (const semantic::Constructor & cs, const generator::Generator & classType,  const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
 	    
 	    /**
 	     * \brief Validate a global var declaration 
@@ -163,7 +174,7 @@ namespace semantic {
 	     * \param ancestor the ancestor of the class (might be empty)
 	     * \return the vtable of the class
 	     */
-	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields);
+	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type
@@ -389,6 +400,17 @@ namespace semantic {
 	     * \param cs the constructor to validate
 	     */
 	    generator::Generator validateConstructorProto (const semantic::Constructor & cs);
+
+	    /**
+	     * \brief Validate the method prototype of a method in order to refer to it
+	     * \param mt the method to validate
+	     */
+	    generator::Generator validateMethodProto (const semantic::Function & mt, const generator::Generator &classType);
+
+	    /**
+	     * \brief Transform a frameProto into a FuncPtr type
+	     */
+	    generator::Generator validateFunctionType (const generator::Generator & proto);
 	    
 	    /**
 	     * \brief Validate the prototype of a function for the creation of a frameproto or a constructProto

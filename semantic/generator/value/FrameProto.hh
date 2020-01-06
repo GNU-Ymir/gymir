@@ -7,7 +7,8 @@ namespace semantic {
 
     namespace generator {
 	class FrameProto : public Value {
-
+	protected :
+	    
 	    std::vector <Generator> _params;
 	    
 	    Generator _type;
@@ -20,7 +21,7 @@ namespace semantic {
 
 	    bool _isCVariadic = false;
 	    
-	private :
+	protected :
 
 	    friend Generator;
 	    

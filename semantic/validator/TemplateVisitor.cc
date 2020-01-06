@@ -1164,10 +1164,29 @@ namespace semantic {
 			    replaceAll (ext.getDeclaration (), mapping)
 			);
 		    }
+		) else of (syntax::Constructor, cst, {
+			std::vector <syntax::Expression> exprs;
+			for (auto & it : cst.getSuperParams ())
+			    exprs.push_back (replaceAll (it, mapping));
+			
+			auto fields = cst.getFieldConstruction ();
+			for (auto & it : fields) {
+			    it.second = replaceAll (it.second, mapping);
+			};
+			
+			return syntax::Constructor::init (cst.getName (),
+							  replaceAll (cst.getPrototype (), mapping),
+							  exprs,
+							  fields,
+							  replaceAll (cst.getBody (), mapping),
+							  cst.getExplicitSuperCall (), cst.getExplicitSelfCall ()
+			);
+		    }		    
 		) else of (syntax::Function, func, {
 			auto ret = syntax::Function::init (func.getName (), replaceAll (func.getPrototype (), mapping), replaceAll (func.getBody (), mapping));
 			ret.to <syntax::Function> ().setCustomAttributes (func.getCustomAttributes ());
 			ret.to <syntax::Function> ().setWeak ();
+			if (func.isOver ()) ret.to <syntax::Function> ().setOver ();
 			return ret;
 		    }
 		) else of (syntax::Global, glb, {

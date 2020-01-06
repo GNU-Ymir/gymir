@@ -57,7 +57,7 @@ namespace semantic {
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
 
-	const std::vector <Symbol> & getAllLocal () const;
+	const std::vector <Symbol> & getAllInner () const;
 	
 	bool equals (const Symbol & other) const override;
 

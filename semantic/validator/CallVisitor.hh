@@ -15,7 +15,8 @@ namespace semantic {
 	class CallVisitor {
 
 	    enum Scores {
-		SCORE_TYPE = 3
+		SCORE_TYPE = 3,
+		SCORE_MUT = 1
 	    };
 	    
 	    Visitor & _context;
@@ -165,6 +166,8 @@ namespace semantic {
 	    static void error (const lexing::Word & expression, const lexing::Word & end, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::vector <std::string> & errors);
 
 	    static void insertCandidate (int & nb, std::vector <std::string> & errors, const std::vector <std::string> & candErrors);
+
+	    static std::string prettyName (const generator::Generator & gen);
 	    
 	};
 	

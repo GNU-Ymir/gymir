@@ -220,6 +220,9 @@ namespace syntax {
 	 * and is therefore weak def
 	 */
 	bool _isWeak = false;
+
+	/** Some method can be marked over */
+	bool _isOver;
 	
     private :
 
@@ -319,6 +322,16 @@ namespace syntax {
 	 * Is this function weak
 	 */
 	bool isWeak () const;
+
+	/** 
+	 * This function is now an override function
+	 */
+	void setOver ();
+
+	/**
+	 * does this function override another function
+	 */
+	bool isOver () const;
     };
     
 }

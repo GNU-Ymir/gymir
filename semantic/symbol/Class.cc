@@ -60,21 +60,15 @@ namespace semantic {
     }
 
     std::vector <Symbol> Class::get (const std::string & name) const {
-	auto vec = getReferent ().get (name);
-	auto local = this-> _table.get (name);
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+	return getReferent ().get (name);
     }
 
     std::vector <Symbol> Class::getPublic (const std::string & name) const {
-	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table.getPublic (name);
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+	return getReferent ().getPublic (name);
     }
     
     std::vector <Symbol> Class::getLocal (const std::string & name) const {
-	return this-> _table.get (name);
+	return {};
     }
 
     bool Class::equals (const Symbol & other) const {
@@ -84,7 +78,7 @@ namespace semantic {
 	} else return false;
     }
 
-    const std::vector <Symbol> & Class::getAllLocal () const {
+    const std::vector <Symbol> & Class::getAllInner () const {
 	return this-> _table.getAll ();
     }
     

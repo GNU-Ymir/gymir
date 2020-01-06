@@ -132,6 +132,7 @@ ymir_OBJS = \
 	ymir/generator_Frame.o \
 	ymir/generator_GlobalConstant.o \
 	ymir/generator_FrameProto.o \
+	ymir/generator_MethodProto.o \
 	ymir/generator_LambdaProto.o \
 	ymir/generator_GlobalVar.o \
 	ymir/generator_Integer.o \
@@ -161,6 +162,7 @@ ymir_OBJS = \
 	ymir/generator_Struct.o \
 	ymir/generator_Class.o \
 	ymir/generator_StructAccess.o \
+	ymir/generator_VtableAccess.o \
 	ymir/generator_StructCst.o \
 	ymir/generator_StructRef.o \
 	ymir/generator_ClassRef.o \

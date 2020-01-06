@@ -14,6 +14,7 @@ namespace semantic {
 	std::string Mangler::YMIR_FUNCTION_RET = "Z";
 	std::string Mangler::YMIR_VAR = "V";
 	std::string Mangler::YMIR_CST = "CST";
+	std::string Mangler::YMIR_VTABLE = "VT";
 	
 	Mangler::Mangler () {}
 
@@ -108,7 +109,13 @@ namespace semantic {
 		buf.write (Mangler::YMIR_PREFIX);
 		for (auto & it : splits) buf.write (it.length (), it);
 		buf.write (Mangler::YMIR_FUNCTION);
-
+		
+		auto cl = proto.clone ();
+		if (cl.is <MethodProto> ()) {
+		    auto type = cl.to <MethodProto> ().getClassType ();
+		    type.to <Type> ().isMutable (cl.to <MethodProto> ().isMutable ());
+		    buf.write (mangle (type));
+		}
 		for (auto & p : proto.getParameters ())
 		    buf.write (mangle (p.to <ProtoVar> ().getType ()));
 			
@@ -282,6 +289,11 @@ namespace semantic {
 	    auto splits = split (ref.getMangledName (), "::");
 	    for (auto & it : splits) buf.write (it.length (), it);
 	    return buf.str ();
+	}
+
+	std::string Mangler::mangleVtable (const ClassRef & ref) const {
+	    auto buf = mangleClassRef (ref);
+	    return Mangler::YMIR_PREFIX + buf + Mangler::YMIR_VTABLE;
 	}
 	
 	std::string Mangler::mangleEnumRef (const EnumRef & ref) const {

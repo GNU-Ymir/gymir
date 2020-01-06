@@ -30,6 +30,11 @@ namespace semantic {
 
 	/** Is this function variadic */
 	bool _isVariadic;
+
+	/**
+	 * Is this function marked override
+	 */
+	bool _isOver = false;
 	
 	std::string _externLanguage;
 	
@@ -72,9 +77,13 @@ namespace semantic {
 	void isInline (bool is);
 
 	void isSafe (bool is);
+
+	void isOver (bool is);
 	
 	bool isVariadic () const;
 
+	bool isOver () const;
+	
 	const syntax::Function & getContent () const;
 
 	/**

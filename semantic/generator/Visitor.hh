@@ -92,6 +92,11 @@ namespace semantic {
 	     * \brief Transform a global constant into gimple
 	     */
 	    generic::Tree generateGlobalConstant (const GlobalConstant & cst);
+
+	    /**
+	     * \brief Create the vtable of a classref
+	     */
+	    generic::Tree generateVtable (const Generator & classType);
 	    
 	    /**
 	     * \brief Generate the declaration of a param var
@@ -230,6 +235,11 @@ namespace semantic {
 	     */
 	    generic::Tree generateStructAccess (const StructAccess & acc);
 
+	    /**
+	     * \brief Transform a vtable access into gimple
+	     */	    
+	    generic::Tree generateVtableAccess (const VtableAccess & acc);
+	    
 	    /**
 	     * \brief Transform a struct construction into gimple
 	     */

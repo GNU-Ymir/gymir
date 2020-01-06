@@ -21,6 +21,8 @@ namespace semantic {
 	    static std::string YMIR_VAR;
 
 	    static std::string YMIR_CST;
+
+	    static std::string YMIR_VTABLE;
 	    
 	private :
 
@@ -157,6 +159,11 @@ namespace semantic {
 	     */
 	    std::string mangleClassRef (const ClassRef & r) const;
 
+	    /**
+	     * \brief Mangle a class vtable name
+	     */
+	    std::string mangleVtable (const ClassRef & r) const;
+	    
 	    /**
 	     * \brief Mangle a enum type
 	     */

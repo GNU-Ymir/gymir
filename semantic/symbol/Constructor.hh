@@ -18,22 +18,22 @@ namespace semantic {
 
 	/** The syntaxic function */
 	syntax::Declaration _content;
-		
-	syntax::Expression _class;
 
+	Symbol _class;
+	
     private :
 
 	friend Symbol;
 
 	Constructor ();
 
-	Constructor (const lexing::Word & name, const syntax::Constructor & func, const syntax::Expression & cl);
+	Constructor (const lexing::Word & name, const syntax::Constructor & func);
 
 	Constructor (const Constructor & other);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const syntax::Constructor & func, const syntax::Expression & cl);
+	static Symbol init (const lexing::Word & name, const syntax::Constructor & func);
 
 	Symbol clone () const override;
 
@@ -63,10 +63,12 @@ namespace semantic {
 	std::string getRealName () const override;
 
 	std::string getMangledName () const override;
-
-	const syntax::Expression & getClass () const;
 	
 	std::string formatTree (int padd) const override;
+
+	void setClass (const Symbol & sym);
+
+	const Symbol & getClass () const;
 	
     };    
 

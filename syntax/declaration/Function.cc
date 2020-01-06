@@ -231,5 +231,13 @@ namespace syntax {
     bool Function::isWeak () const {
 	return this-> _isWeak;
     }
+
+    void Function::setOver () {
+	this-> _isOver = true;
+    }
+
+    bool Function::isOver () const {
+	return this-> _isOver;
+    }
     
 }

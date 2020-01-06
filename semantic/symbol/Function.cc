@@ -13,14 +13,16 @@ namespace semantic {
 	ISymbol (name),
 	_table (this),
 	_content (syntax::Declaration {func.clone ()}),
-	_isVariadic (func.getPrototype ().isVariadic ())
+	_isVariadic (func.getPrototype ().isVariadic ()),
+	_isOver (func.isOver ())
     {}
 
     Function::Function (const Function & other) :
 	ISymbol (other),
 	_table (other._table.clone (this)), 
 	_content (other._content),
-	_isVariadic (other._isVariadic)
+	_isVariadic (other._isVariadic),
+	_isOver (other._isOver)
     {}
     
     Symbol Function::init (const lexing::Word & name, const syntax::Function & func) {
@@ -92,6 +94,14 @@ namespace semantic {
 	this-> _isSafe = is;
     }
 
+    void Function::isOver (bool is) {
+	this-> _isOver = is;
+    }
+
+    bool Function::isOver () const {
+	return this-> _content.to <syntax::Function> ().isOver ();
+    }
+    
     const syntax::Function & Function::getContent () const {
 	return this-> _content.to <syntax::Function> ();
     }

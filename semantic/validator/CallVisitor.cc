@@ -100,7 +100,7 @@ namespace semantic {
 	    }
 	    
 	    if (!left.is<MultSym> ()) 
-		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), left.getLocation (), left.prettyString ()));	    
+		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), left.getLocation (), prettyName (left)));	    
 	    return Generator::empty ();
 	}
 	
@@ -153,7 +153,11 @@ namespace semantic {
 			    true
 			);
 			types.push_back (proto.getParameters () [it].to <Value> ().getType ());
-			score += Scores::SCORE_TYPE;		   
+			score += Scores::SCORE_TYPE;
+			auto llevel = params [it].to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+			auto rlevel = proto.getParameters () [it].to <Value> ().getType ().to <Type> ().mutabilityLevel () + 1;
+			score += rlevel - llevel;
+
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -213,7 +217,11 @@ namespace semantic {
 			    true
 			);
 			types.push_back (proto.getParameters () [it].to <Value> ().getType ());
-			score += Scores::SCORE_TYPE;		   
+			score += Scores::SCORE_TYPE;
+			auto llevel = params [it].to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+			auto rlevel = proto.getParameters () [it].to <Value> ().getType ().to <Type> ().mutabilityLevel () + 1;
+			score += rlevel - llevel;
+
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -298,7 +306,11 @@ namespace semantic {
 				true
 			    );
 			    types.push_back (proto.getParameters () [it].to <Value> ().getType ());
-			    score += Scores::SCORE_TYPE;		   
+			    score += Scores::SCORE_TYPE;
+			    auto llevel = params [it].to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+			    auto rlevel = proto.getParameters () [it].to <Value> ().getType ().to <Type> ().mutabilityLevel () + 1;
+			    score += rlevel - llevel;
+			    
 			) CATCH (ErrorCode::EXTERNAL) {
 			    GET_ERRORS_AND_CLEAR (msgs);
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -418,7 +430,11 @@ namespace semantic {
 			    true
 			);
 			types.push_back (funcType.getParamTypes () [it]);
-			score += Scores::SCORE_TYPE;		   
+			score += Scores::SCORE_TYPE;
+			
+			auto llevel = params [it].to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+			auto rlevel = funcType.getParamTypes ()[it].to <Value> ().getType ().to <Type> ().mutabilityLevel () + 1;
+			score += rlevel - llevel;
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -439,17 +455,61 @@ namespace semantic {
 
 	generator::Generator CallVisitor::validateDelegate (const lexing::Word & location, const Generator & gen, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
 	    score = 0;
-	    std::vector <Generator> params = rights_;
-	    auto funcType = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <FuncPtr> ();
-	    if (params.size () != funcType.getParamTypes ().size ()) return Generator::empty ();
+	    std::vector <Generator> params;
+	    std::vector <Generator> rights = rights_;
+	    std::vector <Generator> paramTypes;
+	    Generator retType (Generator::empty ());
+	    std::string typeName; 
+
+	    if (gen.to <Value> ().getType ().to <Type> ().getInners ()[0].is <FuncPtr> ()) {
+		auto funcType = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <FuncPtr> ();
+		typeName = funcType.getTypeName ();
+		params = rights;
+		rights = {};
+		paramTypes = funcType.getParamTypes ();
+		retType = funcType.getReturnType ();
+		if (params.size () != paramTypes.size ()) return Generator::empty ();
+	    } else {
+		auto proto = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <FrameProto> ();
+		typeName = proto.prettyString ();
+		TRY (
+		    if (gen.to <Value> ().getType ().to <Type> ().getInners ()[0].is <MethodProto> ()) {
+			auto meth = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <MethodProto> ();
+			auto type = meth.getClassType ();
+			type.to <Type> ().isMutable (meth.isMutable ());
+			this-> _context.verifyImplicitAlias (location, type, gen.to <DelegateValue> ().getClosure ());
+			auto llevel = gen.to <DelegateValue> ().getClosure ().to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+			auto rlevel = type.to <Type> ().mutabilityLevel () + 1;
+			score += rlevel - llevel;
+		    }
+		    
+		    if (proto.getParameters ().size () != rights.size ()) return Generator::empty ();
+		    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
+			auto param = findParameter (rights, proto.getParameters () [it].to<ProtoVar> ());
+			if (param.isEmpty ()) return Generator::empty ();
+			params.push_back (param);
+			paramTypes.push_back (proto.getParameters ()[it].to <ProtoVar> ().getType ());
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors = msgs;
+		} FINALLY;
+
+		retType = proto.getReturnType ();
+		if (errors.size () != 0) return Generator::empty ();	    
+	    }
+	    
+	    if (rights.size () != 0) return Generator::empty ();
+	    
+		    
 	    std::vector <Generator> types;
-	    for (auto it : Ymir::r (0, funcType.getParamTypes ().size ())) {
+	    for (auto it : Ymir::r (0, paramTypes.size ())) {
 		{
 		    bool succeed = true;
 		    TRY (			
 			this-> _context.verifyCompatibleType (
 			    params [it].getLocation (),
-			    funcType.getParamTypes () [it],
+			    paramTypes [it],
 			    params [it].to <Value> ().getType ()
 			);
 		    ) CATCH (ErrorCode::EXTERNAL) {
@@ -464,23 +524,27 @@ namespace semantic {
 		    TRY (		    
 			this-> _context.verifyMemoryOwner (
 			    params [it].getLocation (),
-			    funcType.getParamTypes () [it],
+			    paramTypes [it],
 			    params [it],
 			    true
 			);
-			types.push_back (funcType.getParamTypes () [it]);
-			score += Scores::SCORE_TYPE;		   
+			types.push_back (paramTypes [it]);
+			score += Scores::SCORE_TYPE;
+			auto llevel = params [it].to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+			auto rlevel = paramTypes [it].to <Type> ().mutabilityLevel () + 1;
+			score += rlevel - llevel;
+
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), it, funcType.getTypeName ()));
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), it, typeName));
 		    } FINALLY;
 		}
 	    }
 
 	    if (errors.size () != 0) return Generator::empty ();	   
 	    return Call::init (location,
-			       funcType.getReturnType (),
+			       retType,
 			       gen,
 			       types,
 			       params,
@@ -501,7 +565,7 @@ namespace semantic {
 	    for (auto & it : sym.getGenerators ()) {
 		int current = 0;
 		std::vector <std::string> local_errors;
-		if (it.is <FrameProto> () || it.is <ConstructorProto> () || (it.is <Addresser> () && it.to<Addresser> ().getType ().is <FuncPtr> ())) {
+		if (it.is <FrameProto> () || it.is <ConstructorProto> () || (it.is <Addresser> () && it.to<Addresser> ().getType ().is <FuncPtr> ()) || it.is <DelegateValue> ()) {
 		    auto func = it;
 		    if (it.is <Addresser> ()) func = it.to <Addresser> ().getWho ();
 		    
@@ -556,11 +620,11 @@ namespace semantic {
 		    std::string leftName = sym.getLocation ().str;
 		    std::vector<std::string> names;
 		    for (auto & it : rights_)
-			names.push_back (it.prettyString ());
+			names.push_back (prettyName (it));
 			
 		    std::string note;
 		    for (auto & it : element_on_scores-> second)
-			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getName (), this-> _context.validateMultSym (sym.getLocation (), {it}).prettyString ()) + '\n';
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getName (), prettyName (this-> _context.validateMultSym (sym.getLocation (), {it}))) + '\n';
 		    Ymir::Error::occurAndNote (location,
 					       note,
 					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
@@ -585,11 +649,11 @@ namespace semantic {
 		    std::string leftName = sym.getLocation ().str;
 		    std::vector<std::string> names;
 		    for (auto & it : rights_)
-			names.push_back (it.prettyString ());
+			names.push_back (prettyName (it));
 			
 		    std::string note;
 		    for (auto & it : element_on_scores-> second)
-			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ()) + '\n';
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), lexing::Word {it.getLocation (), ""}, prettyName (it)) + '\n';
 		    Ymir::Error::occurAndNote (location,
 					       note,
 					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
@@ -743,6 +807,18 @@ namespace semantic {
 	    THROW (ErrorCode::EXTERNAL, errors);
 	}
 
+	std::string CallVisitor::prettyName (const Generator & gen) {
+	    match (gen) {
+		of (DelegateValue, dg, {
+			return dg.getType ().to <Type> ().getInners ()[0].prettyString ();		    
+		    }
+		) else of (Call, cl, {
+			return prettyName (cl.getFrame ());
+		    }
+		);
+	    }
+	    return gen.prettyString ();
+	}
 	
 	void CallVisitor::insertCandidate (int & nb, std::vector <std::string> & errors, const std::vector <std::string> & candErrors) {	    
 	    if (nb == 3 && !global::State::instance ().isVerboseActive ()) {

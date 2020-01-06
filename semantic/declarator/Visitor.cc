@@ -168,6 +168,9 @@ namespace semantic {
 		}
 	    }
 
+	    
+	    if (func.isOver ()) function.to <Function> ().isOver (true);	    
+
 	    if (!isExtern || !func.getBody ().getBody ().isEmpty ()) {
 		if (func.getPrototype ().isVariadic ()) Ymir::Error::occur (func.getName (), ExternalError::get (DECL_VARIADIC_FUNC));
 	    }
@@ -177,8 +180,8 @@ namespace semantic {
 	    return function;
 	}        
 
-	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor & cs, const syntax::Expression & cl) {
-	    auto semcs = semantic::Constructor::init (cs.getName (), cs, cl);
+	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor & cs) {
+	    auto semcs = semantic::Constructor::init (cs.getName (), cs);
 	    getReferent ().insert (semcs);
 	    return semcs;
 	}
@@ -308,7 +311,8 @@ namespace semantic {
 			}
 		    )
 		    else of (syntax::Constructor, cs, {
-			    visitConstructor (cs, syntax::Var::init (stcls.getName ()));
+			    auto sym = visitConstructor (cs);
+			    sym.to <Constructor> ().setClass (cls);
 			}
 		    ) else {			
 			visit (it);

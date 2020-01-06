@@ -158,7 +158,19 @@ namespace semantic {
 	       ) else of (Delegate, d, {
 		       std::vector <Tree> inner;
 		       inner.push_back (Tree::pointerType (Tree::voidType ()));
-		       inner.push_back (generateType (d.getInners () [0]));
+		       if (d.getInners ()[0].is <FrameProto> ()) {
+			   auto & proto = d.getInners ()[0];
+			   auto params = proto.to <FrameProto> ().getParameters ();
+			   auto ret = proto.to <FrameProto> ().getReturnType ();
+			   std::vector <Generator> paramTypes;
+			   for (auto & it : params) {
+			       paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+			   }
+	    
+			   inner.push_back (generateType (FuncPtr::init (proto.getLocation (), ret, paramTypes)));
+		       } else {
+			   inner.push_back (generateType (d.getInners () [0]));
+		       }
 		       type = Tree::tupleType ({}, inner); // delegate are unnamed tuple .0 closure, .1 funcptr
 		   }
 	       );
@@ -181,7 +193,7 @@ namespace semantic {
 		std::vector <Tree> inner;
 		std::vector <std::string> fields;
 		fields.push_back ("#_vtable");
-		inner.push_back (Tree::pointerType (Tree::voidType ()));
+		inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ())));
 		for (auto & it : gen.to <generator::Class> ().getFields ()) {
 		    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
 		    fields.push_back (it.to <generator::VarDecl> ().getName ());
@@ -288,6 +300,38 @@ namespace semantic {
 	    
 	    return decl;
 	}
+
+	Tree Visitor::generateVtable (const Generator & classType) {
+	    static std::map <std::string, generic::Tree> __globalConstant__;
+	    auto name = Mangler::init ().mangleVtable (classType.to<ClassRef> ());
+	    auto res = __globalConstant__.find (name);
+	    if (res != __globalConstant__.end ()) return res-> second;
+
+	    std::vector<Tree> params;
+	    auto & classGen = classType.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
+		params.push_back (generateValue (it));
+	    }
+		
+	    auto vtableType = Tree::staticArray (Tree::pointerType (Tree::voidType ()), params.size ());
+	    auto vtableValue = Tree::constructIndexed (classType.getLocation (), vtableType, params);
+		
+	    Tree decl = Tree::varDecl (classType.getLocation (), name, vtableType);
+	    decl.setDeclInitial (vtableValue);
+	    decl.isStatic (true);
+	    decl.isUsed (true);
+	    decl.isExternal (false);
+	    decl.isPreserved (true);
+	    decl.isPublic (true);
+	    decl.isWeak (true);
+	    decl.setDeclContext (getGlobalContext ());	 
+
+	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    __globalConstant__.emplace (name, decl);
+	    
+	    return decl;
+	}
+	
 	
 	void Visitor::generateMainCall (bool isVoid, const std::string & mainName) {
 	    auto argcT = Tree::intType (64, false);
@@ -673,6 +717,10 @@ namespace semantic {
 			 
 		else of (GlobalConstant, cst,
 		    return generateGlobalConstant (cst);
+		)
+
+		else of (VtableAccess, acc,
+		    return generateVtableAccess (acc);
 		);
 	    }
 	    
@@ -1531,6 +1579,20 @@ namespace semantic {
 	    );
 	}
 
+	generic::Tree Visitor::generateVtableAccess (const VtableAccess & acc) {
+	    auto elem = generateValue (acc.getClass ());
+	    // If the type is a class, we need to unref it to access its inner fields
+	    elem = elem.buildPointerUnref (0);	    
+	    
+	    auto vtable = elem.getValue ().getField ("#_vtable");
+	    auto type = generateType (acc.getType ());
+	    return Tree::compound (
+		acc.getLocation (),
+		vtable.buildPointerUnref (type, acc.getField ()),
+		elem.getList ()
+	    );
+	}
+
 	generic::Tree Visitor::generateCall (const Call & cl) {
 	    std::vector <Tree> results;
 	    TreeStmtList pre = TreeStmtList::init ();
@@ -1549,12 +1611,17 @@ namespace semantic {
 
 	    if (cl.getFrame ().to <Value> ().getType ().is <Delegate> ()) { // Delegate are {&closure, &fn}, so we call it this way : &fn (&closure, types...)
 		auto fn = generateValue (cl.getFrame ());
-		pre.append (fn.getList ());
-		results.insert (results.begin (), fn.getField (Ymir::format ("_%", 0)));
+		Tree var = Tree::varDecl (cl.getLocation (), "_", fn.getType ());
+		var.setDeclContext (getCurrentContext ());
+		
+		stackVarDeclChain.back ().append (var);
+		pre.append (Tree::affect (cl.getLocation (), var, fn));
+		
+		results.insert (results.begin (), var.getField (Ymir::format ("_%", 0)));
 		auto type = generateType (cl.getType ());
 		return Tree::compound (
 		    cl.getLocation (),
-		    Tree::buildCall (cl.getLocation (), type, fn.getField (Ymir::format ("_%", 1)), results),
+		    Tree::buildCall (cl.getLocation (), type, var.getField (Ymir::format ("_%", 1)), results),
 		    pre.toTree ()
 		);
 	    } else {
@@ -1580,13 +1647,29 @@ namespace semantic {
 	    auto classType = generateType (cl.getType ());
 	    auto inner = classType.getType ();
 	    if (cl.getSelf ().isEmpty ()) {
-		auto classValue = Tree::buildCall (
+		TreeStmtList list (TreeStmtList::init ());
+		Tree var = Tree::varDecl (cl.getLocation (), "self", classType);
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
+		
+		auto classValue = Tree::affect (cl.getLocation (), var, Tree::buildCall (
 		    cl.getLocation (),
 		    classType,
 		    global::CoreNames::get (CLASS_ALLOC),
 		    {Tree::buildSizeCst (inner.getSize ())}
+		));
+		
+		list.append (classValue);
+		auto vtable = generateVtable (cl.getType ());
+		list.append (Tree::affect (cl.getLocation (),
+					   var.buildPointerUnref (0).getField ("#_vtable"),
+					   Tree::buildAddress (cl.getLocation (), vtable, Tree::pointerType (Tree::pointerType (Tree::voidType ())))));
+
+		classValue = Tree::compound (
+		    cl.getLocation (),
+		    var,
+		    list.toTree ()
 		);
-		// TODO set the vtable
 		
 		results.insert (results.begin (), classValue);
 	    } else {

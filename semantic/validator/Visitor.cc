@@ -1,4 +1,4 @@
- #include <ymir/semantic/validator/Visitor.hh>
+#include <ymir/semantic/validator/Visitor.hh>
 #include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/semantic/validator/BracketVisitor.hh>
 #include <ymir/semantic/validator/CallVisitor.hh>
@@ -16,6 +16,7 @@
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/map.hh>
 #include <ymir/global/Core.hh>
+#include <ymir/utils/Path.hh>
 #include <string>
 #include <algorithm>
 
@@ -151,7 +152,6 @@ namespace semantic {
 			    } FINALLY;
 			
 			    this-> _referent.pop_back ();
-			
 			    if (errors.size () != 0) {
 				THROW (ErrorCode::EXTERNAL, errors);
 			    }
@@ -490,88 +490,187 @@ namespace semantic {
 		sym.to <semantic::Class> ().setGenerator (gen);
 		std::vector <std::string> errors;
 		std::map <std::string, generator::Generator> syms;
-		enterForeign ();
-		TRY (
-		    this-> _referent.push_back (sym);
-		    this-> enterBlock ();
-		    std::vector <std::string> fields;
-		    std::vector <generator::Generator> types;
-		    for (auto & it : sym.to<semantic::Class> ().getFields ()) {
-			this-> validateVarDeclValue (it.to <syntax::VarDecl> (), false);
-		    }
-		 
-		    syms = this-> discardAllLocals ();
-		    
-		    this-> quitBlock ();
-		    this-> _referent.pop_back ();
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;		
-		exitForeign ();
+		std::vector <Generator> fieldsDecl;
+		std::vector <Generator> ancestorFields;
 		
-		if (errors.size () != 0)
-		    THROW (ErrorCode::EXTERNAL, errors);
-		
-		std::vector <Generator> fieldsDecl, ancestorFields;
-		if (!ancestor.isEmpty ()) {
-		    fieldsDecl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getFields ();
-		    ancestorFields = fieldsDecl;
-		    for (auto & it : fieldsDecl) { // Verify shadowing 
-			auto gen = syms.find (it.to <generator::VarDecl> ().getName ());
-			if (gen != syms.end ()) {
-			    auto note = Ymir::Error::createNote (it.getLocation ());		
-			    Error::occurAndNote (gen-> second.getLocation (), note, ExternalError::get (SHADOWING_DECL), it.to <generator::VarDecl> ().getName ());
+		{
+		    enterForeign ();
+		    TRY (
+			this-> _referent.push_back (sym);
+			this-> enterBlock ();
+			std::vector <std::string> fields;
+			std::vector <generator::Generator> types;
+			for (auto & it : sym.to<semantic::Class> ().getFields ()) {
+			    this-> validateVarDeclValue (it.to <syntax::VarDecl> (), false);
 			}
+		 
+			syms = this-> discardAllLocals ();
+		    
+			this-> quitBlock ();
+			this-> _referent.pop_back ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;		
+		    exitForeign ();
+		}
+		
+		if (errors.size () != 0) {
+		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    THROW (ErrorCode::EXTERNAL, errors);
+		}	       
+		
+		{
+		    TRY (
+			if (!ancestor.isEmpty ()) {
+			    fieldsDecl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getFields ();
+			    ancestorFields = fieldsDecl;
+			    for (auto & it : fieldsDecl) { // Verify shadowing 
+				auto gen = syms.find (it.to <generator::VarDecl> ().getName ());
+				if (gen != syms.end ()) {
+				    auto note = Ymir::Error::createNote (it.getLocation ());		
+				    Error::occurAndNote (gen-> second.getLocation (), note, ExternalError::get (SHADOWING_DECL), it.to <generator::VarDecl> ().getName ());
+				}
+			    }
+			}
+		
+			for (auto & it : sym.to <semantic::Class> ().getFields ()) {
+			    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().str);			    
+			    fieldsDecl.push_back (gen-> second);
+			}
+
+			gen.to <generator::Class> ().setFields (fieldsDecl);
+			sym.to <semantic::Class> ().setGenerator (gen);
+				
+			auto vtable = validateClassDeclarations (cls, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields);
+			gen.to <generator::Class> ().setVtable (vtable);
+			sym.to <semantic::Class> ().setGenerator (gen);
+
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+		
+		if (errors.size () != 0) {
+		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    THROW (ErrorCode::EXTERNAL, errors);
+		}
+		
+		{
+		    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
+			TRY (
+			    match (it) {
+				of (semantic::Function, func ATTRIBUTE_UNUSED, {
+					validateMethod (func, ClassRef::init (cls.getName (), ancestor, sym));
+				    }
+				) else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
+					validateConstructor (cs, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields);
+				    }
+				);
+			    }
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
 		    }
 		}
 		
-		for (auto & it : sym.to <semantic::Class> ().getFields ()) {
-		    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().str);			    
-		    fieldsDecl.push_back (gen-> second);
+		if (errors.size () != 0) {
+		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    THROW (ErrorCode::EXTERNAL, errors);
 		}
-
-		gen.to <generator::Class> ().setFields (fieldsDecl);
-		sym.to <semantic::Class> ().setGenerator (gen);
-
-		auto vtable = validateClassDeclarations (cls, ancestor, ancestorFields);		
-		gen.to <generator::Class> ().setVtable (vtable);
-		sym.to <semantic::Class> ().setGenerator (gen);
 		
 		return ClassRef::init (cls.getName (), ancestor, sym);
 	    }
 	    
-	    return ClassRef::init (cls.getName (), ancestor, cls);
+	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ())
+		return ClassRef::init (cls.getName (), ancestor, cls);
+	    else {
+		Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE), cls.getRealName ());
+		return Generator::empty ();
+	    }
 	}
 
-	std::vector<generator::Generator> Visitor::validateClassDeclarations (const semantic::Symbol & cls, const Generator & ancestor, const std::vector <Generator> & ancestorFields)  {
+	std::vector<generator::Generator> Visitor::validateClassDeclarations (const semantic::Symbol & cls, const Generator & classType, const Generator & ancestor, const std::vector <Generator> &)  {
 	    std::vector <Generator> vtable;
+	    std::vector <Generator> ancVtable;
+	    std::vector <std::string> errors;
 	    if (!ancestor.isEmpty ()) {
 		auto & ancClas = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 		vtable = ancClas.to <generator::Class> ().getVtable ();
+		ancVtable = vtable;
 	    }
 	    
-	    for (auto & it : cls.to <semantic::Class> ().getAllLocal ()) {
-		match (it) {
-		    of (semantic::Function, func ATTRIBUTE_UNUSED, {			    
-			    // println (it.formatTree ());
-			}
-		    )
-		    else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
-			    validateConstructor (cs, ancestor, ancestorFields);
-			}
-		    );
-		}		    
+	    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
+		TRY (
+		    match (it) {
+			of (semantic::Function, func ATTRIBUTE_UNUSED, {
+				validateVtableMethod (func, classType, ancestor, vtable, ancVtable);
+			    }
+			);
+		    }		    		
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
 	    }
+		
+	    if (errors.size () != 0) 
+		THROW (ErrorCode::EXTERNAL, errors);
+		
 	    return vtable;
 	}
 
-	void Visitor::validateConstructor (const semantic::Constructor & cs, const Generator & ancestor, const std::vector <Generator> & ancestorFields) {
+	Generator Visitor::validateFunctionType (const Generator & proto) {
+	    auto params = proto.to <FrameProto> ().getParameters ();
+	    auto ret = proto.to <FrameProto> ().getReturnType ();
+	    std::vector <Generator> paramTypes;
+	    for (auto & it : params) {
+		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+	    }
+	    
+	    return FuncPtr::init (proto.getLocation (), ret, paramTypes);
+	}
+
+	void Visitor::validateVtableMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, const std::vector <Generator> & ancVtable) {
+	    auto proto = validateMethodProto (func, classType);
+	    auto protoFptr = validateFunctionType (proto);
+	    bool over = false;
+	    for (auto i : Ymir::r (0, ancVtable.size ())) {
+		if (Ymir::Path (ancVtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().str) {
+		    auto fptr = validateFunctionType (ancVtable [i]);
+		    if (protoFptr.equals (fptr)) {
+			over = true;
+			vtable [i] = proto;
+			if (!func.isOver ()) {
+			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
+			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (IMPLICIT_OVERRIDE), ancVtable[i].prettyString ());
+			}
+			break;
+		    }
+		}
+	    }
+	    
+	    if (!over) { // TODO verify func is marked override
+		if (func.isOver ()) {
+		    std::string name;
+		    for (auto & it : ancVtable) {
+			if (Ymir::Path (it.to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().str)
+			    name = name + Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getLocation (), it.prettyString ());
+		    }
+		    Ymir::Error::occurAndNote (func.getName (), name, ExternalError::get (NOT_OVERRIDE), proto.prettyString ());
+		}
+		vtable.push_back (proto);
+	    } 
+	}
+	
+	void Visitor::validateConstructor (const semantic::Constructor & cs, const Generator & classType_, const Generator & ancestor, const std::vector <Generator> & ancestorFields) {
 	    auto constr = cs.getContent ();
 	    std::vector <Generator> params;
 	    Generator retType (Generator::empty ());
 	    std::vector <std::string> errors;
-	    auto classType = validateType (cs.getClass ());
+	    auto classType = classType_;
 	    
 	    enterContext ({{cs.getName (), classType.prettyString ()}});
 	    classType.to <Type> ().isMutable (true);
@@ -587,18 +686,98 @@ namespace semantic {
 		errors = msgs;
 	    } FINALLY;
 
+	    Generator body (Generator::empty ());
+	    {
+		TRY (
+		    auto preConstruct = validatePreConstructor (cs, classType_, ancestor, ancestorFields);
+		    this-> setCurrentFuncType (retType);
 
-	    auto preConstruct = validatePreConstructor (cs, ancestor, ancestorFields);
-	    this-> setCurrentFuncType (retType);
+		    body = validateValue (constr.getBody ());
+		    auto loc = constr.getBody ().getLocation ();
+		    auto ret = Return::init (loc,
+					     Void::init (loc),
+					     classType,
+					     VarRef::init (loc, params [0].to <ParamVar> ().getName (), classType, params [0].getUniqId (), true, Generator::empty ())
+		    );	    
+		    body = Block::init (loc, Void::init (loc), {preConstruct, body, ret});
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 
-	    auto body = validateValue (constr.getBody ());
-	    auto loc = constr.getBody ().getLocation ();
-	    auto ret = Return::init (loc,
-				     Void::init (loc),
-				     classType,
-				     VarRef::init (loc, params [0].to <ParamVar> ().getName (), classType, params [0].getUniqId (), true, Generator::empty ())
-	    );	    
-	    body = Block::init (loc, Void::init (loc), {preConstruct, body, ret});
+	    {
+		TRY (
+		    quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+	
+	    exitContext ();
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+	    
+	    auto frame = Frame::init (constr.getName (), cs.getRealName (), params, classType, body, false);
+	    frame.to <Frame> ().setMangledName (cs.getMangledName ());
+	    insertNewGenerator (frame);
+	}
+
+	void Visitor::validateMethod (const semantic::Function & func, const Generator & classType_) {
+	    auto function = func.getContent ();
+	    std::vector <Generator> params;
+	    Generator retType (Generator::empty ());
+	    std::vector <std::string> errors;
+	    
+	    auto classType = classType_;
+	    auto & cs = classType.to <ClassRef> ().getRef ().to <semantic::Class> ();
+
+	    enterContext ({{cs.getName (), classType.prettyString ()}});
+	    classType.to <Type> ().isMutable (true);
+	    
+	    enterBlock ();
+	    TRY (
+		auto & __params = function.getPrototype ().getParameters ();
+		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
+		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
+		
+		validatePrototypeForFrame (cs.getName (), proto, params, retType);
+		bool isMutable = false;
+		for (auto & it : function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().getDecorators ()) {
+		    if (it.getValue () == syntax::Decorator::MUT) isMutable = true;
+		    else {
+			Ymir::Error::occur (it.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    it.getLocation ().str
+			);				
+		    }
+		}
+		
+		classType.to <Type> ().isMutable (isMutable);
+		params.insert (params.begin (), ParamVar::init ({cs.getName (), Keys::SELF}, classType, isMutable));
+		insertLocal (params [0].getName (), params [0]);
+		if (retType.isEmpty ()) retType = Void::init (cs.getName ());
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors = msgs;
+	    } FINALLY;
+
+	    volatile bool needFinalReturn = false;
+	    Generator body (Generator::empty ());
+	    {
+		TRY (
+		    body = validateValue (function.getBody ().getBody ());
+		
+		    if (!body.to<Value> ().isReturner ()) {
+			verifyMemoryOwner (body.getLocation (), retType, body, true);		    
+			needFinalReturn = !retType.is<Void> ();
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
 	    {
 		TRY (
@@ -612,14 +791,17 @@ namespace semantic {
 	    exitContext ();
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
-	    auto frame = Frame::init (constr.getName (), cs.getRealName (), params, classType, body, false);
-	    frame.to <Frame> ().setMangledName (cs.getMangledName ());
-	    insertNewGenerator (frame);
-	}
+		
+	    auto frame = Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn);
+	    frame.to <Frame> ().isWeak (function.isWeak ());
+	    frame.to <Frame> ().setMangledName (func.getMangledName ());
 
-	generator::Generator Visitor::validatePreConstructor (const semantic::Constructor & cs, const Generator & ancestor, const std::vector<Generator> & ancestorFields) {
+	    insertNewGenerator (frame);		
+	}
+	
+	generator::Generator Visitor::validatePreConstructor (const semantic::Constructor & cs, const Generator & classType, const Generator & ancestor, const std::vector<Generator> & ancestorFields) {
 	    auto & superParams = cs.getContent ().getSuperParams ();
-	    auto classR = this-> validateType (cs.getClass ());
+	    auto classR = classType;
 	    std::vector <Generator> instructions;
 	    std::vector <std::string> errors;
 	    
@@ -679,6 +861,9 @@ namespace semantic {
 		    } FINALLY;		    
 		}
 
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
+		
 		for (auto & it : classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getFields ()) {
 		    if (validated.find (it.to <syntax::VarDecl> ().getName ().str) == validated.end ()) {
 			if (it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
@@ -943,7 +1128,6 @@ namespace semantic {
 			    }
 			    if (!sec_ret.isEmpty ()) ret = sec_ret;
 			}
-			
 			return ret;
 		    }
 		);
@@ -1239,6 +1423,7 @@ namespace semantic {
 		errors.insert (errors.end (), msgs.begin (), msgs.end ());
 	    } FINALLY;   
 	    exitForeign ();
+
 	    this-> _referent.pop_back ();
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
@@ -1459,10 +1644,10 @@ namespace semantic {
 			    this-> _referent.pop_back ();			    
 			    continue;
 			}
-		    ) else of (semantic::Constructor, cs, {
+		    ) else of (semantic::Constructor, func, {
 			    this-> _referent.push_back (sym);
-			    gens.push_back (validateConstructorProto (cs));
-			    this-> _referent.pop_back ();
+			    gens.push_back (validateConstructorProto (func));
+			    this-> _referent.pop_back ();			    
 			    continue;
 			}
 		    ) else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
@@ -1481,7 +1666,9 @@ namespace semantic {
 
 		    ) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
 			    auto cl_ref = validateClass (sym);
-			    gens.push_back (cl_ref.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+			    if (cl_ref.is<ClassRef> ())
+				gens.push_back (cl_ref.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+			    else gens.push_back (cl_ref);
 			    continue;
 			}
 		    ) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
@@ -1617,6 +1804,7 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateConstructorProto (const semantic::Constructor & func) {
+	    this-> _referent.push_back (func.clone ());
 	    enterForeign ();
 	    std::vector <Generator> params;
 	    static std::list <lexing::Word> __validating__;
@@ -1639,18 +1827,58 @@ namespace semantic {
 	    
 	    __validating__.pop_back ();
 	    exitForeign ();
+	    this-> _referent.pop_back ();
+	    
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);		
+	    }
+	    
+	    auto cl = validateClass (func.getClass ());
+	    cl.to <Type> ().isMutable (true);
+	    
+	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), cl, params);
+	    frame.to <ConstructorProto> ().setMangledName (func.getMangledName ());
+	    return frame;
+	}
+
+	Generator Visitor::validateMethodProto (const semantic::Function & func, const Generator & classType) {
+	    enterForeign ();
+	    std::vector <Generator> params;
+	    static std::list <lexing::Word> __validating__;
+	    auto & function = func.getContent ();
+	    std::vector <std::string> errors;
+	    bool no_value = false;
+	    Generator retType (Generator::empty ());
+	    for (auto func_loc : __validating__) {
+		if (func_loc.isSame (func.getName ())) no_value = true;
+	    }
+
+	    __validating__.push_back (func.getName ());
+	    TRY (
+		auto & __params = function.getPrototype ().getParameters ();
+		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
+		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
+		validatePrototypeForProto (func.getName (), proto, no_value, params, retType);
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors = msgs;
+	    } FINALLY;
+	    
+	    __validating__.pop_back ();
+	    exitForeign ();
 
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);		
 	    }
 	    
-	    auto cl = validateType (func.getClass ());
-	    cl.to <Type> ().isMutable (true);
-	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), cl, params);
-	    frame.to <ConstructorProto> ().setMangledName (func.getMangledName ());
-	    
+	    auto frame = MethodProto::init (function.getName (), func.getRealName (), retType, params, false,
+					    classType,
+					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT));
+	    frame.to <MethodProto> ().setMangledName (func.getMangledName ());
 	    return frame;
 	}
+
+	
 
 	void Visitor::validatePrototypeForFrame (const lexing::Word &, const syntax::Function::Prototype & proto,  std::vector <Generator> & params, generator::Generator & retType) {
 	    std::vector <std::string> errors;
@@ -2294,9 +2522,9 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 
-		if (ret.isEmpty ())
-		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
-		else return ret;
+		if (errors.size () != 0) {
+		    errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
+		} else return ret;
 		
 	    } else if (value.is<MultSym> ()) {
 		volatile int all_score = -1; // Not volatile, but due to longjmp the compiler prefers it to be
@@ -2361,7 +2589,7 @@ namespace semantic {
 		names
 	    ));
 
-	    THROW (ErrorCode::EXTERNAL, errors);	   
+	    THROW (ErrorCode::EXTERNAL, errors);
 	    return Generator::empty ();	    
 	}
 
@@ -2806,6 +3034,11 @@ namespace semantic {
 	    }
 	    
 	    auto type = content.to <Value> ().getType ();
+	    if (!type.to <Type> ().isMutable ())
+		Ymir::Error::occur (content.getLocation (),
+				    ExternalError::get (NOT_A_LVALUE)
+		);
+	    
 	    return Aliaser::init (intr.getLocation (), type, content);	    	    
 	}
 
@@ -3367,13 +3600,14 @@ namespace semantic {
 	    match (gen) {
 		of (ArrayValue, arr ATTRIBUTE_UNUSED, return);
 		of (StructCst, arr ATTRIBUTE_UNUSED, return);
+		of (ClassCst, arr ATTRIBUTE_UNUSED, return);
 		of (Block, arr ATTRIBUTE_UNUSED, return);
 		of (Conditional, arr ATTRIBUTE_UNUSED, return);
 		of (ExitScope, arr ATTRIBUTE_UNUSED, return);
 		of (SuccessScope, arr ATTRIBUTE_UNUSED, return);
 	    }
 	    auto llevel = type.to <Type> ().mutabilityLevel ();
-	    
+
 	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
 	    if (llevel > 0) {
 		auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
@@ -3459,6 +3693,18 @@ namespace semantic {
 	    bool error = false;
 	    std::string leftName;
 	    if (!left.to<Type> ().isCompatible (right)) {
+		// It can be compatible with an ancestor of right
+		if (right.is <ClassRef> () && !right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ()) {
+		    auto ancestor = validateType (right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ());
+		    while (!ancestor.isEmpty ()) {
+			if (left.to <Type> ().isCompatible (ancestor)) return;
+			else {
+			    if (!ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ())
+				ancestor = validateType (ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ());
+			    else ancestor = Generator::empty ();
+			}
+		    }
+		}
 		error = true;
 		leftName = left.to<Type> ().getTypeName ();
 	    }
