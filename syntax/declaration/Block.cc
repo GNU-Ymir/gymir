@@ -9,14 +9,16 @@ namespace syntax {
 	ret-> _token = decl._token;
 	ret-> _inner = decl._inner;
 	ret-> _isPrivate = decl._isPrivate;
+	ret-> _isProt = decl._isProt;
 	return Declaration {ret};
     }
 
-    Declaration DeclBlock::init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate) {
+    Declaration DeclBlock::init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate, bool isProt) {
 	auto ret = new (Z0) DeclBlock ();
 	ret-> _token = token;
 	ret-> _inner = content;
 	ret-> _isPrivate = isPrivate;
+	ret-> _isProt = isProt;
 	return Declaration {ret};
     }
 
@@ -45,7 +47,15 @@ namespace syntax {
     }
 
     bool DeclBlock::isPrivate () const {
-	return this-> _isPrivate;
+	return this-> _isPrivate && !this-> _isProt;
+    }
+
+    bool DeclBlock::isProt () const {
+	return this-> _isProt;
+    }
+
+    bool DeclBlock::isPublic () const {
+	return !this-> _isPrivate && !this-> _isProt;
     }
     
     const std::vector <Declaration> & DeclBlock::getDeclarations () const {

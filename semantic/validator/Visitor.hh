@@ -68,6 +68,12 @@ namespace semantic {
 	    /** The current Cas context */
 	    std::vector <std::vector <lexing::Word> > _contextCas;
 
+	    /**
+	     * The context of class validation
+	     * This is used to verify that we have the right to access to protected or private content of a class
+	     */
+	    std::vector <semantic::Symbol> _classContext;
+
 	    /** The already validated lambdas */
 	    std::map <std::string, generator::Generator> _lambdas;
 
@@ -122,7 +128,7 @@ namespace semantic {
 	     * \brief Validate a method prototype and put it in the vtable at the right place
 	     * \warning This does not validate the body of the method, see validateMethod 
 	     */
-	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, const std::vector <generator::Generator> & ancVtable);
+	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable);
 	    
 	    /**
 	     * \brief Validate a class constructor
@@ -174,7 +180,7 @@ namespace semantic {
 	     * \param ancestor the ancestor of the class (might be empty)
 	     * \return the vtable of the class
 	     */
-	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields);
+	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields, std::vector <generator::Class::MethodProtection> & protections);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type
@@ -710,10 +716,38 @@ namespace semantic {
 	    void exitContext ();
 
 	    /**
+	     * \brief enter a new class context
+	     */
+	    void enterClassDef (const semantic::Symbol & sym);
+
+
+	    /**
+	     * \brief Exit a class context (Cf. enterClassDef)
+	     */
+	    void exitClassDef ();
+	    
+	    /**
 	     * \return does the current context include context
 	     */
 	    bool isInContext (const std::string & context);
 	    
+	    
+	    /**
+	     * \brief Get the current context for class access
+	     * \param cl a class symbol that we want to access
+	     * \param isPrivate return by ref, will be true if we have the right to access to private elements of cl 
+	     * \param isProtected return by ref, will be true if we have the right to access to protected elements of cl 
+	     * \info as public is always true, it is not a parameter here
+	     */
+	    void getClassContext (const semantic::Symbol & cl, bool & isPrivate, bool & isProtected);
+
+	    /**
+	     * \brief Get the current context of the current state
+	     * \brief If mod is an ancestor of the current ref, return will be true
+	     * \brief It means that all the private declaration of mod can be accessed in the current state
+	     */
+	    bool  getModuleContext (const semantic::Symbol & mod);
+
 	    /**
 	     * \brief Insert a new Generator that has passed the semantic validation
 	     * \brief All the symbol passed here, will be transformed at generation time

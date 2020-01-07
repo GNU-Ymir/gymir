@@ -45,27 +45,30 @@ namespace semantic {
 
 		if (left.isEmpty ())
 		    THROW (ErrorCode::EXTERNAL, errors);
-	    }
-	    
-	    match (left) {
-		of (MultSym, mult, return validateMultSym (expression, mult));
-		of (ModuleAccess, acc, return validateModuleAccess (expression, acc));
-		of (generator::Enum, en, return validateEnum (expression, en));		
-		of (generator::Struct, str ATTRIBUTE_UNUSED, return validateStruct(expression, left));
-		of (generator::Class, cl ATTRIBUTE_UNUSED, return validateClass (expression, left));
-		of (ClassRef,  cl, return validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator ()));
-		of (Type, te ATTRIBUTE_UNUSED, return validateType (expression, left));
+		else errors = {};
 	    }
 
-	    if (left.is<Value> ()) {
+	    Generator gen (Generator::empty ());
+	    match (left) {
+		of (MultSym, mult, gen = validateMultSym (expression, mult))
+		else of (ModuleAccess, acc, gen = validateModuleAccess (expression, acc))
+		else of (generator::Enum, en, gen = validateEnum (expression, en))	     
+		else of (generator::Struct, str ATTRIBUTE_UNUSED, gen = validateStruct(expression, left))
+		    else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
+		    else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
+		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));
+	    }
+	    
+	    if (left.is<Value> () && gen.isEmpty ()) {
 		match (left.to <Value> ().getType ()) {
-		    of (StructRef, str ATTRIBUTE_UNUSED, return validateStructValue (expression, left));
+		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left));
 		}
 	    }
 	    
-	    this-> error (expression, left, expression.getRight ());
+	    if (gen.isEmpty ())
+		this-> error (expression, left, expression.getRight (), errors);
 	    
-	    return Generator::empty ();
+	    return gen;
 	}
 
 	Generator SubVisitor::validateMultSym (const syntax::Binary &expression, const MultSym & mult) {
@@ -73,8 +76,13 @@ namespace semantic {
 	    std::vector <Symbol> syms;
 	    for (auto & gen : mult.getGenerators ()) {
 		if (gen.is<ModuleAccess> ()) {
-		    auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
-		    syms.insert (syms.end (), elems.begin (), elems.end ());
+		    if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
+			auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
+			syms.insert (syms.end (), elems.begin (), elems.end ());
+		    } else {
+			auto elems = gen.to <ModuleAccess> ().getLocalPublic (right);		    
+			syms.insert (syms.end (), elems.begin (), elems.end ());
+		    }
 		} 
 	    }
 
@@ -87,7 +95,11 @@ namespace semantic {
 
 	Generator SubVisitor::validateModuleAccess (const syntax::Binary &expression, const ModuleAccess & acc) {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
-	    std::vector <Symbol> syms = acc.getLocal (right);
+	    std::vector <Symbol> syms;
+	    if (this-> _context.getModuleContext (acc.getModRef ())) {
+		syms = acc.getLocal (right);
+	    } else syms = acc.getLocalPublic (right);
+	    
 	    if (syms.size () == 0) {
 		this-> error (expression, acc.clone (), expression.getRight ());
 	    }
@@ -461,15 +473,25 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t) {
+	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> & errors) {
+	    bool prot = false, prv = false;
+	    this-> _context.getClassContext (t.to <generator::Class> ().getRef (), prv, prot);
+	    
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 		if (name == ClassRef::INIT_NAME) {
 		    std::vector <Symbol> syms;
 		    for (auto & gen : t.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 			match (gen) {
-			    of (semantic::Constructor, cst ATTRIBUTE_UNUSED,
-				syms.push_back (gen));
+			    of (semantic::Constructor, cst ATTRIBUTE_UNUSED, {
+				    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) 
+					syms.push_back (gen);
+				    else {
+					errors.push_back (
+					    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), this-> _context.validateConstructorProto (cst).prettyString ())					    
+					);
+				    }
+				});
 			}
 		    }
 		    if (syms.size () != 0) 
@@ -544,10 +566,12 @@ namespace semantic {
 		    else of  (generator::Enum, en, leftName = en.getName ())
 		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
 		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ());
+		    else of (Type,       type,  leftName = type.getTypeName ())
+		    else of (generator::Class, cl, leftName = cl.getName ())
+		    else of (ClassRef, cl, leftName = cl.getName ());
 		}
 	    }
-	    {
+	    {		
 		match (right) {
 		    of (syntax::Var, var, rightName = var.getName ().str);
 		}
@@ -577,7 +601,9 @@ namespace semantic {
 		    else of  (generator::Enum, en, leftName = en.getName ())
 		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
 		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ());
+		    else of (Type,       type,  leftName = type.getTypeName ())
+		    else of (generator::Class, cl, leftName = cl.getName ())
+		    else of (ClassRef, cl, leftName = cl.getName ());
 		}
 	    }
 	    {
@@ -592,7 +618,7 @@ namespace semantic {
 	    }
 
 	    
-	    errors.insert (errors.end (), Ymir::Error::makeOccur (
+	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
 		expression.getLocation (),
 		ExternalError::get (UNDEFINED_SUB_PART_FOR),
 		rightName,

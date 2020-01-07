@@ -19,7 +19,8 @@ namespace semantic {
 	    return DotVisitor (context);
 	}
 
-	Generator DotVisitor::validate (const syntax::Binary & expression, bool isFromCall) {	    
+	Generator DotVisitor::validate (const syntax::Binary & expression, bool isFromCall) {
+	    std::vector <std::string> errors;
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    
 	    Generator ret (Generator::empty ());
@@ -45,7 +46,7 @@ namespace semantic {
 		)
 
 		else of (ClassRef, cl ATTRIBUTE_UNUSED,
-		    ret = validateClass (expression, left);
+			 ret = validateClass (expression, left, errors);
 		); 		
 	    }
 
@@ -55,10 +56,10 @@ namespace semantic {
 	    }
 	    
 	    if (expression.getRight ().is <syntax::Var> ()) 
-		this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str);
+		this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str, errors);
 	    else {
 		auto right = this-> _context.validateValue (expression.getRight ());
-		this-> error (expression, left, right.to <Value> ().prettyString ());
+		this-> error (expression, left, right.to <Value> ().prettyString (), errors);
 	    }
 
 	    return Generator::empty ();
@@ -184,31 +185,53 @@ namespace semantic {
 	    return Generator::empty ();	    
 	}
 
-	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left) {
+	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::vector <std::string> & errors) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
-	    auto context = left.to <Value> ().getType ().to <Type> ().getTypeName (false, false);
 	    auto cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
-	    auto prvContext = this-> _context.isInContext (context);
+	    bool prv = false, prot = false;
+	    
+	    this-> _context.getClassContext (left.to <Value> ().getType ().to <ClassRef> ().getRef (), prv, prot);
 	    int i = 0;
 	    
 	    // Field
 	    while (!cl.isEmpty ()) {
-		if (i == 0 && prvContext) {
+		if (i == 0 && prv) {
 		    auto type = cl.to <generator::Class> ().getFieldType (name);
 		    if (!type.isEmpty ())
 			return StructAccess::init (expression.getLocation (),
 						   type,
 						   left, name);
-		} else if (prvContext) {
+		} else if (prv) {
 		    auto type = cl.to <generator::Class> ().getFieldTypeProtected (name);
 		    if (!type.isEmpty ())
 			return StructAccess::init (expression.getLocation (),
 						   type,
-						   left, name);		    
+						   left, name);
+		    else {
+			auto type = cl.to <generator::Class> ().getFieldType (name);
+			if (!type.isEmpty ()) {
+			    errors.push_back (
+				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), type.getLocation (), name)
+			    );
+			    break;
+			}
+		    }
 		} else {
-		    // TODO
-		    // auto type = cl.to <generator::Class> ().getFieldTypePublic (name);
+		    auto type = cl.to <generator::Class> ().getFieldTypePublic (name);
+		    if (!type.isEmpty ())
+			return StructAccess::init (expression.getLocation (),
+						   type,
+						   left, name);
+		    else {
+			auto type = cl.to <generator::Class> ().getFieldType (name);
+			if (!type.isEmpty ()) {
+			    errors.push_back (
+				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), type.getLocation (), name)
+			    );
+			    break;
+			}			
+		    }
 		}
 		auto ancestor = cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAncestor ();
 		if (!ancestor.isEmpty ())
@@ -220,27 +243,33 @@ namespace semantic {
 	    // Method
 	    cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    std::vector <Generator> syms;
-	    i = 0;
-	    for (auto & gen : cl.to <generator::Class> ().getVtable ()) {
-		if (Ymir::Path (gen.to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
-		    std::vector <Generator> types;
-		    for (auto & it : gen.to <FrameProto> ().getParameters ())
-			types.push_back (it.to <ProtoVar> ().getType ());
+	    auto & vtable = cl.to <generator::Class> ().getVtable ();
+	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
+	    for (auto i : Ymir::r (0, vtable.size ())) {
+		if (Ymir::Path (vtable [i].to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
+		    if (prv || (prot && protVtable [i] == generator::Class::MethodProtection::PROT) || protVtable [i] == generator::Class::MethodProtection::PUB) {
+			std::vector <Generator> types;
+			for (auto & it : vtable [i].to <FrameProto> ().getParameters ())
+			    types.push_back (it.to <ProtoVar> ().getType ());
 		    
-		    auto delType = Delegate::init (gen.getLocation (), gen);
-		    syms.push_back (
-			DelegateValue::init ({expression.getLocation (), name}, delType, left,
-					     VtableAccess::init (expression.getLocation (),
-								 FuncPtr::init (expression.getLocation (),
-										gen.to <FrameProto> ().getReturnType (),
-										types),
-								 left,
-								 i
-					     )
-			)
-		    );
+			auto delType = Delegate::init (vtable [i].getLocation (), vtable [i]);
+			syms.push_back (
+			    DelegateValue::init ({expression.getLocation (), name}, delType, left,
+						 VtableAccess::init (expression.getLocation (),
+								     FuncPtr::init (expression.getLocation (),
+										    vtable [i].to <FrameProto> ().getReturnType (),
+										    types),
+								     left,
+								     i
+						 )
+			    )
+			);
+		    } else {
+			errors.push_back (
+			    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), vtable [i].getLocation (), vtable[i].prettyString ())
+			);
+		    }
 		}
-		i += 1;
 	    }
 					    
 	    if (syms.size () != 0) 
@@ -267,7 +296,7 @@ namespace semantic {
 	    return ret;
 	}
 	
-	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right) {
+	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right, std::vector <std::string> & errors) {
 	    std::string leftName;
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())
@@ -276,12 +305,14 @@ namespace semantic {
 			else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
 	    }
 
-	    Ymir::Error::occur (
+	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
 		expression.getLocation (),
 		ExternalError::get (UNDEFINED_FIELD_FOR),
 		right,
 		leftName
-	    );
+	    ));
+	    
+	    THROW (ErrorCode::EXTERNAL, errors);		
 	}
 
 	

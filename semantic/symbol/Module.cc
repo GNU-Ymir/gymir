@@ -70,6 +70,10 @@ namespace semantic {
 	return this-> _table.get (name);
     }
 
+    std::vector<Symbol> Module::getLocalPublic (const std::string & name) const {
+	return this-> _table.getPublic (name);
+    }
+
     const std::vector <Symbol> & Module::getAllLocal () const {
 	return this-> _table.getAll ();
     }

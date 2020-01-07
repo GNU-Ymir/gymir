@@ -9,12 +9,24 @@ namespace semantic {
     namespace generator {
 
 	class Class : public Value {
+	public :
+	    
+	    enum MethodProtection {
+		PRV_PARENT = 0,
+		PRV,
+		PROT,
+		PUB
+	    };
+	    
+	private : 
 	    
 	    Symbol _ref;
 
 	    std::vector <generator::Generator> _fields;
 
 	    std::vector <generator::Generator> _vtable;
+
+	    std::vector <MethodProtection> _prots;
 	    
 	private :
 
@@ -75,11 +87,28 @@ namespace semantic {
 	     * \brief Same as getFieldType, this will perform a search only on the fields of this class, and not on its parent class
 	     */
 	    generator::Generator getFieldTypeProtected (const std::string & name) const;
+
+	    /**
+	     * \brief the fields that are mark as public 
+	     * \brief this is used to access the field of a class from extern context
+	     * \brief Same as getFieldType, this will perform a search only on the fields of this class, and not on its parent class
+	     */
+	    generator::Generator getFieldTypePublic (const std::string & name) const;
 	    
 	    /**
 	     * \return the vtable of the class
 	     */
 	    const std::vector <generator::Generator> & getVtable () const;
+
+	    /**
+	     * \return the protection of the vtable 
+	     */
+	    const std::vector <MethodProtection> & getProtectionVtable () const;
+
+	    /**
+	     * Set the protection of the vtable
+	     */
+	    void setProtectionVtable (const std::vector <MethodProtection> & prots);
 	    
 	    /**
 	     * 

@@ -39,7 +39,9 @@ namespace semantic {
 	
 	std::vector<Symbol> getTemplates () const override;
 	
-	std::vector <Symbol> getLocal (const std::string & name) const override;	
+	std::vector <Symbol> getLocal (const std::string & name) const override;
+
+	std::vector <Symbol> getLocalPublic (const std::string & name) const override;
 
 	Symbol clone () const override;
 
@@ -55,6 +57,11 @@ namespace semantic {
 	
 	const std::string & getModName () const;
 
+	/**
+	 * \return the associated module if this is a leaf (ref to a real module), or this
+	 */
+	Symbol getModule () const;
+	
 	/**
 	 * \return the space name of this symbol
 	 */

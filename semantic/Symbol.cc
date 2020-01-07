@@ -69,6 +69,15 @@ namespace semantic {
     bool ISymbol::isPublic () const {
 	return this-> _isPublic;
     }
+
+    void ISymbol::setProtected () {
+	this-> _isPublic = false;
+	this-> _isProtected = true;
+    }
+
+    bool ISymbol::isProtected () const {
+	return this-> _isProtected;
+    }
     
     std::vector <Symbol> ISymbol::get (const std::string & name) const {
 	return this-> getReferent ().get (name);
@@ -82,6 +91,10 @@ namespace semantic {
 	return {};
     }    
 
+    std::vector <Symbol> ISymbol::getLocalPublic (const std::string &) const {
+	return {};
+    }    
+    
     const std::map <std::string, Symbol> & ISymbol::getUsedSymbols () const {
 	return this-> _used;
     }
@@ -209,6 +222,26 @@ namespace semantic {
 	}
     }
 
+    void Symbol::setProtected () {
+	if (this-> _value != nullptr)
+	    this-> _value-> setProtected ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+    }
+
+    bool Symbol::isProtected () const {
+	if (this-> _value != nullptr)
+	    return this-> _value-> isProtected ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return false;
+	}
+    }
+
+    
     
     std::vector <Symbol> Symbol::get (const std::string & name) const {
 	if (this-> _value == nullptr)
@@ -294,6 +327,11 @@ namespace semantic {
     std::vector <Symbol> Symbol::getLocal (const std::string & name) const {
 	if (this-> _value == nullptr) return {};
 	else return this-> _value-> getLocal (name);
+    }
+
+    std::vector <Symbol> Symbol::getLocalPublic (const std::string & name) const {
+	if (this-> _value == nullptr) return {};
+	else return this-> _value-> getLocalPublic (name);
     }
     
     bool Symbol::equals (const Symbol & other) const {

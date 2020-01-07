@@ -69,6 +69,10 @@ namespace semantic {
 	return this-> _table.get (name);
     }
 
+    std::vector<Symbol> TemplateSolution::getLocalPublic (const std::string & name) const {
+	return this-> _table.getPublic (name);
+    }
+
     const std::vector <Symbol> & TemplateSolution::getAllLocal () const {
 	return this-> _table.getAll ();
     }

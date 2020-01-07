@@ -19,6 +19,11 @@ namespace semantic {
 
 	/** The list of fields that are marked as private */
 	std::vector <std::string> _privates;
+
+	/**
+	 * the list of fields that are marked protected 
+	 */
+	std::vector <std::string> _protected;
 	
 	/**
 	 * set at validation time, to prevent multiple time validation of the same symbol
@@ -84,6 +89,12 @@ namespace semantic {
 	 * \brief Mark a field has private
 	 */
 	void setPrivate (const std::string & name);
+
+
+	/**
+	 * \brief Mark a field has private
+	 */
+	void setProtected (const std::string & name);
 	
 	/**
 	 * \return the list of fields
@@ -96,6 +107,13 @@ namespace semantic {
 	 * \warning we assume that this function is called oif we are sure that the fields exists in the class
 	 */
 	bool isMarkedPrivate (const std::string & name) const;
+
+	/**
+	 * \return true if the field is mark protected
+	 * \warning if the fields does not exists in the class it will return false
+	 * \warning we assume that this function is called oif we are sure that the fields exists in the class
+	 */
+	bool isMarkedProtected (const std::string & name) const;
 	
 	/**
 	 * return the ancestor of the class (might be empty)

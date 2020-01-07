@@ -74,6 +74,7 @@ namespace semantic {
 
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
+	     * \it will not check the ref, and mutability infos
 	     */
 	    bool equals (const Generator & other) const override;
 	    

@@ -95,6 +95,7 @@ namespace Ymir {
 	    auto locus = word.getLocus ();
 	    auto line = getLine (locus, word.getFile ().c_str ());
 	    if (line.length () > 0) {
+		auto wordLength = word.length ();
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
 		buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
@@ -108,11 +109,13 @@ namespace Ymir {
 				   Colors::get (RESET)));
 
 		auto column = LOCATION_COLUMN (locus);
+		if (wordLength != 0 && line [column] != word.str [0])
+		    wordLength = 1;
 		buf.write (format ("%% | %%%(y)%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
 				   line.substr (0, column - 1),
-				   substr (line, column - 1, column + word.length () - 1),
-				   substr (line, column + word.length () - 1, line.length ())
+				   substr (line, column - 1, column + wordLength - 1),
+				   substr (line, column + wordLength - 1, line.length ())
 		));
 
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
@@ -122,7 +125,7 @@ namespace Ymir {
 		    else buf.write (' ');
 		}
 		
-		buf.write (rightJustify ("", word.length (), '^'));
+		buf.write (rightJustify ("", wordLength, '^'));
 		buf.write ('\n');
 	    } else addLineEof (buf, word);
 	}
@@ -175,9 +178,14 @@ namespace Ymir {
 	    if (word.line != end.line) {
 		addTwoLines (buf, word, end);
 		return;
-	    }
+	    } 
 	    
 	    auto locus = word.getLocus (), locus2 = end.getLocus ();
+	    if (word.line == end.line && LOCATION_COLUMN (locus) == LOCATION_COLUMN (locus2)) {
+		addLine (buf, word);
+		return;
+	    }
+	    
 	    auto line = getLine (locus, word.getFile ().c_str ());
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');

@@ -90,6 +90,29 @@ namespace semantic {
 	    return Generator::empty ();	    
 	}
 
+	Generator Class::getFieldTypePublic (const std::string & name) const {
+	    Generator type (Generator::empty ());
+	    // Those fields contains all the fields of the class including ancestor
+	    for (auto & it: this-> _fields) {
+		if (it.to <generator::VarDecl> ().getName () == name) {
+		    type = it.to <generator::VarDecl> ().getVarType ();
+		    break;
+		}
+	    }
+
+	    if (type.isEmpty ()) return type;
+	    // so we need to check that it belong to this class and not to an ancestor	    
+	    for (auto & it : this-> _ref.to <semantic::Class> ().getFields ()) {
+		if (it.to <syntax::VarDecl> ().getName ().str == name) {
+		    if (this-> _ref.to <semantic::Class> ().isMarkedPrivate (name) ||
+			this-> _ref.to <semantic::Class> ().isMarkedProtected (name))
+			return Generator::empty ();
+		    return type;
+		}
+	    }
+	    return Generator::empty ();	    
+	}
+
 	
 	const std::vector <generator::Generator> & Class::getVtable () const {
 	    return this-> _vtable;
@@ -97,6 +120,14 @@ namespace semantic {
 
 	void Class::setVtable (const std::vector <generator::Generator> & vtable) {
 	    this-> _vtable = vtable;
+	}
+
+	const std::vector <generator::Class::MethodProtection> & Class::getProtectionVtable () const {
+	    return this-> _prots;
+	}
+
+	void Class::setProtectionVtable (const std::vector <Class::MethodProtection> & prots) {
+	    this-> _prots = prots;
 	}
 	
 	std::string Class::getName () const {

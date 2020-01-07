@@ -67,7 +67,7 @@ namespace semantic {
 	return getReferent ().getPublic (name);
     }
     
-    std::vector <Symbol> Class::getLocal (const std::string & name) const {
+    std::vector <Symbol> Class::getLocal (const std::string &) const {
 	return {};
     }
 
@@ -115,11 +115,23 @@ namespace semantic {
 	this-> _privates.push_back (name);
     }
 
+    void Class::setProtected (const std::string & name) {
+	this-> _protected.push_back (name);
+    }
+
     bool Class::isMarkedPrivate (const std::string & name) const {
 	for (auto & it : this-> _privates) {
 	    if (it == name) return true;
 	}
 	return false;
     }
+
+    bool Class::isMarkedProtected (const std::string & name) const {
+	for (auto & it : this-> _protected) {
+	    if (it == name) return true;
+	}
+	return false;
+    }
+
     
 }

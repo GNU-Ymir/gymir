@@ -19,6 +19,8 @@ namespace syntax {
 	std::vector <Declaration> _inner;
 
 	bool _isPrivate;
+
+	bool _isProt;
 	
     private :
 
@@ -30,7 +32,7 @@ namespace syntax {
 
 	static Declaration init (const DeclBlock & decl);
 	
-	static Declaration init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate);
+	static Declaration init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate, bool isProt);
 
 	Declaration clone () const override;
 
@@ -41,6 +43,10 @@ namespace syntax {
 	const lexing::Word & getLocation () const;
 
 	bool isPrivate () const;
+
+	bool isProt () const;
+
+	bool isPublic () const;
 	
 	const std::vector <Declaration> & getDeclarations () const;
 	

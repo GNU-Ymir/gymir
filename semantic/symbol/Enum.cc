@@ -76,6 +76,10 @@ namespace semantic {
 	return this-> _table.get (name);
     }
 
+    std::vector <Symbol> Enum::getLocalPublic (const std::string & name) const {
+	return this-> _table.getPublic (name);
+    }    
+    
     const syntax::Expression & Enum::getType () const {
 	return this-> _type;
     }

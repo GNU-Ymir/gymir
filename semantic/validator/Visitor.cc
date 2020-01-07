@@ -541,9 +541,11 @@ namespace semantic {
 
 			gen.to <generator::Class> ().setFields (fieldsDecl);
 			sym.to <semantic::Class> ().setGenerator (gen);
-				
-			auto vtable = validateClassDeclarations (cls, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields);
+
+			std::vector <generator::Class::MethodProtection> protections;
+			auto vtable = validateClassDeclarations (cls, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields, protections);
 			gen.to <generator::Class> ().setVtable (vtable);
+			gen.to <generator::Class> ().setProtectionVtable (protections);
 			sym.to <semantic::Class> ().setGenerator (gen);
 
 		    ) CATCH (ErrorCode::EXTERNAL) {
@@ -592,21 +594,27 @@ namespace semantic {
 	    }
 	}
 
-	std::vector<generator::Generator> Visitor::validateClassDeclarations (const semantic::Symbol & cls, const Generator & classType, const Generator & ancestor, const std::vector <Generator> &)  {
+	std::vector<generator::Generator> Visitor::validateClassDeclarations (const semantic::Symbol & cls, const Generator & classType, const Generator & ancestor, const std::vector <Generator> &, std::vector <generator::Class::MethodProtection>  & protection)  {
 	    std::vector <Generator> vtable;
 	    std::vector <Generator> ancVtable;
 	    std::vector <std::string> errors;
 	    if (!ancestor.isEmpty ()) {
 		auto & ancClas = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 		vtable = ancClas.to <generator::Class> ().getVtable ();
+		protection = ancClas.to <generator::Class> ().getProtectionVtable ();
 		ancVtable = vtable;
+		for (auto & it : protection) {
+		    if (it == generator::Class::MethodProtection::PRV)
+			it = generator::Class::MethodProtection::PRV_PARENT;
+		}
 	    }
+	    
 	    
 	    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
 		TRY (
 		    match (it) {
 			of (semantic::Function, func ATTRIBUTE_UNUSED, {
-				validateVtableMethod (func, classType, ancestor, vtable, ancVtable);
+				validateVtableMethod (func, classType, ancestor, vtable, protection, ancVtable);
 			    }
 			);
 		    }		    		
@@ -628,31 +636,46 @@ namespace semantic {
 	    std::vector <Generator> paramTypes;
 	    for (auto & it : params) {
 		paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+		if (it.to <generator::ProtoVar> ().isMutable ())
+		    paramTypes.back ().to <Type> ().isMutable (true);
+		if (it.to <generator::ProtoVar> ().getType ().to <Type> ().isRef ())
+		    paramTypes.back ().to <Type> ().isRef (true);
 	    }
 	    
 	    return FuncPtr::init (proto.getLocation (), ret, paramTypes);
 	}
+	
+	void Visitor::validateVtableMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable) {
 
-	void Visitor::validateVtableMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, const std::vector <Generator> & ancVtable) {
 	    auto proto = validateMethodProto (func, classType);
 	    auto protoFptr = validateFunctionType (proto);
 	    bool over = false;
 	    for (auto i : Ymir::r (0, ancVtable.size ())) {
 		if (Ymir::Path (ancVtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().str) {
 		    auto fptr = validateFunctionType (ancVtable [i]);
-		    if (protoFptr.equals (fptr)) {
+		    if (protoFptr.equals (fptr) && ancVtable [i].to<MethodProto> ().isMutable () == proto.to<MethodProto> ().isMutable ()) {
 			over = true;
 			vtable [i] = proto;
 			if (!func.isOver ()) {
 			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
 			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (IMPLICIT_OVERRIDE), ancVtable[i].prettyString ());
+			} else if (protection [i] == generator::Class::MethodProtection::PRV_PARENT) {
+			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
+			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (OVERRIDE_PRIVATE), ancVtable[i].prettyString ());
+			} else if ((func.isPublic () && protection [i] != generator::Class::MethodProtection::PUB) ||
+				   (func.isProtected () && protection [i] != generator::Class::MethodProtection::PROT)) {
+			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
+			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (OVERRIDE_MISMATCH_PROTECTION), proto.prettyString ());
+			} else if (!func.isPublic () && !func.isProtected ()) {
+			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
+			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (CANNOT_OVERRIDE_AS_PRIVATE), proto.prettyString ());
 			}
 			break;
 		    }
-		}
+		}		
 	    }
 	    
-	    if (!over) { // TODO verify func is marked override
+	    if (!over) { 
 		if (func.isOver ()) {
 		    std::string name;
 		    for (auto & it : ancVtable) {
@@ -661,8 +684,15 @@ namespace semantic {
 		    }
 		    Ymir::Error::occurAndNote (func.getName (), name, ExternalError::get (NOT_OVERRIDE), proto.prettyString ());
 		}
+		
 		vtable.push_back (proto);
-	    } 
+		if (func.isPublic ())
+		    protection.push_back (generator::Class::MethodProtection::PUB);
+		else if (func.isProtected ())
+		    protection.push_back (generator::Class::MethodProtection::PROT);
+		else
+		    protection.push_back (generator::Class::MethodProtection::PRV);
+	    }
 	}
 	
 	void Visitor::validateConstructor (const semantic::Constructor & cs, const Generator & classType_, const Generator & ancestor, const std::vector <Generator> & ancestorFields) {
@@ -672,7 +702,7 @@ namespace semantic {
 	    std::vector <std::string> errors;
 	    auto classType = classType_;
 	    
-	    enterContext ({{cs.getName (), classType.prettyString ()}});
+	    enterClassDef (classType_.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
 	    
 	    enterBlock ();
@@ -715,7 +745,8 @@ namespace semantic {
 		} FINALLY;
 	    }
 	
-	    exitContext ();
+	    exitClassDef ();
+	    
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 	    
@@ -733,7 +764,7 @@ namespace semantic {
 	    auto classType = classType_;
 	    auto & cs = classType.to <ClassRef> ().getRef ().to <semantic::Class> ();
 
-	    enterContext ({{cs.getName (), classType.prettyString ()}});
+	    enterClassDef (classType.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
 	    
 	    enterBlock ();
@@ -765,19 +796,20 @@ namespace semantic {
 
 	    volatile bool needFinalReturn = false;
 	    Generator body (Generator::empty ());
-	    {
-		TRY (
-		    body = validateValue (function.getBody ().getBody ());
+	    if (errors.size () == 0) 
+		{
+		    TRY (
+			body = validateValue (function.getBody ().getBody ());
 		
-		    if (!body.to<Value> ().isReturner ()) {
-			verifyMemoryOwner (body.getLocation (), retType, body, true);		    
-			needFinalReturn = !retType.is<Void> ();
-		    }
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-	    }
+			if (!body.to<Value> ().isReturner ()) {
+			    verifyMemoryOwner (body.getLocation (), retType, body, true);		    
+			    needFinalReturn = !retType.is<Void> ();
+			}
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
 	    
 	    {
 		TRY (
@@ -787,8 +819,10 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
+		
 	
-	    exitContext ();
+	    exitClassDef ();
+	    
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 		
@@ -3436,6 +3470,54 @@ namespace semantic {
 	    this-> _contextCas.pop_back ();
 	}
 
+	void Visitor::enterClassDef (const semantic::Symbol & sym) {
+	    this-> _classContext.push_back (sym);
+	}
+
+	void Visitor::exitClassDef () {
+	    this-> _classContext.pop_back ();
+	}
+
+	void Visitor::getClassContext (const semantic::Symbol & cl, bool & isPrivate, bool & isProtected) {
+	    isPrivate = false;
+	    isProtected = false;
+	    if (this-> _classContext.size () != 0) {
+		isPrivate = this-> _classContext.back ().equals (cl);
+		if (isPrivate) isProtected = true;
+		else {
+		    Symbol clSym (Symbol::empty ());
+		    auto ancestor = this-> _classContext.back ().to <semantic::Class> ().getAncestor ();
+		    if (!ancestor.isEmpty ())
+			clSym = validateType (ancestor).to <ClassRef> ().getRef ();
+		    
+		    while (!clSym.isEmpty ()) {
+			if (clSym.equals (cl)) {
+			    isProtected = true;
+			    break;
+			} else {
+			    auto ancestor = clSym.to <semantic::Class> ().getAncestor ();
+			    if (!ancestor.isEmpty ())
+				clSym = validateType (ancestor).to <ClassRef> ().getRef ();
+			}
+		    }
+		}
+	    }
+	}
+
+	bool Visitor::getModuleContext (const semantic::Symbol & cl) {
+	    auto module = cl;
+	    if (module.is <ModRef> ()) module = module.to <ModRef> ().getModule ();
+	    
+	    if (this-> _referent.size () != 0) {
+		auto curr = this-> _referent.back ();
+		while (!curr.isEmpty () && !module.isEmpty ()) {
+		    if (curr.equals (module)) return true; 
+		    curr = curr.getReferent ();
+		}
+	    }
+	    return false;
+	}
+	
 	bool Visitor::isInContext (const std::string & context) {
 	    if (!this-> _contextCas.empty ()) {
 		for (auto & it : this-> _contextCas.back ())

@@ -42,9 +42,17 @@ namespace semantic {
 	    if (!gen.is<FuncPtr> ()) return false;
 	    auto array = gen.to <FuncPtr> ();
 	    if (this-> getInners ().size () != array.getInners ().size ()) return false;
-	    for (auto it : Ymir::r (0, this-> getInners ().size ()))
-		if (!this-> getInners () [it].equals (array.getInners ()[it]))
+	    // For two func ptr to be identic, the mutability and ref of the inner type must be respected
+	    for (auto it : Ymir::r (0, this-> getInners ().size ())) {
+		if (!this-> getInners () [it].equals (array.getInners ()[it]))		    
 		    return false;
+		else if (this-> getInners ()[it].to <Type> ().mutabilityLevel () !=
+			 array.getInners ()[it].to <Type> ().mutabilityLevel ())
+		    return false;
+		else if (this-> getInners () [it].to <Type> ().isRef () !=
+			 array.getInners ()[it].to <Type> ().isRef ())
+		    return false;
+	    } 
 	    return true;
 	}
 

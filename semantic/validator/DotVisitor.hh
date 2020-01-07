@@ -80,7 +80,7 @@ namespace semantic {
 	     * \param expression the bin expression
 	     * \param left the value of type ClassRef
 	     */
-	    generator::Generator validateClass (const syntax::Binary & expression, const generator::Generator & left);
+	    generator::Generator validateClass (const syntax::Binary & expression, const generator::Generator & left, std::vector <std::string> & errors);
 	    
 	    /**
 	     * \brief Validate an implicit dotTemplateCall
@@ -103,7 +103,7 @@ namespace semantic {
 	     * \param left the left element
 	     * \param right the field we are trying to access
 	     */
-	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right);
+	    void error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right, std::vector <std::string> & errors);
 	    
 	};
 

@@ -166,7 +166,7 @@ namespace syntax {
 	    } else decls.push_back (visitDeclaration ());	    
 	} while (!end);
 
-	return DeclBlock::init (location, decls, isPrivate);	
+	return DeclBlock::init (location, decls, isPrivate, false);	
     }
 
     Declaration Visitor::visitVersionGlob (bool global) {
@@ -220,7 +220,7 @@ namespace syntax {
 	    }
 	}
 	
-	return DeclBlock::init (location, decls, true);
+	return DeclBlock::init (location, decls, true, false);
     }
 
 
@@ -299,9 +299,9 @@ namespace syntax {
 	
 	auto token = this-> _lex.next ({Token::LACC});
 	do {
-	    token = this-> _lex.consumeIf ({Keys::PRIVATE, Keys::PROTECTED, Keys::VERSION, Token::RACC, Token::SEMI_COLON});
-	    if (token == Keys::PRIVATE || token == Keys::PROTECTED) {
-		decls.push_back (visitProtectionClassBlock (token == Keys::PRIVATE));
+	    token = this-> _lex.consumeIf ({Keys::PRIVATE, Keys::PUBLIC, Keys::PROTECTED, Keys::VERSION, Token::RACC, Token::SEMI_COLON});
+	    if (token == Keys::PRIVATE || token == Keys::PUBLIC || token == Keys::PROTECTED) {
+		decls.push_back (visitProtectionClassBlock (token == Keys::PRIVATE, token == Keys::PROTECTED));
 	    } else if (token == Keys::VERSION) {
 		decls.push_back (visitVersionClass ());
 	    } else if (token != Token::RACC && token != Token::SEMI_COLON) {
@@ -311,21 +311,20 @@ namespace syntax {
 	return decls;
     }
     
-    Declaration Visitor::visitProtectionClassBlock (bool isPrivate) {
+    Declaration Visitor::visitProtectionClassBlock (bool isPrivate, bool isProtected) {
 	auto location = this-> _lex.rewind ().next ();
 	std::vector <Declaration> decls;
 	auto token = this-> _lex.consumeIf ({Token::LACC});
 	bool end = (token != Token::LACC);
 
 	do {
-	    token = this-> _lex.consumeIf ({Token::RACC});
+	    token = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
 	    if (token == Token::RACC && !end) end = true;
-	    else {
-		decls.push_back (visitDeclaration ());
+	    else if (token != Token::SEMI_COLON) {
+		decls.push_back (visitClassContent ());		
 	    }
 	} while (!end);
-	
-	return DeclBlock::init (location, decls, isPrivate);
+	return DeclBlock::init (location, decls, isPrivate, isProtected);
     }
 
     void Visitor::ignoreBlock () {
@@ -358,7 +357,7 @@ namespace syntax {
 		decls = visitClassBlock ();
 	    }
 	}   
-	return DeclBlock::init (location, decls, true);
+	return DeclBlock::init (location, decls, true, false);
     }
     
     Declaration Visitor::visitClassContent () {
@@ -623,7 +622,7 @@ namespace syntax {
 	} while (token == Token::COMA);
 
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
-	return DeclBlock::init (location, imports, true);
+	return DeclBlock::init (location, imports, true, false);
     }
 
     Declaration Visitor::visitLocalMod () {

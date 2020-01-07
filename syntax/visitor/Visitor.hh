@@ -109,7 +109,7 @@ namespace syntax {
 	/**
 	 * \brief Visit a private or public block
 	 * \verbatim
-	 protection := ('private' | 'public') declaration_block
+	 protection := ('prv' | 'pub') declaration_block
 	 declaration_block := declaration | '{' declaration* '}'
 	 \endverbatim
 	 * \param isPrivate the returned block will be private ?
@@ -221,10 +221,10 @@ namespace syntax {
 	/**
 	 * \brief Return a class protected content (DeclBlock)
 	 * \verbatim
-	 protect_content := ('private' | 'protected') (('{' class_content* '}') | class_content)
+	 protect_content := ('prv' | 'prot' | 'pub') (('{' class_content* '}') | class_content)
 	 \endverbatim
 	 */
-	Declaration visitProtectionClassBlock (bool isPrivate);
+	Declaration visitProtectionClassBlock (bool isPrivate, bool isProtected);
 
 
 	/**

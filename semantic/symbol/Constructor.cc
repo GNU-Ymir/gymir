@@ -72,6 +72,10 @@ namespace semantic {
     std::vector <Symbol> Constructor::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }
+
+    std::vector <Symbol> Constructor::getLocalPublic (const std::string & name) const {
+	return this-> _table.getPublic (name);
+    }
     
     bool Constructor::equals (const Symbol & other) const {
 	if (!other.is <Constructor> ()) return false;

@@ -1139,7 +1139,7 @@ namespace semantic {
 			std::vector <Declaration> decls;
 			for (auto & it : dl.getDeclarations ())
 			    decls.push_back (replaceAll (it, mapping));
-			return syntax::DeclBlock::init (dl.getLocation (), decls, dl.isPrivate ());
+			return syntax::DeclBlock::init (dl.getLocation (), decls, dl.isPrivate (), dl.isProt ());
 		    }
 		) else of (syntax::Class, cl, {
 			std::vector <Declaration> decls;

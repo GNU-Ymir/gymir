@@ -303,9 +303,11 @@ namespace semantic {
 		match (it) {
 		    of (syntax::ExpressionWrapper, wrap, {
 			    match (wrap.getContent ()) {
-				of (syntax::VarDecl, de ATTRIBUTE_UNUSED,
-				    cls.to <semantic::Class> ().addField (wrap.getContent ()))
-				else 
+				of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
+					cls.to <semantic::Class> ().addField (wrap.getContent ());
+					cls.to <semantic::Class> ().setProtected (de.getName ().str);
+				    }
+				) else 
 				    Error::halt ("%(r) - reaching impossible point", "Critical");			
 			    }
 			}
@@ -313,9 +315,45 @@ namespace semantic {
 		    else of (syntax::Constructor, cs, {
 			    auto sym = visitConstructor (cs);
 			    sym.to <Constructor> ().setClass (cls);
+			    sym.setPublic ();
+			}
+		    ) else of (syntax::DeclBlock, dc, {
+			    for (auto & jt : dc.getDeclarations ()) {
+				match (jt) {
+				    of (syntax::ExpressionWrapper, wrap, {
+					    match (wrap.getContent ()) {
+						of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
+							cls.to <semantic::Class> ().addField (wrap.getContent ());
+							if (dc.isPrivate ())
+							    cls.to <semantic::Class> ().setPrivate (de.getName ().str);
+							if (dc.isProt ())
+							    cls.to <semantic::Class> ().setProtected (de.getName ().str);
+						    } 
+						) else 
+						    Error::halt ("%(r) - reaching impossible point", "Critical");			
+					    }
+					}
+				    ) else of (syntax::Constructor, cs, {
+					    auto sym = visitConstructor (cs);
+					    sym.to <Constructor> ().setClass (cls);
+					    if (dc.isPublic ())
+						sym.setPublic ();
+					    if (dc.isProt ()) 
+						sym.setProtected ();					    
+					}
+				    ) else {
+					    auto sym = visit (jt);
+					    if (dc.isPublic ())
+						sym.setPublic ();
+					    if (dc.isProt ())
+						sym.setProtected ();
+				    }
+				}
+			    }
 			}
 		    ) else {			
-			visit (it);
+				auto sym = visit (it);
+				sym.setPublic ();
 		    }
 		}
 	    }

@@ -40,6 +40,10 @@ namespace semantic {
 	    return this-> _ref.getLocal (name);
 	}
 
+	std::vector <Symbol> ModuleAccess::getLocalPublic (const std::string & name) const {
+	    return this-> _ref.getLocalPublic (name);
+	}	
+	
 	const Symbol & ModuleAccess::getModRef () const {
 	    return this-> _ref;
 	}

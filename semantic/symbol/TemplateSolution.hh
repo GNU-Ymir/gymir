@@ -50,6 +50,8 @@ namespace semantic {
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
 	
+	std::vector <Symbol> getLocalPublic (const std::string & name) const override;
+	
 	const std::vector <Symbol> & getAllLocal () const;
 	
 	bool isOf (const ISymbol * type) const override;

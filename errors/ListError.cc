@@ -9,6 +9,7 @@ namespace Ymir {
 			    CALL_RECURSION                  = "limit of compile time call recursion reached %(y)", 
 			    CANDIDATE_ARE                   = "candidate % : %",
 			    CANNOT_BE_CTE                   = "cannot be compile time executed",
+			    CANNOT_OVERRIDE_AS_PRIVATE      = "private method %(y) cannot override ancestor method",
 			    CATCH_MULTIPLE_TIME             = "type %(y) is catch multiple time",
 			    CATCH_OUT_OF_SCOPE              = "catch used as an expression",
 			    COMPILATION_END		    = "",
@@ -63,8 +64,11 @@ namespace Ymir {
 			    OTHER_CANDIDATES                = "there are other candidates, use option -v to show them",
 			    OVERFLOW			    = "overflow capacity for type %(y) = %(y)",
 			    OVERFLOW_ARITY                  = "tuple access out of bound (%(y)), tuple arity is %(y)",
+			    OVERRIDE_MISMATCH_PROTECTION    = "protection of the overriden method %(y) does not match with the definition in the ancestor class",
+			    OVERRIDE_PRIVATE                = "cannot override private method %(y)",
 			    PACKED_AND_UNION		    = "structure could not be packed and union at the same time",
 			    PARAMETER_NAME                  = "parameter % : %",
+			    PRIVATE_IN_THIS_CONTEXT         = "%(B) : % is private within this context",
 			    REF_NOT_TYPE		    = "use a reference as a value",
 			    REF_NO_EFFECT		    = "the creation of ref has no effect on left operand",
 			    REF_NO_VALUE		    = "%(y) declared as a reference but not initialized",
@@ -108,6 +112,6 @@ namespace Ymir {
 			    VAR_DECL_WITHOUT_VALUE	    = "var declaration must have an initial a value",
 			    VAR_DECL_WITH_NOTHING           = "var declaration must at least have a type or a value",
 			    VOID_VAR			    = "cannot declare var of type void",
-			    WRONG_MODULE_NAME		    = "module named %(y) must be placed in file named %(y)",			    
+			    WRONG_MODULE_NAME		    = "module named %(y) must be placed in file named %(y)",
     );    
 }

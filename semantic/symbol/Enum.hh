@@ -54,6 +54,8 @@ namespace semantic {
 
 	std::vector <Symbol> getLocal (const std::string & name) const override;
 
+	std::vector <Symbol> getLocalPublic (const std::string & name) const override;
+
 	bool equals (const Symbol & other) const override;
 
 	std::string formatTree (int padd) const override;

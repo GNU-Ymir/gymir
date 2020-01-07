@@ -29,6 +29,8 @@ namespace semantic {
 	std::map <std::string, Symbol> _used;
 
 	bool _isPublic = false;
+
+	bool _isProtected = false;
 	
     private :
 	
@@ -118,6 +120,16 @@ namespace semantic {
 	 * \brief Is this symbol declared public ?
 	 */
 	bool isPublic () const;
+
+	/**
+	 * \brief Set the symbol to protected (applicable for inner class definition only)
+	 */
+	void setProtected ();
+
+	/**
+	 * \brief Is this symbol declared protected
+	 */
+	bool isProtected () const;
 	
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
@@ -140,6 +152,13 @@ namespace semantic {
 	 * \return a symbol, may be empty
 	 */
 	virtual std::vector <Symbol> getLocal (const std::string & name) const;
+
+	/**
+	 * \brief Find a symbol named name in the table of this symbol if it is public
+	 * \brief Does not call it's referent
+	 * \return a symbol, may be empty
+	 */
+	virtual std::vector <Symbol> getLocalPublic (const std::string & name) const;
 
 	/**
 	 * \return the list of used symbols
@@ -268,6 +287,16 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
+	void setProtected ();
+
+	/**
+	 * Proxy function for symbol
+	 */
+	bool isProtected () const;	
+	
+	/**
+	 * Proxy function for symbol
+	 */
 	std::vector <Symbol> get (const std::string & name) const;
 
 	/**
@@ -290,6 +319,11 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	std::vector <Symbol> getLocal (const std::string & name) const;
+
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector <Symbol> getLocalPublic (const std::string & name) const;
 	
 	/**
 	 * Proxy function for symbol

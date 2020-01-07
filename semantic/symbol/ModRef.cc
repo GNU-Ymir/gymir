@@ -13,14 +13,18 @@ namespace semantic {
 	ISymbol ({loc, name}),
 	_name (name),
 	_table (this)
-    {}
+    {
+	this-> setPublic ();
+    }
 
 
     ModRef::ModRef (const ModRef & mod) :
 	ISymbol (mod),
 	_name (mod._name),
 	_table (mod._table.clone (this))
-    {}
+    {
+	this-> setPublic ();
+    }
     
     Symbol ModRef::init (const lexing::Word & loc, const std::string & name) {
 	return Symbol {new (Z0) ModRef (loc, name)};
@@ -129,6 +133,25 @@ namespace semantic {
 	}	
     }
 
+    std::vector <Symbol> ModRef::getLocalPublic (const std::string & name) const {
+	// This is a leaf, we have the right to access to the data of this module	
+	if (this-> _table.getAll ().size () == 0) {
+	    auto real_name = this-> getRealName ();
+	    auto  mod = Symbol::getModuleByPath (real_name);
+	    return mod.getLocalPublic (name);
+	} else {
+	    return this-> _table.getPublic (name);
+	}	
+    }
+
+    Symbol ModRef::getModule () const {
+	if (this-> _table.getAll ().size () == 0) {
+	    auto real_name = this-> getRealName ();
+	    auto  mod = Symbol::getModuleByPath (real_name);
+	    return mod;	    
+	} else return Symbol::empty ();
+    }
+        
     std::string ModRef::getRealName () const {
 	if (this-> getReferent ().isEmpty ()) return this-> getModName ();
 	else if (!this-> getReferent ().is <ModRef> ()) return this-> getModName ();

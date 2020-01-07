@@ -73,6 +73,11 @@ namespace semantic {
     std::vector <Symbol> Function::getLocal (const std::string & name) const {
 	return this-> _table.get (name);
     }
+
+    std::vector <Symbol> Function::getLocalPublic (const std::string & name) const {
+	return this-> _table.getPublic (name);
+    }
+    
     
     bool Function::equals (const Symbol & other) const {
 	if (!other.is <Function> ()) return false;
