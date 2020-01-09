@@ -65,7 +65,6 @@ struct Keys {
     static std::string  MACRO_TOKEN;
     static std::string  MAIN; 
     static std::string  MATCH; 
-    static std::string  MIXIN; 
     static std::string  MOD;
     static std::string  MOVE;
     static std::string  MUTABLE;

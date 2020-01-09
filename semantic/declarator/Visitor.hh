@@ -119,6 +119,16 @@ namespace semantic {
 	    semantic::Symbol visitClass (const syntax::Class & cls);
 
 	    /**
+	     * \brief Transform a trait declarator into a semantic tree
+	     */
+	    semantic::Symbol visitTrait (const syntax::Trait & trait);
+
+	    /**
+	     * \brief Transform a trait implementation into a semantic tree
+	     */
+	    semantic::Symbol visitImpl (const syntax::Mixin & impl);
+	    
+	    /**
 	     * \brief Visit an enum declaration
 	     */
 	    semantic::Symbol visitEnum (const syntax::Enum & stenm);

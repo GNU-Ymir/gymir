@@ -14,6 +14,8 @@ namespace syntax {
 
 	/** The name of the trait */
 	lexing::Word _location;
+
+	std::vector <Declaration> _declarations;
 	
     private :
 
@@ -39,7 +41,7 @@ namespace syntax {
 	 * \param location the location of the use
 	 * \param mixin the mixin to use
 	 */
-	static Declaration init (const lexing::Word & location, const Expression & mixin);
+	static Declaration init (const lexing::Word & location, const Expression & mixin, const std::vector <Declaration> & declarations);
 
 	/**
 	 * Mandatory function for proxy polymoprhism system
@@ -55,6 +57,7 @@ namespace syntax {
 
 	const Expression & getMixin () const;
 
+	const std::vector <Declaration> & getDeclarations () const;
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	

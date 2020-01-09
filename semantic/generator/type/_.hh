@@ -17,4 +17,5 @@
 #include <ymir/semantic/generator/type/EnumRef.hh>
 #include <ymir/semantic/generator/type/Range.hh>
 #include <ymir/semantic/generator/type/Tuple.hh>
+#include <ymir/semantic/generator/type/TraitRef.hh>
 #include <ymir/semantic/generator/type/Void.hh>

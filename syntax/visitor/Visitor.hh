@@ -181,7 +181,7 @@ namespace syntax {
 	 class_block := class_content*
 	 \endverbatim
 	 */
-	std::vector<Declaration> visitClassBlock ();
+	std::vector<Declaration> visitClassBlock (bool fromTrait = false);
 	
 	/**
 	 * \brief Return a class content
@@ -194,7 +194,7 @@ namespace syntax {
 			  protect_content   
 	 \endverbatim
 	 */
-	Declaration visitClassContent ();
+	Declaration visitClassContent (bool fromTrait = false);
 
 
 	/**
@@ -216,7 +216,7 @@ namespace syntax {
 	/**
 	 * \brief Inner class version control
 	 */
-	Declaration visitVersionClass ();
+	Declaration visitVersionClass (bool fromTrait = false);
 	
 	/**
 	 * \brief Return a class protected content (DeclBlock)
@@ -224,7 +224,7 @@ namespace syntax {
 	 protect_content := ('prv' | 'prot' | 'pub') (('{' class_content* '}') | class_content)
 	 \endverbatim
 	 */
-	Declaration visitProtectionClassBlock (bool isPrivate, bool isProtected);
+	Declaration visitProtectionClassBlock (bool isPrivate, bool isProtected, bool fromTrait = false);
 
 
 	/**

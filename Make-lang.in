@@ -166,6 +166,7 @@ ymir_OBJS = \
 	ymir/generator_StructCst.o \
 	ymir/generator_StructRef.o \
 	ymir/generator_ClassRef.o \
+	ymir/generator_TraitRef.o \
 	ymir/generator_TemplateRef.o \
 	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_TemplateSyntaxList.o \
@@ -195,6 +196,8 @@ ymir_OBJS = \
 	ymir/parsing_Parser.o \
 	ymir/semantic_Alias.o \
 	ymir/semantic_Class.o \
+	ymir/semantic_Trait.o \
+	ymir/semantic_Impl.o \
 	ymir/semantic_Constructor.o \
 	ymir/semantic_Enum.o \
 	ymir/semantic_Function.o \

@@ -123,12 +123,18 @@ namespace semantic {
 	     * \brief Validate a method
 	     */
 	    void validateMethod (const semantic::Function & func, const generator::Generator & cl);
-	    
+
+	    /**
+	     * \brief Validate an implementation of a trait
+	     */
+	    void validateVtableImplement (const semantic::Impl & impl, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, std::vector <Symbol> & add);
+
 	    /**
 	     * \brief Validate a method prototype and put it in the vtable at the right place
 	     * \warning This does not validate the body of the method, see validateMethod 
+	     * \param i by return, is the index where the prototype has been put in the vtable
 	     */
-	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable);
+	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, int & i);
 	    
 	    /**
 	     * \brief Validate a class constructor
@@ -175,12 +181,18 @@ namespace semantic {
 	    generator::Generator validateClass (const semantic::Symbol & cls);
 
 	    /**
+	     * \brief Make same small verif on trait
+	     * \brief This does not generate any code
+	     */
+	    void validateTrait (const semantic::Symbol & tra);
+	    
+	    /**
 	     * \brief Validate the internal declaration of a class
 	     * \param cls the symbol that declare the class
 	     * \param ancestor the ancestor of the class (might be empty)
 	     * \return the vtable of the class
 	     */
-	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields, std::vector <generator::Class::MethodProtection> & protections);
+	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields, std::vector <generator::Class::MethodProtection> & protections, std::vector <Symbol> & addMethods);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type

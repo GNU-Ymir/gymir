@@ -80,13 +80,13 @@ namespace syntax {
 	    Keys::ALIAS, Keys::CLASS, Keys::ENUM,
 	    Keys::DEF, Keys::STATIC, Keys::IMPORT,
 	    Keys::MACRO, Keys::MOD, Keys::STRUCT,
-	    Keys::TRAIT, Keys::USE, Keys::MIXIN, Keys::EXTERN
+	    Keys::TRAIT, Keys::USE, Keys::EXTERN
 	};
 	
 	visit._declarationsBlock = {
 	    Keys::CLASS, Keys::ENUM,  Keys::DEF,
 	    Keys::IMPORT, Keys::STRUCT, Keys::TRAIT,
-	    Keys::USE, Keys::MIXIN
+	    Keys::USE
 	};
 
 	visit._intrisics = {
@@ -255,7 +255,6 @@ namespace syntax {
 	if (location == Keys::MOD) return visitLocalMod ();
 	if (location == Keys::STRUCT) return visitStruct ();
 	if (location == Keys::TRAIT) return visitTrait ();
-	if (location == Keys::MIXIN) return visitTrait ();
 	if (location == Keys::USE) return visitUse ();
 	else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -294,7 +293,7 @@ namespace syntax {
 	    return Class::init (name, ancestor, decls);
     }
 
-    std::vector <Declaration> Visitor::visitClassBlock () {
+    std::vector <Declaration> Visitor::visitClassBlock (bool fromTrait) {
 	std::vector <Declaration> decls;
 	
 	auto token = this-> _lex.next ({Token::LACC});
@@ -303,15 +302,15 @@ namespace syntax {
 	    if (token == Keys::PRIVATE || token == Keys::PUBLIC || token == Keys::PROTECTED) {
 		decls.push_back (visitProtectionClassBlock (token == Keys::PRIVATE, token == Keys::PROTECTED));
 	    } else if (token == Keys::VERSION) {
-		decls.push_back (visitVersionClass ());
+		decls.push_back (visitVersionClass (fromTrait));
 	    } else if (token != Token::RACC && token != Token::SEMI_COLON) {
-		decls.push_back (visitClassContent ());
+		decls.push_back (visitClassContent (fromTrait));
 	    } 
 	} while (token != Token::RACC);
 	return decls;
     }
     
-    Declaration Visitor::visitProtectionClassBlock (bool isPrivate, bool isProtected) {
+    Declaration Visitor::visitProtectionClassBlock (bool isPrivate, bool isProtected, bool fromTrait) {
 	auto location = this-> _lex.rewind ().next ();
 	std::vector <Declaration> decls;
 	auto token = this-> _lex.consumeIf ({Token::LACC});
@@ -321,7 +320,7 @@ namespace syntax {
 	    token = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
 	    if (token == Token::RACC && !end) end = true;
 	    else if (token != Token::SEMI_COLON) {
-		decls.push_back (visitClassContent ());		
+		decls.push_back (visitClassContent (fromTrait));		
 	    }
 	} while (!end);
 	return DeclBlock::init (location, decls, isPrivate, isProtected);
@@ -342,26 +341,31 @@ namespace syntax {
 
     
     
-    Declaration Visitor::visitVersionClass () {
+    Declaration Visitor::visitVersionClass (bool fromTrait) {
 	auto location = this-> _lex.rewind ().next ();
 	auto ident = visitIdentifier ();
 	std::vector <Declaration> decls;
 	if (global::State::instance ().isVersionActive (ident.str)) {
-	    decls = visitClassBlock ();
+	    decls = visitClassBlock (fromTrait);
 	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
 		ignoreBlock ();
 	    }	   
 	} else {
 	    ignoreBlock ();
 	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
-		decls = visitClassBlock ();
+		decls = visitClassBlock (fromTrait);
 	    }
 	}   
 	return DeclBlock::init (location, decls, true, false);
     }
     
-    Declaration Visitor::visitClassContent () {
-	auto token = this-> _lex.next ({Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::MIXIN});
+    Declaration Visitor::visitClassContent (bool fromTrait) {
+	lexing::Word token;
+	if (fromTrait)
+	    token = this-> _lex.next ({Keys::DEF, Keys::OVER}); // Trait can only have method definitions
+	else
+	    token = this-> _lex.next ({Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL});
+	
 	if (token == Keys::SELF) {
 	    return visitClassConstructor ();
 	} else if (token == Keys::DEF) {
@@ -373,7 +377,7 @@ namespace syntax {
 	} else if (token == Keys::LET) {
 	    this-> _lex.rewind ();
 	    return Expression::toDeclaration (visitVarDeclaration ());
-	} else if (token == Keys::MIXIN) {
+	} else if (token == Keys::IMPL) {
 	    return visitClassMixin ();
 	} else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -382,10 +386,13 @@ namespace syntax {
     }
 
     Declaration Visitor::visitClassMixin () {
-	auto location = this-> _lex.rewind ().next ({Keys::MIXIN});
+	auto location = this-> _lex.rewind ().next ({Keys::IMPL});
 	auto content = visitExpression (10); // (priority of dot operator)
-	this-> _lex.consumeIf ({Token::SEMI_COLON});
-	return Mixin::init (location, content);
+	if (this-> _lex.consumeIf ({Token::SEMI_COLON}) != Token::SEMI_COLON) {	    
+	    std::vector <Declaration> decls = visitClassBlock (false);	    
+	    return Mixin::init (location, content, decls);
+	} else
+	    return Mixin::init (location, content, {});
     }
 
     Declaration Visitor::visitClassConstructor () {
@@ -669,16 +676,15 @@ namespace syntax {
     }
 
     Declaration Visitor::visitTrait () {
-	auto location = this-> _lex.rewind ().next ();
+	auto location = this-> _lex.rewind ().next ({Keys::TRAIT});
 	auto name = visitIdentifier ();
 	auto templates = visitTemplateParameters ();
 
-	auto token = this-> _lex.next ({Token::LACC});
-	std::vector <Declaration> decls = visitClassBlock ();
+	std::vector <Declaration> decls = visitClassBlock (false);
 	
 	if (!templates.empty ()) {
-	    return Template::init (name, templates, Trait::init (name, decls, location == Keys::MIXIN));
-	} else return Trait::init (name, decls, location == Keys::MIXIN);	
+	    return Template::init (name, templates, Trait::init (name, decls));
+	} else return Trait::init (name, decls);	
     }
 
     Declaration Visitor::visitUse () {

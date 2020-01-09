@@ -1194,7 +1194,10 @@ namespace semantic {
 		    }
 		) else of (syntax::Import, imp ATTRIBUTE_UNUSED, return decl; 
 		) else of (syntax::Mixin, mx, {
-			return syntax::Mixin::init (mx.getLocation (), replaceAll (mx.getMixin (), mapping));
+			std::vector <Declaration> decls;
+			for (auto& it : mx.getDeclarations ())
+			    decls.push_back (replaceAll (it, mapping));
+			return syntax::Mixin::init (mx.getLocation (), replaceAll (mx.getMixin (), mapping), decls);
 		    }
 		) else of (syntax::Module, mod, {
 			std::vector <Declaration> decls;
@@ -1234,9 +1237,9 @@ namespace semantic {
 		    }
 		) else of (syntax::Trait, trai, {
 			std::vector <Declaration> inner;
-			for (auto & it : trai.getInners ())
+			for (auto & it : trai.getDeclarations ())
 			    inner.push_back (replaceAll (it, mapping));
-			return syntax::Trait::init (trai.getName (), inner, trai.isMixin ());
+			return syntax::Trait::init (trai.getName (), inner);
 		    }
 		) else of (syntax::Use, use, {
 			return syntax::Use::init (use.getLocation (), replaceAll (use.getModule (), mapping));

@@ -12,15 +12,13 @@ namespace syntax {
 	auto ret = new (Z0) Trait ();
 	ret-> _name = tr._name;
 	ret-> _inner = tr._inner;
-	ret-> _isMixin = tr._isMixin;
 	return Declaration {ret};
     }
 
-    Declaration Trait::init (const lexing::Word & name, const std::vector <Declaration> & decls, bool isMixin) {
+    Declaration Trait::init (const lexing::Word & name, const std::vector <Declaration> & decls) {
 	auto ret = new (Z0) Trait ();
 	ret-> _name = name;
 	ret-> _inner = decls;
-	ret-> _isMixin = isMixin;
 	return Declaration {ret};
     }
 
@@ -37,7 +35,7 @@ namespace syntax {
     
     void Trait::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Trait> ", i, '\t');
-	stream.writeln (this-> _name, " mixin : ", this-> _isMixin);
+	stream.writeln (this-> _name);
 
 	for (auto & it : this-> _inner)
 	    it.treePrint (stream, i + 1);
@@ -47,12 +45,8 @@ namespace syntax {
 	return this-> _name;
     }
 
-    const std::vector<Declaration> & Trait::getInners () const {
+    const std::vector<Declaration> & Trait::getDeclarations () const {
 	return this-> _inner;
-    }
-
-    bool Trait::isMixin () const {
-	return this-> _isMixin;
     }
     
 }

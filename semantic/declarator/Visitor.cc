@@ -51,6 +51,14 @@ namespace semantic {
 		    return visitClass (cls);
 		);
 
+		of (syntax::Trait, trait,
+		    return visitTrait (trait);
+		);
+
+		of (syntax::Mixin, impl,
+		    return visitImpl (impl);
+		);
+		
 		of (syntax::Global, glb,
 		    return visitGlobal (glb);
 		);
@@ -292,10 +300,8 @@ namespace semantic {
 	
 	    auto symbols = getReferent ().getLocal (stcls.getName ().str);
 	    for (auto & symbol : symbols) {
-		if (!symbol.is <Class> ()) {
-		    auto note = Ymir::Error::createNote (symbol.getName ());
-		    Ymir::Error::occurAndNote (stcls.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stcls.getName ().str);
-		}
+		auto note = Ymir::Error::createNote (symbol.getName ());
+		Ymir::Error::occurAndNote (stcls.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stcls.getName ().str);		
 	    }
 
 	    pushReferent (cls);
@@ -363,6 +369,64 @@ namespace semantic {
 	    return ret;
 	}
 
+	semantic::Symbol Visitor::visitTrait (const syntax::Trait & sttrait) {
+	    auto tr = Trait::init (sttrait.getName ());
+
+	    auto symbols = getReferent ().getLocal (sttrait.getName ().str);
+	    for (auto & symbol : symbols) {
+		auto note = Ymir::Error::createNote (symbol.getName ());
+		Ymir::Error::occurAndNote (sttrait.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), sttrait.getName ().str);
+	    }
+
+	    pushReferent (tr);
+	    for (auto & it : sttrait.getDeclarations ()) {
+		match (it) {
+		    of (syntax::DeclBlock, dc, {
+			    for (auto & jt : dc.getDeclarations ()) {
+				auto sym = visit (jt);
+				if (dc.isPublic ())
+				    sym.setPublic ();
+				if (dc.isProt ())
+				    sym.setProtected ();
+			    }							    
+			}
+		    ) else {			
+			auto sym = visit (it);
+			sym.setPublic ();
+		    }
+		}
+	    }
+	    auto ret = popReferent ();
+	    getReferent ().insert (ret);
+	    return ret;
+	}
+
+	semantic::Symbol Visitor::visitImpl (const syntax::Mixin & stimpl) {
+	    auto im = Impl::init (stimpl.getLocation (), stimpl.getMixin ());
+	    pushReferent (im);
+	    for (auto & it : stimpl.getDeclarations ()) {
+		match (it) {
+		    of (syntax::DeclBlock, dc, {
+			    for (auto & jt : dc.getDeclarations ()) {
+				auto sym = visit (jt);
+				if (dc.isPublic ())
+				    sym.setPublic ();
+				if (dc.isProt ())
+				    sym.setProtected ();
+			    }							    
+			}
+		    ) else {			
+			auto sym = visit (it);
+			sym.setPublic ();
+		    }
+		}
+	    }
+	    
+	    auto ret = popReferent ();
+	    getReferent ().insert (ret);
+	    return ret;
+	}
+	
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum & stenm) {
 	    auto enm = Enum::init (stenm.getName (), stenm.getValues (), stenm.getType ());
 	    auto symbols = getReferent ().getLocal (stenm.getName ().str);

@@ -13,13 +13,15 @@ namespace syntax {
 	auto ret = new (Z0) Mixin ();
 	ret-> _location = mixin._location;
 	ret-> _mixin = mixin._mixin;
+	ret-> _declarations = mixin._declarations;
 	return Declaration {ret};
     }
 
-    Declaration Mixin::init (const lexing::Word & loc, const Expression & mixin) {
+    Declaration Mixin::init (const lexing::Word & loc, const Expression & mixin, const std::vector<Declaration> & decls) {
 	auto ret = new (Z0) Mixin ();
 	ret-> _mixin = mixin;
 	ret-> _location = loc;
+	ret-> _declarations = decls;
 	return Declaration {ret};
     }
 
@@ -42,6 +44,10 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }
 
+    const std::vector <Declaration> & Mixin::getDeclarations () const {
+	return this-> _declarations;
+    }
+    
     void Mixin::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Mixin> ", i, '\t');
 	this-> _mixin.treePrint (stream, i + 1);

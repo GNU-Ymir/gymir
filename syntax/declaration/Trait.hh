@@ -12,20 +12,15 @@ namespace syntax {
 	
 	/** The prototypes declared inside the trait 
 	 * It could be : 
-	 * - function 
+	 * - function (methods)
 	 * - vardecl (inside a wrapper, as VarDecl is an expression)
-	 * constructor and destructor are function with keyword name (self, or self~), that return void
+	 * constructor are function with keyword name (self), that return void
 	 */
 	std::vector <Declaration> _inner;
 
 	/** The name of the trait */
 	lexing::Word _name;
-
-	/** 
-	 * True if this is declaration is a mixin 
-	 * The difference between trait and mixin is semantic
-	 */
-	bool _isMixin; 
+	
 	
     private :
 
@@ -51,7 +46,7 @@ namespace syntax {
 	 * \param name the name of the trait 
 	 * \param inner the declaration inside the trait
 	 */
-	static Declaration init (const lexing::Word & name, const std::vector <Declaration> & inner, bool isMixin);
+	static Declaration init (const lexing::Word & name, const std::vector <Declaration> & inner);
 
 	/**
 	 * Mandatory function for proxy polymoprhism system
@@ -67,10 +62,8 @@ namespace syntax {
 
 	const lexing::Word & getName () const;
 
-	const std::vector <Declaration> & getInners () const;
+	const std::vector <Declaration> & getDeclarations () const;
 
-	bool isMixin () const;
     };
-
     
 }

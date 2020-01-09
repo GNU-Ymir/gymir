@@ -60,7 +60,6 @@ std::string     Keys::MACRO_IDENT  = "ident";
 std::string     Keys::MACRO_TOKEN  = "token";
 std::string     Keys::MAIN	   = "main";
 std::string     Keys::MATCH	   = "match";
-std::string     Keys::MIXIN	   = "mixin";
 std::string     Keys::MOD	   = "mod";
 std::string     Keys::MOVE	   = "move";
 std::string     Keys::MUTABLE	   = "mut";
