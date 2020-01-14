@@ -80,6 +80,10 @@ namespace semantic {
 	    return false;
     }
 
+    std::string Impl::getRealName () const {
+	return this-> getReferent ().getRealName ();
+    }
+    
     const syntax::Expression & Impl::getTrait () const {
 	return this-> _trait;
     }    

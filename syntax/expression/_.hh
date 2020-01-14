@@ -16,6 +16,7 @@
 #include <ymir/syntax/expression/For.hh>
 #include <ymir/syntax/expression/FuncPtr.hh>
 #include <ymir/syntax/expression/If.hh>
+#include <ymir/syntax/expression/ImplVar.hh>
 #include <ymir/syntax/expression/Ignore.hh>
 #include <ymir/syntax/expression/Intrinsics.hh>
 #include <ymir/syntax/expression/Is.hh>

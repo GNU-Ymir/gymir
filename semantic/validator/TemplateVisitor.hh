@@ -139,11 +139,19 @@ namespace semantic {
 
 	    /**
 	     * \brief Validate a type template specialization from explicit context on an OfVar
-	     * \param params the template parameters (T : [R], R, ...)
+	     * \param params the template parameters (T of [R], R, ...)
 	     * \param left one of the template parameters \in params, which is a OfVar
 	     * \param type the type that will make the specialization
 	     */
 	    Mapper applyTypeFromExplicitOfVar (const std::vector <syntax::Expression> & params, const syntax::OfVar & var, const generator::Generator & types) const;
+
+	    /**
+	     * \brief Validate a type template specialization from explicit context on an ImplVar
+	     * \param params the template parameters (T impl isTruc!R, R, ...)
+	     * \param left one of the template parameters \in params, which is a ImplVar
+	     * \param type the type that will make the specialization
+	     */
+	    Mapper applyTypeFromExplicitImplVar (const std::vector <syntax::Expression> & params, const syntax::ImplVar & implvar, const generator::Generator & types) const;
 
 
 	    /**

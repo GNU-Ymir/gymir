@@ -673,6 +673,7 @@ namespace semantic {
 	    }
 
 	    // We want to validate implementation afterwards to have clearer errors
+	    // And we don't want to be able to override impl methods outside the impl declaration scope
 	    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
 		TRY (
 		    match (it) {
@@ -755,9 +756,31 @@ namespace semantic {
 		    errors.push_back (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
 		} FINALLY;
 	    }
+
+
+	    {
+		for (auto & it : loc_vtable_impl) {
+		    auto protoFptr = validateFunctionType (it);
+		    TRY (
+			for (auto i : Ymir::r (ancVtable.size (), vtable.size ())) { // Verification of the collision (since all reimplemented function are marked override)
+			    if (Ymir::Path (vtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () ==
+				Ymir::Path (it.to <FrameProto> ().getName (), "::").fileName ().toString ()) {
+				auto fptr = validateFunctionType (vtable [i]);
+				if (protoFptr.equals (fptr) && vtable [i].to<MethodProto> ().isMutable () == it.to<MethodProto> ().isMutable ()) {
+				    auto note = Ymir::Error::createNote (vtable [i].getLocation ());
+				    Ymir::Error::occurAndNote (it.getLocation (), note, ExternalError::get (CONFLICTING_DECLARATIONS), vtable [i].prettyString ());
+				}
+			    }
+			}
+			vtable.push_back (it);			
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    errors.push_back (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
+		    } FINALLY;
+		}
+	    }
 	    
-	    for (auto & it : loc_vtable_impl)
-		vtable.push_back (it);
 	    for (auto & it : loc_protection)
 		protection.push_back (it);
 
@@ -3817,10 +3840,15 @@ namespace semantic {
 		    );	 
 	    } else {
 		// Verify mutability
-		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {		    
+		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {
 		    auto llevel = type.to <Type> ().mutabilityLevel ();
 		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
-		    if (llevel > std::max (1, rlevel)) {
+		    if ((type.to <Type> ().isRef () && construct && llevel > std::max (0, rlevel))) { // If it is the construction of a ref
+			auto note = Ymir::Error::createNote (gen.getLocation ());
+			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+						   llevel, std::max (0, rlevel)
+			);		
+		    } else if (llevel > std::max (1, rlevel)) {
 			auto note = Ymir::Error::createNote (gen.getLocation ());
 			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 						   llevel, std::max (1, rlevel)
@@ -3922,6 +3950,25 @@ namespace semantic {
 	    }
 	}
 
+	void Visitor::verifyClassImpl (const Generator & cl, const Generator & trait) {
+	    if (!trait.is <TraitRef> ()) {
+		Ymir::Error::occur (trait.getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
+	    }
+
+	    auto sym = cl.to <ClassRef> ().getRef ();
+	    for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
+		match (it) {
+		    of (semantic::Impl, im, {
+			    auto sec_trait = this-> validateType (im.getTrait ());
+			    if (trait.equals (sec_trait)) return;
+			}
+		    );
+		}		
+	    }
+
+	    Ymir::Error::occur (cl.getLocation (), ExternalError::get (NOT_IMPL_TRAIT), cl.prettyString (), trait.prettyString ());
+	}
+	
 	void Visitor::verifyCompatibleTypeWithValue (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (gen.is <NullValue> () && type.is <Pointer> ()) return;
 	    else if (gen.is<ArrayValue> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;

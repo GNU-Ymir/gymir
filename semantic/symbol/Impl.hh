@@ -59,6 +59,9 @@ namespace semantic {
 	std::string formatTree (int padd) const override;
 
 	const syntax::Expression & getTrait () const;
+
+	/** The name of the impl must be ignored */
+	std::string getRealName () const override;
 	
     };
     

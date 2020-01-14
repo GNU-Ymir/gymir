@@ -126,5 +126,8 @@ namespace semantic {
 	return false;
     }
 
+    std::string Trait::getRealName () const {
+	return this-> getReferent ().getRealName ();
+    }
     
 }

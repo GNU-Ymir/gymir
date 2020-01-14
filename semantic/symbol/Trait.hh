@@ -112,6 +112,9 @@ namespace semantic {
 	 * \warning we assume that this function is called oif we are sure that the fields exists in the class
 	 */
 	bool isMarkedProtected (const std::string & name) const;	
+
+	/** The name of the trait must be ignored */
+	std::string getRealName () const override;
 	
     };
     

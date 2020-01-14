@@ -150,6 +150,18 @@ namespace semantic {
 			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
 			}
 		    }
+		) else of (ImplVar, var, {
+			if (values [0].is <ClassRef> ()) {
+			    consumed += 1;
+			    return applyTypeFromExplicitImplVar (syntaxTempl, var, values [0]);
+			} else if (values [0].is <Type> ()) {
+			    auto note = Ymir::Error::createNote (param.getLocation ());
+			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
+			} else {
+			    auto note = Ymir::Error::createNote (param.getLocation ());
+			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
+			}
+		    }
 		) else of (StructVar, var, {
 			if (values [0].is <Type> ()) {
 			    if (values [0].is <StructRef> ()) {
@@ -262,7 +274,6 @@ namespace semantic {
 	
 	Generator TemplateVisitor::validateFromImplicit (const TemplateRef & ref, const std::vector <Generator> & valueParams, const std::vector <Generator> & types, int & score, Symbol & symbol, std::vector <Generator> & finalParams) const {
 	    const Symbol & sym = ref.getTemplateRef ();
-	    
 	    // For the moment I assume that only function can be implicitly specialized
 	    if (!sym.to<semantic::Template> ().getDeclaration ().is <syntax::Function> ())
 		return Generator::empty ();
@@ -309,7 +320,7 @@ namespace semantic {
 		} else {
 		    globalMapper = mergeMappers (globalMapper, mapper);
 		    syntaxTempl = replaceSyntaxTempl (syntaxTempl, globalMapper.mapping);
-
+		    
 		    if (current_consumed <= 1) {
 			finalParams.push_back (NamedGenerator::init (syntaxParams [it].getLocation (), valueParams [consumed]));
 		    } else {
@@ -352,7 +363,7 @@ namespace semantic {
 		score = merge.score;
 		finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
-		
+
 		auto visit = declarator::Visitor::init ();
 		visit.pushReferent (ref.getTemplateRef ().getReferent ());
 
@@ -527,6 +538,11 @@ namespace semantic {
 			if (!tmplSoluce.isEmpty ())
 			    return validateTypeFromTemplCall (params, cl, tmplSoluce.to <TemplateSolution> (), consumed);
 		    }
+		) else of (ClassRef, clRef, {
+			auto tmplSoluce = getFirstTemplateSolution (clRef.getRef ());
+			if (!tmplSoluce.isEmpty ())
+			    return validateTypeFromTemplCall (params, cl, tmplSoluce.to <TemplateSolution> (), consumed);
+		    }		    
 		) else of (Range, rng, { // Range are created by template Call
 			auto left = cl.getContent ();
 			if (left.is<syntax::Var> () && left.to <syntax::Var> ().getName () == Range::NAME) {
@@ -535,10 +551,11 @@ namespace semantic {
 			    }
 			}
 		    }
-		) return Mapper (false, 0);
+		);			
 	    }	
-	    
-	    return Mapper (false, 0);
+
+	    // We don't validate anything but, the function that called us will with no new information though
+	    return Mapper (true, 0); 
 	}
 
 	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & soluce, int &) const {
@@ -606,6 +623,15 @@ namespace semantic {
 			consumed += 1;
 			return applyTypeFromExplicitOfVar (params, var, types [0]);
 		    }
+		) else of (ImplVar, var, {
+			if (!types [0].is <ClassRef> ()) {
+			    auto note = Ymir::Error::createNote (var.getLocation ());
+			    Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (NOT_A_CLASS), types [0].prettyString ());
+			}
+			
+			consumed += 1;
+			return applyTypeFromExplicitImplVar (params, var, types [0]);			
+		    }
 		) else of (StructVar, var, {
 			if ((!types [0].isEmpty ()) && types [0].is <StructRef> ()) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
@@ -650,17 +676,7 @@ namespace semantic {
 	    match (ofv.getType ()) {
 		of (Var, var, {
 			auto expr = findExpression (var.getName ().str, params);
-			if (expr.isEmpty ()) {
-			    auto left = this-> _context.validateType (ofv.getType (), true);
-			    this-> _context.verifySameType (left, type);
-			    
-			    Mapper mapper (true, Scores::SCORE_TYPE);
-			    this-> _context.verifyNotIsType (ofv.getLocation ());
-			    
-			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), type));
-			    mapper.nameOrder.push_back (ofv.getLocation ().str);
-			    return mapper;			
-			} else {
+			if (!expr.isEmpty ()) {						
 			    int consumed = 0;
 			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
 			    auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
@@ -764,16 +780,96 @@ namespace semantic {
 			mapper.score += Scores::SCORE_TYPE;
 			return mapper;
 		    }
+		) else of (TemplateCall, cl, {
+			int current_consumed = 0;
+			auto mapper = validateTypeFromTemplCall (params, cl, type, current_consumed);
+			Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
+			auto genType = this-> _context.validateType (realType, true);
+			this-> _context.verifySameType (genType, type);
+			this-> _context.verifyNotIsType (ofv.getLocation ());
+			
+			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
+			mapper.nameOrder.push_back (ofv.getLocation ().str);
+			mapper.score += Scores::SCORE_TYPE;
+			return mapper;			
+		    }
 		);
 	    }
-
-	    OutBuffer buf;
-	    ofv.getType ().treePrint (buf, 0);
-	    println (buf.str ());
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Mapper (false, 0);
+	    
+	    // Default case, we just validate it and check the type equality
+	    auto left = this-> _context.validateType (ofv.getType (), true);
+	    this-> _context.verifySameType (left, type);
+			    
+	    Mapper mapper (true, Scores::SCORE_TYPE);
+	    this-> _context.verifyNotIsType (ofv.getLocation ());
+			    
+	    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), type));
+	    mapper.nameOrder.push_back (ofv.getLocation ().str);
+	    return mapper;
 	}
 
+	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicitImplVar (const std::vector <Expression> & params, const ImplVar & implv, const generator::Generator & type) const {
+	    if (type.isEmpty ()) return Mapper {true, 0, {}, {}};
+	    match (implv.getType ()) {
+		of (Var, var, {
+			auto expr = findExpression (var.getName ().str, params);
+			if (!expr.isEmpty ()) {
+			    int consumed = 0;
+			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
+			    auto realType = this-> replaceAll (implv.getType (), mapper.mapping);			    
+			    auto genType = this-> _context.validateType (realType, true);
+			    this-> _context.verifyClassImpl (type, genType);
+			    
+			    mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
+			    mapper.nameOrder.push_back (implv.getLocation ().str);
+			    return mapper;			    
+			}
+		    }
+		) else of (TemplateCall, cl, {
+			int current_consumed = 0;
+			auto mapper = validateTypeFromTemplCall (params, cl, type, current_consumed);
+			Expression realType = this-> replaceAll (implv.getType (), mapper.mapping);
+			auto genType = this-> _context.validateType (realType, true);
+			this-> _context.verifyClassImpl (type, genType);
+			mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
+			mapper.nameOrder.push_back (implv.getLocation ().str);
+			mapper.score += Scores::SCORE_TYPE;
+			return mapper;			
+		    }
+		) else of (syntax::List, lst, {
+			Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    type.to<Type> ().getTypeName ());		    
+		    }
+		) else of (syntax::FuncPtr, fPtr, {
+			Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    type.to<Type> ().getTypeName ());			
+		    }		   
+		) else of (syntax::ArrayAlloc, arr, {
+			Ymir::Error::occur (arr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    type.to<Type> ().getTypeName ());		    
+		    }
+		) else of (DecoratedExpression, dc, {
+			Ymir::Error::occur (dc.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    type.to<Type> ().getTypeName ());	
+		    }
+		);
+	    }
+	    
+	    auto left = this-> _context.validateType (implv.getType (), true);
+	    this-> _context.verifyClassImpl (type, left);
+	    Mapper mapper (true, Scores::SCORE_TYPE);
+	    this-> _context.verifyNotIsType (implv.getLocation ());
+			    
+	    mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
+	    mapper.nameOrder.push_back (implv.getLocation ().str);
+	    return mapper;	
+	}
+
+	
 	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromDecoratedExpression (const std::vector <Expression> & params, const DecoratedExpression & expr, const std::vector <generator::Generator> & types, int & consumed) const {
 	    if (expr.hasDecorator (syntax::Decorator::CTE) || expr.hasDecorator (syntax::Decorator::REF))
 		return Mapper (false, 0);	    
@@ -831,6 +927,9 @@ namespace semantic {
 			    if (var.getName ().str == name) return it;
 			}
 		    ) else of (OfVar, var, {
+			    if (var.getLocation ().str == name) return it;
+			}
+		    ) else of (ImplVar, var, {
 			    if (var.getLocation ().str == name) return it;
 			}
 		    ) else of (VariadicVar, var, {
@@ -1009,6 +1108,11 @@ namespace semantic {
 			   return syntax::OfVar::init (
 			       element.getLocation (),
 			       replaceAll (of.getType (), mapping)
+			   );
+		) else of (syntax::ImplVar, im,
+			   return syntax::ImplVar::init (
+			       element.getLocation (),
+			       replaceAll (im.getType (), mapping)
 			   );
 		) else of (syntax::Return, ret,
 			   return syntax::Return::init (
@@ -1306,6 +1410,11 @@ namespace semantic {
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
+		    ) else of (syntax::ImplVar, var, {
+			    if (mapping.find (var.getLocation ().str) == mapping.end ()) 
+				results.push_back (replaceAll (it, mapping));
+			    continue;
+			}
 		    ) else of (syntax::VariadicVar, var, {
 			    if (mapping.find (var.getLocation ().str) == mapping.end ())
 				results.push_back (it);
@@ -1350,6 +1459,7 @@ namespace semantic {
 		    result.emplace (it.first, it.second);
 		}
 	    }
+	    
 	    return Mapper {true, left.score + right.score, result, nameOrder};
 	}
 
@@ -1361,6 +1471,9 @@ namespace semantic {
 			    results.push_back (mapping.find (var.getName ().str)-> second);
 			}
 		    ) else of (syntax::OfVar, var, {
+			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			}
+		    ) else of (syntax::ImplVar, var, {
 			    results.push_back (mapping.find (var.getLocation ().str)-> second);
 			}
 		    ) else of (syntax::VariadicVar, var, {
@@ -1392,6 +1505,10 @@ namespace semantic {
 				results.push_back (var.getName ().str);
 			}
 		    ) else of (syntax::OfVar, var, {
+			    if (mapping.find (var.getLocation ().str) != mapping.end ())
+				results.push_back (var.getLocation ().str);
+			}
+		    ) else of (syntax::ImplVar, var, {
 			    if (mapping.find (var.getLocation ().str) != mapping.end ())
 				results.push_back (var.getLocation ().str);
 			}

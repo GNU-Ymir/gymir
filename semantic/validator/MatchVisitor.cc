@@ -43,7 +43,7 @@ namespace semantic {
 			if (local_mandatory) isMandatory = true;
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
-			//errors = msgs;
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		    } FINALLY;
 		}
 		
@@ -79,6 +79,13 @@ namespace semantic {
 
 	Generator MatchVisitor::validateMatch (const Generator & value, const Expression & matcher, bool & isMandatory) {
 	    match (matcher) {
+		of (syntax::Var, var,		    
+		    if (var.getName () == Keys::UNDER) {
+			isMandatory = true;
+			return BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
+		    }
+		);
+				
 		of (syntax::Binary, bin,
 		    return validateMatchBinary (value, bin, isMandatory);
 		);
@@ -90,56 +97,68 @@ namespace semantic {
 		of (syntax::List, lst,
 		    return validateMatchList (value, lst, isMandatory);
 		);
-		
-		of (syntax::Var, var,		    
-		    if (var.getName () == Keys::UNDER) {
-			isMandatory = true;
-			return BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
+				
+		of (syntax::MultOperator, call, {
+			if (call.getEnd () == Token::RPAR) 
+			    return validateMatchCall (value, call, isMandatory);
 		    }
-		);		   
+		);
 	    }
 	    return validateMatchAnything (value, matcher, isMandatory);
 	}
 
-	Generator MatchVisitor::validateMatchVarDecl (const Generator & value, const syntax::VarDecl & var, bool & isMandatory) {
-	    if (var.getName () != Keys::UNDER)
-		this-> _context.verifyShadow (var.getName ());
-	    
-	    Generator varValue (Generator::empty ());
-	    if (!var.getValue ().isEmpty ()) {
-		varValue = this-> _context.validateValue (var.getValue ());
-	    }
-
-	    Generator varType (Generator::empty ());
-	    if (!var.getType ().isEmpty ())		
-		varType = this-> _context.validateType (var.getType ());
-	    else {
-		varType = value.to <Value> ().getType (); // to have a vardecl, we must at least have a type or a value
-		varType.to <Type> ().isRef (false);
-		varType.to <Type> ().isMutable (false);
-	    }
-
-	    bool isMutable = false, isRef = false;
-	    this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable);
-
-
+	Generator MatchVisitor::validateMatchVarDecl (const Generator & value_, const syntax::VarDecl & var, bool & isMandatory) {
+	    std::vector <std::string> errors;
 	    Generator test (Generator::empty ());
-	    this-> _context.verifySameType (varType, value.to <Value> ().getType ());
-	    if (!varValue.isEmpty ()) {
-		this-> _context.verifyMemoryOwner (var.getLocation (), varType, varValue, true);
-		test = validateMatch (value, TemplateSyntaxWrapper::init (varValue.getLocation (), varValue), isMandatory);		
-	    } else {
-		isMandatory = true;
-		varValue = value;
-		this-> _context.verifyMemoryOwner (var.getLocation (), varType, varValue, true);
-		test = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
-	    }
+	    Generator varDecl (Generator::empty ());
+	    TRY (
+		Generator value (value_);
+		if (var.getName () != Keys::UNDER)
+		    this-> _context.verifyShadow (var.getName ());
 	    
-	    auto varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, varValue, isMutable);
-	    if (var.getName () != Keys::UNDER) {
-		this-> _context.insertLocal (var.getName ().str, varDecl);
-	    }
-	    return Set::init (var.getLocation (), Bool::init (value.getLocation ()), {varDecl, test});
+		Generator varValue (Generator::empty ());
+		if (!var.getValue ().isEmpty ()) {
+		    varValue = this-> _context.validateValue (var.getValue ());
+		}
+
+		Generator varType (Generator::empty ());
+		if (!var.getType ().isEmpty ())		
+		    varType = this-> _context.validateType (var.getType ());
+		else {
+		    varType = value.to <Value> ().getType (); // to have a vardecl, we must at least have a type or a value
+		    varType.to <Type> ().isRef (false);
+		    varType.to <Type> ().isMutable (false);
+		}	    
+	    
+		bool isMutable = false;
+		bool isRef = false;
+		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable);
+
+		this-> _context.verifySameType (varType, value.to <Value> ().getType ());
+		if (!varValue.isEmpty ()) {
+		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, varValue, true);
+		    test = validateMatch (value, TemplateSyntaxWrapper::init (varValue.getLocation (), varValue), isMandatory);		
+		} else {
+		    isMandatory = true;
+		    varValue = value;
+		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, varValue, true);
+		    test = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
+		}
+	    
+		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, varValue, isMutable);
+		if (var.getName () != Keys::UNDER) {
+		    this-> _context.insertLocal (var.getName ().str, varDecl);
+		}
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors = msgs;
+		errors.insert (errors.begin (), Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+	    } FINALLY;
+
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+	    
+	    return Set::init (var.getLocation (), Bool::init (value_.getLocation ()), {varDecl, test});
 	}
 
 	Generator MatchVisitor::validateMatchBinary (const Generator & value, const syntax::Binary & bin, bool & isMandatory) {
@@ -215,6 +234,96 @@ namespace semantic {
 	    
 	    return validateMatchAnything (value, lst.clone (), isMandatory);
 	}
+
+	Generator MatchVisitor::validateMatchCall (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
+	    if (!value.to <Value> ().getType ().is <StructRef> ()) {
+		auto note = Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF));		
+		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (NOT_A_STRUCT), value.to <Value> ().getType ().prettyString ());
+	    }
+	    std::vector <std::string> errors;
+	    TRY (
+		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
+		    auto type = this-> _context.validateType (call.getLeft ());
+		    this-> _context.verifyCompatibleTypeWithValue (value.getLocation (), type, value);
+		}
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		errors.insert (errors.begin (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));		
+	    } FINALLY;
+	    
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+	    
+	    auto & str = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ();
+	    	    
+	    isMandatory = true;
+	    std::vector <Expression> rights = call.getRights ();
+	    std::vector <Expression> params;
+	    for (auto it : str.getFields ()) {
+		auto param = findParameterStruct (rights, it.to <generator::VarDecl> ());		    		
+		params.push_back (param); // We add empties, to have the same amount of params as fields
+		// The pattern can be successful even if there is some fields that are not tested
+	    }
+	    
+	    if (rights.size () != 0) {
+		std::vector <std::string> names;
+		for (auto & it : rights)
+		    names.push_back (it.prettyString ());
+		
+		Ymir::Error::occur (call.getLocation (), call.getEnd (), ExternalError::get (UNUSED_MATCH_CALL_OP), names);				    
+	    }		
+
+	    Generator globTest (Generator::empty ());
+	    for (auto it : Ymir::r (0, params.size ())) {
+		if (!params [it].isEmpty ()) {
+		    auto loc_mandatory = false;
+		    auto acc = StructAccess::init (value.getLocation (), str.getFieldType (str.getFields() [it].to <generator::VarDecl> ().getName ()), value, str.getFields() [it].to <generator::VarDecl> ().getName ());
+		    if (value.is<Referencer> ()) {
+			auto type = acc.to <Value> ().getType ();
+			type.to <Type> ().isRef (true);
+			acc = Referencer::init (acc.getLocation (), type, acc);
+		    }
+		    
+		    auto loc_test = validateMatch (acc, params [it], loc_mandatory);		    
+		    isMandatory = loc_mandatory && isMandatory;
+		    
+		    if (globTest.isEmpty ()) // Not necessarily when it == 0, as params [0] can be empty
+			globTest = loc_test;
+		    else globTest = BinaryBool::init (value.getLocation (),
+						      Binary::Operator::AND,
+						      Bool::init (value.getLocation ()),
+						      globTest, loc_test);
+		}
+	    }
+
+	    return globTest;		
+	}
+
+	syntax::Expression MatchVisitor::findParameterStruct (std::vector <Expression> & params, const generator::VarDecl & var) {
+	    // Cf CallVisitor::findParameterStruct (), it is the same function but on expression instead of Generators
+	    for (auto it : Ymir::r (0, params.size ())) {
+		if (params [it].is <NamedExpression> ()) {
+		    auto name = params [it].to <NamedExpression> ().getLocation ();
+		    if (name.str == var.getLocation ().str) {
+			auto toRet = params [it].to <NamedExpression> ().getContent ();
+			params.erase (params.begin () + it);
+			return toRet;
+		    }		    
+		}
+	    }
+	    
+	    if (!var.getVarValue ().isEmpty ()) return Expression::empty ();
+	    for (auto it : Ymir::r (0, params.size ())) {
+		if (!params [it].is <NamedExpression> ()) {
+		    auto toRet = params [it];
+		    params.erase (params.begin () + it);
+		    return toRet;
+		}
+	    }
+	    return Expression::empty ();
+	}
+	
 	
 	Generator MatchVisitor::validateMatchAnything (const Generator & value, const syntax::Expression & matcher, bool & isMandatory) {	    
 	    auto binVisitor = BinaryVisitor::init (this-> _context);

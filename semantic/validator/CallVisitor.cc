@@ -251,12 +251,17 @@ namespace semantic {
 	    if (ret.isEmpty ()) {
 		// If the var has a value, it is an optional argument
 		if (!var.getValue ().isEmpty ()) ret = var.getValue ();	    
-		else if (params.size () == 0) return Generator::empty ();
-		// If it does not have a value, it is a mandatory var, and its name cannot be the same as params [0] (we just verify that in the for loop)
-		else if (params [0].is <NamedGenerator> ()) return Generator::empty ();
+		// If it does not have a value, it is a mandatory var, so we take the first param that is not a NamedExpression
+		// No NamedExpression can have the same name as var, it is already checked in the first for loop
 		else {
-		    ret = params [0];
-		    params.erase (params.begin ());
+		    for (auto it : Ymir::r (0, params.size ())) {
+			if (!params [it].is<NamedGenerator> ()) {
+			    ret = params [it];
+			    params.erase (params.begin () + it);
+			    break;
+			}
+		    }
+		    if (ret.isEmpty ()) return Generator::empty ();
 		}
 	    }
 	    
@@ -387,14 +392,16 @@ namespace semantic {
 
 	    // If the var has a value, it is an optional argument
 	    if (!var.getVarValue ().isEmpty ()) return var.getVarValue ();
+	    // Cf, find Parameter
+	    for (auto it : Ymir::r (0, params.size ())) {
+		if (!params [it].is <NamedGenerator> ()) {
+		    auto toRet = params [it];
+		    params.erase (params.begin () + it);
+		    return toRet;
+		}
+	    }
 	    
-	    else if (params.size () == 0) return Generator::empty ();
-	    // If it does not have a value, it is a mandatory var, and its name cannot be the same as params [0] (we just verify that in the for loop)
-	    else if (params [0].is <NamedGenerator> ()) return Generator::empty ();
-	    
-	    auto toRet = params [0];
-	    params.erase (params.begin ());
-	    return toRet;	    
+	    return Generator::empty ();
 	}
 
 	generator::Generator CallVisitor::validateFunctionPointer (const lexing::Word & location, const Generator & gen, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {

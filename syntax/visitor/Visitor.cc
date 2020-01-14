@@ -401,8 +401,9 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	auto token = this-> _lex.next ();
 	if (token != Token::LPAR) { // If there is no remaining parameters, it means that the read templates may be the runtime parameters
-	    templates.clear (); // So, we remove them
-	    this-> _lex.seek (before_template); // And we seek to this location to get them as runtime parameters
+	    if (canBeParameters (templates))
+		this-> _lex.seek (before_template); // And we seek to this location to get them as runtime parameters
+	    templates.clear (); // So, we remove them	    
 	} else this-> _lex.rewind ();
 
 	auto proto = visitFunctionPrototype ();
@@ -506,8 +507,9 @@ namespace syntax {
 	
 	token = this-> _lex.next ();
 	if (token != Token::LPAR) {
+	    if (canBeParameters (templates))
+		this-> _lex.seek (befTemplates);
 	    templates.clear ();
-	    this-> _lex.seek (befTemplates);
 	}
 	else this-> _lex.rewind ();
 
@@ -694,6 +696,14 @@ namespace syntax {
 	
 	return Use::init (location, content);
     }
+
+    bool Visitor::canBeParameters (const std::vector <Expression> & params) {
+	for (auto & it : params) {
+	    // It can be a var in constructor of method (for self)
+	    if (!it.is <VarDecl> () && !it.is <Var> ()) return false;
+	}
+	return true;
+    }
     
     std::vector <Expression> Visitor::visitTemplateParameters () {
 	std::vector <Expression> list;
@@ -721,6 +731,8 @@ namespace syntax {
 			    list.push_back (VarDecl::init (name, {}, Expression::empty (), visitExpression ()));
 			} else if (token == Keys::OF)
 			    list.push_back (OfVar::init (name, visitExpression ()));
+			else if (token == Keys::IMPL)
+			    list.push_back (ImplVar::init (name, visitExpression ()));
 			else if (token == Token::TDOT) {
 			    list.push_back (VariadicVar::init (name, false));
 			} else {

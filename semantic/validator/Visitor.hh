@@ -659,6 +659,11 @@ namespace semantic {
 	    void verifySameType (const generator::Generator & left, const generator::Generator & right);
 
 	    /**
+	     * \brief Verify that the class cl implement the trait tr
+	     */
+	    void verifyClassImpl (const generator::Generator & cl, const generator::Generator & tr);
+	    
+	    /**
 	     * \brief Throw an exception if left.isCompatible (right) is false
 	     * \param left a type
 	     * \param right a type

@@ -283,6 +283,11 @@ namespace syntax {
 	 */
 	std::vector <Expression> visitTemplateParameters ();
 
+	/**
+	 * \brief Tell if the parameters acquired by visitTemplateParameters can be used a function runtime params
+	 * \brief Basically, Is each element of params a VarDecl?
+	 */
+	bool canBeParameters (const std::vector <Expression> & params);
 
 	/**
 	 * \brief Visit a global var declaration 

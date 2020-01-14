@@ -60,11 +60,21 @@ namespace semantic {
 	     * \brief This is used to match over a tuple, or a static array
 	     */
 	    generator::Generator validateMatchList (const generator::Generator & value, const syntax::List & lst, bool & isMandatory);
-	    
+
+	    /**
+	     * \brief Validate a call operation
+	     */
+	    generator::Generator validateMatchCall (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);
+
 	    /**
 	     * \brief Validate anything else, that is not a pattern matching
 	     */
 	    generator::Generator validateMatchAnything (const generator::Generator & value, const syntax::Expression & any, bool & isMandatory);
+
+
+	private :
+
+	    syntax::Expression findParameterStruct (std::vector <syntax::Expression> & params, const generator::VarDecl & var);
 	    
 	};
 	    
