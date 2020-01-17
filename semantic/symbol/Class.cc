@@ -9,7 +9,8 @@ namespace semantic {
 	_table (this),
 	_ancestor (syntax::Expression::empty ()),
 	_fields ({}),
-	_gen (generator::Generator::empty ())
+	_gen (generator::Generator::empty ()),
+	_typeInfo (generator::Generator::empty ())
     {}
 
     Class::Class (const lexing::Word & name, const syntax::Expression & ancestor) :
@@ -17,7 +18,8 @@ namespace semantic {
 	_table (this),
 	_ancestor (ancestor),
 	_fields ({}),
-	_gen (generator::Generator::empty ())
+	_gen (generator::Generator::empty ()),
+	_typeInfo (generator::Generator::empty ())
     {}
 
     Class::Class (const Class & other) :
@@ -25,7 +27,8 @@ namespace semantic {
 	_table (other._table.clone (this)),
 	_ancestor (other._ancestor),
 	_fields ({}),
-	_gen (generator::Generator::empty ())
+	_gen (generator::Generator::empty ()),
+	_typeInfo (generator::Generator::empty ())
     {}
     
     Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor) {
@@ -99,6 +102,15 @@ namespace semantic {
 	this-> _gen = gen;
     }
 
+    const generator::Generator & Class::getTypeInfo () const {
+	return this-> _typeInfo;
+    }
+
+    void Class::setTypeInfo (const generator::Generator & gen) {
+	this-> _typeInfo = gen;
+    }
+
+    
     void Class::addField (const syntax::Expression & field) {
 	this-> _fields.push_back (field);
     }

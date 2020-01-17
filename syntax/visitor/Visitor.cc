@@ -507,8 +507,7 @@ namespace syntax {
 	
 	token = this-> _lex.next ();
 	if (token != Token::LPAR) {
-	    if (canBeParameters (templates))
-		this-> _lex.seek (befTemplates);
+	    this-> _lex.seek (befTemplates);
 	    templates.clear ();
 	}
 	else this-> _lex.rewind ();
@@ -875,11 +874,14 @@ namespace syntax {
 
 	if (begin.is (this-> _intrisics)) {
 	    auto loc = this-> _lex.next ();
-	    auto inner = visitExpression (10);
+	    auto tok = this-> _lex.consumeIf ({Token::LPAR});
+	    auto inner = tok == Token::LPAR ? visitExpression () : visitExpression (10);	    
 	    if (inner.is<Lambda> () && begin == Keys::MOVE) {
+		if (tok == Token::LPAR) this-> _lex.next ({Token::RPAR});
 		return Lambda::moveClosure (inner);
 	    }
 	    
+	    if (tok == Token::LPAR) this-> _lex.next ({Token::RPAR});
 	    return Intrinsics::init (loc, inner);
 	}
 	
@@ -1015,12 +1017,18 @@ namespace syntax {
     Expression Visitor::visitMatchExpression () {
 	auto next = this-> _lex.next ();
 	this-> _lex.rewind ();
-	if (canVisitSingleVarDeclaration (true, true)) {
-	    auto ret = visitSingleVarDeclaration (true, true);
-	    return ret;
+	if (can(&Visitor::visitSingleVarDeclarationForMatch)) {
+	    return visitSingleVarDeclarationForMatch ();
 	} else if (canVisitIdentifier () || next == Keys::UNDER) {
 	    auto name = this-> _lex.next ();
-	    next = this-> _lex.next ();
+	    next = this-> _lex.next ();	 
+	    Expression var (Expression::empty ());
+	    if (name != Keys::UNDER && next == Token::NOT) {
+		this-> _lex.rewind ();
+		var = visitTemplateCall (Var::init (name));
+		next = this-> _lex.next ();
+	    }
+	    
 	    if (next == Token::LPAR) {
 		std::vector <Expression> params;
 		auto end = this-> _lex.consumeIf ({Token::RPAR, Token::COMA});
@@ -1028,12 +1036,17 @@ namespace syntax {
 		    params.push_back (visitMatchExpression ());
 		    end = this-> _lex.next ({Token::COMA, Token::RPAR});
 		}
-		return MultOperator::init (name, end, Var::init (name), params);
-	    } else if (next == Token::ARROW) {
+		if (var.isEmpty ())
+		    return MultOperator::init (name, end, Var::init (name), params);
+		else
+		    return MultOperator::init (name, end, var, params);
+	    } else if (next == Token::ARROW && var.isEmpty ()) {
 		return NamedExpression::init (name, visitMatchExpression ());
 	    }
 	    this-> _lex.rewind ();
-	    return Var::init (name);
+	    if (var.isEmpty ())		
+		return Var::init (name);
+	    return var;
 	} else if (next == Token::LPAR) {
 	    this-> _lex.next (); // Consume LPAR
 	    std::vector <Expression> params;
@@ -1590,7 +1603,46 @@ namespace syntax {
 	
 	return VarDecl::init (name, decos, type, value);
     }
-   
+
+    Expression Visitor::visitSingleVarDeclarationForMatch () {
+	std::vector<DecoratorWord> decos;
+	Expression type (Expression::empty ()), value (Expression::empty ());
+	
+	lexing::Word token = this-> _lex.consumeIf (DecoratorWord::members ());
+	while (token.is (DecoratorWord::members ())) {
+	    auto deco = DecoratorWord::init (token);
+	    for (auto d : decos) {
+		if (d.getValue () == deco.getValue ()) {
+		    auto note = Ymir::Error::createNote (d.getLocation ());
+		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		}
+	    }
+	    
+	    decos.push_back (deco);
+	    token = this-> _lex.consumeIf (DecoratorWord::members ());	    
+	}
+
+	lexing::Word name = this-> _lex.consumeIf ({Keys::UNDER});
+	if (name != Keys::UNDER) {
+	    name = visitIdentifier ();
+	}
+	
+	if (name == Keys::SELF)
+	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.str);
+	
+	token = this-> _lex.next ({Token::COLON});	
+	token = this-> _lex.consumeIf ({Keys::UNDER});
+	if (token != Keys::UNDER)
+	    type = visitExpression (10);
+	
+	token = this-> _lex.next ();	 
+	if (token == Token::EQUAL)
+	    value = visitMatchExpression ();
+	else this-> _lex.rewind ();
+
+	return VarDecl::init (name, decos, type, value);
+    }
+    
     Expression Visitor::visitDestructVarDeclaration () {
 	auto begin = this-> _lex.rewind ().next ();
 	lexing::Word next;

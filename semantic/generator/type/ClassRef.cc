@@ -66,6 +66,10 @@ namespace semantic {
 	std::string ClassRef::getMangledName () const {
 	    return Ymir::format ("%", this-> _ref.getMangledName ());
 	}
+
+	const Generator & ClassRef::getAncestor () const {
+	    return this-> _parent;
+	}
 	
     }
 }

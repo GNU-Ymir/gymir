@@ -24,7 +24,7 @@ namespace semantic {
 	    /**
 	     * \brief Create an uniq value, this value is used as a vardecl var ref pair, but in a simpler way
 	     * \brief Whenever a value has a risq to be generated multiple time (expand, for loop, ...)
-	     * \brief This will ensure that the value is generated only, and return a ref to it 
+	     * \brief This will ensure that the value is generated only once, and return a ref to it 
 	     */
 	    static Generator init (const lexing::Word & location, const Generator & type, const Generator & value);
 	    

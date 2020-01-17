@@ -379,9 +379,14 @@ namespace syntax {
 	 \endverbatim
 	 * \param withValue is true if we can have an affectation ('=' expression)?
 	 */
-	Expression visitSingleVarDeclaration (bool mandType = false, bool withValue = true, bool isClass = false);	
-       
+	Expression visitSingleVarDeclaration (bool mandType = false, bool withValue = true, bool isClass = false);
 
+	/**
+	 * \brief Visit a single var declaration for match (it means that the type can be '_')
+	 * \brief For everything else it is exactly equivalent as visitSingleVarDeclaration
+	 */
+	Expression visitSingleVarDeclarationForMatch ();	
+       
 	/**
 	 * \return true iif, a var declaration is following
 	 * \param mandatoryType is the type mandatory in this declaration ?

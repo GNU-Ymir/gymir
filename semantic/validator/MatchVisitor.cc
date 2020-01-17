@@ -1,7 +1,9 @@
 #include <ymir/semantic/validator/MatchVisitor.hh>
 #include <ymir/semantic/validator/BinaryVisitor.hh>
+#include <ymir/semantic/validator/SubVisitor.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/global/State.hh>
+#include <ymir/global/Core.hh>
 
 namespace semantic {
 
@@ -115,11 +117,7 @@ namespace semantic {
 		Generator value (value_);
 		if (var.getName () != Keys::UNDER)
 		    this-> _context.verifyShadow (var.getName ());
-	    
-		Generator varValue (Generator::empty ());
-		if (!var.getValue ().isEmpty ()) {
-		    varValue = this-> _context.validateValue (var.getValue ());
-		}
+
 
 		Generator varType (Generator::empty ());
 		if (!var.getType ().isEmpty ())		
@@ -129,23 +127,49 @@ namespace semantic {
 		    varType.to <Type> ().isRef (false);
 		    varType.to <Type> ().isMutable (false);
 		}	    
+		
 	    
 		bool isMutable = false;
 		bool isRef = false;
 		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable);
 
-		this-> _context.verifySameType (varType, value.to <Value> ().getType ());
-		if (!varValue.isEmpty ()) {
-		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, varValue, true);
-		    test = validateMatch (value, TemplateSyntaxWrapper::init (varValue.getLocation (), varValue), isMandatory);		
+		// The type checking is made in reverse
+		// We want to be able to get an inherit class, from an ancestor class
+		// That is exactly the reverse of function call, or var affectation
+		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType);
+		Generator type_test (Generator::empty ());
+		if (!value.to <Value> ().getType ().to <Type> ().isCompatible (varType)) { // If we have passed the test, but still not compatible means it is a class
+		    auto loc = var.getLocation ();
+		    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+						     TemplateSyntaxWrapper::init (loc, value),
+						     syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+						     syntax::Expression::empty ()
+		    );
+		    
+		    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
+							    syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+							    {bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (var.getLocation (), varType))}							    
+		    );
+		    type_test = this-> _context.validateValue (call);
+		}
+		
+		if (!var.getValue ().isEmpty ()) {
+		    test = validateMatch (value, var.getValue (), isMandatory);			
 		} else {
 		    isMandatory = true;
-		    varValue = value;
-		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, varValue, true);
+		    // We already checked the types, and we want to check in reverse anyway
+		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, value, true, false);
 		    test = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		}
-	    
-		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, varValue, isMutable);
+		
+		if (!type_test.isEmpty ()) {
+		    test = BinaryBool::init (var.getLocation (),
+					     Binary::Operator::AND,
+					     Bool::init (var.getLocation ()),
+					     test, type_test);
+		}
+		
+		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, value, isMutable);
 		if (var.getName () != Keys::UNDER) {
 		    this-> _context.insertLocal (var.getName ().str, varDecl);
 		}
@@ -236,10 +260,89 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchCall (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
-	    if (!value.to <Value> ().getType ().is <StructRef> ()) {
-		auto note = Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF));		
-		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (NOT_A_STRUCT), value.to <Value> ().getType ().prettyString ());
+	    if (value.to <Value> ().getType ().is <StructRef> ()) {
+		return validateMatchCallStruct (value, call, isMandatory);
+	    } else if (value.to <Value> ().getType ().is <ClassRef> ()) {
+		return validateMatchCallClass (value, call, isMandatory);
 	    }
+	    
+	    auto note = Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF));		
+	    Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (MATCH_CALL), value.to <Value> ().getType ().prettyString ());
+	    return Generator::empty ();
+	}
+
+	Generator MatchVisitor::validateMatchCallClass (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
+	    std::vector <std::string> errors;
+	    Generator globTest (Generator::empty ());
+	    auto loc = call.getLocation ();
+	    Generator type (Generator::empty ());
+	    
+	    TRY (
+		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
+		    type = this-> _context.validateType (call.getLeft ());
+		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
+		    if (!value.to <Value> ().getType ().to <Type> ().isCompatible (type)) {
+			// If we have passed the test, but still not compatible means it is a class
+			auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+							 TemplateSyntaxWrapper::init (loc, value),
+							 syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+							 syntax::Expression::empty ()
+			);
+		    
+			auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
+								syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+								{bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (loc, type))}							    
+			);
+			globTest = this-> _context.validateValue (call);
+		    } else {			
+			isMandatory = true;
+			globTest = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
+		    }
+		}
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		errors.insert (errors.begin (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));		
+	    } FINALLY;
+
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
+	    
+	    type.to <Type> ().isMutable (value.to <Value> ().getType ().to <Type> ().isMutable ());
+	    type.to <Type> ().isRef (false);
+	    
+	    // Simple affectation is sufficiant, since it is a Class, and therefore already a ref
+	    auto castedValue = UniqValue::init (call.getLocation (), type, Cast::init (call.getLocation (), type, value));
+	    globTest = Set::init (call.getLocation (), Bool::init (call.getLocation ()), {castedValue, globTest});
+	    for (auto & it : call.getRights ()) {		
+		if (!it.is <NamedExpression> ())
+		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
+		auto name = it.to <NamedExpression> ().getLocation ().str;
+		auto loc = it.getLocation ();
+		auto bin = syntax::Binary::init ({loc, Token::DOT},
+						 TemplateSyntaxWrapper::init (loc, castedValue),
+						 syntax::Var::init ({loc, name}),
+						 syntax::Expression::empty ());
+		auto innerVal = this-> _context.validateValue (bin);		
+		if (value.is <Referencer> ()) {
+		    auto type = innerVal.to <Value> ().getType ();
+		    type.to <Type> ().isRef (true);
+		    innerVal = Referencer::init (innerVal.getLocation (), type, innerVal);
+		}
+		
+		auto loc_mandatory = false;		
+		auto loc_test = validateMatch (innerVal, it.to <NamedExpression> ().getContent (), loc_mandatory);
+		isMandatory = loc_mandatory && isMandatory;
+		globTest = BinaryBool::init (value.getLocation (),
+					     Binary::Operator::AND,
+					     Bool::init (value.getLocation ()),
+					     globTest, loc_test);
+	    }
+	    return globTest;
+	}
+	
+	Generator MatchVisitor::validateMatchCallStruct (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {	    
 	    std::vector <std::string> errors;
 	    TRY (
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {

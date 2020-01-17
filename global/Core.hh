@@ -21,6 +21,7 @@ namespace global {
 			 RUN_MAIN_DEBUG,
 			 SET_JMP,
 			 THROW,
+			 TYPE_INFO_EQUAL,
     );
     
 }

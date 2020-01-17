@@ -67,6 +67,16 @@ namespace semantic {
 	    generator::Generator validateMatchCall (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);
 
 	    /**
+	     * \brief Validate a call operation, where value a value of type StructRef
+	     */
+	    generator::Generator validateMatchCallStruct (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);
+
+	    /**
+	     * \brief Validate a call operation, where value a value of type ClassRef
+	     */
+	    generator::Generator validateMatchCallClass (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);
+
+	    /**
 	     * \brief Validate anything else, that is not a pattern matching
 	     */
 	    generator::Generator validateMatchAnything (const generator::Generator & value, const syntax::Expression & any, bool & isMandatory);

@@ -325,7 +325,8 @@ namespace semantic {
 			finalParams.push_back (NamedGenerator::init (syntaxParams [it].getLocation (), valueParams [consumed]));
 		    } else {
 			// Create a tuple containing the number of types consumed
-			auto tupleType = Tuple::init (syntaxParams [it].getLocation (), std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + current_consumed));
+			auto innerTuple = std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + current_consumed);
+			auto tupleType = Tuple::init (syntaxParams [it].getLocation (), innerTuple);
 			finalParams.push_back (NamedGenerator::init (syntaxParams [it].getLocation (), TupleValue::init (syntaxParams [it].getLocation (), tupleType, std::vector <Generator> (valueParams.begin () + consumed, valueParams.begin () + consumed + current_consumed))));
 		    }
 		    consumed += current_consumed;
@@ -909,8 +910,10 @@ namespace semantic {
 
 	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const std::vector <generator::Generator> & gens) const {
 	    std::vector <Generator> types = gens;
-	    for (auto & type : types)
+	    for (auto & type : types) {
 		type.changeLocation (location);
+		type.to <Type> ().isRef (false);
+	    }
 	    return TemplateSyntaxList::init (location, types);
 	}	
 

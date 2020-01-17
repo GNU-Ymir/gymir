@@ -94,6 +94,12 @@ namespace semantic {
 	    generic::Tree generateGlobalConstant (const GlobalConstant & cst);
 
 	    /**
+	     * \brief Generate the type info for a class
+	     * \brief This will be happened at the end of the vtable
+	     */
+	    generic::Tree generateTypeInfoClass (const Generator & classType);
+	    
+	    /**
 	     * \brief Create the vtable of a classref
 	     */
 	    generic::Tree generateVtable (const Generator & classType);

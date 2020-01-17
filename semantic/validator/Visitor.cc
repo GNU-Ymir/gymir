@@ -575,6 +575,7 @@ namespace semantic {
 			gen.to <generator::Class> ().setVtable (vtable);
 			gen.to <generator::Class> ().setProtectionVtable (protections);
 			sym.to <semantic::Class> ().setGenerator (gen);
+			sym.to <semantic::Class> ().setTypeInfo (validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));
 
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
@@ -1060,8 +1061,8 @@ namespace semantic {
 		    
 			auto left = this-> validateValue (access);
 			auto right = this-> validateValue (it.second);
-			verifyCompatibleTypeWithValue (name, left.to <Value> ().getType (), right);
-			instructions.push_back (Affect::init (left.getLocation (), left.to <Value> ().getType (), left, right));
+			verifyMemoryOwner (left.getLocation (), left.to <Value> ().getType (), right, true);
+			instructions.push_back (Affect::init (left.getLocation (), left.to <Value> ().getType (), left, right, true));
 
 			validated.emplace (name.str);
 		    ) CATCH (ErrorCode::EXTERNAL) {
@@ -2235,12 +2236,6 @@ namespace semantic {
 	    if (var.getName () != Keys::UNDER)
 		verifyShadow (var.getName ());
 
-	    if (var.getValue ().isEmpty () && needInitValue) {
-		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
-	    } else if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
-		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
-	    }
-
 	    Generator value (Generator::empty ());
 	    if (!var.getValue ().isEmpty ()) {
 		value = validateValue (var.getValue ());
@@ -2255,6 +2250,12 @@ namespace semantic {
 		type.to <Type> ().isMutable (false);
 	    }
 
+	    if (var.getValue ().isEmpty () && needInitValue) {
+		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
+	    } else if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
+		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
+	    }
+		    
 	    bool isMutable = false, isRef = false;
 	    applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
 	    
@@ -2265,9 +2266,8 @@ namespace semantic {
 
 	    if (type.is<NoneType> () || type.is<Void> ()) {
 		Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
-	    } else if (type.to <Type> ().isRef () && value.isEmpty ()) {
-		Ymir::Error::occur (var.getName (), ExternalError::get (REF_NO_VALUE), var.getName ().str);
-	    } 
+	    }
+	    
 	    
 	    auto ret = generator::VarDecl::init (var.getLocation (), var.getName ().str, type, value, isMutable);
 	    if (var.getName () != Keys::UNDER)
@@ -2623,7 +2623,17 @@ namespace semantic {
 	    
 	    type.to <Type> ().isRef (true);
 	    auto value = Copier::init (thr.getLocation (), type, inner, true);
-	    auto info = validateTypeInfo (thr.getLocation (), simpleType);
+	    Generator info (Generator::empty ());
+	    if (type.is <ClassRef> () && !type.to <ClassRef> ().getRef ().to <semantic::Class> ().getTypeInfo ().isEmpty ()) {
+		auto loc = thr.getLocation ();
+		auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+						 TemplateSyntaxWrapper::init (loc, inner),
+						 syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+						 syntax::Expression::empty ()
+		);
+		info = validateValue (bin);
+	    } else 
+		info = validateTypeInfo (thr.getLocation (), simpleType);
 	    return Throw::init (thr.getLocation (), info, value);
 	}
 
@@ -2645,7 +2655,7 @@ namespace semantic {
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type) {
 	    auto typeInfo = syntax::Var::init ({loc, Visitor::TYPE_INFO});
 	    auto str = validateType (typeInfo);
-
+	    
 	    auto typeIDs = syntax::Var::init ({loc, Visitor::TYPE_IDS});
 	    auto en_m = validateValue (typeIDs);
 	       
@@ -2655,22 +2665,29 @@ namespace semantic {
 		Slice::init (loc, str),
 		Slice::init (loc, Char::init (loc, 32))
 	    };
-	    
+
 	    std::vector <Generator> innerTypes;
-	    if (type.to <Type> ().isComplex ()) {
-		for (auto & it : type.to <Type> ().getInners ())
-		    innerTypes.push_back (validateTypeInfo (loc, it));
+	    if (!type.is <ClassRef> ()) {
+		if (type.to <Type> ().isComplex ()) {
+		    for (auto & it : type.to <Type> ().getInners ())
+			innerTypes.push_back (validateTypeInfo (loc, it));
+		}
+	    } else {		
+		if (!type.to <ClassRef> ().getAncestor ().isEmpty ()) {
+		    innerTypes.push_back (validateTypeInfo (loc, type.to <ClassRef> ().getAncestor ()));
+		}
 	    }
+	    
 	    auto arrayType = Array::init (loc, str, innerTypes.size ());
 	    auto stringLit = syntax::String::init (loc, loc, {loc, type.prettyString ()}, lexing::Word::eof ());
 	    auto name = validateValue (stringLit);
 	    auto constName = Mangler::init ().mangle (type) + "_" + "name";
+	    auto sliceType = Slice::init (loc, str);
 
-	    
 	    std::vector <Generator> values = {
 		en_m.to <generator::Enum> ().getFieldValue (typeInfoName (type)),
 		SizeOf::init (loc, Integer::init (loc, 0, false), type),
-		ArrayValue::init (loc, arrayType, innerTypes),		
+		Copier::init (loc, sliceType, Aliaser::init (loc, sliceType, ArrayValue::init (loc, arrayType, innerTypes))),	       
 		GlobalConstant::init (loc, constName, name.to <Value> ().getType (), name)
 	    };
 	    
@@ -2684,6 +2701,7 @@ namespace semantic {
 	}
 
 	std::string Visitor::typeInfoName (const Generator & type) {
+	    // Maybe that's enhanceable
 	    match (type) {
 		of (Array, ar ATTRIBUTE_UNUSED, return "ARRAY";);
 		of (Bool,  bo ATTRIBUTE_UNUSED, return "BOOL";);
@@ -2696,6 +2714,7 @@ namespace semantic {
 		of (Slice,  sl ATTRIBUTE_UNUSED, return "SLICE";);
 		of (StructRef,  sl ATTRIBUTE_UNUSED, return "STRUCT";);
 		of (Tuple,  tu ATTRIBUTE_UNUSED, return "TUPLE";);
+		of (ClassRef, cl ATTRIBUTE_UNUSED, return "OBJECT";);
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -3094,7 +3113,7 @@ namespace semantic {
 	    if (!closure.isEmpty ()) {
 		auto closureValue = validateClosureValue (closure, proto.isRefClosure (), proto.getClosureIndex ());
 		auto tupleType = Delegate::init (proto.getLocation (), funcType);		
-		auto tuple = DelegateValue::init (proto.getLocation (), tupleType, closureValue, addr);
+		auto tuple = DelegateValue::init (proto.getLocation (), tupleType, closureValue.to <Value> ().getType (), closureValue, addr);
 						       
 		return tuple;
 	    } else {		
@@ -3259,13 +3278,27 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateDeepCopy (const syntax::Intrinsics & intr) {
+	    auto inner = validateValue (intr.getContent ());
+	    syntax::Expression call (syntax::Expression::empty ());
 	    auto loc = intr.getLocation ();
-	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
-		syntax::Var::init ({loc, Visitor::DCOPY_OP_OVERRIDE}),
-		{intr.getContent ()}	       
-	    );
-
+	    if (inner.to <Value> ().getType ().is <ClassRef> ()) {
+		call = syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    syntax::Binary::init ({loc, Token::DOT},
+					  TemplateSyntaxWrapper::init (inner.getLocation (), inner), 	       
+					  syntax::Var::init ({loc, Visitor::DCOPY_OP_OVERRIDE}),
+					  syntax::Expression::empty ()
+		    ),
+		    {}
+		);
+	    } else {
+		call = syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    syntax::Var::init ({loc, Visitor::DCOPY_OP_OVERRIDE}),
+		    {TemplateSyntaxWrapper::init (inner.getLocation (), inner)}	       
+		);
+	    }
+	    
 	    auto val = validateValue (call);
 	    return Aliaser::init (intr.getLocation (), val.to <Value> ().getType (), val);
 	}
@@ -3774,8 +3807,9 @@ namespace semantic {
 	    }
 	}
 
-	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct) {
-	    verifyCompatibleTypeWithValue (loc, type, gen);	    
+	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct, bool checkTypes) {
+	    if (checkTypes)
+		verifyCompatibleTypeWithValue (loc, type, gen);	    
 	    verifyImplicitAlias (loc, type, gen);
 	    
 	    // Verify Implicit referencing
@@ -3877,8 +3911,9 @@ namespace semantic {
 	    }
 	    auto llevel = type.to <Type> ().mutabilityLevel ();
 
+	    auto max_level = type.is <ClassRef> () ? 0 : 1;
 	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
-	    if (llevel > 0) {
+	    if (llevel > max_level) {
 		auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
 						     gen.to <Value> ().getType ().to <Type> ().getTypeName ());
 
@@ -3889,7 +3924,7 @@ namespace semantic {
 		}
 		
 		Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-					   llevel, 0
+					   llevel, max_level
 		);
 	    }
 	}

@@ -10,14 +10,16 @@ namespace semantic {
 	    _value (Generator::empty ())
 	{}
 
-	Affect::Affect (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value) :
+	Affect::Affect (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value, bool isConstruction) :
 	    Value (loc, type),
 	    _who (who),
-	    _value (value)
+	    _value (value),
+	    _isConstruction (isConstruction)
+	    
 	{}	
 	
-	Generator Affect::init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value) {
-	    return Generator {new Affect (loc, type, who, value)};
+	Generator Affect::init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value, bool isConstruction) {
+	    return Generator {new Affect (loc, type, who, value, isConstruction)};
 	}
     
 	Generator Affect::clone () const {
@@ -43,7 +45,11 @@ namespace semantic {
 	}
 
 	const Generator & Affect::getValue () const {
-	    return this-> _value;
+	    return this-> _value;	    
+	}
+
+	bool Affect::isConstruction () const {
+	    return this-> _isConstruction;
 	}
 
 	std::string Affect::prettyString () const {

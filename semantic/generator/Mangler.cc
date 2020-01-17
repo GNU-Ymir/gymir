@@ -15,6 +15,7 @@ namespace semantic {
 	std::string Mangler::YMIR_VAR = "V";
 	std::string Mangler::YMIR_CST = "CST";
 	std::string Mangler::YMIR_VTABLE = "VT";
+	std::string Mangler::YMIR_TYPEINFO = "TI";
 	
 	Mangler::Mangler () {}
 
@@ -291,6 +292,11 @@ namespace semantic {
 	    return buf.str ();
 	}
 
+	std::string Mangler::mangleTypeInfo (const ClassRef & ref) const {
+	    auto buf = mangleClassRef (ref);
+	    return Mangler::YMIR_PREFIX + buf + Mangler::YMIR_TYPEINFO;
+	}
+	
 	std::string Mangler::mangleVtable (const ClassRef & ref) const {
 	    auto buf = mangleClassRef (ref);
 	    return Mangler::YMIR_PREFIX + buf + Mangler::YMIR_VTABLE;

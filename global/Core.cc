@@ -15,5 +15,6 @@ namespace global {
 			    RUN_MAIN_DEBUG = "_yrt_run_main_debug", // (int, char**)
 			    SET_JMP        = "setjmp",
 			    THROW          = "_yrt_exc_throw", // (char *file, char *function, unsigned line, TypeInfo* info, void* data)
+			    TYPE_INFO_EQUAL = "equals",
     );
 }

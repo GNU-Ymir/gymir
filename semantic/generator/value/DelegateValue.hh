@@ -12,6 +12,8 @@ namespace semantic {
 	 */
 	class DelegateValue : public Value {	    
 	private :
+
+	    Generator _closureType;
 	    
 	    Generator _closure;
 	    
@@ -23,11 +25,11 @@ namespace semantic {
 
 	    DelegateValue ();
 
-	    DelegateValue (const lexing::Word & loc, const Generator & type, const Generator & closure, const Generator & ptr);	    	    
+	    DelegateValue (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr);	    	    
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & closure, const Generator & ptr);	    	    
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr);	    	    
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -53,6 +55,11 @@ namespace semantic {
 	     * \return the closure of the delegate
 	     */
 	    const Generator & getClosure () const;
+
+	    /**
+	     * \return the type of the closure (to cast the closure)
+	     */
+	    const Generator & getClosureType () const;
 	    
 	    std::string prettyString () const override;
 	    

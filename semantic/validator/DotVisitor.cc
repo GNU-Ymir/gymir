@@ -196,20 +196,13 @@ namespace semantic {
 	    
 	    // Field
 	    while (!cl.isEmpty ()) {
+		Generator type (Generator::empty ());
 		if (i == 0 && prv) {
-		    auto type = cl.to <generator::Class> ().getFieldType (name);
-		    if (!type.isEmpty ())
-			return StructAccess::init (expression.getLocation (),
-						   type,
-						   left, name);
+		    type = cl.to <generator::Class> ().getFieldType (name);		
 		} else if (prv) {
-		    auto type = cl.to <generator::Class> ().getFieldTypeProtected (name);
-		    if (!type.isEmpty ())
-			return StructAccess::init (expression.getLocation (),
-						   type,
-						   left, name);
-		    else {
-			auto type = cl.to <generator::Class> ().getFieldType (name);
+		    type = cl.to <generator::Class> ().getFieldTypeProtected (name);
+		    if (type.isEmpty ()) {
+			type = cl.to <generator::Class> ().getFieldType (name);		    
 			if (!type.isEmpty ()) {
 			    errors.push_back (
 				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), type.getLocation (), name)
@@ -218,12 +211,8 @@ namespace semantic {
 			}
 		    }
 		} else {
-		    auto type = cl.to <generator::Class> ().getFieldTypePublic (name);
-		    if (!type.isEmpty ())
-			return StructAccess::init (expression.getLocation (),
-						   type,
-						   left, name);
-		    else {
+		    type = cl.to <generator::Class> ().getFieldTypePublic (name);
+		    if (type.isEmpty ()) {
 			auto type = cl.to <generator::Class> ().getFieldType (name);
 			if (!type.isEmpty ()) {
 			    errors.push_back (
@@ -233,6 +222,22 @@ namespace semantic {
 			}			
 		    }
 		}
+
+		if (!type.isEmpty ()) {
+		    if (
+			left.to <Value> ().isLvalue () &&
+			left.to <Value> ().getType ().to <Type> ().isMutable () &&
+			type.to <Type> ().isMutable ()
+		    )
+			type.to <Type> ().isMutable (true);
+		    else
+			type.to<Type> ().isMutable (false);
+		    
+		    return StructAccess::init (expression.getLocation (),
+					       type,
+					       left, name);
+		}
+		
 		auto ancestor = cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAncestor ();
 		if (!ancestor.isEmpty ())
 		    cl = this-> _context.validateType (ancestor).to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
@@ -254,7 +259,9 @@ namespace semantic {
 		    
 			auto delType = Delegate::init (vtable [i].getLocation (), vtable [i]);
 			syms.push_back (
-			    DelegateValue::init ({expression.getLocation (), name}, delType, left,
+			    DelegateValue::init ({expression.getLocation (), name}, delType,
+						 vtable [i].to <MethodProto> ().getClassType (),
+						 left,
 						 VtableAccess::init (expression.getLocation (),
 								     FuncPtr::init (expression.getLocation (),
 										    vtable [i].to <FrameProto> ().getReturnType (),

@@ -29,6 +29,11 @@ namespace semantic {
 	 * set at validation time, to prevent multiple time validation of the same symbol
 	 */
 	generator::Generator _gen;
+
+	/**
+	 * Set at validation time, it is the typeinfo of the class
+	 */
+	generator::Generator _typeInfo;
 	
     private :
 
@@ -79,6 +84,18 @@ namespace semantic {
 	 * \brief set the generator (structure prototype)
 	 */
 	void setGenerator (const generator::Generator & gen);
+	
+	/**
+	 * \brief This information is set at validation time
+	 * \return the typeinfo 
+	 */
+	const generator::Generator & getTypeInfo () const;
+
+	/**
+	 * \brief This information is set at validation time
+	 * \brief set the typeinfo 
+	 */
+	void setTypeInfo (const generator::Generator & gen);
 
 	/**
 	 * \brief Add a field in the class declaration

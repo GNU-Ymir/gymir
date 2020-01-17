@@ -114,7 +114,7 @@ namespace semantic {
 
 	void Type::setInners (const std::vector <Generator> & inner) {
 	    if (this-> _isComplex) {
-		this-> _inners = inner ;
+		this-> _inners = inner;
 	    } else
 		Ymir::Error::halt ("%(r) - Getting inner data of a simple type !", "Critical");
 	}

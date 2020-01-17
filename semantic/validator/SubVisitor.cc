@@ -54,14 +54,15 @@ namespace semantic {
 		else of (ModuleAccess, acc, gen = validateModuleAccess (expression, acc))
 		else of (generator::Enum, en, gen = validateEnum (expression, en))	     
 		else of (generator::Struct, str ATTRIBUTE_UNUSED, gen = validateStruct(expression, left))
-		    else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
-		    else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
+		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
+		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));
 	    }
 	    
 	    if (left.is<Value> () && gen.isEmpty ()) {
 		match (left.to <Value> ().getType ()) {
 		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left));
+		    of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
 		}
 	    }
 	    
@@ -519,6 +520,30 @@ namespace semantic {
 
 	    return Generator::empty ();
 	}
+
+	Generator SubVisitor::validateClassValue (const syntax::Binary & expression, const generator::Generator & value) {
+	    auto & cl = value.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ();
+	    if (expression.getRight ().is <syntax::Var> ()) {
+		auto opName = expression.getRight ().to <syntax::Var> ().getName ().str;
+		if (opName == SubVisitor::__TYPEINFO__) {		    
+		    auto loc = expression.getLocation ();
+		    auto typeInfoValue = this-> _context.validateTypeInfo (expression.getLocation (), value.to <Value> ().getType ());
+		    auto nbVtable = cl.getGenerator ().to <generator::Class> ().getVtable ().size ();
+		    auto typeInfo = typeInfoValue.to<Value> ().getType ();
+		    typeInfo.to <Type> ().isRef (true); // It is a pointer in the vtable, we need to unref it
+		    typeInfo.to <Type> ().isMutable (false);
+		    
+		    return VtableAccess::init (loc,
+					       typeInfo,
+					       value,
+					       nbVtable
+		    );
+		}
+	    }
+	    
+	    return Generator::empty ();
+	}
+
 	
 	Generator SubVisitor::validateStructValue (const syntax::Binary & expression, const generator::Generator & value) {
 	    auto & t = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();

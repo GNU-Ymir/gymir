@@ -6,18 +6,20 @@ namespace semantic {
 
 	DelegateValue::DelegateValue () :
 	    Value (),
+	    _closureType (Generator::empty ()),
 	    _closure (Generator::empty ()),
 	    _funcptr (Generator::empty ())
 	{}
 
-	DelegateValue::DelegateValue (const lexing::Word & loc, const Generator & type, const Generator & closure, const Generator & ptr) : 
+	DelegateValue::DelegateValue (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr) : 
 	    Value (loc, type),
-	    _closure (closure),
+	    _closureType (closureType),
+	    _closure (closure),	    
 	    _funcptr (ptr)
 	{}
        
-	Generator DelegateValue::init (const lexing::Word & loc, const Generator & type, const Generator & closure, const Generator & ptr) {
-	    return Generator {new (Z0) DelegateValue (loc, type, closure, ptr)};
+	Generator DelegateValue::init (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr) {
+	    return Generator {new (Z0) DelegateValue (loc, type, closureType, closure, ptr)};
 	}
 
 	Generator DelegateValue::clone () const {
@@ -44,6 +46,10 @@ namespace semantic {
 
 	const Generator & DelegateValue::getFuncPtr () const {
 	    return this-> _funcptr;
+	}
+
+	const Generator & DelegateValue::getClosureType () const {
+	    return this-> _closureType;
 	}
 	
 	std::string DelegateValue::prettyString () const {

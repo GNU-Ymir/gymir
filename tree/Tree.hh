@@ -295,7 +295,7 @@ namespace generic {
 	/**
 	 * \brief Create a ptr cst
 	 */
-	static Tree buildPtrCst (const lexing::Word & loc, ulong value);
+	static Tree buildPtrCst (const lexing::Word & loc, ulong value);	
 	
 	/**
 	 * \brief Create a uint cst

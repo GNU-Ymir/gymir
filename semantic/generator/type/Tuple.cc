@@ -18,7 +18,10 @@ namespace semantic {
 	    Type (loc, loc.str)
 	{
 	    this-> isComplex (true);
-	    this-> setInners (inner);
+	    auto aux = inner;
+	    for (auto & it : aux)
+		it.to <Type> ().isRef (false);
+	    this-> setInners (aux);
 	}
 
 	Generator Tuple::init (const lexing::Word & loc, const std::vector<Generator> & inner) {

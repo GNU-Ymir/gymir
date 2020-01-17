@@ -19,7 +19,7 @@ namespace semantic {
 	    /**
 	     * The parent of the class, it can be empty
 	     */
-	    Generator _parent; 
+	    Generator _parent;
 
 	private :
 
@@ -54,6 +54,8 @@ namespace semantic {
 	    bool needExplicitAlias () const override;
 
 	    const Symbol & getRef () const;
+	    
+	    const Generator & getAncestor () const;
 	    
 	    std::string typeName () const override;
 

@@ -23,6 +23,8 @@ namespace semantic {
 	    static std::string YMIR_CST;
 
 	    static std::string YMIR_VTABLE;
+
+	    static std::string YMIR_TYPEINFO;
 	    
 	private :
 
@@ -159,6 +161,11 @@ namespace semantic {
 	     */
 	    std::string mangleClassRef (const ClassRef & r) const;
 
+	    /**
+	     * \brief Mangle a class typeinfo name
+	     */
+	    std::string mangleTypeInfo (const ClassRef & r) const;
+	    
 	    /**
 	     * \brief Mangle a class vtable name
 	     */

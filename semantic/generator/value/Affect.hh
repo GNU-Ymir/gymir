@@ -14,7 +14,9 @@ namespace semantic {
 
 	    Generator _who;
 
-	    Generator _value;	    
+	    Generator _value;
+
+	    bool _isConstruction;
 
 	private :
 
@@ -22,14 +24,14 @@ namespace semantic {
 	    
 	    Affect ();
 
-	    Affect (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    Affect (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value, bool isConstruction);
 
 	public :
 
 	    /**
 	     * \brief Generate a new affectation
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value, bool isConstruction = false);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -56,6 +58,8 @@ namespace semantic {
 	     */
 	    const Generator & getValue () const;
 
+	    bool isConstruction () const;
+	    
 	    std::string prettyString () const override;
 	    
 	};

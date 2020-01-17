@@ -23,7 +23,10 @@ namespace semantic {
 	    Type (loc, loc.str)
 	{
 	    this-> isComplex (true);
-	    this-> setInners ({inner});
+	    auto aux = inner;
+	    aux.to <Type> ().isRef (false);
+	    
+	    this-> setInners ({aux});
 	}
 
 	Generator Range::init (const lexing::Word & loc, const Generator & inner) {

@@ -625,7 +625,7 @@ namespace semantic {
 	     * \brief This function verify that the mutability of gen is preserved
 	     * \brief And that no implicit operation are performed
 	     */
-	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct);
+	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct, bool checkTypes = true);
 
 
 	    /**

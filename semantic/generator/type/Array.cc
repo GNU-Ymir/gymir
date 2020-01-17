@@ -20,7 +20,10 @@ namespace semantic {
 	    _size (size)
 	{
 	    this-> isComplex (true);
-	    this-> setInners ({inner});
+	    auto aux = inner;
+	    aux.to <Type> ().isRef (false);
+	    
+	    this-> setInners ({aux});
 	}
 
 	Generator Array::init (const lexing::Word & loc, const Generator & inner, uint size) {

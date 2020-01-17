@@ -111,7 +111,7 @@ namespace semantic {
 		)
 			 
 		else of (ClassRef, cl, {
-			return generateClassType (cl);
+			type = generateClassType (cl);
 		    }
 		)
 			 
@@ -122,7 +122,7 @@ namespace semantic {
 
 		    else of (Pointer, pt, {
 			    auto inner = generateType (pt.getInners ()[0]);
-			    return Tree::pointerType (inner);			    
+			    type = Tree::pointerType (inner);			    
 			}
 	       ) else of (Range, rg, {
 		       std::vector <Tree> inner;
@@ -175,7 +175,7 @@ namespace semantic {
 		   }
 	       );
 	    }
-	    
+
 	    if (type.isEmpty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 
@@ -301,6 +301,78 @@ namespace semantic {
 	    return decl;
 	}
 
+	Tree Visitor::generateTypeInfoClass (const Generator & classType) {
+	    static std::map <std::string, generic::Tree> __globalConstant__;
+	    auto name = Mangler::init ().mangleTypeInfo (classType.to <ClassRef> ());
+	    auto res = __globalConstant__.find (name);
+	    if (res != __globalConstant__.end ()) return res-> second;
+
+	    auto typeInfo = classType.to<ClassRef> ().getRef ().to<semantic::Class> ().getTypeInfo ();
+	    // auto gen = classType.to<ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    Tree ancestorSlice (Tree::empty ());
+	    	    
+	    if (!classType.to <ClassRef> ().getAncestor ().isEmpty ()) {
+		auto ancestor = generateTypeInfoClass (classType.to<ClassRef> ().getAncestor ());
+		ancestorSlice = Tree::constructField (
+		    classType.getLocation (),
+		    generateType (typeInfo.to <StructCst> ().getTypes ()[2]),
+		    {Slice::LEN_NAME, Slice::PTR_NAME},
+		    {
+			Tree::buildSizeCst (1),
+			    Tree::buildAddress (classType.getLocation (), ancestor, Tree::pointerType (Tree::voidType ()))
+			    }
+		);		    
+	    } else {
+		ancestorSlice = Tree::constructField (
+		    classType.getLocation (),
+		    generateType (typeInfo.to <StructCst> ().getTypes ()[2]),
+		    {Slice::LEN_NAME, Slice::PTR_NAME},
+		    {
+			Tree::buildSizeCst (Integer::INIT),
+			    Tree::buildIntCst (classType.getLocation (), Integer::INIT, Tree::pointerType (Tree::voidType ()))
+			    }
+		);
+	    }
+	    
+	    auto slcName = castTo (typeInfo.to <StructCst> ().getTypes () [3], typeInfo.to <StructCst> ().getParameters() [3].to <GlobalConstant> ().getValue ());
+	    
+	    std::vector <Tree> params = {
+	    	castTo (typeInfo.to <StructCst> ().getTypes () [0], typeInfo.to <StructCst> ().getParameters() [0]),
+		castTo (typeInfo.to <StructCst> ().getTypes () [1], typeInfo.to <StructCst> ().getParameters() [1]),
+	    	ancestorSlice,
+		slcName
+	    };
+
+	    std::vector <Tree> types = {
+		params [0].getType (),
+		params [1].getType (),
+		params [2].getType (),
+		params [3].getType ()
+	    };
+	    
+	    auto typeValue = Tree::constructField (
+	    	classType.getLocation (),
+		Tree::tupleType ({}, types),
+	    	{},
+	    	params
+	    );
+	    
+	    Tree decl = Tree::varDecl (classType.getLocation (), name, typeValue.getType ());
+	    decl.setDeclInitial (typeValue);
+	    decl.isStatic (true);
+	    decl.isUsed (true);
+	    decl.isExternal (false);
+	    decl.isPreserved (true);
+	    decl.isPublic (true);
+	    decl.isWeak (true);
+	    decl.setDeclContext (getGlobalContext ());	 
+
+	    vec_safe_push (globalDeclarations, decl.getTree ());
+	    __globalConstant__.emplace (name, decl);
+	    
+	    return decl;	    
+	}
+
 	Tree Visitor::generateVtable (const Generator & classType) {
 	    static std::map <std::string, generic::Tree> __globalConstant__;
 	    auto name = Mangler::init ().mangleVtable (classType.to<ClassRef> ());
@@ -312,7 +384,10 @@ namespace semantic {
 	    for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
 		params.push_back (generateValue (it));
 	    }
-		
+
+	    params.push_back (Tree::buildAddress (classType.getLocation (), generateTypeInfoClass (classType), Tree::pointerType (Tree::voidType ())));
+	    
+	    
 	    auto vtableType = Tree::staticArray (Tree::pointerType (Tree::voidType ()), params.size ());
 	    auto vtableValue = Tree::constructIndexed (classType.getLocation (), vtableType, params);
 		
@@ -815,11 +890,12 @@ namespace semantic {
 	}
 	
 	Tree Visitor::generateAffect (const Affect & aff) {
-	    auto left = generateValue (aff.getWho ());
-	    // An affectation cannot generate ref copy
 	    auto leftType = aff.getWho ().to <Value> ().getType ();
-	    leftType.to<Type> ().isRef (false);
+	    // An affectation cannot generate ref copy, (or it is a construction)
+	    if (!aff.isConstruction ())
+		leftType.to<Type> ().isRef (false);
 	    
+	    auto left = castTo (leftType, aff.getWho ());	    
 	    auto right = castTo (leftType, aff.getValue ()); 
 	    
 	    TreeStmtList list = TreeStmtList::init ();
@@ -827,7 +903,7 @@ namespace semantic {
 	    list.append (right.getList ());
 	    auto lvalue =  left.getValue ();
 	    auto rvalue =  right.getValue ();
-	   	    
+	    
 	    auto value = Tree::affect (aff.getLocation (), lvalue, rvalue);
 	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
 	    return ret;
@@ -1288,16 +1364,16 @@ namespace semantic {
 	generic::Tree Visitor::generateDelegateValue (const DelegateValue & dlg) {
 	    auto type = generateType (dlg.getType ());
 	    std::vector <Tree> params = {
-		generateValue (dlg.getClosure ()),
+		castTo (dlg.getClosureType (), dlg.getClosure ()),
 		generateValue (dlg.getFuncPtr ())
 	    };
-
+	    
 	    return Tree::constructField (dlg.getLocation (), type, {}, params);
 	}
 	
 	generic::Tree Visitor::generateCast (const Cast & cast) {
 	    auto type = generateType (cast.getType ());
-	    auto who = generateValue (cast.getWho ());
+	    auto who = generateValue (cast.getWho ());	    
 	    return Tree::castTo (cast.getLocation (), type, who);
 	}
 
@@ -1365,7 +1441,7 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::generateThrow (const Throw & thr) {
-	    auto value = castTo (thr.getValue ().to <Value> ().getType (), thr.getValue ());	    
+	    auto value = castTo (thr.getValue ().to <Value> ().getType (), thr.getValue ());
 	    auto info = generateValue (thr.getTypeInfo ());
 	    auto file = thr.getLocation ().getFile ();
 	    auto lit = Tree::buildStringLiteral (thr.getLocation (), file.c_str (), file.length () + 1, 8);
@@ -1567,10 +1643,11 @@ namespace semantic {
 
 	generic::Tree Visitor::generateStructAccess (const StructAccess & acc) {
 	    auto elem = generateValue (acc.getStruct ());
-	    if (acc.getStruct ().to <Value> ().getType ().is <ClassRef> ()) {
-		// If the type is a class, we need to unref it to access its inner fields
-		elem = elem.buildPointerUnref (0);
-	    }
+	    
+	    // If the type is a class, we need to unref it to access its inner fields
+	    // Same if it is a ref to a struct, or a ref to class
+	    while (elem.getType ().isPointerType ())
+		elem = elem.toDirect ();
 	    
 	    return Tree::compound (
 		acc.getLocation (),
@@ -1582,7 +1659,10 @@ namespace semantic {
 	generic::Tree Visitor::generateVtableAccess (const VtableAccess & acc) {
 	    auto elem = generateValue (acc.getClass ());
 	    // If the type is a class, we need to unref it to access its inner fields
-	    elem = elem.buildPointerUnref (0);	    
+	    // Same if it is a ref to a struct, or a ref to class
+	    
+	    while (elem.getType ().isPointerType ())
+		elem = elem.toDirect ();
 	    
 	    auto vtable = elem.getValue ().getField ("#_vtable");
 	    auto type = generateType (acc.getType ());
@@ -1617,7 +1697,7 @@ namespace semantic {
 		stackVarDeclChain.back ().append (var);
 		pre.append (Tree::affect (cl.getLocation (), var, fn));
 		
-		results.insert (results.begin (), var.getField (Ymir::format ("_%", 0)));
+		results.insert (results.begin (), var.getField (Ymir::format ("_%", 0)));		
 		auto type = generateType (cl.getType ());
 		return Tree::compound (
 		    cl.getLocation (),
