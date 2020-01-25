@@ -957,12 +957,23 @@ namespace syntax {
 	auto location = this-> _lex.next ({Keys::IF});
 	auto test = visitExpression ();
 	auto content = visitExpression ();
+	auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	if (tok == Token::SEMI_COLON)
+	    content = Block::init (content.getLocation (), tok, Declaration::empty (), {content, Unit::init (tok)});
+	
 	auto next = this-> _lex.consumeIf ({Keys::ELSE});
 	if (next == Keys::ELSE) {
 	    next = this-> _lex.next ();
 	    this-> _lex.rewind ();
 	    if (next == Keys::IF) return If::init (location, test, content, visitIf ());
-	    else return If::init (location, test, content, visitExpression ());
+	    else {
+		auto el_exp = visitExpression ();
+		auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
+		if (tok == Token::SEMI_COLON)
+		    el_exp = Block::init (content.getLocation (), tok, Declaration::empty (), {content, Unit::init (tok)});
+		
+		return If::init (location, test, content, el_exp);
+	    }
 	}
 	
 	return If::init (location, test, content, Expression::empty ());
