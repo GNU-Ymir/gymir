@@ -12,11 +12,12 @@ namespace syntax {
 	_element (Expression::empty ())
     {}
 
-    Expression MultOperator::init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params) {
+    Expression MultOperator::init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall) {
 	auto ret = new (Z0) MultOperator (location);
 	ret-> _end = end;
 	ret-> _element = element;
 	ret-> _params = params;
+	ret-> _canbedotCall = canbedotcall;
 	return Expression {ret};
     }
 
@@ -50,6 +51,10 @@ namespace syntax {
 
     const std::vector <Expression> & MultOperator::getRights () const {
 	return this-> _params;
+    }
+
+    bool MultOperator::canBeDotCall () const {
+	return this-> _canbedotCall;
     }
     
 }

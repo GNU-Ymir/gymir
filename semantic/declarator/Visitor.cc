@@ -304,6 +304,13 @@ namespace semantic {
 		Ymir::Error::occurAndNote (stcls.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stcls.getName ().str);		
 	    }
 
+	    for (auto & ca : stcls.getAttributes ()) {
+		if (ca == Keys::ABSTRACT) cls.to <Class> ().isAbs (true);
+		else {
+		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
+		}
+	    }
+	    
 	    pushReferent (cls);
 	    for (auto & it : stcls.getDeclarations ()) {
 		match (it) {

@@ -28,7 +28,8 @@ namespace semantic {
 	_ancestor (other._ancestor),
 	_fields ({}),
 	_gen (generator::Generator::empty ()),
-	_typeInfo (generator::Generator::empty ())
+	_typeInfo (generator::Generator::empty ()),
+	_isAbstract (other._isAbstract)
     {}
     
     Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor) {
@@ -137,7 +138,7 @@ namespace semantic {
 	}
 	return false;
     }
-
+    
     bool Class::isMarkedProtected (const std::string & name) const {
 	for (auto & it : this-> _protected) {
 	    if (it == name) return true;
@@ -145,5 +146,13 @@ namespace semantic {
 	return false;
     }
 
+
+    void Class::isAbs (bool is) {
+	this-> _isAbstract = is;
+    }
+
+    bool Class::isAbs () const {
+	return this-> _isAbstract;
+    }
     
 }

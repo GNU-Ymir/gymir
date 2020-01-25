@@ -7,6 +7,7 @@
  * The list of keyword, and miscellaneous word used in syntax
  */
 struct Keys {
+    static std::string  ABSTRACT;
     static std::string  ALIAS;
     static std::string  ANTI; 
     static std::string  AS;

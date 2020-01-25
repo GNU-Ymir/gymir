@@ -36,10 +36,6 @@ namespace semantic {
 		REF = 1,
 		MOVE = 2
 	    };
-
-	    static std::string TYPE_INFO;
-	    static std::string TYPE_IDS;
-	    static std::string DCOPY_OP_OVERRIDE;
 	    
 	    /** List of referent for symbol access and insertion */
 	    std::list <Symbol> _referent;	
@@ -113,6 +109,11 @@ namespace semantic {
 	     * \brief Validate a module
 	     */
 	    void validateTemplateSolution (const semantic::TemplateSolution & sol);
+
+	    /**
+	     * \brief Validate a template solution for a method frame
+	     */
+	    generator::Generator validateTemplateSolutionMethod (const semantic::Symbol & sol, const generator::Generator & self);
 	    
 	    /**
 	     * \brief Validate a function
@@ -336,8 +337,9 @@ namespace semantic {
 
 	    /**
 	     * \brief Validate a symbol created by templateSpecialization
+	     * \param ref is the reference of the template (sometimes it is a MethodTemplateRef and need to be treated like that)
 	     */
-	    void validateTemplateSymbol (const semantic::Symbol & sym);
+	    void validateTemplateSymbol (const semantic::Symbol & sym, const generator::Generator & ref);
 	    
 	    /**
 	     * \brief Validate a set of expression
@@ -437,6 +439,8 @@ namespace semantic {
 	     * \return param params (returned by ref), the validated parameter of the function
 	     * \return param retType (returned by ref), the validated type of the prototype (if any)
 	     * \param no_value if it is true, the var_decl of the params cannot have values (they won't be validated)
+	     * \warning we assume we enter a block, that will contains only the params
+	     * \warning it is not entered inside this function, because for the case of a methodproto, we want to add the self var before hand
 	     */
 	    void validatePrototypeForProto (const lexing::Word & loc, const syntax::Function::Prototype & proto, bool no_value, std::vector <generator::Generator> & params, generator::Generator & retType);
 
@@ -662,6 +666,11 @@ namespace semantic {
 	     * \brief Verify that the class cl implement the trait tr
 	     */
 	    void verifyClassImpl (const generator::Generator & cl, const generator::Generator & tr);
+
+	    /**
+	     * \return the list of all implemented traits in the class cl
+	     */
+	    std::vector <generator::Generator> getAllImplClass (const generator::Generator & cl);
 	    
 	    /**
 	     * \brief Throw an exception if left.isCompatible (right) is false
@@ -758,6 +767,12 @@ namespace semantic {
 	     */
 	    void getClassContext (const semantic::Symbol & cl, bool & isPrivate, bool & isProtected);
 
+	    /**
+	     * \return the list of (in a multsym) of the constructor of the class cl
+	     * \warning cl is assumed to be a generator::Class
+	     */
+	    generator::Generator getClassConstructors (const lexing::Word & loc, const generator::Generator & cl);
+	    
 	    /**
 	     * \brief Get the current context of the current state
 	     * \brief If mod is an ancestor of the current ref, return will be true
@@ -895,6 +910,8 @@ namespace semantic {
 	    
 	private :
 
+	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
+	    
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
 
 	    void printLocal () const;

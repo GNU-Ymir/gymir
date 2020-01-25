@@ -56,11 +56,11 @@ namespace semantic {
 	}
 	
 	std::string TraitRef::typeName () const {
-	    return Ymir::format ("%", this-> _ref.getRealName ());
+	    return Ymir::format ("%::%", this-> _ref.getRealName (), this-> getLocation ().str);
 	}
 
 	std::string TraitRef::getMangledName () const {
-	    return Ymir::format ("%", this-> _ref.getMangledName ());
+	    return Ymir::format ("%::%", this-> _ref.getMangledName (), this-> getLocation ().str);
 	}
 	
     }

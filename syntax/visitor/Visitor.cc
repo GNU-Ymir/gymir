@@ -277,6 +277,8 @@ namespace syntax {
     
     Declaration Visitor::visitClass () {
 	auto location = this-> _lex.rewind ().next ();
+	auto attribs = visitAttributes ();
+	
 	auto name = this-> _lex.next ();	
 	auto templates = visitTemplateParameters ();
 	Expression ancestor (Expression::empty ());
@@ -288,9 +290,9 @@ namespace syntax {
 	auto decls = visitClassBlock ();
 
 	if (!templates.empty ()) {
-	    return Template::init (name, templates, Class::init (name, ancestor, decls));
+	    return Template::init (name, templates, Class::init (name, ancestor, decls, attribs));
 	} else
-	    return Class::init (name, ancestor, decls);
+	    return Class::init (name, ancestor, decls, attribs);
     }
 
     std::vector <Declaration> Visitor::visitClassBlock (bool fromTrait) {
@@ -827,7 +829,7 @@ namespace syntax {
 	    return visitOperand1 (MultOperator::init (location, end, value, params));
 	} else if (location == Token::DOT) {
 	    auto right = visitOperand3 (false);
-	    return visitOperand1 (Binary::init (location, value, visitTemplateCall (right), Expression::empty ()));
+	    return visitOperand1 (visitTemplateCall (Binary::init (location, value, right, Expression::empty ())));
 	} this-> _lex.rewind ();
 	return value;	
     }

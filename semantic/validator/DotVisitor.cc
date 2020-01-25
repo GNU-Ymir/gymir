@@ -278,7 +278,27 @@ namespace semantic {
 		    }
 		}
 	    }
-					    
+
+	    // Template methods
+	    for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
+		match (it) {
+		    of (Template, tl, {
+			    if (tl.getName () == name) {
+				if (prv || (prot && it.isProtected ()) || it.isPublic ()) {
+				    syms.push_back (
+					MethodTemplateRef::init ({expression.getLocation (), tl.getName ().str}, it, left)
+				    );
+				} else {
+				    errors.push_back (
+					Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), tl.prettyString ())
+				    );			    
+				}
+			    }
+
+			});			
+		}
+	    }
+	    
 	    if (syms.size () != 0) 
 		return MultSym::init ({expression.getLocation (), name}, syms);
 	    

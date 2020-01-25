@@ -24,7 +24,7 @@ namespace semantic {
 		);
 		
 	    	this-> isReturner (
-		    this-> _content.to <Value> ().isBreaker () &&
+		    this-> _content.to <Value> ().isReturner () &&
 		    this-> _else.to <Value> ().isReturner ()
 		);
 	    }

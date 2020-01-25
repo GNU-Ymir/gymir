@@ -16,5 +16,13 @@ namespace global {
 			    SET_JMP        = "setjmp",
 			    THROW          = "_yrt_exc_throw", // (char *file, char *function, unsigned line, TypeInfo* info, void* data)
 			    TYPE_INFO_EQUAL = "equals",
+			    TYPE_INFO = "TypeInfo",
+			    TYPE_IDS = "TypeIDs",
+			    DCOPY_OP_OVERRIDE = "deepCopy",
+			    DCOPY_TRAITS = "Copiable",
+			    BINARY_OP_OVERRIDE = "binop",
+			    CORE_MODULE = "core",
+			    DUPLICATION_MODULE = "duplication",
+			    TYPE_INFO_MODULE = "typeinfo"
     );
 }

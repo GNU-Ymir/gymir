@@ -1,6 +1,7 @@
 #include <ymir/syntax/visitor/Keys.hh>
 
 
+std::string     Keys::ABSTRACT     = "abstract";
 std::string	Keys::IMPORT	   = "import";
 std::string	Keys::STRUCT	   = "struct";
 std::string     Keys::ALIAS	   = "alias";

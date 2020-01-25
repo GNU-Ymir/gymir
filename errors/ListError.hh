@@ -20,8 +20,9 @@ namespace Ymir {
        This enumaration lists all the error types 
        We cannot use C++ enum, as it does not allows to have string values
     */
-    DECLARE_ENUM_HEADER (ExternalError, std::string,			         
+    DECLARE_ENUM_HEADER (ExternalError, std::string,			 
 			 AFFECT_COMPILE_TIME,
+			 ALLOC_ABSTRACT_CLASS,
 			 BORROWED_HERE,
 			 BREAK_INSIDE_EXPR,
 			 BREAK_NO_LOOP,
@@ -77,6 +78,7 @@ namespace Ymir {
 			 NOT_A_CLASS,
 			 NOT_A_LVALUE,
 			 NOT_A_STRUCT,
+			 NOT_ABSTRACT_NO_OVER,
 			 NOT_IMPL_TRAIT,
 			 NOT_ITERABLE,
 			 NOT_ITERABLE_WITH,
@@ -115,7 +117,8 @@ namespace Ymir {
 			 SYNTAX_ERROR_IF_ON_NON_TEMPLATE,
 			 SYNTAX_ERROR_MISSING_TEMPL_PAR,
 			 TEMPLATE_RECURSION,
-			 TEMPLATE_TEST_FAILED, 
+			 TEMPLATE_TEST_FAILED,
+			 TRAIT_NO_METHOD,
 			 UNDEFINED_BIN_OP,
 			 UNDEFINED_BRACKETS_OP,
 			 UNDEFINED_CA,

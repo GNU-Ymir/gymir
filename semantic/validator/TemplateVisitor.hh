@@ -88,7 +88,7 @@ namespace semantic {
 	     * \param types the types of the parameters of the implicit call
 	     * \param finalParams by return reference, the parameters to pass at the template symbol for final validation after template specialization
 	     */
-	    generator::Generator validateFromImplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & valueParams, const std::vector <generator::Generator> & types, int & score, Symbol & sym, std::vector <generator::Generator> & finalParams) const;
+	    generator::Generator validateFromImplicit (const generator::Generator & ref, const std::vector <generator::Generator> & valueParams, const std::vector <generator::Generator> & types, int & score, Symbol & sym, std::vector <generator::Generator> & finalParams) const;
 
 
 	    /**

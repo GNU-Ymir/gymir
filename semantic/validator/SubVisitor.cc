@@ -48,9 +48,10 @@ namespace semantic {
 		else errors = {};
 	    }
 
+	    
 	    Generator gen (Generator::empty ());
 	    match (left) {
-		of (MultSym, mult, gen = validateMultSym (expression, mult))
+		of (MultSym, mult, gen = validateMultSym (expression, mult))		    
 		else of (ModuleAccess, acc, gen = validateModuleAccess (expression, acc))
 		else of (generator::Enum, en, gen = validateEnum (expression, en))	     
 		else of (generator::Struct, str ATTRIBUTE_UNUSED, gen = validateStruct(expression, left))
@@ -75,6 +76,7 @@ namespace semantic {
 	Generator SubVisitor::validateMultSym (const syntax::Binary &expression, const MultSym & mult) {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    std::vector <Symbol> syms;
+	    std::vector <std::string> errors;
 	    for (auto & gen : mult.getGenerators ()) {
 		if (gen.is<ModuleAccess> ()) {
 		    if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
@@ -82,13 +84,18 @@ namespace semantic {
 			syms.insert (syms.end (), elems.begin (), elems.end ());
 		    } else {
 			auto elems = gen.to <ModuleAccess> ().getLocalPublic (right);		    
+			if (elems.size () == 0) {
+			    elems = gen.to <ModuleAccess> ().getLocal (right);
+			    for (auto & it : elems)
+				errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+			}
 			syms.insert (syms.end (), elems.begin (), elems.end ());
 		    }
 		} 
 	    }
 
 	    if (syms.size () == 0) {
-		this-> error (expression, mult.clone (), expression.getRight ());
+		this-> error (expression, mult.clone (), expression.getRight (), errors);
 	    }
 
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
@@ -97,12 +104,20 @@ namespace semantic {
 	Generator SubVisitor::validateModuleAccess (const syntax::Binary &expression, const ModuleAccess & acc) {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    std::vector <Symbol> syms;
+	    std::vector <std::string> errors;
 	    if (this-> _context.getModuleContext (acc.getModRef ())) {
 		syms = acc.getLocal (right);
-	    } else syms = acc.getLocalPublic (right);
+	    } else {
+		syms = acc.getLocalPublic (right);
+		if (syms.size () == 0) {
+		    auto elems = acc.getLocal (right);
+		    for (auto & it : elems)
+			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+		}
+	    }
 	    
 	    if (syms.size () == 0) {
-		this-> error (expression, acc.clone (), expression.getRight ());
+		this-> error (expression, acc.clone (), expression.getRight (), errors);
 	    }
 	    
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
@@ -474,30 +489,16 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> & errors) {
-	    bool prot = false, prv = false;
-	    this-> _context.getClassContext (t.to <generator::Class> ().getRef (), prv, prot);
-	    
+	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> &) {	    
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 		if (name == ClassRef::INIT_NAME) {
-		    std::vector <Symbol> syms;
-		    for (auto & gen : t.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
-			match (gen) {
-			    of (semantic::Constructor, cst ATTRIBUTE_UNUSED, {
-				    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) 
-					syms.push_back (gen);
-				    else {
-					errors.push_back (
-					    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), this-> _context.validateConstructorProto (cst).prettyString ())					    
-					);
-				    }
-				});
-			}
+		    if (t.to <generator::Class> ().getRef ().to <semantic::Class> ().isAbs ()) {
+			Ymir::Error::occur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ());
+			
 		    }
-		    if (syms.size () != 0) 
-			return this-> _context.validateMultSym (expression.getLocation (), syms);
-		    else return Generator::empty ();
+		    
+		    return this-> _context.getClassConstructors (expression.getLocation (), t);
 		}
 		
 		if (name == __TYPEID__) {		    
@@ -587,13 +588,14 @@ namespace semantic {
 	    {
 		match (left) {
 		    of (FrameProto, proto, leftName = proto.getName ())
+		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
 		    else of (generator::Struct, str, leftName = str.getName ())
 		    else of  (generator::Enum, en, leftName = en.getName ())
 		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
-		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ())
 		    else of (generator::Class, cl, leftName = cl.getName ())
-		    else of (ClassRef, cl, leftName = cl.getName ());
+		    else of (ClassRef, cl, leftName = cl.getName ())
+		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+		    else of (Type,       type,  leftName = type.getTypeName ());
 		}
 	    }
 	    {		
@@ -625,10 +627,11 @@ namespace semantic {
 		    else of (generator::Struct, str, leftName = str.getName ())
 		    else of  (generator::Enum, en, leftName = en.getName ())
 		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
-		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ())
 		    else of (generator::Class, cl, leftName = cl.getName ())
-		    else of (ClassRef, cl, leftName = cl.getName ());
+		    else of (ClassRef, cl, leftName = cl.getName ())
+		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
+		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+		    else of (Type,       type,  leftName = type.getTypeName ());
 		}
 	    }
 	    {

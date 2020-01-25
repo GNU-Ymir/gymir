@@ -25,6 +25,13 @@ namespace syntax {
 	 */
 	std::vector <Declaration> _innerDeclaration;
 
+	/**
+	 * The attributes of the class
+	 * Must be empty, or only one word named /abs/
+	 */
+	std::vector <lexing::Word> _attributes;
+
+	bool _isAbstract = false;
 	
     private :
 
@@ -51,7 +58,7 @@ namespace syntax {
 	 * \param over the type that this class override (may be empty)
 	 * \param decls the inner declaration
 	 */
-	static Declaration init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls);
+	static Declaration init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
 
 	/**
 	 * Mandatory function for proxy polymoprhism system
@@ -77,7 +84,11 @@ namespace syntax {
 	 * \return all the declaration inside the class 
 	 */
 	const std::vector <Declaration> & getDeclarations () const;
-	
+
+	/**
+	 * \return the list of attributes of the class
+	 */
+	const std::vector<lexing::Word> & getAttributes () const;
     };
     
 

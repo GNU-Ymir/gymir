@@ -272,15 +272,15 @@ namespace semantic {
 	    return mapper;
 	}
 	
-	Generator TemplateVisitor::validateFromImplicit (const TemplateRef & ref, const std::vector <Generator> & valueParams, const std::vector <Generator> & types, int & score, Symbol & symbol, std::vector <Generator> & finalParams) const {
-	    const Symbol & sym = ref.getTemplateRef ();
+	Generator TemplateVisitor::validateFromImplicit (const Generator & ref, const std::vector <Generator> & valueParams, const std::vector <Generator> & types, int & score, Symbol & symbol, std::vector <Generator> & finalParams) const {
+	    const Symbol & sym = ref.to <TemplateRef> ().getTemplateRef ();
 	    // For the moment I assume that only function can be implicitly specialized
 	    if (!sym.to<semantic::Template> ().getDeclaration ().is <syntax::Function> ())
 		return Generator::empty ();
 	    
 	    auto syntaxParams = sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ();
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
-
+	    
 	    /** INFO : Not enough parameters for the function, actually, it
 		is probably not mandatory to check that since this
 		function is called by CallVisitor, but I don't know
@@ -298,7 +298,7 @@ namespace semantic {
 		int current_consumed = 0;
 		Mapper mapper (false, 0);
 		bool succeed = true;
-		TRY (
+		TRY (		    
 		    mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
@@ -312,7 +312,7 @@ namespace semantic {
 		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
 		    break;
 		}
-
+		
 		// We apply the mapper, to gain time
 		if (!mapper.succeed) {
 		    globalMapper.succeed = false;
@@ -362,49 +362,44 @@ namespace semantic {
 		}
 		
 		score = merge.score;
-		finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
+		finalValidation (ref.to <TemplateRef> ().getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
 
 		auto visit = declarator::Visitor::init ();
-		visit.pushReferent (ref.getTemplateRef ().getReferent ());
+		visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
 
 		auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder);
 		auto glob = getTemplateSolution (visit.getReferent (), soluce);
-		if (glob.isEmpty ()) {
+		if (glob.isEmpty ()) {		    
 		    visit.pushReferent (soluce);
-		    auto sym_func = visit.visitFunction (func.to <syntax::Function> ());
-		    symbol = visit.popReferent ();
-		    visit.getReferent ().insertTemplate (symbol);
-		    this-> _context.pushReferent (sym_func.getReferent ());
-		    Generator proto (Generator::empty ());
-		    TRY (
-			proto = this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		    this-> _context.popReferent ();
-		    
-		    if (errors.size () != 0) 
-			THROW (ErrorCode::EXTERNAL, errors);
-		    return proto;
-		} else {
-		    symbol = glob;
-		    auto sym_func = symbol.getLocal (func.to<syntax::Function> ().getName ().str) [0];
-		    Generator proto (Generator::empty ());
-		    this-> _context.pushReferent (sym_func.getReferent ());
-		    TRY (
-			proto = this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		    this-> _context.popReferent ();
-		    
-		    if (errors.size () != 0) 
-			THROW (ErrorCode::EXTERNAL, errors);
-		    return proto;		    
+		    auto sym_func = visit.visit (func);
+		    glob = visit.popReferent ();
+		    visit.getReferent ().insertTemplate (glob);
 		}
+		
+		symbol = glob;
+		auto sym_func = symbol.getLocal (func.to<syntax::Function> ().getName ().str) [0];
+		
+		Generator proto (Generator::empty ());
+		this-> _context.pushReferent (sym_func.getReferent ());
+		
+		TRY (
+		    if (ref.is <MethodTemplateRef> ()) {
+		    	auto & self = ref.to <MethodTemplateRef> ().getSelf ();
+			proto = this-> _context.validateMethodProto (sym_func.to <semantic::Function> (), self.to <Value> ().getType ());
+		    } else {
+			proto = this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+		
+		this-> _context.popReferent ();
+		symbol = glob;
+		if (errors.size () != 0) 
+		    THROW (ErrorCode::EXTERNAL, errors);
+		return proto;		
 	    } 
 	    
 	    return Generator::empty ();
@@ -412,7 +407,13 @@ namespace semantic {
 
 	TemplateVisitor::Mapper TemplateVisitor::validateVarDeclFromImplicit (const std::vector <Expression> & params, const Expression & left, const std::vector <generator::Generator> & types, int & consumed) const {
 	    auto type_decl = left.to <syntax::VarDecl> ().getType ();
-	    return validateTypeFromImplicit (params, type_decl, types, consumed);
+	    if (!type_decl.isEmpty ())
+		return validateTypeFromImplicit (params, type_decl, types, consumed);
+	    else { // If the vardecl has no type ...
+		// 2h, to find that, what a shame
+		consumed += 1;
+		return Mapper (true, 0);
+	    }
 	}	
 
 	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromImplicit (const std::vector <Expression> & params, const Expression & leftT, const std::vector <generator::Generator> & types, int & consumed) const {
@@ -544,6 +545,11 @@ namespace semantic {
 			if (!tmplSoluce.isEmpty ())
 			    return validateTypeFromTemplCall (params, cl, tmplSoluce.to <TemplateSolution> (), consumed);
 		    }		    
+		) else of (TraitRef, trRef, {
+			auto tmplSoluce = getFirstTemplateSolution (trRef.getRef ());
+			if (!tmplSoluce.isEmpty ())
+			    return validateTypeFromTemplCall (params, cl, tmplSoluce.to <TemplateSolution> (), consumed);			
+		    }
 		) else of (Range, rng, { // Range are created by template Call
 			auto left = cl.getContent ();
 			if (left.is<syntax::Var> () && left.to <syntax::Var> ().getName () == Range::NAME) {
@@ -827,15 +833,32 @@ namespace semantic {
 			}
 		    }
 		) else of (TemplateCall, cl, {
-			int current_consumed = 0;
-			auto mapper = validateTypeFromTemplCall (params, cl, type, current_consumed);
-			Expression realType = this-> replaceAll (implv.getType (), mapper.mapping);
-			auto genType = this-> _context.validateType (realType, true);
-			this-> _context.verifyClassImpl (type, genType);
-			mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
-			mapper.nameOrder.push_back (implv.getLocation ().str);
-			mapper.score += Scores::SCORE_TYPE;
-			return mapper;			
+			std::vector <std::string> errors;
+			for (auto & trait : this-> _context.getAllImplClass (type)) {
+			    bool succeed = true;
+			    Mapper mapper (true, 0);
+			    TRY (
+				int current_consumed = 0;
+				auto loc_mapper = validateTypeFromTemplCall (params, cl, trait, current_consumed);		
+				Expression realType = this-> replaceAll (implv.getType (), loc_mapper.mapping);
+				auto genType = this-> _context.validateType (realType, true);
+				this-> _context.verifyClassImpl (type, genType);
+				mapper = mergeMappers (loc_mapper, mapper);
+			    ) CATCH (ErrorCode::EXTERNAL) {
+				GET_ERRORS_AND_CLEAR (msgs);
+				errors.insert (errors.end (), msgs.begin (), msgs.end ());
+				succeed = false;
+			    } FINALLY;
+
+			    if (succeed) {
+				mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
+				mapper.nameOrder.push_back (implv.getLocation ().str);
+				mapper.score += Scores::SCORE_TYPE;
+				return mapper;
+			    }
+			}
+			
+			THROW (ErrorCode::EXTERNAL, errors);
 		    }
 		) else of (syntax::List, lst, {
 			Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
@@ -1226,6 +1249,16 @@ namespace semantic {
 			       element.getLocation (),
 			       calls, params
 			   );
+		) else of (syntax::Match, m, {
+			   std::vector <Expression> matchers;
+			   std::vector <Expression> actions;
+			   for (auto & it : m.getMatchers ())
+			       matchers.push_back (replaceAll (it, mapping));
+			   for (auto & it : m.getActions ())
+			       actions.push_back (replaceAll (it, mapping));
+			   return syntax::Match::init (m.getLocation (), replaceAll (m.getContent (), mapping),
+						       matchers, actions, m.isFinal ());
+		    }
 		);
 	    }
 	    
@@ -1252,7 +1285,7 @@ namespace semantic {
 			std::vector <Declaration> decls;
 			for (auto & it : cl.getDeclarations ())
 			    decls.push_back (replaceAll (it, mapping));
-			return syntax::Class::init (cl.getName (), replaceAll (cl.getAncestor (), mapping), decls);
+			return syntax::Class::init (cl.getName (), replaceAll (cl.getAncestor (), mapping), decls, cl.getAttributes ());
 		    }
 		) else of (syntax::Enum, en, {
 			std::vector <Expression> values;

@@ -22,6 +22,14 @@ namespace global {
 			 SET_JMP,
 			 THROW,
 			 TYPE_INFO_EQUAL,
+			 TYPE_INFO,
+			 TYPE_IDS,
+			 DCOPY_OP_OVERRIDE,
+			 DCOPY_TRAITS,
+			 BINARY_OP_OVERRIDE,
+			 CORE_MODULE,
+			 DUPLICATION_MODULE,
+			 TYPE_INFO_MODULE
     );
     
 }

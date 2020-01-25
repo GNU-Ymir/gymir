@@ -11,7 +11,7 @@ namespace semantic {
 
 	    Symbol _ref;
 
-	private :
+	protected :
 
 	    friend Generator;
 

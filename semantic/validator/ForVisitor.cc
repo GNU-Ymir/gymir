@@ -181,14 +181,16 @@ namespace semantic {
 	Generator ForVisitor::iterateSlice (const syntax::For & expression, const Generator & value, const syntax::Expression & index, const syntax::Expression & val) {	
 	    std::vector <std::string> errors;
 	    std::vector<Generator> values = {};
+	    auto loc = val.getLocation ();
+	    Generator loop_type (Void::init (loc));
 	    {
 		TRY (
-		    auto loc = val.getLocation ();
 		    this-> _context.enterBlock ();
 		    std::vector <Generator> vars;
 		    if (index.isEmpty ()) 
 			vars = createIndexVar (expression, value, "_iter");
-		    else vars = createIndexVar (expression, value, index.to<syntax::VarDecl> ());		    
+		    else vars = createIndexVar (expression, value, index.to<syntax::VarDecl> ());
+		    Generator valVar (Generator::empty ());
 		    values.push_back (vars [0]);
 		    values.push_back (vars [1]); // We push it here to add the validation before the loop
 
@@ -209,13 +211,33 @@ namespace semantic {
 		    bool canBeRef = value.is <Aliaser> () || value.is<Referencer> () || value.to <Value> ().isLvalue ();
 		    auto level = value.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
 		    
-		    innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));		    
-		    innerValues.push_back (this-> _context.validateValue (expression.getBlock ()));
+		    innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));
+		    auto content = this-> _context.validateValueNoReachable (expression.getBlock ());
+		    if (!content.to <Value> ().getType ().is <Void> ()) {
+			loop_type = content.to <Value> ().getType ();
+			valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
+			auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
+			
+			this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
+			innerValues.push_back (Affect::init (
+			    loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
+			    content
+			));
+			
+		    } else {
+			innerValues.push_back (content);
+		    }
 		    
 		    innerValues.push_back (Affect::init (
 			loc, iter.to<Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, one.to<Value> ().getType (), iter, one)
 		    ));
-		    values.push_back (Loop::init (expression.getLocation (), Void::init (expression.getLocation ()), test, Block::init (expression.getLocation (), Void::init (expression.getLocation ()), innerValues), false));
+		    
+		    if (!valVar.isEmpty ()) {
+			innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
+			values.push_back (valVar);
+		    }
+		    
+		    values.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -234,8 +256,8 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
-	    
-	    return Block::init (expression.getLocation (), Void::init (expression.getLocation ()), values);
+
+	    return Block::init (expression.getLocation (), loop_type, values);
 	}
 	
 	Generator ForVisitor::validateRange (const syntax::For & expression, const generator::Generator & value) {
@@ -307,12 +329,14 @@ namespace semantic {
 	Generator ForVisitor::iterateRange (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index) {
 	    std::vector <std::string> errors;
 	    std::vector <Generator> value = {};
+	    auto loc = range.getLocation ();
+	    Generator loop_type (Void::init (loc));
 	    {
 		TRY (
-		    auto loc = range.getLocation ();
 		    this-> _context.enterBlock ();
 		    auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
 		    auto vars = createIndexVarRange (expression, range, index.to <syntax::VarDecl> ());
+		    Generator valVar (Generator::empty ());
 		    value.push_back (vars [0]);
 		    value.push_back (vars [1]); // We want the uniq value to be defined outside the loop
 		    
@@ -379,7 +403,22 @@ namespace semantic {
 						   isFull, rTest, lTest);
 
 		    std::vector <Generator> innerValues;
-		    innerValues.push_back (this->_context.validateValue (expression.getBlock ()));
+		    auto content = this->_context.validateValueNoReachable (expression.getBlock ());
+		    if (!content.to <Value> ().getType ().is <Void> ()) {
+			loop_type = content.to <Value> ().getType ();
+			valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
+			auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
+			
+			this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
+			innerValues.push_back (Affect::init (
+			    loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
+			    content
+			));
+			
+		    } else {
+			innerValues.push_back (content);
+		    }
+
 		    if (innerType.is<Float> ()) {
 			innerValues.push_back (Affect::init (
 			    loc, iter.to <Value> ().getType (), iter, BinaryFloat::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
@@ -387,9 +426,15 @@ namespace semantic {
 		    } else {
 			innerValues.push_back (Affect::init (
 			    loc, iter.to <Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
-			));
+			));			
 		    }
-		    value.push_back (Loop::init (expression.getLocation (), Void::init (expression.getLocation ()), test, Block::init (expression.getLocation (), Void::init (loc), innerValues), false));		    
+
+		    if (!valVar.isEmpty ()) {
+			innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
+			value.push_back (valVar);
+		    }
+		    
+		    value.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));		    
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -409,7 +454,7 @@ namespace semantic {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
 	    
-	    return Block::init (expression.getLocation (), Void::init (expression.getLocation ()), value);
+	    return Block::init (expression.getLocation (), loop_type, value);
 	}
 
 	Generator ForVisitor::validateTuple (const syntax::For & expression, const generator::Generator & tuple) {

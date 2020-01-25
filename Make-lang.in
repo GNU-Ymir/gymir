@@ -134,6 +134,7 @@ ymir_OBJS = \
 	ymir/generator_GlobalConstant.o \
 	ymir/generator_FrameProto.o \
 	ymir/generator_MethodProto.o \
+	ymir/generator_MethodTemplateRef.o \
 	ymir/generator_LambdaProto.o \
 	ymir/generator_GlobalVar.o \
 	ymir/generator_Integer.o \
@@ -173,6 +174,7 @@ ymir_OBJS = \
 	ymir/generator_TemplateSyntaxList.o \
 	ymir/generator_Throw.o \
 	ymir/generator_Tuple.o \
+	ymir/generator_TupleClosure.o \
 	ymir/generator_TupleAccess.o \
 	ymir/generator_TupleValue.o \
 	ymir/generator_Type.o \

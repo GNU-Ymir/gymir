@@ -1,8 +1,10 @@
 #include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
 #include <ymir/syntax/visitor/Keys.hh>
+#include <ymir/global/Core.hh>
 #include <algorithm>
 
+using namespace global;
 
 namespace semantic {
 
@@ -10,8 +12,6 @@ namespace semantic {
 
 	using namespace Ymir;
 	using namespace generator;
-
-	std::string BinaryVisitor::BINARY_OP_OVERRIDE = "binop";
 	
 	
 	BinaryVisitor::BinaryVisitor (Visitor & context) :
@@ -79,6 +79,10 @@ namespace semantic {
 
 		    of (Slice, s ATTRIBUTE_UNUSED,
 			ret = validateMathSlice (op, expression, left, right);
+		    );
+
+		    of (ClassRef, c ATTRIBUTE_UNUSED,
+			ret = validateMathClass (op, expression, left, right);
 		    );
 		}
 		
@@ -201,7 +205,7 @@ namespace semantic {
 		auto templ = syntax::TemplateCall::init (
 		    loc,
 		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    syntax::Var::init ({loc, BinaryVisitor::BINARY_OP_OVERRIDE})
+		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)})
 		);
 		
 		auto call = syntax::MultOperator::init (
@@ -230,7 +234,7 @@ namespace semantic {
 		auto templ = syntax::TemplateCall::init (
 		    loc,
 		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    syntax::Var::init ({loc, BinaryVisitor::BINARY_OP_OVERRIDE})
+		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)})
 		);
 		
 		auto call = syntax::MultOperator::init (
@@ -243,6 +247,30 @@ namespace semantic {
 	    }
 	    
 	    return Generator::empty ();
+	}
+
+	Generator BinaryVisitor::validateMathClass (Binary::Operator, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    auto loc = expression.getLocation ();
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
+	    auto templ = syntax::TemplateCall::init (
+		loc,
+		{syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
+		syntax::Binary::init (
+		    {loc, Token::DOT},
+		    leftSynt,		    
+		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)}),
+		    syntax::Expression::empty ()
+		)
+	    );
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{rightSynt}, false
+	    );
+
+	    return this-> _context.validateValue (call);
 	}	
 	
 	Generator BinaryVisitor::validateLogicalOperation (Binary::Operator op, const syntax::Binary & expression) {

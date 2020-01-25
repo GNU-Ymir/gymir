@@ -34,6 +34,11 @@ namespace semantic {
 	 * Set at validation time, it is the typeinfo of the class
 	 */
 	generator::Generator _typeInfo;
+
+	/**
+	 * Is this class abstract (not instanciable, and doesn't need all its methods to have body)
+	 */
+	bool _isAbstract = false;
 	
     private :
 
@@ -131,6 +136,16 @@ namespace semantic {
 	 * \warning we assume that this function is called oif we are sure that the fields exists in the class
 	 */
 	bool isMarkedProtected (const std::string & name) const;
+
+	/**
+	 * Set the class to abstract if is
+	 */
+	void isAbs (bool is);
+
+	/**
+	 * \return is this class abstract?
+	 */
+	bool isAbs () const;
 	
 	/**
 	 * return the ancestor of the class (might be empty)

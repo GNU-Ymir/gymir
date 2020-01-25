@@ -31,9 +31,10 @@ namespace semantic {
 	    }
 
 	    std::vector <Generator> rights;
-	    if (left.isEmpty ()) {
-		left = this-> validateDotCall (expression.getLeft (), rights, errors);
-	    }
+	    if (left.isEmpty () && expression.canBeDotCall ()) {
+		left = this-> validateDotCall (expression.getLeft (), rights, errors);		
+	    } else if (left.isEmpty ())
+		THROW (ErrorCode::EXTERNAL, errors);
 	    
 	    for (auto & it : expression.getRights ()) {
 		auto val = this-> _context.validateValue (it);
@@ -43,7 +44,7 @@ namespace semantic {
 		} else 
 		    rights.push_back (val);
 	    }
-
+	    
 	    int score = 0;
 	    errors = {};
 	    auto ret = validate (expression.getLocation (), left, rights, score, errors);
@@ -82,11 +83,11 @@ namespace semantic {
 	    } else if (left.is <generator::TemplateRef> ()) {
 		Symbol sym (Symbol::empty ());
 		Generator proto_gen (Generator::empty ());
-		auto gen = validateTemplateRef (location, left.to <TemplateRef> (), rights, score, errors, sym, proto_gen);
+		auto gen = validateTemplateRef (location, left, rights, score, errors, sym, proto_gen);
 		if (!gen.isEmpty ()) {
 		    std::vector <std::string> local_errors;
 		    TRY (
-			this-> _context.validateTemplateSymbol (sym);
+			this-> _context.validateTemplateSymbol (sym, left);
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
@@ -466,8 +467,7 @@ namespace semantic {
 	    std::vector <Generator> rights = rights_;
 	    std::vector <Generator> paramTypes;
 	    Generator retType (Generator::empty ());
-	    std::string typeName; 
-
+	    std::string typeName;
 	    if (gen.to <Value> ().getType ().to <Type> ().getInners ()[0].is <FuncPtr> ()) {
 		auto funcType = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <FuncPtr> ();
 		typeName = funcType.getTypeName ();
@@ -477,11 +477,10 @@ namespace semantic {
 		retType = funcType.getReturnType ();
 		if (params.size () != paramTypes.size ()) return Generator::empty ();
 	    } else {
-		auto proto = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <FrameProto> ();
-		typeName = proto.prettyString ();
+		auto proto = gen.to <Value> ().getType ().to <Type> ().getInners ()[0];
 		TRY (
-		    if (gen.to <Value> ().getType ().to <Type> ().getInners ()[0].is <MethodProto> ()) {
-			auto meth = gen.to <Value> ().getType ().to <Type> ().getInners ()[0].to <MethodProto> ();
+		    if (proto.is <MethodProto> ()) {
+			auto meth = proto.to <MethodProto> ();
 			auto type = meth.getClassType ();
 			type.to <Type> ().isMutable (meth.isMutable ());
 			this-> _context.verifyImplicitAlias (location, type, gen.to <DelegateValue> ().getClosure ());
@@ -490,19 +489,19 @@ namespace semantic {
 			score += rlevel - llevel;
 		    }
 		    
-		    if (proto.getParameters ().size () != rights.size ()) return Generator::empty ();
-		    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
-			auto param = findParameter (rights, proto.getParameters () [it].to<ProtoVar> ());
+		    if (proto.to <FrameProto> ().getParameters ().size () != rights.size ()) return Generator::empty ();
+		    for (auto it : Ymir::r (0, proto.to <FrameProto> ().getParameters ().size ())) {
+			auto param = findParameter (rights, proto.to <FrameProto> ().getParameters () [it].to<ProtoVar> ());
 			if (param.isEmpty ()) return Generator::empty ();
 			params.push_back (param);
-			paramTypes.push_back (proto.getParameters ()[it].to <ProtoVar> ().getType ());
+			paramTypes.push_back (proto.to <FrameProto> ().getParameters ()[it].to <ProtoVar> ().getType ());
 		    }
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors = msgs;
 		} FINALLY;
-
-		retType = proto.getReturnType ();
+		
+		retType = proto.to <FrameProto> ().getReturnType ();
 		if (errors.size () != 0) return Generator::empty ();	    
 	    }
 	    
@@ -590,7 +589,7 @@ namespace semantic {
 		} else if (it.is <TemplateRef> ()) {
 		    Symbol _sym (Symbol::empty ());
 		    Generator _proto_gen (Generator::empty ());
-		    auto gen = validateTemplateRef (location, it.to <TemplateRef> (), rights_, current, local_errors, _sym, _proto_gen);
+		    auto gen = validateTemplateRef (location, it, rights_, current, local_errors, _sym, _proto_gen);
 		    if (!gen.isEmpty ()) templScores [current].push_back (_sym);
 		    if (!gen.isEmpty () && current > score && fromTempl) { // Can only take the token over less scored template function
 			score = current;
@@ -642,7 +641,7 @@ namespace semantic {
 		
 		std::vector <std::string> local_errors;
 		TRY (
-		    this-> _context.validateTemplateSymbol (templSym);
+		    this-> _context.validateTemplateSymbol (templSym, used_gen);		    
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
@@ -672,15 +671,18 @@ namespace semantic {
 	    return final_gen;
 	}
 
-	generator::Generator CallVisitor::validateTemplateRef (const lexing::Word & location, const generator::TemplateRef & ref, const std::vector <generator::Generator> & rights_, int & score, std::vector <std::string> & errors, Symbol & _sym, Generator & proto_gen) {
-	    const Symbol & sym = ref.getTemplateRef ();
+	generator::Generator CallVisitor::validateTemplateRef (const lexing::Word & location, const Generator & ref, const std::vector <generator::Generator> & rights_, int & score, std::vector <std::string> & errors, Symbol & _sym, Generator & proto_gen) {
+	    const Symbol & sym = ref.to <TemplateRef> ().getTemplateRef ();
 	    if (!sym.to<semantic::Template> ().getDeclaration ().is <syntax::Function> ()) return Generator::empty ();
 	    
 	    std::vector <Generator> typeParams;
 	    std::vector <Generator> valueParams;
 	    std::vector <Generator> rights = rights_;
-
-	    for (auto & it : sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ()) {
+	    
+	    if (ref.is <MethodTemplateRef> ())
+		rights.insert (rights.begin (), ref.to <MethodTemplateRef> ().getSelf ());
+	    
+	    for (auto & it : sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ()) {		
 		Generator value (Generator::empty ());
 		auto var = it.to<syntax::VarDecl> ();
 		volatile bool failure = false;
@@ -716,11 +718,12 @@ namespace semantic {
 	    for (auto & it : rights) { // Add the rests, for variadic templates 
 		typeParams.push_back (it.to <Value> ().getType ());
 		valueParams.push_back (it);
-	    }
-
+	    }	    
+	    
 	    auto templateVisitor = TemplateVisitor::init (this-> _context);
 	    std::vector <Generator> finalParams;
 	    bool succeed = true;
+	    
 	    TRY (
 		// The solution is a function transformed generated by template specialisation (if it succeed)
 		proto_gen = templateVisitor.validateFromImplicit (ref, valueParams, typeParams, score, _sym, finalParams);
@@ -731,8 +734,21 @@ namespace semantic {
 	    } FINALLY;
 	    
 	    if (succeed) {
-		int _score;	       
-		auto ret = validateFrameProto (location, proto_gen.to<FrameProto> (), finalParams, _score, errors);		
+		int _score;
+		Generator ret (Generator::empty ());
+		if (ref.is <MethodTemplateRef> ()) {
+		    // Remove the first argument, (that is self)
+		    finalParams = std::vector <Generator> (finalParams.begin () + 1, finalParams.end ());
+		    auto self = ref.to <MethodTemplateRef> ().getSelf ();
+		    auto delType = Delegate::init (proto_gen.getLocation (), proto_gen);
+		    auto delValue = DelegateValue::init (proto_gen.getLocation(),
+							 delType, proto_gen.to <MethodProto> ().getClassType (),
+							 self, proto_gen);
+		    ret = validateDelegate (location, delValue, finalParams, _score, errors);
+		} else {
+		    ret = validateFrameProto (location, proto_gen.to <FrameProto> (), finalParams, _score, errors);
+		}
+		
 		score += _score;		
 		return ret;
 	    } 
@@ -741,24 +757,25 @@ namespace semantic {
 	}							   
 
 	Generator CallVisitor::validateDotCall (const syntax::Expression & left, std::vector <Generator> & params, const std::vector <std::string> & errors) {
-	    match (left) {
-		of (syntax::Binary, bin, {
-			if (bin.getLocation () == Token::DOT) {
-			    bool success = true;
-			    Generator right (Generator::empty ());
-			    TRY (				
+	    volatile bool success = true;
+	    Generator right (Generator::empty ());	
+	    TRY (			
+		match (left) {		
+		    of (syntax::Binary, bin, {
+			    if (bin.getLocation () == Token::DOT) {
 				auto param = this-> _context.validateValue (bin.getLeft ());
 				right = this-> _context.validateValue (bin.getRight ());
 				params.push_back (param);
-			    ) CATCH (ErrorCode::EXTERNAL) {
-				GET_ERRORS_AND_CLEAR (msgs);
-				success = false;
-			    } FINALLY;
-			    if (success) return right;
+			    } else success = false;
 			}
-		    }
-		);
-	    }
+		    ) else success = false;
+		}
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		success = false;
+	    } FINALLY;
+		
+	    if (success) return right;
 	    
 	    THROW (ErrorCode::EXTERNAL, errors);
 	    return Generator::empty ();
@@ -774,6 +791,7 @@ namespace semantic {
 		of (FrameProto, proto, leftName = proto.getName ())
 		else of (generator::Struct, str, leftName = str.getName ())
 		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		else of (ModuleAccess, acc, leftName = acc.prettyString ())
 		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
 	    }
 	    
@@ -797,9 +815,11 @@ namespace semantic {
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())
 		else of (ConstructorProto, proto, leftName = proto.getName ())
-		else of (generator::Struct, str, leftName = str.getName ())
+		else of (generator::Struct, str, leftName = str.getName ())			 
 		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
-		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+		else of (ModuleAccess, acc, leftName = acc.prettyString ())
+		else of (Value,      val,  leftName = val.getType ().to <Type> ().getTypeName ()
+		);
 	    }
 	    
 	    errors.insert (errors.begin (), Ymir::Error::makeOccur (

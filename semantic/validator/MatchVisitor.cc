@@ -4,6 +4,7 @@
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
+using namespace global;
 
 namespace semantic {
 
@@ -196,7 +197,7 @@ namespace semantic {
 		auto  templ = syntax::TemplateCall::init (
 		    loc,
 		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    syntax::Var::init ({loc, BinaryVisitor::BINARY_OP_OVERRIDE})
+		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)})
 		);
 		
 		auto call = syntax::MultOperator::init (

@@ -92,7 +92,13 @@ namespace semantic {
 			type = Tree::tupleType ({}, inner);
 		    }
 		)
-			 
+
+		else of (TupleClosure, tu, {
+			std::vector <Tree> inner;
+			for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
+			type = Tree::tupleType ({}, inner);
+		    }
+		)
 		else of (StructRef, st, {
 			static std::set <std::string> current;
 			if (current.find (st.prettyString ()) == current.end ()) { // To prevent infinite loop for inner type validation
@@ -202,7 +208,7 @@ namespace semantic {
 		auto type = Tree::pointerType (Tree::tupleType (fields, inner));
 		current.erase (ref.prettyString ());
 		return type;
-	    } else return Tree::voidType ();
+	    } else return Tree::pointerType (Tree::voidType ());
 	}
 		
 	Tree Visitor::generateInitValueForType (const Generator & type) {
@@ -1633,7 +1639,7 @@ namespace semantic {
 
 	generic::Tree Visitor::generateTupleAccess (const TupleAccess & acc) {
 	    auto elem = generateValue (acc.getTuple ());
-	    auto field = Ymir::format ("_%", acc.getIndex ());
+	    auto field = Ymir::format ("_%", (int) acc.getIndex ());
 	    return Tree::compound (
 		acc.getLocation (),
 		elem.getValue ().getField (field),

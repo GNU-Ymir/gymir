@@ -68,10 +68,7 @@ namespace semantic {
 		return SliceAccess::init (expression.getLocation (), innerType, left, right [0]);
 	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> ()) {
 		auto rtype = right [0].to <Value> ().getType ();
-		if (rtype.to <Type> ().getInners () [0].is<Integer> () &&
-		    rtype.to <Type> ().getInners () [0].to<Integer> ().getSize () == 64 &&
-		    !rtype.to <Type> ().getInners () [0].to<Integer> ().isSigned ()
-		) {
+		if (rtype.to <Type> ().getInners () [0].is<Integer> ()) {
 		    auto innerType = rtype.to <Type> ().getInners ()[0];
 		    std::vector <Generator> gens;
 		    auto vdecl = generator::VarDecl::init (expression.getLocation (),

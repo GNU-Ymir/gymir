@@ -147,7 +147,7 @@ namespace semantic {
 	     * \brief a template ref can be called if refer to a function 
 	     * \brief It will start by solving the template params with the types of the parameters
 	     */
-	    generator::Generator validateTemplateRef (const lexing::Word & expression, const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
+	    generator::Generator validateTemplateRef (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
 
 
 	    /**

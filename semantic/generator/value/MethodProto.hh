@@ -12,13 +12,18 @@ namespace semantic {
 
 	    Generator _classType;
 
+	    /**
+	     * True if the method prototype refer to a method that has no body
+	     */
+	    bool _isEmptyFrame; 
+	    
 	private :
 
 	    friend Generator;
 
 	    MethodProto ();
 
-	    MethodProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable);
+	    MethodProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable, bool isEmptyFrame);
 
 	public :
 	    
@@ -26,7 +31,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable, bool isEmptyFrame);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -51,6 +56,8 @@ namespace semantic {
 	    const Generator & getClassType () const;
 
 	    bool isMutable () const;
+
+	    bool isEmptyFrame () const;
 	    
 	};
     }

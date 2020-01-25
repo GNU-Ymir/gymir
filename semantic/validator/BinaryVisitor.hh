@@ -17,11 +17,6 @@ namespace semantic {
 	class BinaryVisitor {
 
 	    Visitor & _context;
-
-	public :
-
-	    static std::string BINARY_OP_OVERRIDE;
-
 	    
 	private :
 
@@ -91,7 +86,7 @@ namespace semantic {
 	     * \brief Validate a binary math operation with an array on the left operand
 	     * \param op the operator of the expression 
 	     * \param expression the syntaxic node that will produce the generator
-	     * \param left the left operand that we assume to be a Pointer value
+	     * \param left the left operand that we assume to be an Array value
 	     * \param right the right operand that we don't know the type yet
 	     */
 	    generator::Generator validateMathArray (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
@@ -101,12 +96,22 @@ namespace semantic {
 	     * \brief Validate a binary math operation with an slice on the left operand
 	     * \param op the operator of the expression 
 	     * \param expression the syntaxic node that will produce the generator
-	     * \param left the left operand that we assume to be a Pointer value
+	     * \param left the left operand that we assume to be a Slice value
 	     * \param right the right operand that we don't know the type yet
 	     */
 	    generator::Generator validateMathSlice (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
-	    
+	    /**
+	     * \brief Validate a binary math operator with a class as the left operand
+	     * \param op the operator of the expression
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we assume to be a Class value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateMathClass (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+
+
 	    /**
 	     * \brief Validate a logical operation from two operands
 	     * \brief Logical operations are operations that typically create boolean

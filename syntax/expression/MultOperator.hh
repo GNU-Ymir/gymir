@@ -19,6 +19,8 @@ namespace syntax {
 
 	/** The parameters of the access */
 	std::vector <Expression> _params;
+
+	bool _canbedotCall = true;
 	
     private :
 
@@ -37,7 +39,7 @@ namespace syntax {
 	 * \param element the left operand
 	 * \param params the parameters of the operation
 	 */
-	static Expression init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params);
+	static Expression init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall = true);
 	
 	Expression clone () const override;
 
@@ -59,6 +61,12 @@ namespace syntax {
 	 * \return the right operands of the expression (between the operator tokens)
 	 */
 	const std::vector <Expression> & getRights () const;
+
+	/**
+	 * \brief Does this expression can be used for a dotcall
+	 * \brief This param is set at validation for intrinsics validations
+	 */
+	bool canBeDotCall () const;
 	
     };
 

@@ -13,14 +13,16 @@ namespace syntax {
 	ret-> _name = cl._name;
 	ret-> _over = cl._over;
 	ret-> _innerDeclaration = cl._innerDeclaration;
+	ret-> _attributes = cl._attributes;
 	return Declaration {ret};
     }
 
-    Declaration Class::init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls) {
+    Declaration Class::init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attribs) {
 	auto ret = new (Z0) Class ();
 	ret-> _name = name;
 	ret-> _over = over;
 	ret-> _innerDeclaration = decls;
+	ret-> _attributes = attribs;
 	return Declaration {ret};
     }
 
@@ -45,6 +47,10 @@ namespace syntax {
 
     const std::vector <Declaration> & Class::getDeclarations () const {
 	return this-> _innerDeclaration;
+    }
+
+    const std::vector <lexing::Word> & Class::getAttributes () const {
+	return this-> _attributes;
     }
     
 }

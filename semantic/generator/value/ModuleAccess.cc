@@ -49,7 +49,7 @@ namespace semantic {
 	}
 
 	std::string ModuleAccess::prettyString () const {
-	    return Ymir::format ("%::", this-> getLocation ().str);
+	    return Ymir::format ("%", this-> _ref.getRealName ());
 	}
 	
     }
