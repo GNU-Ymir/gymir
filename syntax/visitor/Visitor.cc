@@ -829,7 +829,7 @@ namespace syntax {
 	    return visitOperand1 (MultOperator::init (location, end, value, params));
 	} else if (location == Token::DOT) {
 	    auto right = visitOperand3 (false);
-	    return visitOperand1 (visitTemplateCall (Binary::init (location, value, right, Expression::empty ())));
+	    return visitOperand1 (Binary::init (location, value, visitTemplateCall (right), Expression::empty ()));
 	} this-> _lex.rewind ();
 	return value;	
     }

@@ -441,7 +441,7 @@ namespace semantic {
 			score += Scores::SCORE_TYPE;
 			
 			auto llevel = params [it].to <Value> ().getType ().to <Type> ().mutabilityLevel ();
-			auto rlevel = funcType.getParamTypes ()[it].to <Value> ().getType ().to <Type> ().mutabilityLevel () + 1;
+			auto rlevel = funcType.getParamTypes ()[it].to <Type> ().mutabilityLevel () + 1;
 			score += rlevel - llevel;
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
@@ -756,29 +756,47 @@ namespace semantic {
 	    return Generator::empty ();	    
 	}							   
 
-	Generator CallVisitor::validateDotCall (const syntax::Expression & left, std::vector <Generator> & params, const std::vector <std::string> & errors) {
-	    volatile bool success = true;
-	    Generator right (Generator::empty ());	
-	    TRY (			
-		match (left) {		
-		    of (syntax::Binary, bin, {
-			    if (bin.getLocation () == Token::DOT) {
-				auto param = this-> _context.validateValue (bin.getLeft ());
-				right = this-> _context.validateValue (bin.getRight ());
-				params.push_back (param);
-			    } else success = false;
-			}
-		    ) else success = false;
-		}
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		success = false;
-	    } FINALLY;
-		
-	    if (success) return right;
+	Generator CallVisitor::validateDotCall (const syntax::Expression & exp, std::vector <Generator> & params, const std::vector <std::string> & errors) {
+	    Generator right (Generator::empty ());
+	    Generator left (Generator::empty ());
+	    if (!exp.is <syntax::Binary> () || exp.to <syntax::Binary> ().getLocation () != Token::DOT) THROW (ErrorCode::EXTERNAL, errors);
+	    auto bin = exp.to <syntax::Binary> ();
 	    
-	    THROW (ErrorCode::EXTERNAL, errors);
-	    return Generator::empty ();
+	    TRY (		
+		left = this-> _context.validateValue (bin.getLeft ());
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);			       
+	    } FINALLY;
+	    
+	    if (left.isEmpty ())  
+		THROW (ErrorCode::EXTERNAL, errors);	    
+	    else if (left.to <Value> ().getType ().is <ClassRef> ()) {
+		TRY (
+		    match (bin.getRight ()) {		    
+			of (syntax::TemplateCall, cl, {
+				auto loc = left.getLocation ();
+				auto n_bin = TemplateCall::init (
+				    cl.getLocation (), cl.getParameters (),
+				    syntax::Binary::init (
+					{loc, Token::DOT},  TemplateSyntaxWrapper::init (loc, left),
+					cl.getContent (), Expression::empty ()
+				    )
+				);
+				right = this-> _context.validateValue (n_bin);
+			    }
+			);       	
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);			       
+		} FINALLY;
+	    }
+	    
+	    if (right.isEmpty ()) {
+		right = this-> _context.validateValue (bin.getRight ());
+		params.push_back (left);
+	    }
+	    
+	    return right;
 	}
 	
 	void CallVisitor::error (const lexing::Word & location, const Generator & left, const std::vector <Generator> & rights, std::vector <std::string> & errors) {	    
