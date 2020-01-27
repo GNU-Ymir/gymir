@@ -81,6 +81,7 @@ ymir_langhook_init (void)
 static void
 ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decoded_options ATTRIBUTE_UNUSED)
 {
+    global::State::instance ().setExecutable (decoded_options [0].arg);
     for (unsigned int i = 0 ; i < argc ; i++) {
 	//const char * arg = decoded_options [i].arg;
 	switch (decoded_options [i].opt_index) {

@@ -15,7 +15,8 @@ namespace Ymir {
 	    if (pos != std::string::npos) {
 		this-> _files.push_back (aux.substr (0, pos));
 		aux = aux.substr (pos + sep.size ());
-	    } else this-> _files.push_back (aux);
+	    } else if (aux.length () != 0)
+		this-> _files.push_back (aux);
 	} while (pos != std::string::npos);
     }
 

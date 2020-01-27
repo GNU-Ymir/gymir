@@ -25,6 +25,8 @@ namespace global {
 	std::string _corePath;
 	
 	std::string _prefixPath;
+
+	std::string _executable;
 	
 	bool _isDebug = false;
 
@@ -101,6 +103,12 @@ namespace global {
 	 */
 	void setPrefix (const std::string & path);
 
+	/**
+	 * \brief Set the executable path
+	 * \change the prefix path, Cf setPrefix
+	 */
+	void setExecutable (const std::string & executable);
+	
 	/**
 	 * \return the prefix path
 	 */
