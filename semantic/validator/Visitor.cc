@@ -339,29 +339,32 @@ namespace semantic {
 	    this-> setCurrentFuncType (retType);
 	    
 	    if (!function.getBody ().getBody ().isEmpty () && errors.size () == 0) {
-		if (!function.getBody ().getInner ().isEmpty () ||
-		    !function.getBody ().getOuter ().isEmpty ()
-		)
-		    Ymir::Error::halt ("%(r) - TODO contract", "Critical");
-
-		auto body = validateValue (function.getBody ().getBody ());
-		volatile bool needFinalReturn = false;
-		
-		
-		if (!body.to<Value> ().isReturner ()) {
-		    verifyMemoryOwner (body.getLocation (), retType, body, true);		    
-		    needFinalReturn = !retType.is<Void> ();
-		}
-		
+		Generator body (Generator::empty ());
+		volatile bool needFinalReturn = false;				
 		{
 		    TRY (
-			quitBlock ();
+			body = validateValue (function.getBody ().getBody ());
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		    } FINALLY;
 		}
-	
+		if (!body.isEmpty ()) {
+		    if (!body.to<Value> ().isReturner ()) {
+			verifyMemoryOwner (body.getLocation (), retType, body, true);		    
+			needFinalReturn = !retType.is<Void> ();
+		    }
+		
+		    {
+			TRY (
+			    quitBlock ();
+			) CATCH (ErrorCode::EXTERNAL) {
+			    GET_ERRORS_AND_CLEAR (msgs);
+			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			} FINALLY;
+		    }
+		}
+		
 		exitContext ();
 		if (errors.size () != 0)
 		    THROW (ErrorCode::EXTERNAL, errors);
@@ -1912,82 +1915,92 @@ namespace semantic {
 	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {	    
 	    std::vector <Generator> gens;
 	    for (auto & sym : multSym) {
-		match (sym) {
-		    of (semantic::Function, func, {
-			    this-> _referent.push_back (sym);
-			    gens.push_back (validateFunctionProto (func));
-			    this-> _referent.pop_back ();			    
-			    continue;
-			}
-		    ) else of (semantic::Constructor, func, {
-			    this-> _referent.push_back (sym);
-			    gens.push_back (validateConstructorProto (func));
-			    this-> _referent.pop_back ();			    
-			    continue;
-			}
-		    ) else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
-			    gens.push_back (ModuleAccess::init (loc, sym));
-			    continue;
-			}		    		    
-		    ) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
-			    gens.push_back (ModuleAccess::init (loc, sym));
-			    continue;
-			}
-		    ) else of (semantic::Struct, st ATTRIBUTE_UNUSED, {
-			    auto str_ref = validateStruct (sym);
-			    gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
-			    continue;
-			}
-
-		    ) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
-			    auto cl_ref = validateClass (sym);
-			    if (cl_ref.is<ClassRef> ())
-				gens.push_back (cl_ref.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
-			    else gens.push_back (cl_ref);
-			    continue;
-			}
-		    ) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-			    return TraitRef::init ({loc, tr.getName ().str}, sym);
-			}
-		    ) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
-			    auto en_ref = validateEnum (sym);
-			    gens.push_back (en_ref.to <Type> ().getProxy ().to <EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ());
-			    continue;
-			}
-		    ) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
-			    gens.push_back (TemplateRef::init ({loc, sym.getName ().str}, sym));
-			    continue;
-			}
-		    ) else of (semantic::TemplateSolution, sol, {			    
-			    auto loc_gens = validateMultSym (loc, sol.getAllLocal ());
-			    match (loc_gens) {
-				of (MultSym, mlt_sym, {
-					gens.insert (gens.end (), mlt_sym.getGenerators ().begin (), mlt_sym.getGenerators ().end ());
-				    }) else {
-				    gens.push_back (loc_gens);
-				}
+		this-> _referent.push_back (sym);
+		volatile bool succ = false;
+		std::vector <std::string> errors;
+		TRY (
+		    match (sym) {
+			of (semantic::Function, func, {
+				gens.push_back (validateFunctionProto (func));			    
+				succ = true;
 			    }
-			    continue;
-			}
-		    ) else of (semantic::VarDecl, decl, {
-			    validateVarDecl (sym);
-			    auto gen = decl.getGenerator ().to <GlobalVar> ();
-			    Generator value (Generator::empty ());
-			    if (!gen.isMutable ())
-				value = gen.getValue ();
-			    gens.push_back (VarRef::init (decl.getName (), decl.getName ().str, gen.getType (), gen.getUniqId (), gen.isMutable (), value));
-			    continue;
-			 }
-		    ) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
-			    auto al_ref = validateAlias (sym);
-			    gens.push_back (al_ref);
-			    continue;
-			}
-		    );
-		}
+			) else of (semantic::Constructor, func, {
+				gens.push_back (validateConstructorProto (func));		    
+				succ = true;
+			    }
+			) else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
+				gens.push_back (ModuleAccess::init (loc, sym));
+				succ = true;
+			    }		    		    
+			) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
+				gens.push_back (ModuleAccess::init (loc, sym));
+				succ = true;
+			    }
+			) else of (semantic::Struct, st ATTRIBUTE_UNUSED, {
+				auto str_ref = validateStruct (sym);
+				gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
+				succ = true;
+			    }
 
-		println (sym.formatTree ());
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+			) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
+				auto cl_ref = validateClass (sym);
+				if (cl_ref.is<ClassRef> ())
+				    gens.push_back (cl_ref.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+				else gens.push_back (cl_ref);
+				succ = true;
+			    }
+			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
+				return TraitRef::init ({loc, tr.getName ().str}, sym);
+			    }
+			) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+				auto en_ref = validateEnum (sym);
+				gens.push_back (en_ref.to <Type> ().getProxy ().to <EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ());
+				succ = true;
+			    }
+			) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
+				gens.push_back (TemplateRef::init (sym.getName (), sym));
+				succ = true;
+			    }
+			) else of (semantic::TemplateSolution, sol, {			    
+				auto loc_gens = validateMultSym (loc, sol.getAllLocal ());
+				match (loc_gens) {
+				    of (MultSym, mlt_sym, {
+					    gens.insert (gens.end (), mlt_sym.getGenerators ().begin (), mlt_sym.getGenerators ().end ());
+					}) else {
+					gens.push_back (loc_gens);
+				    }
+				}
+				succ = true;
+			    }
+			) else of (semantic::VarDecl, decl, {
+				validateVarDecl (sym);
+				auto gen = decl.getGenerator ().to <GlobalVar> ();
+				Generator value (Generator::empty ());
+				if (!gen.isMutable ())
+				    value = gen.getValue ();
+				gens.push_back (VarRef::init (decl.getName (), decl.getName ().str, gen.getType (), gen.getUniqId (), gen.isMutable (), value));
+				succ = true;
+			    }
+			) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
+				auto al_ref = validateAlias (sym);
+				gens.push_back (al_ref);
+				succ = true;
+			    }
+			);
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors = msgs;
+		} FINALLY;		
+		
+		this-> _referent.pop_back ();
+		if (errors.size () != 0)
+		    THROW (ErrorCode::EXTERNAL, errors);
+		
+		if (!succ) {
+		    println (sym.formatTree ());
+		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		}
 	    }
 
 	    if (gens.size () == 1) return gens [0];
@@ -3983,7 +3996,7 @@ namespace semantic {
 		}
 		println (Ymir::format ("%* }", (int)_it, '\t'));
 	    }
-	}
+	}	
 
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct, bool checkTypes) {
 	    if (checkTypes)

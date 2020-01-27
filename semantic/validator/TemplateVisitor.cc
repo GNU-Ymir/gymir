@@ -267,7 +267,11 @@ namespace semantic {
 			param.getLocation ().str,
 			param.getLocation ().line,
 			param.getLocation ().column
-		), param);
+		), createSyntaxValue (param.getLocation (), value));
+	    mapper.nameOrder.push_back (format ("%[%,%]",
+						param.getLocation ().str,
+						param.getLocation ().line,
+						param.getLocation ().column));
 		
 	    return mapper;
 	}
@@ -369,8 +373,8 @@ namespace semantic {
 		visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
 
 		auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder);
-		auto glob = getTemplateSolution (visit.getReferent (), soluce);
-		if (glob.isEmpty ()) {		    
+		auto glob = getTemplateSolution (visit.getReferent (), soluce);		
+		if (glob.isEmpty ()) {
 		    visit.pushReferent (soluce);
 		    auto sym_func = visit.visit (func);
 		    glob = visit.popReferent ();
@@ -1728,12 +1732,8 @@ namespace semantic {
 	}
 
 	Symbol TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
-	    for (auto & it : ref.getTemplates ()) {
-		if (it.is <TemplateSolution> () && // It can be a Template, from semi explicit validation 
-		    it.to <TemplateSolution> ().getSolutionName () == solution.to <TemplateSolution> ().getSolutionName ()
-		    && it.getName ().isSame (solution.getName ())) { // To be similar to template solution must have the same name at the same location
-
-
+	    for (auto & it : ref.getTemplates ()) {		
+		if (it.equals (solution) && it.getName () == solution.getName ()) {
 		    return it;
 		}
 	    }

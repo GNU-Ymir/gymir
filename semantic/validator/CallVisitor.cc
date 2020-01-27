@@ -558,7 +558,7 @@ namespace semantic {
 	    );
 	}
 	
-	generator::Generator CallVisitor::validateMultSym (const lexing::Word & location, const MultSym & sym, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {	    
+	generator::Generator CallVisitor::validateMultSym (const lexing::Word & location, const MultSym & sym, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
 	    Generator final_gen (Generator::empty ());	    
 	    Generator used_gen (Generator::empty ());
 	    Generator proto_gen (Generator::empty ());
@@ -589,7 +589,7 @@ namespace semantic {
 		} else if (it.is <TemplateRef> ()) {
 		    Symbol _sym (Symbol::empty ());
 		    Generator _proto_gen (Generator::empty ());
-		    auto gen = validateTemplateRef (location, it, rights_, current, local_errors, _sym, _proto_gen);
+		    auto gen = validateTemplateRef (location, it, rights_, current, local_errors, _sym, _proto_gen);		    
 		    if (!gen.isEmpty ()) templScores [current].push_back (_sym);
 		    if (!gen.isEmpty () && current > score && fromTempl) { // Can only take the token over less scored template function
 			score = current;

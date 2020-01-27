@@ -65,6 +65,15 @@ namespace semantic {
 	    generator::Generator validateMathIntLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
 	    /**
+	     * \brief Validate a binary math operation with an char on the left operand
+	     * \param op the operator of the expression 
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we assume to be an Integer value
+	     * \param right the right operand that we don't know the type yet
+	     */
+	    generator::Generator validateMathCharLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+	    
+	    /**
 	     * \brief Validate a binary math operation with a float on the left operand
 	     * \param op the operator of the expression 
 	     * \param expression the syntaxic node that will produce the generator

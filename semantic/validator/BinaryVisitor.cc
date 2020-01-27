@@ -65,6 +65,10 @@ namespace semantic {
 			ret = validateMathIntLeft (op, expression, left, right);
 		    );
 
+		    of (Char, chr ATTRIBUTE_UNUSED,
+			ret = validateMathCharLeft (op, expression, left, right);
+		    );
+		    
 		    of (Float, f ATTRIBUTE_UNUSED,
 			ret = validateMathFloatLeft (op, expression, left, right);
 		    );
@@ -123,6 +127,32 @@ namespace semantic {
 		}		
 	    }
 	    
+	    
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				expression.getLocation ().str,
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+	    );
+	    
+	    return Generator::empty ();
+	}
+	
+	Generator BinaryVisitor::validateMathCharLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    std::vector <Binary::Operator> possible = {
+		Binary::Operator::ADD, Binary::Operator::SUB
+	    };
+	    
+	    if (right.to <Value> ().getType ().is <Char> () && std::find (possible.begin (), possible.end (), op) != possible.end ()) {
+		const Char & leftType = left.to <Value> ().getType ().to <Char> ();
+		const Char & rightType = right.to <Value> ().getType ().to <Char> ();
+		
+		auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();
+		return BinaryChar::init (expression.getLocation (),
+					op,
+					Char::init (expression.getLocation (), max),
+					left, right
+		);			    		
+	    }	    
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().str,

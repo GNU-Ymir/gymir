@@ -85,8 +85,9 @@ namespace semantic {
 		auto _it = ot._params.find (it.first);
 		if (_it == ot._params.end ()) return false;
 		else if (_it-> second.is <generator::TemplateSyntaxWrapper> () && it.second.is <generator::TemplateSyntaxWrapper> ()) {
-		    if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().equals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ()))
+		    if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().equals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
 			return false;
+		    }
 		} else if (_it-> second.is <generator::TemplateSyntaxList> () && it.second.is <generator::TemplateSyntaxList> ()) {
 		    if (_it-> second.to <generator::TemplateSyntaxList> ().getContents ().size () != it.second.to <generator::TemplateSyntaxList> ().getContents ().size ())
 			return false;
@@ -94,7 +95,8 @@ namespace semantic {
 			if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].equals (it.second.to <generator::TemplateSyntaxList> ().getContents () [j]))
 			    return false;
 		    }
-		} else return false;
+		} else if (_it-> second.prettyString () != it.second.prettyString ()) // Single value
+		    return false;
 	    }
 	    if (_nameOrder.size () != ot._nameOrder.size ()) return false;
 	    for (auto it : Ymir::r (0, _nameOrder.size ())) {
@@ -143,7 +145,7 @@ namespace semantic {
 	for (auto & it : _nameOrder) {
 	    if (i != 0)
 		buf.write (",");
-	    buf.write (this-> _params.find (it)-> second.prettyString ()); // [] on map discard const qualifier ?!!
+	    buf.write (this-> _params.find (it)-> first,"=> ",this-> _params.find (it)-> second.prettyString ()); // [] on map discard const qualifier ?!!
 	    i += 1;
 	}
 	buf.write (")");
