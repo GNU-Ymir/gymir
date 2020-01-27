@@ -2,12 +2,17 @@
 #include <ymir/utils/Path.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <algorithm>
+#include <cppdefault.h>
 
 namespace global {
     
     State::State () {}
 
-    State::State (const State &) {}
+    State::State (const State &) {
+	this-> _prefixPath = std::string (cpp_GCC_INCLUDE_DIR);
+	this-> _corePath = Ymir::Path::build (Ymir::Path::build (this-> _prefixPath, "ymir"), "core").toString ();	
+	this-> _includeDir.emplace (Ymir::Path::build (this-> _prefixPath, "ymir").toString ());
+    }
 
     State & State::operator= (const State &) {
 	return *this;
