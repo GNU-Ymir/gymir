@@ -364,7 +364,7 @@ namespace semantic {
 	/**
 	 * \return The module named name, empty symbol if the module was not imported
 	 */
-	static const Symbol & getModule (const std::string & name);
+	static Symbol getModule (const std::string & name);
 
 	/**
 	 * \brief Add a new known module (if the module already exists, it will erase it)

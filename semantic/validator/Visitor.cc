@@ -219,14 +219,13 @@ namespace semantic {
 		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);		
 		of (semantic::Template, x ATTRIBUTE_UNUSED, return);
 	    }
-
+	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	}      
 	
 	void Visitor::validateModule (const semantic::Module & mod) {
 	    if (!mod.isExtern ()) {
 		const std::vector <Symbol> & syms = mod.getAllLocal ();
-
 		for (auto & it : syms) {
 		    validate (it);
 		}

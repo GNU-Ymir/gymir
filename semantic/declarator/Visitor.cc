@@ -96,10 +96,13 @@ namespace semantic {
 	    auto path = Path {mod.getIdent ().str, "::"};
 	    if (mod.isGlobal ()) {
 		auto file_location = Path {mod.getIdent ().locFile}.stripExtension ();
+		if (path.getFiles ().size () == 0) {
+		    path = Path (file_location.getFiles ().back ());
+		}
 		__imported__.emplace (file_location.toString ());
 		if (!mod.getIdent ().isEof () && !Path {mod.getIdent ().str, "::"}.isRelativeFrom (file_location)) {
 		    Ymir::Error::occur (mod.getIdent (), ExternalError::get (WRONG_MODULE_NAME), mod.getIdent ().str, Path {mod.getIdent ().str, "::"}.toString () + ".yr");
-		}		
+		}
 	    }
 
 
@@ -115,7 +118,8 @@ namespace semantic {
 
 	    auto ret = popReferent ();
 	    auto modules = path.getFiles ();
-	    if (mod.isGlobal () && modules.size () != 1) {
+	    
+	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
 		if (glob.isEmpty ()) {
 		    glob = Module::init ({mod.getIdent (), modules [0]});
@@ -128,7 +132,8 @@ namespace semantic {
 		Symbol::registerModule (modules [0], glob);
 		return ret;
 	    } else if (mod.isGlobal ()) {
-		Symbol::registerModule (modules [0], ret);
+		if (modules.size () == 1) 
+		    Symbol::registerModule (modules [0], ret);
 	    } else getReferent ().insert (ret);
 	    
 	    return ret;

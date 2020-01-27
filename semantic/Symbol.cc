@@ -357,7 +357,7 @@ namespace semantic {
 	} return ret;
     }
     
-    const Symbol & Symbol::getModule (const std::string & name) {
+    Symbol Symbol::getModule (const std::string & name) {	
 	auto sym = __imported__.find (name);
 	if (sym == __imported__.end ()) return Symbol::__empty__;
 	else return sym-> second;

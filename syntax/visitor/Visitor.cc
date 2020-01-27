@@ -126,11 +126,9 @@ namespace syntax {
 	lexing::Word token;
 	auto beginPos = this-> _lex.tell ();
 	TRY (
-	    auto next = this-> _lex.consumeIf ({Keys::MOD});
-	    if (next == Keys::MOD) {
-		space = visitNamespace ();
-		this-> _lex.consumeIf ({Token::SEMI_COLON});
-	    } 
+	    auto next = this-> _lex.next ({Keys::MOD});
+	    space = visitNamespace ();
+	    this-> _lex.consumeIf ({Token::SEMI_COLON});
 	) CATCH (ErrorCode::EXTERNAL) {
 	    CLEAR_ERRORS ();
 	    space = lexing::Word::eof ();
@@ -147,6 +145,9 @@ namespace syntax {
 		decls.push_back (visitDeclaration ());
 	    }
 	} while (!token.isEof ());
+
+	if (space.isEof ())
+	    space.setLocus (this-> _lex.getFilename (), 0, 0);
 	
 	auto ret = Module::init (space, decls);
 	ret.to<Module> ().isGlobal (true);
@@ -956,22 +957,14 @@ namespace syntax {
     Expression Visitor::visitIf () {
 	auto location = this-> _lex.next ({Keys::IF});
 	auto test = visitExpression ();
-	auto content = visitExpression ();
-	auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
-	if (tok == Token::SEMI_COLON)
-	    content = Block::init (content.getLocation (), tok, Declaration::empty (), {content, Unit::init (tok)});
-	
+	auto content = visitExpression ();	
 	auto next = this-> _lex.consumeIf ({Keys::ELSE});
 	if (next == Keys::ELSE) {
 	    next = this-> _lex.next ();
 	    this-> _lex.rewind ();
 	    if (next == Keys::IF) return If::init (location, test, content, visitIf ());
 	    else {
-		auto el_exp = visitExpression ();
-		auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
-		if (tok == Token::SEMI_COLON)
-		    el_exp = Block::init (content.getLocation (), tok, Declaration::empty (), {content, Unit::init (tok)});
-		
+		auto el_exp = visitExpression ();		
 		return If::init (location, test, content, el_exp);
 	    }
 	}
