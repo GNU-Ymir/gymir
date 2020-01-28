@@ -59,7 +59,7 @@ namespace semantic {
 	 */
 	const std::vector <syntax::Expression> & getFields () const;
 	
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool parent) const override;
 
 	/**
 	 * \brief Set the pack information of the structure

@@ -55,7 +55,7 @@ namespace semantic {
 
 	std::vector <Symbol> getPublic (const std::string & name) const override;
 
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool parent) const override;
 
 	const syntax::Constructor & getContent () const;
 

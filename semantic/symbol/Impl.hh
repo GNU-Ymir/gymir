@@ -51,7 +51,7 @@ namespace semantic {
 
 	const std::vector <Symbol> & getAllInner () const;
 	
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool parent = true) const override;
 
 	/**
 	 * \return a formated string of the hierarchy of the modules and all declared symbols

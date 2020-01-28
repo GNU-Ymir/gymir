@@ -10,17 +10,19 @@ namespace semantic {
 	
 	Class::Class () :
 	    Value (),
-	    _ref (Symbol::__empty__)
+	    _ref (Symbol::__empty__),
+	    _classRef (Generator::empty ())
 	{
 	}
 
-	Class::Class (const lexing::Word & loc, const Symbol & ref) :
+	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) :
 	    Value (loc, loc.str, NoneType::init (loc, "class " + ref.getRealName ())),
-	    _ref (ref)
+	    _ref (ref),
+	    _classRef (clRef)
 	{}
 
-	Generator Class::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new (Z0) Class (loc, ref)};
+	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) {
+	    return Generator {new (Z0) Class (loc, ref, clRef)};
 	}
 
 	Generator Class::clone () const {
@@ -140,6 +142,10 @@ namespace semantic {
 
 	const Symbol & Class::getRef () const {
 	    return this-> _ref;
+	}
+
+	const Generator & Class::getClassRef () const {
+	    return this-> _classRef;
 	}
 	
     }

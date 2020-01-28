@@ -75,10 +75,12 @@ namespace semantic {
 	return {};
     }
 
-    bool Class::equals (const Symbol & other) const {
+    bool Class::equals (const Symbol & other, bool parent) const {
 	if (!other.is <Class> ()) return false;
 	if (other.getName () == this-> getName ()) {
-	    return this-> getReferent ().equals (other.getReferent ());
+	    if (parent)
+		return this-> getReferent ().equals (other.getReferent ());
+	    else return true;
 	} else return false;
     }
 

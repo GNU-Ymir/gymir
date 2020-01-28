@@ -77,7 +77,7 @@ namespace semantic {
 	return this-> _table.getAll ();
     }
     
-    bool TemplateSolution::equals (const Symbol & other) const {
+    bool TemplateSolution::equals (const Symbol & other, bool parent) const {
 	if (!other.is<TemplateSolution> ()) return false;
 	if (this-> getName ().isSame (other.getName ())) {
 	    auto & ot = other.to<TemplateSolution> ();	    
@@ -98,11 +98,22 @@ namespace semantic {
 		} else if (_it-> second.prettyString () != it.second.prettyString ()) // Single value
 		    return false;
 	    }
+
 	    if (_nameOrder.size () != ot._nameOrder.size ()) return false;
 	    for (auto it : Ymir::r (0, _nameOrder.size ())) {
 		if (_nameOrder [it] != ot._nameOrder [it]) return false;
 	    }
-	    return this-> getReferent ().equals (other.getReferent ());
+	    
+	    auto & inner = this-> getAllLocal ();
+	    auto & aux_inner = ot.getAllLocal ();
+	    if (inner.size () != aux_inner.size ()) return false;
+	    for (auto it : Ymir::r (0, inner.size ())) {
+		if (!inner [it].equals (aux_inner [it], false)) return false;
+	    }
+
+	    if (parent)
+		return this-> getReferent ().equals (other.getReferent ());
+	    else return true;
 	} else 
 	    return false;
     }    

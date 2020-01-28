@@ -77,10 +77,12 @@ namespace semantic {
 	return this-> _table.getPublic (name);
     }
     
-    bool Constructor::equals (const Symbol & other) const {
+    bool Constructor::equals (const Symbol & other, bool parent) const {
 	if (!other.is <Constructor> ()) return false;
 	if (other.getName ().isSame (this-> getName ())) {
-	    return this-> getReferent ().equals (other.getReferent ());
+	    if (parent)
+		return this-> getReferent ().equals (other.getReferent ());
+	    else return true;
 	} else
 	    return false;
     }

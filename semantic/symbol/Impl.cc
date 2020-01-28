@@ -72,10 +72,12 @@ namespace semantic {
 	return this-> _table.getAll ();
     }
     
-    bool Impl::equals (const Symbol & other) const {
+    bool Impl::equals (const Symbol & other, bool parent) const {
 	if (!other.is<Impl> ()) return false;
 	if (this-> getName () == other.getName ()) {
-	    return this-> getReferent ().equals (other.getReferent ());
+	    if (parent)
+		return this-> getReferent ().equals (other.getReferent ());
+	    else return true;
 	} else 
 	    return false;
     }

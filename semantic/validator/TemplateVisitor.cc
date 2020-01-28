@@ -112,13 +112,14 @@ namespace semantic {
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
 
 		    auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder);
-		    auto glob = getTemplateSolution (visit.getReferent (), soluce);
-		    if (glob.isEmpty ()) {
-			visit.pushReferent (soluce);
-			visit.visit (final_syntax);
-			glob = visit.popReferent ();
+		    visit.pushReferent (soluce);
+		    visit.visit (final_syntax);
+		    auto glob = visit.popReferent ();
+		    
+		    auto already = getTemplateSolution (visit.getReferent (), soluce);
+		    if (already.isEmpty ()) {			
 			visit.getReferent ().insertTemplate (glob);
-		    }
+		    } else glob = already;
 		    
 		    return glob;
 		}
@@ -373,16 +374,16 @@ namespace semantic {
 		visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
 
 		auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder);
-		auto glob = getTemplateSolution (visit.getReferent (), soluce);		
-		if (glob.isEmpty ()) {
-		    visit.pushReferent (soluce);
-		    auto sym_func = visit.visit (func);
-		    glob = visit.popReferent ();
+		visit.pushReferent (soluce);
+		auto sym_func = visit.visit (func);
+		auto glob = visit.popReferent ();
+		auto already = getTemplateSolution (visit.getReferent (), soluce);
+		if (already.isEmpty ()) {
 		    visit.getReferent ().insertTemplate (glob);
-		}
+		} else glob = already;		
 		
 		symbol = glob;
-		auto sym_func = symbol.getLocal (func.to<syntax::Function> ().getName ().str) [0];
+		sym_func = symbol.getLocal (func.to<syntax::Function> ().getName ().str) [0];
 		
 		Generator proto (Generator::empty ());
 		this-> _context.pushReferent (sym_func.getReferent ());
@@ -1733,7 +1734,7 @@ namespace semantic {
 
 	Symbol TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
 	    for (auto & it : ref.getTemplates ()) {		
-		if (it.equals (solution) && it.getName () == solution.getName ()) {
+		if (it.equals (solution)) {
 		    return it;
 		}
 	    }

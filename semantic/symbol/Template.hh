@@ -44,7 +44,7 @@ namespace semantic {
 
 	bool isOf (const ISymbol * type) const override;
 
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool equals) const override;
 
 	const syntax::Declaration & getDeclaration () const;
 

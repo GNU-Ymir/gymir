@@ -83,6 +83,14 @@ namespace semantic {
 	return this-> getReferent ().get (name);
     }
 
+    std::vector <Symbol> ISymbol::getPrivate (const std::string & name) const {
+	auto ret = this-> get (name);	
+	auto parent = this-> getReferent ().getPrivate (name);
+	ret.insert (ret.end (), parent.begin (), parent.end ());
+	
+	return Symbol::mergeEqSymbols (ret);
+    }
+    
     std::vector <Symbol> ISymbol::getPublic (const std::string & name) const {
 	return this-> getReferent ().getPublic (name);
     }
@@ -258,6 +266,21 @@ namespace semantic {
 	return Symbol::mergeEqSymbols (ret);
     }
 
+    std::vector <Symbol> Symbol::getPrivate (const std::string & name) const {
+	if (this-> _value == nullptr)
+	    return {};
+	
+	auto ret = this-> _value-> getPrivate (name);
+	for (auto & it : this-> _value-> getUsedSymbols ()) {
+	    if (!it.second.isEmpty ()) {
+		auto local_ret = it.second.getLocal (name);
+		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	    }
+	}
+	
+	return Symbol::mergeEqSymbols (ret);
+    }
+
     std::vector <Symbol> Symbol::getPublic (const std::string & name) const {
 	if (this-> _value == nullptr)
 	    return {};
@@ -334,9 +357,9 @@ namespace semantic {
 	else return this-> _value-> getLocalPublic (name);
     }
     
-    bool Symbol::equals (const Symbol & other) const {
+    bool Symbol::equals (const Symbol & other, bool parent) const {
 	if (this-> _value == nullptr) return other._value == nullptr;
-	return this-> _value-> equals (other);
+	return this-> _value-> equals (other, parent);
     }
 
     bool Symbol::isSameRef (const Symbol & other) const {

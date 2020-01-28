@@ -74,7 +74,7 @@ namespace semantic {
 
 	const std::vector <Symbol> & getAllInner () const;
 	
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool parent = true) const override;
 
 	std::string formatTree (int padd) const override;
 

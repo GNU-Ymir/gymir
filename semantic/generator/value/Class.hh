@@ -27,6 +27,8 @@ namespace semantic {
 	    std::vector <generator::Generator> _vtable;
 
 	    std::vector <MethodProtection> _prots;
+
+	    Generator _classRef;
 	    
 	private :
 
@@ -36,11 +38,12 @@ namespace semantic {
 	    
 	    Class ();
 
-	    Class (const lexing::Word & loc, const Symbol & ref);
+	    Class (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
 
 	public : 
 	    
-	    static Generator init (const lexing::Word & loc, const Symbol & ref);
+	    static Generator init (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
+	    
 	    
 	    Generator clone () const override;
 	    
@@ -119,6 +122,11 @@ namespace semantic {
 	     * \return the symbol responsible of the declaration of this structure prototype
 	     */
 	    const Symbol&  getRef () const;
+
+	    /**
+	     * \return a classRef, containing the information about this class and ancestor
+	     */
+	    const Generator & getClassRef () const;
 	    
 	};
     }

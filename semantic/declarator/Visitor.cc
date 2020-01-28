@@ -325,7 +325,13 @@ namespace semantic {
 					cls.to <semantic::Class> ().addField (wrap.getContent ());
 					cls.to <semantic::Class> ().setProtected (de.getName ().str);
 				    }
-				) else 
+				) else of (syntax::Set, se, {
+					for (auto & it : se.getContent ()) {
+					    cls.to <semantic::Class> ().addField (it);
+					    cls.to <semantic::Class> ().setProtected (it.to <syntax::VarDecl> ().getName ().str);
+					}
+				    }
+				) else
 				    Error::halt ("%(r) - reaching impossible point", "Critical");			
 			    }
 			}

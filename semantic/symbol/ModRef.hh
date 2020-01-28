@@ -47,7 +47,7 @@ namespace semantic {
 
 	bool isOf (const ISymbol * type) const override;
 	
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool parent = true) const override;
 
 	/**
 	 * \brief Merge two mod reference (assuming they have the same name)

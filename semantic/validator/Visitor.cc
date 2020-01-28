@@ -543,7 +543,7 @@ namespace semantic {
 	    
 	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty ()) {
 		auto sym = cls;
-		auto gen = generator::Class::init (cls.getName (), sym);
+		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 		sym.to <semantic::Class> ().setGenerator (gen);
 		std::vector <std::string> errors;
 		std::map <std::string, generator::Generator> syms;
@@ -927,6 +927,7 @@ namespace semantic {
 	    
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
+	    enterForeign ();
 	    
 	    enterBlock ();
 	    TRY (
@@ -967,7 +968,8 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
-	
+	    
+	    exitForeign ();
 	    exitClassDef ();
 	    
 	    if (errors.size () != 0)
@@ -989,6 +991,7 @@ namespace semantic {
 
 	    enterClassDef (classType.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
+	    enterForeign ();
 	    
 	    enterBlock ();
 	    TRY (
@@ -1044,7 +1047,7 @@ namespace semantic {
 		} FINALLY;
 	    }
 		
-	
+	    exitForeign ();
 	    exitClassDef ();
 	    
 	    if (errors.size () != 0)
@@ -1887,8 +1890,15 @@ namespace semantic {
 	    if (gen.isEmpty ()) {
 		auto sym = getGlobal (var.getName ().str);
 		if (sym.empty ()) {
-		    Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().str);
+		    sym = getGlobalPrivate (var.getName ().str);
+		    std::string note;
+		    for (auto it : Ymir::r (0, sym.size ())) {
+			if (it != 0) note = note + "\n";
+			note = note + Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), sym[it].getName (), sym [it].getRealName ());
+		    }
+		    Error::occurAndNote (var.getLocation (), note, ExternalError::get (UNDEF_VAR), var.getName ().str);
 		}
+		
 		return validateMultSym (var.getLocation (), sym);
 	    }
 
@@ -2007,54 +2017,54 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateMultSymType (const lexing::Word & loc, const std::vector <Symbol> & multSym) {
-	    if (multSym.size () != 1) return Generator::empty ();	    
-	    match (multSym [0]) {		    
-		of (semantic::Struct, st ATTRIBUTE_UNUSED, {
-			return validateStruct (multSym [0]);
-		    });
-		of (semantic::Enum, en ATTRIBUTE_UNUSED, {
-			return validateEnum (multSym [0]);
-		    });
+	    if (multSym.size () != 1) return Generator::empty ();
+	    Generator gen (Generator::empty ());
+	    std::vector <std::string> errors;
+	    this-> _referent.push_back (multSym [0]);
 
-		of (semantic::Class, cl ATTRIBUTE_UNUSED, {
-			return validateClass (multSym [0]);
-		    });
-		
-		of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-			return TraitRef::init ({loc, tr.getName ().str}, multSym [0]);
-		    });
-		
-		of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
-			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			return Generator::empty ();
+	    TRY (
+		match (multSym [0]) {		    
+		    of (semantic::Struct, st ATTRIBUTE_UNUSED, {
+			    gen = validateStruct (multSym [0]);
+			}
+		    ) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+			    gen = validateEnum (multSym [0]);
+			}
+		    ) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
+			    gen = validateClass (multSym [0]);
+			}		
+		    ) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
+			    gen = TraitRef::init ({loc, tr.getName ().str}, multSym [0]);
+			}			
+		    ) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
+			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			}							     
+		    ) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
+			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			}
+		    ) else of (semantic::ModRef, mod ATTRIBUTE_UNUSED, {
+			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			}
+		    ) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
+			    gen = validateAlias (multSym [0]);
+			}
+		    ) else of (semantic::Function, func, {
+			    gen = validateFunctionProto (func);
+			}
+		    ) else {
+		       Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
 		    }
-		);
-
-		of (semantic::Module, mod ATTRIBUTE_UNUSED, {
-			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			return Generator::empty ();
-		    }
-		);
-
-		of (semantic::ModRef, mod ATTRIBUTE_UNUSED, {
-			Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			return Generator::empty ();
-		    }
-		);
-		
-		of (semantic::Alias, al ATTRIBUTE_UNUSED, 
-		    return validateAlias (multSym [0]);		    
-		);
-		
-		of (semantic::Function, func,
-		    return validateFunctionProto (func);
-		);
-		
-	    }
+		}		
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors = msgs;
+	    } FINALLY;
 	    
-	    // println (loc, ' ', multSym [0].formatTree ());
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return Generator::empty ();
+	    this-> _referent.pop_back ();		   
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+	    
+	    return gen;
 	}
 	
 	Generator Visitor::validateFunctionProto (const semantic::Function & func) {
@@ -2642,17 +2652,18 @@ namespace semantic {
 	    Generator inner (Generator::empty ());
 	    if (str.getSuffix () == Keys::S8) inner = Char::init (str.getLocation (), 8);
 	    else inner = Char::init (str.getLocation (), 32);
-
+	    inner.to <Type> ().isMutable (false);
+	    
 	    auto visitor = UtfVisitor::init (*this);
 	    int len = 0;
 	    auto value = visitor.convertString (str.getLocation (), str.getSequence (), inner.to <Char> ().getSize (), len);
 
 	    auto type = Array::init (str.getLocation (), inner, len);
-	    type.to <Type> ().isMutable (false);
+	    type.to <Type> ().isMutable (true);
 	    type.to <Type> ().isLocal (false);
 
 	    auto sliceType = Slice::init (str.getLocation (), inner);
-	    sliceType.to <Type> ().isMutable (false);
+	    sliceType.to <Type> ().isMutable (true);
 	    sliceType.to <Type> ().isLocal (false);
 	    
 	    return Aliaser::init (
@@ -3585,12 +3596,8 @@ namespace semantic {
 	    if (val.is<Type> ()) return val;
 	    if (val.is<generator::Struct> ())
 		return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
-	    if (val.is <generator::Class> ()) {
-		Generator ancestor (Generator::empty ());
-		auto sym = val.to <generator::Class> ().getRef ();
-		if (!sym.to <semantic::Class> ().getAncestor ().isEmpty ())
-		    ancestor = this-> validateType (sym.to <semantic::Class> ().getAncestor ());
-		return ClassRef::init (type.getLocation (), ancestor, sym);
+	    if (val.is <generator::Class> ()) {		
+		return val.to <generator::Class> ().getClassRef ();		
 	    }
 	    
 	    if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();
@@ -3618,7 +3625,15 @@ namespace semantic {
 		auto syms = getGlobal (var.getName ().str);
 		if (!syms.empty ()) {
 		    auto ret = validateMultSymType (var.getLocation (), syms);
-		    if (!ret.isEmpty ()) return ret;
+		    if (!ret.isEmpty ()) return ret;		    
+		} else {
+		    syms = getGlobalPrivate (var.getName ().str);
+		    std::string note;
+		    for (auto it : Ymir::r (0, syms.size ())) {
+			if (it != 0) note = note + ("\n");
+			note = note + Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), syms [it].getName (), syms [it].getRealName ());
+		    }
+		    Error::occurAndNote (var.getName (), note, ExternalError::get (UNDEF_TYPE), var.getName ().str);
 		}
 	    }
 	    
@@ -3881,7 +3896,7 @@ namespace semantic {
 	void Visitor::exitClassDef () {
 	    this-> _classContext.pop_back ();
 	}
-
+              
 	void Visitor::getClassContext (const semantic::Symbol & cl, bool & isPrivate, bool & isProtected) {
 	    isPrivate = false;
 	    isProtected = false;
@@ -3890,18 +3905,18 @@ namespace semantic {
 		if (isPrivate) isProtected = true;
 		else {
 		    Symbol clSym (Symbol::empty ());
-		    auto ancestor = this-> _classContext.back ().to <semantic::Class> ().getAncestor ();
+		    auto ancestor = this-> _classContext.back ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
 		    if (!ancestor.isEmpty ())
-			clSym = validateType (ancestor).to <ClassRef> ().getRef ();
+			clSym = ancestor.to <ClassRef> ().getRef ();
 		    
 		    while (!clSym.isEmpty ()) {
 			if (clSym.equals (cl)) {
 			    isProtected = true;
 			    break;
 			} else {
-			    auto ancestor = clSym.to <semantic::Class> ().getAncestor ();
+			    auto ancestor = clSym.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
 			    if (!ancestor.isEmpty ())
-				clSym = validateType (ancestor).to <ClassRef> ().getRef ();
+				clSym = ancestor.to <ClassRef> ().getRef ();
 			    else break;
 			}
 		    }
@@ -4181,15 +4196,21 @@ namespace semantic {
 	    }
 
 	    auto sym = cl.to <ClassRef> ().getRef ();
-	    for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
-		match (it) {
-		    of (semantic::Impl, im, {
+	    while (!sym.isEmpty ()) {
+		for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
+		    match (it) {
+			of (semantic::Impl, im, {
 			    auto sec_trait = this-> validateType (im.getTrait ());
 			    if (trait.equals (sec_trait)) return;
-			}
-		    );
-		}		
-	    }
+			    }
+			);
+		    }		
+		}
+		auto ancestor = sym.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
+		if (!ancestor.isEmpty ())
+		    sym = ancestor.to <ClassRef> ().getRef ();
+		else break;
+	    } 
 
 	    Ymir::Error::occur (cl.getLocation (), ExternalError::get (NOT_IMPL_TRAIT), cl.prettyString (), trait.prettyString ());
 	}
@@ -4223,12 +4244,12 @@ namespace semantic {
 	    if (!left.to<Type> ().isCompatible (right)) {
 		// It can be compatible with an ancestor of right
 		if (right.is <ClassRef> () && !right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ()) {
-		    auto ancestor = validateType (right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ());
+		    auto ancestor = right.to <ClassRef> ().getAncestor ();
 		    while (!ancestor.isEmpty ()) {
 			if (left.to <Type> ().isCompatible (ancestor)) return;
 			else {
 			    if (!ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ())
-				ancestor = validateType (ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ());
+				ancestor = ancestor.to <ClassRef> ().getAncestor ();
 			    else ancestor = Generator::empty ();
 			}
 		    }
@@ -4326,6 +4347,10 @@ namespace semantic {
 	    return this-> _referent.back ().get (name);
 	}	
 
+	std::vector <Symbol> Visitor::getGlobalPrivate (const std::string & name) {					       
+	    return this-> _referent.back ().getPrivate (name);
+	}	
+	
 	void Visitor::pushReferent (const semantic::Symbol & sym) {
 	    this-> _referent.push_back (sym);
 	}

@@ -238,9 +238,9 @@ namespace semantic {
 					       left, name);
 		}
 		
-		auto ancestor = cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAncestor ();
+		auto ancestor = cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
 		if (!ancestor.isEmpty ())
-		    cl = this-> _context.validateType (ancestor).to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+		    cl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 		else cl = Generator::empty ();
 		i += 1;
 	    }
@@ -250,6 +250,7 @@ namespace semantic {
 	    std::vector <Generator> syms;
 	    auto & vtable = cl.to <generator::Class> ().getVtable ();
 	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
+	    
 	    for (auto i : Ymir::r (0, vtable.size ())) {
 		if (Ymir::Path (vtable [i].to <FrameProto> ().getName (), "::").fileName ().toString () == name) {
 		    if (prv || (prot && protVtable [i] == generator::Class::MethodProtection::PROT) || protVtable [i] == generator::Class::MethodProtection::PUB) {
@@ -278,7 +279,7 @@ namespace semantic {
 		    }
 		}
 	    }
-
+	    
 	    // Template methods
 	    for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 		match (it) {
@@ -318,7 +319,7 @@ namespace semantic {
 	    int score;
 	    std::vector <std::string> errors;
 	    auto ret = call.validate (expression.getLocation (), elem, {left}, score, errors);
-	    if (errors.size () != 0)
+	    if (ret.isEmpty ())
 		call.error (expression.getLocation (), elem, {left}, errors);
 	    return ret;
 	}

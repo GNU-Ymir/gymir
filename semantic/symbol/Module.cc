@@ -78,10 +78,12 @@ namespace semantic {
 	return this-> _table.getAll ();
     }
     
-    bool Module::equals (const Symbol & other) const {
+    bool Module::equals (const Symbol & other, bool parent) const {
 	if (!other.is<Module> ()) return false;
 	if (this-> getName () == other.getName ()) {
-	    return this-> getReferent ().equals (other.getReferent ());
+	    if (parent) {		
+		return this-> getReferent ().equals (other.getReferent ());
+	    } else return true;
 	} else 
 	    return false;
     }

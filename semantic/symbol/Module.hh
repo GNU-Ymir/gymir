@@ -56,7 +56,7 @@ namespace semantic {
 
 	const std::vector <Symbol> & getAllLocal () const;
 	
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool parent = true) const override;
 
 	/**
 	 * \return Does this module comes from external file ?

@@ -140,6 +140,13 @@ namespace semantic {
 
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
+	 * \brief It will ask it's referent recursively
+	 * \return a list of symbol, or an empty list if it does not exists
+	 */
+	virtual std::vector <Symbol> getPrivate (const std::string & name) const final;
+
+	/**
+	 * \brief Find a symbol named name, in the scope hierarchy
 	 * \brief It will ask to it's referent recursively
 	 * \brief It can only return symbols that are public
 	 * \return a list of symbols (all publics), or an empty list it it does not exists
@@ -194,7 +201,7 @@ namespace semantic {
 	/**
 	 * \return is this symbol the same as other (no only address, or type)
 	 */
-	virtual bool equals (const Symbol & other) const = 0;
+	virtual bool equals (const Symbol & other, bool parent = true) const = 0;
 	
 	/**
 	 * \return a formated string of the hierarchy of the modules and all declared symbols
@@ -298,6 +305,11 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	std::vector <Symbol> get (const std::string & name) const;
+		
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector <Symbol> getPrivate (const std::string & name) const;
 
 	/**
 	 * Proxy function for symbol
@@ -348,7 +360,7 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	bool equals (const Symbol & other) const ;
+	bool equals (const Symbol & other, bool parent = true) const ;
 
 	/**
 	 * \brief This function will check if the symbols are the same (in ref terms)
@@ -428,8 +440,7 @@ namespace semantic {
 	    T t;
 	    return this-> _value-> isOf (&t); 			    
 	}
-
-    private :
+	
 	/**
 	 * \brief It can happens that symbols can be accessed by multiple points
 	 * \brief This will result of a multiple definition of the same symbol

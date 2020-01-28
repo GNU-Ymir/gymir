@@ -69,7 +69,7 @@ namespace semantic {
 	return this-> _table.getTemplates ();
     }    
     
-    bool ModRef::equals (const Symbol & other) const {
+    bool ModRef::equals (const Symbol & other, bool) const {
 	if (!other.is<ModRef> ()) return false;
 	return this-> getName () == other.getName () && this-> _name == other.to<ModRef> ()._name;
     }

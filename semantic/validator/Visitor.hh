@@ -172,8 +172,7 @@ namespace semantic {
 	     * \return A StructRef
 	     */
 	    generator::Generator validateStruct (const semantic::Symbol & str);
-
-
+	    
 	    /**
 	     * \brief Validate a class declaration
 	     * \brief unlike function or vardel, this will not create any generator, but just check the integrity of the the class, and generate all the inner function of the class
@@ -877,6 +876,13 @@ namespace semantic {
 	     * \param name the name of the symbol to retreive
 	     */
 	    std::vector <Symbol> getGlobal (const std::string & name);
+
+
+	    /**
+	     * \brief Retreive a globally declared symbol (outside of the frame, or inner declared but not local just private)
+	     * \param name the name of the symbol to retreive
+	     */
+	    std::vector <Symbol> getGlobalPrivate (const std::string & name);
 
 
 	    /**

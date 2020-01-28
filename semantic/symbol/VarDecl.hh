@@ -37,7 +37,7 @@ namespace semantic {
 
 	bool isOf (const ISymbol * type) const override;
 
-	bool equals (const Symbol & other) const override;
+	bool equals (const Symbol & other, bool parent = true) const override;
 
 	const syntax::Expression & getValue () const;
 	
