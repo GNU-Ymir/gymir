@@ -40,3 +40,7 @@ YMIR Driver
 
 fversion=
 YMIR Joined RejectNegative
+
+imultilib
+YMIR Joined Separate
+; Documented in C

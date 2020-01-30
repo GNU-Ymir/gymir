@@ -141,6 +141,8 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 	// dump documentation
     } else if (code == OPT_fversion_) {
 	global::State::instance ().activateVersion (arg);
+    } else if (code == OPT_imultilib) {
+	// set multilib
     } else {
 	return false;
     }

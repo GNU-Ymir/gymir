@@ -295,7 +295,7 @@ namespace semantic {
 		    }
 		}
 	    } else
-		Error::halt ("%(r) - reaching impossible point", "Critical");
+		Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
 	    
 	    return Symbol::empty ();
 	}
