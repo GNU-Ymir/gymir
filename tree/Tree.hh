@@ -122,7 +122,7 @@ namespace generic {
 	 * \param attrs the name of the fields (if attrs < types, the fields name will be their index)
 	 * \param types the type of each field
 	 */
-	static Tree tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types);
+	static Tree tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types, bool isUnion = false, bool isPacked = false);
 	
 	/**
 	 * \brief Create a tree type of floating type

@@ -110,7 +110,7 @@ namespace semantic {
 				inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
 				fields.push_back (it.to <generator::VarDecl> ().getName ());
 			    }
-			    type = Tree::tupleType (fields, inner);
+			    type = Tree::tupleType (st.getRef ().getRealName (), fields, inner, st.getRef ().to <semantic::Struct> ().isUnion (), st.getRef ().to <semantic::Struct> ().isPacked ());
 			    current.erase (st.prettyString ());
 			} else return Tree::voidType ();
 		    }
@@ -746,6 +746,10 @@ namespace semantic {
 
 		else of (StructCst, cst,
 		    return generateStructCst (cst);	       
+		)
+
+		else of (UnionCst, cst,
+		    return generateUnionCst (cst);	       
 		)
 
 		else of (StructRef, rf ATTRIBUTE_UNUSED,
@@ -1781,6 +1785,17 @@ namespace semantic {
 	    auto type = generateType (cl.getType ());
 	    return Tree::constructField (cl.getLocation (), type, names, results);
 	}
+
+	generic::Tree Visitor::generateUnionCst (const UnionCst & cl) {
+	    std::vector <std::string> names;
+	    std::vector <Tree> results;
+	    names.push_back (cl.getFieldName ());
+	    results.push_back (castTo (cl.getTypeCst (), cl.getParameter ()));	    
+	    auto type = generateType (cl.getType ());
+	    
+	    return Tree::constructField (cl.getLocation (), type, names, results);
+	}
+
 	
 	generic::Tree Visitor::generateCopier (const Copier & copy) {
 	    auto inner = generateValue (copy.getWho ());

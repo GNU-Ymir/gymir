@@ -117,6 +117,8 @@ namespace Ymir {
 			    UNDEF_TYPE			    = "undefined type %(y)",
 			    UNDEF_VAR			    = "undefined symbol %(y)",
 			    UNINIT_FIELD                    = "field %(y) has no initial value",
+			    UNION_CST_MULT                  = "Construction of union requires only one parameter",
+			    UNION_INIT_FIELD                = "default field value of union has no sense",
 			    UNREACHBLE_STATEMENT	    = "unreachable statement",
 			    UNRESOLVED_TEMPLATE             = "unresolved template",
 			    UNTERMINATED_SEQUENCE	    = "unterminated escape sequence",

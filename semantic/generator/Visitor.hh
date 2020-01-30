@@ -252,6 +252,11 @@ namespace semantic {
 	    generic::Tree generateStructCst (const StructCst & cl);
 
 	    /**
+	     * \brief Transform an union construction into gimple
+	     */
+	    generic::Tree generateUnionCst (const UnionCst & cl);
+
+	    /**
 	     * \brief Transform a class construction into gimple
 	     */
 	    generic::Tree generateClassCst (const ClassCst & cl);

@@ -107,9 +107,13 @@ namespace generic {
 	return Tree::tupleType ("", attrs, types);
     }
     
-    Tree Tree::tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types) {
+    Tree Tree::tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types, bool isUnion, bool isPacked) {
 	tree field_last = NULL_TREE, field_begin = NULL_TREE;
-	tree record_type = make_node (RECORD_TYPE);
+	tree record_type;
+	if (isUnion)
+	    record_type = make_node (UNION_TYPE);
+	else record_type = make_node (RECORD_TYPE);
+	
 	auto size = 0;
 	for (uint i = 0 ; i < types.size () ; i++) {
 	    tree ident;
@@ -133,6 +137,15 @@ namespace generic {
 	TREE_CHAIN (field_last) = NULL_TREE;
 	TYPE_FIELDS (record_type) = field_begin;
 	layout_type (record_type);
+	
+	if (isPacked && !isUnion) {
+	    TYPE_SIZE (record_type) = bitsize_int (size * BITS_PER_UNIT);
+	    TYPE_SIZE_UNIT (record_type) = size_int (size);
+	    TYPE_PACKED (record_type) = 1;
+	    SET_TYPE_ALIGN (record_type, 1 * BITS_PER_UNIT);
+	    compute_record_mode (record_type);	
+	}
+	  
 
 	return Tree::init (UNKNOWN_LOCATION, record_type);
     }
@@ -673,7 +686,7 @@ namespace generic {
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	
 	return getTreeCode () != RECORD_TYPE &&
-	    getTreeCode () != ARRAY_TYPE ;	    
+	    getTreeCode () != ARRAY_TYPE && getTreeCode () != UNION_TYPE;	    
     }    
     
     void Tree::setDeclArguments (const std::list <Tree> & args) {
@@ -816,7 +829,7 @@ namespace generic {
 	if (this-> _t == NULL_TREE)
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	tree type = this-> _t;
-	if (this-> getTreeCode () != RECORD_TYPE) type = TREE_TYPE (this-> _t);
+	if (this-> getTreeCode () != RECORD_TYPE && this-> getTreeCode () != UNION_TYPE) type = TREE_TYPE (this-> _t);
 	
 	tree field_decl = TYPE_FIELDS (type);
 	while (field_decl != NULL_TREE) {
@@ -830,7 +843,7 @@ namespace generic {
 	    Ymir::Error::halt ("(%r) - undefined field : %(r)", "Critical" , name);
 
 	// If this-> _t is not a RECORD_TYPE, we assume we want the component ref
-	if (this-> getTreeCode () == RECORD_TYPE)
+	if (this-> getTreeCode () == RECORD_TYPE || this-> getTreeCode () == UNION_TYPE)
 	    return Tree::init (BUILTINS_LOCATION, field_decl);
 	
 	return Tree::build (

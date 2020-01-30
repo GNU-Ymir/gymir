@@ -183,6 +183,7 @@ ymir_OBJS = \
 	ymir/generator_UnaryFloat.o \
 	ymir/generator_UnaryInt.o \
 	ymir/generator_UnaryPointer.o \
+	ymir/generator_UnionCst.o \
 	ymir/generator_Value.o \
 	ymir/generator_VarDecl.o \
 	ymir/generator_UniqValue.o \

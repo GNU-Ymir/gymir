@@ -489,6 +489,8 @@ namespace semantic {
 		    std::vector <generator::Generator> types;
 		    for (auto & it : sym.to<semantic::Struct> ().getFields ()) {
 			this-> validateVarDeclValue (it.to <syntax::VarDecl> (), false);
+			if (str.to <semantic::Struct> ().isUnion () && !it.to <syntax::VarDecl> ().getValue ().isEmpty ())
+			    errors.push_back (Ymir::Error::makeOccur (it.to <syntax::VarDecl> ().getValue ().getLocation (), ExternalError::get (UNION_INIT_FIELD)));
 		    }
 		    
 		    syms = this-> discardAllLocals ();
@@ -2514,7 +2516,9 @@ namespace semantic {
 	    
 	    type.to <Type> ().isLocal (true);
 	    if (!value.isEmpty ()) {
-		verifyMemoryOwner (var.getLocation (), type, value, true);
+		// We do not check the lambdatype complete type if the var is not mutable
+		if (isMutable || !type.is <LambdaType> ())
+		    verifyMemoryOwner (var.getLocation (), type, value, true);
 	    }
 
 	    if (type.is<NoneType> () || type.is<Void> ()) {

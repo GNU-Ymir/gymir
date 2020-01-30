@@ -355,33 +355,71 @@ namespace semantic {
 	generator::Generator CallVisitor::validateStructCst (const lexing::Word & location, const generator::Struct & str, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
 	    std::vector <Generator> params;
 	    std::vector <Generator> rights = rights_;
-	    for (auto it : str.getFields ()) {
-		auto param = findParameterStruct (rights, it.to<generator::VarDecl> ());
-		if (param.isEmpty ()) return Generator::empty ();
-		params.push_back (param);
-	    }
-
-	    if (rights.size () != 0) return Generator::empty ();
 	    std::vector <Generator> types;
-	    for (auto it : Ymir::r (0, str.getFields ().size ())) {
+	    
+	    if (str.getRef ().to <semantic::Struct> ().isUnion ()) {
+		lexing::Word name;
 		TRY (
-		    this-> _context.verifyMemoryOwner (
-			params [it].getLocation (),
-			str.getFields () [it].to <generator::VarDecl> ().getVarType (),
-			params [it],
-			true
-		    );
-		    types.push_back (str.getFields () [it].to <generator::VarDecl> ().getVarType ());
+		    if (rights.size () != 1)
+			Ymir::Error::occur (location, ExternalError::get (UNION_CST_MULT));
+
+		    if (rights [0].is <NamedGenerator> ()) { // If it is a named gen, we get the field with the same name
+			name = rights [0].to <NamedGenerator> ().getLocation ();
+			auto param = rights [0].to <NamedGenerator> ().getContent ();
+			for (auto it : str.getFields ()) {
+			    if (it.to <generator::VarDecl> ().getLocation ().str == name.str) {				
+				this-> _context.verifyMemoryOwner (
+				    name,
+				    it.to <generator::VarDecl> ().getVarType (),
+				    param,
+				    true
+				);
+				
+				types.push_back (it.to <generator::VarDecl> ().getVarType ());
+				params.push_back (param);
+				break;
+			    }
+			}
+		    } // No else, we must name the field we want to construct 
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-	    }
+		} FINALLY;		
+		if (params.size () == 0) return Generator::empty ();
 
-	    if (errors.size () != 0) return Generator::empty ();
+		if (errors.size () != 0) return Generator::empty ();
 	    
-	    score = 0;
-	    return StructCst::init (location, StructRef::init (str.getLocation (), str.getRef ()), str.clone (), types, params);
+		score = 0;
+		return UnionCst::init (location, StructRef::init (str.getLocation (), str.getRef ()), str.clone (), name.str, types[0], params[0]);
+	    } else {
+		for (auto it : str.getFields ()) {
+		    auto param = findParameterStruct (rights, it.to<generator::VarDecl> ());
+		    if (param.isEmpty ()) return Generator::empty ();
+		    params.push_back (param);
+		}
+		
+		if (rights.size () != 0) return Generator::empty ();
+		for (auto it : Ymir::r (0, str.getFields ().size ())) {
+		    TRY (
+			this-> _context.verifyMemoryOwner (
+			    params [it].getLocation (),
+			    str.getFields () [it].to <generator::VarDecl> ().getVarType (),
+			    params [it],
+			    true
+			);
+			types.push_back (str.getFields () [it].to <generator::VarDecl> ().getVarType ());
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+	    
+
+		if (errors.size () != 0) return Generator::empty ();
+	    
+		score = 0;
+		return StructCst::init (location, StructRef::init (str.getLocation (), str.getRef ()), str.clone (), types, params);
+	    }
 	}	
 
 	generator::Generator CallVisitor::findParameterStruct (std::vector <Generator> & params, const generator::VarDecl & var) {
@@ -409,7 +447,7 @@ namespace semantic {
 	    
 	    return Generator::empty ();
 	}
-
+	
 	generator::Generator CallVisitor::validateFunctionPointer (const lexing::Word & location, const Generator & gen, const std::vector <Generator> & rights_, int & score, std::vector <std::string> & errors) {
 	    score = 0;
 	    std::vector <Generator> params = rights_;
