@@ -39,6 +39,10 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    bool equals (const Generator & other) const override;
+
+	    
+	    void isMutable (bool is) override;
+
 	    
 	    /** 
 	     * \return the name of the type formatted

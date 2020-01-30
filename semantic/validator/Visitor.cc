@@ -665,7 +665,7 @@ namespace semantic {
 	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ())
 		return ClassRef::init (cls.getName (), ancestor, cls);
 	    else {
-		Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE), cls.getRealName ());
+		Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), cls.getRealName ());
 		return Generator::empty ();
 	    }
 	}
@@ -924,6 +924,9 @@ namespace semantic {
 	    Generator retType (Generator::empty ());
 	    std::vector <std::string> errors;
 	    auto classType = classType_;
+
+	    auto proto = validateConstructorProto (cs);
+	    verifyConstructionLoop (proto.getLocation (), proto);
 	    
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
@@ -1040,6 +1043,9 @@ namespace semantic {
 	    
 	    {
 		TRY (
+		    if (errors.size () != 0)
+			this-> discardAllLocals ();
+		    
 		    quitBlock ();
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
@@ -1133,8 +1139,7 @@ namespace semantic {
 			auto left = this-> validateValue (access);
 			auto right = this-> validateValue (it.second);
 			verifyMemoryOwner (left.getLocation (), left.to <Value> ().getType (), right, true);
-			instructions.push_back (Affect::init (left.getLocation (), left.to <Value> ().getType (), left, right, true));
-
+			instructions.push_back (Affect::init (left.getLocation (), left.to <Value> ().getType (), left, right, true));			
 			validated.emplace (name.str);
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
@@ -1169,6 +1174,114 @@ namespace semantic {
 	    auto loc = cs.getName ();
 	    return Block::init (loc, Void::init (loc), instructions);
 	}
+
+	void Visitor::verifyConstructionLoop (const lexing::Word & location, const Generator & call) {
+	    static std::vector <Symbol> protos;
+	    static std::vector <Generator> gen_protos;
+	    static std::vector <lexing::Word> locs;
+	    Symbol sym (Symbol::empty ());
+	    Generator current_proto (Generator::empty ());
+	    Generator clRef (Generator::empty ());
+	    
+	    if (call.is <Call> () && call.to <Call> ().getFrame ().is <ConstructorProto> ()) {
+		sym = call.to <Call> ().getFrame ().to <ConstructorProto> ().getRef ();
+		current_proto = call.to <Call> ().getFrame ();
+		clRef = call.to <Call> ().getFrame ().to <ConstructorProto> ().getReturnType ();	    
+	    } else if (call.is <ConstructorProto> ()) {
+		sym = call.to <ConstructorProto> ().getRef ();
+		current_proto = call;
+		clRef = call.to <ConstructorProto> ().getReturnType ();	    
+	    } else if (call.is <ClassCst> ()) {
+		sym = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getRef ();
+		current_proto = call.to <ClassCst> ().getFrame ();
+		clRef = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getReturnType ();	    
+	    } else return; // This is not a class constructor, we can't check that
+	    
+	    auto & cs = sym.to <semantic::Constructor> ();	    
+	    for (auto & it : protos) {
+		if (it.equals (sym)) {		    
+		    std::string note;
+		    for (auto z : Ymir::r (0, locs.size ())) {
+			if (z != 0) note += "\n";
+			note = note + Ymir::Error::createNote (locs [z], gen_protos [z].prettyString ());
+		    }
+		    Ymir::Error::occurAndNote (call.getLocation (), note, ExternalError::get (INFINITE_CONSTRUCTION_LOOP));
+		}
+	    }
+
+	    this-> _referent.push_back (sym);
+	    protos.push_back (sym);
+	    gen_protos.push_back (current_proto);
+	    locs.push_back (location);
+	    
+	    std::vector <std::string> errors;
+	    std::vector <Generator> params;
+	    Generator retType (Generator::empty ());
+	    
+	    enterClassDef (clRef.to <ClassRef> ().getRef ());
+	    enterForeign ();
+	    enterBlock ();
+
+	    {
+		TRY (
+		    validatePrototypeForFrame (cs.getName (), cs.getContent ().getPrototype (), params, retType);
+		    retType = clRef.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <Value> ().getType ();
+		    params.insert (params.begin (), ParamVar::init (cs.getName (), clRef, true));
+		    insertLocal (params [0].getName (), params [0]);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors = msgs;
+		} FINALLY;
+	    }
+	    
+	    TRY (
+		// If this is just a construction redirection, there is no need to check 
+		if (cs.getContent ().getExplicitSelfCall ().isEof ()) {	    
+		    auto & superParams = cs.getContent ().getSuperParams ();
+		    if (!clRef.to <ClassRef> ().getAncestor ().isEmpty ()) {
+			auto ancestor = clRef.to <ClassRef> ().getAncestor ();
+			auto loc = cs.getContent ().getExplicitSuperCall ();
+			if (loc.isEof ()) loc = cs.getName ();
+			auto superBin = TemplateSyntaxWrapper::init (loc, getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ()));				      
+		    
+			auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
+			auto result = validateValue (call);
+			verifyConstructionLoop (loc, result);
+		    }
+
+		    for (auto & it : cs.getContent ().getFieldConstruction ()) {
+			auto right = this-> validateValue (it.second);
+			if (right.to <Value> ().getType ().is <ClassRef> ()) {
+			    locs.back () = it.second.getLocation ();
+			    verifyConstructionLoop (it.second.getLocation (), right);
+			}
+		    }
+		}		
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } FINALLY;
+
+	    {
+		TRY (
+		    quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+
+	    exitForeign ();
+	    exitClassDef ();	    	    
+	    protos.pop_back ();
+	    gen_protos.pop_back ();
+	    locs.pop_back ();
+	    
+	    this-> _referent.pop_back ();
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
+	}	
 
 	generator::Generator Visitor::validateEnum (const semantic::Symbol & en) {
 	    if (en.to<semantic::Enum> ().getGenerator ().isEmpty ()) {
@@ -1563,29 +1676,39 @@ namespace semantic {
 		    } FINALLY;
 		}
 	    }
+
+	    {
+		TRY (
+		    if (!type.is<Void> ()) {			
+			verifyMemoryOwner (block.getEnd (), type, values.back(), false);
+		    } else if (type.is<Void> () && values.size () != 0 && !values.back ().is <None> () && isUseless (values.back ()))
+			Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID));	    
+		)  CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
 	    {
 		TRY (
 		    if (!decl.isEmpty ()) {
 			this-> _referent.pop_back ();
 		    }
+		    
+		    // If there are some errors, no need to add the warning about the unused vars
+		    // Moreover, they may be not pertinent 
+		    if (errors.size () != 0)
+			discardAllLocals ();
+		    
 		    quitBlock ();
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
-	    
-	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
-	    }
 
-	    if (!type.is<Void> ()) {		
-		verifyMemoryOwner (block.getEnd (), type, values.back(), false);
-	    }
-	    
-	    else if (type.is<Void> () && values.size () != 0 && !values.back ().is <None> () && isUseless (values.back ()))
-		Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID));	    
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
 	    
 	    auto ret = Block::init (block.getLocation (), type, values);
 	    ret.to <Value> ().isBreaker (breaker);
@@ -2164,8 +2287,8 @@ namespace semantic {
 	    }
 	    
 	    
-	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), cl, params);
-	    frame.to <ConstructorProto> ().setMangledName (func.getMangledName ());
+	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), func.clone (), cl, params);
+	    frame.to <ConstructorProto> ().setMangledName (func.getMangledName ());	    
 	    return frame;
 	}
 
@@ -2254,6 +2377,8 @@ namespace semantic {
 
 			if (type.is <NoneType> () || type.is<Void> ()) {
 			    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+			} else if (type.is <generator::LambdaType> ()) {
+			    Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
 			}
 		
 			params.push_back (ParamVar::init (var.getName (), type, isMutable));
@@ -2309,7 +2434,8 @@ namespace semantic {
 
 		    if (var.getType ().isEmpty () && no_value && !var.getValue ().isEmpty ()) {
 			Ymir::Error::occur (var.getLocation (), ExternalError::get (FORWARD_REFERENCE_VAR));
-		    }		    
+		    }
+
 				
 		    bool isMutable = false;
 		    bool isRef = false;
@@ -2323,6 +2449,11 @@ namespace semantic {
 		    if (type.is <NoneType> () || type.is<Void> ()) {
 			Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
 		    }
+		    
+		    if (type.is <generator::LambdaType> ()) {
+			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
+		    }
+
 		    
 		    params.push_back (ProtoVar::init (var.getName (), type, value, isMutable));
 		    if (var.getName () != Keys::UNDER) {
@@ -2614,7 +2745,22 @@ namespace semantic {
 	    } else type = Void::init (rt.getLocation ());
 
 	    auto fn_type = getCurrentFuncType ();
- 
+
+	    /** In case of lambda proto, we are able to validate it with the function return type */
+	    if (type.is <LambdaType> () && (fn_type.is <FuncPtr> () || fn_type.is <Delegate> ())) {
+		std::vector <Generator> paramTypes;
+		if (fn_type.is <FuncPtr> ()) paramTypes = fn_type.to <FuncPtr> ().getParamTypes ();
+		else paramTypes = fn_type.to <Delegate> ().getInners ()[0].to <FuncPtr> ().getParamTypes ();
+
+		if (value.is <VarRef> ()) {
+		    value = validateLambdaProto (value.to <VarRef> ().getValue ().to <LambdaProto> (), paramTypes);
+		    type = value.to <Value> ().getType ();
+		} else if (value.is <LambdaProto> ()) {
+		    value = validateLambdaProto (value.to <LambdaProto> (), paramTypes);
+		    type = value.to <Value> ().getType ();
+		} // This is working exactly like findParameter for function, maybe we can merge those two blocks
+	    }
+	    
 	    if (fn_type.isEmpty ()) {
 		this-> setCurrentFuncType (type);
 		fn_type = type;
@@ -3381,10 +3527,17 @@ namespace semantic {
 	Generator Visitor::validateFuncPtr (const syntax::FuncPtr & ptr) {
 	    std::vector <Generator> params;
 	    if (ptr.getLocation () == Keys::FUNCTION) {
-		for (auto & it : ptr.getParameters ())
+		for (auto & it : ptr.getParameters ()) {
 		    params.push_back (validateType (it, true));
+		}
 		
 		return FuncPtr::init (ptr.getLocation (), validateType (ptr.getRetType (), true), params);
+	    } else if (ptr.getLocation () == Keys::DELEGATE) {
+		for (auto & it : ptr.getParameters ()) {
+		    params.push_back (validateType (it, true));
+		}
+		
+		return Delegate::init (ptr.getLocation (), FuncPtr::init (ptr.getLocation (), validateType (ptr.getRetType (), true), params));
 	    } else {
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		return Generator::empty ();
@@ -4013,8 +4166,10 @@ namespace semantic {
 	}	
 
 	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct, bool checkTypes) {
-	    if (checkTypes)
-		verifyCompatibleTypeWithValue (loc, type, gen);	    
+	    if (checkTypes) 
+		verifyCompatibleTypeWithValue (loc, type, gen);
+
+	    verifyCompleteType (loc, type);
 	    verifyImplicitAlias (loc, type, gen);
 	    
 	    // Verify Implicit referencing
@@ -4131,6 +4286,16 @@ namespace semantic {
 		Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					   llevel, max_level
 		);
+	    }
+	}
+
+	void Visitor::verifyCompleteType (const lexing::Word & loc, const Generator &type) {
+	    if (type.is <LambdaType> ()) {
+		if (!loc.isSame (type.getLocation ())) {
+		    auto note = Ymir::Error::createNote (loc);
+		    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
+		} else
+		    Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
 	    }
 	}
 	

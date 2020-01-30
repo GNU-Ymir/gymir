@@ -122,8 +122,9 @@ namespace semantic {
 	    /**
 	     * \brief if the type is mutable
 	     */
-	    virtual void isMutable (bool is);
+	    virtual void isMutable (bool is);	    
 
+	    
 	    /**
 	     * \brief Transform the type into the same type but deeply mutable (every sub type are also mutable)
 	     * \brief This is used when the keyword dmut is used
@@ -216,6 +217,12 @@ namespace semantic {
 	     * \brief Change the inner type
 	     */
 	    void setInners (const std::vector<Generator> & gen);
+
+	    /**
+	     * Change the value of _isMutable, 
+	     * Warning different of isMutable (bool)
+	     */
+	    void setMutable (bool is);
 	    
 	};	
 

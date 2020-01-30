@@ -56,6 +56,10 @@ namespace semantic {
 	    return true;
 	}
 
+	void FuncPtr::isMutable (bool is) {
+	    this-> setMutable (is);
+	}
+	
 	std::string FuncPtr::typeName () const {
 	    Ymir::OutBuffer buf;
 	    buf.write ("&fn(");

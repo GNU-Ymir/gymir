@@ -10,14 +10,17 @@ namespace semantic {
 	ConstructorProto::ConstructorProto () :
 	    Value (),
 	    _params ({}),
-	    _type (Generator::empty ())	    
+	    _type (Generator::empty ()),
+	    _name (""),
+	    _ref (Symbol::empty ())
 	{}
 
-	ConstructorProto::ConstructorProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params) :
+	ConstructorProto::ConstructorProto (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params) :
 	    Value (loc, LambdaType::init (loc, type, getTypes (params))),
 	    _params (params),
 	    _type (type),
-	    _name (name)
+	    _name (name),
+	    _ref (ref)
 	{}
 
 	std::vector <Generator> ConstructorProto::getTypes (const std::vector <Generator> & params) {
@@ -28,8 +31,8 @@ namespace semantic {
 	    return types;
 	}
 		   
-	Generator ConstructorProto::init (const lexing::Word & loc, const std::string &name, const Generator & type, const std::vector<Generator> & params) {
-	    return Generator {new ConstructorProto (loc, name, type, params)};
+	Generator ConstructorProto::init (const lexing::Word & loc, const std::string &name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params) {
+	    return Generator {new ConstructorProto (loc, name, ref, type, params)};
 	}
     
 	Generator ConstructorProto::clone () const {
@@ -84,6 +87,10 @@ namespace semantic {
 
 	const std::string & ConstructorProto::getName () const {
 	    return this-> _name;
+	}
+
+	Symbol ConstructorProto::getRef () const {
+	    return this-> _ref;
 	}
 	
     }

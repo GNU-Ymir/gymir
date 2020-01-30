@@ -45,6 +45,10 @@ namespace semantic {
 	    return true;
 	}
 	
+	void LambdaType::isMutable (bool is) {
+	    this-> setMutable (is);
+	}
+	
 	std::string LambdaType::typeName () const {
 	    Ymir::OutBuffer buf;
 	    buf.write ("fn (");

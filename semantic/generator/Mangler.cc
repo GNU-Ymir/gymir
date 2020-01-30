@@ -63,6 +63,7 @@ namespace semantic {
 		else of (Range, r, result = mangleRangeT (r))
 		else of (Pointer, p, result = manglePointerT (p))
 		else of (FuncPtr, f, result = mangleFuncPtrT (f))
+		else of (Delegate, d, result = mangleDelegateT (d))
 		else of (Closure, c ATTRIBUTE_UNUSED, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
 	    }
 
@@ -327,6 +328,14 @@ namespace semantic {
 	    return format ("FP%%", buf.str ().length (), buf.str ());
 	}
 
+	std::string Mangler::mangleDelegateT (const Delegate & ptr) const {
+	    Ymir::OutBuffer buf;
+	    for (auto & it : ptr.getInners ()) {		
+		buf.write (format ("%", mangleType (it, false)));
+	    }
+	    return format ("DG%%", buf.str ().length (), buf.str ());
+	}
+	
 	std::string Mangler::mangleClosureT (const Closure &) const {
 	    return ""; 
 	}

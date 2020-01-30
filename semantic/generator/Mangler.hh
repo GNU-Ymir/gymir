@@ -192,6 +192,11 @@ namespace semantic {
 	    std::string mangleFuncPtrT (const FuncPtr & ptr) const;
 
 	    /**
+	     * \brief Mangle a function pointer type
+	     */
+	    std::string mangleDelegateT (const Delegate & ptr) const;
+
+	    /**
 	     * \brief Mangle a closure type
 	     */
 	    std::string mangleClosureT (const Closure & c) const;

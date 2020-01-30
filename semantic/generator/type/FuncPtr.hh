@@ -47,6 +47,11 @@ namespace semantic {
 	    std::string typeName () const override;
 
 	    /**
+	     * Does not change the mutability of the params
+	     */
+	    void isMutable (bool is) override;
+	    
+	    /**
 	     * \return the return type of the function pointer
 	     */
 	    const Generator & getReturnType () const;

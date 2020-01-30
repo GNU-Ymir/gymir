@@ -45,6 +45,10 @@ namespace semantic {
 	    return true;
 	}
 
+	void Delegate::isMutable (bool is) {
+	    this-> setMutable (is);
+	}
+	
 	std::string Delegate::typeName () const {
 	    Ymir::OutBuffer buf;
 	    buf.write ("dg(");

@@ -267,11 +267,15 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (ret.to <Value> ().getType ().is <LambdaType> () && var.getType ().is <FuncPtr> ()) {
+	    if (ret.to <Value> ().getType ().is <LambdaType> () && (var.getType ().is <FuncPtr> () || var.getType ().is <Delegate> ())) {
+		std::vector <Generator> paramTypes;
+		if (var.getType ().is <FuncPtr> ()) paramTypes = var.getType ().to <FuncPtr> ().getParamTypes ();
+		else paramTypes = var.getType ().to <Delegate> ().getInners ()[0].to <FuncPtr> ().getParamTypes ();
+		
 	    	if (ret.is <VarRef> ()) {
-	    	    return this-> _context.validateLambdaProto (ret.to <VarRef> ().getValue ().to <LambdaProto> (), var.getType ().to <FuncPtr> ().getParamTypes ());
+	    	    return this-> _context.validateLambdaProto (ret.to <VarRef> ().getValue ().to <LambdaProto> (), paramTypes);
 	    	} else if (ret.is <LambdaProto> ()) 		    
-	    	    return this-> _context.validateLambdaProto (ret.to<LambdaProto> (), var.getType ().to <FuncPtr> ().getParamTypes ());		     	    
+	    	    return this-> _context.validateLambdaProto (ret.to<LambdaProto> (), paramTypes);		     	    
 	    }
 	    
 	    return ret;	    

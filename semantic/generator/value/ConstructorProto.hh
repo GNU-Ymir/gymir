@@ -2,6 +2,7 @@
 
 #include <ymir/semantic/generator/Value.hh>
 #include <ymir/semantic/generator/Frame.hh>
+#include <ymir/semantic/Symbol.hh>
 
 namespace semantic {
 
@@ -15,6 +16,8 @@ namespace semantic {
 	    std::string _name;
 	    
 	    std::string _mangleName;
+
+	    Symbol _ref;
 	    
 	private :
 
@@ -22,7 +25,7 @@ namespace semantic {
 	    
 	    ConstructorProto ();
 
-	    ConstructorProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params);
+	    ConstructorProto (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector <Generator> & params);
 
 	public :
 
@@ -30,7 +33,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector <Generator> & params);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -70,7 +73,11 @@ namespace semantic {
 
 	    void setMangledName (const std::string & name);
 
+
 	    const std::string & getMangledName () const;
+
+	    
+	    Symbol getRef () const;
 
 	private :
 

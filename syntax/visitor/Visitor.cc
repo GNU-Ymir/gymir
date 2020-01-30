@@ -37,7 +37,7 @@ namespace syntax {
 	    Keys::FOR,  Keys::WHILE, Keys::BREAK,
 	    Keys::MATCH, Keys::IN, Keys::ELSE, Keys::DELEGATE, 
 	    Keys::TRUE_, Keys::FALSE_, Keys::NULL_, Keys::CAST,
-	    Keys::FUNCTION, Keys::LET, Keys::IS, Keys::EXTERN,
+	    Keys::FUNCTION, Keys::DELEGATE, Keys::LET, Keys::IS, Keys::EXTERN,
 	    Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 	    Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
 	    Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::CLASS, Keys::ALIAS,
@@ -859,6 +859,7 @@ namespace syntax {
 	if (begin == Keys::DO)       return visitDoWhile ();
 	if (begin == Keys::FOR)      return visitFor ();
 	if (begin == Keys::FUNCTION) return visitFunctionType ();
+	if (begin == Keys::DELEGATE) return visitFunctionType ();
 	if (begin == Keys::IF)       return visitIf ();
 	if (begin == Keys::LET)      return visitVarDeclaration ();
 	if (begin == Keys::LOOP)     return visitWhile ();

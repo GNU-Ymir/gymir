@@ -1,8 +1,7 @@
 #include <ymir/errors/ListError.hh>
 
 namespace Ymir {    
-    DECLARE_ENUM_WITH_TYPE (ExternalError, std::string,			         
-			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
+    DECLARE_ENUM_WITH_TYPE (ExternalError, std::string,			       			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
 			    ALLOC_ABSTRACT_CLASS            = "class %(y) is declared abstract",
 			    BORROWED_HERE		    = "borrow occured here",
 			    BREAK_INSIDE_EXPR		    = "break here will result in an undefined behavior",
@@ -35,7 +34,11 @@ namespace Ymir {
 			    IMPOSSIBLE_EXTERN               = "impossible extern declaration",
 			    INCOMPATIBLE_TYPES		    = "incompatible types %(y) and %(y)",
 			    INCOMPATIBLE_VALUES             = "incompatible values",
-			    INCOMPLETE_TYPE                 = "type %(y) is not complete due to previous errors",
+			    INCOMPLETE_TYPE                 = "type %(y) is not complete",
+			    INCOMPLETE_TYPE_CLASS           = "type %(y) is not complete due to previous errors",
+			    
+
+			    INFINITE_CONSTRUCTION_LOOP      = "infinite construction loop",
 			    INHERIT_NO_CLASS                = "class base must be a class not a %(y)",
 			    INSERT_NO_TABLE		    = "insertion of a symbol in an entity that cannot be a referent",
 			    IN_COMPILE_TIME_EXEC            = "in compile time execution",
@@ -56,10 +59,10 @@ namespace Ymir {
 			    MUTABLE_CONST_PARAM		    = "a parameter cannot be mutable, if it is not a reference",
 			    MUTABLE_CONST_RETURN	    = "a return value cannot be mutable, if it is not a reference",
 			    NEVER_USED			    = "symbol %(y) declared but never used",
+			    NOT_ABSTRACT_NO_OVER            = "class %(y) is not abstract, but does not override empty parent method %(y)",
 			    NOT_A_CLASS                     = "type %(y) is not a class type",
 			    NOT_A_LVALUE		    = "not a lvalue",
 			    NOT_A_STRUCT                    = "type %(y) is not a struct type",
-			    NOT_ABSTRACT_NO_OVER            = "class %(y) is not abstract, but does not override empty parent method %(y)",
 			    NOT_IMPL_TRAIT                  = "class %(y) does not implement trait %(y)",
 			    NOT_ITERABLE                    = "%(y) type is not iterable",
 			    NOT_ITERABLE_WITH               = "%(y) type is not iterable with %(y) vars",
@@ -114,10 +117,10 @@ namespace Ymir {
 			    UNDEF_TYPE			    = "undefined type %(y)",
 			    UNDEF_VAR			    = "undefined symbol %(y)",
 			    UNINIT_FIELD                    = "field %(y) has no initial value",
-			    UNUSED_MATCH_CALL_OP            = "unused patterns {%(y)} in struct destructuring",
 			    UNREACHBLE_STATEMENT	    = "unreachable statement",
 			    UNRESOLVED_TEMPLATE             = "unresolved template",
 			    UNTERMINATED_SEQUENCE	    = "unterminated escape sequence",
+			    UNUSED_MATCH_CALL_OP            = "unused patterns {%(y)} in struct destructuring",
 			    USELESS_DECORATOR		    = "useless decorator",
 			    USELESS_EXPR                    = "expression has no effect",
 			    USE_AS_TYPE			    = "expression used as type",
@@ -127,5 +130,6 @@ namespace Ymir {
 			    VAR_DECL_WITH_NOTHING           = "var declaration must at least have a type or a value",
 			    VOID_VAR			    = "cannot declare var of type void",
 			    WRONG_MODULE_NAME		    = "module named %(y) must be placed in file named %(y)",
+  
     );    
 }

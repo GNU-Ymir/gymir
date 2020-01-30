@@ -86,6 +86,11 @@ namespace semantic {
 	    }	    
 	}
 
+	void Type::setMutable (bool is) {
+	    this-> _isMutable = is;
+	}
+	
+
 	void Type::isComplex (bool is) {
 	    this-> _isComplex = is;
 	}

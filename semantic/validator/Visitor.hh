@@ -636,6 +636,13 @@ namespace semantic {
 	     */
 	    void verifyImplicitAlias (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen);
 
+
+	    /**
+	     * \brief Verify that the type is complete and can be used at runtime to store value
+	     */
+	    void verifyCompleteType (const lexing::Word & loc, const generator::Generator & type);
+	    
+	    
 	    /**
 	     * \brief Applicable to the type of a vardecl, 
 	     * \param decos the decorators of the variable (and not of the type)
@@ -686,6 +693,16 @@ namespace semantic {
 	     */
 	    void verifyCompatibleTypeWithValue (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right);
 
+
+	    /**
+	     * \brief Verify the construction loop
+	     * \brief This verification is not complete, it is only able to check if there is a loop when using only direct constructor
+	     * \brief It is the more common construction, so I think, it is important to check it
+	     * \brief And other construction like using function that return an instance of the object are much more difficult to check and sometimes not even calculable i think
+	     */
+	    void verifyConstructionLoop (const lexing::Word & loc, const generator::Generator & call);
+
+	    
 	    /**
 	     * \brief Throw an exception if there is already some var named name
 	     * \param name the forbidden name
