@@ -1,8 +1,12 @@
 #include <ymir/errors/ListError.hh>
 
 namespace Ymir {    
-    DECLARE_ENUM_WITH_TYPE (ExternalError, std::string,			       			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
+    DECLARE_ENUM_WITH_TYPE (ExternalError, std::string,
+			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
+
+			    
 			    ALLOC_ABSTRACT_CLASS            = "class %(y) is declared abstract",
+			    ASSERT_FAILED                   = "assertion failed : %(y)",
 			    BORROWED_HERE		    = "borrow occured here",
 			    BREAK_INSIDE_EXPR		    = "break here will result in an undefined behavior",
 			    BREAK_NO_LOOP		    = "break statement must be placed inside a loop",
@@ -36,8 +40,6 @@ namespace Ymir {
 			    INCOMPATIBLE_VALUES             = "incompatible values",
 			    INCOMPLETE_TYPE                 = "type %(y) is not complete",
 			    INCOMPLETE_TYPE_CLASS           = "type %(y) is not complete due to previous errors",
-			    
-
 			    INFINITE_CONSTRUCTION_LOOP      = "infinite construction loop",
 			    INHERIT_NO_CLASS                = "class base must be a class not a %(y)",
 			    INSERT_NO_TABLE		    = "insertion of a symbol in an entity that cannot be a referent",

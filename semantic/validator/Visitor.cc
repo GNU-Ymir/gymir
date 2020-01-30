@@ -1404,6 +1404,8 @@ namespace semantic {
 	    match (value) {
 		of (syntax::If, fi,
 		    return validateCteIfExpression (fi);
+		) else of (syntax::Assert, as,
+		    return validateCteAssert (as);
 		) else of (syntax::Block, bl ATTRIBUTE_UNUSED,
 		    return validateValue (value);
 		) else {
@@ -1582,6 +1584,10 @@ namespace semantic {
 
 		of (syntax::Scope, scope, 
 		    return validateScopeOutOfScope (scope); // Out of scope is useless
+		);
+
+		of (syntax::Assert, assert,
+		    return validateAssert (assert);
 		);
 	    }
 
@@ -2960,6 +2966,61 @@ namespace semantic {
 	    Ymir::Error::occur (scope.getLocation (), ExternalError::get (SCOPE_OUT_OF_SCOPE));
 	    return Generator::empty ();
 	}
+
+	Generator Visitor::validateAssert (const syntax::Assert & assert) {
+	    auto test = validateValue (assert.getTest ());
+	    if (!test.to <Value> ().getType ().is <Bool> ()) {
+		Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    test.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    Bool::NAME
+		);
+	    }
+
+	    std::vector <syntax::Expression> params;
+	    params.push_back (TemplateSyntaxWrapper::init (test.getLocation (), test));
+	    if (!assert.getMsg ().isEmpty ()) {
+		params.push_back (assert.getMsg ());
+	    }
+
+	    auto loc = assert.getLocation ();
+	    auto func = createVarFromPath (assert.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (ASSERT_FUNC)});
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		func,
+		params
+	    );
+	    
+	    auto ret = validateValue (call);
+	    TRY (
+	    	auto val = retreiveValue (test);
+	    	ret.to <Value> ().isReturner (!val.to <BoolValue> ().getValue ());
+	    ) CATCH (ErrorCode::EXTERNAL) {
+	    	GET_ERRORS_AND_CLEAR (msgs);
+	    } FINALLY;
+	    
+	    return ret;
+	}
+
+	Generator Visitor::validateCteAssert (const syntax::Assert & assert) {
+	    auto test = validateValue (assert.getTest ());
+	    if (!test.to <Value> ().getType ().is <Bool> ()) {
+		Ymir::Error::occur (test.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    test.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    Bool::NAME
+		);
+	    }
+
+	    auto val = retreiveValue (test);
+	    if (!val.to <BoolValue> ().getValue ()) {
+		std::string msg;
+		if (!assert.getMsg ().isEmpty ())
+		    msg = validateValue (assert.getMsg ()).prettyString ();
+		Ymir::Error::occur (assert.getLocation (), ExternalError::get (ASSERT_FAILED), msg);
+	    }
+	    
+	    return None::init (assert.getLocation ());
+	}
+
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type) {
 	    auto typeInfo = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_INFO)});

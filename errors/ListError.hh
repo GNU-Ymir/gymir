@@ -23,6 +23,7 @@ namespace Ymir {
     DECLARE_ENUM_HEADER (ExternalError, std::string,			 
 			 AFFECT_COMPILE_TIME,
 			 ALLOC_ABSTRACT_CLASS,
+			 ASSERT_FAILED,
 			 BORROWED_HERE,
 			 BREAK_INSIDE_EXPR,
 			 BREAK_NO_LOOP,

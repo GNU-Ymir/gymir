@@ -1085,10 +1085,21 @@ namespace syntax {
 	return Break::init (location, visitExpression());
     }
 
-    Expression Visitor::visitAssert () {
+    Expression Visitor::visitAssert () {	
 	auto location = this-> _lex.next ();
+	auto token = this-> _lex.consumeIf ({Token::LPAR});	
 	auto test = visitExpression ();
-	return Assert::init (location, test, visitExpression());
+	if (token == Token::LPAR) {
+	    token = this-> _lex.next ({Token::RPAR, Token::COMA});
+	    Expression msg (Expression::empty ());
+	    if (token == Token::COMA) {
+		msg = visitExpression();
+		this-> _lex.next ({Token::RPAR});
+	    }
+	    return Assert::init (location, test, msg);
+	}
+	
+	return Assert::init (location, test, Expression::empty ());
     }
 
     Expression Visitor::visitThrow () {

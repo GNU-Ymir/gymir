@@ -269,6 +269,16 @@ namespace semantic {
 	     */
 	    generator::Generator validateCatchOutOfScope (const syntax::Catch & cat);
 
+	    /**
+	     * \brief Validate an assert
+	     */
+	    generator::Generator validateAssert (const syntax::Assert & assert);
+
+	    /**
+	     * \brief Validate an assert at compile time, 
+	     */
+	    generator::Generator validateCteAssert (const syntax::Assert & assert);
+
 
 	    /**
 	     * \brief Validate a scope guard (this function must be called only if this scope is out from any scope)

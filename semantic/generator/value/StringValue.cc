@@ -1,4 +1,6 @@
 #include <ymir/semantic/generator/value/StringValue.hh>
+#include <ymir/semantic/generator/type/Char.hh>
+#include <ymir/semantic/validator/UtfVisitor.hh>
 
 namespace semantic {
 
@@ -45,6 +47,20 @@ namespace semantic {
 	}
 
 	std::string StringValue::prettyString () const {
+	    if (this-> _value.size () < 100) { // Yes, that is absolutely arbitrary
+		std::string res;
+		std::vector <char> list;
+		if (this-> getType ().to <Type> ().getInners ()[0].to <Char> ().getSize () == 32)
+		    list = validator::UtfVisitor::utf32_to_utf8 (this-> _value); // and ugly
+		else list = this-> _value;
+		
+		for (auto & x : list) {
+		    if (x != '\0')
+			res += x;
+		}
+		
+		return res;
+	    } 
 	    return Ymir::format ("_");
 	}
 	
