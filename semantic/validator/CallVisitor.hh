@@ -168,6 +168,8 @@ namespace semantic {
 	    static void insertCandidate (int & nb, std::vector <std::string> & errors, const std::vector <std::string> & candErrors);
 
 	    static std::string prettyName (const generator::Generator & gen);
+
+	    static lexing::Word realLocation (const generator::Generator & gen);
 	    
 	};
 	

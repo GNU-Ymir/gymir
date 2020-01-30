@@ -533,29 +533,31 @@ namespace syntax {
 	std::vector <Expression> vars;
 	lexing::Word token;
 	if (isClosure)
-	     token = this-> _lex.next ({Token::PIPE});
+	    token = this-> _lex.next ({Token::PIPE, Token::DPIPE});
 	else token = this-> _lex.next ({Token::LPAR});
 	
 	bool isVariadic = false;
-	do {
-	    if (isClosure) {
-		token = this-> _lex.consumeIf ({Token::PIPE});
-		if (token != Token::PIPE) {
-		    vars.push_back (visitSingleVarDeclaration (false, false));
-		    token = this-> _lex.next ({Token::PIPE, Token::COMA});
+	if (token != Token::DPIPE) { // || begin of a closure with not params
+	    do {
+		if (isClosure) {
+		    token = this-> _lex.consumeIf ({Token::PIPE});
+		    if (token != Token::PIPE) {
+			vars.push_back (visitSingleVarDeclaration (false, false));
+			token = this-> _lex.next ({Token::PIPE, Token::COMA});
+		    }
+		} else {
+		    if (!isClass || vars.size () > 0) // If we get a method prototype, we need at least one param
+			token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
+		    if (token == Token::TDOT) {
+			isVariadic = true;
+			token = this-> _lex.next ({Token::RPAR});
+		    } else if (token != Token::RPAR) {
+			vars.push_back (visitSingleVarDeclaration (true, true, isClass && vars.size () == 0));
+			token = this-> _lex.next ({Token::RPAR, Token::COMA, Token::TDOT});
+		    }
 		}
-	    } else {
-		if (!isClass || vars.size () > 0) // If we get a method prototype, we need at least one param
-		    token = this-> _lex.consumeIf ({Token::RPAR, Token::TDOT});
-		if (token == Token::TDOT) {
-		    isVariadic = true;
-		    token = this-> _lex.next ({Token::RPAR});
-		} else if (token != Token::RPAR) {
-		    vars.push_back (visitSingleVarDeclaration (true, true, isClass && vars.size () == 0));
-		    token = this-> _lex.next ({Token::RPAR, Token::COMA, Token::TDOT});
-		}
-	    }
-	} while ((isClosure && token != Token::PIPE) || (!isClosure && token != Token::RPAR));
+	    } while ((isClosure && token != Token::PIPE) || (!isClosure && token != Token::RPAR));
+	}
 	
 	token = this-> _lex.consumeIf ({Token::ARROW});
 	if (token == Token::ARROW) 
@@ -874,7 +876,8 @@ namespace syntax {
 	//if (begin == Token::LACC)    return visitBlock ();
 	if (begin == Token::LCRO)    return visitArray ();
 	if (begin == Token::LPAR)    return visitTuple ();
-	if (begin == Token::PIPE)    return visitLambda ();
+	if (begin == Token::PIPE || begin == Token::DPIPE)
+	    return visitLambda ();
 
 	if (begin.is (this-> _intrisics)) {
 	    auto loc = this-> _lex.next ();
@@ -1335,8 +1338,8 @@ namespace syntax {
     Expression Visitor::visitLambda () {
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
-	
-	auto proto = visitFunctionPrototype (true);
+
+	auto proto = visitFunctionPrototype (true);	
 	this-> _lex.consumeIf ({Token::DARROW});
 	return Lambda::init (begin, proto, visitExpression ());
     }       

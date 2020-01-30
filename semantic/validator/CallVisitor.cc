@@ -102,7 +102,7 @@ namespace semantic {
 	    }
 	    
 	    if (!left.is<MultSym> ()) 
-		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), left.getLocation (), prettyName (left)));	    
+		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (left), prettyName (left)));	    
 	    return Generator::empty ();
 	}
 	
@@ -672,8 +672,10 @@ namespace semantic {
 			names.push_back (prettyName (it));
 			
 		    std::string note;
-		    for (auto & it : element_on_scores-> second)
-			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), it.getName (), prettyName (this-> _context.validateMultSym (sym.getLocation (), {it}))) + '\n';
+		    for (auto & it : element_on_scores-> second) {
+			auto gen = this-> _context.validateMultSym (sym.getLocation (), {it});
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (gen), prettyName (gen)) + '\n';
+		    }
 		    Ymir::Error::occurAndNote (location,
 					       note,
 					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
@@ -703,7 +705,7 @@ namespace semantic {
 			
 		    std::string note;
 		    for (auto & it : element_on_scores-> second)
-			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), lexing::Word {it.getLocation (), ""}, prettyName (it)) + '\n';
+			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (it), prettyName (it)) + '\n';
 		    Ymir::Error::occurAndNote (location,
 					       note,
 					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
@@ -906,6 +908,19 @@ namespace semantic {
 		);
 	    }
 	    return gen.prettyString ();
+	}
+
+	lexing::Word CallVisitor::realLocation (const Generator & gen) {
+	    match (gen) {
+		of (DelegateValue, dg, {
+			return dg.getType ().getLocation ();
+		    }
+		) else of (Call, cl, {
+			return realLocation (cl.getFrame ());
+		    }
+		);
+	    }
+	    return gen.getLocation ();
 	}
 	
 	void CallVisitor::insertCandidate (int & nb, std::vector <std::string> & errors, const std::vector <std::string> & candErrors) {	    
