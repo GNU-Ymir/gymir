@@ -13,6 +13,8 @@ namespace syntax {
      */
     class Float : public IExpression {
 
+	lexing::Word _prePart;
+	
 	/** The decimal part of the float */
 	lexing::Word _decPart;
 
@@ -28,7 +30,7 @@ namespace syntax {
 
     public :
 
-	static Expression init (const lexing::Word & token, const lexing::Word & decPart, const lexing::Word & suff);
+	static Expression init (const lexing::Word & token, const lexing::Word & prePart, const lexing::Word & decPart, const lexing::Word & suff);
 
 	Expression clone () const override;
 

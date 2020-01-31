@@ -1983,7 +1983,7 @@ namespace semantic {
 	    else {
 		type = Float::init (f.getLocation (), 64);
 	    }
-
+	    
 	    return FloatValue::init (f.getLocation (), type, f.getValue ());
 	}
 

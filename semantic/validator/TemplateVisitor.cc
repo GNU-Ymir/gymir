@@ -51,7 +51,7 @@ namespace semantic {
 		int current_consumed = 0;
 		auto rest = std::vector<syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
 		Mapper mapper {false, 0, {}, {}};
-		bool succeed = true;
+		volatile bool succeed = true;
 		TRY (
 		    mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -69,7 +69,7 @@ namespace semantic {
 		
 		if (!mapper.succeed) return Symbol::empty ();
 		else {
-		    globalMapper = mergeMappers (globalMapper, mapper);
+		    globalMapper = mergeMappers (globalMapper, mapper);		    
 		    syntaxTempl = replaceSyntaxTempl (syntaxTempl, globalMapper.mapping);
 		    consumed += current_consumed;
 		}		
@@ -80,8 +80,8 @@ namespace semantic {
 	    } else {
 		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		auto merge = mergeMappers (prevMapper, globalMapper);
-		
-		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
+
+		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);	
 		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
 		
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
@@ -110,7 +110,7 @@ namespace semantic {
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
 		    auto visit = declarator::Visitor::init ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
-
+		    		    
 		    auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder);
 		    visit.pushReferent (soluce);
 		    visit.visit (final_syntax);
@@ -350,7 +350,7 @@ namespace semantic {
 		auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to <Template> ().getSpecNameOrder ());
 		auto merge = mergeMappers (prevMapper, globalMapper);
 		
-		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);		
+		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
 		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
 		
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
@@ -378,6 +378,7 @@ namespace semantic {
 		auto sym_func = visit.visit (func);
 		auto glob = visit.popReferent ();
 		auto already = getTemplateSolution (visit.getReferent (), soluce);
+		
 		if (already.isEmpty ()) {
 		    visit.getReferent ().insertTemplate (glob);
 		} else glob = already;		
@@ -1565,12 +1566,11 @@ namespace semantic {
 			    if (mapping.find (var.getLocation ().str) != mapping.end ())
 				results.push_back (var.getLocation ().str);
 			}
-		    ) else { // just ignore it, it is a value
-				    // OutBuffer buf;
-				    // it.treePrint (buf, 0);
-				    // println (buf.str ());
-				    // Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
-				}
+		    ) else {
+			 auto name = format ("%[%,%]", it.getLocation ().str, it.getLocation ().line, it.getLocation ().column);
+			 if (mapping.find (name) != mapping.end ())
+			     results.push_back (name);		    			    
+		    }
 		}
 	    }
 	    return results;
@@ -1733,7 +1733,7 @@ namespace semantic {
 	}
 
 	Symbol TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {
-	    for (auto & it : ref.getTemplates ()) {		
+	    for (auto & it : ref.getTemplates ()) {
 		if (it.equals (solution)) {
 		    return it;
 		}

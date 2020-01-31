@@ -1457,8 +1457,18 @@ namespace syntax {
     }    
 
     Expression Visitor::visitFloat (const lexing::Word & begin) {
-	auto dot = this-> _lex.next ();
-	auto after = this-> _lex.next ();
+	// No space inside a floating point value
+	this-> _lex.skipEnable (Token::SPACE, false);
+	this-> _lex.skipEnable (Token::TAB, false);		
+	this-> _lex.skipEnable (Token::RETURN, false);
+	this-> _lex.skipEnable (Token::RRETURN, false);
+	auto dot = this-> _lex.next ({Token::DOT});
+	auto after = this-> _lex.next ();	
+	this-> _lex.skipEnable (Token::SPACE, true);
+	this-> _lex.skipEnable (Token::TAB, true);		
+	this-> _lex.skipEnable (Token::RETURN, true);
+	this-> _lex.skipEnable (Token::RRETURN, true);
+	
 	if (after.str [0] >= '0' && after.str [0] <= '9') {
 	    if (after.str.length () >= 2) {
 		auto suffix = lexing::Word {after, after.str.substr (after.str.length () - 1)};
@@ -1467,7 +1477,7 @@ namespace syntax {
 		if (suffix.is (this-> _floatSuffix)) {
 		    auto value = after.str.substr (0, after.str.length () - 1);
 		    if (!verifNumeric (after, value))
-			return Float::init (begin, {after, value}, suffix);
+			return Float::init (dot, begin, {after, value}, suffix);
 		    else
 			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.str);
 		}
@@ -1485,12 +1495,14 @@ namespace syntax {
 		    }
 		} 
 	    }
-	
-	    return Float::init (begin, after, lexing::Word::eof ());
+	    return Float::init (dot, begin, after, lexing::Word::eof ());
 	} else if (begin.isEof ()) {
 	    Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.str);
+	} else if (after.is (this-> _floatSuffix)) {
+	    return Float::init (dot, begin, lexing::Word::eof (), after);	    
 	} else this-> _lex.rewind ();
-	return Float::init (begin, lexing::Word::eof (), lexing::Word::eof ());
+	
+	return Float::init (dot, begin, lexing::Word::eof (), lexing::Word::eof ());
     }
 
     Expression Visitor::visitChar () {

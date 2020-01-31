@@ -10,8 +10,9 @@ namespace syntax {
 	IExpression (loc)
     {}
 
-    Expression Float::init (const lexing::Word & location, const lexing::Word & decPart, const lexing::Word & suffix) {
+    Expression Float::init (const lexing::Word & location, const lexing::Word & prePart, const lexing::Word & decPart, const lexing::Word & suffix) {
 	auto ret = new (Z0) Float (location);
+	ret-> _prePart = prePart;
 	ret-> _decPart = decPart;
 	ret-> _suffix = suffix;
 	return Expression {ret};
@@ -35,11 +36,11 @@ namespace syntax {
 
     std::string Float::getValue () const {
 	if (this-> _decPart.isEof ()) {
-	    return this-> getLocation ().str + "0";
-	} else if (this-> getLocation () == Token::DOT) {
+	    return this-> _prePart.str + ".0";
+	} else if (this-> _prePart.isEof ()) {
 	    return "0." + this-> _decPart.str;
 	} else {
-	    return this-> getLocation ().str + "." + this-> _decPart.str;
+	    return this-> _prePart.str + "." + this-> _decPart.str;
 	}
     }
 
