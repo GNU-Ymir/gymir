@@ -138,6 +138,7 @@ namespace semantic {
 		
 		of (semantic::TemplateSolution, sol, {
 			if (insertTemplateSolution (sym)) {
+			    //println ("No template solution : ", sol.getSolutionName ());
 			    std::vector <std::string> errors;			
 			    this-> _referent.push_back (sym);
 			    TRY (
@@ -546,7 +547,10 @@ namespace semantic {
 	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty ()) {
 		auto sym = cls;
 		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
+		// To avoid recursive validation 
 		sym.to <semantic::Class> ().setGenerator (gen);
+		//println ("No generator need to validate the class : ", sym.getRealName ());
+		
 		std::vector <std::string> errors;
 		std::map <std::string, generator::Generator> syms;
 		std::vector <Generator> fieldsDecl;
@@ -1237,7 +1241,8 @@ namespace semantic {
 	    
 	    TRY (
 		// If this is just a construction redirection, there is no need to check 
-		if (cs.getContent ().getExplicitSelfCall ().isEof ()) {	    
+		if (cs.getContent ().getExplicitSelfCall ().isEof ()) {
+		    std::set <std::string> validated;
 		    auto & superParams = cs.getContent ().getSuperParams ();
 		    if (!clRef.to <ClassRef> ().getAncestor ().isEmpty ()) {
 			auto ancestor = clRef.to <ClassRef> ().getAncestor ();
@@ -1255,6 +1260,20 @@ namespace semantic {
 			if (right.to <Value> ().getType ().is <ClassRef> ()) {
 			    locs.back () = it.second.getLocation ();
 			    verifyConstructionLoop (it.second.getLocation (), right);
+			    validated.emplace (it.first.str);
+			}
+		    }
+
+		    for (auto & it : clRef.to<ClassRef> ().getRef ().to <semantic::Class> ().getFields ()) {
+			if (validated.find (it.to<syntax::VarDecl> ().getName ().str) == validated.end ()) {
+			    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
+				auto right = this-> validateValue (it.to <syntax::VarDecl> ().getValue ());
+				if (right.to <Value> ().getType ().is <ClassRef> ()) {
+				    auto loc = it.to <syntax::VarDecl> ().getValue ().getLocation ();
+				    locs.back () = loc;
+				    verifyConstructionLoop (loc, right);
+				}
+			    }
 			}
 		    }
 		}		
@@ -2199,7 +2218,7 @@ namespace semantic {
 		this-> _referent.pop_back ();
 		
 		if (!gen.isEmpty () && !locGen.isEmpty ()) {
-		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), gen.getLocation (), gen.prettyString ());
+		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), gen.getLocation (), gen.prettyString ()) + "\n";
 		    note = note + Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), locGen.getLocation (), locGen.prettyString ());
 			
 		    Ymir::Error::occurAndNote (loc,
@@ -3866,10 +3885,10 @@ namespace semantic {
 		return Float::init (var.getName (), std::atoi (size.c_str ())); 
 	    } else if (std::find (Char::NAMES.begin (), Char::NAMES.end (), var.getName ().str) != Char::NAMES.end ()) {
 		return Char::init (var.getName (), std::atoi (var.getName ().str.substr (1).c_str ()));
-	    } else {
-		auto syms = getGlobal (var.getName ().str);
-		if (!syms.empty ()) {
-		    auto ret = validateMultSymType (var.getLocation (), syms);
+	    } else {		
+		auto syms = getGlobal (var.getName ().str);		
+		if (!syms.empty ()) {		    
+		    auto ret = validateMultSymType (var.getLocation (), syms);		    
 		    if (!ret.isEmpty ()) return ret;		    
 		} else {
 		    syms = getGlobalPrivate (var.getName ().str);
@@ -4593,7 +4612,7 @@ namespace semantic {
 
 	bool Visitor::insertTemplateSolution (const Symbol & sol) {
 	    for (auto & it : this-> _templateSolutions) {
-		if (it.equals (sol)) return false;
+		if (it.equals (sol)) return false;		
 	    }
 	    
 	    this-> _templateSolutions.push_back (sol);
@@ -4602,7 +4621,7 @@ namespace semantic {
 	
 	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {					       
 	    return this-> _referent.back ().get (name);
-	}	
+	}
 
 	std::vector <Symbol> Visitor::getGlobalPrivate (const std::string & name) {					       
 	    return this-> _referent.back ().getPrivate (name);

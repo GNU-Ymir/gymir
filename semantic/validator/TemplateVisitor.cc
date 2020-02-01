@@ -115,6 +115,7 @@ namespace semantic {
 		    visit.pushReferent (soluce);
 		    visit.visit (final_syntax);
 		    auto glob = visit.popReferent ();
+		    glob.setReferent (visit.getReferent ());
 		    
 		    auto already = getTemplateSolution (visit.getReferent (), soluce);
 		    if (already.isEmpty ()) {			
@@ -377,6 +378,10 @@ namespace semantic {
 		visit.pushReferent (soluce);
 		auto sym_func = visit.visit (func);
 		auto glob = visit.popReferent ();
+		
+		// Strange but not always the case, it depends on what is glob 
+		glob.setReferent (visit.getReferent ());
+		
 		auto already = getTemplateSolution (visit.getReferent (), soluce);
 		
 		if (already.isEmpty ()) {

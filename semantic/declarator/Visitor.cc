@@ -533,7 +533,7 @@ namespace semantic {
 	semantic::Symbol Visitor::visitImport (const syntax::Import & imp) {
 	    auto path = Path {imp.getModule ().str, "::"};
 	    bool success = false;
-	    
+
 	    if (__imported__ .find (path.toString ()) == __imported__.end ()) {
 		auto file_path = imp.getPath () + ".yr";
 		auto file = fopen (file_path.c_str (), "r");
