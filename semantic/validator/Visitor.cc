@@ -42,7 +42,7 @@ namespace semantic {
 	    match (sym) {
 		of (semantic::Module, mod, {
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);			
+			pushReferent (sym, "validate::module");			
 			TRY (
 			    validateModule (mod);
 			 ) CATCH (ErrorCode::EXTERNAL) {
@@ -50,7 +50,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
 		       			
-			this-> _referent.pop_back ();
+			popReferent ("validate::module");
 			
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
@@ -61,7 +61,7 @@ namespace semantic {
 
 		of (semantic::Function, func, {
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);			
+			pushReferent (sym, "validate::function");			
 			TRY (
 			    validateFunction (func);
 			) CATCH (ErrorCode::EXTERNAL) {
@@ -69,7 +69,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
 			
-			this-> _referent.pop_back ();
+			popReferent ("validate::function");
 			
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
@@ -80,7 +80,7 @@ namespace semantic {
 
 		of (semantic::VarDecl, decl ATTRIBUTE_UNUSED, {
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);			
+			pushReferent (sym, "validate::vdecl");			
 			TRY (
 			    validateVarDecl (sym);
 			) CATCH (ErrorCode::EXTERNAL) {
@@ -88,7 +88,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
 			
-			this-> _referent.pop_back ();
+			popReferent ("validate::vdecl");
 			
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
@@ -100,7 +100,7 @@ namespace semantic {
 
 		of (semantic::Alias, alias ATTRIBUTE_UNUSED, {
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);
+			pushReferent (sym, "validate::alias");
 			TRY (
 			    validateAlias (sym);
 			) CATCH (ErrorCode::EXTERNAL) {
@@ -108,7 +108,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());			    
 			} FINALLY;
 
-			this-> _referent.pop_back ();
+			popReferent ("validate::alias");
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
 			}
@@ -118,7 +118,7 @@ namespace semantic {
 		
 		of (semantic::Struct, str ATTRIBUTE_UNUSED, {
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);			
+			pushReferent (sym, "validate::struct");			
 			TRY (
 			    validateStruct (sym);
 			) CATCH (ErrorCode::EXTERNAL) {
@@ -126,7 +126,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
 			
-			this-> _referent.pop_back ();
+			popReferent ("validate::struct");
 			
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
@@ -140,7 +140,7 @@ namespace semantic {
 			if (insertTemplateSolution (sym)) {
 			    //println ("No template solution : ", sol.getSolutionName ());
 			    std::vector <std::string> errors;			
-			    this-> _referent.push_back (sym);
+			    pushReferent (sym, "validate::tmpl");
 			    TRY (
 				validateTemplateSolution (sol);
 			    ) CATCH (ErrorCode::EXTERNAL) {
@@ -148,7 +148,7 @@ namespace semantic {
 				errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			    } FINALLY;
 			
-			    this-> _referent.pop_back ();
+			    popReferent ("validate::tmpl");
 			    if (errors.size () != 0) {
 				THROW (ErrorCode::EXTERNAL, errors);
 			    }
@@ -159,7 +159,7 @@ namespace semantic {
 
 		of (semantic::Enum, en ATTRIBUTE_UNUSED, {
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);
+			pushReferent (sym, "validate::enum");
 			TRY (
 			    validateEnum (sym);
 			) CATCH (ErrorCode::EXTERNAL) {
@@ -167,7 +167,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
 			
-			this-> _referent.pop_back ();
+			popReferent ("validate::enum");
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
 			}
@@ -178,7 +178,7 @@ namespace semantic {
 
 		of (semantic::Class, cl ATTRIBUTE_UNUSED, {
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);			
+			pushReferent (sym, "validate::class");			
 			TRY (
 			    validateClass (sym, true);
 			) CATCH (ErrorCode::EXTERNAL) {
@@ -186,7 +186,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
 			
-			this-> _referent.pop_back ();
+			popReferent ("validate::class");
 			
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
@@ -198,7 +198,7 @@ namespace semantic {
 
 		of (semantic::Trait, tr ATTRIBUTE_UNUSED, {			
 			std::vector <std::string> errors;
-			this-> _referent.push_back (sym);			
+			pushReferent (sym, "validate::trait");			
 			TRY (
 			    validateTrait (sym);
 			) CATCH (ErrorCode::EXTERNAL) {
@@ -206,7 +206,7 @@ namespace semantic {
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
 			
-			this-> _referent.pop_back ();
+			popReferent ("validate::trait");
 			
 			if (errors.size () != 0) {
 			    THROW (ErrorCode::EXTERNAL, errors);
@@ -236,7 +236,7 @@ namespace semantic {
 	Generator Visitor::validateTemplateTest (const Symbol & context, const syntax::Expression & expr) {
 	    Generator value (Generator::empty ());
 	    std::vector <std::string> errors;
-	    this-> _referent.push_back (context);
+	    pushReferent (context, "validateTemplateTest");
 	    enterForeign ();
 	    TRY (
 		value = this-> validateValue (expr);
@@ -246,7 +246,8 @@ namespace semantic {
 	    } FINALLY;
 
 	    exitForeign ();
-	    this-> _referent.pop_back ();
+	    popReferent ("validateTemplateTest");
+	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
@@ -270,7 +271,7 @@ namespace semantic {
 	    if (syms.size () != 1) Ymir::Error::halt ("", "");
 	    if (insertTemplateSolution (sol)) { // If it is the first time, the solution is presented
 		std::vector <std::string> errors;
-		this-> _referent.push_back (self.to <Value> ().getType ().to <ClassRef> ().getRef ().getRef ());
+		pushReferent (self.to <Value> ().getType ().to <ClassRef> ().getRef ().getRef (), "validateTemplateSolutionMethod");
 		enterForeign ();
 		TRY (
 		    static int nb_recur_template = 0;
@@ -287,7 +288,7 @@ namespace semantic {
 		} FINALLY;
 	    
 		exitForeign ();
-		this-> _referent.pop_back ();
+		popReferent ("validateTemplateSolutionMethod");
 		if (errors.size () != 0) {
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
@@ -483,8 +484,8 @@ namespace semantic {
 		std::vector <std::string> errors;
 		std::map <std::string, generator::Generator> syms;
 		enterForeign ();
+		pushReferent (sym, "validateStruct");
 		TRY (
-		    this-> _referent.push_back (sym);
 		    this-> enterBlock ();
 		    std::vector <std::string> fields;
 		    std::vector <generator::Generator> types;
@@ -493,16 +494,24 @@ namespace semantic {
 			if (str.to <semantic::Struct> ().isUnion () && !it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 			    errors.push_back (Ymir::Error::makeOccur (it.to <syntax::VarDecl> ().getValue ().getLocation (), ExternalError::get (UNION_INIT_FIELD)));
 		    }
-		    
-		    syms = this-> discardAllLocals ();
-		    
-		    this-> quitBlock ();
-		    this-> _referent.pop_back ();
+		    		    
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;		
-		exitForeign ();
+
+		{
+		    TRY (
+			syms = this-> discardAllLocals ();
+			this-> quitBlock ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+		
+		exitForeign ();		
+		popReferent ("validateStruct");
 		
 		if (errors.size () != 0)
 		    THROW (ErrorCode::EXTERNAL, errors);
@@ -559,8 +568,8 @@ namespace semantic {
 		
 		{
 		    enterForeign ();
+		    pushReferent (sym, "validateClass");
 		    TRY (
-			this-> _referent.push_back (sym);
 			this-> enterBlock ();
 			std::vector <std::string> fields;
 			std::vector <generator::Generator> types;
@@ -571,11 +580,12 @@ namespace semantic {
 			syms = this-> discardAllLocals ();
 		    
 			this-> quitBlock ();
-			this-> _referent.pop_back ();
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;		
+		    } FINALLY;
+		    
+		    popReferent ("validateClass");
 		    exitForeign ();
 		}
 		
@@ -1214,7 +1224,7 @@ namespace semantic {
 		}
 	    }
 
-	    this-> _referent.push_back (sym);
+	    pushReferent (sym, "verifyConstructionLoop");
 	    protos.push_back (sym);
 	    gen_protos.push_back (current_proto);
 	    locs.push_back (location);
@@ -1295,9 +1305,9 @@ namespace semantic {
 	    exitClassDef ();	    	    
 	    protos.pop_back ();
 	    gen_protos.pop_back ();
-	    locs.pop_back ();
+	    locs.pop_back ();	    
+	    popReferent ("verifyConstructionLoop");
 	    
-	    this-> _referent.pop_back ();
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
@@ -1314,8 +1324,8 @@ namespace semantic {
 		std::map <std::string, generator::Generator> syms;		
 
 		enterForeign ();
+		pushReferent (en, "validateEnum");
 		TRY (		
-		    this-> _referent.push_back (en);
 		    this-> enterBlock ();
 
 		    if (!sym.to<semantic::Enum>().getType ().isEmpty ())
@@ -1342,15 +1352,23 @@ namespace semantic {
 			    type.changeLocation (gen.getLocation ());
 			} else verifyCompatibleType (val.getLocation (), type, val.to<generator::VarDecl> ().getVarType ());
 		    }
-
-		    syms = this-> discardAllLocals ();
 		    
-		    this-> quitBlock ();
-		    this-> _referent.pop_back ();
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;		
+		} FINALLY;
+
+		{
+		    TRY (
+			syms = this-> discardAllLocals ();
+			this-> quitBlock ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+		
+		popReferent ("validateEnum");
 		exitForeign ();
 		
 		if (errors.size () != 0)
@@ -1628,9 +1646,6 @@ namespace semantic {
 		TRY (
 		    enterBlock ();
 		    decl = validateInnerModule (block.getDeclModule ());
-		    if (!decl.isEmpty ()) {
-			this-> _referent.push_back (decl);
-		    }		   
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -1638,6 +1653,10 @@ namespace semantic {
 		} FINALLY;
 	    }
 
+	    if (!decl.isEmpty ()) {
+		pushReferent (decl, "validateBlock");
+	    }
+	    
 	    std::vector <Generator> onExit;
 	    std::vector <Generator> onSuccess;
 	    std::vector <Generator> onFailure;
@@ -1714,12 +1733,13 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
+
+	    if (!decl.isEmpty ()) {
+		popReferent ("validateBlock");
+	    }
 	    
 	    {
 		TRY (
-		    if (!decl.isEmpty ()) {
-			this-> _referent.pop_back ();
-		    }
 		    
 		    // If there are some errors, no need to add the warning about the unused vars
 		    // Moreover, they may be not pertinent 
@@ -1816,18 +1836,20 @@ namespace semantic {
 	Symbol Visitor::validateInnerModule (const syntax::Declaration & decl) {
 	    if (decl.isEmpty ()) return Symbol::empty ();
 	    auto sym = declarator::Visitor::init ().visit (decl);
-	    if (!sym.isEmpty ()) {		
-		this-> _referent.back ().insert (sym);
+	    if (!sym.isEmpty ()) {
 		std::vector <std::string> errors;
+		
+		this-> _referent.back ().insert (sym);
 		enterForeign ();
 		TRY (
 		    this-> validate (sym);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;   
+		} FINALLY;
+		
 		exitForeign ();
-
+		
 		if (errors.size () != 0) {
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
@@ -1837,9 +1859,11 @@ namespace semantic {
 	}
 	
 	void Visitor::validateTemplateSymbol (const semantic::Symbol & sym, const Generator & gen) {
-	    this-> _referent.push_back (sym.getRef ());
 	    std::vector <std::string> errors;
+	    
+	    pushReferent (sym.getRef (), "validateTemplateSymbol");
 	    enterForeign ();
+	    
 	    TRY (
 		if (gen.is <MethodTemplateRef> () && sym.is <TemplateSolution> ())
 		    this-> validateTemplateSolutionMethod (sym, gen.to <MethodTemplateRef> ().getSelf ());
@@ -1848,9 +1872,11 @@ namespace semantic {
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors.insert (errors.end (), msgs.begin (), msgs.end ());
-	    } FINALLY;   
+	    } FINALLY;
+	    
 	    exitForeign ();
-	    this-> _referent.pop_back ();
+	    popReferent ("validateTemplateSymbol");
+	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
@@ -2077,7 +2103,7 @@ namespace semantic {
 	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {	    
 	    std::vector <Generator> gens;
 	    for (auto & sym : multSym) {
-		this-> _referent.push_back (sym);
+		pushReferent (sym, "validateMultSym");
 		volatile bool succ = false;
 		std::vector <std::string> errors;
 		TRY (
@@ -2112,7 +2138,8 @@ namespace semantic {
 				succ = true;
 			    }
 			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-				return TraitRef::init ({loc, tr.getName ().str}, sym);
+				gens.push_back (TraitRef::init ({loc, tr.getName ().str}, sym));
+				succ = true;
 			    }
 			) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
 				auto en_ref = validateEnum (sym);
@@ -2155,7 +2182,7 @@ namespace semantic {
 		    errors = msgs;
 		} FINALLY;		
 		
-		this-> _referent.pop_back ();
+		popReferent ("validateMultSym");
 		if (errors.size () != 0)
 		    THROW (ErrorCode::EXTERNAL, errors);
 		
@@ -2174,7 +2201,7 @@ namespace semantic {
 	    std::vector <std::string> errors;
 
 	    for (auto  it : Ymir::r (0, multSym.size ())) {
-		this-> _referent.push_back (multSym [it]);
+		pushReferent (multSym [it], "validateMultSymType");
 		Generator locGen (Generator::empty ());
 		TRY (
 		    match (multSym [it]) {		    
@@ -2215,7 +2242,7 @@ namespace semantic {
 		    errors = msgs;
 		} FINALLY;
 
-		this-> _referent.pop_back ();
+		popReferent ("validateMultSymType");
 		
 		if (!gen.isEmpty () && !locGen.isEmpty ()) {
 		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), gen.getLocation (), gen.prettyString ()) + "\n";
@@ -2287,8 +2314,9 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateConstructorProto (const semantic::Constructor & func) {
-	    this-> _referent.push_back (func.clone ());
+	    pushReferent (func.clone (), "validateConstructorProto");
 	    enterForeign ();
+	    
 	    std::vector <Generator> params;
 	    static std::list <lexing::Word> __validating__;
 	    auto & function = func.getContent ();
@@ -2324,8 +2352,9 @@ namespace semantic {
 	    }
 	    
 	    __validating__.pop_back ();
+	    
 	    exitForeign ();
-	    this-> _referent.pop_back ();
+	    popReferent ("validateConstructorProto");
 	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);		
@@ -3148,15 +3177,23 @@ namespace semantic {
 		    params.push_back (validateType (it, true));
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.begin (), msgs.begin (), msgs.end ());
 		    succeed = false;
 		} FINALLY;
-		
+
 		if (!succeed) {
-		    auto val = validateValue (it);
-		    auto rvalue = retreiveValue (val);
-		    params.push_back (rvalue);
-		} 
+		    TRY (
+			auto val = validateValue (it);
+			auto rvalue = retreiveValue (val);
+			params.push_back (rvalue);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			succeed = false;
+		    } FINALLY;
+		}
 	    }
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
 	    
 	    if (value.is <TemplateRef> ()) {
 		Generator ret (Generator::empty ());
@@ -3743,7 +3780,7 @@ namespace semantic {
 		auto trait = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DUPLICATION_MODULE), CoreNames::get (DCOPY_TRAITS)});		
 		auto impl = validateType (trait);
 		
-		verifyClassImpl (inner.to <Value> ().getType (), impl);		
+		verifyClassImpl (intr.getLocation (), inner.to <Value> ().getType (), impl);		
 		call = syntax::MultOperator::init (
 		    {loc, Token::LPAR}, {loc, Token::RPAR},
 		    syntax::Binary::init ({loc, Token::DOT},
@@ -3886,7 +3923,10 @@ namespace semantic {
 	    } else if (std::find (Char::NAMES.begin (), Char::NAMES.end (), var.getName ().str) != Char::NAMES.end ()) {
 		return Char::init (var.getName (), std::atoi (var.getName ().str.substr (1).c_str ()));
 	    } else {		
-		auto syms = getGlobal (var.getName ().str);		
+		auto syms = getGlobal (var.getName ().str);
+		// println( var.getName ().str, " ", this-> _referent.back ().formatTree ());
+		// for (auto & it : syms)
+		//     println (it.getRealName ());
 		if (!syms.empty ()) {		    
 		    auto ret = validateMultSymType (var.getLocation (), syms);		    
 		    if (!ret.isEmpty ()) return ret;		    
@@ -4466,7 +4506,7 @@ namespace semantic {
 	    }
 	}
 
-	void Visitor::verifyClassImpl (const Generator & cl, const Generator & trait) {
+	void Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const Generator & trait) {
 	    if (!trait.is <TraitRef> ()) {
 		Ymir::Error::occur (trait.getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
 	    }
@@ -4488,7 +4528,8 @@ namespace semantic {
 		else break;
 	    } 
 
-	    Ymir::Error::occur (cl.getLocation (), ExternalError::get (NOT_IMPL_TRAIT), cl.prettyString (), trait.prettyString ());
+	    auto note = Ymir::Error::createNote (loc);
+	    Ymir::Error::occurAndNote (cl.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), cl.prettyString (), trait.prettyString ());
 	}
 
 	std::vector <Generator> Visitor::getAllImplClass (const Generator &cl) {
@@ -4627,11 +4668,13 @@ namespace semantic {
 	    return this-> _referent.back ().getPrivate (name);
 	}	
 	
-	void Visitor::pushReferent (const semantic::Symbol & sym) {
+	void Visitor::pushReferent (const semantic::Symbol & sym, const std::string &) {
+	    //println ("IN : ", msg, " => ", sym.getRealName ());
 	    this-> _referent.push_back (sym);
 	}
 
-	void Visitor::popReferent () {
+	void Visitor::popReferent (const std::string &) {
+	    //println ("Out : ", msg, " => ", this-> _referent.back ().getRealName ());
 	    this-> _referent.pop_back ();
 	}
 

@@ -847,8 +847,15 @@ namespace semantic {
 	    }
 	    
 	    if (right.isEmpty ()) {
-		right = this-> _context.validateValue (bin.getRight ());
-		params.push_back (left);
+		TRY (
+		    right = this-> _context.validateValue (bin.getRight ());		    
+		    params.push_back (left);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);		    
+		} FINALLY;
+
+		if (right.isEmpty ())
+		    THROW (ErrorCode::EXTERNAL, errors);
 	    }
 	    
 	    return right;

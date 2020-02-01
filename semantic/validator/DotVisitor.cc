@@ -302,8 +302,7 @@ namespace semantic {
 	    
 	    if (syms.size () != 0) 
 		return MultSym::init ({expression.getLocation (), name}, syms);
-	    
-	    
+	    	    
 	    return Generator::empty ();
 	}
 	

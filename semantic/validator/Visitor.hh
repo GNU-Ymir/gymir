@@ -682,7 +682,7 @@ namespace semantic {
 	    /**
 	     * \brief Verify that the class cl implement the trait tr
 	     */
-	    void verifyClassImpl (const generator::Generator & cl, const generator::Generator & tr);
+	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const generator::Generator & tr);
 
 	    /**
 	     * \return the list of all implemented traits in the class cl
@@ -935,12 +935,12 @@ namespace semantic {
 	    /**
 	     * \brief this-> _referent.push_back (sym)
 	     */
-	    void pushReferent (const semantic::Symbol & sym);
+	    void pushReferent (const semantic::Symbol & sym, const std::string & msg);
 
 	    /**
 	     * \brief this-> _referent.pop_back ()
 	     */
-	    void popReferent ();
+	    void popReferent (const std::string & msg);
 	    
 	    
 	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);

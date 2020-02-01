@@ -392,7 +392,7 @@ namespace semantic {
 		sym_func = symbol.getLocal (func.to<syntax::Function> ().getName ().str) [0];
 		
 		Generator proto (Generator::empty ());
-		this-> _context.pushReferent (sym_func.getReferent ());
+		this-> _context.pushReferent (sym_func.getReferent (),  "TemplateVisitor::validateFromImplicit");
 		
 		TRY (
 		    if (ref.is <MethodTemplateRef> ()) {
@@ -406,7 +406,7 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 		
-		this-> _context.popReferent ();
+		this-> _context.popReferent ("TemplateVisitor::validateFromImplicit");
 		symbol = glob;
 		if (errors.size () != 0) 
 		    THROW (ErrorCode::EXTERNAL, errors);
@@ -836,7 +836,7 @@ namespace semantic {
 			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
 			    auto realType = this-> replaceAll (implv.getType (), mapper.mapping);			    
 			    auto genType = this-> _context.validateType (realType, true);
-			    this-> _context.verifyClassImpl (type, genType);
+			    this-> _context.verifyClassImpl (implv.getLocation (), type, genType);
 			    
 			    mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
 			    mapper.nameOrder.push_back (implv.getLocation ().str);
@@ -853,7 +853,7 @@ namespace semantic {
 				auto loc_mapper = validateTypeFromTemplCall (params, cl, trait, current_consumed);		
 				Expression realType = this-> replaceAll (implv.getType (), loc_mapper.mapping);
 				auto genType = this-> _context.validateType (realType, true);
-				this-> _context.verifyClassImpl (type, genType);
+				this-> _context.verifyClassImpl (implv.getLocation (), type, genType);
 				mapper = mergeMappers (loc_mapper, mapper);
 			    ) CATCH (ErrorCode::EXTERNAL) {
 				GET_ERRORS_AND_CLEAR (msgs);
@@ -895,7 +895,7 @@ namespace semantic {
 	    }
 	    
 	    auto left = this-> _context.validateType (implv.getType (), true);
-	    this-> _context.verifyClassImpl (type, left);
+	    this-> _context.verifyClassImpl (implv.getLocation (), type, left);
 	    Mapper mapper (true, Scores::SCORE_TYPE);
 	    this-> _context.verifyNotIsType (implv.getLocation ());
 			    
