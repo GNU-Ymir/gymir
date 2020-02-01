@@ -55,7 +55,7 @@ namespace semantic {
 		else of (ModuleAccess, acc, gen = validateModuleAccess (expression, acc))
 		else of (generator::Enum, en, gen = validateEnum (expression, en))	     
 		else of (generator::Struct, str ATTRIBUTE_UNUSED, gen = validateStruct(expression, left))
-		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
+		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))			 
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));
 	    }

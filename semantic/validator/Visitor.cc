@@ -179,7 +179,7 @@ namespace semantic {
 			std::vector <std::string> errors;
 			this-> _referent.push_back (sym);			
 			TRY (
-			    validateClass (sym);
+			    validateClass (sym, true);
 			) CATCH (ErrorCode::EXTERNAL) {
 			    GET_ERRORS_AND_CLEAR (msgs);
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -531,7 +531,7 @@ namespace semantic {
 	    }
 	}
 	
-	generator::Generator Visitor::validateClass (const semantic::Symbol & cls) {
+	generator::Generator Visitor::validateClass (const semantic::Symbol & cls, bool inModule) {
 	    Generator ancestor (Generator::empty ());
 	    if (!cls.to <semantic::Class> ().getAncestor ().isEmpty ()) {
 		ancestor = this-> validateType (cls.to <semantic::Class> ().getAncestor ());
@@ -620,7 +620,7 @@ namespace semantic {
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
 		
-		{
+		if (inModule) {
 		    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
 			TRY (
 			    match (it) {
@@ -640,22 +640,20 @@ namespace semantic {
 		    }
 
 		    for (auto & it : addMethods) {
-			TRY (
-			    match (it) {
-				of (semantic::Function, func ATTRIBUTE_UNUSED, {
+			match (it) {
+			    of (semantic::Function, func ATTRIBUTE_UNUSED, {
+				    TRY (
 					validateMethod (func, ClassRef::init (cls.getName (), ancestor, sym));
-				    }
-				);
-			    }
-			) CATCH (ErrorCode::EXTERNAL) {
-			    GET_ERRORS_AND_CLEAR (msgs);
-			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-			} FINALLY;
+				    ) CATCH (ErrorCode::EXTERNAL) {
+					GET_ERRORS_AND_CLEAR (msgs);
+					errors.insert (errors.end (), msgs.begin (), msgs.end ());
+				    } FINALLY;
+				}
+			    );
+			}			
 		    }
 		}
-
-		
-		
+	       		
 		if (errors.size () != 0) {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    THROW (ErrorCode::EXTERNAL, errors);
@@ -982,6 +980,7 @@ namespace semantic {
 	    
 	    auto frame = Frame::init (constr.getName (), cs.getRealName (), params, classType, body, false);
 	    frame.to <Frame> ().setMangledName (cs.getMangledName ());
+	    frame.to <Frame> ().isWeak (true);
 	    insertNewGenerator (frame);
 	}
 
