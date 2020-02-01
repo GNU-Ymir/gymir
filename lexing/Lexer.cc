@@ -203,7 +203,7 @@ namespace lexing {
 		    do {
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
-			    if (word.getStr () == Token::RETURN || word.getStr () == Token::RRETURN) {
+			    if (word.getStr () == Token::RETURN) {
 				buf.write ("\\n"); line_break = true;
 			    } else if (!line_break || (word.getStr () != ign && line_break)) {
 				line_break = line_break ? word.getStr () == Token::SPACE : false;
@@ -236,7 +236,7 @@ namespace lexing {
 		    do {
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
-			    if (word.getStr () == Token::RETURN || word.getStr () == Token::RRETURN) {
+			    if (word.getStr () == Token::RETURN) {
 				buf.write ("\\n");
 				line_break = true;
 			    } else if ((line_break && word.getStr () != ign) || !line_break) {
@@ -291,7 +291,7 @@ namespace lexing {
 	    }
 	}
 	constructWord (word, beg, max, line, where);
-	if (word.getStr () == "\n" || word.getStr () == "\r") {
+	if (word.getStr () == "\n") {
 	    this-> line ++;
 	    this-> column = 1;
 	} else {
