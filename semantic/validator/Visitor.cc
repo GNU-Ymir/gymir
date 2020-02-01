@@ -1898,7 +1898,7 @@ namespace semantic {
 			overflow = true;
 		    }
 		    
-		    if (overflow || value > getMaxU (type))
+		    if (overflow || (value > getMaxU (type) && getMaxU (type) != 0))
 			Error::occur (loc, ExternalError::get (OVERFLOW), type.getTypeName (), val);
 		    
 		    return value;
@@ -1922,7 +1922,7 @@ namespace semantic {
 			overflow = true;
 		    }
 		    
-		    if (overflow || value > getMaxS (type))
+		    if (overflow || (value > getMaxS (type) && getMaxS (type) != 0))
 			Error::occur (loc, ExternalError::get (OVERFLOW), type.getTypeName (), val);
 		    
 		    return value;
@@ -1934,6 +1934,7 @@ namespace semantic {
 		    case 16 : return USHRT_MAX;
 		    case 32 : return UINT_MAX;
 		    case 64 : return ULONG_MAX;
+		    case 0 : return 0;
 		    }
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		    return 0;
@@ -1945,6 +1946,7 @@ namespace semantic {
 		    case 16 : return SHRT_MAX;
 		    case 32 : return INT_MAX;
 		    case 64 : return LONG_MAX;
+		    case 0 : return 0;
 		    }
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		    return 0;
@@ -1957,11 +1959,13 @@ namespace semantic {
 	    if (fixed.getSuffix () == Keys::U16) type = Integer::init (fixed.getLocation (), 16, false);
 	    if (fixed.getSuffix () == Keys::U32) type = Integer::init (fixed.getLocation (), 32, false);
 	    if (fixed.getSuffix () == Keys::U64) type = Integer::init (fixed.getLocation (), 64, false);
+	    if (fixed.getSuffix () == Keys::USIZE) type = Integer::init (fixed.getLocation (), 0, false);
 	    
 	    if (fixed.getSuffix () == Keys::I8) type = Integer::init (fixed.getLocation (), 8, true);
 	    if (fixed.getSuffix () == Keys::I16) type = Integer::init (fixed.getLocation (), 16, true);
 	    if (fixed.getSuffix () == "") type = Integer::init (fixed.getLocation (), 32, true);
 	    if (fixed.getSuffix () == Keys::I64) type = Integer::init (fixed.getLocation (), 64, true);
+	    if (fixed.getSuffix () == Keys::ISIZE) type = Integer::init (fixed.getLocation (), 0, true);
 
 	    auto integer = type.to<Integer> ();
 	    //type.to <Type> ().isMutable (true);
@@ -2502,6 +2506,10 @@ namespace semantic {
 		value = validateValue (var.getValue ());
 	    }
 
+	    if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
+		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
+	    }
+
 	    Generator type (Generator::empty ());
 	    if (!var.getType ().isEmpty ()) {
 		type = validateType (var.getType ());
@@ -2511,11 +2519,10 @@ namespace semantic {
 		type.to <Type> ().isMutable (false);
 	    }
 
+	    
 	    if (var.getValue ().isEmpty () && needInitValue) {
 		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
-	    } else if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
-		Error::occur (var.getLocation (), ExternalError::get (VAR_DECL_WITH_NOTHING));
-	    }
+	    } 
 		    
 	    bool isMutable = false, isRef = false;
 	    applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
@@ -2857,13 +2864,19 @@ namespace semantic {
 	    innerType.to <Type> ().isMutable (true);
 	    auto slc = Slice::init (list.getLocation (), innerType);
 	    slc.to <Type> ().isMutable (true);
-	    
-	    return Copier::init (list.getLocation (),
-				 slc,
-				 Aliaser::init (list.getLocation (), slc,
-						ArrayValue::init (list.getLocation (), type.to <Type> ().toDeeplyMutable (), params)
-				 )
-	    );
+
+	    if (!innerType.is <Void> ()) {
+		return Copier::init (list.getLocation (),
+				     slc,
+				     Aliaser::init (list.getLocation (), slc,
+						    ArrayValue::init (list.getLocation (), type.to <Type> ().toDeeplyMutable (), params)
+				     )
+		);
+	    } else
+		return
+		    Aliaser::init (list.getLocation (), slc,
+				   ArrayValue::init (list.getLocation (), type.to <Type> ().toDeeplyMutable (), params)
+		    );
 	}	
 	
 	Generator Visitor::validateTuple (const syntax::List & list) {
@@ -4462,7 +4475,7 @@ namespace semantic {
 	
 	void Visitor::verifyCompatibleTypeWithValue (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (gen.is <NullValue> () && type.is <Pointer> ()) return;
-	    else if (gen.is<ArrayValue> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
+	    else if (gen.to <Value> ().getType ().is <Slice> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
 	
 	    verifyCompatibleType (loc, type, gen.to <Value> ().getType ());
 	}	
