@@ -688,7 +688,7 @@ namespace semantic {
 		    }
 		    Ymir::Error::occurAndNote (location,
 					       note,
-					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
+					       ExternalError::get (SPECIALISATION_WORK_WITH_BOTH),
 					       leftName,
 					       names);
 
@@ -718,7 +718,7 @@ namespace semantic {
 			note += Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (it), prettyName (it)) + '\n';
 		    Ymir::Error::occurAndNote (location,
 					       note,
-					       ExternalError::get (SPECIALISATION_WOTK_WITH_BOTH),
+					       ExternalError::get (SPECIALISATION_WORK_WITH_BOTH),
 					       leftName,
 					       names);
 

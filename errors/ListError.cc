@@ -96,7 +96,8 @@ namespace Ymir {
 			    SCOPE_OUT_OF_SCOPE              = "scope guard used as expression", 
 			    SHADOWING_DECL		    = "declaration of %(y) shadow another declaration",
 			    SPACE_EXTERN_C                  = "extern C cannot be namespaced",
-			    SPECIALISATION_WOTK_WITH_BOTH   = "%(y) called with {%(y)} work with both",
+			    SPECIALISATION_WORK_WITH_BOTH   = "%(y) called with {%(y)} work with both",
+			    SPECIALISATION_WORK_TYPE_BOTH   = "type match both",
 			    STATIC_ARRAY_REF		    = "left operand is a static array, it cannot store a reference to a dynamic array",
 			    SYNTAX_ERROR_AT		    = "[%] expected, when %(y) found",	// syntax error a specific location
 			    SYNTAX_ERROR_AT_SIMPLE	    = "%(y) unexpected",	// syntax error a specific location

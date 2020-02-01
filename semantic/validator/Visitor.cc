@@ -2151,51 +2151,66 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateMultSymType (const lexing::Word & loc, const std::vector <Symbol> & multSym) {
-	    if (multSym.size () != 1) return Generator::empty ();
 	    Generator gen (Generator::empty ());
 	    std::vector <std::string> errors;
-	    this-> _referent.push_back (multSym [0]);
 
-	    TRY (
-		match (multSym [0]) {		    
-		    of (semantic::Struct, st ATTRIBUTE_UNUSED, {
-			    gen = validateStruct (multSym [0]);
+	    for (auto  it : Ymir::r (0, multSym.size ())) {
+		this-> _referent.push_back (multSym [it]);
+		Generator locGen (Generator::empty ());
+		TRY (
+		    match (multSym [it]) {		    
+			of (semantic::Struct, st ATTRIBUTE_UNUSED, {
+				locGen = validateStruct (multSym [it]);
+			    }
+			) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
+				locGen = validateEnum (multSym [it]);
+			    }
+			) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
+				locGen = validateClass (multSym [it]);
+			    }		
+			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
+				locGen = TraitRef::init ({loc, tr.getName ().str}, multSym [it]);
+			    }			
+			) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
+				Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			    }							     
+			) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
+				Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			    }
+			) else of (semantic::ModRef, mod ATTRIBUTE_UNUSED, {
+				Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			    }
+			) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
+				locGen = validateAlias (multSym [0]);
+			    }
+			) else of (semantic::Function, func, {
+				locGen = validateFunctionProto (func);
+			    }
+			) else {
+			        Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
 			}
-		    ) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
-			    gen = validateEnum (multSym [0]);
-			}
-		    ) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
-			    gen = validateClass (multSym [0]);
-			}		
-		    ) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-			    gen = TraitRef::init ({loc, tr.getName ().str}, multSym [0]);
-			}			
-		    ) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
-			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			}							     
-		    ) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
-			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			}
-		    ) else of (semantic::ModRef, mod ATTRIBUTE_UNUSED, {
-			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			}
-		    ) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
-			    gen = validateAlias (multSym [0]);
-			}
-		    ) else of (semantic::Function, func, {
-			    gen = validateFunctionProto (func);
-			}
-		    ) else {
-		       Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
 		    }
-		}		
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors = msgs;
-	    } FINALLY;
-	    
-	    this-> _referent.pop_back ();		   
-	    if (errors.size () != 0)
+		    		    		    
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors = msgs;
+		} FINALLY;
+
+		this-> _referent.pop_back ();
+		
+		if (!gen.isEmpty () && !locGen.isEmpty ()) {
+		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), gen.getLocation (), gen.prettyString ());
+		    note = note + Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), locGen.getLocation (), locGen.prettyString ());
+			
+		    Ymir::Error::occurAndNote (loc,
+					       note,
+					       ExternalError::get (SPECIALISATION_WORK_TYPE_BOTH));
+		}
+		
+		if (!locGen.isEmpty ())
+		    gen = locGen;
+	    }
+	    if (errors.size () != 0 && gen.isEmpty ())
 		THROW (ErrorCode::EXTERNAL, errors);
 	    
 	    return gen;
