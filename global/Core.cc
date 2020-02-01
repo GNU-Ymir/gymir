@@ -3,8 +3,9 @@
 namespace global {
     DECLARE_ENUM_WITH_TYPE (CoreNames, std::string,
 			    ARRAY_ALLOC        = "_yrt_alloc_array", 
+			    ARRAY_MODULE      = "array",
 			    ASSERT_FUNC        = "abort",
-			    BINARY_OP_OVERRIDE = "binop",
+			    BINARY_OP_OVERRIDE = "opBinary",
 			    CLASS_ALLOC        = "_yrt_alloc_class", 
 			    CORE_MODULE        = "core",
 			    DCOPY_OP_OVERRIDE  = "deepCopy",
@@ -16,6 +17,7 @@ namespace global {
 			    EXCEPT_GET_VALUE   = "_yrt_exc_check_type", 
 			    EXCEPT_POP         = "_yrt_exc_pop",
 			    EXCEPT_PUSH        = "_yrt_exc_push", 
+			    INDEX_OP_OVERRIDE = "opIndex",
 			    JMP_BUF_TYPE       = "_yrt_jmp_buf_type", 
 			    RETHROW            = "_yrt_exc_rethrow",
 			    RUN_MAIN           = "_yrt_run_main", 

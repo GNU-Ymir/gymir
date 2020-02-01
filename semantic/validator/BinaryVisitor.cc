@@ -231,11 +231,13 @@ namespace semantic {
 		} else if (right.to <Value> ().getType ().is <Slice> ()) {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
+
+		auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (BINARY_OP_OVERRIDE)});		
 		
 		auto templ = syntax::TemplateCall::init (
 		    loc,
 		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)})
+		    var
 		);
 		
 		auto call = syntax::MultOperator::init (
@@ -260,11 +262,13 @@ namespace semantic {
 		} else if (right.to <Value> ().getType ().is <Slice> ()) {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
+
+		auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (BINARY_OP_OVERRIDE)});
 		
 		auto templ = syntax::TemplateCall::init (
 		    loc,
 		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)})
+		    var
 		);
 		
 		auto call = syntax::MultOperator::init (

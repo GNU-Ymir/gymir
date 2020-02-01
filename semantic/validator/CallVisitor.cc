@@ -57,31 +57,41 @@ namespace semantic {
 	}
 
 	generator::Generator CallVisitor::validate (const lexing::Word & location , const generator::Generator & left, const std::vector <generator::Generator> & rights, int & score, std::vector <std::string> & errors) {
+	    bool checked = false;
 	    if (left.is <FrameProto> ()) {
 		auto gen = validateFrameProto (location, left.to<FrameProto> (), rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <ConstructorProto> ()) {
 		auto gen = validateConstructorProto (location, left.to <ConstructorProto> (), rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <LambdaProto> ()) {
 		auto gen = validateLambdaProto (location, left.to <LambdaProto> (), rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is<VarRef> () && left.to<Value> ().getType ().is<LambdaType> ()) { // We stored the lambdaproto in a varref
 		auto gen = validateLambdaProto (location, left.to <VarRef> ().getValue ().to<LambdaProto> (), rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <generator::Struct> ()) {
 		auto gen = validateStructCst (location, left.to <generator::Struct> (), rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <MultSym> ()) {
 		auto gen = validateMultSym (location, left.to <MultSym> (), rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.to<Value> ().getType ().is<FuncPtr> ()) {
 		auto gen = validateFunctionPointer (location, left, rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.to <Value> ().getType ().is <Delegate> ()) {
 		auto gen = validateDelegate (location, left, rights, score, errors);
+		checked = true;
 		if (!gen.isEmpty ()) return gen;
 	    } else if (left.is <generator::TemplateRef> ()) {
+		checked = true;
 		Symbol sym (Symbol::empty ());
 		Generator proto_gen (Generator::empty ());
 		auto gen = validateTemplateRef (location, left, rights, score, errors, sym, proto_gen);
@@ -101,7 +111,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (!left.is<MultSym> ()) 
+	    if (!left.is<MultSym> () && checked) 
 		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (left), prettyName (left)));	    
 	    return Generator::empty ();
 	}
@@ -905,9 +915,14 @@ namespace semantic {
 		) else of (Call, cl, {
 			return prettyName (cl.getFrame ());
 		    }
-		);
+		) else of (FrameProto, p, return p.prettyString ();
+		) else of (ConstructorProto, c, return c.prettyString ();
+		) else of (generator::Struct, str, return str.getName ()			 
+		) else of (MultSym,    sym,   return sym.getLocation ().str
+		) else of (ModuleAccess, acc, return acc.prettyString ()
+		) else of (Value,      val,  return val.getType ().to <Type> ().getTypeName ());
 	    }
-	    return gen.prettyString ();
+	    return gen.getLocation().str;
 	}
 
 	lexing::Word CallVisitor::realLocation (const Generator & gen) {

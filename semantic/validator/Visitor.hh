@@ -941,8 +941,7 @@ namespace semantic {
 	     */
 	    void popReferent ();
 	    
-	private :
-
+	    
 	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
 	    
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;

@@ -66,6 +66,11 @@ namespace semantic {
 	     */
 	    generator::Generator validateSlice (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights);
 
+	    /**
+	     * \brief Validate the operation done on a class
+	     */
+	    generator::Generator validateClass (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights);
+
 
 	    
 	    /**

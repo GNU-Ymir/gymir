@@ -1802,7 +1802,7 @@ namespace semantic {
 	    if (!copy.isAny ()) {
 		if (copy.getType ().is <Array> ())
 		    return inner;
-
+		
 		if (copy.getType ().is <Slice> ()) {
 		    ulong size = generateType (copy.getType ().to <Slice> ().getInners () [0]).getSize ();
 		    return Tree::buildCall (

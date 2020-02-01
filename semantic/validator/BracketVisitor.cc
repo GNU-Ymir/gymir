@@ -1,5 +1,5 @@
 #include <ymir/semantic/validator/BracketVisitor.hh>
-
+#include <ymir/global/Core.hh>
 
 namespace semantic {
 
@@ -7,6 +7,7 @@ namespace semantic {
 
 	using namespace generator;
 	using namespace Ymir;
+	using namespace global;
 	
 	BracketVisitor::BracketVisitor (Visitor & context) :
 	    _context (context)
@@ -27,6 +28,9 @@ namespace semantic {
 
 	    if (left.to <Value> ().getType ().is <Slice> ())
 		return validateSlice (expression, left, rights);
+
+	    if (left.to <Value> ().getType ().is <ClassRef> ()) 
+		return validateClass (expression, left, rights);
 	    
 	    BracketVisitor::error (expression, left, rights);
 	    return Generator::empty ();
@@ -125,6 +129,33 @@ namespace semantic {
 	    BracketVisitor::error (expression, left, right);
 	    return Generator::empty ();
 	}
+
+	Generator BracketVisitor::validateClass (const syntax::MultOperator & expression, const Generator & left, const std::vector<Generator> & right) {
+	    auto loc = expression.getLocation ();
+
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+	    std::vector <syntax::Expression> rightSynt;
+	    for (auto & it : right)
+		rightSynt.push_back (TemplateSyntaxWrapper::init (it.getLocation (), it));
+
+
+	    auto bin = syntax::Binary::init (
+		{loc, Token::DOT},
+		leftSynt,
+		syntax::Var::init ({loc, CoreNames::get (INDEX_OP_OVERRIDE)}),
+		syntax::Expression::empty ()
+	    );
+	    
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		bin,
+		rightSynt, false
+	    );
+
+	    return this-> _context.validateValue (call);
+	}
+	
+
 	
 	void BracketVisitor::error (const syntax::MultOperator & expression, const Generator & left, const std::vector <Generator> & rights) {	    
 	    std::vector <std::string> names;

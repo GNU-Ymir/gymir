@@ -98,7 +98,7 @@ namespace syntax {
 	};
 	
 	visit._fixedSuffixes = {
-	    Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::U32, Keys::I64, Keys::U64
+	    Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::U32, Keys::I64, Keys::U64, Keys::USIZE, Keys::ISIZE
 	};
 
 	visit._floatSuffix = {
@@ -817,6 +817,23 @@ namespace syntax {
 	auto next = this-> _lex.next ();
 	this-> _lex.rewind ();
 	if (next == Token::LACC)  return visitBlock ();
+	if (next == Keys::IF)       return visitIf ();
+	if (next == Keys::WHILE)    return visitWhile ();
+	if (next == Keys::ASSERT)   return visitAssert ();
+	if (next == Keys::BREAK)    return visitBreak ();
+	if (next == Keys::DO)       return visitDoWhile ();
+	if (next == Keys::FOR)      return visitFor ();
+	if (next == Keys::MATCH)    return visitMatch ();
+	if (next == Keys::SCOPE)    return visitScope ();
+	if (next == Keys::LET)      return visitVarDeclaration ();
+	if (next == Keys::RETURN)   return visitReturn ();
+	if (next == Keys::FUNCTION) return visitFunctionType ();
+	if (next == Keys::DELEGATE) return visitFunctionType ();
+	if (next == Keys::LOOP)     return visitWhile ();
+	if (next == Keys::CATCH)    return visitCatch ();
+	if (next == Keys::THROW_K)  return visitThrow ();
+	if (next == Keys::VERSION)  return visitVersion ();
+	if (next == Keys::PRAGMA)   return visitPragma ();
 	
 	auto value = visitOperand2 ();
 	return visitOperand1 (value);
@@ -854,26 +871,9 @@ namespace syntax {
     Expression Visitor::visitOperand3 (bool canBeTemplateCall) {
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
-	if (begin == Keys::ASSERT)   return visitAssert ();
-	if (begin == Keys::BREAK)    return visitBreak ();
+
 	if (begin == Keys::CAST)     return visitCast ();
 	if (begin == Keys::TEMPLATE) return visitTemplateChecker ();
-	if (begin == Keys::DO)       return visitDoWhile ();
-	if (begin == Keys::FOR)      return visitFor ();
-	if (begin == Keys::FUNCTION) return visitFunctionType ();
-	if (begin == Keys::DELEGATE) return visitFunctionType ();
-	if (begin == Keys::IF)       return visitIf ();
-	if (begin == Keys::LET)      return visitVarDeclaration ();
-	if (begin == Keys::LOOP)     return visitWhile ();
-	if (begin == Keys::MATCH)    return visitMatch ();
-	if (begin == Keys::PRAGMA)   return visitPragma ();
-	if (begin == Keys::RETURN)   return visitReturn ();
-	if (begin == Keys::SCOPE)    return visitScope ();
-	if (begin == Keys::CATCH)    return visitCatch ();
-	if (begin == Keys::THROW_K)  return visitThrow ();
-	if (begin == Keys::VERSION)  return visitVersion ();
-	if (begin == Keys::WHILE)    return visitWhile ();
-	//if (begin == Token::LACC)    return visitBlock ();
 	if (begin == Token::LCRO)    return visitArray ();
 	if (begin == Token::LPAR)    return visitTuple ();
 	if (begin == Token::PIPE || begin == Token::DPIPE)

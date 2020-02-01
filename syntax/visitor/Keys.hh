@@ -48,6 +48,7 @@ struct Keys {
     static std::string  I16;
     static std::string  I64;
     static std::string  I8;
+    static std::string  ISIZE;
     static std::string  IF; 
     static std::string  IMMUTABLE;
     static std::string  IMPL; 
@@ -124,6 +125,7 @@ struct Keys {
     static std::string  U32;
     static std::string  U64;
     static std::string  U8;
+    static std::string  USIZE;    
     static std::string  UNDER; 
     static std::string  UNION;
     static std::string  USE;
