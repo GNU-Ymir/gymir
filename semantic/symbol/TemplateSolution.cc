@@ -30,10 +30,6 @@ namespace semantic {
 	return Symbol {new (Z0) TemplateSolution (name, templs, mapping, nameOrders)};
     }
 
-    Symbol TemplateSolution::clone () const {
-	return Symbol {new TemplateSolution (*this)};
-    }
-
     bool TemplateSolution::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	TemplateSolution thisType; // That's why we cannot implement it for all class

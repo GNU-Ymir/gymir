@@ -268,7 +268,7 @@ namespace semantic {
 										    vtable [i].to <FrameProto> ().getReturnType (),
 										    types),
 								     left,
-								     i
+								     i + 1 // + 1 to ignore the typeinfo
 						 )
 			    )
 			);

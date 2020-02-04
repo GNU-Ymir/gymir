@@ -8,7 +8,7 @@
 namespace semantic {
 
     class Class : public ISymbol {
-
+	
 	/** The symbol declared in the class (the attributes, methods ...) */
 	Table _table;
 
@@ -39,6 +39,11 @@ namespace semantic {
 	 * Is this class abstract (not instanciable, and doesn't need all its methods to have body)
 	 */
 	bool _isAbstract = false;
+
+	/**
+	 * Is this class final (not inheritable)
+	 */
+	bool _isFinal = false;
 	
     private :
 
@@ -53,8 +58,6 @@ namespace semantic {
     public :
 	
 	static Symbol init (const lexing::Word & name, const syntax::Expression & ancestor);
-
-	Symbol clone () const override;
 
 	bool isOf (const ISymbol * type) const override;
 
@@ -146,6 +149,16 @@ namespace semantic {
 	 * \return is this class abstract?
 	 */
 	bool isAbs () const;
+
+	/**
+	 * Set the class to final if /is/
+	 */
+	void isFinal (bool is);
+
+	/**
+	 * \return Is this class abstract
+	 */
+	bool isFinal () const;
 	
 	/**
 	 * return the ancestor of the class (might be empty)

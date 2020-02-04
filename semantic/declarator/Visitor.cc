@@ -245,7 +245,7 @@ namespace semantic {
 		visit (decl);		
 	    }
 
-	    auto ret = popReferent ();
+	    auto ret = popReferent ();	    
 	    auto syms = ret.to <semantic::Module> ().getAllLocal ();
 	    if (!block.isPrivate ()) {
 		for (auto & it : syms)
@@ -311,6 +311,7 @@ namespace semantic {
 
 	    for (auto & ca : stcls.getAttributes ()) {
 		if (ca == Keys::ABSTRACT) cls.to <Class> ().isAbs (true);
+		else if (ca == Keys::FINAL_) cls.to <Class> ().isFinal (true);
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
 		}
@@ -375,7 +376,7 @@ namespace semantic {
 				}
 			    }
 			}
-		    ) else {			
+		    ) else {
 				auto sym = visit (it);
 				sym.setPublic ();
 		    }

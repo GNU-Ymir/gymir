@@ -55,7 +55,7 @@ namespace semantic {
 	    default : op = "??"; break;
 	    }
 
-	    return Ymir::format ("%(%)", op, this-> _operand.prettyString ());
+	    return Ymir::format ("% (%)", op, this-> _operand.prettyString ());
 	}
 	
     }

@@ -1033,10 +1033,19 @@ namespace syntax {
 	    auto name = this-> _lex.next ();
 	    next = this-> _lex.next ();	 
 	    Expression var (Expression::empty ());
-	    if (name != Keys::UNDER && next == Token::NOT) {
-		this-> _lex.rewind ();
-		var = visitTemplateCall (Var::init (name));
-		next = this-> _lex.next ();
+	    if (name != Keys::UNDER) {
+		var = Var::init (name);
+		while (true) {
+		    if (next == Token::NOT) {
+			this-> _lex.rewind ();
+			var = visitTemplateCall (var);
+			next = this-> _lex.next ();
+			break;
+		    } else if (next == Token::DCOLON) {
+			var = Binary::init (next, var, Var::init (visitIdentifier ()), Expression::empty ());
+			next = this-> _lex.next ();
+		    } else break;
+		}
 	    }
 	    
 	    if (next == Token::LPAR) {
@@ -1052,7 +1061,10 @@ namespace syntax {
 		    return MultOperator::init (name, end, var, params);
 	    } else if (next == Token::ARROW && var.isEmpty ()) {
 		return NamedExpression::init (name, visitMatchExpression ());
+	    } else if (next == Token::ARROW && var.is <Var> ()) {
+		return NamedExpression::init (var.getLocation (), visitMatchExpression ());
 	    }
+	    
 	    this-> _lex.rewind ();
 	    if (var.isEmpty ())		
 		return Var::init (name);

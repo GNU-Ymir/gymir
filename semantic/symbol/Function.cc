@@ -1,5 +1,6 @@
 #include <ymir/semantic/symbol/Function.hh>
 #include <ymir/syntax/visitor/Keys.hh>
+#include <ymir/syntax/expression/VarDecl.hh>
 
 namespace semantic {
 
@@ -27,10 +28,6 @@ namespace semantic {
     
     Symbol Function::init (const lexing::Word & name, const syntax::Function & func) {
 	return Symbol {new Function (name, func)};
-    }
-
-    Symbol Function::clone () const {
-	return Symbol {new Function (*this)};
     }
 
     bool Function::isOf (const ISymbol * type) const {
@@ -107,6 +104,17 @@ namespace semantic {
 
     bool Function::isOver () const {
 	return this-> _content.to <syntax::Function> ().isOver ();
+    }
+
+    bool Function::isMethod () const {
+	auto & proto = this-> _content.to <syntax::Function> ().getPrototype ();
+	if (proto.getParameters ().size () >= 1) {
+	    if (proto.getParameters ()[0].is <syntax::VarDecl> () &&
+		proto.getParameters ()[0].to <syntax::VarDecl> ().getType ().isEmpty () &&
+		proto.getParameters ()[0].to <syntax::VarDecl> ().getName () == Keys::SELF)
+		return true;
+	}
+	return false;
     }
     
     const syntax::Function & Function::getContent () const {

@@ -43,8 +43,6 @@ namespace semantic {
 
 	std::vector <Symbol> getLocalPublic (const std::string & name) const override;
 
-	Symbol clone () const override;
-
 	bool isOf (const ISymbol * type) const override;
 	
 	bool equals (const Symbol & other, bool parent = true) const override;

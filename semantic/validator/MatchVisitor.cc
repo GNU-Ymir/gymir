@@ -128,12 +128,10 @@ namespace semantic {
 		    varType.to <Type> ().isRef (false);
 		    varType.to <Type> ().isMutable (false);
 		}	    
-		
-	    
+
 		bool isMutable = false;
 		bool isRef = false;
 		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable);
-
 		// The type checking is made in reverse
 		// We want to be able to get an inherit class, from an ancestor class
 		// That is exactly the reverse of function call, or var affectation
@@ -156,12 +154,13 @@ namespace semantic {
 		
 		if (!var.getValue ().isEmpty ()) {
 		    test = validateMatch (value, var.getValue (), isMandatory);			
-		} else {
+		} else if (type_test.isEmpty ()) { // If is not a class, maybe we need a check and it is not mandatory
 		    isMandatory = true;
 		    // We already checked the types, and we want to check in reverse anyway
-		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, value, true, false);
+		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, value, true, false, true);
 		    test = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
-		}
+		} else
+		    test = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		
 		if (!type_test.isEmpty ()) {
 		    test = BinaryBool::init (var.getLocation (),
@@ -169,11 +168,12 @@ namespace semantic {
 					     Bool::init (var.getLocation ()),
 					     test, type_test);
 		}
-		
+
 		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, value, isMutable);
 		if (var.getName () != Keys::UNDER) {
 		    this-> _context.insertLocal (var.getName ().str, varDecl);
 		}
+				
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors = msgs;

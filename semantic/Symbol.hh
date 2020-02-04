@@ -57,12 +57,7 @@ namespace semantic {
 	 * \brief Change the name of the symbol
 	 */
 	void setName (const std::string & name);
-	
-	/** 
-	 * \brief Mandatory function used inside proxy design pattern
-	*/
-	virtual Symbol clone () const = 0;
-
+		
 	/**
 	 * \brief Mandatory function used inside proxy design pattern for dynamic casting
 	 */
@@ -207,6 +202,7 @@ namespace semantic {
 	 * \return a formated string of the hierarchy of the modules and all declared symbols
 	 */
 	virtual std::string formatTree (int padd) const = 0;
+
 	
 	/** Virtual but does not do anything */
 	virtual ~ISymbol ();

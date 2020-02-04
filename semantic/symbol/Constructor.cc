@@ -28,10 +28,6 @@ namespace semantic {
 	return Symbol {new Constructor (name, func)};
     }
 
-    Symbol Constructor::clone () const {
-	return Symbol {new Constructor (*this)};
-    }
-
     bool Constructor::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Constructor thisType; // That's why we cannot implement it for all class

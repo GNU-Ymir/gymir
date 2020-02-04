@@ -41,6 +41,7 @@ namespace Ymir {
 			    INCOMPLETE_TYPE                 = "type %(y) is not complete",
 			    INCOMPLETE_TYPE_CLASS           = "type %(y) is not complete due to previous errors",
 			    INFINITE_CONSTRUCTION_LOOP      = "infinite construction loop",
+			    INHERIT_FINAL_CLASS             = "base class %(y) is marked final",
 			    INHERIT_NO_CLASS                = "class base must be a class not a %(y)",
 			    INSERT_NO_TABLE		    = "insertion of a symbol in an entity that cannot be a referent",
 			    IN_COMPILE_TIME_EXEC            = "in compile time execution",

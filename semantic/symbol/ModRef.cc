@@ -45,10 +45,6 @@ namespace semantic {
 	return current;
     }
     
-    Symbol ModRef::clone () const {
-	return Symbol {new ModRef (*this)};
-    }
-
     bool ModRef::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	ModRef thisType; // That's why we cannot implement it for all class

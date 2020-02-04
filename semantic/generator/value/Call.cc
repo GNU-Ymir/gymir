@@ -20,7 +20,7 @@ namespace semantic {
 	    _params (params),
 	    _addParams (gen)
 	{
-	    this-> isLvalue (true);
+	    this-> isLvalue (type.to <Type> ().isRef ());
 	}
 	
 	Generator Call::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & addParams) {

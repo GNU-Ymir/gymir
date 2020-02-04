@@ -52,8 +52,6 @@ namespace semantic {
 
 	static Symbol init (const lexing::Word & name, const syntax::Function & func);
 
-	Symbol clone () const override;
-
 	bool isOf (const ISymbol * type) const override;
 
 	void insert (const Symbol & sym) override;
@@ -85,6 +83,8 @@ namespace semantic {
 	bool isVariadic () const;
 
 	bool isOver () const;
+
+	bool isMethod () const;
 	
 	const syntax::Function & getContent () const;
 

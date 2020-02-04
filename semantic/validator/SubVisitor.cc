@@ -48,7 +48,6 @@ namespace semantic {
 		else errors = {};
 	    }
 
-	    
 	    Generator gen (Generator::empty ());
 	    match (left) {
 		of (MultSym, mult, gen = validateMultSym (expression, mult))		    
@@ -59,7 +58,7 @@ namespace semantic {
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));
 	    }
-	    
+	    	    
 	    if (left.is<Value> () && gen.isEmpty ()) {
 		match (left.to <Value> ().getType ()) {
 		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left));
@@ -77,28 +76,63 @@ namespace semantic {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    std::vector <Symbol> syms;
 	    std::vector <std::string> errors;
+	    std::vector <Generator> gens;
 	    for (auto & gen : mult.getGenerators ()) {
-		if (gen.is<ModuleAccess> ()) {
-		    if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
-			auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
-			syms.insert (syms.end (), elems.begin (), elems.end ());
-		    } else {
-			auto elems = gen.to <ModuleAccess> ().getLocalPublic (right);		    
-			if (elems.size () == 0) {
-			    elems = gen.to <ModuleAccess> ().getLocal (right);
-			    for (auto & it : elems)
-				errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+		match (gen) {
+		    of (ModuleAccess, md ATTRIBUTE_UNUSED, {
+			    if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
+				auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
+				syms.insert (syms.end (), elems.begin (), elems.end ());
+			    } else {
+				auto elems = gen.to <ModuleAccess> ().getLocalPublic (right);		    
+				if (elems.size () == 0) {
+				    elems = gen.to <ModuleAccess> ().getLocal (right);
+				    for (auto & it : elems)
+					errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
+				}
+				syms.insert (syms.end (), elems.begin (), elems.end ());
+			    }
 			}
-			syms.insert (syms.end (), elems.begin (), elems.end ());
-		    }
-		} 
+		    ) else of (generator::Enum, en,  {
+			    gens.push_back (validateEnum (expression, en));
+			}
+		    ) else of (generator::Struct, str ATTRIBUTE_UNUSED, {
+			    gens.push_back (validateStruct (expression, gen));
+			}
+		    ) else of (generator::Class, cl ATTRIBUTE_UNUSED, {
+			    gens.push_back (validateClass (expression, gen, errors));
+			}
+		    ) else of (ClassRef, cl, {
+			    gens.push_back (validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors));
+			}
+		    ) else of (Type, te ATTRIBUTE_UNUSED, {
+			    gens.push_back (validateType (expression, gen));
+			}
+		    ) else of (Value, v, {
+			    if (v.getType ().is <StructRef> ())
+				gens.push_back (validateStructValue (expression, gen));
+			    else if (v.getType ().is <ClassRef> ())
+				gens.push_back (validateClassValue (expression, gen));
+				
+			}
+		    )
+		}
 	    }
 
-	    if (syms.size () == 0) {
+	    if (syms.size () == 0 && gens.size () == 0) {
 		this-> error (expression, mult.clone (), expression.getRight (), errors);
 	    }
+	    
+	    if (syms.size () != 0) {
+		auto s = this-> _context.validateMultSym (expression.getLocation (), syms);
+		if (s.is <MultSym> ()) {
+		    gens.insert (gens.end (), s.to <MultSym> ().getGenerators ().begin (), s.to <MultSym> ().getGenerators ().end ());
+		} else
+		    gens.push_back (s);
+	    }
 
-	    return this-> _context.validateMultSym (expression.getLocation (), syms);
+	    if (gens.size () == 1) return gens [0];
+	    else return MultSym::init (expression.getLocation (), gens);
 	}
 
 	Generator SubVisitor::validateModuleAccess (const syntax::Binary &expression, const ModuleAccess & acc) {
@@ -500,8 +534,9 @@ namespace semantic {
 		    
 		    return this-> _context.getClassConstructors (expression.getLocation (), t);
 		}
-		
-		if (name == __TYPEID__) {		    
+
+
+		if (name == __TYPEID__) {
 		    auto stringLit = syntax::String::init (
 			expression.getLocation (),
 			expression.getLocation (),
@@ -509,7 +544,7 @@ namespace semantic {
 			lexing::Word::eof ()
 		    );
 		
-		    return this-> _context.validateValue (stringLit);
+		    return this-> _context.validateValue (stringLit);   
 		} else if (name == __TYPEINFO__) {
 		    Generator cl = this-> _context.validateClass (t.to <generator::Class> ().getRef ());
 		    return this-> _context.validateTypeInfo (
@@ -537,7 +572,7 @@ namespace semantic {
 		    return VtableAccess::init (loc,
 					       typeInfo,
 					       value,
-					       nbVtable
+					       0
 		    );
 		}
 	    }

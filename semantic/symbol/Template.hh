@@ -40,8 +40,6 @@ namespace semantic {
 
 	static Symbol init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decls, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams);
 
-	Symbol clone () const override;
-
 	bool isOf (const ISymbol * type) const override;
 
 	bool equals (const Symbol & other, bool equals) const override;

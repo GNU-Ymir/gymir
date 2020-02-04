@@ -79,6 +79,8 @@ namespace semantic {
 	    case Operator::TRANGE : op = "..."; break;
 	    case Operator::IS : op = "is"; break;
 	    case Operator::NOT_IS : op = "!is"; break;
+	    case Operator::IN : op = "in"; break;
+	    case Operator::NOT_IN : op = "!in"; break;
 	    default : op = "??"; break;
 	    }
 	    

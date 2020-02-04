@@ -140,7 +140,7 @@ namespace semantic {
 	    /**
 	     * \brief Validate a class constructor
 	     */
-	    void validateConstructor (const semantic::Constructor & cs, const generator::Generator & classType, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
+	    void validateConstructor (const semantic::Symbol & sym, const generator::Generator & classType, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
 	    
 	    /**
 	     * \brief Validate the pre construction instruction in a constructor
@@ -429,7 +429,7 @@ namespace semantic {
 	     * \brief Validate the prototyp of a constructor in order to refer to it
 	     * \param cs the constructor to validate
 	     */
-	    generator::Generator validateConstructorProto (const semantic::Constructor & cs);
+	    generator::Generator validateConstructorProto (const semantic::Symbol & cs);
 
 	    /**
 	     * \brief Validate the method prototype of a method in order to refer to it
@@ -639,7 +639,7 @@ namespace semantic {
 	     * \brief This function verify that the mutability of gen is preserved
 	     * \brief And that no implicit operation are performed
 	     */
-	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct, bool checkTypes = true);
+	    void verifyMemoryOwner (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen, bool construct, bool checkTypes = true, bool inMatch = false);
 
 
 	    /**

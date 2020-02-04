@@ -21,10 +21,6 @@ namespace semantic {
 	return Symbol {new (Z0) Module (name)};
     }
 
-    Symbol Module::clone () const {
-	return Symbol {new Module (*this)};
-    }
-
     bool Module::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Module thisType; // That's why we cannot implement it for all class

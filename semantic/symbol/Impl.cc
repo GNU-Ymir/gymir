@@ -24,10 +24,6 @@ namespace semantic {
 	return Symbol {new (Z0) Impl (name, trait)};
     }
 
-    Symbol Impl::clone () const {
-	return Symbol {new Impl (*this)};
-    }
-
     bool Impl::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Impl thisType; // That's why we cannot implement it for all class

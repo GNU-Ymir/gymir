@@ -17,10 +17,6 @@ namespace semantic {
 	_value (value),
 	_gen (generator::Generator::empty ())
     {}
-
-    Symbol VarDecl::clone () const {
-	return VarDecl::init (this-> getName (), this-> _decos, this-> _type, this-> _value);
-    }
     
     Symbol VarDecl::init (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value) {
 	return Symbol {new (Z0) VarDecl (name, decos, type, value)};

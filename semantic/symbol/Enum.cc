@@ -31,10 +31,6 @@ namespace semantic {
 	return Symbol {new (Z0) Enum (name, values, type)};
     }
 
-    Symbol Enum::clone () const {
-	return Symbol {new (Z0) Enum (*this)};
-    }
-
     bool Enum::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Enum thisType; // That's why we cannot implement it for all class

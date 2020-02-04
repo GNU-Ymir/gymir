@@ -163,6 +163,17 @@ namespace semantic {
 	     * \param right the right operand that we don't know the type yet
 	     */
 	    generator::Generator validateLogicalBoolLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+
+	    /**
+	     * \brief Validate a binary logical operator with an array on left operator
+	     */
+	    generator::Generator validateLogicalArrayLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a binary logical operator with a slice on left operator
+	     */
+	    generator::Generator validateLogicalSliceLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 	    
 	    /**
 	     * \brief Validate an affectation, the pre operation is a mathetical one (or concat, but its considered math)
@@ -193,6 +204,14 @@ namespace semantic {
 	     * \param expression the syntaxic node 
 	     */
 	    generator::Generator validatePointerOperation (generator::Binary::Operator op, const syntax::Binary & expression);
+
+
+	    /**
+	     * \brief Validate a contain operation
+	     * \param op the operator of the expression
+	     * \param expression 
+	     */
+	    generator::Generator validateContain (generator::Binary::Operator op, const syntax::Binary & expression);
 	    
 	    	    
 	    /**
@@ -218,12 +237,16 @@ namespace semantic {
 	     * \return is this operator a range operator
 	     */
 	    bool isRange (generator::Binary::Operator op);
-
 	    
 	    /**
 	     * \return is this operator a pointer operator
 	     */
 	    bool isPointer (generator::Binary::Operator op);
+
+	    /**
+	     * \return is this operator a contain operator
+	     */
+	    bool isContain (generator::Binary::Operator op);
 	    
 	};	
 	

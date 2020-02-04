@@ -33,6 +33,8 @@ namespace semantic {
 		return validateRangeOperation (op, expression);
 	    } else if (isPointer (op)) {
 		return validatePointerOperation (op, expression);
+	    } else if (isContain (op)) {
+		return validateContain (op, expression);
 	    } else if (isAff) {
 		return validateAffectation (op, expression);
 	    } 
@@ -338,6 +340,18 @@ namespace semantic {
 		    of (Char, c ATTRIBUTE_UNUSED,
 			ret = validateLogicalCharLeft (op, expression, left, right);
 		    );
+
+		    of (Array, a ATTRIBUTE_UNUSED,
+			ret = validateLogicalArrayLeft (op, expression, left, right);
+		    );
+
+		    of (Slice, s ATTRIBUTE_UNUSED,
+			ret = validateLogicalSliceLeft (op, expression, left, right);
+		    );
+
+		    // of (ClassRef, c ATTRIBUTE_UNUSED,
+		    // 	ret = validateLogicalClass (op, expression, left, right);
+		    // );
 		}		
 		
 	    ) CATCH (ErrorCode::EXTERNAL) {
@@ -458,7 +472,66 @@ namespace semantic {
 	    );
 	    
 	    return Generator::empty ();
-	}	
+	}
+
+	Generator BinaryVisitor::validateLogicalArrayLeft (Binary::Operator, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    auto loc = expression.getLocation ();
+	    auto leftSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, left));
+	    syntax::Expression rightSynt (syntax::Expression::empty ()); 
+	    if (right.to <Value> ().getType ().is <Array> ()) {
+		rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+	    } else if (right.to <Value> ().getType ().is <Slice> ()) {
+		rightSynt = TemplateSyntaxWrapper::init (loc, right);
+	    } else return Generator::empty ();
+
+	    auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});		
+	    	    
+	    auto call = this-> _context.validateValue (syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		var,
+		{leftSynt, rightSynt}
+	    ));
+
+	    auto test = syntax::Binary::init (
+		expression.getLocation (),
+		TemplateSyntaxWrapper::init (loc, call),
+		syntax::Cast::init (loc,
+				    TemplateSyntaxWrapper::init (loc, call.to<Value> ().getType ()),
+				    TemplateSyntaxWrapper::init (loc, ufixed (0))
+		), syntax::Expression::empty ()
+	    );
+	    
+	    return this-> _context.validateValue (test);
+	}
+
+	Generator BinaryVisitor::validateLogicalSliceLeft (Binary::Operator, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    auto loc = expression.getLocation ();
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+	    syntax::Expression rightSynt (syntax::Expression::empty ()); 
+	    if (right.to <Value> ().getType ().is <Array> ()) {
+		rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+	    } else if (right.to <Value> ().getType ().is <Slice> ()) {
+		rightSynt = TemplateSyntaxWrapper::init (loc, right);
+	    } else return Generator::empty ();
+
+	    auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});			    	    
+	    auto call = this-> _context.validateValue (syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		var,
+		{leftSynt, rightSynt}
+	    ));
+
+	    auto test = syntax::Binary::init (
+		expression.getLocation (),
+		TemplateSyntaxWrapper::init (loc, call),
+		syntax::Cast::init (loc,
+				    TemplateSyntaxWrapper::init (loc, call.to<Value> ().getType ()),
+				    TemplateSyntaxWrapper::init (loc, ufixed (0))
+		), syntax::Expression::empty ()
+	    );
+	    
+	    return this-> _context.validateValue (test);
+	}
 
 	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
@@ -622,8 +695,40 @@ namespace semantic {
 	    }
 	    return Generator::empty ();
 	}
+
+	Generator BinaryVisitor::validateContain (Binary::Operator op, const syntax::Binary & expression) {
+	    auto loc = expression.getLocation ();
+	    auto leftExp = expression.getLeft ();
+	    if (!expression.getType ().isEmpty ()) {
+		leftExp = syntax::Cast::init (expression.getLocation (), expression.getType (), leftExp);
+	    }
+
+	    auto right = this-> _context.validateValue (expression.getRight ());
+	    if (!right.to <Value> ().getType ().is <ClassRef> ())
+		return Generator::empty ();
+
+	    auto templ = syntax::Binary::init (
+		{loc, Token::DOT},
+		TemplateSyntaxWrapper::init (loc, right),		    
+		syntax::Var::init ({loc, CoreNames::get (CONTAIN_OP_OVERRIDE)}),
+		syntax::Expression::empty ()	    
+	    );
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{leftExp}, false
+	    );
+
+	    if (op == Binary::Operator::NOT_IN) {
+		call = syntax::Unary::init ({expression.getLocation (), Token::NOT}, call);
+	    }
+	    
+	    return this-> _context.validateValue (call);
+	}
 	
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {
+	    isAff = false;
 	    string_match (loc.str) {
 		eq (Token::EQUAL, { isAff = true; return Binary::Operator::LAST_OP; });
 		eq (Token::DIV_AFF, { isAff = true; return Binary::Operator::DIV; });
@@ -658,6 +763,8 @@ namespace semantic {
 		eq (Token::TDOT, return Binary::Operator::TRANGE;);
 		eq (Keys::IS, return Binary::Operator::IS;);
 		eq (Keys::NOT_IS, return Binary::Operator::NOT_IS;);
+		eq (Keys::IN, return Binary::Operator::IN);
+		eq (Keys::NOT_IN, return Binary::Operator::NOT_IN);
 	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -680,7 +787,8 @@ namespace semantic {
 	bool BinaryVisitor::isLogical (Binary::Operator op) {
 	    auto impossible = {
 		Binary::Operator::TRANGE, Binary::Operator::RANGE,
-		Binary::Operator::IS, Binary::Operator::NOT_IS
+		Binary::Operator::IS, Binary::Operator::NOT_IS,
+		Binary::Operator::IN, Binary::Operator::NOT_IN
 	    };
 	    return !isMath (op) &&
 		(std::find (impossible.begin (), impossible.end (), op) == impossible.end ());
@@ -692,6 +800,10 @@ namespace semantic {
 
 	bool BinaryVisitor::isPointer (Binary::Operator op) {
 	    return op == Binary::Operator::IS || op == Binary::Operator::NOT_IS;
+	}
+
+	bool BinaryVisitor::isContain (Binary::Operator op) {
+	    return op == Binary::Operator::IN || op == Binary::Operator::NOT_IN;
 	}
 	
     }

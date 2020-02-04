@@ -40,8 +40,9 @@ struct Keys {
     static std::string  EXPAND; 
     static std::string  EXTERN; 
     static std::string  FAILURE;
-    static std::string  FALSE_; 
-    static std::string  FLOAT_S;
+    static std::string  FALSE_;
+    static std::string  FINAL_;
+    static std::string  FLOAT_S;    
     static std::string  FOR; 
     static std::string  FROM; 
     static std::string  FUNCTION;
@@ -53,7 +54,8 @@ struct Keys {
     static std::string  IMMUTABLE;
     static std::string  IMPL; 
     static std::string  IMPORT;
-    static std::string  IN; 
+    static std::string  IN;
+    static std::string  NOT_IN; 
     static std::string  INIT;
     static std::string  INLINE;
     static std::string  IS; 

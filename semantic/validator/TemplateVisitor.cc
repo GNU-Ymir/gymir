@@ -108,6 +108,7 @@ namespace semantic {
 		    score = merge.score;
 		    finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping);
+		    
 		    auto visit = declarator::Visitor::init ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
 		    		    
@@ -1019,8 +1020,10 @@ namespace semantic {
 			       replaceAll (bin.getType (), mapping)
 			   );
 		) else of (syntax::Block, block, {
-			std::vector <Expression> content;
-			Declaration declMod = replaceAll (block.getDeclModule (), mapping);
+			std::vector <Expression> content;			
+			Declaration declMod (Declaration::empty ());
+			if (!block.getDeclModule ().isEmpty ())
+			    declMod = replaceAll (block.getDeclModule (), mapping);
 			for (auto & it : block.getContent ())
 			    content.push_back (replaceAll (it, mapping));
 			return syntax::Block::init (element.getLocation (), block.getEnd (), declMod, content);
@@ -1268,7 +1271,8 @@ namespace semantic {
 			   for (auto & it : m.getActions ())
 			       actions.push_back (replaceAll (it, mapping));
 			   return syntax::Match::init (m.getLocation (), replaceAll (m.getContent (), mapping),
-						       matchers, actions, m.isFinal ());
+							   matchers, actions, m.isFinal ());
+
 		    }
 		);
 	    }
@@ -1294,8 +1298,9 @@ namespace semantic {
 		    }
 		) else of (syntax::Class, cl, {
 			std::vector <Declaration> decls;
-			for (auto & it : cl.getDeclarations ())
+			for (auto & it : cl.getDeclarations ()) {
 			    decls.push_back (replaceAll (it, mapping));
+			}
 			return syntax::Class::init (cl.getName (), replaceAll (cl.getAncestor (), mapping), decls, cl.getAttributes ());
 		    }
 		) else of (syntax::Enum, en, {
@@ -1404,7 +1409,9 @@ namespace semantic {
 		println (buf.str ());
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		return Declaration::empty ();
-	    } else return decl;
+	    }
+	    
+	    return Declaration::empty ();
 	}
 
 	syntax::Function::Prototype TemplateVisitor::replaceAll (const syntax::Function::Prototype & proto, const std::map <std::string, Expression> & mapping) const {

@@ -13,10 +13,6 @@ namespace semantic {
 	_value (value),
 	_gen (generator::Generator::empty ())
     {}
-
-    Symbol Alias::clone () const {
-	return Alias::init (this-> getName (), this-> _value);
-    }
     
     Symbol Alias::init (const lexing::Word & name, const syntax::Expression & value) {
 	return Symbol {new (Z0) Alias (name, value)};

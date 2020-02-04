@@ -23,10 +23,6 @@ namespace semantic {
 	return Symbol {new (Z0) Struct (name, fields)};
     }
 
-    Symbol Struct::clone () const {
-	return Symbol {new (Z0) Struct (*this)};
-    }
-
     bool Struct::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Struct thisType; // That's why we cannot implement it for all class

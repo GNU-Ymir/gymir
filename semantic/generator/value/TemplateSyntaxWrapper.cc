@@ -30,8 +30,8 @@ namespace semantic {
 	}
 
 	void TemplateSyntaxWrapper::treePrint (Ymir::OutBuffer & stream, int i) const {
-	    stream.writefln ("%<TemplateSyntaxWrapper> ", i, '\t');
-	    stream.writeln ("%%", i, '\t', this-> _content.prettyString ());
+	    stream.writefln ("%*<TemplateSyntaxWrapper> ", i, '\t');
+	    stream.writefln ("%*%", i, '\t', this-> _content.prettyString ());
 	}
 
 	const Generator & TemplateSyntaxWrapper::getContent() const {

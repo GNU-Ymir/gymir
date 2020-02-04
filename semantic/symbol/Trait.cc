@@ -28,10 +28,6 @@ namespace semantic {
     Symbol Trait::init (const lexing::Word & name) {
 	return Symbol {new (Z0) Trait (name)};
     }
-
-    Symbol Trait::clone () const {
-	return Symbol {new Trait (*this)};
-    }
     
     bool Trait::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];

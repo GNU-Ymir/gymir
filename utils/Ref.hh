@@ -59,7 +59,9 @@ private :
 	else {
 	    ptr-> second -= 1;
 	    auto nb = ptr-> second;
-	    if (nb <= 0) delete value;	    
+	    if (nb <= 0) {
+		delete value;
+	    }
 	}
     }
 

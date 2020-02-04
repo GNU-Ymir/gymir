@@ -41,6 +41,8 @@ namespace semantic {
 		TRANGE, // ...
 		IS,
 		NOT_IS,
+		IN,
+		NOT_IN,
 		LAST_OP
 	    };	    
 

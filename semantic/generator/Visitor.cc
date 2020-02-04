@@ -387,12 +387,11 @@ namespace semantic {
 
 	    std::vector<Tree> params;
 	    auto & classGen = classType.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
-	    for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
-		params.push_back (generateValue (it));
-	    }
-
 	    params.push_back (Tree::buildAddress (classType.getLocation (), generateTypeInfoClass (classType), Tree::pointerType (Tree::voidType ())));
 	    
+	    for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
+		params.push_back (generateValue (it));
+	    }	    
 	    
 	    auto vtableType = Tree::staticArray (Tree::pointerType (Tree::voidType ()), params.size ());
 	    auto vtableValue = Tree::constructIndexed (classType.getLocation (), vtableType, params);

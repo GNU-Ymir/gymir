@@ -541,13 +541,18 @@ namespace semantic {
 	    }
 	}
 	
-	generator::Generator Visitor::validateClass (const semantic::Symbol & cls, bool inModule) {
+	generator::Generator Visitor::validateClass (const semantic::Symbol & cls, bool inModule) {	    
 	    Generator ancestor (Generator::empty ());
 	    if (!cls.to <semantic::Class> ().getAncestor ().isEmpty ()) {
 		ancestor = this-> validateType (cls.to <semantic::Class> ().getAncestor ());
 		if (!ancestor.is <ClassRef> ()) {
 		    Ymir::Error::occur (cls.to <semantic::Class> ().getAncestor ().getLocation (),
 					ExternalError::get (INHERIT_NO_CLASS),
+					ancestor.prettyString ()
+		    );
+		} else if (ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().isFinal ()) {
+		    Ymir::Error::occur (cls.to <semantic::Class> ().getAncestor ().getLocation (),
+					ExternalError::get (INHERIT_FINAL_CLASS),
 					ancestor.prettyString ()
 		    );
 		}
@@ -633,17 +638,19 @@ namespace semantic {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
-		
+
 		if (inModule) {
-		    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
-			TRY (
+		    auto allInners = cls.to <semantic::Class> ().getAllInner ();
+		    for (auto  it : allInners) {
+			pushReferent (it, "validate::innerClass");			
+			TRY (			    
 			    match (it) {
 				of (semantic::Function, func ATTRIBUTE_UNUSED, {
 					if (!func.getContent ().getBody ().getBody ().isEmpty ())
 					    validateMethod (func, ClassRef::init (cls.getName (), ancestor, sym));
 				    }
 				) else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
-					validateConstructor (cs, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields);
+					validateConstructor (it, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields);
 				    }
 				);
 			    }
@@ -651,20 +658,26 @@ namespace semantic {
 			    GET_ERRORS_AND_CLEAR (msgs);
 			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 			} FINALLY;
+			
+			popReferent ("validate::innerClass");			
 		    }
 
-		    for (auto & it : addMethods) {
+		    for (auto it : addMethods) {
+			pushReferent (it, "validate::innerClass");
 			match (it) {
 			    of (semantic::Function, func ATTRIBUTE_UNUSED, {
-				    TRY (
-					validateMethod (func, ClassRef::init (cls.getName (), ancestor, sym));
-				    ) CATCH (ErrorCode::EXTERNAL) {
-					GET_ERRORS_AND_CLEAR (msgs);
-					errors.insert (errors.end (), msgs.begin (), msgs.end ());
-				    } FINALLY;
+				    if (!func.getContent ().getBody ().getBody ().isEmpty ()) {
+					TRY (
+					    validateMethod (func, ClassRef::init (cls.getName (), ancestor, sym));
+					) CATCH (ErrorCode::EXTERNAL) {
+					    GET_ERRORS_AND_CLEAR (msgs);
+					    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+					} FINALLY;
+				    }
 				}
 			    );
-			}			
+			}
+			popReferent ("validate::innerClass");
 		    }
 		}
 	       		
@@ -700,7 +713,7 @@ namespace semantic {
 	    }
 	    
 	    
-	    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
+	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
 		TRY (
 		    match (it) {
 			of (semantic::Function, func ATTRIBUTE_UNUSED, {				
@@ -720,7 +733,7 @@ namespace semantic {
 
 	    // We want to validate implementation afterwards to have clearer errors
 	    // And we don't want to be able to override impl methods outside the impl declaration scope
-	    for (auto & it : cls.to <semantic::Class> ().getAllInner ()) {
+	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
 		TRY (
 		    match (it) {
 			of (semantic::Impl, im, {
@@ -779,7 +792,7 @@ namespace semantic {
 	    std::vector <Symbol> loc_addMethods;
 	    
 	    std::vector <generator::Class::MethodProtection> loc_protection;
-	    for (auto & it : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) {
+	    for (auto it : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) {
 		TRY (
 		    match (it) {
 			of (semantic::Function, func ATTRIBUTE_UNUSED, {
@@ -797,7 +810,7 @@ namespace semantic {
 	    }
 
 	    std::vector <Generator> loc_vtable_impl = loc_vtable;
-	    for (auto & it : impl.getAllInner ()) {
+	    for (auto it : impl.getAllInner ()) {
 		TRY (
 		    match (it) {
 			of (semantic::Function, func ATTRIBUTE_UNUSED, {
@@ -851,7 +864,7 @@ namespace semantic {
 	    for (auto & it : loc_addMethods) {
 		addMethods.push_back (it);
 		TRY (
-		    if (it.to <semantic::Function> ().getContent ().getBody ().getBody ().isEmpty ()) {
+		    if (it.to <semantic::Function> ().getContent ().getBody ().getBody ().isEmpty () && !classType.to <ClassRef> ().getRef ().to <semantic::Class> ().isAbs ()) {
 			Ymir::Error::occur (loc_vtable_impl [i].getLocation (), ExternalError::get (NO_BODY_METHOD), loc_vtable_impl [i].prettyString ());
 		    }
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -932,14 +945,14 @@ namespace semantic {
 	    }
 	}
 	
-	void Visitor::validateConstructor (const semantic::Constructor & cs, const Generator & classType_, const Generator & ancestor, const std::vector <Generator> & ancestorFields) {
+	void Visitor::validateConstructor (const semantic::Symbol & sym, const Generator & classType_, const Generator & ancestor, const std::vector <Generator> & ancestorFields) {
+	    auto & cs = sym.to <Constructor> ();
 	    auto constr = cs.getContent ();
 	    std::vector <Generator> params;
 	    Generator retType (Generator::empty ());
 	    std::vector <std::string> errors;
 	    auto classType = classType_;
-
-	    auto proto = validateConstructorProto (cs);
+	    auto proto = validateConstructorProto (sym);
 	    verifyConstructionLoop (proto.getLocation (), proto);
 	    
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
@@ -1012,12 +1025,8 @@ namespace semantic {
 	    enterForeign ();
 	    
 	    enterBlock ();
+	    
 	    TRY (
-		auto & __params = function.getPrototype ().getParameters ();
-		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
-		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
-		
-		validatePrototypeForFrame (cs.getName (), proto, params, retType);
 		bool isMutable = false;
 		for (auto & it : function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().getDecorators ()) {
 		    if (it.getValue () == syntax::Decorator::MUT) isMutable = true;
@@ -1032,6 +1041,12 @@ namespace semantic {
 		classType.to <Type> ().isMutable (isMutable);
 		params.insert (params.begin (), ParamVar::init ({cs.getName (), Keys::SELF}, classType, isMutable));
 		insertLocal (params [0].getName (), params [0]);
+
+		auto & __params = function.getPrototype ().getParameters ();
+		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
+		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
+		
+		validatePrototypeForFrame (cs.getName (), proto, params, retType);
 		if (retType.isEmpty ()) retType = Void::init (func.getName ());
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
@@ -1093,7 +1108,7 @@ namespace semantic {
 				syms.push_back (gen);
 			    else {
 				errors.push_back (
-				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), validateConstructorProto (cst).prettyString ())					    
+				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), validateConstructorProto (gen).prettyString ())					    
 				);
 			    }
 			});
@@ -2109,11 +2124,13 @@ namespace semantic {
 		TRY (
 		    match (sym) {
 			of (semantic::Function, func, {
-				gens.push_back (validateFunctionProto (func));			    
+				if (!func.isMethod ()) {
+				    gens.push_back (validateFunctionProto (func));			    
+				}
 				succ = true;
 			    }
-			) else of (semantic::Constructor, func, {
-				gens.push_back (validateConstructorProto (func));		    
+			) else of (semantic::Constructor, func ATTRIBUTE_UNUSED, {
+				gens.push_back (validateConstructorProto (sym));		    
 				succ = true;
 			    }
 			) else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
@@ -2313,8 +2330,9 @@ namespace semantic {
 	    return frame;
 	}
 
-	Generator Visitor::validateConstructorProto (const semantic::Constructor & func) {
-	    pushReferent (func.clone (), "validateConstructorProto");
+	Generator Visitor::validateConstructorProto (const semantic::Symbol & sym) {
+	    auto & func = sym.to <Constructor> ();
+	    pushReferent (sym, "validateConstructorProto");
 	    enterForeign ();
 	    
 	    std::vector <Generator> params;
@@ -2359,9 +2377,8 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);		
 	    }
-	    
-	    
-	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), func.clone (), cl, params);
+	    	    
+	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), sym, cl, params);
 	    frame.to <ConstructorProto> ().setMangledName (func.getMangledName ());	    
 	    return frame;
 	}
@@ -2381,7 +2398,7 @@ namespace semantic {
 	    __validating__.push_back (func.getName ());
 	    enterBlock ();
 	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), classType, Generator::empty (), true));
-	    
+
 	    TRY (
 		auto & __params = function.getPrototype ().getParameters ();
 		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
@@ -2509,7 +2526,6 @@ namespace semantic {
 		    if (var.getType ().isEmpty () && no_value && !var.getValue ().isEmpty ()) {
 			Ymir::Error::occur (var.getLocation (), ExternalError::get (FORWARD_REFERENCE_VAR));
 		    }
-
 				
 		    bool isMutable = false;
 		    bool isRef = false;
@@ -2843,13 +2859,16 @@ namespace semantic {
 	    if (fn_type.isEmpty ()) {
 		this-> setCurrentFuncType (type);
 		fn_type = type;
-	    } else if (!fn_type.equals (type)) {
-	    	auto note = Ymir::Error::createNote (fn_type.getLocation ());
-	    	Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-	    				   type.to <Type> ().getTypeName (),
-	    				   fn_type.to <Type> ().getTypeName ()
-	    	);				    
-	    }
+	    } else
+		verifyCompatibleType (type.getLocation (), fn_type, type);
+	    
+	    // 	if (!fn_type.equals (type)) {
+	    // 	auto note = Ymir::Error::createNote (fn_type.getLocation ());
+	    // 	Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+	    // 				   type.to <Type> ().getTypeName (),
+	    // 				   fn_type.to <Type> ().getTypeName ()
+	    // 	);				    
+	    // }
 
 	    if (!fn_type.is<Void> ()) {
 		verifyMemoryOwner (rt.getLocation (), fn_type, value, true);
@@ -3097,7 +3116,11 @@ namespace semantic {
 	}
 
 	
-	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type) {
+	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
+	    auto type = type_;
+	    type.to <Type> ().isRef (false);
+	    type.to <Type> ().isMutable (false);
+	    
 	    auto typeInfo = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_INFO)});
 		
 	    auto str = validateType (typeInfo);
@@ -3173,15 +3196,17 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    for (auto & it : tcl.getParameters ()) {
 		bool succeed = true;
+		std::vector <std::string> locErrors;
 		TRY (
 		    params.push_back (validateType (it, true));
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.begin (), msgs.begin (), msgs.end ());
+		    locErrors.insert (locErrors.begin (), msgs.begin (), msgs.end ());
 		    succeed = false;
 		} FINALLY;
 
 		if (!succeed) {
+		    succeed = true;
 		    TRY (
 			auto val = validateValue (it);
 			auto rvalue = retreiveValue (val);
@@ -3189,9 +3214,13 @@ namespace semantic {
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			succeed = false;
-		    } FINALLY;
+		    } FINALLY;		    
 		}
+		
+		if (!succeed)
+		    errors.insert (errors.end (), locErrors.begin (), locErrors.end ());
 	    }
+	    
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 	    
@@ -3289,7 +3318,9 @@ namespace semantic {
 			    else aux.push_back (ret);
 			}
 			
-			ret = MultSym::init (value.getLocation (), aux);
+			if (aux.size () == 1)
+			    ret = aux [0];
+			else ret = MultSym::init (value.getLocation (), aux);
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -3902,7 +3933,7 @@ namespace semantic {
 	    }
 	    
 	    if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();
-	    
+
 	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
 	    return Generator::empty ();	    	   
 	}
@@ -4316,7 +4347,7 @@ namespace semantic {
 	    }
 	}	
 
-	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct, bool checkTypes) {
+	void Visitor::verifyMemoryOwner (const lexing::Word & loc, const Generator & type, const Generator & gen, bool construct, bool checkTypes, bool inMatch) {
 	    if (checkTypes) 
 		verifyCompatibleTypeWithValue (loc, type, gen);
 
@@ -4325,7 +4356,8 @@ namespace semantic {
 	    
 	    // Verify Implicit referencing
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
-		Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
+		if (!inMatch)
+		    Ymir::Error::warn (gen.getLocation (), ExternalError::get (REF_NO_EFFECT));
 	    } else {
 		if (type.to <Type> ().isRef () && construct) {
 		    verifySameType (type, gen.to <Value> ().getType ());

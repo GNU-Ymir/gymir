@@ -35,10 +35,6 @@ namespace semantic {
     Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor) {
 	return Symbol {new (Z0) Class (name, ancestor)};
     }
-
-    Symbol Class::clone () const {
-	return Symbol {new Class (*this)};
-    }
     
     bool Class::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
@@ -46,7 +42,7 @@ namespace semantic {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return ISymbol::isOf (type);	
     }
-
+    
     void Class::insert (const Symbol & sym) {
 	this-> _table.insert (sym);
     }
@@ -156,5 +152,14 @@ namespace semantic {
     bool Class::isAbs () const {
 	return this-> _isAbstract;
     }
+
+    void Class::isFinal (bool is) {
+	this-> _isFinal = is;
+    }
+
+    bool Class::isFinal () const {
+	return this-> _isFinal;
+    }
+
     
 }

@@ -38,8 +38,6 @@ namespace semantic {
 
 	static Symbol init (const lexing::Word & loc, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders);
 
-	Symbol clone () const override;
-
 	void insert (const Symbol & sym) override;
 
 	void replace (const Symbol & sym) override;
