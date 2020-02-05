@@ -14,9 +14,11 @@ namespace semantic {
 
 	/** The ancestor of the class */
 	syntax::Expression _ancestor;
-	
+
+	/** The fields of the class */
 	std::vector <syntax::Expression> _fields;
 
+	
 	/** The list of fields that are marked as private */
 	std::vector <std::string> _privates;
 
@@ -35,6 +37,13 @@ namespace semantic {
 	 */
 	generator::Generator _typeInfo;
 
+	/** The list of function that were declared in a traits, but
+	    not overriden by the class 
+	    They were put directly in the class as they were, and will be validate likewise
+	    This vector is filled at validation time
+	*/
+	std::vector <Symbol> _addMethods;
+	
 	/**
 	 * Is this class abstract (not instanciable, and doesn't need all its methods to have body)
 	 */
@@ -164,6 +173,17 @@ namespace semantic {
 	 * return the ancestor of the class (might be empty)
 	 */
 	const syntax::Expression & getAncestor () const;
+
+	/**
+	 * \return the list of added methods (trait but not overriden)
+	 */
+	const std::vector <Symbol> & getAddMethods () const;
+
+	/**
+	 * \brief Set the list of methods that were directly imported from trait
+	 * \brief All those methods were not declared in the class, so they are not accessible in its symbol table
+	 */
+	void setAddMethods (const std::vector <Symbol> & methods);
 	
     };
     

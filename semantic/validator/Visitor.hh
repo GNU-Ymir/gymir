@@ -182,6 +182,13 @@ namespace semantic {
 	    generator::Generator validateClass (const semantic::Symbol & cls, bool isModule = false);
 
 	    /**
+	     * \brief Validate the inner symbols of a class definition
+	     * \Warning the class must have been validated beforehand by the function validateClass
+	     * \Warning Actually, the only function that should call this method is validateClass
+	     */
+	    void validateInnerClass (const semantic::Symbol & cls);
+	    
+	    /**
 	     * \brief Make same small verif on trait
 	     * \brief This does not generate any code
 	     */

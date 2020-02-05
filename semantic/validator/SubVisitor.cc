@@ -558,13 +558,11 @@ namespace semantic {
 	}
 
 	Generator SubVisitor::validateClassValue (const syntax::Binary & expression, const generator::Generator & value) {
-	    auto & cl = value.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ();
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto opName = expression.getRight ().to <syntax::Var> ().getName ().str;
 		if (opName == SubVisitor::__TYPEINFO__) {		    
 		    auto loc = expression.getLocation ();
 		    auto typeInfoValue = this-> _context.validateTypeInfo (expression.getLocation (), value.to <Value> ().getType ());
-		    auto nbVtable = cl.getGenerator ().to <generator::Class> ().getVtable ().size ();
 		    auto typeInfo = typeInfoValue.to<Value> ().getType ();
 		    typeInfo.to <Type> ().isRef (true); // It is a pointer in the vtable, we need to unref it
 		    typeInfo.to <Type> ().isMutable (false);

@@ -161,5 +161,12 @@ namespace semantic {
 	return this-> _isFinal;
     }
 
+    void Class::setAddMethods (const std::vector <Symbol> & methods) {
+	this-> _addMethods = methods;
+    }
+
+    const std::vector <Symbol> & Class::getAddMethods () const {
+	return this-> _addMethods;
+    }
     
 }
