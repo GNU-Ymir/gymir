@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ymir/utils/OutBuffer.hh>
 /**
  * Implementation of a proxy design pattern
  * This allows to use polymorphism with hidden allocation, and ensure that all allocation or freed when unused
@@ -49,9 +50,9 @@ public:
     }
     
     I clone () const {
-	if (this-> _value != nullptr)
+	if (this-> _value != nullptr) {
 	    return this-> _value-> clone ();
-	else return I (nullptr);
+	} else return I (nullptr);
     }
     
     virtual ~Proxy<T, I> () {

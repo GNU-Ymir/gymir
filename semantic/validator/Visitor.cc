@@ -540,6 +540,46 @@ namespace semantic {
 		    Ymir::Error::occur (it.getName (), ExternalError::get (NOT_OVERRIDE), it.getName ().str);
 	    }
 	}
+
+	void Visitor::validateInnerClass (const semantic::Symbol & cls) {
+	    auto & clRef = cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
+	    auto & ancestor = clRef.to <ClassRef> ().getAncestor ();
+	    auto & addMethods = cls.to <semantic::Class> ().getAddMethods ();
+	    
+	    std::vector <Generator> ancestorFields;
+	    if (!ancestor.isEmpty ())
+		ancestorFields = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getFields ();
+	    
+	    auto allInners = cls.to <semantic::Class> ().getAllInner ();
+	    allInners.insert (allInners.end (), addMethods.begin (), addMethods.end ());
+	    std::vector <std::string> errors;
+	    
+	    for (auto & it : allInners) {
+		pushReferent (it, "validate::innerClass");			
+		TRY (			    
+		    match (it) {
+			of (semantic::Function, func ATTRIBUTE_UNUSED, {
+				if (!func.getContent ().getBody ().getBody ().isEmpty ())
+				    validateMethod (func, clRef);
+			    }
+			) else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
+				validateConstructor (it, clRef, ancestor, ancestorFields);
+			    }
+			);
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+			
+		popReferent ("validate::innerClass");			
+	    }
+
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
+	    
+	}
 	
 	generator::Generator Visitor::validateClass (const semantic::Symbol & cls, bool inModule) {	    
 	    Generator ancestor (Generator::empty ());
@@ -558,12 +598,12 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty ()) {
+	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {
+
 		auto sym = cls;
 		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 		// To avoid recursive validation 
 		sym.to <semantic::Class> ().setGenerator (gen);
-		//println ("No generator need to validate the class : ", sym.getRealName ());
 		
 		std::vector <std::string> errors;
 		std::map <std::string, generator::Generator> syms;
@@ -627,6 +667,7 @@ namespace semantic {
 			gen.to <generator::Class> ().setProtectionVtable (protections);
 			sym.to <semantic::Class> ().setGenerator (gen);
 			sym.to <semantic::Class> ().setTypeInfo (validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));
+			sym.to <semantic::Class> ().setAddMethods (addMethods); // We don't put them in the table of the symbol, because they are not declared in it
 
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
@@ -638,56 +679,15 @@ namespace semantic {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
-
-		if (inModule) {
-		    auto allInners = cls.to <semantic::Class> ().getAllInner ();
-		    for (auto  it : allInners) {
-			pushReferent (it, "validate::innerClass");			
-			TRY (			    
-			    match (it) {
-				of (semantic::Function, func ATTRIBUTE_UNUSED, {
-					if (!func.getContent ().getBody ().getBody ().isEmpty ())
-					    validateMethod (func, ClassRef::init (cls.getName (), ancestor, sym));
-				    }
-				) else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
-					validateConstructor (it, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields);
-				    }
-				);
-			    }
-			) CATCH (ErrorCode::EXTERNAL) {
-			    GET_ERRORS_AND_CLEAR (msgs);
-			    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-			} FINALLY;
-			
-			popReferent ("validate::innerClass");			
-		    }
-
-		    for (auto it : addMethods) {
-			pushReferent (it, "validate::innerClass");
-			match (it) {
-			    of (semantic::Function, func ATTRIBUTE_UNUSED, {
-				    if (!func.getContent ().getBody ().getBody ().isEmpty ()) {
-					TRY (
-					    validateMethod (func, ClassRef::init (cls.getName (), ancestor, sym));
-					) CATCH (ErrorCode::EXTERNAL) {
-					    GET_ERRORS_AND_CLEAR (msgs);
-					    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-					} FINALLY;
-				    }
-				}
-			    );
-			}
-			popReferent ("validate::innerClass");
-		    }
-		}
 	       		
 		if (errors.size () != 0) {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
-		
-		return ClassRef::init (cls.getName (), ancestor, sym);
 	    }
+
+	    if (inModule) 
+		validateInnerClass (cls);	    
 	    
 	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ())
 		return ClassRef::init (cls.getName (), ancestor, cls);
@@ -3238,7 +3238,8 @@ namespace semantic {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
-				
+
+
 		if (errors.size () != 0) {
 		    errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
 		} else return ret;
