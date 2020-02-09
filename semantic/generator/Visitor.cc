@@ -547,7 +547,7 @@ namespace semantic {
 	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
 	    auto asmName = Mangler::init ().mangleFrame (frame);
 	    fn_decl.asmName (asmName);
-	    if (!frame.isWeak () || this-> _definedFrame.find (asmName) == this-> _definedFrame.end ())	{	   	    
+	    if (!frame.isWeak () || this-> _definedFrame.find (asmName) == this-> _definedFrame.end ())	{
 		if (frame.getName () == Keys::MAIN) 
 		    generateMainCall (frame.getType ().is <Void> (), asmName);
 	    

@@ -23,31 +23,35 @@ namespace semantic {
 	SubVisitor SubVisitor::init (Visitor & context) {
 	    return SubVisitor {context};
 	}
-
+	
 	generator::Generator SubVisitor::validate (const syntax::Binary & expression) {
 	    std::vector <std::string> errors;
 	    Generator left (Generator::empty ());
+	    bool failed = false;
 	    {
 		TRY (
 		    left = this-> _context.validateValue (expression.getLeft ());
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    failed = true;
 		} FINALLY;
 	    }
 
-	    if (left.isEmpty ()) {
-		TRY (
-		    left = this-> _context.validateType (expression.getLeft (), true);		    
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		} FINALLY;
-
-		if (left.isEmpty ())
-		    THROW (ErrorCode::EXTERNAL, errors);
-		else errors = {};
+	    if (failed) {
+		failed = false;
+	    	TRY (
+	    	    left = this-> _context.validateType (expression.getLeft (), true);		    
+	    	) CATCH (ErrorCode::EXTERNAL) {
+	    	    GET_ERRORS_AND_CLEAR (msgs);
+		    failed = true;
+	    	} FINALLY;
 	    }
 
+	    if (failed) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    } else errors = {};		   
+	    
 	    Generator gen (Generator::empty ());
 	    match (left) {
 		of (MultSym, mult, gen = validateMultSym (expression, mult))		    
@@ -65,24 +69,8 @@ namespace semantic {
 		    of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
 		}
 	    }
-	    
-	    if (gen.isEmpty ()) {
-		if (expression.getRight ().is <syntax::Var> ()) {
-		    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
-		    if (name == __TYPEID__) {		    
-			auto stringLit = syntax::String::init (
-			    expression.getLocation (),
-			    expression.getLocation (),
-			    lexing::Word {expression.getLocation (), left.to <Value> ().getType ().prettyString ()},
-			    lexing::Word::eof ()
-			);
-		
-			return this-> _context.validateValue (stringLit);
-		    } else if (name == __TYPEINFO__) {
-			return this-> _context.validateTypeInfo (expression.getRight ().getLocation (), left.to <Value> ().getType ());
-		    }
-		}
-		
+
+	    if (gen.isEmpty ()) {		
 		this-> error (expression, left, expression.getRight (), errors);
 	    }
 	    

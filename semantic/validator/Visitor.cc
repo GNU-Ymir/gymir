@@ -557,12 +557,13 @@ namespace semantic {
 	    std::vector <std::string> errors;
 	    
 	    for (auto & it : allInners) {
-		pushReferent (it, "validate::innerClass");			
-		TRY (			    
+		pushReferent (it, "validate::innerClass");
+		TRY (
 		    match (it) {
 			of (semantic::Function, func ATTRIBUTE_UNUSED, {
-				if (!func.getContent ().getBody ().getBody ().isEmpty ())
+				if (!func.getContent ().getBody ().getBody ().isEmpty ()) {
 				    validateMethod (func, clRef);
+				}
 			    }
 			) else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
 				validateConstructor (it, clRef, ancestor, ancestorFields);
@@ -573,10 +574,10 @@ namespace semantic {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
-			
+
 		popReferent ("validate::innerClass");			
 	    }
-
+	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
@@ -681,15 +682,24 @@ namespace semantic {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
-	       		
+		
+	    }
+
+	    if (inModule) {
+		std::vector <std::string> errors;
+		TRY (
+		    validateInnerClass (cls);
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+		
 		if (errors.size () != 0) {
+		    auto sym = cls;
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    THROW (ErrorCode::EXTERNAL, errors);
 		}
 	    }
-
-	    if (inModule) 
-		validateInnerClass (cls);	    
 	    
 	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ())
 		return ClassRef::init (cls.getName (), ancestor, cls);
@@ -1027,8 +1037,7 @@ namespace semantic {
 
 	    enterClassDef (classType.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
-	    enterForeign ();
-	    
+	    enterForeign ();	    
 	    enterBlock ();
 	    
 	    TRY (
@@ -1057,7 +1066,7 @@ namespace semantic {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors = msgs;
 	    } FINALLY;
-
+	    
 	    volatile bool needFinalReturn = false;
 	    Generator body (Generator::empty ());
 	    if (errors.size () == 0) 
@@ -1087,10 +1096,10 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
-		
+	    
 	    exitForeign ();
 	    exitClassDef ();
-	    
+
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 		
@@ -1726,7 +1735,7 @@ namespace semantic {
 		    }
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
 
@@ -1866,8 +1875,7 @@ namespace semantic {
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-		
+		} FINALLY;		
 		exitForeign ();
 		
 		if (errors.size () != 0) {
@@ -1882,8 +1890,8 @@ namespace semantic {
 	    std::vector <std::string> errors;
 	    
 	    pushReferent (sym.getRef (), "validateTemplateSymbol");
-	    enterForeign ();
 	    
+	    enterForeign ();	    
 	    TRY (
 		if (gen.is <MethodTemplateRef> () && sym.is <TemplateSolution> ())
 		    this-> validateTemplateSolutionMethod (sym, gen.to <MethodTemplateRef> ().getSelf ());
@@ -1892,9 +1900,9 @@ namespace semantic {
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors.insert (errors.end (), msgs.begin (), msgs.end ());
-	    } FINALLY;
-	    
+	    } FINALLY;	    
 	    exitForeign ();
+	    
 	    popReferent ("validateTemplateSymbol");
 	    
 	    if (errors.size () != 0) {
@@ -2278,6 +2286,7 @@ namespace semantic {
 		if (!locGen.isEmpty ())
 		    gen = locGen;
 	    }
+	    
 	    if (errors.size () != 0 && gen.isEmpty ())
 		THROW (ErrorCode::EXTERNAL, errors);
 	    
@@ -3244,7 +3253,7 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 
-
+		
 		if (errors.size () != 0) {
 		    errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
 		} else return ret;
