@@ -176,6 +176,7 @@ namespace semantic {
 	    for (auto & ca : func.getCustomAttributes ()) {
 		if (ca == Keys::SAFE) function.to <Function> ().isSafe (true);
 		else if (ca == Keys::PURE) function.to <Function> ().isPure (true);
+		else if (ca == Keys::FINAL_ && function.to<Function> ().isMethod ()) function.to <Function> ().isFinal (true);
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
 		}

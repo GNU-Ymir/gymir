@@ -271,7 +271,7 @@ namespace semantic {
 	    if (syms.size () != 1) Ymir::Error::halt ("", "");
 	    if (insertTemplateSolution (sol)) { // If it is the first time, the solution is presented
 		std::vector <std::string> errors;
-		pushReferent (self.to <Value> ().getType ().to <ClassRef> ().getRef ().getRef (), "validateTemplateSolutionMethod");
+		pushReferent (sol, "validateTemplateSolutionMethod");
 		enterForeign ();
 		TRY (
 		    static int nb_recur_template = 0;
@@ -279,7 +279,7 @@ namespace semantic {
 		    if (nb_recur_template >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
 			Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), nb_recur_template);
 		    }
-			
+		    
 		    this-> validateMethod (syms [0].to <semantic::Function> (), self.to <Value> ().getType ());
 		    nb_recur_template -= 1;
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -412,14 +412,10 @@ namespace semantic {
 		    value = validateValue (var.getValue ());		
 		}
 
-		if (type.isEmpty () && value.isEmpty ()) {
-		    Error::occur (var.getName (), ExternalError::get (VAR_DECL_WITH_NOTHING), var.getName ().str);
-		}
-
-		if (!value.isEmpty () && !type.isEmpty ()) {
-		    verifyCompatibleType (value.getLocation (), type, value.to<Value> ().getType ());
-		}
-
+		if (var.getValue ().isEmpty ()) {
+		    Error::occur (var.getName (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
+		} 
+		
 		if (type.isEmpty ()) {
 		    type = value.to <Value> ().getType ();
 		    type.to<Type> ().isRef (false);
@@ -439,8 +435,14 @@ namespace semantic {
 		    }
 		}
 		if (!isMutable) type.to <Type> ().isMutable (false);
+
+		if (!value.isEmpty ()) {
+		    if (isMutable || !type.is <LambdaType> ())
+			verifyMemoryOwner (var.getName (), type, value, true);
+		    // verifyCompatibleType (value.getLocation (), type, value.to<Value> ().getType ());
+		}
 		
-		auto glbVar = GlobalVar::init (var.getName (), var.getName ().str, isMutable, type, value);		
+		auto glbVar = GlobalVar::init (var.getName (), var.getRealName (), isMutable, type, value);		
 		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);
 	    
 		insertNewGenerator (glbVar);
@@ -902,6 +904,9 @@ namespace semantic {
 			} else if (!func.isPublic () && !func.isProtected ()) {
 			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
 			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (CANNOT_OVERRIDE_AS_PRIVATE), proto.prettyString ());
+			} else if (ancVtable [i].to <MethodProto> ().isFinal ()) {
+			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
+			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (CANNOT_OVERRIDE_FINAL), ancVtable [i].prettyString ()); 
 			}
 			
 			over = true;
@@ -2428,7 +2433,7 @@ namespace semantic {
 	    
 	    auto frame = MethodProto::init (function.getName (), func.getRealName (), retType, params, false,
 					    classType,
-					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().getBody ().isEmpty ());
+					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().getBody ().isEmpty (), func.isFinal ());
 	    frame.to <MethodProto> ().setMangledName (func.getMangledName ());
 	    return frame;
 	}

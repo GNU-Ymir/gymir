@@ -151,6 +151,13 @@ namespace semantic {
     bool Function::isVariadic () const {
 	return this-> _isVariadic;
     }
-    
+
+    void Function::isFinal (bool is) {
+	this-> _isFinal = is;
+    }
+
+    bool Function::isFinal () const {
+	return this-> _isFinal;
+    }
     
 }

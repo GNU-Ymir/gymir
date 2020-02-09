@@ -34,6 +34,11 @@ namespace semantic {
 	    /** The declaration of the global var */
 	    std::map <uint, generic::Tree> _globalDeclarators;
 
+	    /**
+	     * The value of global vars needing a static initialization
+	     */
+	    std::map <uint, std::pair <generator::Generator, generator::Generator> > _globalInitialiser;
+	    
 	    std::list <generic::Tree> _loopLabels;
 
 	    std::list <generic::Tree> _loopVars;
@@ -74,6 +79,11 @@ namespace semantic {
 	     * \param var the variable to generate
 	     */
 	    void generateGlobalVar (const GlobalVar & var);
+
+	    /**
+	     * \brief Init the frame, that will initialize all the global var before calling the main
+	     */
+	    void generateGlobalInitFrame ();
 	    
 	    /**
 	     * \brief Generate the call of the _Ymain function from the runtime of Ymir
@@ -496,7 +506,7 @@ namespace semantic {
 	     * \return its name
 	     */
 	    std::string identify (const Generator & gen);
-	    
+
 	};
 
     }

@@ -14,6 +14,7 @@ namespace Ymir {
 			    CANDIDATE_ARE                   = "candidate % : %",
 			    CANNOT_BE_CTE                   = "cannot be compile time executed",
 			    CANNOT_OVERRIDE_AS_PRIVATE      = "private method %(y) cannot override ancestor method",
+			    CANNOT_OVERRIDE_FINAL           = "cannot override final method %(y)",
 			    CATCH_MULTIPLE_TIME             = "type %(y) is catch multiple time",
 			    CATCH_OUT_OF_SCOPE              = "catch used as an expression",
 			    COMPILATION_END		    = "",

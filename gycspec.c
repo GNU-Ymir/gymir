@@ -24,6 +24,10 @@
 #define LIBGC "gc"
 #endif
 
+#ifndef LIBPTHREAD
+#define LIBPTHREAD "pthread"
+#endif
+
 void
 lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 		      unsigned int * in_decoded_options_count,
@@ -36,6 +40,7 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     cl_decoded_option *decoded_options = *in_decoded_options;
     int added_libraries = *in_added_libraries;
     bool need_gc = *in_decoded_options_count != 1;
+    bool need_pthread = *in_decoded_options_count != 1;
     bool need_libs = true;
     /* bool need_midgard = *in_decoded_options_count != 1; */
     /* bool need_runtime = *in_decoded_options_count != 1; */
@@ -46,17 +51,19 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
     for (i = 0 ; i < argc ; i++) {
 	const char * arg = decoded_options [i].arg;
 	if (decoded_options [i].opt_index == OPT_l) {
-	    if (arg != NULL && (strcmp (arg, LIBGC) == 0)) need_gc = false;	    
+	    if (arg != NULL && (strcmp (arg, LIBGC) == 0)) need_gc = false;
+	    if (arg != NULL && (strcmp (arg, LIBPTHREAD) == 0)) need_pthread = false;	    
 	} else if (decoded_options [i].opt_index == OPT_SPECIAL_input_file) {
 	    yr_file_found = true;
 	} else if (decoded_options [i].opt_index == OPT_nomidgardlib) {
 	    need_gc = false;
 	    need_libs = false;
+	    need_pthread = false;
 	}	    	
     }
     
     if (yr_file_found) {
-	num_args = argc + need_gc + (need_libs * 4) + includes.size () - toRemove.size ();
+	num_args = argc + need_gc + need_pthread + (need_libs * 4) + includes.size () - toRemove.size ();
 	new_decoded_options = XNEWVEC (cl_decoded_option, num_args);
 	i = 0;
 
@@ -71,7 +78,13 @@ lang_specific_driver (struct cl_decoded_option ** in_decoded_options ,
 	    added_libraries ++;
 	    i++;
 	}
-    		     
+
+	if (need_pthread) {
+	    generate_option (OPT_l, LIBPTHREAD, 1, CL_DRIVER, &new_decoded_options [i]);
+	    added_libraries ++;
+	    i++;
+	}
+	
 	if (need_libs) {
 	    generate_option (OPT_l, LIBYRUNTIME, 1, CL_DRIVER, &new_decoded_options [i]);
 	    added_libraries ++;

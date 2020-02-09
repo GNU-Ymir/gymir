@@ -592,6 +592,10 @@ namespace generic {
 	TREE_STATIC (this-> _t) = st;
     }
 
+    void Tree::isGlobalCstr (bool is) {
+	DECL_STATIC_CONSTRUCTOR (this-> _t) = is;
+    }
+    
     bool Tree::isUsed () const {
 	return TREE_USED (this-> _t) == 1;
     }

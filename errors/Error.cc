@@ -109,8 +109,10 @@ namespace Ymir {
 				   Colors::get (RESET)));
 
 		auto column = LOCATION_COLUMN (locus);
-		if (wordLength != 0 && line [column] != word.str [0])
+		if (wordLength != 0 && line [column - 1] != word.str [0]) {
 		    wordLength = 1;
+		}
+		
 		buf.write (format ("%% | %%%(y)%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
 				   line.substr (0, column - 1),

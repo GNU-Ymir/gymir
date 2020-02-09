@@ -30,6 +30,10 @@ namespace semantic {
 	}
 
 	void Visitor::finalize () {
+	    if (this-> _globalInitialiser.size () != 0) {
+		generateGlobalInitFrame ();
+	    }
+	    
 	    int len = vec_safe_length (globalDeclarations);
 	    tree * addr = vec_safe_address (globalDeclarations);
 	    for (int i = 0 ; i < len ; i++) {
@@ -49,9 +53,8 @@ namespace semantic {
 		    generateFrame (frame);
 		    return;
 		);
-
 	    }
-
+	   	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	}	
 
@@ -264,11 +267,17 @@ namespace semantic {
 	void Visitor::generateGlobalVar (const GlobalVar & var) {
 	    auto type = generateType (var.getType ());
 	    auto name = Mangler::init ().mangleGlobalVar (var);
-
+	    
 	    Tree decl = Tree::varDecl (var.getLocation (), name, type);
 	    if (!var.getValue ().isEmpty ()) {
+		enterBlock ();
 		auto value = castTo (var.getType (), var.getValue ());
-		decl.setDeclInitial (value);
+		if (stackVarDeclChain.back ().begin ().current.isEmpty ()) {
+		    decl.setDeclInitial (value);				
+		} else {
+		    this-> _globalInitialiser.emplace (var.getUniqId (), std::pair<generator::Generator, generator::Generator> (var.getType (), var.getValue ()));
+		}
+		quitBlock (var.getLocation (), Tree::empty ());
 	    } 
  
 	    decl.isStatic (true);
@@ -485,6 +494,48 @@ namespace semantic {
 	    quitFrame ();	    	    
 	}
 
+	void Visitor::generateGlobalInitFrame () {
+	    Tree ret = Tree::voidType ();
+	    std::vector <Tree> args;
+
+	    Tree fnType = Tree::functionType (ret, args);
+	    Tree fn_decl = Tree::functionDecl (lexing::Word::eof (), "_GLOBAL_", fnType);
+	    setCurrentContext (fn_decl);
+	    enterFrame ();
+
+	    enterBlock ();
+	    auto resultDecl = Tree::resultDecl (lexing::Word::eof (), ret);
+	    fn_decl.setResultDecl (resultDecl);
+	    TreeStmtList list (TreeStmtList::init ());
+	    
+	    for (auto & it : this-> _globalInitialiser) {
+		auto value = castTo (it.second.first, it.second.second);
+		list.append (value.getList ());
+		auto decl = this-> _globalDeclarators.find (it.first);
+		list.append (Tree::affect (it.second.first.getLocation (), decl-> second, value.getValue ()));
+	    }
+
+	    auto fnTree = quitBlock (lexing::Word::eof (), list.toTree ());
+	    auto fnBlock = fnTree.block;
+	    fnBlock.setBlockSuperContext (fn_decl);
+
+	    fn_decl.setDeclInitial (fnBlock);
+	    fn_decl.setDeclSavedTree (fnTree.bind_expr);
+	    fn_decl.isExternal (false);
+	    fn_decl.isPreserved (true);
+	    fn_decl.isWeak (false);
+
+	    fn_decl.isPublic (false);
+	    fn_decl.isStatic (true);
+	    fn_decl.isGlobalCstr (true);
+
+	    gimplify_function_tree (fn_decl.getTree ());
+	    cgraph_node::finalize_function (fn_decl.getTree (), true);
+	    
+	    quitFrame ();
+	    setCurrentContext (Tree::empty ());
+	}
+	
 	void Visitor::generateFrame (const Frame & frame) {	    	    	    
 	    std::vector <Tree> args;
 	    for (auto i : Ymir::r (0, args.size ())) {
@@ -537,7 +588,7 @@ namespace semantic {
 
 		fn_decl.isPublic (true);
 		fn_decl.isStatic (true);
-
+		
 		gimplify_function_tree (fn_decl.getTree ());
 		cgraph_node::finalize_function (fn_decl.getTree (), true);
 		this-> _definedFrame.emplace (asmName);

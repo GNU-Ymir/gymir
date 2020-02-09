@@ -748,6 +748,9 @@ namespace syntax {
 			if (x == Keys::STRUCT) {
 			    auto name = visitIdentifier ();
 			    list.push_back (StructVar::init (name));
+			} else if (x == Keys::CLASS) {
+			    auto name = visitIdentifier ();
+			    list.push_back (ClassVar::init (name));
 			} else {
 			    this-> _lex.rewind ();
 			    list.push_back (visitExpression (10));

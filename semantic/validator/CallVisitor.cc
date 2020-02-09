@@ -826,16 +826,22 @@ namespace semantic {
 	    if (left.isEmpty ())  
 		THROW (ErrorCode::EXTERNAL, errors);	    
 	    else if (left.to <Value> ().getType ().is <ClassRef> ()) {
+		volatile bool succ = false;
+		std::vector <std::string> localErrors;
 		TRY (
 		    match (bin.getRight ()) {		    
 			of (syntax::TemplateCall, cl, {
 				auto loc = left.getLocation ();
-				auto n_bin = TemplateCall::init (
+				auto inner_bin = syntax::Binary::init (
+				    {loc, Token::DOT},  TemplateSyntaxWrapper::init (loc, left),
+				    cl.getContent (), Expression::empty ()
+				);
+				auto inner_value = this-> _context.validateValue (inner_bin);
+				succ = true; // If we are here, then the class has field named cl.getContent ()
+				
+				auto n_bin = TemplateCall::init (				    
 				    cl.getLocation (), cl.getParameters (),
-				    syntax::Binary::init (
-					{loc, Token::DOT},  TemplateSyntaxWrapper::init (loc, left),
-					cl.getContent (), Expression::empty ()
-				    )
+				    TemplateSyntaxWrapper::init (inner_value.getLocation (), inner_value)
 				);
 				right = this-> _context.validateValue (n_bin);
 			    }
@@ -843,8 +849,16 @@ namespace semantic {
 		    }
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
+		    if (succ) { // If we failed, we failed after the DotOp, so the failure is due to template call
+			localErrors = msgs;
+		    }
 		} FINALLY;
+		
+		if (succ && localErrors.size () != 0) { // Errors, when processing the template call
+		    THROW (ErrorCode::EXTERNAL, localErrors);
+		}
 	    }
+
 	    
 	    if (right.isEmpty ()) {
 		TRY (

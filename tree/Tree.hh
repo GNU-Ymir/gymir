@@ -470,13 +470,18 @@ namespace generic {
 	 * \brief Associated to a declaration 
 	 * \return is this a static symbol ?
 	 */
-	bool isStatic () const;
+	bool isStatic () const;	
 	
 	/**
 	 * \brief set the declaration static information
 	 */
 	void isStatic (bool);
 
+	/**
+	 * \brief Set the declaration global costr frame
+	 */
+	void isGlobalCstr (bool);
+	
 	/**
 	 * \brief Associated to labels
 	 * \brief I don't really understand the meaning of this 

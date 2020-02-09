@@ -19,13 +19,13 @@ namespace semantic {
 	/** The syntaxic function */
 	syntax::Declaration _content;
 
-	/** Is this function pure ? (it means purely functional, without any side effect)*/
+	/** Is this function @pure ? (it means purely functional, without any side effect)*/
 	bool _isPure;
 
 	/** Is this an inlinable function ?*/
 	bool _isInline;
 
-	/** Is this function safe ? (it means cannot crash the program) */
+	/** Is this function @safe ? (it means cannot crash the program) */
 	bool _isSafe;
 
 	/** Is this function variadic */
@@ -35,6 +35,11 @@ namespace semantic {
 	 * Is this function marked override
 	 */
 	bool _isOver = false;
+
+	/**
+	 * Is this function marked @final
+	 */
+	bool _isFinal = false;
 	
 	std::string _externLanguage;
 	
@@ -85,6 +90,10 @@ namespace semantic {
 	bool isOver () const;
 
 	bool isMethod () const;
+
+	bool isFinal () const;
+
+	void isFinal (bool is);
 	
 	const syntax::Function & getContent () const;
 

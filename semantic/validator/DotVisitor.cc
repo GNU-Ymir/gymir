@@ -279,25 +279,32 @@ namespace semantic {
 		    }
 		}
 	    }
-	    
-	    // Template methods
-	    for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
-		match (it) {
-		    of (Template, tl, {
-			    if (tl.getName () == name) {
-				if (prv || (prot && it.isProtected ()) || it.isPublic ()) {
-				    syms.push_back (
-					MethodTemplateRef::init ({expression.getLocation (), tl.getName ().str}, it, left)
-				    );
-				} else {
-				    errors.push_back (
-					Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), tl.prettyString ())
-				    );			    
-				}
-			    }
 
-			});			
+	    cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    // Template methods
+	    while (!cl.isEmpty ()) {
+		for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
+		    match (it) {
+			of (Template, tl, {
+				if (tl.getName () == name) {
+				    if (prv || (prot && it.isProtected ()) || it.isPublic ()) {
+					syms.push_back (
+					    MethodTemplateRef::init ({expression.getLocation (), tl.getName ().str}, it, left)
+					);
+				    } else {
+					errors.push_back (
+					    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), tl.prettyString ())
+					);			    
+				    }
+				}
+
+			    });			
+		    }
 		}
+		auto ancestor = cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
+		if (!ancestor.isEmpty ())
+		    cl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+		else cl = Generator::empty ();		
 	    }
 	    
 	    if (syms.size () != 0) 

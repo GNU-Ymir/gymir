@@ -16,6 +16,11 @@ namespace semantic {
 	     * True if the method prototype refer to a method that has no body
 	     */
 	    bool _isEmptyFrame; 
+
+	    /**
+	     * True if the method is final 
+	     */
+	    bool _isFinal;
 	    
 	private :
 
@@ -23,7 +28,7 @@ namespace semantic {
 
 	    MethodProto ();
 
-	    MethodProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable, bool isEmptyFrame);
+	    MethodProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable, bool isEmptyFrame, bool isFinal);
 
 	public :
 	    
@@ -31,7 +36,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable, bool isEmptyFrame);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable, bool isEmptyFrame, bool isFinal);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -58,6 +63,8 @@ namespace semantic {
 	    bool isMutable () const;
 
 	    bool isEmptyFrame () const;
+
+	    bool isFinal () const;
 	    
 	};
     }
