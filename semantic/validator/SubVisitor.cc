@@ -66,8 +66,25 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (gen.isEmpty ())
+	    if (gen.isEmpty ()) {
+		if (expression.getRight ().is <syntax::Var> ()) {
+		    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		    if (name == __TYPEID__) {		    
+			auto stringLit = syntax::String::init (
+			    expression.getLocation (),
+			    expression.getLocation (),
+			    lexing::Word {expression.getLocation (), left.to <Value> ().getType ().prettyString ()},
+			    lexing::Word::eof ()
+			);
+		
+			return this-> _context.validateValue (stringLit);
+		    } else if (name == __TYPEINFO__) {
+			return this-> _context.validateTypeInfo (expression.getRight ().getLocation (), left.to <Value> ().getType ());
+		    }
+		}
+		
 		this-> error (expression, left, expression.getRight (), errors);
+	    }
 	    
 	    return gen;
 	}
