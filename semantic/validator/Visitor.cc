@@ -515,8 +515,10 @@ namespace semantic {
 		exitForeign ();		
 		popReferent ("validateStruct");
 		
-		if (errors.size () != 0)
+		if (errors.size () != 0) {
+		    sym.to <semantic::Struct> ().setGenerator (NoneType::init (sym.getName ()));
 		    THROW (ErrorCode::EXTERNAL, errors);
+		}
 		
 		std::vector <Generator> fieldsDecl;
 		for (auto & it : sym.to <semantic::Struct> ().getFields ()) {
@@ -532,8 +534,13 @@ namespace semantic {
  		sym.to <semantic::Struct> ().setGenerator (gen);
 		return StructRef::init (str.getName (), sym);
 	    }
-	    
-	    return StructRef::init (str.getName (), str);
+
+	    if (str.to <semantic::Struct> ().getGenerator ().is <generator::Struct> ())
+		return StructRef::init (str.getName (), str);
+	    else {
+		Ymir::Error::occur (str.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), str.getRealName ());
+		return Generator::empty ();
+	    }
 	}
 
 	void Visitor::validateTrait (const semantic::Symbol & tr) {
@@ -1399,10 +1406,12 @@ namespace semantic {
 		
 		popReferent ("validateEnum");
 		exitForeign ();
-		
-		if (errors.size () != 0)
-		    THROW (ErrorCode::EXTERNAL, errors);
 
+		if (errors.size () != 0) {
+		    sym.to <semantic::Enum> ().setGenerator (NoneType::init (sym.getName ()));
+		    THROW (ErrorCode::EXTERNAL, errors);
+		}
+		
 		std::vector <Generator> fieldsDecl;
 		for (auto & it : sym.to <semantic::Enum> ().getFields ()) {
 		    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().str);		    
@@ -1417,8 +1426,13 @@ namespace semantic {
 	       		
 		return type;
 	    }
-
-	    return en.to <semantic::Enum> ().getGenerator ().to <semantic::generator::Enum> ().getType ();
+	    auto gen = en.to <semantic::Enum> ().getGenerator ();
+	    if (gen.is <semantic::generator::Enum> ())
+		return gen.to <semantic::generator::Enum> ().getType ();
+	    else {
+		Ymir::Error::occur (en.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), en.getRealName ());
+		return Generator::empty ();
+	    }
 	}
 
 	void Visitor::verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const semantic::Symbol & sym) const {
