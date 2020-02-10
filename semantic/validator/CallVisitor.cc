@@ -915,17 +915,21 @@ namespace semantic {
 		else of (Value,      val,  leftName = val.getType ().to <Type> ().getTypeName ()
 		);
 	    }
+
+	    OutBuffer buf;
+	    for (auto & it : errors)
+		buf.write (it, "\n");
 	    
-	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
+	    Ymir::Error::occurAndNote (
 		location,
 		end,
+		buf.str (),
 		ExternalError::get (UNDEFINED_CALL_OP),
 		leftName,
 		names
-	    ));
-	    
-	    
-	    THROW (ErrorCode::EXTERNAL, errors);
+	    );
+	    	    
+	    //THROW (ErrorCode::EXTERNAL, errors);
 	}
 
 	std::string CallVisitor::prettyName (const Generator & gen) {

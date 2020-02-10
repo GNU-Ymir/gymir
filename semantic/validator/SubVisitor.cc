@@ -683,15 +683,20 @@ namespace semantic {
 		rightName = val.prettyString ();
 	    }
 
+	    OutBuffer buf;
+	    for (auto & it : errors)
+		buf.write (it, "\n");
+
 	    
-	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
+	    Ymir::Error::occurAndNote (
 		expression.getLocation (),
+		buf.str (),
 		ExternalError::get (UNDEFINED_SUB_PART_FOR),
 		rightName,
 		leftName
-	    ));
+	    );
 	    
-	    THROW (ErrorCode::EXTERNAL, errors);
+	    //THROW (ErrorCode::EXTERNAL, errors);
 	}
 	
 	

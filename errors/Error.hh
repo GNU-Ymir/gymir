@@ -61,6 +61,11 @@ namespace Ymir {
 	std::string addLine (const std::string&, const lexing::Word& word, const lexing::Word & end);
 
 	/**
+	 * \brief Add a note to an error
+	 */
+	std::string addNote (const lexing::Word&, const std::string &, const std::string&);
+	
+	/**
 	   \brief cause the compiler to abort due to internal error
 	   \param the message, can be NULL
 	*/
@@ -149,7 +154,16 @@ namespace Ymir {
 	void occurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);
-	    THROW ((int) ErrorCode::EXTERNAL, msg + note);
+	    msg = addNote (loc, msg, note); 	   
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	}
+	
+	template <typename ... TArgs>
+	void occurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const std::string & note, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc, loc2);
+	    msg = addNote (loc, msg, note); 	   
+	    THROW ((int) ErrorCode::EXTERNAL, msg);
 	}
 
 	

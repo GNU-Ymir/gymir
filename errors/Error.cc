@@ -140,6 +140,41 @@ namespace Ymir {
 	    return buf.str ();
 	}
 
+	std::vector <std::string> splitString (const std::string & str, const std::string & delims) {
+	    std::vector <std::string> cont;
+	    std::size_t current, previous = 0;
+	    current = str.find_first_of(delims);
+	    while (current != std::string::npos) {
+		cont.push_back (str.substr(previous, current - previous));
+		previous = current + 1;
+		current = str.find_first_of(delims, previous);
+	    }
+	    cont.push_back(str.substr(previous, current - previous));
+	    return cont;
+	}
+	
+	std::string addNote (const Word & word, const std::string & msg, const std::string & note) {
+	    auto locus = word.getLocus ();
+	    auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+	    auto padd = center ("", leftLine.length (), ' ');
+	    auto padd2 = center ("", leftLine.length (), '-');
+	    OutBuffer buf;
+	    buf.write (msg);
+	    auto lines = splitString (note, "\n");
+	    bool added = false;
+	    for (auto it : Ymir::r (0, lines.size ())) {
+		if (lines [it].length() != 0) {
+		    auto l = format ("%% | %%\n", Colors::get (BOLD), padd, Colors::get (RESET), lines [it]);
+		    buf.write (l);
+		    added = true;
+		}
+	    }
+	    
+	    if (added) 
+		buf.write (format ("%% |%* %\n", Colors::get (BOLD), padd, 30, '-', Colors::get (RESET)));
+	    return buf.str ();
+	}
+	
 	void addTwoLines (OutBuffer & buf, const Word & word, const Word & end) {
 	    auto locus = word.getLocus ();
 	    auto line = getLine (locus, word.getFile ().c_str ());

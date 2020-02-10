@@ -3350,15 +3350,20 @@ namespace semantic {
 	    for (auto & it : params)
 		names.push_back (it.prettyString ());
 
-	    std::string leftName = value.getLocation ().str ;	    
-	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
+	    std::string leftName = value.getLocation ().str ;
+	    OutBuffer buf;
+	    for (auto & it : errors)
+		buf.write (it, "\n");
+
+	    
+	    Ymir::Error::occurAndNote (
 		tcl.getLocation (),
+		buf.str (),
 		ExternalError::get (UNDEFINED_TEMPLATE_OP),
 		leftName,
 		names
-	    ));
+	    );
 
-	    THROW (ErrorCode::EXTERNAL, errors);
 	    return Generator::empty ();	    
 	}
 

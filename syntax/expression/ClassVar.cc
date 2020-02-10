@@ -32,6 +32,6 @@ namespace syntax {
     }
 
     std::string ClassVar::prettyString () const {
-	return "struct " + this-> getLocation ().str;
+	return "class " + this-> getLocation ().str;
     }
 }

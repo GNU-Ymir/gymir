@@ -339,14 +339,20 @@ namespace semantic {
 			else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
 	    }
 
-	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
+	    OutBuffer buf;
+	    for (auto & it : errors) {
+		buf.write (it, "\n");
+	    }
+	    
+	    Ymir::Error::occurAndNote (
 		expression.getLocation (),
+		buf.str (),
 		ExternalError::get (UNDEFINED_FIELD_FOR),
 		right,
 		leftName
-	    ));
+	    );
 	    
-	    THROW (ErrorCode::EXTERNAL, errors);		
+	    //THROW (ErrorCode::EXTERNAL, errors);		
 	}
 
 	
