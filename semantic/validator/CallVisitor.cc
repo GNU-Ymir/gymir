@@ -888,13 +888,19 @@ namespace semantic {
 		else of (ModuleAccess, acc, leftName = acc.prettyString ())
 		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
 	    }
+
+
+	    OutBuffer buf;
+	    for (auto & it : errors)
+		buf.write (it, "\n");
 	    
-	    errors.insert (errors.begin (), Ymir::Error::makeOccur (
+	    Ymir::Error::occurAndNote (
 		location,
+		buf.str (), 
 		ExternalError::get (UNDEFINED_CALL_OP),
 		leftName,
 		names
-	    ));
+	    );
 	    
 	    
 	    THROW (ErrorCode::EXTERNAL, errors);
