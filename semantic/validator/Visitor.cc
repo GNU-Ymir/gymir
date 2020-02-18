@@ -4520,18 +4520,28 @@ namespace semantic {
 	void Visitor::verifyImplicitAlias (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias 
 	    if (gen.is<Copier> () || gen.is <Aliaser> () || gen.is <Referencer> ()) return; // It is aliased or copied, that's ok
-	    match (gen) {
-		of (ArrayValue, arr ATTRIBUTE_UNUSED, return);
-		of (StructCst, arr ATTRIBUTE_UNUSED, return);
-		of (ClassCst, arr ATTRIBUTE_UNUSED, return);
-		of (Block, arr, { if (!arr.isLvalue ()) return; });
-		of (Conditional, arr ATTRIBUTE_UNUSED, return);
-		of (ExitScope, arr ATTRIBUTE_UNUSED, return);
-		of (SuccessScope, arr ATTRIBUTE_UNUSED, return);
-	    }
-	    auto llevel = type.to <Type> ().mutabilityLevel ();
-
 	    auto max_level = type.is <ClassRef> () ? 0 : 1;
+
+	    {
+		// Totally ok for implicit alias 
+		match (gen) {
+		    of (ArrayValue, arr ATTRIBUTE_UNUSED, return);
+		    of (StructCst, arr ATTRIBUTE_UNUSED, return);
+		    of (ClassCst, arr ATTRIBUTE_UNUSED, return);
+		}
+	    }
+	    {
+		// Ok for implicit alias, but the mutability must be checked
+		match (gen) {
+		    of (Block,             arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
+		    else of (Conditional,  arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
+		    else of (ExitScope,    arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
+		    else of (SuccessScope, arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
+		    else of (Call,         arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ());
+		}
+	    }
+	    
+	    auto llevel = type.to <Type> ().mutabilityLevel ();
 	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
 	    if (llevel > max_level) {
 		auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
