@@ -1768,8 +1768,7 @@ namespace semantic {
 			type = value.to <Value> ().getType ();
 			type.to <Type> ().isRef (false);
 			type.changeLocation (block.getContent ()[i].getLocation ());
-			if (!value.is<Aliaser> () && !value.is<Referencer> ())
-			    type.to <Type> ().isMutable (false);
+			if (!canImplicitAlias (value)) type.to <Type> ().isMutable (false);
 		    
 			values.push_back (value);
 		    }
@@ -1793,7 +1792,7 @@ namespace semantic {
 
 	    {
 		TRY (
-		    if (!type.is<Void> ()) {			
+		    if (!type.is<Void> ()) {
 			verifyMemoryOwner (block.getEnd (), type, values.back(), false);
 		    } else if (type.is<Void> () && values.size () != 0 && !values.back ().is <None> () && isUseless (values.back ()))
 			Ymir::Error::occur (block.getContent ().back ().getLocation (), ExternalError::get (USE_UNIT_FOR_VOID));	    
@@ -4517,6 +4516,21 @@ namespace semantic {
 	    // }
 	}
 
+	bool Visitor::canImplicitAlias (const Generator & value) {
+	    if (value.is<Copier> () || value.is <Aliaser> () || value.is <Referencer> ()) return true; // It is aliased or copied, that's ok
+	    
+	    {
+		// Totally ok for implicit alias 
+		match (value) {
+		    of (ArrayValue, arr ATTRIBUTE_UNUSED, return true);
+		    of (StructCst, arr ATTRIBUTE_UNUSED, return true);
+		    of (ClassCst, arr ATTRIBUTE_UNUSED, return true);
+		}
+	    }
+	    
+	    return false;
+	}
+	
 	void Visitor::verifyImplicitAlias (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias 
 	    if (gen.is<Copier> () || gen.is <Aliaser> () || gen.is <Referencer> ()) return; // It is aliased or copied, that's ok
@@ -4533,7 +4547,7 @@ namespace semantic {
 	    {
 		// Ok for implicit alias, but the mutability must be checked
 		match (gen) {
-		    of (Block,             arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
+		    of (Block,             arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())	       
 		    else of (Conditional,  arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
 		    else of (ExitScope,    arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
 		    else of (SuccessScope, arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())

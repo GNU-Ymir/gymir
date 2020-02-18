@@ -654,6 +654,11 @@ namespace semantic {
 	     */
 	    void verifyImplicitAlias (const lexing::Word & loc, const generator::Generator & type, const generator::Generator & gen);
 
+	    /**
+	     * \return true, if we can make an implicit alias of the value
+	     */
+	    bool canImplicitAlias (const generator::Generator & value);
+
 
 	    /**
 	     * \brief Verify that the type is complete and can be used at runtime to store value
