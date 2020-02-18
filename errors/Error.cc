@@ -24,7 +24,8 @@ namespace Ymir {
 		if (aux == NULL) return "";
 		std::string ret = std::string (buf);
 		final += ret;
-		free (buf);
+		delete buf;
+		
 		if (ret.size () != max - 1) return final;
 		else max *= 2;      
 	    }

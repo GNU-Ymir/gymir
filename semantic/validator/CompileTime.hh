@@ -62,6 +62,11 @@ namespace semantic {
 	    generator::Generator executeUnaryInt (const generator::UnaryInt & unaInt);
 	    
 	    /**
+	     * \brief Execute an unary bool expression
+	     */
+	    generator::Generator executeUnaryBool (const generator::UnaryBool & unaBool);
+	    
+	    /**
 	     * \brief Execute a binary float expression
 	     * \brief Two operands needs to be compile time known
 	     */

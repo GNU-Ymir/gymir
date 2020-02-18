@@ -30,6 +30,7 @@ YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++
 ymir_OBJS = \
 	ymir/decl_Alias.o \
 	ymir/decl_Block.o \
+	ymir/decl_CondBlock.o \
 	ymir/decl_Class.o \
 	ymir/decl_Constructor.o \
 	ymir/decl_Enum.o \
@@ -80,6 +81,7 @@ ymir_OBJS = \
 	ymir/expr_ImplVar.o \
 	ymir/expr_StructVar.o \
 	ymir/expr_ClassVar.o \
+	ymir/expr_AliasVar.o \
 	ymir/expr_Pragma.o \
 	ymir/expr_Return.o \
 	ymir/expr_Scope.o \
@@ -171,6 +173,7 @@ ymir_OBJS = \
 	ymir/generator_ClassRef.o \
 	ymir/generator_TraitRef.o \
 	ymir/generator_TemplateRef.o \
+	ymir/generator_TemplateClassCst.o \
 	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_TemplateSyntaxList.o \
 	ymir/generator_Throw.o \

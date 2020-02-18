@@ -34,11 +34,11 @@ namespace semantic {
 	
 	Template ();
 	
-	Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams);
+	Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams, bool isWeak);
 	
     public :
 
-	static Symbol init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decls, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams);
+	static Symbol init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decls, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

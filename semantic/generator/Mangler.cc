@@ -90,9 +90,13 @@ namespace semantic {
 		OutBuffer buf;
 		buf.write (Mangler::YMIR_PREFIX);
 		for (auto & it : splits) buf.write (it.length (), it);
+		
 		buf.write (Mangler::YMIR_FUNCTION);
 
-		for (auto & p : fr.getParams ()) buf.write (mangle (p.to <ParamVar> ().getType ()));
+		for (auto & p : fr.getParams ()) {
+		    buf.write (mangle (p.to <ParamVar> ().getType ()));
+		}
+		
 		buf.write (Mangler::YMIR_FUNCTION_RET, mangle (fr.getType ()));
 		return buf.str ();
 	    } else {
@@ -118,6 +122,7 @@ namespace semantic {
 		    type.to <Type> ().isMutable (cl.to <MethodProto> ().isMutable ());
 		    buf.write (mangle (type));
 		}
+		
 		for (auto & p : proto.getParameters ())
 		    buf.write (mangle (p.to <ProtoVar> ().getType ()));
 			

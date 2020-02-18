@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/syntax/declaration/Template.hh>
+#include <ymir/syntax/declaration/CondBlock.hh>
 #include <ymir/semantic/validator/Visitor.hh>
 #include <ymir/semantic/generator/value/Binary.hh>
 #include <ymir/syntax/Expression.hh>
@@ -217,13 +218,17 @@ namespace semantic {
 	     * \param element the declaration to transform
 	     * \param mapping the mapper element of the template specialization
 	     */
-	    syntax::Declaration replaceAll (const syntax::Declaration & element, const std::map <std::string, syntax::Expression> & mapping) const;
+	    syntax::Declaration replaceAll (const syntax::Declaration & element, const std::map <std::string, syntax::Expression> & mapping, const semantic::Symbol & ref) const;
 
 	    syntax::Function::Prototype replaceAll (const syntax::Function::Prototype & element, const std::map <std::string, syntax::Expression> & mapping) const;
 
 	    syntax::Function::Body replaceAll (const syntax::Function::Body & element, const std::map <std::string, syntax::Expression> & mapping) const;
 
-
+	    /**
+	     * Cond blocks are declared inside a class
+	     */
+	    syntax::Declaration replaceAll (const Symbol & _ref, const syntax::CondBlock & decl, const std::map <std::string, syntax::Expression> & mapping) const;
+	    
 	    /**
 	     * \brief Update the template parameters using a mapper generated
 	     * \param elements the template parameters specialization

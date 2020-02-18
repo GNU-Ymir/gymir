@@ -60,13 +60,13 @@ namespace semantic {
 
 	Class ();
 
-	Class (const lexing::Word & name, const syntax::Expression & ancestor);
+	Class (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak);
 
 	Class (const Class & other);
 	
     public :
 	
-	static Symbol init (const lexing::Word & name, const syntax::Expression & ancestor);
+	static Symbol init (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

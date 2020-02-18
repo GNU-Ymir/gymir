@@ -1,6 +1,7 @@
 #include <ymir/semantic/validator/SubVisitor.hh>
 #include <ymir/syntax/expression/Var.hh>
 #include <ymir/semantic/generator/value/ModuleAccess.hh>
+#include <ymir/syntax/declaration/Class.hh>
 #include <cfloat>
 #include <climits>
 
@@ -47,7 +48,7 @@ namespace semantic {
 		    failed = true;
 	    	} FINALLY;
 	    }
-
+	    
 	    if (failed) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    } else errors = {};		   
@@ -58,7 +59,8 @@ namespace semantic {
 		else of (ModuleAccess, acc, gen = validateModuleAccess (expression, acc))
 		else of (generator::Enum, en, gen = validateEnum (expression, en))	     
 		else of (generator::Struct, str ATTRIBUTE_UNUSED, gen = validateStruct(expression, left))
-		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))			 
+		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
+		else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));
 	    }
@@ -67,9 +69,10 @@ namespace semantic {
 		match (left.to <Value> ().getType ()) {
 		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left));
 		    of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
+		    of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors));
 		}
 	    }
-
+	    
 	    if (gen.isEmpty ()) {		
 		this-> error (expression, left, expression.getRight (), errors);
 	    }
@@ -99,25 +102,45 @@ namespace semantic {
 			    }
 			}
 		    ) else of (generator::Enum, en,  {
-			    gens.push_back (validateEnum (expression, en));
+			    auto res = validateEnum (expression, en);
+			    if (!res.isEmpty ())
+				gens.push_back (res);
 			}
 		    ) else of (generator::Struct, str ATTRIBUTE_UNUSED, {
-			    gens.push_back (validateStruct (expression, gen));
+			    auto res = validateStruct (expression, gen);
+			    if (!res.isEmpty ())
+				gens.push_back (res);
 			}
 		    ) else of (generator::Class, cl ATTRIBUTE_UNUSED, {
-			    gens.push_back (validateClass (expression, gen, errors));
+			    auto res = validateClass (expression, gen, errors);
+			    if (!res.isEmpty ())
+				gens.push_back (res);
 			}
 		    ) else of (ClassRef, cl, {
-			    gens.push_back (validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors));
+			    auto res = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors);
+			    if (!res.isEmpty ())
+				gens.push_back (res);
 			}
 		    ) else of (Type, te ATTRIBUTE_UNUSED, {
-			    gens.push_back (validateType (expression, gen));
+			    auto res = validateType (expression, gen);
+			    if (!res.isEmpty ())
+				gens.push_back (res);
+			}
+		    ) else of (TemplateRef, te ATTRIBUTE_UNUSED, {
+			    auto res = validateTemplate (expression, gen, errors);			    
+			    if (!res.isEmpty ()) {
+				gens.insert (gens.end (), res.to <MultSym> ().getGenerators ().begin (),
+					     res.to <MultSym> ().getGenerators ().end ());
+			    }
 			}
 		    ) else of (Value, v, {
-			    if (v.getType ().is <StructRef> ())
-				gens.push_back (validateStructValue (expression, gen));
-			    else if (v.getType ().is <ClassRef> ())
-				gens.push_back (validateClassValue (expression, gen));
+			    if (v.getType ().is <StructRef> ()) {
+				auto res = validateStructValue (expression, gen);
+				if (!res.isEmpty ()) gens.push_back (res);
+			    } else if (v.getType ().is <ClassRef> ()) {
+				auto res = validateClassValue (expression, gen);
+				if (!res.isEmpty ()) gens.push_back (res);
+			    }
 				
 			}
 		    )
@@ -528,16 +551,26 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> &) {	    
+	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> & errors) {	    
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 		if (name == ClassRef::INIT_NAME) {
 		    if (t.to <generator::Class> ().getRef ().to <semantic::Class> ().isAbs ()) {
-			Ymir::Error::occur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ());
-			
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
 		    }
 		    
-		    return this-> _context.getClassConstructors (expression.getLocation (), t);
+		    bool succeed = true;
+		    Generator gen (Generator::empty ());
+		    TRY (			
+			gen = this-> _context.getClassConstructors (expression.getLocation (), t);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			succeed = false;
+		    } FINALLY;
+		    
+		    if (!succeed) return Generator::empty ();
+		    else return gen;
 		}
 
 
@@ -561,6 +594,34 @@ namespace semantic {
 
 	    return Generator::empty ();
 	}
+
+	Generator SubVisitor::validateTemplate (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> & errors) {
+	    if (expression.getRight ().is <syntax::Var> ()) {
+		auto tmp = t.to <TemplateRef> ().getTemplateRef ().to <semantic::Template> ().getDeclaration ();
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		if (!tmp.is <syntax::Class> ()) return Generator::empty ();
+		
+		if (name == ClassRef::INIT_NAME) {
+		    if (tmp.to <syntax::Class> ().isAbstract ()) {
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
+		    }
+
+		    auto constructors = this-> _context.getAllConstructors (tmp.to <syntax::Class> ().getDeclarations ());
+		    std::vector <generator::Generator> gens;
+		    for (auto & it : constructors) {
+			gens.push_back (TemplateClassCst::init (expression.getLocation (), t.to<TemplateRef> ().getTemplateRef (), it));
+		    }
+		    
+		    if (gens.size () != 0)
+			return MultSym::init (expression.getLocation (), gens);
+		    else
+			return Generator::empty ();
+		}
+	    }
+
+	    return Generator::empty ();
+   
+	}	
 
 	Generator SubVisitor::validateClassValue (const syntax::Binary & expression, const generator::Generator & value) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
@@ -632,6 +693,7 @@ namespace semantic {
 		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
 		    else of (generator::Class, cl, leftName = cl.getName ())
 		    else of (ClassRef, cl, leftName = cl.getName ())
+		    else of (TemplateRef, rf, leftName = rf.prettyString ())
 		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
 		    else of (Type,       type,  leftName = type.getTypeName ());
 		}
@@ -663,11 +725,12 @@ namespace semantic {
 		match (left) {
 		    of (FrameProto, proto, leftName = proto.getName ())
 		    else of (generator::Struct, str, leftName = str.getName ())
-		    else of  (generator::Enum, en, leftName = en.getName ())
+		    else of (generator::Enum, en, leftName = en.getName ())
 		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
 		    else of (generator::Class, cl, leftName = cl.getName ())
 		    else of (ClassRef, cl, leftName = cl.getName ())
 		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
+		    else of (TemplateRef, rf, leftName = rf.prettyString ())
 		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
 		    else of (Type,       type,  leftName = type.getTypeName ());
 		}

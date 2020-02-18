@@ -4,6 +4,7 @@
 #include <ymir/syntax/Expression.hh>
 #include <ymir/syntax/declaration/Function.hh>
 #include <ymir/lexing/Word.hh>
+#include <ymir/syntax/visitor/Keys.hh>
 #include <vector>
 
 namespace syntax {
@@ -89,6 +90,11 @@ namespace syntax {
 	 * \return the list of attributes of the class
 	 */
 	const std::vector<lexing::Word> & getAttributes () const;
+
+	/**
+	 * I this class abstract
+	 */
+	bool isAbstract () const;
     };
     
 

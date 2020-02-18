@@ -5,7 +5,7 @@
 namespace semantic {
 
     Class::Class () :
-	ISymbol (lexing::Word::eof ()), 
+	ISymbol (lexing::Word::eof (), false), 
 	_table (this),
 	_ancestor (syntax::Expression::empty ()),
 	_fields ({}),
@@ -13,8 +13,8 @@ namespace semantic {
 	_typeInfo (generator::Generator::empty ())
     {}
 
-    Class::Class (const lexing::Word & name, const syntax::Expression & ancestor) :
-	ISymbol (name),
+    Class::Class (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak) :
+	ISymbol (name, isWeak),
 	_table (this),
 	_ancestor (ancestor),
 	_fields ({}),
@@ -32,8 +32,8 @@ namespace semantic {
 	_isAbstract (other._isAbstract)
     {}
     
-    Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor) {
-	return Symbol {new (Z0) Class (name, ancestor)};
+    Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak) {
+	return Symbol {new (Z0) Class (name, ancestor, isWeak)};
     }
     
     bool Class::isOf (const ISymbol * type) const {
@@ -144,7 +144,6 @@ namespace semantic {
 	return false;
     }
 
-
     void Class::isAbs (bool is) {
 	this-> _isAbstract = is;
     }
@@ -160,7 +159,7 @@ namespace semantic {
     bool Class::isFinal () const {
 	return this-> _isFinal;
     }
-
+    
     void Class::setAddMethods (const std::vector <Symbol> & methods) {
 	this-> _addMethods = methods;
     }

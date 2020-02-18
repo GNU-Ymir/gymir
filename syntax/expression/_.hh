@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ymir/syntax/expression/AliasVar.hh>
 #include <ymir/syntax/expression/ArrayAlloc.hh>
 #include <ymir/syntax/expression/Assert.hh>
 #include <ymir/syntax/expression/Binary.hh>

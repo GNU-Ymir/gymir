@@ -8,7 +8,7 @@
 namespace semantic {
 
     TemplateSolution::TemplateSolution () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_table (this)
     {}
     
@@ -18,16 +18,16 @@ namespace semantic {
 	_params (mod._params)
     {}
 
-    TemplateSolution::TemplateSolution (const lexing::Word & loc, const std::vector<syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders) :
-	ISymbol (loc),
+    TemplateSolution::TemplateSolution (const lexing::Word & loc, const std::vector<syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders, bool isWeak) :
+	ISymbol (loc, isWeak),
 	_table (this),
 	_templs (templs), 
 	_params (params),
 	_nameOrder (nameOrders)
     {}
     
-    Symbol TemplateSolution::init (const lexing::Word & name, const std::vector <syntax::Expression> & templs, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & nameOrders) {
-	return Symbol {new (Z0) TemplateSolution (name, templs, mapping, nameOrders)};
+    Symbol TemplateSolution::init (const lexing::Word & name, const std::vector <syntax::Expression> & templs, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & nameOrders, bool isWeak) {
+	return Symbol {new (Z0) TemplateSolution (name, templs, mapping, nameOrders, isWeak)};
     }
 
     bool TemplateSolution::isOf (const ISymbol * type) const {

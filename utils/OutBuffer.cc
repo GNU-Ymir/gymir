@@ -15,11 +15,11 @@ namespace Ymir {
 	    this-> current [i] = cs [j]; 
 	}
 	
-	len += cslen;
+	this-> len += cslen;
     }
     
     void OutBuffer::write_ (const std::string& cs) {
-	if (capacity < len + cs.length ()) {
+	if (capacity <= len + cs.length ()) {
 	    resize (len + cs.length ());
 	}
 	
@@ -32,75 +32,73 @@ namespace Ymir {
     
     void OutBuffer::write_ (ulong nb) {
 	auto len = snprintf (NULL, 0, "%lu", nb);
-	if (this-> capacity < this-> len + len) {
+	if (this-> capacity <= this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%lu", nb);
+	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%lu", nb);       	
 	this-> len += len;
     }
 
     void OutBuffer::write_ (long nb) {
 	auto len = snprintf (NULL, 0, "%ld", nb);
-	if (this-> capacity < this-> len + len) {
+	if (this-> capacity <= this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%ld", nb);
+	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%ld", nb);
 	this-> len += len;
     }
 
 
     void OutBuffer::write_ (int nb) {
 	auto len = snprintf (NULL, 0, "%d", nb);
-	if (this-> capacity < this-> len + len) {
+	if (this-> capacity <= this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%d", nb);
+	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%d", nb);
 	this-> len += len;
     }
     
     void OutBuffer::write_ (uint nb) {
 	auto len = snprintf (NULL, 0, "%x", nb);
-	if (this-> capacity < this-> len + len) {
+	if (this-> capacity <= this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%x", nb);
+	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%x", nb);
 	this-> len += len;
     }
 
     void OutBuffer::write_ (uint8_t nb) {
 	auto len = snprintf (NULL, 0, "%x", nb);
-	if (this-> capacity < this-> len + len) {
+	if (this-> capacity <= this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%x", nb);
+	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%x", nb);
 	this-> len += len;
     }    
 
     void OutBuffer::write_ (double nb) {
 	auto len = snprintf (NULL, 0, "%A", nb);
-	if (this-> capacity < this-> len + len) {
+	if (this-> capacity <= this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%A", nb);
+	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%A", nb);
 	this-> len += len;
     }
     
     void OutBuffer::write_ (char c) {
-	if (this-> capacity < this-> len + 1) {
+	if (this-> capacity <= this-> len + 1) {
 	    resize (this-> len + 1);
 	}
 
 	this-> current [this-> len] = c;
-	len += 1;
-    }
-
-       
+	this-> len += 1;
+    }      
     
     void OutBuffer::write_ (const lexing::Word & word) {
 	this-> write (word.toString ());
@@ -114,11 +112,11 @@ namespace Ymir {
 
     void OutBuffer::write_ (float nb) {
 	auto len = snprintf (NULL, 0, "%A", nb);
-	if (this-> capacity < this-> len + len) {
+	if (this-> capacity <= this-> len + len) {
 	    resize (this-> len + len);
 	}
 
-	sprintf (this-> current + this-> len, "%A", nb);
+	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%A", nb);
 	this-> len += len;
     }
     
@@ -132,8 +130,8 @@ namespace Ymir {
 	for (uint i = 0 ; i < this-> len ; i ++)
 	    aux [i] = this-> current [i];
 	
-	delete[] this-> current;
-	this-> current = aux;
+	delete this-> current;
+	this-> current = aux;	
     }
     
     void OutBuffer::write () {}

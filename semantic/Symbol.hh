@@ -31,6 +31,8 @@ namespace semantic {
 	bool _isPublic = false;
 
 	bool _isProtected = false;
+
+	bool _isWeak = false;
 	
     private :
 	
@@ -46,7 +48,7 @@ namespace semantic {
 	 * \brief For example a variable
 	 * \param name is the name and location of the symbol
 	 */
-	ISymbol (const lexing::Word & name);
+	ISymbol (const lexing::Word & name, bool isWeak);
 
 	/**
 	 * \return the name and location of the symbol
@@ -125,6 +127,16 @@ namespace semantic {
 	 * \brief Is this symbol declared protected
 	 */
 	bool isProtected () const;
+
+	/**
+	 * \brief Does this sym has been validated by template resolution?
+	 */
+	void setWeak ();
+
+	/**
+	 * \return Does this sym has been validated by template resolution
+	 */
+	bool isWeak () const;
 	
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
@@ -295,7 +307,17 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	bool isProtected () const;	
+	bool isProtected () const;
+	
+	/**
+	 * Proxy function for symbol
+	 */
+	void setWeak ();
+
+	/**
+	 * Proxy function for symbol
+	 */
+	bool isWeak () const;
 	
 	/**
 	 * Proxy function for symbol
@@ -393,7 +415,7 @@ namespace semantic {
 	 * \return The list of all declared modules
 	 */
 	static const std::map <std::string, Symbol> & getAllModules ();
-
+	
 	
 	/**
 	 * \brief Cast the content pointer into the type (if possible)

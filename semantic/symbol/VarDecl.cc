@@ -3,23 +3,23 @@
 namespace semantic {
 
     VarDecl::VarDecl () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_decos (),
 	_type (syntax::Expression::empty ()),
 	_value (syntax::Expression::empty ()),
 	_gen (generator::Generator::empty ())
     {}
 
-    VarDecl::VarDecl (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value) :
-	ISymbol (name),
+    VarDecl::VarDecl (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value, bool isWeak) :
+	ISymbol (name, isWeak),
 	_decos (decos),
 	_type (type),
 	_value (value),
 	_gen (generator::Generator::empty ())
     {}
     
-    Symbol VarDecl::init (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value) {
-	return Symbol {new (Z0) VarDecl (name, decos, type, value)};
+    Symbol VarDecl::init (const lexing::Word & name, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value, bool isWeak) {
+	return Symbol {new (Z0) VarDecl (name, decos, type, value, isWeak)};
     }
     
     bool VarDecl::isOf (const ISymbol * type) const {

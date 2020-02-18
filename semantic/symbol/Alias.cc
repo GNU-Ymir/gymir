@@ -3,19 +3,19 @@
 namespace semantic {
 
     Alias::Alias () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_value (syntax::Expression::empty ()),
 	_gen (generator::Generator::empty ())
     {}
 
-    Alias::Alias (const lexing::Word & name, const syntax::Expression & value) :
-	ISymbol (name),
+    Alias::Alias (const lexing::Word & name, const syntax::Expression & value, bool isWeak) :
+	ISymbol (name, isWeak),
 	_value (value),
 	_gen (generator::Generator::empty ())
     {}
     
-    Symbol Alias::init (const lexing::Word & name, const syntax::Expression & value) {
-	return Symbol {new (Z0) Alias (name, value)};
+    Symbol Alias::init (const lexing::Word & name, const syntax::Expression & value, bool isWeak) {
+	return Symbol {new (Z0) Alias (name, value, isWeak)};
     }
     
     bool Alias::isOf (const ISymbol * type) const {

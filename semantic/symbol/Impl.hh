@@ -25,13 +25,13 @@ namespace semantic {
 
 	Impl ();
 	
-	Impl (const lexing::Word & name, const syntax::Expression & trait);
+	Impl (const lexing::Word & name, const syntax::Expression & trait, bool isWeak);
 
 	Impl (const Impl & mod);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const syntax::Expression & trait);
+	static Symbol init (const lexing::Word & name, const syntax::Expression & trait, bool isWeak);
 	
 	bool isOf (const ISymbol * type) const override;
 

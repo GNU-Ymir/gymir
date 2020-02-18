@@ -34,21 +34,11 @@ namespace semantic {
 	 */
 	class Visitor {
 
-	    /**
-	     * The context of the visitor determine if symbols should generate code or not
-	     * For exemple when visiting a function in extern context : 
-	     * we do not care about the body of the function and don't create any frame
-	     */
-	    enum class Context {
-		INNER,
-		EXTERN
-	    };
-       
-	    Context _context = Context::INNER;
-
 	    std::list <Symbol> _referent;
 
-	    static std::set <std::string> __imported__;
+	    static std::set <std::string> __imported__;	    
+
+	    bool _isWeak = false;
 	    
 	private : 
 
@@ -119,6 +109,11 @@ namespace semantic {
 	    semantic::Symbol visitClass (const syntax::Class & cls);
 
 	    /**
+	     * \brief Visit the internal part of a class
+	     */
+	    void visitInnerClass (Symbol & cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
+	    
+	    /**
 	     * \brief Transform a trait declarator into a semantic tree
 	     */
 	    semantic::Symbol visitTrait (const syntax::Trait & trait);
@@ -175,6 +170,16 @@ namespace semantic {
 	     * \brief Import all the core files in the current referent
 	     */
 	    void importAllCoreFiles ();
+
+	    /**
+	     * \brief All the declaration of this visitor will be weak?
+	     */
+	    bool isWeak () const;
+
+	    /**
+	     * From now on, all the symbol declared by this visitor will be weak
+	     */
+	    void setWeak ();
 	    
 	};
 

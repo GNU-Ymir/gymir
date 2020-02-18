@@ -74,7 +74,7 @@ void excPop (jmp_buf *j) {
 
     /* While with MALLOC, free.  When using obstacks it is better not to
        free and hold up. */
-    free (stored);
+    delete stored;
 }
 
 void excThrow (const char *file, const char *function, unsigned line, int code, const std::string& msg) {

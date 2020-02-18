@@ -51,7 +51,9 @@ namespace syntax {
 	 * \return the list of decorators;
 	 */
 	const std::vector <DecoratorWord> & getDecorators () const;
-
+	
+	std::string prettyString () const override;
+	
     };    
 
 }

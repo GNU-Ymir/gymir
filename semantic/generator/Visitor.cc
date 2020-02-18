@@ -299,8 +299,26 @@ namespace semantic {
 	    
 	    auto type = generateType (cst.getType ());
 	    Tree decl = Tree::varDecl (cst.getLocation (), name, type);
-	    auto value = castTo (cst.getType (), cst.getValue ());
-	    decl.setDeclInitial (value);
+	    if (cst.getValue ().is <StringValue> ()) {
+		auto & val = cst.getValue ().to <StringValue> ();
+		std::vector <Tree> params;
+		auto type = generateType (val.getType ());
+		auto inner = generateType (val.getType ().to <Type> ().getInners ()[0]);
+		auto ptr = cst.getValue ().to <StringValue> ().getValue ();
+		auto i = 0;
+		// Utf-32
+		while (i < (int) ptr.size ()) {
+		    auto data = (int*) (ptr.data () + i);
+		    auto value = Tree::buildCharCst (cst.getLocation (), *data, inner);
+		    params.push_back (value);
+		    i += 4;
+		}		
+		decl.setDeclInitial (Tree::constructIndexed (val.getLocation (), type, params));
+		
+	    } else {
+		auto value = castTo (cst.getType (), cst.getValue ());
+		decl.setDeclInitial (value);
+	    }
 	    
 	    decl.isWeak (true);
 	    decl.isStatic (true);
@@ -348,14 +366,24 @@ namespace semantic {
 			    }
 		);
 	    }
-	    
-	    auto slcName = castTo (typeInfo.to <StructCst> ().getTypes () [3], typeInfo.to <StructCst> ().getParameters() [3].to <GlobalConstant> ().getValue ());
+
+	    auto declName = generateValue (typeInfo.to <StructCst> ().getParameters() [3]);
+	    // auto slcType = generateType (typeInfo.to <StructCst> ().getTypes () [3]);	    
+	    // auto slcName = Tree::constructField (
+	    // 	classType.getLocation (),
+	    // 	slcType,
+	    // 	{Slice::LEN_NAME, Slice::PTR_NAME},
+	    // 	{
+	    // 	    declName.getField (Slice::LEN_NAME),
+	    // 		declName.getField (Slice::PTR_NAME)
+	    // 		}
+	    // );
 	    
 	    std::vector <Tree> params = {
 	    	castTo (typeInfo.to <StructCst> ().getTypes () [0], typeInfo.to <StructCst> ().getParameters() [0]),
 		castTo (typeInfo.to <StructCst> ().getTypes () [1], typeInfo.to <StructCst> ().getParameters() [1]),
 	    	ancestorSlice,
-		slcName
+		declName.getDeclInitial ()
 	    };
 
 	    std::vector <Tree> types = {
@@ -379,7 +407,7 @@ namespace semantic {
 	    decl.isExternal (false);
 	    decl.isPreserved (true);
 	    decl.isPublic (true);
-	    decl.isWeak (true);
+	    decl.isWeak (false);
 	    decl.setDeclContext (getGlobalContext ());	 
 
 	    vec_safe_push (globalDeclarations, decl.getTree ());
@@ -1436,7 +1464,7 @@ namespace semantic {
 	    auto who = generateValue (cast.getWho ());	    
 	    return Tree::castTo (cast.getLocation (), type, who);
 	}
-
+	
 	generic::Tree Visitor::generateArrayAlloc (const ArrayAlloc & alloc) {
 	    auto value = generateValue (alloc.getDefaultValue ());
 	    auto size = generateValue (alloc.getInnerTypeSize ());
@@ -1918,8 +1946,12 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::generateSizeOf (const SizeOf & size) {
-	    auto size_ = generateType (size.getWho ()).getSize ();
-	    return Tree::buildSizeCst (size_);
+	    if (size.getWho ().is <Void> ()) {
+		return Tree::buildSizeCst (0);
+	    } else {
+		auto size_ = generateType (size.getWho ()).getSize ();
+		return Tree::buildSizeCst (size_);
+	    }
 	}
 	
 	generic::Tree Visitor::castTo (const Generator & type, const Generator & val) {

@@ -34,13 +34,13 @@ namespace semantic {
 
 	Trait ();
 
-	Trait (const lexing::Word & name);
+	Trait (const lexing::Word & name, bool isWeak);
 
 	Trait (const Trait & other);
 	
     public :
 	
-	static Symbol init (const lexing::Word & name);
+	static Symbol init (const lexing::Word & name, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

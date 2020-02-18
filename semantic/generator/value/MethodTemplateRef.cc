@@ -41,7 +41,10 @@ namespace semantic {
 	    return this-> _self;
 	}
 	
-	std::string MethodTemplateRef::prettyString () const {	    
+	std::string MethodTemplateRef::prettyString () const {
+	    if (this-> _self.is<Value> ()) {
+		return Ymir::format ("(%) %", this-> _self.to <Value> ().getType ().prettyString (), TemplateRef::prettyString ());
+	    }
 	    return Ymir::format ("(%) %", this-> _self.prettyString (), TemplateRef::prettyString ());
 	}
 	

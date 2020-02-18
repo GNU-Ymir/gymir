@@ -215,12 +215,6 @@ namespace syntax {
 	/** The name of the function */
 	lexing::Word _name;
 
-	/**
-	 * Is declared at semantic time validation (from template resolution for instance) 
-	 * and is therefore weak def
-	 */
-	bool _isWeak = false;
-
 	/** Some method can be marked over */
 	bool _isOver;
 	
@@ -312,16 +306,6 @@ namespace syntax {
 	 * \return the body of the function
 	 */
 	const Body & getBody () const;
-
-	/**
-	 * This definition is now weak
-	 */
-	void setWeak ();
-
-	/**
-	 * Is this function weak
-	 */
-	bool isWeak () const;
 
 	/** 
 	 * This function is now an override function

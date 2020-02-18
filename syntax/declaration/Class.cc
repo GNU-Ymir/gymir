@@ -52,5 +52,12 @@ namespace syntax {
     const std::vector <lexing::Word> & Class::getAttributes () const {
 	return this-> _attributes;
     }
+
+    bool Class::isAbstract () const {
+	for (auto & it : this-> _attributes) {
+	    if (it == Keys::ABSTRACT) return true;
+	}
+	return false;
+    }
     
 }

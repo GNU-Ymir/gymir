@@ -106,8 +106,8 @@ namespace semantic {
 	    }
 
 
-	    pushReferent (Module::init ({mod.getIdent (), path.fileName ().toString ()}));	    
-	    getReferent ().insert (ModRef::init (mod.getIdent (), path.getFiles ()));
+	    pushReferent (Module::init ({mod.getIdent (), path.fileName ().toString ()}, this-> _isWeak));	    
+	    getReferent ().insert (ModRef::init (mod.getIdent (), path.getFiles (), this-> _isWeak));
 
 	    if (mod.isGlobal () && !global::State::instance ().isStandalone ())
 		importAllCoreFiles ();	    
@@ -122,7 +122,7 @@ namespace semantic {
 	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
 		if (glob.isEmpty ()) {
-		    glob = Module::init ({mod.getIdent (), modules [0]});
+		    glob = Module::init ({mod.getIdent (), modules [0]}, this-> _isWeak);
 		    pushReferent (glob);
 		} else pushReferent (glob);
 		
@@ -154,7 +154,7 @@ namespace semantic {
 			return;
 		    }
 		}
-		pushReferent (Module::init ({loc, names [0]}));
+		pushReferent (Module::init ({loc, names [0]}, this-> _isWeak));
 		std::vector<std::string> modules (names.begin () + 1, names.end ());
 		createSubModules (loc, modules, last);
 		auto mod = popReferent ();
@@ -163,7 +163,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitFunction (const syntax::Function & func, bool isExtern, bool insert) {
-	    auto function = Function::init (func.getName (), func);
+	    auto function = Function::init (func.getName (), func, this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (func.getName ().str);	    
 	    for (auto & symbol : symbols) {
@@ -195,13 +195,13 @@ namespace semantic {
 	}        
 
 	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor & cs) {
-	    auto semcs = semantic::Constructor::init (cs.getName (), cs);
+	    auto semcs = semantic::Constructor::init (cs.getName (), cs, this-> _isWeak);
 	    getReferent ().insert (semcs);
 	    return semcs;
 	}
 	
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct & str, bool insert) {
-	    auto structure = Struct::init (str.getName (), str.getDeclarations ());
+	    auto structure = Struct::init (str.getName (), str.getDeclarations (), this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (str.getName ().str);	
 	    for (auto & symbol : symbols) {
@@ -227,7 +227,7 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitAlias (const syntax::Alias & stal) {
-	    auto alias = Alias::init (stal.getName (), stal.getValue ());
+	    auto alias = Alias::init (stal.getName (), stal.getValue (), this-> _isWeak);
 
 	    auto symbols = getReferent ().getLocal (stal.getName ().str);
 	    if (symbols.size () != 0) {
@@ -240,7 +240,7 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock & block) {
-	    pushReferent (Module::init (block.getLocation ()));
+	    pushReferent (Module::init (block.getLocation (), this-> _isWeak));
 	    // A declaration block is just a list of declaration, we do not enter a new referent
 	    for (const syntax::Declaration & decl : block.getDeclarations ()) {
 		visit (decl);		
@@ -301,8 +301,53 @@ namespace semantic {
 	    return Symbol::empty ();
 	}
 	
+	void Visitor::visitInnerClass (Symbol & cls, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
+	    for (auto & jt : decls) {
+		match (jt) {
+		    of (syntax::ExpressionWrapper, wrap, {
+			    match (wrap.getContent ()) {
+				of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
+					cls.to <semantic::Class> ().addField (wrap.getContent ());
+					if (prv)
+					    cls.to <semantic::Class> ().setPrivate (de.getName ().str);
+					else if (prot) {
+					    cls.to <semantic::Class> ().setProtected (de.getName ().str);
+					}
+				    } 
+				) else of (syntax::Set, se, {
+					for (auto & it : se.getContent ()) {
+					    cls.to <semantic::Class> ().addField (it);
+					    if (prv)						
+						cls.to <semantic::Class> ().setPrivate (it.to <syntax::VarDecl> ().getName ().str);
+					    else if (prot) {
+						cls.to <semantic::Class> ().setProtected (it.to <syntax::VarDecl> ().getName ().str);
+					    }
+					}
+				    }
+				) else 
+				    Error::halt ("%(r) - reaching impossible point", "Critical");			
+			    }
+			}
+		    ) else of (syntax::DeclBlock, dc, {
+			    visitInnerClass (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+			}
+		    ) else of (syntax::Constructor, cs, {
+			    auto sym = visitConstructor (cs);
+			    sym.to <Constructor> ().setClass (cls);
+			    if (pub)  sym.setPublic ();
+			    if (prot) sym.setProtected ();					    
+			}
+		    ) else {
+			    auto sym = visit (jt);
+			    if (pub)  sym.setPublic ();
+			    if (prot) sym.setProtected ();
+			}
+		}
+	    }
+	}
+	
 	semantic::Symbol Visitor::visitClass (const syntax::Class & stcls) {
-	    auto cls = Class::init (stcls.getName (), stcls.getAncestor ());
+	    auto cls = Class::init (stcls.getName (), stcls.getAncestor (), this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (stcls.getName ().str);
 	    for (auto & symbol : symbols) {
@@ -319,70 +364,7 @@ namespace semantic {
 	    }
 	    
 	    pushReferent (cls);
-	    for (auto & it : stcls.getDeclarations ()) {
-		match (it) {
-		    of (syntax::ExpressionWrapper, wrap, {
-			    match (wrap.getContent ()) {
-				of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
-					cls.to <semantic::Class> ().addField (wrap.getContent ());
-					cls.to <semantic::Class> ().setProtected (de.getName ().str);
-				    }
-				) else of (syntax::Set, se, {
-					for (auto & it : se.getContent ()) {
-					    cls.to <semantic::Class> ().addField (it);
-					    cls.to <semantic::Class> ().setProtected (it.to <syntax::VarDecl> ().getName ().str);
-					}
-				    }
-				) else
-				    Error::halt ("%(r) - reaching impossible point", "Critical");			
-			    }
-			}
-		    )
-		    else of (syntax::Constructor, cs, {
-			    auto sym = visitConstructor (cs);
-			    sym.to <Constructor> ().setClass (cls);
-			    sym.setPublic ();
-			}
-		    ) else of (syntax::DeclBlock, dc, {
-			    for (auto & jt : dc.getDeclarations ()) {
-				match (jt) {
-				    of (syntax::ExpressionWrapper, wrap, {
-					    match (wrap.getContent ()) {
-						of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
-							cls.to <semantic::Class> ().addField (wrap.getContent ());
-							if (dc.isPrivate ())
-							    cls.to <semantic::Class> ().setPrivate (de.getName ().str);
-							if (dc.isProt ())
-							    cls.to <semantic::Class> ().setProtected (de.getName ().str);
-						    } 
-						) else 
-						    Error::halt ("%(r) - reaching impossible point", "Critical");			
-					    }
-					}
-				    ) else of (syntax::Constructor, cs, {
-					    auto sym = visitConstructor (cs);
-					    sym.to <Constructor> ().setClass (cls);
-					    if (dc.isPublic ())
-						sym.setPublic ();
-					    if (dc.isProt ()) 
-						sym.setProtected ();					    
-					}
-				    ) else {
-					    auto sym = visit (jt);
-					    if (dc.isPublic ())
-						sym.setPublic ();
-					    if (dc.isProt ())
-						sym.setProtected ();
-				    }
-				}
-			    }
-			}
-		    ) else {
-				auto sym = visit (it);
-				sym.setPublic ();
-		    }
-		}
-	    }
+	    visitInnerClass (cls, stcls.getDeclarations (), false, true, false);	   
 
 	    auto ret = popReferent ();
 	    getReferent ().insert (ret);
@@ -390,7 +372,7 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitTrait (const syntax::Trait & sttrait) {
-	    auto tr = Trait::init (sttrait.getName ());
+	    auto tr = Trait::init (sttrait.getName (), this-> _isWeak);
 
 	    auto symbols = getReferent ().getLocal (sttrait.getName ().str);
 	    for (auto & symbol : symbols) {
@@ -422,7 +404,7 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitImpl (const syntax::Mixin & stimpl) {
-	    auto im = Impl::init (stimpl.getLocation (), stimpl.getMixin ());
+	    auto im = Impl::init (stimpl.getLocation (), stimpl.getMixin (), this-> _isWeak);
 	    pushReferent (im);
 	    for (auto & it : stimpl.getDeclarations ()) {
 		match (it) {
@@ -448,7 +430,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum & stenm) {
-	    auto enm = Enum::init (stenm.getName (), stenm.getValues (), stenm.getType ());
+	    auto enm = Enum::init (stenm.getName (), stenm.getValues (), stenm.getType (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stenm.getName ().str);
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
@@ -468,7 +450,7 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl & stdecl) {
-	    auto decl = VarDecl::init (stdecl.getName (), stdecl.getDecorators (), stdecl.getType (), stdecl.getValue ());
+	    auto decl = VarDecl::init (stdecl.getName (), stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stdecl.getName ().str);
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
@@ -636,7 +618,7 @@ namespace semantic {
 		}		
 	    }
 	    
-	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent (), tep.getTest (), tep.getParams ());
+	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent (), tep.getTest (), tep.getParams (), this-> _isWeak);
 	    getReferent ().insert (sym);
 	    return sym;
 	}
@@ -663,6 +645,14 @@ namespace semantic {
 	    else return Symbol::__empty__;
 	}
 
+	void Visitor::setWeak () {
+	    this-> _isWeak = true;
+	}
+
+	bool Visitor::isWeak () const {
+	    return this-> _isWeak;
+	}
+	
     }
     
 }

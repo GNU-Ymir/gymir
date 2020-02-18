@@ -5,14 +5,14 @@
 namespace semantic {
 
     Trait::Trait () :
-	ISymbol (lexing::Word::eof ()), 
+	ISymbol (lexing::Word::eof (), false), 
 	_table (this),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
-    Trait::Trait (const lexing::Word & name) :
-	ISymbol (name),
+    Trait::Trait (const lexing::Word & name, bool isWeak) :
+	ISymbol (name, isWeak),
 	_table (this),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
@@ -25,8 +25,8 @@ namespace semantic {
 	_gen (generator::Generator::empty ())
     {}
     
-    Symbol Trait::init (const lexing::Word & name) {
-	return Symbol {new (Z0) Trait (name)};
+    Symbol Trait::init (const lexing::Word & name, bool isWeak) {
+	return Symbol {new (Z0) Trait (name, isWeak)};
     }
     
     bool Trait::isOf (const ISymbol * type) const {

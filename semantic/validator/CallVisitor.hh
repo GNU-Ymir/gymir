@@ -149,6 +149,11 @@ namespace semantic {
 	     */
 	    generator::Generator validateTemplateRef (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
 
+	    /**
+	     * \brief Validate a template Class Cst
+	     */
+	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
+
 
 	    /**
 	     * \brief Try to validate a dotCall expression

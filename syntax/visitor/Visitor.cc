@@ -301,11 +301,13 @@ namespace syntax {
 	
 	auto token = this-> _lex.next ({Token::LACC});
 	do {
-	    token = this-> _lex.consumeIf ({Keys::PRIVATE, Keys::PUBLIC, Keys::PROTECTED, Keys::VERSION, Token::RACC, Token::SEMI_COLON});
+	    token = this-> _lex.consumeIf ({Keys::PRIVATE, Keys::PUBLIC, Keys::PROTECTED, Keys::VERSION, Token::RACC, Token::SEMI_COLON, Keys::IMMUTABLE});
 	    if (token == Keys::PRIVATE || token == Keys::PUBLIC || token == Keys::PROTECTED) {
 		decls.push_back (visitProtectionClassBlock (token == Keys::PRIVATE, token == Keys::PROTECTED));
 	    } else if (token == Keys::VERSION) {
 		decls.push_back (visitVersionClass (fromTrait));
+	    } else if (token == Keys::IMMUTABLE) {
+		decls.push_back (visitIfClass (fromTrait));
 	    } else if (token != Token::RACC && token != Token::SEMI_COLON) {
 		decls.push_back (visitClassContent (fromTrait));
 	    } 
@@ -359,7 +361,25 @@ namespace syntax {
 		decls = visitClassBlock (fromTrait);
 	    }
 	}   
-	return DeclBlock::init (location, decls, true, false);
+	return DeclBlock::init (location, decls, false, false);
+    }
+
+    Declaration Visitor::visitIfClass (bool fromTrait) {
+	auto location = this-> _lex.next ({Keys::IF});
+	auto test = this-> visitExpression ();
+	auto decls = visitClassBlock (fromTrait);
+	auto next = this-> _lex.consumeIf ({Keys::ELSE});
+	if (next == Keys::ELSE) {
+	    auto next2 = this-> _lex.consumeIf ({Keys::IF});
+	    if (next2 == Keys::IF) {
+		this-> _lex.rewind ();
+		return CondBlock::init (location, test, decls, visitIfClass (fromTrait));
+	    } else {
+		auto elseDecls = visitClassBlock (fromTrait);
+		return CondBlock::init (location, test, decls, DeclBlock::init (next, elseDecls, true, false));
+	    }
+	}
+	return CondBlock::init (location, test, decls, DeclBlock::init (location, {}, true, false));
     }
     
     Declaration Visitor::visitClassContent (bool fromTrait) {
@@ -387,7 +407,7 @@ namespace syntax {
 	    return Declaration::empty ();	
 	}
     }
-
+    
     Declaration Visitor::visitClassMixin () {
 	auto location = this-> _lex.rewind ().next ({Keys::IMPL});
 	auto content = visitExpression (10); // (priority of dot operator)
@@ -751,6 +771,9 @@ namespace syntax {
 			} else if (x == Keys::CLASS) {
 			    auto name = visitIdentifier ();
 			    list.push_back (ClassVar::init (name));
+			} else if (x == Keys::ALIAS) {
+			    auto name = visitIdentifier ();
+			    list.push_back (AliasVar::init (name));
 			} else {
 			    this-> _lex.rewind ();
 			    list.push_back (visitExpression (10));

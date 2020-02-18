@@ -261,8 +261,9 @@ namespace semantic {
 		Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), nb_recur_template);
 	    }
 	    const std::vector <Symbol> & syms = sol.getAllLocal ();
-	    for (auto & it : syms)
+	    for (auto & it : syms) {
 		validate (it);
+	    }
 	    nb_recur_template -= 1;
 	}
 
@@ -279,7 +280,7 @@ namespace semantic {
 		    if (nb_recur_template >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
 			Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), nb_recur_template);
 		    }
-		    
+
 		    this-> validateMethod (syms [0].to <semantic::Function> (), self.to <Value> ().getType ());
 		    nb_recur_template -= 1;
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -297,7 +298,7 @@ namespace semantic {
 	}
 	
 	
-	void Visitor::validateFunction (const semantic::Function & func, bool isWeak) {
+	void Visitor::validateFunction (const semantic::Function & func) {
 	    auto & function = func.getContent ();
 	    std::vector <Generator> params;
 	    std::vector <std::string> errors;
@@ -376,8 +377,8 @@ namespace semantic {
 		    frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::C);
 		else if (ln == Keys::CPPLANG)
 		    frame.to <Frame> ().setManglingStyle (Frame::ManglingStyle::CXX);
-		
-		frame.to <Frame> ().isWeak (isWeak || function.isWeak ());
+
+		frame.to <Frame> ().isWeak (func.isWeak ());
 		frame.to <Frame> ().setMangledName (func.getMangledName ());
 
 		insertNewGenerator (frame);		
@@ -569,7 +570,8 @@ namespace semantic {
 		    match (it) {
 			of (semantic::Function, func ATTRIBUTE_UNUSED, {
 				if (!func.getContent ().getBody ().getBody ().isEmpty ()) {
-				    validateMethod (func, clRef);
+				    validateMethod (func, clRef, cls.isWeak ()); // We need to pass weak here
+				    // The method could have been imported from a trait that is not weak
 				}
 			    }
 			) else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
@@ -1029,11 +1031,11 @@ namespace semantic {
 	    
 	    auto frame = Frame::init (constr.getName (), cs.getRealName (), params, classType, body, false);
 	    frame.to <Frame> ().setMangledName (cs.getMangledName ());
-	    frame.to <Frame> ().isWeak (true);
+	    frame.to <Frame> ().isWeak (cs.isWeak ());
 	    insertNewGenerator (frame);
 	}
 
-	void Visitor::validateMethod (const semantic::Function & func, const Generator & classType_) {
+	void Visitor::validateMethod (const semantic::Function & func, const Generator & classType_, bool isWeak) {
 	    auto function = func.getContent ();
 	    std::vector <Generator> params;
 	    Generator retType (Generator::empty ());
@@ -1111,9 +1113,9 @@ namespace semantic {
 		THROW (ErrorCode::EXTERNAL, errors);
 		
 	    auto frame = Frame::init (function.getName (), func.getRealName (), params, retType, body, needFinalReturn);
-	    frame.to <Frame> ().isWeak (function.isWeak ());
+	    frame.to <Frame> ().isWeak (func.isWeak () || isWeak);
 	    frame.to <Frame> ().setMangledName (func.getMangledName ());
-
+	    
 	    insertNewGenerator (frame);		
 	}
 
@@ -1135,6 +1137,7 @@ namespace semantic {
 			});
 		}
 	    }
+	    
 	    if (syms.size () != 0) 
 		return validateMultSym (loc, syms);
 	    else if (errors.size () != 0)
@@ -1143,6 +1146,20 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	std::vector <syntax::Declaration> Visitor::getAllConstructors (const std::vector <syntax::Declaration> & decls) {
+	    std::vector <syntax::Declaration> results;
+	    for (auto & it : decls) {
+		match (it) {
+		    of (syntax::Constructor, cs ATTRIBUTE_UNUSED, results.push_back (it))
+		    else of (syntax::DeclBlock, dc, {
+			    auto inner = getAllConstructors (dc.getDeclarations ());
+			    results.insert (results.end (), inner.begin (), inner.end ());
+			}
+		    );			
+		}
+	    }
+	    return results;
+	}       
 	
 	generator::Generator Visitor::validatePreConstructor (const semantic::Constructor & cs, const Generator & classType, const Generator & ancestor, const std::vector<Generator> & ancestorFields) {
 	    auto & superParams = cs.getContent ().getSuperParams ();
@@ -3179,13 +3196,21 @@ namespace semantic {
 	    auto stringLit = syntax::String::init (loc, loc, {loc, type.prettyString ()}, lexing::Word::eof ());
 	    auto name = validateValue (stringLit);
 	    auto constName = Mangler::init ().mangle (type) + "_" + "name";
+	    auto constNameInner = Mangler::init ().mangle (type) + "_" + "nameInner";
 	    auto sliceType = Slice::init (loc, str);
+	    auto inner = name.to <Aliaser> ().getWho ();
 
 	    std::vector <Generator> values = {
 		en_m.to <generator::Enum> ().getFieldValue (typeInfoName (type)),
 		SizeOf::init (loc, Integer::init (loc, 0, false), type),
 		Copier::init (loc, sliceType, Aliaser::init (loc, sliceType, ArrayValue::init (loc, arrayType, innerTypes))),	       
-		GlobalConstant::init (loc, constName, name.to <Value> ().getType (), name)
+		GlobalConstant::init (loc, constName, name.to <Value> ().getType (),
+				      Aliaser::init (loc, name.to <Value> ().getType (),
+						     GlobalConstant::init (
+							 loc, constNameInner, inner.to<Value> ().getType (), inner
+						     )
+				      )
+		)
 	    };
 	    
 	    return StructCst::init (
@@ -3200,6 +3225,7 @@ namespace semantic {
 	std::string Visitor::typeInfoName (const Generator & type) {
 	    // Maybe that's enhanceable
 	    match (type) {
+		of (Void, bo ATTRIBUTE_UNUSED, return "VOID";);
 		of (Array, ar ATTRIBUTE_UNUSED, return "ARRAY";);
 		of (Bool,  bo ATTRIBUTE_UNUSED, return "BOOL";);
 		of (Char,  ca ATTRIBUTE_UNUSED, return "CHAR";);

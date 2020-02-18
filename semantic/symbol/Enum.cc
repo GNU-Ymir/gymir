@@ -2,17 +2,16 @@
 
 namespace semantic {
 
-
     Enum::Enum () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_table (this),
 	_type (syntax::Expression::empty ()),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
-    Enum::Enum (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type) :
-	ISymbol (name),
+    Enum::Enum (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) :
+	ISymbol (name, isWeak),
 	_table (this),
 	_type (type),
 	_fields (values),
@@ -27,8 +26,8 @@ namespace semantic {
 	_gen (other._gen)
     {}
     
-    Symbol Enum::init (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type) {
-	return Symbol {new (Z0) Enum (name, values, type)};
+    Symbol Enum::init (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) {
+	return Symbol {new (Z0) Enum (name, values, type, isWeak)};
     }
 
     bool Enum::isOf (const ISymbol * type) const {

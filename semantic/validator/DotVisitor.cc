@@ -283,14 +283,23 @@ namespace semantic {
 	    cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    // Template methods
 	    while (!cl.isEmpty ()) {
+		auto clRef = cl.to <generator::Class> ().getClassRef ();
+		clRef.to <Type> ().isMutable (true);
+		
 		for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 		    match (it) {
 			of (Template, tl, {
 				if (tl.getName () == name) {
 				    if (prv || (prot && it.isProtected ()) || it.isPublic ()) {
+					// We cast it, because the parent method must be validated with parent class ref					    
+					auto castedRef = Cast::init (left.getLocation (), clRef, left);
+					if (left.is <Aliaser> ()) {
+					    castedRef = Aliaser::init (castedRef.getLocation (), clRef, left);
+					}
+					
 					syms.push_back (
-					    MethodTemplateRef::init ({expression.getLocation (), tl.getName ().str}, it, left)
-					);
+					    MethodTemplateRef::init ({expression.getLocation (), tl.getName ().str}, it, castedRef)
+					);					
 				    } else {
 					errors.push_back (
 					    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), tl.prettyString ())

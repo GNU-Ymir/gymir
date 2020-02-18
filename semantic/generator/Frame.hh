@@ -102,7 +102,6 @@ namespace semantic {
 	     */
 	    void setMangledName (const std::string & name);
 
-	    
 	    const std::string & getMangledName () const;
 	    
 

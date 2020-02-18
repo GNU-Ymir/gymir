@@ -4,14 +4,14 @@
 namespace semantic {
 
     Constructor::Constructor () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_table (this),
 	_content (syntax::Declaration::empty ()),
 	_class (Symbol::empty ())
     {}
 
-    Constructor::Constructor (const lexing::Word & name, const syntax::Constructor & func) :
-	ISymbol (name),
+    Constructor::Constructor (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) :
+	ISymbol (name, isWeak),
 	_table (this),
 	_content (syntax::Declaration {func.clone ()}),
 	_class (Symbol::empty ())
@@ -24,8 +24,8 @@ namespace semantic {
 	_class (Symbol::empty ())
     {}
     
-    Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func) {
-	return Symbol {new Constructor (name, func)};
+    Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) {
+	return Symbol {new Constructor (name, func, isWeak)};
     }
 
     bool Constructor::isOf (const ISymbol * type) const {

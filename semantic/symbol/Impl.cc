@@ -3,13 +3,13 @@
 namespace semantic {
 
     Impl::Impl () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_table (this),
 	_trait (syntax::Expression::empty ())
     {}
     
-    Impl::Impl (const lexing::Word & name, const syntax::Expression & trait) :
-	ISymbol (name),
+    Impl::Impl (const lexing::Word & name, const syntax::Expression & trait, bool isWeak) :
+	ISymbol (name, isWeak),
 	_table (this),
 	_trait (trait)
     {}
@@ -20,8 +20,8 @@ namespace semantic {
 	_trait (mod._trait)
     {}
 
-    Symbol Impl::init (const lexing::Word & name, const syntax::Expression & trait) {
-	return Symbol {new (Z0) Impl (name, trait)};
+    Symbol Impl::init (const lexing::Word & name, const syntax::Expression & trait, bool isWeak) {
+	return Symbol {new (Z0) Impl (name, trait, isWeak)};
     }
 
     bool Impl::isOf (const ISymbol * type) const {

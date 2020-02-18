@@ -56,6 +56,7 @@
 #include <ymir/semantic/generator/value/StructCst.hh>
 #include <ymir/semantic/generator/value/SuccessScope.hh>
 #include <ymir/semantic/generator/value/TemplateRef.hh>
+#include <ymir/semantic/generator/value/TemplateClassCst.hh>
 #include <ymir/semantic/generator/value/TemplateSyntaxWrapper.hh>
 #include <ymir/semantic/generator/value/TemplateSyntaxList.hh>
 #include <ymir/semantic/generator/value/Throw.hh>

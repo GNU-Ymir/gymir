@@ -43,6 +43,8 @@ namespace syntax {
 	 * \return the content of the Unary
 	 */
 	const Expression & getContent () const;
+
+	std::string prettyString () const override;
 	
     };    
 

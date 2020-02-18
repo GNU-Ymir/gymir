@@ -3,6 +3,7 @@
 #include <ymir/syntax/declaration/Alias.hh>
 #include <ymir/syntax/declaration/Block.hh>
 #include <ymir/syntax/declaration/Class.hh>
+#include <ymir/syntax/declaration/CondBlock.hh>
 #include <ymir/syntax/declaration/Constructor.hh>
 #include <ymir/syntax/declaration/Enum.hh>
 #include <ymir/syntax/declaration/ExpressionWrapper.hh>

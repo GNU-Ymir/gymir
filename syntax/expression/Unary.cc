@@ -42,5 +42,9 @@ namespace syntax {
     const Expression & Unary::getContent () const {
 	return this-> _content;
     }
+
+    std::string Unary::prettyString () const {
+	return Ymir::format ("% (%)", this-> getLocation ().str, this-> _content.prettyString ());
+    }
     
 }

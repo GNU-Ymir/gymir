@@ -4,13 +4,13 @@
 namespace semantic {
 
     ModRef::ModRef () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_name (""),
 	_table (this)
     {}
     
-    ModRef::ModRef (const lexing::Word & loc, const std::string & name) :
-	ISymbol ({loc, name}),
+    ModRef::ModRef (const lexing::Word & loc, const std::string & name, bool isWeak) :
+	ISymbol ({loc, name}, isWeak),
 	_name (name),
 	_table (this)
     {
@@ -26,17 +26,17 @@ namespace semantic {
 	this-> setPublic ();
     }
     
-    Symbol ModRef::init (const lexing::Word & loc, const std::string & name) {
-	return Symbol {new (Z0) ModRef (loc, name)};
+    Symbol ModRef::init (const lexing::Word & loc, const std::string & name, bool isWeak) {
+	return Symbol {new (Z0) ModRef (loc, name, isWeak)};
     }
 
-    Symbol ModRef::init (const lexing::Word & loc, const std::vector <std::string> & names_) {
+    Symbol ModRef::init (const lexing::Word & loc, const std::vector <std::string> & names_, bool isWeak) {
 	auto names = names_;      
 	std::reverse (names.begin (), names.end ());
 
 	Symbol current = Symbol::empty ();
 	for (auto & name : names) {
-	    auto back = ModRef::init (loc, name);
+	    auto back = ModRef::init (loc, name, isWeak);
 	    if (!current.isEmpty ()) 
 		back.insert (current);	    
 	    current = back;
@@ -107,7 +107,7 @@ namespace semantic {
 	    if (add) ret.push_back (j_);
 	}
 
-	auto mod = ModRef::init (this-> getName (), this-> _name);
+	auto mod = ModRef::init (this-> getName (), this-> _name, this-> isWeak () && other.isWeak ());
 	for (auto sym : ret) {
 	    mod.insert (sym);
 	}

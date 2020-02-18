@@ -3,12 +3,12 @@
 namespace semantic {
 
     Module::Module () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_table (this)
     {}
     
-    Module::Module (const lexing::Word & name) :
-	ISymbol (name),
+    Module::Module (const lexing::Word & name, bool isWeak) :
+	ISymbol (name, isWeak),
 	_table (this)	
     {}
 
@@ -17,8 +17,8 @@ namespace semantic {
 	_table (mod._table.clone (this))
     {}
 
-    Symbol Module::init (const lexing::Word & name) {
-	return Symbol {new (Z0) Module (name)};
+    Symbol Module::init (const lexing::Word & name, bool isWeak) {
+	return Symbol {new (Z0) Module (name, isWeak)};
     }
 
     bool Module::isOf (const ISymbol * type) const {

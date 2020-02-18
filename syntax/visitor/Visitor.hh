@@ -217,6 +217,11 @@ namespace syntax {
 	 * \brief Inner class version control
 	 */
 	Declaration visitVersionClass (bool fromTrait = false);
+
+	/**
+	 * \brief Inner class cte if control
+	 */
+	Declaration visitIfClass (bool fromTrait = false);
 	
 	/**
 	 * \brief Return a class protected content (DeclBlock)

@@ -71,6 +71,10 @@ namespace semantic {
 		of (UnaryInt, una,
 		    return executeUnaryInt (una);
 		);
+
+		of (UnaryBool, ub,
+		    return executeUnaryBool (ub);
+		);
 			 
 		of (BinaryFloat, fl,
 		    return executeBinaryFloat (fl);
@@ -349,6 +353,33 @@ namespace semantic {
 	    } else {
 		Ymir::Error::occur (
 		    unaInt.getLocation (),
+		    ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);
+		return Generator::empty ();
+	    }
+	}
+
+	bool applyUnaBool (Unary::Operator op, bool v) {
+	    switch (op) {
+	    case Unary::Operator::NOT : return !v;
+	    default :
+		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
+		return bool ();
+	    }
+	}
+
+	generator::Generator CompileTime::executeUnaryBool (const generator::UnaryBool & unaBool) { 
+	    auto elemEx = this-> execute (unaBool.getOperand ());
+	    
+	    auto elem = elemEx.to <BoolValue> ();
+	    if (unaBool.getType ().is <Bool> ()) {
+		std::string type = unaBool.getType ().prettyString ();			       		
+		auto result = applyUnaBool (unaBool.getOperator (), elem.getValue ());
+				
+		return BoolValue::init (unaBool.getLocation (), unaBool.getType (), result);
+	    } else {
+		Ymir::Error::occur (
+		    unaBool.getLocation (),
 		    ExternalError::get (COMPILE_TIME_UNKNOWN)
 		);
 		return Generator::empty ();

@@ -20,11 +20,11 @@ namespace semantic {
 
 	Alias ();
 
-	Alias (const lexing::Word & name, const syntax::Expression & expr);
+	Alias (const lexing::Word & name, const syntax::Expression & expr, bool isWeak);
 
     public : 
 
-	static Symbol init (const lexing::Word & name, const syntax::Expression & expr);
+	static Symbol init (const lexing::Word & name, const syntax::Expression & expr, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

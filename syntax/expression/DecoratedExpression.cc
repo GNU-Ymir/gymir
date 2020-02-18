@@ -70,4 +70,25 @@ namespace syntax {
     const std::vector <DecoratorWord> & DecoratedExpression::getDecorators () const {
 	return this-> _decos;
     }
+
+    std::string DecoratedExpression::prettyString () const {
+	Ymir::OutBuffer buf;
+	int i = 0;
+	for (auto it : this-> _decos) {
+	    if (i != 0) buf.write (" ");
+	    switch (it.getValue ()) {
+	    case Decorator::REF : buf.write  ("ref"); break;
+	    case Decorator::CONST : buf.write ("const"); break;
+	    case Decorator::MUT : buf.write ("mut"); break;
+	    case Decorator::DMUT : buf.write ("dmut"); break;
+	    case Decorator::STATIC : buf.write ("static"); break;
+	    case Decorator::CTE : buf.write ("cte"); break;
+	    }
+	    i += 1;
+	}
+	if (i != 0) buf.write (" ");
+	buf.write (this-> _content.prettyString ());
+	return buf.str ();	
+    }
+    
 }

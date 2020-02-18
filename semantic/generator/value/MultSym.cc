@@ -44,16 +44,15 @@ namespace semantic {
 	}
 
 	std::string MultSym::prettyString () const {
-	    Ymir::OutBuffer buf;
-	    int i = 0;
-	    buf.write ("Multiple Symbols : {");
-	    for (auto & it : this-> _gens) {
-		if (i != 0) buf.write (" or ");
-		buf.write (it.prettyString ());
-		i += 1;
+	    if (this-> _gens.size () != 1) {
+		Ymir::OutBuffer buf;
+		buf.write ("Multiple Symbols : {");
+		buf.write (this-> _gens [0].getLocation ().str);
+		buf.write ("}");
+		return buf.str ();
+	    } else {
+		return this-> _gens [0].prettyString ();
 	    }
-	    buf.write ("}");
-	    return buf.str ();
 	}
     }
     

@@ -27,13 +27,13 @@ namespace semantic {
 
 	Constructor ();
 
-	Constructor (const lexing::Word & name, const syntax::Constructor & func);
+	Constructor (const lexing::Word & name, const syntax::Constructor & func, bool isWeak);
 
 	Constructor (const Constructor & other);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const syntax::Constructor & func);
+	static Symbol init (const lexing::Word & name, const syntax::Constructor & func, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

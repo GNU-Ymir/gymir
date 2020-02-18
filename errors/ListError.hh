@@ -84,6 +84,7 @@ namespace Ymir {
 			 NOT_A_CLASS,
 			 NOT_A_LVALUE,
 			 NOT_A_STRUCT,
+			 NOT_AN_ALIAS,
 			 NOT_IMPL_TRAIT,
 			 NOT_ITERABLE,
 			 NOT_ITERABLE_WITH,

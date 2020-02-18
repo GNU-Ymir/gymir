@@ -118,12 +118,12 @@ namespace semantic {
 	    /**
 	     * \brief Validate a function
 	     */
-	    void validateFunction (const semantic::Function & func, bool isWeak = false);
+	    void validateFunction (const semantic::Function & func);
 
 	    /**
 	     * \brief Validate a method
 	     */
-	    void validateMethod (const semantic::Function & func, const generator::Generator & cl);
+	    void validateMethod (const semantic::Function & func, const generator::Generator & cl, bool isWeak = false);
 
 	    /**
 	     * \brief Validate an implementation of a trait
@@ -806,6 +806,11 @@ namespace semantic {
 	     * \warning cl is assumed to be a generator::Class
 	     */
 	    generator::Generator getClassConstructors (const lexing::Word & loc, const generator::Generator & cl);
+
+	    /**
+	     * \return the list of constructors declared in the class
+	     */
+	    std::vector <syntax::Declaration> getAllConstructors (const std::vector <syntax::Declaration> & innerClass);
 	    
 	    /**
 	     * \brief Get the current context of the current state

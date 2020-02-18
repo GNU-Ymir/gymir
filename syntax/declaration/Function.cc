@@ -224,14 +224,6 @@ namespace syntax {
 	return this-> _body;
     }
 
-    void Function::setWeak () {
-	this-> _isWeak = true;
-    }
-
-    bool Function::isWeak () const {
-	return this-> _isWeak;
-    }
-
     void Function::setOver () {
 	this-> _isOver = true;
     }

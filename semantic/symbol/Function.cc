@@ -5,13 +5,13 @@
 namespace semantic {
 
     Function::Function () :
-	ISymbol (lexing::Word::eof ()),
+	ISymbol (lexing::Word::eof (), false),
 	_table (this),
 	_content (syntax::Declaration::empty ())
     {}
 
-    Function::Function (const lexing::Word & name, const syntax::Function & func) :
-	ISymbol (name),
+    Function::Function (const lexing::Word & name, const syntax::Function & func, bool isWeak) :
+	ISymbol (name, isWeak),
 	_table (this),
 	_content (syntax::Declaration {func.clone ()}),
 	_isVariadic (func.getPrototype ().isVariadic ()),
@@ -26,8 +26,8 @@ namespace semantic {
 	_isOver (other._isOver)
     {}
     
-    Symbol Function::init (const lexing::Word & name, const syntax::Function & func) {
-	return Symbol {new Function (name, func)};
+    Symbol Function::init (const lexing::Word & name, const syntax::Function & func, bool isWeak) {
+	return Symbol {new Function (name, func, isWeak)};
     }
 
     bool Function::isOf (const ISymbol * type) const {

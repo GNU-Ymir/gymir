@@ -67,6 +67,7 @@ namespace Ymir {
 			    NOT_A_CLASS                     = "type %(y) is not a class type",
 			    NOT_A_LVALUE		    = "not a lvalue",
 			    NOT_A_STRUCT                    = "type %(y) is not a struct type",
+			    NOT_AN_ALIAS                    = "type %(y) is not an aliasable type",
 			    NOT_IMPL_TRAIT                  = "class %(y) does not implement trait %(y)",
 			    NOT_ITERABLE                    = "%(y) type is not iterable",
 			    NOT_ITERABLE_WITH               = "%(y) type is not iterable with %(y) vars",

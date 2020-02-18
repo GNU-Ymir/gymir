@@ -15,9 +15,10 @@ namespace semantic {
 	_referent (nullptr)
     {}
 
-    ISymbol::ISymbol (const lexing::Word & name)
+    ISymbol::ISymbol (const lexing::Word & name, bool isWeak)
 	: _name (name),
-	  _referent (nullptr)
+	  _referent (nullptr),
+	  _isWeak (isWeak)
     {}
 
     bool ISymbol::isOf (const ISymbol *) const {
@@ -70,6 +71,14 @@ namespace semantic {
 	return this-> _isPublic;
     }
 
+    void ISymbol::setWeak () {
+	this-> _isWeak = true;
+    }
+
+    bool ISymbol::isWeak () const {
+	return this-> _isWeak;
+    }
+    
     void ISymbol::setProtected () {
 	this-> _isPublic = false;
 	this-> _isProtected = true;
@@ -229,7 +238,26 @@ namespace semantic {
 	    return false;
 	}
     }
+    
+    void Symbol::setWeak () {
+	if (this-> _value != nullptr)
+	    this-> _value-> setWeak ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+    }
 
+    bool Symbol::isWeak () const {
+	if (this-> _value != nullptr)
+	    return this-> _value-> isWeak ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return false;
+	}
+    }
+    
     void Symbol::setProtected () {
 	if (this-> _value != nullptr)
 	    this-> _value-> setProtected ();
