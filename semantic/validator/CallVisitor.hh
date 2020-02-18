@@ -2,6 +2,7 @@
 
 #include <ymir/syntax/expression/MultOperator.hh>
 #include <ymir/semantic/validator/Visitor.hh>
+#include <ymir/syntax/declaration/Function.hh>
 #include <ymir/semantic/generator/value/ArrayAccess.hh>
 
 namespace semantic {
@@ -153,6 +154,11 @@ namespace semantic {
 	     * \brief Validate a template Class Cst
 	     */
 	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
+
+	    /**
+	     * \brief Validate a template class cst prototype
+	     */
+	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const syntax::Function::Prototype & prototype, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym);
 
 
 	    /**

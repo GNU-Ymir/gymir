@@ -976,13 +976,14 @@ namespace semantic {
 	    Generator retType (Generator::empty ());
 	    std::vector <std::string> errors;
 	    auto classType = classType_;
+	    
 	    auto proto = validateConstructorProto (sym);
 	    verifyConstructionLoop (proto.getLocation (), proto);
 	    
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
 	    enterForeign ();
-	    
+
 	    enterBlock ();
 	    TRY (
 		validatePrototypeForFrame (cs.getName (), constr.getPrototype (), params, retType);
@@ -999,7 +1000,6 @@ namespace semantic {
 		TRY (
 		    auto preConstruct = validatePreConstructor (cs, classType_, ancestor, ancestorFields);
 		    this-> setCurrentFuncType (retType);
-
 		    body = validateValue (constr.getBody ());
 		    auto loc = constr.getBody ().getLocation ();
 		    auto ret = Return::init (loc,
@@ -1155,7 +1155,15 @@ namespace semantic {
 			    auto inner = getAllConstructors (dc.getDeclarations ());
 			    results.insert (results.end (), inner.begin (), inner.end ());
 			}
-		    );			
+		    ) else of (syntax::CondBlock, cd, {
+			    auto inner = getAllConstructors (cd.getDeclarations ());
+			    results.insert (results.end (), inner.begin (), inner.end ());
+			    if (!cd.getElse ().isEmpty ()) {
+				auto inner = getAllConstructors ({cd.getElse ()});
+				results.insert (results.end (), inner.begin (), inner.end ());
+			    }
+			}
+		    );
 		}
 	    }
 	    return results;
@@ -1347,6 +1355,7 @@ namespace semantic {
 
 	    {
 		TRY (
+		    this-> discardAllLocals ();
 		    quitBlock ();
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
@@ -1360,7 +1369,7 @@ namespace semantic {
 	    gen_protos.pop_back ();
 	    locs.pop_back ();	    
 	    popReferent ("verifyConstructionLoop");
-	    
+
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
 	    }
@@ -2390,35 +2399,43 @@ namespace semantic {
 	    for (auto func_loc : __validating__) {
 		if (func_loc.isSame (func.getName ())) no_value = true;
 	    }
-	    
-	    auto cl = validateClass (func.getClass ());
-	    cl.to <Type> ().isMutable (true);
 
-	    __validating__.push_back (func.getName ());
-	    enterBlock ();
-	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true));
-	    TRY (		
-		validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType);
+	    Generator cl (Generator::empty ());
+	    TRY (
+		cl = validateClass (func.getClass ());
+		cl.to <Type> ().isMutable (true);
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors = msgs;
 	    } FINALLY;
 	    
-	    {
-		TRY (
-		    this-> discardAllLocals ();
-		    this-> quitBlock ();
+	    if (!cl.isEmpty ()) {		
+		__validating__.push_back (func.getName ());
+		enterBlock ();
+		this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true));
+		TRY (		
+		    validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType);
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    errors = msgs;
 		} FINALLY;
+
+		{
+		    TRY (
+			this-> discardAllLocals ();
+			this-> quitBlock ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+
+		__validating__.pop_back ();
 	    }
-	    
-	    __validating__.pop_back ();
 	    
 	    exitForeign ();
 	    popReferent ("validateConstructorProto");
-	    
+	    	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);		
 	    }
@@ -4761,11 +4778,13 @@ namespace semantic {
 	}	
 	
 	void Visitor::pushReferent (const semantic::Symbol & sym, const std::string &) {
-	    //println ("IN : ", msg, " => ", sym.getRealName ());
+	    // print (this-> _referent.size (), ' ');
+	    // println ("IN : ", msg, " => ", sym.getRealName ());
 	    this-> _referent.push_back (sym);
 	}
 
 	void Visitor::popReferent (const std::string &) {
+	    //print (this-> _referent.size ());
 	    //println ("Out : ", msg, " => ", this-> _referent.back ().getRealName ());
 	    this-> _referent.pop_back ();
 	}

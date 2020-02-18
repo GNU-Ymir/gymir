@@ -317,15 +317,18 @@ namespace semantic {
 		
 	    return mapper;
 	}
-	
+
 	Generator TemplateVisitor::validateFromImplicit (const Generator & ref, const std::vector <Generator> & valueParams, const std::vector <Generator> & types, int & score, Symbol & symbol, std::vector <Generator> & finalParams) const {
-	    const Symbol & sym = ref.to <TemplateRef> ().getTemplateRef ();
-	    std::vector <syntax::Expression> syntaxParams;
-	    if (sym.to <semantic::Template> ().getDeclaration ().is <syntax::Function> ())
-		syntaxParams = sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ();
-	    else
-		syntaxParams = ref.to <TemplateClassCst> ().getConstructor ().to <syntax::Constructor> ().getPrototype ().getParameters ();
+	    const Symbol & sym = ref.to <TemplateRef> ().getTemplateRef ();	    
+	    if (!sym.to <semantic::Template> ().getDeclaration ().is <syntax::Function> ())
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    
+	    auto & syntaxParams = sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ();
+	    return validateFromImplicit (ref, valueParams, types, syntaxParams, score, symbol, finalParams);	    
+	}
+	
+	Generator TemplateVisitor::validateFromImplicit (const Generator & ref, const std::vector <Generator> & valueParams, const std::vector <Generator> & types, const std::vector <syntax::Expression> & syntaxParams, int & score, Symbol & symbol, std::vector <Generator> & finalParams) const {
+	    const Symbol & sym = ref.to <TemplateRef> ().getTemplateRef ();	    
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
 	    
 	    /** INFO : Not enough parameters for the function, actually, it

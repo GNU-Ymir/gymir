@@ -607,14 +607,14 @@ namespace semantic {
 		    }
 
 		    auto constructors = this-> _context.getAllConstructors (tmp.to <syntax::Class> ().getDeclarations ());
-		    std::vector <generator::Generator> gens;
+		    std::vector <syntax::Function::Prototype> csts;
 		    for (auto & it : constructors) {
-			gens.push_back (TemplateClassCst::init (expression.getLocation (), t.to<TemplateRef> ().getTemplateRef (), it));
+			csts.push_back (it.to <syntax::Constructor> ().getPrototype ());
 		    }
 		    
-		    if (gens.size () != 0)
-			return MultSym::init (expression.getLocation (), gens);
-		    else
+		    if (csts.size () != 0) {
+			return TemplateClassCst::init (expression.getLocation (), t.to<TemplateRef> ().getTemplateRef (), csts); 
+		    } else
 			return Generator::empty ();
 		}
 	    }

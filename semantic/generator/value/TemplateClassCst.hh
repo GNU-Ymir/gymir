@@ -2,6 +2,7 @@
 
 #include <ymir/semantic/generator/Value.hh>
 #include <ymir/syntax/Declaration.hh>
+#include <ymir/syntax/declaration/Function.hh>
 #include <ymir/semantic/generator/value/TemplateRef.hh>
 
 
@@ -12,7 +13,7 @@ namespace semantic {
 	class TemplateClassCst : public TemplateRef {
 
 
-	    syntax::Declaration _cst;
+	    std::vector <syntax::Function::Prototype>  _cst;
 
 	private :
 
@@ -20,11 +21,11 @@ namespace semantic {
 
 	    TemplateClassCst ();
 
-	    TemplateClassCst (const lexing::Word & loc, const Symbol & ref, const syntax::Declaration & self);
+	    TemplateClassCst (const lexing::Word & loc, const Symbol & ref, const std::vector <syntax::Function::Prototype> & self);
 
 	public :
 
-	    static Generator init (const lexing::Word & loc, const Symbol & ref, const syntax::Declaration & self);
+	    static Generator init (const lexing::Word & loc, const Symbol & ref, const std::vector <syntax::Function::Prototype> & self);
 
 	    
 	    /** 
@@ -42,7 +43,10 @@ namespace semantic {
 	     */
 	    bool equals (const Generator & other) const override;	    
 
-	    const syntax::Declaration & getConstructor () const;
+	    /**
+	     * 
+	     */
+	    const std::vector <syntax::Function::Prototype> & getPrototypes () const;
 	    
 	    std::string prettyString () const override;
 

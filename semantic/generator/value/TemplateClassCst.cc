@@ -7,16 +7,15 @@ namespace semantic {
     namespace generator {
 
 	TemplateClassCst::TemplateClassCst () :
-	    TemplateRef (),
-	    _cst (syntax::Declaration::empty ())
+	    TemplateRef ()
 	{}
 
-	TemplateClassCst::TemplateClassCst (const lexing::Word & loc, const Symbol & ref, const syntax::Declaration & cst) :
+	TemplateClassCst::TemplateClassCst (const lexing::Word & loc, const Symbol & ref, const std::vector <syntax::Function::Prototype> & cst) :
 	    TemplateRef (loc, ref),
 	    _cst (cst)
 	{}
 	
-	Generator TemplateClassCst::init (const lexing::Word & loc, const Symbol & ref, const syntax::Declaration & cst) {
+	Generator TemplateClassCst::init (const lexing::Word & loc, const Symbol & ref, const std::vector <syntax::Function::Prototype> & cst) {
 	    return Generator {new TemplateClassCst (loc, ref, cst)};
 	}
     
@@ -38,7 +37,7 @@ namespace semantic {
 	}
 
 
-	const syntax::Declaration & TemplateClassCst::getConstructor () const {
+	const std::vector <syntax::Function::Prototype> & TemplateClassCst::getPrototypes () const {
 	    return this-> _cst;
 	}
 

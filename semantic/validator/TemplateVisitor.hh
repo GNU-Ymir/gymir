@@ -91,6 +91,8 @@ namespace semantic {
 	     */
 	    generator::Generator validateFromImplicit (const generator::Generator & ref, const std::vector <generator::Generator> & valueParams, const std::vector <generator::Generator> & types, int & score, Symbol & sym, std::vector <generator::Generator> & finalParams) const;
 
+	    generator::Generator validateFromImplicit (const generator::Generator & ref, const std::vector <generator::Generator> & valueParams, const std::vector <generator::Generator> & types, const std::vector <syntax::Expression> & syntaxParams, int & score, Symbol & sym, std::vector <generator::Generator> & finalParams) const;
+
 
 	    /**
 	     * \brief Validate a type template specialisation from implicit context
