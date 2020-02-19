@@ -17,11 +17,16 @@ namespace syntax {
 	/** The end of the block */
 	lexing::Word _end;
 
+	/** The declaration done inside the block */
+	Declaration _declModule;
+
+	Expression _catcher;
+
 	/** The content of the block */
 	std::vector <Expression> _content;
 
-	/** The declaration done inside the block */
-	Declaration _declModule;
+	/** The scope guard of the block */
+	std::vector <Expression> _scopes;
 	
     private :
 
@@ -33,7 +38,7 @@ namespace syntax {
 
     public :
 
-	static Expression init (const lexing::Word & op, const lexing::Word & end, const Declaration & decls, const std::vector <Expression> & conetent);
+	static Expression init (const lexing::Word & op, const lexing::Word & end, const Declaration & decls, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes);
 
 	Expression clone () const override;
 
@@ -55,6 +60,17 @@ namespace syntax {
 	 * \return the closing token of the block
 	 */
 	const lexing::Word & getEnd () const;
+
+	/**
+	 * \return the catcher of this block, might be empty
+	 */
+	const Expression & getCatcher () const;
+
+	/**
+	 * \return the list of scope guards of the block
+	 */
+	const std::vector <Expression> & getScopes () const;
+	
 	
     };    
 

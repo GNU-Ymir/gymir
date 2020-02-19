@@ -38,10 +38,10 @@ namespace semantic {
 		auto it = matchers.size () - 1 - it_; // We get them in the reverse order to have the tests in the right order
 		Generator test (Generator::empty ());
 		std::vector <std::string> errors;
+		bool local_mandatory = false;
 		this-> _context.enterBlock ();
 		{
 		    TRY (
-			bool local_mandatory = false;
 			test = this-> validateMatch (value, matchers [it], local_mandatory);
 			if (local_mandatory) isMandatory = true;
 		    ) CATCH (ErrorCode::EXTERNAL) {
@@ -53,12 +53,21 @@ namespace semantic {
 		if (!test.isEmpty ()) { // size == 2, if succeed
 		    auto content = this-> _context.validateValue (actions [it]);
 		    auto local_type = content.to <Value> ().getType ();
-		    if (type.isEmpty ()) type = local_type;
-		    else this-> _context.verifyCompatibleType (content.getLocation (), type, local_type);
 		    
-		    result = Conditional::init (matchers [it].getLocation (), type, test, content, result);
+		    if (type.isEmpty () && (!content.to <Value> ().isReturner () && !content.to <Value> ().isBreaker ())) {
+			// We don't take the type into account, if the content is throwing or returning or something like that
+			type = local_type;
+		    } else {
+			if (!content.to <Value> ().isReturner () && !content.to<Value> ().isBreaker ()) // If it is a breaker or a returner the value won't be evaluated anyway
+			    this-> _context.verifyCompatibleType (content.getLocation (), type, local_type);
+		    }
+			
+		    if (type.isEmpty ())		       			
+			result = Conditional::init (matchers [it].getLocation (), local_type, test, content, result, local_mandatory); 
+		    else
+			result = Conditional::init (matchers [it].getLocation (), type, test, content, result, local_mandatory); 
 		}
-
+		
 		{
 		    TRY (
 			this-> _context.quitBlock ();

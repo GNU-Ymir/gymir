@@ -407,7 +407,7 @@ namespace semantic {
 	    decl.isExternal (false);
 	    decl.isPreserved (true);
 	    decl.isPublic (true);
-	    decl.isWeak (false);
+	    decl.isWeak (true);
 	    decl.setDeclContext (getGlobalContext ());	 
 
 	    vec_safe_push (globalDeclarations, decl.getTree ());
@@ -1305,7 +1305,8 @@ namespace semantic {
 	    }
 	    	    
 	    Tree content (Tree::empty ());
-	    if (!var.isEmpty ()) {
+	    if (!var.isEmpty () && !cond.getContent ().to <Value> ().getType ().is <Void> ()) {
+		// The type can be different if this content is a returner
 		TreeStmtList list = TreeStmtList::init ();
 		content = castTo (cond.getType (), cond.getContent ());
 		list.append (content.getList ());
@@ -1317,7 +1318,8 @@ namespace semantic {
 	    
 	    auto elsePart = Tree::empty ();
 	    if (!cond.getElse ().isEmpty ()) {
-		if (!var.isEmpty ()) {
+		if (!var.isEmpty () && !cond.getElse ().to <Value> ().getType ().is<Void> ()) {
+		    // The type can be different if this.else content is a returner
 		    TreeStmtList list = TreeStmtList::init ();
 		    elsePart = castTo (cond.getType (), cond.getElse ());
 		    list.append (elsePart.getList ());
@@ -1615,29 +1617,29 @@ namespace semantic {
 	generic::Tree Visitor::generateCatching (const ExitScope & scope, Tree varScope) {
 	    TreeStmtList glob (TreeStmtList::init ());
 	    auto last = Tree::buildCall (scope.getLocation (), Tree::voidType (), global::CoreNames::get (RETHROW), {});
-	    auto & vars = scope.getCatchingVars ();
-	    auto & infos = scope.getCatchingInfoTypes ();
-	    auto & actions = scope.getCatchingActions ();
-	    for (auto it : Ymir::r (0, vars.size ())) {
-		auto type = generateType (vars [it].to <generator::VarDecl> ().getVarType ());
-		auto var = Tree::varDecl (vars [it].getLocation (), vars [it].to <generator::VarDecl> ().getName (), type);
-		var.setDeclContext (getCurrentContext ());
-		stackVarDeclChain.back ().append (var);
-		insertDeclarator (vars [it].getUniqId (), var);
-		glob.append (var);
+	    auto & var = scope.getCatchingVar ();
+	    auto & info = scope.getCatchingInfoType ();
+	    auto & action = scope.getCatchingAction ();
+	    if (!var.isEmpty ()) {
+		auto type = generateType (var.to <generator::VarDecl> ().getVarType ());
+		auto innerVar = Tree::varDecl (var.getLocation (), var.to <generator::VarDecl> ().getName (), type);
+		innerVar.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (innerVar);
+		insertDeclarator (var.getUniqId (), innerVar);
+		glob.append (innerVar);
 		
-		auto info = generateValue (infos [it]);
-		auto call = Tree::buildCall (vars [it].getLocation (), type, global::CoreNames::get (EXCEPT_GET_VALUE), {info});
-		auto left = Tree::compound (vars [it].getLocation (), var, Tree::affect (scope.getLocation (), var, call));
-		auto nul = Tree::buildPtrCst (vars [it].getLocation (), 0);
-		auto test = Tree::binaryPtrTest (vars [it].getLocation (), NE_EXPR, Tree::boolType (), left, nul);
+		auto innerInfo = generateValue (info);
+		auto call = Tree::buildCall (var.getLocation (), type, global::CoreNames::get (EXCEPT_GET_VALUE), {innerInfo});
+		auto left = Tree::compound (var.getLocation (), innerVar, Tree::affect (scope.getLocation (), innerVar, call));
+		auto nul = Tree::buildPtrCst (var.getLocation (), 0);
+		auto test = Tree::binaryPtrTest (var.getLocation (), NE_EXPR, Tree::boolType (), left, nul);
 		
 		enterBlock ();
 		TreeStmtList list (TreeStmtList::init ());
-		if (!scope.getType ().is <Void> ()) 
-		    list.append (Tree::affect (scope.getLocation (), varScope, generateValue (actions [it])));
+		if (!action.to <Value> ().getType ().is <Void> ()) 
+		    list.append (Tree::affect (scope.getLocation (), varScope, generateValue (action)));
 		else
-		    list.append (generateValue (actions [it]));
+		    list.append (generateValue (action));
 		auto binding = quitBlock (scope.getLocation (), list.toTree ());
 		last = Tree::conditional (scope.getLocation (), getCurrentContext (), test, binding.bind_expr, last);
 	    }

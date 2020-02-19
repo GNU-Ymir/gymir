@@ -7,7 +7,10 @@ namespace semantic {
 	ExitScope::ExitScope () :
 	    Value (),
 	    _who (Generator::empty ()),
-	    _jmpBuf (Generator::empty ())
+	    _jmpBuf (Generator::empty ()),
+	    _catchingVar (Generator::empty ()),
+	    _catchingInfoType (Generator::empty ()),
+	    _catchingAction (Generator::empty ())
 	{}
 
 	ExitScope::ExitScope (const lexing::Word & loc,
@@ -16,17 +19,17 @@ namespace semantic {
 			      const Generator & who,
 			      const std::vector <Generator> & success,
 			      const std::vector <Generator> & failure,
-			      const std::vector<Generator> & catchingVar,
-			      const std::vector<Generator> & catchingInfos,
-			      const std::vector<Generator> & catchingActions) :
+			      const Generator & catchingVar,
+			      const Generator & catchingInfo,
+			      const Generator & catchingAction) :
 	    Value (loc, type),
 	    _who (who),
 	    _jmpBuf (jmpBuf),
+	    _catchingVar (catchingVar),
+	    _catchingInfoType (catchingInfo),
+	    _catchingAction (catchingAction),
 	    _success (success),
-	    _failure (failure),
-	    _catchingVars (catchingVar),
-	    _catchingInfoType (catchingInfos),
-	    _catchingActions (catchingActions)
+	    _failure (failure)
 	{}
 	
 	Generator ExitScope::init (const lexing::Word & loc,
@@ -35,11 +38,11 @@ namespace semantic {
 				   const Generator & who,
 				   const std::vector <Generator> & success,
 				   const std::vector <Generator> & failure,
-				   const std::vector<Generator> & catchingVar,
-				   const std::vector<Generator> & catchingInfos,
-				   const std::vector<Generator> & catchingActions)
+				   const Generator & catchingVar,
+				   const Generator & catchingInfo,
+				   const Generator & catchingAction)
 	{	    
-	    return Generator {new ExitScope (loc, type, jmpBuf, who, success, failure, catchingVar, catchingInfos, catchingActions)};
+	    return Generator {new ExitScope (loc, type, jmpBuf, who, success, failure, catchingVar, catchingInfo, catchingAction)};
 	}
     
 	Generator ExitScope::clone () const {
@@ -82,20 +85,20 @@ namespace semantic {
 	    return this-> _jmpBuf;
 	}
 
-	const std::vector <Generator> & ExitScope::getCatchingVars () const {
-	    return this-> _catchingVars;
+	const Generator & ExitScope::getCatchingVar () const {
+	    return this-> _catchingVar;
 	}
 
-	const std::vector <Generator> & ExitScope::getCatchingInfoTypes () const {
+	const Generator & ExitScope::getCatchingInfoType () const {
 	    return this-> _catchingInfoType;
 	}
 	    
-	const std::vector <Generator> & ExitScope::getCatchingActions () const {
-	    return this-> _catchingActions;
+	const Generator & ExitScope::getCatchingAction () const {
+	    return this-> _catchingAction;
 	}
 	
 	std::string ExitScope::prettyString () const {
-	    return Ymir::format ("&(%)", this-> _who.prettyString ());
+	    return Ymir::format ("%", this-> _who.prettyString ());
 	}
     }
     

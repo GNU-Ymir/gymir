@@ -15,7 +15,7 @@ namespace syntax {
     class Catch : public IExpression {
     protected:
 	
-	std::vector <Expression> _vars;
+	std::vector <Expression> _matchs;
 
 	std::vector <Expression> _actions;
 
@@ -25,7 +25,7 @@ namespace syntax {
 
 	Catch ();
 	
-	Catch (const lexing::Word & loc, const std::vector<Expression> & vars, const std::vector<Expression> & actions);
+	Catch (const lexing::Word & loc, const std::vector<Expression> & matchs, const std::vector<Expression> & actions);
 
     public :
 
@@ -34,7 +34,7 @@ namespace syntax {
 	 * \param location the location of the scope
 	 * \param content the content of the scope
 	 */
-	static Expression init (const lexing::Word & location, const std::vector<Expression> & vars, const std::vector<Expression> & actions);
+	static Expression init (const lexing::Word & location, const std::vector<Expression> & matchs, const std::vector<Expression> & actions);
 
 	virtual Expression clone () const override;
 
@@ -42,7 +42,7 @@ namespace syntax {
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
-	const std::vector <Expression> & getVars () const;
+	const std::vector <Expression> & getMatchs () const;
 
 	const std::vector <Expression> & getActions () const;
 	

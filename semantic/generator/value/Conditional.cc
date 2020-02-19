@@ -11,7 +11,7 @@ namespace semantic {
 	    _else (Generator::empty ())
 	{}
 	
-	Conditional::Conditional (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_) :
+	Conditional::Conditional (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_, bool isMandatory) :
 	    Value (loc, type),
 	    _test (test),
 	    _content (content),
@@ -27,11 +27,19 @@ namespace semantic {
 		    this-> _content.to <Value> ().isReturner () &&
 		    this-> _else.to <Value> ().isReturner ()
 		);
+	    } else if (isMandatory) {
+		this-> isBreaker (
+		    this-> _content.to <Value> ().isBreaker ()
+		);
+		
+	    	this-> isReturner (
+		    this-> _content.to <Value> ().isReturner ()
+		);
 	    }
 	}	
 	
-	Generator Conditional::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_) {
-	    return Generator {new Conditional (loc, type, test, content, else_)};
+	Generator Conditional::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_, bool isMandatory) {
+	    return Generator {new Conditional (loc, type, test, content, else_, isMandatory)};
 	}
     
 	Generator Conditional::clone () const {

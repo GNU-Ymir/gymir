@@ -343,7 +343,7 @@ namespace semantic {
 	     * \brief return by ref the vardecls and actions to perform in case of catch
 	     * \brief All the actions must return the type type (if type !is void)
 	     */
-	    void validateCatchers (const syntax::Expression & catcher, std::vector <generator::Generator> & varDecl, std::vector <generator::Generator> & typeInfos, std::vector <generator::Generator> & actions, const generator::Generator& type);
+	    void validateCatcher (const syntax::Expression & catcher, generator::Generator & varDecl, generator::Generator & typeInfos, generator::Generator & actions, const generator::Generator& type);
 	    
 	    
 	    /**

@@ -24,14 +24,14 @@ namespace semantic {
 	    
 	    Conditional ();
 
-	    Conditional (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_);
+	    Conditional (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_, bool isMandatory);
 
 	public :
 
 	    /**
 	     * \brief Generate a 
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_, bool isMandatory = false);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern

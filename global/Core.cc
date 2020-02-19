@@ -15,6 +15,8 @@ namespace global {
 			    DUPL_ANY           = "_yrt_dupl_any", 
 			    DUPL_SLICE         = "_yrt_dup_slice", 
 			    EXCEPTION_MODULE   = "exception",
+			    EXCEPTION_RETHROW_FUNC  = "rethrow",
+			    EXCEPTION_TYPE     = "Exception",
 			    EXCEPT_GET_VALUE   = "_yrt_exc_check_type", 
 			    EXCEPT_POP         = "_yrt_exc_pop",
 			    EXCEPT_PUSH        = "_yrt_exc_push", 

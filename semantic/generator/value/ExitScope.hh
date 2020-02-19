@@ -16,16 +16,16 @@ namespace semantic {
 	    Generator _who;
 
 	    Generator _jmpBuf;
+
+	    Generator _catchingVar;
+
+	    Generator _catchingInfoType;
 	    
+	    Generator _catchingAction;
+
 	    std::vector<Generator> _success;
 
 	    std::vector<Generator> _failure;
-
-	    std::vector<Generator> _catchingVars;
-
-	    std::vector<Generator> _catchingInfoType;
-
-	    std::vector<Generator> _catchingActions;
 
 	private :
 
@@ -33,7 +33,7 @@ namespace semantic {
 	    
 	    ExitScope ();
 
-	    ExitScope (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & jmpBufType, const std::vector<Generator> & success, const std::vector<Generator> & failure, const std::vector<Generator> & catchingVar, const std::vector<Generator> & catchingInfos, const std::vector<Generator> & catchingActions);
+	    ExitScope (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & jmpBufType, const std::vector<Generator> & success, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
 
 	public :
 
@@ -41,7 +41,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator& jmpBufType, const std::vector <Generator> & values, const std::vector<Generator> & failure, const std::vector<Generator> & catchingVar, const std::vector<Generator> & catchingInfos, const std::vector<Generator> & catchingActions);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator& jmpBufType, const std::vector <Generator> & values, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -76,17 +76,17 @@ namespace semantic {
 	    /**
 	     * \return the catching vars 
 	     */
-	    const std::vector <Generator> & getCatchingVars () const;
+	    const Generator & getCatchingVar () const;
 
 	    /**
 	     * \return the catching info types
 	     */
-	    const std::vector <Generator> & getCatchingInfoTypes () const;
+	    const Generator & getCatchingInfoType () const;
 	    
 	    /**
 	     * \return the catching actions
 	     */
-	    const std::vector <Generator> & getCatchingActions () const;
+	    const Generator & getCatchingAction () const;
 
 	    /**
 	     * \return the jump_buf type

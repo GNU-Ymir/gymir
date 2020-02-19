@@ -1134,7 +1134,13 @@ namespace semantic {
 			    declMod = replaceAll (block.getDeclModule (), mapping, semantic::Symbol::empty ());
 			for (auto & it : block.getContent ())
 			    content.push_back (replaceAll (it, mapping));
-			return syntax::Block::init (element.getLocation (), block.getEnd (), declMod, content);
+			Expression catcher (Expression::empty ());
+			if (!block.getCatcher ().isEmpty ()) catcher = replaceAll (block.getCatcher (), mapping);
+			std::vector <Expression> scopes;
+			for (auto & it : block.getScopes ())
+			    scopes.push_back (replaceAll (it, mapping));
+			
+			return syntax::Block::init (element.getLocation (), block.getEnd (), declMod, content, catcher, scopes);
 		    }
 		) else of (syntax::Bool, b ATTRIBUTE_UNUSED, return element;
 		) else of (syntax::Break, b, {

@@ -2,9 +2,9 @@
 
 namespace syntax {
 
-    Catch::Catch (const lexing::Word & loc, const std::vector<Expression> & vars, const std::vector<Expression> & actions) : 
+    Catch::Catch (const lexing::Word & loc, const std::vector<Expression> & matchs, const std::vector<Expression> & actions) : 
 	IExpression (loc),
-	_vars (vars),
+	_matchs (matchs),
 	_actions (actions)
     {}
 
@@ -12,8 +12,8 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    Expression Catch::init (const lexing::Word & location, const std::vector<Expression> & vars, const std::vector<Expression> & actions) {
-	return Expression {new (Z0) Catch (location, vars, actions)};
+    Expression Catch::init (const lexing::Word & location, const std::vector<Expression> & matchs, const std::vector<Expression> & actions) {
+	return Expression {new (Z0) Catch (location, matchs, actions)};
     }
 
     Expression Catch::clone () const {
@@ -30,14 +30,14 @@ namespace syntax {
     void Catch::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Catch> ", i, '\t');
 	stream.writeln (this-> getLocation ());
-	for (auto it : Ymir::r (0, this-> _vars.size ())) {
-	    this-> _vars [it].treePrint (stream, i + 1);
+	for (auto it : Ymir::r (0, this-> _matchs.size ())) {
+	    this-> _matchs [it].treePrint (stream, i + 1);
 	    this-> _actions [it].treePrint (stream, i + 2);
 	}	    
     }    
 
-    const std::vector<Expression>& Catch::getVars () const {
-	return this-> _vars;
+    const std::vector<Expression>& Catch::getMatchs () const {
+	return this-> _matchs;
     }
 
     const std::vector<Expression>& Catch::getActions () const {

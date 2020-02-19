@@ -1725,69 +1725,27 @@ namespace semantic {
 	    if (!decl.isEmpty ()) {
 		pushReferent (decl, "validateBlock");
 	    }
-	    
-	    std::vector <Generator> onExit;
-	    std::vector <Generator> onSuccess;
-	    std::vector <Generator> onFailure;
-	    std::vector <Generator> catchVars;
-	    std::vector <Generator> catchInfos;
-	    std::vector <Generator> catchActions;
-	    std::vector <syntax::Expression> toValidate;
-	    
+	    	    
 	    // i is not really volatile, but the compiler seems to want it to be (due to TRY CATCHS)
 	    for (volatile int i = 0 ; i < (int) block.getContent ().size () ; i ++) {
 		TRY (
-		    if (block.getContent ()[i].is <syntax::Scope> ()) {
-			auto scope = block.getContent ()[i].to <syntax::Scope> ();
-			if (scope.isExit ()) {
-			    onExit.push_back (validateValue (scope.getContent()));
-			    if (onExit.back ().to <Value> ().isReturner ()) returner = true;
-			    if (onExit.back ().to <Value> ().isBreaker ()) breaker = true;
-			} else if (scope.isSuccess ()) {
-			    onSuccess.push_back (validateValue (scope.getContent ()));
-			    if (onSuccess.back ().to <Value> ().isReturner ()) returner = true;
-			    if (onSuccess.back ().to <Value> ().isBreaker ()) breaker = true;
-			} else if (scope.isFailure ()) {
-			    onFailure.push_back (validateValue (scope.getContent ()));
-			} else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().str);
-			
-			if (i == (int) block.getContent ().size () - 1) { // Add Unit, scope guard does not have values
-			    values.push_back (None::init (scope.getLocation ()));
-			    type = Void::init (scope.getLocation ());
-			}
-		    } else if (block.getContent ()[i].is <syntax::Catch> ()) {
-			toValidate.push_back (block.getContent ()[i]);
-		    } else {
-			if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
-			    Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
-			}
-			auto value = validateValueNoReachable (block.getContent () [i]);
-		    
-			if (value.to <Value> ().isReturner ()) returner = true;
-			if (value.to <Value> ().isBreaker ()) breaker = true;
-			type = value.to <Value> ().getType ();
-			type.to <Type> ().isRef (false);
-			type.changeLocation (block.getContent ()[i].getLocation ());
-			if (!canImplicitAlias (value)) type.to <Type> ().isMutable (false);
-		    
-			values.push_back (value);
+		    if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
+			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
 		    }
+		    auto value = validateValueNoReachable (block.getContent () [i]);
+		    
+		    if (value.to <Value> ().isReturner ()) returner = true;
+		    if (value.to <Value> ().isBreaker ()) breaker = true;
+		    type = value.to <Value> ().getType ();
+		    type.to <Type> ().isRef (false);
+		    type.changeLocation (block.getContent ()[i].getLocation ());
+		    if (!canImplicitAlias (value)) type.to <Type> ().isMutable (false);
+		    
+		    values.push_back (value);		    
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
-	    }
-
-	    if (errors.size () == 0) {
-		// We do not verify useless expression, it is only warnings, and it must be verified after the all function has been verified
-		for (auto & it : toValidate) { // Validation of the catchers
-		    TRY (
-			validateCatchers (it, catchVars, catchInfos, catchActions, type);
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
-		    } FINALLY;
-		}
 	    }
 
 	    {
@@ -1800,7 +1758,7 @@ namespace semantic {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
-	    }
+	    }	    
 
 	    if (!decl.isEmpty ()) {
 		popReferent ("validateBlock");
@@ -1821,6 +1779,33 @@ namespace semantic {
 		} FINALLY;
 	    }
 
+	    Generator catchVar (Generator::empty ());
+	    Generator catchInfo (Generator::empty ());
+	    Generator catchAction (Generator::empty ());
+	    
+	    if (!block.getCatcher ().isEmpty ()) {
+		validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type);
+	    }
+
+	    std::vector <Generator> onExit;
+	    std::vector <Generator> onSuccess;
+	    std::vector <Generator> onFailure;
+	    
+	    for (auto & scope_ : block.getScopes ()) {
+		auto scope = scope_.to <syntax::Scope> ();
+		if (scope.isExit ()) {
+		    onExit.push_back (validateValue (scope.getContent()));
+		    if (onExit.back ().to <Value> ().isReturner ()) returner = true;
+		    if (onExit.back ().to <Value> ().isBreaker ()) breaker = true;
+		} else if (scope.isSuccess ()) {
+		    onSuccess.push_back (validateValue (scope.getContent ()));
+		    if (onSuccess.back ().to <Value> ().isReturner ()) returner = true;
+		    if (onSuccess.back ().to <Value> ().isBreaker ()) breaker = true;
+		} else if (scope.isFailure ()) {
+		    onFailure.push_back (validateValue (scope.getContent ()));
+		} else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().str);			
+	    } 
+	
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 	    
@@ -1829,72 +1814,65 @@ namespace semantic {
 	    ret.to <Value> ().isReturner (returner);
 	    
 	    if (onSuccess.size () != 0) ret = SuccessScope::init (block.getLocation (), type, ret, onSuccess);
-	    if (onExit.size () != 0 || onFailure.size () != 0 || catchVars.size () != 0) {
+	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) {
 		auto jmp_buf_type = validateType (syntax::Var::init ({block.getLocation (), global::CoreNames::get (JMP_BUF_TYPE)}));
 		onFailure.insert (onFailure.end (), onExit.begin (), onExit.end ());
-		return ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit, onFailure, catchVars, catchInfos, catchActions);
+		return ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
 	    }
 	    return ret;
 	}
 
-	void Visitor::validateCatchers (const syntax::Expression & catcher, std::vector <Generator> & varDecl, std::vector <Generator> & typeInfos, std::vector <Generator> & actions, const generator::Generator& typeBlock) {
-	    auto & vars = catcher.to <syntax::Catch> ().getVars ();
-	    auto & syntaxActions = catcher.to <syntax::Catch> ().getActions ();
-	    std::vector <std::string> errors;
-	    for (auto it : Ymir::r (0, vars.size ())) {
-		enterBlock ();
-		{
-		    TRY ( 
-			auto var = validateVarDeclValue (vars [it].to <syntax::VarDecl> (), false);
-			auto type = var.to <generator::VarDecl> ().getVarType ();
-			auto simpleType = type;
-			type.to <Type> ().isRef (true);
-			type.to <Type> ().isMutable (false);
-			
-			simpleType.to <Type> ().isRef (false);
-			simpleType.to <Type> ().isMutable (false);
-			
-			var = generator::VarDecl::init (var.getLocation (), var.getName (), type, Generator::empty (), false);
-			if (var.getName () != Keys::UNDER)
-			    insertLocal (var.getName (), var);
-			
-			if (!var.to <generator::VarDecl> ().getVarType ().isEmpty ()) {
-			    for (auto & j : varDecl) {
-				if (type.to <Type> ().isCompatible (j.to <generator::VarDecl> ().getVarType ())) {
-				    auto note = Ymir::Error::createNote (j.getLocation ());
-				    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (CATCH_MULTIPLE_TIME), type.prettyString ());
-				}		    
-			    }			    
-			    typeInfos.push_back (validateTypeInfo (var.getLocation (), simpleType));
-			} else {
-			    for (auto & j : varDecl) {
-				if (j.to <generator::VarDecl> ().getName () == Keys::UNDER) {
-				    auto note = Ymir::Error::createNote (j.getLocation ());
-				    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (CATCH_MULTIPLE_TIME), "any");
-				}
-			    }
-			    typeInfos.push_back (None::init (catcher.getLocation ()));
-			}									 
-			varDecl.push_back (var);
-			auto value = validateValue (syntaxActions [it]);
-			if (!type.is<Void> ()) {
-			    verifyMemoryOwner (syntaxActions [it].getLocation (), typeBlock, value, false);
-			}
-			actions.push_back (value);						
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}
-		{
-		    TRY (
-			quitBlock ();
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}
+	void Visitor::validateCatcher (const syntax::Expression & catcher, Generator & varDecl, Generator & typeInfo, Generator & action, const generator::Generator& typeBlock) {
+	    auto matchs = catcher.to <syntax::Catch> ().getMatchs ();
+	    auto actions = catcher.to <syntax::Catch> ().getActions ();
+	    std::vector <std::string> errors;	    
+	    enterBlock ();
+	    {
+		TRY (
+		    auto loc = catcher.getLocation ();
+		    auto syntaxType = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+		    auto type = validateType (syntaxType);
+		    type.to <Type> ().isRef (false);
+		    type.to <Type> ().isMutable (false);
+		    
+		    varDecl = generator::VarDecl::init ({loc, "#catch"}, "#catch", type, Generator::empty (), false);
+		    insertLocal ("#catch", varDecl);
+		    typeInfo = validateTypeInfo (loc, type);
+		    auto vref = VarRef::init (loc, "#catch", type, varDecl.getUniqId (),  false, Generator::empty ());
+
+		    auto syntaxRethrow = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_RETHROW_FUNC)});
+		    matchs.push_back (syntax::Var::init ({loc, "_"}));
+		    auto rethrow = validateValue (syntax::MultOperator::init (
+			{loc, Token::LPAR}, {loc, Token::RPAR},
+			syntaxRethrow,
+			{}
+		    ));
+		    
+		    rethrow.to <Value> ().isReturner (true); // This is a returner, the rethrow will break the current scope		    
+		    actions.push_back (TemplateSyntaxWrapper::init (loc, rethrow));
+		    
+		    auto match = syntax::Match::init (loc, TemplateSyntaxWrapper::init (loc, vref),
+					      matchs, actions
+		    );
+		    
+		    action = validateValue (match);
+		    if (!action.to <Value> ().isReturner () && !action.to <Value> ().isBreaker ()) {
+			this-> verifyMemoryOwner (loc, typeBlock, action, false, true, false);
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
 	    }
+	    {
+		TRY (
+		    this-> discardAllLocals ();
+		    quitBlock ();
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }	
 	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);
@@ -2760,7 +2738,9 @@ namespace semantic {
 
 	    if (!_if.getElsePart ().isEmpty ()) {
 		auto _else = validateValueNoReachable (_if.getElsePart ());
-		verifyCompatibleType (_if.getLocation (), _else.to<Value> ().getType (), type);
+		if (!_else.to <Value> ().isReturner () && !_else.to <Value> ().isBreaker ()) {
+		    verifyCompatibleType (_if.getLocation (), _else.to<Value> ().getType (), type);
+		}
 		return Conditional::init (_if.getLocation (), type, test, content, _else);	    
 	    } else {
 		verifyCompatibleType (_if.getLocation (), Void::init (_if.getLocation ()), type);
@@ -3087,24 +3067,21 @@ namespace semantic {
 	Generator Visitor::validateThrow (const syntax::Throw & thr) {
 	    auto inner = this-> validateValue (thr.getValue ());
 	    auto type = inner.to <Value> ().getType ();
-	    auto simpleType = inner.to<Value> ().getType ();
-	    simpleType.to <Type> ().isRef (false);
-	    simpleType.to <Type> ().isMutable (false);
+	    auto syntaxType = createVarFromPath (thr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+	    auto ancType = validateType (syntaxType);
+
+	    verifyCompatibleType (thr.getLocation (), ancType, type);
 	    
-	    type.to <Type> ().isRef (true);
-	    auto value = Copier::init (thr.getLocation (), type, inner, true);
-	    Generator info (Generator::empty ());
-	    if (type.is <ClassRef> () && !type.to <ClassRef> ().getRef ().to <semantic::Class> ().getTypeInfo ().isEmpty ()) {
-		auto loc = thr.getLocation ();
-		auto bin = syntax::Binary::init ({loc, Token::DCOLON},
-						 TemplateSyntaxWrapper::init (loc, inner),
-						 syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
-						 syntax::Expression::empty ()
-		);
-		info = validateValue (bin);
-	    } else 
-		info = validateTypeInfo (thr.getLocation (), simpleType);
-	    return Throw::init (thr.getLocation (), info, value);
+	    auto loc = thr.getLocation ();
+	    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+					     TemplateSyntaxWrapper::init (loc, inner),
+					     syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+					     syntax::Expression::empty ()
+	    );
+	    auto info = validateValue (bin);
+
+	    
+	    return Throw::init (thr.getLocation (), info, inner);
 	}
 
 	Generator Visitor::validateMatch (const syntax::Match & matcher) {

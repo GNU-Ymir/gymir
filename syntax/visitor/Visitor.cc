@@ -41,7 +41,7 @@ namespace syntax {
 	    Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 	    Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
 	    Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::CLASS, Keys::ALIAS,
-	    Keys::STATIC
+	    Keys::STATIC, Keys::CATCH
 	};
 	
 	visit._operators = {
@@ -850,13 +850,11 @@ namespace syntax {
 	if (next == Keys::DO)       return visitDoWhile ();
 	if (next == Keys::FOR)      return visitFor ();
 	if (next == Keys::MATCH)    return visitMatch ();
-	if (next == Keys::SCOPE)    return visitScope ();
 	if (next == Keys::LET)      return visitVarDeclaration ();
 	if (next == Keys::RETURN)   return visitReturn ();
 	if (next == Keys::FUNCTION) return visitFunctionType ();
 	if (next == Keys::DELEGATE) return visitFunctionType ();
 	if (next == Keys::LOOP)     return visitWhile ();
-	if (next == Keys::CATCH)    return visitCatch ();
 	if (next == Keys::THROW_K)  return visitThrow ();
 	if (next == Keys::VERSION)  return visitVersion ();
 	if (next == Keys::PRAGMA)   return visitPragma ();
@@ -975,12 +973,25 @@ namespace syntax {
 	    } else if (end == Token::SEMI_COLON)
 		last = true;
 	} while (end != Token::RACC);
+
+	auto ct = this-> _lex.consumeIf ({Keys::CATCH});
+	Expression catcher (Expression::empty ());
+	if (ct == Keys::CATCH) catcher = visitCatch ();
+
+	std::vector <Expression> scopes;
+	do {
+	    auto next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
+	    if (next != "") {
+		this-> _lex.consumeIf ({Token::DARROW});
+		scopes.push_back (Scope::init (next, visitExpression ()));
+	    } else break;
+	} while (true);	
 	
 	if (last) content.push_back (Unit::init (end));
 	if (decls.size () != 0) {
-	    return Block::init (begin, end, Module::init ({begin, "_"}, decls), content);
+	    return Block::init (begin, end, Module::init ({begin, "_"}, decls), content, catcher, scopes);
 	} else {
-	    return Block::init (begin, end, Declaration::empty (), content);
+	    return Block::init (begin, end, Declaration::empty (), content, catcher, scopes);
 	}
     }    
 
@@ -1164,37 +1175,21 @@ namespace syntax {
     }
 
     Expression Visitor::visitCatch () {
-	auto begin = this-> _lex.next ();
+	auto begin = this-> _lex.rewind ().next ();
 	auto next = this-> _lex.consumeIf ({Token::LACC});
-	std::vector <Expression> vars;
-	std::vector <Expression> actions;
-	if (next == Token::LACC) {
-	    do {
-		lexing::Word name = this-> _lex.consumeIf ({Keys::UNDER});
-		if (name != Keys::UNDER) {
-		    name = visitIdentifier ();
-		}
-		Expression type (Expression::empty ());
-		if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
-		    type = visitExpression (10);
-		vars.push_back (VarDecl::init (name, {}, type, Expression::empty ()));				    
-		this-> _lex.next ({Token::DARROW});
-		actions.push_back (visitExpression ());
-		next = this->_lex.consumeIf ({Token::RACC});
-	    } while (next != Token::RACC);	    
-	} else {
-	    lexing::Word name = this-> _lex.consumeIf ({Keys::UNDER});
-	    if (name != Keys::UNDER) {
-		name = visitIdentifier ();
-	    }
-	    Expression type (Expression::empty ());
-	    if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
-		type = visitExpression (10);
-	    vars.push_back (VarDecl::init (name, {}, type, Expression::empty ()));				    
+	std::vector <Expression> matchs;
+	std::vector <Expression> actions;	
+	do {
+	    auto expr = visitMatchExpression ();
 	    this-> _lex.next ({Token::DARROW});
-	    actions.push_back (visitExpression ());
-	}
-	return Catch::init (begin, vars, actions);
+	    auto action = visitExpression (10);
+	    this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    matchs.push_back (expr);
+	    actions.push_back (action);
+	    next = this-> _lex.consumeIf ({Token::RACC});	    
+	} while (next != Token::RACC);
+	
+	return Catch::init (begin, matchs, actions);
     }
     
     Expression Visitor::visitVersion () {
