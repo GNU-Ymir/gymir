@@ -309,6 +309,7 @@ namespace semantic {
 	    for (auto &it : func.getThrowers ()) {
 		TRY (
 		    throwers.push_back (validateType (it));
+		    throwers.back ().to <Type> ().changeLocation (it.getLocation ());
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -1013,6 +1014,7 @@ namespace semantic {
 	    for (auto &it : constr.getThrowers ()) {
 		TRY (
 		    throwers.push_back (validateType (it));
+		    throwers.back ().to <Type> ().changeLocation (it.getLocation ());
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
@@ -1101,6 +1103,7 @@ namespace semantic {
 	    for (auto &it : func.getThrowers ()) {
 		TRY (
 		    throwers.push_back (validateType (it));
+		    throwers.back ().to <Type> ().changeLocation (it.getLocation ());
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
