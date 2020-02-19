@@ -13,7 +13,9 @@ namespace semantic {
 	    Value (loc, type),
 	    _operand (operand),
 	    _operator (op)	    
-	{}
+	{
+	    this-> setThrowers (this-> _operand.getThrowers ());
+	}
 	
 	Generator Unary::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & operand) {
 	    return Generator {new Unary (loc, op, type, operand)};

@@ -664,7 +664,13 @@ namespace semantic {
 	     * \brief Verify that the type is complete and can be used at runtime to store value
 	     */
 	    void verifyCompleteType (const lexing::Word & loc, const generator::Generator & type);
-	    
+
+	    /**
+	     * Verify the throws declared by the function, and the throws found inside the function
+	     * \return by ref, unused the list of declared throws that were not found in the function
+	     * \return by ref, notfound the list of throws that were not declared in the prototype
+	     */
+	    void verifyThrows (const std::vector <generator::Generator> & types, const std::vector <generator::Generator> &rethrows, std::vector <generator::Generator> & unused, std::vector <generator::Generator> & notfound);
 	    
 	    /**
 	     * \brief Applicable to the type of a vardecl, 
@@ -961,6 +967,11 @@ namespace semantic {
 	    
 	    
 	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
+
+	    /**
+	     * \brief Append a else to a conditional (recursively)
+	     */
+	    generator::Generator addElseToConditional (const generator::Generator & cond, const generator::Generator & _else);
 	    
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
 

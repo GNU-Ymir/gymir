@@ -21,7 +21,8 @@ namespace semantic {
 	ISymbol (other),
 	_table (other._table.clone (this)), 
 	_content (other._content),
-	_class (Symbol::empty ())
+	_class (Symbol::empty ()),
+	_throwers (other._throwers)
     {}
     
     Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) {
@@ -109,9 +110,17 @@ namespace semantic {
     void Constructor::setClass (const Symbol& sym) {
 	this-> _class = sym;
     }
-
+     
     const Symbol & Constructor::getClass () const {
 	return this-> _class;
+    }
+
+    void Constructor::setThrowers (const std::vector <syntax::Expression> & throwers) {
+	this-> _throwers = throwers;
+    }
+
+    const std::vector <syntax::Expression> & Constructor::getThrowers () const {
+	return this-> _throwers;
     }
     
 }

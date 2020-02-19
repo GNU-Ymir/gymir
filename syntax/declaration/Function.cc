@@ -231,5 +231,13 @@ namespace syntax {
     bool Function::isOver () const {
 	return this-> _isOver;
     }
+
+    void Function::setThrowers (const std::vector <syntax::Expression> & throwers) {
+	this-> _throwers = throwers;
+    }
+
+    const std::vector <syntax::Expression> & Function::getThrowers () const {
+	return this-> _throwers;
+    }
     
 }

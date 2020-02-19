@@ -17,6 +17,11 @@ namespace semantic {
 	    _isDo (isDo)
 	{
 	    this-> isBreaker (false);
+	    auto thrs = this-> _test.getThrowers ();
+	    auto &cth = this-> _content.getThrowers ();
+	    thrs.insert (thrs.end (), cth.begin (), cth.end ());
+	    
+	    this-> setThrowers (thrs);
 	}
 	
 	Generator Loop::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, bool isDo) {

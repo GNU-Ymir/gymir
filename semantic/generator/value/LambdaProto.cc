@@ -25,7 +25,11 @@ namespace semantic {
 	    _isRefClosure (isRefClosure),
 	    _isMoveClosure (isMoveClosure),
 	    _index (index)
-	{}
+	{
+	    // Logically, a lambda proto can't throw anything
+	    // I suppose its safer to prohibit any throw inside lambdas,
+	    // I can't see how we can check the throwing system when using lambdas
+	}
 
 	std::vector <Generator> LambdaProto::getTypes (const std::vector <Generator> & params) {
 	    std::vector <Generator> types;

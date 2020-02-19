@@ -13,13 +13,18 @@ namespace semantic {
 	    _type (Generator::empty ())	    
 	{}
 
-	FrameProto::FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic) :
+	FrameProto::FrameProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, bool isSafe, const std::vector <Generator> & throwers) :
 	    Value (loc, LambdaType::init (loc, type, getTypes (params))),
 	    _params (params),
 	    _type (type),
 	    _name (name),
-	    _isCVariadic (isCVariadic)
-	{}
+	    _isCVariadic (isCVariadic),
+	    _isSafe (isSafe)
+	{
+	    auto th = throwers;
+	    for (auto &it : th) it.changeLocation (loc);
+	    this-> setThrowers (th);		
+	}
 
 	std::vector <Generator> FrameProto::getTypes (const std::vector <Generator> & params) {
 	    std::vector <Generator> types;
@@ -29,8 +34,8 @@ namespace semantic {
 	    return types;
 	}
 		   
-	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic) {
-	    return Generator {new FrameProto (loc, name, type, params, isCVariadic)};
+	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, bool isSafe, const std::vector <Generator> & throwers) {
+	    return Generator {new FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers)};
 	}
     
 	Generator FrameProto::clone () const {

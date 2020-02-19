@@ -2,6 +2,7 @@
 #include <ymir/semantic/generator/type/Void.hh>
 #include <ymir/semantic/generator/value/ProtoVar.hh>
 #include <ymir/semantic/generator/type/LambdaType.hh>
+#include <ymir/semantic/symbol/Constructor.hh>
 
 namespace semantic {
 
@@ -15,13 +16,17 @@ namespace semantic {
 	    _ref (Symbol::empty ())
 	{}
 
-	ConstructorProto::ConstructorProto (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params) :
+	ConstructorProto::ConstructorProto (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params, const std::vector <Generator> &throwers) :
 	    Value (loc, LambdaType::init (loc, type, getTypes (params))),
 	    _params (params),
 	    _type (type),
 	    _name (name),
 	    _ref (ref)
-	{}
+	{
+	    auto th = throwers;
+	    for (auto &it : th) it.changeLocation (loc);
+	    this-> setThrowers (th);
+	}
 
 	std::vector <Generator> ConstructorProto::getTypes (const std::vector <Generator> & params) {
 	    std::vector <Generator> types;
@@ -31,8 +36,8 @@ namespace semantic {
 	    return types;
 	}
 		   
-	Generator ConstructorProto::init (const lexing::Word & loc, const std::string &name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params) {
-	    return Generator {new ConstructorProto (loc, name, ref, type, params)};
+	Generator ConstructorProto::init (const lexing::Word & loc, const std::string &name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params, const std::vector <Generator> &throwers) {
+	    return Generator {new ConstructorProto (loc, name, ref, type, params, throwers)};
 	}
     
 	Generator ConstructorProto::clone () const {

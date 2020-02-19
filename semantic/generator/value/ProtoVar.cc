@@ -17,6 +17,7 @@ namespace semantic {
 	{
 	    this-> isLocal (false);
 	    this-> isLvalue (isMutable);
+	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 
 	Generator ProtoVar::init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable) {

@@ -25,7 +25,7 @@ namespace semantic {
 	    
 	    ConstructorProto ();
 
-	    ConstructorProto (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector <Generator> & params);
+	    ConstructorProto (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector <Generator> & params, const std::vector <Generator> &throwers);
 
 	public :
 
@@ -33,7 +33,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector <Generator> & params);
+	    static Generator init (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector <Generator> & params, const std::vector <Generator> &throwers);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern

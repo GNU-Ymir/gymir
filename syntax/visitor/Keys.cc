@@ -112,6 +112,7 @@ std::string     Keys::SUCCESS      = "success";
 std::string     Keys::SUPER	   = "super";
 std::string     Keys::TEMPLATE     = "is";
 std::string     Keys::THROW_K	   = "throw";
+std::string     Keys::THROWS	   = "throws";
 std::string     Keys::TRAIT	   = "trait";
 std::string     Keys::TRUE_	   = "true";
 std::string     Keys::TRUSTED	   = "trusted";

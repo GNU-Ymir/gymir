@@ -18,6 +18,11 @@ namespace semantic {
 	    _index (index)
 	{
 	    this-> isLvalue (true);
+	    auto vth = this-> _array.getThrowers ();
+	    auto & ith = this-> _index.getThrowers ();
+	    vth.insert (vth.end (), ith.begin (), ith.end ());
+	    
+	    this-> setThrowers (vth);
 	}
 	
 	Generator ArrayAccess::init (const lexing::Word & loc, const Generator & type, const Generator & array, const Generator & index) {

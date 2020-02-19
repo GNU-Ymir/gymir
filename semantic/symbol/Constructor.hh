@@ -20,7 +20,9 @@ namespace semantic {
 	syntax::Declaration _content;
 
 	Symbol _class;
-	
+
+	std::vector <syntax::Expression> _throwers;
+		
     private :
 
 	friend Symbol;
@@ -68,6 +70,10 @@ namespace semantic {
 
 	void setClass (const Symbol & sym);
 
+	void setThrowers (const std::vector <syntax::Expression> & thrs);
+
+	const std::vector <syntax::Expression> & getThrowers () const;
+	
 	const Symbol & getClass () const;
 	
     };    

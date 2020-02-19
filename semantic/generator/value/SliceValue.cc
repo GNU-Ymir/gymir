@@ -14,7 +14,14 @@ namespace semantic {
 	    Value (loc, type),
 	    _ptr (ptr),
 	    _len (len)
-	{}
+	{
+	    // No throwable thing there i think, but to e sure :
+	    auto pth = this-> _ptr.getThrowers ();
+	    auto &lth = this-> _len.getThrowers ();
+	    pth.insert (pth.end (), lth.begin (), lth.end ());
+	    
+	    this-> setThrowers (pth);
+	}
        
 	Generator SliceValue::init (const lexing::Word & loc, const Generator & type, const Generator & ptr, const Generator & len) {
 	    return Generator {new (Z0) SliceValue (loc, type, ptr, len)};

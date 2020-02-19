@@ -13,7 +13,15 @@ namespace semantic {
 	    Value (loc, type),
 	    _who (who),
 	    _values (values)
-	{}
+	{
+	    auto wth = this-> _who.getThrowers ();
+	    for (auto & it : this-> _values) {
+		auto &ith = it.getThrowers ();
+		wth.insert (wth.end (), ith.begin (), ith.end ());
+	    }
+
+	    this-> setThrowers (wth);
+	}
 	
 	Generator SuccessScope::init (const lexing::Word & loc, const Generator & type, const Generator & who, const std::vector <Generator> & values) {
 	    return Generator {new SuccessScope (loc, type, who, values)};

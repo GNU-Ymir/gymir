@@ -18,6 +18,11 @@ namespace semantic {
 	    _index (index)
 	{
 	    this-> isLvalue (true);
+	    auto sth = this-> _slice.getThrowers ();
+	    auto &ith = this-> _index.getThrowers ();
+	    sth.insert (sth.end (), ith.begin (), ith.end ());
+	    
+	    this-> setThrowers (sth);
 	}
 	
 	Generator SliceAccess::init (const lexing::Word & loc, const Generator & type, const Generator & slice, const Generator & index) {

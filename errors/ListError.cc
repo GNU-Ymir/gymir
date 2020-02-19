@@ -2,9 +2,7 @@
 
 namespace Ymir {    
     DECLARE_ENUM_WITH_TYPE (ExternalError, std::string,
-			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
-
-			    
+   			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
 			    ALLOC_ABSTRACT_CLASS            = "class %(y) is declared abstract",
 			    ASSERT_FAILED                   = "assertion failed : %(y)",
 			    BORROWED_HERE		    = "borrow occured here",
@@ -55,6 +53,7 @@ namespace Ymir {
 			    MALFORMED_CHAR		    = "malformed literal, number of %(y) is %(y)",
 			    MATCH_CALL                      = "match call can only work on class or struct, not %(y)",
 			    MATCH_NO_DEFAULT                = "match of type %(y) has no default match case",
+			    MATCH_FINAL_NO_DEFAULT          = "final match has no default match case",
 			    MATCH_PATTERN_CLASS             = "inner patterns of a class pattern matching must be named expressions",
 			    MISMATCH_ARITY                  = "mismatch arity in tuple destructor (%(y)) and (%(y))",
 			    MOVE_ONLY_CLOSURE               = "move is only usable for lambda closure",
@@ -64,10 +63,10 @@ namespace Ymir {
 			    MUTABLE_CONST_RETURN	    = "a return value cannot be mutable, if it is not a reference",
 			    NEVER_USED			    = "symbol %(y) declared but never used",
 			    NOT_ABSTRACT_NO_OVER            = "class %(y) is not abstract, but does not override empty parent method %(y)",
+			    NOT_AN_ALIAS                    = "type %(y) is not an aliasable type",
 			    NOT_A_CLASS                     = "type %(y) is not a class type",
 			    NOT_A_LVALUE		    = "not a lvalue",
 			    NOT_A_STRUCT                    = "type %(y) is not a struct type",
-			    NOT_AN_ALIAS                    = "type %(y) is not an aliasable type",
 			    NOT_IMPL_TRAIT                  = "class %(y) does not implement trait %(y)",
 			    NOT_ITERABLE                    = "%(y) type is not iterable",
 			    NOT_ITERABLE_WITH               = "%(y) type is not iterable with %(y) vars",
@@ -99,8 +98,8 @@ namespace Ymir {
 			    SCOPE_OUT_OF_SCOPE              = "scope guard used as expression", 
 			    SHADOWING_DECL		    = "declaration of %(y) shadow another declaration",
 			    SPACE_EXTERN_C                  = "extern C cannot be namespaced",
-			    SPECIALISATION_WORK_WITH_BOTH   = "%(y) called with {%(y)} work with both",
 			    SPECIALISATION_WORK_TYPE_BOTH   = "type match both",
+			    SPECIALISATION_WORK_WITH_BOTH   = "%(y) called with {%(y)} work with both",
 			    STATIC_ARRAY_REF		    = "left operand is a static array, it cannot store a reference to a dynamic array",
 			    SYNTAX_ERROR_AT		    = "[%] expected, when %(y) found",	// syntax error a specific location
 			    SYNTAX_ERROR_AT_SIMPLE	    = "%(y) unexpected",	// syntax error a specific location
@@ -108,6 +107,10 @@ namespace Ymir {
 			    SYNTAX_ERROR_MISSING_TEMPL_PAR  = "multiple ! arguments are not allowed",
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
 			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
+
+			    THROWS_IN_LAMBDA                = "lambda functions must be safe, but there are exceptions not caught",
+			    THROWS_NOT_DECLARED             = "function %(y) might throw an exception of type %(y), but that is not declared in its prototype",
+			    THROWS_NOT_USED                 = "function %(y) prototype inform about a possible throw of an exception of type %(y), but this is not true",
 			    TRAIT_NO_METHOD                 = "trait %(y) does not have any method %(y)",
 			    UNDEFINED_BIN_OP		    = "undefined operator %(y) for types %(y) and %(y)",
 			    UNDEFINED_BRACKETS_OP	    = "index operator is not defined for type %(y) and {%(y)}",

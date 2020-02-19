@@ -15,7 +15,13 @@ namespace semantic {
 	    _left (left),
 	    _right (right),
 	    _operator (op)	    
-	{}
+	{
+	    auto  lth = this-> _left.getThrowers ();
+	    auto &rth = this-> _right.getThrowers ();
+	    lth.insert (lth.end (), rth.begin (), rth.end ());
+	    
+	    this-> setThrowers (lth);
+	}
 	
 	Generator Binary::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & left, const Generator & right) {
 	    return Generator {new Binary (loc, op, type, left, right)};

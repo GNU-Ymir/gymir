@@ -15,6 +15,7 @@ namespace semantic {
 	    _refId (refId)	    
 	{
 	    this-> isLvalue (true);
+	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 	
 	Generator UniqValue::init (const lexing::Word & location, const Generator & type, const Generator & value) {

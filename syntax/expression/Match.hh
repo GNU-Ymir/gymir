@@ -27,7 +27,7 @@ namespace syntax {
 
     public :
 
-	static Expression init (const lexing::Word & token, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal = true);
+	static Expression init (const lexing::Word & token, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal = false);
 
 	Expression clone () const override;
 

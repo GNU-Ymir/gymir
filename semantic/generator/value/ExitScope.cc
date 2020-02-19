@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/ExitScope.hh>
+#include <ymir/semantic/generator/value/Conditional.hh>
 
 namespace semantic {
 
@@ -30,7 +31,30 @@ namespace semantic {
 	    _catchingAction (catchingAction),
 	    _success (success),
 	    _failure (failure)
-	{}
+	{
+	    std::vector <Generator> thrs;
+	    if (this-> _catchingAction.isEmpty ()) {
+		// If the catchingAction exists, it catch all the exceptions
+		// otherwise, the scope is not safe
+		auto &wth = this-> _who.getThrowers ();
+		thrs.insert (thrs.end (), wth.begin (), wth.end ());	    
+	    }
+	    
+	    for (auto & it : this-> _failure) {
+		auto &fth = it.getThrowers ();
+		thrs.insert (thrs.end (), fth.begin (), fth.end ());
+	    }
+
+	    for (auto & it : this-> _success) {
+		auto &sth = it.getThrowers ();
+		thrs.insert (thrs.end (), sth.begin (), sth.end ());
+	    }
+
+	    auto &cth = this-> _catchingAction.getThrowers ();
+	    thrs.insert (thrs.end (), cth.begin (), cth.end ());
+	    
+	    this-> setThrowers (thrs);
+	}
 	
 	Generator ExitScope::init (const lexing::Word & loc,
 				   const Generator & type,

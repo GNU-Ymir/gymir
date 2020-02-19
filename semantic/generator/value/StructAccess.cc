@@ -15,7 +15,8 @@ namespace semantic {
 	    _str (str),
 	    _field (field)
 	{
-	    this-> isLvalue (true);
+	    this-> isLvalue (true);	   	    
+	    this-> setThrowers (str.getThrowers ());
 	}
 
 

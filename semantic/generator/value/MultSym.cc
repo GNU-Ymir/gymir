@@ -12,7 +12,9 @@ namespace semantic {
 	MultSym::MultSym (const lexing::Word & loc, const std::vector <Generator> & gens) :
 	    Value (loc, NoneType::init (loc)),
 	    _gens (gens)
-	{}	
+	{
+	    // MultSym are temporary elements, used only at validation time, they cant be throwers
+	}	
 	
 	Generator MultSym::init (const lexing::Word & loc, const std::vector <Generator> & gens) {
 	    return Generator {new MultSym (loc, gens)};

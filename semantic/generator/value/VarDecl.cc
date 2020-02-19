@@ -23,6 +23,8 @@ namespace semantic {
 	{
 	    this-> _varRefId = __lastId__;
 	    __lastId__ += 1;
+	    
+	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 
 	Generator VarDecl::init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value, bool isMutable) {

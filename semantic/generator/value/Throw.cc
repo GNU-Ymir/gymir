@@ -19,6 +19,9 @@ namespace semantic {
 	    _typeInfo (typeInfo)
 	{
 	    this-> isReturner (true);
+	    auto type = this-> _value.to <Value> ().getType ();
+	    type.changeLocation (loc);
+	    this-> setThrowers ({type});
 	}
 	
 	Generator Throw::init (const lexing::Word & loc, const Generator & typeInfo, const Generator & value) {

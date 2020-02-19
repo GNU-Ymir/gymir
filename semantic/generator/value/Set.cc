@@ -11,7 +11,15 @@ namespace semantic {
 	Set::Set (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) :
 	    Value (loc, type),
 	    _content (content)
-	{}
+	{
+	    std::vector <Generator> thrs;
+	    for (auto & it : this-> _content) {
+		auto &ith = it.getThrowers ();
+		thrs.insert (thrs.end (), ith.begin (), ith.end ());
+	    }
+	    
+	    this-> setThrowers (thrs);
+	}
        
 	Generator Set::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {
 	    return Generator {new (Z0) Set (loc, type, values)};

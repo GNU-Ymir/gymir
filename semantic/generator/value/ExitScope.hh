@@ -26,7 +26,7 @@ namespace semantic {
 	    std::vector<Generator> _success;
 
 	    std::vector<Generator> _failure;
-
+	    
 	private :
 
 	    friend Generator;

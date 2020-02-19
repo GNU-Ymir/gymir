@@ -13,6 +13,13 @@ namespace semantic {
 	    _content (content)
 	{
 	    this-> isLvalue (isLvalue);
+	    std::vector <Generator> thr;
+	    for (auto & it : this-> _content) {
+		auto &ith = it.getThrowers ();
+		thr.insert (thr.end (), ith.begin (), ith.end ());
+	    }
+	    
+	    this-> setThrowers (thr);
 	}
        
 	Generator Block::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {

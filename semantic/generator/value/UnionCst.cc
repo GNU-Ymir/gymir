@@ -22,6 +22,7 @@ namespace semantic {
 	    _param (param)
 	{
 	    this-> isLvalue (true);
+	    this-> setThrowers (this-> _param.getThrowers ());
 	}
 	
 	Generator UnionCst::init (const lexing::Word & loc, const Generator & type, const Generator & str, const std::string & name, const Generator & typeCst, const Generator & param) {

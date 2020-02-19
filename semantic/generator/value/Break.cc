@@ -16,6 +16,7 @@ namespace semantic {
 	    _value (value)
 	{
 	    this-> isBreaker (true);
+	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 	
 	Generator Break::init (const lexing::Word & loc, const Generator & type, const Generator & value) {

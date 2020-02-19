@@ -420,6 +420,8 @@ namespace syntax {
 
     Declaration Visitor::visitClassConstructor () {
 	auto location = this-> _lex.rewind ().next ();
+	auto cas = visitAttributes ();
+	
 	auto before_template = this-> _lex.tell ();
 	auto templates = visitTemplateParameters ();
 	auto token = this-> _lex.next ();
@@ -464,24 +466,30 @@ namespace syntax {
 	}
 	
 	auto body = visitExpression ();
+	auto throws = this-> _lex.consumeIf ({Keys::THROWS});
+	std::vector <syntax::Expression> throwers;
+	if (throws == Keys::THROWS) {
+	    throwers = visitThrowers ();
+	}
+	
 	if (templates.size () != 0) {
-	    return Template::init (location, templates, Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf));
+	    return Template::init (location, templates, Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf, cas, throwers));
 	} else 
-	    return Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf);
-    }
-    
-    Declaration Visitor::visitClassDestructor () {
-	auto location = this-> _lex.rewind (2).next ();
-	this-> _lex.next ();
-	location.str = Keys::SELF_TILDE;
-	
-	this-> _lex.next ({Token::LPAR});
-	this-> _lex.next ({Token::RPAR});
-	
-	auto body = visitFunctionBody ();
-	return Function::init (location, Function::Prototype::init ({}, Expression::empty (), false), body);	
+	    return Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf, cas, throwers);
     }
 
+    std::vector <syntax::Expression> Visitor::visitThrowers () {
+	std::vector <syntax::Expression> throwers;
+	do {
+	    throwers.push_back (visitExpression ());
+	    auto n =this-> _lex.consumeIf ({Token::SEMI_COLON, Token::COMA});
+	    if (n != Token::COMA) {
+		break;
+	    }
+	} while (true);
+	return throwers;
+    }
+    
     Declaration Visitor::visitEnum () {
 	auto location = this-> _lex.rewind ().next ({Keys::ENUM});
 	Expression type (Expression::empty ());
@@ -537,9 +545,17 @@ namespace syntax {
 
 	auto proto = visitFunctionPrototype (false, isClass);
 	auto body = visitFunctionBody ();
+	
+	auto throws = this-> _lex.consumeIf ({Keys::THROWS});
+	std::vector <syntax::Expression> throwers;
+	if (throws == Keys::THROWS) {
+	    throwers = visitThrowers ();
+	}
+	
 	auto function = Function::init (name, proto, body);
 	function.to <Function> ().setCustomAttributes (attribs);
-
+	function.to <Function> ().setThrowers (throwers);
+	
 	if (templates.size () != 0) {
 	    return Template::init (name, templates, function, test);
 	} else {
@@ -590,22 +606,10 @@ namespace syntax {
 	Expression in (Expression::empty ()), body (Expression::empty ()), out (Expression::empty ());
 	lexing::Word name;
 	
-	auto token = this-> _lex.next ();	
-	if (token == Keys::PRE) {
-	    in = visitExpression ();
-	    token = this-> _lex.next ();
-	}
+	auto token = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	if (token == Token::SEMI_COLON)
+	    return Function::Body::init (in, Expression::empty (), out, name);	
 	
-	if (token == Keys::POST) {
-	    name = visitIdentifier ();
-	    out = visitExpression ();
-	} else this-> _lex.rewind ();
-
-	if (in.isEmpty () && out.isEmpty ()) {
-	    token = this-> _lex.consumeIf ({Token::SEMI_COLON});
-	    if (token == Token::SEMI_COLON)
-		return Function::Body::init (in, Expression::empty (), out, name);	
-	}
 	return Function::Body::init (in, visitExpression (), out, name);	
     }
 
@@ -620,7 +624,7 @@ namespace syntax {
 	if (token == Token::LACC) {
 	    std::vector <lexing::Word> vars;
 	    do {
-		vars.push_back (visitIdentifier ());
+		vars.push_back (visitIdentifier ());		
 		token = this-> _lex.next ({Token::COMA, Token::RACC});
 	    } while (token != Token::RACC);
 	    return vars;

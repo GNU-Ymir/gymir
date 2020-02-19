@@ -11,7 +11,15 @@ namespace semantic {
 	TupleValue::TupleValue (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) :
 	    Value (loc, type),
 	    _content (content)
-	{}
+	{
+	    std::vector <Generator> thrs;
+	    for (auto & it : this-> _content) {
+		auto &ith = it.getThrowers ();
+		thrs.insert (thrs.end (), ith.begin (), ith.end ());
+	    }
+	    
+	    this-> setThrowers (thrs);
+	}
 	
 	Generator TupleValue::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) {
 	    return Generator {new TupleValue (loc, type, content)};

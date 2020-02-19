@@ -18,6 +18,7 @@ namespace semantic {
 	    _value (value)
 	{
 	    this-> isReturner (true);
+	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 	
 	Generator Return::init (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value) {

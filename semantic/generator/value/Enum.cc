@@ -17,7 +17,8 @@ namespace semantic {
 	    Value (loc, loc.str, Void::init (loc)),
 	    _ref (ref),
 	    _type (Generator::empty ())
-	{}
+	{	    
+	}
 
 	Generator Enum::init (const lexing::Word & loc, const Symbol & ref) {
 	    return Generator {new (Z0) Enum (loc, ref)};

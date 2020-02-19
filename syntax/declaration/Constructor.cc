@@ -14,18 +14,20 @@ namespace syntax {
 	_explicitSelfCall (lexing::Word::eof ())
     {}
 
-    Constructor::Constructor (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall) :
+    Constructor::Constructor (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) :
 	_name (name),
 	_proto (proto),
 	_superParams (super),
 	_construction (constructions),
 	_body (body),
 	_explicitSuperCall (explicitSuperCall),
-	_explicitSelfCall (explicitSelfCall)
+	_explicitSelfCall (explicitSelfCall),
+	_cas (cas),
+	_throwers (thrower)
     {}
     
-    Declaration Constructor::init (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall) {
-	return Declaration {new (Z0) Constructor (name, proto, super, constructions, body, explicitSuperCall, explicitSelfCall)};
+    Declaration Constructor::init (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) {
+	return Declaration {new (Z0) Constructor (name, proto, super, constructions, body, explicitSuperCall, explicitSelfCall, cas, thrower)};
     }
     
     Declaration Constructor::clone () const {
@@ -65,6 +67,14 @@ namespace syntax {
 
     const lexing::Word & Constructor::getExplicitSelfCall () const {
 	return this-> _explicitSelfCall;
+    }
+    
+    const std::vector <lexing::Word> & Constructor::getCustomAttributes () const {
+	return this-> _cas;
+    }
+
+    const std::vector <Expression> & Constructor::getThrowers () const {
+	return this-> _throwers;
     }
     
 }

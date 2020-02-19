@@ -13,16 +13,16 @@ namespace semantic {
 	    _classType (Generator::empty ())	    
 	{}
 
-	MethodProto::MethodProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal) :
-	    FrameProto (loc, name, type, params, isCVariadic),
+	MethodProto::MethodProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers) :
+	    FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers),
 	    _isMut (isMutable),
 	    _classType (classType),
 	    _isEmptyFrame (isEmptyFrame),
 	    _isFinal (isFinal)
 	{}
 
-	Generator MethodProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal) {
-	    return Generator {new MethodProto (loc, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal)};
+	Generator MethodProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers) {
+	    return Generator {new MethodProto (loc, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal, isSafe, throwers)};
 	}
 	
 	Generator MethodProto::clone () const {

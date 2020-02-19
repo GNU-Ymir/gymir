@@ -11,7 +11,15 @@ namespace semantic {
 	ArrayValue::ArrayValue (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) :
 	    Value (loc, type),
 	    _content (content)
-	{}
+	{
+	    std::vector <Generator> throwers;
+	    for (auto &it : this-> _content) {
+		auto &ith = it.getThrowers ();
+		throwers.insert (throwers.end (), ith.begin (), ith.end ());
+	    }
+	    
+	    this-> setThrowers (throwers);
+	}
 	
 	Generator ArrayValue::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) {
 	    return Generator {new ArrayValue (loc, type, content)};

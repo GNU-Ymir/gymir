@@ -12,7 +12,9 @@ namespace semantic {
 	SizeOf::SizeOf (const lexing::Word & loc, const Generator & type, const Generator & who) :
 	    Value (loc, type),
 	    _who (who)
-	{}
+	{
+	    // Sizeof never evaluate the value, the size is known at compile time
+	}
 	
 	Generator SizeOf::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
 	    return Generator {new SizeOf (loc, type, who)};

@@ -22,6 +22,13 @@ namespace semantic {
 	    _staticLen (0),
 	    _isDynamic (true)
 	{
+	    auto vth = this-> _value.getThrowers ();
+	    auto &sth = this-> _size.getThrowers ();
+	    auto &lth = this-> _len.getThrowers ();
+	    vth.insert (vth.end (), sth.begin (), sth.end ());
+	    vth.insert (vth.end (), lth.begin (), lth.end ());
+	    
+	    this-> setThrowers (vth); 
 	}
 
 
@@ -33,6 +40,11 @@ namespace semantic {
 	    _staticLen (len),
 	    _isDynamic (false)
 	{
+	    auto vth = this-> _value.getThrowers ();
+	    auto &sth = this-> _size.getThrowers ();
+	    vth.insert (vth.end (), sth.begin (), sth.end ());
+	    
+	    this-> setThrowers (vth);    
 	}
 		
 	Generator ArrayAlloc::init (const lexing::Word & loc,  const Generator & type, const Generator & value, const Generator & size, const Generator & len) {

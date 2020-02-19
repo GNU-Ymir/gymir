@@ -16,7 +16,11 @@ namespace semantic {
 	    _closureType (closureType),
 	    _closure (closure),	    
 	    _funcptr (ptr)
-	{}
+	{
+	    // Can't throw in a delegate or a function lambda ??!!
+	    // It seems really difficult to check actually
+	    // What about the delegate created from method ?
+	}
        
 	Generator DelegateValue::init (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr) {
 	    return Generator {new (Z0) DelegateValue (loc, type, closureType, closure, ptr)};

@@ -98,6 +98,10 @@ namespace semantic {
 	this-> _isSafe = is;
     }
 
+    bool Function::isSafe () const {
+	return this-> _isSafe;
+    }
+
     void Function::isOver (bool is) {
 	this-> _isOver = is;
     }
@@ -106,6 +110,14 @@ namespace semantic {
 	return this-> _content.to <syntax::Function> ().isOver ();
     }
 
+    void Function::setThrowers (const std::vector <syntax::Expression> & throwers) {
+	this-> _throwers = throwers;
+    }
+
+    const std::vector <syntax::Expression> & Function::getThrowers () const {
+	return this-> _throwers;
+    }
+    
     bool Function::isMethod () const {
 	auto & proto = this-> _content.to <syntax::Function> ().getPrototype ();
 	if (proto.getParameters ().size () >= 1) {

@@ -15,7 +15,8 @@ namespace semantic {
 	    Value (loc, type),
 	    _test (test),
 	    _content (content),
-	    _else (else_)				    
+	    _else (else_),
+	    _isComplete (isMandatory)
 	{
 	    if (!else_.isEmpty ()) {
 		this-> isBreaker (
@@ -27,6 +28,10 @@ namespace semantic {
 		    this-> _content.to <Value> ().isReturner () &&
 		    this-> _else.to <Value> ().isReturner ()
 		);
+
+		this-> _isComplete = !this-> _else.is<Conditional> () ||
+		    this-> _else.to <Conditional> ().isComplete ();
+		
 	    } else if (isMandatory) {
 		this-> isBreaker (
 		    this-> _content.to <Value> ().isBreaker ()
@@ -36,6 +41,15 @@ namespace semantic {
 		    this-> _content.to <Value> ().isReturner ()
 		);
 	    }
+
+	    auto lth = this-> _test.getThrowers ();
+	    auto &cth = this-> _content.getThrowers ();
+	    auto &eth = this-> _else.getThrowers ();
+	    
+	    lth.insert (lth.end (), cth.begin (), cth.end ());
+	    lth.insert (lth.end (), eth.begin (), eth.end ());
+	    
+	    this-> setThrowers (lth);	    
 	}	
 	
 	Generator Conditional::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_, bool isMandatory) {
@@ -78,6 +92,11 @@ namespace semantic {
 		return Ymir::format ("if (%) %", this-> _test.prettyString (), this-> _content.prettyString ());
 	    else
 		return Ymir::format ("if (%) %\nelse %", this-> _test.prettyString (), this-> _content.prettyString (), this-> _else.prettyString ());
+	}
+
+	
+	bool Conditional::isComplete () const {
+	    return this-> _isComplete;
 	}
 	
     }

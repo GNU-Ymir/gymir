@@ -34,6 +34,12 @@ namespace semantic {
 	    /** The name of the generator */
 	    std::string _name;
 
+	    /**
+	     * The location of the thrower if any
+	     */
+	    std::vector<Generator> _throwers;
+	    
+	    
 	    /** The id of the generator */
 	    uint _uniqId; 
 
@@ -111,6 +117,17 @@ namespace semantic {
 	     * \return a formatted string representing the generator in Ymir like syntax
 	     */
 	    virtual std::string prettyString () const;
+
+	    /**
+	     * \brief Change the list of location that are throwing something that is not catched
+	     */
+	    void setThrowers (const std::vector <Generator> & loc);
+	    
+	    /**
+	     * \return the list of location that are throwing something that is not catched
+	     */
+	    const std::vector <Generator> & getThrowers () const;
+
 	    
 	    /** Virtual but does not do anything */
 	    virtual ~IGenerator ();
@@ -122,6 +139,8 @@ namespace semantic {
 
 	    /** For convinience an empty generator is declared to avoid segmentation fault on unreferenced generator */
 	    static Generator __empty__;
+
+	    static std::vector <Generator> __nothrowers__;
 	    
 	public :
 
@@ -182,6 +201,16 @@ namespace semantic {
 	     * Proxy function for generator
 	     */
 	    std::string prettyString () const;
+
+	    /**
+	     * Proxy function for generator
+	     */
+	    void setThrowers (const std::vector <Generator> & loc);
+	    
+	    /**
+	     * Proxy function for generator
+	     */
+	    const std::vector <Generator> & getThrowers () const;
 	    
 	    /**
 	     * \brief Cast the content pointer into the type (if possible)

@@ -5,6 +5,7 @@ namespace semantic {
 
 	Generator Generator::__empty__ (Generator::empty ());
 	uint IGenerator::__lastId__ = 0;
+	std::vector <Generator> Generator::__nothrowers__;
 	
 	IGenerator::IGenerator () :
 	    _location (lexing::Word::eof ()),
@@ -25,6 +26,7 @@ namespace semantic {
 	IGenerator::IGenerator (const IGenerator & other) :
 	    _location (other._location),
 	    _name (other._name),
+	    _throwers (other._throwers),
 	    _uniqId (other._uniqId)
 	{}
 
@@ -64,6 +66,14 @@ namespace semantic {
 
 	void IGenerator::changeLocation (const lexing::Word & loc) {
 	    this-> _location = loc;
+	}
+
+	void IGenerator::setThrowers (const std::vector <Generator> & locs) {
+	    this-> _throwers = locs;
+	}
+	    
+	const std::vector <Generator> & IGenerator::getThrowers () const {
+	    return this-> _throwers;
 	}
 	
 	IGenerator::~IGenerator () {}
@@ -127,6 +137,17 @@ namespace semantic {
 	    return this-> _value-> setUniqId (id);	    
 	}
 
+	void Generator::setThrowers (const std::vector <Generator> & locs) {
+	    if (this-> _value == nullptr)
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return this-> _value-> setThrowers (locs);
+	}
+
+	const std::vector <Generator> & Generator::getThrowers () const {
+	    if (this-> _value != nullptr)
+		return this-> _value-> getThrowers ();
+	    else return __nothrowers__;
+	}
 	
     }
 }

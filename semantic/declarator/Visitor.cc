@@ -172,10 +172,10 @@ namespace semantic {
 		    Ymir::Error::occurAndNote (func.getName (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), func.getName ().str);
 		}
 	    }
-	
+
+	    lexing::Word gotSafeOrThrow (lexing::Word::eof ());
 	    for (auto & ca : func.getCustomAttributes ()) {
-		if (ca == Keys::SAFE) function.to <Function> ().isSafe (true);
-		else if (ca == Keys::PURE) function.to <Function> ().isPure (true);
+		if (ca == Keys::SAFE) function.to <Function> ().isSafe (true);		
 		else if (ca == Keys::FINAL_ && function.to<Function> ().isMethod ()) function.to <Function> ().isFinal (true);
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
@@ -184,7 +184,8 @@ namespace semantic {
 
 	    
 	    if (func.isOver ()) function.to <Function> ().isOver (true);	    
-
+	    function.to <Function> ().setThrowers (func.getThrowers ());
+		
 	    if (!isExtern || !func.getBody ().getBody ().isEmpty ()) {
 		if (func.getPrototype ().isVariadic ()) Ymir::Error::occur (func.getName (), ExternalError::get (DECL_VARIADIC_FUNC));
 	    }
@@ -196,6 +197,7 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor & cs) {
 	    auto semcs = semantic::Constructor::init (cs.getName (), cs, this-> _isWeak);
+	    semcs.to <Constructor> ().setThrowers (cs.getThrowers ());
 	    getReferent ().insert (semcs);
 	    return semcs;
 	}

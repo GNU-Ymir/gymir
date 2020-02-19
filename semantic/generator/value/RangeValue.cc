@@ -18,7 +18,13 @@ namespace semantic {
 	    _right (right),
 	    _step (step),
 	    _isFull (full)
-	{}
+	{
+	    auto lthrs = this-> _left.getThrowers ();
+	    auto &rthrs = this-> _right.getThrowers ();
+	    lthrs.insert (lthrs.end (), rthrs.begin (), rthrs.end ());
+	    
+	    this-> setThrowers (lthrs);
+	}
 	
 	Generator RangeValue::init (const lexing::Word & loc, const Generator & type, const Generator & left, const Generator & right, const Generator & step, const Generator & full) {
 	    return Generator {new RangeValue (loc, type, left, right, step, full)};

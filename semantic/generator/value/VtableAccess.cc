@@ -12,8 +12,9 @@ namespace semantic {
 	    Value (loc, type),
 	    _str (str),
 	    _field (field)
-	{}
-
+	{
+	    this-> setThrowers (this-> _str.getThrowers ());
+	}
 
 	Generator VtableAccess::init (const lexing::Word & loc, const Generator & type, const Generator & str, uint field) {
 	    return Generator {new VtableAccess (loc, type, str, field)};

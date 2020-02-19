@@ -305,6 +305,15 @@ namespace semantic {
 	    Generator retType (Generator::empty ());
 	    
 	    enterContext (function.getCustomAttributes ());
+	    std::vector <Generator> throwers;
+	    for (auto &it : func.getThrowers ()) {
+		TRY (
+		    throwers.push_back (validateType (it));
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
 	    enterBlock ();
 	    {
@@ -356,7 +365,19 @@ namespace semantic {
 			verifyMemoryOwner (body.getLocation (), retType, body, true);		    
 			needFinalReturn = !retType.is<Void> ();
 		    }
-		
+		    		    
+		    std::vector <Generator> unused, notfound;		    
+		    verifyThrows (body.getThrowers (), throwers, unused, notfound);		    		    
+		    for (auto & it : notfound) {
+			auto note = Ymir::Error::createNote (it.getLocation ());
+			errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_DECLARED), func.getRealName (), it.prettyString ()));
+		    }
+
+		    for (auto & it : unused) {
+			auto note = Ymir::Error::createNote (it.getLocation ());
+			errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_USED), func.getRealName (), it.prettyString ()));
+		    }
+		    
 		    {
 			TRY (
 			    quitBlock ();
@@ -927,6 +948,10 @@ namespace semantic {
 			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
 			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (CANNOT_OVERRIDE_FINAL), ancVtable [i].prettyString ()); 
 			}
+
+			// Verify the attributes
+			// They must be the same
+			
 			
 			over = true;
 			vtable [i] = proto; // We do that afterward, when impl a trait the vtable might be empty and always different from ancVtable
@@ -984,6 +1009,16 @@ namespace semantic {
 	    classType.to <Type> ().isMutable (true);
 	    enterForeign ();
 
+	    std::vector <Generator> throwers;
+	    for (auto &it : constr.getThrowers ()) {
+		TRY (
+		    throwers.push_back (validateType (it));
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+	    
 	    enterBlock ();
 	    TRY (
 		validatePrototypeForFrame (cs.getName (), constr.getPrototype (), params, retType);
@@ -1012,6 +1047,20 @@ namespace semantic {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
+	    }		    
+	    
+	    if (!body.isEmpty ()) {
+		std::vector <Generator> unused, notfound;		    
+		verifyThrows (body.getThrowers (), throwers, unused, notfound);		    		    
+		for (auto & it : notfound) {
+		    auto note = Ymir::Error::createNote (it.getLocation ());
+		    errors.push_back (Error::makeOccurAndNote (sym.getName (), note, ExternalError::get (THROWS_NOT_DECLARED), sym.getRealName (), it.prettyString ()));
+		}
+
+		for (auto & it : unused) {
+		    auto note = Ymir::Error::createNote (it.getLocation ());
+		    errors.push_back (Error::makeOccurAndNote (sym.getName (), note, ExternalError::get (THROWS_NOT_USED), sym.getRealName (), it.prettyString ()));
+		}
 	    }
 
 	    {
@@ -1046,7 +1095,18 @@ namespace semantic {
 
 	    enterClassDef (classType.to <ClassRef> ().getRef ());
 	    classType.to <Type> ().isMutable (true);
-	    enterForeign ();	    
+	    enterForeign ();
+
+	    std::vector <Generator> throwers;
+	    for (auto &it : func.getThrowers ()) {
+		TRY (
+		    throwers.push_back (validateType (it));
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }	    
+	    
 	    enterBlock ();
 	    
 	    TRY (
@@ -1093,6 +1153,21 @@ namespace semantic {
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		    } FINALLY;
 		}
+
+
+	    if (!body.isEmpty ()) {
+		std::vector <Generator> unused, notfound;		    
+		verifyThrows (body.getThrowers (), throwers, unused, notfound);		    		    
+		for (auto & it : notfound) {
+		    auto note = Ymir::Error::createNote (it.getLocation ());
+		    errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_DECLARED), func.getRealName (), it.prettyString ()));
+		}
+
+		for (auto & it : unused) {
+		    auto note = Ymir::Error::createNote (it.getLocation ());
+		    errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_USED), func.getRealName (), it.prettyString ()));
+		}
+	    }
 	    
 	    {
 		TRY (
@@ -1781,8 +1856,7 @@ namespace semantic {
 
 	    Generator catchVar (Generator::empty ());
 	    Generator catchInfo (Generator::empty ());
-	    Generator catchAction (Generator::empty ());
-	    
+	    Generator catchAction (Generator::empty ());	    
 	    if (!block.getCatcher ().isEmpty ()) {
 		validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type);
 	    }
@@ -1839,23 +1913,12 @@ namespace semantic {
 		    insertLocal ("#catch", varDecl);
 		    typeInfo = validateTypeInfo (loc, type);
 		    auto vref = VarRef::init (loc, "#catch", type, varDecl.getUniqId (),  false, Generator::empty ());
-
-		    auto syntaxRethrow = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_RETHROW_FUNC)});
-		    matchs.push_back (syntax::Var::init ({loc, "_"}));
-		    auto rethrow = validateValue (syntax::MultOperator::init (
-			{loc, Token::LPAR}, {loc, Token::RPAR},
-			syntaxRethrow,
-			{}
-		    ));
-		    
-		    rethrow.to <Value> ().isReturner (true); // This is a returner, the rethrow will break the current scope		    
-		    actions.push_back (TemplateSyntaxWrapper::init (loc, rethrow));
 		    
 		    auto match = syntax::Match::init (loc, TemplateSyntaxWrapper::init (loc, vref),
-					      matchs, actions
+						      matchs, actions, true // Final, the match must be complete
 		    );
 		    
-		    action = validateValue (match);
+		    action = validateValue (match);		    
 		    if (!action.to <Value> ().isReturner () && !action.to <Value> ().isBreaker ()) {
 			this-> verifyMemoryOwner (loc, typeBlock, action, false, true, false);
 		    }
@@ -2342,6 +2405,16 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
+
+	    std::vector <Generator> throwers;
+	    for (auto &it : func.getThrowers ()) {
+		TRY (
+		    throwers.push_back (validateType (it));
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
 	    __validating__.pop_back ();
 	    exitForeign ();
@@ -2351,7 +2424,7 @@ namespace semantic {
 	    }
 
 
-	    auto frame = FrameProto::init (function.getName (), func.getRealName (), retType, params, func.isVariadic ());
+	    auto frame = FrameProto::init (function.getName (), func.getRealName (), retType, params, func.isVariadic (), func.isSafe (), throwers);
 	    auto ln = func.getExternalLanguage ();
 	    if (ln == Keys::CLANG) 
 		frame.to <FrameProto> ().setManglingStyle (Frame::ManglingStyle::C);
@@ -2410,14 +2483,24 @@ namespace semantic {
 		__validating__.pop_back ();
 	    }
 	    
+	    std::vector <Generator> throwers;
+	    for (auto &it : func.getThrowers ()) {
+		TRY (
+		    throwers.push_back (validateType (it));
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
+	    
 	    exitForeign ();
 	    popReferent ("validateConstructorProto");
 	    	    
 	    if (errors.size () != 0) {
 		THROW (ErrorCode::EXTERNAL, errors);		
 	    }
-	    	    
-	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), sym, cl, params);
+
+	    auto frame = ConstructorProto::init (func.getName (), func.getRealName (), sym, cl, params, throwers);
 	    frame.to <ConstructorProto> ().setMangledName (func.getMangledName ());	    
 	    return frame;
 	}
@@ -2457,6 +2540,16 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
+
+	    std::vector <Generator> throwers;
+	    for (auto &it : func.getThrowers ()) {
+		TRY (
+		    throwers.push_back (validateType (it));
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
 	    __validating__.pop_back ();
 	    exitForeign ();
@@ -2467,7 +2560,7 @@ namespace semantic {
 	    
 	    auto frame = MethodProto::init (function.getName (), func.getRealName (), retType, params, false,
 					    classType,
-					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().getBody ().isEmpty (), func.isFinal ());
+					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().getBody ().isEmpty (), func.isFinal (), func.isSafe (), throwers);
 	    frame.to <MethodProto> ().setMangledName (func.getMangledName ());
 	    return frame;
 	}
@@ -3654,6 +3747,16 @@ namespace semantic {
 		    params [0].setUniqId (refId);
 		} else closure = Generator::empty ();
 	    }
+
+	    if (!body.isEmpty ()) {
+		if (body.getThrowers ().size () != 0) {
+		    std::string note = "";
+		    for (auto &it : body.getThrowers ()) {
+			note = note + Ymir::Error::createNote (it.getLocation (), it.prettyString ()) + "\n";		
+		    }
+		    errors.push_back (Error::makeOccurAndNote (proto.getLocation (), note, ExternalError::get (THROWS_IN_LAMBDA)));
+		}
+	    }
 	    
 	    {
 		TRY ( // We want to guarantee that we exit the foreign at the end of this function 
@@ -3674,7 +3777,7 @@ namespace semantic {
 
 	    insertNewGenerator (frame);
 		
-	    auto frameProto = FrameProto::init (proto.getLocation (), proto.getName (), retType, paramsProto, false);
+	    auto frameProto = FrameProto::init (proto.getLocation (), proto.getName (), retType, paramsProto, false, false, {});
 	    frameProto.to<FrameProto>().setMangledName (proto.getMangledName ());
 		
 	    auto funcType = FuncPtr::init (proto.getLocation (), frameProto.to <FrameProto> ().getReturnType (), types);
@@ -4744,6 +4847,42 @@ namespace semantic {
 		}
 	    }
 	}
+
+	void Visitor::verifyThrows (const std::vector <Generator> & types, const std::vector <Generator> & rethrow, std::vector <Generator> & unused, std::vector <Generator> & notfound) {
+	    // This function is ugly, maybe there is a better way to do this
+	    // But still this is working
+	    std::vector <Generator> used;
+	    for (auto &it : types) {
+		bool found = false;
+		for (auto & j : used) {
+		    if (it.to<Type> ().isCompatible (j)) {
+			found = true;
+			break;
+		    }
+		}
+		if (found) break;
+		for (auto &j : rethrow) {
+		    if (it.to<Type> ().isCompatible (j)) {
+			found = true;
+			used.push_back (j);
+			break;
+		    }
+		}
+		
+		if (!found) notfound.push_back (it);
+	    }
+
+	    for (auto & it : rethrow) {
+		bool found = false;
+		for (auto & j : used) {
+		    if (it.to <Type> ().isCompatible (j)) {
+			found = true;
+			break;
+		    }
+		}
+		if (!found) unused.push_back (it);
+	    }
+	}
 	
 	Generator Visitor::retreiveValue (const Generator & gen) {
 	    auto compile_time = CompileTime::init (*this);
@@ -4804,6 +4943,23 @@ namespace semantic {
 		names = std::vector <std::string> (names.begin () + 1, names.end ());
 	    }	    
 	    return last;
+	}
+
+	Generator Visitor::addElseToConditional (const Generator & gen, const Generator & _else) {
+	    match (gen) {
+		of (Conditional, cd, {
+			if (cd.getElse ().isEmpty ()) {
+			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), _else, cd.isComplete ());
+			} else {
+			    auto addElse_ = addElseToConditional (cd.getElse (), _else);
+			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), addElse_, cd.isComplete ());
+			}
+		    }
+		) else {
+		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");   
+		}
+	    }
+	    return Generator::empty ();
 	}
 	
 	bool Visitor::isUseless (const Generator & value) {

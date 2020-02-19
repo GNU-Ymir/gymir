@@ -82,8 +82,12 @@ namespace semantic {
 	    }
 	    
 	    
-	    if (!isMandatory && !type.is<Void> ()) {
-		Ymir::Error::occur (expression.getLocation (), ExternalError::get (MATCH_NO_DEFAULT), type.prettyString ());
+	    if (!isMandatory && (!type.is<Void> () || expression.isFinal ())) {
+		if (!type.is<Void> ()) {
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (MATCH_NO_DEFAULT), type.prettyString ());
+		} else {
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (MATCH_FINAL_NO_DEFAULT));
+		}
 	    }
 	    
 	    return result;

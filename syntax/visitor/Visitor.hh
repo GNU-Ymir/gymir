@@ -366,6 +366,14 @@ namespace syntax {
 	 \endverbatim
 	 */
 	std::vector <lexing::Word> visitAttributes ();
+
+	/**
+	 * \brief Visit a list of throwers
+	 * \verbatim
+	 throwers := 'throws' expression:(0) (',' expression:(0))* (';')?
+	 \endverbatim
+	 */
+	std::vector <syntax::Expression> visitThrowers ();
 	
 	/**
 	 * Visit a var declaration, 

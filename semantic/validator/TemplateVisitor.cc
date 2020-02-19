@@ -1459,19 +1459,29 @@ namespace semantic {
 			for (auto & it : fields) {
 			    it.second = replaceAll (it.second, mapping);
 			};
+
+			std::vector <syntax::Expression> throwers;
+			for (auto &it : cst.getThrowers ())
+			    throwers.push_back (replaceAll (it, mapping));
 			
 			return syntax::Constructor::init (cst.getName (),
 							  replaceAll (cst.getPrototype (), mapping),
 							  exprs,
 							  fields,
 							  replaceAll (cst.getBody (), mapping),
-							  cst.getExplicitSuperCall (), cst.getExplicitSelfCall ()
+							  cst.getExplicitSuperCall (), cst.getExplicitSelfCall (), cst.getCustomAttributes (),
+							  throwers
 			);
 		    }		    
 		) else of (syntax::Function, func, {
 			auto ret = syntax::Function::init (func.getName (), replaceAll (func.getPrototype (), mapping), replaceAll (func.getBody (), mapping));
 			ret.to <syntax::Function> ().setCustomAttributes (func.getCustomAttributes ());
 			if (func.isOver ()) ret.to <syntax::Function> ().setOver ();
+			std::vector <syntax::Expression> throwers;
+			for (auto &it : func.getThrowers ())
+			    throwers.push_back (replaceAll (it, mapping));
+			ret.to <syntax::Function> ().setThrowers (throwers);
+			
 			return ret;
 		    }
 		) else of (syntax::Global, glb, {

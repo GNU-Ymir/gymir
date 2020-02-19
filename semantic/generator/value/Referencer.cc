@@ -17,6 +17,7 @@ namespace semantic {
 		Ymir::Error::halt ("%(r) Malformed Referencer, is not a reference type", "Critical");
 	    }
 	    this-> isLvalue (true);
+	    this-> setThrowers (this-> _who.getThrowers ());
 	}
 	
 	Generator Referencer::init (const lexing::Word & loc, const Generator & type, const Generator & who) {

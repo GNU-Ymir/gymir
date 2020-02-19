@@ -12,7 +12,9 @@ namespace semantic {
 	Addresser::Addresser (const lexing::Word & loc, const Generator & type, const Generator & who) :
 	    Value (loc, type),
 	    _who (who)
-	{}
+	{
+	    this-> setThrowers (this-> _who.to <Value> ().getThrowers ());
+	}
 	
 	Generator Addresser::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
 	    return Generator {new Addresser (loc, type, who)};

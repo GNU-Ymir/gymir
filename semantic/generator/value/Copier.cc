@@ -13,7 +13,9 @@ namespace semantic {
 	    Value (loc, type),
 	    _who (who),
 	    _isAny (isAny)
-	{}
+	{
+	    this-> setThrowers (this-> _who.getThrowers ());
+	}
 	
 	Generator Copier::init (const lexing::Word & loc, const Generator & type, const Generator & who, bool isAny) {
 	    return Generator {new Copier (loc, type, who, isAny)};

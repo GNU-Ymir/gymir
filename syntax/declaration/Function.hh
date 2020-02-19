@@ -212,6 +212,8 @@ namespace syntax {
 	/** The CAs (custom attributes) of the functions */
 	std::vector <lexing::Word> _cas;
 
+	std::vector <syntax::Expression> _throwers;
+	
 	/** The name of the function */
 	lexing::Word _name;
 
@@ -316,6 +318,10 @@ namespace syntax {
 	 * does this function override another function
 	 */
 	bool isOver () const;
+
+	void setThrowers (const std::vector <syntax::Expression> & throwers);
+
+	const std::vector <syntax::Expression> & getThrowers () const;
     };
     
 }

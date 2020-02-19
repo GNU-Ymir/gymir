@@ -40,6 +40,8 @@ namespace semantic {
 	 * Is this function marked @final
 	 */
 	bool _isFinal = false;
+
+	std::vector <syntax::Expression> _throwers;
 	
 	std::string _externLanguage;
 	
@@ -83,6 +85,8 @@ namespace semantic {
 
 	void isSafe (bool is);
 
+	bool isSafe () const;
+
 	void isOver (bool is);
 	
 	bool isVariadic () const;
@@ -94,6 +98,10 @@ namespace semantic {
 	bool isFinal () const;
 
 	void isFinal (bool is);
+
+	void setThrowers (const std::vector <syntax::Expression> & throwers);
+
+	const std::vector <syntax::Expression> & getThrowers () const;
 	
 	const syntax::Function & getContent () const;
 

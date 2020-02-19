@@ -20,6 +20,14 @@ namespace semantic {
 	    _params (params)
 	{
 	    this-> isLvalue (true);
+	    
+	    std::vector <Generator> thrs;
+	    for (auto & it : this-> _params) {
+		auto &ith = it.getThrowers ();
+		thrs.insert (thrs.end (), ith.begin (), ith.end ());
+	    }
+
+	    this-> setThrowers (thrs);		
 	}
 	
 	Generator StructCst::init (const lexing::Word & loc, const Generator & type, const Generator & str, const std::vector<Generator> & types, const std::vector <Generator> & params) {

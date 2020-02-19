@@ -21,6 +21,22 @@ namespace semantic {
 	    _addParams (gen)
 	{
 	    this-> isLvalue (type.to <Type> ().isRef ());
+	    auto lth = this-> _frame.getThrowers ();
+	    if (lth.size () != 0) {
+		for (auto &it : lth) it.changeLocation (loc);
+	    }
+	    
+	    for (auto & it : this-> _params) {
+		auto &ith = it.getThrowers ();
+		lth.insert (lth.end (), ith.begin (), ith.end ());
+	    }
+
+	    for (auto & it : this-> _addParams) {
+		auto &ith = it.getThrowers ();
+		lth.insert (lth.end (), ith.begin (), ith.end ());
+	    }
+		
+	    this-> setThrowers (lth);
 	}
 	
 	Generator Call::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & addParams) {

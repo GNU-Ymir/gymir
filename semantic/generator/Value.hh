@@ -25,7 +25,7 @@ namespace semantic {
 	     * this value is set to true if the current generator close the frame in any case
 	     */
 	    bool _returner = false;
-
+	    
 	    /**
 	     * This value is set to true, if the current generator can be used as a left value 
 	     * (Does not consider const or immutability informations)
@@ -95,7 +95,7 @@ namespace semantic {
 	     * \param returnable if true reaching this value close the current frame
 	     */
 	    void isReturner (bool returner);
-
+	    
 	    /**
 	     * \return Does this generator can be used as a LValue ?
 	     * \warning does not check const or imut informations

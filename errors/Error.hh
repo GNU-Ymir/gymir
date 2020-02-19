@@ -120,6 +120,15 @@ namespace Ymir {
 	}
 
 	template <typename ... TArgs>
+	std::string makeOccurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    msg = addLine (msg, loc);
+	    msg = addNote (loc, msg, note);
+	    return msg;
+	}
+
+	
+	template <typename ... TArgs>
 	std::string makeOccur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);

@@ -118,6 +118,7 @@ struct Keys {
     static std::string  SUPER;
     static std::string  TEMPLATE;
     static std::string  THROW_K;
+    static std::string  THROWS;
     static std::string  TRAIT; 
     static std::string  TRUE_; 
     static std::string  TRUSTED;

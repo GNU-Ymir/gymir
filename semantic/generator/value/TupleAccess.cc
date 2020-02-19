@@ -16,6 +16,7 @@ namespace semantic {
 	    _index (index)
 	{
 	    this-> isLvalue (true);
+	    this-> setThrowers (tuple.getThrowers ());
 	}
 
 

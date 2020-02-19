@@ -16,7 +16,13 @@ namespace semantic {
 	    _value (value),
 	    _isConstruction (isConstruction)
 	    
-	{}	
+	{
+	    auto throwers = this-> _who.getThrowers ();
+	    auto &vth = this-> _value.getThrowers ();
+	    throwers.insert (throwers.end (), vth.begin (), vth.end ());
+	    
+	    this-> setThrowers (throwers);
+	}	
 	
 	Generator Affect::init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value, bool isConstruction) {
 	    return Generator {new Affect (loc, type, who, value, isConstruction)};

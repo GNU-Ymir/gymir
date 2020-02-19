@@ -18,6 +18,8 @@ namespace semantic {
 
 	    Generator _else;
 
+	    bool _isComplete;
+	    
 	private :
 
 	    friend Generator;
@@ -63,6 +65,8 @@ namespace semantic {
 	     */
 	    const Generator & getElse () const;
 
+	    bool isComplete () const;
+	    
 	    std::string prettyString () const override;
 	};
 	

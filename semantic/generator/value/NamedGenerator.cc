@@ -11,7 +11,9 @@ namespace semantic {
 	NamedGenerator::NamedGenerator (const lexing::Word & loc, const Generator & content) :
 	    Value (loc, content.to<Value> ().getType ()),
 	    _content (content)
-	{}
+	{
+	    this-> setThrowers (this-> _content.getThrowers ());
+	}
     
 	Generator NamedGenerator::init (const lexing::Word & location, const Generator & content) {
 	    return Generator {new (Z0) NamedGenerator (location, content)};
