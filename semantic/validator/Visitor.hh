@@ -26,11 +26,16 @@ namespace semantic {
 	 * It will traverse all the declared symbol of a given module and validated each of them
 	 */
 	class Visitor {
-
+	public :
+	    
 	    enum VisitConstante {
 		LIMIT_TEMPLATE_RECUR = 300
 	    };
 
+	    static int __CALL_NB_RECURS__;
+	    
+	private :
+	    
 	    enum ClosureState {
 		NONE = 0,
 		REF = 1,

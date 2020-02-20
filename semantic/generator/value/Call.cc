@@ -23,7 +23,7 @@ namespace semantic {
 	    this-> isLvalue (type.to <Type> ().isRef ());
 	    auto lth = this-> _frame.getThrowers ();
 	    if (lth.size () != 0) {
-		for (auto &it : lth) it.changeLocation (loc);
+		for (auto &it : lth) it.changeLocation (loc);		
 	    }
 	    
 	    for (auto & it : this-> _params) {

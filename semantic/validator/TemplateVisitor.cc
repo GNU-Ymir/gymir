@@ -314,7 +314,8 @@ namespace semantic {
 						param.getLocation ().str,
 						param.getLocation ().line,
 						param.getLocation ().column));
-		
+
+	    mapper.score += Scores::SCORE_TYPE;
 	    return mapper;
 	}
 

@@ -103,15 +103,21 @@ namespace semantic {
 		if (!gen.isEmpty ()) {
 		    std::vector <std::string> local_errors;
 		    TRY (
+			Visitor::__CALL_NB_RECURS__ += 1;
 			this-> _context.validateTemplateSymbol (sym, left);
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
-			msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
-			msgs.insert (msgs.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
+			if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
+			    msgs.push_back (format ("     : %(B)", "..."));
+			    msgs.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
+			} else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {
+			    msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
+			    msgs.insert (msgs.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
+			}
 			errors = msgs;
 			gen = Generator::empty ();
 		    } FINALLY;
-		    
+		    Visitor::__CALL_NB_RECURS__ -= 1;
 		    return gen;
 		}
 	    }
@@ -707,14 +713,21 @@ namespace semantic {
 		
 		std::vector <std::string> local_errors;
 		TRY (
+		    Visitor::__CALL_NB_RECURS__ += 1;
 		    this-> _context.validateTemplateSymbol (templSym, used_gen);		    
 		) CATCH (ErrorCode::EXTERNAL) {
 		    GET_ERRORS_AND_CLEAR (msgs);
-		    msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
-		    msgs.insert (msgs.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
+		    if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
+			msgs.push_back (format ("     : %(B)", "..."));
+			msgs.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
+		    } else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {
+			msgs.insert (msgs.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
+			msgs.insert (msgs.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
+		    }
 		    errors = msgs;
 		    final_gen = Generator::empty ();
 		} FINALLY;
+		Visitor::__CALL_NB_RECURS__ -= 1;
 		
 	    } else if (!final_gen.isEmpty ()) {
 		auto element_on_scores = nonTemplScores.find (score);

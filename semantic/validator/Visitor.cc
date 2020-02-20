@@ -17,6 +17,7 @@
 #include <ymir/utils/map.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/utils/Path.hh>
+#include <ymir/global/State.hh>
 #include <string>
 #include <algorithm>
 
@@ -28,6 +29,8 @@ namespace semantic {
 
 	using namespace generator;
 	using namespace Ymir;       
+
+	int Visitor::__CALL_NB_RECURS__ = 0;
 	
 	Visitor::Visitor ()
 	{
@@ -378,7 +381,7 @@ namespace semantic {
 			auto note = Ymir::Error::createNote (it.getLocation ());
 			errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_USED), func.getRealName (), it.prettyString ()));
 		    }
-		    
+		    		    
 		    {
 			TRY (
 			    quitBlock ();
@@ -1007,6 +1010,8 @@ namespace semantic {
 	    verifyConstructionLoop (proto.getLocation (), proto);
 	    
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
+	    enterContext (cs.getCustomAttributes ());
+	    
 	    classType.to <Type> ().isMutable (true);
 	    enterForeign ();
 
@@ -1064,7 +1069,7 @@ namespace semantic {
 		    errors.push_back (Error::makeOccurAndNote (sym.getName (), note, ExternalError::get (THROWS_NOT_USED), sym.getRealName (), it.prettyString ()));
 		}
 	    }
-
+	    
 	    {
 		TRY (
 		    quitBlock ();
@@ -1075,6 +1080,7 @@ namespace semantic {
 	    }
 	    
 	    exitForeign ();
+	    exitContext ();
 	    exitClassDef ();
 	    
 	    if (errors.size () != 0)
@@ -1096,6 +1102,7 @@ namespace semantic {
 	    auto & cs = classType.to <ClassRef> ().getRef ().to <semantic::Class> ();
 
 	    enterClassDef (classType.to <ClassRef> ().getRef ());
+	    enterContext (function.getCustomAttributes ());
 	    classType.to <Type> ().isMutable (true);
 	    enterForeign ();
 
@@ -1185,6 +1192,7 @@ namespace semantic {
 	    }
 	    
 	    exitForeign ();
+	    exitContext ();
 	    exitClassDef ();
 
 	    if (errors.size () != 0)
@@ -3367,6 +3375,8 @@ namespace semantic {
 	    
 	    if (value.is <TemplateRef> ()) {
 		Generator ret (Generator::empty ());
+		Visitor::__CALL_NB_RECURS__ += 1;
+		
 		TRY (
 		    int score = -1;
 		    auto templateVisitor = TemplateVisitor::init (*this);
@@ -3379,7 +3389,8 @@ namespace semantic {
 		    GET_ERRORS_AND_CLEAR (msgs);
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
-
+		Visitor::__CALL_NB_RECURS__ -= 1;
+		
 		
 		if (errors.size () != 0) {
 		    errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
@@ -3422,6 +3433,7 @@ namespace semantic {
 		
 		if (loc_scores.size () != 0) {
 		    Generator ret (Generator::empty ());
+		    Visitor::__CALL_NB_RECURS__ += 1;
 		    TRY (
 			auto element_on_scores = loc_scores.find ((int) all_score);
 			std::vector <Symbol> syms;
@@ -3468,29 +3480,37 @@ namespace semantic {
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		    } FINALLY;
 		    
+		    Visitor::__CALL_NB_RECURS__ -= 1;
+		    
 		    if (!ret.isEmpty ())
 			return ret;
 		}
 	    }
-
-	    std::vector<std::string> names;
-	    for (auto & it : params)
-		names.push_back (it.prettyString ());
-
-	    std::string leftName = value.getLocation ().str ;
-	    OutBuffer buf;
-	    for (auto & it : errors)
-		buf.write (it, "\n");
-
 	    
-	    Ymir::Error::occurAndNote (
-		tcl.getLocation (),
-		buf.str (),
-		ExternalError::get (UNDEFINED_TEMPLATE_OP),
-		leftName,
-		names
-	    );
+	    if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
+		errors.insert (errors.begin (), format ("     : %(B)", "..."));
+		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
+	    } else if (Visitor::__CALL_NB_RECURS__ <  3 || (Visitor::__CALL_NB_RECURS__ == LIMIT_TEMPLATE_RECUR - 1) || global::State::instance ().isVerboseActive ()) {
+		std::vector<std::string> names;
+		for (auto & it : params)
+		    names.push_back (it.prettyString ());
 
+		std::string leftName = value.getLocation ().str;
+		
+		OutBuffer buf;
+		for (auto & it : errors)
+		    buf.write (it, "\n");
+		
+		errors = {Ymir::Error::makeOccurAndNote (
+		    tcl.getLocation (),
+		    buf.str (),
+		    ExternalError::get (UNDEFINED_TEMPLATE_OP),
+		    leftName,
+		    names
+		)};
+	    }
+	    
+	    THROW (ErrorCode::EXTERNAL, errors);
 	    return Generator::empty ();	    
 	}
 
@@ -3695,6 +3715,7 @@ namespace semantic {
 
 	    volatile bool needFinalReturn = false;// mmmh, not understanding why, but gcc doesn't like it otherwise
 	    enterForeign ();
+	    enterContext ({});
 	    enterBlock ();
 	    {
 		TRY (
@@ -3769,6 +3790,7 @@ namespace semantic {
 	    }
 	    
 	    exitForeign ();
+	    exitContext ();
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 

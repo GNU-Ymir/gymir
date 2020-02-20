@@ -12,6 +12,7 @@ namespace global {
 			 ARRAY_MODULE,
 			 ASSERT_FUNC,
 			 BINARY_OP_OVERRIDE,
+			 BINARY_OP_OVERRIDE_RIGHT,
 			 CLASS_ALLOC,
 			 CONTAIN_OP_OVERRIDE,
 			 CORE_MODULE,			 
@@ -33,11 +34,14 @@ namespace global {
 			 RUN_MAIN,
 			 RUN_MAIN_DEBUG,
 			 SET_JMP,
+			 TEST_OP_OVERRIDE,
+			 TEST_OP_OVERRIDE_RIGHT,
 			 THROW,
 			 TYPE_IDS,
 			 TYPE_INFO,
 			 TYPE_INFO_EQUAL,
 			 TYPE_INFO_MODULE,
+			 UNARY_OP_OVERRIDE,
     );
     
 }

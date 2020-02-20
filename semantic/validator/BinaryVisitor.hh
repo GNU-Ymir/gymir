@@ -120,6 +120,15 @@ namespace semantic {
 	    generator::Generator validateMathClass (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
 
+	    /**
+	     * \brief Validate a binary math operator with a class as the right operand
+	     * \param op the operator of the expression
+	     * \param expression the syntaxic node that will produce the generator
+	     * \param left the left operand that we don't know the type yet
+	     * \param right the right operand that we assume to be a Class value
+	     */
+	    generator::Generator validateMathClassRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
 
 	    /**
 	     * \brief Validate a logical operation from two operands
@@ -171,9 +180,20 @@ namespace semantic {
 	    generator::Generator validateLogicalArrayLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
 	    /**
-	     * \brief Validate a binary logical operator with a slice on left operator
+	     * \brief Validate a binary logical operator with a slice on left operand
 	     */
 	    generator::Generator validateLogicalSliceLeft (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a binary logical operator with a class on left operand
+	     */
+	    generator::Generator validateLogicalClass (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Validate a binary logical operator with a class on right operand
+	     */
+	    generator::Generator validateLogicalClassRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+
 	    
 	    /**
 	     * \brief Validate an affectation, the pre operation is a mathetical one (or concat, but its considered math)
@@ -247,6 +267,13 @@ namespace semantic {
 	     * \return is this operator a contain operator
 	     */
 	    bool isContain (generator::Binary::Operator op);
+
+	    std::string toString (generator::Binary::Operator op);
+	    
+	    /**
+	     * Use to inverse logical operation (for opTest on class only)
+	     */
+	    std::string inverseOperator (generator::Binary::Operator op);
 	    
 	};	
 	

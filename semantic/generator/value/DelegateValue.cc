@@ -17,9 +17,7 @@ namespace semantic {
 	    _closure (closure),	    
 	    _funcptr (ptr)
 	{
-	    // Can't throw in a delegate or a function lambda ??!!
-	    // It seems really difficult to check actually
-	    // What about the delegate created from method ?
+	    this-> setThrowers (this-> _funcptr.getThrowers ());
 	}
        
 	Generator DelegateValue::init (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr) {

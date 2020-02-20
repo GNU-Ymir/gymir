@@ -1,5 +1,6 @@
 #include <ymir/semantic/validator/UnaryVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
+#include <ymir/global/Core.hh>
 
 namespace semantic {
 
@@ -7,6 +8,7 @@ namespace semantic {
 
 	using namespace Ymir;
 	using namespace generator;
+	using namespace global;
 
 	UnaryVisitor::UnaryVisitor (Visitor & context) :
 	    _context (context)
@@ -55,9 +57,12 @@ namespace semantic {
 			return validateInt (expression, operand);
 		    );
 
-
 		    of (Pointer, p ATTRIBUTE_UNUSED,
 			return validatePointer (expression, operand);
+		    );
+
+		    of (ClassRef, c ATTRIBUTE_UNUSED,
+			return validateClass (expression, operand);
 		    );
 		}
 	    }
@@ -111,6 +116,29 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	Generator UnaryVisitor::validateClass (const syntax::Unary & expression, const Generator & operand) {
+	    auto loc = expression.getLocation ();
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, operand);
+	    auto templ = syntax::TemplateCall::init (
+		loc,
+		{syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
+		syntax::Binary::init (
+		    {loc, Token::DOT},
+		    leftSynt,		    
+		    syntax::Var::init ({loc, CoreNames::get (UNARY_OP_OVERRIDE)}),
+		    syntax::Expression::empty ()
+		)
+	    );
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{}, false
+	    );
+
+	    return this-> _context.validateValue (call);
+	}
+	
 	Generator UnaryVisitor::validateFunctionPointer (const syntax::Unary & un, const Generator & proto) {
 	    return Addresser::init (un.getLocation (), this-> _context.validateFunctionType (proto), proto);
 	}

@@ -175,8 +175,12 @@ namespace semantic {
 
 	    lexing::Word gotSafeOrThrow (lexing::Word::eof ());
 	    for (auto & ca : func.getCustomAttributes ()) {
-		if (ca == Keys::SAFE) function.to <Function> ().isSafe (true);		
-		else if (ca == Keys::FINAL_ && function.to<Function> ().isMethod ()) function.to <Function> ().isFinal (true);
+		if (ca == Keys::SAFE) {
+		    function.to <Function> ().isSafe (true);
+		    if (func.getThrowers ().size () != 0) {
+			Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::SAFE_THROW));
+		    }
+		} else if (ca == Keys::FINAL_ && function.to<Function> ().isMethod ()) function.to <Function> ().isFinal (true);
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
 		}
@@ -184,7 +188,7 @@ namespace semantic {
 
 	    
 	    if (func.isOver ()) function.to <Function> ().isOver (true);	    
-	    function.to <Function> ().setThrowers (func.getThrowers ());
+	    function.to <Function> ().setThrowers (func.getThrowers ()); 
 		
 	    if (!isExtern || !func.getBody ().getBody ().isEmpty ()) {
 		if (func.getPrototype ().isVariadic ()) Ymir::Error::occur (func.getName (), ExternalError::get (DECL_VARIADIC_FUNC));
@@ -198,6 +202,16 @@ namespace semantic {
 	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor & cs) {
 	    auto semcs = semantic::Constructor::init (cs.getName (), cs, this-> _isWeak);
 	    semcs.to <Constructor> ().setThrowers (cs.getThrowers ());
+	    for (auto & ca : cs.getCustomAttributes ()) {
+		if (ca == Keys::SAFE) {
+		    if (cs.getThrowers ().size () != 0) {
+			Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::SAFE_THROW));
+		    }
+		} else {
+		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
+		}
+	    }
+
 	    getReferent ().insert (semcs);
 	    return semcs;
 	}
@@ -408,24 +422,7 @@ namespace semantic {
 	semantic::Symbol Visitor::visitImpl (const syntax::Mixin & stimpl) {
 	    auto im = Impl::init (stimpl.getLocation (), stimpl.getMixin (), this-> _isWeak);
 	    pushReferent (im);
-	    for (auto & it : stimpl.getDeclarations ()) {
-		match (it) {
-		    of (syntax::DeclBlock, dc, {
-			    for (auto & jt : dc.getDeclarations ()) {
-				auto sym = visit (jt);
-				if (dc.isPublic ())
-				    sym.setPublic ();
-				if (dc.isProt ())
-				    sym.setProtected ();
-			    }							    
-			}
-		    ) else {			
-			auto sym = visit (it);
-			sym.setPublic ();
-		    }
-		}
-	    }
-	    
+	    visitInnerClass (im, stimpl.getDeclarations (), false, true, false);	    
 	    auto ret = popReferent ();
 	    getReferent ().insert (ret);
 	    return ret;

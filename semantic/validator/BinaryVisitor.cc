@@ -95,21 +95,34 @@ namespace semantic {
 	    ) CATCH (ErrorCode::EXTERNAL) {
 		GET_ERRORS_AND_CLEAR (msgs);
 		errors = msgs;
-	    } FINALLY;
-	    	    
-	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
-	    }
-	    
+	    } FINALLY; 
+	    	    	    
 	    if (!ret.isEmpty ()) return ret;	    
 	    else {
-		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				    expression.getLocation ().str,
-				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
-		);
-	    
-		return Generator::empty ();
+		TRY (
+		    match (right.to <Value> ().getType ()) {
+			of (ClassRef, c ATTRIBUTE_UNUSED,
+			    ret = validateMathClassRight (op, expression, left, right);
+			);
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+		
+		if (ret.isEmpty ()) {
+		    if (errors.size () != 0) {
+			THROW (ErrorCode::EXTERNAL, errors);
+		    }
+		    
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+					expression.getLocation ().str,
+					left.to <Value> ().getType ().to <Type> ().getTypeName (),
+					right.to <Value> ().getType ().to <Type> ().getTypeName ()
+		    );
+		    
+		    return Generator::empty ();
+		} else return ret;
 	    }
 	}
 
@@ -285,8 +298,8 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator BinaryVisitor::validateMathClass (Binary::Operator, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    auto loc = expression.getLocation ();
+	Generator BinaryVisitor::validateMathClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    lexing::Word loc = {expression.getLocation (), toString (op)};
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto templ = syntax::TemplateCall::init (
@@ -296,6 +309,30 @@ namespace semantic {
 		    {loc, Token::DOT},
 		    leftSynt,		    
 		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)}),
+		    syntax::Expression::empty ()
+		)
+	    );
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{rightSynt}, false
+	    );
+
+	    return this-> _context.validateValue (call);
+	}
+
+	Generator BinaryVisitor::validateMathClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
+	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto templ = syntax::TemplateCall::init (
+		loc,
+		{syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
+		syntax::Binary::init (
+		    {loc, Token::DOT},
+		    leftSynt,		    
+		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE_RIGHT)}),
 		    syntax::Expression::empty ()
 		)
 	    );
@@ -349,9 +386,9 @@ namespace semantic {
 			ret = validateLogicalSliceLeft (op, expression, left, right);
 		    );
 
-		    // of (ClassRef, c ATTRIBUTE_UNUSED,
-		    // 	ret = validateLogicalClass (op, expression, left, right);
-		    // );
+		    of (ClassRef, c ATTRIBUTE_UNUSED,
+		    	ret = validateLogicalClass (op, expression, left, right);
+		    );
 		}		
 		
 	    ) CATCH (ErrorCode::EXTERNAL) {
@@ -359,19 +396,32 @@ namespace semantic {
 		errors = msgs;
 	    } FINALLY;
 	    
-	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
-	    } 
-
 	    if (!ret.isEmpty  ()) return ret;
 	    else {
-		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				    expression.getLocation ().str,
-				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
-		);
+		TRY (
+		    match (right.to <Value> ().getType ()) {
+			of (ClassRef, c ATTRIBUTE_UNUSED,
+			    ret = validateLogicalClassRight (op, expression, left, right);
+			);
+		    }
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
 		
-		return Generator::empty ();
+		if (ret.isEmpty ()) {
+		    if (errors.size () != 0) {
+			THROW (ErrorCode::EXTERNAL, errors);
+		    }
+		    
+		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+					expression.getLocation ().str,
+					left.to <Value> ().getType ().to <Type> ().getTypeName (),
+					right.to <Value> ().getType ().to <Type> ().getTypeName ()
+		    );
+		    
+		    return Generator::empty ();
+		} else return ret;
 	    }
 	}
 
@@ -533,6 +583,83 @@ namespace semantic {
 	    return this-> _context.validateValue (test);
 	}
 
+	Generator BinaryVisitor::validateLogicalClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
+			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
+			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
+	    
+	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
+	    
+	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
+	    auto templ = syntax::Binary::init (
+		{loc, Token::DOT},
+		leftSynt,		    
+		syntax::Var::init ({loc, CoreNames::get (TEST_OP_OVERRIDE)}),
+		syntax::Expression::empty ()
+	    );	    
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{rightSynt}, false
+	    );
+
+	    auto cl = this-> _context.validateValue (call);
+	    
+	    auto final_test = syntax::Binary::init (
+		{loc},
+		call,
+		syntax::Cast::init (loc,
+				    TemplateSyntaxWrapper::init (loc, cl.to <Value> ().getType ()),
+				    TemplateSyntaxWrapper::init (loc, ifixed (0))
+		),
+		syntax::Expression::empty ()
+	    );		    
+
+	    return this-> _context.validateValue (final_test);
+	}
+
+	Generator BinaryVisitor::validateLogicalClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
+			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
+			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
+	    
+	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
+	    
+	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
+	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto templ = syntax::Binary::init (
+		{loc, Token::DOT},
+		leftSynt,		    
+		syntax::Var::init ({loc, CoreNames::get (TEST_OP_OVERRIDE)}),
+		syntax::Expression::empty ()
+	    );	    
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{rightSynt}, false
+	    );
+
+	    auto cl = this-> _context.validateValue (call);
+	    
+	    auto final_test = syntax::Binary::init (
+		{loc, inverseOperator (op)},
+		call,
+		syntax::Cast::init (loc,
+				    TemplateSyntaxWrapper::init (loc, cl.to <Value> ().getType ()),
+				    TemplateSyntaxWrapper::init (loc, ifixed (0))
+		),
+		syntax::Expression::empty ()
+	    );		    
+
+	    return this-> _context.validateValue (final_test);
+	}
+
+	
 	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    auto right = this-> _context.validateValue (expression.getRight ());
@@ -804,6 +931,56 @@ namespace semantic {
 
 	bool BinaryVisitor::isContain (Binary::Operator op) {
 	    return op == Binary::Operator::IN || op == Binary::Operator::NOT_IN;
+	}
+
+	std::string BinaryVisitor::toString (Binary::Operator op) {
+	    switch (op) {
+	    case Binary::Operator::OR : return Token::DPIPE;
+	    case Binary::Operator::AND : return Token::DAND;		
+	    case Binary::Operator::INF : return Token::INF;
+	    case Binary::Operator::SUP : return Token::SUP;
+	    case Binary::Operator::INF_EQUAL : return Token::INF_EQUAL;
+	    case Binary::Operator::SUP_EQUAL : return Token::SUP_EQUAL;
+	    case Binary::Operator::NOT_EQUAL : return Token::NOT_EQUAL;
+	    case Binary::Operator::EQUAL : return Token::DEQUAL;
+	    case Binary::Operator::LEFT_SHIFT : return Token::LEFTD;
+	    case Binary::Operator::RIGHT_SHIFT : return Token::RIGHTD;
+	    case Binary::Operator::BIT_OR : return Token::PIPE;
+	    case Binary::Operator::BIT_AND : return Token::AND; 
+	    case Binary::Operator::BIT_XOR : return Token::XOR;
+	    case Binary::Operator::ADD : return Token::PLUS;
+	    case Binary::Operator::CONCAT : return Token::TILDE;
+	    case Binary::Operator::SUB : return Token::MINUS;
+	    case Binary::Operator::MUL : return Token::STAR;
+	    case Binary::Operator::DIV : return Token::DIV;
+	    case Binary::Operator::MODULO : return Token::PERCENT;
+	    case Binary::Operator::EXP : return Token::DXOR;
+	    case Binary::Operator::RANGE : return Token::DDOT;
+	    case Binary::Operator::TRANGE : return Token::TDOT;
+	    case Binary::Operator::IS : return Keys::IS;
+	    case Binary::Operator::NOT_IS : return Keys::NOT_IS;
+	    case Binary::Operator::IN : return Keys::IN;
+	    case Binary::Operator::NOT_IN : return Keys::NOT_IN;
+	    default :
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    }
+	    return "";
+	}
+	
+
+	std::string BinaryVisitor::inverseOperator (Binary::Operator op) {
+	    switch (op) {
+	    case Binary::Operator::INF : return Token::SUP;
+	    case Binary::Operator::INF_EQUAL : return Token::SUP_EQUAL;
+	    case Binary::Operator::SUP : return Token::INF;
+	    case Binary::Operator::SUP_EQUAL : return Token::INF_EQUAL;
+	    case Binary::Operator::EQUAL : return Token::DEQUAL;
+	    case Binary::Operator::NOT_EQUAL : return Token::NOT_EQUAL;
+	    default :
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+	    }
+	    
+	    return "";
 	}
 	
     }

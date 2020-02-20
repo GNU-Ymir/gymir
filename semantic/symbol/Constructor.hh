@@ -75,6 +75,11 @@ namespace semantic {
 	const std::vector <syntax::Expression> & getThrowers () const;
 	
 	const Symbol & getClass () const;
+
+	/**
+	 * \return the list of custom attributs
+	 */
+	const std::vector <lexing::Word> & getCustomAttributes () const;
 	
     };    
 

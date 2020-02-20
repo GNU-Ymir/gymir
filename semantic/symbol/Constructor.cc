@@ -122,5 +122,9 @@ namespace semantic {
     const std::vector <syntax::Expression> & Constructor::getThrowers () const {
 	return this-> _throwers;
     }
+
+    const std::vector <lexing::Word> & Constructor::getCustomAttributes () const {
+	return this-> _content.to <syntax::Constructor> ().getCustomAttributes ();
+    }
     
 }

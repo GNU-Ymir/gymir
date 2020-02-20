@@ -77,6 +77,13 @@ namespace semantic {
 	    generator::Generator validatePointer (const syntax::Unary & un, const generator::Generator & operand);
 
 	    /**
+	     * \brief Validate the operation on a class
+	     * \param un the operation
+	     * \param operand an operand (assumed to be class value)
+	     */
+	    generator::Generator validateClass (const syntax::Unary & un, const generator::Generator & operand);
+
+	    /**
 	     * \brief Validate a function pointer from frame proto
 	     * \param un the operation
 	     * \param proto the frame prototype

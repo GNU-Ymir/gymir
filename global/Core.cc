@@ -6,6 +6,7 @@ namespace global {
 			    ARRAY_MODULE       = "array",
 			    ASSERT_FUNC        = "abort",
 			    BINARY_OP_OVERRIDE = "opBinary",
+			    BINARY_OP_OVERRIDE_RIGHT = "opBinaryRight",
 			    CLASS_ALLOC        = "_yrt_alloc_class", 
 			    CONTAIN_OP_OVERRIDE = "opContain",
 			    CORE_MODULE        = "core",
@@ -27,10 +28,13 @@ namespace global {
 			    RUN_MAIN           = "_yrt_run_main", 
 			    RUN_MAIN_DEBUG     = "_yrt_run_main_debug", 
 			    SET_JMP            = "setjmp",
+			    TEST_OP_OVERRIDE   = "opTest",
+			    TEST_OP_OVERRIDE_RIGHT   = "opTestRight",
 			    THROW              = "_yrt_exc_throw", 
 			    TYPE_IDS           = "TypeIDs",
 			    TYPE_INFO          = "TypeInfo",
 			    TYPE_INFO_EQUAL    = "equals",
 			    TYPE_INFO_MODULE   = "typeinfo",
+			    UNARY_OP_OVERRIDE  = "opUnary",
     );
 }
