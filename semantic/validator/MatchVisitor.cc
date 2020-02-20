@@ -34,10 +34,10 @@ namespace semantic {
 	    auto & actions  = expression.getActions ();
 	    Generator type (Generator::empty ());
 	    bool isMandatory = false;
+	    std::vector <std::string> errors;
 	    for (auto it_ : Ymir::r (0, matchers.size ())) {
 		auto it = matchers.size () - 1 - it_; // We get them in the reverse order to have the tests in the right order
 		Generator test (Generator::empty ());
-		std::vector <std::string> errors;
 		bool local_mandatory = false;
 		this-> _context.enterBlock ();
 		{
@@ -70,17 +70,19 @@ namespace semantic {
 		
 		{
 		    TRY (
+			if (errors.size () != 0)
+			    this-> _context.discardAllLocals ();
+			
 			this-> _context.quitBlock ();
 		    ) CATCH (ErrorCode::EXTERNAL) {
 			GET_ERRORS_AND_CLEAR (msgs);
 			errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		    } FINALLY;
 		}
-
-		if (errors.size () != 0 && expression.isFinal ())
-		    THROW (ErrorCode::EXTERNAL, errors);
 	    }
-	    
+
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
 	    
 	    if (!isMandatory && (!type.is<Void> () || expression.isFinal ())) {
 		if (!type.is<Void> ()) {
@@ -92,6 +94,8 @@ namespace semantic {
 	    
 	    return result;
 	}
+
+       	
 
 	Generator MatchVisitor::validateMatch (const Generator & value, const Expression & matcher, bool & isMandatory) {
 	    match (matcher) {
@@ -457,7 +461,346 @@ namespace semantic {
 		isMandatory = retValue.is <BoolValue> () && retValue.to <BoolValue> ().getValue ();
 		return value;
 	    } else return ret;
-	}	
-    }
-    
+	}	    
+
+	Generator MatchVisitor::validateCatcher (const Generator & excp, const std::vector <Generator> & possibleTypes, const syntax::Catch & expression) {
+	    Generator result (Generator::empty ());
+	    auto & matchers = expression.getMatchs ();
+	    auto & actions = expression.getActions ();
+
+	    Generator type (Generator::empty ());
+	    bool isMandatory = false;
+	    std::vector <std::string> errors;
+	    std::vector <std::pair <lexing::Word, Generator> > usedTypes;
+	    
+	    for (auto it : Ymir::r (0, matchers.size ())) {
+		// We are going in the right order, but the insertion will be performed at the end of the else
+		// this-> _context.addElseToConditional ()
+		
+		Generator test (Generator::empty ());
+		std::vector <Generator> local_types;
+		bool all_mandatory = false;
+		
+		this-> _context.enterBlock ();
+
+		{
+		    std::vector <std::pair <lexing::Word, Generator> > founds; // Outside the try, because there is a coma inside this declaration, C++ sucks sometimes
+		    TRY (
+			test = this-> validateMatchForCatcher (excp, matchers [it], possibleTypes, local_types, all_mandatory);
+			if (all_mandatory) {isMandatory = true;} // Keys::UNDER, we caught all
+			bool once = false;
+			for (auto &lt : local_types) {
+			    bool found = false;
+			    for (auto &it : usedTypes) {
+				if (it.second.to<Type> ().isCompatible (lt)) {
+				    found = true;
+				    founds.push_back ({it.first, it.second});
+				    break;   
+				}
+			    }
+			    
+			    if (!found) {
+				once = true;
+				usedTypes.push_back ({matchers [it].getLocation (), lt});
+			    }
+			}
+
+			if (!once) { // If this catch has inserted nothing
+			    for (auto & jt : founds) {
+				auto note = Ymir::Error::createNote (jt.first);
+				errors.push_back (Error::makeOccurAndNote (matchers [it].getLocation (), note, ExternalError::get (MULTIPLE_CATCH), jt.second.prettyString ()));
+			    }
+			}
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}
+
+		if (!test.isEmpty ()) { // size == 2, if succeed
+		    auto content = this-> _context.validateValue (actions [it]);
+		    auto local_type = content.to <Value> ().getType ();
+		    
+		    if (type.isEmpty () && (!content.to <Value> ().isReturner () && !content.to <Value> ().isBreaker ())) {
+			// We don't take the type into account, if the content is throwing or returning or something like that
+			type = local_type;
+		    } else {
+			if (!content.to <Value> ().isReturner () && !content.to<Value> ().isBreaker ()) // If it is a breaker or a returner the value won't be evaluated anyway
+			    this-> _context.verifyCompatibleType (content.getLocation (), type, local_type);
+		    }
+
+		    Generator cond (Generator::empty ());
+		    if (type.isEmpty ())		       			
+			cond = Conditional::init (matchers [it].getLocation (), local_type, test, content, Generator::empty (), all_mandatory); 
+		    else
+			cond = Conditional::init (matchers [it].getLocation (), type, test, content, Generator::empty (), all_mandatory);
+
+		    if (result.isEmpty ()) {
+			result = cond;
+		    } else result = this-> _context.addElseToConditional (result, cond);		    
+		}
+		
+		{
+		    TRY (
+			if (errors.size () != 0)
+			    this-> _context.discardAllLocals ();
+			
+			this-> _context.quitBlock ();
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } FINALLY;
+		}		
+	    }
+
+	    if (!isMandatory) { // If there is no all catcher
+		for (auto & it : possibleTypes) {
+		    bool found = false;
+		    for (auto & jt : usedTypes) {
+			if (it.to <Type> ().isCompatible (jt.second)) {
+			    found = true;
+			    break;
+			}
+		    }
+		    
+		    if (!found)
+			errors.push_back (Error::makeOccur (expression.getLocation (), ExternalError::get (NOT_CATCH), it.prettyString ()));
+		}
+	    }
+
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+	    
+	    return result;
+	}
+
+	Generator MatchVisitor::validateMatchForCatcher (const Generator & value, const Expression & matcher, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {
+	    bool isMandatory = false;
+	    match (matcher) {
+		of (syntax::Var, var,
+		    if (var.getName () == Keys::UNDER) {
+			all = true;
+			return BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
+		    }
+		);
+
+		of (syntax::VarDecl, decl,
+		    return validateMatchVarDeclForCatcher (value, decl, possibleTypes, catchingTypes, all);
+		);
+
+		of (syntax::MultOperator, call, {
+			if (call.getEnd () == Token::RPAR)
+			    return validateMatchCallForCatcher (value, call, possibleTypes, catchingTypes, all);
+		    }
+		);
+
+		// All the following won't pass but we wan't to get a valid error
+		of (syntax::Binary, bin,
+		    return validateMatchBinary (value, bin, isMandatory); // Normal test
+		);
+
+		of (syntax::List, lst,
+		    return validateMatchList (value, lst, isMandatory); // Normal test
+		);
+	    }
+	    
+	    // Idem for that
+	    return validateMatchAnything (value, matcher, isMandatory);
+	}
+
+	Generator MatchVisitor::validateMatchVarDeclForCatcher (const Generator & value_, const syntax::VarDecl & var, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {
+	    std::vector <std::string> errors;
+	    Generator test (Generator::empty ());
+	    Generator varDecl (Generator::empty ());
+
+	    TRY (
+		Generator value (value_);
+		if (var.getName () != Keys::UNDER) this-> _context.verifyShadow (var.getName ());
+
+		Generator varType (Generator::empty ());
+		if (!var.getType ().isEmpty ())		
+		    varType = this-> _context.validateType (var.getType ());
+		else {
+		    all = true; // No type, so every type will pass there
+		    varType = value.to <Value> ().getType (); // to have a vardecl, we must at least have a type or a value
+		    varType.to <Type> ().isRef (false);
+		    varType.to <Type> ().isMutable (false);
+		}
+
+		bool isMutable = false;
+		bool isRef = false;
+		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable);
+		// value is typed exception, this will pass if varType is an heir 
+		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType);
+
+		auto loc = var.getLocation ();
+		auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+						 TemplateSyntaxWrapper::init (loc, value),
+						 syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+						 syntax::Expression::empty ()
+		);
+		    
+		auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
+							syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+							{bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (var.getLocation (), varType))}							    
+		);
+		
+		auto type_test = this-> _context.validateValue (call);
+		
+		bool isMandatory = false;
+		
+		if (!var.getValue ().isEmpty ()) {
+		    test = validateMatchForCatcher (value, var.getValue (), possibleTypes, catchingTypes, isMandatory);
+		} else isMandatory = true;
+
+		if (!test.isEmpty () && !type_test.isEmpty ()) {
+		    test = BinaryBool::init (var.getLocation (), Binary::Operator::AND, Bool::init (var.getLocation ()), test, type_test);
+		} else test = type_test;
+		
+
+		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, value, isMutable);
+		if (var.getName () != Keys::UNDER) {
+		    this-> _context.insertLocal (var.getName ().str, varDecl);
+		}
+
+		if (isMandatory) { // If the test will always pass
+		    catchingTypes = {}; // Prune to avoid conflict
+		    for (auto & it : possibleTypes) {
+			if (varType.to <Type> ().isCompatible (it) || this-> _context.isAncestor (varType, it))
+			    catchingTypes.push_back (it);
+		    }
+		} else { // We need to verify that we didn't let pass some type that will not pass this test
+		    std::vector <Generator> realCatch;
+		    for (auto & it : catchingTypes) {
+			if (varType.to <Type> ().isCompatible (it) || this-> _context.isAncestor (varType, it))
+			    realCatch.push_back (it);
+		    }
+		    catchingTypes = realCatch;
+		}
+		
+		// If no possibleType is compatible with varType, then this is an useless catcher
+		if (catchingTypes.size () == 0) {
+		    bool found = false;
+		    for (auto & it : possibleTypes) {
+			if (varType.to <Type> ().isCompatible (it) || this-> _context.isAncestor (varType, it)) {
+			    found = true;
+			    break;
+			}
+		    }
+		    
+		    if (!found) Ymir::Error::occur (var.getLocation (), ExternalError::get (USELESS_CATCH), varType.prettyString ());;		    
+		}
+		
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors = msgs;
+		errors.back () = Ymir::Error::addNote (var.getLocation (), errors.back (), Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+	    } FINALLY;
+
+	    if (errors.size () != 0)
+		THROW (ErrorCode::EXTERNAL, errors);
+
+	    
+	    return Set::init (var.getLocation (), Bool::init (value_.getLocation ()), {varDecl, test});	    
+	}
+
+	Generator MatchVisitor::validateMatchCallForCatcher (const Generator & value, const syntax::MultOperator & call, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {	    
+	    std::vector <std::string> errors;
+	    Generator globTest (Generator::empty ());
+	    auto loc = call.getLocation ();
+	    Generator type (Generator::empty ());
+	    bool isMandatory = true;
+	    all = false;
+	    
+	    TRY (
+		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
+		    type = this-> _context.validateType (call.getLeft ());		    
+		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
+		   
+		    // If we have passed the test, but still not compatible means it is a class
+		    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+						     TemplateSyntaxWrapper::init (loc, value),
+						     syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+						     syntax::Expression::empty ()
+		    );
+		    
+		    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
+							    syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+							    {bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (loc, type))}							    
+		    );
+		    globTest = this-> _context.validateValue (call);		   
+		}
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		errors.back () = Ymir::Error::addNote (call.getLocation (), errors.back (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+	    } FINALLY;
+	    
+	    if (errors.size () != 0) {
+		THROW (ErrorCode::EXTERNAL, errors);
+	    }
+	    
+	    type.to <Type> ().isMutable (false);
+	    type.to <Type> ().isRef (false);
+
+	    auto castedValue = UniqValue::init (call.getLocation (), type, Cast::init (call.getLocation (), type, value));
+	    globTest = Set::init (call.getLocation (), Bool::init (call.getLocation ()), {castedValue, globTest});
+	    
+	    for (auto & it : call.getRights ()) {		
+		if (!it.is <NamedExpression> ())
+		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
+		auto name = it.to <NamedExpression> ().getLocation ().str;
+		auto loc = it.getLocation ();
+		auto bin = syntax::Binary::init ({loc, Token::DOT},
+						 TemplateSyntaxWrapper::init (loc, castedValue),
+						 syntax::Var::init ({loc, name}),
+						 syntax::Expression::empty ());
+		auto innerVal = this-> _context.validateValue (bin);		
+		if (value.is <Referencer> ()) {
+		    auto type = innerVal.to <Value> ().getType ();
+		    type.to <Type> ().isRef (true);
+		    innerVal = Referencer::init (innerVal.getLocation (), type, innerVal);
+		}
+		
+		auto loc_mandatory = false;		
+		auto loc_test = validateMatch (innerVal, it.to <NamedExpression> ().getContent (), loc_mandatory);
+		isMandatory = loc_mandatory && isMandatory;
+		globTest = BinaryBool::init (value.getLocation (),
+					     Binary::Operator::AND,
+					     Bool::init (value.getLocation ()),
+					     globTest, loc_test);
+	    }
+
+	    if (isMandatory) { // If the test will always pass
+		catchingTypes = {}; // Prune to avoid conflict
+		for (auto & it : possibleTypes) {
+		    if (type.to <Type> ().isCompatible (it) || this-> _context.isAncestor (type, it))
+			catchingTypes.push_back (it);
+		}
+	    } else { // We need to verify that we didn't let pass some type that will not pass this test
+		std::vector <Generator> realCatch;
+		for (auto & it : catchingTypes) {
+		    if (type.to <Type> ().isCompatible (it) || this-> _context.isAncestor (type, it))
+			realCatch.push_back (it);
+		}
+		catchingTypes = realCatch;
+	    }
+		
+	    // If no possibleType is compatible with type, then this is an useless catcher
+	    if (catchingTypes.size () == 0) {
+		bool found = false;
+		for (auto & it : possibleTypes) {
+		    if (type.to <Type> ().isCompatible (it) || this-> _context.isAncestor (type, it)) {
+			found = true;
+			break;
+		    }
+		}
+		    
+		if (!found) Ymir::Error::occur (call.getLocation (), ExternalError::get (USELESS_CATCH), type.prettyString ());;		    
+	    }
+	    
+	    return globTest;
+	}
+	
+    }    
 }

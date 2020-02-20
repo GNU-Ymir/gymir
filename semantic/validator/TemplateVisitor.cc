@@ -1398,6 +1398,16 @@ namespace semantic {
 							   matchers, actions, m.isFinal ());
 
 		    }
+		) else of (syntax::Catch, c, {
+			std::vector <Expression> matchers;
+			std::vector <Expression> actions;
+			for (auto & it : c.getMatchs ())
+			    matchers.push_back (replaceAll (it, mapping));
+			for (auto & it : c.getActions ())
+			    actions.push_back (replaceAll (it, mapping));
+			
+			return syntax::Catch::init (c.getLocation (), matchers, actions);
+		    }
 		) else of (syntax::Scope, s, {
 			return syntax::Scope::init (s.getLocation (), replaceAll (s.getContent (), mapping));
 		    }

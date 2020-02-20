@@ -1857,11 +1857,15 @@ namespace semantic {
 		} FINALLY;
 	    }
 
+	    auto ret = Block::init (block.getLocation (), type, values);
+	    ret.to <Value> ().isBreaker (breaker);
+	    ret.to <Value> ().isReturner (returner);
+	    
 	    Generator catchVar (Generator::empty ());
 	    Generator catchInfo (Generator::empty ());
 	    Generator catchAction (Generator::empty ());	    
 	    if (!block.getCatcher ().isEmpty ()) {
-		validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type);
+		validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type, ret.getThrowers ());
 	    }
 
 	    std::vector <Generator> onExit;
@@ -1885,10 +1889,7 @@ namespace semantic {
 	
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
-	    
-	    auto ret = Block::init (block.getLocation (), type, values);
-	    ret.to <Value> ().isBreaker (breaker);
-	    ret.to <Value> ().isReturner (returner);
+	   
 	    
 	    if (onSuccess.size () != 0) ret = SuccessScope::init (block.getLocation (), type, ret, onSuccess);
 	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) {
@@ -1899,9 +1900,7 @@ namespace semantic {
 	    return ret;
 	}
 
-	void Visitor::validateCatcher (const syntax::Expression & catcher, Generator & varDecl, Generator & typeInfo, Generator & action, const generator::Generator& typeBlock) {
-	    auto matchs = catcher.to <syntax::Catch> ().getMatchs ();
-	    auto actions = catcher.to <syntax::Catch> ().getActions ();
+	void Visitor::validateCatcher (const syntax::Expression & catcher, Generator & varDecl, Generator & typeInfo, Generator & action, const generator::Generator& typeBlock, const std::vector <Generator> & throwsTypes) {
 	    std::vector <std::string> errors;	    
 	    enterBlock ();
 	    {
@@ -1916,12 +1915,11 @@ namespace semantic {
 		    insertLocal ("#catch", varDecl);
 		    typeInfo = validateTypeInfo (loc, type);
 		    auto vref = VarRef::init (loc, "#catch", type, varDecl.getUniqId (),  false, Generator::empty ());
+
+		    auto visitor = MatchVisitor::init (*this);
 		    
-		    auto match = syntax::Match::init (loc, TemplateSyntaxWrapper::init (loc, vref),
-						      matchs, actions, true // Final, the match must be complete
-		    );
+		    action = visitor.validateCatcher (vref, throwsTypes, catcher.to <syntax::Catch> ());
 		    
-		    action = validateValue (match);		    
 		    if (!action.to <Value> ().isReturner () && !action.to <Value> ().isBreaker ()) {
 			this-> verifyMemoryOwner (loc, typeBlock, action, false, true, false);
 		    }
@@ -4776,18 +4774,9 @@ namespace semantic {
 	    std::string leftName;
 	    if (!left.to<Type> ().isCompatible (right)) {
 		// It can be compatible with an ancestor of right
-		if (right.is <ClassRef> () && !right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ()) {
-		    auto ancestor = right.to <ClassRef> ().getAncestor ();
-		    while (!ancestor.isEmpty ()) {
-			if (left.to <Type> ().isCompatible (ancestor)) return;
-			else {
-			    if (!ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ())
-				ancestor = ancestor.to <ClassRef> ().getAncestor ();
-			    else ancestor = Generator::empty ();
-			}
-		    }
-		}
-		error = true;
+		error = !isAncestor (left, right);
+		if (!error) return;
+		
 		leftName = left.to<Type> ().getTypeName ();
 	    }
 	    
@@ -4813,6 +4802,21 @@ namespace semantic {
 
 	}	
 
+	bool Visitor::isAncestor (const Generator & left, const Generator & right) {
+	    if (right.is <ClassRef> () && !right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ()) {
+		auto ancestor = right.to <ClassRef> ().getAncestor ();
+		while (!ancestor.isEmpty ()) {
+		    if (left.to <Type> ().isCompatible (ancestor)) return true;
+		    else {
+			if (!ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ())
+			    ancestor = ancestor.to <ClassRef> ().getAncestor ();
+			else ancestor = Generator::empty ();
+		    }
+		}
+	    }
+	    return false;
+	}
+	
 	void Visitor::verifyShadow (const lexing::Word & name) {
 	    verifyNotIsType (name);
 	    

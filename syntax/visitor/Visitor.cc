@@ -465,12 +465,13 @@ namespace syntax {
 	    this-> _lex.rewind (); // We rewind the LACC, since it is part of the following expression
 	}
 	
-	auto body = visitExpression ();
 	auto throws = this-> _lex.consumeIf ({Keys::THROWS});
 	std::vector <syntax::Expression> throwers;
 	if (throws == Keys::THROWS) {
 	    throwers = visitThrowers ();
 	}
+
+	auto body = visitExpression ();
 	
 	if (templates.size () != 0) {
 	    return Template::init (location, templates, Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf, cas, throwers));
@@ -544,13 +545,15 @@ namespace syntax {
 	else this-> _lex.rewind ();
 
 	auto proto = visitFunctionPrototype (false, isClass);
-	auto body = visitFunctionBody ();
-	
+
 	auto throws = this-> _lex.consumeIf ({Keys::THROWS});
 	std::vector <syntax::Expression> throwers;
 	if (throws == Keys::THROWS) {
 	    throwers = visitThrowers ();
 	}
+
+	auto body = visitFunctionBody ();
+	
 	
 	auto function = Function::init (name, proto, body);
 	function.to <Function> ().setCustomAttributes (attribs);

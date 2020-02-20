@@ -37,6 +37,14 @@ namespace semantic {
 	    generator::Generator validate (const syntax::Match & expression);
 
 	    /**
+	     * \brief Validate the pattern matching of a catcher
+	     * \brief This is a bit different to tht validateMatch, because the value is always of type Exception, but we have only the right to be equal to types that are inside possibleTypes
+	     * \brief This also means that the main matching (first level) will only work on vardecl and multoperator
+	     */
+	    generator::Generator validateCatcher (const generator::Generator & value, const std::vector <generator::Generator> & possibleTypes, const syntax::Catch & expression);
+
+	    
+	    /**
 	     * \brief Validate a matcher
 	     * \returns test, the validated test
 	     * \warning this will throw errors if failure, that have to be caught elsewhere to follow the behavior of a pattern matcher
@@ -44,11 +52,24 @@ namespace semantic {
 	    generator::Generator validateMatch (const generator::Generator & value, const syntax::Expression & matcher, bool & isMandatory);
 
 	    /**
+	     * \brief Validate a specific matcher for a catcher
+	     * 
+	     */
+	    generator::Generator validateMatchForCatcher (const generator::Generator & value, const syntax::Expression & matcher, const std::vector <generator::Generator> & possibleTypes, std::vector <generator::Generator> & caught, bool & all);
+	    
+	    
+	    /**
 	     * \brief Validate a VarDecl
 	     * \returns test, the validated test
 	     */
 	    generator::Generator validateMatchVarDecl (const generator::Generator & value, const syntax::VarDecl & decl, bool & isMandatory);
 
+	    /**
+	     * \brief Validate a vardecl for a catcher
+	     */
+	    generator::Generator validateMatchVarDeclForCatcher (const generator::Generator & value, const syntax::VarDecl & matcher, const std::vector <generator::Generator> & possibletypes, std::vector<generator::Generator> & catchingTypes, bool & all);
+	    
+	    
 	    /**
 	     * \brief Validate a binaryExpr
 	     * \brief If it is a '|' or a '..' or '...', it must be validated by the pattern match otherwise it is validate normaly as any other expression
@@ -66,6 +87,10 @@ namespace semantic {
 	     */
 	    generator::Generator validateMatchCall (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);
 
+	    
+	    generator::Generator validateMatchCallForCatcher (const generator::Generator & value, const syntax::MultOperator & matcher, const std::vector <generator::Generator> & possibletypes, std::vector<generator::Generator> & catchingTypes, bool & all);
+	
+	    
 	    /**
 	     * \brief Validate a call operation, where value a value of type StructRef
 	     */

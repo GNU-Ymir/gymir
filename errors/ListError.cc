@@ -2,7 +2,7 @@
 
 namespace Ymir {    
     DECLARE_ENUM_WITH_TYPE (ExternalError, std::string,
-   			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
+			    AFFECT_COMPILE_TIME		    = "affectation at compile time is prohibited",
 			    ALLOC_ABSTRACT_CLASS            = "class %(y) is declared abstract",
 			    ASSERT_FAILED                   = "assertion failed : %(y)",
 			    BORROWED_HERE		    = "borrow occured here",
@@ -52,11 +52,12 @@ namespace Ymir {
 			    MAIN_FUNCTION_ONE_ARG           = "main function take at most one argument",
 			    MALFORMED_CHAR		    = "malformed literal, number of %(y) is %(y)",
 			    MATCH_CALL                      = "match call can only work on class or struct, not %(y)",
-			    MATCH_NO_DEFAULT                = "match of type %(y) has no default match case",
 			    MATCH_FINAL_NO_DEFAULT          = "final match has no default match case",
+			    MATCH_NO_DEFAULT                = "match of type %(y) has no default match case",
 			    MATCH_PATTERN_CLASS             = "inner patterns of a class pattern matching must be named expressions",
 			    MISMATCH_ARITY                  = "mismatch arity in tuple destructor (%(y)) and (%(y))",
 			    MOVE_ONLY_CLOSURE               = "move is only usable for lambda closure",
+			    MULTIPLE_CATCH                  = "%(y) is caught multiple times, this catcher will never been activated",
 			    MULTIPLE_FIELD_INIT             = "field %(y) is initialized multiple times",
 			    MUTABLE_CONST_ITER		    = "an iterator cannot be mutable, if it is not a reference",
 			    MUTABLE_CONST_PARAM		    = "a parameter cannot be mutable, if it is not a reference",
@@ -67,6 +68,7 @@ namespace Ymir {
 			    NOT_A_CLASS                     = "type %(y) is not a class type",
 			    NOT_A_LVALUE		    = "not a lvalue",
 			    NOT_A_STRUCT                    = "type %(y) is not a struct type",
+			    NOT_CATCH                       = "the exception %(y) might be thrown but is not caught",
 			    NOT_IMPL_TRAIT                  = "class %(y) does not implement trait %(y)",
 			    NOT_ITERABLE                    = "%(y) type is not iterable",
 			    NOT_ITERABLE_WITH               = "%(y) type is not iterable with %(y) vars",
@@ -107,7 +109,6 @@ namespace Ymir {
 			    SYNTAX_ERROR_MISSING_TEMPL_PAR  = "multiple ! arguments are not allowed",
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
 			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
-
 			    THROWS_IN_LAMBDA                = "lambda functions must be safe, but there are exceptions not caught",
 			    THROWS_NOT_DECLARED             = "function %(y) might throw an exception of type %(y), but that is not declared in its prototype",
 			    THROWS_NOT_USED                 = "function %(y) prototype inform about a possible throw of an exception of type %(y), but this is not true",
@@ -132,6 +133,7 @@ namespace Ymir {
 			    UNRESOLVED_TEMPLATE             = "unresolved template",
 			    UNTERMINATED_SEQUENCE	    = "unterminated escape sequence",
 			    UNUSED_MATCH_CALL_OP            = "unused patterns {%(y)} in struct destructuring",
+			    USELESS_CATCH                   = "useless catch of %(y), that cannot be thrown",  
 			    USELESS_DECORATOR		    = "useless decorator",
 			    USELESS_EXPR                    = "expression has no effect",
 			    USE_AS_TYPE			    = "expression used as type",
@@ -141,6 +143,5 @@ namespace Ymir {
 			    VAR_DECL_WITH_NOTHING           = "var declaration must at least have a type or a value",
 			    VOID_VAR			    = "cannot declare var of type void",
 			    WRONG_MODULE_NAME		    = "module named %(y) must be placed in file named %(y)",
-  
     );    
 }

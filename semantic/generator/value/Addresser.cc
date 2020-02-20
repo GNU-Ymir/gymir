@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/Addresser.hh>
+#include <ymir/semantic/generator/value/FrameProto.hh>
 
 namespace semantic {
 
@@ -13,7 +14,8 @@ namespace semantic {
 	    Value (loc, type),
 	    _who (who)
 	{
-	    this-> setThrowers (this-> _who.to <Value> ().getThrowers ());
+	    if (!this-> _who.is <FrameProto> ())
+		this-> setThrowers (this-> _who.to <Value> ().getThrowers ());
 	}
 	
 	Generator Addresser::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
