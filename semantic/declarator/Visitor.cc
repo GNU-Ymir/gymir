@@ -498,6 +498,7 @@ namespace semantic {
 			    THROW (ErrorCode::EXTERNAL, errors);			
 		    }
 		}
+		
 		getReferent ().use (it.second, Symbol::getModuleByPath (it.second));		
 	    }
 	}

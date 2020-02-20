@@ -596,7 +596,7 @@ namespace semantic {
 	    auto templ = syntax::Binary::init (
 		{loc, Token::DOT},
 		leftSynt,		    
-		syntax::Var::init ({loc, CoreNames::get (TEST_OP_OVERRIDE)}),
+		syntax::Var::init ({loc, CoreNames::get (LOGICAL_OP_OVERRIDE)}),
 		syntax::Expression::empty ()
 	    );	    
 
@@ -634,7 +634,7 @@ namespace semantic {
 	    auto templ = syntax::Binary::init (
 		{loc, Token::DOT},
 		leftSynt,		    
-		syntax::Var::init ({loc, CoreNames::get (TEST_OP_OVERRIDE)}),
+		syntax::Var::init ({loc, CoreNames::get (LOGICAL_OP_OVERRIDE)}),
 		syntax::Expression::empty ()
 	    );	    
 

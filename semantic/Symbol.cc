@@ -285,8 +285,13 @@ namespace semantic {
 
 	auto ret = this-> _value-> get (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    if (!it.second.isEmpty ()) {
-		auto local_ret = it.second.getUsed (name);
+	    auto mod = it.second;
+	    if (it.second.isEmpty ()) {
+		mod = getModuleByPath (it.first);
+	    }
+		    
+	    if (!mod.isEmpty ()) {
+		auto local_ret = mod.getUsed (name);
 		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
 	    }
 	}
@@ -300,10 +305,15 @@ namespace semantic {
 	
 	auto ret = this-> _value-> getPrivate (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    if (!it.second.isEmpty ()) {
-		auto local_ret = it.second.getLocal (name);
-		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	    auto mod = it.second;
+	    if (it.second.isEmpty ()) {
+		mod = getModuleByPath (it.first);
 	    }
+	    
+	    if (!mod.isEmpty ()) {
+		auto local_ret = mod.getLocal (name);
+		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+	    } 
 	}
 	
 	return Symbol::mergeEqSymbols (ret);
@@ -315,8 +325,13 @@ namespace semantic {
 
 	auto ret = this-> _value-> getPublic (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    if (!it.second.isEmpty () && it.second.isPublic ()) {
-		auto local_ret = it.second.getPublic (name);
+	    auto mod = it.second;
+	    if (it.second.isEmpty ()) {
+		mod = getModuleByPath (it.first);
+	    }
+	    
+	    if (!mod.isEmpty () && mod.isPublic ()) {
+		auto local_ret = mod.getPublic (name);
 		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
 	    }	    
 	}
@@ -327,11 +342,16 @@ namespace semantic {
     std::vector <Symbol> Symbol::getUsed (const std::string & name) const {
 	if (this-> _value == nullptr)
 	    return {};
-	
+
 	auto ret = this-> _value-> getPublic (name);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    if (!it.second.isEmpty () && it.second.isPublic ()) {
-		auto local_ret = it.second.getUsed (name);
+	    auto mod = it.second;
+	    if (it.second.isEmpty ()) {
+		mod = getModuleByPath (it.first);
+	    }
+	    
+	    if (!mod.isEmpty () && mod.isPublic ()) {
+		auto local_ret = mod.getUsed (name);
 		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
 	    }
 	}

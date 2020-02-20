@@ -728,7 +728,7 @@ namespace syntax {
 	 block := '{' (expression:(0) | ';')* '}'
 	 \endverbatim
 	 */
-	Expression visitBlock ();
+	Expression visitBlock (bool catcher = true);
 
 
 	/**

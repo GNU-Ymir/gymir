@@ -1873,28 +1873,40 @@ namespace semantic {
 	    Generator catchInfo (Generator::empty ());
 	    Generator catchAction (Generator::empty ());	    
 	    if (!block.getCatcher ().isEmpty ()) {
-		validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type, ret.getThrowers ());
+		TRY (
+		    validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type, ret.getThrowers ());
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
 	    }
 
 	    std::vector <Generator> onExit;
 	    std::vector <Generator> onSuccess;
 	    std::vector <Generator> onFailure;
+
+	    {
+		TRY (
+		    for (auto & scope_ : block.getScopes ()) {
+			auto scope = scope_.to <syntax::Scope> ();
+			if (scope.isExit ()) {
+			    onExit.push_back (validateValue (scope.getContent()));
+			    if (onExit.back ().to <Value> ().isReturner ()) returner = true;
+			    if (onExit.back ().to <Value> ().isBreaker ()) breaker = true;
+			} else if (scope.isSuccess ()) {
+			    onSuccess.push_back (validateValue (scope.getContent ()));
+			    if (onSuccess.back ().to <Value> ().isReturner ()) returner = true;
+			    if (onSuccess.back ().to <Value> ().isBreaker ()) breaker = true;
+			} else if (scope.isFailure ()) {
+			    onFailure.push_back (validateValue (scope.getContent ()));
+			} else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().str);			
+		    } 
+		) CATCH (ErrorCode::EXTERNAL) {
+		    GET_ERRORS_AND_CLEAR (msgs);
+		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} FINALLY;
+	    }
 	    
-	    for (auto & scope_ : block.getScopes ()) {
-		auto scope = scope_.to <syntax::Scope> ();
-		if (scope.isExit ()) {
-		    onExit.push_back (validateValue (scope.getContent()));
-		    if (onExit.back ().to <Value> ().isReturner ()) returner = true;
-		    if (onExit.back ().to <Value> ().isBreaker ()) breaker = true;
-		} else if (scope.isSuccess ()) {
-		    onSuccess.push_back (validateValue (scope.getContent ()));
-		    if (onSuccess.back ().to <Value> ().isReturner ()) returner = true;
-		    if (onSuccess.back ().to <Value> ().isBreaker ()) breaker = true;
-		} else if (scope.isFailure ()) {
-		    onFailure.push_back (validateValue (scope.getContent ()));
-		} else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().str);			
-	    } 
-	
 	    if (errors.size () != 0)
 		THROW (ErrorCode::EXTERNAL, errors);
 	   
@@ -2191,6 +2203,11 @@ namespace semantic {
 		    for (auto it : Ymir::r (0, sym.size ())) {
 			if (it != 0) note = note + "\n";
 			note = note + Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), sym[it].getName (), sym [it].getRealName ());
+		    }
+		    {
+			auto sym = this-> _referent.back ();
+			while (!sym.getReferent ().isEmpty ()) sym = sym.getReferent ();
+			note += "\n" + sym.formatTree () + "\n";
 		    }
 		    Error::occurAndNote (var.getLocation (), note, ExternalError::get (UNDEF_VAR), var.getName ().str);
 		}

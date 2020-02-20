@@ -37,7 +37,27 @@ namespace semantic {
 	}
 
 	Generator BracketVisitor::validateArray (const syntax::MultOperator & expression, const Generator & left, const std::vector<Generator> & right) {
+	    auto loc = expression.getLocation ();
+	    
 	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {
+		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+		auto len = ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());		
+		auto test = this-> _context.validateValue (syntax::Binary::init (
+		    {loc, Token::INF},
+		    TemplateSyntaxWrapper::init (loc, len), 
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), right[0])
+		    ),
+		    syntax::Expression::empty ()
+		));
+		    
+		auto call = this-> _context.validateValue (syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    func,
+		    {}
+		));
+		
+		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());				
 		auto innerType = left.to <Value> ().getType ().to <Array> ().getInners () [0];
 		
 		if (
@@ -48,8 +68,30 @@ namespace semantic {
 		    innerType.to <Type> ().isMutable (true);
 		else
 		    innerType.to <Type> ().isMutable (false);
-		
-		return ArrayAccess::init (expression.getLocation (), innerType, left, right [0]);
+
+		auto blType = innerType;
+		if (innerType.to <Type> ().isMutable ()) { // Array are located on the stack, so we need to make a ref
+		    blType.to <Type> ().isRef (true);
+		    return LBlock::init (
+			loc,
+			blType,
+			{
+			    conditional, 
+				Referencer::init (loc, blType,
+						  ArrayAccess::init (expression.getLocation (), innerType, left, right [0])
+				)
+				}
+		    );
+		} else {
+		    return LBlock::init (
+			loc,
+			blType,
+			{
+			    conditional, 
+				ArrayAccess::init (expression.getLocation (), innerType, left, right [0])				
+			}
+		    );
+		}
 	    }
 
 	    BracketVisitor::error (expression, left, right);
@@ -58,6 +100,29 @@ namespace semantic {
 
 	Generator BracketVisitor::validateSlice (const syntax::MultOperator & expression, const Generator & left, const std::vector<Generator> & right) {
 	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {
+		auto loc = expression.getLocation ();
+		
+		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+		auto len = StructAccess::init (expression.getLocation (),
+					       Integer::init (expression.getLocation (), 64, false),
+					       left, Slice::LEN_NAME);
+		
+		auto test = this-> _context.validateValue (syntax::Binary::init (
+		    {loc, Token::INF},
+		    TemplateSyntaxWrapper::init (loc, len), 
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), right[0])
+		    ),
+		    syntax::Expression::empty ()
+		));
+		    
+		auto call = this-> _context.validateValue (syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    func,
+		    {}
+		));
+		
+		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());						
 		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
 
 		if (
@@ -69,61 +134,14 @@ namespace semantic {
 		else
 		    innerType.to <Type> ().isMutable (false);
 
-		return SliceAccess::init (expression.getLocation (), innerType, left, right [0]);
+		return LBlock::init (
+		    loc,
+		    innerType,
+		    { conditional, SliceAccess::init (expression.getLocation (), innerType, left, right [0]) }
+		);
+		
 	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> ()) {
-		auto rtype = right [0].to <Value> ().getType ();
-		if (rtype.to <Type> ().getInners () [0].is<Integer> ()) {
-		    auto innerType = rtype.to <Type> ().getInners ()[0];
-		    std::vector <Generator> gens;
-		    auto vdecl = generator::VarDecl::init (expression.getLocation (),
-							   "#right", rtype, right [0], false);
-		    auto vref = VarRef::init (expression.getLocation (), "#right", rtype, vdecl.getUniqId (), false, Generator::empty ());
-		    gens.push_back (vdecl);
-
-		    auto vldecl = generator::VarDecl::init (expression.getLocation (),
-							    "#left", left.to <Value> ().getType (), left, false);
-		    auto vlref = VarRef::init (expression.getLocation (), "#left", left.to <Value> ().getType (), vldecl.getUniqId (), false, Generator::empty ());
-		    gens.push_back (vldecl);
-		    
-		    auto l = StructAccess::init (expression.getLocation (), innerType, vref, Range::FST_NAME);
-		    auto r = StructAccess::init (expression.getLocation (), innerType, vref, Range::SCD_NAME);
-		    auto len = BinaryInt::init (expression.getLocation (), Binary::Operator::SUB, innerType, r, l);
-
-		    auto ptrType = Pointer::init (expression.getLocation (), Void::init (
-			expression.getLocation ()
-		    ));
-
-		    auto lsize = BinaryInt::init (
-			expression.getLocation (), Binary::Operator::MUL,
-			innerType, 
-			StructAccess::init (expression.getLocation (), innerType, vref, Range::FST_NAME),
-			SizeOf::init (expression.getLocation (), innerType, left.to <Value> ().getType ().to <Type> ().getInners ()[0])
-		    );
-
-		    auto type = left.to <Value> ().getType ();
-		    if (
-			left.to <Value> ().isLvalue () &&
-			left.to <Value> ().getType ().to <Type> ().isMutable () &&
-			left.to <Value> ().getType ().to <Slice> ().getInners () [0].to <Type> ().isMutable ()
-		    )
-			type.to <Type> ().isMutable (true);
-		    else
-			type.to <Type> ().isMutable (false);
-		    
-		    type.to <Type> ().isRef (false);
-		    
-		    gens.push_back (SliceValue::init (
-			expression.getLocation (),
-			type, 
-			BinaryPtr::init (expression.getLocation (), Binary::Operator::ADD,
-					 ptrType,
-					 StructAccess::init (expression.getLocation (), ptrType, vlref, Slice::PTR_NAME),
-					 lsize
-			),
-			len
-		    ));
-		    return LBlock::init (expression.getLocation (), type, gens);
-		}
+		// Call a core function is probably better 
 	    }
 
 	    BracketVisitor::error (expression, left, right);
@@ -155,7 +173,6 @@ namespace semantic {
 	    return this-> _context.validateValue (call);
 	}
 	
-
 	
 	void BracketVisitor::error (const syntax::MultOperator & expression, const Generator & left, const std::vector <Generator> & rights) {	    
 	    std::vector <std::string> names;

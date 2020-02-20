@@ -99,7 +99,7 @@ namespace semantic {
 	}
 
 	Generator UnaryVisitor::validatePointer (const syntax::Unary & un, const Generator & operand) {
-	    auto op = toOperator (un.getOperator ());
+	    // auto op = toOperator (un.getOperator ());
 	    // This is unsafe, we don't want to do that in ymir right ?
 	    // if (op == Unary::Operator::UNREF) {
 	    // 	this-> _context.verifySafety (un.getLocation ());

@@ -102,8 +102,8 @@ namespace Ymir {
 			    SPECIALISATION_WORK_TYPE_BOTH   = "type match both",
 			    SPECIALISATION_WORK_WITH_BOTH   = "%(y) called with {%(y)} work with both",
 			    STATIC_ARRAY_REF		    = "left operand is a static array, it cannot store a reference to a dynamic array",
-			    SYNTAX_ERROR_AT		    = "[%] expected, when %(y) found",	// syntax error a specific location
-			    SYNTAX_ERROR_AT_SIMPLE	    = "%(y) unexpected",	// syntax error a specific location
+			    SYNTAX_ERROR_AT		    = "[%] expected, when %(y) found",	
+			    SYNTAX_ERROR_AT_SIMPLE	    = "%(y) unexpected",	
 			    SYNTAX_ERROR_IF_ON_NON_TEMPLATE = "test on non template declaration",
 			    SYNTAX_ERROR_MISSING_TEMPL_PAR  = "multiple ! arguments are not allowed",
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
@@ -114,7 +114,7 @@ namespace Ymir {
 			    TRAIT_NO_METHOD                 = "trait %(y) does not have any method %(y)",
 			    UNDEFINED_BIN_OP		    = "undefined operator %(y) for types %(y) and %(y)",
 			    UNDEFINED_BRACKETS_OP	    = "index operator is not defined for type %(y) and {%(y)}",
-			    UNDEFINED_CA		    = "custom attribute %(y), does not exist in this context",
+			    UNDEFINED_CA		    = "custom attribute %(y) does not exist in this context",
 			    UNDEFINED_CALL_OP		    = "call operator is not defined for type %(y) and {%(y)}",
 			    UNDEFINED_CAST_OP               = "undefined cast operator for type %(y) to type %(y)",
 			    UNDEFINED_ESCAPE		    = "undefined escape sequence",

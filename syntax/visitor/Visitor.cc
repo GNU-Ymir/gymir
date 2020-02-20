@@ -961,7 +961,7 @@ namespace syntax {
 	}
     }
 
-    Expression Visitor::visitBlock () {	
+    Expression Visitor::visitBlock (bool canCatcher) {	
 	std::vector <Declaration> decls;	
 	std::vector <Expression> content;
 	auto begin = this-> _lex.next ({Token::LACC});
@@ -981,18 +981,22 @@ namespace syntax {
 		last = true;
 	} while (end != Token::RACC);
 
-	auto ct = this-> _lex.consumeIf ({Keys::CATCH});
 	Expression catcher (Expression::empty ());
-	if (ct == Keys::CATCH) catcher = visitCatch ();
 
 	std::vector <Expression> scopes;
 	do {
-	    auto next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
-	    if (next != "") {
+	    
+	    lexing::Word next;
+	    if (catcher.isEmpty () && canCatcher)
+		next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE, Keys::CATCH});
+	    else next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
+	    if (next == Keys::CATCH) {
+		catcher = visitCatch ();
+	    } else if (next != "") {
 		this-> _lex.consumeIf ({Token::DARROW});
-		scopes.push_back (Scope::init (next, visitExpression ()));
+		scopes.push_back (Scope::init (next, visitBlock (false)));
 	    } else break;
-	} while (true);	
+	} while (true);
 	
 	if (last) content.push_back (Unit::init (end));
 	if (decls.size () != 0) {

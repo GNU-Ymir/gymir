@@ -218,6 +218,7 @@ namespace semantic {
 	
 	/** Virtual but does not do anything */
 	virtual ~ISymbol ();
+
     };
        
 
