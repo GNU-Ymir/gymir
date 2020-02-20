@@ -754,11 +754,6 @@ namespace semantic {
 	     */
 	    void verifyNotIsType (const lexing::Word & name);
 
-	    /**
-	     * \brief Throw an exception if we are currently in a safe context
-	     * \param location the location of the unsafe operation
-	     */
-	    void verifySafety (const lexing::Word & location) const;
 	    
 	public :
 

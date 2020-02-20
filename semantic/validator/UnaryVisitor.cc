@@ -100,17 +100,18 @@ namespace semantic {
 
 	Generator UnaryVisitor::validatePointer (const syntax::Unary & un, const Generator & operand) {
 	    auto op = toOperator (un.getOperator ());
-	    if (op == Unary::Operator::UNREF) {
-		this-> _context.verifySafety (un.getLocation ());
-		auto type = operand.to <Value> ().getType ().to <Type> ().getInners ()[0];
-		if (!operand.to <Value> ().getType ().to <Type> ().isMutable ())
-		    type.to<Type> ().isMutable (false);
-		return UnaryPointer::init (un.getLocation (),
-					   op,
-					   type,
-					   operand
-		);
-	    }
+	    // This is unsafe, we don't want to do that in ymir right ?
+	    // if (op == Unary::Operator::UNREF) {
+	    // 	this-> _context.verifySafety (un.getLocation ());
+	    // 	auto type = operand.to <Value> ().getType ().to <Type> ().getInners ()[0];
+	    // 	if (!operand.to <Value> ().getType ().to <Type> ().isMutable ())
+	    // 	    type.to<Type> ().isMutable (false);
+	    // 	return UnaryPointer::init (un.getLocation (),
+	    // 				   op,
+	    // 				   type,
+	    // 				   operand
+	    // 	);
+	    // }
 
 	    error (un, operand);
 	    return Generator::empty ();

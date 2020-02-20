@@ -4863,19 +4863,6 @@ namespace semantic {
 	    }
 	}
 	
-	void Visitor::verifySafety (const lexing::Word & location) const {
-	    if (this-> _contextCas.empty ())
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    
-	    for (auto & it : this-> _contextCas.back ()) {
-		if (it == Keys::SAFE) {
-		    auto note = Ymir::Error::createNote (it);
-		    Ymir::Error::occur (location,
-					ExternalError::get (SAFE_CONTEXT)
-		    );
-		}
-	    }
-	}
 
 	void Visitor::verifyThrows (const std::vector <Generator> & types, const std::vector <Generator> & rethrow, std::vector <Generator> & unused, std::vector <Generator> & notfound) {
 	    // This function is ugly, maybe there is a better way to do this

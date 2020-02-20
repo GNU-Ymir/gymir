@@ -96,8 +96,6 @@ namespace Ymir {
 			    RETURN_INSIDE_EXPR		    = "return here will result in an undefined behavior", 
 			    RETURN_LOCAL_REFERENCE	    = "expression does not live long enough",
 			    RETURN_NO_FRAME                 = "return outside of function has no meaning",
-			    SAFE_CONTEXT                    = "unsafe operation in safe context",
-			    SAFE_THROW                      = "cannot throw exception in a safe context",
 			    SCOPE_OUT_OF_SCOPE              = "scope guard used as expression", 
 			    SHADOWING_DECL		    = "declaration of %(y) shadow another declaration",
 			    SPACE_EXTERN_C                  = "extern C cannot be namespaced",

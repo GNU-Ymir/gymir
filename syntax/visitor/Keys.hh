@@ -106,7 +106,6 @@ struct Keys {
     static std::string  S8;
     static std::string  S16;
     static std::string  S32;
-    static std::string  SAFE;
     static std::string  SCOPE; 
     static std::string  SELF;
     static std::string  SELF_TILDE; 

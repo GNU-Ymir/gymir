@@ -26,7 +26,7 @@ namespace semantic {
 	bool _isInline;
 
 	/** Is this function @safe ? (it means cannot crash the program) */
-	bool _isSafe;
+	bool _isSafe = true;
 
 	/** Is this function variadic */
 	bool _isVariadic;

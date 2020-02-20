@@ -101,7 +101,6 @@ std::string     Keys::RETURN	   = "return";
 std::string     Keys::S8	   = "s8";
 std::string     Keys::S16	   = "s16";
 std::string     Keys::S32	   = "s32";
-std::string     Keys::SAFE	   = "safe";
 std::string     Keys::SCOPE	   = "on";
 std::string     Keys::SELF	   = "self";
 std::string     Keys::SELF_TILDE   = "self~";

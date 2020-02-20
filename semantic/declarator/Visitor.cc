@@ -175,12 +175,7 @@ namespace semantic {
 
 	    lexing::Word gotSafeOrThrow (lexing::Word::eof ());
 	    for (auto & ca : func.getCustomAttributes ()) {
-		if (ca == Keys::SAFE) {
-		    function.to <Function> ().isSafe (true);
-		    if (func.getThrowers ().size () != 0) {
-			Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::SAFE_THROW));
-		    }
-		} else if (ca == Keys::FINAL_ && function.to<Function> ().isMethod ()) function.to <Function> ().isFinal (true);
+		if (ca == Keys::FINAL_ && function.to<Function> ().isMethod ()) function.to <Function> ().isFinal (true);
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
 		}
@@ -203,13 +198,7 @@ namespace semantic {
 	    auto semcs = semantic::Constructor::init (cs.getName (), cs, this-> _isWeak);
 	    semcs.to <Constructor> ().setThrowers (cs.getThrowers ());
 	    for (auto & ca : cs.getCustomAttributes ()) {
-		if (ca == Keys::SAFE) {
-		    if (cs.getThrowers ().size () != 0) {
-			Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::SAFE_THROW));
-		    }
-		} else {
-		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);
-		}
+		Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);		
 	    }
 
 	    getReferent ().insert (semcs);
