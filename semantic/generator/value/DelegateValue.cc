@@ -17,7 +17,14 @@ namespace semantic {
 	    _closure (closure),	    
 	    _funcptr (ptr)
 	{
-	    this-> setThrowers (this-> _funcptr.getThrowers ());
+	    
+	    auto thrs = this-> getType ().to <Type> ().getInners ()[0].getThrowers ();
+	    for (auto & it : thrs) it.changeLocation (loc);
+	    
+	    auto & fptrT = this-> _funcptr.getThrowers ();
+	    thrs.insert (thrs.end (), fptrT.begin (), fptrT.end ());
+	    
+	    this-> setThrowers (thrs);
 	}
        
 	Generator DelegateValue::init (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr) {

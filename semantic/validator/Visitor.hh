@@ -347,8 +347,9 @@ namespace semantic {
 	     * \brief Validate a catch block
 	     * \brief return by ref the vardecls and actions to perform in case of catch
 	     * \brief All the actions must return the type type (if type !is void)
+	     * \brief The type of the block may change, in case of common ancestor
 	     */
-	    void validateCatcher (const syntax::Expression & catcher, generator::Generator & varDecl, generator::Generator & typeInfos, generator::Generator & actions, const generator::Generator& type, const std::vector <generator::Generator> & throwsTypes);
+	    void validateCatcher (const syntax::Expression & catcher, generator::Generator & varDecl, generator::Generator & typeInfos, generator::Generator & actions, generator::Generator& type, const std::vector <generator::Generator> & throwsTypes);
 	    
 	    
 	    /**
@@ -980,6 +981,8 @@ namespace semantic {
 	    
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
 
+	    generator::Generator getCommonAncestor (const generator::Generator & left, const generator::Generator & right);
+	    
 	    void printLocal () const;
 	    
 	};

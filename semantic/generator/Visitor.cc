@@ -893,7 +893,9 @@ namespace semantic {
 	}
 	
 	Tree Visitor::generateBlock (const Block & block) {
-	    TreeStmtList list = TreeStmtList::init ();
+	    if (block.isLvalue ()) return generateLeftBlock (block);
+	    
+	    TreeStmtList list = TreeStmtList::init ();	    
 	    Generator last (Generator::empty ());
 	    Tree var (Tree::empty ());
 	    if (!block.getType ().is<Void> ()) {
@@ -923,6 +925,24 @@ namespace semantic {
 		    list.append (generateValue (last));
 		return quitBlock (block.getLocation (), list.toTree ()).bind_expr;
 	    }    
+	}
+
+	Tree Visitor::generateLeftBlock (const Block & block) {
+	    // A left block does not enter a new block
+	    // Its return value is directly the last value
+	    TreeStmtList list (TreeStmtList::init ());
+	    Generator last (Generator::empty ());
+	    
+	    for (auto & it : block.getContent ()) {
+		if (!last.isEmpty ()) list.append (generateValue (last));
+		last = it;
+	    }
+
+	    return Tree::compound (
+		block.getLocation (),
+		generateValue (last),
+		list.toTree ()
+	    );
 	}	
 
 	Tree Visitor::generateSet (const Set & set) {
@@ -1570,20 +1590,29 @@ namespace semantic {
 	    	)
 	    ); // res = setjmp (buf);
 
-	    auto left = generateValue (scope.getWho ());	    
+	    auto left = generateValue (scope.getWho ());
 	    Tree var (Tree::empty ());
-	    if (!scope.getType ().is <Void> ()) {
-		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getType ()));
+	    if (!scope.getWho ().to <Value> ().getType ().is <Void> ()) {
+		TreeStmtList list (TreeStmtList::init ());
+		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getWho ().to <Value> ().getType ()));
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
-		left = Tree::affect (scope.getLocation (), var, left);
+		list.append (left.getList ());
+		list.append (Tree::affect (scope.getLocation (), var, left.getValue ()));
+		left = list.toTree ();
 	    }
 
 	    TreeStmtList left_part (TreeStmtList::init ());
 	    left_part.append (left);
 	    TreeStmtList right_part (TreeStmtList::init ());
-	    for (auto & it : scope.getFailure ())
-		right_part.append (generateValue (it));	    
+	    for (auto & it : scope.getFailure ()) {
+		right_part.append (generateValue (it));
+	    }
+	    
+	    for (auto & it : scope.getSuccess ()) {
+	    	left_part.append (generateValue (it));
+	    }
+	    
 	    right_part.append (generateCatching (scope, var));
 	    auto right = right_part.toTree ();
 	    	    
@@ -1605,11 +1634,9 @@ namespace semantic {
 
 	    auto cond = Tree::conditional (scope.getLocation (), getCurrentContext (), test, left, right);
 	    list.append (cond);
-	    for (auto & it : scope.getSuccess ())
-		list.append (generateValue (it));
 	    
 	    auto binding = quitBlock (scope.getLocation (), list.toTree ());
-	    if (!scope.getType ().is <Void> ()) {
+	    if (!scope.getWho ().to <Value> ().getType ().is <Void> ()) {
 		return Tree::compound (scope.getLocation (), var, binding.bind_expr);
 	    } else return binding.bind_expr;
 	}

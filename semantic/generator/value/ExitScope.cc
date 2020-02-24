@@ -54,6 +54,19 @@ namespace semantic {
 	    thrs.insert (thrs.end (), cth.begin (), cth.end ());
 	    
 	    this-> setThrowers (thrs);
+
+	    this-> isReturner (this-> _who.to <Value> ().isReturner ());
+	    this-> isBreaker (this-> _who.to <Value> ().isBreaker ());
+	    
+	    if (!this-> _catchingAction.isEmpty ()) {
+		this-> isReturner (
+		    this-> isReturner () && this-> _catchingAction.to <Value> ().isReturner ()
+		);
+
+		this-> isBreaker (
+		    this-> isBreaker () && this-> _catchingAction.to <Value> ().isBreaker ()
+		);
+	    }
 	}
 	
 	Generator ExitScope::init (const lexing::Word & loc,
@@ -122,7 +135,7 @@ namespace semantic {
 	}
 	
 	std::string ExitScope::prettyString () const {
-	    return Ymir::format ("%", this-> _who.prettyString ());
+	    return Ymir::format ("try {\n%n} catch {\n%\n}", this-> _who.prettyString (), this-> _catchingAction.prettyString ());
 	}
     }
     

@@ -58,8 +58,15 @@ namespace semantic {
 			// We don't take the type into account, if the content is throwing or returning or something like that
 			type = local_type;
 		    } else {
-			if (!content.to <Value> ().isReturner () && !content.to<Value> ().isBreaker ()) // If it is a breaker or a returner the value won't be evaluated anyway
+			if (!content.to <Value> ().isReturner () && !content.to<Value> ().isBreaker ()) {// If it is a breaker or a returner the value won't be evaluated anyway
+			    if (!local_type.to <Type> ().isCompatible (type)) {
+				auto anc = this-> _context.getCommonAncestor (local_type, type);
+				if (!anc.isEmpty ())
+				    type = anc;
+			    }
+			
 			    this-> _context.verifyCompatibleType (content.getLocation (), type, local_type);
+			}
 		    }
 			
 		    if (type.isEmpty ())		       			
@@ -525,8 +532,14 @@ namespace semantic {
 			// We don't take the type into account, if the content is throwing or returning or something like that
 			type = local_type;
 		    } else {
-			if (!content.to <Value> ().isReturner () && !content.to<Value> ().isBreaker ()) // If it is a breaker or a returner the value won't be evaluated anyway
+			if (!content.to <Value> ().isReturner () && !content.to<Value> ().isBreaker ()) {// If it is a breaker or a returner the value won't be evaluated anyway
+			    if (!local_type.to <Type> ().isCompatible (type)) {
+				auto anc = this-> _context.getCommonAncestor (local_type, type);
+				if (!anc.isEmpty ())
+				    type = anc;
+			    }
 			    this-> _context.verifyCompatibleType (content.getLocation (), type, local_type);
+			}
 		    }
 
 		    Generator cond (Generator::empty ());

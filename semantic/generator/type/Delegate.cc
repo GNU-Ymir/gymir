@@ -51,12 +51,16 @@ namespace semantic {
 	
 	std::string Delegate::typeName () const {
 	    Ymir::OutBuffer buf;
-	    buf.write ("dg(");
-	    for (auto it : Ymir::r (1, this-> getInners ()[0].to<Type> ().getInners ().size ())) {
-		if (it != 1) buf.write (", "); 
-		buf.write (this-> getInners ()[0].to <Type> ().getInners ()[it].to <Type> ().getTypeName ());
+	    if (this-> getInners ()[0].is<Type> ()) {
+		buf.write ("dg(");
+		for (auto it : Ymir::r (1, this-> getInners ()[0].to<Type> ().getInners ().size ())) {
+		    if (it != 1) buf.write (", "); 
+		    buf.write (this-> getInners ()[0].to <Type> ().getInners ()[it].to <Type> ().getTypeName ());
+		}
+		buf.write (Ymir::format (")-> %", this-> getInners ()[0].to <Type> ().getInners ()[0].to <Type> ().getTypeName ()));
+	    } else {
+		buf.write ("dg(%)", this-> getInners ()[0].prettyString ());
 	    }
-	    buf.write (Ymir::format (")-> %", this-> getInners ()[0].to <Type> ().getInners ()[0].to <Type> ().getTypeName ()));
 	    return buf.str ();
 	}	
 	

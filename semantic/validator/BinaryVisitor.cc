@@ -589,6 +589,31 @@ namespace semantic {
 			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
 	    
 	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
+
+	    std::vector <std::string> errors;
+	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
+		Generator result (Generator::empty ());
+		{
+		    TRY (
+			result = validateEqualClass (op, expression, left, right);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors = msgs;		    
+		    } FINALLY;
+		}
+		
+		if (result.isEmpty ()) {
+		    TRY (
+			result = validateEqualClassRight (op, expression, left, right);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+		    } FINALLY;
+		
+		}
+		
+		if (!result.isEmpty ()) return result;
+	    }
 	    
 	    lexing::Word loc = {expression.getLocation (), toString (op)};
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
@@ -606,7 +631,16 @@ namespace semantic {
 		{rightSynt}, false
 	    );
 
-	    auto cl = this-> _context.validateValue (call);
+	    Generator cl (Generator::empty ());
+	    TRY (
+		cl = this-> _context.validateValue (call);
+	    ) CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+	    } FINALLY;
+
+	    if (cl.isEmpty ())
+		THROW (ErrorCode::EXTERNAL, errors);
 	    
 	    auto final_test = syntax::Binary::init (
 		{loc},
@@ -627,6 +661,22 @@ namespace semantic {
 			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
 	    
 	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
+
+	    std::vector <std::string> errors;	    
+	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
+		Generator result (Generator::empty ());
+		{
+		    TRY (
+			result = validateEqualClassRight (op, expression, left, right);
+		    ) CATCH (ErrorCode::EXTERNAL) {
+			GET_ERRORS_AND_CLEAR (msgs);
+			errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+		    } FINALLY;
+		
+		}
+		
+		if (!result.isEmpty ()) return result;
+	    }
 	    
 	    lexing::Word loc = {expression.getLocation (), toString (op)};
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
@@ -644,7 +694,17 @@ namespace semantic {
 		{rightSynt}, false
 	    );
 
-	    auto cl = this-> _context.validateValue (call);
+	    Generator cl (Generator::empty ());
+	    
+	    TRY (
+		cl = this-> _context.validateValue (call);
+	    )  CATCH (ErrorCode::EXTERNAL) {
+		GET_ERRORS_AND_CLEAR (msgs);
+		errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
+	    } FINALLY;
+
+	    if (cl.isEmpty ())
+		THROW (ErrorCode::EXTERNAL, errors);
 	    
 	    auto final_test = syntax::Binary::init (
 		{loc, inverseOperator (op)},
@@ -659,6 +719,53 @@ namespace semantic {
 	    return this-> _context.validateValue (final_test);
 	}
 
+	Generator BinaryVisitor::validateEqualClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
+	    auto templ = syntax::Binary::init (
+		{loc, Token::DOT},
+		leftSynt,		    
+		syntax::Var::init ({loc, CoreNames::get (EQUALS_OP_OVERRIDE)}),
+		syntax::Expression::empty ()
+	    );	    
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{rightSynt}, false
+	    );
+
+	    if (op == Binary::Operator::NOT_EQUAL) {
+		call = syntax::Unary::init ({loc, Token::NOT}, call);
+	    }
+	    	    
+	    return this-> _context.validateValue (call);
+	}
+
+	Generator BinaryVisitor::validateEqualClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
+	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto templ = syntax::Binary::init (
+		{loc, Token::DOT},
+		leftSynt,		    
+		syntax::Var::init ({loc, CoreNames::get (EQUALS_OP_OVERRIDE)}),
+		syntax::Expression::empty ()
+	    );	    
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{rightSynt}, false
+	    );
+
+	    if (op == Binary::Operator::NOT_EQUAL) {
+		call = syntax::Unary::init ({loc, Token::NOT}, call);
+	    }
+	    	    
+	    return this-> _context.validateValue (call);
+	}	
 	
 	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
@@ -839,7 +946,7 @@ namespace semantic {
 		TemplateSyntaxWrapper::init (loc, right),		    
 		syntax::Var::init ({loc, CoreNames::get (CONTAIN_OP_OVERRIDE)}),
 		syntax::Expression::empty ()	    
-	    );
+	    );	    
 
 	    auto call = syntax::MultOperator::init (
 		{loc, Token::LPAR}, {loc, Token::RPAR},

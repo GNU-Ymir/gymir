@@ -132,6 +132,7 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::vector <Generator> addParams;
 	    std::vector <Generator> rights = rights_;
+	    
 	    TRY (
 		for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 		    auto param = findParameter (rights, proto.getParameters () [it].to<ProtoVar> ());
@@ -258,48 +259,86 @@ namespace semantic {
 	}	
        
 	generator::Generator CallVisitor::findParameter (std::vector <Generator> & params, const ProtoVar & var) {
-	    Generator ret (Generator::empty ());
-	    for (auto  it : Ymir::r (0, params.size ())) {
-		if (params [it].is <NamedGenerator> ()) {
-		    auto name = params [it].to <NamedGenerator> ().getLocation ();
-		    if (name.str == var.getLocation ().str) {
-			auto toRet = params [it].to <NamedGenerator> ().getContent ();
-			params.erase (params.begin () + it);
-			ret = toRet;
-			break;
-		    }
-		}
-	    }
-
-	    if (ret.isEmpty ()) {
-		// If the var has a value, it is an optional argument
-		if (!var.getValue ().isEmpty ()) ret = var.getValue ();	    
-		// If it does not have a value, it is a mandatory var, so we take the first param that is not a NamedExpression
-		// No NamedExpression can have the same name as var, it is already checked in the first for loop
-		else {
-		    for (auto it : Ymir::r (0, params.size ())) {
-			if (!params [it].is<NamedGenerator> ()) {
-			    ret = params [it];
+	    if (var.getNbConsume () == 1) {
+		Generator ret (Generator::empty ());
+		for (auto  it : Ymir::r (0, params.size ())) {
+		    if (params [it].is <NamedGenerator> ()) {
+			auto name = params [it].to <NamedGenerator> ().getLocation ();
+			if (name.str == var.getLocation ().str) {
+			    auto toRet = params [it].to <NamedGenerator> ().getContent ();
 			    params.erase (params.begin () + it);
+			    ret = toRet;
 			    break;
 			}
 		    }
-		    if (ret.isEmpty ()) return Generator::empty ();
 		}
-	    }
+
+		if (ret.isEmpty ()) {
+		    // If the var has a value, it is an optional argument
+		    if (!var.getValue ().isEmpty ()) ret = var.getValue ();	    
+		    // If it does not have a value, it is a mandatory var, so we take the first param that is not a NamedExpression
+		    // No NamedExpression can have the same name as var, it is already checked in the first for loop
+		    else {
+			for (auto it : Ymir::r (0, params.size ())) {
+			    if (!params [it].is<NamedGenerator> ()) {
+				ret = params [it];
+				params.erase (params.begin () + it);
+				break;
+			    }
+			}
+			if (ret.isEmpty ()) return Generator::empty ();
+		    }
+		}
 	    
-	    if (ret.to <Value> ().getType ().is <LambdaType> () && (var.getType ().is <FuncPtr> () || var.getType ().is <Delegate> ())) {
-		std::vector <Generator> paramTypes;
-		if (var.getType ().is <FuncPtr> ()) paramTypes = var.getType ().to <FuncPtr> ().getParamTypes ();
-		else paramTypes = var.getType ().to <Delegate> ().getInners ()[0].to <FuncPtr> ().getParamTypes ();
+		if (ret.to <Value> ().getType ().is <LambdaType> () && (var.getType ().is <FuncPtr> () || var.getType ().is <Delegate> ())) {
+		    std::vector <Generator> paramTypes;
+		    if (var.getType ().is <FuncPtr> ()) paramTypes = var.getType ().to <FuncPtr> ().getParamTypes ();
+		    else paramTypes = var.getType ().to <Delegate> ().getInners ()[0].to <FuncPtr> ().getParamTypes ();
 		
-	    	if (ret.is <VarRef> ()) {
-	    	    return this-> _context.validateLambdaProto (ret.to <VarRef> ().getValue ().to <LambdaProto> (), paramTypes);
-	    	} else if (ret.is <LambdaProto> ()) 		    
-	    	    return this-> _context.validateLambdaProto (ret.to<LambdaProto> (), paramTypes);		     	    
-	    }
+		    if (ret.is <VarRef> ()) {
+			return this-> _context.validateLambdaProto (ret.to <VarRef> ().getValue ().to <LambdaProto> (), paramTypes);
+		    } else if (ret.is <LambdaProto> ()) 		    
+			return this-> _context.validateLambdaProto (ret.to<LambdaProto> (), paramTypes);		     	    
+		}
 	    
-	    return ret;	    
+		return ret;
+	    } else {
+		int i = 0;
+		std::vector <Generator> tupleValues;
+		std::vector <Generator> tupleTypes;
+		int it = 0;
+		while (it < (int) params.size ()) {
+		    if (!params [it].is<NamedGenerator> ()) {
+			Generator ret = params [it];
+			params.erase (params.begin () + it);
+			
+			if (ret.to <Value> ().getType ().is <LambdaType> () && (var.getType ().to <Type> ().getInners () [i].is <FuncPtr> () || var.getType ().to <Type> ().getInners () [i].is <Delegate> ())) {
+			    std::vector <Generator> paramTypes;
+			    if (var.getType ().to <Type> ().getInners () [i].is <FuncPtr> ()) paramTypes = var.getType ().to <Type> ().getInners () [i].to <FuncPtr> ().getParamTypes ();
+			    else paramTypes = var.getType ().to <Delegate> ().getInners ()[0].to <FuncPtr> ().getParamTypes ();
+		
+			    if (ret.is <VarRef> ()) {
+				tupleValues.push_back (this-> _context.validateLambdaProto (ret.to <VarRef> ().getValue ().to <LambdaProto> (), paramTypes));
+			    } else if (ret.is <LambdaProto> ()) 		    
+				tupleValues.push_back (this-> _context.validateLambdaProto (ret.to<LambdaProto> (), paramTypes));		     	    
+			} else {
+			    tupleValues.push_back (ret);
+			}
+			tupleTypes.push_back (tupleValues.back ().to <Value> ().getType ());
+
+			// Don't increment it, because we have remove a element
+			i += 1;
+			if (i == var.getNbConsume ()) break;
+		    } else {
+			it += 1;
+		    }
+		}	       
+		
+		if (i == var.getNbConsume ()) {
+		    auto tupleType = Tuple::init (tupleTypes [0].getLocation (), tupleTypes);
+		    return TupleValue::init (tupleValues [0].getLocation (), tupleType, tupleValues);
+		} else return Generator::empty ();
+	    }
 	}
 
 	generator::Generator CallVisitor::validateLambdaProto (const lexing::Word & location, const LambdaProto & proto, const std::vector <Generator> & rights, int & score, std::vector <std::string> & errors) {
@@ -778,7 +817,7 @@ namespace semantic {
 		    bool isRef = false;
 		    this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
 		    
-		    auto param = findParameter (rights, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable).to<ProtoVar> ());
+		    auto param = findParameter (rights, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1).to<ProtoVar> ());
 		    if (param.isEmpty ())
 		    	failure = true;
 		    else {
@@ -802,7 +841,7 @@ namespace semantic {
 	    
 	    auto templateVisitor = TemplateVisitor::init (this-> _context);
 	    std::vector <Generator> finalParams;
-	    bool succeed = true;
+	    volatile bool succeed = true; // again and again, volatile everywhere	    
 	    
 	    TRY (
 		// The solution is a function transformed generated by template specialisation (if it succeed)
@@ -812,10 +851,11 @@ namespace semantic {
 		errors.insert (errors.begin (), msgs.begin (), msgs.end ());
 		succeed = false;
 	    } FINALLY;
-	    
+	    	    
 	    if (succeed) {
 		int _score;
 		Generator ret (Generator::empty ());
+		finalParams = rights_;
 		if (ref.is <MethodTemplateRef> ()) {
 		    // Remove the first argument, (that is self)
 		    finalParams = std::vector <Generator> (finalParams.begin () + 1, finalParams.end ());
@@ -896,7 +936,7 @@ namespace semantic {
 		    bool isRef = false;
 		    this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
 		    
-		    auto param = findParameter (rights, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable).to<ProtoVar> ());
+		    auto param = findParameter (rights, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1).to<ProtoVar> ());
 		    if (param.isEmpty ())
 		    	failure = true;
 		    else {
@@ -1004,6 +1044,7 @@ namespace semantic {
 		of (FrameProto, proto, leftName = proto.getName ())
 		else of (generator::Struct, str, leftName = str.getName ())
 		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		else of (TemplateRef, cl, leftName = cl.prettyString ())
 		else of (TemplateClassCst, cl, leftName = cl.prettyString ())
 		else of (ModuleAccess, acc, leftName = acc.prettyString ())
 		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
@@ -1038,6 +1079,7 @@ namespace semantic {
 		else of (generator::Struct, str, leftName = str.getName ())			 
 		else of (MultSym,    sym,   leftName = sym.prettyString ())
 		else of (ModuleAccess, acc, leftName = acc.prettyString ())
+		else of (TemplateRef, cl, leftName = cl.prettyString ())
 		else of (TemplateClassCst, cl, leftName = cl.prettyString ())
 		else of (Value,      val,  leftName = val.getType ().to <Type> ().getTypeName ()
 		);
@@ -1072,6 +1114,7 @@ namespace semantic {
 		) else of (generator::Struct, str, return str.getName ()			 
 		) else of (MultSym,    sym,   return sym.prettyString ();
 		) else of (ModuleAccess, acc, return acc.prettyString ()
+		) else of (TemplateRef, cl, return cl.prettyString ()
 		) else of (TemplateClassCst, cl, return cl.prettyString ()
 		) else of (Value,      val,  return val.getType ().to <Type> ().getTypeName ());
 	    }

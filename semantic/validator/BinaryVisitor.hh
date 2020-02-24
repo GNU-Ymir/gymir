@@ -190,10 +190,20 @@ namespace semantic {
 	    generator::Generator validateLogicalClass (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
 	    /**
+	     * \brief Validate a equality operator with a class on left operand
+	     */
+	    generator::Generator validateEqualClass (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+	    
+	    /**
 	     * \brief Validate a binary logical operator with a class on right operand
 	     */
 	    generator::Generator validateLogicalClassRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
 
+	    /**
+	     * \brief Validate a equality operator with a class on right operand
+	     */
+	    generator::Generator validateEqualClassRight (generator::Binary::Operator op, const syntax::Binary & expression, const generator::Generator & left, const generator::Generator & right);
+	    
 	    
 	    /**
 	     * \brief Validate an affectation, the pre operation is a mathetical one (or concat, but its considered math)

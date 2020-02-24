@@ -1898,6 +1898,9 @@ namespace semantic {
 			    if (onSuccess.back ().to <Value> ().isReturner ()) returner = true;
 			    if (onSuccess.back ().to <Value> ().isBreaker ()) breaker = true;
 			} else if (scope.isFailure ()) {
+			    if (ret.getThrowers ().size () == 0) {
+				Ymir::Error::occur (scope.getLocation (), ExternalError::get (FAILURE_NO_THROW));
+			    }
 			    onFailure.push_back (validateValue (scope.getContent ()));
 			} else Ymir::Error::occur (scope.getLocation (), ExternalError::get (UNDEFINED_SCOPE_GUARD), scope.getLocation ().str);			
 		    } 
@@ -1915,12 +1918,17 @@ namespace semantic {
 	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) {
 		auto jmp_buf_type = validateType (syntax::Var::init ({block.getLocation (), global::CoreNames::get (JMP_BUF_TYPE)}));
 		onFailure.insert (onFailure.end (), onExit.begin (), onExit.end ());
-		return ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
+		auto ex = ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
+		return ex;
 	    }
 	    return ret;
 	}
 
-	void Visitor::validateCatcher (const syntax::Expression & catcher, Generator & varDecl, Generator & typeInfo, Generator & action, const generator::Generator& typeBlock, const std::vector <Generator> & throwsTypes) {
+	void Visitor::validateCatcher (const syntax::Expression & catcher, Generator & varDecl, Generator & typeInfo, Generator & action, generator::Generator & typeBlock, const std::vector <Generator> & throwsTypes) {
+	    if (throwsTypes.size () == 0) {
+		Error::occur (catcher.getLocation (), ExternalError::get (NOTHING_TO_CATCH));
+	    }
+	    
 	    std::vector <std::string> errors;	    
 	    enterBlock ();
 	    {
@@ -1941,6 +1949,11 @@ namespace semantic {
 		    action = visitor.validateCatcher (vref, throwsTypes, catcher.to <syntax::Catch> ());
 		    
 		    if (!action.to <Value> ().isReturner () && !action.to <Value> ().isBreaker ()) {
+			if (!action.to <Value> ().getType ().to <Type> ().isCompatible (typeBlock)) {
+			    auto anc = getCommonAncestor (action.to <Value> ().getType (), typeBlock);
+			    if (!anc.isEmpty ())
+				typeBlock = anc;
+			}
 			this-> verifyMemoryOwner (loc, typeBlock, action, false, true, false);
 		    }
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -1948,6 +1961,7 @@ namespace semantic {
 		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
 		} FINALLY;
 	    }
+	    
 	    {
 		TRY (
 		    this-> discardAllLocals ();
@@ -2203,11 +2217,6 @@ namespace semantic {
 		    for (auto it : Ymir::r (0, sym.size ())) {
 			if (it != 0) note = note + "\n";
 			note = note + Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), sym[it].getName (), sym [it].getRealName ());
-		    }
-		    {
-			auto sym = this-> _referent.back ();
-			while (!sym.getReferent ().isEmpty ()) sym = sym.getReferent ();
-			note += "\n" + sym.formatTree () + "\n";
 		    }
 		    Error::occurAndNote (var.getLocation (), note, ExternalError::get (UNDEF_VAR), var.getName ().str);
 		}
@@ -2488,7 +2497,7 @@ namespace semantic {
 	    if (!cl.isEmpty ()) {		
 		__validating__.push_back (func.getName ());
 		enterBlock ();
-		this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true));
+		this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true, 1));
 		TRY (		
 		    validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType);
 		) CATCH (ErrorCode::EXTERNAL) {
@@ -2545,7 +2554,7 @@ namespace semantic {
 
 	    __validating__.push_back (func.getName ());
 	    enterBlock ();
-	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), classType, Generator::empty (), true));
+	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), classType, Generator::empty (), true, 1));
 
 	    TRY (
 		auto & __params = function.getPrototype ().getParameters ();
@@ -2668,8 +2677,8 @@ namespace semantic {
 
 		    Generator value (Generator::empty ());
 		    
-		    if (!var.getType ().isEmpty ()) {
-		    	type = validateType (var.getType ());
+		    if (!var.getType ().isEmpty ()) {						
+			type = validateType (var.getType ());
 		    }
 		    		
 		    if (!var.getValue ().isEmpty () && !no_value) {
@@ -2702,8 +2711,12 @@ namespace semantic {
 			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
 		    }
 
+		    int nb_consumed = 1;
+		    if (!var.getType ().isEmpty () && var.getType ().is <TemplateSyntaxList> ()) {
+			nb_consumed = var.getType ().to <TemplateSyntaxList> ().getContents ().size ();
+		    }
 		    
-		    params.push_back (ProtoVar::init (var.getName (), type, value, isMutable));
+		    params.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed));
 		    if (var.getName () != Keys::UNDER) {
 			verifyShadow (var.getName ());		
 			insertLocal (var.getName ().str, params.back ());
@@ -2858,8 +2871,15 @@ namespace semantic {
 	    if (!_if.getElsePart ().isEmpty ()) {
 		auto _else = validateValueNoReachable (_if.getElsePart ());
 		if (!_else.to <Value> ().isReturner () && !_else.to <Value> ().isBreaker ()) {
-		    verifyCompatibleType (_if.getLocation (), _else.to<Value> ().getType (), type);
+		    if (!_else.to <Value> ().getType ().to <Type> ().isCompatible (type)) {
+			auto anc = getCommonAncestor (_else.to <Value> ().getType (), type);
+			if (!anc.isEmpty ())
+			    type = anc;
+		    }
+		    verifyCompatibleType (_if.getLocation (), type, _else.to<Value> ().getType ());
 		}
+
+		if (content.to <Value> ().isReturner () || content.to <Value> ().isBreaker ()) type = _else.to <Value> ().getType ();
 		return Conditional::init (_if.getLocation (), type, test, content, _else);	    
 	    } else {
 		verifyCompatibleType (_if.getLocation (), Void::init (_if.getLocation ()), type);
@@ -2919,11 +2939,16 @@ namespace semantic {
 		type = content.to <Value> ().getType ();
 
 		if (!breakType.isEmpty () && !content.to <Value> ().isBreaker () && !type.equals (breakType)) {
-		    auto note = Ymir::Error::createNote (breakType.getLocation ());
-		    Ymir::Error::occurAndNote (content.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-					       type.to <Type> ().getTypeName (),
-					       breakType.to <Type> ().getTypeName ()
-		    );				    
+		    auto anc = getCommonAncestor (content.to <Value> ().getType (), type);
+		    if (!anc.isEmpty ()) {
+			type = anc;
+		    } else {
+			auto note = Ymir::Error::createNote (breakType.getLocation ());
+			Ymir::Error::occurAndNote (content.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+						   type.to <Type> ().getTypeName (),
+						   breakType.to <Type> ().getTypeName ()
+			);
+		    }
 		} else if (content.to <Value> ().isBreaker ()) {
 		    type = breakType;
 		}
@@ -2978,12 +3003,18 @@ namespace semantic {
 	    if (loop_type.isEmpty ()) {
 		setCurrentLoopType (type);
 		loop_type = type;
-	    } else if (!loop_type.equals (type)) {		
-		auto note = Ymir::Error::createNote (loop_type.getLocation ());
-		Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-					   type.to <Type> ().getTypeName (),
-					   loop_type.to <Type> ().getTypeName ()
-		);				    
+	    } else if (!loop_type.equals (type)) {
+		auto anc = getCommonAncestor (loop_type, type);
+		if (!anc.isEmpty ()) {
+		    loop_type = anc;
+		    setCurrentLoopType (anc);
+		}//  else {		
+		//     auto note = Ymir::Error::createNote (loop_type.getLocation ());
+		//     Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+		// 			       type.to <Type> ().getTypeName (),
+		// 			       loop_type.to <Type> ().getTypeName ()
+		//     );
+		// }
 	    }
 
 	    if (!loop_type.is<Void> ()) verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
@@ -3679,7 +3710,7 @@ namespace semantic {
 			}
 		
 			params.push_back (ParamVar::init (var.getName (), type, isMutable));
-			paramsProto.push_back (ProtoVar::init (var.getName (), type, Generator::empty (), isMutable));
+			paramsProto.push_back (ProtoVar::init (var.getName (), type, Generator::empty (), isMutable, 1));
 			paramTypes.push_back (type);
 			if (var.getName () != Keys::UNDER) {
 			    verifyShadow (var.getName ());		
@@ -3740,7 +3771,7 @@ namespace semantic {
 			auto var = proto.getParameters ()[it].to <ProtoVar> ();
 			bool isMutable = types [it].to <Type> ().isMutable ();
 			params.push_back (ParamVar::init (var.getLocation (), types [it], isMutable));
-			paramsProto.push_back (ProtoVar::init (var.getLocation (), types [it], Generator::empty (), isMutable));
+			paramsProto.push_back (ProtoVar::init (var.getLocation (), types [it], Generator::empty (), isMutable, 1));
 			if (var.getName () != Keys::UNDER) {
 			    insertLocal (var.getName (), params.back ());
 			}		
@@ -4990,6 +5021,21 @@ namespace semantic {
 		    }
 		) else {
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");   
+		}
+	    }
+	    return Generator::empty ();
+	}
+
+	Generator Visitor::getCommonAncestor (const Generator & leftType, const Generator & rightType) {
+	    auto ancestor = leftType;
+	    if (leftType.is <ClassRef> ()) {
+		while (!ancestor.isEmpty ()) {
+		    if (isAncestor (ancestor, rightType)) return ancestor;
+		    else {
+			if (!ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ())
+			    ancestor = ancestor.to <ClassRef> ().getAncestor ();
+			else ancestor = Generator::empty ();
+		    }
 		}
 	    }
 	    return Generator::empty ();

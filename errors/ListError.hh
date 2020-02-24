@@ -21,6 +21,7 @@ namespace Ymir {
        We cannot use C++ enum, as it does not allows to have string values
     */
     DECLARE_ENUM_HEADER (ExternalError, std::string,
+			 ADDR_MIGHT_THROW,
 			 AFFECT_COMPILE_TIME,
 			 ALLOC_ABSTRACT_CLASS,
 			 ASSERT_FAILED,
@@ -46,6 +47,7 @@ namespace Ymir {
 			 DISCARD_LOCALITY,
 			 DYNAMIC_CAST_FAILED,
 			 EN_NO_VALUE,
+			 FAILURE_NO_THROW,
 			 FORWARD_REFERENCE_VAR,
 			 IMMUTABLE_LVALUE,
 			 IMPLICIT_ALIAS,
@@ -82,6 +84,7 @@ namespace Ymir {
 			 MUTABLE_CONST_PARAM,
 			 MUTABLE_CONST_RETURN,
 			 NEVER_USED,
+			 NOTHING_TO_CATCH,
 			 NOT_ABSTRACT_NO_OVER,
 			 NOT_AN_ALIAS,
 			 NOT_A_CLASS,
@@ -127,6 +130,7 @@ namespace Ymir {
 			 SYNTAX_ERROR_MISSING_TEMPL_PAR,
 			 TEMPLATE_RECURSION,
 			 TEMPLATE_TEST_FAILED,
+			 THROWS,
 			 THROWS_IN_LAMBDA,
 			 THROWS_NOT_DECLARED,
 			 THROWS_NOT_USED,
@@ -160,7 +164,7 @@ namespace Ymir {
 			 VAR_DECL_WITHOUT_VALUE,
 			 VAR_DECL_WITH_NOTHING,
 			 VOID_VAR,	
-			 WRONG_MODULE_NAME
+			 WRONG_MODULE_NAME,
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

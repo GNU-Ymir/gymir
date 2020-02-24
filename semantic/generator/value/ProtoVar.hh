@@ -10,6 +10,8 @@ namespace semantic {
 	    Generator _value;
 	    
 	    bool _isMutable;
+
+	    int _nbConsume;
 	    
 	private :
 
@@ -17,7 +19,7 @@ namespace semantic {
 	    
 	    ProtoVar ();
 
-	    ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable);
+	    ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume);
 
 	public :
 
@@ -26,7 +28,7 @@ namespace semantic {
 	     * \param location the location of the param var (for debug info)
 	     * \param type the type of the var
 	     */
-	    static Generator init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable);
+	    static Generator init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -52,6 +54,11 @@ namespace semantic {
 	     * \return the value of the proto var
 	     */
 	    const Generator & getValue () const;
+
+	    /**
+	     * \return the number of arguments this proto var consume (for variadic templates)
+	     */
+	    int getNbConsume () const;
 	    
 	    std::string prettyString () const override;
 	};

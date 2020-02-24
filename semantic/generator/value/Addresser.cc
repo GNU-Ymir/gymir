@@ -14,8 +14,12 @@ namespace semantic {
 	    Value (loc, type),
 	    _who (who)
 	{
-	    if (!this-> _who.is <FrameProto> ())
-		this-> setThrowers (this-> _who.to <Value> ().getThrowers ());
+	    // We simply get the throwers
+	    // If the inner element has throwers, the validation has succeeded
+	    // Only frame without throwers can be used a function pointer
+	    // So if there are throwers here, it is not really a function pointer, but a internal validated element
+	    
+	    this-> setThrowers (this-> _who.to <Value> ().getThrowers ());
 	}
 	
 	Generator Addresser::init (const lexing::Word & loc, const Generator & type, const Generator & who) {

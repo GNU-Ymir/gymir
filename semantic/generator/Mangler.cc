@@ -277,6 +277,7 @@ namespace semantic {
 
 	    auto inner = buf.str ();
 	    res.write ("T", inner.length (), inner);
+	    
 	    return res.str ();
 	}
 

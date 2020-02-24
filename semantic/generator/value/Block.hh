@@ -8,6 +8,8 @@ namespace semantic {
 
 	/**
 	 * A Lblock just generate a block, but as a lvalue
+	 *  Left block return value that has been declared in the above scope
+	 * They are treated differentely at generation time, and are lvalue
 	 */
 	class LBlock {	    	    	    	    
 	public : 

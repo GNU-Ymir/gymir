@@ -141,6 +141,13 @@ namespace semantic {
 	}
 	
 	Generator UnaryVisitor::validateFunctionPointer (const syntax::Unary & un, const Generator & proto) {
+	    // Proto is a frameproto
+	    if (proto.getThrowers ().size () != 0) {
+		std::string note = "";
+		for (auto &it : proto.getThrowers ())
+		    note = note + Ymir::Error::createNoteOneLine (ExternalError::get (THROWS), it.prettyString ()) + "\n";
+		Ymir::Error::occurAndNote (un.getLocation (), note, ExternalError::get (ADDR_MIGHT_THROW), proto.prettyString ());
+	    }
 	    return Addresser::init (un.getLocation (), this-> _context.validateFunctionType (proto), proto);
 	}
 	

@@ -344,7 +344,12 @@ namespace semantic {
 	    
 	    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 		auto param = replaceAll (syntaxParams [it], globalMapper.mapping);
-		auto current_types = std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + 1 + (types.size () - syntaxParams.size ()));
+		
+		auto rest = types.size () - consumed;
+		auto syntaxRest = (syntaxParams.size () - it) - 1; // we don't count the current one
+		auto right = rest - syntaxRest;
+		
+		auto current_types = std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + right);
 		
 		int current_consumed = 0;
 		Mapper mapper (false, 0);
@@ -570,18 +575,35 @@ namespace semantic {
 			consumed += 1;
 			auto type = types [0];
 			if (type.is <Delegate> ()) type = type.to <Type> ().getInners ()[0];
-			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == fPtr.getParameters ().size () + 1) {
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= fPtr.getParameters ().size () + 1) {
 			    Mapper mapper (false, 0);
 			    auto syntaxParams = fPtr.getParameters ();
+			    int current_consumed = 0;
+			    auto types = type.to <Type> ().getInners ();
+			    types = std::vector <Generator> (types.begin () + 1, types.end ()); // remove the return type
 			    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 				auto param = replaceAll (syntaxParams [it], mapper.mapping);
-				int current_consumed = 0;
-				auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners ()[it + 1]}, current_consumed); // On funcPtr type, the first one is the type
+				
+				auto rest = types.size () - current_consumed;
+				auto syntaxRest = (syntaxParams.size () - it) - 1; // we don't count the current one
+				auto right = rest - syntaxRest;
+		
+				auto current_types = std::vector <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
+				auto mp = validateTypeFromImplicit (params, param, current_types, current_consumed); // On funcPtr type, the first one is the type
 				if (!mp.succeed) return mp;
 				mapper = mergeMappers (mapper, mp);
 			    }
+			    
+			    if (current_consumed < (int) types.size ()) {
+				Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						    fPtr.prettyString (),
+						    type.to<Type> ().getTypeName ());
 
-			    int current_consumed = 0;
+				Mapper mapper (false, 0);
+				return mapper;
+			    }
+
+			    current_consumed = 0;
 			    auto param = replaceAll (fPtr.getRetType (), mapper.mapping);
 			    auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners ()[0]}, current_consumed); // specialize the return type
 			    if (!mp.succeed) return mp;
@@ -836,18 +858,35 @@ namespace semantic {
 		) else of (syntax::FuncPtr, fPtr, {
 			auto ftype = type;
 			if (type.is <Delegate> ()) ftype = type.to <Type> ().getInners ()[0];
-			if (ftype.to <Type> ().isComplex () && ftype.to<Type> ().getInners ().size () == fPtr.getParameters ().size () + 1) {
+			if (ftype.to <Type> ().isComplex () && ftype.to<Type> ().getInners ().size () >= fPtr.getParameters ().size () + 1) {
 			    Mapper mapper (false, 0);
+			    int current_consumed = 0;
+			    auto types = type.to <Type> ().getInners ();
+			    types = std::vector <Generator> (types.begin () + 1, types.end ()); // remove the return type
 			    auto syntaxParams = fPtr.getParameters ();
 			    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 				auto param = replaceAll (syntaxParams [it], mapper.mapping);
-				int current_consumed = 0;
-				auto mp = validateTypeFromImplicit (params, param, {ftype.to <Type> ().getInners ()[it + 1]}, current_consumed); // On funcPtr type, the first one is the type
+
+				auto rest = types.size () - current_consumed;
+				auto syntaxRest = (syntaxParams.size () - it) - 1; // we don't count the current one
+				auto right = rest - syntaxRest;
+		
+				auto current_types = std::vector <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
+				auto mp = validateTypeFromImplicit (params, param, types, current_consumed); // On funcPtr type, the first one is the type
 				if (!mp.succeed) return mp;
 				mapper = mergeMappers (mapper, mp);
 			    }
 
-			    int current_consumed = 0;
+			    if (current_consumed < (int) types.size ()) {
+				Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						    NoneType::init (ofv.getLocation ()).to <Type> ().getTypeName (),
+						    type.to<Type> ().getTypeName ());
+				
+				Mapper mapper (false, 0);
+				return mapper;
+			    }
+
+			    current_consumed = 0;
 			    auto param = replaceAll (fPtr.getRetType (), mapper.mapping);
 			    auto mp = validateTypeFromImplicit (params, param, {ftype.to <Type> ().getInners ()[0]}, current_consumed); // specialize the return type
 			    if (!mp.succeed) return mp;
@@ -1411,6 +1450,9 @@ namespace semantic {
 		    }
 		) else of (syntax::Scope, s, {
 			return syntax::Scope::init (s.getLocation (), replaceAll (s.getContent (), mapping));
+		    }
+		) else of (syntax::Throw, thr, {
+			return syntax::Throw::init (thr.getLocation (), replaceAll (thr.getValue (), mapping));
 		    }
 		);
 	    }

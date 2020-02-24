@@ -69,29 +69,11 @@ namespace semantic {
 		else
 		    innerType.to <Type> ().isMutable (false);
 
-		auto blType = innerType;
-		if (innerType.to <Type> ().isMutable ()) { // Array are located on the stack, so we need to make a ref
-		    blType.to <Type> ().isRef (true);
-		    return LBlock::init (
-			loc,
-			blType,
-			{
-			    conditional, 
-				Referencer::init (loc, blType,
-						  ArrayAccess::init (expression.getLocation (), innerType, left, right [0])
-				)
-				}
-		    );
-		} else {
-		    return LBlock::init (
-			loc,
-			blType,
-			{
-			    conditional, 
-				ArrayAccess::init (expression.getLocation (), innerType, left, right [0])				
-			}
-		    );
-		}
+		return LBlock::init (
+		    loc,
+		    innerType,
+		    { conditional, ArrayAccess::init (expression.getLocation (), innerType, left, right [0]) }
+		);		
 	    }
 
 	    BracketVisitor::error (expression, left, right);
@@ -139,7 +121,7 @@ namespace semantic {
 		    innerType,
 		    { conditional, SliceAccess::init (expression.getLocation (), innerType, left, right [0]) }
 		);
-		
+	    		
 	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> ()) {
 		// Call a core function is probably better 
 	    }

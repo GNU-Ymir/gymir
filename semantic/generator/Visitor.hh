@@ -171,6 +171,11 @@ namespace semantic {
 	    generic::Tree generateBlock (const Block & bl);
 
 	    /**
+	     * \brief Transform a left block into gimple
+	     */
+	    generic::Tree generateLeftBlock (const Block & bl);
+	    
+	    /**
 	     * \brief Transform a block into gimple
 	     */
 	    generic::Tree generateSet (const Set & set);
