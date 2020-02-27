@@ -90,7 +90,7 @@ namespace semantic {
 	     * \param isVoid is the main function declared as void?
 	     * \param name the asmName of the function main
 	     */
-	    void generateMainCall (bool isVoid, const std::string & name);
+	    void generateMainCall (const lexing::Word & loc, bool isVoid, const std::string & name);
 	    
 	    /**
 	     * \brief Generate a new frame from a frame generator

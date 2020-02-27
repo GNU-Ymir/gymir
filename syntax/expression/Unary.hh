@@ -22,13 +22,12 @@ namespace syntax {
 
 	Unary ();
 	
-	Unary (const lexing::Word & loc);
+	Unary (const lexing::Word & loc, const Expression &content);
 
     public :
 
 	static Expression init (const lexing::Word & op, const Expression &content);
 
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

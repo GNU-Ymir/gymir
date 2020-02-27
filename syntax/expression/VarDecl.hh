@@ -35,7 +35,7 @@ namespace syntax {
 
 	VarDecl ();
 	
-	VarDecl (const lexing::Word & loc);
+	VarDecl (const lexing::Word & loc, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value);
 
     public :
 
@@ -48,7 +48,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & name, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value);
 	
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 
@@ -56,7 +55,6 @@ namespace syntax {
 
 	std::string prettyString () const override;
 	
-	void setValue (const Expression & value);
 
 	/**
 	 * \return the name and location of the declaration

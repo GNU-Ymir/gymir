@@ -26,13 +26,12 @@ namespace syntax {
 
 	Float ();
 	
-	Float (const lexing::Word & loc);
+	Float (const lexing::Word & loc, const lexing::Word & prePart, const lexing::Word & decPart, const lexing::Word & suff);
 
     public :
 
 	static Expression init (const lexing::Word & token, const lexing::Word & prePart, const lexing::Word & decPart, const lexing::Word & suff);
 
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 	

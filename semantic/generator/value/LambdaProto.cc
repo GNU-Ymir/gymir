@@ -40,7 +40,14 @@ namespace semantic {
 	}
 	
 	Generator LambdaProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index) {
-	    return Generator {new LambdaProto (loc, name, type, params, content, isRefClosure, isMoveClosure, index)};
+	    return Generator {new (Z0) LambdaProto (loc, name, type, params, content, isRefClosure, isMoveClosure, index)};
+	}
+
+	Generator LambdaProto::init (const LambdaProto & other, const std::string & name, Frame::ManglingStyle style) {
+	    auto ret = other.clone ();
+	    ret.to <LambdaProto> ()._mangleName = name;
+	    ret.to <LambdaProto> ()._style = style;
+	    return ret;
 	}
     
 	Generator LambdaProto::clone () const {
@@ -95,16 +102,9 @@ namespace semantic {
 		return Ymir::format ("% (%)-> %", this-> _name, content, this-> _type.prettyString ());
 	}
 	
-	void LambdaProto::setManglingStyle (Frame::ManglingStyle style) {
-	    this-> _style = style;
-	}
 
 	Frame::ManglingStyle LambdaProto::getManglingStyle () const {
 	    return this-> _style;
-	}
-
-	void LambdaProto::setMangledName (const std::string & name) {
-	    this-> _mangleName = name;
 	}
 
 	const std::string & LambdaProto::getMangledName () const {	    

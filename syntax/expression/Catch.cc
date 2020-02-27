@@ -16,10 +16,6 @@ namespace syntax {
 	return Expression {new (Z0) Catch (location, matchs, actions)};
     }
 
-    Expression Catch::clone () const {
-	return Expression {new Catch (*this)};
-    }
-
     bool Catch::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Catch thisType; // That's why we cannot implement it for all class

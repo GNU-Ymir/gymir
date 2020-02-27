@@ -6,22 +6,17 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    Float::Float (const lexing::Word & loc) :
-	IExpression (loc)
+    Float::Float (const lexing::Word & loc, const lexing::Word & prePart, const lexing::Word & decPart, const lexing::Word & suffix) :
+	IExpression (loc),
+	_prePart (prePart),
+	_decPart (decPart),
+	_suffix (suffix)
     {}
 
     Expression Float::init (const lexing::Word & location, const lexing::Word & prePart, const lexing::Word & decPart, const lexing::Word & suffix) {
-	auto ret = new (Z0) Float (location);
-	ret-> _prePart = prePart;
-	ret-> _decPart = decPart;
-	ret-> _suffix = suffix;
-	return Expression {ret};
+	return Expression {new (Z0) Float (location, prePart, decPart, suffix)};
     }
-
-    Expression Float::clone () const {
-	return Expression {new Float (*this)};
-    }
-
+    
     bool Float::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Float thisType; // That's why we cannot implement it for all class

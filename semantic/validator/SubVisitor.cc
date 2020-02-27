@@ -26,31 +26,31 @@ namespace semantic {
 	}
 	
 	generator::Generator SubVisitor::validate (const syntax::Binary & expression) {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    Generator left (Generator::empty ());
 	    bool failed = false;
 	    {
-		TRY (
+		try {
 		    left = this-> _context.validateValue (expression.getLeft ());
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		} catch (Error::ErrorList list) {
+		    
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    failed = true;
-		} FINALLY;
+		} 
 	    }
 
 	    if (failed) {
 		failed = false;
-	    	TRY (
+	    	try {
 	    	    left = this-> _context.validateType (expression.getLeft (), true);		    
-	    	) CATCH (ErrorCode::EXTERNAL) {
-	    	    GET_ERRORS_AND_CLEAR (msgs);
+	    	} catch (Error::ErrorList list) {
+	    	    
 		    failed = true;
-	    	} FINALLY;
+	    	} 
 	    }
 	    
 	    if (failed) {
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    } else errors = {};		   
 	    
 	    Generator gen (Generator::empty ());
@@ -73,7 +73,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (gen.isEmpty ()) {		
+	    if (gen.isEmpty ()) {
 		this-> error (expression, left, expression.getRight (), errors);
 	    }
 	    
@@ -83,9 +83,9 @@ namespace semantic {
 	Generator SubVisitor::validateMultSym (const syntax::Binary &expression, const MultSym & mult) {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    std::vector <Symbol> syms;
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    std::vector <Generator> gens;
-	    for (auto & gen : mult.getGenerators ()) {
+	    for (auto gen : mult.getGenerators ()) {
 		match (gen) {
 		    of (ModuleAccess, md ATTRIBUTE_UNUSED, {
 			    if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
@@ -166,7 +166,7 @@ namespace semantic {
 	Generator SubVisitor::validateModuleAccess (const syntax::Binary &expression, const ModuleAccess & acc) {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    std::vector <Symbol> syms;
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    if (this-> _context.getModuleContext (acc.getModRef ())) {
 		syms = acc.getLocal (right);
 	    } else {
@@ -179,7 +179,7 @@ namespace semantic {
 	    }
 	    
 	    if (syms.size () == 0) {
-		this-> error (expression, acc.clone (), expression.getRight (), errors);
+		this-> error (expression, Generator {acc.clone ()}, expression.getRight (), errors);
 	    }
 	    
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
@@ -194,8 +194,8 @@ namespace semantic {
 
 	    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
 	    auto type = val.to <Value> ().getType ();
-	    type.to <Type> ().setProxy (prox);
-	    val.to <Value> ().setType (type);
+	    type = Type::init (type.to <Type> (), prox);
+	    val = Value::init (val.to <Value> (), type);
 	    
 	    return val;
 	}	
@@ -250,8 +250,8 @@ namespace semantic {
 		return Fixed::init (b.getLocation (), type, value);	       		
 	    } else if (name == Array::INIT) {
 		std::vector <Generator> params;
-		std::vector <std::string> errors;
-		TRY (
+		std::list <std::string> errors;
+		try {
 		    auto bin = syntax::Binary::init (
 			b.to <Type> ().getInners ()[0].getLocation (),
 			expression.getLeft (),
@@ -262,10 +262,10 @@ namespace semantic {
 		    auto inner = validateType (bin.to <syntax::Binary> (), b.to <Type> ().getInners ()[0]);
 		    for (auto it ATTRIBUTE_UNUSED : Ymir::r (0, b.to <Array> ().getSize ()))
 			params.push_back (inner);
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
+		} catch (Error::ErrorList list) {
+		    
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
 
 		if (errors.size () != 0) {
 		    this-> error (expression, b, expression.getRight (), errors);
@@ -477,17 +477,17 @@ namespace semantic {
 		    return Fixed::init (t.getLocation (), type, value);	       			
 		} else if (name == Tuple::INIT_NAME) {
 		    auto & fields = t.to <Type> ().getInners ();
-		    std::vector <std::string> errors;
+		    std::list <std::string> errors;
 		    std::vector <Generator> params;		    
-		    TRY (
+		    try {
 			for (auto & field : fields) {
 			    auto bin = syntax::Binary::init (field.getLocation (), expression.getLeft (), expression.getRight (), syntax::Expression::empty ());
 			    params.push_back (validateType (bin.to <syntax::Binary> (), field));
 			}
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
+		    } catch (Error::ErrorList list) {
+			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
 
 		    if (errors.size () != 0) {
 			this-> error (expression, t, expression.getRight (), errors);
@@ -505,18 +505,18 @@ namespace semantic {
 		    auto & fields = t.to <generator::Struct> ().getFields ();
 		    std::vector <Generator> params;
 		    std::vector <Generator> types;
-		    std::vector <std::string> errors;
-		    TRY (
+		    std::list <std::string> errors;
+		    try {
 			for (auto & field : fields) {
 			    auto type = field.to <generator::VarDecl> ().getVarType ();
 			    types.push_back (type);
 			    auto bin = syntax::Binary::init (type.getLocation (), expression.getLeft (), expression.getRight (), syntax::Expression::empty ());
 			    params.push_back (validateType (bin.to<syntax::Binary> (), type));
 			}
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
+		    } catch (Error::ErrorList list) {
+			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
 
 		    if (errors.size () != 0) {
 			this-> error (expression, t, expression.getRight (), errors);
@@ -525,7 +525,7 @@ namespace semantic {
 		    return StructCst::init (
 			expression.getLocation (),
 			StructRef::init (expression.getLocation (), t.to<generator::Struct> ().getRef ()),
-			t.clone (),
+			t,
 			types,
 			params
 		    );
@@ -551,7 +551,7 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> & errors) {	    
+	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::list <std::string> & errors) {	    
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 		if (name == ClassRef::INIT_NAME) {
@@ -561,13 +561,13 @@ namespace semantic {
 		    
 		    bool succeed = true;
 		    Generator gen (Generator::empty ());
-		    TRY (			
+		    try {			
 			gen = this-> _context.getClassConstructors (expression.getLocation (), t);
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
+		    } catch (Error::ErrorList list) {
+			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			succeed = false;
-		    } FINALLY;
+		    } 
 		    
 		    if (!succeed) return Generator::empty ();
 		    else return gen;
@@ -595,7 +595,7 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator SubVisitor::validateTemplate (const syntax::Binary & expression, const generator::Generator & t, std::vector <std::string> & errors) {
+	Generator SubVisitor::validateTemplate (const syntax::Binary & expression, const generator::Generator & t, std::list <std::string> & errors) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto tmp = t.to <TemplateRef> ().getTemplateRef ().to <semantic::Template> ().getDeclaration ();
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
@@ -629,9 +629,9 @@ namespace semantic {
 		if (opName == SubVisitor::__TYPEINFO__) {		    
 		    auto loc = expression.getLocation ();
 		    auto typeInfoValue = this-> _context.validateTypeInfo (expression.getLocation (), value.to <Value> ().getType ());
-		    auto typeInfo = typeInfoValue.to<Value> ().getType ();
-		    typeInfo.to <Type> ().isRef (true); // It is a pointer in the vtable, we need to unref it
-		    typeInfo.to <Type> ().isMutable (false);
+
+		    // It is a pointer in the vtable, we need to unref it
+		    auto typeInfo = Type::init (typeInfoValue.to<Value> ().getType ().to <Type> (), false, true);
 		    
 		    return VtableAccess::init (loc,
 					       typeInfo,
@@ -653,26 +653,25 @@ namespace semantic {
 		    auto & fields = t.to <generator::Struct> ().getFields ();
 		    std::vector <Generator> types;
 		    std::vector <Generator> params;
-		    std::vector <std::string> errors;
-		    TRY (
+		    std::list <std::string> errors;
+		    try {
 			for (auto & field : fields) {
 			    auto type = field.to <generator::VarDecl> ().getVarType ();
 			    auto name = field.to <generator::VarDecl> ().getName ();
-			    type.to <Type> ().isMutable (false);
+			    type = Type::init (type.to <Type> (), false);
+			    
 			    params.push_back (StructAccess::init (expression.getLocation (), type, value, name));
 			    types.push_back (type);
 			}
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
 
 		    if (errors.size () != 0) {
 			this-> error (expression, t, expression.getRight (), errors);
 		    }
 		    auto tuple = Tuple::init (expression.getLocation (), types);
-		    tuple.to <Type> ().isMutable (false); // Impossible to modify a struct via its tupleof
-		    tuple.to <Type> ().isLocal (false);
+		    tuple = Type::init (tuple.to <Type> (), false); // Impossible to modify a struct via its tupleof
 		    
 		    return TupleValue::init (expression.getLocation (), tuple, params); 
 		}
@@ -718,7 +717,7 @@ namespace semantic {
 	    );
 	}
 
-	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::vector <std::string> & errors) {
+	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::list <std::string> & errors) {
 	    std::string leftName;
 	    std::string rightName = "";
 	    {
@@ -759,7 +758,7 @@ namespace semantic {
 		leftName
 	    );
 	    
-	    //THROW (ErrorCode::EXTERNAL, errors);
+	    //throw Error::ErrorList {errors};
 	}
 	
 	

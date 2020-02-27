@@ -22,7 +22,7 @@ namespace semantic {
 	}
 	
 	Generator ArrayValue::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) {
-	    return Generator {new ArrayValue (loc, type, content)};
+	    return Generator {new (Z0) ArrayValue (loc, type, content)};
 	}
     
 	Generator ArrayValue::clone () const {

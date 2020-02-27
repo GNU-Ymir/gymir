@@ -19,7 +19,7 @@ namespace semantic {
 	{
 	    
 	    auto thrs = this-> getType ().to <Type> ().getInners ()[0].getThrowers ();
-	    for (auto & it : thrs) it.changeLocation (loc);
+	    for (auto & it : thrs) it = Generator::init (loc, it);
 	    
 	    auto & fptrT = this-> _funcptr.getThrowers ();
 	    thrs.insert (thrs.end (), fptrT.begin (), fptrT.end ());

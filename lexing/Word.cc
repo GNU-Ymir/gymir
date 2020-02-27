@@ -2,6 +2,7 @@
 #include <sstream>
 #include <algorithm>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Memory.hh>
 #include <ymir/utils/Colors.hh>
 
 namespace lexing {
@@ -70,16 +71,20 @@ namespace lexing {
     }
 
     location_t Word::getLocus () const {
-	char * aux = new (Z0) char [this-> locFile.length () + 1];
-	for (auto it : Ymir::r (0, this-> locFile.length ()))
-	    aux [it] = this-> locFile [it];
-	aux [this-> locFile.length ()] = '\0';
+	if (this-> isEof ()) {
+	    return BUILTINS_LOCATION;
+	} else {
+	    char * aux = new (Z0) char [this-> locFile.length () + 1];
+	    for (auto it : Ymir::r (0, this-> locFile.length ()))
+		aux [it] = this-> locFile [it];
+	    aux [this-> locFile.length ()] = '\0';
     
-	linemap_add (line_table, LC_ENTER, 0, aux, this-> line);	
-	linemap_line_start (line_table, this-> line, 0);
-	auto ret = linemap_position_for_column (line_table, this-> column);
-	linemap_add (line_table, LC_LEAVE, 0, NULL, 0);
-	return ret;
+	    linemap_add (line_table, LC_ENTER, 0, aux, this-> line);	
+	    linemap_line_start (line_table, this-> line, 0);
+	    auto ret = linemap_position_for_column (line_table, this-> column);
+	    linemap_add (line_table, LC_LEAVE, 0, NULL, 0);
+	    return ret;
+	}
     }
 
 

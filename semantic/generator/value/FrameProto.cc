@@ -22,7 +22,7 @@ namespace semantic {
 	    _isSafe (isSafe)
 	{
 	    auto th = throwers;
-	    for (auto &it : th) it.changeLocation (loc);
+	    for (auto &it : th) it = Generator::init (loc, it);
 	    this-> setThrowers (th);		
 	}
 
@@ -35,7 +35,14 @@ namespace semantic {
 	}
 		   
 	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, bool isSafe, const std::vector <Generator> & throwers) {
-	    return Generator {new FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers)};
+	    return Generator {new (Z0) FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers)};
+	}
+
+	Generator FrameProto::init (const FrameProto & proto, const std::string & name, Frame::ManglingStyle style) {
+	    auto ret = proto.clone ();
+	    ret.to <FrameProto> ()._mangleName = name;
+	    ret.to <FrameProto> ()._style = style;
+	    return ret;
 	}
     
 	Generator FrameProto::clone () const {
@@ -81,18 +88,10 @@ namespace semantic {
 		    content.back () = content.back ().substr (0, content.back ().size () - 1);
 	    }
 	    return Ymir::format ("% (%)-> %", this-> _name, content, this-> _type.prettyString ());
-	}
-	
-	void FrameProto::setManglingStyle (Frame::ManglingStyle style) {
-	    this-> _style = style;
-	}
+	}	
 
 	Frame::ManglingStyle FrameProto::getManglingStyle () const {
 	    return this-> _style;
-	}
-
-	void FrameProto::setMangledName (const std::string & name) {
-	    this-> _mangleName = name;
 	}
 
 	const std::string & FrameProto::getMangledName () const {	    

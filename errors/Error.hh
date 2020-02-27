@@ -9,9 +9,12 @@
 #include <cmath>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/errors/ListError.hh>
+#include <list>
 #include <ymir/errors/Exception.hh>
 
 namespace Ymir {
+
+
     
     /**
        \brief format a string with simple system
@@ -41,6 +44,20 @@ namespace Ymir {
     void bt_print ();
 
     namespace Error {
+
+	
+	struct ErrorList {
+
+	    std::list <std::string> errors;      
+
+	    void print () const;
+    
+	};
+
+	struct FatalError {
+	    std::string msg;
+	    void print () const;
+	};
 	
 	/** 
 	    \brief add the line information on the error
@@ -101,14 +118,14 @@ namespace Ymir {
 	void occur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);
-	    THROW ((int) ErrorCode::EXTERNAL, msg);	    
+	    throw ErrorList {{msg}};	    
 	}
 
 	template <typename ... TArgs>
 	void occur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc, end);
-	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	    throw ErrorList {std::list <std::string> {msg}};
 	}
 
 
@@ -156,36 +173,36 @@ namespace Ymir {
 	void warn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
 	    auto msg = format ("%(y) : " + content, "Warning", args...);
 	    msg = addLine (msg, loc);
-	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	    throw ErrorList {std::list <std::string> {msg}};
 	}
 
 	template <typename ... TArgs>
 	void occurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc);
-	    msg = addNote (loc, msg, note); 	   
-	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	    msg = addNote (loc, msg, note);
+	    throw ErrorList {std::list <std::string> {msg}};
 	}
 	
 	template <typename ... TArgs>
 	void occurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const std::string & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
 	    msg = addLine (msg, loc, loc2);
-	    msg = addNote (loc, msg, note); 	   
-	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	    msg = addNote (loc, msg, note);
+	    throw ErrorList {std::list <std::string> {msg}};
 	}
 
 	
 	template <typename ... TArgs>
 	void occur (const std::string &content, TArgs ... args) {
-	    auto msg = format ("%(r) : " + content, "Error", args...);	   
-	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    throw ErrorList {std::list <std::string> {msg}};
 	}
 
 	template <typename ... TArgs>
 	void warn (const std::string & content, TArgs ... args) {
 	    auto msg = format ("%(y) : " + content, "Warning", args...);
-	    THROW ((int) ErrorCode::EXTERNAL, msg);
+	    throw ErrorList {std::list <std::string> {msg}};
 	}
 	
 	/**
@@ -199,8 +216,7 @@ namespace Ymir {
 	    msg = addLine (msg, loc);
 
 	    //bt_print ();
-
-	    THROW ((int) ErrorCode::FAIL, msg);
+	    throw ErrorList {std::list <std::string> (msg)};
 	}
 
 	/**
@@ -226,21 +242,7 @@ namespace Ymir {
 
 	    //bt_print ();
 
-	    THROW ((int) ErrorCode::FATAL, aux);
-	}
-
-	/**
-	   \brief Print a note error on the error stream
-	   \param word the location of the note
-	   \param format_ the content of the note
-	   \param args the parameter of the format
-	 */
-	template <typename ... TArgs>
-	void note (const lexing::Word& word, const std::string& format_, TArgs ... args) {
-	    std::string aux = format ("%(b) : " + format_, "Note", args...);
-	    aux = addLine (aux, word);
-	    std::string & msg = getLastError ();
-	    msg += aux;
+	    throw FatalError {aux};
 	}
 
 	/**

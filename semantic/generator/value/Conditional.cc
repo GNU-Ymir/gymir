@@ -19,12 +19,12 @@ namespace semantic {
 	    _isComplete (isMandatory)
 	{
 	    if (!else_.isEmpty ()) {
-		this-> isBreaker (
+		this-> setBreaker (
 		    this-> _content.to <Value> ().isBreaker () &&
 		    this-> _else.to <Value> ().isBreaker ()
 		);
 		
-	    	this-> isReturner (
+	    	this-> setReturner (
 		    this-> _content.to <Value> ().isReturner () &&
 		    this-> _else.to <Value> ().isReturner ()
 		);
@@ -33,11 +33,11 @@ namespace semantic {
 		    this-> _else.to <Conditional> ().isComplete ();
 		
 	    } else if (isMandatory) {
-		this-> isBreaker (
+		this-> setBreaker (
 		    this-> _content.to <Value> ().isBreaker ()
 		);
 		
-	    	this-> isReturner (
+	    	this-> setReturner (
 		    this-> _content.to <Value> ().isReturner ()
 		);
 	    }
@@ -53,7 +53,7 @@ namespace semantic {
 	}	
 	
 	Generator Conditional::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_, bool isMandatory) {
-	    return Generator {new Conditional (loc, type, test, content, else_, isMandatory)};
+	    return Generator {new (Z0) Conditional (loc, type, test, content, else_, isMandatory)};
 	}
     
 	Generator Conditional::clone () const {

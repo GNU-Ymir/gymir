@@ -22,7 +22,7 @@ namespace semantic {
 	}
 	
 	Generator TupleValue::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) {
-	    return Generator {new TupleValue (loc, type, content)};
+	    return Generator {new (Z0) TupleValue (loc, type, content)};
 	}
     
 	Generator TupleValue::clone () const {

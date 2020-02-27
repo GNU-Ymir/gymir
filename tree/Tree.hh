@@ -1,33 +1,6 @@
 #pragma once
 
-#include "config.h"
-#include "system.h"
-#include "coretypes.h"
 
-#include "target.h"
-#include "tree.h"
-#include "tree-iterator.h"
-#include "input.h"
-#include "diagnostic.h"
-#include "stringpool.h"
-#include "cgraph.h"
-#include "gimplify.h"
-#include "gimple-expr.h"
-#include "convert.h"
-#include "print-tree.h"
-#include "stor-layout.h"
-#include "fold-const.h"
-
-#include "convert.h"
-#include "langhooks.h"
-#include "ubsan.h"
-#include "stringpool.h"
-#include "attribs.h"
-#include "asan.h"
-#include "tree-pretty-print.h"
-#include "print-tree.h"
-#include "cppdefault.h"
-#include "tm.h"
 
 #include <ymir/lexing/Word.hh>
 #include <ymir/errors/Error.hh>
@@ -37,6 +10,7 @@
 #include <list>
 #include <map>
 
+#include "tree.h"
 
 namespace generic {
 
@@ -426,6 +400,16 @@ namespace generic {
 	 */
 	static Tree build (tree_code tc, lexing::Word loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3, const Tree & t4, const Tree & t5);
 
+	/**
+	 * 	    gimplify_function_tree (fn_decl.getTree ());
+	 */
+	static void gimplifyFunction (const Tree & fnDecl);
+
+	/**
+	 * 	    cgraph_node::finalize_function (fn_decl.getTree (), true);
+	 */
+	static void finalizeFunction (const Tree & fnDecl);
+	
 	/**
 	 * \return the location of the tree (for debuging infos)
 	 */

@@ -14,8 +14,6 @@ namespace syntax {
      */
     class ExternBlock : public IDeclaration {
 
-	lexing::Word _location;
-
 	/** The language which has implemented the following declaration */
 	lexing::Word _from;
 
@@ -31,19 +29,15 @@ namespace syntax {
 
 	ExternBlock ();
 
+	ExternBlock (const lexing::Word & location, const lexing::Word & from, const lexing::Word & space, const Declaration & content);
+
     public :
 
-	static Declaration init (const ExternBlock & decl);
-	
 	static Declaration init (const lexing::Word & location, const lexing::Word & from, const lexing::Word & space, const Declaration & content);
-
-	Declaration clone () const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	
 	bool isOf (const IDeclaration * type) const override;
-
-	const lexing::Word & getLocation () const;
 	
 	/**
 	 * \return the declaration 

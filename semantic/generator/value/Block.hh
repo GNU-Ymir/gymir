@@ -57,11 +57,7 @@ namespace semantic {
 	     */
 	    const std::vector <Generator> & getContent () const;
 
-	    /**
-	     * \brief Set the list of expression of the block
-	     */
-	    void setContent (const std::vector <Generator> & expressions);
-
+	    
 	    std::string prettyString () const override;
 	};	
 

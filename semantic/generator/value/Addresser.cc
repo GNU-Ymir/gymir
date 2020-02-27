@@ -23,7 +23,7 @@ namespace semantic {
 	}
 	
 	Generator Addresser::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new Addresser (loc, type, who)};
+	    return Generator {new (Z0) Addresser (loc, type, who)};
 	}
     
 	Generator Addresser::clone () const {

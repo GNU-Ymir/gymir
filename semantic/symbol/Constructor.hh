@@ -14,12 +14,12 @@ namespace semantic {
     class Constructor : public ISymbol {
 
 	/** The symbol table associated to the module */
-	Table _table;
+	std::shared_ptr<Table> _table;
 
 	/** The syntaxic function */
 	syntax::Declaration _content;
 
-	Symbol _class;
+	std::weak_ptr <ISymbol> _class;
 
 	std::vector <syntax::Expression> _throwers;
 		
@@ -74,7 +74,7 @@ namespace semantic {
 
 	const std::vector <syntax::Expression> & getThrowers () const;
 	
-	const Symbol & getClass () const;
+	Symbol getClass () const;
 
 	/**
 	 * \return the list of custom attributs

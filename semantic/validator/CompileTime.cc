@@ -21,8 +21,8 @@ namespace semantic {
 	    static int nb_recurs = 0;
 	    nb_recurs += 1;
 	    
-	    std::vector <std::string> errors;
-	    TRY (
+	    std::list <std::string> errors;
+	    try {
 	    match (gen) {
 		of (Fixed, f ATTRIBUTE_UNUSED,
 		    return gen;
@@ -132,9 +132,9 @@ namespace semantic {
 		    return execute (val.getValue ());
 		);
 	    }
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors.insert (errors.begin (), msgs.begin (), msgs.end ());
+	    } catch (Error::ErrorList list) {
+		
+		errors.insert (errors.begin (), list.errors.begin (), list.errors.end ());
 		if (nb_recurs <= 3 || global::State::instance ().isVerboseActive ()) {
 		    errors.insert (errors.begin (), Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IN_COMPILE_TIME_EXEC)));		    
 		} else {
@@ -143,12 +143,12 @@ namespace semantic {
 			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));		    	
 		    }
 		}
-	    } FINALLY;
+	    } 
 
 	    nb_recurs -= 1;
 	    
 	    if (errors.size () != 0)
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    else {
 		Ymir::Error::occur (
 		    gen.getLocation (),
@@ -608,12 +608,11 @@ namespace semantic {
 	generator::Generator CompileTime::executeMultSym (const generator::Generator & gen) {
 	    std::vector <Generator> mult;
 	    for (auto & it : gen.to <MultSym> ().getGenerators ()) {
-		TRY (
+		try {
 		    auto ret = this-> execute (it);
 		    mult.push_back (ret);
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		} FINALLY;
+		} catch (Error::ErrorList list) {		    
+		} 
 	    }
 
 	    if (mult.size () == 0)

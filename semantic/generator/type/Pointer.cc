@@ -21,9 +21,7 @@ namespace semantic {
 	    Type (loc, loc.str)
 	{
 	    this-> isComplex (true);
-	    auto aux = inner;
-	    aux.to <Type> ().isRef (false);
-	    this-> setInners ({aux});
+	    this-> setInners ({Type::init (inner.to <Type> (), inner.to <Type> ().isMutable (), false)});
 	}
 
 	Generator Pointer::init (const lexing::Word & loc, const Generator & inner) {

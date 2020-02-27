@@ -18,7 +18,7 @@ namespace syntax {
 
 	FuncPtr ();
 	
-	FuncPtr (const lexing::Word & loc);
+	FuncPtr (const lexing::Word & loc, const Expression & ret, const std::vector <Expression> & params);
 
     public :
 
@@ -29,9 +29,7 @@ namespace syntax {
 	 * \param element the left operand
 	 * \param params the parameters of the operation
 	 */
-	static Expression init (const lexing::Word & location, const Expression & ret, const std::vector <Expression> & params);
-	
-	Expression clone () const override;
+	static Expression init (const lexing::Word & location, const Expression & ret, const std::vector <Expression> & params);       
 
 	const Expression & getRetType () const;
 

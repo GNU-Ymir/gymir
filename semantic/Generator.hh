@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/utils/Proxy.hh>
+#include <ymir/utils/Ref.hh>
 #include <ymir/lexing/Word.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/errors/ListError.hh>
@@ -81,11 +81,6 @@ namespace semantic {
 	     * \return the location of the generator for debuging info generation
 	     */
 	    const lexing::Word & getLocation () const;
-
-	    /**
-	     * Change the location of the generator (useful for templates)
-	     */
-	    void changeLocation (const lexing::Word & loc);
 	    
 	    /**
 	     * \return the name of the generator
@@ -132,9 +127,16 @@ namespace semantic {
 	    /** Virtual but does not do anything */
 	    virtual ~IGenerator ();
 	    
+	protected :
+	    
+	    /**
+	     * Change the location of the generator (useful for templates)
+	     */
+	    void changeLocation (const lexing::Word & loc);
+	    
 	};
 
-	class Generator : public Proxy <IGenerator, Generator> {
+	class Generator : public RefProxy <IGenerator, Generator> {
 	public : 
 
 	    /** For convinience an empty generator is declared to avoid segmentation fault on unreferenced generator */
@@ -146,6 +148,8 @@ namespace semantic {
 
 	    Generator (IGenerator * gen);
 
+	    static Generator init (const lexing::Word & loc, const Generator & other);
+	    
 	    /**
 	     * \brief Create en empty generator
 	     */
@@ -165,11 +169,6 @@ namespace semantic {
 	     * Proxy function for generator
 	     */
 	    const lexing::Word & getLocation () const;
-
-	    /**
-	     * Proxy function for generator
-	     */
-	    void changeLocation (const lexing::Word & loc);
 	    
 	    /**
 	     * Proxy function for generator
@@ -218,13 +217,13 @@ namespace semantic {
 	     */
 	    template <typename T>
 	    T& to ()  {	    
-		if (this-> _value == NULL)
+		if (this-> _value == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
 
 		T t;
-		if (!this-> _value-> isOf (&t))
+		if (!this-> _value.get ()-> isOf (&t))
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-		return *((T*) this-> _value);	    
+		return *((T*) this-> _value.get ());	    
 	    }
 
 	    /**
@@ -233,13 +232,13 @@ namespace semantic {
 	     */
 	    template <typename T>
 	    const T& to () const  {	    
-		if (this-> _value == NULL)
+		if (this-> _value == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
 
 		T t;
-		if (!this-> _value-> isOf (&t))
+		if (!this-> _value.get ()-> isOf (&t))
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-		return *((T*) this-> _value);	    
+		return *((const T*) this-> _value.get ());	    
 	    }
 
 	    /**
@@ -247,13 +246,13 @@ namespace semantic {
 	     */
 	    template <typename T>
 	    bool is () const  {	    
-		if (this-> _value == NULL)
+		if (this-> _value == nullptr)
 		    return false;
 
 		T t;
-		return this-> _value-> isOf (&t); 			    
+		return this-> _value.get ()-> isOf (&t); 			    
 	    }
-		  	    
+	    
 	};
 	
     }    

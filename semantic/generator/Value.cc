@@ -18,15 +18,28 @@ namespace semantic {
 	    IGenerator (loc, name),
 	    _type (type)
 	{}
+
+	Generator Value::initBrRet (const Value & other, bool isBreaker, bool isReturner) {
+	    auto ret = other.clone ();
+	    ret.to<Value> ()._breaker = isBreaker;
+	    ret.to<Value> ()._returner = isReturner;
+	    return ret;
+	}
+	
+	Generator Value::init (const Value & other, const Generator & type) {
+	    auto ret = other.clone ();
+	    ret.to <Value> ()._type = type;
+	    return ret;
+	}
 	
 	Generator Value::clone () const {
 	    return Generator{new (Z0) Value (*this)};
 	}
 	
-	void Value::setType (const Generator & type) {
-	    this-> _type = type;
-	    this-> _type.changeLocation (this-> getLocation ());
-	}
+	// void Value::setType (const Generator & type) {
+	//     this-> _type = type;
+	//     this-> _type.changeLocation (this-> getLocation ());
+	// }
 
 	const Generator & Value::getType () const {
 	    return this-> _type;
@@ -47,18 +60,18 @@ namespace semantic {
 	    return this-> _breaker;
 	}
 
-	void Value::isBreaker (bool breaker) {
-	    this-> _breaker = breaker;
-	}
-
 	bool Value::isReturner () const {
 	    return this-> _returner;
 	}
 
-	void Value::isReturner (bool returner) {
-	    this-> _returner = returner;
+	void Value::setReturner (bool is) {
+	    this-> _returner = is;
 	}
 
+	void Value::setBreaker (bool is) {
+	    this-> _breaker = is;
+	}
+	
 	bool Value::isLvalue () const {
 	    return this-> _isLvalue;
 	}

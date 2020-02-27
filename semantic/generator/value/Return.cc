@@ -9,7 +9,7 @@ namespace semantic {
 	    _frameType (Generator::empty ()),
 	    _value (Generator::empty ())
 	{
-	    this-> isReturner (true);
+	    this-> setReturner (true);
 	}
 
 	Return::Return (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value) :
@@ -17,12 +17,12 @@ namespace semantic {
 	    _frameType (fun_type),
 	    _value (value)
 	{
-	    this-> isReturner (true);
+	    this-> setReturner (true);
 	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 	
 	Generator Return::init (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value) {
-	    return Generator {new Return (loc, type, fun_type, value)};
+	    return Generator {new (Z0) Return (loc, type, fun_type, value)};
 	}
     
 	Generator Return::clone () const {

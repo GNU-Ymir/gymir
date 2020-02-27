@@ -77,15 +77,15 @@ namespace semantic {
 	    generator::Generator validateSlice (const syntax::Binary & expression, const generator::Generator & s);
 	    generator::Generator validateTuple (const syntax::Binary & expression, const generator::Generator & t);
 	    generator::Generator validateStruct (const syntax::Binary & expression, const generator::Generator & en);
-	    generator::Generator validateClass (const syntax::Binary & expression, const generator::Generator & en, std::vector <std::string> & errors);
-	    generator::Generator validateTemplate (const syntax::Binary & expression, const generator::Generator & en, std::vector <std::string> & errors);
+	    generator::Generator validateClass (const syntax::Binary & expression, const generator::Generator & en, std::list <std::string> & errors);
+	    generator::Generator validateTemplate (const syntax::Binary & expression, const generator::Generator & en, std::list <std::string> & errors);
 	    generator::Generator validateClassValue (const syntax::Binary & expression, const generator::Generator & en);
 	    generator::Generator validateStructValue (const syntax::Binary & expression, const generator::Generator & en);
 	    
 	private :	    
 
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right);
-	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::vector <std::string> & errors);
+	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::list <std::string> & errors);
 	    
 	};
 

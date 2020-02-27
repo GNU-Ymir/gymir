@@ -26,7 +26,7 @@ namespace semantic {
 	}
 	
 	Generator UnionCst::init (const lexing::Word & loc, const Generator & type, const Generator & str, const std::string & name, const Generator & typeCst, const Generator & param) {
-	    return Generator {new UnionCst (loc, type, str, name, typeCst, param)};
+	    return Generator {new (Z0) UnionCst (loc, type, str, name, typeCst, param)};
 	}
     
 	Generator UnionCst::clone () const {

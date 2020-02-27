@@ -3,27 +3,17 @@
 namespace syntax {
 
     ExpressionWrapper::ExpressionWrapper () :
+	IDeclaration (lexing::Word::eof ()),
 	_content (Expression::empty ())
     {}
 
-    Declaration ExpressionWrapper::init () {
-	return Declaration {new (Z0) ExpressionWrapper ()};
-    }
-
-    Declaration ExpressionWrapper::init (const ExpressionWrapper & gl) {
-	auto ret = new (Z0) ExpressionWrapper ();
-	ret-> _content = gl._content;
-	return Declaration {ret};
-    }
-
-    Declaration ExpressionWrapper::init (const Expression & content) {
-	auto ret = new (Z0) ExpressionWrapper ();
-	ret-> _content = content;
-	return Declaration {ret};
-    }
-
-    Declaration ExpressionWrapper::clone () const {
-	return ExpressionWrapper::init (*this);
+    ExpressionWrapper::ExpressionWrapper (const lexing::Word & loc, const Expression & content) :
+	IDeclaration (loc),
+	_content (content)
+    {}
+    
+    Declaration ExpressionWrapper::init (const lexing::Word & loc, const Expression & content) {
+	return Declaration {new (Z0) ExpressionWrapper (loc, content)};
     }
 
     bool ExpressionWrapper::isOf (const IDeclaration * type) const {

@@ -6,7 +6,6 @@ namespace semantic {
 
     Class::Class () :
 	ISymbol (lexing::Word::eof (), false), 
-	_table (this),
 	_ancestor (syntax::Expression::empty ()),
 	_fields ({}),
 	_gen (generator::Generator::empty ()),
@@ -15,25 +14,17 @@ namespace semantic {
 
     Class::Class (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak) :
 	ISymbol (name, isWeak),
-	_table (this),
 	_ancestor (ancestor),
 	_fields ({}),
 	_gen (generator::Generator::empty ()),
 	_typeInfo (generator::Generator::empty ())
     {}
 
-    Class::Class (const Class & other) :
-	ISymbol (other),
-	_table (other._table.clone (this)),
-	_ancestor (other._ancestor),
-	_fields ({}),
-	_gen (generator::Generator::empty ()),
-	_typeInfo (generator::Generator::empty ()),
-	_isAbstract (other._isAbstract)
-    {}
     
     Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak) {
-	return Symbol {new (Z0) Class (name, ancestor, isWeak)};
+	auto ret = Symbol {new (Z0) Class (name, ancestor, isWeak)};
+	ret.to <Class> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
     
     bool Class::isOf (const ISymbol * type) const {
@@ -44,19 +35,19 @@ namespace semantic {
     }
     
     void Class::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
     
     void Class::insertTemplate (const Symbol & sym) {
-	this-> _table.insertTemplate (sym);
+	this-> _table-> insertTemplate (sym);
     }
 
     std::vector<Symbol> Class::getTemplates () const {
-	return this-> _table.getTemplates ();
+	return this-> _table-> getTemplates ();
     }    
     
     void Class::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector <Symbol> Class::get (const std::string & name) const {
@@ -81,13 +72,13 @@ namespace semantic {
     }
 
     const std::vector <Symbol> & Class::getAllInner () const {
-	return this-> _table.getAll ();
+	return this-> _table-> getAll ();
     }
     
     std::string Class::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();
@@ -108,7 +99,6 @@ namespace semantic {
     void Class::setTypeInfo (const generator::Generator & gen) {
 	this-> _typeInfo = gen;
     }
-
     
     void Class::addField (const syntax::Expression & field) {
 	this-> _fields.push_back (field);

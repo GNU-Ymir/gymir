@@ -37,7 +37,7 @@ namespace semantic {
 	     * \warning left and right operand must generate int typed values
 	     */
 	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, bool isCVariadic, const Generator & classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers);
-	    
+	   	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
 	     */

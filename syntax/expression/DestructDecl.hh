@@ -29,7 +29,7 @@ namespace syntax {
 
 	DestructDecl ();
 	
-	DestructDecl (const lexing::Word & loc);
+	DestructDecl (const lexing::Word & loc, const std::vector<Expression> & params, const Expression & value, bool isVariadic);
 
     public :
 
@@ -41,7 +41,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & value, bool isVariadic);
 	
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

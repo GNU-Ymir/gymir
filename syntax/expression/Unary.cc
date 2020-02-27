@@ -7,19 +7,13 @@ namespace syntax {
 	_content (Expression::empty ())
     {}
     
-    Unary::Unary (const lexing::Word & loc) :
+    Unary::Unary (const lexing::Word & loc, const Expression & content) :
 	IExpression (loc),
-	_content (Expression::empty ())
+	_content (content)
     {}
 
     Expression Unary::init (const lexing::Word & location, const Expression & content) {
-	auto ret = new (Z0) Unary (location);
-	ret-> _content = content;
-	return Expression {ret};
-    }
-
-    Expression Unary::clone () const {
-	return Expression {new Unary (*this)};
+	return Expression {new (Z0) Unary (location, content)};
     }
 
     bool Unary::isOf (const IExpression * type) const {

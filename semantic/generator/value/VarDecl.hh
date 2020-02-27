@@ -15,8 +15,6 @@ namespace semantic {
 
 	    bool _isMutable;
 
-	    bool _autoInit = true;
-
 	    static uint __lastId__;
 
 	    uint _varRefId;
@@ -70,17 +68,7 @@ namespace semantic {
 	     * \return has this var been declared mutable ?
 	     */
 	    bool isMutable () const;
-
-	    /**
-	       
-	     */
-	    void isAutoInit (bool is);
 	    
-	    /**
-	     * \return if it has no init value, do we initialize it with default init value ? 
-	     */
-	    bool isAutoInit () const;
-
 	    /**
 	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
 	     */

@@ -52,7 +52,8 @@ namespace Ymir {
 	 */
 	void lintTime ();
 
-
+	~Parser ();	
+	
     private :
 
 	/// The path of the file parsed 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ymir/utils/Proxy.hh>
+#include <ymir/utils/Ref.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/lexing/Word.hh>
 
@@ -18,9 +18,8 @@ namespace syntax {
 	IExpression (const lexing::Word & location);
 	
     public:	
-	
-	virtual Expression clone () const = 0;
 
+	
 	virtual bool isOf (const IExpression * type) const = 0;
 
 	/**
@@ -47,7 +46,7 @@ namespace syntax {
     /**
      * \struct Expression Proxy of all Expression
      */
-    class Expression : public Proxy <IExpression, Expression> {
+    class Expression : public RefProxy <IExpression, Expression> {
     public:
 
 	Expression (IExpression * expr);
@@ -72,14 +71,14 @@ namespace syntax {
 	 */
 	template <typename T>
 	T& to () {	    
-	    if (this-> _value == NULL) 
+	    if (this-> _value == nullptr) 
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");
 	    else {
 		T t;
-		if (!this-> _value-> isOf (&t))
+		if (!this-> _value.get ()-> isOf (&t))
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
 	    }
-	    return *((T*) this-> _value);	    
+	    return *((T*) this-> _value.get ());	    
 	}
 	
 	/**
@@ -88,14 +87,14 @@ namespace syntax {
 	 */
 	template <typename T>
 	const T& to () const {	    
-	    if (this-> _value == NULL) 
+	    if (this-> _value == nullptr) 
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");
 	    else {
 		T t;
-		if (!this-> _value-> isOf (&t))
+		if (!this-> _value.get ()-> isOf (&t))
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
 	    }
-	    return *((const T*) this-> _value);	    
+	    return *((const T*) this-> _value.get ());	    
 	}
 	
 	/**
@@ -103,11 +102,11 @@ namespace syntax {
 	 */
 	template <typename T>
 	bool is () const {	    
-	    if (this-> _value == NULL)
+	    if (this-> _value == nullptr)
 		return false;
 
 	    T t;
-	    return this-> _value-> isOf (&t); 			    
+	    return this-> _value.get ()-> isOf (&t); 			    
 	}
 	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;

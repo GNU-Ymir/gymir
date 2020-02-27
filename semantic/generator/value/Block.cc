@@ -57,10 +57,6 @@ namespace semantic {
 	    return this-> _content;
 	}
 
-	void Block::setContent (const std::vector<Generator> & content) {
-	    this-> _content = content;
-	}
-
 	std::string Block::prettyString () const {
 	    Ymir::OutBuffer buf ("{");
 	    ulong i = 0;

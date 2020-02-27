@@ -63,14 +63,6 @@ namespace semantic {
 	    return this-> _isMutable;
 	}
 
-	bool VarDecl::isAutoInit () const {
-	    return this-> _autoInit;
-	}
-
-	void VarDecl::isAutoInit (bool is) {
-	    this-> _autoInit = is;
-	}
-
 	uint VarDecl::getUniqId () const {
 	    return _varRefId;
 	}

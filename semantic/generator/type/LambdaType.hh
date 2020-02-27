@@ -38,16 +38,16 @@ namespace semantic {
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
-	    bool equals (const Generator & other) const override;
-
-	    
-	    void isMutable (bool is) override;
-
+	    bool equals (const Generator & other) const override;	   
 	    
 	    /** 
 	     * \return the name of the type formatted
 	     */
-	    std::string typeName () const override;	    
+	    std::string typeName () const override;
+
+	protected :
+
+	    Generator createMutable (bool is) const override;
 	    
 	};
 

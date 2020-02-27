@@ -7,19 +7,13 @@ namespace syntax {
 	_right (Expression::empty ())
     {}
     
-    ImplVar::ImplVar (const lexing::Word & loc) :
+    ImplVar::ImplVar (const lexing::Word & loc, const Expression & type) :
 	IExpression (loc),
-	_right (Expression::empty ())
+	_right (type)
     {}
         
     Expression ImplVar::init (const lexing::Word & location, const Expression & type) {
-	auto ret = new (Z0) ImplVar (location);
-	ret-> _right = type;
-	return Expression {ret};
-    }
-
-    Expression ImplVar::clone () const {
-	return Expression {new ImplVar (*this)};
+	return Expression {new (Z0) ImplVar (location, type)};
     }
 
     bool ImplVar::isOf (const IExpression * type) const {

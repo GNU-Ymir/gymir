@@ -8,26 +8,21 @@
 namespace semantic {
 
     TemplateSolution::TemplateSolution () :
-	ISymbol (lexing::Word::eof (), false),
-	_table (this)
+	ISymbol (lexing::Word::eof (), false)
     {}
     
-    TemplateSolution::TemplateSolution (const TemplateSolution & mod) :
-	ISymbol (mod),
-	_table (mod._table.clone (this)),
-	_params (mod._params)
-    {}
 
     TemplateSolution::TemplateSolution (const lexing::Word & loc, const std::vector<syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders, bool isWeak) :
 	ISymbol (loc, isWeak),
-	_table (this),
 	_templs (templs), 
 	_params (params),
 	_nameOrder (nameOrders)
     {}
     
     Symbol TemplateSolution::init (const lexing::Word & name, const std::vector <syntax::Expression> & templs, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & nameOrders, bool isWeak) {
-	return Symbol {new (Z0) TemplateSolution (name, templs, mapping, nameOrders, isWeak)};
+	auto ret =  Symbol {new (Z0) TemplateSolution (name, templs, mapping, nameOrders, isWeak)};
+	ret.to <TemplateSolution> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
 
     bool TemplateSolution::isOf (const ISymbol * type) const {
@@ -38,16 +33,16 @@ namespace semantic {
     }
 
     void TemplateSolution::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
 
     void TemplateSolution::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector <Symbol> TemplateSolution::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	auto local = this-> _table.get (name);
+	auto local = this-> _table-> get (name);
 	
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
@@ -55,22 +50,22 @@ namespace semantic {
 
     std::vector <Symbol> TemplateSolution::getPublic (const std::string & name) const {
 	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table.getPublic (name);
+	auto local = this-> _table-> getPublic (name);
 	
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
     
     std::vector<Symbol> TemplateSolution::getLocal (const std::string & name) const {
-	return this-> _table.get (name);
+	return this-> _table-> get (name);
     }
 
     std::vector<Symbol> TemplateSolution::getLocalPublic (const std::string & name) const {
-	return this-> _table.getPublic (name);
+	return this-> _table-> getPublic (name);
     }
 
     const std::vector <Symbol> & TemplateSolution::getAllLocal () const {
-	return this-> _table.getAll ();
+	return this-> _table-> getAll ();
     }
     
     bool TemplateSolution::equals (const Symbol & other, bool parent) const {
@@ -117,7 +112,7 @@ namespace semantic {
     std::string TemplateSolution::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();
@@ -170,8 +165,7 @@ namespace semantic {
 	    if (second.is <generator::TemplateSyntaxWrapper> ()) {
 		match (second.to <generator::TemplateSyntaxWrapper> ().getContent ()) {
 		    of (generator::Type, t, {
-			    auto aux = t.clone ();
-			    aux.to <generator::Type> ().isMutable (false);
+			    auto aux = generator::Type::init (t, false, t.isRef ());
 			    buf.write (Ymir::format ("N%", mangler.mangle (aux))); // [] on map discard const qualifier ?!!	    
 			}
 		    ) else {
@@ -183,8 +177,7 @@ namespace semantic {
 		for (auto & it : second.to <generator::TemplateSyntaxList> ().getContents ()) {
 		    match (it) {
 			of (generator::Type, t, {
-				auto aux = t.clone ();
-				aux.to <generator::Type> ().isMutable (false);
+				auto aux = generator::Type::init (t, false, t.isRef ());
 				innerBuf.writef ("N%", mangler.mangle (aux));
 			    }
 			) else innerBuf.writef ("N%", mangler.mangle (it));

@@ -56,8 +56,10 @@ namespace semantic {
 	    return true;
 	}
 
-	void FuncPtr::isMutable (bool is) {
-	    this-> setMutable (is);
+	Generator FuncPtr::createMutable (bool is) const {
+	    auto ret = this-> clone ();
+	    ret.to <FuncPtr> ().setMutable (is);
+	    return ret;
 	}
 	
 	std::string FuncPtr::typeName () const {

@@ -15,7 +15,7 @@ namespace semantic {
     class Module : public ISymbol {
 
 	/** The symbol table associated to the module */
-	Table _table;
+	std::shared_ptr<Table> _table;
 
 	/** set to true, if the module was imported  */
 	bool _isExtern;

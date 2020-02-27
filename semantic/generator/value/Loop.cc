@@ -16,7 +16,7 @@ namespace semantic {
 	    _content (content),
 	    _isDo (isDo)
 	{
-	    this-> isBreaker (false);
+	    this-> setBreaker (false);
 	    auto thrs = this-> _test.getThrowers ();
 	    auto &cth = this-> _content.getThrowers ();
 	    thrs.insert (thrs.end (), cth.begin (), cth.end ());
@@ -25,7 +25,7 @@ namespace semantic {
 	}
 	
 	Generator Loop::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, bool isDo) {
-	    return Generator {new Loop (loc, type, test, content, isDo)};
+	    return Generator {new (Z0) Loop (loc, type, test, content, isDo)};
 	}
     
 	Generator Loop::clone () const {

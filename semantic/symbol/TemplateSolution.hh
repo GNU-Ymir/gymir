@@ -16,7 +16,7 @@ namespace semantic {
     class TemplateSolution : public ISymbol {
 
 	/** The symbol table associated to the template solution */
-	Table _table;
+	std::shared_ptr <Table> _table;
 
 	std::vector <syntax::Expression> _templs;
 	

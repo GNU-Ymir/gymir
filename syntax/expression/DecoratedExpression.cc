@@ -18,10 +18,6 @@ namespace syntax {
 	return Expression {new (Z0) DecoratedExpression (location, decos, content)};
     }
         
-    Expression DecoratedExpression::clone () const {
-	return Expression {new DecoratedExpression (*this)};
-    }
-
     bool DecoratedExpression::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	DecoratedExpression thisType; // That's why we cannot implement it for all class

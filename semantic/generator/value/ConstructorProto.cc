@@ -12,20 +12,21 @@ namespace semantic {
 	    Value (),
 	    _params ({}),
 	    _type (Generator::empty ()),
-	    _name (""),
-	    _ref (Symbol::empty ())
+	    _name ("")
 	{}
 
 	ConstructorProto::ConstructorProto (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params, const std::vector <Generator> &throwers) :
 	    Value (loc, LambdaType::init (loc, type, getTypes (params))),
 	    _params (params),
 	    _type (type),
-	    _name (name),
-	    _ref (ref)
+	    _name (name)
 	{
+	    auto aux = ref;
+	    this-> _ref = aux.getPtr ();
+	    
 	    auto th = throwers;
-	    for (auto &it : th) it.changeLocation (loc);
-	    this-> setThrowers (th);
+	    for (auto &it : th) it = Generator::init (loc, it);
+	    this-> setThrowers (th);	    
 	}
 
 	std::vector <Generator> ConstructorProto::getTypes (const std::vector <Generator> & params) {
@@ -37,9 +38,15 @@ namespace semantic {
 	}
 		   
 	Generator ConstructorProto::init (const lexing::Word & loc, const std::string &name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params, const std::vector <Generator> &throwers) {
-	    return Generator {new ConstructorProto (loc, name, ref, type, params, throwers)};
+	    return Generator {new (Z0) ConstructorProto (loc, name, ref, type, params, throwers)};
 	}
-    
+
+	Generator ConstructorProto::init (const ConstructorProto & proto, const std::string & name) {
+	    auto ret = proto.clone ();
+	    ret.to <ConstructorProto>()._mangleName = name;
+	    return ret;
+	}
+	
 	Generator ConstructorProto::clone () const {
 	    return Generator {new (Z0) ConstructorProto (*this)};
 	}
@@ -82,10 +89,6 @@ namespace semantic {
 	}
 	
 
-	void ConstructorProto::setMangledName (const std::string & name) {
-	    this-> _mangleName = name;
-	}
-
 	const std::string & ConstructorProto::getMangledName () const {	    
 	    return this-> _mangleName;
 	}
@@ -95,7 +98,7 @@ namespace semantic {
 	}
 
 	Symbol ConstructorProto::getRef () const {
-	    return this-> _ref;
+	    return Symbol {this-> _ref.lock ()};
 	}
 	
     }

@@ -20,7 +20,7 @@ namespace semantic {
 	    
 	private : 
 	    
-	    Symbol _ref;
+	    std::weak_ptr<ISymbol> _ref;
 
 	    std::vector <generator::Generator> _fields;
 
@@ -43,6 +43,10 @@ namespace semantic {
 	public : 
 	    
 	    static Generator init (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
+
+	    static Generator initFields (const Class & other, const std::vector <generator::Generator> & fields);
+
+	    static Generator initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots);
 	    
 	    
 	    Generator clone () const override;
@@ -67,15 +71,6 @@ namespace semantic {
 	     */
 	    const std::vector <generator::Generator> & getFields () const;
 
-	    /**
-	     * set the fields of the struct
-	     */
-	    void setFields (const std::vector <generator::Generator> & fields);
-
-	    /**
-	     * \brief Set the vtable of the class
-	     */
-	    void setVtable (const std::vector <generator::Generator> & vtable);
 
 	    /**
 	     * \return the field type of the field named name, or empty if this class does not have a field named name
@@ -109,11 +104,6 @@ namespace semantic {
 	    const std::vector <MethodProtection> & getProtectionVtable () const;
 
 	    /**
-	     * Set the protection of the vtable
-	     */
-	    void setProtectionVtable (const std::vector <MethodProtection> & prots);
-	    
-	    /**
 	     * 
 	     */
 	    std::string prettyString () const override;
@@ -121,7 +111,7 @@ namespace semantic {
 	    /**
 	     * \return the symbol responsible of the declaration of this structure prototype
 	     */
-	    const Symbol&  getRef () const;
+	    Symbol getRef () const;
 
 	    /**
 	     * \return a classRef, containing the information about this class and ancestor

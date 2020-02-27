@@ -19,8 +19,6 @@ namespace syntax {
     class Constructor : public IDeclaration {
     private:
 
-	lexing::Word _name;
-
 	Function::Prototype _proto;
 
 	std::vector <Expression> _superParams;
@@ -59,19 +57,14 @@ namespace syntax {
 	static Declaration init (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower);
 
 	/**
-	 * Mandatory function used for proxy polymoprhism system
+	 * \return an encapsulation into a Declaration
 	 */
-	Declaration clone () const override;
-
+	static Declaration init (const Constructor & aux);
+	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */
 	bool isOf (const IDeclaration * type) const override;
-
-	/**
-	 * \return the location of the constructor
-	 */
-	const lexing::Word & getName () const;
 
 	/**
 	 * \return the list of parameters to pass for the construction of the super class

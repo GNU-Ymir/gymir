@@ -23,8 +23,6 @@ namespace syntax {
 
 	/** The CAs (custom attributes) of the struct */
 	std::vector <lexing::Word> _cas;
-
-	lexing::Word _name;
 	
     private :
 
@@ -32,18 +30,9 @@ namespace syntax {
 
 	Struct ();
 
+	Struct (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
+	
     public :
-
-	/**
-	 * \brief Create an empty structure
-	 */
-	static Declaration init ();
-
-	/**
-	 * \brief Create an new struct by copying 
-	 * \param str the struct to copy
-	 */
-	static Declaration init (const Struct & str);
 
 	/**
 	 * \brief Create a new struct
@@ -54,33 +43,12 @@ namespace syntax {
 	static Declaration init (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
 
 	/**
-	 * Mandatory function for proxy polymoprhism system
-	 */
-	Declaration clone () const override;
-
-	/**
 	 * Mandatory function for dynamic cast
 	 */
 	bool isOf (const IDeclaration * type) const override;
 
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
-	
-	/**
-	 * \brief add a custom attribute to the struct
-	 * \param ca the custom attr
-	 */
-	void addCustomAttribute (const lexing::Word & ca);
-	
-	/**
-	 * Change the name of the struct
-	 */
-	void setName (const lexing::Word & name);
-
-	/**
-	 * \return the name and location of the declaration
-	 */
-	const lexing::Word & getName () const ;
 
 	/**
 	 * \return the list of custom attributes

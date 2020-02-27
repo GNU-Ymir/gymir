@@ -13,10 +13,10 @@ namespace semantic {
 	 * The EnumRef is a type, and can be used as a normal structure, at either validation and generation time
 	 */
 	class Enum : public Value {
-	    
-	    Symbol _ref;
 
 	    generator::Generator _type;
+	    
+	    std::weak_ptr<ISymbol> _ref;
 	    
 	    std::vector <generator::Generator> _fields;
 	    
@@ -33,6 +33,8 @@ namespace semantic {
 	public : 
 	    
 	    static Generator init (const lexing::Word & loc, const Symbol & ref);
+
+	    static Generator init (const Enum & en, const Generator & type, const std::vector <generator::Generator> & fields);
 	    
 	    Generator clone () const override;
 	    
@@ -54,17 +56,7 @@ namespace semantic {
 	    /**
 	     * \return the type of the enum
 	     */
-	    Generator getType () const;
-
-	    /**
-	     * \brief Set the type of the generator
-	     */
-	    void setType (const generator::Generator & type);
-	    
-	    /**
-	     * set the fields of the struct
-	     */
-	    void setFields (const std::vector <generator::Generator> & fields);
+	    Generator getType () const;	    
 
 	    /**
 	     * \return the value of the field named name in the enum
@@ -84,7 +76,7 @@ namespace semantic {
 	    /**
 	     * \return the symbol responsible of the declaration of this structure prototype
 	     */
-	    const Symbol&  getRef () const;
+	    Symbol getRef () const;
 	    
 	};
     }

@@ -8,19 +8,19 @@ namespace semantic {
 	    Value (),
 	    _value (Generator::empty ())
 	{
-	    this-> isBreaker (true);
+	    this-> setBreaker (true);
 	}
 
 	Break::Break (const lexing::Word & loc, const Generator & type, const Generator & value) :
 	    Value (loc, type),
 	    _value (value)
 	{
-	    this-> isBreaker (true);
+	    this-> setBreaker (true);
 	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 	
 	Generator Break::init (const lexing::Word & loc, const Generator & type, const Generator & value) {
-	    return Generator {new Break (loc, type, value)};
+	    return Generator {new (Z0) Break (loc, type, value)};
 	}
     
 	Generator Break::clone () const {

@@ -14,10 +14,6 @@ namespace syntax {
 	return Expression {new (Z0) Bool (location)};
     }
 
-    Expression Bool::clone () const {
-	return Expression {new (Z0) Bool (*this)};
-    }
-
     bool Bool::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Bool thisType; // That's why we cannot implement it for all class

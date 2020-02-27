@@ -31,9 +31,9 @@ namespace semantic {
 		    ) else {
 			if (operand.to <Value> ().isLvalue ()) {
 			    auto inner = operand.to<Value> ().getType ();
-			    inner.to <Type> ().isRef (false);
+			    inner = Type::init (inner.to <Type> (), inner.to <Type> ().isMutable (), false);
 			    auto type = Pointer::init (operand.getLocation (), inner);
-			    type.to<Type> ().isMutable (true);
+			    type = Type::init (type.to<Type> (), true);
 			    return Addresser::init (expression.getLocation (), type, operand);
 			} else {
 			    auto note = Ymir::Error::createNote (expression.getLocation (), ExternalError::get (OF), operand.prettyString ());
@@ -99,19 +99,33 @@ namespace semantic {
 	}
 
 	Generator UnaryVisitor::validatePointer (const syntax::Unary & un, const Generator & operand) {
-	    // auto op = toOperator (un.getOperator ());
+	    auto op = toOperator (un.getOperator ());
 	    // This is unsafe, we don't want to do that in ymir right ?
-	    // if (op == Unary::Operator::UNREF) {
-	    // 	this-> _context.verifySafety (un.getLocation ());
-	    // 	auto type = operand.to <Value> ().getType ().to <Type> ().getInners ()[0];
-	    // 	if (!operand.to <Value> ().getType ().to <Type> ().isMutable ())
-	    // 	    type.to<Type> ().isMutable (false);
-	    // 	return UnaryPointer::init (un.getLocation (),
-	    // 				   op,
-	    // 				   type,
-	    // 				   operand
-	    // 	);
-	    // }
+	    // This will throw SegFault exception, sometimes
+	    
+	    if (op == Unary::Operator::UNREF) {
+	    	auto type = operand.to <Value> ().getType ().to <Type> ().getInners ()[0];
+	    	if (!operand.to <Value> ().getType ().to <Type> ().isMutable ()) {
+	    	    type = Type::init (type.to<Type> (), false);
+		}
+
+		auto ret = UnaryPointer::init (un.getLocation (),
+					       op,
+					       type,
+					       operand
+	    	);
+
+		auto loc = un.getLocation ();
+		// It might seg fault
+		auto syntaxType = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (SEG_FAULT_TYPE)});
+		auto segFaultType = Generator::init (un.getLocation (), this-> _context.validateType (syntaxType));
+		
+		auto thrs = ret.getThrowers ();
+		thrs.push_back (segFaultType);
+		ret.setThrowers (thrs);
+		
+		return ret;
+	    }
 
 	    error (un, operand);
 	    return Generator::empty ();

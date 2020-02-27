@@ -25,7 +25,7 @@ namespace syntax {
 
 	Assert ();
 	
-	Assert (const lexing::Word & loc);
+	Assert (const lexing::Word & loc, const Expression & test, const Expression & msg);
 	
     public :
 
@@ -37,8 +37,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & location, const Expression & test, const Expression & msg);
 	
-	Expression clone () const override;
-
 	const Expression & getTest () const;
 
 	const Expression & getMsg () const;

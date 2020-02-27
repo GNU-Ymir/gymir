@@ -1,6 +1,7 @@
 #include <ymir/errors/Error.hh>
 #include <string>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Memory.hh>
 #include <ymir/utils/Colors.hh>
 #include <execinfo.h>
 
@@ -9,6 +10,16 @@ using namespace lexing;
 namespace Ymir {
     namespace Error {
 
+	void ErrorList::print () const {
+	    for (auto it : this-> errors) {
+		fprintf (stderr, "%s\n", it.c_str ());
+	    }
+	}
+
+	void FatalError::print () const {
+	    fprintf (stderr, "%s\n", this-> msg.c_str ());	    
+	}
+	
 	std::string substr (const std::string& x, ulong beg, ulong end) {
 	    if (end - beg > x.length ()) return "";
 	    if (beg > x.length ()) return "";
@@ -21,10 +32,14 @@ namespace Ymir {
 	    while (1) {
 		char * buf = new (Z0) char[max];
 		char * aux = fgets(buf, max, i);
-		if (aux == NULL) return "";
+		if (aux == NULL) {
+		    delete buf;
+		    return "";
+		}
 		std::string ret = std::string (buf);
 		final += ret;
-		delete buf;
+		
+		delete  buf;
 		
 		if (ret.size () != max - 1) return final;
 		else max *= 2;      

@@ -14,11 +14,7 @@ namespace syntax {
     {}
 
     Expression String::init (const lexing::Word & location, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix) {
-	return Expression {new String (location, end, sequence, suffix)};	
-    }
-
-    Expression String::clone () const {
-	return Expression {new String (*this)};
+	return Expression {new (Z0) String (location, end, sequence, suffix)};	
     }
 
     bool String::isOf (const IExpression * type) const {

@@ -6,18 +6,13 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    Pragma::Pragma (const lexing::Word & loc) :
-	IExpression (loc)
+    Pragma::Pragma (const lexing::Word & loc, const std::vector <Expression> & params) :
+	IExpression (loc),
+	_params (params)
     {}
 
     Expression Pragma::init (const lexing::Word & location, const std::vector <Expression> & params) {
-	auto ret = new (Z0) Pragma (location);
-	ret-> _params = params;
-	return Expression {ret};
-    }
-
-    Expression Pragma::clone () const {
-	return Expression {new Pragma (*this)};
+	return Expression {new (Z0) Pragma (location, params)};
     }
 
     bool Pragma::isOf (const IExpression * type) const {

@@ -14,7 +14,7 @@ namespace semantic {
     class Function : public ISymbol {
 
 	/** The symbol table associated to the module */
-	Table _table;
+	std::shared_ptr<Table> _table;
 
 	/** The syntaxic function */
 	syntax::Declaration _content;

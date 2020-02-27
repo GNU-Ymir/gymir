@@ -17,42 +17,24 @@ namespace syntax {
      */
     class Import : public IDeclaration {
 
-	/** The module to import */
 	lexing::Word _module;
-
-	/** The name for rename import (may be empty ()) */
-	lexing::Word _as;
-
-
+	
     private :
 
 	friend Declaration;
 
 	Import ();
 
+	Import (const lexing::Word & loc, const lexing::Word & module);
+	
     public :
-
-	/**
-	 * \brief Create an empty import
-	 */
-	static Declaration init ();
-
-	/** 
-	 * \brief Create an import from a copy
-	 */
-	static Declaration init (const Import & imp);
 
 	/**
 	 * \brief Create a new import
 	 * \param module the module import
 	 * \param as the name for renamed import
 	 */
-	static Declaration init (const lexing::Word & module, const lexing::Word & as);
-
-	/**
-	 * \brief Create a clone of the import, mandatory function for proxy polymorphism
-	 */
-	Declaration clone () const override;
+	static Declaration init (const lexing::Word & loc, const lexing::Word & module);
 
 	/**
 	 * \brief Mandatory function for proxy dynamic casting
@@ -61,23 +43,11 @@ namespace syntax {
 
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
-	
-	/**
-	 * \brief Change the module to import
-	 * \param name the name of the module
-	 */
-	void setModule (const lexing::Word & name);
 
 	/**
 	 * \return the module to import
 	 */
 	const lexing::Word & getModule () const;
-	
-	/**
-	 * \brief Change the name of the import
-	 * \param name the rename name
-	 */
-	void setName (const lexing::Word & name);
 
 	/**
 	 * \return the relative path of the module to import

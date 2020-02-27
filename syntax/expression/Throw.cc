@@ -7,19 +7,13 @@ namespace syntax {
 	_value (Expression::empty ())
     {}
     
-    Throw::Throw (const lexing::Word & loc) :
+    Throw::Throw (const lexing::Word & loc, const Expression & value) :
 	IExpression (loc),
-	_value (Expression::empty ())
+	_value (value)
     {}
 
     Expression Throw::init (const lexing::Word & location, const Expression & value) {
-	auto ret = new (Z0) Throw (location);
-	ret-> _value = value;
-	return Expression {ret};
-    }
-
-    Expression Throw::clone () const {
-	return Expression {new Throw (*this)};
+	return Expression {new (Z0) Throw (location, value)};
     }
 
     bool Throw::isOf (const IExpression * type) const {

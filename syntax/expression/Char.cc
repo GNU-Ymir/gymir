@@ -14,12 +14,9 @@ namespace syntax {
     {}
 
     Expression Char::init (const lexing::Word & location, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix) {
-	return Expression {new Char (location, end, sequence, suffix)};	
+	return Expression {new (Z0) Char (location, end, sequence, suffix)};	
     }
 
-    Expression Char::clone () const {
-	return Expression {new Char (*this)};
-    }
 
     bool Char::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];

@@ -2,35 +2,20 @@
 
 namespace syntax {
 
-    Mixin::Mixin () : _mixin (Expression::empty ())
+    Mixin::Mixin () :
+	IDeclaration (lexing::Word::eof ()),
+	_mixin (Expression::empty ())	
     {}
 
-    Declaration Mixin::init () {
-	return Declaration {new (Z0) Mixin ()};
-    }
-
-    Declaration Mixin::init (const Mixin & mixin) {
-	auto ret = new (Z0) Mixin ();
-	ret-> _location = mixin._location;
-	ret-> _mixin = mixin._mixin;
-	ret-> _declarations = mixin._declarations;
-	return Declaration {ret};
-    }
+    Mixin::Mixin (const lexing::Word & loc, const Expression & mixin, const std::vector<Declaration> & decls) :
+	IDeclaration (loc),
+	_mixin (mixin),
+	_declarations (decls)
+    {}
+    
 
     Declaration Mixin::init (const lexing::Word & loc, const Expression & mixin, const std::vector<Declaration> & decls) {
-	auto ret = new (Z0) Mixin ();
-	ret-> _mixin = mixin;
-	ret-> _location = loc;
-	ret-> _declarations = decls;
-	return Declaration {ret};
-    }
-
-    Declaration Mixin::clone () const {
-	return Mixin::init (*this);
-    }
-
-    const lexing::Word & Mixin::getLocation () const {
-	return this-> _location;
+	return Declaration {new (Z0) Mixin (loc, mixin, decls)};
     }
 
     const Expression & Mixin::getMixin () const {

@@ -7,22 +7,16 @@ namespace syntax {
 	_element (Expression::empty ())
     {}
     
-    MultOperator::MultOperator (const lexing::Word & loc) :
+    MultOperator::MultOperator (const lexing::Word & loc, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall) :
 	IExpression (loc),
-	_element (Expression::empty ())
+	_end (end),
+	_element (element),
+	_params (params),
+	_canbedotCall (canbedotcall)
     {}
 
     Expression MultOperator::init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall) {
-	auto ret = new (Z0) MultOperator (location);
-	ret-> _end = end;
-	ret-> _element = element;
-	ret-> _params = params;
-	ret-> _canbedotCall = canbedotcall;
-	return Expression {ret};
-    }
-
-    Expression MultOperator::clone () const {
-	return Expression {new MultOperator (*this)};
+	return Expression {new (Z0) MultOperator (location, end, element, params, canbedotcall)};
     }
 
     bool MultOperator::isOf (const IExpression * type) const {

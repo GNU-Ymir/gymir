@@ -1,4 +1,5 @@
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Memory.hh>
 #include <ymir/lexing/Word.hh>
 #include <cstring>
 
@@ -36,7 +37,7 @@ namespace Ymir {
 	    resize (this-> len + len);
 	}
 
-	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%lu", nb);       	
+	snprintf (this-> current.data () + this-> len, (this-> capacity - this-> len), "%lu", nb);       	
 	this-> len += len;
     }
 
@@ -46,7 +47,7 @@ namespace Ymir {
 	    resize (this-> len + len);
 	}
 
-	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%ld", nb);
+	snprintf (this-> current.data () + this-> len, (this-> capacity - this-> len), "%ld", nb);
 	this-> len += len;
     }
 
@@ -57,7 +58,7 @@ namespace Ymir {
 	    resize (this-> len + len);
 	}
 
-	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%d", nb);
+	snprintf (this-> current.data () + this-> len, (this-> capacity - this-> len), "%d", nb);
 	this-> len += len;
     }
     
@@ -67,7 +68,7 @@ namespace Ymir {
 	    resize (this-> len + len);
 	}
 
-	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%x", nb);
+	snprintf (this-> current.data () + this-> len, (this-> capacity - this-> len), "%x", nb);
 	this-> len += len;
     }
 
@@ -77,7 +78,7 @@ namespace Ymir {
 	    resize (this-> len + len);
 	}
 
-	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%x", nb);
+	snprintf (this-> current.data () + this-> len, (this-> capacity - this-> len), "%x", nb);
 	this-> len += len;
     }    
 
@@ -87,7 +88,7 @@ namespace Ymir {
 	    resize (this-> len + len);
 	}
 
-	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%A", nb);
+	snprintf (this-> current.data () + this-> len, (this-> capacity - this-> len), "%A", nb);
 	this-> len += len;
     }
     
@@ -116,7 +117,7 @@ namespace Ymir {
 	    resize (this-> len + len);
 	}
 
-	snprintf (this-> current + this-> len, (this-> capacity - this-> len), "%A", nb);
+	snprintf (this-> current.data () + this-> len, (this-> capacity - this-> len), "%A", nb);
 	this-> len += len;
     }
     
@@ -125,13 +126,12 @@ namespace Ymir {
 	else if (capacity * 2 < len) capacity = len + capacity + 1;
 	else capacity = (capacity * 2) + 1;
 	
-	auto aux = new (Z0) char [capacity];
+	this-> current.resize (capacity, '\0');
 
-	for (uint i = 0 ; i < this-> len ; i ++)
-	    aux [i] = this-> current [i];
-	
-	delete this-> current;
-	this-> current = aux;	
+	// for (uint i = 0 ; i < this-> len ; i ++)
+	//     aux.push_back (this-> current [i]);
+		
+	// this-> current = aux;	
     }
     
     void OutBuffer::write () {}
@@ -153,5 +153,5 @@ namespace Ymir {
 	return buf.str ();
     }
 
-    
+    OutBuffer::~OutBuffer () {}
 }

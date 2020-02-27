@@ -55,15 +55,15 @@ namespace semantic {
 	    
 	    this-> setThrowers (thrs);
 
-	    this-> isReturner (this-> _who.to <Value> ().isReturner ());
-	    this-> isBreaker (this-> _who.to <Value> ().isBreaker ());
+	    this-> setReturner (this-> _who.to <Value> ().isReturner ());
+	    this-> setBreaker (this-> _who.to <Value> ().isBreaker ());
 	    
 	    if (!this-> _catchingAction.isEmpty ()) {
-		this-> isReturner (
+		this-> setReturner (
 		    this-> isReturner () && this-> _catchingAction.to <Value> ().isReturner ()
 		);
 
-		this-> isBreaker (
+		this-> setBreaker (
 		    this-> isBreaker () && this-> _catchingAction.to <Value> ().isBreaker ()
 		);
 	    }
@@ -79,7 +79,7 @@ namespace semantic {
 				   const Generator & catchingInfo,
 				   const Generator & catchingAction)
 	{	    
-	    return Generator {new ExitScope (loc, type, jmpBuf, who, success, failure, catchingVar, catchingInfo, catchingAction)};
+	    return Generator {new (Z0) ExitScope (loc, type, jmpBuf, who, success, failure, catchingVar, catchingInfo, catchingAction)};
 	}
     
 	Generator ExitScope::clone () const {

@@ -19,10 +19,6 @@ namespace syntax {
 	return Expression {new (Z0) Match (location, content, matchs, actions, isFinal)};
     }
 
-    Expression Match::clone () const {
-	return Expression {new Match (*this)};
-    }
-
     bool Match::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Match thisType; // That's why we cannot implement it for all class

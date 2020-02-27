@@ -46,10 +46,6 @@ namespace semantic {
 	     */
 	    std::string typeName () const override;
 
-	    /**
-	     * Does not change the mutability of the params
-	     */
-	    void isMutable (bool is) override;
 	    
 	    /**
 	     * \return the return type of the function pointer
@@ -60,6 +56,13 @@ namespace semantic {
 	     * \return a list containing the types of the parameters of the funcPtr
 	     */
 	    std::vector <Generator> getParamTypes () const;	    
+
+	protected :
+
+	    /**
+	     * Does not change the mutability of the params
+	     */
+	    Generator createMutable (bool is) const override;
 	    
 	};
        

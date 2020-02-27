@@ -65,9 +65,9 @@ namespace semantic {
 		    left.to <Value> ().getType ().to <Type> ().isMutable () &&
 		    left.to <Value> ().getType ().to <Array> ().getInners () [0].to <Type> ().isMutable () 		    
 		)
-		    innerType.to <Type> ().isMutable (true);
+		    innerType = Type::init (innerType.to <Type> (), true);
 		else
-		    innerType.to <Type> ().isMutable (false);
+		    innerType = Type::init (innerType.to <Type> (), false);
 
 		return LBlock::init (
 		    loc,
@@ -112,9 +112,9 @@ namespace semantic {
 		    left.to <Value> ().getType ().to <Type> ().isMutable () &&
 		    left.to <Value> ().getType ().to <Slice> ().getInners () [0].to <Type> ().isMutable ()
 		)
-		    innerType.to <Type> ().isMutable (true);
+		    innerType = Type::init (innerType.to <Type> (), true);
 		else
-		    innerType.to <Type> ().isMutable (false);
+		    innerType = Type::init (innerType.to <Type> (), false);
 
 		return LBlock::init (
 		    loc,

@@ -11,7 +11,7 @@ namespace semantic {
     class Enum : public ISymbol {
 	
 	/** The symbol declared in the structure (basically the attributes) */
-	Table _table;
+	std::shared_ptr<Table> _table;
 
 	/** The type of the enum */
 	syntax::Expression _type;

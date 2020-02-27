@@ -17,7 +17,7 @@ namespace semantic {
 	}
 	
 	Generator Cast::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new Cast (loc, type, who)};
+	    return Generator {new (Z0) Cast (loc, type, who)};
 	}
     
 	Generator Cast::clone () const {

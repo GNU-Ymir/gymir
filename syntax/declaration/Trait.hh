@@ -17,29 +17,17 @@ namespace syntax {
 	 * constructor are function with keyword name (self), that return void
 	 */
 	std::vector <Declaration> _inner;
-
-	/** The name of the trait */
-	lexing::Word _name;
 	
 	
     private :
 
 	friend Declaration;
-
+	
 	Trait ();
 
+	Trait (const lexing::Word & name, const std::vector <Declaration> & inner);
+
     public :
-
-	/** 
-	 * \brief Create an empty trait
-	 */
-	static Declaration init ();
-
-	/** 
-	 * \brief Create a trait from copy
-	 * \param trait the trait to copy
-	*/
-	static Declaration init (const Trait & trait);
 
 	/**
 	 * \brief Create a new trait
@@ -47,11 +35,6 @@ namespace syntax {
 	 * \param inner the declaration inside the trait
 	 */
 	static Declaration init (const lexing::Word & name, const std::vector <Declaration> & inner);
-
-	/**
-	 * Mandatory function for proxy polymoprhism system
-	 */
-	Declaration clone () const override;
 		
 	/**
 	 * Mandatory function for dynamic casting
@@ -59,9 +42,7 @@ namespace syntax {
 	bool isOf (const IDeclaration * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
-
-	const lexing::Word & getName () const;
-
+	
 	const std::vector <Declaration> & getDeclarations () const;
 
     };

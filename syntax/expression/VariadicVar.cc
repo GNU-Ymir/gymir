@@ -6,18 +6,13 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    VariadicVar::VariadicVar (const lexing::Word & loc) :
-	IExpression (loc)
+    VariadicVar::VariadicVar (const lexing::Word & loc, bool isValue) :
+	IExpression (loc),
+	_isValue (isValue)
     {}
     
     Expression VariadicVar::init (const lexing::Word & location, bool isValue) {
-	auto ret = new (Z0) VariadicVar (location);
-	ret-> _isValue = isValue;
-	return Expression {ret};
-    }
-
-    Expression VariadicVar::clone () const {
-	return Expression {new VariadicVar (*this)};
+	return Expression {new (Z0) VariadicVar (location, isValue)};
     }
 
     bool VariadicVar::isOf (const IExpression * type) const {

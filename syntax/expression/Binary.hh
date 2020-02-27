@@ -31,13 +31,14 @@ namespace syntax {
 
 	Binary ();
 	
-	Binary (const lexing::Word& loc);
+	Binary (const lexing::Word& loc, const Expression & left, const Expression & right, const Expression & type);
 
     public :
 
 	static Expression init (const lexing::Word & op, const Expression & left, const Expression &right, const Expression & type);
 
-	Expression clone () const override;
+	static Expression init (const Binary & other);
+	
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

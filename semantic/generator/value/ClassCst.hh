@@ -34,6 +34,11 @@ namespace semantic {
 	     * \brief Generate a new affectation
 	     */
 	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params);
+
+	    /**
+	       
+	     */
+	    static Generator init (const ClassCst & other, const Generator & self);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -64,11 +69,6 @@ namespace semantic {
 	     * \return the parameters
 	     */
 	    const std::vector <Generator> & getParameters () const;
-
-	    /**
-	     * \brief Set the self element
-	     */
-	    void setSelf (const Generator & gen);
 
 	    /**
 	     * \return the self element (if any, if not it will be constructed at generation time);

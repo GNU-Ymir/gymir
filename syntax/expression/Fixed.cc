@@ -6,19 +6,15 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    Fixed::Fixed (const lexing::Word & loc) :
-	IExpression (loc)
+    Fixed::Fixed (const lexing::Word & loc, const lexing::Word & suffix) :
+	IExpression (loc),
+	_suffix (suffix)
     {}
 
     Expression Fixed::init (const lexing::Word & location, const lexing::Word & suffix) {
-	auto ret = new (Z0) Fixed (location);
-	ret-> _suffix = suffix;
-	return Expression {ret};
+	return Expression {new (Z0) Fixed (location, suffix)};
     }
-
-    Expression Fixed::clone () const {
-	return Expression {new (Z0) Fixed (*this)};
-    }
+ 
 
     bool Fixed::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];

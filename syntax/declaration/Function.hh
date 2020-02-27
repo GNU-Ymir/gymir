@@ -36,20 +36,12 @@ namespace syntax {
 	private:
 	    
 	    Prototype ();
+
+	    Prototype (const std::vector <Expression> & vars, const Expression & retType, bool isVariadic);
 	    
 	public:
 
-	    /**
-	     * \brief Create en empty prototype
-	     * There is no proxy over prototype, but to gain in clarity all the object are initialized the same way
-	     */
-	    static Prototype init ();
-
-	    /**
-	     * \brief Create a copy of another prototype
-	     * \param proto the other prototype
-	     */
-	    static Prototype init (const Prototype & proto);
+	    static Prototype empty ();
 	    
 	    /**
 	     * \brief Create a new prototype
@@ -62,34 +54,7 @@ namespace syntax {
 	    static Prototype init (const std::vector <Expression> & vars, const Expression & retType, bool isVariadic);
 
 
-	    /**
-	     * Not mandatory since Prototype is not inside a proxy, 
-	     * but it is implemented to produce the same result on all the object types
-	     */
-	    Prototype clone () const; 
-
 	    void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
-	    
-	    /**
-	     * \brief Add a new parameter to the prototype
-	     * \param name the name of the parameter
-	     * \param type the type of the parameter
-	     * \param decos the decorator associated to the parameter
-	     */
-	    void addParameter (const Expression & var); 
-	    /**
-	     * \brief Change the type of the prototype
-	     * \param type the new type
-	     * \param decos the decorator of the return type
-	     */
-	    void setType (const Expression & type);
-
-	    /**
-	     * \brief Set the variadic information of this prototype
-	     * \param is if true, this prototype is considered variadic
-	     */
-	    void isVariadic (bool is);
-
 	    
 	    /**
 	     * \return the list of parameters of the prototype
@@ -107,116 +72,20 @@ namespace syntax {
 	    bool isVariadic () const;
 	};
 
-	/**
-	 * A function body can reprensent either a block or a contract block
-	 */
-	class Body {
-	    
-	    /** The body of the function */
-	    Expression _body;
-
-	    /** The in expression of a contract programming (empty if unused) */
-	    Expression _inner;
-
-	    /** The out expression of a contract programming (empty if unused) */
-	    Expression _outer;
-
-	    /** The name of the variable of the outer block (used only if !_outer.empty ()) */
-	    lexing::Word _outerName;
-
-	private:
-	    
-	    Body ();
-
-	public:
-
-	    /**
-	     * \brief Create an empty body	     
-	     * There is no proxy over body, but to gain in clarity all the object are initialized the same way
-	     */
-	    static Body init ();
-
-	    /**
-	     * \brief Create a body from another one
-	     */
-	    static Body init (const Body& body);
-	    
-	    /**
-	     * \brief Create a normal body (without contract programming)
-	     * \param body the content of the body
-	     */
-	    static Body init (const Expression & body); 
-
-	    /**
-	     * \brief Create a contract programming body
-	     * \param inner the in part of the contract
-	     * \param body the body of the function
-	     * \param outer the out part of the contract
-	     * \param name the name of the variable inside the out part
-	     */
-	    static Body init (const Expression & inner, const Expression & body, const Expression & outer, const lexing::Word & name);
-
-	    Body clone () const;
-
-	    void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
-	    
-	    /**
-	     * \brief Set the body of the expression
-	     * \param body the content of this body
-	     */
-	    void setBody (const Expression & body);
-
-	    /**
-	     * \return the body
-	     */
-	    const Expression & getBody () const;
-	    
-	    /**
-	     * \brief Set the inner contract part 
-	     * \param inner 
-	     */
-	    void setInner (const Expression & inner);
-
-	    /**
-	     * \brief Set the outer contract part 
-	     * \param outer the content of the out part
-	     * \param name the name of the variable in the out block
-	     */
-	    void setOuter (const Expression & outer, const lexing::Word & name);
-
-	    /**
-	     * \return the inner contract part
-	     */
-	    const Expression & getInner () const;
-
-	    /**
-	     * \return the outer contract part
-	     */
-	    const Expression& getOuter () const;
-
-	    const lexing::Word & getOuterName () const;
-
-	};
 
     private :
-
-	/** The test of the definition if there is templates */
-	Expression _test;
 	
 	/** The prototype of the function */
 	Prototype _proto;
 
 	/** The body of the function */
-	Body _body;
+	Expression _body;
 
 	/** The CAs (custom attributes) of the functions */
 	std::vector <lexing::Word> _cas;
 
 	std::vector <syntax::Expression> _throwers;
 	
-	/** The name of the function */
-	lexing::Word _name;
-
 	/** Some method can be marked over */
 	bool _isOver;
 	
@@ -226,19 +95,10 @@ namespace syntax {
 	
 	/** \brief Does nothing special, just to ensure that the function cannot be created without init */
 	Function ();
+
+	Function (const lexing::Word & name,  const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver);
 	
     public:
-
-	/** 
-	 * \brief Create a new empty function 
-	 */
-	static Declaration init ();
-
-	/**
-	 * \brief Create a function from another one
-	 * \param func the function to copy
-	 */
-	static Declaration init (const Function& func);
 
 	/**
 	 * \brief Create a new function
@@ -246,13 +106,13 @@ namespace syntax {
 	 * \param proto the prototype of the function
 	 * \param body the content of the function
 	 */
-	static Declaration init (const lexing::Word & name, const Prototype & proto, const Body & body);
+	static Declaration init (const lexing::Word & name, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver);
 
 	/**
-	 * Mandatory function used for proxy polymoprhism system
+	 * \return an encapsulation into a Declaration
 	 */
-	Declaration clone () const override;
-
+	static Declaration init (const Function & other);
+	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	
 	/**
@@ -261,65 +121,25 @@ namespace syntax {
 	bool isOf (const IDeclaration * type) const override;
 	
 	/**
-	 * \brief add a custom attribute to the function
-	 * \param ca the custom attr
-	 */
-	void addCustomAttribute (const lexing::Word & ca);
-	
-	/**
-	 * \brief Set the set of custom attributes 
-	 */
-	void setCustomAttributes (const std::vector <lexing::Word> & cas);
-
-	/**
 	 * \return the list of custom attributs
 	 */
 	const std::vector <lexing::Word> & getCustomAttributes () const;
 	
-	/**
-	 * \return the name and location of the function
-	 */
-	const lexing::Word & getName () const;
-
-	/**
-	 * \brief Change the name of the function
-	 * \param name the name of the function
-	 */
-	void setName (const lexing::Word & name);
-
-	/**
-	 * \brief Set the prototype of the function 
-	 * \param proto the prototype of the function
-	 */
-	void setPrototype (const Prototype & proto);
 
 	/**
 	 * \return the prototype of the function
 	 */
 	const Prototype & getPrototype () const;
-	
-	/**
-	 * \brief Set the body of the function
-	 * \param body the body of the function
-	 */
-	void setBody (const Body & body);
 
 	/**
 	 * \return the body of the function
 	 */
-	const Body & getBody () const;
-
-	/** 
-	 * This function is now an override function
-	 */
-	void setOver ();
+	const Expression & getBody () const;
 
 	/**
 	 * does this function override another function
 	 */
 	bool isOver () const;
-
-	void setThrowers (const std::vector <syntax::Expression> & throwers);
 
 	const std::vector <syntax::Expression> & getThrowers () const;
     };

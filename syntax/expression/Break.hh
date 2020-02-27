@@ -22,7 +22,7 @@ namespace syntax {
 
 	Break ();
 	
-	Break (const lexing::Word & loc);
+	Break (const lexing::Word & loc, const Expression & value);
 
     public :
 
@@ -33,7 +33,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & location, const Expression & value);
 	
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;	
 

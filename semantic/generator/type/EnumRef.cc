@@ -7,14 +7,15 @@ namespace semantic {
     namespace generator {
 	
 	EnumRef::EnumRef () :
-	    Type (),
-	    _ref (Symbol::__empty__)
+	    Type ()
 	{}
 
 	EnumRef::EnumRef (const lexing::Word & loc, const Symbol & ref) :
-	    Type (loc, loc.str),
-	    _ref (ref)
-	{}
+	    Type (loc, loc.str)
+	{
+	    auto aux = ref;
+	    this-> _ref = aux.getPtr ();
+	}
 
 	Generator EnumRef::init (const lexing::Word&  loc, const Symbol & ref) {
 	    return Generator {new (Z0) EnumRef (loc, ref)};
@@ -34,23 +35,23 @@ namespace semantic {
 	bool EnumRef::equals (const Generator & gen) const {
 	    if (!gen.is<EnumRef> ()) return false;
 	    auto str = gen.to <EnumRef> ();
-	    return this-> _ref.equals (str._ref);
+	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});
 	}
 
 	bool EnumRef::isRefOf (const Symbol & sym) const {
-	    return this-> _ref.isSameRef (sym);
+	    return (Symbol {this-> _ref}).isSameRef (sym);
 	}
 	
-	const Symbol & EnumRef::getRef () const {
-	    return this-> _ref;
+	Symbol EnumRef::getRef () const {
+	    return Symbol {this-> _ref};
 	}
 	
 	std::string EnumRef::typeName () const {
-	    return Ymir::format ("%", this-> _ref.getRealName ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).getRealName ());
 	}
 
 	std::string EnumRef::getMangledName () const {
-	    return Ymir::format ("%", this-> _ref.getMangledName ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).getMangledName ());
 	}
 	
     }

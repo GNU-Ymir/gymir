@@ -8,24 +8,17 @@ namespace syntax {
 	_catcher (Expression::empty ())
     {}
     
-    Block::Block (const lexing::Word & loc) :
-	IExpression (loc),
-	_declModule (Declaration::empty ()),
-	_catcher (Expression::empty ())
+    Block::Block (const lexing::Word & loc, const lexing::Word & end, const Declaration & declModule, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes) :
+    	IExpression (loc),
+	_end (end),
+	_declModule (declModule),
+	_catcher (catcher),
+	_content (content),
+	_scopes (scopes)
     {}
 
     Expression Block::init (const lexing::Word & location, const lexing::Word & end, const Declaration & declModule, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes) {
-	auto ret = new (Z0) Block (location);
-	ret-> _end = end;
-	ret-> _content = content;
-	ret-> _declModule = declModule;
-	ret-> _catcher = catcher;
-	ret-> _scopes = scopes;
-	return Expression {ret};
-    }
-
-    Expression Block::clone () const {
-	return Expression {new (Z0) Block (*this)};
+	return Expression {new (Z0) Block (location, end, declModule, content, catcher, scopes)};
     }
 
     bool Block::isOf (const IExpression * type) const {

@@ -118,8 +118,7 @@ namespace semantic {
 		
 		auto cl = proto.clone ();
 		if (cl.is <MethodProto> ()) {
-		    auto type = cl.to <MethodProto> ().getClassType ();
-		    type.to <Type> ().isMutable (cl.to <MethodProto> ().isMutable ());
+		    auto type = Type::init (cl.to <MethodProto> ().getClassType ().to <Type> (), cl.to <MethodProto> ().isMutable ());
 		    buf.write (mangle (type));
 		}
 		

@@ -7,21 +7,16 @@ namespace syntax {
 	_content (Expression::empty ())
     {}
     
-    TemplateCall::TemplateCall (const lexing::Word & loc) :
+    TemplateCall::TemplateCall (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & content) :
 	IExpression (loc),
-	_content (Expression::empty ())
+	_parameters (params),
+	_content (content)
     {}    
     
     Expression TemplateCall::init (const lexing::Word & location, const std::vector <Expression> & params, const Expression & content) {
-	auto ret = new (Z0) TemplateCall (location);
-	ret-> _parameters = params;
-	ret-> _content = content;
-	return Expression {ret};
+	return Expression {new (Z0) TemplateCall (location, params, content)};
     }
 
-    Expression TemplateCall::clone () const {
-	return Expression {new TemplateCall (*this)};
-    }
     
     bool TemplateCall::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
@@ -29,14 +24,6 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IExpression::isOf (type);
     }	    
-
-    void TemplateCall::addParameter (const Expression & param) {
-	this-> _parameters.push_back (param);
-    }
-
-    void TemplateCall::setContent (const Expression& content) {
-	this-> _content = content;
-    }
 
     void TemplateCall::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<TemplateCall>", i, '\t');

@@ -1,36 +1,36 @@
-#pragma once
+// #pragma once
 
-#include <ymir/syntax/Expression.hh>
+// #include <ymir/syntax/Expression.hh>
 
-namespace syntax {
+// namespace syntax {
 
-    /**
-     * \struct MacroCall
-     */
-    class MacroCall : public IExpression {
+//     /**
+//      * \struct MacroCall
+//      */
+//     class MacroCall : public IExpression {
 
-	/** The left operand (macro) */
-	Expression _left;
+// 	/** The left operand (macro) */
+// 	Expression _left;
 
-	/** The content tokens */
-	std::vector <lexing::Word> _content;	
+// 	/** The content tokens */
+// 	std::vector <lexing::Word> _content;	
 	
-    private :
+//     private :
 
-	friend Expression;
+// 	friend Expression;
 
-	MacroCall ();
+// 	MacroCall ();
 	
-	MacroCall (const lexing::Word & loc);
+// 	MacroCall (const lexing::Word & loc);
 
-    public :
+//     public :
 
-	static Expression init (const lexing::Word & location, const Expression & left, const std::vector <lexing::Word> & content);
+// 	static Expression init (const lexing::Word & location, const Expression & left, const std::vector <lexing::Word> & content);
 
-	Expression clone () const override;
+// 	Expression clone () const override;
 
-	bool isOf (const IExpression * type) const override;
+// 	bool isOf (const IExpression * type) const override;
 	
-    };    
+//     };    
 
-}
+// }

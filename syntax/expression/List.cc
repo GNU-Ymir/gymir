@@ -6,20 +6,19 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    List::List (const lexing::Word & loc) :
-	IExpression (loc)
+    List::List (const lexing::Word & loc, const lexing::Word & end, const std::vector <Expression> & params) :
+	IExpression (loc),
+	_end (end),
+	_params (params)
     {}
 
     Expression List::init (const lexing::Word & location, const lexing::Word & end, const std::vector <Expression> & params) {
-	auto ret = new (Z0) List (location);
-	ret-> _end = end;
-	ret-> _params = params;
-	return Expression {ret};
+	return Expression {new (Z0) List (location, end, params)};
     }
 
-    Expression List::clone () const {
-	return Expression {new List (*this)};
-    }
+    Expression List::init (const List & list) {
+	return Expression {new (Z0) List (list)};
+    }   
 
     bool List::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];

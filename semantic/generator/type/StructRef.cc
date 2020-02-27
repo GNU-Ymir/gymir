@@ -11,15 +11,15 @@ namespace semantic {
 	std::string StructRef::TUPLEOF   = "tupleof";
 	
 	StructRef::StructRef () :
-	    Type (),
-	    _ref (Symbol::__empty__)
+	    Type ()
 	{}
 
 	StructRef::StructRef (const lexing::Word & loc, const Symbol & ref) :
-	    Type (loc, loc.str),
-	    _ref (ref)
+	    Type (loc, loc.str)
 	{
-	    if (!this-> _ref.isEmpty ()) { // A structure is complex iif one of its field is complex
+	    auto aux = ref;
+	    this-> _ref = aux.getPtr ();
+	    if (!this-> _ref.lock ()) { 
 		this-> isComplex (
 		    true
 		);
@@ -44,22 +44,23 @@ namespace semantic {
 	bool StructRef::equals (const Generator & gen) const {
 	    if (!gen.is<StructRef> ()) return false;
 	    auto str = gen.to <StructRef> ();
-	    return this-> _ref.equals (str._ref);
+	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});
 	}
 
 	bool StructRef::isRefOf (const Symbol & sym) const {
-	    return this-> _ref.isSameRef (sym);
+	    return Symbol {this-> _ref}.isSameRef (sym);
 	}
 
-	const Symbol & StructRef::getRef () const {
-	    return this-> _ref;
+	Symbol StructRef::getRef () const {
+	    return Symbol {this-> _ref};
 	}
 
 	int StructRef::mutabilityLevel (int level) const {
 	    if (this-> isMutable ()) {
-		if (this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
+		auto ref = Symbol {this-> _ref};
+		if (ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
 		    auto max = level;
-		    for (auto & it : this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
+		    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
 			auto mut = it.to <Value> ().getType ().to <Type> ().mutabilityLevel (level + 1);
 			if (mut > max) max = mut;
 		    }
@@ -70,7 +71,8 @@ namespace semantic {
 	}	
 
 	bool StructRef::needExplicitAlias () const {
-	    for (auto & it : this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
+	    auto ref = Symbol {this-> _ref};
+	    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
 
 		auto mut = it.to <generator::VarDecl> ().isMutable ()
 		    && it.to <generator::VarDecl> ().getVarType ().to <Type> ().needExplicitAlias ();
@@ -83,7 +85,8 @@ namespace semantic {
 	}
 
 	const Generator & StructRef::getExplicitAliasTypeLoc () const {
-	    for (auto & it : this-> _ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {		
+	    auto ref = Symbol {this-> _ref};
+	    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {		
 		auto mut = it.to <generator::VarDecl> ().isMutable ()
 		    && it.to <generator::VarDecl> ().getVarType ().to <Type> ().needExplicitAlias ();
 		
@@ -95,11 +98,13 @@ namespace semantic {
 	}
 	
 	std::string StructRef::typeName () const {
-	    return Ymir::format ("%", this-> _ref.getRealName ());
+	    auto ref = Symbol {this-> _ref};
+	    return Ymir::format ("%", ref.getRealName ());
 	}
 
 	std::string StructRef::getMangledName () const {
-	    return Ymir::format ("%", this-> _ref.getMangledName ());
+	    auto ref = Symbol {this-> _ref};
+	    return Ymir::format ("%", ref.getMangledName ());
 	}
 	
     }

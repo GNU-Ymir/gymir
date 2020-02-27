@@ -3,24 +3,18 @@
 
 namespace syntax {
 
-    Scope::Scope (const lexing::Word& loc) :
-	IExpression (loc),
-	_content (Expression::empty ())
-    {}
-
     Scope::Scope () :
 	IExpression (lexing::Word::eof ()),
 	_content (Expression::empty ())
     {}
+
+    Scope::Scope (const lexing::Word& loc, const Expression & content) :
+	IExpression (loc),
+	_content (content)
+    {}
     
     Expression Scope::init (const lexing::Word & location, const Expression & content) {
-	auto ret = new (Z0) Scope (location);
-	ret-> _content = content;
-	return Expression {ret};
-    }
-
-    Expression Scope::clone () const {
-	return Expression {new Scope (*this)};
+	return Expression {new (Z0) Scope (location, content)};
     }
 
     bool Scope::isOf (const IExpression * type) const {

@@ -29,7 +29,7 @@ namespace syntax {
 
 	Lambda ();
 	
-	Lambda (const lexing::Word & loc);
+	Lambda (const lexing::Word & loc, const Function::Prototype & proto, const Expression & content);
 
     public :
 
@@ -39,8 +39,6 @@ namespace syntax {
 
 	static Expression moveClosure (const syntax::Expression & lmbd);
 	
-	Expression clone () const override;
-
 	bool isOf (const IExpression * type) const override;
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;

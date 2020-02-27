@@ -24,13 +24,11 @@ namespace syntax {
 
 	Intrinsics ();
 	
-	Intrinsics (const lexing::Word & loc);
+	Intrinsics (const lexing::Word & loc, const Expression & value);
 
     public :
 
 	static Expression init (const lexing::Word & op, const Expression & value);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

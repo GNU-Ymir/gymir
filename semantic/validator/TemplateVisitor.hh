@@ -19,6 +19,49 @@ namespace semantic {
 	 */
 	class TemplateVisitor {
 
+	    // We can't make a slice of a vector in C++, because i don't know
+	    // This is an implementation of slice, to remove multiple useless copies
+	    template <typename T>
+	    class array_view {
+
+		typename std::vector <T>::const_iterator begin_;
+		
+		typename std::vector <T>::const_iterator end_;		
+		
+	    public:
+
+		array_view (const std::vector <T> & v) :
+		    array_view (v.begin (), v.end ()) {}
+		
+		array_view(const typename std::vector <T>::const_iterator begin, const typename std::vector <T>::const_iterator& end): begin_(begin), end_(end) {}
+
+		array_view (const array_view<T> & other) :
+		    array_view (other.begin_, other.end_) {}
+
+		const array_view<T> & operator= (const array_view<T> & other) {
+		    this-> begin_ = other.begin_;
+		    this-> end_ = other.end_;
+		    return other;
+		}
+		
+		typename std::vector <T>::const_iterator begin () const {
+		    return begin_;
+		}
+
+		typename std::vector <T>::const_iterator end () const {
+		    return end_;
+		}
+		
+		uint size () const {
+		    return end_ - begin_;
+		}
+		
+		const T & operator[](std::size_t index) const {
+		    return *(this->begin_ + index);
+		}
+		
+	    };
+	    
 	    enum Scores {
 		SCORE_VAR = 1,
 		SCORE_TYPE = 2
@@ -80,7 +123,7 @@ namespace semantic {
 	    semantic::Symbol validateFromExplicit (const generator::TemplateRef & ref, const std::vector <generator::Generator> & params, int & score) const;	    
 
 
-	    Mapper validateParamTemplFromExplicit (const std::vector <syntax::Expression> & paramTempl, const syntax::Expression & param, const std::vector <generator::Generator> & values, int & consumed) const;
+	    Mapper validateParamTemplFromExplicit (const array_view <syntax::Expression> & paramTempl, const syntax::Expression & param, const array_view <generator::Generator> & values, int & consumed) const;
 	    
 	    /**
 	     * \brief Validate Template expression from implicit specialistion (call operator) 
@@ -101,7 +144,7 @@ namespace semantic {
 	     * \param type the type used for implicit specialization
 	     * \return a Mapper, which stores the modifications to apply
 	     */
-	    Mapper validateVarDeclFromImplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const std::vector <generator::Generator> & types, int & consumed) const;
+	    Mapper validateVarDeclFromImplicit (const array_view <syntax::Expression> & params, const syntax::Expression & left, const array_view <generator::Generator> & types, int & consumed) const;
 
 	    /**
 	     * \brief Validate a type template specialization from implicit context
@@ -110,7 +153,7 @@ namespace semantic {
 	     * \param params type the type used for implicit specialization
 	     * \return a Mapper, which stores the modifications to apply
 	     */
-	    Mapper validateTypeFromImplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const std::vector <generator::Generator> & types, int & consumed) const;
+	    Mapper validateTypeFromImplicit (const array_view <syntax::Expression> & params, const syntax::Expression & left, const array_view <generator::Generator> & types, int & consumed) const;
 
 
 	    /**
@@ -120,7 +163,7 @@ namespace semantic {
 	     * \param type the type associated to this vardecl for implicit specialization
 	     * \return a Mapper, which store the modification to apply
 	     */
-	    Mapper validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const generator::Generator & type, int & consumed) const;
+	    Mapper validateTypeFromTemplCall (const array_view <syntax::Expression> & params, const syntax::TemplateCall & cl, const generator::Generator & type, int & consumed) const;
 
 	    
 	    /**
@@ -130,7 +173,7 @@ namespace semantic {
 	     * \param the symbol of the template solution 
 	     * \return a Mapper, which store the modification to apply
 	     */
-	    Mapper validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & tmplS, int & consumed) const;
+	    Mapper validateTypeFromTemplCall (const array_view <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & tmplS, int & consumed) const;
 
 	    /**
 	     * \brief Validate a type template specialization from explicit context
@@ -138,7 +181,7 @@ namespace semantic {
 	     * \param left one of the template parameters \in params
 	     * \param type the type that will make the specialization
 	     */
-	    Mapper applyTypeFromExplicit (const std::vector <syntax::Expression> & params, const syntax::Expression & left, const std::vector <generator::Generator> & types, int & consumed) const;
+	    Mapper applyTypeFromExplicit (const array_view <syntax::Expression> & params, const syntax::Expression & left, const array_view <generator::Generator> & types, int & consumed) const;
 
 	    /**
 	     * \brief Validate a type template specialization from explicit context on an OfVar
@@ -146,7 +189,7 @@ namespace semantic {
 	     * \param left one of the template parameters \in params, which is a OfVar
 	     * \param type the type that will make the specialization
 	     */
-	    Mapper applyTypeFromExplicitOfVar (const std::vector <syntax::Expression> & params, const syntax::OfVar & var, const generator::Generator & types) const;
+	    Mapper applyTypeFromExplicitOfVar (const array_view <syntax::Expression> & params, const syntax::OfVar & var, const generator::Generator & types) const;
 
 	    /**
 	     * \brief Validate a type template specialization from explicit context on an ImplVar
@@ -154,7 +197,7 @@ namespace semantic {
 	     * \param left one of the template parameters \in params, which is a ImplVar
 	     * \param type the type that will make the specialization
 	     */
-	    Mapper applyTypeFromExplicitImplVar (const std::vector <syntax::Expression> & params, const syntax::ImplVar & implvar, const generator::Generator & types) const;
+	    Mapper applyTypeFromExplicitImplVar (const array_view <syntax::Expression> & params, const syntax::ImplVar & implvar, const generator::Generator & types) const;
 
 
 	    /**
@@ -162,21 +205,21 @@ namespace semantic {
 	     * \param params the template parameters (T : [R], R, ...)
 	     * \param expr the decorated expression 
 	     */
-	    Mapper applyTypeFromDecoratedExpression (const std::vector <syntax::Expression> & params, const syntax::DecoratedExpression & expr, const std::vector <generator::Generator> & types, int & consumed) const; 
+	    Mapper applyTypeFromDecoratedExpression (const array_view <syntax::Expression> & params, const syntax::DecoratedExpression & expr, const array_view <generator::Generator> & types, int & consumed) const; 
 	    
 	    /**
 	     * \brief Find the expression named name in the list of params (direct access)
 	     * \param name the name of the expression to find
 	     * \param params the template parameters (T : [R], R, ...)
 	     */
-	    syntax::Expression findExpression (const std::string & name, const std::vector <syntax::Expression> & params) const;
+	    syntax::Expression findExpression (const std::string & name, const array_view <syntax::Expression> & params) const;
 
 	    /**
 	     * \brief Find the expression named name in the list of params (direct access)
 	     * \param name the name of the expression to find
 	     * \param params the template parameters (T : [R], R, ...)
 	     */
-	    syntax::Expression findExpressionValue (const std::string & name, const std::vector <syntax::Expression> & params) const;
+	    syntax::Expression findExpressionValue (const std::string & name, const array_view <syntax::Expression> & params) const;
 	    
 	    /**
 	     * \brief Create syntax tree from generator type
@@ -188,7 +231,7 @@ namespace semantic {
 	     * \brief Create syntax tree from generator type
 	     * \brief Reverse the compilation (kind of, it just return a SyntaxWrapper for a generator)
 	     */
-	    syntax::Expression createSyntaxType (const lexing::Word & loc, const std::vector <generator::Generator> & types) const;
+	    syntax::Expression createSyntaxType (const lexing::Word & loc, const array_view <generator::Generator> & types) const;
 
 
 	    /**
@@ -223,8 +266,6 @@ namespace semantic {
 	    syntax::Declaration replaceAll (const syntax::Declaration & element, const std::map <std::string, syntax::Expression> & mapping, const semantic::Symbol & ref) const;
 
 	    syntax::Function::Prototype replaceAll (const syntax::Function::Prototype & element, const std::map <std::string, syntax::Expression> & mapping) const;
-
-	    syntax::Function::Body replaceAll (const syntax::Function::Body & element, const std::map <std::string, syntax::Expression> & mapping) const;
 
 	    /**
 	     * Cond blocks are declared inside a class

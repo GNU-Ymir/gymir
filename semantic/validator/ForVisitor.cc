@@ -24,7 +24,7 @@ namespace semantic {
 	    match (value.to <Value> ().getType ()) {
 		of (Array, a,
 		    auto type = Slice::init (expression.getLocation (), a.getInners ()[0]);
-		    type.to<Type> ().isMutable (a.isMutable ());
+		    type = Type::init (type.to<Type> (), a.isMutable ());
 		    
 		    return validateSlice (expression, Aliaser::init (expression.getLocation (), type, value));
 		);
@@ -61,9 +61,10 @@ namespace semantic {
 		this-> _context.verifyCompatibleType (var.getLocation (), type, innerType);
 	    } else type = innerType;
 
-	    type.to<Type> ().isMutable (false);
-	    bool isMutable = false, isRef = false;
-	    this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable);
+	    type = Type::init (type.to<Type> (), false);
+	    
+	    bool isMutable = false, isRef = false, dmut = false;	    
+	    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
 	    this-> _context.verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_ITER);
 	    
 	    auto value = Generator::empty ();
@@ -106,7 +107,8 @@ namespace semantic {
 	    auto type = zero.to<Value> ().getType ();
 
 	    auto valType = value.to <Value> ().getType ();
-	    valType.to<Type> ().isRef (true);
+	    valType = Type::init (valType.to<Type> (), valType.to <Type> ().isMutable (), true);
+	    
 	    auto rRef = UniqValue::init (loc, valType, Referencer::init (loc, valType, value));
 	    
 	    if (!decl.getType ().isEmpty ()) {
@@ -139,7 +141,7 @@ namespace semantic {
 	    auto zero = ufixed (0);
 	    auto loc = expression.getLocation ();
 	    auto type = value.to <Value> ().getType ();
-	    type.to<Type> ().isRef (true);
+	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true);
 
 	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, value));
 	    
@@ -179,82 +181,80 @@ namespace semantic {
 	}
 
 	Generator ForVisitor::iterateSlice (const syntax::For & expression, const Generator & value, const syntax::Expression & index, const syntax::Expression & val) {	
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    std::vector<Generator> values = {};
 	    auto loc = val.getLocation ();
 	    Generator loop_type (Void::init (loc));
-	    {
-		TRY (
-		    this-> _context.enterBlock ();
-		    std::vector <Generator> vars;
-		    if (index.isEmpty ()) 
-			vars = createIndexVar (expression, value, "_iter");
-		    else vars = createIndexVar (expression, value, index.to<syntax::VarDecl> ());
-		    Generator valVar (Generator::empty ());
-		    values.push_back (vars [0]);
-		    values.push_back (vars [1]); // We push it here to add the validation before the loop
-
-		    auto array = vars [1];
-		    auto iter = vars [2];
-		    
-		    auto one = ufixed (1);		    
-		    auto len = StructAccess::init (loc, one.to <Value> ().getType (), array, "len");
-		    
-		    auto test = BinaryInt::init (loc, Binary::Operator::INF, Bool::init (loc), iter, len);
-
-		    std::vector <Generator> innerValues;
-
-		    auto innerType = array.to <Value> ().getType ().to <Slice> ().getInners () [0];
-		    auto indexVal = SliceAccess::init (loc, innerType, array, iter);
-		    
-		    // Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
-		    bool canBeRef = value.is <Aliaser> () || value.is<Referencer> () || value.to <Value> ().isLvalue ();
-		    auto level = value.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
-		    
-		    innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));
-		    auto content = this-> _context.validateValueNoReachable (expression.getBlock ());
-		    if (!content.to <Value> ().getType ().is <Void> ()) {
-			loop_type = content.to <Value> ().getType ();
-			valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
-			auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
-			
-			this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
-			innerValues.push_back (Affect::init (
-			    loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
-			    content
-			));
-			
-		    } else {
-			innerValues.push_back (content);
-		    }
-		    
-		    innerValues.push_back (Affect::init (
-			loc, iter.to<Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, one.to<Value> ().getType (), iter, one)
-		    ));
-		    
-		    if (!valVar.isEmpty ()) {
-			innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
-			values.push_back (valVar);
-		    }
-		    
-		    values.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-	    }
 	    
-	    {
-		TRY (
-		    this-> _context.quitBlock ();
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-	    }
+	    try {
+		this-> _context.enterBlock ();
+		std::vector <Generator> vars;
+		if (index.isEmpty ()) 
+		    vars = createIndexVar (expression, value, "_iter");
+		else vars = createIndexVar (expression, value, index.to<syntax::VarDecl> ());
+		Generator valVar (Generator::empty ());
+		values.push_back (vars [0]);
+		values.push_back (vars [1]); // We push it here to add the validation before the loop
+
+		auto array = vars [1];
+		auto iter = vars [2];
+		    
+		auto one = ufixed (1);		    
+		auto len = StructAccess::init (loc, one.to <Value> ().getType (), array, "len");
+		    
+		auto test = BinaryInt::init (loc, Binary::Operator::INF, Bool::init (loc), iter, len);
+
+		std::vector <Generator> innerValues;
+
+		auto innerType = array.to <Value> ().getType ().to <Slice> ().getInners () [0];
+		auto indexVal = SliceAccess::init (loc, innerType, array, iter);
+		    
+		// Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
+		bool canBeRef = value.is <Aliaser> () || value.is<Referencer> () || value.to <Value> ().isLvalue ();
+		auto level = value.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
+		    
+		innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));
+		auto content = this-> _context.validateValueNoReachable (expression.getBlock ());
+		if (!content.to <Value> ().getType ().is <Void> ()) {
+		    loop_type = content.to <Value> ().getType ();
+		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
+		    auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
+			
+		    this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
+		    innerValues.push_back (Affect::init (
+			loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
+			content
+		    ));
+			
+		} else {
+		    innerValues.push_back (content);
+		}
+		    
+		innerValues.push_back (Affect::init (
+		    loc, iter.to<Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, one.to<Value> ().getType (), iter, one)
+		));
+		    
+		if (!valVar.isEmpty ()) {
+		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
+		    values.push_back (valVar);
+		}
+		    
+		values.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
+	    
+	    
+	    
+	    try {
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList list) {
+		    
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 	    
 
 	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    }
 
 	    return Block::init (expression.getLocation (), loop_type, values);
@@ -290,7 +290,7 @@ namespace semantic {
 
 	    auto loc = decl.getLocation ();
 	    auto type = range.to <Value> ().getType ();
-	    type.to<Type> ().isRef (true);
+	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true);
 	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, range));
 	    
 	    
@@ -327,131 +327,131 @@ namespace semantic {
 
 	
 	Generator ForVisitor::iterateRange (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index) {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    std::vector <Generator> value = {};
 	    auto loc = range.getLocation ();
 	    Generator loop_type (Void::init (loc));
-	    {
-		TRY (
-		    this-> _context.enterBlock ();
-		    auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
-		    auto vars = createIndexVarRange (expression, range, index.to <syntax::VarDecl> ());
-		    Generator valVar (Generator::empty ());
-		    value.push_back (vars [0]);
-		    value.push_back (vars [1]); // We want the uniq value to be defined outside the loop
+	    
+	    try {
+		this-> _context.enterBlock ();
+		auto innerType = range.to <Value> ().getType ().to <Type> ().getInners ()[0];
+		auto vars = createIndexVarRange (expression, range, index.to <syntax::VarDecl> ());
+		Generator valVar (Generator::empty ());
+		value.push_back (vars [0]);
+		value.push_back (vars [1]); // We want the uniq value to be defined outside the loop
 		    
-		    auto rangeVar = vars [1];
-		    auto left = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::FST_NAME);
-		    auto right = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::SCD_NAME);
-		    auto step = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::STEP_NAME);
-		    auto isFull = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::FULL_NAME);
+		auto rangeVar = vars [1];
+		auto left = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::FST_NAME);
+		auto right = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::SCD_NAME);
+		auto step = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::STEP_NAME);
+		auto isFull = StructAccess::init (expression.getLocation (), innerType, rangeVar, Range::FULL_NAME);
 		    
-		    auto iter = vars [2];
-		    auto lTest = Generator::empty ();
-		    auto rTest = Generator::empty ();
-		    if (innerType.is <Float> ()) {
-			auto iterTest = BinaryFloat::init (loc, Binary::Operator::INF, Bool::init (loc), step, FloatValue::init (loc, innerType, 0.0f));
-			lTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
-						   BinaryFloat::init (expression.getLocation (),
-								    Binary::Operator::SUP,
-								    Bool::init (expression.getLocation ()),
-								    iter, right),
-						   BinaryFloat::init (expression.getLocation (),
-								    Binary::Operator::INF,
-								    Bool::init (expression.getLocation ()),
-								    iter, right)
-			);
+		auto iter = vars [2];
+		auto lTest = Generator::empty ();
+		auto rTest = Generator::empty ();
+		if (innerType.is <Float> ()) {
+		    auto iterTest = BinaryFloat::init (loc, Binary::Operator::INF, Bool::init (loc), step, FloatValue::init (loc, innerType, 0.0f));
+		    lTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
+					       BinaryFloat::init (expression.getLocation (),
+								  Binary::Operator::SUP,
+								  Bool::init (expression.getLocation ()),
+								  iter, right),
+					       BinaryFloat::init (expression.getLocation (),
+								  Binary::Operator::INF,
+								  Bool::init (expression.getLocation ()),
+								  iter, right)
+		    );
 
-			rTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
-						   BinaryFloat::init (expression.getLocation (),
-								    Binary::Operator::SUP_EQUAL,
-								    Bool::init (expression.getLocation ()),
-								    iter, right),
-						   BinaryFloat::init (expression.getLocation (),
-								    Binary::Operator::INF_EQUAL,
-								    Bool::init (expression.getLocation ()),
-								    iter, right)
-			);
-		    } else {
-			auto iterTest = BinaryInt::init (loc, Binary::Operator::INF, Bool::init (loc), step, ifixed (0));
-			lTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
-						   BinaryInt::init (expression.getLocation (),
-								    Binary::Operator::SUP,
-								    Bool::init (expression.getLocation ()),
-								    iter, right),
-						   BinaryInt::init (expression.getLocation (),
-								    Binary::Operator::INF,
-								    Bool::init (expression.getLocation ()),
-								    iter, right)
-			);
+		    rTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
+					       BinaryFloat::init (expression.getLocation (),
+								  Binary::Operator::SUP_EQUAL,
+								  Bool::init (expression.getLocation ()),
+								  iter, right),
+					       BinaryFloat::init (expression.getLocation (),
+								  Binary::Operator::INF_EQUAL,
+								  Bool::init (expression.getLocation ()),
+								  iter, right)
+		    );
+		} else {
+		    auto iterTest = BinaryInt::init (loc, Binary::Operator::INF, Bool::init (loc), step, ifixed (0));
+		    lTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
+					       BinaryInt::init (expression.getLocation (),
+								Binary::Operator::SUP,
+								Bool::init (expression.getLocation ()),
+								iter, right),
+					       BinaryInt::init (expression.getLocation (),
+								Binary::Operator::INF,
+								Bool::init (expression.getLocation ()),
+								iter, right)
+		    );
 
-			rTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
-						   BinaryInt::init (expression.getLocation (),
-								    Binary::Operator::SUP_EQUAL,
-								    Bool::init (expression.getLocation ()),
-								    iter, right),
-						   BinaryInt::init (expression.getLocation (),
-								    Binary::Operator::INF_EQUAL,
-								    Bool::init (expression.getLocation ()),
-								    iter, right)
-			);
+		    rTest = Conditional::init (loc, Bool::init (loc), iterTest, 			    
+					       BinaryInt::init (expression.getLocation (),
+								Binary::Operator::SUP_EQUAL,
+								Bool::init (expression.getLocation ()),
+								iter, right),
+					       BinaryInt::init (expression.getLocation (),
+								Binary::Operator::INF_EQUAL,
+								Bool::init (expression.getLocation ()),
+								iter, right)
+		    );
 			
-		    }
+		}
 
-		    auto test = Conditional::init (expression.getLocation (),
-						   Bool::init (expression.getLocation ()),
-						   isFull, rTest, lTest);
+		auto test = Conditional::init (expression.getLocation (),
+					       Bool::init (expression.getLocation ()),
+					       isFull, rTest, lTest);
 
-		    std::vector <Generator> innerValues;
-		    auto content = this->_context.validateValueNoReachable (expression.getBlock ());
-		    if (!content.to <Value> ().getType ().is <Void> ()) {
-			loop_type = content.to <Value> ().getType ();
-			valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
-			auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
+		std::vector <Generator> innerValues;
+		auto content = this->_context.validateValueNoReachable (expression.getBlock ());
+		if (!content.to <Value> ().getType ().is <Void> ()) {
+		    loop_type = content.to <Value> ().getType ();
+		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
+		    auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
 			
-			this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
-			innerValues.push_back (Affect::init (
-			    loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
-			    content
-			));
+		    this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
+		    innerValues.push_back (Affect::init (
+			loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
+			content
+		    ));
 			
-		    } else {
-			innerValues.push_back (content);
-		    }
+		} else {
+		    innerValues.push_back (content);
+		}
 
-		    if (innerType.is<Float> ()) {
-			innerValues.push_back (Affect::init (
-			    loc, iter.to <Value> ().getType (), iter, BinaryFloat::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
-			));
-		    } else {
-			innerValues.push_back (Affect::init (
-			    loc, iter.to <Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
-			));			
-		    }
+		if (innerType.is<Float> ()) {
+		    innerValues.push_back (Affect::init (
+			loc, iter.to <Value> ().getType (), iter, BinaryFloat::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
+		    ));
+		} else {
+		    innerValues.push_back (Affect::init (
+			loc, iter.to <Value> ().getType (), iter, BinaryInt::init (loc, Binary::Operator::ADD, step.to<Value> ().getType (), iter, step)
+		    ));			
+		}
 
-		    if (!valVar.isEmpty ()) {
-			innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
-			value.push_back (valVar);
-		    }
+		if (!valVar.isEmpty ()) {
+		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
+		    value.push_back (valVar);
+		}
 		    
-		    value.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));		    
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-	    }
+		value.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));		    
+	    } catch (Error::ErrorList list) {
+		    
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
+	    
 
-	    {
-		TRY (
-		    this-> _context.quitBlock ();
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-	    }
+	    
+	    try {
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList list) {
+		    
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
+	    
 
 	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    }
 	    
 	    return Block::init (expression.getLocation (), loop_type, value);
@@ -482,8 +482,8 @@ namespace semantic {
 	    if (!decl.getType ().isEmpty ())
 		type = this-> _context.validateType (decl.getType ());
 	    
-	    bool isMutable = false, isRef = false;	    
-	    this-> _context.applyDecoratorOnVarDeclType (decl.getDecorators (), type, isRef, isMutable);
+	    bool isMutable = false, isRef = false, dmut = false;	    
+	    type = this-> _context.applyDecoratorOnVarDeclType (decl.getDecorators (), type, isRef, isMutable, dmut);
 	    this-> _context.verifyMutabilityRefParam (decl.getLocation (), type, MUTABLE_CONST_ITER);		
 	    //this-> _context.verifyMemoryOwner (decl.getLocation (), type, innerTuple, true);
 	    
@@ -524,11 +524,11 @@ namespace semantic {
 	}
 	
 	Generator ForVisitor::iterateTuple (const syntax::For & expression, const Generator & value, const syntax::Expression & index) {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    // The iteration on tuple is done at compile time, we just replicate the block multiple times
 	    this-> _context.enterBlock ();
 	    auto type = value.to <Value> ().getType ();
-	    type.to<Type> ().isRef (true);
+	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), true);
 	    auto loc = expression.getLocation ();
 	    
 	    auto rRef = UniqValue::init (loc, type, Referencer::init (loc, type, value));
@@ -537,52 +537,49 @@ namespace semantic {
 	    std::vector <Generator> innerValues;
 	    for (auto  it : Ymir::r (0, value.to <Value> ().getType ().to <Type> ().getInners ().size ())) {
 		auto currentType =  value.to <Value> ().getType ().to <Type> ().getInners () [it];
-		{
-		    TRY (
-			this-> _context.enterBlock ();
-			auto decl = index.to <syntax::VarDecl> ();
-			auto innerTuple = TupleAccess::init (index.getLocation (), currentType, rRef, it);
-			// Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
-			bool canBeRef = value.to <Value> ().isLvalue ();
-			auto level = type.to<Type> ().mutabilityLevel ();
+		
+		try {
+		    this-> _context.enterBlock ();
+		    auto decl = index.to <syntax::VarDecl> ();
+		    auto innerTuple = TupleAccess::init (index.getLocation (), currentType, rRef, it);
+		    // Can be passed by ref, iif it is a lvalue, and mutability level is > 2 (mut [mut T])
+		    bool canBeRef = value.to <Value> ().isLvalue ();
+		    auto level = type.to<Type> ().mutabilityLevel ();
 			
-			auto vars = createIndexVarTuple (expression, innerTuple, decl, canBeRef ? level : 0);
-			innerValues.push_back (vars [0]);
-			auto bl = this-> _context.validateValue (expression.getBlock ());
-			if (it == (int) type.to <Type> ().getInners ().size () - 1)
-			    loopType = bl.to <Value> ().getType ();
-			innerValues.push_back (bl);			
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}
-	    
-		{
-		    TRY (
-			this-> _context.quitBlock ();
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}
+		    auto vars = createIndexVarTuple (expression, innerTuple, decl, canBeRef ? level : 0);
+		    innerValues.push_back (vars [0]);
+		    auto bl = this-> _context.validateValue (expression.getBlock ());
+		    if (it == (int) type.to <Type> ().getInners ().size () - 1)
+			loopType = bl.to <Value> ().getType ();
+		    innerValues.push_back (bl);			
+		} catch (Error::ErrorList list) {
+			
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+
+		try {
+		    this-> _context.quitBlock ();
+		} catch (Error::ErrorList list) {
+			
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+		
 
 		if (errors.size () != 0) {
-		    THROW (ErrorCode::EXTERNAL, errors);
+		    throw Error::ErrorList {errors};
 		}
 	    }
 
-	    {
-		TRY (
-		    this-> _context.quitBlock ();
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
-	    }
+	    
+	    try {
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList list) {		    
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
+		
 	    
 	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    }
 
 	    return Block::init (expression.getLocation (), loopType, innerValues); 	    

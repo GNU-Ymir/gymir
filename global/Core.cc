@@ -29,6 +29,7 @@ namespace global {
 			    RETHROW            = "_yrt_exc_rethrow",
 			    RUN_MAIN           = "_yrt_run_main", 
 			    RUN_MAIN_DEBUG     = "_yrt_run_main_debug", 
+			    SEG_FAULT_TYPE     = "SegFault",
 			    SET_JMP            = "setjmp",
 			    THROW              = "_yrt_exc_throw", 
 			    TYPE_IDS           = "TypeIDs",

@@ -28,7 +28,7 @@ namespace syntax {
 
 	MultOperator ();
 
-	MultOperator (const lexing::Word & loc);
+	MultOperator (const lexing::Word & loc, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall = true);
 
     public :
 
@@ -39,9 +39,7 @@ namespace syntax {
 	 * \param element the left operand
 	 * \param params the parameters of the operation
 	 */
-	static Expression init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall = true);
-	
-	Expression clone () const override;
+	static Expression init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall = true);       
 
 	bool isOf (const IExpression * type) const override;
 	

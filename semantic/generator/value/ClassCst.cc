@@ -24,7 +24,7 @@ namespace semantic {
 	    this-> isLvalue (true);
 	    auto lth = this-> _frame.getThrowers ();
 	    if (lth.size () != 0) {
-		for (auto &it : lth) it.changeLocation (loc);
+		for (auto &it : lth) it = Generator::init (loc, it);
 	    }
 	    
 	    for (auto & it : this-> _params) {
@@ -36,9 +36,15 @@ namespace semantic {
 	}
 	
 	Generator ClassCst::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params) {
-	    return Generator {new ClassCst (loc, type, frame, types, params)};
+	    return Generator {new (Z0) ClassCst (loc, type, frame, types, params)};
 	}
-    
+
+	Generator ClassCst::init (const ClassCst & other, const Generator & self) {
+	    auto ret = other.clone ();
+	    ret.to <ClassCst> ()._self = self;
+	    return ret;
+	}
+	
 	Generator ClassCst::clone () const {
 	    return Generator {new (Z0) ClassCst (*this)};
 	}
@@ -73,10 +79,6 @@ namespace semantic {
 	
 	const std::vector <Generator> & ClassCst::getParameters () const {
 	    return this-> _params;
-	}
-
-	void ClassCst::setSelf (const Generator & self) {
-	    this-> _self = self;
 	}
 	
 	const Generator & ClassCst::getSelf () const {

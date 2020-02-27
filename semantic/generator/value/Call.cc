@@ -23,7 +23,7 @@ namespace semantic {
 	    this-> isLvalue (type.to <Type> ().isRef ());
 	    auto lth = this-> _frame.getThrowers ();
 	    if (lth.size () != 0) {
-		for (auto &it : lth) it.changeLocation (loc);		
+		for (auto &it : lth) it = Generator::init (loc, it);		
 	    }
 	    
 	    for (auto & it : this-> _params) {
@@ -40,7 +40,7 @@ namespace semantic {
 	}
 	
 	Generator Call::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & addParams) {
-	    return Generator {new Call (loc, type, frame, types, params, addParams)};
+	    return Generator {new (Z0) Call (loc, type, frame, types, params, addParams)};
 	}
     
 	Generator Call::clone () const {

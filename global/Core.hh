@@ -35,6 +35,7 @@ namespace global {
 			 RETHROW,
 			 RUN_MAIN,
 			 RUN_MAIN_DEBUG,
+			 SEG_FAULT_TYPE,
 			 SET_JMP,
 			 THROW,
 			 TYPE_IDS,

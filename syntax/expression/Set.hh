@@ -22,7 +22,7 @@ namespace syntax {
 
 	Set ();
 	
-	Set (const lexing::Word & loc);
+	Set (const lexing::Word & loc, const std::vector <Expression> & params);
 
     public :
 
@@ -32,8 +32,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & loc, const std::vector <Expression> & params);
 	
-	Expression clone () const override;
-
 	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;

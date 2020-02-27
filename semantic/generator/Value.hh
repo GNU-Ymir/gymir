@@ -49,6 +49,10 @@ namespace semantic {
 	    
 	public :
 
+	    static Generator initBrRet (const Value & other, bool breaker, bool returner);
+
+	    static Generator init (const Value & other, const Generator & type);
+	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
 	     */
@@ -63,12 +67,7 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    virtual bool equals (const Generator & other) const ;	    
-	    
-	    /**
-	     * \brief change the type of this value
-	     */
-	    void setType (const Generator & type);
-	    
+	    	    
 	    /** 
 	     * \return the type of the value
 	     */
@@ -78,23 +77,11 @@ namespace semantic {
 	     * \return Tell if the generator close the closest loop scope
 	     */
 	    bool isBreaker () const;
-
-	    /**
-	     * \brief Change the state of this value
-	     * \param breaker if true reaching this value close the closest loop scope  
-	     */
-	    void isBreaker (bool breaker);
 	    
 	    /**
 	     * \return Does this generator close the frame ?
 	     */
 	    bool isReturner () const;
-
-	    /**
-	     * \brief Change the state of this value
-	     * \param returnable if true reaching this value close the current frame
-	     */
-	    void isReturner (bool returner);
 	    
 	    /**
 	     * \return Does this generator can be used as a LValue ?
@@ -120,6 +107,10 @@ namespace semantic {
 	     */
 	    void isLocal (bool is);
 
+	    void setReturner (bool);
+
+	    void setBreaker (bool);
+	    
 	};	
 
     }

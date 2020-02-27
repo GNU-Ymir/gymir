@@ -3,22 +3,17 @@
 namespace semantic {
 
     Module::Module () :
-	ISymbol (lexing::Word::eof (), false),
-	_table (this)
+	ISymbol (lexing::Word::eof (), false)
     {}
     
     Module::Module (const lexing::Word & name, bool isWeak) :
-	ISymbol (name, isWeak),
-	_table (this)	
+	ISymbol (name, isWeak)	
     {}
-
-    Module::Module (const Module & mod) :
-	ISymbol (mod),
-	_table (mod._table.clone (this))
-    {}
-
+    
     Symbol Module::init (const lexing::Word & name, bool isWeak) {
-	return Symbol {new (Z0) Module (name, isWeak)};
+	auto ret = Symbol {new (Z0) Module (name, isWeak)};
+	ret.to <Module> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
 
     bool Module::isOf (const ISymbol * type) const {
@@ -29,26 +24,26 @@ namespace semantic {
     }
 
     void Module::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
 
     
     void Module::insertTemplate (const Symbol & sym) {
-	this-> _table.insertTemplate (sym);
+	this-> _table-> insertTemplate (sym);
     }
 
     std::vector<Symbol> Module::getTemplates () const {
-	return this-> _table.getTemplates ();
+	return this-> _table-> getTemplates ();
     }    
 
 
     void Module::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector <Symbol> Module::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	auto local = this-> _table.get (name);
+	auto local = this-> _table-> get (name);
 	
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
@@ -56,22 +51,22 @@ namespace semantic {
 
     std::vector <Symbol> Module::getPublic (const std::string & name) const {
 	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table.getPublic (name);
+	auto local = this-> _table-> getPublic (name);
 	
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
     
     std::vector<Symbol> Module::getLocal (const std::string & name) const {
-	return this-> _table.get (name);
+	return this-> _table-> get (name);
     }
 
     std::vector<Symbol> Module::getLocalPublic (const std::string & name) const {
-	return this-> _table.getPublic (name);
+	return this-> _table-> getPublic (name);
     }
 
     const std::vector <Symbol> & Module::getAllLocal () const {
-	return this-> _table.getAll ();
+	return this-> _table-> getAll ();
     }
     
     bool Module::equals (const Symbol & other, bool parent) const {
@@ -95,7 +90,7 @@ namespace semantic {
     std::string Module::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();

@@ -2,16 +2,15 @@
 
 namespace semantic {
 
-    Table::Table (ISymbol * attach) :
-	_attached (attach)
-    {
+    Table::Table (const Symbol & attach) :
+	_attached (attach.getPtr ())
+    {}
+
+    std::shared_ptr <Table> Table::init (const Symbol & attach) {
+	return std::make_shared <Table> (attach);
     }
     
-    Table Table::init (ISymbol * attach) {
-	return Table (attach);
-    }
-
-    Table Table::clone (ISymbol * attach) const {
+    std::shared_ptr<Table> Table::clone (const Symbol & attach) const {
 	Table ret (attach);
 	for (auto it : Ymir::r (0, this-> _syms.size ())) {	    
 	    auto cl = this-> _syms [it];
@@ -19,15 +18,11 @@ namespace semantic {
 	    ret. _syms.push_back (cl);
 	}
 
-	return ret;
+	return std::make_shared<Table> (ret);
     }
 
-    ISymbol * Table::getAttach () {
-	return this-> _attached;
-    }
-
-    void Table::setAttach (ISymbol * attach) {
-	this-> _attached = attach;
+    Symbol Table::getAttach () {
+	return Symbol {this-> _attached};
     }
     
     void Table::insert (const Symbol & sym) {

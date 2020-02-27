@@ -19,11 +19,8 @@ namespace semantic {
 	Slice::Slice (const lexing::Word & loc, const Generator & inner) :
 	    Type (loc, loc.str)
 	{
-	    this-> isComplex (true);
-	    auto aux = inner;
-	    aux.to <Type> ().isRef (false);
-	    
-	    this-> setInners ({aux});
+	    this-> isComplex (true);	    
+	    this-> setInners ({Type::init (inner.to <Type> (), inner.to <Type> ().isMutable (), false)});
 	}
 
 	Generator Slice::init (const lexing::Word & loc, const Generator & inner) {

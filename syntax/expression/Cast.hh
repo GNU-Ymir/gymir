@@ -25,13 +25,11 @@ namespace syntax {
 
 	Cast ();
 	
-	Cast (const lexing::Word & loc);
+	Cast (const lexing::Word & loc, const Expression & type, const Expression & content);
 
     public :
 
 	static Expression init (const lexing::Word & op, const Expression & type, const Expression &content);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

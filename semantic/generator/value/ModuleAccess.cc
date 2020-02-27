@@ -6,17 +6,18 @@ namespace semantic {
     namespace generator {
 
 	ModuleAccess::ModuleAccess () :
-	    Value (),
-	    _ref (Symbol::empty ())
+	    Value ()
 	{}
 
 	ModuleAccess::ModuleAccess (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, NoneType::init (loc)),
-	    _ref (ref)
-	{}
+	    Value (loc, NoneType::init (loc))
+	{
+	    auto aux = ref;
+	    this-> _ref = aux.getPtr();
+	}
 	
 	Generator ModuleAccess::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new ModuleAccess (loc, ref)};
+	    return Generator {new (Z0) ModuleAccess (loc, ref)};
 	}
     
 	Generator ModuleAccess::clone () const {
@@ -33,23 +34,23 @@ namespace semantic {
 	bool ModuleAccess::equals (const Generator & gen) const {
 	    if (!gen.is <ModuleAccess> ()) return false;
 	    auto fr = gen.to<ModuleAccess> ();
-	    return this-> _ref.equals (fr._ref);
+	    return (Symbol {this-> _ref}).equals (fr._ref);
 	}
 
 	std::vector <Symbol> ModuleAccess::getLocal (const std::string & name) const {
-	    return this-> _ref.getLocal (name);
+	    return (Symbol {this-> _ref}).getLocal (name);
 	}
 
 	std::vector <Symbol> ModuleAccess::getLocalPublic (const std::string & name) const {
-	    return this-> _ref.getLocalPublic (name);
+	    return (Symbol {this-> _ref}).getLocalPublic (name);
 	}	
 	
-	const Symbol & ModuleAccess::getModRef () const {
-	    return this-> _ref;
+	Symbol ModuleAccess::getModRef () const {
+	    return (Symbol {this-> _ref});
 	}
 
 	std::string ModuleAccess::prettyString () const {
-	    return Ymir::format ("%", this-> _ref.getRealName ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).formatTree ());
 	}
 	
     }

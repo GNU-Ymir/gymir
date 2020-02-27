@@ -5,28 +5,18 @@ namespace semantic {
 
     Constructor::Constructor () :
 	ISymbol (lexing::Word::eof (), false),
-	_table (this),
-	_content (syntax::Declaration::empty ()),
-	_class (Symbol::empty ())
+	_content (syntax::Declaration::empty ())
     {}
 
     Constructor::Constructor (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) :
 	ISymbol (name, isWeak),
-	_table (this),
-	_content (syntax::Declaration {func.clone ()}),
-	_class (Symbol::empty ())
+	_content (syntax::Constructor::init (func))
     {}
 
-    Constructor::Constructor (const Constructor & other) :
-	ISymbol (other),
-	_table (other._table.clone (this)), 
-	_content (other._content),
-	_class (Symbol::empty ()),
-	_throwers (other._throwers)
-    {}
-    
     Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) {
-	return Symbol {new Constructor (name, func, isWeak)};
+	auto ret = Symbol {new (Z0) Constructor (name, func, isWeak)};
+	ret.to <Constructor> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
 
     bool Constructor::isOf (const ISymbol * type) const {
@@ -37,41 +27,41 @@ namespace semantic {
     }
 
     void Constructor::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
 
     void Constructor::insertTemplate (const Symbol & sym) {
-	this-> _table.insertTemplate (sym);
+	this-> _table-> insertTemplate (sym);
     }
     
     std::vector<Symbol> Constructor::getTemplates () const {
-	return this-> _table.getTemplates ();
+	return this-> _table-> getTemplates ();
     }    
     
     void Constructor::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector<Symbol> Constructor::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	auto local = this-> _table.get (name);
+	auto local = this-> _table-> get (name);
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
 
     std::vector<Symbol> Constructor::getPublic (const std::string & name) const {
 	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table.getPublic (name);
+	auto local = this-> _table-> getPublic (name);
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
     
     std::vector <Symbol> Constructor::getLocal (const std::string & name) const {
-	return this-> _table.get (name);
+	return this-> _table-> get (name);
     }
 
     std::vector <Symbol> Constructor::getLocalPublic (const std::string & name) const {
-	return this-> _table.getPublic (name);
+	return this-> _table-> getPublic (name);
     }
     
     bool Constructor::equals (const Symbol & other, bool parent) const {
@@ -101,18 +91,18 @@ namespace semantic {
     std::string Constructor::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();
     }
 
     void Constructor::setClass (const Symbol& sym) {
-	this-> _class = sym;
+	this-> _class = sym.getPtr ();
     }
      
-    const Symbol & Constructor::getClass () const {
-	return this-> _class;
+    Symbol Constructor::getClass () const {
+	return Symbol {this-> _class};
     }
 
     void Constructor::setThrowers (const std::vector <syntax::Expression> & throwers) {

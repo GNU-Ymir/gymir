@@ -2,28 +2,26 @@
 
 namespace syntax {
 
-    DeclBlock::DeclBlock () {}
+    DeclBlock::DeclBlock ()
+	: IDeclaration (lexing::Word::eof ()),
+	  _inner ({}),
+	  _isPrivate (false),
+	  _isProt (false)
+    {}
 
+    DeclBlock::DeclBlock (const lexing::Word & loc, const std::vector <Declaration> & content, bool isPrivate, bool isProt) : 
+	IDeclaration (loc),
+	_inner (content),
+	_isPrivate (isPrivate),
+	_isProt (isProt)
+    {}
+    
     Declaration DeclBlock::init (const DeclBlock & decl) {
-	auto ret = new (Z0) DeclBlock ();
-	ret-> _token = decl._token;
-	ret-> _inner = decl._inner;
-	ret-> _isPrivate = decl._isPrivate;
-	ret-> _isProt = decl._isProt;
-	return Declaration {ret};
+	return Declaration {new (Z0) DeclBlock (decl)};
     }
 
     Declaration DeclBlock::init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate, bool isProt) {
-	auto ret = new (Z0) DeclBlock ();
-	ret-> _token = token;
-	ret-> _inner = content;
-	ret-> _isPrivate = isPrivate;
-	ret-> _isProt = isProt;
-	return Declaration {ret};
-    }
-
-    Declaration DeclBlock::clone () const {
-	return DeclBlock::init (*this);
+	return Declaration {new (Z0) DeclBlock (token, content, isPrivate, isProt)};
     }
    
     bool DeclBlock::isOf (const IDeclaration * type) const {
@@ -35,17 +33,13 @@ namespace syntax {
     
     void DeclBlock::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');
-	stream.writeln ("<Block> : ", this-> _token, " ", this-> _isPrivate ? "private" : "public");
+	stream.writeln ("<Block> : ", this-> getLocation (), " ", this-> _isPrivate ? "private" : "public");
 	
 	for (auto & it : this-> _inner) {
 	    it.treePrint (stream, i + 1);
 	}
     }
     
-    const lexing::Word & DeclBlock::getLocation () const {
-	return this-> _token;
-    }
-
     bool DeclBlock::isPrivate () const {
 	return this-> _isPrivate && !this-> _isProt;
     }

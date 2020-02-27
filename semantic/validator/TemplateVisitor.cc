@@ -1,5 +1,6 @@
 #include <ymir/semantic/validator/TemplateVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
+#include <chrono>
 
 namespace semantic {
 
@@ -22,10 +23,10 @@ namespace semantic {
 	    Mapper globalMapper (true, 0);
 	    int consumed = 0;
 	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) { 
-		auto currentElems = std::vector <Generator> (values.begin () + consumed, values.end ());
+		auto currentElems = array_view <Generator> (values.begin () + consumed, values.end ());
 		
 		int current_consumed = 0;
-		auto rest = std::vector<syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
+		auto rest = array_view <syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
 		auto mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);	
 		if (!mapper.succeed) return mapper;
 		else {
@@ -43,28 +44,27 @@ namespace semantic {
 	    const Symbol & sym = ref.getTemplateRef ();
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
 	    Mapper globalMapper (true, 0);
-	    std::vector<std::string> errors;
+	    std::list <std::string> errors;
 	    int consumed = 0;
 	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) { 
-		auto currentElems = std::vector <Generator> (values.begin () + consumed, values.end ());
+		auto currentElems = array_view <Generator> (values.begin () + consumed, values.end ());
 		
 		int current_consumed = 0;
-		auto rest = std::vector<syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
+		auto rest = array_view <syntax::Expression> (syntaxTempl.begin () + 1, syntaxTempl.end ());
 		Mapper mapper {false, 0, {}, {}};
-		volatile bool succeed = true;
-		TRY (
+		bool succeed = true;
+		try {
 		    mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);		    
-		    errors = msgs;
+		} catch (Error::ErrorList list) {		    		    
+		    errors = list.errors;
 		    succeed = false;
-		} FINALLY;
+		} 
 		
 		if (!succeed) {
 		    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		    auto merge = mergeMappers (prevMapper, globalMapper);
 		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		    THROW (ErrorCode::EXTERNAL, errors);
+		    throw Error::ErrorList {errors};
 		}		
 		
 		if (!mapper.succeed) return Symbol::empty ();
@@ -130,7 +130,7 @@ namespace semantic {
 	    }
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::validateParamTemplFromExplicit (const std::vector <syntax::Expression> & syntaxTempl, const syntax::Expression & param, const std::vector <Generator> & values, int & consumed) const {
+	TemplateVisitor::Mapper TemplateVisitor::validateParamTemplFromExplicit (const array_view <syntax::Expression> & syntaxTempl, const syntax::Expression & param, const array_view <Generator> & values, int & consumed) const {
 	    match (param) {
 		of (Var, var, {
 			if (values [0].is<Type> ()) {
@@ -240,15 +240,14 @@ namespace semantic {
 			    
 			    if (!decl.getType ().isEmpty ()) {			    
 				auto current_consumed = 0;
-				mapper = validateTypeFromImplicit  (syntaxTempl, decl.getType (), {values [0].to <Value> ().getType ()}, current_consumed);
+				auto vec = {values [0].to <Value> ().getType ()};
+				mapper = validateTypeFromImplicit  (syntaxTempl, decl.getType (), array_view<Generator> (vec), current_consumed);
 				Generator type (Generator::empty ());
 				
 				// The type can be uncomplete, so it is enclosed it in a try catch
-				TRY (
+				try {
 				    type = this-> _context.validateType (replaceAll (decl.getType (), mapper.mapping)); 
-				) CATCH (ErrorCode::EXTERNAL) {
-				    GET_ERRORS_AND_CLEAR (msgs);
-				} FINALLY;
+				} catch (Error::ErrorList list) {} 
 				
 				if (!type.isEmpty ())
 				    this-> _context.verifySameType (type, values [0].to <Value> ().getType ());
@@ -339,8 +338,8 @@ namespace semantic {
 	    if (syntaxParams.size () > types.size ()) return Generator::empty ();
 	    Mapper globalMapper (true, 0);
 
-	    volatile int consumed = 0; // longjmp
-	    std::vector <std::string> errors;
+	    int consumed = 0;
+	    std::list <std::string> errors;
 	    
 	    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 		auto param = replaceAll (syntaxParams [it], globalMapper.mapping);
@@ -348,20 +347,18 @@ namespace semantic {
 		auto rest = types.size () - consumed;
 		auto syntaxRest = (syntaxParams.size () - it) - 1; // we don't count the current one
 		auto right = rest - syntaxRest;
-		
-		auto current_types = std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + right);
+		auto current_types = array_view <Generator> (types.begin () + consumed, types.begin () + consumed + right);
 		
 		int current_consumed = 0;
 		Mapper mapper (false, 0);
 		bool succeed = true;
-		TRY (		    
+		try {		    
 		    mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors = msgs;
+		} catch (Error::ErrorList list) {		    
+		    errors = list.errors;
 		    succeed = false;
-		} FINALLY;
-		
+		} 
+	    
 		if (!succeed) {
 		    auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ());
 		    auto merge = mergeMappers (prevMapper, globalMapper);
@@ -383,19 +380,21 @@ namespace semantic {
 			// Create a tuple containing the number of types consumed
 			auto innerTuple = std::vector <Generator> (types.begin () + consumed, types.begin () + consumed + current_consumed);
 			auto tupleType = Tuple::init (syntaxParams [it].getLocation (), innerTuple);
-			finalParams.push_back (NamedGenerator::init (syntaxParams [it].getLocation (), TupleValue::init (syntaxParams [it].getLocation (), tupleType, std::vector <Generator> (valueParams.begin () + consumed, valueParams.begin () + consumed + current_consumed))));
+			auto tupleValues = std::vector <Generator> (valueParams.begin () + consumed, valueParams.begin () + consumed + current_consumed);
+			finalParams.push_back (NamedGenerator::init (syntaxParams [it].getLocation (), TupleValue::init (syntaxParams [it].getLocation (), tupleType, tupleValues)));
 		    }
 		    consumed += current_consumed;
 		}		
 		// The mapper will be applied on the body at the end only, so we need to merge the differents mappers	
-	    }	    
-
+	    }
+	    
+	    
 	    for (auto it : Ymir::r (consumed, valueParams.size ())) {
 		finalParams.push_back (valueParams [it]);
 	    }
 
 	    if (errors.size () != 0) 
-		THROW (ErrorCode::EXTERNAL, errors);	    
+		throw Error::ErrorList {errors};	    
 	    
 	    if (globalMapper.succeed) {
 		auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to <Template> ().getSpecNameOrder ());
@@ -407,25 +406,27 @@ namespace semantic {
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
 		
 		if (syntaxTempl.size () != 0) {
-		    std::vector <std::string> errors;
+		    std::list <std::string> errors;
 		    for (auto it : syntaxTempl) {
 			errors.push_back (Ymir::Error::makeOccur (
 			    it.getLocation (),
 			    ExternalError::get (UNRESOLVED_TEMPLATE)
 			));					  
 		    }
-		    THROW (ErrorCode::EXTERNAL, errors);
+		    throw Error::ErrorList {errors};
 		}
+
 		
 		score = merge.score;
 		finalValidation (ref.to <TemplateRef> ().getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		auto func = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
-
+				
 		auto visit = declarator::Visitor::init ();
 		visit.setWeak ();
 		visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
-
+		
 		auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
+		
 		visit.pushReferent (soluce);
 		auto sym_func = visit.visit (func);
 		auto glob = visit.popReferent ();
@@ -443,10 +444,10 @@ namespace semantic {
 		{ // In a block, because it declare a var named ref
 		    match (func) {
 			of (syntax::Function, f, {
-				sym_func = symbol.getLocal (f.getName ().str) [0];
+				sym_func = symbol.getLocal (f.getLocation ().str) [0];
 			    }
 			) else of (syntax::Class, c, {
-				sym_func = symbol.getLocal (c.getName ().str) [0];
+				sym_func = symbol.getLocal (c.getLocation ().str) [0];
 			    }
 			) else {
 				Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");   
@@ -457,7 +458,7 @@ namespace semantic {
 		Generator proto (Generator::empty ());
 		this-> _context.pushReferent (sym_func.getReferent (),  "TemplateVisitor::validateFromImplicit");
 		
-		TRY (
+		try {
 		    if (ref.is <MethodTemplateRef> ()) {
 		    	auto & self = ref.to <MethodTemplateRef> ().getSelf ();
 			proto = this-> _context.validateMethodProto (sym_func.to <semantic::Function> (), self.to <Value> ().getType ());
@@ -466,27 +467,26 @@ namespace semantic {
 		    } else {
 			proto = this-> _context.validateFunctionProto (sym_func.to <semantic::Function> ());
 		    }
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
+		} catch (Error::ErrorList list) {		    
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
 		
 		this-> _context.popReferent ("TemplateVisitor::validateFromImplicit");
 		symbol = glob;
 		if (errors.size () != 0) 
-		    THROW (ErrorCode::EXTERNAL, errors);
+		    throw Error::ErrorList {errors};
 		return proto;		
 	    } else {
 		auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ());
 		auto merge = mergeMappers (prevMapper, globalMapper);
 		errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    }
 	    
 	    return Generator::empty ();
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::validateVarDeclFromImplicit (const std::vector <Expression> & params, const Expression & left, const std::vector <generator::Generator> & types, int & consumed) const {
+	TemplateVisitor::Mapper TemplateVisitor::validateVarDeclFromImplicit (const array_view <Expression> & params, const Expression & left, const array_view <generator::Generator> & types, int & consumed) const {
 	    auto type_decl = left.to <syntax::VarDecl> ().getType ();
 	    if (!type_decl.isEmpty ())
 		return validateTypeFromImplicit (params, type_decl, types, consumed);
@@ -497,7 +497,7 @@ namespace semantic {
 	    }
 	}	
 
-	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromImplicit (const std::vector <Expression> & params, const Expression & leftT, const std::vector <generator::Generator> & types, int & consumed) const {
+	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromImplicit (const array_view <Expression> & params, const Expression & leftT, const array_view <generator::Generator> & types, int & consumed) const {
 	    match (leftT) {
 		of (Var, var, {
 			Expression expr = findExpression (var.getName ().str, params);
@@ -528,7 +528,9 @@ namespace semantic {
 			    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 				auto param = replaceAll (syntaxParams [it], mapper.mapping);
 				int current_consumed = 0;
-				auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners () [it]}, current_consumed);
+				auto vec = {type.to <Type> ().getInners () [it]};
+				
+				auto mp = validateTypeFromImplicit (params, param, array_view <Generator> (vec), current_consumed);
 				if (!mp.succeed) return mp;
 				mapper = mergeMappers (mapper, mp);
 			    }
@@ -546,14 +548,16 @@ namespace semantic {
 			int current_consumed = 0;
 			if (type.is <Array> ()) {
 			    consumed += 1;
-			    auto ret = validateTypeFromImplicit (params, arr.getLeft (), {type.to <Type> ().getInners () [0]}, current_consumed);
+			    auto vec = {type.to <Type> ().getInners () [0]};
+			    auto ret = validateTypeFromImplicit (params, arr.getLeft (), array_view<Generator> (vec), current_consumed);
 			    if (ret.succeed && arr.getSize ().is <syntax::Var> ()) {
 				Expression exp = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().str, params);
 				if (!exp.isEmpty ()) {
 				    auto local_consumed = 0;
 				    auto size = ufixed (arr.getSize ().getLocation (), type.to<Array> ().getSize ());
+				    auto vec = {size};
 				    
-				    auto auxMap = validateParamTemplFromExplicit (params, exp, {size}, local_consumed);
+				    auto auxMap = validateParamTemplFromExplicit (params, exp, array_view<Generator> (vec), local_consumed);
 				    ret = mergeMappers (ret, auxMap);
 				}
 			    }
@@ -579,8 +583,8 @@ namespace semantic {
 			    Mapper mapper (false, 0);
 			    auto syntaxParams = fPtr.getParameters ();
 			    int current_consumed = 0;
-			    auto types = type.to <Type> ().getInners ();
-			    types = std::vector <Generator> (types.begin () + 1, types.end ()); // remove the return type
+			    auto & vec_types = type.to <Type> ().getInners ();
+			    auto types = array_view <Generator> (vec_types.begin () + 1, vec_types.end ()); // remove the return type
 			    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 				auto param = replaceAll (syntaxParams [it], mapper.mapping);
 				
@@ -588,7 +592,7 @@ namespace semantic {
 				auto syntaxRest = (syntaxParams.size () - it) - 1; // we don't count the current one
 				auto right = rest - syntaxRest;
 		
-				auto current_types = std::vector <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
+				auto current_types = array_view <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
 				auto mp = validateTypeFromImplicit (params, param, current_types, current_consumed); // On funcPtr type, the first one is the type
 				if (!mp.succeed) return mp;
 				mapper = mergeMappers (mapper, mp);
@@ -605,7 +609,8 @@ namespace semantic {
 
 			    current_consumed = 0;
 			    auto param = replaceAll (fPtr.getRetType (), mapper.mapping);
-			    auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners ()[0]}, current_consumed); // specialize the return type
+			    auto vec = {type.to <Type> ().getInners ()[0]};
+			    auto mp = validateTypeFromImplicit (params, param, array_view<Generator> (vec), current_consumed); // specialize the return type
 			    if (!mp.succeed) return mp;
 			    return mergeMappers (mapper, mp);
 			} else if (type.is <NoneType> ()) { // None type are accepted, it only refers to templateref i think
@@ -634,7 +639,7 @@ namespace semantic {
 	    // return Mapper {};
 	}
 	
-	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall  & cl, const generator::Generator & type, int & consumed) const {
+	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const array_view <syntax::Expression> & params, const syntax::TemplateCall  & cl, const generator::Generator & type, int & consumed) const {
 	    Generator currentType = type;
 	    // We get the first templateCall in the expression
 	    match (currentType) {
@@ -657,7 +662,8 @@ namespace semantic {
 			auto left = cl.getContent ();
 			if (left.is<syntax::Var> () && left.to <syntax::Var> ().getName () == Range::NAME) {
 			    if (cl.getParameters ().size () == 1) {
-				return validateTypeFromImplicit (params, cl.getParameters ()[0], {rng.getInners ()[0]}, consumed);
+				auto vec = {rng.getInners ()[0]};
+				return validateTypeFromImplicit (params, cl.getParameters ()[0], array_view <Generator> (vec), consumed);
 			    }
 			}
 		    }
@@ -668,7 +674,7 @@ namespace semantic {
 	    return Mapper (true, 0); 
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const std::vector <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & soluce, int &) const {
+	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromTemplCall (const array_view <syntax::Expression> & params, const syntax::TemplateCall & cl, const semantic::TemplateSolution & soluce, int &) const {
 	    auto tmpls = sort (soluce.getTempls (), soluce.getParams ());
 	    Mapper mapper (false, 0);
 	    auto syntaxParams = cl.getParameters ();
@@ -679,7 +685,8 @@ namespace semantic {
 		match (tmpls [it]) {
 		    of (generator::TemplateSyntaxWrapper, wrp, {
 			    auto type = wrp.getContent ();
-			    auto mp = validateTypeFromImplicit (params, param, {type}, current_consumed);
+			    auto vec = {type};
+			    auto mp = validateTypeFromImplicit (params, param, array_view<Generator> (vec), current_consumed);
 			    if (!mp.succeed) return mp;
 			    mapper = mergeMappers (mapper, mp);
 			}
@@ -712,7 +719,7 @@ namespace semantic {
 	    return getFirstTemplateSolution (symbol.getReferent ());	    
 	}
 	    
-	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicit (const std::vector <Expression> & params, const Expression & leftT, const std::vector <generator::Generator> & types, int & consumed) const {
+	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicit (const array_view <Expression> & params, const Expression & leftT, const array_view <generator::Generator> & types, int & consumed) const {
 	    match (leftT) {
 		of (Var, var, {
 			if (types [0].isEmpty ()) {
@@ -812,14 +819,15 @@ namespace semantic {
 	    return Mapper {false, 0, {}, {}};
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicitOfVar (const std::vector <Expression> & params, const OfVar & ofv, const generator::Generator & type) const {
+	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicitOfVar (const array_view <Expression> & params, const OfVar & ofv, const generator::Generator & type) const {
 	    if (type.isEmpty ()) return Mapper {true, 0, {}, {}};
 	    match (ofv.getType ()) {
 		of (Var, var, {
 			auto expr = findExpression (var.getName ().str, params);
 			if (!expr.isEmpty ()) {						
 			    int consumed = 0;
-			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
+			    auto vec = {type};
+			    Mapper mapper = applyTypeFromExplicit (params, expr, array_view<Generator> (vec), consumed);
 			    auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType, true);
 
@@ -836,7 +844,8 @@ namespace semantic {
 			    for (auto it : Ymir::r (0, syntaxParam.size ())) {
 				auto param = replaceAll (syntaxParam [it], mapper.mapping);
 				int consumed = 0;
-				auto mp = validateTypeFromImplicit (params, param, {type.to <Type> ().getInners () [it]}, consumed);				
+				auto vec = {type.to <Type> ().getInners () [it]};
+				auto mp = validateTypeFromImplicit (params, param, array_view<Generator> (vec), consumed);				
 				mapper = mergeMappers (mapper, mp);
 			    }
 			    
@@ -861,8 +870,8 @@ namespace semantic {
 			if (ftype.to <Type> ().isComplex () && ftype.to<Type> ().getInners ().size () >= fPtr.getParameters ().size () + 1) {
 			    Mapper mapper (false, 0);
 			    int current_consumed = 0;
-			    auto types = type.to <Type> ().getInners ();
-			    types = std::vector <Generator> (types.begin () + 1, types.end ()); // remove the return type
+			    auto vec_types = type.to <Type> ().getInners ();
+			    auto types = array_view <Generator> (vec_types.begin () + 1, vec_types.end ()); // remove the return type
 			    auto syntaxParams = fPtr.getParameters ();
 			    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 				auto param = replaceAll (syntaxParams [it], mapper.mapping);
@@ -871,8 +880,8 @@ namespace semantic {
 				auto syntaxRest = (syntaxParams.size () - it) - 1; // we don't count the current one
 				auto right = rest - syntaxRest;
 		
-				auto current_types = std::vector <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
-				auto mp = validateTypeFromImplicit (params, param, types, current_consumed); // On funcPtr type, the first one is the type
+				auto current_types = array_view <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
+				auto mp = validateTypeFromImplicit (params, param, current_types, current_consumed); // On funcPtr type, the first one is the type
 				if (!mp.succeed) return mp;
 				mapper = mergeMappers (mapper, mp);
 			    }
@@ -888,7 +897,8 @@ namespace semantic {
 
 			    current_consumed = 0;
 			    auto param = replaceAll (fPtr.getRetType (), mapper.mapping);
-			    auto mp = validateTypeFromImplicit (params, param, {ftype.to <Type> ().getInners ()[0]}, current_consumed); // specialize the return type
+			    auto vec = {ftype.to <Type> ().getInners ()[0]};
+			    auto mp = validateTypeFromImplicit (params, param, array_view<Generator> (vec), current_consumed); // specialize the return type
 			    if (!mp.succeed) return mp;
 			    mapper.score += Scores::SCORE_TYPE;
 			    return mergeMappers (mapper, mp);
@@ -901,13 +911,15 @@ namespace semantic {
 		) else of (syntax::ArrayAlloc, arr, {
 			if (type.is<Array> ()) {
 			    int consumed = 0;
-			    Mapper mapper = validateTypeFromImplicit (params, arr.getLeft (), {type.to <Type> ().getInners () [0]}, consumed);
+			    auto vec = {type.to <Type> ().getInners () [0]};
+			    Mapper mapper = validateTypeFromImplicit (params, arr.getLeft (), array_view<Generator> (vec), consumed);
 			    if (mapper.succeed && arr.getSize ().is <syntax::Var> ()) {
 				Expression expr = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().str, params);				
 				if (!expr.isEmpty ()) {
 				    int local_consumed = 0;
-				    auto size = ufixed (arr.getSize ().getLocation (), type.to <Array> ().getSize ()); 
-				    auto auxMap = validateParamTemplFromExplicit (params, expr, {size}, local_consumed);
+				    auto size = ufixed (arr.getSize ().getLocation (), type.to <Array> ().getSize ());
+				    auto vec = {size};
+				    auto auxMap = validateParamTemplFromExplicit (params, expr, array_view<Generator> (vec), local_consumed);
 				    mapper = mergeMappers (mapper, auxMap);
 				}
 			    }
@@ -929,7 +941,8 @@ namespace semantic {
 		    }
 		) else of (DecoratedExpression, dc, {
 			int current_consumed = 0;
-			Mapper mapper = applyTypeFromDecoratedExpression (params, dc, {type}, current_consumed);
+			auto vec = {type};
+			Mapper mapper = applyTypeFromDecoratedExpression (params, dc, array_view <Generator> (vec), current_consumed);
 			Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 			auto genType = this-> _context.validateType (realType, true);
 			this-> _context.verifySameType (genType, type);
@@ -968,14 +981,15 @@ namespace semantic {
 	    return mapper;
 	}
 
-	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicitImplVar (const std::vector <Expression> & params, const ImplVar & implv, const generator::Generator & type) const {
+	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromExplicitImplVar (const array_view <Expression> & params, const ImplVar & implv, const generator::Generator & type) const {
 	    if (type.isEmpty ()) return Mapper {true, 0, {}, {}};
 	    match (implv.getType ()) {
 		of (Var, var, {
 			auto expr = findExpression (var.getName ().str, params);
 			if (!expr.isEmpty ()) {
 			    int consumed = 0;
-			    Mapper mapper = applyTypeFromExplicit (params, expr, {type}, consumed);
+			    auto vec = {type};
+			    Mapper mapper = applyTypeFromExplicit (params, expr, array_view <Generator> (vec), consumed);
 			    auto realType = this-> replaceAll (implv.getType (), mapper.mapping);			    
 			    auto genType = this-> _context.validateType (realType, true);
 			    this-> _context.verifyClassImpl (implv.getLocation (), type, genType);
@@ -986,22 +1000,21 @@ namespace semantic {
 			}
 		    }
 		) else of (TemplateCall, cl, {
-			std::vector <std::string> errors;
+			std::list <std::string> errors;
 			for (auto & trait : this-> _context.getAllImplClass (type)) {
 			    bool succeed = true;
 			    Mapper mapper (true, 0);
-			    TRY (
+			    try {
 				int current_consumed = 0;
 				auto loc_mapper = validateTypeFromTemplCall (params, cl, trait, current_consumed);		
 				Expression realType = this-> replaceAll (implv.getType (), loc_mapper.mapping);
 				auto genType = this-> _context.validateType (realType, true);
 				this-> _context.verifyClassImpl (implv.getLocation (), type, genType);
 				mapper = mergeMappers (loc_mapper, mapper);
-			    ) CATCH (ErrorCode::EXTERNAL) {
-				GET_ERRORS_AND_CLEAR (msgs);
-				errors.insert (errors.end (), msgs.begin (), msgs.end ());
+			    } catch (Error::ErrorList list) {				
+				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 				succeed = false;
-			    } FINALLY;
+			    } 
 
 			    if (succeed) {
 				mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
@@ -1011,7 +1024,7 @@ namespace semantic {
 			    }
 			}
 			
-			THROW (ErrorCode::EXTERNAL, errors);
+			throw Error::ErrorList {errors};
 		    }
 		) else of (syntax::List, lst, {
 			Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
@@ -1047,7 +1060,7 @@ namespace semantic {
 	}
 
 	
-	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromDecoratedExpression (const std::vector <Expression> & params, const DecoratedExpression & expr, const std::vector <generator::Generator> & types, int & consumed) const {
+	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromDecoratedExpression (const array_view <Expression> & params, const DecoratedExpression & expr, const array_view <generator::Generator> & types, int & consumed) const {
 	    if (expr.hasDecorator (syntax::Decorator::CTE) || expr.hasDecorator (syntax::Decorator::REF))
 		return Mapper (false, 0);	    
 
@@ -1060,10 +1073,10 @@ namespace semantic {
 				auto content = syn.getContent ();
 				if (content.is <Type> ()) {
 				    if (expr.hasDecorator (syntax::Decorator::MUT))
-					content.to <Type> ().isMutable (true);
+					content = Type::init (content.to <Type> (), true);
 
 				    if (expr.hasDecorator (syntax::Decorator::CONST))
-					content.to <Type> ().isMutable (false);				    
+					content = Type::init (content.to <Type> (), false);		    
 				}
 				maps.emplace (it.first, TemplateSyntaxWrapper::init (syn.getLocation (), content));
 			    }
@@ -1077,29 +1090,24 @@ namespace semantic {
 	}
 	
 	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const generator::Generator & gen, bool isMutable, bool isRef) const {
-	    Generator type = gen;
-	    type.to <Type> ().isMutable (isMutable);
-	    type.to <Type> ().isRef (isRef);
-	    type.changeLocation (location);
+	    Generator type = Type::init (location, gen.to <Type> (), isMutable, isRef);
 	    return TemplateSyntaxWrapper::init (location, type);
 	}
 
-	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const std::vector <generator::Generator> & gens) const {
-	    std::vector <Generator> types = gens;
+	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const array_view <generator::Generator> & gens) const {
+	    std::vector <Generator> types (gens.begin (), gens.end ());
 	    for (auto & type : types) {
-		type.changeLocation (location);
-		type.to <Type> ().isRef (false);
+		type = Type::init (location, type.to<Type> (), type.to <Type> ().isMutable (), false);
 	    }
 	    return TemplateSyntaxList::init (location, types);
 	}	
 
 	Expression TemplateVisitor::createSyntaxValue (const lexing::Word & location, const generator::Generator & gen) const {
-	    auto val = gen;
-	    val.changeLocation (location);
+	    auto val = Generator::init (location, gen);
 	    return TemplateSyntaxWrapper::init (location, val);
 	}
 
-	Expression TemplateVisitor::findExpression (const std::string & name, const std::vector <Expression> & params) const {
+	Expression TemplateVisitor::findExpression (const std::string & name, const array_view <Expression> & params) const {
 	    for (auto & it : params) {
 		match (it) {
 		    of (Var, var, {
@@ -1130,7 +1138,7 @@ namespace semantic {
 	}
 
 
-	Expression TemplateVisitor::findExpressionValue (const std::string & name, const std::vector <Expression> & params) const {
+	Expression TemplateVisitor::findExpressionValue (const std::string & name, const array_view <Expression> & params) const {
 	    for (auto & it : params) {
 		match (it) {
 		    of (syntax::VarDecl, var, {
@@ -1364,15 +1372,13 @@ namespace semantic {
 			if (inner != mapping.end ()) {
 			    if (inner-> second.is <TemplateSyntaxWrapper> ()) {
 				auto tmplSynt = inner-> second.to <TemplateSyntaxWrapper> ();
-				auto content = tmplSynt.getContent ();
-				content.changeLocation (var.getLocation ());
+				auto content = Generator::init (var.getLocation (), tmplSynt.getContent ());
 				return TemplateSyntaxWrapper::init (var.getLocation (), content);
 			    } else if (inner-> second.is <TemplateSyntaxList> ()) { // Variadic
 				std::vector <Generator> params;
 				auto tmplSynt = inner-> second.to <TemplateSyntaxList> ();
 				for (auto it : tmplSynt.getContents ()) {				   
-				    it.changeLocation (var.getLocation ());
-				    params.push_back (it);
+				    params.push_back (Generator::init (var.getLocation (), it));
 				}
 				return TemplateSyntaxList::init (var.getLocation (), params);
 			    } else return inner-> second; // ?!
@@ -1428,14 +1434,14 @@ namespace semantic {
 			       calls, params
 			   );
 		) else of (syntax::Match, m, {
-			   std::vector <Expression> matchers;
-			   std::vector <Expression> actions;
-			   for (auto & it : m.getMatchers ())
-			       matchers.push_back (replaceAll (it, mapping));
-			   for (auto & it : m.getActions ())
-			       actions.push_back (replaceAll (it, mapping));
-			   return syntax::Match::init (m.getLocation (), replaceAll (m.getContent (), mapping),
-							   matchers, actions, m.isFinal ());
+			std::vector <Expression> matchers;
+			std::vector <Expression> actions;
+			for (auto & it : m.getMatchers ())
+			    matchers.push_back (replaceAll (it, mapping));
+			for (auto & it : m.getActions ())
+			    actions.push_back (replaceAll (it, mapping));
+			return syntax::Match::init (m.getLocation (), replaceAll (m.getContent (), mapping),
+						    matchers, actions, m.isFinal ());
 
 		    }
 		) else of (syntax::Catch, c, {
@@ -1469,7 +1475,7 @@ namespace semantic {
 
 	Declaration TemplateVisitor::replaceAll (const Declaration & decl, const std::map <std::string, Expression> & mapping, const Symbol & _ref) const {
 	    match (decl) {
-		of (syntax::Alias, al, return syntax::Alias::init (al.getName (), replaceAll (al.getValue (), mapping)))
+		of (syntax::Alias, al, return syntax::Alias::init (al.getLocation (), replaceAll (al.getValue (), mapping)))
 		else of (syntax::CondBlock, cd, {
 			return replaceAll (_ref, cd, mapping);
 		    }
@@ -1484,16 +1490,16 @@ namespace semantic {
 			for (auto & it : cl.getDeclarations ()) {
 			    decls.push_back (replaceAll (it, mapping, _ref));
 			}
-			return syntax::Class::init (cl.getName (), replaceAll (cl.getAncestor (), mapping), decls, cl.getAttributes ());
+			return syntax::Class::init (cl.getLocation (), replaceAll (cl.getAncestor (), mapping), decls, cl.getAttributes ());
 		    }
 		) else of (syntax::Enum, en, {
 			std::vector <Expression> values;
 			for (auto & it : en.getValues ())
 			    values.push_back (replaceAll (it, mapping));
-			return syntax::Enum::init (en.getName (), replaceAll (en.getType (), mapping), values);
+			return syntax::Enum::init (en.getLocation (), replaceAll (en.getType (), mapping), values);
 		    }
 		) else of (syntax::ExpressionWrapper, wrp, {
-			return syntax::ExpressionWrapper::init (replaceAll (wrp.getContent (), mapping));
+			return syntax::ExpressionWrapper::init (wrp.getLocation (), replaceAll (wrp.getContent (), mapping));
 		    }
 		) else of (syntax::ExternBlock, ext, {
 			return syntax::ExternBlock::init (
@@ -1517,7 +1523,7 @@ namespace semantic {
 			for (auto &it : cst.getThrowers ())
 			    throwers.push_back (replaceAll (it, mapping));
 			
-			return syntax::Constructor::init (cst.getName (),
+			return syntax::Constructor::init (cst.getLocation (),
 							  replaceAll (cst.getPrototype (), mapping),
 							  exprs,
 							  fields,
@@ -1527,15 +1533,17 @@ namespace semantic {
 			);
 		    }		    
 		) else of (syntax::Function, func, {
-			auto ret = syntax::Function::init (func.getName (), replaceAll (func.getPrototype (), mapping), replaceAll (func.getBody (), mapping));
-			ret.to <syntax::Function> ().setCustomAttributes (func.getCustomAttributes ());
-			if (func.isOver ()) ret.to <syntax::Function> ().setOver ();
 			std::vector <syntax::Expression> throwers;
 			for (auto &it : func.getThrowers ())
 			    throwers.push_back (replaceAll (it, mapping));
-			ret.to <syntax::Function> ().setThrowers (throwers);
 			
-			return ret;
+			return syntax::Function::init (func.getLocation (),
+						       replaceAll (func.getPrototype (), mapping),
+						       replaceAll (func.getBody (), mapping),
+						       func.getCustomAttributes (),
+						       throwers,
+						       func.isOver ()
+			);			
 		    }
 		) else of (syntax::Global, glb, {
 			return syntax::Global::init (glb.getLocation (), replaceAll (glb.getContent (), mapping));
@@ -1551,18 +1559,17 @@ namespace semantic {
 			std::vector <Declaration> decls;
 			for (auto & it : mod.getDeclarations ())
 			    decls.push_back (replaceAll (it, mapping, _ref));
-			auto ret = syntax::Module::init (
-			    mod.getIdent (),
-			    decls
+			return syntax::Module::init (
+			    mod.getLocation (),
+			    decls,
+			    mod.isGlobal ()
 			);
-			ret.to <syntax::Module> ().isGlobal (mod.isGlobal ());
-			return ret;
 		    }
 		) else of (syntax::Struct, str, {
 			std::vector <Expression> vars;
 			for (auto &it : str.getDeclarations ())
 			    vars.push_back (replaceAll (it, mapping));
-			return syntax::Struct::init (str.getName (), str.getCustomAttributes (), vars);
+			return syntax::Struct::init (str.getLocation (), str.getCustomAttributes (), vars);
 		    }
 		) else of (syntax::Template, tmpl, {
 			std::vector <Expression> params;
@@ -1587,7 +1594,7 @@ namespace semantic {
 			std::vector <Declaration> inner;
 			for (auto & it : trai.getDeclarations ())
 			    inner.push_back (replaceAll (it, mapping, _ref));
-			return syntax::Trait::init (trai.getName (), inner);
+			return syntax::Trait::init (trai.getLocation (), inner);
 		    }
 		) else of (syntax::Use, use, {
 			return syntax::Use::init (use.getLocation (), replaceAll (use.getModule (), mapping));
@@ -1631,16 +1638,7 @@ namespace semantic {
 	    return syntax::Function::Prototype::init (vars, replaceAll (proto.getType (), mapping), proto.isVariadic ());
 	    
 	}
-	
-	syntax::Function::Body TemplateVisitor::replaceAll (const syntax::Function::Body & body, const std::map <std::string, Expression> & mapping) const {
-	    return syntax::Function::Body::init (
-		replaceAll (body.getInner (), mapping),
-		replaceAll (body.getBody (), mapping),
-		replaceAll (body.getOuter (), mapping),
-		body.getOuterName ()
-	    );
-	}
-	
+		
 	std::vector <Expression> TemplateVisitor::replaceSyntaxTempl (const std::vector<Expression> & elements, const std::map <std::string, Expression> & mapping) const {
 	    if (mapping.size () == 0) return elements;
 	    std::vector <Expression> results;	    
@@ -1748,11 +1746,11 @@ namespace semantic {
 			    results.push_back (mapping.find (var.getLocation ().str)-> second);
 			}
 		    ) else {
-				    OutBuffer buf;
-				    it.treePrint (buf, 0);
-				    println (buf.str ());
-				    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
-				}
+						    OutBuffer buf;
+						    it.treePrint (buf, 0);
+						    println (buf.str ());
+						    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");	    
+						}
 		}
 	    }
 	    return results;
@@ -1795,10 +1793,10 @@ namespace semantic {
 				results.push_back (var.getLocation ().str);
 			}
 		    ) else {
-			 auto name = format ("%[%,%]", it.getLocation ().str, it.getLocation ().line, it.getLocation ().column);
-			 if (mapping.find (name) != mapping.end ())
-			     results.push_back (name);		    			    
-		    }
+						    auto name = format ("%[%,%]", it.getLocation ().str, it.getLocation ().line, it.getLocation ().column);
+						    if (mapping.find (name) != mapping.end ())
+							results.push_back (name);		    			    
+						}
 		}
 	    }
 	    return results;
@@ -1823,18 +1821,16 @@ namespace semantic {
 	Generator TemplateVisitor::validateTypeOrEmpty (const Expression & type, const std::map<std::string, Expression> & mapping) const {
 	    auto param = replaceAll (type, mapping);	    
 	    Generator gen (Generator::empty ());
-	    TRY (
+	    try {
 		gen = this-> _context.validateType (param, true);
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-	    } FINALLY;
+	    } catch (Error::ErrorList list) {} 
 	    
 	    return gen;
 	}
 
 	
 	std::map <std::string, syntax::Expression> TemplateVisitor::validateLambdaProtos (const std::vector<syntax::Expression> & exprs, const std::map <std::string, syntax::Expression> & mapping) const {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    std::map <std::string, syntax::Expression> maps;
 	    std::vector <std::pair <syntax::Expression, Generator> > toValidate;
 	    for (auto & it : mapping) {
@@ -1909,7 +1905,8 @@ namespace semantic {
 		for (auto & it : toValidate) {
 		    int current_consumed = 0;
 		    auto param = replaceAll (it.first, maps);
-		    auto mp = validateTypeFromImplicit (exprs, param, {it.second}, current_consumed);
+		    auto vec = {it.second};
+		    auto mp = validateTypeFromImplicit (exprs, param, array_view<Generator> (vec), current_consumed);
 		    if (!mp.succeed) {
 			Ymir::Error::occur (it.first.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 					    it.first.prettyString (),

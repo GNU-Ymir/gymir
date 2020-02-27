@@ -21,7 +21,7 @@ namespace semantic {
 	}
 	
 	Generator Referencer::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new Referencer (loc, type, who)};
+	    return Generator {new (Z0) Referencer (loc, type, who)};
 	}
     
 	Generator Referencer::clone () const {

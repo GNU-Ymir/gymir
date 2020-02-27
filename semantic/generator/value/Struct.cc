@@ -7,18 +7,25 @@ namespace semantic {
     namespace generator {
 	
 	Struct::Struct () :
-	    Value (),
-	    _ref (Symbol::__empty__)
+	    Value ()
 	{
 	}
 
 	Struct::Struct (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, loc.str, NoneType::init (loc, "struct " + ref.getRealName ())),
-	    _ref (ref)
-	{}
+	    Value (loc, loc.str, NoneType::init (loc, "struct " + ref.getRealName ()))
+	{
+	    auto aux = ref;
+	    this-> _ref = aux.getPtr ();
+	}
 
 	Generator Struct::init (const lexing::Word & loc, const Symbol & ref) {
 	    return Generator {new (Z0) Struct (loc, ref)};
+	}
+
+	Generator Struct::init (const Struct & other, const std::vector <Generator> & fields) {
+	    auto ret = other.clone ();
+	    ret.to <Struct> ()._fields = fields;
+	    return ret;
 	}
 
 	Generator Struct::clone () const {
@@ -35,19 +42,15 @@ namespace semantic {
 	bool Struct::equals (const Generator & gen) const {
 	    if (!gen.is<Struct> ()) return false;
 	    auto str = gen.to <Struct> ();
-	    return this-> _ref.isSameRef (str._ref);
+	    return (Symbol {this-> _ref}).isSameRef (str._ref);
 	}
 
 	const std::vector <generator::Generator> & Struct::getFields () const {
 	    return this-> _fields;
 	}
 
-	void Struct::setFields (const std::vector <generator::Generator> & fields) {
-	    this-> _fields = fields;
-	}
-
 	std::string Struct::getName () const {
-	    return this-> _ref.getRealName ();
+	    return (Symbol {this-> _ref}).getRealName ();
 	}
 	
 	Generator Struct::getFieldType (const std::string & name) const {
@@ -65,11 +68,11 @@ namespace semantic {
 		if (content.back ().size () != 0 && content.back ().back () == '\n')
 		    content.back () = content.back ().substr (0, content.back ().size () - 1);
 	    }
-	    return Ymir::format ("% (%)", this-> _ref.getRealName (), content);
+	    return Ymir::format ("% (%)", (Symbol {this-> _ref}).getRealName (), content);
 	}
 
-	const Symbol & Struct::getRef () const {
-	    return this-> _ref;
+	Symbol Struct::getRef () const {
+	    return Symbol {this-> _ref};
 	}
 
 	bool Struct::hasComplexField () const {

@@ -48,11 +48,11 @@ namespace semantic {
 	}
 		
 	Generator ArrayAlloc::init (const lexing::Word & loc,  const Generator & type, const Generator & value, const Generator & size, const Generator & len) {
-	    return Generator {new ArrayAlloc (loc, type, value, size, len)};
+	    return Generator {new (Z0) ArrayAlloc (loc, type, value, size, len)};
 	}
 
 	Generator ArrayAlloc::init (const lexing::Word & loc,  const Generator & type, const Generator & value, const Generator & size, ulong len) {
-	    return Generator {new ArrayAlloc (loc, type, value, size, len)};
+	    return Generator {new (Z0) ArrayAlloc (loc, type, value, size, len)};
 	}
     
 	Generator ArrayAlloc::clone () const {

@@ -8,23 +8,16 @@ namespace syntax {
 	_block (Expression::empty ())
     {}
     
-    For::For (const lexing::Word & loc) :
+    For::For (const lexing::Word & loc, const std::vector <Expression> & vars, const Expression & iter, const Expression & block) :
 	IExpression (loc),
-	_iter (Expression::empty ()),
-	_block (Expression::empty ())
+	_vars (vars),
+	_iter (iter),
+	_block (block)
     {}
 
 
     Expression For::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & iter, const Expression & block) {
-	auto ret = new (Z0) For (location);
-	ret-> _vars = vars;
-	ret-> _iter = iter;
-	ret-> _block = block;
-	return Expression {ret};
-    }
-
-    Expression For::clone () const {
-	return Expression {new (Z0) For (*this)};
+	return Expression {new (Z0) For (location, vars, iter, block)};
     }
 
     bool For::isOf (const IExpression * type) const {

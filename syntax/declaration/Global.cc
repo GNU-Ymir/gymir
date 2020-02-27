@@ -4,29 +4,17 @@ namespace syntax {
 
 
     Global::Global () :
+	IDeclaration (lexing::Word::eof ()),
 	_decl (Expression::empty ())
     {}
 
-    Declaration Global::init () {
-	return Declaration {new (Z0) Global ()};
-    }
-
-    Declaration Global::init (const Global & gl) {
-	auto ret = new (Z0) Global ();
-	ret-> _location = gl._location;
-	ret-> _decl = gl._decl;
-	return Declaration {ret};
-    }
+    Global::Global (const lexing::Word & loc, const Expression & expr) :
+	IDeclaration (loc),
+	_decl (expr)
+    {}
 
     Declaration Global::init (const lexing::Word & location, const Expression & decl) {
-	auto ret = new (Z0) Global ();
-	ret-> _location = location;
-	ret-> _decl = decl;
-	return Declaration {ret};
-    }
-
-    Declaration Global::clone () const {
-	return Global::init (*this);
+	return Declaration {new (Z0) Global (location, decl)};
     }
 
     bool Global::isOf (const IDeclaration * type) const {
@@ -40,13 +28,9 @@ namespace syntax {
 	return this-> _decl;
     }
     
-    const lexing::Word & Global::getLocation () const {
-	return this-> _location;
-    }
-
     void Global::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Global>", i, '\t');
-	stream.writeln (" ", this-> _location);       
+	stream.writeln (" ", this-> getLocation ());       
 	this-> _decl.treePrint (stream, i + 2);
     }
         

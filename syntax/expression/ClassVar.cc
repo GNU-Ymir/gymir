@@ -15,10 +15,6 @@ namespace syntax {
 	return Expression {ret};
     }
 
-    Expression ClassVar::clone () const {
-	return Expression {new ClassVar (*this)};
-    }
-
     bool ClassVar::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	ClassVar thisType; // That's why we cannot implement it for all class

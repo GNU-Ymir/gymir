@@ -18,7 +18,7 @@ namespace semantic {
 	}
 	
 	Generator Copier::init (const lexing::Word & loc, const Generator & type, const Generator & who, bool isAny) {
-	    return Generator {new Copier (loc, type, who, isAny)};
+	    return Generator {new (Z0) Copier (loc, type, who, isAny)};
 	}
     
 	Generator Copier::clone () const {

@@ -37,37 +37,23 @@ namespace semantic {
 	 * The symbol possessing this table 
 	 * This symbol cannot be nullptr
 	 */
-	ISymbol* _attached; 
+	std::weak_ptr <ISymbol> _attached;
 		
     public :
 
-	/**
-	 * Please use it only for construction of Table field (see example in semantic/symbol/Class)
-	 * This class is a special one, that cannot be proxied, and cannot act as if it is
-	 */
-	Table (ISymbol * attached);
-	
-	/**
-	 * \brief Create an empty table
-	 * \warning if attached is empty, an internal excpetion is raised
-	 */
-	static Table init (ISymbol * attached);	
+	Table (const Symbol & attach); // I wish i could put that private but shared pointer ...
 
+	static std::shared_ptr<Table> init (const Symbol & attach);
+	
 	/**
 	 * \brief make a copy of the table, and all symbols
 	 */
-	Table clone (ISymbol * attached) const;
+	std::shared_ptr<Table> clone (const Symbol & attached) const;
 
 	/**
 	 * \return the symbol in which the table is attached
 	 */
-	ISymbol* getAttach ();
-
-	/**
-	 * \brief Change the attach of the table
-	 * \param attach the new attach
-	 */
-	void setAttach (ISymbol * attach);
+	Symbol getAttach ();
 	
 	/**
 	 * \brief Insert a new symbol in the table

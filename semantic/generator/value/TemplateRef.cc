@@ -7,17 +7,17 @@ namespace semantic {
     namespace generator {
 
 	TemplateRef::TemplateRef () :
-	    Value (),
-	    _ref (Symbol::empty ())
+	    Value ()
 	{}
 
 	TemplateRef::TemplateRef (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, NoneType::init (loc)),
-	    _ref (ref)
-	{}
+	    Value (loc, NoneType::init (loc))
+	{
+	    this-> _ref = ref.getPtr ();
+	}
 	
 	Generator TemplateRef::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new TemplateRef (loc, ref)};
+	    return Generator {new (Z0) TemplateRef (loc, ref)};
 	}
     
 	Generator TemplateRef::clone () const {
@@ -34,19 +34,19 @@ namespace semantic {
 	bool TemplateRef::equals (const Generator & gen) const {
 	    if (!gen.is <TemplateRef> ()) return false;
 	    auto fr = gen.to<TemplateRef> ();
-	    return this-> _ref.equals (fr._ref);
+	    return (Symbol {this-> _ref}).equals (Symbol {fr._ref});
 	}
 
 	std::vector <Symbol> TemplateRef::getLocal (const std::string & name) const {
-	    return this-> _ref.getLocal (name);
+	    return (Symbol {this-> _ref}).getLocal (name);
 	}
 
-	const Symbol & TemplateRef::getTemplateRef () const {
-	    return this-> _ref;
+	Symbol TemplateRef::getTemplateRef () const {
+	    return Symbol {this-> _ref};
 	}
 
 	std::string TemplateRef::prettyString () const {	    
-	    return Ymir::format ("%", this-> _ref.to <semantic::Template> ().prettyString ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).to <semantic::Template> ().prettyString ());
 	}
 	
     }

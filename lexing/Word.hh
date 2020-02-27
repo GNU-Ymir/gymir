@@ -7,7 +7,6 @@
 #include <string>
 #include <tr1/memory>
 #include <stdlib.h>
-#include <ymir/utils/Memory.hh>
 #include <ymir/lexing/Token.hh>
 
 namespace lexing {

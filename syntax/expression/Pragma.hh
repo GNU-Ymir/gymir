@@ -17,13 +17,11 @@ namespace syntax {
 
 	Pragma ();
 	
-	Pragma (const lexing::Word & loc);
+	Pragma (const lexing::Word & loc, const std::vector <Expression> & params);
 
     public :
 
 	static Expression init (const lexing::Word & token, const std::vector <Expression> & params);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

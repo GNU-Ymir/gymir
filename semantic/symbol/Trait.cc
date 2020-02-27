@@ -6,27 +6,20 @@ namespace semantic {
 
     Trait::Trait () :
 	ISymbol (lexing::Word::eof (), false), 
-	_table (this),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
     Trait::Trait (const lexing::Word & name, bool isWeak) :
 	ISymbol (name, isWeak),
-	_table (this),
-	_fields ({}),
-	_gen (generator::Generator::empty ())
-    {}
-
-    Trait::Trait (const Trait & other) :
-	ISymbol (other),
-	_table (other._table.clone (this)),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
     
     Symbol Trait::init (const lexing::Word & name, bool isWeak) {
-	return Symbol {new (Z0) Trait (name, isWeak)};
+	auto ret = Symbol {new (Z0) Trait (name, isWeak)};
+	ret.to <Trait> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
     
     bool Trait::isOf (const ISymbol * type) const {
@@ -37,19 +30,19 @@ namespace semantic {
     }
 
     void Trait::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
     
     void Trait::insertTemplate (const Symbol & sym) {
-	this-> _table.insertTemplate (sym);
+	this-> _table-> insertTemplate (sym);
     }
 
     std::vector<Symbol> Trait::getTemplates () const {
-	return this-> _table.getTemplates ();
+	return this-> _table-> getTemplates ();
     }    
     
     void Trait::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector <Symbol> Trait::get (const std::string & name) const {
@@ -74,13 +67,13 @@ namespace semantic {
     }
 
     const std::vector <Symbol> & Trait::getAllInner () const {
-	return this-> _table.getAll ();
+	return this-> _table-> getAll ();
     }
     
     std::string Trait::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();

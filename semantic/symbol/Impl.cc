@@ -4,24 +4,18 @@ namespace semantic {
 
     Impl::Impl () :
 	ISymbol (lexing::Word::eof (), false),
-	_table (this),
 	_trait (syntax::Expression::empty ())
     {}
     
     Impl::Impl (const lexing::Word & name, const syntax::Expression & trait, bool isWeak) :
 	ISymbol (name, isWeak),
-	_table (this),
 	_trait (trait)
     {}
 
-    Impl::Impl (const Impl & mod) :
-	ISymbol (mod),
-	_table (mod._table.clone (this)),
-	_trait (mod._trait)
-    {}
-
     Symbol Impl::init (const lexing::Word & name, const syntax::Expression & trait, bool isWeak) {
-	return Symbol {new (Z0) Impl (name, trait, isWeak)};
+	auto ret = Symbol {new (Z0) Impl (name, trait, isWeak)};
+	ret.to <Impl> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
 
     bool Impl::isOf (const ISymbol * type) const {
@@ -32,17 +26,17 @@ namespace semantic {
     }
 
     void Impl::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
    
 
     void Impl::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector <Symbol> Impl::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	auto local = this-> _table.get (name);
+	auto local = this-> _table-> get (name);
 	
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
@@ -50,22 +44,22 @@ namespace semantic {
 
     std::vector <Symbol> Impl::getPublic (const std::string & name) const {
 	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table.getPublic (name);
+	auto local = this-> _table-> getPublic (name);
 	
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
     
     std::vector<Symbol> Impl::getLocal (const std::string & name) const {
-	return this-> _table.get (name);
+	return this-> _table-> get (name);
     }
 
     std::vector<Symbol> Impl::getLocalPublic (const std::string & name) const {
-	return this-> _table.getPublic (name);
+	return this-> _table-> getPublic (name);
     }
 
     const std::vector <Symbol> & Impl::getAllInner () const {
-	return this-> _table.getAll ();
+	return this-> _table-> getAll ();
     }
     
     bool Impl::equals (const Symbol & other, bool parent) const {
@@ -89,7 +83,7 @@ namespace semantic {
     std::string Impl::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();

@@ -24,7 +24,7 @@ namespace semantic {
 	}
 	
 	Generator UnaryFloat::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & operand) {
-	    return Generator {new UnaryFloat (loc, op, type, operand)};
+	    return Generator {new (Z0) UnaryFloat (loc, op, type, operand)};
 	}
 
 	Generator UnaryFloat::clone () const {

@@ -7,21 +7,15 @@ namespace syntax {
 	_value (Expression::empty ())
     {}
     
-    TupleDest::TupleDest (const lexing::Word & loc) :
+    TupleDest::TupleDest (const lexing::Word & loc, const std::vector <Expression> & vars, const Expression & value, bool isVariadic) :
 	IExpression (loc),
-	_value (Expression::empty ())
+	_vars (vars),
+	_value (value),
+	_isVariadic (isVariadic)
     {}
     
     Expression TupleDest::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & value, bool isVariadic) {
-	auto ret = new (Z0) TupleDest (location);
-	ret-> _vars = vars;
-	ret-> _value = value;
-	ret-> _isVariadic = isVariadic;
-	return Expression {ret};
-    }
-
-    Expression TupleDest::clone () const {
-	return Expression {new TupleDest (*this)};
+	return Expression {new (Z0) TupleDest (location, vars, value, isVariadic)};
     }
 
     Expression TupleDest::isOf (const IExpression * type) const {

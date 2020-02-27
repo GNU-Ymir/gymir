@@ -22,7 +22,7 @@ namespace semantic {
 	}
 	
 	Generator List::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) {
-	    return Generator {new List (loc, type, content)};
+	    return Generator {new (Z0) List (loc, type, content)};
 	}
     
 	Generator List::clone () const {

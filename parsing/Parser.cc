@@ -32,22 +32,22 @@ namespace Ymir {
 	_path (filename),
 	_module (syntax::Declaration::empty ())
     {}
+
+    Parser::~Parser () {}
     
     void Parser::run () {
 	std::vector <std::string> errors;
-	TRY (
+	try {
 	    syntaxicTime ();
 	    semanticTime ();
-	) CATCH (ErrorCode::FAIL) {
-	    PRINT_ERRORS ();
+	} catch (Error::ErrorList list) {
+	    list.print ();
 	    Error::end (ExternalError::get (COMPILATION_END));
-	} CATCH (ErrorCode::FATAL) {
-	    PRINT_ERRORS ();
+	} catch (Error::FatalError ftl) {
+	    ftl.print ();
 	    Error::end (ExternalError::get (COMPILATION_END));
-	} CATCH (ErrorCode::EXTERNAL) {
-	    PRINT_ERRORS ();
-	    Error::end (ExternalError::get (COMPILATION_END));
-	} FINALLY; // Internal Error are not catched	
+	}
+	
     }
     
     void Parser::syntaxicTime () {
@@ -60,17 +60,18 @@ namespace Ymir {
 
     void Parser::semanticTime () {
 	auto declarator = semantic::declarator::Visitor::init ();
-	auto module = declarator.visit (this-> _module);
-
-	auto validator = semantic::validator::Visitor::init ();
+	auto module = declarator.visit (this-> _module);	
+	
+	auto validator = semantic::validator::Visitor::init ();	
 	validator.validate (module);
-
+	
 	auto generator = semantic::generator::Visitor::init ();
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
 	
 	generator.finalize ();
+	semantic::Symbol::purge ();
     }
     
 }

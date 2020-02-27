@@ -255,7 +255,7 @@ namespace syntax {
 	 function := 'def' ('if' expression)? (attributes)? Identifier (templates)? function_proto function_body
 	 \endverbatim
 	 */
-	Declaration visitFunction (bool isClass = false);
+	Declaration visitFunction (bool isClass = false, bool isOver = false);
 	
 	/**
 	 * \brief Visit a function prototype
@@ -272,7 +272,7 @@ namespace syntax {
 	 function_body := ('in' expression)? ('out' '(' Identifier ')' expression)? expression
 	 \endverbatim
 	 */
-	Function::Body visitFunctionBody ();
+	Expression visitFunctionBody ();
 	
 	/**
 	 * \brief Visit a set of template parameter, used in declaration

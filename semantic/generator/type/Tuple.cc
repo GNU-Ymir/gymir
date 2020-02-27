@@ -18,9 +18,14 @@ namespace semantic {
 	    Type (loc, loc.str)
 	{
 	    this-> isComplex (true);
-	    auto aux = inner;
-	    for (auto & it : aux)
-		it.to <Type> ().isRef (false);
+	    
+	    std::vector <Generator> aux;
+	    aux.reserve (inner.size ());
+	    
+	    for (auto & it : inner) {
+		aux.push_back (Type::init (it.to <Type> (), it.to <Type> ().isMutable (), false));
+	    }
+	    
 	    this-> setInners (aux);
 	}
 

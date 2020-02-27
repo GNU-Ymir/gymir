@@ -17,7 +17,7 @@ namespace semantic {
 	}	
 	
 	Generator MultSym::init (const lexing::Word & loc, const std::vector <Generator> & gens) {
-	    return Generator {new MultSym (loc, gens)};
+	    return Generator {new (Z0) MultSym (loc, gens)};
 	}
     
 	Generator MultSym::clone () const {

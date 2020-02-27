@@ -28,7 +28,7 @@ namespace syntax {
 
 	While ();
 	
-	While (const lexing::Word & loc);
+	While (const lexing::Word & loc, const Expression & test, const Expression & content, bool isDo = false);
 
     public :
 
@@ -41,8 +41,6 @@ namespace syntax {
 	static Expression init (const lexing::Word & location, const Expression & test, const Expression & content, bool isDo = false);
 
 	
-	Expression clone () const override;
-
 	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;

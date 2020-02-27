@@ -17,7 +17,7 @@ namespace semantic {
 	}
 	
 	Generator Aliaser::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new Aliaser (loc, type, who)};
+	    return Generator {new (Z0) Aliaser (loc, type, who)};
 	}
     
 	Generator Aliaser::clone () const {

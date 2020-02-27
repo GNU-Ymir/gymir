@@ -10,7 +10,7 @@ namespace semantic {
     class Trait : public ISymbol {
 
 	/** The symbol declared in the class (the attributes, methods ...) */
-	Table _table;
+	std::shared_ptr<Table> _table;
 
 	
 	std::vector <syntax::Expression> _fields;

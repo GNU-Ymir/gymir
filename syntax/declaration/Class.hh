@@ -11,9 +11,6 @@ namespace syntax {
 
     class Class : public IDeclaration {
 
-	/** The name of the class */
-	lexing::Word _name;
-
 	/** The type overriden by the class (can be empty ()) */
 	Expression _over;
 
@@ -40,12 +37,9 @@ namespace syntax {
 
 	Class ();
 
+	Class (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
+	
     public :
-
-	/** 
-	 * \brief Create an empty class
-	 */
-	static Declaration init ();
 
 	/** 
 	 * \brief Create a class from copy
@@ -62,19 +56,9 @@ namespace syntax {
 	static Declaration init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
 
 	/**
-	 * Mandatory function for proxy polymoprhism system
-	 */
-	Declaration clone () const override;
-
-	/**
 	 * Mandatory function for dynamic casting
 	 */
 	bool isOf (const IDeclaration * type) const override;
-
-	/**
-	 * \return the name and location of the class
-	 */
-	const lexing::Word & getName () const;
 	
 	/**
 	 * \return the expression defining the ancestor of the class definition

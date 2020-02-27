@@ -22,7 +22,7 @@ namespace semantic {
 
 	/** The symbol in which the symbol is declared */
 	/** This information is set at getting time */
-	ISymbol* _referent;
+	std::weak_ptr <ISymbol> _referent;
 
 	/** The list of usable symbols for symbol search */
 	/** This list is intended to be used only in the proxy symbol */
@@ -234,11 +234,17 @@ namespace semantic {
 	static Symbol __empty__;
 
 	/** This list containes the imported modules */
-	static std::map <std::string, Symbol> __imported__;
+	static std::map <std::string, Symbol> __imported__;	
 	
     public:
 
 	Symbol (ISymbol * sym);
+
+	Symbol (const std::shared_ptr <ISymbol> & sym);
+
+	Symbol (const std::weak_ptr <ISymbol> & sym);
+
+	~Symbol ();
 	
 	/**
 	 * \brief Create an empty symbol
@@ -365,7 +371,7 @@ namespace semantic {
 	 * Proxy Function for symbol
 	 */
 	void setReferent (const Symbol & ref);
-
+	
 	/**
 	 * \return the space name of the symbol
 	 */
@@ -416,7 +422,11 @@ namespace semantic {
 	 * \return The list of all declared modules
 	 */
 	static const std::map <std::string, Symbol> & getAllModules ();
-	
+
+	/**
+	 * Remove all the imported symbols
+	 */
+	static void purge ();	
 	
 	/**
 	 * \brief Cast the content pointer into the type (if possible)
@@ -424,13 +434,13 @@ namespace semantic {
 	 */
 	template <typename T>
 	T& to ()  {	    
-	    if (this-> _value == NULL)
+	    if (this-> _value == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
 
 	    T t;
-	    if (!this-> _value-> isOf (&t))
+	    if (!this-> _value.get ()-> isOf (&t))
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-	    return *((T*) this-> _value);	    
+	    return *((T*) this-> _value.get ());	    
 	}
 
 	/**
@@ -439,13 +449,13 @@ namespace semantic {
 	 */
 	template <typename T>
 	const T& to () const  {	    
-	    if (this-> _value == NULL)
+	    if (this-> _value == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
 
 	    T t;
-	    if (!this-> _value-> isOf (&t))
+	    if (!this-> _value.get ()-> isOf (&t))
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-	    return *((T*) this-> _value);	    
+	    return *((const T*) this-> _value.get ());	    
 	}
 
 	/**
@@ -453,11 +463,11 @@ namespace semantic {
 	 */
 	template <typename T>
 	bool is () const  {	    
-	    if (this-> _value == NULL)
+	    if (this-> _value == nullptr)
 		return false;
 
 	    T t;
-	    return this-> _value-> isOf (&t); 			    
+	    return this-> _value.get ()-> isOf (&t); 			    
 	}
 	
 	/**

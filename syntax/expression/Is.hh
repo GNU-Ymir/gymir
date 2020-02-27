@@ -21,7 +21,7 @@ namespace syntax {
 
 	Is ();
 	
-	Is (const lexing::Word & loc);
+	Is (const lexing::Word & loc, const Expression & element, const std::vector <Expression> & params);
 
     public :
 
@@ -34,8 +34,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & location, const Expression & element, const std::vector <Expression> & params);
 	
-	Expression clone () const override;
-
 	bool isOf (const IExpression * type) const override;
 	
     };

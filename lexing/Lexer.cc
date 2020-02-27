@@ -6,6 +6,7 @@
 #include "diagnostic.h"
 #include "safe-ctype.h"
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/Memory.hh>
 #include <ymir/errors/_.hh>
 
 namespace lexing {
@@ -18,10 +19,16 @@ namespace lexing {
 	while (1) {
 	    char * buf = new (Z0) char[max];
 	    char * aux = fgets(buf, max, i);
-	    if (aux == NULL) return "";
+	    if (aux == NULL) {
+		delete buf;
+		return "";
+	    }
+	    
 	    std::string ret = std::string (buf);
 	    final += ret;
-	    delete buf;
+	    
+	    delete  buf;
+	    
 	    if (ret.size () != max - 1) return final;
 	    else max *= 2;      
 	}

@@ -25,7 +25,7 @@ namespace syntax {
 
 	TemplateChecker ();
 	
-	TemplateChecker (const lexing::Word & loc);
+	TemplateChecker (const lexing::Word & loc, const std::vector <Expression> & calls, const std::vector <Expression> & params);
 	
     public :
 
@@ -35,11 +35,6 @@ namespace syntax {
 	 * \param content the content declaration
 	 */
 	static Expression init (const lexing::Word & loc, const std::vector <Expression> & calls, const std::vector <Expression> & params);
-
-	/**
-	 * \brief Mandatory function used for proxy polymoprhism system
-	 */
-	Expression clone () const override;
 
 	/**
 	 * \brief Polymorphism dynamic casting

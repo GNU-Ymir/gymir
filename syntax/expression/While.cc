@@ -8,22 +8,15 @@ namespace syntax {
 	_content (Expression::empty ())
     {}    
     
-    While::While (const lexing::Word & loc) :
+    While::While (const lexing::Word & loc, const Expression & test, const Expression & content, bool isDo) :
 	IExpression (loc),
-	_test (Expression::empty ()),
-	_content (Expression::empty ())
+	_test (test),
+	_content (content),
+	_isDo (isDo)
     {}
 
     Expression While::init (const lexing::Word & location, const Expression & test, const Expression & content, bool isDo) {
-	auto ret = new (Z0) While (location);
-	ret-> _test = test;
-	ret-> _content = content;
-	ret-> _isDo = isDo;
-	return Expression {ret};
-    }
-
-    Expression While::clone () const {
-	return Expression {new While (*this)};
+	return Expression {new (Z0) While (location, test, content, isDo)};
     }
 
     bool While::isOf (const IExpression * type) const {

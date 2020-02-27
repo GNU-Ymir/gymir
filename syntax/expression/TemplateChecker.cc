@@ -6,19 +6,14 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}
     
-    TemplateChecker::TemplateChecker (const lexing::Word & loc) :
-	IExpression (loc)
+    TemplateChecker::TemplateChecker (const lexing::Word & loc, const std::vector <Expression> & calls, const std::vector <Expression> & params) :
+	IExpression (loc),
+	_parameters (params),
+	_calls (calls)
     {}    
     
     Expression TemplateChecker::init (const lexing::Word & location, const std::vector <Expression> & calls, const std::vector <Expression> & params) {
-	auto ret = new (Z0) TemplateChecker (location);
-	ret-> _parameters = params;
-	ret-> _calls = calls;
-	return Expression {ret};
-    }
-
-    Expression TemplateChecker::clone () const {
-	return Expression {new TemplateChecker (*this)};
+	return Expression {new (Z0) TemplateChecker (location, calls, params)};
     }
     
     bool TemplateChecker::isOf (const IExpression * type) const {

@@ -30,7 +30,7 @@ namespace syntax {
 
 	TupleDest ();
 	
-	TupleDest (const lexing::Word & loc);
+	TupleDest (const lexing::Word & loc, const std::vector <Expression> & vars, const Expression & value, bool isVariadic = false);
 
     public :
 
@@ -41,8 +41,6 @@ namespace syntax {
 	 * \param value the value (right operand)
 	 */
 	static Expression init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & value, bool isVariadic = false);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

@@ -14,7 +14,7 @@ namespace semantic {
 	class TraitRef : public Type {
 
 	    /** The id of the structure refered */
-	    Symbol _ref;
+	    std::weak_ptr <ISymbol> _ref;
 
 
 	private :
@@ -45,7 +45,7 @@ namespace semantic {
 
 	    bool needExplicitAlias () const override;
 
-	    const Symbol & getRef () const;
+	    Symbol getRef () const;
 	    
 	    std::string typeName () const override;
 

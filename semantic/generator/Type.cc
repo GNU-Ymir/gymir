@@ -26,7 +26,55 @@ namespace semantic {
 	
 	Generator Type::clone () const {
 	    return Generator{new (Z0) Type ()};
-	} 
+	}
+
+	Generator Type::init (const lexing::Word & loc, const Type & other) {
+	    auto ret = other.clone ();
+	    ret.to <Type> ().changeLocation (loc);
+	    return ret;
+	}
+	
+	Generator Type::init (const lexing::Word & loc, const Type & other, bool isMutable, bool isRef) {
+	    auto ret = init (other, isMutable, isRef);
+	    ret.to <Type> ().changeLocation (loc);
+	    return ret;
+	}
+	
+	Generator Type::init (const Type & other, bool isMutable) {
+	    return init (other, isMutable, other.isRef ());
+	}
+	
+	Generator Type::init (const Type & other, bool isMutable, bool isRef) {
+	    auto ret = other.createMutable (isMutable);
+	    ret.to <Type> ()._isRef = isRef;
+	    return ret;
+	}
+
+	Generator Type::init (const Type &other, const Generator & gen) {
+	    auto ret = other.clone ();
+	    ret.to <Type> ()._proxy = gen;
+	    return ret;
+	}
+	
+	Generator Type::createMutable (bool is) const {
+	    std::vector <Generator> inners;
+	    if (this-> _isComplex && !is) {
+		for (auto & it : this-> _inners) {
+		    if (!it.isEmpty ())
+			inners.push_back (Type::init (it.to <Type> (), false, false));
+		    // inner types are never ref, but for lambdas, funcptr and delegate but they override this func
+		    else inners.push_back (it);
+		} 
+	    } else inners = this-> _inners;
+	    
+	    auto ret = this-> clone ();	    
+	    if (ret.to <Type> ().isComplex ()) {
+		ret.to<Type> ().setInners (inners);
+	    }
+	    
+	    ret.to<Type> ()._isMutable  = is;
+	    return ret;	    
+	}	
 	
 	bool Type::isOf (const IGenerator * type) const {
 	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
@@ -72,20 +120,7 @@ namespace semantic {
 	bool Type::isComplex () const {
 	    return this-> _isComplex;
 	}
-	
-	void Type::isRef (bool is) {
-	    this-> _isRef = is;
-	}
-	
-	void Type::isMutable (bool is) {	    
-	    this-> _isMutable = is;
-	    if (this-> _isComplex && !is) {
-		for (auto & it : this-> _inners)
-		    if (!it.isEmpty ())
-			it.to <Type> ().isMutable (false);
-	    }	    
-	}
-
+		
 	void Type::setMutable (bool is) {
 	    this-> _isMutable = is;
 	}
@@ -105,11 +140,7 @@ namespace semantic {
 	    
 	    return this-> _isLocal;
 	}
-
-	void Type::isLocal (bool is) {
-	    this-> _isLocal = is;
-	}
-	
+       	
 	const std::vector<Generator> & Type::getInners () const {
 	    if (!this-> _isComplex)
 		Ymir::Error::halt ("%(r) - Getting inner data of a simple type !", "Critical");
@@ -126,7 +157,7 @@ namespace semantic {
 	
 	Generator Type::toDeeplyMutable () const {
 	    Generator ret = Generator {this-> clone ()};
-	    ret.to<Type> ().isMutable (true);
+	    ret.to<Type> ()._isMutable = true;
 	    
 	    if (this-> isComplex ()) {
 		std::vector <Generator> inners;
@@ -140,7 +171,7 @@ namespace semantic {
 
 	Generator Type::toMutable () const {
 	    Generator ret = Generator (this-> clone ());
-	    ret.to<Type> ().isMutable (true);
+	    ret.to<Type> ()._isMutable = true;
 
 	    if (this-> isComplex ()) {
 		std::vector <Generator> inners;
@@ -160,10 +191,10 @@ namespace semantic {
 	    else {
 		std::vector<Generator> inners = this-> getInners ();
 		for (auto & it : inners) 
-		    it.to <Type> ().isMutable (false);
+		    it.to <Type> ()._isMutable = false;
 		
 		Generator ret = Generator {this-> clone ()};
-		ret.to <Type> ().isMutable (true);
+		ret.to <Type> ()._isMutable = true;
 		ret.to <Type> ().setInners (inners);
 		return ret;
 	    }
@@ -190,10 +221,6 @@ namespace semantic {
 	    return false;
 	}
 	
-	void Type::setProxy (const Generator & proxy) {
-	    this-> _proxy = proxy;
-	}
-
 	const Generator & Type::getProxy () const {
 	    return this-> _proxy;
 	}	

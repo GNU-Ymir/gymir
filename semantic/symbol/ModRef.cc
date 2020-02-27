@@ -5,29 +5,20 @@ namespace semantic {
 
     ModRef::ModRef () :
 	ISymbol (lexing::Word::eof (), false),
-	_name (""),
-	_table (this)
+	_name ("")
     {}
     
     ModRef::ModRef (const lexing::Word & loc, const std::string & name, bool isWeak) :
 	ISymbol ({loc, name}, isWeak),
-	_name (name),
-	_table (this)
-    {
-	this-> setPublic ();
-    }
-
-
-    ModRef::ModRef (const ModRef & mod) :
-	ISymbol (mod),
-	_name (mod._name),
-	_table (mod._table.clone (this))
+	_name (name)
     {
 	this-> setPublic ();
     }
     
     Symbol ModRef::init (const lexing::Word & loc, const std::string & name, bool isWeak) {
-	return Symbol {new (Z0) ModRef (loc, name, isWeak)};
+	auto ret = Symbol {new (Z0) ModRef (loc, name, isWeak)};
+	ret.to <ModRef> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
 
     Symbol ModRef::init (const lexing::Word & loc, const std::vector <std::string> & names_, bool isWeak) {
@@ -53,16 +44,16 @@ namespace semantic {
     }
 
     void ModRef::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }   
 
     void ModRef::insertTemplate (const Symbol & sym) {
-	this-> _table.insertTemplate (sym);
+	this-> _table-> insertTemplate (sym);
     }
 
     
     std::vector<Symbol> ModRef::getTemplates () const {
-	return this-> _table.getTemplates ();
+	return this-> _table-> getTemplates ();
     }    
     
     bool ModRef::equals (const Symbol & other, bool) const {
@@ -72,14 +63,14 @@ namespace semantic {
 
     Symbol ModRef::merge (const ModRef & other) const {
 	std::vector <Symbol> ret;
-	for (auto & i_ : this-> _table.getAll ()) {
+	for (auto & i_ : this-> _table-> getAll ()) {
 	    auto & i = i_.to<ModRef> ();
 	    bool add = true;
-	    for (auto & j_ : other._table.getAll ()) {
+	    for (auto & j_ : other._table-> getAll ()) {
 		auto & j = j_.to<ModRef> ();		
 		if (j._name == i._name) {
-		    if ((j._table.getAll ().size () != 0 && i._table.getAll ().size () != 0) ||
-			(j._table.getAll ().size () == 0 && i._table.getAll ().size () == 0) 
+		    if ((j._table-> getAll ().size () != 0 && i._table-> getAll ().size () != 0) ||
+			(j._table-> getAll ().size () == 0 && i._table-> getAll ().size () == 0) 
 		    ) {
 			add = false;
 			ret.push_back (i.merge (j));
@@ -90,14 +81,14 @@ namespace semantic {
 	    if (add) ret.push_back (i_);
 	}
 
-	for (auto & j_ : other._table.getAll ()) {
+	for (auto & j_ : other._table-> getAll ()) {
 	    auto & j = j_.to<ModRef> ();
 	    bool add = true;
 	    for (auto & z_ : ret) {
 		auto & z = z_.to<ModRef> ();
 		if (j._name == z._name) {
-		    if ((j._table.getAll ().size () != 0 && z._table.getAll ().size () != 0) ||
-			(j._table.getAll ().size () == 0 && z._table.getAll ().size () == 0)
+		    if ((j._table-> getAll ().size () != 0 && z._table-> getAll ().size () != 0) ||
+			(j._table-> getAll ().size () == 0 && z._table-> getAll ().size () == 0)
 		    ) {
 			add = false;
 			break;
@@ -120,28 +111,28 @@ namespace semantic {
 
     std::vector <Symbol> ModRef::getLocal (const std::string & name) const {
 	// This is a leaf, we have the right to access to the data of this module	
-	if (this-> _table.getAll ().size () == 0) {
+	if (this-> _table-> getAll ().size () == 0) {
 	    auto real_name = this-> getRealName ();
 	    auto  mod = Symbol::getModuleByPath (real_name);
 	    return mod.getLocal (name);
 	} else {
-	    return this-> _table.get (name);
+	    return this-> _table-> get (name);
 	}	
     }
 
     std::vector <Symbol> ModRef::getLocalPublic (const std::string & name) const {
 	// This is a leaf, we have the right to access to the data of this module	
-	if (this-> _table.getAll ().size () == 0) {
+	if (this-> _table-> getAll ().size () == 0) {
 	    auto real_name = this-> getRealName ();
 	    auto  mod = Symbol::getModuleByPath (real_name);
 	    return mod.getLocalPublic (name);
 	} else {
-	    return this-> _table.getPublic (name);
+	    return this-> _table-> getPublic (name);
 	}	
     }
 
     Symbol ModRef::getModule () const {
-	if (this-> _table.getAll ().size () == 0) {
+	if (this-> _table-> getAll ().size () == 0) {
 	    auto real_name = this-> getRealName ();
 	    auto  mod = Symbol::getModuleByPath (real_name);
 	    return mod;	    
@@ -162,7 +153,7 @@ namespace semantic {
     std::string ModRef::formatTree (int i) const {
 	Ymir::OutBuffer buf;	
 	buf.writefln ("%*- %", i, "|\t", this-> getModName ());
-	for (auto inner : this-> _table.getAll ())
+	for (auto inner : this-> _table-> getAll ())
 	    buf.write (inner.formatTree (i + 1));
 	return buf.str ();
     }

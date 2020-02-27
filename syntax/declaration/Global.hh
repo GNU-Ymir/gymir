@@ -15,9 +15,6 @@ namespace syntax {
      */
     class Global : public IDeclaration {
 
-	/** The name of the variable */
-	lexing::Word _location;
-
 	/** The type of the variable (may be empty () if !_value.empty ())*/
 	Expression _decl;
 
@@ -26,18 +23,10 @@ namespace syntax {
 	friend Declaration; // Needed for dynamic casting 
 	
 	Global ();
+
+	Global (const lexing::Word & loc, const Expression & decl);
 	
     public : 
-
-	/**
-	 * \brief Create an empty global var
-	 */
-	static Declaration init ();
-
-	/**
-	 * \brief Copy another global var
-	 */
-	static Declaration init (const Global & gl);
 
 	/**
 	 * \brief Init a new global var
@@ -46,11 +35,6 @@ namespace syntax {
 	 */
 	static Declaration init (const lexing::Word & location, const Expression & decl);
 
-	/**
-	 * \brief Mandatory function used by proxy polymoprhism system
-	 */
-	Declaration clone () const override;
-	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */
@@ -61,7 +45,6 @@ namespace syntax {
 	 */
 	const Expression & getContent () const;
 
-	const lexing::Word & getLocation () const;
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	

@@ -10,7 +10,7 @@ namespace semantic {
 	    _value (Generator::empty ()),
 	    _typeInfo (Generator::empty ())
 	{
-	    this-> isReturner (true);
+	    this-> setReturner (true);
 	}
 
 	Throw::Throw (const lexing::Word & loc, const Generator & typeInfo, const Generator & value) :
@@ -18,14 +18,12 @@ namespace semantic {
 	    _value (value),
 	    _typeInfo (typeInfo)
 	{
-	    this-> isReturner (true);
-	    auto type = this-> _value.to <Value> ().getType ();
-	    type.changeLocation (loc);
-	    this-> setThrowers ({type});
+	    this-> setReturner (true);
+	    this-> setThrowers ({Generator::init (loc, this-> _value.to <Value> ().getType ())});
 	}
 	
 	Generator Throw::init (const lexing::Word & loc, const Generator & typeInfo, const Generator & value) {
-	    return Generator {new Throw (loc,  typeInfo, value)};
+	    return Generator {new (Z0) Throw (loc,  typeInfo, value)};
 	}
     
 	Generator Throw::clone () const {

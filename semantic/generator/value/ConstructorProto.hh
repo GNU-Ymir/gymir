@@ -17,7 +17,7 @@ namespace semantic {
 	    
 	    std::string _mangleName;
 
-	    Symbol _ref;
+	    std::weak_ptr <ISymbol> _ref;
 	    
 	private :
 
@@ -34,6 +34,8 @@ namespace semantic {
 	     * \warning left and right operand must generate int typed values
 	     */
 	    static Generator init (const lexing::Word & loc, const std::string & name, const Symbol & ref, const Generator & type, const std::vector <Generator> & params, const std::vector <Generator> &throwers);
+
+	    static Generator init (const ConstructorProto & proto, const std::string & name);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -70,9 +72,6 @@ namespace semantic {
 	     */
 	    const std::string & getName () const;
 	    
-
-	    void setMangledName (const std::string & name);
-
 
 	    const std::string & getMangledName () const;
 

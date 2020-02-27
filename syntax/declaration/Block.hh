@@ -14,8 +14,6 @@ namespace syntax {
      */
     class DeclBlock : public IDeclaration {
 
-	lexing::Word _token;
-
 	std::vector <Declaration> _inner;
 
 	bool _isPrivate;
@@ -28,19 +26,17 @@ namespace syntax {
 
 	DeclBlock ();
 
+	DeclBlock (const lexing::Word & loc, const std::vector <Declaration> & content, bool isPrivate, bool isProt);
+
     public :
 
 	static Declaration init (const DeclBlock & decl);
 	
 	static Declaration init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate, bool isProt);
 
-	Declaration clone () const override;
-
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;	
 
 	bool isOf (const IDeclaration * type) const override;
-
-	const lexing::Word & getLocation () const;
 
 	bool isPrivate () const;
 

@@ -12,9 +12,6 @@ namespace syntax {
 	/** the name of the vars */
 	Expression _mixin;
 
-	/** The name of the trait */
-	lexing::Word _location;
-
 	std::vector <Declaration> _declarations;
 	
     private :
@@ -23,18 +20,9 @@ namespace syntax {
 
 	Mixin ();
 
+	Mixin (const lexing::Word & loc, const Expression & mixin, const std::vector <Declaration> & decls);
+
     public :
-
-	/** 
-	 * \brief Create an empty use
-	 */
-	static Declaration init ();
-
-	/** 
-	 * \brief Create a use from copy
-	 * \param mixin the mixin to copy
-	*/
-	static Declaration init (const Mixin & mixin);
 
 	/**
 	 * \brief Create a new trait
@@ -44,16 +32,9 @@ namespace syntax {
 	static Declaration init (const lexing::Word & location, const Expression & mixin, const std::vector <Declaration> & declarations);
 
 	/**
-	 * Mandatory function for proxy polymoprhism system
-	 */
-	Declaration clone () const override;
-
-	/**
 	 * Mandatory function for dynamic casting
 	 */
 	bool isOf (const IDeclaration * type) const override;
-
-	const lexing::Word & getLocation () const;
 
 	const Expression & getMixin () const;
 

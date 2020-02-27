@@ -16,24 +16,18 @@ namespace syntax {
      */
     class Alias : public IDeclaration {
 
-	/** The identifier of the alias*/
-	lexing::Word _ident;
-
 	/** The value of the alias */
 	Expression _value;
 
     private :
 
 	friend Declaration; // Needed for dynamic casting 
-	
+
 	Alias ();
 	
+	Alias (const lexing::Word & ident, const Expression & value);
+	
     public :
-
-	/**
-	 * \brief Create an empty alias
-	 */
-	static Declaration init (); 
 
 	/** 
 	 * \brief Create a new alias
@@ -49,36 +43,13 @@ namespace syntax {
 	static Declaration init (const Alias & alias);
 
 
-	/**
-	 * \brief Construct a copy, mandatory function for proxy polymoprhism system
-	 */
-	Declaration clone () const override;
-
-
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */
-	bool isOf (const IDeclaration * type) const override;
-
-	/**
-	 * \brief Set the identifier of the alias
-	 * \param ident the new identifier 
-	 */
-	void setName (const lexing::Word & ident);
-
-	/**
-	 * \return the identifier of the alias
-	 */
-	const lexing::Word & getName () const;	
+	bool isOf (const IDeclaration * type) const override;	
 	
-	/**
-	 * \brief Set the value of the alias
-	 * \param value the value of the alias
-	 */
-	void setValue (const Expression & value);	
-
 	/**
 	 * \return the value of the alias
 	 */

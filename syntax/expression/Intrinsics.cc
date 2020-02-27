@@ -8,19 +8,13 @@ namespace syntax {
 	_value (Expression::empty ())
     {}
     
-    Intrinsics::Intrinsics (const lexing::Word & loc) :
+    Intrinsics::Intrinsics (const lexing::Word & loc, const Expression & value) :
 	IExpression (loc),
-	_value (Expression::empty ())
+	_value (value)
     {}
 
     Expression Intrinsics::init (const lexing::Word & location, const Expression & value) {
-	auto ret = new (Z0) Intrinsics (location);
-	ret-> _value = value;
-	return Expression {ret};
-    }
-
-    Expression Intrinsics::clone () const {
-	return Expression {new (Z0) Intrinsics (*this)};
+	return Expression {new (Z0) Intrinsics (location, value)};
     }
 
     bool Intrinsics::isOf (const IExpression * type) const {

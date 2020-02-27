@@ -8,21 +8,14 @@ namespace syntax {
 	_content (Expression::empty ())
     {}
     
-    Cast::Cast (const lexing::Word & loc) :
+    Cast::Cast (const lexing::Word & loc, const Expression & type, const Expression & content) :
 	IExpression (loc),
-	_type (Expression::empty ()),
-	_content (Expression::empty ())
+	_type (type),
+	_content (content)
     {}
 
     Expression Cast::init (const lexing::Word & location, const Expression & type, const Expression & content) {
-	auto ret = new (Z0) Cast (location);
-	ret-> _type = type;
-	ret-> _content = content;
-	return Expression {ret};
-    }
-
-    Expression Cast::clone () const {
-	return Expression {new (Z0) Cast (*this)};
+	return Expression {new (Z0) Cast (location, type, content)};
     }
 
     bool Cast::isOf (const IExpression * type) const {

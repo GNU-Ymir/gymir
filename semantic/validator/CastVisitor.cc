@@ -22,22 +22,22 @@ namespace semantic {
 	    match (type) {
 		of (Integer, in, {
 			if (value.to <Value> ().getType ().is<Integer> ()) {
-			    type.to <Type> ().isMutable (value.to <Value> ().getType ().to <Type> ().isMutable ());
+			    type = Type::init (type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
 			    return generator::Cast::init (expression.getLocation (), type, value);
 			} else if (value.to <Value> ().getType ().is<Char> () && !in.isSigned ()) {
-			    type.to <Type> ().isMutable (false);
+			    type = Type::init (type.to <Type> (), false);
 			    return generator::Cast::init (expression.getLocation (), type, value);
 			}
 		    }
 		) else of (Float, flt ATTRIBUTE_UNUSED, {
 			if (value.to <Value> ().getType ().is<Float> ()) {
-			    type.to <Type> ().isMutable (value.to <Value> ().getType ().to <Type> ().isMutable ());
+			    type = Type::init (type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
 			    return generator::Cast::init (expression.getLocation (), type, value);
 			}
 		    }
 		) else of (Char, chr ATTRIBUTE_UNUSED, {
 			if (value.to <Value> ().getType ().is<Char> ()) {
-			    type.to <Type> ().isMutable (value.to <Value> ().getType ().to <Type> ().isMutable ());
+			    type = Type::init (type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
 			    return generator::Cast::init (expression.getLocation (), type, value);
 			}
 		    }

@@ -17,7 +17,7 @@ namespace semantic {
 	{}
 	
 	Generator MethodTemplateRef::init (const lexing::Word & loc, const Symbol & ref, const Generator & self) {
-	    return Generator {new MethodTemplateRef (loc, ref, self)};
+	    return Generator {new (Z0) MethodTemplateRef (loc, ref, self)};
 	}
     
 	Generator MethodTemplateRef::clone () const {

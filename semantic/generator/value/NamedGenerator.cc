@@ -20,7 +20,7 @@ namespace semantic {
 	}
         
 	Generator NamedGenerator::clone () const {
-	    return Generator {new NamedGenerator (*this)};
+	    return Generator {new (Z0) NamedGenerator (*this)};
 	}
 
 	bool NamedGenerator::isOf (const IGenerator * type) const {

@@ -22,7 +22,7 @@ namespace syntax {
 
 	Throw ();
 	
-	Throw (const lexing::Word & loc);
+	Throw (const lexing::Word & loc, const Expression & value);
 
     public :
 
@@ -32,8 +32,6 @@ namespace syntax {
 	 * \param value the expression that is thrown
 	 */
 	static Expression init (const lexing::Word & location, const Expression & value);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

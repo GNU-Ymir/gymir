@@ -32,7 +32,7 @@ namespace syntax {
 
 	For ();
 	
-	For (const lexing::Word & loc);
+	For (const lexing::Word & loc, const std::vector <Expression> & vars, const Expression & iter, const Expression & block);
 
     public :
 
@@ -44,8 +44,6 @@ namespace syntax {
 	 * \param block the content of the loop
 	 */
 	static Expression init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & iter, const Expression & block);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

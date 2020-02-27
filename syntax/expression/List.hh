@@ -25,7 +25,7 @@ namespace syntax {
 
 	List ();
 	
-	List (const lexing::Word & loc);
+	List (const lexing::Word & loc, const lexing::Word & end, const std::vector <Expression> & params);
 
     public :
 
@@ -37,8 +37,9 @@ namespace syntax {
 	 * \param params the parameters of the operation
 	 */
 	static Expression init (const lexing::Word & location, const lexing::Word & end, const std::vector <Expression> & params);
+
+	static Expression init (const List & other);
 	
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

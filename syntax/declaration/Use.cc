@@ -2,29 +2,19 @@
 
 namespace syntax {
 
-    Use::Use () : _module (Expression::empty ())
+    Use::Use () :
+	IDeclaration (lexing::Word::eof ()),
+	_module (Expression::empty ())
     {}
 
-    Declaration Use::init () {
-	return Declaration {new (Z0) Use ()};
-    }
 
-    Declaration Use::init (const Use & use) {
-	auto ret = new (Z0) Use ();
-	ret-> _location = use._location;
-	ret-> _module = use._module;
-	return Declaration {ret};
-    }
+    Use::Use (const lexing::Word & loc, const Expression & module) :
+	IDeclaration (loc),
+	_module (module)
+    {}
 
     Declaration Use::init (const lexing::Word & loc, const Expression & module) {
-	auto ret = new (Z0) Use ();
-	ret-> _module = module;
-	ret-> _location = loc;
-	return Declaration {ret};
-    }
-
-    Declaration Use::clone () const {
-	return Use::init (*this);
+	return Declaration {new (Z0) Use (loc, module)};
     }
 
     bool Use::isOf (const IDeclaration * type) const {
@@ -37,10 +27,6 @@ namespace syntax {
     void Use::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Use> ", i, '\t');
 	this-> _module.treePrint (stream, i + 1);
-    }
-
-    const lexing::Word & Use::getLocation () const {
-	return this-> _location;
     }
 
     const Expression & Use::getModule () const {

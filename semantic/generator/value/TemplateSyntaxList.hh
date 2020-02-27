@@ -30,8 +30,6 @@ namespace semantic {
 
 	    static syntax::Expression init (const lexing::Word & location, const std::vector<Generator> & gen);
 
-	    syntax::Expression clone () const override;
-
 	    void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	    
 	    bool isOf (const syntax::IExpression* type) const override;

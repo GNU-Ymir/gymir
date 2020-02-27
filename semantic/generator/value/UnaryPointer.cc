@@ -24,7 +24,7 @@ namespace semantic {
 	}
 	
 	Generator UnaryPointer::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & operand) {
-	    return Generator {new UnaryPointer (loc, op, type, operand)};
+	    return Generator {new (Z0) UnaryPointer (loc, op, type, operand)};
 	}
 
 	Generator UnaryPointer::clone () const {

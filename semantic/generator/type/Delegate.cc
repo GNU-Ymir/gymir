@@ -45,8 +45,10 @@ namespace semantic {
 	    return true;
 	}
 
-	void Delegate::isMutable (bool is) {
-	    this-> setMutable (is);
+	Generator Delegate::createMutable (bool is) const {
+	    auto ret = this-> clone ();
+	    ret.to <Delegate> ().setMutable (is);
+	    return ret;
 	}
 	
 	std::string Delegate::typeName () const {

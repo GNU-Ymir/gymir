@@ -27,7 +27,6 @@ namespace syntax {
 
 	static Expression init (const lexing::Word & token, const std::vector <DecoratorWord> & decos, const Expression & content);
 
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

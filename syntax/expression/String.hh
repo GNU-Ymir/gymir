@@ -29,7 +29,6 @@ namespace syntax {
 
 	static Expression init (const lexing::Word & begin, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix);
 
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

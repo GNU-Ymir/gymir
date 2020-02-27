@@ -62,6 +62,21 @@ namespace semantic {
 	    
 	public : 
 
+	    static Generator init (const lexing::Word & loc, const Type & other);
+	    
+	    static Generator init (const lexing::Word & loc, const Type & other, bool isMutable, bool isRef);
+
+	    static Generator init (const Type & other, bool isMutable, bool isRef);
+	    
+	    static Generator init (const Type & other, bool isMutable);
+	    
+	    /** 
+	     * \brief Set the proxy of the type, used in Enum 
+	     * \warning not the same proxy as the design pattern
+	     * \param gen, an EnumRef, that proxy the type
+	     */
+	    static Generator init (const Type & other, const Generator & gen);
+	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
 	     */
@@ -112,18 +127,7 @@ namespace semantic {
 	    /**
 	     * \return assuming that isComplex () == true, the content type of this type
 	     */
-	    const std::vector<Generator> & getInners () const;	    
-	    
-	    /**
-	     * \brief Set if the type is a reference
-	     */
-	    void isRef (bool is);
-	   	    
-	    /**
-	     * \brief if the type is mutable
-	     */
-	    virtual void isMutable (bool is);	    
-
+	    const std::vector<Generator> & getInners () const;	    	    
 	    
 	    /**
 	     * \brief Transform the type into the same type but deeply mutable (every sub type are also mutable)
@@ -171,19 +175,6 @@ namespace semantic {
 	     */
 	    virtual bool isLocal () const;
 
-	    /**
-	     * \warning applicable iif this-> isComplex ()
-	     * \brief Change the locality of the type 
-	     * \brief Set to true, means the type is refering to local datas
-	     */
-	    void isLocal (bool local);
-
-	    /** 
-	     * \brief Set the proxy of the type, used in Enum 
-	     * \warning not the same proxy as the design pattern
-	     * \param gen, an EnumRef, that proxy the type
-	     */
-	    void setProxy (const Generator & gen);
 
 	    /**
 	     * \warning not the same proxy as the design pattern
@@ -223,7 +214,12 @@ namespace semantic {
 	     * Warning different of isMutable (bool)
 	     */
 	    void setMutable (bool is);
-	    
+
+	    /**
+	     * Used in the init function
+	     */
+	    virtual Generator createMutable (bool is) const;
+	   	    
 	};	
 
     }

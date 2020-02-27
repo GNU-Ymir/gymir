@@ -9,7 +9,7 @@ namespace semantic {
 
 	class ModuleAccess : public Value {
 
-	    Symbol _ref;
+	    std::weak_ptr <ISymbol> _ref;
 	    
 	private :
 
@@ -51,7 +51,7 @@ namespace semantic {
 	    /**
 	     * \return the module reference that is accessed by this generator
 	     */
-	    const Symbol & getModRef () const;
+	    Symbol getModRef () const;
 
 	    std::string prettyString () const override;
 	};

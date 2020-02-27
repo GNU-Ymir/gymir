@@ -14,7 +14,7 @@ namespace semantic {
 	class StructRef : public Type {
 
 	    /** The id of the structure refered */
-	    Symbol _ref;
+	    std::weak_ptr <ISymbol> _ref;
 
 	private :
 
@@ -47,7 +47,7 @@ namespace semantic {
 
 	    bool isRefOf (const Symbol & sym) const;
 
-	    const Symbol & getRef () const;
+	    Symbol getRef () const;
 
 	    virtual int mutabilityLevel (int level) const override;
 

@@ -2,11 +2,11 @@
 
 #include <ymir/utils/Colors.hh>
 #include <ymir/utils/StringEnum.hh>
-#include <ymir/utils/Memory.hh>
 #include <string>
 #include <map>
 #include <ymir/utils/Range.hh>
 #include <vector>
+#include <list>
 #include <set>
 #include <type_traits>
 
@@ -26,7 +26,7 @@ namespace Ymir {
     class OutBuffer  {
     private :
 	
-	char * current = NULL;
+	std::vector<char> current;
 	ulong len = 0;
 	ulong capacity = 0;
 	std::vector <std::string> _currentColor;
@@ -37,6 +37,8 @@ namespace Ymir {
 	OutBuffer (T ... args) {
 	    write (args ...);
 	}
+
+	~OutBuffer ();
 	
 	void writef (const char* s) {
 	    write (s);
@@ -73,7 +75,7 @@ namespace Ymir {
 	}
 	
 	std::string str () {
-	    return std::string (current, len);
+	    return std::string (current.data (), len);
 	}
 
     private :
@@ -158,6 +160,17 @@ namespace Ymir {
 	    }
 	}
 
+	template <typename T>
+	void write_ (const std::list <T> &elem) {
+	    int i = 0;
+	    for (auto it : elem) {
+		if (i != 0) write_ (", ");
+		write_ (it);
+		i += 1;
+	    }
+	}
+
+	
 	template <typename T>
 	void write_ (const std::set <T> &elem) {
 	    int i = 0;

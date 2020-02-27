@@ -24,7 +24,7 @@ namespace syntax {
 
 	TemplateCall ();
 	
-	TemplateCall (const lexing::Word & loc);
+	TemplateCall (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & content);
 	
     public :
 
@@ -36,25 +36,10 @@ namespace syntax {
 	static Expression init (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & content);
 
 	/**
-	 * \brief Mandatory function used for proxy polymoprhism system
-	 */
-	Expression clone () const override;
-
-	/**
 	 * \brief Polymorphism dynamic casting
 	 */
 	bool isOf (const IExpression * type) const override;
 	
-	/**
-	 * \brief Add a new template parameter
-	 * \param param the template param
-	 */
-	void addParameter (const Expression & param);
-
-	/**
-	 * \brief Change the content of the template
-	 */
-	void setContent (const Expression & content);
 
 	const std::vector <Expression> & getParameters () const;
 

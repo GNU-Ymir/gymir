@@ -24,7 +24,7 @@ namespace semantic {
 	}
 	
 	Generator UnaryBool::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & operand) {
-	    return Generator {new UnaryBool (loc, op, type, operand)};
+	    return Generator {new (Z0) UnaryBool (loc, op, type, operand)};
 	}
 
 	Generator UnaryBool::clone () const {

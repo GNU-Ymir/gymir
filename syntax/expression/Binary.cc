@@ -9,26 +9,21 @@ namespace syntax {
 	_type (Expression::empty ())
     {}
     
-    Binary::Binary (const lexing::Word & loc) :
+    Binary::Binary (const lexing::Word & loc, const Expression & left, const Expression & right, const Expression & type) :
 	IExpression (loc),
-	_left (Expression::empty ()),
-	_right (Expression::empty ()),
-	_type (Expression::empty ())
+	_left (left),
+	_right (right),
+	_type (type)
     {}
 
     Expression Binary::init (const lexing::Word & location, const Expression & left, const Expression & right, const Expression & type) {
-	auto ret = new (Z0) Binary (location);
-	ret-> _op = location;
-	ret-> _left = left;
-	ret-> _right = right;
-	ret-> _type = type;
-	return Expression {ret};
+	return Expression {new (Z0) Binary (location, left, right, type)};
     }
 
-    Expression Binary::clone () const {
-	return Expression {new (Z0) Binary (*this)};
+    Expression Binary::init (const Binary & other) {
+	return Expression {new (Z0) Binary (other)};
     }
-
+    
     bool Binary::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Binary thisType; // That's why we cannot implement it for all class

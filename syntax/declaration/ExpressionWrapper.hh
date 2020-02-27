@@ -23,29 +23,16 @@ namespace syntax {
 	friend Declaration; // Needed for dynamic casting 
 	
 	ExpressionWrapper ();
+
+	ExpressionWrapper (const lexing::Word & loc, const Expression & content);
 	
     public : 
-
-	/**
-	 * \brief Create an empty wrapper
-	 */
-	static Declaration init ();
-
-	/**
-	 * \brief Copy another expression wrapper
-	 */
-	static Declaration init (const ExpressionWrapper & gl);
 
 	/**
 	 * \brief Init a wrapper for content
 	 * \param content the content of the wrapper
 	 */
-	static Declaration init (const Expression & content);
-	
-	/**
-	 * \brief Mandatory function used by proxy polymoprhism system
-	 */
-	Declaration clone () const override;
+	static Declaration init (const lexing::Word & loc, const Expression & content);
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	

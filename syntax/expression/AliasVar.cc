@@ -11,12 +11,7 @@ namespace syntax {
     {}
         
     Expression AliasVar::init (const lexing::Word & location) {
-	auto ret = new (Z0) AliasVar (location);
-	return Expression {ret};
-    }
-
-    Expression AliasVar::clone () const {
-	return Expression {new AliasVar (*this)};
+	return Expression {new (Z0) AliasVar (location)};
     }
 
     bool AliasVar::isOf (const IExpression * type) const {

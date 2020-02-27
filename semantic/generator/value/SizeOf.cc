@@ -17,7 +17,7 @@ namespace semantic {
 	}
 	
 	Generator SizeOf::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new SizeOf (loc, type, who)};
+	    return Generator {new (Z0) SizeOf (loc, type, who)};
 	}
     
 	Generator SizeOf::clone () const {

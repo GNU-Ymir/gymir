@@ -1,5 +1,32 @@
 #include <ymir/tree/Tree.hh>
 #include <ymir/tree/StmtList.hh>
+#include "config.h"
+#include "system.h"
+#include "coretypes.h"
+
+#include "target.h"
+#include "tree-iterator.h"
+#include "input.h"
+#include "diagnostic.h"
+#include "stringpool.h"
+#include "cgraph.h"
+#include "gimplify.h"
+#include "gimple-expr.h"
+#include "convert.h"
+#include "print-tree.h"
+#include "stor-layout.h"
+#include "fold-const.h"
+
+#include "convert.h"
+#include "langhooks.h"
+#include "ubsan.h"
+#include "stringpool.h"
+#include "attribs.h"
+#include "asan.h"
+#include "tree-pretty-print.h"
+#include "print-tree.h"
+#include "cppdefault.h"
+#include "tm.h"
 
 namespace generic {
 
@@ -862,6 +889,14 @@ namespace generic {
 
     void Tree::print () const {
 	debug_tree (this-> getTree ());
+    }
+
+    void Tree::gimplifyFunction (const Tree & fn_decl) {
+	gimplify_function_tree (fn_decl.getTree ());
+    }
+
+    void Tree::finalizeFunction (const Tree & fn_decl) {
+	cgraph_node::finalize_function (fn_decl.getTree (), true);
     }
     
 }

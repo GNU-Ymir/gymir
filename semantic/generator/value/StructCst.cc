@@ -31,7 +31,7 @@ namespace semantic {
 	}
 	
 	Generator StructCst::init (const lexing::Word & loc, const Generator & type, const Generator & str, const std::vector<Generator> & types, const std::vector <Generator> & params) {
-	    return Generator {new StructCst (loc, type, str, types, params)};
+	    return Generator {new (Z0) StructCst (loc, type, str, types, params)};
 	}
     
 	Generator StructCst::clone () const {

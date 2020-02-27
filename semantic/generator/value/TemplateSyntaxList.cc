@@ -14,11 +14,7 @@ namespace semantic {
 	{}
 
 	syntax::Expression TemplateSyntaxList::init (const lexing::Word & lex, const std::vector <Generator> & contents) {
-	    return syntax::Expression {new TemplateSyntaxList (lex, contents)};
-	}
-
-	syntax::Expression TemplateSyntaxList::clone () const {
-	    return syntax::Expression {new TemplateSyntaxList (*this)};
+	    return syntax::Expression {new (Z0) TemplateSyntaxList (lex, contents)};
 	}
 
 	bool TemplateSyntaxList::isOf (const syntax::IExpression * type) const {

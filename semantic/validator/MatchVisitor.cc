@@ -34,21 +34,21 @@ namespace semantic {
 	    auto & actions  = expression.getActions ();
 	    Generator type (Generator::empty ());
 	    bool isMandatory = false;
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    for (auto it_ : Ymir::r (0, matchers.size ())) {
 		auto it = matchers.size () - 1 - it_; // We get them in the reverse order to have the tests in the right order
 		Generator test (Generator::empty ());
 		bool local_mandatory = false;
 		this-> _context.enterBlock ();
-		{
-		    TRY (
-			test = this-> validateMatch (value, matchers [it], local_mandatory);
-			if (local_mandatory) isMandatory = true;
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}
+		
+		try {
+		    test = this-> validateMatch (value, matchers [it], local_mandatory);
+		    if (local_mandatory) isMandatory = true;
+		} catch (Error::ErrorList list) {
+			
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+		
 		
 		if (!test.isEmpty ()) { // size == 2, if succeed
 		    auto content = this-> _context.validateValue (actions [it]);
@@ -75,21 +75,22 @@ namespace semantic {
 			result = Conditional::init (matchers [it].getLocation (), type, test, content, result, local_mandatory); 
 		}
 		
-		{
-		    TRY (
-			if (errors.size () != 0)
-			    this-> _context.discardAllLocals ();
+		if (type.isEmpty ()) type = Void::init (expression.getLocation ());
+				
+		try {
+		    if (errors.size () != 0)
+			this-> _context.discardAllLocals ();
 			
-			this-> _context.quitBlock ();
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}
+		    this-> _context.quitBlock ();
+		} catch (Error::ErrorList list) {
+			
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+		
 	    }
 
 	    if (errors.size () != 0)
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    
 	    if (!isMandatory && (!type.is<Void> () || expression.isFinal ())) {
 		if (!type.is<Void> ()) {
@@ -135,10 +136,10 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchVarDecl (const Generator & value_, const syntax::VarDecl & var, bool & isMandatory) {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    Generator test (Generator::empty ());
 	    Generator varDecl (Generator::empty ());
-	    TRY (
+	    try {
 		Generator value (value_);
 		if (var.getName () != Keys::UNDER)
 		    this-> _context.verifyShadow (var.getName ());
@@ -148,14 +149,13 @@ namespace semantic {
 		if (!var.getType ().isEmpty ())		
 		    varType = this-> _context.validateType (var.getType ());
 		else {
-		    varType = value.to <Value> ().getType (); // to have a vardecl, we must at least have a type or a value
-		    varType.to <Type> ().isRef (false);
-		    varType.to <Type> ().isMutable (false);
+		    varType = Type::init (value.to <Value> ().getType ().to<Type> (), false, false); // to have a vardecl, we must at least have a type or a value
 		}	    
 
 		bool isMutable = false;
 		bool isRef = false;
-		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable);
+		bool dmut = false;
+		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut);
 		// The type checking is made in reverse
 		// We want to be able to get an inherit class, from an ancestor class
 		// That is exactly the reverse of function call, or var affectation
@@ -198,14 +198,14 @@ namespace semantic {
 		    this-> _context.insertLocal (var.getName ().str, varDecl);
 		}
 				
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors = msgs;
+	    } catch (Error::ErrorList list) {
+		
+		errors = list.errors;
 		errors.insert (errors.begin (), Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
-	    } FINALLY;
+	    } 
 
 	    if (errors.size () != 0)
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    
 	    return Set::init (var.getLocation (), Bool::init (value_.getLocation ()), {varDecl, test});
 	}
@@ -227,13 +227,13 @@ namespace semantic {
 		auto call = syntax::MultOperator::init (
 		    {loc, Token::LPAR}, {loc, Token::RPAR},
 		    templ,
-		    {TemplateSyntaxWrapper::init (value.getLocation (), value), bin.clone ()}
+		    {TemplateSyntaxWrapper::init (value.getLocation (), value), syntax::Binary::init (bin)}
 		);
 		
 		return this-> _context.validateValue (call);
 	    }
 	    
-	    return validateMatchAnything (value, bin.clone (), isMandatory);	    
+	    return validateMatchAnything (value, syntax::Binary::init (bin), isMandatory);	    
 	}
 
 	Generator MatchVisitor::validateMatchList (const Generator & value, const syntax::List & lst, bool & isMandatory) {
@@ -281,7 +281,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    return validateMatchAnything (value, lst.clone (), isMandatory);
+	    return validateMatchAnything (value, syntax::List::init (lst), isMandatory);
 	}
 
 	Generator MatchVisitor::validateMatchCall (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
@@ -297,12 +297,12 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchCallClass (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    Generator globTest (Generator::empty ());
 	    auto loc = call.getLocation ();
 	    Generator type (Generator::empty ());
 	    
-	    TRY (
+	    try {
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
 		    type = this-> _context.validateType (call.getLeft ());
 		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
@@ -324,18 +324,17 @@ namespace semantic {
 			globTest = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		    }
 		}
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } catch (Error::ErrorList list) {
+		
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		errors.insert (errors.begin (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));		
-	    } FINALLY;
+	    } 
 
 	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    }
 	    
-	    type.to <Type> ().isMutable (value.to <Value> ().getType ().to <Type> ().isMutable ());
-	    type.to <Type> ().isRef (false);
+	    type = Type::init (type.to<Type> (), value.to <Value> ().getType ().to <Type> ().isMutable (), false);
 	    
 	    // Simple affectation is sufficiant, since it is a Class, and therefore already a ref
 	    auto castedValue = UniqValue::init (call.getLocation (), type, Cast::init (call.getLocation (), type, value));
@@ -352,7 +351,7 @@ namespace semantic {
 		auto innerVal = this-> _context.validateValue (bin);		
 		if (value.is <Referencer> ()) {
 		    auto type = innerVal.to <Value> ().getType ();
-		    type.to <Type> ().isRef (true);
+		    type = Type::init (type.to <Type> (), type.to <Type> ().isMutable (), true);
 		    innerVal = Referencer::init (innerVal.getLocation (), type, innerVal);
 		}
 		
@@ -368,20 +367,20 @@ namespace semantic {
 	}
 	
 	Generator MatchVisitor::validateMatchCallStruct (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {	    
-	    std::vector <std::string> errors;
-	    TRY (
+	    std::list <std::string> errors;
+	    try {
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
 		    auto type = this-> _context.validateType (call.getLeft ());
 		    this-> _context.verifyCompatibleTypeWithValue (value.getLocation (), type, value);
 		}
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } catch (Error::ErrorList list) {
+		
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		errors.insert (errors.begin (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));		
-	    } FINALLY;
+	    } 
 	    
 	    if (errors.size () != 0)
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    
 	    auto & str = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ();
 	    	    
@@ -395,7 +394,7 @@ namespace semantic {
 	    }
 	    
 	    if (rights.size () != 0) {
-		std::vector <std::string> names;
+		std::list <std::string> names;
 		for (auto & it : rights)
 		    names.push_back (it.prettyString ());
 		
@@ -409,7 +408,7 @@ namespace semantic {
 		    auto acc = StructAccess::init (value.getLocation (), str.getFieldType (str.getFields() [it].to <generator::VarDecl> ().getName ()), value, str.getFields() [it].to <generator::VarDecl> ().getName ());
 		    if (value.is<Referencer> ()) {
 			auto type = acc.to <Value> ().getType ();
-			type.to <Type> ().isRef (true);
+			type = Type::init (type.to <Type> (), type.to <Type> ().isMutable (), true);
 			acc = Referencer::init (acc.getLocation (), type, acc);
 		    }
 		    
@@ -458,11 +457,11 @@ namespace semantic {
 	    auto fakeBinary = syntax::Binary::init ({matcher.getLocation (), Token::DEQUAL}, TemplateSyntaxWrapper::init (value.getLocation (), value), matcher, Expression::empty ());
 	    auto ret = binVisitor.validate (fakeBinary.to <syntax::Binary> ());
 	    Generator retValue (Generator::empty ());
-	    TRY (
+	    try {
 		retValue = this-> _context.retreiveValue (ret);
-	    ) CATCH (ErrorCode::EXTERNAL) {
-	    	GET_ERRORS_AND_CLEAR (msgs);		
-	    } FINALLY;
+	    } catch (Error::ErrorList list) {
+	    			
+	    } 
 	    
 	    if (!retValue.isEmpty ()) {
 		isMandatory = retValue.is <BoolValue> () && retValue.to <BoolValue> ().getValue ();
@@ -477,7 +476,7 @@ namespace semantic {
 
 	    Generator type (Generator::empty ());
 	    bool isMandatory = false;
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    std::vector <std::pair <lexing::Word, Generator> > usedTypes;
 	    
 	    for (auto it : Ymir::r (0, matchers.size ())) {
@@ -489,40 +488,38 @@ namespace semantic {
 		bool all_mandatory = false;
 		
 		this-> _context.enterBlock ();
-
-		{
-		    std::vector <std::pair <lexing::Word, Generator> > founds; // Outside the try, because there is a coma inside this declaration, C++ sucks sometimes
-		    TRY (
-			test = this-> validateMatchForCatcher (excp, matchers [it], possibleTypes, local_types, all_mandatory);
-			if (all_mandatory) {isMandatory = true;} // Keys::UNDER, we caught all
-			bool once = false;
-			for (auto &lt : local_types) {
-			    bool found = false;
-			    for (auto &it : usedTypes) {
-				if (it.second.to<Type> ().isCompatible (lt)) {
-				    found = true;
-				    founds.push_back ({it.first, it.second});
-				    break;   
-				}
+		
+		std::vector <std::pair <lexing::Word, Generator> > founds; 
+		try {
+		    test = this-> validateMatchForCatcher (excp, matchers [it], possibleTypes, local_types, all_mandatory);
+		    if (all_mandatory) {isMandatory = true;} // Keys::UNDER, we caught all
+		    bool once = false;
+		    for (auto &lt : local_types) {
+			bool found = false;
+			for (auto &it : usedTypes) {
+			    if (it.second.to<Type> ().isCompatible (lt)) {
+				found = true;
+				founds.push_back ({it.first, it.second});
+				break;   
 			    }
+			}
 			    
-			    if (!found) {
-				once = true;
-				usedTypes.push_back ({matchers [it].getLocation (), lt});
-			    }
+			if (!found) {
+			    once = true;
+			    usedTypes.push_back ({matchers [it].getLocation (), lt});
 			}
+		    }
 
-			if (!once) { // If this catch has inserted nothing
-			    for (auto & jt : founds) {
-				auto note = Ymir::Error::createNote (jt.first);
-				errors.push_back (Error::makeOccurAndNote (matchers [it].getLocation (), note, ExternalError::get (MULTIPLE_CATCH), jt.second.prettyString ()));
-			    }
+		    if (!once) { // If this catch has inserted nothing
+			for (auto & jt : founds) {
+			    auto note = Ymir::Error::createNote (jt.first);
+			    errors.push_back (Error::makeOccurAndNote (matchers [it].getLocation (), note, ExternalError::get (MULTIPLE_CATCH), jt.second.prettyString ()));
 			}
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}
+		    }
+		} catch (Error::ErrorList list) {			
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+		
 
 		if (!test.isEmpty ()) { // size == 2, if succeed
 		    auto content = this-> _context.validateValue (actions [it]);
@@ -552,18 +549,16 @@ namespace semantic {
 			result = cond;
 		    } else result = this-> _context.addElseToConditional (result, cond);		    
 		}
-		
-		{
-		    TRY (
-			if (errors.size () != 0)
-			    this-> _context.discardAllLocals ();
+				
+		try {
+		    if (errors.size () != 0)
+			this-> _context.discardAllLocals ();
 			
-			this-> _context.quitBlock ();
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		    } FINALLY;
-		}		
+		    this-> _context.quitBlock ();
+		} catch (Error::ErrorList list) {			
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+		    
 	    }
 
 	    if (!isMandatory) { // If there is no all catcher
@@ -576,13 +571,15 @@ namespace semantic {
 			}
 		    }
 		    
-		    if (!found)
+		    if (!found) {
 			errors.push_back (Error::makeOccur (expression.getLocation (), ExternalError::get (NOT_CATCH), it.prettyString ()));
+			usedTypes.push_back ({it.getLocation (), it}); // to not display the error multiple times
+		    }
 		}
 	    }
 
 	    if (errors.size () != 0)
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    
 	    return result;
 	}
@@ -622,11 +619,11 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchVarDeclForCatcher (const Generator & value_, const syntax::VarDecl & var, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    Generator test (Generator::empty ());
 	    Generator varDecl (Generator::empty ());
 
-	    TRY (
+	    try {
 		Generator value (value_);
 		if (var.getName () != Keys::UNDER) this-> _context.verifyShadow (var.getName ());
 
@@ -635,14 +632,13 @@ namespace semantic {
 		    varType = this-> _context.validateType (var.getType ());
 		else {
 		    all = true; // No type, so every type will pass there
-		    varType = value.to <Value> ().getType (); // to have a vardecl, we must at least have a type or a value
-		    varType.to <Type> ().isRef (false);
-		    varType.to <Type> ().isMutable (false);
+		    varType = Type::init (value.to <Value> ().getType ().to<Type> (), false, false); // to have a vardecl, we must at least have a type or a value
 		}
 
 		bool isMutable = false;
 		bool isRef = false;
-		this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable);
+		bool dmut = false;
+		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut);
 		// value is typed exception, this will pass if varType is an heir 
 		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType);
 
@@ -704,28 +700,28 @@ namespace semantic {
 		    if (!found) Ymir::Error::occur (var.getLocation (), ExternalError::get (USELESS_CATCH), varType.prettyString ());;		    
 		}
 		
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors = msgs;
+	    } catch (Error::ErrorList list) {
+		
+		errors = list.errors;
 		errors.back () = Ymir::Error::addNote (var.getLocation (), errors.back (), Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
-	    } FINALLY;
+	    } 
 
 	    if (errors.size () != 0)
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 
 	    
 	    return Set::init (var.getLocation (), Bool::init (value_.getLocation ()), {varDecl, test});	    
 	}
 
 	Generator MatchVisitor::validateMatchCallForCatcher (const Generator & value, const syntax::MultOperator & call, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {	    
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    Generator globTest (Generator::empty ());
 	    auto loc = call.getLocation ();
 	    Generator type (Generator::empty ());
 	    bool isMandatory = true;
 	    all = false;
 	    
-	    TRY (
+	    try {
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
 		    type = this-> _context.validateType (call.getLeft ());		    
 		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
@@ -743,18 +739,16 @@ namespace semantic {
 		    );
 		    globTest = this-> _context.validateValue (call);		   
 		}
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors.insert (errors.end (), msgs.begin (), msgs.end ());
+	    } catch (Error::ErrorList list) {		
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		errors.back () = Ymir::Error::addNote (call.getLocation (), errors.back (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
-	    } FINALLY;
+	    } 
 	    
 	    if (errors.size () != 0) {
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    }
 	    
-	    type.to <Type> ().isMutable (false);
-	    type.to <Type> ().isRef (false);
+	    type = Type::init (type.to <Type> (), false, false);
 
 	    auto castedValue = UniqValue::init (call.getLocation (), type, Cast::init (call.getLocation (), type, value));
 	    globTest = Set::init (call.getLocation (), Bool::init (call.getLocation ()), {castedValue, globTest});
@@ -771,7 +765,7 @@ namespace semantic {
 		auto innerVal = this-> _context.validateValue (bin);		
 		if (value.is <Referencer> ()) {
 		    auto type = innerVal.to <Value> ().getType ();
-		    type.to <Type> ().isRef (true);
+		    type = Type::init (type.to <Type> (), type.to <Type> ().isMutable (), true);
 		    innerVal = Referencer::init (innerVal.getLocation (), type, innerVal);
 		}
 		

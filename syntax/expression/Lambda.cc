@@ -6,44 +6,37 @@ namespace syntax {
     
     Lambda::Lambda () :
 	IExpression (lexing::Word::eof ()),
-	_proto (Function::Prototype::init ()),
+	_proto (Function::Prototype::empty ()),
 	_content (Expression::empty ())
     {
 	this-> _uniqId = __lastId__ + 1;
 	__lastId__ ++;
     }
     
-    Lambda::Lambda (const lexing::Word & loc) :
+    Lambda::Lambda (const lexing::Word & loc, const Function::Prototype & proto, const Expression & content) :
 	IExpression (loc),
-	_proto (Function::Prototype::init ()),
-	_content (Expression::empty ())
+	_proto (proto),
+	_content (content)	
     {
 	this-> _uniqId = __lastId__ + 1;
 	__lastId__ ++;
     }
 
     Expression Lambda::init (const lexing::Word & location, const Function::Prototype & proto, const Expression & content) {
-	auto ret = new (Z0) Lambda (location);
-	ret-> _proto = proto;
-	ret-> _content = content;
-	return Expression {ret};
+	return Expression {new (Z0) Lambda (location, proto, content)};
     }
 
 
-    Expression Lambda::refClosure (const syntax::Expression & expr) {
-	Lambda lmbd = expr.to <Lambda> ();
-	lmbd._isRefClosure = true;
-	return Expression {new (Z0) Lambda (lmbd)};
+    Expression Lambda::refClosure (const syntax::Expression & expr) {       
+	Lambda * lmbd = new (Z0) Lambda (expr.to <Lambda> ());
+	lmbd-> _isRefClosure = true;
+	return Expression {lmbd};
     }
 
     Expression Lambda::moveClosure (const syntax::Expression & expr) {
-	auto lmbd = expr.to <Lambda> ();
-	lmbd._isMoveClosure = true;
-	return Expression {new (Z0) Lambda (lmbd)};
-    }
-    
-    Expression Lambda::clone () const {
-	return Expression {new Lambda (*this)};
+	Lambda * lmbd = new (Z0) Lambda (expr.to <Lambda> ());
+	lmbd-> _isMoveClosure = true;
+	return Expression {lmbd};
     }
 
     bool Lambda::isOf (const IExpression * type) const {

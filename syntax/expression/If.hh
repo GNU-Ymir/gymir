@@ -28,7 +28,7 @@ namespace syntax {
 
 	If ();
 	
-	If (const lexing::Word & loc);
+	If (const lexing::Word & loc, const Expression & test, const Expression & content, const Expression & elsePart);
 
     public :
 	 
@@ -39,10 +39,7 @@ namespace syntax {
 	 * \param content the content of the loop (executed at each loop)
 	 * \param else the else part
 	 */
-	static Expression init (const lexing::Word & location, const Expression & test, const Expression & content, const Expression & elsePart);
-
-	
-	Expression clone () const override;
+	static Expression init (const lexing::Word & location, const Expression & test, const Expression & content, const Expression & elsePart);       
 
 	bool isOf (const IExpression * type) const override;
 

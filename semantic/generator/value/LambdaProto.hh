@@ -49,6 +49,8 @@ namespace semantic {
 	     * \warning left and right operand must generate int typed values
 	     */
 	    static Generator init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector <Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index);
+
+	    static Generator init (const LambdaProto & other, const std::string & mangleName, Frame::ManglingStyle style);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -90,13 +92,7 @@ namespace semantic {
 	     */
 	    Frame::ManglingStyle getManglingStyle () const;
 
-	    /**
-	     * \brief Change the mangling style of the frame 
-	     */
-	    void setManglingStyle (Frame::ManglingStyle style);
 
-
-	    void setMangledName (const std::string & name);
 
 	    const std::string & getMangledName () const;
 

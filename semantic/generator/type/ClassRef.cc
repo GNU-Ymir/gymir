@@ -10,16 +10,16 @@ namespace semantic {
 	
 	ClassRef::ClassRef () :
 	    Type (),
-	    _ref (Symbol::__empty__),
 	    _parent (Generator::empty ())
 	{}
 
 	ClassRef::ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref) :
 	    Type (loc, loc.str),
-	    _ref (ref),
 	    _parent (parent)
 	{
-	    if (!this-> _ref.isEmpty ()) { // A structure is complex iif one of its field is complex
+	    auto aux = ref;
+	    this-> _ref = aux.getPtr ();
+	    if (!this-> _ref.lock ()) { 
 		this-> isComplex (
 		    true
 		);
@@ -44,15 +44,15 @@ namespace semantic {
 	bool ClassRef::equals (const Generator & gen) const {
 	    if (!gen.is<ClassRef> ()) return false;
 	    auto str = gen.to <ClassRef> ();
-	    return this-> _ref.equals (str._ref);
+	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});
 	}
 
 	bool ClassRef::isRefOf (const Symbol & sym) const {
-	    return this-> _ref.isSameRef (sym);
+	    return (Symbol {this-> _ref}).isSameRef (sym);
 	}
 
-	const Symbol & ClassRef::getRef () const {
-	    return this-> _ref;
+	Symbol ClassRef::getRef () const {
+	    return Symbol {this-> _ref};
 	}
 
 	bool ClassRef::needExplicitAlias () const {
@@ -60,11 +60,11 @@ namespace semantic {
 	}
 	
 	std::string ClassRef::typeName () const {
-	    return Ymir::format ("%", this-> _ref.getRealName ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).getRealName ());
 	}
 
 	std::string ClassRef::getMangledName () const {
-	    return Ymir::format ("%", this-> _ref.getMangledName ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).getMangledName ());
 	}
 
 	const Generator & ClassRef::getAncestor () const {

@@ -16,8 +16,6 @@ namespace syntax {
      */
     class Template : public IDeclaration {
 
-	lexing::Word _loc;
-	
 	/** The template parameter of the declaration */
 	std::vector <Expression> _parameters;
 
@@ -32,27 +30,10 @@ namespace syntax {
 	friend Declaration; // Needed for dynamic casting
 	
 	Template ();
+
+	Template (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test);
 	
     public :
-
-	/**
-	 * \brief Create an empty template
-	 */
-	static Declaration init ();
-
-	/**
-	 * \brief Create a template from another one
-	 * \param tmpl the template to copy
-	 */
-	static Declaration init (const Template & tmpl);
-
-	/**
-	 * \brief Create an initialized template 
-	 * \param params the template parameters
-	 * \param content the content declaration
-	 */
-	static Declaration init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content);
-
 	
 	/**
 	 * \brief Create an initialized template 
@@ -61,33 +42,13 @@ namespace syntax {
 	 */
 	static Declaration init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test);
 
-	/**
-	 * \brief Mandatory function used for proxy polymoprhism system
-	 */
-	Declaration clone () const override;
-
+	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
 	/**
 	 * \brief Polymorphism dynamic casting
 	 */
 	bool isOf (const IDeclaration * type) const override;
-	
-	/**
-	 * \brief Add a new template parameter
-	 * \param param the template param
-	 */
-	void addParameter (const Expression & param);
-
-	/**
-	 * \brief Change the content of the template
-	 */
-	void setContent (const Declaration & content);
-
-	/**
-	 * \return the location of the template definition
-	 */
-	const lexing::Word & getLocation () const;
 	
 	/**
 	 * \return the list of template parameters of the declarations

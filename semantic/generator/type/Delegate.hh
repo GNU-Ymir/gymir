@@ -41,15 +41,19 @@ namespace semantic {
 	     */
 	    bool equals (const Generator & other) const override;
 
-	    /**
-	     * Does not change the mutability of the params
-	     */
-	    void isMutable (bool is) override;
+
 	    
 	    /**
 	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
 	     */
 	    std::string typeName () const override;
+
+	protected :
+	    
+	    /**
+	     * Does not change the mutability of the params
+	     */
+	    Generator createMutable (bool is) const override;
 	    
 	};
        

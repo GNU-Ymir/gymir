@@ -8,21 +8,14 @@ namespace syntax {
 	_msg (Expression::empty ())
     {}
     
-    Assert::Assert (const lexing::Word & loc) :
+    Assert::Assert (const lexing::Word & loc, const Expression & test, const Expression & msg) :
 	IExpression (loc),
-	_test (Expression::empty ()),
-	_msg (Expression::empty ())
+	_test (test),
+	_msg (msg)
     {}
 
     Expression Assert::init (const lexing::Word & loc, const Expression & test, const Expression & msg) {
-	auto ret = new (Z0) Assert (loc);
-	ret-> _test = test;
-	ret-> _msg = msg;
-	return Expression {ret};
-    }
-
-    Expression Assert::clone () const {
-	return Expression {new (Z0) Assert (*this)};
+	return Expression {new (Z0) Assert (loc, test, msg)};
     }
 
     bool Assert::isOf (const IExpression * type) const {

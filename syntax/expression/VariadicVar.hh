@@ -18,13 +18,11 @@ namespace syntax {
 
 	VariadicVar ();
 	
-	VariadicVar (const lexing::Word & loc);
+	VariadicVar (const lexing::Word & loc, bool isValue);
 
     public :
 
 	static Expression init (const lexing::Word & token, bool isValue);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 	

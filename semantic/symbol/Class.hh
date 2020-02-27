@@ -10,7 +10,7 @@ namespace semantic {
     class Class : public ISymbol {
 	
 	/** The symbol declared in the class (the attributes, methods ...) */
-	Table _table;
+	std::shared_ptr <Table> _table;
 
 	/** The ancestor of the class */
 	syntax::Expression _ancestor;
@@ -62,7 +62,7 @@ namespace semantic {
 
 	Class (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak);
 
-	Class (const Class & other);
+	Class (const Class & other); // never used
 	
     public :
 	

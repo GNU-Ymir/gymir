@@ -9,24 +9,16 @@ namespace syntax {
 	_else (Expression::empty ())
     {}
 
-    If::If (const lexing::Word & loc) :
+    If::If (const lexing::Word & loc, const Expression & test, const Expression & content, const Expression & elsePart) :
 	IExpression (loc),
-	_test (Expression::empty ()),
-	_content (Expression::empty ()),
-	_else (Expression::empty ())
+	_test (test),
+	_content (content),
+	_else (elsePart)
     {}
     
    
     Expression If::init (const lexing::Word & location, const Expression & test, const Expression & content, const Expression & elsePart) {
-	auto ret = new (Z0) If (location);
-	ret-> _test = test;
-	ret-> _content = content;
-	ret-> _else = elsePart;
-	return Expression {ret};
-    }
-
-    Expression If::clone () const {
-	return Expression {new If (*this)};
+	return Expression {new (Z0) If (location, test, content, elsePart)};
     }
 
     bool If::isOf (const IExpression * type) const {

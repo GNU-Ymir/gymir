@@ -3,48 +3,25 @@
 namespace syntax {
 
     Template::Template () :
-	_loc (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof ()),
 	_content (Declaration::empty ()),
 	_test (Expression::empty ())
     {}
-    
-    Declaration Template::init () {
-	return Declaration {new (Z0) Template ()};
-    }
 
-    Declaration Template::init (const Template & tmpl) {
-	auto ret = new (Z0) Template ();
-	ret-> _loc = tmpl._loc;
-	ret-> _parameters = tmpl._parameters;
-	ret-> _content = tmpl._content;
-	ret-> _test = tmpl._test;
-	return Declaration {ret};
-    }
-
-    Declaration Template::init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content) {
-	auto ret = new (Z0) Template ();
-	ret-> _loc = loc;
-	ret-> _parameters = params;
-	ret-> _content = content;
-	return Declaration {ret};
-    }
+    Template::Template (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test) :
+	IDeclaration (loc),
+	_parameters (params),
+	_content (content),
+	_test (test)
+    {}
     
     Declaration Template::init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test) {
-	auto ret = new (Z0) Template ();
-	ret-> _loc = loc;
-	ret-> _parameters = params;
-	ret-> _content = content;
-	ret-> _test = test;
-	return Declaration {ret};
-    }
-
-    Declaration Template::clone () const {
-	return Template::init (*this);
+	return Declaration {new (Z0) Template (loc, params, content, test)};
     }
 
     void Template::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Template>", i, '\t');
-	stream.writeln (this-> _loc);
+	stream.writeln (this-> getLocation ());
 	stream.writefln ("%*<Test>", i + 1, '\t');
 	this-> _test.treePrint (stream, i + 2);
 	stream.writefln ("%*<Params>", i + 1, '\t');
@@ -60,18 +37,6 @@ namespace syntax {
 	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
 	return IDeclaration::isOf (type);
     }	    
-
-    void Template::addParameter (const Expression & param) {
-	this-> _parameters.push_back (param);
-    }
-
-    void Template::setContent (const Declaration& content) {
-	this-> _content = content;
-    }
-
-    const lexing::Word & Template::getLocation () const {
-	return this-> _loc;
-    }
 
     const std::vector <Expression> & Template::getParams () const {
 	return this-> _parameters;

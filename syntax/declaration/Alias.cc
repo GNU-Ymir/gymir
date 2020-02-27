@@ -2,29 +2,22 @@
 
 namespace syntax {
 
-    Alias::Alias () : _value (nullptr)
+    Alias::Alias () :
+	IDeclaration (lexing::Word::eof ()),
+	_value (nullptr)
+    {}
+
+    Alias::Alias (const lexing::Word & ident, const Expression & value) :
+	IDeclaration (ident),
+	_value (value)
     {}
     
-    Declaration Alias::init () {
-	return Declaration {new (Z0) Alias ()};
-    }
-
     Declaration Alias::init (const lexing::Word & ident, const Expression & value) {
-	Alias * ret = new (Z0) Alias ();
-	ret-> _ident = ident;
-	ret-> _value = value;
-	return Declaration {ret};
+	return Declaration {new (Z0) Alias (ident, value)};
     }
 
     Declaration Alias::init (const Alias & other) {
-	Alias * ret = new (Z0) Alias ();
-	ret-> _ident = other._ident;
-	ret-> _value = other._value;
-	return Declaration {ret};
-    }
-
-    Declaration Alias::clone () const {
-	return Alias::init (*this);
+	return Declaration {new (Z0) Alias (other)};
     }
 
     bool Alias::isOf (const IDeclaration * type) const {
@@ -34,25 +27,14 @@ namespace syntax {
 	return IDeclaration::isOf (type);
     }	    
     
-    void Alias::setName (const lexing::Word & ident) {
-	this-> _ident = ident;
-    }
-
-    const lexing::Word & Alias::getName () const {
-	return this-> _ident;
-    }    
     
-    void Alias::setValue (const Expression & value) {
-	this-> _value = value;
-    }
-
     const Expression & Alias::getValue () const {
 	return this-> _value;
     }
     
     void Alias::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');
-	stream.writeln ("<Alias> : ", this-> _ident);
+	stream.writeln ("<Alias> : ", this-> getLocation ());
 	this-> _value.treePrint (stream, i + 1);
     }
     

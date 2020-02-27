@@ -27,7 +27,7 @@ namespace semantic {
 	}
 	
 	Generator RangeValue::init (const lexing::Word & loc, const Generator & type, const Generator & left, const Generator & right, const Generator & step, const Generator & full) {
-	    return Generator {new RangeValue (loc, type, left, right, step, full)};
+	    return Generator {new (Z0) RangeValue (loc, type, left, right, step, full)};
 	}
     
 	Generator RangeValue::clone () const {

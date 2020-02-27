@@ -15,7 +15,7 @@ namespace semantic {
     class Impl : public ISymbol {
 
 	/** The symbol table associated to the implem */
-	Table _table;
+	std::shared_ptr<Table> _table;
 
 	syntax::Expression _trait;
 	

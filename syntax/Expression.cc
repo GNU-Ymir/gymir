@@ -3,12 +3,12 @@
 #include <ymir/syntax/declaration/ExpressionWrapper.hh>
 
 namespace syntax {
-
+    
     IExpression::IExpression (const lexing::Word & location) :
 	_location (location)
     {}
     
-    Expression::Expression (IExpression * expr) : Proxy<IExpression, Expression> (expr)
+    Expression::Expression (IExpression * expr) : RefProxy<IExpression, Expression> (expr)
     {}
 
     Expression Expression::empty () {
@@ -20,18 +20,18 @@ namespace syntax {
     }
     
     Declaration Expression::toDeclaration (const Expression & value) {
-	return ExpressionWrapper::init (value);
+	return ExpressionWrapper::init (value.getLocation (), value);
     }
     
     void Expression::treePrint (Ymir::OutBuffer & stream, int i)  const {	
-	if (this-> _value == NULL) {
+	if (this-> _value == nullptr) {
 	    stream.writef ("%*", i, '\t');
 	    stream.writeln ("<null>");
 	} else this-> _value-> treePrint (stream, i);
     }
 
     std::string Expression::prettyString () const {
-	if (this-> _value == NULL) return "";
+	if (this-> _value == nullptr) return "";
 	else return this-> _value-> prettyString ();
     }
 

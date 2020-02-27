@@ -10,21 +10,35 @@ namespace semantic {
 	
 	Class::Class () :
 	    Value (),
-	    _ref (Symbol::__empty__),
 	    _classRef (Generator::empty ())
 	{
 	}
 
 	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) :
 	    Value (loc, loc.str, NoneType::init (loc, "class " + ref.getRealName ())),
-	    _ref (ref),
 	    _classRef (clRef)
-	{}
+	{
+	    auto aux = ref;
+	    this-> _ref = aux.getPtr ();
+	}
 
 	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) {
 	    return Generator {new (Z0) Class (loc, ref, clRef)};
 	}
 
+	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields) {
+	    auto ret = other.clone ();
+	    ret.to <Class> ()._fields = fields;
+	    return ret;
+	}
+
+	Generator Class::initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots) {
+	    auto ret = other.clone ();
+	    ret.to <Class> ()._vtable = vtable;
+	    ret.to <Class> ()._prots = prots;
+	    return ret;
+	}
+	
 	Generator Class::clone () const {
 	    return Generator {new (Z0) Class (*this)};
 	}
@@ -39,16 +53,13 @@ namespace semantic {
 	bool Class::equals (const Generator & gen) const {
 	    if (!gen.is<Class> ()) return false;
 	    auto str = gen.to <Class> ();
-	    return this-> _ref.isSameRef (str._ref);
+	    return (Symbol {this-> _ref}).isSameRef (Symbol {str._ref});
 	}
 
 	const std::vector <generator::Generator> & Class::getFields () const {
 	    return this-> _fields;
 	}
 
-	void Class::setFields (const std::vector <generator::Generator> & fields) {
-	    this-> _fields = fields;
-	}
 
 	Generator Class::getFieldType (const std::string & name) const {
 	    Generator type (Generator::empty ());
@@ -64,7 +75,7 @@ namespace semantic {
 	    if (type.isEmpty ()) return type;
 	    
 	    // so we need to check that it belong to this class and not to an ancestor	    
-	    for (auto & it : this-> _ref.to <semantic::Class> ().getFields ()) {
+	    for (auto & it : (Symbol {this-> _ref}).to <semantic::Class> ().getFields ()) {
 		if (it.to <syntax::VarDecl> ().getName ().str == name) return type;
 	    }
 	    return Generator::empty ();
@@ -80,11 +91,12 @@ namespace semantic {
 		}
 	    }
 
+	    auto ref = Symbol {this-> _ref};
 	    if (type.isEmpty ()) return type;
 	    // so we need to check that it belong to this class and not to an ancestor	    
-	    for (auto & it : this-> _ref.to <semantic::Class> ().getFields ()) {
+	    for (auto & it : ref.to <semantic::Class> ().getFields ()) {
 		if (it.to <syntax::VarDecl> ().getName ().str == name) {
-		    if (this-> _ref.to <semantic::Class> ().isMarkedPrivate (name))
+		    if (ref.to <semantic::Class> ().isMarkedPrivate (name))
 			return Generator::empty ();
 		    return type;
 		}
@@ -102,12 +114,13 @@ namespace semantic {
 		}
 	    }
 
+	    auto ref = Symbol {this-> _ref};
 	    if (type.isEmpty ()) return type;
 	    // so we need to check that it belong to this class and not to an ancestor	    
-	    for (auto & it : this-> _ref.to <semantic::Class> ().getFields ()) {
+	    for (auto & it : ref.to <semantic::Class> ().getFields ()) {
 		if (it.to <syntax::VarDecl> ().getName ().str == name) {
-		    if (this-> _ref.to <semantic::Class> ().isMarkedPrivate (name) ||
-			this-> _ref.to <semantic::Class> ().isMarkedProtected (name))
+		    if (ref.to <semantic::Class> ().isMarkedPrivate (name) ||
+			ref.to <semantic::Class> ().isMarkedProtected (name))
 			return Generator::empty ();
 		    return type;
 		}
@@ -120,28 +133,20 @@ namespace semantic {
 	    return this-> _vtable;
 	}
 
-	void Class::setVtable (const std::vector <generator::Generator> & vtable) {
-	    this-> _vtable = vtable;
-	}
-
 	const std::vector <generator::Class::MethodProtection> & Class::getProtectionVtable () const {
 	    return this-> _prots;
 	}
-
-	void Class::setProtectionVtable (const std::vector <Class::MethodProtection> & prots) {
-	    this-> _prots = prots;
-	}
 	
 	std::string Class::getName () const {
-	    return this-> _ref.getRealName ();
+	    return (Symbol {this-> _ref}).getRealName ();
 	}
 	
 	std::string Class::prettyString () const {
-	    return Ymir::format ("%", this-> _ref.getRealName ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).getRealName ());
 	}
 
-	const Symbol & Class::getRef () const {
-	    return this-> _ref;
+	Symbol Class::getRef () const {
+	    return Symbol {this-> _ref};
 	}
 
 	const Generator & Class::getClassRef () const {

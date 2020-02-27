@@ -8,22 +8,15 @@ namespace syntax {
 	_size (Expression::empty ())
     {}
 
-    ArrayAlloc::ArrayAlloc (const lexing::Word & loc) :
+    ArrayAlloc::ArrayAlloc (const lexing::Word & loc, const Expression & left, const Expression & size, bool isDyn) :
 	IExpression (loc),
-	_left (Expression::empty ()),
-	_size (Expression::empty ())
+	_left (left),
+	_size (size),
+	_isDynamic (isDyn)
     {}
 
     Expression ArrayAlloc::init (const lexing::Word & location, const Expression & left, const Expression &size, bool isDynamic) {
-	auto ret = new (Z0) ArrayAlloc (location);
-	ret-> _left = left;
-	ret-> _size = size;	
-	ret-> _isDynamic = isDynamic;
-	return Expression {ret};
-    }
-
-    Expression ArrayAlloc::clone () const {
-	return Expression {new ArrayAlloc (*this)};
+	return Expression {new (Z0) ArrayAlloc (location, left, size, isDynamic)};
     }
 
     bool ArrayAlloc::isOf (const IExpression * type) const {

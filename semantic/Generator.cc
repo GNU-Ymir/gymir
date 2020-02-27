@@ -2,7 +2,7 @@
 
 namespace semantic {
     namespace generator {
-
+	
 	Generator Generator::__empty__ (Generator::empty ());
 	uint IGenerator::__lastId__ = 0;
 	std::vector <Generator> Generator::__nothrowers__;
@@ -69,7 +69,7 @@ namespace semantic {
 	}
 
 	void IGenerator::setThrowers (const std::vector <Generator> & locs) {
-	    this-> _throwers = locs;
+	    this-> _throwers = locs;	  // We want all locations 
 	}
 	    
 	const std::vector <Generator> & IGenerator::getThrowers () const {
@@ -78,9 +78,17 @@ namespace semantic {
 	
 	IGenerator::~IGenerator () {}
 
-	Generator::Generator (IGenerator * gen) : Proxy<IGenerator, Generator> (gen)
+	Generator::Generator (IGenerator * gen) : RefProxy<IGenerator, Generator> (gen)
 	{}
 
+	Generator Generator::init (const lexing::Word & loc, const Generator & other) {
+	    if (other._value != nullptr) {
+		auto ret = other._value-> clone ();
+		ret._value-> changeLocation (loc);
+		return ret;
+	    } else return Generator::empty ();
+	}
+	
 	Generator Generator::empty () {
 	    return Generator {nullptr};
 	}
@@ -100,12 +108,6 @@ namespace semantic {
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	    return this-> _value-> getLocation ();
 	}	
-
-	void Generator::changeLocation (const lexing::Word & loc) {
-	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
-	    return this-> _value-> changeLocation (loc);
-	}
 	
 	bool Generator::equals (const Generator & other) const {
 	    if (this-> _value == nullptr) return other._value == nullptr;

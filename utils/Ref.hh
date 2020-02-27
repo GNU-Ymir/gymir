@@ -2,11 +2,8 @@
 
 #include <ymir/utils/OutBuffer.hh>
 #include <map>
-
-class RefTable {
-public : 
-    static std::map <void*, int> __refsCount__;
-};
+#include <memory>
+#include <ymir/utils/Memory.hh>
 
 /**
  * Implementation of a proxy design pattern
@@ -18,61 +15,27 @@ public :
 template <typename T, class I> class RefProxy {    
 protected:
 
-    T * _value;
+    std::shared_ptr <T> _value;
     
 public:
     
-    RefProxy<T, I> (T * a) {
-	this-> _value = a;
-	addRef (this-> _value);
-    }
+    RefProxy<T, I> (std::shared_ptr<T> a) : _value (a) {}   
 
-    RefProxy<T, I> (const RefProxy<T, I> & ot) {
+    RefProxy<T, I> (T * a) : _value (a) {}
+
+    RefProxy<T, I> (const RefProxy<T, I> & ot) : _value (ot._value) {}
+
+    const RefProxy<T, I>& operator=(const RefProxy<T, I> & ot) {	
 	this-> _value = ot._value;	
-	addRef (this-> _value);
+	return ot;
     }
 
-    RefProxy<T, I>& operator=(const RefProxy<T, I> & ot) {
-	dispose (this-> _value);	
-	
-	this-> _value = ot._value;
-	addRef (this-> _value);
-	
-	return *this;
-    }
-
-    T* getRef () const {
+    const std::shared_ptr<T> & getPtr () const {
 	return this-> _value;
     }
     
-    virtual ~RefProxy<T, I> () {
-	dispose (this-> _value);
+    std::shared_ptr<T> & getPtr () {
+	return this-> _value;
     }
-
-private :
-
-    static void dispose (T * value) {
-	if (value == nullptr) return;
-	
-	auto ptr = RefTable::__refsCount__.find (value);
-	if (ptr == RefTable::__refsCount__.end ()) delete value;
-	else {
-	    ptr-> second -= 1;
-	    auto nb = ptr-> second;
-	    if (nb <= 0) {
-		delete value;
-	    }
-	}
-    }
-
-    static void addRef (T * value) {
-	if (value == nullptr) return;
-	
-	auto ptr = RefTable::__refsCount__.find (value);
-	if (ptr == RefTable::__refsCount__.end ()) {
-	    RefTable::__refsCount__.emplace (value, 1);
-	} else ptr-> second += 1;
-    }
-
     
 };

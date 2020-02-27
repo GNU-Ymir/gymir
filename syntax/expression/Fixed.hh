@@ -22,13 +22,12 @@ namespace syntax {
 
 	Fixed ();
 	
-	Fixed (const lexing::Word & loc);
+	Fixed (const lexing::Word & loc, const lexing::Word & suff);
 
     public :
 
 	static Expression init (const lexing::Word & token, const lexing::Word & suff);
 
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

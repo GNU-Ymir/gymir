@@ -23,7 +23,7 @@ namespace syntax {
 
 	Scope ();
 	
-	Scope (const lexing::Word & loc);
+	Scope (const lexing::Word & loc, const Expression & content);
 
     public :
 
@@ -33,8 +33,6 @@ namespace syntax {
 	 * \param content the content of the scope
 	 */
 	static Expression init (const lexing::Word & location, const Expression & content);
-
-	virtual Expression clone () const override;
 
 	virtual bool isOf (const IExpression * type) const override;
 

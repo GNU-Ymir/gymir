@@ -26,7 +26,7 @@ namespace semantic {
 	}
 	
 	Generator SliceAccess::init (const lexing::Word & loc, const Generator & type, const Generator & slice, const Generator & index) {
-	    return Generator {new SliceAccess (loc, type, slice, index)};
+	    return Generator {new (Z0) SliceAccess (loc, type, slice, index)};
 	}
     
 	Generator SliceAccess::clone () const {

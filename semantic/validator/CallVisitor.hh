@@ -57,7 +57,7 @@ namespace semantic {
 	     * \brief - Search for operator overloading
 	     * \brief Else throw an error
 	     */	    
-	    generator::Generator validate (const lexing::Word & location, const generator::Generator & left, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors);
+	    generator::Generator validate (const lexing::Word & location, const generator::Generator & left, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors);
 	    
 	    /**
 	     * \brief Validate a call expression on a frame proto
@@ -68,7 +68,7 @@ namespace semantic {
 	     * \brief It does not throw an exception on failure, 
 	     * \brief It will return a empty generator and a score of -1
 	     */
-	    generator::Generator validateFrameProto (const lexing::Word & location, const generator::FrameProto & proto, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
+	    generator::Generator validateFrameProto (const lexing::Word & location, const generator::FrameProto & proto, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors);
 
 	    /**
 	     * \brief Validate a call expression on a constructor proto
@@ -79,11 +79,11 @@ namespace semantic {
 	     * \brief It does not throw an exception on failure, 
 	     * \brief It will return a empty generator and a score of -1
 	     */	    
-	    generator::Generator validateConstructorProto (const lexing::Word & location, const generator::ConstructorProto & proto, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors);	    	    
+	    generator::Generator validateConstructorProto (const lexing::Word & location, const generator::ConstructorProto & proto, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors);	    	    
 	    /**
 	     * \brief Find the right parameter assoc to the var
 	     */
-	    generator::Generator findParameter (std::vector<generator::Generator> & params, const generator::ProtoVar & var);
+	    generator::Generator findParameter (std::list <generator::Generator> & params, const generator::ProtoVar & var);
 
 	    /**
 	     * \brief Validate a call expression on a lambda proto
@@ -94,7 +94,7 @@ namespace semantic {
 	     * \brief It does not throw an exception on failure, 
 	     * \brief It will return a empty generator and a score of -1
 	     */
-	    generator::Generator validateLambdaProto (const lexing::Word & location, const generator::LambdaProto & proto, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors);
+	    generator::Generator validateLambdaProto (const lexing::Word & location, const generator::LambdaProto & proto, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors);
 	    	    
 	    /**
 	     * \brief Validate a call expression on a frame proto
@@ -106,7 +106,7 @@ namespace semantic {
 	     * \brief It will return a empty generator and a score of -1
 	     * \brief All the errors will be store into errors
 	     */
-	    generator::Generator validateStructCst (const lexing::Word & location, const generator::Struct & str, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
+	    generator::Generator validateStructCst (const lexing::Word & location, const generator::Struct & str, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors);
 
 	    /**
 	     * \brief Find the right parameter assoc to the var
@@ -122,7 +122,7 @@ namespace semantic {
 	     * \brief It will return a empty generator and a score of -1
 	     * \brief All the errors will be store into errors
 	     */
-	    generator::Generator validateFunctionPointer (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
+	    generator::Generator validateFunctionPointer (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors);
 	    
 	    /**
 	     * \brief Validate a Function pointer call
@@ -134,31 +134,31 @@ namespace semantic {
 	     * \brief All the errors will be store into errors
 	     * \warning TODO, merge this function and validateFunctionPointer, these two functions do exaclty the same treatment and have only one different code line 
 	     */
-	    generator::Generator validateDelegate (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::vector<std::string> & errors);
+	    generator::Generator validateDelegate (const lexing::Word & expression, const generator::Generator & gen, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors);
 	    
 	    /**
 	     * \brief Validate a mult sym 
 	     * \brief A mult sym regroups a list of frameproto
 	     * \brief It will use the more specialized one
 	     */
-	    generator::Generator validateMultSym (const lexing::Word & expression, const generator::MultSym & sym, const std::vector<generator::Generator> & params, int & score, std::vector<std::string> & errors);	    
+	    generator::Generator validateMultSym (const lexing::Word & expression, const generator::MultSym & sym, const std::vector<generator::Generator> & params, int & score, std::list <std::string> & errors);	    
 
 	    /**
 	     * \brief Validate a template ref 
 	     * \brief a template ref can be called if refer to a function 
 	     * \brief It will start by solving the template params with the types of the parameters
 	     */
-	    generator::Generator validateTemplateRef (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
+	    generator::Generator validateTemplateRef (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
 
 	    /**
 	     * \brief Validate a template Class Cst
 	     */
-	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
+	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors, Symbol & sym, generator::Generator & proto_gen);
 
 	    /**
 	     * \brief Validate a template class cst prototype
 	     */
-	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const syntax::Function::Prototype & prototype, const std::vector <generator::Generator> & params, int & score, std::vector <std::string> & errors, Symbol & sym);
+	    generator::Generator validateTemplateClassCst (const lexing::Word & expression, const generator::Generator & ref, const syntax::Function::Prototype & prototype, const std::vector <generator::Generator> & params, int & score, std::list <std::string> & errors, Symbol & sym);
 
 
 	    /**
@@ -167,16 +167,16 @@ namespace semantic {
 	     * \param params the parameter to fill with the left expression (a.b ()-> return b; and params.push (a))
 	     * \param errors the errors to throw in case of failure
 	     */
-	    generator::Generator validateDotCall (const syntax::Expression & left, std::vector<generator::Generator> & params, const std::vector<std::string> & errors);
+	    generator::Generator validateDotCall (const syntax::Expression & left, std::vector<generator::Generator> & params, const std::list <std::string> & errors);
 	    
 	    /**
 	     * Throw an undefined op error
 	     */
-	    static void error (const lexing::Word & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::vector <std::string> & errors);
+	    static void error (const lexing::Word & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::list <std::string> & errors);
 
-	    static void error (const lexing::Word & expression, const lexing::Word & end, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::vector <std::string> & errors);
+	    static void error (const lexing::Word & expression, const lexing::Word & end, const generator::Generator & left, const std::vector <generator::Generator> & rights, std::list <std::string> & errors);
 
-	    static void insertCandidate (int & nb, std::vector <std::string> & errors, const std::vector <std::string> & candErrors);
+	    static void insertCandidate (int & nb, std::list <std::string> & errors, const std::list <std::string> & candErrors);
 
 	    static std::string prettyName (const generator::Generator & gen);
 

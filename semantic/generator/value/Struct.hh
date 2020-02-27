@@ -25,7 +25,7 @@ namespace semantic {
 	 */
 	class Struct : public Value {
 	    
-	    Symbol _ref;
+	    std::weak_ptr <ISymbol> _ref;
 
 	    std::vector <generator::Generator> _fields;
 	    
@@ -42,6 +42,8 @@ namespace semantic {
 	public : 
 	    
 	    static Generator init (const lexing::Word & loc, const Symbol & ref);
+
+	    static Generator init (const Struct & other, const std::vector <Generator> & fields);
 	    
 	    Generator clone () const override;
 	    
@@ -61,11 +63,6 @@ namespace semantic {
 	    const std::vector <generator::Generator> & getFields () const;
 
 	    /**
-	     * set the fields of the struct
-	     */
-	    void setFields (const std::vector <generator::Generator> & fields);
-
-	    /**
 	     * \return the type of a given field or an empty generator 	     
 	     */
 	    Generator  getFieldType (const std::string & name) const;
@@ -83,7 +80,7 @@ namespace semantic {
 	    /**
 	     * \return the symbol responsible of the declaration of this structure prototype
 	     */
-	    const Symbol&  getRef () const;
+	    Symbol getRef () const;
 
 	    /**
 	     * \return does this structure have at least one complex field ? 

@@ -6,18 +6,13 @@ namespace syntax {
 	IExpression (lexing::Word::eof ())
     {}    
     
-    Set::Set (const lexing::Word & loc) :
-	IExpression (loc)
+    Set::Set (const lexing::Word & loc,  const std::vector <Expression> & params) :
+	IExpression (loc),
+	_params (params)
     {}
 
     Expression Set::init (const lexing::Word & location, const std::vector <Expression> & params) {
-	auto ret = new (Z0) Set (location);
-	ret-> _params = params;
-	return Expression {ret};
-    }
-
-    Expression Set::clone () const {
-	return Expression {new Set (*this)};
+	return Expression {new (Z0) Set (location, params)};
     }
 
     bool Set::isOf (const IExpression * type) const {

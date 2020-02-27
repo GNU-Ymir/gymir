@@ -2,28 +2,17 @@
 
 namespace syntax {
 
-    Trait::Trait () {}
+    Trait::Trait () :
+	IDeclaration (lexing::Word::eof ())
+    {}
 
-    Declaration Trait::init () {
-	return Declaration {new (Z0) Trait ()};
-    }
-
-    Declaration Trait::init (const Trait & tr) {
-	auto ret = new (Z0) Trait ();
-	ret-> _name = tr._name;
-	ret-> _inner = tr._inner;
-	return Declaration {ret};
-    }
-
+    Trait::Trait (const lexing::Word & name, const std::vector <Declaration> & decls) :
+	IDeclaration (name),
+	_inner (decls)
+    {}
+    
     Declaration Trait::init (const lexing::Word & name, const std::vector <Declaration> & decls) {
-	auto ret = new (Z0) Trait ();
-	ret-> _name = name;
-	ret-> _inner = decls;
-	return Declaration {ret};
-    }
-
-    Declaration Trait::clone () const {
-	return Trait::init (*this);
+	return Declaration {new (Z0) Trait (name, decls)};
     }
     
     bool Trait::isOf (const IDeclaration * type) const {
@@ -35,14 +24,10 @@ namespace syntax {
     
     void Trait::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Trait> ", i, '\t');
-	stream.writeln (this-> _name);
+	stream.writeln (this-> getLocation ());
 
 	for (auto & it : this-> _inner)
 	    it.treePrint (stream, i + 1);
-    }
-
-    const lexing::Word & Trait::getName () const {
-	return this-> _name;
     }
 
     const std::vector<Declaration> & Trait::getDeclarations () const {

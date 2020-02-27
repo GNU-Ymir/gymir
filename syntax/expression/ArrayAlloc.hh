@@ -29,13 +29,11 @@ namespace syntax {
 
 	ArrayAlloc ();
 
-	ArrayAlloc (const lexing::Word & loc);
+	ArrayAlloc (const lexing::Word & loc, const Expression & left, const Expression & size, bool isDyn);
 
     public :
 
 	static Expression init (const lexing::Word & location, const Expression & left, const Expression &size, bool isDynamic = false);
-
-	Expression clone () const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	

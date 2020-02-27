@@ -58,9 +58,9 @@ namespace semantic {
 	}
 	
 	Generator BinaryVisitor::validateMathOperation (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {	
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    Generator ret (Generator::empty ());
-	    TRY (
+	    try {
 
 		match (left.to<Value> ().getType ()) {
 		    of (Integer, integer ATTRIBUTE_UNUSED,
@@ -92,27 +92,25 @@ namespace semantic {
 		    );
 		}
 		
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors = msgs;
-	    } FINALLY; 
+	    } catch (Error::ErrorList list) {		
+		errors = list.errors;
+	    }  
 	    	    	    
 	    if (!ret.isEmpty ()) return ret;	    
 	    else {
-		TRY (
+		try {
 		    match (right.to <Value> ().getType ()) {
 			of (ClassRef, c ATTRIBUTE_UNUSED,
 			    ret = validateMathClassRight (op, expression, left, right);
 			);
 		    }
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
+		} catch (Error::ErrorList list) {		    
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
 		
 		if (ret.isEmpty ()) {
 		    if (errors.size () != 0) {
-			THROW (ErrorCode::EXTERNAL, errors);
+			throw Error::ErrorList {errors};
 		    }
 		    
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
@@ -358,8 +356,8 @@ namespace semantic {
 	    auto right = this-> _context.validateValue (rightExp);
 
 	    Generator ret (Generator::empty ());
-	    std::vector <std::string> errors;
-	    TRY (
+	    std::list <std::string> errors;
+	    try {
 
 		match (left.to<Value> ().getType ()) {
 		    of (Integer, integer ATTRIBUTE_UNUSED,
@@ -391,27 +389,25 @@ namespace semantic {
 		    );
 		}		
 		
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors = msgs;
-	    } FINALLY;
+	    } catch (Error::ErrorList list) {		
+		errors = list.errors;
+	    } 
 	    
 	    if (!ret.isEmpty  ()) return ret;
 	    else {
-		TRY (
+		try {
 		    match (right.to <Value> ().getType ()) {
 			of (ClassRef, c ATTRIBUTE_UNUSED,
 			    ret = validateLogicalClassRight (op, expression, left, right);
 			);
 		    }
-		) CATCH (ErrorCode::EXTERNAL) {
-		    GET_ERRORS_AND_CLEAR (msgs);
-		    errors.insert (errors.end (), msgs.begin (), msgs.end ());
-		} FINALLY;
+		} catch (Error::ErrorList list) {		    
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
 		
 		if (ret.isEmpty ()) {
 		    if (errors.size () != 0) {
-			THROW (ErrorCode::EXTERNAL, errors);
+			throw Error::ErrorList {errors};
 		    }
 		    
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
@@ -590,25 +586,23 @@ namespace semantic {
 	    
 	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
 
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
 		Generator result (Generator::empty ());
 		{
-		    TRY (
+		    try {
 			result = validateEqualClass (op, expression, left, right);
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors = msgs;		    
-		    } FINALLY;
+		    } catch (Error::ErrorList list) {			
+			errors = list.errors;		    
+		    } 
 		}
 		
 		if (result.isEmpty ()) {
-		    TRY (
+		    try {
 			result = validateEqualClassRight (op, expression, left, right);
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
-		    } FINALLY;
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
+		    } 
 		
 		}
 		
@@ -632,15 +626,14 @@ namespace semantic {
 	    );
 
 	    Generator cl (Generator::empty ());
-	    TRY (
+	    try {
 		cl = this-> _context.validateValue (call);
-	    ) CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
-	    } FINALLY;
+	    } catch (Error::ErrorList list) {		
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
+	    } 
 
 	    if (cl.isEmpty ())
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    
 	    auto final_test = syntax::Binary::init (
 		{loc},
@@ -662,16 +655,15 @@ namespace semantic {
 	    
 	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
 
-	    std::vector <std::string> errors;	    
+	    std::list <std::string> errors;	    
 	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
 		Generator result (Generator::empty ());
 		{
-		    TRY (
+		    try {
 			result = validateEqualClassRight (op, expression, left, right);
-		    ) CATCH (ErrorCode::EXTERNAL) {
-			GET_ERRORS_AND_CLEAR (msgs);
-			errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
-		    } FINALLY;
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
+		    } 
 		
 		}
 		
@@ -696,15 +688,14 @@ namespace semantic {
 
 	    Generator cl (Generator::empty ());
 	    
-	    TRY (
+	    try {
 		cl = this-> _context.validateValue (call);
-	    )  CATCH (ErrorCode::EXTERNAL) {
-		GET_ERRORS_AND_CLEAR (msgs);
-		errors.insert (errors.end (), msgs.begin (), msgs.end ());		    
-	    } FINALLY;
+	    } catch (Error::ErrorList list) {		
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
+	    }
 
 	    if (cl.isEmpty ())
-		THROW (ErrorCode::EXTERNAL, errors);
+		throw Error::ErrorList {errors};
 	    
 	    auto final_test = syntax::Binary::init (
 		{loc, inverseOperator (op)},

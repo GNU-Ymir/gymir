@@ -9,22 +9,15 @@ namespace syntax {
 	_value (Expression::empty ())
     {}
     
-    DestructDecl::DestructDecl (const lexing::Word & loc) :
+    DestructDecl::DestructDecl (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & value, bool isVariadic) :
 	IExpression (loc),
-	_params ({}),
-	_value (Expression::empty ())
+	_params (params),
+	_value (value),
+	_isVariadic (isVariadic)
     {}
 
     Expression DestructDecl::init (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & value, bool isVariadic) {
-	auto ret = new (Z0) DestructDecl (loc);
-	ret-> _params = params;
-	ret-> _value = value;
-	ret-> _isVariadic = isVariadic;
-	return Expression {ret};
-    }
-
-    Expression DestructDecl::clone () const {
-	return Expression {new DestructDecl (*this)};
+	return Expression {new (Z0) DestructDecl (loc, params, value, isVariadic)};
     }
 
     bool DestructDecl::isOf (const IExpression * type) const {

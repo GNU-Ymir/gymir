@@ -7,19 +7,13 @@ namespace syntax {
 	_right (Expression::empty ())
     {}
     
-    OfVar::OfVar (const lexing::Word & loc) :
+    OfVar::OfVar (const lexing::Word & loc, const Expression & type) :
 	IExpression (loc),
-	_right (Expression::empty ())
+	_right (type)
     {}
         
     Expression OfVar::init (const lexing::Word & location, const Expression & type) {
-	auto ret = new (Z0) OfVar (location);
-	ret-> _right = type;
-	return Expression {ret};
-    }
-
-    Expression OfVar::clone () const {
-	return Expression {new OfVar (*this)};
+	return Expression {new (Z0) OfVar (location, type)};
     }
 
     bool OfVar::isOf (const IExpression * type) const {

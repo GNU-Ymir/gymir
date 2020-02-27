@@ -20,7 +20,7 @@ namespace semantic {
 	}
 
 	Generator DotVisitor::validate (const syntax::Binary & expression, bool isFromCall) {
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    
 	    Generator ret (Generator::empty ());
@@ -91,9 +91,9 @@ namespace semantic {
 		left.to <Value> ().getType ().to <Type> ().isMutable () &&
 		type.to <Type> ().isMutable ()
 	    )
-		type.to <Type> ().isMutable (true);
+		type = Type::init (type.to <Type> (), true);
 	    else
-		type.to<Type> ().isMutable (false);
+		type = Type::init (type.to<Type> (), false);
 	    
 	    return TupleAccess::init (expression.getLocation (), type, left, index_val);
 	}
@@ -111,9 +111,9 @@ namespace semantic {
 		    left.to <Value> ().getType ().to <Type> ().isMutable () &&
 		    field_type.to <Type> ().isMutable ()
 		)
-		    field_type.to <Type> ().isMutable (true);
+		    field_type = Type::init (field_type.to <Type> (), true);
 		else
-		    field_type.to<Type> ().isMutable (false);
+		    field_type = Type::init (field_type.to<Type> (), false);
 		
 		return StructAccess::init (expression.getLocation (), field_type, left, name);
 	    }	    
@@ -159,7 +159,7 @@ namespace semantic {
 
 	    if (name == Range::FST_NAME || name == Range::SCD_NAME) {
 		auto innerType = left.to <Value> ().getType ().to <Type> ().getInners ()[0];
-		innerType.to<Type> ().isMutable (false);
+		innerType = Type::init (innerType.to<Type> (), false);
 		return StructAccess::init (expression.getLocation (),
 					   innerType,
 					   left, name);					   
@@ -167,7 +167,7 @@ namespace semantic {
 
 	    if (name == Range::STEP_NAME) {
 		auto step_type = left.to<Value> ().getType ().to <Range> ().getStepType ();
-		step_type.to <Type> ().isMutable (left.to <Value> ().getType ().to <Type> ().isMutable ());
+		step_type = Type::init (step_type.to <Type> (), left.to <Value> ().getType ().to <Type> ().isMutable ());
 		return StructAccess::init (expression.getLocation (),
 					   step_type,
 					   left, name);	
@@ -175,7 +175,7 @@ namespace semantic {
 
 	    if (name == Range::FULL_NAME) {
 		auto full_type = Bool::init (expression.getLocation ());
-		full_type.to <Type> ().isMutable (false);
+		full_type = Type::init (full_type.to <Type> (), false);
 		return StructAccess::init (expression.getLocation (),
 					   full_type,
 					   left, name);	
@@ -185,7 +185,7 @@ namespace semantic {
 	    return Generator::empty ();	    
 	}
 
-	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::vector <std::string> & errors) {
+	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <std::string> & errors) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
 	    auto cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
@@ -229,9 +229,9 @@ namespace semantic {
 			left.to <Value> ().getType ().to <Type> ().isMutable () &&
 			type.to <Type> ().isMutable ()
 		    )
-			type.to <Type> ().isMutable (true);
+			type = Type::init (type.to <Type> (), true);
 		    else
-			type.to<Type> ().isMutable (false);
+			type = Type::init (type.to<Type> (), false);
 		    
 		    return StructAccess::init (expression.getLocation (),
 					       type,
@@ -283,8 +283,7 @@ namespace semantic {
 	    cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    // Template methods
 	    while (!cl.isEmpty ()) {
-		auto clRef = cl.to <generator::Class> ().getClassRef ();
-		clRef.to <Type> ().isMutable (true);
+		auto clRef = Type::init (cl.to <generator::Class> ().getClassRef ().to <Type> (), true);
 		
 		for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 		    match (it) {
@@ -332,14 +331,14 @@ namespace semantic {
 	    auto elem = this-> _context.validateValue (expression.getRight (), false, true); // We are in a call finfine
 
 	    int score;
-	    std::vector <std::string> errors;
+	    std::list <std::string> errors;
 	    auto ret = call.validate (expression.getLocation (), elem, {left}, score, errors);
 	    if (ret.isEmpty ())
 		call.error (expression.getLocation (), elem, {left}, errors);
 	    return ret;
 	}
 	
-	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right, std::vector <std::string> & errors) {
+	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right, std::list <std::string> & errors) {
 	    std::string leftName;
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())

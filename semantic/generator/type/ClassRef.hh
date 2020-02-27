@@ -14,7 +14,7 @@ namespace semantic {
 	class ClassRef : public Type {
 
 	    /** The id of the structure refered */
-	    Symbol _ref;
+	    std::weak_ptr<ISymbol> _ref;
 
 	    /**
 	     * The parent of the class, it can be empty
@@ -53,7 +53,7 @@ namespace semantic {
 
 	    bool needExplicitAlias () const override;
 
-	    const Symbol & getRef () const;
+	    Symbol getRef () const;
 	    
 	    const Generator & getAncestor () const;
 	    

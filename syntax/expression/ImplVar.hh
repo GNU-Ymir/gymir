@@ -17,13 +17,11 @@ namespace syntax {
 
 	ImplVar ();
 	
-	ImplVar (const lexing::Word & loc);
+	ImplVar (const lexing::Word & loc, const Expression & type);
 
     public :
 
 	static Expression init (const lexing::Word & token, const Expression & type);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

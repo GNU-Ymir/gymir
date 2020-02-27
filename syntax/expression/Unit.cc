@@ -14,10 +14,6 @@ namespace syntax {
 	return Expression {new (Z0) Unit (location)};
     }
 
-    Expression Unit::clone () const {
-	return Expression {new (Z0) Unit (*this)};
-    }
-
     bool Unit::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Unit thisType; // That's why we cannot implement it for all class

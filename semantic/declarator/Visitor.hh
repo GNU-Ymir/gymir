@@ -59,101 +59,101 @@ namespace semantic {
 	    /**
 	     * \brief Transform a AST into a semantic tree
 	     */
-	    semantic::Symbol visit (const syntax::Declaration & ast);
+	    semantic::Symbol visit (const syntax::Declaration ast);
 
 	    /**
 	     * \brief Transform a syntax::module into a semantic tree
 	     */
-	    semantic::Symbol visitModule (const syntax::Module & mod);
+	    semantic::Symbol visitModule (const syntax::Module mod);
 
 	    /**
 	     * \brief Create the sub module when creating a global module with a complexe path
 	     */
-	    void createSubModules (const lexing::Word & loc, const std::vector <std::string> & names, semantic::Symbol & last);
+	    void createSubModules (const lexing::Word & loc, const std::vector <std::string> & names, semantic::Symbol last);
 	    
 	    /**
 	     * \brief Transform a function into a semantic tree
 	     */
-	    semantic::Symbol visitFunction (const syntax::Function & func, bool isExtern = false, bool insert = true);
+	    semantic::Symbol visitFunction (const syntax::Function func, bool isExtern = false, bool insert = true);
 
 	    /**
 	     * \brief Transform a constructor into a semantic tree
 	     */
-	    semantic::Symbol visitConstructor (const syntax::Constructor & cs);
+	    semantic::Symbol visitConstructor (const syntax::Constructor cs);
 	    
 	    /**
 	     * \brief Transform a struct into a semantic tree
 	     */
-	    semantic::Symbol visitStruct (const syntax::Struct & str, bool insert = true);
+	    semantic::Symbol visitStruct (const syntax::Struct str, bool insert = true);
 
 	    /**
 	     * \brief Transform an alias into a semantic tree
 	     */
-	    semantic::Symbol visitAlias (const syntax::Alias & stal);
+	    semantic::Symbol visitAlias (const syntax::Alias stal);
 
 	    /**
 	     * \brief Transform a list of declaration into semantic tree 
 	     * \return always an empty symbol
 	     */
-	    semantic::Symbol visitBlock (const syntax::DeclBlock & block);
+	    semantic::Symbol visitBlock (const syntax::DeclBlock block);
 
 	    /**
 	     * \brief Transform a list of external declaration into semantic tree
 	     * \return always an empty symbol
 	     */
-	    semantic::Symbol visitExtern (const syntax::ExternBlock & ex_block);
+	    semantic::Symbol visitExtern (const syntax::ExternBlock ex_block);
 	    
 	    /**
 	     * \brief Transform a class declarator into a semantic tree
 	     */
-	    semantic::Symbol visitClass (const syntax::Class & cls);
+	    semantic::Symbol visitClass (const syntax::Class cls);
 
 	    /**
 	     * \brief Visit the internal part of a class
 	     */
-	    void visitInnerClass (Symbol & cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
+	    void visitInnerClass (Symbol cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
 	    
 	    /**
 	     * \brief Transform a trait declarator into a semantic tree
 	     */
-	    semantic::Symbol visitTrait (const syntax::Trait & trait);
+	    semantic::Symbol visitTrait (const syntax::Trait trait);
 
 	    /**
 	     * \brief Transform a trait implementation into a semantic tree
 	     */
-	    semantic::Symbol visitImpl (const syntax::Mixin & impl);
+	    semantic::Symbol visitImpl (const syntax::Mixin impl);
 	    
 	    /**
 	     * \brief Visit an enum declaration
 	     */
-	    semantic::Symbol visitEnum (const syntax::Enum & stenm);
+	    semantic::Symbol visitEnum (const syntax::Enum stenm);
 
 	    /**
 	     * \brief Transform a vardecl to a semantic tree
 	     */
-	    semantic::Symbol visitVarDecl (const syntax::VarDecl & decl);
+	    semantic::Symbol visitVarDecl (const syntax::VarDecl decl);
 
 	    /**
 	     * \brief Transform a global var declaration into semantic tree
 	     */
-	    semantic::Symbol visitGlobal (const syntax::Global & glob);
+	    semantic::Symbol visitGlobal (const syntax::Global glob);
 	    
 	    /**
 	     * \brief Transform an import into a semantic tree
 	     */
-	    semantic::Symbol visitImport (const syntax::Import & imp);
+	    semantic::Symbol visitImport (const syntax::Import imp);
 
 	    /**
 	     * \brief Transform a template declaration into semantic tree
 	     */
-	    semantic::Symbol visitTemplate (const syntax::Template & tep);
+	    semantic::Symbol visitTemplate (const syntax::Template tep);
 	    
 	    /**
 	     * \brief Push a referent symbol
 	     * \brief This symbol is the current symbol table that will be filled
 	     * \brief It is also the symbol table used to get the symbol list
 	     */
-	    void pushReferent (const Symbol & sym);
+	    void pushReferent (const Symbol sym);
 
 	    /**
 	     * \brief Remove the last referent symbol (if any)
@@ -164,7 +164,7 @@ namespace semantic {
 	    /** 
 	     * \brief Return the current referent
 	     */
-	    Symbol & getReferent ();
+	    Symbol getReferent ();
 
 	    /**
 	     * \brief Import all the core files in the current referent

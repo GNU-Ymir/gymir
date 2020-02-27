@@ -14,10 +14,6 @@ namespace syntax {
 	return Expression {new (Z0) Ignore (location)};
     }
 
-    Expression Ignore::clone () const {
-	return Expression {new (Z0) Ignore (*this)};
-    }
-
     bool Ignore::isOf (const IExpression * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	Ignore thisType; // That's why we cannot implement it for all class

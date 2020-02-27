@@ -16,7 +16,7 @@ namespace semantic {
 	{}
 	
 	Generator TemplateClassCst::init (const lexing::Word & loc, const Symbol & ref, const std::vector <syntax::Function::Prototype> & cst) {
-	    return Generator {new TemplateClassCst (loc, ref, cst)};
+	    return Generator {new (Z0) TemplateClassCst (loc, ref, cst)};
 	}
     
 	Generator TemplateClassCst::clone () const {

@@ -9,7 +9,7 @@ namespace semantic {
 
 	class TemplateRef : public Value {
 
-	    Symbol _ref;
+	    std::weak_ptr<ISymbol> _ref;
 
 	protected :
 
@@ -50,7 +50,7 @@ namespace semantic {
 	    /**
 	     * \return the module reference that is accessed by this generator
 	     */
-	    const Symbol & getTemplateRef () const;
+	    Symbol getTemplateRef () const;
 
 	    std::string prettyString () const override;
 	    

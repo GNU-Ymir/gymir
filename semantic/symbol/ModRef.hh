@@ -14,7 +14,7 @@ namespace semantic {
 
 	std::string _name;
 
-	Table _table;
+	std::shared_ptr<Table> _table;
 	
     private :
 

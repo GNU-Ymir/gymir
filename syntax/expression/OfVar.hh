@@ -17,13 +17,11 @@ namespace syntax {
 
 	OfVar ();
 	
-	OfVar (const lexing::Word & loc);
+	OfVar (const lexing::Word & loc, const Expression & type);
 
     public :
 
 	static Expression init (const lexing::Word & token, const Expression & type);
-
-	Expression clone () const override;
 
 	bool isOf (const IExpression * type) const override;
 

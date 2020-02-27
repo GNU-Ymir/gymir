@@ -34,13 +34,11 @@ namespace syntax {
 
 	Block ();
 	
-	Block (const lexing::Word & loc);
+	Block (const lexing::Word & loc, const lexing::Word & end, const Declaration & decls, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes);
 
     public :
 
 	static Expression init (const lexing::Word & op, const lexing::Word & end, const Declaration & decls, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes);
-
-	Expression clone () const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

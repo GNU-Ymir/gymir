@@ -19,55 +19,31 @@ namespace syntax {
      \endverbatim
      */
     class Module : public IDeclaration {
-
-	static const std::string KEYWORD;
 	
-	/** The identifier of the module */
-	lexing::Word _ident;
-
 	/** All the declaration inside the module */
 	std::vector <Declaration> _decls;
 	
 	/** Is this a global module (entire file) */
 	bool _isGlobal;
 
-	/** The function called at static init of the module (may be empty ()); */	 
-	Declaration _constructor;
-
-	/** The function called at static destruction of the module (may be empty ()); */
-	Declaration _destructor;
-	
     private :
 
 	friend Declaration; // Needed for dynamic casting
 
 	Module ();
+
+	Module (const lexing::Word & loc, const std::vector <Declaration> & content, bool isGlobal);
 	
     public:
-
-	/**
-	 * \brief Create an empty module
-	 */
-	static Declaration init ();
-	
+		
 	/**
 	 * \brief Create a new module 
 	 * \param ident the location and name of the module
 	 * \param decls the list of declaration inside the module
 	 */
-	static Declaration init (const lexing::Word &ident, const std::vector <Declaration> & decls);
+	static Declaration init (const lexing::Word &ident, const std::vector <Declaration> & decls, bool isGlobal);
 
-	/**
-	 * \brief Create a new module from another one
-	 * \param mod the module to copy
-	 */
-	static Declaration init (const Module & mod);	
 	
-	/**
-	 * \brief Mandatory function used for proxy polymoprhism system
-	 */
-	Declaration clone () const override;
-
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
 	/**
@@ -75,28 +51,6 @@ namespace syntax {
 	 */
 	bool isOf (const IDeclaration * type) const override;
 	
-	/**
-	 * \brief Set the identifier of the module
-	 * \param ident the new name of the module
-	 */
-	void setIdent (const lexing::Word &ident);
-
-	/**
-	 * \brief Add a new declaration inside the module
-	 * \param decl the declaration to add
-	 */
-	void addDeclaration (const Declaration & decl);
-
-	/**
-	 * \param isGlobal is this module a global one ?
-	 */
-	void isGlobal (bool isGlobal);
-
-	/**
-	 * \return the identifier of the module
-	 */
-	const lexing::Word & getIdent () const;
-
 	/**
 	 * \return is this module global ?
 	 */

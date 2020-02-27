@@ -5,22 +5,20 @@
 #include <ymir/semantic/symbol/TemplateSolution.hh>
 
 namespace semantic {
-
+    
     Symbol Symbol::__empty__ (Symbol::empty ());
         
     std::map <std::string, Symbol> Symbol::__imported__;
     
     ISymbol::ISymbol () :
-	_name (lexing::Word::eof ()),
-	_referent (nullptr)
+	_name (lexing::Word::eof ())
     {}
 
     ISymbol::ISymbol (const lexing::Word & name, bool isWeak)
 	: _name (name),
-	  _referent (nullptr),
 	  _isWeak (isWeak)
     {}
-
+    
     bool ISymbol::isOf (const ISymbol *) const {
 	return false;
     }
@@ -117,17 +115,17 @@ namespace semantic {
     }
     
     Symbol ISymbol::getReferent () const {
-	return Symbol {this-> _referent};
+	return Symbol {this-> _referent};	
     }
     
     void ISymbol::setReferent (const Symbol & ref) {
-	this-> _referent = ref.getRef ();
+	this-> _referent = ref.getPtr ();
     }
     
     std::string ISymbol::getRealName () const {
-	if (this-> _referent == nullptr) return this-> _name.str;
+	if (!this-> _referent.lock ()) return this-> _name.str;
 	else {
-	    auto ft = this-> _referent-> getRealName ();
+	    auto ft = (Symbol {this-> _referent}).getRealName ();
 	    if (ft != "")
 		return ft + "::" + this-> _name.str;
 	    else return this-> _name.str;
@@ -135,9 +133,9 @@ namespace semantic {
     }
     
     std::string ISymbol::getMangledName () const {
-	if (this-> _referent == nullptr) return this-> _name.str;
+	if (!this-> _referent.lock ()) return this-> _name.str;
 	else {
-	    auto ft = this-> _referent-> getMangledName ();
+	    auto ft = (Symbol {this-> _referent}).getMangledName ();
 	    if (ft != "")
 		return ft + "::" + this-> _name.str;
 	    else return this-> _name.str;
@@ -148,6 +146,14 @@ namespace semantic {
 
     Symbol::Symbol (ISymbol * value) : RefProxy<ISymbol, Symbol> (value)
     {}
+
+    Symbol::Symbol (const std::shared_ptr <ISymbol> & sym) : RefProxy<ISymbol, Symbol> (sym)
+    {}
+
+    Symbol::Symbol (const std::weak_ptr <ISymbol> & sym) : RefProxy<ISymbol, Symbol> (sym.lock ())
+    {}
+    
+    Symbol::~Symbol () {}
     
     Symbol Symbol::empty () {
 	return Symbol {nullptr};
@@ -371,14 +377,15 @@ namespace semantic {
     }
     
     Symbol Symbol::getReferent () const {
-	if (this-> _value == nullptr)
+	if (this-> _value == nullptr)	    
 	    return Symbol::__empty__;
-	return this-> _value-> getReferent ();
-    }
-
+	return this-> _value-> getReferent ();	
+    }    
+        
     void Symbol::setReferent (const Symbol & ref) {
-	if (this-> _value != nullptr)
+	if (this-> _value != nullptr) {	    
 	    this-> _value-> setReferent (ref);
+	}
     }
     
     std::string Symbol::getRealName () const {
@@ -412,7 +419,7 @@ namespace semantic {
 
     bool Symbol::isSameRef (const Symbol & other) const {
 	if (this-> _value == nullptr) return false;
-	return this-> _value == other._value;
+	return this-> _value.get () == other._value.get ();
     }
 
     std::string Symbol::formatTree (int padd) const {
@@ -462,6 +469,10 @@ namespace semantic {
 	return __imported__;
     }
 
+    void Symbol::purge () {
+	__imported__.clear ();
+    }
+    
     std::vector <Symbol> Symbol::mergeEqSymbols (const std::vector <Symbol> & multSym) {
 	std::vector <Symbol> result;
 	for (auto & it : multSym) {

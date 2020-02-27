@@ -45,8 +45,10 @@ namespace semantic {
 	    return true;
 	}
 	
-	void LambdaType::isMutable (bool is) {
-	    this-> setMutable (is);
+	Generator LambdaType::createMutable (bool is) const {
+	    auto ret = this-> clone ();
+	    ret.to <LambdaType> ().setMutable (is);
+	    return ret;
 	}
 	
 	std::string LambdaType::typeName () const {

@@ -4,7 +4,6 @@ namespace semantic {
 
     Enum::Enum () :
 	ISymbol (lexing::Word::eof (), false),
-	_table (this),
 	_type (syntax::Expression::empty ()),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
@@ -12,22 +11,15 @@ namespace semantic {
 
     Enum::Enum (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) :
 	ISymbol (name, isWeak),
-	_table (this),
 	_type (type),
 	_fields (values),
 	_gen (generator::Generator::empty ())
     {}
-
-    Enum::Enum (const Enum & other) :
-	ISymbol (other),
-	_table (other._table.clone (this)),
-	_type (other._type),
-	_fields (other._fields),
-	_gen (other._gen)
-    {}
     
     Symbol Enum::init (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) {
-	return Symbol {new (Z0) Enum (name, values, type, isWeak)};
+	auto ret = Symbol {new (Z0) Enum (name, values, type, isWeak)};
+	ret.to <Enum> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
 
     bool Enum::isOf (const ISymbol * type) const {
@@ -38,41 +30,41 @@ namespace semantic {
     }
 
     void Enum::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
     
     void Enum::insertTemplate (const Symbol & sym) {
-	this-> _table.insertTemplate (sym);
+	this-> _table-> insertTemplate (sym);
     }
 
     std::vector<Symbol> Enum::getTemplates () const {
-	return this-> _table.getTemplates ();
+	return this-> _table-> getTemplates ();
     }    
     
     void Enum::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector <Symbol> Enum::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	auto local = this-> _table.get (name);
+	auto local = this-> _table-> get (name);
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
 
     std::vector <Symbol> Enum::getPublic (const std::string & name) const {
 	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table.getPublic (name);
+	auto local = this-> _table-> getPublic (name);
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
     
     std::vector <Symbol> Enum::getLocal (const std::string & name) const {
-	return this-> _table.get (name);
+	return this-> _table-> get (name);
     }
 
     std::vector <Symbol> Enum::getLocalPublic (const std::string & name) const {
-	return this-> _table.getPublic (name);
+	return this-> _table-> getPublic (name);
     }    
     
     const syntax::Expression & Enum::getType () const {
@@ -95,7 +87,7 @@ namespace semantic {
     std::string Enum::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();

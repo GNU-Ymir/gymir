@@ -6,28 +6,20 @@ namespace semantic {
 
     Function::Function () :
 	ISymbol (lexing::Word::eof (), false),
-	_table (this),
 	_content (syntax::Declaration::empty ())
     {}
 
     Function::Function (const lexing::Word & name, const syntax::Function & func, bool isWeak) :
 	ISymbol (name, isWeak),
-	_table (this),
-	_content (syntax::Declaration {func.clone ()}),
+	_content (syntax::Function::init (func)),
 	_isVariadic (func.getPrototype ().isVariadic ()),
 	_isOver (func.isOver ())
     {}
 
-    Function::Function (const Function & other) :
-	ISymbol (other),
-	_table (other._table.clone (this)), 
-	_content (other._content),
-	_isVariadic (other._isVariadic),
-	_isOver (other._isOver)
-    {}
-    
     Symbol Function::init (const lexing::Word & name, const syntax::Function & func, bool isWeak) {
-	return Symbol {new Function (name, func, isWeak)};
+	auto ret = Symbol {new (Z0) Function (name, func, isWeak)};
+	ret.to <Function> ()._table = Table::init (ret.getPtr ());
+	return ret;
     }
 
     bool Function::isOf (const ISymbol * type) const {
@@ -38,41 +30,41 @@ namespace semantic {
     }
 
     void Function::insert (const Symbol & sym) {
-	this-> _table.insert (sym);
+	this-> _table-> insert (sym);
     }
 
     void Function::insertTemplate (const Symbol & sym) {
-	this-> _table.insertTemplate (sym);
+	this-> _table-> insertTemplate (sym);
     }
     
     std::vector<Symbol> Function::getTemplates () const {
-	return this-> _table.getTemplates ();
+	return this-> _table-> getTemplates ();
     }    
     
     void Function::replace (const Symbol & sym) {
-	this-> _table.replace (sym);
+	this-> _table-> replace (sym);
     }
 
     std::vector<Symbol> Function::get (const std::string & name) const {
 	auto vec = getReferent ().get (name);
-	auto local = this-> _table.get (name);
+	auto local = this-> _table-> get (name);
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
 
     std::vector<Symbol> Function::getPublic (const std::string & name) const {
 	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table.getPublic (name);
+	auto local = this-> _table-> getPublic (name);
 	vec.insert (vec.begin (), local.begin (), local.end ());
 	return vec;
     }
     
     std::vector <Symbol> Function::getLocal (const std::string & name) const {
-	return this-> _table.get (name);
+	return this-> _table-> get (name);
     }
 
     std::vector <Symbol> Function::getLocalPublic (const std::string & name) const {
-	return this-> _table.getPublic (name);
+	return this-> _table-> getPublic (name);
     }
     
     
@@ -154,7 +146,7 @@ namespace semantic {
     std::string Function::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());
-	for (auto & it : this-> _table.getAll ()) {
+	for (auto & it : this-> _table-> getAll ()) {
 	    buf.write (it.formatTree (i + 1));
 	}
 	return buf.str ();

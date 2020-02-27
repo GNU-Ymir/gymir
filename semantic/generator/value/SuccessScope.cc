@@ -24,7 +24,7 @@ namespace semantic {
 	}
 	
 	Generator SuccessScope::init (const lexing::Word & loc, const Generator & type, const Generator & who, const std::vector <Generator> & values) {
-	    return Generator {new SuccessScope (loc, type, who, values)};
+	    return Generator {new (Z0) SuccessScope (loc, type, who, values)};
 	}
     
 	Generator SuccessScope::clone () const {

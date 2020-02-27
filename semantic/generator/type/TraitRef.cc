@@ -7,15 +7,14 @@ namespace semantic {
 
 
 	TraitRef::TraitRef () :
-	    Type (),
-	    _ref (Symbol::__empty__)
+	    Type ()
 	{}
 
 	TraitRef::TraitRef (const lexing::Word & loc, const Symbol & ref) :
-	    Type (loc, loc.str),
-	    _ref (ref)
+	    Type (loc, loc.str)
 	{
-	    if (!this-> _ref.isEmpty ()) { // A structure is complex iif one of its field is complex
+	    this-> _ref = ref.getPtr ();
+	    if (!this-> _ref.lock ()) { // A structure is complex iif one of its field is complex
 		this-> isComplex (
 		    true
 		);
@@ -40,15 +39,15 @@ namespace semantic {
 	bool TraitRef::equals (const Generator & gen) const {
 	    if (!gen.is<TraitRef> ()) return false;
 	    auto str = gen.to <TraitRef> ();
-	    return this-> _ref.equals (str._ref);
+	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});
 	}
 
 	bool TraitRef::isRefOf (const Symbol & sym) const {
-	    return this-> _ref.isSameRef (sym);
+	    return (Symbol {this-> _ref}).isSameRef (sym);
 	}
 
-	const Symbol & TraitRef::getRef () const {
-	    return this-> _ref;
+	Symbol TraitRef::getRef () const {
+	    return Symbol {this-> _ref};
 	}
 
 	bool TraitRef::needExplicitAlias () const {
@@ -56,11 +55,11 @@ namespace semantic {
 	}
 	
 	std::string TraitRef::typeName () const {
-	    return Ymir::format ("%::%", this-> _ref.getRealName (), this-> getLocation ().str);
+	    return Ymir::format ("%::%", (Symbol {this-> _ref}).getRealName (), this-> getLocation ().str);
 	}
 
 	std::string TraitRef::getMangledName () const {
-	    return Ymir::format ("%::%", this-> _ref.getMangledName (), this-> getLocation ().str);
+	    return Ymir::format ("%::%", (Symbol {this-> _ref}).getMangledName (), this-> getLocation ().str);
 	}
 	
     }
