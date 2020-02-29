@@ -39,7 +39,10 @@ fdoc
 YMIR Driver
 
 fversion=
-YMIR Joined RejectNegative
+YMIR Joined
+
+vfile
+YMIR Joined Separate
 
 imultilib
 YMIR Joined Separate

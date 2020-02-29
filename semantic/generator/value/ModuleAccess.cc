@@ -50,7 +50,7 @@ namespace semantic {
 	}
 
 	std::string ModuleAccess::prettyString () const {
-	    return Ymir::format ("%", (Symbol {this-> _ref}).formatTree ());
+	    return Ymir::format ("%", (Symbol {this-> _ref}).getRealName ());
 	}
 	
     }

@@ -528,7 +528,7 @@ namespace semantic {
 		    
 		    if (errors.size () != 0) {
 			auto note = Ymir::Error::createNote (imp.getModule (), ExternalError::get (IN_IMPORT));
-			errors.push_back (note);
+			errors.back () = Ymir::Error::addNote (imp.getModule (), errors.back (), note);
 			throw Error::ErrorList {errors};
 		    }
 		}

@@ -199,9 +199,8 @@ namespace semantic {
 		}
 				
 	    } catch (Error::ErrorList list) {
-		
 		errors = list.errors;
-		errors.insert (errors.begin (), Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back () = Ymir::Error::addNote (var.getLocation (), errors.back (), Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 
 	    if (errors.size () != 0)
@@ -324,10 +323,9 @@ namespace semantic {
 			globTest = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		    }
 		}
-	    } catch (Error::ErrorList list) {
-		
+	    } catch (Error::ErrorList list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.insert (errors.begin (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));		
+		errors.back () = Ymir::Error::addNote (value.getLocation (), errors.back (), Ymir::Error::createNote (value.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 
 	    if (errors.size () != 0) {
@@ -373,10 +371,9 @@ namespace semantic {
 		    auto type = this-> _context.validateType (call.getLeft ());
 		    this-> _context.verifyCompatibleTypeWithValue (value.getLocation (), type, value);
 		}
-	    } catch (Error::ErrorList list) {
-		
+	    } catch (Error::ErrorList list) {	       
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.insert (errors.begin (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));		
+		errors.back () = Ymir::Error::addNote (call.getLocation (), errors.back (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 	    
 	    if (errors.size () != 0)
@@ -700,8 +697,7 @@ namespace semantic {
 		    if (!found) Ymir::Error::occur (var.getLocation (), ExternalError::get (USELESS_CATCH), varType.prettyString ());;		    
 		}
 		
-	    } catch (Error::ErrorList list) {
-		
+	    } catch (Error::ErrorList list) {		
 		errors = list.errors;
 		errors.back () = Ymir::Error::addNote (var.getLocation (), errors.back (), Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 

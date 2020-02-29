@@ -12,6 +12,7 @@ namespace global {
 			    CORE_MODULE        = "core",
 			    DCOPY_OP_OVERRIDE  = "deepCopy",
 			    DCOPY_TRAITS       = "Copiable",
+			    DEBUG_VERSION      = "Debug",
 			    DUPLICATION_MODULE = "duplication",
 			    DUPL_ANY           = "_yrt_dupl_any", 
 			    DUPL_SLICE         = "_yrt_dup_slice", 

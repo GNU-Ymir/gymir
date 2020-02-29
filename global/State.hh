@@ -28,11 +28,14 @@ namespace global {
 
 	std::string _executable;
 	
+	std::string _version_path;
+	
 	bool _isDebug = false;
 
 	bool _isVerbose = false;
 
 	bool _isStandalone = false;
+	
 	
     private :
 
@@ -108,7 +111,12 @@ namespace global {
 	 * \change the prefix path, Cf setPrefix
 	 */
 	void setExecutable (const std::string & executable);
-	
+
+	/**
+	 * Set the path of the version file
+	 */
+	void setVersionFile (const std::string & version);
+
 	/**
 	 * \return the prefix path
 	 */
@@ -123,6 +131,11 @@ namespace global {
 	 * \return the list of include directories
 	 */
 	const std::set <std::string> & getIncludeDirs () const ;
+
+	/**
+	 * The config file that determines versions
+	 */
+	const std::string & getVersionFile () const;
 	
     };
    

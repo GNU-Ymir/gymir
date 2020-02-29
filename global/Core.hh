@@ -18,6 +18,7 @@ namespace global {
 			 CORE_MODULE,			 
 			 DCOPY_OP_OVERRIDE,
 			 DCOPY_TRAITS,
+			 DEBUG_VERSION,
 			 DUPLICATION_MODULE,
 			 DUPL_ANY,
 			 DUPL_SLICE,

@@ -983,7 +983,7 @@ namespace semantic {
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
 	    enterContext (cs.getCustomAttributes ());
 	    
-	    classType = Type::init (classType.to <Type> (), true);
+	    classType = Type::init (proto.getLocation (), classType.to <Type> (), true, false);
 	    enterForeign ();
 
 	    std::vector <Generator> throwers;
@@ -1070,7 +1070,7 @@ namespace semantic {
 	    enterClassDef (classType.to <ClassRef> ().getRef ());
 	    enterContext (function.getCustomAttributes ());
 	    
-	    classType = Type::init (classType.to <Type> (), true);
+	    classType = Type::init (function.getLocation (), classType.to <Type> (), true, false);
 	    enterForeign ();
 
 	    std::vector <Generator> throwers;
@@ -1095,12 +1095,12 @@ namespace semantic {
 			);				
 		    }
 		}
-		
-		classType = Type::init (classType.to <Type> (), isMutable);		
-		params.insert (params.begin (), ParamVar::init ({cs.getName (), Keys::SELF}, classType, isMutable));
-		insertLocal (params [0].getName (), params [0]);
-
 		auto & __params = function.getPrototype ().getParameters ();
+		
+		classType = Type::init (__params [0].getLocation (), classType.to <Type> (), isMutable, false);		
+		params.insert (params.begin (), ParamVar::init ({__params [0].getLocation (), Keys::SELF}, classType, isMutable));
+		insertLocal (params [0].getName (), params [0]);		
+
 		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
 		auto proto = syntax::Function::Prototype::init (fakeParams, function.getPrototype ().getType (), false);
 		
@@ -2415,7 +2415,7 @@ namespace semantic {
 
 	    Generator cl (Generator::empty ());
 	    try {
-		cl = Type::init (validateClass (func.getClass ()).to <Type> (), true);
+		cl = Type::init (func.getName (), validateClass (func.getClass ()).to <Type> (), true, false);
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    } 
@@ -2463,7 +2463,7 @@ namespace semantic {
 	    return frame;
 	}
 
-	Generator Visitor::validateMethodProto (const semantic::Function & func, const Generator & classType) {
+	Generator Visitor::validateMethodProto (const semantic::Function & func, const Generator & classType_) {
 	    enterForeign ();
 	    std::vector <Generator> params;
 	    static std::list <lexing::Word> __validating__;
@@ -2474,7 +2474,8 @@ namespace semantic {
 	    for (auto func_loc : __validating__) {
 		if (func_loc.isSame (func.getName ())) no_value = true;
 	    }
-
+	    
+	    auto classType = Type::init (function.getLocation (), classType_.to <Type> ());
 	    __validating__.push_back (func.getName ());
 	    enterBlock ();
 	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), classType, Generator::empty (), true, 1));
@@ -2525,62 +2526,70 @@ namespace semantic {
 
 	void Visitor::validatePrototypeForFrame (const lexing::Word &, const syntax::Function::Prototype & proto,  std::vector <Generator> & params, generator::Generator & retType) {
 	    std::list <std::string> errors;
-	    {
+	    std::vector <Generator> addedParams;
+	    addedParams.reserve (proto.getParameters ().size ());
+	    for (auto & param : proto.getParameters ()) {
 		try {
-		    for (auto & param : proto.getParameters ()) {
-			auto var = param.to <syntax::VarDecl> ();
-			Generator type (Generator::empty ());
-			Generator value (Generator::empty ());
-			if (!var.getType ().isEmpty ()) {
-			    type = validateType (var.getType ());
-			}
+		    auto var = param.to <syntax::VarDecl> ();
+		    Generator type (Generator::empty ());
+		    Generator value (Generator::empty ());
+		    if (!var.getType ().isEmpty ()) {
+			type = validateType (var.getType ());
+		    }
 		
-			if (!var.getValue ().isEmpty ()) {
-			    value = validateValue (var.getValue ());
-			    if (!type.isEmpty ())
-				verifySameType (type, value.to <Value> ().getType ());
-			    else {
-				type = Type::init (value.to <Value> ().getType ().to <Type> (), false);
-			    }
-			}
-			
-			bool isMutable = false;
-			bool isRef = false;
-			bool dmut = false;
-			
-			type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
-						
-			verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
-			
-			if (!value.isEmpty ()) {		    
-			    verifyMemoryOwner (value.getLocation (), type, value, true);
-			}
-
-			if (type.is <NoneType> () || type.is<Void> ()) {
-			    Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
-			} else if (type.is <generator::LambdaType> ()) {
-			    Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
-			}
-		
-			params.push_back (ParamVar::init (var.getName (), type, isMutable));
-			if (var.getName () != Keys::UNDER) {
-			    verifyShadow (var.getName ());		
-			    insertLocal (var.getName ().str, params.back ());
+		    if (!var.getValue ().isEmpty ()) {
+			value = validateValue (var.getValue ());
+			if (!type.isEmpty ())
+			    verifySameType (type, value.to <Value> ().getType ());
+			else {
+			    type = Type::init (value.to <Value> ().getType ().to <Type> (), false);
 			}
 		    }
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    {
+			
+		    bool isMutable = false;
+		    bool isRef = false;
+		    bool dmut = false;
+			
+		    type = applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
+						
+		    verifyMutabilityRefParam (var.getLocation (), type, MUTABLE_CONST_PARAM);
+			
+		    if (!value.isEmpty ()) {		    
+			verifyMemoryOwner (value.getLocation (), type, value, true);
+		    }
 
-		try {
-		    if (!proto.getType ().isEmpty ())
-			retType = validateType (proto.getType (), true);
+		    if (type.is <NoneType> () || type.is<Void> ()) {
+			Ymir::Error::occur (var.getLocation (), ExternalError::get (VOID_VAR));
+		    } else if (type.is <generator::LambdaType> ()) {
+			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
+		    }
+		
+		    addedParams.push_back (ParamVar::init (var.getName (), type, isMutable));
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
+
+	    // We insert them after validation to avoid cross referencing value of param
+	    for (auto & param : addedParams) {
+		if (param.getLocation () != Keys::UNDER) {
+		    verifyShadow (param.getLocation ());		
+		    insertLocal (param.getLocation ().str, param);
+		}
+	    }
+	    
+	    params.insert (params.end (), addedParams.begin (), addedParams.end ());
+	    
+	    try {
+		if (!proto.getType ().isEmpty ()) {
+		    retType = validateType (proto.getType (), true);
+		    if (retType.to <Type> ().isRef ()) {
+			Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
+		    }		    
+		}		
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 	    
 
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};		
@@ -2590,6 +2599,9 @@ namespace semantic {
 	
 	void Visitor::validatePrototypeForProto (const lexing::Word & loc, const syntax::Function::Prototype & proto, bool no_value, std::vector <Generator> & params, generator::Generator & retType) {
 	    std::list <std::string> errors;
+	    std::vector <Generator> addedParams;
+	    addedParams.reserve (proto.getParameters ().size ());
+	    
 	    for (auto & param : proto.getParameters ()) {
 		try {
 		    auto var = param.to <syntax::VarDecl> ();
@@ -2639,27 +2651,34 @@ namespace semantic {
 			nb_consumed = var.getType ().to <TemplateSyntaxList> ().getContents ().size ();
 		    }
 		    
-		    params.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed));
-		    if (var.getName () != Keys::UNDER) {
-			verifyShadow (var.getName ());		
-			insertLocal (var.getName ().str, params.back ());
-		    }
+		    addedParams.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed));
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    errors.push_back (Ymir::Error::createNote (param.getLocation ()));
 		} 
 	    }
-	    
-	    {
-		try {
-		    if (!proto.getType ().isEmpty ())
-			retType = validateType (proto.getType (), true);
-		    else retType = Void::init (loc);
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
+
+	    // We insert them after validation to avoid cross referencing value of param
+	    for (auto & param : addedParams) {
+		if (param.getName () != Keys::UNDER) {
+		    verifyShadow (param.getLocation ());		
+		    insertLocal (param.getLocation ().str, param);
+		}
 	    }
 
+	    params.insert (params.end (), addedParams.begin (), addedParams.end ());
+	    
+	    try {
+		if (!proto.getType ().isEmpty ()) {
+		    retType = validateType (proto.getType (), true);
+		    if (retType.to <Type> ().isRef ()) {
+			Ymir::Error::occur (retType.getLocation (), ExternalError::get (REF_RETURN_TYPE), retType.prettyString ());
+		    }		    
+		} else retType = Void::init (loc);
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
+	    
 	    
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};		

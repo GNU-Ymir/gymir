@@ -69,6 +69,7 @@ namespace global {
 	this-> _prefixPath = path;
 	this-> _includeDir.emplace (Ymir::Path::build (path, __includeInPrefix__).toString ());	
 	this-> _corePath = Ymir::Path::build (Ymir::Path::build (path, __includeInPrefix__), "core").toString ();
+	this-> _version_path = Ymir::Path::build (Ymir::Path::build (path, __includeInPrefix__), "version").toString ();
     }
 
     const std::string & State::getCorePath () const {
@@ -78,5 +79,13 @@ namespace global {
     const std::string & State::getPrefix () const {
 	return this-> _prefixPath;
     }
-    
+
+
+    void State::setVersionFile (const std::string & path) {
+	this-> _version_path = path;
+    }
+
+    const std::string & State::getVersionFile () const {
+	return this-> _version_path;
+    }
 }

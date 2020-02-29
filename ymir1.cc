@@ -17,6 +17,7 @@
 #include <ymir/generic/types.hh>
 #include <ymir/parsing/Parser.hh>
 #include <ymir/global/State.hh>
+#include <ymir/global/Core.hh>
 
 /* Language-dependent contents of a type.  */
  
@@ -86,7 +87,10 @@ ymir_init_options (unsigned int argc ATTRIBUTE_UNUSED, cl_decoded_option * decod
 	//const char * arg = decoded_options [i].arg;
 	switch (decoded_options [i].opt_index) {
 	case OPT_g :
-	case OPT_ggdb : global::State::instance ().activateDebug (true); break;
+	case OPT_ggdb :
+	    global::State::instance ().activateDebug (true);
+	    global::State::instance ().activateVersion (global::CoreNames::get (global::DEBUG_VERSION));
+	    break;
 	case OPT_v : global::State::instance ().activateVerbose (true); break;
 	case OPT_nostdinc : global::State::instance ().activateStandalone (true); break;
 	}
@@ -143,6 +147,8 @@ ymir_langhook_handle_option (size_t scode, const char *arg, int value ATTRIBUTE_
 	global::State::instance ().activateVersion (arg);
     } else if (code == OPT_imultilib) {
 	// set multilib
+    } else if (code == OPT_vfile) {
+	global::State::instance ().setVersionFile (arg);
     } else {
 	return false;
     }

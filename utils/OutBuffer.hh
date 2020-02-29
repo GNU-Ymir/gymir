@@ -9,6 +9,8 @@
 #include <list>
 #include <set>
 #include <type_traits>
+#include <ymir/global/State.hh>
+#include <ymir/global/Core.hh>
 
 namespace lexing {
     struct Word;
@@ -258,6 +260,14 @@ template <typename ... T>
 void print (T ... args) {
     printf ("%s", Ymir::OutBuffer (args...).str ().c_str ());
 }
+
+template <typename ... T>
+void log (T ... args) {
+    if (global::State::instance ().isVerboseActive ()) 
+	printf ("%s\n", Ymir::OutBuffer (args...).str ().c_str ());
+}
+
+
 
 namespace Ymir {
     std::string entab (const std::string & value);

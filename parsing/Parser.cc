@@ -1,6 +1,7 @@
 #include <ymir/parsing/Parser.hh>
 #include <ymir/errors/_.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/lexing/Token.hh>
 #include <ymir/syntax/declaration/Function.hh>
 #include <ymir/syntax/declaration/Module.hh>
 #include <ymir/syntax/visitor/Visitor.hh>
@@ -9,6 +10,8 @@
 #include <ymir/semantic/generator/Visitor.hh>
 #include <ymir/utils/Ref.hh>
 #include <ymir/semantic/Symbol.hh>
+#include <ymir/global/State.hh>
+#include <ymir/global/Core.hh>
 
 using namespace Ymir;
 
@@ -21,6 +24,8 @@ void ymir_parse_file (const char * filename) {
 
 void ymir_parse_files (int nb_files, const char ** files) {
     // TODO generate docs
+    Parser::readVersionFile (); // No need to do it for each file
+    
     for (int i = 0 ; i < nb_files ; i++) {
 	ymir_parse_file (files [i]);
     }    
@@ -34,6 +39,32 @@ namespace Ymir {
     {}
 
     Parser::~Parser () {}
+
+    void Parser::readVersionFile () {
+	auto file_path = global::State::instance ().getVersionFile ();
+	auto file = fopen (file_path.c_str (), "r");
+	if (file != NULL) {
+	    log ("Reading version file : ", file_path);
+	    lexing::Lexer lexer (file_path.c_str (), file,
+				 {Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB},
+				 {
+				     {Token::LCOMM1, {Token::RCOMM1, ""}},
+					 {Token::LCOMM2, {Token::RETURN, ""}},
+					     {Token::LCOMM3, {Token::RCOMM3, ""}},
+						 {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
+						     {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}} 
+				 }
+	    );
+	    while (true) {
+		auto name = lexer.next ();
+		if (!name.isEof ())
+		    global::State::instance ().activateVersion (name.str);
+		else break;
+	    }
+	    fclose (file);
+	} else {
+	}
+    }
     
     void Parser::run () {
 	std::vector <std::string> errors;
@@ -56,6 +87,7 @@ namespace Ymir {
 	
 	auto visitor = syntax::Visitor::init (this-> _path, file);
 	this-> _module = visitor.visitModGlobal ();
+	fclose (file);
     }
 
     void Parser::semanticTime () {

@@ -169,18 +169,8 @@ namespace syntax {
     }
 
     Declaration Visitor::visitVersionGlob (bool global) {
-	if (!global) return visitVersionGlobBlock (global);
-	
-	auto location = this-> _lex.rewind ().next ();
-	auto token = this-> _lex.consumeIf ({Token::EQUAL});
-	if (token == Token::EQUAL) {
-	    auto type = visitIdentifier ();
-	    this-> _lex.consumeIf ({Token::SEMI_COLON});
-	    global::State::instance ().activateVersion (type.str);
-	    return Declaration::empty ();
-	} else {
-	    return visitVersionGlobBlock (global);
-	}	
+	if (!global) return visitVersionGlobBlock (global);       
+	return visitVersionGlobBlock (global);
     }
 
     Declaration Visitor::visitVersionGlobBlock (bool global) {
@@ -1211,7 +1201,7 @@ namespace syntax {
 	    }
 	}
 	
-	return Expression::empty ();
+	return Unit::init (location);
     }
 
     Expression Visitor::visitReturn () {

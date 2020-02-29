@@ -96,6 +96,7 @@ namespace Ymir {
 			    REF_NOT_TYPE		    = "use a reference as a value",
 			    REF_NO_EFFECT		    = "the creation of ref has no effect on left operand",
 			    REF_NO_VALUE		    = "%(y) declared as a reference but not initialized",
+			    REF_RETURN_TYPE                 = "cannot return a reference type",
 			    RETURN_INSIDE_EXPR		    = "return here will result in an undefined behavior", 
 			    RETURN_LOCAL_REFERENCE	    = "expression does not live long enough",
 			    RETURN_NO_FRAME                 = "return outside of function has no meaning",
