@@ -814,7 +814,6 @@ namespace semantic {
 	generator::Generator CallVisitor::validateTemplateRef (const lexing::Word & location, const Generator & ref, const std::vector <generator::Generator> & rights_, int & score, std::list <std::string> & errors, Symbol & _sym, Generator & proto_gen) {
 	    const Symbol & sym = ref.to <TemplateRef> ().getTemplateRef ();
 	    if (!sym.to<semantic::Template> ().getDeclaration ().is <syntax::Function> ()) return Generator::empty ();
-	    
 	    std::vector <Generator> typeParams;
 	    std::vector <Generator> valueParams;
 	    std::vector <Generator> rights = rights_;
@@ -840,7 +839,7 @@ namespace semantic {
 		    bool dmut = false;
 		    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);	    
 		    auto param = findParameter (list, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1).to<ProtoVar> ());
-		   		    
+		    
 		    if (param.isEmpty ())
 		    	failure = true;
 		    else {
@@ -872,7 +871,6 @@ namespace semantic {
 		errors.insert (errors.begin (), list.errors.begin (), list.errors.end ());
 		succeed = false;
 	    } 	    	    
-
 
 	    if (succeed) {
 		int _score;

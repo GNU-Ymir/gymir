@@ -1616,24 +1616,7 @@ namespace semantic {
 	syntax::Function::Prototype TemplateVisitor::replaceAll (const syntax::Function::Prototype & proto, const std::map <std::string, Expression> & mapping) const {
 	    std::vector <Expression> vars;
 	    for (auto & it : proto.getParameters ()) {
-		if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
-		    /** As we are in a template function, it can be possible that the type of the value is not compatible, with the infered type of the var
-		     * We want the following exemple to successfully compile :
-		     * --------
-		     * def foo (T) (a : T = 12) ...
-		     * ...
-		     * foo (?a=[1, 2, 3])
-		     * --------
-		     */
-		    vars.push_back (replaceAll (syntax::VarDecl::init (
-			it.getLocation (),
-			it.to <syntax::VarDecl> ().getDecorators (),
-			it.to <syntax::VarDecl> ().getType (),
-			syntax::Expression::empty ()
-		    ), mapping));
-		} else {
-		    vars.push_back (replaceAll (it, mapping));
-		}
+		vars.push_back (replaceAll (it, mapping));	    
 	    }
 	    return syntax::Function::Prototype::init (vars, replaceAll (proto.getType (), mapping), proto.isVariadic ());
 	    

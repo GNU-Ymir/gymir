@@ -85,15 +85,25 @@ namespace semantic {
 		auto loc = expression.getLocation ();
 		
 		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+
+
+		auto leftType = left.to <Value> ().getType ();
+		leftType = Type::init (leftType.to<Type> (), leftType.to <Type> ().isMutable (), true);
+		auto lRef = UniqValue::init (loc, leftType, Referencer::init (loc, leftType, left));
+		
+		auto rightType = right[0].to <Value> ().getType ();
+		rightType = Type::init (rightType.to<Type> (), rightType.to <Type> ().isMutable (), true);
+		auto rRef = UniqValue::init (loc, rightType, Referencer::init (loc, rightType, right [0]));
+
 		auto len = StructAccess::init (expression.getLocation (),
 					       Integer::init (expression.getLocation (), 64, false),
-					       left, Slice::LEN_NAME);
+					       lRef, Slice::LEN_NAME);
 		
 		auto test = this-> _context.validateValue (syntax::Binary::init (
-		    {loc, Token::INF},
+		    {loc, Token::INF_EQUAL},
 		    TemplateSyntaxWrapper::init (loc, len), 
 		    TemplateSyntaxWrapper::init (loc,
-						 Cast::init (loc, len.to <Value> ().getType (), right[0])
+						 Cast::init (loc, len.to <Value> ().getType (), rRef)
 		    ),
 		    syntax::Expression::empty ()
 		));
@@ -119,11 +129,122 @@ namespace semantic {
 		return LBlock::init (
 		    loc,
 		    innerType,
-		    { conditional, SliceAccess::init (expression.getLocation (), innerType, left, right [0]) }
+		    { lRef, rRef, conditional, SliceAccess::init (expression.getLocation (), innerType, lRef, rRef) }
 		);
 	    		
-	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> ()) {
-		// Call a core function is probably better 
+	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> () && right [0].to <Value> ().getType ().to <Range> ().getInners () [0].is <Integer> ()) {
+		auto loc = expression.getLocation ();
+		
+		auto leftType = left.to <Value> ().getType ();
+		leftType = Type::init (leftType.to<Type> (), leftType.to <Type> ().isMutable (), true);
+		auto lRef = UniqValue::init (loc, leftType, Referencer::init (loc, leftType, left));
+		
+		auto rightType = right[0].to <Value> ().getType ();
+		rightType = Type::init (rightType.to<Type> (), rightType.to <Type> ().isMutable (), true);
+		auto rRef = UniqValue::init (loc, rightType, Referencer::init (loc, rightType, right [0]));
+		
+		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+		auto len = StructAccess::init (expression.getLocation (),
+					       Integer::init (expression.getLocation (), 64, false),
+					       lRef, Slice::LEN_NAME);
+
+		auto ptr = StructAccess::init (expression.getLocation (),
+					       Integer::init (expression.getLocation (), 64, false),
+					       lRef, Slice::PTR_NAME);
+		
+		auto rngInner = right [0].to <Value> ().getType ().to <Range> ().getInners () [0];
+		auto fst = StructAccess::init (expression.getLocation (),
+					       rngInner,
+					       rRef, Range::FST_NAME);
+
+		auto scd = StructAccess::init (expression.getLocation (),
+					       rngInner,
+					       rRef, Range::SCD_NAME);
+		
+		
+		auto testFst = syntax::Binary::init (
+		    {loc, Token::INF},
+		    TemplateSyntaxWrapper::init (loc, len), 
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), fst)
+		    ),
+		    syntax::Expression::empty ()
+		);
+
+		auto testScd = syntax::Binary::init (
+		    {loc, Token::INF},
+		    TemplateSyntaxWrapper::init (loc, len), 
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), scd)
+		    ),
+		    syntax::Expression::empty ()
+		);
+
+		auto testOrder = syntax::Binary::init (
+		    {loc, Token::INF},
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), scd)), 
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), fst)),		    
+		    syntax::Expression::empty ()
+		);
+
+		auto test = this-> _context.validateValue (syntax::Binary::init (
+		    {loc, Token::DPIPE},
+		    testOrder,
+		    syntax::Binary::init (
+			{loc, Token::DPIPE},
+			testFst, testScd, syntax::Expression::empty ()
+		    ),
+		    syntax::Expression::empty ()
+		));
+
+		auto call = this-> _context.validateValue (syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    func,
+		    {}
+		));
+		
+		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());
+		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
+		if (
+		    left.to <Value> ().isLvalue () &&
+		    left.to <Value> ().getType ().to <Type> ().isMutable () &&
+		    left.to <Value> ().getType ().to <Slice> ().getInners () [0].to <Type> ().isMutable ()
+		)
+		    innerType = Type::init (innerType.to <Type> (), true);
+		else
+		    innerType = Type::init (innerType.to <Type> (), false);
+
+		auto ptrFinal = this-> _context.validateValue (syntax::Binary::init (
+		    {loc, Token::PLUS},
+		    TemplateSyntaxWrapper::init (loc, ptr),
+		    syntax::Binary::init (
+			{loc, Token::STAR},
+			TemplateSyntaxWrapper::init (loc,
+						     SizeOf::init (loc, Integer::init (loc, 0, false), innerType)),
+			TemplateSyntaxWrapper::init (loc,
+						     Cast::init (loc, len.to <Value> ().getType (), fst)),
+			syntax::Expression::empty ()
+		    ), syntax::Expression::empty ())
+		);
+
+		auto lenFinal = this-> _context.validateValue (syntax::Binary::init (
+		    {loc, Token::MINUS},
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), scd)),
+		    TemplateSyntaxWrapper::init (loc,
+						 Cast::init (loc, len.to <Value> ().getType (), fst)),
+		    syntax::Expression::empty ()
+		));
+
+		auto slcType = Slice::init (loc, innerType);
+		auto value = SliceValue::init (loc, slcType, ptrFinal, lenFinal);
+		return LBlock::init (
+		    loc,
+		    slcType,
+		    {rRef, lRef, conditional, value}
+		);
 	    }
 
 	    BracketVisitor::error (expression, left, right);

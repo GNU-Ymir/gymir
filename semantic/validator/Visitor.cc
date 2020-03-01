@@ -2819,6 +2819,8 @@ namespace semantic {
 		return Conditional::init (_if.getLocation (), type, test, content, _else);	    
 	    } else {
 		verifyCompatibleType (_if.getLocation (), Void::init (_if.getLocation ()), type);
+		// We check if the type is void, it impose to add a ; at the end of if expression
+		
 		return Conditional::init (_if.getLocation (), type, test, content, Generator::empty ());
 	    }
 	}
@@ -3676,7 +3678,7 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    
 	    auto proto = LambdaProto::init (function.getLocation (), frameName, retType, paramsProto, function.getContent (), function.isRefClosure (), function.isMoveClosure (), syms);
-	    proto = FrameProto::init (proto.to<FrameProto>(), format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name), Frame::ManglingStyle::Y);	    
+	    proto = LambdaProto::init (proto.to<LambdaProto>(), format ("%%%", this-> _referent.back ().getMangledName (), name.length (), name), Frame::ManglingStyle::Y);	    
 
 	    if (!uncomplete) {
 		return validateLambdaProto (proto.to <LambdaProto> (), paramTypes);
