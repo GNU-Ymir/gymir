@@ -230,6 +230,189 @@ namespace syntax {
 	return ExternBlock::init (location, from, space, visitProtectionBlock (false));
     }
 
+    Declaration Visitor::visitMacro () {
+	std::vector <std::string> skips;
+	if (this-> _lex.consumeIf({Token::AT}) == Token::AT) {
+	    this-> _lex.next ({Keys::SKIP});
+	    this-> _lex.next ({Token::EQUAL});
+	    this-> _lex.next ({Token::LACC});
+	    
+	    do {
+		auto tok = visitString ();
+		skips.push_back (tok.to <String> ().getSequence ().str);
+		auto end = this-> _lex.next ({Token::COMA, Token::RACC});
+		if (end == Token::RACC) break;
+	    } while (true);
+	}
+	
+	auto name = this-> _lex.next ();
+
+
+	auto content = visitMacroBlock ();
+	
+	return Macro::init (name, skips, content);
+    }
+
+    std::vector <Declaration> Visitor::visitMacroBlock () {
+	std::vector <Declaration> decls;
+	auto token = this-> _lex.next ({Token::LACC});
+	do {
+	    token = this-> _lex.consumeIf ({Keys::PUBLIC, Keys::VERSION, Token::RACC});
+	    if (token == Keys::PUBLIC) {
+		decls.push_back (visitPublicMacroBlock ());
+	    } else if (token == Keys::VERSION) {
+		decls.push_back (visitVersionMacro ());
+	    } else if (token != Token::RACC) {
+		decls.push_back (visitMacroContent ());
+	    }
+	} while (token != Token::RACC);
+	return decls;
+    }
+
+    Declaration Visitor::visitPublicMacroBlock () {
+	auto location = this-> _lex.rewind ().next ();
+	std::vector <Declaration> decls;
+	auto token = this-> _lex.consumeIf ({Token::LACC});
+	bool end = (token != Token::LACC);
+
+	do {
+	    token = this-> _lex.consumeIf ({Token::RACC});
+	    if (token == Token::RACC) end = true;
+	    else {
+		decls.push_back (visitMacroContent ());
+	    }
+	} while (!end);
+	return DeclBlock::init (location, decls, false, false);
+    }
+
+    Declaration Visitor::visitVersionMacro () {
+	auto location = this-> _lex.rewind ().next ();
+	auto ident = visitIdentifier ();
+	std::vector <Declaration> decls;
+	if (global::State::instance ().isVersionActive (ident.str)) {
+	    decls = visitMacroBlock ();
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
+		ignoreBlock ();
+	    }
+	} else {
+	    ignoreBlock ();
+	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
+		decls = visitMacroBlock ();
+	    }
+	}
+	return DeclBlock::init (location, decls, false, false);
+    }
+
+    Declaration Visitor::visitMacroContent () {
+	auto token = this-> _lex.next ({Keys::SELF, Keys::DEF, Keys::IMPORT});
+	if (token == Keys::IMPORT) return visitImport ();
+	
+	auto name = token;
+	if (token != Keys::SELF) name = visitIdentifier ();
+	
+	token = this-> _lex.next ({Token::LPAR}); 
+	std::vector <Expression> inner;	
+	lexing::Word end = token;
+	bool or_ = false;
+	do {
+	    if (!or_) {
+		if (can (&Visitor::visitMacroExpression)) 
+		    inner.push_back (visitMacroExpression ());
+		else inner.push_back (visitExpression (10));
+		    
+		if (inner.size () == 1) {
+		    auto aux = this-> _lex.consumeIf ({Token::PIPE});
+		    if (aux == Token::PIPE) {
+			Expression next (Expression::empty ());
+			if (can (&Visitor::visitMacroExpression)) 
+			    next = visitMacroExpression ();
+			else next = visitExpression (10);
+			    
+			inner.back () = MacroOr::init (aux, inner.back (), next);
+			or_ = true;
+			end = this-> _lex.next ({Token::RPAR, Token::PIPE});
+		    } else end = this-> _lex.consumeIf ({Token::RPAR}); 
+		} else end = this-> _lex.consumeIf ({Token::RPAR}); 
+	    } else {
+		Expression next (Expression::empty ());
+		if (can (&Visitor::visitMacroExpression)) 
+		    next = visitMacroExpression ();
+		else next = visitExpression (10);
+		inner.back () = MacroOr::init (end, inner.back (), next);
+		end = this-> _lex.next ({Token::RPAR, Token::PIPE});
+	    }		
+	} while (end != Token::RPAR);
+
+	Expression expr = MacroMult::init (token, end, inner, lexing::Word::eof ());
+
+	Expression type (Expression::empty ());
+	if (name != Keys::SELF) {
+	    if (this-> _lex.consumeIf ({Token::SEMI_COLON}) == Token::SEMI_COLON) {
+		return MacroRule::init (name, type, expr, Expression::empty ());	
+	    }
+	}
+       	
+	if (this-> _lex.consumeIf ({Token::ARROW}) == Token::ARROW) {
+	    type = visitExpression ();
+	}
+
+	return MacroConstructor::init (name, type, expr, visitExpression ());
+    }
+
+    Expression Visitor::visitMacroExpression () {
+	auto tok = this-> _lex.consumeIf ({Token::LPAR});
+	if (tok == Token::LPAR) {
+	    std::vector <Expression> inner;
+	    std::vector <std::string> multiplicators = {Token::STAR, Token::PLUS, Token::INTEG};
+	    lexing::Word end = tok;
+	    bool or_ = false;
+	    do {
+		if (!or_) {
+		    if (can (&Visitor::visitMacroExpression)) 
+			inner.push_back (visitMacroExpression ());
+		    else inner.push_back (visitExpression (10));
+		    
+		    if (inner.size () == 1) {
+			auto aux = this-> _lex.consumeIf ({Token::PIPE});
+			if (aux == Token::PIPE) {
+			    Expression next (Expression::empty ());
+			    if (can (&Visitor::visitMacroExpression)) 
+				next = visitMacroExpression ();
+			    else next = visitExpression (10);
+			    
+			    inner.back () = MacroOr::init (aux, inner.back (), next);
+			    or_ = true;
+			    end = this-> _lex.next ({Token::RPAR, Token::PIPE});
+			} else end = this-> _lex.consumeIf ({Token::RPAR}); 
+		    } else end = this-> _lex.consumeIf ({Token::RPAR}); 
+		} else {
+		    Expression next (Expression::empty ());
+		    if (can (&Visitor::visitMacroExpression)) 
+			next = visitMacroExpression ();
+		    else next = visitExpression (10);
+		    inner.back () = MacroOr::init (end, inner.back (), next);
+		    end = this-> _lex.next ({Token::RPAR, Token::PIPE});
+		}		
+	    } while (end != Token::RPAR);
+	    auto mult = this-> _lex.consumeIf (multiplicators);
+	    return MacroMult::init (tok, end, inner, mult);       				 
+	} else if (canVisitIdentifier ()) {
+	    auto ident = visitIdentifier ();
+
+	    this-> _lex.next ({Token::EQUAL});
+	    Expression expr (Expression::empty ());
+	    if (can (&Visitor::visitMacroExpression)) {
+		expr = visitMacroExpression ();	    
+	    } else {
+		expr = visitExpression (10);
+	    }
+	    return MacroVar::init (ident, expr);
+	} else {	    
+	    auto str = visitString ();
+	    return MacroToken::init (str.getLocation (), str.to <String> ().getSequence ().str);
+	}
+    }
+        
     Declaration Visitor::visitDeclaration () {
 	auto location = this-> _lex.next (this-> _declarations);	
 
@@ -240,7 +423,7 @@ namespace syntax {
 	if (location == Keys::STATIC) return visitGlobal ();
 	if (location == Keys::IMPORT) return visitImport ();
 	if (location == Keys::EXTERN) return visitExtern ();
-	// if (location == Keys::MACRO) return visitMacro ();
+	if (location == Keys::MACRO) return visitMacro ();
 	if (location == Keys::MOD) return visitLocalMod ();
 	if (location == Keys::STRUCT) return visitStruct ();
 	if (location == Keys::TRAIT) return visitTrait ();
@@ -375,7 +558,7 @@ namespace syntax {
 	if (fromTrait)
 	    token = this-> _lex.next ({Keys::DEF, Keys::OVER}); // Trait can only have method definitions
 	else
-	    token = this-> _lex.next ({Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL});
+	    token = this-> _lex.next ({Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL, Keys::IMPORT});
 	
 	if (token == Keys::SELF) {
 	    return visitClassConstructor ();
@@ -388,6 +571,8 @@ namespace syntax {
 	    return Expression::toDeclaration (visitVarDeclaration ());
 	} else if (token == Keys::IMPL) {
 	    return visitClassMixin ();
+	} else if (token == Keys::IMPORT) {
+	    return visitImport ();
 	} else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Declaration::empty ();	
@@ -860,6 +1045,8 @@ namespace syntax {
 	    if (location == Token::LPAR) end = this-> _lex.next ({Token::RPAR});
 	    else end = this-> _lex.next ({Token::RCRO});
 	    return visitOperand1 (MultOperator::init (location, end, value, params));
+	} else if (location == Token::MACRO_ACC || location == Token::MACRO_CRO || location == Token::MACRO_PAR) {
+	    return visitMacroCall (value);
 	} else if (location == Token::DOT) {
 	    auto right = visitOperand3 (false);
 	    return visitOperand1 (Binary::init (location, value, visitTemplateCall (right), Expression::empty ()));
@@ -889,6 +1076,7 @@ namespace syntax {
 	if (begin == Keys::TEMPLATE) return visitTemplateChecker ();
 	if (begin == Token::LCRO)    return visitArray ();
 	if (begin == Token::LPAR)    return visitTuple ();
+	if (begin == Token::MACRO_ACC || begin == Token::MACRO_PAR || begin == Token::MACRO_CRO) return visitMacroEval ();
 	if (begin == Token::PIPE || begin == Token::DPIPE)
 	    return visitLambda ();
 
@@ -1299,6 +1487,49 @@ namespace syntax {
 	return left;
     }
 
+    Expression Visitor::visitMacroCall (const Expression & left) {
+	auto tok = this-> _lex.rewind ().next ();
+	std::string open, close;
+	if (tok == Token::MACRO_ACC) {
+	    open = Token::LACC; close = Token::RACC;
+	} else if (tok == Token::MACRO_CRO) {
+	    open = Token::LCRO; close = Token::RCRO;
+	} else {
+	    open = Token::LPAR; close = Token::RPAR;
+	}
+
+	this-> _lex.skipEnable (Token::SPACE,   false);
+	this-> _lex.skipEnable (Token::TAB,     false);
+	this-> _lex.skipEnable (Token::RETURN,  false);
+	this-> _lex.skipEnable (Token::RRETURN, false);
+	this-> _lex.commentEnable (false);
+
+	lexing::Word cursor = lexing::Word::eof ();
+	Ymir::OutBuffer all;
+	int nb = 1;
+	do {
+	    cursor = this-> _lex.next ();
+	    if (cursor.isEof ()) {
+		auto note = Ymir::Error::createNote (tok);
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+	    } else if (cursor == close) {
+		nb -= 1;
+	    } else if (cursor == open) {
+		nb += 1;
+	    } else {
+		all.write (cursor.str);
+	    }
+	} while (nb > 0);
+
+	this-> _lex.skipEnable (Token::SPACE,   true);
+	this-> _lex.skipEnable (Token::TAB,     true); 
+	this-> _lex.skipEnable (Token::RETURN,  true);
+	this-> _lex.skipEnable (Token::RRETURN, true);
+	this-> _lex.commentEnable (true);
+	
+	return MacroCall::init (tok, cursor, left, all.str ());	
+    }
+        
     std::vector <Expression> Visitor::visitParamList (bool withNamed) {
 	std::vector <Expression> params;
 	auto begin = this-> _lex.tell ();
@@ -1371,6 +1602,24 @@ namespace syntax {
 	return params [0];
     }
 
+    Expression Visitor::visitMacroEval () {
+	auto tok = this-> _lex.next ({Token::MACRO_ACC, Token::MACRO_PAR, Token::MACRO_CRO});
+
+	auto expr = visitExpression ();
+
+	lexing::Word end;
+	
+	if (tok == Token::MACRO_ACC) {
+	    end = this-> _lex.next ({Token::RACC});
+	} else if (tok == Token::MACRO_CRO) {
+	    end = this-> _lex.next ({Token::RCRO});
+	} else {
+	    end = this-> _lex.next ({Token::RPAR});
+	}
+	
+	return MacroEval::init (tok, end, expr);
+    }
+    
     Expression Visitor::visitLambda () {
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
@@ -1536,15 +1785,20 @@ namespace syntax {
 	this-> _lex.skipEnable (Token::SPACE, false);
 	this-> _lex.skipEnable (Token::TAB, false);		
 	this-> _lex.skipEnable (Token::RETURN, false);
-	this-> _lex.skipEnable (Token::RRETURN, false);
-	
+	this-> _lex.skipEnable (Token::RRETURN, false);	
 	this-> _lex.commentEnable (false);
+	
 	lexing::Word cursor = lexing::Word::eof ();
 	lexing::Word all = lexing::Word::eof ();
 	do {
 	    cursor = this-> _lex.next ();
-	    if (cursor == Token::RETURN || cursor == Token::RRETURN || cursor.isEof ()) {
-		Error::occur (cursor, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+	    if (cursor == Token::TAB || cursor == Token::RETURN || cursor == Token::RRETURN) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (MUST_ESCAPE_CHAR));
+		note = note + Ymir::Error::createNote (begin) + "\n";
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+	    } else if (cursor.isEof ()) {
+		auto note = Ymir::Error::createNote (begin);
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
 	    } else if (cursor != Token::APOS) {
 		all += cursor;
 	    }
@@ -1578,7 +1832,8 @@ namespace syntax {
 	do {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
-		Error::occur (cursor, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+		auto note = Ymir::Error::createNote (begin);
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
 	    } else if (cursor != begin) {
 		all += cursor;
 	    } 

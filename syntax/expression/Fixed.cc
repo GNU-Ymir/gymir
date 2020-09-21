@@ -33,4 +33,11 @@ namespace syntax {
 	return this-> _suffix;
     }
 
+    std::string Fixed::prettyString () const {
+	if (this-> _suffix.isEof ())
+	    return this-> getLocation ().str;
+	else
+	    return Ymir::format ("%_%", this-> getLocation ().str, this-> _suffix.str);
+    }
+
 }

@@ -45,6 +45,8 @@ namespace syntax {
 	
 	bool isOf (const IExpression * type) const override;
 
+	std::string prettyString () const override;
+	
     };
     
 }

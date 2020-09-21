@@ -40,6 +40,9 @@ namespace syntax {
 	 * \return the content of the set
 	 */
 	const std::vector <Expression> getContent () const;
+
+
+	std::string prettyString () const override;
 	
     };
 

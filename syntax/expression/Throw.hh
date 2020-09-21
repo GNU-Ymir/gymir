@@ -41,6 +41,8 @@ namespace syntax {
 	 * \return the value that is thrown
 	 */
 	const Expression & getValue () const;
+
+	std::string prettyString () const override;
 	
     };
 

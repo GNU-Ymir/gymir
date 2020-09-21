@@ -29,7 +29,9 @@ namespace semantic {
 	    if (left.to <Value> ().getType ().is <Slice> ())
 		return validateSlice (expression, left, rights);
 
-	    if (left.to <Value> ().getType ().is <ClassRef> ()) 
+	    if (left.to <Value> ().getType ().is <Pointer> () &&
+		left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].is<ClassRef> ()
+	    ) 
 		return validateClass (expression, left, rights);
 	    
 	    BracketVisitor::error (expression, left, rights);
@@ -89,11 +91,15 @@ namespace semantic {
 
 		auto leftType = left.to <Value> ().getType ();
 		leftType = Type::init (leftType.to<Type> (), leftType.to <Type> ().isMutable (), true);
-		auto lRef = UniqValue::init (loc, leftType, Referencer::init (loc, leftType, left));
+		auto lRef = UniqValue::init (loc, leftType, // Referencer::init (loc, leftType, 
+					     left//)
+		);
 		
 		auto rightType = right[0].to <Value> ().getType ();
 		rightType = Type::init (rightType.to<Type> (), rightType.to <Type> ().isMutable (), true);
-		auto rRef = UniqValue::init (loc, rightType, Referencer::init (loc, rightType, right [0]));
+		auto rRef = UniqValue::init (loc, rightType, // Referencer::init (loc, rightType,
+					     right [0]//)
+		);
 
 		auto len = StructAccess::init (expression.getLocation (),
 					       Integer::init (expression.getLocation (), 64, false),
@@ -129,7 +135,7 @@ namespace semantic {
 		return LBlock::init (
 		    loc,
 		    innerType,
-		    { lRef, rRef, conditional, SliceAccess::init (expression.getLocation (), innerType, lRef, rRef) }
+		    { conditional, SliceAccess::init (expression.getLocation (), innerType, lRef, rRef) } 
 		);
 	    		
 	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> () && right [0].to <Value> ().getType ().to <Range> ().getInners () [0].is <Integer> ()) {
@@ -137,11 +143,15 @@ namespace semantic {
 		
 		auto leftType = left.to <Value> ().getType ();
 		leftType = Type::init (leftType.to<Type> (), leftType.to <Type> ().isMutable (), true);
-		auto lRef = UniqValue::init (loc, leftType, Referencer::init (loc, leftType, left));
+		auto lRef = UniqValue::init (loc, leftType, // Referencer::init (loc, leftType, 
+					     left//)
+		);
 		
 		auto rightType = right[0].to <Value> ().getType ();
 		rightType = Type::init (rightType.to<Type> (), rightType.to <Type> ().isMutable (), true);
-		auto rRef = UniqValue::init (loc, rightType, Referencer::init (loc, rightType, right [0]));
+		auto rRef = UniqValue::init (loc, rightType, // Referencer::init (loc, rightType, 
+					     right [0]//)
+		);
 		
 		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
 		auto len = StructAccess::init (expression.getLocation (),
@@ -239,8 +249,14 @@ namespace semantic {
 		));
 
 		auto slcType = Slice::init (loc, innerType);
+		if (left.to <Value> ().isLvalue () &&
+		    left.to <Value> ().getType ().to <Type> ().isMutable ())
+		    slcType = Type::init (slcType.to <Type> (), true);
+		else
+		    slcType = Type::init (slcType.to <Type> (), false);
+		
 		auto value = SliceValue::init (loc, slcType, ptrFinal, lenFinal);
-		return LBlock::init (
+		return Block::init (
 		    loc,
 		    slcType,
 		    {rRef, lRef, conditional, value}

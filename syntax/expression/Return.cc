@@ -31,5 +31,13 @@ namespace syntax {
     const Expression & Return::getValue () const {
 	return this-> _value;
     }
+
+    std::string Return::prettyString () const {
+	if (this-> _value.isEmpty ()) {
+	    return "return";
+	} else {
+	    return Ymir::format ("return %", this-> _value.prettyString ());
+	}
+    }
     
 }

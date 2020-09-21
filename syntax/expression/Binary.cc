@@ -51,5 +51,9 @@ namespace syntax {
     const Expression & Binary::getType () const {
 	return this-> _type;
     }
+
+    std::string Binary::prettyString () const {
+	return this-> _left.prettyString () + this-> getLocation ().str + this-> _right.prettyString ();
+    }
     
 }

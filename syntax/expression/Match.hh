@@ -51,6 +51,8 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & buf, int i) const override;
 
 	bool isFinal () const;
+
+	std::string prettyString () const override;
 	
     };    
 

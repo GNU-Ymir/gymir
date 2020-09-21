@@ -29,4 +29,21 @@ namespace syntax {
 	    it.treePrint (stream, i + 1);
     }
     
+    const std::vector <Expression> & Pragma::getContent () const {
+	return this-> _params;
+    }
+
+    std::string Pragma::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.writef ("__pragma!%(", this-> getLocation ().str);
+	int i = 0;
+	for (auto &it : this-> _params) {
+	    if (i != 0) buf.write (", ");
+	    buf.write (it.prettyString ());
+	    i += 1;
+	}
+	buf.write (")");
+	return buf.str ();
+    }
+    
 }

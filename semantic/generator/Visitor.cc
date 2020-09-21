@@ -102,6 +102,7 @@ namespace semantic {
 			type = Tree::tupleType ({}, inner);
 		    }
 		)
+			 
 		else of (StructRef, st, {
 			static std::set <std::string> current;
 			if (current.find (st.prettyString ()) == current.end ()) { // To prevent infinite loop for inner type validation
@@ -113,6 +114,12 @@ namespace semantic {
 				inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
 				fields.push_back (it.to <generator::VarDecl> ().getName ());
 			    }
+
+			    if (inner.size () == 0) {
+				inner.push_back (Tree::charType (8));
+				fields.push_back ("_");
+			    }
+			    
 			    type = Tree::tupleType (st.getRef ().getRealName (), fields, inner, st.getRef ().to <semantic::Struct> ().isUnion (), st.getRef ().to <semantic::Struct> ().isPacked ());
 			    current.erase (st.prettyString ());
 			} else return Tree::voidType ();
@@ -208,10 +215,14 @@ namespace semantic {
 		    fields.push_back (it.to <generator::VarDecl> ().getName ());
 		}
 		
-		auto type = Tree::pointerType (Tree::tupleType (fields, inner));
+		auto type = // Tree::pointerType (
+		    Tree::tupleType (fields, inner);
+		    //);
 		current.erase (ref.prettyString ());
 		return type;
-	    } else return Tree::pointerType (Tree::voidType ());
+	    } else return // Tree::pointerType (
+		       Tree::voidType ()//);
+		       ;
 	}
 		
 	Tree Visitor::generateInitValueForType (const Generator & type) {
@@ -1533,7 +1544,7 @@ namespace semantic {
 	    if (!ref.isEmpty ()) return ref;
 	    else {
 		auto type = generateType (uniq.getValue ().to <Value> ().getType ());
-		auto name = "_" + Ymir::format ("%", uniq.getRefId ());
+		auto name = Ymir::format ("uniq_%", uniq.getRefId ());
 		auto decl = Tree::varDecl (uniq.getLocation (), name, type);
 		decl.setDeclInitial (castTo (uniq.getValue ().to <Value> ().getType (), uniq.getValue ()));
 		decl.setDeclContext (getCurrentContext ());
@@ -1630,7 +1641,7 @@ namespace semantic {
 		scope.getLocation (),
 		Tree::boolType (),
 		global::CoreNames::get (EXCEPT_POP),
-		{Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ())), r_res}
+		{Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ()))}
 	    );
 	    left_part.append (pop);
 	    left = left_part.toTree ();
@@ -1647,6 +1658,7 @@ namespace semantic {
 	generic::Tree Visitor::generateCatching (const ExitScope & scope, Tree varScope) {
 	    TreeStmtList glob (TreeStmtList::init ());
 	    auto last = Tree::buildCall (scope.getLocation (), Tree::voidType (), global::CoreNames::get (RETHROW), {});
+	    
 	    auto & var = scope.getCatchingVar ();
 	    auto & info = scope.getCatchingInfoType ();
 	    auto & action = scope.getCatchingAction ();
@@ -1860,7 +1872,7 @@ namespace semantic {
 		));
 		
 		list.append (classValue);
-		auto vtable = generateVtable (cl.getType ());
+		auto vtable = generateVtable (cl.getType ().to <Pointer> ().getInners ()[0]);
 		list.append (Tree::affect (cl.getLocation (),
 					   var.buildPointerUnref (0).getField ("#_vtable"),
 					   Tree::buildAddress (cl.getLocation (), vtable, Tree::pointerType (Tree::pointerType (Tree::voidType ())))));
@@ -1965,16 +1977,22 @@ namespace semantic {
 	    list.append (left.getList ());
 	    list.append (right.getList ());
 
-	    auto lvalue = left.getValue (), rvalue = right.getValue ();
+	    auto lvalue = left.getValue (), rvalue = right.getValue ();	    
 	    ulong size = generateType (access.getSlice ().to <Value> ().getType ().to <Slice> ().getInners () [0]).getSize ();
 	    
 	    auto indexType = Tree::sizeType ();
 	    auto index = Tree::binary (access.getLocation (), MULT_EXPR, indexType, rvalue, Tree::buildSizeCst (size));
-	    auto data_field = lvalue.getField (Slice::PTR_NAME);
 	    auto type = Tree::pointerType (generateType (access.getType ()));
 	    
-	    auto ptr = Tree::binaryDirect (access.getLocation (), POINTER_PLUS_EXPR, type, data_field, index);
-	    return ptr.buildPointerUnref (0);
+	    auto data_field = lvalue.getField (Slice::PTR_NAME);
+	   	    
+	    auto value = Tree::binaryDirect (access.getLocation (), POINTER_PLUS_EXPR, type, data_field, index);
+	    
+	    return Tree::compound (
+	    	access.getLocation (), 
+		value.buildPointerUnref (0),
+		list.toTree ()
+	    );
 	}
 
 	generic::Tree Visitor::generateSizeOf (const SizeOf & size) {

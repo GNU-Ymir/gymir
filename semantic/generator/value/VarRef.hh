@@ -19,6 +19,8 @@ namespace semantic {
 
 	    /** If the this refer to a const var, it could have a compile time value */
 	    Generator _value;
+
+	    bool _isSelf;
 	    
 	private :
 
@@ -26,7 +28,7 @@ namespace semantic {
 	    
 	    VarRef ();
 
-	    VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint refId, bool isMutable, const Generator & value);
+	    VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint refId, bool isMutable, const Generator & value, bool isSelf);
 
 	public :
 
@@ -37,7 +39,7 @@ namespace semantic {
 	     * \param type the type of the var
 	     * \param refId the id of the generator that will declare the var
 	     */
-	    static Generator init (const lexing::Word & locatio, const std::string & name, const Generator & type, uint refId, bool isMutable, const Generator & value);
+	    static Generator init (const lexing::Word & locatio, const std::string & name, const Generator & type, uint refId, bool isMutable, const Generator & value, bool isSelf = false);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -68,6 +70,11 @@ namespace semantic {
 	     * \return the value of the ref (if any, it could be empty ())
 	     */
 	    const Generator & getValue () const;
+
+	    /**
+	     * Ref to the self paramvar of a method
+	     */
+	    bool isSelf () const;
 	    
 	    std::string prettyString () const override;
 	};

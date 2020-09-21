@@ -46,5 +46,12 @@ namespace syntax {
     const Expression & If::getElsePart () const {
 	return this-> _else;
     }
+
+    std::string If::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.writef ("if (%) % ", this-> _test.prettyString (), this-> _content.prettyString ());
+	if (!this-> _else.isEmpty ()) buf.writef ("\nelse %", this-> _else.prettyString ());
+	return buf.str ();
+    }
     
 }

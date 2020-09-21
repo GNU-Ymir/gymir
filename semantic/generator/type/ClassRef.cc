@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/type/ClassRef.hh>
+#include <ymir/semantic/generator/type/NoneType.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/symbol/Class.hh>
 #include <ymir/semantic/generator/value/Class.hh>
@@ -19,17 +20,17 @@ namespace semantic {
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();
-	    if (!this-> _ref.lock ()) { 
-		this-> isComplex (
-		    true
-		);
-	    }
+	    // if (!this-> _ref.lock ()) { 
+	    // 	this-> isComplex (
+	    // 	    true
+	    // 	);
+	    // }
 	}
 
 	Generator ClassRef::init (const lexing::Word&  loc, const Generator & parent, const Symbol & ref) {
 	    return Generator {new (Z0) ClassRef (loc, parent, ref)};
 	}
-
+	
 	Generator ClassRef::clone () const {
 	    return Generator {new (Z0) ClassRef (*this)};
 	}
@@ -54,15 +55,11 @@ namespace semantic {
 	Symbol ClassRef::getRef () const {
 	    return Symbol {this-> _ref};
 	}
-
-	bool ClassRef::needExplicitAlias () const {
-	    return true;
-	}
 	
 	std::string ClassRef::typeName () const {
-	    return Ymir::format ("%", (Symbol {this-> _ref}).getRealName ());
+	    return (Symbol {this-> _ref}).getRealName ();
 	}
-
+	
 	std::string ClassRef::getMangledName () const {
 	    return Ymir::format ("%", (Symbol {this-> _ref}).getMangledName ());
 	}

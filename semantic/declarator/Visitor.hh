@@ -112,6 +112,11 @@ namespace semantic {
 	     * \brief Visit the internal part of a class
 	     */
 	    void visitInnerClass (Symbol cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
+
+	    /**
+	     * \brief Visit the internal part of a macro
+	     */
+	    void visitInnerMacro (Symbol cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
 	    
 	    /**
 	     * \brief Transform a trait declarator into a semantic tree
@@ -128,6 +133,21 @@ namespace semantic {
 	     */
 	    semantic::Symbol visitEnum (const syntax::Enum stenm);
 
+	    /**
+	     * \brief Visit a macro declaration
+	     */
+	    semantic::Symbol visitMacro (const syntax::Macro mc);
+
+	    /**
+	     * \brief Visit a macro constructor declaration
+	     */
+	    semantic::Symbol visitMacroConstructor (const syntax::MacroConstructor constr);
+
+	    /**
+	     * \brief Visit a macro constructor declaration
+	     */
+	    semantic::Symbol visitMacroRule (const syntax::MacroRule constr);
+	    
 	    /**
 	     * \brief Transform a vardecl to a semantic tree
 	     */

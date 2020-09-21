@@ -24,5 +24,9 @@ namespace syntax {
     void Dollar::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Dollar>", i, '\t');
     }
+
+    std::string Dollar::prettyString () const {
+	return "$";
+    }
     
 }

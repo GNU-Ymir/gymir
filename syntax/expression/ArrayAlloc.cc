@@ -48,4 +48,12 @@ namespace syntax {
 	return this-> _isDynamic;	
     }
 
+    std::string ArrayAlloc::prettyString () const {
+	if (!this-> _isDynamic)
+	    return Ymir::format ("[%; %]", this-> _left.prettyString (), this-> _size.prettyString ());
+	else
+	    return Ymir::format ("[%; new %]", this-> _left.prettyString (), this-> _size.prettyString ());
+
+    }
+    
 }

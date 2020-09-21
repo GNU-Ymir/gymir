@@ -31,7 +31,7 @@ namespace syntax {
 	/**
 	 * \brief Create a pretty print of the expression
 	 */
-	virtual std::string prettyString () const;
+	virtual std::string prettyString () const = 0;
 	
 	/**
 	 * \return the location of the expression

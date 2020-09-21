@@ -144,6 +144,60 @@ namespace syntax {
 	Declaration visitExtern ();
 
 	/**
+	 * \brief Visit a macro 
+	 * \verbatim
+	 macro := '__macro' Identifier '{' macro_expression+ '}'
+	 \endverbatim
+	 */
+	Declaration visitMacro ();
+
+	/**
+	 * \brief Visit a macro internal content
+	 * \verbatim
+	 macro_block := '{' (pub_macro_block | version_macro_block   macro_content)* '}'
+	 \endverbatim
+	 */
+	std::vector <Declaration> visitMacroBlock ();
+
+
+	/**
+	 * \brief Visit a public macro block
+	 * \verbatim
+	 pub_macro_block := 'pub' (('{' macro_content* '}') | 'macro_content')
+	 \endverbatim
+	 */
+	Declaration visitPublicMacroBlock ();
+
+
+	/**
+	 * \brief Visit a version macro block
+	 * \verbatim
+	 version_macro_block := '__version' Identifier macro_block ('else' macro_block)?
+	 \endverbatim
+	 */
+	Declaration visitVersionMacro ();
+
+	/**
+	 * \brief Visit a macro content
+	 * \verbatim
+	 version_macro_content := 'self' macro_expression ('->' expression:(10))? expression:(10) 
+	                          | 'def' Identifier macro_expression ((('->' expression:(10))? expression:(10)) | ';')
+	 \endverbatim
+	 */
+	Declaration visitMacroContent ();
+
+
+	/**
+	 * \brief Visit a macro expression
+	 * \verbatim
+	 
+	 \endverbatim 
+	 */
+	Expression visitMacroExpression ();
+
+	Expression visitMacroExpression (const Expression & left);
+	
+	/**
 	 * \brief Visit a single declaration
 	 * \verbatim
 	 declaration := alias    |
@@ -564,6 +618,14 @@ namespace syntax {
 	Expression visitArray ();
 
 	/**
+	 * \brief Visit a macro evaluation, 
+	 * \verbatim
+	 macro_eval := '#(' expression ')' | '#[' expression ']' | '#{' expression '}'
+	 \endverbatim
+	 */
+	Expression visitMacroEval ();
+	
+	/**
 	 * \brief Visit a tuple literal, or an simple expression surrounded with '(' ')'
 	 * \verbatim
 	 tuple := '(' (expression:(0) ((',' expression:(0))* | ','))? ')'
@@ -756,6 +818,14 @@ namespace syntax {
 	 \endverbatim
 	*/
 	Expression visitTemplateCall (const Expression & elem);
+
+	/**
+	 * \brief Visit a macro call, on elem
+	 * \verbatim
+	 macro_call := ('#(' Token* ')') | ('#{' Token* '}') | ('#[' Token* ']')
+	 \endverbatim
+	 */
+	Expression visitMacroCall (const Expression & elem);
 	
 	/**
 	 * \brief Visit a decorated expression 

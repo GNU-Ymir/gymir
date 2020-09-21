@@ -43,6 +43,8 @@ ymir_OBJS = \
 	ymir/decl_Global.o \
 	ymir/decl_Import.o \
 	ymir/decl_Macro.o \
+	ymir/decl_MacroRule.o \
+	ymir/decl_MacroConstructor.o \
 	ymir/decl_Mixin.o \
 	ymir/decl_Module.o \
 	ymir/decl_Struct.o \
@@ -75,6 +77,12 @@ ymir_OBJS = \
 	ymir/expr_Lambda.o \
 	ymir/expr_List.o \
 	ymir/expr_MacroCall.o \
+	ymir/expr_MacroMult.o \
+	ymir/expr_MacroOr.o \
+	ymir/expr_MacroToken.o \
+	ymir/expr_MacroEval.o \
+	ymir/expr_MacroResult.o \
+	ymir/expr_MacroVar.o \
 	ymir/expr_Match.o \
 	ymir/expr_MultOperator.o \
 	ymir/expr_NamedExpression.o \
@@ -175,6 +183,7 @@ ymir_OBJS = \
 	ymir/generator_ClassRef.o \
 	ymir/generator_TraitRef.o \
 	ymir/generator_TemplateRef.o \
+	ymir/generator_MacroRef.o \
 	ymir/generator_TemplateClassCst.o \
 	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_TemplateSyntaxList.o \
@@ -205,6 +214,9 @@ ymir_OBJS = \
 	ymir/lexing_Word.o \
 	ymir/parsing_Parser.o \
 	ymir/semantic_Alias.o \
+	ymir/semantic_Macro.o \
+	ymir/semantic_MacroConstructor.o \
+	ymir/semantic_MacroRule.o \
 	ymir/semantic_Class.o \
 	ymir/semantic_Trait.o \
 	ymir/semantic_Impl.o \
@@ -244,6 +256,7 @@ ymir_OBJS = \
 	ymir/validator_UnaryVisitor.o \
 	ymir/validator_UtfVisitor.o \
 	ymir/validator_MatchVisitor.o \
+	ymir/validator_MacroVisitor.o \
 	ymir/validator_Visitor.o \
 	ymir/ymir1.o \
 	$(END)	

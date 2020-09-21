@@ -105,6 +105,8 @@ namespace semantic {
 	    
 	    if (op == Unary::Operator::UNREF) {
 	    	auto type = operand.to <Value> ().getType ().to <Type> ().getInners ()[0];
+		if (type.is <ClassRef> ()) UnaryVisitor::error (un, operand);	;
+		
 	    	if (!operand.to <Value> ().getType ().to <Type> ().isMutable ()) {
 	    	    type = Type::init (type.to<Type> (), false);
 		}
@@ -117,7 +119,7 @@ namespace semantic {
 
 		auto loc = un.getLocation ();
 		// It might seg fault
-		auto syntaxType = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (SEG_FAULT_TYPE)});
+		auto syntaxType = this-> _context.createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (SEG_FAULT_TYPE)});
 		auto segFaultType = Generator::init (un.getLocation (), this-> _context.validateType (syntaxType));
 		
 		auto thrs = ret.getThrowers ();

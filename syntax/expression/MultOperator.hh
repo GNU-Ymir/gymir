@@ -65,6 +65,8 @@ namespace syntax {
 	 * \brief This param is set at validation for intrinsics validations
 	 */
 	bool canBeDotCall () const;
+
+	std::string prettyString () const override;
 	
     };
 

@@ -42,5 +42,13 @@ namespace syntax {
     const lexing::Word & Float::getSuffix () const {
 	return this-> _suffix;
     }
+
+    std::string Float::prettyString () const {
+	if (this-> _suffix.isEof ()) {
+	    return Ymir::format ("%.%", this-> _prePart.str, this-> _decPart.str);
+	} else {
+	    return Ymir::format ("%.%%", this-> _prePart.str, this-> _decPart.str, this-> _suffix.str);
+	}
+    }
     
 }

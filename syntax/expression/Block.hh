@@ -68,7 +68,9 @@ namespace syntax {
 	 * \return the list of scope guards of the block
 	 */
 	const std::vector <Expression> & getScopes () const;
-	
+
+
+	std::string prettyString () const override;
 	
     };    
 

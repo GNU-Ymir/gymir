@@ -25,6 +25,12 @@
 #include <ymir/syntax/expression/Lambda.hh>
 #include <ymir/syntax/expression/List.hh>
 #include <ymir/syntax/expression/MacroCall.hh>
+#include <ymir/syntax/expression/MacroEval.hh>
+#include <ymir/syntax/expression/MacroMult.hh>
+#include <ymir/syntax/expression/MacroOr.hh>
+#include <ymir/syntax/expression/MacroToken.hh>
+#include <ymir/syntax/expression/MacroResult.hh>
+#include <ymir/syntax/expression/MacroVar.hh>
 #include <ymir/syntax/expression/Match.hh>
 #include <ymir/syntax/expression/MultOperator.hh>
 #include <ymir/syntax/expression/NamedExpression.hh>

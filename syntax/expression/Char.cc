@@ -37,5 +37,12 @@ namespace syntax {
     const lexing::Word & Char::getSequence () const {
 	return this-> _sequence;
     }
+
+    std::string Char::prettyString () const {
+	if (this-> _suffix.isEof ())
+	    return Ymir::format ("'%'%", this->_sequence.str, this-> _suffix.str);
+	else
+	    return Ymir::format ("'%'", this->_sequence.str);
+    }
     
 }

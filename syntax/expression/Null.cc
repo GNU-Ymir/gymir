@@ -24,5 +24,9 @@ namespace syntax {
     void Null::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Null>", i, '\t');
     }
+
+    std::string Null::prettyString () const {
+	return "null";
+    }
     
 }

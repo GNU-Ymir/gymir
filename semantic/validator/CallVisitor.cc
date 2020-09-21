@@ -96,6 +96,7 @@ namespace semantic {
 		Symbol sym (Symbol::empty ());
 		Generator proto_gen (Generator::empty ());
 		Generator gen (Generator::empty ());
+		
 		if (left.is <TemplateClassCst> ())
 		    gen = validateTemplateClassCst (location, left, rights, score, errors, sym, proto_gen);
 		else
@@ -297,6 +298,7 @@ namespace semantic {
 		}
 		
 		if (!ret.isEmpty ()) {
+
 		    if (i != -1) {
 			auto pt = params.begin ();
 			std::advance (pt, i);
@@ -314,7 +316,7 @@ namespace semantic {
 			    return this-> _context.validateLambdaProto (ret.to<LambdaProto> (), paramTypes);		     	    
 		    }
 		}
-	    
+
 		return ret;
 	    } else {
 		int i = 0;
@@ -597,10 +599,15 @@ namespace semantic {
 	    } else {
 		auto proto = gen.to <Value> ().getType ().to <Type> ().getInners ()[0];
 		try {
-		    if (proto.is <MethodProto> ()) {
+		    if (proto.is <MethodProto> ()) {			
 			auto meth = proto.to <MethodProto> ();
-			auto type = Type::init (meth.getClassType ().to<Type> (), meth.isMutable ());
+			Generator type (Generator::empty ());
+			if (meth.isMutable ())
+			    type = meth.getClassType ().to<Type> ().toDeeplyMutable ();
+			else type = Type::init (meth.getClassType ().to <Type> (), meth.isMutable ());
+			
 			this-> _context.verifyImplicitAlias (location, type, gen.to <DelegateValue> ().getClosure ());
+			this-> _context.verifyMemoryOwner   (location, type, gen.to <DelegateValue> ().getClosure (), true);
 			auto llevel = gen.to <DelegateValue> ().getClosure ().to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 			auto rlevel = type.to <Type> ().mutabilityLevel () + 1;
 			score += rlevel - llevel;
@@ -817,10 +824,12 @@ namespace semantic {
 	    std::vector <Generator> typeParams;
 	    std::vector <Generator> valueParams;
 	    std::vector <Generator> rights = rights_;
-	    auto list = std::list <Generator> (rights.begin (), rights.end ());
-	    
-	    if (ref.is <MethodTemplateRef> ())
+
+	    if (ref.is <MethodTemplateRef> ()) {
 		rights.insert (rights.begin (), ref.to <MethodTemplateRef> ().getSelf ());
+	    }
+	    
+	    auto list = std::list <Generator> (rights.begin (), rights.end ());
 	    
 	    for (auto & it : sym.to <semantic::Template> ().getDeclaration ().to <syntax::Function> ().getPrototype ().getParameters ()) {		
 		Generator value (Generator::empty ());
@@ -838,11 +847,11 @@ namespace semantic {
 		    bool isRef = false;
 		    bool dmut = false;
 		    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);	    
-		    auto param = findParameter (list, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1).to<ProtoVar> ());
-		    
-		    if (param.isEmpty ())
+		    auto param = findParameter (list, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1, false).to<ProtoVar> ());
+
+		    if (param.isEmpty ()) {
 		    	failure = true;
-		    else {
+		    } else {
 			typeParams.push_back (param.to <Value> ().getType ());
 			valueParams.push_back (param);
 		    }
@@ -852,14 +861,15 @@ namespace semantic {
 		} 
 		
 		this-> _context.exitForeign (); // exiting the context to return to the context of the local frame
-		if (failure) return Generator::empty ();
+		if (failure) return Generator::empty ();		
+		
 	    }
 
 	    for (auto & it : list) { // Add the rests, for variadic templates 
 		typeParams.push_back (it.to <Value> ().getType ());
 		valueParams.push_back (it);
 	    }
-	    
+
 	    auto templateVisitor = TemplateVisitor::init (this-> _context);
 	    std::vector <Generator> finalParams;
 	    bool succeed = true; 
@@ -872,18 +882,19 @@ namespace semantic {
 		succeed = false;
 	    } 	    	    
 
+
 	    if (succeed) {
 		int _score;
 		Generator ret (Generator::empty ());
 		finalParams = rights_;
 		if (ref.is <MethodTemplateRef> ()) {
-		    // Remove the first argument, (that is self)
-		    finalParams = std::vector <Generator> (finalParams.begin () + 1, finalParams.end ());
 		    auto self = ref.to <MethodTemplateRef> ().getSelf ();
 		    auto delType = Delegate::init (proto_gen.getLocation (), proto_gen);
 		    auto delValue = DelegateValue::init (proto_gen.getLocation(),
 							 delType, proto_gen.to <MethodProto> ().getClassType (),
 							 self, proto_gen);
+
+		    
 		    ret = validateDelegate (location, delValue, finalParams, _score, errors);
 		} else {
 		    ret = validateFrameProto (location, proto_gen.to <FrameProto> (), finalParams, _score, errors);
@@ -901,11 +912,12 @@ namespace semantic {
 		int local_score = 0;
 		auto gen = validateTemplateClassCst (loc, ref, it, rights_, local_score, errors, _sym);
 		if (!gen.isEmpty ()) {
+		    if (gen.is <ClassRef> ()) gen = Pointer::init (loc, gen);
 		    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
 						     TemplateSyntaxWrapper::init (loc, gen),
 						     Var::init ({loc, ClassRef::INIT_NAME}),
 						     Expression::empty ());
-
+		    
 		    std::vector <syntax::Expression> params;
 		    for (auto & it : rights_)
 			params.push_back (TemplateSyntaxWrapper::init (it.getLocation (), it));
@@ -958,7 +970,7 @@ namespace semantic {
 		    bool dmut = false;
 		    type = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), type, isRef, isMutable, dmut);
 		    
-		    auto param = findParameter (list, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1).to<ProtoVar> ());
+		    auto param = findParameter (list, ProtoVar::init (var.getName (), Generator::empty (), value, isMutable, 1, false).to<ProtoVar> ());
 		    if (param.isEmpty ())
 		    	failure = true;
 		    else {
@@ -1096,13 +1108,13 @@ namespace semantic {
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())
 		else of (ConstructorProto, proto, leftName = proto.getName ())
-		    else of (generator::Struct, str, leftName = str.getName ())			 
-			else of (MultSym,    sym,   leftName = sym.prettyString ())
-			    else of (ModuleAccess, acc, leftName = acc.prettyString ())
-				else of (TemplateRef, cl, leftName = cl.prettyString ())
-				    else of (TemplateClassCst, cl, leftName = cl.prettyString ())
-					else of (Value,      val,  leftName = val.getType ().to <Type> ().getTypeName ()
-					);
+		else of (generator::Struct, str, leftName = str.getName ())			 
+		else of (MultSym,    sym,   leftName = sym.prettyString ())
+		else of (ModuleAccess, acc, leftName = acc.prettyString ())
+		else of (TemplateRef, cl, leftName = cl.prettyString ())
+		else of (TemplateClassCst, cl, leftName = cl.prettyString ())
+		else of (Value,      val,  leftName = val.getType ().to <Type> ().getTypeName ()
+		);
 	    }
 
 	    OutBuffer buf;

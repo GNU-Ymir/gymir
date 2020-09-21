@@ -74,6 +74,10 @@ namespace semantic {
 		of (syntax::Enum, en,
 		    return visitEnum (en);
 		);
+
+		of (syntax::Macro, mc,
+		    return visitMacro (mc);
+		);
 		
 		of (syntax::ExpressionWrapper, wrap, {
 			match (wrap.getContent ()) {
@@ -87,7 +91,10 @@ namespace semantic {
 		    }
 		);
 	    }
-
+	    
+	    Ymir::OutBuffer buf;
+	    ast.treePrint (buf);
+	    println (buf);
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Symbol::empty ();
 	}    
@@ -437,6 +444,55 @@ namespace semantic {
 	    return ret;
 	}    
 
+	void Visitor::visitInnerMacro (Symbol cls, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
+	    for (auto jt : decls) {
+		match (jt) {
+		    of (syntax::MacroConstructor, constr, {
+			    auto sym = visitMacroConstructor (constr);
+			    if (pub) sym.setPublic ();
+			    if (prot) sym.setProtected ();
+			}
+		    ) else of (syntax::MacroRule, rule, {
+			    auto sym = visitMacroRule (rule);
+			    if (pub) sym.setPublic ();
+			    if (prot) sym.setProtected ();
+			}
+		    ) else of (syntax::DeclBlock, dc, {
+			    visitInnerMacro (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+			}			
+		    );			       
+		}		
+	    }	    
+	}
+	
+	semantic::Symbol Visitor::visitMacro (const syntax::Macro macro) {
+	    auto smc = Macro::init (macro.getLocation (), macro.getSkips ());
+	    auto symbols = getReferent ().getLocal (macro.getLocation ().str);
+	    if (symbols.size () != 0) {
+		auto note = Ymir::Error::createNote (symbols [0].getName ());
+		Ymir::Error::occurAndNote (macro.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), macro.getLocation ().str);
+	    }
+
+	    pushReferent (smc);
+	    visitInnerMacro (smc, macro.getContent (), false, true, false);
+	    
+	    auto ret = popReferent ();
+	    getReferent ().insert (ret);
+	    return ret;
+	}
+
+	semantic::Symbol Visitor::visitMacroConstructor (const syntax::MacroConstructor contr) {
+	    auto ret = MacroConstructor::init (contr.getLocation (), syntax::MacroConstructor::init (contr));
+	    getReferent ().insert (ret);
+	    return ret;
+	}
+
+	semantic::Symbol Visitor::visitMacroRule (const syntax::MacroRule rule) {
+	    auto ret = MacroRule::init (rule.getLocation (), syntax::MacroRule::init (rule));
+	    getReferent ().insert (ret);
+	    return ret;
+	}
+	
 	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl stdecl) {
 	    auto decl = VarDecl::init (stdecl.getLocation (), stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stdecl.getLocation ().str);

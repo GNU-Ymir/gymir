@@ -24,5 +24,9 @@ namespace syntax {
     void Ignore::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Ignore>", i, '\t');
     }
+
+    std::string Ignore::prettyString () const {
+	return "_";
+    }
     
 }

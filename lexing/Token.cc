@@ -70,7 +70,9 @@ std::string Token::GUILL = "\"";
 std::string Token::APOS = "'";
 std::string Token::TAB = "\t";
 std::string Token::ARROW = "->";
-std::string Token::BSTRING = "(_{";
-std::string Token::ESTRING = "}_)";
 std::string Token::DCOLON = "::";
+std::string Token::MACRO_ACC = "#{";
+std::string Token::MACRO_CRO = "#[";
+std::string Token::MACRO_PAR = "#(";
+
 std::string Token::BROK_SPACE = "\xc2\xa0";

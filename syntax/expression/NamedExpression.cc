@@ -32,5 +32,9 @@ namespace syntax {
     const Expression & NamedExpression::getContent () const {
 	return this-> _content;
     }
+
+    std::string NamedExpression::prettyString () const {
+	return Ymir::format ("% -> %", this-> getLocation ().str, this-> _content.prettyString ());
+    }
     
 }

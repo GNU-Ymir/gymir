@@ -39,5 +39,27 @@ namespace syntax {
     const std::vector<Expression>& Catch::getActions () const {
 	return this-> _actions;
     }
+
+    std::string Catch::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.write ("catch {\n");
+	for (auto it : Ymir::r (0, this-> _matchs.size ())) {
+	    auto in = this-> _matchs [it].prettyString ();
+	    for (auto & j : in) {
+		buf.write (j);
+		if (j == '\n') buf.write ('\t');
+	    }
+	    
+	    buf.write (" => " );
+	    
+	    in = this-> _actions [it].prettyString ();
+	    for (auto & j : in) {
+		buf.write (j);
+		if (j == '\n') buf.write ('\t');
+	    }
+	}
+	buf.write ("}");
+	return buf.str ();
+    }
     
 }

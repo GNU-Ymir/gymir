@@ -52,5 +52,28 @@ namespace syntax {
     bool Match::isFinal () const {
 	return this-> _isFinal;
     }
+
+    std::string Match::prettyString () const {
+	Ymir::OutBuffer buf;
+	//if (this-> _isFinal) buf.write ("final ");
+	buf.writef ("match (%)", this-> _content.prettyString ());
+	for (auto it : Ymir::r (0, this-> _matchs.size ())) {
+	    auto in = this-> _matchs [it].prettyString ();
+	    for (auto & j : in) {
+		buf.write (j);
+		if (j == '\n') buf.write ('\t');
+	    }
+	    
+	    buf.write (" => " );
+	    
+	    in = this-> _actions [it].prettyString ();
+	    for (auto & j : in) {
+		buf.write (j);
+		if (j == '\n') buf.write ('\t');
+	    }
+	}
+	buf.write ("}");
+	return buf.str ();
+    }
     
 }

@@ -24,5 +24,9 @@ namespace syntax {
     void Unit::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Unit>", i, '\t');
     }
+
+    std::string Unit::prettyString () const {
+	return ";";
+    }
     
 }

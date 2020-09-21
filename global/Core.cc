@@ -23,6 +23,7 @@ namespace global {
 			    EXCEPT_GET_VALUE   = "_yrt_exc_check_type", 
 			    EXCEPT_POP         = "_yrt_exc_pop",
 			    EXCEPT_PUSH        = "_yrt_exc_push", 
+			    INDEX_ASSIGN_OP_OVERRIDE  = "opIndexAssign",
 			    INDEX_OP_OVERRIDE  = "opIndex",
 			    JMP_BUF_TYPE       = "_yrt_jmp_buf_type", 
 			    LOGICAL_OP_OVERRIDE = "opCmp",

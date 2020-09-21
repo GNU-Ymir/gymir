@@ -33,6 +33,8 @@ namespace syntax {
 	 */
 	const Expression & getContent () const;
 
+	std::string prettyString () const override;
+
     };    
 
 }

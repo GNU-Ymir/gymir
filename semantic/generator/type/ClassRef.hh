@@ -20,7 +20,7 @@ namespace semantic {
 	     * The parent of the class, it can be empty
 	     */
 	    Generator _parent;
-
+	    
 	private :
 
 	    friend Generator;
@@ -36,7 +36,7 @@ namespace semantic {
 	public :
 
 	    static Generator init (const lexing::Word & loc, const Generator & parent, const Symbol & ref);
-
+	    
 	    Generator clone () const override;
 
 	    /**
@@ -50,8 +50,6 @@ namespace semantic {
 	    bool equals (const Generator & other) const override;
 
 	    bool isRefOf (const Symbol & sym) const;
-
-	    bool needExplicitAlias () const override;
 
 	    Symbol getRef () const;
 	    

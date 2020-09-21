@@ -8,6 +8,8 @@ namespace semantic {
 	class ParamVar : public Value {	    
 
 	    bool _isMutable;
+
+	    bool _isSelf;
 	    
 	private :
 
@@ -15,7 +17,7 @@ namespace semantic {
 	    
 	    ParamVar ();
 
-	    ParamVar (const lexing::Word & location, const Generator & type, bool isMutable);
+	    ParamVar (const lexing::Word & location, const Generator & type, bool isMutable, bool isSelf);
 
 	public :
 
@@ -24,7 +26,7 @@ namespace semantic {
 	     * \param location the location of the param var (for debug info)
 	     * \param type the type of the var
 	     */
-	    static Generator init (const lexing::Word & location, const Generator & type, bool isMutable);
+	    static Generator init (const lexing::Word & location, const Generator & type, bool isMutable, bool isSelf);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -45,6 +47,11 @@ namespace semantic {
 	     * \return has this var been declared mutable ?
 	     */
 	    bool isMutable () const;
+
+	    /**
+	     * Is defining the self var of a method
+	     */
+	    bool isSelf () const;
 
 	    std::string prettyString () const override;
 	};

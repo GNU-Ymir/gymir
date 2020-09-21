@@ -62,4 +62,8 @@ namespace syntax {
 	return this-> getLocation () == Keys::DCOPY;
     }
     
+    std::string Intrinsics::prettyString () const {
+	return Ymir::format ("% (%)", this-> getLocation ().str, this-> _value.prettyString ());
+    }    
+
 }

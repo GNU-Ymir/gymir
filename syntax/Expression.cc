@@ -53,9 +53,9 @@ namespace syntax {
 	stream.writefln ("%*<TODO>", i, '\t');
     }
 
-    std::string IExpression::prettyString () const {
-	return "";
-    }
+    // std::string IExpression::prettyString () const {
+    // 	return "";
+    // }
     
     IExpression::~IExpression () {}
 

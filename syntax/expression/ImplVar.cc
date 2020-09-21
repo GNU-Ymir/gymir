@@ -34,6 +34,6 @@ namespace syntax {
     }
 
     std::string ImplVar::prettyString () const {
-	return this-> getLocation ().str + " of " + this-> _right.prettyString ();
+	return this-> getLocation ().str + " impl " + this-> _right.prettyString ();
     }
 }

@@ -286,7 +286,7 @@ namespace semantic {
 	Generator MatchVisitor::validateMatchCall (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
 	    if (value.to <Value> ().getType ().is <StructRef> ()) {
 		return validateMatchCallStruct (value, call, isMandatory);
-	    } else if (value.to <Value> ().getType ().is <ClassRef> ()) {
+	    } else if (value.to <Value> ().getType ().is <Pointer> () && value.to <Value> ().getType ().to <Pointer> ().getInners ()[0].is <ClassRef> ()) {
 		return validateMatchCallClass (value, call, isMandatory);
 	    }
 	    
@@ -303,7 +303,9 @@ namespace semantic {
 	    
 	    try {
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
-		    type = this-> _context.validateType (call.getLeft ());
+		    type = this-> _context.validateTypeClassRef (call.getLeft ());
+		    if (type.is <ClassRef> ()) type = Pointer::init (call.getLocation (), type);
+		    
 		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
 		    if (!value.to <Value> ().getType ().to <Type> ().isCompatible (type)) {
 			// If we have passed the test, but still not compatible means it is a class

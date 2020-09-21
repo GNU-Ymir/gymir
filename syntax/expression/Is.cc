@@ -24,5 +24,9 @@ namespace syntax {
 	return IExpression::isOf (type);
     }
 
+    std::string Is::prettyString () const {
+	return "";
+    }
+    
     
 }

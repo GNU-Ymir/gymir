@@ -9,16 +9,17 @@ namespace semantic {
 	    this-> isLocal (false);
 	}
 
-	ParamVar::ParamVar (const lexing::Word & location, const Generator & type, bool isMutable) :
+	ParamVar::ParamVar (const lexing::Word & location, const Generator & type, bool isMutable, bool isSelf) :
 	    Value (location, type),
-	    _isMutable (isMutable)
+	    _isMutable (isMutable),
+	    _isSelf (isSelf)
 	{
 	    this-> isLocal (false);
 	    this-> isLvalue (isMutable);
 	}
 
-	Generator ParamVar::init (const lexing::Word & location, const Generator & type, bool isMutable) {
-	    return Generator {new (Z0) ParamVar (location, type, isMutable)};
+	Generator ParamVar::init (const lexing::Word & location, const Generator & type, bool isMutable, bool isSelf) {
+	    return Generator {new (Z0) ParamVar (location, type, isMutable, isSelf)};
 	}
 
 	Generator ParamVar::clone () const {
@@ -44,6 +45,10 @@ namespace semantic {
 	    return this-> _isMutable;
 	}
 
+	bool ParamVar::isSelf () const {
+	    return this-> _isSelf;
+	}
+	
 	std::string ParamVar::prettyString () const {
 	    if (this-> _isMutable) 
 		return Ymir::format ("mut % : %", this-> getLocation ().str, this-> getType ().prettyString ());

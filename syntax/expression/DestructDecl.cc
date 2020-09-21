@@ -45,5 +45,20 @@ namespace syntax {
     bool DestructDecl::isVariadic () const {
 	return this-> _isVariadic;
     }
+
+    std::string DestructDecl::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.write ("let (");
+	int i = 0;
+	for (auto & it : this-> _params) {
+	    if (i != 0) buf.write (", ");
+	    buf.write (it.prettyString ());
+	    i += 1;	    
+	}
+	if (this-> _isVariadic) buf.write ("...");
+	buf.write (") = ");
+	buf.write (this-> _value.prettyString ());
+	return buf.str ();
+    }
     
 }

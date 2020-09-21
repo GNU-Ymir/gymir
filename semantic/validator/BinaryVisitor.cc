@@ -758,15 +758,23 @@ namespace semantic {
 	    return this-> _context.validateValue (call);
 	}	
 	
-	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {	    
+	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {
+	    if (expression.getLeft ().is <syntax::MultOperator> () &&
+		expression.getLeft ().to <syntax::MultOperator> ().getEnd () == Token::RCRO) {
+		//try {
+		auto gen = validateIndexAssign (op, expression);
+		if (!gen.isEmpty ()) return gen;
+		// } catch (Error::ErrorList list) {}
+	    }
+	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    auto right = this-> _context.validateValue (expression.getRight ());
 
 	    if (op != Binary::Operator::LAST_OP) {
 		right = validateMathOperation (op, expression, left, right);
 	    }
-	    
-	    if (!left.to <Value> ().isLvalue ()) 
+
+	    if (!left.to <Value> ().isLvalue () || (left.is <VarRef> () && left.to <VarRef> ().isSelf ())) // We cannot change the reference of the self paramvar even if it is mutable
 		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
 
 	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) 
@@ -775,6 +783,44 @@ namespace semantic {
 	    this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);	    
 	    return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);	    
 	}
+
+	Generator BinaryVisitor::validateIndexAssign (Binary::Operator op, const syntax::Binary & expression) {
+	    auto loc = expression.getLocation ();
+	    auto left = expression.getLeft ().to <syntax::MultOperator> ();
+
+	    auto leftIndex = this-> _context.validateValue (left.getLeft ());
+	    auto right = this-> _context.validateValue (expression.getRight ());
+	    
+	    if (!leftIndex.to <Value> ().getType ().is <Pointer> () ||
+		!leftIndex.to <Value> ().getType ().to <Pointer> ().getInners ()[0].is<ClassRef> ()
+	    )
+		return Generator::empty ();
+		
+	    if (op != Binary::Operator::LAST_OP) {
+		auto leftTotal = this-> _context.validateValue (expression.getLeft ());
+		right = validateMathOperation (op, expression, leftTotal, right);
+	    }
+	    
+	    auto leftSynt = TemplateSyntaxWrapper::init (leftIndex.getLocation (), leftIndex);	    
+	    auto rightSynts = left.getRights ();
+	    rightSynts.push_back (TemplateSyntaxWrapper::init (right.getLocation (), right));
+				  
+	    auto bin = syntax::Binary::init (
+		{loc, Token::DOT},
+		leftSynt,
+		syntax::Var::init ({loc, CoreNames::get (INDEX_ASSIGN_OP_OVERRIDE)}),
+		syntax::Expression::empty ()
+	    );
+
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		bin,
+		rightSynts, false
+	    );
+
+	    return this-> _context.validateValue (call);
+	}
+	
 
 	Generator BinaryVisitor::validateRangeOperation (Binary::Operator op, const syntax::Binary & expression) {
 	    auto leftExp = expression.getLeft ();

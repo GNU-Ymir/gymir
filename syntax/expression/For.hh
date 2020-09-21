@@ -54,6 +54,8 @@ namespace syntax {
 	const Expression & getBlock () const;
 
 	const std::vector <Expression> & getVars () const;
+
+	std::string prettyString () const override;
 	
     };
     

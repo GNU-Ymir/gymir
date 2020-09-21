@@ -45,6 +45,10 @@ namespace syntax {
     const Expression& Scope::getContent () const {
 	return this-> _content;
     }
-    
+
+
+    std::string Scope::prettyString () const {
+	return Ymir::format ("% %", this-> getLocation ().str, this-> _content.prettyString ());
+    }
 
 }

@@ -62,7 +62,13 @@ namespace semantic {
 		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
 		else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
-		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));
+		else of (Pointer, ptr,
+		     if (ptr.getInners ()[0].is <ClassRef> ())
+			 gen = validateClass (expression, ptr.getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), errors);
+		     else
+			 gen = validateType (expression, left);
+		)
+		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));			 
 	    }
 	    	    
 	    if (left.is<Value> () && gen.isEmpty ()) {
@@ -70,6 +76,8 @@ namespace semantic {
 		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left));
 		    of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
 		    of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors));
+		    of (Pointer, ptr, if (ptr.getInners ()[0].is <ClassRef> ()) gen = validateClassValue (expression, left);
+		    );
 		}
 	    }
 	    
@@ -563,8 +571,7 @@ namespace semantic {
 		    Generator gen (Generator::empty ());
 		    try {			
 			gen = this-> _context.getClassConstructors (expression.getLocation (), t);
-		    } catch (Error::ErrorList list) {
-			
+		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			succeed = false;
 		    } 
@@ -628,7 +635,9 @@ namespace semantic {
 		auto opName = expression.getRight ().to <syntax::Var> ().getName ().str;
 		if (opName == SubVisitor::__TYPEINFO__) {		    
 		    auto loc = expression.getLocation ();
-		    auto typeInfoValue = this-> _context.validateTypeInfo (expression.getLocation (), value.to <Value> ().getType ());
+		    auto type = value.to <Value> ().getType ();
+		    if (type.is <Pointer> ()) type = type.to<Pointer> ().getInners ()[0];
+		    auto typeInfoValue = this-> _context.validateTypeInfo (expression.getLocation (), type);
 
 		    // It is a pointer in the vtable, we need to unref it
 		    auto typeInfo = Type::init (typeInfoValue.to<Value> ().getType ().to <Type> (), false, true);

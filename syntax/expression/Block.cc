@@ -1,4 +1,5 @@
 #include <ymir/syntax/expression/Block.hh>
+#include <ymir/errors/_.hh>
 
 namespace syntax {
 
@@ -54,6 +55,32 @@ namespace syntax {
 
     const std::vector <Expression> & Block::getScopes () const {
 	return this-> _scopes;
+    }
+
+    std::string Block::prettyString () const {
+	if (!this-> _declModule.isEmpty ()) Ymir::Error::halt ("", ""); // TODO
+	Ymir::OutBuffer buf;
+	buf.write ("{\n");
+	int i = 0;
+	for (auto & it : this-> _content) {
+	    if (i != 0) buf.write (";\n");
+	    auto in = it.prettyString ();
+	    buf.write ("\t");
+	    for (auto & j : in) {
+		buf.write (j);
+		if (j == '\n') buf.write ("\t");
+	    }
+	    i += 1;
+	}
+	buf.write ("\n}");
+	if (!this-> _catcher.isEmpty ()) {
+	    buf.write (this-> _catcher.prettyString ());
+	}
+
+	for (auto & it : this-> _scopes) {
+	    buf.write (it.prettyString ());
+	}
+	return buf.str ();
     }
     
 }

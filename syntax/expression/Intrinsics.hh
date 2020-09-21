@@ -74,6 +74,8 @@ namespace syntax {
 	 * \return is it a move
 	 */
 	bool isMove () const;
+
+	std::string prettyString () const override;
 	
     };    
 

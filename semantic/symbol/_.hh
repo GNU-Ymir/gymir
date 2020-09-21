@@ -6,6 +6,9 @@
 #include <ymir/semantic/symbol/Enum.hh>
 #include <ymir/semantic/symbol/Function.hh>
 #include <ymir/semantic/symbol/Impl.hh>
+#include <ymir/semantic/symbol/Macro.hh>
+#include <ymir/semantic/symbol/MacroConstructor.hh>
+#include <ymir/semantic/symbol/MacroRule.hh>
 #include <ymir/semantic/symbol/Module.hh>
 #include <ymir/semantic/symbol/ModRef.hh>
 #include <ymir/semantic/symbol/Struct.hh>

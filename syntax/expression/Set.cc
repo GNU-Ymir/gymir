@@ -31,4 +31,15 @@ namespace syntax {
 	return this-> _params;
     }
     
+    std::string Set::prettyString () const {
+	Ymir::OutBuffer buf;
+	int i = 0;
+	for (auto & it : this-> _params) {
+	    if (i != 0) buf.write ("\n");
+	    buf.write (it.prettyString ());
+	    i += 1;
+	}
+	return buf.str ();
+    }
+
 }

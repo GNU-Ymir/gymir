@@ -62,7 +62,20 @@ namespace semantic {
 	}
 	
 	std::string DelegateValue::prettyString () const {
-	    return Ymir::format ("{%, %}", this-> _closure.prettyString (), this-> _funcptr.prettyString ());
+	    if (this-> _closure.is <Value> ()) {
+		return Ymir::format ("{% = % : %, %} ",
+				     this-> _closureType.prettyString (),
+				     this-> _closure.prettyString (),
+				     this-> _closure.to <Value> ().getType ().prettyString (),
+				     this-> _funcptr.prettyString ()
+		);
+	    } else {
+		return Ymir::format ("{% = %, %} ",
+				     this-> _closureType.prettyString (),
+				     this-> _closure.prettyString (),
+				     this-> _funcptr.prettyString ()
+		);
+	    }
 	}
 	
     }

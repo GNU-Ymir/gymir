@@ -45,9 +45,11 @@ namespace semantic {
 		    ret = validateRange (expression, left);
 		)
 
-		else of (ClassRef, cl ATTRIBUTE_UNUSED,
+		else of (Pointer, ptr ATTRIBUTE_UNUSED,
+		     if (ptr.getInners ()[0].is<ClassRef> ()) {
 			 ret = validateClass (expression, left, errors);
-		); 		
+		     }
+		);				
 	    }
 
 	    if (!ret.isEmpty ()) return ret;
@@ -188,10 +190,10 @@ namespace semantic {
 	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <std::string> & errors) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
-	    auto cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    auto cl = left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    bool prv = false, prot = false;
-	    
-	    this-> _context.getClassContext (left.to <Value> ().getType ().to <ClassRef> ().getRef (), prv, prot);
+
+	    this-> _context.getClassContext (left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef (), prv, prot);
 	    int i = 0;
 	    
 	    // Field
@@ -223,11 +225,12 @@ namespace semantic {
 		    }
 		}
 
-		if (!type.isEmpty ()) {
+		if (!type.isEmpty ()) {			     
 		    if (
 			left.to <Value> ().isLvalue () &&
 			left.to <Value> ().getType ().to <Type> ().isMutable () &&
-			type.to <Type> ().isMutable ()
+			type.to <Type> ().isMutable () &&
+			left.to <Value> ().getType ().to <Type> ().getInners ()[0].to <Type> ().isMutable () // ClassRef must be mutable 
 		    )
 			type = Type::init (type.to <Type> (), true);
 		    else
@@ -246,7 +249,7 @@ namespace semantic {
 	    }
 	    
 	    // Method
-	    cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    cl = left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    std::vector <Generator> syms;
 	    auto & vtable = cl.to <generator::Class> ().getVtable ();
 	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
@@ -280,10 +283,11 @@ namespace semantic {
 		}
 	    }
 
-	    cl = left.to <Value> ().getType ().to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    cl = left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    // Template methods
 	    while (!cl.isEmpty ()) {
-		auto clRef = Type::init (cl.to <generator::Class> ().getClassRef ().to <Type> (), true);
+		auto clRef = left.to <Value> ().getType ();//Type::init (cl.to <generator::Class> ().getClassRef ().to <Type> (), true);
+		clRef = Type::init (clRef.to <Type> (), clRef.to<Type> ().isMutable (), false);
 		
 		for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 		    match (it) {

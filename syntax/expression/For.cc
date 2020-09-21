@@ -50,4 +50,20 @@ namespace syntax {
 	return this-> _vars;
     }
     
+    std::string For::prettyString () const {
+	Ymir::OutBuffer buf;
+	buf.write ("for ");
+	int i = 0;
+	for (auto & it : this-> _vars) {
+	    if (i != 0) buf.write (", ");
+	    buf.write (it.prettyString ());
+	    i += 1;
+	}
+	buf.write (" in ");
+	buf.write (this-> _iter.prettyString ());
+	buf.write (" ");
+	buf.write (this-> _block.prettyString ());
+	return buf.str ();
+    }
+
 }

@@ -47,6 +47,8 @@ namespace syntax {
 	 */
 	const lexing::Word & getSuffix () const;
 
+	std::string prettyString () const override;
+	
     };    
 
 }

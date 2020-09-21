@@ -75,9 +75,10 @@ struct Token {
     static std::string	LCOMM5;
     static std::string	RCOMM5;
     static std::string 	ARROW;
-    static std::string 	BSTRING;
-    static std::string 	ESTRING;
     static std::string 	DCOLON;
+    static std::string  MACRO_ACC;
+    static std::string  MACRO_CRO;
+    static std::string  MACRO_PAR;
     static std::string  BROK_SPACE;
     
     static std::vector <std::string> members () {
@@ -88,7 +89,8 @@ struct Token {
 		COLON,		DOLLAR,		EQUAL,		DEQUAL,		STAR,		STAR_AFF,	PERCENT,	PERCENT_AFF,
 		XOR,		DXOR_AFF,	DXOR,		TILDE,		TILDE_AFF,	AT,		DARROW,
 		SHARP,		SPACE,		RETURN,		RRETURN, ANTI, 	LCOMM1,		RCOMM1,		LCOMM2,
-		GUILL,		APOS,		TAB,		LCOMM3,		RCOMM3,		LCOMM4, LCOMM5, RCOMM5, ARROW,		BSTRING,	ESTRING,	DCOLON, BROK_SPACE
+		GUILL,		APOS,		TAB,		LCOMM3,		RCOMM3,		LCOMM4,         LCOMM5,         RCOMM5,
+		ARROW,		MACRO_ACC,      MACRO_CRO,      MACRO_PAR,	DCOLON,         BROK_SPACE
 		};
     }
     

@@ -55,6 +55,8 @@ namespace syntax {
 	const Expression & getRight () const;
 	
 	const Expression & getType () const;
+
+	std::string prettyString () const;
     };    
 
 }

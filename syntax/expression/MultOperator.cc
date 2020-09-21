@@ -50,5 +50,20 @@ namespace syntax {
     bool MultOperator::canBeDotCall () const {
 	return this-> _canbedotCall;
     }
+
+    std::string MultOperator::prettyString () const {
+	Ymir::OutBuffer stream;
+	stream.writef ("% %", this-> _element.prettyString (), this-> getLocation ().str);
+	auto i = 0;
+	for (auto & it : this-> _params) {
+	    if (i != 0) 
+		stream.writef (", %", it.prettyString ());
+	    else 
+		stream.writef ("%", it.prettyString ());
+	    i += 1;
+	}
+	stream.writef ("%", this-> _end.str);
+	return stream.str ();
+    }
     
 }

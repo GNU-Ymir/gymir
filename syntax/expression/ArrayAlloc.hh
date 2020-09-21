@@ -53,7 +53,9 @@ namespace syntax {
 	 * \return is this allocation dynamic (declared with the new token)
 	 */
 	bool isDynamic () const;
-		
+
+	std::string prettyString () const override;
+	
     };    
 
 }

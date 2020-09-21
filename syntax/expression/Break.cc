@@ -31,5 +31,12 @@ namespace syntax {
     const Expression & Break::getValue () const {
 	return this-> _value;
     }
+
+    std::string Break::prettyString () const {
+	if (this-> _value.isEmpty ())
+	    return "break";
+	else 
+	return Ymir::format ("break %", this-> _value.prettyString ());
+    }
     
 }

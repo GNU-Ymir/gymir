@@ -59,6 +59,8 @@ namespace syntax {
 	 * \return the else part of the if
 	 */
 	const Expression & getElsePart () const;
+
+	std::string prettyString () const override;
 	
     };
     

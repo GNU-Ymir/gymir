@@ -60,6 +60,8 @@ namespace syntax {
 	 * \return is this destruct declaration variadic?
 	 */
 	bool isVariadic () const;
+
+	std::string prettyString () const override;
 	
     };
     

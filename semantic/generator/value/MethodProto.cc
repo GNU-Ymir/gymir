@@ -49,8 +49,10 @@ namespace semantic {
 	}
 
 	std::string MethodProto::prettyString () const {
-	    auto buf = "(" + this-> _classType.prettyString () + ") => " + FrameProto::prettyString ();
-	    if (this-> _isMut) buf = "mut " + buf;
+	    auto buf = FrameProto::prettyString ();
+	    if (this-> _isMut) buf = "(" + this-> _classType.to <Type> ().toDeeplyMutable ().prettyString () + ") => " + buf;
+	    else
+		buf = "(" + Type::init (this-> _classType.getLocation (), this-> _classType.to <Type> (), false, false).prettyString () + ") => " + buf;		
 	    return buf;
 	}
 

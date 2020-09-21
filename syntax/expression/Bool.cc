@@ -26,4 +26,8 @@ namespace syntax {
 	stream.writeln (this-> getLocation ());
     }
     
+
+    std::string Bool::prettyString () const {
+	return this-> getLocation ().str;
+    }
 }

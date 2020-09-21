@@ -38,6 +38,8 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	const Expression & getValue () const;
+
+	std::string prettyString () const override;
 	
     };    
     

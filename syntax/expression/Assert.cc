@@ -38,5 +38,13 @@ namespace syntax {
 	this-> _test.treePrint (stream, i + 1);
 	this-> _msg.treePrint (stream, i + 1);
     }
+
+    std::string Assert::prettyString () const {
+	if (this-> _msg.isEmpty ())
+	    return Ymir::format ("assert (%)", this-> _test.prettyString ());
+	else 
+	    return Ymir::format ("assert (%, %)", this-> _test.prettyString (), this-> _msg.prettyString ());
+    }
+	
     
 }

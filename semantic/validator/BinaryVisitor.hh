@@ -213,6 +213,11 @@ namespace semantic {
 	    generator::Generator validateAffectation (generator::Binary::Operator op, const syntax::Binary & expression);
 
 	    /**
+	     * \brief Validate an index assign, unfortunately this cannot be done inside bracketvisitor	     
+	     */
+	    generator::Generator validateIndexAssign (generator::Binary::Operator op, const syntax::Binary & expression);
+	    
+	    /**
 	     * \brief Validate an affectation on complex type (arrays, tuple, struct ...)
 	     * \brief implicit Copy and reference are forbidden
 	     * \brief This ensure that right is a Referencer or a Copier

@@ -46,6 +46,7 @@ namespace semantic {
 	    Mapper globalMapper (true, 0);
 	    std::list <std::string> errors;
 	    int consumed = 0;
+
 	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) { 
 		auto currentElems = array_view <Generator> (values.begin () + consumed, values.end ());
 		
@@ -74,7 +75,7 @@ namespace semantic {
 		    consumed += current_consumed;
 		}		
 	    }
-	    
+
 	    if (!globalMapper.succeed || consumed < (int) values.size ()) {
 		return Symbol::empty ();	    
 	    } else {
@@ -113,7 +114,7 @@ namespace semantic {
 		    auto visit = declarator::Visitor::init ();
 		    visit.setWeak ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
-		    		    
+		    
 		    auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
 		    visit.pushReferent (soluce);
 		    visit.visit (final_syntax);
@@ -156,7 +157,7 @@ namespace semantic {
 			}
 		    }
 		) else of (ImplVar, var, {
-			if (values [0].is <ClassRef> ()) {
+			if (values [0].is <Pointer> () && values [0].to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
 			    consumed += 1;
 			    return applyTypeFromExplicitImplVar (syntaxTempl, var, values [0]);
 			} else if (values [0].is <Type> ()) {
@@ -284,7 +285,38 @@ namespace semantic {
 			consumed += values.size ();
 			return mapper;
 		    }
-		);			    
+		) else of (syntax::DecoratedExpression, dc, {
+			if (dc.getContent ().is <Var> ()) {
+			    auto var = dc.getContent ();
+			    Mapper localMapper (true, Scores::SCORE_VAR);			    
+			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), values [0]));
+			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    
+			    auto realType = this-> replaceAll (param, localMapper.mapping);
+			    auto genType = this-> _context.validateType (realType, true);
+			
+			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			    
+			    auto rightType = this-> _context.validateType (fakeType, true);
+			    
+			    this-> _context.verifySameType (genType, rightType);
+			
+			    auto llevel = genType.to <Type> ().mutabilityLevel ();
+			    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+			    
+			    if (llevel != rlevel) {
+				auto note = Ymir::Error::createNote (values [0].getLocation ());
+				Ymir::Error::occurAndNote (param.getLocation (), note, ExternalError::get (DISCARD_CONST_LEVEL_TEMPLATE),
+							   llevel, rlevel);
+			    }
+
+			    Mapper mapper (true, Scores::SCORE_VAR);
+			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (param.getLocation (), genType));
+			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    consumed += 1;
+			    return mapper;
+			}
+		    }
+		);
 	    }
 	    // else, we validate the value directly, and consume one
 
@@ -327,9 +359,12 @@ namespace semantic {
 	    return validateFromImplicit (ref, valueParams, types, syntaxParams, score, symbol, finalParams);	    
 	}
 	
-	Generator TemplateVisitor::validateFromImplicit (const Generator & ref, const std::vector <Generator> & valueParams, const std::vector <Generator> & types, const std::vector <syntax::Expression> & syntaxParams, int & score, Symbol & symbol, std::vector <Generator> & finalParams) const {
+	Generator TemplateVisitor::validateFromImplicit (const Generator & ref, const std::vector <Generator> & valueParams, const std::vector <Generator> & types_, const std::vector <syntax::Expression> & syntaxParams, int & score, Symbol & symbol, std::vector <Generator> & finalParams) const {
 	    const Symbol & sym = ref.to <TemplateRef> ().getTemplateRef ();	    
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
+
+	    std::vector <Generator> types = types_;
+	    for (auto & it : types) it = Type::init (it.to <Type> (), false, false); // Implicit can not create mutable template
 	    
 	    /** INFO : Not enough parameters for the function, actually, it
 		is probably not mandatory to check that since this
@@ -461,7 +496,8 @@ namespace semantic {
 		try {
 		    if (ref.is <MethodTemplateRef> ()) {
 		    	auto & self = ref.to <MethodTemplateRef> ().getSelf ();
-			proto = this-> _context.validateMethodProto (sym_func.to <semantic::Function> (), self.to <Value> ().getType ());
+			auto classType = self.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
+			proto = this-> _context.validateMethodProto (sym_func.to <semantic::Function> (), classType);			
 		    } else if (ref.is <TemplateClassCst> ()) {
 			proto = this-> _context.validateClass (sym_func, false);
 		    } else {
@@ -571,10 +607,36 @@ namespace semantic {
 			return validateTypeFromTemplCall (params, cl, types [0], current_consumed);
 		    }
 		) else of (DecoratedExpression, dc, {
-			consumed += 1;
-			int current_consumed = 0;
-			return applyTypeFromDecoratedExpression (params, dc, types, current_consumed);
-		    }
+			if (dc.getContent ().is <Var> ()) {
+			    consumed += 1;
+			    auto var = dc.getContent ();
+			    Mapper localMapper (true, Scores::SCORE_VAR);			    
+			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), types [0]));
+			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    
+			    auto realType = this-> replaceAll (leftT, localMapper.mapping);
+			    auto genType = this-> _context.validateType (realType, true);
+			
+			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			
+			    auto rightType = this-> _context.validateType (fakeType, true);
+			    
+			    this-> _context.verifySameType (genType, rightType);
+			
+			    auto llevel = genType.to <Type> ().mutabilityLevel ();
+			    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+			    
+			    if (llevel != rlevel) {
+				auto note = Ymir::Error::createNote (types [0].getLocation ());
+				Ymir::Error::occurAndNote (leftT.getLocation (), note, ExternalError::get (DISCARD_CONST_LEVEL_TEMPLATE),
+							   llevel, rlevel);
+			    }
+
+			    Mapper mapper (true, Scores::SCORE_VAR);
+			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (leftT.getLocation (), genType));
+			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    return mapper;
+			}
+		    }		    
 		) else of (syntax::FuncPtr, fPtr, {
 			consumed += 1;
 			auto type = types [0];
@@ -628,7 +690,7 @@ namespace semantic {
 		    }
 		);	       
 	    }
-
+	    
 	    this-> _context.validateType (leftT, true);
 	    Mapper mapper (false, 0);
 	    return mapper;
@@ -741,7 +803,7 @@ namespace semantic {
 			return applyTypeFromExplicitOfVar (params, var, types [0]);
 		    }
 		) else of (ImplVar, var, {
-			if (!types [0].is <ClassRef> ()) {
+			if (!types [0].is <Pointer> () || !types[0].to<Pointer> ().getInners ()[0].is <ClassRef> ()) {
 			    auto note = Ymir::Error::createNote (var.getLocation ());
 			    Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (NOT_A_CLASS), types [0].prettyString ());
 			}
@@ -766,7 +828,7 @@ namespace semantic {
 			return Mapper (false, 0);
 		    }
 		) else of (ClassVar, var, {
-			if ((!types [0].isEmpty ()) && types [0].is <ClassRef> ()) {
+			if ((!types [0].isEmpty ()) && types [0].is <Pointer> () && types [0].to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
 			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
 			    mapper.nameOrder.push_back (var.getLocation ().str);
@@ -808,6 +870,37 @@ namespace semantic {
 			}
 			consumed += types.size ();
 			return mapper;
+		    }
+		) else of (DecoratedExpression, dc, {
+			if (dc.getContent ().is <Var> ()) {
+			    consumed += 1;
+			    auto var = dc.getContent ();
+			    Mapper localMapper (true, Scores::SCORE_VAR);			    
+			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), types [0]));
+			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    
+			    auto realType = this-> replaceAll (leftT, localMapper.mapping);
+			    auto genType = this-> _context.validateType (realType, true);
+			
+			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			
+			    auto rightType = this-> _context.validateType (fakeType, true);
+			    
+			    this-> _context.verifySameType (genType, rightType);
+			
+			    auto llevel = genType.to <Type> ().mutabilityLevel ();
+			    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+			    
+			    if (llevel != rlevel) {
+				auto note = Ymir::Error::createNote (types [0].getLocation ());
+				Ymir::Error::occurAndNote (leftT.getLocation (), note, ExternalError::get (DISCARD_CONST_LEVEL_TEMPLATE),
+							   llevel, rlevel);
+			    }
+
+			    Mapper mapper (true, Scores::SCORE_VAR);
+			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (leftT.getLocation (), genType));
+			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    return mapper;
+			}
 		    }
 		);
 	    }
@@ -947,8 +1040,10 @@ namespace semantic {
 			auto genType = this-> _context.validateType (realType, true);
 			this-> _context.verifySameType (genType, type);
 			this-> _context.verifyNotIsType (ofv.getLocation ());
+			if (dc.hasDecorator (syntax::Decorator::MUT))
+			    genType = Type::init (ofv.getLocation (), genType.to <Type> (), true, false);
 			
-			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType, dc.hasDecorator (syntax::Decorator::MUT)));
+			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
 			mapper.nameOrder.push_back (ofv.getLocation ().str);
 			mapper.score += Scores::SCORE_TYPE;
 			return mapper;
@@ -971,9 +1066,16 @@ namespace semantic {
 	    
 	    // Default case, we just validate it and check the type equality
 	    auto left = this-> _context.validateType (ofv.getType (), true);
-	    this-> _context.verifySameType (left, type);
+	    auto score = Scores::SCORE_TYPE;
+	    if (type.is <Pointer> () && type.to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
+		this-> _context.verifyCompatibleType (ofv.getLocation (), left, type);
+		if (left.equals (type))
+		    score = Scores::SCORE_TYPE;
+		else score = Scores::SCORE_VAR;
+	    } else 
+		this-> _context.verifySameType (left, type);
 			    
-	    Mapper mapper (true, Scores::SCORE_TYPE);
+	    Mapper mapper (true, score);
 	    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
 	    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), type));
@@ -1062,35 +1164,14 @@ namespace semantic {
 	
 	TemplateVisitor::Mapper TemplateVisitor::applyTypeFromDecoratedExpression (const array_view <Expression> & params, const DecoratedExpression & expr, const array_view <generator::Generator> & types, int & consumed) const {
 	    if (expr.hasDecorator (syntax::Decorator::CTE) || expr.hasDecorator (syntax::Decorator::REF))
-		return Mapper (false, 0);	    
-
-	    auto result = validateTypeFromImplicit (params, expr.getContent (), types, consumed);
-	    if (result.succeed) {
-		std::map<std::string, syntax::Expression> maps;
-		for (auto & it : result.mapping) {
-		    match (it.second) {
-			of (TemplateSyntaxWrapper, syn, {
-				auto content = syn.getContent ();
-				if (content.is <Type> ()) {
-				    if (expr.hasDecorator (syntax::Decorator::MUT))
-					content = Type::init (content.to <Type> (), true);
-
-				    if (expr.hasDecorator (syntax::Decorator::CONST))
-					content = Type::init (content.to <Type> (), false);		    
-				}
-				maps.emplace (it.first, TemplateSyntaxWrapper::init (syn.getLocation (), content));
-			    }
-			) else {
-			    maps.emplace (it.first, it.second);
-			}
-		    }
-		}
-		return Mapper (true, result.score, maps, result.nameOrder);
-	    } else return Mapper (false, 0);	    
+		return Mapper (false, 0);
+	    
+	    return validateTypeFromImplicit (params, expr.getContent (), types, consumed);
 	}
 	
-	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const generator::Generator & gen, bool isMutable, bool isRef) const {
-	    Generator type = Type::init (location, gen.to <Type> (), isMutable, isRef);
+	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const generator::Generator & gen// , bool isMutable, bool isRef
+	) const {	    
+	    Generator type = Type::init (location, gen.to <Type> (), gen.to <Type> ().isMutable (), false);
 	    return TemplateSyntaxWrapper::init (location, type);
 	}
 
@@ -1130,6 +1211,9 @@ namespace semantic {
 			}
 		    ) else of (AliasVar, var, {
 			    if (var.getLocation ().str == name) return it;
+			}
+		    ) else of (DecoratedExpression, dc, {
+			    if (dc.getContent ().is<Var> () && dc.getContent ().to <Var> ().getName ().str == name) return it;
 			}
 		    ); // We don't do anything for the rest of expression types as they do not refer to types
 		}
@@ -1460,6 +1544,13 @@ namespace semantic {
 		) else of (syntax::Throw, thr, {
 			return syntax::Throw::init (thr.getLocation (), replaceAll (thr.getValue (), mapping));
 		    }
+		) else of (syntax::Pragma, prg, {
+			std::vector <syntax::Expression> exprs;
+			for (auto & it : prg.getContent ()) {
+			    exprs.push_back (replaceAll (it, mapping));
+			}
+			return syntax::Pragma::init (prg.getLocation (), exprs);
+		    }
 		);
 	    }
 	    
@@ -1667,6 +1758,11 @@ namespace semantic {
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
+		    ) else of (syntax::DecoratedExpression, dc, {
+			    if (mapping.find (dc.getContent ().to <Var> ().getName ().str) == mapping.end ())
+				results.push_back (replaceAll (it, mapping));
+			    continue;
+			}
 		    );
 
 		} // else {
@@ -1727,6 +1823,9 @@ namespace semantic {
 			}
 		    ) else of (syntax::AliasVar, var, {
 			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			}
+		    ) else of (syntax::DecoratedExpression, dc, {
+			    results.push_back (mapping.find (dc.getContent ().to <Var> ().getName ().str)-> second);
 			}
 		    ) else {
 						    OutBuffer buf;

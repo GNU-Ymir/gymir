@@ -34,6 +34,7 @@
 #include <ymir/semantic/generator/value/LambdaProto.hh>
 #include <ymir/semantic/generator/value/List.hh>
 #include <ymir/semantic/generator/value/Loop.hh>
+#include <ymir/semantic/generator/value/MacroRef.hh>
 #include <ymir/semantic/generator/value/MethodProto.hh>
 #include <ymir/semantic/generator/value/MethodTemplateRef.hh>
 #include <ymir/semantic/generator/value/ModuleAccess.hh>

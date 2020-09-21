@@ -11,18 +11,19 @@ namespace semantic {
 	    _value (Generator::empty ())
 	{}
 
-	VarRef::VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value) :
+	VarRef::VarRef (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value, bool isSelf) :
 	    Value (location, type),
 	    _name (name),
 	    _refId (id),
 	    _isMutable (isMutable),
-	    _value (value)
+	    _value (value),
+	    _isSelf (isSelf)
 	{
 	    this-> isLvalue (true);
 	}
 
-	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value) {
-	    return Generator {new (Z0) VarRef (location, name, type, id, isMutable, value)};
+	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value, bool isSelf) {
+	    return Generator {new (Z0) VarRef (location, name, type, id, isMutable, value, isSelf)};
 	}
 
 	Generator VarRef::clone () const {
@@ -50,6 +51,10 @@ namespace semantic {
 
 	const Generator & VarRef::getValue () const {
 	    return this-> _value;
+	}
+
+	bool VarRef::isSelf () const {
+	    return this-> _isSelf;
 	}
 	
 	std::string VarRef::prettyString () const {

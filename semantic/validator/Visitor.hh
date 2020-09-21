@@ -213,15 +213,30 @@ namespace semantic {
 	    generator::Generator validateType (const syntax::Expression & type, bool lock);
 
 	    /**
+	     * \brief validate an expression, that produce a type, if it failed with validateType (so it must be a ClassRef)
+	     * \return a generator containing the resulting type
+	     * \param lock if the return type is not mutable do we lock the mutability ?
+	     * \      if true, even if we set it to mutable later all the inner types will be immutable
+	     */
+	    generator::Generator validateTypeClassRef (const syntax::Expression & type, bool lock);
+
+	    /**
 	     * \brief validate an expression, that produce a type
 	     * \return a generator containing the resulting type
 	     */
 	    generator::Generator validateType (const syntax::Expression & type);
+	    
+	    /**
+	     * \brief validate an expression, that produce a type, if it failed with validateType (so it must be a ClassRef)
+	     * \return a generator containing the resulting type
+	     */
+	    generator::Generator validateTypeClassRef (const syntax::Expression & type);
 
 	    /**
 	     * \brief Validate a decorated type
+	     * \param canBeClassRef, true if it can be a class ref (from a UnaryOp type creation)
 	     */
-	    generator::Generator validateTypeDecorated (const syntax::DecoratedExpression & type);
+	    generator::Generator validateTypeDecorated (const syntax::DecoratedExpression & type, bool canBeClassRef = false);
 	    
 	    /**
 	     * \brief Validate the var using it as a type
@@ -284,6 +299,16 @@ namespace semantic {
 	     */
 	    generator::Generator validateAssert (const syntax::Assert & assert);
 
+	    /**
+	     * \brief Validate a macro call
+	     */
+	    generator::Generator validateMacroCall (const syntax::MacroCall & call);
+
+	    /**
+	     * \brief Validate a pragma 
+	     */
+	    generator::Generator validatePragma (const syntax::Pragma & prg);
+	    
 	    /**
 	     * \brief Validate an assert at compile time, 
 	     */
@@ -822,6 +847,12 @@ namespace semantic {
 	    generator::Generator getClassConstructors (const lexing::Word & loc, const generator::Generator & cl);
 
 	    /**
+	     * \return the list of constructor of the macro
+	     * \warning mref is assumed to be a MacroRef
+	     */
+	    std::vector <semantic::MacroConstructor> getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref);
+	    
+	    /**
 	     * \return the list of constructors declared in the class
 	     */
 	    std::vector <syntax::Declaration> getAllConstructors (const std::vector <syntax::Declaration> & innerClass);
@@ -970,6 +1001,9 @@ namespace semantic {
 	    
 	    
 	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
+
+
+	    syntax::Expression createClassTypeFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
 
 	    /**
 	     * \brief Append a else to a conditional (recursively)

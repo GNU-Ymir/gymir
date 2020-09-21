@@ -10,19 +10,20 @@ namespace semantic {
 	    this-> isLocal (false);
 	}
 
-	ProtoVar::ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume) :
+	ProtoVar::ProtoVar (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool isSelf) :
 	    Value (location, type),
 	    _value (value),
 	    _isMutable (isMutable),
-	    _nbConsume (nb_consume)
+	    _nbConsume (nb_consume),
+	    _isSelf (isSelf)
 	{
 	    this-> isLocal (false);
 	    this-> isLvalue (isMutable);
 	    this-> setThrowers (this-> _value.getThrowers ());
 	}
 
-	Generator ProtoVar::init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume) {
-	    return Generator {new (Z0) ProtoVar (location, type, value, isMutable, nb_consume)};
+	Generator ProtoVar::init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool isSelf) {
+	    return Generator {new (Z0) ProtoVar (location, type, value, isMutable, nb_consume, isSelf)};
 	}
 
 	Generator ProtoVar::clone () const {
@@ -56,6 +57,10 @@ namespace semantic {
 
 	int ProtoVar::getNbConsume () const {
 	    return this-> _nbConsume;
+	}
+
+	bool ProtoVar::isSelf () const {
+	    return this-> _isSelf;
 	}
 	
 	std::string ProtoVar::prettyString () const {

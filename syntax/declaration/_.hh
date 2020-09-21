@@ -11,7 +11,9 @@
 #include <ymir/syntax/declaration/Function.hh>
 #include <ymir/syntax/declaration/Global.hh>
 #include <ymir/syntax/declaration/Import.hh>
-//#include <ymir/syntax/declaration/Macro.hh>
+#include <ymir/syntax/declaration/Macro.hh>
+#include <ymir/syntax/declaration/MacroConstructor.hh>
+#include <ymir/syntax/declaration/MacroRule.hh>
 #include <ymir/syntax/declaration/Mixin.hh>
 #include <ymir/syntax/declaration/Module.hh>
 #include <ymir/syntax/declaration/Struct.hh>

@@ -43,6 +43,8 @@ namespace syntax {
 	const std::vector <Expression> & getMatchs () const;
 
 	const std::vector <Expression> & getActions () const;
+
+	std::string prettyString () const override;
 	
     };    
     

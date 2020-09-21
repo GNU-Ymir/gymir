@@ -60,6 +60,8 @@ namespace syntax {
 	 */
 	bool isDo () const;
 
+	std::string prettyString () const override;
+	
     };
     
 }

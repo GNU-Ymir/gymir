@@ -34,6 +34,8 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	const lexing::Word & getSuffix () const;
+
+	std::string prettyString () const override;
 	
     };    
 

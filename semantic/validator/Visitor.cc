@@ -12,6 +12,7 @@
 #include <ymir/semantic/validator/TemplateVisitor.hh>
 #include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/semantic/validator/MatchVisitor.hh>
+#include <ymir/semantic/validator/MacroVisitor.hh>
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/utils/map.hh>
@@ -214,6 +215,7 @@ namespace semantic {
 		/** Nothing to do for those kind of symbols */
 		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);		
 		of (semantic::Template, x ATTRIBUTE_UNUSED, return);
+		of (semantic::Macro, x ATTRIBUTE_UNUSED, return);
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -262,8 +264,10 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateTemplateSolutionMethod (const semantic::Symbol & sol, const Generator & self) {
-	    const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();
+	    const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();	    
 	    if (syms.size () != 1) Ymir::Error::halt ("", "");
+	    
+	    auto classType = self.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
 	    if (insertTemplateSolution (sol)) { // If it is the first time, the solution is presented
 		std::list <std::string> errors;
 		pushReferent (sol, "validateTemplateSolutionMethod");
@@ -275,7 +279,7 @@ namespace semantic {
 			Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), nb_recur_template);
 		    }
 
-		    this-> validateMethod (syms [0].to <semantic::Function> (), self.to <Value> ().getType ());
+		    this-> validateMethod (syms [0].to <semantic::Function> (), classType);
 		    nb_recur_template -= 1;
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -287,7 +291,8 @@ namespace semantic {
 		    throw Error::ErrorList {errors};
 		}
 	    }
-	    return this-> validateMethodProto (syms [0].to <semantic::Function> (), self.to <Value> ().getType ());
+	    auto proto = this-> validateMethodProto (syms [0].to <semantic::Function> (), classType);
+	    return proto;
 	}
 	
 	
@@ -598,7 +603,8 @@ namespace semantic {
 	generator::Generator Visitor::validateClass (const semantic::Symbol & cls, bool inModule) {	    
 	    Generator ancestor (Generator::empty ());
 	    if (!cls.to <semantic::Class> ().getAncestor ().isEmpty ()) {
-		ancestor = this-> validateType (cls.to <semantic::Class> ().getAncestor ());
+		ancestor = this-> validateValue (cls.to <semantic::Class> ().getAncestor (), true, false);
+		if (ancestor.is <generator::Class> ()) ancestor = ancestor.to <generator::Class> ().getClassRef ();
 		if (!ancestor.is <ClassRef> ()) {
 		    Ymir::Error::occur (cls.to <semantic::Class> ().getAncestor ().getLocation (),
 					ExternalError::get (INHERIT_NO_CLASS),
@@ -903,7 +909,7 @@ namespace semantic {
 	    auto protoFptr = validateFunctionType (proto);
 	    bool over = false;
 	    for (auto i : Ymir::r (0, ancVtable.size ())) {
-		if (Ymir::Path (ancVtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().str) {
+		if (Ymir::Path (ancVtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().str) {		    
 		    auto fptr = validateFunctionType (ancVtable [i]);
 		    if (protoFptr.equals (fptr) && ancVtable [i].to<MethodProto> ().isMutable () == proto.to<MethodProto> ().isMutable ()) {
 			if (!func.isOver ()) {
@@ -924,9 +930,23 @@ namespace semantic {
 			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (CANNOT_OVERRIDE_FINAL), ancVtable [i].prettyString ()); 
 			}
 
-			// Verify the attributes
-			// They must be the same
+			std::vector <Generator> unused, notfound;
+			verifyThrows (proto.getThrowers (), ancVtable[i].getThrowers (), unused, notfound);
+			// There can be unused throwers that is not important
+			// A method override does not need to throw the same things as a parent method
+			// But it must not rethrow elements that are not rethrowed by the overloaded method
+
+			std::list <std::string> errors;
+			for (auto & it : notfound) {
+			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
+			    errors.push_back (Ymir::Error::makeOccurAndNote (it.getLocation (), note, ExternalError::get (RETHROW_NOT_MATCHING_PARENT), it.prettyString ()));
+			}
+
+			if (errors.size () != 0)
+			    throw Error::ErrorList {errors};
 			
+			// Verify the attributes
+			// They must be the same			
 			
 			over = true;
 			vtable [i] = proto; // We do that afterward, when impl a trait the vtable might be empty and always different from ancVtable
@@ -983,7 +1003,7 @@ namespace semantic {
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
 	    enterContext (cs.getCustomAttributes ());
 	    
-	    classType = Type::init (proto.getLocation (), classType.to <Type> (), true, false);
+	    classType = Type::init (proto.getLocation (), Pointer::init (proto.getLocation (), Type::init (proto.getLocation (), classType.to <Type> (), true, false)).to <Type> (), true, false);
 	    enterForeign ();
 
 	    std::vector <Generator> throwers;
@@ -998,8 +1018,8 @@ namespace semantic {
 	    enterBlock ();
 	    try {
 		validatePrototypeForFrame (cs.getName (), constr.getPrototype (), params, retType);
-		retType = classType.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <Value> ().getType ();
-		params.insert (params.begin (), ParamVar::init (cs.getName (), classType, true));
+		retType = classType.to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <Value> ().getType ();
+		params.insert (params.begin (), ParamVar::init (cs.getName (), classType, true, true));
 		insertLocal (params [0].getName (), params [0]);
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
@@ -1015,7 +1035,7 @@ namespace semantic {
 		    auto ret = Return::init (loc,
 					     Void::init (loc),
 					     classType,
-					     VarRef::init (loc, params [0].to <ParamVar> ().getName (), classType, params [0].getUniqId (), true, Generator::empty ())
+					     VarRef::init (loc, params [0].to <ParamVar> ().getName (), classType, params [0].getUniqId (), true, Generator::empty (), true)
 		    );	    
 		    body = Block::init (loc, Void::init (loc), {preConstruct, body, ret});
 		} catch (Error::ErrorList list) {
@@ -1070,7 +1090,7 @@ namespace semantic {
 	    enterClassDef (classType.to <ClassRef> ().getRef ());
 	    enterContext (function.getCustomAttributes ());
 	    
-	    classType = Type::init (function.getLocation (), classType.to <Type> (), true, false);
+	    classType = Type::init (function.getLocation (), Pointer::init (function.getLocation (), classType).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
 	    enterForeign ();
 
 	    std::vector <Generator> throwers;
@@ -1098,7 +1118,7 @@ namespace semantic {
 		auto & __params = function.getPrototype ().getParameters ();
 		
 		classType = Type::init (__params [0].getLocation (), classType.to <Type> (), isMutable, false);		
-		params.insert (params.begin (), ParamVar::init ({__params [0].getLocation (), Keys::SELF}, classType, isMutable));
+		params.insert (params.begin (), ParamVar::init ({__params [0].getLocation (), Keys::SELF}, classType, isMutable, true));
 		insertLocal (params [0].getName (), params [0]);		
 
 		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
@@ -1216,6 +1236,34 @@ namespace semantic {
 	    }
 	    return results;
 	}       
+
+	std::vector <MacroConstructor> Visitor::getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref) {
+	    bool prot = false, prv = false;
+	    std::list <std::string> errors;
+	    getClassContext (mref.getMacroRef (), prv, prot);
+	    std::vector <MacroConstructor> syms;
+
+	    for (auto & gen : mref.getMacroRef ().to <semantic::Macro> ().getAllInner ()) {
+		match (gen) {
+		    of (semantic::MacroConstructor, cst, {
+			    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) 
+				syms.push_back (cst);
+			    else {
+				errors.push_back (
+				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().str)					    
+				);
+			    }
+			});
+		}
+	    }
+	    
+	    if (syms.size () != 0) 
+		return syms;
+	    else if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+	    
+	    return {};
+	}
 	
 	generator::Generator Visitor::validatePreConstructor (const semantic::Constructor & cs, const Generator & classType, const Generator & ancestor, const std::vector<Generator> & ancestorFields) {
 	    auto & superParams = cs.getContent ().getSuperParams ();
@@ -1231,19 +1279,72 @@ namespace semantic {
 		    Ymir::Error::occur (cs.getContent ().getFieldConstruction ()[0].first, ExternalError::get (MULTIPLE_FIELD_INIT), cs.getContent ().getFieldConstruction ()[0].first.str);
 		
 		auto loc = cs.getContent ().getExplicitSelfCall ();
-		auto superBin = TemplateSyntaxWrapper::init (loc, getClassConstructors (loc, classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ()));				      
-		auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
-		auto result = validateValue (call);
-		instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init ({loc, Keys::SELF}))));
+
+		Generator cstrs (Generator::empty ());
+		try {
+		    cstrs = getClassConstructors (loc, classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+		} catch (Error::ErrorList list) {
+		    OutBuffer buf;
+		    for (auto & it : list.errors)
+			buf.write (it, "\n");
+
+		    Ymir::Error::occurAndNote (
+			loc,
+			buf.str (), 
+			ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			ClassRef::INIT_NAME,
+			classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
+		    );
+		}
+		
+		if (!cstrs.isEmpty ()) {
+		    auto superBin = TemplateSyntaxWrapper::init (loc, cstrs);				      
+		    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
+		    auto result = validateValue (call);
+		    instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init ({loc, Keys::SELF}))));
+		} else {
+		    Ymir::Error::occur (
+			loc,
+			ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			ClassRef::INIT_NAME,
+			classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
+		    );
+		}
 	    } else {
 		if (!ancestor.isEmpty ()) {
 		    auto loc = cs.getContent ().getExplicitSuperCall ();
 		    if (loc.isEof ()) loc = cs.getName ();
-		    auto superBin = TemplateSyntaxWrapper::init (loc, getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ()));				      
+		    Generator cstrs (Generator::empty ());
+		    try {
+			cstrs = getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+		    } catch (Error::ErrorList list) {			
+			OutBuffer buf;
+			for (auto & it : list.errors)
+			    buf.write (it, "\n");
+			
+			Ymir::Error::occurAndNote (
+			    loc,
+			    buf.str (),
+			    ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			    ClassRef::INIT_NAME,
+			    ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
+			);
+		    }
 
-		    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
-		    auto result = validateValue (call);
-		    instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init ({loc, Keys::SELF}))));
+		    if (!cstrs.isEmpty ()) {
+			auto superBin = TemplateSyntaxWrapper::init (loc, cstrs);				      
+			
+			auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
+			auto result = validateValue (call);
+			instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init ({loc, Keys::SELF}))));
+		    } else {
+			Ymir::Error::occur (
+			    loc,
+			    ExternalError::get (UNDEFINED_SUB_PART_FOR),
+			    ClassRef::INIT_NAME,
+			    ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().prettyString ()
+			);
+		    }
 		}
 
 		std::set <std::string> validated;
@@ -1307,15 +1408,15 @@ namespace semantic {
 	    if (call.is <Call> () && call.to <Call> ().getFrame ().is <ConstructorProto> ()) {
 		sym = call.to <Call> ().getFrame ().to <ConstructorProto> ().getRef ();
 		current_proto = call.to <Call> ().getFrame ();
-		clRef = call.to <Call> ().getFrame ().to <ConstructorProto> ().getReturnType ();	    
+		clRef = call.to <Call> ().getFrame ().to <ConstructorProto> ().getReturnType ().to <Pointer> ().getInners ()[0];	    
 	    } else if (call.is <ConstructorProto> ()) {
 		sym = call.to <ConstructorProto> ().getRef ();
 		current_proto = call;
-		clRef = call.to <ConstructorProto> ().getReturnType ();	    
+		clRef = call.to <ConstructorProto> ().getReturnType ().to <Pointer> ().getInners ()[0];	    
 	    } else if (call.is <ClassCst> ()) {
 		sym = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getRef ();
 		current_proto = call.to <ClassCst> ().getFrame ();
-		clRef = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getReturnType ();	    
+		clRef = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getReturnType ().to <Pointer> ().getInners ()[0];	    
 	    } else return; // This is not a class constructor, we can't check that
 	    
 	    auto & cs = sym.to <semantic::Constructor> ();	    
@@ -1347,7 +1448,7 @@ namespace semantic {
 		try {
 		    validatePrototypeForFrame (cs.getName (), cs.getContent ().getPrototype (), params, retType);
 		    retType = clRef.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <Value> ().getType ();
-		    params.insert (params.begin (), ParamVar::init (cs.getName (), clRef, true));
+		    params.insert (params.begin (), ParamVar::init (cs.getName (), clRef, true, true));
 		    insertLocal (params [0].getName (), params [0]);
 		} catch (Error::ErrorList list) {
 		    errors = list.errors;
@@ -1363,11 +1464,21 @@ namespace semantic {
 			auto ancestor = clRef.to <ClassRef> ().getAncestor ();
 			auto loc = cs.getContent ().getExplicitSuperCall ();
 			if (loc.isEof ()) loc = cs.getName ();
-			auto superBin = TemplateSyntaxWrapper::init (loc, getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ()));				      
-		    
-			auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
-			auto result = validateValue (call);
-			verifyConstructionLoop (loc, result);
+			Generator cstrs (Generator::empty ());
+			
+			try {
+			    cstrs = getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+			} catch (Error::ErrorList list) {
+			    errors = list.errors;
+			    return;
+			}
+			
+			if (!cstrs.isEmpty ()) {			    
+			    auto superBin = TemplateSyntaxWrapper::init (loc, cstrs);				      			    
+			    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);			    
+			    auto result = validateValue (call);
+			    verifyConstructionLoop (loc, result);
+			}
 		    }
 
 		    for (auto & it : cs.getContent ().getFieldConstruction ()) {
@@ -1530,7 +1641,8 @@ namespace semantic {
 	    else
 		value = validateValueNoReachable (expr, fromCall);
 	    // If it can be a type, that means we are looking for a type, and that implicit call is not an option
-	    
+
+	    if (value.isEmpty ()) Ymir::Error::halt ("", ""); // It can't be null without throwing exception!
 	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
 		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
@@ -1732,7 +1844,15 @@ namespace semantic {
 		of (syntax::Assert, assert,
 		    return validateAssert (assert);
 		);
-	    }
+
+		of (syntax::MacroCall, call,
+		    return validateMacroCall (call);
+		);
+
+		of (syntax::Pragma, prg,
+		    return validatePragma (prg);
+		);
+	    }	    
 
 	    OutBuffer buf;
 	    value.treePrint (buf, 0);
@@ -1875,17 +1995,18 @@ namespace semantic {
 	    enterBlock ();
 	    {
 		try {
+
 		    auto loc = catcher.getLocation ();
-		    auto syntaxType = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+		    auto syntaxType = createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
 		    auto type = Type::init (validateType (syntaxType).to <Type> (), false, false);
-		    
+
 		    varDecl = generator::VarDecl::init ({loc, "#catch"}, "#catch", type, Generator::empty (), false);
 		    insertLocal ("#catch", varDecl);
 		    typeInfo = validateTypeInfo (loc, type);
 		    auto vref = VarRef::init (loc, "#catch", type, varDecl.getUniqId (),  false, Generator::empty ());
 
 		    auto visitor = MatchVisitor::init (*this);
-		    
+
 		    action = visitor.validateCatcher (vref, throwsTypes, catcher.to <syntax::Catch> ());
 		    
 		    if (!action.to <Value> ().isReturner () && !action.to <Value> ().isBreaker ()) {
@@ -2161,7 +2282,7 @@ namespace semantic {
 
 	    // The gen that we got can be either a param decl or a var decl
 	    if (gen.is <ParamVar> ()) {
-		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId (), gen.to<ParamVar> ().isMutable (), Generator::empty ());
+		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId (), gen.to<ParamVar> ().isMutable (), Generator::empty (), gen.to <ParamVar> ().isSelf ());
 	    } else if (gen.is <generator::VarDecl> ()) {
 		Generator value (Generator::empty ());
 		if (!gen.to <generator::VarDecl> ().isMutable ())
@@ -2229,6 +2350,10 @@ namespace semantic {
 				gens.push_back (TemplateRef::init (sym.getName (), sym));
 				succ = true;
 			    }
+			) else of (semantic::Macro, mc ATTRIBUTE_UNUSED, {
+				gens.push_back (MacroRef::init (mc.getName (), sym));
+				succ = true;
+			    } 
 			) else of (semantic::TemplateSolution, sol, {			    
 				auto loc_gens = validateMultSym (loc, sol.getAllLocal ());
 				match (loc_gens) {
@@ -2415,7 +2540,7 @@ namespace semantic {
 
 	    Generator cl (Generator::empty ());
 	    try {
-		cl = Type::init (func.getName (), validateClass (func.getClass ()).to <Type> (), true, false);
+		cl = Type::init (func.getName (), Pointer::init (func.getName (), Type::init (func.getName (), validateClass (func.getClass ()).to <Type> (), true, false)).to <Type> (), true, false);
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    } 
@@ -2423,7 +2548,7 @@ namespace semantic {
 	    if (!cl.isEmpty ()) {		
 		__validating__.push_back (func.getName ());
 		enterBlock ();
-		this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true, 1));
+		this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), cl, Generator::empty (), true, 1, true));
 		try {		
 		    validatePrototypeForProto (func.getName (), function.getPrototype (), no_value, params, retType);
 		} catch (Error::ErrorList list) {
@@ -2475,10 +2600,11 @@ namespace semantic {
 		if (func_loc.isSame (func.getName ())) no_value = true;
 	    }
 	    
-	    auto classType = Type::init (function.getLocation (), classType_.to <Type> ());
+	    auto classType = Type::init (function.getLocation (), Pointer::init (function.getLocation (), classType_).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
+
 	    __validating__.push_back (func.getName ());
 	    enterBlock ();
-	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), classType, Generator::empty (), true, 1));
+	    this-> insertLocal (Keys::SELF, ProtoVar::init (func.getName (), classType, Generator::empty (), true, 1, true));
 
 	    try {
 		auto & __params = function.getPrototype ().getParameters ();
@@ -2513,6 +2639,9 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};		
 	    }
+
+	    if (!function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT))
+		classType = Type::init (classType.getLocation (), classType.to <Type> (), false, false);
 	    
 	    auto frame = MethodProto::init (function.getLocation (), func.getRealName (), retType, params, false,
 					    classType,
@@ -2564,7 +2693,7 @@ namespace semantic {
 			Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
 		    }
 		
-		    addedParams.push_back (ParamVar::init (var.getName (), type, isMutable));
+		    addedParams.push_back (ParamVar::init (var.getName (), type, isMutable, false));
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -2651,7 +2780,7 @@ namespace semantic {
 			nb_consumed = var.getType ().to <TemplateSyntaxList> ().getContents ().size ();
 		    }
 		    
-		    addedParams.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed));
+		    addedParams.push_back (ProtoVar::init (var.getName (), type, value, isMutable, nb_consumed, false));
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    errors.push_back (Ymir::Error::createNote (param.getLocation ()));
@@ -2763,6 +2892,11 @@ namespace semantic {
 	    
 	    if (dec_expr.hasDecorator (syntax::Decorator::REF)) {
 		if (inner.to <Value> ().isLvalue ()) {
+		    if (inner.is <VarRef> () && inner.to<VarRef> ().isSelf ()) {
+			Ymir::Error::occur (inner.getLocation (),
+					    ExternalError::get (REF_SELF)
+			);
+		    }
 		    // if (!inner.to <Value> ().getType ().to <Type> ().isMutable ()) {
 		    // 	Ymir::Error::occur (inner.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));
 		    // } // We allow this, since we want to pass element by const reference to function, or variable
@@ -3148,7 +3282,7 @@ namespace semantic {
 	Generator Visitor::validateThrow (const syntax::Throw & thr) {
 	    auto inner = this-> validateValue (thr.getValue ());
 	    auto type = inner.to <Value> ().getType ();
-	    auto syntaxType = createVarFromPath (thr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+	    auto syntaxType = createClassTypeFromPath (thr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
 	    auto ancType = validateType (syntaxType);
 
 	    verifyCompatibleType (thr.getLocation (), ancType, type);
@@ -3160,7 +3294,6 @@ namespace semantic {
 					     syntax::Expression::empty ()
 	    );
 	    auto info = validateValue (bin);
-
 	    
 	    return Throw::init (thr.getLocation (), info, inner);
 	}
@@ -3212,7 +3345,7 @@ namespace semantic {
 	    
 	    return ret;
 	}
-
+		
 	Generator Visitor::validateCteAssert (const syntax::Assert & assert) {
 	    auto test = validateValue (assert.getTest ());
 	    if (!test.to <Value> ().getType ().is <Bool> ()) {
@@ -3233,9 +3366,34 @@ namespace semantic {
 	    return None::init (assert.getLocation ());
 	}
 
+	Generator Visitor::validateMacroCall (const syntax::MacroCall & call) {
+	    auto visitor = MacroVisitor::init (*this);
+	    return visitor.validate (call);
+	}	
+
+	Generator Visitor::validatePragma (const syntax::Pragma & prg) {
+	    if (prg.getLocation ().str == Keys::COMPILE) {
+		try {
+		    for (auto & it : prg.getContent ()) {
+			validateValue (it);
+		    }
+		    
+		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
+		} catch (Error::ErrorList list) {
+		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
+		}
+	    } else {
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNKOWN_PRAGMA), prg.getLocation ().str);
+	    }
+	    
+	    return Generator::empty ();
+	}
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
-	    auto type = Type::init (type_.to <Type> (), false, false);	    
+	    auto type = Type::init (type_.to <Type> (), false, false);
+	    if (type.is <Pointer> () && type.to <Pointer> ().getInners ()[0].is <ClassRef>())
+		type = type.to <Pointer> ().getInners ()[0];
+	    
 	    auto typeInfo = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_INFO)});
 		
 	    auto str = validateType (typeInfo);
@@ -3644,8 +3802,8 @@ namespace semantic {
 			    }
 			}
 		
-			params.push_back (ParamVar::init (var.getName (), type, isMutable));
-			paramsProto.push_back (ProtoVar::init (var.getName (), type, Generator::empty (), isMutable, 1));
+			params.push_back (ParamVar::init (var.getName (), type, isMutable, false));
+			paramsProto.push_back (ProtoVar::init (var.getName (), type, Generator::empty (), isMutable, 1, false));
 			paramTypes.push_back (type);
 			if (var.getName () != Keys::UNDER) {
 			    verifyShadow (var.getName ());		
@@ -3703,8 +3861,8 @@ namespace semantic {
 		    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 			auto var = proto.getParameters ()[it].to <ProtoVar> ();
 			bool isMutable = types [it].to <Type> ().isMutable ();
-			params.push_back (ParamVar::init (var.getLocation (), types [it], isMutable));
-			paramsProto.push_back (ProtoVar::init (var.getLocation (), types [it], Generator::empty (), isMutable, 1));
+			params.push_back (ParamVar::init (var.getLocation (), types [it], isMutable, false));
+			paramsProto.push_back (ProtoVar::init (var.getLocation (), types [it], Generator::empty (), isMutable, 1, false));
 			if (var.getName () != Keys::UNDER) {
 			    insertLocal (var.getName (), params.back ());
 			}		
@@ -3744,7 +3902,7 @@ namespace semantic {
 	    if (proto.isRefClosure () || proto.isMoveClosure ()) {
 		closure = this-> exitClosure ();
 		if (closure.to <Closure> ().getNames ().size () != 0) {
-		    params.insert (params.begin (), ParamVar::init ({lexing::Word::eof (), "#_closure"}, closure, false));
+		    params.insert (params.begin (), ParamVar::init ({lexing::Word::eof (), "#_closure"}, closure, false, false));
 		    params [0].setUniqId (refId);
 		} else closure = Generator::empty ();
 	    }
@@ -3823,7 +3981,7 @@ namespace semantic {
 		    if (ptr != syms [_it].end ()) {
 			if (ptr-> second.is <ParamVar> ()) {
 			    auto type = ptr-> second.to <Value> ().getType ();
-			    auto varRef = VarRef::init (loc, name, type, ptr-> second.getUniqId (), false, Generator::empty ());
+			    auto varRef = VarRef::init (loc, name, type, ptr-> second.getUniqId (), false, Generator::empty (), ptr-> second.to <ParamVar> ().isSelf ());
 			    if (isRefClosure) {
 				innerValues.push_back (Referencer::init (loc, Type::init (type.to <Type> (), type.to <Type> ().isMutable (), true), varRef));
 			    } else
@@ -4032,6 +4190,43 @@ namespace semantic {
 		return Type::init (type.to <Type> (), false);
 	    return type;		
 	}
+
+	Generator Visitor::validateTypeClassRef (const syntax::Expression & expr, bool lock) {
+	    auto type = validateTypeClassRef (expr);
+	    if (lock && !type.to<Type> ().isMutable ())
+		return Type::init (type.to <Type> (), false);
+	    return type;		
+	}
+
+	Generator Visitor::validateTypeClassRef (const syntax::Expression & type) {
+	    Generator val (Generator::empty ());
+	    match (type) {
+		of (syntax::Var, var,
+		    val = validateTypeVar (var);
+		);
+
+		of (syntax::DecoratedExpression, dec_expr,
+		    val = validateTypeDecorated (dec_expr, true);
+		);
+		
+		of (TemplateSyntaxWrapper, tmplSynt,
+		    val =  tmplSynt.getContent ();
+		);
+		
+	    }
+
+	    if (val.isEmpty ()) {		
+		val = validateValue (type, true, true); // Can't make a implicit call validation if we are looking for a type
+	    }
+		
+	    if (val.is<ClassRef> ()) return val;	   
+	    if (val.is <generator::Class> ()) {
+		return val.to <generator::Class> ().getClassRef ();
+	    }
+	    
+	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
+	    return Generator::empty ();	  
+	}
 	
 	Generator Visitor::validateType (const syntax::Expression & type) {
 	    Generator val (Generator::empty ());
@@ -4077,12 +4272,13 @@ namespace semantic {
 		val = validateValue (type, true, true); // Can't make a implicit call validation if we are looking for a type
 	    }
 
+	    if (val.is <ClassRef> () || val.is <generator::Class> ()) {
+		Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
+	    }
+		
 	    if (val.is<Type> ()) return val;
 	    if (val.is<generator::Struct> ())
 		return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
-	    if (val.is <generator::Class> ()) {		
-		return val.to <generator::Class> ().getClassRef ();		
-	    }
 	    
 	    if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();
 
@@ -4131,15 +4327,27 @@ namespace semantic {
 	Generator Visitor::validateTypeUnary (const syntax::Unary & un) {
 	    auto op = un.getOperator ();
 	    if (op == Token::AND) { // Pointer
-		auto inner = validateType (un.getContent (), true);
-		if (!inner.isEmpty ()) return Pointer::init (un.getLocation (), inner);
+		try {
+		    auto inner = validateType (un.getContent (), true);		
+		    if (!inner.isEmpty ()) return Pointer::init (un.getLocation (), inner);
+		} catch (Error::ErrorList list) {
+		    auto inner = validateTypeClassRef (un.getContent (), true);
+		    if (inner.is <ClassRef> ()) {
+			auto ret =  Pointer::init (un.getLocation (), inner);
+			return ret;
+		    } else throw list;
+		}
 	    }
 
 	    return Generator::empty ();
 	}
 
-	Generator Visitor::validateTypeDecorated (const syntax::DecoratedExpression & expr) {
-	    auto type = validateType (expr.getContent ());
+	Generator Visitor::validateTypeDecorated (const syntax::DecoratedExpression & expr, bool canBeClassRef) {
+	    Generator type (Generator::empty ());
+	    if (canBeClassRef) 
+		type = validateTypeClassRef (expr.getContent ());
+	    else
+		type = validateType (expr.getContent ());
 	    
 	    lexing::Word gotConstOrMut (lexing::Word::eof ());
 	    for (auto & deco : expr.getDecorators ()) {
@@ -4504,6 +4712,10 @@ namespace semantic {
 
 	    verifyCompleteType (loc, type);
 	    verifyImplicitAlias (loc, type, gen);
+
+	    auto llevel = type.to <Type> ().mutabilityLevel ();
+	    // if (gen.is<Aliaser> () && llevel <= 1 && !inMatch && !gen.to <Aliaser> ().getWho ().is<StringValue>()) // special case for string literal
+	    // 	Ymir::Error::warn (gen.getLocation (), ExternalError::get (ALIAS_NO_EFFECT));
 	    
 	    // Verify Implicit referencing
 	    if ((!construct || !type.to <Type> ().isRef ()) && gen.is<Referencer> ()) {
@@ -4514,7 +4726,7 @@ namespace semantic {
 		    verifySameType (type, gen.to <Value> ().getType ());
 		    
 		    if (!gen.is<Referencer> ()) {
-			if (gen.to<Value> ().isLvalue ()) {
+			if (gen.to<Value> ().isLvalue () || gen.is <Aliaser> ()) {
 			    Ymir::Error::occur (gen.getLocation (), ExternalError::get (IMPLICIT_REFERENCE),
 						gen.to<Value> ().getType ().to <Type> ().getTypeName ()
 			    );
@@ -4525,12 +4737,11 @@ namespace semantic {
 		    }
 		}
 	    }
-
+	    
 	    // Tuple copy is by default, as we cannot alias a tuple
 	    // And for arrays (but left op)
 	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <Range> () || type.is<Array> ()) {
 		auto tu = gen.to<Value> ().getType ();
-		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
@@ -4540,7 +4751,7 @@ namespace semantic {
 		}		
 	    } else if (type.is <StructRef> () && !type.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
 		auto tu = gen.to<Value> ().getType ();
-		auto llevel = type.to <Type> ().mutabilityLevel ();
+
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
@@ -4549,7 +4760,6 @@ namespace semantic {
 		    );
 		}		
 	    } else if (type.is<Pointer> ()) {
-		auto llevel = type.to <Type> ().mutabilityLevel ();
 		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel)) {
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
@@ -4558,6 +4768,15 @@ namespace semantic {
 		    );
 		}		
 	    } else if (type.is<FuncPtr> ()) { // Yes, i know that's ugly, but easier to understand actually	
+	    } else if (type.is<ClassRef> ()) {		
+		auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+
+		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
+		    auto note = Ymir::Error::createNote (gen.getLocation ());
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+		    );
+		}		
 	    } else if (type.is<LambdaType> ()) {
 		if (!construct || !gen.is<LambdaProto> ()) {
 		    auto note = Ymir::Error::createNote (loc);
@@ -4567,10 +4786,10 @@ namespace semantic {
 					1, 0
 		    );	 
 	    } else {
+		
 		// Verify mutability
 		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {
-		    auto llevel = type.to <Type> ().mutabilityLevel ();
-		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();		    
 		    if ((type.to <Type> ().isRef () && construct && llevel > std::max (0, rlevel))) { // If it is the construction of a ref
 			auto note = Ymir::Error::createNote (gen.getLocation ());
 			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
@@ -4609,9 +4828,11 @@ namespace semantic {
 	}
 	
 	void Visitor::verifyImplicitAlias (const lexing::Word & loc, const Generator & type, const Generator & gen) {
-	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias 
+	    if (!type.to <Type> ().needExplicitAlias ()) return; // No need to explicitly alias
+	    auto llevel = type.to <Type> ().mutabilityLevel ();
+	    	    
 	    if (gen.is<Copier> () || gen.is <Aliaser> () || gen.is <Referencer> ()) return; // It is aliased or copied, that's ok
-	    auto max_level = type.is <ClassRef> () ? 0 : 1;
+	    auto max_level = 1;
 
 	    {
 		// Totally ok for implicit alias 
@@ -4626,15 +4847,22 @@ namespace semantic {
 	    {
 		// Ok for implicit alias, but the mutability must be checked
 		match (gen) {
-		    of (Block,             arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())	       
+		    of (Block,             arr,
+			{
+			    if (!arr.isLvalue ()) // Implicit alias of LBlock is not allowed
+				max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+			}
+		    )	       
 		    else of (Conditional,  arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
-			else of (ExitScope,    arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
-			    else of (SuccessScope, arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
-				else of (Call,         arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ());
+		    else of (ExitScope,    arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
+		    else of (SuccessScope, arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
+		    else of (Call,         arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ());
 		}
 	    }
 	    
-	    auto llevel = type.to <Type> ().mutabilityLevel ();
+
+	    max_level = std::max (1, max_level);
+		
 	    // If the type is totally immutable, it's it not necessary to make an explicit alias 
 	    if (llevel > max_level) {
 		auto note = Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IMPLICIT_ALIAS),
@@ -4719,7 +4947,7 @@ namespace semantic {
 		Ymir::Error::occur (trait.getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
 	    }
 
-	    auto sym = cl.to <ClassRef> ().getRef ();
+	    auto sym = cl.to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ();
 	    while (!sym.isEmpty ()) {
 		for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
 		    match (it) {
@@ -4741,8 +4969,20 @@ namespace semantic {
 	}
 
 	std::vector <Generator> Visitor::getAllImplClass (const Generator &cl) {
-	    auto sym = cl.to <ClassRef> ().getRef ();
+	    Symbol sym (Symbol::empty ());
+	    Generator classType (Generator::empty ());
+	    if (cl.is <Pointer> ()) {
+		sym = cl.to<Pointer> ().getInners ()[0].to <ClassRef> ().getRef ();
+		classType = cl.to <Pointer> ().getInners ()[0];
+	    } else {
+		sym = cl.to <ClassRef> ().getRef ();
+		classType = cl;
+	    }
+	    
 	    std::vector <Generator> traits;
+	    if (!classType.to <ClassRef> ().getAncestor ().isEmpty ())
+		traits = getAllImplClass (classType.to <ClassRef> ().getAncestor ());
+	    
 	    for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
 		match (it) {
 		    of (semantic::Impl, im, {
@@ -4750,13 +4990,13 @@ namespace semantic {
 			    traits.push_back (sec_trait);
 			}
 		    );
-		}		
+		}
 	    }
 	    return traits;
 	}
 	
 	void Visitor::verifyCompatibleTypeWithValue (const lexing::Word & loc, const Generator & type, const Generator & gen) {
-	    if (gen.is <NullValue> () && type.is <Pointer> ()) return;
+	    if (gen.is <NullValue> () && type.is <Pointer> () && !type.to <Pointer> ().getInners ()[0].is <ClassRef> ())  return;
 	    else if (gen.to <Value> ().getType ().is <Slice> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
 	
 	    verifyCompatibleType (loc, type, gen.to <Value> ().getType ());
@@ -4796,7 +5036,13 @@ namespace semantic {
 
 	}	
 
-	bool Visitor::isAncestor (const Generator & left, const Generator & right) {
+	bool Visitor::isAncestor (const Generator & left_, const Generator & right_) {
+	    auto right = right_;
+	    auto left = left_;
+	    
+	    if (right.is <Pointer> ()) right = right.to <Type>().getInners ()[0];
+	    if (left.is <Pointer> ()) left = left.to <Type>().getInners ()[0];
+	    
 	    if (right.is <ClassRef> () && !right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ()) {
 		auto ancestor = right.to <ClassRef> ().getAncestor ();
 		while (!ancestor.isEmpty ()) {
@@ -4933,6 +5179,14 @@ namespace semantic {
 	    return last;
 	}
 
+	syntax::Expression Visitor::createClassTypeFromPath (const lexing::Word & loc, const std::vector <std::string> & names_) {
+	    auto last = createVarFromPath (loc, names_);
+	    return syntax::Unary::init (
+		{loc, Token::AND},
+		last
+	    );
+	}
+
 	Generator Visitor::addElseToConditional (const Generator & gen, const Generator & _else) {
 	    match (gen) {
 		of (Conditional, cd, {
@@ -4950,9 +5204,17 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator Visitor::getCommonAncestor (const Generator & leftType, const Generator & rightType) {
+	Generator Visitor::getCommonAncestor (const Generator & leftType, const Generator & rightType_) {
 	    auto ancestor = leftType;
-	    if (leftType.is <ClassRef> ()) {
+	    auto rightType = rightType_;
+	    
+	    if (leftType.is <Pointer> ())  ancestor = ancestor.to <Pointer> ().getInners ()[0];
+	    if (rightType.is <Pointer> ()) rightType = rightType.to <Pointer> ().getInners ()[0];
+
+	    println (ancestor.prettyString ());
+	    println (rightType.prettyString ());
+	    
+	    if (ancestor.is <ClassRef> ()) {
 		while (!ancestor.isEmpty ()) {
 		    if (isAncestor (ancestor, rightType)) return ancestor;
 		    else {

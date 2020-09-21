@@ -225,7 +225,8 @@ namespace semantic {
 	     * \brief Create syntax tree from generator type
 	     * \brief Reverse the compilation (kind of, it just return a SyntaxWrapper for a generator)
 	     */
-	    syntax::Expression createSyntaxType (const lexing::Word & loc, const generator::Generator & type, bool isMutable = false, bool isRef = false) const;
+	    syntax::Expression createSyntaxType (const lexing::Word & loc, const generator::Generator & type// , bool isMutable = false, bool isRef = false
+	    ) const;
 	    
 	    /**
 	     * \brief Create syntax tree from generator type

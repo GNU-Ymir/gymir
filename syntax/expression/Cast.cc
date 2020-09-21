@@ -38,4 +38,8 @@ namespace syntax {
     const Expression & Cast::getContent () const {
 	return this-> _content;
     }
+
+    std::string Cast::prettyString () const {
+	return Ymir::format ("cast!(%) (%)", this-> _type.prettyString(), this-> _content.prettyString ());
+    }
 }

@@ -31,5 +31,9 @@ namespace syntax {
     const Expression & Throw::getValue () const {
 	return this-> _value;
     }
+
+    std::string Throw::prettyString () const {
+	return Ymir::format ("throw %", this-> _value.prettyString ());
+    }
     
 }

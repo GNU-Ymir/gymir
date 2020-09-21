@@ -44,4 +44,12 @@ namespace syntax {
 	return this-> _isDo;
     }
 
+    std::string While::prettyString () const {
+	if (this-> _isDo) {
+	    return Ymir::format ("do % while (%)", this-> _content.prettyString (), this-> _test.prettyString ());
+	} else {
+	    return Ymir::format ("while (%) %", this-> _test.prettyString (), this-> _content.prettyString ());
+	}
+    }
+    
 }
