@@ -356,7 +356,44 @@ namespace syntax {
 	    type = visitExpression ();
 	}
 
-	return MacroConstructor::init (name, type, expr, visitExpression ());
+	auto tok = this-> _lex.next ({Token::LACC});
+	std::string open, close;
+	open = Token::LACC;
+	close = Token::RACC;
+	
+	this-> _lex.skipEnable (Token::SPACE,   false);
+	this-> _lex.skipEnable (Token::TAB,     false);
+	this-> _lex.skipEnable (Token::RETURN,  false);
+	this-> _lex.skipEnable (Token::RRETURN, false);
+	this-> _lex.commentEnable (false);
+
+	lexing::Word cursor = lexing::Word::eof ();
+	Ymir::OutBuffer all;
+	int nb = 1;
+	do {
+	    cursor = this-> _lex.next ();
+	    if (cursor.isEof ()) {
+		auto note = Ymir::Error::createNote (tok);
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+	    } else if (cursor == close) {
+		nb -= 1;
+		if (nb != 0)
+		    all.write (cursor.str);
+	    } else if (cursor == open) {
+		nb += 1;
+		all.write (cursor.str);
+	    } else {
+		all.write (cursor.str);
+	    }
+	} while (nb > 0);
+
+	this-> _lex.skipEnable (Token::SPACE,   true);
+	this-> _lex.skipEnable (Token::TAB,     true); 
+	this-> _lex.skipEnable (Token::RETURN,  true);
+	this-> _lex.skipEnable (Token::RRETURN, true);
+	this-> _lex.commentEnable (true);
+
+	return MacroConstructor::init (name, type, expr, all.str ());
     }
 
     Expression Visitor::visitMacroExpression () {
@@ -1514,8 +1551,11 @@ namespace syntax {
 		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
 	    } else if (cursor == close) {
 		nb -= 1;
+		if (nb != 0)
+		    all.write (cursor.str);
 	    } else if (cursor == open) {
 		nb += 1;
+		all.write (cursor.str);
 	    } else {
 		all.write (cursor.str);
 	    }
@@ -2095,6 +2135,16 @@ namespace syntax {
 	this-> _lex.seek (begin);
 	return true;
     }
-        
+
+    bool Visitor::isEof () {
+	auto current = this-> _lex.tell ();
+	auto next =  this-> _lex.next ();
+	this-> _lex.seek (current);
+	return next.isEof ();
+    }
+
+    lexing::Lexer & Visitor::getLexer () {
+	return this-> _lex;
+    }
     
 }

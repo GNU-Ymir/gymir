@@ -15,7 +15,7 @@ namespace syntax {
 	
 	Expression _type;
 
-	Expression _content;
+	std::string _content;
 
     private :
 
@@ -23,11 +23,11 @@ namespace syntax {
 
 	MacroConstructor ();
 
-	MacroConstructor (const lexing::Word & loc, const Expression & type, const Expression & rule, const Expression & content);
+	MacroConstructor (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content);
 
     public :
 
-	static Declaration init (const lexing::Word & loc, const Expression & type, const Expression & rule, const Expression & content);
+	static Declaration init (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content);
 
 	static Declaration init (const MacroConstructor & contr);
 
@@ -39,7 +39,7 @@ namespace syntax {
 
 	const Expression & getType () const;
 
-	const Expression & getContent () const;
+	const std::string & getContent () const;
 	
     };
 

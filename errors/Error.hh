@@ -68,6 +68,8 @@ namespace Ymir {
 	*/
 	std::string addLine (const std::string&, const lexing::Word& word);
 
+	
+
 	/** 
 	    \brief add the line information on the error
 	    \brief Only add underline information if the word string is equals to the line at the correct location
@@ -143,6 +145,7 @@ namespace Ymir {
 	    msg = addNote (loc, msg, note);
 	    return msg;
 	}
+	
 
 	
 	template <typename ... TArgs>
@@ -183,6 +186,7 @@ namespace Ymir {
 	    msg = addNote (loc, msg, note);
 	    throw ErrorList {std::list <std::string> {msg}};
 	}
+
 	
 	template <typename ... TArgs>
 	void occurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const std::string & note, const std::string &content, TArgs ... args) {

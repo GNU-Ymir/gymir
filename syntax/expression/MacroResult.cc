@@ -29,7 +29,7 @@ namespace syntax {
     }
 
     std::string MacroResult::prettyString () const {
-	return "\"" + this-> _content + "\"";
+	return this-> _content;
     }
 
     const std::string & MacroResult::getContent () const {

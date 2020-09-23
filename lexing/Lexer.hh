@@ -23,6 +23,10 @@ namespace lexing {
 	 * \brief Empty lexer, always EOF
 	 */
 	Lexer ();
+
+	Lexer (const Lexer & lex);
+
+	const Lexer & operator= (const Lexer & lex);
 	
 	/**
 	 * \param filename the name of the file
@@ -32,6 +36,14 @@ namespace lexing {
 	 */
 	Lexer (const char * filename, FILE * file, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments);
 
+
+	/**
+	 * Create a lexer that read from a string instead of a file	
+	 * \param line, the init line (string content are generally from macros, and the macro is in a file, thus we need to ) 
+	 */
+	static Lexer initFromString (const std::string & content, const std::string & filename, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, ulong line);
+
+	
 	/**
 	 * \return the name of the file
 	 */
@@ -114,7 +126,7 @@ namespace lexing {
 	/**
 	 * \return the index of the current word
 	 */
-	ulong tell ();
+	ulong tell () const;
 
 	/**
 	 * \brief Move to a specific word index 
@@ -131,6 +143,10 @@ namespace lexing {
 	 * \brief close the file
 	 */
 	void dispose ();
+
+	const std::string & getContent () const;
+
+	const std::string & getStringName () const;
 	
 	~Lexer ();
 
@@ -197,7 +213,12 @@ namespace lexing {
 	FILE * file;
 
 	const struct line_map * line_map;
+
+	std::string content = "";
+	bool isFromString = false;
+	std::string string_name;
+	ulong start = 0;
+	
+    };    
     
-    };
-  
 };

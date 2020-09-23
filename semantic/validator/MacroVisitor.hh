@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ymir/syntax/expression/Match.hh>
+#include <ymir/syntax/visitor/Visitor.hh>
 #include <ymir/syntax/declaration/MacroConstructor.hh>
 #include <ymir/semantic/validator/Visitor.hh>
 
@@ -15,7 +16,9 @@ namespace semantic {
 	class MacroVisitor {
 
 	    Visitor & _context;
-
+	    
+	public :
+	    
 	    struct Mapper {
 
 		bool succeed;
@@ -36,8 +39,11 @@ namespace semantic {
 		    this-> consumed = consumed;
 		    this-> mapping = mapping;
 		}
+
+		std::string toString (int i = 0) const;		    		
 		
-	    };	   
+	    };
+	    
 	    
 	private :
 	    
@@ -64,15 +70,15 @@ namespace semantic {
 	    
 	    generator::Generator validateMacroRef (const generator::MacroRef & mref, const syntax::MacroCall & expression, std::vector <std::string> & errors);
 	    
-	    generator::Generator validateConstructor (const semantic::MacroConstructor & constr, const syntax::MacroCall & expression);
+	    generator::Generator validateConstructor (const semantic::Symbol & constr, const syntax::MacroCall & expression);
 
-	    Mapper validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
+	    std::vector<Mapper> validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
 
 	    Mapper validateMacroList (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
 	    
-	    Mapper validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
-	    Mapper validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
-	    Mapper validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
+	    std::vector <Mapper> validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
+	    std::vector<Mapper> validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
+	    std::vector<Mapper> validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
 
 	    Mapper validateMacroOr (const syntax::MacroOr & mult, const std::string & content, std::string & rest);
 
@@ -81,11 +87,13 @@ namespace semantic {
 	    Mapper validateMacroToken (const syntax::MacroToken & mult, const std::string & content, std::string & rest);	    
 	    Mapper mergeMapper (const Mapper & left, const Mapper & right) const ;
 
-	    syntax::Expression validateMapper (const syntax::Expression & expr, const Mapper & mapping);
+	    syntax::Expression validateMapper (const lexing::Word & loc, const std::string & expr, const Mapper & mapping);
+
+	    syntax::Expression toMacroEval (const std::string & content, const lexing::Word & loc, lexing::Lexer & lex, const lexing::Word & begin);
 	    
 	    generator::Generator validateExpression (const syntax::Expression & expr);	    
 
-	    syntax::Expression validateMacroEval (const syntax::MacroEval & eval, const Mapper & mapper);	    
+	    std::vector<Mapper> validateMacroEval (const std::string & content, const lexing::Word & loc, const syntax::Expression & eval, const Mapper & mapper);	    
 	    
 	    void error (const lexing::Word & location, const lexing::Word & end, const generator::Generator & left, const std::vector <std::string> & errors);
 	    

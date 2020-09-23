@@ -16,6 +16,7 @@ namespace lexing {
      */
     struct Word {
 
+	
 	/// The content of the word
 	std::string str;
 
@@ -30,7 +31,17 @@ namespace lexing {
 
 	/// The length of the word (may differ with str.length ())
 	long _length = -1;
-    
+
+	/// is from a string or a file
+	bool isFromString;
+
+	/**
+	 * the content of the file is the word is created from a string
+	 */
+	std::string content;
+
+	ulong start = 0;
+	
     public:
 
 	/**
@@ -54,7 +65,9 @@ namespace lexing {
 	Word (const Word & other, std::string str, long len);
     
 	Word (const Word & other);
-
+	
+	Word (const std::string * content, const std::string & str);
+	
 	/**
 	 * EOF
 	 */
@@ -66,6 +79,8 @@ namespace lexing {
 
 	void setLocus (std::string filename, ulong line, ulong column);
     
+	void setFromString (const std::string content, ulong start);
+
 	location_t getLocus () const;
     
 	const std::string &getStr () const {

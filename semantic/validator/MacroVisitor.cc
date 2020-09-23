@@ -14,6 +14,32 @@ namespace semantic {
 	using namespace Ymir;
 	using namespace syntax;
 
+	std::string MacroVisitor::Mapper::toString (int i) const {
+	    Ymir::OutBuffer buf;
+	    buf.writef ("%*# : \"%\" {", i, "\t", this-> consumed);
+	    int y = 0;
+	    if (this-> mapping.size () != 0) buf.writeln ("");	    
+	    for (auto & it : this-> mapping) {
+		if (y != 0) buf.writeln (",");
+		buf.writefln ("%*%=> [", i+1, "\t", it.first);
+		if (it.second.size () > 1) buf.writeln ("");
+		int z = 0;
+		for (auto &j : it.second) {
+		    if (z != 0) buf.writeln (",");
+		    buf.write (j.toString (i + 2));
+		    z += 1;
+		}
+		if (it.second.size () != 0)
+		    buf.writef ("\n%*]", i+1 , "\t");
+		else buf.write ("]");
+		y += 1;
+	    }
+	    if (this-> mapping.size () != 0)
+		buf.writef ("\n%*}", i, "\t");
+	    else buf.writef ("}");
+	    return buf.str ();
+	}
+	
 	MacroVisitor::MacroVisitor (Visitor & context) :
 	    _context (context)
 	{}
@@ -31,7 +57,7 @@ namespace semantic {
 		    of (MultSym, sym,
 			ret = validateMultSym (sym, expression, errors);
 		    ) else of (MacroRef, mref,
-			       ret = validateMacroRef (mref, expression, errors);
+			ret = validateMacroRef (mref, expression, errors);
 		    );		    
 		}
 	    } catch (Error::ErrorList list) {
@@ -68,31 +94,35 @@ namespace semantic {
 	    else return values [0];
 	}
 
-	generator::Generator MacroVisitor::validateConstructor (const semantic::MacroConstructor & constr, const syntax::MacroCall & expression) {
-	    auto rule = constr.getContent ().to <syntax::MacroConstructor> ().getRule ();
+	generator::Generator MacroVisitor::validateConstructor (const semantic::Symbol & constr, const syntax::MacroCall & expression) {
+	    auto rule = constr.to <semantic::MacroConstructor> ().getContent ().to <syntax::MacroConstructor> ().getRule ();
 	    std::string content = expression.getContent ();
 	    std::string rest;
 	    Mapper mapper (false);
 	    
 	    match (rule) {
-		of (MacroMult, mult, mapper = validateMacroMult (mult, content, rest))
-		else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest))
+		of (MacroMult, mult, {
+		    if (mult.getMult ().isEof () || mult.getMult () == "")
+			mapper = validateMacroList (mult, content, rest);
+		    }
+		) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest))
 		else of (MacroVar, var, mapper = validateMacroVar (var, content, rest))
 		else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest))
 	    }
 
-	    if (mapper.succeed) {
-		return validateExpression (
-		    validateMapper (constr.getContent ().to <syntax::MacroConstructor> ().getContent (), mapper)
+	    if (mapper.succeed && rest.length () == 0) {
+		return this-> _context.validateMacroExpression (
+		    constr,
+		    validateMapper (constr.getName (), constr.to <semantic::MacroConstructor> ().getContent ().to <syntax::MacroConstructor> ().getContent (), mapper)
 		);
 	    }
 	    
 	    return Generator::empty ();
 	}
 
-	MacroVisitor::Mapper MacroVisitor::validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
+	std::vector <MacroVisitor::Mapper> MacroVisitor::validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
 	    if (mult.getMult ().isEof () || mult.getMult () == "") {
-		return validateMacroList (mult, content, rest);
+		return {validateMacroList (mult, content, rest)};
 	    } else if (mult.getMult () == Token::STAR) {
 		return validateMacroRepeat (mult, content, rest);
 	    } else if (mult.getMult () == Token::PLUS) {
@@ -103,7 +133,7 @@ namespace semantic {
 	    
 	    println (mult.getMult ());
 	    Ymir::Error::halt ("", "");	    	    
-	    return Mapper (false);
+	    return {Mapper (false)};
 	}
 
 
@@ -115,8 +145,11 @@ namespace semantic {
 		std::string content_2 = rest;
 		
 		match (it) {
-		    of (MacroMult, mult, local_mapper = validateMacroMult (mult, content_2, rest))
-		    else of (MacroOr, or_, local_mapper = validateMacroOr (or_, content_2, rest))
+		    of (MacroMult, mult, {
+			if (mult.getMult ().isEof () || mult.getMult () == "")
+			    local_mapper = validateMacroList (mult, content_2, rest);
+			}
+		    ) else of (MacroOr, or_, local_mapper = validateMacroOr (or_, content_2, rest))
 		    else of (MacroVar, var, local_mapper = validateMacroVar (var, content_2, rest))
 		    else of (MacroToken, tok, local_mapper = validateMacroToken (tok, content_2, rest))   
 		}
@@ -127,8 +160,7 @@ namespace semantic {
 	    return mapper;
 	}
 	
-	MacroVisitor::Mapper MacroVisitor::validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
-	    Mapper mapper (true);
+	std::vector <MacroVisitor::Mapper> MacroVisitor::validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
 	    rest = content;
 	    std::vector <Mapper> values;
 	    while (true) {
@@ -139,35 +171,74 @@ namespace semantic {
 		} else break;
 	    }
 	    	    	    
-	    return Mapper (false);
+	    return values;
 	}
 	
-	MacroVisitor::Mapper MacroVisitor::validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
-	    return Mapper (false);
+	std::vector<MacroVisitor::Mapper> MacroVisitor::validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
+	    return {};
 	}
 	
-	MacroVisitor::Mapper MacroVisitor::validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
-	    return Mapper (false);
+	std::vector<MacroVisitor::Mapper> MacroVisitor::validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
+	    return {};
 	}		
 	
 	MacroVisitor::Mapper MacroVisitor::validateMacroOr (const syntax::MacroOr & mult, const std::string & content, std::string & rest) {
-	    return Mapper (false);
+	    std::string rest_left;
+	    Mapper mapper (true);
+	    match (mult.getLeft ()) {
+		of (MacroMult, mult, {
+			if (mult.getMult ().isEof () || mult.getMult () == "")
+			    mapper = validateMacroList (mult, content, rest_left);
+		    }		    
+		) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest_left)
+		) else of (MacroVar, var, mapper = validateMacroVar (var, content, rest_left)
+		) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest_left));		
+	    }
+	    if (mapper.succeed) {
+		rest = rest_left;
+		return mapper;
+	    } else {
+		match (mult.getRight ()) {
+		    of (MacroMult, mult, {
+			    if (mult.getMult ().isEof () || mult.getMult () == "")
+				mapper = validateMacroList (mult, content, rest);
+			}		    
+		    ) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest)
+		    ) else of (MacroVar, var, mapper = validateMacroVar (var, content, rest)
+		    ) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest));		    
+		}
+		return mapper;
+	    }
+	    
 	}
 	
 	MacroVisitor::Mapper MacroVisitor::validateMacroVar (const syntax::MacroVar & var, const std::string & content, std::string & rest) {
 	    auto rule = var.getContent ();
 	    Mapper mapper (false);
 	    match (rule) {
-		of (MacroMult, mult, mapper = validateMacroMult (mult, content, rest))
+		of (MacroMult, mult, {
+			auto mappers = validateMacroMult (mult, content, rest);
+			if (mappers.size () == 1 && !mappers [0].succeed) return Mapper (false);
+			else {
+			    Ymir::OutBuffer buf;
+			    for (auto & it : mappers)
+				buf.write (it.consumed);
+			    Mapper result (true, buf.str ());
+			    result.mapping.emplace (var.getLocation ().str, mappers);
+			    return result;
+			}
+		    }
+		)
 		else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest))
 		else of (MacroVar, var, mapper = validateMacroVar (var, content, rest))
 		else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest))
 	    }
 
 	    if (mapper.succeed) {
-		std::vector <Mapper> vec = {Mapper (true, mapper.consumed)};
-		mapper.mapping.emplace (var.getLocation ().str, vec);
-		return mapper;
+		std::vector <Mapper> vec = {mapper};
+		Mapper result (true, mapper.consumed);
+		result.mapping.emplace (var.getLocation ().str, vec);
+		return result;
 	    }
 	    
 	    return Mapper (false);
@@ -198,288 +269,188 @@ namespace semantic {
 	    return result;
 	}
 
-	syntax::Expression MacroVisitor::validateMapper (const syntax::Expression & element, const MacroVisitor::Mapper & mapping) {
-	    if (mapping.mapping.size () == 0) return element;
-	    match (element) {
-		of (syntax::ArrayAlloc, arr,
-		    return syntax::ArrayAlloc::init (
-			element.getLocation (),
-			validateMapper (arr.getLeft (), mapping),
-			validateMapper (arr.getSize (), mapping),
-			arr.isDynamic ()
-		    );
-		) else of (Assert, asr,
-			   return Assert::init (
-			       element.getLocation (),
-			       validateMapper (asr.getTest (), mapping),
-			       validateMapper (asr.getMsg (), mapping)
-			   );
-		) else of (syntax::Binary, bin,
-			   return syntax::Binary::init (
-			       element.getLocation (),
-			       validateMapper (bin.getLeft (), mapping),
-			       validateMapper (bin.getRight (), mapping),
-			       validateMapper (bin.getType (), mapping)
-			   );
-		) else of (syntax::Block, block, {
-			std::vector <Expression> content;			
-			Declaration declMod (Declaration::empty ());
-			if (!block.getDeclModule ().isEmpty ())
-			    Ymir::Error::halt ("", ""); // TODO, handle that
-			// // No reference of symbol, here, but no risk to have a CondBlock inside a normal block
-			// declMod = validateMapper (mapping, block.getDeclModule (), semantic::Symbol::empty ());
-
-			
-			for (auto & it : block.getContent ())
-			    content.push_back (validateMapper (it, mapping));
-			
-			Expression catcher (Expression::empty ());
-			if (!block.getCatcher ().isEmpty ()) catcher = validateMapper (block.getCatcher (), mapping);
-			std::vector <Expression> scopes;
-			for (auto & it : block.getScopes ())
-			    scopes.push_back (validateMapper (it, mapping));
-			
-			return syntax::Block::init (element.getLocation (), block.getEnd (), declMod, content, catcher, scopes);
-		    }
-		) else of (syntax::Bool, b ATTRIBUTE_UNUSED, return element;
-		) else of (syntax::Break, b, {
-			return syntax::Break::init (b.getLocation (), validateMapper (b.getValue (), mapping));
-		    }
-		) else of (syntax::Cast, c,
-			   return syntax::Cast::init (
-			       element.getLocation (),
-			       validateMapper (c.getType (), mapping),
-			       validateMapper (c.getContent (), mapping)
-			   );
-		) else of (syntax::Char, c ATTRIBUTE_UNUSED, return element;
-		) else of (DecoratedExpression, dec, {
-			return syntax::DecoratedExpression::init (
-			    element.getLocation (),
-			    dec.getDecorators (),
-			    validateMapper (dec.getContent (), mapping)
-			);
-		    }
-		) else of (syntax::Dollar, dol ATTRIBUTE_UNUSED, return element;
-		) else of (syntax::Fixed, fix ATTRIBUTE_UNUSED, return element;
-		) else of (syntax::Float, fl ATTRIBUTE_UNUSED, return element;
-		) else of (syntax::For, fr, {
-			std::vector <Expression> vars;
-			for (auto & it : fr.getVars ())
-			    vars.push_back (validateMapper (it, mapping));
-			return syntax::For::init (
-			    element.getLocation (),
-			    vars,
-			    validateMapper (fr.getIter (), mapping),
-			    validateMapper (fr.getBlock (), mapping)
-			);
-		    }
-		) else of (syntax::FuncPtr, fnp, {
-			std::vector<Expression> params;
-			for (auto & it : fnp.getParameters ()) 
-			    params.push_back (validateMapper (it, mapping));
-			
-			return syntax::FuncPtr::init (element.getLocation (),
-						      validateMapper (fnp.getRetType (), mapping),
-						      params);
-		    }
-		) else of (syntax::If, fi,
-			   return syntax::If::init (
-			       element.getLocation (),
-			       validateMapper (fi.getTest (), mapping),
-			       validateMapper (fi.getContent (), mapping),
-			       validateMapper (fi.getElsePart (), mapping)
-			   );
-		) else of (syntax::Ignore, ig ATTRIBUTE_UNUSED, return element;
-		) else of (syntax::Intrinsics, intr,
-			   return syntax::Intrinsics::init (
-			       element.getLocation (),
-			       validateMapper (intr.getContent (), mapping)
-			   );
-		) else of (syntax::Lambda, lmb,
-			   std::vector <syntax::Expression> params;
-			   for (auto & it : lmb.getPrototype ().getParameters ())
-			       params.push_back (validateMapper (it, mapping));
-			   auto retType = validateMapper (lmb.getPrototype ().getType (), mapping);
-			   
-			   return syntax::Lambda::init (
-			       element.getLocation (),
-			       syntax::Function::Prototype::init (params, retType, lmb.getPrototype ().isVariadic ()),
-			       validateMapper (lmb.getContent (), mapping)
-			   );
-		) else of (syntax::List, lst, {
-			std::vector <Expression> params;
-			for (auto & it : lst.getParameters ()) 
-			    params.push_back (validateMapper (it, mapping));
-			
-			return syntax::List::init (
-			    element.getLocation (),
-			    lst.getEnd (),
-			    params
-			);
-		    }
-		) else of (syntax::MultOperator, mlt, {
-			std::vector <Expression> rights;
-			for (auto & it : mlt.getRights ())
-			    rights.push_back (validateMapper (it, mapping));
-			return syntax::MultOperator::init (
-			    element.getLocation (),
-			    mlt.getEnd (),
-			    validateMapper (mlt.getLeft (), mapping),
-			    rights
-			);
-		    }
-		) else of (syntax::NamedExpression, nmd,
-			   return syntax::NamedExpression::init (
-			       element.getLocation (),
-			       validateMapper (nmd.getContent (), mapping)
-			   );
-		) else of (syntax::Null, nl ATTRIBUTE_UNUSED, return element;
-		) else of (syntax::OfVar, of,
-			   return syntax::OfVar::init (
-			       element.getLocation (),
-			       validateMapper (of.getType (), mapping)
-			   );
-		) else of (syntax::ImplVar, im,
-			   return syntax::ImplVar::init (
-			       element.getLocation (),
-			       validateMapper (im.getType (), mapping)
-			   );
-		) else of (syntax::Return, ret,
-			   return syntax::Return::init (
-			       element.getLocation (),
-			       validateMapper (ret.getValue (), mapping)
-			   );
-		) else of (syntax::Set, set, {
-			std::vector <Expression> content;
-			for (auto & it : set.getContent ())
-			    content.push_back (validateMapper (it, mapping));
-			return syntax::Set::init (
-			    element.getLocation (),
-			    content
-			);
-		    }
-		) else of (syntax::StructVar, var ATTRIBUTE_UNUSED, {
-			return syntax::StructVar::init (
-			    element.getLocation ()
-			);
-		    }
-		) else of (syntax::ClassVar, var ATTRIBUTE_UNUSED, {
-			return syntax::ClassVar::init (
-			    element.getLocation ()
-			);
-		    }
-		) else of (syntax::AliasVar, var ATTRIBUTE_UNUSED, {
-			return syntax::AliasVar::init (
-			    element.getLocation ()
-			);
-		    }
-		) else of (syntax::String, str ATTRIBUTE_UNUSED, return element;
-		) else of (syntax::TemplateCall, tmpl, {
-			std::vector <Expression> params;
-			for (auto & it : tmpl.getParameters ()) 
-			    params.push_back (validateMapper (it, mapping));
-			
-			return syntax::TemplateCall::init (
-			    element.getLocation (),
-			    params,
-			    validateMapper (tmpl.getContent (), mapping)
-			);
-		    }
-		) else of (syntax::Unary, un,
-			   return syntax::Unary::init (element.getLocation (), validateMapper (un.getContent (), mapping));
-		) else of (syntax::Unit, uni ATTRIBUTE_UNUSED, { return element; }
-		) else of (syntax::Var, var ATTRIBUTE_UNUSED, {	return element;  }
-		) else of (syntax::VarDecl, vdecl,
-			   return syntax::VarDecl::init (
-			       element.getLocation (),
-			       vdecl.getDecorators (),
-			       validateMapper (vdecl.getType (), mapping),
-			       validateMapper (vdecl.getValue (), mapping)
-			   );
-
-		) else of (syntax::DestructDecl, ddecl,
-			   std::vector <Expression> params;
-			   for (auto & it : ddecl.getParameters ()) params.push_back (validateMapper (it, mapping));
-			   return syntax::DestructDecl::init (
-			       ddecl.getLocation (),
-			       params,
-			       validateMapper (ddecl.getValue (), mapping),
-			       ddecl.isVariadic ()
-			   );			   
-		) else of (syntax::VariadicVar, vdvar ATTRIBUTE_UNUSED, { return element; }
-		) else of (syntax::While, wh, 
-			   return syntax::While::init (
-			       element.getLocation (),
-			       validateMapper (wh.getTest (), mapping),
-			       validateMapper (wh.getContent (), mapping),
-			       wh.isDo ()
-			   );
-		) else of (syntax::TemplateChecker, ch,
-			   std::vector <syntax::Expression> params;
-			   std::vector <syntax::Expression> calls;
-			   for (auto & it : ch.getCalls ()) calls.push_back (validateMapper (it, mapping));			  			   
-			   for (auto & it : ch.getParameters ()) params.push_back (validateMapper (it, mapping));
-			   
-			   return syntax::TemplateChecker::init (
-			       element.getLocation (),
-			       calls, params
-			   );
-		) else of (syntax::Match, m, {
-			std::vector <Expression> matchers;
-			std::vector <Expression> actions;
-			for (auto & it : m.getMatchers ()) matchers.push_back (validateMapper (it, mapping));
-			for (auto & it : m.getActions ())  actions.push_back (validateMapper (it, mapping));
-			return syntax::Match::init (m.getLocation (), validateMapper (m.getContent (), mapping),
-						    matchers, actions, m.isFinal ());
-
-		    }
-		) else of (syntax::Catch, c, {
-			std::vector <Expression> matchers;
-			std::vector <Expression> actions;
-			for (auto & it : c.getMatchs ())
-			    matchers.push_back (validateMapper (it, mapping));
-			for (auto & it : c.getActions ())
-			    actions.push_back (validateMapper (it, mapping));
-			
-			return syntax::Catch::init (c.getLocation (), matchers, actions);
-		    }
-		) else of (syntax::Scope, s, {
-			return syntax::Scope::init (s.getLocation (), validateMapper (s.getContent (), mapping));
-		    }
-		) else of (syntax::Throw, thr, {
-			return syntax::Throw::init (thr.getLocation (), validateMapper (thr.getValue (), mapping));
-		    }
-		) else of (syntax::Pragma, prg, {
-			std::vector <syntax::Expression> exprs;
-			for (auto & it : prg.getContent ()) {
-			    exprs.push_back (validateMapper (it, mapping));
-			}
-			return syntax::Pragma::init (prg.getLocation (), exprs);
-		    }
-		) else of (syntax::MacroEval, eval, {
-			return validateMacroEval (eval, mapping);
-		    }
-		);
+	syntax::Expression MacroVisitor::validateMapper (const lexing::Word & loc, const std::string & content, const MacroVisitor::Mapper & mapping) {	    
+	    Ymir::OutBuffer buf;
+	    std::list <std::string> errors;	    
+	    try {		
+		lexing::Lexer lex = lexing::Lexer::initFromString (content, loc.locFile, {}, {}, loc.line);
+		while (true) {
+		    auto next = lex.next ();
+		    if (next == Token::MACRO_ACC || next == Token::MACRO_CRO || next == Token::MACRO_PAR) {
+			auto vecs = validateMacroEval (content, loc, toMacroEval (content, loc, lex, next), mapping);
+			for (auto & it : vecs)
+			    buf.write (it.consumed);
+		    } else if (!next.isEof ()) {
+			buf.write (next.str);
+		    } else break;		
+		}
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
 	    }
+	    	    
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+
+	    auto expr = "{" + buf.str () + "}";
+
+	    syntax::Expression result (syntax::Expression::empty ());	    
+	    try {
+		auto lex = lexing::Lexer::initFromString (expr, loc.locFile,
+							  {Token::SPACE, Token::TAB, Token::RETURN, Token::RRETURN},
+							  {
+							      {Token::LCOMM1, {Token::RCOMM1, ""}},
+								  {Token::LCOMM2, {Token::RETURN, ""}},
+								      {Token::LCOMM3, {Token::RCOMM3, ""}},
+									  {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
+									      {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}}
+							  }, loc.line);
+		
+		auto visit = syntax::Visitor::init (lex);
+		result = visit.visitExpression ();
+	    }  catch (Error::ErrorList list) {
+		errors = list.errors;
+	    }
+	    	    
+	    if (result.isEmpty ()) throw Error::ErrorList {errors};
 	    
-	    if (!element.isEmpty ()) {
-		OutBuffer buf;
-		element.treePrint (buf, 0);
-		println (buf.str ());
-		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-		return Expression::empty ();
-	    } else return element;
+	    return result;
 	} 
 
-	syntax::Expression MacroVisitor::validateMacroEval (const syntax::MacroEval & eval, const Mapper & mapper) {
-	    return Expression::empty ();
+	syntax::Expression MacroVisitor::toMacroEval (const std::string & content, const lexing::Word & loc, lexing::Lexer & lex, const lexing::Word & begin) {
+	    std::list <std::string> errors;
+	    syntax::Expression inner (syntax::Expression::empty ());
+	    
+	    try {
+
+		lex.skipEnable (Token::SPACE,   true);
+		lex.skipEnable (Token::TAB,     true);
+		lex.skipEnable (Token::RETURN,  true);
+		lex.skipEnable (Token::RRETURN, true);
+
+		auto visit = syntax::Visitor::init (lex);
+		inner = visit.visitExpression ();
+		lex = visit.getLexer ();
+		
+		if (begin == Token::MACRO_ACC) lex.next ({Token::RACC});
+		if (begin == Token::MACRO_PAR) lex.next ({Token::RPAR});
+		if (begin == Token::MACRO_CRO) lex.next ({Token::RCRO});
+
+		lex.skipEnable (Token::SPACE,   false);
+		lex.skipEnable (Token::TAB,     false);
+		lex.skipEnable (Token::RETURN,  false);
+		lex.skipEnable (Token::RRETURN, false);
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
+	    }
+	    
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};		
+	    }
+	    
+	    return inner;
+	} 
+	
+	std::vector <MacroVisitor::Mapper> MacroVisitor::validateMacroEval (const std::string & content, const lexing::Word & loc, const syntax::Expression & eval, const Mapper & mapper) {
+	    std::list <std::string> errors;	    
+	    try {
+		match (eval) {
+		    of (syntax::Var, var, {
+			    auto inner = mapper.mapping.find (var.getName ().str);
+			    if (inner != mapper.mapping.end ()) {
+				return inner-> second;
+			    } else {
+				Ymir::OutBuffer buf;
+				int i = 0;
+				for (auto & it : mapper.mapping) {
+				    if (i != 0) buf.write (", ");
+				    buf.write (it.first);
+				    i += 1;
+				}
+				
+				Ymir::Error::occur (
+				    var.getLocation (),
+				    ExternalError::get (UNDEF_MACRO_EVAL),
+				    var.getName ().str
+				);
+			    }
+			}
+		    ) else of (syntax::Binary, bin, {
+			    if (bin.getLocation () == Token::DCOLON) {
+				auto left = validateMacroEval (content, loc, bin.getLeft (), mapper);
+				auto right = bin.getRight ().to <syntax::Var> ().getName ().str;
+				if (left.size () == 1) {
+				    auto inner = left[0].mapping.find (right);
+				    if (inner != left[0].mapping.end ()) {
+					return inner-> second;
+				    } else {
+					Ymir::OutBuffer buf;
+					int i = 0;
+					for (auto & it : left [0].mapping) {
+					    if (i != 0) buf.write (", ");
+					    buf.write (it.first);
+					    i += 1;
+					}
+
+					Ymir::Error::occur (
+					    bin.getRight ().getLocation (),
+					    ExternalError::get (UNDEFINED_SUB_PART_FOR),
+					    right,
+					    bin.getLeft ().prettyString ()
+					);
+				    }
+				} else {
+				    Ymir::Error::occur (
+					eval.getLocation (),
+					ExternalError::get (UNDEFINED_SUB_PART_FOR),
+					right					,
+					bin.getLeft ().prettyString ()
+				    );				    
+				}
+			    }
+			}
+		    ) else of (syntax::MultOperator, op, {
+			    if (op.getLocation () == Token::LCRO && op.getRights ().size () == 1) {
+				auto left = validateMacroEval (content, loc, op.getLeft (), mapper);				
+				auto value = this-> _context.retreiveValue (this-> _context.validateValue (op.getRights () [0]));
+				if (!value.is<Fixed> () || (value.to<Fixed> ().getType ().to <Integer> ().isSigned () && value.to <Fixed> ().getUI ().i < 0)) {
+				    Ymir::Error::occur (op.getRights () [0].getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+							      value.to <Value> ().getType ().to <Type> ().getTypeName (),
+							      (Integer::init (lexing::Word::eof (), 64, false)).to<Type> ().getTypeName ()
+				    );				    
+				}
+				auto size = value.to <Fixed> ().getUI ().u;
+				if (size >= left.size ()) {
+				    Ymir::Error::occur (value.getLocation (), ExternalError::get (OVERFLOW_ARITY), size, left.size ());
+				}
+				return {left [size]};
+			    } else {
+				std::vector <std::string> names;
+				for (auto & it : op.getRights ())
+				    names.push_back (this-> _context.validateValue (it).to <Value> ().getType ().to <Type> ().getTypeName ());
+			    }
+			}
+		    );
+		}
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
+	    }
+	    
+	    Ymir::OutBuffer buf;
+	    for (auto & it : errors) {
+		buf.write (it);
+	    }
+	    
+	    Ymir::Error::occurAndNote (
+		eval.getLocation (),
+		buf.str (),
+		ExternalError::get (UNDEF_MACRO_EVAL),
+		eval.prettyString ()
+	    );
+
+	    return {};
 	}
 	
-
-	generator::Generator MacroVisitor::validateExpression (const syntax::Expression & expr) {
-	    println (expr.prettyString ());
-	    return Generator::empty ();
-	}
 	    
 	void MacroVisitor::error (const lexing::Word & location, const lexing::Word & end, const Generator & left, const std::vector <std::string> & errors) {
 	    std::string leftName;

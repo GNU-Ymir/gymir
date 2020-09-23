@@ -116,6 +116,11 @@ namespace semantic {
 	     * \brief Validate a template solution for a method frame
 	     */
 	    generator::Generator validateTemplateSolutionMethod (const semantic::Symbol & sol, const generator::Generator & self);
+
+	    /**
+	     * Validate the content of a macro expression, created by a MacroVisitor, invoked by a MacroCall
+	     */
+	    generator::Generator validateMacroExpression (const semantic::Symbol & sol, const syntax::Expression & expr);
 	    
 	    /**
 	     * \brief Validate a function
@@ -850,7 +855,7 @@ namespace semantic {
 	     * \return the list of constructor of the macro
 	     * \warning mref is assumed to be a MacroRef
 	     */
-	    std::vector <semantic::MacroConstructor> getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref);
+	    std::vector <semantic::Symbol> getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref);
 	    
 	    /**
 	     * \return the list of constructors declared in the class

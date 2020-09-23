@@ -31,6 +31,14 @@ namespace syntax {
 	this-> _right.treePrint (stream, i+1);
     }
 
+    const Expression & MacroOr::getLeft () const {
+	return this-> _left;
+    }
+
+    const Expression & MacroOr::getRight () const {
+	return this-> _right;
+    }
+    
     std::string MacroOr::prettyString () const {
 	return this-> _left.prettyString () + " | " + this-> _right.prettyString ();
     }

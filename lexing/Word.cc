@@ -20,15 +20,21 @@ namespace lexing {
 	str (str),
 	locFile (other.locFile),
 	line (other.line),
-	column (other.column)
-    {}
+	column (other.column),
+	isFromString (other.isFromString),
+	content (other.content),
+	start (other.start)
+    {}    
 
     Word::Word (const Word & other, std::string str, long len) :
 	str (str),
 	locFile (other.locFile),
 	line (other.line),
 	column (other.column),
-	_length (len)
+	_length (len),
+	isFromString (other.isFromString),
+	content (other.content),
+	start (other.start)
     {}
 
 
@@ -37,7 +43,10 @@ namespace lexing {
 	locFile (other.locFile),
 	line (other.line),
 	column (other.column),
-	_length (other._length)
+	_length (other._length),
+	isFromString (other.isFromString),
+	content (other.content),
+	start (other.start)
     {}
 
     Word& Word::operator=(const Word& other) {
@@ -46,6 +55,9 @@ namespace lexing {
 	this-> line = other.line;
 	this-> column = other.column;
 	this-> _length = other._length;
+	this-> isFromString = other.isFromString;
+	this-> content = other.content;
+	this-> start = other.start;
 	return *this;
     }
 
@@ -70,6 +82,12 @@ namespace lexing {
 	this-> column = column;
     }
 
+    void Word::setFromString (const std::string content, ulong start) {
+	this-> isFromString = true;
+	this-> content = content;
+	this-> start = start;
+    }
+    
     location_t Word::getLocus () const {
 	if (this-> isEof ()) {
 	    return BUILTINS_LOCATION;

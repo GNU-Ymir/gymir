@@ -48,12 +48,25 @@ namespace Ymir {
     
 	std::string getLine (const location_t& locus, const char * filename) {
 	    auto file = fopen (filename, "r");
+	    if (file == NULL) return "";
 	    std::string cline;
 	    for (auto it = 0 ; it < LOCATION_LINE (locus) ; it ++) {
 		cline = readln (file);
 	    }
 	    if (file) fclose (file);
 	    return cline;
+	}
+
+	std::string getLineInFile (const location_t& locus, const std::string & file, ulong start) {
+	    auto str = file;
+	    for (ulong it = 0 ; it < LOCATION_LINE (locus) - start; it ++) {
+		auto pos = str.find ("\n");
+		str = str.substr (pos + 1);
+	    }
+	    auto end = str.find ("\n");
+	    if (end != std::string::npos) 
+		return str.substr (0, end);
+	    else return str;
 	}
 	
 	ulong computeMid (std::string& mid, const std::string& word, const std::string& line, ulong begin, ulong end) {
@@ -103,13 +116,17 @@ namespace Ymir {
 			       Colors::get (RESET)
 	    ));
 
-	    buf.write (format ("%% | %%\n", Colors::get (BOLD), padd, Colors::get (RESET), "'EOF'"));
-	    buf.write (format ("%% | %\n", Colors::get (BOLD), padd, Colors::get (RESET)));
+	    buf.write ("\n");
 	}
 	
+	
 	void addLine (OutBuffer & buf, const Word & word) {
-	    auto locus = word.getLocus ();
-	    auto line = getLine (locus, word.getFile ().c_str ());
+	    auto locus = word.getLocus ();	    
+	    std::string line;
+	    if (!word.isFromString)
+		line = getLine (locus, word.getFile ().c_str ());
+	    else line = getLineInFile (locus, word.content, word.start);
+	    
 	    if (line.length () > 0) {
 		auto wordLength = word.length ();
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
@@ -147,7 +164,6 @@ namespace Ymir {
 		buf.write ('\n');
 	    } else addLineEof (buf, word);
 	}
-
 	
 	std::string addLine (const std::string & msg, const lexing::Word & word) {
 	    OutBuffer buf;

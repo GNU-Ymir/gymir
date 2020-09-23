@@ -294,7 +294,33 @@ namespace semantic {
 	    auto proto = this-> validateMethodProto (syms [0].to <semantic::Function> (), classType);
 	    return proto;
 	}
-	
+
+	Generator Visitor::validateMacroExpression (const semantic::Symbol & sol, const syntax::Expression & content) {
+	    std::list <std::string> errors;
+	    pushReferent (sol, "validateMacroExpression");
+	    enterForeign ();
+	    
+	    Generator gen (Generator::empty ());
+	    try {
+		static int nb_recur_template = 0;
+		nb_recur_template += 1;
+		if (nb_recur_template >= VisitConstante::LIMIT_TEMPLATE_RECUR) {
+		    Ymir::Error::occur (sol.getName (), ExternalError::get (TEMPLATE_RECURSION), nb_recur_template);
+		}
+
+		gen = this-> validateValue (content);
+		nb_recur_template -= 1;
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    }
+	    
+	    exitForeign ();
+	    popReferent ("validateMacroExpression");
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+
+	    return gen;
+	}	
 	
 	void Visitor::validateFunction (const semantic::Function & func) {
 	    auto & function = func.getContent ();
@@ -1237,17 +1263,17 @@ namespace semantic {
 	    return results;
 	}       
 
-	std::vector <MacroConstructor> Visitor::getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref) {
+	std::vector <Symbol> Visitor::getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref) {
 	    bool prot = false, prv = false;
 	    std::list <std::string> errors;
 	    getClassContext (mref.getMacroRef (), prv, prot);
-	    std::vector <MacroConstructor> syms;
+	    std::vector <Symbol> syms;
 
 	    for (auto & gen : mref.getMacroRef ().to <semantic::Macro> ().getAllInner ()) {
 		match (gen) {
-		    of (semantic::MacroConstructor, cst, {
+		    of (semantic::MacroConstructor, cst ATTRIBUTE_UNUSED , {
 			    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) 
-				syms.push_back (cst);
+				syms.push_back (gen);
 			    else {
 				errors.push_back (
 				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().str)					    

@@ -15,7 +15,7 @@ namespace semantic {
     Symbol MacroConstructor::init (const lexing::Word & name, const syntax::Declaration & constr) {
 	return Symbol {new (Z0) MacroConstructor (name, constr)};
     }
-
+    
     bool MacroConstructor::isOf (const ISymbol * type) const {
 	auto vtable = reinterpret_cast <const void* const *> (type) [0];
 	MacroConstructor thisType; // That's why we cannot implement it for all class

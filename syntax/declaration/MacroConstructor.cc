@@ -5,18 +5,17 @@ namespace syntax {
     MacroConstructor::MacroConstructor () :
 	IDeclaration (lexing::Word::eof ()),
 	_rule (Expression::empty ()),
-	_type (Expression::empty ()),
-	_content (Expression::empty ())
+	_type (Expression::empty ())
     {}
 
-    MacroConstructor::MacroConstructor (const lexing::Word & loc, const Expression & type, const Expression & rule, const Expression & content) :
+    MacroConstructor::MacroConstructor (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content) :
 	IDeclaration (loc),
 	_rule (rule),
 	_type (type),
 	_content (content)
     {}
 
-    Declaration MacroConstructor::init (const lexing::Word & loc, const Expression & type, const Expression & rule, const Expression & content) {
+    Declaration MacroConstructor::init (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content) {
 	return Declaration {new (Z0) MacroConstructor (loc, type, rule, content)};
     }
 
@@ -36,7 +35,7 @@ namespace syntax {
 	stream.writeln ("<MacroConstructor> : ", this-> getLocation ());
 	this-> _rule.treePrint (stream, i+1);
 	this-> _type.treePrint (stream, i+1);
-	this-> _content.treePrint (stream, i+1);
+	stream.write (this-> _content);
     }
 
     const Expression & MacroConstructor::getRule () const {
@@ -47,7 +46,7 @@ namespace syntax {
 	return this-> _type;
     }
 
-    const Expression & MacroConstructor::getContent () const {
+    const std::string & MacroConstructor::getContent () const {
 	return this-> _content;
     }
     

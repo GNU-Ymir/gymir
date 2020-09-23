@@ -869,7 +869,14 @@ namespace syntax {
 	 * \brief Ignore a block of content (skip all token between '{' and '}')	 
 	 */
 	void ignoreBlock ();
-	
+
+
+	/**
+	 * Does the lexer inside the visitor still have some tokens to read?
+	 */
+	bool isEof () ;
+
+	lexing::Lexer & getLexer ();
     };
 
 
