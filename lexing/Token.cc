@@ -74,5 +74,6 @@ std::string Token::DCOLON = "::";
 std::string Token::MACRO_ACC = "#{";
 std::string Token::MACRO_CRO = "#[";
 std::string Token::MACRO_PAR = "#(";
+std::string Token::MACRO_FOR = "#for";
 
 std::string Token::BROK_SPACE = "\xc2\xa0";

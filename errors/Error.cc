@@ -125,7 +125,7 @@ namespace Ymir {
 	    std::string line;
 	    if (!word.isFromString)
 		line = getLine (locus, word.getFile ().c_str ());
-	    else line = getLineInFile (locus, word.content, word.start);
+	    else if (!word.isEof ()) line = getLineInFile (locus, word.content, word.start);
 	    
 	    if (line.length () > 0) {
 		auto wordLength = word.length ();
@@ -211,7 +211,7 @@ namespace Ymir {
 	    auto locus = word.getLocus ();
 	    std::string line;
 	    if (!word.isFromString) line = getLine (locus, word.getFile ().c_str ());
-	    else line = getLineInFile (locus, word.content, word.start);
+	    else if (!word.isEof ()) line = getLineInFile (locus, word.content, word.start);
 	    
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
@@ -260,7 +260,7 @@ namespace Ymir {
 	    
 	    std::string line;
 	    if (!word.isFromString) line = getLine (locus, word.getFile ().c_str ());
-	    else line = getLineInFile (locus, word.content, word.start);
+	    else if (!word.isEof ()) line = getLineInFile (locus, word.content, word.start);
 	    
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');

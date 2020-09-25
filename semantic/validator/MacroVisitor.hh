@@ -27,8 +27,6 @@ namespace semantic {
 
 	    std::string _content;
 
-	    ulong _current;
-
 	    lexing::Word _call;
 	    
 	public :
@@ -86,23 +84,25 @@ namespace semantic {
 	    
 	    generator::Generator validateConstructor (const semantic::Symbol & constr, const syntax::MacroCall & expression);
 
-	    Mapper validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
+	    Mapper validateMacroMult (const syntax::MacroMult & mult, const std::string & content, ulong & current);
 
-	    Mapper validateMacroList (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
+	    Mapper validateMacroList (const syntax::MacroMult & mult, const std::string & content, ulong & current);
 	    
-	    std::vector <Mapper> validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
-	    std::vector<Mapper> validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
-	    std::vector<Mapper> validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
-
-	    Mapper validateMacroOr (const syntax::MacroOr & mult, const std::string & content, std::string & rest);
-
-	    Mapper validateMacroVar (const syntax::MacroVar & mult, const std::string & content, std::string & rest);
-
-	    Mapper validateMacroToken (const syntax::MacroToken & mult, const std::string & content, std::string & rest);
+	    std::vector <Mapper> validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, ulong & current);
 	    
-	    Mapper validateRule (const syntax::Expression & expr, const std::string & content, std::string & rest);
+	    std::vector<Mapper> validateMacroOneOrMore (const syntax::MacroMult & mult, const std::string & content, ulong & current);
+	    
+	    Mapper validateMacroOneOrNone (const syntax::MacroMult & mult, const std::string & content, ulong & current);
 
-	    Mapper validateRuleVar (const syntax::Var & expr, const std::string & content, std::string & rest);
+	    Mapper validateMacroOr (const syntax::MacroOr & mult, const std::string & content, ulong & current);
+
+	    Mapper validateMacroVar (const syntax::MacroVar & mult, const std::string & content, ulong & current);
+
+	    Mapper validateMacroToken (const syntax::MacroToken & mult, const std::string & content, ulong & current);
+	    
+	    Mapper validateRule (const syntax::Expression & expr, const std::string & content, ulong & current);
+
+	    Mapper validateRuleVar (const syntax::Var & expr, const std::string & content, ulong & current);
 	    
 	    Mapper mergeMapper (const Mapper & left, const Mapper & right) const ;
 
@@ -112,9 +112,11 @@ namespace semantic {
 	    
 	    generator::Generator validateExpression (const syntax::Expression & expr);	    
 
-	    std::vector<Mapper> validateMacroEval (const std::string & content, const lexing::Word & loc, const syntax::Expression & eval, const Mapper & mapper);	    
+	    std::vector<Mapper> validateMacroEval (const std::string & content, const lexing::Word & loc, const syntax::Expression & eval, const Mapper & mapper);
+
+	    std::string validateMacroFor (const std::string & content, const lexing::Word & loc, lexing::Lexer & lex, const Mapper & mapping);
 	    
-	    void computeLine (ulong & line, ulong & col, ulong & seek);
+	    void computeLine (ulong & line, ulong & col, ulong & seek, ulong current);
 
 	    void error (const lexing::Word & location, const lexing::Word & end, const generator::Generator & left, const std::vector <std::string> & errors);
 	    

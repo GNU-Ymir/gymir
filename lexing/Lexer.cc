@@ -316,6 +316,7 @@ namespace lexing {
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
 		    do {
+			word.setEof (this-> filename);
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
 			    if (word.getStr () == Token::RETURN) {
@@ -349,6 +350,7 @@ namespace lexing {
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
 		    do {
+			word.setEof (this-> filename);
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
 			    if (word.getStr () == Token::RETURN) {
@@ -425,7 +427,7 @@ namespace lexing {
 	if (this-> isFromString) {
 	    word.setFromString (this-> content, this-> start);	    
 	}
-	
+
 	if (beg == line.length () + 1) word.setStr (line);
 	else if (beg == 0) {
 	    word.setStr (line.substr (0, min (max, line.length ())));

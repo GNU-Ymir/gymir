@@ -356,6 +356,7 @@ namespace syntax {
 	auto tok = this-> _lex.next ({Token::LACC});
 	std::string open, close;
 	open = Token::LACC;
+	auto sec_open = Token::MACRO_ACC;
 	close = Token::RACC;
 	
 	this-> _lex.skipEnable (Token::SPACE,   false);
@@ -376,7 +377,7 @@ namespace syntax {
 		nb -= 1;
 		if (nb != 0)
 		    all.write (cursor.str);
-	    } else if (cursor == open) {
+	    } else if (cursor == open || cursor == sec_open) {
 		nb += 1;
 		all.write (cursor.str);
 	    } else {
