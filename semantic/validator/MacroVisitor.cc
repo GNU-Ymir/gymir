@@ -419,7 +419,6 @@ namespace semantic {
 		ulong line = 0, col = 0, seek = 0;
 		computeLine (line, col, seek, current);
 		    
-		
 		auto lex = lexing::Lexer::initFromString (content.substr (current), this-> _call.locFile,
 							  {Token::SPACE, Token::TAB, Token::RETURN, Token::RRETURN},
 							  {
@@ -531,9 +530,9 @@ namespace semantic {
 
 	syntax::Expression MacroVisitor::validateMapper (const lexing::Word & loc, const std::string & content, const MacroVisitor::Mapper & mapping) {	    
 	    Ymir::OutBuffer buf;
-	    std::list <std::string> errors;	    
-	    try {		
-		lexing::Lexer lex = lexing::Lexer::initFromString (content, loc.locFile, {}, {}, loc.line);
+	    std::list <std::string> errors;
+	    lexing::Lexer lex = lexing::Lexer::initFromString (content, loc.locFile, {}, {}, loc.line);
+	    try {
 		while (true) {
 		    auto next = lex.next ();
 		    if (next == Token::MACRO_ACC || next == Token::MACRO_CRO || next == Token::MACRO_PAR) {
@@ -656,7 +655,7 @@ namespace semantic {
 		mapper.mapping.emplace (var.str, std::vector <MacroVisitor::Mapper> {it});
 		Ymir::OutBuffer buf;
 		std::list <std::string> errors;	    
-		try {		
+		try {
 		    lexing::Lexer lex = lexing::Lexer::initFromString (text, loc.locFile, {}, {}, loc.line);
 		    while (true) {
 			auto next = lex.next ();

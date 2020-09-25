@@ -96,7 +96,7 @@ namespace lexing {
 	this-> current = lex.current;
 
 	if (lex.isFromString) {
-	    auto name = tmpnam (new char [L_tmpnam]);	
+	    auto name = tmpnam (new char [L_tmpnam]);
 	    this-> file = fopen (name, "w");
 	    fseek (this-> file, 0, SEEK_SET);
 	    fwrite (lex.content.c_str (), lex.content.length (), sizeof (char), this-> file);
@@ -115,6 +115,8 @@ namespace lexing {
     }
 
     const Lexer & Lexer :: operator= (const Lexer & lex) {
+	dispose ();
+	
 	this-> line = lex.line;
 	this-> column = lex.column;
 	this-> enableComment = lex.enableComment;
@@ -127,8 +129,8 @@ namespace lexing {
 	this-> docs = lex.docs;
 	this-> current = lex.current;
 
-	if (lex.isFromString) {
-	    auto name = tmpnam (new char [L_tmpnam]);	
+	if (lex.isFromString) {	    
+	    auto name = tmpnam (new char [L_tmpnam]);
 	    this-> file = fopen (name, "w");
 	    fseek (this-> file, 0, SEEK_SET);
 	    fwrite (lex.content.c_str (), lex.content.length (), sizeof (char), this-> file);
