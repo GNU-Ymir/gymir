@@ -144,6 +144,11 @@ namespace lexing {
 	 */
 	void dispose ();
 
+	/**
+	 * Return a string containing all the already read tokens (including skips, and comments
+	 */
+	std::string formatRestOfFile ();
+	
 	const std::string & getContent () const;
 
 	const std::string & getStringName () const;

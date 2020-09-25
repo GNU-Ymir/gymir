@@ -184,6 +184,7 @@ ymir_OBJS = \
 	ymir/generator_TraitRef.o \
 	ymir/generator_TemplateRef.o \
 	ymir/generator_MacroRef.o \
+	ymir/generator_MacroRuleRef.o \
 	ymir/generator_TemplateClassCst.o \
 	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_TemplateSyntaxList.o \

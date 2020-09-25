@@ -9,7 +9,7 @@ namespace syntax {
      */
     class MacroToken : public IExpression {
 	
-	std::string _content;
+	Expression _content;
 	
     private :
 
@@ -17,11 +17,11 @@ namespace syntax {
 
 	MacroToken ();
 	
-	MacroToken (const lexing::Word & loc, const std::string & content);
+	MacroToken (const lexing::Word & loc, const Expression & content);
 
     public :
 
-	static Expression init (const lexing::Word & token, const std::string & content);
+	static Expression init (const lexing::Word & token, const Expression & content);
 
 	bool isOf (const IExpression * type) const override;
 
@@ -29,7 +29,7 @@ namespace syntax {
 
 	std::string prettyString () const override;
 
-	const std::string & getContent () const;
+	const Expression & getContent () const;
 	
     };    
 

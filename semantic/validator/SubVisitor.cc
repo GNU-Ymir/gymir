@@ -61,6 +61,7 @@ namespace semantic {
 		else of (generator::Struct, str ATTRIBUTE_UNUSED, gen = validateStruct(expression, left))
 		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
 		else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
+		else of (MacroRef, rf ATTRIBUTE_UNUSED, gen = validateMacro (expression, left, errors))
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Pointer, ptr,
 		     if (ptr.getInners ()[0].is <ClassRef> ())
@@ -602,6 +603,24 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+
+	generator::Generator SubVisitor::validateMacro (const syntax::Binary & expression, const generator::Generator & t, std::list <std::string> & errors) {
+	    if (expression.getRight ().is <syntax::Var> ()) {
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto syms = this-> _context.getMacroRules (expression.getLocation (), t.to <generator::MacroRef> (), name);
+		std::vector <Generator> gens;
+		for (auto & it : syms) {
+		    gens.push_back (MacroRuleRef::init (it.getName (), it));
+		}
+		
+		if (gens.size () == 1) return gens [0];
+		else if (gens.size () != 0) {
+		    return MultSym::init (expression.getLocation (), gens);
+		}
+	    }
+	    return Generator::empty ();
+	}
+	
 	Generator SubVisitor::validateTemplate (const syntax::Binary & expression, const generator::Generator & t, std::list <std::string> & errors) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto tmp = t.to <TemplateRef> ().getTemplateRef ().to <semantic::Template> ().getDeclaration ();
@@ -703,7 +722,8 @@ namespace semantic {
 		    else of (ClassRef, cl, leftName = cl.getName ())
 		    else of (TemplateRef, rf, leftName = rf.prettyString ())
 		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ());
+		    else of (Type,       type,  leftName = type.getTypeName ())
+		    else of (MacroRef,   rf,    leftName = rf.prettyString ());
 		}
 	    }
 	    {		
@@ -740,7 +760,8 @@ namespace semantic {
 		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
 		    else of (TemplateRef, rf, leftName = rf.prettyString ())
 		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ());
+		    else of (Type,       type,  leftName = type.getTypeName ())
+		    else of (MacroRef,   rf,    leftName = rf.prettyString ());
 		}
 	    }
 	    {

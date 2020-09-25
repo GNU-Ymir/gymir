@@ -21,6 +21,7 @@ namespace lexing {
 	locFile (other.locFile),
 	line (other.line),
 	column (other.column),
+	seek (other.seek),
 	isFromString (other.isFromString),
 	content (other.content),
 	start (other.start)
@@ -31,6 +32,7 @@ namespace lexing {
 	locFile (other.locFile),
 	line (other.line),
 	column (other.column),
+	seek (other.seek),
 	_length (len),
 	isFromString (other.isFromString),
 	content (other.content),
@@ -43,6 +45,7 @@ namespace lexing {
 	locFile (other.locFile),
 	line (other.line),
 	column (other.column),
+	seek (other.seek),
 	_length (other._length),
 	isFromString (other.isFromString),
 	content (other.content),
@@ -54,6 +57,7 @@ namespace lexing {
 	this-> locFile = other.locFile;
 	this-> line = other.line;
 	this-> column = other.column;
+	this-> seek = other.seek;
 	this-> _length = other._length;
 	this-> isFromString = other.isFromString;
 	this-> content = other.content;
@@ -76,10 +80,11 @@ namespace lexing {
 	}
     }
 
-    void Word::setLocus (std::string filename, ulong line, ulong column) {
+    void Word::setLocus (std::string filename, ulong line, ulong column, ulong seek) {
 	this-> locFile = filename;
 	this-> line = line;
 	this-> column = column;
+	this-> seek = seek;
     }
 
     void Word::setFromString (const std::string content, ulong start) {

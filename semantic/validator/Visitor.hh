@@ -421,7 +421,7 @@ namespace semantic {
 	    /**
 	     * \brief Validate a string literal
 	     */
-	    generator::Generator validateString (const syntax::String & s);
+	    generator::Generator validateString (const syntax::String & s, bool forceUtf8 = false);
 	    
 	    /**
 	     * \brief Validate a binary expression 
@@ -846,6 +846,11 @@ namespace semantic {
 	    void getClassContext (const semantic::Symbol & cl, bool & isPrivate, bool & isProtected);
 
 	    /**
+	     * \brief Get the current context for a macro access
+	     */
+	    void getMacroContext (const semantic::Symbol & cl, bool & isPrivate);
+
+	    /**
 	     * \return the list of (in a multsym) of the constructor of the class cl
 	     * \warning cl is assumed to be a generator::Class
 	     */
@@ -853,9 +858,14 @@ namespace semantic {
 
 	    /**
 	     * \return the list of constructor of the macro
-	     * \warning mref is assumed to be a MacroRef
 	     */
 	    std::vector <semantic::Symbol> getMacroConstructor (const lexing::Word & loc, const generator::MacroRef & mref);
+
+	    /**
+	     * \return the list of macro rule of the macro
+	     * \param name the name of the rule
+	     */
+	    std::vector <semantic::Symbol> getMacroRules (const lexing::Word & loc, const generator::MacroRef & ref, const std::string & name);
 	    
 	    /**
 	     * \return the list of constructors declared in the class

@@ -15,7 +15,21 @@ namespace semantic {
 	 */
 	class MacroVisitor {
 
+	    static const std::string __EXPR__;
+
+	    static const std::string __IDENT__;
+
+	    static const std::string __TOKEN__;
+	    
+	private : 
+
 	    Visitor & _context;
+
+	    std::string _content;
+
+	    ulong _current;
+
+	    lexing::Word _call;
 	    
 	public :
 	    
@@ -72,7 +86,7 @@ namespace semantic {
 	    
 	    generator::Generator validateConstructor (const semantic::Symbol & constr, const syntax::MacroCall & expression);
 
-	    std::vector<Mapper> validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
+	    Mapper validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
 
 	    Mapper validateMacroList (const syntax::MacroMult & mult, const std::string & content, std::string & rest);
 	    
@@ -84,7 +98,12 @@ namespace semantic {
 
 	    Mapper validateMacroVar (const syntax::MacroVar & mult, const std::string & content, std::string & rest);
 
-	    Mapper validateMacroToken (const syntax::MacroToken & mult, const std::string & content, std::string & rest);	    
+	    Mapper validateMacroToken (const syntax::MacroToken & mult, const std::string & content, std::string & rest);
+	    
+	    Mapper validateRule (const syntax::Expression & expr, const std::string & content, std::string & rest);
+
+	    Mapper validateRuleVar (const syntax::Var & expr, const std::string & content, std::string & rest);
+	    
 	    Mapper mergeMapper (const Mapper & left, const Mapper & right) const ;
 
 	    syntax::Expression validateMapper (const lexing::Word & loc, const std::string & expr, const Mapper & mapping);
@@ -95,6 +114,8 @@ namespace semantic {
 
 	    std::vector<Mapper> validateMacroEval (const std::string & content, const lexing::Word & loc, const syntax::Expression & eval, const Mapper & mapper);	    
 	    
+	    void computeLine (ulong & line, ulong & col, ulong & seek);
+
 	    void error (const lexing::Word & location, const lexing::Word & end, const generator::Generator & left, const std::vector <std::string> & errors);
 	    
 	};

@@ -34,6 +34,10 @@ namespace syntax {
 	bool isOf (const IDeclaration * type) const override;       	
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
+
+	const Expression & getContent () const;
+
+	const Expression & getRule () const;
 	
     };
 

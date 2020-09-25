@@ -39,4 +39,12 @@ namespace syntax {
 	this-> _content.treePrint (stream, i+1);
     }
 
+    const Expression & MacroRule::getContent () const {
+	return this-> _content;
+    }
+
+    const Expression & MacroRule::getRule () const {
+	return this-> _rule;
+    }
+    
 }

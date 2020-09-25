@@ -29,6 +29,9 @@ namespace lexing {
 	/// The column where the word is located
 	ulong column;
 
+	/** the cursor in file*/
+	ulong seek;
+
 	/// The length of the word (may differ with str.length ())
 	long _length = -1;
 
@@ -77,7 +80,7 @@ namespace lexing {
     
 	void setLocus (location_t locus);
 
-	void setLocus (std::string filename, ulong line, ulong column);
+	void setLocus (std::string filename, ulong line, ulong column, ulong seek);
     
 	void setFromString (const std::string content, ulong start);
 

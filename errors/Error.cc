@@ -209,7 +209,10 @@ namespace Ymir {
 	
 	void addTwoLines (OutBuffer & buf, const Word & word, const Word & end) {
 	    auto locus = word.getLocus ();
-	    auto line = getLine (locus, word.getFile ().c_str ());
+	    std::string line;
+	    if (!word.isFromString) line = getLine (locus, word.getFile ().c_str ());
+	    else line = getLineInFile (locus, word.content, word.start);
+	    
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
@@ -255,7 +258,10 @@ namespace Ymir {
 		return;
 	    }
 	    
-	    auto line = getLine (locus, word.getFile ().c_str ());
+	    std::string line;
+	    if (!word.isFromString) line = getLine (locus, word.getFile ().c_str ());
+	    else line = getLineInFile (locus, word.content, word.start);
+	    
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');

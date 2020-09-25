@@ -298,7 +298,7 @@ namespace semantic {
 	Generator Visitor::validateMacroExpression (const semantic::Symbol & sol, const syntax::Expression & content) {
 	    std::list <std::string> errors;
 	    pushReferent (sol, "validateMacroExpression");
-	    enterForeign ();
+	    //enterForeign ();
 	    
 	    Generator gen (Generator::empty ());
 	    try {
@@ -314,7 +314,7 @@ namespace semantic {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    
-	    exitForeign ();
+	    //exitForeign ();
 	    popReferent ("validateMacroExpression");
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
@@ -1283,6 +1283,37 @@ namespace semantic {
 		}
 	    }
 	    
+	    if (syms.size () != 0) 
+		return syms;
+	    else if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+	    
+	    return {};
+	}
+
+	std::vector <Symbol> Visitor::getMacroRules (const lexing::Word & loc, const generator::MacroRef & mref, const std::string & name) {
+	    bool prv = false;
+	    std::list <std::string> errors;
+	    getMacroContext (mref.getMacroRef (), prv);
+	    std::vector <Symbol> syms;
+
+	    for (auto & gen : mref.getMacroRef ().to <semantic::Macro> ().getAllInner ()) {
+		match (gen) {
+		    of (semantic::MacroRule, rule, {
+			    if (rule.getName ().str == name) {
+				if (prv || gen.isPublic ()) {
+				    syms.push_back (gen);
+				} else {
+				    errors.push_back (
+					Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().str)
+				    );
+				}
+			    }
+			}
+		    );
+		}
+	    }
+
 	    if (syms.size () != 0) 
 		return syms;
 	    else if (errors.size () != 0)
@@ -3181,9 +3212,9 @@ namespace semantic {
 	    return validateTuple (syntax::List::init (lst.getLocation (), lst.getLocation (), exprs).to <syntax::List> ());
 	}
 	
-	Generator Visitor::validateString (const syntax::String & str) {
+	Generator Visitor::validateString (const syntax::String & str, bool forceUtf8) {
 	    Generator inner (Generator::empty ());
-	    if (str.getSuffix () == Keys::S8) inner = Char::init (str.getLocation (), 8);
+	    if (str.getSuffix () == Keys::S8 || forceUtf8) inner = Char::init (str.getLocation (), 8);
 	    else inner = Char::init (str.getLocation (), 32);
 	    inner = Type::init (inner.to <Type> (), false);
 	    
@@ -4642,6 +4673,13 @@ namespace semantic {
 		    }
 		}
 	    }
+	}
+
+	void Visitor::getMacroContext (const semantic::Symbol & cl, bool & isPrivate) {
+	    isPrivate = false;
+	    if (this-> _classContext.size () != 0) {
+		isPrivate = this-> _classContext.back ().equals (cl);
+	    }	    
 	}
 
 	bool Visitor::getModuleContext (const semantic::Symbol & cl) {

@@ -3,7 +3,9 @@
 #include <ymir/semantic/validator/SubVisitor.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/global/State.hh>
+#include <ymir/syntax/declaration/MacroRule.hh>
 #include <ymir/global/Core.hh>
+
 using namespace global;
 
 namespace semantic {
@@ -13,6 +15,9 @@ namespace semantic {
 	using namespace generator;
 	using namespace Ymir;
 	using namespace syntax;
+	
+
+	const std::string MacroVisitor::__EXPR__ = "expr";
 
 	std::string MacroVisitor::Mapper::toString (int i) const {
 	    Ymir::OutBuffer buf;
@@ -80,11 +85,14 @@ namespace semantic {
 	    auto constructors = this-> _context.getMacroConstructor (sym.getLocation (), sym);
 	    std::vector <Generator> values;
 	    for (auto & it : constructors) {
+		this-> _context.enterClassDef (sym.getMacroRef ());
 		try {
 		    values.push_back (validateConstructor (it, expression));		    
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 		
+		}
+
+		this-> _context.exitClassDef ();		
 	    }
 
 	    if (values.size () > 1) {
@@ -97,20 +105,49 @@ namespace semantic {
 	generator::Generator MacroVisitor::validateConstructor (const semantic::Symbol & constr, const syntax::MacroCall & expression) {
 	    auto rule = constr.to <semantic::MacroConstructor> ().getContent ().to <syntax::MacroConstructor> ().getRule ();
 	    std::string content = expression.getContent ();
+
+	    this-> _call = expression.getLocation ();
+	    this-> _current = 0;
+	    this-> _content = content;
+
+	    
 	    std::string rest;
 	    Mapper mapper (false);
+	    std::list <std::string> errors;
 	    
-	    match (rule) {
-		of (MacroMult, mult, {
-		    if (mult.getMult ().isEof () || mult.getMult () == "")
-			mapper = validateMacroList (mult, content, rest);
-		    }
-		) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest))
-		else of (MacroVar, var, mapper = validateMacroVar (var, content, rest))
-		else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest))
+	    this-> _context.pushReferent (constr, "validateMacroExpression");
+	    this-> _context.enterForeign ();
+
+	    try {
+		match (rule) {
+		    of (MacroMult, mult, mapper = validateMacroMult (mult, content, rest)
+		    ) else of (MacroOr, or_,
+			       mapper = validateMacroOr (or_, content, rest)
+		    ) else of (MacroVar, var,
+			       mapper = validateMacroVar (var, content, rest)
+		    ) else of (MacroToken, tok,
+			       mapper = validateMacroToken (tok, content, rest)
+		    ) else mapper = validateRule (rule, content, rest);		
+		}
+	    }  catch (Error::ErrorList list) {
+		errors = list.errors;
 	    }
 
-	    if (mapper.succeed && rest.length () == 0) {
+	    this-> _context.exitForeign ();
+	    this-> _context.popReferent ("validateMacroExpression");
+	    if (errors.size () != 0) throw Error::ErrorList {errors};
+	    
+	    if (mapper.succeed) {
+		if (rest.length () != 0) {
+		    auto note = Ymir::Error::createNote (expression.getLocation ());
+		    Ymir::Error::occur (
+			rule.getLocation (),
+			ExternalError::get (MACRO_REST),
+			rest
+		    );
+			
+		}
+
 		return this-> _context.validateMacroExpression (
 		    constr,
 		    validateMapper (constr.getName (), constr.to <semantic::MacroConstructor> ().getContent ().to <syntax::MacroConstructor> ().getContent (), mapper)
@@ -119,16 +156,31 @@ namespace semantic {
 	    
 	    return Generator::empty ();
 	}
-
-	std::vector <MacroVisitor::Mapper> MacroVisitor::validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
+	
+	MacroVisitor::Mapper MacroVisitor::validateMacroMult (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
 	    if (mult.getMult ().isEof () || mult.getMult () == "") {
-		return {validateMacroList (mult, content, rest)};
+		return validateMacroList (mult, content, rest);
 	    } else if (mult.getMult () == Token::STAR) {
-		return validateMacroRepeat (mult, content, rest);
+		auto rets = validateMacroRepeat (mult, content, rest);
+		Mapper mapper (true);
+		for (auto & it : rets) {
+		    mapper = mergeMapper (mapper, it);
+		}	       
+		return mapper;
 	    } else if (mult.getMult () == Token::PLUS) {
-		return validateMacroOneOrMore (mult, content, rest);
+		auto rets = validateMacroOneOrMore (mult, content, rest);
+		Mapper mapper (true);
+		for (auto & it : rets) {
+		    mapper = mergeMapper (mapper, it);
+		}
+		return mapper;
 	    } else if (mult.getMult () == Token::INTEG) {
-		return validateMacroOneOrNone (mult, content, rest);
+		auto rets = validateMacroOneOrNone (mult, content, rest);
+		Mapper mapper (true);
+		for (auto & it : rets) {
+		    mapper = mergeMapper (mapper, it);
+		}
+		return mapper;
 	    }
 	    
 	    println (mult.getMult ());
@@ -140,35 +192,43 @@ namespace semantic {
 	MacroVisitor::Mapper MacroVisitor::validateMacroList (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
 	    Mapper mapper (true);
 	    rest = content;
+	    
 	    for (auto & it : mult.getContent ()) {
 		Mapper local_mapper (false);
 		std::string content_2 = rest;
-		
+
 		match (it) {
-		    of (MacroMult, mult, {
-			if (mult.getMult ().isEof () || mult.getMult () == "")
-			    local_mapper = validateMacroList (mult, content_2, rest);
+		    of (MacroMult, mult, local_mapper = validateMacroMult (mult, content_2, rest)			
+		    ) else of (MacroOr, or_, local_mapper = validateMacroOr (or_, content_2, rest)
+		    ) else of (MacroVar, var, local_mapper = validateMacroVar (var, content_2, rest)
+		    ) else of (MacroToken, tok, {
+			    local_mapper = validateMacroToken (tok, content_2, rest);
 			}
-		    ) else of (MacroOr, or_, local_mapper = validateMacroOr (or_, content_2, rest))
-		    else of (MacroVar, var, local_mapper = validateMacroVar (var, content_2, rest))
-		    else of (MacroToken, tok, local_mapper = validateMacroToken (tok, content_2, rest))   
+		    ) else local_mapper = validateRule (it, content_2, rest);		    
 		}
+		
 		if (!local_mapper.succeed) return Mapper (false);
 		mapper = mergeMapper (mapper, local_mapper);
+
 	    }
-	    
+	    	    
 	    return mapper;
 	}
 	
 	std::vector <MacroVisitor::Mapper> MacroVisitor::validateMacroRepeat (const syntax::MacroMult & mult, const std::string & content, std::string & rest) {
-	    rest = content;
 	    std::vector <Mapper> values;
+	    rest = content;
+	    
 	    while (true) {
 		auto content_2 = rest;
-		auto local_mapper = validateMacroList (mult, content_2, rest);
-		if (local_mapper.succeed) {
-		    values.push_back (local_mapper);
-		} else break;
+		try {
+		    auto local_mapper = validateMacroList (mult, content_2, rest);
+		    if (local_mapper.succeed) {
+			values.push_back (local_mapper);
+		    } else break;
+		} catch (Error::ErrorList list) {
+		    break; // If a throw has been done, there was a failure however we are in a repeat so that's not a problem
+		}
 	    }
 	    	    	    
 	    return values;
@@ -184,30 +244,42 @@ namespace semantic {
 	
 	MacroVisitor::Mapper MacroVisitor::validateMacroOr (const syntax::MacroOr & mult, const std::string & content, std::string & rest) {
 	    std::string rest_left;
-	    Mapper mapper (true);
+	    Mapper mapper (false);
+	    std::list <std::string> errors;
+	    rest = content;
+	    
 	    match (mult.getLeft ()) {
-		of (MacroMult, mult, {
-			if (mult.getMult ().isEof () || mult.getMult () == "")
-			    mapper = validateMacroList (mult, content, rest_left);
-		    }		    
-		) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest_left)
-		) else of (MacroVar, var, mapper = validateMacroVar (var, content, rest_left)
-		) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest_left));		
+		try {
+		    of (MacroMult, mult, mapper = validateMacroMult (mult, content, rest_left)
+		    ) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest_left)
+		    ) else of (MacroVar, var, mapper = validateMacroVar (var, content, rest_left)
+		    ) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest_left)
+		    ) else mapper = validateRule (mult.getLeft (), content, rest_left);
+		} catch (Error::ErrorList list) {
+		    errors = list.errors;
+		}
 	    }
+	    
 	    if (mapper.succeed) {
-		rest = rest_left;
+		rest = rest_left;		
 		return mapper;
 	    } else {
-		match (mult.getRight ()) {
-		    of (MacroMult, mult, {
-			    if (mult.getMult ().isEof () || mult.getMult () == "")
-				mapper = validateMacroList (mult, content, rest);
-			}		    
-		    ) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest)
-		    ) else of (MacroVar, var, mapper = validateMacroVar (var, content, rest)
-		    ) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest));		    
+		try {
+		    match (mult.getRight ()) {
+			of (MacroMult, mult, mapper = validateMacroMult (mult, content, rest)
+			) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest)
+			) else of (MacroVar, var, mapper = validateMacroVar (var, content, rest)
+			) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest)
+			) else mapper = validateRule (mult.getRight (), content, rest);
+		    
+		    }
+		} catch (Error::ErrorList list) {
+		    errors = list.errors;		    
 		}
-		return mapper;
+		
+		if (!mapper.succeed)
+		    throw Error::ErrorList {errors};
+		return mapper;		
 	    }
 	    
 	}
@@ -215,25 +287,21 @@ namespace semantic {
 	MacroVisitor::Mapper MacroVisitor::validateMacroVar (const syntax::MacroVar & var, const std::string & content, std::string & rest) {
 	    auto rule = var.getContent ();
 	    Mapper mapper (false);
+	    rest = content;
+	    
 	    match (rule) {
 		of (MacroMult, mult, {
-			auto mappers = validateMacroMult (mult, content, rest);
-			if (mappers.size () == 1 && !mappers [0].succeed) return Mapper (false);
-			else {
-			    Ymir::OutBuffer buf;
-			    for (auto & it : mappers)
-				buf.write (it.consumed);
-			    Mapper result (true, buf.str ());
-			    result.mapping.emplace (var.getLocation ().str, mappers);
-			    return result;
-			}
-		    }
-		)
-		else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest))
-		else of (MacroVar, var, mapper = validateMacroVar (var, content, rest))
-		else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest))
+			auto mapper = validateMacroMult (mult, content, rest);
+			Mapper result (true, mapper.consumed);
+			result.mapping.emplace (var.getLocation ().str, std::vector <MacroVisitor::Mapper> {mapper});
+			return result;
+		    }		    		    		
+		) else of (MacroOr, or_, mapper = validateMacroOr (or_, content, rest)
+		) else of (MacroVar, var, mapper = validateMacroVar (var, content, rest)
+		) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, rest)
+		) else mapper = validateRule (rule, content, rest);		
 	    }
-
+	    
 	    if (mapper.succeed) {
 		std::vector <Mapper> vec = {mapper};
 		Mapper result (true, mapper.consumed);
@@ -241,18 +309,172 @@ namespace semantic {
 		return result;
 	    }
 	    
+	    // In principle, we can't get here as an error have been thrown in case of failure
 	    return Mapper (false);
 	}
+
+	MacroVisitor::Mapper MacroVisitor::validateRule (const syntax::Expression & expr, const std::string & content, std::string & rest) {
+	    Mapper mapper (false);
+	    if (expr.is <syntax::Var> ()) {
+		auto left_rest = content;
+		auto mapper = validateRuleVar (expr.to <syntax::Var> (), content, left_rest);
+		if (mapper.succeed) {
+		    rest = left_rest;
+		    return mapper;
+		}
+	    }
+	    
+	    auto rules = this-> _context.validateValue (expr);
+	    std::list <std::string> errors;
+	    rest = content;
+	    
+	    Visitor::__CALL_NB_RECURS__ += 1;
+	    try {
+		match (rules) {
+		    of (MacroRuleRef, ruleRef ATTRIBUTE_UNUSED, {
+			    auto sem_rule = ruleRef.getMacroRuleRef ().to <semantic::MacroRule> ().getContent ();
+			    auto innerRule = sem_rule.to <syntax::MacroRule> ().getRule ();
+
+			    match (innerRule) {
+				of (MacroMult, mult, mapper = validateMacroMult (mult, content, rest)				    
+				) else of (MacroOr, or_,
+					   mapper = validateMacroOr (or_, content, rest)
+				) else of (MacroVar, var,
+					   mapper = validateMacroVar (var, content, rest)
+				) else of (MacroToken, tok,
+					   mapper = validateMacroToken (tok, content, rest)
+				) else Ymir::Error::occur (
+				    innerRule.getLocation (),
+				    ExternalError::get (INVALID_MACRO_RULE),
+				    innerRule.prettyString ()
+				);			    
+			    }
+			}		
+		    ) else {
+			Ymir::Error::occur (
+			    expr.getLocation (),
+			    ExternalError::get (INVALID_MACRO_RULE),
+			    rules.prettyString ()
+			);
+		    }
+		}
+	    } catch (Error::ErrorList list) {		
+		if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));	    
+		    list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
+		} else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {   
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));
+		    Visitor::__LAST__ = true;
+		} else if (Visitor::__LAST__) {			    
+		    Visitor::__LAST__ = false;
+		}
+		
+		errors = list.errors;
+	    }
+
+	    Visitor::__CALL_NB_RECURS__ -= 1;
+	    if (errors.size () != 0) throw Error::ErrorList {errors};
+	   
+	    return mapper;
+	}
+
+	MacroVisitor::Mapper MacroVisitor::validateRuleVar (const syntax::Var & var, const std::string & content, std::string & rest) {
+	    auto name = var.getName ().str;
+	    if (name == MacroVisitor::__EXPR__) {
+		ulong line = 0, col = 0, seek = 0;
+		computeLine (line, col, seek);
+		    
+
+		auto lex = lexing::Lexer::initFromString (content, this-> _call.locFile,
+							  {Token::SPACE, Token::TAB, Token::RETURN, Token::RRETURN},
+							  {
+							      {Token::LCOMM1, {Token::RCOMM1, ""}},
+								  {Token::LCOMM2, {Token::RETURN, ""}},
+								      {Token::LCOMM3, {Token::RCOMM3, ""}},
+									  {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
+									      {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}}
+							  }, line);
+		
+		auto visit = syntax::Visitor::init (lex);
+		auto result = visit.visitExpression ();
+		lex = visit.getLexer ();
+		rest = lex.formatRestOfFile ();
+		auto expr = content.substr (0, content.length () - rest.length ());
+
+		return Mapper (true, expr, {});
+	    }
+
+	    return Mapper (false);	    
+	}
+	
 	
 	MacroVisitor::Mapper MacroVisitor::validateMacroToken (const syntax::MacroToken & mult, const std::string & content, std::string & rest) {
-	    auto len = mult.getContent ().length ();
-	    if (len > content.length ()) return Mapper (false);
+	    auto sem_str = this-> _context.validateString (mult.getContent ().to <syntax::String> (), true);
+	    auto ch_str = sem_str.to <Aliaser> ().getWho ().to <StringValue> ().getValue ();
+	    Ymir::OutBuffer buf;
+	    rest = content;
+	    
+	    ulong i = 0;
+	    for (auto & it : ch_str) {
+		i += 1;
+		if (it != '\0' && i < ch_str.size ())
+		    buf.write (it);
+	    }
+	    
+	    auto str = buf.str ();
+	    auto len = str.length ();
+
+	    if (len > content.length ()) {
+		lexing::Word word (UNKNOWN_LOCATION, content.substr (0, len));
+		ulong line = 0, col = 0, seek = 0;
+		computeLine (line, col, seek);
+		    
+		word.setLocus (this-> _call.getFile (), line, col, seek);
+		auto note = Ymir::Error::createNote (word); 
+		Ymir::Error::occurAndNote (
+		    mult.getLocation (),
+		    note, 
+		    ExternalError::get (INCOMPATIBLE_TOKENS),
+		    str,
+		    content
+		);
+	    }
+
 	    for (auto it : Ymir::r(0, len)) {
-		if (mult.getContent () [it] != content [it]) return Mapper (false);
+		if (str [it] != content [it]) {
+		    lexing::Word word (UNKNOWN_LOCATION, content.substr (0, len));
+		    ulong line = 0, col = 0, seek = 0;
+		    computeLine (line, col, seek);
+		    
+		    word.setLocus (this-> _call.getFile (), line, col, seek);
+		    auto note = Ymir::Error::createNote (word); 
+		    Ymir::Error::occurAndNote (
+			mult.getLocation (),
+			note,
+			ExternalError::get (INCOMPATIBLE_TOKENS),
+			str,
+			content.substr (0, len)
+		    );  
+		}
 	    }
 
 	    rest = content.substr (len);
+	    this-> _current += len;
+	    
 	    return Mapper (true, content.substr (0, len), {});
+	}
+
+	void MacroVisitor::computeLine (ulong & line, ulong & column, ulong & seek) {
+	    line = this-> _call.line;
+	    column = this-> _call.column + this-> _call.length ();
+	    seek = this-> _call.seek;
+	    for (auto it : Ymir::r (0, this-> _current)) {
+		if (this-> _content [it] == '\n') {
+		    line ++;
+		    column = 0;
+		} else column += 1;
+		seek += 1;
+	    }
 	}
 
 	MacroVisitor::Mapper MacroVisitor::mergeMapper (const MacroVisitor::Mapper & left, const MacroVisitor::Mapper & right) const {

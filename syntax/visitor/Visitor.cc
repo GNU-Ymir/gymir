@@ -146,7 +146,7 @@ namespace syntax {
 	} while (!token.isEof ());
 
 	if (space.isEof ())
-	    space.setLocus (this-> _lex.getFilename (), 0, 0);
+	    space.setLocus (this-> _lex.getFilename (), 0, 0, 0);
 	
 	auto ret = Module::init (space, decls, true);
 	return ret;
@@ -316,10 +316,10 @@ namespace syntax {
 	bool or_ = false;
 	do {
 	    if (!or_) {
-		if (can (&Visitor::visitMacroExpression)) 
+		if (can (&Visitor::visitMacroExpression))  {
 		    inner.push_back (visitMacroExpression ());
-		else inner.push_back (visitExpression (10));
-		    
+		} else inner.push_back (visitExpression (10));
+		
 		if (inner.size () == 1) {
 		    auto aux = this-> _lex.consumeIf ({Token::PIPE});
 		    if (aux == Token::PIPE) {
@@ -348,13 +348,10 @@ namespace syntax {
 	Expression type (Expression::empty ());
 	if (name != Keys::SELF) {
 	    if (this-> _lex.consumeIf ({Token::SEMI_COLON}) == Token::SEMI_COLON) {
-		return MacroRule::init (name, type, expr, Expression::empty ());	
+		return MacroRule::init (name, expr, type, Expression::empty ());	
 	    }
 	}
        	
-	if (this-> _lex.consumeIf ({Token::ARROW}) == Token::ARROW) {
-	    type = visitExpression ();
-	}
 
 	auto tok = this-> _lex.next ({Token::LACC});
 	std::string open, close;
@@ -444,9 +441,9 @@ namespace syntax {
 		expr = visitExpression (10);
 	    }
 	    return MacroVar::init (ident, expr);
-	} else {	    
+	} else {
 	    auto str = visitString ();
-	    return MacroToken::init (str.getLocation (), str.to <String> ().getSequence ().str);
+	    return MacroToken::init (str.getLocation (), str);
 	}
     }
         
@@ -1105,7 +1102,7 @@ namespace syntax {
 	return value;
     }
     
-    Expression Visitor::visitOperand3 (bool canBeTemplateCall) {
+    Expression Visitor::visitOperand3 (bool canBeTemplateCall) {	
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
 
@@ -1113,7 +1110,6 @@ namespace syntax {
 	if (begin == Keys::TEMPLATE) return visitTemplateChecker ();
 	if (begin == Token::LCRO)    return visitArray ();
 	if (begin == Token::LPAR)    return visitTuple ();
-	if (begin == Token::MACRO_ACC || begin == Token::MACRO_PAR || begin == Token::MACRO_CRO) return visitMacroEval ();
 	if (begin == Token::PIPE || begin == Token::DPIPE)
 	    return visitLambda ();
 
@@ -1859,7 +1855,7 @@ namespace syntax {
     }
 
     Expression Visitor::visitString () {
-	auto begin = this-> _lex.next ();
+	auto begin = this-> _lex.next ({Token::GUILL});
 
 	this-> _lex.skipEnable (Token::SPACE,   false);
 	// this-> _lex.skipEnable (Token::TAB,     false);

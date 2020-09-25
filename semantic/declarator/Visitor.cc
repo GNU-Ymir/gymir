@@ -489,6 +489,14 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visitMacroRule (const syntax::MacroRule rule) {
 	    auto ret = MacroRule::init (rule.getLocation (), syntax::MacroRule::init (rule));
+	    auto symbols = getReferent ().getLocal (rule.getLocation ().str);
+	    for (auto & it : getReferent ().to <Macro> ().getAllInner ()) {
+		if (it.is <MacroRule> () && it.getName ().str == rule.getLocation ().str) {
+		    auto note = Ymir::Error::createNote (it.getName ());
+		    Ymir::Error::occurAndNote (rule.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), rule.getLocation ().str);
+		}
+	    }
+	    
 	    getReferent ().insert (ret);
 	    return ret;
 	}

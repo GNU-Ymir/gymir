@@ -34,6 +34,21 @@ namespace lexing {
 	}
     }
 
+    std::string read (FILE * i) {
+	auto tell = ftell (i);
+	fseek (i, 0, SEEK_END);
+	auto length = ftell (i) - tell;
+	char * buf = new (Z0) char[length];
+	fseek (i, tell, SEEK_SET);
+	
+	auto size = fread (buf, 1, length, i);
+	buf [size] = '\0';
+	std::string ret = std::string (buf);
+	
+	delete  buf;
+	return ret;
+    }
+
     Lexer::Lexer () :
 	line (0),
 	column (0),
@@ -169,7 +184,7 @@ namespace lexing {
 
     Word Lexer::fileLocus () {
 	Word loc;
-	loc.setLocus (this-> filename, 0, 0);
+	loc.setLocus (this-> filename, 0, 0, 0);
 	return loc;
     }
 
@@ -398,6 +413,7 @@ namespace lexing {
 	} else {
 	    this-> column += word.getStr ().length ();
 	}
+	
 	return true;
     }
 
@@ -418,9 +434,20 @@ namespace lexing {
 	    word.setStr (line.substr (0, min (beg, line.length ())));
 	    fseek (this-> file, where + beg, SEEK_SET);
 	}
-	word.setLocus (this-> filename, this-> line, this-> column);
+	word.setLocus (this-> filename, this-> line, this-> column, where);
     }
-    
+
+    std::string Lexer::formatRestOfFile () {
+	auto tell = ftell (this-> file);
+	if (this-> current < (long) (this-> reads.size ()) - 1) {
+	    if (this-> reads [this-> current + 1].isEof ()) return "";
+	    fseek (this-> file, this-> reads [this-> current + 1].seek, SEEK_SET);
+	} 
+
+	auto end = read (this-> file);
+	fseek (this-> file, tell, SEEK_SET);
+	return end;
+    }   
 
     const std::string & Lexer::getContent () const {
 	return this-> content;

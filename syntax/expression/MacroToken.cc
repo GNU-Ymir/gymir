@@ -3,15 +3,16 @@
 namespace syntax {
 
     MacroToken::MacroToken () :
-	IExpression (lexing::Word::eof ())
+	IExpression (lexing::Word::eof ()),
+	_content (Expression::empty ())
     {}
     
-    MacroToken::MacroToken (const lexing::Word & loc, const std::string & content) :
+    MacroToken::MacroToken (const lexing::Word & loc, const Expression & content) :
 	IExpression (loc),
 	_content (content)
     {}
         
-    Expression MacroToken::init (const lexing::Word & location, const std::string & content) {
+    Expression MacroToken::init (const lexing::Word & location, const Expression & content) {
 	return Expression {new (Z0) MacroToken (location, content)};
     }
 
@@ -25,14 +26,14 @@ namespace syntax {
     void MacroToken::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<MacroToken> ", i, '\t');
 	stream.writefln ("%*%", i+1, '\t', this-> getLocation ());
-	stream.writefln ("%*%", i+1, '\t', this-> _content);
+	stream.writefln ("%*%", i+1, '\t', this-> _content.prettyString ());
     }
 
     std::string MacroToken::prettyString () const {
-	return "\"" + this-> _content + "\"";
+	return this-> _content.prettyString ();
     }
 
-    const std::string & MacroToken::getContent () const {
+    const Expression & MacroToken::getContent () const {
 	return this-> _content;
     }
 }

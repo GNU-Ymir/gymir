@@ -33,7 +33,7 @@ namespace semantic {
 
 	const syntax::Declaration & getContent () const;
 	
-	std::string formatTree (int padd) const override;
+	std::string formatTree (int padd) const override;	
 	
     };    
 
