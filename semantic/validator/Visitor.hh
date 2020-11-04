@@ -692,6 +692,11 @@ namespace semantic {
 	     */
 	    bool canImplicitAlias (const generator::Generator & value);
 
+	    /**
+	     * Is the type a void array
+	     */
+	    bool isVoidArrayType (const generator::Generator & type);
+	    
 
 	    /**
 	     * \brief Verify that the type is complete and can be used at runtime to store value

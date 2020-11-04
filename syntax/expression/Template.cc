@@ -46,8 +46,9 @@ namespace syntax {
 	Ymir::OutBuffer inner;
 	int i = 0;
 	for (auto & x : this-> _parameters) {
-	    if (i != 0) inner.write (",");
+	    if (i != 0) inner.write (", ");
 	    inner.writef ("%", x.prettyString ());
+	    i += 1;
 	}
 	stream.writef ("%!(%)", this-> _content.prettyString (), inner.str ());
 	return stream.str ();

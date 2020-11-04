@@ -266,8 +266,10 @@ namespace semantic {
 	}
 	
 	Generator BinaryVisitor::validateMathSlice (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    if (op == Binary::Operator::CONCAT) {
+	    if (op == Binary::Operator::CONCAT || op == Binary::Operator::ADD) {
 		auto loc = expression.getLocation ();
+		lexing::Word type_of = {expression.getLocation (), Keys::TYPEOF};
+		
 		auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 		syntax::Expression rightSynt (syntax::Expression::empty ()); 
 		if (right.to <Value> ().getType ().is <Array> ()) {
@@ -280,7 +282,9 @@ namespace semantic {
 		
 		auto templ = syntax::TemplateCall::init (
 		    loc,
-		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
+		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ()),
+			    syntax::Intrinsics::init (type_of, leftSynt)
+		    },
 		    var
 		);
 		
@@ -298,11 +302,15 @@ namespace semantic {
 
 	Generator BinaryVisitor::validateMathClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    lexing::Word type_of = {expression.getLocation (), Keys::TYPEOF};
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto templ = syntax::TemplateCall::init (
 		loc,
-		{syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
+		{
+		    syntax::String::init (loc, loc, loc, lexing::Word::eof ()),
+			syntax::Intrinsics::init (type_of, leftSynt)
+		},
 		syntax::Binary::init (
 		    {loc, Token::DOT},
 		    leftSynt,		    
@@ -317,7 +325,7 @@ namespace semantic {
 		{rightSynt}, false
 	    );
 
-	    return this-> _context.validateValue (call);
+	    return this-> _context.validateValue (call);	    
 	}
 
 	Generator BinaryVisitor::validateMathClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {

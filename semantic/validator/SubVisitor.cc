@@ -29,6 +29,7 @@ namespace semantic {
 	    std::list <std::string> errors;
 	    Generator left (Generator::empty ());
 	    bool failed = false;
+
 	    {
 		try {
 		    left = this-> _context.validateValue (expression.getLeft ());
@@ -48,7 +49,7 @@ namespace semantic {
 		    failed = true;
 	    	} 
 	    }
-	    
+
 	    if (failed) {
 		throw Error::ErrorList {errors};
 	    } else errors = {};		   
@@ -82,6 +83,8 @@ namespace semantic {
 		}
 	    }
 	    
+
+	    
 	    if (gen.isEmpty ()) {
 		this-> error (expression, left, expression.getRight (), errors);
 	    }
@@ -94,6 +97,7 @@ namespace semantic {
 	    std::vector <Symbol> syms;
 	    std::list <std::string> errors;
 	    std::vector <Generator> gens;
+
 	    for (auto gen : mult.getGenerators ()) {
 		match (gen) {
 		    of (ModuleAccess, md ATTRIBUTE_UNUSED, {
@@ -190,7 +194,7 @@ namespace semantic {
 	    if (syms.size () == 0) {
 		this-> error (expression, Generator {acc.clone ()}, expression.getRight (), errors);
 	    }
-	    
+
 	    return this-> _context.validateMultSym (expression.getLocation (), syms);
 	}
 

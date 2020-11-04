@@ -114,6 +114,7 @@ namespace Ymir {
 			    SYNTAX_ERROR_IF_ON_NON_TEMPLATE = "test on a non-template declaration",
 			    SYNTAX_ERROR_MISSING_TEMPL_PAR  = "multiple ! arguments are not allowed",
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
+			    TEMPLATE_REST                   = "template validation incomplete, rest : [%(y)]",
 			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
 			    THROWS                          = "throws %(y)",
 			    THROWS_IN_LAMBDA                = "a lambda function must be safe, but there are exceptions that are not caught",

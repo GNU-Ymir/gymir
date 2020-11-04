@@ -1,5 +1,6 @@
 #include <ymir/semantic/generator/type/Array.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/semantic/generator/type/Void.hh>
 
 namespace semantic {
     namespace generator {

@@ -1693,12 +1693,13 @@ namespace semantic {
 	
 	Generator Visitor::validateValue (const syntax::Expression & expr, bool canBeType, bool fromCall) {
 	    Generator value (Generator::empty ());
+	    
 	    if (canBeType) 
 		value = validateValueNoReachable (expr, true);
 	    else
 		value = validateValueNoReachable (expr, fromCall);
 	    // If it can be a type, that means we are looking for a type, and that implicit call is not an option
-
+	    
 	    if (value.isEmpty ()) Ymir::Error::halt ("", ""); // It can't be null without throwing exception!
 	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
@@ -1757,8 +1758,8 @@ namespace semantic {
 		    return validateBinary (binary, fromCall);
 		);
 		
-		of (syntax::Var, var,
-		    return validateVar (var);
+		of (syntax::Var, var, 
+		    return validateVar (var);		    
 		);
 
 		of (syntax::VarDecl, var,
@@ -2322,6 +2323,7 @@ namespace semantic {
 	
 	Generator Visitor::validateVar (const syntax::Var & var) {
 	    auto gen = getLocal (var.getName ().str);
+	    
 	    if (gen.isEmpty ()) {
 		auto sym = getGlobal (var.getName ().str);
 		if (sym.empty ()) {
@@ -2336,8 +2338,8 @@ namespace semantic {
 		
 		return validateMultSym (var.getLocation (), sym);
 	    }
-
-	    // The gen that we got can be either a param decl or a var decl
+	    
+	    // The gen that we got can be either a param decl or a var decl, or inside a closure
 	    if (gen.is <ParamVar> ()) {
 		return VarRef::init (var.getLocation (), var.getName ().str, gen.to<Value> ().getType (), gen.getUniqId (), gen.to<ParamVar> ().isMutable (), Generator::empty (), gen.to <ParamVar> ().isSelf ());
 	    } else if (gen.is <generator::VarDecl> ()) {
@@ -2357,10 +2359,12 @@ namespace semantic {
 	
 	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {	    
 	    std::vector <Generator> gens;
+
 	    for (auto & sym : multSym) {
 		pushReferent (sym, "validateMultSym");
 		bool succ = false;
 		std::list <std::string> errors;
+		
 		try {
 		    match (sym) {
 			of (semantic::Function, func, {
@@ -2441,7 +2445,7 @@ namespace semantic {
 		} catch (Error::ErrorList list) {
 		    errors = list.errors;
 		} 		
-		
+
 		popReferent ("validateMultSym");
 		if (errors.size () != 0)
 		    throw Error::ErrorList {errors};
@@ -3578,16 +3582,19 @@ namespace semantic {
 		} 
 		Visitor::__CALL_NB_RECURS__ -= 1;
 		
+		if (ret.isEmpty () && errors.size () == 0)
+		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		
 		if (errors.size () != 0) {
 		    errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
 		} else return ret;
 		
-	    } else if (value.is<MultSym> ()) {
+	    } else if (value.is<MultSym> ()) {		
 		int all_score = -1; 
 		Symbol final_sym (Symbol::empty ());
 		std::map <int, std::vector <Symbol>> loc_scores;
 		std::map <int, std::vector <Generator>> loc_elem;
+		
 		for (auto & elem : value.to <MultSym> ().getGenerators ()) {
 		    if (elem.is<TemplateRef> ()) {
 			int local_score = 0;
@@ -3618,6 +3625,12 @@ namespace semantic {
 			}
 		    }
 		}
+
+		/// TODO
+		/// Here we need to validate everything before trying to take the best score
+		/// Maybe some elements have passed the template test, but not the parameters, or else
+		/// So vaidate everything, and take the best score that successfully validated the whole symbol
+		/// Check if the problem is the same in the CallVisitor for template implicit call
 		
 		if (loc_scores.size () != 0) {
 		    errors = {};
@@ -4778,6 +4791,7 @@ namespace semantic {
 	    verifyImplicitAlias (loc, type, gen);
 
 	    auto llevel = type.to <Type> ().mutabilityLevel ();
+
 	    // if (gen.is<Aliaser> () && llevel <= 1 && !inMatch && !gen.to <Aliaser> ().getWho ().is<StringValue>()) // special case for string literal
 	    // 	Ymir::Error::warn (gen.getLocation (), ExternalError::get (ALIAS_NO_EFFECT));
 	    
@@ -4807,6 +4821,12 @@ namespace semantic {
 	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <Range> () || type.is<Array> ()) {
 		auto tu = gen.to<Value> ().getType ();
 		auto rlevel = tu.to <Type> ().mutabilityLevel ();
+
+		// In case of void array, the mutabilityLevel is set to the left operand, as the right operand is necessarily a constant and the left operand can have very deep level
+		// Exemple : let dmut a : [[[[[[i32]]]]]] = []; // Ok
+		
+		if (isVoidArrayType (gen.to <Value> ().getType ())) rlevel = llevel;
+		    
 		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
 		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
@@ -4853,7 +4873,13 @@ namespace semantic {
 		
 		// Verify mutability
 		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {
-		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();		    
+		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+		    
+		    // In case of void array, the mutabilityLevel is set to the left operand, as the right operand is necessarily a constant and the left operand can have very deep level
+		    // Exemple : let dmut a : [[[[[[i32]]]]]] = []; // Ok
+		    
+		    if (isVoidArrayType (gen.to <Value> ().getType ())) rlevel = llevel; 
+		    
 		    if ((type.to <Type> ().isRef () && construct && llevel > std::max (0, rlevel))) { // If it is the construction of a ref
 			auto note = Ymir::Error::createNote (gen.getLocation ());
 			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
@@ -4872,6 +4898,12 @@ namespace semantic {
 	    // if (!type.to<Type> ().isLocal () && gen.to <Value> ().getType ().to <Type> ().isLocal ()) {
 	    // 	Ymir::Error::occur (loc, ExternalError::get (DISCARD_LOCALITY));				    
 	    // }
+	}
+
+	bool Visitor::isVoidArrayType (const Generator & gen) {
+	    if (!gen.is <Array> () && !gen.is <Slice> ()) return false;
+	    if (!gen.to <Type> ().getInners () [0].is <Void> ()) return false;
+	    return true;
 	}
 
 	bool Visitor::canImplicitAlias (const Generator & value) {

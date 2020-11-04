@@ -76,8 +76,19 @@ namespace semantic {
 		}		
 	    }
 
-	    if (!globalMapper.succeed || consumed < (int) values.size ()) {
-		return Symbol::empty ();	    
+	    if (consumed < (int) values.size ()) {
+		Ymir::OutBuffer buf;
+		for (auto it : Ymir::r (consumed, values.size ())) {
+		    if (it != consumed) buf.write (", ");
+		    buf.write (values [it].prettyString ());
+		}
+		
+		Ymir::Error::occur (values [consumed].getLocation (), ExternalError::get (TEMPLATE_REST),
+				    buf.str ());
+		return Symbol::empty ();
+	    } else if (!globalMapper.succeed) {
+		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		return Symbol::empty ();
 	    } else {
 		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		auto merge = mergeMappers (prevMapper, globalMapper);
@@ -186,6 +197,7 @@ namespace semantic {
 			}
 		    }
 		) else of (ClassVar, var, {
+			println ("Class Var : ", var.prettyString (), ' ', values [0].prettyString ());
 			if (values [0].is <Type> ()) {
 			    if (values [0].is <ClassRef> ()) {
 				Mapper mapper (true, Scores::SCORE_VAR);
