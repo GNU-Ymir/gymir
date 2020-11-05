@@ -3625,14 +3625,8 @@ namespace semantic {
 			}
 		    }
 		}
-
-		/// TODO
-		/// Here we need to validate everything before trying to take the best score
-		/// Maybe some elements have passed the template test, but not the parameters, or else
-		/// So vaidate everything, and take the best score that successfully validated the whole symbol
-		/// Check if the problem is the same in the CallVisitor for template implicit call
 		
-		if (loc_scores.size () != 0) {
+		if (loc_scores.size () != 0) { 
 		    errors = {};
 		    Generator ret (Generator::empty ());
 		    Visitor::__CALL_NB_RECURS__ += 1;
@@ -3673,9 +3667,9 @@ namespace semantic {
 			    errors.push_back (note);
 			} 
 		    }
-		    
-		    if (errors.size () == 0) { // If they passed the template specialization, all symbol must compile?  Yes, if we are here, all the symbols have the same scores 
-			if (syms.size () != 0) {
+
+		    if (errors.size () == 0) {
+			if (syms.size () != 0) { 
 			    ret = this-> validateMultSym (value.getLocation (), syms);
 			    if (ret.is <MultSym> ()) 
 				aux.insert (aux.end (), ret.to <MultSym> ().getGenerators ().begin (), ret.to <MultSym> ().getGenerators ().end ());
@@ -3691,6 +3685,7 @@ namespace semantic {
 			if (!ret.isEmpty ())
 			    return ret;
 		    }
+		    
 		}
 	    }
 	    

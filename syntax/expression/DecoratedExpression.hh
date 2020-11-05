@@ -51,6 +51,8 @@ namespace syntax {
 	 */
 	const std::vector <DecoratorWord> & getDecorators () const;
 	
+	std::string prettyDecorators () const;
+	
 	std::string prettyString () const override;
 	
     };    

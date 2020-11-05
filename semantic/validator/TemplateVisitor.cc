@@ -43,6 +43,7 @@ namespace semantic {
 	    score = -1;
 	    const Symbol & sym = ref.getTemplateRef ();
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
+	    
 	    Mapper globalMapper (true, 0);
 	    std::list <std::string> errors;
 	    int consumed = 0;
@@ -298,35 +299,10 @@ namespace semantic {
 			return mapper;
 		    }
 		) else of (syntax::DecoratedExpression, dc, {
-			if (dc.getContent ().is <Var> ()) {
-			    auto var = dc.getContent ();
-			    Mapper localMapper (true, Scores::SCORE_VAR);			    
-			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), values [0]));
-			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
-			    
-			    auto realType = this-> replaceAll (param, localMapper.mapping);
-			    auto genType = this-> _context.validateType (realType, true);
-			
-			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			    
-			    auto rightType = this-> _context.validateType (fakeType, true);
-			    
-			    this-> _context.verifySameType (genType, rightType);
-			
-			    auto llevel = genType.to <Type> ().mutabilityLevel ();
-			    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
-			    
-			    if (llevel != rlevel) {
-				auto note = Ymir::Error::createNote (values [0].getLocation ());
-				Ymir::Error::occurAndNote (param.getLocation (), note, ExternalError::get (DISCARD_CONST_LEVEL_TEMPLATE),
-							   llevel, rlevel);
-			    }
-
-			    Mapper mapper (true, Scores::SCORE_VAR);
-			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (param.getLocation (), genType));
-			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
-			    consumed += 1;
-			    return mapper;
-			}
+			Ymir::Error::occur (dc.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    dc.prettyDecorators ()
+			);			
 		    }
 		);
 	    }
@@ -619,35 +595,10 @@ namespace semantic {
 			return validateTypeFromTemplCall (params, cl, types [0], current_consumed);
 		    }
 		) else of (DecoratedExpression, dc, {
-			if (dc.getContent ().is <Var> ()) {
-			    consumed += 1;
-			    auto var = dc.getContent ();
-			    Mapper localMapper (true, Scores::SCORE_VAR);			    
-			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), types [0]));
-			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
-			    
-			    auto realType = this-> replaceAll (leftT, localMapper.mapping);
-			    auto genType = this-> _context.validateType (realType, true);
-			
-			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			
-			    auto rightType = this-> _context.validateType (fakeType, true);
-			    
-			    this-> _context.verifySameType (genType, rightType);
-			
-			    auto llevel = genType.to <Type> ().mutabilityLevel ();
-			    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
-			    
-			    if (llevel != rlevel) {
-				auto note = Ymir::Error::createNote (types [0].getLocation ());
-				Ymir::Error::occurAndNote (leftT.getLocation (), note, ExternalError::get (DISCARD_CONST_LEVEL_TEMPLATE),
-							   llevel, rlevel);
-			    }
-
-			    Mapper mapper (true, Scores::SCORE_VAR);
-			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (leftT.getLocation (), genType));
-			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
-			    return mapper;
-			}
+			Ymir::Error::occur (dc.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    dc.prettyDecorators ()
+			);
 		    }		    
 		) else of (syntax::FuncPtr, fPtr, {
 			consumed += 1;
@@ -884,35 +835,10 @@ namespace semantic {
 			return mapper;
 		    }
 		) else of (DecoratedExpression, dc, {
-			if (dc.getContent ().is <Var> ()) {
-			    consumed += 1;
-			    auto var = dc.getContent ();
-			    Mapper localMapper (true, Scores::SCORE_VAR);			    
-			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), types [0]));
-			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
-			    
-			    auto realType = this-> replaceAll (leftT, localMapper.mapping);
-			    auto genType = this-> _context.validateType (realType, true);
-			
-			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			
-			    auto rightType = this-> _context.validateType (fakeType, true);
-			    
-			    this-> _context.verifySameType (genType, rightType);
-			
-			    auto llevel = genType.to <Type> ().mutabilityLevel ();
-			    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
-			    
-			    if (llevel != rlevel) {
-				auto note = Ymir::Error::createNote (types [0].getLocation ());
-				Ymir::Error::occurAndNote (leftT.getLocation (), note, ExternalError::get (DISCARD_CONST_LEVEL_TEMPLATE),
-							   llevel, rlevel);
-			    }
-
-			    Mapper mapper (true, Scores::SCORE_VAR);
-			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (leftT.getLocation (), genType));
-			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
-			    return mapper;
-			}
+			Ymir::Error::occur (dc.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    dc.prettyDecorators ()
+			);
 		    }
 		);
 	    }
@@ -1045,20 +971,10 @@ namespace semantic {
 			}
 		    }
 		) else of (DecoratedExpression, dc, {
-			int current_consumed = 0;
-			auto vec = {type};
-			Mapper mapper = applyTypeFromDecoratedExpression (params, dc, array_view <Generator> (vec), current_consumed);
-			Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
-			auto genType = this-> _context.validateType (realType, true);
-			this-> _context.verifySameType (genType, type);
-			this-> _context.verifyNotIsType (ofv.getLocation ());
-			if (dc.hasDecorator (syntax::Decorator::MUT))
-			    genType = Type::init (ofv.getLocation (), genType.to <Type> (), true, false);
-			
-			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
-			mapper.nameOrder.push_back (ofv.getLocation ().str);
-			mapper.score += Scores::SCORE_TYPE;
-			return mapper;
+			Ymir::Error::occur (dc.getLocation (),
+					    ExternalError::get (DECO_OUT_OF_CONTEXT),
+					    dc.prettyDecorators ()
+			);
 		    }
 		) else of (TemplateCall, cl, {
 			int current_consumed = 0;
@@ -1182,8 +1098,9 @@ namespace semantic {
 	}
 	
 	Expression TemplateVisitor::createSyntaxType (const lexing::Word & location, const generator::Generator & gen// , bool isMutable, bool isRef
-	) const {	    
-	    Generator type = Type::init (location, gen.to <Type> (), gen.to <Type> ().isMutable (), false);
+	) const {
+	    // Syntax template types can't be mutable
+	    Generator type = Type::init (location, gen.to <Type> (), false, false);
 	    return TemplateSyntaxWrapper::init (location, type);
 	}
 
