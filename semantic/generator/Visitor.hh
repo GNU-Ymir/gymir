@@ -430,6 +430,11 @@ namespace semantic {
 	     * \brief Transform an slice access into gimple
 	     */
 	    generic::Tree generateSliceAccess (const SliceAccess & access);
+
+	    /**
+	     * \brief Transform a slice concatenation into gimple
+	     */
+	    generic::Tree generateSliceConcat (const SliceConcat & concat);
 	    
 	private :
 

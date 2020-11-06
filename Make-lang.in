@@ -111,6 +111,7 @@ ymir_OBJS = \
 	ymir/generator_Aliaser.o \
 	ymir/generator_Array.o \
 	ymir/generator_ArrayAccess.o \
+	ymir/generator_SliceConcat.o \
 	ymir/generator_ArrayAlloc.o \
 	ymir/generator_ArrayValue.o \
 	ymir/generator_Binary.o \

@@ -245,30 +245,27 @@ namespace semantic {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
 
-		auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (BINARY_OP_OVERRIDE)});		
+		auto lgen = this-> _context.validateValue (leftSynt);
+		auto rgen = this-> _context.validateValue (rightSynt);
 		
-		auto templ = syntax::TemplateCall::init (
-		    loc,
-		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    var
-		);
-		
-		auto call = syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
-		    templ,
-		    {leftSynt, rightSynt}
-		);
+		auto llevel = lgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+		auto rlevel = rgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 
-		return this-> _context.validateValue (call);
+		this-> _context.verifySameType (lgen.to <Value> ().getType (), rgen.to <Value> ().getType ());
+		
+		Generator retType (Generator::empty ());
+		if (llevel < rlevel) retType = lgen.to <Value> ().getType ();
+		else retType = rgen.to <Value> ().getType ();
+		
+		return SliceConcat::init (expression.getLocation (), retType, lgen, rgen);
 	    }
 	    
 	    return Generator::empty ();
 	}
 	
 	Generator BinaryVisitor::validateMathSlice (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    if (op == Binary::Operator::CONCAT || op == Binary::Operator::ADD) {
+	    if (op == Binary::Operator::CONCAT) {
 		auto loc = expression.getLocation ();
-		lexing::Word type_of = {expression.getLocation (), Keys::TYPEOF};
 		
 		auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 		syntax::Expression rightSynt (syntax::Expression::empty ()); 
@@ -278,23 +275,20 @@ namespace semantic {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
 
-		auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (BINARY_OP_OVERRIDE)});
+		auto lgen = this-> _context.validateValue (leftSynt);
+		auto rgen = this-> _context.validateValue (rightSynt);
 		
-		auto templ = syntax::TemplateCall::init (
-		    loc,
-		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ()),
-			    syntax::Intrinsics::init (type_of, leftSynt)
-		    },
-		    var
-		);
-		
-		auto call = syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
-		    templ,
-		    {leftSynt, rightSynt}
-		);
+		auto llevel = lgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+		auto rlevel = rgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 
-		return this-> _context.validateValue (call);
+		this-> _context.verifySameType (lgen.to <Value> ().getType (), rgen.to <Value> ().getType ());
+		
+		Generator retType (Generator::empty ());
+		if (llevel < rlevel) retType = lgen.to <Value> ().getType ();
+		else retType = rgen.to <Value> ().getType ();
+		
+		return SliceConcat::init (expression.getLocation (), retType, lgen, rgen);
+
 	    }
 	    
 	    return Generator::empty ();

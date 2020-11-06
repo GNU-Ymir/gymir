@@ -787,7 +787,11 @@ namespace semantic {
 		else of (SliceAccess, access,
 		    return generateSliceAccess (access);
 		)
-
+		
+                else of (SliceConcat, sc,
+		    return generateSliceConcat (sc);
+		)
+			     
 		else of (UnaryBool, ub,
 		    return generateUnaryBool (ub);
 		)
@@ -1993,6 +1997,21 @@ namespace semantic {
 		value.buildPointerUnref (0),
 		list.toTree ()
 	    );
+	}
+
+	generic::Tree Visitor::generateSliceConcat (const SliceConcat & slice) {
+	    auto left = generateValue (slice.getLeft ());
+	    auto right = generateValue (slice.getRight ());
+
+	    auto type = generateType (slice.getType ());
+	    ulong size = generateType (slice.getType ().to <Type> ().getInners () [0]).getSize ();
+	    return Tree::buildCall (
+		slice.getLocation (),
+		type,
+		global::CoreNames::get (SLICE_CONCAT),
+		{left, right, Tree::buildSizeCst (size)}
+	    );
+
 	}
 
 	generic::Tree Visitor::generateSizeOf (const SizeOf & size) {

@@ -39,6 +39,7 @@ namespace global {
 			 RUN_MAIN_DEBUG,
 			 SEG_FAULT_TYPE,
 			 SET_JMP,
+			 SLICE_CONCAT,
 			 THROW,
 			 TYPE_IDS,
 			 TYPE_INFO,

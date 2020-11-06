@@ -51,6 +51,7 @@
 #include <ymir/semantic/generator/value/Set.hh>
 #include <ymir/semantic/generator/value/SizeOf.hh>
 #include <ymir/semantic/generator/value/SliceAccess.hh>
+#include <ymir/semantic/generator/value/SliceConcat.hh>
 #include <ymir/semantic/generator/value/SliceValue.hh>
 #include <ymir/semantic/generator/value/StringValue.hh>
 #include <ymir/semantic/generator/value/Struct.hh>

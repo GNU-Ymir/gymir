@@ -33,6 +33,7 @@ namespace global {
 			    RUN_MAIN_DEBUG     = "_yrt_run_main_debug", 
 			    SEG_FAULT_TYPE     = "SegFault",
 			    SET_JMP            = "setjmp",
+			    SLICE_CONCAT       = "_yrt_concat_slices",
 			    THROW              = "_yrt_exc_throw", 
 			    TYPE_IDS           = "TypeIDs",
 			    TYPE_INFO          = "TypeInfo",
