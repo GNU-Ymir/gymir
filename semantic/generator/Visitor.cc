@@ -1388,8 +1388,6 @@ namespace semantic {
 	    // The last value is not used when we have a loop {} expression
 	    // So, we have to verify if the loop has a test 
 	    if (!var.isEmpty () && !loop.getContent ().to <Value> ().isBreaker () && !test.isEmpty ()) {
-		println ("=========== STARTING LOOP ===========");
-		println (loop.getContent ().prettyString ());
 		TreeStmtList list = TreeStmtList::init ();
 		content = castTo (loop.getType (), loop.getContent ());
 		list.append (content.getList ());
@@ -1397,7 +1395,6 @@ namespace semantic {
 
 		list.append (Tree::affect (loop.getLocation (), var, value));		
 		content = list.toTree ();
-		println ("=========== ENDING LOOP ===========");
 	    } else content = generateValue (loop.getContent ());
 	    quitLoop ();
 	    

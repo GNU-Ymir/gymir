@@ -198,7 +198,6 @@ namespace semantic {
 			}
 		    }
 		) else of (ClassVar, var, {
-			println ("Class Var : ", var.prettyString (), ' ', values [0].prettyString ());
 			if (values [0].is <Type> ()) {
 			    if (values [0].is <ClassRef> ()) {
 				Mapper mapper (true, Scores::SCORE_VAR);

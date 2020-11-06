@@ -5301,9 +5301,6 @@ namespace semantic {
 	    
 	    if (leftType.is <Pointer> ())  ancestor = ancestor.to <Pointer> ().getInners ()[0];
 	    if (rightType.is <Pointer> ()) rightType = rightType.to <Pointer> ().getInners ()[0];
-
-	    println (ancestor.prettyString ());
-	    println (rightType.prettyString ());
 	    
 	    if (ancestor.is <ClassRef> ()) {
 		while (!ancestor.isEmpty ()) {
