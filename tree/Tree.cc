@@ -264,12 +264,17 @@ namespace generic {
 	    
 	    auto tmemcopy = Tree::init (UNKNOWN_LOCATION, builtin_decl_explicit (BUILT_IN_MEMCPY));
 	    auto size = Tree::init (UNKNOWN_LOCATION, TYPE_SIZE_UNIT (lvalue.getType ().getTree ()));
+	    
+	    list.append (
+		Tree::init (loc.getLocus (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ()))
+	    );
+	    
 	    return Tree::compound (
-		loc,
-		lvalue,
-		Tree::init (loc.getLocus (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ())));
-		
-		
+	    	loc,
+		rvalue,
+		list.toTree ()
+	    );
+	    
 	}
     }
 

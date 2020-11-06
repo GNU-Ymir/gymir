@@ -595,10 +595,26 @@ namespace semantic {
 			return validateTypeFromTemplCall (params, cl, types [0], current_consumed);
 		    }
 		) else of (DecoratedExpression, dc, {
-			Ymir::Error::occur (dc.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
-					    dc.prettyDecorators ()
-			);
+			if (dc.getContent ().is <Var> ()) {
+			    consumed += 1;
+			    auto var = dc.getContent ();
+			    Mapper localMapper (true, Scores::SCORE_VAR);			    
+			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), types [0]));
+			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    
+			    auto realType = this-> replaceAll (leftT, localMapper.mapping);
+			    auto genType = this-> _context.validateType (realType, true);
+			
+			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			
+			    auto rightType = this-> _context.validateType (fakeType, true);
+			    
+			    this-> _context.verifySameType (genType, rightType);
+			
+			    Mapper mapper (true, Scores::SCORE_VAR);
+			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (leftT.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    return mapper;
+			}
 		    }		    
 		) else of (syntax::FuncPtr, fPtr, {
 			consumed += 1;

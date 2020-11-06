@@ -913,7 +913,7 @@ namespace semantic {
 	    Generator last (Generator::empty ());
 	    Tree var (Tree::empty ());
 	    if (!block.getType ().is<Void> ()) {
-		var = Tree::varDecl (block.getLocation (), "_", generateType (block.getType ()));
+		var = Tree::varDecl (block.getLocation (), "_b", generateType (block.getType ()));
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
 	    }
@@ -928,7 +928,6 @@ namespace semantic {
 		auto value = castTo (block.getType (), last);
 		list.append (value.getList ());
 		value = value.getValue ();
-
 		list.append (Tree::affect (block.getLocation (), var, value));		
 		auto binding = quitBlock (block.getLocation (), list.toTree ());
 		return Tree::compound (block.getLocation (),
@@ -1024,9 +1023,10 @@ namespace semantic {
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
 	    list.append (right.getList ());
+	    
 	    auto lvalue =  left.getValue ();
 	    auto rvalue =  right.getValue ();
-	    
+
 	    auto value = Tree::affect (aff.getLocation (), lvalue, rvalue);
 	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
 	    return ret;
@@ -1376,7 +1376,7 @@ namespace semantic {
 	    if (!loop.getTest ().isEmpty ())
 		test = generateValue (loop.getTest ());
 	    if (!loop.getType ().is<Void> ()) {
-		var = Tree::varDecl (loop.getLocation (), "_", generateType (loop.getType ()));
+		var = Tree::varDecl (loop.getLocation (), "_l", generateType (loop.getType ()));
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
 	    }
@@ -1388,13 +1388,16 @@ namespace semantic {
 	    // The last value is not used when we have a loop {} expression
 	    // So, we have to verify if the loop has a test 
 	    if (!var.isEmpty () && !loop.getContent ().to <Value> ().isBreaker () && !test.isEmpty ()) {
+		println ("=========== STARTING LOOP ===========");
+		println (loop.getContent ().prettyString ());
 		TreeStmtList list = TreeStmtList::init ();
 		content = castTo (loop.getType (), loop.getContent ());
 		list.append (content.getList ());
 		auto value = content.getValue ();
 
-		list.append (Tree::affect (loop.getLocation (), var, value));
+		list.append (Tree::affect (loop.getLocation (), var, value));		
 		content = list.toTree ();
+		println ("=========== ENDING LOOP ===========");
 	    } else content = generateValue (loop.getContent ());
 	    quitLoop ();
 	    

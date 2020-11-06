@@ -239,7 +239,7 @@ namespace semantic {
 		    values.push_back (valVar);
 		}
 		    
-		values.push_back (Loop::init (expression.getLocation (), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
+		values.push_back (Loop::init (lexing::Word {expression.getLocation (), "#_for"}, loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
@@ -454,7 +454,7 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    }
 	    
-	    return Block::init (expression.getLocation (), loop_type, value);
+	    return Block::init (lexing::Word {expression.getLocation (), "#_for_block"}, loop_type, value);
 	}
 
 	Generator ForVisitor::validateTuple (const syntax::For & expression, const generator::Generator & tuple) {
