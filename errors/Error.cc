@@ -126,7 +126,7 @@ namespace Ymir {
 	    if (!word.isFromString)
 		line = getLine (locus, word.getFile ().c_str ());
 	    else if (!word.isEof ()) line = getLineInFile (locus, word.content, word.start);
-	    
+
 	    if (line.length () > 0) {
 		auto wordLength = word.length ();
 		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');

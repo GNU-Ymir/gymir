@@ -13,6 +13,7 @@ namespace lexing {
 	    this-> locFile = LOCATION_FILE (locus);
 	    this-> line = LOCATION_LINE (locus);
 	    this-> column = LOCATION_COLUMN (locus);
+	    this-> isFromString = false;
 	}
     }
 
@@ -69,7 +70,8 @@ namespace lexing {
 	str (""),
 	locFile (""),
 	line (0),
-	column (0)
+	column (0),
+	isFromString (false)
     {}
 
     void Word::setLocus (location_t locus) {

@@ -36,7 +36,7 @@ namespace lexing {
 	long _length = -1;
 
 	/// is from a string or a file
-	bool isFromString;
+	bool isFromString = false;
 
 	/**
 	 * the content of the file is the word is created from a string
