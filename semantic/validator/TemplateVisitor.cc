@@ -199,16 +199,22 @@ namespace semantic {
 		    }
 		) else of (ClassVar, var, {
 			if (values [0].is <Type> ()) {
-			    if (values [0].is <ClassRef> ()) {
+			    if ((!values [0].isEmpty ()) && values [0].is <Pointer> () && values [0].to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
 				Mapper mapper (true, Scores::SCORE_VAR);
 				mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
 				mapper.nameOrder.push_back (var.getLocation ().str);
 				consumed += 1;
 				return mapper;
-			    } else {
+			    } else if (!values [0].isEmpty ()) {
 				auto note = Ymir::Error::createNote (param.getLocation ());
-				Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_CLASS));
+				Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
+			    } else {
+				Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						    var.prettyString (),
+						    NoneType::init (var.getLocation ()).prettyString ());
 			    }
+			    
+			    return Mapper (false, 0);			    
 			} else {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
 			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
@@ -224,7 +230,7 @@ namespace semantic {
 				return mapper;
 			    } else {
 				auto note = Ymir::Error::createNote (param.getLocation ());
-				Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_AN_ALIAS));
+				Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_AN_ALIAS), values [0].prettyString ());
 			    }
 			} else {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
