@@ -186,7 +186,7 @@ namespace semantic {
 	    
 	    return Generator::empty ();	    
 	}
-
+	
 	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <std::string> & errors) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
