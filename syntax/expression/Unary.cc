@@ -13,7 +13,7 @@ namespace syntax {
     {}
 
     Expression Unary::init (const lexing::Word & location, const Expression & content) {
-	return Expression {new (Z0) Unary (location, content)};
+	return Expression {new (NO_GC) Unary (location, content)};
     }
 
     bool Unary::isOf (const IExpression * type) const {

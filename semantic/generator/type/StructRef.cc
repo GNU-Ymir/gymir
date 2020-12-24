@@ -27,11 +27,11 @@ namespace semantic {
 	}
 
 	Generator StructRef::init (const lexing::Word&  loc, const Symbol & ref) {
-	    return Generator {new (Z0) StructRef (loc, ref)};
+	    return Generator {new (NO_GC) StructRef (loc, ref)};
 	}
 
 	Generator StructRef::clone () const {
-	    return Generator {new (Z0) StructRef (*this)};
+	    return Generator {new (NO_GC) StructRef (*this)};
 	}
 
 	bool StructRef::isOf (const IGenerator * type) const {

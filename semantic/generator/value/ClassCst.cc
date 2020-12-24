@@ -36,7 +36,7 @@ namespace semantic {
 	}
 	
 	Generator ClassCst::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params) {
-	    return Generator {new (Z0) ClassCst (loc, type, frame, types, params)};
+	    return Generator {new (NO_GC) ClassCst (loc, type, frame, types, params)};
 	}
 
 	Generator ClassCst::init (const ClassCst & other, const Generator & self) {
@@ -46,7 +46,7 @@ namespace semantic {
 	}
 	
 	Generator ClassCst::clone () const {
-	    return Generator {new (Z0) ClassCst (*this)};
+	    return Generator {new (NO_GC) ClassCst (*this)};
 	}
 
 	bool ClassCst::isOf (const IGenerator * type) const {

@@ -15,7 +15,7 @@ namespace syntax {
     
 
     Declaration Mixin::init (const lexing::Word & loc, const Expression & mixin, const std::vector<Declaration> & decls) {
-	return Declaration {new (Z0) Mixin (loc, mixin, decls)};
+	return Declaration {new (NO_GC) Mixin (loc, mixin, decls)};
     }
 
     const Expression & Mixin::getMixin () const {

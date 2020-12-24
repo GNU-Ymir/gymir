@@ -14,7 +14,7 @@ namespace syntax {
     {}
 
     Declaration Use::init (const lexing::Word & loc, const Expression & module) {
-	return Declaration {new (Z0) Use (loc, module)};
+	return Declaration {new (NO_GC) Use (loc, module)};
     }
 
     bool Use::isOf (const IDeclaration * type) const {

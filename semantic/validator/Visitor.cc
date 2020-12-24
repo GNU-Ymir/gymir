@@ -267,7 +267,7 @@ namespace semantic {
 	    const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();	    
 	    if (syms.size () != 1) Ymir::Error::halt ("", "");
 	    
-	    auto classType = self.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
+	    auto classType = self.to <Value> ().getType ().to <ClassPtr> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
 	    if (insertTemplateSolution (sol)) { // If it is the first time, the solution is presented
 		std::list <std::string> errors;
 		pushReferent (sol, "validateTemplateSolutionMethod");
@@ -451,7 +451,7 @@ namespace semantic {
 		}
 
 		if (!var.getValue ().isEmpty ()) {
-		    value = validateValue (var.getValue ());		
+		    value = validateValueNonVoid (var.getValue ());		
 		}
 
 		if (var.getValue ().isEmpty ()) {
@@ -1029,7 +1029,7 @@ namespace semantic {
 	    enterClassDef (classType_.to <ClassRef> ().getRef ());
 	    enterContext (cs.getCustomAttributes ());
 	    
-	    classType = Type::init (proto.getLocation (), Pointer::init (proto.getLocation (), Type::init (proto.getLocation (), classType.to <Type> (), true, false)).to <Type> (), true, false);
+	    classType = Type::init (proto.getLocation (), ClassPtr::init (proto.getLocation (), Type::init (proto.getLocation (), classType.to <Type> (), true, false)).to <Type> (), true, false);
 	    enterForeign ();
 
 	    std::vector <Generator> throwers;
@@ -1044,7 +1044,7 @@ namespace semantic {
 	    enterBlock ();
 	    try {
 		validatePrototypeForFrame (cs.getName (), constr.getPrototype (), params, retType);
-		retType = classType.to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <Value> ().getType ();
+		retType = classType.to <ClassPtr> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <Value> ().getType ();
 		params.insert (params.begin (), ParamVar::init (cs.getName (), classType, true, true));
 		insertLocal (params [0].getName (), params [0]);
 	    } catch (Error::ErrorList list) {
@@ -1116,7 +1116,7 @@ namespace semantic {
 	    enterClassDef (classType.to <ClassRef> ().getRef ());
 	    enterContext (function.getCustomAttributes ());
 	    
-	    classType = Type::init (function.getLocation (), Pointer::init (function.getLocation (), classType).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
+	    classType = Type::init (function.getLocation (), ClassPtr::init (function.getLocation (), classType).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
 	    enterForeign ();
 
 	    std::vector <Generator> throwers;
@@ -1465,15 +1465,15 @@ namespace semantic {
 	    if (call.is <Call> () && call.to <Call> ().getFrame ().is <ConstructorProto> ()) {
 		sym = call.to <Call> ().getFrame ().to <ConstructorProto> ().getRef ();
 		current_proto = call.to <Call> ().getFrame ();
-		clRef = call.to <Call> ().getFrame ().to <ConstructorProto> ().getReturnType ().to <Pointer> ().getInners ()[0];	    
+		clRef = call.to <Call> ().getFrame ().to <ConstructorProto> ().getReturnType ().to <ClassPtr> ().getInners ()[0];	    
 	    } else if (call.is <ConstructorProto> ()) {
 		sym = call.to <ConstructorProto> ().getRef ();
 		current_proto = call;
-		clRef = call.to <ConstructorProto> ().getReturnType ().to <Pointer> ().getInners ()[0];	    
+		clRef = call.to <ConstructorProto> ().getReturnType ().to <ClassPtr> ().getInners ()[0];	    
 	    } else if (call.is <ClassCst> ()) {
 		sym = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getRef ();
 		current_proto = call.to <ClassCst> ().getFrame ();
-		clRef = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getReturnType ().to <Pointer> ().getInners ()[0];	    
+		clRef = call.to <ClassCst> ().getFrame ().to <ConstructorProto> ().getReturnType ().to <ClassPtr> ().getInners ()[0];	    
 	    } else return; // This is not a class constructor, we can't check that
 	    
 	    auto & cs = sym.to <semantic::Constructor> ();	    
@@ -1540,7 +1540,7 @@ namespace semantic {
 
 		    for (auto & it : cs.getContent ().getFieldConstruction ()) {
 			auto right = this-> validateValue (it.second);
-			if (right.to <Value> ().getType ().is <ClassRef> ()) {
+			if (right.to <Value> ().getType ().is <ClassPtr> ()) {
 			    locs.back () = it.second.getLocation ();
 			    verifyConstructionLoop (it.second.getLocation (), right);
 			    validated.emplace (it.first.str);
@@ -1551,7 +1551,7 @@ namespace semantic {
 			if (validated.find (it.to<syntax::VarDecl> ().getName ().str) == validated.end ()) {
 			    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ()) {
 				auto right = this-> validateValue (it.to <syntax::VarDecl> ().getValue ());
-				if (right.to <Value> ().getType ().is <ClassRef> ()) {
+				if (right.to <Value> ().getType ().is <ClassPtr> ()) {
 				    auto loc = it.to <syntax::VarDecl> ().getValue ().getLocation ();
 				    locs.back () = loc;
 				    verifyConstructionLoop (loc, right);
@@ -1690,6 +1690,14 @@ namespace semantic {
 			    });
 	    }
 	}
+
+	Generator Visitor::validateValueNonVoid (const syntax::Expression & expr) {
+	    auto ret = this-> validateValue (expr, false, false);
+	    if (ret.to <Value> ().getType ().is<NoneType> () || ret.to <Value> ().getType ().is <Void> ()) {
+		Ymir::Error::occur (expr.getLocation (), ExternalError::get (VOID_VALUE));
+	    }
+	    return ret;
+	}
 	
 	Generator Visitor::validateValue (const syntax::Expression & expr, bool canBeType, bool fromCall) {
 	    Generator value (Generator::empty ());
@@ -1706,9 +1714,10 @@ namespace semantic {
 		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
 	    }
 	    
-	    if (value.is <Value> () && value.to <Value> ().isBreaker ())
-		Ymir::Error::occur (value.getLocation (), ExternalError::get (BREAK_INSIDE_EXPR));
-
+	    if (value.is <Value> () && value.to <Value> ().isBreaker ()) {
+		auto note = Ymir::Error::createNote (value.getLocation ());
+		Ymir::Error::occurAndNote (value.to<Value> ().getBreakerLocation (), note, ExternalError::get (BREAK_INSIDE_EXPR));
+	    }
 	    
 	    return value;
 	}
@@ -1925,6 +1934,7 @@ namespace semantic {
 	    
 	    Generator type (Void::init (block.getLocation ()));
 	    bool breaker = false, returner = false;
+	    lexing::Word brLoc, rtLoc;
 	    std::list <std::string> errors;
 	    Symbol decl (Symbol::empty ());
 	    try {
@@ -1947,8 +1957,8 @@ namespace semantic {
 		    auto value = validateValueNoReachable (block.getContent () [i]);
 
 		    bool isMutable = value.to <Value> ().getType ().to <Type> ().isMutable ();
-		    if (value.to <Value> ().isReturner ()) returner = true;
-		    if (value.to <Value> ().isBreaker ()) breaker = true;
+		    if (value.to <Value> ().isReturner ()) { returner = true; rtLoc = value.to<Value> ().getReturnerLocation (); }
+		    if (value.to <Value> ().isBreaker ()) { breaker = true; brLoc = value.to<Value> ().getBreakerLocation (); }
 		    if (!canImplicitAlias (value)) isMutable = false;
 		    
 		    type = value.to <Value> ().getType ();
@@ -1989,7 +1999,7 @@ namespace semantic {
 		} 
 	    }
 
-	    auto ret = Value::initBrRet (Block::init (block.getLocation (), type, values).to <Value> (), breaker, returner);
+	    auto ret = Value::initBrRet (Block::init (block.getLocation (), type, values).to <Value> (), breaker, returner, brLoc, rtLoc);
 	    
 	    Generator catchVar (Generator::empty ());
 	    Generator catchInfo (Generator::empty ());
@@ -2601,7 +2611,7 @@ namespace semantic {
 
 	    Generator cl (Generator::empty ());
 	    try {
-		cl = Type::init (func.getName (), Pointer::init (func.getName (), Type::init (func.getName (), validateClass (func.getClass ()).to <Type> (), true, false)).to <Type> (), true, false);
+		cl = Type::init (func.getName (), ClassPtr::init (func.getName (), Type::init (func.getName (), validateClass (func.getClass ()).to <Type> (), true, false)).to <Type> (), true, false);
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    } 
@@ -2661,7 +2671,7 @@ namespace semantic {
 		if (func_loc.isSame (func.getName ())) no_value = true;
 	    }
 	    
-	    auto classType = Type::init (function.getLocation (), Pointer::init (function.getLocation (), classType_).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
+	    auto classType = Type::init (function.getLocation (), ClassPtr::init (function.getLocation (), classType_).to <Type> ().toDeeplyMutable ().to <Type> (), true, false);
 
 	    __validating__.push_back (func.getName ());
 	    enterBlock ();
@@ -3241,8 +3251,8 @@ namespace semantic {
 	
 	Generator Visitor::validateArray (const syntax::List & list) {
 	    std::vector <Generator> params;
-	    for (auto it : list.getParameters ()) {
-		auto val = validateValue (it);
+	    for (auto it : list.getParameters ()) {		
+		auto val = validateValueNonVoid (it);
 		if (val.is<List> ()) {
 		    for (auto & g_it : val.to <List> ().getParameters ()) {
 			params.push_back (g_it);
@@ -3285,7 +3295,7 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::vector <Generator> types;
 	    for (auto it : list.getParameters ()) {
-		auto val = validateValue (it);
+		auto val = validateValueNonVoid (it);
 		if (val.is <List> ()) {
 		    for (auto & g_it : val.to<List> ().getParameters ()) {
 			params.push_back (g_it);
@@ -3400,7 +3410,7 @@ namespace semantic {
 	    auto ret = validateValue (call);
 	    try {
 	    	auto val = retreiveValue (test);
-	    	ret = Value::initBrRet (ret.to <Value> (), ret.to <Value> ().isBreaker (), !val.to <BoolValue> ().getValue ());
+	    	ret = Value::initBrRet (ret.to <Value> (), ret.to <Value> ().isBreaker (), !val.to <BoolValue> ().getValue (), assert.getLocation (), assert.getLocation ());
 	    } catch (Error::ErrorList list) {
 	    } 
 	    
@@ -3452,8 +3462,8 @@ namespace semantic {
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
 	    auto type = Type::init (type_.to <Type> (), false, false);
-	    if (type.is <Pointer> () && type.to <Pointer> ().getInners ()[0].is <ClassRef>())
-		type = type.to <Pointer> ().getInners ()[0];
+	    if (type.is <ClassPtr> ())
+		type = type.to <ClassPtr> ().getInners ()[0];
 	    
 	    auto typeInfo = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (TYPE_INFO_MODULE), CoreNames::get (TYPE_INFO)});
 		
@@ -3552,7 +3562,7 @@ namespace semantic {
 		    try {
 			auto val = validateValue (it);
 			auto rvalue = retreiveValue (val);
-			params.push_back (rvalue);
+			params.push_back (rvalue);			
 		    } catch (Error::ErrorList list) {
 			succeed = false;
 		    } 		    
@@ -3723,7 +3733,7 @@ namespace semantic {
 
 	Generator Visitor::validateArrayAlloc (const syntax::ArrayAlloc & alloc) {
 	    if (alloc.isDynamic ()) {
-		auto value = validateValue (alloc.getLeft ());
+		auto value = validateValueNonVoid (alloc.getLeft ());
 		verifyMemoryOwner (alloc.getLocation (), value.to <Value> ().getType (), value, false);
 		auto size = SizeOf::init (
 		    alloc.getLocation (),
@@ -3731,13 +3741,13 @@ namespace semantic {
 		    value.to <Value> ().getType ()
 		);
 		
-		auto len = validateValue (alloc.getSize ());
+		auto len = validateValueNonVoid (alloc.getSize ());
 		auto type = Slice::init (alloc.getLocation (), value.to<Value> ().getType ());
 		type = Type::init (type.to <Type> (), true);
 		
 		return ArrayAlloc::init (alloc.getLocation (), type.to<Type> ().toDeeplyMutable (), value, size, len);
 	    } else {
-		auto value = validateValue (alloc.getLeft ());
+		auto value = validateValueNonVoid (alloc.getLeft ());
 		verifyMemoryOwner (alloc.getLocation (), value.to <Value> ().getType (), value, false);
 		
 		auto size = SizeOf::init (
@@ -3746,7 +3756,7 @@ namespace semantic {
 		    value.to <Value> ().getType ()
 		);
 		
-		auto len = retreiveValue (validateValue (alloc.getSize ()));
+		auto len = retreiveValue (validateValueNonVoid (alloc.getSize ()));
 		if (!len.is <Fixed> () || (len.to<Fixed> ().getType ().to <Integer> ().isSigned () && len.to <Fixed> ().getUI ().i < 0)) {
 		    Ymir::Error::occur (alloc.getSize ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 					value.to <Value> ().getType ().to <Type> ().getTypeName (),
@@ -4182,7 +4192,7 @@ namespace semantic {
 	    auto inner = validateValue (intr.getContent ());
 	    syntax::Expression call (syntax::Expression::empty ());
 	    auto loc = intr.getLocation ();
-	    if (inner.to <Value> ().getType ().is <ClassRef> ()) {
+	    if (inner.to <Value> ().getType ().is <ClassPtr> ()) {
 		auto trait = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DUPLICATION_MODULE), CoreNames::get (DCOPY_TRAITS)});		
 		auto impl = validateType (trait);
 		
@@ -4338,7 +4348,8 @@ namespace semantic {
 	    }
 
 	    if (val.is <ClassRef> () || val.is <generator::Class> ()) {
-		Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (FORGET_TOKEN), Token::AND);
+		Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (USE_AS_TYPE));
 	    }
 		
 	    if (val.is<Type> ()) return val;
@@ -4398,7 +4409,7 @@ namespace semantic {
 		} catch (Error::ErrorList list) {
 		    auto inner = validateTypeClassRef (un.getContent (), true);
 		    if (inner.is <ClassRef> ()) {
-			auto ret =  Pointer::init (un.getLocation (), inner);
+			auto ret =  ClassPtr::init (un.getLocation (), inner);
 			return ret;
 		    } else throw list;
 		}
@@ -4846,6 +4857,14 @@ namespace semantic {
 					       llevel, std::max (1, rlevel)
 		    );
 		}		
+	    } else if (type.is<ClassPtr> ()) {
+		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
+		if (llevel > std::max (1, rlevel)) {
+		    auto note = Ymir::Error::createNote (gen.getLocation ());
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+			);
+		}		
 	    } else if (type.is<FuncPtr> ()) { // Yes, i know that's ugly, but easier to understand actually	
 	    } else if (type.is<ClassRef> ()) {		
 		auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
@@ -5038,7 +5057,7 @@ namespace semantic {
 		Ymir::Error::occur (trait.getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
 	    }
 
-	    auto sym = cl.to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ();
+	    auto sym = cl.to <ClassPtr> ().getInners ()[0].to <ClassRef> ().getRef ();
 	    while (!sym.isEmpty ()) {
 		for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
 		    match (it) {
@@ -5062,9 +5081,9 @@ namespace semantic {
 	std::vector <Generator> Visitor::getAllImplClass (const Generator &cl) {
 	    Symbol sym (Symbol::empty ());
 	    Generator classType (Generator::empty ());
-	    if (cl.is <Pointer> ()) {
-		sym = cl.to<Pointer> ().getInners ()[0].to <ClassRef> ().getRef ();
-		classType = cl.to <Pointer> ().getInners ()[0];
+	    if (cl.is <ClassPtr> ()) {
+		sym = cl.to<ClassPtr> ().getClassRef ().getRef ();
+		classType = cl.to <ClassPtr> ().getInners ()[0];
 	    } else {
 		sym = cl.to <ClassRef> ().getRef ();
 		classType = cl;
@@ -5087,7 +5106,7 @@ namespace semantic {
 	}
 	
 	void Visitor::verifyCompatibleTypeWithValue (const lexing::Word & loc, const Generator & type, const Generator & gen) {
-	    if (gen.is <NullValue> () && type.is <Pointer> () && !type.to <Pointer> ().getInners ()[0].is <ClassRef> ())  return;
+	    if (gen.is <NullValue> () && type.is <Pointer> ())  return;
 	    else if (gen.to <Value> ().getType ().is <Slice> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
 	
 	    verifyCompatibleType (loc, type, gen.to <Value> ().getType ());
@@ -5131,8 +5150,8 @@ namespace semantic {
 	    auto right = right_;
 	    auto left = left_;
 	    
-	    if (right.is <Pointer> ()) right = right.to <Type>().getInners ()[0];
-	    if (left.is <Pointer> ()) left = left.to <Type>().getInners ()[0];
+	    if (right.is <ClassPtr> ()) right = right.to <Type>().getInners ()[0];
+	    if (left.is <ClassPtr> ()) left = left.to <Type>().getInners ()[0];
 	    
 	    if (right.is <ClassRef> () && !right.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ()) {
 		auto ancestor = right.to <ClassRef> ().getAncestor ();
@@ -5299,8 +5318,8 @@ namespace semantic {
 	    auto ancestor = leftType;
 	    auto rightType = rightType_;
 	    
-	    if (leftType.is <Pointer> ())  ancestor = ancestor.to <Pointer> ().getInners ()[0];
-	    if (rightType.is <Pointer> ()) rightType = rightType.to <Pointer> ().getInners ()[0];
+	    if (leftType.is <ClassPtr> ())  ancestor = ancestor.to <ClassPtr> ().getInners ()[0];
+	    if (rightType.is <ClassPtr> ()) rightType = rightType.to <ClassPtr> ().getInners ()[0];
 	    
 	    if (ancestor.is <ClassRef> ()) {
 		while (!ancestor.isEmpty ()) {

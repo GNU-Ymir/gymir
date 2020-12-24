@@ -14,11 +14,11 @@ namespace semantic {
 	{}
        
 	Generator FakeValue::init (const lexing::Word & loc, const generator::Generator & type) {
-	    return Generator {new (Z0) FakeValue (loc, type)};
+	    return Generator {new (NO_GC) FakeValue (loc, type)};
 	}
 
 	Generator FakeValue::clone () const {
-	    return Generator {new (Z0) FakeValue (*this)};
+	    return Generator {new (NO_GC) FakeValue (*this)};
 	}
 
 	bool FakeValue::isOf (const IGenerator * type) const {

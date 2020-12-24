@@ -13,7 +13,7 @@ namespace syntax {
     {}
     
     Declaration Import::init (const lexing::Word & loc, const lexing::Word & module) {
-	return Declaration {new (Z0) Import (loc, module)};
+	return Declaration {new (NO_GC) Import (loc, module)};
     }
 
     bool Import::isOf (const IDeclaration * type) const {

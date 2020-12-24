@@ -20,7 +20,7 @@ namespace semantic {
     {}
     
     Symbol TemplateSolution::init (const lexing::Word & name, const std::vector <syntax::Expression> & templs, const std::map <std::string, syntax::Expression> & mapping, const std::vector <std::string> & nameOrders, bool isWeak) {
-	auto ret =  Symbol {new (Z0) TemplateSolution (name, templs, mapping, nameOrders, isWeak)};
+	auto ret =  Symbol {new (NO_GC) TemplateSolution (name, templs, mapping, nameOrders, isWeak)};
 	ret.to <TemplateSolution> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

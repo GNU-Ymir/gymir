@@ -17,11 +17,11 @@ namespace semantic {
 	{}
        
 	Generator StringValue::init (const lexing::Word & loc, const Generator & type, const std::vector<char> &  value, ulong len) {
-	    return Generator {new (Z0) StringValue (loc, type, value, len)};
+	    return Generator {new (NO_GC) StringValue (loc, type, value, len)};
 	}
 
 	Generator StringValue::clone () const {
-	    return Generator {new (Z0) StringValue (*this)};
+	    return Generator {new (NO_GC) StringValue (*this)};
 	}
 
 	bool StringValue::isOf (const IGenerator * type) const {

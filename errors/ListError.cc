@@ -2,12 +2,12 @@
 
 namespace Ymir {    
     DECLARE_ENUM_WITH_TYPE (ExternalError, std::string,
-			    ADDR_MIGHT_THROW                = "a function pointer cannot be created from the %(y) function that might throw an exception", 
+			    ADDR_MIGHT_THROW                = "a function pointer cannot be created from the %(y) function that could throw an exception", 
 			    AFFECT_COMPILE_TIME		    = "assignment at compile time is prohibited",
 			    ALIAS_NO_EFFECT                 = "the creation of an alias has no effect on the left operand",
 			    ALLOC_ABSTRACT_CLASS            = "the class %(y) is declared abstract",
 			    ASSERT_FAILED                   = "assertion failed : %(y)",
-			    BREAK_INSIDE_EXPR		    = "the break statement placed here will result in undefined behavior...",
+			    BREAK_INSIDE_EXPR		    = "the break statement placed here will result in undefined behavior",
 			    BREAK_NO_LOOP		    = "the break statement must be placed inside a loop",
 			    CALL_RECURSION                  = "the limit of the number of call recursions at compile time has been reached %(y)", 
 			    CANDIDATE_ARE                   = "candidate % : %",
@@ -28,6 +28,7 @@ namespace Ymir {
 			    DYNAMIC_CAST_FAILED		    = "dynamic cast failed : %",
 			    EN_NO_VALUE                     = "%(y) was declared in an enumeration, but has no value",
 			    FAILURE_NO_THROW                = "failure scope guard will never be triggered",
+			    FORGET_TOKEN                    = "did you forget '%(y)' ?",
 			    FORWARD_REFERENCE_VAR           = "the type cannot be infered, as it depends on a forward reference",
 			    IMMUTABLE_LVALUE		    = "left operand of type %(y) is immutable",
 			    IMPLICIT_ALIAS                  = "implicit alias of type %(y) is not allowed, it will implicitly discard constant qualifier", 
@@ -92,6 +93,7 @@ namespace Ymir {
 			    OTHER_CANDIDATES                = "there are other candidates, use option -v to show them",
 			    OVERFLOW			    = "overflow capacity for type %(y) = %(y)",
 			    OVERFLOW_ARITY                  = "tuple access out of bound (%(y)), tuple arity is %(y)",
+			    OVERFLOW_ARRAY                  = "array access out of bound (%(y)), array size is %(y)",
 			    OVERRIDE_MISMATCH_PROTECTION    = "the protection of the overriden method %(y) does not match with the definition in the ancestor class",
 			    OVERRIDE_PRIVATE                = "cannot override private method %(y)",
 			    PACKED_AND_UNION		    = "structures could not be packed and union at the same time",
@@ -153,6 +155,7 @@ namespace Ymir {
 			    USE_UNIT_FOR_VOID               = "The block value cannot be void without a unit expression, maybe you forgot the ';'",
 			    VAR_DECL_WITHOUT_VALUE	    = "var declaration must have an initial value",
 			    VAR_DECL_WITH_NOTHING           = "var declaration must at least have a type or a value",
+			    VOID_VALUE                      = "value cannot be void",
 			    VOID_VAR			    = "cannot declare a var of type void",
 			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)",
     );    

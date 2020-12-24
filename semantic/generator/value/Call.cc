@@ -40,11 +40,11 @@ namespace semantic {
 	}
 	
 	Generator Call::init (const lexing::Word & loc, const Generator & type, const Generator & frame, const std::vector<Generator> & types, const std::vector <Generator> & params, const std::vector <Generator> & addParams) {
-	    return Generator {new (Z0) Call (loc, type, frame, types, params, addParams)};
+	    return Generator {new (NO_GC) Call (loc, type, frame, types, params, addParams)};
 	}
     
 	Generator Call::clone () const {
-	    return Generator {new (Z0) Call (*this)};
+	    return Generator {new (NO_GC) Call (*this)};
 	}
 
 	bool Call::isOf (const IGenerator * type) const {

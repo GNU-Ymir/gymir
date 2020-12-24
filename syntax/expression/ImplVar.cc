@@ -13,7 +13,7 @@ namespace syntax {
     {}
         
     Expression ImplVar::init (const lexing::Word & location, const Expression & type) {
-	return Expression {new (Z0) ImplVar (location, type)};
+	return Expression {new (NO_GC) ImplVar (location, type)};
     }
 
     bool ImplVar::isOf (const IExpression * type) const {

@@ -25,11 +25,11 @@ namespace semantic {
 	}	
 	
 	Generator Affect::init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & value, bool isConstruction) {
-	    return Generator {new (Z0) Affect (loc, type, who, value, isConstruction)};
+	    return Generator {new (NO_GC) Affect (loc, type, who, value, isConstruction)};
 	}
     
 	Generator Affect::clone () const {
-	    return Generator {new (Z0) Affect (*this)};
+	    return Generator {new (NO_GC) Affect (*this)};
 	}
 
 	bool Affect::isOf (const IGenerator * type) const {

@@ -20,11 +20,11 @@ namespace semantic {
 	}
 	
 	Generator Break::init (const lexing::Word & loc, const Generator & type, const Generator & value) {
-	    return Generator {new (Z0) Break (loc, type, value)};
+	    return Generator {new (NO_GC) Break (loc, type, value)};
 	}
     
 	Generator Break::clone () const {
-	    return Generator {new (Z0) Break (*this)};
+	    return Generator {new (NO_GC) Break (*this)};
 	}
 
 	bool Break::isOf (const IGenerator * type) const {

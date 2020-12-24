@@ -17,11 +17,11 @@ namespace semantic {
 	}
 	
 	Generator Aliaser::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new (Z0) Aliaser (loc, type, who)};
+	    return Generator {new (NO_GC) Aliaser (loc, type, who)};
 	}
     
 	Generator Aliaser::clone () const {
-	    return Generator {new (Z0) Aliaser (*this)};
+	    return Generator {new (NO_GC) Aliaser (*this)};
 	}
 
 	bool Aliaser::isOf (const IGenerator * type) const {

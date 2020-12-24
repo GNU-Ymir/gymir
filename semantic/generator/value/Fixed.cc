@@ -15,11 +15,11 @@ namespace semantic {
 	{}
        
 	Generator Fixed::init (const lexing::Word & loc, const Generator & type, UI value) {
-	    return Generator {new (Z0) Fixed (loc, type, value)};
+	    return Generator {new (NO_GC) Fixed (loc, type, value)};
 	}
 
 	Generator Fixed::clone () const {
-	    return Generator {new (Z0) Fixed (*this)};
+	    return Generator {new (NO_GC) Fixed (*this)};
 	}
 
 	bool Fixed::isOf (const IGenerator * type) const {

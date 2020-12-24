@@ -16,7 +16,7 @@ namespace syntax {
     {}
     
     Expression Match::init (const lexing::Word & location, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal) {
-	return Expression {new (Z0) Match (location, content, matchs, actions, isFinal)};
+	return Expression {new (NO_GC) Match (location, content, matchs, actions, isFinal)};
     }
 
     bool Match::isOf (const IExpression * type) const {

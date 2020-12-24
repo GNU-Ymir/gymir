@@ -12,7 +12,7 @@ namespace syntax {
     {}
 
     Expression Pragma::init (const lexing::Word & location, const std::vector <Expression> & params) {
-	return Expression {new (Z0) Pragma (location, params)};
+	return Expression {new (NO_GC) Pragma (location, params)};
     }
 
     bool Pragma::isOf (const IExpression * type) const {

@@ -28,11 +28,11 @@ namespace semantic {
 	}
 
 	Generator VarDecl::init (const lexing::Word & location, const std::string & name, const Generator & type, const Generator & value, bool isMutable) {
-	    return Generator {new (Z0) VarDecl (location, name, type, value, isMutable)};
+	    return Generator {new (NO_GC) VarDecl (location, name, type, value, isMutable)};
 	}
 
 	Generator VarDecl::clone () const {
-	    return Generator {new (Z0) VarDecl (*this)};
+	    return Generator {new (NO_GC) VarDecl (*this)};
 	}
 			
 	bool VarDecl::isOf (const IGenerator * type) const {

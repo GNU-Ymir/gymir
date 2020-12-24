@@ -16,7 +16,7 @@ namespace syntax {
     {}
 
     Declaration MacroConstructor::init (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content) {
-	return Declaration {new (Z0) MacroConstructor (loc, type, rule, content)};
+	return Declaration {new (NO_GC) MacroConstructor (loc, type, rule, content)};
     }
 
     Declaration MacroConstructor::init (const MacroConstructor & other) {

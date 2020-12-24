@@ -17,11 +17,11 @@ namespace semantic {
 	{}
 
 	Generator Bool::init (const lexing::Word & loc) {
-	    return Generator {new (Z0) Bool (loc)};
+	    return Generator {new (NO_GC) Bool (loc)};
 	}
 
 	Generator Bool::clone () const {
-	    return Generator {new (Z0) Bool (*this)};
+	    return Generator {new (NO_GC) Bool (*this)};
 	}
 		
 	bool Bool::isOf (const IGenerator * type) const {

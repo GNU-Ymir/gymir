@@ -15,7 +15,7 @@ namespace semantic {
 	{}
 
 	syntax::Expression TemplateSyntaxWrapper::init (const lexing::Word & lex, const Generator & gen) {
-	    return syntax::Expression {new (Z0) TemplateSyntaxWrapper (lex, gen)};
+	    return syntax::Expression {new (NO_GC) TemplateSyntaxWrapper (lex, gen)};
 	}
 
 	bool TemplateSyntaxWrapper::isOf (const syntax::IExpression * type) const {

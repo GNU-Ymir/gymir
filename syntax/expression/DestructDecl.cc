@@ -17,7 +17,7 @@ namespace syntax {
     {}
 
     Expression DestructDecl::init (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & value, bool isVariadic) {
-	return Expression {new (Z0) DestructDecl (loc, params, value, isVariadic)};
+	return Expression {new (NO_GC) DestructDecl (loc, params, value, isVariadic)};
     }
 
     bool DestructDecl::isOf (const IExpression * type) const {

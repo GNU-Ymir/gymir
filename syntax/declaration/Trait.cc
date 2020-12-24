@@ -12,7 +12,7 @@ namespace syntax {
     {}
     
     Declaration Trait::init (const lexing::Word & name, const std::vector <Declaration> & decls) {
-	return Declaration {new (Z0) Trait (name, decls)};
+	return Declaration {new (NO_GC) Trait (name, decls)};
     }
     
     bool Trait::isOf (const IDeclaration * type) const {

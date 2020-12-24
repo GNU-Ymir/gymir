@@ -23,11 +23,11 @@ namespace semantic {
 	}
 
 	Generator VarRef::init (const lexing::Word & location, const std::string & name, const Generator & type, uint id, bool isMutable, const Generator & value, bool isSelf) {
-	    return Generator {new (Z0) VarRef (location, name, type, id, isMutable, value, isSelf)};
+	    return Generator {new (NO_GC) VarRef (location, name, type, id, isMutable, value, isSelf)};
 	}
 
 	Generator VarRef::clone () const {
-	    return Generator {new (Z0) VarRef (*this)};
+	    return Generator {new (NO_GC) VarRef (*this)};
 	}
 			
 	bool VarRef::isOf (const IGenerator * type) const {

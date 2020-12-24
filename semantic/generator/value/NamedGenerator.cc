@@ -16,11 +16,11 @@ namespace semantic {
 	}
     
 	Generator NamedGenerator::init (const lexing::Word & location, const Generator & content) {
-	    return Generator {new (Z0) NamedGenerator (location, content)};
+	    return Generator {new (NO_GC) NamedGenerator (location, content)};
 	}
         
 	Generator NamedGenerator::clone () const {
-	    return Generator {new (Z0) NamedGenerator (*this)};
+	    return Generator {new (NO_GC) NamedGenerator (*this)};
 	}
 
 	bool NamedGenerator::isOf (const IGenerator * type) const {

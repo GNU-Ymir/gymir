@@ -29,11 +29,11 @@ namespace semantic {
 	}
 	
 	Generator BinaryBool::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & left, const Generator & right) {
-	    return Generator {new (Z0) BinaryBool (loc, op, type, left, right)};
+	    return Generator {new (NO_GC) BinaryBool (loc, op, type, left, right)};
 	}
 
 	Generator BinaryBool::clone () const {
-	    return Generator {new (Z0) BinaryBool (*this)};
+	    return Generator {new (NO_GC) BinaryBool (*this)};
 	}
 	
 	bool BinaryBool::isOf (const IGenerator * type) const {

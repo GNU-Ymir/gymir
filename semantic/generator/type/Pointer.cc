@@ -1,6 +1,8 @@
 #include <ymir/semantic/generator/type/Pointer.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/semantic/generator/type/Array.hh>
+#include <ymir/semantic/generator/type/ClassRef.hh>
+#include <ymir/errors/Error.hh>
 
 namespace semantic {
     namespace generator {
@@ -22,14 +24,16 @@ namespace semantic {
 	{
 	    this-> isComplex (true);
 	    this-> setInners ({Type::init (inner.to <Type> (), inner.to <Type> ().isMutable (), false)});
+	    if (inner.is <ClassRef> ())
+		Ymir::Error::halt ("", "");
 	}
 
 	Generator Pointer::init (const lexing::Word & loc, const Generator & inner) {
-	    return Generator {new (Z0) Pointer (loc, inner)};
+	    return Generator {new (NO_GC) Pointer (loc, inner)};
 	}
 
 	Generator Pointer::clone () const {
-	    return Generator {new (Z0) Pointer (*this)};
+	    return Generator {new (NO_GC) Pointer (*this)};
 	}
 		
 	bool Pointer::isOf (const IGenerator * type) const {

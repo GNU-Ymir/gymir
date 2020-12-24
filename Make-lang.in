@@ -26,7 +26,7 @@ ALL_YFLAGS = $(PICFLAG) $(ALIASING_FLAGS) $(COVERAGE_FLAGS) $(WARN_YFLAGS) -g
 YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_YFLAGS) -o $@
 YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo 
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
-YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++
+YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++ -lgc
 
 # The compiler proper
  
@@ -164,6 +164,7 @@ ymir_OBJS = \
 	ymir/generator_NoneType.o \
 	ymir/generator_ParamVar.o \
 	ymir/generator_Pointer.o \
+	ymir/generator_ClassPtr.o \
 	ymir/generator_ProtoVar.o \
 	ymir/generator_Range.o \
 	ymir/generator_RangeValue.o \
@@ -265,7 +266,7 @@ ymir_OBJS = \
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
-	attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) 
+	attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) -lgc
  
 ymir.all.cross: 
  

@@ -187,6 +187,11 @@ namespace semantic {
 	    std::string manglePointerT (const Pointer & ptr) const;
 
 	    /**
+	     * \brief Mangle a class pointer type
+	     */
+	    std::string mangleClassPointerT (const ClassPtr & ptr) const;
+
+	    /**
 	     * \brief Mangle a function pointer type
 	     */
 	    std::string mangleFuncPtrT (const FuncPtr & ptr) const;

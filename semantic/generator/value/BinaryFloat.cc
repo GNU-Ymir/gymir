@@ -30,11 +30,11 @@ namespace semantic {
 	}
 	
 	Generator BinaryFloat::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & left, const Generator & right) {
-	    return Generator {new (Z0) BinaryFloat (loc, op, type, left, right)};
+	    return Generator {new (NO_GC) BinaryFloat (loc, op, type, left, right)};
 	}
 
 	Generator BinaryFloat::clone () const {
-	    return Generator {new (Z0) BinaryFloat (*this)};
+	    return Generator {new (NO_GC) BinaryFloat (*this)};
 	}
 	
 	bool BinaryFloat::isOf (const IGenerator * type) const {

@@ -35,7 +35,7 @@ namespace semantic {
 	}
 		   
 	Generator FrameProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, bool isSafe, const std::vector <Generator> & throwers) {
-	    return Generator {new (Z0) FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers)};
+	    return Generator {new (NO_GC) FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers)};
 	}
 
 	Generator FrameProto::init (const FrameProto & proto, const std::string & name, Frame::ManglingStyle style) {
@@ -46,7 +46,7 @@ namespace semantic {
 	}
     
 	Generator FrameProto::clone () const {
-	    return Generator {new (Z0) FrameProto (*this)};
+	    return Generator {new (NO_GC) FrameProto (*this)};
 	}
 
 	bool FrameProto::isOf (const IGenerator * type) const {

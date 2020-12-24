@@ -13,7 +13,7 @@ namespace syntax {
     {}
         
     Expression OfVar::init (const lexing::Word & location, const Expression & type) {
-	return Expression {new (Z0) OfVar (location, type)};
+	return Expression {new (NO_GC) OfVar (location, type)};
     }
 
     bool OfVar::isOf (const IExpression * type) const {

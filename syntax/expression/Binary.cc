@@ -17,11 +17,11 @@ namespace syntax {
     {}
 
     Expression Binary::init (const lexing::Word & location, const Expression & left, const Expression & right, const Expression & type) {
-	return Expression {new (Z0) Binary (location, left, right, type)};
+	return Expression {new (NO_GC) Binary (location, left, right, type)};
     }
 
     Expression Binary::init (const Binary & other) {
-	return Expression {new (Z0) Binary (other)};
+	return Expression {new (NO_GC) Binary (other)};
     }
     
     bool Binary::isOf (const IExpression * type) const {

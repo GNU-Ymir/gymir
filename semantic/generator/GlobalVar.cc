@@ -17,11 +17,11 @@ namespace semantic {
 	{}
 
 	Generator GlobalVar::init (const lexing::Word & location, const std::string & name, bool isMutable, const Generator & type, const Generator & value) {
-	    return Generator {new (Z0) GlobalVar (location, name, isMutable, type, value)};
+	    return Generator {new (NO_GC) GlobalVar (location, name, isMutable, type, value)};
 	}
 
 	Generator GlobalVar::clone () const {
-	    return Generator {new (Z0) GlobalVar (*this)};
+	    return Generator {new (NO_GC) GlobalVar (*this)};
 	}
 
 	bool GlobalVar::isMutable () const {

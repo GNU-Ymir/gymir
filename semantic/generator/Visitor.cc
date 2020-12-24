@@ -136,11 +136,15 @@ namespace semantic {
 			type = generateType (_type);			
 		    })
 
-		    else of (Pointer, pt, {
-			    auto inner = generateType (pt.getInners ()[0]);
-			    type = Tree::pointerType (inner);			    
-			}
-	       ) else of (Range, rg, {
+		else of (Pointer, pt, {
+			auto inner = generateType (pt.getInners ()[0]);
+			type = Tree::pointerType (inner);			    
+		    })
+		else of (ClassPtr, pt, {
+			auto inner = generateType (pt.getInners ()[0]);
+			type = Tree::pointerType (inner);
+		    })
+		else of (Range, rg, {
 		       std::vector <Tree> inner;
 		       inner.push_back (generateType (rg.getInners ()[0]));
 		       inner.push_back (generateType (rg.getInners ()[0]));
@@ -1876,7 +1880,7 @@ namespace semantic {
 		));
 		
 		list.append (classValue);
-		auto vtable = generateVtable (cl.getType ().to <Pointer> ().getInners ()[0]);
+		auto vtable = generateVtable (cl.getType ().to <ClassPtr> ().getInners ()[0]);
 		list.append (Tree::affect (cl.getLocation (),
 					   var.buildPointerUnref (0).getField ("#_vtable"),
 					   Tree::buildAddress (cl.getLocation (), vtable, Tree::pointerType (Tree::pointerType (Tree::voidType ())))));

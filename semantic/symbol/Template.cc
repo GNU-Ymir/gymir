@@ -21,7 +21,7 @@ namespace semantic {
     {}
     
     Symbol Template::init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams, bool isWeak) {
-	return Symbol {new (Z0) Template (loc, params, decl, test, previousParams, isWeak)};
+	return Symbol {new (NO_GC) Template (loc, params, decl, test, previousParams, isWeak)};
     }
 
     bool Template::isOf (const ISymbol * type) const {

@@ -13,7 +13,7 @@ namespace syntax {
     {}
 
     Declaration Macro::init (const lexing::Word & loc, const std::vector<std::string> & skips, const std::vector <Declaration> & content) {
-	return Declaration {new (Z0) Macro (loc, skips, content)};
+	return Declaration {new (NO_GC) Macro (loc, skips, content)};
     }
 
     bool Macro::isOf (const IDeclaration * type) const {

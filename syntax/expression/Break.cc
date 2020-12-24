@@ -13,7 +13,7 @@ namespace syntax {
     {}
 
     Expression Break::init (const lexing::Word & location, const Expression & value) {
-	return Expression {new (Z0) Break (location, value)};	
+	return Expression {new (NO_GC) Break (location, value)};	
     }
 
     bool Break::isOf (const IExpression * type) const {

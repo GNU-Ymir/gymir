@@ -12,7 +12,7 @@ namespace syntax {
     {}
 
     Expression Set::init (const lexing::Word & location, const std::vector <Expression> & params) {
-	return Expression {new (Z0) Set (location, params)};
+	return Expression {new (NO_GC) Set (location, params)};
     }
 
     bool Set::isOf (const IExpression * type) const {

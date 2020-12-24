@@ -11,7 +11,7 @@ namespace semantic {
     {}
     
     Symbol Module::init (const lexing::Word & name, bool isWeak) {
-	auto ret = Symbol {new (Z0) Module (name, isWeak)};
+	auto ret = Symbol {new (NO_GC) Module (name, isWeak)};
 	ret.to <Module> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

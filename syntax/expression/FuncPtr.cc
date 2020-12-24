@@ -14,7 +14,7 @@ namespace syntax {
     {}
     
     Expression FuncPtr::init (const lexing::Word & location, const Expression & retType, const std::vector <Expression> & params) {
-	return Expression {new (Z0) FuncPtr (location, retType, params)};
+	return Expression {new (NO_GC) FuncPtr (location, retType, params)};
     }
 
     bool FuncPtr::isOf (const IExpression * type) const {

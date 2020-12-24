@@ -19,11 +19,11 @@ namespace semantic {
 	{}
 
 	Generator Frame::init (const lexing::Word & location, const std::string & name, const std::vector <Generator> & params, const Generator & type, const Generator & content, bool needFinalReturn) {
-	    return Generator {new (Z0) Frame (location, name, params, type, content, needFinalReturn)};
+	    return Generator {new (NO_GC) Frame (location, name, params, type, content, needFinalReturn)};
 	}
 
 	Generator Frame::clone () const {
-	    return Generator {new (Z0) Frame (*this)};
+	    return Generator {new (NO_GC) Frame (*this)};
 	}
 
 	const Generator & Frame::getType () const {

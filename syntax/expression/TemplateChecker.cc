@@ -13,7 +13,7 @@ namespace syntax {
     {}    
     
     Expression TemplateChecker::init (const lexing::Word & location, const std::vector <Expression> & calls, const std::vector <Expression> & params) {
-	return Expression {new (Z0) TemplateChecker (location, calls, params)};
+	return Expression {new (NO_GC) TemplateChecker (location, calls, params)};
     }
     
     bool TemplateChecker::isOf (const IExpression * type) const {

@@ -31,11 +31,11 @@ namespace semantic {
 	}
 	
 	Generator StructCst::init (const lexing::Word & loc, const Generator & type, const Generator & str, const std::vector<Generator> & types, const std::vector <Generator> & params) {
-	    return Generator {new (Z0) StructCst (loc, type, str, types, params)};
+	    return Generator {new (NO_GC) StructCst (loc, type, str, types, params)};
 	}
     
 	Generator StructCst::clone () const {
-	    return Generator {new (Z0) StructCst (*this)};
+	    return Generator {new (NO_GC) StructCst (*this)};
 	}
 
 	bool StructCst::isOf (const IGenerator * type) const {

@@ -17,11 +17,11 @@ namespace semantic {
 	}
 	
 	Generator TemplateRef::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new (Z0) TemplateRef (loc, ref)};
+	    return Generator {new (NO_GC) TemplateRef (loc, ref)};
 	}
     
 	Generator TemplateRef::clone () const {
-	    return Generator {new (Z0) TemplateRef (*this)};
+	    return Generator {new (NO_GC) TemplateRef (*this)};
 	}
 
 	bool TemplateRef::isOf (const IGenerator * type) const {

@@ -14,7 +14,7 @@ namespace syntax {
     {}
     
     Expression Scope::init (const lexing::Word & location, const Expression & content) {
-	return Expression {new (Z0) Scope (location, content)};
+	return Expression {new (NO_GC) Scope (location, content)};
     }
 
     bool Scope::isOf (const IExpression * type) const {

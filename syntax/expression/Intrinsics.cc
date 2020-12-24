@@ -14,7 +14,7 @@ namespace syntax {
     {}
 
     Expression Intrinsics::init (const lexing::Word & location, const Expression & value) {
-	return Expression {new (Z0) Intrinsics (location, value)};
+	return Expression {new (NO_GC) Intrinsics (location, value)};
     }
 
     bool Intrinsics::isOf (const IExpression * type) const {

@@ -21,11 +21,11 @@ namespace semantic {
 	}
 
 	Generator LambdaType::init (const lexing::Word & loc, const Generator & retType, const std::vector<Generator> & inner) {
-	    return Generator {new (Z0) LambdaType (loc, retType, inner)};
+	    return Generator {new (NO_GC) LambdaType (loc, retType, inner)};
 	}
 
 	Generator LambdaType::clone () const {
-	    return Generator {new (Z0) LambdaType (*this)};
+	    return Generator {new (NO_GC) LambdaType (*this)};
 	}
 		
 	bool LambdaType::isOf (const IGenerator * type) const {

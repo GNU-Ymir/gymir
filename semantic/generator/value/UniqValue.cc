@@ -19,11 +19,11 @@ namespace semantic {
 	}
 	
 	Generator UniqValue::init (const lexing::Word & location, const Generator & type, const Generator & value) {
-	    return Generator {new (Z0) UniqValue (location, type, value, Generator::getLastId ())};
+	    return Generator {new (NO_GC) UniqValue (location, type, value, Generator::getLastId ())};
 	}
 
 	Generator UniqValue::clone () const {
-	    return Generator {new (Z0) UniqValue (*this)};
+	    return Generator {new (NO_GC) UniqValue (*this)};
 	}
 			
 	bool UniqValue::isOf (const IGenerator * type) const {

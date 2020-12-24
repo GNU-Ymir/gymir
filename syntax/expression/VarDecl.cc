@@ -18,7 +18,7 @@ namespace syntax {
     {}
 
     Expression VarDecl::init (const lexing::Word & name, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value) {
-	return Expression {new (Z0) VarDecl (name, decos, type, value)};
+	return Expression {new (NO_GC) VarDecl (name, decos, type, value)};
     }
  
     bool VarDecl::isOf (const IExpression * type) const {

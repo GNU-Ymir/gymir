@@ -28,11 +28,11 @@ namespace semantic {
 	}
        
 	Generator DelegateValue::init (const lexing::Word & loc, const Generator & type, const Generator & closureType, const Generator & closure, const Generator & ptr) {
-	    return Generator {new (Z0) DelegateValue (loc, type, closureType, closure, ptr)};
+	    return Generator {new (NO_GC) DelegateValue (loc, type, closureType, closure, ptr)};
 	}
 
 	Generator DelegateValue::clone () const {
-	    return Generator {new (Z0) DelegateValue (*this)};
+	    return Generator {new (NO_GC) DelegateValue (*this)};
 	}
 
 	bool DelegateValue::isOf (const IGenerator * type) const {

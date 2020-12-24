@@ -14,7 +14,7 @@ namespace syntax {
     {}
 
     Expression Is::init (const lexing::Word & location, const Expression & element, const std::vector <Expression> & params) {
-	return Expression {new (Z0) Is (location, element, params)};
+	return Expression {new (NO_GC) Is (location, element, params)};
     }
 
     bool Is::isOf (const IExpression * type) const {

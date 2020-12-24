@@ -14,7 +14,7 @@ namespace syntax {
     {}
 
     Declaration Global::init (const lexing::Word & location, const Expression & decl) {
-	return Declaration {new (Z0) Global (location, decl)};
+	return Declaration {new (NO_GC) Global (location, decl)};
     }
 
     bool Global::isOf (const IDeclaration * type) const {

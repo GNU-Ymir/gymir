@@ -13,11 +13,11 @@ namespace syntax {
     {}
     
     Declaration Alias::init (const lexing::Word & ident, const Expression & value) {
-	return Declaration {new (Z0) Alias (ident, value)};
+	return Declaration {new (NO_GC) Alias (ident, value)};
     }
 
     Declaration Alias::init (const Alias & other) {
-	return Declaration {new (Z0) Alias (other)};
+	return Declaration {new (NO_GC) Alias (other)};
     }
 
     bool Alias::isOf (const IDeclaration * type) const {

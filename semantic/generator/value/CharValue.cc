@@ -14,11 +14,11 @@ namespace semantic {
 	{}
        
 	Generator CharValue::init (const lexing::Word & loc, const Generator & type, uint value) {
-	    return Generator {new (Z0) CharValue (loc, type, value)};
+	    return Generator {new (NO_GC) CharValue (loc, type, value)};
 	}
 
 	Generator CharValue::clone () const {
-	    return Generator {new (Z0) CharValue (*this)};
+	    return Generator {new (NO_GC) CharValue (*this)};
 	}
 
 	bool CharValue::isOf (const IGenerator * type) const {

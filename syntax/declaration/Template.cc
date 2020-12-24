@@ -16,7 +16,7 @@ namespace syntax {
     {}
     
     Declaration Template::init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test) {
-	return Declaration {new (Z0) Template (loc, params, content, test)};
+	return Declaration {new (NO_GC) Template (loc, params, content, test)};
     }
 
     void Template::treePrint (Ymir::OutBuffer & stream, int i) const {

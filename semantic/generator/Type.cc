@@ -25,7 +25,7 @@ namespace semantic {
 	{}
 	
 	Generator Type::clone () const {
-	    return Generator{new (Z0) Type ()};
+	    return Generator{new (NO_GC) Type ()};
 	}
 
 	Generator Type::init (const lexing::Word & loc, const Type & other) {

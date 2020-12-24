@@ -13,7 +13,7 @@ namespace syntax {
     {}        
     
     Declaration Struct::init (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars) {
-	return Declaration {new (Z0) Struct (name, attrs, vars)};
+	return Declaration {new (NO_GC) Struct (name, attrs, vars)};
     }
 
     bool Struct::isOf (const IDeclaration * type) const {

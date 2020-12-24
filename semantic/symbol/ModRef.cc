@@ -16,7 +16,7 @@ namespace semantic {
     }
     
     Symbol ModRef::init (const lexing::Word & loc, const std::string & name, bool isWeak) {
-	auto ret = Symbol {new (Z0) ModRef (loc, name, isWeak)};
+	auto ret = Symbol {new (NO_GC) ModRef (loc, name, isWeak)};
 	ret.to <ModRef> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

@@ -40,7 +40,7 @@ namespace semantic {
 	}
 	
 	Generator LambdaProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, const syntax::Expression & content, bool isRefClosure, bool isMoveClosure, uint index) {
-	    return Generator {new (Z0) LambdaProto (loc, name, type, params, content, isRefClosure, isMoveClosure, index)};
+	    return Generator {new (NO_GC) LambdaProto (loc, name, type, params, content, isRefClosure, isMoveClosure, index)};
 	}
 
 	Generator LambdaProto::init (const LambdaProto & other, const std::string & name, Frame::ManglingStyle style) {
@@ -51,7 +51,7 @@ namespace semantic {
 	}
     
 	Generator LambdaProto::clone () const {
-	    return Generator {new (Z0) LambdaProto (*this)};
+	    return Generator {new (NO_GC) LambdaProto (*this)};
 	}
 
 	bool LambdaProto::isOf (const IGenerator * type) const {

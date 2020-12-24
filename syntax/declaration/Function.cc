@@ -60,11 +60,11 @@ namespace syntax {
     {}
     
     Declaration Function::init (const lexing::Word & name, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver) {
-	return Declaration {new (Z0) Function (name, proto, body, cas, throwers, isOver)};
+	return Declaration {new (NO_GC) Function (name, proto, body, cas, throwers, isOver)};
     }
 
     Declaration Function::init (const Function & other) {
-	return Declaration {new (Z0) Function (other)};
+	return Declaration {new (NO_GC) Function (other)};
     }
 
     void Function::treePrint (Ymir::OutBuffer & stream, int i) const {

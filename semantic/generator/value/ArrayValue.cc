@@ -22,11 +22,11 @@ namespace semantic {
 	}
 	
 	Generator ArrayValue::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) {
-	    return Generator {new (Z0) ArrayValue (loc, type, content)};
+	    return Generator {new (NO_GC) ArrayValue (loc, type, content)};
 	}
     
 	Generator ArrayValue::clone () const {
-	    return Generator {new (Z0) ArrayValue (*this)};
+	    return Generator {new (NO_GC) ArrayValue (*this)};
 	}
 
 	bool ArrayValue::isOf (const IGenerator * type) const {

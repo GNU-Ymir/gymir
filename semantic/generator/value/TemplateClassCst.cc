@@ -16,11 +16,11 @@ namespace semantic {
 	{}
 	
 	Generator TemplateClassCst::init (const lexing::Word & loc, const Symbol & ref, const std::vector <syntax::Function::Prototype> & cst) {
-	    return Generator {new (Z0) TemplateClassCst (loc, ref, cst)};
+	    return Generator {new (NO_GC) TemplateClassCst (loc, ref, cst)};
 	}
     
 	Generator TemplateClassCst::clone () const {
-	    return Generator {new (Z0) TemplateClassCst (*this)};
+	    return Generator {new (NO_GC) TemplateClassCst (*this)};
 	}
 
 	bool TemplateClassCst::isOf (const IGenerator * type) const {

@@ -14,7 +14,7 @@ namespace semantic {
     {}
 
     Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) {
-	auto ret = Symbol {new (Z0) Constructor (name, func, isWeak)};
+	auto ret = Symbol {new (NO_GC) Constructor (name, func, isWeak)};
 	ret.to <Constructor> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

@@ -22,11 +22,11 @@ namespace semantic {
 	}
 
 	Generator TraitRef::init (const lexing::Word&  loc, const Symbol & ref) {
-	    return Generator {new (Z0) TraitRef (loc, ref)};
+	    return Generator {new (NO_GC) TraitRef (loc, ref)};
 	}
 
 	Generator TraitRef::clone () const {
-	    return Generator {new (Z0) TraitRef (*this)};
+	    return Generator {new (NO_GC) TraitRef (*this)};
 	}
 
 	bool TraitRef::isOf (const IGenerator * type) const {

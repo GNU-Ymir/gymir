@@ -19,10 +19,12 @@ namespace semantic {
 	    _type (type)
 	{}
 
-	Generator Value::initBrRet (const Value & other, bool isBreaker, bool isReturner) {
+	Generator Value::initBrRet (const Value & other, bool isBreaker, bool isReturner, const lexing::Word & brLoc, const lexing::Word & rtLoc) {
 	    auto ret = other.clone ();
 	    ret.to<Value> ()._breaker = isBreaker;
+	    ret.to<Value> ()._breakerLoc = brLoc;
 	    ret.to<Value> ()._returner = isReturner;
+	    ret.to<Value> ()._returnerLoc = rtLoc;
 	    return ret;
 	}
 	
@@ -33,7 +35,7 @@ namespace semantic {
 	}
 	
 	Generator Value::clone () const {
-	    return Generator{new (Z0) Value (*this)};
+	    return Generator{new (NO_GC) Value (*this)};
 	}
 	
 	// void Value::setType (const Generator & type) {
@@ -60,16 +62,34 @@ namespace semantic {
 	    return this-> _breaker;
 	}
 
+	const lexing::Word & Value::getBreakerLocation () const {
+	    return this-> _breakerLoc;
+	}
+
 	bool Value::isReturner () const {
 	    return this-> _returner;
 	}
 
-	void Value::setReturner (bool is) {
-	    this-> _returner = is;
+	const lexing::Word & Value::getReturnerLocation () const {
+	    return this-> _returnerLoc;
 	}
 
+	void Value::setReturner (bool is) {
+	    this-> _returner = is;
+	    this-> _returnerLoc = this-> getLocation ();
+	}
+
+	void Value::setReturnerLocation (const lexing::Word & w) {
+	    this-> _returnerLoc = w;
+	}
+	
 	void Value::setBreaker (bool is) {
 	    this-> _breaker = is;
+	    this-> _breakerLoc = this-> getLocation ();
+	}
+
+	void Value::setBreakerLocation (const lexing::Word & loc) {
+	    this-> _breakerLoc = loc;
 	}
 	
 	bool Value::isLvalue () const {

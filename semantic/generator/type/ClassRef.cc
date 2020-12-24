@@ -28,11 +28,11 @@ namespace semantic {
 	}
 
 	Generator ClassRef::init (const lexing::Word&  loc, const Generator & parent, const Symbol & ref) {
-	    return Generator {new (Z0) ClassRef (loc, parent, ref)};
+	    return Generator {new (NO_GC) ClassRef (loc, parent, ref)};
 	}
 	
 	Generator ClassRef::clone () const {
-	    return Generator {new (Z0) ClassRef (*this)};
+	    return Generator {new (NO_GC) ClassRef (*this)};
 	}
 
 	bool ClassRef::isOf (const IGenerator * type) const {

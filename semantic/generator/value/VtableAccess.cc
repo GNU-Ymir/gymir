@@ -17,11 +17,11 @@ namespace semantic {
 	}
 
 	Generator VtableAccess::init (const lexing::Word & loc, const Generator & type, const Generator & str, uint field) {
-	    return Generator {new (Z0) VtableAccess (loc, type, str, field)};
+	    return Generator {new (NO_GC) VtableAccess (loc, type, str, field)};
 	}
 	
 	Generator VtableAccess::clone () const {
-	    return Generator {new (Z0) VtableAccess (*this)};
+	    return Generator {new (NO_GC) VtableAccess (*this)};
 	}
 
 	bool VtableAccess::isOf (const IGenerator * type) const {

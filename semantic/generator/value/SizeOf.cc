@@ -17,11 +17,11 @@ namespace semantic {
 	}
 	
 	Generator SizeOf::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new (Z0) SizeOf (loc, type, who)};
+	    return Generator {new (NO_GC) SizeOf (loc, type, who)};
 	}
     
 	Generator SizeOf::clone () const {
-	    return Generator {new (Z0) SizeOf (*this)};
+	    return Generator {new (NO_GC) SizeOf (*this)};
 	}
 
 	bool SizeOf::isOf (const IGenerator * type) const {

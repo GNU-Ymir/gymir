@@ -15,11 +15,11 @@ namespace syntax {
     {}
     
     Declaration Class::init (const Class & cl) {
-	return Declaration {new (Z0) Class (cl)};
+	return Declaration {new (NO_GC) Class (cl)};
     }
 
     Declaration Class::init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attribs) {
-	return Declaration {new (Z0) Class (name, over, decls, attribs)};
+	return Declaration {new (NO_GC) Class (name, over, decls, attribs)};
     }
    
     bool Class::isOf (const IDeclaration * type) const {

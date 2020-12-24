@@ -14,7 +14,7 @@ namespace syntax {
     {}
     
     Declaration Enum::init (const lexing::Word & ident, const Expression& type,  const std::vector <Expression> & values) {
-	return Declaration {new (Z0) Enum (ident, type, values)};
+	return Declaration {new (NO_GC) Enum (ident, type, values)};
     }
     
     bool Enum::isOf (const IDeclaration * type) const {

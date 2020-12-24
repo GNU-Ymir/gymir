@@ -18,7 +18,7 @@ namespace syntax {
     
    
     Expression If::init (const lexing::Word & location, const Expression & test, const Expression & content, const Expression & elsePart) {
-	return Expression {new (Z0) If (location, test, content, elsePart)};
+	return Expression {new (NO_GC) If (location, test, content, elsePart)};
     }
 
     bool If::isOf (const IExpression * type) const {

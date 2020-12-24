@@ -17,11 +17,11 @@ namespace syntax {
     {}
     
     Declaration DeclBlock::init (const DeclBlock & decl) {
-	return Declaration {new (Z0) DeclBlock (decl)};
+	return Declaration {new (NO_GC) DeclBlock (decl)};
     }
 
     Declaration DeclBlock::init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate, bool isProt) {
-	return Declaration {new (Z0) DeclBlock (token, content, isPrivate, isProt)};
+	return Declaration {new (NO_GC) DeclBlock (token, content, isPrivate, isProt)};
     }
    
     bool DeclBlock::isOf (const IDeclaration * type) const {

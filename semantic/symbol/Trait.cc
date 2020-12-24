@@ -17,7 +17,7 @@ namespace semantic {
     {}
     
     Symbol Trait::init (const lexing::Word & name, bool isWeak) {
-	auto ret = Symbol {new (Z0) Trait (name, isWeak)};
+	auto ret = Symbol {new (NO_GC) Trait (name, isWeak)};
 	ret.to <Trait> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

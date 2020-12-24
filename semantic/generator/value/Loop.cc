@@ -25,11 +25,11 @@ namespace semantic {
 	}
 	
 	Generator Loop::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, bool isDo) {
-	    return Generator {new (Z0) Loop (loc, type, test, content, isDo)};
+	    return Generator {new (NO_GC) Loop (loc, type, test, content, isDo)};
 	}
     
 	Generator Loop::clone () const {
-	    return Generator {new (Z0) Loop (*this)};
+	    return Generator {new (NO_GC) Loop (*this)};
 	}
 
 	bool Loop::isOf (const IGenerator * type) const {

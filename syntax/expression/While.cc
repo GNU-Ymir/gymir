@@ -16,7 +16,7 @@ namespace syntax {
     {}
 
     Expression While::init (const lexing::Word & location, const Expression & test, const Expression & content, bool isDo) {
-	return Expression {new (Z0) While (location, test, content, isDo)};
+	return Expression {new (NO_GC) While (location, test, content, isDo)};
     }
 
     bool While::isOf (const IExpression * type) const {

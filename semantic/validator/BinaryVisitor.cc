@@ -58,7 +58,7 @@ namespace semantic {
 	}
 	
 	Generator BinaryVisitor::validateMathOperation (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {	
-	    std::list <std::string> errors;
+	    std::list <std::string> errors;	    
 	    Generator ret (Generator::empty ());
 	    try {
 
@@ -75,7 +75,7 @@ namespace semantic {
 			ret = validateMathFloatLeft (op, expression, left, right);
 		    );
 
-		    of (Pointer, p ATTRIBUTE_UNUSED,
+		    of (Pointer, p ATTRIBUTE_UNUSED, 
 			ret = validateMathPtrLeft (op, expression, left, right);
 		    );
 
@@ -87,8 +87,8 @@ namespace semantic {
 			ret = validateMathSlice (op, expression, left, right);
 		    );
 
-		    of (ClassRef, c ATTRIBUTE_UNUSED,
-			ret = validateMathClass (op, expression, left, right);
+		    of (ClassPtr, p ATTRIBUTE_UNUSED,
+			ret = validateMathClass (op, expression, left, right);		    
 		    );
 		}
 		
@@ -99,11 +99,8 @@ namespace semantic {
 	    if (!ret.isEmpty ()) return ret;	    
 	    else {
 		try {
-		    match (right.to <Value> ().getType ()) {
-			of (ClassRef, c ATTRIBUTE_UNUSED,
-			    ret = validateMathClassRight (op, expression, left, right);
-			);
-		    }
+		    if (right.to <Value> ().getType ().is<ClassPtr> ())
+			ret = validateMathClassRight (op, expression, left, right);		    		    
 		} catch (Error::ErrorList list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -302,8 +299,7 @@ namespace semantic {
 	    auto templ = syntax::TemplateCall::init (
 		loc,
 		{
-		    syntax::String::init (loc, loc, loc, lexing::Word::eof ()),
-			syntax::Intrinsics::init (type_of, leftSynt)
+		    syntax::String::init (loc, loc, loc, lexing::Word::eof ())
 		},
 		syntax::Binary::init (
 		    {loc, Token::DOT},
@@ -318,7 +314,7 @@ namespace semantic {
 		templ,
 		{rightSynt}, false
 	    );
-
+	    
 	    return this-> _context.validateValue (call);	    
 	}
 
@@ -386,8 +382,8 @@ namespace semantic {
 			ret = validateLogicalSliceLeft (op, expression, left, right);
 		    );
 
-		    of (ClassRef, c ATTRIBUTE_UNUSED,
-		    	ret = validateLogicalClass (op, expression, left, right);
+		    of (ClassPtr, p ATTRIBUTE_UNUSED, 
+			ret = validateLogicalClass (op, expression, left, right);
 		    );
 		}		
 		
@@ -398,11 +394,8 @@ namespace semantic {
 	    if (!ret.isEmpty  ()) return ret;
 	    else {
 		try {
-		    match (right.to <Value> ().getType ()) {
-			of (ClassRef, c ATTRIBUTE_UNUSED,
-			    ret = validateLogicalClassRight (op, expression, left, right);
-			);
-		    }
+		    if (right.to <Value> ().getType ().is<ClassPtr> ())
+			ret = validateLogicalClassRight (op, expression, left, right);
 		} catch (Error::ErrorList list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -793,9 +786,7 @@ namespace semantic {
 	    auto leftIndex = this-> _context.validateValue (left.getLeft ());
 	    auto right = this-> _context.validateValue (expression.getRight ());
 	    
-	    if (!leftIndex.to <Value> ().getType ().is <Pointer> () ||
-		!leftIndex.to <Value> ().getType ().to <Pointer> ().getInners ()[0].is<ClassRef> ()
-	    )
+	    if (!leftIndex.to <Value> ().getType ().is <ClassPtr> ())
 		return Generator::empty ();
 		
 	    if (op != Binary::Operator::LAST_OP) {
@@ -977,7 +968,7 @@ namespace semantic {
 	    }
 
 	    auto right = this-> _context.validateValue (expression.getRight ());
-	    if (!right.to <Value> ().getType ().is <ClassRef> ())
+	    if (!right.to <Value> ().getType ().is<ClassPtr> ())
 		return Generator::empty ();
 
 	    auto templ = syntax::Binary::init (

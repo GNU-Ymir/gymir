@@ -21,11 +21,11 @@ namespace semantic {
 
 
 	Generator StructAccess::init (const lexing::Word & loc, const Generator & type, const Generator & str, const std::string & field) {
-	    return Generator {new (Z0) StructAccess (loc, type, str, field)};
+	    return Generator {new (NO_GC) StructAccess (loc, type, str, field)};
 	}
 	
 	Generator StructAccess::clone () const {
-	    return Generator {new (Z0) StructAccess (*this)};
+	    return Generator {new (NO_GC) StructAccess (*this)};
 	}
 
 	bool StructAccess::isOf (const IGenerator * type) const {

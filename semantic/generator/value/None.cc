@@ -14,11 +14,11 @@ namespace semantic {
 	{}
        
 	Generator None::init (const lexing::Word & loc) {
-	    return Generator {new (Z0) None (loc)};
+	    return Generator {new (NO_GC) None (loc)};
 	}
 
 	Generator None::clone () const {
-	    return Generator {new (Z0) None (*this)};
+	    return Generator {new (NO_GC) None (*this)};
 	}
 
 	bool None::isOf (const IGenerator * type) const {

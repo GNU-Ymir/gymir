@@ -13,7 +13,7 @@ namespace syntax {
     {}
         
     Expression MacroVar::init (const lexing::Word & location, const Expression & content) {
-	return Expression {new (Z0) MacroVar (location, content)};
+	return Expression {new (NO_GC) MacroVar (location, content)};
     }
 
     bool MacroVar::isOf (const IExpression * type) const {

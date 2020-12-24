@@ -22,11 +22,11 @@ namespace semantic {
 	}
 	
 	Generator Return::init (const lexing::Word & loc, const Generator & type, const Generator & fun_type, const Generator & value) {
-	    return Generator {new (Z0) Return (loc, type, fun_type, value)};
+	    return Generator {new (NO_GC) Return (loc, type, fun_type, value)};
 	}
     
 	Generator Return::clone () const {
-	    return Generator {new (Z0) Return (*this)};
+	    return Generator {new (NO_GC) Return (*this)};
 	}
 
 	bool Return::isOf (const IGenerator * type) const {

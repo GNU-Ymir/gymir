@@ -18,11 +18,11 @@ namespace semantic {
 	}
 
 	Generator EnumRef::init (const lexing::Word&  loc, const Symbol & ref) {
-	    return Generator {new (Z0) EnumRef (loc, ref)};
+	    return Generator {new (NO_GC) EnumRef (loc, ref)};
 	}
 
 	Generator EnumRef::clone () const {
-	    return Generator {new (Z0) EnumRef (*this)};
+	    return Generator {new (NO_GC) EnumRef (*this)};
 	}
 	
 	bool EnumRef::isOf (const IGenerator * type) const {

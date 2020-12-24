@@ -15,7 +15,7 @@ namespace syntax {
     {}
 
     Expression Assert::init (const lexing::Word & loc, const Expression & test, const Expression & msg) {
-	return Expression {new (Z0) Assert (loc, test, msg)};
+	return Expression {new (NO_GC) Assert (loc, test, msg)};
     }
 
     bool Assert::isOf (const IExpression * type) const {

@@ -17,11 +17,11 @@ namespace semantic {
 	}
 	
 	Generator MacroRuleRef::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new (Z0) MacroRuleRef (loc, ref)};
+	    return Generator {new (NO_GC) MacroRuleRef (loc, ref)};
 	}
     
 	Generator MacroRuleRef::clone () const {
-	    return Generator {new (Z0) MacroRuleRef (*this)};
+	    return Generator {new (NO_GC) MacroRuleRef (*this)};
 	}
 
 	bool MacroRuleRef::isOf (const IGenerator * type) const {

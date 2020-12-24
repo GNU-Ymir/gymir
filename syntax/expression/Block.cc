@@ -19,7 +19,7 @@ namespace syntax {
     {}
 
     Expression Block::init (const lexing::Word & location, const lexing::Word & end, const Declaration & declModule, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes) {
-	return Expression {new (Z0) Block (location, end, declModule, content, catcher, scopes)};
+	return Expression {new (NO_GC) Block (location, end, declModule, content, catcher, scopes)};
     }
 
     bool Block::isOf (const IExpression * type) const {

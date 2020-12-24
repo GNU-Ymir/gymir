@@ -13,7 +13,7 @@ namespace syntax {
     {}
         
     Expression MacroToken::init (const lexing::Word & location, const Expression & content) {
-	return Expression {new (Z0) MacroToken (location, content)};
+	return Expression {new (NO_GC) MacroToken (location, content)};
     }
 
     bool MacroToken::isOf (const IExpression * type) const {

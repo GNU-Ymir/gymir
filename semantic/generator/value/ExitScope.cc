@@ -56,16 +56,24 @@ namespace semantic {
 	    this-> setThrowers (thrs);
 
 	    this-> setReturner (this-> _who.to <Value> ().isReturner ());
+	    this-> setReturnerLocation (this-> _who.to <Value> ().getReturnerLocation ());
 	    this-> setBreaker (this-> _who.to <Value> ().isBreaker ());
+	    this-> setBreakerLocation (this-> _who.to <Value> ().getBreakerLocation ());
 	    
 	    if (!this-> _catchingAction.isEmpty ()) {
 		this-> setReturner (
 		    this-> isReturner () && this-> _catchingAction.to <Value> ().isReturner ()
 		);
 
+		if (this-> _catchingAction.to <Value> ().isReturner ())
+		    this-> setReturnerLocation (this-> _catchingAction.to <Value> ().getReturnerLocation ());
+
 		this-> setBreaker (
 		    this-> isBreaker () && this-> _catchingAction.to <Value> ().isBreaker ()
 		);
+
+		if (this-> _catchingAction.to <Value> ().isBreaker ())
+		    this-> setReturnerLocation (this-> _catchingAction.to <Value> ().getBreakerLocation ());
 	    }
 	}
 	
@@ -79,11 +87,11 @@ namespace semantic {
 				   const Generator & catchingInfo,
 				   const Generator & catchingAction)
 	{	    
-	    return Generator {new (Z0) ExitScope (loc, type, jmpBuf, who, success, failure, catchingVar, catchingInfo, catchingAction)};
+	    return Generator {new (NO_GC) ExitScope (loc, type, jmpBuf, who, success, failure, catchingVar, catchingInfo, catchingAction)};
 	}
     
 	Generator ExitScope::clone () const {
-	    return Generator {new (Z0) ExitScope (*this)};
+	    return Generator {new (NO_GC) ExitScope (*this)};
 	}
 
 	bool ExitScope::isOf (const IGenerator * type) const {

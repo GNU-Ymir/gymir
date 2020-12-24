@@ -11,7 +11,7 @@ namespace syntax {
     {}
         
     Expression AliasVar::init (const lexing::Word & location) {
-	return Expression {new (Z0) AliasVar (location)};
+	return Expression {new (NO_GC) AliasVar (location)};
     }
 
     bool AliasVar::isOf (const IExpression * type) const {

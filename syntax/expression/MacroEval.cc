@@ -15,7 +15,7 @@ namespace syntax {
     {}
         
     Expression MacroEval::init (const lexing::Word & location, const lexing::Word & end, const Expression & content) {
-	return Expression {new (Z0) MacroEval (location, end, content)};
+	return Expression {new (NO_GC) MacroEval (location, end, content)};
     }
 
     bool MacroEval::isOf (const IExpression * type) const {

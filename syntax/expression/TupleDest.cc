@@ -15,7 +15,7 @@ namespace syntax {
     {}
     
     Expression TupleDest::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & value, bool isVariadic) {
-	return Expression {new (Z0) TupleDest (location, vars, value, isVariadic)};
+	return Expression {new (NO_GC) TupleDest (location, vars, value, isVariadic)};
     }
 
     Expression TupleDest::isOf (const IExpression * type) const {

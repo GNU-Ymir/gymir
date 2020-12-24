@@ -15,7 +15,7 @@ namespace semantic {
     {}
     
     Symbol Alias::init (const lexing::Word & name, const syntax::Expression & value, bool isWeak) {
-	return Symbol {new (Z0) Alias (name, value, isWeak)};
+	return Symbol {new (NO_GC) Alias (name, value, isWeak)};
     }
     
     bool Alias::isOf (const ISymbol * type) const {

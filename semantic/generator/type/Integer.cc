@@ -28,11 +28,11 @@ namespace semantic {
 	{}
 
 	Generator Integer::init (const lexing::Word & loc, int size, bool isSigned) {
-	    return Generator {new (Z0) Integer (loc, size, isSigned)};
+	    return Generator {new (NO_GC) Integer (loc, size, isSigned)};
 	}
 
 	Generator Integer::clone () const {
-	    return Generator {new (Z0) Integer (*this)};
+	    return Generator {new (NO_GC) Integer (*this)};
 	}
 		
 	bool Integer::isOf (const IGenerator * type) const {

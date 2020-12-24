@@ -57,11 +57,11 @@ namespace semantic {
 			return validateInt (expression, operand);
 		    );
 
-		    of (Pointer, p ATTRIBUTE_UNUSED,
+		    of (Pointer, p ATTRIBUTE_UNUSED,			
 			return validatePointer (expression, operand);
 		    );
 
-		    of (ClassRef, c ATTRIBUTE_UNUSED,
+		    of (ClassPtr, p ATTRIBUTE_UNUSED,
 			return validateClass (expression, operand);
 		    );
 		}
@@ -105,7 +105,6 @@ namespace semantic {
 	    
 	    if (op == Unary::Operator::UNREF) {
 	    	auto type = operand.to <Value> ().getType ().to <Type> ().getInners ()[0];
-		if (type.is <ClassRef> ()) UnaryVisitor::error (un, operand);	;
 		
 	    	if (!operand.to <Value> ().getType ().to <Type> ().isMutable ()) {
 	    	    type = Type::init (type.to<Type> (), false);

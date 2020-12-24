@@ -14,7 +14,7 @@ namespace syntax {
     {}
 
     Expression Float::init (const lexing::Word & location, const lexing::Word & prePart, const lexing::Word & decPart, const lexing::Word & suffix) {
-	return Expression {new (Z0) Float (location, prePart, decPart, suffix)};
+	return Expression {new (NO_GC) Float (location, prePart, decPart, suffix)};
     }
     
     bool Float::isOf (const IExpression * type) const {

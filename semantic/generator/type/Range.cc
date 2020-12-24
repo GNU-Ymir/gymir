@@ -27,11 +27,11 @@ namespace semantic {
 	}
 
 	Generator Range::init (const lexing::Word & loc, const Generator & inner) {
-	    return Generator {new (Z0) Range (loc, inner)};
+	    return Generator {new (NO_GC) Range (loc, inner)};
 	}
 
 	Generator Range::clone () const {
-	    return Generator {new (Z0) Range (*this)};
+	    return Generator {new (NO_GC) Range (*this)};
 	}
 		
 	bool Range::isOf (const IGenerator * type) const {

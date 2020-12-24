@@ -22,7 +22,7 @@ namespace semantic {
 
     
     Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak) {
-	auto ret = Symbol {new (Z0) Class (name, ancestor, isWeak)};
+	auto ret = Symbol {new (NO_GC) Class (name, ancestor, isWeak)};
 	ret.to <Class> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

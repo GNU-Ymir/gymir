@@ -16,7 +16,7 @@ namespace syntax {
     {}
 
     Expression MacroCall::init (const lexing::Word & loc, const lexing::Word & end, const Expression & left, const std::string & content) {
-	return Expression {new (Z0) MacroCall (loc, end, left, content)};
+	return Expression {new (NO_GC) MacroCall (loc, end, left, content)};
     }
     
     bool MacroCall::isOf (const IExpression * type) const {

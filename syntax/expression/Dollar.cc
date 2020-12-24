@@ -11,7 +11,7 @@ namespace syntax {
     {}
 
     Expression Dollar::init (const lexing::Word & location) {
-	return Expression {new (Z0) Dollar (location)};
+	return Expression {new (NO_GC) Dollar (location)};
     }
 
     bool Dollar::isOf (const IExpression * type) const {

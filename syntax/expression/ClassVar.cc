@@ -11,7 +11,7 @@ namespace syntax {
     {}
         
     Expression ClassVar::init (const lexing::Word & location) {
-	auto ret = new (Z0) ClassVar (location);
+	auto ret = new (NO_GC) ClassVar (location);
 	return Expression {ret};
     }
 

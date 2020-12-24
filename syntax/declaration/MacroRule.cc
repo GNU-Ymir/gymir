@@ -17,11 +17,11 @@ namespace syntax {
     {}
 
     Declaration MacroRule::init (const lexing::Word & loc, const Expression & rule, const Expression & type, const Expression & content) {
-	return Declaration {new (Z0) MacroRule (loc, rule, type, content)};
+	return Declaration {new (NO_GC) MacroRule (loc, rule, type, content)};
     }
 
     Declaration MacroRule::init (const syntax::MacroRule & rule) {
-	return Declaration {new (Z0) MacroRule (rule.getLocation (), rule._rule, rule._type, rule._content)};
+	return Declaration {new (NO_GC) MacroRule (rule.getLocation (), rule._rule, rule._type, rule._content)};
     }
 
     bool MacroRule::isOf (const IDeclaration * type) const {

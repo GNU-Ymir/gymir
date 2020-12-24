@@ -13,7 +13,7 @@ namespace syntax {
     {}
 
     Expression Throw::init (const lexing::Word & location, const Expression & value) {
-	return Expression {new (Z0) Throw (location, value)};
+	return Expression {new (NO_GC) Throw (location, value)};
     }
 
     bool Throw::isOf (const IExpression * type) const {

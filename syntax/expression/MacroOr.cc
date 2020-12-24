@@ -15,7 +15,7 @@ namespace syntax {
     {}
         
     Expression MacroOr::init (const lexing::Word & location, const Expression & left, const Expression & right) {
-	return Expression {new (Z0) MacroOr (location, left, right)};
+	return Expression {new (NO_GC) MacroOr (location, left, right)};
     }
 
     bool MacroOr::isOf (const IExpression * type) const {

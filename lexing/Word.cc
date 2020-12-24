@@ -99,12 +99,15 @@ namespace lexing {
 	if (this-> isEof ()) {
 	    return BUILTINS_LOCATION;
 	} else {
-	    char * aux = new (Z0) char [this-> locFile.length () + 1];
+	    char * aux = new char [this-> locFile.length () + 1];
+
 	    for (auto it : Ymir::r (0, this-> locFile.length ()))
 		aux [it] = this-> locFile [it];
-	    aux [this-> locFile.length ()] = '\0';
-    
-	    linemap_add (line_table, LC_ENTER, 0, aux, this-> line);	
+	    aux [this-> locFile.length ()] = '\0';	    
+	    
+	    linemap_add (line_table, LC_ENTER, 0, aux, this-> line);
+	    delete aux;
+	    
 	    linemap_line_start (line_table, this-> line, 0);
 	    auto ret = linemap_position_for_column (line_table, this-> column);
 	    linemap_add (line_table, LC_LEAVE, 0, NULL, 0);

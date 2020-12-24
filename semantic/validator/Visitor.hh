@@ -344,6 +344,13 @@ namespace semantic {
 	     */
 	    generator::Generator validateTemplateTest (const Symbol & context, const syntax::Expression & expr);
 	    
+
+	    /**
+	     * Validate a value, and ensure that it has a type and not a void type
+	     * \return a tree containing the value
+	     */
+	    generator::Generator validateValueNonVoid (const syntax::Expression & expr);
+	    
 	    /**
 	     * \brief validate an expression, that produce a value
 	     * \brief If the value is a breaker or a returner throw an error
@@ -744,7 +751,7 @@ namespace semantic {
 	     * \return true if left is a classRef that is an ancestor of right also a classref
 	     */
 	    bool isAncestor (const generator::Generator & left, const generator::Generator & right);
-
+	    
 	    /**
 	     * \return the list of all implemented traits in the class cl
 	     */

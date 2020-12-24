@@ -13,7 +13,7 @@ namespace semantic {
     {}
 
     Symbol MacroRule::init (const lexing::Word & name, const syntax::Declaration & constr) {
-	return Symbol {new (Z0) MacroRule (name, constr)};
+	return Symbol {new (NO_GC) MacroRule (name, constr)};
     }
 
     bool MacroRule::isOf (const ISymbol * type) const {

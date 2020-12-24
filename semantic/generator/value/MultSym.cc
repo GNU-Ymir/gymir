@@ -17,11 +17,11 @@ namespace semantic {
 	}	
 	
 	Generator MultSym::init (const lexing::Word & loc, const std::vector <Generator> & gens) {
-	    return Generator {new (Z0) MultSym (loc, gens)};
+	    return Generator {new (NO_GC) MultSym (loc, gens)};
 	}
     
 	Generator MultSym::clone () const {
-	    return Generator {new (Z0) MultSym (*this)};
+	    return Generator {new (NO_GC) MultSym (*this)};
 	}
 
 	bool MultSym::isOf (const IGenerator * type) const {
@@ -48,11 +48,11 @@ namespace semantic {
 	std::string MultSym::prettyString () const {
 	    if (this-> _gens.size () != 1) {
 		Ymir::OutBuffer buf;
-		buf.writef ("% Multiple Symbols : {", this-> _gens.size ());
+		buf.write ("Multiple Symbols : {");
 		for (auto it : Ymir::r (0, 1)) {
 		    buf.write (this-> _gens [it].getLocation ().str);
 		}
-		buf.write ("}");
+		buf.writef ("} x %", this-> _gens.size ());
 		return buf.str ();
 	    } else {
 		return this-> _gens [0].prettyString ();

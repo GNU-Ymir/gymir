@@ -14,7 +14,7 @@ namespace syntax {
     {}
 
     Expression String::init (const lexing::Word & location, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix) {
-	return Expression {new (Z0) String (location, end, sequence, suffix)};	
+	return Expression {new (NO_GC) String (location, end, sequence, suffix)};	
     }
 
     bool String::isOf (const IExpression * type) const {

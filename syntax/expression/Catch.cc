@@ -13,7 +13,7 @@ namespace syntax {
     {}
     
     Expression Catch::init (const lexing::Word & location, const std::vector<Expression> & matchs, const std::vector<Expression> & actions) {
-	return Expression {new (Z0) Catch (location, matchs, actions)};
+	return Expression {new (NO_GC) Catch (location, matchs, actions)};
     }
 
     bool Catch::isOf (const IExpression * type) const {

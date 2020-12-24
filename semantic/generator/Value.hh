@@ -22,9 +22,19 @@ namespace semantic {
 	    bool _breaker = false;
 
 	    /**
+	     * The location of the breaker inside the expression (if _breaker)
+	     */
+	    lexing::Word _breakerLoc = lexing::Word::eof ();
+	    
+	    /**
 	     * this value is set to true if the current generator close the frame in any case
 	     */
 	    bool _returner = false;
+
+	    /**
+	     * The location of the returner inside the expression (if _returner)
+	     */
+	    lexing::Word _returnerLoc = lexing::Word::eof ();
 	    
 	    /**
 	     * This value is set to true, if the current generator can be used as a left value 
@@ -49,7 +59,7 @@ namespace semantic {
 	    
 	public :
 
-	    static Generator initBrRet (const Value & other, bool breaker, bool returner);
+	    static Generator initBrRet (const Value & other, bool breaker, bool returner, const lexing::Word& brLoc, const lexing::Word & rtLoc);
 
 	    static Generator init (const Value & other, const Generator & type);
 	    
@@ -77,11 +87,21 @@ namespace semantic {
 	     * \return Tell if the generator close the closest loop scope
 	     */
 	    bool isBreaker () const;
+
+	    /**
+	     * \return the location of the breaker
+	     */
+	    const lexing::Word & getBreakerLocation () const;
 	    
 	    /**
 	     * \return Does this generator close the frame ?
 	     */
 	    bool isReturner () const;
+
+	    /**
+	     * \return the location of the returner loc
+	     */
+	    const lexing::Word & getReturnerLocation () const;
 	    
 	    /**
 	     * \return Does this generator can be used as a LValue ?
@@ -101,15 +121,35 @@ namespace semantic {
 	     */
 	    void isLvalue (bool is);
 	    
-
 	    /**
 	     * \brief Change the locality of the value
 	     */
 	    void isLocal (bool is);
 
+	    /**
+	     * A child class can declare itself a returner (e.g. Return)
+	     */
 	    void setReturner (bool);
 
+	    /**
+	     * When a child class declare itself as a returner, 
+	     * the returner location is set to the location of the value by default
+	     * But it can be modified if needed
+	     */
+	    void setReturnerLocation (const lexing::Word & loc);
+	    
+	    /**
+	     * A child can declare itself as a breaker (e.g. Break)	       	     
+	     */
 	    void setBreaker (bool);
+
+	    /**
+	     * When a child class declare itself as a breaker, 
+	     * the breaker location is set to the location of the value by default
+	     * But it can be modified if needed
+	     */
+	    void setBreakerLocation (const lexing::Word & loc);
+
 	    
 	};	
 

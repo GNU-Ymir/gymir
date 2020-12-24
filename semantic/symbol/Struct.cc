@@ -20,7 +20,7 @@ namespace semantic {
     {}
     
     Symbol Struct::init (const lexing::Word & name, const std::vector <syntax::Expression> & fields, bool isWeak) {
-	return Symbol {new (Z0) Struct (name, fields, isWeak)};
+	return Symbol {new (NO_GC) Struct (name, fields, isWeak)};
     }
 
     bool Struct::isOf (const ISymbol * type) const {

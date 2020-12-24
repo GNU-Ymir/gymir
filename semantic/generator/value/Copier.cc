@@ -18,11 +18,11 @@ namespace semantic {
 	}
 	
 	Generator Copier::init (const lexing::Word & loc, const Generator & type, const Generator & who, bool isAny) {
-	    return Generator {new (Z0) Copier (loc, type, who, isAny)};
+	    return Generator {new (NO_GC) Copier (loc, type, who, isAny)};
 	}
     
 	Generator Copier::clone () const {
-	    return Generator {new (Z0) Copier (*this)};
+	    return Generator {new (NO_GC) Copier (*this)};
 	}
 
 	bool Copier::isOf (const IGenerator * type) const {

@@ -22,11 +22,11 @@ namespace semantic {
 	{}
 
 	Generator MethodProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers) {
-	    return Generator {new (Z0) MethodProto (loc, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal, isSafe, throwers)};
+	    return Generator {new (NO_GC) MethodProto (loc, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal, isSafe, throwers)};
 	}
 	
 	Generator MethodProto::clone () const {
-	    return Generator {new (Z0) MethodProto (*this)};
+	    return Generator {new (NO_GC) MethodProto (*this)};
 	}
 
 	bool MethodProto::isOf (const IGenerator * type) const {

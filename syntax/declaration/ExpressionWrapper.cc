@@ -13,7 +13,7 @@ namespace syntax {
     {}
     
     Declaration ExpressionWrapper::init (const lexing::Word & loc, const Expression & content) {
-	return Declaration {new (Z0) ExpressionWrapper (loc, content)};
+	return Declaration {new (NO_GC) ExpressionWrapper (loc, content)};
     }
 
     bool ExpressionWrapper::isOf (const IDeclaration * type) const {

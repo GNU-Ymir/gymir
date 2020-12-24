@@ -29,18 +29,15 @@ namespace Ymir {
 	std::string readln (FILE * i) {
 	    unsigned long max = 255;
 	    std::string final = "";
+	    char buf [255];
 	    while (1) {
-		char * buf = new (Z0) char[max];
 		char * aux = fgets(buf, max, i);
 		if (aux == NULL) {
-		    delete buf;
 		    return "";
 		}
 		std::string ret = std::string (buf);
 		final += ret;
-		
-		delete  buf;
-		
+				
 		if (ret.size () != max - 1) return final;
 		else max *= 2;      
 	    }
@@ -146,10 +143,12 @@ namespace Ymir {
 		    wordLength = 1;
 		}
 		
-		buf.write (format ("%% | %%%(y)%",
+		buf.write (format ("%% | %%%%(y)%%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
 				   line.substr (0, column - 1),
+				   Colors::get (UNDERLINE),
 				   substr (line, column - 1, column + wordLength - 1),
+				   Colors::get (RESET),
 				   substr (line, column + wordLength - 1, line.length ())
 		));
 
@@ -227,10 +226,12 @@ namespace Ymir {
 				   Colors::get (RESET)));
 
 		auto column = LOCATION_COLUMN (locus);
-		buf.write (format ("%% | %%%(y)%",
+		buf.write (format ("%% | %%%%(y)%%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
 				   line.substr (0, column - 1),
+				   Colors::get (UNDERLINE),
 				   substr (line, column - 1, column + word.length () - 1),
+				   Colors::get (RESET),
 				   substr (line, column + word.length () - 1, line.length ())
 		));
 
@@ -278,12 +279,16 @@ namespace Ymir {
 
 		auto column = LOCATION_COLUMN (locus);
 		auto column2 = LOCATION_COLUMN (locus2);
-		buf.write (format ("%% | %%%(y)%%(y)%",
+		buf.write (format ("%% | %%%%(y)%%%%(y)%%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
 				   line.substr (0, column - 1),
+				   Colors::get (UNDERLINE),
 				   substr (line, column - 1, column + word.length () - 1),
-				   substr (line, column + word.length () - 1, column2 - 1), 
+				   Colors::get(RESET),
+				   substr (line, column + word.length () - 1, column2 - 1),
+				   Colors::get (UNDERLINE),
 				   substr (line, column2 - 1, column2 + end.length () - 1),
+				   Colors::get (RESET),
 				   substr (line, column2 + end.length () - 1, line.length ())
 		));
 		

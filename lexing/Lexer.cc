@@ -16,20 +16,19 @@ namespace lexing {
     std::string readln (FILE * i) {
 	unsigned long max = 255;
 	std::string final = "";
+	char buf [255];
 	while (1) {
-	    char * buf = new (Z0) char[max];
 	    char * aux = fgets(buf, max, i);
 	    if (aux == NULL) {
-		delete buf;
 		return "";
 	    }
 	    
 	    std::string ret = std::string (buf);
 	    final += ret;
-	    
-	    delete  buf;
-	    
-	    if (ret.size () != max - 1) return final;
+	    	    
+	    if (ret.size () != max - 1) {
+		return final;
+	    }
 	    else max *= 2;      
 	}
     }
@@ -38,14 +37,14 @@ namespace lexing {
 	auto tell = ftell (i);
 	fseek (i, 0, SEEK_END);
 	auto length = ftell (i) - tell;
-	char * buf = new (Z0) char[length];
+	char * buf = new char [length];
 	fseek (i, tell, SEEK_SET);
 	
 	auto size = fread (buf, 1, length, i);
 	buf [size] = '\0';
 	std::string ret = std::string (buf);
+	delete buf;
 	
-	delete  buf;
 	return ret;
     }
 

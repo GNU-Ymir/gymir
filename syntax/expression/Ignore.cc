@@ -11,7 +11,7 @@ namespace syntax {
     {}
 
     Expression Ignore::init (const lexing::Word & location) {
-	return Expression {new (Z0) Ignore (location)};
+	return Expression {new (NO_GC) Ignore (location)};
     }
 
     bool Ignore::isOf (const IExpression * type) const {

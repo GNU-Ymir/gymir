@@ -24,11 +24,11 @@ namespace semantic {
 	}
 	
 	Generator UnaryFloat::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & operand) {
-	    return Generator {new (Z0) UnaryFloat (loc, op, type, operand)};
+	    return Generator {new (NO_GC) UnaryFloat (loc, op, type, operand)};
 	}
 
 	Generator UnaryFloat::clone () const {
-	    return Generator {new (Z0) UnaryFloat (*this)};
+	    return Generator {new (NO_GC) UnaryFloat (*this)};
 	}
 	
 	bool UnaryFloat::isOf (const IGenerator * type) const {

@@ -24,11 +24,11 @@ namespace semantic {
 	}
 	
 	Generator SliceConcat::init (const lexing::Word & loc, const Generator & type, const Generator & left, const Generator & right) {
-	    return Generator {new (Z0) SliceConcat (loc, type, left, right)};
+	    return Generator {new (NO_GC) SliceConcat (loc, type, left, right)};
 	}
     
 	Generator SliceConcat::clone () const {
-	    return Generator {new (Z0) SliceConcat (*this)};
+	    return Generator {new (NO_GC) SliceConcat (*this)};
 	}
 
 	bool SliceConcat::isOf (const IGenerator * type) const {

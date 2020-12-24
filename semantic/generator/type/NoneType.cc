@@ -16,11 +16,11 @@ namespace semantic {
 	{}
 
 	Generator NoneType::init (const lexing::Word & loc, const std::string & name) {
-	    return Generator {new (Z0) NoneType (loc, name)};
+	    return Generator {new (NO_GC) NoneType (loc, name)};
 	}
 
 	Generator NoneType::clone () const {
-	    return Generator {new (Z0) NoneType (*this)};
+	    return Generator {new (NO_GC) NoneType (*this)};
 	}
 		
 	bool NoneType::isOf (const IGenerator * type) const {

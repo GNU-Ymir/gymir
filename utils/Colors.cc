@@ -16,5 +16,6 @@ DECLARE_ENUM_WITH_TYPE (
     RED = "[1;31m",
     GREEN = "[1;32m",
     BOLD = "[1;50m",
+    UNDERLINE = "[4m",
     RESET = "[0m"
 )

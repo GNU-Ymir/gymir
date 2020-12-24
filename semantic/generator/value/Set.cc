@@ -22,11 +22,11 @@ namespace semantic {
 	}
        
 	Generator Set::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {
-	    return Generator {new (Z0) Set (loc, type, values)};
+	    return Generator {new (NO_GC) Set (loc, type, values)};
 	}
 
 	Generator Set::clone () const {
-	    return Generator {new (Z0) Set (*this)};
+	    return Generator {new (NO_GC) Set (*this)};
 	}
 
 	bool Set::isOf (const IGenerator * type) const {

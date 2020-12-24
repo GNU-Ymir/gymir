@@ -16,7 +16,7 @@ namespace syntax {
     {}
 
     Expression ArrayAlloc::init (const lexing::Word & location, const Expression & left, const Expression &size, bool isDynamic) {
-	return Expression {new (Z0) ArrayAlloc (location, left, size, isDynamic)};
+	return Expression {new (NO_GC) ArrayAlloc (location, left, size, isDynamic)};
     }
 
     bool ArrayAlloc::isOf (const IExpression * type) const {

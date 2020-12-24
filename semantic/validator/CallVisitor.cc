@@ -912,7 +912,7 @@ namespace semantic {
 		int local_score = 0;
 		auto gen = validateTemplateClassCst (loc, ref, it, rights_, local_score, errors, _sym);
 		if (!gen.isEmpty ()) {
-		    if (gen.is <ClassRef> ()) gen = Pointer::init (loc, gen);
+		    if (gen.is <ClassRef> ()) gen = ClassPtr::init (loc, gen);
 		    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
 						     TemplateSyntaxWrapper::init (loc, gen),
 						     Var::init ({loc, ClassRef::INIT_NAME}),
@@ -1019,7 +1019,7 @@ namespace semantic {
 
 	    if (left.isEmpty ())  
 		throw Error::ErrorList {errors};	    
-	    else if (left.to <Value> ().getType ().is <ClassRef> ()) {
+	    else if (left.to <Value> ().getType ().is<ClassPtr> ()) {
 		bool succ = false;
 		std::list <std::string> localErrors;
 		try {

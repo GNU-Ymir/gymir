@@ -17,11 +17,11 @@ namespace semantic {
 	}
 	
 	Generator Cast::init (const lexing::Word & loc, const Generator & type, const Generator & who) {
-	    return Generator {new (Z0) Cast (loc, type, who)};
+	    return Generator {new (NO_GC) Cast (loc, type, who)};
 	}
     
 	Generator Cast::clone () const {
-	    return Generator {new (Z0) Cast (*this)};
+	    return Generator {new (NO_GC) Cast (*this)};
 	}
 
 	bool Cast::isOf (const IGenerator * type) const {

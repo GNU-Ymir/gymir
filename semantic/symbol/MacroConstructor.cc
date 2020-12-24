@@ -13,7 +13,7 @@ namespace semantic {
     {}
 
     Symbol MacroConstructor::init (const lexing::Word & name, const syntax::Declaration & constr) {
-	return Symbol {new (Z0) MacroConstructor (name, constr)};
+	return Symbol {new (NO_GC) MacroConstructor (name, constr)};
     }
     
     bool MacroConstructor::isOf (const ISymbol * type) const {

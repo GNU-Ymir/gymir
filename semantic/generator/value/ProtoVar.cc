@@ -23,11 +23,11 @@ namespace semantic {
 	}
 
 	Generator ProtoVar::init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool isSelf) {
-	    return Generator {new (Z0) ProtoVar (location, type, value, isMutable, nb_consume, isSelf)};
+	    return Generator {new (NO_GC) ProtoVar (location, type, value, isMutable, nb_consume, isSelf)};
 	}
 
 	Generator ProtoVar::clone () const {
-	    return Generator {new (Z0) ProtoVar (*this)};
+	    return Generator {new (NO_GC) ProtoVar (*this)};
 	}
 			
 	bool ProtoVar::isOf (const IGenerator * type) const {

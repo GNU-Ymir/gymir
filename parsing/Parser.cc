@@ -17,18 +17,25 @@ using namespace Ymir;
 
 
 void ymir_parse_file (const char * filename) {
-    Ymir::Parser parser (filename);
-    // TODO generate docs
-    parser.run ();
+    {
+	Ymir::Parser parser (filename);
+	// TODO generate docs
+	parser.run ();
+    }
+    
+    control_memory_leakage ();
 }
 
 void ymir_parse_files (int nb_files, const char ** files) {
-    // TODO generate docs
-    Parser::readVersionFile (); // No need to do it for each file
+    { 
+	// TODO generate docs
+	Parser::readVersionFile (); // No need to do it for each file
     
-    for (int i = 0 ; i < nb_files ; i++) {
-	ymir_parse_file (files [i]);
-    }    
+	for (int i = 0 ; i < nb_files ; i++) {
+	    ymir_parse_file (files [i]);
+	}
+    }
+    control_memory_leakage ();
 }
 
 namespace Ymir {
@@ -78,7 +85,6 @@ namespace Ymir {
 	    ftl.print ();
 	    Error::end (ExternalError::get (COMPILATION_END));
 	}
-	
     }
     
     void Parser::syntaxicTime () {

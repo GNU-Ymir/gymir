@@ -30,22 +30,22 @@ namespace semantic {
 	{}
 		
 	Generator FloatValue::init (const lexing::Word & loc, const Generator & type, const std::string & value) {
-	    return Generator {new (Z0) FloatValue (loc, type, value)};
+	    return Generator {new (NO_GC) FloatValue (loc, type, value)};
 	}
 
 	
 	Generator FloatValue::init (const lexing::Word & loc, const Generator & type, float value) {
-	    return Generator {new (Z0) FloatValue (loc, type, value)};
+	    return Generator {new (NO_GC) FloatValue (loc, type, value)};
 	}
 
 		
 	Generator FloatValue::init (const lexing::Word & loc, const Generator & type, double value) {
-	    return Generator {new (Z0) FloatValue (loc, type, value)};
+	    return Generator {new (NO_GC) FloatValue (loc, type, value)};
 	}
 
 	
 	Generator FloatValue::clone () const {
-	    return Generator {new (Z0) FloatValue (*this)};
+	    return Generator {new (NO_GC) FloatValue (*this)};
 	}
 
 	bool FloatValue::isOf (const IGenerator * type) const {

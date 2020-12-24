@@ -38,7 +38,7 @@ namespace semantic {
 	}
 		   
 	Generator ConstructorProto::init (const lexing::Word & loc, const std::string &name, const Symbol & ref, const Generator & type, const std::vector<Generator> & params, const std::vector <Generator> &throwers) {
-	    return Generator {new (Z0) ConstructorProto (loc, name, ref, type, params, throwers)};
+	    return Generator {new (NO_GC) ConstructorProto (loc, name, ref, type, params, throwers)};
 	}
 
 	Generator ConstructorProto::init (const ConstructorProto & proto, const std::string & name) {
@@ -48,7 +48,7 @@ namespace semantic {
 	}
 	
 	Generator ConstructorProto::clone () const {
-	    return Generator {new (Z0) ConstructorProto (*this)};
+	    return Generator {new (NO_GC) ConstructorProto (*this)};
 	}
 
 	bool ConstructorProto::isOf (const IGenerator * type) const {

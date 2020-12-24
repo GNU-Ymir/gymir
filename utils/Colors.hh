@@ -15,5 +15,6 @@ DECLARE_ENUM_HEADER (
     RED,
     GREEN,
     BOLD,
+    UNDERLINE,
     RESET
 )

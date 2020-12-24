@@ -12,7 +12,7 @@ namespace syntax {
     {}
 
     Expression Fixed::init (const lexing::Word & location, const lexing::Word & suffix) {
-	return Expression {new (Z0) Fixed (location, suffix)};
+	return Expression {new (NO_GC) Fixed (location, suffix)};
     }
  
 

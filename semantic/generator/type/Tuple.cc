@@ -30,11 +30,11 @@ namespace semantic {
 	}
 
 	Generator Tuple::init (const lexing::Word & loc, const std::vector<Generator> & inner) {
-	    return Generator {new (Z0) Tuple (loc, inner)};
+	    return Generator {new (NO_GC) Tuple (loc, inner)};
 	}
 
 	Generator Tuple::clone () const {
-	    return Generator {new (Z0) Tuple (*this)};
+	    return Generator {new (NO_GC) Tuple (*this)};
 	}
 		
 	bool Tuple::isOf (const IGenerator * type) const {

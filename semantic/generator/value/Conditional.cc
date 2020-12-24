@@ -24,11 +24,21 @@ namespace semantic {
 		    this-> _else.to <Value> ().isBreaker ()
 		);
 		
+		if (this-> _content.to<Value> ().isBreaker ())
+		    this-> setBreakerLocation (this-> _content.to <Value> ().getBreakerLocation ());
+		else if (this-> _else.to<Value> ().isBreaker ())
+		    this-> setBreakerLocation (this-> _else.to <Value> ().getBreakerLocation ());
+		
 	    	this-> setReturner (
 		    this-> _content.to <Value> ().isReturner () &&
 		    this-> _else.to <Value> ().isReturner ()
 		);
 
+		if (this-> _content.to <Value> ().isReturner ())
+		    this-> setReturnerLocation (this-> _content.to <Value> ().getReturnerLocation ());
+		else if (this-> _else.to <Value> ().isReturner ())
+		    this-> setReturnerLocation (this-> _else.to <Value> ().getReturnerLocation ());
+		
 		this-> _isComplete = !this-> _else.is<Conditional> () ||
 		    this-> _else.to <Conditional> ().isComplete ();
 		
@@ -37,9 +47,15 @@ namespace semantic {
 		    this-> _content.to <Value> ().isBreaker ()
 		);
 		
+		if (this-> _content.to<Value> ().isBreaker ())
+		    this-> setBreakerLocation (this-> _content.to <Value> ().getBreakerLocation ());
+				
 	    	this-> setReturner (
 		    this-> _content.to <Value> ().isReturner ()
 		);
+		
+		if (this-> _content.to <Value> ().isReturner ())
+		    this-> setReturnerLocation (this-> _content.to <Value> ().getReturnerLocation ());
 	    }
 
 	    auto lth = this-> _test.getThrowers ();
@@ -53,11 +69,11 @@ namespace semantic {
 	}	
 	
 	Generator Conditional::init (const lexing::Word & loc, const Generator & type, const Generator & test, const Generator & content, const Generator & else_, bool isMandatory) {
-	    return Generator {new (Z0) Conditional (loc, type, test, content, else_, isMandatory)};
+	    return Generator {new (NO_GC) Conditional (loc, type, test, content, else_, isMandatory)};
 	}
     
 	Generator Conditional::clone () const {
-	    return Generator {new (Z0) Conditional (*this)};
+	    return Generator {new (NO_GC) Conditional (*this)};
 	}
 
 	bool Conditional::isOf (const IGenerator * type) const {

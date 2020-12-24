@@ -19,11 +19,11 @@ namespace semantic {
 	{}
 
 	Generator Char::init (const lexing::Word & loc, int size) {
-	    return Generator {new (Z0) Char (loc, size)};
+	    return Generator {new (NO_GC) Char (loc, size)};
 	}
 
 	Generator Char::clone () const {
-	    return Generator {new (Z0) Char (*this)};
+	    return Generator {new (NO_GC) Char (*this)};
 	}
 		
 	bool Char::isOf (const IGenerator * type) const {

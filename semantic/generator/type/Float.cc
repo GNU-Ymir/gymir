@@ -44,11 +44,11 @@ namespace semantic {
 	{}
 
 	Generator Float::init (const lexing::Word & loc, int size) {
-	    return Generator {new (Z0) Float (loc, size)};
+	    return Generator {new (NO_GC) Float (loc, size)};
 	}
 
 	Generator Float::clone () const {
-	    return Generator {new (Z0) Float (*this)};
+	    return Generator {new (NO_GC) Float (*this)};
 	}
 		
 	bool Float::isOf (const IGenerator * type) const {

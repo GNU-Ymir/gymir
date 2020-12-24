@@ -17,11 +17,11 @@ namespace semantic {
 	}
 	
 	Generator ModuleAccess::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new (Z0) ModuleAccess (loc, ref)};
+	    return Generator {new (NO_GC) ModuleAccess (loc, ref)};
 	}
     
 	Generator ModuleAccess::clone () const {
-	    return Generator {new (Z0) ModuleAccess (*this)};
+	    return Generator {new (NO_GC) ModuleAccess (*this)};
 	}
 
 	bool ModuleAccess::isOf (const IGenerator * type) const {

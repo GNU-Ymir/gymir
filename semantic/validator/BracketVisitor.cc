@@ -29,9 +29,7 @@ namespace semantic {
 	    if (left.to <Value> ().getType ().is <Slice> ())
 		return validateSlice (expression, left, rights);
 
-	    if (left.to <Value> ().getType ().is <Pointer> () &&
-		left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].is<ClassRef> ()
-	    ) 
+	    if (left.to <Value> ().getType ().is<ClassPtr> ())
 		return validateClass (expression, left, rights);
 	    
 	    BracketVisitor::error (expression, left, rights);
@@ -43,7 +41,21 @@ namespace semantic {
 	    
 	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {
 		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
-		auto len = ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());		
+		auto len = ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());
+		auto innerType = left.to <Value> ().getType ().to <Array> ().getInners () [0];
+		
+		bool realFailure = false;
+		try { // If we can know at compile time, there is no reason to add a OUT_OF_ARRAY_EXCEPTION
+		    auto x = this-> _context.retreiveValue (right [0]);
+		    if (x.to <Fixed> ().getUI ().u < left.to <Value> ().getType ().to <Array> ().getSize ()) {
+			return ArrayAccess::init (expression.getLocation (), innerType, left, right [0]);
+		    } else {
+			realFailure = true;
+			Ymir::Error::occur (right[0].getLocation (), ExternalError::get (OVERFLOW_ARRAY), x.to<Fixed> ().getUI ().u, left.to <Value> ().getType ().to <Array> ().getSize ());
+		    }
+		} catch (Error::ErrorList list) {
+		    if (realFailure) throw list;
+		}
 		auto test = this-> _context.validateValue (syntax::Binary::init (
 		    {loc, Token::INF},
 		    TemplateSyntaxWrapper::init (loc, len), 
@@ -60,7 +72,6 @@ namespace semantic {
 		));
 		
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());				
-		auto innerType = left.to <Value> ().getType ().to <Array> ().getInners () [0];
 		
 		if (
 		    left.to <Value> ().isLvalue () &&

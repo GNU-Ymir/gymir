@@ -21,11 +21,11 @@ namespace semantic {
 	}
 
 	Generator Delegate::init (const lexing::Word & loc, const Generator & funcPtr) {
-	    return Generator {new (Z0) Delegate (loc, funcPtr)};
+	    return Generator {new (NO_GC) Delegate (loc, funcPtr)};
 	}
 
 	Generator Delegate::clone () const {
-	    return Generator {new (Z0) Delegate (*this)};
+	    return Generator {new (NO_GC) Delegate (*this)};
 	}
 		
 	bool Delegate::isOf (const IGenerator * type) const {

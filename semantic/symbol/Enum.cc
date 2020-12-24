@@ -17,7 +17,7 @@ namespace semantic {
     {}
     
     Symbol Enum::init (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) {
-	auto ret = Symbol {new (Z0) Enum (name, values, type, isWeak)};
+	auto ret = Symbol {new (NO_GC) Enum (name, values, type, isWeak)};
 	ret.to <Enum> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

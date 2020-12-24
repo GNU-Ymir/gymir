@@ -24,11 +24,11 @@ namespace semantic {
 	}
 
 	Generator FuncPtr::init (const lexing::Word & loc, const Generator & retType, const std::vector <Generator> & typeParams) {
-	    return Generator {new (Z0) FuncPtr (loc, retType, typeParams)};
+	    return Generator {new (NO_GC) FuncPtr (loc, retType, typeParams)};
 	}
 
 	Generator FuncPtr::clone () const {
-	    return Generator {new (Z0) FuncPtr (*this)};
+	    return Generator {new (NO_GC) FuncPtr (*this)};
 	}
 		
 	bool FuncPtr::isOf (const IGenerator * type) const {

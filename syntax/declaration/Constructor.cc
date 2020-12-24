@@ -27,11 +27,11 @@ namespace syntax {
     {}
     
     Declaration Constructor::init (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) {
-	return Declaration {new (Z0) Constructor (name, proto, super, constructions, body, explicitSuperCall, explicitSelfCall, cas, thrower)};
+	return Declaration {new (NO_GC) Constructor (name, proto, super, constructions, body, explicitSuperCall, explicitSelfCall, cas, thrower)};
     }
 
     Declaration Constructor::init (const Constructor & other) {
-	return Declaration {new (Z0) Constructor (other)}; // We need to create an allocation because we don't know how other has been constructed
+	return Declaration {new (NO_GC) Constructor (other)}; // We need to create an allocation because we don't know how other has been constructed
     }
         
     bool Constructor::isOf (const IDeclaration * type) const {

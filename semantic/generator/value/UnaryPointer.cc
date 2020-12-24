@@ -24,11 +24,11 @@ namespace semantic {
 	}
 	
 	Generator UnaryPointer::init (const lexing::Word & loc, Operator op, const Generator & type, const Generator & operand) {
-	    return Generator {new (Z0) UnaryPointer (loc, op, type, operand)};
+	    return Generator {new (NO_GC) UnaryPointer (loc, op, type, operand)};
 	}
 
 	Generator UnaryPointer::clone () const {
-	    return Generator {new (Z0) UnaryPointer (*this)};
+	    return Generator {new (NO_GC) UnaryPointer (*this)};
 	}
 	
 	bool UnaryPointer::isOf (const IGenerator * type) const {

@@ -12,7 +12,7 @@ namespace syntax {
     {}
         
     Expression MacroResult::init (const lexing::Word & location, const std::string & content) {
-	return Expression {new (Z0) MacroResult (location, content)};
+	return Expression {new (NO_GC) MacroResult (location, content)};
     }
 
     bool MacroResult::isOf (const IExpression * type) const {

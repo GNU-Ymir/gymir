@@ -14,7 +14,7 @@ namespace syntax {
     {}    
     
     Expression TemplateCall::init (const lexing::Word & location, const std::vector <Expression> & params, const Expression & content) {
-	return Expression {new (Z0) TemplateCall (location, params, content)};
+	return Expression {new (NO_GC) TemplateCall (location, params, content)};
     }
 
     

@@ -21,7 +21,7 @@ namespace semantic {
 	}
 
 	Generator Enum::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new (Z0) Enum (loc, ref)};
+	    return Generator {new (NO_GC) Enum (loc, ref)};
 	}
 
 	Generator Enum::init (const Enum & other, const Generator & type, const std::vector <Generator> & fields) {
@@ -32,7 +32,7 @@ namespace semantic {
 	}
 
 	Generator Enum::clone () const {
-	    return Generator {new (Z0) Enum (*this)};
+	    return Generator {new (NO_GC) Enum (*this)};
 	}
 		
 	bool Enum::isOf (const IGenerator * type) const {

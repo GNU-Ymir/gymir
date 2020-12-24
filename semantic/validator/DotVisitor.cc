@@ -43,12 +43,10 @@ namespace semantic {
 			 
 		else of (Range, rng ATTRIBUTE_UNUSED,
 		    ret = validateRange (expression, left);
-		)
+	        )
 
-		else of (Pointer, ptr ATTRIBUTE_UNUSED,
-		     if (ptr.getInners ()[0].is<ClassRef> ()) {
-			 ret = validateClass (expression, left, errors);
-		     }
+		else of (ClassPtr, p ATTRIBUTE_UNUSED,			     
+		    ret = validateClass (expression, left, errors);
 		);				
 	    }
 
@@ -190,10 +188,10 @@ namespace semantic {
 	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <std::string> & errors) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
-	    auto cl = left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    auto cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 	    bool prv = false, prot = false;
 
-	    this-> _context.getClassContext (left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef (), prv, prot);
+	    this-> _context.getClassContext (left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
 	    int i = 0;
 	    
 	    // Field
@@ -249,7 +247,7 @@ namespace semantic {
 	    }
 	    
 	    // Method
-	    cl = left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 	    std::vector <Generator> syms;
 	    auto & vtable = cl.to <generator::Class> ().getVtable ();
 	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
@@ -283,7 +281,7 @@ namespace semantic {
 		}
 	    }
 
-	    cl = left.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
+	    cl = left.to <Value> ().getType ().to <ClassPtr> (). getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 	    // Template methods
 	    while (!cl.isEmpty ()) {
 		auto clRef = left.to <Value> ().getType ();//Type::init (cl.to <generator::Class> ().getClassRef ().to <Type> (), true);

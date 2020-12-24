@@ -15,7 +15,7 @@ namespace syntax {
     {}
 
     Expression Cast::init (const lexing::Word & location, const Expression & type, const Expression & content) {
-	return Expression {new (Z0) Cast (location, type, content)};
+	return Expression {new (NO_GC) Cast (location, type, content)};
     }
 
     bool Cast::isOf (const IExpression * type) const {

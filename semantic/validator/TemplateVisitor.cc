@@ -169,7 +169,7 @@ namespace semantic {
 			}
 		    }
 		) else of (ImplVar, var, {
-			if (values [0].is <Pointer> () && values [0].to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
+			if (values [0].is <ClassPtr> ()) {
 			    consumed += 1;
 			    return applyTypeFromExplicitImplVar (syntaxTempl, var, values [0]);
 			} else if (values [0].is <Type> ()) {
@@ -199,7 +199,7 @@ namespace semantic {
 		    }
 		) else of (ClassVar, var, {
 			if (values [0].is <Type> ()) {
-			    if ((!values [0].isEmpty ()) && values [0].is <Pointer> () && values [0].to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
+			    if (!values [0].isEmpty () && values [0].is <ClassPtr> ()) {
 				Mapper mapper (true, Scores::SCORE_VAR);
 				mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
 				mapper.nameOrder.push_back (var.getLocation ().str);
@@ -489,7 +489,7 @@ namespace semantic {
 		try {
 		    if (ref.is <MethodTemplateRef> ()) {
 		    	auto & self = ref.to <MethodTemplateRef> ().getSelf ();
-			auto classType = self.to <Value> ().getType ().to <Pointer> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
+			auto classType = self.to <Value> ().getType ().to <ClassPtr> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
 			proto = this-> _context.validateMethodProto (sym_func.to <semantic::Function> (), classType);			
 		    } else if (ref.is <TemplateClassCst> ()) {
 			proto = this-> _context.validateClass (sym_func, false);
@@ -787,7 +787,7 @@ namespace semantic {
 			return applyTypeFromExplicitOfVar (params, var, types [0]);
 		    }
 		) else of (ImplVar, var, {
-			if (!types [0].is <Pointer> () || !types[0].to<Pointer> ().getInners ()[0].is <ClassRef> ()) {
+			if (!types [0].is <ClassPtr> ()) {
 			    auto note = Ymir::Error::createNote (var.getLocation ());
 			    Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (NOT_A_CLASS), types [0].prettyString ());
 			}
@@ -812,7 +812,7 @@ namespace semantic {
 			return Mapper (false, 0);
 		    }
 		) else of (ClassVar, var, {
-			if ((!types [0].isEmpty ()) && types [0].is <Pointer> () && types [0].to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
+			if (!types [0].isEmpty () && types [0].is <ClassPtr> ()) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
 			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
 			    mapper.nameOrder.push_back (var.getLocation ().str);
@@ -1016,7 +1016,7 @@ namespace semantic {
 	    // Default case, we just validate it and check the type equality
 	    auto left = this-> _context.validateType (ofv.getType (), true);
 	    auto score = Scores::SCORE_TYPE;
-	    if (type.is <Pointer> () && type.to <Pointer> ().getInners ()[0].is<ClassRef> ()) {
+	    if (type.is <ClassPtr> ()) {
 		this-> _context.verifyCompatibleType (ofv.getLocation (), left, type);
 		if (left.equals (type))
 		    score = Scores::SCORE_TYPE;

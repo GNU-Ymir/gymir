@@ -13,7 +13,7 @@ namespace syntax {
     {}
     
     Declaration Module::init (const lexing::Word & ident, const std::vector <Declaration> & decls, bool isGlobal) {
-	return Declaration {new (Z0) Module (ident, decls, isGlobal)};
+	return Declaration {new (NO_GC) Module (ident, decls, isGlobal)};
     }
 
     bool Module::isOf (const IDeclaration * type) const {

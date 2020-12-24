@@ -23,18 +23,18 @@ namespace syntax {
     }
 
     Expression Lambda::init (const lexing::Word & location, const Function::Prototype & proto, const Expression & content) {
-	return Expression {new (Z0) Lambda (location, proto, content)};
+	return Expression {new (NO_GC) Lambda (location, proto, content)};
     }
 
 
     Expression Lambda::refClosure (const syntax::Expression & expr) {       
-	Lambda * lmbd = new (Z0) Lambda (expr.to <Lambda> ());
+	Lambda * lmbd = new (NO_GC) Lambda (expr.to <Lambda> ());
 	lmbd-> _isRefClosure = true;
 	return Expression {lmbd};
     }
 
     Expression Lambda::moveClosure (const syntax::Expression & expr) {
-	Lambda * lmbd = new (Z0) Lambda (expr.to <Lambda> ());
+	Lambda * lmbd = new (NO_GC) Lambda (expr.to <Lambda> ());
 	lmbd-> _isMoveClosure = true;
 	return Expression {lmbd};
     }

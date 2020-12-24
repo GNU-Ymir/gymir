@@ -19,7 +19,7 @@ namespace semantic {
 	}
 
 	Generator Struct::init (const lexing::Word & loc, const Symbol & ref) {
-	    return Generator {new (Z0) Struct (loc, ref)};
+	    return Generator {new (NO_GC) Struct (loc, ref)};
 	}
 
 	Generator Struct::init (const Struct & other, const std::vector <Generator> & fields) {
@@ -29,7 +29,7 @@ namespace semantic {
 	}
 
 	Generator Struct::clone () const {
-	    return Generator {new (Z0) Struct (*this)};
+	    return Generator {new (NO_GC) Struct (*this)};
 	}
 		
 	bool Struct::isOf (const IGenerator * type) const {

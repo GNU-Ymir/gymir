@@ -13,11 +13,11 @@ namespace syntax {
     {}
 
     Expression List::init (const lexing::Word & location, const lexing::Word & end, const std::vector <Expression> & params) {
-	return Expression {new (Z0) List (location, end, params)};
+	return Expression {new (NO_GC) List (location, end, params)};
     }
 
     Expression List::init (const List & list) {
-	return Expression {new (Z0) List (list)};
+	return Expression {new (NO_GC) List (list)};
     }   
 
     bool List::isOf (const IExpression * type) const {

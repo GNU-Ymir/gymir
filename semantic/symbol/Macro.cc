@@ -12,7 +12,7 @@ namespace semantic {
     {}
 
     Symbol Macro::init (const lexing::Word & name, const std::vector <std::string> & skips) {
-	auto ret = Symbol {new (Z0) Macro (name, skips)};
+	auto ret = Symbol {new (NO_GC) Macro (name, skips)};
 	ret.to <Macro> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

@@ -3,6 +3,7 @@
 #include <ymir/semantic/generator/type/Array.hh>
 #include <ymir/semantic/generator/type/Bool.hh>
 #include <ymir/semantic/generator/type/Char.hh>
+#include <ymir/semantic/generator/type/ClassPtr.hh>
 #include <ymir/semantic/generator/type/ClassRef.hh>
 #include <ymir/semantic/generator/type/Closure.hh>
 #include <ymir/semantic/generator/type/Delegate.hh>

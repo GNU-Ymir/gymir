@@ -13,11 +13,11 @@ namespace semantic {
 	{}
        
 	Generator NullValue::init (const lexing::Word & loc, const Generator & type) {
-	    return Generator {new (Z0) NullValue (loc, type)};
+	    return Generator {new (NO_GC) NullValue (loc, type)};
 	}
 
 	Generator NullValue::clone () const {
-	    return Generator {new (Z0) NullValue (*this)};
+	    return Generator {new (NO_GC) NullValue (*this)};
 	}
 
 	bool NullValue::isOf (const IGenerator * type) const {

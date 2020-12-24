@@ -15,11 +15,11 @@ namespace semantic {
 	{}
 
 	Generator Void::init (const lexing::Word & loc) {
-	    return Generator {new (Z0) Void (loc)};
+	    return Generator {new (NO_GC) Void (loc)};
 	}
 
 	Generator Void::clone () const {
-	    return Generator {new (Z0) Void (*this)};
+	    return Generator {new (NO_GC) Void (*this)};
 	}
 		
 	bool Void::isOf (const IGenerator * type) const {

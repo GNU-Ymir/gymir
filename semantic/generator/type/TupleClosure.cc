@@ -19,11 +19,11 @@ namespace semantic {
 	}
 
 	Generator TupleClosure::init (const lexing::Word & loc, const std::vector<Generator> & inner) {
-	    return Generator {new (Z0) TupleClosure (loc, inner)};
+	    return Generator {new (NO_GC) TupleClosure (loc, inner)};
 	}
 
 	Generator TupleClosure::clone () const {
-	    return Generator {new (Z0) TupleClosure (*this)};
+	    return Generator {new (NO_GC) TupleClosure (*this)};
 	}
 		
 	bool TupleClosure::isOf (const IGenerator * type) const {

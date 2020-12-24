@@ -14,7 +14,7 @@ namespace syntax {
     {}
 
     Expression Char::init (const lexing::Word & location, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix) {
-	return Expression {new (Z0) Char (location, end, sequence, suffix)};	
+	return Expression {new (NO_GC) Char (location, end, sequence, suffix)};	
     }
 
 

@@ -14,11 +14,11 @@ namespace semantic {
 	{}
        
 	Generator BoolValue::init (const lexing::Word & loc, const Generator & type, bool value) {
-	    return Generator {new (Z0) BoolValue (loc, type, value)};
+	    return Generator {new (NO_GC) BoolValue (loc, type, value)};
 	}
 
 	Generator BoolValue::clone () const {
-	    return Generator {new (Z0) BoolValue (*this)};
+	    return Generator {new (NO_GC) BoolValue (*this)};
 	}
 
 	bool BoolValue::isOf (const IGenerator * type) const {

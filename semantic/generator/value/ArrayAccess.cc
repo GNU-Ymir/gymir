@@ -26,11 +26,11 @@ namespace semantic {
 	}
 	
 	Generator ArrayAccess::init (const lexing::Word & loc, const Generator & type, const Generator & array, const Generator & index) {
-	    return Generator {new (Z0) ArrayAccess (loc, type, array, index)};
+	    return Generator {new (NO_GC) ArrayAccess (loc, type, array, index)};
 	}
     
 	Generator ArrayAccess::clone () const {
-	    return Generator {new (Z0) ArrayAccess (*this)};
+	    return Generator {new (NO_GC) ArrayAccess (*this)};
 	}
 
 	bool ArrayAccess::isOf (const IGenerator * type) const {

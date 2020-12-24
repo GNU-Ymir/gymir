@@ -15,7 +15,7 @@ namespace syntax {
     {}
     
     Expression DecoratedExpression::init (const lexing::Word & location, const std::vector <DecoratorWord> & decos, const Expression & content) {
-	return Expression {new (Z0) DecoratedExpression (location, decos, content)};
+	return Expression {new (NO_GC) DecoratedExpression (location, decos, content)};
     }
         
     bool DecoratedExpression::isOf (const IExpression * type) const {

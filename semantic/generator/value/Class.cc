@@ -23,7 +23,7 @@ namespace semantic {
 	}
 
 	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) {
-	    return Generator {new (Z0) Class (loc, ref, clRef)};
+	    return Generator {new (NO_GC) Class (loc, ref, clRef)};
 	}
 
 	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields) {
@@ -40,7 +40,7 @@ namespace semantic {
 	}
 	
 	Generator Class::clone () const {
-	    return Generator {new (Z0) Class (*this)};
+	    return Generator {new (NO_GC) Class (*this)};
 	}
 		
 	bool Class::isOf (const IGenerator * type) const {

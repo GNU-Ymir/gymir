@@ -18,11 +18,11 @@ namespace syntax {
 	
     
     Declaration CondBlock::init (const CondBlock & decl) {
-	return Declaration {new (Z0) CondBlock (decl)};
+	return Declaration {new (NO_GC) CondBlock (decl)};
     }
 
     Declaration CondBlock::init (const lexing::Word & token, const Expression & test, const std::vector <Declaration> & content, const Declaration & else_) {	
-	return Declaration {new (Z0) CondBlock (token, test, content, else_)};
+	return Declaration {new (NO_GC) CondBlock (token, test, content, else_)};
     }
 
     bool CondBlock::isOf (const IDeclaration * type) const {

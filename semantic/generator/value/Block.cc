@@ -23,15 +23,15 @@ namespace semantic {
 	}
        
 	Generator Block::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {
-	    return Generator {new (Z0) Block (loc, type, values, false)};
+	    return Generator {new (NO_GC) Block (loc, type, values, false)};
 	}
 
 	Generator LBlock::init (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & values) {
-	    return Generator {new (Z0) Block (loc, type, values, true)};
+	    return Generator {new (NO_GC) Block (loc, type, values, true)};
 	}
 
 	Generator Block::clone () const {
-	    return Generator {new (Z0) Block (*this)};
+	    return Generator {new (NO_GC) Block (*this)};
 	}
 
 	bool Block::isOf (const IGenerator * type) const {

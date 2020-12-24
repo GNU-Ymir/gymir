@@ -16,7 +16,7 @@ namespace syntax {
     {}
 
     Expression MultOperator::init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall) {
-	return Expression {new (Z0) MultOperator (location, end, element, params, canbedotcall)};
+	return Expression {new (NO_GC) MultOperator (location, end, element, params, canbedotcall)};
     }
 
     bool MultOperator::isOf (const IExpression * type) const {

@@ -15,7 +15,7 @@ namespace syntax {
     {}
 
     Declaration ExternBlock::init (const lexing::Word & location, const lexing::Word & from, const lexing::Word & space, const Declaration & content) {
-	return Declaration {new (Z0) ExternBlock (location, from, space, content)};
+	return Declaration {new (NO_GC) ExternBlock (location, from, space, content)};
     }
 
     bool ExternBlock::isOf (const IDeclaration * type) const {

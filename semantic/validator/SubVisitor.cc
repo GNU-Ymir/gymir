@@ -64,22 +64,17 @@ namespace semantic {
 		else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
 		else of (MacroRef, rf ATTRIBUTE_UNUSED, gen = validateMacro (expression, left, errors))
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
-		else of (Pointer, ptr,
-		     if (ptr.getInners ()[0].is <ClassRef> ())
-			 gen = validateClass (expression, ptr.getInners ()[0].to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), errors);
-		     else
-			 gen = validateType (expression, left);
-		)
+		else of (Pointer, ptr ATTRIBUTE_UNUSED, gen = validateType (expression, left))
+		else of (ClassPtr, ptr, gen = validateClass (expression, ptr.getClassRef ().getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));			 
 	    }
 	    	    
 	    if (left.is<Value> () && gen.isEmpty ()) {
 		match (left.to <Value> ().getType ()) {
-		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left));
-		    of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
-		    of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors));
-		    of (Pointer, ptr, if (ptr.getInners ()[0].is <ClassRef> ()) gen = validateClassValue (expression, left);
-		    );
+		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left))
+		    else of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left))
+		    else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
+		    else of (ClassPtr, ptr ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
 		}
 	    }
 	    
@@ -150,11 +145,10 @@ namespace semantic {
 			    if (v.getType ().is <StructRef> ()) {
 				auto res = validateStructValue (expression, gen);
 				if (!res.isEmpty ()) gens.push_back (res);
-			    } else if (v.getType ().is <ClassRef> ()) {
+			    } else if (v.getType ().is <ClassPtr> ()) {
 				auto res = validateClassValue (expression, gen);
 				if (!res.isEmpty ()) gens.push_back (res);
-			    }
-				
+			    }			       
 			}
 		    )
 		}
@@ -659,7 +653,7 @@ namespace semantic {
 		if (opName == SubVisitor::__TYPEINFO__) {		    
 		    auto loc = expression.getLocation ();
 		    auto type = value.to <Value> ().getType ();
-		    if (type.is <Pointer> ()) type = type.to<Pointer> ().getInners ()[0];
+		    if (type.is <ClassPtr> ()) type = type.to<ClassPtr> ().getInners ()[0];
 		    auto typeInfoValue = this-> _context.validateTypeInfo (expression.getLocation (), type);
 
 		    // It is a pointer in the vtable, we need to unref it

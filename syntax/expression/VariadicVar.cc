@@ -12,7 +12,7 @@ namespace syntax {
     {}
     
     Expression VariadicVar::init (const lexing::Word & location, bool isValue) {
-	return Expression {new (Z0) VariadicVar (location, isValue)};
+	return Expression {new (NO_GC) VariadicVar (location, isValue)};
     }
 
     bool VariadicVar::isOf (const IExpression * type) const {

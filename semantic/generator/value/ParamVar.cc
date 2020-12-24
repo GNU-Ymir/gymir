@@ -19,11 +19,11 @@ namespace semantic {
 	}
 
 	Generator ParamVar::init (const lexing::Word & location, const Generator & type, bool isMutable, bool isSelf) {
-	    return Generator {new (Z0) ParamVar (location, type, isMutable, isSelf)};
+	    return Generator {new (NO_GC) ParamVar (location, type, isMutable, isSelf)};
 	}
 
 	Generator ParamVar::clone () const {
-	    return Generator {new (Z0) ParamVar (*this)};
+	    return Generator {new (NO_GC) ParamVar (*this)};
 	}
 			
 	bool ParamVar::isOf (const IGenerator * type) const {

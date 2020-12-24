@@ -21,11 +21,11 @@ namespace semantic {
 
 
 	Generator TupleAccess::init (const lexing::Word & loc, const Generator & type, const Generator & tuple, uint index) {
-	    return Generator {new (Z0) TupleAccess (loc, type, tuple, index)};
+	    return Generator {new (NO_GC) TupleAccess (loc, type, tuple, index)};
 	}
 	
 	Generator TupleAccess::clone () const {
-	    return Generator {new (Z0) TupleAccess (*this)};
+	    return Generator {new (NO_GC) TupleAccess (*this)};
 	}
 
 	bool TupleAccess::isOf (const IGenerator * type) const {

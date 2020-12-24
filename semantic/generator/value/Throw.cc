@@ -23,11 +23,11 @@ namespace semantic {
 	}
 	
 	Generator Throw::init (const lexing::Word & loc, const Generator & typeInfo, const Generator & value) {
-	    return Generator {new (Z0) Throw (loc,  typeInfo, value)};
+	    return Generator {new (NO_GC) Throw (loc,  typeInfo, value)};
 	}
     
 	Generator Throw::clone () const {
-	    return Generator {new (Z0) Throw (*this)};
+	    return Generator {new (NO_GC) Throw (*this)};
 	}
 
 	bool Throw::isOf (const IGenerator * type) const {

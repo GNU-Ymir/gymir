@@ -16,7 +16,7 @@ namespace syntax {
     {}
         
     Expression MacroMult::init (const lexing::Word & location, const lexing::Word & end, const std::vector<Expression> & content, const lexing::Word & mult) {
-	return Expression {new (Z0) MacroMult (location, end, content, mult)};
+	return Expression {new (NO_GC) MacroMult (location, end, content, mult)};
     }
 
     bool MacroMult::isOf (const IExpression * type) const {

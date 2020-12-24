@@ -17,7 +17,7 @@ namespace syntax {
 
 
     Expression For::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & iter, const Expression & block) {
-	return Expression {new (Z0) For (location, vars, iter, block)};
+	return Expression {new (NO_GC) For (location, vars, iter, block)};
     }
 
     bool For::isOf (const IExpression * type) const {

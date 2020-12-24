@@ -24,11 +24,11 @@ namespace semantic {
 	}
        
 	Generator SliceValue::init (const lexing::Word & loc, const Generator & type, const Generator & ptr, const Generator & len) {
-	    return Generator {new (Z0) SliceValue (loc, type, ptr, len)};
+	    return Generator {new (NO_GC) SliceValue (loc, type, ptr, len)};
 	}
 
 	Generator SliceValue::clone () const {
-	    return Generator {new (Z0) SliceValue (*this)};
+	    return Generator {new (NO_GC) SliceValue (*this)};
 	}
 
 	bool SliceValue::isOf (const IGenerator * type) const {

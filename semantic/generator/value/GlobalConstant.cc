@@ -17,11 +17,11 @@ namespace semantic {
 	{}
        
 	Generator GlobalConstant::init (const lexing::Word & loc, const std::string & name, const Generator & type, const Generator & value) {	    	    
-	    return Generator {new (Z0) GlobalConstant (loc, name, type, value)};
+	    return Generator {new (NO_GC) GlobalConstant (loc, name, type, value)};
 	}
 
 	Generator GlobalConstant::clone () const {
-	    return Generator {new (Z0) GlobalConstant (*this)};
+	    return Generator {new (NO_GC) GlobalConstant (*this)};
 	}
 
 	bool GlobalConstant::isOf (const IGenerator * type) const {

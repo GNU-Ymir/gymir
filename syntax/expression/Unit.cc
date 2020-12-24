@@ -11,7 +11,7 @@ namespace syntax {
     {}
 
     Expression Unit::init (const lexing::Word & location) {
-	return Expression {new (Z0) Unit (location)};
+	return Expression {new (NO_GC) Unit (location)};
     }
 
     bool Unit::isOf (const IExpression * type) const {

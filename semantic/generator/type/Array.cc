@@ -25,11 +25,11 @@ namespace semantic {
 	}
 
 	Generator Array::init (const lexing::Word & loc, const Generator & inner, uint size) {
-	    return Generator {new (Z0) Array (loc, inner, size)};
+	    return Generator {new (NO_GC) Array (loc, inner, size)};
 	}
 
 	Generator Array::clone () const {
-	    return Generator {new (Z0) Array (*this)};
+	    return Generator {new (NO_GC) Array (*this)};
 	}
 		
 	bool Array::isOf (const IGenerator * type) const {

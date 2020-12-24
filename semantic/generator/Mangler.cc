@@ -62,6 +62,7 @@ namespace semantic {
 		else of (EnumRef, r, result = mangleEnumRef (r))
 		else of (Range, r, result = mangleRangeT (r))
 		else of (Pointer, p, result = manglePointerT (p))
+		else of (ClassPtr, p, result = mangleClassPointerT (p))
 		else of (FuncPtr, f, result = mangleFuncPtrT (f))
 		else of (Delegate, d, result = mangleDelegateT (d))
 		else of (Closure, c ATTRIBUTE_UNUSED, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
@@ -321,6 +322,11 @@ namespace semantic {
 	}
 
 	std::string Mangler::manglePointerT (const Pointer & ptr) const {
+	    auto res = mangleType (ptr.getInners () [0], ptr.isMutable ());
+	    return format ("P%%", res.length (), res);	    
+	}
+
+	std::string Mangler::mangleClassPointerT (const ClassPtr & ptr) const {
 	    auto res = mangleType (ptr.getInners () [0], ptr.isMutable ());
 	    return format ("P%%", res.length (), res);	    
 	}

@@ -13,7 +13,7 @@ namespace syntax {
     {}
     
     Expression NamedExpression::init (const lexing::Word & location, const Expression & content) {
-	return Expression {new (Z0) NamedExpression (location, content)};
+	return Expression {new (NO_GC) NamedExpression (location, content)};
     }
         
     bool NamedExpression::isOf (const IExpression * type) const {

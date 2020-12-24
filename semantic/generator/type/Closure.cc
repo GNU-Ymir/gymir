@@ -24,11 +24,11 @@ namespace semantic {
 	}
 
 	Generator Closure::init (const lexing::Word & loc, const std::vector<Generator> & inner, const std::vector <std::string> & names, uint index) {
-	    return Generator {new (Z0) Closure (loc, inner, names, index)};
+	    return Generator {new (NO_GC) Closure (loc, inner, names, index)};
 	}
 
 	Generator Closure::clone () const {
-	    return Generator {new (Z0) Closure (*this)};
+	    return Generator {new (NO_GC) Closure (*this)};
 	}
 		
 	bool Closure::isOf (const IGenerator * type) const {
