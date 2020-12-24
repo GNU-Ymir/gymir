@@ -228,13 +228,15 @@ namespace Ymir {
 	void write_ (long);
 
 	void write_ (ulong);
-
+	
 	void write_ (float);
 	
 	void write_ (char);
 
 	void write_ (uint8_t);
 
+	void write_ (__int128_t);
+	
 	void write_ (double);
 		
 	void write_ (bool);

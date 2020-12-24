@@ -22,8 +22,8 @@ struct Keys {
     static std::string  CATCH; 
     static std::string  CLANG;
     static std::string  CLASS;
-    static std::string  CONST;
     static std::string  COMPILE;
+    static std::string  CONST;
     static std::string  COPY;
     static std::string  CPPLANG;
     static std::string  DCOPY;
@@ -112,6 +112,7 @@ struct Keys {
     static std::string  SELF_TILDE; 
     static std::string  SIZEOF;
     static std::string  SKIP;
+    static std::string  SKIPS;
     static std::string  STATIC; 
     static std::string  STRINGOF; 
     static std::string  STRUCT;

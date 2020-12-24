@@ -124,7 +124,7 @@ namespace semantic {
 	    const std::vector <Generator> & getThrowers () const;
 
 	    
-	    /** Virtual but does not do anything */
+	    /** Virtual but does nothing */
 	    virtual ~IGenerator ();
 	    
 	protected :

@@ -13,21 +13,21 @@ namespace syntax {
 	
 	Expression _rule;
 	
-	Expression _type;
-
 	std::string _content;
 
+	std::vector <Expression> _skips;
+	
     private :
 
 	friend Declaration;
 
 	MacroConstructor ();
 
-	MacroConstructor (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content);
+	MacroConstructor (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
     public :
 
-	static Declaration init (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content);
+	static Declaration init (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
 	static Declaration init (const MacroConstructor & contr);
 
@@ -37,9 +37,9 @@ namespace syntax {
 
 	const Expression & getRule () const;
 
-	const Expression & getType () const;
-
 	const std::string & getContent () const;
+
+	const std::vector <Expression> & getSkips () const;
 	
     };
 

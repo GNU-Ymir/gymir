@@ -85,8 +85,10 @@ namespace semantic {
 	    
 	    auto ret = generator::VarDecl::init (loc, var.getName ().str, type, value, isMutable);
 	    
-	    if (var.getName () != Keys::UNDER)
+	    if (var.getName () != Keys::UNDER) {
 		this-> _context.insertLocal (var.getName ().str, ret);
+	    }
+	    
 	    return ret;
 	}
 	
@@ -131,8 +133,9 @@ namespace semantic {
 				     Generator::empty ()
 	    );
 
-	    if (decl.getName () != Keys::UNDER)
+	    if (decl.getName () != Keys::UNDER) {
 		this-> _context.insertLocal (decl.getName ().str, var);
+	    }
 	    
 	    return {var, rRef, ref};
 	}       

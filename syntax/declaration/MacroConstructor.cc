@@ -4,23 +4,22 @@ namespace syntax {
 
     MacroConstructor::MacroConstructor () :
 	IDeclaration (lexing::Word::eof ()),
-	_rule (Expression::empty ()),
-	_type (Expression::empty ())
+	_rule (Expression::empty ())
     {}
 
-    MacroConstructor::MacroConstructor (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content) :
+    MacroConstructor::MacroConstructor (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) :
 	IDeclaration (loc),
 	_rule (rule),
-	_type (type),
-	_content (content)
+	_content (content),
+	_skips (skips)
     {}
 
-    Declaration MacroConstructor::init (const lexing::Word & loc, const Expression & type, const Expression & rule, const std::string & content) {
-	return Declaration {new (NO_GC) MacroConstructor (loc, type, rule, content)};
+    Declaration MacroConstructor::init (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
+	return Declaration {new (NO_GC) MacroConstructor (loc, rule, content, skips)};
     }
 
     Declaration MacroConstructor::init (const MacroConstructor & other) {
-	return init (other.getLocation (), other._type, other._rule, other._content);
+	return init (other.getLocation (), other._rule, other._content, other._skips);
     }
 
     bool MacroConstructor::isOf (const IDeclaration * type) const {
@@ -34,7 +33,6 @@ namespace syntax {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<MacroConstructor> : ", this-> getLocation ());
 	this-> _rule.treePrint (stream, i+1);
-	this-> _type.treePrint (stream, i+1);
 	stream.write (this-> _content);
     }
 
@@ -42,12 +40,12 @@ namespace syntax {
 	return this-> _rule;
     }
 
-    const Expression & MacroConstructor::getType () const {
-	return this-> _type;
-    }
-
     const std::string & MacroConstructor::getContent () const {
 	return this-> _content;
+    }
+
+    const std::vector <Expression> & MacroConstructor::getSkips () const {
+	return this-> _skips;
     }
     
 }

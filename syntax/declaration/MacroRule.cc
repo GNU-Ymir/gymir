@@ -4,24 +4,22 @@ namespace syntax {
 
     MacroRule::MacroRule () :
 	IDeclaration (lexing::Word::eof ()),
-	_rule (Expression::empty ()),
-	_type (Expression::empty ()),
-	_content (Expression::empty ())
+	_rule (Expression::empty ())
     {}
 
-    MacroRule::MacroRule (const lexing::Word & loc, const Expression & rule, const Expression & type, const Expression & content) :
+    MacroRule::MacroRule (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector<Expression> & skips) :
 	IDeclaration (loc),
 	_rule (rule),
-	_type (type),
-	_content (content)
+	_content (content),
+	_skips (skips)
     {}
 
-    Declaration MacroRule::init (const lexing::Word & loc, const Expression & rule, const Expression & type, const Expression & content) {
-	return Declaration {new (NO_GC) MacroRule (loc, rule, type, content)};
+    Declaration MacroRule::init (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
+	return Declaration {new (NO_GC) MacroRule (loc, rule, content, skips)};
     }
 
     Declaration MacroRule::init (const syntax::MacroRule & rule) {
-	return Declaration {new (NO_GC) MacroRule (rule.getLocation (), rule._rule, rule._type, rule._content)};
+	return Declaration {new (NO_GC) MacroRule (rule.getLocation (), rule._rule, rule._content, rule._skips)};
     }
 
     bool MacroRule::isOf (const IDeclaration * type) const {
@@ -35,16 +33,19 @@ namespace syntax {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<MacroRule> : ", this-> getLocation ());
 	this-> _rule.treePrint (stream, i+1);
-	this-> _type.treePrint (stream, i+1);
-	this-> _content.treePrint (stream, i+1);
+	stream.writefln ("%*%", i, '\t', this-> _content);
     }
 
-    const Expression & MacroRule::getContent () const {
+    const std::string & MacroRule::getContent () const {
 	return this-> _content;
     }
 
     const Expression & MacroRule::getRule () const {
 	return this-> _rule;
+    }
+
+    const std::vector<Expression> & MacroRule::getSkips () const {
+	return this-> _skips;
     }
     
 }

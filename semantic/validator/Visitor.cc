@@ -1919,6 +1919,10 @@ namespace semantic {
 		of (syntax::Pragma, prg,
 		    return validatePragma (prg);
 		);
+
+		of (syntax::Dollar, dl,
+		    return validateDollar (dl);
+		);
 	    }	    
 
 	    OutBuffer buf;
@@ -2148,8 +2152,7 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};
 	    }
-	}
-
+	}	
 	
 	Generator Visitor::validateSet (const syntax::Set & set) {
 	    std::vector <Generator> values;
@@ -3459,6 +3462,42 @@ namespace semantic {
 	    
 	    return Generator::empty ();
 	}
+
+	Generator Visitor::validateDollar (const syntax::Dollar & dl) {
+	    if (this-> _dollars.size () != 0) {
+		auto left = this-> _dollars.back ();
+		if (left.to <Value> ().getType ().is <Slice> ()) {
+		    return StructAccess::init (dl.getLocation (),
+					       Integer::init (dl.getLocation (), 64, false),
+					       left, Slice::LEN_NAME
+			);
+		} else if (left.to <Value> ().getType ().is <Array> ()) {
+		    return ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());
+		} else if (left.to <Value> ().getType ().is <ClassPtr> ()) {
+		    auto loc = dl.getLocation ();
+		    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+		    auto bin = syntax::Binary::init (
+			{loc, Token::DOT},
+			leftSynt,
+			syntax::Var::init ({loc, CoreNames::get (DOLLAR_OP_OVERRIDE)}),
+			syntax::Expression::empty ()
+			);
+
+		    auto call = syntax::MultOperator::init (
+			{loc, Token::LPAR}, {loc, Token::RPAR},
+			bin,
+			{}, false
+		    );
+		    
+		    return validateValue (call);
+		} else {
+		    Ymir::Error::halt ("%(r) reaching impossible point", "Critical");
+		}
+	    }
+	    
+	    Ymir::Error::occur (dl.getLocation (), ExternalError::get (DOLLAR_OUSIDE_CONTEXT));
+	    return Generator::empty ();
+	}
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
 	    auto type = Type::init (type_.to <Type> (), false, false);
@@ -4733,6 +4772,14 @@ namespace semantic {
 	    return last;
 	}
 
+	void Visitor::enterDollar (const Generator & gen) {
+	    this-> _dollars.push_back (gen);
+	}
+
+	void Visitor::quitDollar () {
+	    this-> _dollars.pop_back ();
+	}
+	
 	const Generator & Visitor::getCurrentLoopType () const {
 	    return this-> _loopBreakTypes.back ();
 	}
@@ -4757,12 +4804,14 @@ namespace semantic {
 	void Visitor::insertLocal (const std::string & name, const Generator & gen) {
 	    if (this-> _symbols.back ().empty ())
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    if (this-> _symbols.back ().back ().find (name) == this-> _symbols.back ().back ().end ())
+	    if (this-> _symbols.back ().back ().find (name) == this-> _symbols.back ().back ().end ()) {
 		insert_or_assign (this-> _symbols.back ().back (), name, gen);
-	    else
+	    } else {
 		insert_or_assign (this-> _symbols.back ().back (), name, gen);
+	    }
 	}       
 
+	
 	Generator Visitor::getLocal (const std::string & name, bool canBeInClosure) {
 	    for (auto _it : Ymir::r (0, this-> _symbols.back ().size ())) {
 		auto it = (this-> _symbols.back ().size () - _it) - 1;

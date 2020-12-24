@@ -2,6 +2,7 @@
 
 #include <ymir/syntax/Declaration.hh>
 #include <ymir/syntax/Expression.hh>
+#include <vector>
 
 namespace syntax {
 
@@ -13,21 +14,21 @@ namespace syntax {
 	
 	Expression _rule;
 	
-	Expression _type;
+	std::string _content;
 
-	Expression _content;
-
+	std::vector<Expression> _skips;
+	
     private :
 
 	friend Declaration;
 
 	MacroRule ();
 
-	MacroRule (const lexing::Word & loc, const Expression & rule, const Expression & type, const Expression & content);
+	MacroRule (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
     public :
 
-	static Declaration init (const lexing::Word & loc, const Expression & rule, const Expression & type, const Expression & content);
+	static Declaration init (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
 	static Declaration init (const MacroRule & rule);
 
@@ -35,9 +36,11 @@ namespace syntax {
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 
-	const Expression & getContent () const;
+	const std::string & getContent () const;
 
-	const Expression & getRule () const;
+	const Expression & getRule () const;	
+	
+	const std::vector<Expression> & getSkips () const;
 	
     };
 

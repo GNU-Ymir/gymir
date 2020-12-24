@@ -82,6 +82,16 @@ namespace Ymir {
 	this-> len += len;
     }    
 
+    void OutBuffer::write_ (__int128_t nb) {
+	if (nb < 0) {
+	    long n = nb;
+	    write_ (n);
+	} else {
+	    ulong n = nb;
+	    write_ (n);
+	}
+    }
+    
     void OutBuffer::write_ (double nb) {
 	auto len = snprintf (NULL, 0, "%A", nb);
 	if (this-> capacity <= this-> len + len) {

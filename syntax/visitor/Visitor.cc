@@ -6,6 +6,7 @@
 #include <ymir/syntax/declaration/_.hh>
 #include <ymir/syntax/expression/_.hh>
 #include <ymir/global/State.hh>
+#include <ymir/utils/string.hh>
 
 using namespace Ymir;
 
@@ -345,13 +346,22 @@ namespace syntax {
 
 	Expression expr = MacroMult::init (token, end, inner, lexing::Word::eof ());
 
-	Expression type (Expression::empty ());
-	if (name != Keys::SELF) {
-	    if (this-> _lex.consumeIf ({Token::SEMI_COLON}) == Token::SEMI_COLON) {
-		return MacroRule::init (name, expr, type, Expression::empty ());	
+	std::vector <Expression> skips;
+	if (this-> _lex.consumeIf ({Keys::SKIPS}) == Keys::SKIPS) {
+	    this-> _lex.next ({Token::LPAR});
+	    while (true) {
+		auto str = visitString ();
+		skips.push_back (MacroToken::init (str.getLocation (), str));
+		if (this-> _lex.next ({Token::RPAR, Token::PIPE}) == Token::RPAR)
+		    break;
 	    }
 	}
-       	
+	
+	if (name != Keys::SELF) {
+	    if (this-> _lex.consumeIf ({Token::SEMI_COLON}) == Token::SEMI_COLON) {
+		return MacroRule::init (name, expr, "", skips);	
+	    }
+	}       	
 
 	auto tok = this-> _lex.next ({Token::LACC});
 	std::string open, close;
@@ -390,8 +400,11 @@ namespace syntax {
 	this-> _lex.skipEnable (Token::RETURN,  true);
 	this-> _lex.skipEnable (Token::RRETURN, true);
 	this-> _lex.commentEnable (true);
-
-	return MacroConstructor::init (name, type, expr, all.str ());
+	if (name == Keys::SELF) {
+	    return MacroConstructor::init (name, expr, Ymir::trim (all.str ()), skips);
+	} else {
+	    return MacroRule::init (name, expr, Ymir::trim (all.str ()), skips);
+	}
     }
 
     Expression Visitor::visitMacroExpression () {
@@ -542,7 +555,7 @@ namespace syntax {
 	int close = 1;
 	do {
 	    token = this-> _lex.next ();
-	    if (token == Token::LACC) close += 1;
+	    if (token == Token::LACC || token == Token::MACRO_ACC) close += 1;
 	    if (token == Token::RACC) {
 		close -= 1;
 	    } else if (token.isEof ())
@@ -1411,7 +1424,7 @@ namespace syntax {
 	auto location = this-> _lex.next ({Keys::VERSION});
 	auto ident = visitIdentifier ();
 	if (global::State::instance ().isVersionActive (ident.str)) {
-	    auto value = visitBlock ();
+	    auto value = visitBlock ();	    
 	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
 		ignoreBlock ();
 	    }

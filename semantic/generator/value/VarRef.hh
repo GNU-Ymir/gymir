@@ -20,6 +20,8 @@ namespace semantic {
 	    /** If the this refer to a const var, it could have a compile time value */
 	    Generator _value;
 
+	    
+	    
 	    bool _isSelf;
 	    
 	private :

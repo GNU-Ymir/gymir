@@ -13,6 +13,7 @@ namespace global {
 			    DCOPY_OP_OVERRIDE  = "deepCopy",
 			    DCOPY_TRAITS       = "Copiable",
 			    DEBUG_VERSION      = "Debug",
+			    DOLLAR_OP_OVERRIDE = "opDollar",
 			    DUPLICATION_MODULE = "duplication",
 			    DUPL_ANY           = "_yrt_dupl_any", 
 			    DUPL_SLICE         = "_yrt_dup_slice", 

@@ -29,6 +29,7 @@ void ymir_parse_file (const char * filename) {
 void ymir_parse_files (int nb_files, const char ** files) {
     { 
 	// TODO generate docs
+	// TODO The version file is a thing for a dependency manager, not directly the compiler
 	Parser::readVersionFile (); // No need to do it for each file
     
 	for (int i = 0 ; i < nb_files ; i++) {

@@ -1,9 +1,10 @@
 #include <ymir/global/State.hh>
 #include <ymir/utils/Path.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/utils/string.hh>
 #include <algorithm>
 
-namespace global {
+namespace global {   
     
     State::State () {}
 
@@ -19,12 +20,14 @@ namespace global {
     }    
 
     bool State::isVersionActive (const std::string & version) {
-	return std::find (this-> _activeVersion.begin (), this-> _activeVersion.end (), version) != this-> _activeVersion.end ();
+	auto v = Ymir::toUpper (version);
+	return std::find (this-> _activeVersion.begin (), this-> _activeVersion.end (), v) != this-> _activeVersion.end ();
     }
 
     void State::activateVersion (const std::string & version) {
-	if (!isVersionActive (version))
-	    this-> _activeVersion.push_back (version);
+	auto v = Ymir::toUpper (version);
+	if (!isVersionActive (v))
+	    this-> _activeVersion.push_back (v);
     }
 
     void State::addIncludeDir (const std::string & dir) {
