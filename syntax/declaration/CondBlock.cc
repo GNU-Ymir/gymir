@@ -3,14 +3,14 @@
 namespace syntax {
 
     CondBlock::CondBlock () :	
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_inner ({}),
 	_else (Declaration::empty ()),
 	_test (Expression::empty ())
     {}
 
-    CondBlock::CondBlock (const lexing::Word & token, const Expression & test, const std::vector <Declaration> & content, const Declaration & else_) :
-	IDeclaration (token),
+    CondBlock::CondBlock (const lexing::Word & token, const std::string & comment, const Expression & test, const std::vector <Declaration> & content, const Declaration & else_) :
+	IDeclaration (token, comment),
 	_inner (content),
 	_else (else_),
 	_test (test)
@@ -21,8 +21,8 @@ namespace syntax {
 	return Declaration {new (NO_GC) CondBlock (decl)};
     }
 
-    Declaration CondBlock::init (const lexing::Word & token, const Expression & test, const std::vector <Declaration> & content, const Declaration & else_) {	
-	return Declaration {new (NO_GC) CondBlock (token, test, content, else_)};
+    Declaration CondBlock::init (const lexing::Word & token, const std::string & comment, const Expression & test, const std::vector <Declaration> & content, const Declaration & else_) {	
+	return Declaration {new (NO_GC) CondBlock (token, comment, test, content, else_)};
     }
 
     bool CondBlock::isOf (const IDeclaration * type) const {

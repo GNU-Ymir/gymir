@@ -3,17 +3,17 @@
 namespace syntax {
     
     Module::Module () :
-	IDeclaration (lexing::Word::eof ())
+	IDeclaration (lexing::Word::eof (), "")
     {}
 
-    Module::Module (const lexing::Word & ident, const std::vector <Declaration> & decls, bool isGlobal) :
-	IDeclaration (ident),
+    Module::Module (const lexing::Word & ident, const std::string & comment, const std::vector <Declaration> & decls, bool isGlobal) :
+	IDeclaration (ident, comment),
 	_decls (decls),
 	_isGlobal (isGlobal)
     {}
     
-    Declaration Module::init (const lexing::Word & ident, const std::vector <Declaration> & decls, bool isGlobal) {
-	return Declaration {new (NO_GC) Module (ident, decls, isGlobal)};
+    Declaration Module::init (const lexing::Word & ident, const std::string & comment, const std::vector <Declaration> & decls, bool isGlobal) {
+	return Declaration {new (NO_GC) Module (ident, comment, decls, isGlobal)};
     }
 
     bool Module::isOf (const IDeclaration * type) const {

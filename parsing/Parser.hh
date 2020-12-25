@@ -26,12 +26,6 @@ namespace Ymir {
 	 * \param filename the path of the file to parse
 	 */
 	Parser (const char * filename); 
-
-	/**
-	 * Read the version file
-	 * This file is used to activate version (__version keyword)
-	 */
-	static void readVersionFile ();
 	
 	/**
 	 * \brief Run all the phase of the parsing

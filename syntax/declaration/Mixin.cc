@@ -3,19 +3,19 @@
 namespace syntax {
 
     Mixin::Mixin () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_mixin (Expression::empty ())	
     {}
 
-    Mixin::Mixin (const lexing::Word & loc, const Expression & mixin, const std::vector<Declaration> & decls) :
-	IDeclaration (loc),
+    Mixin::Mixin (const lexing::Word & loc, const std::string & comment, const Expression & mixin, const std::vector<Declaration> & decls) :
+	IDeclaration (loc, comment),
 	_mixin (mixin),
 	_declarations (decls)
     {}
     
 
-    Declaration Mixin::init (const lexing::Word & loc, const Expression & mixin, const std::vector<Declaration> & decls) {
-	return Declaration {new (NO_GC) Mixin (loc, mixin, decls)};
+    Declaration Mixin::init (const lexing::Word & loc, const std::string & comment, const Expression & mixin, const std::vector<Declaration> & decls) {
+	return Declaration {new (NO_GC) Mixin (loc, comment, mixin, decls)};
     }
 
     const Expression & Mixin::getMixin () const {

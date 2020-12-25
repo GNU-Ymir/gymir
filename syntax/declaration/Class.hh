@@ -37,7 +37,7 @@ namespace syntax {
 
 	Class ();
 
-	Class (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
+	Class (const lexing::Word & name, const std::string & comment, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
 	
     public :
 
@@ -53,7 +53,7 @@ namespace syntax {
 	 * \param over the type that this class override (may be empty)
 	 * \param decls the inner declaration
 	 */
-	static Declaration init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
+	static Declaration init (const lexing::Word & name, const std::string & comment, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
 
 	/**
 	 * Mandatory function for dynamic casting

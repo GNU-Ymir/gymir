@@ -3,17 +3,16 @@
 namespace syntax {
 
     Macro::Macro () :
-	IDeclaration (lexing::Word::eof ())
+	IDeclaration (lexing::Word::eof (), "")
     {}
 
-    Macro::Macro (const lexing::Word & loc, const std::vector<std::string> & skips, const std::vector <Declaration> & content) :
-	IDeclaration (loc),
-	_skips (skips),
+    Macro::Macro (const lexing::Word & loc, const std::string & comment, const std::vector <Declaration> & content) :
+	IDeclaration (loc, comment),
 	_content (content)
     {}
 
-    Declaration Macro::init (const lexing::Word & loc, const std::vector<std::string> & skips, const std::vector <Declaration> & content) {
-	return Declaration {new (NO_GC) Macro (loc, skips, content)};
+    Declaration Macro::init (const lexing::Word & loc, const std::string & comment, const std::vector <Declaration> & content) {
+	return Declaration {new (NO_GC) Macro (loc, comment,  content)};
     }
 
     bool Macro::isOf (const IDeclaration * type) const {
@@ -29,10 +28,6 @@ namespace syntax {
 	for (auto & it : this-> _content) {
 	    it.treePrint (stream, i + 1);
 	}
-    }
-
-    const std::vector <std::string> & Macro::getSkips () const {
-	return this-> _skips;
     }
 
     const std::vector <Declaration> & Macro::getContent () const {

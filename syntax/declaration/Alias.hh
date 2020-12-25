@@ -25,7 +25,7 @@ namespace syntax {
 
 	Alias ();
 	
-	Alias (const lexing::Word & ident, const Expression & value);
+	Alias (const lexing::Word & ident, const std::string & comment, const Expression & value);
 	
     public :
 
@@ -34,7 +34,7 @@ namespace syntax {
 	 * \param ident the identifier of the alias
 	 * \param value the value of the alias
 	 */
-	static Declaration init (const lexing::Word& ident, const Expression & value);
+	static Declaration init (const lexing::Word& ident, const std::string & comment, const Expression & value);
 	
 	/**
 	 * \brief Create a new Alias from anothe one

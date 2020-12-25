@@ -3,19 +3,19 @@
 namespace syntax {
 
     ExternBlock::ExternBlock () :
-	IDeclaration (lexing::Word::eof ()), 
+	IDeclaration (lexing::Word::eof (), ""), 
 	_content (Declaration::empty ())
     {}
 
-    ExternBlock::ExternBlock (const lexing::Word & location, const lexing::Word & from, const lexing::Word & space, const Declaration & content) :
-	IDeclaration (location),
+    ExternBlock::ExternBlock (const lexing::Word & location, const std::string & comment, const lexing::Word & from, const lexing::Word & space, const Declaration & content) :
+	IDeclaration (location, comment),
 	_from (from),
 	_space (space),
 	_content (content)
     {}
 
-    Declaration ExternBlock::init (const lexing::Word & location, const lexing::Word & from, const lexing::Word & space, const Declaration & content) {
-	return Declaration {new (NO_GC) ExternBlock (location, from, space, content)};
+    Declaration ExternBlock::init (const lexing::Word & location, const std::string & comment, const lexing::Word & from, const lexing::Word & space, const Declaration & content) {
+	return Declaration {new (NO_GC) ExternBlock (location, comment, from, space, content)};
     }
 
     bool ExternBlock::isOf (const IDeclaration * type) const {

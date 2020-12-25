@@ -52,6 +52,7 @@ ymir_OBJS = \
 	ymir/decl_Trait.o \
 	ymir/decl_Use.o \
 	ymir/declarator_Visitor.o \
+	ymir/documentation_Visitor.o \
 	ymir/error_Error.o \
 	ymir/error_ListError.o \
 	ymir/expr_ArrayAlloc.o \
@@ -386,5 +387,9 @@ ymir/generator_%.o: ymir/semantic/generator/value/%.cc
 ymir/generic_%.o: ymir/tree/%.cc
 	  $(YCOMPILE) $(ALL_CXXFLAGS) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
-	
+
+ymir/documentation_%.o: ymir/documentation/%.cc
+	  $(YCOMPILE) $(ALL_CXXFLAGS) $(GYC_INCLUDES) $<
+	  $(YPOSTCOMPILE)
+
 

@@ -26,13 +26,13 @@ namespace syntax {
 
 	DeclBlock ();
 
-	DeclBlock (const lexing::Word & loc, const std::vector <Declaration> & content, bool isPrivate, bool isProt);
+	DeclBlock (const lexing::Word & loc, const std::string & comment, const std::vector <Declaration> & content, bool isPrivate, bool isProt);
 
     public :
 
 	static Declaration init (const DeclBlock & decl);
 	
-	static Declaration init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate, bool isProt);
+	static Declaration init (const lexing::Word & token, const std::string & comment, const std::vector <Declaration> & content, bool isPrivate, bool isProt);
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;	
 

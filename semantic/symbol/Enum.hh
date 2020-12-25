@@ -28,13 +28,13 @@ namespace semantic {
 
 	Enum ();
 
-	Enum (const lexing::Word & name, const std::vector <syntax::Expression> & fields, const syntax::Expression & type, bool isWeak);
+	Enum (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, const syntax::Expression & type, bool isWeak);
 
 	Enum (const Enum & other);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const std::vector<syntax::Expression> & fields, const syntax::Expression & type, bool isWeak);
+	static Symbol init (const lexing::Word & name, const std::string & comments, const std::vector<syntax::Expression> & fields, const syntax::Expression & type, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

@@ -11,10 +11,12 @@ namespace syntax {
     class IDeclaration {
 	
 	lexing::Word _location;
+
+	std::string _comments;
 	
     protected : 
 	
-	IDeclaration (const lexing::Word & location);
+	IDeclaration (const lexing::Word & location, const std::string & comments);
 	
     public:
 	
@@ -48,6 +50,16 @@ namespace syntax {
 	 */
 	const lexing::Word & getLocation () const;
 	
+	/**
+	 * \return the comments of the declaration
+	 */
+	const std::string& getComments () const;
+
+	/**
+	 * Change the comments of the declaration
+	 */
+	void setComments (const std::string & comments);
+	
 	virtual ~IDeclaration ();
 	
     };
@@ -75,6 +87,17 @@ namespace syntax {
 	 * Proxy function
 	 */
 	const lexing::Word & getLocation () const;
+
+
+	/**
+	 * Proxy function
+	 */
+	const std::string & getComments () const;
+
+	/**
+	 * Proxy function
+	 */
+	void setComments (const std::string & comments);
 	
 	/**
 	 * \brief Cast the content pointer into the type (if possible)

@@ -143,12 +143,11 @@ ymir_langhook_handle_option (size_t scode, const char *arg, long int value ATTRI
 	global::State::instance ().activateStandalone (true);
     } else if (code == OPT_fdoc) {
 	// dump documentation
+	global::State::instance ().activateDocDumping (true);
     } else if (code == OPT_fversion_) {
 	global::State::instance ().activateVersion (arg);
     } else if (code == OPT_imultilib) {
 	// set multilib
-    } else if (code == OPT_vfile) {
-	global::State::instance ().setVersionFile (arg);
     } else {
 	return false;
     }

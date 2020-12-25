@@ -32,7 +32,7 @@ namespace syntax {
 
 	Module ();
 
-	Module (const lexing::Word & loc, const std::vector <Declaration> & content, bool isGlobal);
+	Module (const lexing::Word & loc, const std::string & comment, const std::vector <Declaration> & content, bool isGlobal);
 	
     public:
 		
@@ -41,7 +41,7 @@ namespace syntax {
 	 * \param ident the location and name of the module
 	 * \param decls the list of declaration inside the module
 	 */
-	static Declaration init (const lexing::Word &ident, const std::vector <Declaration> & decls, bool isGlobal);
+	static Declaration init (const lexing::Word &ident, const std::string & comment, const std::vector <Declaration> & decls, bool isGlobal);
 
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;

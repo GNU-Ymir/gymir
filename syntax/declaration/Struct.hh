@@ -30,7 +30,7 @@ namespace syntax {
 
 	Struct ();
 
-	Struct (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
+	Struct (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
 	
     public :
 
@@ -40,7 +40,7 @@ namespace syntax {
 	 * \param attrs the attributes of the struct
 	 * \param decl the declaration of the struct
 	 */
-	static Declaration init (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
+	static Declaration init (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
 
 	/**
 	 * Mandatory function for dynamic cast

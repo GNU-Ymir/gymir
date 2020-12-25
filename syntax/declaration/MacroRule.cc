@@ -3,23 +3,23 @@
 namespace syntax {
 
     MacroRule::MacroRule () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_rule (Expression::empty ())
     {}
 
-    MacroRule::MacroRule (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector<Expression> & skips) :
-	IDeclaration (loc),
+    MacroRule::MacroRule (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector<Expression> & skips) :
+	IDeclaration (loc, comment),
 	_rule (rule),
 	_content (content),
 	_skips (skips)
     {}
 
-    Declaration MacroRule::init (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
-	return Declaration {new (NO_GC) MacroRule (loc, rule, content, skips)};
+    Declaration MacroRule::init (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
+	return Declaration {new (NO_GC) MacroRule (loc, comment, rule, content, skips)};
     }
 
     Declaration MacroRule::init (const syntax::MacroRule & rule) {
-	return Declaration {new (NO_GC) MacroRule (rule.getLocation (), rule._rule, rule._content, rule._skips)};
+	return Declaration {new (NO_GC) MacroRule (rule)};
     }
 
     bool MacroRule::isOf (const IDeclaration * type) const {

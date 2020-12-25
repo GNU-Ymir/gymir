@@ -3,15 +3,15 @@
 namespace semantic {
 
     Module::Module () :
-	ISymbol (lexing::Word::eof (), false)
+	ISymbol (lexing::Word::eof (), "", false)
     {}
     
-    Module::Module (const lexing::Word & name, bool isWeak) :
-	ISymbol (name, isWeak)	
+    Module::Module (const lexing::Word & name, const std::string & comments, bool isWeak) :
+	ISymbol (name, comments, isWeak)	
     {}
     
-    Symbol Module::init (const lexing::Word & name, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Module (name, isWeak)};
+    Symbol Module::init (const lexing::Word & name, const std::string & comments, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Module (name, comments, isWeak)};
 	ret.to <Module> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

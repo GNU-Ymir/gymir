@@ -3,17 +3,17 @@
 namespace syntax {
 
     ExpressionWrapper::ExpressionWrapper () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_content (Expression::empty ())
     {}
 
-    ExpressionWrapper::ExpressionWrapper (const lexing::Word & loc, const Expression & content) :
-	IDeclaration (loc),
+    ExpressionWrapper::ExpressionWrapper (const lexing::Word & loc, const std::string & comment, const Expression & content) :
+	IDeclaration (loc, comment),
 	_content (content)
     {}
     
-    Declaration ExpressionWrapper::init (const lexing::Word & loc, const Expression & content) {
-	return Declaration {new (NO_GC) ExpressionWrapper (loc, content)};
+    Declaration ExpressionWrapper::init (const lexing::Word & loc, const std::string & comment, const Expression & content) {
+	return Declaration {new (NO_GC) ExpressionWrapper (loc, comment, content)};
     }
 
     bool ExpressionWrapper::isOf (const IDeclaration * type) const {

@@ -3,18 +3,18 @@
 namespace syntax {
 
     Enum::Enum () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_type (Expression::empty ())
     {}
 
-    Enum::Enum (const lexing::Word & ident, const Expression& type,  const std::vector <Expression> & values) :
-	IDeclaration (ident),
+    Enum::Enum (const lexing::Word & ident, const std::string & comment, const Expression& type,  const std::vector <Expression> & values) :
+	IDeclaration (ident, comment),
 	_values (values),
 	_type (type)
     {}
     
-    Declaration Enum::init (const lexing::Word & ident, const Expression& type,  const std::vector <Expression> & values) {
-	return Declaration {new (NO_GC) Enum (ident, type, values)};
+    Declaration Enum::init (const lexing::Word & ident, const std::string & comment, const Expression& type,  const std::vector <Expression> & values) {
+	return Declaration {new (NO_GC) Enum (ident, comment, type, values)};
     }
     
     bool Enum::isOf (const IDeclaration * type) const {

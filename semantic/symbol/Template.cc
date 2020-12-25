@@ -6,22 +6,22 @@ namespace semantic {
 
 
     Template::Template () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_params ({}),
 	_test (syntax::Expression::empty ()),
 	_decl (syntax::Declaration::empty ())
     {}
 
-    Template::Template (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams, bool isWeak) :
-	ISymbol (loc, isWeak),
+    Template::Template (const lexing::Word & loc, const std::string & comments, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams, bool isWeak) :
+	ISymbol (loc, comments, isWeak),
 	_params (params),
 	_test (test),
 	_decl (decl),
 	_previousParams (previousParams)
     {}
     
-    Symbol Template::init (const lexing::Word & loc, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams, bool isWeak) {
-	return Symbol {new (NO_GC) Template (loc, params, decl, test, previousParams, isWeak)};
+    Symbol Template::init (const lexing::Word & loc, const std::string & comments, const std::vector<syntax::Expression> & params, const syntax::Declaration & decl, const syntax::Expression & test, const std::vector<syntax::Expression> & previousParams, bool isWeak) {
+	return Symbol {new (NO_GC) Template (loc, comments, params, decl, test, previousParams, isWeak)};
     }
 
     bool Template::isOf (const ISymbol * type) const {

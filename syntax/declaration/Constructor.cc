@@ -5,7 +5,7 @@ namespace syntax {
     
 
     Constructor::Constructor () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_proto (Function::Prototype::empty ()),
 	_superParams ({}),
 	_construction ({}),
@@ -14,8 +14,8 @@ namespace syntax {
 	_explicitSelfCall (lexing::Word::eof ())
     {}
     
-    Constructor::Constructor (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) :
-	IDeclaration (name),
+    Constructor::Constructor (const lexing::Word & name, const std::string & comment, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) :
+	IDeclaration (name, comment),
 	_proto (proto),
 	_superParams (super),
 	_construction (constructions),
@@ -26,8 +26,8 @@ namespace syntax {
 	_throwers (thrower)
     {}
     
-    Declaration Constructor::init (const lexing::Word & name, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) {
-	return Declaration {new (NO_GC) Constructor (name, proto, super, constructions, body, explicitSuperCall, explicitSelfCall, cas, thrower)};
+    Declaration Constructor::init (const lexing::Word & name, const std::string& comment, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) {
+	return Declaration {new (NO_GC) Constructor (name, comment, proto, super, constructions, body, explicitSuperCall, explicitSelfCall, cas, thrower)};
     }
 
     Declaration Constructor::init (const Constructor & other) {

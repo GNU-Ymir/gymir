@@ -4,16 +4,16 @@
 namespace syntax {
 
     Import::Import () :
-	IDeclaration (lexing::Word::eof ())
+	IDeclaration (lexing::Word::eof (), "")
     {}
 
-    Import::Import (const lexing::Word & loc, const lexing::Word & module) :
-	IDeclaration (loc),
+    Import::Import (const lexing::Word & loc, const std::string & comment, const lexing::Word & module) :
+	IDeclaration (loc, comment),
 	_module (module)
     {}
     
-    Declaration Import::init (const lexing::Word & loc, const lexing::Word & module) {
-	return Declaration {new (NO_GC) Import (loc, module)};
+    Declaration Import::init (const lexing::Word & loc, const std::string & comment, const lexing::Word & module) {
+	return Declaration {new (NO_GC) Import (loc, comment, module)};
     }
 
     bool Import::isOf (const IDeclaration * type) const {

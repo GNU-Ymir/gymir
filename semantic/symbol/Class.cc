@@ -5,15 +5,15 @@
 namespace semantic {
 
     Class::Class () :
-	ISymbol (lexing::Word::eof (), false), 
+	ISymbol (lexing::Word::eof (), "", false), 
 	_ancestor (syntax::Expression::empty ()),
 	_fields ({}),
 	_gen (generator::Generator::empty ()),
 	_typeInfo (generator::Generator::empty ())
     {}
 
-    Class::Class (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak) :
-	ISymbol (name, isWeak),
+    Class::Class (const lexing::Word & name, const std::string & comments, const syntax::Expression & ancestor, bool isWeak) :
+	ISymbol (name, comments, isWeak),
 	_ancestor (ancestor),
 	_fields ({}),
 	_gen (generator::Generator::empty ()),
@@ -21,8 +21,8 @@ namespace semantic {
     {}
 
     
-    Symbol Class::init (const lexing::Word & name, const syntax::Expression & ancestor, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Class (name, ancestor, isWeak)};
+    Symbol Class::init (const lexing::Word & name, const std::string & comments, const syntax::Expression & ancestor, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Class (name, comments, ancestor, isWeak)};
 	ret.to <Class> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

@@ -126,8 +126,9 @@ namespace syntax {
 	lexing::Word space;
 	lexing::Word token;
 	auto beginPos = this-> _lex.tell ();
+	std::string comments;
 	try {
-	    auto next = this-> _lex.next ({Keys::MOD});
+	    auto next = this-> _lex.nextWithDocs (comments, {Keys::MOD});
 	    space = visitNamespace ();
 	    this-> _lex.consumeIf ({Token::SEMI_COLON});
 	} catch (Error::ErrorList ATTRIBUTE_UNUSED list) {
@@ -135,7 +136,7 @@ namespace syntax {
 	    this-> _lex.seek (beginPos);
 	}
 	
-	do {	    
+	do {
 	    token = this-> _lex.consumeIf ({Keys::PUBLIC, Keys::PRIVATE, Keys::VERSION});
 	    if (token == Keys::PUBLIC || token == Keys::PRIVATE) {
 		decls.push_back (visitProtectionBlock (token == Keys::PRIVATE));
@@ -148,13 +149,14 @@ namespace syntax {
 
 	if (space.isEof ())
 	    space.setLocus (this-> _lex.getFilename (), 0, 0, 0);
-	
-	auto ret = Module::init (space, decls, true);
+
+	auto ret = Module::init (space, comments, decls, true);
 	return ret;
     }
     
     Declaration Visitor::visitProtectionBlock (bool isPrivate) {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	std::vector <Declaration> decls;
 	auto token = this-> _lex.consumeIf ({Token::LACC});
 	bool end = (token != Token::LACC); //if the block is not surrounded with {}, we get only one declaration
@@ -165,8 +167,8 @@ namespace syntax {
 		end = true;
 	    } else decls.push_back (visitDeclaration ());	    
 	} while (!end);
-
-	return DeclBlock::init (location, decls, isPrivate, false);	
+	
+	return DeclBlock::init (location, comments, decls, isPrivate, false);	
     }
 
     Declaration Visitor::visitVersionGlob (bool global) {
@@ -175,7 +177,8 @@ namespace syntax {
     }
 
     Declaration Visitor::visitVersionGlobBlock (bool global) {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto ident = visitIdentifier ();
 	std::vector <Declaration> decls;
 	
@@ -210,12 +213,13 @@ namespace syntax {
 	    }
 	}
 	
-	return DeclBlock::init (location, decls, true, false);
+	return DeclBlock::init (location, comments, decls, true, false);
     }
 
 
     Declaration Visitor::visitExtern () {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto token = this-> _lex.consumeIf ({Token::LPAR});
 
 	lexing::Word from, space;
@@ -228,30 +232,17 @@ namespace syntax {
 	    }
 	}
 
-	return ExternBlock::init (location, from, space, visitProtectionBlock (false));
+	return ExternBlock::init (location, comments, from, space, visitProtectionBlock (false));
     }
 
     Declaration Visitor::visitMacro () {
-	std::vector <std::string> skips;
-	if (this-> _lex.consumeIf({Token::AT}) == Token::AT) {
-	    this-> _lex.next ({Keys::SKIP});
-	    this-> _lex.next ({Token::EQUAL});
-	    this-> _lex.next ({Token::LACC});
-	    
-	    do {
-		auto tok = visitString ();
-		skips.push_back (tok.to <String> ().getSequence ().str);
-		auto end = this-> _lex.next ({Token::COMA, Token::RACC});
-		if (end == Token::RACC) break;
-	    } while (true);
-	}
-	
+	std::string comments;
+	auto loc = this-> _lex.rewind ().nextWithDocs (comments);
 	auto name = this-> _lex.next ();
-
 
 	auto content = visitMacroBlock ();
 	
-	return Macro::init (name, skips, content);
+	return Macro::init (name, comments, content);
     }
 
     std::vector <Declaration> Visitor::visitMacroBlock () {
@@ -271,7 +262,8 @@ namespace syntax {
     }
 
     Declaration Visitor::visitPublicMacroBlock () {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	std::vector <Declaration> decls;
 	auto token = this-> _lex.consumeIf ({Token::LACC});
 	bool end = (token != Token::LACC);
@@ -283,11 +275,12 @@ namespace syntax {
 		decls.push_back (visitMacroContent ());
 	    }
 	} while (!end);
-	return DeclBlock::init (location, decls, false, false);
+	return DeclBlock::init (location, comments, decls, false, false);
     }
 
     Declaration Visitor::visitVersionMacro () {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto ident = visitIdentifier ();
 	std::vector <Declaration> decls;
 	if (global::State::instance ().isVersionActive (ident.str)) {
@@ -301,11 +294,12 @@ namespace syntax {
 		decls = visitMacroBlock ();
 	    }
 	}
-	return DeclBlock::init (location, decls, false, false);
+	return DeclBlock::init (location, comments, decls, false, false);
     }
 
     Declaration Visitor::visitMacroContent () {
-	auto token = this-> _lex.next ({Keys::SELF, Keys::DEF, Keys::IMPORT});
+	std::string comments;
+	auto token = this-> _lex.nextWithDocs (comments, {Keys::SELF, Keys::DEF, Keys::IMPORT});
 	if (token == Keys::IMPORT) return visitImport ();
 	
 	auto name = token;
@@ -359,7 +353,7 @@ namespace syntax {
 	
 	if (name != Keys::SELF) {
 	    if (this-> _lex.consumeIf ({Token::SEMI_COLON}) == Token::SEMI_COLON) {
-		return MacroRule::init (name, expr, "", skips);	
+		return MacroRule::init (name, comments, expr, "", skips);	
 	    }
 	}       	
 
@@ -401,9 +395,9 @@ namespace syntax {
 	this-> _lex.skipEnable (Token::RRETURN, true);
 	this-> _lex.commentEnable (true);
 	if (name == Keys::SELF) {
-	    return MacroConstructor::init (name, expr, Ymir::trim (all.str ()), skips);
+	    return MacroConstructor::init (name, comments, expr, Ymir::trim (all.str ()), skips);
 	} else {
-	    return MacroRule::init (name, expr, Ymir::trim (all.str ()), skips);
+	    return MacroRule::init (name, comments, expr, Ymir::trim (all.str ()), skips);
 	}
     }
 
@@ -483,6 +477,8 @@ namespace syntax {
     }
 
     Declaration Visitor::visitAlias () {
+	std::string comments;
+	this-> _lex.rewind ().nextWithDocs (comments);
 	auto name = visitIdentifier ();
 	std::vector <Expression> templates = visitTemplateParameters ();	
 	this-> _lex.next ({Token::EQUAL});
@@ -490,13 +486,14 @@ namespace syntax {
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	
 	if (!templates.empty ()) {
-	    return Template::init (name, templates, Alias::init (name, value), Expression::empty ());
+	    return Template::init (name, comments, templates, Alias::init (name, comments, value), Expression::empty ());
 	} else 
-	    return Alias::init (name, value);
+	    return Alias::init (name, comments, value);
     }
     
     Declaration Visitor::visitClass () {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto attribs = visitAttributes ();
 	
 	auto name = this-> _lex.next ();	
@@ -510,9 +507,9 @@ namespace syntax {
 	auto decls = visitClassBlock ();
 
 	if (!templates.empty ()) {
-	    return Template::init (name, templates, Class::init (name, ancestor, decls, attribs), Expression::empty ());
+	    return Template::init (name, comments, templates, Class::init (name, comments, ancestor, decls, attribs), Expression::empty ());
 	} else
-	    return Class::init (name, ancestor, decls, attribs);
+	    return Class::init (name, comments, ancestor, decls, attribs);
     }
 
     std::vector <Declaration> Visitor::visitClassBlock (bool fromTrait) {
@@ -535,7 +532,8 @@ namespace syntax {
     }
     
     Declaration Visitor::visitProtectionClassBlock (bool isPrivate, bool isProtected, bool fromTrait) {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;	
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	std::vector <Declaration> decls;
 	auto token = this-> _lex.consumeIf ({Token::LACC});
 	bool end = (token != Token::LACC);
@@ -547,7 +545,11 @@ namespace syntax {
 		decls.push_back (visitClassContent (fromTrait));		
 	    }
 	} while (!end);
-	return DeclBlock::init (location, decls, isPrivate, isProtected);
+	
+	if (decls.size () == 1 && decls [0].getComments () == "") // The protection can be on only one element
+	    decls [0].setComments (comments);
+	
+	return DeclBlock::init (location, comments, decls, isPrivate, isProtected);
     }
 
     void Visitor::ignoreBlock () {
@@ -566,7 +568,8 @@ namespace syntax {
     
     
     Declaration Visitor::visitVersionClass (bool fromTrait) {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto ident = visitIdentifier ();
 	std::vector <Declaration> decls;
 	if (global::State::instance ().isVersionActive (ident.str)) {
@@ -580,11 +583,12 @@ namespace syntax {
 		decls = visitClassBlock (fromTrait);
 	    }
 	}   
-	return DeclBlock::init (location, decls, false, false);
+	return DeclBlock::init (location, comments, decls, false, false);
     }
 
     Declaration Visitor::visitIfClass (bool fromTrait) {
-	auto location = this-> _lex.next ({Keys::IF});
+	std::string comments;
+	auto location = this-> _lex.nextWithDocs ({Keys::IF});
 	auto test = this-> visitExpression ();
 	auto decls = visitClassBlock (fromTrait);
 	auto next = this-> _lex.consumeIf ({Keys::ELSE});
@@ -592,13 +596,13 @@ namespace syntax {
 	    auto next2 = this-> _lex.consumeIf ({Keys::IF});
 	    if (next2 == Keys::IF) {
 		this-> _lex.rewind ();
-		return CondBlock::init (location, test, decls, visitIfClass (fromTrait));
+		return CondBlock::init (location, comments, test, decls, visitIfClass (fromTrait));
 	    } else {
 		auto elseDecls = visitClassBlock (fromTrait);
-		return CondBlock::init (location, test, decls, DeclBlock::init (next, elseDecls, true, false));
+		return CondBlock::init (location, comments, test, decls, DeclBlock::init (next, comments, elseDecls, true, false));
 	    }
 	}
-	return CondBlock::init (location, test, decls, DeclBlock::init (location, {}, true, false));
+	return CondBlock::init (location, comments, test, decls, DeclBlock::init (location, comments, {}, true, false));
     }
     
     Declaration Visitor::visitClassContent (bool fromTrait) {
@@ -628,17 +632,19 @@ namespace syntax {
     }
     
     Declaration Visitor::visitClassMixin () {
-	auto location = this-> _lex.rewind ().next ({Keys::IMPL});
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::IMPL});
 	auto content = visitExpression (10); // (priority of dot operator)
 	if (this-> _lex.consumeIf ({Token::SEMI_COLON}) != Token::SEMI_COLON) {	    
 	    std::vector <Declaration> decls = visitClassBlock (false);	    
-	    return Mixin::init (location, content, decls);
+	    return Mixin::init (location, comments, content, decls);
 	} else
-	    return Mixin::init (location, content, {});
+	    return Mixin::init (location, comments, content, {});
     }
 
     Declaration Visitor::visitClassConstructor () {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto cas = visitAttributes ();
 	
 	auto before_template = this-> _lex.tell ();
@@ -693,9 +699,9 @@ namespace syntax {
 	auto body = visitExpression ();
 	
 	if (templates.size () != 0) {
-	    return Template::init (location, templates, Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), Expression::empty ());
+	    return Template::init (location, comments, templates, Constructor::init (location, comments, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), Expression::empty ());
 	} else 
-	    return Constructor::init (location, proto, supers, constructions, body, getSuper, getSelf, cas, throwers);
+	    return Constructor::init (location, comments, proto, supers, constructions, body, getSuper, getSelf, cas, throwers);
     }
 
     std::vector <syntax::Expression> Visitor::visitThrowers () {
@@ -711,7 +717,8 @@ namespace syntax {
     }
     
     Declaration Visitor::visitEnum () {
-	auto location = this-> _lex.rewind ().next ({Keys::ENUM});
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::ENUM});
 	Expression type (Expression::empty ());
 	if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
 	    type = visitExpression (10);
@@ -732,12 +739,13 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (name, templates, Enum::init (name, type, values), Expression::empty ());
-	} else return Enum::init (name, type, values);
+	    return Template::init (name, comments, templates, Enum::init (name, comments, type, values), Expression::empty ());
+	} else return Enum::init (name, comments, type, values);
     }    
     
-    Declaration Visitor::visitFunction (bool isClass, bool isOver) {       
-	auto location = this-> _lex.rewind ().next ();
+    Declaration Visitor::visitFunction (bool isClass, bool isOver) {
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	
 	Expression test (Expression::empty ());
 	
@@ -774,10 +782,10 @@ namespace syntax {
 	auto body = visitFunctionBody ();
 	
 	
-	auto function = Function::init (name, proto, body, attribs, throwers, isOver);
+	auto function = Function::init (name, comments, proto, body, attribs, throwers, isOver);
 	
 	if (templates.size () != 0) {
-	    return Template::init (name, templates, function, test);
+	    return Template::init (name, comments, templates, function, test);
 	} else {
 	    if (!test.isEmpty ())
 		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE)); 
@@ -851,14 +859,16 @@ namespace syntax {
     }
 
     Declaration Visitor::visitGlobal () {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto decl = visitSingleVarDeclaration ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
-	return Global::init (location, decl);
+	return Global::init (location, comments, decl);
     }
 
     Declaration Visitor::visitImport () {
-	auto location = this-> _lex.rewind ().next ();
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	lexing::Word token;
 	std::vector <Declaration> imports;
 	do {
@@ -871,14 +881,16 @@ namespace syntax {
 		token = this-> _lex.consumeIf ({Token::COMA});
 	    }
 	    
-	    imports.push_back (Import::init (location, space));
+	    imports.push_back (Import::init (location, comments, space));
 	} while (token == Token::COMA);
 
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
-	return DeclBlock::init (location, imports, true, false);
+	return DeclBlock::init (location, comments, imports, true, false);
     }
 
     Declaration Visitor::visitLocalMod () {
+	std::string comments;
+	this-> _lex.rewind ().nextWithDocs (comments, {Keys::MOD});
 	auto name = visitIdentifier ();
 	auto templates = visitTemplateParameters ();
 	auto token = this-> _lex.next ({Token::LACC});
@@ -896,12 +908,13 @@ namespace syntax {
 	} while (token != Token::RACC);
 
 	if (templates.size () != 0) {
-	    return Template::init (name, templates, Module::init (name, decls, false), Expression::empty ());
-	} else return Module::init (name, decls, false);
+	    return Template::init (name, comments, templates, Module::init (name, comments, decls, false), Expression::empty ());
+	} else return Module::init (name, comments, decls, false);
     }
 
     Declaration Visitor::visitStruct () {
-	auto location = this-> _lex.rewind ().next ({Keys::STRUCT});
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::STRUCT});
 	lexing::Word end;
 	std::vector <Expression> vars;
 	std::vector <lexing::Word> attrs = visitAttributes ();
@@ -920,28 +933,30 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (name, templates, Struct::init (name, attrs, vars), Expression::empty ());
-	} else return Struct::init (name, attrs, vars);
+	    return Template::init (name, comments, templates, Struct::init (name, comments, attrs, vars), Expression::empty ());
+	} else return Struct::init (name, comments, attrs, vars);
     }
 
     Declaration Visitor::visitTrait () {
-	auto location = this-> _lex.rewind ().next ({Keys::TRAIT});
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::TRAIT});
 	auto name = visitIdentifier ();
 	auto templates = visitTemplateParameters ();
 
 	std::vector <Declaration> decls = visitClassBlock (false);
 	
 	if (!templates.empty ()) {
-	    return Template::init (name, templates, Trait::init (name, decls), Expression::empty ());
-	} else return Trait::init (name, decls);	
+	    return Template::init (name, comments, templates, Trait::init (name, comments, decls), Expression::empty ());
+	} else return Trait::init (name, comments, decls);	
     }
 
     Declaration Visitor::visitUse () {
-	auto location = this-> _lex.rewind ().next ({Keys::USE});
+	std::string comments;
+	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::USE});
 	auto content = visitExpression (10);
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	
-	return Use::init (location, content);
+	return Use::init (location, comments, content);
     }
 
     bool Visitor::canBeParameters (const std::vector <Expression> & params) {
@@ -1217,7 +1232,7 @@ namespace syntax {
 	
 	if (last) content.push_back (Unit::init (end));
 	if (decls.size () != 0) {
-	    return Block::init (begin, end, Module::init ({begin, "_"}, decls, false), content, catcher, scopes);
+	    return Block::init (begin, end, Module::init ({begin, "_"}, "", decls, false), content, catcher, scopes);
 	} else {
 	    return Block::init (begin, end, Declaration::empty (), content, catcher, scopes);
 	}

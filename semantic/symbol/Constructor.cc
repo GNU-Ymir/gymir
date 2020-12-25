@@ -4,17 +4,17 @@
 namespace semantic {
 
     Constructor::Constructor () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_content (syntax::Declaration::empty ())
     {}
 
-    Constructor::Constructor (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) :
-	ISymbol (name, isWeak),
+    Constructor::Constructor (const lexing::Word & name, const std::string & comments, const syntax::Constructor & func, bool isWeak) :
+	ISymbol (name, comments, isWeak),
 	_content (syntax::Constructor::init (func))
     {}
 
-    Symbol Constructor::init (const lexing::Word & name, const syntax::Constructor & func, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Constructor (name, func, isWeak)};
+    Symbol Constructor::init (const lexing::Word & name, const std::string & comments, const syntax::Constructor & func, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Constructor (name, comments, func, isWeak)};
 	ret.to <Constructor> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

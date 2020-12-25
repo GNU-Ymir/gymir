@@ -24,7 +24,7 @@ namespace syntax {
 	
 	Global ();
 
-	Global (const lexing::Word & loc, const Expression & decl);
+	Global (const lexing::Word & loc, const std::string & comment, const Expression & decl);
 	
     public : 
 
@@ -33,7 +33,7 @@ namespace syntax {
 	 * \param location the location of the declaration 
 	 * \param decl the var_decl
 	 */
-	static Declaration init (const lexing::Word & location, const Expression & decl);
+	static Declaration init (const lexing::Word & location, const std::string & comment, const Expression & decl);
 
 	/**
 	 * \brief Polymorphism dynamic casting

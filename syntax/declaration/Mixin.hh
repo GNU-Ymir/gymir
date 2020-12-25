@@ -20,7 +20,7 @@ namespace syntax {
 
 	Mixin ();
 
-	Mixin (const lexing::Word & loc, const Expression & mixin, const std::vector <Declaration> & decls);
+	Mixin (const lexing::Word & loc, const std::string & comment, const Expression & mixin, const std::vector <Declaration> & decls);
 
     public :
 
@@ -29,7 +29,7 @@ namespace syntax {
 	 * \param location the location of the use
 	 * \param mixin the mixin to use
 	 */
-	static Declaration init (const lexing::Word & location, const Expression & mixin, const std::vector <Declaration> & declarations);
+	static Declaration init (const lexing::Word & location, const std::string & comment, const Expression & mixin, const std::vector <Declaration> & declarations);
 
 	/**
 	 * Mandatory function for dynamic casting

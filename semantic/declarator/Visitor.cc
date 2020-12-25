@@ -113,8 +113,8 @@ namespace semantic {
 	    }
 
 
-	    pushReferent (Module::init ({mod.getLocation (), path.fileName ().toString ()}, this-> _isWeak));	    
-	    getReferent ().insert (ModRef::init (mod.getLocation (), path.getFiles (), this-> _isWeak));
+	    pushReferent (Module::init ({mod.getLocation (), path.fileName ().toString ()}, mod.getComments (), this-> _isWeak));	    
+	    getReferent ().insert (ModRef::init (mod.getLocation (), mod.getComments (), path.getFiles (), this-> _isWeak));
 
 	    if (mod.isGlobal () && !global::State::instance ().isStandalone ())
 		importAllCoreFiles ();	    
@@ -129,7 +129,7 @@ namespace semantic {
 	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
 		if (glob.isEmpty ()) {
-		    glob = Module::init ({mod.getLocation (), modules [0]}, this-> _isWeak);
+		    glob = Module::init ({mod.getLocation (), modules [0]}, mod.getComments (), this-> _isWeak);
 		    pushReferent (glob);
 		} else pushReferent (glob);
 		
@@ -161,7 +161,7 @@ namespace semantic {
 			return;
 		    }
 		}
-		pushReferent (Module::init ({loc, names [0]}, this-> _isWeak));
+		pushReferent (Module::init ({loc, names [0]}, "", this-> _isWeak));
 		std::vector<std::string> modules (names.begin () + 1, names.end ());
 		createSubModules (loc, modules, last);
 		auto mod = popReferent ();
@@ -170,7 +170,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitFunction (const syntax::Function func, bool isExtern, bool insert) {
-	    auto function = Function::init (func.getLocation (), func, this-> _isWeak);
+	    auto function = Function::init (func.getLocation (), func.getComments (), func, this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (func.getLocation ().str);	    
 	    for (auto symbol : symbols) {
@@ -202,7 +202,7 @@ namespace semantic {
 	}        
 
 	semantic::Symbol Visitor::visitConstructor (const syntax::Constructor cs) {
-	    auto semcs = semantic::Constructor::init (cs.getLocation (), cs, this-> _isWeak);
+	    auto semcs = semantic::Constructor::init (cs.getLocation (), cs.getComments (), cs, this-> _isWeak);
 	    semcs.to <Constructor> ().setThrowers (cs.getThrowers ());
 	    for (auto & ca : cs.getCustomAttributes ()) {
 		Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.str);		
@@ -213,7 +213,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct str, bool insert) {
-	    auto structure = Struct::init (str.getLocation (), str.getDeclarations (), this-> _isWeak);
+	    auto structure = Struct::init (str.getLocation (), str.getComments (), str.getDeclarations (), this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (str.getLocation ().str);	
 	    for (auto symbol : symbols) {
@@ -239,7 +239,7 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitAlias (const syntax::Alias stal) {
-	    auto alias = Alias::init (stal.getLocation (), stal.getValue (), this-> _isWeak);
+	    auto alias = Alias::init (stal.getLocation (), stal.getComments (), stal.getValue (), this-> _isWeak);
 
 	    auto symbols = getReferent ().getLocal (stal.getLocation ().str);
 	    if (symbols.size () != 0) {
@@ -252,7 +252,7 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock block) {
-	    pushReferent (Module::init (block.getLocation (), this-> _isWeak));
+	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak));
 	    // A declaration block is just a list of declaration, we do not enter a new referent
 	    for (const syntax::Declaration decl : block.getDeclarations ()) {
 	    	visit (decl);		
@@ -359,7 +359,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitClass (const syntax::Class stcls) {
-	    auto cls = Class::init (stcls.getLocation (), stcls.getAncestor (), this-> _isWeak);
+	    auto cls = Class::init (stcls.getLocation (), stcls.getComments (), stcls.getAncestor (), this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (stcls.getLocation ().str);
 	    for (auto symbol : symbols) {
@@ -384,7 +384,7 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitTrait (const syntax::Trait sttrait) {
-	    auto tr = Trait::init (sttrait.getLocation (), this-> _isWeak);
+	    auto tr = Trait::init (sttrait.getLocation (), sttrait.getComments (), this-> _isWeak);
 
 	    auto symbols = getReferent ().getLocal (sttrait.getLocation ().str);
 	    for (auto symbol : symbols) {
@@ -416,7 +416,7 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitImpl (const syntax::Mixin stimpl) {
-	    auto im = Impl::init (stimpl.getLocation (), stimpl.getMixin (), this-> _isWeak);
+	    auto im = Impl::init (stimpl.getLocation (), stimpl.getComments (), stimpl.getMixin (), this-> _isWeak);
 	    pushReferent (im);
 	    visitInnerClass (im, stimpl.getDeclarations (), false, true, false);	    
 	    auto ret = popReferent ();
@@ -425,7 +425,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum stenm) {
-	    auto enm = Enum::init (stenm.getLocation (), stenm.getValues (), stenm.getType (), this-> _isWeak);
+	    auto enm = Enum::init (stenm.getLocation (), stenm.getComments (), stenm.getValues (), stenm.getType (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stenm.getLocation ().str);
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
@@ -435,7 +435,7 @@ namespace semantic {
 	    pushReferent (enm);
 	    for (auto it : stenm.getValues ()) {
 		// Inside an enum the vars are declared using a vardecl expression
-		auto en = visit (syntax::ExpressionWrapper::init (it.getLocation (), it));
+		auto en = visit (syntax::ExpressionWrapper::init (it.getLocation (), "",it));
 		en.setPublic ();
 	    }
 
@@ -466,7 +466,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitMacro (const syntax::Macro macro) {
-	    auto smc = Macro::init (macro.getLocation (), macro.getSkips ());
+	    auto smc = Macro::init (macro.getLocation (), macro.getComments ());
 	    auto symbols = getReferent ().getLocal (macro.getLocation ().str);
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
@@ -482,13 +482,13 @@ namespace semantic {
 	}
 
 	semantic::Symbol Visitor::visitMacroConstructor (const syntax::MacroConstructor contr) {
-	    auto ret = MacroConstructor::init (contr.getLocation (), syntax::MacroConstructor::init (contr));
+	    auto ret = MacroConstructor::init (contr.getLocation (), contr.getComments (), syntax::MacroConstructor::init (contr));
 	    getReferent ().insert (ret);
 	    return ret;
 	}
 
 	semantic::Symbol Visitor::visitMacroRule (const syntax::MacroRule rule) {
-	    auto ret = MacroRule::init (rule.getLocation (), syntax::MacroRule::init (rule));
+	    auto ret = MacroRule::init (rule.getLocation (), rule.getComments (), syntax::MacroRule::init (rule));
 	    auto symbols = getReferent ().getLocal (rule.getLocation ().str);
 	    for (auto & it : getReferent ().to <Macro> ().getAllInner ()) {
 		if (it.is <MacroRule> () && it.getName ().str == rule.getLocation ().str) {
@@ -502,7 +502,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl stdecl) {
-	    auto decl = VarDecl::init (stdecl.getLocation (), stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
+	    auto decl = VarDecl::init (stdecl.getLocation (), "", stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stdecl.getLocation ().str);
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
@@ -514,7 +514,7 @@ namespace semantic {
 	}
     
 	semantic::Symbol Visitor::visitGlobal (const syntax::Global stglob) {
-	    return visit (syntax::ExpressionWrapper::init (stglob.getLocation (), stglob.getContent ()));	
+	    return visit (syntax::ExpressionWrapper::init (stglob.getLocation (), stglob.getComments (), stglob.getContent ()));	
 	}
 
 	std::map <std::string, std::string> dirEntries (const std::string & path, const std::string & init) {
@@ -674,7 +674,7 @@ namespace semantic {
 		}		
 	    }
 	    
-	    auto sym = Template::init (tep.getLocation (), tep.getParams (), tep.getContent (), tep.getTest (), tep.getParams (), this-> _isWeak);
+	    auto sym = Template::init (tep.getLocation (), tep.getComments (), tep.getParams (), tep.getContent (), tep.getTest (), tep.getParams (), this-> _isWeak);
 	    getReferent ().insert (sym);
 	    return sym;
 	}

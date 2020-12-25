@@ -3,21 +3,21 @@
 namespace semantic {
 
     Enum::Enum () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_type (syntax::Expression::empty ()),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
-    Enum::Enum (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) :
-	ISymbol (name, isWeak),
+    Enum::Enum (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) :
+	ISymbol (name, comments, isWeak),
 	_type (type),
 	_fields (values),
 	_gen (generator::Generator::empty ())
     {}
     
-    Symbol Enum::init (const lexing::Word & name, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Enum (name, values, type, isWeak)};
+    Symbol Enum::init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Enum (name, comments, values, type, isWeak)};
 	ret.to <Enum> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

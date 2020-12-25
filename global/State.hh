@@ -27,15 +27,14 @@ namespace global {
 	std::string _prefixPath;
 
 	std::string _executable;
-	
-	std::string _version_path;
-	
+		
 	bool _isDebug = false;
 
 	bool _isVerbose = false;
 
 	bool _isStandalone = false;
-	
+
+	bool _isDumpDoc = false;
 	
     private :
 
@@ -81,9 +80,14 @@ namespace global {
 	void activateVerbose (bool verb);
 
 	/**
-	 * \brief If stand, 
+	 * \brief If stand, do not include core files and linkage
 	 */
 	void activateStandalone (bool stand);
+
+	/**
+	 * \brief If act, dump the documentation
+	 */
+	void activateDocDumping (bool act);
 	
 	/**
 	 * \brief tell if the debug mode is active (option -g or -ggdb)
@@ -99,6 +103,11 @@ namespace global {
 	 * \return tell if we need to include core files
 	 */
 	bool isStandalone () const;
+
+	/**
+	 * \return tell if we need to dump the doc
+	 */
+	bool isDocDumpingActive () const;
 	
 	/**
 	 * \brief Set the prefix path dir
@@ -111,11 +120,6 @@ namespace global {
 	 * \change the prefix path, Cf setPrefix
 	 */
 	void setExecutable (const std::string & executable);
-
-	/**
-	 * Set the path of the version file
-	 */
-	void setVersionFile (const std::string & version);
 
 	/**
 	 * \return the prefix path
@@ -132,11 +136,7 @@ namespace global {
 	 */
 	const std::set <std::string> & getIncludeDirs () const ;
 
-	/**
-	 * The config file that determines versions
-	 */
-	const std::string & getVersionFile () const;
-	
+
     };
    
 }

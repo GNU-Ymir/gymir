@@ -3,12 +3,12 @@
 namespace syntax {
 
     Class::Class () :
-	IDeclaration (lexing::Word::eof ()), 
+	IDeclaration (lexing::Word::eof (), ""), 
 	_over (Expression::empty ())
     {}
     
-    Class::Class (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attribts) :
-	IDeclaration (name),
+    Class::Class (const lexing::Word & name, const std::string & comment, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attribts) :
+	IDeclaration (name, comment),
 	_over (over),
 	_innerDeclaration (decls),
 	_attributes (attribts)
@@ -18,8 +18,8 @@ namespace syntax {
 	return Declaration {new (NO_GC) Class (cl)};
     }
 
-    Declaration Class::init (const lexing::Word & name, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attribs) {
-	return Declaration {new (NO_GC) Class (name, over, decls, attribs)};
+    Declaration Class::init (const lexing::Word & name, const std::string & comment, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attribs) {
+	return Declaration {new (NO_GC) Class (name, comment, over, decls, attribs)};
     }
    
     bool Class::isOf (const IDeclaration * type) const {

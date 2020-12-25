@@ -3,17 +3,17 @@
 namespace semantic {
 
     MacroRule::MacroRule () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_constr (syntax::Declaration::empty ())
     {}
     
-    MacroRule::MacroRule (const lexing::Word & name, const syntax::Declaration & constr) :
-	ISymbol (name, false),
+    MacroRule::MacroRule (const lexing::Word & name, const std::string & comments, const syntax::Declaration & constr) :
+	ISymbol (name, comments, false),
 	_constr (constr)
     {}
 
-    Symbol MacroRule::init (const lexing::Word & name, const syntax::Declaration & constr) {
-	return Symbol {new (NO_GC) MacroRule (name, constr)};
+    Symbol MacroRule::init (const lexing::Word & name, const std::string & comments, const syntax::Declaration & constr) {
+	return Symbol {new (NO_GC) MacroRule (name, comments, constr)};
     }
 
     bool MacroRule::isOf (const ISymbol * type) const {

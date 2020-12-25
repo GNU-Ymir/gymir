@@ -4,23 +4,23 @@ namespace semantic {
 
 
     Struct::Struct () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_isPacked (false),
 	_isUnion (false),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
-    Struct::Struct (const lexing::Word & name, const std::vector <syntax::Expression> & fields, bool isWeak) :
-	ISymbol (name, isWeak),
+    Struct::Struct (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak) :
+	ISymbol (name, comments, isWeak),
 	_isPacked (false),
 	_isUnion (false),
 	_fields (fields),
 	_gen (generator::Generator::empty ())
     {}
     
-    Symbol Struct::init (const lexing::Word & name, const std::vector <syntax::Expression> & fields, bool isWeak) {
-	return Symbol {new (NO_GC) Struct (name, fields, isWeak)};
+    Symbol Struct::init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak) {
+	return Symbol {new (NO_GC) Struct (name, comments, fields, isWeak)};
     }
 
     bool Struct::isOf (const ISymbol * type) const {

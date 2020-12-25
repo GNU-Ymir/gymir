@@ -3,16 +3,16 @@
 namespace syntax {
 
     Trait::Trait () :
-	IDeclaration (lexing::Word::eof ())
+	IDeclaration (lexing::Word::eof (), "")
     {}
 
-    Trait::Trait (const lexing::Word & name, const std::vector <Declaration> & decls) :
-	IDeclaration (name),
+    Trait::Trait (const lexing::Word & name, const std::string & comment, const std::vector <Declaration> & decls) :
+	IDeclaration (name, comment),
 	_inner (decls)
     {}
     
-    Declaration Trait::init (const lexing::Word & name, const std::vector <Declaration> & decls) {
-	return Declaration {new (NO_GC) Trait (name, decls)};
+    Declaration Trait::init (const lexing::Word & name, const std::string & comment, const std::vector <Declaration> & decls) {
+	return Declaration {new (NO_GC) Trait (name, comment, decls)};
     }
     
     bool Trait::isOf (const IDeclaration * type) const {

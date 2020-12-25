@@ -5,19 +5,19 @@
 namespace semantic {
 
     Trait::Trait () :
-	ISymbol (lexing::Word::eof (), false), 
+	ISymbol (lexing::Word::eof (), "", false), 
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
 
-    Trait::Trait (const lexing::Word & name, bool isWeak) :
-	ISymbol (name, isWeak),
+    Trait::Trait (const lexing::Word & name, const std::string & comments, bool isWeak) :
+	ISymbol (name, comments, isWeak),
 	_fields ({}),
 	_gen (generator::Generator::empty ())
     {}
     
-    Symbol Trait::init (const lexing::Word & name, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Trait (name, isWeak)};
+    Symbol Trait::init (const lexing::Word & name, const std::string & comments, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Trait (name, comments, isWeak)};
 	ret.to <Trait> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

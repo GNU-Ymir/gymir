@@ -42,5 +42,22 @@ namespace Ymir {
 	
 	return res.str ();
     }
-    
+
+
+    static inline std::string entab (const std::string & text, const std::string & tab) {
+	OutBuffer buf;	
+	bool need_Tab = true;
+	for (auto s : text) {
+	    if (need_Tab) {
+		buf.write (tab);
+		need_Tab = false;
+	    }
+	    
+	    buf.write (s);
+	    if (s == '\n')
+		need_Tab = true;
+	}
+	
+	return buf.str ();
+    }
 }

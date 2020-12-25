@@ -32,11 +32,11 @@ namespace semantic {
 
 	TemplateSolution (const TemplateSolution & mod);
 	
-	TemplateSolution (const lexing::Word & loc, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders, bool isWeak);
+	TemplateSolution (const lexing::Word & loc, const std::string & comments, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders, bool isWeak);
 	
     public :
 
-	static Symbol init (const lexing::Word & loc, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders, bool isWeak);
+	static Symbol init (const lexing::Word & loc, const std::string & comments, const std::vector <syntax::Expression> & templs, const std::map<std::string, syntax::Expression> & params, const std::vector <std::string> & nameOrders, bool isWeak);
 
 	void insert (const Symbol & sym) override;
 

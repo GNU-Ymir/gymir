@@ -3,17 +3,17 @@
 namespace semantic {
 
     Impl::Impl () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_trait (syntax::Expression::empty ())
     {}
     
-    Impl::Impl (const lexing::Word & name, const syntax::Expression & trait, bool isWeak) :
-	ISymbol (name, isWeak),
+    Impl::Impl (const lexing::Word & name, const std::string & comments, const syntax::Expression & trait, bool isWeak) :
+	ISymbol (name, comments, isWeak),
 	_trait (trait)
     {}
 
-    Symbol Impl::init (const lexing::Word & name, const syntax::Expression & trait, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Impl (name, trait, isWeak)};
+    Symbol Impl::init (const lexing::Word & name, const std::string & comments, const syntax::Expression & trait, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Impl (name, comments, trait, isWeak)};
 	ret.to <Impl> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

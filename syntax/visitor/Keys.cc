@@ -105,7 +105,6 @@ std::string     Keys::SCOPE	   = "on";
 std::string     Keys::SELF	   = "self";
 std::string     Keys::SELF_TILDE   = "self~";
 std::string     Keys::SIZEOF	   = "sizeof";
-std::string     Keys::SKIP         = "skip";
 std::string     Keys::SKIPS        = "skips";
 std::string     Keys::STATIC	   = "static";
 std::string     Keys::STRINGOF	   = "stringof";

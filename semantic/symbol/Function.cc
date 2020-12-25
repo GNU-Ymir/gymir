@@ -5,19 +5,19 @@
 namespace semantic {
 
     Function::Function () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_content (syntax::Declaration::empty ())
     {}
 
-    Function::Function (const lexing::Word & name, const syntax::Function & func, bool isWeak) :
-	ISymbol (name, isWeak),
+    Function::Function (const lexing::Word & name, const std::string & comments, const syntax::Function & func, bool isWeak) :
+	ISymbol (name, comments, isWeak),
 	_content (syntax::Function::init (func)),
 	_isVariadic (func.getPrototype ().isVariadic ()),
 	_isOver (func.isOver ())
     {}
 
-    Symbol Function::init (const lexing::Word & name, const syntax::Function & func, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Function (name, func, isWeak)};
+    Symbol Function::init (const lexing::Word & name, const std::string & comments, const syntax::Function & func, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Function (name, comments, func, isWeak)};
 	ret.to <Function> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

@@ -18,7 +18,7 @@ namespace syntax {
 
 	Use ();
 
-	Use (const lexing::Word & location, const Expression & module);
+	Use (const lexing::Word & location, const std::string & comment, const Expression & module);
 	
     public :
 	
@@ -27,7 +27,7 @@ namespace syntax {
 	 * \param location the location of the use
 	 * \param module the module to use
 	 */
-	static Declaration init (const lexing::Word & location, const Expression & module);
+	static Declaration init (const lexing::Word & location, const std::string & comment, const Expression & module);
 
 	/**
 	 * Mandatory function for dynamic casting

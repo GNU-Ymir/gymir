@@ -29,11 +29,11 @@ namespace syntax {
 
 	ExternBlock ();
 
-	ExternBlock (const lexing::Word & location, const lexing::Word & from, const lexing::Word & space, const Declaration & content);
+	ExternBlock (const lexing::Word & location, const std::string & comment, const lexing::Word & from, const lexing::Word & space, const Declaration & content);
 
     public :
 
-	static Declaration init (const lexing::Word & location, const lexing::Word & from, const lexing::Word & space, const Declaration & content);
+	static Declaration init (const lexing::Word & location, const std::string & comment, const lexing::Word & from, const lexing::Word & space, const Declaration & content);
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	

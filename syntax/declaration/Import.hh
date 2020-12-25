@@ -25,7 +25,7 @@ namespace syntax {
 
 	Import ();
 
-	Import (const lexing::Word & loc, const lexing::Word & module);
+	Import (const lexing::Word & loc, const std::string & comment, const lexing::Word & module);
 	
     public :
 
@@ -34,7 +34,7 @@ namespace syntax {
 	 * \param module the module import
 	 * \param as the name for renamed import
 	 */
-	static Declaration init (const lexing::Word & loc, const lexing::Word & module);
+	static Declaration init (const lexing::Word & loc, const std::string & comment, const lexing::Word & module);
 
 	/**
 	 * \brief Mandatory function for proxy dynamic casting

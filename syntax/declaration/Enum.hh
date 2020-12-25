@@ -28,7 +28,7 @@ namespace syntax {
 	
 	Enum ();
 
-	Enum (const lexing::Word& ident, const Expression & type, const std::vector <Expression> & values);
+	Enum (const lexing::Word& ident, const std::string & comment, const Expression & type, const std::vector <Expression> & values);
 	
     public: 
 
@@ -38,7 +38,7 @@ namespace syntax {
 	 * \param type the type of the enumeration
 	 * \param values the values inside the enum
 	 */
-	static Declaration init (const lexing::Word& ident, const Expression & type, const std::vector <Expression> & values);
+	static Declaration init (const lexing::Word& ident, const std::string & comment, const Expression & type, const std::vector <Expression> & values);
 
 	/**
 	 * \brief Polymorphism dynamic casting

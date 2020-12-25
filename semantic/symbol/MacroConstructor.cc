@@ -3,17 +3,17 @@
 namespace semantic {
 
     MacroConstructor::MacroConstructor () :
-	ISymbol (lexing::Word::eof (), false),
+	ISymbol (lexing::Word::eof (), "", false),
 	_constr (syntax::Declaration::empty ())
     {}
     
-    MacroConstructor::MacroConstructor (const lexing::Word & name, const syntax::Declaration & constr) :
-	ISymbol (name, false),
+    MacroConstructor::MacroConstructor (const lexing::Word & name, const std::string & comments, const syntax::Declaration & constr) :
+	ISymbol (name, comments, false),
 	_constr (constr)
     {}
 
-    Symbol MacroConstructor::init (const lexing::Word & name, const syntax::Declaration & constr) {
-	return Symbol {new (NO_GC) MacroConstructor (name, constr)};
+    Symbol MacroConstructor::init (const lexing::Word & name, const std::string & comments, const syntax::Declaration & constr) {
+	return Symbol {new (NO_GC) MacroConstructor (name, comments, constr)};
     }
     
     bool MacroConstructor::isOf (const ISymbol * type) const {

@@ -3,18 +3,18 @@
 namespace syntax {
 
     Use::Use () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_module (Expression::empty ())
     {}
 
 
-    Use::Use (const lexing::Word & loc, const Expression & module) :
-	IDeclaration (loc),
+    Use::Use (const lexing::Word & loc, const std::string & comment, const Expression & module) :
+	IDeclaration (loc, comment),
 	_module (module)
     {}
 
-    Declaration Use::init (const lexing::Word & loc, const Expression & module) {
-	return Declaration {new (NO_GC) Use (loc, module)};
+    Declaration Use::init (const lexing::Word & loc, const std::string & comment, const Expression & module) {
+	return Declaration {new (NO_GC) Use (loc, comment, module)};
     }
 
     bool Use::isOf (const IDeclaration * type) const {

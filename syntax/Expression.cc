@@ -20,7 +20,7 @@ namespace syntax {
     }
     
     Declaration Expression::toDeclaration (const Expression & value) {
-	return ExpressionWrapper::init (value.getLocation (), value);
+	return ExpressionWrapper::init (value.getLocation (), "", value);
     }
     
     void Expression::treePrint (Ymir::OutBuffer & stream, int i)  const {	

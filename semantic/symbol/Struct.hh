@@ -33,11 +33,11 @@ namespace semantic {
 
 	Struct ();
 
-	Struct (const lexing::Word & name, const std::vector <syntax::Expression> & fields, bool isWeak);
+	Struct (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const std::vector <syntax::Expression> & fields, bool isWeak);
+	static Symbol init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

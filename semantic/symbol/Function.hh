@@ -51,13 +51,13 @@ namespace semantic {
 
 	Function ();
 
-	Function (const lexing::Word & name, const syntax::Function & func, bool isWeak);
+	Function (const lexing::Word & name, const std::string & comments, const syntax::Function & func, bool isWeak);
 
 	Function (const Function & other);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const syntax::Function & func, bool isWeak);
+	static Symbol init (const lexing::Word & name, const std::string & comments, const syntax::Function & func, bool isWeak);
 
 	bool isOf (const ISymbol * type) const override;
 

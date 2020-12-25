@@ -45,13 +45,13 @@ namespace syntax {
     
     
     Function::Function () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_proto (Function::Prototype::empty ()),
 	_body (Expression::empty ())
     {}
 
-    Function::Function (const lexing::Word & name, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver) :
-	IDeclaration (name),
+    Function::Function (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver) :
+	IDeclaration (name, comment),
 	_proto (proto),
 	_body (body),
 	_cas (cas),
@@ -59,8 +59,8 @@ namespace syntax {
 	_isOver (isOver)
     {}
     
-    Declaration Function::init (const lexing::Word & name, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver) {
-	return Declaration {new (NO_GC) Function (name, proto, body, cas, throwers, isOver)};
+    Declaration Function::init (const lexing::Word & name, const std::string & comment, const Prototype & proto, const Expression & body, const std::vector <lexing::Word> & cas, const std::vector <Expression> & throwers, bool isOver) {
+	return Declaration {new (NO_GC) Function (name, comment, proto, body, cas, throwers, isOver)};
     }
 
     Declaration Function::init (const Function & other) {

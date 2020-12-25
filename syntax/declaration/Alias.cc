@@ -3,17 +3,17 @@
 namespace syntax {
 
     Alias::Alias () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_value (nullptr)
     {}
 
-    Alias::Alias (const lexing::Word & ident, const Expression & value) :
-	IDeclaration (ident),
+    Alias::Alias (const lexing::Word & ident, const std::string & comment, const Expression & value) :
+	IDeclaration (ident, comment),
 	_value (value)
     {}
     
-    Declaration Alias::init (const lexing::Word & ident, const Expression & value) {
-	return Declaration {new (NO_GC) Alias (ident, value)};
+    Declaration Alias::init (const lexing::Word & ident, const std::string & comment, const Expression & value) {
+	return Declaration {new (NO_GC) Alias (ident, comment, value)};
     }
 
     Declaration Alias::init (const Alias & other) {

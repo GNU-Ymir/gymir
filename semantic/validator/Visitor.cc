@@ -2717,7 +2717,7 @@ namespace semantic {
 	    if (!function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT))
 		classType = Type::init (classType.getLocation (), classType.to <Type> (), false, false);
 	    
-	    auto frame = MethodProto::init (function.getLocation (), func.getRealName (), retType, params, false,
+	    auto frame = MethodProto::init (function.getLocation (), func.getComments (), func.getRealName (), retType, params, false,
 					    classType,
 					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), throwers);
 	    

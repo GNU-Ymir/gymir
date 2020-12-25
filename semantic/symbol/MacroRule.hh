@@ -21,11 +21,11 @@ namespace semantic {
 
 	MacroRule ();
 
-	MacroRule (const lexing::Word & name, const syntax::Declaration & cstr);
+	MacroRule (const lexing::Word & name, const std::string & comments, const syntax::Declaration & cstr);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const syntax::Declaration & func);
+	static Symbol init (const lexing::Word & name, const std::string & comments, const syntax::Declaration & func);
 
 	bool isOf (const ISymbol * type) const override;
 

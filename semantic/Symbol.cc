@@ -14,8 +14,9 @@ namespace semantic {
 	_name (lexing::Word::eof ())
     {}
 
-    ISymbol::ISymbol (const lexing::Word & name, bool isWeak)
+    ISymbol::ISymbol (const lexing::Word & name, const std::string & comments, bool isWeak)
 	: _name (name),
+	  _comments (comments),
 	  _isWeak (isWeak)
     {}
     
@@ -27,6 +28,10 @@ namespace semantic {
 	return this-> _name;
     }
 
+    const std::string & ISymbol::getComments () const {
+	return this-> _comments;
+    }
+    
     void ISymbol::setName (const std::string & name) {
 	this-> _name = {this-> _name, name};
     }
@@ -169,6 +174,12 @@ namespace semantic {
 	return this-> _value-> getName ();
     }
 
+    const std::string & Symbol::getComments () const {
+	if (this-> _value == nullptr)
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	return this-> _value-> getComments ();
+    }
+    
     void Symbol::setName (const std::string & name) {	
 	if (this-> _value == nullptr)
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));

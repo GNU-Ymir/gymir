@@ -111,7 +111,6 @@ struct Keys {
     static std::string  SELF;
     static std::string  SELF_TILDE; 
     static std::string  SIZEOF;
-    static std::string  SKIP;
     static std::string  SKIPS;
     static std::string  STATIC; 
     static std::string  STRINGOF; 

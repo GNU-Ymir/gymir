@@ -13,16 +13,17 @@ namespace semantic {
 	    _classType (Generator::empty ())	    
 	{}
 
-	MethodProto::MethodProto (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers) :
+	MethodProto::MethodProto (const lexing::Word & loc, const std::string & comments, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers) :
 	    FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers),
 	    _isMut (isMutable),
 	    _classType (classType),
 	    _isEmptyFrame (isEmptyFrame),
-	    _isFinal (isFinal)
+	    _isFinal (isFinal),
+	    _comments (comments)
 	{}
 
-	Generator MethodProto::init (const lexing::Word & loc, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers) {
-	    return Generator {new (NO_GC) MethodProto (loc, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal, isSafe, throwers)};
+	Generator MethodProto::init (const lexing::Word & loc, const std::string & comments, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const std::vector <Generator> & throwers) {
+	    return Generator {new (NO_GC) MethodProto (loc, comments, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal, isSafe, throwers)};
 	}
 	
 	Generator MethodProto::clone () const {
@@ -70,6 +71,10 @@ namespace semantic {
 
 	bool MethodProto::isFinal () const {
 	    return this-> _isFinal;
+	}
+
+	const std::string & MethodProto::getComments () const {
+	    return this-> _comments;
 	}
 	
     }

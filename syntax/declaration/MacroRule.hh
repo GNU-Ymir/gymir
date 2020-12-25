@@ -24,11 +24,11 @@ namespace syntax {
 
 	MacroRule ();
 
-	MacroRule (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
+	MacroRule (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
     public :
 
-	static Declaration init (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
+	static Declaration init (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
 	static Declaration init (const MacroRule & rule);
 

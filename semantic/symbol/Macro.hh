@@ -11,20 +11,18 @@ namespace semantic {
 
 	/** The symbol declared in the class (the attributes, methods ...) */
 	std::shared_ptr <Table> _table;
-	
-	std::vector <std::string> _skips;
-	
+		
     private :
 
 	friend Symbol;
 
 	Macro ();
 
-	Macro (const lexing::Word & name, const	std::vector <std::string> & skips);
+	Macro (const lexing::Word & name, const std::string & comments);
 
     public : 
 
-	static Symbol init (const lexing::Word & name, const std::vector <std::string> & skips);
+	static Symbol init (const lexing::Word & name, const std::string & comments);
 
 	bool isOf (const ISymbol * type) const override;
 

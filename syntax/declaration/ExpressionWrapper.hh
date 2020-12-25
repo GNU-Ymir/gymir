@@ -24,7 +24,7 @@ namespace syntax {
 	
 	ExpressionWrapper ();
 
-	ExpressionWrapper (const lexing::Word & loc, const Expression & content);
+	ExpressionWrapper (const lexing::Word & loc, const std::string & comment, const Expression & content);
 	
     public : 
 
@@ -32,7 +32,7 @@ namespace syntax {
 	 * \brief Init a wrapper for content
 	 * \param content the content of the wrapper
 	 */
-	static Declaration init (const lexing::Word & loc, const Expression & content);
+	static Declaration init (const lexing::Word & loc, const std::string & comment, const Expression & content);
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	

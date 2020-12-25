@@ -3,16 +3,15 @@
 namespace semantic {
 
     Macro::Macro () :
-	ISymbol (lexing::Word::eof (), false)
+	ISymbol (lexing::Word::eof (), "", false)
     {}
 
-    Macro::Macro (const lexing::Word & name, const std::vector <std::string> & skips) :
-	ISymbol (name, false),
-	_skips (skips)
+    Macro::Macro (const lexing::Word & name, const std::string & comments) :
+	ISymbol (name, comments, false)
     {}
 
-    Symbol Macro::init (const lexing::Word & name, const std::vector <std::string> & skips) {
-	auto ret = Symbol {new (NO_GC) Macro (name, skips)};
+    Symbol Macro::init (const lexing::Word & name, const std::string & comments) {
+	auto ret = Symbol {new (NO_GC) Macro (name, comments)};
 	ret.to <Macro> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

@@ -3,14 +3,14 @@
 namespace syntax {
 
     DeclBlock::DeclBlock ()
-	: IDeclaration (lexing::Word::eof ()),
+	: IDeclaration (lexing::Word::eof (), ""),
 	  _inner ({}),
 	  _isPrivate (false),
 	  _isProt (false)
     {}
 
-    DeclBlock::DeclBlock (const lexing::Word & loc, const std::vector <Declaration> & content, bool isPrivate, bool isProt) : 
-	IDeclaration (loc),
+    DeclBlock::DeclBlock (const lexing::Word & loc, const std::string & comment, const std::vector <Declaration> & content, bool isPrivate, bool isProt) : 
+	IDeclaration (loc, comment),
 	_inner (content),
 	_isPrivate (isPrivate),
 	_isProt (isProt)
@@ -20,8 +20,8 @@ namespace syntax {
 	return Declaration {new (NO_GC) DeclBlock (decl)};
     }
 
-    Declaration DeclBlock::init (const lexing::Word & token, const std::vector <Declaration> & content, bool isPrivate, bool isProt) {
-	return Declaration {new (NO_GC) DeclBlock (token, content, isPrivate, isProt)};
+    Declaration DeclBlock::init (const lexing::Word & token, const std::string & comment, const std::vector <Declaration> & content, bool isPrivate, bool isProt) {
+	return Declaration {new (NO_GC) DeclBlock (token, comment, content, isPrivate, isProt)};
     }
    
     bool DeclBlock::isOf (const IDeclaration * type) const {

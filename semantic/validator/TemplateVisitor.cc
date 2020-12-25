@@ -105,13 +105,14 @@ namespace semantic {
 		    score = merge.score;
 
 		    auto sym2 = Template::init (ref.getLocation (),
-						syntaxTempl,
+						"",
+						syntaxTempl,						
 						sym.to <semantic::Template> ().getDeclaration (),
 						sym.to <semantic::Template> ().getTest (),
 						sym.to <semantic::Template> ().getParams ()
 						, true
-		    );
-
+			);
+		    
 		    sym2.to <Template> ().setPreviousSpecialization (merge.mapping);
 		    sym2.to <Template> ().setSpecNameOrder (merge.nameOrder);		
 		
@@ -127,7 +128,7 @@ namespace semantic {
 		    visit.setWeak ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
 		    
-		    auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
+		    auto soluce = TemplateSolution::init (sym.getName (), sym.getComments (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
 		    visit.pushReferent (soluce);
 		    visit.visit (final_syntax);
 		    auto glob = visit.popReferent ();
@@ -453,7 +454,7 @@ namespace semantic {
 		visit.setWeak ();
 		visit.pushReferent (ref.to <TemplateRef> ().getTemplateRef ().getReferent ());
 		
-		auto soluce = TemplateSolution::init (sym.getName (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
+		auto soluce = TemplateSolution::init (sym.getName (), sym.getComments (), sym.to <semantic::Template> ().getParams (), merge.mapping, merge.nameOrder, true);
 		
 		visit.pushReferent (soluce);
 		auto sym_func = visit.visit (func);
@@ -1516,7 +1517,7 @@ namespace semantic {
 
 	Declaration TemplateVisitor::replaceAll (const Declaration & decl, const std::map <std::string, Expression> & mapping, const Symbol & _ref) const {
 	    match (decl) {
-		of (syntax::Alias, al, return syntax::Alias::init (al.getLocation (), replaceAll (al.getValue (), mapping)))
+		of (syntax::Alias, al, return syntax::Alias::init (al.getLocation (), "", replaceAll (al.getValue (), mapping)))
 		else of (syntax::CondBlock, cd, {
 			return replaceAll (_ref, cd, mapping);
 		    }
@@ -1524,27 +1525,28 @@ namespace semantic {
 			std::vector <Declaration> decls;
 			for (auto & it : dl.getDeclarations ())
 			    decls.push_back (replaceAll (it, mapping, _ref));
-			return syntax::DeclBlock::init (dl.getLocation (), decls, dl.isPrivate (), dl.isProt ());
+			return syntax::DeclBlock::init (dl.getLocation (), "", decls, dl.isPrivate (), dl.isProt ());
 		    }
 		) else of (syntax::Class, cl, {
 			std::vector <Declaration> decls;
 			for (auto & it : cl.getDeclarations ()) {
 			    decls.push_back (replaceAll (it, mapping, _ref));
 			}
-			return syntax::Class::init (cl.getLocation (), replaceAll (cl.getAncestor (), mapping), decls, cl.getAttributes ());
+			return syntax::Class::init (cl.getLocation (), "", replaceAll (cl.getAncestor (), mapping), decls, cl.getAttributes ());
 		    }
 		) else of (syntax::Enum, en, {
 			std::vector <Expression> values;
 			for (auto & it : en.getValues ())
 			    values.push_back (replaceAll (it, mapping));
-			return syntax::Enum::init (en.getLocation (), replaceAll (en.getType (), mapping), values);
+			return syntax::Enum::init (en.getLocation (), "", replaceAll (en.getType (), mapping), values);
 		    }
 		) else of (syntax::ExpressionWrapper, wrp, {
-			return syntax::ExpressionWrapper::init (wrp.getLocation (), replaceAll (wrp.getContent (), mapping));
+			return syntax::ExpressionWrapper::init (wrp.getLocation (), "", replaceAll (wrp.getContent (), mapping));
 		    }
 		) else of (syntax::ExternBlock, ext, {
 			return syntax::ExternBlock::init (
 			    ext.getLocation (),
+			    "", 
 			    ext.getFrom (),
 			    ext.getSpace (),
 			    replaceAll (ext.getDeclaration (), mapping, _ref)
@@ -1565,6 +1567,7 @@ namespace semantic {
 			    throwers.push_back (replaceAll (it, mapping));
 			
 			return syntax::Constructor::init (cst.getLocation (),
+							  "",
 							  replaceAll (cst.getPrototype (), mapping),
 							  exprs,
 							  fields,
@@ -1579,6 +1582,7 @@ namespace semantic {
 			    throwers.push_back (replaceAll (it, mapping));
 			
 			return syntax::Function::init (func.getLocation (),
+						       "", 
 						       replaceAll (func.getPrototype (), mapping),
 						       replaceAll (func.getBody (), mapping),
 						       func.getCustomAttributes (),
@@ -1587,14 +1591,14 @@ namespace semantic {
 			);			
 		    }
 		) else of (syntax::Global, glb, {
-			return syntax::Global::init (glb.getLocation (), replaceAll (glb.getContent (), mapping));
+			return syntax::Global::init (glb.getLocation (), "", replaceAll (glb.getContent (), mapping));
 		    }
 		) else of (syntax::Import, imp ATTRIBUTE_UNUSED, return decl; 
 		) else of (syntax::Mixin, mx, {
 			std::vector <Declaration> decls;
 			for (auto& it : mx.getDeclarations ())
 			    decls.push_back (replaceAll (it, mapping, _ref));
-			return syntax::Mixin::init (mx.getLocation (), replaceAll (mx.getMixin (), mapping), decls);
+			return syntax::Mixin::init (mx.getLocation (), "", replaceAll (mx.getMixin (), mapping), decls);
 		    }
 		) else of (syntax::Module, mod, {
 			std::vector <Declaration> decls;
@@ -1602,6 +1606,7 @@ namespace semantic {
 			    decls.push_back (replaceAll (it, mapping, _ref));
 			return syntax::Module::init (
 			    mod.getLocation (),
+			    "",
 			    decls,
 			    mod.isGlobal ()
 			);
@@ -1610,7 +1615,7 @@ namespace semantic {
 			std::vector <Expression> vars;
 			for (auto &it : str.getDeclarations ())
 			    vars.push_back (replaceAll (it, mapping));
-			return syntax::Struct::init (str.getLocation (), str.getCustomAttributes (), vars);
+			return syntax::Struct::init (str.getLocation (), "", str.getCustomAttributes (), vars);
 		    }
 		) else of (syntax::Template, tmpl, {
 			std::vector <Expression> params;
@@ -1626,6 +1631,7 @@ namespace semantic {
 			
 			return syntax::Template::init (
 			    tmpl.getLocation (),
+			    "",
 			    params,
 			    replaceAll (tmpl.getContent (), mapping, _ref),
 			    replaceAll (tmpl.getTest (), mapping)
@@ -1635,10 +1641,10 @@ namespace semantic {
 			std::vector <Declaration> inner;
 			for (auto & it : trai.getDeclarations ())
 			    inner.push_back (replaceAll (it, mapping, _ref));
-			return syntax::Trait::init (trai.getLocation (), inner);
+			return syntax::Trait::init (trai.getLocation (), "", inner);
 		    }
 		) else of (syntax::Use, use, {
-			return syntax::Use::init (use.getLocation (), replaceAll (use.getModule (), mapping));
+			return syntax::Use::init (use.getLocation (), "", replaceAll (use.getModule (), mapping));
 		    }
 		);			 
 	    }
@@ -2004,12 +2010,12 @@ namespace semantic {
 		for (auto & it : decl.getDeclarations ())
 		    decls.push_back (replaceAll (it, mapping, ref));
 		
-		return syntax::DeclBlock::init (decl.getLocation (), decls, true, false);
+		return syntax::DeclBlock::init (decl.getLocation (), "", decls, true, false);
 	    } else if (!decl.getElse ().isEmpty () && decl.getElse ().is <CondBlock> ()) {
 		return replaceAll (ref, decl.getElse ().to <CondBlock> (), mapping);
 	    } else if (!decl.getElse ().isEmpty ()) {
 		return replaceAll (decl.getElse (), mapping, ref);
-	    } else return syntax::DeclBlock::init (decl.getLocation (), {}, false, false);
+	    } else return syntax::DeclBlock::init (decl.getLocation (), "", {}, false, false);
 	}
 	
 	Symbol TemplateVisitor::getTemplateSolution (const Symbol & ref, const Symbol & solution) const {

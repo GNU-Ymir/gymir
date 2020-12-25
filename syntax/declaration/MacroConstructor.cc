@@ -3,23 +3,23 @@
 namespace syntax {
 
     MacroConstructor::MacroConstructor () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_rule (Expression::empty ())
     {}
 
-    MacroConstructor::MacroConstructor (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) :
-	IDeclaration (loc),
+    MacroConstructor::MacroConstructor (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) :
+	IDeclaration (loc, comment),
 	_rule (rule),
 	_content (content),
 	_skips (skips)
     {}
 
-    Declaration MacroConstructor::init (const lexing::Word & loc, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
-	return Declaration {new (NO_GC) MacroConstructor (loc, rule, content, skips)};
+    Declaration MacroConstructor::init (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
+	return Declaration {new (NO_GC) MacroConstructor (loc, comment, rule, content, skips)};
     }
 
     Declaration MacroConstructor::init (const MacroConstructor & other) {
-	return init (other.getLocation (), other._rule, other._content, other._skips);
+	return Declaration {new (NO_GC) MacroConstructor (other)};
     }
 
     bool MacroConstructor::isOf (const IDeclaration * type) const {

@@ -3,20 +3,20 @@
 namespace syntax {
 
     Template::Template () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_content (Declaration::empty ()),
 	_test (Expression::empty ())
     {}
 
-    Template::Template (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test) :
-	IDeclaration (loc),
+    Template::Template (const lexing::Word & loc, const std::string & comment, const std::vector <Expression> & params, const Declaration & content, const Expression & test) :
+	IDeclaration (loc, comment),
 	_parameters (params),
 	_content (content),
 	_test (test)
     {}
     
-    Declaration Template::init (const lexing::Word & loc, const std::vector <Expression> & params, const Declaration & content, const Expression & test) {
-	return Declaration {new (NO_GC) Template (loc, params, content, test)};
+    Declaration Template::init (const lexing::Word & loc, const std::string & comment, const std::vector <Expression> & params, const Declaration & content, const Expression & test) {
+	return Declaration {new (NO_GC) Template (loc, comment, params, content, test)};
     }
 
     void Template::treePrint (Ymir::OutBuffer & stream, int i) const {

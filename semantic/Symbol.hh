@@ -20,6 +20,9 @@ namespace semantic {
 	
 	lexing::Word _name;
 
+	/** The comments of the symbol */
+	std::string _comments;
+	
 	/** The symbol in which the symbol is declared */
 	/** This information is set at getting time */
 	std::weak_ptr <ISymbol> _referent;
@@ -48,7 +51,7 @@ namespace semantic {
 	 * \brief For example a variable
 	 * \param name is the name and location of the symbol
 	 */
-	ISymbol (const lexing::Word & name, bool isWeak);
+	ISymbol (const lexing::Word & name, const std::string & comments, bool isWeak);
 
 	/**
 	 * \return the name and location of the symbol
@@ -59,7 +62,14 @@ namespace semantic {
 	 * \brief Change the name of the symbol
 	 */
 	void setName (const std::string & name);
-		
+
+
+	/**
+	 * The comments on the symbol (discovered at syntax time, and pass through by declaration_Visitor)
+	 */
+	const std::string & getComments () const;
+	
+	
 	/**
 	 * \brief Mandatory function used inside proxy design pattern for dynamic casting
 	 */
@@ -265,6 +275,11 @@ namespace semantic {
 	 * \brief Change the name of the symbol
 	 */
 	void setName (const std::string & name);
+	
+	/**
+	 * Proxy function for symbol
+	 */	
+	const std::string & getComments () const;
 	
 	/**
 	 * Proxy function for symbol

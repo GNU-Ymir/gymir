@@ -4,17 +4,17 @@ namespace syntax {
 
 
     Global::Global () :
-	IDeclaration (lexing::Word::eof ()),
+	IDeclaration (lexing::Word::eof (), ""),
 	_decl (Expression::empty ())
     {}
 
-    Global::Global (const lexing::Word & loc, const Expression & expr) :
-	IDeclaration (loc),
+    Global::Global (const lexing::Word & loc, const std::string & comment, const Expression & expr) :
+	IDeclaration (loc, comment),
 	_decl (expr)
     {}
 
-    Declaration Global::init (const lexing::Word & location, const Expression & decl) {
-	return Declaration {new (NO_GC) Global (location, decl)};
+    Declaration Global::init (const lexing::Word & location, const std::string & comment, const Expression & decl) {
+	return Declaration {new (NO_GC) Global (location, comment, decl)};
     }
 
     bool Global::isOf (const IDeclaration * type) const {

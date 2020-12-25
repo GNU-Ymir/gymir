@@ -25,7 +25,7 @@ namespace syntax {
 	
 	Trait ();
 
-	Trait (const lexing::Word & name, const std::vector <Declaration> & inner);
+	Trait (const lexing::Word & name, const std::string & comment, const std::vector <Declaration> & inner);
 
     public :
 
@@ -34,7 +34,7 @@ namespace syntax {
 	 * \param name the name of the trait 
 	 * \param inner the declaration inside the trait
 	 */
-	static Declaration init (const lexing::Word & name, const std::vector <Declaration> & inner);
+	static Declaration init (const lexing::Word & name, const std::string & comment, const std::vector <Declaration> & inner);
 		
 	/**
 	 * Mandatory function for dynamic casting

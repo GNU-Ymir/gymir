@@ -22,16 +22,16 @@ namespace semantic {
 
 	ModRef ();
 
-	ModRef (const lexing::Word & loc, const std::string & name, bool isWeak);
+	ModRef (const lexing::Word & loc, const std::string & comments, const std::string & name, bool isWeak);
 
 	ModRef (const ModRef & mod);
 	
     public :
 
 	
-	static Symbol init (const lexing::Word & loc, const std::string & name, bool isWeak);
+	static Symbol init (const lexing::Word & loc, const std::string & comments, const std::string & name, bool isWeak);
 	
-	static Symbol init (const lexing::Word & loc, const std::vector <std::string> & names, bool isWeak);
+	static Symbol init (const lexing::Word & loc, const std::string & comments, const std::vector <std::string> & names, bool isWeak);
 
 	void insert (const Symbol & sym) override;
 

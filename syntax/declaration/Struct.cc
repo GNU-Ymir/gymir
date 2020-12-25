@@ -3,17 +3,17 @@
 namespace syntax {
 
     Struct::Struct () :
-	IDeclaration (lexing::Word::eof ())
+	IDeclaration (lexing::Word::eof (), "")
     {}
 
-    Struct::Struct (const lexing::Word & loc, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars) :
-	IDeclaration (loc),
+    Struct::Struct (const lexing::Word & loc, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars) :
+	IDeclaration (loc, comment),
 	_decls (vars),
 	_cas (attrs)
     {}        
     
-    Declaration Struct::init (const lexing::Word & name, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars) {
-	return Declaration {new (NO_GC) Struct (name, attrs, vars)};
+    Declaration Struct::init (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars) {
+	return Declaration {new (NO_GC) Struct (name, comment, attrs, vars)};
     }
 
     bool Struct::isOf (const IDeclaration * type) const {
