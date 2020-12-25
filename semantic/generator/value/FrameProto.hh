@@ -84,6 +84,9 @@ namespace semantic {
 
 	    const std::string & getMangledName () const;
 
+
+	    bool isSafe () const;
+	    
 	    bool isCVariadic () const;
 
 	private :

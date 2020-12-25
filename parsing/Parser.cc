@@ -13,7 +13,7 @@
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
-
+#include <ymir/utils/string.hh>
 using namespace Ymir;
 
 
@@ -78,7 +78,10 @@ namespace Ymir {
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
 	    auto res = doc_visit.dump (module);
-	    println (res);
+	    auto name = Ymir::replace (module.getRealName () + ".doc.json", ':', '_');
+	    auto file = fopen (name.c_str (), "w");
+	    fwrite (res.c_str (), sizeof (char), res.length (), file);
+	    fclose (file);
 	}
 	
 	auto generator = semantic::generator::Visitor::init ();

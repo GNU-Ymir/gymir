@@ -101,6 +101,10 @@ namespace semantic {
 	bool FrameProto::isCVariadic () const {
 	    return this-> _isCVariadic;
 	}
+
+	bool FrameProto::isSafe () const {
+	    return this-> _isSafe;
+	}
     }
     
 }

@@ -60,4 +60,13 @@ namespace Ymir {
 	
 	return buf.str ();
     }
+
+    static inline std::string replace (const std::string & str, char f, char t) {
+	OutBuffer buf;
+	for (auto s : str) {
+	    if (s == f) buf.write (t);
+	    else buf.write (s);
+	}
+	return buf.str ();
+    }
 }
