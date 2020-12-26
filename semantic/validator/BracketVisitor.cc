@@ -18,11 +18,25 @@ namespace semantic {
 	}
 
 	Generator BracketVisitor::validate (const syntax::MultOperator & expression) {
-	    auto left = this-> _context.validateValue (expression.getLeft ());			
+	    auto left = this-> _context.validateValue (expression.getLeft ());
+	    std::list <std::string> errors;
 	    std::vector <Generator> rights;
-	    for (auto & it : expression.getRights ()) 
-		rights.push_back (this-> _context.validateValue (it));	    
-
+	    
+	    this-> _context.enterDollar (left);
+	    
+	    try {
+		for (auto & it : expression.getRights ()) {
+		    rights.push_back (this-> _context.validateValue (it));
+		}
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
+	    }
+	    
+	    this-> _context.quitDollar ();
+	    
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+	    
 	    if (left.to <Value> ().getType ().is <Array> ())
 	    	return validateArray (expression, left, rights);
 
@@ -56,6 +70,7 @@ namespace semantic {
 		} catch (Error::ErrorList list) {
 		    if (realFailure) throw list;
 		}
+		
 		auto test = this-> _context.validateValue (syntax::Binary::init (
 		    {loc, Token::INF},
 		    TemplateSyntaxWrapper::init (loc, len), 

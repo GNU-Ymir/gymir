@@ -356,6 +356,7 @@ namespace semantic {
 	    
 	    Ymir::Error::occurAndNote (
 		expression.getLocation (),
+		expression.getRight ().getLocation (),
 		buf.str (),
 		ExternalError::get (UNDEFINED_FIELD_FOR),
 		right,

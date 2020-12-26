@@ -780,6 +780,7 @@ namespace semantic {
 	    
 	    Ymir::Error::occurAndNote (
 		expression.getLocation (),
+		expression.getRight ().getLocation (),
 		buf.str (),
 		ExternalError::get (UNDEFINED_SUB_PART_FOR),
 		rightName,
