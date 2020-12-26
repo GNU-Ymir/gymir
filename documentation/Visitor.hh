@@ -60,6 +60,18 @@ namespace documentation {
 	 * \return the doc
 	 */
 	std::string dumpDeclBlockUnvalidated (const syntax::DeclBlock & dl, bool pub, bool prot);
+
+	/**
+	 * Dump the documentation of an external block
+	 * \return the doc
+	 */
+	std::string dumpExternBlockUnvalidated (const syntax::ExternBlock & ex, bool pub, bool prot);
+	
+	/**
+	 * Dump the documentation of a condition block
+	 * \return the doc
+	 */
+	std::string dumpCondBlockUnvalidated (const syntax::CondBlock & bl, bool pub, bool prot);
 	
 	/**
 	 * Dump the documentation of a function
@@ -80,10 +92,11 @@ namespace documentation {
 	std::string dumpVarDecl (const semantic::VarDecl & decl);
 
 	/**
-	 * Dump the documentation of a vardecl
+	 * Dump the documentation of a global var declaration 
 	 * \return the doc
 	 */
-	std::string dumpVarDeclUnvalidated (const syntax::VarDecl & decl, bool pub, bool prot);
+	std::string dumpGlobalUnvalidated (const syntax::Global & gl, bool pub, bool prot);
+	
 
 	/**
 	 * Dump the documentation of an alias 
@@ -98,17 +111,35 @@ namespace documentation {
 	std::string dumpStruct (const semantic::Struct & str);
 
 	/**
+	 * Dump the documentation of a structure
+	 * \return the doc
+	 */
+	std::string dumpStructUnvalidated (const syntax::Struct & str, bool pub, bool prot);
+	
+	/**
 	 * Dump the documentation of an enumeration
 	 * \return the doc
 	 */
 	std::string dumpEnum (const semantic::Enum & en);
 
 	/**
+	 * Dump the documentation of an enumeration
+	 * \return the doc
+	 */
+	std::string dumpEnumUnvalidated (const syntax::Enum & en, bool pub, bool prot);
+	
+	/**
 	 * Dump the documentation of a class
 	 * \return the doc
 	 */
 	std::string dumpClass (const semantic::Class & cl);
 
+	/**
+	 * Dump the documentation of a class
+	 * \return the doc
+	 */
+	std::string dumpClassUnvalidated (const syntax::Class & cl, bool pub, bool prot);
+	
 	/**
 	 * Dump the documentation of a method
 	 * \return the doc
@@ -122,10 +153,28 @@ namespace documentation {
 	std::string dumpTrait (const semantic::Trait & tr);
 
 	/**
+	 * Dump the documentation of a trait
+	 * \return the doc
+	 */
+	std::string dumpTraitUnvalidated (const syntax::Trait & tr, bool pub, bool prot);
+	
+	/**
 	 * Dump the documentation of a template
 	 * \return the doc
 	 */	
 	std::string dumpTemplate (const semantic::Template & tm);
+
+	/**
+	 * Dump the documentation  of a template
+	 * \return the doc
+	 */
+	std::string dumpTemplateUnvalidated (const syntax::Template & tm, bool pub, bool prot);	
+	
+	/**
+	 * Dump the documentation of a macro
+	 * \return the doc
+	 */
+	std::string dumpMacro (const semantic::Macro & x);
 	
     };
     

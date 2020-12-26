@@ -1502,7 +1502,32 @@ namespace semantic {
 			}
 			return syntax::Pragma::init (prg.getLocation (), exprs);
 		    }
-		);
+		) else of (syntax::MacroMult, m, {
+			std::vector <syntax::Expression> exprs;
+			for (auto & it : m.getContent ()) {
+			    exprs.push_back (replaceAll (it, mapping));
+			}
+			return syntax::MacroMult::init (m.getLocation (), m.getEnd (), exprs, m.getMult ());
+		    }
+		) else of (syntax::MacroCall, c, {
+			return syntax::MacroCall::init (c.getLocation (), c.getEnd (), replaceAll (c.getLeft (), mapping), c.getContent ());
+		    }
+		) else of (syntax::MacroEval, e, {
+			return syntax::MacroEval::init (e.getLocation (), e.getEnd (), replaceAll (e.getContent (), mapping));
+		    }
+		) else of (syntax::MacroOr, o, {
+			return syntax::MacroOr::init (o.getLocation (), replaceAll (o.getLeft (), mapping), replaceAll (o.getRight (), mapping));
+		    }
+		) else of (syntax::MacroResult, r, {
+			return syntax::MacroResult::init (r.getLocation (), r.getContent ());
+		    }
+		) else of (syntax::MacroToken, t, {
+			return syntax::MacroToken::init (t.getLocation (), t.getContent ());
+		    }
+		) else of (syntax::MacroVar, v, {
+			return syntax::MacroVar::init (v.getLocation (), replaceAll (v.getContent (), mapping));
+		    }
+		    );
 	    }
 	    
 	    if (!element.isEmpty ()) {
@@ -1646,7 +1671,25 @@ namespace semantic {
 		) else of (syntax::Use, use, {
 			return syntax::Use::init (use.getLocation (), "", replaceAll (use.getModule (), mapping));
 		    }
-		);			 
+		) else of (syntax::Macro, m, {
+			std::vector <Declaration> inner;
+			for (auto & it : m.getContent ())
+			    inner.push_back (replaceAll (it, mapping, _ref));
+			return syntax::Macro::init (m.getLocation (), "", inner);
+		    }
+		) else of (syntax::MacroConstructor, c, {
+			std::vector <Expression> skips;
+			for (auto & it : c.getSkips ())
+			    skips.push_back (replaceAll (it, mapping));
+			return syntax::MacroConstructor::init (c.getLocation (), "", replaceAll (c.getRule (), mapping), c.getContent (), skips);
+		    }
+		) else of (syntax::MacroRule, r, {
+			std::vector <Expression> skips;
+			for (auto & it : r.getSkips ())
+			    skips.push_back (replaceAll (it, mapping));
+			return syntax::MacroRule::init (r.getLocation (), "", replaceAll (r.getRule (), mapping), r.getContent (), skips);	
+		    }
+		    );			   
 	    }
 
 	    if (!decl.isEmpty ()) {

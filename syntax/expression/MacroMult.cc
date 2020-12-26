@@ -50,4 +50,8 @@ namespace syntax {
     const lexing::Word & MacroMult::getMult () const {
 	return this-> _mult;
     }
+
+    const lexing::Word & MacroMult::getEnd () const {
+	return this-> _end;
+    }
 }

@@ -38,6 +38,10 @@ namespace syntax {
 	return buf.str ();
     }
 
+    const lexing::Word & MacroEval::getEnd () const {
+	return this-> _end;
+    }
+    
     const Expression & MacroEval::getContent () const {
 	return this-> _content;
     }

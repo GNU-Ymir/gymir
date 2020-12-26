@@ -33,6 +33,8 @@ namespace syntax {
 
 	std::string prettyString () const override;
 
+	const lexing::Word & getEnd () const;
+	
 	const std::vector <Expression> & getContent () const;
 
 	const lexing::Word & getMult () const;
