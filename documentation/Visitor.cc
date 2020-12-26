@@ -5,10 +5,15 @@
 #include <algorithm>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/syntax/declaration/_.hh>
+#include <ymir/documentation/String.hh>
+#include <ymir/documentation/Array.hh>
+#include <ymir/documentation/Dict.hh>
+
 
 namespace documentation {
 
     using namespace semantic;
+    using namespace json;
     
     Visitor::Visitor (validator::Visitor & context):
 	_context (context)
@@ -18,68 +23,68 @@ namespace documentation {
 	return Visitor (context);
     }
 
-    std::string Visitor::dump (const semantic::Symbol & sym) {
-	Ymir::OutBuffer buf;
+    JsonValue Visitor::dump (const semantic::Symbol & sym) {
+	JsonValue val (JsonValue::empty ());
 	if (!sym.isWeak ()) {
 	    match (sym) {
 		of (semantic::Module, mod, {
 			this-> _context.pushReferent (sym, "dump::module");
-			buf.write (this-> dumpModule (mod));
+			val = this-> dumpModule (mod);
 			this-> _context.popReferent ("dump::module");
 		    }
 		    )
 		else of (semantic::Function, func, {
 			this-> _context.pushReferent (sym, "dump::function");
-			buf.write (this-> dumpFunction (func));
+			val = this-> dumpFunction (func);
 			this-> _context.popReferent ("dump::function");
 		    }
 		    )
 		else of (semantic::VarDecl, decl, {
 			this-> _context.pushReferent (sym, "dump::vardecl");
-			buf.write (this-> dumpVarDecl (decl));
+			val = this-> dumpVarDecl (decl);
 			this-> _context.popReferent ("dump::vardecl");			    
 		    }
 		    )
 	        else of (semantic::Alias, al, {
 		       this-> _context.pushReferent (sym, "dump::alias");
-		       buf.write (this-> dumpAlias (al));
+		       val = this-> dumpAlias (al);
 		       this-> _context.popReferent ("dump::alias");
 		   }
 		   )
 		else of (semantic::Struct, str, {
 			this-> _context.pushReferent (sym, "dump::struct");
-			buf.write (this-> dumpStruct (str));
+			val = this-> dumpStruct (str);
 			this-> _context.popReferent ("dump::struct");
 		    }
 		    )
 		else of (semantic::TemplateSolution, sol ATTRIBUTE_UNUSED, {})
 		else of (semantic::Enum, en, {
 			this-> _context.pushReferent (sym, "dump::enum");
-			buf.write (this-> dumpEnum (en));
+			val = this-> dumpEnum (en);
 			this-> _context.popReferent ("dump::enum");
 		    }
 		    )
 		else of (semantic::Class, cl, {
 			this-> _context.pushReferent (sym, "dump::class");
-			buf.write (this-> dumpClass (cl));
+			val = this-> dumpClass (cl);
 			this-> _context.popReferent ("dump::class");
 		    }
 		    )
 	        else of (semantic::Trait, tr, {
 			this-> _context.pushReferent (sym, "dump::trait");
-			buf.write (this-> dumpTrait (tr));
+			val = this-> dumpTrait (tr);
 			this-> _context.popReferent ("dump::trait");
 		    }
 		    )
 		else of (semantic::Template, tm, {
 			this-> _context.pushReferent (sym, "dump::template");
-			buf.write (this-> dumpTemplate (tm));
+			val = this-> dumpTemplate (tm);
 			this-> _context.popReferent ("dump::template");
 		    }
 		    )
 		else of (semantic::Macro, x, {
 			this-> _context.pushReferent (sym, "dump::macro");
-			buf.write (this-> dumpMacro (x));
+			val = this-> dumpMacro (x);
 			this-> _context.popReferent ("dump::macro");
 		    }
 		    )
@@ -89,10 +94,10 @@ namespace documentation {
 		}
 	    }
 	}
-	return buf.str ();
+	return val;
     }
 
-    std::string Visitor::dumpUnvalidated (const semantic::Symbol & sym) {
+    JsonValue Visitor::dumpUnvalidated (const semantic::Symbol & sym) {
 	match (sym) {
 	    of (semantic::Function, fn, {
 		    return this-> dumpFunctionUnvalidated (fn.getContent (), sym.isPublic (), false);
@@ -100,10 +105,10 @@ namespace documentation {
 		);	    
 	}
 	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	return "";
+	return JsonValue::empty ();
     }
 
-    std::string Visitor::dumpUnvalidated (const syntax::Declaration & decl, bool pub, bool prot) {
+    JsonValue Visitor::dumpUnvalidated (const syntax::Declaration & decl, bool pub, bool prot) {
 	match (decl) {
 	    of (syntax::DeclBlock, bl, {
 		    return this-> dumpDeclBlockUnvalidated (bl, pub, prot);
@@ -125,7 +130,7 @@ namespace documentation {
 		    return this-> dumpExternBlockUnvalidated (ex, pub, prot);
 		}
 		);
-	    of (syntax::Constructor, cst ATTRIBUTE_UNUSED, {return "";});
+	    of (syntax::Constructor, cst ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
 	    of (syntax::Function, fn, {
 		    return this-> dumpFunctionUnvalidated (fn, pub, prot);
 		}
@@ -134,8 +139,8 @@ namespace documentation {
 		    return this-> dumpGlobalUnvalidated (gl, pub, prot);
 		}
 		);
-	    of (syntax::Import, imp ATTRIBUTE_UNUSED, {return "";});
-	    of (syntax::Mixin, mx ATTRIBUTE_UNUSED, {return"";});
+	    of (syntax::Import, imp ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
+	    of (syntax::Mixin, mx ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
 	    of (syntax::Module, mod, {
 		    return this-> dumpModuleUnvalidated (mod, pub, prot);
 		}
@@ -152,765 +157,719 @@ namespace documentation {
 		    return this-> dumpTraitUnvalidated (tr, pub, prot);
 		}
 		);
-	    of (syntax::Use, u ATTRIBUTE_UNUSED, {return "";});
-	    
+	    of (syntax::Use, u ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
+	    of (syntax::Macro, m, {
+		    return this-> dumpMacroUnvalidated (m, pub, prot);		
+		}
+		);
 	}
 	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	return "";
+	return JsonValue::empty ();
     }
 
-    std::string Visitor::dumpModule (const semantic::Module & mod) {
-	Ymir::OutBuffer buf;
-	if (!mod.isExtern ()) {
-	    buf.writeln ("{");
-	    buf.writeln ("\t\"type\" : \"module\",");
-	    buf.writefln ("\t\"name\" : \"%\",", mod.getRealName ());
-	    buf.writefln ("\t\"loc_file\" : \"%\",", mod.getName ().locFile);
-	    buf.writefln ("\t\"loc_line\" : %,", mod.getName ().line);
-	    buf.writefln ("\t\"loc_col\" : %,", mod.getName ().column);
-	    buf.writefln ("\t\"doc\" : \"%\",", mod.getComments ());
-	    if (mod.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	    else buf.writeln ("\t\"protection\" : \"private\",");
-
-	    buf.writeln ("\t\"childs\" : [");
-	    int i = 0;
-	    for (auto & it : mod.getAllLocal ()) {
-		if (i != 0) buf.writeln ("\t,");
-		auto text = Ymir::entab (this-> dump (it), "\t");
-		if (text != "") {
-		    buf.writeln (text);
-		    i += 1;
-		}
-	    }
-	    buf.writeln ("\t]");
-	    buf.writeln ("}");
-	}
-	return buf.str ();
+    void Visitor::dumpStandard (const semantic::ISymbol & mod, std::map <std::string, JsonValue> & val) {
+	val ["name"] = JsonString::init (mod.getRealName ());
+	val ["loc_file"] = JsonString::init (mod.getName ().locFile);
+	val ["loc_line"] = JsonString::init (mod.getName ().line);
+	val ["loc_col"] = JsonString::init (mod.getName ().column);
+	val ["doc"] = JsonString::init (mod.getComments ());
+	
+	if (mod.isPublic ()) val ["protection"] = JsonString::init ("pub");
+	else if (mod.isProtected ()) val ["protection"] = JsonString::init ("prot");
+	else val ["protection"] = JsonString::init ("prv");
     }    
 
-    std::string Visitor::dumpModuleUnvalidated (const syntax::Module & mod, bool pub, bool prot) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"module\",");
-	buf.writefln ("\t\"name\" : \"%\",", mod.getLocation ().str);
-	buf.writefln ("\t\"loc_file\" : \"%\",", mod.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", mod.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", mod.getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", mod.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
+    void Visitor::dumpStandard (const syntax::IDeclaration & mod, bool pub, bool prot, std::map <std::string, json::JsonValue> & val) {
+	val ["name"] = JsonString::init (mod.getLocation ().str);
+	val ["loc_file"] = JsonString::init (mod.getLocation ().locFile);
+	val ["loc_line"] = JsonString::init (mod.getLocation ().line);
+	val ["loc_col"] = JsonString::init (mod.getLocation ().column);
+	val ["doc"] = JsonString::init (mod.getComments ());
 	
-	buf.writeln ("\t\"childs\" : [");
-	int i = 0;
-	for (auto & it : mod.getDeclarations ()) {
-	    if (i != 0) buf.writeln ("\t,");
-	    auto text = Ymir::entab (this-> dumpUnvalidated (it, false, false), "\t");
-	    if (text != "") {
-		buf.writeln (text);
-		i += 1;
+	if (pub) val ["protection"] = JsonString::init ("pub");
+	else if (prot) val ["protection"] = JsonString::init ("prot");
+	else val ["protection"] = JsonString::init ("prv");
+    }
+    
+    JsonValue Visitor::dumpModule (const semantic::Module & mod) {
+	if (!mod.isExtern ()) {
+	    std::map <std::string, JsonValue> val;
+	    val ["type"] = JsonString::init ("module");
+	    this-> dumpStandard (mod, val);
+	    
+	    std::vector <JsonValue> childs;
+	    for (auto & it : mod.getAllLocal ()) {
+		auto ch = this-> dump (it);
+		if (!ch.isEmpty ())
+		    childs.push_back (ch);
 	    }
+
+	    val ["childs"] = JsonArray::init (childs);
+	    return JsonDict::init (val);
 	}
-	buf.writeln ("\t]");
-	buf.writeln ("}");	
-	return buf.str ();
+	return JsonValue::empty ();
+    }    
+
+    JsonValue Visitor::dumpModuleUnvalidated (const syntax::Module & mod, bool pub, bool prot) {	
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("module");
+	this-> dumpStandard (mod, pub, prot, val);
+
+	std::vector <JsonValue> childs;
+	for (auto & it : mod.getDeclarations ()) {	    
+	    auto ch = this-> dumpUnvalidated (it, false, false);
+	    if (!ch.isEmpty ())
+		childs.push_back (ch);
+	}
+	
+	val ["childs"] = JsonArray::init (childs);	
+	return JsonDict::init (val);
     }
 
-    std::string Visitor::dumpDeclBlockUnvalidated (const syntax::DeclBlock & dl, bool, bool) {
-	Ymir::OutBuffer buf;
+    JsonValue Visitor::dumpDeclBlockUnvalidated (const syntax::DeclBlock & dl, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("block");
+	this-> dumpStandard (dl, pub, prot, val);
+
+	std::vector <JsonValue> childs;
 	for (auto & it : dl.getDeclarations ()) {
-	    auto text = this-> dumpUnvalidated (it, dl.isPublic (), dl.isProt ());
-	    if (text != "") {
-		buf.writefln ("%,", text);
-	    }
+	    auto ch = this-> dumpUnvalidated (it, dl.isPublic (), dl.isProt ());
+	    if (!ch.isEmpty ())
+		childs.push_back (ch);
 	}
-	return buf.str ();
+	
+	val ["childs"] = JsonArray::init (childs);	
+	return JsonDict::init (val);
     }
 
 
-    std::string Visitor::dumpExternBlockUnvalidated (const syntax::ExternBlock & mod, bool pub, bool prot) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"extern\",");
-	buf.writefln ("\t\"name\" : \"%\",", mod.getLocation ().str);
-	buf.writefln ("\t\"loc_file\" : \"%\",", mod.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", mod.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", mod.getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", mod.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
+    JsonValue Visitor::dumpExternBlockUnvalidated (const syntax::ExternBlock & mod, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("extern");
+	this-> dumpStandard (mod, pub, prot, val);
 
-	buf.writeln ("\t\"from\" : \"%\",", mod.getFrom ().str);
-	buf.writeln ("\t\"space\" : \"%\",", mod.getSpace ().str);
+	val ["from"] = JsonString::init (mod.getFrom ().str);
+	val ["space"] = JsonString::init (mod.getSpace ().str);
+
+	std::vector <JsonValue> childs;
+	auto ch = this-> dumpUnvalidated (mod.getDeclaration (), pub, prot);
+	if (!ch.isEmpty ())
+	    childs.push_back (ch);
 	
-	buf.writeln ("\t\"childs\" : [");
-	auto text = Ymir::entab (this-> dumpUnvalidated (mod.getDeclaration (), false, false), "\t");
-	if (text != "") {
-	    buf.writeln (text);
-	}
-	
-	buf.writeln ("\t]");
-	buf.writeln ("}");	
-	return buf.str ();
+	val ["childs"] = JsonArray::init (childs);
+	return JsonDict::init (val);
     }
 
-    std::string Visitor::dumpCondBlockUnvalidated (const syntax::CondBlock & mod, bool pub, bool prot) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"extern\",");
-	buf.writefln ("\t\"name\" : \"%\",", mod.getLocation ().str);
-	buf.writefln ("\t\"loc_file\" : \"%\",", mod.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", mod.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", mod.getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", mod.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-	buf.writefln ("\t\"test\" : \"%\",", mod.getTest ().prettyString ());
+    JsonValue Visitor::dumpCondBlockUnvalidated (const syntax::CondBlock & mod, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("condition");
+	this-> dumpStandard (mod, pub, prot, val);
+	if (!mod.getTest ().isEmpty ())
+	    val ["test"] = JsonString::init (mod.getTest ().prettyString ());
+	
 	if (!mod.getElse ().isEmpty ()) {
-	    auto text = this-> dumpUnvalidated (mod.getElse (), pub, prot);
-	    if (text != "")
-		buf.writefln ("\t\"else\" : {%\n\t},", text);
+	    auto ch = this-> dumpUnvalidated (mod.getElse (), pub, prot);
+	    if (!ch.isEmpty ())
+		val ["else"] = ch;
 	}
+
 	
-	buf.writeln ("\t\"childs\" : [");
-	int i = 0;
+	std::vector <JsonValue> childs;
 	for (auto & it : mod.getDeclarations ()) {
-	    if (i != 0) buf.writeln ("\t,");
-	    auto text = Ymir::entab (this-> dumpUnvalidated (it, false, false), "\t");
-	    if (text != "") {
-		buf.writeln (text);
-		i += 1;
-	    }
+	    auto ch = this-> dumpUnvalidated (it, pub, prot);
+	    if (!ch.isEmpty ())
+		childs.push_back (ch);
 	}
-	buf.writeln ("\t]");
-	buf.writeln ("}");
-	return buf.str ();
+	
+	val ["childs"] = JsonArray::init (childs);
+	return JsonDict::init (val);
     }
     
-    std::string Visitor::dumpFunction (const semantic::Function & func) {
-	Ymir::OutBuffer buf;
+    JsonValue Visitor::dumpFunction (const semantic::Function & func) {
+	std::map <std::string, JsonValue> val;
 	auto proto = this-> _context.validateFunctionProto (func);
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"function\",");	
-	buf.writefln ("\t\"name\" : \"%\",", func.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", func.getContent ().getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", func.getContent ().getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", func.getContent ().getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", func.getComments ());
-	if (func.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-
-	buf.writeln ("\t\"attributes\" : [");
-	int i = 0;
+	val ["type"] = JsonString::init ("function");
+	this-> dumpStandard (func, val);
+	
+	std::vector <JsonValue> attrs;
 	for (auto & it : func.getContent ().getCustomAttributes ()) {
-	    if (i != 0) buf.write (",");
-	    buf.writef ("\"%\"", it.str);
-	    i += 1;
+	    attrs.push_back (JsonString::init (it.str));
 	}
-	
-	buf.writeln ("],\n\t\"params\" : [");
-	i = 0;
-	for (auto & it : proto.to<generator::FrameProto> ().getParameters ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <generator::ProtoVar> ().getLocation ().str);
-	    buf.writefln ("\t\t\"type\" : \"%\",", it.to <generator::Value> ().getType ().prettyString ());
-	    buf.writefln ("\t\t\"mut\" : \"%\",", it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
-	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
-		buf.writefln ("\t\t\"value\" : \"%\"", it.to<generator::ProtoVar> ().getValue ().prettyString ());
-	    buf.writeln ("\t}");
-	    i += 1;
-	}	
-	buf.writefln ("\t],\n\t\"ret_type\" : \"%\",", proto.to <generator::FrameProto> ().getReturnType ().prettyString ());
-	buf.writeln ("\t\"throwers\" : [");
-	i = 0;
-	for (auto & it : proto.getThrowers ()) {
-	    if (i != 0) buf.write (",");
-	    buf.writef ("\"%\"", it.prettyString ());
-	    i += 1;
-	}
-	buf.writeln ("\t]");	
-	buf.writeln ("}");
-	return buf.str ();
-    }
+	val ["attributes"] = JsonArray::init (attrs);
 
-    std::string Visitor::dumpFunctionUnvalidated (const syntax::Function & func, bool pub, bool prot) {
-	Ymir::OutBuffer buf;
-	auto decl = func;
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"function\",");	
-	buf.writefln ("\t\"name\" : \"%\",", func.getLocation ().str);
-	buf.writefln ("\t\"loc_file\" : \"%\",", func.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", func.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", func.getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", func.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-	
-	buf.writeln ("\t\"params\" : [");
-	int i = 0;
-	for (auto & it : decl.getPrototype ().getParameters ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <syntax::VarDecl> ().getLocation ().str);
-	    buf.writefln ("\t\t\"type\" : \"%\",", it.to <syntax::VarDecl> ().getType ().prettyString ());
-	    buf.writefln ("\t\t\"mut\" : \"%\",", it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
-	    buf.writeln ("\t}");
-	    i += 1;
-	}	
-	buf.writefln ("\t],\n\t\"ret_type\" : \"%\"," ,decl.getPrototype ().getType ().prettyString ());
-	auto attrs = decl.getCustomAttributes ();
-	buf.writeln ("\t\"throwers\" : [");
-	i = 0;
-	for (auto & it : decl.getThrowers ()) {
-	    if (i != 0) buf.write (",");
-	    buf.writef ("\"%\"", it.prettyString ());
-	    i += 1;
+	std::vector <JsonValue> params;
+	for (auto & it : proto.to<generator::FrameProto> ().getParameters ()) {
+	    std::map <std::string, JsonValue> param;
+	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().str);
+	    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
+	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
+
+	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
+		param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
+	    params.push_back (JsonDict::init (param));
 	}
-	buf.writeln ("\t]");
-	buf.writeln ("}");
-	return buf.str ();
+	val ["params"] = JsonArray::init (params);
+	val ["type"] = JsonString::init (proto.to <generator::FrameProto> ().getReturnType ().prettyString ());
+	
+	
+	std::vector <JsonValue> throwers;
+	for (auto & it : proto.getThrowers ()) {
+	    throwers.push_back (JsonString::init (it.prettyString ()));
+	}
+	
+	val ["throwers"] = JsonArray::init (throwers);	
+	return JsonDict::init (val);
     }
     
-    std::string Visitor::dumpVarDecl (const semantic::VarDecl & decl) {
-	Ymir::OutBuffer buf;
-	auto gen = decl.getGenerator ();
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"var\",");
-	buf.writefln ("\"name\" : \"%\",", gen.to <generator::GlobalVar> ().getLocation ().str);
-	buf.writefln ("\"mut\" : \"%\",", gen.to <generator::GlobalVar> ().isMutable () ? "true" : "false");
-	buf.writefln ("\"type\" : \"%\",", gen.to <generator::GlobalVar> ().getType ().prettyString ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", gen.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", gen.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", gen.getLocation ().column);
-	buf.writef ("\t\"doc\" : \"%\"", decl.getComments ());
-	if (decl.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-	
-	if (!gen.to <generator::GlobalVar> ().getValue ().isEmpty ()){
-	    buf.writef (",\n\t\"value\" : \"%\"", gen.to <generator::GlobalVar> ().getValue ().prettyString ());
+    JsonValue Visitor::dumpFunctionUnvalidated (const syntax::Function & func, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	auto decl = func;
+	val ["type"] = JsonString::init ("function");
+	this-> dumpStandard (func, pub, prot, val);
+
+	std::vector <JsonValue> attrs;
+	for (auto & it : decl.getCustomAttributes ()) {
+	    attrs.push_back (JsonString::init (it.str));
 	}
-	buf.writeln ("\n}");
-	return buf.str ();
+	val ["attributes"] = JsonArray::init (attrs);
+	
+	std::vector <JsonValue> params;
+	for (auto & it : decl.getPrototype ().getParameters ()) {
+	    std::map <std::string, JsonValue> param;
+	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().str);
+	    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
+	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
+		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
+	    params.push_back (JsonDict::init (param));
+	}
+	
+	val ["param"] = JsonArray::init (params);
+	val ["type"] = JsonString::init (decl.getPrototype ().getType ().prettyString ());
+
+	std::vector <JsonValue> throwers;
+	for (auto & it : decl.getThrowers ()) {
+	    throwers.push_back (JsonString::init (it.prettyString ()));
+	}
+	
+	val ["throwers"] = JsonArray::init (throwers);	
+	return JsonDict::init (val);	
     }
 
-    std::string Visitor::dumpGlobalUnvalidated (const syntax::Global & gv, bool pub, bool prot) {
-	Ymir::OutBuffer buf;
-	auto vdecl = gv.getContent ().to <syntax::VarDecl> ();
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"var\",");
-	buf.writefln ("\"name\" : \"%\",", gv.getLocation ().str);
-	buf.writefln ("\"mut\" : \"%\",", vdecl.hasDecorator (syntax::Decorator::MUT)? "true" : "false");
-	buf.writefln ("\"type\" : \"%\",", vdecl.getType ().prettyString ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", gv.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", gv.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", gv.getLocation ().column);
-	buf.writef ("\t\"doc\" : \"%\"", gv.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
+    
+    JsonValue Visitor::dumpVarDecl (const semantic::VarDecl & decl) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("var");
+	this-> dumpStandard (decl, val);
+	auto gen = decl.getGenerator ();
 	
-	if (!vdecl.getValue ().isEmpty ()){
-	    buf.writef (",\n\t\"value\" : \"%\"", vdecl.getValue ().prettyString ());
+	val ["mut"] = JsonString::init (gen.to <generator::GlobalVar> ().isMutable () ? "true" : "false");
+	val ["var_type"] = JsonString::init (gen.to <generator::GlobalVar> ().getType ().prettyString ());
+		
+	if (!gen.to <generator::GlobalVar> ().getValue ().isEmpty ()){
+	    val ["value"] = JsonString::init (gen.to <generator::GlobalVar> ().getValue ().prettyString ());
 	}
-	buf.writeln ("\n}");
-	return buf.str ();
+	
+	return JsonDict::init (val);
+    }
+
+    JsonValue Visitor::dumpGlobalUnvalidated (const syntax::Global & gv, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("var");
+	this-> dumpStandard (gv, pub, prot, val);
+	auto & vdecl = gv.getContent ().to <syntax::VarDecl> ();
+	
+	val ["mut"] = JsonString::init (vdecl.hasDecorator (syntax::Decorator::MUT)? "true" : "false");
+	val ["var_type"] = JsonString::init (vdecl.getType ().prettyString ());
+		
+	if (!vdecl.getValue ().isEmpty ()){
+	    val ["value"] = JsonString::init (vdecl.getValue ().prettyString ());
+	}
+
+	return JsonDict::init (val);
     }
         
-    std::string Visitor::dumpAlias (const semantic::Alias & al) {
-	Ymir::OutBuffer buf;
+    JsonValue Visitor::dumpAlias (const semantic::Alias & al) {
+	std::map <std::string, JsonValue> val;
 	auto gen = al.getGenerator ();
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"alias\",");
-	buf.writefln ("\"name\" : \"%\",", al.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", al.getName ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", al.getName ().line);
-	buf.writefln ("\t\"loc_col\" : %,", al.getName ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", al.getComments ());
-	buf.writefln ("\t\"value\" : \"%\"", gen.prettyString ());
-	if (al.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-	
-	buf.writeln ("}");
-	return buf.str ();
+	val ["type"] = JsonString::init ("alias");
+	this-> dumpStandard (al, val);
+
+	val ["value"] = JsonString::init (gen.prettyString ());
+	return JsonDict::init (val);
     }
 
-    std::string Visitor::dumpStruct (const semantic::Struct & str) {
-	Ymir::OutBuffer buf;
+    JsonValue Visitor::dumpStruct (const semantic::Struct & str) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("struct");
+	this-> dumpStandard (str, val);
+
 	auto gen = str.getGenerator ();
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"struct\",");
-	buf.writefln ("\"name\" : \"%\",", str.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", str.getName ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", str.getName ().line);
-	buf.writefln ("\t\"loc_col\" : %,", str.getName ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", str.getComments ());
-	if (str.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-		
-	buf.writeln ("\t\"childs\" : [");
-	int i = 0;
+	
+	std::vector <JsonValue> attrs;
+	if (str.isUnion ()) attrs.push_back (JsonString::init (Keys::UNION));
+	if (str.isPacked ()) attrs.push_back (JsonString::init (Keys::PACKED));
+	val ["attributes"] = JsonArray::init (attrs);
+
+	std::vector <JsonValue> childs;
 	for (auto & it : gen.to<generator::Struct> ().getFields ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <generator::VarDecl> ().getName ());
-	    buf.writefln ("\t\t\"type\" : \"%\",", it.to <generator::VarDecl> ().getVarType ().prettyString ());
-	    buf.writefln ("\t\t\"mut\" : \"%\"", it.to <generator::VarDecl> ().isMutable () ? "true" : "false");    
+	    std::map <std::string, JsonValue> field;
+	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
+	    field ["type"] = JsonString::init (it.to <generator::VarDecl> ().getVarType ().prettyString ());
+	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
+	    
 	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
-		buf.writefln ("\t\t,\"value\" : \"%\"", it.to<generator::VarDecl> ().getVarValue ().prettyString ());
-	    buf.writeln ("\t}");
-	    i += 1;
+		field ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
+	    childs.push_back (JsonDict::init (field));
 	}
-	buf.writeln ("\t]\n}");
-	return buf.str ();
+	
+	val ["fields"] = JsonArray::init (childs);
+	return JsonDict::init (val);
     }
 
-    std::string Visitor::dumpStructUnvalidated (const syntax::Struct & str, bool pub, bool prot) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"struct\",");
-	buf.writefln ("\"name\" : \"%\",", str.getLocation ().str);
-	buf.writefln ("\t\"loc_file\" : \"%\",", str.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", str.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", str.getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", str.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
+    JsonValue Visitor::dumpStructUnvalidated (const syntax::Struct & str, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("struct");
+	
+	this-> dumpStandard (str, pub, prot, val);
 
-	buf.writeln ("\t\"attributes\" : [");
-	int i = 0;
+	std::vector <JsonValue> attrs;	
 	for (auto & it : str.getCustomAttributes ()) {
-	    if (i != 0) buf.write (",");
-	    buf.writef ("\"%\"", it.str);
-	    i += 1;
+	    attrs.push_back (JsonString::init (it.str));
 	}
+	val ["attributes"] = JsonArray::init (attrs);
 	
-	buf.writeln ("],\n\t\"childs\" : [");
-	i = 0;
+	std::vector <JsonValue> childs;
 	for (auto & it : str.getDeclarations ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <syntax::VarDecl> ().getName ());
-	    buf.writefln ("\t\t\"type\" : \"%\",", it.to <syntax::VarDecl> ().getType ().prettyString ());
-	    buf.writefln ("\t\t\"mut\" : \"%\"", it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");    
+	    std::map <std::string, JsonValue> field;
+	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().str);
+	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");    
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		buf.writefln ("\t\t,\"value\" : \"%\"", it.to<syntax::VarDecl> ().getValue ().prettyString ());
-	    buf.writeln ("\t}");
-	    i += 1;
+		field ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
+	    childs.push_back (JsonDict::init (field));
 	}
-	buf.writeln ("\t]\n}");
-	return buf.str ();
+	
+	val ["fields"] = JsonArray::init (childs);
+	return JsonDict::init (val);
 	
     }
 
-    std::string Visitor::dumpEnum (const semantic::Enum & en) {
-	Ymir::OutBuffer buf;
+    JsonValue Visitor::dumpEnum (const semantic::Enum & en) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("enum");
+	this-> dumpStandard (en, val);
 	auto gen = en.getGenerator ();
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"enum\",");
-	buf.writefln ("\"name\" : \"%\",", en.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", en.getName ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", en.getName ().line);
-	buf.writefln ("\t\"loc_col\" : %,", en.getName ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", en.getComments ());
-	if (en.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
 	
-	buf.writefln ("\t\"type\" : \"%\",", gen.to <semantic::generator::Enum> ().getType ().prettyString ());
-
-	buf.writeln ("\t\"childs\" : [");
-	int i = 0;
+	val ["en_type"] = JsonString::init (gen.to <semantic::generator::Enum> ().getType ().prettyString ());
+	
+	std::vector <JsonValue> childs;
         for (auto & it : gen.to <semantic::generator::Enum> ().getFields ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
-	    buf.writefln ("\t\t\"name\" : \"%\"", it.to <generator::VarDecl> ().getName ());
+	    std::map <std::string, JsonValue> param;
+	    param ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());	
 	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
-		buf.writefln ("\t\t\"value\" : \"%\"", it.to<generator::VarDecl> ().getVarValue ().prettyString ());
-	    buf.writeln ("\t}");
-	    i += 1;
+		param ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
+	    childs.push_back (JsonDict::init (param));
         }
-	buf.writeln ("\t]\n}");
-	return buf.str ();
+	
+	val ["fields"] = JsonArray::init (childs);
+	return JsonDict::init (val);
     }
 
-    std::string Visitor::dumpEnumUnvalidated (const syntax::Enum & en, bool pub, bool prot) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"enum\",");
-	buf.writefln ("\"name\" : \"%\",", en.getLocation ().str);
-	buf.writefln ("\t\"loc_file\" : \"%\",", en.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", en.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", en.getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", en.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
+    JsonValue Visitor::dumpEnumUnvalidated (const syntax::Enum & en, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("enum");
+	this-> dumpStandard (en, pub, prot, val);
+	val ["en_type"] = JsonString::init (en.getType ().prettyString ());
 
-	buf.writefln ("\t\"type\" : \"%\",", en.getType ().prettyString ());
 	
-	buf.writeln ("\t\"childs\" : [");
-	int i = 0;
+	std::vector <JsonValue> childs;
 	for (auto & it : en.getValues ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <syntax::VarDecl> ().getName ());
+	    std::map <std::string, JsonValue> param;
+	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().str);	    
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		buf.writefln ("\t\t,\"value\" : \"%\"", it.to<syntax::VarDecl> ().getValue ().prettyString ());
-	    buf.writeln ("\t}");
-	    i += 1;
+		param ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
+	    childs.push_back (JsonDict::init (param));
 	}
-	buf.writeln ("\t]\n}");
-	return buf.str ();
+	
+	val ["fields"] = JsonArray::init (childs);
+	return JsonDict::init (val);
     }
     
-    std::string Visitor::dumpClass (const semantic::Class & cl) {
-	Ymir::OutBuffer buf;
+    JsonValue Visitor::dumpClass (const semantic::Class & cl) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("class");
+	this-> dumpStandard (cl, val);
+
 	auto gen = cl.getGenerator ();
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"class\",");
-	buf.writefln ("\"name\" : \"%\",", cl.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", cl.getName ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", cl.getName ().line);
-	buf.writefln ("\t\"loc_col\" : %,", cl.getName ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", cl.getComments ());
-	if (cl.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
 	
 	auto ancestor = gen.to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().getAncestor ();
-	if (!ancestor.isEmpty ())
-	    buf.writefln ("\t\"ancestor\" : \"%\",", ancestor.prettyString ());
+	if (!ancestor.isEmpty ()) {
+	    val ["ancestor"] = JsonString::init (ancestor.prettyString ());
+	}
 	
-	buf.writeln ("\t\"fields\" : [");
-	int i = 0;
+	std::vector <JsonValue> fields;
 	for (auto & it : gen.to <semantic::generator::Class> ().getFields ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
+	    std::map <std::string, JsonValue> field;
+	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
+	    field ["type"] = JsonString::init (it.to <generator::VarDecl> ().getVarType ().prettyString ());
+	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
 	    
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <generator::VarDecl> ().getName ());
-	    buf.writefln ("\t\t\"type\" : \"%\",", it.to <generator::VarDecl> ().getVarType ().prettyString ());
-	    buf.writefln ("\t\t\"mut\" : \"%\",", it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
 	    if (cl.isMarkedPrivate (it.to <generator::VarDecl> ().getName ()))
-		buf.writefln ("\t\t\"protection\" : \"%\"", "private");
+		field ["protection"] = JsonString::init ("prv");
 	    else if (cl.isMarkedProtected (it.to <generator::VarDecl> ().getName ()))
-		buf.writefln ("\t\t\"protection\" : \"%\"", "prot");
-	    else
-		buf.writefln ("\t\t\"protection\" : \"%\"", "public");
+		field ["protection"] = JsonString::init ("prot");
+	    else field ["protection"] = JsonString::init ("pub");
 		
 	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
-		buf.writefln ("\t\t,\"value\" : \"%\"", it.to<generator::VarDecl> ().getVarValue ().prettyString ());
-	    buf.writeln ("\t}");
-	    i += 1;
+		field ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
+	    
+	    fields.push_back (JsonDict::init (field));
 	}
-	buf.writeln ("\t],\n\t\"constructors\" : [");
-	i = 0;
-	for (auto & it : cl.getAllInner ()) { // Dump constructors
-	    match (it) {
-		of (semantic::Constructor, cst ATTRIBUTE_UNUSED, {
-			auto proto = this-> _context.validateConstructorProto (it);
-			if (i == 0) buf.writeln ("\t{");
-			else buf.writeln ("\t,{");
-			buf.writefln ("\t\t\"loc_file\" : \"%\",", it.getName ().locFile);
-			buf.writefln ("\t\t\"loc_line\" : %,", it.getName ().line);
-			buf.writefln ("\t\t\"loc_col\" : %,", it.getName ().column);
-			buf.writefln ("\t\t\"doc\" : \"%\",", it.getComments ());
-			if (it.isProtected ())
-			    buf.writefln ("\t\t\"protection\" : \"%\",", "prot");
-			else if (it.isPublic ())
-			    buf.writefln ("\t\t\"protection\" : \"%\",", "public");
-			else
-			    buf.writefln ("\t\t\"protection\" : \"%\",", "private");
-		
-			buf.writeln ("\t\t\"params\" : [");
-			int j = 0;
-			for (auto & it : proto.to <generator::ConstructorProto> ().getParameters ()) {
-			    if (j == 0) buf.writeln ("\t{");
-			    else buf.writeln ("\t\t,{");
-			    buf.writefln ("\t\t\t\"name\" : \"%\",", it.to <generator::ProtoVar> ().getLocation ().str);
-			    buf.writefln ("\t\t\t\"type\" : \"%\",", it.to <generator::Value> ().getType ().prettyString ());
-			    buf.writefln ("\t\t\t\"mut\" : \"%\",", it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
-			    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
-				buf.writefln ("\t\t\t\"value\" : \"%\"", it.to<generator::ProtoVar> ().getValue ().prettyString ());
-			    buf.writeln ("\t\t}");
-			    j += 1;
-			}			
-			buf.writeln ("\t\t]\t}");
-			i += 1;
-		    }		    
-		    );
-	    }
-	}
+
+	std::vector <JsonValue> cstrs;
+	std::vector <JsonValue> methods;
+	std::vector <JsonValue> impls;
 	
-	buf.writeln ("\t],\n\t\"methods\": [");
-	i = 0;	    
+	for (auto & it : cl.getAllInner ()) { // Dump constructors
+	    std::map <std::string, JsonValue> def;
+	    if (it.is <semantic::Constructor> ()) {
+		auto proto = this-> _context.validateConstructorProto (it);
+		def ["type"] = JsonString::init ("cstr");
+		this-> dumpStandard (it.to <semantic::Constructor> (), def);
+		
+		std::vector <JsonValue> params;
+					       
+		for (auto & it : proto.to <generator::ConstructorProto> ().getParameters ()) {
+		    std::map <std::string, JsonValue> param;
+		    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().str);
+		    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
+		    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
+		    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
+			param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
+
+
+		    params.push_back (JsonDict::init (param));
+		}
+		def ["params"] = JsonArray::init (params);
+		cstrs.push_back (JsonDict::init (def));
+	    } else if (it.is <semantic::Impl> ()) {	    
+		def ["type"] = JsonString::init ("impl");
+		this-> dumpStandard (it.to <semantic::Impl> (), def);
+		def ["trait"] = JsonString::init (this-> _context.validateType (it.to <semantic::Impl> ().getTrait ()).prettyString ());
+		impls.push_back (JsonDict::init (def));
+	    }
+	}	
+
+	val ["cstrs"] = JsonArray::init (cstrs);
+	val ["impls"] = JsonArray::init (impls);
+
+	int i = 0;
 	for (auto & it : gen.to <semantic::generator::Class> ().getVtable ()) {
-	    if (i != 0) buf.writeln ("\t,");
-	    buf.writeln (Ymir::entab (this-> dumpMethodProto (it.to <generator::MethodProto> (), gen.to <semantic::generator::Class> ().getProtectionVtable ()[i]), "\t"));
+	    auto m = this-> dumpMethodProto (it.to <generator::MethodProto> (), gen.to <semantic::generator::Class> ().getProtectionVtable ()[i]);
+	    if (!m.isEmpty ())
+		methods.push_back (m);
 	    i += 1;
 	}
 
-	buf.writeln ("\t],\n\t\"impl\": [");
-	i = 0;
-	for (auto & it : cl.getAllInner ()) {
-	    match (it) {
-		of (semantic::Impl, im ATTRIBUTE_UNUSED, {
-			if (i == 0) buf.writeln ("\t{");
-			else buf.writeln ("\t,{");
-			buf.writefln ("\t\t\"loc_file\" : \"%\",", it.getName ().locFile);
-			buf.writefln ("\t\t\"loc_line\" : %,", it.getName ().line);
-			buf.writefln ("\t\t\"loc_col\" : %,", it.getName ().column);
-			buf.writefln ("\t\t\"doc\" : \"%\",", it.getComments ());
-			buf.writefln ("\t\t\"type\" : \"%\"", this-> _context.validateType (im.getTrait ()).prettyString ());
-			buf.writeln ("}");
-		    }
-		    );
-	    }
-	}
-	
-	buf.writeln ("\t]\n}");
-	return buf.str ();
+	val ["methods"] = JsonArray::init (methods);
+	return JsonDict::init (val);
     }
 
 
-    std::string Visitor::dumpClassUnvalidated (const syntax::Class & s_cl, bool pub, bool prot) {
+    JsonValue Visitor::dumpClassUnvalidated (const syntax::Class & s_cl, bool pub, bool prot) {
 	auto visit = declarator::Visitor::init ();
 	visit.setWeak ();
 	auto symcl = visit.visitClass (s_cl);
 	auto & cl = symcl.to <semantic::Class> ();
-	Ymir::OutBuffer buf;
 	
-	buf.writeln ("{");
-	buf.writeln ("\"type\" : \"class\",");
-	buf.writefln ("\"name\" : \"%\",", cl.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", cl.getName ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", cl.getName ().line);
-	buf.writefln ("\t\"loc_col\" : %,", cl.getName ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", cl.getComments ());
-	if (pub) buf.writeln ("\t\"protection\" : \"public\",");
-	else if (prot) buf.writeln ("\t\"protection\" : \"prot\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("class");
+	this-> dumpStandard (s_cl, pub, prot, val);
 	
 	auto ancestor = s_cl.getAncestor ();
-	if (!ancestor.isEmpty ())
-	    buf.writefln ("\t\"ancestor\" : \"%\",", ancestor.prettyString ());
+	if (!ancestor.isEmpty ()) {
+	    val ["ancestor"] = JsonString::init (ancestor.prettyString ());
+	}
 	
-	buf.writeln ("\t\"fields\" : [");
-	int i = 0;
+	std::vector <JsonValue> fields;
 	for (auto & it : cl.getFields ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
+	    std::map <std::string, JsonValue> field;
+	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().str);
+	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
 	    
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <syntax::VarDecl> ().getName ());
-	    buf.writefln ("\t\t\"type\" : \"%\",", it.to <syntax::VarDecl> ().getType ().prettyString ());
-	    buf.writefln ("\t\t\"mut\" : \"%\",", it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
 	    if (cl.isMarkedPrivate (it.to <syntax::VarDecl> ().getName ().str))
-		buf.writefln ("\t\t\"protection\" : \"%\"", "private");
+		field ["protection"] = JsonString::init ("prv");
 	    else if (cl.isMarkedProtected (it.to <syntax::VarDecl> ().getName ().str))
-		buf.writefln ("\t\t\"protection\" : \"%\"", "prot");
-	    else
-		buf.writefln ("\t\t\"protection\" : \"%\"", "public");
+		field ["protection"] = JsonString::init ("prot");
+	    else field ["protection"] = JsonString::init ("pub");
 		
-	    buf.writeln ("\t}");
-	    i += 1;
+	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
+		field ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
+	    
+	    fields.push_back (JsonDict::init (field));
 	}
-	buf.writeln ("\t],\n\t\"constructors\" : [");
-	i = 0;
+
+	std::vector <JsonValue> cstrs;
+	std::vector <JsonValue> methods;
+	std::vector <JsonValue> impls;
+	
 	for (auto & it : cl.getAllInner ()) { // Dump constructors
-	    match (it) {
-		of (semantic::Constructor, cst ATTRIBUTE_UNUSED, {
-			if (i == 0) buf.writeln ("\t{");
-			else buf.writeln ("\t,{");
-			buf.writefln ("\t\t\"loc_file\" : \"%\",", it.getName ().locFile);
-			buf.writefln ("\t\t\"loc_line\" : %,", it.getName ().line);
-			buf.writefln ("\t\t\"loc_col\" : %,", it.getName ().column);
-			buf.writefln ("\t\t\"doc\" : \"%\",", it.getComments ());
-			if (it.isProtected ())
-			    buf.writefln ("\t\t\"protection\" : \"%\",", "prot");
-			else if (it.isPublic ())
-			    buf.writefln ("\t\t\"protection\" : \"%\",", "public");
-			else
-			    buf.writefln ("\t\t\"protection\" : \"%\",", "private");
-		
-			buf.writeln ("\t\t\"params\" : [");
-			int j = 0;
-			for (auto & it : cst.getContent ().getPrototype ().getParameters ()) {
-			    if (j == 0) buf.writeln ("\t{");
-			    else buf.writeln ("\t\t,{");
-			    buf.writefln ("\t\t\t\"name\" : \"%\",", it.to <syntax::VarDecl> ().getLocation ().str);
-			    buf.writefln ("\t\t\t\"type\" : \"%\",", it.to <syntax::VarDecl> ().getType ().prettyString ());
-			    buf.writefln ("\t\t\"mut\" : \"%\",", it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
-			    buf.writeln ("\t\t}");
-			    j += 1;
-			}			
-			buf.writeln ("\t\t]\t}");
-			i += 1;
-		    }		    
-		    );
-	    }
-	}
-	
-	buf.writeln ("\t],\n\t\"methods\": [");
-	i = 0;	    
-	for (auto & it : cl.getAllInner ()) {
-	    match (it) {
-		of (semantic::Function, fn ATTRIBUTE_UNUSED, {
-			if (i != 0) buf.writeln ("\t,");
-			buf.writeln (Ymir::entab (this-> dumpUnvalidated (it), "\t"));				     
-			i += 1;
-		    }
-		    );
-	    }
+	    if (it.is <semantic::Constructor> ()) {
+		std::map <std::string, JsonValue> def;
+		auto & cst = it.to <semantic::Constructor> ();
+		def ["type"] = JsonString::init ("cstr");
+		this-> dumpStandard (it.to <semantic::Constructor> (), def);
+		std::vector <JsonValue> params;
+					       
+		for (auto & it : cst.getContent ().getPrototype ().getParameters ()) {
+		    std::map <std::string, JsonValue> param;
+		    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().str);
+		    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+		    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
+		    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
+			param ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
+
+
+		    params.push_back (JsonDict::init (param));
+		}
+		def ["params"] = JsonArray::init (params);
+		cstrs.push_back (JsonDict::init (def));
+	    } else if (it.is <semantic::Impl> ()) {		    
+		std::map <std::string, JsonValue> def;
+		def ["type"] = JsonString::init ("impl");
+		this-> dumpStandard (it.to <semantic::Impl> (), def);
+		def ["trait"] = JsonString::init (it.to <semantic::Impl> ().getTrait ().prettyString ());
+		impls.push_back (JsonDict::init (def));
+	    } else if (it.is <semantic::Function> ()) {
+		methods.push_back (this-> dumpUnvalidated (it));
+	    }		    	    
 	}
 
-	buf.writeln ("\t],\n\t\"impl\": [");
-	i = 0;
-	for (auto & it : cl.getAllInner ()) {
-	    match (it) {
-		of (semantic::Impl, im ATTRIBUTE_UNUSED, {
-			if (i == 0) buf.writeln ("\t{");
-			else buf.writeln ("\t,{");
-			buf.writefln ("\t\t\"loc_file\" : \"%\",", it.getName ().locFile);
-			buf.writefln ("\t\t\"loc_line\" : %,", it.getName ().line);
-			buf.writefln ("\t\t\"loc_col\" : %,", it.getName ().column);
-			buf.writefln ("\t\t\"doc\" : \"%\",", it.getComments ());
-			buf.writefln ("\t\t\"type\" : \"%\"", this-> _context.validateType (im.getTrait ()).prettyString ());
-			buf.writeln ("}");
-		    }
-		    );
-	    }
-	}
+	val ["cstrs"] = JsonArray::init (cstrs);
+	val ["impls"] = JsonArray::init (impls);	
+	val ["methods"] = JsonArray::init (methods);
 	
-	buf.writeln ("\t]\n}");
-	
-	return buf.str ();
+	return JsonDict::init (val);
     }
 
 
-    std::string Visitor::dumpMethodProto (const generator::MethodProto & proto, const semantic::generator::Class::MethodProtection & prot) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"method\",");	
-	buf.writefln ("\t\"name\" : \"%\",", proto.getLocation ().str);
-	buf.writefln ("\t\"loc_file\" : \"%\",", proto.getLocation ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", proto.getLocation ().line);
-	buf.writefln ("\t\"loc_col\" : %,", proto.getLocation ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", proto.getComments ());
-	buf.writeln ("\t\"params\" : [");
-	int i = 0;
+    JsonValue Visitor::dumpMethodProto (const generator::MethodProto & proto, const semantic::generator::Class::MethodProtection & prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("method");
+	val ["name"] = JsonString::init (proto.getLocation ().str);
+	val ["loc_file"] = JsonString::init (proto.getLocation ().locFile);
+	val ["loc_line"] = JsonString::init (proto.getLocation ().line);
+	val ["loc_col"] = JsonString::init (proto.getLocation ().column);
+	val ["doc"] = JsonString::init (proto.getComments ());
+	
+	std::vector <JsonValue> params;
 	for (auto & it : proto.getParameters ()) {
-	    if (i == 0) buf.writeln ("\t{");
-	    else buf.writeln ("\t,{");
-	    buf.writefln ("\t\t\"name\" : \"%\",", it.to <generator::ProtoVar> ().getLocation ().str);
-	    buf.writefln ("\t\t\"type\" : \"%\",", it.to <generator::Value> ().getType ().prettyString ());
-	    buf.writefln ("\t\t\"mut\" : \"%\",", it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
+	    std::map <std::string, JsonValue> param;
+	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().str);
+	    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
+	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
+	    
 	    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
-		buf.writefln ("\t\t\"value\" : \"%\"", it.to<generator::ProtoVar> ().getValue ().prettyString ());
-	    buf.writeln ("\t}");
-	    i += 1;
+		param ["value"] = JsonString::init (it.to<generator::ProtoVar> ().getValue ().prettyString ());
+	    params.push_back (JsonDict::init (param));
 	}
-	buf.writeln ("\t],");
-	buf.writefln ("\t\"ret_type\" : \"%\"", proto.getReturnType ().prettyString ());
-	if (proto.isEmptyFrame ()) {
-	    buf.writeln ("\t,\"pure\" : \"true\"");
-	}
+	val ["params"] = JsonArray::init (params);
+	val ["ret_type"] = JsonString::init (proto.getReturnType ().prettyString ());
 	
-	if (proto.isFinal ()) {
-	    buf.writeln ("\t,\"final\" : \"true\"");
-	}
+	std::vector<JsonValue> attrs;
+	if (proto.isEmptyFrame ()) attrs.push_back (JsonString::init ("virtual"));
+	if (proto.isFinal ()) attrs.push_back (JsonString::init ("final"));
+	if (proto.isMutable ()) attrs.push_back (JsonString::init ("mut"));
+	val ["attributes"] = JsonArray::init (attrs);
 	
-	if (proto.isMutable ()) {
-	    buf.writeln ("\t,\"mutable\" : \"true\"");
-	}
-
+	
 	if (prot == semantic::generator::Class::MethodProtection::PRV_PARENT) {
-	    buf.writeln ("\t,\"prot\" : \"private_parent\"");
+	    val ["protection"] = JsonString::init ("prv_parent");
 	} else if (prot == semantic::generator::Class::MethodProtection::PRV) {
-	    buf.writeln ("\t,\"prot\" : \"private\"");
+	    val ["protection"] = JsonString::init ("prv");
 	} else if (prot == semantic::generator::Class::MethodProtection::PROT) {
-	    buf.writeln ("\t,\"prot\" : \"prot\"");
+	    val ["protection"] = JsonString::init ("prot");
 	} else {
-	    buf.writeln ("\t,\"prot\" : \"public\"");
+	    val ["protection"] = JsonString::init ("pub");
 	}
-
-	buf.writeln ("}");
-	return buf.str ();
+	
+	return JsonDict::init (val);
     }
 
-    std::string Visitor::dumpTrait (const semantic::Trait & tr) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"trait\",");
-	buf.writefln ("\t\"name\" : \"%\",", tr.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", tr.getName ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", tr.getName ().line);
-	buf.writefln ("\t\"loc_col\" : %,", tr.getName  ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", tr.getComments ());
-	if (tr.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-
-	buf.writeln ("\t\"childs\" : [");
-	int i = 0;
+    JsonValue Visitor::dumpTrait (const semantic::Trait & tr) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("trait");
+	this-> dumpStandard (tr, val);
+	
+	std::vector <JsonValue> childs;
 	for (auto & it : tr.getAllInner ()) {
-	    if (i != 0) buf.writeln ("\t,");
-	    auto text = Ymir::entab (this-> dumpUnvalidated (it), "\t");
-	    if (text != "") {
-		buf.writeln (text);
-		i += 1;
-	    }
+	    auto ch = this-> dumpUnvalidated (it);
+	    if (!ch.isEmpty ())
+		childs.push_back (ch);	    
+	    childs.push_back (ch);
 	}
-	buf.writeln ("\t]");
-	buf.writeln ("}");
-	return buf.str ();
+	
+	val ["childs"] = JsonArray::init (childs);
+	return JsonDict::init (val);
     }
 
 
-    std::string Visitor::dumpTraitUnvalidated (const syntax::Trait & tr, bool pub, bool prot) {
-	return "";
+    JsonValue Visitor::dumpTraitUnvalidated (const syntax::Trait & s_tr, bool pub, bool prot) {
+	auto visit = declarator::Visitor::init ();
+	visit.setWeak ();
+	auto symcl = visit.visitTrait (s_tr);
+	auto & tr = symcl.to <semantic::Trait> ();
+
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("trait");
+	this-> dumpStandard (s_tr, pub, prot, val);
+	
+	std::vector <JsonValue> childs;
+	for (auto & it : tr.getAllInner ()) {
+	    auto ch = this-> dumpUnvalidated (it);
+	    if (!ch.isEmpty ())
+		childs.push_back (ch);	    
+	    childs.push_back (ch);
+	}
+	
+	val ["childs"] = JsonArray::init (childs);
+	return JsonDict::init (val);	
     }
     
-    std::string Visitor::dumpTemplate (const semantic::Template & tm) {
-	Ymir::OutBuffer buf;
-	buf.writeln ("{");
-	buf.writeln ("\t\"type\" : \"template\",");
-	buf.writefln ("\t\"name\" : \"%\",", tm.getRealName ());
-	buf.writefln ("\t\"loc_file\" : \"%\",", tm.getName ().locFile);
-	buf.writefln ("\t\"loc_line\" : %,", tm.getName ().line);
-	buf.writefln ("\t\"loc_col\" : %,", tm.getName  ().column);
-	buf.writefln ("\t\"doc\" : \"%\",", tm.getComments ());
-	if (tm.isPublic ()) buf.writeln ("\t\"protection\" : \"public\",");
-	else buf.writeln ("\t\"protection\" : \"private\",");
-
+    JsonValue Visitor::dumpTemplate (const semantic::Template & tm) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("template");
+	this-> dumpStandard (tm, val);
+	
 	if (!tm.getTest ().isEmpty ()) {
-	    buf.writefln ("\t\"test\" : \"%\",", tm.getTest ().prettyString ());
+	    val ["test"] = JsonString::init (tm.getTest ().prettyString ());
 	}
 	
-	int i = 0;
-	buf.write ("\t\"params\" : [");
+	std::vector <JsonValue> params;
 	for (auto & it : tm.getParams ()) {
-	    if (i != 0) buf.write (", ");
-	    buf.writef ("\"%\"", it.prettyString ());
-	    i += 1;
+	    params.push_back (JsonString::init (it.prettyString ()));
+	}
+
+	val ["params"] = JsonArray::init (params);
+
+	auto ch = this-> dumpUnvalidated (tm.getDeclaration ());
+	if (!ch.isEmpty ())
+	    val ["child"] = ch;
+	
+	return JsonDict::init (val);
+    }
+
+    JsonValue Visitor::dumpTemplateUnvalidated (const syntax::Template & tm, bool pub, bool prot) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("template");
+	this-> dumpStandard (tm, pub, prot, val);
+	
+	if (!tm.getTest ().isEmpty ()) {
+	    val ["test"] = JsonString::init (tm.getTest ().prettyString ());
 	}
 	
-	buf.writeln ("]\n\t,\"childs\" : [");
-	auto text = Ymir::entab (this-> dumpUnvalidated (tm.getDeclaration ()), "\t");
-	if (text != "") {
-	    buf.writeln (text);	
+	std::vector <JsonValue> params;
+	for (auto & it : tm.getParams ()) {
+	    params.push_back (JsonString::init (it.prettyString ()));
 	}
-	buf.writeln ("\t]");
-	buf.writeln ("}");
-	return buf.str ();
+	val ["params"] = JsonArray::init (params);
+	
+	auto ch = this-> dumpUnvalidated (tm.getContent (), pub, prot);
+	if (!ch.isEmpty ())
+	    val ["child"] = ch;
+	
+	return JsonDict::init (val);	
     }
 
-    std::string Visitor::dumpTemplateUnvalidated (const syntax::Template & tl, bool pub, bool prot) {
-	return "";
+    JsonValue Visitor::dumpMacro (const semantic::Macro & m) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("macro");
+	this-> dumpStandard (m, val);
+	
+	std::vector <JsonValue> cstrs;
+	std::vector <JsonValue> rules;
+	for (auto & it : m.getAllInner ()) {
+	    if (it.is <semantic::MacroConstructor> ()) {
+		auto & mc = it.to <semantic::MacroConstructor> ().getContent ().to<syntax::MacroConstructor> ();
+		std::map <std::string, JsonValue> content;
+		this-> dumpStandard (it.to <semantic::MacroConstructor> (), content);
+		content ["rule"] = JsonString::init (mc.getRule ().prettyString ());
+		std::vector <JsonValue> skips;
+		for (auto & jt : mc.getSkips ()) {
+		    skips.push_back (JsonString::init (jt.prettyString ()));
+		}
+		
+		content ["rule"] = JsonArray::init (skips);
+		cstrs.push_back (JsonDict::init (content));
+	    } else if (it.is <semantic::MacroRule> ()) {
+		auto & mc = it.to <semantic::MacroRule> ().getContent ().to<syntax::MacroRule> ();
+		std::map <std::string, JsonValue> content;
+		this-> dumpStandard (it.to <semantic::MacroRule> (), content);
+		content ["rule"] = JsonString::init (mc.getRule ().prettyString ());
+		std::vector <JsonValue> skips;
+		for (auto & jt : mc.getSkips ()) {
+		    skips.push_back (JsonString::init (jt.prettyString ()));
+		}
+		
+		content ["rule"] = JsonArray::init (skips);
+		rules.push_back (JsonDict::init (content));
+	    }
+	}
+
+	val ["cstrs"] = JsonArray::init (cstrs);
+	val ["rules"] = JsonArray::init (rules);
+	
+	return JsonDict::init (val);
     }
 
-    std::string Visitor::dumpMacro (const semantic::Macro & m) {}
+    JsonValue Visitor::dumpMacroUnvalidated (const syntax::Macro & s_m, bool pub, bool prot) {
+	auto visit = declarator::Visitor::init ();
+	visit.setWeak ();
+	auto symcl = visit.visitMacro (s_m);
+	auto & m = symcl.to <semantic::Macro> ();
+	
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("macro");
+	this-> dumpStandard (s_m, pub, prot, val);
+	
+	std::vector <JsonValue> cstrs;
+	std::vector <JsonValue> rules;
+	for (auto & it : m.getAllInner ()) {
+	    if (it.is <semantic::MacroConstructor> ()) {
+		auto & mc = it.to <semantic::MacroConstructor> ().getContent ().to<syntax::MacroConstructor> ();
+		std::map <std::string, JsonValue> content;
+		this-> dumpStandard (it.to <semantic::MacroConstructor> (), content);
+		content ["rule"] = JsonString::init (mc.getRule ().prettyString ());
+		std::vector <JsonValue> skips;
+		for (auto & jt : mc.getSkips ()) {
+		    skips.push_back (JsonString::init (jt.prettyString ()));
+		}
+			
+		content ["rule"] = JsonArray::init (skips);
+		cstrs.push_back (JsonDict::init (content));
+	    } else if (it.is <semantic::MacroRule> ()) {		
+		auto & mc = it.to <semantic::MacroRule> ().getContent ().to<syntax::MacroRule> ();
+		std::map <std::string, JsonValue> content;
+		this-> dumpStandard (it.to <semantic::MacroRule> (), content);
+		content ["rule"] = JsonString::init (mc.getRule ().prettyString ());
+		std::vector <JsonValue> skips;
+		for (auto & jt : mc.getSkips ()) {
+		    skips.push_back (JsonString::init (jt.prettyString ()));
+		}
+		
+		content ["rule"] = JsonArray::init (skips);
+		rules.push_back (JsonDict::init (content));
+	    }
+	}
 
+	val ["cstrs"] = JsonArray::init (cstrs);
+	val ["rules"] = JsonArray::init (rules);
+	
+	return JsonDict::init (val);
+    }
+    
     
     
 }

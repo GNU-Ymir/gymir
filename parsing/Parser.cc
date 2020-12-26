@@ -77,7 +77,7 @@ namespace Ymir {
 
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
-	    auto res = doc_visit.dump (module);
+	    auto res = doc_visit.dump (module).toString ();
 	    auto name = Ymir::replace (module.getRealName () + ".doc.json", ':', '_');
 	    auto file = fopen (name.c_str (), "w");
 	    fwrite (res.c_str (), sizeof (char), res.length (), file);

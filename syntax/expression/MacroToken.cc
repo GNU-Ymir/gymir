@@ -30,7 +30,7 @@ namespace syntax {
     }
 
     std::string MacroToken::prettyString () const {
-	return this-> _content.prettyString ();
+	return Ymir::format ("'%'", this-> _content.prettyString ());
     }
 
     const Expression & MacroToken::getContent () const {
