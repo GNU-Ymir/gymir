@@ -13,7 +13,7 @@ namespace semantic {
 	}
 
 	ClassPtr::ClassPtr (const lexing::Word & loc, const Generator & inner) :
-	    Type (loc, loc.str),
+	    Type (loc, loc.getStr ()),
 	    _ref (inner)
 	{	    
 	    this-> isComplex (true);

@@ -31,11 +31,11 @@ namespace syntax {
 
     std::string Float::getValue () const {
 	if (this-> _decPart.isEof ()) {
-	    return this-> _prePart.str + ".0";
+	    return this-> _prePart.getStr () + ".0";
 	} else if (this-> _prePart.isEof ()) {
-	    return "0." + this-> _decPart.str;
+	    return "0." + this-> _decPart.getStr ();
 	} else {
-	    return this-> _prePart.str + "." + this-> _decPart.str;
+	    return this-> _prePart.getStr () + "." + this-> _decPart.getStr ();
 	}
     }
 
@@ -45,9 +45,9 @@ namespace syntax {
 
     std::string Float::prettyString () const {
 	if (this-> _suffix.isEof ()) {
-	    return Ymir::format ("%.%", this-> _prePart.str, this-> _decPart.str);
+	    return Ymir::format ("%.%", this-> _prePart.getStr (), this-> _decPart.getStr ());
 	} else {
-	    return Ymir::format ("%.%%", this-> _prePart.str, this-> _decPart.str, this-> _suffix.str);
+	    return Ymir::format ("%.%%", this-> _prePart.getStr (), this-> _decPart.getStr (), this-> _suffix.getStr ());
 	}
     }
     

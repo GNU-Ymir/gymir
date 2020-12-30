@@ -40,9 +40,9 @@ namespace syntax {
 
     std::string Char::prettyString () const {
 	if (this-> _suffix.isEof ())
-	    return Ymir::format ("'%'%", this->_sequence.str, this-> _suffix.str);
+	    return Ymir::format ("'%'%", this->_sequence.getStr (), this-> _suffix.getStr ());
 	else
-	    return Ymir::format ("'%'", this->_sequence.str);
+	    return Ymir::format ("'%'", this->_sequence.getStr ());
     }
     
 }

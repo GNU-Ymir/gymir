@@ -20,7 +20,7 @@ namespace semantic {
 	}
 
 	Generator DotVisitor::validate (const syntax::Binary & expression, bool isFromCall) {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    
 	    Generator ret (Generator::empty ());
@@ -56,7 +56,7 @@ namespace semantic {
 	    }
 	    
 	    if (expression.getRight ().is <syntax::Var> ()) 
-		this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().str, errors);
+		this-> error (expression, left, expression.getRight ().to <syntax::Var> ().getName ().getStr (), errors);
 	    else {
 		auto right = this-> _context.validateValue (expression.getRight ());
 		this-> error (expression, left, right.to <Value> ().prettyString (), errors);
@@ -100,7 +100,7 @@ namespace semantic {
 
 	Generator DotVisitor::validateStruct (const syntax::Binary & expression, const Generator & left) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    auto & str = left.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
 	    auto field_type = str.to <generator::Struct> ().getFieldType (name);
@@ -121,7 +121,7 @@ namespace semantic {
 
 	Generator DotVisitor::validateArray (const syntax::Binary & expression, const Generator & left) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    if (name == Array::LEN_NAME) {
 		return ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());		
@@ -132,7 +132,7 @@ namespace semantic {
 
 	Generator DotVisitor::validateSlice (const syntax::Binary & expression, const Generator & left) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    if (name == Slice::LEN_NAME) {
 		return StructAccess::init (expression.getLocation (),
@@ -155,7 +155,7 @@ namespace semantic {
 
 	Generator DotVisitor::validateRange (const syntax::Binary & expression, const Generator & left) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    if (name == Range::FST_NAME || name == Range::SCD_NAME) {
 		auto innerType = left.to <Value> ().getType ().to <Type> ().getInners ()[0];
@@ -185,9 +185,9 @@ namespace semantic {
 	    return Generator::empty ();	    
 	}
 	
-	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <std::string> & errors) {
+	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 	    auto cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 	    bool prv = false, prot = false;
 
@@ -299,7 +299,7 @@ namespace semantic {
 					}
 					
 					syms.push_back (
-					    MethodTemplateRef::init ({expression.getLocation (), tl.getName ().str}, it, castedRef)
+					    MethodTemplateRef::init ({expression.getLocation (), tl.getName ().getStr ()}, it, castedRef)
 					);					
 				    } else {
 					errors.push_back (
@@ -333,31 +333,26 @@ namespace semantic {
 	    auto elem = this-> _context.validateValue (expression.getRight (), false, true); // We are in a call finfine
 
 	    int score;
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    auto ret = call.validate (expression.getLocation (), elem, {left}, score, errors);
 	    if (ret.isEmpty ())
 		call.error (expression.getLocation (), elem, {left}, errors);
 	    return ret;
 	}
 	
-	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right, std::list <std::string> & errors) {
+	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::string leftName;
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())
 		else of (generator::Struct, str, leftName = str.getName ())
-		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		    else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
 			else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
-	    }
-
-	    OutBuffer buf;
-	    for (auto & it : errors) {
-		buf.write (it, "\n");
 	    }
 	    
 	    Ymir::Error::occurAndNote (
 		expression.getLocation (),
 		expression.getRight ().getLocation (),
-		buf.str (),
+		errors,
 		ExternalError::get (UNDEFINED_FIELD_FOR),
 		right,
 		leftName

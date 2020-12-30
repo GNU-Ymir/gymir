@@ -128,22 +128,22 @@ namespace semantic {
     }
     
     std::string ISymbol::getRealName () const {
-	if (!this-> _referent.lock ()) return this-> _name.str;
+	if (!this-> _referent.lock ()) return this-> _name.getStr ();
 	else {
 	    auto ft = (Symbol {this-> _referent}).getRealName ();
 	    if (ft != "")
-		return ft + "::" + this-> _name.str;
-	    else return this-> _name.str;
+		return ft + "::" + this-> _name.getStr ();
+	    else return this-> _name.getStr ();
 	}
     }
     
     std::string ISymbol::getMangledName () const {
-	if (!this-> _referent.lock ()) return this-> _name.str;
+	if (!this-> _referent.lock ()) return this-> _name.getStr ();
 	else {
 	    auto ft = (Symbol {this-> _referent}).getMangledName ();
 	    if (ft != "")
-		return ft + "::" + this-> _name.str;
-	    else return this-> _name.str;
+		return ft + "::" + this-> _name.getStr ();
+	    else return this-> _name.getStr ();
 	}
     }
 

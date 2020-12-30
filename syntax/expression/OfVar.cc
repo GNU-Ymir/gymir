@@ -34,6 +34,6 @@ namespace syntax {
     }
 
     std::string OfVar::prettyString () const {
-	return this-> getLocation ().str + " of " + this-> _right.prettyString ();
+	return this-> getLocation ().getStr () + " of " + this-> _right.prettyString ();
     }
 }

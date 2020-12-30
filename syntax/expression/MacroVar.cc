@@ -30,7 +30,7 @@ namespace syntax {
     }
 
     std::string MacroVar::prettyString () const {
-	return this-> getLocation ().str + "=" + this-> _content.prettyString ();
+	return this-> getLocation ().getStr () + "=" + this-> _content.prettyString ();
     }
 
     const Expression & MacroVar::getContent () const {

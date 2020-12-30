@@ -55,7 +55,7 @@ namespace syntax {
 	    default : {} break;
 	    }
 	
-	buf.writef ("%", getLocation ().str);
+	buf.writef ("%", getLocation ().getStr ());
 	if (!this-> _type.isEmpty ())
 	    buf.writef (" : %", this-> _type.prettyString ());
 	if (!this-> _value.isEmpty ())

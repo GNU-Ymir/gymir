@@ -35,7 +35,7 @@ namespace syntax {
 
     std::string Pragma::prettyString () const {
 	Ymir::OutBuffer buf;
-	buf.writef ("__pragma!%(", this-> getLocation ().str);
+	buf.writef ("__pragma!%(", this-> getLocation ().getStr ());
 	int i = 0;
 	for (auto &it : this-> _params) {
 	    if (i != 0) buf.write (", ");

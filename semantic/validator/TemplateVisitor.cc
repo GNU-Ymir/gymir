@@ -45,7 +45,7 @@ namespace semantic {
 	    auto syntaxTempl = sym.to <semantic::Template> ().getParams ();
 	    
 	    Mapper globalMapper (true, 0);
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    int consumed = 0;
 
 	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) { 
@@ -151,8 +151,8 @@ namespace semantic {
 			    Mapper mapper (true, Scores::SCORE_VAR);
 			    this-> _context.verifyNotIsType (var.getName ());
 			    
-			    mapper.mapping.emplace (var.getName ().str, createSyntaxType (var.getName (), values [0]));
-			    mapper.nameOrder.push_back (var.getName ().str);
+			    mapper.mapping.emplace (var.getName ().getStr (), createSyntaxType (var.getName (), values [0]));
+			    mapper.nameOrder.push_back (var.getName ().getStr ());
 			    consumed += 1;
 			    return mapper;
 			} else {
@@ -185,8 +185,8 @@ namespace semantic {
 			if (values [0].is <Type> ()) {
 			    if (values [0].is <StructRef> ()) {
 				Mapper mapper (true, Scores::SCORE_VAR);
-				mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
-				mapper.nameOrder.push_back (var.getLocation ().str);
+				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
+				mapper.nameOrder.push_back (var.getLocation ().getStr ());
 				consumed += 1;
 				return mapper;
 			    } else {
@@ -202,8 +202,8 @@ namespace semantic {
 			if (values [0].is <Type> ()) {
 			    if (!values [0].isEmpty () && values [0].is <ClassPtr> ()) {
 				Mapper mapper (true, Scores::SCORE_VAR);
-				mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
-				mapper.nameOrder.push_back (var.getLocation ().str);
+				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
+				mapper.nameOrder.push_back (var.getLocation ().getStr ());
 				consumed += 1;
 				return mapper;
 			    } else if (!values [0].isEmpty ()) {
@@ -225,8 +225,8 @@ namespace semantic {
 			if (values [0].is <Type> ()) {
 			    if (values [0].to<Type> ().needExplicitAlias ()) {
 				Mapper mapper (true, Scores::SCORE_VAR);
-				mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
-				mapper.nameOrder.push_back (var.getLocation ().str);
+				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
+				mapper.nameOrder.push_back (var.getLocation ().getStr ());
 				consumed += 1;
 				return mapper;
 			    } else {
@@ -274,8 +274,8 @@ namespace semantic {
 			    }
 
 			    if (mapper.succeed) {				
-				mapper.mapping.emplace (decl.getName ().str, createSyntaxValue (decl.getName (), values [0]));
-				mapper.nameOrder.push_back (decl.getName ().str);
+				mapper.mapping.emplace (decl.getName ().getStr (), createSyntaxValue (decl.getName (), values [0]));
+				mapper.nameOrder.push_back (decl.getName ().getStr ());
 			    }
 			    
 			    mapper.score += Scores::SCORE_VAR;
@@ -295,11 +295,11 @@ namespace semantic {
 			}
 			
 			if (values.size () == 1) {
-			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values [0]));
-			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
 			} else {
-			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), values));
-			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values));
+			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
 			}
 			consumed += values.size ();
 			return mapper;
@@ -331,14 +331,14 @@ namespace semantic {
 	    Mapper mapper (true, 0);
 	    mapper.mapping.emplace (
 		format ("%[%,%]",
-			param.getLocation ().str,
-			param.getLocation ().line,
-			param.getLocation ().column
+			param.getLocation ().getStr (),
+			param.getLocation ().getLine (),
+			param.getLocation ().getColumn ()
 		), createSyntaxValue (param.getLocation (), value));
 	    mapper.nameOrder.push_back (format ("%[%,%]",
-						param.getLocation ().str,
-						param.getLocation ().line,
-						param.getLocation ().column));
+						param.getLocation ().getStr (),
+						param.getLocation ().getLine (),
+						param.getLocation ().getColumn ()));
 
 	    mapper.score += Scores::SCORE_TYPE;
 	    return mapper;
@@ -368,7 +368,7 @@ namespace semantic {
 	    Mapper globalMapper (true, 0);
 
 	    int consumed = 0;
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    
 	    for (auto it : Ymir::r (0, syntaxParams.size ())) {
 		auto param = replaceAll (syntaxParams [it], globalMapper.mapping);
@@ -435,7 +435,7 @@ namespace semantic {
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
 		
 		if (syntaxTempl.size () != 0) {
-		    std::list <std::string> errors;
+		    std::list <Ymir::Error::ErrorMsg> errors;
 		    for (auto it : syntaxTempl) {
 			errors.push_back (Ymir::Error::makeOccur (
 			    it.getLocation (),
@@ -473,10 +473,10 @@ namespace semantic {
 		{ // In a block, because it declare a var named ref
 		    match (func) {
 			of (syntax::Function, f, {
-				sym_func = symbol.getLocal (f.getLocation ().str) [0];
+				sym_func = symbol.getLocal (f.getLocation ().getStr ()) [0];
 			    }
 			) else of (syntax::Class, c, {
-				sym_func = symbol.getLocal (c.getLocation ().str) [0];
+				sym_func = symbol.getLocal (c.getLocation ().getStr ()) [0];
 			    }
 			) else {
 				Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");   
@@ -530,7 +530,7 @@ namespace semantic {
 	TemplateVisitor::Mapper TemplateVisitor::validateTypeFromImplicit (const array_view <Expression> & params, const Expression & leftT, const array_view <generator::Generator> & types, int & consumed) const {
 	    match (leftT) {
 		of (Var, var, {
-			Expression expr = findExpression (var.getName ().str, params);
+			Expression expr = findExpression (var.getName ().getStr (), params);
 			if (expr.isEmpty ()) {
 			    consumed += 1;
 			    // if expression is empty, the type is a real one, and not a template
@@ -581,7 +581,7 @@ namespace semantic {
 			    auto vec = {type.to <Type> ().getInners () [0]};
 			    auto ret = validateTypeFromImplicit (params, arr.getLeft (), array_view<Generator> (vec), current_consumed);
 			    if (ret.succeed && arr.getSize ().is <syntax::Var> ()) {
-				Expression exp = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().str, params);
+				Expression exp = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().getStr (), params);
 				if (!exp.isEmpty ()) {
 				    auto local_consumed = 0;
 				    auto size = ufixed (arr.getSize ().getLocation (), type.to<Array> ().getSize ());
@@ -605,8 +605,8 @@ namespace semantic {
 			    consumed += 1;
 			    auto var = dc.getContent ();
 			    Mapper localMapper (true, Scores::SCORE_VAR);			    
-			    localMapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (var.to <Var> ().getName (), types [0]));
-			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    localMapper.mapping.emplace (var.to <Var> ().getName ().getStr (), createSyntaxType (var.to <Var> ().getName (), types [0]));
+			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().getStr ());
 			    
 			    auto realType = this-> replaceAll (leftT, localMapper.mapping);
 			    auto genType = this-> _context.validateType (realType, true);
@@ -617,8 +617,8 @@ namespace semantic {
 			    this-> _context.verifySameType (genType, rightType);
 			
 			    Mapper mapper (true, Scores::SCORE_VAR);
-			    mapper.mapping.emplace (var.to <Var> ().getName ().str, createSyntaxType (leftT.getLocation (), types [0]));
-			    mapper.nameOrder.push_back (var.to <Var> ().getName ().str);
+			    mapper.mapping.emplace (var.to <Var> ().getName ().getStr (), createSyntaxType (leftT.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.to <Var> ().getName ().getStr ());
 			    return mapper;
 			}
 		    }		    
@@ -777,8 +777,8 @@ namespace semantic {
 			    return mapper; 
 			} else {
 			    Mapper mapper (true, Scores::SCORE_VAR);
-			    mapper.mapping.emplace (var.getName ().str, createSyntaxType (var.getName (), types [0]));
-			    mapper.nameOrder.push_back (var.getName ().str);
+			    mapper.mapping.emplace (var.getName ().getStr (), createSyntaxType (var.getName (), types [0]));
+			    mapper.nameOrder.push_back (var.getName ().getStr ());
 			    consumed += 1;
 			    return mapper;
 			}
@@ -799,8 +799,8 @@ namespace semantic {
 		) else of (StructVar, var, {
 			if ((!types [0].isEmpty ()) && types [0].is <StructRef> ()) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
-			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
-			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
 			    consumed += 1;
 			    return mapper;
 			} else if (!types [0].isEmpty ()) {
@@ -815,8 +815,8 @@ namespace semantic {
 		) else of (ClassVar, var, {
 			if (!types [0].isEmpty () && types [0].is <ClassPtr> ()) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
-			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
-			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
 			    consumed += 1;
 			    return mapper;
 			} else if (!types [0].isEmpty ()) {
@@ -831,8 +831,8 @@ namespace semantic {
 		) else of (AliasVar, var, {
 			if ((!types [0].isEmpty ()) && types [0].to<Type> ().needExplicitAlias ()) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
-			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
-			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
 			    consumed += 1;
 			    return mapper;
 			} else if (!types [0].isEmpty ()) {
@@ -847,11 +847,11 @@ namespace semantic {
 		) else of (VariadicVar, var, {
 			Mapper mapper (true, Scores::SCORE_TYPE);
 			if (types.size () == 1) {
-			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types [0]));
-			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
 			} else {
-			    mapper.mapping.emplace (var.getLocation ().str, createSyntaxType (var.getLocation (), types));
-			    mapper.nameOrder.push_back (var.getLocation ().str);
+			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types));
+			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
 			}
 			consumed += types.size ();
 			return mapper;
@@ -876,7 +876,7 @@ namespace semantic {
 	    if (type.isEmpty ()) return Mapper {true, 0, {}, {}};
 	    match (ofv.getType ()) {
 		of (Var, var, {
-			auto expr = findExpression (var.getName ().str, params);
+			auto expr = findExpression (var.getName ().getStr (), params);
 			if (!expr.isEmpty ()) {						
 			    int consumed = 0;
 			    auto vec = {type};
@@ -885,8 +885,8 @@ namespace semantic {
 			    auto genType = this-> _context.validateType (realType, true);
 
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
-			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
-			    mapper.nameOrder.push_back (ofv.getLocation ().str);
+			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
+			    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 			    return mapper;			    
 			}
 		    }
@@ -907,8 +907,8 @@ namespace semantic {
 			    this-> _context.verifySameType (genType, type);
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
-			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
-			    mapper.nameOrder.push_back (ofv.getLocation ().str);
+			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
+			    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 			    mapper.score += Scores::SCORE_TYPE;
 			    return mapper;
 			} else {
@@ -967,7 +967,7 @@ namespace semantic {
 			    auto vec = {type.to <Type> ().getInners () [0]};
 			    Mapper mapper = validateTypeFromImplicit (params, arr.getLeft (), array_view<Generator> (vec), consumed);
 			    if (mapper.succeed && arr.getSize ().is <syntax::Var> ()) {
-				Expression expr = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().str, params);				
+				Expression expr = findExpressionValue (arr.getSize ().to <syntax::Var> ().getName ().getStr (), params);				
 				if (!expr.isEmpty ()) {
 				    int local_consumed = 0;
 				    auto size = ufixed (arr.getSize ().getLocation (), type.to <Array> ().getSize ());
@@ -982,8 +982,8 @@ namespace semantic {
 			    this-> _context.verifySameType (genType, type);
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
-			    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
-			    mapper.nameOrder.push_back (ofv.getLocation ().str);
+			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
+			    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 			    mapper.score += Scores::SCORE_TYPE;
 			    return mapper;
 			} else {
@@ -1006,8 +1006,8 @@ namespace semantic {
 			this-> _context.verifySameType (genType, type);
 			this-> _context.verifyNotIsType (ofv.getLocation ());
 			
-			mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), genType));
-			mapper.nameOrder.push_back (ofv.getLocation ().str);
+			mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
+			mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 			mapper.score += Scores::SCORE_TYPE;
 			return mapper;			
 		    }
@@ -1028,8 +1028,8 @@ namespace semantic {
 	    Mapper mapper (true, score);
 	    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
-	    mapper.mapping.emplace (ofv.getLocation ().str, createSyntaxType (ofv.getLocation (), type));
-	    mapper.nameOrder.push_back (ofv.getLocation ().str);
+	    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), type));
+	    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 	    return mapper;
 	}
 
@@ -1037,7 +1037,7 @@ namespace semantic {
 	    if (type.isEmpty ()) return Mapper {true, 0, {}, {}};
 	    match (implv.getType ()) {
 		of (Var, var, {
-			auto expr = findExpression (var.getName ().str, params);
+			auto expr = findExpression (var.getName ().getStr (), params);
 			if (!expr.isEmpty ()) {
 			    int consumed = 0;
 			    auto vec = {type};
@@ -1046,13 +1046,13 @@ namespace semantic {
 			    auto genType = this-> _context.validateType (realType, true);
 			    this-> _context.verifyClassImpl (implv.getLocation (), type, genType);
 			    
-			    mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
-			    mapper.nameOrder.push_back (implv.getLocation ().str);
+			    mapper.mapping.emplace (implv.getLocation ().getStr (), createSyntaxType (implv.getLocation (), type));
+			    mapper.nameOrder.push_back (implv.getLocation ().getStr ());
 			    return mapper;			    
 			}
 		    }
 		) else of (TemplateCall, cl, {
-			std::list <std::string> errors;
+			std::list <Ymir::Error::ErrorMsg> errors;
 			for (auto & trait : this-> _context.getAllImplClass (type)) {
 			    bool succeed = true;
 			    Mapper mapper (true, 0);
@@ -1069,8 +1069,8 @@ namespace semantic {
 			    } 
 
 			    if (succeed) {
-				mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
-				mapper.nameOrder.push_back (implv.getLocation ().str);
+				mapper.mapping.emplace (implv.getLocation ().getStr (), createSyntaxType (implv.getLocation (), type));
+				mapper.nameOrder.push_back (implv.getLocation ().getStr ());
 				mapper.score += Scores::SCORE_TYPE;
 				return mapper;
 			    }
@@ -1106,8 +1106,8 @@ namespace semantic {
 	    Mapper mapper (true, Scores::SCORE_TYPE);
 	    this-> _context.verifyNotIsType (implv.getLocation ());
 			    
-	    mapper.mapping.emplace (implv.getLocation ().str, createSyntaxType (implv.getLocation (), type));
-	    mapper.nameOrder.push_back (implv.getLocation ().str);
+	    mapper.mapping.emplace (implv.getLocation ().getStr (), createSyntaxType (implv.getLocation (), type));
+	    mapper.nameOrder.push_back (implv.getLocation ().getStr ());
 	    return mapper;	
 	}
 
@@ -1143,28 +1143,28 @@ namespace semantic {
 	    for (auto & it : params) {
 		match (it) {
 		    of (Var, var, {
-			    if (var.getName ().str == name) return it;
+			    if (var.getName ().getStr () == name) return it;
 			}
 		    ) else of (OfVar, var, {
-			    if (var.getLocation ().str == name) return it;
+			    if (var.getLocation ().getStr () == name) return it;
 			}
 		    ) else of (ImplVar, var, {
-			    if (var.getLocation ().str == name) return it;
+			    if (var.getLocation ().getStr () == name) return it;
 			}
 		    ) else of (VariadicVar, var, {
-			    if (var.getLocation ().str == name) return it;
+			    if (var.getLocation ().getStr () == name) return it;
 			}
 		    ) else of (StructVar, var, {
-			    if (var.getLocation ().str == name) return it;
+			    if (var.getLocation ().getStr () == name) return it;
 			}
 		    ) else of (ClassVar, var, {
-			    if (var.getLocation ().str == name) return it;
+			    if (var.getLocation ().getStr () == name) return it;
 			}
 		    ) else of (AliasVar, var, {
-			    if (var.getLocation ().str == name) return it;
+			    if (var.getLocation ().getStr () == name) return it;
 			}
 		    ) else of (DecoratedExpression, dc, {
-			    if (dc.getContent ().is<Var> () && dc.getContent ().to <Var> ().getName ().str == name) return it;
+			    if (dc.getContent ().is<Var> () && dc.getContent ().to <Var> ().getName ().getStr () == name) return it;
 			}
 		    ); // We don't do anything for the rest of expression types as they do not refer to types
 		}
@@ -1177,7 +1177,7 @@ namespace semantic {
 	    for (auto & it : params) {
 		match (it) {
 		    of (syntax::VarDecl, var, {
-			    if (var.getName ().str == name) return it;
+			    if (var.getName ().getStr () == name) return it;
 			}		    
 		    ); // We don't do anything for the rest of expression types as they do not refer to values
 		}
@@ -1403,7 +1403,7 @@ namespace semantic {
 			   return syntax::Unary::init (element.getLocation (), replaceAll (un.getContent (), mapping));
 		) else of (syntax::Unit, uni ATTRIBUTE_UNUSED, { return element; }
 		) else of (syntax::Var, var, {
-			auto inner = mapping.find (var.getName ().str);
+			auto inner = mapping.find (var.getName ().getStr ());
 			if (inner != mapping.end ()) {
 			    if (inner-> second.is <TemplateSyntaxWrapper> ()) {
 				auto tmplSynt = inner-> second.to <TemplateSyntaxWrapper> ();
@@ -1439,7 +1439,7 @@ namespace semantic {
 			       ddecl.isVariadic ()
 			   );			   
 		) else of (syntax::VariadicVar, vdvar ATTRIBUTE_UNUSED, {
-			auto inner = mapping.find (element.getLocation ().str);
+			auto inner = mapping.find (element.getLocation ().getStr ());
 			if (inner != mapping.end ()) return inner-> second;
 			else return element;		    
 		    }
@@ -1681,13 +1681,13 @@ namespace semantic {
 			std::vector <Expression> skips;
 			for (auto & it : c.getSkips ())
 			    skips.push_back (replaceAll (it, mapping));
-			return syntax::MacroConstructor::init (c.getLocation (), "", replaceAll (c.getRule (), mapping), c.getContent (), skips);
+			return syntax::MacroConstructor::init (c.getLocation (), c.getContentLoc (), "", replaceAll (c.getRule (), mapping), c.getContent (), skips);
 		    }
 		) else of (syntax::MacroRule, r, {
 			std::vector <Expression> skips;
 			for (auto & it : r.getSkips ())
 			    skips.push_back (replaceAll (it, mapping));
-			return syntax::MacroRule::init (r.getLocation (), "", replaceAll (r.getRule (), mapping), r.getContent (), skips);	
+			return syntax::MacroRule::init (r.getLocation (), r.getContentLoc (), "", replaceAll (r.getRule (), mapping), r.getContent (), skips);	
 		    }
 		    );			   
 	    }
@@ -1718,47 +1718,47 @@ namespace semantic {
 	    for (auto & it : elements) {
 		match (it) {
 		    of (syntax::Var, var, {
-			    if (mapping.find (var.getName ().str) == mapping.end ())
+			    if (mapping.find (var.getName ().getStr ()) == mapping.end ())
 				results.push_back (it);
 			    continue;
 			}
 		    ) else of (syntax::OfVar, var, {
-			    if (mapping.find (var.getLocation ().str) == mapping.end ()) 
+			    if (mapping.find (var.getLocation ().getStr ()) == mapping.end ()) 
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
 		    ) else of (syntax::ImplVar, var, {
-			    if (mapping.find (var.getLocation ().str) == mapping.end ()) 
+			    if (mapping.find (var.getLocation ().getStr ()) == mapping.end ()) 
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
 		    ) else of (syntax::VariadicVar, var, {
-			    if (mapping.find (var.getLocation ().str) == mapping.end ())
+			    if (mapping.find (var.getLocation ().getStr ()) == mapping.end ())
 				results.push_back (it);
 			    continue;
 			}
 		    ) else of (syntax::VarDecl, decl, {
-			    if (mapping.find (decl.getLocation ().str) == mapping.end ()) 
+			    if (mapping.find (decl.getLocation ().getStr ()) == mapping.end ()) 
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
 		    ) else of (syntax::StructVar, var, {
-			    if (mapping.find (var.getLocation ().str) == mapping.end ())
+			    if (mapping.find (var.getLocation ().getStr ()) == mapping.end ())
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
 		    ) else of (syntax::ClassVar, var, {
-			    if (mapping.find (var.getLocation ().str) == mapping.end ())
+			    if (mapping.find (var.getLocation ().getStr ()) == mapping.end ())
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
 		    ) else of (syntax::AliasVar, var, {
-			    if (mapping.find (var.getLocation ().str) == mapping.end ())
+			    if (mapping.find (var.getLocation ().getStr ()) == mapping.end ())
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
 		    ) else of (syntax::DecoratedExpression, dc, {
-			    if (mapping.find (dc.getContent ().to <Var> ().getName ().str) == mapping.end ())
+			    if (mapping.find (dc.getContent ().to <Var> ().getName ().getStr ()) == mapping.end ())
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}
@@ -1768,9 +1768,9 @@ namespace semantic {
 
 		if (mapping.find (
 		    format ("%[%,%]",
-			    it.getLocation ().str,
-			    it.getLocation ().line,
-			    it.getLocation ().column)) == mapping.end ()) {
+			    it.getLocation ().getStr (),
+			    it.getLocation ().getLine (),
+			    it.getLocation ().getColumn ())) == mapping.end ()) {
 		    
 		    results.push_back (replaceAll (it, mapping));
 		}
@@ -1800,31 +1800,31 @@ namespace semantic {
 	    for (auto & it : exps) {
 		match (it) {
 		    of (syntax::Var, var, {
-			    results.push_back (mapping.find (var.getName ().str)-> second);
+			    results.push_back (mapping.find (var.getName ().getStr ())-> second);
 			}
 		    ) else of (syntax::OfVar, var, {
-			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			    results.push_back (mapping.find (var.getLocation ().getStr ())-> second);
 			}
 		    ) else of (syntax::ImplVar, var, {
-			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			    results.push_back (mapping.find (var.getLocation ().getStr ())-> second);
 			}
 		    ) else of (syntax::VariadicVar, var, {
-			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			    results.push_back (mapping.find (var.getLocation ().getStr ())-> second);
 			}
 		    ) else of (syntax::VarDecl, var, {
-			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			    results.push_back (mapping.find (var.getLocation ().getStr ())-> second);
 			}
 		    ) else of (syntax::StructVar, var, {
-			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			    results.push_back (mapping.find (var.getLocation ().getStr ())-> second);
 			}
 		    ) else of (syntax::ClassVar, var, {
-			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			    results.push_back (mapping.find (var.getLocation ().getStr ())-> second);
 			}
 		    ) else of (syntax::AliasVar, var, {
-			    results.push_back (mapping.find (var.getLocation ().str)-> second);
+			    results.push_back (mapping.find (var.getLocation ().getStr ())-> second);
 			}
 		    ) else of (syntax::DecoratedExpression, dc, {
-			    results.push_back (mapping.find (dc.getContent ().to <Var> ().getName ().str)-> second);
+			    results.push_back (mapping.find (dc.getContent ().to <Var> ().getName ().getStr ())-> second);
 			}
 		    ) else {
 						    OutBuffer buf;
@@ -1842,39 +1842,39 @@ namespace semantic {
 	    for (auto & it : exps) {
 		match (it) {
 		    of (syntax::Var, var, {
-			    if (mapping.find (var.getName ().str) != mapping.end ())
-				results.push_back (var.getName ().str);
+			    if (mapping.find (var.getName ().getStr ()) != mapping.end ())
+				results.push_back (var.getName ().getStr ());
 			}
 		    ) else of (syntax::OfVar, var, {
-			    if (mapping.find (var.getLocation ().str) != mapping.end ())
-				results.push_back (var.getLocation ().str);
+			    if (mapping.find (var.getLocation ().getStr ()) != mapping.end ())
+				results.push_back (var.getLocation ().getStr ());
 			}
 		    ) else of (syntax::ImplVar, var, {
-			    if (mapping.find (var.getLocation ().str) != mapping.end ())
-				results.push_back (var.getLocation ().str);
+			    if (mapping.find (var.getLocation ().getStr ()) != mapping.end ())
+				results.push_back (var.getLocation ().getStr ());
 			}
 		    ) else of (syntax::VariadicVar, var, {
-			    if (mapping.find (var.getLocation ().str) != mapping.end ())
-				results.push_back (var.getLocation ().str);
+			    if (mapping.find (var.getLocation ().getStr ()) != mapping.end ())
+				results.push_back (var.getLocation ().getStr ());
 			}
 		    ) else of (syntax::VarDecl, var, {
-			    if (mapping.find (var.getLocation ().str) != mapping.end ())
-				results.push_back (var.getLocation ().str);
+			    if (mapping.find (var.getLocation ().getStr ()) != mapping.end ())
+				results.push_back (var.getLocation ().getStr ());
 			}
 		    ) else of (syntax::StructVar, var, {
-			    if (mapping.find (var.getLocation ().str) != mapping.end ())
-				results.push_back (var.getLocation ().str);
+			    if (mapping.find (var.getLocation ().getStr ()) != mapping.end ())
+				results.push_back (var.getLocation ().getStr ());
 			}
 		    ) else of (syntax::ClassVar, var, {
-			    if (mapping.find (var.getLocation ().str) != mapping.end ())
-				results.push_back (var.getLocation ().str);
+			    if (mapping.find (var.getLocation ().getStr ()) != mapping.end ())
+				results.push_back (var.getLocation ().getStr ());
 			}
 		    ) else of (syntax::AliasVar, var, {
-			    if (mapping.find (var.getLocation ().str) != mapping.end ())
-				results.push_back (var.getLocation ().str);
+			    if (mapping.find (var.getLocation ().getStr ()) != mapping.end ())
+				results.push_back (var.getLocation ().getStr ());
 			}
 		    ) else {
-						    auto name = format ("%[%,%]", it.getLocation ().str, it.getLocation ().line, it.getLocation ().column);
+						    auto name = format ("%[%,%]", it.getLocation ().getStr (), it.getLocation ().getLine (), it.getLocation ().getColumn ());
 						    if (mapping.find (name) != mapping.end ())
 							results.push_back (name);		    			    
 						}
@@ -1887,7 +1887,7 @@ namespace semantic {
 	    match (elem) {
 		of (syntax::FuncPtr, ptr ATTRIBUTE_UNUSED, return elem;)
 		else of (syntax::Var, var, {
-			auto F = this-> findExpression (var.getName ().str, syntaxTempl);
+			auto F = this-> findExpression (var.getName ().getStr (), syntaxTempl);
 			return retreiveFuncPtr (F, syntaxTempl);
 		    }
 		) else of (syntax::OfVar, var, {
@@ -1911,7 +1911,7 @@ namespace semantic {
 
 	
 	std::map <std::string, syntax::Expression> TemplateVisitor::validateLambdaProtos (const std::vector<syntax::Expression> & exprs, const std::map <std::string, syntax::Expression> & mapping) const {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::map <std::string, syntax::Expression> maps;
 	    std::vector <std::pair <syntax::Expression, Generator> > toValidate;
 	    for (auto & it : mapping) {
@@ -2009,7 +2009,7 @@ namespace semantic {
 		    of (syntax::VarDecl, decl, { // it is a value, we need to check the type
 			    if (!decl.getType ().isEmpty ()) {
 				auto type = this-> _context.validateType (replaceAll (decl.getType (), mapper.mapping), true);
-				auto auxType = this-> _context.validateValue (mapper.mapping.find (decl.getName ().str)-> second);
+				auto auxType = this-> _context.validateValue (mapper.mapping.find (decl.getName ().getStr ())-> second);
 				this-> _context.verifySameType (type, auxType.to <Value> ().getType ());
 			    }
 			}
@@ -2071,7 +2071,7 @@ namespace semantic {
 	    return Symbol::__empty__;
 	}
 
-	std::string TemplateVisitor::partialResolutionNote (const lexing::Word & location, const Mapper & mapper) const {
+	Ymir::Error::ErrorMsg TemplateVisitor::partialResolutionNote (const lexing::Word & location, const Mapper & mapper) const {
 	    if (mapper.nameOrder.size () != 0) {
 		Ymir::OutBuffer buf;
 		buf.write ("(");
@@ -2084,7 +2084,7 @@ namespace semantic {
 		}
 		buf.write (")");
 		return Ymir::Error::createNoteOneLine ("for : % with %", location, buf.str ());
-	    } else return "";
+	    } else return Ymir::Error::ErrorMsg ("");
 	}	
 	
     }

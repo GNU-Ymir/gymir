@@ -13,7 +13,7 @@ namespace semantic {
 	{}
 
 	Bool::Bool (const lexing::Word & loc) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{}
 
 	Generator Bool::init (const lexing::Word & loc) {

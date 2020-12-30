@@ -39,7 +39,7 @@ namespace semantic {
 	{}
 
 	Float::Float (const lexing::Word & loc, int size) :
-	    Type (loc, loc.str),
+	    Type (loc, loc.getStr ()),
 	    _size (size)
 	{}
 

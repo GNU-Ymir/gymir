@@ -53,14 +53,14 @@ namespace syntax {
 
     std::string  List::prettyString () const {
 	Ymir::OutBuffer buf;
-	buf.write (this-> getLocation ().str);
+	buf.write (this-> getLocation ().getStr ());
 	int i = 0;
 	for (auto &it : this-> _params) {
 	    if (i != 0) buf.write (", ");
 	    buf.write (it.prettyString ());
 	    i ++;
 	}
-	buf.write (this-> _end.str);
+	buf.write (this-> _end.getStr ());
 	return buf.str ();	    
     }
     

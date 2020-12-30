@@ -17,7 +17,7 @@ namespace semantic {
 	}
 
 	Array::Array (const lexing::Word & loc, const Generator & inner, uint size) :
-	    Type (loc, loc.str),
+	    Type (loc, loc.getStr ()),
 	    _size (size)
 	{
 	    this-> isComplex (true);

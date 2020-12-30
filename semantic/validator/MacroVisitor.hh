@@ -19,7 +19,19 @@ namespace semantic {
 
 	    static const std::string __IDENT__;
 
-	    static const std::string __TOKEN__;
+	    static const std::string __TOKEN__;	    
+	    
+	    static const std::string __ANY__;
+
+	    static const std::string __WORD__;
+
+	    static const std::string __INT__;
+
+	    static const std::string __FLOAT__;
+
+	    static const std::string __STRING__;
+
+	    static const std::string __CHAR__;
 	    
 	private : 
 
@@ -28,8 +40,11 @@ namespace semantic {
 	    std::string _content;
 
 	    lexing::Word _call;
-	    
+
+	    std::vector <std::string> _known_rules;
+	   	    
 	public :
+
 	    
 	    struct Mapper {
 
@@ -82,13 +97,13 @@ namespace semantic {
 	     * \brief Validate a Macro call when there are multiple symbols with the same name
 	     * \brief Browse the symbol and call validateMacroRef when the symbol is a MacroRef
 	     */
-	    generator::Generator validateMultSym (const generator::MultSym & sym, const syntax::MacroCall & expression, std::vector <std::string> & errors);
+	    generator::Generator validateMultSym (const generator::MultSym & sym, const syntax::MacroCall & expression, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
 	     * Validate a macro call on a macro ref symbol
 	     * Actually expand the macro call on the ref and produce the results
 	     */
-	    generator::Generator validateMacroRef (const generator::MacroRef & mref, const syntax::MacroCall & expression, std::vector <std::string> & errors);
+	    generator::Generator validateMacroRef (const generator::MacroRef & mref, const syntax::MacroCall & expression, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
 	     * Validate the constructor of a macro ref, there is only one construtor by macro
@@ -171,7 +186,11 @@ namespace semantic {
 	     */
 	    Mapper validateRule (const syntax::Expression & expr, const std::string & content, ulong & current, const syntax::Expression &  skips);
 
-
+	    /**
+	     * Validate a knwon rule
+	     */
+	    Mapper validateKnownRules (const syntax::Expression & expr, const std::string & content, ulong & current);
+	    
 	    /**
 	     * Validate the content of the skips
 	     * It will return a macro mult containing macro ors
@@ -214,13 +233,26 @@ namespace semantic {
 	     */
 	    std::string validateMacroFor (const std::string & content, const lexing::Word & loc, lexing::Lexer & lex, const Mapper & mapping);
 
+	    /**
+	     * Compute the real line in the source file to print a valid error location
+	     */
+	    void computeLine (ulong & line, ulong & col, ulong & seek, ulong current, const lexing::Word & relative);
+
+	    /**
+	     * Compute the real line in the source file to print a valid error location 
+	     */
+	    void computeLinePure (ulong & line, ulong & col, ulong & seek, const lexing::Word & start, const lexing::Word & relative);
+	    
+	    /**
+	     * Transform a string containing already escaped tokens into a string with escaped blank (\n, \r, ...)
+	     */
+	    std::string unescape_str (const std::string & content);
 
 	    
+	    void error (const lexing::Word & location, const lexing::Word & end, const generator::Generator & left, const std::list <Ymir::Error::ErrorMsg> & errors);
 	    
-	    void computeLine (ulong & line, ulong & col, ulong & seek, ulong current);
+	    static std::vector <std::string> getKnwonRules ();
 
-	    void error (const lexing::Word & location, const lexing::Word & end, const generator::Generator & left, const std::vector <std::string> & errors);
-	    
 	};
 	
     }

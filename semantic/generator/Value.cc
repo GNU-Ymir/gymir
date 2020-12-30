@@ -10,7 +10,7 @@ namespace semantic {
 	{}
 
 	Value::Value (const lexing::Word & loc, const Generator & type) :
-	    IGenerator (loc, loc.str),
+	    IGenerator (loc, loc.getStr ()),
 	    _type (type)
 	{}
 

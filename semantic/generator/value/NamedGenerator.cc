@@ -33,7 +33,7 @@ namespace semantic {
 	bool NamedGenerator::equals (const Generator & gen) const {
 	    if (!gen.is <NamedGenerator> ()) return false;
 	    auto named = gen.to<NamedGenerator> ();	    
-	    if (named.getLocation ().str != this-> getLocation ().str) return false;
+	    if (named.getLocation ().getStr () != this-> getLocation ().getStr ()) return false;
 	    return this-> _content.equals (named.getContent ());
 	}
 
@@ -42,7 +42,7 @@ namespace semantic {
 	}
 
 	std::string NamedGenerator::prettyString () const {
-	    return Ymir::format ("?% = %", this-> getLocation ().str, this-> _content.prettyString ());
+	    return Ymir::format ("?% = %", this-> getLocation ().getStr (), this-> _content.prettyString ());
 	}
     }
 }

@@ -77,6 +77,11 @@ namespace syntax {
 	 * It is a subset of _declarations
 	 */
 	std::vector <std::string> _declarationsBlock;
+
+	/**
+	 * If false, line return char are considered in string literal
+	 */
+	bool _strRetIgnore = true;
 	
     private :
 
@@ -89,13 +94,14 @@ namespace syntax {
 	 * \param path the path to the filename
 	 * \param file the file already opened
 	 */
-	static Visitor init (const std::string & path, FILE * file);
+	static Visitor init (const std::string & path);
 	
 	/**
 	 * \brief Create a new visitor from a lexer
 	 * \param lexer the lexical analyser 
+	 * \param ignoreRetInStrings if false, return in string literal will be added
 	 */
-	static Visitor init (const lexing::Lexer & lexer);
+	static Visitor init (const lexing::Lexer & lexer, bool ignoreRetInStrings = true);
 
 	/** 
 	 * \brief Visit a global module (entire file)
@@ -876,7 +882,15 @@ namespace syntax {
 	 */
 	bool isEof () ;
 
+	/**
+	 * \return the lexer of the visitor
+	 */
 	lexing::Lexer & getLexer ();
+
+	/**
+	 * Close the file, that can be reused by cloning
+	 */
+	~Visitor ();
     };
 
 

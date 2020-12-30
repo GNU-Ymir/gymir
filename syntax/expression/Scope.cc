@@ -25,15 +25,15 @@ namespace syntax {
     }
 
     bool Scope::isExit () const {
-	return this-> getLocation ().str == Keys::EXIT;
+	return this-> getLocation ().getStr () == Keys::EXIT;
     }
 
     bool Scope::isSuccess () const {
-	return this-> getLocation ().str == Keys::SUCCESS;
+	return this-> getLocation ().getStr () == Keys::SUCCESS;
     }
 
     bool Scope::isFailure () const {
-	return this-> getLocation ().str == Keys::FAILURE;
+	return this-> getLocation ().getStr () == Keys::FAILURE;
     }
 
     void Scope::treePrint (Ymir::OutBuffer & stream, int i) const {
@@ -48,7 +48,7 @@ namespace syntax {
 
 
     std::string Scope::prettyString () const {
-	return Ymir::format ("% %", this-> getLocation ().str, this-> _content.prettyString ());
+	return Ymir::format ("% %", this-> getLocation ().getStr (), this-> _content.prettyString ());
     }
 
 }

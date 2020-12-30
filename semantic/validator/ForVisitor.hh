@@ -105,7 +105,14 @@ namespace semantic {
 	    generator::Generator iterateTuple (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index);
 
 
+	    /**
+	     * Validate a for loop over a class
+	     */
+	    generator::Generator validateClass (const syntax::For & expression, const generator::Generator & value);
 
+
+	    generator::Generator validateIndexVarClass (const syntax::For&, const generator::Generator & iterator, const syntax::VarDecl & decl, int i);
+	    
 	    
 	    /**
 	     * Throw an undefined op error

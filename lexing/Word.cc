@@ -4,18 +4,11 @@
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Memory.hh>
 #include <ymir/utils/Colors.hh>
+#include <ymir/errors/Error.hh>
 
 namespace lexing {
-    Word::Word (location_t locus, const std::string &str) :
-	str (str)
-    {
-	if (locus != UNKNOWN_LOCATION) {
-	    this-> locFile = LOCATION_FILE (locus);
-	    this-> line = LOCATION_LINE (locus);
-	    this-> column = LOCATION_COLUMN (locus);
-	    this-> isFromString = false;
-	}
-    }
+    
+    std::map <std::string, char*> Word::__filenames__;
 
     Word::Word (const Word & other, const std::string &str) :
 	str (str),
@@ -24,7 +17,7 @@ namespace lexing {
 	column (other.column),
 	seek (other.seek),
 	isFromString (other.isFromString),
-	content (other.content),
+	file (other.file),
 	start (other.start)
     {}    
 
@@ -36,85 +29,121 @@ namespace lexing {
 	seek (other.seek),
 	_length (len),
 	isFromString (other.isFromString),
-	content (other.content),
+	file (other.file),
 	start (other.start)
     {}
-
-
-    Word::Word (const Word & other) :
-	str (other.str),
-	locFile (other.locFile),
-	line (other.line),
-	column (other.column),
-	seek (other.seek),
-	_length (other._length),
-	isFromString (other.isFromString),
-	content (other.content),
-	start (other.start)
-    {}
-
-    Word& Word::operator=(const Word& other) {
-	this-> str = other.str;
-	this-> locFile = other.locFile;
-	this-> line = other.line;
-	this-> column = other.column;
-	this-> seek = other.seek;
-	this-> _length = other._length;
-	this-> isFromString = other.isFromString;
-	this-> content = other.content;
-	this-> start = other.start;
-	return *this;
-    }
 
     Word::Word () :	
 	str (""),
 	locFile (""),
 	line (0),
 	column (0),
-	isFromString (false)
+	isFromString (false),
+	file (lexing::File::empty ()),
+	start (0)
     {}
 
-    void Word::setLocus (location_t locus) {
+    Word Word::setLocation (const lexing::File & file, location_t locus) const {
 	if (locus != UNKNOWN_LOCATION) {
-	    this-> locFile = LOCATION_FILE (locus);
-	    this-> line = LOCATION_LINE (locus);
-	    this-> column = LOCATION_COLUMN (locus);
+	    Word ret (*this);
+	    ret.locFile = LOCATION_FILE (locus);
+	    ret.line = LOCATION_LINE (locus);
+	    ret.column = LOCATION_COLUMN (locus);
+	    ret.file = file;
+	    return ret;
 	}
+	return *this;
     }
 
-    void Word::setLocus (std::string filename, ulong line, ulong column, ulong seek) {
-	this-> locFile = filename;
-	this-> line = line;
-	this-> column = column;
-	this-> seek = seek;
+    Word Word::setLocation (const lexing::File & file, std::string filename, ulong line, ulong column, ulong seek) const {
+	Word ret (*this);
+	ret.locFile = filename;
+	ret.line = line;
+	ret.column = column;
+	ret.seek = seek;
+	ret.file = file;
+	
+	return ret;
     }
 
-    void Word::setFromString (const std::string content, ulong start) {
-	this-> isFromString = true;
-	this-> content = content;
-	this-> start = start;
+    Word Word::setFromString (ulong start) const {
+	Word ret (*this);
+	ret.isFromString = true;
+	ret.start = start;
+	return ret;
     }
     
-    location_t Word::getLocus () const {
+    location_t Word::getLocation () const {
 	if (this-> isEof ()) {
 	    return BUILTINS_LOCATION;
 	} else {
-	    char * aux = new char [this-> locFile.length () + 1];
+	    auto it = __filenames__.find (this-> locFile);
+	    char * name = nullptr;
+	    if (it == __filenames__.end ()) {
+		char * aux = new char [this-> locFile.length () + 1];
 
-	    for (auto it : Ymir::r (0, this-> locFile.length ()))
-		aux [it] = this-> locFile [it];
-	    aux [this-> locFile.length ()] = '\0';	    
+		for (auto it : Ymir::r (0, this-> locFile.length ()))
+		    aux [it] = this-> locFile [it];
+		aux [this-> locFile.length ()] = '\0';
+		__filenames__.emplace (this-> locFile, aux);
+		name = aux;
+	    } else name = it-> second;
 	    
-	    linemap_add (line_table, LC_ENTER, 0, aux, this-> line);
-	    delete aux;
-	    
+	    linemap_add (line_table, LC_ENTER, 0, name, this-> line);
 	    linemap_line_start (line_table, this-> line, 0);
 	    auto ret = linemap_position_for_column (line_table, this-> column);
 	    linemap_add (line_table, LC_LEAVE, 0, NULL, 0);
+	    
 	    return ret;
 	}
     }
 
+    const std::string & Word::getStr () const {
+	return this-> str;
+    }
+
+    long Word::length () const  {
+	if (this-> _length == -1) return this-> str.length ();
+	return this-> _length;
+    }
+    
+
+    Word Word::setStr (const std::string & s) const {
+	Word ret (*this);
+	ret.str = s;
+	return ret;
+    }
+
+
+    Word Word::setColumn (ulong col) const {
+	Word ret (*this);
+	ret.column = col;
+	return ret;
+    }
+
+    ulong Word::getColumn () const {
+	return this-> column;
+    }
+
+    Word Word::setLine (ulong line) const {
+	Word ret (*this);
+	ret.line = line;
+	return ret;
+    }
+
+    ulong Word::getLine () const {
+	return this-> line;
+    }
+
+    ulong Word::getSeek () const {
+	return this-> seek;
+    }
+    
+    bool Word::isEof () const {
+	return this-> file.isEmpty ();
+    }
+
+    
 
     std::string Word::toString () const {
 	if (this-> isEof ()) return ":\u001B[32meof\u001B[0m()";
@@ -122,7 +151,15 @@ namespace lexing {
 	return buf.str ();
     }
 
-    std::string Word::getFile () const {
+    lexing::File Word::getFile () const {
+	return this-> file;
+    }
+
+    ulong Word::getStart () const {
+	return this-> start;
+    }
+    
+    const std::string & Word::getFilename () const {
 	return this-> locFile;
     }
 
@@ -138,10 +175,15 @@ namespace lexing {
 	    this-> column == other.column;    
     }
 
-    bool Word::is (const std::vector <std::string> & values) {
+    bool Word::is (const std::vector <std::string> & values) const {
 	return std::find (values.begin (), values.end (), this-> str) != values.end ();
     }
     
-
+    
+    void Word::purge () {
+	for (auto & it : __filenames__)
+	    delete it.second;
+    }
+    
 }
 

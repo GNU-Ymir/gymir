@@ -30,8 +30,8 @@ namespace syntax {
 
     std::string VariadicVar::prettyString () const {
 	if (this-> _isValue)
-	    return Ymir::format ("%:...", this-> getLocation ().str);
+	    return Ymir::format ("%:...", this-> getLocation ().getStr ());
 	else
-	    return Ymir::format ("%...", this-> getLocation ().str);
+	    return Ymir::format ("%...", this-> getLocation ().getStr ());
     }
 }

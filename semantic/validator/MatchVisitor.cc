@@ -34,7 +34,7 @@ namespace semantic {
 	    auto & actions  = expression.getActions ();
 	    Generator type (Generator::empty ());
 	    bool isMandatory = false;
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    for (auto it_ : Ymir::r (0, matchers.size ())) {
 		auto it = matchers.size () - 1 - it_; // We get them in the reverse order to have the tests in the right order
 		Generator test (Generator::empty ());
@@ -136,7 +136,7 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchVarDecl (const Generator & value_, const syntax::VarDecl & var, bool & isMandatory) {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    Generator test (Generator::empty ());
 	    Generator varDecl (Generator::empty ());
 	    try {
@@ -193,14 +193,14 @@ namespace semantic {
 					     test, type_test);
 		}
 
-		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, value, isMutable);
+		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().getStr (), varType, value, isMutable);
 		if (var.getName () != Keys::UNDER) {
-		    this-> _context.insertLocal (var.getName ().str, varDecl);
+		    this-> _context.insertLocal (var.getName ().getStr (), varDecl);
 		}
 				
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
-		errors.back () = Ymir::Error::addNote (var.getLocation (), errors.back (), Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 
 	    if (errors.size () != 0)
@@ -296,7 +296,7 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchCallClass (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    Generator globTest (Generator::empty ());
 	    auto loc = call.getLocation ();
 	    Generator type (Generator::empty ());
@@ -327,7 +327,7 @@ namespace semantic {
 		}
 	    } catch (Error::ErrorList list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.back () = Ymir::Error::addNote (value.getLocation (), errors.back (), Ymir::Error::createNote (value.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (value.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 
 	    if (errors.size () != 0) {
@@ -342,7 +342,7 @@ namespace semantic {
 	    for (auto & it : call.getRights ()) {		
 		if (!it.is <NamedExpression> ())
 		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
-		auto name = it.to <NamedExpression> ().getLocation ().str;
+		auto name = it.to <NamedExpression> ().getLocation ().getStr ();
 		auto loc = it.getLocation ();
 		auto bin = syntax::Binary::init ({loc, Token::DOT},
 						 TemplateSyntaxWrapper::init (loc, castedValue),
@@ -367,7 +367,7 @@ namespace semantic {
 	}
 	
 	Generator MatchVisitor::validateMatchCallStruct (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {	    
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
 		    auto type = this-> _context.validateType (call.getLeft ());
@@ -375,7 +375,7 @@ namespace semantic {
 		}
 	    } catch (Error::ErrorList list) {	       
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.back () = Ymir::Error::addNote (call.getLocation (), errors.back (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 	    
 	    if (errors.size () != 0)
@@ -431,7 +431,7 @@ namespace semantic {
 	    for (auto it : Ymir::r (0, params.size ())) {
 		if (params [it].is <NamedExpression> ()) {
 		    auto name = params [it].to <NamedExpression> ().getLocation ();
-		    if (name.str == var.getLocation ().str) {
+		    if (name.getStr () == var.getLocation ().getStr ()) {
 			auto toRet = params [it].to <NamedExpression> ().getContent ();
 			params.erase (params.begin () + it);
 			return toRet;
@@ -475,7 +475,7 @@ namespace semantic {
 
 	    Generator type (Generator::empty ());
 	    bool isMandatory = false;
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <std::pair <lexing::Word, Generator> > usedTypes;
 	    
 	    for (auto it : Ymir::r (0, matchers.size ())) {
@@ -618,7 +618,7 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchVarDeclForCatcher (const Generator & value_, const syntax::VarDecl & var, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    Generator test (Generator::empty ());
 	    Generator varDecl (Generator::empty ());
 
@@ -666,9 +666,9 @@ namespace semantic {
 		} else test = type_test;
 		
 
-		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().str, varType, value, isMutable);
+		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().getStr (), varType, value, isMutable);
 		if (var.getName () != Keys::UNDER) {
-		    this-> _context.insertLocal (var.getName ().str, varDecl);
+		    this-> _context.insertLocal (var.getName ().getStr (), varDecl);
 		}
 
 		if (isMandatory) { // If the test will always pass
@@ -701,7 +701,7 @@ namespace semantic {
 		
 	    } catch (Error::ErrorList list) {		
 		errors = list.errors;
-		errors.back () = Ymir::Error::addNote (var.getLocation (), errors.back (), Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 
 	    if (errors.size () != 0)
@@ -712,7 +712,7 @@ namespace semantic {
 	}
 
 	Generator MatchVisitor::validateMatchCallForCatcher (const Generator & value, const syntax::MultOperator & call, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {	    
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    Generator globTest (Generator::empty ());
 	    auto loc = call.getLocation ();
 	    Generator type (Generator::empty ());
@@ -739,7 +739,7 @@ namespace semantic {
 		}
 	    } catch (Error::ErrorList list) {		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		errors.back () = Ymir::Error::addNote (call.getLocation (), errors.back (), Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 	    
 	    if (errors.size () != 0) {
@@ -754,7 +754,7 @@ namespace semantic {
 	    for (auto & it : call.getRights ()) {		
 		if (!it.is <NamedExpression> ())
 		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
-		auto name = it.to <NamedExpression> ().getLocation ().str;
+		auto name = it.to <NamedExpression> ().getLocation ().getStr ();
 		auto loc = it.getLocation ();
 		auto bin = syntax::Binary::init ({loc, Token::DOT},
 						 TemplateSyntaxWrapper::init (loc, castedValue),

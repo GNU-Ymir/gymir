@@ -22,7 +22,7 @@ namespace semantic {
 	{}
 
 	Integer::Integer (const lexing::Word & loc, int size, bool isSigned) :
-	    Type (loc, loc.str),
+	    Type (loc, loc.getStr ()),
 	    _size (size),
 	    _isSigned (isSigned)
 	{}

@@ -56,7 +56,7 @@ namespace generic {
     
     Tree Tree::block (const lexing::Word & loc, const Tree & vars, const Tree & chain) {
 	return Tree::init (
-	    loc.getLocus (), build_block (
+	    loc.getLocation (), build_block (
 		vars.getTree (), chain.getTree (), NULL_TREE, NULL_TREE
 	    )
 	);
@@ -178,9 +178,9 @@ namespace generic {
     }
     
     Tree Tree::varDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
-	return Tree::init (loc.getLocus (),
+	return Tree::init (loc.getLocation (),
 			   build_decl (
-			       loc.getLocus (),
+			       loc.getLocation (),
 			       VAR_DECL,
 			       get_identifier (name.c_str ()),
 			       type.getTree ()
@@ -193,9 +193,9 @@ namespace generic {
     }
     
     Tree Tree::paramDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
-	return Tree::init (loc.getLocus (),
+	return Tree::init (loc.getLocation (),
 			   build_decl (
-			       loc.getLocus (),
+			       loc.getLocation (),
 			       PARM_DECL,
 			       get_identifier (name.c_str ()),
 			       type.getTree ()
@@ -218,9 +218,9 @@ namespace generic {
     }
 
     Tree Tree::functionDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
-	return Tree::init (loc.getLocus (),
+	return Tree::init (loc.getLocation (),
 			   build_decl (
-			       loc.getLocus (),
+			       loc.getLocation (),
 			       FUNCTION_DECL,
 			       get_identifier (name.c_str ()),
 			       type.getTree ()
@@ -230,9 +230,9 @@ namespace generic {
     
     Tree Tree::resultDecl (const lexing::Word & loc, const Tree & type) {
 	return Tree::init (
-	    loc.getLocus (),
+	    loc.getLocation (),
 	    build_decl (
-		loc.getLocus (),
+		loc.getLocation (),
 		RESULT_DECL,
 		NULL_TREE,
 		type.getTree ()
@@ -244,7 +244,7 @@ namespace generic {
 	if (left.getType ().isScalar ()) {
 	    return Tree::build (MODIFY_EXPR, loc, left.getType (), left,
 				Tree::init (
-				    loc.getLocus (),
+				    loc.getLocation (),
 				    convert (left.getType ().getTree (), right.getTree ())
 				)
 	    );
@@ -266,7 +266,7 @@ namespace generic {
 	    auto size = Tree::init (UNKNOWN_LOCATION, TYPE_SIZE_UNIT (lvalue.getType ().getTree ()));
 	    
 	    list.append (
-		Tree::init (loc.getLocus (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ()))
+		Tree::init (loc.getLocation (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ()))
 	    );
 	    
 	    return Tree::compound (
@@ -283,8 +283,8 @@ namespace generic {
 	for (auto it : params)
 	    real_params.push_back (it.getTree ());
 	
-	return Tree::init (loc.getLocus (),
-			   build_call_array_loc (loc.getLocus (), type.getTree (), fn.getTree (), real_params.size (), real_params.data ())
+	return Tree::init (loc.getLocation (),
+			   build_call_array_loc (loc.getLocation (), type.getTree (), fn.getTree (), real_params.size (), real_params.data ())
 	);
     }
 
@@ -301,8 +301,8 @@ namespace generic {
 	tree fn = build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl);
 
 	return Tree::init (
-	    loc.getLocus (),
-	    build_call_array_loc (loc.getLocus (), type.getTree (), fn, real_params.size (), real_params.data ())
+	    loc.getLocation (),
+	    build_call_array_loc (loc.getLocation (), type.getTree (), fn, real_params.size (), real_params.data ())
 	);
     }
 
@@ -315,7 +315,7 @@ namespace generic {
 	tree fndecl_type = build_function_type_array (type.getTree (), fndecl_type_params.size (), fndecl_type_params.data ());
 
 	tree fndecl = build_fn_decl (name.c_str (), fndecl_type);
-	return Tree::init (loc.getLocus (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl));
+	return Tree::init (loc.getLocation (), build1 (ADDR_EXPR, Tree::pointerType (Tree::init (BUILTINS_LOCATION, fndecl_type)).getTree (), fndecl));
     }
 
     
@@ -329,14 +329,14 @@ namespace generic {
 	if (left.getType ().getSize () >= right.getType ().getSize ()) {
 	    return Tree::build (code, loc, type, left,
 				Tree::init (
-				    loc.getLocus (),
+				    loc.getLocation (),
 				    convert (left.getType ().getTree (), right.getTree ())
 				)
 	    );
 	} else {
 	    return Tree::build (code, loc, type,
 				Tree::init (
-				    loc.getLocus (),
+				    loc.getLocation (),
 				    convert (right.getType ().getTree (), left.getTree ())
 				), right
 	    );
@@ -346,7 +346,7 @@ namespace generic {
     Tree Tree::binaryPtr (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & left, const Tree & right) {
 	return Tree::build (code, loc, type, left,
 			    Tree::init (
-				loc.getLocus (),
+				loc.getLocation (),
 				convert_to_ptrofftype (right.getTree ())
 			    )
 	);
@@ -357,11 +357,11 @@ namespace generic {
 
 	return Tree::build (code, loc, type,
 			    Tree::init (
-				loc.getLocus (),
+				loc.getLocation (),
 				convert (ulong_type.getTree (), left.getTree ())
 			    ),
 			    Tree::init (
-				loc.getLocus (),
+				loc.getLocation (),
 				convert (ulong_type.getTree (), right.getTree ())
 			    )
 	);
@@ -374,7 +374,7 @@ namespace generic {
     }
 
     Tree Tree::castTo (const lexing::Word & loc, const Tree & type, const Tree & value) {
-	return Tree::init (loc.getLocus (), convert (type.getTree (), value.getTree ()));
+	return Tree::init (loc.getLocation (), convert (type.getTree (), value.getTree ()));
     }
     
     Tree Tree::unary (const lexing::Word & loc, tree_code code, const Tree & type, const Tree & operand) {
@@ -385,8 +385,8 @@ namespace generic {
     Tree Tree::compound (const lexing::Word & loc, const Tree & left, const Tree & right) {
 	if (left.isEmpty ()) return right;
 	if (right.isEmpty ()) return left;
-	return Tree::init (loc.getLocus (),
-			   fold_build2_loc (loc.getLocus (), COMPOUND_EXPR,
+	return Tree::init (loc.getLocation (),
+			   fold_build2_loc (loc.getLocation (), COMPOUND_EXPR,
 					    left.getType ().getTree (), right.getTree (),
 					    left.getTree ())
 	);
@@ -399,7 +399,7 @@ namespace generic {
 	    CONSTRUCTOR_APPEND_ELT (elms, size_int (it), params [it].getTree ());
 	}
 
-	return Tree::init (loc.getLocus (), build_constructor (type.getTree (), elms));
+	return Tree::init (loc.getLocation (), build_constructor (type.getTree (), elms));
     }
 
     Tree Tree::constructIndexed0 (const lexing::Word & loc, const Tree & type, const Tree & value, uint size) {
@@ -408,7 +408,7 @@ namespace generic {
 	    CONSTRUCTOR_APPEND_ELT (elms, size_int (it), value.getTree ());
 	}
 
-	return Tree::init (loc.getLocus (), build_constructor (type.getTree (), elms));
+	return Tree::init (loc.getLocation (), build_constructor (type.getTree (), elms));
     }
 
     Tree Tree::constructField (const lexing::Word & loc, const Tree & type, const std::vector <std::string> & names, const std::vector <Tree> & values) {
@@ -422,7 +422,7 @@ namespace generic {
 		CONSTRUCTOR_APPEND_ELT (elms, type.getField (names [it]).getTree (), values [it].getTree ());
 	}
 	
-	return Tree::init (loc.getLocus (), build_constructor (type.getTree (), elms));
+	return Tree::init (loc.getLocation (), build_constructor (type.getTree (), elms));
     }
     
     Tree Tree::conditional (const lexing::Word & loc, const Tree & context, const Tree & test, const Tree & left, const Tree & right) {
@@ -456,7 +456,7 @@ namespace generic {
     }    
 
     Tree Tree::makeLabel (const lexing::Word & loc, const Tree & context, const std::string & name) {
-	auto decl = Tree::init (loc.getLocus (), build_decl (loc.getLocus (), LABEL_DECL, get_identifier (name.c_str ()), void_type_node));
+	auto decl = Tree::init (loc.getLocation (), build_decl (loc.getLocation (), LABEL_DECL, get_identifier (name.c_str ()), void_type_node));
 	decl.setDeclContext (context);
 	return decl;
     }
@@ -482,21 +482,21 @@ namespace generic {
     Tree Tree::buildPtrCst (const lexing::Word & loc, ulong value) {
 	auto cst = Tree::buildIntCst (loc, value, Tree::intType (64, false)).getTree ();
 	return Tree::init (
-	    loc.getLocus (), 
+	    loc.getLocation (), 
 	    convert_to_ptrofftype (cst)
 	);
     }
     
     Tree Tree::buildIntCst (const lexing::Word & loc, ulong value, const Tree & type) {
-	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
+	return Tree::init (loc.getLocation (), build_int_cst_type (type.getTree (), value));
     }
     
     Tree Tree::buildIntCst (const lexing::Word & loc, long value, const Tree & type) {
-	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
+	return Tree::init (loc.getLocation (), build_int_cst_type (type.getTree (), value));
     }
 
     Tree Tree::buildStringLiteral (const lexing::Word & loc, const char * lit, ulong len, int size) {
-	return Tree::init (loc.getLocus (), build_string_literal (len * (size / 8), lit));
+	return Tree::init (loc.getLocation (), build_string_literal (len * (size / 8), lit));
     }
     
     Tree Tree::buildSizeCst (ulong value) {
@@ -509,7 +509,7 @@ namespace generic {
 	if (str == "INF") str = "Inf";
 	if (str == "NAN") str = "QNaN";
 	real_from_string (&real_value, str.c_str ());
-	return Tree::init (loc.getLocus (), build_real (type.getTree (), real_value));
+	return Tree::init (loc.getLocation (), build_real (type.getTree (), real_value));
     }
 
     Tree Tree::buildFloatCst (const lexing::Word & loc, float val, const Tree & type) {
@@ -525,11 +525,11 @@ namespace generic {
     }
 
     Tree Tree::buildBoolCst (const lexing::Word & loc, bool value) {
-	return Tree::init (loc.getLocus (), build_int_cst_type (unsigned_char_type_node, (ulong) value));
+	return Tree::init (loc.getLocation (), build_int_cst_type (unsigned_char_type_node, (ulong) value));
     }
     
     Tree Tree::buildCharCst (const lexing::Word & loc, uint value, const Tree & type) {
-	return Tree::init (loc.getLocus (), build_int_cst_type (type.getTree (), value));
+	return Tree::init (loc.getLocation (), build_int_cst_type (type.getTree (), value));
     }
 
     Tree Tree::buildAddress (const lexing::Word & loc, const Tree & value, const Tree & type) {
@@ -548,23 +548,23 @@ namespace generic {
     }
     
     Tree Tree::build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1) {
-	return Tree::init (loc.getLocus (), build1_loc (loc.getLocus (), tc, type.getTree (), t1.getTree ()));
+	return Tree::init (loc.getLocation (), build1_loc (loc.getLocation (), tc, type.getTree (), t1.getTree ()));
     }
     
     Tree Tree::build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1, const Tree & t2) {
-	return Tree::init (loc.getLocus (), build2_loc (loc.getLocus (), tc, type.getTree (), t1.getTree (), t2.getTree ()));
+	return Tree::init (loc.getLocation (), build2_loc (loc.getLocation (), tc, type.getTree (), t1.getTree (), t2.getTree ()));
     }
 
     Tree Tree::build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3) {
-	return Tree::init (loc.getLocus (), build3_loc (loc.getLocus (), tc, type.getTree (), t1.getTree (), t2.getTree (), t3.getTree ()));
+	return Tree::init (loc.getLocation (), build3_loc (loc.getLocation (), tc, type.getTree (), t1.getTree (), t2.getTree (), t3.getTree ()));
     }
 
     Tree Tree::build (tree_code tc, const lexing::Word & loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3, const Tree & t4) {
-	return Tree::init (loc.getLocus (), build4_loc (loc.getLocus (), tc, type.getTree (), t1.getTree (), t2.getTree (), t3.getTree (), t4.getTree ()));
+	return Tree::init (loc.getLocation (), build4_loc (loc.getLocation (), tc, type.getTree (), t1.getTree (), t2.getTree (), t3.getTree (), t4.getTree ()));
     }
 
     Tree Tree::build (tree_code tc, lexing::Word loc, const Tree & type, const Tree & t1, const Tree & t2, const Tree & t3, const Tree & t4, const Tree & t5) {
-	return Tree::init (loc.getLocus (), build5_loc (loc.getLocus (), tc, type.getTree (), t1.getTree (), t2.getTree (), t3.getTree (), t4.getTree (), t5.getTree ()));
+	return Tree::init (loc.getLocation (), build5_loc (loc.getLocation (), tc, type.getTree (), t1.getTree (), t2.getTree (), t3.getTree (), t4.getTree (), t5.getTree ()));
     }
     
     const location_t & Tree::getLocus () const {

@@ -53,7 +53,7 @@ namespace syntax {
 
     std::string MultOperator::prettyString () const {
 	Ymir::OutBuffer stream;
-	stream.writef ("% %", this-> _element.prettyString (), this-> getLocation ().str);
+	stream.writef ("% %", this-> _element.prettyString (), this-> getLocation ().getStr ());
 	auto i = 0;
 	for (auto & it : this-> _params) {
 	    if (i != 0) 
@@ -62,7 +62,7 @@ namespace syntax {
 		stream.writef ("%", it.prettyString ());
 	    i += 1;
 	}
-	stream.writef ("%", this-> _end.str);
+	stream.writef ("%", this-> _end.getStr ());
 	return stream.str ();
     }
     

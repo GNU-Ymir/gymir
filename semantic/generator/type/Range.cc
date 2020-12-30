@@ -20,7 +20,7 @@ namespace semantic {
 	}
 
 	Range::Range (const lexing::Word & loc, const Generator & inner) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{
 	    this-> isComplex (true);	    
 	    this-> setInners ({Type::init (inner.to <Type> (), inner.to <Type> ().isMutable (), false)});

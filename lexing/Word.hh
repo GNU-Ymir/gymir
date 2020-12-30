@@ -3,11 +3,14 @@
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
+#include "File.hh"
 
 #include <string>
 #include <tr1/memory>
 #include <stdlib.h>
+#include <ymir/lexing/File.hh>
 #include <ymir/lexing/Token.hh>
+#include <map>
 
 namespace lexing {
     /**
@@ -16,6 +19,9 @@ namespace lexing {
      */
     struct Word {
 
+    private : 
+	
+	static std::map <std::string, char*> __filenames__;
 	
 	/// The content of the word
 	std::string str;
@@ -37,23 +43,18 @@ namespace lexing {
 
 	/// is from a string or a file
 	bool isFromString = false;
-
-	/**
-	 * the content of the file is the word is created from a string
-	 */
-	std::string content;
+	
+	lexing::File file;
 
 	ulong start = 0;
 	
     public:
 
 	/**
-	 * Construct a word from a GCC internal location information
-	 * \param locus the location
-	 * \param str the content
+	 * EOF
 	 */
-	Word (location_t locus, const std::string &str);
-
+	Word ();
+	
 	/**
 	 * Copy a second word location 
 	 * \param str the content of the word
@@ -67,41 +68,86 @@ namespace lexing {
 	 */
 	Word (const Word & other, std::string str, long len);
     
-	Word (const Word & other);
-	
-	Word (const std::string * content, const std::string & str);
+		
+        /**
+	 * Create a new word with another location
+	 */
+	Word setLocation (const lexing::File & file, location_t locus) const;
+
+	/**
+	 * Create a new word with another location
+	 */
+	Word setLocation (const lexing::File & file, std::string filename, ulong line, ulong column, ulong seek) const;
+
+	/**
+	 * Create a new word that came from a string file
+	 */
+	Word setFromString (ulong start) const;
+
+	/**
+	 * Get the location of the word for GCC internals
+	 */
+	location_t getLocation () const;
+
+	/**
+	 * Get the content of the word
+	 */
+	const std::string & getStr () const ;
 	
 	/**
-	 * EOF
+	 * Get the length of the word
 	 */
-	Word ();
-    
-	Word& operator=(const Word&);
-    
-	void setLocus (location_t locus);
+	long length () const;
 
-	void setLocus (std::string filename, ulong line, ulong column, ulong seek);
-    
-	void setFromString (const std::string content, ulong start);
+	/**
+	 * Create a new word with a different str content
+	 */
+	Word setStr (const std::string & other) const;
 
-	location_t getLocus () const;
-    
-	const std::string &getStr () const {
-	    return this-> str;
-	}
+	/**
+	 * Create a new word with a different col content
+	 */
+	Word setColumn (ulong col) const;
 
-	long length () const {
-	    if (this-> _length == -1) return this-> str.length ();
-	    return this-> _length;
-	}
-    
-	void setStr (std::string other) {
-	    this-> str = other;	
-	}
+	/**
+	 * @return: the column location of the word
+	 */
+	ulong getColumn () const;
 
-	std::string getFile () const;  
-    
-	static Word eof (std::string file) {
+	/**
+	 * Create a new word with a different line content
+	 */
+	Word setLine (ulong line) const;
+	
+	/**
+	 * @return: the line location of the word
+	 */
+	ulong getLine () const;
+
+	/**
+	 * @return: the cursor position of the word within the file
+	 */
+	ulong getSeek () const;
+	
+	/**
+	 * Get the file that created the word
+	 */
+	lexing::File getFile () const;  
+
+	/**
+	 * Get the start line of the file containing the word
+	 */
+	ulong getStart () const;
+	
+	/**
+	 * Get the name of the file that created the word
+	 */
+	const std::string & getFilename () const;
+
+	/**
+	 * Create a an empty word 
+	 */
+	static Word eof (const std::string & file) {
 	    auto ret = Word {};
 	    ret.str = "";
 	    ret.line = 0;
@@ -109,6 +155,9 @@ namespace lexing {
 	    return ret;
 	}
 
+	/**
+	 * Create an empty word
+	 */
 	static Word eof () {
 	    auto ret = Word {};
 	    ret.str = "";
@@ -116,26 +165,14 @@ namespace lexing {
 	    return ret;
 	}
     
-	bool isEof () const {
-	    return this-> line == 0 && this-> str == "";
-	}
-
-	void setEof () {
-	    this-> line = 0;
-	    this-> str = "";
-	}
+	bool isEof () const;
     
-	void setEof (std::string file) {
-	    this-> line = 0;
-	    this-> str = "";
-	    this-> locFile = file;
-	}
 
 	bool isToken () const;
     
 	bool isSame (const Word& other) const;
 
-	bool is (const std::vector<std::string> & vals);
+	bool is (const std::vector<std::string> & vals) const;
 	
 	friend bool operator== (const Word& elem, const char* sec) {
 	    return elem.getStr () == sec;
@@ -166,22 +203,11 @@ namespace lexing {
 		return {left, left.str + right.str};
 	    return right;
 	}
-
-	Word& operator+= (const Word & right) {
-	    if (!this-> isEof ()) {
-		this-> str += right.str;
-	    } else {
-		this-> str = right.str;
-		this-> locFile = right.locFile;
-		this-> line = right.line;
-		this-> column = right.column;
-		this-> _length = right._length;
-	    }
-	    return *this;
-	}
 	
 	std::string toString () const;    
-    
+
+	static void purge ();
+	
     };
 
 }

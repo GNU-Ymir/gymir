@@ -11,7 +11,7 @@ namespace semantic {
 	}
 
 	LambdaType::LambdaType (const lexing::Word & loc, const Generator & retType, const std::vector <Generator> & inner) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{
 	    this-> isComplex (true);
 	    std::vector <Generator> types;

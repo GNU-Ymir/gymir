@@ -301,7 +301,7 @@ namespace semantic {
 
 	    Symbol getTemplateSolution (const Symbol & ref, const Symbol & solution) const;
 	    
-	    std::string partialResolutionNote (const lexing::Word & loc, const Mapper & mapper) const;
+	    Ymir::Error::ErrorMsg partialResolutionNote (const lexing::Word & loc, const Mapper & mapper) const;
 
 	};
 	

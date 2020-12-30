@@ -27,6 +27,6 @@ namespace syntax {
     }
 
     std::string AliasVar::prettyString () const {
-	return "alias " + this-> getLocation ().str;
+	return "alias " + this-> getLocation ().getStr ();
     }
 }

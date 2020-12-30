@@ -45,7 +45,7 @@ namespace semantic {
 	Symbol toInsert = sym;
 	toInsert.setReferent (Symbol {this-> _attached});
 	for (auto it : Ymir::r (0, this-> _syms.size ())) {
-	    if (this-> _syms [it].getName ().str == sym.getName ().str) {
+	    if (this-> _syms [it].getName ().getStr () == sym.getName ().getStr ()) {
 		this-> _syms [it] = sym;
 		return;
 	    }
@@ -56,7 +56,7 @@ namespace semantic {
     std::vector <Symbol> Table::get (const std::string & name) const {
 	std::vector <Symbol> rets;
 	for (auto & s : this-> _syms) {
-	    if (s.getName ().str == name) {
+	    if (s.getName ().getStr () == name) {
 		rets.push_back (s);
 	    }
 	}
@@ -67,7 +67,7 @@ namespace semantic {
     std::vector <Symbol> Table::getPublic (const std::string & name) const {
 	std::vector <Symbol> rets;
 	for (auto & s : this-> _syms) {
-	    if (s.getName ().str == name && s.isPublic ()) {
+	    if (s.getName ().getStr () == name && s.isPublic ()) {
 		rets.push_back (s);
 	    }
 	}

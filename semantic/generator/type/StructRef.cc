@@ -15,7 +15,7 @@ namespace semantic {
 	{}
 
 	StructRef::StructRef (const lexing::Word & loc, const Symbol & ref) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();

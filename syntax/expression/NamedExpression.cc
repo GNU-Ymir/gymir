@@ -34,7 +34,7 @@ namespace syntax {
     }
 
     std::string NamedExpression::prettyString () const {
-	return Ymir::format ("% -> %", this-> getLocation ().str, this-> _content.prettyString ());
+	return Ymir::format ("% -> %", this-> getLocation ().getStr (), this-> _content.prettyString ());
     }
     
 }

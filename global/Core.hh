@@ -47,6 +47,10 @@ namespace global {
 			 TYPE_INFO_EQUAL,
 			 TYPE_INFO_MODULE,
 			 UNARY_OP_OVERRIDE,
+			 BEGIN_OP_OVERRIDE,
+			 END_OP_OVERRIDE,
+			 GET_OP_OVERRIDE,
+			 NEXT_OP_OVERRIDE,
     );
     
 }

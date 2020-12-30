@@ -126,12 +126,12 @@ namespace semantic {
     }
 
     std::string Function::getRealName () const {
-	if (this-> getName ().str == Keys::MAIN) return this-> getName ().str;
+	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
 	else return ISymbol::getRealName ();
     }
 
     std::string Function::getMangledName () const {
-	if (this-> getName ().str == Keys::MAIN) return this-> getName ().str;
+	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
 	else return ISymbol::getMangledName ();
     }
     

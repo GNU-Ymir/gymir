@@ -26,7 +26,7 @@ namespace semantic {
 	}
 	
 	generator::Generator SubVisitor::validate (const syntax::Binary & expression) {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    Generator left (Generator::empty ());
 	    bool failed = false;
 
@@ -88,9 +88,9 @@ namespace semantic {
 	}
 
 	Generator SubVisitor::validateMultSym (const syntax::Binary &expression, const MultSym & mult) {
-	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto right = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 	    std::vector <Symbol> syms;
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <Generator> gens;
 
 	    for (auto gen : mult.getGenerators ()) {
@@ -171,9 +171,9 @@ namespace semantic {
 	}
 
 	Generator SubVisitor::validateModuleAccess (const syntax::Binary &expression, const ModuleAccess & acc) {
-	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto right = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 	    std::vector <Symbol> syms;
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    if (this-> _context.getModuleContext (acc.getModRef ())) {
 		syms = acc.getLocal (right);
 	    } else {
@@ -193,7 +193,7 @@ namespace semantic {
 	}
 
 	Generator SubVisitor::validateEnum (const syntax::Binary & expression, const generator::Enum & en) {
-	    auto right = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto right = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 	    auto val = en.getFieldValue (right);
 	    if (val.isEmpty ()) {
 		this-> error (expression, en.clone (), expression.getRight ());
@@ -222,7 +222,7 @@ namespace semantic {
 	    
 	    if (ret.isEmpty ()) {
 		if (expression.getRight ().is <syntax::Var> ()) {
-		    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		    if (name == __TYPEID__) {		    
 			auto stringLit = syntax::String::init (
 			    expression.getLocation (),
@@ -246,7 +246,7 @@ namespace semantic {
 	    
 	Generator SubVisitor::validateArray (const syntax::Binary & expression, const Generator & b) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    if (name == Array::INNER_NAME) {
 		return b.to <Type> ().getInners () [0];
@@ -257,7 +257,7 @@ namespace semantic {
 		return Fixed::init (b.getLocation (), type, value);	       		
 	    } else if (name == Array::INIT) {
 		std::vector <Generator> params;
-		std::list <std::string> errors;
+		std::list <Ymir::Error::ErrorMsg> errors;
 		try {
 		    auto bin = syntax::Binary::init (
 			b.to <Type> ().getInners ()[0].getLocation (),
@@ -285,7 +285,7 @@ namespace semantic {
 
 	Generator SubVisitor::validateBool (const syntax::Binary & expression, const Generator & b) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    if (name == __INIT__) {
 		return BoolValue::init (b.getLocation (), Bool::init (b.getLocation ()), Bool::INIT);
@@ -296,7 +296,7 @@ namespace semantic {
 
 	Generator SubVisitor::validateChar (const syntax::Binary & expression, const generator::Generator & c) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 	    
 	    if (name == __INIT__) {
 		return CharValue::init (c.getLocation (), c, Char::INIT);
@@ -307,7 +307,7 @@ namespace semantic {
 
 	Generator SubVisitor::validateFloat (const syntax::Binary & expression, const generator::Generator & f) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 	    
 	    if (name == __INIT__) {
 		return FloatValue::init (f.getLocation (), f, Float::INIT);
@@ -388,7 +388,7 @@ namespace semantic {
 
 	Generator SubVisitor::validateInteger (const syntax::Binary & expression, const generator::Generator & i) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    if (name == Integer::INIT_NAME) {
 		Fixed::UI value;
@@ -441,7 +441,7 @@ namespace semantic {
 
 	Generator SubVisitor::validatePointer (const syntax::Binary & expression, const generator::Generator & p) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    // if (name == Pointer::INIT_NAME) {
 	    // TODO
@@ -455,7 +455,7 @@ namespace semantic {
 
 	Generator SubVisitor::validateSlice (const syntax::Binary & expression, const generator::Generator & s) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
 	    if (name == Slice::INNER_NAME) {
 		return s.to <Type> ().getInners () [0];
@@ -475,7 +475,7 @@ namespace semantic {
 		    return t.to <Type> ().getInners () [value.to <Fixed> ().getUI ().i];
 		}
 	    } else {
-		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		if (name == Tuple::ARITY_NAME) {
 		    auto type = Integer::init (t.getLocation (), 32, false);
 		    Fixed::UI value;
@@ -484,7 +484,7 @@ namespace semantic {
 		    return Fixed::init (t.getLocation (), type, value);	       			
 		} else if (name == Tuple::INIT_NAME) {
 		    auto & fields = t.to <Type> ().getInners ();
-		    std::list <std::string> errors;
+		    std::list <Ymir::Error::ErrorMsg> errors;
 		    std::vector <Generator> params;		    
 		    try {
 			for (auto & field : fields) {
@@ -507,12 +507,12 @@ namespace semantic {
 
 	Generator SubVisitor::validateStruct (const syntax::Binary & expression, const generator::Generator & t) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
-		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		if (name == StructRef::INIT_NAME) {
 		    auto & fields = t.to <generator::Struct> ().getFields ();
 		    std::vector <Generator> params;
 		    std::vector <Generator> types;
-		    std::list <std::string> errors;
+		    std::list <Ymir::Error::ErrorMsg> errors;
 		    try {
 			for (auto & field : fields) {
 			    auto type = field.to <generator::VarDecl> ().getVarType ();
@@ -558,9 +558,9 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::list <std::string> & errors) {	    
+	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::list <Ymir::Error::ErrorMsg> & errors) {	    
 	    if (expression.getRight ().is <syntax::Var> ()) {
-		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		if (name == ClassRef::INIT_NAME) {
 		    if (t.to <generator::Class> ().getRef ().to <semantic::Class> ().isAbs ()) {
 			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
@@ -602,9 +602,9 @@ namespace semantic {
 	}
 
 
-	generator::Generator SubVisitor::validateMacro (const syntax::Binary & expression, const generator::Generator & t, std::list <std::string> & errors) {
+	generator::Generator SubVisitor::validateMacro (const syntax::Binary & expression, const generator::Generator & t, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
-		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		auto syms = this-> _context.getMacroRules (expression.getLocation (), t.to <generator::MacroRef> (), name);
 		std::vector <Generator> gens;
 		for (auto & it : syms) {
@@ -619,10 +619,10 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 	
-	Generator SubVisitor::validateTemplate (const syntax::Binary & expression, const generator::Generator & t, std::list <std::string> & errors) {
+	Generator SubVisitor::validateTemplate (const syntax::Binary & expression, const generator::Generator & t, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto tmp = t.to <TemplateRef> ().getTemplateRef ().to <semantic::Template> ().getDeclaration ();
-		auto name = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		if (!tmp.is <syntax::Class> ()) return Generator::empty ();
 		
 		if (name == ClassRef::INIT_NAME) {
@@ -649,7 +649,7 @@ namespace semantic {
 
 	Generator SubVisitor::validateClassValue (const syntax::Binary & expression, const generator::Generator & value) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
-		auto opName = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto opName = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		if (opName == SubVisitor::__TYPEINFO__) {		    
 		    auto loc = expression.getLocation ();
 		    auto type = value.to <Value> ().getType ();
@@ -674,12 +674,12 @@ namespace semantic {
 	Generator SubVisitor::validateStructValue (const syntax::Binary & expression, const generator::Generator & value) {
 	    auto & t = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
 	    if (expression.getRight ().is <syntax::Var> ()) {
-		auto opName = expression.getRight ().to <syntax::Var> ().getName ().str;
+		auto opName = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		if (opName == StructRef::TUPLEOF) {
 		    auto & fields = t.to <generator::Struct> ().getFields ();
 		    std::vector <Generator> types;
 		    std::vector <Generator> params;
-		    std::list <std::string> errors;
+		    std::list <Ymir::Error::ErrorMsg> errors;
 		    try {
 			for (auto & field : fields) {
 			    auto type = field.to <generator::VarDecl> ().getVarType ();
@@ -715,7 +715,7 @@ namespace semantic {
 		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
 		    else of (generator::Struct, str, leftName = str.getName ())
 		    else of  (generator::Enum, en, leftName = en.getName ())
-		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		    else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
 		    else of (generator::Class, cl, leftName = cl.getName ())
 		    else of (ClassRef, cl, leftName = cl.getName ())
 		    else of (TemplateRef, rf, leftName = rf.prettyString ())
@@ -726,7 +726,7 @@ namespace semantic {
 	    }
 	    {		
 		match (right) {
-		    of (syntax::Var, var, rightName = var.getName ().str);
+		    of (syntax::Var, var, rightName = var.getName ().getStr ());
 		}
 	    }
 	    
@@ -744,7 +744,7 @@ namespace semantic {
 	    );
 	}
 
-	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::list <std::string> & errors) {
+	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::string leftName;
 	    std::string rightName = "";
 	    {
@@ -752,7 +752,7 @@ namespace semantic {
 		    of (FrameProto, proto, leftName = proto.getName ())
 		    else of (generator::Struct, str, leftName = str.getName ())
 		    else of (generator::Enum, en, leftName = en.getName ())
-		    else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		    else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
 		    else of (generator::Class, cl, leftName = cl.getName ())
 		    else of (ClassRef, cl, leftName = cl.getName ())
 		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
@@ -764,7 +764,7 @@ namespace semantic {
 	    }
 	    {
 		match (right) {
-		    of (syntax::Var, var, rightName = var.getName ().str);
+		    of (syntax::Var, var, rightName = var.getName ().getStr ());
 		}
 	    }
 	    
@@ -773,15 +773,11 @@ namespace semantic {
 		rightName = val.prettyString ();
 	    }
 
-	    OutBuffer buf;
-	    for (auto & it : errors)
-		buf.write (it, "\n");
-
 	    
 	    Ymir::Error::occurAndNote (
 		expression.getLocation (),
 		expression.getRight ().getLocation (),
-		buf.str (),
+		errors,
 		ExternalError::get (UNDEFINED_SUB_PART_FOR),
 		rightName,
 		leftName

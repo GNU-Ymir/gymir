@@ -158,10 +158,10 @@ namespace semantic {
 	Generator UnaryVisitor::validateFunctionPointer (const syntax::Unary & un, const Generator & proto) {
 	    // Proto is a frameproto
 	    if (proto.getThrowers ().size () != 0) {
-		std::string note = "";
+		std::list <Ymir::Error::ErrorMsg> notes;
 		for (auto &it : proto.getThrowers ())
-		    note = note + Ymir::Error::createNoteOneLine (ExternalError::get (THROWS), it.prettyString ()) + "\n";
-		Ymir::Error::occurAndNote (un.getLocation (), note, ExternalError::get (ADDR_MIGHT_THROW), proto.prettyString ());
+		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (THROWS), it.prettyString ()));
+		Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::get (ADDR_MIGHT_THROW), proto.prettyString ());
 	    }
 	    return Addresser::init (un.getLocation (), this-> _context.validateFunctionType (proto), proto);
 	}
@@ -171,19 +171,19 @@ namespace semantic {
 	    match (left) {
 		of (FrameProto, proto, leftName = proto.getName ())
 		else of (generator::Struct, str, leftName = str.getName ())
-		else of (MultSym,    sym,   leftName = sym.getLocation ().str)
+		else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
 		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
 	    }
 	    
 	    Ymir::Error::occur (un.getLocation (),
 				ExternalError::get (UNDEFINED_UN_OP),
-				un.getLocation ().str, 
+				un.getLocation ().getStr (), 
 				leftName
 	    );
 	}	
 
 	Unary::Operator UnaryVisitor::toOperator (const lexing::Word & loc) {
-	    string_match (loc.str) {
+	    string_match (loc.getStr ()) {
 		eq (Token::NOT, return Unary::Operator::NOT;);
 		eq (Token::MINUS, return Unary::Operator::MINUS;);
 		eq (Token::STAR, return Unary::Operator::UNREF;);

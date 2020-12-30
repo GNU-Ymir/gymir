@@ -5,12 +5,12 @@
 #include "coretypes.h"
 #include "input.h"
 #include "diagnostic.h"
-#include <ymir/lexing/Word.hh>
 #include <cmath>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/errors/ListError.hh>
 #include <list>
 #include <ymir/errors/Exception.hh>
+#include <ymir/lexing/Word.hh>
 
 namespace Ymir {
 
@@ -38,17 +38,47 @@ namespace Ymir {
 	return buf.str ();
     }
     
-    /**
-     * \brief print the backtrace into stderr
-     */
-    void bt_print ();
+
 
     namespace Error {
+
+	struct ErrorMsg {
+	private :
+	    
+	    lexing::Word begin;
+	    
+	    lexing::Word end;
+	    
+	    std::string msg;
+
+	    bool one_line;
+
+	    std::list <ErrorMsg> notes;
+	    
+	public :
+
+	    ErrorMsg (const lexing::Word & begin, const std::string & msg);
+
+	    ErrorMsg (const lexing::Word & begin, const lexing::Word & end, const std::string & msg);
+
+	    ErrorMsg (const std::string & msg);
+	    
+	    void addNote (const ErrorMsg & note);
+	    
+	    std::string computeMessage () const;
+
+	    bool isEmpty () const;
+
+	    const lexing::Word & getLocation () const;
+
+	    const std::string & getMessage () const;
+	    
+	};
 
 	
 	struct ErrorList {
 
-	    std::list <std::string> errors;      
+	    std::list <ErrorMsg> errors;      
 
 	    void print () const;
     
@@ -119,48 +149,52 @@ namespace Ymir {
 	template <typename ... TArgs>
 	void occur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    msg = addLine (msg, loc);
-	    throw ErrorList {{msg}};	    
+	    throw ErrorList {std::list <ErrorMsg> {ErrorMsg (loc, msg)}};	    
 	}
 
 	template <typename ... TArgs>
 	void occur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    msg = addLine (msg, loc, end);
-	    throw ErrorList {std::list <std::string> {msg}};
+	    throw ErrorList {std::list <ErrorMsg> {ErrorMsg (loc, end, msg)}};
 	}
 
 
 	template <typename ... TArgs>
-	std::string makeOccur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
+	ErrorMsg makeOccur (const lexing::Word & loc, const lexing::Word & end, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    msg = addLine (msg, loc, end);
-	    return msg;
+	    return ErrorMsg (loc, end, msg);
 	}
 
 	template <typename ... TArgs>
-	std::string makeOccurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
+	ErrorMsg makeOccurAndNote (const lexing::Word & loc, const ErrorMsg & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    msg = addLine (msg, loc);
-	    msg = addNote (loc, msg, note);
-	    return msg;
+	    auto err = ErrorMsg (loc, msg);
+	    err.addNote (note);
+	    return err;
 	}
 	
+	template <typename ... TArgs>
+	ErrorMsg makeOccurAndNote (const lexing::Word & loc, const std::list <ErrorMsg> & notes, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    auto err = ErrorMsg (loc, msg);
+	    for (auto & it : notes)
+		err.addNote (it);
+	    return err;
+	}
+
 
 	
 	template <typename ... TArgs>
-	std::string makeOccur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
-	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    msg = addLine (msg, loc);
-	    return msg;
+	ErrorMsg makeOccur (const lexing::Word & loc, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);	    
+	    return ErrorMsg (loc, msg);
 	}
 	
 	
 	template <typename ... TArgs>
-	std::string makeWarn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
-	    auto msg = format ("%(y) : " + content, "Warning", args...);
-	    msg = addLine (msg, loc);
-	    return msg;
+	ErrorMsg makeWarn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
+	    auto msg = format ("%(y) : " + content, "Warning", args...);	    
+	    return ErrorMsg (loc, msg);
 	}
 
 	/**
@@ -174,39 +208,57 @@ namespace Ymir {
 	 */
 	template <typename ... TArgs>
 	void warn (const lexing::Word & loc, const std::string & content, TArgs ... args) {
-	    auto msg = format ("%(y) : " + content, "Warning", args...);
-	    msg = addLine (msg, loc);
-	    throw ErrorList {std::list <std::string> {msg}};
+	    auto msg = format ("%(y) : " + content, "Warning", args...);	    
+	    throw ErrorList {std::list <ErrorMsg> {ErrorMsg (loc, msg)}};
 	}
 
 	template <typename ... TArgs>
-	void occurAndNote (const lexing::Word & loc, const std::string & note, const std::string &content, TArgs ... args) {
+	void occurAndNote (const lexing::Word & loc, const ErrorMsg & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    msg = addLine (msg, loc);
-	    msg = addNote (loc, msg, note);
-	    throw ErrorList {std::list <std::string> {msg}};
+	    auto err = ErrorMsg (loc, msg);
+	    err.addNote (note);	    
+	    throw ErrorList {std::list <ErrorMsg> {err}};
+	}
+	
+
+	template <typename ... TArgs>
+	void occurAndNote (const lexing::Word & loc, const std::list <ErrorMsg> & notes, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    auto err = ErrorMsg (loc, msg);
+	    for (auto & it : notes)
+		err.addNote (it);	    
+	    throw ErrorList {std::list <ErrorMsg> {err}};
 	}
 
 	
 	template <typename ... TArgs>
-	void occurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const std::string & note, const std::string &content, TArgs ... args) {
+	void occurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const ErrorMsg & note, const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    msg = addLine (msg, loc, loc2);
-	    msg = addNote (loc, msg, note);
-	    throw ErrorList {std::list <std::string> {msg}};
+	    auto err = ErrorMsg (loc, loc2, msg);
+	    err.addNote (note);
+	    throw ErrorList {std::list <ErrorMsg> {err}};
+	}
+
+	template <typename ... TArgs>
+	void occurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const std::list <ErrorMsg> & notes, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(r) : " + content, "Error", args...);
+	    auto err = ErrorMsg (loc, loc2, msg);
+	    for (auto & it : notes)
+		err.addNote (it);
+	    throw ErrorList {std::list <ErrorMsg> {err}};
 	}
 
 	
 	template <typename ... TArgs>
 	void occur (const std::string &content, TArgs ... args) {
 	    auto msg = format ("%(r) : " + content, "Error", args...);
-	    throw ErrorList {std::list <std::string> {msg}};
+	    throw ErrorList {std::list <ErrorMsg> {ErrorMsg (lexing::Word::eof (), msg)}};
 	}
 
 	template <typename ... TArgs>
 	void warn (const std::string & content, TArgs ... args) {
 	    auto msg = format ("%(y) : " + content, "Warning", args...);
-	    throw ErrorList {std::list <std::string> {msg}};
+	    throw ErrorList {std::list <ErrorMsg> {ErrorMsg (lexing::Word::eof (), msg)}};
 	}
 	
 	/**
@@ -217,10 +269,10 @@ namespace Ymir {
 	template <typename ... TArgs>
 	void fail (const lexing::Word & loc, const std::string & content, TArgs ... args) {
 	    auto msg = format (std::string ("%(r) : ") + content, "Error", args...);
-	    msg = addLine (msg, loc);
+	    auto err = ErrorMsg (loc, msg);
 
 	    //bt_print ();
-	    throw ErrorList {std::list <std::string> (msg)};
+	    throw ErrorList {std::list <ErrorMsg> (err)};
 	}
 
 	/**
@@ -256,10 +308,9 @@ namespace Ymir {
 	   \param args the parameter of the format
 	 */
 	template <typename ... TArgs>
-	std::string createNote (const lexing::Word& word, const std::string& format_, TArgs ... args) {
+	ErrorMsg createNote (const lexing::Word& word, const std::string& format_, TArgs ... args) {
 	    std::string aux = format ("%(b) : " + format_, "Note", args...);
-	    aux = addLine (aux, word);
-	    return aux;
+	    return ErrorMsg (word, aux);
 	}
 	
 	/**
@@ -269,16 +320,16 @@ namespace Ymir {
 	   \param args the parameter of the format
 	 */
 	template <typename ... TArgs>
-	std::string createNoteOneLine (const std::string& format_, TArgs ... args) {
+	ErrorMsg createNoteOneLine (const std::string& format_, TArgs ... args) {
 	    std::string aux = format ("%(b) : " + format_, "Note", args...);
-	    return aux;
+	    return ErrorMsg (aux);
 	}
 	
 	/**
 	   \brief Create a note message
 	   \param word the location of the note
 	 */
-	std::string createNote (const lexing::Word& word);
+	ErrorMsg createNote (const lexing::Word& word);
 	
 	
     }

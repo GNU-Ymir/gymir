@@ -120,7 +120,7 @@ namespace semantic {
     
     std::string TemplateSolution::getRealName () const {
 	Ymir::OutBuffer buf;
-	buf.writef ("%", this-> getName ().str);
+	buf.writef ("%", this-> getName ().getStr ());
 	int i = 0;
 	buf.write ("(");
 	for (auto & it : _nameOrder) {
@@ -141,7 +141,7 @@ namespace semantic {
 
     std::string TemplateSolution::getSolutionName () const {
 	Ymir::OutBuffer buf;
-	buf.writef ("%", this-> getName ().str);
+	buf.writef ("%", this-> getName ().getStr ());
 	int i = 0;
 	buf.write ("(");
 	for (auto & it : _nameOrder) {
@@ -158,7 +158,7 @@ namespace semantic {
     
     std::string TemplateSolution::getMangledName () const {
 	Ymir::OutBuffer buf;
-	buf.write (this-> getName ().str);
+	buf.write (this-> getName ().getStr ());
 	generator::Mangler mangler = generator::Mangler::init ();
 	for (auto & it : _nameOrder) {
 	    auto second = this-> _params.find (it)-> second;

@@ -7,15 +7,16 @@ namespace syntax {
 	_rule (Expression::empty ())
     {}
 
-    MacroConstructor::MacroConstructor (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) :
+    MacroConstructor::MacroConstructor (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) :
 	IDeclaration (loc, comment),
 	_rule (rule),
+	_contentLoc (contentLoc),
 	_content (content),
 	_skips (skips)
     {}
 
-    Declaration MacroConstructor::init (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
-	return Declaration {new (NO_GC) MacroConstructor (loc, comment, rule, content, skips)};
+    Declaration MacroConstructor::init (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
+	return Declaration {new (NO_GC) MacroConstructor (loc, contentLoc, comment, rule, content, skips)};
     }
 
     Declaration MacroConstructor::init (const MacroConstructor & other) {
@@ -42,6 +43,10 @@ namespace syntax {
 
     const std::string & MacroConstructor::getContent () const {
 	return this-> _content;
+    }
+
+    const lexing::Word & MacroConstructor::getContentLoc () const {
+	return this-> _contentLoc;
     }
 
     const std::vector <Expression> & MacroConstructor::getSkips () const {

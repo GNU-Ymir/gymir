@@ -79,12 +79,12 @@ namespace semantic {
     }
 
     std::string Constructor::getRealName () const {
-	if (this-> getName ().str == Keys::MAIN) return this-> getName ().str;
+	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
 	else return ISymbol::getRealName ();
     }
 
     std::string Constructor::getMangledName () const {
-	if (this-> getName ().str == Keys::MAIN) return this-> getName ().str;
+	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
 	else return ISymbol::getMangledName ();
     }
 

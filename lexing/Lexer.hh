@@ -5,8 +5,9 @@
 #include "system.h"
 #include "coretypes.h"
 
-#include "Word.hh"
-#include "Token.hh"
+#include <ymir/lexing/Word.hh>
+#include <ymir/lexing/File.hh>
+#include <ymir/lexing/Token.hh>
 #include <vector>
 #include <map>
 #include <stdlib.h>
@@ -23,10 +24,6 @@ namespace lexing {
 	 * \brief Empty lexer, always EOF
 	 */
 	Lexer ();
-
-	Lexer (const Lexer & lex);
-
-	const Lexer & operator= (const Lexer & lex);
 	
 	/**
 	 * \param filename the name of the file
@@ -34,14 +31,14 @@ namespace lexing {
 	 * \param the token to skip
 	 * \param comments the tokens used to define comments
 	 */
-	Lexer (const char * filename, FILE * file, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments);
+	Lexer (const char * filename, const lexing::File & file, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments);
 
 
 	/**
 	 * Create a lexer that read from a string instead of a file	
 	 * \param line, the init line (string content are generally from macros, and the macro is in a file, thus we need to ) 
 	 */
-	static Lexer initFromString (const std::string & content, const std::string & filename, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, ulong line);
+	static Lexer initFromString (const lexing::File & file, const std::string & filename, const std::vector<std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, ulong line);
 
 	
 	/**
@@ -49,6 +46,9 @@ namespace lexing {
 	 */
 	std::string getFilename () const;
 
+	
+	lexing::File getFile () const;
+	
 	/**
 	 * \brief enable a skip token
 	 * \param elem the token to skip
@@ -148,13 +148,13 @@ namespace lexing {
 	 * Return a string containing all the already read tokens (including skips, and comments
 	 */
 	std::string formatRestOfFile ();
-	
-	const std::string & getContent () const;
 
-	const std::string & getStringName () const;
+	/**
+	 * Sometimes the cursor of the file is not at the same position as the lexer
+	 * If we want to use the file outside the lexer, we first need to re-seek it
+	 */
+	void correctFileCursor ();
 	
-	~Lexer ();
-
     protected:
 
 	/**
@@ -215,13 +215,11 @@ namespace lexing {
 	std::vector <std::string> docs;
 	
 	long current;
-	FILE * file;
+	lexing::File file;
 
 	const struct line_map * line_map;
 
-	std::string content = "";
 	bool isFromString = false;
-	std::string string_name;
 	ulong start = 0;
 	
     };    

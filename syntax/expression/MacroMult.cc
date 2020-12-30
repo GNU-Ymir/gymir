@@ -39,7 +39,7 @@ namespace syntax {
 	    buf.write (it.prettyString ());
 	}
 	buf.write (")");
-	if (!this-> _mult.isEof ()) buf.write (this-> _mult.str);
+	if (!this-> _mult.isEof ()) buf.write (this-> _mult.getStr ());
 	return buf.str ();
     }
 

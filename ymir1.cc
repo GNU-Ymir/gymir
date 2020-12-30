@@ -137,6 +137,7 @@ ymir_langhook_handle_option (size_t scode, const char *arg, long int value ATTRI
     } else if (code == OPT_iprefix) {
 	global::State::instance ().setPrefix (arg);
     } else if (code == OPT_v) {
+	return false;
 	// set verbose 
     } else if (code == OPT_nostdinc)  {
 	// no std include

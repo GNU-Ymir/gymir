@@ -41,5 +41,9 @@ namespace global {
 			    TYPE_INFO_EQUAL    = "equals",
 			    TYPE_INFO_MODULE   = "typeinfo",
 			    UNARY_OP_OVERRIDE  = "opUnary",
+			    BEGIN_OP_OVERRIDE  = "begin",
+			    END_OP_OVERRIDE    = "end",
+			    GET_OP_OVERRIDE    = "get",
+			    NEXT_OP_OVERRIDE   = "next",
     );
 }

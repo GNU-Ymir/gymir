@@ -1,9 +1,9 @@
 #pragma once
 
-#include <ymir/utils/OutBuffer.hh>
+
 #include <map>
 #include <memory>
-#include <ymir/utils/Memory.hh>
+
 
 /**
  * Implementation of a proxy design pattern

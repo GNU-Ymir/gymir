@@ -36,20 +36,6 @@ std::string getStackTrace () {
 }
 #endif
 
-const garbage_collection_t GC;
-
-void* operator new (size_t cbSize, const garbage_collection_t&) {
-    void *mem = GC_malloc (cbSize);
-    memset(mem,0,cbSize);
-    return mem;
-}
-
-void* operator new[] (size_t cbSize, const garbage_collection_t&) {
-    void *mem = GC_malloc (cbSize);
-    memset(mem,0,cbSize);
-    return mem;
-}
-
 
 const no_garbage_collection_t NO_GC;
 

@@ -7,15 +7,16 @@ namespace syntax {
 	_rule (Expression::empty ())
     {}
 
-    MacroRule::MacroRule (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector<Expression> & skips) :
+    MacroRule::MacroRule (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector<Expression> & skips) :
 	IDeclaration (loc, comment),
 	_rule (rule),
+	_contentLoc (contentLoc),
 	_content (content),
 	_skips (skips)
     {}
 
-    Declaration MacroRule::init (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
-	return Declaration {new (NO_GC) MacroRule (loc, comment, rule, content, skips)};
+    Declaration MacroRule::init (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) {
+	return Declaration {new (NO_GC) MacroRule (loc, contentLoc, comment, rule, content, skips)};
     }
 
     Declaration MacroRule::init (const syntax::MacroRule & rule) {
@@ -40,6 +41,10 @@ namespace syntax {
 	return this-> _content;
     }
 
+    const lexing::Word & MacroRule::getContentLoc () const {
+	return this-> _contentLoc;
+    }
+    
     const Expression & MacroRule::getRule () const {
 	return this-> _rule;
     }

@@ -28,6 +28,6 @@ namespace syntax {
     
 
     std::string Bool::prettyString () const {
-	return this-> getLocation ().str;
+	return this-> getLocation ().getStr ();
     }
 }

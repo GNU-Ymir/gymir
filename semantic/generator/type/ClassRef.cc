@@ -15,7 +15,7 @@ namespace semantic {
 	{}
 
 	ClassRef::ClassRef (const lexing::Word & loc, const Generator & parent, const Symbol & ref) :
-	    Type (loc, loc.str),
+	    Type (loc, loc.getStr ()),
 	    _parent (parent)
 	{
 	    auto aux = ref;

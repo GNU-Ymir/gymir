@@ -1,5 +1,6 @@
 #pragma once
 #include <ymir/utils/Ref.hh>
+#include <ymir/errors/Error.hh>
 
 namespace documentation {
 

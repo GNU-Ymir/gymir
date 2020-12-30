@@ -31,7 +31,7 @@ namespace syntax {
     }
 
     std::string Var::prettyString () const {
-	return this-> getLocation ().str;
+	return this-> getLocation ().getStr ();
     }
     
 }

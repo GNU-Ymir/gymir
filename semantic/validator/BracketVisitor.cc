@@ -19,7 +19,7 @@ namespace semantic {
 
 	Generator BracketVisitor::validate (const syntax::MultOperator & expression) {
 	    auto left = this-> _context.validateValue (expression.getLeft ());
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <Generator> rights;
 	    
 	    this-> _context.enterDollar (left);

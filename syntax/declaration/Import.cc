@@ -33,7 +33,7 @@ namespace syntax {
     }
     
     std::string Import::getPath () const {
-	auto path = Ymir::Path {this-> _module.str, "::"};
+	auto path = Ymir::Path {this-> _module.getStr (), "::"};
 	return path.toString ();
     }
         

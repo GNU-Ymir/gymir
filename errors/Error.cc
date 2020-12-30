@@ -10,9 +10,10 @@ using namespace lexing;
 namespace Ymir {
     namespace Error {
 
+	
 	void ErrorList::print () const {
 	    for (auto it : this-> errors) {
-		fprintf (stderr, "%s\n", it.c_str ());
+		fprintf (stderr, "%s\n", it.computeMessage ().c_str ());
 	    }
 	}
 
@@ -25,46 +26,35 @@ namespace Ymir {
 	    if (beg > x.length ()) return "";
 	    return x.substr (beg, end - beg);
 	}
+
+	std::string shorten (const std::string & str, ulong max = 50) {
+	    if (str.length () < max) return str;
+	    else {
+		return str.substr (0, max/2 - 3) + "[...]" + str.substr (str.length () - max/2 + 2);
+	    }
+	}
+	
     
-	std::string readln (FILE * i) {
-	    unsigned long max = 255;
-	    std::string final = "";
-	    char buf [255];
-	    while (1) {
-		char * aux = fgets(buf, max, i);
-		if (aux == NULL) {
-		    return "";
+	std::string getLine (int line, lexing::File file, int start) {
+	    if (file.isClosed ()) {
+		auto aux = file.clone (); // We can't modify the file 
+		std::string cline;
+		for (auto it = start ; it < line ; it ++) {
+		    cline = aux.readln ();
 		}
-		std::string ret = std::string (buf);
-		final += ret;
-				
-		if (ret.size () != max - 1) return final;
-		else max *= 2;      
+		return cline;
+	    } else {
+		auto cursor = file.tell ();
+		file.seek (0);
+		std::string cline;
+		for (auto it = start ; it < line ; it ++) {
+		    cline = file.readln ();
+		}		
+		file.seek (cursor);
+		return cline;
 	    }
-	}  
-    
-	std::string getLine (const location_t& locus, const char * filename) {
-	    auto file = fopen (filename, "r");
-	    if (file == NULL) return "";
-	    std::string cline;
-	    for (auto it = 0 ; it < LOCATION_LINE (locus) ; it ++) {
-		cline = readln (file);
-	    }
-	    if (file) fclose (file);
-	    return cline;
 	}
 
-	std::string getLineInFile (const location_t& locus, const std::string & file, ulong start) {
-	    auto str = file;
-	    for (ulong it = 0 ; it < LOCATION_LINE (locus) - start; it ++) {
-		auto pos = str.find ("\n");
-		str = str.substr (pos + 1);
-	    }
-	    auto end = str.find ("\n");
-	    if (end != std::string::npos) 
-		return str.substr (0, end);
-	    else return str;
-	}
 	
 	ulong computeMid (std::string& mid, const std::string& word, const std::string& line, ulong begin, ulong end) {
 	    auto end2 = begin;
@@ -99,67 +89,66 @@ namespace Ymir {
 	}
 
 	void addLineEof (OutBuffer & buf, const Word & word) {
-	    auto locus = word.getLocus ();
-	    std::string leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+	    std::string leftLine = center (format ("%", word.getLine ()), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
-	    buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+	    buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
 			       Colors::get (BOLD),
-			       word.getFile (),
-			       LOCATION_LINE (locus),
-			       LOCATION_COLUMN (locus),
+			       word.getFilename (),
+			       word.getLine (),
+			       word.getColumn (),
 			       Colors::get (RESET),
 			       Colors::get (BOLD),
 			       padd,
 			       Colors::get (RESET)
-	    ));
+			   ));
 
 	    buf.write ("\n");
 	}
 	
 	
 	void addLine (OutBuffer & buf, const Word & word) {
-	    auto locus = word.getLocus ();	    
-	    std::string line;
-	    if (!word.isFromString)
-		line = getLine (locus, word.getFile ().c_str ());
-	    else if (!word.isEof ()) line = getLineInFile (locus, word.content, word.start);
+	    std::string line = getLine (word.getLine (), word.getFile (), word.getStart ());
 
 	    if (line.length () > 0) {
 		auto wordLength = word.length ();
-		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+		buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
 				   Colors::get (BOLD),
-				   word.getFile ().c_str (),
-				   LOCATION_LINE (locus),
-				   LOCATION_COLUMN (locus),
+				   word.getFilename ().c_str (),
+				   word.getLine (),
+				   word.getColumn (),
 				   Colors::get (RESET),
 				   Colors::get (BOLD),
 				   padd,
 				   Colors::get (RESET)));
 
-		auto column = LOCATION_COLUMN (locus);
-		if (wordLength != 0 && line [column - 1] != word.str [0]) {
+		auto column = word.getColumn ();
+		if (wordLength != 0 && line [column - 1] != word.getStr () [0]) {
 		    wordLength = 1;
 		}
-		
-		buf.write (format ("%% | %%%%(y)%%",
+
+		auto begin = shorten (line.substr (0, column - 1));
+		auto wordStr = shorten (substr (line, column - 1, column + wordLength - 1));
+		auto between = shorten (substr (line, column + wordLength - 1, line.length ()));
+		column = begin.length () + 1;
+		buf.write (format ("%% ┃ %%%%(y)%%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
-				   line.substr (0, column - 1),
+				   begin,
 				   Colors::get (UNDERLINE),
-				   substr (line, column - 1, column + wordLength - 1),
+				   wordStr,
 				   Colors::get (RESET),
-				   substr (line, column + wordLength - 1, line.length ())
-		));
+				   between
+			       ));
 
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
-		buf.write (format ("%% | %", Colors::get (BOLD), padd, Colors::get (RESET)));
-		for (auto it = 0 ; it < column - 1 ; it++) {
+		buf.write (format ("%% ┃ %", Colors::get (BOLD), padd, Colors::get (RESET)));
+		for (ulong it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
 		
-		buf.write (rightJustify ("", wordLength, '^'));
+		buf.write (rightJustify ("", wordStr.length (), '^'));
 		buf.write ('\n');
 	    } else addLineEof (buf, word);
 	}
@@ -184,128 +173,135 @@ namespace Ymir {
 	    return cont;
 	}
 	
-	std::string addNote (const Word & word, const std::string & msg, const std::string & note) {
-	    auto locus = word.getLocus ();
-	    auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+	std::string addNote (const Word & word, const std::string & msg, const std::string & note, bool fst, bool oneLine) {
+	    auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
 	    auto padd2 = center ("", leftLine.length (), '-');
 	    OutBuffer buf;
 	    buf.write (msg);
+	    
 	    auto lines = splitString (note, "\n");
-	    bool added = false;
+	    if (!fst && !oneLine) {
+		auto l = format ("%% ┃ %\n", Colors::get (BOLD), padd, Colors::get (RESET));
+		buf.write (l);
+	    }
+	    
 	    for (auto it : Ymir::r (0, lines.size ())) {
 		if (lines [it].length() != 0) {
-		    auto l = format ("%% | %%\n", Colors::get (BOLD), padd, Colors::get (RESET), lines [it]);
+		    auto l = format ("%% ┃ %%\n", Colors::get (BOLD), padd, Colors::get (RESET), lines [it]);
 		    buf.write (l);
-		    added = true;
 		}
 	    }
 	    
-	    if (added) 
-		buf.write (format ("%% |%* %\n", Colors::get (BOLD), padd, 30, '-', Colors::get (RESET)));
 	    return buf.str ();
 	}
 	
 	void addTwoLines (OutBuffer & buf, const Word & word, const Word & end) {
-	    auto locus = word.getLocus ();
-	    std::string line;
-	    if (!word.isFromString) line = getLine (locus, word.getFile ().c_str ());
-	    else if (!word.isEof ()) line = getLineInFile (locus, word.content, word.start);
+	    std::string line = getLine (word.getLine (), word.getFile (), word.getStart ());
 	    
 	    if (line.length () > 0) {
-		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+		buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
 				   Colors::get (BOLD),
-				   word.getFile ().c_str (),
-				   LOCATION_LINE (locus),
-				   LOCATION_COLUMN (locus),
+				   word.getFilename ().c_str (),
+				   word.getLine (),
+				   word.getColumn (),
 				   Colors::get (RESET),
 				   Colors::get (BOLD),
 				   padd,
 				   Colors::get (RESET)));
 
-		auto column = LOCATION_COLUMN (locus);
-		buf.write (format ("%% | %%%%(y)%%",
+		auto column = word.getColumn ();
+		auto begin =   shorten (line.substr (0, column - 1));
+		auto wordStr = shorten (substr (line, column - 1, column + word.length () - 1));
+		auto between =  shorten (substr (line, column + word.length () - 1, line.length ()));
+		
+		column = begin.length () + 1;
+		buf.write (format ("%% ┃ %%%%(y)%%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
-				   line.substr (0, column - 1),
+				   begin,
 				   Colors::get (UNDERLINE),
-				   substr (line, column - 1, column + word.length () - 1),
+				   wordStr,
 				   Colors::get (RESET),
-				   substr (line, column + word.length () - 1, line.length ())
-		));
+				   between
+			       ));
 
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
 		buf.write (format ("%%...%", Colors::get (BOLD), padd, Colors::get (RESET)));
-		for (auto it = 0 ; it < column - 1 ; it++) {
+		for (ulong it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
 		
-		buf.write (rightJustify ("", word.length (), '^'));
+		buf.write (rightJustify ("", wordStr.length (), '^'));
 		addLine (buf, end);
 	    } else addLineEof (buf, word);
 	}
 	
 	void addLine (OutBuffer & buf, const Word & word, const Word & end) {
-	    if (word.line != end.line) {
+	    if (word.getLine () != end.getLine ()) {
 		addTwoLines (buf, word, end);
 		return;
-	    } 
+	    } else if (end.getColumn () < word.getColumn ()) {
+		addLine (buf, word);
+		return;	    
+	    }
 	    
-	    auto locus = word.getLocus (), locus2 = end.getLocus ();
-	    if (word.line == end.line && LOCATION_COLUMN (locus) == LOCATION_COLUMN (locus2)) {
+	    if (word.getLine () == end.getLine () && end.getColumn () == word.getColumn ()) {
 		addLine (buf, word);
 		return;
 	    }
 	    
-	    std::string line;
-	    if (!word.isFromString) line = getLine (locus, word.getFile ().c_str ());
-	    else if (!word.isEof ()) line = getLineInFile (locus, word.content, word.start);
+	    std::string line = getLine (word.getLine (), word.getFile (), word.getStart ());
 	    
 	    if (line.length () > 0) {
-		auto leftLine = center (format ("%", LOCATION_LINE (locus)), 3, ' ');
+		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		buf.write (format ("\n% --> %:(%,%)%\n%% | %\n",
+		buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
 				   Colors::get (BOLD),
-				   word.getFile ().c_str (),
-				   LOCATION_LINE (locus),
-				   LOCATION_COLUMN (locus),
+				   word.getFilename ().c_str (),
+				   word.getLine (),
+				   word.getColumn (),
 				   Colors::get (RESET),
 				   Colors::get (BOLD),
 				   padd,
 				   Colors::get (RESET)));
 
 
-		auto column = LOCATION_COLUMN (locus);
-		auto column2 = LOCATION_COLUMN (locus2);
-		buf.write (format ("%% | %%%%(y)%%%%(y)%%",
+		auto column = word.getColumn ();
+		auto column2 = end.getColumn ();
+		auto wordStr = shorten (substr (line, column - 1, column + word.length () - 1));
+		auto between = shorten (substr (line, column + word.length () - 1, column2 - 1));
+		auto wordStr2 = shorten (substr (line, column2 - 1, column2 + end.length () - 1));
+		buf.write (format ("%% ┃ %%%%(y)%%%%(y)%%",
 				   Colors::get (BOLD), leftLine, Colors::get (RESET),
 				   line.substr (0, column - 1),
 				   Colors::get (UNDERLINE),
-				   substr (line, column - 1, column + word.length () - 1),
+				   wordStr,
 				   Colors::get(RESET),
-				   substr (line, column + word.length () - 1, column2 - 1),
+				   between,
 				   Colors::get (UNDERLINE),
-				   substr (line, column2 - 1, column2 + end.length () - 1),
+				   wordStr2,
 				   Colors::get (RESET),
-				   substr (line, column2 + end.length () - 1, line.length ())
+				   shorten (substr (line, column2 + end.length () - 1, line.length ()))
 		));
 		
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
-		buf.write (format ("%% | %", Colors::get (BOLD), padd, Colors::get (RESET)));
-		for (auto it = 0 ; it < column - 1 ; it++) {
+		buf.write (format ("%% ┃ %", Colors::get (BOLD), padd, Colors::get (RESET)));
+		for (ulong it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
-	       		
-		buf.write (rightJustify ("", word.length (), '^'));
-		for (auto it = column + word.length () - 1 ; it < column2 - 1 ; it++) {
+
+		column2 = column + between.length () + wordStr.length () - 1;
+		buf.write (rightJustify ("", wordStr.length (), '^'));
+		for (ulong it = column + wordStr.length () - 1 ; it < column2 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
 		}
 		
-		buf.write (rightJustify ("", end.length (), '^'));				
+		buf.write (rightJustify ("", wordStr2.length (), '^'));				
 		buf.write ('\n');
 	    } else addLineEof (buf, word);	    
 	}	
@@ -317,54 +313,78 @@ namespace Ymir {
 	    return buf.str ();
 	}
 	
-	std::string createNote (const lexing::Word & word) {
+	ErrorMsg createNote (const lexing::Word & word) {
 	    std::string aux = format ("%(b) : ", "Note");
-	    aux = addLine (aux, word);
-	    return aux;
+	    return ErrorMsg (word, aux);
+	}
+
+
+	ErrorMsg::ErrorMsg (const lexing::Word & begin, const std::string & msg) :
+	    begin (begin),
+	    end (lexing::Word::eof ()),
+	    msg (msg),
+	    one_line (false)
+	{}
+
+	ErrorMsg::ErrorMsg (const lexing::Word & begin, const lexing::Word & end, const std::string & msg) :
+	    begin (begin),
+	    end (end),
+	    msg (msg),
+	    one_line (false)
+	{}
+
+	ErrorMsg::ErrorMsg (const std::string & msg) :
+	    begin (lexing::Word::eof ()),
+	    end (lexing::Word::eof ()),
+	    msg (msg),
+	    one_line (true)
+	{}
+
+	void ErrorMsg::addNote (const ErrorMsg & other) {
+	    this-> notes.push_back (other);
+	}
+
+	std::string ErrorMsg::computeMessage () const {
+	    std::string ret;
+	    if (this-> begin.isEof ()) ret = msg + "\n";
+	    else if (this-> end.isEof ()) {
+		ret = addLine (this-> msg, this-> begin);
+	    } else {
+		ret = addLine (this-> msg, this-> begin, this-> end);
+	    }
+
+	    int z = 0;
+	    bool oneLine = false;
+	    for (auto & it : this-> notes) {
+		if (!it.isEmpty ()) {
+		    ret = Ymir::Error::addNote (this-> begin, ret, it.computeMessage (), z == 0, oneLine);
+		    z += 1;
+		    oneLine = it.one_line;
+		}		
+	    }
+	    
+	    if (z != 0) { // Added some notes
+		auto leftLine = center (format ("%", this-> begin.getLine ()), 3, ' ');
+		auto padd = center ("", leftLine.length (), ' ');
+		ret = ret + format ("%% ┗%* %\n", Colors::get (BOLD), padd, 30, "━", Colors::get (RESET));
+	    }
+	    
+	    		    
+	    return ret;
+	}
+	
+	bool ErrorMsg::isEmpty () const {
+	    return this-> msg == "";
+	}
+
+	const lexing::Word & ErrorMsg::getLocation () const {
+	    return this-> begin;
+	}
+
+	const std::string & ErrorMsg::getMessage () const {
+	    return this-> msg;
 	}
 	
     }
-
-
-    bool runCommand (char *sys) {
-	auto fp = popen (sys, "r");
-	if (fp == NULL) return false;	
     
-	char path[255];
-	memset (path, 0, 255 - 1);    
-	fprintf (stderr, "in function : ");
-	auto func = fgets (path, 255 - 1, fp);
-	fprintf (stderr, "%s", func);
-	fprintf (stderr, "\t%s", fgets (path, 255 - 1, fp));    
-	pclose (fp);
-	return true;
-    }
-
-    void bt_print () {    		
-	// void *trace[16];
-	// char **messages = (char **)NULL;
-	// int i, trace_size = 0;
-
-	// trace_size = backtrace(trace, 16);
-	// messages = backtrace_symbols(trace, trace_size);
-	// /* skip first stack frame (points here) */
-	// fprintf(stderr, "[bt] Execution path:\n");
-	// for (i=2; i<trace_size; ++i)
-	//     {
-	// 	fprintf(stderr, "[bt] #%d ", i - 1);
-	// 	/* find first occurence of '(' or ' ' in message[i] and assume
-	// 	 * everything before that is the file name. (Don't go beyond 0 though
-	// 	 * (string terminator)*/
-	// 	size_t p = 0;
-	// 	while(messages[i][p] != '(' && messages[i][p] != ' '
-	// 	      && messages[i][p] != 0)
-	// 	    ++p;
-
-	// 	char syscom[256];
-	// 	snprintf(syscom, 256, "addr2line %p -f -e %.*s", trace[i], (int) p, messages[i]);
-	// 	if (!runCommand (syscom))
-	// 	    fprintf (stderr, "%s %p\n", messages [i], trace [i]);
-	//     }
-    }
-
 }

@@ -51,9 +51,9 @@ namespace semantic {
 	
 	std::string ParamVar::prettyString () const {
 	    if (this-> _isMutable) 
-		return Ymir::format ("mut % : %", this-> getLocation ().str, this-> getType ().prettyString ());
+		return Ymir::format ("mut % : %", this-> getLocation ().getStr (), this-> getType ().prettyString ());
 	    else
-		return Ymir::format ("% : %", this-> getLocation ().str, this-> getType ().prettyString ());
+		return Ymir::format ("% : %", this-> getLocation ().getStr (), this-> getType ().prettyString ());
 	}
     }
 }

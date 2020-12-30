@@ -117,8 +117,7 @@ namespace semantic {
 	    auto fst = content.substr (it).find_first_of ('{');
 	    auto scd = content.substr (it).find_first_of ('}');
 	    if (fst == std::string::npos || scd == std::string::npos)  {
-		auto real_loc = loc;
-		real_loc.column += it;
+		auto real_loc = loc.setColumn (loc.getColumn () + it);
 		Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
 	    }
 
@@ -137,32 +136,48 @@ namespace semantic {
 	    it = it + scd;
 
 	}
-	       		
-	std::string UtfVisitor::escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size) {
+	
+	std::string UtfVisitor::escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size, bool error) {
 	    OutBuffer buf;
 	    int it = 0;
 	    static std::vector <char> escape = {'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '\"', '"', '?'};
 	    static std::vector <uint> values = {7, 8, 12, 10, 13, 9, 11, 92, 39, 34, 63};
-		    
+
+	    int col = 0, line = 0;
 	    while (it < (int) content.size ()) {
+		if (content [it] == '\n') {
+		    line += 1;
+		    col = 0;
+		} else col += 1;
+		
 		if (content [it] == '\\') {
 		    if (it + 1 < (int) content.size ()) {
-			it += 1;
-			if (content [it] == 'u') escapeUnicode (loc, it, content, buf, size);
-			else {
-			    auto pos = std::find (escape.begin (), escape.end (), content [it]) - escape.begin ();
+			if (content [it + 1] == 'u') {
+			    it += 1;
+			    escapeUnicode (loc, it, content, buf, size);
+			} else {
+			    auto pos = std::find (escape.begin (), escape.end (), content [it + 1]) - escape.begin ();
 			    if (pos >= (int) escape.size ()) {
-				auto real_loc = loc;
-				real_loc.column += it;
-				Error::occur (real_loc, ExternalError::get (UNDEFINED_ESCAPE));
+				if (error) {
+				    auto real_loc = loc.setColumn (loc.getColumn () + col);
+				    real_loc = real_loc.setLine (loc.getLine () + line);
+				    Error::occur (real_loc, ExternalError::get (UNDEFINED_ESCAPE));
+				} else {
+				    buf.write (content [it]);
+				}
+			    } else {
+				it += 1;
+				buf.write ((char) values [pos]);
 			    }
-				    
-			    buf.write ((char) values [pos]);
 			}
 		    } else {
-			auto real_loc = loc;
-			real_loc.column += it;
-			Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
+			if (error) {
+			    auto real_loc = loc.setColumn (loc.getColumn () + col);
+			    real_loc = real_loc.setLine (loc.getLine () + line);
+			    Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
+			} else {
+			    buf.write (content [it]);
+			}
 		    }
 		} else buf.write (content [it]);
 		it ++;
@@ -187,7 +202,7 @@ namespace semantic {
 	}
 	
 	uint UtfVisitor::convertChar (const lexing::Word & loc, const lexing::Word & content, int size) {
-	    auto str =  escapeChar (loc, content.str, size == 32 ? Keys::U32 : Keys::U8);
+	    auto str =  escapeChar (loc, content.getStr (), size == 32 ? Keys::U32 : Keys::U8, true);
 	    if (size == 32) {
 		std::vector <uint> utf_32 = utf8_to_utf32 (str);			
 		if (utf_32.size () != 1) {		    
@@ -204,8 +219,12 @@ namespace semantic {
 	    return 0;
 	}
 
-	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const lexing::Word & content, int size, int & len) {
-	    auto str = escapeChar (loc, content.str, size == 32 ? Keys::U32 : Keys::U8);
+	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const lexing::Word & content, int size, int & len, bool error) {
+	    return convertString (loc, content.getStr (), size, len, error);
+	}
+
+	std::vector <char> UtfVisitor::convertString (const lexing::Word & loc, const std::string & content, int size, int & len, bool error) {
+	    auto str = escapeChar (loc, content, size == 32 ? Keys::U32 : Keys::U8, error);
 	    if (size == 32) {
 		std::vector <uint> utf_32 = utf8_to_utf32 (str);
 		auto ret = toString (utf_32);
@@ -220,7 +239,7 @@ namespace semantic {
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    return {};
+	    return {};	    
 	}
 
 	std::vector <char> UtfVisitor::utf32_to_utf8 (const std::vector <char> & utf32) {

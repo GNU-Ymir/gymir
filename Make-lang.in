@@ -26,7 +26,7 @@ ALL_YFLAGS = $(PICFLAG) $(ALIASING_FLAGS) $(COVERAGE_FLAGS) $(WARN_YFLAGS) -g
 YCOMPILE.base = $(CXX) $(NO_PIE_CFLAGS) -c $(ALL_YFLAGS) -o $@
 YCOMPILE = $(YCOMPILE.base) -MT $@ -MMD -MP -MF $(@D)/$(DEPDIR)/$(*F).TPo 
 YPOSTCOMPILE = @mv $(@D)/$(DEPDIR)/$(*F).TPo $(@D)/$(DEPDIR)/$(*F).Po
-YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++ -lgc
+YLINKER = $(CXX) $(NO_PIE_CFLAG) -lstdc++ 
 
 # The compiler proper
  
@@ -218,6 +218,7 @@ ymir_OBJS = \
 	ymir/global_Core.o \
 	ymir/global_State.o \
 	ymir/lexing_Lexer.o \
+	ymir/lexing_File.o \
 	ymir/lexing_Token.o \
 	ymir/lexing_Word.o \
 	ymir/parsing_Parser.o \
@@ -271,7 +272,7 @@ ymir_OBJS = \
 
 ymir1$(exeext): attribs.o $(ymir_OBJS) $(BACKEND) $(LIBDEPS)
 	+$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) -o $@ \
-	attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS) -lgc
+	attribs.o $(ymir_OBJS) $(BACKEND) $(LIBS) $(BACKENDLIBS)
  
 ymir.all.cross: 
  

@@ -13,7 +13,7 @@ namespace semantic {
 	}
 
 	Enum::Enum (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, loc.str, Void::init (loc)),
+	    Value (loc, loc.getStr (), Void::init (loc)),
 	    _type (Generator::empty ())
 	{
 	    auto aux = ref;

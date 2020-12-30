@@ -13,9 +13,11 @@ namespace syntax {
     class MacroRule : public IDeclaration {
 	
 	Expression _rule;
-	
-	std::string _content;
 
+	lexing::Word _contentLoc;
+	
+	std::string _content;	
+	
 	std::vector<Expression> _skips;
 	
     private :
@@ -24,11 +26,11 @@ namespace syntax {
 
 	MacroRule ();
 
-	MacroRule (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
+	MacroRule (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
     public :
 
-	static Declaration init (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
+	static Declaration init (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
 	static Declaration init (const MacroRule & rule);
 
@@ -38,6 +40,8 @@ namespace syntax {
 
 	const std::string & getContent () const;
 
+	const lexing::Word & getContentLoc () const;
+	
 	const Expression & getRule () const;	
 	
 	const std::vector<Expression> & getSkips () const;

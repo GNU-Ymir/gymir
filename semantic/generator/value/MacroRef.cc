@@ -46,7 +46,7 @@ namespace semantic {
 	}
 
 	std::string MacroRef::prettyString () const {	    
-	    return Ymir::format ("__macro %", (Symbol {this-> _ref}).to <semantic::Macro> ().getName ().str);
+	    return Ymir::format ("__macro %", (Symbol {this-> _ref}).to <semantic::Macro> ().getName ().getStr ());
 	}
 	
     }

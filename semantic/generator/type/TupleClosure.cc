@@ -11,7 +11,7 @@ namespace semantic {
 	}
 
 	TupleClosure::TupleClosure (const lexing::Word & loc, const std::vector <Generator> & inner) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{
 	    this-> isComplex (true);
 	    auto aux = inner;

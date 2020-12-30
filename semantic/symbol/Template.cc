@@ -81,7 +81,7 @@ namespace semantic {
     
     std::string Template::prettyString () const {
 	Ymir::OutBuffer buf;
-	buf.writef ("% (", this-> getName ().str);
+	buf.writef ("% (", this-> getName ().getStr ());
 	for (auto it : Ymir::r (0, this-> _params.size ())) {
 	    if (it != 0)
 		buf.write (", ");

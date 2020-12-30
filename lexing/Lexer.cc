@@ -12,61 +12,27 @@
 namespace lexing {
 
     using namespace Ymir;
-    
-    std::string readln (FILE * i) {
-	unsigned long max = 255;
-	std::string final = "";
-	char buf [255];
-	while (1) {
-	    char * aux = fgets(buf, max, i);
-	    if (aux == NULL) {
-		return "";
-	    }
-	    
-	    std::string ret = std::string (buf);
-	    final += ret;
-	    	    
-	    if (ret.size () != max - 1) {
-		return final;
-	    }
-	    else max *= 2;      
-	}
-    }
-
-    std::string read (FILE * i) {
-	auto tell = ftell (i);
-	fseek (i, 0, SEEK_END);
-	auto length = ftell (i) - tell;
-	char * buf = new char [length];
-	fseek (i, tell, SEEK_SET);
-	
-	auto size = fread (buf, 1, length, i);
-	buf [size] = '\0';
-	std::string ret = std::string (buf);
-	delete buf;
-	
-	return ret;
-    }
-
+  
     Lexer::Lexer () :
 	line (0),
 	column (0),
 	enableComment (false),
-	current (-1)
+	current (-1),
+	file (lexing::File::empty ())
     {
 	this-> filename = "";
-	this-> file = NULL;
     }
     
     Lexer :: Lexer (const char * filename,
-		    FILE * file, 
+		    const lexing::File & file, 
 		    const std::vector <std::string> &skips,
 		    const std::map <std::string, std::pair <std::string, std::string> > &comments
     ) :
 	line (1),
 	column (1),
 	enableComment (true),
-	current (-1)
+	current (-1),
+	file (file)
     {
 	
 	for (auto it : skips) {
@@ -76,121 +42,33 @@ namespace lexing {
 	this-> filename = filename;
 	this-> tokens = Token::members ();
 	this-> comments = comments;	
-	this -> file = file;
 	this-> disposed = false;
     }
 
-
-    Lexer :: Lexer (const Lexer & lex) {
-	this-> line = lex.line;
-	this-> column = lex.column;
-	this-> enableComment = lex.enableComment;
-	this-> disposed = lex.disposed;
-	this-> filename = lex.filename;
-	this-> skips = lex.skips;
-	this-> tokens = lex.tokens;
-	this-> comments = lex.comments;
-	this-> reads = lex.reads;
-	this-> docs = lex.docs;
-	this-> current = lex.current;
-
-	if (lex.isFromString) {
-	    auto name = tmpnam (new char [L_tmpnam]);
-	    this-> file = fopen (name, "w");
-	    fseek (this-> file, 0, SEEK_SET);
-	    fwrite (lex.content.c_str (), lex.content.length (), sizeof (char), this-> file);
-	    fclose (this-> file);
-
-	    this-> file = fopen (name, "r");
-	    fseek (this-> file, ftell (lex.file), SEEK_SET);
-	    this-> string_name = name;
-	    delete name;
-	} else this-> file = lex.file;
-	
-	this-> line_map = lex.line_map;
-	this-> content = lex.content;
-	this-> isFromString = lex.isFromString;
-	this-> start = lex.start;
-    }
-
-    const Lexer & Lexer :: operator= (const Lexer & lex) {
-	dispose ();
-	
-	this-> line = lex.line;
-	this-> column = lex.column;
-	this-> enableComment = lex.enableComment;
-	this-> disposed = lex.disposed;
-	this-> filename = lex.filename;
-	this-> skips = lex.skips;
-	this-> tokens = lex.tokens;
-	this-> comments = lex.comments;
-	this-> reads = lex.reads;
-	this-> docs = lex.docs;
-	this-> current = lex.current;
-
-	if (lex.isFromString) {	    
-	    auto name = tmpnam (new char [L_tmpnam]);
-	    this-> file = fopen (name, "w");
-	    fseek (this-> file, 0, SEEK_SET);
-	    fwrite (lex.content.c_str (), lex.content.length (), sizeof (char), this-> file);
-	    fclose (this-> file);
-
-	    this-> file = fopen (name, "r");
-	    fseek (this-> file, ftell (lex.file), SEEK_SET);
-	    this-> string_name = name;
-	    
-	    delete name;
-	} else {
-	    this-> file = lex.file;
-	}
-	
-	this-> line_map = lex.line_map;
-	this-> content = lex.content;
-	this-> isFromString = lex.isFromString;
-	this-> start = lex.start;
-	return lex;
-    }
     
-    Lexer Lexer::initFromString (const std::string & content, const std::string & filename, const std::vector <std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, ulong start) {
-	auto name = tmpnam (new char [L_tmpnam]);
-	FILE * tmp = fopen (name, "w");
-	fwrite (content.c_str (), content.length (), sizeof (char), tmp);
-
-	fclose (tmp);
-	tmp = fopen (name, "r");
+    Lexer Lexer::initFromString (const lexing::File & file, const std::string & filename, const std::vector <std::string> &skips, const std::map <std::string, std::pair <std::string, std::string> > &comments, ulong start) {
+	auto lex = Lexer (filename.c_str (), file, skips, comments);
 	
-	auto lex = Lexer (filename.c_str (), tmp, skips, comments);
-	
-	lex.content = content;
 	lex.isFromString = true;
-	lex.line = start;
+	lex.line = start + 1;
 	lex.start = start;
-	lex.string_name = name;	
 
-	delete name;	
 	return lex;
     }
-
-    void Lexer::dispose () {
-	if (isFromString) {
-	    fclose (this-> file);
-	    remove (this-> string_name.c_str ());
-	}
-    }
-    
-    Lexer :: ~Lexer () {
-	dispose ();
-    }
-
+   
 
     Word Lexer::fileLocus () {
 	Word loc;
-	loc.setLocus (this-> filename, 0, 0, 0);
+	loc = loc.setLocation (this-> file, this-> filename, 0, 0, 0);
 	return loc;
     }
 
     std::string Lexer::getFilename () const {
 	return this-> filename;
+    }
+
+    lexing::File Lexer::getFile () const {
+	return this-> file;
     }
 
     void Lexer::skipEnable (const std::string &elem, bool on) {
@@ -264,7 +142,7 @@ namespace lexing {
 	}
 	
 	this-> rewind ();
-	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.str);
+	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
 	
 	return Word::eof (this-> filename);
     }
@@ -277,7 +155,7 @@ namespace lexing {
 	}
 	
 	this-> rewind ();
-	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.str);
+	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
 	
 	return Word::eof (this-> filename);
     }
@@ -310,14 +188,14 @@ namespace lexing {
 	OutBuffer buf;
 	do {
 	    if (!getWord (word)) {
-		word.setEof (this-> filename);
+		word = lexing::Word::eof (this-> filename);
 		break;
 	    } else {
 		std::string com, ign;
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
 		    do {
-			word.setEof (this-> filename);
+			word = lexing::Word::eof (this-> filename);
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
 			    if (word.getStr () == Token::RETURN) {
@@ -344,14 +222,14 @@ namespace lexing {
 	OutBuffer buf;
 	do {
 	    if (!getWord (word)) {
-		word.setEof (this-> filename);
+		word = lexing::Word::eof (this-> filename);
 		break;
 	    } else {
 		std::string com, ign;
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
 		    do {
-			word.setEof (this-> filename);
+			word = lexing::Word::eof (this-> filename);
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
 			    if (word.getStr () == Token::RETURN) {
@@ -393,9 +271,9 @@ namespace lexing {
     }
 
     bool Lexer::getWord (Word & word) {
-	if (feof (this-> file) != 0) return false;
-	auto where = ftell (this-> file);
-	auto line = readln (this-> file);
+	if (this-> file.isEof ()) return false;
+	auto where = this-> file.tell ();
+	auto line  = this-> file.readln ();
 	if (line == "") return false;
 	ulong max = 0, beg = line.length ();
 	for (auto it : this-> tokens) {
@@ -426,38 +304,38 @@ namespace lexing {
 
     void Lexer::constructWord (Word & word, ulong beg, ulong max, const std::string& line, ulong where) {
 	if (this-> isFromString) {
-	    word.setFromString (this-> content, this-> start);	    
+	    word = word.setFromString (this-> start);	    
 	}
 
-	if (beg == line.length () + 1) word.setStr (line);
+	if (beg == line.length () + 1) word = word.setStr (line);
 	else if (beg == 0) {
-	    word.setStr (line.substr (0, min (max, line.length ())));
-	    fseek (this-> file, where + max, SEEK_SET);	    
+	    word = word.setStr (line.substr (0, min (max, line.length ())));
+	    this-> file.seek (where + max);	    
 	} else if (beg > 0) {
-	    word.setStr (line.substr (0, min (beg, line.length ())));
-	    fseek (this-> file, where + beg, SEEK_SET);
+	    word = word.setStr (line.substr (0, min (beg, line.length ())));
+	    this-> file.seek (where + beg);
 	}
-	word.setLocus (this-> filename, this-> line, this-> column, where);
+	
+	word = word.setLocation (this-> file, this-> filename, this-> line, this-> column, where);
     }
 
     std::string Lexer::formatRestOfFile () {
-	auto tell = ftell (this-> file);
+	auto tell = this-> file.tell ();
 	if (this-> current < (long) (this-> reads.size ()) - 1) {
 	    if (this-> reads [this-> current + 1].isEof ()) return "";
-	    fseek (this-> file, this-> reads [this-> current + 1].seek, SEEK_SET);
+	    this-> file.seek (this-> reads [this-> current + 1].getSeek ());
 	} 
 
-	auto end = read (this-> file);
-	fseek (this-> file, tell, SEEK_SET);
+	auto end = this-> file.readAll ();
+	this-> file.seek (tell);
 	return end;
-    }   
-
-    const std::string & Lexer::getContent () const {
-	return this-> content;
     }
 
-    const std::string & Lexer::getStringName () const {
-	return this-> string_name;
+    void Lexer::correctFileCursor () {
+	if (this-> current < (long) this-> reads.size () - 1) {
+	    if (!this-> reads [this-> current + 1].isEof ())
+		this-> file.seek (this-> reads [this-> current + 1].getSeek ());
+	}
     }
     
 }

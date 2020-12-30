@@ -53,7 +53,7 @@ namespace syntax {
     }
 
     std::string Binary::prettyString () const {
-	return this-> _left.prettyString () + this-> getLocation ().str + this-> _right.prettyString ();
+	return this-> _left.prettyString () + this-> getLocation ().getStr () + this-> _right.prettyString ();
     }
     
 }

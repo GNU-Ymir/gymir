@@ -14,8 +14,8 @@ namespace syntax {
 
     Visitor::Visitor () {}
 
-    Visitor Visitor::init (const std::string & path, FILE * file) {
-	lexing::Lexer lexer (path.c_str (), file,
+    Visitor Visitor::init (const std::string & path) {
+	lexing::Lexer lexer (path.c_str (), lexing::RealFile::init (path.c_str ()), 
 		     {Token::SPACE, Token::RETURN, Token::RRETURN, Token::TAB},
 		     {
 			 {Token::LCOMM1, {Token::RCOMM1, ""}},
@@ -24,14 +24,14 @@ namespace syntax {
 				     {Token::LCOMM4, {Token::RCOMM3, Token::STAR}},
 					 {Token::LCOMM5, {Token::RCOMM5, Token::PLUS}} 
 		     }
-	);
-	
+	    );
 	return Visitor::init (lexer);
     }
     
-    Visitor Visitor::init (const lexing::Lexer & lexer) {
+    Visitor Visitor::init (const lexing::Lexer & lexer, bool strRetIg) {
 	Visitor visit {};
 	visit._lex = lexer;
+	visit._strRetIgnore = strRetIg;
 	visit._forbiddenKeys = {
 	    Keys::IMPORT, Keys::STRUCT, Keys::ASSERT, Keys::THROW_K, Keys::SCOPE,
 	    Keys::DEF, Keys::IF, Keys::RETURN, Keys::PRAGMA, 
@@ -148,7 +148,7 @@ namespace syntax {
 	} while (!token.isEof ());
 
 	if (space.isEof ())
-	    space.setLocus (this-> _lex.getFilename (), 0, 0, 0);
+	    space = space.setLocation (this-> _lex.getFile (), this-> _lex.getFilename (), 0, 0, 0);
 
 	auto ret = Module::init (space, comments, decls, true);
 	return ret;
@@ -182,7 +182,7 @@ namespace syntax {
 	auto ident = visitIdentifier ();
 	std::vector <Declaration> decls;
 	
-	if (global::State::instance ().isVersionActive (ident.str)) {
+	if (global::State::instance ().isVersionActive (ident.getStr ())) {
 	    auto token = this-> _lex.next ({Token::LACC});
 	
 	    do {
@@ -283,7 +283,7 @@ namespace syntax {
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto ident = visitIdentifier ();
 	std::vector <Declaration> decls;
-	if (global::State::instance ().isVersionActive (ident.str)) {
+	if (global::State::instance ().isVersionActive (ident.getStr ())) {
 	    decls = visitMacroBlock ();
 	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
 		ignoreBlock ();
@@ -352,12 +352,13 @@ namespace syntax {
 	}
 	
 	if (name != Keys::SELF) {
-	    if (this-> _lex.consumeIf ({Token::SEMI_COLON}) == Token::SEMI_COLON) {
-		return MacroRule::init (name, comments, expr, "", skips);	
+	    auto nx = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    if (nx == Token::SEMI_COLON) {
+		return MacroRule::init (name, nx, comments, expr, "", skips);	
 	    }
 	}       	
 
-	auto tok = this-> _lex.next ({Token::LACC});
+	auto begin_content = this-> _lex.next ({Token::LACC});
 	std::string open, close;
 	open = Token::LACC;
 	auto sec_open = Token::MACRO_ACC;
@@ -375,17 +376,17 @@ namespace syntax {
 	do {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
-		auto note = Ymir::Error::createNote (tok);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+		auto note = Ymir::Error::createNote (begin_content);
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
 	    } else if (cursor == close) {
 		nb -= 1;
 		if (nb != 0)
-		    all.write (cursor.str);
+		    all.write (cursor.getStr ());
 	    } else if (cursor == open || cursor == sec_open) {
 		nb += 1;
-		all.write (cursor.str);
+		all.write (cursor.getStr ());
 	    } else {
-		all.write (cursor.str);
+		all.write (cursor.getStr ());
 	    }
 	} while (nb > 0);
 
@@ -395,9 +396,9 @@ namespace syntax {
 	this-> _lex.skipEnable (Token::RRETURN, true);
 	this-> _lex.commentEnable (true);
 	if (name == Keys::SELF) {
-	    return MacroConstructor::init (name, comments, expr, Ymir::trim (all.str ()), skips);
+	    return MacroConstructor::init (name, begin_content, comments, expr, Ymir::trim (all.str ()), skips);
 	} else {
-	    return MacroRule::init (name, comments, expr, Ymir::trim (all.str ()), skips);
+	    return MacroRule::init (name, begin_content, comments, expr, Ymir::trim (all.str ()), skips);
 	}
     }
 
@@ -561,7 +562,7 @@ namespace syntax {
 	    if (token == Token::RACC) {
 		close -= 1;
 	    } else if (token.isEof ())
-		Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
 	} while (close != 0);
     }
 
@@ -572,7 +573,7 @@ namespace syntax {
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto ident = visitIdentifier ();
 	std::vector <Declaration> decls;
-	if (global::State::instance ().isVersionActive (ident.str)) {
+	if (global::State::instance ().isVersionActive (ident.getStr ())) {
 	    decls = visitClassBlock (fromTrait);
 	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
 		ignoreBlock ();
@@ -668,14 +669,14 @@ namespace syntax {
 		if (ident == Keys::SUPER) {
 		    getSuper = ident;
 		    if (supers.size () != 0)
-			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.str);
+			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
 		    this-> _lex.next ({Token::LPAR});
 		    supers = visitParamList (true);
 		    this-> _lex.next ({Token::RPAR});
 		} else if (ident == Keys::SELF) {
 		    getSelf = ident;
 		    if (supers.size () != 0)
-			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.str);
+			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
 		    this-> _lex.next ({Token::LPAR});
 		    supers = visitParamList (true);
 		    this-> _lex.next ({Token::RPAR});
@@ -759,7 +760,7 @@ namespace syntax {
 	auto attribs = visitAttributes ();
 	auto name = visitIdentifier ();
 	if (name == Keys::SELF)
-	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.str);
+	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.getStr ());
 	
 	auto befTemplates = this-> _lex.tell ();
 	auto templates = visitTemplateParameters ();
@@ -1204,7 +1205,7 @@ namespace syntax {
 	    end = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
 	    if (end != Token::RACC && end != Token::SEMI_COLON) {
 		last = false;
-		if (this-> _lex.consumeIf (this-> _declarationsBlock).str != "") {
+		if (this-> _lex.consumeIf (this-> _declarationsBlock).getStr () != "") {
 		    this-> _lex.rewind ();
 		    decls.push_back (visitDeclaration ());
 		} else 
@@ -1438,7 +1439,7 @@ namespace syntax {
     Expression Visitor::visitVersion () {
 	auto location = this-> _lex.next ({Keys::VERSION});
 	auto ident = visitIdentifier ();
-	if (global::State::instance ().isVersionActive (ident.str)) {
+	if (global::State::instance ().isVersionActive (ident.getStr ())) {
 	    auto value = visitBlock ();	    
 	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
 		ignoreBlock ();
@@ -1492,7 +1493,7 @@ namespace syntax {
 	    for (auto d : decos) {
 		if (d.getValue () == deco.getValue ()) {
 		    auto note = Ymir::Error::createNote (d.getLocation ());
-		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
 		}
 	    }
 	    
@@ -1573,16 +1574,16 @@ namespace syntax {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (tok);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
 	    } else if (cursor == close) {
 		nb -= 1;
 		if (nb != 0)
-		    all.write (cursor.str);
+		    all.write (cursor.getStr ());
 	    } else if (cursor == open) {
 		nb += 1;
-		all.write (cursor.str);
+		all.write (cursor.getStr ());
 	    } else {
-		all.write (cursor.str);
+		all.write (cursor.getStr ());
 	    }
 	} while (nb > 0);
 
@@ -1721,7 +1722,7 @@ namespace syntax {
     Expression Visitor::visitLiteral () {
 	auto tok = this-> _lex.next ();
 	this-> _lex.rewind ();
-	if ((tok.str [0] >= '0' && tok.str [0] <= '9') || (tok.str [0] == '_' && tok.str.length () != 1))
+	if ((tok.getStr () [0] >= '0' && tok.getStr () [0] <= '9') || (tok.getStr () [0] == '_' && tok.getStr ().length () != 1))
 	                                               return visitNumeric ();
 	if (tok == Token::DOT)                         return visitFloat (lexing::Word::eof ());
 	if (tok == Token::APOS)                        return visitChar ();
@@ -1730,35 +1731,35 @@ namespace syntax {
 	if (tok == Keys::NULL_)                        return Null::init (this-> _lex.next ());
 	if (tok == Token::DOLLAR)                      return Dollar::init (this-> _lex.next ());
 	
-	Error::occur (tok, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), tok.str);
+	Error::occur (tok, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), tok.getStr ());
 	return Expression::empty ();
     }
 
     Expression Visitor::visitNumeric () {
 	auto begin = this-> _lex.next ();	
-	if (begin.str.length () >= 4) {
-	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 3)};
-	    suffix.column += begin.str.length () - 3;
+	if (begin.getStr ().length () >= 4) {
+	    auto suffix = lexing::Word {begin, begin.getStr ().substr (begin.getStr ().length () - 3)};
+	    suffix = suffix.setColumn (suffix.getColumn () + begin.getStr ().length () - 3);
 	    
 	    if (suffix.is (this-> _fixedSuffixes)) {
-		auto value = begin.str.substr (0, begin.str.length () - 3);
+		auto value = begin.getStr ().substr (0, begin.getStr ().length () - 3);
 		verifNumeric (begin, value);
 		return Fixed::init ({begin, value}, suffix);
 	    }
 	}
 	
-	if (begin.str.length () >= 3) {
-	    auto suffix = lexing::Word {begin, begin.str.substr (begin.str.length () - 2)};
-	    suffix.column += begin.str.length () - 2;
+	if (begin.getStr ().length () >= 3) {
+	    auto suffix = lexing::Word {begin, begin.getStr ().substr (begin.getStr ().length () - 2)};
+	    suffix = suffix.setColumn (suffix.getColumn () + begin.getStr ().length () - 2);
 	    
 	    if (suffix.is (this-> _fixedSuffixes)) {
-		auto value = begin.str.substr (0, begin.str.length () - 2);
+		auto value = begin.getStr ().substr (0, begin.getStr ().length () - 2);
 		verifNumeric (begin, value);
 		return Fixed::init ({begin, value}, suffix);
 	    }
 	}
 	
-	auto value = begin.str;
+	auto value = begin.getStr ();
 	if (!verifNumeric (begin, value)) {
 	    auto next = this-> _lex.consumeIf ({Token::DOT});
 	    if (next == Token::DOT) {
@@ -1774,21 +1775,21 @@ namespace syntax {
 	if (value.length () > 2 && value [0] == '0' && value [1] == Keys::LX [0]) {
 	    for (uint i = 2 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && (value [i] < 'A' || value [i] > 'F') && (value [i] < 'a' || value [i] > 'f') && value [i] != Keys::UNDER [0]) {
-		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.str);
+		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.getStr ());
 		}
 	    }
 	    return true;
 	} else if (value.length () > 2 && value [0] == '0' && value [1] == 'o') {
 	    for (uint i = 2 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '7') && value [i] != Keys::UNDER [0]) {
-		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.str);
+		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.getStr ());
 		}
 	    }
 	    return true;
 	} else {
 	    for (uint i = 0 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && value [i] != Keys::UNDER [0]) {
-		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.str);
+		    Error::occur (loc, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), loc.getStr ());
 		}
 	    }
 	    return false;
@@ -1808,25 +1809,25 @@ namespace syntax {
 	this-> _lex.skipEnable (Token::RETURN, true);
 	this-> _lex.skipEnable (Token::RRETURN, true);
 	
-	if (after.str [0] >= '0' && after.str [0] <= '9') {
-	    if (after.str.length () >= 2) {
-		auto suffix = lexing::Word {after, after.str.substr (after.str.length () - 1)};
-		suffix.column += after.str.length () - 1;
+	if (after.getStr () [0] >= '0' && after.getStr () [0] <= '9') {
+	    if (after.getStr ().length () >= 2) {
+		auto suffix = lexing::Word {after, after.getStr ().substr (after.getStr ().length () - 1)};
+		suffix = suffix.setColumn (suffix.getColumn () + after.getStr ().length () - 1);
 	    
 		if (suffix.is (this-> _floatSuffix)) {
-		    auto value = after.str.substr (0, after.str.length () - 1);
+		    auto value = after.getStr ().substr (0, after.getStr ().length () - 1);
 		    if (!verifNumeric (after, value))
 			return Float::init (dot, begin, {after, value}, suffix);
 		    else
-			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.str);
+			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.getStr ());
 		}
 	    }
 	
-	    auto value = after.str;
+	    auto value = after.getStr ();
 	    for (uint i = 0 ; i < value.length (); i++) {
 		if ((value [i] < '0' || value [i] > '9') && value [i] != Keys::UNDER [0]) {
 		    if (begin.isEof ())
-			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.str);
+			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.getStr ());
 		    else {
 			this-> _lex.rewind ();
 			after = lexing::Word::eof ();
@@ -1836,7 +1837,7 @@ namespace syntax {
 	    }
 	    return Float::init (dot, begin, after, lexing::Word::eof ());
 	} else if (begin.isEof ()) {
-	    Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.str);
+	    Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.getStr ());
 	} else if (after.is (this-> _floatSuffix)) {
 	    return Float::init (dot, begin, lexing::Word::eof (), after);	    
 	} else this-> _lex.rewind ();
@@ -1858,20 +1859,21 @@ namespace syntax {
 	do {
 	    cursor = this-> _lex.next ();
 	    if (cursor == Token::TAB || cursor == Token::RETURN || cursor == Token::RRETURN) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (MUST_ESCAPE_CHAR));
-		note = note + Ymir::Error::createNote (begin) + "\n";
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+		std::list <Ymir::Error::ErrorMsg> notes;
+		notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (MUST_ESCAPE_CHAR)));
+		notes.push_back (Ymir::Error::createNote (begin));
+		Error::occurAndNote (cursor, notes, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
 	    } else if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (begin);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
 	    } else if (cursor != Token::APOS) {
-		all += cursor;
+		all = all + cursor;
 	    }
 	} while (cursor != Token::APOS);
 
 	auto format = this-> _lex.consumeIf (this-> _charSuffix);
-	if (!format.isEof () && format.str [0] == '_') {
-	    format = lexing::Word {format, format.str.substr (1, format.str.length  ()- 1)};
+	if (!format.isEof () && format.getStr () [0] == '_') {
+	    format = lexing::Word {format, format.getStr ().substr (1, format.getStr ().length  ()- 1)};
 	}
 	// We restore the skip and comments
 	this-> _lex.skipEnable (Token::SPACE, true);
@@ -1887,9 +1889,12 @@ namespace syntax {
 	auto begin = this-> _lex.next ({Token::GUILL});
 
 	this-> _lex.skipEnable (Token::SPACE,   false);
-	// this-> _lex.skipEnable (Token::TAB,     false);
-	// this-> _lex.skipEnable (Token::RETURN,  false);
-	// this-> _lex.skipEnable (Token::RRETURN, false);
+	if (!this-> _strRetIgnore) {
+	    this-> _lex.skipEnable (Token::TAB,     false);
+	    this-> _lex.skipEnable (Token::RETURN,  false);
+	    this-> _lex.skipEnable (Token::RRETURN, false);
+	}
+	
 	this-> _lex.commentEnable (false);
 
 	lexing::Word cursor = lexing::Word::eof ();
@@ -1898,21 +1903,23 @@ namespace syntax {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (begin);
-		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.str);		
+		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
 	    } else if (cursor != begin) {
-		all += cursor;
+		all = all + cursor;
 	    } 
 	} while (cursor != begin);
 
 	auto format = this-> _lex.consumeIf (this-> _stringSuffix);
-	if (!format.isEof () && format.str [0] == '_') {
-	    format = lexing::Word {format, format.str.substr (1, format.str.length  ()- 1)};
+	if (!format.isEof () && format.getStr () [0] == '_') {
+	    format = lexing::Word {format, format.getStr ().substr (1, format.getStr ().length  ()- 1)};
 	}
 	
 	this-> _lex.skipEnable (Token::SPACE,   true);
-	// this-> _lex.skipEnable (Token::TAB,     true); // Need to add the escape char to get a tab or a line break
-	// this-> _lex.skipEnable (Token::RETURN,  true);
-	// this-> _lex.skipEnable (Token::RRETURN, true);
+	if (!this-> _strRetIgnore) {
+	    this-> _lex.skipEnable (Token::TAB,     true); // Need to add the escape char to get a tab or a line break
+	    this-> _lex.skipEnable (Token::RETURN,  true);
+	    this-> _lex.skipEnable (Token::RRETURN, true);
+	}
 	this-> _lex.commentEnable (true);
 
 	return String::init (begin, cursor, all, format);
@@ -1949,7 +1956,7 @@ namespace syntax {
 	    for (auto d : decos) {
 		if (d.getValue () == deco.getValue ()) {
 		    auto note = Ymir::Error::createNote (d.getLocation ());
-		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
 		}
 	    }
 	    
@@ -1964,7 +1971,7 @@ namespace syntax {
 
 	if (name != Keys::SELF || !isClass) {
 	    if (name == Keys::SELF || isClass)
-		Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.str);
+		Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.getStr ());
 	    
 	    if (mandType) token = this-> _lex.next ({Token::COLON});
 	    else token = this-> _lex.next ();
@@ -1992,7 +1999,7 @@ namespace syntax {
 	    for (auto d : decos) {
 		if (d.getValue () == deco.getValue ()) {
 		    auto note = Ymir::Error::createNote (d.getLocation ());
-		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+		    Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
 		}
 	    }
 	    
@@ -2006,7 +2013,7 @@ namespace syntax {
 	}
 	
 	if (name == Keys::SELF)
-	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.str);
+	    Error::occur (name, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), name.getStr ());
 	
 	token = this-> _lex.next ({Token::COLON});	
 	token = this-> _lex.consumeIf ({Keys::UNDER});
@@ -2036,7 +2043,7 @@ namespace syntax {
 		for (auto d : decos) {
 		    if (d.getValue () == deco.getValue ()) {
 			auto note = Ymir::Error::createNote (d.getLocation ());
-			Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);
+			Error::occurAndNote (token, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());
 		    }
 		}
 	    
@@ -2093,13 +2100,13 @@ namespace syntax {
 	    if (token == Keys::UNDER) return ident + token;
 	    
 	    this-> _lex.rewind ();
-	    ident += visitIdentifier ();
+	    ident = ident + visitIdentifier ();
 
 	    token = this-> _lex.next ();
 	    if (token != Token::DCOLON) {
 		this-> _lex.rewind ();
 		break;
-	    } else ident += token;
+	    } else ident = ident + token;
 	    
 	} while (true);
 	
@@ -2109,7 +2116,7 @@ namespace syntax {
     lexing::Word Visitor::visitIdentifier () {
 	if (!canVisitIdentifier ()) {
 	    auto token = this-> _lex.next ();
-	    Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.str);		
+	    Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());		
 	}
 	return this-> _lex.next ();
     }
@@ -2125,7 +2132,7 @@ namespace syntax {
 	
 	int i = 0;
 	bool found = false;
-	for (auto it : token.str) {
+	for (auto it : token.getStr ()) {
 	    if ((it >= 'a' && it <= 'z') || (it >= 'A' && it <= 'Z')) {
 		found = true;
 		break;
@@ -2135,8 +2142,8 @@ namespace syntax {
 	}
 	
 	i ++;
-	if (i < (int) token.str.length ()) {
-	    for (auto it : token.str.substr (i)) {
+	if (i < (int) token.getStr ().length ()) {
+	    for (auto it : token.getStr ().substr (i)) {
 		if ((it < 'a' || it > 'z')
 		    && (it < 'A' || it > 'Z')
 		    && (it != '_')
@@ -2170,6 +2177,10 @@ namespace syntax {
 
     lexing::Lexer & Visitor::getLexer () {
 	return this-> _lex;
+    }
+
+    Visitor::~Visitor () {
+	this-> _lex.getFile ().close ();
     }
     
 }

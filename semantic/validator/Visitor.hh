@@ -850,7 +850,7 @@ namespace semantic {
 	    /**
 	     * \brief Exit a class context (Cf. enterClassDef)
 	     */
-	    void exitClassDef ();
+	    void exitClassDef (const semantic::Symbol & sym);
 	    
 	    /**
 	     * \return does the current context include context
@@ -888,6 +888,12 @@ namespace semantic {
 	     * \param name the name of the rule
 	     */
 	    std::vector <semantic::Symbol> getMacroRules (const lexing::Word & loc, const generator::MacroRef & ref, const std::string & name);
+
+	    /**
+	     * \return the list of macro rules of the current macro context
+	     * \param name the name of the rule
+	     */
+	    semantic::Symbol getCurrentMacroRules (const lexing::Word & loc, const std::string & name);
 	    
 	    /**
 	     * \return the list of constructors declared in the class

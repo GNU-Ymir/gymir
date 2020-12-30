@@ -63,7 +63,7 @@ namespace syntax {
     }
     
     std::string Intrinsics::prettyString () const {
-	return Ymir::format ("% (%)", this-> getLocation ().str, this-> _value.prettyString ());
+	return Ymir::format ("% (%)", this-> getLocation ().getStr (), this-> _value.prettyString ());
     }    
 
 }

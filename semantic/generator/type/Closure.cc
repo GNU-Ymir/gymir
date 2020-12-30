@@ -15,7 +15,7 @@ namespace semantic {
 	}
 
 	Closure::Closure (const lexing::Word & loc, const std::vector <Generator> & inner, const std::vector<std::string> & names, uint index) :
-	    Type (loc, loc.str),
+	    Type (loc, loc.getStr ()),
 	    _names (names),
 	    _index (index)
 	{

@@ -11,7 +11,7 @@ namespace semantic {
 	{}
 
 	TraitRef::TraitRef (const lexing::Word & loc, const Symbol & ref) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{
 	    this-> _ref = ref.getPtr ();
 	    if (!this-> _ref.lock ()) { // A structure is complex iif one of its field is complex
@@ -55,11 +55,11 @@ namespace semantic {
 	}
 	
 	std::string TraitRef::typeName () const {
-	    return Ymir::format ("%::%", (Symbol {this-> _ref}).getRealName (), this-> getLocation ().str);
+	    return Ymir::format ("%::%", (Symbol {this-> _ref}).getRealName (), this-> getLocation ().getStr ());
 	}
 
 	std::string TraitRef::getMangledName () const {
-	    return Ymir::format ("%::%", (Symbol {this-> _ref}).getMangledName (), this-> getLocation ().str);
+	    return Ymir::format ("%::%", (Symbol {this-> _ref}).getMangledName (), this-> getLocation ().getStr ());
 	}
 	
     }

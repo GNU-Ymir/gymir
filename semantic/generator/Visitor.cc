@@ -1575,12 +1575,12 @@ namespace semantic {
 	generic::Tree Visitor::generateThrow (const Throw & thr) {
 	    auto value = castTo (thr.getValue ().to <Value> ().getType (), thr.getValue ());
 	    auto info = generateValue (thr.getTypeInfo ());
-	    auto file = thr.getLocation ().getFile ();
+	    auto file = thr.getLocation ().getFilename ();
 	    auto lit = Tree::buildStringLiteral (thr.getLocation (), file.c_str (), file.length () + 1, 8);
 	    auto context = getCurrentContext ().funcDeclName ();
 	    auto func = Tree::buildStringLiteral (thr.getLocation (), context.c_str (), context.length () + 1, 8);
 	    
-	    auto line = Tree::buildIntCst (thr.getLocation (), (ulong) thr.getLocation ().line, Tree::intType (32, false));
+	    auto line = Tree::buildIntCst (thr.getLocation (), (ulong) thr.getLocation ().getLine (), Tree::intType (32, false));
 
 	    return Tree::buildCall (
 		thr.getLocation (),

@@ -11,7 +11,7 @@ namespace semantic {
 	{}
 
 	NoneType::NoneType (const lexing::Word & loc, const std::string & name) :
-	    Type (loc, loc.str),
+	    Type (loc, loc.getStr ()),
 	    _name (name)
 	{}
 

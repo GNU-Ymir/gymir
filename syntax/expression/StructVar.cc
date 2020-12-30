@@ -28,6 +28,6 @@ namespace syntax {
     }
 
     std::string StructVar::prettyString () const {
-	return "struct " + this-> getLocation ().str;
+	return "struct " + this-> getLocation ().getStr ();
     }
 }

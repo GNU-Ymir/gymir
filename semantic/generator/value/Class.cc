@@ -15,7 +15,7 @@ namespace semantic {
 	}
 
 	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) :
-	    Value (loc, loc.str, NoneType::init (loc, "class " + ref.getRealName ())),
+	    Value (loc, loc.getStr (), NoneType::init (loc, "class " + ref.getRealName ())),
 	    _classRef (clRef)
 	{
 	    auto aux = ref;
@@ -76,7 +76,7 @@ namespace semantic {
 	    
 	    // so we need to check that it belong to this class and not to an ancestor	    
 	    for (auto & it : (Symbol {this-> _ref}).to <semantic::Class> ().getFields ()) {
-		if (it.to <syntax::VarDecl> ().getName ().str == name) return type;
+		if (it.to <syntax::VarDecl> ().getName ().getStr () == name) return type;
 	    }
 	    return Generator::empty ();
 	}
@@ -95,7 +95,7 @@ namespace semantic {
 	    if (type.isEmpty ()) return type;
 	    // so we need to check that it belong to this class and not to an ancestor	    
 	    for (auto & it : ref.to <semantic::Class> ().getFields ()) {
-		if (it.to <syntax::VarDecl> ().getName ().str == name) {
+		if (it.to <syntax::VarDecl> ().getName ().getStr () == name) {
 		    if (ref.to <semantic::Class> ().isMarkedPrivate (name))
 			return Generator::empty ();
 		    return type;
@@ -118,7 +118,7 @@ namespace semantic {
 	    if (type.isEmpty ()) return type;
 	    // so we need to check that it belong to this class and not to an ancestor	    
 	    for (auto & it : ref.to <semantic::Class> ().getFields ()) {
-		if (it.to <syntax::VarDecl> ().getName ().str == name) {
+		if (it.to <syntax::VarDecl> ().getName ().getStr () == name) {
 		    if (ref.to <semantic::Class> ().isMarkedPrivate (name) ||
 			ref.to <semantic::Class> ().isMarkedProtected (name))
 			return Generator::empty ();

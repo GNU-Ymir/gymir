@@ -39,18 +39,33 @@ namespace semantic {
 	    /**
 	     * \brief Convert a string literal to an unicode string
 	     * \param loc the location of the string
-	     * \param content the content o the string literal
+	     * \param content the content of the string literal
 	     * \param size the type of the inner content (8, 16, 32)
 	     */
-	    std::vector<char> convertString (const lexing::Word& loc, const lexing::Word & content, int size, int & len);
+	    std::vector<char> convertString (const lexing::Word& loc, const lexing::Word & content, int size, int & len, bool error = true);
 
+	    /**
+	     * \brief Convert a string literal to an unicode string
+	     * \param loc the location of the string
+	     * \param content the content of the string literal
+	     * \param size the type of the inner content (8, 16, 32)
+	     */
+	    std::vector<char> convertString (const lexing::Word& loc, const std::string & content, int size, int & len, bool error = true);
+
+	    /**
+	     * Transform a utf32 string into a utf8 string
+	     */
 	    static std::vector <char> utf32_to_utf8 (const std::vector<char> & utf32);
 
+	    /**
+	     * Transform a utf8 string into a utf32 string
+	     */
+	    std::vector <uint> utf8_to_utf32 (const std::string& text);
+	    
 	private :
 
 	    size_t utf8_codepoint_size (uint8_t text);
 	    
-	    std::vector <uint> utf8_to_utf32 (const std::string& text);
 
 	    static void getUnicodeChar (int & nb, uint code, char chars[5]);
 
@@ -58,7 +73,7 @@ namespace semantic {
 
 	    std::vector<char> toString (const std::vector <uint> & content);
 	    
-	    std::string escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size);	    
+	    std::string escapeChar (const lexing::Word & loc, const std::string & content, const std::string & size, bool error);	    
 	    
 	};
 	

@@ -15,7 +15,7 @@ namespace semantic {
 	}
 
 	FuncPtr::FuncPtr (const lexing::Word & loc, const Generator & retType, const std::vector <Generator> & typeParams) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{
 	    this-> isComplex (true);
 	    std::vector <Generator> gens = typeParams;

@@ -1,6 +1,9 @@
 #include <ymir/semantic/validator/ForVisitor.hh>
 #include <ymir/semantic/generator/_.hh>
 #include <ymir/syntax/visitor/Keys.hh>
+#include <ymir/global/Core.hh>
+
+using namespace global;
 
 namespace semantic {
 
@@ -39,6 +42,10 @@ namespace semantic {
 
 		of (Tuple, t ATTRIBUTE_UNUSED,
 		    return validateTuple (expression, value);
+		);
+
+		of (ClassPtr, p ATTRIBUTE_UNUSED,
+		    return validateClass (expression, value);
 		);
 		
 	    }
@@ -83,10 +90,10 @@ namespace semantic {
 	    
 	    this-> _context.verifyMemoryOwner (loc, type, value, true);	    
 	    
-	    auto ret = generator::VarDecl::init (loc, var.getName ().str, type, value, isMutable);
+	    auto ret = generator::VarDecl::init (loc, var.getName ().getStr (), type, value, isMutable);
 	    
 	    if (var.getName () != Keys::UNDER) {
-		this-> _context.insertLocal (var.getName ().str, ret);
+		this-> _context.insertLocal (var.getName ().getStr (), ret);
 	    }
 	    
 	    return ret;
@@ -100,7 +107,7 @@ namespace semantic {
 		auto deco = decl.getDecorators ()[0];
 		Ymir::Error::occur (deco.getLocation (),
 				    ExternalError::get (DECO_OUT_OF_CONTEXT),
-				    deco.getLocation ().str
+				    deco.getLocation ().getStr ()
 		);
 	    }
 	    
@@ -119,14 +126,14 @@ namespace semantic {
 	    } 
 
 	    auto var = generator::VarDecl::init (loc,
-						 decl.getName ().str,
+						 decl.getName ().getStr (),
 						 type,
 						 zero,
 						 false
 	    );
 	    
 	    auto ref = VarRef::init (loc,
-				     decl.getName ().str,
+				     decl.getName ().getStr (),
 				     type, 
 				     var.getUniqId (),
 				     false,
@@ -134,7 +141,7 @@ namespace semantic {
 	    );
 
 	    if (decl.getName () != Keys::UNDER) {
-		this-> _context.insertLocal (decl.getName ().str, var);
+		this-> _context.insertLocal (decl.getName ().getStr (), var);
 	    }
 	    
 	    return {var, rRef, ref};
@@ -184,7 +191,7 @@ namespace semantic {
 	}
 
 	Generator ForVisitor::iterateSlice (const syntax::For & expression, const Generator & value, const syntax::Expression & index, const syntax::Expression & val) {	
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector<Generator> values = {};
 	    auto loc = val.getLocation ();
 	    Generator loop_type (Void::init (loc));
@@ -280,14 +287,14 @@ namespace semantic {
 
 
 	std::vector <Generator> ForVisitor::createIndexVarRange (const syntax::For &, const Generator & range, const syntax::VarDecl & decl) {
-	    if (decl.getName ().str != Keys::UNDER)
+	    if (decl.getName ().getStr () != Keys::UNDER)
 		this-> _context.verifyShadow (decl.getName ());
 	    
 	    if (decl.getDecorators ().size () != 0) {
 		auto deco = decl.getDecorators ()[0];
 		Ymir::Error::occur (deco.getLocation (),
 				    ExternalError::get (DECO_OUT_OF_CONTEXT),
-				    deco.getLocation ().str
+				    deco.getLocation ().getStr ()
 		);
 	    }
 
@@ -307,14 +314,14 @@ namespace semantic {
 	    auto step = StructAccess::init (loc, innerType, rRef, Range::STEP_NAME);
 	    
 	    auto var = generator::VarDecl::init (loc,
-						 decl.getName ().str,
+						 decl.getName ().getStr (),
 						 zero.to <Value> ().getType (),
 						 zero,
 						 false
 	    );
 
 	    auto ref = VarRef::init (loc,
-				     decl.getName ().str,
+				     decl.getName ().getStr (),
 				     zero.to<Value> ().getType (),
 				     var.getUniqId (),
 				     false,
@@ -323,14 +330,14 @@ namespace semantic {
 
 
 	    if (decl.getName () != Keys::UNDER)
-		this-> _context.insertLocal (decl.getName ().str, var);
+		this-> _context.insertLocal (decl.getName ().getStr (), var);
 	    
 	    return {var, rRef, ref};
 	}       
 
 	
 	Generator ForVisitor::iterateRange (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index) {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <Generator> value = {};
 	    auto loc = range.getLocation ();
 	    Generator loop_type (Void::init (loc));
@@ -476,7 +483,7 @@ namespace semantic {
 	}
 
 	std::vector <Generator> ForVisitor::createIndexVarTuple (const syntax::For & expression, const Generator & innerTuple, const syntax::VarDecl & decl, int level) {
-	    if (decl.getName ().str != Keys::UNDER)
+	    if (decl.getName ().getStr () != Keys::UNDER)
 		this-> _context.verifyShadow (decl.getName ());
 
 
@@ -504,14 +511,14 @@ namespace semantic {
 	    }
 	    
 	    auto var = generator::VarDecl::init (loc,
-						 decl.getName ().str,
+						 decl.getName ().getStr (),
 						 type, 
 						 value,
 						 isMutable
 	    );
 
 	    auto ref = VarRef::init (loc,
-				     decl.getName ().str,
+				     decl.getName ().getStr (),
 				     type,
 				     var.getUniqId (),
 				     false,
@@ -520,14 +527,14 @@ namespace semantic {
 
 
 	    if (decl.getName () != Keys::UNDER)
-		this-> _context.insertLocal (decl.getName ().str, var);
+		this-> _context.insertLocal (decl.getName ().getStr (), var);
 	    
 	    return {var, ref};
 
 	}
 	
 	Generator ForVisitor::iterateTuple (const syntax::For & expression, const Generator & value, const syntax::Expression & index) {
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    // The iteration on tuple is done at compile time, we just replicate the block multiple times
 	    this-> _context.enterBlock ();
 	    auto type = value.to <Value> ().getType ();
@@ -587,6 +594,165 @@ namespace semantic {
 
 	    return Block::init (expression.getLocation (), loopType, innerValues); 	    
 	}
+
+
+	Generator ForVisitor::validateIndexVarClass (const syntax::For & expr, const Generator & iterator, const syntax::VarDecl & decl, int i) {
+	    auto loc = decl.getLocation ();
+	    auto syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterator);
+	    auto templ = syntax::TemplateCall::init (
+		loc,
+		{syntax::Fixed::init ({loc, Ymir::format ("%", i)}, lexing::Word::eof ())},
+		syntax::Binary::init (
+		    {loc, Token::DOT},
+		    syntIterVal,
+		    syntax::Var::init ({loc, CoreNames::get (GET_OP_OVERRIDE)}),
+		    syntax::Expression::empty ()
+		    )
+		);
+	    auto call = syntax::MultOperator::init (
+		{loc, Token::LPAR}, {loc, Token::RPAR},
+		templ,
+		{}, false
+		);
+		    
+	    auto value = this-> _context.validateValue (call);
+	    auto type = value.to <Value> ().getType ();
+	    if (decl.getDecorators ().size () != 0) {
+		auto deco = decl.getDecorators ()[0];
+		Ymir::Error::occur (deco.getLocation (),
+				    ExternalError::get (DECO_OUT_OF_CONTEXT),
+				    deco.getLocation ().getStr ()
+		    );
+	    }
+	    
+	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), false); // The iteration is necessarily immutable and by value
+	    
+	    auto var = generator::VarDecl::init (loc,
+						 decl.getName ().getStr (),
+						 type,
+						 value,
+						 false
+	    );
+
+	    if (decl.getName () != Keys::UNDER)
+		this-> _context.insertLocal (decl.getName ().getStr (), var);
+	    
+	    return var;
+	}
+		
+	generator::Generator ForVisitor::validateClass (const syntax::For & expr, const generator::Generator & value) {
+	    std::list <Error::ErrorMsg> errors;
+	    std::vector <Generator> values;
+	    auto loc = expr.getLocation ();
+	    
+	    Generator loop_type (Void::init (loc));
+	    
+	    this-> _context.enterBlock ();
+
+	    try {
+		Generator valVar (Generator::empty ());
+		auto cRef = UniqValue::init (expr.getLocation (), value.to <Value> ().getType (), value);
+
+		auto syntCRef = TemplateSyntaxWrapper::init (loc, cRef);
+		auto syntBegin = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
+							     syntax::Binary::init ({loc, Token::DOT},
+										   syntCRef,
+										   syntax::Var::init ({loc, CoreNames::get (BEGIN_OP_OVERRIDE)}),
+										   syntax::Expression::empty ()
+								 ),
+							     {}, false);
+
+		auto syntEnd = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
+							   syntax::Binary::init ({loc, Token::DOT},
+										 syntCRef,
+										 syntax::Var::init ({loc, CoreNames::get (END_OP_OVERRIDE)}),
+										 syntax::Expression::empty ()
+							       ),
+							   {}, false);
+		auto begin = this-> _context.validateValue (syntBegin);
+		auto end = this-> _context.validateValue (syntEnd);
+		
+		syntBegin = TemplateSyntaxWrapper::init (loc, begin);
+		syntEnd = TemplateSyntaxWrapper::init (loc, end);
+
+		auto iterVal = generator::VarDecl::init (loc, "#_iter", begin.to<Value> ().getType (), begin, true);
+		auto iterRef = VarRef::init (loc, "#_iter", begin.to<Value> ().getType (), iterVal.getUniqId (), true, Generator::empty ());		
+		values.push_back (iterVal);		
+
+		auto syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterRef);
+		
+		auto test = this-> _context.validateValue (
+		    syntax::Binary::init ({loc, Token::NOT_EQUAL}, syntIterVal, syntEnd, syntax::Expression::empty ())
+		    );
+
+		std::vector <Generator> innerValues;
+		
+		int i = 0;
+		for (auto & it : expr.getVars ()) {
+		    innerValues.push_back (
+			validateIndexVarClass (expr, iterRef, it.to <syntax::VarDecl> (), i)
+			);
+		    i += 1;
+		}
+		
+		auto nextBin = syntax::Binary::init (
+		    {loc, Token::DOT},
+		    syntIterVal,
+		    syntax::Var::init ({loc, CoreNames::get (NEXT_OP_OVERRIDE)}),
+		    syntax::Expression::empty ()
+		    );
+		    
+		auto call = syntax::MultOperator::init (
+		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    nextBin,
+		    {}, false
+		    );
+
+		auto right = this-> _context.validateValue (call);
+		this-> _context.verifyMemoryOwner (loc, iterRef.to <Value> ().getType (), right, false);
+
+		auto content = this->_context.validateValueNoReachable (expr.getBlock ());
+		if (!content.to <Value> ().getType ().is <Void> ()) {
+		    loop_type = content.to <Value> ().getType ();
+		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
+		    auto refId = valVar.to <generator::VarDecl> ().getUniqId ();
+			
+		    this-> _context.verifyMemoryOwner (loc, loop_type, content, false, true);
+		    innerValues.push_back (Affect::init (
+			loc, loop_type, VarRef::init (loc, "#_for", loop_type, refId, false, Generator::empty ()),
+			content
+		    ));
+			
+		} else {
+		    innerValues.push_back (content);
+		}
+		
+		innerValues.push_back (Affect::init (loc, iterRef.to <Value> ().getType (), iterRef, right));
+		
+		if (!valVar.isEmpty ()) {
+		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
+		    values.push_back (valVar);
+		}
+		values.push_back (Loop::init ({loc, "#_for"}, loop_type, test, Block::init (loc, loop_type, innerValues), false));
+		
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
+		// We discard local to avoid useless error message when quitting the block
+		this-> _context.discardAllLocals ();
+	    }
+
+	    try {
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    }
+
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+	    
+	    return Block::init ({expr.getLocation (), "#_for_block"}, loop_type, values);
+	}
+	
 	
 	void ForVisitor::error (const syntax::For &, const generator::Generator & value) {
 	    Ymir::Error::occur (

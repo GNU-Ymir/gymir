@@ -8,6 +8,7 @@
 #include <ymir/semantic/declarator/Visitor.hh>
 #include <ymir/semantic/validator/Visitor.hh>
 #include <ymir/semantic/generator/Visitor.hh>
+#include <ymir/utils/Path.hh>
 #include <ymir/documentation/Visitor.hh>
 #include <ymir/utils/Ref.hh>
 #include <ymir/semantic/Symbol.hh>
@@ -60,12 +61,10 @@ namespace Ymir {
     }
     
     void Parser::syntaxicTime () {
-	auto file = fopen (this-> _path.c_str (), "r");
-	if (file == NULL) Error::occur (ExternalError::get (NO_SUCH_FILE), _path);
+	if (!Ymir::file_exists (this-> _path.c_str ())) Error::occur (ExternalError::get (NO_SUCH_FILE), _path);
 	
-	auto visitor = syntax::Visitor::init (this-> _path, file);
+	auto visitor = syntax::Visitor::init (this-> _path);
 	this-> _module = visitor.visitModGlobal ();
-	fclose (file);
     }
 
     void Parser::semanticTime () {

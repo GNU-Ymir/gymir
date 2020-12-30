@@ -21,7 +21,7 @@ namespace semantic {
 	    static int nb_recurs = 0;
 	    nb_recurs += 1;
 	    
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
 	    match (gen) {
 		of (Fixed, f ATTRIBUTE_UNUSED,

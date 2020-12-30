@@ -14,7 +14,7 @@ namespace semantic {
 	}
 
 	Delegate::Delegate (const lexing::Word & loc, const Generator & funcPtr) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{
 	    this-> isComplex (true);
 	    this-> setInners ({funcPtr}); 

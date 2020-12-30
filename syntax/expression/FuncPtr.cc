@@ -42,7 +42,7 @@ namespace syntax {
 
     std::string FuncPtr::prettyString () const {
 	Ymir::OutBuffer buf;
-	buf.writef ("% (", this-> getLocation ().str);
+	buf.writef ("% (", this-> getLocation ().getStr ());
 	for (auto it : Ymir::r (0, this-> _params.size ())) {
 	    if (it!= 0) buf.write (", ");
 	    buf.write (this-> _params [it].prettyString ());

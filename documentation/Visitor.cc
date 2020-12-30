@@ -169,9 +169,9 @@ namespace documentation {
 
     void Visitor::dumpStandard (const semantic::ISymbol & mod, std::map <std::string, JsonValue> & val) {
 	val ["name"] = JsonString::init (mod.getRealName ());
-	val ["loc_file"] = JsonString::init (mod.getName ().locFile);
-	val ["loc_line"] = JsonString::init (mod.getName ().line);
-	val ["loc_col"] = JsonString::init (mod.getName ().column);
+	val ["loc_file"] = JsonString::init (mod.getName ().getFilename ());
+	val ["loc_line"] = JsonString::init (mod.getName ().getLine ());
+	val ["loc_col"] = JsonString::init (mod.getName ().getColumn ());
 	val ["doc"] = JsonString::init (mod.getComments ());
 	
 	if (mod.isPublic ()) val ["protection"] = JsonString::init ("pub");
@@ -180,10 +180,10 @@ namespace documentation {
     }    
 
     void Visitor::dumpStandard (const syntax::IDeclaration & mod, bool pub, bool prot, std::map <std::string, json::JsonValue> & val) {
-	val ["name"] = JsonString::init (mod.getLocation ().str);
-	val ["loc_file"] = JsonString::init (mod.getLocation ().locFile);
-	val ["loc_line"] = JsonString::init (mod.getLocation ().line);
-	val ["loc_col"] = JsonString::init (mod.getLocation ().column);
+	val ["name"] = JsonString::init (mod.getLocation ().getStr ());
+	val ["loc_file"] = JsonString::init (mod.getLocation ().getFilename ());
+	val ["loc_line"] = JsonString::init (mod.getLocation ().getLine ());
+	val ["loc_col"] = JsonString::init (mod.getLocation ().getColumn ());
 	val ["doc"] = JsonString::init (mod.getComments ());
 	
 	if (pub) val ["protection"] = JsonString::init ("pub");
@@ -248,8 +248,8 @@ namespace documentation {
 	val ["type"] = JsonString::init ("extern");
 	this-> dumpStandard (mod, pub, prot, val);
 
-	val ["from"] = JsonString::init (mod.getFrom ().str);
-	val ["space"] = JsonString::init (mod.getSpace ().str);
+	val ["from"] = JsonString::init (mod.getFrom ().getStr ());
+	val ["space"] = JsonString::init (mod.getSpace ().getStr ());
 
 	std::vector <JsonValue> childs;
 	auto ch = this-> dumpUnvalidated (mod.getDeclaration (), pub, prot);
@@ -293,14 +293,14 @@ namespace documentation {
 	
 	std::vector <JsonValue> attrs;
 	for (auto & it : func.getContent ().getCustomAttributes ()) {
-	    attrs.push_back (JsonString::init (it.str));
+	    attrs.push_back (JsonString::init (it.getStr ()));
 	}
 	val ["attributes"] = JsonArray::init (attrs);
 
 	std::vector <JsonValue> params;
 	for (auto & it : proto.to<generator::FrameProto> ().getParameters ()) {
 	    std::map <std::string, JsonValue> param;
-	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().str);
+	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 	    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 
@@ -329,14 +329,14 @@ namespace documentation {
 
 	std::vector <JsonValue> attrs;
 	for (auto & it : decl.getCustomAttributes ()) {
-	    attrs.push_back (JsonString::init (it.str));
+	    attrs.push_back (JsonString::init (it.getStr ()));
 	}
 	val ["attributes"] = JsonArray::init (attrs);
 	
 	std::vector <JsonValue> params;
 	for (auto & it : decl.getPrototype ().getParameters ()) {
 	    std::map <std::string, JsonValue> param;
-	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().str);
+	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 	    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
 	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
@@ -435,14 +435,14 @@ namespace documentation {
 
 	std::vector <JsonValue> attrs;	
 	for (auto & it : str.getCustomAttributes ()) {
-	    attrs.push_back (JsonString::init (it.str));
+	    attrs.push_back (JsonString::init (it.getStr ()));
 	}
 	val ["attributes"] = JsonArray::init (attrs);
 	
 	std::vector <JsonValue> childs;
 	for (auto & it : str.getDeclarations ()) {
 	    std::map <std::string, JsonValue> field;
-	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().str);
+	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
 	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
 	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");    
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
@@ -486,7 +486,7 @@ namespace documentation {
 	std::vector <JsonValue> childs;
 	for (auto & it : en.getValues ()) {
 	    std::map <std::string, JsonValue> param;
-	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().str);	    
+	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());	    
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
 	    childs.push_back (JsonDict::init (param));
@@ -542,7 +542,7 @@ namespace documentation {
 					       
 		for (auto & it : proto.to <generator::ConstructorProto> ().getParameters ()) {
 		    std::map <std::string, JsonValue> param;
-		    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().str);
+		    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 		    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
 		    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 		    if (!it.to <generator::ProtoVar> ().getValue ().isEmpty ())
@@ -595,13 +595,13 @@ namespace documentation {
 	std::vector <JsonValue> fields;
 	for (auto & it : cl.getFields ()) {
 	    std::map <std::string, JsonValue> field;
-	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().str);
+	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
 	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
 	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
 	    
-	    if (cl.isMarkedPrivate (it.to <syntax::VarDecl> ().getName ().str))
+	    if (cl.isMarkedPrivate (it.to <syntax::VarDecl> ().getName ().getStr ()))
 		field ["protection"] = JsonString::init ("prv");
-	    else if (cl.isMarkedProtected (it.to <syntax::VarDecl> ().getName ().str))
+	    else if (cl.isMarkedProtected (it.to <syntax::VarDecl> ().getName ().getStr ()))
 		field ["protection"] = JsonString::init ("prot");
 	    else field ["protection"] = JsonString::init ("pub");
 		
@@ -625,7 +625,7 @@ namespace documentation {
 					       
 		for (auto & it : cst.getContent ().getPrototype ().getParameters ()) {
 		    std::map <std::string, JsonValue> param;
-		    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().str);
+		    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 		    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
 		    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
 		    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
@@ -658,16 +658,16 @@ namespace documentation {
     JsonValue Visitor::dumpMethodProto (const generator::MethodProto & proto, const semantic::generator::Class::MethodProtection & prot) {
 	std::map <std::string, JsonValue> val;
 	val ["type"] = JsonString::init ("method");
-	val ["name"] = JsonString::init (proto.getLocation ().str);
-	val ["loc_file"] = JsonString::init (proto.getLocation ().locFile);
-	val ["loc_line"] = JsonString::init (proto.getLocation ().line);
-	val ["loc_col"] = JsonString::init (proto.getLocation ().column);
+	val ["name"] = JsonString::init (proto.getLocation ().getStr ());
+	val ["loc_file"] = JsonString::init (proto.getLocation ().getFilename ());
+	val ["loc_line"] = JsonString::init (proto.getLocation ().getLine ());
+	val ["loc_col"] = JsonString::init (proto.getLocation ().getColumn ());
 	val ["doc"] = JsonString::init (proto.getComments ());
 	
 	std::vector <JsonValue> params;
 	for (auto & it : proto.getParameters ()) {
 	    std::map <std::string, JsonValue> param;
-	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().str);
+	    param ["name"] = JsonString::init (it.to <generator::ProtoVar> ().getLocation ().getStr ());
 	    param ["type"] = JsonString::init (it.to <generator::Value> ().getType ().prettyString ());
 	    param ["mut"] = JsonString::init (it.to <generator::ProtoVar> ().isMutable ()? "true" : "false");
 	    

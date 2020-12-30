@@ -67,9 +67,9 @@ namespace semantic {
 	    std::string value;
 	    if (!this-> _value.isEmpty ()) value = Ymir::format (" = %", this-> _value.prettyString ());
 	    if (this-> _isMutable) 
-		return Ymir::format ("mut % : %%", this-> getLocation ().str, this-> getType ().prettyString (), value);
+		return Ymir::format ("mut % : %%", this-> getLocation ().getStr (), this-> getType ().prettyString (), value);
 	    else
-		return Ymir::format ("% : %%", this-> getLocation ().str, this-> getType ().prettyString (), value);
+		return Ymir::format ("% : %%", this-> getLocation ().getStr (), this-> getType ().prettyString (), value);
 	}
     }
 }

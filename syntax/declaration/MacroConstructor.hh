@@ -12,6 +12,8 @@ namespace syntax {
     class MacroConstructor : public IDeclaration {
 	
 	Expression _rule;
+
+	lexing::Word _contentLoc;
 	
 	std::string _content;
 
@@ -23,11 +25,11 @@ namespace syntax {
 
 	MacroConstructor ();
 
-	MacroConstructor (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
+	MacroConstructor (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
     public :
 
-	static Declaration init (const lexing::Word & loc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
+	static Declaration init (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
 	static Declaration init (const MacroConstructor & contr);
 
@@ -36,9 +38,11 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 
 	const Expression & getRule () const;
-
+	
 	const std::string & getContent () const;
 
+	const lexing::Word & getContentLoc () const;
+	
 	const std::vector <Expression> & getSkips () const;
 	
     };

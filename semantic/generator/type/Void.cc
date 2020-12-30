@@ -11,7 +11,7 @@ namespace semantic {
 	{}
 
 	Void::Void (const lexing::Word & loc) :
-	    Type (loc, loc.str)
+	    Type (loc, loc.getStr ())
 	{}
 
 	Generator Void::init (const lexing::Word & loc) {

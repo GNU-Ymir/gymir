@@ -12,7 +12,7 @@ namespace semantic {
 	}
 
 	Struct::Struct (const lexing::Word & loc, const Symbol & ref) :
-	    Value (loc, loc.str, NoneType::init (loc, "struct " + ref.getRealName ()))
+	    Value (loc, loc.getStr (), NoneType::init (loc, "struct " + ref.getRealName ()))
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();

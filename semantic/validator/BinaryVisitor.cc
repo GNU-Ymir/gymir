@@ -58,7 +58,7 @@ namespace semantic {
 	}
 	
 	Generator BinaryVisitor::validateMathOperation (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {	
-	    std::list <std::string> errors;	    
+	    std::list <Ymir::Error::ErrorMsg> errors;	    
 	    Generator ret (Generator::empty ());
 	    try {
 
@@ -111,7 +111,7 @@ namespace semantic {
 		    }
 		    
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-					expression.getLocation ().str,
+					expression.getLocation ().getStr (),
 					left.to <Value> ().getType ().to <Type> ().getTypeName (),
 					right.to <Value> ().getType ().to <Type> ().getTypeName ()
 		    );
@@ -139,7 +139,7 @@ namespace semantic {
 	    
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -165,7 +165,7 @@ namespace semantic {
 	    }	    
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -194,7 +194,7 @@ namespace semantic {
 	    }
 	    	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -223,7 +223,7 @@ namespace semantic {
 	    
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -354,7 +354,7 @@ namespace semantic {
 	    auto right = this-> _context.validateValue (rightExp);
 
 	    Generator ret (Generator::empty ());
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
 
 		match (left.to<Value> ().getType ()) {
@@ -406,7 +406,7 @@ namespace semantic {
 		    }
 		    
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-					expression.getLocation ().str,
+					expression.getLocation ().getStr (),
 					left.to <Value> ().getType ().to <Type> ().getTypeName (),
 					right.to <Value> ().getType ().to <Type> ().getTypeName ()
 		    );
@@ -436,7 +436,7 @@ namespace semantic {
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -460,7 +460,7 @@ namespace semantic {
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -484,7 +484,7 @@ namespace semantic {
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -507,7 +507,7 @@ namespace semantic {
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -581,7 +581,7 @@ namespace semantic {
 	    
 	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
 
-	    std::list <std::string> errors;
+	    std::list <Ymir::Error::ErrorMsg> errors;
 	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
 		Generator result (Generator::empty ());
 		{
@@ -650,7 +650,7 @@ namespace semantic {
 	    
 	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
 
-	    std::list <std::string> errors;	    
+	    std::list <Ymir::Error::ErrorMsg> errors;	    
 	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
 		Generator result (Generator::empty ());
 		{
@@ -735,7 +735,7 @@ namespace semantic {
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto templ = syntax::Binary::init (
 		{loc, Token::DOT},
-		leftSynt,		    
+		rightSynt,		    
 		syntax::Var::init ({loc, CoreNames::get (EQUALS_OP_OVERRIDE)}),
 		syntax::Expression::empty ()
 	    );	    
@@ -743,7 +743,7 @@ namespace semantic {
 	    auto call = syntax::MultOperator::init (
 		{loc, Token::LPAR}, {loc, Token::RPAR},
 		templ,
-		{rightSynt}, false
+		{leftSynt}, false
 	    );
 
 	    if (op == Binary::Operator::NOT_EQUAL) {
@@ -924,7 +924,7 @@ namespace semantic {
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
-				expression.getLocation ().str,
+				expression.getLocation ().getStr (),
 				left.to <Value> ().getType ().to <Type> ().getTypeName (),
 				right.to <Value> ().getType ().to <Type> ().getTypeName ()
 	    );
@@ -993,7 +993,7 @@ namespace semantic {
 	
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {
 	    isAff = false;
-	    string_match (loc.str) {
+	    string_match (loc.getStr ()) {
 		eq (Token::EQUAL, { isAff = true; return Binary::Operator::LAST_OP; });
 		eq (Token::DIV_AFF, { isAff = true; return Binary::Operator::DIV; });
 		eq (Token::MINUS_AFF, { isAff = true; return Binary::Operator::SUB; });
