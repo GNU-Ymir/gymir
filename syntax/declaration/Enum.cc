@@ -7,23 +7,17 @@ namespace syntax {
 	_type (Expression::empty ())
     {}
 
-    Enum::Enum (const lexing::Word & ident, const std::string & comment, const Expression& type,  const std::vector <Expression> & values) :
+    Enum::Enum (const lexing::Word & ident, const std::string & comment, const Expression& type,  const std::vector <Expression> & values, const std::vector <std::string> & fieldComments) :
 	IDeclaration (ident, comment),
 	_values (values),
-	_type (type)
+	_type (type),
+	_field_comments (fieldComments)
     {}
     
-    Declaration Enum::init (const lexing::Word & ident, const std::string & comment, const Expression& type,  const std::vector <Expression> & values) {
-	return Declaration {new (NO_GC) Enum (ident, comment, type, values)};
+    Declaration Enum::init (const lexing::Word & ident, const std::string & comment, const Expression& type,  const std::vector <Expression> & values, const std::vector <std::string> & fieldComments) {
+	return Declaration {new (NO_GC) Enum (ident, comment, type, values, fieldComments)};
     }
     
-    bool Enum::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const*> (type) [0];
-	Enum thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const*> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
-
     const Expression & Enum::getType () const {
 	return this-> _type;
     }
@@ -32,6 +26,10 @@ namespace syntax {
 	return this-> _values;
     }
     
+    const std::vector <std::string> & Enum::getFieldComments () const {
+	return this-> _field_comments;
+    }
+
     void Enum::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<Enum> : ", this-> getLocation (), ":");

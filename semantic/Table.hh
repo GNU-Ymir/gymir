@@ -88,7 +88,7 @@ namespace semantic {
 	 * \brief This informations can be retreived inside the symbol
 	 * \param name the name of the symbol
 	 */
-	std::vector <Symbol> get (const std::string & name) const;
+	void get (const std::string & name, std::vector <Symbol> & ret) const;
 
 	/**
 	 * \brief Get a symbol from this table
@@ -99,7 +99,7 @@ namespace semantic {
 	 * \brief Only return symbol that are marked public
 	 * \param name the name of the symbol
 	 */	
-	std::vector <Symbol> getPublic (const std::string & name) const;
+	void getPublic (const std::string & name, std::vector <Symbol>  &) const;
 	
 	/**
 	 * \return the list of all declared symbol inside the table

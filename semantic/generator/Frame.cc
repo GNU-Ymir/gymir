@@ -38,13 +38,6 @@ namespace semantic {
 	    return this-> _content;
 	}
        
-	bool Frame::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Frame thisFrame; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisFrame) [0] == vtable) return true;
-	    return IGenerator::isOf (type);	
-	}
-
 	bool Frame::equals (const Generator & other) const {
 	    if (!other.is <Frame> ()) return false;
 	    else 

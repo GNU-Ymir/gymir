@@ -19,13 +19,6 @@ namespace syntax {
     Declaration Alias::init (const Alias & other) {
 	return Declaration {new (NO_GC) Alias (other)};
     }
-
-    bool Alias::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Alias thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
     
     
     const Expression & Alias::getValue () const {

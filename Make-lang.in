@@ -394,7 +394,7 @@ ymir/generic_%.o: ymir/tree/%.cc
 	  $(YPOSTCOMPILE)
 
 ymir/documentation_%.o: ymir/documentation/%.cc
-	  $(YCOMPILE) $(ALL_CXXFLAGS) $(GYC_INCLUDES) $<
+	  $(YCOMPILE) $(GYC_INCLUDES) $<
 	  $(YPOSTCOMPILE)
 
 

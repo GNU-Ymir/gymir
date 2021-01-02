@@ -69,7 +69,7 @@ namespace semantic {
 	    }
 
 	    if (result == "") {
-		println (gen.to <Type> ().prettyString ());
+		println (gen.prettyString ());
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    }
 	    
@@ -341,8 +341,12 @@ namespace semantic {
 
 	std::string Mangler::mangleDelegateT (const Delegate & ptr) const {
 	    Ymir::OutBuffer buf;
-	    for (auto & it : ptr.getInners ()) {		
-		buf.write (format ("%", mangleType (it, false)));
+	    for (auto & it : ptr.getInners ()) {
+		if (it.is <Type> ()) {
+		    buf.write (format ("%", mangleType (it, false)));
+		} else if (it.is <FrameProto> ()) {
+		    buf.write (format ("%", mangleFrameProto (it.to <FrameProto> ())));
+		}
 	    }
 	    return format ("DG%%", buf.str ().length (), buf.str ());
 	}

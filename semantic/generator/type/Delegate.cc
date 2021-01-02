@@ -1,5 +1,7 @@
 #include <ymir/semantic/generator/type/Delegate.hh>
 #include <ymir/utils/OutBuffer.hh>
+#include <ymir/semantic/generator/type/FuncPtr.hh>
+#include <ymir/errors/Error.hh>
 
 namespace semantic {
     namespace generator {
@@ -28,13 +30,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) Delegate (*this)};
 	}
 		
-	bool Delegate::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Delegate thisDelegate; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisDelegate) [0] == vtable) return true;
-	    return Type::isOf (type);	
-	}
-
 	bool Delegate::equals (const Generator & gen) const {
 	    if (!gen.is<Delegate> ()) return false;
 	    auto array = gen.to <Delegate> ();
@@ -61,7 +56,7 @@ namespace semantic {
 		}
 		buf.write (Ymir::format (")-> %", this-> getInners ()[0].to <Type> ().getInners ()[0].to <Type> ().getTypeName ()));
 	    } else {
-		buf.write ("dg(%)", this-> getInners ()[0].prettyString ());
+		buf.writef ("dg(%)", this-> getInners ()[0].prettyString ());
 	    }
 	    return buf.str ();
 	}	

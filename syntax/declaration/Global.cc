@@ -17,13 +17,6 @@ namespace syntax {
 	return Declaration {new (NO_GC) Global (location, comment, decl)};
     }
 
-    bool Global::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Global thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }
-
     const Expression & Global::getContent () const {
 	return this-> _decl;
     }

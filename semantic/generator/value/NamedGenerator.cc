@@ -23,13 +23,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) NamedGenerator (*this)};
 	}
 
-	bool NamedGenerator::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    NamedGenerator thisType; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	    return Value::isOf (type);
-	}
-
 	bool NamedGenerator::equals (const Generator & gen) const {
 	    if (!gen.is <NamedGenerator> ()) return false;
 	    auto named = gen.to<NamedGenerator> ();	    

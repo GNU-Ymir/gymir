@@ -23,8 +23,6 @@ namespace syntax {
 
 	friend Declaration;
 
-	Import ();
-
 	Import (const lexing::Word & loc, const std::string & comment, const lexing::Word & module);
 	
     public :
@@ -35,11 +33,6 @@ namespace syntax {
 	 * \param as the name for renamed import
 	 */
 	static Declaration init (const lexing::Word & loc, const std::string & comment, const lexing::Word & module);
-
-	/**
-	 * \brief Mandatory function for proxy dynamic casting
-	 */
-	bool isOf (const IDeclaration* type) const override;
 
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;

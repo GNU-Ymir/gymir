@@ -33,13 +33,7 @@ namespace syntax {
 	 * \param params the template parameters
 	 * \param content the content declaration
 	 */
-	static Expression init (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & content);
-
-	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IExpression * type) const override;
-	
+	static Expression init (const lexing::Word & loc, const std::vector <Expression> & params, const Expression & content);	
 
 	const std::vector <Expression> & getParameters () const;
 

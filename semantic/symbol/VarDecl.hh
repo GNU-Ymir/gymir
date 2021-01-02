@@ -33,8 +33,6 @@ namespace semantic {
 
 	static Symbol init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::DecoratorWord> & decos, const syntax::Expression & type, const syntax::Expression & value, bool isWeak);
 
-	bool isOf (const ISymbol * type) const override;
-
 	bool equals (const Symbol & other, bool parent = true) const override;
 
 	const syntax::Expression & getValue () const;

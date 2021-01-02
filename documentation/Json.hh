@@ -20,7 +20,6 @@ namespace documentation {
 
 	    virtual JsonValue clone () const = 0;
 
-	    virtual bool isOf (const IJsonValue * type) const = 0;
 	    	    
 	    virtual std::string toString () const = 0;
 	    
@@ -56,18 +55,16 @@ namespace documentation {
 	    std::string toString () const;
 
 	    
-	      /**
+	    /**
 	     * \brief Cast the content pointer into the type (if possible)
 	     * \brief Raise an internal error if that is not possible
 	     */
 	    template <typename T>
-	    T& to ()  {	    
-		if (this-> _value == nullptr)
-		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-		T t;
-		if (!this-> _value.get ()-> isOf (&t))
+	    T& to ()  {
+#ifdef DEBUG
+		if (dynamic_cast<T*> (this-> _value.get ()) == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 		return *((T*) this-> _value.get ());	    
 	    }
 
@@ -76,13 +73,11 @@ namespace documentation {
 	     * \brief Raise an internal error if that is not possible
 	     */
 	    template <typename T>
-	    const T& to () const  {	    
-		if (this-> _value == nullptr)
-		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-		T t;
-		if (!this-> _value.get ()-> isOf (&t))
+	    const T& to () const  {
+#ifdef DEBUG
+		if (dynamic_cast<T*> (this-> _value.get ()) == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 		return *((const T*) this-> _value.get ());	    
 	    }
 
@@ -91,11 +86,7 @@ namespace documentation {
 	     */
 	    template <typename T>
 	    bool is () const  {	    
-		if (this-> _value == nullptr)
-		    return false;
-
-		T t;
-		return this-> _value.get ()-> isOf (&t); 			    
+		return dynamic_cast<T*> (this-> _value.get ()) != nullptr;
 	    }
 	    
 	};

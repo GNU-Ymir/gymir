@@ -36,13 +36,6 @@ namespace semantic {
 	    return this-> _value;
 	}
 		
-	bool GlobalVar::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    GlobalVar thisGlobalVar; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisGlobalVar) [0] == vtable) return true;
-	    return IGenerator::isOf (type);	
-	}
-
 	bool GlobalVar::equals (const Generator & other) const {
 	    if (!other.is <GlobalVar> ()) return false;
 	    else 

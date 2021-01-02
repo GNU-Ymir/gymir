@@ -34,8 +34,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & location, const Expression & content);
 
-	virtual bool isOf (const IExpression * type) const override;
-
 	bool isExit () const;
 
 	bool isSuccess () const;

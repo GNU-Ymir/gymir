@@ -37,11 +37,6 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	
 	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
-	
-	/**
 	 * \return the content of the wrapper
 	 */
 	const Expression & getContent () const;

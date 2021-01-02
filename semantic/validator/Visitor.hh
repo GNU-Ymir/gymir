@@ -784,6 +784,17 @@ namespace semantic {
 
 
 	    /**
+	     * Is the value known at compile time and is a fixed constant
+	     */
+	    bool isIntConstant (const generator::Generator & val);
+
+	    /**
+	     * Is the value known at compile time and is a float const
+	     */
+	    bool isFloatConstant (const generator::Generator & val);
+
+	    
+	    /**
 	     * \brief Verify the construction loop
 	     * \brief This verification is not complete, it is only able to check if there is a loop when using only direct constructor
 	     * \brief It is the more common construction, so I think, it is important to check it

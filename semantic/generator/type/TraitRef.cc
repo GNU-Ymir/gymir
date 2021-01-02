@@ -29,13 +29,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) TraitRef (*this)};
 	}
 
-	bool TraitRef::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    TraitRef thisTrait; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisTrait) [0] == vtable) return true;
-	    return Type::isOf (type);	
-	}
-
 	bool TraitRef::equals (const Generator & gen) const {
 	    if (!gen.is<TraitRef> ()) return false;
 	    auto str = gen.to <TraitRef> ();

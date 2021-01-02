@@ -49,13 +49,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) FrameProto (*this)};
 	}
 
-	bool FrameProto::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    FrameProto thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool FrameProto::equals (const Generator & gen) const {
 	    if (!gen.is <FrameProto> ()) return false;
 	    auto fr = gen.to<FrameProto> ();

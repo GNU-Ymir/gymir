@@ -84,7 +84,7 @@ namespace semantic {
 		of (syntax::ExpressionWrapper, wrap, {
 			match (wrap.getContent ()) {
 			    of (syntax::VarDecl, decl,
-				return visitVarDecl (decl);
+				return visitVarDecl (decl, wrap.getComments ());
 			    );		    
 			}
 		
@@ -115,11 +115,12 @@ namespace semantic {
 	    }
 
 
-	    pushReferent (Module::init ({mod.getLocation (), path.fileName ().toString ()}, mod.getComments (), this-> _isWeak));	    
+	    pushReferent (Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak));	    
 	    getReferent ().insert (ModRef::init (mod.getLocation (), mod.getComments (), path.getFiles (), this-> _isWeak));
 
-	    if (mod.isGlobal () && !global::State::instance ().isStandalone ())
-		importAllCoreFiles ();	    
+	    if (mod.isGlobal () && !global::State::instance ().isStandalone ()) {
+		importAllCoreFiles ();
+	    }
 	    
 	    for (auto it : mod.getDeclarations ()) {
 		visit (it);
@@ -131,7 +132,7 @@ namespace semantic {
 	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
 		if (glob.isEmpty ()) {
-		    glob = Module::init ({mod.getLocation (), modules [0]}, mod.getComments (), this-> _isWeak);
+		    glob = Module::init (lexing::Word::init (mod.getLocation (), modules [0]), mod.getComments (), this-> _isWeak);
 		    pushReferent (glob);
 		} else pushReferent (glob);
 		
@@ -163,7 +164,7 @@ namespace semantic {
 			return;
 		    }
 		}
-		pushReferent (Module::init ({loc, names [0]}, "", this-> _isWeak));
+		pushReferent (Module::init (lexing::Word::init (loc, names [0]), "", this-> _isWeak));
 		std::vector<std::string> modules (names.begin () + 1, names.end ());
 		createSubModules (loc, modules, last);
 		auto mod = popReferent ();
@@ -215,7 +216,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitStruct (const syntax::Struct str, bool insert) {
-	    auto structure = Struct::init (str.getLocation (), str.getComments (), str.getDeclarations (), this-> _isWeak);
+	    auto structure = Struct::init (str.getLocation (), str.getComments (), str.getDeclarations (), str.getDeclComments (), this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (str.getLocation ().getStr ());	
 	    for (auto symbol : symbols) {
@@ -256,7 +257,9 @@ namespace semantic {
 	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock block) {
 	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak));
 	    // A declaration block is just a list of declaration, we do not enter a new referent
-	    for (const syntax::Declaration decl : block.getDeclarations ()) {
+	    for (syntax::Declaration decl : block.getDeclarations ()) {
+		if (block.getDeclarations ().size () == 1)
+		    decl.setComments (block.getComments () + decl.getComments ());
 	    	visit (decl);		
 	    }	    
 	    
@@ -297,7 +300,7 @@ namespace semantic {
 			else of (syntax::ExpressionWrapper, wrap, {
 				match (wrap.getContent ()) {
 				    of (syntax::VarDecl, decl,
-					visitVarDecl (decl);
+					visitVarDecl (decl, wrap.getComments ());
 					continue;
 				    );		    
 				}
@@ -321,7 +324,8 @@ namespace semantic {
 		    of (syntax::ExpressionWrapper, wrap, {
 			    match (wrap.getContent ()) {
 				of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
-					cls.to <semantic::Class> ().addField (wrap.getContent ());
+					cls.to <semantic::Class> ().addField (wrap.getContent ());					
+					cls.to <semantic::Class> ().setFieldComment (de.getLocation ().getStr (), wrap.getComments ());
 					if (prv)
 					    cls.to <semantic::Class> ().setPrivate (de.getLocation ().getStr ());
 					else if (prot) {
@@ -331,6 +335,7 @@ namespace semantic {
 				) else of (syntax::Set, se, {
 					for (auto it : se.getContent ()) {
 					    cls.to <semantic::Class> ().addField (it);
+					    cls.to <semantic::Class> ().setFieldComment (it.to <syntax::VarDecl> ().getLocation ().getStr (), wrap.getComments ());
 					    if (prv)						
 						cls.to <semantic::Class> ().setPrivate (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 					    else if (prot) {
@@ -427,7 +432,7 @@ namespace semantic {
 	}
 	
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum stenm) {
-	    auto enm = Enum::init (stenm.getLocation (), stenm.getComments (), stenm.getValues (), stenm.getType (), this-> _isWeak);
+	    auto enm = Enum::init (stenm.getLocation (), stenm.getComments (), stenm.getValues (), stenm.getType (), stenm.getFieldComments (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stenm.getLocation ().getStr ());
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
@@ -508,8 +513,8 @@ namespace semantic {
 	    return ret;
 	}
 	
-	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl stdecl) {
-	    auto decl = VarDecl::init (stdecl.getLocation (), "", stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
+	semantic::Symbol Visitor::visitVarDecl (const syntax::VarDecl stdecl, const std::string & comments) {
+	    auto decl = VarDecl::init (stdecl.getLocation (), comments, stdecl.getDecorators (), stdecl.getType (), stdecl.getValue (), this-> _isWeak);
 	    auto symbols = getReferent ().getLocal (stdecl.getLocation ().getStr ());
 	    if (symbols.size () != 0) {
 		auto note = Ymir::Error::createNote (symbols [0].getName ());
@@ -552,7 +557,7 @@ namespace semantic {
 	    for (auto & it : entries) {
 		if (__imported__.find (it.first) == __imported__.end ()) {
 		    auto file_path = it.first + ".yr";
-		    
+			
 		    if (Ymir::file_exists (file_path)) {
 			// We add a fake module, to prevent infinite import loops
 			__imported__.emplace (it.first);

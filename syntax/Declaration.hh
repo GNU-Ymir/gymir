@@ -20,24 +20,6 @@ namespace syntax {
 	
     public:
 	
-	/**
-	 * \brief It is mandatory to override this function C++ does not implement mixin system
-	 * \brief The simplest way is as follow : 
-	 * \verbatim 
-	 class Heir : public IDeclaration {
-	     // ...
-	     bool isOf (const IDeclaration & type) {
-	         auto vtable = ((void**) &type) [0];
-		 Heir thisType; // That's why we cannot implement it for all class
-		 if (((void**) &thisType) [0] == vtable) return true;
-		 return IDeclaration::isOf (type);
-	     }
-	     //...
-	 };
-	 \endverbatim
-	 * \return true if type is the same as this, or is an ancestor of this
-	 */
-	virtual bool isOf (const IDeclaration * type) const = 0;
 
 	/**
 	 * \brief Print the declaration into the buffer 
@@ -104,13 +86,11 @@ namespace syntax {
 	 * Raise an internal error if that impossible
 	 */
 	template <typename T>
-	T& to () {	    
-	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-	    T t;
-	    if (!this-> _value.get ()-> isOf (&t))
+	T& to () {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) != nullptr) 
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif 
 	    return *((T*) this-> _value.get ());	    
 	}
 
@@ -119,13 +99,11 @@ namespace syntax {
 	 * Raise an internal error if that impossible
 	 */
 	template <typename T>
-	const T& to () const {	    
-	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-	    T t;
-	    if (!this-> _value.get ()-> isOf (&t))
+	const T& to () const {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) != nullptr) 
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 	    return * ((const T*) this-> _value.get ());	    
 	}
 	
@@ -134,11 +112,7 @@ namespace syntax {
 	 */
 	template <typename T>
 	bool is () const {	    
-	    if (this-> _value == nullptr)
-		return false;
-
-	    T t;
-	    return this-> _value.get ()-> isOf (&t); 			    
+	    return dynamic_cast <T*> (this-> _value.get ()) != nullptr; 
 	}
 	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;

@@ -27,8 +27,6 @@ namespace semantic {
 
 	    Generator clone () const override;
 
-	    bool isOf (const IGenerator * type) const override;
-
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     */

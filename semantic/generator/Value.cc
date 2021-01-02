@@ -47,13 +47,6 @@ namespace semantic {
 	    return this-> _type;
 	}
 
-	bool Value::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Value thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return IGenerator::isOf (type);	
-	}
-
 	bool Value::equals (const Generator &) const {
 	    return false;
 	}

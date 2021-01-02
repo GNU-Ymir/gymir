@@ -139,15 +139,15 @@ namespace semantic {
 		loc,
 		{syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
 		syntax::Binary::init (
-		    {loc, Token::DOT},
+		    lexing::Word::init (loc, Token::DOT),
 		    leftSynt,		    
-		    syntax::Var::init ({loc, CoreNames::get (UNARY_OP_OVERRIDE)}),
+		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (UNARY_OP_OVERRIDE))),
 		    syntax::Expression::empty ()
 		)
 	    );
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{}, false
 	    );

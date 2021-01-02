@@ -15,13 +15,6 @@ namespace syntax {
 	return Expression {new (NO_GC) MacroResult (location, content)};
     }
 
-    bool MacroResult::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	MacroResult thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
-
     void MacroResult::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<MacroResult> ", i, '\t');
 	stream.writefln ("%*%", i+1, '\t', this-> getLocation ());

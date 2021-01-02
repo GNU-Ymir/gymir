@@ -42,8 +42,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & value, bool isVariadic = false);
 
-	bool isOf (const IExpression * type) const override;
-
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
     };        

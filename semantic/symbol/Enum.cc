@@ -9,24 +9,18 @@ namespace semantic {
 	_gen (generator::Generator::empty ())
     {}
 
-    Enum::Enum (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) :
+    Enum::Enum (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & values, const syntax::Expression & type, const std::vector <std::string> & fieldComments, bool isWeak) :
 	ISymbol (name, comments, isWeak),
 	_type (type),
 	_fields (values),
-	_gen (generator::Generator::empty ())
+	_gen (generator::Generator::empty ()),
+	_field_comments (fieldComments)
     {}
     
-    Symbol Enum::init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & values, const syntax::Expression & type, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Enum (name, comments, values, type, isWeak)};
+    Symbol Enum::init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & values, const syntax::Expression & type, const std::vector <std::string> & fieldComments, bool isWeak) {
+	auto ret = Symbol {new (NO_GC) Enum (name, comments, values, type,  fieldComments, isWeak)};
 	ret.to <Enum> ()._table = Table::init (ret.getPtr ());
 	return ret;
-    }
-
-    bool Enum::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Enum thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);	
     }
 
     void Enum::insert (const Symbol & sym) {
@@ -37,34 +31,31 @@ namespace semantic {
 	this-> _table-> insertTemplate (sym);
     }
 
-    std::vector<Symbol> Enum::getTemplates () const {
-	return this-> _table-> getTemplates ();
+    void Enum::getTemplates (std::vector<Symbol> & rets) const {
+	auto & tmpls = this-> _table-> getTemplates ();
+	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
     }    
     
     void Enum::replace (const Symbol & sym) {
 	this-> _table-> replace (sym);
     }
 
-    std::vector <Symbol> Enum::get (const std::string & name) const {
-	auto vec = getReferent ().get (name);
-	auto local = this-> _table-> get (name);
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+    void Enum::get (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().get (name, rets);
+	this-> _table-> get (name, rets);
     }
 
-    std::vector <Symbol> Enum::getPublic (const std::string & name) const {
-	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table-> getPublic (name);
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+    void Enum::getPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().getPublic (name, rets);
+	this-> _table-> getPublic (name, rets);
     }
     
-    std::vector <Symbol> Enum::getLocal (const std::string & name) const {
-	return this-> _table-> get (name);
+    void Enum::getLocal (const std::string & name, std::vector <Symbol> & rets) const {
+	this-> _table-> get (name, rets);
     }
 
-    std::vector <Symbol> Enum::getLocalPublic (const std::string & name) const {
-	return this-> _table-> getPublic (name);
+    void Enum::getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	this-> _table-> getPublic (name, rets);
     }    
     
     const syntax::Expression & Enum::getType () const {
@@ -73,6 +64,10 @@ namespace semantic {
     
     const std::vector <syntax::Expression> & Enum::getFields () const {
 	return this-> _fields;
+    }
+
+    const std::vector <std::string> & Enum::getFieldComments () const {
+	return this-> _field_comments;
     }
     
     bool Enum::equals (const Symbol & other, bool parent) const {

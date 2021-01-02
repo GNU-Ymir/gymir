@@ -34,7 +34,6 @@ namespace semantic {
 	    
 	    Generator clone () const override;
 
-	    bool isOf (const IGenerator * type) const override;
 
 	    bool equals (const Generator & other) const override;
 

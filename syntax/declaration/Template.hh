@@ -43,12 +43,7 @@ namespace syntax {
 	static Declaration init (const lexing::Word & loc, const std::string & comment, const std::vector <Expression> & params, const Declaration & content, const Expression & test);
 
 	
-	void treePrint (Ymir::OutBuffer & stream, int i) const override;
-	
-	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
+	void treePrint (Ymir::OutBuffer & stream, int i) const override;	
 	
 	/**
 	 * \return the list of template parameters of the declarations

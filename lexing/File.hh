@@ -24,8 +24,6 @@ namespace lexing {
 
 	virtual File clone () const = 0;
 	
-	virtual bool isOf (const IFile * type) const = 0;
-
 	virtual bool isEof () const = 0;
 
 	virtual ulong tell () const = 0;
@@ -87,13 +85,11 @@ namespace lexing {
 	 * \brief Raise an internal error if that is not possible
 	 */
 	template <typename T>
-	T& to ()  {	    
-	    if (this-> _value == nullptr)
-		Ymir::Error::halt ("");	    
-
-	    T t;
-	    if (!this-> _value.get ()-> isOf (&t))
+	T& to ()  {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
 		Ymir::Error::halt ("");
+#endif
 	    return *((T*) this-> _value.get ());	    
 	}
 
@@ -102,13 +98,11 @@ namespace lexing {
 	 * \brief Raise an internal error if that is not possible
 	 */
 	template <typename T>
-	const T& to () const  {	    
-	    if (this-> _value == nullptr)
-		Ymir::Error::halt ("");	    
-
-	    T t;
-	    if (!this-> _value.get ()-> isOf (&t))
+	const T& to () const  {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
 		Ymir::Error::halt ("");
+#endif
 	    return *((const T*) this-> _value.get ());	    
 	}
 
@@ -117,11 +111,7 @@ namespace lexing {
 	 */
 	template <typename T>
 	bool is () const  {	    
-	    if (this-> _value == nullptr)
-		return false;
-
-	    T t;
-	    return this-> _value.get ()-> isOf (&t); 			    
+	    return dynamic_cast <T*> (this-> _value.get ()) != nullptr;
 	}
 	
     };
@@ -153,8 +143,6 @@ namespace lexing {
 
 	virtual File clone () const override;
 	
-	bool isOf (const IFile * type) const override;
-
 	bool isEof () const override;
 
 	ulong tell () const override;
@@ -194,8 +182,6 @@ namespace lexing {
 	static File init (const std::string & content);
 	
 	virtual File clone () const override;
-
-	bool isOf (const IFile * type) const override;		
 
 	bool isEof () const override;
 

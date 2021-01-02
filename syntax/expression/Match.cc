@@ -18,14 +18,6 @@ namespace syntax {
     Expression Match::init (const lexing::Word & location, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal) {
 	return Expression {new (NO_GC) Match (location, content, matchs, actions, isFinal)};
     }
-
-    bool Match::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Match thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
-
     
     const Expression & Match::getContent () const {
 	return this-> _content;

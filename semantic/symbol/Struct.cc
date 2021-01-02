@@ -11,23 +11,17 @@ namespace semantic {
 	_gen (generator::Generator::empty ())
     {}
 
-    Struct::Struct (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak) :
+    Struct::Struct (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, const std::vector <std::string> & fieldComments, bool isWeak) :
 	ISymbol (name, comments, isWeak),
 	_isPacked (false),
 	_isUnion (false),
 	_fields (fields),
-	_gen (generator::Generator::empty ())
+	_gen (generator::Generator::empty ()),
+	_field_comments (fieldComments)
     {}
     
-    Symbol Struct::init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak) {
-	return Symbol {new (NO_GC) Struct (name, comments, fields, isWeak)};
-    }
-
-    bool Struct::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Struct thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);	
+    Symbol Struct::init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, const std::vector <std::string> & fieldComments, bool isWeak) {
+	return Symbol {new (NO_GC) Struct (name, comments, fields, fieldComments, isWeak)};
     }
 
     bool Struct::equals (const Symbol & other, bool parent) const {
@@ -43,6 +37,10 @@ namespace semantic {
 	return this-> _fields;
     }
     
+    const std::vector <std::string> & Struct::getFieldComments () const {
+	return this-> _field_comments;
+    }
+
     bool Struct::isUnion () const {
 	return this-> _isUnion;
     }

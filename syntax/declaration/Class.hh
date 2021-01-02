@@ -54,11 +54,6 @@ namespace syntax {
 	 * \param decls the inner declaration
 	 */
 	static Declaration init (const lexing::Word & name, const std::string & comment, const Expression & over, const std::vector <Declaration> & decls, const std::vector <lexing::Word> & attributes);
-
-	/**
-	 * Mandatory function for dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
 	
 	/**
 	 * \return the expression defining the ancestor of the class definition

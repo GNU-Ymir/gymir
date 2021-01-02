@@ -123,8 +123,8 @@ namespace syntax {
 
     Declaration Visitor::visitModGlobal () {
 	std::vector <Declaration> decls;
-	lexing::Word space;
-	lexing::Word token;
+	lexing::Word space = lexing::Word::eof ();
+	lexing::Word token = lexing::Word::eof ();
 	auto beginPos = this-> _lex.tell ();
 	std::string comments;
 	try {
@@ -142,13 +142,17 @@ namespace syntax {
 		decls.push_back (visitProtectionBlock (token == Keys::PRIVATE));
 	    } else if (token == Keys::VERSION) {
 		decls.push_back (visitVersionGlob (true));
-	    } else if (!token.isEof ()) {
-		decls.push_back (visitDeclaration ());
+	    } else {
+		token = this-> _lex.consumeIf (this-> _declarations);
+		if (!token.isEof ()) {
+		    this-> _lex.rewind ();
+		    decls.push_back (visitDeclaration ());
+		}
 	    }
 	} while (!token.isEof ());
 
 	if (space.isEof ())
-	    space = space.setLocation (this-> _lex.getFile (), this-> _lex.getFilename (), 0, 0, 0);
+	    space = this-> _lex.fileLocus ();
 
 	auto ret = Module::init (space, comments, decls, true);
 	return ret;
@@ -222,7 +226,7 @@ namespace syntax {
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto token = this-> _lex.consumeIf ({Token::LPAR});
 
-	lexing::Word from, space;
+	lexing::Word from = lexing::Word::eof (), space = lexing::Word::eof ();
 	if (token == Token::LPAR) {
 	    from = this-> _lex.next ({Keys::CLANG, Keys::CPPLANG, Keys::DLANG, Keys::YLANG});
 	    token = this-> _lex.next ({Token::COMA, Token::RPAR});
@@ -457,7 +461,7 @@ namespace syntax {
     }
         
     Declaration Visitor::visitDeclaration () {
-	auto location = this-> _lex.next (this-> _declarations);	
+	auto location = this-> _lex.next (this-> _declarations);
 
 	if (location == Keys::ALIAS) return visitAlias ();
 	if (location == Keys::CLASS) return visitClass ();
@@ -589,8 +593,9 @@ namespace syntax {
 
     Declaration Visitor::visitIfClass (bool fromTrait) {
 	std::string comments;
-	auto location = this-> _lex.nextWithDocs ({Keys::IF});
+	auto location = this-> _lex.nextWithDocs (comments, {Keys::IF});
 	auto test = this-> visitExpression ();
+	
 	auto decls = visitClassBlock (fromTrait);
 	auto next = this-> _lex.consumeIf ({Keys::ELSE});
 	if (next == Keys::ELSE) {
@@ -607,12 +612,13 @@ namespace syntax {
     }
     
     Declaration Visitor::visitClassContent (bool fromTrait) {
-	lexing::Word token;
+	lexing::Word token = lexing::Word::eof ();
+	std::string docs;
 	if (fromTrait)
-	    token = this-> _lex.next ({Keys::DEF, Keys::OVER}); // Trait can only have method definitions
+	    token = this-> _lex.nextWithDocs (docs, {Keys::DEF, Keys::OVER}); // Trait can only have method definitions
 	else
-	    token = this-> _lex.next ({Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL, Keys::IMPORT});
-	
+	    token = this-> _lex.nextWithDocs (docs, {Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL, Keys::IMPORT});
+
 	if (token == Keys::SELF) {
 	    return visitClassConstructor ();
 	} else if (token == Keys::DEF) {
@@ -621,7 +627,7 @@ namespace syntax {
 	    return visitFunction (true, true);
 	} else if (token == Keys::LET) {
 	    this-> _lex.rewind ();
-	    return Expression::toDeclaration (visitVarDeclaration ());
+	    return Expression::toDeclaration (visitVarDeclaration (), docs);
 	} else if (token == Keys::IMPL) {
 	    return visitClassMixin ();
 	} else if (token == Keys::IMPORT) {
@@ -724,10 +730,15 @@ namespace syntax {
 	if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
 	    type = visitExpression (10);
 	
-	lexing::Word end;
+	lexing::Word end = lexing::Word::eof ();
 	std::vector <Expression> values;
+	std::vector <std::string> comms;
+	bool fst = true;
 	do {
-	    end = this-> _lex.next ({Token::ARROW, Token::PIPE});
+	    std::string docs;
+	    end = this-> _lex.nextWithDocs (docs, {Token::ARROW, Token::PIPE});
+	    if (!fst) comms.push_back (docs);
+	    fst = false;
 	    if (end != Token::ARROW) {
 		auto name = visitIdentifier ();
 		if (this-> _lex.consumeIf ({Token::EQUAL}) == Token::EQUAL)
@@ -740,8 +751,8 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (name, comments, templates, Enum::init (name, comments, type, values), Expression::empty ());
-	} else return Enum::init (name, comments, type, values);
+	    return Template::init (name, comments, templates, Enum::init (name, comments, type, values, comms), Expression::empty ());
+	} else return Enum::init (name, comments, type, values, comms);
     }    
     
     Declaration Visitor::visitFunction (bool isClass, bool isOver) {
@@ -751,7 +762,7 @@ namespace syntax {
 	Expression test (Expression::empty ());
 	
 	auto token = this-> _lex.consumeIf ({Keys::IF});
-	lexing::Word ifLoc;
+	lexing::Word ifLoc = lexing::Word::eof ();
 	if (token == Keys::IF) {
 	    ifLoc = token;
 	    test = visitExpression ();
@@ -796,7 +807,7 @@ namespace syntax {
 
     Function::Prototype Visitor::visitFunctionPrototype (bool isClosure, bool isClass) {
 	std::vector <Expression> vars;
-	lexing::Word token;
+	lexing::Word token = lexing::Word::eof ();
 	if (isClosure)
 	    token = this-> _lex.next ({Token::PIPE, Token::DPIPE});
 	else token = this-> _lex.next ({Token::LPAR});
@@ -870,11 +881,11 @@ namespace syntax {
     Declaration Visitor::visitImport () {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
-	lexing::Word token;
+	lexing::Word token = lexing::Word::eof ();
 	std::vector <Declaration> imports;
 	do {
 	    auto space = visitNamespace ();
-	    lexing::Word as;
+	    lexing::Word as = lexing::Word::eof ();
 	    
 	    token = this-> _lex.consumeIf ({Token::COMA, Keys::AS});
 	    if (token == Keys::AS) {
@@ -916,11 +927,17 @@ namespace syntax {
     Declaration Visitor::visitStruct () {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::STRUCT});
-	lexing::Word end;
+	lexing::Word end = lexing::Word::eof ();
 	std::vector <Expression> vars;
+	std::vector <std::string> comms;
 	std::vector <lexing::Word> attrs = visitAttributes ();
+	bool fst = true;
 	do {
-	    end = this-> _lex.next ({Token::ARROW, Token::PIPE});
+	    std::string docs;
+	    end = this-> _lex.nextWithDocs (docs, {Token::ARROW, Token::PIPE});
+	    if (!fst) comms.push_back (docs); // The comment is after the var decl
+	    fst = false;
+	    
 	    if (end != Token::ARROW) {
 		vars.push_back (visitSingleVarDeclaration (true, false));
 		if (this-> _lex.consumeIf ({Token::EQUAL}) == Token::EQUAL) {
@@ -934,8 +951,8 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (name, comments, templates, Struct::init (name, comments, attrs, vars), Expression::empty ());
-	} else return Struct::init (name, comments, attrs, vars);
+	    return Template::init (name, comments, templates, Struct::init (name, comments, attrs, vars, comms), Expression::empty ());
+	} else return Struct::init (name, comments, attrs, vars, comms);
     }
 
     Declaration Visitor::visitTrait () {
@@ -1062,7 +1079,7 @@ namespace syntax {
 		}
 
 		auto right = visitExpression (priority + 1);
-		return visitExpression (Binary::init (token + next, left, right, ctype), priority);
+		return visitExpression (Binary::init (lexing::Word::init (token, token.getStr () + next.getStr ()), left, right, ctype), priority);
 	    } else this-> _lex.rewind ();
 	} this-> _lex.rewind ();
 	return left;
@@ -1105,13 +1122,13 @@ namespace syntax {
 	auto location = this-> _lex.next ();
 	if (location == Token::LPAR || location == Token::LCRO) {
 	    auto params = visitParamList (location == Token::LPAR);
-	    lexing::Word end;
+	    lexing::Word end = lexing::Word::eof ();
 	    if (location == Token::LPAR) end = this-> _lex.next ({Token::RPAR});
 	    else end = this-> _lex.next ({Token::RCRO});
 	    return visitOperand1 (MultOperator::init (location, end, value, params));
 	} else if (location == Token::MACRO_ACC || location == Token::MACRO_CRO || location == Token::MACRO_PAR) {
 	    return visitMacroCall (value);
-	} else if (location == Token::DOT) {
+	} else if (location == Token::DOT || location == Token::DOT_AND) {
 	    auto right = visitOperand3 (false);
 	    return visitOperand1 (visitTemplateCall (Binary::init (location, value, right, Expression::empty ())));
 	} this-> _lex.rewind ();
@@ -1199,7 +1216,7 @@ namespace syntax {
 	std::vector <Expression> content;
 	auto begin = this-> _lex.next ({Token::LACC});
 
-	lexing::Word end;
+	lexing::Word end = lexing::Word::eof ();
 	bool last = false;
 	do {
 	    end = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
@@ -1219,7 +1236,7 @@ namespace syntax {
 	std::vector <Expression> scopes;
 	do {
 	    
-	    lexing::Word next;
+	    lexing::Word next = lexing::Word::eof ();
 	    if (catcher.isEmpty () && canCatcher)
 		next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE, Keys::CATCH});
 	    else next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
@@ -1233,7 +1250,7 @@ namespace syntax {
 	
 	if (last) content.push_back (Unit::init (end));
 	if (decls.size () != 0) {
-	    return Block::init (begin, end, Module::init ({begin, "_"}, "", decls, false), content, catcher, scopes);
+	    return Block::init (begin, end, Module::init (lexing::Word::init (begin, "_"), "", decls, false), content, catcher, scopes);
 	} else {
 	    return Block::init (begin, end, Declaration::empty (), content, catcher, scopes);
 	}
@@ -1276,7 +1293,7 @@ namespace syntax {
     Expression Visitor::visitFor () {
 	std::vector <Expression> decls;
 	auto location = this-> _lex.next ({Keys::FOR});
-	lexing::Word token;
+	lexing::Word token = lexing::Word::eof ();
 	do {
 	    decls.push_back (visitSingleVarDeclaration (false, false));	    
 	    token = this-> _lex.next ({Token::COMA, Keys::IN});
@@ -1673,7 +1690,7 @@ namespace syntax {
 
 	auto expr = visitExpression ();
 
-	lexing::Word end;
+	lexing::Word end = lexing::Word::eof ();
 	
 	if (tok == Token::MACRO_ACC) {
 	    end = this-> _lex.next ({Token::RACC});
@@ -1698,7 +1715,7 @@ namespace syntax {
     Expression Visitor::visitFunctionType () {
 	auto begin = this-> _lex.next ();
 	auto open = this-> _lex.next ({Token::LPAR, Token::PIPE});
-	lexing::Word token;
+	lexing::Word token = lexing::Word::eof ();
 	std::vector <Expression> vars;
 	do {
 	    if (open == Token::PIPE) {
@@ -1738,24 +1755,34 @@ namespace syntax {
     Expression Visitor::visitNumeric () {
 	auto begin = this-> _lex.next ();	
 	if (begin.getStr ().length () >= 4) {
-	    auto suffix = lexing::Word {begin, begin.getStr ().substr (begin.getStr ().length () - 3)};
-	    suffix = suffix.setColumn (suffix.getColumn () + begin.getStr ().length () - 3);
+	    auto suffix = lexing::Word::init (begin.getStr ().substr (begin.getStr ().length () - 3),
+					      begin.getFile (),
+					      begin.getFilename (),
+					      begin.getLine (),
+					      begin.getColumn () + begin.getStr ().length () - 3,
+					      begin.getSeek () + begin.getStr ().length () - 3
+		);
 	    
 	    if (suffix.is (this-> _fixedSuffixes)) {
 		auto value = begin.getStr ().substr (0, begin.getStr ().length () - 3);
 		verifNumeric (begin, value);
-		return Fixed::init ({begin, value}, suffix);
+		return Fixed::init (lexing::Word::init (begin, value), suffix);
 	    }
 	}
 	
 	if (begin.getStr ().length () >= 3) {
-	    auto suffix = lexing::Word {begin, begin.getStr ().substr (begin.getStr ().length () - 2)};
-	    suffix = suffix.setColumn (suffix.getColumn () + begin.getStr ().length () - 2);
+	    auto suffix = lexing::Word::init (begin.getStr ().substr (begin.getStr ().length () - 2),
+					      begin.getFile (),
+					      begin.getFilename (),
+					      begin.getLine (),
+					      begin.getColumn () + begin.getStr ().length () - 2,
+					      begin.getSeek () + begin.getStr ().length () - 2
+		);
 	    
 	    if (suffix.is (this-> _fixedSuffixes)) {
 		auto value = begin.getStr ().substr (0, begin.getStr ().length () - 2);
 		verifNumeric (begin, value);
-		return Fixed::init ({begin, value}, suffix);
+		return Fixed::init (lexing::Word::init (begin, value), suffix);
 	    }
 	}
 	
@@ -1810,14 +1837,19 @@ namespace syntax {
 	this-> _lex.skipEnable (Token::RRETURN, true);
 	
 	if (after.getStr () [0] >= '0' && after.getStr () [0] <= '9') {
-	    if (after.getStr ().length () >= 2) {
-		auto suffix = lexing::Word {after, after.getStr ().substr (after.getStr ().length () - 1)};
-		suffix = suffix.setColumn (suffix.getColumn () + after.getStr ().length () - 1);
+	    if (after.getStr ().length () >= 2) {		
+		auto suffix = lexing::Word::init (after.getStr ().substr (after.getStr ().length () - 1),
+						  after.getFile (),
+						  after.getFilename (),
+						  after.getLine (),
+						  after.getColumn () + after.getStr ().length () - 1,
+						  after.getSeek () + after.getStr ().length () - 1
+		    );
 	    
 		if (suffix.is (this-> _floatSuffix)) {
 		    auto value = after.getStr ().substr (0, after.getStr ().length () - 1);
 		    if (!verifNumeric (after, value))
-			return Float::init (dot, begin, {after, value}, suffix);
+			return Float::init (dot, begin, lexing::Word::init (after, value), suffix);
 		    else
 			Error::occur (after, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), after.getStr ());
 		}
@@ -1855,7 +1887,7 @@ namespace syntax {
 	this-> _lex.commentEnable (false);
 	
 	lexing::Word cursor = lexing::Word::eof ();
-	lexing::Word all = lexing::Word::eof ();
+	Ymir::OutBuffer all;
 	do {
 	    cursor = this-> _lex.next ();
 	    if (cursor == Token::TAB || cursor == Token::RETURN || cursor == Token::RRETURN) {
@@ -1867,13 +1899,13 @@ namespace syntax {
 		auto note = Ymir::Error::createNote (begin);
 		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
 	    } else if (cursor != Token::APOS) {
-		all = all + cursor;
+		all.write (cursor.getStr ());
 	    }
 	} while (cursor != Token::APOS);
 
 	auto format = this-> _lex.consumeIf (this-> _charSuffix);
 	if (!format.isEof () && format.getStr () [0] == '_') {
-	    format = lexing::Word {format, format.getStr ().substr (1, format.getStr ().length  ()- 1)};
+	    format = lexing::Word::init (format, format.getStr ().substr (1, format.getStr ().length  ()- 1));
 	}
 	// We restore the skip and comments
 	this-> _lex.skipEnable (Token::SPACE, true);
@@ -1882,12 +1914,11 @@ namespace syntax {
 	this-> _lex.skipEnable (Token::RRETURN, true);
 	this-> _lex.commentEnable (true);
 	
-	return Char::init (begin, cursor, all, format);
+	return Char::init (begin, cursor, lexing::Word::init (begin, all.str ()), format);
     }
 
     Expression Visitor::visitString () {
 	auto begin = this-> _lex.next ({Token::GUILL});
-
 	this-> _lex.skipEnable (Token::SPACE,   false);
 	if (!this-> _strRetIgnore) {
 	    this-> _lex.skipEnable (Token::TAB,     false);
@@ -1898,20 +1929,20 @@ namespace syntax {
 	this-> _lex.commentEnable (false);
 
 	lexing::Word cursor = lexing::Word::eof ();
-	lexing::Word all    = lexing::Word::eof ();
+	Ymir::OutBuffer all;
 	do {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (begin);
 		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
 	    } else if (cursor != begin) {
-		all = all + cursor;
-	    } 
+		all.write (cursor.getStr ());
+	    }
 	} while (cursor != begin);
 
 	auto format = this-> _lex.consumeIf (this-> _stringSuffix);
 	if (!format.isEof () && format.getStr () [0] == '_') {
-	    format = lexing::Word {format, format.getStr ().substr (1, format.getStr ().length  ()- 1)};
+	    format = lexing::Word::init (format, format.getStr ().substr (1, format.getStr ().length  ()- 1));
 	}
 	
 	this-> _lex.skipEnable (Token::SPACE,   true);
@@ -1922,12 +1953,12 @@ namespace syntax {
 	}
 	this-> _lex.commentEnable (true);
 
-	return String::init (begin, cursor, all, format);
+	return String::init (begin, cursor, lexing::Word::init (begin, all.str ()), format);
     }
     
     Expression Visitor::visitVarDeclaration () {
 	auto location = this-> _lex.next ({Keys::LET});
-	lexing::Word token;
+	lexing::Word token = lexing::Word::eof ();
 	std::vector <Expression> decls;
 	do {
 	    auto tok = this-> _lex.consumeIf ({Token::LPAR});
@@ -2030,7 +2061,7 @@ namespace syntax {
     
     Expression Visitor::visitDestructVarDeclaration () {
 	auto begin = this-> _lex.rewind ().next ();
-	lexing::Word next;
+	lexing::Word next = lexing::Word::eof ();
 	std::vector <Expression> params;
 	bool isVariadic = false;
 	do {
@@ -2094,23 +2125,28 @@ namespace syntax {
 
     
     lexing::Word Visitor::visitNamespace () {
-	lexing::Word ident;
+	lexing::Word begin = this-> _lex.next ();
+	Ymir::OutBuffer ident;
+	this-> _lex.rewind ();
 	do {
 	    auto token = this-> _lex.next ();
-	    if (token == Keys::UNDER) return ident + token;
+	    if (token == Keys::UNDER) {
+		ident.write (token.getStr ());
+		break;
+	    }
 	    
 	    this-> _lex.rewind ();
-	    ident = ident + visitIdentifier ();
+	    ident.write (visitIdentifier ().getStr ());
 
 	    token = this-> _lex.next ();
 	    if (token != Token::DCOLON) {
 		this-> _lex.rewind ();
 		break;
-	    } else ident = ident + token;
+	    } else ident.write (token.getStr ());
 	    
 	} while (true);
 	
-	return ident;	
+	return lexing::Word::init (begin, ident.str ());	
     }
 
     lexing::Word Visitor::visitIdentifier () {

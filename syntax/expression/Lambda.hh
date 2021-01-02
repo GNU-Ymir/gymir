@@ -37,9 +37,7 @@ namespace syntax {
 
 	static Expression refClosure (const syntax::Expression & lmbd);
 
-	static Expression moveClosure (const syntax::Expression & lmbd);
-	
-	bool isOf (const IExpression * type) const override;
+	static Expression moveClosure (const syntax::Expression & lmbd);	
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

@@ -26,8 +26,6 @@ namespace syntax {
 
 	friend Expression;
 
-	MultOperator ();
-
 	MultOperator (const lexing::Word & loc, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall = true);
 
     public :
@@ -40,8 +38,6 @@ namespace syntax {
 	 * \param params the parameters of the operation
 	 */
 	static Expression init (const lexing::Word & location, const lexing::Word & end, const Expression & element, const std::vector <Expression> & params, bool canbedotcall = true);       
-
-	bool isOf (const IExpression * type) const override;
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

@@ -11,18 +11,19 @@
 #include <ymir/lexing/File.hh>
 #include <ymir/lexing/Token.hh>
 #include <map>
+#include <memory>
 
 namespace lexing {
+
+    class Word;
+
     /**
-     * \struct Word 
+     * \struct IWord 
      * A word is a string with location information
      */
-    struct Word {
-
+    class IWord {
     private : 
-	
-	static std::map <std::string, char*> __filenames__;
-	
+       	
 	/// The content of the word
 	std::string str;
 
@@ -39,7 +40,7 @@ namespace lexing {
 	ulong seek;
 
 	/// The length of the word (may differ with str.length ())
-	long _length = -1;
+	long length = -1;
 
 	/// is from a string or a file
 	bool isFromString = false;
@@ -48,42 +49,68 @@ namespace lexing {
 
 	ulong start = 0;
 	
-    public:
+	/**
+	 * Create a word with all field initialized
+	 */
+	IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start);
+	
+	friend Word;
+
+	friend bool operator == (const IWord & elem, const char * sec) {
+	    return elem.str == sec;
+	}
+
+	friend bool operator == (const IWord & elem, const std::string & sec) {
+	    return elem.str == sec;
+	}
+
+	friend bool operator == (const IWord & elem, const IWord & sec) {
+	    return elem.str == sec.str;
+	}	
+	
+    };
+
+    class Word : public RefProxy <IWord, Word> {
+    private : 
+
+	static Word __empty__;
+	
+	static std::map <std::string, char*> __filenames__;
+	
+	Word (IWord * val);
+	
+    public : 
 
 	/**
-	 * EOF
+	 * Create a an empty word 
 	 */
-	Word ();
+	static Word eof (const std::string & file);
 	
 	/**
-	 * Copy a second word location 
-	 * \param str the content of the word
+	 * Create an empty word
 	 */
-	Word (const Word & other, const std::string &str);
+	static Word eof ();
 
 	/**
-	 * Copy a second word location 
-	 * \param str the content of the word
-	 * \param len the length overriding word content length
+	 * Create a new word
 	 */
-	Word (const Word & other, std::string str, long len);
-    
-		
-        /**
-	 * Create a new word with another location
-	 */
-	Word setLocation (const lexing::File & file, location_t locus) const;
+	static Word init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek);
 
 	/**
-	 * Create a new word with another location
+	 * Create a new from string
 	 */
-	Word setLocation (const lexing::File & file, std::string filename, ulong line, ulong column, ulong seek) const;
+	static Word init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek, bool isFromString, ulong start);
 
 	/**
-	 * Create a new word that came from a string file
+	 * Create a copy of other with a different string content
 	 */
-	Word setFromString (ulong start) const;
+	static Word init (const Word & other, const std::string & str);
 
+	/**
+	 * Create a copy of other with a different string content, and length
+	 */
+	static Word init (const Word & other, const std::string & str, ulong length);
+	
 	/**
 	 * Get the location of the word for GCC internals
 	 */
@@ -100,24 +127,9 @@ namespace lexing {
 	long length () const;
 
 	/**
-	 * Create a new word with a different str content
-	 */
-	Word setStr (const std::string & other) const;
-
-	/**
-	 * Create a new word with a different col content
-	 */
-	Word setColumn (ulong col) const;
-
-	/**
 	 * @return: the column location of the word
 	 */
 	ulong getColumn () const;
-
-	/**
-	 * Create a new word with a different line content
-	 */
-	Word setLine (ulong line) const;
 	
 	/**
 	 * @return: the line location of the word
@@ -145,69 +157,53 @@ namespace lexing {
 	const std::string & getFilename () const;
 
 	/**
-	 * Create a an empty word 
+	 * Is this word pointing to nowhere
 	 */
-	static Word eof (const std::string & file) {
-	    auto ret = Word {};
-	    ret.str = "";
-	    ret.line = 0;
-	    ret.locFile = file;
-	    return ret;
-	}
+	bool isEof () const;    
 
 	/**
-	 * Create an empty word
+	 * Is this word containing a string that can be found in Token::members ()?
 	 */
-	static Word eof () {
-	    auto ret = Word {};
-	    ret.str = "";
-	    ret.line = 0;
-	    return ret;
-	}
-    
-	bool isEof () const;
-    
-
 	bool isToken () const;
-    
+
+	/**
+	 * Complete equality between two Words (str and location)
+	 */
 	bool isSame (const Word& other) const;
 
+	/**
+	 * Is this word containing a string that can be found in vals?
+	 */
 	bool is (const std::vector<std::string> & vals) const;
 	
 	friend bool operator== (const Word& elem, const char* sec) {
-	    return elem.getStr () == sec;
+	    return *(elem._value) == sec;
 	}
     
-	friend bool operator== (const Word& elem, std::string& sec) {
-	    return elem.getStr () == sec;
+	friend bool operator== (const Word& elem, const std::string& sec) {
+	    return *(elem._value) == sec;
 	}
 
 	friend bool operator== (const Word& elem, const Word& sec) {
-	    return elem.getStr () == sec.getStr ();
+	    return *(elem._value) == *(sec._value);
 	}
 
-	friend bool operator!= (const Word& elem, const Word& sec) {
-	    return elem.getStr () != sec.getStr ();
+	friend bool operator!= (const Word& elem, const Word & sec) {
+	    return !(elem == sec);
 	}
 
 	friend bool operator!= (const Word& elem, const char* sec) {
-	    return elem.getStr () != sec;
+	    return !(elem == sec);
 	}
     
-	friend bool operator!= (const Word& elem, std::string& sec) {
-	    return elem.getStr () != sec;
-	}
-
-	friend Word operator+ (const Word & left, const Word & right) {
-	    if (!left.isEof ()) 
-		return {left, left.str + right.str};
-	    return right;
+	friend bool operator!= (const Word& elem, const std::string& sec) {
+	    return !(elem == sec);
 	}
 	
 	std::string toString () const;    
 
-	static void purge ();
+	static void purge ();	
 	
     };
-
+    
 }

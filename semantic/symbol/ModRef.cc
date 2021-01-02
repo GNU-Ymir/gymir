@@ -2,14 +2,9 @@
 #include <algorithm>
 
 namespace semantic {
-
-    ModRef::ModRef () :
-	ISymbol (lexing::Word::eof (), "", false),
-	_name ("")
-    {}
     
     ModRef::ModRef (const lexing::Word & loc, const std::string & comments, const std::string & name, bool isWeak) :
-	ISymbol ({loc, name}, comments, isWeak),
+	ISymbol (lexing::Word::init (loc, name), comments, isWeak),
 	_name (name)
     {
 	this-> setPublic ();
@@ -36,13 +31,6 @@ namespace semantic {
 	return current;
     }
     
-    bool ModRef::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	ModRef thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);
-    }
-
     void ModRef::insert (const Symbol & sym) {
 	this-> _table-> insert (sym);
     }   
@@ -52,8 +40,9 @@ namespace semantic {
     }
 
     
-    std::vector<Symbol> ModRef::getTemplates () const {
-	return this-> _table-> getTemplates ();
+    void ModRef::getTemplates (std::vector <Symbol> & rets) const {
+	auto & tmpls = this-> _table-> getTemplates ();
+	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
     }    
     
     bool ModRef::equals (const Symbol & other, bool) const {
@@ -109,25 +98,25 @@ namespace semantic {
 	return this-> _name;
     }
 
-    std::vector <Symbol> ModRef::getLocal (const std::string & name) const {
+    void ModRef::getLocal (const std::string & name, std::vector <Symbol> & rets) const {
 	// This is a leaf, we have the right to access to the data of this module	
 	if (this-> _table-> getAll ().size () == 0) {
 	    auto real_name = this-> getRealName ();
 	    auto  mod = Symbol::getModuleByPath (real_name);
-	    return mod.getLocal (name);
+	    mod.getLocal (name, rets);
 	} else {
-	    return this-> _table-> get (name);
+	    this-> _table-> get (name, rets);
 	}	
     }
 
-    std::vector <Symbol> ModRef::getLocalPublic (const std::string & name) const {
+    void ModRef::getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const {
 	// This is a leaf, we have the right to access to the data of this module	
 	if (this-> _table-> getAll ().size () == 0) {
 	    auto real_name = this-> getRealName ();
 	    auto  mod = Symbol::getModuleByPath (real_name);
-	    return mod.getLocalPublic (name);
+	    mod.getLocalPublic (name, rets);
 	} else {
-	    return this-> _table-> getPublic (name);
+	    this-> _table-> getPublic (name, rets);
 	}	
     }
 

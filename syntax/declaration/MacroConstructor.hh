@@ -23,8 +23,6 @@ namespace syntax {
 
 	friend Declaration;
 
-	MacroConstructor ();
-
 	MacroConstructor (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
     public :
@@ -32,8 +30,6 @@ namespace syntax {
 	static Declaration init (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips);
 
 	static Declaration init (const MacroConstructor & contr);
-
-	bool isOf (const IDeclaration * type) const override;       	
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 

@@ -15,13 +15,6 @@ namespace syntax {
 	return Expression {new (NO_GC) Pragma (location, params)};
     }
 
-    bool Pragma::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Pragma thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
-
     void Pragma::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Pragma> ", i, '\t');
 	stream.writeln (this-> getLocation ());
@@ -35,7 +28,7 @@ namespace syntax {
 
     std::string Pragma::prettyString () const {
 	Ymir::OutBuffer buf;
-	buf.writef ("__pragma!%(", this-> getLocation ().getStr ());
+	buf.write ("__pragma!", this-> getLocation ().getStr (), "(");
 	int i = 0;
 	for (auto &it : this-> _params) {
 	    if (i != 0) buf.write (", ");

@@ -21,13 +21,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) None (*this)};
 	}
 
-	bool None::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    None thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool None::equals (const Generator & gen) const {
 	    return gen.is <None> ();
 	    

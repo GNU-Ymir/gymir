@@ -16,13 +16,6 @@ namespace syntax {
 	return Expression {new (NO_GC) TemplateChecker (location, calls, params)};
     }
     
-    bool TemplateChecker::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	TemplateChecker thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }	    
-
     void TemplateChecker::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<TemplateChecker>", i, '\t');
 	stream.writefln ("%*<Calls>", i + 1, '\t');

@@ -30,7 +30,6 @@ namespace semantic {
 
 	    void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	    
-	    bool isOf (const syntax::IExpression* type) const override;
 
 	    /**
 	     * \return the content wrapped inside this fake syntax expression

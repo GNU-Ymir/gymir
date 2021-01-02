@@ -412,11 +412,17 @@ namespace documentation {
 	val ["attributes"] = JsonArray::init (attrs);
 
 	std::vector <JsonValue> childs;
+	const std::vector <std::string> & field_coms = str.getFieldComments ();
+	
+	int i = 0;
 	for (auto & it : gen.to<generator::Struct> ().getFields ()) {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
 	    field ["type"] = JsonString::init (it.to <generator::VarDecl> ().getVarType ().prettyString ());
 	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
+	    field ["doc"] = JsonString::init (field_coms [i]);
+	    
+	    i += 1;
 	    
 	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
 		field ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
@@ -440,11 +446,16 @@ namespace documentation {
 	val ["attributes"] = JsonArray::init (attrs);
 	
 	std::vector <JsonValue> childs;
+	const std::vector <std::string> & field_coms = str.getDeclComments ();
+	int i = 0;
 	for (auto & it : str.getDeclarations ()) {
 	    std::map <std::string, JsonValue> field;
 	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
 	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
-	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");    
+	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
+	    field ["doc"] = JsonString::init (field_coms [i]);
+	    i += 1;
+	    
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		field ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
 	    childs.push_back (JsonDict::init (field));
@@ -464,9 +475,15 @@ namespace documentation {
 	val ["en_type"] = JsonString::init (gen.to <semantic::generator::Enum> ().getType ().prettyString ());
 	
 	std::vector <JsonValue> childs;
+	const std::vector <std::string> & field_coms = en.getFieldComments ();
+	int i = 0;
+	
         for (auto & it : gen.to <semantic::generator::Enum> ().getFields ()) {
 	    std::map <std::string, JsonValue> param;
-	    param ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());	
+	    param ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
+	    param ["doc"] = JsonString::init (field_coms [i]);
+	    i += 1;
+	    
 	    if (!it.to <generator::VarDecl> ().getVarValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to<generator::VarDecl> ().getVarValue ().prettyString ());
 	    childs.push_back (JsonDict::init (param));
@@ -484,9 +501,14 @@ namespace documentation {
 
 	
 	std::vector <JsonValue> childs;
+	const std::vector <std::string> & field_coms = en.getFieldComments ();
+	int i = 0;
 	for (auto & it : en.getValues ()) {
 	    std::map <std::string, JsonValue> param;
-	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());	    
+	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
+	    param ["doc"] = JsonString::init (field_coms [i]);
+	    i += 1;
+	    
 	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
 		param ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
 	    childs.push_back (JsonDict::init (param));
@@ -514,6 +536,7 @@ namespace documentation {
 	    field ["name"] = JsonString::init (it.to <generator::VarDecl> ().getName ());
 	    field ["type"] = JsonString::init (it.to <generator::VarDecl> ().getVarType ().prettyString ());
 	    field ["mut"] = JsonString::init (it.to <generator::VarDecl> ().isMutable () ? "true" : "false");
+	    field ["doc"] = JsonString::init (cl.getFieldComments (it.to <generator::VarDecl> ().getName ()));
 	    
 	    if (cl.isMarkedPrivate (it.to <generator::VarDecl> ().getName ()))
 		field ["protection"] = JsonString::init ("prv");
@@ -527,6 +550,8 @@ namespace documentation {
 	    fields.push_back (JsonDict::init (field));
 	}
 
+	val ["fields"] = JsonArray::init (fields);
+	
 	std::vector <JsonValue> cstrs;
 	std::vector <JsonValue> methods;
 	std::vector <JsonValue> impls;
@@ -598,6 +623,7 @@ namespace documentation {
 	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
 	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
 	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
+	    field ["doc"] = JsonString::init (cl.getFieldComments (it.to <syntax::VarDecl> ().getName ().getStr ()));
 	    
 	    if (cl.isMarkedPrivate (it.to <syntax::VarDecl> ().getName ().getStr ()))
 		field ["protection"] = JsonString::init ("prv");
@@ -610,6 +636,7 @@ namespace documentation {
 	    
 	    fields.push_back (JsonDict::init (field));
 	}
+	val ["fields"] = JsonArray::init (fields);
 
 	std::vector <JsonValue> cstrs;
 	std::vector <JsonValue> methods;

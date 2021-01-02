@@ -19,8 +19,8 @@ namespace syntax {
 	return this-> _value == nullptr;
     }
     
-    Declaration Expression::toDeclaration (const Expression & value) {
-	return ExpressionWrapper::init (value.getLocation (), "", value);
+    Declaration Expression::toDeclaration (const Expression & value, const std::string & comments) {
+	return ExpressionWrapper::init (value.getLocation (), comments, value);
     }
     
     void Expression::treePrint (Ymir::OutBuffer & stream, int i)  const {	
@@ -33,10 +33,6 @@ namespace syntax {
     std::string Expression::prettyString () const {
 	if (this-> _value == nullptr) return "";
 	else return this-> _value-> prettyString ();
-    }
-
-    bool IExpression::isOf (const IExpression *) const {
-	return false;
     }
 
     const lexing::Word & IExpression::getLocation () const {

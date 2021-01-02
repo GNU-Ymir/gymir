@@ -28,11 +28,6 @@ namespace syntax {
 	 * \param module the module to use
 	 */
 	static Declaration init (const lexing::Word & location, const std::string & comment, const Expression & module);
-
-	/**
-	 * Mandatory function for dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
 				
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

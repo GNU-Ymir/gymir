@@ -32,13 +32,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) ClassPtr (*this)};
 	}
 		
-	bool ClassPtr::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    ClassPtr thisClassPtr; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisClassPtr) [0] == vtable) return true;
-	    return Type::isOf (type);	
-	}
-
 	bool ClassPtr::equals (const Generator & gen) const {
 	    if (!gen.is<ClassPtr> ()) return false;
 	    auto array = gen.to <ClassPtr> ();

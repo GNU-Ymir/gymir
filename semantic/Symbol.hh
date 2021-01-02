@@ -38,10 +38,7 @@ namespace semantic {
 	bool _isWeak = false;
 	
     private :
-	
-	/** Only used for dynamic cast */
-	ISymbol ();
-	
+		
 	friend Symbol;
 	
     public :
@@ -59,22 +56,10 @@ namespace semantic {
 	const lexing::Word & getName () const;
 
 	/**
-	 * \brief Change the name of the symbol
-	 */
-	void setName (const std::string & name);
-
-
-	/**
 	 * The comments on the symbol (discovered at syntax time, and pass through by declaration_Visitor)
 	 */
 	const std::string & getComments () const;
-	
-	
-	/**
-	 * \brief Mandatory function used inside proxy design pattern for dynamic casting
-	 */
-	virtual bool isOf (const ISymbol * type) const = 0;
-
+		
 	/** 
 	 * \brief Insert a new symbol in the current one
 	 * \brief This is working for some kind of symbol only
@@ -95,7 +80,7 @@ namespace semantic {
 	/**
 	 * \return all the inserted template solutions
 	 */
-	virtual std::vector <Symbol> getTemplates () const;
+	virtual void getTemplates (std::vector <Symbol> & ret) const;
 	
 	/**
 	 * \brief Insert a new symbol in the current one
@@ -153,14 +138,14 @@ namespace semantic {
 	 * \brief It will ask it's referent recursively
 	 * \return a list of symbol, or an empty list if it does not exists
 	 */
-	virtual std::vector <Symbol> get (const std::string & name) const ;
+	virtual void get (const std::string & name, std::vector <Symbol> & ret) const ;
 
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
 	 * \brief It will ask it's referent recursively
 	 * \return a list of symbol, or an empty list if it does not exists
 	 */
-	virtual std::vector <Symbol> getPrivate (const std::string & name) const final;
+	virtual void getPrivate (const std::string & name, std::vector <Symbol> & ret) const final;
 
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
@@ -168,22 +153,22 @@ namespace semantic {
 	 * \brief It can only return symbols that are public
 	 * \return a list of symbols (all publics), or an empty list it it does not exists
 	 */
-	virtual std::vector <Symbol> getPublic (const std::string & name) const;	
+	virtual void getPublic (const std::string & name, std::vector <Symbol> & ret) const;	
 	
 	/**
 	 * \brief Find a symbol named name in the table of this symbol
 	 * \brief Does not call it's referent
 	 * \return a symbol, may be empty
 	 */
-	virtual std::vector <Symbol> getLocal (const std::string & name) const;
+	virtual void getLocal (const std::string & name, std::vector <Symbol> & ret) const;
 
 	/**
 	 * \brief Find a symbol named name in the table of this symbol if it is public
 	 * \brief Does not call it's referent
 	 * \return a symbol, may be empty
 	 */
-	virtual std::vector <Symbol> getLocalPublic (const std::string & name) const;
-
+	virtual void getLocalPublic (const std::string & name, std::vector <Symbol> & ret) const;	
+	
 	/**
 	 * \return the list of used symbols
 	 */
@@ -240,11 +225,14 @@ namespace semantic {
     class Symbol : public RefProxy <ISymbol, Symbol> {
     public: 
 	
-	/** For convinience an empty symbol is declared to avoid segmentation fault on unreferenced symbol */
+	/** For convinience an empty symbol is declared to avoid segmentation fault on unreferenced symbol, and still be able to return ref */
 	static Symbol __empty__;
 
 	/** This list containes the imported modules */
 	static std::map <std::string, Symbol> __imported__;	
+
+	/** This list contains the modules indexed by path, it is filled by getModuleByPath */
+	static std::map <std::string, Symbol> __fast_mod_access__;
 	
     public:
 
@@ -270,11 +258,6 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	const lexing::Word & getName () const;
-
-	/**
-	 * \brief Change the name of the symbol
-	 */
-	void setName (const std::string & name);
 	
 	/**
 	 * Proxy function for symbol
@@ -290,6 +273,11 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	void insertTemplate (const Symbol & sym);
+
+	/**
+	 * Proxy function for symbol
+	 */
+	void getTemplates (std::vector <Symbol> & ret) const;
 
 	/**
 	 * Proxy function for symbol
@@ -344,17 +332,38 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	std::vector <Symbol> get (const std::string & name) const;
-		
-	/**
-	 * Proxy function for symbol
-	 */
-	std::vector <Symbol> getPrivate (const std::string & name) const;
+	void get (const std::string & name, std::vector <Symbol>  & ret) const;
 
 	/**
 	 * Proxy function for symbol
 	 */
-	std::vector <Symbol> getPublic (const std::string & name) const;
+	std::vector <Symbol> get (const std::string & name) const;
+	
+	/**
+	 * Proxy function for symbol
+	 */
+	void getPrivate (const std::string & name, std::vector <Symbol> & ret) const;
+
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector<Symbol> getPrivate (const std::string & name) const;
+
+	/**
+	 * Proxy function for symbol
+	 */
+	void getPublic (const std::string & name, std::vector <Symbol> & ret) const;
+
+	/**
+	 * Proxy function for symbol
+	 */
+	std::vector<Symbol> getPublic (const std::string & name) const;
+	
+	/**
+	 * \warning not a proxy function
+	 * \brief search a symbol from a used symbol (*this* is currently in a list used in another symbol)
+	 */
+	void getUsed (const std::string & name, std::vector <Symbol> & ret) const;
 
 	/**
 	 * \warning not a proxy function
@@ -370,11 +379,21 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	std::vector <Symbol> getLocal (const std::string & name) const;
+	void getLocal (const std::string & name, std::vector <Symbol> & ret) const;
 
 	/**
 	 * Proxy function for symbol
 	 */
+	std::vector <Symbol> getLocal (const std::string & name) const;
+	
+	/**
+	 * Proxy function for symbol
+	 */
+	void getLocalPublic (const std::string & name, std::vector <Symbol> & ret) const;
+
+	/**
+	 * Proxy function for symbol
+	 */	
 	std::vector <Symbol> getLocalPublic (const std::string & name) const;
 	
 	/**
@@ -416,7 +435,7 @@ namespace semantic {
 	/**
 	 * \return The module named name, empty symbol if the module was not imported
 	 */
-	static Symbol getModule (const std::string & name);
+	static const Symbol & getModule (const std::string & name);
 
 	/**
 	 * \brief Add a new known module (if the module already exists, it will erase it)
@@ -448,13 +467,11 @@ namespace semantic {
 	 * \brief Raise an internal error if that is not possible
 	 */
 	template <typename T>
-	T& to ()  {	    
-	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-	    T t;
-	    if (!this-> _value.get ()-> isOf (&t))
+	T& to ()  {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 	    return *((T*) this-> _value.get ());	    
 	}
 
@@ -463,13 +480,11 @@ namespace semantic {
 	 * \brief Raise an internal error if that is not possible
 	 */
 	template <typename T>
-	const T& to () const  {	    
-	    if (this-> _value == nullptr)
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-	    T t;
-	    if (!this-> _value.get ()-> isOf (&t))
+	const T& to () const  {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 	    return *((const T*) this-> _value.get ());	    
 	}
 
@@ -478,11 +493,7 @@ namespace semantic {
 	 */
 	template <typename T>
 	bool is () const  {	    
-	    if (this-> _value == nullptr)
-		return false;
-
-	    T t;
-	    return this-> _value.get ()-> isOf (&t); 			    
+	    return dynamic_cast<T*> (this-> _value.get ()) != nullptr;
 	}
 	
 	/**
@@ -492,7 +503,7 @@ namespace semantic {
 	 * \param multSym a list of symbols (basically returned by get or getLocal function)
 	 * \return a list of uniq symbols
 	 */
-	static std::vector <Symbol> mergeEqSymbols (const std::vector <Symbol> & multSym);	
+	static void mergeEqSymbols (std::vector <Symbol> & ret);	
     };
     
 }

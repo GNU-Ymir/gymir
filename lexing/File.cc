@@ -9,10 +9,6 @@ namespace lexing {
 
     IFile::~IFile () {}
     
-    bool IFile::isOf (const IFile*type) const {
-	return false;
-    }
-
     void IFile::close () {}
     
     RealFile::RealFile () :
@@ -129,13 +125,6 @@ namespace lexing {
 	return file;
     }
     
-    bool RealFile::isOf (const IFile * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	RealFile thisValue; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	return IFile::isOf (type);	
-    }
-
     StringFile::StringFile () :
 	_content (""),
 	_cursor (0)
@@ -154,13 +143,6 @@ namespace lexing {
 	return File {new (NO_GC) StringFile (*this)};
     }
     
-    bool StringFile::isOf (const IFile * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	StringFile thisValue; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	return IFile::isOf (type);	
-    }
-
     bool StringFile::isEof () const {
 	return this-> _cursor >= this-> _content.length ();
     }

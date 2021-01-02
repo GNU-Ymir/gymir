@@ -19,17 +19,12 @@ namespace syntax {
     private :
 
 	friend Expression;
-
-	Fixed ();
 	
 	Fixed (const lexing::Word & loc, const lexing::Word & suff);
 
     public :
 
 	static Expression init (const lexing::Word & token, const lexing::Word & suff);
-
-
-	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

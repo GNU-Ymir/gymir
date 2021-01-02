@@ -29,9 +29,6 @@ namespace syntax {
 
 	static Expression init (const lexing::Word & token, const Expression & content, const std::vector <Expression> & matchs, const std::vector <Expression> & actions, bool isFinal = false);
 
-
-	bool isOf (const IExpression * type) const override;
-
 	/**
 	 * \return the element that will be passed to the pattern matching
 	 */

@@ -39,10 +39,7 @@ namespace syntax {
 	 * \param content the content of the loop (executed at each loop)
 	 */
 	static Expression init (const lexing::Word & location, const Expression & test, const Expression & content, bool isDo = false);
-
 	
-	bool isOf (const IExpression * type) const override;
-
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	/**

@@ -61,10 +61,11 @@ namespace semantic {
 	}
 	
 	MacroVisitor::MacroVisitor (Visitor & context) :
-	    _context (context)
-	{
-	    this-> _known_rules = MacroVisitor::getKnwonRules ();
-	}
+	    _context (context),
+	    _content (""),
+	    _call (lexing::Word::eof ()),
+	    _known_rules (MacroVisitor::getKnwonRules ())
+	{}
 
 	MacroVisitor MacroVisitor::init (Visitor & context) {
 	    return MacroVisitor {context};
@@ -152,8 +153,7 @@ namespace semantic {
 		if (current != content.length ()) {
 		    ulong line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
-		    lexing::Word word (lexing::Word::eof (), content.substr (current, 1));
-		    word = word.setLocation (this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    lexing::Word word = lexing::Word::init (content.substr (current, 1), this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
 		    
 		    auto note = Ymir::Error::createNote (word);
 		    Ymir::Error::occurAndNote (
@@ -456,11 +456,11 @@ namespace semantic {
 		    current += 1;
 		    return Mapper (true, content.substr (current-1, 1));
 		} else {
-		    lexing::Word word (lexing::Word::eof (), "");
 		    ulong line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
-		
-		    word = word.setLocation (this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    
+		    lexing::Word word = lexing::Word::init ("", this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    
 		    auto note = Ymir::Error::createNote (word); 
 		    Ymir::Error::occurAndNote (
 			expr.getLocation (),
@@ -516,12 +516,12 @@ namespace semantic {
 		// Assumed to be a syntax error, so relativally simple to change
 		auto back_error = list.errors.back ();
 		auto n = back_error.getLocation ();
-		
-		lexing::Word word (lexing::Word::eof (), n.getStr ());
+
 		ulong line = 0, col = 0, seek = 0;
 		computeLine (line, col, seek, n.getSeek () + current, this-> _call);
 		
-		word = word.setLocation (this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		lexing::Word word = lexing::Word::init (n.getStr (), this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		
 		list.errors.back () = Ymir::Error::ErrorMsg (word, back_error.getMessage ());
 		    
 		if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
@@ -558,7 +558,7 @@ namespace semantic {
 		i += 1;
 	    }
 	    
-	    return MacroMult::init (ret.getLocation (), ret.getLocation (), {ret}, lexing::Word {ret.getLocation (), Token::STAR});
+	    return MacroMult::init (ret.getLocation (), ret.getLocation (), {ret}, lexing::Word::init (ret.getLocation (), Token::STAR));
 	}
 		
 	MacroVisitor::Mapper MacroVisitor::validateMacroToken (const syntax::MacroToken & mult, const std::string & content, ulong & current, const Expression &) {
@@ -579,12 +579,10 @@ namespace semantic {
 	    if (len > (content.length () - current)) {
 		std::string wstr;
 		if (current < content.length ()) wstr = content.substr (current);
-		    
-		lexing::Word word (lexing::Word::eof (), wstr);
 		ulong line = 0, col = 0, seek = 0;
 		computeLine (line, col, seek, current, this-> _call);
+		lexing::Word word = lexing::Word::init (wstr, this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
 		
-		word = word.setLocation (this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
 		auto note = Ymir::Error::createNote (word); 
 		Ymir::Error::occurAndNote (
 		    mult.getLocation (),
@@ -597,11 +595,11 @@ namespace semantic {
 
 	    for (auto it : Ymir::r(0, len)) {
 		if (str [it] != content [it+current]) {
-		    lexing::Word word (lexing::Word::eof (), content.substr (current, len));
 		    ulong line = 0, col = 0, seek = 0;
 		    computeLine (line, col, seek, current, this-> _call);
 		    
-		    word = word.setLocation (this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    lexing::Word word = lexing::Word::init (content.substr (current, len), this-> _call.getFile (), this-> _call.getFilename (), line, col, seek);
+		    
 		    auto note = Ymir::Error::createNote (word); 
 		    Ymir::Error::occurAndNote (
 			mult.getLocation (),
@@ -755,7 +753,6 @@ namespace semantic {
 	    lex.skipEnable (Token::RETURN,  true);
 	    lex.skipEnable (Token::RRETURN, true);
 	    auto begin = lex.next ({Token::LACC});
-	    begin = begin.setLine (begin.getLine () + loc.getLine ());
 	    
 	    lex.skipEnable (Token::SPACE,   false);
 	    lex.skipEnable (Token::TAB,     false);

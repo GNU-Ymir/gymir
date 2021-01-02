@@ -10,173 +10,133 @@ namespace lexing {
     
     std::map <std::string, char*> Word::__filenames__;
 
-    Word::Word (const Word & other, const std::string &str) :
-	str (str),
-	locFile (other.locFile),
-	line (other.line),
-	column (other.column),
-	seek (other.seek),
-	isFromString (other.isFromString),
-	file (other.file),
-	start (other.start)
-    {}    
+    Word Word::__empty__ = Word {new (NO_GC) IWord ("", "", 0, 0, 0, 0, false, lexing::File::empty (), 0)};
 
-    Word::Word (const Word & other, std::string str, long len) :
+    IWord::IWord (const std::string & str, const std::string & locFile, ulong line, ulong col, ulong seek, long len, bool isFromString, const lexing::File & file, ulong start) :	
 	str (str),
-	locFile (other.locFile),
-	line (other.line),
-	column (other.column),
-	seek (other.seek),
-	_length (len),
-	isFromString (other.isFromString),
-	file (other.file),
-	start (other.start)
+	locFile (locFile),
+	line (line),
+	column (col),
+	seek (seek),
+	length (len),
+	isFromString (isFromString),
+	file (file),
+	start (start)
     {}
 
-    Word::Word () :	
-	str (""),
-	locFile (""),
-	line (0),
-	column (0),
-	isFromString (false),
-	file (lexing::File::empty ()),
-	start (0)
+    Word::Word (IWord * elem) : RefProxy<IWord, Word> (elem)
     {}
 
-    Word Word::setLocation (const lexing::File & file, location_t locus) const {
-	if (locus != UNKNOWN_LOCATION) {
-	    Word ret (*this);
-	    ret.locFile = LOCATION_FILE (locus);
-	    ret.line = LOCATION_LINE (locus);
-	    ret.column = LOCATION_COLUMN (locus);
-	    ret.file = file;
-	    return ret;
-	}
-	return *this;
+    
+    Word Word::eof (const std::string & file) {
+    	return Word {new (NO_GC) IWord ("", file, 0, 0, 0, -1, false, lexing::File::empty (), 0)};
     }
 
-    Word Word::setLocation (const lexing::File & file, std::string filename, ulong line, ulong column, ulong seek) const {
-	Word ret (*this);
-	ret.locFile = filename;
-	ret.line = line;
-	ret.column = column;
-	ret.seek = seek;
-	ret.file = file;
-	
-	return ret;
+    Word Word::eof () {
+	return __empty__;
     }
 
-    Word Word::setFromString (ulong start) const {
-	Word ret (*this);
-	ret.isFromString = true;
-	ret.start = start;
-	return ret;
+    Word Word::init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek) {
+	return Word {new (NO_GC) IWord (str, filename, line, col, seek, -1, false, file, 0)};
+    }
+
+
+    Word Word::init (const std::string & str, const lexing::File & file, const std::string & filename, ulong line, ulong col, ulong seek, bool isFromString, ulong start) {
+	return Word {new (NO_GC) IWord (str, filename, line, col, seek, -1, isFromString, file, start)};
+    }
+    
+    Word Word::init (const lexing::Word & other, const std::string & str) {
+	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, other._value-> length, other._value-> isFromString, other._value-> file, other._value-> start)};	
+    }
+    
+    Word Word::init (const lexing::Word & other, const std::string & str, ulong length) {
+	return Word {new (NO_GC) IWord (str, other._value-> locFile, other._value-> line, other._value-> column, other._value-> seek, length, other._value-> isFromString, other._value-> file, other._value-> start)};	
     }
     
     location_t Word::getLocation () const {
 	if (this-> isEof ()) {
 	    return BUILTINS_LOCATION;
 	} else {
-	    auto it = __filenames__.find (this-> locFile);
+	    auto it = __filenames__.find (this-> _value-> locFile);
 	    char * name = nullptr;
 	    if (it == __filenames__.end ()) {
-		char * aux = new char [this-> locFile.length () + 1];
+		char * aux = new char [this-> _value-> locFile.length () + 1];
 
-		for (auto it : Ymir::r (0, this-> locFile.length ()))
-		    aux [it] = this-> locFile [it];
-		aux [this-> locFile.length ()] = '\0';
-		__filenames__.emplace (this-> locFile, aux);
+		for (auto it : Ymir::r (0, this-> _value-> locFile.length ()))
+		    aux [it] = (this-> _value-> locFile) [it];
+		aux [this-> _value-> locFile.length ()] = '\0';
+		__filenames__.emplace (this-> _value-> locFile, aux);
 		name = aux;
 	    } else name = it-> second;
 	    
-	    linemap_add (line_table, LC_ENTER, 0, name, this-> line);
-	    linemap_line_start (line_table, this-> line, 0);
-	    auto ret = linemap_position_for_column (line_table, this-> column);
+	    linemap_add (line_table, LC_ENTER, 0, name, this-> _value-> line);
+	    linemap_line_start (line_table, this-> _value-> line, 0);
+	    auto ret = linemap_position_for_column (line_table, this-> _value-> column);
 	    linemap_add (line_table, LC_LEAVE, 0, NULL, 0);
 	    
 	    return ret;
 	}
     }
 
-    const std::string & Word::getStr () const {
-	return this-> str;
+    const std::string & Word::getStr () const {	
+	return this-> _value-> str;
     }
 
-    long Word::length () const  {
-	if (this-> _length == -1) return this-> str.length ();
-	return this-> _length;
+    long Word::length () const  {	
+	if (this-> _value-> length == -1) return this-> _value-> str.length ();
+	return this-> _value-> length;
     }
     
-
-    Word Word::setStr (const std::string & s) const {
-	Word ret (*this);
-	ret.str = s;
-	return ret;
+    ulong Word::getColumn () const {	
+	return this-> _value-> column;	
     }
 
-
-    Word Word::setColumn (ulong col) const {
-	Word ret (*this);
-	ret.column = col;
-	return ret;
+    ulong Word::getLine () const {	
+	return this-> _value-> line;
     }
 
-    ulong Word::getColumn () const {
-	return this-> column;
-    }
-
-    Word Word::setLine (ulong line) const {
-	Word ret (*this);
-	ret.line = line;
-	return ret;
-    }
-
-    ulong Word::getLine () const {
-	return this-> line;
-    }
-
-    ulong Word::getSeek () const {
-	return this-> seek;
+    ulong Word::getSeek () const {	
+	return this-> _value-> seek;
     }
     
     bool Word::isEof () const {
-	return this-> file.isEmpty ();
+	return this-> _value-> file.isEmpty ();
     }
-
     
 
     std::string Word::toString () const {
 	if (this-> isEof ()) return ":\u001B[32meof\u001B[0m()";
-	Ymir::OutBuffer buf (Colors::get (BOLD), this-> str, " --> ", this-> locFile.c_str (), ":(", this-> line, ",", this-> column, ")", Colors::get (RESET));
+	
+	Ymir::OutBuffer buf (Colors::get (BOLD), this-> _value-> str, " --> ", this-> _value-> locFile, ":(", this-> _value-> line, ",", this-> _value-> column, ")", Colors::get (RESET));
 	return buf.str ();
     }
 
     lexing::File Word::getFile () const {
-	return this-> file;
+	return this-> _value-> file;
     }
 
-    ulong Word::getStart () const {
-	return this-> start;
+    ulong Word::getStart () const {	
+	return this-> _value-> start;
     }
     
-    const std::string & Word::getFilename () const {
-	return this-> locFile;
+    const std::string & Word::getFilename () const {	
+	return this-> _value-> locFile;
     }
 
-    bool Word::isToken () const {
-	auto mem = Token::members ();
-	return std::find (mem.begin (), mem.end (), this-> str) != mem.end ();
+    bool Word::isToken () const {	
+	auto & mem = Token::members ();
+	return std::find (mem.begin (), mem.end (), this-> _value-> str) != mem.end ();
     }
 
     bool Word::isSame (const Word & other) const {
-	return this-> str == other.str &&
-	    this-> locFile == other.locFile &&
-	    this-> line == other.line &&
-	    this-> column == other.column;    
+       	return this-> _value-> str == other._value-> str &&
+	    this-> _value-> locFile == other._value-> locFile &&
+	    this-> _value-> line == other._value-> line &&
+	    this-> _value-> column == other._value-> column;    
     }
 
-    bool Word::is (const std::vector <std::string> & values) const {
-	return std::find (values.begin (), values.end (), this-> str) != values.end ();
+    bool Word::is (const std::vector <std::string> & values) const {	
+	return std::find (values.begin (), values.end (), this-> _value-> str) != values.end ();
     }
     
     

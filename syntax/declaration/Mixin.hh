@@ -31,11 +31,6 @@ namespace syntax {
 	 */
 	static Declaration init (const lexing::Word & location, const std::string & comment, const Expression & mixin, const std::vector <Declaration> & declarations);
 
-	/**
-	 * Mandatory function for dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
-
 	const Expression & getMixin () const;
 
 	const std::vector <Declaration> & getDeclarations () const;

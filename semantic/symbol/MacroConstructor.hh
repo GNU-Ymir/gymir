@@ -27,8 +27,6 @@ namespace semantic {
 
 	static Symbol init (const lexing::Word & name, const std::string & comments, const syntax::Declaration & func);
 
-	bool isOf (const ISymbol * type) const override;
-
 	bool equals (const Symbol & other, bool parent) const override;
 
 	const syntax::Declaration & getContent () const;

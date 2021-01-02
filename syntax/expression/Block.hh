@@ -31,8 +31,6 @@ namespace syntax {
     private :
 
 	friend Expression;
-
-	Block ();
 	
 	Block (const lexing::Word & loc, const lexing::Word & end, const Declaration & decls, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes);
 
@@ -41,8 +39,6 @@ namespace syntax {
 	static Expression init (const lexing::Word & op, const lexing::Word & end, const Declaration & decls, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes);
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
-
-	bool isOf (const IExpression * type) const override;
 
 	/**
 	 * \return the list of expression the block contains

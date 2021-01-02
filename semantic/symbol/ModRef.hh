@@ -20,8 +20,6 @@ namespace semantic {
 
 	friend Symbol;
 
-	ModRef ();
-
 	ModRef (const lexing::Word & loc, const std::string & comments, const std::string & name, bool isWeak);
 
 	ModRef (const ModRef & mod);
@@ -37,13 +35,12 @@ namespace semantic {
 
 	void insertTemplate (const Symbol & sym) override;
 	
-	std::vector<Symbol> getTemplates () const override;
+	void getTemplates (std::vector<Symbol> & rets) const override;
 	
-	std::vector <Symbol> getLocal (const std::string & name) const override;
+	void getLocal (const std::string & name, std::vector <Symbol> & rets) const override;
 
-	std::vector <Symbol> getLocalPublic (const std::string & name) const override;
+	void getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const override;
 
-	bool isOf (const ISymbol * type) const override;
 	
 	bool equals (const Symbol & other, bool parent = true) const override;
 

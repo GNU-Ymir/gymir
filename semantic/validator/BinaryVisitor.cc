@@ -37,7 +37,7 @@ namespace semantic {
 		return validateContain (op, expression);
 	    } else if (isAff) {
 		return validateAffectation (op, expression);
-	    } 
+	    }
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Generator::empty ();
@@ -234,10 +234,10 @@ namespace semantic {
 	Generator BinaryVisitor::validateMathArray (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    if (op == Binary::Operator::CONCAT) {
 		auto loc = expression.getLocation ();
-		auto leftSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, left));
+		auto leftSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, left));
 		syntax::Expression rightSynt (syntax::Expression::empty ()); 
 		if (right.to <Value> ().getType ().is <Array> ()) {
-		    rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+		    rightSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, right));
 		} else if (right.to <Value> ().getType ().is <Slice> ()) {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
@@ -267,7 +267,7 @@ namespace semantic {
 		auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 		syntax::Expression rightSynt (syntax::Expression::empty ()); 
 		if (right.to <Value> ().getType ().is <Array> ()) {
-		    rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+		    rightSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, right));
 		} else if (right.to <Value> ().getType ().is <Slice> ()) {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
@@ -292,8 +292,8 @@ namespace semantic {
 	}
 
 	Generator BinaryVisitor::validateMathClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    lexing::Word loc = {expression.getLocation (), toString (op)};
-	    lexing::Word type_of = {expression.getLocation (), Keys::TYPEOF};
+	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
+	    lexing::Word type_of = lexing::Word::init (expression.getLocation (), Keys::TYPEOF);
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto templ = syntax::TemplateCall::init (
@@ -302,39 +302,39 @@ namespace semantic {
 		    syntax::String::init (loc, loc, loc, lexing::Word::eof ())
 		},
 		syntax::Binary::init (
-		    {loc, Token::DOT},
+		    lexing::Word::init (loc, Token::DOT),
 		    leftSynt,		    
-		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)}),
+		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BINARY_OP_OVERRIDE))),
 		    syntax::Expression::empty ()
 		)
 	    );
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{rightSynt}, false
-	    );
+		);
 	    
 	    return this-> _context.validateValue (call);	    
 	}
 
 	Generator BinaryVisitor::validateMathClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto templ = syntax::TemplateCall::init (
 		loc,
 		{syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
 		syntax::Binary::init (
-		    {loc, Token::DOT},
+		    lexing::Word::init (loc, Token::DOT),
 		    leftSynt,		    
-		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE_RIGHT)}),
+		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BINARY_OP_OVERRIDE_RIGHT))),
 		    syntax::Expression::empty ()
 		)
 	    );
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{rightSynt}, false
 	    );
@@ -517,21 +517,23 @@ namespace semantic {
 
 	Generator BinaryVisitor::validateLogicalArrayLeft (Binary::Operator, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    auto loc = expression.getLocation ();
-	    auto leftSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, left));
+	    auto leftSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, left));
 	    syntax::Expression rightSynt (syntax::Expression::empty ()); 
 	    if (right.to <Value> ().getType ().is <Array> ()) {
-		rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+		rightSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, right));
 	    } else if (right.to <Value> ().getType ().is <Slice> ()) {
 		rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    } else return Generator::empty ();
 
 	    auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});		
 	    	    
-	    auto call = this-> _context.validateValue (syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
-		var,
-		{leftSynt, rightSynt}
-	    ));
+	    auto call = this-> _context.validateValue (
+		syntax::MultOperator::init (
+		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+		    var,
+		    {leftSynt, rightSynt}
+		    )
+		);
 
 	    auto test = syntax::Binary::init (
 		expression.getLocation (),
@@ -550,17 +552,19 @@ namespace semantic {
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    syntax::Expression rightSynt (syntax::Expression::empty ()); 
 	    if (right.to <Value> ().getType ().is <Array> ()) {
-		rightSynt = syntax::Intrinsics::init ({loc, Keys::ALIAS}, TemplateSyntaxWrapper::init (loc, right));
+		rightSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, right));
 	    } else if (right.to <Value> ().getType ().is <Slice> ()) {
 		rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    } else return Generator::empty ();
 
 	    auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});			    	    
-	    auto call = this-> _context.validateValue (syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
-		var,
-		{leftSynt, rightSynt}
-	    ));
+	    auto call = this-> _context.validateValue (
+		syntax::MultOperator::init (
+		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+		    var,
+		    {leftSynt, rightSynt}
+		    )
+		);
 
 	    auto test = syntax::Binary::init (
 		expression.getLocation (),
@@ -604,21 +608,21 @@ namespace semantic {
 		if (!result.isEmpty ()) return result;
 	    }
 	    
-	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto templ = syntax::Binary::init (
-		{loc, Token::DOT},
+		lexing::Word::init (loc, Token::DOT),
 		leftSynt,		    
-		syntax::Var::init ({loc, CoreNames::get (LOGICAL_OP_OVERRIDE)}),
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (LOGICAL_OP_OVERRIDE))),
 		syntax::Expression::empty ()
 	    );	    
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{rightSynt}, false
-	    );
+		);
 
 	    Generator cl (Generator::empty ());
 	    try {
@@ -631,7 +635,7 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    
 	    auto final_test = syntax::Binary::init (
-		{loc},
+		loc,
 		call,
 		syntax::Cast::init (loc,
 				    TemplateSyntaxWrapper::init (loc, cl.to <Value> ().getType ()),
@@ -665,18 +669,18 @@ namespace semantic {
 		if (!result.isEmpty ()) return result;
 	    }
 	    
-	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto templ = syntax::Binary::init (
-		{loc, Token::DOT},
+		lexing::Word::init (loc, Token::DOT),
 		leftSynt,		    
-		syntax::Var::init ({loc, CoreNames::get (LOGICAL_OP_OVERRIDE)}),
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (LOGICAL_OP_OVERRIDE))),
 		syntax::Expression::empty ()
 	    );	    
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{rightSynt}, false
 	    );
@@ -693,7 +697,7 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    
 	    auto final_test = syntax::Binary::init (
-		{loc, inverseOperator (op)},
+		lexing::Word::init (loc, inverseOperator (op)),
 		call,
 		syntax::Cast::init (loc,
 				    TemplateSyntaxWrapper::init (loc, cl.to <Value> ().getType ()),
@@ -706,48 +710,48 @@ namespace semantic {
 	}
 
 	Generator BinaryVisitor::validateEqualClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto templ = syntax::Binary::init (
-		{loc, Token::DOT},
+		lexing::Word::init (loc, Token::DOT),
 		leftSynt,		    
-		syntax::Var::init ({loc, CoreNames::get (EQUALS_OP_OVERRIDE)}),
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (EQUALS_OP_OVERRIDE))),
 		syntax::Expression::empty ()
-	    );	    
+		);	    
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{rightSynt}, false
 	    );
 
 	    if (op == Binary::Operator::NOT_EQUAL) {
-		call = syntax::Unary::init ({loc, Token::NOT}, call);
+		call = syntax::Unary::init (lexing::Word::init (loc, Token::NOT), call);
 	    }
 	    	    
 	    return this-> _context.validateValue (call);
 	}
 
 	Generator BinaryVisitor::validateEqualClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    lexing::Word loc = {expression.getLocation (), toString (op)};
+	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
 	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
 	    auto templ = syntax::Binary::init (
-		{loc, Token::DOT},
+		lexing::Word::init (loc, Token::DOT),
 		rightSynt,		    
-		syntax::Var::init ({loc, CoreNames::get (EQUALS_OP_OVERRIDE)}),
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (EQUALS_OP_OVERRIDE))),
 		syntax::Expression::empty ()
 	    );	    
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{leftSynt}, false
 	    );
 
 	    if (op == Binary::Operator::NOT_EQUAL) {
-		call = syntax::Unary::init ({loc, Token::NOT}, call);
+		call = syntax::Unary::init (lexing::Word::init (loc, Token::NOT), call);
 	    }
 	    	    
 	    return this-> _context.validateValue (call);
@@ -799,14 +803,14 @@ namespace semantic {
 	    rightSynts.push_back (TemplateSyntaxWrapper::init (right.getLocation (), right));
 				  
 	    auto bin = syntax::Binary::init (
-		{loc, Token::DOT},
+		lexing::Word::init (loc, Token::DOT),
 		leftSynt,
-		syntax::Var::init ({loc, CoreNames::get (INDEX_ASSIGN_OP_OVERRIDE)}),
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (INDEX_ASSIGN_OP_OVERRIDE))),
 		syntax::Expression::empty ()
 	    );
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		bin,
 		rightSynts, false
 	    );
@@ -831,11 +835,14 @@ namespace semantic {
 		    of (Char, c_,
 			auto c = left.to <Value> ().getType ();
 			auto rangeType = Range::init (expression.getLocation (), c);
+			auto lName = lexing::Word::init (expression.getLocation (), "#1");
+			auto rName = lexing::Word::init (expression.getLocation (), "#2");
 
-			auto lVar = generator::VarDecl::init ({expression.getLocation (), "#1"}, "#1", c, left, false);
-			auto rVar = generator::VarDecl::init ({expression.getLocation (), "#2"}, "#2", c, right, false);
-			auto lVref = VarRef::init ({expression.getLocation (), "#1"}, "#1", c, lVar.getUniqId (), false, left);
-			auto rVref = VarRef::init ({expression.getLocation (), "#2"}, "#2", c, rVar.getUniqId (), false, right);
+			auto lVar = generator::VarDecl::init (lName, "#1", c, left, false);
+			auto rVar = generator::VarDecl::init (rName, "#2", c, right, false);
+			
+			auto lVref = VarRef::init (lName, "#1", c, lVar.getUniqId (), false, left);
+			auto rVref = VarRef::init (rName, "#2", c, rVar.getUniqId (), false, right);
 
 			Fixed::UI hui;
 			Fixed::UI lui;
@@ -864,11 +871,14 @@ namespace semantic {
 		    ) else of (Float, f_ ATTRIBUTE_UNUSED,
 			       auto f = left.to <Value> ().getType ();
 			       auto rangeType = Range::init (expression.getLocation (), f);
+			       auto lName = lexing::Word::init (expression.getLocation (), "#1");
+			       auto rName = lexing::Word::init (expression.getLocation (), "#2");
 
-			       auto lVar = generator::VarDecl::init ({expression.getLocation (), "#1"}, "#1", f, left, false);
-			       auto rVar = generator::VarDecl::init ({expression.getLocation (), "#2"}, "#2", f, right, false);
-			       auto lVref = VarRef::init ({expression.getLocation (), "#1"}, "#1", f, lVar.getUniqId (), false, left);
-			       auto rVref = VarRef::init ({expression.getLocation (), "#2"}, "#2", f, rVar.getUniqId (), false, right);
+			       auto lVar = generator::VarDecl::init (lName, "#1", f, left, false);
+			       auto rVar = generator::VarDecl::init (rName, "#2", f, right, false);
+			
+			       auto lVref = VarRef::init (lName, "#1", f, lVar.getUniqId (), false, left);
+			       auto rVref = VarRef::init (rName, "#2", f, rVar.getUniqId (), false, right);
 
 			       auto hVal = FloatValue::init (expression.getLocation (), f, 1.0f);
 			       auto lVal = FloatValue::init (expression.getLocation (), f, -1.0f);
@@ -891,11 +901,15 @@ namespace semantic {
 		    ) else of (Integer, i_,
 			       auto i = left.to <Value> ().getType ();
 			       auto rangeType = Range::init (expression.getLocation (), i);
+			       auto lName = lexing::Word::init (expression.getLocation (), "#1");
+			       auto rName = lexing::Word::init (expression.getLocation (), "#2");
 
-			       auto lVar = generator::VarDecl::init ({expression.getLocation (),"#1"}, "#1", i, left, false);
-			       auto rVar = generator::VarDecl::init ({expression.getLocation (), "#2"}, "#2", i, right, false);
-			       auto lVref = VarRef::init ({expression.getLocation (), "#1"}, "#1", i, lVar.getUniqId (), false, left);
-			       auto rVref = VarRef::init ({expression.getLocation (), "#2"}, "#2", i, rVar.getUniqId (), false, right);
+			       auto lVar = generator::VarDecl::init (lName, "#1", i, left, false);
+			       auto rVar = generator::VarDecl::init (rName, "#2", i, right, false);
+			
+			       auto lVref = VarRef::init (lName, "#1", i, lVar.getUniqId (), false, left);
+			       auto rVref = VarRef::init (rName, "#2", i, rVar.getUniqId (), false, right);
+
 
 			       Fixed::UI hui;
 			       Fixed::UI lui;
@@ -972,20 +986,20 @@ namespace semantic {
 		return Generator::empty ();
 
 	    auto templ = syntax::Binary::init (
-		{loc, Token::DOT},
+		lexing::Word::init (loc, Token::DOT),
 		TemplateSyntaxWrapper::init (loc, right),		    
-		syntax::Var::init ({loc, CoreNames::get (CONTAIN_OP_OVERRIDE)}),
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (CONTAIN_OP_OVERRIDE))),
 		syntax::Expression::empty ()	    
 	    );	    
 
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{leftExp}, false
 	    );
 
 	    if (op == Binary::Operator::NOT_IN) {
-		call = syntax::Unary::init ({expression.getLocation (), Token::NOT}, call);
+		call = syntax::Unary::init (lexing::Word::init (expression.getLocation (), Token::NOT), call);
 	    }
 	    
 	    return this-> _context.validateValue (call);
@@ -1028,10 +1042,9 @@ namespace semantic {
 		eq (Keys::IS, return Binary::Operator::IS;);
 		eq (Keys::NOT_IS, return Binary::Operator::NOT_IS;);
 		eq (Keys::IN, return Binary::Operator::IN);
-		eq (Keys::NOT_IN, return Binary::Operator::NOT_IN);
+		eq (Keys::NOT_IN, return Binary::Operator::NOT_IN);		
 	    }
 
-	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Binary::Operator::LAST_OP;
 	}
 

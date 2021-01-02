@@ -45,11 +45,6 @@ namespace semantic {
 	    virtual Generator clone () const ;
 
 	    /**
-	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
-	     */
-	    virtual bool isOf (const IGenerator * type) const ;	    
-
-	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
 	    virtual bool equals (const Generator & other) const ;	    

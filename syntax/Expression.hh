@@ -18,10 +18,7 @@ namespace syntax {
 	IExpression (const lexing::Word & location);
 	
     public:	
-
-	
-	virtual bool isOf (const IExpression * type) const = 0;
-
+       
 	/**
 	 * \brief Print the expression into the buffer 
 	 * \brief Debugging purpose only
@@ -58,7 +55,7 @@ namespace syntax {
 	/**
 	 * Transform the expression into a declaration
 	 */
-	static Declaration toDeclaration (const Expression & expr);
+	static Declaration toDeclaration (const Expression & expr, const std::string & comments);
 
 	/**
 	 * Proxy method
@@ -70,14 +67,11 @@ namespace syntax {
 	 * Raise an internal error if that impossible
 	 */
 	template <typename T>
-	T& to () {	    
-	    if (this-> _value == nullptr) 
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");
-	    else {
-		T t;
-		if (!this-> _value.get ()-> isOf (&t))
-		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-	    }
+	T& to () {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");	    
+#endif
 	    return *((T*) this-> _value.get ());	    
 	}
 	
@@ -86,14 +80,11 @@ namespace syntax {
 	 * Raise an internal error if that impossible
 	 */
 	template <typename T>
-	const T& to () const {	    
-	    if (this-> _value == nullptr) 
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");
-	    else {
-		T t;
-		if (!this-> _value.get ()-> isOf (&t))
-		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-	    }
+	const T& to () const {
+#ifdef DEBUG
+	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");	    
+#endif	    
 	    return *((const T*) this-> _value.get ());	    
 	}
 	
@@ -102,11 +93,7 @@ namespace syntax {
 	 */
 	template <typename T>
 	bool is () const {	    
-	    if (this-> _value == nullptr)
-		return false;
-
-	    T t;
-	    return this-> _value.get ()-> isOf (&t); 			    
+	    return dynamic_cast <T*> (this-> _value.get ()) != nullptr;
 	}
 	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;

@@ -26,13 +26,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) UniqValue (*this)};
 	}
 			
-	bool UniqValue::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    UniqValue thisUniqValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisUniqValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool UniqValue::equals (const Generator & other) const {
 	    if (!other.is <UniqValue> ()) return false;
 	    else 

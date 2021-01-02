@@ -19,13 +19,6 @@ namespace syntax {
     Expression For::init (const lexing::Word & location, const std::vector <Expression> & vars, const Expression & iter, const Expression & block) {
 	return Expression {new (NO_GC) For (location, vars, iter, block)};
     }
-
-    bool For::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	For thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
     
     void For::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<For>", i, '\t');

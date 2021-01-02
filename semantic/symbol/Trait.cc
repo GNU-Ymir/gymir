@@ -22,13 +22,6 @@ namespace semantic {
 	return ret;
     }
     
-    bool Trait::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Trait thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);	
-    }
-
     void Trait::insert (const Symbol & sym) {
 	this-> _table-> insert (sym);
     }
@@ -37,25 +30,24 @@ namespace semantic {
 	this-> _table-> insertTemplate (sym);
     }
 
-    std::vector<Symbol> Trait::getTemplates () const {
-	return this-> _table-> getTemplates ();
+    void Trait::getTemplates (std::vector <Symbol> & rets) const {
+	auto & tmpls = this-> _table-> getTemplates ();
+	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
     }    
     
     void Trait::replace (const Symbol & sym) {
 	this-> _table-> replace (sym);
     }
 
-    std::vector <Symbol> Trait::get (const std::string & name) const {
-	return getReferent ().get (name);
+    void Trait::get (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().get (name, rets);
     }
 
-    std::vector <Symbol> Trait::getPublic (const std::string & name) const {
-	return getReferent ().getPublic (name);
+    void Trait::getPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().getPublic (name, rets);
     }
     
-    std::vector <Symbol> Trait::getLocal (const std::string &) const {
-	return {};
-    }
+    void Trait::getLocal (const std::string &, std::vector <Symbol> &) const {}
 
     bool Trait::equals (const Symbol & other, bool parent) const {
 	if (!other.is <Trait> ()) return false;

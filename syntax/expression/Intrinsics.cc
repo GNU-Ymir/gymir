@@ -17,13 +17,6 @@ namespace syntax {
 	return Expression {new (NO_GC) Intrinsics (location, value)};
     }
 
-    bool Intrinsics::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Intrinsics thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }    
-
     void Intrinsics::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Intrisics> ", i, '\t');
 	stream.writeln (this-> getLocation ());

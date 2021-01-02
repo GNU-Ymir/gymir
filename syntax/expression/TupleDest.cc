@@ -18,13 +18,6 @@ namespace syntax {
 	return Expression {new (NO_GC) TupleDest (location, vars, value, isVariadic)};
     }
 
-    Expression TupleDest::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	TupleDest thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }    
-
     void TupleDest::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<TupleDest>", i, '\t');
 	stream.writeln (this-> _isVariadic ? "..." : "");

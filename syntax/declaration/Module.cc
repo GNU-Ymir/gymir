@@ -16,13 +16,6 @@ namespace syntax {
 	return Declaration {new (NO_GC) Module (ident, comment, decls, isGlobal)};
     }
 
-    bool Module::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Module thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
-
     void Module::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Module>", i, '\t');
 	stream.writeln (this-> getLocation ());

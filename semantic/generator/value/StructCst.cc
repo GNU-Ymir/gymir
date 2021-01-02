@@ -38,13 +38,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) StructCst (*this)};
 	}
 
-	bool StructCst::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    StructCst thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool StructCst::equals (const Generator & gen) const {
 	    if (!gen.is <StructCst> ()) return false;
 	    auto call = gen.to <StructCst> ();

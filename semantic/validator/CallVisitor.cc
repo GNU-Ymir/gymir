@@ -157,11 +157,11 @@ namespace semantic {
 		{
 		    bool succeed = true;
 		    try {			
-			this-> _context.verifyCompatibleType (
+			this-> _context.verifyCompatibleTypeWithValue (
 			    params [it].getLocation (),
 			    proto.getParameters () [it].to <Value> ().getType (),
-			    params [it].to <Value> ().getType ()
-			);
+			    params [it]
+			    );
 		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
@@ -221,10 +221,10 @@ namespace semantic {
 		{
 		    bool succeed = true;
 		    try {			
-			this-> _context.verifyCompatibleType (
+			this-> _context.verifyCompatibleTypeWithValue (
 			    params [it].getLocation (),
 			    proto.getParameters () [it].to <Value> ().getType (),
-			    params [it].to <Value> ().getType ()
+			    params [it]
 			);
 		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -378,10 +378,10 @@ namespace semantic {
 		    {
 			bool succeed = true;
 			try {
-			    this-> _context.verifyCompatibleType (
+			    this-> _context.verifyCompatibleTypeWithValue (
 				params [it].getLocation (),
 				proto.getParameters () [it].to <Value> ().getType (),
-				params [it].to <Value> ().getType ()
+				params [it]
 			    );
 			} catch (Error::ErrorList list) {			   
 			    succeed = false;
@@ -437,7 +437,7 @@ namespace semantic {
 	    std::vector <Generator> types;
 	    
 	    if (str.getRef ().to <semantic::Struct> ().isUnion ()) {
-		lexing::Word name;
+		lexing::Word name = lexing::Word::eof ();
 		try {
 		    if (rights.size () != 1)
 			Ymir::Error::occur (location, ExternalError::get (UNION_CST_MULT));
@@ -535,10 +535,10 @@ namespace semantic {
 		{
 		    bool succeed = true;
 		    try {
-			this-> _context.verifyCompatibleType (
+			this-> _context.verifyCompatibleTypeWithValue (
 			    params [it].getLocation (),
 			    funcType.getParamTypes () [it],
-			    params [it].to <Value> ().getType ()
+			    params [it]
 			);
 		    } catch (Error::ErrorList list) {
 			errors = {};
@@ -634,10 +634,10 @@ namespace semantic {
 		{
 		    bool succeed = true;
 		    try {			
-			this-> _context.verifyCompatibleType (
+			this-> _context.verifyCompatibleTypeWithValue (
 			    params [it].getLocation (),
 			    paramTypes [it],
-			    params [it].to <Value> ().getType ()
+			    params [it]
 			);
 		    } catch (Error::ErrorList list) {
 			errors = {};
@@ -914,16 +914,16 @@ namespace semantic {
 		auto gen = validateTemplateClassCst (loc, ref, it, rights_, local_score, errors, _sym);
 		if (!gen.isEmpty ()) {
 		    if (gen.is <ClassRef> ()) gen = ClassPtr::init (loc, gen);
-		    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+		    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 						     TemplateSyntaxWrapper::init (loc, gen),
-						     Var::init ({loc, ClassRef::INIT_NAME}),
+						     Var::init (lexing::Word::init (loc, ClassRef::INIT_NAME)),
 						     Expression::empty ());
 		    
 		    std::vector <syntax::Expression> params;
 		    for (auto & it : rights_)
 			params.push_back (TemplateSyntaxWrapper::init (it.getLocation (), it));
 					  
-		    auto expr = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
+		    auto expr = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 							    bin,
 							    params, false
 		    );
@@ -1028,9 +1028,9 @@ namespace semantic {
 			of (syntax::TemplateCall, cl, {
 				auto loc = left.getLocation ();
 				auto inner_bin = syntax::Binary::init (
-				    {loc, Token::DOT},  TemplateSyntaxWrapper::init (loc, left),
+				    lexing::Word::init (loc, Token::DOT),  TemplateSyntaxWrapper::init (loc, left),
 				    cl.getContent (), Expression::empty ()
-				);
+				    );
 				auto inner_value = this-> _context.validateValue (inner_bin);
 				succ = true; // If we are here, then the class has field named cl.getContent ()
 				

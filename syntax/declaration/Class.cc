@@ -22,13 +22,6 @@ namespace syntax {
 	return Declaration {new (NO_GC) Class (name, comment, over, decls, attribs)};
     }
    
-    bool Class::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Class thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
-
     const Expression & Class::getAncestor () const {
 	return this-> _over;
     }

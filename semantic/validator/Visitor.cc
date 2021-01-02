@@ -264,12 +264,14 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateTemplateSolutionMethod (const semantic::Symbol & sol, const Generator & self) {
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    
 	    const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();	    
 	    if (syms.size () != 1) Ymir::Error::halt ("", "");
 	    
-	    auto classType = self.to <Value> ().getType ().to <ClassPtr> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
-	    if (insertTemplateSolution (sol)) { // If it is the first time, the solution is presented
-		std::list <Ymir::Error::ErrorMsg> errors;
+	    auto classType = sol.getReferent ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
+	    
+	    if (insertTemplateSolution (sol)) { // If it is the first time the solution is presented
 		pushReferent (sol, "validateTemplateSolutionMethod");
 		enterForeign ();
 		try {
@@ -295,8 +297,21 @@ namespace semantic {
 	    if (syms [0].to <semantic::Function> ().isOver ()) {
 		Ymir::Error::occur (syms [0].getName (), ExternalError::get (NOT_OVERRIDE), syms [0].getName ().getStr ());
 	    }
+
+	    pushReferent (syms [0], "validateTemplateSolutionMethod");
+	    Generator proto (Generator::empty ());
+	    try {
+		proto = this-> validateMethodProto (syms [0].to <semantic::Function> (), classType);
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
+	    }
+
+	    popReferent ("validateTemplateSolutionMethodProto");
 	    
-	    auto proto = this-> validateMethodProto (syms [0].to <semantic::Function> (), classType);
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+	    
 	    return proto;
 	}
 
@@ -399,7 +414,7 @@ namespace semantic {
 			auto note = Ymir::Error::createNote (it.getLocation ());
 			errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_DECLARED), func.getRealName (), it.prettyString ()));
 		    }
-
+		    
 		    for (auto & it : unused) {
 			auto note = Ymir::Error::createNote (it.getLocation ());
 			errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_USED), func.getRealName (), it.prettyString ()));
@@ -651,8 +666,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {
-
+	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {		
 		auto sym = cls;
 		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 		// To avoid recursive validation 
@@ -1171,7 +1185,7 @@ namespace semantic {
 		auto & __params = function.getPrototype ().getParameters ();
 		
 		classType = Type::init (__params [0].getLocation (), classType.to <Type> (), isMutable, false);		
-		params.insert (params.begin (), ParamVar::init ({__params [0].getLocation (), Keys::SELF}, classType, isMutable, true));
+		params.insert (params.begin (), ParamVar::init (lexing::Word::init (__params [0].getLocation (), Keys::SELF), classType, isMutable, true));
 		insertLocal (params [0].getName (), params [0]);		
 
 		auto fakeParams = std::vector <syntax::Expression> (__params.begin () + 1, __params.end ());
@@ -1395,9 +1409,9 @@ namespace semantic {
 		
 		if (!cstrs.isEmpty ()) {
 		    auto superBin = TemplateSyntaxWrapper::init (loc, cstrs);				      
-		    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
+		    auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR), superBin, superParams);
 		    auto result = validateValue (call);
-		    instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init ({loc, Keys::SELF}))));
+		    instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init (lexing::Word::init (loc, Keys::SELF)))));
 		} else {
 		    Ymir::Error::occur (
 			loc,
@@ -1426,9 +1440,9 @@ namespace semantic {
 		    if (!cstrs.isEmpty ()) {
 			auto superBin = TemplateSyntaxWrapper::init (loc, cstrs);				      
 			
-			auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);
+			auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR), superBin, superParams);
 			auto result = validateValue (call);
-			instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init ({loc, Keys::SELF}))));
+			instructions.push_back (ClassCst::init (result.to <ClassCst> (), validateValue (syntax::Var::init (lexing::Word::init (loc, Keys::SELF)))));
 		    } else {
 			Ymir::Error::occur (
 			    loc,
@@ -1443,8 +1457,8 @@ namespace semantic {
 		for (auto & it : ancestorFields) validated.emplace (it.to <generator::VarDecl> ().getName ());
 		for (auto & it : cs.getContent ().getFieldConstruction ()) {
 		    auto name = it.first;
-		    auto access = syntax::Binary::init ({name, Token::DOT},
-							syntax::Var::init ({name, Keys::SELF}),
+		    auto access = syntax::Binary::init (lexing::Word::init (name, Token::DOT),
+							syntax::Var::init (lexing::Word::init (name, Keys::SELF)),
 							syntax::Var::init (name), syntax::Expression::empty ());
 		    try {		
 			if (validated.find (name.getStr ()) != validated.end ()) {
@@ -1471,8 +1485,8 @@ namespace semantic {
 			    Error::occurAndNote (it.to <syntax::VarDecl> ().getLocation (), note, ExternalError::get (UNINIT_FIELD), it.to <syntax::VarDecl> ().getName ().getStr ());
 			} else {
 			    auto name = it.to <syntax::VarDecl> ().getName ();
-			    auto access = syntax::Binary::init ({name, Token::DOT},
-								syntax::Var::init ({name, Keys::SELF}),
+			    auto access = syntax::Binary::init (lexing::Word::init (name, Token::DOT),
+								syntax::Var::init (lexing::Word::init (name, Keys::SELF)),
 								syntax::Var::init (name), syntax::Expression::empty ());
 			    auto left = this-> validateValue (access);
 			    auto right = this-> validateValue (it.to <syntax::VarDecl> ().getValue ());
@@ -1567,7 +1581,7 @@ namespace semantic {
 			
 			if (!cstrs.isEmpty ()) {			    
 			    auto superBin = TemplateSyntaxWrapper::init (loc, cstrs);				      			    
-			    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR}, superBin, superParams);			    
+			    auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR), superBin, superParams);			    
 			    auto result = validateValue (call);
 			    verifyConstructionLoop (loc, result);
 			}
@@ -1640,23 +1654,30 @@ namespace semantic {
 		    
 		    std::vector <std::string> fields;
 		    if (sym.to<semantic::Enum> ().getFields ().size () == 0) {
-			// Error
+			Ymir::Error::occur (sym.getName (), ExternalError::get (ENUM_EMPTY));
 		    }
 		    
 		    for (auto & it : sym.to <semantic::Enum> ().getFields ()) {
-			match (it) {
-			    of (syntax::VarDecl, decl, {
-				    if (decl.getValue ().isEmpty ()) {
-					Ymir::Error::occur (decl.getName (), ExternalError::get (EN_NO_VALUE), decl.getName ().getStr ());
+			try {
+			    match (it) {
+				of (syntax::VarDecl, decl, {
+					if (decl.getValue ().isEmpty ()) {
+					    Ymir::Error::occur (decl.getName (), ExternalError::get (EN_NO_VALUE), decl.getName ().getStr ());
+					}
 				    }
-				}
-			    );
+				    );
+			    }
+			    
+			    auto val = this-> validateValue (it);			    
+			    if (type.isEmpty ()) {
+				type = Generator::init (gen.getLocation (), val.to <generator::VarDecl> ().getVarType ());
+			    } else verifyCompatibleType (val.getLocation (), type, val.to<generator::VarDecl> ().getVarType ());
+			} catch (Error::ErrorList list) {
+			    auto note = Ymir::Error::createNote (it.getLocation ());
+			    for (auto it : list.errors) 
+				note.addNote (it);
+			    errors.push_back (note);
 			}
-			
-			auto val = this-> validateValue (it);
-			if (type.isEmpty ()) {
-			    type = Generator::init (gen.getLocation (), val.to <generator::VarDecl> ().getVarType ());
-			} else verifyCompatibleType (val.getLocation (), type, val.to<generator::VarDecl> ().getVarType ());
 		    }
 		    
 		} catch (Error::ErrorList list) {
@@ -1694,7 +1715,7 @@ namespace semantic {
 		return type;
 	    }
 	    auto gen = en.to <semantic::Enum> ().getGenerator ();
-	    if (gen.is <semantic::generator::Enum> ())
+	    if (!gen.to <semantic::generator::Enum> ().getType ().isEmpty ())
 		return gen.to <semantic::generator::Enum> ().getType ();
 	    else {
 		Ymir::Error::occur (en.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), en.getRealName ());
@@ -1802,8 +1823,15 @@ namespace semantic {
 		    return validateBinary (binary, fromCall);
 		);
 		
-		of (syntax::Var, var, 
-		    return validateVar (var);		    
+		of (syntax::Var, var,
+		    try {
+			return validateVar (var);
+		    } catch (Error::ErrorList lst) {
+			try {
+			    return validateTypeVar (var);
+			} catch (Error::ErrorList) {}
+			throw lst;
+		    }
 		);
 
 		of (syntax::VarDecl, var,
@@ -1869,10 +1897,20 @@ namespace semantic {
 			    std::list <Ymir::Error::ErrorMsg> errors;
 			    int score;
 			    auto visit = CallVisitor::init (*this);			    
-			    ret = visit.validateFrameProto (cl.getLocation (), ret.to <FrameProto> (), {}, score, errors);
+			    auto sec_ret = visit.validateFrameProto (cl.getLocation (), ret.to <FrameProto> (), {}, score, errors);
 			    if (errors.size () != 0) {
 				throw Error::ErrorList {errors};
-			    }			    
+			    }
+			    if (!sec_ret.isEmpty ()) ret = sec_ret;
+			} else if (!fromCall && ret.is <DelegateValue> () && ret.to <DelegateValue> ().getType ().to<Type> ().getInners ()[0].is <FrameProto> ()) { // Template method proto
+			    std::list <Ymir::Error::ErrorMsg> errors;
+			    int score;
+			    auto visit = CallVisitor::init (*this);			    
+			    auto sec_ret = visit.validateDelegate (cl.getLocation (), ret, {}, score, errors);
+			    if (errors.size () != 0) {
+				throw Error::ErrorList {errors};
+			    }
+			    if (!sec_ret.isEmpty ()) ret = sec_ret;
 			} else if (!fromCall && ret.is <generator::Struct> ()) {
 			    std::list <Ymir::Error::ErrorMsg> errors;
 			    int score;
@@ -1973,7 +2011,7 @@ namespace semantic {
 	    
 	    Generator type (Void::init (block.getLocation ()));
 	    bool breaker = false, returner = false;
-	    lexing::Word brLoc, rtLoc;
+	    lexing::Word brLoc = lexing::Word::eof (), rtLoc = lexing::Word::eof ();
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    Symbol decl (Symbol::empty ());
 	    try {
@@ -1993,8 +2031,9 @@ namespace semantic {
 		    if ((returner || breaker) && !block.getContent ()[i].is <syntax::Unit> ()) {			
 			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
 		    }
-		    auto value = validateValueNoReachable (block.getContent () [i]);
 
+		    auto value = validateValueNoReachable (block.getContent () [i]);
+		    
 		    bool isMutable = value.to <Value> ().getType ().to <Type> ().isMutable ();
 		    if (value.to <Value> ().isReturner ()) { returner = true; rtLoc = value.to<Value> ().getReturnerLocation (); }
 		    if (value.to <Value> ().isBreaker ()) { breaker = true; brLoc = value.to<Value> ().getBreakerLocation (); }
@@ -2085,7 +2124,7 @@ namespace semantic {
 	    
 	    if (onSuccess.size () != 0) ret = SuccessScope::init (block.getLocation (), type, ret, onSuccess);
 	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) {
-		auto jmp_buf_type = validateType (syntax::Var::init ({block.getLocation (), global::CoreNames::get (JMP_BUF_TYPE)}));
+		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (block.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
 		onFailure.insert (onFailure.end (), onExit.begin (), onExit.end ());
 		auto ex = ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
 		return ex;
@@ -2107,7 +2146,7 @@ namespace semantic {
 		    auto syntaxType = createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
 		    auto type = Type::init (validateType (syntaxType).to <Type> (), false, false);
 
-		    varDecl = generator::VarDecl::init ({loc, "#catch"}, "#catch", type, Generator::empty (), false);
+		    varDecl = generator::VarDecl::init (lexing::Word::init (loc, "#catch"), "#catch", type, Generator::empty (), false);
 		    insertLocal ("#catch", varDecl);
 		    typeInfo = validateTypeInfo (loc, type);
 		    auto vref = VarRef::init (loc, "#catch", type, varDecl.getUniqId (),  false, Generator::empty ());
@@ -2315,7 +2354,7 @@ namespace semantic {
 	    if (fixed.getSuffix () == "") type = Integer::init (fixed.getLocation (), 32, true);
 	    if (fixed.getSuffix () == Keys::I64) type = Integer::init (fixed.getLocation (), 64, true);
 	    if (fixed.getSuffix () == Keys::ISIZE) type = Integer::init (fixed.getLocation (), 0, true);
-
+		
 	    auto integer = type.to<Integer> ();
 	    //type.to <Type> ().isMutable (true);
 	    Fixed::UI value;
@@ -2358,6 +2397,10 @@ namespace semantic {
 	    } else if (bin.getLocation () == Token::DOT) {
 		auto dotVisitor = DotVisitor::init (*this);
 		return dotVisitor.validate (bin, isFromCall);
+	    } else if (bin.getLocation () == Token::DOT_AND) {
+		auto intr = syntax::Intrinsics::init (lexing::Word::init (bin.getLocation (), Keys::ALIAS), bin.getLeft ());
+		auto n_bin = syntax::Binary::init (lexing::Word::init (bin.getLocation (), Token::DOT), intr, bin.getRight (), bin.getType ());
+		return this-> validateBinary (n_bin.to <syntax::Binary> (), isFromCall);
 	    } else {
 		auto binVisitor = BinaryVisitor::init (*this);
 		return binVisitor.validate (bin);
@@ -2446,7 +2489,7 @@ namespace semantic {
 				succ = true;
 			    }
 			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-				gens.push_back (TraitRef::init ({loc, tr.getName ().getStr ()}, sym));
+				gens.push_back (TraitRef::init (lexing::Word::init (loc, tr.getName ().getStr ()), sym));
 				succ = true;
 			    }
 			) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
@@ -2526,7 +2569,7 @@ namespace semantic {
 				locGen = validateClass (multSym [it]);
 			    }		
 			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-				locGen = TraitRef::init ({loc, tr.getName ().getStr ()}, multSym [it]);
+				locGen = TraitRef::init (lexing::Word::init (loc, tr.getName ().getStr ()), multSym [it]);
 			    }			
 			) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
 				Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
@@ -2698,7 +2741,7 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateMethodProto (const semantic::Function & func, const Generator & classType_) {
-	    enterForeign ();
+	    enterForeign ();	    
 	    std::vector <Generator> params;
 	    static std::list <lexing::Word> __validating__;
 	    auto & function = func.getContent ();
@@ -2744,7 +2787,7 @@ namespace semantic {
 	    
 	    __validating__.pop_back ();
 	    exitForeign ();
-
+	    
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};		
 	    }
@@ -3397,9 +3440,9 @@ namespace semantic {
 	    verifyCompatibleType (thr.getLocation (), ancType, type);
 	    
 	    auto loc = thr.getLocation ();
-	    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+	    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 					     TemplateSyntaxWrapper::init (loc, inner),
-					     syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+					     syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
 					     syntax::Expression::empty ()
 	    );
 	    auto info = validateValue (bin);
@@ -3440,10 +3483,10 @@ namespace semantic {
 	    auto loc = assert.getLocation ();
 	    auto func = createVarFromPath (assert.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (ASSERT_FUNC)});
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		func,
 		params
-	    );
+		);
 	    
 	    auto ret = validateValue (call);
 	    try {
@@ -3491,6 +3534,46 @@ namespace semantic {
 		} catch (Error::ErrorList list) {
 		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 		}
+	    } else if (prg.getLocation ().getStr () == Keys::OPERATOR) {
+		if (prg.getContent ().size () != 2 && prg.getContent ().size () != 3) {		    
+		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		}
+		
+		auto op = prg.getContent ()[0];
+		if (!op.is <syntax::String> ())
+		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+
+		syntax::Expression syntOp (syntax::Expression::empty ());
+		
+		if (prg.getContent ().size () == 2) {
+		    if (UnaryVisitor::toOperator (op.to<syntax::String> ().getSequence ()) == generator::Unary::Operator::LAST_OP) {
+			Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		    }
+		    auto type = this-> validateType (prg.getContent () [1]);
+		    auto value = FakeValue::init (prg.getLocation (), type);
+		    syntOp = syntax::Unary::init (op.to <syntax::String> ().getSequence (),
+						  TemplateSyntaxWrapper::init (value.getLocation (), value));
+		} else if (prg.getContent ().size () == 3) {
+		    bool af = false;
+		    if (BinaryVisitor::toOperator (op.to<syntax::String> ().getSequence (), af) == generator::Binary::Operator::LAST_OP) {
+			Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		    }
+		    auto left = this-> validateType (prg.getContent () [1]);
+		    auto right = this-> validateType (prg.getContent () [2]);
+		    auto lValue = FakeValue::init (prg.getLocation (), left);
+		    auto rValue = FakeValue::init (prg.getLocation (), right);
+		    syntOp = syntax::Binary::init (op.to <syntax::String> ().getSequence (),
+						   TemplateSyntaxWrapper::init (lValue.getLocation (), lValue),
+						   TemplateSyntaxWrapper::init (rValue.getLocation (), rValue),
+						   syntax::Expression::empty ());
+		}
+		
+		try {
+		    this-> validateValue (syntOp);
+		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
+		} catch (Error::ErrorList list) {
+		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
+		}
 	    } else {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNKOWN_PRAGMA), prg.getLocation ().getStr ());
 	    }
@@ -3512,14 +3595,14 @@ namespace semantic {
 	    	} else if (left.to <Value> ().getType ().is <ClassPtr> ()) {
 	    	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 	    	    auto bin = syntax::Binary::init (
-	    		{loc, Token::DOT},
+	    		lexing::Word::init (loc, Token::DOT),
 	    		leftSynt,
-	    		syntax::Var::init ({loc, CoreNames::get (DOLLAR_OP_OVERRIDE)}),
+	    		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (DOLLAR_OP_OVERRIDE))),
 	    		syntax::Expression::empty ()
 	    		);
 
 	    	    auto call = syntax::MultOperator::init (
-	    		{loc, Token::LPAR}, {loc, Token::RPAR},
+	    		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 	    		bin,
 	    		{}, false
 	    	    );
@@ -3566,7 +3649,7 @@ namespace semantic {
 	    }
 	    
 	    auto arrayType = Array::init (loc, str, innerTypes.size ());
-	    auto stringLit = syntax::String::init (loc, loc, {loc, type.prettyString ()}, lexing::Word::eof ());
+	    auto stringLit = syntax::String::init (loc, loc, lexing::Word::init (loc, type.prettyString ()), lexing::Word::eof ());
 	    auto name = validateValue (stringLit);
 	    auto constName = Mangler::init ().mangle (type) + "_" + "name";
 	    auto constNameInner = Mangler::init ().mangle (type) + "_" + "nameInner";
@@ -3842,7 +3925,7 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateDestructDecl (const syntax::DestructDecl & decl) {
-	    auto value = validateValue (syntax::Intrinsics::init ({decl.getLocation (), Keys::EXPAND}, decl.getValue ()));
+	    auto value = validateValue (syntax::Intrinsics::init (lexing::Word::init (decl.getLocation (), Keys::EXPAND), decl.getValue ()));
 	    match (value) {
 		of (List, lst, {
 			if ((decl.isVariadic () && lst.getParameters ().size () < decl.getParameters ().size ())
@@ -4047,7 +4130,7 @@ namespace semantic {
 	    if (proto.isRefClosure () || proto.isMoveClosure ()) {
 		closure = this-> exitClosure ();
 		if (closure.to <Closure> ().getNames ().size () != 0) {
-		    params.insert (params.begin (), ParamVar::init ({lexing::Word::eof (), "#_closure"}, closure, false, false));
+		    params.insert (params.begin (), ParamVar::init (lexing::Word::init (lexing::Word::eof (), "#_closure"), closure, false, false));
 		    params [0].setUniqId (refId);
 		} else closure = Generator::empty ();
 	    }
@@ -4110,7 +4193,7 @@ namespace semantic {
 	    auto call = CallVisitor::init (*this);	    
 	    auto ret = call.validate (sym.getLocation (), sym, valueParams, score, errors);
 	    if (ret.isEmpty ()) 
-		call.error ({sym.getLocation (), ""}, {sym.getLocation (), ""}, sym, valueParams, errors);
+		call.error (lexing::Word::init (sym.getLocation (), ""), lexing::Word::init (sym.getLocation (), ""), sym, valueParams, errors);
 	    
 	    return ret.to <Call> ().getFrame ();
 	}
@@ -4268,22 +4351,22 @@ namespace semantic {
 		
 		verifyClassImpl (intr.getLocation (), inner.to <Value> ().getType (), impl);		
 		call = syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
-		    syntax::Binary::init ({loc, Token::DOT},
+		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+		    syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
 					  TemplateSyntaxWrapper::init (inner.getLocation (), inner), 	       
-					  syntax::Var::init ({loc, global::CoreNames::get (DCOPY_OP_OVERRIDE)}),
+					  syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (DCOPY_OP_OVERRIDE))),
 					  syntax::Expression::empty ()
-		    ),
+			),
 		    {}, false
 		);
 	    } else {
 		auto func = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DUPLICATION_MODULE), CoreNames::get (DCOPY_OP_OVERRIDE)});
 		
 		call = syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		    func,
 		    {TemplateSyntaxWrapper::init (inner.getLocation (), inner)}	       
-		);
+		    );
 	    }
 
 	    auto val = validateValue (call);
@@ -5194,7 +5277,9 @@ namespace semantic {
 	void Visitor::verifyCompatibleTypeWithValue (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (gen.is <NullValue> () && type.is <Pointer> ())  return;
 	    else if (gen.to <Value> ().getType ().is <Slice> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
-	
+	    else if (type.is <Integer> () && this-> isIntConstant (gen)) return; // We allow int implicit cast if the operand is knwon at compile time and is a int value
+	    else if (type.is <Float> () && this-> isFloatConstant (gen)) return; // Idem for float const
+	    
 	    verifyCompatibleType (loc, type, gen.to <Value> ().getType ());
 	}	
 
@@ -5230,7 +5315,28 @@ namespace semantic {
 		}
 	    }
 
-	}	
+	}
+
+
+	bool Visitor::isIntConstant (const Generator & value) {
+	    if (!value.to <Value> ().getType ().is <Integer> ()) return false;
+	    try {
+		auto val = retreiveValue (value);
+		return val.is <Fixed> ();
+	    } catch (Error::ErrorList err) {
+		return false;
+	    }
+	}
+
+	bool Visitor::isFloatConstant (const Generator & value) {
+	    if (!value.to <Value> ().getType ().is <Float> ()) return false;
+	    try {
+		auto val = retreiveValue (value);
+		return val.is <FloatValue> ();		
+	    } catch (Error::ErrorList list) {
+		return false;
+	    }
+	}
 
 	bool Visitor::isAncestor (const Generator & left_, const Generator & right_) {
 	    auto right = right_;
@@ -5354,20 +5460,20 @@ namespace semantic {
 	}
 
 	void Visitor::popReferent (const std::string &) {
-	    //print (this-> _referent.size ());
-	    //println ("Out : ", msg, " => ", this-> _referent.back ().getRealName ());
+	    // print (this-> _referent.size ());
+	    // println ("Out : ", msg, " => ", this-> _referent.back ().getRealName ());
 	    this-> _referent.pop_back ();
 	}
 
 	syntax::Expression Visitor::createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & names_) {
 	    auto names = names_;
-	    syntax::Expression last = syntax::Var::init ({loc, names [0]});
+	    syntax::Expression last = syntax::Var::init (lexing::Word::init (loc, names [0]));
 	    names = std::vector <std::string> (names.begin () + 1, names.end ());
 	    while (names.size () > 0) {
 		last = syntax::Binary::init (
-		    {loc, Token::DCOLON},
+		    lexing::Word::init (loc, Token::DCOLON),
 		    last,
-		    syntax::Var::init ({loc, names [0]}),
+		    syntax::Var::init (lexing::Word::init (loc, names [0])),
 		    syntax::Expression::empty ()
 		);
 		names = std::vector <std::string> (names.begin () + 1, names.end ());
@@ -5378,9 +5484,9 @@ namespace semantic {
 	syntax::Expression Visitor::createClassTypeFromPath (const lexing::Word & loc, const std::vector <std::string> & names_) {
 	    auto last = createVarFromPath (loc, names_);
 	    return syntax::Unary::init (
-		{loc, Token::AND},
+		lexing::Word::init (loc, Token::AND),
 		last
-	    );
+		);
 	}
 
 	Generator Visitor::addElseToConditional (const Generator & gen, const Generator & _else) {

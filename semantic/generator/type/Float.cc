@@ -51,13 +51,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) Float (*this)};
 	}
 		
-	bool Float::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Float thisFloat; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisFloat) [0] == vtable) return true;
-	    return Type::isOf (type);	
-	}
-
 	bool Float::equals (const Generator & gen) const {
 	    if (!gen.is <Float> ()) return false;
 	    auto integer = gen.to<Float> ();

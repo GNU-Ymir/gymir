@@ -29,8 +29,6 @@ namespace documentation {
 
 	    JsonValue clone () const override;
 
-	    bool isOf (const IJsonValue * type) const override;
-
 	    std::string toString () const override;
 	    
 	};

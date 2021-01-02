@@ -261,7 +261,7 @@ namespace semantic {
 		    
 			auto delType = Delegate::init (vtable [i].getLocation (), vtable [i]);
 			syms.push_back (
-			    DelegateValue::init ({expression.getLocation (), name}, delType,
+			    DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
 						 vtable [i].to <MethodProto> ().getClassType (),
 						 left,
 						 VtableAccess::init (expression.getLocation (),
@@ -271,7 +271,7 @@ namespace semantic {
 								     left,
 								     i + 1 // + 1 to ignore the typeinfo
 						 )
-			    )
+				)
 			);
 		    } else {
 			errors.push_back (
@@ -299,7 +299,7 @@ namespace semantic {
 					}
 					
 					syms.push_back (
-					    MethodTemplateRef::init ({expression.getLocation (), tl.getName ().getStr ()}, it, castedRef)
+					    MethodTemplateRef::init (lexing::Word::init (expression.getLocation (), tl.getName ().getStr ()), it, castedRef)
 					);					
 				    } else {
 					errors.push_back (
@@ -318,7 +318,7 @@ namespace semantic {
 	    }
 	    
 	    if (syms.size () != 0) 
-		return MultSym::init ({expression.getLocation (), name}, syms);
+		return MultSym::init (lexing::Word::init (expression.getLocation (), name), syms);
 	    	    
 	    return Generator::empty ();
 	}

@@ -83,11 +83,6 @@ namespace semantic {
 	    Generator clone () const override ;
 	    
 	    /**
-	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
-	     */
-	    bool isOf (const IGenerator * type) const override;	    
-
-	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     * \it will not check the ref, and mutability infos
 	     */

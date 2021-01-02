@@ -2,11 +2,6 @@
 
 namespace syntax {
 
-    MacroConstructor::MacroConstructor () :
-	IDeclaration (lexing::Word::eof (), ""),
-	_rule (Expression::empty ())
-    {}
-
     MacroConstructor::MacroConstructor (const lexing::Word & loc, const lexing::Word & contentLoc, const std::string & comment, const Expression & rule, const std::string & content, const std::vector <Expression> & skips) :
 	IDeclaration (loc, comment),
 	_rule (rule),
@@ -22,13 +17,6 @@ namespace syntax {
     Declaration MacroConstructor::init (const MacroConstructor & other) {
 	return Declaration {new (NO_GC) MacroConstructor (other)};
     }
-
-    bool MacroConstructor::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	MacroConstructor thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
 
     void MacroConstructor::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');

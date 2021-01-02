@@ -30,13 +30,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) ProtoVar (*this)};
 	}
 			
-	bool ProtoVar::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    ProtoVar thisProtoVar; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisProtoVar) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool ProtoVar::equals (const Generator & other) const {
 	    if (!other.is <ProtoVar> ()) return false;
 	    else 

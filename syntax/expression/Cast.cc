@@ -17,13 +17,6 @@ namespace syntax {
     Expression Cast::init (const lexing::Word & location, const Expression & type, const Expression & content) {
 	return Expression {new (NO_GC) Cast (location, type, content)};
     }
-
-    bool Cast::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Cast thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
     
     void Cast::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Cast>", i, '\t');

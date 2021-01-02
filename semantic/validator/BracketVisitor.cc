@@ -71,20 +71,24 @@ namespace semantic {
 		    if (realFailure) throw list;
 		}
 		
-		auto test = this-> _context.validateValue (syntax::Binary::init (
-		    {loc, Token::INF},
-		    TemplateSyntaxWrapper::init (loc, len), 
-		    TemplateSyntaxWrapper::init (loc,
-						 Cast::init (loc, len.to <Value> ().getType (), right[0])
-		    ),
-		    syntax::Expression::empty ()
-		));
-		    
-		auto call = this-> _context.validateValue (syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
-		    func,
-		    {}
-		));
+		auto test = this-> _context.validateValue (
+		    syntax::Binary::init (
+			lexing::Word::init (loc, Token::INF),
+			TemplateSyntaxWrapper::init (loc, len), 
+			TemplateSyntaxWrapper::init (loc,
+						     Cast::init (loc, len.to <Value> ().getType (), right[0])
+			    ),
+			syntax::Expression::empty ()
+			)
+		    );
+		
+		auto call = this-> _context.validateValue (
+		    syntax::MultOperator::init (
+			lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+			func,
+			{}
+			)
+		    );
 		
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());				
 		
@@ -131,20 +135,24 @@ namespace semantic {
 					       Integer::init (expression.getLocation (), 64, false),
 					       lRef, Slice::LEN_NAME);
 		
-		auto test = this-> _context.validateValue (syntax::Binary::init (
-		    {loc, Token::INF_EQUAL},
-		    TemplateSyntaxWrapper::init (loc, len), 
-		    TemplateSyntaxWrapper::init (loc,
-						 Cast::init (loc, len.to <Value> ().getType (), rRef)
-		    ),
-		    syntax::Expression::empty ()
-		));
+		auto test = this-> _context.validateValue (
+		    syntax::Binary::init (
+			lexing::Word::init (loc, Token::INF_EQUAL),
+			TemplateSyntaxWrapper::init (loc, len), 
+			TemplateSyntaxWrapper::init (loc,
+						     Cast::init (loc, len.to <Value> ().getType (), rRef)
+			    ),
+			syntax::Expression::empty ()
+			))
+		    ;
 		    
-		auto call = this-> _context.validateValue (syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
-		    func,
-		    {}
-		));
+		auto call = this-> _context.validateValue (
+		    syntax::MultOperator::init (
+			lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+			func,
+			{}
+			)
+		    );
 		
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());						
 		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
@@ -199,47 +207,51 @@ namespace semantic {
 		
 		
 		auto testFst = syntax::Binary::init (
-		    {loc, Token::INF},
+		    lexing::Word::init (loc, Token::INF),
 		    TemplateSyntaxWrapper::init (loc, len), 
 		    TemplateSyntaxWrapper::init (loc,
 						 Cast::init (loc, len.to <Value> ().getType (), fst)
-		    ),
+			),
 		    syntax::Expression::empty ()
-		);
+		    );
 
 		auto testScd = syntax::Binary::init (
-		    {loc, Token::INF},
+		    lexing::Word::init (loc, Token::INF),
 		    TemplateSyntaxWrapper::init (loc, len), 
 		    TemplateSyntaxWrapper::init (loc,
 						 Cast::init (loc, len.to <Value> ().getType (), scd)
-		    ),
+			),
 		    syntax::Expression::empty ()
-		);
+		    );
 
 		auto testOrder = syntax::Binary::init (
-		    {loc, Token::INF},
+		    lexing::Word::init (loc, Token::INF),
 		    TemplateSyntaxWrapper::init (loc,
 						 Cast::init (loc, len.to <Value> ().getType (), scd)), 
 		    TemplateSyntaxWrapper::init (loc,
 						 Cast::init (loc, len.to <Value> ().getType (), fst)),		    
 		    syntax::Expression::empty ()
-		);
+		    );
 
-		auto test = this-> _context.validateValue (syntax::Binary::init (
-		    {loc, Token::DPIPE},
-		    testOrder,
+		auto test = this-> _context.validateValue (
 		    syntax::Binary::init (
-			{loc, Token::DPIPE},
-			testFst, testScd, syntax::Expression::empty ()
-		    ),
-		    syntax::Expression::empty ()
-		));
+			lexing::Word::init (loc, Token::DPIPE),
+			testOrder,
+			syntax::Binary::init (
+			    lexing::Word::init (loc, Token::DPIPE),
+			    testFst, testScd, syntax::Expression::empty ()
+			    ),
+			syntax::Expression::empty ()
+			)
+		    );
 
-		auto call = this-> _context.validateValue (syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
-		    func,
-		    {}
-		));
+		auto call = this-> _context.validateValue (
+		    syntax::MultOperator::init (
+			lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+			func,
+			{}
+			)
+		    );
 		
 		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());
 		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
@@ -252,27 +264,30 @@ namespace semantic {
 		else
 		    innerType = Type::init (innerType.to <Type> (), false);
 
-		auto ptrFinal = this-> _context.validateValue (syntax::Binary::init (
-		    {loc, Token::PLUS},
-		    TemplateSyntaxWrapper::init (loc, ptr),
+		auto ptrFinal = this-> _context.validateValue (
 		    syntax::Binary::init (
-			{loc, Token::STAR},
+			lexing::Word::init (loc, Token::PLUS),
+			TemplateSyntaxWrapper::init (loc, ptr),
+			syntax::Binary::init (
+			    lexing::Word::init (loc, Token::STAR),
+			    TemplateSyntaxWrapper::init (loc,
+							 SizeOf::init (loc, Integer::init (loc, 0, false), innerType)),
+			    TemplateSyntaxWrapper::init (loc,
+							 Cast::init (loc, len.to <Value> ().getType (), fst)),
+			    syntax::Expression::empty ()
+			    ), syntax::Expression::empty ())
+		    );
+		
+		auto lenFinal = this-> _context.validateValue (
+		    syntax::Binary::init (
+			lexing::Word::init (loc, Token::MINUS),
 			TemplateSyntaxWrapper::init (loc,
-						     SizeOf::init (loc, Integer::init (loc, 0, false), innerType)),
+						     Cast::init (loc, len.to <Value> ().getType (), scd)),
 			TemplateSyntaxWrapper::init (loc,
 						     Cast::init (loc, len.to <Value> ().getType (), fst)),
 			syntax::Expression::empty ()
-		    ), syntax::Expression::empty ())
-		);
-
-		auto lenFinal = this-> _context.validateValue (syntax::Binary::init (
-		    {loc, Token::MINUS},
-		    TemplateSyntaxWrapper::init (loc,
-						 Cast::init (loc, len.to <Value> ().getType (), scd)),
-		    TemplateSyntaxWrapper::init (loc,
-						 Cast::init (loc, len.to <Value> ().getType (), fst)),
-		    syntax::Expression::empty ()
-		));
+			)
+		    );
 
 		auto slcType = Slice::init (loc, innerType);
 		if (left.to <Value> ().isLvalue () &&
@@ -303,14 +318,14 @@ namespace semantic {
 
 
 	    auto bin = syntax::Binary::init (
-		{loc, Token::DOT},
+		lexing::Word::init (loc, Token::DOT),
 		leftSynt,
-		syntax::Var::init ({loc, CoreNames::get (INDEX_OP_OVERRIDE)}),
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (INDEX_OP_OVERRIDE))),
 		syntax::Expression::empty ()
 	    );
 	    
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		bin,
 		rightSynt, false
 	    );

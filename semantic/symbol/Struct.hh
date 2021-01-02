@@ -23,9 +23,14 @@ namespace semantic {
 	bool _isUnion;
 
 	const std::vector <syntax::Expression> _fields;
-
+	
 	/** Set at validation time, to prevent multiple time validation of the same symbol */
 	generator::Generator _gen;
+
+	/**
+	 * The comments on top of the fields
+	 */
+	const std::vector <std::string> _field_comments;
 	
     private :
 
@@ -33,13 +38,11 @@ namespace semantic {
 
 	Struct ();
 
-	Struct (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak);
+	Struct (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, const std::vector <std::string> & fieldComments, bool isWeak);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, bool isWeak);
-
-	bool isOf (const ISymbol * type) const override;
+	static Symbol init (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, const std::vector <std::string> & fieldComments, bool isWeak);
 
 	/**
 	 * \brief The list of fields stores syntaxic nodes, because the types of fields cannot be known before validation
@@ -56,6 +59,12 @@ namespace semantic {
 	 * \return the list of fields of the structure	 
 	 */
 	const std::vector <syntax::Expression> & getFields () const;
+
+	/**
+	 * \return the list of comments of the fields
+	 */
+	const std::vector <std::string> & getFieldComments () const;
+
 	
 	bool equals (const Symbol & other, bool parent) const override;
 

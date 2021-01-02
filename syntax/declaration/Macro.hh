@@ -25,8 +25,6 @@ namespace syntax {
 
 	static Declaration init (const lexing::Word & loc, const std::string & comment, const std::vector <Declaration> & content);
 
-	bool isOf (const IDeclaration * type) const override;       	
-
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	
 	const std::vector <Declaration> & getContent () const;

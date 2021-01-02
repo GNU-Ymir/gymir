@@ -26,13 +26,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) TupleClosure (*this)};
 	}
 		
-	bool TupleClosure::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    TupleClosure thisTupleClosure; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisTupleClosure) [0] == vtable) return true;
-	    return Type::isOf (type);	
-	}
-
 	bool TupleClosure::equals (const Generator & gen) const {
 	    if (!gen.is<TupleClosure> ()) return false;
 	    auto tu = gen.to <TupleClosure> ();

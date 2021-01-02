@@ -20,13 +20,6 @@ namespace documentation {
 	    return JsonValue {new (NO_GC) JsonDict (*this)};
 	}
 
-	bool JsonDict::isOf (const IJsonValue * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    JsonDict thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return IJsonValue::isOf (type);	
-	}
-
 	std::string JsonDict::toString () const {
 	    Ymir::OutBuffer buf;
 	    int i = 0;
@@ -34,13 +27,13 @@ namespace documentation {
 	    for (auto & it : this-> _content) {
 		if (i != 0) buf.writeln (", ");
 		if (it.second.is <JsonDict> ()) {
-		    buf.write (Ymir::format ("\t\"%\" : %", it.first, Ymir::entab (it.second.toString (), "\t")));
+		    buf.write (Ymir::format ("\t\"%\" : %", it.first, Ymir::entab (it.second.toString (), "\t", false)));
 		} else {
 		    buf.write (Ymir::format ("\t\"%\" : %", it.first, it.second.toString ()));
 		}
 		i += 1;
 	    }
-	    buf.write ("}");
+	    buf.write ("\n}");
 	    return buf.str ();
 	}
 	

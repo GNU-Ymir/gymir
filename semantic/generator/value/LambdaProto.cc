@@ -54,13 +54,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) LambdaProto (*this)};
 	}
 
-	bool LambdaProto::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    LambdaProto thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool LambdaProto::equals (const Generator & gen) const {
 	    if (!gen.is <LambdaProto> ()) return false;
 	    auto fr = gen.to<LambdaProto> ();

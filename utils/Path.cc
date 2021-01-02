@@ -79,7 +79,7 @@ namespace Ymir {
 	}
     }
 
-    std::vector <std::string> Path::getFiles () const {
+    const std::vector <std::string> & Path::getFiles () const {
 	return this-> _files;
     }
 

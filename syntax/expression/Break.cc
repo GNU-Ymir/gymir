@@ -16,13 +16,6 @@ namespace syntax {
 	return Expression {new (NO_GC) Break (location, value)};	
     }
 
-    bool Break::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Break thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }	    
-
     void Break::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<Break>", i, '\t');
 	this-> _value.treePrint (stream, i + 1);

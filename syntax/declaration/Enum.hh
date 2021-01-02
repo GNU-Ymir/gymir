@@ -22,13 +22,15 @@ namespace syntax {
 	/** The type of the expression (might be empty) */
 	Expression _type;
 
+	std::vector <std::string> _field_comments;
+	
     private:
 
 	friend Declaration; // Needed for dynamic casting 
 	
 	Enum ();
 
-	Enum (const lexing::Word& ident, const std::string & comment, const Expression & type, const std::vector <Expression> & values);
+	Enum (const lexing::Word& ident, const std::string & comment, const Expression & type, const std::vector <Expression> & values, const std::vector <std::string> & fieldComments);
 	
     public: 
 
@@ -38,12 +40,8 @@ namespace syntax {
 	 * \param type the type of the enumeration
 	 * \param values the values inside the enum
 	 */
-	static Declaration init (const lexing::Word& ident, const std::string & comment, const Expression & type, const std::vector <Expression> & values);
+	static Declaration init (const lexing::Word& ident, const std::string & comment, const Expression & type, const std::vector <Expression> & values, const std::vector <std::string> & fieldComments);
 
-	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
 
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;	
@@ -57,6 +55,11 @@ namespace syntax {
 	 * \return the different values declared inside the enumeration
 	 */
 	const std::vector <Expression> & getValues () const;
+
+	/**
+	 * \return the comments on the fields
+	 */
+	const std::vector <std::string> & getFieldComments () const;
 	
     };
     

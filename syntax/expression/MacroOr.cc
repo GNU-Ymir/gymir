@@ -18,13 +18,6 @@ namespace syntax {
 	return Expression {new (NO_GC) MacroOr (location, left, right)};
     }
 
-    bool MacroOr::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	MacroOr thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
-
     void MacroOr::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<MacroOr> ", i, '\t');
 	this-> _left.treePrint (stream, i+1);

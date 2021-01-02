@@ -19,13 +19,6 @@ namespace syntax {
 	return Expression {new (NO_GC) MacroCall (loc, end, left, content)};
     }
     
-    bool MacroCall::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	MacroCall thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
-
     const Expression & MacroCall::getLeft () const {
 	return this-> _left;
     }

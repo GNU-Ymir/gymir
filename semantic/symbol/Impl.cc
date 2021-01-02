@@ -18,13 +18,6 @@ namespace semantic {
 	return ret;
     }
 
-    bool Impl::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Impl thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);
-    }
-
     void Impl::insert (const Symbol & sym) {
 	this-> _table-> insert (sym);
     }
@@ -34,28 +27,22 @@ namespace semantic {
 	this-> _table-> replace (sym);
     }
 
-    std::vector <Symbol> Impl::get (const std::string & name) const {
-	auto vec = getReferent ().get (name);
-	auto local = this-> _table-> get (name);
-	
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+    void Impl::get (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().get (name, rets);
+	this-> _table-> get (name, rets);
     }
 
-    std::vector <Symbol> Impl::getPublic (const std::string & name) const {
-	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table-> getPublic (name);
-	
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+    void Impl::getPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().getPublic (name, rets);
+	this-> _table-> getPublic (name, rets);
     }
     
-    std::vector<Symbol> Impl::getLocal (const std::string & name) const {
-	return this-> _table-> get (name);
+    void Impl::getLocal (const std::string & name, std::vector<Symbol> & rets) const {
+	this-> _table-> get (name, rets);
     }
 
-    std::vector<Symbol> Impl::getLocalPublic (const std::string & name) const {
-	return this-> _table-> getPublic (name);
+    void Impl::getLocalPublic (const std::string & name, std::vector<Symbol> & rets) const {
+	this-> _table-> getPublic (name, rets);
     }
 
     const std::vector <Symbol> & Impl::getAllInner () const {

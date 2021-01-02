@@ -16,15 +16,7 @@ namespace syntax {
     Expression TemplateCall::init (const lexing::Word & location, const std::vector <Expression> & params, const Expression & content) {
 	return Expression {new (NO_GC) TemplateCall (location, params, content)};
     }
-
     
-    bool TemplateCall::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	TemplateCall thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }	    
-
     void TemplateCall::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<TemplateCall>", i, '\t');
 	stream.writefln ("%*<Params>", i + 1, '\t');

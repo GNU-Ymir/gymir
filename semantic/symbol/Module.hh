@@ -34,23 +34,21 @@ namespace semantic {
 
 	static Symbol init (const lexing::Word & name, const std::string & comments, bool isWeak);
 	
-	bool isOf (const ISymbol * type) const override;
-
 	void insert (const Symbol & sym) override;
 
 	void insertTemplate (const Symbol & sym) override;
 
-	std::vector<Symbol> getTemplates () const override;
+	void getTemplates (std::vector<Symbol> & ret) const override;
 	
 	void replace (const Symbol & sym) override;
 
-	std::vector <Symbol> get (const std::string & name) const override;
+	void get (const std::string & name, std::vector <Symbol> & ret) const override;
 
-	std::vector <Symbol> getPublic (const std::string & name) const override;
+	void getPublic (const std::string & name, std::vector <Symbol> & ret) const override;
 
-	std::vector <Symbol> getLocal (const std::string & name) const override;
+	void getLocal (const std::string & name, std::vector <Symbol> & ret) const override;
 
-	std::vector <Symbol> getLocalPublic (const std::string & name) const override;
+	void getLocalPublic (const std::string & name, std::vector <Symbol> & ret) const override;
 
 	const std::vector <Symbol> & getAllLocal () const;
 	

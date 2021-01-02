@@ -26,13 +26,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) Char (*this)};
 	}
 		
-	bool Char::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Char thisChar; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisChar) [0] == vtable) return true;
-	    return Type::isOf (type);	
-	}
-
 	bool Char::equals (const Generator & gen) const {
 	    if (!gen.is <Char> ()) return false;
 	    auto integer = gen.to<Char> ();

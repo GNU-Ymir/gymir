@@ -20,8 +20,6 @@ namespace syntax {
     private :
 
 	friend Expression;
-
-	Char ();
 	
 	Char (const lexing::Word & loc, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix);
 
@@ -29,8 +27,6 @@ namespace syntax {
 
 	static Expression init (const lexing::Word & begin, const lexing::Word & end, const lexing::Word & sequence, const lexing::Word & suffix);
 
-
-	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

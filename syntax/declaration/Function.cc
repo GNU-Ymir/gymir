@@ -77,14 +77,7 @@ namespace syntax {
 	stream.writefln ("%*<Body>", i + 1, '\t');	
 	this-> _body.treePrint (stream, i + 2);
     }
-    
-    bool Function::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast<const void* const*> (type) [0];
-	Function thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast<const void* const*> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
-        
+            
     const std::vector <lexing::Word> & Function::getCustomAttributes () const {
 	return this-> _cas;
     }

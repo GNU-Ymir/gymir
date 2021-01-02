@@ -19,13 +19,6 @@ namespace semantic {
 	return ret;
     }
 
-    bool Constructor::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Constructor thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);
-    }
-
     void Constructor::insert (const Symbol & sym) {
 	this-> _table-> insert (sym);
     }
@@ -34,34 +27,31 @@ namespace semantic {
 	this-> _table-> insertTemplate (sym);
     }
     
-    std::vector<Symbol> Constructor::getTemplates () const {
-	return this-> _table-> getTemplates ();
+    void Constructor::getTemplates (std::vector<Symbol> & rets) const {
+	auto & tmpls = this-> _table-> getTemplates ();
+	rets.insert (rets.begin (), tmpls.begin (), tmpls.end ());
     }    
     
     void Constructor::replace (const Symbol & sym) {
 	this-> _table-> replace (sym);
     }
 
-    std::vector<Symbol> Constructor::get (const std::string & name) const {
-	auto vec = getReferent ().get (name);
-	auto local = this-> _table-> get (name);
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+    void Constructor::get (const std::string & name, std::vector<Symbol> & rets) const {
+	getReferent ().get (name, rets);
+	this-> _table-> get (name, rets);
     }
 
-    std::vector<Symbol> Constructor::getPublic (const std::string & name) const {
-	auto vec = getReferent ().getPublic (name);
-	auto local = this-> _table-> getPublic (name);
-	vec.insert (vec.begin (), local.begin (), local.end ());
-	return vec;
+    void Constructor::getPublic (const std::string & name, std::vector<Symbol> & rets) const {
+	getReferent ().getPublic (name, rets);
+	this-> _table-> getPublic (name, rets);
     }
     
-    std::vector <Symbol> Constructor::getLocal (const std::string & name) const {
-	return this-> _table-> get (name);
+    void Constructor::getLocal (const std::string & name, std::vector <Symbol> & rets) const {
+	this-> _table-> get (name, rets);
     }
 
-    std::vector <Symbol> Constructor::getLocalPublic (const std::string & name) const {
-	return this-> _table-> getPublic (name);
+    void Constructor::getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	this-> _table-> getPublic (name, rets);
     }
     
     bool Constructor::equals (const Symbol & other, bool parent) const {

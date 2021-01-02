@@ -36,11 +36,6 @@ namespace syntax {
 	static Declaration init (const lexing::Word & location, const std::string & comment, const Expression & decl);
 
 	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
-
-	/**
 	 * \brief Return the content var declaration
 	 */
 	const Expression & getContent () const;

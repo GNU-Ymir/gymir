@@ -33,14 +33,7 @@ namespace semantic {
 
 	Generator Enum::clone () const {
 	    return Generator {new (NO_GC) Enum (*this)};
-	}
-		
-	bool Enum::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Enum thisEnum; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisEnum) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
+	}		
 
 	bool Enum::equals (const Generator & gen) const {
 	    if (!gen.is<Enum> ()) return false;

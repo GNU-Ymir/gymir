@@ -1,10 +1,6 @@
 #include <ymir/syntax/expression/List.hh>
 
 namespace syntax {
-
-    List::List () :
-	IExpression (lexing::Word::eof ())
-    {}
     
     List::List (const lexing::Word & loc, const lexing::Word & end, const std::vector <Expression> & params) :
 	IExpression (loc),
@@ -19,13 +15,6 @@ namespace syntax {
     Expression List::init (const List & list) {
 	return Expression {new (NO_GC) List (list)};
     }   
-
-    bool List::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	List thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
 
     void List::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<List> ", i, '\t');

@@ -22,8 +22,6 @@ namespace syntax {
     private :
 
 	friend Expression;
-
-	List ();
 	
 	List (const lexing::Word & loc, const lexing::Word & end, const std::vector <Expression> & params);
 
@@ -40,8 +38,6 @@ namespace syntax {
 
 	static Expression init (const List & other);
 	
-
-	bool isOf (const IExpression * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 

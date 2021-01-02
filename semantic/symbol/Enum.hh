@@ -21,6 +21,8 @@ namespace semantic {
 
 	/** Set at validation time, to prevent multiple time validation of the same symbol */
 	generator::Generator _gen;
+
+	const std::vector <std::string> _field_comments;
 	
     private :
 
@@ -28,31 +30,29 @@ namespace semantic {
 
 	Enum ();
 
-	Enum (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, const syntax::Expression & type, bool isWeak);
+	Enum (const lexing::Word & name, const std::string & comments, const std::vector <syntax::Expression> & fields, const syntax::Expression & type, const std::vector <std::string> & fieldComments, bool isWeak);
 
 	Enum (const Enum & other);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const std::string & comments, const std::vector<syntax::Expression> & fields, const syntax::Expression & type, bool isWeak);
-
-	bool isOf (const ISymbol * type) const override;
+	static Symbol init (const lexing::Word & name, const std::string & comments, const std::vector<syntax::Expression> & fields, const syntax::Expression & type, const std::vector <std::string> & fieldComments, bool isWeak);
 
 	void insert (const Symbol & sym) override;
 
-	std::vector<Symbol> getTemplates () const override;
+	void getTemplates (std::vector<Symbol> & rets) const override;
 
 	void insertTemplate (const Symbol & sym) override;
 
 	void replace (const Symbol & sym) override;	
 
-	std::vector <Symbol> get (const std::string & name) const override;
+	void get (const std::string & name, std::vector <Symbol> & rets) const override;
 
-	std::vector <Symbol> getPublic (const std::string & name) const override;
+	void getPublic (const std::string & name, std::vector <Symbol> & rets) const override;
 
-	std::vector <Symbol> getLocal (const std::string & name) const override;
+	void getLocal (const std::string & name, std::vector <Symbol> & rets) const override;
 
-	std::vector <Symbol> getLocalPublic (const std::string & name) const override;
+	void getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const override;
 
 	bool equals (const Symbol & other, bool parent = true) const override;
 
@@ -70,6 +70,11 @@ namespace semantic {
 	 */
 	const std::vector<syntax::Expression> & getFields () const;
 
+	/**
+	 * \return the comments about the fields
+	 */
+	const std::vector<std::string> & getFieldComments () const;
+	
 	/**
 	 * \brief This information is set at validation time
 	 * \return the generator (enum prototype)

@@ -23,14 +23,7 @@ namespace syntax {
     Declaration DeclBlock::init (const lexing::Word & token, const std::string & comment, const std::vector <Declaration> & content, bool isPrivate, bool isProt) {
 	return Declaration {new (NO_GC) DeclBlock (token, comment, content, isPrivate, isProt)};
     }
-   
-    bool DeclBlock::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	DeclBlock thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
-    
+       
     void DeclBlock::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<Block> : ", this-> getLocation (), " ", this-> _isPrivate ? "private" : "public");

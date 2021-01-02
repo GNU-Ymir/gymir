@@ -2,12 +2,6 @@
 #include <algorithm>
 
 namespace syntax {
-
-    VarDecl::VarDecl () :
-	IExpression (lexing::Word::eof ()),
-	_type (Expression::empty ()),
-	_value (Expression::empty ())
-    {}
     
     VarDecl::VarDecl (const lexing::Word & loc, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value) :
 	IExpression (loc),
@@ -21,13 +15,6 @@ namespace syntax {
 	return Expression {new (NO_GC) VarDecl (name, decos, type, value)};
     }
  
-    bool VarDecl::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	VarDecl thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
-
     void VarDecl::treePrint (Ymir::OutBuffer & stream, int i) const {
 	std::vector<std::string> decosName;
 	for (auto it : this-> _decos)

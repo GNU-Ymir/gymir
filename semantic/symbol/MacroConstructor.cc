@@ -16,13 +16,6 @@ namespace semantic {
 	return Symbol {new (NO_GC) MacroConstructor (name, comments, constr)};
     }
     
-    bool MacroConstructor::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	MacroConstructor thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);	
-    }
-
     bool MacroConstructor::equals (const Symbol & other, bool parent) const {
 	if (!other.is <MacroConstructor> ()) return false;
 	if (other.getName () == this-> getName ()) {

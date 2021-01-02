@@ -19,10 +19,12 @@ namespace semantic {
 	{
 	    
 	    auto thrs = this-> getType ().to <Type> ().getInners ()[0].getThrowers ();
-	    for (auto & it : thrs) it = Generator::init (loc, it);
-	    
-	    auto & fptrT = this-> _funcptr.getThrowers ();
-	    thrs.insert (thrs.end (), fptrT.begin (), fptrT.end ());
+	    for (auto & it : thrs) it = Generator::init (loc, it);	    
+
+	    if (this-> getType ().to <Type> ().getInners () [0].is <Type> ()) { // If it is a delegate to a template value, then the throwers are already declared
+		auto & fptrT = this-> _funcptr.getThrowers ();
+		thrs.insert (thrs.end (), fptrT.begin (), fptrT.end ());
+	    }
 	    
 	    this-> setThrowers (thrs);
 	}
@@ -33,13 +35,6 @@ namespace semantic {
 
 	Generator DelegateValue::clone () const {
 	    return Generator {new (NO_GC) DelegateValue (*this)};
-	}
-
-	bool DelegateValue::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    DelegateValue thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
 	}
 
 	bool DelegateValue::equals (const Generator & gen) const {

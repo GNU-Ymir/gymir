@@ -30,10 +30,6 @@ namespace semantic {
 	    _uniqId (other._uniqId)
 	{}
 
-	bool IGenerator::isOf (const IGenerator *) const {
-	    return false;
-	}
-
 	const std::string & IGenerator::getName () const {
 	    return this-> _name;
 	}

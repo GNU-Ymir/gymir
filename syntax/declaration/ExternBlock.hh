@@ -27,8 +27,6 @@ namespace syntax {
 
 	friend Declaration;
 
-	ExternBlock ();
-
 	ExternBlock (const lexing::Word & location, const std::string & comment, const lexing::Word & from, const lexing::Word & space, const Declaration & content);
 
     public :
@@ -37,7 +35,6 @@ namespace syntax {
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;
 	
-	bool isOf (const IDeclaration * type) const override;
 	
 	/**
 	 * \return the declaration 

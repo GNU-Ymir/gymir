@@ -17,13 +17,6 @@ namespace semantic {
 	    return syntax::Expression {new (NO_GC) TemplateSyntaxList (lex, contents)};
 	}
 
-	bool TemplateSyntaxList::isOf (const syntax::IExpression * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    TemplateSyntaxList thisType; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	    return IExpression::isOf (type);
-	}
-
 	void TemplateSyntaxList::treePrint (Ymir::OutBuffer & stream, int i) const {
 	    stream.writefln ("%<TemplateSyntaxList> ", i, '\t');
 	    for (auto & it : this-> _contents)

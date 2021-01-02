@@ -16,13 +16,6 @@ namespace semantic {
 	return ret;
     }
 
-    bool Macro::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Macro thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);	
-    }
-
     bool Macro::equals (const Symbol & other, bool parent) const {
 	if (!other.is <Macro> ()) return false;
 	if (other.getName () == this-> getName ()) {
@@ -40,24 +33,24 @@ namespace semantic {
 	this-> _table-> insertTemplate (sym);
     }
 
-    std::vector<Symbol> Macro::getTemplates () const {
-	return this-> _table-> getTemplates ();
+    void Macro::getTemplates (std::vector<Symbol>& rets) const {
+	auto & tmpls = this-> _table-> getTemplates ();
+	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
     }    
     
     void Macro::replace (const Symbol & sym) {
 	this-> _table-> replace (sym);
     }
 
-    std::vector <Symbol> Macro::get (const std::string & name) const {
-	return getReferent ().get (name);
+    void Macro::get (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().get (name, rets);
     }
 
-    std::vector <Symbol> Macro::getPublic (const std::string & name) const {
-	return getReferent ().getPublic (name);
+    void Macro::getPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().getPublic (name, rets);
     }
     
-    std::vector <Symbol> Macro::getLocal (const std::string &) const {
-	return {};
+    void Macro::getLocal (const std::string &, std::vector <Symbol> &) const {
     }
     
     const std::vector <Symbol> & Macro::getAllInner () const {

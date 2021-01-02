@@ -176,19 +176,19 @@ namespace lexing {
 	 * \param retour the closing token
 	 * \param ign the token ignore at each line in this comments for exemple (*, for comment multiline comment)
 	 */
-	bool isComment (const Word& elem, std::string &retour, std::string & ign);
+	bool isComment (const Word& elem, std::string &retour, std::string & ign) const ;
 
 	/**
 	 * \return Do we need to skip this word ?
 	 */
-	bool isSkip (const Word &word);
+	bool isSkip (const Word &word) const;
 
 	/**
 	 * \brief return the current word (read in the file) by reference
 	 * \return true if a ord has been read, false otherwise
 	 */
-	virtual bool getWord (Word &word);
-
+	bool getWord (Word &word);
+	
 	/**
 	 * \return the minimal value between a and b
 	 */
@@ -197,7 +197,7 @@ namespace lexing {
 	/**
 	 * \brief construct a new word from line informations
 	 */
-	void constructWord (Word &word, ulong beg, ulong _max, const std::string &line,
+	Word constructWord (ulong beg, ulong _max, const std::string &line,
 			    ulong where);
 	
     protected:
@@ -206,7 +206,6 @@ namespace lexing {
 	ulong line, column;    
 	bool enableComment, disposed;
 	std::string filename;
-
 	
 	std::map <std::string, bool> skips;
 	std::vector <std::string> tokens;	
@@ -222,6 +221,7 @@ namespace lexing {
 	bool isFromString = false;
 	ulong start = 0;
 	
+	Word _fileLocus;	
     };    
     
 };

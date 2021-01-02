@@ -44,9 +44,9 @@ namespace Ymir {
     }
 
 
-    static inline std::string entab (const std::string & text, const std::string & tab) {
+    static inline std::string entab (const std::string & text, const std::string & tab, bool fst = true) {
 	OutBuffer buf;	
-	bool need_Tab = true;
+	bool need_Tab = fst;
 	for (auto s : text) {
 	    if (need_Tab) {
 		buf.write (tab);
@@ -61,6 +61,7 @@ namespace Ymir {
 	return buf.str ();
     }
 
+   
     static inline std::string replace (const std::string & str, char f, char t) {
 	OutBuffer buf;
 	for (auto s : str) {

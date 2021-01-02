@@ -37,7 +37,6 @@ namespace syntax {
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
-	bool isOf (const IExpression * type) const override;
 
 	/**
 	 * \return the left part of the allocation (could be a type or any expression)

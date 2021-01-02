@@ -249,7 +249,7 @@ namespace semantic {
 		    values.push_back (valVar);
 		}
 		    
-		values.push_back (Loop::init (lexing::Word {expression.getLocation (), "#_for"}, loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
+		values.push_back (Loop::init (lexing::Word::init (expression.getLocation (), "#_for"), loop_type, test, Block::init (expression.getLocation (), loop_type, innerValues), false));
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 
@@ -464,7 +464,7 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    }
 	    
-	    return Block::init (lexing::Word {expression.getLocation (), "#_for_block"}, loop_type, value);
+	    return Block::init (lexing::Word::init (expression.getLocation (), "#_for_block"), loop_type, value);
 	}
 
 	Generator ForVisitor::validateTuple (const syntax::For & expression, const generator::Generator & tuple) {
@@ -601,16 +601,16 @@ namespace semantic {
 	    auto syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterator);
 	    auto templ = syntax::TemplateCall::init (
 		loc,
-		{syntax::Fixed::init ({loc, Ymir::format ("%", i)}, lexing::Word::eof ())},
+		{syntax::Fixed::init (lexing::Word::init (loc, Ymir::format ("%", i)), lexing::Word::eof ())},
 		syntax::Binary::init (
-		    {loc, Token::DOT},
+		    lexing::Word::init (loc, Token::DOT),
 		    syntIterVal,
-		    syntax::Var::init ({loc, CoreNames::get (GET_OP_OVERRIDE)}),
+		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (GET_OP_OVERRIDE))),
 		    syntax::Expression::empty ()
 		    )
 		);
 	    auto call = syntax::MultOperator::init (
-		{loc, Token::LPAR}, {loc, Token::RPAR},
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		templ,
 		{}, false
 		);
@@ -654,18 +654,18 @@ namespace semantic {
 		auto cRef = UniqValue::init (expr.getLocation (), value.to <Value> ().getType (), value);
 
 		auto syntCRef = TemplateSyntaxWrapper::init (loc, cRef);
-		auto syntBegin = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
-							     syntax::Binary::init ({loc, Token::DOT},
+		auto syntBegin = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+							     syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
 										   syntCRef,
-										   syntax::Var::init ({loc, CoreNames::get (BEGIN_OP_OVERRIDE)}),
+										   syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BEGIN_OP_OVERRIDE))),
 										   syntax::Expression::empty ()
 								 ),
 							     {}, false);
 
-		auto syntEnd = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
-							   syntax::Binary::init ({loc, Token::DOT},
+		auto syntEnd = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+							   syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
 										 syntCRef,
-										 syntax::Var::init ({loc, CoreNames::get (END_OP_OVERRIDE)}),
+										 syntax::Var::init (lexing::Word::init (loc, CoreNames::get (END_OP_OVERRIDE))),
 										 syntax::Expression::empty ()
 							       ),
 							   {}, false);
@@ -682,7 +682,7 @@ namespace semantic {
 		auto syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterRef);
 		
 		auto test = this-> _context.validateValue (
-		    syntax::Binary::init ({loc, Token::NOT_EQUAL}, syntIterVal, syntEnd, syntax::Expression::empty ())
+		    syntax::Binary::init (lexing::Word::init (loc, Token::NOT_EQUAL), syntIterVal, syntEnd, syntax::Expression::empty ())
 		    );
 
 		std::vector <Generator> innerValues;
@@ -696,14 +696,14 @@ namespace semantic {
 		}
 		
 		auto nextBin = syntax::Binary::init (
-		    {loc, Token::DOT},
+		    lexing::Word::init (loc, Token::DOT),
 		    syntIterVal,
-		    syntax::Var::init ({loc, CoreNames::get (NEXT_OP_OVERRIDE)}),
+		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (NEXT_OP_OVERRIDE))),
 		    syntax::Expression::empty ()
 		    );
 		    
 		auto call = syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		    nextBin,
 		    {}, false
 		    );
@@ -733,7 +733,7 @@ namespace semantic {
 		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));
 		    values.push_back (valVar);
 		}
-		values.push_back (Loop::init ({loc, "#_for"}, loop_type, test, Block::init (loc, loop_type, innerValues), false));
+		values.push_back (Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false));
 		
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
@@ -750,7 +750,7 @@ namespace semantic {
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
 	    
-	    return Block::init ({expr.getLocation (), "#_for_block"}, loop_type, values);
+	    return Block::init (lexing::Word::init (expr.getLocation (), "#_for_block"), loop_type, values);
 	}
 	
 	

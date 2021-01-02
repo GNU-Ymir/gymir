@@ -35,11 +35,6 @@ namespace syntax {
 	 * \param content the content declaration
 	 */
 	static Expression init (const lexing::Word & loc, const std::vector <Expression> & calls, const std::vector <Expression> & params);
-
-	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IExpression * type) const override;
 	
 	const std::vector <Expression> & getParameters () const;
 

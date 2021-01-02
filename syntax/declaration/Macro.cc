@@ -15,13 +15,6 @@ namespace syntax {
 	return Declaration {new (NO_GC) Macro (loc, comment,  content)};
     }
 
-    bool Macro::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Macro thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
-
     void Macro::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<Macro> : ", this-> getLocation ());

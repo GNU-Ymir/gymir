@@ -47,11 +47,6 @@ namespace syntax {
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	
 	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
-	
-	/**
 	 * \return is this module global ?
 	 */
 	bool isGlobal () const;

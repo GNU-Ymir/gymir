@@ -55,7 +55,7 @@ namespace Ymir {
 	/**
 	 * \return the list of file and directory composing the path
 	 */
-	std::vector <std::string> getFiles () const;
+	const std::vector <std::string> & getFiles () const;
 	
 	/**
 	 * \brief Transform the path into a string

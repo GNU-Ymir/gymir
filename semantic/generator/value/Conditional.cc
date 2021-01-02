@@ -76,13 +76,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) Conditional (*this)};
 	}
 
-	bool Conditional::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Conditional thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool Conditional::equals (const Generator & gen) const {
 	    if (!gen.is <Conditional> ()) return false;
 	    auto bin = gen.to<Conditional> ();	    

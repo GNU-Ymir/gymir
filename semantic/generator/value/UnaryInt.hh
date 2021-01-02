@@ -32,11 +32,6 @@ namespace semantic {
 	     */
 	    Generator clone () const  override;
 
-	    /**
-	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
-	     */
-	    bool isOf (const IGenerator * type) const override;	    
-
 	};
 	
     }

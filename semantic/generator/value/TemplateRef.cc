@@ -24,13 +24,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) TemplateRef (*this)};
 	}
 
-	bool TemplateRef::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    TemplateRef thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool TemplateRef::equals (const Generator & gen) const {
 	    if (!gen.is <TemplateRef> ()) return false;
 	    auto fr = gen.to<TemplateRef> ();

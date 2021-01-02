@@ -151,7 +151,7 @@ namespace semantic {
 	    /**
 	     * \brief Transform a vardecl to a semantic tree
 	     */
-	    semantic::Symbol visitVarDecl (const syntax::VarDecl decl);
+	    semantic::Symbol visitVarDecl (const syntax::VarDecl decl, const std::string & comment);
 
 	    /**
 	     * \brief Transform a global var declaration into semantic tree

@@ -34,13 +34,6 @@ namespace syntax {
 	return Declaration {new (NO_GC) Constructor (other)}; // We need to create an allocation because we don't know how other has been constructed
     }
         
-    bool Constructor::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast<const void* const*> (type) [0];
-	Constructor thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast<const void* const*> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
-
     const std::vector <Expression> & Constructor::getSuperParams () const {
 	return this-> _superParams;
     }

@@ -6,22 +6,16 @@ namespace syntax {
 	IDeclaration (lexing::Word::eof (), "")
     {}
 
-    Struct::Struct (const lexing::Word & loc, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars) :
+    Struct::Struct (const lexing::Word & loc, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars, const std::vector <std::string> & fieldComms) :
 	IDeclaration (loc, comment),
 	_decls (vars),
-	_cas (attrs)
+	_cas (attrs),
+	_field_comments (fieldComms)
     {}        
     
-    Declaration Struct::init (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars) {
-	return Declaration {new (NO_GC) Struct (name, comment, attrs, vars)};
+    Declaration Struct::init (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars, const std::vector <std::string> & fieldComms) {
+	return Declaration {new (NO_GC) Struct (name, comment, attrs, vars, fieldComms)};
     }
-
-    bool Struct::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Struct thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
-    }	    
 
     void Struct::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writef ("%*<Struct> ", i, '\t');
@@ -40,4 +34,8 @@ namespace syntax {
 	return this-> _decls;
     }
 
+    const std::vector <std::string> & Struct::getDeclComments () const {
+	return this-> _field_comments;
+    }
+    
 }

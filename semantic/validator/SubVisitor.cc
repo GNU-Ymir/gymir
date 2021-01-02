@@ -227,7 +227,7 @@ namespace semantic {
 			auto stringLit = syntax::String::init (
 			    expression.getLocation (),
 			    expression.getLocation (),
-			    lexing::Word {expression.getLocation (), type.prettyString ()},
+			    lexing::Word::init (expression.getLocation (), type.prettyString ()),
 			    lexing::Word::eof ()
 			);
 		
@@ -542,7 +542,7 @@ namespace semantic {
 		    auto stringLit = syntax::String::init (
 			expression.getLocation (),
 			expression.getLocation (),
-			lexing::Word {expression.getLocation (), t.prettyString ()},
+			lexing::Word::init (expression.getLocation (), t.prettyString ()),
 			lexing::Word::eof ()
 		    );
 		
@@ -584,7 +584,7 @@ namespace semantic {
 		    auto stringLit = syntax::String::init (
 			expression.getLocation (),
 			expression.getLocation (),
-			lexing::Word {expression.getLocation (), t.prettyString ()},
+			lexing::Word::init (expression.getLocation (), t.prettyString ()),
 			lexing::Word::eof ()
 		    );
 		

@@ -36,10 +36,6 @@ namespace syntax {
 	 */
 	static Declaration init (const lexing::Word & name, const std::string & comment, const std::vector <Declaration> & inner);
 		
-	/**
-	 * Mandatory function for dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 	

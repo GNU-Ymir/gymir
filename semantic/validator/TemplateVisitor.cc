@@ -123,7 +123,7 @@ namespace semantic {
 		    score = merge.score;
 		    finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.getTemplateRef ().getReferent ());
-		    
+
 		    auto visit = declarator::Visitor::init ();
 		    visit.setWeak ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
@@ -775,7 +775,10 @@ namespace semantic {
 			    consumed += 1;
 			    Mapper mapper (true, 0);
 			    return mapper; 
-			} else {
+			} else if (!types [0].is<Type> ()) {
+			    auto note = Ymir::Error::createNote (var.getLocation ());
+			    Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (USE_AS_TYPE), types [0].prettyString ());
+			} else {			    
 			    Mapper mapper (true, Scores::SCORE_VAR);
 			    mapper.mapping.emplace (var.getName ().getStr (), createSyntaxType (var.getName (), types [0]));
 			    mapper.nameOrder.push_back (var.getName ().getStr ());
@@ -1249,10 +1252,10 @@ namespace semantic {
 				);				
 			    }
 			    return syntax::List::init (
-				{element.getLocation (), Token::LPAR},
-				{element.getLocation (), Token::RPAR},
+				lexing::Word::init (element.getLocation (), Token::LPAR),
+				lexing::Word::init (element.getLocation (), Token::RPAR),
 				params
-			    );
+				);
 			} else {
 			    return syntax::DecoratedExpression::init (
 				element.getLocation (),
@@ -1563,7 +1566,7 @@ namespace semantic {
 			std::vector <Expression> values;
 			for (auto & it : en.getValues ())
 			    values.push_back (replaceAll (it, mapping));
-			return syntax::Enum::init (en.getLocation (), "", replaceAll (en.getType (), mapping), values);
+			return syntax::Enum::init (en.getLocation (), "", replaceAll (en.getType (), mapping), values, {});
 		    }
 		) else of (syntax::ExpressionWrapper, wrp, {
 			return syntax::ExpressionWrapper::init (wrp.getLocation (), "", replaceAll (wrp.getContent (), mapping));
@@ -1640,7 +1643,7 @@ namespace semantic {
 			std::vector <Expression> vars;
 			for (auto &it : str.getDeclarations ())
 			    vars.push_back (replaceAll (it, mapping));
-			return syntax::Struct::init (str.getLocation (), "", str.getCustomAttributes (), vars);
+			return syntax::Struct::init (str.getLocation (), "", str.getCustomAttributes (), vars, {});
 		    }
 		) else of (syntax::Template, tmpl, {
 			std::vector <Expression> params;

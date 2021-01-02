@@ -18,10 +18,6 @@ namespace syntax {
     void IDeclaration::setComments (const std::string & comments) {
 	this-> _comments = comments;
     }    
-
-    bool IDeclaration::isOf (const IDeclaration*) const {
-	return false; // IDeclaration is abstract, type cannot be of type IDeclaration
-    }
     
     void IDeclaration::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<TODO>", i, '\t');

@@ -30,13 +30,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) Addresser (*this)};
 	}
 
-	bool Addresser::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Addresser thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool Addresser::equals (const Generator & gen) const {
 	    if (!gen.is <Addresser> ()) return false;
 	    auto bin = gen.to<Addresser> ();	    

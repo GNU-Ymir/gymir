@@ -163,14 +163,14 @@ namespace semantic {
 		Generator type_test (Generator::empty ());
 		if (!value.to <Value> ().getType ().to <Type> ().isCompatible (varType)) { // If we have passed the test, but still not compatible means it is a class
 		    auto loc = var.getLocation ();
-		    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+		    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 						     TemplateSyntaxWrapper::init (loc, value),
-						     syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+						     syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
 						     syntax::Expression::empty ()
 		    );
 		    
-		    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
-							    syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+		    auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+							    syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (global::TYPE_INFO_EQUAL))),
 							    {bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (var.getLocation (), varType))}							    
 		    );
 		    type_test = this-> _context.validateValue (call);
@@ -216,15 +216,15 @@ namespace semantic {
 		
 		return BinaryBool::init (bin.getLocation (), Binary::Operator::OR, Bool::init (bin.getLocation ()), testLeft, testRight);					 
 	    } else if (bin.getLocation () == Token::DDOT || bin.getLocation () == Token::TDOT) {
-		auto loc = lexing::Word{bin.getLocation (), Keys::IN};		
+		auto loc = lexing::Word::init (bin.getLocation (), Keys::IN);		
 		auto  templ = syntax::TemplateCall::init (
 		    loc,
 		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    syntax::Var::init ({loc, CoreNames::get (BINARY_OP_OVERRIDE)})
+		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BINARY_OP_OVERRIDE)))
 		);
 		
 		auto call = syntax::MultOperator::init (
-		    {loc, Token::LPAR}, {loc, Token::RPAR},
+		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 		    templ,
 		    {TemplateSyntaxWrapper::init (value.getLocation (), value), syntax::Binary::init (bin)}
 		);
@@ -309,14 +309,14 @@ namespace semantic {
 		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
 		    if (!value.to <Value> ().getType ().to <Type> ().isCompatible (type)) {
 			// If we have passed the test, but still not compatible means it is a class
-			auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+			auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 							 TemplateSyntaxWrapper::init (loc, value),
-							 syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+							 syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
 							 syntax::Expression::empty ()
 			);
 		    
-			auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
-								syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+			auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+								syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (global::TYPE_INFO_EQUAL))),
 								{bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (loc, type))}							    
 			);
 			globTest = this-> _context.validateValue (call);
@@ -344,9 +344,9 @@ namespace semantic {
 		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
 		auto name = it.to <NamedExpression> ().getLocation ().getStr ();
 		auto loc = it.getLocation ();
-		auto bin = syntax::Binary::init ({loc, Token::DOT},
+		auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
 						 TemplateSyntaxWrapper::init (loc, castedValue),
-						 syntax::Var::init ({loc, name}),
+						 syntax::Var::init (lexing::Word::init (loc, name)),
 						 syntax::Expression::empty ());
 		auto innerVal = this-> _context.validateValue (bin);		
 		if (value.is <Referencer> ()) {
@@ -453,7 +453,7 @@ namespace semantic {
 	
 	Generator MatchVisitor::validateMatchAnything (const Generator & value, const syntax::Expression & matcher, bool & isMandatory) {	    
 	    auto binVisitor = BinaryVisitor::init (this-> _context);
-	    auto fakeBinary = syntax::Binary::init ({matcher.getLocation (), Token::DEQUAL}, TemplateSyntaxWrapper::init (value.getLocation (), value), matcher, Expression::empty ());
+	    auto fakeBinary = syntax::Binary::init (lexing::Word::init (matcher.getLocation (), Token::DEQUAL), TemplateSyntaxWrapper::init (value.getLocation (), value), matcher, Expression::empty ());
 	    auto ret = binVisitor.validate (fakeBinary.to <syntax::Binary> ());
 	    Generator retValue (Generator::empty ());
 	    try {
@@ -642,14 +642,14 @@ namespace semantic {
 		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType);
 
 		auto loc = var.getLocation ();
-		auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+		auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 						 TemplateSyntaxWrapper::init (loc, value),
-						 syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+						 syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
 						 syntax::Expression::empty ()
 		);
 		    
-		auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
-							syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+		auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+							syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (global::TYPE_INFO_EQUAL))),
 							{bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (var.getLocation (), varType))}							    
 		);
 		
@@ -725,14 +725,14 @@ namespace semantic {
 		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
 		   
 		    // If we have passed the test, but still not compatible means it is a class
-		    auto bin = syntax::Binary::init ({loc, Token::DCOLON},
+		    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
 						     TemplateSyntaxWrapper::init (loc, value),
-						     syntax::Var::init ({loc, SubVisitor::__TYPEINFO__}),
+						     syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
 						     syntax::Expression::empty ()
 		    );
 		    
-		    auto call = syntax::MultOperator::init ({loc, Token::LPAR}, {loc, Token::RPAR},
-							    syntax::Var::init ({loc, global::CoreNames::get (global::TYPE_INFO_EQUAL)}),
+		    auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+							    syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (global::TYPE_INFO_EQUAL))),
 							    {bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (loc, type))}							    
 		    );
 		    globTest = this-> _context.validateValue (call);		   
@@ -756,9 +756,9 @@ namespace semantic {
 		    Ymir::Error::occur (it.getLocation (), ExternalError::get (MATCH_PATTERN_CLASS));
 		auto name = it.to <NamedExpression> ().getLocation ().getStr ();
 		auto loc = it.getLocation ();
-		auto bin = syntax::Binary::init ({loc, Token::DOT},
+		auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
 						 TemplateSyntaxWrapper::init (loc, castedValue),
-						 syntax::Var::init ({loc, name}),
+						 syntax::Var::init (lexing::Word::init (loc, name)),
 						 syntax::Expression::empty ());
 		auto innerVal = this-> _context.validateValue (bin);		
 		if (value.is <Referencer> ()) {

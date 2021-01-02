@@ -18,14 +18,16 @@ namespace semantic {
 	/** The fields of the class */
 	std::vector <syntax::Expression> _fields;
 
+	/** The comments about the field of the class */
+	std::map <std::string, std::string> _field_comments;
 	
 	/** The list of fields that are marked as private */
-	std::vector <std::string> _privates;
+	std::set <std::string> _privates;
 
 	/**
 	 * the list of fields that are marked protected 
 	 */
-	std::vector <std::string> _protected;
+	std::set <std::string> _protected;
 	
 	/**
 	 * set at validation time, to prevent multiple time validation of the same symbol
@@ -68,21 +70,20 @@ namespace semantic {
 	
 	static Symbol init (const lexing::Word & name, const std::string & comments, const syntax::Expression & ancestor, bool isWeak);
 
-	bool isOf (const ISymbol * type) const override;
 
 	void insert (const Symbol & sym) override;
 
 	void insertTemplate (const Symbol & sym) override;
 
-	std::vector<Symbol> getTemplates () const override;
+	void getTemplates (std::vector<Symbol> & ret) const override;
 	
 	void replace (const Symbol & sym) override;	
 	
-	std::vector <Symbol> get (const std::string & name) const override;
+	void get (const std::string & name, std::vector <Symbol> & ret) const override;
 	
-	std::vector <Symbol> getPublic (const std::string & name) const override;
+	void getPublic (const std::string & name, std::vector <Symbol> & ret) const override;
 
-	std::vector <Symbol> getLocal (const std::string & name) const override;
+	void getLocal (const std::string & name, std::vector <Symbol> & ret) const override;
 
 	const std::vector <Symbol> & getAllInner () const;
 	
@@ -119,6 +120,16 @@ namespace semantic {
 	 */
 	void addField (const syntax::Expression & field);
 
+	/**
+	 * \brief Register the comment of a field for later documentation dumping
+	 */
+	void setFieldComment (const std::string & name, const std::string & comment);
+
+	/**
+	 * \return the comments on a field declaration
+	 */
+	std::string getFieldComments (const std::string & name) const;
+	
 	/**
 	 * \brief Mark a field has private
 	 */

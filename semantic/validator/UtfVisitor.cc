@@ -116,14 +116,22 @@ namespace semantic {
 	void UtfVisitor::escapeUnicode (const lexing::Word & loc, int & it, const std::string & content, OutBuffer & buf, const std::string & size) {
 	    auto fst = content.substr (it).find_first_of ('{');
 	    auto scd = content.substr (it).find_first_of ('}');
-	    if (fst == std::string::npos || scd == std::string::npos)  {
-		auto real_loc = loc.setColumn (loc.getColumn () + it);
+	    if (fst == std::string::npos || scd == std::string::npos)  {		
+		auto real_loc = lexing::Word::init (
+		    loc.getStr (),
+		    loc.getFile (),
+		    loc.getFilename (),
+		    loc.getLine (),		    
+		    loc.getColumn () + it,
+		    loc.getSeek () + it
+		    );
+		
 		Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
 	    }
 
 	    auto inner = content.substr (it).substr (fst + 1, scd - fst - 1);
 		    
-	    auto fixed = syntax::Fixed::init (lexing::Word {loc, inner}, lexing::Word {loc, size});
+	    auto fixed = syntax::Fixed::init (lexing::Word::init (loc, inner), lexing::Word::init (loc, size));
 	    auto gen = this-> _context.validateFixed (fixed.to<syntax::Fixed> (), 16);
 	    auto ui = (uint) gen.to <semantic::generator::Fixed> ().getUI ().u;
 
@@ -159,8 +167,15 @@ namespace semantic {
 			    auto pos = std::find (escape.begin (), escape.end (), content [it + 1]) - escape.begin ();
 			    if (pos >= (int) escape.size ()) {
 				if (error) {
-				    auto real_loc = loc.setColumn (loc.getColumn () + col);
-				    real_loc = real_loc.setLine (loc.getLine () + line);
+				    auto real_loc = lexing::Word::init (
+					loc.getStr (),
+					loc.getFile (),
+					loc.getFilename (),
+					loc.getLine () + line,		    
+					loc.getColumn () + col,
+					loc.getSeek ()
+					);
+		
 				    Error::occur (real_loc, ExternalError::get (UNDEFINED_ESCAPE));
 				} else {
 				    buf.write (content [it]);
@@ -172,8 +187,15 @@ namespace semantic {
 			}
 		    } else {
 			if (error) {
-			    auto real_loc = loc.setColumn (loc.getColumn () + col);
-			    real_loc = real_loc.setLine (loc.getLine () + line);
+			    auto real_loc = lexing::Word::init (
+				loc.getStr (),
+				loc.getFile (),
+				loc.getFilename (),
+				loc.getLine () + line,		    
+				loc.getColumn () + col,
+				loc.getSeek ()
+				);
+				    
 			    Error::occur (real_loc, ExternalError::get (UNTERMINATED_SEQUENCE));
 			} else {
 			    buf.write (content [it]);

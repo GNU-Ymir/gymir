@@ -23,6 +23,9 @@ namespace syntax {
 
 	/** The CAs (custom attributes) of the struct */
 	std::vector <lexing::Word> _cas;
+
+
+	std::vector <std::string> _field_comments;
 	
     private :
 
@@ -30,7 +33,7 @@ namespace syntax {
 
 	Struct ();
 
-	Struct (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
+	Struct (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars, const std::vector <std::string> & comments);
 	
     public :
 
@@ -40,12 +43,7 @@ namespace syntax {
 	 * \param attrs the attributes of the struct
 	 * \param decl the declaration of the struct
 	 */
-	static Declaration init (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars);
-
-	/**
-	 * Mandatory function for dynamic cast
-	 */
-	bool isOf (const IDeclaration * type) const override;
+	static Declaration init (const lexing::Word & name, const std::string & comment, const std::vector <lexing::Word> & attrs, const std::vector <Expression> & vars, const std::vector <std::string> & comments);
 
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
@@ -59,6 +57,11 @@ namespace syntax {
 	 * \return the declaration of the attributes
 	 */
 	const std::vector <Expression> & getDeclarations () const;
+
+	/**
+	 * \return the comments on the fields
+	 */
+	const std::vector <std::string> & getDeclComments () const;
     };
 
 }

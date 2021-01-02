@@ -31,13 +31,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) Slice (*this)};
 	}
 		
-	bool Slice::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    Slice thisSlice; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisSlice) [0] == vtable) return true;
-	    return Type::isOf (type);	
-	}
-
 	bool Slice::equals (const Generator & gen) const {
 	    if (!gen.is<Slice> ()) return false;
 	    auto array = gen.to <Slice> ();

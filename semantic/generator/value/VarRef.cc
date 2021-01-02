@@ -30,13 +30,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) VarRef (*this)};
 	}
 			
-	bool VarRef::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    VarRef thisVarRef; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisVarRef) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool VarRef::equals (const Generator & other) const {
 	    if (!other.is <VarRef> ()) return false;
 	    else 

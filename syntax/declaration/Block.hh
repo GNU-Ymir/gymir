@@ -36,7 +36,6 @@ namespace syntax {
 
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const override;	
 
-	bool isOf (const IDeclaration * type) const override;
 
 	bool isPrivate () const;
 

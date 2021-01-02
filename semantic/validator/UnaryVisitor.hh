@@ -90,12 +90,12 @@ namespace semantic {
 	     */
 	    generator::Generator validateFunctionPointer (const syntax::Unary & un, const generator::Generator & proto);
 	    
-	private :
-
 	    /**
 	     * \brief Transform the token into the right operator
 	     */
-	    generator::Unary::Operator toOperator (const lexing::Word & loc);	    
+	    static generator::Unary::Operator toOperator (const lexing::Word & loc);
+	    
+	private :
 
 	    /**
 	     * Throw an undefined op error

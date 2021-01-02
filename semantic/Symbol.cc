@@ -9,21 +9,14 @@ namespace semantic {
     Symbol Symbol::__empty__ (Symbol::empty ());
         
     std::map <std::string, Symbol> Symbol::__imported__;
-    
-    ISymbol::ISymbol () :
-	_name (lexing::Word::eof ())
-    {}
+    std::map <std::string, Symbol> Symbol::__fast_mod_access__;
 
     ISymbol::ISymbol (const lexing::Word & name, const std::string & comments, bool isWeak)
 	: _name (name),
 	  _comments (comments),
 	  _isWeak (isWeak)
     {}
-    
-    bool ISymbol::isOf (const ISymbol *) const {
-	return false;
-    }
-    
+        
     const lexing::Word & ISymbol::getName () const {
 	return this-> _name;
     }
@@ -31,11 +24,7 @@ namespace semantic {
     const std::string & ISymbol::getComments () const {
 	return this-> _comments;
     }
-    
-    void ISymbol::setName (const std::string & name) {
-	this-> _name = {this-> _name, name};
-    }
-    
+        
     void ISymbol::insert (const Symbol &) {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
@@ -44,9 +33,8 @@ namespace semantic {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
 
-    std::vector<Symbol> ISymbol::getTemplates () const {
+    void ISymbol::getTemplates (std::vector<Symbol> &) const {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
-	return {};
     }
 
     void ISymbol::replace (const Symbol &) {
@@ -57,7 +45,7 @@ namespace semantic {
 	auto ptr = this-> _used.find (name);
 	if (ptr == this-> _used.end ()) {
 	    this-> _used.emplace (name, sym);
-	} else {
+	} else {	    
 	    ptr-> second = sym;
 	}
     }
@@ -91,28 +79,24 @@ namespace semantic {
 	return this-> _isProtected;
     }
     
-    std::vector <Symbol> ISymbol::get (const std::string & name) const {
-	return this-> getReferent ().get (name);
+    void ISymbol::get (const std::string & name, std::vector <Symbol> & ret) const {
+	this-> getReferent ().get (name, ret);
     }
 
-    std::vector <Symbol> ISymbol::getPrivate (const std::string & name) const {
-	auto ret = this-> get (name);	
-	auto parent = this-> getReferent ().getPrivate (name);
-	ret.insert (ret.end (), parent.begin (), parent.end ());
+    void ISymbol::getPrivate (const std::string & name, std::vector <Symbol> & ret) const {
+	this-> get (name, ret);	
+	this-> getReferent ().getPrivate (name, ret);
 	
-	return Symbol::mergeEqSymbols (ret);
+	Symbol::mergeEqSymbols (ret);
     }
     
-    std::vector <Symbol> ISymbol::getPublic (const std::string & name) const {
-	return this-> getReferent ().getPublic (name);
+    void ISymbol::getPublic (const std::string & name, std::vector <Symbol> & ret) const {
+	this-> getReferent ().getPublic (name, ret);
     }
 
-    std::vector <Symbol> ISymbol::getLocal (const std::string &) const {
-	return {};
-    }    
+    void ISymbol::getLocal (const std::string &, std::vector <Symbol> &) const {}    
 
-    std::vector <Symbol> ISymbol::getLocalPublic (const std::string &) const {
-	return {};
+    void ISymbol::getLocalPublic (const std::string &, std::vector <Symbol> &) const {
     }    
     
     const std::map <std::string, Symbol> & ISymbol::getUsedSymbols () const {
@@ -180,11 +164,6 @@ namespace semantic {
 	return this-> _value-> getComments ();
     }
     
-    void Symbol::setName (const std::string & name) {	
-	if (this-> _value == nullptr)
-	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
-	return this-> _value-> setName (name);
-    }
 
     void Symbol::insert (const Symbol & sym) {
 	if (this-> _value != nullptr)
@@ -202,14 +181,19 @@ namespace semantic {
 	}
     }
     
-    std::vector <Symbol> Symbol::getTemplates () const {
+    void Symbol::getTemplates (std::vector <Symbol> & ret) const {
 	if (this-> _value == nullptr) {
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	}
 	
-	return this-> _value-> getTemplates ();
+	this-> _value-> getTemplates (ret);
     }
 
+    std::vector <Symbol> Symbol::getTemplates () const {
+	std::vector <Symbol> rets;
+	this-> getTemplates (rets);
+	return rets;
+    }    
     
     void Symbol::replace (const Symbol & sym) {
 	if (this-> _value != nullptr)
@@ -293,34 +277,41 @@ namespace semantic {
 	    return false;
 	}
     }
-
-    
-    
+       
     std::vector <Symbol> Symbol::get (const std::string & name) const {
-	if (this-> _value == nullptr)
-	    return {};
+	std::vector <Symbol> rets;
+	this-> get (name, rets);
+	return rets;
+    }
 
-	auto ret = this-> _value-> get (name);
+    void Symbol::get (const std::string & name, std::vector <Symbol> & ret) const {
+	if (this-> _value == nullptr) return;
+
+	this-> _value-> get (name, ret);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
 	    auto mod = it.second;
-	    if (it.second.isEmpty ()) {
+	    if (it.second.isEmpty ()) {		
 		mod = getModuleByPath (it.first);
 	    }
 		    
 	    if (!mod.isEmpty ()) {
-		auto local_ret = mod.getUsed (name);
-		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+		mod.getUsed (name, ret);
 	    }
 	}
 	
-	return Symbol::mergeEqSymbols (ret);
+	Symbol::mergeEqSymbols (ret);
     }
 
     std::vector <Symbol> Symbol::getPrivate (const std::string & name) const {
-	if (this-> _value == nullptr)
-	    return {};
+	std::vector <Symbol> rets;
+	this-> getPrivate (name, rets);
+	return rets;
+    }
+    
+    void Symbol::getPrivate (const std::string & name, std::vector <Symbol>& ret) const {
+	if (this-> _value == nullptr) return;
 	
-	auto ret = this-> _value-> getPrivate (name);
+	this-> _value-> getPrivate (name, ret);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
 	    auto mod = it.second;
 	    if (it.second.isEmpty ()) {
@@ -328,19 +319,23 @@ namespace semantic {
 	    }
 	    
 	    if (!mod.isEmpty ()) {
-		auto local_ret = mod.getLocal (name);
-		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+		mod.getLocal (name, ret);
 	    } 
 	}
 	
-	return Symbol::mergeEqSymbols (ret);
+	Symbol::mergeEqSymbols (ret);
     }
 
     std::vector <Symbol> Symbol::getPublic (const std::string & name) const {
-	if (this-> _value == nullptr)
-	    return {};
+	std::vector <Symbol> rets;
+	this-> getPublic (name, rets);
+	return rets;
+    }
 
-	auto ret = this-> _value-> getPublic (name);
+    void Symbol::getPublic (const std::string & name, std::vector <Symbol> & ret) const {
+	if (this-> _value == nullptr) return;
+
+	this-> _value-> getPublic (name, ret);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
 	    auto mod = it.second;
 	    if (it.second.isEmpty ()) {
@@ -348,19 +343,24 @@ namespace semantic {
 	    }
 	    
 	    if (!mod.isEmpty () && mod.isPublic ()) {
-		auto local_ret = mod.getPublic (name);
-		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+		mod.getPublic (name, ret);
 	    }	    
 	}
 	
-	return Symbol::mergeEqSymbols (ret);
+	Symbol::mergeEqSymbols (ret);
     }
-    
-    std::vector <Symbol> Symbol::getUsed (const std::string & name) const {
-	if (this-> _value == nullptr)
-	    return {};
 
-	auto ret = this-> _value-> getPublic (name);
+    std::vector <Symbol> Symbol::getUsed (const std::string & name) const {
+	std::vector <Symbol> rets;
+	this-> getUsed (name, rets);
+	return rets;
+    }
+
+    
+    void Symbol::getUsed (const std::string & name, std::vector <Symbol> & ret) const {
+	if (this-> _value == nullptr) return;
+
+	this-> _value-> getPublic (name, ret);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
 	    auto mod = it.second;
 	    if (it.second.isEmpty ()) {
@@ -368,12 +368,11 @@ namespace semantic {
 	    }
 	    
 	    if (!mod.isEmpty () && mod.isPublic ()) {
-		auto local_ret = mod.getUsed (name);
-		ret.insert (ret.end (), local_ret.begin (), local_ret.end ());
+		mod.getUsed (name, ret);
 	    }
 	}
 	
-	return Symbol::mergeEqSymbols (ret);
+	Symbol::mergeEqSymbols (ret);
     }
 
     const std::map <std::string, Symbol> & Symbol::getUsedSymbols () const {
@@ -413,14 +412,26 @@ namespace semantic {
 	}
     }
 
+    void Symbol::getLocal (const std::string & name, std::vector <Symbol> & ret) const {
+	if (this-> _value != nullptr) 
+	    this-> _value-> getLocal (name, ret);
+    }
+
     std::vector <Symbol> Symbol::getLocal (const std::string & name) const {
-	if (this-> _value == nullptr) return {};
-	else return this-> _value-> getLocal (name);
+	std::vector <Symbol> ret;
+	this-> getLocal (name, ret);
+	return ret;
+    }
+    
+    void Symbol::getLocalPublic (const std::string & name, std::vector <Symbol> & ret) const {
+	if (this-> _value != nullptr) 
+	    this-> _value-> getLocalPublic (name, ret);
     }
 
     std::vector <Symbol> Symbol::getLocalPublic (const std::string & name) const {
-	if (this-> _value == nullptr) return {};
-	else return this-> _value-> getLocalPublic (name);
+	std::vector <Symbol> rets;
+	this-> getLocalPublic (name, rets);
+	return rets;
     }
     
     bool Symbol::equals (const Symbol & other, bool parent) const {
@@ -446,28 +457,40 @@ namespace semantic {
 	} return ret;
     }
     
-    Symbol Symbol::getModule (const std::string & name) {	
+    const Symbol & Symbol::getModule (const std::string & name) {	
 	auto sym = __imported__.find (name);
 	if (sym == __imported__.end ()) return Symbol::__empty__;
 	else return sym-> second;
     }
 
-    Symbol Symbol::getModuleByPath (const std::string & path_) {
-	auto path = Ymir::Path {path_, "::"};
+    Symbol Symbol::getModuleByPath (const std::string & path_) {	
+	auto it = __fast_mod_access__.find (path_);
+	if (it != __fast_mod_access__.end ()) {
+	    return it-> second;
+	} 
+	
+	auto path = Ymir::Path {path_, "::"};	
 	auto mod = Symbol::getModule (path.getFiles () [0]);
 	auto files = path.getFiles ();
 	auto submods = std::vector <std::string> {files.begin () + 1, files.end ()};
 	for (auto & name : submods) {
-	    auto inners = mod.getLocal (name);
+	    std::vector <Symbol> inners;
+	    
+	    mod.getLocal (name, inners);
 	    bool succeed = false;
-	    for (auto & inner_sym : inners) {
+	    for (const auto & inner_sym : inners) {
 		if (inner_sym.is <Module> ()) {
 		    succeed = true;
 		    mod = inner_sym;
+		    break;
 		}
 	    }
 	    if (!succeed) return Symbol::__empty__;
 	}
+	
+	if (!mod.isEmpty ())
+	    __fast_mod_access__.emplace (path_, mod);
+	
 	return mod;
     }
     
@@ -482,18 +505,22 @@ namespace semantic {
 
     void Symbol::purge () {
 	__imported__.clear ();
+	__fast_mod_access__.clear ();
     }
     
-    std::vector <Symbol> Symbol::mergeEqSymbols (const std::vector <Symbol> & multSym) {
+    void Symbol::mergeEqSymbols (std::vector <Symbol> & multSym) {
 	std::vector <Symbol> result;
+	result.reserve (multSym.size ());
 	for (auto & it : multSym) {
 	    bool add = true;
 	    for (auto & zt : result)
 		if (zt.isSameRef (it)) { add = false; break; }
+	    
 	    if (add)
 		result.push_back (it);
 	}
-	return result;
+	
+	multSym = result;
     }
 
     

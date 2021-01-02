@@ -25,8 +25,6 @@ namespace syntax {
 
 	static Expression init (const lexing::Word & token, const Expression & left, const Expression & right);
 
-	bool isOf (const IExpression * type) const override;
-
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	const Expression & getLeft () const;

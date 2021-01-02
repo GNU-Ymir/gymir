@@ -34,8 +34,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & location, const Expression & element, const std::vector <Expression> & params);
 	
-	bool isOf (const IExpression * type) const override;
-
 	std::string prettyString () const override;
 	
     };

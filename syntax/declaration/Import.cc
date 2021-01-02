@@ -3,10 +3,6 @@
 
 namespace syntax {
 
-    Import::Import () :
-	IDeclaration (lexing::Word::eof (), "")
-    {}
-
     Import::Import (const lexing::Word & loc, const std::string & comment, const lexing::Word & module) :
 	IDeclaration (loc, comment),
 	_module (module)
@@ -14,13 +10,6 @@ namespace syntax {
     
     Declaration Import::init (const lexing::Word & loc, const std::string & comment, const lexing::Word & module) {
 	return Declaration {new (NO_GC) Import (loc, comment, module)};
-    }
-
-    bool Import::isOf (const IDeclaration * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Import thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IDeclaration::isOf (type);
     }
 
     void Import::treePrint (Ymir::OutBuffer & stream, int i) const {

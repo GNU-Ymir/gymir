@@ -32,8 +32,6 @@ namespace syntax {
     private :
 
 	friend Expression;
-
-	VarDecl ();
 	
 	VarDecl (const lexing::Word & loc, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value);
 
@@ -48,9 +46,6 @@ namespace syntax {
 	 */
 	static Expression init (const lexing::Word & name, const std::vector <DecoratorWord> & decos, const Expression & type, const Expression & value);
 	
-
-	bool isOf (const IExpression * type) const override;
-
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
 	std::string prettyString () const override;

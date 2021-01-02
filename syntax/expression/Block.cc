@@ -2,12 +2,6 @@
 #include <ymir/errors/_.hh>
 
 namespace syntax {
-
-    Block::Block () :
-	IExpression (lexing::Word::eof ()),
-	_declModule (Declaration::empty ()),
-	_catcher (Expression::empty ())
-    {}
     
     Block::Block (const lexing::Word & loc, const lexing::Word & end, const Declaration & declModule, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes) :
     	IExpression (loc),
@@ -20,13 +14,6 @@ namespace syntax {
 
     Expression Block::init (const lexing::Word & location, const lexing::Word & end, const Declaration & declModule, const std::vector <Expression> & content, const Expression & catcher, const std::vector <Expression> & scopes) {
 	return Expression {new (NO_GC) Block (location, end, declModule, content, catcher, scopes)};
-    }
-
-    bool Block::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Block thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
     }
 
     void Block::treePrint (Ymir::OutBuffer & stream, int i) const {

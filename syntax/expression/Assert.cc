@@ -18,13 +18,6 @@ namespace syntax {
 	return Expression {new (NO_GC) Assert (loc, test, msg)};
     }
 
-    bool Assert::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Assert thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }	    
-
     const Expression & Assert::getTest () const {
 	return this-> _test;
     }

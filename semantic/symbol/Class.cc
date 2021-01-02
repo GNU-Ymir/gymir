@@ -26,14 +26,7 @@ namespace semantic {
 	ret.to <Class> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }
-    
-    bool Class::isOf (const ISymbol * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	Class thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return ISymbol::isOf (type);	
-    }
-    
+        
     void Class::insert (const Symbol & sym) {
 	this-> _table-> insert (sym);
     }
@@ -42,24 +35,24 @@ namespace semantic {
 	this-> _table-> insertTemplate (sym);
     }
 
-    std::vector<Symbol> Class::getTemplates () const {
-	return this-> _table-> getTemplates ();
+    void Class::getTemplates (std::vector <Symbol> & ret) const {
+	auto & tmpls = this-> _table-> getTemplates ();
+	ret.insert (ret.begin (), tmpls.begin (), tmpls.end ());
     }    
     
     void Class::replace (const Symbol & sym) {
 	this-> _table-> replace (sym);
     }
 
-    std::vector <Symbol> Class::get (const std::string & name) const {
-	return getReferent ().get (name);
+    void Class::get (const std::string & name, std::vector <Symbol> & ret) const {
+	getReferent ().get (name, ret);
     }
 
-    std::vector <Symbol> Class::getPublic (const std::string & name) const {
-	return getReferent ().getPublic (name);
+    void Class::getPublic (const std::string & name, std::vector <Symbol> & ret) const {
+	getReferent ().getPublic (name, ret);
     }
     
-    std::vector <Symbol> Class::getLocal (const std::string &) const {
-	return {};
+    void Class::getLocal (const std::string &, std::vector <Symbol>&) const {
     }
 
     bool Class::equals (const Symbol & other, bool parent) const {
@@ -104,8 +97,19 @@ namespace semantic {
 	this-> _fields.push_back (field);
     }
 
+    void Class::setFieldComment (const std::string & name, const std::string & comment) {
+	this-> _field_comments [name] = comment;
+    }
+    
     const std::vector<syntax::Expression> & Class::getFields () const {
 	return this-> _fields;
+    }
+
+    std::string Class::getFieldComments (const std::string & name) const {
+	auto it = this-> _field_comments.find (name);
+	if (it != this-> _field_comments.end ())
+	    return it-> second;
+	return "";	
     }
     
     const syntax::Expression & Class::getAncestor () const {
@@ -113,24 +117,22 @@ namespace semantic {
     }
 
     void Class::setPrivate (const std::string & name) {
-	this-> _privates.push_back (name);
+	this-> _privates.emplace (name);
     }
 
     void Class::setProtected (const std::string & name) {
-	this-> _protected.push_back (name);
+	this-> _protected.emplace (name);
     }
 
     bool Class::isMarkedPrivate (const std::string & name) const {
-	for (auto & it : this-> _privates) {
-	    if (it == name) return true;
-	}
+	if (this-> _privates.find (name) != this-> _privates.end ())
+	    return true;	
 	return false;
     }
     
     bool Class::isMarkedProtected (const std::string & name) const {
-	for (auto & it : this-> _protected) {
-	    if (it == name) return true;
-	}
+	if (this-> _protected.find (name) != this-> _protected.end ()) 
+	    return true;	
 	return false;
     }
 

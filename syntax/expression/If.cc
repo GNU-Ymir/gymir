@@ -21,13 +21,6 @@ namespace syntax {
 	return Expression {new (NO_GC) If (location, test, content, elsePart)};
     }
 
-    bool If::isOf (const IExpression * type) const {
-	auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	If thisType; // That's why we cannot implement it for all class
-	if (reinterpret_cast <const void* const *> (&thisType) [0] == vtable) return true;
-	return IExpression::isOf (type);
-    }
-
     void If::treePrint (Ymir::OutBuffer & stream, int i) const {
 	stream.writefln ("%*<If> ", i, '\t');
 	this-> _test.treePrint (stream, i + 1);

@@ -59,12 +59,7 @@ namespace syntax {
 	/**
 	 * \return an encapsulation into a Declaration
 	 */
-	static Declaration init (const Constructor & aux);
-	
-	/**
-	 * \brief Polymorphism dynamic casting
-	 */
-	bool isOf (const IDeclaration * type) const override;
+	static Declaration init (const Constructor & aux);	
 
 	/**
 	 * \return the list of parameters to pass for the construction of the super class

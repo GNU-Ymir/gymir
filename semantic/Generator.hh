@@ -68,11 +68,6 @@ namespace semantic {
 	    virtual Generator clone () const = 0;
 
 	    /**
-	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
-	     */
-	    virtual bool isOf (const IGenerator * type) const = 0;	    
-
-	    /**
 	     * \return is this generator the same as other (no only address, or type)
 	     */
 	    virtual bool equals (const Generator & other) const = 0;
@@ -216,13 +211,11 @@ namespace semantic {
 	     * \brief Raise an internal error if that is not possible
 	     */
 	    template <typename T>
-	    T& to ()  {	    
-		if (this-> _value == nullptr)
-		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-		T t;
-		if (!this-> _value.get ()-> isOf (&t))
+	    T& to ()  {
+#ifdef DEBUG
+		if (dynamic_cast <T*> (this-> _value.get () == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 		return *((T*) this-> _value.get ());	    
 	    }
 
@@ -231,13 +224,11 @@ namespace semantic {
 	     * \brief Raise an internal error if that is not possible
 	     */
 	    template <typename T>
-	    const T& to () const  {	    
-		if (this-> _value == nullptr)
-		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "nullptr");	    
-
-		T t;
-		if (!this-> _value.get ()-> isOf (&t))
+	    const T& to () const  {
+#ifdef DEBUG
+		if (dynamic_cast <T*> (this-> _value.get () == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 		return *((const T*) this-> _value.get ());	    
 	    }
 
@@ -246,11 +237,7 @@ namespace semantic {
 	     */
 	    template <typename T>
 	    bool is () const  {	    
-		if (this-> _value == nullptr)
-		    return false;
-
-		T t;
-		return this-> _value.get ()-> isOf (&t); 			    
+		return dynamic_cast <T*> (this-> _value.get ()) != nullptr;		    
 	    }
 	    
 	};

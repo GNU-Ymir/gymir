@@ -30,11 +30,6 @@ namespace semantic {
 	     * \brief Mandatory function used inside proxy design pattern
 	     */
 	    Generator clone () const  override;
-
-	    /**
-	     * \brief Mandatory function used inside proxy design pattern for dynamic casting
-	     */
-	    bool isOf (const IGenerator * type) const override;	    
 	    
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)

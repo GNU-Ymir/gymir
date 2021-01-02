@@ -4,10 +4,6 @@ namespace documentation {
 
     namespace json {
 
-	bool IJsonValue::isOf (const IJsonValue*) const {
-	    return false;
-	}
-
 	JsonValue::JsonValue () :
 	    RefProxy<IJsonValue, JsonValue> (nullptr)
 	{}

@@ -13,9 +13,6 @@ namespace syntax {
      */
     class Binary : public IExpression {
 
-	/** The location of the allocation */
-	lexing::Word _op;
-
 	/** The left operand, can be a type or a value */
 	Expression _left;
 
@@ -28,8 +25,6 @@ namespace syntax {
     private :
 
 	friend Expression;
-
-	Binary ();
 	
 	Binary (const lexing::Word& loc, const Expression & left, const Expression & right, const Expression & type);
 
@@ -41,8 +36,6 @@ namespace syntax {
 	
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
-
-	bool isOf (const IExpression * type) const override;
 
 	/**
 	 * \return the left operand of the operation

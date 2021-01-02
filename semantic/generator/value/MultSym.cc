@@ -24,13 +24,6 @@ namespace semantic {
 	    return Generator {new (NO_GC) MultSym (*this)};
 	}
 
-	bool MultSym::isOf (const IGenerator * type) const {
-	    auto vtable = reinterpret_cast <const void* const *> (type) [0];
-	    MultSym thisValue; // That's why we cannot implement it for all class
-	    if (reinterpret_cast <const void* const *> (&thisValue) [0] == vtable) return true;
-	    return Value::isOf (type);	
-	}
-
 	bool MultSym::equals (const Generator & gen) const {
 	    if (!gen.is <MultSym> ()) return false;
 	    auto mult = gen.to<MultSym> ();	    
