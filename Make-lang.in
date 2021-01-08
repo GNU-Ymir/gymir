@@ -218,6 +218,7 @@ ymir_OBJS = \
 	ymir/global_Core.o \
 	ymir/global_State.o \
 	ymir/lexing_Lexer.o \
+	ymir/lexing_IndexMap.o \
 	ymir/lexing_File.o \
 	ymir/lexing_Token.o \
 	ymir/lexing_Word.o \

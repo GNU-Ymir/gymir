@@ -8,6 +8,7 @@
 #include <ymir/lexing/Word.hh>
 #include <ymir/lexing/File.hh>
 #include <ymir/lexing/Token.hh>
+#include <ymir/lexing/IndexMap.hh>
 #include <vector>
 #include <map>
 #include <stdlib.h>
@@ -148,12 +149,6 @@ namespace lexing {
 	 * Return a string containing all the already read tokens (including skips, and comments
 	 */
 	std::string formatRestOfFile ();
-
-	/**
-	 * Sometimes the cursor of the file is not at the same position as the lexer
-	 * If we want to use the file outside the lexer, we first need to re-seek it
-	 */
-	void correctFileCursor ();
 	
     protected:
 
@@ -188,6 +183,11 @@ namespace lexing {
 	 * \return true if a ord has been read, false otherwise
 	 */
 	bool getWord (Word &word);
+
+	/**
+	 * \return the next line of the file
+	 */
+	std::list <Word> readLine ();
 	
 	/**
 	 * \return the minimal value between a and b
@@ -208,10 +208,11 @@ namespace lexing {
 	std::string filename;
 	
 	std::map <std::string, bool> skips;
-	std::vector <std::string> tokens;	
 	std::map <std::string, std::pair<std::string, std::string> > comments;
 	std::vector <Word> reads;
 	std::vector <std::string> docs;
+
+	lexing::IndexMap _tokenizer;
 	
 	long current;
 	lexing::File file;
@@ -221,7 +222,8 @@ namespace lexing {
 	bool isFromString = false;
 	ulong start = 0;
 	
-	Word _fileLocus;	
+	Word _fileLocus;
+	std::list <Word> _cache;
     };    
     
 };

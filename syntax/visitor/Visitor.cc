@@ -135,7 +135,6 @@ namespace syntax {
 	    space = lexing::Word::eof ();
 	    this-> _lex.seek (beginPos);
 	}
-	
 	do {
 	    token = this-> _lex.consumeIf ({Keys::PUBLIC, Keys::PRIVATE, Keys::VERSION});
 	    if (token == Keys::PUBLIC || token == Keys::PRIVATE) {
@@ -143,7 +142,7 @@ namespace syntax {
 	    } else if (token == Keys::VERSION) {
 		decls.push_back (visitVersionGlob (true));
 	    } else {
-		token = this-> _lex.consumeIf (this-> _declarations);
+		token = this-> _lex.consumeIf (this-> _declarations);		
 		if (!token.isEof ()) {
 		    this-> _lex.rewind ();
 		    decls.push_back (visitDeclaration ());

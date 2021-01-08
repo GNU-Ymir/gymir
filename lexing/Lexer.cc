@@ -19,6 +19,7 @@ namespace lexing {
 	line (0),
 	column (0),
 	enableComment (false),
+	_tokenizer (Token::members ()),
 	current (-1),
 	file (lexing::File::empty ()),       
 	_fileLocus (Word::eof ())	
@@ -34,6 +35,7 @@ namespace lexing {
 	line (1),
 	column (1),
 	enableComment (true),
+	_tokenizer (Token::members ()),
 	current (-1),
 	file (file),
 	_fileLocus (Word::init ("", file, filename, 0, 0, 0))
@@ -44,7 +46,6 @@ namespace lexing {
 	}
 	
 	this-> filename = filename;
-	this-> tokens = Token::members ();
 	this-> comments = comments;	
 	this-> disposed = false;
     }
@@ -115,13 +116,13 @@ namespace lexing {
     }
     
     Word Lexer::nextWithDocs (std::string & docs) {
-	Word word = Word::eof ();
+	Word word = Word::eof (this-> filename);
 	this-> nextWithDocs (docs, word);
 	return word;
     }
     
     Word Lexer::next () {
-	Word word = Word::eof ();
+	Word word = Word::eof (this-> filename);
 	this-> next (word);
 	return word;
     }
@@ -137,7 +138,7 @@ namespace lexing {
     }
     
     Word Lexer::next (const std::vector <std::string> &mandatories) {
-	Word word = Word::eof ();
+	Word word = Word::eof (this-> filename);
 	this-> next (word);
 	if (std::find (mandatories.begin (), mandatories.end (), word.getStr ()) != mandatories.end ())
 	    return word;	
@@ -145,19 +146,20 @@ namespace lexing {
 	this-> rewind ();
 	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
 	
-	return Word::eof ();
+	return Word::eof (this-> filename);
     }
 
     Word Lexer::nextWithDocs (std::string & docs, const std::vector <std::string> &mandatories) {
-	Word word = Word::eof ();
+	Word word = Word::eof (this-> filename);
 	this-> nextWithDocs (docs, word);
+	
 	if (std::find (mandatories.begin (), mandatories.end (), word.getStr ()) != mandatories.end ())
 	    return word;	
 	
 	this-> rewind ();
 	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
 	
-	return Word::eof ();
+	return Word::eof (this-> filename);
     }
 
     Word Lexer::consumeIf (const std::vector <std::string> & optional) {
@@ -272,53 +274,40 @@ namespace lexing {
 	else return it-> second;
     }
 
-    bool Lexer::getWord (Word & word) {
-	if (this-> file.isEof ()) return false;
+    bool Lexer::getWord (Word& word) {
+	if (this-> _cache.empty ()) {
+	    this-> _cache = this-> readLine ();
+	}
+
+	if (this-> _cache.empty ()) {
+	    return false;	    
+	} else {	    
+	    word = this-> _cache.front ();
+	    this-> _cache.pop_front ();
+	    return true;
+	}
+    }
+    
+    std::list <Word> Lexer::readLine () {
+	if (this-> file.isEof ()) return {};
 	auto where = this-> file.tell ();
 	auto line  = this-> file.readln ();
-	if (line == "") return false;
-	ulong max = 0, beg = line.length ();
-	for (auto & it : this-> tokens) {
-	    auto id = line.find (it);
-	    if (id != std::string::npos) {
-		if (id == beg && it.length () > max) max = it.length ();
-		else if (id < beg) {
-		    beg = id;
-		    max = it.length ();
-		}
-	    }
+	if (line == "") return {};	
+	auto lst = this-> _tokenizer.tokenize (line);
+	
+	std::list <Word> result;
+	for (auto & it : lst) {
+	    result.push_back (Word::init (it, this-> file, this-> filename, this-> line, this-> column, where, this-> isFromString, this-> start));
+	    where = where + it.length ();
+	    if (it  == "\n") {
+		this-> line ++;
+		this-> column = 1;
+	    } else {
+		this-> column += it.length ();
+	    }	    
 	}
 	
-	word = constructWord (beg, max, line, where);
-	
-	if (word.getStr () == "\n") {
-	    this-> line ++;
-	    this-> column = 1;
-	} else {
-	    this-> column += word.getStr ().length ();
-	}
-	
-	return true;
-    }
-
-    ulong Lexer::min (ulong u1, ulong u2) {
-	return u1 < u2 ? u1 : u2;
-    }
-
-    Word Lexer::constructWord (ulong beg, ulong max, const std::string& line, ulong where) {
-	Word word = Word::eof ();
-	
-	if (beg == line.length () + 1) {
-	    word = Word::init (line, this-> file, this-> filename, this-> line, this-> column, where, this-> isFromString, this-> start);
-	} else if (beg == 0) {
-	    word = Word::init (line.substr (0, min (max, line.length ())), this-> file, this-> filename, this-> line, this-> column, where, this-> isFromString, this-> start);
-	    this-> file.seek (where + max);	    
-	} else if (beg > 0) {
-	    word = Word::init (line.substr (0, min (beg, line.length ())), this-> file, this-> filename, this-> line, this-> column, where, this-> isFromString, this-> start);
-	    this-> file.seek (where + beg);
-	}
-	
-	return word;
+	return result;
     }
 
     std::string Lexer::formatRestOfFile () {
@@ -333,12 +322,6 @@ namespace lexing {
 	return end;
     }
 
-    void Lexer::correctFileCursor () {
-	if (this-> current < (long) this-> reads.size () - 1) {
-	    if (!this-> reads [this-> current + 1].isEof ())
-		this-> file.seek (this-> reads [this-> current + 1].getSeek ());
-	}
-    }
     
 }
 
