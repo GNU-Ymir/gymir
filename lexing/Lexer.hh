@@ -223,6 +223,7 @@ namespace lexing {
 	ulong start = 0;
 	
 	Word _fileLocus;
+	Word __eof__;
 	std::list <Word> _cache;
     };    
     

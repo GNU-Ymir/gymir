@@ -22,7 +22,8 @@ namespace lexing {
 	_tokenizer (Token::members ()),
 	current (-1),
 	file (lexing::File::empty ()),       
-	_fileLocus (Word::eof ())	
+	_fileLocus (Word::eof ()),
+	__eof__ (Word::eof (""))
     {
 	this-> filename = "";
     }
@@ -38,7 +39,8 @@ namespace lexing {
 	_tokenizer (Token::members ()),
 	current (-1),
 	file (file),
-	_fileLocus (Word::init ("", file, filename, 0, 0, 0))
+	_fileLocus (Word::init ("", file, filename, 0, 0, 0)),
+	__eof__ (Word::eof (filename))
     {
 	
 	for (auto & it : skips) {
@@ -116,13 +118,13 @@ namespace lexing {
     }
     
     Word Lexer::nextWithDocs (std::string & docs) {
-	Word word = Word::eof (this-> filename);
+	Word word = this-> __eof__;
 	this-> nextWithDocs (docs, word);
 	return word;
     }
     
     Word Lexer::next () {
-	Word word = Word::eof (this-> filename);
+	Word word = this-> __eof__;
 	this-> next (word);
 	return word;
     }
@@ -138,7 +140,7 @@ namespace lexing {
     }
     
     Word Lexer::next (const std::vector <std::string> &mandatories) {
-	Word word = Word::eof (this-> filename);
+	Word word = this-> __eof__;
 	this-> next (word);
 	if (std::find (mandatories.begin (), mandatories.end (), word.getStr ()) != mandatories.end ())
 	    return word;	
@@ -146,11 +148,11 @@ namespace lexing {
 	this-> rewind ();
 	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
 	
-	return Word::eof (this-> filename);
+	return this-> __eof__;
     }
 
     Word Lexer::nextWithDocs (std::string & docs, const std::vector <std::string> &mandatories) {
-	Word word = Word::eof (this-> filename);
+	Word word = this-> __eof__;
 	this-> nextWithDocs (docs, word);
 	
 	if (std::find (mandatories.begin (), mandatories.end (), word.getStr ()) != mandatories.end ())
@@ -159,7 +161,7 @@ namespace lexing {
 	this-> rewind ();
 	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
 	
-	return Word::eof (this-> filename);
+	return this-> __eof__;
     }
 
     Word Lexer::consumeIf (const std::vector <std::string> & optional) {
@@ -168,7 +170,7 @@ namespace lexing {
 	    return word;
 	
 	this-> rewind ();
-	return Word::eof (this-> filename);
+	return this-> __eof__;
     }
     
     Lexer& Lexer::rewind (ulong nb) {
@@ -189,14 +191,14 @@ namespace lexing {
 	OutBuffer buf;
 	do {
 	    if (!getWord (word)) {
-		word = lexing::Word::eof (this-> filename);
+		word = this-> __eof__;
 		break;
 	    } else {
 		std::string com, ign;
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
 		    do {
-			word = lexing::Word::eof (this-> filename);
+			word = this-> __eof__;
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
 			    if (global::State::instance ().isDocDumpingActive ())  {
@@ -225,14 +227,14 @@ namespace lexing {
 	OutBuffer buf;
 	do {
 	    if (!getWord (word)) {
-		word = lexing::Word::eof (this-> filename);
+		word = this-> __eof__;
 		break;
 	    } else {
 		std::string com, ign;
 		bool line_break = false;
 		while (isComment (word, com, ign) && this-> enableComment) {
 		    do {
-			word = lexing::Word::eof (this-> filename);
+			word = this-> __eof__;
 			getWord (word);
 			if (word.getStr () != com && !word.isEof ()) {
 			    if (global::State::instance ().isDocDumpingActive ()) {
