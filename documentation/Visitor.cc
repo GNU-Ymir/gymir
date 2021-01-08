@@ -529,6 +529,9 @@ namespace documentation {
 	if (!ancestor.isEmpty ()) {
 	    val ["ancestor"] = JsonString::init (ancestor.prettyString ());
 	}
+
+	if (cl.isAbs ()) val ["abstract"] = JsonString::init ("true");
+	if (cl.isFinal ()) val ["final"] = JsonString::init ("true");	
 	
 	std::vector <JsonValue> fields;
 	for (auto & it : gen.to <semantic::generator::Class> ().getFields ()) {
@@ -601,82 +604,122 @@ namespace documentation {
 	return JsonDict::init (val);
     }
 
+    void Visitor::dumpInnerClassUnvalidated (std::vector <JsonValue> & fields, std::vector <JsonValue> & cstrs, std::vector<JsonValue> & methods, std::vector <JsonValue> & others, const  std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
+	for (auto & jt : decls) {	    
+	    if  (jt.is <syntax::ExpressionWrapper> ()) {
+		auto wrap = jt.to <syntax::ExpressionWrapper> ();
+		if (wrap.getContent ().is <syntax::VarDecl> ()) {
+		    auto de = wrap.getContent ().to <syntax::VarDecl> ();		
+		    std::map <std::string, JsonValue> param;
+		    param ["name"] = JsonString::init (de.getName ().getStr ());
+		    param ["type"] = JsonString::init (de.getType ().prettyString ());
+		    param ["mut"] = JsonString::init (de.hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
+		    param ["doc"] = JsonString::init (wrap.getComments ());
+				    	
+		    if (prv)
+			param ["protection"] = JsonString::init ("prv");
+		    else if (prot) {
+			param ["protection"] = JsonString::init ("prot");
+		    } else
+			param ["protection"] = JsonString::init ("pub");
+		    fields.push_back (JsonDict::init (param));
+		} else if (wrap.getContent ().is <syntax::Set> ()) {
+		    for (auto it : wrap.getContent ().to <syntax::Set> ().getContent ()) {
+			auto de = it.to <syntax::VarDecl> ();
+			std::map <std::string, JsonValue> param;
+			param ["name"] = JsonString::init (de.getName ().getStr ());
+			param ["type"] = JsonString::init (de.getType ().prettyString ());
+			param ["mut"] = JsonString::init (de.hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
+			param ["doc"] = JsonString::init (wrap.getComments ());
+				    	
+			if (prv)
+			    param ["protection"] = JsonString::init ("prv");
+			else if (prot) {
+			    param ["protection"] = JsonString::init ("prot");
+			} else
+			    param ["protection"] = JsonString::init ("pub");
+			fields.push_back (JsonDict::init (param));
 
-    JsonValue Visitor::dumpClassUnvalidated (const syntax::Class & s_cl, bool pub, bool prot) {
-	auto visit = declarator::Visitor::init ();
-	visit.setWeak ();
-	auto symcl = visit.visitClass (s_cl);
-	auto & cl = symcl.to <semantic::Class> ();
-	
+		    }
+		} else {
+		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");			
+		}		
+	    } else if (jt.is <syntax::DeclBlock> ()) {
+		auto dc = jt.to <syntax::DeclBlock> ();
+		this-> dumpInnerClassUnvalidated (fields, cstrs, methods, others, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+	    } else if (jt.is <syntax::Constructor> ()) {
+		cstrs.push_back (this-> dumpConstructorUnvalidated (jt.to <syntax::Constructor> (), prv, prot, pub));
+	    } else if (jt.is <syntax::Function> ()) {
+		methods.push_back (this-> dumpFunctionUnvalidated (jt.to <syntax::Function> (), pub, prot));
+	    } else if (jt.is <syntax::CondBlock> ()) {
+		auto dc = jt.to <syntax::CondBlock> ();
+		std::map <std::string, JsonValue> val;
+		std::map <std::string, JsonValue> r_val;
+		
+		val ["type"] = JsonString::init ("template_condition");
+		val ["condition"] = JsonString::init (dc.getTest ().prettyString ());
+		this-> dumpStandard (dc, pub, prot, val);
+		std::vector <JsonValue> l_fields;
+		std::vector <JsonValue> l_cstrs;
+		std::vector <JsonValue> l_methods;
+		std::vector <JsonValue> l_others;
+		this-> dumpInnerClassUnvalidated (l_fields, l_cstrs, l_methods, l_others, dc.getDeclarations (), prv, prot, pub);
+		val ["cstrs"] = JsonArray::init (l_cstrs);
+		val ["methods"] = JsonArray::init (l_methods);
+		val ["fields"] = JsonArray::init (l_fields);
+		val ["others"] = JsonArray::init (l_others);
+
+		if (!dc.getElse ().isEmpty ()) {
+		    std::vector <JsonValue> r_fields;
+		    std::vector <JsonValue> r_cstrs;
+		    std::vector <JsonValue> r_methods;
+		    std::vector <JsonValue> r_others;
+		    
+		    this-> dumpInnerClassUnvalidated (r_fields, r_cstrs, r_methods, r_others, {dc.getElse ()}, prv, prot, pub);
+		    if (r_others.size () != 0) {
+			val ["else"] = r_others [0];
+		    } else val ["else"] = JsonDict::init (r_val);
+		} else {		
+		    val ["else"] = JsonDict::init (r_val);
+		}
+		others.push_back (JsonDict::init (val));
+	    } else if (jt.is <syntax::Mixin> ()) {
+		std::map <std::string, JsonValue> val;
+		val ["type"] = JsonString::init ("impl");
+		this-> dumpStandard (jt.to <syntax::Mixin> (), pub, prot, val);
+		val ["trait"] = JsonString::init (jt.to <syntax::Mixin> ().getMixin ().prettyString ());
+		others.push_back (JsonDict::init (val));
+	    } else {
+		Ymir::OutBuffer buf;
+		jt.treePrint (buf, 0);
+		println (buf.str ());
+		Ymir::Error::halt ("", "");
+	    }
+	}	
+    }
+
+
+    JsonValue Visitor::dumpClassUnvalidated (const syntax::Class & s_cl, bool pub, bool prot) {	
 	std::map <std::string, JsonValue> val;
-	val ["type"] = JsonString::init ("class");
+	val ["type"] = JsonString::init ("template_class");
 	this-> dumpStandard (s_cl, pub, prot, val);
 	
 	auto ancestor = s_cl.getAncestor ();
 	if (!ancestor.isEmpty ()) {
 	    val ["ancestor"] = JsonString::init (ancestor.prettyString ());
 	}
-	
-	std::vector <JsonValue> fields;
-	for (auto & it : cl.getFields ()) {
-	    std::map <std::string, JsonValue> field;
-	    field ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getName ().getStr ());
-	    field ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
-	    field ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT) ? "true" : "false");
-	    field ["doc"] = JsonString::init (cl.getFieldComments (it.to <syntax::VarDecl> ().getName ().getStr ()));
-	    
-	    if (cl.isMarkedPrivate (it.to <syntax::VarDecl> ().getName ().getStr ()))
-		field ["protection"] = JsonString::init ("prv");
-	    else if (cl.isMarkedProtected (it.to <syntax::VarDecl> ().getName ().getStr ()))
-		field ["protection"] = JsonString::init ("prot");
-	    else field ["protection"] = JsonString::init ("pub");
-		
-	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-		field ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
-	    
-	    fields.push_back (JsonDict::init (field));
-	}
-	val ["fields"] = JsonArray::init (fields);
 
+	std::vector <JsonValue> fields;
 	std::vector <JsonValue> cstrs;
 	std::vector <JsonValue> methods;
-	std::vector <JsonValue> impls;
+	std::vector <JsonValue> others;
+
+	this-> dumpInnerClassUnvalidated (fields, cstrs, methods, others, s_cl.getDeclarations (), false, true, false);
 	
-	for (auto & it : cl.getAllInner ()) { // Dump constructors
-	    if (it.is <semantic::Constructor> ()) {
-		std::map <std::string, JsonValue> def;
-		auto & cst = it.to <semantic::Constructor> ();
-		def ["type"] = JsonString::init ("cstr");
-		this-> dumpStandard (it.to <semantic::Constructor> (), def);
-		std::vector <JsonValue> params;
-					       
-		for (auto & it : cst.getContent ().getPrototype ().getParameters ()) {
-		    std::map <std::string, JsonValue> param;
-		    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
-		    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
-		    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
-		    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
-			param ["value"] = JsonString::init (it.to<syntax::VarDecl> ().getValue ().prettyString ());
-
-
-		    params.push_back (JsonDict::init (param));
-		}
-		def ["params"] = JsonArray::init (params);
-		cstrs.push_back (JsonDict::init (def));
-	    } else if (it.is <semantic::Impl> ()) {		    
-		std::map <std::string, JsonValue> def;
-		def ["type"] = JsonString::init ("impl");
-		this-> dumpStandard (it.to <semantic::Impl> (), def);
-		def ["trait"] = JsonString::init (it.to <semantic::Impl> ().getTrait ().prettyString ());
-		impls.push_back (JsonDict::init (def));
-	    } else if (it.is <semantic::Function> ()) {
-		methods.push_back (this-> dumpUnvalidated (it));
-	    }		    	    
-	}
-
-	val ["cstrs"] = JsonArray::init (cstrs);
-	val ["impls"] = JsonArray::init (impls);	
 	val ["methods"] = JsonArray::init (methods);
+	val ["fields"] = JsonArray::init (fields);
+	val ["cstrs"] = JsonArray::init (cstrs);
+	val ["others"] = JsonArray::init (others);
 	
 	return JsonDict::init (val);
     }
@@ -724,6 +767,33 @@ namespace documentation {
 	
 	return JsonDict::init (val);
     }
+
+    JsonValue Visitor::dumpConstructorUnvalidated (const syntax::Constructor & decl, bool prv, bool prot, bool pub) {
+	std::map <std::string, JsonValue> val;
+	val ["type"] = JsonString::init ("cstrs");
+	this-> dumpStandard (decl, pub, prot, val);
+
+	std::vector <JsonValue> params;
+	for (auto & it : decl.getPrototype ().getParameters ()) {
+	    std::map <std::string, JsonValue> param;
+	    param ["name"] = JsonString::init (it.to <syntax::VarDecl> ().getLocation ().getStr ());
+	    param ["type"] = JsonString::init (it.to <syntax::VarDecl> ().getType ().prettyString ());
+	    param ["mut"] = JsonString::init (it.to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT)? "true" : "false");
+	    if (!it.to <syntax::VarDecl> ().getValue ().isEmpty ())
+		param ["value"] = JsonString::init (it.to <syntax::VarDecl> ().getValue ().prettyString ());
+	    params.push_back (JsonDict::init (param));
+	}
+
+	val ["param"] = JsonArray::init (params);
+
+	std::vector <JsonValue> throwers;
+	for (auto & it : decl.getThrowers ()) {
+	    throwers.push_back (JsonString::init (it.prettyString ()));
+	}
+
+	val ["throwers"] = JsonArray::init (throwers);	
+	return JsonDict::init (val);	
+    }    
 
     JsonValue Visitor::dumpTrait (const semantic::Trait & tr) {
 	std::map <std::string, JsonValue> val;

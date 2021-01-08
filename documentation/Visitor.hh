@@ -140,6 +140,13 @@ namespace documentation {
 	 * \return the doc
 	 */
 	json::JsonValue dumpClassUnvalidated (const syntax::Class & cl, bool pub, bool prot);
+
+	/**
+	 * Dump the documentation of the inner declaration of an unvalidated class (template)
+	 */
+	void dumpInnerClassUnvalidated (std::vector <json::JsonValue> & fields, std::vector <json::JsonValue> & cstrs, std::vector <json::JsonValue> & methods, std::vector <json::JsonValue> & others, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
+
+	json::JsonValue dumpConstructorUnvalidated (const syntax::Constructor & cstr, bool prv, bool prot, bool pub);
 	
 	/**
 	 * Dump the documentation of a method
