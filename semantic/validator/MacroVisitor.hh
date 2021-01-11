@@ -231,7 +231,7 @@ namespace semantic {
 	    /**
 	     * Validate a macro for expression that loop over a Mapper
 	     */
-	    std::string validateMacroFor (const std::string & content, const lexing::Word & loc, lexing::Lexer & lex, const Mapper & mapping);
+	    std::string validateMacroFor (const std::string & content, const lexing::Word & open, const lexing::Word & loc, lexing::Lexer & lex, const Mapper & mapping);
 
 	    /**
 	     * Compute the real line in the source file to print a valid error location

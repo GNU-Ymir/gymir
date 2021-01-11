@@ -662,12 +662,15 @@ namespace semantic {
 	    while (true) {
 		auto next = lex.next ();
 		if (next == Token::MACRO_ACC || next == Token::MACRO_CRO || next == Token::MACRO_PAR) {
-		    auto vecs = validateMacroEval (content, loc, toMacroEval (content, loc, lex, next), mapping);
-		    for (auto & it : vecs) {			
-			buf.write (it.consumed);
+		    auto loop = lex.consumeIf ({Keys::FOR});
+		    if (loop == Keys::FOR) {			
+			buf.write (validateMacroFor (content, next, loc, lex, mapping));
+		    } else {
+			auto vecs = validateMacroEval (content, loc, toMacroEval (content, loc, lex, next), mapping);
+			for (auto & it : vecs) {			
+			    buf.write (it.consumed);
+			}
 		    }
-		} else if (next == Token::MACRO_FOR) {
-		    buf.write (validateMacroFor (content, loc, lex, mapping));
 		} else if (!next.isEof ()) {
 		    buf.write (next.getStr ());
 		} else break;		
@@ -736,7 +739,7 @@ namespace semantic {
 	    return inner;
 	} 
 
-	std::string MacroVisitor::validateMacroFor (const std::string & content, const lexing::Word & loc, lexing::Lexer & lex, const Mapper & mapping) {
+	std::string MacroVisitor::validateMacroFor (const std::string & content, const lexing::Word & open, const lexing::Word & loc, lexing::Lexer & lex, const Mapper & mapping) {
 	    lex.skipEnable (Token::SPACE,   true);
 	    lex.skipEnable (Token::TAB,     true);
 	    lex.skipEnable (Token::RETURN,  true);
@@ -752,6 +755,11 @@ namespace semantic {
 	    lex.skipEnable (Token::TAB,     true);
 	    lex.skipEnable (Token::RETURN,  true);
 	    lex.skipEnable (Token::RRETURN, true);
+	    
+	    if (open == Token::MACRO_PAR) lex.next ({Token::RPAR});
+	    else if (open == Token::MACRO_ACC) lex.next ({Token::RACC});
+	    else lex.next ({Token::RCRO});
+	    
 	    auto begin = lex.next ({Token::LACC});
 	    
 	    lex.skipEnable (Token::SPACE,   false);
@@ -782,11 +790,14 @@ namespace semantic {
 		    while (true) {
 			auto next = lex.next ();
 			if (next == Token::MACRO_ACC || next == Token::MACRO_CRO || next == Token::MACRO_PAR) {
-			    auto vecs = validateMacroEval (content, loc, toMacroEval (content, loc, lex, next), mapper);
-			    for (auto & it : vecs)
-				buf.write (it.consumed);
-			} else if (next == Token::MACRO_FOR) {
-			    buf.write (validateMacroFor (content, loc, lex, mapper));
+			    auto loop = lex.consumeIf ({Keys::FOR});
+			    if (loop == Keys::FOR) {
+				buf.write (validateMacroFor (content, next, loc, lex, mapper));
+			    } else {
+				auto vecs = validateMacroEval (content, loc, toMacroEval (content, loc, lex, next), mapper);
+				for (auto & it : vecs)
+				    buf.write (it.consumed);
+			    }
 			} else if (!next.isEof ()) {
 			    buf.write (next.getStr ());
 			} else break;		
@@ -850,6 +861,12 @@ namespace semantic {
 					    bin.getLeft ().prettyString ()
 					);
 				    }
+				} else if (right == Keys::LEN) {
+				    std::vector <Mapper> ret;
+				    Ymir::OutBuffer buf;
+				    buf.write (left.size (), Keys::U64);
+				    ret.push_back (Mapper (true, buf.str ()));
+				    return ret;
 				} else {
 				    Ymir::Error::occur (
 					eval.getLocation (),

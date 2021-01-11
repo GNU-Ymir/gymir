@@ -556,7 +556,7 @@ namespace semantic {
 		auto value = castTo (it.second.first, it.second.second);
 		list.append (value.getList ());
 		auto decl = this-> _globalDeclarators.find (it.first);
-		list.append (Tree::affect (it.second.first.getLocation (), decl-> second, value.getValue ()));
+		list.append (Tree::affect (stackVarDeclChain.back (), getCurrentContext (), it.second.first.getLocation (), decl-> second, value.getValue ()));
 	    }
 
 	    auto fnTree = quitBlock (lexing::Word::eof (), list.toTree ());
@@ -925,7 +925,7 @@ namespace semantic {
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
 	    }
-
+	    
 	    enterBlock ();
 	    for (auto & it : block.getContent ()) {
 		if (!last.isEmpty ()) list.append (generateValue (last));
@@ -936,7 +936,7 @@ namespace semantic {
 		auto value = castTo (block.getType (), last);
 		list.append (value.getList ());
 		value = value.getValue ();
-		list.append (Tree::affect (block.getLocation (), var, value));		
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), block.getLocation (), var, value));		
 		auto binding = quitBlock (block.getLocation (), list.toTree ());
 		return Tree::compound (block.getLocation (),
 				       var, 
@@ -980,7 +980,7 @@ namespace semantic {
 	    }
 
 	    if (!set.getType ().is<Void> ()) {
-		list.append (Tree::affect (set.getLocation (), var, last));
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), set.getLocation (), var, last));
 		auto binding = list.toTree ();
 		return Tree::compound (set.getLocation (),
 				       var, 
@@ -1027,15 +1027,15 @@ namespace semantic {
 	    
 	    auto left = castTo (leftType, aff.getWho ());	    
 	    auto right = castTo (leftType, aff.getValue ()); 
-	    
+
 	    TreeStmtList list = TreeStmtList::init ();
 	    list.append (left.getList ());
 	    list.append (right.getList ());
 	    
 	    auto lvalue =  left.getValue ();
 	    auto rvalue =  right.getValue ();
-
-	    auto value = Tree::affect (aff.getLocation (), lvalue, rvalue);
+	    
+	    auto value = Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), aff.getLocation (), lvalue, rvalue);
 	    auto ret = Tree::compound (aff.getLocation (), value, list.toTree ());
 	    return ret;
 	}
@@ -1354,7 +1354,7 @@ namespace semantic {
 		list.append (content.getList ());
 		auto value = content.getValue ();
 		
-		list.append (Tree::affect (cond.getLocation (), var, value));
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cond.getLocation (), var, value));
 		content = list.toTree ();
 	    } else content = generateValue (cond.getContent ());
 	    
@@ -1367,7 +1367,7 @@ namespace semantic {
 		    list.append (elsePart.getList ());
 		    auto value = elsePart.getValue ();
 		
-		    list.append (Tree::affect (cond.getLocation (), var, value));
+		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cond.getLocation (), var, value));
 		    elsePart = list.toTree ();
 		} else elsePart = generateValue (cond.getElse ());
 	    }
@@ -1401,7 +1401,7 @@ namespace semantic {
 		list.append (content.getList ());
 		auto value = content.getValue ();
 
-		list.append (Tree::affect (loop.getLocation (), var, value));		
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), loop.getLocation (), var, value));		
 		content = list.toTree ();
 	    } else content = generateValue (loop.getContent ());
 	    quitLoop ();
@@ -1438,7 +1438,7 @@ namespace semantic {
 	    if (!br.getValue ().to <Value> ().getType ().is<Void> ()) {
 	    	auto value = generateValue (br.getValue ());		 // Loop will never be lvalue, and therefore cannot return a ref
 	    	list.append (
-	    	    Tree::affect (br.getLocation (),
+	    	    Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), br.getLocation (),
 	    			  this-> _loopVars.back (),
 	    			  value)
 	    	);
@@ -1606,6 +1606,7 @@ namespace semantic {
 	    list.append (r_res);
 	    list.append (
 	    	Tree::affect (
+		    this-> stackVarDeclChain.back (), this-> getCurrentContext (),
 	    	    scope.getLocation (),
 	    	    r_res,
 	    	    Tree::buildCall (scope.getLocation (), generateType (i_type), global::CoreNames::get (SET_JMP),  {Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ()))})
@@ -1620,7 +1621,7 @@ namespace semantic {
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
 		list.append (left.getList ());
-		list.append (Tree::affect (scope.getLocation (), var, left.getValue ()));
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), var, left.getValue ()));
 		left = list.toTree ();
 	    }
 
@@ -1680,14 +1681,14 @@ namespace semantic {
 		
 		auto innerInfo = generateValue (info);
 		auto call = Tree::buildCall (var.getLocation (), type, global::CoreNames::get (EXCEPT_GET_VALUE), {innerInfo});
-		auto left = Tree::compound (var.getLocation (), innerVar, Tree::affect (scope.getLocation (), innerVar, call));
+		auto left = Tree::compound (var.getLocation (), innerVar, Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), innerVar, call));
 		auto nul = Tree::buildPtrCst (var.getLocation (), 0);
 		auto test = Tree::binaryPtrTest (var.getLocation (), NE_EXPR, Tree::boolType (), left, nul);
 		
 		enterBlock ();
 		TreeStmtList list (TreeStmtList::init ());
 		if (!action.to <Value> ().getType ().is <Void> ()) 
-		    list.append (Tree::affect (scope.getLocation (), varScope, generateValue (action)));
+		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), varScope, generateValue (action)));
 		else
 		    list.append (generateValue (action));
 		auto binding = quitBlock (scope.getLocation (), list.toTree ());
@@ -1706,7 +1707,7 @@ namespace semantic {
 		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getType ()));
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
-		left = Tree::affect (scope.getLocation (), var, left);
+		left = Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), var, left);
 	    }
 	    
 	    list.append (left);
@@ -1835,7 +1836,7 @@ namespace semantic {
 		var.setDeclContext (getCurrentContext ());
 		
 		stackVarDeclChain.back ().append (var);
-		pre.append (Tree::affect (cl.getLocation (), var, fn));
+		pre.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cl.getLocation (), var, fn));
 		
 		results.insert (results.begin (), var.getField (Ymir::format ("_%", 0)));		
 		auto type = generateType (cl.getType ());
@@ -1872,7 +1873,7 @@ namespace semantic {
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
 		
-		auto classValue = Tree::affect (cl.getLocation (), var, Tree::buildCall (
+		auto classValue = Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cl.getLocation (), var, Tree::buildCall (
 		    cl.getLocation (),
 		    classType,
 		    global::CoreNames::get (CLASS_ALLOC),
@@ -1881,7 +1882,7 @@ namespace semantic {
 		
 		list.append (classValue);
 		auto vtable = generateVtable (cl.getType ().to <ClassPtr> ().getInners ()[0]);
-		list.append (Tree::affect (cl.getLocation (),
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cl.getLocation (),
 					   var.buildPointerUnref (0).getField ("#_vtable"),
 					   Tree::buildAddress (cl.getLocation (), vtable, Tree::pointerType (Tree::pointerType (Tree::voidType ())))));
 

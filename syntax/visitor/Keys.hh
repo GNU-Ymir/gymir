@@ -139,4 +139,5 @@ struct Keys {
     static const std::string  WITH;
     static const std::string  YLANG;
     static const std::string  OPERATOR;
+    static const std::string  LEN;
 };
