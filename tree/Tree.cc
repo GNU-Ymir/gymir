@@ -1,5 +1,6 @@
 #include <ymir/tree/Tree.hh>
 #include <ymir/tree/StmtList.hh>
+#include <ymir/tree/ChainBase.hh>
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -240,7 +241,7 @@ namespace generic {
 	);			
     }    
 
-    Tree Tree::affect (const lexing::Word & loc, const Tree & left, const Tree & right) {
+    Tree Tree::affect (generic::TreeChain & stackContext, const generic::Tree & segmentContext, const lexing::Word & loc, const Tree & left, const Tree & right) {
 	if (left.getType ().isScalar ()) {
 	    return Tree::build (MODIFY_EXPR, loc, left.getType (), left,
 				Tree::init (
@@ -252,15 +253,24 @@ namespace generic {
 	    if (left.getType () == right.getType ())
 		return Tree::build (MODIFY_EXPR, loc, left.getType (), left, right);
 
-	    TreeStmtList list = TreeStmtList::init ();
+	    Tree var = Tree::varDecl (loc, "#_aff", right.getType ());
+	    var.setDeclContext (segmentContext);
+	    stackContext.append (var);
+	    
+	    TreeStmtList list = TreeStmtList::init ();	    
+	    
 	    list.append (left.getList ());
 	    list.append (right.getList ());
 	    
 	    auto lvalue = left.getValue ();
 	    auto rvalue = right.getValue ();
 	    
+	    // If rvalue is a call expression, allocation etc, we must not recall it again
+	    // So we put it in temp variable
+	    list.append (Tree::build (MODIFY_EXPR, loc, right.getType (), var, right));
+	    
 	    auto ptrl = Tree::buildAddress (loc, lvalue, Tree::pointerType (lvalue.getType ()));
-	    auto ptrr = Tree::buildAddress (loc, rvalue, Tree::pointerType (rvalue.getType ()));
+	    auto ptrr = Tree::buildAddress (loc, var, Tree::pointerType (rvalue.getType ()));
 	    
 	    auto tmemcopy = Tree::init (UNKNOWN_LOCATION, builtin_decl_explicit (BUILT_IN_MEMCPY));
 	    auto size = Tree::init (UNKNOWN_LOCATION, TYPE_SIZE_UNIT (lvalue.getType ().getTree ()));
@@ -269,10 +279,10 @@ namespace generic {
 		Tree::init (loc.getLocation (), build_call_expr (tmemcopy.getTree (), 3, ptrl.getTree (), ptrr.getTree (), size.getTree ()))
 	    );
 	    
-	    return Tree::compound (
+	    return  Tree::compound (
 	    	loc,
-		rvalue,
-		list.toTree ()
+		var, 
+	    	list.toTree ()
 	    );
 	    
 	}

@@ -12,8 +12,16 @@
 
 #include "tree.h"
 
+namespace semantic {
+    namespace generator {
+	class Visitor;
+    }
+}
+
 namespace generic {
 
+    struct TreeChain;
+    
     /**
      * This class is a form of proxy for generic tree
      * Unlike all other proxy this one is only referencing 
@@ -168,8 +176,9 @@ namespace generic {
 
 	/**
 	 * \brief Create an affectation instruction from right to left
+	 * \info we need a context, because new temporary variable may be created
 	 */
-	static Tree affect (const lexing::Word & location, const Tree & left, const Tree & right);
+	static Tree affect (generic::TreeChain & stackContext, const generic::Tree & segmentContext, const lexing::Word & location, const Tree & left, const Tree & right);
 
 	/**
 	 * \brief Create a binary expression, (convert the operand in order to have the same type on each)
