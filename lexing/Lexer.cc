@@ -36,7 +36,7 @@ namespace lexing {
 	line (1),
 	column (1),
 	enableComment (true),
-	_tokenizer (Token::members ()),
+	_tokenizer (Token::members ()),	
 	current (-1),
 	file (file),
 	_fileLocus (Word::init ("", file, filename, 0, 0, 0)),

@@ -39,6 +39,11 @@ namespace lexing {
 	 * Simply return the key of this node
 	 */
 	char getKey () const;
+
+	/**
+	 * Transform the index map into string for debugging purpose
+	 */
+	std::string prettyString (int padd) const;
 	
     };    
 
@@ -77,6 +82,11 @@ namespace lexing {
 	 * Complexity : O (n * log (m)) with n = |str| and m = |Tokens|
 	 */
 	std::list <std::string> tokenize (const std::string & str) const;
+
+	/**
+	 * Transform the index map into string for debugging purpose
+	 */
+	std::string prettyString () const;
 
     };
     

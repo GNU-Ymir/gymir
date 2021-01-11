@@ -212,7 +212,7 @@ namespace lexing {
 	std::vector <Word> reads;
 	std::vector <std::string> docs;
 
-	lexing::IndexMap _tokenizer;
+	const lexing::IndexMap _tokenizer;
 	
 	long current;
 	lexing::File file;

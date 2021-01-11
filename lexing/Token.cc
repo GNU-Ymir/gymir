@@ -79,7 +79,7 @@ const std::string Token::MACRO_FOR = "#for";
 
 const std::string Token::BROK_SPACE = "\xc2\xa0";
 
-std::vector <std::string> Token::__members__ = {Token::DIV,	Token::DIV_AFF,		Token::DOT,		Token::DDOT,		Token::TDOT,		Token::DOT_AND,		Token::AND,	Token::DAND,	Token::PIPE,
+const std::vector <std::string> Token::__members__ = {Token::DIV,	Token::DIV_AFF,		Token::DOT,		Token::DDOT,		Token::TDOT,		Token::DOT_AND,		Token::AND,	Token::DAND,	Token::PIPE,
 						Token::DPIPE,		Token::MINUS,		Token::MINUS_AFF,	Token::DMINUS,		Token::PLUS,		Token::PLUS_AFF,	Token::DPLUS,	Token::INF,
 						Token::INF_EQUAL,	Token::LEFTD,		Token::LEFTD_AFF,	Token::SUP,		Token::SUP_EQUAL,	Token::RIGHTD,		Token::RIGHTD_AFF,
 						Token::NOT,		Token::NOT_EQUAL,	Token::LPAR,		Token::RPAR,		Token::LCRO,		Token::RCRO,		Token::LACC,
@@ -88,7 +88,7 @@ std::vector <std::string> Token::__members__ = {Token::DIV,	Token::DIV_AFF,		Tok
 						Token::XOR,		Token::DXOR_AFF,	Token::DXOR,		Token::TILDE,		Token::TILDE_AFF,	Token::AT,		Token::DARROW,
 						Token::SHARP,		Token::SPACE,		Token::RETURN,		Token::RRETURN,		Token::ANTI,		Token::LCOMM1,		Token::RCOMM1,	Token::LCOMM2,
 						Token::GUILL,		Token::APOS,		Token::TAB,		Token::LCOMM3,		Token::RCOMM3,		Token::LCOMM4,		Token::LCOMM5,  Token::RCOMM5,
-						Token::ARROW,		Token::MACRO_ACC,	Token::MACRO_CRO,	Token::MACRO_PAR,	Token::DCOLON,		Token::BROK_SPACE
+						Token::ARROW,		Token::MACRO_ACC,	Token::MACRO_CRO,	Token::MACRO_PAR,	Token::DCOLON
 };
 
 const std::vector <std::string> & Token::members () {

@@ -10,7 +10,7 @@
  */
 struct Token {
 
-    static std::vector <std::string> __members__;
+    static const std::vector <std::string> __members__;
     
     static const std::string	DIV;
     static const std::string	DIV_AFF;
