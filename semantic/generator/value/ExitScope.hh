@@ -23,7 +23,7 @@ namespace semantic {
 	    
 	    Generator _catchingAction;
 
-	    std::vector<Generator> _success;
+	    std::vector<Generator> _exit;
 
 	    std::vector<Generator> _failure;
 	    
@@ -33,7 +33,7 @@ namespace semantic {
 	    
 	    ExitScope ();
 
-	    ExitScope (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator & jmpBufType, const std::vector<Generator> & success, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
+	    ExitScope (const lexing::Word & loc, const Generator & type, const Generator & jmpBufType, const Generator & who, const std::vector<Generator> & exit, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
 
 	public :
 
@@ -41,7 +41,7 @@ namespace semantic {
 	     * \brief Generate a new Binary on int
 	     * \warning left and right operand must generate int typed values
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator& jmpBufType, const std::vector <Generator> & values, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & who, const Generator& jmpBufType, const std::vector <Generator> & exit, const std::vector<Generator> & failure, const Generator & catchingVar, const Generator & catchingInfo, const Generator & catchingAction);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -61,7 +61,7 @@ namespace semantic {
 	    /**
 	     * \return the values to execute at the exit of the scope in case of success
 	     */
-	    const std::vector <Generator> & getSuccess () const;
+	    const std::vector <Generator> & getExit () const;
 
 	    /**
 	     * \return the values to execute at the exit of the scope in case of failure

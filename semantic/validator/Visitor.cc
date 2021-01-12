@@ -2124,8 +2124,7 @@ namespace semantic {
 	    
 	    if (onSuccess.size () != 0) ret = SuccessScope::init (block.getLocation (), type, ret, onSuccess);
 	    if (onExit.size () != 0 || onFailure.size () != 0 || !catchVar.isEmpty ()) {
-		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (block.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
-		onFailure.insert (onFailure.end (), onExit.begin (), onExit.end ());
+		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (block.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));		
 		auto ex = ExitScope::init (block.getLocation (), type, jmp_buf_type, ret, onExit, onFailure, catchVar, catchInfo, catchAction);
 		return ex;
 	    }

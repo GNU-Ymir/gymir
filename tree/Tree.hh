@@ -619,9 +619,14 @@ namespace generic {
 	Tree getType () const;
 
 	/**
-	 * \return this type encode a pointer type ?
+	 * \return this tree encode a pointer type ?
 	 */
 	bool isPointerType () const;
+
+	/**
+	 * \return this tree encode a void type ?
+	 */
+	bool isVoidType () const;
 	
 	/**
 	 * \brief Applicable to a type

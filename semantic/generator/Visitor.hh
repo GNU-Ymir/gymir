@@ -16,12 +16,29 @@ namespace semantic {
 	 */
 	class Visitor {
 
+	    struct ReturnWithinCatch {
+
+		const static ulong RETURN;
+		const static ulong BREAK;
+		const static ulong THROW;
+		const static ulong NONE;
+		
+		generic::Tree label;
+		generic::Tree test;
+		generic::Tree var;
+		generic::Tree jmp_var;
+	    };
+
+	    
 	    /** The list of var decl for each blocks */
 	    std::vector <generic::TreeChain> stackVarDeclChain;
 
 	    /** The list of block currently entered */
 	    std::vector <generic::BlockChain> stackBlockChain;	    	    
 
+	    /** The list of jumps; */
+	    std::vector <ReturnWithinCatch> exceptionDeclChain;
+	    
 	    /** The global context of the generation */
 	    generic::Tree _globalContext;
 
@@ -211,10 +228,20 @@ namespace semantic {
 	    generic::Tree generateExitScope (const ExitScope & scope);
 
 	    /**
+	     * Used for break statements
+	     */
+	    generic::Tree popLastException (const lexing::Word & loc);
+	    
+	    /**
 	     * \brief Generate the catching part of an exit scope
 	     * \param var the var containing the value of the scope
 	     */
 	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree var);
+
+	    /**
+	     * \brief The test at the end of an exit scope to make sure return, break and throws are correctly executed
+	     */
+	    generic::Tree generateEndOfExit (const lexing::Word & loc, generic::Tree test, generic::Tree value);
 	    
 	    /**
 	     * \brief Transform an success scope into gimple
@@ -367,10 +394,20 @@ namespace semantic {
 	    generic::Tree generateBreak (const Break & loop);
 
 	    /**
+	     * \brief Generate a break statement without value affectation (assumed to be already done)
+	     */
+	    generic::Tree generateBreak (const lexing::Word & loc);
+	    
+	    /**
 	     * \brief Transform a return expression into gimple
 	     */
 	    generic::Tree generateReturn (const Return & ret);
 
+	    /**
+	     * Create a return statement from an already validated value
+	     */
+	    generic::Tree generateReturn (const lexing::Word & location, generic::Tree value);
+	    
 	    /**
 	     * \brief Transform a range value into gimple
 	     */

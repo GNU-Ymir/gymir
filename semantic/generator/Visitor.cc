@@ -19,6 +19,11 @@ namespace semantic {
 	using namespace generic;
 
 	static GTY(()) vec<tree, va_gc> *globalDeclarations;
+
+	const ulong	Visitor::ReturnWithinCatch::NONE   = 0;
+	const ulong	Visitor::ReturnWithinCatch::RETURN = 1;
+	const ulong	Visitor::ReturnWithinCatch::BREAK  = 2;
+	const ulong	Visitor::ReturnWithinCatch::THROW  = 3;
 	
 	Visitor::Visitor () :
 	    _globalContext (Tree::empty ()),
@@ -1443,13 +1448,35 @@ namespace semantic {
 	    			  value)
 	    	);
 	    }
-	    	    
-	    list.append (Tree::gotoExpr (br.getLocation (), this-> _loopLabels.back ()));
+
+	    if (this-> exceptionDeclChain.size () == 0) {	    
+		list.append (Tree::gotoExpr (br.getLocation (), this-> _loopLabels.back ()));
+	    } else {
+		auto exc_break = this-> exceptionDeclChain.back ();
+		auto test_val = Tree::buildIntCst (br.getLocation (), ReturnWithinCatch::BREAK, Tree::intType (8, false));
+		list.append (this-> popLastException (br.getLocation ()));
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), br.getLocation (), exc_break.test, test_val));
+		list.append (Tree::gotoExpr (br.getLocation (), exc_break.label));
+	    }
 	    return list.toTree ();
 	}
 
+	generic::Tree Visitor::generateBreak (const lexing::Word & loc) {
+	    if (this-> exceptionDeclChain.size () == 0) {
+		return Tree::gotoExpr (loc, this-> _loopLabels.back ());
+	    } else {
+		TreeStmtList list = TreeStmtList::init ();
+		auto exc_break = this-> exceptionDeclChain.back ();
+		auto test_val = Tree::buildIntCst (loc, ReturnWithinCatch::BREAK, Tree::intType (8, false));
+		list.append (this-> popLastException (loc));
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), loc, exc_break.test, test_val));
+		list.append (Tree::gotoExpr (loc, exc_break.label));
+		return list.toTree ();	    
+	    }
+	}
+	
 	generic::Tree Visitor::generateReturn (const Return & ret) {
-	    TreeStmtList list = TreeStmtList::init ();
+	    TreeStmtList list = TreeStmtList::init ();	    
 	    if (!ret.getValue ().isEmpty ()) {
 		auto value = castTo (ret.getFunType (), ret.getValue ());
 		auto fr = getCurrentContext ();
@@ -1457,19 +1484,74 @@ namespace semantic {
 
 		if (ret.getFunType ().is<Void> ()) {
 		    list.append (value);
-		    list.append (Tree::returnStmt (ret.getLocation ()));
+		    if (this-> exceptionDeclChain.size () == 0) 
+			list.append (Tree::returnStmt (ret.getLocation ()));
+		    else {
+			auto exc_return = this-> exceptionDeclChain.back ();
+			auto test_val = Tree::buildIntCst (ret.getLocation (), ReturnWithinCatch::RETURN, Tree::intType (8, false));
+			list.append (this-> popLastException (ret.getLocation ()));
+			list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.test, test_val));
+			list.append (Tree::gotoExpr (ret.getLocation (), exc_return.label));
+		    }
 		} else {
 		    list.append (value.getList ());
 		    value = value.getValue ();
-		    list.append (Tree::returnStmt (ret.getLocation (), resultDecl, value));
+		    if (this-> exceptionDeclChain.size () == 0) {
+			list.append (Tree::returnStmt (ret.getLocation (), resultDecl, value));
+		    } else {
+			auto exc_return = this-> exceptionDeclChain.back ();
+			auto test_val = Tree::buildIntCst (ret.getLocation (), ReturnWithinCatch::RETURN, Tree::intType (8, false));
+			list.append (this-> popLastException (ret.getLocation ()));
+			list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.test, test_val));
+			list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.var, value));
+			list.append (Tree::gotoExpr (ret.getLocation (), exc_return.label));
+		    }
 		}
 	    } else {
-		list.append (Tree::returnStmt (ret.getLocation ()));
+		if (this-> exceptionDeclChain.size () == 0) {		    
+		    list.append (Tree::returnStmt (ret.getLocation ()));
+		} else {
+		    auto exc_return = this-> exceptionDeclChain.back ();
+		    auto test_val = Tree::buildIntCst (ret.getLocation (), ReturnWithinCatch::RETURN, Tree::intType (8, false));
+		    list.append (this-> popLastException (ret.getLocation ()));
+		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.test, test_val));
+		    list.append (Tree::gotoExpr (ret.getLocation (), exc_return.label));
+		}
 	    }
 	    
 	    return list.toTree ();
 	}
 
+	generic::Tree Visitor::generateReturn (const lexing::Word & location, generic::Tree value) {
+	    TreeStmtList list = TreeStmtList::init ();
+	    if (!value.isEmpty ()) {
+		if (this-> exceptionDeclChain.size () == 0) {
+		    auto fr = getCurrentContext ();
+		    auto resultDecl = fr.getResultDecl ();
+		    
+		    return Tree::returnStmt (location, resultDecl, value);
+		} else {
+		    auto exc_return = this-> exceptionDeclChain.back ();
+		    auto test_val = Tree::buildIntCst (location, ReturnWithinCatch::RETURN, Tree::intType (8, false));
+		    list.append (this-> popLastException (location));
+		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), location, exc_return.test, test_val));
+		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), location, exc_return.var, value));
+		    list.append (Tree::gotoExpr (location, exc_return.label));
+		}
+	    } else {
+		if (this-> exceptionDeclChain.size () == 0) {
+		    return Tree::returnStmt (location);
+		} else {
+		    auto exc_return = this-> exceptionDeclChain.back ();
+		    auto test_val = Tree::buildIntCst (location, ReturnWithinCatch::RETURN, Tree::intType (8, false));
+		    list.append (this-> popLastException (location));
+		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), location, exc_return.test, test_val));
+		    list.append (Tree::gotoExpr (location, exc_return.label));
+		}
+	    }
+	    return list.toTree ();
+	}
+	
 	generic::Tree Visitor::generateRangeValue (const RangeValue & rng) {
 	    auto type = generateType (rng.getType ());
 	    std::vector <Tree> params = {
@@ -1601,6 +1683,19 @@ namespace semantic {
 	    auto r_res = Tree::varDecl (scope.getLocation (), "#ref", generateType (i_type));
 	    r_res.setDeclContext (getCurrentContext ());
 	    stackVarDeclChain.back ().append (r_res);
+
+	    auto return_value = Tree::empty ();
+	    auto test_return_value = Tree::varDecl (scope.getLocation (), "#ret?", Tree::intType (8, false));
+	    test_return_value.setDeclInitial (Tree::buildIntCst (scope.getLocation (), ReturnWithinCatch::NONE, Tree::intType (8, false))); // No return by default
+	    
+	    if (!getCurrentContext ().getResultDecl ().getType ().isVoidType ()) {
+		return_value = Tree::varDecl (scope.getLocation (), "#ret_val", getCurrentContext ().getResultDecl ().getType ());
+		list.append (return_value);
+	    }
+	    
+	    auto exit_label = Tree::makeLabel (scope.getLocation (), getCurrentContext (), "exit");
+	    
+	    this-> exceptionDeclChain.push_back ({exit_label, test_return_value, return_value, r_jmp});
 	    
 	    list.append (r_jmp);
 	    list.append (r_res);
@@ -1613,50 +1708,62 @@ namespace semantic {
 	    	)
 	    ); // res = setjmp (buf);
 
-	    auto left = generateValue (scope.getWho ());
+	    auto left_value = generateValue (scope.getWho ());
+	    		    
 	    Tree var (Tree::empty ());
-	    if (!scope.getWho ().to <Value> ().getType ().is <Void> ()) {
+	    if (!scope.getWho ().to <Value> ().getType ().is <Void> ()) { // If the content block has a value
 		TreeStmtList list (TreeStmtList::init ());
 		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getWho ().to <Value> ().getType ()));
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
-		list.append (left.getList ());
-		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), var, left.getValue ()));
-		left = list.toTree ();
+		list.append (left_value.getList ());
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), var, left_value.getValue ()));
+		left_value = list.toTree ();
 	    }
-
+	    
+	    /**
+	     * Exit scope
+	     */
+	    TreeStmtList exitList = TreeStmtList::init ();	    
+	    exitList.append (Tree::labelExpr (scope.getLocation (), exit_label));
+	    
+	    for (auto & it : scope.getExit ()) {
+	    	exitList.append (generateValue (it));
+	    }
+	    
+	    /** Try scope */
 	    TreeStmtList left_part (TreeStmtList::init ());
-	    left_part.append (left);
+	    left_part.append (left_value);
+	    left_part.append (this-> popLastException (scope.getLocation ()));
+	    left_part.append (Tree::gotoExpr (scope.getLocation (), exit_label));
+	    
+	    /** Failure scope */
 	    TreeStmtList right_part (TreeStmtList::init ());
 	    for (auto & it : scope.getFailure ()) {
 		right_part.append (generateValue (it));
 	    }
 	    
-	    for (auto & it : scope.getSuccess ()) {
-	    	left_part.append (generateValue (it));
-	    }
+	    right_part.append (generateCatching (scope, var)); // Affect the value of the block on failure	    
+	    right_part.append (Tree::gotoExpr (scope.getLocation (), exit_label)); // Goto exit scope in all cases
+
+	    this-> exceptionDeclChain.pop_back ();
 	    
-	    right_part.append (generateCatching (scope, var));
 	    auto right = right_part.toTree ();
-	    	    
+	    auto left = left_part.toTree ();
+	    
 	    auto test = Tree::buildCall (
 		scope.getLocation (),
 		Tree::boolType (),
 		global::CoreNames::get (EXCEPT_PUSH),
 		{Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ())), r_res}
 	    );
-
-	    auto pop = Tree::buildCall (
-		scope.getLocation (),
-		Tree::boolType (),
-		global::CoreNames::get (EXCEPT_POP),
-		{Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ()))}
-	    );
-	    left_part.append (pop);
-	    left = left_part.toTree ();
-
-	    auto cond = Tree::conditional (scope.getLocation (), getCurrentContext (), test, left, right);
+	    
+	    /// Conditional on the jump
+	    auto cond = Tree::conditional (scope.getLocation (), getCurrentContext (), test, left, right); // Try catch expression -> exit
 	    list.append (cond);
+
+	    exitList.append (this-> generateEndOfExit (scope.getLocation (), test_return_value, return_value));
+	    list.append (exitList.toTree ());
 	    
 	    auto binding = quitBlock (scope.getLocation (), list.toTree ());
 	    if (!scope.getWho ().to <Value> ().getType ().is <Void> ()) {
@@ -1666,7 +1773,15 @@ namespace semantic {
 
 	generic::Tree Visitor::generateCatching (const ExitScope & scope, Tree varScope) {
 	    TreeStmtList glob (TreeStmtList::init ());
-	    auto last = Tree::buildCall (scope.getLocation (), Tree::voidType (), global::CoreNames::get (RETHROW), {});
+	    TreeStmtList rethrow = TreeStmtList::init ();
+	    auto test_val = Tree::buildIntCst (scope.getLocation (), ReturnWithinCatch::THROW, Tree::intType (8, false));
+
+	    // By default we go to the exit scope and tell it that nothing has been caught
+	    auto exc_return = this-> exceptionDeclChain.back ();	    
+	    rethrow.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), exc_return.test, test_val));
+	    rethrow.append (Tree::gotoExpr (scope.getLocation (), exc_return.label));
+	    
+	    auto last = rethrow.toTree ();
 	    
 	    auto & var = scope.getCatchingVar ();
 	    auto & info = scope.getCatchingInfoType ();
@@ -1697,22 +1812,89 @@ namespace semantic {
 	    return // Ymir::compound (scope.getLocation (), 
 		last;// , glob.toTree ());
 	}
+
+	generic::Tree Visitor::generateEndOfExit (const lexing::Word & loc, generic::Tree test, generic::Tree ret_value) {
+	    auto type = Tree::intType (8, false);
+	    auto is_return = Tree::binary (loc, EQ_EXPR, type, test, Tree::buildIntCst (loc, ReturnWithinCatch::RETURN, type));
+	    auto is_break = Tree::binary (loc, EQ_EXPR, type, test, Tree::buildIntCst (loc, ReturnWithinCatch::BREAK, type));
+	    auto is_none = Tree::binary (loc, EQ_EXPR, type, test, Tree::buildIntCst (loc, ReturnWithinCatch::NONE, type));
+
+	    auto rethrow = Tree::buildCall (loc, Tree::voidType (), global::CoreNames::get (RETHROW), {});
+
+	    if (this-> _loopLabels.size () != 0) { // Can only break inside loops
+		/**
+		 * if (test == NONE) {} else if (test == RETURN) { return ; } else if (test == BREAK) { break; } else { rethrow ; }
+		 */
+		return Tree::conditional (loc, getCurrentContext (), is_none, TreeStmtList::init ().toTree (),
+					  Tree::conditional (loc, getCurrentContext (), is_return, this-> generateReturn (loc, ret_value),
+							     Tree::conditional (loc, getCurrentContext (), is_break, this-> generateBreak (loc), rethrow)
+					      )		    
+		    );
+	    } else {
+		return Tree::conditional (loc, getCurrentContext (), is_none, TreeStmtList::init ().toTree (),
+					  Tree::conditional (loc, getCurrentContext (), is_return, this-> generateReturn (loc, ret_value), rethrow)					  
+		    );		
+	    } 
+	}
+
+	generic::Tree Visitor::popLastException (const lexing::Word & loc) {
+	    if (this-> exceptionDeclChain.size () != 0 && !this-> exceptionDeclChain.back ().jmp_var.isEmpty ()) {
+		return Tree::buildCall (
+		    loc,
+		    Tree::boolType (),
+		    global::CoreNames::get (EXCEPT_POP),
+		    {Tree::buildAddress (loc, this-> exceptionDeclChain.back ().jmp_var, Tree::pointerType (Tree::voidType ()))}
+		    );
+	    } else {
+		return Tree::empty ();
+	    }
+	}
 	
 	generic::Tree Visitor::generateSuccessScope (const SuccessScope & scope) {
 	    TreeStmtList list (TreeStmtList::init ());
 	    enterBlock ();
-	    auto left = generateValue (scope.getWho ());
+
+	    auto return_value = Tree::empty ();
+	    auto test_return_value = Tree::varDecl (scope.getLocation (), "#ret?", Tree::intType (8, false));
+	    test_return_value.setDeclInitial (Tree::buildIntCst (scope.getLocation (), ReturnWithinCatch::NONE, Tree::intType (8, false))); // No return by default
+
+	    if (!getCurrentContext ().getResultDecl ().getType ().isVoidType ()) {
+		return_value = Tree::varDecl (scope.getLocation (), "#ret_val", getCurrentContext ().getResultDecl ().getType ());
+		list.append (return_value);
+	    }
+
+	    auto exit_label = Tree::makeLabel (scope.getLocation (), getCurrentContext (), "exit");	    
+	    this-> exceptionDeclChain.push_back ({exit_label, test_return_value, return_value, Tree::empty ()});
+
+	    /**
+	     * Success scope
+	     */
+	    TreeStmtList exitList = TreeStmtList::init ();	    
+	    exitList.append (Tree::labelExpr (scope.getLocation (), exit_label));
+	    
+	    for (auto & it : scope.getValues ()) {
+	    	exitList.append (generateValue (it));
+	    }
+	    
+	    auto content = generateValue (scope.getWho ());
 	    Tree var (Tree::empty ());
 	    if (!scope.getType ().is<Void> ()) {
+		TreeStmtList innerList (TreeStmtList::init ());
 		var = Tree::varDecl (scope.getLocation (), "_", generateType (scope.getType ()));
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
-		left = Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), var, left);
+		innerList.append (content.getList ());
+		innerList.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), var, content.getValue ()));
+		content = innerList.toTree ();
 	    }
+	   
+	    list.append (content);
+	    list.append (Tree::gotoExpr (scope.getLocation (), exit_label)); // We go to success scope
 	    
-	    list.append (left);
-	    for (auto & it : scope.getValues ())
-		list.append (generateValue (it));
+	    this-> exceptionDeclChain.pop_back ();
+
+	    exitList.append (this-> generateEndOfExit (scope.getLocation (), test_return_value, return_value));
+	    list.append (exitList.toTree ());
 	    
 	    auto binding = quitBlock (scope.getLocation (), list.toTree ());
 	    if (!scope.getType ().is <Void> ()) {

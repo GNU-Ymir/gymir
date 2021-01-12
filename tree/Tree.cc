@@ -845,6 +845,10 @@ namespace generic {
 	return this-> getTreeCode () == POINTER_TYPE;
     }
 
+    bool Tree::isVoidType () const {
+	return this-> getTreeCode () == VOID_TYPE;
+    }
+    
     Tree Tree::buildPointerUnref (int index) const {
 	auto inner = TREE_TYPE (this-> getType ().getTree ());
 	auto element_size = TYPE_SIZE_UNIT (inner);

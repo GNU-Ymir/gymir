@@ -1233,19 +1233,21 @@ namespace syntax {
 	Expression catcher (Expression::empty ());
 
 	std::vector <Expression> scopes;
-	do {
-	    
-	    lexing::Word next = lexing::Word::eof ();
-	    if (catcher.isEmpty () && canCatcher)
-		next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE, Keys::CATCH});
-	    else next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
-	    if (next == Keys::CATCH) {
-		catcher = visitCatch ();
-	    } else if (next != "") {
-		this-> _lex.consumeIf ({Token::DARROW});
-		scopes.push_back (Scope::init (next, visitBlock (false)));
-	    } else break;
-	} while (true);
+	if (canCatcher) {
+	    do {
+		
+		lexing::Word next = lexing::Word::eof ();
+		if (catcher.isEmpty ())
+		    next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE, Keys::CATCH});
+		else next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
+		if (next == Keys::CATCH) {
+		    catcher = visitCatch ();
+		} else if (next != "") {
+		    this-> _lex.consumeIf ({Token::DARROW});
+		    scopes.push_back (Scope::init (next, visitBlock (false)));
+		} else break;
+	    } while (true);
+	}
 	
 	if (last) content.push_back (Unit::init (end));
 	if (decls.size () != 0) {
