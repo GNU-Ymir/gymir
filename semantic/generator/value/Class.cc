@@ -53,7 +53,6 @@ namespace semantic {
 	    return this-> _fields;
 	}
 
-
 	Generator Class::getFieldType (const std::string & name) const {
 	    Generator type (Generator::empty ());
 

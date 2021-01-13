@@ -1787,7 +1787,7 @@ namespace semantic {
 		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
 	    }
 	    
-	    if (value.is <Value> () && value.to <Value> ().isBreaker ()) {
+	    if (value.is <Value> () && value.to <Value> ().isBreaker () && !value.to <Value> ().getType ().is <Void> ()) {
 		auto note = Ymir::Error::createNote (value.getLocation ());
 		Ymir::Error::occurAndNote (value.to<Value> ().getBreakerLocation (), note, ExternalError::get (BREAK_INSIDE_EXPR));
 	    }

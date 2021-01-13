@@ -135,10 +135,14 @@ namespace semantic {
 				gens.push_back (res);
 			}
 		    ) else of (TemplateRef, te ATTRIBUTE_UNUSED, {
-			    auto res = validateTemplate (expression, gen, errors);			    
-			    if (!res.isEmpty ()) {
-				gens.insert (gens.end (), res.to <MultSym> ().getGenerators ().begin (),
-					     res.to <MultSym> ().getGenerators ().end ());
+			    auto res = validateTemplate (expression, gen, errors);
+			    if (res.is <MultSym> ()) {
+				if (!res.isEmpty ()) {
+				    gens.insert (gens.end (), res.to <MultSym> ().getGenerators ().begin (),
+						 res.to <MultSym> ().getGenerators ().end ());
+				}
+			    } else {
+				gens.push_back (res);
 			    }
 			}
 		    ) else of (Value, v, {
@@ -673,13 +677,13 @@ namespace semantic {
 		    std::vector <Generator> types;
 		    std::vector <Generator> params;
 		    std::list <Ymir::Error::ErrorMsg> errors;
-
 		    for (auto & field : cl.to <generator::Class> ().getFields ()) {
 			bool loc_pub = true, loc_prot = true;
 			auto type = field.to <generator::VarDecl> ().getVarType ();
 			auto name = field.to <generator::VarDecl> ().getName ();
 			cl.to <generator::Class> ().getFieldProtection (name, loc_pub, loc_prot);
 			if (loc_pub || (loc_prot && (prv || prot)) || prv) {
+			    println (name, " ", loc_prot, " ", loc_pub, " ", prv, " ", prot);
 			    type = Type::init (type.to <Type> (), false);
 			    
 			    params.push_back (StructAccess::init (expression.getLocation (), type, value, name));

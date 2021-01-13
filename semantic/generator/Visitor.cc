@@ -1449,9 +1449,10 @@ namespace semantic {
 	    	);
 	    }
 
-	    if (this-> exceptionDeclChain.size () == 0) {	    
+	    if (this-> exceptionDeclChain.back ().label.isEmpty ()) {
+		// If we are in a loop, we pushed a exceptionDeclChain thing, but an empty one
 		list.append (Tree::gotoExpr (br.getLocation (), this-> _loopLabels.back ()));
-	    } else {
+	    } else { // or a catcher put a real exception and we have to take it into account
 		auto exc_break = this-> exceptionDeclChain.back ();
 		auto test_val = Tree::buildIntCst (br.getLocation (), ReturnWithinCatch::BREAK, Tree::intType (8, false));
 		list.append (this-> popLastException (br.getLocation ()));
@@ -1702,6 +1703,16 @@ namespace semantic {
 	    list.append (r_jmp);
 	    list.append (r_res);
 	    list.append (test_return_value);
+
+	    list.append (
+	    	Tree::affect (
+		    this-> stackVarDeclChain.back (), this-> getCurrentContext (),
+	    	    scope.getLocation (),
+	    	    r_res,
+	    	    Tree::buildCall (scope.getLocation (), generateType (i_type), global::CoreNames::get (SET_JMP),  {Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ()))})
+	    	)
+	    ); // res = setjmp (buf);
+
 	    list.append (
 		Tree::affect (this-> stackVarDeclChain.back (),
 			      this-> getCurrentContext (),
@@ -1713,16 +1724,7 @@ namespace semantic {
 				  )
 		    )
 		); // No return by default
-
-	    list.append (
-	    	Tree::affect (
-		    this-> stackVarDeclChain.back (), this-> getCurrentContext (),
-	    	    scope.getLocation (),
-	    	    r_res,
-	    	    Tree::buildCall (scope.getLocation (), generateType (i_type), global::CoreNames::get (SET_JMP),  {Tree::buildAddress (scope.getLocation (), r_jmp, Tree::pointerType (Tree::voidType ()))})
-	    	)
-	    ); // res = setjmp (buf);
-
+	    
 	    auto left_value = generateValue (scope.getWho ());
 	    		    
 	    Tree var (Tree::empty ());
@@ -1792,7 +1794,7 @@ namespace semantic {
 	    auto test_val = Tree::buildIntCst (scope.getLocation (), ReturnWithinCatch::THROW, Tree::intType (8, false));
 
 	    // By default we go to the exit scope and tell it that nothing has been caught
-	    auto exc_return = this-> exceptionDeclChain.back ();	    
+	    auto exc_return = this-> exceptionDeclChain.back ();
 	    rethrow.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), scope.getLocation (), exc_return.test, test_val));
 	    rethrow.append (Tree::gotoExpr (scope.getLocation (), exc_return.label));
 	    
@@ -2336,11 +2338,16 @@ namespace semantic {
 	void Visitor::enterLoop (const Tree & label, const Tree & var) {
 	    this-> _loopLabels.push_back (label);
 	    this-> _loopVars.push_back (var);
+	    
+	    // If there is a break inside the loop it need to break, not go outside the loop to the closest catch
+	    this-> exceptionDeclChain.push_back ({Tree::empty (), Tree::empty (), Tree::empty (), Tree::empty ()});
 	}
 
 	void Visitor::quitLoop () {
 	    this-> _loopVars.pop_back ();
 	    this-> _loopLabels.pop_back ();
+	    // cf enterloop
+	    this-> exceptionDeclChain.pop_back ();
 	}	
 	
 	void Visitor::enterFrame () {
