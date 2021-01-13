@@ -45,7 +45,7 @@ namespace semantic {
 	    };
 	    
 	    /** List of referent for symbol access and insertion */
-	    std::list <Symbol> _referent;	
+	    std::list <Symbol> _referent;
 
 	    /** The list of generator produced by the search */
 	    std::vector <generator::Generator> _list;
@@ -1061,8 +1061,7 @@ namespace semantic {
 	    /**
 	     * \brief this-> _referent.pop_back ()
 	     */
-	    void popReferent (const std::string & msg);
-	    
+	    void popReferent (const std::string & msg);	    
 	    
 	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
 

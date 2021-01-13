@@ -43,7 +43,7 @@ namespace semantic {
 		Ymir::OutBuffer buf;
 		buf.write ("Multiple Symbols : {");
 		for (auto it : Ymir::r (0, 1)) {
-		    buf.write (this-> _gens [it].getLocation ().getStr ());
+		    buf.write (this-> _gens [it].prettyString ());
 		}
 		buf.writef ("} x %", this-> _gens.size ());
 		return buf.str ();

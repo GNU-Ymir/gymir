@@ -1069,14 +1069,19 @@ namespace semantic {
 			    } catch (Error::ErrorList list) {				
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 				succeed = false;
-			    } 
-
+			    }
+			    
 			    if (succeed) {
 				mapper.mapping.emplace (implv.getLocation ().getStr (), createSyntaxType (implv.getLocation (), type));
 				mapper.nameOrder.push_back (implv.getLocation ().getStr ());
 				mapper.score += Scores::SCORE_TYPE;
 				return mapper;
 			    }
+			}
+			
+			if (errors.size () == 0) {
+			    auto note = Ymir::Error::createNote (implv.getLocation ());
+			    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), type.prettyString (), implv.getType ().prettyString ());
 			}
 			
 			throw Error::ErrorList {errors};

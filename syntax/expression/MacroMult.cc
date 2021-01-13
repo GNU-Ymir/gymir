@@ -28,8 +28,11 @@ namespace syntax {
     std::string MacroMult::prettyString () const {
 	Ymir::OutBuffer buf;
 	buf.write ("(");
+	int i = 0;
 	for (auto & it : this-> _content) {
+	    if (i != 0) buf.write (" ");
 	    buf.write (it.prettyString ());
+	    i += 1;
 	}
 	buf.write (")");
 	if (!this-> _mult.isEof ()) buf.write (this-> _mult.getStr ());

@@ -898,7 +898,7 @@ namespace documentation {
 		    skips.push_back (JsonString::init (jt.prettyString ()));
 		}
 		
-		content ["rule"] = JsonArray::init (skips);
+		content ["skips"] = JsonArray::init (skips);
 		cstrs.push_back (JsonDict::init (content));
 	    } else if (it.is <semantic::MacroRule> ()) {
 		auto & mc = it.to <semantic::MacroRule> ().getContent ().to<syntax::MacroRule> ();
@@ -910,7 +910,7 @@ namespace documentation {
 		    skips.push_back (JsonString::init (jt.prettyString ()));
 		}
 		
-		content ["rule"] = JsonArray::init (skips);
+		content ["skips"] = JsonArray::init (skips);
 		rules.push_back (JsonDict::init (content));
 	    }
 	}

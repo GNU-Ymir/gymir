@@ -13,7 +13,44 @@ namespace semantic {
     {}
 
     Symbol MacroConstructor::init (const lexing::Word & name, const std::string & comments, const syntax::Declaration & constr) {
-	return Symbol {new (NO_GC) MacroConstructor (name, comments, constr)};
+	auto ret = Symbol {new (NO_GC) MacroConstructor (name, comments, constr)};
+	ret.to <MacroConstructor> ()._table = Table::init (ret.getPtr ());
+	return ret;
+    }
+
+    void MacroConstructor::insert (const Symbol & sym) {
+	this-> _table-> insert (sym);
+    }
+
+    void MacroConstructor::insertTemplate (const Symbol & sym) {
+	this-> _table-> insertTemplate (sym);
+    }
+    
+    void MacroConstructor::getTemplates (std::vector <Symbol> & rets) const {
+	auto & tmpls = this-> _table-> getTemplates ();
+	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
+    }    
+    
+    void MacroConstructor::replace (const Symbol & sym) {
+	this-> _table-> replace (sym);
+    }
+
+    void MacroConstructor::get (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().get (name, rets);
+	this-> _table-> get (name, rets);
+    }
+
+    void MacroConstructor::getPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	getReferent ().getPublic (name, rets);
+	this-> _table-> getPublic (name, rets);
+    }
+    
+    void MacroConstructor::getLocal (const std::string & name, std::vector <Symbol> & rets) const {
+	this-> _table-> get (name, rets);
+    }
+
+    void MacroConstructor::getLocalPublic (const std::string & name, std::vector <Symbol> & rets) const {
+	this-> _table-> getPublic (name, rets);
     }
     
     bool MacroConstructor::equals (const Symbol & other, bool parent) const {

@@ -715,7 +715,7 @@ namespace semantic {
 		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
 		    else of (generator::Struct, str, leftName = str.getName ())
 		    else of  (generator::Enum, en, leftName = en.getName ())
-		    else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
+		    else of (MultSym,    sym,   leftName = sym.prettyString ())
 		    else of (generator::Class, cl, leftName = cl.getName ())
 		    else of (ClassRef, cl, leftName = cl.getName ())
 		    else of (TemplateRef, rf, leftName = rf.prettyString ())
@@ -734,7 +734,8 @@ namespace semantic {
 		auto val = this-> _context.retreiveValue (this-> _context.validateValue (right));
 		rightName = val.prettyString ();
 	    }
-
+	    
+	    println (left.prettyString (), " ", left.is <ModuleAccess> ());
 	    
 	    Ymir::Error::occur (
 		expression.getLocation (),
@@ -752,7 +753,7 @@ namespace semantic {
 		    of (FrameProto, proto, leftName = proto.getName ())
 		    else of (generator::Struct, str, leftName = str.getName ())
 		    else of (generator::Enum, en, leftName = en.getName ())
-		    else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
+		    else of (MultSym,    sym,   leftName = sym.prettyString ())
 		    else of (generator::Class, cl, leftName = cl.getName ())
 		    else of (ClassRef, cl, leftName = cl.getName ())
 		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
@@ -772,7 +773,6 @@ namespace semantic {
 		auto val = this-> _context.retreiveValue (this-> _context.validateValue (right));
 		rightName = val.prettyString ();
 	    }
-
 	    
 	    Ymir::Error::occurAndNote (
 		expression.getLocation (),

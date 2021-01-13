@@ -592,22 +592,36 @@ namespace syntax {
 
     Declaration Visitor::visitIfClass (bool fromTrait) {
 	std::string comments;
-	auto location = this-> _lex.nextWithDocs (comments, {Keys::IF});
-	auto test = this-> visitExpression ();
+	auto location = this-> _lex.nextWithDocs (comments, {Keys::IF, Keys::ASSERT});
+	if (location == Keys::IF) {
+	    auto test = this-> visitExpression ();
 	
-	auto decls = visitClassBlock (fromTrait);
-	auto next = this-> _lex.consumeIf ({Keys::ELSE});
-	if (next == Keys::ELSE) {
-	    auto next2 = this-> _lex.consumeIf ({Keys::IF});
-	    if (next2 == Keys::IF) {
-		this-> _lex.rewind ();
-		return CondBlock::init (location, comments, test, decls, visitIfClass (fromTrait));
-	    } else {
-		auto elseDecls = visitClassBlock (fromTrait);
-		return CondBlock::init (location, comments, test, decls, DeclBlock::init (next, comments, elseDecls, true, false));
+	    auto decls = visitClassBlock (fromTrait);
+	    auto next = this-> _lex.consumeIf ({Keys::ELSE});
+	    if (next == Keys::ELSE) {
+		auto next2 = this-> _lex.consumeIf ({Keys::IF});
+		if (next2 == Keys::IF) {
+		    this-> _lex.rewind ();
+		    return CondBlock::init (location, comments, test, decls, visitIfClass (fromTrait));
+		} else {
+		    auto elseDecls = visitClassBlock (fromTrait);
+		    return CondBlock::init (location, comments, test, decls, DeclBlock::init (next, comments, elseDecls, true, false));
+		}
 	    }
+	    return CondBlock::init (location, comments, test, decls, DeclBlock::init (location, comments, {}, true, false));
+	} else {
+	    auto token = this-> _lex.consumeIf ({Token::LPAR});
+	    auto test = visitExpression ();
+	    if (token == Token::LPAR) {
+		token = this-> _lex.next ({Token::RPAR, Token::COMA});
+		if (token == Token::COMA) {
+		    auto msg = visitExpression ();
+		    this-> _lex.next ({Token::RPAR});
+		    return Expression::toDeclaration (Assert::init (location, test, msg), comments);
+		} 
+	    }
+	    return Expression::toDeclaration (Assert::init (location, test, Expression::empty ()), comments);
 	}
-	return CondBlock::init (location, comments, test, decls, DeclBlock::init (location, comments, {}, true, false));
     }
     
     Declaration Visitor::visitClassContent (bool fromTrait) {

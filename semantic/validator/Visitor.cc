@@ -317,8 +317,8 @@ namespace semantic {
 
 	Generator Visitor::validateMacroExpression (const semantic::Symbol & sol, const syntax::Expression & content) {
 	    std::list <Ymir::Error::ErrorMsg> errors;
-	    pushReferent (sol, "validateMacroExpression");
-	    //enterForeign ();
+	    // pushReferent (sol, "validateMacroExpression"); // the context of the macro expression is the context that created the expression (caller)
+	    // enterForeign (); // We also don't enter a foreign because local variable may have been used inside the expression content
 	    
 	    Generator gen (Generator::empty ());
 	    try {
@@ -334,8 +334,9 @@ namespace semantic {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 	    
-	    //exitForeign ();
-	    popReferent ("validateMacroExpression");
+	    // exitForeign ();
+	    // popReferent ("validateMacroExpression");
+	    
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
 
@@ -2186,7 +2187,7 @@ namespace semantic {
 	    auto sym = declarator::Visitor::init ().visit (decl);
 	    if (!sym.isEmpty ()) {
 		std::list <Ymir::Error::ErrorMsg> errors;
-		
+
 		this-> _referent.back ().insert (sym);
 		enterForeign ();
 		try {
@@ -2674,7 +2675,7 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateConstructorProto (const semantic::Symbol & sym) {
-	    auto & func = sym.to <Constructor> ();
+	    auto & func = sym.to <Constructor> ();	    
 	    pushReferent (sym, "validateConstructorProto");
 	    enterForeign ();
 	    
@@ -2691,7 +2692,7 @@ namespace semantic {
 
 	    Generator cl (Generator::empty ());
 	    try {
-		cl = Type::init (func.getName (), ClassPtr::init (func.getName (), Type::init (func.getName (), validateClass (func.getClass ()).to <Type> (), true, false)).to <Type> (), true, false);
+		cl = Type::init (func.getClass ().getName (), ClassPtr::init (func.getClass ().getName (), Type::init (func.getClass ().getName (), validateClass (func.getClass ()).to <Type> (), true, false)).to <Type> (), true, false);
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    } 
@@ -5228,14 +5229,31 @@ namespace semantic {
 	    auto sym = cl.to <ClassPtr> ().getInners ()[0].to <ClassRef> ().getRef ();
 	    while (!sym.isEmpty ()) {
 		for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
+		    bool succeed = false;
+		    std::list <Ymir::Error::ErrorMsg> errors;
 		    match (it) {
 			of (semantic::Impl, im, {
-				auto sec_trait = this-> validateType (im.getTrait ());
-				if (trait.equals (sec_trait)) return;
+				pushReferent (sym, "verifyClassImpl");
+				enterForeign ();
+				
+				try {
+				    auto sec_trait = this-> validateType (im.getTrait ());
+				    if (trait.equals (sec_trait)) succeed = true;
+				} catch (Error::ErrorList list) {
+				    errors = list.errors;
+				}
+				
+				exitForeign ();
+				popReferent ("verifyClassImpl");
+				
+				if (errors.size () != 0)
+				    throw Error::ErrorList {errors};
+				if (succeed) return;
 			    }
 			);
 		    }		
 		}
+		
 		auto ancestor = sym.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
 		if (!ancestor.isEmpty ())
 		    sym = ancestor.to <ClassRef> ().getRef ();
@@ -5262,10 +5280,22 @@ namespace semantic {
 		traits = getAllImplClass (classType.to <ClassRef> ().getAncestor ());
 	    
 	    for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
+		std::list <Ymir::Error::ErrorMsg> errors;
 		match (it) {
 		    of (semantic::Impl, im, {
-			    auto sec_trait = this-> validateType (im.getTrait ());
-			    traits.push_back (sec_trait);
+			    pushReferent (sym, "getAllImplClass");
+			    enterForeign ();
+			    try {
+				auto sec_trait = this-> validateType (im.getTrait ());
+				traits.push_back (sec_trait);
+			    } catch (Error::ErrorList list) {
+				errors = list.errors;
+			    }
+			    
+			    exitForeign ();
+			    popReferent ("getAllImplClass");
+			    if (errors.size () != 0)
+				throw Error::ErrorList {errors};
 			}
 		    );
 		}
@@ -5448,7 +5478,7 @@ namespace semantic {
 	    return this-> _referent.back ().get (name);
 	}
 
-	std::vector <Symbol> Visitor::getGlobalPrivate (const std::string & name) {					       
+	std::vector <Symbol> Visitor::getGlobalPrivate (const std::string & name) {
 	    return this-> _referent.back ().getPrivate (name);
 	}	
 	
@@ -5463,7 +5493,7 @@ namespace semantic {
 	    // println ("Out : ", msg, " => ", this-> _referent.back ().getRealName ());
 	    this-> _referent.pop_back ();
 	}
-
+       	
 	syntax::Expression Visitor::createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & names_) {
 	    auto names = names_;
 	    syntax::Expression last = syntax::Var::init (lexing::Word::init (loc, names [0]));
@@ -5514,7 +5544,8 @@ namespace semantic {
 	    
 	    if (ancestor.is <ClassRef> ()) {
 		while (!ancestor.isEmpty ()) {
-		    if (isAncestor (ancestor, rightType)) return ancestor;
+		    if (isAncestor (ancestor, rightType))
+			return ClassPtr::init (leftType.getLocation (), ancestor);
 		    else {
 			if (!ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getAncestor ().isEmpty ())
 			    ancestor = ancestor.to <ClassRef> ().getAncestor ();

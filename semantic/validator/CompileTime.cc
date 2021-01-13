@@ -530,7 +530,7 @@ namespace semantic {
 	}
 
 	generator::Generator CompileTime::executeCall (const generator::Call & call) {
-	    if (call.getParameters ().size () != 0) {
+	    if (call.getParameters ().size () != 0 || !call.getFrame ().is <FrameProto> ()) {
 		Ymir::Error::occur (
 		    call.getLocation (),
 		    ExternalError::get (COMPILE_TIME_UNKNOWN)
