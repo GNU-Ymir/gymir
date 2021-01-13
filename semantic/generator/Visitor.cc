@@ -1686,19 +1686,34 @@ namespace semantic {
 
 	    auto return_value = Tree::empty ();
 	    auto test_return_value = Tree::varDecl (scope.getLocation (), "#ret?", Tree::intType (8, false));
-	    test_return_value.setDeclInitial (Tree::buildIntCst (scope.getLocation (), ReturnWithinCatch::NONE, Tree::intType (8, false))); // No return by default
+	    test_return_value.setDeclContext (getCurrentContext ());
+	    stackVarDeclChain.back ().append (test_return_value);
 	    
 	    if (!getCurrentContext ().getResultDecl ().getType ().isVoidType ()) {
 		return_value = Tree::varDecl (scope.getLocation (), "#ret_val", getCurrentContext ().getResultDecl ().getType ());
+		return_value.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (return_value);
 		list.append (return_value);
 	    }
 	    
-	    auto exit_label = Tree::makeLabel (scope.getLocation (), getCurrentContext (), "exit");
-	    
+	    auto exit_label = Tree::makeLabel (scope.getLocation (), getCurrentContext (), "exit");	    
 	    this-> exceptionDeclChain.push_back ({exit_label, test_return_value, return_value, r_jmp});
 	    
 	    list.append (r_jmp);
 	    list.append (r_res);
+	    list.append (test_return_value);
+	    list.append (
+		Tree::affect (this-> stackVarDeclChain.back (),
+			      this-> getCurrentContext (),
+			      scope.getLocation (),
+			      test_return_value,
+			      Tree::buildIntCst (scope.getLocation (),
+						 ReturnWithinCatch::NONE,
+						 Tree::intType (8, false)
+				  )
+		    )
+		); // No return by default
+
 	    list.append (
 	    	Tree::affect (
 		    this-> stackVarDeclChain.back (), this-> getCurrentContext (),
@@ -1819,21 +1834,24 @@ namespace semantic {
 	    auto is_break = Tree::binary (loc, EQ_EXPR, type, test, Tree::buildIntCst (loc, ReturnWithinCatch::BREAK, type));
 	    auto is_none = Tree::binary (loc, EQ_EXPR, type, test, Tree::buildIntCst (loc, ReturnWithinCatch::NONE, type));
 
+	    TreeStmtList list = TreeStmtList::init ();
 	    auto rethrow = Tree::buildCall (loc, Tree::voidType (), global::CoreNames::get (RETHROW), {});
 
 	    if (this-> _loopLabels.size () != 0) { // Can only break inside loops
 		/**
 		 * if (test == NONE) {} else if (test == RETURN) { return ; } else if (test == BREAK) { break; } else { rethrow ; }
 		 */
-		return Tree::conditional (loc, getCurrentContext (), is_none, TreeStmtList::init ().toTree (),
-					  Tree::conditional (loc, getCurrentContext (), is_return, this-> generateReturn (loc, ret_value),
+		list.append (Tree::conditional (loc, getCurrentContext (), is_none, TreeStmtList::init ().toTree (),
+						Tree::conditional (loc, getCurrentContext (), is_return, this-> generateReturn (loc, ret_value),
 							     Tree::conditional (loc, getCurrentContext (), is_break, this-> generateBreak (loc), rethrow)
 					      )		    
-		    );
+				 ));
+		return list.toTree ();
 	    } else {
-		return Tree::conditional (loc, getCurrentContext (), is_none, TreeStmtList::init ().toTree (),
+		list.append (Tree::conditional (loc, getCurrentContext (), is_none, TreeStmtList::init ().toTree (),
 					  Tree::conditional (loc, getCurrentContext (), is_return, this-> generateReturn (loc, ret_value), rethrow)					  
-		    );		
+				 ));
+		return list.toTree ();
 	    } 
 	}
 
@@ -1856,10 +1874,27 @@ namespace semantic {
 
 	    auto return_value = Tree::empty ();
 	    auto test_return_value = Tree::varDecl (scope.getLocation (), "#ret?", Tree::intType (8, false));
-	    test_return_value.setDeclInitial (Tree::buildIntCst (scope.getLocation (), ReturnWithinCatch::NONE, Tree::intType (8, false))); // No return by default
+	    test_return_value.setDeclContext (getCurrentContext ());
+	    stackVarDeclChain.back ().append (test_return_value);
+	    list.append (test_return_value);
+	    list.append (
+		Tree::affect (this-> stackVarDeclChain.back (),
+			      this-> getCurrentContext (),
+			      scope.getLocation (),
+			      test_return_value,
+			      Tree::buildIntCst (scope.getLocation (),
+						 ReturnWithinCatch::NONE,
+						 Tree::intType (8, false)
+				  )
+		    )
+		); // No return by default
 
+	    
 	    if (!getCurrentContext ().getResultDecl ().getType ().isVoidType ()) {
 		return_value = Tree::varDecl (scope.getLocation (), "#ret_val", getCurrentContext ().getResultDecl ().getType ());
+		return_value.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (return_value);
+
 		list.append (return_value);
 	    }
 

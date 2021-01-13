@@ -664,6 +664,33 @@ namespace semantic {
 					       value,
 					       0
 		    );
+		} else if (opName == ClassRef::TUPLEOF) {
+		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
+		    bool prv = false, prot = false;
+
+		    this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+
+		    std::vector <Generator> types;
+		    std::vector <Generator> params;
+		    std::list <Ymir::Error::ErrorMsg> errors;
+
+		    for (auto & field : cl.to <generator::Class> ().getFields ()) {
+			bool loc_pub = true, loc_prot = true;
+			auto type = field.to <generator::VarDecl> ().getVarType ();
+			auto name = field.to <generator::VarDecl> ().getName ();
+			cl.to <generator::Class> ().getFieldProtection (name, loc_pub, loc_prot);
+			if (loc_pub || (loc_prot && (prv || prot)) || prv) {
+			    type = Type::init (type.to <Type> (), false);
+			    
+			    params.push_back (StructAccess::init (expression.getLocation (), type, value, name));
+			    types.push_back (type);
+			}
+		    }
+
+		    auto tuple = Tuple::init (expression.getLocation (), types);
+		    tuple = Type::init (tuple.to <Type> (), false);
+		    
+		    return TupleValue::init (expression.getLocation (), tuple, params);
 		}
 	    }
 	    

@@ -87,6 +87,11 @@ namespace semantic {
 	     * \brief Same as getFieldType, this will perform a search only on the fields of this class, and not on its parent class
 	     */
 	    generator::Generator getFieldTypePublic (const std::string & name) const;
+
+	    /**
+	     * \brief Set pub and prot according to the protection of the field str
+	     */
+	    void getFieldProtection (const std::string & str, bool & pub, bool & prot) const;	    
 	    
 	    /**
 	     * \return the vtable of the class

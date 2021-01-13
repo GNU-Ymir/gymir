@@ -61,10 +61,8 @@ namespace documentation {
 	     */
 	    template <typename T>
 	    T& to ()  {
-#ifdef DEBUG
 		if (dynamic_cast<T*> (this-> _value.get ()) == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-#endif
 		return *((T*) this-> _value.get ());	    
 	    }
 
@@ -74,10 +72,8 @@ namespace documentation {
 	     */
 	    template <typename T>
 	    const T& to () const  {
-#ifdef DEBUG
 		if (dynamic_cast<T*> (this-> _value.get ()) == nullptr)
 		    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-#endif
 		return *((const T*) this-> _value.get ());	    
 	    }
 

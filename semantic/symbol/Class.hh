@@ -18,6 +18,12 @@ namespace semantic {
 	/** The fields of the class */
 	std::vector <syntax::Expression> _fields;
 
+	/** The assertion that must be validated within the class */
+	std::vector <syntax::Expression> _assertions;
+
+	/** The comments above the assertion (for documentation dumping only) */
+	std::vector <std::string> _assertion_comments;
+	
 	/** The comments about the field of the class */
 	std::map <std::string, std::string> _field_comments;
 	
@@ -129,12 +135,31 @@ namespace semantic {
 	 * \return the comments on a field declaration
 	 */
 	std::string getFieldComments (const std::string & name) const;
+
+	/**
+	 * \brief Add an assertion to validate in the class
+	 */
+	void addAssertion (const syntax::Expression & assert);
+
+	/** 
+	 * \brief add a comment about the last inserted assertion
+	 */
+	void addAssertionComments (const std::string & str);
+
+	/**
+	 * \return the list of assertion in the class
+	 */
+	const std::vector <syntax::Expression> & getAssertions () const;
+	
+	/**
+	 * \return the comments on the assertions
+	 */
+	const std::vector <std::string> & getAssertionComments () const;
 	
 	/**
 	 * \brief Mark a field has private
 	 */
 	void setPrivate (const std::string & name);
-
 
 	/**
 	 * \brief Mark a field has private

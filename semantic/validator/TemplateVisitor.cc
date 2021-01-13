@@ -550,19 +550,36 @@ namespace semantic {
 			return Mapper (true, 0);
 		    }
 		) else of (syntax::List, lst, {
-			consumed += 1;
+			consumed += 1;			
 			auto type = types [0];
-			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == lst.getParameters ().size ()) {
+			
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size ()) {
 			    Mapper mapper (false, 0);
-			    auto syntaxParams = lst.getParameters ();
-			    for (auto it : Ymir::r (0, syntaxParams.size ())) {
-				auto param = replaceAll (syntaxParams [it], mapper.mapping);
-				int current_consumed = 0;
-				auto vec = {type.to <Type> ().getInners () [it]};
+			    auto syntaxParam = lst.getParameters ();
+			    int current_consumed = 0;
+			    auto & types = type.to <Type> ().getInners ();
+			    
+			    for (auto it : Ymir::r (0, syntaxParam.size ())) {
+				auto param = replaceAll (syntaxParam [it], mapper.mapping);
+				auto rest = types.size () - current_consumed;
+				auto syntaxRest = (syntaxParam.size () - it) - 1;
+				int right = rest - syntaxRest;
+				auto current_types = array_view <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
+
 				
-				auto mp = validateTypeFromImplicit (params, param, array_view <Generator> (vec), current_consumed);
+				auto mp = validateTypeFromImplicit (params, param, current_types, current_consumed);
 				if (!mp.succeed) return mp;
+				
 				mapper = mergeMappers (mapper, mp);
+			    }
+
+			    if (current_consumed < (int) types.size ()) {
+				Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						    lst.prettyString (),
+						    type.to<Type> ().getTypeName ());
+
+				Mapper mapper (false, 0);
+				return mapper;
 			    }
 			    
 			    return mapper;
@@ -894,17 +911,35 @@ namespace semantic {
 			}
 		    }
 		) else of (syntax::List, lst, {
-			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == lst.getParameters ().size ()) {
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size ()) {
 			    Mapper mapper (false, 0);
 			    auto syntaxParam = lst.getParameters ();
+			    int current_consumed = 0;
+			    auto & types = type.to <Type> ().getInners ();
+			    
 			    for (auto it : Ymir::r (0, syntaxParam.size ())) {
 				auto param = replaceAll (syntaxParam [it], mapper.mapping);
-				int consumed = 0;
-				auto vec = {type.to <Type> ().getInners () [it]};
-				auto mp = validateTypeFromImplicit (params, param, array_view<Generator> (vec), consumed);				
+				auto rest = types.size () - current_consumed;
+				auto syntaxRest = (syntaxParam.size () - it) - 1;
+				int right = rest - syntaxRest;
+				auto current_types = array_view <Generator> (types.begin () + current_consumed, types.begin () + current_consumed + right);
+
+				
+				auto mp = validateTypeFromImplicit (params, param, current_types, current_consumed);
+				if (!mp.succeed) return mp;
+				
 				mapper = mergeMappers (mapper, mp);
 			    }
-			    
+
+			    if (current_consumed < (int) types.size ()) {
+				Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						    lst.prettyString (),
+						    type.to<Type> ().getTypeName ());
+
+				Mapper mapper (false, 0);
+				return mapper;
+			    }
+
 			    Expression realType  = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType, true);
 			    this-> _context.verifySameType (genType, type);

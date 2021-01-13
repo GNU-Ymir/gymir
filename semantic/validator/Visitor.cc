@@ -679,11 +679,27 @@ namespace semantic {
 		std::vector <Generator> ancestorFields;
 		std::vector <Symbol> addMethods;
 		
+		if (cls.to <semantic::Class> ().getAssertions ().size () != 0) {
+		    pushReferent (sym, "validateClassAssertions");
+		    enterForeign ();
+		    
+		    for (auto & it : cls.to <semantic::Class> ().getAssertions ()) {
+			try {
+			    this-> validateCteValue (it);
+			} catch (Error::ErrorList list) {
+			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+			}
+		    }
+		    
+		    exitForeign ();
+		    popReferent ("validateClassAssertions");
+		}
+		
 		{
 		    enterForeign ();
 		    pushReferent (sym, "validateClass");
 		    try {
-			this-> enterBlock ();
+			this-> enterBlock ();			
 			std::vector <std::string> fields;
 			std::vector <generator::Generator> types;
 			for (auto & it : sym.to<semantic::Class> ().getFields ()) {
@@ -883,7 +899,7 @@ namespace semantic {
 			   Ymir::Error::halt ("", "");
 			}			
 		    }
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    errors.push_back (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
 		} 
@@ -1788,8 +1804,8 @@ namespace semantic {
 		) else of (syntax::Block, bl ATTRIBUTE_UNUSED,
 			   return validateValue (value);
 		) else {
-			    return retreiveValue (validateValue (value));
-			}		    
+			   return retreiveValue (validateValue (value));
+		}		    
 	    }
 	    return Generator::empty ();
 	}
@@ -3511,7 +3527,7 @@ namespace semantic {
 	    if (!val.to <BoolValue> ().getValue ()) {
 		std::string msg;
 		if (!assert.getMsg ().isEmpty ())
-		    msg = validateValue (assert.getMsg ()).prettyString ();
+		    msg = assert.getMsg ().prettyString ();
 		Ymir::Error::occur (assert.getLocation (), ExternalError::get (ASSERT_FAILED), msg);
 	    }
 	    

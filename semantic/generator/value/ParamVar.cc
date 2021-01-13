@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/ParamVar.hh>
+#include <ymir/semantic/generator/value/VarDecl.hh>
 
 namespace semantic {
     namespace generator {
@@ -15,6 +16,10 @@ namespace semantic {
 	    _isSelf (isSelf)
 	{
 	    this-> isLocal (false);
+	    
+	    this-> _varRefId = VarDecl::__lastId__;
+	    VarDecl::__lastId__ += 1;
+	    
 	    this-> isLvalue (isMutable);
 	}
 
@@ -40,6 +45,10 @@ namespace semantic {
 
 	bool ParamVar::isSelf () const {
 	    return this-> _isSelf;
+	}
+
+	uint ParamVar::getUniqId () const {
+	    return _varRefId;
 	}
 	
 	std::string ParamVar::prettyString () const {

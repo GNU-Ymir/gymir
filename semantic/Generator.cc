@@ -35,6 +35,7 @@ namespace semantic {
 	}
 
 	uint IGenerator::getUniqId () const {
+	    Ymir::Error::halt ("%(r) Asking uniq id of none Var", "Critical");
 	    return this-> _uniqId;
 	}
 

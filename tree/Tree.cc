@@ -1,6 +1,7 @@
 #include <ymir/tree/Tree.hh>
 #include <ymir/tree/StmtList.hh>
 #include <ymir/tree/ChainBase.hh>
+#include <ymir/errors/Error.hh>
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -28,6 +29,8 @@
 #include "print-tree.h"
 #include "cppdefault.h"
 #include "tm.h"
+
+
 
 namespace generic {
 
@@ -135,13 +138,13 @@ namespace generic {
 	return Tree::tupleType ("", attrs, types);
     }
     
-    Tree Tree::tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types, bool isUnion, bool isPacked) {
+    Tree Tree::tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types, bool isUnion, bool isPacked) {		
 	tree field_last = NULL_TREE, field_begin = NULL_TREE;
 	tree record_type;
 	if (isUnion)
 	    record_type = make_node (UNION_TYPE);
 	else record_type = make_node (RECORD_TYPE);
-	
+
 	auto size = 0;
 	for (uint i = 0 ; i < types.size () ; i++) {
 	    tree ident;
@@ -161,8 +164,12 @@ namespace generic {
 	    field_last = field;	    
 	}
 
+
+
 	TYPE_NAME (record_type) = get_identifier (name.c_str ());
-	TREE_CHAIN (field_last) = NULL_TREE;
+	if (field_last != NULL_TREE) 
+	    TREE_CHAIN (field_last) = NULL_TREE;
+	
 	TYPE_FIELDS (record_type) = field_begin;
 	layout_type (record_type);
 	
@@ -383,7 +390,7 @@ namespace generic {
 	return Tree::build (code, loc, type, left, right);
     }
 
-    Tree Tree::castTo (const lexing::Word & loc, const Tree & type, const Tree & value) {
+    Tree Tree::castTo (const lexing::Word & loc, const Tree & type, const Tree & value) {	
 	return Tree::init (loc.getLocation (), convert (type.getTree (), value.getTree ()));
     }
     
@@ -466,7 +473,12 @@ namespace generic {
     }    
 
     Tree Tree::makeLabel (const lexing::Word & loc, const Tree & context, const std::string & name) {
-	auto decl = Tree::init (loc.getLocation (), build_decl (loc.getLocation (), LABEL_DECL, get_identifier (name.c_str ()), void_type_node));
+	static int __last_label_id__ = 0;	
+	Ymir::OutBuffer buf;
+	buf.write (name, '[', __last_label_id__, ']');
+	__last_label_id__ += 1;
+	
+	auto decl = Tree::init (loc.getLocation (), build_decl (loc.getLocation (), LABEL_DECL, get_identifier (buf.str ().c_str ()), void_type_node));
 	decl.setDeclContext (context);
 	return decl;
     }
@@ -957,7 +969,8 @@ tree convert (tree type, tree expr) {
 	return error_mark_node;
     if (TREE_CODE (TREE_TYPE (expr)) == VOID_TYPE)
 	{
-	    error ("void value not ignored as it ought to be");
+	    debug_tree (expr);
+	    Ymir::Error::halt  ("%(r) conversion to non-scalar type requested", "Critical");
 	    return error_mark_node;
 	}
 
@@ -1022,8 +1035,9 @@ tree convert (tree type, tree expr) {
 		ret = fold (ret);
 	    return ret;
 	}
-
-    error ("conversion to non-scalar type requested");
+    
+    debug_tree (type);
+    Ymir::Error::halt  ("%(r) conversion to non-scalar type requested", "Critical");
     return error_mark_node;
 }
 

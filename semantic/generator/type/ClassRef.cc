@@ -7,7 +7,8 @@
 namespace semantic {
     namespace generator {
 
-	std::string ClassRef::INIT_NAME = "new";
+	const std::string ClassRef::INIT_NAME = "new";
+	const std::string ClassRef::TUPLEOF   = "tupleof";
 	
 	ClassRef::ClassRef () :
 	    Type (),

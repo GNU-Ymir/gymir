@@ -10,6 +10,8 @@ namespace semantic {
 	    bool _isMutable;
 
 	    bool _isSelf;
+
+	    uint _varRefId;
 	    
 	private :
 
@@ -48,6 +50,11 @@ namespace semantic {
 	     */
 	    bool isSelf () const;
 
+	    /**
+	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
+	     */
+	    uint getUniqId () const override;
+	    
 	    std::string prettyString () const override;
 	};
 	

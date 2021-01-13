@@ -121,6 +121,18 @@ namespace semantic {
 	    return Generator::empty ();	    
 	}
 
+	void Class::getFieldProtection (const std::string & name, bool & pub, bool & prot) const {
+	    if (Symbol {this-> _ref}.to <semantic::Class> ().isMarkedPrivate (name)) {
+		pub = prot = false;
+	    } else if (Symbol {this-> _ref}.to <semantic::Class> ().isMarkedProtected (name)) {
+		pub = false;
+		prot = true;
+	    } else {
+		pub = true;
+		prot = false;
+	    }	    
+	}
+	
 	
 	const std::vector <generator::Generator> & Class::getVtable () const {
 	    return this-> _vtable;

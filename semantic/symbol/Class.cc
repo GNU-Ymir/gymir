@@ -111,6 +111,22 @@ namespace semantic {
 	    return it-> second;
 	return "";	
     }
+
+    void Class::addAssertion (const syntax::Expression & assert) {
+	this-> _assertions.push_back (assert);
+    }
+
+    void Class::addAssertionComments (const std::string & comments) {
+	this-> _assertion_comments.push_back (comments);
+    }
+
+    const std::vector <syntax::Expression> & Class::getAssertions () const {
+	return this-> _assertions;
+    }
+
+    const std::vector <std::string> & Class::getAssertionComments () const {
+	return this-> _assertion_comments;
+    }
     
     const syntax::Expression & Class::getAncestor () const {
 	return this-> _ancestor;

@@ -552,8 +552,22 @@ namespace documentation {
 	    
 	    fields.push_back (JsonDict::init (field));
 	}
-
+	
 	val ["fields"] = JsonArray::init (fields);
+	
+	std::vector <JsonValue> asserts;
+	auto & assertions = cl.getAssertions ();
+	auto & assertComments = cl.getAssertionComments ();
+	for (auto it : Ymir::r (0, assertions.size ())) {
+	    std::map <std::string, JsonValue> a;
+	    a ["test"] = JsonString::init (assertions [it].to <syntax::Assert> ().getTest ().prettyString ());
+	    a ["msg"]  = JsonString::init (assertions [it].to <syntax::Assert> ().getMsg ().prettyString ());
+	    a ["doc"]  = JsonString::init (assertComments [it]);
+					  
+	    asserts.push_back (JsonDict::init (a));
+	}
+	
+	val ["asserts"] = JsonArray::init (asserts);
 	
 	std::vector <JsonValue> cstrs;
 	std::vector <JsonValue> methods;
@@ -641,6 +655,11 @@ namespace documentation {
 			fields.push_back (JsonDict::init (param));
 
 		    }
+		} else if (wrap.getContent ().is <syntax::Assert> ()) {
+		    std::map <std::string, JsonValue> a;
+		    a ["test"] = JsonString::init (wrap.getContent ().to <syntax::Assert> ().getTest ().prettyString ());
+		    a ["msg"]  = JsonString::init (wrap.getContent ().to <syntax::Assert> ().getMsg ().prettyString ());
+		    a ["doc"]  = JsonString::init (wrap.getComments ());
 		} else {
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");			
 		}		

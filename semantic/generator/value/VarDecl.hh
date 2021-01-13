@@ -5,6 +5,8 @@
 namespace semantic {
     namespace generator {
 
+	class ParamVar;
+	
 	class VarDecl : public Value {	    
 
 	    std::string _name;
@@ -18,6 +20,8 @@ namespace semantic {
 	    static uint __lastId__;
 
 	    uint _varRefId;
+
+	    friend ParamVar;
 	    
 	private :
 

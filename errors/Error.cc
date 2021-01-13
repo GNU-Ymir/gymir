@@ -27,7 +27,7 @@ namespace Ymir {
 	    return x.substr (beg, end - beg);
 	}
 
-	std::string shorten (const std::string & str, ulong max = 50) {
+	std::string shorten (const std::string & str, ulong max = 100) {
 	    if (str.length () < max) return str;
 	    else {
 		return str.substr (0, max/2 - 3) + "[...]" + str.substr (str.length () - max/2 + 2);

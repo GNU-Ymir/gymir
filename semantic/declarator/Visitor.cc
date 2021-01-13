@@ -343,8 +343,12 @@ namespace semantic {
 					    }
 					}
 				    }
-				) else 
-				    Error::halt ("%(r) - reaching impossible point", "Critical");			
+				 ) else of (syntax::Assert, de ATTRIBUTE_UNUSED, {
+					 cls.to <semantic::Class> ().addAssertion (wrap.getContent ());
+					 cls.to <semantic::Class> ().addAssertionComments (wrap.getComments ());
+				     }
+				 ) else 
+				      Error::halt ("%(r) - reaching impossible point", "Critical");			
 			    }
 			}
 		    ) else of (syntax::DeclBlock, dc, {
