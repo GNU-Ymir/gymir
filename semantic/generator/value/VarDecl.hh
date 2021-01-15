@@ -6,6 +6,7 @@ namespace semantic {
     namespace generator {
 
 	class ParamVar;
+	class ProtoVar;
 	
 	class VarDecl : public Value {	    
 
@@ -22,6 +23,7 @@ namespace semantic {
 	    uint _varRefId;
 
 	    friend ParamVar;
+	    friend ProtoVar;
 	    
 	private :
 

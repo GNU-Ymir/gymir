@@ -57,6 +57,7 @@ namespace Ymir {
 			    IN_TEMPLATE_DEF                 = "in template specialization",
 			    IN_TRAIT_VALIDATION             = "in trait validation", 
 			    IS_TYPE                         = "cannot declare a variable named %(y), identifier is already used for a type",
+			    LOCKED_CONTEXT                  = "the mutable element %(y) is locked in this iteration context",
 			    MACRO_MULT_NO_VAR               = "macro multiple expression must be identified inside a var",
 			    MACRO_REST                      = "macro validation incomplete, there remains : [%(y)]",
 			    MAIN_FUNCTION_ONE_ARG           = "main function takes at most one argument",

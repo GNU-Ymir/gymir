@@ -14,6 +14,8 @@ namespace semantic {
 	    int _nbConsume;
 
 	    bool _isSelf;
+
+	    uint _varRefId;
 	    
 	private :
 
@@ -61,6 +63,11 @@ namespace semantic {
 	     * this protovar define a self class var
 	     */
 	    bool isSelf () const;
+
+	    /**
+	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
+	     */
+	    uint getUniqId () const override;
 	    
 	    std::string prettyString () const override;
 	};

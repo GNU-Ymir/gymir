@@ -1463,7 +1463,8 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::generateBreak (const lexing::Word & loc) {
-	    if (this-> exceptionDeclChain.size () == 0) {
+	    if (this-> exceptionDeclChain.back ().label.isEmpty ()) {
+		// If we are in a loop, we pushed a exceptionDeclChain thing, but an empty one
 		return Tree::gotoExpr (loc, this-> _loopLabels.back ());
 	    } else {
 		TreeStmtList list = TreeStmtList::init ();

@@ -81,6 +81,11 @@ namespace semantic {
 
 	    /** The current enclosed vars */
 	    std::vector <std::vector <generator::Generator> > _enclosed;
+
+	    std::vector <generator::Generator> _lockedAlias;
+	    
+	    std::vector <lexing::Word> _lockedAliasLoc;
+	    
 	    
 	private :
 
@@ -930,6 +935,21 @@ namespace semantic {
 	     */
 	    void enterBlock ();
 
+	    /**
+	     * Lock the possibility of alias the content of gen for a moment
+	     */
+	    void lockAliasing (const lexing::Word & loc, const generator::Generator & gen);
+
+	    /**
+	     * Unlock the possibility of alias the content of gen
+	     */
+	    void unlockAliasing (const generator::Generator & gen);
+
+	    /**
+	     * Verify that a given value is not locked for aliasing
+	     */
+	    void verifyLockAlias (const generator::Generator & gen);
+	    
 	    /**
 	     * \brief insert a new symbol in the frame local scope
 	     * \param name the name of the symbol

@@ -3065,6 +3065,9 @@ namespace semantic {
 					    ExternalError::get (REF_SELF)
 			);
 		    }
+		    
+		    this-> verifyLockAlias (inner);
+		    
 		    // if (!inner.to <Value> ().getType ().to <Type> ().isMutable ()) {
 		    // 	Ymir::Error::occur (inner.getLocation (), ExternalError::get (IMMUTABLE_LVALUE));
 		    // } // We allow this, since we want to pass element by const reference to function, or variable
@@ -4353,6 +4356,8 @@ namespace semantic {
 		Ymir::Error::occur (content.getLocation (),
 				    ExternalError::get (NOT_A_LVALUE)
 		);
+
+	    this-> verifyLockAlias (content);
 	    
 	    return Aliaser::init (intr.getLocation (), type, content);	    	    
 	}
@@ -4733,6 +4738,62 @@ namespace semantic {
 	    }
 	}
 
+	void Visitor::lockAliasing (const lexing::Word & loc, const generator::Generator & gen_) {
+	    if (gen_.to <Value> ().getType ().to <Type> ().isMutable ()) { // not necessary to store immutable element
+		auto gen = gen_;
+		while (gen.is <Aliaser> () || gen.is<Referencer> ()) {
+		    if (gen.is <Aliaser> ()) gen = gen.to <Aliaser> ().getWho ();
+		    else if (gen.is <Referencer> ()) gen = gen.to <Referencer> ().getWho ();
+		}
+		
+		this-> _lockedAlias.push_back (gen);
+		this-> _lockedAliasLoc.push_back (loc);
+	    }
+	}
+
+	void Visitor::unlockAliasing (const generator::Generator & gen_) {
+	    if (this-> _lockedAlias.size () != 0 && gen_.to <Value> ().getType ().to <Type> ().isMutable ()) {
+		std::vector <Generator> keeps;
+		std::vector <lexing::Word> keepLoc;
+		auto gen = gen_;
+		while (gen.is <Aliaser> () || gen.is<Referencer> ()) {
+		    if (gen.is <Aliaser> ()) gen = gen.to <Aliaser> ().getWho ();
+		    else if (gen.is <Referencer> ()) gen = gen.to <Referencer> ().getWho ();
+		}
+
+		int i = 0;
+		for (auto & it : this-> _lockedAlias) {
+		    if (!it.equals (gen)) {
+			keeps.push_back (it);
+			keepLoc.push_back (this-> _lockedAliasLoc [i]);
+		    }
+		    i += 1;
+		}
+		
+		this-> _lockedAlias = keeps;
+		this-> _lockedAliasLoc = keepLoc;
+	    }	    
+	}
+
+	void Visitor::verifyLockAlias (const generator::Generator & gen_) {
+	    if (this-> _lockedAlias.size () != 0 && gen_.to <Value> ().getType ().to <Type> ().isMutable ()) {
+		auto gen = gen_;
+		while (gen.is <Aliaser> () || gen.is<Referencer> ()) {
+		    if (gen.is <Aliaser> ()) gen = gen.to <Aliaser> ().getWho ();
+		    else if (gen.is <Referencer> ()) gen = gen.to <Referencer> ().getWho ();
+		}
+
+		int i = 0;
+		for (auto & it : this-> _lockedAlias) {		    
+		    if (it.equals (gen)) {
+			auto note = Ymir::Error::createNote (this-> _lockedAliasLoc [i]);
+			Ymir::Error::occurAndNote (gen_.getLocation (), note, ExternalError::get (LOCKED_CONTEXT), gen.to <Value> ().getType ().prettyString ());
+		    }
+		    i += 1;
+		}		
+	    }	    
+	}
+	
 	std::map <std::string, generator::Generator> Visitor::discardAllLocals () {
 	    auto ret = this-> _symbols.back ().back ();
 	    this-> _symbols.back ().back () = {};

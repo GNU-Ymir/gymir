@@ -752,7 +752,7 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
-
+	    
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
 	    

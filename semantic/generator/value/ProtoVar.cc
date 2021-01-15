@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/ProtoVar.hh>
+#include <ymir/semantic/generator/value/VarDecl.hh>
 
 namespace semantic {
     namespace generator {
@@ -20,6 +21,9 @@ namespace semantic {
 	    this-> isLocal (false);
 	    this-> isLvalue (isMutable);
 	    this-> setThrowers (this-> _value.getThrowers ());
+
+	    this-> _varRefId = VarDecl::__lastId__;
+	    VarDecl::__lastId__ += 1;
 	}
 
 	Generator ProtoVar::init (const lexing::Word & location, const Generator & type, const Generator & value, bool isMutable, int nb_consume, bool isSelf) {
@@ -54,6 +58,10 @@ namespace semantic {
 
 	bool ProtoVar::isSelf () const {
 	    return this-> _isSelf;
+	}
+
+	uint ProtoVar::getUniqId () const {
+	    return _varRefId;
 	}
 	
 	std::string ProtoVar::prettyString () const {
