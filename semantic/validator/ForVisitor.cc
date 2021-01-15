@@ -626,6 +626,12 @@ namespace semantic {
 	    }
 	    
 	    type = Type::init (type.to<Type> (), type.to <Type> ().isMutable (), false); // The iteration is necessarily immutable and by value
+
+	    if (!decl.getType ().isEmpty ()) {
+		auto d_type = this-> _context.validateType (decl.getType ());
+		this-> _context.verifyCompatibleType (decl.getLocation (), d_type, type);
+		type = d_type;
+	    }
 	    
 	    auto var = generator::VarDecl::init (loc,
 						 decl.getName ().getStr (),
