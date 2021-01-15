@@ -1485,10 +1485,10 @@ namespace semantic {
 
 		if (ret.getFunType ().is<Void> ()) {
 		    list.append (value);
-		    if (this-> exceptionDeclChain.size () == 0) 
+		    auto exc_return = this-> getLastCatcherPosition ();
+		    if (exc_return.test.isEmpty ()) 
 			list.append (Tree::returnStmt (ret.getLocation ()));
 		    else {
-			auto exc_return = this-> exceptionDeclChain.back ();
 			auto test_val = Tree::buildIntCst (ret.getLocation (), ReturnWithinCatch::RETURN, Tree::intType (8, false));
 			list.append (this-> popLastException (ret.getLocation ()));
 			list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.test, test_val));
@@ -1497,22 +1497,23 @@ namespace semantic {
 		} else {
 		    list.append (value.getList ());
 		    value = value.getValue ();
-		    if (this-> exceptionDeclChain.size () == 0) {
+		    auto exc_return = this-> getLastCatcherPosition ();
+		    if (exc_return.test.isEmpty ()) {
 			list.append (Tree::returnStmt (ret.getLocation (), resultDecl, value));
 		    } else {
-			auto exc_return = this-> exceptionDeclChain.back ();
 			auto test_val = Tree::buildIntCst (ret.getLocation (), ReturnWithinCatch::RETURN, Tree::intType (8, false));
 			list.append (this-> popLastException (ret.getLocation ()));
+			
 			list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.test, test_val));
 			list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.var, value));
 			list.append (Tree::gotoExpr (ret.getLocation (), exc_return.label));
 		    }
 		}
 	    } else {
-		if (this-> exceptionDeclChain.size () == 0) {		    
+		auto exc_return = this-> getLastCatcherPosition ();
+		if (exc_return.test.isEmpty ()) {		    
 		    list.append (Tree::returnStmt (ret.getLocation ()));
 		} else {
-		    auto exc_return = this-> exceptionDeclChain.back ();
 		    auto test_val = Tree::buildIntCst (ret.getLocation (), ReturnWithinCatch::RETURN, Tree::intType (8, false));
 		    list.append (this-> popLastException (ret.getLocation ()));
 		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), ret.getLocation (), exc_return.test, test_val));
@@ -1526,13 +1527,13 @@ namespace semantic {
 	generic::Tree Visitor::generateReturn (const lexing::Word & location, generic::Tree value) {
 	    TreeStmtList list = TreeStmtList::init ();
 	    if (!value.isEmpty ()) {
-		if (this-> exceptionDeclChain.size () == 0) {
+		auto exc_return = this-> getLastCatcherPosition ();
+		if (exc_return.test.isEmpty ()) {
 		    auto fr = getCurrentContext ();
 		    auto resultDecl = fr.getResultDecl ();
 		    
 		    return Tree::returnStmt (location, resultDecl, value);
 		} else {
-		    auto exc_return = this-> exceptionDeclChain.back ();
 		    auto test_val = Tree::buildIntCst (location, ReturnWithinCatch::RETURN, Tree::intType (8, false));
 		    list.append (this-> popLastException (location));
 		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), location, exc_return.test, test_val));
@@ -1540,10 +1541,10 @@ namespace semantic {
 		    list.append (Tree::gotoExpr (location, exc_return.label));
 		}
 	    } else {
-		if (this-> exceptionDeclChain.size () == 0) {
+		auto exc_return = this-> getLastCatcherPosition ();
+		if (exc_return.test.isEmpty ()) {
 		    return Tree::returnStmt (location);
 		} else {
-		    auto exc_return = this-> exceptionDeclChain.back ();
 		    auto test_val = Tree::buildIntCst (location, ReturnWithinCatch::RETURN, Tree::intType (8, false));
 		    list.append (this-> popLastException (location));
 		    list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), location, exc_return.test, test_val));
@@ -1551,6 +1552,14 @@ namespace semantic {
 		}
 	    }
 	    return list.toTree ();
+	}
+
+	Visitor::ReturnWithinCatch Visitor::getLastCatcherPosition () {
+	    for (auto i : Ymir::r ((int) (this-> exceptionDeclChain.size () - 1), -1)) {
+		if (!this-> exceptionDeclChain [i].test.isEmpty ())
+		    return this-> exceptionDeclChain [i];
+	    }
+	    return ReturnWithinCatch {Tree::empty (), Tree::empty (), Tree::empty (), Tree::empty ()};
 	}
 	
 	generic::Tree Visitor::generateRangeValue (const RangeValue & rng) {

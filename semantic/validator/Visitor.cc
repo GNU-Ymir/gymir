@@ -3760,7 +3760,7 @@ namespace semantic {
 			this-> validateTemplateSymbol (sym, value);
 			ret = this-> validateMultSym (value.getLocation (), {sym});
 		    } 		    
-		} catch (Error::ErrorList list) {		    
+		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		Visitor::__CALL_NB_RECURS__ -= 1;
@@ -3768,7 +3768,7 @@ namespace semantic {
 		if (ret.isEmpty () && errors.size () == 0)
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		
-		if (errors.size () != 0) {
+		if (errors.size () != 0) {		    
 		    errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
 		} else return ret;
 		
@@ -3890,7 +3890,7 @@ namespace semantic {
 		    names
 		)};
 	    }
-	    
+
 	    throw Error::ErrorList {errors};
 	    return Generator::empty ();	    
 	}
@@ -4575,11 +4575,15 @@ namespace semantic {
 		    auto inner = validateType (un.getContent (), true);		
 		    if (!inner.isEmpty ()) return Pointer::init (un.getLocation (), inner);
 		} catch (Error::ErrorList list) {
-		    auto inner = validateTypeClassRef (un.getContent (), true);
-		    if (inner.is <ClassRef> ()) {
-			auto ret =  ClassPtr::init (un.getLocation (), inner);
-			return ret;
-		    } else throw list;
+		    try {
+			auto inner = validateTypeClassRef (un.getContent (), true);
+			if (inner.is <ClassRef> ()) {
+			    auto ret =  ClassPtr::init (un.getLocation (), inner);
+			    return ret;
+			}
+		    } catch (Error::ErrorList ignore) {
+			throw list;
+		    }
 		}
 	    }
 

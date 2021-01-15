@@ -407,6 +407,11 @@ namespace semantic {
 	     * Create a return statement from an already validated value
 	     */
 	    generic::Tree generateReturn (const lexing::Word & location, generic::Tree value);
+
+	    /**
+	     * \return the position (test, label, etc) of the last catcher (test is empty, if there is non)
+	     */
+	    ReturnWithinCatch getLastCatcherPosition ();
 	    
 	    /**
 	     * \brief Transform a range value into gimple
