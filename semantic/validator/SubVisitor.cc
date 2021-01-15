@@ -709,15 +709,14 @@ namespace semantic {
 		    auto ancestor = this-> _context.validateValue (expression.getRight ());
 		    if (ancestor.is <generator::Class> ()) {
 			auto ancClRef = ancestor.to <generator::Class> ().getClassRef ();
-			if (this-> _context.isAncestor (ancClRef,
-							value.to <Value> ().getType ())) {
+		    this-> _context.verifyCompatibleType (expression.getLocation (), ClassPtr::init (expression.getLocation (), ancClRef), value.to <Value> ().getType ());
 
-			    auto clRef = value.to<Value> ().getType ().to <Type> ().getInners () [0];
-			    auto inner = Type::init (ancClRef.to <Type> (), clRef.to <Type> ().isMutable ()); // mutability of the inner ref
-			    // mutability of ref
-			    auto proxyType = Type::init (ClassProxy::init (expression.getLocation (), inner, clRef).to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
-			    return Value::init (value.to <Value> (), proxyType);
-			}
+			
+			auto clRef = value.to<Value> ().getType ().to <Type> ().getInners () [0];
+			auto inner = Type::init (ancClRef.to <Type> (), clRef.to <Type> ().isMutable ()); // mutability of the inner ref
+			// mutability of ref
+			auto proxyType = Type::init (ClassProxy::init (expression.getLocation (), inner, clRef).to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
+			return Value::init (value.to <Value> (), proxyType);			
 		    }
 		}
 	    }
