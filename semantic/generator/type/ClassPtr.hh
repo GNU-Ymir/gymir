@@ -8,11 +8,11 @@ namespace semantic {
     namespace generator {
 
 	class ClassPtr : public Type {
-	private :
+	protected :
 
 	    Generator _ref;
 	    
-	private : 
+	protected : 
 
 	    friend Generator;
 

@@ -76,6 +76,14 @@ namespace semantic {
 	    generator::Generator validateRange (const syntax::Binary & expression, const generator::Generator & left);	    
 
 	    /**
+	     * Try to access to the field in the class
+	     * \param classValue: a value of type ClassPtr
+	     * \param name: the name of the field
+	     * \param prv, prot: the class context
+	     */
+	    generator::Generator validateClassFieldAccess (const lexing::Word & loc, const generator::Generator & classValue, const std::string & fieldName, bool prv, bool prot, std::list <Ymir::Error::ErrorMsg> & errors);
+	    
+	    /**
 	     * \brief Validate the operator on a class type
 	     * \param expression the bin expression
 	     * \param left the value of type ClassRef

@@ -66,13 +66,13 @@ namespace lexing {
 	    while (1) {
 		char * aux = fgets(buf, 255, this-> _ptr);
 		if (aux == NULL) {
-		    return "";
+		    return all;
 		}
 
 		std::string ret = std::string (buf);
 		all += ret;
-	    	    
-		if (ret.size () != 255 - 1) {
+		// String is null terminated, so the line return is at -2, not -1
+		if (ret [ret.size () - 2] != '\n') {
 		    return all;
 		}
 	    }

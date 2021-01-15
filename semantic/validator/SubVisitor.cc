@@ -1,4 +1,5 @@
 #include <ymir/semantic/validator/SubVisitor.hh>
+#include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/syntax/expression/Var.hh>
 #include <ymir/semantic/generator/value/ModuleAccess.hh>
 #include <ymir/syntax/declaration/Class.hh>
@@ -672,21 +673,23 @@ namespace semantic {
 		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 		    bool prv = false, prot = false;
 
-		    this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+		    if (value.to<Value> ().getType ().is <ClassProxy> ()) {
+			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
+			prv = false;
+		    } else
+			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
 
 		    std::vector <Generator> types;
 		    std::vector <Generator> params;
 		    std::list <Ymir::Error::ErrorMsg> errors;
-		    for (auto & field : cl.to <generator::Class> ().getFields ()) {
-			bool loc_pub = true, loc_prot = true;
-			auto type = field.to <generator::VarDecl> ().getVarType ();
+		    auto dot_visit = DotVisitor::init (this-> _context);
+		    for (auto & field : cl.to <generator::Class> ().getFields ()) {			
 			auto name = field.to <generator::VarDecl> ().getName ();
-			cl.to <generator::Class> ().getFieldProtection (name, loc_pub, loc_prot);
-			if (loc_pub || (loc_prot && (prv || prot)) || prv) {
-			    println (name, " ", loc_prot, " ", loc_pub, " ", prv, " ", prot);
-			    type = Type::init (type.to <Type> (), false);
+			auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
+			if (!field_access.isEmpty ()) {
+			    auto type = Type::init (field_access.to <Value> ().getType ().to <Type> (), false);
 			    
-			    params.push_back (StructAccess::init (expression.getLocation (), type, value, name));
+			    params.push_back (field_access);
 			    types.push_back (type);
 			}
 		    }
@@ -695,6 +698,27 @@ namespace semantic {
 		    tuple = Type::init (tuple.to <Type> (), false);
 		    
 		    return TupleValue::init (expression.getLocation (), tuple, params);
+		} 				
+	    }
+
+	    bool prv = false, prot = false;
+	    if (!value.to <Value> ().getType ().is <ClassProxy> ()) {
+		this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+	    
+		if (prv) { // Class proxy
+		    auto ancestor = this-> _context.validateValue (expression.getRight ());
+		    if (ancestor.is <generator::Class> ()) {
+			auto ancClRef = ancestor.to <generator::Class> ().getClassRef ();
+			if (this-> _context.isAncestor (ancClRef,
+							value.to <Value> ().getType ())) {
+
+			    auto clRef = value.to<Value> ().getType ().to <Type> ().getInners () [0];
+			    auto inner = Type::init (ancClRef.to <Type> (), clRef.to <Type> ().isMutable ()); // mutability of the inner ref
+			    // mutability of ref
+			    auto proxyType = Type::init (ClassProxy::init (expression.getLocation (), inner, clRef).to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
+			    return Value::init (value.to <Value> (), proxyType);
+			}
+		    }
 		}
 	    }
 	    

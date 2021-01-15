@@ -37,9 +37,9 @@ namespace Ymir {
     
 	std::string getLine (int line, lexing::File file, int start) {
 	    if (file.isClosed ()) {
-		auto aux = file.clone (); // We can't modify the file 
+		auto aux = file.clone (); // We can't modify the file
 		std::string cline;
-		for (auto it = start ; it < line ; it ++) {
+		for (auto it = start ; it < line ; it ++) {		    
 		    cline = aux.readln ();
 		}
 		return cline;
@@ -47,7 +47,7 @@ namespace Ymir {
 		auto cursor = file.tell ();
 		file.seek (0);
 		std::string cline;
-		for (auto it = start ; it < line ; it ++) {
+		for (auto it = start ; it < line ; it ++) {		    
 		    cline = file.readln ();
 		}		
 		file.seek (cursor);

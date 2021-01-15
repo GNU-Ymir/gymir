@@ -3760,7 +3760,7 @@ namespace semantic {
 			this-> validateTemplateSymbol (sym, value);
 			ret = this-> validateMultSym (value.getLocation (), {sym});
 		    } 		    
-		} catch (Error::ErrorList list) {
+		} catch (Error::ErrorList list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		Visitor::__CALL_NB_RECURS__ -= 1;
@@ -5181,7 +5181,7 @@ namespace semantic {
 		    auto note = Ymir::Error::createNote (loc);
 		    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
 		} else
-		    Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());
+		    Ymir::Error::occur (type.getLocation (), ExternalError::get (INCOMPLETE_TYPE), type.prettyString ());		
 	    }
 	}
 	

@@ -170,6 +170,7 @@ ymir_OBJS = \
 	ymir/generator_ParamVar.o \
 	ymir/generator_Pointer.o \
 	ymir/generator_ClassPtr.o \
+	ymir/generator_ClassProxy.o \
 	ymir/generator_ProtoVar.o \
 	ymir/generator_Range.o \
 	ymir/generator_RangeValue.o \

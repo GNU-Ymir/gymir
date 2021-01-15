@@ -47,7 +47,7 @@ namespace semantic {
 
 		else of (ClassPtr, p ATTRIBUTE_UNUSED,			     
 		    ret = validateClass (expression, left, errors);
-		);				
+		);		
 	    }
 
 	    if (!ret.isEmpty ()) return ret;
@@ -184,14 +184,9 @@ namespace semantic {
 	    
 	    return Generator::empty ();	    
 	}
-	
-	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <Ymir::Error::ErrorMsg> & errors) {
-	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
-	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-	    auto cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
-	    bool prv = false, prot = false;
 
-	    this-> _context.getClassContext (left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+	Generator DotVisitor::validateClassFieldAccess (const lexing::Word & loc, const Generator & classValue, const std::string & name, bool prv, bool prot, std::list <Ymir::Error::ErrorMsg> & errors) {
+	    auto cl = classValue.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
 	    int i = 0;
 	    
 	    // Field
@@ -199,7 +194,7 @@ namespace semantic {
 		Generator type (Generator::empty ());
 		if (i == 0 && prv) {
 		    type = cl.to <generator::Class> ().getFieldType (name);		
-		} else if (prv) {
+		} else if (prot) {
 		    type = cl.to <generator::Class> ().getFieldTypeProtected (name);
 		    if (type.isEmpty ()) {
 			type = cl.to <generator::Class> ().getFieldType (name);		    
@@ -225,18 +220,18 @@ namespace semantic {
 
 		if (!type.isEmpty ()) {			     
 		    if (
-			left.to <Value> ().isLvalue () &&
-			left.to <Value> ().getType ().to <Type> ().isMutable () &&
+			classValue.to <Value> ().isLvalue () &&
+			classValue.to <Value> ().getType ().to <Type> ().isMutable () &&
 			type.to <Type> ().isMutable () &&
-			left.to <Value> ().getType ().to <Type> ().getInners ()[0].to <Type> ().isMutable () // ClassRef must be mutable 
+			classValue.to <Value> ().getType ().to <Type> ().getInners ()[0].to <Type> ().isMutable () // ClassRef must be mutable 
 		    )
 			type = Type::init (type.to <Type> (), true);
 		    else
 			type = Type::init (type.to<Type> (), false);
 		    
-		    return StructAccess::init (expression.getLocation (),
+		    return StructAccess::init (loc,
 					       type,
-					       left, name);
+					       classValue, name);
 		}
 		
 		auto ancestor = cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
@@ -246,8 +241,27 @@ namespace semantic {
 		i += 1;
 	    }
 	    
+	    return Generator::empty ();
+	}
+	
+	Generator DotVisitor::validateClass (const syntax::Binary & expression, const Generator & left, std::list <Ymir::Error::ErrorMsg> & errors) {
+	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
+	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+	    bool proxy = left.to <Value> ().getType ().is <ClassProxy> ();
+	    bool prv = false, prot = false;
+	    if (!proxy) 
+		this-> _context.getClassContext (left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+	    else {
+		this-> _context.getClassContext (left.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
+		prv = false;
+	    }
+
+	    auto field_access = this-> validateClassFieldAccess (expression.getLocation (), left, name, prv, prot, errors);
+	    if (!field_access.isEmpty ()) return field_access;	    
+
 	    // Method
-	    cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
+	    auto cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
+
 	    std::vector <Generator> syms;
 	    auto & vtable = cl.to <generator::Class> ().getVtable ();
 	    auto & protVtable = cl.to <generator::Class> ().getProtectionVtable ();
@@ -260,19 +274,29 @@ namespace semantic {
 			    types.push_back (it.to <ProtoVar> ().getType ());
 		    
 			auto delType = Delegate::init (vtable [i].getLocation (), vtable [i]);
-			syms.push_back (
-			    DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
-						 vtable [i].to <MethodProto> ().getClassType (),
-						 left,
-						 VtableAccess::init (expression.getLocation (),
-								     FuncPtr::init (expression.getLocation (),
-										    vtable [i].to <FrameProto> ().getReturnType (),
-										    types),
-								     left,
-								     i + 1 // + 1 to ignore the typeinfo
-						 )
-				)
-			);
+			if (left.to <Value> ().getType ().is <ClassProxy> ()) {
+			    syms.push_back (
+				DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
+						     vtable [i].to <MethodProto> ().getClassType (),
+						     left,
+						     vtable [i]
+				    )
+				);
+			} else {
+			    syms.push_back (
+				DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
+						     vtable [i].to <MethodProto> ().getClassType (),
+						     left,
+						     VtableAccess::init (expression.getLocation (),
+									 FuncPtr::init (expression.getLocation (),
+											vtable [i].to <FrameProto> ().getReturnType (),
+											types),
+									 left,
+									 i + 1 // + 1 to ignore the typeinfo
+							 )
+				    )
+				);
+			}
 		    } else {
 			errors.push_back (
 			    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), vtable [i].getLocation (), vtable[i].prettyString ())
@@ -281,7 +305,11 @@ namespace semantic {
 		}
 	    }
 
-	    cl = left.to <Value> ().getType ().to <ClassPtr> (). getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
+	    cl = left.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
+
+	    int i = 0;
+	    if (left.to <Value> ().getType ().is <ClassProxy> ()) i += 1; // can't access private of ancestor even through proxy
+	    
 	    // Template methods
 	    while (!cl.isEmpty ()) {
 		auto clRef = left.to <Value> ().getType ();//Type::init (cl.to <generator::Class> ().getClassRef ().to <Type> (), true);
@@ -291,7 +319,7 @@ namespace semantic {
 		    match (it) {
 			of (Template, tl, {
 				if (tl.getName () == name) {
-				    if (prv || (prot && it.isProtected ()) || it.isPublic ()) {
+				    if ((i == 0 && prv) || (prot && it.isProtected ()) || it.isPublic ()) {
 					// We cast it, because the parent method must be validated with parent class ref					    
 					auto castedRef = Cast::init (left.getLocation (), clRef, left);
 					if (left.is <Aliaser> ()) {
@@ -314,7 +342,8 @@ namespace semantic {
 		auto ancestor = cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
 		if (!ancestor.isEmpty ())
 		    cl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
-		else cl = Generator::empty ();		
+		else cl = Generator::empty ();
+		i += 1;
 	    }
 	    
 	    if (syms.size () != 0) 

@@ -44,8 +44,7 @@ namespace semantic {
 		try {
 		    test = this-> validateMatch (value, matchers [it], local_mandatory);
 		    if (local_mandatory) isMandatory = true;
-		} catch (Error::ErrorList list) {
-			
+		} catch (Error::ErrorList list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		
@@ -61,6 +60,7 @@ namespace semantic {
 			if (!content.to <Value> ().isReturner () && !content.to<Value> ().isBreaker ()) {// If it is a breaker or a returner the value won't be evaluated anyway
 			    if (!local_type.to <Type> ().isCompatible (type)) {
 				auto anc = this-> _context.getCommonAncestor (local_type, type);
+				
 				if (!anc.isEmpty ())
 				    type = anc;
 			    }
@@ -82,8 +82,7 @@ namespace semantic {
 			this-> _context.discardAllLocals ();
 			
 		    this-> _context.quitBlock ();
-		} catch (Error::ErrorList list) {
-			
+		} catch (Error::ErrorList list) {			
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 		
