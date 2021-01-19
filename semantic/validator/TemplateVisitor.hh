@@ -192,6 +192,14 @@ namespace semantic {
 	    Mapper applyTypeFromExplicitOfVar (const array_view <syntax::Expression> & params, const syntax::OfVar & var, const generator::Generator & types) const;
 
 	    /**
+	     * \brief Validate a type template specialization from explicit context on an Decorated expression
+	     * \param params the template parameters (mut [R], R, ...)
+	     * \param left one of the template parameters \in params, which is a DecoratedExpression
+	     * \param type the type that will make the specialization
+	     */
+	    Mapper applyTypeFromExplicitDecoratedVar (const array_view <syntax::Expression> & params, const syntax::Expression& expr, const generator::Generator & types) const;
+
+	    /**
 	     * \brief Validate a type template specialization from explicit context on an ImplVar
 	     * \param params the template parameters (T impl isTruc!R, R, ...)
 	     * \param left one of the template parameters \in params, which is a ImplVar

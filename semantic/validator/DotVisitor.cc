@@ -49,7 +49,7 @@ namespace semantic {
 		    ret = validateClass (expression, left, errors);
 		);		
 	    }
-
+	    
 	    if (!ret.isEmpty ()) return ret;
 	    else if (expression.getRight ().is<syntax::TemplateCall> () && !isFromCall) {
 		return validateDotTemplateCall (expression, left);
@@ -274,7 +274,8 @@ namespace semantic {
 			    types.push_back (it.to <ProtoVar> ().getType ());
 		    
 			auto delType = Delegate::init (vtable [i].getLocation (), vtable [i]);
-			if (left.to <Value> ().getType ().is <ClassProxy> ()) {
+			// If the class is final, then no need to access the vtable
+			if (left.to <Value> ().getType ().is <ClassProxy> () || cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getRef ().to <semantic::Class> ().isFinal ()) {
 			    syms.push_back (
 				DelegateValue::init (lexing::Word::init (expression.getLocation (), name), delType,
 						     vtable [i].to <MethodProto> ().getClassType (),
@@ -292,7 +293,8 @@ namespace semantic {
 											vtable [i].to <FrameProto> ().getReturnType (),
 											types),
 									 left,
-									 i + 1 // + 1 to ignore the typeinfo
+									 i + 1, // + 1 to ignore the typeinfo,
+									 name
 							 )
 				    )
 				);

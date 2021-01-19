@@ -315,7 +315,13 @@ namespace semantic {
 		{rightSynt}, false
 		);
 	    
-	    return this-> _context.validateValue (call);	    
+	    try {
+		return this-> _context.validateValue (call);
+	    }  catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
 	}
 
 	Generator BinaryVisitor::validateMathClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
@@ -339,7 +345,13 @@ namespace semantic {
 		{rightSynt}, false
 	    );
 
-	    return this-> _context.validateValue (call);
+	    try {
+		return this-> _context.validateValue (call);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
 	}	
 	
 	Generator BinaryVisitor::validateLogicalOperation (Binary::Operator op, const syntax::Binary & expression) {
@@ -591,20 +603,11 @@ namespace semantic {
 		{
 		    try {
 			result = validateEqualClass (op, expression, left, right);
-		    } catch (Error::ErrorList list) {			
+		    } catch (Error::ErrorList list) {
 			errors = list.errors;		    
 		    } 
 		}
-		
-		if (result.isEmpty ()) {
-		    try {
-			result = validateEqualClassRight (op, expression, left, right);
-		    } catch (Error::ErrorList list) {			
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
-		    } 
-		
-		}
-		
+			       		
 		if (!result.isEmpty ()) return result;
 	    }
 	    
@@ -628,9 +631,11 @@ namespace semantic {
 	    try {
 		cl = this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {		
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
-	    } 
-
+	    }
+	    
 	    if (cl.isEmpty ())
 		throw Error::ErrorList {errors};
 	    
@@ -689,7 +694,9 @@ namespace semantic {
 	    
 	    try {
 		cl = this-> _context.validateValue (call);
-	    } catch (Error::ErrorList list) {		
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
 	    }
 
@@ -729,14 +736,20 @@ namespace semantic {
 	    if (op == Binary::Operator::NOT_EQUAL) {
 		call = syntax::Unary::init (lexing::Word::init (loc, Token::NOT), call);
 	    }
-	    	    
-	    return this-> _context.validateValue (call);
+
+	    try {
+		return this-> _context.validateValue (call);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
 	}
 
 	Generator BinaryVisitor::validateEqualClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    lexing::Word loc = lexing::Word::init (expression.getLocation (), toString (op));
-	    auto leftSynt = TemplateSyntaxWrapper::init (loc, right);
-	    auto rightSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
+	    auto rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    auto templ = syntax::Binary::init (
 		lexing::Word::init (loc, Token::DOT),
 		rightSynt,		    
@@ -753,8 +766,15 @@ namespace semantic {
 	    if (op == Binary::Operator::NOT_EQUAL) {
 		call = syntax::Unary::init (lexing::Word::init (loc, Token::NOT), call);
 	    }
-	    	    
-	    return this-> _context.validateValue (call);
+
+
+	    try {
+		return this-> _context.validateValue (call);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
 	}	
 	
 	Generator BinaryVisitor::validateAffectation (Binary::Operator op, const syntax::Binary & expression) {
@@ -815,7 +835,13 @@ namespace semantic {
 		rightSynts, false
 	    );
 
-	    return this-> _context.validateValue (call);
+	    try {
+		return this-> _context.validateValue (call);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
 	}
 	
 
@@ -1001,8 +1027,14 @@ namespace semantic {
 	    if (op == Binary::Operator::NOT_IN) {
 		call = syntax::Unary::init (lexing::Word::init (expression.getLocation (), Token::NOT), call);
 	    }
-	    
-	    return this-> _context.validateValue (call);
+
+	    try {
+		return this-> _context.validateValue (call);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
 	}
 	
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {

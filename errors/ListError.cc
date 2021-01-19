@@ -160,6 +160,7 @@ namespace Ymir {
 			    USE_AS_TYPE			    = "expression used as a type",
 			    USE_AS_VALUE                    = "type expression used as a value",
 			    USE_UNIT_FOR_VOID               = "The block value cannot be void without a unit expression, maybe you forgot the ';'",
+			    VALIDATING                      = "when validating %(y)",
 			    VAR_DECL_WITHOUT_VALUE	    = "var declaration must have an initial value",
 			    VAR_DECL_WITH_NOTHING           = "var declaration must at least have a type or a value",
 			    VOID_VALUE                      = "value cannot be void",

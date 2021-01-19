@@ -3422,20 +3422,31 @@ namespace semantic {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    for (auto & it : check.getCalls ()) {
 		bool succeed = true;
+		std::list <Ymir::Error::ErrorMsg> locErrors;
 		try {
-		    auto val = validateType (it, true);
-		    params.push_back (val);
+		    params.push_back (validateType (it, true));
 		} catch (Error::ErrorList list) {
+		    locErrors.insert (locErrors.begin (), list.errors.begin (), list.errors.end ());
 		    succeed = false;
 		} 
-		
+
 		if (!succeed) {
-		    auto val = validateValue (it);
-		    auto rvalue = retreiveValue (val);
-		    params.push_back (rvalue);
+		    succeed = true;
+		    try {
+			auto val = validateValue (it);
+			auto rvalue = retreiveValue (val);
+			params.push_back (rvalue);			
+		    } catch (Error::ErrorList list) {
+			succeed = false;
+		    } 		    
 		}
+		
+		if (!succeed)
+		    errors.insert (errors.end (), locErrors.begin (), locErrors.end ());
 	    }
-	    
+
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
 
 	    bool succeed = false; // again, due to longjmp
 	    
@@ -3529,8 +3540,14 @@ namespace semantic {
 	    auto val = retreiveValue (test);
 	    if (!val.to <BoolValue> ().getValue ()) {
 		std::string msg;
-		if (!assert.getMsg ().isEmpty ())
-		    msg = assert.getMsg ().prettyString ();
+		if (!assert.getMsg ().isEmpty ()) {
+		    try {
+			auto msgVal = retreiveValue (validateValue (assert.getMsg ()));
+			msg = msgVal.prettyString ();
+		    } catch (Ymir::Error::ErrorList) {
+			msg = assert.getMsg ().prettyString ();
+		    }
+		}
 		Ymir::Error::occur (assert.getLocation (), ExternalError::get (ASSERT_FAILED), msg);
 	    }
 	    
@@ -5387,8 +5404,8 @@ namespace semantic {
 	void Visitor::verifyCompatibleTypeWithValue (const lexing::Word & loc, const Generator & type, const Generator & gen) {
 	    if (gen.is <NullValue> () && type.is <Pointer> ())  return;
 	    else if (gen.to <Value> ().getType ().is <Slice> () && gen.to <Value> ().getType ().to <Type> ().getInners () [0].is<Void> () && type.is <Slice> ()) return;
-	    else if (type.is <Integer> () && this-> isIntConstant (gen)) return; // We allow int implicit cast if the operand is knwon at compile time and is a int value
-	    else if (type.is <Float> () && this-> isFloatConstant (gen)) return; // Idem for float const
+	    // else if (type.is <Integer> () && this-> isIntConstant (gen)) return; // We allow int implicit cast if the operand is knwon at compile time and is a int value
+	    // else if (type.is <Float> () && this-> isFloatConstant (gen)) return; // Idem for float const
 	    
 	    verifyCompatibleType (loc, type, gen.to <Value> ().getType ());
 	}	

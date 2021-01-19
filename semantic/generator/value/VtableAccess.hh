@@ -17,20 +17,22 @@ namespace semantic {
 	    
 	    uint _field;
 
+	    std::string _name;
+
 	private : 
 
 	    friend Generator;
 
 	    VtableAccess ();
 
-	    VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & cl, uint field);
+	    VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & cl, uint field, const std::string & name);
 
 	public:
 
 	    /**
 	     * \brief Generate a tuple access
 	     */
-	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & cl, uint field);
+	    static Generator init (const lexing::Word & loc, const Generator & type, const Generator & cl, uint field, const std::string & name);
 	    
 	    Generator clone () const override;
 

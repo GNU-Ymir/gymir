@@ -42,7 +42,7 @@ namespace syntax {
 	    Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 	    Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
 	    Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::CLASS, Keys::ALIAS,
-	    Keys::STATIC, Keys::CATCH
+	    Keys::STATIC, Keys::CATCH, Keys::COPY, Keys::DCOPY
 	};
 	
 	visit._operators = {

@@ -160,7 +160,7 @@ namespace semantic {
 			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
 			}
 		    }
-		) else of (OfVar, var, {
+		 ) else of (OfVar, var, {
 			if (values [0].is<Type> ()) {
 			    consumed += 1;
 			    return applyTypeFromExplicitOfVar (syntaxTempl, var, values [0]);
@@ -170,7 +170,7 @@ namespace semantic {
 			}
 		    }
 		) else of (ImplVar, var, {
-			if (values [0].is <ClassPtr> ()) {
+			if (values [0].is <ClassPtr> () || values [0].is <ClassRef> ()) {
 			    consumed += 1;
 			    return applyTypeFromExplicitImplVar (syntaxTempl, var, values [0]);
 			} else if (values [0].is <Type> ()) {
@@ -200,7 +200,7 @@ namespace semantic {
 		    }
 		) else of (ClassVar, var, {
 			if (values [0].is <Type> ()) {
-			    if (!values [0].isEmpty () && values [0].is <ClassPtr> ()) {
+			    if (!values [0].isEmpty () && (values [0].is <ClassPtr> () || values [0].is <ClassRef> ())) {
 				Mapper mapper (true, Scores::SCORE_VAR);
 				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
 				mapper.nameOrder.push_back (var.getLocation ().getStr ());
@@ -304,11 +304,11 @@ namespace semantic {
 			consumed += values.size ();
 			return mapper;
 		    }
-		) else of (syntax::DecoratedExpression, dc, {
-			Ymir::Error::occur (dc.getLocation (),
+		) else of (syntax::DecoratedExpression, dc, {			    
+			Ymir::Error::occur (dc.getDecorators ()[0].getLocation (),
 					    ExternalError::get (DECO_OUT_OF_CONTEXT),
 					    dc.prettyDecorators ()
-			);			
+			    );						    
 		    }
 		);
 	    }
@@ -548,6 +548,30 @@ namespace semantic {
 		) else of (TemplateSyntaxWrapper, wp ATTRIBUTE_UNUSED, {
 			consumed += 1;
 			return Mapper (true, 0);
+		    }		
+		) else of (syntax::Unary, un, {
+			consumed += 1;
+			auto type = types [0];
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == 1) {
+			    auto vec = type.to <Type> ().getInners ();
+			    int consumed = 0;
+			    auto mapper = this-> validateTypeFromImplicit (params, un.getContent (), array_view<Generator> (vec), consumed);
+			    
+			    if (mapper.succeed) {
+				Expression realType = this-> replaceAll (leftT, mapper.mapping);
+				auto genType = this-> _context.validateType (realType, true);
+				this-> _context.verifySameType (genType, type);
+				this-> _context.verifyNotIsType (leftT.getLocation ());
+			  				
+				mapper.score += Scores::SCORE_TYPE;
+				return mapper;
+			    }
+			} else {
+			    Ymir::Error::occur (un.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						un.prettyString (),
+						type.to<Type> ().getTypeName ());
+			}			
+						    			
 		    }
 		) else of (syntax::List, lst, {
 			consumed += 1;			
@@ -617,28 +641,26 @@ namespace semantic {
 			int current_consumed = 0;
 			return validateTypeFromTemplCall (params, cl, types [0], current_consumed);
 		    }
-		) else of (DecoratedExpression, dc, {
-			if (dc.getContent ().is <Var> ()) {
-			    consumed += 1;
-			    auto var = dc.getContent ();
-			    Mapper localMapper (true, Scores::SCORE_VAR);			    
-			    localMapper.mapping.emplace (var.to <Var> ().getName ().getStr (), createSyntaxType (var.to <Var> ().getName (), types [0]));
-			    localMapper.nameOrder.push_back (var.to <Var> ().getName ().getStr ());
-			    
-			    auto realType = this-> replaceAll (leftT, localMapper.mapping);
-			    auto genType = this-> _context.validateType (realType, true);
+		) else of (DecoratedExpression, dc, {			
+			int current_consumed = 0;
+			consumed += 1;
 			
-			    auto fakeType = this-> replaceAll (dc.getContent (), localMapper.mapping);			
-			    auto rightType = this-> _context.validateType (fakeType, true);
-			    
-			    this-> _context.verifySameType (genType, rightType);
+			auto mapper = this-> validateTypeFromImplicit (params, dc.getContent (), array_view<Generator> ({types [0]}), current_consumed);    
+			if (mapper.succeed) {
 			
-			    Mapper mapper (true, Scores::SCORE_VAR);
-			    mapper.mapping.emplace (var.to <Var> ().getName ().getStr (), createSyntaxType (leftT.getLocation (), types [0]));
-			    mapper.nameOrder.push_back (var.to <Var> ().getName ().getStr ());
-			    return mapper;
+			    mapper.mapping.emplace (
+				format ("%[%,%]",
+					dc.getLocation ().getStr (),
+					dc.getLocation ().getLine (),
+					dc.getLocation ().getColumn ()
+				    ), createSyntaxValue (dc.getLocation (), types [0]));
+			    mapper.nameOrder.push_back (format ("%[%,%]",
+								dc.getLocation ().getStr (),
+								dc.getLocation ().getLine (),
+								dc.getLocation ().getColumn ()));
 			}
-		    }		    
+			return mapper;
+		    }		    		    
 		) else of (syntax::FuncPtr, fPtr, {
 			consumed += 1;
 			auto type = types [0];
@@ -808,7 +830,7 @@ namespace semantic {
 			return applyTypeFromExplicitOfVar (params, var, types [0]);
 		    }
 		) else of (ImplVar, var, {
-			if (!types [0].is <ClassPtr> ()) {
+			if (!types [0].is <ClassPtr> () && !types [0].is <ClassRef> ()) {
 			    auto note = Ymir::Error::createNote (var.getLocation ());
 			    Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (NOT_A_CLASS), types [0].prettyString ());
 			}
@@ -833,7 +855,7 @@ namespace semantic {
 			return Mapper (false, 0);
 		    }
 		) else of (ClassVar, var, {
-			if (!types [0].isEmpty () && types [0].is <ClassPtr> ()) {
+			if (!types [0].isEmpty () && (types [0].is <ClassPtr> () || types [0].is <ClassRef> ())) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
 			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
 			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
@@ -876,11 +898,11 @@ namespace semantic {
 			consumed += types.size ();
 			return mapper;
 		    }
-		) else of (DecoratedExpression, dc, {
-			Ymir::Error::occur (dc.getLocation (),
+		) else of (DecoratedExpression, dc ATTRIBUTE_UNUSED, {
+			Ymir::Error::occur (dc.getDecorators ()[0].getLocation (),
 					    ExternalError::get (DECO_OUT_OF_CONTEXT),
 					    dc.prettyDecorators ()
-			);
+			    );						    
 		    }
 		);
 	    }
@@ -901,14 +923,43 @@ namespace semantic {
 			    int consumed = 0;
 			    auto vec = {type};
 			    Mapper mapper = applyTypeFromExplicit (params, expr, array_view<Generator> (vec), consumed);
-			    auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
-			    auto genType = this-> _context.validateType (realType, true);
-
+			    if (!type.is <ClassRef> ()) { // we skip the validation ?
+				auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
+				auto genType = this-> _context.validateType (realType, true);
+				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
+			    } else {
+				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), type));
+			    }
+			    
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
-			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
 			    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
+			    
 			    return mapper;			    
 			}
+		    }
+		) else of (syntax::Unary, un, {
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () == 1) {
+			    auto vec = type.to <Type> ().getInners ();
+			    int consumed = 0;
+			    auto mapper = this-> validateTypeFromImplicit (params, un.getContent (), array_view<Generator> (vec), consumed);
+			    
+			    if (mapper.succeed) {
+				Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
+				auto genType = this-> _context.validateType (realType, true);
+				this-> _context.verifySameType (genType, type);
+				this-> _context.verifyNotIsType (ofv.getLocation ());
+			    
+				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxValue (ofv.getLocation (), type));				
+				mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
+				
+				mapper.score += Scores::SCORE_TYPE;
+				return mapper;
+			    }
+			} else {
+			    Ymir::Error::occur (un.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						un.prettyString (),
+						type.to<Type> ().getTypeName ());
+			}			
 		    }
 		) else of (syntax::List, lst, {
 			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size ()) {
@@ -1031,10 +1082,30 @@ namespace semantic {
 			}
 		    }
 		) else of (DecoratedExpression, dc, {
-			Ymir::Error::occur (dc.getLocation (),
-					    ExternalError::get (DECO_OUT_OF_CONTEXT),
-					    dc.prettyDecorators ()
-			);
+			for (auto & it : dc.getDecorators ()) {
+			    if (it.getValue () != Decorator::MUT && it.getValue () != Decorator::DMUT)
+				Ymir::Error::occur (it.getLocation (),
+						    ExternalError::get (DECO_OUT_OF_CONTEXT),
+						    it.getLocation ().getStr ()
+				    );						    
+			}
+
+			int local_consumed = 0;
+			auto vec = {type}; 
+			auto mapper = this-> validateTypeFromImplicit (params, dc.getContent (), array_view<Generator> (vec), local_consumed);
+			if (mapper.succeed) {
+			    if (dc.hasDecorator (Decorator::MUT) && !type.to <Type> ().isMutable ()) {
+				auto note = this-> partialResolutionNote (dc.getLocation (), mapper);
+				Ymir::Error::occurAndNote (dc.getDecorators ()[0].getLocation (), note, ExternalError::get (DISCARD_CONST));
+			    } else if (dc.hasDecorator (Decorator::DMUT) && !type.to <Type> ().isDeeplyMutable ()) {
+				auto note = this-> partialResolutionNote (dc.getLocation (), mapper);
+				Ymir::Error::occurAndNote (dc.getDecorators ()[0].getLocation (), note, ExternalError::get (DISCARD_CONST));
+			    }
+			    
+			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), type));
+			}
+			    
+			return mapper;			
 		    }
 		) else of (TemplateCall, cl, {
 			int current_consumed = 0;
@@ -1801,7 +1872,12 @@ namespace semantic {
 			    continue;
 			}
 		    ) else of (syntax::DecoratedExpression, dc, {
-			    if (mapping.find (dc.getContent ().to <Var> ().getName ().getStr ()) == mapping.end ())
+			    auto f_name = format ("%[%,%]",
+						dc.getLocation ().getStr (),
+						dc.getLocation ().getLine (),
+						dc.getLocation ().getColumn ());
+			    
+			    if (mapping.find (f_name) == mapping.end ())
 				results.push_back (replaceAll (it, mapping));
 			    continue;
 			}

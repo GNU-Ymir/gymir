@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/DelegateValue.hh>
+#include <ymir/semantic/generator/value/VtableAccess.hh>
 
 namespace semantic {
 
@@ -58,6 +59,10 @@ namespace semantic {
 	
 	std::string DelegateValue::prettyString () const {
 	    if (this-> _closure.is <Value> ()) {
+		if (this-> _funcptr.is <VtableAccess> ()) {
+		    return this-> _funcptr.prettyString ();
+		}
+		
 		return Ymir::format ("{% = % : %, %} ",
 				     this-> _closureType.prettyString (),
 				     this-> _closure.prettyString (),

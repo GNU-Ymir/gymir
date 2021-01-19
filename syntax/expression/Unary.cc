@@ -31,7 +31,9 @@ namespace syntax {
     }
 
     std::string Unary::prettyString () const {
-	return Ymir::format ("% (%)", this-> getLocation ().getStr (), this-> _content.prettyString ());
+	Ymir::OutBuffer buf;
+	buf.write (this-> getLocation ().getStr (), '(', this-> _content.prettyString (), ')');
+	return buf.str ();
     }
     
 }

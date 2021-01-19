@@ -30,25 +30,25 @@ namespace semantic {
 		    type = Type::init (type.to<Type> (), a.isMutable ());
 		    
 		    return validateSlice (expression, Aliaser::init (expression.getLocation (), type, value));
-		);
-
+		    );
+		
 		of (Slice, s ATTRIBUTE_UNUSED,
 		    return validateSlice (expression, value);
-		);
-
+		    );
+		
 		of (Range, r ATTRIBUTE_UNUSED,
 		    return validateRange (expression, value);
-		);
+		    );
 
 		of (Tuple, t ATTRIBUTE_UNUSED,
 		    return validateTuple (expression, value);
-		);
-
+		    );
+		
 		of (ClassPtr, p ATTRIBUTE_UNUSED,
 		    return validateClass (expression, value);
-		);
+		    );
 		
-	    }
+	    }	    
 	    
 	    error (expression, value);
 	    return Generator::empty ();
@@ -660,13 +660,14 @@ namespace semantic {
 		auto cRef = UniqValue::init (expr.getLocation (), value.to <Value> ().getType (), value);
 
 		auto syntCRef = TemplateSyntaxWrapper::init (loc, cRef);
-		auto syntBegin = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-							     syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
-										   syntCRef,
-										   syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BEGIN_OP_OVERRIDE))),
-										   syntax::Expression::empty ()
-								 ),
-							     {}, false);
+		auto syntBegin = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS),
+							 syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+										     syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
+													   syntCRef,
+													   syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BEGIN_OP_OVERRIDE))),
+													   syntax::Expression::empty ()
+											 ),
+										     {}, false));
 
 		auto syntEnd = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
 							   syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
@@ -675,20 +676,49 @@ namespace semantic {
 										 syntax::Expression::empty ()
 							       ),
 							   {}, false);
-		auto begin = this-> _context.validateValue (syntBegin);
-		auto end = this-> _context.validateValue (syntEnd);
+		Generator begin (Generator::empty ());
+		Generator end (Generator::empty ());
+		
+		try {
+		    begin = this-> _context.validateValue (syntBegin);
+		} catch (Error::ErrorList list) {
+		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntBegin.prettyString ());
+		    list.errors.back ().addNote (note);
+		    throw list;
+		}
+
+		try {
+		    end = this-> _context.validateValue (syntEnd);
+		} catch (Error::ErrorList list) {
+		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), syntEnd.prettyString ());
+		    list.errors.back ().addNote (note);
+		    throw list;
+		}
+
+		auto iterType = begin.to <Value> ().getType ().to <Type> ().toDeeplyMutable ();		
+		this-> _context.verifyMemoryOwner (loc, iterType, begin, false);
+		
 		
 		syntBegin = TemplateSyntaxWrapper::init (loc, begin);
 		syntEnd = TemplateSyntaxWrapper::init (loc, end);
 
-		auto iterVal = generator::VarDecl::init (loc, "#_iter", begin.to<Value> ().getType (), begin, true);
-		auto iterRef = VarRef::init (loc, "#_iter", begin.to<Value> ().getType (), iterVal.getUniqId (), true, Generator::empty ());		
-		values.push_back (iterVal);		
+		auto iterVal = generator::VarDecl::init (loc, "#_iter", iterType, begin, true);
+		auto iterRef = Aliaser::init (
+		    loc,
+		    begin.to<Value> ().getType (),
+		    VarRef::init (loc, "#_iter", iterType, iterVal.getUniqId (), true, Generator::empty ()));
 
+		auto endVal = generator::VarDecl::init (loc, "#_end", end.to <Value> ().getType (), end, false);
+		auto endRef = VarRef::init (loc, "#_end", end.to<Value> ().getType (), endVal.getUniqId (), false, Generator::empty ());
+		
+		values.push_back (iterVal);		
+		values.push_back (endVal);
+		
 		auto syntIterVal = TemplateSyntaxWrapper::init (expr.getLocation (), iterRef);
+		auto syntEndVal  = TemplateSyntaxWrapper::init (expr.getLocation (), endRef);
 		
 		auto test = this-> _context.validateValue (
-		    syntax::Binary::init (lexing::Word::init (loc, Token::NOT_EQUAL), syntIterVal, syntEnd, syntax::Expression::empty ())
+		    syntax::Binary::init (lexing::Word::init (loc, Token::NOT_EQUAL), syntIterVal, syntEndVal, syntax::Expression::empty ())
 		    );
 
 		std::vector <Generator> innerValues;
@@ -715,7 +745,6 @@ namespace semantic {
 		    );
 
 		auto right = this-> _context.validateValue (call);
-		this-> _context.verifyMemoryOwner (loc, iterRef.to <Value> ().getType (), right, false);
 
 		auto content = this->_context.validateValueNoReachable (expr.getBlock ());
 		if (!content.to <Value> ().getType ().is <Void> ()) {
@@ -733,7 +762,7 @@ namespace semantic {
 		    innerValues.push_back (content);
 		}
 		
-		innerValues.push_back (Affect::init (loc, iterRef.to <Value> ().getType (), iterRef, right));
+		innerValues.push_back (right);
 		
 		if (!valVar.isEmpty ()) {
 		    innerValues.push_back (VarRef::init (loc, "#_for", loop_type, valVar.to <generator::VarDecl> ().getUniqId (), false, Generator::empty ()));

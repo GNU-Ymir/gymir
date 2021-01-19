@@ -152,7 +152,13 @@ namespace semantic {
 		{}, false
 	    );
 
-	    return this-> _context.validateValue (call);
+	    try {
+		return this-> _context.validateValue (call);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
 	}
 	
 	Generator UnaryVisitor::validateFunctionPointer (const syntax::Unary & un, const Generator & proto) {

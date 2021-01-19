@@ -667,7 +667,8 @@ namespace semantic {
 		    return VtableAccess::init (loc,
 					       typeInfo,
 					       value,
-					       0
+					       0,
+					       SubVisitor::__TYPEINFO__
 		    );
 		} else if (opName == ClassRef::TUPLEOF) {
 		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();

@@ -110,6 +110,11 @@ namespace semantic {
 	    bool isMutable () const;
 
 	    /**
+	     * \return is this type and all inner types mutable?
+	     */
+	    bool isDeeplyMutable () const;
+	    
+	    /**
 	     * \return this type is complex ? (cf this-> _isComplex definition)
 	     */
 	    bool isComplex () const;	    

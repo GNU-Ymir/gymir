@@ -163,6 +163,11 @@ namespace documentation {
 		}
 		);
 	}
+
+	Ymir::OutBuffer buf;
+	decl.treePrint (buf, 0);
+	println (buf.str ());
+	
 	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	return JsonValue::empty ();
     }
@@ -709,11 +714,8 @@ namespace documentation {
 		val ["trait"] = JsonString::init (jt.to <syntax::Mixin> ().getMixin ().prettyString ());
 		others.push_back (JsonDict::init (val));
 	    } else {
-		Ymir::OutBuffer buf;
-		jt.treePrint (buf, 0);
-		println (buf.str ());
-		Ymir::Error::halt ("", "");
-	    }
+		others.push_back (this-> dumpUnvalidated (jt, pub, prot));
+	    } 
 	}	
     }
 

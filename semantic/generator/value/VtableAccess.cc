@@ -8,16 +8,17 @@ namespace semantic {
 	    _str (Generator::empty ())
 	{}
 
-	VtableAccess::VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & str, uint field) :
+	VtableAccess::VtableAccess (const lexing::Word & loc, const Generator & type, const Generator & str, uint field, const std::string & name) :
 	    Value (loc, type),
 	    _str (str),
-	    _field (field)
+	    _field (field),
+	    _name (name)
 	{
 	    this-> setThrowers (this-> _str.getThrowers ());
 	}
 
-	Generator VtableAccess::init (const lexing::Word & loc, const Generator & type, const Generator & str, uint field) {
-	    return Generator {new (NO_GC) VtableAccess (loc, type, str, field)};
+	Generator VtableAccess::init (const lexing::Word & loc, const Generator & type, const Generator & str, uint field, const std::string & name) {
+	    return Generator {new (NO_GC) VtableAccess (loc, type, str, field, name)};
 	}
 	
 	Generator VtableAccess::clone () const {
@@ -39,7 +40,7 @@ namespace semantic {
 	}
 
 	std::string VtableAccess::prettyString () const {
-	    return Ymir::format ("%.%", this-> _str.prettyString (), this-> _field);
+	    return Ymir::format ("(%).%", this-> _str.prettyString (), this-> _name);
 	}
 
     }    

@@ -110,6 +110,16 @@ namespace semantic {
 	    return this-> _isMutable;
 	}
 
+	bool Type::isDeeplyMutable () const {
+	    if (this-> _isComplex) {
+		for (auto &it : this-> _inners) {
+		    if (it.is <Type> () && !it.to <Type> ().isDeeplyMutable ()) return false;
+		}
+	    }
+	    
+	    return this-> _isMutable;
+	}
+	
 	bool Type::isComplex () const {
 	    return this-> _isComplex;
 	}
