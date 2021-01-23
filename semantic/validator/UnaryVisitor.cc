@@ -1,4 +1,5 @@
 #include <ymir/semantic/validator/UnaryVisitor.hh>
+#include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/semantic/generator/value/_.hh>
 #include <ymir/global/Core.hh>
 
@@ -29,6 +30,11 @@ namespace semantic {
 		    of (FrameProto, proto ATTRIBUTE_UNUSED,
 			return validateFunctionPointer (expression, operand);
 		    ) else {
+			if (operand.is <MultSym> ()) {
+			    auto gen = validateDelegatePointer (expression, operand);
+			    if (!gen.isEmpty ()) return gen;
+			}
+			
 			if (operand.to <Value> ().isLvalue ()) {
 			    auto inner = operand.to<Value> ().getType ();
 			    inner = Type::init (inner.to <Type> (), inner.to <Type> ().isMutable (), false);
@@ -170,6 +176,85 @@ namespace semantic {
 		Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::get (ADDR_MIGHT_THROW), proto.prettyString ());
 	    }
 	    return Addresser::init (un.getLocation (), this-> _context.validateFunctionType (proto), proto);
+	}
+
+	Generator UnaryVisitor::validateDelegatePointer (const syntax::Unary & un, const Generator & gen) {
+	    // All this is probably over kill, there are two cases actually mutable and immutable, and there is no possibility that one works if the other does
+	    // So, I put that as it is, because it is thus totally safe if there is modification in the future, but a big optimization pass should be done 
+	    std::list <Error::ErrorMsg> errors;
+	    std::map <int, std::vector <Generator> > results;
+	    int highest = 0;
+	    for (auto & del : gen.to <MultSym> ().getGenerators ()) {
+		try {
+		    if (!del.is <DelegateValue> ()) this-> error (un, del);
+	    	     
+		    if (del.getThrowers ().size () != 0) {
+			std::list <Ymir::Error::ErrorMsg> notes;
+			for (auto &it : del.getThrowers ())
+			    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (THROWS), it.prettyString ()));
+			Ymir::Error::occurAndNote (un.getLocation (), notes, ExternalError::get (ADDR_MIGHT_THROW), del.prettyString ());	
+		    }
+	    
+		    auto funcPtr = del.to <DelegateValue> ().getFuncPtr ();
+		    auto proto = del.to <Value> ().getType ().to <Type> ().getInners ()[0];
+		    if (proto.is <MethodProto> ()) {
+			auto meth = proto.to <MethodProto> ();
+			Generator type (Generator::empty ());
+			if (meth.isMutable ()) {
+			    type = meth.getClassType ().to <Type> ().toDeeplyMutable ();
+			} else type = Type::init (meth.getClassType ().to <Type> (), meth.isMutable ());
+
+			try {
+			    // Verify that the delegate won't implicitly alias the closure
+			    this-> _context.verifyImplicitAlias (un.getLocation (), type, del.to <DelegateValue> ().getClosure ());
+			    this-> _context.verifyMemoryOwner (un.getLocation (), type, del.to <DelegateValue> ().getClosure (), true);
+			} catch (Error::ErrorList list) {
+			    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), del.to <Value> ().getType ().getLocation (), proto.prettyString ());
+			    auto err = Ymir::Error::makeOccurAndNote (un.getLocation (),
+								      note, 
+								      ExternalError::get (UNDEFINED_UN_OP),
+								      un.getLocation ().getStr (), 
+								      del.prettyString ()
+				);
+		   		    
+
+			    for (auto & i : list.errors)
+				err.addNote (i);
+			    throw Error::ErrorList {{err}};
+			}
+
+			auto llevel = del.to <DelegateValue> ().getClosure ().to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+			auto rlevel = type.to <Type> ().mutabilityLevel () + 1;
+			auto score = rlevel - llevel;
+			if (score > highest) highest = score;
+			
+			auto delType = Delegate::init (un.getLocation (), this-> _context.validateFunctionType (proto));
+			if (results.find (score) != results.end ())
+			    results[score].push_back (Value::init (del.to <Value> (), delType));
+			else results [score] = {Value::init (del.to <Value> (), delType)};
+		    }
+		} catch (Error::ErrorList list) {
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		}
+	    }
+
+	    auto elements = results.find (highest);
+	    if (elements == results.end ())
+		throw Error::ErrorList {errors};
+
+	    if (elements-> second.size () == 1) return elements-> second [0];
+	    else {
+		std::list <Error::ErrorMsg> notes;
+		for (auto & it : elements-> second)
+		    notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), CallVisitor::realLocation (it), CallVisitor::prettyName (it)));
+		
+		Ymir::Error::occurAndNote (un.getLocation (),
+					   notes,
+					   ExternalError::get (SPECIALISATION_WORK_WITH_BOTH_PURE),
+					   gen.prettyString ());
+	    }
+	    
+	    return Generator::empty ();
 	}
 	
 	void UnaryVisitor::error (const syntax::Unary & un, const generator::Generator & left) {

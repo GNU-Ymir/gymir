@@ -30,6 +30,12 @@ namespace semantic {
 	Generator Closure::clone () const {
 	    return Generator {new (NO_GC) Closure (*this)};
 	}
+
+	Generator Closure::createMutable (bool is) const {
+	    auto ret = this-> clone ();
+	    ret.to <Closure> ().setMutable (is);
+	    return ret;
+	}	
 		
 	bool Closure::equals (const Generator & gen) const {
 	    if (!gen.is<Closure> ()) return false;

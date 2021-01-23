@@ -3,10 +3,16 @@
 #include <ymir/semantic/generator/Value.hh>
 
 namespace semantic {
+
+    namespace validator {
+	class Visitor;
+    }
+    
     namespace generator {
 
 	class ParamVar;
 	class ProtoVar;
+	class GlobalVar;
 	
 	class VarDecl : public Value {	    
 
@@ -24,6 +30,8 @@ namespace semantic {
 
 	    friend ParamVar;
 	    friend ProtoVar;
+	    friend validator::Visitor;
+	    friend GlobalVar;
 	    
 	private :
 

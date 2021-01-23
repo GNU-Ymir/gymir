@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/GlobalVar.hh>
+#include <ymir/semantic/generator/value/VarDecl.hh>
 
 namespace semantic {
     namespace generator {
@@ -14,7 +15,10 @@ namespace semantic {
 	    _type (type),
 	    _value (value),
 	    _isMutable (isMutable)
-	{}
+	{
+	    this-> _varRefId = VarDecl::__lastId__;
+	    VarDecl::__lastId__ += 1;
+	}
 
 	Generator GlobalVar::init (const lexing::Word & location, const std::string & name, bool isMutable, const Generator & type, const Generator & value) {
 	    return Generator {new (NO_GC) GlobalVar (location, name, isMutable, type, value)};
@@ -36,6 +40,10 @@ namespace semantic {
 	    return this-> _value;
 	}
 		
+	uint GlobalVar::getUniqId () const {
+	    return _varRefId;
+	}
+
 	bool GlobalVar::equals (const Generator & other) const {
 	    if (!other.is <GlobalVar> ()) return false;
 	    else 

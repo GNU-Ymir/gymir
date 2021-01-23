@@ -177,7 +177,9 @@ namespace semantic {
 	       ) else of (Closure, c, {
 		       std::vector <Tree> inner;
 		       std::vector <std::string> fields = c.getNames ();
-		       for (auto & it : c.getInners ()) inner.push_back (generateType (it));
+		       for (auto & it : c.getInners ()) {
+			   inner.push_back (generateType (it));
+		       }
 		       type = Tree::tupleType (fields, inner);
 		   }
 	       ) else of (Delegate, d, {

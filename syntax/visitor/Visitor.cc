@@ -1165,7 +1165,7 @@ namespace syntax {
     Expression Visitor::visitOperand3 (bool canBeTemplateCall) {	
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
-
+	
 	if (begin == Keys::CAST)     return visitCast ();
 	if (begin == Keys::TEMPLATE) return visitTemplateChecker ();
 	if (begin == Token::LCRO)    return visitArray ();
@@ -1190,8 +1190,8 @@ namespace syntax {
 	    return visitDecoratedExpression ();
 	}
 	
-	if (can (&Visitor::visitVar))  return visitVar (canBeTemplateCall);       
-	return visitLiteral ();
+	if (can (&Visitor::visitLiteral))  return visitLiteral ();
+	return visitVar (canBeTemplateCall);
     }    
 
     Expression Visitor::visitArray () {
@@ -1534,9 +1534,6 @@ namespace syntax {
 	}
 	
 	auto content = visitExpression (10);
-	// Lambda if deco is REF
-	if (content.is<Lambda> () && decos.size () == 1 && decos [0].getValue () == Decorator::REF)
-	    return Lambda::refClosure (content);
 	return DecoratedExpression::init (content.getLocation (), decos, content);	
     }
 
@@ -1548,7 +1545,9 @@ namespace syntax {
 	auto name = visitIdentifier ();
 	if (canBeTemplateCall) {
 	    return visitTemplateCall (Var::init (name));
-	} else return Var::init (name);	
+	}
+	
+	return Var::init (name);	
     }
 
     Expression Visitor::visitTemplateCall (const Expression & left) {

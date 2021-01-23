@@ -89,6 +89,13 @@ namespace semantic {
 	     * \param proto the frame prototype
 	     */
 	    generator::Generator validateFunctionPointer (const syntax::Unary & un, const generator::Generator & proto);
+
+	    /**
+	     * \brief Validate a delegate pointer from a delegate value
+	     * \param un the operation
+	     * \param del the delegate value
+	     */
+	    generator::Generator validateDelegatePointer (const syntax::Unary & un, const generator::Generator & del);
 	    
 	    /**
 	     * \brief Transform the token into the right operator

@@ -91,7 +91,7 @@ namespace semantic {
 	     * \brief Change the id of the generator
 	     * \brief This in principal is only used when we need to refer to VarDecl for which the type is not totally knwon yet (\ie Lambda closure)
 	     */
-	    void setUniqId (uint id);
+	    virtual void setUniqId (uint id);
 	    
 	    /**
 	     * \brief Reset the count of uniq ids

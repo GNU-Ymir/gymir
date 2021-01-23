@@ -62,7 +62,7 @@ namespace semantic {
 		for (auto & it : this-> _inners) {
 		    if (!it.isEmpty ())
 			inners.push_back (Type::init (it.to <Type> (), false, false));
-		    // inner types are never ref, but for lambdas, funcptr and delegate but they override this func
+		    // inner types are never ref, but for lambdas, closure, funcptr and delegate but they override this func
 		    else inners.push_back (it);
 		} 
 	    } else inners = this-> _inners;

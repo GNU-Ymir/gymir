@@ -93,9 +93,13 @@ namespace semantic {
 	    } else {
 		auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		auto merge = mergeMappers (prevMapper, globalMapper);
-
-		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);	
-		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
+		try {
+		    merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);	
+		    merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
+		} catch (Error::ErrorList list) {
+		    list.errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
+		    throw list;
+		}
 		
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
 		
@@ -211,7 +215,7 @@ namespace semantic {
 				Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
 			    } else {
 				Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-						    var.prettyString (),
+						    var.prettyString (),						    
 						    NoneType::init (var.getLocation ()).prettyString ());
 			    }
 			    
@@ -428,9 +432,13 @@ namespace semantic {
 	    if (globalMapper.succeed) {
 		auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to <Template> ().getSpecNameOrder ());
 		auto merge = mergeMappers (prevMapper, globalMapper);
-		
-		merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
-		merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
+		try {
+		    merge.mapping = validateLambdaProtos (sym.to <Template> ().getPreviousParams (), merge.mapping);
+		    merge.nameOrder = sortNames (sym.to<Template> ().getPreviousParams (), merge.mapping);
+		} catch (Error::ErrorList list) {
+		    list.errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
+		    throw list;
+		}
 		
 		syntaxTempl = replaceSyntaxTempl (syntaxTempl, merge.mapping);
 		
@@ -442,6 +450,7 @@ namespace semantic {
 			    ExternalError::get (UNRESOLVED_TEMPLATE)
 			));					  
 		    }
+		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
 		    throw Error::ErrorList {errors};
 		}
 
@@ -577,7 +586,7 @@ namespace semantic {
 			consumed += 1;			
 			auto type = types [0];
 			
-			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size ()) {
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size () && !type.is <ClassPtr> ()) {
 			    Mapper mapper (false, 0);
 			    auto syntaxParam = lst.getParameters ();
 			    int current_consumed = 0;
@@ -609,7 +618,7 @@ namespace semantic {
 			    return mapper;
 			} else {
 			    Ymir::Error::occur (leftT.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-						NoneType::init (leftT.getLocation ()).to <Type> ().getTypeName (),
+						lst.prettyString (),
 						type.to<Type> ().getTypeName ());
 
 			}
@@ -962,7 +971,7 @@ namespace semantic {
 			}			
 		    }
 		) else of (syntax::List, lst, {
-			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size ()) {
+			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size () && !type.is <ClassPtr> ()) {
 			    Mapper mapper (false, 0);
 			    auto syntaxParam = lst.getParameters ();
 			    int current_consumed = 0;
@@ -1002,7 +1011,7 @@ namespace semantic {
 			    return mapper;
 			} else {
 			    Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-						NoneType::init (ofv.getLocation ()).to <Type> ().getTypeName (),
+						lst.prettyString (), 
 						type.to<Type> ().getTypeName ());
 			}
 		    }
@@ -1046,7 +1055,7 @@ namespace semantic {
 			    return mergeMappers (mapper, mp);
 			} else {
 			    Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-						NoneType::init (ofv.getLocation ()).to <Type> ().getTypeName (),
+						fPtr.prettyString (), 
 						type.to<Type> ().getTypeName ());
 			}
 		    }		   
@@ -1077,7 +1086,7 @@ namespace semantic {
 			    return mapper;
 			} else {
 			    Ymir::Error::occur (arr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-						NoneType::init (ofv.getLocation ()).to <Type> ().getTypeName (),
+						arr.prettyString (),
 						type.to<Type> ().getTypeName ());
 			}
 		    }
@@ -1152,8 +1161,7 @@ namespace semantic {
 			    auto vec = {type};
 			    Mapper mapper = applyTypeFromExplicit (params, expr, array_view <Generator> (vec), consumed);
 			    auto realType = this-> replaceAll (implv.getType (), mapper.mapping);			    
-			    auto genType = this-> _context.validateType (realType, true);
-			    this-> _context.verifyClassImpl (implv.getLocation (), type, genType);
+			    this-> _context.verifyClassImpl (implv.getLocation (), type, realType);
 			    
 			    mapper.mapping.emplace (implv.getLocation ().getStr (), createSyntaxType (implv.getLocation (), type));
 			    mapper.nameOrder.push_back (implv.getLocation ().getStr ());
@@ -1168,9 +1176,8 @@ namespace semantic {
 			    try {
 				int current_consumed = 0;
 				auto loc_mapper = validateTypeFromTemplCall (params, cl, trait, current_consumed);		
-				Expression realType = this-> replaceAll (implv.getType (), loc_mapper.mapping);
-				auto genType = this-> _context.validateType (realType, true);
-				this-> _context.verifyClassImpl (implv.getLocation (), type, genType);
+				Expression realType = this-> replaceAll (implv.getType (), loc_mapper.mapping);				
+				this-> _context.verifyClassImpl (implv.getLocation (), type, realType);
 				mapper = mergeMappers (loc_mapper, mapper);
 			    } catch (Error::ErrorList list) {				
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -1194,29 +1201,28 @@ namespace semantic {
 		    }
 		) else of (syntax::List, lst, {
 			Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    lst.prettyString (),
 					    type.to<Type> ().getTypeName ());		    
 		    }
 		) else of (syntax::FuncPtr, fPtr, {
 			Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    fPtr.prettyString (),
 					    type.to<Type> ().getTypeName ());			
 		    }		   
 		) else of (syntax::ArrayAlloc, arr, {
 			Ymir::Error::occur (arr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    arr.prettyString (),
 					    type.to<Type> ().getTypeName ());		    
 		    }
 		) else of (DecoratedExpression, dc, {
 			Ymir::Error::occur (dc.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
-					    NoneType::init (implv.getLocation ()).to <Type> ().getTypeName (),
+					    dc.prettyString (),
 					    type.to<Type> ().getTypeName ());	
 		    }
 		);
 	    }
 	    
-	    auto left = this-> _context.validateType (implv.getType (), true);
-	    this-> _context.verifyClassImpl (implv.getLocation (), type, left);
+	    this-> _context.verifyClassImpl (implv.getLocation (), type, implv.getType ());
 	    Mapper mapper (true, Scores::SCORE_TYPE);
 	    this-> _context.verifyNotIsType (implv.getLocation ());
 			    
@@ -2132,9 +2138,9 @@ namespace semantic {
 				this-> _context.verifySameType (type, auxType.to <Value> ().getType ());
 			    }
 			}
-		    );
+			);
 		}
-	    }
+	    }	    
 
 	    if (!test.isEmpty ()) {
 		auto value = this-> _context.validateTemplateTest (context, replaceAll (test, mapper.mapping));
@@ -2172,7 +2178,7 @@ namespace semantic {
 		for (auto & it : decl.getDeclarations ())
 		    decls.push_back (replaceAll (it, mapping, ref));
 		
-		return syntax::DeclBlock::init (decl.getLocation (), "", decls, true, false);
+		return syntax::DeclBlock::init (decl.getLocation (), "", decls, false, true);
 	    } else if (!decl.getElse ().isEmpty () && decl.getElse ().is <CondBlock> ()) {
 		return replaceAll (ref, decl.getElse ().to <CondBlock> (), mapping);
 	    } else if (!decl.getElse ().isEmpty ()) {
@@ -2197,7 +2203,7 @@ namespace semantic {
 		int i = 0;
 		for (auto & it : mapper.nameOrder) {
 		    if (i != 0)
-			buf.write (",");
+			buf.write (", ");
 		    buf.writef ("% = %", it, mapper.mapping.find (it)-> second.prettyString ());
 		    i += 1;
 		}

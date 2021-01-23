@@ -39,8 +39,8 @@ namespace semantic {
 	    return this-> _uniqId;
 	}
 
-	void IGenerator::setUniqId (uint id)  {
-	    this-> _uniqId = id;
+	void IGenerator::setUniqId (uint)  {
+	    Ymir::Error::halt ("%(r) Setting uniq id of none Var", "Critical");
 	}
 	
 	void IGenerator::resetIdCount () {

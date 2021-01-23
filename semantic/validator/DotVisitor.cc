@@ -322,10 +322,17 @@ namespace semantic {
 			of (Template, tl, {
 				if (tl.getName () == name) {
 				    if ((i == 0 && prv) || (prot && it.isProtected ()) || it.isPublic ()) {
+					auto realRef = left.to <Value> ().getType ();
+					auto innerRealRef = realRef.to <ClassPtr> ().getInners ()[0];
+					
+					auto parentClRef = cl.to <generator::Class> ().getClassRef ();
+					auto parentRef = ClassPtr::init (cl.getLocation (), Type::init (parentClRef.to <Type> (), innerRealRef.to <Type> ().isMutable (), false));
+					parentRef = Type::init (parentRef.to <Type> (), realRef.to <Type> ().isMutable (), false);
+					
 					// We cast it, because the parent method must be validated with parent class ref					    
-					auto castedRef = Cast::init (left.getLocation (), clRef, left);
+					auto castedRef = Cast::init (left.getLocation (), parentRef, left);
 					if (left.is <Aliaser> ()) {
-					    castedRef = Aliaser::init (castedRef.getLocation (), clRef, left);
+					    castedRef = Aliaser::init (castedRef.getLocation (), parentRef, castedRef);
 					}
 					
 					syms.push_back (

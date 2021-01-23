@@ -50,6 +50,10 @@ namespace semantic {
 	uint ParamVar::getUniqId () const {
 	    return _varRefId;
 	}
+
+	void ParamVar::setUniqId (uint id) {
+	    this-> _varRefId = id;
+	}
 	
 	std::string ParamVar::prettyString () const {
 	    if (this-> _isMutable) 

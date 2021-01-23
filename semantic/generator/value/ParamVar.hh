@@ -54,6 +54,11 @@ namespace semantic {
 	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
 	     */
 	    uint getUniqId () const override;
+
+	    /**
+	     * Change the ref id of the var ref (used in closure)
+	     */
+	    void setUniqId (uint varRefId) override;
 	    
 	    std::string prettyString () const override;
 	};

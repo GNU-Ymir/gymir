@@ -18,6 +18,8 @@ namespace semantic {
 	     * The global var is mutable? 
 	     */
 	    bool _isMutable;
+
+	    uint _varRefId;
 	    
 	private :
 
@@ -59,6 +61,11 @@ namespace semantic {
 	     */
 	    const Generator & getType () const;
 
+	    /**
+	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
+	     */
+	    uint getUniqId () const override;
+	    
 	    /**
 	     * \return the value of the var
 	     */

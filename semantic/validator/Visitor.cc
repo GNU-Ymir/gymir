@@ -145,6 +145,7 @@ namespace semantic {
 				validateTemplateSolution (sol);
 			    } catch (Error::ErrorList list) {
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+				removeTemplateSolution (sym); // If there is an error, we don't wan't to store the template solution anymore
 			    } 
 			
 			    popReferent ("validate::tmpl");
@@ -285,6 +286,7 @@ namespace semantic {
 		    nb_recur_template -= 1;
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    removeTemplateSolution (sol); // If there is an error, we don't want to store the solution anymore
 		} 
 	    
 		exitForeign ();
@@ -305,7 +307,7 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {
 		errors = list.errors;
 	    }
-
+	    
 	    popReferent ("validateTemplateSolutionMethodProto");
 	    
 	    if (errors.size () != 0) {
@@ -1919,7 +1921,7 @@ namespace semantic {
 				throw Error::ErrorList {errors};
 			    }
 			    if (!sec_ret.isEmpty ()) ret = sec_ret;
-			} else if (!fromCall && ret.is <DelegateValue> () && ret.to <DelegateValue> ().getType ().to<Type> ().getInners ()[0].is <FrameProto> ()) { // Template method proto
+			} else if (!fromCall && ret.is <DelegateValue> () && ret.to <DelegateValue> ().getType ().to<Type> ().getInners ()[0].is <FrameProto> ()) { // Template method proto, and dot template calls
 			    std::list <Ymir::Error::ErrorMsg> errors;
 			    int score;
 			    auto visit = CallVisitor::init (*this);			    
@@ -2414,9 +2416,15 @@ namespace semantic {
 		auto dotVisitor = DotVisitor::init (*this);
 		return dotVisitor.validate (bin, isFromCall);
 	    } else if (bin.getLocation () == Token::DOT_AND) {
-		auto intr = syntax::Intrinsics::init (lexing::Word::init (bin.getLocation (), Keys::ALIAS), bin.getLeft ());
-		auto n_bin = syntax::Binary::init (lexing::Word::init (bin.getLocation (), Token::DOT), intr, bin.getRight (), bin.getType ());
-		return this-> validateBinary (n_bin.to <syntax::Binary> (), isFromCall);
+		try {
+		    auto intr = syntax::Intrinsics::init (lexing::Word::init (bin.getLocation (), Keys::ALIAS), bin.getLeft ());
+		    auto n_bin = syntax::Binary::init (lexing::Word::init (bin.getLocation (), Token::DOT), intr, bin.getRight (), bin.getType ());
+		    return this-> validateBinary (n_bin.to <syntax::Binary> (), isFromCall);
+		} catch (Error::ErrorList list) {
+		    auto note = Ymir::Error::createNote (bin.getLocation ());
+		    list.errors.back ().addNote (note);
+		    throw list;
+		}
 	    } else {
 		auto binVisitor = BinaryVisitor::init (*this);
 		return binVisitor.validate (bin);
@@ -2532,7 +2540,7 @@ namespace semantic {
 				}
 				succ = true;
 			    }
-			) else of (semantic::VarDecl, decl, {
+			 ) else of (semantic::VarDecl, decl, {
 				validateVarDecl (sym);
 				auto gen = decl.getGenerator ().to <GlobalVar> ();
 				Generator value (Generator::empty ());
@@ -2816,6 +2824,9 @@ namespace semantic {
 					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), throwers);
 	    
 	    frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);
+	    if (		frame.prettyString () == "(&(main::MyThread)) => std::concurrency::thread::Thread::send([i32])::send (x : [i32])-> void")
+		Ymir::Error::halt ("", "");
+	    
 	    return frame;
 	}
 
@@ -3735,9 +3746,24 @@ namespace semantic {
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return "";
 	}
+
+	// Generator Visitor::validateDotTemplateCall (const syntax::TemplateCall & bin) {
+	//     auto right = bin.getContent ().to <syntax::Binary> ().getRight ();
+	//     auto rightTmpl = syntax::TemplateCall::init (bin.getLocation (), bin.getParameters (), right);
+	//     auto leftTmpl = bin.getContent ().to<syntax::Binary> ().getLeft ();
+	//     auto bin = syntax::Binary::init (bin.getContent ().getLocation (),
+	// 				     leftTmpl,
+	// 				     rightTmpl,
+	// 				     syntax::Expression::empty ()
+	// 	);
+	//     try {
+		
+	//     }
+	// }
 	
 	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {
 	    auto value = this-> validateValue (tcl.getContent (), false, true);
+
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    std::vector <Generator> params;
 	    for (auto & it : tcl.getParameters ()) {
@@ -3767,7 +3793,7 @@ namespace semantic {
 	    
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
-	    
+
 	    if (value.is <TemplateRef> ()) {
 		Generator ret (Generator::empty ());
 		Visitor::__CALL_NB_RECURS__ += 1;
@@ -3792,7 +3818,7 @@ namespace semantic {
 		    errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), value.getLocation (), value.prettyString ()));
 		} else return ret;
 		
-	    } else if (value.is<MultSym> ()) {		
+	    } else if (value.is<MultSym> ()) {
 		int all_score = -1; 
 		Symbol final_sym (Symbol::empty ());
 		std::map <int, std::vector <Symbol>> loc_scores;
@@ -3828,7 +3854,7 @@ namespace semantic {
 			}
 		    }
 		}
-		
+				
 		if (loc_scores.size () != 0) { 
 		    errors = {};
 		    Generator ret (Generator::empty ());
@@ -3841,7 +3867,7 @@ namespace semantic {
 			std::vector <Generator> types;
 			try {
 			    this-> validateTemplateSymbol (element_on_scores [it], loc_elem.find ((int) all_score)-> second [it]);
-			    if (location_elems [it].is<MethodTemplateRef> ()) {
+			    if (location_elems [it].is<MethodTemplateRef> ()) { 
 			    	if (element_on_scores [it].is <TemplateSolution> ()) {
 			    	    auto self = location_elems [it].to <MethodTemplateRef> ().getSelf ();
 			    	    auto proto = this-> validateTemplateSolutionMethod (element_on_scores [it], self);
@@ -4141,7 +4167,8 @@ namespace semantic {
 	    {
 		try {		    
 		    this-> setCurrentFuncType (retType);
-		    refId = Generator::getLastId ();
+		    refId = generator::VarDecl::__lastId__;
+		    generator::VarDecl::__lastId__ += 1;
 		    if (proto.isRefClosure () || proto.isMoveClosure ())
 			this-> enterClosure (proto.isRefClosure (), refId, proto.getClosureIndex ());
 			    
@@ -4250,7 +4277,7 @@ namespace semantic {
 				innerValues.push_back (Referencer::init (loc, Type::init (type.to <Type> (), type.to <Type> ().isMutable (), true), varRef));
 			    } else
 				innerValues.push_back (varRef);
-			    
+
 			    innerTypes.push_back (type);
 			} else if (ptr-> second.is <generator::VarDecl> ()) {
 			    auto type = ptr-> second.to <generator::VarDecl> ().getVarType ();
@@ -4264,10 +4291,13 @@ namespace semantic {
 				varRef = VarRef::init (loc, name, type, ptr-> second.getUniqId (), false, value);
 				innerValues.push_back (varRef);
 			    }
+			    
 			    innerTypes.push_back (type);
 			} else if (ptr-> second.is <StructAccess> ()) {
 			    innerValues.push_back (ptr-> second);
-			    innerTypes.push_back (ptr-> second.to <Value> ().getType ());
+			    
+			    auto type = ptr-> second.to <Value> ().getType ();
+			    innerTypes.push_back (type);
 			}
 			break; // We found it, go to the the next enclosure
 		    }
@@ -4846,7 +4876,7 @@ namespace semantic {
 	Generator Visitor::getInClosure (const std::string & name) {
 	    if (!isInClosure ()) return Generator::__empty__;
 	    auto closureType = this-> getLocal ("#{CLOSURE-TYPE}", false);
-	    bool isRefClosure = this-> getLocal ("#{CLOSURE}").to <BoolValue> ().getValue ();
+	    //bool isRefClosure = this-> getLocal ("#{CLOSURE}").to <BoolValue> ().getValue ();
 	    auto field = closureType.to <Closure> ().getField (name);
 	    if (field.isEmpty ()) { // need to get it from upper closure
 		auto & syms = this-> _symbols [closureType.to <Closure> ().getIndex ()];
@@ -4861,7 +4891,6 @@ namespace semantic {
 			} else type = ptr-> second.to <Value> ().getType ();
 			
 			auto types = closureType.to <Type> ().getInners ();
-			type = Type::init (type.to <Type> (), false, isRefClosure);
 			
 			auto names = closureType.to <Closure> ().getNames ();
 			types.push_back (type);
@@ -4872,7 +4901,8 @@ namespace semantic {
 			
 			insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-TYPE}", closureType);
 			auto closureRef = this-> getLocal ("#{CLOSURE-VARREF}", false);
-			insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-VARREF}", VarRef::init (lexing::Word::eof (), "#{CLOSURE-VARREF}", closureType, closureRef.to <VarRef> ().getRefId (), false, Generator::empty ()));			
+			insert_or_assign (this-> _symbols.back ()[0], "#{CLOSURE-VARREF}", VarRef::init (lexing::Word::eof (), "#{CLOSURE-VARREF}", closureType, closureRef.to <VarRef> ().getRefId (), false, Generator::empty ()));
+			
 			return StructAccess::init (lexing::Word::eof (), type, this-> getLocal ("#{CLOSURE-VARREF}", false), name);
 		    }
 		}
@@ -5319,6 +5349,29 @@ namespace semantic {
 	    }
 	}
 
+	Generator Visitor::validateTypeClassContext (const lexing::Word & loc, const Generator & cl, const syntax::Expression & type) {
+	    auto sym = cl.to <ClassPtr> ().getInners ()[0].to <ClassRef> ().getRef ();
+	    Generator gen (Generator::empty ());
+	    std::list <Error::ErrorMsg> errors;
+	    
+	    pushReferent (sym, "validateTypeClContext");	    
+	    try {
+		gen = this-> validateType (type, true);
+	    } catch (Error::ErrorList list) {
+		errors = list.errors;
+	    }
+	    popReferent ("validateTypeClContext");
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+	    
+	    return gen;	    
+	}
+
+	void Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const syntax::Expression & trait) {
+	    auto type = this-> validateTypeClassContext (loc, cl, trait);
+	    return verifyClassImpl (loc, cl, type);
+	}
+	
 	void Visitor::verifyClassImpl (const lexing::Word & loc, const Generator & cl, const Generator & trait) {
 	    if (!trait.is <TraitRef> ()) {
 		Ymir::Error::occur (trait.getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
@@ -5570,6 +5623,15 @@ namespace semantic {
 	    
 	    this-> _templateSolutions.push_back (sol);
 	    return true;
+	}
+
+	void Visitor::removeTemplateSolution (const Symbol & sol) {
+	    std::vector <Symbol> res;
+	    for (auto & it : this-> _templateSolutions) {
+		if (!it.equals (sol)) res.push_back (it);
+	    }
+
+	    this-> _templateSolutions = res;
 	}
 	
 	std::vector <Symbol> Visitor::getGlobal (const std::string & name) {					       

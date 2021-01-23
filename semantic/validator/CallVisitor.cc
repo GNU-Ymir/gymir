@@ -894,7 +894,6 @@ namespace semantic {
 		    auto delValue = DelegateValue::init (proto_gen.getLocation(),
 							 delType, proto_gen.to <MethodProto> ().getClassType (),
 							 self, proto_gen);
-
 		    
 		    ret = validateDelegate (location, delValue, finalParams, _score, errors);
 		} else {
@@ -1008,16 +1007,31 @@ namespace semantic {
 	    else return Generator::empty ();	    
 	}
 	
-	Generator CallVisitor::validateDotCall (const syntax::Expression & exp, std::vector <Generator> & params, const std::list <Ymir::Error::ErrorMsg> & errors) {
+	Generator CallVisitor::validateDotCall (const syntax::Expression & exp, std::vector <Generator> & params, const std::list <Ymir::Error::ErrorMsg> & errors) {	    
 	    Generator right (Generator::empty ());
 	    Generator left (Generator::empty ());
-	    if (!exp.is <syntax::Binary> () || exp.to <syntax::Binary> ().getLocation () != Token::DOT) throw Error::ErrorList {errors};
-	    auto bin = exp.to <syntax::Binary> ();
+	    syntax::Expression synthBin (syntax::Expression::empty ());
+
+	    if (exp.is <syntax::TemplateCall> () && exp.to <syntax::TemplateCall> ().getContent ().is <syntax::Binary> () && exp.to <syntax::TemplateCall> ().getContent ().getLocation () == Token::DOT) {
+		auto leftBin = exp.to <syntax::TemplateCall> ().getContent ().to <syntax::Binary> ().getLeft ();
+		auto rightBin = exp.to <syntax::TemplateCall> ().getContent ().to <syntax::Binary> ().getRight ();
+		auto rightTmpl = syntax::TemplateCall::init (exp.getLocation (), exp.to <syntax::TemplateCall> ().getParameters (), rightBin);
+		synthBin = syntax::Binary::init (exp.to <syntax::TemplateCall> ().getContent ().getLocation (),
+					    leftBin,
+					    rightTmpl,
+					    syntax::Expression::empty ());
+		
+	    } else if  (exp.is <syntax::Binary> () && exp.to <syntax::Binary> ().getLocation () == Token::DOT) {
+		synthBin = exp;
+	    } else throw Error::ErrorList {errors};
+
+	    auto bin = synthBin.to <syntax::Binary> ();
 
 	    try {		
 		left = this-> _context.validateValue (bin.getLeft ());
 	    } catch (Error::ErrorList list) {}       
 
+	    
 	    if (left.isEmpty ())  
 		throw Error::ErrorList {errors};	    
 	    else if (left.to <Value> ().getType ().is<ClassPtr> ()) {
@@ -1038,6 +1052,7 @@ namespace semantic {
 				    cl.getLocation (), cl.getParameters (),
 				    TemplateSyntaxWrapper::init (inner_value.getLocation (), inner_value)
 				);
+				
 				right = this-> _context.validateValue (n_bin);
 			    }
 			);
@@ -1052,13 +1067,19 @@ namespace semantic {
 		    throw Error::ErrorList {localErrors};
 		}
 	    }
-
 	    
 	    if (right.isEmpty ()) {
 		try {
 		    right = this-> _context.validateValue (bin.getRight ());		    
 		    params.push_back (left);
-		} catch (Error::ErrorList list) {}	    		    		
+		} catch (Error::ErrorList list) {
+		    std::list <Ymir::Error::ErrorMsg> copyErrors = errors;
+		    copyErrors.back ().addNote (Ymir::Error::createNoteOneLine (ExternalError::get (UFC_REWRITING)));
+		    for (auto & it : list.errors)
+			copyErrors.back ().addNote (it);
+
+		    throw Error::ErrorList {copyErrors};
+		}	    		    		
 
 		if (right.isEmpty ())
 		    throw Error::ErrorList {errors};

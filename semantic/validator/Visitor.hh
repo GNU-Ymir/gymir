@@ -756,6 +756,11 @@ namespace semantic {
 	     * \param rigth a type
 	     */
 	    void verifySameType (const generator::Generator & left, const generator::Generator & right);
+	    
+	    /**
+	     * \brief Verify that the class cl implement the trait tr
+	     */
+	    void verifyClassImpl (const lexing::Word & loc, const generator::Generator & cl, const syntax::Expression & tr);
 
 	    /**
 	     * \brief Verify that the class cl implement the trait tr
@@ -1074,6 +1079,11 @@ namespace semantic {
 	    bool insertTemplateSolution (const semantic::Symbol & sol);
 
 	    /**
+	     * \brief Remove a template solution 
+	     */
+	    void removeTemplateSolution (const semantic::Symbol & sol);
+	    
+	    /**
 	     * \brief this-> _referent.push_back (sym)
 	     */
 	    void pushReferent (const semantic::Symbol & sym, const std::string & msg);
@@ -1096,6 +1106,8 @@ namespace semantic {
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
 
 	    generator::Generator getCommonAncestor (const generator::Generator & left, const generator::Generator & right);
+
+	    generator::Generator validateTypeClassContext (const lexing::Word & loc, const generator::Generator & cl, const syntax::Expression & type);
 	    
 	    void printLocal () const;
 	    
