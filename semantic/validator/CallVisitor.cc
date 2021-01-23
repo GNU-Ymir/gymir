@@ -1,6 +1,7 @@
 #include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/semantic/validator/TemplateVisitor.hh>
 #include <ymir/global/State.hh>
+#include <ymir/syntax/visitor/Keys.hh>
 #include <chrono>
 
 namespace semantic {
@@ -1008,10 +1009,16 @@ namespace semantic {
 	}
 	
 	Generator CallVisitor::validateDotCall (const syntax::Expression & exp, std::vector <Generator> & params, const std::list <Ymir::Error::ErrorMsg> & errors) {	    
+	    if (exp.is <syntax::Binary> () && exp.getLocation () == Token::DOT_AND) {
+		auto intr = syntax::Intrinsics::init (lexing::Word::init (exp.getLocation (), Keys::ALIAS), exp.to<syntax::Binary> ().getLeft ());
+		auto n_bin = syntax::Binary::init (lexing::Word::init (exp.getLocation (), Token::DOT), intr, exp.to <syntax::Binary> ().getRight (), exp.to <syntax::Binary> ().getType ());
+		return validateDotCall (n_bin, params, errors);
+	    }
+	    
 	    Generator right (Generator::empty ());
 	    Generator left (Generator::empty ());
 	    syntax::Expression synthBin (syntax::Expression::empty ());
-
+	    
 	    if (exp.is <syntax::TemplateCall> () && exp.to <syntax::TemplateCall> ().getContent ().is <syntax::Binary> () && exp.to <syntax::TemplateCall> ().getContent ().getLocation () == Token::DOT) {
 		auto leftBin = exp.to <syntax::TemplateCall> ().getContent ().to <syntax::Binary> ().getLeft ();
 		auto rightBin = exp.to <syntax::TemplateCall> ().getContent ().to <syntax::Binary> ().getRight ();
@@ -1030,7 +1037,6 @@ namespace semantic {
 	    try {		
 		left = this-> _context.validateValue (bin.getLeft ());
 	    } catch (Error::ErrorList list) {}       
-
 	    
 	    if (left.isEmpty ())  
 		throw Error::ErrorList {errors};	    
@@ -1055,7 +1061,7 @@ namespace semantic {
 				
 				right = this-> _context.validateValue (n_bin);
 			    }
-			);
+			) else succ = true;
 		    }
 		} catch (Error::ErrorList list) {		    
 		    if (succ) { // If we failed, we failed after the DotOp, so the failure is due to template call
