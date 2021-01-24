@@ -26,9 +26,10 @@ namespace semantic {
 	    return Generator {new (NO_GC) Class (loc, ref, clRef)};
 	}
 
-	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields) {
+	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields) {
 	    auto ret = other.clone ();
 	    ret.to <Class> ()._fields = fields;
+	    ret.to <Class> ()._localFields = localFields;
 	    return ret;
 	}
 
@@ -53,6 +54,10 @@ namespace semantic {
 	    return this-> _fields;
 	}
 
+	const std::vector <generator::Generator> & Class::getLocalFields () const {
+	    return this-> _localFields;
+	}
+	
 	Generator Class::getFieldType (const std::string & name) const {
 	    Generator type (Generator::empty ());
 

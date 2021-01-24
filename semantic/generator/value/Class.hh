@@ -24,6 +24,8 @@ namespace semantic {
 
 	    std::vector <generator::Generator> _fields;
 
+	    std::vector <generator::Generator> _localFields;
+
 	    std::vector <generator::Generator> _vtable;
 
 	    std::vector <MethodProtection> _prots;
@@ -44,7 +46,7 @@ namespace semantic {
 	    
 	    static Generator init (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
 
-	    static Generator initFields (const Class & other, const std::vector <generator::Generator> & fields);
+	    static Generator initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields);
 
 	    static Generator initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots);
 	    
@@ -62,11 +64,16 @@ namespace semantic {
 	    std::string getName () const;
 
 	    /**
-	     * \return the fields of the structure
+	     * \return the fields of the class
 	     */
 	    const std::vector <generator::Generator> & getFields () const;
 
 
+	    /**
+	     * \return the fields that have been declared in the class and not inside ancestors
+	     */
+	    const std::vector <generator::Generator> & getLocalFields () const;
+	    
 	    /**
 	     * \return the field type of the field named name, or empty if this class does not have a field named name
 	     * \warning this is only applicable for fields not for methods

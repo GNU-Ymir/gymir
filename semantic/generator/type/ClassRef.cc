@@ -7,8 +7,10 @@
 namespace semantic {
     namespace generator {
 
-	const std::string ClassRef::INIT_NAME = "new";
-	const std::string ClassRef::TUPLEOF   = "tupleof";
+	const std::string	ClassRef::DIRECT_TUPLEOF = "local_tupleof";
+	const std::string	ClassRef::INIT_NAME	 = "new";
+	const std::string	ClassRef::SUPER		 = "super";
+	const std::string	ClassRef::TUPLEOF	 = "tupleof";
 	
 	ClassRef::ClassRef () :
 	    Type (),

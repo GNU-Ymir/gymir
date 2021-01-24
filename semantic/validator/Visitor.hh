@@ -151,7 +151,7 @@ namespace semantic {
 	     * \warning This does not validate the body of the method, see validateMethod 
 	     * \param i by return, is the index where the prototype has been put in the vtable
 	     */
-	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, int & i);
+	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, int & i, bool inImpl = false);
 	    
 	    /**
 	     * \brief Validate a class constructor
@@ -497,7 +497,7 @@ namespace semantic {
 	     * \brief Validate the method prototype of a method in order to refer to it
 	     * \param mt the method to validate
 	     */
-	    generator::Generator validateMethodProto (const semantic::Function & mt, const generator::Generator &classType);
+	    generator::Generator validateMethodProto (const semantic::Function & mt, const generator::Generator &classType, bool inImpl = false);
 
 	    /**
 	     * \brief Transform a frameProto into a FuncPtr type

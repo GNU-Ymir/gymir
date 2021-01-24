@@ -679,12 +679,42 @@ namespace semantic {
 			prv = false;
 		    } else
 			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+		    if (prv) { // local tupleof exists only inside class definition
+			std::vector <Generator> types;
+			std::vector <Generator> params;
+			std::list <Ymir::Error::ErrorMsg> errors;
+			auto dot_visit = DotVisitor::init (this-> _context);
+			for (auto & field : cl.to <generator::Class> ().getFields ()) {			
+			    auto name = field.to <generator::VarDecl> ().getName ();
+			    auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
+			    if (!field_access.isEmpty ()) {
+				auto type = Type::init (field_access.to <Value> ().getType ().to <Type> (), false);
+			    
+				params.push_back (field_access);
+				types.push_back (type);
+			    }
+			}
+
+			auto tuple = Tuple::init (expression.getLocation (), types);
+			tuple = Type::init (tuple.to <Type> (), false);
+		    
+			return TupleValue::init (expression.getLocation (), tuple, params);
+		    } else return Generator::empty ();
+		} else if (opName == ClassRef::DIRECT_TUPLEOF) {
+		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
+		    bool prv = false, prot = false;
+
+		    if (value.to<Value> ().getType ().is <ClassProxy> ()) {
+			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
+			prv = false;
+		    } else
+			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
 
 		    std::vector <Generator> types;
 		    std::vector <Generator> params;
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		    auto dot_visit = DotVisitor::init (this-> _context);
-		    for (auto & field : cl.to <generator::Class> ().getFields ()) {			
+		    for (auto & field : cl.to <generator::Class> ().getLocalFields ()) {			
 			auto name = field.to <generator::VarDecl> ().getName ();
 			auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
 			if (!field_access.isEmpty ()) {
@@ -699,14 +729,29 @@ namespace semantic {
 		    tuple = Type::init (tuple.to <Type> (), false);
 		    
 		    return TupleValue::init (expression.getLocation (), tuple, params);
-		} 				
+		} else if (opName == ClassRef::SUPER) {
+		    bool prv = false, prot = false;
+		    if (!value.to <Value> ().getType ().is <ClassProxy> ()) {
+			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+			if (prv) {
+			    auto ancestor = value.to <Value>().getType ().to <ClassPtr> ().getInners ()[0].to <ClassRef> ().getAncestor ();
+			    if (!ancestor.isEmpty ()) {
+				auto clRef = value.to<Value> ().getType ().to <Type> ().getInners () [0];
+				auto inner = Type::init (ancestor.to <Type> (), clRef.to <Type> ().isMutable ()); // mutability of the inner ref
+				// mutability of ref
+				auto proxyType = Type::init (ClassProxy::init (expression.getLocation (), inner, clRef).to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
+				return Value::init (value.to <Value> (), proxyType);			
+			    }
+			}
+		    }
+		}
 	    }
 
 	    bool prv = false, prot = false;
 	    if (!value.to <Value> ().getType ().is <ClassProxy> ()) {
 		this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
 	    
-		if (prv) { // Class proxy
+		if (prv) { // can Class proxy
 		    auto ancestor = this-> _context.validateValue (expression.getRight ());
 		    if (ancestor.is <generator::Class> ()) {
 			auto ancClRef = ancestor.to <generator::Class> ().getClassRef ();

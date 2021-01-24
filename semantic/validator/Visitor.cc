@@ -732,18 +732,21 @@ namespace semantic {
 			    for (auto & it : fieldsDecl) { // Verify shadowing 
 				auto gen = syms.find (it.to <generator::VarDecl> ().getName ());
 				if (gen != syms.end ()) {
-				    auto note = Ymir::Error::createNote (it.getLocation ());		
-				    Error::occurAndNote (gen-> second.getLocation (), note, ExternalError::get (SHADOWING_DECL), it.to <generator::VarDecl> ().getName ());
+				    auto note = Ymir::Error::createNote (it.getLocation ());
+				    auto note2 = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), cls.getRealName ());
+				    Error::occurAndNote (gen-> second.getLocation (), {note, note2}, ExternalError::get (SHADOWING_DECL), it.to <generator::VarDecl> ().getName ());
 				}
 			    }
 			}
-		
+
+			std::vector <generator::Generator> localFields;
 			for (auto & it : sym.to <semantic::Class> ().getFields ()) {
 			    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().getStr ());			    
 			    fieldsDecl.push_back (gen-> second);
+			    localFields.push_back (gen-> second);
 			}
 
-			gen = generator::Class::initFields (gen.to <generator::Class> (), fieldsDecl);
+			gen = generator::Class::initFields (gen.to <generator::Class> (), fieldsDecl, localFields);
 			sym.to <semantic::Class> ().setGenerator (gen);
 
 			std::vector <generator::Class::MethodProtection> protections;
@@ -802,7 +805,8 @@ namespace semantic {
 		for (auto & it : protection) {
 		    if (it == generator::Class::MethodProtection::PRV)
 			it = generator::Class::MethodProtection::PRV_PARENT;
-		}	       
+		}
+		
 	    }
 	    
 	    
@@ -881,16 +885,16 @@ namespace semantic {
 	    }
 	    
 	    std::list <Ymir::Error::ErrorMsg> errors;
-	    std::vector <Generator> loc_vtable;
+	    std::vector <Generator> loc_vtable = ancVtable;
 	    std::vector <Symbol> loc_addMethods;
 	    
-	    std::vector <generator::Class::MethodProtection> loc_protection;
+	    std::vector <generator::Class::MethodProtection> loc_protection = protection;
 	    for (auto it : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) {
 		try {
 		    match (it) {
 			of (semantic::Function, func ATTRIBUTE_UNUSED, {
 				int i = 0;
-				validateVtableMethod (func, classType, ancestor, loc_vtable, loc_protection, ancVtable, i);
+				validateVtableMethod (func, classType, ancestor, loc_vtable, loc_protection, ancVtable, i, true);
 				loc_addMethods.push_back (it);
 			    }
 			)
@@ -903,9 +907,9 @@ namespace semantic {
 		    }
 		} catch (Error::ErrorList list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    errors.push_back (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
+		    errors.back ().addNote (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
 		} 
-	    }
+	    }	    	    
 
 	    std::vector <Generator> loc_vtable_impl = loc_vtable;
 	    for (auto it : impl.getAllInner ()) {
@@ -933,11 +937,12 @@ namespace semantic {
 		    }
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    errors.push_back (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
+		    errors.back ().addNote (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
 		} 
 	    }	    
 	    
 	    {
+		int j = 0;
 		for (auto & it : loc_vtable_impl) {
 		    auto protoFptr = validateFunctionType (it);
 		    try {
@@ -951,10 +956,13 @@ namespace semantic {
 				}
 			    }
 			}
-			vtable.push_back (it);			
+			if (j >= (int) ancVtable.size ()) 
+			    vtable.push_back (it);
+			else vtable [j] = it;
+			j += 1;
 		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			errors.push_back (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
+			errors.back ().addNote (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
 		    } 
 		}
 	    }
@@ -981,23 +989,25 @@ namespace semantic {
 	    
 	}
 	
-	void Visitor::validateVtableMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, int & index) {
+	void Visitor::validateVtableMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, int & index, bool inImpl) {
 	    
-	    auto proto = validateMethodProto (func, classType);
+	    auto proto = validateMethodProto (func, classType, inImpl);	    
 	    auto protoFptr = validateFunctionType (proto);
 	    bool over = false;
 	    for (auto i : Ymir::r (0, ancVtable.size ())) {
 		if (Ymir::Path (ancVtable[i].to <FrameProto> ().getName (), "::").fileName ().toString () == func.getName ().getStr ()) {		    
 		    auto fptr = validateFunctionType (ancVtable [i]);
 		    if (protoFptr.equals (fptr) && ancVtable [i].to<MethodProto> ().isMutable () == proto.to<MethodProto> ().isMutable ()) {
-			if (!func.isOver ()) {
+			// If we are inside an impl Trait, and the method is not overriden but rewritten by reimplementation this is ok
+			
+			if (!func.isOver () && (!ancVtable [i].to <MethodProto> ().isFromTrait () && !inImpl)) {
 			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
 			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (IMPLICIT_OVERRIDE), ancVtable[i].prettyString ());
-			} else if (protection [i] == generator::Class::MethodProtection::PRV_PARENT) {
+			} else if (!inImpl && protection [i] == generator::Class::MethodProtection::PRV_PARENT) {
 			    auto note = Ymir::Error::createNote (ancVtable [i].getLocation ());
 			    Ymir::Error::occurAndNote (func.getName (), note, ExternalError::get (OVERRIDE_PRIVATE), ancVtable[i].prettyString ());
-			} else if ((func.isPublic () && protection [i] != generator::Class::MethodProtection::PUB) ||
-				   (func.isProtected () && protection [i] != generator::Class::MethodProtection::PROT)) {
+			} else if (!inImpl && ((func.isPublic () && protection [i] != generator::Class::MethodProtection::PUB) ||
+					       (func.isProtected () && protection [i] != generator::Class::MethodProtection::PROT))) {
 			    std::string prot, prot_over;
 			    if (protection [i] == generator::Class::MethodProtection::PUB) prot = Keys::PUBLIC;
 			    else prot = Keys::PROTECTED;
@@ -1036,14 +1046,14 @@ namespace semantic {
 			over = true;
 			vtable [i] = proto; // We do that afterward, when impl a trait the vtable might be empty and always different from ancVtable
 			// But we can ensure that an error will be thrown before then, since the func is never marked override in a trait
-			index = i;
+			index = i;			
 			
 			break;
 		    }
 		}		
 	    }
 	    
-	    if (!over) { 
+	    if (!over) {		
 		if (func.isOver ()) {
 		    std::list <Ymir::Error::ErrorMsg> names;
 		    for (auto & it : ancVtable) {
@@ -2764,7 +2774,7 @@ namespace semantic {
 	    return frame;
 	}
 
-	Generator Visitor::validateMethodProto (const semantic::Function & func, const Generator & classType_) {
+	Generator Visitor::validateMethodProto (const semantic::Function & func, const Generator & classType_, bool inImpl) {
 	    enterForeign ();	    
 	    std::vector <Generator> params;
 	    static std::list <lexing::Word> __validating__;
@@ -2821,7 +2831,7 @@ namespace semantic {
 	    
 	    auto frame = MethodProto::init (function.getLocation (), func.getComments (), func.getRealName (), retType, params, false,
 					    classType,
-					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), throwers);
+					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), inImpl, throwers);
 	    
 	    frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);
 	    if (		frame.prettyString () == "(&(main::MyThread)) => std::concurrency::thread::Thread::send([i32])::send (x : [i32])-> void")
