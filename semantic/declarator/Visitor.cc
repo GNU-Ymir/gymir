@@ -351,7 +351,7 @@ namespace semantic {
 				      Error::halt ("%(r) - reaching impossible point", "Critical");			
 			    }
 			}
-		    ) else of (syntax::DeclBlock, dc, {
+		    ) else of (syntax::DeclBlock, dc, {			    
 			    visitInnerClass (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
 			}
 		    ) else of (syntax::Constructor, cs, {
@@ -406,7 +406,7 @@ namespace semantic {
 	    pushReferent (tr);
 	    for (auto it : sttrait.getDeclarations ()) {
 	    	match (it) {
-	    	    of (syntax::DeclBlock, dc, {
+	    	    of (syntax::DeclBlock, dc, {			    
 	    		    for (auto jt : dc.getDeclarations ()) {
 	    			auto sym = visit (jt);
 	    			if (dc.isPublic ())

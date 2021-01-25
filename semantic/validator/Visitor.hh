@@ -144,14 +144,16 @@ namespace semantic {
 	    /**
 	     * \brief Validate an implementation of a trait
 	     */
-	    void validateVtableImplement (const semantic::Impl & impl, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, std::vector <Symbol> & add);
+	    void validateVtableImplement (const semantic::Impl & impl, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, std::vector <semantic::Symbol> & addMethods);
 
 	    /**
 	     * \brief Validate a method prototype and put it in the vtable at the right place
 	     * \warning This does not validate the body of the method, see validateMethod 
 	     * \param i by return, is the index where the prototype has been put in the vtable
 	     */
-	    void validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, int & i, bool inImpl = false);
+	    int validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, const generator::Generator & trait);
+
+	    int validateVtableMethodImplement (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, const generator::Generator & trait);
 	    
 	    /**
 	     * \brief Validate a class constructor
@@ -497,7 +499,7 @@ namespace semantic {
 	     * \brief Validate the method prototype of a method in order to refer to it
 	     * \param mt the method to validate
 	     */
-	    generator::Generator validateMethodProto (const semantic::Function & mt, const generator::Generator &classType, bool inImpl = false);
+	    generator::Generator validateMethodProto (const semantic::Function & mt, const generator::Generator &classType, const generator::Generator & trait);
 
 	    /**
 	     * \brief Transform a frameProto into a FuncPtr type

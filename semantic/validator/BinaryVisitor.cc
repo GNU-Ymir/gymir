@@ -784,6 +784,10 @@ namespace semantic {
 		auto gen = validateIndexAssign (op, expression);
 		if (!gen.isEmpty ()) return gen;
 		// } catch (Error::ErrorList list) {}
+	    } else if (expression.getLeft ().is <syntax::Unary> () &&
+		       expression.getLeft ().to <syntax::Unary> ().getLocation () == Token::STAR) {
+		auto gen = validateUnaryAssign (op, expression);
+		if (!gen.isEmpty ()) return gen;
 	    }
 	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
@@ -807,15 +811,15 @@ namespace semantic {
 	    auto loc = expression.getLocation ();
 	    auto left = expression.getLeft ().to <syntax::MultOperator> ();
 
-	    auto leftIndex = this-> _context.validateValue (left.getLeft ());
-	    auto right = this-> _context.validateValue (expression.getRight ());
+	    auto leftIndex = this-> _context.validateValue (left.getLeft ()); // a in a[i] = b
+	    auto right = this-> _context.validateValue (expression.getRight ()); // b in a [i] = b
 	    
 	    if (!leftIndex.to <Value> ().getType ().is <ClassPtr> ())
 		return Generator::empty ();
 		
 	    if (op != Binary::Operator::LAST_OP) {
-		auto leftTotal = this-> _context.validateValue (expression.getLeft ());
-		right = validateMathOperation (op, expression, leftTotal, right);
+		auto leftTotal = this-> _context.validateValue (expression.getLeft ()); // a [i] in a [i] += b
+		right = validateMathOperation (op, expression, leftTotal, right); // a [i] + b in a [i] += b
 	    }
 	    
 	    auto leftSynt = TemplateSyntaxWrapper::init (leftIndex.getLocation (), leftIndex);	    
@@ -844,7 +848,52 @@ namespace semantic {
 	    }
 	}
 	
+	Generator BinaryVisitor::validateUnaryAssign (Binary::Operator op, const syntax::Binary & expression) {
+	    auto loc = expression.getLocation ();
+	    auto left = expression.getLeft ().to <syntax::Unary> ();
+	    
+	    auto leftIndex = this-> _context.validateValue (left.getContent ()); // a in *(a) = b
+	    auto right = this-> _context.validateValue (expression.getRight ()); // b in *(a) = b
+	    if (!leftIndex.to <Value> ().getType ().is <ClassPtr> ()) {
+		return Generator::empty ();
+	    }
 
+	    if (op != Binary::Operator::LAST_OP) {
+		auto leftTotal = this-> _context.validateValue (expression.getLeft ()); // *a in *a += b
+		right = validateMathOperation (op, expression, leftTotal, right); // *a + b in *a += b
+	    }
+
+	    auto leftSynt = TemplateSyntaxWrapper::init (leftIndex.getLocation (), leftIndex);
+	    std::vector <syntax::Expression> rightSynts = {TemplateSyntaxWrapper::init (right.getLocation (), right)};
+
+	    auto bin = syntax::Binary::init (
+		lexing::Word::init (loc, Token::DOT),
+		leftSynt,
+		syntax::Var::init (lexing::Word::init (loc, CoreNames::get (UNARY_ASSIGN_OP_OVERRIDE))),
+		syntax::Expression::empty ()
+		);
+
+	    auto templ = syntax::TemplateCall::init (
+		loc,
+		{syntax::String::init (left.getLocation (), left.getLocation (), left.getLocation (), lexing::Word::eof ())},
+		bin
+		);
+
+	    auto call = syntax::MultOperator::init (
+		lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+		templ,
+		rightSynts, false
+		);
+
+	    try {
+		return this-> _context.validateValue (call);
+	    } catch (Error::ErrorList list) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		list.errors.back ().addNote (note);
+		throw list;
+	    }
+	}
+	
 	Generator BinaryVisitor::validateRangeOperation (Binary::Operator op, const syntax::Binary & expression) {
 	    auto leftExp = expression.getLeft ();
 	    auto rightExp = expression.getRight ();

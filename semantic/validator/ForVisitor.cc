@@ -591,7 +591,8 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};
 	    }
-
+	    if (loopType.isEmpty ())
+		loopType = Void::init (expression.getLocation ());
 	    return Block::init (expression.getLocation (), loopType, innerValues); 	    
 	}
 

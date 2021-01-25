@@ -834,9 +834,7 @@ namespace semantic {
 		auto val = this-> _context.retreiveValue (this-> _context.validateValue (right));
 		rightName = val.prettyString ();
 	    }
-	    
-	    println (left.prettyString (), " ", left.is <ModuleAccess> ());
-	    
+	    	    
 	    Ymir::Error::occur (
 		expression.getLocation (),
 		ExternalError::get (UNDEFINED_SUB_PART_FOR),

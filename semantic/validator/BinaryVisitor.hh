@@ -213,9 +213,14 @@ namespace semantic {
 	    generator::Generator validateAffectation (generator::Binary::Operator op, const syntax::Binary & expression);
 
 	    /**
-	     * \brief Validate an index assign, unfortunately this cannot be done inside bracketvisitor	     
+	     * \brief Validate an index assign, a [i] = b
 	     */
 	    generator::Generator validateIndexAssign (generator::Binary::Operator op, const syntax::Binary & expression);
+
+	    /**
+	     * \Brief Validate an unary op assign, *a = b
+	     */
+	    generator::Generator validateUnaryAssign (generator::Binary::Operator op, const syntax::Binary & expression);
 	    
 	    /**
 	     * \brief Validate an affectation on complex type (arrays, tuple, struct ...)

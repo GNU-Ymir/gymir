@@ -500,7 +500,7 @@ namespace semantic {
 		    if (ref.is <MethodTemplateRef> ()) {
 		    	auto & self = ref.to <MethodTemplateRef> ().getSelf ();
 			auto classType = self.to <Value> ().getType ().to <ClassPtr> ().getInners ()[0].to<Type> ().toDeeplyMutable ();
-			proto = this-> _context.validateMethodProto (sym_func.to <semantic::Function> (), classType);			
+			proto = this-> _context.validateMethodProto (sym_func.to <semantic::Function> (), classType, Generator::empty ());			
 		    } else if (ref.is <TemplateClassCst> ()) {
 			proto = this-> _context.validateClass (sym_func, false);
 		    } else {

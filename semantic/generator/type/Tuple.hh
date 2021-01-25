@@ -13,9 +13,9 @@ namespace semantic {
 	class Tuple : public Type {	    
 	public :
 
-	    static std::string ARITY_NAME;
+	    const static std::string ARITY_NAME;
 
-	    static std::string INIT_NAME;
+	    const static std::string INIT_NAME;
 	    
 	private : 
 

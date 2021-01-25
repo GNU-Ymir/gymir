@@ -10,21 +10,22 @@ namespace semantic {
 	MethodProto::MethodProto () :
 	    FrameProto (),
 	    _isMut (false),
-	    _classType (Generator::empty ())	    
+	    _classType (Generator::empty ()),
+	    _trait (Generator::empty ())
 	{}
 
-	MethodProto::MethodProto (const lexing::Word & loc, const std::string & comments, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, bool isFromImpl, const std::vector <Generator> & throwers) :
+	MethodProto::MethodProto (const lexing::Word & loc, const std::string & comments, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const Generator & trait, const std::vector <Generator> & throwers) :
 	    FrameProto (loc, name, type, params, isCVariadic, isSafe, throwers),
 	    _isMut (isMutable),
 	    _classType (classType),
 	    _isEmptyFrame (isEmptyFrame),
 	    _isFinal (isFinal),
-	    _isFromImpl (isFromImpl),
+	    _trait (trait),
 	    _comments (comments)
 	{}
 
-	Generator MethodProto::init (const lexing::Word & loc, const std::string & comments, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, bool isFromImpl, const std::vector <Generator> & throwers) {
-	    return Generator {new (NO_GC) MethodProto (loc, comments, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal, isSafe, isFromImpl, throwers)};
+	Generator MethodProto::init (const lexing::Word & loc, const std::string & comments, const std::string & name, const Generator & type, const std::vector<Generator> & params, bool isCVariadic, const Generator& classType, bool isMutable, bool isEmptyFrame, bool isFinal, bool isSafe, const Generator & trait, const std::vector <Generator> & throwers) {
+	    return Generator {new (NO_GC) MethodProto (loc, comments, name, type, params, isCVariadic, classType, isMutable, isEmptyFrame, isFinal, isSafe, trait, throwers)};
 	}
 	
 	Generator MethodProto::clone () const {
@@ -67,8 +68,8 @@ namespace semantic {
 	    return this-> _isFinal;
 	}
 	
-	bool MethodProto::isFromTrait () const {
-	    return this-> _isFromImpl;
+	const Generator & MethodProto::getTrait () const {
+	    return this-> _trait;
 	}
 
 	const std::string & MethodProto::getComments () const {
