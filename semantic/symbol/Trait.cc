@@ -110,7 +110,7 @@ namespace semantic {
     }
 
     std::string Trait::getRealName () const {
-	return this-> getReferent ().getRealName ();
+	return this-> getReferent ().getRealName () + "::" + this-> getName ().getStr ();
     }
     
 }

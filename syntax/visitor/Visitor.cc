@@ -728,7 +728,7 @@ namespace syntax {
 	std::vector <syntax::Expression> throwers;
 	do {
 	    throwers.push_back (visitExpression ());
-	    auto n =this-> _lex.consumeIf ({Token::SEMI_COLON, Token::COMA});
+	    auto n = this-> _lex.consumeIf ({Token::COMA});
 	    if (n != Token::COMA) {
 		break;
 	    }

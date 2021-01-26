@@ -249,6 +249,9 @@ namespace generic {
     }    
 
     Tree Tree::affect (generic::TreeChain & stackContext, const generic::Tree & segmentContext, const lexing::Word & loc, const Tree & left, const Tree & right) {
+	if (right.isCompound () || right.isStmtList ())
+	    Ymir::Error::halt ("", "");
+	
 	if (left.getType ().isScalar ()) {
 	    return Tree::build (MODIFY_EXPR, loc, left.getType (), left,
 				Tree::init (
@@ -260,7 +263,8 @@ namespace generic {
 	    if (left.getType () == right.getType ())
 		return Tree::build (MODIFY_EXPR, loc, left.getType (), left, right);
 
-	    Tree var = Tree::varDecl (loc, "#_aff", right.getType ());
+	    auto name = Ymir::format ("#_aff(%)", loc.getLine ());
+	    Tree var = Tree::varDecl (loc, name, right.getType ());
 	    var.setDeclContext (segmentContext);
 	    stackContext.append (var);
 	    
@@ -402,6 +406,8 @@ namespace generic {
     Tree Tree::compound (const lexing::Word & loc, const Tree & left, const Tree & right) {
 	if (left.isEmpty ()) return right;
 	if (right.isEmpty ()) return left;
+	if (left.getTree () == right.getTree ()) Ymir::Error::halt ("", "");
+	
 	return Tree::init (loc.getLocation (),
 			   fold_build2_loc (loc.getLocation (), COMPOUND_EXPR,
 					    left.getType ().getTree (), right.getTree (),
@@ -465,7 +471,7 @@ namespace generic {
 	if (!right.isEmpty ()) {
 	    list.append (Tree::labelExpr (loc, elseLabel));
 	    list.append (right);
-	    list.append (gotoEnd);
+	    list.append (Tree::gotoExpr  (loc, endLabel));
 	}
 	
 	list.append (Tree::labelExpr (loc, endLabel));
@@ -819,6 +825,19 @@ namespace generic {
     bool Tree::isArrayType () const {
 	return this-> getTreeCode () == ARRAY_TYPE;
     }
+
+    bool Tree::isEmptyStmtList () const {
+	return this-> getTreeCode () == STATEMENT_LIST &&
+	    STATEMENT_LIST_HEAD (this-> getTree ()) == NULL;
+    }
+    
+    bool Tree::isStmtList () const {
+	return this-> getTreeCode () == STATEMENT_LIST;
+    }
+
+    bool Tree::isCompound () const {
+	return this-> getTreeCode () == COMPOUND_EXPR;
+    }
     
     Tree Tree::getOperand (int i) const {
 	if (this-> _t == NULL_TREE)
@@ -839,9 +858,8 @@ namespace generic {
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	if (this-> getTreeCode () == COMPOUND_EXPR) {
 	    return this-> getOperand (1);
-	} else {
-	    return *this;
-	}
+	} else 
+	    return *this;	
     }
 
     Tree Tree::toDirect () const {
@@ -919,9 +937,13 @@ namespace generic {
     }
 
     void Tree::print () const {
-	debug_tree (this-> getTree ());
+	print_generic_stmt (stdout, this-> getTree ());
     }
 
+    void Tree::debug_print () const {
+	debug_tree (this-> getTree ());
+    }
+    
     void Tree::gimplifyFunction (const Tree & fn_decl) {
 	gimplify_function_tree (fn_decl.getTree ());
     }

@@ -109,18 +109,23 @@ namespace semantic {
 			Visitor::__CALL_NB_RECURS__ += 1;
 			this-> _context.validateTemplateSymbol (sym, left);
 		    } catch (Error::ErrorList list) {
-			if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
+			static std::list <Error::ErrorMsg> __last_error__;			
+			if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 			    list.errors.push_back (format ("     : %(B)", "..."));
 			    list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-			} else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {
+			} else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive () || Visitor::__LAST__) {
 			    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
 			    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
 			    Visitor::__LAST__ = true;
+			    __last_error__ = {};
 			} else if (Visitor::__LAST__) {			    
 			    Visitor::__LAST__ = false;
-			} else list.errors = {};
+			     __last_error__ = list.errors;
+			} else {
+			    list.errors = __last_error__;
+			}
 			
-			errors = list.errors;
+			errors = list.errors;			
 			gen = Generator::empty ();
 		    } 
 		    Visitor::__CALL_NB_RECURS__ -= 1;
@@ -776,23 +781,28 @@ namespace semantic {
 		try {
 		    Visitor::__CALL_NB_RECURS__ += 1;
 		    this-> _context.validateTemplateSymbol (templSym, used_gen);		    
-		} catch (Error::ErrorList list) {		    
+		} catch (Error::ErrorList list) {
+		    static std::list <Error::ErrorMsg> __last_error__;
 		    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), used_gen.to <TemplateRef> ().getTemplateRef ().getName (), used_gen.prettyString ());
 		    for (auto & it : list.errors)			
 			note.addNote (it);
 		    list.errors = {note};
-		    if (Visitor::__CALL_NB_RECURS__ == 3 && !global::State::instance ().isVerboseActive ()) {
+		    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 			list.errors.push_back (format ("     : %(B)", "..."));
 			list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		    } else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {
+		    } else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive () ) {
 			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
 			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
 			Visitor::__LAST__ = true;
+			__last_error__ = {};
 		    } else if (Visitor::__LAST__) {			    
 			Visitor::__LAST__ = false;
-		    } else list.errors = {};
-		    
-		    errors = list.errors;
+			__last_error__ = list.errors;
+		    } else {
+			list.errors = __last_error__;
+		    }
+
+		    errors = list.errors;		    
 		    final_gen = Generator::empty ();
 		} 
 		Visitor::__CALL_NB_RECURS__ -= 1;

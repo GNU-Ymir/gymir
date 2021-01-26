@@ -38,6 +38,8 @@ namespace global {
 			 JMP_BUF_TYPE,
 			 LOGICAL_OP_OVERRIDE,
 			 NEXT_OP_OVERRIDE,
+			 OBJECT_MODULE,
+			 OBJECT_TYPE,
 			 OUT_OF_ARRAY,
 			 RETHROW,
 			 RUN_MAIN,

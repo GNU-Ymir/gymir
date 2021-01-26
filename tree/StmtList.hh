@@ -6,6 +6,7 @@ namespace generic {
 
     struct TreeStmtList {
 
+	
 	tree _list;
 	
     private : 

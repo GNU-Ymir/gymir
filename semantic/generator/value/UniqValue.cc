@@ -1,4 +1,5 @@
 #include <ymir/semantic/generator/value/UniqValue.hh>
+#include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/semantic/generator/type/Void.hh>
 
 namespace semantic {
@@ -19,7 +20,9 @@ namespace semantic {
 	}
 	
 	Generator UniqValue::init (const lexing::Word & location, const Generator & type, const Generator & value) {
-	    return Generator {new (NO_GC) UniqValue (location, type, value, Generator::getLastId ())};
+	    int id = VarDecl::__lastId__;
+	    VarDecl::__lastId__ += 1;
+	    return Generator {new (NO_GC) UniqValue (location, type, value, id)};
 	}
 
 	Generator UniqValue::clone () const {
@@ -42,7 +45,7 @@ namespace semantic {
 	}
 	
 	std::string UniqValue::prettyString () const {
-	    return this-> _value.prettyString ();
+	    return Ymir::format ("Uniq (%)", (int) this-> _refId); //this-> _value.prettyString ();
 	}
 	
     }

@@ -709,7 +709,7 @@ namespace semantic {
 			prv = false;
 		    } else
 			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
-
+		    
 		    std::vector <Generator> types;
 		    std::vector <Generator> params;
 		    std::list <Ymir::Error::ErrorMsg> errors;

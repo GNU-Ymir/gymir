@@ -918,7 +918,7 @@ namespace semantic {
 
 	    OutBuffer buf;
 	    leftT.treePrint (buf, 0);
-	    println (buf.str ());
+	    println (buf.str ());	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Mapper {false, 0, {}, {}};
 	}

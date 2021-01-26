@@ -775,7 +775,7 @@ namespace semantic {
 	    if (inModule) {
 		std::list <Ymir::Error::ErrorMsg> errors;
 		try {
-		    validateInnerClass (cls);
+		    validateInnerClass (cls);		    
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
@@ -785,6 +785,8 @@ namespace semantic {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    throw Error::ErrorList {errors};
 		}
+		
+		insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
 	    }
 	    
 	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ())
@@ -4612,7 +4614,7 @@ namespace semantic {
 	    if (val.is<generator::Struct> ())
 		return StructRef::init (type.getLocation (), val.to <generator::Struct> ().getRef ());
 	    
-	    if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();
+	    // if (val.is <StructCst> ()) return val.to <StructCst> ().getStr ();, Why?
 
 	    Ymir::Error::occur (type.getLocation (), ExternalError::get (USE_AS_TYPE));
 	    return Generator::empty ();	    	   
@@ -5499,7 +5501,7 @@ namespace semantic {
 	}	
 
 	
-	void Visitor::verifyCompatibleType (const lexing::Word & loc, const Generator & left, const Generator & right) {
+	void Visitor::verifyCompatibleType (const lexing::Word & loc, const Generator & left, const Generator & right, bool fromObject) {
 	    bool error = false;
 	    std::string leftName;
 	    if (!left.to<Type> ().isCompatible (right)) {
@@ -5508,6 +5510,12 @@ namespace semantic {
 		if (!error) return;
 		
 		leftName = left.to<Type> ().getTypeName ();
+	    }
+
+	    if (right.is <ClassPtr> () && fromObject) {
+		auto syntaxType = this-> createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (OBJECT_MODULE), CoreNames::get (OBJECT_TYPE)});
+		auto objectType = this-> validateType (syntaxType);
+		if (objectType.to <Type> ().isCompatible (left)) return;
 	    }
 	    
 	    if (!left.to <Type> ().getProxy ().isEmpty () && !left.to <Type> ().getProxy ().to <Type> ().isCompatible (right.to <Type> ().getProxy ())) {

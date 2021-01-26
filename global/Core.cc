@@ -32,6 +32,8 @@ namespace global {
 			    JMP_BUF_TYPE       = "_yrt_jmp_buf_type", 
 			    LOGICAL_OP_OVERRIDE = "opCmp",
 			    NEXT_OP_OVERRIDE   = "next",
+			    OBJECT_MODULE      = "object",
+			    OBJECT_TYPE        = "Object",
 			    OUT_OF_ARRAY       = "outOfArray",
 			    RETHROW            = "_yrt_exc_rethrow",
 			    RUN_MAIN           = "_yrt_run_main", 

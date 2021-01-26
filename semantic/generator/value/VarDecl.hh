@@ -13,6 +13,7 @@ namespace semantic {
 	class ParamVar;
 	class ProtoVar;
 	class GlobalVar;
+	class UniqValue;
 	
 	class VarDecl : public Value {	    
 
@@ -32,6 +33,7 @@ namespace semantic {
 	    friend ProtoVar;
 	    friend validator::Visitor;
 	    friend GlobalVar;
+	    friend UniqValue;
 	    
 	private :
 

@@ -158,7 +158,7 @@ namespace semantic {
 		// The type checking is made in reverse
 		// We want to be able to get an inherit class, from an ancestor class
 		// That is exactly the reverse of function call, or var affectation
-		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType);
+		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType, true);
 		Generator type_test (Generator::empty ());
 		if (!value.to <Value> ().getType ().to <Type> ().isCompatible (varType)) { // If we have passed the test, but still not compatible means it is a class
 		    auto loc = var.getLocation ();
@@ -305,7 +305,7 @@ namespace semantic {
 		    type = this-> _context.validateTypeClassRef (call.getLeft ());
 		    if (type.is <ClassRef> ()) type = ClassPtr::init (call.getLocation (), type);
 		    
-		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
+		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type, true);
 		    if (!value.to <Value> ().getType ().to <Type> ().isCompatible (type)) {
 			// If we have passed the test, but still not compatible means it is a class
 			auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
@@ -638,7 +638,7 @@ namespace semantic {
 		bool dmut = false;
 		varType = this-> _context.applyDecoratorOnVarDeclType (var.getDecorators (), varType, isRef, isMutable, dmut);
 		// value is typed exception, this will pass if varType is an heir 
-		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType);
+		this-> _context.verifyCompatibleType (var.getLocation (), value.to <Value> ().getType (), varType, true);
 
 		auto loc = var.getLocation ();
 		auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
@@ -721,7 +721,7 @@ namespace semantic {
 	    try {
 		if (!call.getLeft ().is <Var> () || call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
 		    type = this-> _context.validateType (call.getLeft ());		    
-		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type);
+		    this-> _context.verifyCompatibleType (value.getLocation (), value.to <Value> ().getType (), type, true);
 		   
 		    // If we have passed the test, but still not compatible means it is a class
 		    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),

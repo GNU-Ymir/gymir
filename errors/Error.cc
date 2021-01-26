@@ -384,6 +384,10 @@ namespace Ymir {
 	const std::string & ErrorMsg::getMessage () const {
 	    return this-> msg;
 	}
+
+	std::list <ErrorMsg>  ErrorMsg::getNotes () const {
+	    return this-> notes;
+	}
 	
     }
     

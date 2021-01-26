@@ -72,6 +72,8 @@ namespace Ymir {
 	    const lexing::Word & getLocation () const;
 
 	    const std::string & getMessage () const;
+
+	    std::list <ErrorMsg> getNotes () const;
 	    
 	};
 

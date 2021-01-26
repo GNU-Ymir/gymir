@@ -191,10 +191,6 @@ namespace semantic {
 		auto len = StructAccess::init (expression.getLocation (),
 					       Integer::init (expression.getLocation (), 64, false),
 					       lRef, Slice::LEN_NAME);
-
-		auto ptr = StructAccess::init (expression.getLocation (),
-					       Integer::init (expression.getLocation (), 64, false),
-					       lRef, Slice::PTR_NAME);
 		
 		auto rngInner = right [0].to <Value> ().getType ().to <Range> ().getInners () [0];
 		auto fst = StructAccess::init (expression.getLocation (),
@@ -264,6 +260,13 @@ namespace semantic {
 		else
 		    innerType = Type::init (innerType.to <Type> (), false);
 
+
+		auto ptrType = Type::init (Pointer::init (loc, innerType).to <Type> (), left.to <Value> ().getType ().to <Type> ().isMutable ());
+		auto ptr = StructAccess::init (expression.getLocation (),
+					       ptrType,
+					       lRef, Slice::PTR_NAME);
+		
+		
 		auto ptrFinal = this-> _context.validateValue (
 		    syntax::Binary::init (
 			lexing::Word::init (loc, Token::PLUS),
@@ -277,6 +280,7 @@ namespace semantic {
 			    syntax::Expression::empty ()
 			    ), syntax::Expression::empty ())
 		    );
+
 		
 		auto lenFinal = this-> _context.validateValue (
 		    syntax::Binary::init (

@@ -1,4 +1,6 @@
 #include <ymir/tree/StmtList.hh>
+#include <ymir/utils/OutBuffer.hh>
+#include <ymir/errors/Error.hh>
 #include "config.h"
 #include "system.h"
 #include "coretypes.h"
@@ -26,10 +28,11 @@
 #include "print-tree.h"
 #include "cppdefault.h"
 #include "tm.h"
+#include <set>
 
 
 namespace generic {
-
+    
     TreeStmtList::TreeStmtList () :
 	_list (alloc_stmt_list ())
     {}

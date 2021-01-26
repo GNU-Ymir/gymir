@@ -38,6 +38,8 @@ namespace semantic {
 
 	    /** The list of jumps; */
 	    std::vector <ReturnWithinCatch> exceptionDeclChain;
+
+	    std::list <std::string> blockNames;
 	    
 	    /** The global context of the generation */
 	    generic::Tree _globalContext;
@@ -483,12 +485,12 @@ namespace semantic {
 	    /**
 	     * Enter a new block 
 	     */
-	    void enterBlock () ;
+	    void enterBlock (const std::string & name) ;
 
 	    /** 
 	     * Quit the last block and return its symbol mapping 
 	    */
-	    generic::TreeSymbolMapping quitBlock (const lexing::Word & loc, const generic::Tree &);
+	    generic::TreeSymbolMapping quitBlock (const lexing::Word & loc, const generic::Tree &, const std::string & name);
 
 	    /**
 	     * \brief Enter a new loop

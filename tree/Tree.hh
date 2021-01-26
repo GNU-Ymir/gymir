@@ -650,11 +650,26 @@ namespace generic {
 	 * \return true if this is a type and it is an array (static array only)
 	 */
 	bool isArrayType () const; 
-
+	
 	/**
 	 * \return true if this is a type and it is a string
 	 */
 	bool isStringType () const;
+
+	/**
+	 * \return true if this is a stmt list that contains nothing
+	 */
+	bool isEmptyStmtList () const;
+
+	/**
+	 * \return true if this is a stmt list that contains nothing
+	 */
+	bool isStmtList () const;
+
+	/**
+	 * \return true if this is a compound expression
+	 */
+	bool isCompound () const;
 	
 	/**
 	 * \return the i eme operand of this tree
@@ -698,6 +713,11 @@ namespace generic {
 	 * \brief print the tree for debug information
 	 */
 	void print () const;
+
+	/**
+	 * \brief print the tree for debug information
+	 */
+	void debug_print () const;
 	
     };
    

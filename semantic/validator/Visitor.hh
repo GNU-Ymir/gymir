@@ -783,8 +783,9 @@ namespace semantic {
 	     * \brief Throw an exception if left.isCompatible (right) is false
 	     * \param left a type
 	     * \param right a type
+	     * \param fromObject, if the left type is an &core::object::Object, and right is a ClassPtr, then the type is compatible iif fromObject 
 	     */
-	    void verifyCompatibleType (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right);
+	    void verifyCompatibleType (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right, bool fromObject = false);
 
 	    
 	    /**
