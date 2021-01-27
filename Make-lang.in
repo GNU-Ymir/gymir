@@ -52,11 +52,11 @@ ymir_OBJS = \
 	ymir/decl_Trait.o \
 	ymir/decl_Use.o \
 	ymir/declarator_Visitor.o \
-	ymir/documentation_Visitor.o \
 	ymir/documentation_Json.o \
 	ymir/documentation_String.o \
 	ymir/documentation_Array.o \
 	ymir/documentation_Dict.o \
+	ymir/documentation_Visitor.o \
 	ymir/error_Error.o \
 	ymir/error_ListError.o \
 	ymir/expr_ArrayAlloc.o \

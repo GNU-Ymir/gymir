@@ -284,7 +284,7 @@ namespace Ymir {
 	*/
 	template <typename ... TArgs>
 	void end (const std::string& format_, TArgs ... args) {	    
-	    fatal_error (UNKNOWN_LOCATION, format (format_, args...).c_str ());
+	    fatal_error (UNKNOWN_LOCATION, "%s", format (format_, args...).c_str ());
 	}       
 
 	/**
