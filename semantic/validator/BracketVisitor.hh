@@ -72,6 +72,11 @@ namespace semantic {
 	    generator::Generator validateClass (const syntax::MultOperator & expression, const generator::Generator & left, const std::vector <generator::Generator> & rights);
 
 
+	    /**
+	     * Create the generator for the expression `throw OutOfArray::new ();` 
+	     */
+	    generator::Generator createThrowOutOfArray (const lexing::Word & location);
+
 	    
 	    /**
 	     * Throw an undefined op error

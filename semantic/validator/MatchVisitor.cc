@@ -174,7 +174,7 @@ namespace semantic {
 		    );
 		    type_test = this-> _context.validateValue (call);
 		}
-		
+
 		if (!var.getValue ().isEmpty ()) {
 		    test = validateMatch (value, var.getValue (), isMandatory);			
 		} else if (type_test.isEmpty ()) { // If is not a class, maybe we need a check and it is not mandatory
@@ -191,7 +191,7 @@ namespace semantic {
 					     Bool::init (var.getLocation ()),
 					     test, type_test);
 		}
-
+		
 		varDecl = generator::VarDecl::init (var.getLocation (), var.getName ().getStr (), varType, value, isMutable);
 		if (var.getName () != Keys::UNDER) {
 		    this-> _context.insertLocal (var.getName ().getStr (), varDecl);

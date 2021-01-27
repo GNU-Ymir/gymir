@@ -918,6 +918,10 @@ namespace semantic {
 
 		else of (VtableAccess, acc,
 		    return generateVtableAccess (acc);
+		)
+
+		else of (ThrowBlock, bl,
+		    return generateThrowBlock (bl);
 		);
 	    }
 	    
@@ -1709,6 +1713,33 @@ namespace semantic {
 	    );
 	}
 
+	generic::Tree Visitor::generateThrowBlock (const ThrowBlock & bl) {
+	    auto lbl = this-> _throwLabels.back ().find (bl.getName ());
+	    
+	    if (lbl == this-> _throwLabels.back ().end ()) {
+		auto endLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "end_throw");
+		auto beginLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "begin_throw");
+		auto doLabel = Tree::makeLabel (bl.getLocation (), getCurrentContext (), "do_throw");
+		
+		enterBlock (bl.getLocation ().toString ());
+		TreeStmtList list (TreeStmtList::init ());
+		list.append (Tree::labelExpr (bl.getLocation (), beginLabel));
+		list.append (Tree::gotoExpr (bl.getLocation (), endLabel));
+		list.append (Tree::labelExpr (bl.getLocation (), doLabel));
+		list.append (generateValue (bl.getContent ()));
+		list.append (Tree::labelExpr (bl.getLocation (), endLabel));
+		auto binding = quitBlock (bl.getLocation (), list.toTree (), bl.getLocation ().toString ());
+		TreeStmtList all (TreeStmtList::init ());
+		all.append (binding.bind_expr);
+		all.append (Tree::gotoExpr (bl.getLocation (), doLabel));
+		this-> _throwLabels.back ().emplace (bl.getName (), doLabel);
+		
+		return all.toTree ();
+	    }
+	    
+	    return Tree::gotoExpr (bl.getLocation (), lbl-> second);
+	}
+	
 	generic::Tree Visitor::generateExitScope (const ExitScope & scope) {
 	    auto r_jmp = Tree::varDecl (scope.getLocation (), "#buf", generateType (scope.getJmpbufType ()));
 	    r_jmp.setDeclContext (getCurrentContext ());
@@ -2400,6 +2431,7 @@ namespace semantic {
 	
 	void Visitor::enterFrame () {
 	    this-> _declarators.push_back ({});
+	    this-> _throwLabels.push_back ({});
 	}
 
 	void Visitor::quitFrame () {
@@ -2408,6 +2440,7 @@ namespace semantic {
 	    }
 	    
 	    this-> _declarators.pop_back ();
+	    this-> _throwLabels.pop_back ();
 	}
 	
 	const generic::Tree & Visitor::getGlobalContext () {

@@ -63,6 +63,11 @@ namespace semantic {
 	    std::list <generic::Tree> _loopVars;
 
 	    /**
+	     * The labels of each declared throw block in the frame
+	     */
+	    std::list <std::map <std::string, generic::Tree> > _throwLabels;
+	    
+	    /**
 	     * List of defined frame, to prevent multiple definition of the same weak frame
 	     */
 	    std::set <std::string> _definedFrame;
@@ -224,6 +229,11 @@ namespace semantic {
 	     */
 	    generic::Tree generateThrow (const Throw & thr);
 
+	    /**
+	     * \brief Transform a throw block into gimple
+	     */
+	    generic::Tree generateThrowBlock (const ThrowBlock & thr);
+	    
 	    /**
 	     * \brief Transform an exit scope into gimple
 	     */

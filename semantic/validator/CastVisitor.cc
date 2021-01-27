@@ -41,6 +41,12 @@ namespace semantic {
 			if (value.to <Value> ().getType ().is<Char> ()) {
 			    type = Type::init (type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
 			    return generator::Cast::init (expression.getLocation (), type, value);
+			} else if (value.to <Value> ().getType ().is<Integer> ()) {
+			    auto in = value.to <Value> ().getType ().to <Integer> ();
+			    if (!in.isSigned () && in.getSize () == chr.getSize ()) {
+				type = Type::init (type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
+				return generator::Cast::init (expression.getLocation (), type, value);
+			    }
 			}
 		    }
 		) else of (Pointer, ptr , {

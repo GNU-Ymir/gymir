@@ -35,6 +35,7 @@ namespace global {
 			    OBJECT_MODULE      = "object",
 			    OBJECT_TYPE        = "Object",
 			    OUT_OF_ARRAY       = "outOfArray",
+			    OUT_OF_ARRAY_TYPE  = "OutOfArray",
 			    RETHROW            = "_yrt_exc_rethrow",
 			    RUN_MAIN           = "_yrt_run_main", 
 			    RUN_MAIN_DEBUG     = "_yrt_run_main_debug", 

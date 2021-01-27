@@ -3335,14 +3335,19 @@ namespace semantic {
 		    type = value.to <Value> ().getType ();
 		} // This is working exactly like findParameter for function, maybe we can merge those two blocks
 	    }
-	    
-	    if (fn_type.isEmpty ()) {
-		this-> setCurrentFuncType (type);
-		fn_type = type;
-	    } else if (!value.isEmpty ()) { // If value, it can be a mut [mut void]
-		verifyCompatibleTypeWithValue (type.getLocation (), fn_type, value);
-	    } else
-		verifyCompatibleType (type.getLocation (), fn_type, type);
+
+	    try {
+		if (fn_type.isEmpty ()) {
+		    this-> setCurrentFuncType (type);
+		    fn_type = type;
+		} else if (!value.isEmpty ()) { // If value, it can be a mut [mut void]
+		    verifyCompatibleTypeWithValue (fn_type.getLocation (), fn_type, value);
+		} else
+		    verifyCompatibleType (fn_type.getLocation (), fn_type, type);
+	    } catch (Error::ErrorList list) {
+		list.errors.back ().addNote (Ymir::Error::createNote (rt.getLocation()));
+		throw list;
+	    }
 	    
 	    // 	if (!fn_type.equals (type)) {
 	    // 	auto note = Ymir::Error::createNote (fn_type.getLocation ());
@@ -5511,7 +5516,7 @@ namespace semantic {
 		
 		leftName = left.to<Type> ().getTypeName ();
 	    }
-
+	    	    
 	    if (right.is <ClassPtr> () && fromObject) {
 		auto syntaxType = this-> createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (OBJECT_MODULE), CoreNames::get (OBJECT_TYPE)});
 		auto objectType = this-> validateType (syntaxType);

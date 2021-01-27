@@ -41,6 +41,7 @@ namespace global {
 			 OBJECT_MODULE,
 			 OBJECT_TYPE,
 			 OUT_OF_ARRAY,
+			 OUT_OF_ARRAY_TYPE,
 			 RETHROW,
 			 RUN_MAIN,
 			 RUN_MAIN_DEBUG,

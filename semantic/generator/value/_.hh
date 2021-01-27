@@ -63,6 +63,7 @@
 #include <ymir/semantic/generator/value/TemplateSyntaxWrapper.hh>
 #include <ymir/semantic/generator/value/TemplateSyntaxList.hh>
 #include <ymir/semantic/generator/value/Throw.hh>
+#include <ymir/semantic/generator/value/ThrowBlock.hh>
 #include <ymir/semantic/generator/value/TupleAccess.hh>
 #include <ymir/semantic/generator/value/TupleValue.hh>
 #include <ymir/semantic/generator/value/Unary.hh>

@@ -115,22 +115,21 @@ namespace semantic {
 	Generator BracketVisitor::validateSlice (const syntax::MultOperator & expression, const Generator & left, const std::vector<Generator> & right) {
 	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {
 		auto loc = expression.getLocation ();
-		
-		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
-
-
+		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
+				    
 		auto leftType = left.to <Value> ().getType ();
 		leftType = Type::init (leftType.to<Type> (), leftType.to <Type> ().isMutable (), true);
 		auto lRef = UniqValue::init (loc, leftType, // Referencer::init (loc, leftType, 
 					     left//)
-		);
+		    );
 		
 		auto rightType = right[0].to <Value> ().getType ();
 		rightType = Type::init (rightType.to<Type> (), rightType.to <Type> ().isMutable (), true);
 		auto rRef = UniqValue::init (loc, rightType, // Referencer::init (loc, rightType,
 					     right [0]//)
-		);
+		    );
 
+		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
 		auto len = StructAccess::init (expression.getLocation (),
 					       Integer::init (expression.getLocation (), 64, false),
 					       lRef, Slice::LEN_NAME);
@@ -153,15 +152,17 @@ namespace semantic {
 			{}
 			)
 		    );
+
+		auto throwType = Ymir::format ("%::%::%", CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY));
+		auto throwBl = ThrowBlock::init (loc, call, throwType);
 		
-		auto conditional = Conditional::init (loc, Void::init (loc), test, call, Generator::empty ());						
-		auto innerType = left.to <Value> ().getType ().to <Slice> ().getInners () [0];
+		auto conditional = Conditional::init (loc, Void::init (loc), test, throwBl, Generator::empty ());						
 
 		if (
 		    left.to <Value> ().isLvalue () &&
 		    left.to <Value> ().getType ().to <Type> ().isMutable () &&
 		    left.to <Value> ().getType ().to <Slice> ().getInners () [0].to <Type> ().isMutable ()
-		)
+		    )
 		    innerType = Type::init (innerType.to <Type> (), true);
 		else
 		    innerType = Type::init (innerType.to <Type> (), false);
@@ -170,8 +171,7 @@ namespace semantic {
 		    loc,
 		    innerType,
 		    { conditional, SliceAccess::init (expression.getLocation (), innerType, lRef, rRef) } 
-		);
-	    		
+		    );
 	    } else if (right.size () == 1 && right [0].to <Value> ().getType ().is <Range> () && right [0].to <Value> ().getType ().to <Range> ().getInners () [0].is <Integer> ()) {
 		auto loc = expression.getLocation ();
 		
