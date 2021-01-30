@@ -25,5 +25,5 @@ namespace syntax {
 	auto path = Ymir::Path {this-> _module.getStr (), "::"};
 	return path.toString ();
     }
-        
+
 }

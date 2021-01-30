@@ -25,14 +25,21 @@ namespace semantic {
 	    static std::string YMIR_VTABLE;
 
 	    static std::string YMIR_TYPEINFO;
+
+	private :
+
+	    bool _fail;
 	    
 	private :
 
-	    Mangler ();
+	    Mangler (bool fail);
 
 	public :
 
-	    static Mangler init ();
+	    /**
+	     * \param fail, if fail is set to true, failure of mangling will make the compiler halt
+	     */
+	    static Mangler init (bool fail = true);
 
 	    /**
 	     * \return the prefix that will be put in the begining of mangled Ymir function
@@ -205,6 +212,11 @@ namespace semantic {
 	     * \brief Mangle a closure type
 	     */
 	    std::string mangleClosureT (const Closure & c) const;
+
+	    /**
+	     * Mangle a string containing a path (delimited by '::')
+	     */
+	    std::string manglePath (const std::string & path) const;
 	    
 	private : 
 

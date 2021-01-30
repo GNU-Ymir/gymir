@@ -54,6 +54,14 @@ namespace semantic {
 	    }
 	    return false;
 	}
+
+	bool Tuple::containPointers () const {
+	    for (auto it : Ymir::r (0, this-> getInners ().size ())) {
+		if (this-> getInners () [it].to <Type> ().containPointers ())
+		    return true;
+	    }
+	    return false;
+	}
 	
 	std::string Tuple::typeName () const {
 	    Ymir::OutBuffer buf;
@@ -62,6 +70,7 @@ namespace semantic {
 		if (it != 0) buf.write (", ");
 		buf.write (this-> getInners () [it].to <Type> ().getTypeName (this-> isMutable ()));
 	    }
+	    if (this-> getInners ().size () == 1) buf.write (",");
 	    buf.write (")");
 	    return buf.str ();
 	}

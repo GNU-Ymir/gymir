@@ -10,7 +10,6 @@ struct Keys {
     static const std::string  ABSTRACT;
     static const std::string  ALIAS;
     static const std::string  ANTI; 
-    static const std::string  AS;
     static const std::string  ASSERT;
     static const std::string  ATTRIBUTE;
     static const std::string  BODY;
@@ -140,4 +139,5 @@ struct Keys {
     static const std::string  YLANG;
     static const std::string  OPERATOR;
     static const std::string  LEN;
+    static const std::string  MANGLE;
 };

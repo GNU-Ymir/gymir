@@ -38,6 +38,8 @@ namespace semantic {
 	    const static std::string SUPER;
 
 	    const static std::string DIRECT_TUPLEOF;
+
+	    const static std::string DIRECT_FIELDS;
 	    
 	public :
 

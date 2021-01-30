@@ -46,6 +46,10 @@ namespace semantic {
 	bool TraitRef::needExplicitAlias () const {
 	    return true;
 	}
+
+	bool TraitRef::containPointers () const {
+	    return true;
+	}
 	
 	std::string TraitRef::typeName () const {
 	    return Ymir::format ("%::%", (Symbol {this-> _ref}).getRealName (), this-> getLocation ().getStr ());

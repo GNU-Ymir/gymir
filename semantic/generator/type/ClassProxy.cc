@@ -32,6 +32,15 @@ namespace semantic {
 	const ClassRef & ClassProxy::getProxyRef () const {
 	    return this-> _proxy.to <ClassRef> ();
 	}
+
+	bool ClassProxy::needExplicitAlias () const {
+	    return true;
+	}
+
+	bool ClassProxy::containPointers () const {
+	    return true;
+	}
+
 	
 	std::string ClassProxy::typeName () const {
 	    Ymir::OutBuffer buf;

@@ -188,7 +188,7 @@ namespace semantic {
 		) else of (StructVar, var, {
 			if (values [0].is <Type> ()) {
 			    if (values [0].is <StructRef> ()) {
-				Mapper mapper (true, Scores::SCORE_VAR);
+				Mapper mapper (true, Scores::SCORE_TYPE);
 				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
 				mapper.nameOrder.push_back (var.getLocation ().getStr ());
 				consumed += 1;
@@ -205,7 +205,7 @@ namespace semantic {
 		) else of (ClassVar, var, {
 			if (values [0].is <Type> ()) {
 			    if (!values [0].isEmpty () && (values [0].is <ClassPtr> () || values [0].is <ClassRef> ())) {
-				Mapper mapper (true, Scores::SCORE_VAR);
+				Mapper mapper (true, Scores::SCORE_TYPE);
 				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
 				mapper.nameOrder.push_back (var.getLocation ().getStr ());
 				consumed += 1;
@@ -227,8 +227,8 @@ namespace semantic {
 		    }
 		) else of (AliasVar, var, {
 			if (values [0].is <Type> ()) {
-			    if (values [0].to<Type> ().needExplicitAlias ()) {
-				Mapper mapper (true, Scores::SCORE_VAR);
+			    if (values [0].to<Type> ().containPointers ()) {
+				Mapper mapper (true, Scores::SCORE_TYPE);
 				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), values [0]));
 				mapper.nameOrder.push_back (var.getLocation ().getStr ());
 				consumed += 1;
@@ -880,7 +880,7 @@ namespace semantic {
 			return Mapper (false, 0);
 		    }
 		) else of (AliasVar, var, {
-			if ((!types [0].isEmpty ()) && types [0].to<Type> ().needExplicitAlias ()) {
+			if ((!types [0].isEmpty ()) && types [0].to<Type> ().containPointers ()) {
 			    Mapper mapper (true, Scores::SCORE_TYPE);
 			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
 			    mapper.nameOrder.push_back (var.getLocation ().getStr ());

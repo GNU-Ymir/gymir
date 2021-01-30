@@ -501,10 +501,11 @@ namespace semantic {
 
 	    auto value = innerTuple;
 	    if (isRef) {
-		if (level < 2)
+		auto llevel = type.to <Type> ().mutabilityLevel ();
+		if (level < llevel)
 		    Ymir::Error::occur (expression.getIter ().getLocation (),
 					ExternalError::get (DISCARD_CONST_LEVEL),
-					2, level
+					llevel, level
 		    );
 		
 		value = Referencer::init (loc, type, innerTuple);	

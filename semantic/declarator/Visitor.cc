@@ -49,16 +49,16 @@ namespace semantic {
 		    return visitExtern (ex_bl);
 		);
 		
-		of (syntax::Class, cls,
-		    return visitClass (cls);
+		of (syntax::Class, cls ATTRIBUTE_UNUSED,
+		    return visitClass (ast);
 		);
 
 		of (syntax::Trait, trait,
 		    return visitTrait (trait);
 		);
 
-		of (syntax::Mixin, impl,
-		    return visitImpl (impl);
+		of (syntax::Mixin, impl ATTRIBUTE_UNUSED,
+		    return visitImpl (ast);
 		);
 		
 		of (syntax::Global, glb,
@@ -135,6 +135,7 @@ namespace semantic {
 		    glob = Module::init (lexing::Word::init (mod.getLocation (), modules [0]), mod.getComments (), this-> _isWeak);
 		    pushReferent (glob);
 		} else pushReferent (glob);
+
 		
 		createSubModules (mod.getLocation (), std::vector <std::string> (modules.begin () + 1, modules.end ()), ret);
 		
@@ -356,20 +357,24 @@ namespace semantic {
 			}
 		    ) else of (syntax::Constructor, cs, {
 			    auto sym = visitConstructor (cs);
-			    sym.to <Constructor> ().setClass (cls);
-			    if (pub)  sym.setPublic ();
-			    if (prot) sym.setProtected ();					    
+			    if (!sym.isEmpty ()) sym.to <Constructor> ().setClass (cls);
+			    if (!sym.isEmpty () && pub)  sym.setPublic ();
+			    if (!sym.isEmpty () && prot) sym.setProtected ();					    
+			}
+		    ) else of (syntax::CondBlock, cb, {
+			    Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_CLASS));
 			}
 		    ) else {
 			    auto sym = visit (jt);
-			    if (pub)  sym.setPublic ();
-			    if (prot) sym.setProtected ();
+			    if (!sym.isEmpty () && pub)  sym.setPublic ();
+			    if (!sym.isEmpty () && prot) sym.setProtected ();
 			}
 		}
 	    }
 	}
 	
-	semantic::Symbol Visitor::visitClass (const syntax::Class stcls) {
+	semantic::Symbol Visitor::visitClass (const syntax::Declaration & stdecl) {
+	    auto & stcls = stdecl.to <syntax::Class> ();
 	    auto cls = Class::init (stcls.getLocation (), stcls.getComments (), stcls.getAncestor (), this-> _isWeak);
 	
 	    auto symbols = getReferent ().getLocal (stcls.getLocation ().getStr ());
@@ -393,7 +398,7 @@ namespace semantic {
 	    getReferent ().insert (ret);
 	    return ret;
 	}
-
+	
 	semantic::Symbol Visitor::visitTrait (const syntax::Trait sttrait) {
 	    auto tr = Trait::init (sttrait.getLocation (), sttrait.getComments (), this-> _isWeak);
 
@@ -404,35 +409,48 @@ namespace semantic {
 	    }
 
 	    pushReferent (tr);
-	    for (auto it : sttrait.getDeclarations ()) {
-	    	match (it) {
-	    	    of (syntax::DeclBlock, dc, {			    
-	    		    for (auto jt : dc.getDeclarations ()) {
-	    			auto sym = visit (jt);
-	    			if (dc.isPublic ())
-	    			    sym.setPublic ();
-	    			if (dc.isProt ())
-	    			    sym.setProtected ();
-	    		    }							    
-	    		}
-	    	    ) else {			
-	    		auto sym = visit (it);
-	    		sym.setPublic ();
-	    	    }
-	    	}
-	    }
+	    visitInnerTrait (tr, sttrait.getDeclarations (), false, true, false);
 	    auto ret = popReferent ();
-	    getReferent ().insert (ret);
+	    getReferent ().replace (ret);
 	    return tr;
 	}
 
-	semantic::Symbol Visitor::visitImpl (const syntax::Mixin stimpl) {
+	void Visitor::visitInnerTrait (Symbol tr, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
+	    for (auto it : decls) {
+	    	match (it) {
+	    	    of (syntax::DeclBlock, dc, {
+			    visitInnerTrait (tr, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+	    		}
+		    ) else of (syntax::CondBlock, cb, {
+			    Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_TRAIT));
+			}
+		     ) else of (syntax::ExpressionWrapper, wrap, {
+			     if (wrap.getContent ().is <syntax::Assert> ()) {
+				 tr.to <semantic::Trait> ().addAssertion (wrap.getContent ());
+				 tr.to <semantic::Trait> ().addAssertionComments (wrap.getComments ());
+			     } else {
+				 auto sym = visit (it);
+				 if (!sym.isEmpty () && prot) sym.setProtected ();
+				 if (!sym.isEmpty () && pub) sym.setPublic ();
+			     }
+			 }
+		     ) else {			
+	    		auto sym = visit (it);
+			if (!sym.isEmpty () && prot) sym.setProtected ();
+			if (!sym.isEmpty () && pub) sym.setPublic ();
+	    	    }
+	    	}
+	    }  
+	}
+	
+	semantic::Symbol Visitor::visitImpl (const syntax::Declaration & decl) {
+	    auto stimpl = decl.to <syntax::Mixin> ();
 	    auto im = Impl::init (stimpl.getLocation (), stimpl.getComments (), stimpl.getMixin (), this-> _isWeak);
 	    pushReferent (im);
 	    visitInnerClass (im, stimpl.getDeclarations (), false, true, false);	    
 	    auto ret = popReferent ();
 	    getReferent ().insert (ret);
-	    return ret;
+	    return ret;	    
 	}
 	
 	semantic::Symbol Visitor::visitEnum (const syntax::Enum stenm) {
@@ -460,13 +478,13 @@ namespace semantic {
 		match (jt) {
 		    of (syntax::MacroConstructor, constr, {
 			    auto sym = visitMacroConstructor (constr);
-			    if (pub) sym.setPublic ();
-			    if (prot) sym.setProtected ();
+			    if (!sym.isEmpty () && pub) sym.setPublic ();
+			    if (!sym.isEmpty () && prot) sym.setProtected ();
 			}
 		    ) else of (syntax::MacroRule, rule, {
 			    auto sym = visitMacroRule (rule);
-			    if (pub) sym.setPublic ();
-			    if (prot) sym.setProtected ();
+			    if (!sym.isEmpty () && pub) sym.setPublic ();
+			    if (!sym.isEmpty () && prot) sym.setProtected ();
 			}
 		    ) else of (syntax::DeclBlock, dc, {
 			    visitInnerMacro (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
@@ -643,8 +661,9 @@ namespace semantic {
 		    Error::occur (imp.getModule (), ExternalError::get (NO_SUCH_FILE), path);
 		}
 	    }
-	    
+
 	    getReferent ().use (imp.getModule ().getStr () , Symbol::getModuleByPath (imp.getModule ().getStr ()));
+	    
 	    return Symbol::empty ();	    		    
 	}	
 	
@@ -688,7 +707,6 @@ namespace semantic {
 	    getReferent ().insert (sym);
 	    return sym;
 	}
-
 	
 	void Visitor::pushReferent (const Symbol sym) {
 	    this-> _referent.push_front (sym);

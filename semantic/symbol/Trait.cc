@@ -112,5 +112,22 @@ namespace semantic {
     std::string Trait::getRealName () const {
 	return this-> getReferent ().getRealName () + "::" + this-> getName ().getStr ();
     }
+
+    void Trait::addAssertion (const syntax::Expression & assert) {
+	this-> _assertions.push_back (assert);
+    }
+
+    void Trait::addAssertionComments (const std::string & comments) {
+	this-> _assertion_comments.push_back (comments);
+    }
+
+    const std::vector <syntax::Expression> & Trait::getAssertions () const {
+	return this-> _assertions;
+    }
+
+    const std::vector <std::string> & Trait::getAssertionComments () const {
+	return this-> _assertion_comments;
+    }
+
     
 }

@@ -1046,6 +1046,13 @@ namespace semantic {
 					    Bool::init (expression.getLocation ()),
 					    left, right);
 	    }
+
+	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				expression.getLocation ().getStr (),
+				left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+		);
+		    
 	    return Generator::empty ();
 	}
 

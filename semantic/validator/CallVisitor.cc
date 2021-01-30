@@ -1018,7 +1018,7 @@ namespace semantic {
 	    else return Generator::empty ();	    
 	}
 	
-	Generator CallVisitor::validateDotCall (const syntax::Expression & exp, std::vector <Generator> & params, const std::list <Ymir::Error::ErrorMsg> & errors) {	    
+	Generator CallVisitor::validateDotCall (const syntax::Expression & exp, std::vector <Generator> & params, const std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (exp.is <syntax::Binary> () && exp.getLocation () == Token::DOT_AND) {
 		auto intr = syntax::Intrinsics::init (lexing::Word::init (exp.getLocation (), Keys::ALIAS), exp.to<syntax::Binary> ().getLeft ());
 		auto n_bin = syntax::Binary::init (lexing::Word::init (exp.getLocation (), Token::DOT), intr, exp.to <syntax::Binary> ().getRight (), exp.to <syntax::Binary> ().getType ());
@@ -1029,14 +1029,18 @@ namespace semantic {
 	    Generator left (Generator::empty ());
 	    syntax::Expression synthBin (syntax::Expression::empty ());
 	    
-	    if (exp.is <syntax::TemplateCall> () && exp.to <syntax::TemplateCall> ().getContent ().is <syntax::Binary> () && exp.to <syntax::TemplateCall> ().getContent ().getLocation () == Token::DOT) {
+	    if (exp.is <syntax::TemplateCall> () && exp.to <syntax::TemplateCall> ().getContent ().is <syntax::Binary> () && (exp.to <syntax::TemplateCall> ().getContent ().getLocation () == Token::DOT ||
+															      exp.to <syntax::TemplateCall> ().getContent ().getLocation () == Token::DOT_AND)) {
 		auto leftBin = exp.to <syntax::TemplateCall> ().getContent ().to <syntax::Binary> ().getLeft ();
+		if (exp.to <syntax::TemplateCall> ().getContent ().getLocation () == Token::DOT_AND) {
+		    leftBin = syntax::Intrinsics::init (lexing::Word::init (exp.to <syntax::TemplateCall> ().getContent ().getLocation (), Keys::ALIAS), leftBin);
+		}
 		auto rightBin = exp.to <syntax::TemplateCall> ().getContent ().to <syntax::Binary> ().getRight ();
 		auto rightTmpl = syntax::TemplateCall::init (exp.getLocation (), exp.to <syntax::TemplateCall> ().getParameters (), rightBin);
-		synthBin = syntax::Binary::init (exp.to <syntax::TemplateCall> ().getContent ().getLocation (),
-					    leftBin,
-					    rightTmpl,
-					    syntax::Expression::empty ());
+		synthBin = syntax::Binary::init (lexing::Word::init (exp.to <syntax::TemplateCall> ().getContent ().getLocation (), Token::DOT),
+						 leftBin,
+						 rightTmpl,
+						 syntax::Expression::empty ());
 		
 	    } else if  (exp.is <syntax::Binary> () && exp.to <syntax::Binary> ().getLocation () == Token::DOT) {
 		synthBin = exp;

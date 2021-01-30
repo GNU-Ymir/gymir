@@ -28,6 +28,8 @@ namespace semantic {
 	    static std::string INIT_NAME;
 
 	    static std::string TUPLEOF;
+
+	    static std::string DIRECT_FIELDS;
 	    
 	public :
 
@@ -51,7 +53,12 @@ namespace semantic {
 	     */
 	    bool needExplicitAlias () const override;
 
-	    const Generator & getExplicitAliasTypeLoc () const;
+	    /**
+	     * \return true if this struct contains type containing pointer
+	     */
+	    bool containPointers () const override;
+	    
+	    const Generator & getExplicitAliasTypeLoc () const;	    
 	    
 	    std::string typeName () const override;
 

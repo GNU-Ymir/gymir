@@ -448,9 +448,6 @@ namespace semantic {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 
-	    // if (name == Pointer::INIT_NAME) {
-	    // TODO
-	    // } else
 	    if (name == Pointer::INNER_NAME) {
 		return p.to <Type> ().getInners () [0];
 	    }
@@ -600,7 +597,14 @@ namespace semantic {
 			expression.getRight ().getLocation (),
 			cl
 		    );
-		} 
+		} else if (name == ClassRef::SUPER) {
+		    auto ancestor = t.to<generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
+		    if (!ancestor.isEmpty ()) {
+			auto inner = Type::init (ancestor.to <Type> (), false); 
+			auto type = Type::init (ClassPtr::init (expression.getLocation (), inner).to <Type> (), false);
+			return type;
+		    }
+		}
 	    }
 
 	    return Generator::empty ();
@@ -688,8 +692,8 @@ namespace semantic {
 			    auto name = field.to <generator::VarDecl> ().getName ();
 			    auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
 			    if (!field_access.isEmpty ()) {
-				auto type = Type::init (field_access.to <Value> ().getType ().to <Type> (), false);
-			    
+				auto field_type = field_access.to <Value> ().getType ();
+				auto type = Type::init (field_type.to <Type> (), false);
 				params.push_back (field_access);
 				types.push_back (type);
 			    }
@@ -718,9 +722,38 @@ namespace semantic {
 			auto name = field.to <generator::VarDecl> ().getName ();
 			auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
 			if (!field_access.isEmpty ()) {
-			    auto type = Type::init (field_access.to <Value> ().getType ().to <Type> (), false);
-			    
+			    auto field_type = field_access.to <Value> ().getType ();
+			    auto type = Type::init (field_type.to <Type> (), false);			    
 			    params.push_back (field_access);
+			    types.push_back (type);
+			}
+		    }
+
+		    auto tuple = Tuple::init (expression.getLocation (), types);
+		    tuple = Type::init (tuple.to <Type> (), false);
+		    
+		    return TupleValue::init (expression.getLocation (), tuple, params);
+		} else if (opName == ClassRef::DIRECT_FIELDS) {
+		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
+		    bool prv = false, prot = false;
+
+		    if (value.to<Value> ().getType ().is <ClassProxy> ()) {
+			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
+			prv = false;
+		    } else
+			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
+		    
+		    std::vector <Generator> types;
+		    std::vector <Generator> params;
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    auto dot_visit = DotVisitor::init (this-> _context);
+		    for (auto & field : cl.to <generator::Class> ().getLocalFields ()) {			
+			auto name = field.to <generator::VarDecl> ().getName ();
+			auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
+			if (!field_access.isEmpty ()) {
+			    auto field_type = field_access.to <Value> ().getType ();
+			    auto type = Pointer::init (field_access.getLocation (), field_type);			    
+			    params.push_back (Addresser::init (field_access.getLocation (), type, field_access));
 			    types.push_back (type);
 			}
 		    }
@@ -800,11 +833,36 @@ namespace semantic {
 		    tuple = Type::init (tuple.to <Type> (), false); // Impossible to modify a struct via its tupleof
 		    
 		    return TupleValue::init (expression.getLocation (), tuple, params); 
+		} else if (opName == StructRef::DIRECT_FIELDS) {		    
+		    auto & fields = t.to <generator::Struct> ().getFields ();
+		    std::vector <Generator> types;
+		    std::vector <Generator> params;
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    try {
+			for (auto & field : fields) {
+			    auto field_type = field.to <generator::VarDecl> ().getVarType ();
+			    field_type = Type::init (field_type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable () && field_type.to <Type> ().isMutable ());
+			    auto name = field.to <generator::VarDecl> ().getName ();
+			    auto type = Pointer::init (expression.getLocation (), field_type);
+
+			    auto field_value = StructAccess::init (expression.getLocation (), type, value, name); 
+			    params.push_back (Addresser::init (field_value.getLocation (), type, field_value));
+			    types.push_back (type);
+			}
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
+
+		    if (errors.size () != 0) {
+			this-> error (expression, t, expression.getRight (), errors);
+		    }
+		    
+		    auto tuple = Tuple::init (expression.getLocation (), types);		    
+		    return TupleValue::init (expression.getLocation (), tuple, params); 
 		}
 	    }	    
 	    return Generator::empty ();
-	}
-
+	}	
 	
 	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right) {
 	    std::string leftName;

@@ -235,6 +235,7 @@ namespace semantic {
 		    Tree::tupleType (fields, inner);
 		    //);
 		current.erase (ref.prettyString ());
+		type.getFieldOffsets (ref.getLocation ());
 		return type;
 	    } else return // Tree::pointerType (
 		       Tree::voidType ()//);

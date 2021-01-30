@@ -41,6 +41,10 @@ namespace semantic {
 	bool ClassPtr::needExplicitAlias () const {
 	    return true;
 	}
+
+	bool ClassPtr::containPointers () const {
+	    return true;
+	}
 	
 	bool ClassPtr::isCompatible (const Generator & gen) const {
 	    if (this-> equals (gen)) return true;

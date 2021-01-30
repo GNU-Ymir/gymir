@@ -43,6 +43,14 @@ namespace semantic {
 	    }
 	    return false;
 	}
+
+	bool TupleClosure::containPointers () const {
+	    for (auto it : Ymir::r (0, this-> getInners ().size ())) {
+		if (this-> getInners () [it].to <Type> ().containPointers ())
+		    return true;
+	    }
+	    return false;	    
+	}
 	
 	std::string TupleClosure::typeName () const {
 	    Ymir::OutBuffer buf;

@@ -249,8 +249,6 @@ namespace semantic {
 	     */
 	    syntax::Expression createSyntaxValue (const lexing::Word & loc, const generator::Generator & type) const;
 
-	private :
-
 	    /**
 	     * \brief Merge two mappers 
 	     * \warning assume that the merge will succed (meaning there is no conflict between left and right)

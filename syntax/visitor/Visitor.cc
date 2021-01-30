@@ -146,6 +146,11 @@ namespace syntax {
 		if (!token.isEof ()) {
 		    this-> _lex.rewind ();
 		    decls.push_back (visitDeclaration ());
+		} else {
+		    token = this-> _lex.next ();
+		    if (!token.isEof ()) {
+			Error::occur (token, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), token.getStr ());		
+		    }
 		}
 	    }
 	} while (!token.isEof ());
@@ -655,9 +660,20 @@ namespace syntax {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::IMPL});
 	auto content = visitExpression (10); // (priority of dot operator)
-	if (this-> _lex.consumeIf ({Token::SEMI_COLON}) != Token::SEMI_COLON) {	    
+	auto next = this-> _lex.consumeIf ({Token::SEMI_COLON, Token::COMA});
+	if (next != Token::SEMI_COLON && next != Token::COMA) {	    
 	    std::vector <Declaration> decls = visitClassBlock (false);	    
 	    return Mixin::init (location, comments, content, decls);
+	} else if (next == Token::COMA) {
+	    std::vector <Declaration> impls;
+	    impls.push_back (Mixin::init (location, comments, content, {}));
+	    do {
+		content = visitExpression (10);
+		next = this-> _lex.consumeIf ({Token::SEMI_COLON, Token::COMA});
+		impls.push_back (Mixin::init (location, comments, content, {}));
+	    } while (next == Token::COMA);
+	    this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    return DeclBlock::init (location, comments, impls, false, false);
 	} else
 	    return Mixin::init (location, comments, content, {});
     }
@@ -900,12 +916,7 @@ namespace syntax {
 	    auto space = visitNamespace ();
 	    lexing::Word as = lexing::Word::eof ();
 	    
-	    token = this-> _lex.consumeIf ({Token::COMA, Keys::AS});
-	    if (token == Keys::AS) {
-		as = visitIdentifier ();
-		token = this-> _lex.consumeIf ({Token::COMA});
-	    }
-	    
+	    token = this-> _lex.consumeIf ({Token::COMA});	    
 	    imports.push_back (Import::init (location, comments, space));
 	} while (token == Token::COMA);
 

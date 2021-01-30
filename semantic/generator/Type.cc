@@ -223,6 +223,10 @@ namespace semantic {
 	bool Type::needExplicitAlias () const {
 	    return false;
 	}
+
+	bool Type::containPointers () const {
+	    return false;
+	}
 	
 	const Generator & Type::getProxy () const {
 	    return this-> _proxy;

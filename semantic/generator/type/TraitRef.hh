@@ -40,6 +40,8 @@ namespace semantic {
 
 	    bool needExplicitAlias () const override;
 
+	    bool containPointers () const override;
+	    
 	    Symbol getRef () const;
 	    
 	    std::string typeName () const override;

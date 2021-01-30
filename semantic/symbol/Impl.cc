@@ -66,7 +66,7 @@ namespace semantic {
     const syntax::Expression & Impl::getTrait () const {
 	return this-> _trait;
     }    
-
+    
     std::string Impl::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());

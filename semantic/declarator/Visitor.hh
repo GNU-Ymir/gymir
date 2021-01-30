@@ -104,10 +104,10 @@ namespace semantic {
 	    semantic::Symbol visitExtern (const syntax::ExternBlock ex_block);
 	    
 	    /**
-	     * \brief Transform a class declarator into a semantic tree
+	     * \brief Transform a class declarator into a semantic tree, does not traverse the content of the class
 	     */
-	    semantic::Symbol visitClass (const syntax::Class cls);
-
+	    semantic::Symbol visitClass (const syntax::Declaration & stdecl);
+	    
 	    /**
 	     * \brief Visit the internal part of a class
 	     */
@@ -123,10 +123,16 @@ namespace semantic {
 	     */
 	    semantic::Symbol visitTrait (const syntax::Trait trait);
 
+
 	    /**
-	     * \brief Transform a trait implementation into a semantic tree
+	     * \brief Visit the internal part of a trait
 	     */
-	    semantic::Symbol visitImpl (const syntax::Mixin impl);
+	    void visitInnerTrait (Symbol tr, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
+	    
+	    /**
+	     * \brief Transform a trait implementation into a semantic tree, don't traverse the content of the mixin
+	     */
+	    semantic::Symbol visitImpl (const syntax::Declaration & impl);
 	    
 	    /**
 	     * \brief Visit an enum declaration

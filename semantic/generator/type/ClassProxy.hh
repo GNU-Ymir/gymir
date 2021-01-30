@@ -40,7 +40,17 @@ namespace semantic {
 	     * \return the ref that generated the proxy
 	     */
 	    const ClassRef & getProxyRef () const;
-   	    
+
+	    /**
+	     * \return true, pointer points to data in foreign place, and need to give the ownership
+	     */
+	    bool needExplicitAlias () const override;
+
+	    /**
+	     * \return true, this is literaly a pointer
+	     */
+	    bool containPointers () const override;
+	    
 	    /** 
 	     * \return the name of the value formatted
 	     */

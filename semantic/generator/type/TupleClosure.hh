@@ -36,6 +36,11 @@ namespace semantic {
 	     */
 	    bool needExplicitAlias () const override;
 
+	    /**
+	     * \return true if the tuple contains type containing pointers
+	     */
+	    bool containPointers () const override;
+	    
 	    /** 
 	     * \return the name of the type formatted
 	     */

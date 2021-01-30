@@ -3,6 +3,7 @@
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/semantic/Table.hh>
 #include <ymir/syntax/Expression.hh>
+#include <ymir/syntax/Declaration.hh>
 #include <vector>
 
 
@@ -16,7 +17,7 @@ namespace semantic {
 
 	/** The symbol table associated to the implem */
 	std::shared_ptr<Table> _table;
-
+	
 	syntax::Expression _trait;
 	
     private :

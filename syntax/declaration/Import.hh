@@ -46,7 +46,7 @@ namespace syntax {
 	 * \return the relative path of the module to import
 	 */
 	std::string getPath () const;
-
+	
     };
     
 }

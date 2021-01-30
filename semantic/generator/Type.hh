@@ -122,7 +122,12 @@ namespace semantic {
 	    /**
 	     * \return this type is in the heap and need to be explicitly aliases
 	     */
-	    virtual bool needExplicitAlias () const;	    
+	    virtual bool needExplicitAlias () const;
+
+	    /**
+	     * \return this type is in the heap and need to be explicitly aliases 
+	     */
+	    virtual bool containPointers () const;	    
 	    
 	    /**
 	     * \return assuming that isComplex () == true, the content type of this type

@@ -22,6 +22,12 @@ namespace semantic {
 	 * the list of fields that are marked protected 
 	 */
 	std::vector <std::string> _protected;
+
+	/** The assertion that must be validated within the class */
+	std::vector <syntax::Expression> _assertions;
+
+	/** The comments above the assertion (for documentation dumping only) */
+	std::vector <std::string> _assertion_comments;
 	
 	/**
 	 * set at validation time, to prevent multiple time validation of the same symbol
@@ -112,6 +118,26 @@ namespace semantic {
 	/** The name of the trait must be ignored */
 	std::string getRealName () const override;
 	
+	/**
+	 * \brief Add an assertion to validate in the class
+	 */
+	void addAssertion (const syntax::Expression & assert);
+
+	/** 
+	 * \brief add a comment about the last inserted assertion
+	 */
+	void addAssertionComments (const std::string & str);
+
+	/**
+	 * \return the list of assertion in the class
+	 */
+	const std::vector <syntax::Expression> & getAssertions () const;
+	
+	/**
+	 * \return the comments on the assertions
+	 */
+	const std::vector <std::string> & getAssertionComments () const;
+
     };
     
 }

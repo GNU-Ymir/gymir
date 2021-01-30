@@ -17,10 +17,12 @@ namespace semantic {
 	std::string Mangler::YMIR_VTABLE = "VT";
 	std::string Mangler::YMIR_TYPEINFO = "TI";
 	
-	Mangler::Mangler () {}
+	Mangler::Mangler (bool fail) :
+	    _fail (fail)
+	{}
 
-	Mangler Mangler::init () {
-	    return Mangler ();
+	Mangler Mangler::init (bool fail) {
+	    return Mangler (fail);
 	}
 
 	std::string Mangler::getYmirPrefix () {
@@ -68,12 +70,12 @@ namespace semantic {
 		else of (Closure, c ATTRIBUTE_UNUSED, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
 	    }
 
-	    if (result == "") {
+	    if (result == "" && this-> _fail) {
 		println (gen.prettyString ());
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    }
 	    
-	    else {
+	    else if (result != "") {
 		if (fatherMut && gen.to <Type> ().isMutable ()) 
 		    result = "x" + result;
 		if (gen.to <Type> ().isRef ())
@@ -353,6 +355,13 @@ namespace semantic {
 	
 	std::string Mangler::mangleClosureT (const Closure &) const {
 	    return ""; 
+	}
+
+	std::string Mangler::manglePath (const std::string & path) const {
+	    std::vector <std::string> splits = split (path, "::");
+	    OutBuffer buf;
+	    for (auto & it : splits) buf.write (it.length (), it);
+	    return buf.str ();
 	}
 	
 	std::vector <std::string> Mangler::split (const std::string & str, const std::string & delim) const {

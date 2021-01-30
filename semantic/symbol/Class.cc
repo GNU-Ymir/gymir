@@ -131,7 +131,7 @@ namespace semantic {
     const syntax::Expression & Class::getAncestor () const {
 	return this-> _ancestor;
     }
-
+    
     void Class::setPrivate (const std::string & name) {
 	this-> _privates.emplace (name);
     }

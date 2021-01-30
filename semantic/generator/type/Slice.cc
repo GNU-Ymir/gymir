@@ -48,6 +48,10 @@ namespace semantic {
 	bool Slice::needExplicitAlias () const {
 	    return true;
 	}
+
+	bool Slice::containPointers () const {
+	    return true;
+	}
 	
 	std::string Slice::typeName () const {
 	    Ymir::OutBuffer buf;

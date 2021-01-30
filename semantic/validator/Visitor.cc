@@ -602,12 +602,34 @@ namespace semantic {
 	}
 
 	void Visitor::validateTrait (const semantic::Symbol & tr) {
+	    std::list <Error::ErrorMsg> errors;
 	    for (auto & it : tr.to <semantic::Trait> ().getAllInner ()) {
 		if (it.is <semantic::Template> ()) {
-		    Ymir::Error::occur (it.getName (), ExternalError::get (TEMPLATE_IN_TRAIT));
+		    errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::get (TEMPLATE_IN_TRAIT)));
+		} else if (it.is <semantic::VarDecl> ()) {
+		    errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::get (VAR_DECL_IN_TRAIT)));
 		} else if (it.to <semantic::Function> ().isOver ())
-		    Ymir::Error::occur (it.getName (), ExternalError::get (NOT_OVERRIDE), it.getName ().getStr ());
+		    errors.push_back (Ymir::Error::makeOccur (it.getName (), ExternalError::get (NOT_OVERRIDE), it.getName ().getStr ()));
 	    }
+
+	    if (tr.to <semantic::Trait> ().getAssertions ().size () != 0) {
+		pushReferent (tr, "validateClassAssertions");
+		enterForeign ();
+		    
+		for (auto & it : tr.to <semantic::Trait> ().getAssertions ()) {
+		    try {
+			this-> validateCteValue (it);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    }
+		}
+		    
+		exitForeign ();
+		popReferent ("validateClassAssertions");
+	    }
+
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
 	}
 
 	void Visitor::validateInnerClass (const semantic::Symbol & cls) {
@@ -639,6 +661,7 @@ namespace semantic {
 			);
 		    }
 		} catch (Error::ErrorList list) {
+		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), it.getRealName ()));
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 
@@ -767,7 +790,7 @@ namespace semantic {
 		
 		if (errors.size () != 0) {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-		    throw Error::ErrorList {errors};
+		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
 		}
 		
 	    }
@@ -783,7 +806,7 @@ namespace semantic {
 		if (errors.size () != 0) {
 		    auto sym = cls;
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-		    throw Error::ErrorList {errors};
+		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
 		}
 		
 		insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
@@ -818,12 +841,14 @@ namespace semantic {
 		}
 	    }
 
+	    std::vector <semantic::Symbol> implemented;
 	    // We verify the vtable for implementation that have already been made in ancestor class
 	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
 		try {
 		    match (it) {
-			of (semantic::Impl, im, {
+			of (semantic::Impl, im ATTRIBUTE_UNUSED, {
 				validateVtableImplement (im, classType, ancestor, vtable, protection, ancVtable, addMethods);
+				implemented.push_back (it);
 			    }
 			    );
 		    }		    		
@@ -849,46 +874,38 @@ namespace semantic {
 		} 
 	    }
 
-	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
+	    for (auto it : implemented) {
 		try {		    
-		    if (it.is <semantic::Impl> ()) {
-			auto trait = this-> validateType (it.to <semantic::Impl> ().getTrait ());
-			for (auto jt : it.to <semantic::Impl> ().getAllInner ()) {
-			    match (jt) {
-				of (semantic::Function, func ATTRIBUTE_UNUSED, {
-					auto index = validateVtableMethod (func, classType, ancestor, vtable, protection, implVtable, trait);
-					if (func.getContent ().getBody ().isEmpty ()) {
-					    Ymir::Error::occur (vtable [index].getLocation (), ExternalError::get (NO_BODY_METHOD), vtable [index].prettyString ());
-					}
-					
-					// Definition of a new method in implement is forbidden
-					if (index >= (int) addMethods.size ()) {
-					    std::list <Ymir::Error::ErrorMsg> names;
-					    for (auto & ft : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) { // It is necessarily a trait, we verified that earlier
-						if (ft.getName ().getStr () == func.getName ().getStr () && ft.is <semantic::Function> ()) {
-						    auto proto = validateMethodProto (ft.to <semantic::Function> (), classType, trait);
-						    names.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), proto.getLocation (), proto.prettyString ()));
-						}
-					    }
-					    Ymir::Error::occurAndNote (func.getName (), names, ExternalError::get (TRAIT_NO_METHOD), trait.prettyString (), vtable [index].prettyString ());
-					}
-					addMethods [index] = jt;
-				    }
-				    )
-				else of (semantic::Template, tm ATTRIBUTE_UNUSED, {
-				   Ymir::Error::occur (it.getName (), ExternalError::get (TEMPLATE_IN_TRAIT));
-				}
-				) else {
-				    Ymir::Error::halt ("", "");
-				}		
+		    auto trait = this-> validateType (it.to <semantic::Impl> ().getTrait ());
+		    for (auto jt : it.to <semantic::Impl> ().getAllInner ()) {
+			if (jt.is <semantic::Function> ()) {
+			    auto & func = jt.to <semantic::Function> ();
+			    auto index = validateVtableMethod (func, classType, ancestor, vtable, protection, implVtable, trait);
+			    if (func.getContent ().getBody ().isEmpty ()) {
+				Ymir::Error::occur (vtable [index].getLocation (), ExternalError::get (NO_BODY_METHOD), vtable [index].prettyString ());
 			    }
+					
+			    // Definition of a new method in implement is forbidden
+			    if (index >= (int) addMethods.size ()) {
+				std::list <Ymir::Error::ErrorMsg> names;
+				for (auto & ft : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) { // It is necessarily a trait, we verified that earlier
+				    if (ft.getName ().getStr () == func.getName ().getStr () && ft.is <semantic::Function> ()) {
+					auto proto = validateMethodProto (ft.to <semantic::Function> (), classType, trait);
+					names.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), proto.getLocation (), proto.prettyString ()));
+				    }
+				}
+				Ymir::Error::occurAndNote (func.getName (), names, ExternalError::get (TRAIT_NO_METHOD), trait.prettyString (), vtable [index].prettyString ());
+			    }
+			    addMethods [index] = jt;
+			} else {
+			    Ymir::Error::halt ("", ""); 
 			}
-		    }								    	    		
+		    }			    
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
+		} 	
 	    }
-
+	    
 	    for (auto i : Ymir::r (0, vtable.size ())) {
 		for (auto j : Ymir::r (0, vtable.size ())) {
 		    // Verification of the collision (since all reimplemented function are marked override)
@@ -952,27 +969,27 @@ namespace semantic {
 
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    for (auto it : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) {
+		pushReferent (it, "vtableImplement");
 		try {
-		    match (it) {
-			of (semantic::Function, func ATTRIBUTE_UNUSED, {
-				int index = validateVtableMethodImplement (func, classType, ancestor, vtable, protection, ancVtable, trait);
-				if (index < (int) ancVtable.size ())
-				    addMethods [index] = it;
-				else 
-				    addMethods.push_back (it);
-			    }
-			)
-			else of (semantic::Template, tm ATTRIBUTE_UNUSED, {
-				Ymir::Error::occur (it.getName (), ExternalError::get (TEMPLATE_IN_TRAIT));
-			    }
-			) else {
-			   Ymir::Error::halt ("", "");
-			}			
+		    if (it.is <semantic::Template> ()) {
+			Ymir::Error::occur (it.getName (), ExternalError::get (TEMPLATE_IN_TRAIT));
+		    } else if (it.is <semantic::VarDecl> ()) {
+			Ymir::Error::occur (it.getName (), ExternalError::get (VAR_DECL_IN_TRAIT));
+		    } else if (it.is <semantic::Function> ()) {
+			auto & func = it.to <semantic::Function> ();
+			int index = validateVtableMethodImplement (func, classType, ancestor, vtable, protection, ancVtable, trait);
+			if (index < (int) ancVtable.size ())
+			    addMethods [index] = it;
+			else 
+			    addMethods.push_back (it);
+		    } else {
+			Ymir::Error::halt ("", "");		    			
 		    }
 		} catch (Error::ErrorList list) {		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    errors.back ().addNote (Ymir::Error::createNote (impl.getTrait ().getLocation (), ExternalError::get (IN_TRAIT_VALIDATION)));
-		} 
+		}
+		popReferent ("vtableImplement");
 	    }
 	    
 	    if (errors.size () != 0)
@@ -1821,7 +1838,11 @@ namespace semantic {
 		value = validateValueNoReachable (expr, fromCall);
 	    // If it can be a type, that means we are looking for a type, and that implicit call is not an option
 	    
-	    if (value.isEmpty ()) Ymir::Error::halt ("", ""); // It can't be null without throwing exception!
+	    if (value.isEmpty ()) {
+		println (expr.prettyString ());
+		Ymir::Error::halt ("", ""); // It can't be null without throwing exception!
+	    }
+	    
 	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
 		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
@@ -3596,7 +3617,20 @@ namespace semantic {
 		if (!assert.getMsg ().isEmpty ()) {
 		    try {
 			auto msgVal = retreiveValue (validateValue (assert.getMsg ()));
-			msg = msgVal.prettyString ();
+			std::vector <char> text;
+			if (msgVal.is <StringValue> ()) {
+			    text = msgVal.to <StringValue> ().getValue ();
+			} else if (msgVal.is <Aliaser> () && msgVal.to <Aliaser> ().getWho ().is <StringValue> ()) {
+			    text = msgVal.to <Aliaser> ().getWho ().to <StringValue> ().getValue ();
+			}
+			if (text.size () != 0) {
+			    Ymir::OutBuffer buf;
+			    text = UtfVisitor::utf32_to_utf8 (text);
+			    for (int i = 0 ; i < (int) text.size () - 1; i++) buf.write (text [i]);
+			    msg = buf.str ();
+			} else {
+			    msg = msgVal.prettyString ();
+			}
 		    } catch (Ymir::Error::ErrorList) {
 			msg = assert.getMsg ().prettyString ();
 		    }
@@ -3623,6 +3657,40 @@ namespace semantic {
 		} catch (Error::ErrorList list) {
 		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 		}
+	    } else if (prg.getLocation ().getStr () == Keys::MANGLE) {
+		if (prg.getContent ().size () != 1) {
+		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		}
+		
+		std::string res;
+		auto mangler = Mangler::init (false);
+		try {
+		    auto val = validateValue (prg.getContent ()[0], true, false);
+		    if (val.is <StringValue> ()) { // assumed to be a path
+			res = mangler.manglePath (Ymir::format ("%", val.to <StringValue> ().getValue ()));
+		    } else {
+			res = mangler.mangle (val);
+		    }
+
+
+		} catch (Error::ErrorList list) {
+		    try {
+			auto val = validateType (prg.getContent ()[0], true);
+			res = mangler.mangle (val);
+		    } catch (Error::ErrorList list) {
+			Ymir::Error::occurAndNote (prg.getLocation (), list.errors, ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+		    }
+		}
+
+		    return validateValue (
+			syntax::String::init (
+			    prg.getLocation (),
+			    prg.getLocation (),
+			    lexing::Word::init (prg.getLocation (), res),
+			    lexing::Word::eof ()
+			    )
+			);
+		    		    
 	    } else if (prg.getLocation ().getStr () == Keys::OPERATOR) {
 		if (prg.getContent ().size () != 2 && prg.getContent ().size () != 3) {		    
 		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());

@@ -635,6 +635,11 @@ namespace generic {
 	uint getSize () const;
 
 	/**
+	 * \brief Get the field offset of a record type in a static array
+	 */
+	Tree getFieldOffsets (const lexing::Word & loc) const;
+	
+	/**
 	 * \brief Applicable to a type
 	 * \return the size of the array in number of element
 	 */

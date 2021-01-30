@@ -138,7 +138,7 @@ namespace generic {
 	return Tree::tupleType ("", attrs, types);
     }
     
-    Tree Tree::tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types, bool isUnion, bool isPacked) {		
+    Tree Tree::tupleType (const std::string & name, const std::vector <std::string> & attrs, const std::vector <Tree> & types, bool isUnion, bool isPacked) {
 	tree field_last = NULL_TREE, field_begin = NULL_TREE;
 	tree record_type;
 	if (isUnion)
@@ -179,8 +179,7 @@ namespace generic {
 	    TYPE_PACKED (record_type) = 1;
 	    SET_TYPE_ALIGN (record_type, 1 * BITS_PER_UNIT);
 	    compute_record_mode (record_type);	
-	}
-	  
+	}	  
 
 	return Tree::init (UNKNOWN_LOCATION, record_type);
     }
@@ -788,6 +787,23 @@ namespace generic {
 	return TREE_INT_CST_LOW (TYPE_SIZE_UNIT (this-> _t));
     }    
 
+    Tree Tree::getFieldOffsets (const lexing::Word & loc) const {
+	tree type = this-> _t;
+	if (this-> getTreeCode () != RECORD_TYPE && this-> getTreeCode () != UNION_TYPE) {
+	    type = TREE_TYPE (this-> _t);
+	}
+	
+	std::vector<Tree> params;
+	tree field_decl = TYPE_FIELDS (type);
+	while (field_decl != NULL_TREE) {;
+	    uint offset = TREE_INT_CST_LOW (DECL_FIELD_BIT_OFFSET (field_decl));
+	    params.push_back (Tree::buildSizeCst (offset));
+	    field_decl = TREE_CHAIN (field_decl);
+	}
+	auto arr_type = Tree::staticArray (Tree::sizeType (), params.size ());
+	return Tree::constructIndexed (loc, arr_type, params);
+    }
+    
     Tree Tree::getArraySize () const {
 	auto range = TYPE_DOMAIN (this-> _t);
 	return Tree::init (BUILTINS_LOCATION,

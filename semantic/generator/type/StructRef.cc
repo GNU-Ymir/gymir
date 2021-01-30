@@ -9,6 +9,7 @@ namespace semantic {
 
 	std::string StructRef::INIT_NAME = "init";
 	std::string StructRef::TUPLEOF   = "tupleof";
+	std::string StructRef::DIRECT_FIELDS   = "fields_address";
 	
 	StructRef::StructRef () :
 	    Type ()
@@ -77,6 +78,16 @@ namespace semantic {
 	    return false;
 	}
 
+	bool StructRef::containPointers () const {
+	    auto ref = Symbol {this-> _ref};
+	    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {
+		if (it.to <generator::VarDecl> ().getVarType ().to <Type> ().containPointers ())	       
+		    return true;
+	    }
+	    
+	    return false;	    
+	}
+	
 	const Generator & StructRef::getExplicitAliasTypeLoc () const {
 	    auto ref = Symbol {this-> _ref};
 	    for (auto & it : ref.to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().getFields ()) {		

@@ -455,12 +455,17 @@ namespace semantic {
 
 	generator::Generator CompileTime::executeBinaryBool (const generator::BinaryBool & binBool) {
 	    auto leftEx = this-> execute (binBool.getLeft ());
-	    auto rightEx = this-> execute (binBool.getRight ());
 	    if (!leftEx.is <BoolValue> ())
 		Ymir::Error::occur (
 		    leftEx.getLocation (),
 		    ExternalError::get (COMPILE_TIME_UNKNOWN)
 		);
+
+	    if (binBool.getOperator () == Binary::Operator::AND && !leftEx.to <BoolValue> ().getValue ()) {
+		return BoolValue::init (binBool.getLocation (), Bool::init (binBool.getLocation ()), false);
+	    }
+	    
+	    auto rightEx = this-> execute (binBool.getRight ());
 	    if (!rightEx.is<BoolValue> ())
 		Ymir::Error::occur (
 		    leftEx.getLocation (),

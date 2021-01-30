@@ -43,6 +43,11 @@ namespace semantic {
 	    bool needExplicitAlias () const override;
 
 	    /**
+	     * \return true, this is literaly a pointer
+	     */
+	    bool containPointers () const override;
+	    
+	    /**
 	     * \return the associated class reference
 	     */
 	    const ClassRef & getClassRef () const;

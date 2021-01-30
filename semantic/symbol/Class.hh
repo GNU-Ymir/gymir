@@ -2,6 +2,7 @@
 
 #include <ymir/semantic/Symbol.hh>
 #include <ymir/syntax/Expression.hh>
+#include <ymir/syntax/Declaration.hh>
 #include <ymir/semantic/Table.hh>
 #include <ymir/semantic/Generator.hh>
 
@@ -14,7 +15,7 @@ namespace semantic {
 
 	/** The ancestor of the class */
 	syntax::Expression _ancestor;
-
+	
 	/** The fields of the class */
 	std::vector <syntax::Expression> _fields;
 
@@ -209,7 +210,7 @@ namespace semantic {
 	 * return the ancestor of the class (might be empty)
 	 */
 	const syntax::Expression & getAncestor () const;
-
+	
 	/**
 	 * \return the list of added methods (trait but not overriden)
 	 */
