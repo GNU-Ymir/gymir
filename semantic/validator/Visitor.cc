@@ -3765,9 +3765,7 @@ namespace semantic {
 	    	    );
 		    
 	    	    return validateValue (call);
-	    	} else {
-	    	    Ymir::Error::halt ("%(r) reaching impossible point", "Critical");
-	    	}
+	    	} 		  
 	    }
 	    
 	    Ymir::Error::occur (dl.getLocation (), ExternalError::get (DOLLAR_OUSIDE_CONTEXT));

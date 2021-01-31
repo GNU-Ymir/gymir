@@ -142,11 +142,9 @@ namespace semantic {
 
 	    if (name == Slice::PTR_NAME) {
 		auto inner = left.to<Value> ().getType ().to <Slice> ().getInners ()[0];
+		auto type =  Type::init (Pointer::init (expression.getLocation (), inner).to <Type> (), left.to <Value> ().getType ().to<Type> ().isMutable ());
 		return StructAccess::init (expression.getLocation (),
-					   Pointer::init (expression.getLocation (),
-							  inner
-					   ),
-					   left, name);
+					   type, left, name);
 	    }
 	    
 	    return Generator::empty ();

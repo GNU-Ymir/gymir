@@ -699,7 +699,7 @@ namespace syntax {
 	lexing::Word getSuper = lexing::Word::eof ();
 	lexing::Word getSelf = lexing::Word::eof ();
 	if (token == Keys::WITH) {
-	    while (token != Token::LACC) {
+	    while (token != Token::LACC && token != Keys::THROWS) {
 		auto ident = this-> visitIdentifier ();
 		if (ident == Keys::SUPER) {
 		    getSuper = ident;
@@ -721,9 +721,9 @@ namespace syntax {
 		    constructions.push_back ({ident, expr});
 		}
 
-		token = this-> _lex.next ({Token::LACC, Token::COMA});
+		token = this-> _lex.next ({Token::LACC, Token::COMA, Keys::THROWS});
 	    }
-	    this-> _lex.rewind (); // We rewind the LACC, since it is part of the following expression
+	    this-> _lex.rewind (); // We rewind the LACC or THROWS, since it is part of the following expression
 	}
 	
 	auto throws = this-> _lex.consumeIf ({Keys::THROWS});
