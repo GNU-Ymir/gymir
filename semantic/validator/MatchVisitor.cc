@@ -287,6 +287,8 @@ namespace semantic {
 		return validateMatchCallStruct (value, call, isMandatory);
 	    } else if (value.to <Value> ().getType ().is<ClassPtr> ()) {
 		return validateMatchCallClass (value, call, isMandatory);
+	    } else if (value.to <Value> ().getType ().is <Option> ()) {
+		return validateMatchCallOption (value, call, isMandatory);
 	    }
 	    
 	    auto note = Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF));		
@@ -423,6 +425,111 @@ namespace semantic {
 	    }
 
 	    return globTest;		
+	}
+
+	Generator MatchVisitor::validateMatchCallOption (const Generator & value, const syntax::MultOperator & call, bool & isMandatory) {
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    auto loc = call.getLocation ();
+	    Generator globTest (Generator::empty ());
+	    bool isSucc = false;
+	    try {
+		if (call.getLeft ().is <Var> () && call.getLeft ().to <Var> ().getName () != Keys::UNDER) {
+		    auto name = call.getLeft ().to <Var> ().getName ();
+		    auto blType = Bool::init (loc);
+		    auto optionType = StructAccess::init (loc, blType, value, Option::TYPE_FIELD);
+		    Expression synthGlobTest (Expression::empty ());
+		    
+		    if (name == Keys::OK_) {
+			auto true_ = BoolValue::init (loc, Bool::init (loc), true);
+			synthGlobTest = syntax::Binary::init (lexing::Word::init (loc, Token::DEQUAL),
+							 TemplateSyntaxWrapper::init (loc, optionType),
+							 TemplateSyntaxWrapper::init (loc, true_),
+							 syntax::Expression::empty ()
+			    );
+			isSucc = true;
+		    } else if (name == Keys::ERR_) {
+			auto false_ = BoolValue::init (loc, Bool::init (loc), false);
+			synthGlobTest = syntax::Binary::init (lexing::Word::init (loc, Token::DEQUAL),
+							      TemplateSyntaxWrapper::init (loc, optionType),
+							      TemplateSyntaxWrapper::init (loc, false_),
+							      syntax::Expression::empty ()
+			    );
+			isSucc = false;
+		    } else {
+			Ymir::Error::occur (loc, ExternalError::get (UNKNOWN_OPTION_NAME), name);
+		    } 
+		    globTest = this-> _context.validateValue (synthGlobTest);		
+		} else {
+		    Ymir::Error::occur (loc, ExternalError::get (UNKNOWN_OPTION_NAME), call.getLeft ().prettyString ());
+		}
+	    } catch (Error::ErrorList list) {	       
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		errors.back ().addNote (Ymir::Error::createNote (call.getLocation (), ExternalError::get (IN_MATCH_DEF)));
+	    } 
+	    
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+
+
+	    std::vector <Expression> rights = call.getRights ();
+	    if (rights.size () > 1) {
+		std::list <std::string> names;
+		for (auto it : Ymir::r (1, rights.size ())) {
+		    names.push_back (rights[it].prettyString ());
+		}
+		Ymir::Error::occur (call.getLocation (), call.getEnd (), ExternalError::get (UNUSED_MATCH_CALL_OP), names);	
+	    }
+	    
+	    if (rights.size () == 0) return globTest;
+
+	    Expression param (rights [0]);
+	    Generator leftVal (Generator::empty ());
+	    
+	    if (rights [0].is <NamedExpression> ()) {
+		param = rights [0].to <NamedExpression> ().getContent ();
+		auto name = rights [0].to <NamedExpression> ().getLocation ();
+		if (isSucc) {
+		    auto innerType = value.to <Value> ().getType ().to <Type> ().getInners ()[0];
+		    if (name.getStr () != Option::VALUE_FIELD || innerType.is <Void> ()) {
+			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), name.getStr (), Ymir::format ("% (%)", Keys::OK_, innerType.prettyString ()));		    
+		    }
+		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::VALUE_FIELD);
+		} else {		    
+		    auto syntaxType = this-> _context.createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+		    auto innerType = this-> _context.validateType (syntaxType);
+		    
+		    if (name.getStr () != Option::ERROR_FIELD) {
+			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), name.getStr (), Ymir::format ("% (%)", Keys::ERR_, innerType.prettyString ()));		    
+		    }		   
+		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::ERROR_FIELD);
+		}
+	    } else {
+		if (isSucc) {
+		    auto innerType = value.to <Value> ().getType ().to <Type> ().getInners ()[0];
+		    if (innerType.is <Void> ()) {
+			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), Option::VALUE_FIELD, Ymir::format ("% (%)", Keys::OK_, innerType.prettyString ()));		    
+		    }
+		    
+		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::VALUE_FIELD);
+		} else {
+		    auto syntaxType = this-> _context.createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+		    auto innerType = this-> _context.validateType (syntaxType);
+		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::ERROR_FIELD);
+		}
+	    }
+	    
+	    bool loc_mandatory = false;
+	    auto innerTest = validateMatch (leftVal, param, loc_mandatory);
+	    isMandatory = loc_mandatory && isMandatory;
+
+	    if (globTest.isEmpty ()) {
+		globTest = innerTest;
+	    } else globTest = BinaryBool::init (value.getLocation (),
+						Binary::Operator::AND,
+						Bool::init (value.getLocation ()),
+						globTest, innerTest);
+	    
+	    return globTest;
 	}
 
 	syntax::Expression MatchVisitor::findParameterStruct (std::vector <Expression> & params, const generator::VarDecl & var) {

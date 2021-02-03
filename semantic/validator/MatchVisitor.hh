@@ -97,6 +97,11 @@ namespace semantic {
 	    generator::Generator validateMatchCallStruct (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);
 
 	    /**
+	     * \brief Validate a call operation, where value is a value of type Option
+	     */
+	    generator::Generator validateMatchCallOption (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);
+
+	    /**
 	     * \brief Validate a call operation, where value a value of type ClassRef
 	     */
 	    generator::Generator validateMatchCallClass (const generator::Generator & value, const syntax::MultOperator & call, bool & isMandatory);

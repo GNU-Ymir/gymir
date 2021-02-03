@@ -99,6 +99,14 @@ namespace generic {
 	static Tree tupleType (const std::vector <std::string> & attrs, const std::vector <Tree> & types);
 
 	/**
+	 * \brief Create an option type
+	 * \param attrs the name of the fields  (if attrs < common + union, the fields name will be their index)
+	 * \params common, the type that are common to success and failure
+	 * \param unions, the types that are aligned at the same index after the commons
+	 */
+	static Tree optionType (const std::vector <std::string> & names, const std::vector <Tree> & common, const std::vector <Tree> & unions);
+	
+	/**
 	 * \brief Create a tuple type
 	 * \param name the name of the tuple type
 	 * \param attrs the name of the fields (if attrs < types, the fields name will be their index)

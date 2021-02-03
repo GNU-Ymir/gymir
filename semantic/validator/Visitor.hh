@@ -265,6 +265,11 @@ namespace semantic {
 	    generator::Generator validateTypeUnary (const syntax::Unary & var);
 
 	    /**
+	     * \brief Validate the unary using it as a type (for (i32)? for example)
+	     */
+	    generator::Generator validateTypeTry (const syntax::Try & tr);
+	    
+	    /**
 	     * \brief Validate an array allocation as a type
 	     */
 	    generator::Generator validateTypeArrayAlloc (const syntax::ArrayAlloc & alloc);
@@ -330,6 +335,10 @@ namespace semantic {
 	     */
 	    generator::Generator validateDollar (const syntax::Dollar & dl);
 
+	    /**
+	     * \brief Validate a try expression
+	     */
+	    generator::Generator validateTry (const syntax::Try & tr);
 	    
 	    /**
 	     * \brief Validate an assert at compile time, 

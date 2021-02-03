@@ -205,6 +205,25 @@ namespace semantic {
 		       }
 		       type = Tree::tupleType ({}, inner); // delegate are unnamed tuple .0 closure, .1 funcptr
 		   }
+	       ) else of (Option, o, {
+		       auto inner = generateType (o.getInners ()[0]);
+		       auto errorType = generateType (o.getInners ()[1]);
+		       auto boolType = Tree::boolType ();
+		       std::vector <std::string> names;
+		       names.push_back (Option::TYPE_FIELD);
+		       if (!o.getInners ()[0].is<Void> ())
+			   names.push_back (Option::VALUE_FIELD);
+		       
+		       names.push_back (Option::ERROR_FIELD);
+		       
+		       std::vector <Tree> unions;
+		       if (!o.getInners ()[0].is <Void> ())
+			   unions.push_back (inner);
+		       
+		       unions.push_back (errorType);
+		       
+		       type = Tree::optionType (names, {boolType}, unions);
+		   }
 	       );
 	    }
 
@@ -923,6 +942,10 @@ namespace semantic {
 
 		else of (ThrowBlock, bl,
 		    return generateThrowBlock (bl);
+		)
+
+	        else of (OptionValue, vl,
+		    return generateOptionValue (vl);
 		);
 	    }
 	    
@@ -990,25 +1013,32 @@ namespace semantic {
 
 	Tree Visitor::generateSet (const Set & set) {
 	    TreeStmtList list = TreeStmtList::init ();
-	    Tree last (Tree::empty ());
+	    Generator last (Generator::empty ());
 	    Tree var (Tree::empty ());
 	    if (!set.getType ().is<Void> ()) {
 		var = Tree::varDecl (set.getLocation (), "_", generateType (set.getType ()));
 	    }
 
 	    for (auto & it : set.getContent ()) {
-		if (!last.isEmpty ()) list.append (last);
-		last = generateValue (it);
+		if (!last.isEmpty ()) list.append (generateValue (last));
+		last = it;
 	    }
 
 	    if (!set.getType ().is<Void> ()) {
-		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), set.getLocation (), var, last));
+		auto value = castTo (set.getType (), last);
+		list.append (value.getList ());
+		value = value.getValue ();
+		
+		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), set.getLocation (), var, value));
 		auto binding = list.toTree ();
 		return Tree::compound (set.getLocation (),
 				       var, 
 				       binding);
 	    } else {
-		return Tree::compound (set.getLocation (), last, list.toTree ());
+		if (!last.isEmpty ())
+		    list.append (generateValue (last));
+		
+		return list.toTree ();
 	    }    
 	}	
 		
@@ -1739,6 +1769,31 @@ namespace semantic {
 	    }
 	    
 	    return Tree::gotoExpr (bl.getLocation (), lbl-> second);
+	}
+
+	generic::Tree Visitor::generateOptionValue (const OptionValue & val) {
+	    std::vector <std::string> names;
+	    std::vector <Tree> results;
+	    names.push_back (Option::TYPE_FIELD);
+	    if (val.isSuccess () && !val.getContent ().to <Value> ().getType ().is <Void> ()) names.push_back (Option::VALUE_FIELD);
+	    else if (!val.isSuccess ()) names.push_back (Option::ERROR_FIELD);
+
+	    results.push_back (Tree::buildBoolCst (val.getLocation (), val.isSuccess ()));
+	    auto value = generateValue (val.getContent ());
+	    TreeStmtList list (TreeStmtList::init ());
+
+	    list.append (value.getList ());
+	    value = value.getValue ();
+
+	    if (!val.getContent ().to <Value> ().getType ().is <Void> ())
+		results.push_back (value);
+	    else
+		list.append (value);
+	    
+	    auto type = generateType (val.getType ());
+	    return Tree::compound (val.getLocation (),
+				   Tree::constructField (val.getLocation (), type, names, results),
+				   list.toTree ());
 	}
 	
 	generic::Tree Visitor::generateExitScope (const ExitScope & scope) {

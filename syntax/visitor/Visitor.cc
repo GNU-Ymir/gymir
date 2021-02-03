@@ -1111,11 +1111,17 @@ namespace syntax {
 
     Expression Visitor::visitOperand0 () {
 	auto location = this-> _lex.consumeIf (this-> _operand_op);
+	Expression ret (Expression::empty ());
 	if (location.is (this-> _operand_op)) {
-	    return Unary::init (location, visitOperand1 ());
-	}
+	    ret = Unary::init (location, visitOperand1 ());
+	} else ret = visitOperand1 ();
 	
-	return visitOperand1 ();    
+	auto post = this-> _lex.consumeIf ({Token::INTEG});
+	if (post == Token::INTEG) {
+	    return Try::init (post, ret);
+	}
+
+	return ret;
     }
 
     Expression Visitor::visitOperand1 () {
@@ -1480,10 +1486,10 @@ namespace syntax {
     }
     
     Expression Visitor::visitVersion () {
-	auto location = this-> _lex.next ({Keys::VERSION});
+	auto location = this-> _lex.next ({Keys::VERSION});	
 	auto ident = visitIdentifier ();
 	if (global::State::instance ().isVersionActive (ident.getStr ())) {
-	    auto value = visitBlock ();	    
+	    auto value = visitBlock ();
 	    if (this-> _lex.consumeIf ({Keys::ELSE}) == Keys::ELSE) {
 		ignoreBlock ();
 	    }

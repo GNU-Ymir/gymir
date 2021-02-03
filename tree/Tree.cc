@@ -183,6 +183,57 @@ namespace generic {
 
 	return Tree::init (UNKNOWN_LOCATION, record_type);
     }
+
+    Tree Tree::optionType (const std::vector <std::string> & attrs, const std::vector <Tree> & common, const std::vector <Tree> & unions) {
+	tree field_last = NULL_TREE, field_begin = NULL_TREE;
+	tree record_type = make_node (RECORD_TYPE);
+	
+	for (uint i = 0 ; i < common.size () ; i++) {
+	    tree ident;
+	    if (i >= attrs.size ()) {
+		Ymir::OutBuffer buf;
+		buf.write ("_", (int) i - attrs.size ());
+		ident = get_identifier (buf.str ().c_str ());
+	    } else ident = get_identifier (attrs [i].c_str ());
+	    
+	    tree type = common [i].getTree ();
+	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
+	    DECL_CONTEXT (field) = record_type;
+
+	    if (field_begin == NULL_TREE) field_begin = field;
+	    if (field_last != NULL_TREE) TREE_CHAIN (field_last) = field;
+	    field_last = field;	    
+	}
+
+	tree offset;
+	for (uint i = 0 ; i < unions.size () ; i++) {
+	    tree ident;
+	    if (i + common.size () >= attrs.size ()) {
+		Ymir::OutBuffer buf;
+		buf.write ("_", (int) i - attrs.size ());
+		ident = get_identifier (buf.str ().c_str ());
+	    } else ident = get_identifier (attrs [common.size () + i].c_str ());
+	    
+	    tree type = unions [i].getTree ();
+	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
+	    DECL_CONTEXT (field) = record_type;
+	    if (i == 0) offset = DECL_FIELD_OFFSET (field);
+	    else DECL_FIELD_OFFSET (field) = offset;
+
+	    if (field_begin == NULL_TREE) field_begin = field;
+	    if (field_last != NULL_TREE) TREE_CHAIN (field_last) = field;
+	    field_last = field;	    
+	}
+
+	if (field_last != NULL_TREE) 
+	    TREE_CHAIN (field_last) = NULL_TREE;
+
+	TYPE_NAME (record_type) = get_identifier ("option");
+	TYPE_FIELDS (record_type) = field_begin;
+	layout_type (record_type);
+
+	return Tree::init (UNKNOWN_LOCATION, record_type);	
+    }
     
     Tree Tree::varDecl (const lexing::Word & loc, const std::string & name, const Tree & type) {
 	return Tree::init (loc.getLocation (),

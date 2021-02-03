@@ -43,6 +43,7 @@
 #include <ymir/semantic/generator/value/NamedGenerator.hh>
 #include <ymir/semantic/generator/value/None.hh>
 #include <ymir/semantic/generator/value/NullValue.hh>
+#include <ymir/semantic/generator/value/OptionValue.hh>
 #include <ymir/semantic/generator/value/ParamVar.hh>
 #include <ymir/semantic/generator/value/ProtoVar.hh>
 #include <ymir/semantic/generator/value/RangeValue.hh>
@@ -58,10 +59,10 @@
 #include <ymir/semantic/generator/value/StructAccess.hh>
 #include <ymir/semantic/generator/value/StructCst.hh>
 #include <ymir/semantic/generator/value/SuccessScope.hh>
-#include <ymir/semantic/generator/value/TemplateRef.hh>
 #include <ymir/semantic/generator/value/TemplateClassCst.hh>
-#include <ymir/semantic/generator/value/TemplateSyntaxWrapper.hh>
+#include <ymir/semantic/generator/value/TemplateRef.hh>
 #include <ymir/semantic/generator/value/TemplateSyntaxList.hh>
+#include <ymir/semantic/generator/value/TemplateSyntaxWrapper.hh>
 #include <ymir/semantic/generator/value/Throw.hh>
 #include <ymir/semantic/generator/value/ThrowBlock.hh>
 #include <ymir/semantic/generator/value/TupleAccess.hh>
@@ -71,8 +72,8 @@
 #include <ymir/semantic/generator/value/UnaryFloat.hh>
 #include <ymir/semantic/generator/value/UnaryInt.hh>
 #include <ymir/semantic/generator/value/UnaryPointer.hh>
-#include <ymir/semantic/generator/value/UniqValue.hh>
 #include <ymir/semantic/generator/value/UnionCst.hh>
+#include <ymir/semantic/generator/value/UniqValue.hh>
 #include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/semantic/generator/value/VarRef.hh>
 #include <ymir/semantic/generator/value/VtableAccess.hh>

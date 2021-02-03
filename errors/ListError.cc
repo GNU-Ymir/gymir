@@ -156,6 +156,7 @@ namespace Ymir {
 			    UNINIT_FIELD                    = "the field %(y) has no initial value",
 			    UNION_CST_MULT                  = "the construction of an union requires only one parameter",
 			    UNION_INIT_FIELD                = "default field value of union has no sense",
+			    UNKNOWN_OPTION_NAME             = "%(y) is not a valid option name",
 			    UNKNOWN_PRAGMA                  = "unknown __pragma %(y)",
 			    UNREACHBLE_STATEMENT	    = "unreachable statement",
 			    UNRESOLVED_TEMPLATE             = "unresolved template",

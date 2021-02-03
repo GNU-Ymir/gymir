@@ -233,6 +233,11 @@ namespace semantic {
 	     * \brief Transform a throw block into gimple
 	     */
 	    generic::Tree generateThrowBlock (const ThrowBlock & thr);
+
+	    /**
+	     * \brief Transform an option value into gimple
+	     */
+	    generic::Tree generateOptionValue (const OptionValue & opt);
 	    
 	    /**
 	     * \brief Transform an exit scope into gimple

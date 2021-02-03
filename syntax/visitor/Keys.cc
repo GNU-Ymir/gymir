@@ -133,3 +133,5 @@ const std::string	Keys::YLANG	   = "Y";
 const std::string	Keys::OPERATOR     = "operator";
 const std::string	Keys::LEN          = "len";
 const std::string       Keys::MANGLE       = "mangle";
+const std::string       Keys::OK_          = "Ok";
+const std::string       Keys::ERR_         = "Err";

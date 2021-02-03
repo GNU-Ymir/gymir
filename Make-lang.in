@@ -96,6 +96,7 @@ ymir_OBJS = \
 	ymir/expr_ImplVar.o \
 	ymir/expr_StructVar.o \
 	ymir/expr_ClassVar.o \
+	ymir/expr_Try.o \
 	ymir/expr_AliasVar.o \
 	ymir/expr_Pragma.o \
 	ymir/expr_Return.o \
@@ -156,6 +157,8 @@ ymir_OBJS = \
 	ymir/generator_MethodTemplateRef.o \
 	ymir/generator_LambdaProto.o \
 	ymir/generator_GlobalVar.o \
+	ymir/generator_Option.o \
+	ymir/generator_OptionValue.o \
 	ymir/generator_Integer.o \
 	ymir/generator_LambdaType.o \
 	ymir/generator_List.o \

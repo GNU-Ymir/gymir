@@ -2074,6 +2074,10 @@ namespace semantic {
 		of (syntax::Dollar, dl,
 		    return validateDollar (dl);
 		);
+
+		of (syntax::Try, tr,
+		    return validateTry (tr);
+		);
 	    }	    
 
 	    OutBuffer buf;
@@ -3771,6 +3775,33 @@ namespace semantic {
 	    Ymir::Error::occur (dl.getLocation (), ExternalError::get (DOLLAR_OUSIDE_CONTEXT));
 	    return Generator::empty ();
 	}
+
+	Generator Visitor::validateTry (const syntax::Try & tr) {
+	    auto inner = this-> validateValue (tr.getInner ());
+	    auto syntaxType = createClassTypeFromPath (tr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
+	    
+	    auto optionType = Option::init (tr.getLocation (), inner.to <Value> ().getType (), errType);
+	    if (inner.to <Value> ().getType ().to <Type> ().isMutable ())
+		optionType = Type::init (optionType.to <Type> (), true);
+		    
+	    auto throwsType = inner.getThrowers ();
+	    inner = OptionValue::init (tr.getLocation (), optionType, inner, true);
+	    if (throwsType.size () != 0) {
+		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (tr.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
+
+		auto loc = tr.getLocation ();
+		auto varDecl = generator::VarDecl::init (lexing::Word::init (loc, "#catch"), "#catch", errType, Generator::empty (), false);
+		auto typeInfo = validateTypeInfo (loc, errType);
+		auto vref = VarRef::init (loc, "#catch", errType, varDecl.getUniqId (),  false, Generator::empty ());
+
+		auto outer = OptionValue::init (tr.getLocation (), optionType, vref, false);
+		
+		return ExitScope::init (tr.getLocation (), optionType, jmp_buf_type, inner, {}, {}, varDecl, typeInfo, outer);		
+	    }
+	    
+	    return inner;
+	}
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
 	    auto type = Type::init (type_.to <Type> (), false, false);
@@ -4651,6 +4682,10 @@ namespace semantic {
 		    val = validateTypeUnary (un);
 		);
 
+		of (syntax::Try, tr,
+		    val = validateTypeTry (tr);
+		);
+		
 		of (syntax::List, list,
 		    if (list.isArray ())
 			val = validateTypeSlice (list);
@@ -4747,6 +4782,15 @@ namespace semantic {
 		}
 	    }
 
+	    return Generator::empty ();
+	}
+
+	Generator Visitor::validateTypeTry (const syntax::Try & tr) {
+	    auto inner = validateType (tr.getInner (), true);
+	    auto syntaxType = createClassTypeFromPath (tr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
+	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
+	    
+	    if (!inner.isEmpty ()) return Option::init (tr.getLocation (), inner, errType);
 	    return Generator::empty ();
 	}
 
@@ -5255,7 +5299,7 @@ namespace semantic {
 		}		
 	    } else if (type.is<Pointer> ()) {
 		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
-		if (llevel > std::max (1, rlevel)) {
+		if (llevel > std::max (1, rlevel) && !gen.is <NullValue> ()) {
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
 		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					       llevel, std::max (1, rlevel)
