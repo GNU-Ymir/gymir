@@ -336,7 +336,8 @@ namespace semantic {
 	    if (errors.size () != 0) {
 		throw Error::ErrorList {errors};
 	    }
-	    
+
+	    if (type.isEmpty ()) type = value.to <Value> ().getType ();
 	    type = Type::init (type.to<Type> (), value.to <Value> ().getType ().to <Type> ().isMutable (), false);
 	    
 	    // Simple affectation is sufficiant, since it is a Class, and therefore already a ref
