@@ -175,12 +175,14 @@ namespace semantic {
 		    type_test = this-> _context.validateValue (call);
 		}
 
+		this-> _context.verifyMemoryOwner (var.getLocation (), varType, value, true, false, true);
+		
 		if (!var.getValue ().isEmpty ()) {
 		    test = validateMatch (value, var.getValue (), isMandatory);			
 		} else if (type_test.isEmpty ()) { // If is not a class, maybe we need a check and it is not mandatory
 		    isMandatory = true;
 		    // We already checked the types, and we want to check in reverse anyway
-		    this-> _context.verifyMemoryOwner (var.getLocation (), varType, value, true, false, true);
+		    //this-> _context.verifyMemoryOwner (var.getLocation (), varType, value, true, false, true);
 		    test = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		} else
 		    test = BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
@@ -494,13 +496,16 @@ namespace semantic {
 			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), name.getStr (), Ymir::format ("% (%)", Keys::OK_, innerType.prettyString ()));		    
 		    }
 		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::VALUE_FIELD);
-		} else {		    
-		    auto syntaxType = this-> _context.createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
-		    auto innerType = this-> _context.validateType (syntaxType);
-		    
+		    if (value.is <Referencer> ()) {
+			auto type = leftVal.to <Value> ().getType ();
+			type = Type::init (type.to <Type> (), type.to <Type> ().isMutable (), true);
+			leftVal = Referencer::init (leftVal.getLocation (), type, leftVal); 
+		    }
+		} else {
+		    auto innerType = value.to <Value> ().getType ().to <Type> ().getInners ()[1];		    
 		    if (name.getStr () != Option::ERROR_FIELD) {
 			Ymir::Error::occur (rights[0].getLocation (), ExternalError::get (UNDEFINED_FIELD_FOR), name.getStr (), Ymir::format ("% (%)", Keys::ERR_, innerType.prettyString ()));		    
-		    }		   
+		    }
 		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::ERROR_FIELD);
 		}
 	    } else {
@@ -511,12 +516,17 @@ namespace semantic {
 		    }
 		    
 		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::VALUE_FIELD);
+		    if (value.is <Referencer> ()) {
+			auto type = leftVal.to <Value> ().getType ();
+			type = Type::init (type.to <Type> (), type.to <Type> ().isMutable (), true);
+			leftVal = Referencer::init (leftVal.getLocation (), type, leftVal); 
+		    }
 		} else {
-		    auto syntaxType = this-> _context.createClassTypeFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
-		    auto innerType = this-> _context.validateType (syntaxType);
+		    auto innerType = value.to <Value> ().getType ().to <Type> ().getInners ()[1];
 		    leftVal = StructAccess::init (call.getLocation (), innerType, value, Option::ERROR_FIELD);
 		}
 	    }
+
 	    
 	    bool loc_mandatory = false;
 	    auto innerTest = validateMatch (leftVal, param, loc_mandatory);
