@@ -527,17 +527,30 @@ namespace semantic {
 		}
 	    }
 
+	    if (!isSucc) {
+		auto ptrType = Pointer::init (value.getLocation (), Void::init (value.getLocation ()));
+		auto locTest = BinaryPtr::init (value.getLocation (),
+						Binary::Operator::NOT_IS,
+						Bool::init (value.getLocation ()),
+						leftVal,
+						NullValue::init (value.getLocation (), ptrType)						
+		    );
+						    
+		globTest = BinaryBool::init (value.getLocation (),
+					     Binary::Operator::AND,
+					     Bool::init (value.getLocation ()),
+					     globTest, locTest);
+	    }
+
 	    
 	    bool loc_mandatory = false;
 	    auto innerTest = validateMatch (leftVal, param, loc_mandatory);
 	    isMandatory = loc_mandatory && isMandatory;
-
-	    if (globTest.isEmpty ()) {
-		globTest = innerTest;
-	    } else globTest = BinaryBool::init (value.getLocation (),
-						Binary::Operator::AND,
-						Bool::init (value.getLocation ()),
-						globTest, innerTest);
+	    
+	    globTest = BinaryBool::init (value.getLocation (),
+	    				 Binary::Operator::AND,
+	    				 Bool::init (value.getLocation ()),
+	    				 globTest, innerTest);
 	    
 	    return globTest;
 	}

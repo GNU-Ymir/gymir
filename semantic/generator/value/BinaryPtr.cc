@@ -2,6 +2,7 @@
 #include <ymir/semantic/generator/type/Integer.hh>
 #include <ymir/semantic/generator/type/Pointer.hh>
 #include <ymir/semantic/generator/type/Bool.hh>
+#include <ymir/semantic/generator/type/ClassPtr.hh>
 #include <ymir/errors/Error.hh>
 
 namespace semantic {
@@ -15,7 +16,7 @@ namespace semantic {
 	BinaryPtr::BinaryPtr (const lexing::Word & loc, Operator op, const Generator & type, const Generator & left, const Generator & right) :
 	    Binary (loc, op, type, left, right)
 	{
-	    if (!left.to<Value> ().getType ().is<Pointer> ()) {
+	    if (!left.to<Value> ().getType ().is<Pointer> () && !left.to <Value> ().getType ().is <ClassPtr> ()) {
 		Ymir::Error::halt ("%(r) Malformed BinaryPtr, left operand type is : %(y)", "Critical", left.to<Value> ().getType ().to<Type> ().getTypeName ());
 	    }
 

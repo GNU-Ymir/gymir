@@ -9,6 +9,7 @@ namespace semantic {
 	class Option : public Type {
 	public : 
 
+	    const static std::string INIT_NAME;
 	    const static std::string TYPE_FIELD;
 	    const static std::string VALUE_FIELD;
 	    const static std::string ERROR_FIELD;

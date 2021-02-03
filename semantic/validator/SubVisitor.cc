@@ -67,6 +67,7 @@ namespace semantic {
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Pointer, ptr ATTRIBUTE_UNUSED, gen = validateType (expression, left))
 		else of (ClassPtr, ptr, gen = validateClass (expression, ptr.getClassRef ().getRef ().to <semantic::Class> ().getGenerator (), errors))
+		else of (Option, o ATTRIBUTE_UNUSED, gen = validateOption (expression, left, errors))
 		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));			 
 	    }
 	    	    
@@ -560,6 +561,27 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	Generator SubVisitor::validateOption (const syntax::Binary & expression, const generator::Generator & t, std::list <Ymir::Error::ErrorMsg> & errors) {
+	    if (expression.getRight ().is <syntax::Var> ()) {
+		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+		if (name == Option::INIT_NAME) {
+		    auto ptrType = Pointer::init (expression.getLocation (), Void::init (expression.getLocation ()));
+		    auto val = Aliaser::init (
+			expression.getLocation (),
+			t,
+			OptionValue::init (expression.getLocation (),
+					   t,
+					   NullValue::init (expression.getLocation (), ptrType),
+					   false
+			    )
+			);
+		    return val;
+		}
+	    }
+	    return Generator::empty ();
+	}
+	
+	
 	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::list <Ymir::Error::ErrorMsg> & errors) {	    
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();

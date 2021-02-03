@@ -1135,9 +1135,28 @@ namespace semantic {
 	    auto left = generateValue (bin.getLeft ());
 	    auto right = generateValue (bin.getRight ());
 	    TreeStmtList list = TreeStmtList::init ();
-
+	    	    
+	    auto lvalue = left.getValue ();
+	    auto rvalue = right.getValue ();
 	    list.append (left.getList ());
-	    list.append (right.getList ());
+	    
+	    if (bin.getOperator () == Binary::Operator::AND) {
+		Tree var = Tree::varDecl (bin.getLocation (), Ymir::format ("_bb(%)", bin.getLocation ().getLine ()), generateType (bin.getType ()));
+		var.setDeclContext (getCurrentContext ());
+		stackVarDeclChain.back ().append (var);
+
+		TreeStmtList if_L (TreeStmtList::init ());
+		if_L.append (right.getList ());
+		if_L.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), bin.getLocation (), var, rvalue));
+
+		TreeStmtList if_nL (TreeStmtList::init ());
+		if_nL.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), bin.getLocation (), var, lvalue));
+		
+		list.append (Tree::conditional (bin.getLocation (), getCurrentContext (), lvalue, if_L.toTree (), if_nL.toTree ()));
+		lvalue = var;
+	    } else {
+		list.append (right.getList ());
+	    }
 
 	    tree_code code = LSHIFT_EXPR; // Fake default affectation to avoid warning
 	    switch (bin.getOperator ()) {
@@ -1148,9 +1167,6 @@ namespace semantic {
 	    default :
 		Ymir::Error::halt ("%(r) - unhandeld case", "Critical");
 	    }
-
-	    auto lvalue = left.getValue ();
-	    auto rvalue = right.getValue ();
 	    
 	    auto type = generateType (bin.getType ());
 	    auto value = Tree::binary (bin.getLocation (), code, type, lvalue, rvalue);

@@ -5,6 +5,7 @@
 namespace semantic {
     namespace generator {
 
+	const std::string Option::INIT_NAME = "err";
 	const std::string Option::TYPE_FIELD = "type";
 	const std::string Option::VALUE_FIELD = "val";
 	const std::string Option::ERROR_FIELD = "err";

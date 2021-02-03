@@ -78,6 +78,7 @@ namespace semantic {
 	    generator::Generator validateTuple (const syntax::Binary & expression, const generator::Generator & t);
 	    generator::Generator validateStruct (const syntax::Binary & expression, const generator::Generator & en);
 	    generator::Generator validateClass (const syntax::Binary & expression, const generator::Generator & en, std::list <Ymir::Error::ErrorMsg> & errors);
+	    generator::Generator validateOption (const syntax::Binary & expression, const generator::Generator & en, std::list <Ymir::Error::ErrorMsg> & errors);
 	    generator::Generator validateMacro (const syntax::Binary & expression, const generator::Generator & gen, std::list <Ymir::Error::ErrorMsg> & errors);
 	    generator::Generator validateTemplate (const syntax::Binary & expression, const generator::Generator & en, std::list <Ymir::Error::ErrorMsg> & errors);
 	    generator::Generator validateClassValue (const syntax::Binary & expression, const generator::Generator & en);
