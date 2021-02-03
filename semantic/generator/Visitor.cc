@@ -474,7 +474,11 @@ namespace semantic {
 	    params.push_back (Tree::buildAddress (classType.getLocation (), generateTypeInfoClass (classType), Tree::pointerType (Tree::voidType ())));
 	    
 	    for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
-		params.push_back (generateValue (it));
+		if (it.to <MethodProto> ().isEmptyFrame ()) {
+		    params.push_back (Tree::buildPtrCst (it.getLocation (), 0));
+		} else {
+		    params.push_back (generateValue (it));
+		}
 	    }	    
 	    
 	    auto vtableType = Tree::staticArray (Tree::pointerType (Tree::voidType ()), params.size ());

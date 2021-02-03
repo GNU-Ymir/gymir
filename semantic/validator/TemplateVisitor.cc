@@ -1647,7 +1647,10 @@ namespace semantic {
 		) else of (syntax::MacroVar, v, {
 			return syntax::MacroVar::init (v.getLocation (), replaceAll (v.getContent (), mapping));
 		    }
-		    );
+		) else of (syntax::Try, tr, {
+			return syntax::Try::init (tr.getLocation (), replaceAll (tr.getInner (), mapping));
+		    }
+		);
 	    }
 	    
 	    if (!element.isEmpty ()) {

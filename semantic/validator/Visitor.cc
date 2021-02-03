@@ -2885,10 +2885,7 @@ namespace semantic {
 					    classType,
 					    function.getPrototype ().getParameters ()[0].to <syntax::VarDecl> ().hasDecorator (syntax::Decorator::MUT), function.getBody ().isEmpty (), func.isFinal (), func.isSafe (), trait, throwers);
 	    
-	    frame = FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);
-	    if (		frame.prettyString () == "(&(main::MyThread)) => std::concurrency::thread::Thread::send([i32])::send (x : [i32])-> void")
-		Ymir::Error::halt ("", "");
-	    
+	    return FrameProto::init (frame.to <FrameProto> (), func.getMangledName (), Frame::ManglingStyle::Y);	    
 	    return frame;
 	}
 
