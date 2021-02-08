@@ -41,7 +41,7 @@ namespace syntax {
 	    Keys::FUNCTION, Keys::DELEGATE, Keys::LET, Keys::IS, Keys::EXTERN,
 	    Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 	    Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
-	    Keys::MOD, Keys::USE, Keys::STRINGOF, Keys::CLASS, Keys::ALIAS,
+	    Keys::MOD,  Keys::STRINGOF, Keys::CLASS, Keys::ALIAS,
 	    Keys::STATIC, Keys::CATCH, Keys::COPY, Keys::DCOPY
 	};
 	
@@ -81,13 +81,12 @@ namespace syntax {
 	    Keys::ALIAS, Keys::CLASS, Keys::ENUM,
 	    Keys::DEF, Keys::STATIC, Keys::IMPORT,
 	    Keys::MACRO, Keys::MOD, Keys::STRUCT,
-	    Keys::TRAIT, Keys::USE, Keys::EXTERN
+	    Keys::TRAIT, Keys::EXTERN
 	};
 	
 	visit._declarationsBlock = {
 	    Keys::CLASS, Keys::ENUM,  Keys::DEF,
 	    Keys::IMPORT, Keys::STRUCT, Keys::TRAIT,
-	    Keys::USE
 	};
 
 	visit._intrisics = {
@@ -478,7 +477,6 @@ namespace syntax {
 	if (location == Keys::MOD) return visitLocalMod ();
 	if (location == Keys::STRUCT) return visitStruct ();
 	if (location == Keys::TRAIT) return visitTrait ();
-	if (location == Keys::USE) return visitUse ();
 	else {
 	    Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return Declaration::empty ();
