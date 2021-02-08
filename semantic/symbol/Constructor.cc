@@ -95,6 +95,10 @@ namespace semantic {
 	return Symbol {this-> _class};
     }
 
+    const lexing::Word & Constructor::getRename () const {
+	return this-> _content.to <syntax::Constructor> ().getRename ();
+    }
+    
     void Constructor::setThrowers (const std::vector <syntax::Expression> & throwers) {
 	this-> _throwers = throwers;
     }

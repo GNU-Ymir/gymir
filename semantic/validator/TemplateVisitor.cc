@@ -1650,6 +1650,12 @@ namespace semantic {
 		) else of (syntax::Try, tr, {
 			return syntax::Try::init (tr.getLocation (), replaceAll (tr.getInner (), mapping));
 		    }
+		) else of (syntax::With, wh, {
+			std::vector <syntax::Expression> exprs;
+			for (auto & it : wh.getDecls ())
+			    exprs.push_back (replaceAll (it, mapping));
+			return syntax::With::init (wh.getLocation (), exprs, replaceAll (wh.getContent (), mapping));
+		    }
 		);
 	    }
 	    
@@ -1716,6 +1722,7 @@ namespace semantic {
 			
 			return syntax::Constructor::init (cst.getLocation (),
 							  "",
+							  cst.getRename (),
 							  replaceAll (cst.getPrototype (), mapping),
 							  exprs,
 							  fields,
@@ -1829,7 +1836,7 @@ namespace semantic {
 	syntax::Function::Prototype TemplateVisitor::replaceAll (const syntax::Function::Prototype & proto, const std::map <std::string, Expression> & mapping) const {
 	    std::vector <Expression> vars;
 	    for (auto & it : proto.getParameters ()) {
-		vars.push_back (replaceAll (it, mapping));	    
+		vars.push_back (replaceAll (it, mapping));
 	    }
 	    return syntax::Function::Prototype::init (vars, replaceAll (proto.getType (), mapping), proto.isVariadic ());
 	    

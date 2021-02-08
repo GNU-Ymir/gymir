@@ -146,7 +146,9 @@ namespace lexing {
 	    return word;	
 	
 	this-> rewind ();
-	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
+	std::string val = word.getStr ();
+	if (word.isEof ()) val = "\u001B[32mEOF\u001B[0m()";
+	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), val);
 	
 	return this-> __eof__;
     }
@@ -159,7 +161,9 @@ namespace lexing {
 	    return word;	
 	
 	this-> rewind ();
-	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), word.getStr ());
+	std::string val = word.getStr ();
+	if (word.isEof ()) val = "\u001B[32mEOF\u001B[0m()";
+	Error::occur (word, ExternalError::get (SYNTAX_ERROR_AT), join (mandatories).c_str (), val);
 	
 	return this-> __eof__;
     }

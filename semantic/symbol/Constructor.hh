@@ -74,6 +74,8 @@ namespace semantic {
 	
 	Symbol getClass () const;
 
+	const lexing::Word & getRename () const;
+	
 	/**
 	 * \return the list of custom attributs
 	 */

@@ -742,6 +742,14 @@ namespace syntax {
 	Expression visitPragma ();
 
 	/**
+	 * \brief Visit a with expression
+	 * \verbatim
+	 with := 'with' var_decl* block
+	 \endverbatim
+	 */
+	Expression visitWith ();
+	
+	/**
 	 * \brief Visit a scope guard
 	 * \verbatim
 	 scope := 'on' ('exit' | 'failure' | 'success') '=>' expression:(0) |

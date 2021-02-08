@@ -54,3 +54,4 @@
 #include <ymir/syntax/expression/VarDecl.hh>
 #include <ymir/syntax/expression/VariadicVar.hh>
 #include <ymir/syntax/expression/While.hh>
+#include <ymir/syntax/expression/With.hh>

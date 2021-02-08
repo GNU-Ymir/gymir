@@ -112,6 +112,7 @@ ymir_OBJS = \
 	ymir/expr_VarDecl.o \
 	ymir/expr_VariadicVar.o \
 	ymir/expr_While.o \
+	ymir/expr_With.o \
 	ymir/generator_Addresser.o \
 	ymir/generator_Affect.o \
 	ymir/generator_Aliaser.o \

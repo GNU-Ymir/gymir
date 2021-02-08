@@ -1328,7 +1328,7 @@ namespace semantic {
 	    insertNewGenerator (frame);		
 	}
 
-	generator::Generator Visitor::getClassConstructors (const lexing::Word & loc, const generator::Generator & cl) {
+	generator::Generator Visitor::getClassConstructors (const lexing::Word & loc, const generator::Generator & cl, const lexing::Word & name) {
 	    bool prot = false, prv = false;
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    getClassContext (cl.to <generator::Class> ().getRef (), prv, prot);
@@ -1336,9 +1336,10 @@ namespace semantic {
 	    for (auto & gen : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 		match (gen) {
 		    of (semantic::Constructor, cst ATTRIBUTE_UNUSED, {
-			    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) 
-				syms.push_back (gen);
-			    else {
+			    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) {
+				if (cst.getRename () == name || name.isEof ())
+				    syms.push_back (gen);
+			    } else {
 				errors.push_back (
 				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), validateConstructorProto (gen).prettyString ())					    
 				);
@@ -1355,20 +1356,20 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	std::vector <syntax::Declaration> Visitor::getAllConstructors (const std::vector <syntax::Declaration> & decls) {
+	std::vector <syntax::Declaration> Visitor::getAllConstructors (const std::vector <syntax::Declaration> & decls, const lexing::Word & name) {
 	    std::vector <syntax::Declaration> results;
 	    for (auto & it : decls) {
 		match (it) {
-		    of (syntax::Constructor, cs ATTRIBUTE_UNUSED, results.push_back (it))
+		    of (syntax::Constructor, cs ATTRIBUTE_UNUSED, if (cs.getRename () == name || name.isEof ()) results.push_back (it))
 		    else of (syntax::DeclBlock, dc, {
-			    auto inner = getAllConstructors (dc.getDeclarations ());
+			    auto inner = getAllConstructors (dc.getDeclarations (), name);
 			    results.insert (results.end (), inner.begin (), inner.end ());
 			}
 		    ) else of (syntax::CondBlock, cd, {
-			    auto inner = getAllConstructors (cd.getDeclarations ());
+			    auto inner = getAllConstructors (cd.getDeclarations (), name);
 			    results.insert (results.end (), inner.begin (), inner.end ());
 			    if (!cd.getElse ().isEmpty ()) {
-				auto inner = getAllConstructors ({cd.getElse ()});
+				auto inner = getAllConstructors ({cd.getElse ()}, name);
 				results.insert (results.end (), inner.begin (), inner.end ());
 			    }
 			}
@@ -1470,7 +1471,7 @@ namespace semantic {
 
 		Generator cstrs (Generator::empty ());
 		try {
-		    cstrs = getClassConstructors (loc, classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+		    cstrs = getClassConstructors (loc, classR.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
 		} catch (Error::ErrorList list) {
 		    Ymir::Error::occurAndNote (
 			loc,
@@ -1500,7 +1501,7 @@ namespace semantic {
 		    if (loc.isEof ()) loc = cs.getName ();
 		    Generator cstrs (Generator::empty ());
 		    try {
-			cstrs = getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+			cstrs = getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
 		    } catch (Error::ErrorList list) {						
 			Ymir::Error::occurAndNote (
 			    loc,
@@ -1647,7 +1648,7 @@ namespace semantic {
 			Generator cstrs (Generator::empty ());
 			
 			try {
-			    cstrs = getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+			    cstrs = getClassConstructors (loc, ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator (), lexing::Word::eof ());
 			} catch (Error::ErrorList list) {
 			    errors = list.errors;
 			    return;
@@ -2077,6 +2078,10 @@ namespace semantic {
 
 		of (syntax::Try, tr,
 		    return validateTry (tr);
+		);
+
+		of (syntax::With, wh,
+		    return validateWith (wh);
 		);
 	    }	    
 
@@ -3807,6 +3812,75 @@ namespace semantic {
 	    }
 	    
 	    return inner;
+	}
+
+	Generator Visitor::validateWith (const syntax::With & wh) {
+	    enterBlock ();
+	    std::vector <Generator> varDecls;
+	    std::vector <Generator> exits;
+	    
+	    std::list <Error::ErrorMsg> errors;
+	    for (auto & it : wh.getDecls ()) {
+		try {
+		    varDecls.push_back (this-> validateVarDeclValue (it.to <syntax::VarDecl> (), true));
+		} catch (Error::ErrorList list) {
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		}
+	    }
+
+	    for (auto & it : varDecls) {
+		try {
+		    auto vdecl = it.to <generator::VarDecl> ();
+		    auto loc = vdecl.getLocation ();
+		    auto trait = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (DISPOSING_MODULE), CoreNames::get (DISPOSABLE_TRAITS)});		
+		    auto impl = validateType (trait);
+		    
+		    if (!vdecl.getVarType ().is <ClassPtr> ()) {
+			Ymir::Error::occur (vdecl.getLocation (), ExternalError::get (NOT_IMPL_TRAIT), vdecl.getVarType ().prettyString (), impl.prettyString ());	
+		    } else {
+			verifyClassImpl (vdecl.getLocation (), vdecl.getVarType (), impl);
+		    }
+
+		    auto vRef = VarRef::init (it.getLocation (), vdecl.getName (), vdecl.getVarType (), vdecl.getUniqId (), vdecl.isMutable (), Generator::empty ());
+		    auto intr = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, vRef));
+		    auto call = syntax::MultOperator::init (
+			lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
+			syntax::Binary::init (lexing::Word::init (loc, Token::DOT),
+					      intr,
+					      syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (DISPOSE_OP_OVERRIDE))),
+					      syntax::Expression::empty ()),
+			{}, false
+			);
+		    exits.push_back (this-> validateValue (call));
+		} catch (Error::ErrorList list) {
+		    list.errors.back ().addNote (Error::createNote (wh.getLocation ()));
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		}
+	    }		
+	    
+	    Generator inner (Generator::empty ());
+	    if (errors.size () == 0) { // To avoid to much error printing
+		try {
+		    inner = this-> validateValue (wh.getContent ());
+		    varDecls.push_back (inner);
+		    inner = Block::init (wh.getLocation (), inner.to <Value> ().getType (), varDecls);
+		} catch (Error::ErrorList list) {
+		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		} 
+	    }
+	    
+	    try {
+		quitBlock ();
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    }
+
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+
+	    auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (wh.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));		
+	    return ExitScope::init (wh.getLocation (), inner.to <Value> ().getType (), jmp_buf_type, inner, exits, {}, Generator::empty (), Generator::empty (), Generator::empty ());
 	}
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {

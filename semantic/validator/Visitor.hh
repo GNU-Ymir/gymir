@@ -339,6 +339,11 @@ namespace semantic {
 	     * \brief Validate a try expression
 	     */
 	    generator::Generator validateTry (const syntax::Try & tr);
+
+	    /**
+	     * \brief Validate a with expression
+	     */
+	    generator::Generator validateWith (const syntax::With & wh);
 	    
 	    /**
 	     * \brief Validate an assert at compile time, 
@@ -909,7 +914,7 @@ namespace semantic {
 	     * \return the list of (in a multsym) of the constructor of the class cl
 	     * \warning cl is assumed to be a generator::Class
 	     */
-	    generator::Generator getClassConstructors (const lexing::Word & loc, const generator::Generator & cl);
+	    generator::Generator getClassConstructors (const lexing::Word & loc, const generator::Generator & cl, const lexing::Word & name);
 
 	    /**
 	     * \return the list of constructor of the macro
@@ -931,7 +936,7 @@ namespace semantic {
 	    /**
 	     * \return the list of constructors declared in the class
 	     */
-	    std::vector <syntax::Declaration> getAllConstructors (const std::vector <syntax::Declaration> & innerClass);
+	    std::vector <syntax::Declaration> getAllConstructors (const std::vector <syntax::Declaration> & innerClass, const lexing::Word & name);
 	    
 	    /**
 	     * \brief Get the current context of the current state

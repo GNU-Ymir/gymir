@@ -78,7 +78,7 @@ namespace lexing {
 	}
     }
 
-    const std::string & Word::getStr () const {	
+    const std::string & Word::getStr () const {
 	return this-> _value-> str;
     }
 

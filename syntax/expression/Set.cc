@@ -20,7 +20,7 @@ namespace syntax {
 	    it.treePrint (stream, i);
     }
 
-    const std::vector <Expression> Set::getContent () const {
+    const std::vector <Expression> & Set::getContent () const {
 	return this-> _params;
     }
     

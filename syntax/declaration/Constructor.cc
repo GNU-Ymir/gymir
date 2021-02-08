@@ -11,10 +11,11 @@ namespace syntax {
 	_construction ({}),
 	_body (Expression::empty ()),
 	_explicitSuperCall (lexing::Word::eof ()),
-	_explicitSelfCall (lexing::Word::eof ())
+	_explicitSelfCall (lexing::Word::eof ()),
+	_rename (lexing::Word::eof ())
     {}
     
-    Constructor::Constructor (const lexing::Word & name, const std::string & comment, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) :
+    Constructor::Constructor (const lexing::Word & name, const std::string & comment, const lexing::Word & rename, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) :
 	IDeclaration (name, comment),
 	_proto (proto),
 	_superParams (super),
@@ -22,12 +23,13 @@ namespace syntax {
 	_body (body),
 	_explicitSuperCall (explicitSuperCall),
 	_explicitSelfCall (explicitSelfCall),
+	_rename (rename),
 	_cas (cas),
 	_throwers (thrower)
     {}
     
-    Declaration Constructor::init (const lexing::Word & name, const std::string& comment, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) {
-	return Declaration {new (NO_GC) Constructor (name, comment, proto, super, constructions, body, explicitSuperCall, explicitSelfCall, cas, thrower)};
+    Declaration Constructor::init (const lexing::Word & name, const std::string& comment, const lexing::Word & rename, const Function::Prototype & proto, const std::vector <Expression> & super, const std::vector <std::pair <lexing::Word, Expression> > & constructions, const Expression & body, const lexing::Word & explicitSuperCall, const lexing::Word & explicitSelfCall, const std::vector <lexing::Word> & cas, const std::vector <Expression> & thrower) {
+	return Declaration {new (NO_GC) Constructor (name, comment, rename, proto, super, constructions, body, explicitSuperCall, explicitSelfCall, cas, thrower)};
     }
 
     Declaration Constructor::init (const Constructor & other) {
@@ -65,5 +67,8 @@ namespace syntax {
     const std::vector <Expression> & Constructor::getThrowers () const {
 	return this-> _throwers;
     }
-    
+
+    const lexing::Word & Constructor::getRename () const {
+	return this-> _rename;
+    }
 }

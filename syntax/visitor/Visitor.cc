@@ -682,7 +682,11 @@ namespace syntax {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto cas = visitAttributes ();
-	
+	lexing::Word name (lexing::Word::eof ());
+	if (canVisitIdentifier ()) {
+	    name = visitIdentifier ();
+	}
+		
 	auto before_template = this-> _lex.tell ();
 	auto templates = visitTemplateParameters ();
 	auto token = this-> _lex.next ();
@@ -735,9 +739,9 @@ namespace syntax {
 	auto body = visitExpression ();
 	
 	if (templates.size () != 0) {
-	    return Template::init (location, comments, templates, Constructor::init (location, comments, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), Expression::empty ());
+	    return Template::init (location, comments, templates, Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), Expression::empty ());
 	} else 
-	    return Constructor::init (location, comments, proto, supers, constructions, body, getSuper, getSelf, cas, throwers);
+	    return Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers);
     }
 
     std::vector <syntax::Expression> Visitor::visitThrowers () {
@@ -1095,15 +1099,8 @@ namespace syntax {
 	} else if (token == Token::NOT) {
 	    auto next = this-> _lex.next ();
 	    if (next.is (this-> _specialOperators [priority])) {
-		Expression ctype (Expression::empty ());
-		{
-		    auto next = this-> _lex.next ();
-		    if (next == Token::COLON) ctype = visitExpression (0);
-		    else this-> _lex.rewind ();
-		}
-
 		auto right = visitExpression (priority + 1);
-		return visitExpression (Binary::init (lexing::Word::init (token, token.getStr () + next.getStr ()), left, right, ctype), priority);
+		return visitExpression (Binary::init (lexing::Word::init (token, token.getStr () + next.getStr ()), left, right, Expression::empty ()), priority);
 	    } else this-> _lex.rewind ();
 	} this-> _lex.rewind ();
 	return left;
@@ -1143,6 +1140,7 @@ namespace syntax {
 	if (next == Keys::THROW_K)  return visitThrow ();
 	if (next == Keys::VERSION)  return visitVersion ();
 	if (next == Keys::PRAGMA)   return visitPragma ();
+	if (next == Keys::WITH)     return visitWith ();
 	
 	auto value = visitOperand2 ();
 	return visitOperand1 (value);
@@ -1245,60 +1243,84 @@ namespace syntax {
 	std::vector <Declaration> decls;	
 	std::vector <Expression> content;
 	auto begin = this-> _lex.next ({Token::LACC});
-
-	lexing::Word end = lexing::Word::eof ();
-	bool last = false;
-	do {
-	    end = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
-	    if (end != Token::RACC && end != Token::SEMI_COLON) {
-		last = false;
-		if (this-> _lex.consumeIf (this-> _declarationsBlock).getStr () != "") {
-		    this-> _lex.rewind ();
-		    decls.push_back (visitDeclaration ());
-		} else 
-		    content.push_back (visitExpression ());
-	    } else if (end == Token::SEMI_COLON)
-		last = true;
-	} while (end != Token::RACC);
-
-	Expression catcher (Expression::empty ());
-
-	std::vector <Expression> scopes;
-	if (canCatcher) {
+	try {
+	    lexing::Word end = lexing::Word::eof ();
+	    bool last = false;
 	    do {
+		end = this-> _lex.consumeIf ({Token::RACC, Token::SEMI_COLON});
+		if (end != Token::RACC && end != Token::SEMI_COLON) {
+		    last = false;
+		    if (this-> _lex.consumeIf (this-> _declarationsBlock).getStr () != "") {
+			this-> _lex.rewind ();
+			decls.push_back (visitDeclaration ());
+		    } else 
+			content.push_back (visitExpression ());
+		} else if (end == Token::SEMI_COLON)
+		    last = true;
+	    } while (end != Token::RACC);
+
+	    Expression catcher (Expression::empty ());
+
+	    std::vector <Expression> scopes;
+	    if (canCatcher) {
+		do {
 		
-		lexing::Word next = lexing::Word::eof ();
-		if (catcher.isEmpty ())
-		    next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE, Keys::CATCH});
-		else next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
-		if (next == Keys::CATCH) {
-		    catcher = visitCatch ();
-		} else if (next != "") {
-		    this-> _lex.consumeIf ({Token::DARROW});
-		    scopes.push_back (Scope::init (next, visitBlock (false)));
-		} else break;
-	    } while (true);
+		    lexing::Word next = lexing::Word::eof ();
+		    if (catcher.isEmpty ())
+			next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE, Keys::CATCH});
+		    else next = this-> _lex.consumeIf ({Keys::EXIT, Keys::SUCCESS, Keys::FAILURE});
+		    if (next == Keys::CATCH) {
+			catcher = visitCatch ();
+		    } else if (next != "") {
+			this-> _lex.consumeIf ({Token::DARROW});
+			scopes.push_back (Scope::init (next, visitBlock (false)));
+		    } else break;
+		} while (true);
+	    }
+	    
+	    if (last) content.push_back (Unit::init (end));
+	    if (decls.size () != 0) {
+		return Block::init (begin, end, Module::init (lexing::Word::init (begin, "_"), "", decls, false), content, catcher, scopes);
+	    } else {
+		return Block::init (begin, end, Declaration::empty (), content, catcher, scopes);
+	    }
+	} catch (Error::ErrorList msg) {
+	    Error::occurAndNote (begin, msg.errors, ExternalError::get(IN_BLOCK_OPEN));
 	}
-	
-	if (last) content.push_back (Unit::init (end));
-	if (decls.size () != 0) {
-	    return Block::init (begin, end, Module::init (lexing::Word::init (begin, "_"), "", decls, false), content, catcher, scopes);
-	} else {
-	    return Block::init (begin, end, Declaration::empty (), content, catcher, scopes);
-	}
+	return Expression::empty ();
     }    
 
     Expression Visitor::visitIf () {
 	auto location = this-> _lex.next ({Keys::IF});
 	auto test = visitExpression ();
-	auto content = visitExpression ();	
+	auto content = visitExpression ();
+	
+	if (!content.is <Block> ()) {
+	    auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    if (tok == Token::SEMI_COLON) {
+		std::vector <Expression> inner;
+		inner.push_back (content);
+		inner.push_back (Unit::init (tok));
+		content = Block::init (content.getLocation (), tok, Declaration::empty (), inner, Expression::empty (), {});
+	    }
+	}
+
 	auto next = this-> _lex.consumeIf ({Keys::ELSE});
 	if (next == Keys::ELSE) {
 	    next = this-> _lex.next ();
 	    this-> _lex.rewind ();
 	    if (next == Keys::IF) return If::init (location, test, content, visitIf ());
 	    else {
-		auto el_exp = visitExpression ();		
+		auto el_exp = visitExpression ();
+		if (!el_exp.is <Block> ()) {
+		    auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
+		    if (tok == Token::SEMI_COLON) {
+			std::vector <Expression> inner;
+			inner.push_back (el_exp);
+			inner.push_back (Unit::init (tok));
+			el_exp = Block::init (el_exp.getLocation (), tok, Declaration::empty (), inner, Expression::empty (), {});
+		    }
+		}
 		return If::init (location, test, content, el_exp);
 	    }
 	}
@@ -1311,6 +1333,17 @@ namespace syntax {
 	Expression test (Expression::empty ());
 	if (location != Keys::LOOP) test = visitExpression ();
 	auto content = visitExpression ();
+
+	if (!content.is<Block> ()) {
+	    auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    if (tok == Token::SEMI_COLON) {
+		std::vector <Expression> inner;
+		inner.push_back (content);
+		inner.push_back (Unit::init (tok));
+		content = Block::init (content.getLocation (), tok, Declaration::empty (), inner, Expression::empty (), {});
+	    }
+	}
+	
 	return While::init (location, test, content);
     }
 
@@ -1319,6 +1352,17 @@ namespace syntax {
 	auto content = visitExpression ();
 	this-> _lex.next ({Keys::WHILE});
 	auto test = visitExpression ();
+	
+	if (!content.is <Block> ()) {
+	    auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    if (tok == Token::SEMI_COLON) {
+		std::vector <Expression> inner;
+		inner.push_back (content);
+		inner.push_back (Unit::init (tok));
+		content = Block::init (content.getLocation (), tok, Declaration::empty (), inner, Expression::empty (), {});
+	    }
+	}
+
 	return While::init (location, test, content, true);
     }
     
@@ -1326,13 +1370,29 @@ namespace syntax {
 	std::vector <Expression> decls;
 	auto location = this-> _lex.next ({Keys::FOR});
 	lexing::Word token = lexing::Word::eof ();
+	auto par = this-> _lex.consumeIf ({Token::LPAR});
+	
 	do {
-	    decls.push_back (visitSingleVarDeclaration (false, false));	    
+	    decls.push_back (visitSingleVarDeclaration (false, false));
 	    token = this-> _lex.next ({Token::COMA, Keys::IN});
 	} while (token == Token::COMA);
 
 	Expression iter = visitExpression ();
-	return For::init (location, decls, iter, visitExpression ());
+	if (par == Token::LPAR)
+	    this-> _lex.next ({Token::RPAR});
+	auto content = visitExpression ();
+
+	if (!content.is <Block> ()) {
+	    auto tok = this-> _lex.consumeIf ({Token::SEMI_COLON});
+	    if (tok == Token::SEMI_COLON) {
+		std::vector <Expression> inner;
+		inner.push_back (content);
+		inner.push_back (Unit::init (tok));
+		content = Block::init (content.getLocation (), tok, Declaration::empty (), inner, Expression::empty (), {});
+	    }
+	}
+		
+	return For::init (location, decls, iter, content);
     }
 
     Expression Visitor::visitMatch () {
@@ -1460,6 +1520,23 @@ namespace syntax {
 	return Pragma::init (name, params);	
     }
 
+    Expression Visitor::visitWith () {
+	auto location = this-> _lex.next ({Keys::WITH});
+	lexing::Word token = lexing::Word::eof ();
+	std::vector <Expression> decls;
+	auto par = this-> _lex.consumeIf ({Token::LPAR});
+	do {
+	    decls.push_back (visitSingleVarDeclaration ());
+	    token = this-> _lex.consumeIf ({Token::COMA});
+	} while (token == Token::COMA);
+
+	if (par == Token::LPAR)
+	    this-> _lex.next ({Token::RPAR});
+	
+	auto block = visitBlock (true);
+	return With::init (location, decls, block);
+    }
+    
     Expression Visitor::visitScope () {
 	auto location = this-> _lex.next ();
 	auto name = visitIdentifier ();

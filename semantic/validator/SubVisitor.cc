@@ -593,7 +593,7 @@ namespace semantic {
 		    bool succeed = true;
 		    Generator gen (Generator::empty ());
 		    try {			
-			gen = this-> _context.getClassConstructors (expression.getLocation (), t);
+			gen = this-> _context.getClassConstructors (expression.getLocation (), t, lexing::Word::eof ());
 		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			succeed = false;
@@ -618,7 +618,7 @@ namespace semantic {
 		    return this-> _context.validateTypeInfo (
 			expression.getRight ().getLocation (),
 			cl
-		    );
+			);
 		} else if (name == ClassRef::SUPER) {
 		    auto ancestor = t.to<generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
 		    if (!ancestor.isEmpty ()) {
@@ -626,7 +626,23 @@ namespace semantic {
 			auto type = Type::init (ClassPtr::init (expression.getLocation (), inner).to <Type> (), false);
 			return type;
 		    }
-		}
+		} else {
+		    if (t.to <generator::Class> ().getRef ().to <semantic::Class> ().isAbs ()) {
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
+		    }
+		    
+		    bool succeed = true;
+		    Generator gen (Generator::empty ());
+		    try {			
+			gen = this-> _context.getClassConstructors (expression.getLocation (), t, expression.getRight ().to <syntax::Var> ().getName ());
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+			succeed = false;
+		    } 
+		    
+		    if (!succeed) return Generator::empty ();
+		    else return gen;
+		}	       
 	    }
 
 	    return Generator::empty ();
@@ -661,7 +677,22 @@ namespace semantic {
 			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
 		    }
 
-		    auto constructors = this-> _context.getAllConstructors (tmp.to <syntax::Class> ().getDeclarations ());
+		    auto constructors = this-> _context.getAllConstructors (tmp.to <syntax::Class> ().getDeclarations (), lexing::Word::eof ());
+		    std::vector <syntax::Function::Prototype> csts;
+		    for (auto & it : constructors) {
+			csts.push_back (it.to <syntax::Constructor> ().getPrototype ());
+		    }
+		    
+		    if (csts.size () != 0) {
+			return TemplateClassCst::init (expression.getLocation (), t.to<TemplateRef> ().getTemplateRef (), csts); 
+		    } else
+			return Generator::empty ();
+		} else if (name != __TYPEID__ && name != __TYPEINFO__ && name != ClassRef::SUPER) {
+		    if (tmp.to <syntax::Class> ().isAbstract ()) {
+			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
+		    }
+
+		    auto constructors = this-> _context.getAllConstructors (tmp.to <syntax::Class> ().getDeclarations (), expression.getRight ().to <syntax::Var> ().getName ());
 		    std::vector <syntax::Function::Prototype> csts;
 		    for (auto & it : constructors) {
 			csts.push_back (it.to <syntax::Constructor> ().getPrototype ());
