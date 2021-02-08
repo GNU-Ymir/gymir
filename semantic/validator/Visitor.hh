@@ -406,7 +406,7 @@ namespace semantic {
 	     * \brief Validate a block of expression
 	     * \return a tree containing the result of the block
 	     */
-	    generator::Generator validateBlock (const syntax::Block & block);
+	    generator::Generator validateBlock (const syntax::Block & block, const std::vector <generator::Generator> & init = {});
 
 	    /**
 	     * \brief Validate a catch block

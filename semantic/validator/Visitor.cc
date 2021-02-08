@@ -2093,8 +2093,8 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator Visitor::validateBlock (const syntax::Block & block) {
-	    std::vector <Generator> values;
+	Generator Visitor::validateBlock (const syntax::Block & block, const std::vector <Generator> & init) {
+	    std::vector <Generator> values = init;
 	    
 	    Generator type (Void::init (block.getLocation ()));
 	    bool breaker = false, returner = false;
@@ -3857,30 +3857,36 @@ namespace semantic {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		}
 	    }		
+
+	    std::vector <syntax::Expression> scopes;
+	    syntax::Expression catcher (syntax::Expression::empty ());
 	    
-	    Generator inner (Generator::empty ());
-	    if (errors.size () == 0) { // To avoid to much error printing
-		try {
-		    inner = this-> validateValue (wh.getContent ());
-		    varDecls.push_back (inner);
-		    inner = Block::init (wh.getLocation (), inner.to <Value> ().getType (), varDecls);
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
-	    }
-	    
+	    Generator ret (Generator::empty ());
 	    try {
-		quitBlock ();
+		ret = this-> validateValue (wh.getContent ());
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
 
-	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};
+	    try {
+		if (errors.size () != 0)
+		    discardAllLocals ();
+		
+		quitBlock ();
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    }
-
-	    auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (wh.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));		
-	    return ExitScope::init (wh.getLocation (), inner.to <Value> ().getType (), jmp_buf_type, inner, exits, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+	    
+	    if (errors.size () != 0)
+		throw Error::ErrorList {errors};
+	    
+	    auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (wh.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
+	    for (auto it : Ymir::r (exits.size (), 0)) {
+		ret = ExitScope::init (wh.getLocation (), ret.to <Value> ().getType (), jmp_buf_type, ret, {exits [it - 1]}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
+		ret = Block::init (wh.getLocation (), ret.to<Value> ().getType (), {varDecls [it - 1], ret});
+	    }
+	    
+	    return ret;
 	}
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
