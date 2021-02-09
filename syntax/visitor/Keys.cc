@@ -1,5 +1,6 @@
 #include <ymir/syntax/visitor/Keys.hh>
 
+const std::string       Keys::ATOMIC       = "atomic";
 const std::string	Keys::IMPORT	   = "import";
 const std::string	Keys::STRUCT	   = "struct";
 const std::string	Keys::ABSTRACT     = "abstract";
@@ -23,8 +24,6 @@ const std::string	Keys::CPPLANG      = "C++";
 const std::string	Keys::DCOPY	   = "dcopy";
 const std::string	Keys::DEF	   = "def";
 const std::string	Keys::DELEGATE	   = "dg";
-const std::string	Keys::DELETE	   = "delete";
-const std::string	Keys::DISPOSE	   = "~self";
 const std::string	Keys::DLANG	   = "D";
 const std::string	Keys::DMUTABLE	   = "dmut";
 const std::string	Keys::DO	   = "do";

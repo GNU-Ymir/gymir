@@ -59,6 +59,7 @@ ymir_OBJS = \
 	ymir/documentation_Visitor.o \
 	ymir/error_Error.o \
 	ymir/error_ListError.o \
+	ymir/expr_Atomic.o \
 	ymir/expr_ArrayAlloc.o \
 	ymir/expr_Assert.o \
 	ymir/expr_Binary.o \
@@ -113,6 +114,7 @@ ymir_OBJS = \
 	ymir/expr_VariadicVar.o \
 	ymir/expr_While.o \
 	ymir/expr_With.o \
+	ymir/generator_Atomic.o \
 	ymir/generator_Addresser.o \
 	ymir/generator_Affect.o \
 	ymir/generator_Aliaser.o \

@@ -18,8 +18,10 @@ namespace semantic {
 	     * The global var is mutable? 
 	     */
 	    bool _isMutable;
-
+	    
 	    uint _varRefId;
+
+	    std::string _externalLanguage;
 	    
 	private :
 
@@ -27,7 +29,7 @@ namespace semantic {
 	    
 	    GlobalVar ();
 
-	    GlobalVar (const lexing::Word & location, const std::string & name, bool isMutable, const Generator & type, const Generator & value);
+	    GlobalVar (const lexing::Word & location, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value);
 
 	public :
 
@@ -39,7 +41,7 @@ namespace semantic {
 	     * \param type the type of the var
 	     * \param value the initial value of the var (could be empty ())
 	     */
-	    static Generator init (const lexing::Word & locatio, const std::string & name, bool isMutable, const Generator & type, const Generator & value);
+	    static Generator init (const lexing::Word & locatio, const std::string & name, const std::string & externalLanguage, bool isMutable, const Generator & type, const Generator & value);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern
@@ -65,6 +67,14 @@ namespace semantic {
 	     * \brief Override the getuniqid, the ref id of a var decl must be copied, all the varref will refer to it
 	     */
 	    uint getUniqId () const override;
+
+	    /**
+	     * \return the external language (if the var has been declared external)
+	     */
+	    const std::string & getExternalLanguage () const;
+
+
+	    bool isExternal () const;
 	    
 	    /**
 	     * \return the value of the var

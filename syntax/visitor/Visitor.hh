@@ -797,6 +797,14 @@ namespace syntax {
 	 \endverbatim
 	 */
 	Expression visitTemplateChecker ();
+
+
+	/**
+	 * \brief Visit an atomic expression 
+	 * \verbatim
+	 atomic := 'atomic' block | expression:(0) block
+	 */
+	Expression visitAtomic ();
 	
 	/**
 	 * \brief Visit a block of expression 

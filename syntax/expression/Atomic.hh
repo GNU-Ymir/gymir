@@ -4,9 +4,9 @@
 
 namespace syntax {
 
-    class Cast : public IExpression {
+    class Atomic : public IExpression {
 
-	Expression _type;
+	Expression _who;
 
 	Expression _content;
 
@@ -14,17 +14,17 @@ namespace syntax {
 
 	friend Expression;
 
-	Cast ();
+	Atomic ();
 	
-	Cast (const lexing::Word & loc, const Expression & type, const Expression & content);
+	Atomic (const lexing::Word & loc, const Expression & who, const Expression & content);
 
     public :
 
-	static Expression init (const lexing::Word & op, const Expression & type, const Expression &content);
+	static Expression init (const lexing::Word & loc, const Expression & who, const Expression &content);
 
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
 
-	const Expression & getType () const;
+	const Expression & getWho () const;
 
 	const Expression & getContent () const;
 

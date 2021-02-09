@@ -477,7 +477,7 @@ namespace semantic {
 		    value = validateValueNonVoid (var.getValue ());		
 		}
 
-		if (var.getValue ().isEmpty ()) {
+		if (var.getValue ().isEmpty () && !var.isExtern ()) {
 		    Error::occur (var.getName (), ExternalError::get (VAR_DECL_WITHOUT_VALUE));
 		} 
 		
@@ -500,15 +500,18 @@ namespace semantic {
 		if (!isMutable) type = Type::init (type.to <Type> (), false);
 
 		if (!value.isEmpty ()) {
+		    if (var.isExtern ())
+			Ymir::Error::occur (value.getLocation (), ExternalError::get (EXTERNAL_VAR_WITH_VALUE), var.getRealName ());
+		    
 		    if (isMutable || !type.is <LambdaType> ())
 			verifyMemoryOwner (var.getName (), type, value, true);
 		    // verifyCompatibleType (value.getLocation (), type, value.to<Value> ().getType ());
 		}
 		
-		auto glbVar = GlobalVar::init (var.getName (), var.getRealName (), isMutable, type, value);		
-		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);
-	    
-		insertNewGenerator (glbVar);
+		auto glbVar = GlobalVar::init (var.getName (), var.getRealName (), var.getExternalLanguage (), isMutable, type, value);		
+		elemSym.to<semantic::VarDecl> ().setGenerator (glbVar);		
+		
+		insertNewGenerator (glbVar);		
 	    }
 	}
 	
@@ -2082,6 +2085,10 @@ namespace semantic {
 
 		of (syntax::With, wh,
 		    return validateWith (wh);
+		);
+
+		of (syntax::Atomic, at,
+		    return validateAtomic (at);
 		);
 	    }	    
 
@@ -3888,6 +3895,60 @@ namespace semantic {
 	    
 	    return ret;
 	}
+
+	Generator Visitor::validateAtomic (const syntax::Atomic & atom) {
+	    if (atom.getWho ().isEmpty ()) {
+		auto loc = atom.getLocation ();
+		auto mutexType = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ATOMIC_MODULE), CoreNames::get (MUTEX_TYPE)});
+		auto mutexInitValue = createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ATOMIC_MODULE), CoreNames::get (MUTEX_INIT)});
+				
+		auto type = validateType (mutexType);
+		auto initValue = this-> validateValue (mutexInitValue);
+		auto ptrType = Pointer::init (atom.getLocation (), type);		
+		
+		
+		auto name = Ymir::format ("__atom%", atom.getLocation ().getLine ());
+		auto glbVar = GlobalVar::init (lexing::Word::init (atom.getLocation (), name), name, "", false, type, initValue);
+		auto vRef = VarRef::init (lexing::Word::init (atom.getLocation (), name), name, type, glbVar.getUniqId (), false, Generator::empty ());
+		
+		insertNewGenerator (glbVar);
+		enterBlock ();
+		
+		auto inner = this-> validateValue (atom.getContent ());
+		inner = Block::init (atom.getLocation (), inner.to <Value> ().getType (),
+				     {
+					 AtomicLocker::init (atom.getLocation (), Addresser::init (atom.getLocation (), ptrType, vRef), false),
+					 inner
+				     }
+		    );
+		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (atom.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
+		auto exit = ExitScope::init (atom.getLocation (), inner.to <Value> ().getType (), jmp_buf_type, inner, {
+			AtomicUnlocker::init (atom.getLocation (), Addresser::init (atom.getLocation (), ptrType, vRef), false)
+		    }, {}, Generator::empty (), Generator::empty (), Generator::empty ()
+		    );
+		return exit;
+	    } else {
+		auto value = this-> validateValue (atom.getWho ());
+		if (!value.to <Value> ().getType ().is <ClassPtr> ()) {
+		    Ymir::Error::occur (atom.getLocation (), ExternalError::get (MONITOR_NON_CLASS), value.to <Value> ().getType ().prettyString ());
+		}
+
+		auto inner = this-> validateValue (atom.getContent ());
+		inner = Block::init (atom.getLocation (), inner.to <Value> ().getType (),
+				     {
+					 AtomicLocker::init (atom.getLocation (), value, true),
+					 inner
+				     }
+		    );
+
+		auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (atom.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
+		auto exit = ExitScope::init (atom.getLocation (), inner.to <Value> ().getType (), jmp_buf_type, inner, {
+			AtomicUnlocker::init (atom.getLocation (), value, true)
+			    }, {}, Generator::empty (), Generator::empty (), Generator::empty ()
+		    );
+		return exit;
+	    }
+	}	
 	
 	Generator Visitor::validateTypeInfo (const lexing::Word & loc, const Generator & type_) {
 	    auto type = Type::init (type_.to <Type> (), false, false);

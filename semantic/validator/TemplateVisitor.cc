@@ -1656,6 +1656,9 @@ namespace semantic {
 			    exprs.push_back (replaceAll (it, mapping));
 			return syntax::With::init (wh.getLocation (), exprs, replaceAll (wh.getContent (), mapping));
 		    }
+		) else of (syntax::Atomic, at, {
+			return syntax::Atomic::init (at.getLocation (), replaceAll (at.getWho (), mapping), replaceAll (at.getContent (), mapping));
+		    }
 		);
 	    }
 	    

@@ -20,6 +20,8 @@ namespace semantic {
 
 	/** The generator (created at validation time) */
 	generator::Generator _gen;
+
+	std::string _externLanguage;
 	
     private :
 
@@ -44,6 +46,18 @@ namespace semantic {
 	const generator::Generator & getGenerator () const;
 	
 	const std::vector <syntax::DecoratorWord> & getDecorators () const;
+
+	/**
+	 * \brief Change the external language (for external global var declaration)
+	 */
+	void setExternalLanguage (const std::string & name);
+	
+	/**
+	 * \return the external language of the declaration
+	 */
+	const std::string & getExternalLanguage () const;
+
+	bool isExtern () const;
 	
 	std::string formatTree (int padd) const override;
     };

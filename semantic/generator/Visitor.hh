@@ -451,6 +451,16 @@ namespace semantic {
 	    generic::Tree generateCast (const Cast & cast);
 
 	    /**
+	     * \brief Transform an atomic locker into gimple
+	     */
+	    generic::Tree generateAtomicLocker (const AtomicLocker & lock);
+
+	    /**
+	     * \brief Transform an atomic unlocker into gimple
+	     */
+	    generic::Tree generateAtomicUnlocker (const AtomicUnlocker & lock);
+	    
+	    /**
 	     * \brief Generate an array allocation into gimple
 	     */
 	    generic::Tree generateArrayAlloc (const ArrayAlloc & alloc);

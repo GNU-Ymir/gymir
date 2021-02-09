@@ -344,6 +344,11 @@ namespace semantic {
 	     * \brief Validate a with expression
 	     */
 	    generator::Generator validateWith (const syntax::With & wh);
+
+	    /**
+	     * \brief Validate an atomic expression
+	     */
+	    generator::Generator validateAtomic (const syntax::Atomic & atom);
 	    
 	    /**
 	     * \brief Validate an assert at compile time, 

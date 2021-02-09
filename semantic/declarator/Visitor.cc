@@ -301,7 +301,8 @@ namespace semantic {
 			else of (syntax::ExpressionWrapper, wrap, {
 				match (wrap.getContent ()) {
 				    of (syntax::VarDecl, decl,
-					visitVarDecl (decl, wrap.getComments ());
+					auto dl = visitVarDecl (decl, wrap.getComments ());
+					dl.to <semantic::VarDecl> ().setExternalLanguage (ex_block.getFrom ().getStr ());
 					continue;
 				    );		    
 				}
@@ -309,8 +310,16 @@ namespace semantic {
 				Error::halt ("%(r) - reaching impossible point", "Critical");
 				return Symbol::empty ();
 			    }
-			) else
-				 Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
+		        ) else of (syntax::Global, glb, {
+				auto decl = visitGlobal (glb);
+				decl.to <semantic::VarDecl> ().setExternalLanguage (ex_block.getFrom ().getStr ());
+			    }
+			) else {
+				Ymir::OutBuffer buf;
+				ex_decl.treePrint (buf);
+				println (buf.str ());
+				Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
+			    }
 		    }
 		}
 	    } else

@@ -42,7 +42,7 @@ namespace syntax {
 	    Keys::PUBLIC, Keys::PRIVATE, Keys::TYPEOF, Keys::IMMUTABLE,
 	    Keys::MACRO, Keys::TRAIT, Keys::REF, Keys::CONST,
 	    Keys::MOD,  Keys::STRINGOF, Keys::CLASS, Keys::ALIAS,
-	    Keys::STATIC, Keys::CATCH, Keys::COPY, Keys::DCOPY
+	    Keys::STATIC, Keys::CATCH, Keys::COPY, Keys::DCOPY, Keys::ATOMIC
 	};
 	
 	visit._operators = {
@@ -1122,7 +1122,8 @@ namespace syntax {
     Expression Visitor::visitOperand1 () {
 	auto next = this-> _lex.next ();
 	this-> _lex.rewind ();
-	if (next == Token::LACC)  return visitBlock ();
+	
+	if (next == Token::LACC)    return visitBlock ();
 	if (next == Keys::IF)       return visitIf ();
 	if (next == Keys::WHILE)    return visitWhile ();
 	if (next == Keys::ASSERT)   return visitAssert ();
@@ -1139,6 +1140,7 @@ namespace syntax {
 	if (next == Keys::VERSION)  return visitVersion ();
 	if (next == Keys::PRAGMA)   return visitPragma ();
 	if (next == Keys::WITH)     return visitWith ();
+	if (next == Keys::ATOMIC)   return visitAtomic ();
 	
 	auto value = visitOperand2 ();
 	return visitOperand1 (value);
@@ -1609,6 +1611,21 @@ namespace syntax {
 	return Cast::init (location, type, inner);
     }
 
+    Expression Visitor::visitAtomic () {
+	auto location = this-> _lex.next ();
+	auto next = this-> _lex.consumeIf ({Token::LACC});
+	if (next == Token::LACC) {
+	    this-> _lex.rewind ();
+	    auto content = visitExpression ();
+	    return Atomic::init (location, Expression::empty (), content);
+	} else {
+	    next = this-> _lex.consumeIf ({Token::LPAR});
+	    auto inner = visitExpression ();
+	    if (next == Token::LPAR) this-> _lex.next ({Token::RPAR});
+	    return Atomic::init (location, inner, visitExpression ());
+	}
+    }
+    
     Expression Visitor::visitTemplateChecker () {
 	auto name = this-> _lex.next ();
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ymir/semantic/generator/value/Atomic.hh>
 #include <ymir/semantic/generator/value/Addresser.hh>
 #include <ymir/semantic/generator/value/Affect.hh>
 #include <ymir/semantic/generator/value/Aliaser.hh>

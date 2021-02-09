@@ -8,6 +8,8 @@ namespace generic {
 
 	
 	tree _list;
+
+	bool _empty;
 	
     private : 
 
@@ -20,6 +22,8 @@ namespace generic {
 	void append (const Tree & tree);
 
 	Tree toTree () const;
+
+	bool isEmpty () const;
 	
     };        
 

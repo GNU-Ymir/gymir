@@ -244,7 +244,10 @@ namespace semantic {
 		std::vector <Tree> inner;
 		std::vector <std::string> fields;
 		fields.push_back ("#_vtable");
-		inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ())));
+		fields.push_back ("#_monitor");
+		inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ()))); // vtable
+		inner.push_back (Tree::pointerType (Tree::pointerType (Tree::voidType ()))); // monitor
+		
 		for (auto & it : gen.to <generator::Class> ().getFields ()) {
 		    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
 		    fields.push_back (it.to <generator::VarDecl> ().getName ());
@@ -320,16 +323,19 @@ namespace semantic {
 		enterBlock (var.getLocation ().toString ());
 		auto value = castTo (var.getType (), var.getValue ());
 		if (stackVarDeclChain.back ().begin ().current.isEmpty ()) {
-		    decl.setDeclInitial (value);				
+		    decl.setDeclInitial (value);
 		} else {
 		    this-> _globalInitialiser.emplace (var.getUniqId (), std::pair<generator::Generator, generator::Generator> (var.getType (), var.getValue ()));
-		}
-		quitBlock (var.getLocation (), Tree::empty (), var.getLocation ().toString ());
+		    }
+		quitBlock (var.getLocation (), Tree::empty (), var.getLocation ().toString ());		
 	    } 
  
 	    decl.isStatic (true);
 	    decl.isUsed (true);
-	    decl.isExternal (false);
+	    if (var.isExternal()) 
+		decl.isExternal (true);
+	    else decl.isExternal (false);
+	    
 	    decl.isPreserved (true);
 	    decl.isPublic (true);
 	    decl.setDeclContext (getGlobalContext ());
@@ -912,6 +918,14 @@ namespace semantic {
 		    return generateCast (cast);
 		)
 
+		else of (AtomicLocker, lock,
+		    return generateAtomicLocker (lock);
+		)
+
+		else of (AtomicUnlocker, lock,
+		    return generateAtomicUnlocker (lock);
+		)
+			 
 		else of (ArrayAlloc, alloc,
 		    return generateArrayAlloc (alloc);
 		)
@@ -1682,6 +1696,32 @@ namespace semantic {
 	    auto who = generateValue (cast.getWho ());	    
 	    return Tree::castTo (cast.getLocation (), type, who);
 	}
+
+	generic::Tree Visitor::generateAtomicLocker (const AtomicLocker & lock) {
+	    auto fn = global::CoreNames::get (ATOMIC_LOCK);
+	    if (lock.isMonitor ()) fn = global::CoreNames::get (ATOMIC_MONITOR_LOCK);
+	    
+	    auto inner = generateValue (lock.getWho ());
+	    return Tree::buildCall (
+		lock.getLocation (),
+		Tree::voidType (),
+		fn,
+		{inner}
+		);
+	}
+
+	generic::Tree Visitor::generateAtomicUnlocker (const AtomicUnlocker & lock) {
+	    auto fn = global::CoreNames::get (ATOMIC_UNLOCK);
+	    if (lock.isMonitor ()) fn = global::CoreNames::get (ATOMIC_MONITOR_UNLOCK);
+	    
+	    auto inner = generateValue (lock.getWho ());
+	    return Tree::buildCall (
+		lock.getLocation (),
+		Tree::voidType (),
+		fn,
+		{inner}
+		);
+	}
 	
 	generic::Tree Visitor::generateArrayAlloc (const ArrayAlloc & alloc) {
 	    auto value = generateValue (alloc.getDefaultValue ());
@@ -1709,11 +1749,15 @@ namespace semantic {
 		}
 		auto type = generateType (alloc.getType ());
 		auto index = Tree::constructIndexed (alloc.getLocation (), type, params);
-		return Tree::compound (
-		    alloc.getLocation (),
-		    index,
-		    list.toTree ()
-		);
+		if (!list.isEmpty ()) {		
+		    return Tree::compound (
+			alloc.getLocation (),
+			index,
+			list.toTree ()
+			);
+		} else {
+		    return index;
+		}
 	    }
 	}	
 	
@@ -2234,31 +2278,19 @@ namespace semantic {
 	    }
 
 	    auto classType = generateType (cl.getType ());
-	    auto inner = classType.getType ();
-	    if (cl.getSelf ().isEmpty ()) {
+	    if (cl.getSelf ().isEmpty ()) { // allocate the class
 		TreeStmtList list (TreeStmtList::init ());
 		Tree var = Tree::varDecl (cl.getLocation (), "self", classType);
 		var.setDeclContext (getCurrentContext ());
 		stackVarDeclChain.back ().append (var);
-		
+
+		auto vtable = generateVtable (cl.getType ().to <ClassPtr> ().getInners ()[0]);		
 		auto classValue = Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cl.getLocation (), var, Tree::buildCall (
 		    cl.getLocation (),
 		    classType,
 		    global::CoreNames::get (CLASS_ALLOC),
-		    {Tree::buildSizeCst (inner.getSize ())}
+		    {Tree::buildAddress (cl.getLocation (), vtable, Tree::pointerType (Tree::pointerType (Tree::voidType ())))}
 		));
-		
-		list.append (classValue);
-		auto vtable = generateVtable (cl.getType ().to <ClassPtr> ().getInners ()[0]);
-		list.append (Tree::affect (this-> stackVarDeclChain.back (), this-> getCurrentContext (), cl.getLocation (),
-					   var.buildPointerUnref (0).getField ("#_vtable"),
-					   Tree::buildAddress (cl.getLocation (), vtable, Tree::pointerType (Tree::pointerType (Tree::voidType ())))));
-
-		classValue = Tree::compound (
-		    cl.getLocation (),
-		    var,
-		    list.toTree ()
-		);
 		
 		results.insert (results.begin (), classValue);
 	    } else {
@@ -2266,7 +2298,7 @@ namespace semantic {
 	    }
 	    
 	    auto fn = generateValue (cl.getFrame ());
-	    return Tree::compound (
+	    return Tree::compound ( // call the constructor
 		cl.getLocation (),
 		Tree::buildCall (cl.getLocation (), classType, fn, results),
 		pre.toTree ()
@@ -2543,15 +2575,20 @@ namespace semantic {
 	    // if (this-> _declarators.empty ()) {
 	    // 	Ymir::Error::halt ("%(r) get a declarator from outside a frame", "Critical");
 	    // }
-	    
-	    auto ptr = this-> _declarators.back ().find (id);
-	    if (ptr == this-> _declarators.back ().end ()) {
-		ptr = this-> _globalDeclarators.find (id);
+	    if (this-> _declarators.empty ()) {
+		auto ptr = this-> _globalDeclarators.find (id);
 		if (ptr == this-> _globalDeclarators.end ())
 		    Ymir::Error::halt ("%(r) undefined declarators %(y)", "Critical", (int) id);
-	    }
-	    
-	    return ptr-> second;
+		return ptr-> second;
+	    } else {
+		auto ptr = this-> _declarators.back ().find (id);
+		if (ptr == this-> _declarators.back ().end ()) {
+		    ptr = this-> _globalDeclarators.find (id);
+		    if (ptr == this-> _globalDeclarators.end ())
+			Ymir::Error::halt ("%(r) undefined declarators %(y)", "Critical", (int) id);
+		}
+		return ptr-> second;
+	    }	    
 	}
 
 
@@ -2559,15 +2596,23 @@ namespace semantic {
 	    // if (this-> _declarators.empty ()) {
 	    // 	Ymir::Error::halt ("%(r) get a declarator from outside a frame", "Critical");
 	    // }
-	    
-	    auto ptr = this-> _declarators.back ().find (id);
-	    if (ptr == this-> _declarators.back ().end ()) {
-		ptr = this-> _globalDeclarators.find (id);
+
+	    if (this-> _declarators.empty ()) {
+		auto ptr = this-> _globalDeclarators.find (id);
 		if (ptr == this-> _globalDeclarators.end ())
 		    return Tree::empty ();
-	    }
+		return ptr-> second;
+	    } else {
+		auto ptr = this-> _declarators.back ().find (id);
+		if (ptr == this-> _declarators.back ().end ()) {
+		    ptr = this-> _globalDeclarators.find (id);
+		    if (ptr == this-> _globalDeclarators.end ())
+			return Tree::empty ();
+		}
 	    
-	    return ptr-> second;
+	    
+		return ptr-> second;
+	    }
 	}
 
 	

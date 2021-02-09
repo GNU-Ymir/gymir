@@ -51,6 +51,18 @@ namespace semantic {
 	return this-> _gen;
     }
     
+    void VarDecl::setExternalLanguage (const std::string & name) {
+	this-> _externLanguage = name;
+    }
+	
+    const std::string & VarDecl::getExternalLanguage () const {
+	return this-> _externLanguage;
+    }
+
+    bool VarDecl::isExtern () const {
+	return this-> _externLanguage != "";
+    }
+
     std::string VarDecl::formatTree (int i) const {
 	Ymir::OutBuffer buf;
 	buf.writefln ("%*- %", i, "|\t", this-> getName ());

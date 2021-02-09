@@ -157,16 +157,22 @@ namespace semantic {
 	}
 	
 	std::string Mangler::mangleGlobalVar (const GlobalVar & v) const {
-	    auto name = v.getName ();
-	    std::vector <std::string> splits = split (name, "::");
+	    if (v.getExternalLanguage () == "") {
+		auto name = v.getName ();
+		std::vector <std::string> splits = split (name, "::");
 
-	    OutBuffer buf;
-	    buf.write (Mangler::YMIR_PREFIX);
-	    for (auto & it : splits) buf.write (it.length (), it);
-	    buf.write (Mangler::YMIR_VAR);
+		OutBuffer buf;
+		buf.write (Mangler::YMIR_PREFIX);
+		for (auto & it : splits) buf.write (it.length (), it);
+		buf.write (Mangler::YMIR_VAR);
 
-	    buf.write (mangle (v.getType ()));
-	    return buf.str ();
+		buf.write (mangle (v.getType ()));
+		return buf.str ();
+	    } else {
+		auto name = v.getName ();
+		std::vector <std::string> splits = split (name, "::");
+		return splits.back ();
+	    }
 	}
 
 	std::string Mangler::mangleGlobalConstant (const GlobalConstant & v) const {

@@ -7,6 +7,7 @@
  * The list of keyword, and miscellaneous word used in syntax
  */
 struct Keys {
+    static const std::string  ATOMIC;
     static const std::string  ABSTRACT;
     static const std::string  ALIAS;
     static const std::string  ANTI; 
@@ -28,8 +29,6 @@ struct Keys {
     static const std::string  DCOPY;
     static const std::string  DEF;
     static const std::string  DELEGATE; 
-    static const std::string  DELETE;
-    static const std::string  DISPOSE;
     static const std::string  DLANG;
     static const std::string  DMUTABLE; 
     static const std::string  DO;
