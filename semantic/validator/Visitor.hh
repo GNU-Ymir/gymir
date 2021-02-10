@@ -34,7 +34,11 @@ namespace semantic {
 
 	    static int __CALL_NB_RECURS__;
 
+	    static int __TEMPLATE_NB_RECURS__;
+	    
 	    static bool __LAST__;
+
+	    static bool __LAST_TEMPLATE__;
 	    
 	private :
 	    
@@ -804,7 +808,7 @@ namespace semantic {
 	     * \param right a type
 	     * \param fromObject, if the left type is an &core::object::Object, and right is a ClassPtr, then the type is compatible iif fromObject 
 	     */
-	    void verifyCompatibleType (const lexing::Word & loc, const generator::Generator & left, const generator::Generator & right, bool fromObject = false);
+	    void verifyCompatibleType (const lexing::Word & loc, const lexing::Word & rightLoc, const generator::Generator & left, const generator::Generator & right, bool fromObject = false);
 
 	    
 	    /**

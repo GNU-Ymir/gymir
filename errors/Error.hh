@@ -65,7 +65,7 @@ namespace Ymir {
 	    
 	    void addNote (const ErrorMsg & note);
 	    
-	    std::string computeMessage () const;
+	    void computeMessage (Ymir::OutBuffer & buf) const;
 
 	    bool isEmpty () const;
 
@@ -98,7 +98,7 @@ namespace Ymir {
 	    \param word the location of the line	
 	    \return a new string, with line information
 	*/
-	std::string addLine (const std::string&, const lexing::Word& word);
+	void addLine (Ymir::OutBuffer & buf, const std::string&, const lexing::Word& word);
 
 	
 
@@ -109,12 +109,12 @@ namespace Ymir {
 	    \param word the location of the line	
 	    \return a new string, with line information
 	*/
-	std::string addLine (const std::string&, const lexing::Word& word, const lexing::Word & end);
+	void addLine (Ymir::OutBuffer & buf, const std::string&, const lexing::Word& word, const lexing::Word & end);
 
 	/**
 	 * \brief Add a note to an error
 	 */
-	std::string addNote (const lexing::Word&, const std::string &, const std::string&);
+	void addNote (const lexing::Word&, const std::string &, const std::string&);
 	
 	/**
 	   \brief cause the compiler to abort due to internal error
@@ -296,11 +296,12 @@ namespace Ymir {
 	template <typename ... TArgs>
 	void fatal (const lexing::Word& word, const std::string & content, TArgs ... args) {
 	    std::string aux = format (std::string ("%(r) : ") + content, "Error", args...);
-	    aux = addLine (aux, word);
+	    Ymir::OutBuffer buf;
+	    addLine (buf, aux, word);
 
 	    //bt_print ();
 
-	    throw FatalError {aux};
+	    throw FatalError {buf.str ()};
 	}
 
 	/**

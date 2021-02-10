@@ -433,7 +433,7 @@ namespace semantic {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));	    
 		    list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
 		} else if (Visitor::__CALL_NB_RECURS__ <  3 || global::State::instance ().isVerboseActive ()) {   
-		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));
+		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (expr.getLocation (), ExternalError::get (IN_MACRO_EXPANSION)));		    
 		    Visitor::__LAST__ = true;
 		} else if (Visitor::__LAST__) {			    
 		    Visitor::__LAST__ = false;

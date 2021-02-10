@@ -1136,7 +1136,7 @@ namespace semantic {
 	    auto left = this-> _context.validateType (ofv.getType (), true);
 	    auto score = Scores::SCORE_TYPE;
 	    if (type.is <ClassPtr> ()) {
-		this-> _context.verifyCompatibleType (ofv.getLocation (), left, type);
+		this-> _context.verifyCompatibleType (ofv.getLocation (), type.getLocation (), left, type);
 		if (left.equals (type))
 		    score = Scores::SCORE_TYPE;
 		else score = Scores::SCORE_VAR;

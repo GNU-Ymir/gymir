@@ -113,7 +113,7 @@ namespace semantic {
 			if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 			    list.errors.push_back (format ("     : %(B)", "..."));
 			    list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-			} else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive () || Visitor::__LAST__) {
+			} else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive ()) {
 			    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
 			    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
 			    Visitor::__LAST__ = true;
@@ -790,9 +790,10 @@ namespace semantic {
 		    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 			list.errors.push_back (format ("     : %(B)", "..."));
 			list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		    } else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive () ) {
+		    } else if (Visitor::__CALL_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive ()) {
 			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", proto_gen.getLocation (), proto_gen.prettyString ()));
 			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (location, ExternalError::get (IN_TEMPLATE_DEF)));
+			
 			Visitor::__LAST__ = true;
 			__last_error__ = {};
 		    } else if (Visitor::__LAST__) {			    

@@ -134,6 +134,7 @@ namespace Ymir {
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
 			    TEMPLATE_REST                   = "template validation incomplete, rest : [%(y)]",
 			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
+			    TEMPLATE_VALUE_TRY              = "when trying template value resolution",
 			    THROWS                          = "throws %(y)",
 			    THROWS_IN_LAMBDA                = "a lambda function must be safe, but there are exceptions that are not caught",
 			    THROWS_NOT_DECLARED             = "the function %(y) might throw an exception of type %(y), but that is not declared in its prototype",

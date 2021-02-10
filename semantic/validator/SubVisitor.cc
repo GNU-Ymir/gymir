@@ -841,7 +841,7 @@ namespace semantic {
 		    auto ancestor = this-> _context.validateValue (expression.getRight ());
 		    if (ancestor.is <generator::Class> ()) {
 			auto ancClRef = ancestor.to <generator::Class> ().getClassRef ();
-		    this-> _context.verifyCompatibleType (expression.getLocation (), ClassPtr::init (expression.getLocation (), ancClRef), value.to <Value> ().getType ());
+			this-> _context.verifyCompatibleType (expression.getLocation (), value.getLocation (), ClassPtr::init (expression.getLocation (), ancClRef), value.to <Value> ().getType ());
 
 			
 			auto clRef = value.to<Value> ().getType ().to <Type> ().getInners () [0];

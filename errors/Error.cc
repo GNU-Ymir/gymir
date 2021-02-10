@@ -12,9 +12,13 @@ namespace Ymir {
 
 	
 	void ErrorList::print () const {
+	    Ymir::OutBuffer buf;
 	    for (auto it : this-> errors) {
-		fprintf (stderr, "%s\n", it.computeMessage ().c_str ());
+		it.computeMessage (buf);
+		buf.writeln ("");
 	    }
+	    
+	    fprintf (stderr, "%s\n", buf.str ().c_str ());
 	}
 
 	void FatalError::print () const {
@@ -153,11 +157,9 @@ namespace Ymir {
 	    } else addLineEof (buf, word);
 	}
 	
-	std::string addLine (const std::string & msg, const lexing::Word & word) {
-	    OutBuffer buf;
+	void addLine (Ymir::OutBuffer & buf, const std::string & msg, const lexing::Word & word) {
 	    buf.write (msg);
 	    addLine (buf, word);
-	    return buf.str ();
 	}
 
 	std::vector <std::string> splitString (const std::string & str, const std::string & delims) {
@@ -173,12 +175,10 @@ namespace Ymir {
 	    return cont;
 	}
 	
-	std::string addNote (const Word & word, const std::string & msg, const std::string & note, bool fst, bool oneLine) {
+	void addNote (Ymir::OutBuffer & buf, const Word & word, const std::string & note, bool fst, bool oneLine) {
 	    auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
 	    auto padd2 = center ("", leftLine.length (), '-');
-	    OutBuffer buf;
-	    buf.write (msg);
 	    
 	    auto lines = splitString (note, "\n");
 	    if (!fst && !oneLine) {
@@ -191,9 +191,7 @@ namespace Ymir {
 		    auto l = format ("%% ┃ %%\n", Colors::get (BOLD), padd, Colors::get (RESET), lines [it]);
 		    buf.write (l);
 		}
-	    }
-	    
-	    return buf.str ();
+	    }	    
 	}
 	
 	void addTwoLines (OutBuffer & buf, const Word & word, const Word & end) {
@@ -306,11 +304,9 @@ namespace Ymir {
 	    } else addLineEof (buf, word);	    
 	}	
 	
-	std::string addLine (const std::string & msg, const lexing::Word & word, const lexing::Word & end) {
-	    OutBuffer buf;
+	void addLine (Ymir::OutBuffer & buf, const std::string & msg, const lexing::Word & word, const lexing::Word & end) {
 	    buf.write (msg);
 	    addLine (buf, word, end);
-	    return buf.str ();
 	}
 	
 	ErrorMsg createNote (const lexing::Word & word) {
@@ -344,20 +340,21 @@ namespace Ymir {
 	    this-> notes.push_back (other);
 	}
 
-	std::string ErrorMsg::computeMessage () const {
-	    std::string ret;
-	    if (this-> begin.isEof ()) ret = msg + "\n";
+	void ErrorMsg::computeMessage (Ymir::OutBuffer & buf) const {
+	    if (this-> begin.isEof ()) buf.writeln (msg);
 	    else if (this-> end.isEof ()) {
-		ret = addLine (this-> msg, this-> begin);
+		addLine (buf, this-> msg, this-> begin);
 	    } else {
-		ret = addLine (this-> msg, this-> begin, this-> end);
+		addLine (buf, this-> msg, this-> begin, this-> end);
 	    }
 
 	    int z = 0;
 	    bool oneLine = false;
 	    for (auto & it : this-> notes) {
 		if (!it.isEmpty ()) {
-		    ret = Ymir::Error::addNote (this-> begin, ret, it.computeMessage (), z == 0, oneLine);
+		    Ymir::OutBuffer note;
+		    it.computeMessage (note);
+		    Ymir::Error::addNote (buf, this-> begin, note.str (), z == 0, oneLine);
 		    z += 1;
 		    oneLine = it.one_line;
 		}		
@@ -366,11 +363,8 @@ namespace Ymir {
 	    if (z != 0) { // Added some notes
 		auto leftLine = center (format ("%", this-> begin.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		ret = ret + format ("%% ┗%* %\n", Colors::get (BOLD), padd, 30, "━", Colors::get (RESET));
-	    }
-	    
-	    		    
-	    return ret;
+		buf.write (format ("%% ┗%* %\n", Colors::get (BOLD), padd, 30, "━", Colors::get (RESET)));
+	    }	    	    		   
 	}
 	
 	bool ErrorMsg::isEmpty () const {
