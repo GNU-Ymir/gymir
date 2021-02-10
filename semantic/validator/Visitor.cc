@@ -1788,12 +1788,12 @@ namespace semantic {
 		type = Type::init (type.to <Type> (), EnumRef::init (en.getName (), sym));		
 		gen = generator::Enum::init (gen.to <generator::Enum> (), type, fieldsDecl);
 		
-		sym.to <semantic::Enum> ().setGenerator (gen);
-	       		
+		sym.to <semantic::Enum> ().setGenerator (gen);	       		
 		return type;
 	    }
+	    
 	    auto gen = en.to <semantic::Enum> ().getGenerator ();
-	    if (!gen.to <semantic::generator::Enum> ().getType ().isEmpty ())
+	    if (gen.is <Value> () && !gen.to <semantic::generator::Enum> ().getType ().isEmpty ())
 		return gen.to <semantic::generator::Enum> ().getType ();
 	    else {
 		Ymir::Error::occur (en.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), en.getRealName ());
