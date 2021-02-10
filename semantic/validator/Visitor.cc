@@ -4554,12 +4554,19 @@ namespace semantic {
 		try {
 		    for (auto it : Ymir::r (0, proto.getParameters ().size ())) {
 			auto var = proto.getParameters ()[it].to <ProtoVar> ();
-			bool isMutable = types [it].to <Type> ().isMutable ();
-			params.push_back (ParamVar::init (var.getLocation (), types [it], isMutable, false));
-			paramsProto.push_back (ProtoVar::init (var.getLocation (), types [it], Generator::empty (), isMutable, 1, false));
-			if (var.getName () != Keys::UNDER) {
-			    insertLocal (var.getName (), params.back ());
-			}		
+			if (it >= (long) types.size () || types [it].isEmpty ()) {
+			    Ymir::Error::occur (var.getLocation (), ExternalError::get (UNKNOWN_LAMBDA_TYPE), var.prettyString ());
+			} else {
+			    bool isMutable = types [it].to <Type> ().isMutable ();
+			    if (!var.getType ().isEmpty ()) {
+				this-> verifyCompatibleType (var.getType ().getLocation (), types [it].getLocation (), var.getType (), types [it]);
+			    }
+			    params.push_back (ParamVar::init (var.getLocation (), types [it], isMutable, false));
+			    paramsProto.push_back (ProtoVar::init (var.getLocation (), types [it], Generator::empty (), isMutable, 1, false));
+			    if (var.getName () != Keys::UNDER) {
+				insertLocal (var.getName (), params.back ());
+			    }
+			}
 		    }
 		    
 		} catch (Error::ErrorList list) {

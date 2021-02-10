@@ -303,6 +303,8 @@ namespace semantic {
 
 	    generator::Generator validateTypeOrEmpty (const syntax::Expression & type, const std::map <std::string, syntax::Expression> & mapping) const;
 
+	    std::vector<generator::Generator> validateTypeOrEmptyMultiple (const syntax::Expression & type, const std::map <std::string, syntax::Expression> & mapping) const;
+
 	    void finalValidation (const Symbol & sym, const std::vector<syntax::Expression> & exprs, const Mapper & mapping, const syntax::Expression & test) const;
 
 	    Symbol getTemplateSolution (const Symbol & ref, const Symbol & solution) const;

@@ -895,14 +895,28 @@ namespace semantic {
 						NoneType::init (var.getLocation ()).to <Type> ().getTypeName ());
 			return Mapper (false, 0);
 		    }
-		) else of (VariadicVar, var, {
+		 ) else of (VariadicVar, var, {
 			Mapper mapper (true, Scores::SCORE_TYPE);
 			if (types.size () == 1) {
-			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
-			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
+			    if (!types [0].isEmpty ()) {
+				// It can happen when we use a lambdaProto as a value in a validateExplicit
+				// and it is not a problem
+				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types [0]));
+				mapper.nameOrder.push_back (var.getLocation ().getStr ());
+			    }
 			} else {
-			    mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types));
-			    mapper.nameOrder.push_back (var.getLocation ().getStr ());
+			    bool add = true;
+			    for (auto & it : types) {
+				if (it.isEmpty ()) add = false;
+				else if (!it.is<Type> ()) {
+				    auto note = Ymir::Error::createNote (var.getLocation ());
+				    Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (USE_AS_TYPE), types [0].prettyString ());
+				}
+			    }
+			    if (add) {
+				mapper.mapping.emplace (var.getLocation ().getStr (), createSyntaxType (var.getLocation (), types));
+				mapper.nameOrder.push_back (var.getLocation ().getStr ());
+			    }
 			}
 			consumed += types.size ();
 			return mapper;
@@ -2047,6 +2061,26 @@ namespace semantic {
 	    return gen;
 	}
 
+	std::vector <Generator> TemplateVisitor::validateTypeOrEmptyMultiple (const Expression & type, const std::map<std::string, Expression> & mapping) const {
+	    auto param = replaceAll (type, mapping);	    
+	    std::vector <Generator> gen;
+	    try {
+		if (param.is <TemplateSyntaxList> ()) {
+		    for (auto & it : param.to <TemplateSyntaxList> ().getContents ()) {
+			if (it.is <Type> ()) 
+			    gen.push_back (it);
+			else return {};
+		    }
+		} else {
+		    gen.push_back (this-> _context.validateType (param, true));
+		}
+	    } catch (Error::ErrorList list) {
+		return {};
+	    } 
+	    
+	    return gen;
+	}
+	
 	
 	std::map <std::string, syntax::Expression> TemplateVisitor::validateLambdaProtos (const std::vector<syntax::Expression> & exprs, const std::map <std::string, syntax::Expression> & mapping) const {
 	    std::list <Ymir::Error::ErrorMsg> errors;
@@ -2068,11 +2102,13 @@ namespace semantic {
 			    // If it is a funcPtr, it has the same number of var as the lambda,
 			    // it is assumed if we are here, the template spec has been successful
 			    for (auto & it : F.to <syntax::FuncPtr> ().getParameters ()) {				
-				auto type = validateTypeOrEmpty (it, mapping);
-				if (type.isEmpty ()) {
+				auto type = validateTypeOrEmptyMultiple (it, mapping);
+				if (type.empty ()) {
 				    successful = false;
 				    break;
-				} else types.push_back (type);
+				} else {
+				    types.insert (types.end (), type.begin (), type.end ());
+				}
 			    }			    
 			}
 			if (successful) retType = F.to <syntax::FuncPtr> ().getRetType ();
