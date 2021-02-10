@@ -23,7 +23,7 @@ namespace semantic {
 	    aux.reserve (inner.size ());
 	    
 	    for (auto & it : inner) {
-		aux.push_back (Type::init (it.to <Type> (), false, false)); // tuple inner types are always immutable
+		aux.push_back (Type::init (it.to <Type> (), it.to <Type> ().isMutable (), false)); // tuple inner types are always immutable
 	    }
 	    
 	    this-> setInners (aux);
