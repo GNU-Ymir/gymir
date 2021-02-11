@@ -701,7 +701,8 @@ namespace semantic {
 		    }
 		    
 		    if (!found) {
-			errors.push_back (Error::makeOccur (expression.getLocation (), ExternalError::get (NOT_CATCH), it.prettyString ()));
+			auto note = Ymir::Error::createNote (expression.getLocation ());
+			errors.push_back (Error::makeOccurAndNote (it.getLocation (), note, ExternalError::get (NOT_CATCH), it.prettyString ()));
 			usedTypes.push_back ({it.getLocation (), it}); // to not display the error multiple times
 		    }
 		}

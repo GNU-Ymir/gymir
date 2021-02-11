@@ -108,6 +108,11 @@ namespace semantic {
 	     * Throw an undefined op error
 	     */
 	    static void error (const syntax::Unary & un, const generator::Generator & operand);
+
+	    /**
+	     * Throw an undefined op error
+	     */
+	    static void error (const syntax::Unary & un, const generator::Generator & operand, const std::list <Ymir::Error::ErrorMsg> & errors);
 	    
 	};	
 

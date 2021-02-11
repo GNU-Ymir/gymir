@@ -4146,7 +4146,7 @@ namespace semantic {
 		    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 			list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
 			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		    } else if (Visitor::__CALL_NB_RECURS__ == 1 || global::State::instance ().isVerboseActive ()) {
+		    } else if ((Visitor::__CALL_NB_RECURS__ == 1 || global::State::instance ().isVerboseActive ()) && !Visitor::__LAST__) {
 			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", value.getLocation (), value.prettyString ()));
 			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
 			Visitor::__LAST__ = true;
@@ -4166,21 +4166,24 @@ namespace semantic {
 			
 			__last_error__ = {};
 		    } else if (Visitor::__LAST__) {
+			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", value.getLocation (), value.prettyString ()));
+			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
+			
 			Visitor::__LAST__ = false;
 			std::vector<std::string> names;
 			for (auto & it : params)
 			    names.push_back (it.prettyString ());
 
 			std::string leftName = value.getLocation ().getStr ();				
-			list.errors.insert (list.errors.begin (),
-					    Ymir::Error::makeOccurAndNote (
-						tcl.getLocation (),
-						errors,
-						ExternalError::get (UNDEFINED_TEMPLATE_OP),
-						leftName,
-						names
-						)
-			    );			    
+			list.errors = {
+			    Ymir::Error::makeOccurAndNote (
+				tcl.getLocation (),
+				list.errors,
+				ExternalError::get (UNDEFINED_TEMPLATE_OP),
+				leftName,
+				names
+				)
+			};			    
 			__last_error__ = list.errors;
 		    } else {
 			list.errors = __last_error__;
@@ -4274,7 +4277,7 @@ namespace semantic {
 			    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 				list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-			    } else if (Visitor::__CALL_NB_RECURS__ < 2 || global::State::instance ().isVerboseActive ()) {
+			    } else if ((Visitor::__CALL_NB_RECURS__ < 2 || global::State::instance ().isVerboseActive ()) && !Visitor::__LAST__) {
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
 				Visitor::__LAST__ = true;
@@ -4294,6 +4297,9 @@ namespace semantic {
 				
 				__last_error__ = {};
 			    } else if (Visitor::__LAST__) {
+				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
+				list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
+				
 				Visitor::__LAST__ = false;
 				std::vector<std::string> names;
 				for (auto & it : params)
@@ -4301,15 +4307,14 @@ namespace semantic {
 
 				std::string leftName = value.getLocation ().getStr ();
 				
-				list.errors.insert (list.errors.begin (), Ymir::Error::makeOccurAndNote (
-							tcl.getLocation (),
-							errors,
-							ExternalError::get (UNDEFINED_TEMPLATE_OP),
-							leftName,
-							names
-							)
-				    );
-				
+				list.errors = {Ymir::Error::makeOccurAndNote (
+					tcl.getLocation (),
+					list.errors,
+					ExternalError::get (UNDEFINED_TEMPLATE_OP),
+					leftName,
+					names
+					)
+				};				
 				__last_error__ = list.errors;
 			    } else {
 				list.errors = __last_error__;

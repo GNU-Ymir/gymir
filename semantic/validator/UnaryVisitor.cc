@@ -186,7 +186,10 @@ namespace semantic {
 	    int highest = 0;
 	    for (auto & del : gen.to <MultSym> ().getGenerators ()) {
 		try {
-		    if (!del.is <DelegateValue> ()) this-> error (un, del);
+		    if (!del.is <DelegateValue> ()) {
+			auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), del.to <Value> ().getType ().getLocation (), del.prettyString ());
+			throw Error::ErrorList {{note}};
+		    }
 	    	     
 		    if (del.getThrowers ().size () != 0) {
 			std::list <Ymir::Error::ErrorMsg> notes;
@@ -210,24 +213,17 @@ namespace semantic {
 			    this-> _context.verifyMemoryOwner (un.getLocation (), type, del.to <DelegateValue> ().getClosure (), true);
 			} catch (Error::ErrorList list) {
 			    auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), del.to <Value> ().getType ().getLocation (), proto.prettyString ());
-			    auto err = Ymir::Error::makeOccurAndNote (un.getLocation (),
-								      note, 
-								      ExternalError::get (UNDEFINED_UN_OP),
-								      un.getLocation ().getStr (), 
-								      del.prettyString ()
-				);
-		   		    
 
 			    for (auto & i : list.errors)
-				err.addNote (i);
-			    throw Error::ErrorList {{err}};
+				note.addNote (i);
+			    throw Error::ErrorList {{note}};
 			}
 
 			auto llevel = del.to <DelegateValue> ().getClosure ().to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 			auto rlevel = type.to <Type> ().mutabilityLevel () + 1;
 			auto score = rlevel - llevel;
 			if (score > highest) highest = score;
-			
+
 			auto delType = Delegate::init (un.getLocation (), this-> _context.validateFunctionType (proto));
 			if (results.find (score) != results.end ())
 			    results[score].push_back (Value::init (del.to <Value> (), delType));
@@ -239,8 +235,9 @@ namespace semantic {
 	    }
 
 	    auto elements = results.find (highest);
-	    if (elements == results.end ())
-		throw Error::ErrorList {errors};
+	    if (elements == results.end ()) {
+		this-> error (un, gen, errors);
+	    }
 
 	    if (elements-> second.size () == 1) return elements-> second [0];
 	    else {
@@ -273,6 +270,24 @@ namespace semantic {
 	    );
 	}	
 
+	void UnaryVisitor::error (const syntax::Unary & un, const generator::Generator & left, const std::list <Error::ErrorMsg> & errors) {
+	    std::string leftName;
+	    match (left) {
+		of (FrameProto, proto, leftName = proto.getName ())
+		else of (generator::Struct, str, leftName = str.getName ())
+		else of (MultSym,    sym,   leftName = sym.getType ().prettyString ())
+		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
+	    }
+	    
+	    Ymir::Error::occurAndNote (un.getLocation (),
+				       errors,
+				       ExternalError::get (UNDEFINED_UN_OP),
+				       un.getLocation ().getStr (), 
+				       leftName
+	    );
+	}	
+
+	
 	Unary::Operator UnaryVisitor::toOperator (const lexing::Word & loc) {
 	    string_match (loc.getStr ()) {
 		eq (Token::NOT, return Unary::Operator::NOT;);
