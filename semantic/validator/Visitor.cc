@@ -452,11 +452,24 @@ namespace semantic {
 		    		    
 		    std::vector <Generator> unused, notfound;		    
 		    verifyThrows (body.getThrowers (), throwers, unused, notfound);
-		    
+
+		    std::vector <Generator> types;
+		    std::vector <Error::ErrorMsg> msg_types;
 		    for (auto & it : notfound) {
-			auto note = Ymir::Error::createNote (it.getLocation ());
-			errors.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_DECLARED), func.getRealName (), it.prettyString ()));
+			bool found = false;
+			for (auto jt : Ymir::r (0, types.size ())) {
+			    if (it.to <Type> ().isCompatible (types [jt])) {
+				found = true;				
+				msg_types[jt].addNote (Ymir::Error::createNote (it.getLocation ()));
+			    }
+			}
+			if (!found) {
+			    auto note = Ymir::Error::createNote (it.getLocation ());
+			    msg_types.push_back (Error::makeOccurAndNote (func.getName (), note, ExternalError::get (THROWS_NOT_DECLARED), func.getRealName (), it.prettyString ()));
+			    types.push_back (it);
+			}
 		    }
+		    errors.insert (errors.end (), msg_types.begin (), msg_types.end ());			
 		    
 		    for (auto & it : unused) {
 			auto note = Ymir::Error::createNote (it.getLocation ());
@@ -3932,7 +3945,7 @@ namespace semantic {
 	    auto jmp_buf_type = validateType (syntax::Var::init (lexing::Word::init (wh.getLocation (), global::CoreNames::get (JMP_BUF_TYPE))));
 	    for (auto it : Ymir::r (exits.size (), 0)) {
 		ret = ExitScope::init (wh.getLocation (), ret.to <Value> ().getType (), jmp_buf_type, ret, {exits [it - 1]}, {}, Generator::empty (), Generator::empty (), Generator::empty ());
-		ret = Block::init (wh.getLocation (), ret.to<Value> ().getType (), {varDecls [it - 1], ret});
+		ret = Block::init (wh.getLocation (), ret.to<Value> ().getType (), {varDecls [it - 1], ret});		
 	    }
 	    
 	    return ret;
@@ -5999,7 +6012,7 @@ namespace semantic {
 	}
 	
 
-	void Visitor::verifyThrows (const std::vector <Generator> & types, const std::vector <Generator> & rethrow, std::vector <Generator> & unused, std::vector <Generator> & notfound) {
+	void Visitor::verifyThrows (const std::vector <Generator> & types, const std::vector <Generator> & rethrow, std::vector <Generator> & unused, std::vector <Generator> & notfound) {	    
 	    // This function is ugly, maybe there is a better way to do this
 	    // But still this is working
 	    std::vector <Generator> used;
@@ -6011,16 +6024,18 @@ namespace semantic {
 			break;
 		    }
 		}
-		if (found) break;
-		for (auto &j : rethrow) {
-		    if (it.to<Type> ().isCompatible (j)) {
-			found = true;
-			used.push_back (j);
-			break;
-		    }
-		}
 		
-		if (!found) notfound.push_back (it);
+		if (!found) {
+		    for (auto &j : rethrow) {
+			if (it.to<Type> ().isCompatible (j)) {
+			    found = true;
+			    used.push_back (j);
+			    break;
+			}
+		    }
+		    
+		    if (!found) notfound.push_back (it);
+		}
 	    }
 
 	    for (auto & it : rethrow) {

@@ -2050,16 +2050,18 @@ namespace semantic {
 	}
 
 	generic::Tree Visitor::popLastException (const lexing::Word & loc) {
-	    if (this-> exceptionDeclChain.size () != 0 && !this-> exceptionDeclChain.back ().jmp_var.isEmpty ()) {
-		return Tree::buildCall (
-		    loc,
-		    Tree::boolType (),
-		    global::CoreNames::get (EXCEPT_POP),
-		    {Tree::buildAddress (loc, this-> exceptionDeclChain.back ().jmp_var, Tree::pointerType (Tree::voidType ()))}
-		    );
-	    } else {
-		return Tree::empty ();
+	    for (auto i : Ymir::r ((int) (this-> exceptionDeclChain.size () - 1), -1)) {
+		if (!this-> exceptionDeclChain[i].jmp_var.isEmpty ()) {		
+		    return Tree::buildCall (
+			loc,
+			Tree::boolType (),
+			global::CoreNames::get (EXCEPT_POP),
+			{Tree::buildAddress (loc, this-> exceptionDeclChain [i].jmp_var, Tree::pointerType (Tree::voidType ()))}
+			);
+		}
 	    }
+	    
+	    return Tree::empty ();	    
 	}
 	
 	generic::Tree Visitor::generateSuccessScope (const SuccessScope & scope) {
