@@ -745,6 +745,10 @@ namespace semantic {
 	bool Visitor::isWeak () const {
 	    return this-> _isWeak;
 	}
+
+	void Visitor::purge () {
+	    __imported__.clear ();
+	}
 	
     }
     

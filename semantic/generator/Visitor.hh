@@ -70,7 +70,7 @@ namespace semantic {
 	    /**
 	     * List of defined frame, to prevent multiple definition of the same weak frame
 	     */
-	    std::set <std::string> _definedFrame;
+	    static std::set <std::string> __definedFrame__;
 	    
 	private :
 

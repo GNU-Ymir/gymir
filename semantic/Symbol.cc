@@ -505,7 +505,7 @@ namespace semantic {
 
     void Symbol::purge () {
 	__imported__.clear ();
-	__fast_mod_access__.clear ();
+	__fast_mod_access__.clear ();	
     }
     
     void Symbol::mergeEqSymbols (std::vector <Symbol> & multSym) {

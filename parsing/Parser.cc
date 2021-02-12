@@ -90,6 +90,7 @@ namespace Ymir {
 	
 	generator.finalize ();
 	semantic::Symbol::purge ();
+	semantic::declarator::Visitor::purge ();
     }
     
 }

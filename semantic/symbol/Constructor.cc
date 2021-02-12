@@ -69,13 +69,23 @@ namespace semantic {
     }
 
     std::string Constructor::getRealName () const {
-	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
-	else return ISymbol::getRealName ();
+	if (this-> getRename ().isEof ()) 
+	    return ISymbol::getRealName ();
+	else {
+	    Ymir::OutBuffer buf;
+	    buf.writef ("%::%", ISymbol::getRealName (), this-> getRename ().getStr ());
+	    return buf.str ();
+	}
     }
 
     std::string Constructor::getMangledName () const {
-	if (this-> getName () == Keys::MAIN) return this-> getName ().getStr ();
-	else return ISymbol::getMangledName ();
+	if (this-> getRename ().isEof ()) 
+	    return ISymbol::getMangledName ();
+	else {
+	    Ymir::OutBuffer buf;
+	    buf.writef ("%::%", ISymbol::getRealName (), this-> getRename ().getStr ());
+	    return buf.str ();
+	}
     }
 
     std::string Constructor::formatTree (int i) const {

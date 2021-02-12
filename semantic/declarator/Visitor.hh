@@ -206,6 +206,11 @@ namespace semantic {
 	     * From now on, all the symbol declared by this visitor will be weak
 	     */
 	    void setWeak ();
+
+	    /**
+	     * Clean the global symbols
+	     */
+	    static void purge ();
 	    
 	};
 

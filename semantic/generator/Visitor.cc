@@ -24,6 +24,8 @@ namespace semantic {
 	const ulong	Visitor::ReturnWithinCatch::RETURN = 1;
 	const ulong	Visitor::ReturnWithinCatch::BREAK  = 2;
 	const ulong	Visitor::ReturnWithinCatch::THROW  = 3;
+
+	std::set <std::string> Visitor::__definedFrame__;
 	
 	Visitor::Visitor () :
 	    _globalContext (Tree::empty ()),
@@ -623,7 +625,7 @@ namespace semantic {
 	    setCurrentContext (Tree::empty ());
 	}
 	
-	void Visitor::generateFrame (const Frame & frame) {	    	    	    
+	void Visitor::generateFrame (const Frame & frame) {	    
 	    std::vector <Tree> args;
 	    for (auto i : Ymir::r (0, args.size ())) {
 		args.push_back (generateType (frame.getParams () [i].to<ParamVar> ().getType ()));
@@ -634,7 +636,7 @@ namespace semantic {
 	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
 	    auto asmName = Mangler::init ().mangleFrame (frame);
 	    fn_decl.asmName (asmName);
-	    if (!frame.isWeak () || this-> _definedFrame.find (asmName) == this-> _definedFrame.end ())	{
+	    if (!frame.isWeak () || __definedFrame__.find (asmName) == __definedFrame__.end ())	{
 		if (frame.getName () == Keys::MAIN) 
 		    generateMainCall (frame.getLocation (), frame.getType ().is <Void> (), asmName);
 	    
@@ -679,7 +681,7 @@ namespace semantic {
 		Tree::gimplifyFunction (fn_decl);
 		Tree::finalizeFunction (fn_decl);
 
-		this-> _definedFrame.emplace (asmName);
+		__definedFrame__.emplace (asmName);
 		
 		setCurrentContext (Tree::empty ());
 		quitFrame ();
