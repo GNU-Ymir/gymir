@@ -3537,15 +3537,22 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::vector <Generator> types;
 	    for (auto it : list.getParameters ()) {
-		auto val = validateValueNonVoid (it);
+		auto val = validateValue (it, false, false);
 		if (val.is <List> ()) {
 		    for (auto & g_it : val.to<List> ().getParameters ()) {
+			if (g_it.to <Value> ().getType ().is<NoneType> () || g_it.to <Value> ().getType ().is <Void> ()) {
+			    Ymir::Error::occur (g_it.getLocation (), ExternalError::get (VOID_VALUE));
+			}
+			
 			params.push_back (g_it);
 			auto type = params.back ().to <Value> ().getType ();
 			types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
 			verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
 		    }
 		} else {
+		    if (val.to <Value> ().getType ().is<NoneType> () || val.to <Value> ().getType ().is <Void> ()) {
+			Ymir::Error::occur (val.getLocation (), ExternalError::get (VOID_VALUE));
+		    }
 		    params.push_back (val);
 		    auto type = params.back ().to <Value> ().getType ();
 		    types.push_back (Type::init (type.to<Type> (), type.to <Type> ().isMutable (), false));
