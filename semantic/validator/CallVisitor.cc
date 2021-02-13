@@ -851,8 +851,15 @@ namespace semantic {
 		this-> _context.enterForeign ();		    // We enter a foreign, the value of a parameter var has no local context
 		try {
 		    this-> _context.enterBlock (); // it has no context but it need a block to be validated
-		    if (!var.getValue ().isEmpty ())
-			value = this-> _context.validateValue (var.getValue ());
+		    if (!var.getValue ().isEmpty ()) {
+			try {
+			    value = this-> _context.validateValue (var.getValue ());
+			} catch (Error::ErrorList err) {
+			    // If it failed it can be a template, that will be validated later, so we add something
+			    // To tell the templateVisitor, that there is something, but we can't use it for the moment
+			    value = None::init (var.getValue ().getLocation ());
+			}
+		    }
 		    this-> _context.quitBlock ();
 
 		    auto type = Void::init (var.getName ());

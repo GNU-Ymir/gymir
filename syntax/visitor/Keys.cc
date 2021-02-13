@@ -42,6 +42,7 @@ const std::string	Keys::FOR	   = "for";
 const std::string	Keys::FROM	   = "from";
 const std::string	Keys::FUNCTION	   = "fn";
 const std::string	Keys::I16	   = "i16";
+const std::string	Keys::I32	   = "i32";
 const std::string	Keys::I64	   = "i64";
 const std::string	Keys::I8	   = "i8";
 const std::string	Keys::IF	   = "if";

@@ -98,7 +98,7 @@ namespace syntax {
 	};
 	
 	visit._fixedSuffixes = {
-	    Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::U32, Keys::I64, Keys::U64, Keys::USIZE, Keys::ISIZE
+	    Keys::I8, Keys::U8, Keys::I16, Keys::U16, Keys::I32, Keys::U32, Keys::I64, Keys::U64, Keys::USIZE, Keys::ISIZE
 	};
 
 	visit._floatSuffix = {

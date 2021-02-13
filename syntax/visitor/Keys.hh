@@ -47,6 +47,7 @@ struct Keys {
     static const std::string  FROM; 
     static const std::string  FUNCTION;
     static const std::string  I16;
+    static const std::string  I32;
     static const std::string  I64;
     static const std::string  I8;
     static const std::string  IF; 

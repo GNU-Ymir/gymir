@@ -945,7 +945,7 @@ namespace semantic {
 		auto val = this-> _context.retreiveValue (this-> _context.validateValue (right));
 		rightName = val.prettyString ();
 	    }
-	    	    
+	    
 	    Ymir::Error::occur (
 		expression.getLocation (),
 		ExternalError::get (UNDEFINED_SUB_PART_FOR),
@@ -982,7 +982,7 @@ namespace semantic {
 		auto val = this-> _context.retreiveValue (this-> _context.validateValue (right));
 		rightName = val.prettyString ();
 	    }
-	    
+
 	    Ymir::Error::occurAndNote (
 		expression.getLocation (),
 		expression.getRight ().getLocation (),

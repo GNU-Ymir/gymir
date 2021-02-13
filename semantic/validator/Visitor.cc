@@ -2498,7 +2498,7 @@ namespace semantic {
 	    
 	    if (fixed.getSuffix () == Keys::I8) type = Integer::init (fixed.getLocation (), 8, true);
 	    if (fixed.getSuffix () == Keys::I16) type = Integer::init (fixed.getLocation (), 16, true);
-	    if (fixed.getSuffix () == "") type = Integer::init (fixed.getLocation (), 32, true);
+	    if (fixed.getSuffix () == Keys::I32 || fixed.getSuffix () == "") type = Integer::init (fixed.getLocation (), 32, true);
 	    if (fixed.getSuffix () == Keys::I64) type = Integer::init (fixed.getLocation (), 64, true);
 	    if (fixed.getSuffix () == Keys::ISIZE) type = Integer::init (fixed.getLocation (), 0, true);
 		
