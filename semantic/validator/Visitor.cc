@@ -3848,7 +3848,7 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateTry (const syntax::Try & tr) {
-	    auto inner = this-> validateValue (tr.getInner ());
+	    auto inner = this-> validateValue (tr.getContent ());
 	    auto syntaxType = createClassTypeFromPath (tr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
 	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
 	    
@@ -5083,7 +5083,7 @@ namespace semantic {
 	}
 
 	Generator Visitor::validateTypeTry (const syntax::Try & tr) {
-	    auto inner = validateType (tr.getInner (), true);
+	    auto inner = validateType (tr.getContent (), true);
 	    auto syntaxType = createClassTypeFromPath (tr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
 	    auto errType = Type::init (validateType (syntaxType).to <Type> (), false, false);
 	    

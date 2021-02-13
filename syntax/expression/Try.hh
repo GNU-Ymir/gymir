@@ -26,7 +26,7 @@ namespace syntax {
 
 	std::string prettyString () const override;	
 
-	const syntax::Expression & getInner () const;
+	const syntax::Expression & getContent () const;
 	
     };
     

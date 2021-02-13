@@ -26,7 +26,7 @@ namespace syntax {
 	return Ymir::format ("(%)?", this-> _inner.prettyString ());
     }
     
-    const syntax::Expression & Try::getInner () const {
+    const syntax::Expression & Try::getContent () const {
 	return this-> _inner;
     }
 }

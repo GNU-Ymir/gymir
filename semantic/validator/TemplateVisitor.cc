@@ -582,6 +582,30 @@ namespace semantic {
 			}			
 						    			
 		    }
+		) else of (syntax::Try, tr, {
+			consumed += 1;
+			auto type = types [0];
+			if (type.is <Option> ()) {
+			    std::vector <Generator> vec = {type.to <Type> ().getInners ()[0]};
+			    int consumed = 0;
+			    auto mapper = this-> validateTypeFromImplicit (params, tr.getContent (), array_view<Generator> (vec), consumed);
+			    
+			    if (mapper.succeed) {
+				Expression realType = this-> replaceAll (leftT, mapper.mapping);
+				auto genType = this-> _context.validateType (realType, true);
+				this-> _context.verifySameType (genType, type);
+				this-> _context.verifyNotIsType (leftT.getLocation ());
+			  				
+				mapper.score += Scores::SCORE_TYPE;
+				return mapper;
+			    }
+			} else {
+			    Ymir::Error::occur (tr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						tr.prettyString (),
+						type.to<Type> ().getTypeName ());
+			}			
+						    			
+		    }
 		) else of (syntax::List, lst, {
 			consumed += 1;			
 			auto type = types [0];
@@ -983,6 +1007,30 @@ namespace semantic {
 						un.prettyString (),
 						type.to<Type> ().getTypeName ());
 			}			
+		    }
+		) else of (syntax::Try, tr, {
+			if (type.is <Option> ()) {
+			    std::vector <Generator> vec = {type.to <Type> ().getInners ()[0]};
+			    int consumed = 0;
+			    auto mapper = this-> validateTypeFromImplicit (params, tr.getContent (), array_view<Generator> (vec), consumed);
+			    
+			    if (mapper.succeed) {
+				Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
+				auto genType = this-> _context.validateType (realType, true);
+				this-> _context.verifySameType (genType, type);
+				this-> _context.verifyNotIsType (ofv.getLocation ());
+			    
+				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxValue (ofv.getLocation (), type));				
+				mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
+				
+				mapper.score += Scores::SCORE_TYPE;
+				return mapper;
+			    }
+			} else {
+			    Ymir::Error::occur (tr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						tr.prettyString (),
+						type.to<Type> ().getTypeName ());
+			}		
 		    }
 		) else of (syntax::List, lst, {
 			if (type.to <Type> ().isComplex () && type.to <Type> ().getInners ().size () >= lst.getParameters ().size () && !type.is <ClassPtr> ()) {
@@ -1662,7 +1710,7 @@ namespace semantic {
 			return syntax::MacroVar::init (v.getLocation (), replaceAll (v.getContent (), mapping));
 		    }
 		) else of (syntax::Try, tr, {
-			return syntax::Try::init (tr.getLocation (), replaceAll (tr.getInner (), mapping));
+			return syntax::Try::init (tr.getLocation (), replaceAll (tr.getContent (), mapping));
 		    }
 		) else of (syntax::With, wh, {
 			std::vector <syntax::Expression> exprs;
