@@ -898,10 +898,18 @@ namespace semantic {
 		    try {
 			for (auto & field : fields) {
 			    auto field_type = field.to <generator::VarDecl> ().getVarType ();
-			    field_type = Type::init (field_type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable () && field_type.to <Type> ().isMutable ());
+			    if (value.to <Value> ().isLvalue () &&
+				value.to <Value> ().getType ().to <Type> ().isMutable () &&
+				field_type.to <Type> ().isMutable ())
+				
+				field_type = Type::init (field_type.to <Type> (), true);
+			    else
+				field_type = Type::init (field_type.to <Type> (), false);
+			    
 			    auto name = field.to <generator::VarDecl> ().getName ();
 			    auto type = Pointer::init (expression.getLocation (), field_type);
-
+			    type = Type::init (type.to <Type> (), field_type.to <Type> ().isMutable ());
+			    
 			    auto field_value = StructAccess::init (expression.getLocation (), type, value, name); 
 			    params.push_back (Addresser::init (field_value.getLocation (), type, field_value));
 			    types.push_back (type);
@@ -914,7 +922,9 @@ namespace semantic {
 			this-> error (expression, t, expression.getRight (), errors);
 		    }
 		    
-		    auto tuple = Tuple::init (expression.getLocation (), types);		    
+		    auto tuple = Tuple::init (expression.getLocation (), types);
+		    tuple = Type::init (tuple.to <Type> (), true);
+		    
 		    return TupleValue::init (expression.getLocation (), tuple, params); 
 		}
 	    }	    

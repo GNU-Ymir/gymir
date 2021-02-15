@@ -6,12 +6,15 @@ namespace semantic {
 
 	TupleValue::TupleValue () :
 	    Value ()
-	{}
+	{
+	    this-> isLvalue (true);
+	}
 
 	TupleValue::TupleValue (const lexing::Word & loc, const Generator & type, const std::vector <Generator> & content) :
 	    Value (loc, type),
 	    _content (content)
 	{
+	    this-> isLvalue (true);
 	    std::vector <Generator> thrs;
 	    for (auto & it : this-> _content) {
 		auto &ith = it.getThrowers ();

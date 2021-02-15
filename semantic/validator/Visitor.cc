@@ -5541,8 +5541,6 @@ namespace semantic {
 	    verifyCompleteType (loc, type);
 	    verifyImplicitAlias (loc, type, gen);
 
-	    auto llevel = type.to <Type> ().mutabilityLevel ();
-
 	    // if (gen.is<Aliaser> () && llevel <= 1 && !inMatch && !gen.to <Aliaser> ().getWho ().is<StringValue>()) // special case for string literal
 	    // 	Ymir::Error::warn (gen.getLocation (), ExternalError::get (ALIAS_NO_EFFECT));
 	    
@@ -5566,91 +5564,25 @@ namespace semantic {
 		    }
 		}
 	    }
-	    
-	    // Tuple copy is by default, as we cannot alias a tuple
-	    // And for arrays (but left op)
-	    if (gen.to <Value> ().getType ().is <Tuple> () || gen.to <Value> ().getType ().is <Range> () || type.is<Array> ()) {
-		auto tu = gen.to<Value> ().getType ();
-		auto rlevel = tu.to <Type> ().mutabilityLevel ();
 
-		// In case of void array, the mutabilityLevel is set to the left operand, as the right operand is necessarily a constant and the left operand can have very deep level
-		// Exemple : let dmut a : [[[[[[i32]]]]]] = []; // Ok
-		
-		if (isVoidArrayType (gen.to <Value> ().getType ())) rlevel = llevel;
-		    
-		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
-		    auto note = Ymir::Error::createNote (gen.getLocation ());
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-					       llevel, std::max (1, rlevel)
-		    );
-		}		
-	    } else if (type.is <StructRef> () && !type.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
-		auto tu = gen.to<Value> ().getType ();
-
-		auto rlevel = tu.to <Type> ().mutabilityLevel ();
-		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
-		    auto note = Ymir::Error::createNote (gen.getLocation ());
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-					       llevel, std::max (1, rlevel)
-		    );
-		}		
+	    if (type.is<LambdaType> ()) {
+		if (!construct || !gen.is<LambdaProto> ()) {
+		    auto note = Ymir::Error::createNote (loc);
+		    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+		} else {
+		    verifyMutabilityLevel (loc, gen.getLocation (), type, gen.to <Value> ().getType (), construct);
+		}
 	    } else if (type.is<Pointer> ()) {
-		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
+		auto llevel = type.to <Type> ().mutabilityLevel ();
+		auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
 		if (llevel > std::max (1, rlevel) && !gen.is <NullValue> ()) {
 		    auto note = Ymir::Error::createNote (gen.getLocation ());
 		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
 					       llevel, std::max (1, rlevel)
-		    );
-		}		
-	    } else if (type.is<ClassPtr> ()) {
-		auto rlevel = gen.to<Value> ().getType ().to <Type> ().mutabilityLevel ();
-		if (llevel > std::max (1, rlevel)) {
-		    auto note = Ymir::Error::createNote (gen.getLocation ());
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-					       llevel, std::max (1, rlevel)
 			);
 		}		
-	    } else if (type.is<FuncPtr> ()) { // Yes, i know that's ugly, but easier to understand actually	
-	    } else if (type.is<ClassRef> ()) {		
-		auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
-
-		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
-		    auto note = Ymir::Error::createNote (gen.getLocation ());
-		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-					       llevel, std::max (1, rlevel)
-		    );
-		}		
-	    } else if (type.is<LambdaType> ()) {
-		if (!construct || !gen.is<LambdaProto> ()) {
-		    auto note = Ymir::Error::createNote (loc);
-		    Ymir::Error::occurAndNote (gen.getLocation (), note, ExternalError::get (USE_AS_VALUE));
-		} else if (type.to <Type> ().isMutable ())
-		    Ymir::Error::occur (gen.getLocation (), ExternalError::get (DISCARD_CONST_LEVEL),
-					1, 0
-		    );	 
 	    } else {
-		
-		// Verify mutability
-		if (type.to<Type> ().isComplex () || type.to <Type> ().isRef ()) {
-		    auto rlevel = gen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
-		    
-		    // In case of void array, the mutabilityLevel is set to the left operand, as the right operand is necessarily a constant and the left operand can have very deep level
-		    // Exemple : let dmut a : [[[[[[i32]]]]]] = []; // Ok
-		    
-		    if (isVoidArrayType (gen.to <Value> ().getType ())) rlevel = llevel; 
-		    
-		    if ((type.to <Type> ().isRef () && construct && llevel > std::max (0, rlevel))) { // If it is the construction of a ref
-			auto note = Ymir::Error::createNote (gen.getLocation ());
-			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-						   llevel, std::max (0, rlevel)
-			);		
-		    } else if (llevel > std::max (1, rlevel)) {
-			auto note = Ymir::Error::createNote (gen.getLocation ());
-			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
-						   llevel, std::max (1, rlevel)
-			);
-		    }
-		}
+		verifyMutabilityLevel (loc, gen.getLocation (), type, gen.to <Value> ().getType (), construct);
 	    }
 
 	    // TODO Verify locality
@@ -5658,6 +5590,93 @@ namespace semantic {
 	    // 	Ymir::Error::occur (loc, ExternalError::get (DISCARD_LOCALITY));				    
 	    // }
 	}
+
+	void Visitor::verifyMutabilityLevel (const lexing::Word & loc, const lexing::Word & rloc, const Generator & leftType, const Generator & rightType, bool construct) {
+	    auto llevel = leftType.to <Type> ().mutabilityLevel ();
+	    // Tuple are different, mutability level does not work with them, we need to verify each fields
+	    if (rightType.is <Tuple> ()) {
+		for (auto it : Ymir::r (0, leftType.to <Tuple> ().getInners ().size ())) {
+		    verifyMutabilityLevel (loc, rloc, leftType.to <Tuple> ().getInners ()[it], rightType.to <Tuple> ().getInners ()[it], false);
+		}
+	    } else if (rightType.is <Range> () || leftType.is<Array> ()) {
+		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+
+		// In case of void array, the mutabilityLevel is set to the left operand, as the right operand is necessarily a constant and the left operand can have very deep level
+		// Exemple : let dmut a : [[[[[[i32]]]]]] = []; // Ok
+		
+		if (isVoidArrayType (rightType)) rlevel = llevel;
+		    
+		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
+		    auto note = Ymir::Error::createNote (rloc);
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+			);
+		}		
+	    } else if (leftType.is <StructRef> () && !leftType.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ().hasComplexField ()) {
+		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
+		    auto note = Ymir::Error::createNote (rloc);
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+			);
+		}		
+	    } else if (leftType.is<Pointer> ()) {
+		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+		if (llevel > std::max (1, rlevel)) {
+		    auto note = Ymir::Error::createNote (rloc);
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+			);
+		}		
+	    } else if (leftType.is<ClassPtr> ()) {
+		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+		if (llevel > std::max (1, rlevel)) {
+		    auto note = Ymir::Error::createNote (rloc);
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+			);
+		}		
+	    } else if (leftType.is<FuncPtr> ()) { // Yes, i know that's ugly, but easier to understand actually	
+	    } else if (leftType.is<ClassRef> ()) {		
+		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+
+		if (llevel > std::max (1, rlevel)) { // left operand can be mutable, but it can't modify inner right operand values
+		    auto note = Ymir::Error::createNote (rloc);
+		    Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+					       llevel, std::max (1, rlevel)
+			);
+		}		
+	    } else if (leftType.is<LambdaType> ()) {
+		if (leftType.to <Type> ().isMutable ())
+		    Ymir::Error::occur (rloc, ExternalError::get (DISCARD_CONST_LEVEL),
+					1, 0
+			);	 
+	    } else {
+		
+		// Verify mutability
+		if (leftType.to<Type> ().isComplex () || leftType.to <Type> ().isRef ()) {
+		    auto rlevel = rightType.to <Type> ().mutabilityLevel ();
+		    
+		    // In case of void array, the mutabilityLevel is set to the left operand, as the right operand is necessarily a constant and the left operand can have very deep level
+		    // Exemple : let dmut a : [[[[[[i32]]]]]] = []; // Ok
+		    
+		    if (isVoidArrayType (rightType)) rlevel = llevel; 
+		    
+		    if ((leftType.to <Type> ().isRef () && construct && llevel > std::max (0, rlevel))) { // If it is the construction of a ref
+			auto note = Ymir::Error::createNote (rloc);
+			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+						   llevel, std::max (0, rlevel)
+			    );		
+		    } else if (llevel > std::max (1, rlevel)) {
+			auto note = Ymir::Error::createNote (rloc);
+			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST_LEVEL),
+						   llevel, std::max (1, rlevel)
+			    );
+		    }
+		}
+	    }
+	}
+	
 
 	bool Visitor::isVoidArrayType (const Generator & gen) {
 	    if (!gen.is <Array> () && !gen.is <Slice> ()) return false;

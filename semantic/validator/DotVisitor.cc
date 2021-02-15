@@ -94,7 +94,7 @@ namespace semantic {
 		type = Type::init (type.to <Type> (), true);
 	    else
 		type = Type::init (type.to<Type> (), false);
-	    
+
 	    return TupleAccess::init (expression.getLocation (), type, left, index_val);
 	}
 
