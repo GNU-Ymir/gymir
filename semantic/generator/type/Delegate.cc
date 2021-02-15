@@ -30,7 +30,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Delegate (*this)};
 	}
 		
-	bool Delegate::directEquals (const Generator & gen) const {
+	bool Delegate::equals (const Generator & gen) const {
 	    if (!gen.is<Delegate> ()) return false;
 	    auto array = gen.to <Delegate> ();
 	    if (this-> getInners ().size () != array.getInners ().size ()) return false;

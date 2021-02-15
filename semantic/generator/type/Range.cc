@@ -34,7 +34,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Range (*this)};
 	}
 		
-	bool Range::directEquals (const Generator & gen) const {
+	bool Range::equals (const Generator & gen) const {
 	    if (!gen.is<Range> ()) return false;
 	    auto array = gen.to <Range> ();
 	    return this-> getInners () [0].equals (array.getInners () [0]);

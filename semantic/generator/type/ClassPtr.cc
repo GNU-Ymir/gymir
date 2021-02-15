@@ -32,7 +32,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) ClassPtr (*this)};
 	}
 		
-	bool ClassPtr::directEquals (const Generator & gen) const {
+	bool ClassPtr::equals (const Generator & gen) const {
 	    if (!gen.is<ClassPtr> ()) return false;
 	    auto array = gen.to <ClassPtr> ();
 	    return this-> _ref.equals (array._ref);

@@ -22,7 +22,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Void (*this)};
 	}
 		
-	bool Void::directEquals (const Generator & gen) const {
+	bool Void::equals (const Generator & gen) const {
 	    return gen.is<Void> ();
 	}
 

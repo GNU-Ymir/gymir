@@ -33,6 +33,14 @@ namespace semantic {
 	    ret.to <Value> ()._type = type;
 	    return ret;
 	}
+
+	Generator Value::init (const lexing::Word & loc, const Value & other, const Generator & type) {
+	    auto ret = other.clone ();
+	    ret.to <Value> ()._type = type;
+	    ret.to <Value> ().changeLocation (loc);
+	    return ret;
+	}
+
 	
 	Generator Value::clone () const {
 	    return Generator{new (NO_GC) Value (*this)};

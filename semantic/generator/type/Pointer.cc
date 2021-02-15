@@ -36,7 +36,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Pointer (*this)};
 	}
 		
-	bool Pointer::directEquals (const Generator & gen) const {
+	bool Pointer::equals (const Generator & gen) const {
 	    if (!gen.is<Pointer> ()) return false;
 	    auto array = gen.to <Pointer> ();
 	    return this-> getInners () [0].equals (array.getInners () [0]);

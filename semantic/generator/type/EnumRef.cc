@@ -27,7 +27,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) EnumRef (*this)};
 	}
 	
-	bool EnumRef::directEquals (const Generator & gen) const {
+	bool EnumRef::equals (const Generator & gen) const {
 	    if (!gen.is<EnumRef> ()) return false;
 	    auto str = gen.to <EnumRef> ();
 	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});

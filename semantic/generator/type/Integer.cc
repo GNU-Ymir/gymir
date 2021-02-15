@@ -35,7 +35,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Integer (*this)};
 	}
 		
-	bool Integer::directEquals (const Generator & gen) const {
+	bool Integer::equals (const Generator & gen) const {
 	    if (!gen.is <Integer> ()) return false;
 	    auto integer = gen.to<Integer> ();
 	    return this-> _size == integer._size &&

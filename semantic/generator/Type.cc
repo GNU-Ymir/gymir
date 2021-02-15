@@ -76,24 +76,24 @@ namespace semantic {
 	    return ret;	    
 	}	
 
-	bool Type::directEquals (const Generator&) const {
-	    return false;
-	}
-	
-	bool Type::equals (const Generator & other) const {
+	bool Type::completeEquals (const Generator & other) const {
 	    if (!this-> _proxy.isEmpty ()) {
 		if (other.is <Type> () && other.to <Type> ()._proxy.isEmpty ()) return false;
 		else if (!this-> _proxy.equals (other.to <Type> ()._proxy))
 		    return false;
-			
+		
 	    } else if (other.is <Type> () && !other.to <Type> ()._proxy.isEmpty ())
 		return false;
 	    
-	    return this-> directEquals (other);
+	    return this-> equals (other);
+	}
+	
+	bool Type::equals (const Generator &) const {
+	    return false;
 	}
 
 	bool Type::isCompatible (const Generator & gen) const {
-	    return this-> directEquals (gen);
+	    return this-> equals (gen);
 	}
 	
 	std::string Type::getTypeName (bool isParentMutable, bool includeRef) const {

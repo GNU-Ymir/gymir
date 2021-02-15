@@ -87,13 +87,13 @@ namespace semantic {
 	     * \return is this symbol the same as other (no only address, or type)
 	     * \it will not check the ref, and mutability infos
 	     */
-	    virtual bool directEquals (const Generator & other) const;
+	    bool completeEquals (const Generator & other) const;
 	    
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     * \it will not check the ref, and mutability infos, but check proxy
 	     */
-	    bool equals (const Generator & other) const override final;
+	    bool equals (const Generator & other) const override;
 	    
 	    /**
 	     * \return does the current type can store the value of the type other without casting ?

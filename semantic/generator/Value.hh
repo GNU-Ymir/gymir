@@ -62,6 +62,8 @@ namespace semantic {
 	    static Generator initBrRet (const Value & other, bool breaker, bool returner, const lexing::Word& brLoc, const lexing::Word & rtLoc);
 
 	    static Generator init (const Value & other, const Generator & type);
+
+	    static Generator init (const lexing::Word & loc, const Value & other, const Generator & type);
 	    
 	    /** 
 	     * \brief Mandatory function used inside proxy design pattern

@@ -34,7 +34,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Option (*this)};
 	}
 		
-	bool Option::directEquals (const Generator & gen) const {
+	bool Option::equals (const Generator & gen) const {
 	    if (!gen.is<Option> ()) return false;
 	    auto array = gen.to <Option> ();
 	    return this-> getInners () [0].equals (array.getInners () [0]);

@@ -37,7 +37,7 @@ namespace semantic {
 	    return ret;
 	}	
 		
-	bool Closure::directEquals (const Generator & gen) const {
+	bool Closure::equals (const Generator & gen) const {
 	    if (!gen.is<Closure> ()) return false;
 	    auto tu = gen.to <Closure> ();
 	    if (tu.getInners ().size () != this-> getInners ().size ()) return false;

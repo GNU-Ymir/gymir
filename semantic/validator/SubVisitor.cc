@@ -234,7 +234,7 @@ namespace semantic {
 	    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
 	    auto type = val.to <Value> ().getType ();
 	    type = Type::init (type.to <Type> (), prox);
-	    val = Value::init (val.to <Value> (), type);
+	    val = Value::init (expression.getLocation (), val.to <Value> (), type);
 	    
 	    return val;
 	}	

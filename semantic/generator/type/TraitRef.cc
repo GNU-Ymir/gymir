@@ -29,7 +29,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) TraitRef (*this)};
 	}
 
-	bool TraitRef::directEquals (const Generator & gen) const {
+	bool TraitRef::equals (const Generator & gen) const {
 	    if (!gen.is<TraitRef> ()) return false;
 	    auto str = gen.to <TraitRef> ();
 	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});

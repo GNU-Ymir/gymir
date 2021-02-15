@@ -29,7 +29,7 @@ namespace semantic {
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
-	    bool directEquals (const Generator & other) const override;
+	    bool equals (const Generator & other) const override;
 
 	    /**
 	     * \return true if this tuple contains type with explicit alias needed	     
