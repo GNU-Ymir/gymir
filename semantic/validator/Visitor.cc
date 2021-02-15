@@ -5596,7 +5596,16 @@ namespace semantic {
 	    // Tuple are different, mutability level does not work with them, we need to verify each fields
 	    if (rightType.is <Tuple> ()) {
 		for (auto it : Ymir::r (0, leftType.to <Tuple> ().getInners ().size ())) {
-		    verifyMutabilityLevel (loc, rloc, leftType.to <Tuple> ().getInners ()[it], rightType.to <Tuple> ().getInners ()[it], false);
+		    try {
+			verifyMutabilityLevel (leftType.to <Tuple> ().getInners ()[it].getLocation (),
+					       rightType.to <Tuple> ().getInners ()[it].getLocation (),
+					       leftType.to <Tuple> ().getInners ()[it],
+					       rightType.to <Tuple> ().getInners ()[it], false);
+		    } catch (Error::ErrorList list) {
+			auto note = Ymir::Error::createNote (rloc);
+			for (auto &it : list.errors) note.addNote (it);
+			Ymir::Error::occurAndNote (loc, note, ExternalError::get (DISCARD_CONST));
+		    }
 		}
 	    } else if (rightType.is <Range> () || leftType.is<Array> ()) {
 		auto rlevel = rightType.to <Type> ().mutabilityLevel ();
