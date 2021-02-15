@@ -516,18 +516,22 @@ namespace semantic {
 		    std::vector <Generator> params;
 		    std::vector <Generator> types;
 		    std::list <Ymir::Error::ErrorMsg> errors;
+		    
 		    try {
 			for (auto & field : fields) {
 			    auto type = field.to <generator::VarDecl> ().getVarType ();
 			    types.push_back (type);
-			    auto bin = syntax::Binary::init (type.getLocation (), expression.getLeft (), expression.getRight (), syntax::Expression::empty ());
-			    params.push_back (validateType (bin.to<syntax::Binary> (), type));
+			    if (field.to <generator::VarDecl> ().getVarValue ().isEmpty ()) {
+				auto bin = syntax::Binary::init (type.getLocation (), expression.getLeft (), expression.getRight (), syntax::Expression::empty ());
+				params.push_back (validateType (bin.to<syntax::Binary> (), type));
+			    } else {
+				params.push_back (field.to <generator::VarDecl> ().getVarValue ());
+			    }
 			}
-		    } catch (Error::ErrorList list) {
-			
+		    } catch (Error::ErrorList list) {			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
-
+		    }
+			    
 		    if (errors.size () != 0) {
 			this-> error (expression, t, expression.getRight (), errors);
 		    }
@@ -545,7 +549,7 @@ namespace semantic {
 		    auto stringLit = syntax::String::init (
 			expression.getLocation (),
 			expression.getLocation (),
-			lexing::Word::init (expression.getLocation (), t.prettyString ()),
+			lexing::Word::init (expression.getLocation (), t.to<generator::Struct> ().getName ()),
 			lexing::Word::eof ()
 		    );
 		
