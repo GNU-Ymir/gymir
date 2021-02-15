@@ -34,7 +34,7 @@ namespace semantic {
 	    /**
 	     * \return is this symbol the same as other (not only address, or type)
 	     */
-	    bool equals (const Generator & other) const override;
+	    bool directEquals (const Generator & other) const override;
 
 	    /**
 	     * \return the ref that generated the proxy

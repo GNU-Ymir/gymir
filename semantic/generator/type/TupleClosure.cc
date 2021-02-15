@@ -26,7 +26,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) TupleClosure (*this)};
 	}
 		
-	bool TupleClosure::equals (const Generator & gen) const {
+	bool TupleClosure::directEquals (const Generator & gen) const {
 	    if (!gen.is<TupleClosure> ()) return false;
 	    auto tu = gen.to <TupleClosure> ();
 	    if (tu.getInners ().size () != this-> getInners ().size ()) return false;

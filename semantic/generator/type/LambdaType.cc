@@ -28,7 +28,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) LambdaType (*this)};
 	}
 		
-	bool LambdaType::equals (const Generator & gen) const {
+	bool LambdaType::directEquals (const Generator & gen) const {
 	    if (!gen.is<LambdaType> ()) return false;
 	    auto tu = gen.to <LambdaType> ();
 	    if (tu.getInners ().size () != this-> getInners ().size ()) return false;

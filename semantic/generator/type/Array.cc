@@ -32,7 +32,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Array (*this)};
 	}
 		
-	bool Array::equals (const Generator & gen) const {
+	bool Array::directEquals (const Generator & gen) const {
 	    if (!gen.is<Array> ()) return false;
 	    auto array = gen.to <Array> ();
 	    return this-> getInners () [0].equals (array.getInners () [0]) && this-> _size == array._size;

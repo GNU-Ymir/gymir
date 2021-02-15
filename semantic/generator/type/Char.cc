@@ -26,7 +26,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Char (*this)};
 	}
 		
-	bool Char::equals (const Generator & gen) const {
+	bool Char::directEquals (const Generator & gen) const {
 	    if (!gen.is <Char> ()) return false;
 	    auto integer = gen.to<Char> ();
 	    if (this-> _size == integer._size) return true;

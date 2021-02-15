@@ -37,7 +37,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Tuple (*this)};
 	}
 		
-	bool Tuple::equals (const Generator & gen) const {
+	bool Tuple::directEquals (const Generator & gen) const {
 	    if (!gen.is<Tuple> ()) return false;
 	    auto tu = gen.to <Tuple> ();
 	    if (tu.getInners ().size () != this-> getInners ().size ()) return false;

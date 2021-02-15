@@ -23,7 +23,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) NoneType (*this)};
 	}
 		
-	bool NoneType::equals (const Generator & gen) const {
+	bool NoneType::directEquals (const Generator & gen) const {
 	    return gen.is<NoneType> ();
 	}
 

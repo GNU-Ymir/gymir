@@ -62,7 +62,7 @@ namespace semantic {
 	    for (auto & it : _params) {
 		auto _it = ot._params.find (it.first);
 		if (_it == ot._params.end ()) return false;
-		else if (_it-> second.is <generator::TemplateSyntaxWrapper> () && it.second.is <generator::TemplateSyntaxWrapper> ()) {
+		else if (_it-> second.is <generator::TemplateSyntaxWrapper> () && it.second.is <generator::TemplateSyntaxWrapper> ()) {		    
 		    if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().equals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
 			return false;
 		    }

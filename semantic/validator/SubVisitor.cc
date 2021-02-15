@@ -202,6 +202,32 @@ namespace semantic {
 	    auto right = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 	    auto val = en.getFieldValue (right);
 	    if (val.isEmpty ()) {
+		right = removeUnders (right);		
+		if (right == EnumRef::MEMBERS) {
+		    auto inners = en.getFields ();
+		    std::vector <Generator> values;
+		    for (auto & it : inners) values.push_back (it.to <generator::VarDecl> ().getVarValue ());
+		    
+		    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
+		    auto innerType = values [0].to <Value> ().getType (); // there is always at least one element in tuple
+		    innerType = Type::init (innerType.to <Type> (), prox);
+		    
+		    auto type = Array::init (expression.getLocation (), innerType, values.size ());
+		    type = Type::init (type.to <Type> (), true);
+		    innerType = Type::init (innerType.to <Type> (), true);
+		    
+		    auto slc = Slice::init (expression.getLocation (), innerType);
+		    slc = Type::init (slc.to <Type> (), true);
+		    auto ret = Copier::init (expression.getLocation (),
+					 slc,
+					 Aliaser::init (expression.getLocation (), slc,
+							ArrayValue::init (expression.getLocation (), type.to <Type> ().toDeeplyMutable (), values)
+					     )
+			);
+
+		    return ret;
+		}
+		
 		this-> error (expression, en.clone (), expression.getRight ());
 	    }
 
@@ -229,6 +255,7 @@ namespace semantic {
 	    if (ret.isEmpty ()) {
 		if (expression.getRight ().is <syntax::Var> ()) {
 		    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+		    name = removeUnders (name);		
 		    if (name == __TYPEID__) {		    
 			auto stringLit = syntax::String::init (
 			    expression.getLocation (),
@@ -253,7 +280,8 @@ namespace semantic {
 	Generator SubVisitor::validateArray (const syntax::Binary & expression, const Generator & b) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-
+	    name = removeUnders (name);
+	    
 	    if (name == Array::INNER_NAME) {
 		return b.to <Type> ().getInners () [0];
 	    } else if (name == Array::LEN_NAME) {
@@ -292,7 +320,8 @@ namespace semantic {
 	Generator SubVisitor::validateBool (const syntax::Binary & expression, const Generator & b) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-
+	    name = removeUnders (name);
+	    
 	    if (name == __INIT__) {
 		return BoolValue::init (b.getLocation (), Bool::init (b.getLocation ()), Bool::INIT);
 	    }
@@ -303,6 +332,7 @@ namespace semantic {
 	Generator SubVisitor::validateChar (const syntax::Binary & expression, const generator::Generator & c) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+	    name = removeUnders (name);
 	    
 	    if (name == __INIT__) {
 		return CharValue::init (c.getLocation (), c, Char::INIT);
@@ -314,6 +344,7 @@ namespace semantic {
 	Generator SubVisitor::validateFloat (const syntax::Binary & expression, const generator::Generator & f) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+	    name = removeUnders (name);
 	    
 	    if (name == __INIT__) {
 		return FloatValue::init (f.getLocation (), f, Float::INIT);
@@ -395,7 +426,8 @@ namespace semantic {
 	Generator SubVisitor::validateInteger (const syntax::Binary & expression, const generator::Generator & i) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-
+	    name = removeUnders (name);
+	    
 	    if (name == Integer::INIT_NAME) {
 		Fixed::UI value;
 		value.i = Integer::INIT;
@@ -448,7 +480,8 @@ namespace semantic {
 	Generator SubVisitor::validatePointer (const syntax::Binary & expression, const generator::Generator & p) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-
+	    name = removeUnders (name);
+	    
 	    if (name == Pointer::INNER_NAME) {
 		return p.to <Type> ().getInners () [0];
 	    }
@@ -459,7 +492,8 @@ namespace semantic {
 	Generator SubVisitor::validateSlice (const syntax::Binary & expression, const generator::Generator & s) {
 	    if (!expression.getRight ().is <syntax::Var> ()) return Generator::empty ();
 	    auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-
+	    name = removeUnders (name);
+	    
 	    if (name == Slice::INNER_NAME) {
 		return s.to <Type> ().getInners () [0];
 	    } else if (name == Slice::INIT) {
@@ -479,6 +513,8 @@ namespace semantic {
 		}
 	    } else {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+		name = removeUnders (name);
+		
 		if (name == Tuple::ARITY_NAME) {
 		    auto type = Integer::init (t.getLocation (), 32, false);
 		    Fixed::UI value;
@@ -511,6 +547,8 @@ namespace semantic {
 	Generator SubVisitor::validateStruct (const syntax::Binary & expression, const generator::Generator & t) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+		name = removeUnders (name);
+		
 		if (name == StructRef::INIT_NAME) {
 		    auto & fields = t.to <generator::Struct> ().getFields ();
 		    std::vector <Generator> params;
@@ -544,7 +582,7 @@ namespace semantic {
 			params
 		    );
 		}
-		
+	
 		if (name == __TYPEID__) {		    
 		    auto stringLit = syntax::String::init (
 			expression.getLocation (),
@@ -568,6 +606,8 @@ namespace semantic {
 	Generator SubVisitor::validateOption (const syntax::Binary & expression, const generator::Generator & t, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+		name = removeUnders (name);
+		
 		if (name == Option::INIT_NAME) {
 		    auto ptrType = Pointer::init (expression.getLocation (), Void::init (expression.getLocation ()));
 		    auto val = Aliaser::init (
@@ -589,7 +629,9 @@ namespace semantic {
 	Generator SubVisitor::validateClass (const syntax::Binary & expression, const generator::Generator & t, std::list <Ymir::Error::ErrorMsg> & errors) {	    
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-		if (name == ClassRef::INIT_NAME) {
+		auto aux_name = removeUnders (name);
+		
+		if (aux_name == ClassRef::INIT_NAME) {
 		    if (t.to <generator::Class> ().getRef ().to <semantic::Class> ().isAbs ()) {
 			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
 		    }
@@ -606,9 +648,8 @@ namespace semantic {
 		    if (!succeed) return Generator::empty ();
 		    else return gen;
 		}
-
-
-		if (name == __TYPEID__) {
+		
+		if (aux_name == __TYPEID__) {
 		    auto stringLit = syntax::String::init (
 			expression.getLocation (),
 			expression.getLocation (),
@@ -617,7 +658,7 @@ namespace semantic {
 		    );
 		
 		    return this-> _context.validateValue (stringLit);   
-		} else if (name == __TYPEINFO__) {
+		} else if (aux_name == __TYPEINFO__) {
 		    Generator cl = this-> _context.validateClass (t.to <generator::Class> ().getRef ());
 		    return this-> _context.validateTypeInfo (
 			expression.getRight ().getLocation (),
@@ -674,9 +715,10 @@ namespace semantic {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto tmp = t.to <TemplateRef> ().getTemplateRef ().to <semantic::Template> ().getDeclaration ();
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+
 		if (!tmp.is <syntax::Class> ()) return Generator::empty ();
-		
-		if (name == ClassRef::INIT_NAME) {
+
+		if (removeUnders (name) == ClassRef::INIT_NAME) {
 		    if (tmp.to <syntax::Class> ().isAbstract ()) {
 			errors.push_back (Ymir::Error::makeOccur (expression.getLocation (), ExternalError::get (ALLOC_ABSTRACT_CLASS), t.prettyString ()));			
 		    }
@@ -716,6 +758,8 @@ namespace semantic {
 	Generator SubVisitor::validateClassValue (const syntax::Binary & expression, const generator::Generator & value) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto opName = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+		auto ancOpName = opName;
+		opName = removeUnders (opName);	
 		if (opName == SubVisitor::__TYPEINFO__) {		    
 		    auto loc = expression.getLocation ();
 		    auto type = value.to <Value> ().getType ();
@@ -819,7 +863,7 @@ namespace semantic {
 		    tuple = Type::init (tuple.to <Type> (), false);
 		    
 		    return TupleValue::init (expression.getLocation (), tuple, params);
-		} else if (opName == ClassRef::SUPER) {
+		} else if (ancOpName == ClassRef::SUPER) {
 		    bool prv = false, prot = false;
 		    if (!value.to <Value> ().getType ().is <ClassProxy> ()) {
 			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
@@ -865,6 +909,8 @@ namespace semantic {
 	    auto & t = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto opName = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
+		opName = removeUnders (opName);
+		
 		if (opName == StructRef::TUPLEOF) {
 		    auto & fields = t.to <generator::Struct> ().getFields ();
 		    std::vector <Generator> types;
@@ -1008,7 +1054,23 @@ namespace semantic {
 	    
 	    //throw Error::ErrorList {errors};
 	}
-	
+
+	std::string SubVisitor::removeUnders (const std::string & name) const {
+	    Ymir::OutBuffer buf;
+	    int nb = 0;
+	    bool started = false;
+	    for (unsigned int i = 0 ; i < name.length (); i ++) {
+		if (name[i] != '_') {
+		    if (started) for (auto j ATTRIBUTE_UNUSED : Ymir::r (0, nb)) buf.write ('_');
+		    buf.write (name [i]);
+		    started = true;
+		    nb = 0;
+		} else {
+		    nb += 1;
+		}
+	    }	    
+	    return buf.str ();
+	}
 	
     }    
 

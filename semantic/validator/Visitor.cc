@@ -1846,9 +1846,11 @@ namespace semantic {
 	    }
 	    
 	    auto gen = en.to <semantic::Enum> ().getGenerator ();
-	    if (gen.is <Value> () && !gen.to <semantic::generator::Enum> ().getType ().isEmpty ())
-		return gen.to <semantic::generator::Enum> ().getType ();
-	    else {
+	    if (gen.is <Value> () && !gen.to <semantic::generator::Enum> ().getType ().isEmpty ()) {
+		auto type = gen.to <semantic::generator::Enum> ().getType ();
+		
+		return type;
+	    } else {
 		Ymir::Error::occur (en.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), en.getRealName ());
 		return Generator::empty ();
 	    }

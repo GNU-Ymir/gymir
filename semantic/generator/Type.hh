@@ -81,12 +81,19 @@ namespace semantic {
 	     * \brief Mandatory function used inside proxy design pattern
 	     */
 	    Generator clone () const override ;
-	    
+
+
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     * \it will not check the ref, and mutability infos
 	     */
-	    bool equals (const Generator & other) const override;
+	    virtual bool directEquals (const Generator & other) const;
+	    
+	    /**
+	     * \return is this symbol the same as other (no only address, or type)
+	     * \it will not check the ref, and mutability infos, but check proxy
+	     */
+	    bool equals (const Generator & other) const override final;
 	    
 	    /**
 	     * \return does the current type can store the value of the type other without casting ?

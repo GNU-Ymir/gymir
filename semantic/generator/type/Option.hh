@@ -28,7 +28,7 @@ namespace semantic {
 
 	    Generator clone () const override;
 
-	    bool equals (const Generator & other) const override;
+	    bool directEquals (const Generator & other) const override;
 
 	    bool isCompatible (const Generator & other) const override;
 

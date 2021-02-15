@@ -16,6 +16,10 @@ namespace semantic {
 	    /** The id of the structure refered */
 	    std::weak_ptr <ISymbol> _ref;
 
+	public :
+
+	    const static std::string MEMBERS;
+	    
 	private :
 
 	    friend Generator;
@@ -33,8 +37,8 @@ namespace semantic {
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
-	    bool equals (const Generator & other) const override;
-    
+	    bool directEquals (const Generator & other) const override;
+	    
 	    bool isRefOf (const Symbol & sym) const;
 
 	    Symbol getRef () const;

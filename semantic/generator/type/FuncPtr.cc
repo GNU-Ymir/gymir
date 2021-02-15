@@ -31,7 +31,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) FuncPtr (*this)};
 	}		
 
-	bool FuncPtr::equals (const Generator & gen) const {
+	bool FuncPtr::directEquals (const Generator & gen) const {
 	    if (!gen.is<FuncPtr> ()) return false;
 	    auto array = gen.to <FuncPtr> ();
 	    if (this-> getInners ().size () != array.getInners ().size ()) return false;

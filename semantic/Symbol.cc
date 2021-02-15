@@ -3,6 +3,7 @@
 #include <ymir/utils/Path.hh>
 #include <ymir/semantic/symbol/Module.hh>
 #include <ymir/semantic/symbol/TemplateSolution.hh>
+#include <ymir/semantic/generator/Mangler.hh>
 
 namespace semantic {
     
@@ -122,13 +123,16 @@ namespace semantic {
     }
     
     std::string ISymbol::getMangledName () const {
-	if (!this-> _referent.lock ()) return this-> _name.getStr ();
+	std::string ret;
+	if (!this-> _referent.lock ()) ret = this-> _name.getStr ();
 	else {
 	    auto ft = (Symbol {this-> _referent}).getMangledName ();
 	    if (ft != "")
-		return ft + "::" + this-> _name.getStr ();
-	    else return this-> _name.getStr ();
+		ret = ft + "::" + this-> _name.getStr ();
+	    else ret = this-> _name.getStr ();
 	}
+	
+	return ret;
     }
 
     ISymbol::~ISymbol () {}

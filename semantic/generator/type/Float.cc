@@ -51,7 +51,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Float (*this)};
 	}
 		
-	bool Float::equals (const Generator & gen) const {
+	bool Float::directEquals (const Generator & gen) const {
 	    if (!gen.is <Float> ()) return false;
 	    auto integer = gen.to<Float> ();
 	    return this-> _size == integer._size;

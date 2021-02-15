@@ -88,6 +88,8 @@ namespace semantic {
 
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right);
 	    void error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right, std::list <Ymir::Error::ErrorMsg> & errors);
+
+	    std::string removeUnders (const std::string & name) const;
 	    
 	};
 

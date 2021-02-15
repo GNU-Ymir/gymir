@@ -31,7 +31,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Slice (*this)};
 	}
 		
-	bool Slice::equals (const Generator & gen) const {
+	bool Slice::directEquals (const Generator & gen) const {
 	    if (!gen.is<Slice> ()) return false;
 	    auto array = gen.to <Slice> ();
 	    return this-> getInners () [0].equals (array.getInners () [0]);

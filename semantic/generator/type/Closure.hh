@@ -49,7 +49,7 @@ namespace semantic {
 	    /**
 	     * \return is this symbol the same as other (no only address, or type)
 	     */
-	    bool equals (const Generator & other) const override;
+	    bool directEquals (const Generator & other) const override;
 	    
 	    /** 
 	     * \return the name of the type formatted

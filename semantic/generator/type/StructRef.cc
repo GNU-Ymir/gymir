@@ -35,7 +35,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) StructRef (*this)};
 	}
 
-	bool StructRef::equals (const Generator & gen) const {
+	bool StructRef::directEquals (const Generator & gen) const {
 	    if (!gen.is<StructRef> ()) return false;
 	    auto str = gen.to <StructRef> ();
 	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});

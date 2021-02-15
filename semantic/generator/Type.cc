@@ -75,13 +75,25 @@ namespace semantic {
 	    ret.to<Type> ()._isMutable  = is;
 	    return ret;	    
 	}	
-	
-	bool Type::equals (const Generator &) const {
+
+	bool Type::directEquals (const Generator&) const {
 	    return false;
+	}
+	
+	bool Type::equals (const Generator & other) const {
+	    if (!this-> _proxy.isEmpty ()) {
+		if (other.is <Type> () && other.to <Type> ()._proxy.isEmpty ()) return false;
+		else if (!this-> _proxy.equals (other.to <Type> ()._proxy))
+		    return false;
+			
+	    } else if (other.is <Type> () && !other.to <Type> ()._proxy.isEmpty ())
+		return false;
+	    
+	    return this-> directEquals (other);
 	}
 
 	bool Type::isCompatible (const Generator & gen) const {
-	    return this-> equals (gen);
+	    return this-> directEquals (gen);
 	}
 	
 	std::string Type::getTypeName (bool isParentMutable, bool includeRef) const {
@@ -90,6 +102,9 @@ namespace semantic {
 		inner = "mut " + inner;
 	    if (this-> _isRef && includeRef)
 		inner = "ref " + inner;
+	    
+	    if (!this-> _proxy.isEmpty () && includeRef)
+		return this-> _proxy.to <Type> ().getTypeName () + Ymir::format ("(%)", inner);
 	    
 	    return inner;
 	}

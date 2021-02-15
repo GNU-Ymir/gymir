@@ -23,7 +23,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) ClassProxy (*this)};
 	}
 		
-	bool ClassProxy::equals (const Generator & gen) const {
+	bool ClassProxy::directEquals (const Generator & gen) const {
 	    if (!gen.is<ClassProxy> ()) return false;
 	    auto array = gen.to <ClassProxy> ();
 	    return this-> _proxy.equals (array._proxy) && ClassPtr::equals (gen);

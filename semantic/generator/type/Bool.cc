@@ -24,7 +24,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) Bool (*this)};
 	}
 		
-	bool Bool::equals (const Generator & gen) const {
+	bool Bool::directEquals (const Generator & gen) const {
 	    return gen.is<Bool> ();
 	}
 

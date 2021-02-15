@@ -39,7 +39,7 @@ namespace semantic {
 	    return Generator {new (NO_GC) ClassRef (*this)};
 	}
 
-	bool ClassRef::equals (const Generator & gen) const {
+	bool ClassRef::directEquals (const Generator & gen) const {
 	    if (!gen.is<ClassRef> ()) return false;
 	    auto str = gen.to <ClassRef> ();
 	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});

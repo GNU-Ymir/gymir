@@ -5,6 +5,8 @@
 
 namespace semantic {
     namespace generator {
+
+	const std::string EnumRef::MEMBERS = "members";
 	
 	EnumRef::EnumRef () :
 	    Type ()
@@ -25,12 +27,12 @@ namespace semantic {
 	    return Generator {new (NO_GC) EnumRef (*this)};
 	}
 	
-	bool EnumRef::equals (const Generator & gen) const {
+	bool EnumRef::directEquals (const Generator & gen) const {
 	    if (!gen.is<EnumRef> ()) return false;
 	    auto str = gen.to <EnumRef> ();
 	    return (Symbol {this-> _ref}).equals (Symbol {str._ref});
 	}
-
+	
 	bool EnumRef::isRefOf (const Symbol & sym) const {
 	    return (Symbol {this-> _ref}).isSameRef (sym);
 	}
@@ -43,7 +45,7 @@ namespace semantic {
 	    return Ymir::format ("%", (Symbol {this-> _ref}).getRealName ());
 	}
 
-	std::string EnumRef::getMangledName () const {
+	std::string EnumRef::getMangledName () const {	    
 	    return Ymir::format ("%", (Symbol {this-> _ref}).getMangledName ());
 	}
 	
