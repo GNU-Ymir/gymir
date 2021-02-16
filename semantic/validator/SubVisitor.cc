@@ -226,6 +226,53 @@ namespace semantic {
 			);
 
 		    return ret;
+		} else if (right == EnumRef::MEMBER_NAMES) {
+		    auto inners = en.getFields ();
+		    std::vector <Generator> values;
+		    for (auto & it : inners) values.push_back (
+			this-> _context.validateValue (syntax::String::init (it.getLocation (),
+									     it.getLocation (),
+									     it.getLocation (),
+									     lexing::Word::eof ()))
+			);
+		    
+		    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
+		    auto innerType = values [0].to <Value> ().getType (); // there is always at least one element in tuple
+		    innerType = Type::init (innerType.to <Type> (), prox);
+		    
+		    auto type = Array::init (expression.getLocation (), innerType, values.size ());
+		    type = Type::init (type.to <Type> (), true);
+		    innerType = Type::init (innerType.to <Type> (), true);
+		    
+		    auto slc = Slice::init (expression.getLocation (), innerType);
+		    slc = Type::init (slc.to <Type> (), true);
+		    auto ret = Copier::init (expression.getLocation (),
+					     slc,
+					     Aliaser::init (expression.getLocation (), slc,
+							    ArrayValue::init (expression.getLocation (), type.to <Type> ().toDeeplyMutable (), values)
+						 )
+			);
+
+		    return ret;
+		} else if (right == __TYPEID__) {
+		    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
+		    auto stringLit = syntax::String::init (
+			expression.getLocation (),
+			expression.getLocation (),
+			lexing::Word::init (expression.getLocation (), prox.prettyString ()),
+			lexing::Word::eof ()
+		     );
+		
+		    return this-> _context.validateValue (stringLit);
+
+		} else if (right == __TYPEINFO__) {
+		    auto inners = en.getFields ();
+		    auto type = inners [0].to <generator::VarDecl> ().getVarValue ().to <Value> ().getType ();	    
+		    return this-> _context.validateTypeInfo (expression.getRight ().getLocation (), type);
+		} else if (right == EnumRef::INNER_NAME) {
+		    auto inners = en.getFields ();
+		    auto type = inners [0].to <generator::VarDecl> ().getVarValue ().to <Value> ().getType ();
+		    return type;
 		}
 		
 		this-> error (expression, en.clone (), expression.getRight ());

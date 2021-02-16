@@ -7,6 +7,8 @@ namespace semantic {
     namespace generator {
 
 	const std::string EnumRef::MEMBERS = "members";
+	const std::string EnumRef::MEMBER_NAMES = "member_names";
+	const std::string EnumRef::INNER_NAME = "inner";
 	
 	EnumRef::EnumRef () :
 	    Type ()

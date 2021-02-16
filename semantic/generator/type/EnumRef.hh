@@ -20,6 +20,10 @@ namespace semantic {
 
 	    const static std::string MEMBERS;
 	    
+	    const static std::string MEMBER_NAMES;
+
+	    const static std::string INNER_NAME;
+	    
 	private :
 
 	    friend Generator;
