@@ -2992,7 +2992,7 @@ namespace semantic {
 		    if (!var.getValue ().isEmpty ()) {
 			value = validateValue (var.getValue ());
 			if (!type.isEmpty ())
-			    verifySameType (type, value.to <Value> ().getType ());
+			    verifyCompatibleTypeWithValue (type.getLocation (), type, value);
 			else {
 			    type = Type::init (value.to <Value> ().getType ().to <Type> (), false);
 			}
@@ -3404,13 +3404,13 @@ namespace semantic {
 		if (!anc.isEmpty ()) {
 		    loop_type = anc;
 		    setCurrentLoopType (anc);
-		}//  else {		
-		//     auto note = Ymir::Error::createNote (loop_type.getLocation ());
-		//     Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-		// 			       type.to <Type> ().getTypeName (),
-		// 			       loop_type.to <Type> ().getTypeName ()
-		//     );
-		// }
+		} else {		
+		    auto note = Ymir::Error::createNote (loop_type.getLocation ());
+		    Ymir::Error::occurAndNote (value.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+					       type.to <Type> ().getTypeName (),
+					       loop_type.to <Type> ().getTypeName ()
+		    );
+		}
 	    }
 
 	    if (!loop_type.is<Void> ()) verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
@@ -5828,7 +5828,7 @@ namespace semantic {
 	}
 
 	void Visitor::verifySameType (const Generator & left, const Generator & right) {	    
-	    if (!left.equals (right)) {
+	    if (!left.equals (right)) {		
 		if (left.getLocation ().getLine () == right.getLocation ().getLine () && left.getLocation ().getColumn () == right.getLocation ().getColumn ()) 
 		    Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 					left.to<Type> ().getTypeName (),

@@ -51,7 +51,6 @@ namespace semantic {
 	    if (this-> _isMut) buf = "(mut self) => " + buf;
 	    else
 		buf = "(const self) => " + buf;
-	    println (buf);
 	    return buf;
 	}
 
