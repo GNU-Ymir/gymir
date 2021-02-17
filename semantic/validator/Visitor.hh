@@ -222,7 +222,7 @@ namespace semantic {
 	     * \param ancestor the ancestor of the class (might be empty)
 	     * \return the vtable of the class
 	     */
-	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, const std::vector<generator::Generator> & ancestorFields, std::vector <generator::Class::MethodProtection> & protections, std::vector <Symbol> & addMethods);
+	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Class::MethodProtection> & protections, std::vector <Symbol> & addMethods);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type

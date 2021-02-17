@@ -776,6 +776,30 @@ namespace semantic {
 		    popReferent ("validateClassAssertions");
 		}
 		
+	      		
+		{
+		    try {
+			std::vector <generator::Class::MethodProtection> protections;
+			auto vtable = validateClassDeclarations (cls, ClassRef::init (cls.getName (), ancestor, sym), ancestor, protections, addMethods);
+			
+			gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections);
+			
+			sym.to <semantic::Class> ().setGenerator (gen);
+			sym.to <semantic::Class> ().setTypeInfo (validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));
+			
+			// Add methods is the list of methods that have been added by trait implementation
+			sym.to <semantic::Class> ().setAddMethods (addMethods); // We don't put them in the table of the symbol, because they are not declared in it
+
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
+		}
+		
+		if (errors.size () != 0) {
+		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+		}
+
 		{
 		    enterForeign ();
 		    pushReferent (sym, "validateClass");
@@ -796,14 +820,7 @@ namespace semantic {
 		    
 		    popReferent ("validateClass");
 		    exitForeign ();
-		}
-		
-		if (errors.size () != 0) {
-		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-		    throw Error::ErrorList {errors};
-		}	       
-		
-		{
+		    
 		    try {
 			if (!ancestor.isEmpty ()) {
 			    fieldsDecl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getFields ();
@@ -827,18 +844,6 @@ namespace semantic {
 
 			gen = generator::Class::initFields (gen.to <generator::Class> (), fieldsDecl, localFields);
 			sym.to <semantic::Class> ().setGenerator (gen);
-
-			std::vector <generator::Class::MethodProtection> protections;
-			auto vtable = validateClassDeclarations (cls, ClassRef::init (cls.getName (), ancestor, sym), ancestor, ancestorFields, protections, addMethods);
-			
-			gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections);
-			
-			sym.to <semantic::Class> ().setGenerator (gen);
-			sym.to <semantic::Class> ().setTypeInfo (validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));
-			
-			// Add methods is the list of methods that have been added by trait implementation
-			sym.to <semantic::Class> ().setAddMethods (addMethods); // We don't put them in the table of the symbol, because they are not declared in it
-
 		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
@@ -846,9 +851,8 @@ namespace semantic {
 		
 		if (errors.size () != 0) {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+		    throw Error::ErrorList {errors};
 		}
-		
 	    }
 
 	    if (inModule) {
@@ -868,15 +872,15 @@ namespace semantic {
 		insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
 	    }
 	    
-	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ())
+	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ()) {		
 		return ClassRef::init (cls.getName (), ancestor, cls);
-	    else {
+	    } else {
 		Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), cls.getRealName ());
 		return Generator::empty ();
 	    }
 	}
 
-	std::vector<generator::Generator> Visitor::validateClassDeclarations (const semantic::Symbol & cls, const Generator & classType, const Generator & ancestor, const std::vector <Generator> &, std::vector <generator::Class::MethodProtection>  & protection, std::vector <Symbol> & addMethods)  {
+	std::vector<generator::Generator> Visitor::validateClassDeclarations (const semantic::Symbol & cls, const Generator & classType, const Generator & ancestor, std::vector <generator::Class::MethodProtection>  & protection, std::vector <Symbol> & addMethods)  {
 	    std::vector <Generator> vtable;
 	    std::vector <Generator> ancVtable;
 	    std::vector <generator::Class::MethodProtection> ancProtection;
@@ -2720,7 +2724,7 @@ namespace semantic {
 			) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
 				locGen = validateEnum (multSym [it]);
 			    }
-			) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
+		        ) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
 				locGen = validateClass (multSym [it]);
 			    }		
 			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
@@ -5045,7 +5049,7 @@ namespace semantic {
 		// println( var.getName ().getStr (), " ", this-> _referent.back ().formatTree ());
 		// for (auto & it : syms)
 		//     println (it.getRealName ());
-		if (!syms.empty ()) {		    
+		if (!syms.empty ()) {
 		    auto ret = validateMultSymType (var.getLocation (), syms);		    
 		    if (!ret.isEmpty ()) return ret;		    
 		} else {
