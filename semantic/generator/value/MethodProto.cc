@@ -2,6 +2,7 @@
 #include <ymir/semantic/generator/type/Void.hh>
 #include <ymir/semantic/generator/value/ProtoVar.hh>
 #include <ymir/semantic/generator/type/LambdaType.hh>
+#include <ymir/utils/Path.hh>
 
 namespace semantic {
 
@@ -46,9 +47,11 @@ namespace semantic {
 
 	std::string MethodProto::prettyString () const {
 	    auto buf = FrameProto::prettyString ();
-	    if (this-> _isMut) buf = "(" + this-> _classType.to <Type> ().toDeeplyMutable ().prettyString () + ") => " + buf;
+	    
+	    if (this-> _isMut) buf = "(mut self) => " + buf;
 	    else
-		buf = "(" + Type::init (this-> _classType.getLocation (), this-> _classType.to <Type> (), false, false).prettyString () + ") => " + buf;		
+		buf = "(const self) => " + buf;
+	    println (buf);
 	    return buf;
 	}
 

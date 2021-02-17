@@ -3069,7 +3069,7 @@ namespace semantic {
 		    if (!var.getValue ().isEmpty () && !no_value) {
 			value = validateValue (var.getValue ());
 			if (!type.isEmpty ()) 
-			    verifyCompatibleType (param.getLocation (), value.getLocation (), type, value.to <Value> ().getType ());
+			    verifyCompatibleTypeWithValue (param.getLocation (), type, value);
 		    	else {
 		    	    type = value.to <Value> ().getType ();
 		    	}
@@ -3272,7 +3272,7 @@ namespace semantic {
 			if (!anc.isEmpty ())
 			    type = anc;
 		    }
-		    verifyCompatibleType (_if.getLocation (), _else.getLocation (), type, _else.to<Value> ().getType ());
+		    verifyCompatibleTypeWithValue (_if.getLocation (), type, _else);
 		}
 
 		if (content.to <Value> ().isReturner () || content.to <Value> ().isBreaker ()) type = _else.to <Value> ().getType ();
@@ -5827,7 +5827,7 @@ namespace semantic {
 	    }	    
 	}
 
-	void Visitor::verifySameType (const Generator & left, const Generator & right) {
+	void Visitor::verifySameType (const Generator & left, const Generator & right) {	    
 	    if (!left.equals (right)) {
 		if (left.getLocation ().getLine () == right.getLocation ().getLine () && left.getLocation ().getColumn () == right.getLocation ().getColumn ()) 
 		    Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),

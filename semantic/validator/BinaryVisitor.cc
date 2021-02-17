@@ -318,7 +318,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    }  catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -348,7 +348,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -631,7 +631,7 @@ namespace semantic {
 	    try {
 		cl = this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {		
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
 	    }
@@ -695,7 +695,7 @@ namespace semantic {
 	    try {
 		cl = this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());		    
 	    }
@@ -740,7 +740,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -771,7 +771,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -842,7 +842,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), bin.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -888,7 +888,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }
@@ -1087,7 +1087,7 @@ namespace semantic {
 	    try {
 		return this-> _context.validateValue (call);
 	    } catch (Error::ErrorList list) {
-		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), call.prettyString ());
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), templ.prettyString ());
 		list.errors.back ().addNote (note);
 		throw list;
 	    }

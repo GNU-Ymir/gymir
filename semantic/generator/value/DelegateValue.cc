@@ -1,5 +1,6 @@
 #include <ymir/semantic/generator/value/DelegateValue.hh>
 #include <ymir/semantic/generator/value/VtableAccess.hh>
+#include <ymir/semantic/generator/value/MethodProto.hh>
 
 namespace semantic {
 
@@ -61,18 +62,15 @@ namespace semantic {
 	    if (this-> _closure.is <Value> ()) {
 		if (this-> _funcptr.is <VtableAccess> ()) {
 		    return this-> _funcptr.prettyString ();
+		} else if (this-> _funcptr.is <MethodProto> ()) {
+		    return this-> _funcptr.prettyString ();
 		}
 		
-		return Ymir::format ("{% = % : %, %} ",
-				     this-> _closureType.prettyString (),
-				     this-> _closure.prettyString (),
-				     this-> _closure.to <Value> ().getType ().prettyString (),
+		return Ymir::format ("dg % ",
 				     this-> _funcptr.prettyString ()
 		);
 	    } else {
-		return Ymir::format ("{% = %, %} ",
-				     this-> _closureType.prettyString (),
-				     this-> _closure.prettyString (),
+		return Ymir::format ("dg % ",
 				     this-> _funcptr.prettyString ()
 		);
 	    }
