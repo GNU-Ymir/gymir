@@ -2026,6 +2026,7 @@ namespace syntax {
 	
 	lexing::Word cursor = lexing::Word::eof ();
 	Ymir::OutBuffer all;
+	bool escaping = false;
 	do {
 	    cursor = this-> _lex.next ();
 	    if (cursor == Token::TAB || cursor == Token::RETURN || cursor == Token::RRETURN) {
@@ -2033,11 +2034,15 @@ namespace syntax {
 		notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (MUST_ESCAPE_CHAR)));
 		notes.push_back (Ymir::Error::createNote (begin));
 		Error::occurAndNote (cursor, notes, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
-	    } else if (cursor.isEof ()) {
+	    } else if (cursor.isEof ()) {		
 		auto note = Ymir::Error::createNote (begin);
 		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
-	    } else if (cursor != Token::APOS) {
+	    } else if (cursor != Token::APOS || escaping) {
 		all.write (cursor.getStr ());
+		if (escaping) cursor = lexing::Word::eof ();
+		
+		escaping = false;
+		if (cursor == Keys::ANTI) escaping = true;
 	    }
 	} while (cursor != Token::APOS);
 
@@ -2068,13 +2073,18 @@ namespace syntax {
 
 	lexing::Word cursor = lexing::Word::eof ();
 	Ymir::OutBuffer all;
+	bool escaping = false;
 	do {
 	    cursor = this-> _lex.next ();
 	    if (cursor.isEof ()) {
 		auto note = Ymir::Error::createNote (begin);
 		Error::occurAndNote (cursor, note, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), cursor.getStr ());		
-	    } else if (cursor != begin) {
+	    } else if (cursor != begin || escaping) {
 		all.write (cursor.getStr ());
+		if (escaping) cursor = lexing::Word::eof ();
+		
+		escaping = false;
+		if (cursor == Keys::ANTI) escaping = true;
 	    }
 	} while (cursor != begin);
 

@@ -755,10 +755,6 @@ namespace semantic {
 		sym.to <semantic::Class> ().setGenerator (gen);
 		
 		std::list <Ymir::Error::ErrorMsg> errors;
-		std::map <std::string, generator::Generator> syms;
-		std::vector <Generator> fieldsDecl;
-		std::vector <Generator> ancestorFields;
-		std::vector <Symbol> addMethods;
 		
 		if (cls.to <semantic::Class> ().getAssertions ().size () != 0) {
 		    pushReferent (sym, "validateClassAssertions");
@@ -779,6 +775,7 @@ namespace semantic {
 	      		
 		{
 		    try {
+			std::vector <Symbol> addMethods;
 			std::vector <generator::Class::MethodProtection> protections;
 			auto vtable = validateClassDeclarations (cls, ClassRef::init (cls.getName (), ancestor, sym), ancestor, protections, addMethods);
 			
@@ -801,27 +798,38 @@ namespace semantic {
 		}
 
 		{
-		    enterForeign ();
-		    pushReferent (sym, "validateClass");
-		    try {
-			this-> enterBlock ();			
-			std::vector <std::string> fields;
-			std::vector <generator::Generator> types;
-			for (auto & it : sym.to<semantic::Class> ().getFields ()) {
-			    this-> validateVarDeclValue (it.to <syntax::VarDecl> (), false);
-			}
+		    std::map <std::string, generator::Generator> syms;
+		    {
+			enterForeign ();
+			pushReferent (sym, "validateClass");
+			try {
+			    this-> enterBlock ();			
+			    std::vector <std::string> fields;
+			    std::vector <generator::Generator> types;
+			    for (auto & it : sym.to<semantic::Class> ().getFields ()) {
+				this-> validateVarDeclValue (it.to <syntax::VarDecl> (), false);
+			    }
 		 
-			syms = this-> discardAllLocals ();
+			    syms = this-> discardAllLocals ();
 		    
-			this-> quitBlock ();
-		    } catch (Error::ErrorList list) {
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
+			    this-> quitBlock ();
+			} catch (Error::ErrorList list) {
+			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+			} 
 		    
-		    popReferent ("validateClass");
-		    exitForeign ();
-		    
+			popReferent ("validateClass");
+			exitForeign ();
+			
+			if (errors.size () != 0) {
+			    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+			    throw Error::ErrorList {errors};
+			}
+		    }
+		    		
 		    try {
+			std::vector <Generator> fieldsDecl;
+			std::vector <Generator> ancestorFields;
+			
 			if (!ancestor.isEmpty ()) {
 			    fieldsDecl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getFields ();
 			    ancestorFields = fieldsDecl;
@@ -837,9 +845,13 @@ namespace semantic {
 
 			std::vector <generator::Generator> localFields;
 			for (auto & it : sym.to <semantic::Class> ().getFields ()) {
-			    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().getStr ());			    
-			    fieldsDecl.push_back (gen-> second);
-			    localFields.push_back (gen-> second);
+			    auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().getStr ());
+			    if (gen != syms.end ()) {
+				fieldsDecl.push_back (gen-> second);
+				localFields.push_back (gen-> second);
+			    } else {
+				Ymir::Error::halt ("", "");
+			    }
 			}
 
 			gen = generator::Class::initFields (gen.to <generator::Class> (), fieldsDecl, localFields);
