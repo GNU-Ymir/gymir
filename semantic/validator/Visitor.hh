@@ -1133,6 +1133,11 @@ namespace semantic {
 	     * \brief Append a else to a conditional (recursively)
 	     */
 	    generator::Generator addElseToConditional (const generator::Generator & cond, const generator::Generator & _else);
+
+	    /**
+	     * Transform a conditional to a complete conditional (meaning we assure that all the test covers every cases, and thus we enter a branch no matter what)
+	     */
+	    generator::Generator setCompleteConditional (const generator::Generator &cond);
 	    
 	    void verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const Symbol & sym) const;
 

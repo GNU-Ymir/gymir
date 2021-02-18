@@ -706,7 +706,10 @@ namespace semantic {
 			usedTypes.push_back ({it.getLocation (), it}); // to not display the error multiple times
 		    }
 		}
-	    }
+		// We caught everything even if there is no global catch, so we must set the conditional to mandatory
+
+		result = this-> _context.setCompleteConditional (result);
+	    } 
 
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};

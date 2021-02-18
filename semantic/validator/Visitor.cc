@@ -3395,10 +3395,12 @@ namespace semantic {
 		type = value.to <Value> ().getType ();
 	    } else type = Void::init (_break.getLocation ());
 
+	    bool set = false;
 	    auto loop_type = getCurrentLoopType ();
 	    if (loop_type.isEmpty ()) {
 		setCurrentLoopType (type);
 		loop_type = type;
+		set = true;
 	    } else if (!loop_type.equals (type)) {
 		auto anc = getCommonAncestor (loop_type, type);
 		if (!anc.isEmpty ()) {
@@ -3413,7 +3415,19 @@ namespace semantic {
 		}
 	    }
 
-	    if (!loop_type.is<Void> ()) verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
+	    if (!loop_type.is<Void> ()) {
+		if (set) {
+		    try {
+			verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
+		    } catch (Error::ErrorList err) { // Maybe implicit alias problem, we set the type to non mutable, to check
+			loop_type = Type::init (loop_type.to <Type> (), false, loop_type.to <Type> ().isRef ());
+			setCurrentLoopType (loop_type);
+			verifyMemoryOwner (_break.getLocation (), loop_type, value, false); // if this pass, the loop type is const, and it is ok
+		    }		    
+		} else {
+		    verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
+		}
+	    }
 	    
 	    return Break::init (_break.getLocation (), Void::init (_break.getLocation ()), value);
 	}
@@ -6196,6 +6210,21 @@ namespace semantic {
 		}
 	    }
 	    return Generator::empty ();
+	}
+
+	Generator Visitor::setCompleteConditional (const Generator & gen) {
+	    match (gen) {
+		of (Conditional, cd, {
+			if (cd.getElse ().isEmpty ()) {
+			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), Generator::empty (), true);
+			} else {
+			    auto _else = setCompleteConditional (cd.getElse ());
+			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), _else, cd.isComplete ());
+			}
+		    }
+		);
+	    }	    
+	    return gen;
 	}
 
 	Generator Visitor::getCommonAncestor (const Generator & leftType, const Generator & rightType_) {
