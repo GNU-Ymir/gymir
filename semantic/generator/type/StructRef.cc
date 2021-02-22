@@ -10,6 +10,7 @@ namespace semantic {
 	std::string StructRef::INIT_NAME = "init";
 	std::string StructRef::TUPLEOF   = "tupleof";
 	std::string StructRef::DIRECT_FIELDS   = "fields_address";
+	std::string StructRef::FIELD_NAMES     = "fields_name";
 	
 	StructRef::StructRef () :
 	    Type ()

@@ -64,6 +64,7 @@ namespace semantic {
 		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
 		else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
 		else of (MacroRef, rf ATTRIBUTE_UNUSED, gen = validateMacro (expression, left, errors))
+		else of (generator::StructRef, str_ ATTRIBUTE_UNUSED, gen = validateStruct (expression, left))
 		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
 		else of (Pointer, ptr ATTRIBUTE_UNUSED, gen = validateType (expression, left))
 		else of (ClassPtr, ptr, gen = validateClass (expression, ptr.getClassRef ().getRef ().to <semantic::Class> ().getGenerator (), errors))
@@ -296,7 +297,8 @@ namespace semantic {
 		else of (Integer, it ATTRIBUTE_UNUSED, ret = validateInteger (expression, type))
 		else of (Pointer, pt ATTRIBUTE_UNUSED, ret = validatePointer (expression, type))
 		else of (Slice, sl ATTRIBUTE_UNUSED, ret = validateSlice (expression, type))
-		else of (Tuple, tl ATTRIBUTE_UNUSED, ret = validateTuple (expression, type));
+		else of (Tuple, tl ATTRIBUTE_UNUSED, ret = validateTuple (expression, type))
+		else of (StructRef, st ATTRIBUTE_UNUSED, ret = validateStruct (expression, type));
 	    }
 	    
 	    if (ret.isEmpty ()) {
@@ -591,10 +593,15 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	Generator SubVisitor::validateStruct (const syntax::Binary & expression, const generator::Generator & t) {
+	Generator SubVisitor::validateStruct (const syntax::Binary & expression, const generator::Generator & t_) {
 	    if (expression.getRight ().is <syntax::Var> ()) {
 		auto name = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
 		name = removeUnders (name);
+
+		Generator t = t_;
+		if (t_.is <StructRef> ()) {
+		    t = t_.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
+		}
 		
 		if (name == StructRef::INIT_NAME) {
 		    auto & fields = t.to <generator::Struct> ().getFields ();
@@ -627,7 +634,33 @@ namespace semantic {
 			t,
 			types,
 			params
-		    );
+			);
+		} else if (name == StructRef::FIELD_NAMES) {
+		    auto & fields = t.to <generator::Struct> ().getFields ();
+		    std::vector <Generator> params;
+		    Generator innerType (Generator::empty ());
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    		    
+		    try {
+			for (auto & field : fields) {
+			    auto name = field.to <generator::VarDecl> ().getLocation ();
+			    params.push_back (this-> _context.validateValue (syntax::String::init (
+										 name, 
+										 name,
+										 name,
+										 lexing::Word::eof ())));
+			    innerType = params.back ().to <Value> ().getType ();
+			}			
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    }
+			    
+		    if (errors.size () != 0) {
+			this-> error (expression, t, expression.getRight (), errors);
+		    }
+
+		    auto arrType = Array::init (expression.getLocation (), innerType, params.size ());		    
+		    return ArrayValue::init (expression.getLocation (), arrType, params);
 		}
 	
 		if (name == __TYPEID__) {		    

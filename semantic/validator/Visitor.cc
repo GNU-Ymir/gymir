@@ -4194,6 +4194,7 @@ namespace semantic {
 			ret = this-> validateMultSym (value.getLocation (), {sym});
 		    } 		    
 		} catch (Error::ErrorList list) {
+		    
 		    static std::list <Error::ErrorMsg> __last_error__;
 		    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 			list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
@@ -4207,14 +4208,14 @@ namespace semantic {
 			for (auto & it : params)
 			    names.push_back (it.prettyString ());
 
-			std::string leftName = value.getLocation ().getStr ();				
-			list.errors.insert (list.errors.begin (), {Ymir::Error::makeOccurAndNote (
-				    tcl.getLocation (),
-				    errors,
-				    ExternalError::get (UNDEFINED_TEMPLATE_OP),
-				    leftName,
-				    names
-				    )});
+			std::string leftName = value.getLocation ().getStr ();
+			list.errors = {Ymir::Error::makeOccurAndNote (
+				tcl.getLocation (),
+				list.errors,
+				ExternalError::get (UNDEFINED_TEMPLATE_OP),
+				leftName,
+				names
+				)};
 			
 			__last_error__ = {};
 		    } else if (Visitor::__LAST__) {
@@ -4324,7 +4325,7 @@ namespace semantic {
 			    } else {
 			    	syms.push_back (element_on_scores [it]);
 			    }
-			} catch (Error::ErrorList list) {
+			} catch (Error::ErrorList list) {			    
 			    static std::list <Error::ErrorMsg> __last_error__;
 			    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 				list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
@@ -4339,13 +4340,13 @@ namespace semantic {
 				    names.push_back (it.prettyString ());
 
 				std::string leftName = value.getLocation ().getStr ();				
-				list.errors.insert (list.errors.begin (), {Ymir::Error::makeOccurAndNote (
-					    tcl.getLocation (),
-					    errors,
-					    ExternalError::get (UNDEFINED_TEMPLATE_OP),
-					    leftName,
-					    names
-					    )});
+				list.errors = {Ymir::Error::makeOccurAndNote (
+					tcl.getLocation (),
+					list.errors,
+					ExternalError::get (UNDEFINED_TEMPLATE_OP),
+					leftName,
+					names
+					)};
 				
 				__last_error__ = {};
 			    } else if (Visitor::__LAST__) {
@@ -4372,7 +4373,7 @@ namespace semantic {
 				list.errors = __last_error__;
 			    }
 			    
-			    errors = list.errors;			
+			    errors = list.errors;
 			}
 			Visitor::__CALL_NB_RECURS__ -= 1;
 		    }
@@ -4396,8 +4397,7 @@ namespace semantic {
 		    
 		}
 	    }
-	    
-	    
+	    	    
 	    throw Error::ErrorList {errors};
 	    return Generator::empty ();	    
 	}

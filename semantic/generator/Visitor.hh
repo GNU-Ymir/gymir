@@ -37,7 +37,7 @@ namespace semantic {
 	    std::vector <generic::BlockChain> stackBlockChain;	    	    
 
 	    /** The list of jumps; */
-	    std::vector <ReturnWithinCatch> exceptionDeclChain;
+	    std::list <std::vector <ReturnWithinCatch> > exceptionDeclChain;
 
 	    std::list <std::string> blockNames;
 	    
@@ -253,7 +253,7 @@ namespace semantic {
 	     * \brief Generate the catching part of an exit scope
 	     * \param var the var containing the value of the scope
 	     */
-	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree var);
+	    generic::Tree generateCatching (const ExitScope & scope, generic::Tree var, ReturnWithinCatch exc_return);
 
 	    /**
 	     * \brief The test at the end of an exit scope to make sure return, break and throws are correctly executed
