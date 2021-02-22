@@ -195,7 +195,7 @@ namespace semantic {
 				return mapper;
 			    } else {
 				auto note = Ymir::Error::createNote (param.getLocation ());
-				Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_STRUCT));
+				Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_STRUCT), values [0].prettyString ());
 			    }
 			} else {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
