@@ -51,6 +51,14 @@ namespace semantic {
 		of (StringValue, s ATTRIBUTE_UNUSED,
 		    return gen;
 		);
+
+		of (RangeValue, rng,
+		    return executeRangeValue (rng);
+		);
+
+		of (SliceConcat, slc,
+		    return executeSliceConcat (slc);
+		);
 		
 		of (Affect, aff,
 		    return executeAffect (aff);
@@ -159,6 +167,17 @@ namespace semantic {
 	    return gen;
 	}
 
+	generator::Generator CompileTime::executeRangeValue (const generator::RangeValue & rng) {
+	    auto left = execute (rng.getLeft ());
+	    auto right = execute (rng.getRight ());
+	    auto full = execute (rng.getIsFull ());
+	    auto step = rng.getStep ();
+	    if (!step.isEmpty ())
+		step = execute (step);
+	    
+	    return RangeValue::init (rng.getLocation (), rng.getType (), left, right, step, full);
+	}
+
 	generator::Generator CompileTime::executeAffect (const generator::Affect & gen) {
 	    Ymir::Error::occur (
 		gen.getLocation (),
@@ -167,6 +186,36 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
+	generator::Generator CompileTime::executeSliceConcat (const generator::SliceConcat & slc) {
+	    auto left = execute (slc.getLeft ());
+	    auto right = execute (slc.getRight ());
+	    if (left.is<Aliaser> ()) left = left.to <Aliaser> ().getWho ();
+	    if (right.is<Aliaser> ()) right = right.to <Aliaser> ().getWho ();
+	    
+	    if (left.is <StringValue> () && right.is<StringValue> ()) {
+		auto res = left.to <StringValue> ().getValue ();
+		if (slc.getType ().to <Type> ().getInners () [0].to <Char> ().getSize () == 1) {
+		    res.pop_back ();
+		} else {
+		    for (int i = 0 ; i < 4; i++) res.pop_back ();
+		}
+		
+		auto len = right.to <StringValue> ().getLen () + right.to <StringValue> ().getLen ();
+		res.insert (res.end (), right.to <StringValue> ().getValue ().begin (), right.to <StringValue> ().getValue ().end ());
+		return Aliaser::init (
+		    slc.getLocation (),
+		    slc.getType (),
+		    StringValue::init (slc.getLocation (), slc.getType (), res, len)
+		    );
+	    }
+	    
+	    Ymir::Error::occur (
+		slc.getLocation (),
+		ExternalError::get (COMPILE_TIME_UNKNOWN)
+		); 	    
+	    return Generator::empty ();
+	}
+	
 	generator::Generator CompileTime::executeArrayAccess (const generator::ArrayAccess & acc) {
 	    auto array = this-> execute (acc.getArray ());
 	    auto index = this-> execute (acc.getIndex ());

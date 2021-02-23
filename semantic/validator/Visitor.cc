@@ -10,6 +10,7 @@
 #include <ymir/semantic/validator/SubVisitor.hh>
 #include <ymir/semantic/validator/DotVisitor.hh>
 #include <ymir/semantic/validator/TemplateVisitor.hh>
+#include <ymir/semantic/validator/PragmaVisitor.hh>
 #include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/semantic/validator/MatchVisitor.hh>
 #include <ymir/semantic/validator/MacroVisitor.hh>
@@ -1933,17 +1934,13 @@ namespace semantic {
 
 	Generator Visitor::validateCteValue (const syntax::Expression & value) {
 	    match (value) {
-		of (syntax::If, fi,
-		    return validateCteIfExpression (fi);
-		) else of (syntax::Assert, as,
-			   return validateCteAssert (as);
-		) else of (syntax::Block, bl ATTRIBUTE_UNUSED,
-			   return validateValue (value);
-		) else {
-			   return retreiveValue (validateValue (value));
-		}		    
+		of (syntax::If, fi, return validateCteIfExpression (fi));
+		of (syntax::Assert, as, return validateCteAssert (as));
+		of (syntax::Block, bl ATTRIBUTE_UNUSED, return validateValue (value));
+		of (syntax::For, fo, return validateForExpression (fo, true));
 	    }
-	    return Generator::empty ();
+	    
+	    return retreiveValue (validateValue (value));
 	}
 	
 	Generator Visitor::validateValueNoReachable (const syntax::Expression & value, bool fromCall) {
@@ -3357,13 +3354,16 @@ namespace semantic {
 	    return Loop::init (_wh.getLocation (), type, test, content, _wh.isDo ());	    
 	}	
 
-	Generator Visitor::validateForExpression (const syntax::For & _for) {
+	Generator Visitor::validateForExpression (const syntax::For & _for, bool isCte) {
 	    auto forVisitor = ForVisitor::init (*this);
 	    Generator content (Generator::empty ());
 	    enterLoop ();
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
-		content = forVisitor.validate (_for);
+		if (isCte)
+		    content = forVisitor.validateCte (_for);
+		else
+		    content = forVisitor.validate (_for);
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
@@ -3754,95 +3754,8 @@ namespace semantic {
 	}	
 
 	Generator Visitor::validatePragma (const syntax::Pragma & prg) {
-	    if (prg.getLocation ().getStr () == Keys::COMPILE) {
-		try {
-		    for (auto & it : prg.getContent ()) {
-			validateValue (it);
-		    }
-		    
-		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
-		} catch (Error::ErrorList list) {
-		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
-		}
-	    } else if (prg.getLocation ().getStr () == Keys::MANGLE) {
-		if (prg.getContent ().size () != 1) {
-		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
-		}
-		
-		std::string res;
-		auto mangler = Mangler::init (false);
-		try {
-		    auto val = validateValue (prg.getContent ()[0], true, false);
-		    if (val.is <StringValue> ()) { // assumed to be a path
-			res = mangler.manglePath (Ymir::format ("%", val.to <StringValue> ().getValue ()));
-		    } else {
-			res = mangler.mangle (val);
-		    }
-
-
-		} catch (Error::ErrorList list) {
-		    try {
-			auto val = validateType (prg.getContent ()[0], true);
-			res = mangler.mangle (val);
-		    } catch (Error::ErrorList list) {
-			Ymir::Error::occurAndNote (prg.getLocation (), list.errors, ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
-		    }
-		}
-
-		    return validateValue (
-			syntax::String::init (
-			    prg.getLocation (),
-			    prg.getLocation (),
-			    lexing::Word::init (prg.getLocation (), res),
-			    lexing::Word::eof ()
-			    )
-			);
-		    		    
-	    } else if (prg.getLocation ().getStr () == Keys::OPERATOR) {
-		if (prg.getContent ().size () != 2 && prg.getContent ().size () != 3) {		    
-		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
-		}
-		
-		auto op = prg.getContent ()[0];
-		if (!op.is <syntax::String> ())
-		    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
-
-		syntax::Expression syntOp (syntax::Expression::empty ());
-		
-		if (prg.getContent ().size () == 2) {
-		    if (UnaryVisitor::toOperator (op.to<syntax::String> ().getSequence ()) == generator::Unary::Operator::LAST_OP) {
-			Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
-		    }
-		    auto type = this-> validateType (prg.getContent () [1]);
-		    auto value = FakeValue::init (prg.getLocation (), type);
-		    syntOp = syntax::Unary::init (op.to <syntax::String> ().getSequence (),
-						  TemplateSyntaxWrapper::init (value.getLocation (), value));
-		} else if (prg.getContent ().size () == 3) {
-		    bool af = false;
-		    if (BinaryVisitor::toOperator (op.to<syntax::String> ().getSequence (), af) == generator::Binary::Operator::LAST_OP) {
-			Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
-		    }
-		    auto left = this-> validateType (prg.getContent () [1]);
-		    auto right = this-> validateType (prg.getContent () [2]);
-		    auto lValue = FakeValue::init (prg.getLocation (), left);
-		    auto rValue = FakeValue::init (prg.getLocation (), right);
-		    syntOp = syntax::Binary::init (op.to <syntax::String> ().getSequence (),
-						   TemplateSyntaxWrapper::init (lValue.getLocation (), lValue),
-						   TemplateSyntaxWrapper::init (rValue.getLocation (), rValue),
-						   syntax::Expression::empty ());
-		}
-		
-		try {
-		    this-> validateValue (syntOp);
-		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), true);
-		} catch (Error::ErrorList list) {
-		    return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
-		}
-	    } else {
-		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNKOWN_PRAGMA), prg.getLocation ().getStr ());
-	    }
-	    
-	    return Generator::empty ();
+	    auto visitor = PragmaVisitor::init (*this);
+	    return visitor.validate (prg);	    
 	}
 
 	Generator Visitor::validateDollar (const syntax::Dollar & dl) {

@@ -42,6 +42,11 @@ namespace semantic {
 	    generator::Generator validate (const syntax::For & expression);
 
 	    /**
+	     * Validate a for loop that is executed at compile time	     
+	     */
+	    generator::Generator validateCte (const syntax::For & expression);
+
+	    /**
 	     * Validate the var declaration of the iterator in case of by value array iteration
 	     */
 	    generator::Generator validateArrayByValueIterator (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & val, const generator::Generator & value, int level);
@@ -91,13 +96,14 @@ namespace semantic {
 	     */
 	    generator::Generator iterateSlice (const syntax::For & expression, const generator::Generator & array, const syntax::Expression & index, const syntax::Expression & val);
 	    
-	    generator::Generator validateRange (const syntax::For & expression, const generator::Generator & range);
-
+	    generator::Generator validateRange (const syntax::For & expression, const generator::Generator & range, bool isCte = false);
+	   	    
 	    std::vector <generator::Generator> createIndexVarRange (const syntax::For & expression, const generator::Generator & range, const syntax::VarDecl & name);
-
+	    
 	    generator::Generator iterateRange (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index);
 
-
+	    generator::Generator iterateRangeCte (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index);	    
+	    
 	    generator::Generator validateTuple (const syntax::For & expression, const generator::Generator & range);
 
 	    std::vector <generator::Generator> createIndexVarTuple (const syntax::For & expression, const generator::Generator & range, const syntax::VarDecl & name, int level);
@@ -117,7 +123,7 @@ namespace semantic {
 	    /**
 	     * Throw an undefined op error
 	     */
-	    static void error (const syntax::For & expression, const generator::Generator & value);
+	    static void error (const syntax::For & expression, const generator::Generator & value, bool isCte = false);
 	};
 
 	

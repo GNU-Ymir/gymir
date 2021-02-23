@@ -26,12 +26,6 @@ namespace semantic {
 	public :
 
 	    static std::string INIT_NAME;
-
-	    static std::string TUPLEOF;
-
-	    static std::string DIRECT_FIELDS;
-
-	    static std::string FIELD_NAMES;
 	    
 	public :
 

@@ -70,20 +70,23 @@ namespace semantic {
 	    auto index = CompileTime::init (this-> _context).execute (right);
 
 	    if (!index.to <Value> ().getType ().is<Integer> ()) {
-		Ymir::Error::occur (index.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+		auto note = Ymir::Error::createNote (expression.getLocation ());
+		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
 				    index.to <Value> ().getType ().to <Type> ().getTypeName (),
 				    Integer::init (index.getLocation (), 64, false). to <Type> ().getTypeName ()
 		);
 	    }
 	    
 	    if (!index.is <Fixed> ()) {
-		Ymir::Error::occur (index.getLocation (), ExternalError::get (COMPILE_TIME_UNKNOWN));
+		auto note = Ymir::Error::createNote (expression.getLocation ());
+		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::get (COMPILE_TIME_UNKNOWN));
 	    }
 	    
 	    auto index_val = index.to <Fixed> ().getUI ().u;
 	    auto & tu_inners = left.to <Value> ().getType ().to <Tuple> ().getInners ();
 	    if (index_val >= tu_inners.size ()) {
-		Ymir::Error::occur (index.getLocation (), ExternalError::get (OVERFLOW_ARITY), index_val, tu_inners.size ());
+		auto note = Ymir::Error::createNote (expression.getLocation ());
+		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::get (OVERFLOW_ARITY), index_val, tu_inners.size ());
 	    }
 	    auto type = tu_inners [index_val];
 	    if (

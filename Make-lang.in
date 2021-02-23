@@ -262,6 +262,7 @@ ymir_OBJS = \
 	ymir/util_Range.o \
 	ymir/util_Ref.o \
 	ymir/util_StringEnum.o \
+	ymir/validator_PragmaVisitor.o \
 	ymir/validator_BinaryVisitor.o \
 	ymir/validator_BracketVisitor.o \
 	ymir/validator_CallVisitor.o \

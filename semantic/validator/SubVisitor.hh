@@ -82,7 +82,6 @@ namespace semantic {
 	    generator::Generator validateMacro (const syntax::Binary & expression, const generator::Generator & gen, std::list <Ymir::Error::ErrorMsg> & errors);
 	    generator::Generator validateTemplate (const syntax::Binary & expression, const generator::Generator & en, std::list <Ymir::Error::ErrorMsg> & errors);
 	    generator::Generator validateClassValue (const syntax::Binary & expression, const generator::Generator & en);
-	    generator::Generator validateStructValue (const syntax::Binary & expression, const generator::Generator & en);
 	    
 	private :	    
 

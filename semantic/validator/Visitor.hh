@@ -586,7 +586,7 @@ namespace semantic {
 	     * \brief Validate a for expression
 	     * \return as always a generator
 	     */
-	    generator::Generator validateForExpression (const syntax::For & _for);
+	    generator::Generator validateForExpression (const syntax::For & _for, bool isCte = false);
 	    
 	    /**
 	     * \brief Validate a break expression

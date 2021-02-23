@@ -2,6 +2,7 @@
 #include <ymir/semantic/generator/_.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <ymir/global/Core.hh>
+#include <ymir/semantic/generator/value/_.hh>
 
 using namespace global;
 
@@ -51,6 +52,18 @@ namespace semantic {
 	    }	    
 	    
 	    error (expression, value);
+	    return Generator::empty ();
+	}
+
+	Generator ForVisitor::validateCte (const syntax::For & expression) {
+	    auto value = this-> _context.validateValue (expression.getIter ());
+	    match (value.to <Value> ().getType ()) {		
+		of (Range, r ATTRIBUTE_UNUSED,
+		    return validateRange (expression, value, true);
+		    );
+	    }
+	    
+	    error (expression, value, true);
 	    return Generator::empty ();
 	}
 
@@ -269,8 +282,8 @@ namespace semantic {
 
 	    return Block::init (expression.getLocation (), loop_type, values);
 	}
-	
-	Generator ForVisitor::validateRange (const syntax::For & expression, const generator::Generator & value) {
+
+	Generator ForVisitor::validateRange (const syntax::For & expression, const generator::Generator & value, bool isCte) {
 	    auto vars = expression.getVars ();
 	    if (vars.size () != 1) {
 		Ymir::Error::occur (
@@ -282,7 +295,10 @@ namespace semantic {
 		return Generator::empty ();
 	    }
 
-	    return iterateRange (expression, value, vars [0]);
+	    if (isCte)
+		return iterateRangeCte (expression, value, vars [0]);
+	    else
+		return iterateRange (expression, value, vars [0]);
 	}
 
 
@@ -467,6 +483,172 @@ namespace semantic {
 	    return Block::init (lexing::Word::init (expression.getLocation (), "#_for_block"), loop_type, value);
 	}
 
+	Generator ForVisitor::iterateRangeCte (const syntax::For & expression, const generator::Generator & range, const syntax::Expression & index) {
+	    std::list <Ymir::Error::ErrorMsg> errors;
+	    auto loc = expression.getLocation ();
+	    
+	    this-> _context.enterBlock ();
+	    auto rng = this-> _context.retreiveValue (range);
+	    if (!rng.is <RangeValue> ()) {
+		this-> error (expression, range, true);
+	    }
+	    
+	    auto l = rng.to <RangeValue> ().getLeft ();
+	    auto r = rng.to <RangeValue> ().getRight ();
+	    auto s = rng.to <RangeValue> ().getStep ();
+	    bool isFull = rng.to <RangeValue> ().getIsFull ().to <BoolValue> ().getValue ();
+	    
+	    if (!l.is <Fixed> ())
+		this-> error (expression, range, true);
+	    
+	    auto decl = index.to <syntax::VarDecl> ();	    
+	    if (decl.getName ().getStr () != Keys::UNDER)
+		this-> _context.verifyShadow (decl.getName ());
+	    
+	    if (decl.getDecorators ().size () != 0) {
+		auto deco = decl.getDecorators ()[0];
+		Ymir::Error::occur (deco.getLocation (),
+				    ExternalError::get (DECO_OUT_OF_CONTEXT),
+				    deco.getLocation ().getStr ()
+		    );
+	    }
+	    
+	    auto loopType = Generator::empty ();
+	    std::vector <Generator> innerValues;
+	    if (l.to <Value> ().getType ().to <Integer> ().isSigned ()) {
+		long l_i = l.to<Fixed> ().getUI ().u;
+		long r_i = r.to<Fixed> ().getUI ().u;
+		long s_i = s.to <Fixed> ().getUI ().i;
+		for (long i = l_i;; i += s_i) {
+		    println (i);
+		    if (s_i < 0) {
+			if (isFull) {
+			    if (i < r_i) break;
+			} else {
+			    if (i <= r_i) break;
+			}
+		    } else {
+			if (isFull) {
+			    if (i > r_i) break;
+			} else {
+			    if (i >= r_i) break;
+			}
+		    }
+		    try {
+			this-> _context.enterBlock ();		    
+			if (decl.getName () != Keys::UNDER) {
+			    auto var = generator::VarDecl::init (loc,
+								 decl.getName ().getStr (),
+								 l.to <Value> ().getType (), 
+								 ifixed (i),
+								 false
+				);
+
+			    auto ref = VarRef::init (loc,
+						     decl.getName ().getStr (),
+						     l.to<Value> ().getType (),
+						     var.getUniqId (),
+						     false,
+						     ifixed (i)
+				);
+			    this-> _context.insertLocal (decl.getName ().getStr (), var);
+			    innerValues.push_back (var);			
+			}
+			auto bl = this-> _context.validateValue (expression.getBlock ());
+			loopType = bl.to <Value> ().getType ();
+			innerValues.push_back (bl);
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    }
+		
+		    try {
+			this-> _context.quitBlock ();
+		    } catch (Error::ErrorList list) {
+			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
+		
+
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
+		    }
+		}
+	    } else {
+		ulong l_i = l.to<Fixed> ().getUI ().u;
+		ulong r_i = r.to<Fixed> ().getUI ().u;
+		long s_i = s.to <Fixed> ().getUI ().i;
+		for (ulong i = l_i;; i += s_i) {
+		    
+		    if (s_i < 0) {
+			if (isFull) {
+			    if (i < r_i) break;
+			} else {
+			    if (i <= r_i) break;
+			}
+		    } else {
+			if (isFull) {
+			    if (i > r_i) break;
+			} else {
+			    if (i >= r_i) break;
+			}
+		    }
+		    
+		    try {
+			this-> _context.enterBlock ();		    
+			if (decl.getName () != Keys::UNDER) {
+			    auto var = generator::VarDecl::init (loc,
+								 decl.getName ().getStr (),
+								 l.to <Value> ().getType (), 
+								 ufixed (i),
+								 false
+				);
+
+			    auto ref = VarRef::init (loc,
+						     decl.getName ().getStr (),
+						     l.to<Value> ().getType (),
+						     var.getUniqId (),
+						     false,
+						     ufixed (i)
+				);
+			    this-> _context.insertLocal (decl.getName ().getStr (), var);
+			    innerValues.push_back (var);			
+			}
+			auto bl = this-> _context.validateValue (expression.getBlock ());
+			loopType = bl.to <Value> ().getType ();
+			innerValues.push_back (bl);
+		    } catch (Error::ErrorList list) {			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    }
+		
+		    try {
+			this-> _context.quitBlock ();
+		    } catch (Error::ErrorList list) {
+			
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
+		
+
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
+		    }
+		}
+	    }
+	    
+	    try {
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList list) {		    
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
+		
+	    
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+	    if (loopType.isEmpty ())
+		loopType = Void::init (expression.getLocation ());	    
+	    return Block::init (expression.getLocation (), loopType, innerValues); 	    
+	}
+	
 	Generator ForVisitor::validateTuple (const syntax::For & expression, const generator::Generator & tuple) {
 	    auto vars = expression.getVars ();
 	    if (vars.size () > 1) {
@@ -791,12 +973,20 @@ namespace semantic {
 	}
 	
 	
-	void ForVisitor::error (const syntax::For &, const generator::Generator & value) {
-	    Ymir::Error::occur (
-		value.getLocation (),
-		ExternalError::get (NOT_ITERABLE),
-		value.to <Value> ().getType ().to <Type> ().getTypeName ()
-	    );
+	void ForVisitor::error (const syntax::For &, const generator::Generator & value, bool isCte) {
+	    if (isCte) {
+		Ymir::Error::occur (
+		    value.getLocation (),
+		    ExternalError::get (NOT_CTE_ITERABLE),
+		    value.to <Value> ().getType ().to <Type> ().getTypeName ()
+		    );
+	    } else {
+		Ymir::Error::occur (
+		    value.getLocation (),
+		    ExternalError::get (NOT_ITERABLE),
+		    value.to <Value> ().getType ().to <Type> ().getTypeName ()
+		    );
+	    }
 	}
 		
 

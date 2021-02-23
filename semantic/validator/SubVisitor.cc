@@ -73,9 +73,8 @@ namespace semantic {
 	    }
 	    	    
 	    if (left.is<Value> () && gen.isEmpty ()) {
-		match (left.to <Value> ().getType ()) {
-		    of (StructRef, str ATTRIBUTE_UNUSED, gen = validateStructValue (expression, left))
-		    else of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left))
+		match (left.to <Value> ().getType ()) {		    
+		    of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left))
 		    else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
 		    else of (ClassPtr, ptr ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
 		}
@@ -149,10 +148,7 @@ namespace semantic {
 			    }
 			}
 		    ) else of (Value, v, {
-			    if (v.getType ().is <StructRef> ()) {
-				auto res = validateStructValue (expression, gen);
-				if (!res.isEmpty ()) gens.push_back (res);
-			    } else if (v.getType ().is <ClassPtr> ()) {
+			    if (v.getType ().is <ClassPtr> ()) {
 				auto res = validateClassValue (expression, gen);
 				if (!res.isEmpty ()) gens.push_back (res);
 			    }			       
@@ -224,34 +220,6 @@ namespace semantic {
 					 Aliaser::init (expression.getLocation (), slc,
 							ArrayValue::init (expression.getLocation (), type.to <Type> ().toDeeplyMutable (), values)
 					     )
-			);
-
-		    return ret;
-		} else if (right == EnumRef::MEMBER_NAMES) {
-		    auto inners = en.getFields ();
-		    std::vector <Generator> values;
-		    for (auto & it : inners) values.push_back (
-			this-> _context.validateValue (syntax::String::init (it.getLocation (),
-									     it.getLocation (),
-									     it.getLocation (),
-									     lexing::Word::eof ()))
-			);
-		    
-		    auto prox = EnumRef::init (en.getLocation (), en.getRef ());
-		    auto innerType = values [0].to <Value> ().getType (); // there is always at least one element in tuple
-		    innerType = Type::init (innerType.to <Type> (), prox);
-		    
-		    auto type = Array::init (expression.getLocation (), innerType, values.size ());
-		    type = Type::init (type.to <Type> (), true);
-		    innerType = Type::init (innerType.to <Type> (), true);
-		    
-		    auto slc = Slice::init (expression.getLocation (), innerType);
-		    slc = Type::init (slc.to <Type> (), true);
-		    auto ret = Copier::init (expression.getLocation (),
-					     slc,
-					     Aliaser::init (expression.getLocation (), slc,
-							    ArrayValue::init (expression.getLocation (), type.to <Type> ().toDeeplyMutable (), values)
-						 )
 			);
 
 		    return ret;
@@ -635,32 +603,6 @@ namespace semantic {
 			types,
 			params
 			);
-		} else if (name == StructRef::FIELD_NAMES) {
-		    auto & fields = t.to <generator::Struct> ().getFields ();
-		    std::vector <Generator> params;
-		    Generator innerType (Generator::empty ());
-		    std::list <Ymir::Error::ErrorMsg> errors;
-		    		    
-		    try {
-			for (auto & field : fields) {
-			    auto name = field.to <generator::VarDecl> ().getLocation ();
-			    params.push_back (this-> _context.validateValue (syntax::String::init (
-										 name, 
-										 name,
-										 name,
-										 lexing::Word::eof ())));
-			    innerType = params.back ().to <Value> ().getType ();
-			}			
-		    } catch (Error::ErrorList list) {			
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    }
-			    
-		    if (errors.size () != 0) {
-			this-> error (expression, t, expression.getRight (), errors);
-		    }
-
-		    auto arrType = Array::init (expression.getLocation (), innerType, params.size ());		    
-		    return ArrayValue::init (expression.getLocation (), arrType, params);
 		}
 	
 		if (name == __TYPEID__) {		    
@@ -855,94 +797,6 @@ namespace semantic {
 					       0,
 					       SubVisitor::__TYPEINFO__
 		    );
-		} else if (opName == ClassRef::TUPLEOF) {
-		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
-		    bool prv = false, prot = false;
-
-		    if (value.to<Value> ().getType ().is <ClassProxy> ()) {
-			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
-			prv = false;
-		    } else
-			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
-		    if (prv) { // local tupleof exists only inside class definition
-			std::vector <Generator> types;
-			std::vector <Generator> params;
-			std::list <Ymir::Error::ErrorMsg> errors;
-			auto dot_visit = DotVisitor::init (this-> _context);
-			for (auto & field : cl.to <generator::Class> ().getFields ()) {			
-			    auto name = field.to <generator::VarDecl> ().getName ();
-			    auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
-			    if (!field_access.isEmpty ()) {
-				auto field_type = field_access.to <Value> ().getType ();
-				auto type = Type::init (field_type.to <Type> (), false);
-				params.push_back (field_access);
-				types.push_back (type);
-			    }
-			}
-
-			auto tuple = Tuple::init (expression.getLocation (), types);
-			tuple = Type::init (tuple.to <Type> (), false);
-		    
-			return TupleValue::init (expression.getLocation (), tuple, params);
-		    } else return Generator::empty ();
-		} else if (opName == ClassRef::DIRECT_TUPLEOF) {
-		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
-		    bool prv = false, prot = false;
-
-		    if (value.to<Value> ().getType ().is <ClassProxy> ()) {
-			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
-			prv = false;
-		    } else
-			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
-		    
-		    std::vector <Generator> types;
-		    std::vector <Generator> params;
-		    std::list <Ymir::Error::ErrorMsg> errors;
-		    auto dot_visit = DotVisitor::init (this-> _context);
-		    for (auto & field : cl.to <generator::Class> ().getLocalFields ()) {			
-			auto name = field.to <generator::VarDecl> ().getName ();
-			auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
-			if (!field_access.isEmpty ()) {
-			    auto field_type = field_access.to <Value> ().getType ();
-			    auto type = Type::init (field_type.to <Type> (), false);			    
-			    params.push_back (field_access);
-			    types.push_back (type);
-			}
-		    }
-
-		    auto tuple = Tuple::init (expression.getLocation (), types);
-		    tuple = Type::init (tuple.to <Type> (), false);
-		    
-		    return TupleValue::init (expression.getLocation (), tuple, params);
-		} else if (opName == ClassRef::DIRECT_FIELDS) {
-		    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
-		    bool prv = false, prot = false;
-
-		    if (value.to<Value> ().getType ().is <ClassProxy> ()) {
-			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
-			prv = false;
-		    } else
-			this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
-		    
-		    std::vector <Generator> types;
-		    std::vector <Generator> params;
-		    std::list <Ymir::Error::ErrorMsg> errors;
-		    auto dot_visit = DotVisitor::init (this-> _context);
-		    for (auto & field : cl.to <generator::Class> ().getLocalFields ()) {			
-			auto name = field.to <generator::VarDecl> ().getName ();
-			auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
-			if (!field_access.isEmpty ()) {
-			    auto field_type = field_access.to <Value> ().getType ();
-			    auto type = Pointer::init (field_access.getLocation (), field_type);			    
-			    params.push_back (Addresser::init (field_access.getLocation (), type, field_access));
-			    types.push_back (type);
-			}
-		    }
-
-		    auto tuple = Tuple::init (expression.getLocation (), types);
-		    tuple = Type::init (tuple.to <Type> (), false);
-		    
-		    return TupleValue::init (expression.getLocation (), tuple, params);
 		} else if (ancOpName == ClassRef::SUPER) {
 		    bool prv = false, prot = false;
 		    if (!value.to <Value> ().getType ().is <ClassProxy> ()) {
@@ -984,79 +838,7 @@ namespace semantic {
 	    return Generator::empty ();
 	}
 
-	
-	Generator SubVisitor::validateStructValue (const syntax::Binary & expression, const generator::Generator & value) {
-	    auto & t = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
-	    if (expression.getRight ().is <syntax::Var> ()) {
-		auto opName = expression.getRight ().to <syntax::Var> ().getName ().getStr ();
-		opName = removeUnders (opName);
 		
-		if (opName == StructRef::TUPLEOF) {
-		    auto & fields = t.to <generator::Struct> ().getFields ();
-		    std::vector <Generator> types;
-		    std::vector <Generator> params;
-		    std::list <Ymir::Error::ErrorMsg> errors;
-		    try {
-			for (auto & field : fields) {
-			    auto type = field.to <generator::VarDecl> ().getVarType ();
-			    auto name = field.to <generator::VarDecl> ().getName ();
-			    type = Type::init (type.to <Type> (), false);
-			    
-			    params.push_back (StructAccess::init (expression.getLocation (), type, value, name));
-			    types.push_back (type);
-			}
-		    } catch (Error::ErrorList list) {			
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
-
-		    if (errors.size () != 0) {
-			this-> error (expression, t, expression.getRight (), errors);
-		    }
-		    auto tuple = Tuple::init (expression.getLocation (), types);
-		    tuple = Type::init (tuple.to <Type> (), false); // Impossible to modify a struct via its tupleof
-		    
-		    return TupleValue::init (expression.getLocation (), tuple, params); 
-		} else if (opName == StructRef::DIRECT_FIELDS) {		    
-		    auto & fields = t.to <generator::Struct> ().getFields ();
-		    std::vector <Generator> types;
-		    std::vector <Generator> params;
-		    std::list <Ymir::Error::ErrorMsg> errors;
-		    try {
-			for (auto & field : fields) {
-			    auto field_type = field.to <generator::VarDecl> ().getVarType ();
-			    if (value.to <Value> ().isLvalue () &&
-				value.to <Value> ().getType ().to <Type> ().isMutable () &&
-				field_type.to <Type> ().isMutable ())
-				
-				field_type = Type::init (field_type.to <Type> (), true);
-			    else
-				field_type = Type::init (field_type.to <Type> (), false);
-			    
-			    auto name = field.to <generator::VarDecl> ().getName ();
-			    auto type = Pointer::init (expression.getLocation (), field_type);
-			    type = Type::init (type.to <Type> (), field_type.to <Type> ().isMutable ());
-			    
-			    auto field_value = StructAccess::init (expression.getLocation (), type, value, name); 
-			    params.push_back (Addresser::init (field_value.getLocation (), type, field_value));
-			    types.push_back (type);
-			}
-		    } catch (Error::ErrorList list) {			
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
-
-		    if (errors.size () != 0) {
-			this-> error (expression, t, expression.getRight (), errors);
-		    }
-		    
-		    auto tuple = Tuple::init (expression.getLocation (), types);
-		    tuple = Type::init (tuple.to <Type> (), true);
-		    
-		    return TupleValue::init (expression.getLocation (), tuple, params); 
-		}
-	    }	    
-	    return Generator::empty ();
-	}	
-	
 	void SubVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const syntax::Expression & right) {
 	    std::string leftName;
 	    std::string rightName = "";

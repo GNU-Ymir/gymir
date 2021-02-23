@@ -38,6 +38,8 @@ namespace semantic {
 	     */
 	    generator::Generator execute (const generator::Generator & gen);	    
 	    
+
+
 	    /**
 	     * \brief Execute an affectation at compile time 
 	     * \brief Affectation is not a compile time instruction, so this function will just throw an ExternalError
@@ -146,6 +148,16 @@ namespace semantic {
 	     * \brief Return a funcptr on the prototype
 	     */
 	    generator::Generator executeFrameProto (const generator::Generator & proto);
+
+	    /**
+	     * \brief execute a range value (validate the content of the range value)
+	     */
+	    generator::Generator executeRangeValue (const generator::RangeValue & proto);
+
+	    /**
+	     * \brief execute a slice concat value (validate the content of the slice value)
+	     */	    
+	    generator::Generator executeSliceConcat (const generator::SliceConcat & slc);
 	    
 	};
 	
