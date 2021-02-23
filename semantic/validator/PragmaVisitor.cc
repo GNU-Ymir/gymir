@@ -403,7 +403,7 @@ namespace semantic {
 	    std::vector <Generator> params;
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    auto dot_visit = DotVisitor::init (this-> _context);
-	    for (auto & field : cl.to <generator::Class> ().getLocalFields ()) {			
+	    for (auto & field : cl.to <generator::Class> ().getFields ()) {			
 		auto name = field.to <generator::VarDecl> ().getName ();
 		auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
 		if (!field_access.isEmpty ()) {
@@ -471,7 +471,7 @@ namespace semantic {
 		std::vector <Generator> params;
 		std::list <Ymir::Error::ErrorMsg> errors;
 		auto dot_visit = DotVisitor::init (this-> _context);
-		for (auto & field : cl.to <generator::Class> ().getFields ()) {			
+		for (auto & field : cl.to <generator::Class> ().getLocalFields ()) {			
 		    auto name = field.to <generator::VarDecl> ().getName ();
 		    auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
 		    if (!field_access.isEmpty ()) {
