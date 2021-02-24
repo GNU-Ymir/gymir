@@ -300,7 +300,7 @@ namespace semantic {
 		    
 	    if (!mod.isEmpty ()) {
 		mod.getUsed (name, ret);
-	    }
+	    } 
 	}
 	
 	Symbol::mergeEqSymbols (ret);
@@ -314,17 +314,23 @@ namespace semantic {
     
     void Symbol::getPrivate (const std::string & name, std::vector <Symbol>& ret) const {
 	if (this-> _value == nullptr) return;
+
+	static std::set <std::string> current;
 	
-	this-> _value-> getPrivate (name, ret);
-	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    auto mod = it.second;
-	    if (it.second.isEmpty ()) {
-		mod = getModuleByPath (it.first);
-	    }
+	if (current.find (this-> _value-> getRealName ()) == current.end ()) {	    
+	    current.emplace (this-> _value-> getRealName ());
+	    this-> _value-> getPrivate (name, ret);
+	    for (auto & it : this-> _value-> getUsedSymbols ()) {
+		auto mod = it.second;
+		if (it.second.isEmpty ()) {
+		    mod = getModuleByPath (it.first);
+		}
 	    
-	    if (!mod.isEmpty ()) {
-		mod.getLocal (name, ret);
-	    } 
+		if (!mod.isEmpty ()) {
+		    mod.getLocal (name, ret);
+		} 
+	    }
+	    current.erase (this-> _value-> getRealName ());
 	}
 	
 	Symbol::mergeEqSymbols (ret);
@@ -338,17 +344,22 @@ namespace semantic {
 
     void Symbol::getPublic (const std::string & name, std::vector <Symbol> & ret) const {
 	if (this-> _value == nullptr) return;
-
-	this-> _value-> getPublic (name, ret);
-	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    auto mod = it.second;
-	    if (it.second.isEmpty ()) {
-		mod = getModuleByPath (it.first);
-	    }
+	static std::set <std::string> current;
+	
+	if (current.find (this-> _value-> getRealName ()) == current.end ()) {	    
+	    current.emplace (this-> _value-> getRealName ());
+	    this-> _value-> getPublic (name, ret);
+	    for (auto & it : this-> _value-> getUsedSymbols ()) {
+		auto mod = it.second;
+		if (it.second.isEmpty ()) {
+		    mod = getModuleByPath (it.first);
+		}
 	    
-	    if (!mod.isEmpty () && mod.isPublic ()) {
-		mod.getPublic (name, ret);
-	    }	    
+		if (!mod.isEmpty () && mod.isPublic ()) {
+		    mod.getPublic (name, ret);
+		}
+	    }
+	    current.erase (this-> _value-> getRealName ());
 	}
 	
 	Symbol::mergeEqSymbols (ret);
@@ -364,16 +375,22 @@ namespace semantic {
     void Symbol::getUsed (const std::string & name, std::vector <Symbol> & ret) const {
 	if (this-> _value == nullptr) return;
 
-	this-> _value-> getPublic (name, ret);
-	for (auto & it : this-> _value-> getUsedSymbols ()) {
-	    auto mod = it.second;
-	    if (it.second.isEmpty ()) {
-		mod = getModuleByPath (it.first);
+	static std::set <std::string> current;
+	if (current.find (this-> _value-> getRealName ()) == current.end ()) {
+	    current.emplace (this-> _value-> getRealName ());
+	    this-> _value-> getPublic (name, ret);
+	    for (auto & it : this-> _value-> getUsedSymbols ()) {
+		auto mod = it.second;
+		if (it.second.isEmpty ()) {
+		    mod = getModuleByPath (it.first);
+		}
+	    
+		if (!mod.isEmpty () && mod.isPublic ()) {
+		    mod.getUsed (name, ret);
+		}
 	    }
 	    
-	    if (!mod.isEmpty () && mod.isPublic ()) {
-		mod.getUsed (name, ret);
-	    }
+	    current.erase (this-> _value-> getRealName ());
 	}
 	
 	Symbol::mergeEqSymbols (ret);
