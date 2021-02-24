@@ -504,6 +504,11 @@ namespace semantic {
 	    auto decl = index.to <syntax::VarDecl> ();	    
 	    if (decl.getName ().getStr () != Keys::UNDER)
 		this-> _context.verifyShadow (decl.getName ());
+
+	    if (!decl.getType ().isEmpty ()) {
+		auto iterType = this-> _context.validateType (decl.getType ());
+		this-> _context.verifyMemoryOwner (decl.getType ().getLocation (), iterType, l, true);
+	    }
 	    
 	    if (decl.getDecorators ().size () != 0) {
 		auto deco = decl.getDecorators ()[0];
