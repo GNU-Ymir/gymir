@@ -2247,7 +2247,8 @@ namespace semantic {
 	    Generator catchAction (Generator::empty ());	    
 	    if (!block.getCatcher ().isEmpty ()) {
 		try {
-		    validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type, ret.getThrowers ());
+		    if (errors.size () == 0 || ret.getThrowers ().size () != 0) 
+			validateCatcher (block.getCatcher (), catchVar, catchInfo, catchAction, type, ret.getThrowers ());
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 

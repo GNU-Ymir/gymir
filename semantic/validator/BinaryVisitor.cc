@@ -25,6 +25,7 @@ namespace semantic {
 	Generator BinaryVisitor::validate (const syntax::Binary & expression) {
 	    bool isAff = false;
 	    auto op = toOperator (expression.getLocation (), isAff);
+
 	    if (isMath (op) && !isAff) {
 		return validateMathOperation (op, expression);
 	    } else if (isLogical (op) && !isAff) {
@@ -1064,8 +1065,14 @@ namespace semantic {
 	    }
 
 	    auto right = this-> _context.validateValue (expression.getRight ());
-	    if (!right.to <Value> ().getType ().is<ClassPtr> ())
-		return Generator::empty ();
+	    if (!right.to <Value> ().getType ().is<ClassPtr> ()) {
+		auto left = this-> _context.validateValue (leftExp);
+		Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
+				    expression.getLocation ().getStr (),
+				    left.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    right.to <Value> ().getType ().to <Type> ().getTypeName ()
+		    );
+	    }
 
 	    auto templ = syntax::Binary::init (
 		lexing::Word::init (loc, Token::DOT),
