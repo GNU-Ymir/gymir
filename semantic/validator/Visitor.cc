@@ -362,7 +362,7 @@ namespace semantic {
 		if (Visitor::__TEMPLATE_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 		    // list.errors.push_back (format ("     : %(B)", "..."));
 		    // list.errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		} else if (Visitor::__TEMPLATE_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive () || Visitor::__LAST__) {
+		} else if (Visitor::__TEMPLATE_NB_RECURS__ <  2 || global::State::instance ().isVerboseActive () || Visitor::__LAST_TEMPLATE__) {
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", content.getLocation (), content.prettyString ()));
 		    list.errors.insert (list.errors.begin (), Ymir::Error::createNote (content.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
 		    Visitor::__LAST_TEMPLATE__ = true;
@@ -4059,7 +4059,7 @@ namespace semantic {
 
 	// I hate the error handling of this function,
 	// TODO refactor all that an factorise it, the errors seem to be handled the same for multsym and simple value
-	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) { 
+	Generator Visitor::validateTemplateCall (const syntax::TemplateCall & tcl) {	    
 	    auto value = this-> validateValue (tcl.getContent (), false, true);
 
 	    std::list <Ymir::Error::ErrorMsg> errors;
@@ -4096,84 +4096,12 @@ namespace semantic {
 	    
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
-
+	    
 	    if (value.is <TemplateRef> ()) {
-		Generator ret (Generator::empty ());
-		Visitor::__CALL_NB_RECURS__ += 1;
-		
-		try {
-		    int score = -1;
-		    auto templateVisitor = TemplateVisitor::init (*this);
-		    auto sym = templateVisitor.validateFromExplicit (value.to <TemplateRef> (), params, score);
-		    if (!sym.isEmpty ()) {
-			this-> validateTemplateSymbol (sym, value);
-			ret = this-> validateMultSym (value.getLocation (), {sym});
-		    } 		    
-		} catch (Error::ErrorList list) {
-		    
-		    static std::list <Error::ErrorMsg> __last_error__;
-		    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
-			list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-		    } else if ((Visitor::__CALL_NB_RECURS__ == 1 || global::State::instance ().isVerboseActive ()) && !Visitor::__LAST__) {
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", value.getLocation (), value.prettyString ()));
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
-			Visitor::__LAST__ = true;
-
-			std::vector<std::string> names;
-			for (auto & it : params)
-			    names.push_back (it.prettyString ());
-
-			std::string leftName = value.getLocation ().getStr ();
-			list.errors = {Ymir::Error::makeOccurAndNote (
-				tcl.getLocation (),
-				list.errors,
-				ExternalError::get (UNDEFINED_TEMPLATE_OP),
-				leftName,
-				names
-				)};
-			
-			__last_error__ = {};
-		    } else if (Visitor::__LAST__) {
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", value.getLocation (), value.prettyString ()));
-			list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
-			
-			Visitor::__LAST__ = false;
-			std::vector<std::string> names;
-			for (auto & it : params)
-			    names.push_back (it.prettyString ());
-
-			std::string leftName = value.getLocation ().getStr ();				
-			list.errors = {
-			    Ymir::Error::makeOccurAndNote (
-				tcl.getLocation (),
-				list.errors,
-				ExternalError::get (UNDEFINED_TEMPLATE_OP),
-				leftName,
-				names
-				)
-			};			    
-			__last_error__ = list.errors;
-		    } else {
-			if (__last_error__.size () != 0)
-			    list.errors = __last_error__;
-		    }
-		    
-
-		    errors = list.errors;			
-		}
-		
-		Visitor::__CALL_NB_RECURS__ -= 1;
-		
-		if (ret.isEmpty () && errors.size () == 0) {
-		    println (value.prettyString ());
-		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-		}
-
-		if (errors.size () == 0) {
-		    return ret;
-		}		
-	    } else if (value.is<MultSym> ()) {
+		value = MultSym::init (value.getLocation (), {value});
+	    }
+	    
+	    if (value.is<MultSym> ()) {
 		int all_score = -1; 
 		Symbol final_sym (Symbol::empty ());
 		std::map <int, std::vector <Symbol>> loc_scores;
@@ -4209,7 +4137,6 @@ namespace semantic {
 			}
 		    }
 		}
-
 		
 		if (loc_scores.size () != 0) {
 		    errors = {};
@@ -4250,10 +4177,10 @@ namespace semantic {
 			    if (Visitor::__CALL_NB_RECURS__ == 2 && !global::State::instance ().isVerboseActive ()) {
 				list.errors.insert (list.errors.begin (), format ("     : %(B)", "..."));
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
-			    } else if ((Visitor::__CALL_NB_RECURS__ < 2 || global::State::instance ().isVerboseActive ()) && !Visitor::__LAST__) {
+			    } else if ((Visitor::__CALL_NB_RECURS__ < 2 || global::State::instance ().isVerboseActive ()) && !Visitor::__LAST_TEMPLATE__) {
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
-				Visitor::__LAST__ = true;
+				Visitor::__LAST_TEMPLATE__ = true;
 
 				std::vector<std::string> names;
 				for (auto & it : params)
@@ -4269,11 +4196,11 @@ namespace semantic {
 					)};
 				
 				__last_error__ = {};
-			    } else if (Visitor::__LAST__) {
+			    } else if (Visitor::__LAST_TEMPLATE__) {
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNoteOneLine ("% -> %", element_on_scores [it].getName (), element_on_scores [it].getRealName ()));
 				list.errors.insert (list.errors.begin (), Ymir::Error::createNote (tcl.getLocation (), ExternalError::get (IN_TEMPLATE_DEF)));
 				
-				Visitor::__LAST__ = false;
+				Visitor::__LAST_TEMPLATE__ = false;
 				std::vector<std::string> names;
 				for (auto & it : params)
 				    names.push_back (it.prettyString ());
@@ -4316,6 +4243,19 @@ namespace semantic {
 			    return ret;
 		    }
 		    
+		} else {
+		    std::vector<std::string> names;
+		    for (auto & it : params)
+			names.push_back (it.prettyString ());
+		    
+		    std::string leftName = value.getLocation ().getStr ();
+		    Ymir::Error::occurAndNote (
+			tcl.getLocation (),
+			errors,
+			ExternalError::get (UNDEFINED_TEMPLATE_OP),
+			leftName,
+			names
+			);   
 		}
 	    }
 	    	    
@@ -5764,6 +5704,23 @@ namespace semantic {
 
 	void Visitor::verifySameType (const Generator & left, const Generator & right) {	    
 	    if (!left.equals (right)) {		
+		if (left.getLocation ().getLine () == right.getLocation ().getLine () && left.getLocation ().getColumn () == right.getLocation ().getColumn ()) 
+		    Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					left.to<Type> ().getTypeName (),
+					right.to <Type> ().getTypeName ()
+		    );
+		else {
+		    auto note = Ymir::Error::createNote (right.getLocation ());
+		    Ymir::Error::occurAndNote (left.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
+					       left.to<Type> ().getTypeName (),
+					       right.to <Type> ().getTypeName ()
+		    );
+		}
+	    }
+	}
+	
+	void Visitor::verifyCompleteSameType (const Generator & left, const Generator & right) {	    
+	    if (!left.to <Type> ().completeEquals (right)) {		
 		if (left.getLocation ().getLine () == right.getLocation ().getLine () && left.getLocation ().getColumn () == right.getLocation ().getColumn ()) 
 		    Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 					left.to<Type> ().getTypeName (),

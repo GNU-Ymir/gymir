@@ -1202,9 +1202,14 @@ namespace semantic {
 		if (left.equals (type))
 		    score = Scores::SCORE_TYPE;
 		else score = Scores::SCORE_VAR;
-	    } else 
-		this-> _context.verifySameType (left, type);
-			    
+	    } else  {
+		if (!left.to <Type> ().getProxy ().isEmpty ()) {
+		    this-> _context.verifyCompleteSameType (left, type);
+		} else {
+		    this-> _context.verifySameType (left, type);
+		}
+	    }
+	    
 	    Mapper mapper (true, score);
 	    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    

@@ -786,6 +786,13 @@ namespace semantic {
 	     * \param rigth a type
 	     */
 	    void verifySameType (const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \brief Throw an exception if left.equals (right) is false
+	     * \param left a type
+	     * \param rigth a type
+	     */
+	    void verifyCompleteSameType (const generator::Generator & left, const generator::Generator & right);
 	    
 	    /**
 	     * \brief Verify that the class cl implement the trait tr
