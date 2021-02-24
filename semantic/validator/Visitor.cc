@@ -307,7 +307,8 @@ namespace semantic {
 			Visitor::__LAST_TEMPLATE__ = false;
 			__last_error__ = list.errors;
 		    } else {
-			list.errors = __last_error__;
+			if (__last_error__.size () != 0)
+			    list.errors = __last_error__;
 		    }
 		    
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -370,7 +371,8 @@ namespace semantic {
 		    Visitor::__LAST_TEMPLATE__ = false;
 		    __last_error__ = list.errors;
 		} else {
-		    list.errors = __last_error__;
+		    if (__last_error__.size () != 0)
+			list.errors = __last_error__;
 		}
 		
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -4153,16 +4155,20 @@ namespace semantic {
 			};			    
 			__last_error__ = list.errors;
 		    } else {
-			list.errors = __last_error__;
+			if (__last_error__.size () != 0)
+			    list.errors = __last_error__;
 		    }
-			    
+		    
+
 		    errors = list.errors;			
 		}
 		
 		Visitor::__CALL_NB_RECURS__ -= 1;
 		
-		if (ret.isEmpty () && errors.size () == 0)
+		if (ret.isEmpty () && errors.size () == 0) {
+		    println (value.prettyString ());
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		}
 
 		if (errors.size () == 0) {
 		    return ret;
@@ -4284,7 +4290,8 @@ namespace semantic {
 				};				
 				__last_error__ = list.errors;
 			    } else {
-				list.errors = __last_error__;
+				if (__last_error__.size () != 0)
+				    list.errors = __last_error__;
 			    }
 			    
 			    errors = list.errors;

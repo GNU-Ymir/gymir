@@ -122,7 +122,8 @@ namespace semantic {
 			    Visitor::__LAST__ = false;
 			     __last_error__ = list.errors;
 			} else {
-			    list.errors = __last_error__;
+			    if (__last_error__.size () != 0)
+				list.errors = __last_error__;
 			}
 			
 			errors = list.errors;			
@@ -800,7 +801,8 @@ namespace semantic {
 			Visitor::__LAST__ = false;
 			__last_error__ = list.errors;
 		    } else {
-			list.errors = __last_error__;
+			if (__last_error__.size () != 0)
+			    list.errors = __last_error__;
 		    }
 
 		    errors = list.errors;		    
