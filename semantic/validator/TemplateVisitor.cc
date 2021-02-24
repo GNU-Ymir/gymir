@@ -640,11 +640,12 @@ namespace semantic {
 			    }
 			    
 			    return mapper;
-			} else {
+			} else if (type.is <Void> ()) {			    
+			    return Mapper (true, 0);
+			} else {			    
 			    Ymir::Error::occur (leftT.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 						lst.prettyString (),
 						type.to<Type> ().getTypeName ());
-
 			}
 		    }
 		) else of (syntax::ArrayAlloc, arr, {
@@ -1071,6 +1072,8 @@ namespace semantic {
 			    mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 			    mapper.score += Scores::SCORE_TYPE;
 			    return mapper;
+			} else if (type.is<Void> ()) {
+			    return Mapper (true, 0);
 			} else {
 			    Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 						lst.prettyString (), 

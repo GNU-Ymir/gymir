@@ -5703,7 +5703,7 @@ namespace semantic {
 	}
 
 	void Visitor::verifySameType (const Generator & left, const Generator & right) {	    
-	    if (!left.equals (right)) {		
+	    if (!left.equals (right)) {
 		if (left.getLocation ().getLine () == right.getLocation ().getLine () && left.getLocation ().getColumn () == right.getLocation ().getColumn ()) 
 		    Ymir::Error::occur (left.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 					left.to<Type> ().getTypeName (),
