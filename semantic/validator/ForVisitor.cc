@@ -520,7 +520,6 @@ namespace semantic {
 		long r_i = r.to<Fixed> ().getUI ().u;
 		long s_i = s.to <Fixed> ().getUI ().i;
 		for (long i = l_i;; i += s_i) {
-		    println (i);
 		    if (s_i < 0) {
 			if (isFull) {
 			    if (i < r_i) break;
@@ -645,8 +644,11 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    }
 	    if (loopType.isEmpty ())
-		loopType = Void::init (expression.getLocation ());	    
-	    return Block::init (expression.getLocation (), loopType, innerValues); 	    
+		loopType = Void::init (expression.getLocation ());
+	    
+	    auto test = BoolValue::init (loc, Bool::init (loc), false);
+	    auto bl = Block::init (expression.getLocation (), loopType, innerValues);
+	    return Loop::init (lexing::Word::init (loc, "#_for"), loopType, test, bl, true); 	    
 	}
 	
 	Generator ForVisitor::validateTuple (const syntax::For & expression, const generator::Generator & tuple) {
@@ -775,8 +777,11 @@ namespace semantic {
 		throw Error::ErrorList {errors};
 	    }
 	    if (loopType.isEmpty ())
-		loopType = Void::init (expression.getLocation ());	    
-	    return Block::init (expression.getLocation (), loopType, innerValues); 	    
+		loopType = Void::init (expression.getLocation ());
+	    auto test = BoolValue::init (loc, Bool::init (loc), false);
+	    auto bl = Block::init (expression.getLocation (), loopType, innerValues);
+	    
+	    return Loop::init (lexing::Word::init (loc, "#_for"), loopType, test, bl, true); 	    
 	}
 
 
