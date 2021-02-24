@@ -451,9 +451,16 @@ namespace semantic {
 	MacroVisitor::Mapper MacroVisitor::validateKnownRules (const syntax::Expression & expr, const std::string & content, ulong & current) {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    auto name = expr.to <syntax::Var> ().getName ().getStr ();
-	    if (name == MacroVisitor::__ANY__) {
-		if (current < content.length ()) {
+	    if (name == MacroVisitor::__ANY__ || name == MacroVisitor::__CHAR__) {
+		if (current < content.length () && name == MacroVisitor::__ANY__) {
 		    current += 1;
+		    return Mapper (true, content.substr (current-1, 1));
+		} else if (current < content.length () && name == MacroVisitor::__CHAR__) {
+		    current += 1;
+		    if (content [current - 1] == '\"')
+			return Mapper (true, "\\\"");
+		    else if (content [current - 1] == '\'')
+			return Mapper (true, "\\\'");
 		    return Mapper (true, content.substr (current-1, 1));
 		} else {
 		    ulong line = 0, col = 0, seek = 0;
@@ -939,7 +946,7 @@ namespace semantic {
 	}	
 
 	std::vector <std::string> MacroVisitor::getKnwonRules () {
-	    return {__EXPR__, __IDENT__, __TOKEN__, __ANY__, __WORD__, __INT__, __FLOAT__, __STRING__, __CHAR__};
+	    return {__EXPR__, __IDENT__, __TOKEN__, __ANY__, __WORD__, __CHAR__};
 	}
 	
     }
