@@ -28,6 +28,7 @@
 #include <ymir/semantic/generator/value/Enum.hh>
 #include <ymir/semantic/generator/value/ExitScope.hh>
 #include <ymir/semantic/generator/value/FakeValue.hh>
+#include <ymir/semantic/generator/value/FieldOffset.hh>
 #include <ymir/semantic/generator/value/Fixed.hh>
 #include <ymir/semantic/generator/value/FloatValue.hh>
 #include <ymir/semantic/generator/value/FrameProto.hh>

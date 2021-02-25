@@ -190,6 +190,7 @@ ymir_OBJS = \
 	ymir/generator_StringValue.o \
 	ymir/generator_Struct.o \
 	ymir/generator_Class.o \
+	ymir/generator_FieldOffset.o \
 	ymir/generator_StructAccess.o \
 	ymir/generator_VtableAccess.o \
 	ymir/generator_StructCst.o \

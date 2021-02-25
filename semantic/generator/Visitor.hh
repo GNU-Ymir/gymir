@@ -301,6 +301,11 @@ namespace semantic {
 	    generic::Tree generateStructAccess (const StructAccess & acc);
 
 	    /**
+	     * \brief Transform a field offset into gimple
+	     */
+	    generic::Tree generateFieldOffset (const FieldOffset & f);
+	    
+	    /**
 	     * \brief Transform a vtable access into gimple
 	     */	    
 	    generic::Tree generateVtableAccess (const VtableAccess & acc);

@@ -2,6 +2,7 @@
 #include <ymir/semantic/validator/BinaryVisitor.hh>
 #include <ymir/semantic/validator/UnaryVisitor.hh>
 #include <ymir/semantic/validator/DotVisitor.hh>
+#include <ymir/semantic/validator/UtfVisitor.hh>
 #include <ymir/semantic/generator/Mangler.hh>
 #include <ymir/errors/_.hh>
 
@@ -16,11 +17,15 @@ namespace semantic {
 	const std::string PragmaVisitor::COMPILE = "compile";
 	const std::string PragmaVisitor::MANGLE = "mangle";
 	const std::string PragmaVisitor::OPERATOR = "operator";
+	
 	const std::string PragmaVisitor::FIELD_NAMES = "field_names";
-	const std::string PragmaVisitor::FIELD_ADDRESS = "field_addrs";
+	const std::string PragmaVisitor::FIELD_OFFSETS = "field_offsets";
+	const std::string PragmaVisitor::HAS_DEFAULT = "field_has_value";
+	const std::string PragmaVisitor::DEFAULT_VALUE = "field_value";
+	const std::string PragmaVisitor::FIELD_TYPE = "field_type";
+	
 	const std::string PragmaVisitor::TUPLEOF = "tupleof";
 	const std::string PragmaVisitor::LOCAL_TUPLEOF = "local_tupleof";
-	const std::string PragmaVisitor::HAS_DEFAULT = "has_default";
 	
 	PragmaVisitor::PragmaVisitor (Visitor & context) :
 	    _context (context)
@@ -39,14 +44,18 @@ namespace semantic {
 		return this-> validateOperator (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::FIELD_NAMES) {
 		return this-> validateFieldNames (prg);
-	    } else if (prg.getLocation ().getStr () == PragmaVisitor::FIELD_ADDRESS) {
-		return this-> validateFieldAddress (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::TUPLEOF) {
 		return this-> validateTupleOf (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::LOCAL_TUPLEOF) {
 		return this-> validateLocalTupleOf (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::HAS_DEFAULT) {
 		return this-> validateHasDefault (prg);
+	    } else if (prg.getLocation ().getStr () == PragmaVisitor::DEFAULT_VALUE) {
+		return this-> validateDefaultValue (prg);
+	    } else if (prg.getLocation ().getStr () == PragmaVisitor::FIELD_OFFSETS) {
+		return this-> validateFieldOffsets (prg);
+	    } else if (prg.getLocation ().getStr () == PragmaVisitor::FIELD_TYPE) {
+		return this-> validateFieldType (prg);
 	    } else {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNKOWN_PRAGMA), prg.getLocation ().getStr ());
 	    }
@@ -257,93 +266,46 @@ namespace semantic {
 	    return ArrayValue::init (expression.getLocation (), arrType, params);
 	}
 
-	
 	/**
 	 * ========================================================
-	 *                       FIELD ADDRESS
+	 *                       FIELD OFFSETS
 	 * ========================================================
 	 */
 
-	Generator PragmaVisitor::validateFieldAddress (const syntax::Pragma & prg) {
+	Generator PragmaVisitor::validateFieldOffsets (const syntax::Pragma & prg) {
 	    if (prg.getContent ().size () != 1) {		    
 		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
 	    }
 
-	    auto value = this-> _context.validateValue (prg.getContent ()[0]);
-	    match (value.to <Value> ().getType ()) {
-		of (StructRef, str ATTRIBUTE_UNUSED, return validateStructFieldAddress (prg, value));
-		of (ClassPtr, cptr ATTRIBUTE_UNUSED, return validateClassFieldAddress (prg, value));
-		of (ClassRef, cref ATTRIBUTE_UNUSED, return validateClassFieldAddress (prg, value));
+	    auto type = this-> _context.validateType (prg.getContent ()[0]);
+	    match (type) {
+		of (generator::Struct, str, return validateStructFieldOffsets (prg, str));
+		of (generator::StructRef, sref, return validateStructFieldOffsets (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ()));
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
-	    return Generator::empty ();
+	    return Generator::empty ();	    
 	}
 
-	Generator PragmaVisitor::validateStructFieldAddress (const syntax::Pragma & expression, const Generator & value) {
-	    auto & t = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ();
-	    auto & fields = t.to <generator::Struct> ().getFields ();
-	    std::vector <Generator> types;
+	
+	Generator PragmaVisitor::validateStructFieldOffsets (const syntax::Pragma & expression, const generator::Struct & str) {
+	    auto & fields = str.getFields ();
 	    std::vector <Generator> params;
 	    std::list <Ymir::Error::ErrorMsg> errors;
-	    for (auto & field : fields) {
-		auto field_type = field.to <generator::VarDecl> ().getVarType ();
-		if (value.to <Value> ().isLvalue () &&
-		    value.to <Value> ().getType ().to <Type> ().isMutable () &&
-		    field_type.to <Type> ().isMutable ())
-				
-		    field_type = Type::init (field_type.to <Type> (), true);
-		else
-		    field_type = Type::init (field_type.to <Type> (), false);
-			    
-		auto name = field.to <generator::VarDecl> ().getName ();
-		auto type = Pointer::init (expression.getLocation (), field_type);
-		type = Type::init (type.to <Type> (), field_type.to <Type> ().isMutable ());
-			    
-		auto field_value = StructAccess::init (expression.getLocation (), type, value, name); 
-		params.push_back (Addresser::init (field_value.getLocation (), type, field_value));
-		types.push_back (type);
-	    }
+	    auto type = Integer::init (expression.getLocation (), 0, false);
+	    auto strType = StructRef::init (expression.getLocation (), str.getRef ());
 	    
-	    auto tuple = Tuple::init (expression.getLocation (), types);
-	    tuple = Type::init (tuple.to <Type> (), true);
-		    
-	    return TupleValue::init (expression.getLocation (), tuple, params); 
-	}
-
-	Generator PragmaVisitor::validateClassFieldAddress (const syntax::Pragma & expression, const Generator & value) {
-	    auto cl = value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef ().to <semantic::Class> ().getGenerator ();
-	    bool prv = false, prot = false;
-
-	    if (value.to<Value> ().getType ().is <ClassProxy> ()) {
-		this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassProxy> ().getProxyRef ().getRef (), prv, prot);
-		prv = false;
-	    } else
-		this-> _context.getClassContext (value.to <Value> ().getType ().to <ClassPtr> ().getClassRef ().getRef (), prv, prot);
-		    
-	    std::vector <Generator> types;
-	    std::vector <Generator> params;
-	    std::list <Ymir::Error::ErrorMsg> errors;
-	    auto dot_visit = DotVisitor::init (this-> _context);
-	    for (auto & field : cl.to <generator::Class> ().getLocalFields ()) {			
+	    for (auto & field : fields) {
+		auto field_type = field.to <generator::VarDecl> ().getVarType ();			    
 		auto name = field.to <generator::VarDecl> ().getName ();
-		auto field_access = dot_visit.validateClassFieldAccess (expression.getLocation (), value, name, prv, prot, errors);
-		if (!field_access.isEmpty ()) {
-		    auto field_type = field_access.to <Value> ().getType ();		   		    
-		    auto type = Pointer::init (field_access.getLocation (), field_type);
-		    type = Type::init (type.to <Type> (), field_type.to <Type> ().isMutable ());
-		    
-		    params.push_back (Addresser::init (field_access.getLocation (), type, field_access));
-		    types.push_back (type);
-		}
+			    
+		params.push_back (FieldOffset::init (expression.getLocation (), type, strType, name));
 	    }
 
-	    auto tuple = Tuple::init (expression.getLocation (), types);
-	    tuple = Type::init (tuple.to <Type> (), true);
-		    
-	    return TupleValue::init (expression.getLocation (), tuple, params);
+	    auto arrType = Array::init (expression.getLocation (), type, params.size ());	    
+	    return ArrayValue::init (expression.getLocation (), arrType, params); 
 	}
-
+       
 	/**
 	 * ========================================================
 	 *                       TUPLEOF
@@ -527,6 +489,142 @@ namespace semantic {
 	    auto arrType = Array::init (expression.getLocation (), innerType, params.size ());		    
 	    return ArrayValue::init (expression.getLocation (), arrType, params);
 	}
+
+	/**
+	 * ========================================================
+	 *                       DEFAULT VALUE
+	 * ========================================================
+	 */
+
+	Generator PragmaVisitor::validateDefaultValue (const syntax::Pragma & prg) {
+	    if (prg.getContent ().size () != 2) {
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    }
+	    
+	    auto type = this-> _context.validateType (prg.getContent ()[0]);
+	    auto name = this-> _context.retreiveValue (this-> _context.validateValue (prg.getContent ()[1]));
+	    match (type) {
+		of (generator::Struct, str, return validateStructDefaultValue (prg, str, name));
+		of (generator::StructRef, sref, return validateStructDefaultValue (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name));
+	    }
+
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    return Generator::empty ();	    
+	}
+
+	Generator PragmaVisitor::validateStructDefaultValue (const syntax::Pragma & prg, const generator::Struct & str, const Generator & name_) {
+	    auto name = name_;
+	    if (name.is<Aliaser> ()) name = name.to <Aliaser> ().getWho ();
+	    if (!name.is <StringValue> ()) {
+		auto inner = Char::init (str.getLocation (), 32);
+		auto sliceType = Slice::init (str.getLocation (), inner);
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    name_.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    sliceType.prettyString ()
+		    );
+	    }
+
+	    auto str_content = name.to <StringValue> ().getValue ();
+	    if (name.to <StringValue> ().getType ().to <Type> ().getInners () [0].to <Char> ().getSize () == 32) {
+		str_content = UtfVisitor::utf32_to_utf8 (str_content);
+	    }
+
+	    Ymir::OutBuffer buf;
+	    for (auto i : str_content) {
+		if (i != '\0') buf.write (i);
+	    }
+	    auto str_name = buf.str ();
+	    auto & fields = str.getFields ();
+	    
+	    for (auto & field : fields) {
+		if (field.to <generator::VarDecl> ().getName () == str_name) {
+		    if (field.to <generator::VarDecl> ().getVarValue ().isEmpty ()) {
+			auto note = Ymir::Error::createNote (prg.getLocation ());
+			Ymir::Error::occurAndNote (name_.getLocation (), note, ExternalError::get (FIELD_NO_DEFAULT), name_.prettyString (), str.prettyString ());
+		    } else {
+			return field.to <generator::VarDecl> ().getVarValue ();
+		    }
+		}
+	    }
+	    
+	    auto note = Ymir::Error::createNote (prg.getLocation ());
+	    	    
+	    Ymir::Error::occurAndNote (
+		name_.getLocation (),
+		note,
+		ExternalError::get (UNDEFINED_FIELD_FOR),
+		str_name,
+		str.prettyString ()
+	    );
+	    
+	    return Generator::empty ();
+	}	
+
+	/**
+	 * ========================================================
+	 *                       FIELD TYPE
+	 * ========================================================
+	 */
+
+	Generator PragmaVisitor::validateFieldType (const syntax::Pragma & prg) {
+	    if (prg.getContent ().size () != 2) {
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    }
+	    
+	    auto type = this-> _context.validateType (prg.getContent ()[0]);
+	    auto name = this-> _context.retreiveValue (this-> _context.validateValue (prg.getContent ()[1]));
+	    match (type) {
+		of (generator::Struct, str, return validateStructFieldType (prg, str, name));
+		of (generator::StructRef, sref, return validateStructFieldType (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name));
+	    }
+
+	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    return Generator::empty ();	    
+	}
+
+	Generator PragmaVisitor::validateStructFieldType (const syntax::Pragma & prg, const generator::Struct & str, const Generator & name_) {
+	    auto name = name_;
+	    if (name.is<Aliaser> ()) name = name.to <Aliaser> ().getWho ();
+	    if (!name.is <StringValue> ()) {
+		auto inner = Char::init (str.getLocation (), 32);
+		auto sliceType = Slice::init (str.getLocation (), inner);
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+				    name_.to <Value> ().getType ().to <Type> ().getTypeName (),
+				    sliceType.prettyString ()
+		    );
+	    }
+
+	    auto str_content = name.to <StringValue> ().getValue ();
+	    if (name.to <StringValue> ().getType ().to <Type> ().getInners () [0].to <Char> ().getSize () == 32) {
+		str_content = UtfVisitor::utf32_to_utf8 (str_content);
+	    }
+
+	    Ymir::OutBuffer buf;
+	    for (auto i : str_content) {
+		if (i != '\0') buf.write (i);
+	    }
+	    
+	    auto str_name = buf.str ();
+	    auto & fields = str.getFields ();
+	    
+	    for (auto & field : fields) {
+		if (field.to <generator::VarDecl> ().getName () == str_name) {
+		    return field.to <generator::VarDecl> ().getVarType ();		
+		}
+	    }
+	    
+	    auto note = Ymir::Error::createNote (prg.getLocation ());	    	    
+	    Ymir::Error::occurAndNote (
+		name_.getLocation (),
+		note,
+		ExternalError::get (UNDEFINED_FIELD_FOR),
+		str_name,
+		str.prettyString ()
+	    );
+	    
+	    return Generator::empty ();
+	}	
+
 	
     }
 

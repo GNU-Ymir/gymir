@@ -17,11 +17,15 @@ namespace semantic {
 	    static const std::string COMPILE;
 	    static const std::string MANGLE;
 	    static const std::string OPERATOR;
+	    
 	    static const std::string FIELD_NAMES;
-	    static const std::string FIELD_ADDRESS;
+	    static const std::string FIELD_OFFSETS;
+	    static const std::string FIELD_TYPE;
+	    
 	    static const std::string TUPLEOF;
 	    static const std::string LOCAL_TUPLEOF;
 	    static const std::string HAS_DEFAULT;
+	    static const std::string DEFAULT_VALUE;
 
 	    Visitor & _context;
 
@@ -79,7 +83,18 @@ namespace semantic {
 	    generator::Generator validateHasDefault (const syntax::Pragma & prg);
 
 	    generator::Generator validateStructHasDefault (const syntax::Pragma & prg, const generator::Struct & str);
-	    
+
+	    generator::Generator validateDefaultValue (const syntax::Pragma & prg);
+
+	    generator::Generator validateStructDefaultValue (const syntax::Pragma & prg, const generator::Struct & str, const generator::Generator & name);
+
+	    generator::Generator validateFieldType (const syntax::Pragma & prg);
+
+	    generator::Generator validateStructFieldType (const syntax::Pragma & prg, const generator::Struct & str, const generator::Generator & name);
+
+	    generator::Generator validateFieldOffsets (const syntax::Pragma & prg);
+
+	    generator::Generator validateStructFieldOffsets (const syntax::Pragma & prg, const generator::Struct & str);	    
 
 	};
 

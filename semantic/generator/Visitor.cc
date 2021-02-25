@@ -258,8 +258,7 @@ namespace semantic {
 		auto type = // Tree::pointerType (
 		    Tree::tupleType (fields, inner);
 		    //);
-		current.erase (ref.prettyString ());
-		type.getFieldOffsets (ref.getLocation ());
+		current.erase (ref.prettyString ());		
 		return type;
 	    } else return // Tree::pointerType (
 		       Tree::voidType ()//);
@@ -734,239 +733,243 @@ namespace semantic {
 	    match (gen) {
 		of (Block, block,
 		    return generateBlock (block);
-		)
+		    );
 
-		else of (Set, set,
+		of (Set, set,
 		    return generateSet (set);
-		)
+		    );
 		
-		else of (Fixed, fixed,
+		of (Fixed, fixed,
 		    return generateFixed (fixed);
-		)
+		    );
 
-		else of (BoolValue, b,
+		of (BoolValue, b,
 		    return generateBool (b);
-		)
+		    );
 
-		else of (FloatValue, f,
+		of (FloatValue, f,
 		    return generateFloat (f);
-		)
+		    );
 
-		else of (CharValue, c,
+		of (CharValue, c,
 		    return generateChar (c);
-		)
+		    );
 		
-		else of (Affect, aff,
+		of (Affect, aff,
 		    return generateAffect (aff);
-		)
+		    );
 		
-		else of (BinaryInt, i,
+		of (BinaryInt, i,
 		    return generateBinaryInt (i);
-		)
+		    );
 
-		else of (BinaryBool, b,
+		of (BinaryBool, b,
 		    return generateBinaryBool (b);
-		)
+		    );
 
-		else of (BinaryFloat, f,
+		of (BinaryFloat, f,
 		    return generateBinaryFloat (f);
-		)
+		    );
 			 
-		else of (BinaryChar, ch,
+		of (BinaryChar, ch,
 		    return generateBinaryChar (ch);
-		)
+		    );
 			 
-		else of (BinaryPtr, ptr,
+		of (BinaryPtr, ptr,
 		    return generateBinaryPtr (ptr);
-		)
+		    );
 			 
-		else of (VarRef, var,
+		of (VarRef, var,
 		    return generateVarRef (var);
-		)
+		    );
 
-		else of (VarDecl, decl,
+		of (VarDecl, decl,
 		    return generateVarDecl (decl);
-		)
+		    );
 
-		else of (Referencer, _ref,
+		of (Referencer, _ref,
 		    return generateReferencer (_ref);
-		)
+		    );
 
-		else of (Addresser, addr,
+		of (Addresser, addr,
 		    return generateAddresser (addr);
-		)
+		    );
 
-		else of (Conditional, cond,
+		of (Conditional, cond,
 		    return generateConditional (cond);
-		)
+		    );
 
-		else of (Loop, loop,
+		of (Loop, loop,
 		    return generateLoop (loop);
-		)
+		    );
 
-		else of (Break, br,
+		of (Break, br,
 		    return generateBreak (br);
-		)
+		    );
 		
-		else of (ArrayValue, val,
+		of (ArrayValue, val,
 		    return generateArrayValue (val);
-		)
+		    );
 
-		else of (Copier, copy,
+		of (Copier, copy,
 		    return generateCopier (copy);
-		)
+		    );
 
-		else of (SizeOf, size,
+		of (SizeOf, size,
 		    return generateSizeOf (size);
-		)
+		    );
 			 
-		else of (Aliaser, al,
+		of (Aliaser, al,
 		    return generateAliaser (al);
-		)
+		    );
 
-		else of (None, none ATTRIBUTE_UNUSED,
+		of (None, none ATTRIBUTE_UNUSED,
 		    return Tree::empty ();
-		)
+		    );
 
-		else of (ArrayAccess, access,
+		of (ArrayAccess, access,
 		    return generateArrayAccess (access);
-		)
+		    );
 
-		else of (SliceAccess, access,
+		of (SliceAccess, access,
 		    return generateSliceAccess (access);
-		)
+		    );
 		
-                else of (SliceConcat, sc,
+                of (SliceConcat, sc,
 		    return generateSliceConcat (sc);
-		)
+		    );
 			     
-		else of (UnaryBool, ub,
+		of (UnaryBool, ub,
 		    return generateUnaryBool (ub);
-		)
+		    );
 
-		else of (UnaryInt, ui,
+		of (UnaryInt, ui,
 		    return generateUnaryInt (ui);
-		)
+		    );
 
-		else of (UnaryFloat, uf,
+		of (UnaryFloat, uf,
 		    return generateUnaryFloat (uf);
-		)
+		    );
 
-		else of (UnaryPointer, uf,
+		of (UnaryPointer, uf,
 		    return generateUnaryPointer (uf);
-		)
+		    );
 
-		else of (TupleValue, tu,
+		of (TupleValue, tu,
 		    return generateTupleValue (tu);
-		)
+		    );
 
-		else of (StringValue, str,
-		     return generateStringValue (str);
-		)
+		of (StringValue, str,
+		    return generateStringValue (str);
+		    );
 			 
-		else of (Call, cl,
+		of (Call, cl,
 		    return generateCall (cl);		
-		)
+		    );
 			 
-		else of (ClassCst, cs,
+		of (ClassCst, cs,
 		    return generateClassCst (cs);
-		)
+		    );
 			 
-		else of (FrameProto, pr,
+		of (FrameProto, pr,
 		    return generateFrameProto (pr);		
-		)
+		    );
 
-		else of (ConstructorProto, pr,
+		of (ConstructorProto, pr,
 		    return generateConstructorProto (pr);
-		)
+		    );
 
-		else of (TupleAccess, acc,
+		of (TupleAccess, acc,
 		    return generateTupleAccess (acc);		
-		)
+		    );
 
-		else of (StructAccess, acc,
-		   return generateStructAccess (acc);					 
-		)
+		of (StructAccess, acc,
+		    return generateStructAccess (acc);					 
+		    );
 
-		else of (StructCst, cst,
+		of (FieldOffset, off,
+		    return generateFieldOffset (off);
+		    );
+
+		of (StructCst, cst,
 		    return generateStructCst (cst);	       
-		)
+		    );
 
-		else of (UnionCst, cst,
+		of (UnionCst, cst,
 		    return generateUnionCst (cst);	       
-		)
+		    );
 
-		else of (StructRef, rf ATTRIBUTE_UNUSED,
+		of (StructRef, rf ATTRIBUTE_UNUSED,
 		    return Tree::empty ();
-		)
+		    );
 
-		else of (Return, rt,
+		of (Return, rt,
 		    return generateReturn (rt);
-		)
+		    );
 
-		else of (RangeValue, rg,
+		of (RangeValue, rg,
 		    return generateRangeValue (rg);
-		)
+		    );
 
-		else of (SliceValue, sl,
+		of (SliceValue, sl,
 		    return generateSliceValue (sl);
-		)
+		    );
 			 
-		else of (DelegateValue, dg,
+		of (DelegateValue, dg,
 		    return generateDelegateValue (dg);
-		)
+		    );
 			 
-		else of (Cast, cast,
+		of (Cast, cast,
 		    return generateCast (cast);
-		)
+		    );
 
-		else of (AtomicLocker, lock,
+		of (AtomicLocker, lock,
 		    return generateAtomicLocker (lock);
-		)
+		    );
 
-		else of (AtomicUnlocker, lock,
+		of (AtomicUnlocker, lock,
 		    return generateAtomicUnlocker (lock);
-		)
+		    );
 			 
-		else of (ArrayAlloc, alloc,
+		of (ArrayAlloc, alloc,
 		    return generateArrayAlloc (alloc);
-		)
+		    );
 
-		else of (NullValue, nl,
+		of (NullValue, nl,
 		    return generateNullValue (nl);
-		)
+		    );
 
-		else of (UniqValue, uv,
-		     return generateUniqValue (uv);
-		)
+		of (UniqValue, uv,
+		    return generateUniqValue (uv);
+		    );
 
-		else of (Throw, th,
+		of (Throw, th,
 		    return generateThrow (th);
-		)
+		    );
 
-		else of (ExitScope, ex,
+		of (ExitScope, ex,
 		    return generateExitScope (ex);
-		)
+		    );
 
-		else of (SuccessScope, succ,
+		of (SuccessScope, succ,
 		    return generateSuccessScope (succ);
-		)
+		    );
 			 
-		else of (GlobalConstant, cst,
+		of (GlobalConstant, cst,
 		    return generateGlobalConstant (cst);
-		)
+		    );
 
-		else of (VtableAccess, acc,
+		of (VtableAccess, acc,
 		    return generateVtableAccess (acc);
-		)
+		    );
 
-		else of (ThrowBlock, bl,
+		of (ThrowBlock, bl,
 		    return generateThrowBlock (bl);
-		)
+		    );
 
-	        else of (OptionValue, vl,
+	        of (OptionValue, vl,
 		    return generateOptionValue (vl);
-		);
+		    );
 	    }
 	    
 	    println (gen.prettyString ());
@@ -1006,8 +1009,9 @@ namespace semantic {
 				       binding.bind_expr);
 		return ret;
 	    } else {
-		if (!last.isEmpty ())
+		if (!last.isEmpty ()) {
 		    list.append (generateValue (last));
+		}
 		auto binding = quitBlock (block.getLocation (), list.toTree (), block.getLocation ().toString ());
 		return binding.bind_expr;
 	    }    
@@ -2220,6 +2224,18 @@ namespace semantic {
 	    );
 	}
 
+	generic::Tree Visitor::generateFieldOffset (const FieldOffset & off) {
+	    auto strType = generateType (off.getStruct ());
+	    auto ptrType = Tree::pointerType (strType);
+	    auto null_val = Tree::castTo (off.getLocation (), ptrType, Tree::buildPtrCst (off.getLocation (), 0));
+
+	    auto ptrVoid = Tree::pointerType (Tree::voidType ());
+	    auto sizeType = Tree::intType (0, false);
+	    return Tree::castTo (off.getLocation (),
+				 sizeType,
+				 Tree::buildAddress (off.getLocation (), null_val.buildPointerUnref (0).getField (off.getField ()), ptrVoid));
+	}
+	
 	generic::Tree Visitor::generateVtableAccess (const VtableAccess & acc) {
 	    auto elem = generateValue (acc.getClass ());
 	    // If the type is a class, we need to unref it to access its inner fields

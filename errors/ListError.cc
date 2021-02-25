@@ -36,6 +36,7 @@ namespace Ymir {
 			    EN_NO_VALUE                     = "%(y) was declared in an enumeration, but has no value",
 			    EXTERNAL_VAR_WITH_VALUE         = "global variable %(y) declared external cannot have a value",
 			    FAILURE_NO_THROW                = "failure scope guard will never be triggered",
+			    FIELD_NO_DEFAULT                = "the field %(y) of struct %(y) has no default value",
 			    FORGET_TOKEN                    = "did you forget '%(y)' ?",
 			    FORWARD_REFERENCE_VAR           = "the type cannot be infered, as it depends on a forward reference",
 			    IMMUTABLE_LVALUE		    = "left operand of type %(y) is immutable",
@@ -183,6 +184,6 @@ namespace Ymir {
 			    VOID_VALUE                      = "value cannot be void",
 			    VOID_VAR			    = "cannot declare a var of type void",
 			    WRONG_IMPLEMENT                 = "the method %(y) was declared by trait %(y), not %(y)",
-			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)",
+			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)", 
     );    
 }

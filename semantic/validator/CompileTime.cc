@@ -140,6 +140,7 @@ namespace semantic {
 		    return execute (val.getValue ());
 		);
 	    }
+	    
 	    } catch (Error::ErrorList list) {
 		
 		errors.insert (errors.begin (), list.errors.begin (), list.errors.end ());
@@ -239,6 +240,7 @@ namespace semantic {
 	    case 16 : return USHRT_MAX;
 	    case 32 : return UINT_MAX;
 	    case 64 : return ULONG_MAX;
+	    default : return ULONG_MAX;
 	    }
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return 0;
@@ -250,6 +252,7 @@ namespace semantic {
 	    case 16 : return SHRT_MAX;
 	    case 32 : return INT_MAX;
 	    case 64 : return LONG_MAX;
+	    default : return LONG_MAX;
 	    }
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return 0;
@@ -265,6 +268,7 @@ namespace semantic {
 	    case 16 : return SHRT_MIN;
 	    case 32 : return INT_MIN;
 	    case 64 : return LONG_MIN;
+	    default : return LONG_MIN;
 	    }
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	    return 0;

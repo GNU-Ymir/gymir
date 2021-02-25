@@ -156,9 +156,10 @@ namespace generic {
 	    
 	    tree type = types [i].getTree ();
 	    size += TREE_INT_CST_LOW (TYPE_SIZE_UNIT (type));
+	    
 	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
-	    DECL_CONTEXT (field) = record_type;
-
+	    DECL_FIELD_CONTEXT (field) = record_type;
+	    
 	    if (field_begin == NULL_TREE) field_begin = field;
 	    if (field_last != NULL_TREE) TREE_CHAIN (field_last) = field;
 	    field_last = field;	    
@@ -179,7 +180,9 @@ namespace generic {
 	    TYPE_PACKED (record_type) = 1;
 	    SET_TYPE_ALIGN (record_type, 1 * BITS_PER_UNIT);
 	    compute_record_mode (record_type);	
-	}	  
+	} else {
+	    compute_record_mode (record_type);	
+	}
 
 	return Tree::init (UNKNOWN_LOCATION, record_type);
     }
@@ -198,7 +201,7 @@ namespace generic {
 	    
 	    tree type = common [i].getTree ();
 	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
-	    DECL_CONTEXT (field) = record_type;
+	    DECL_FIELD_CONTEXT (field) = record_type;
 
 	    if (field_begin == NULL_TREE) field_begin = field;
 	    if (field_last != NULL_TREE) TREE_CHAIN (field_last) = field;
@@ -216,7 +219,7 @@ namespace generic {
 	    
 	    tree type = unions [i].getTree ();
 	    tree field = build_decl (BUILTINS_LOCATION, FIELD_DECL, ident, type);
-	    DECL_CONTEXT (field) = record_type;
+	    DECL_FIELD_CONTEXT (field) = record_type;
 	    if (i == 0) offset = DECL_FIELD_OFFSET (field);
 	    else DECL_FIELD_OFFSET (field) = offset;
 
@@ -837,23 +840,6 @@ namespace generic {
 	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
 	return TREE_INT_CST_LOW (TYPE_SIZE_UNIT (this-> _t));
     }    
-
-    Tree Tree::getFieldOffsets (const lexing::Word & loc) const {
-	tree type = this-> _t;
-	if (this-> getTreeCode () != RECORD_TYPE && this-> getTreeCode () != UNION_TYPE) {
-	    type = TREE_TYPE (this-> _t);
-	}
-	
-	std::vector<Tree> params;
-	tree field_decl = TYPE_FIELDS (type);
-	while (field_decl != NULL_TREE) {;
-	    uint offset = TREE_INT_CST_LOW (DECL_FIELD_BIT_OFFSET (field_decl));
-	    params.push_back (Tree::buildSizeCst (offset));
-	    field_decl = TREE_CHAIN (field_decl);
-	}
-	auto arr_type = Tree::staticArray (Tree::sizeType (), params.size ());
-	return Tree::constructIndexed (loc, arr_type, params);
-    }
     
     Tree Tree::getArraySize () const {
 	auto range = TYPE_DOMAIN (this-> _t);
