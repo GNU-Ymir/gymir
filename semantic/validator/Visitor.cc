@@ -4243,23 +4243,22 @@ namespace semantic {
 			    return ret;
 		    }
 		    
-		} else {
-		    std::vector<std::string> names;
-		    for (auto & it : params)
-			names.push_back (it.prettyString ());
-		    
-		    std::string leftName = value.getLocation ().getStr ();
-		    Ymir::Error::occurAndNote (
-			tcl.getLocation (),
-			errors,
-			ExternalError::get (UNDEFINED_TEMPLATE_OP),
-			leftName,
-			names
-			);   
-		}
+		} 
 	    }
-	    	    
-	    throw Error::ErrorList {errors};
+
+	    std::vector<std::string> names;
+	    for (auto & it : params)
+		names.push_back (it.prettyString ());
+		    
+	    std::string leftName = value.getLocation ().getStr ();
+	    Ymir::Error::occurAndNote (
+		tcl.getLocation (),
+		errors,
+		ExternalError::get (UNDEFINED_TEMPLATE_OP),
+		leftName,
+		names
+		);   	    
+	    
 	    return Generator::empty ();	    
 	}
 
