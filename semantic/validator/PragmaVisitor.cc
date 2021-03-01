@@ -100,8 +100,12 @@ namespace semantic {
 	    
 	    if (this-> _context.isInTrusted ()) {
 		auto bl = this-> _context.validateValue (prg.getContent ()[0]);
-		bl.setThrowers ({});
-		return bl;
+		auto jmp_buf_type = this-> _context.validateType (syntax::Var::init (lexing::Word::init (prg.getLocation (), global::CoreNames::get (global::JMP_BUF_TYPE))));	
+		auto ex = ExitScope::init (bl.getLocation (), bl.to <Value> ().getType (), jmp_buf_type, bl, {}, {
+			Panic::init (bl.getLocation ())
+		    }, Generator::empty (), Generator::empty (), Generator::empty ());
+		ex.setThrowers ({});
+		return ex;
 	    } else {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNTRUSTED_CONTEXT));
 	    }

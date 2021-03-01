@@ -947,6 +947,10 @@ namespace semantic {
 		    return generateThrow (th);
 		    );
 
+		of (Panic, pc,
+		    return generatePanic (pc);
+		    );
+		
 		of (ExitScope, ex,
 		    return generateExitScope (ex);
 		    );
@@ -1813,6 +1817,23 @@ namespace semantic {
 	    );
 	}
 
+	generic::Tree Visitor::generatePanic (const Panic & pc) {
+	    auto file = pc.getLocation ().getFilename ();
+	    auto lit = Tree::buildStringLiteral (pc.getLocation (), file.c_str (), file.length () + 1, 8);
+	    auto context = getCurrentContext ().funcDeclName ();
+	    auto func = Tree::buildStringLiteral (pc.getLocation (), context.c_str (), context.length () + 1, 8);
+	    
+	    auto line = Tree::buildIntCst (pc.getLocation (), (ulong) pc.getLocation ().getLine (), Tree::intType (32, false));
+
+	    return Tree::buildCall (
+		pc.getLocation (),
+		Tree::voidType (),
+		global::CoreNames::get (PANIC),
+		{lit, func, line}
+		);
+
+	}
+	
 	generic::Tree Visitor::generateThrowBlock (const ThrowBlock & bl) {
 	    auto lbl = this-> _throwLabels.back ().find (bl.getName ());
 	    

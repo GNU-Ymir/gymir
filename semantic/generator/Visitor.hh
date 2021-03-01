@@ -230,6 +230,11 @@ namespace semantic {
 	    generic::Tree generateThrow (const Throw & thr);
 
 	    /**
+	     * \brief Transform a panic into gimple
+	     */
+	    generic::Tree generatePanic (const Panic & pc);
+	    
+	    /**
 	     * \brief Transform a throw block into gimple
 	     */
 	    generic::Tree generateThrowBlock (const ThrowBlock & thr);

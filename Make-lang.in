@@ -204,6 +204,7 @@ ymir_OBJS = \
 	ymir/generator_TemplateSyntaxWrapper.o \
 	ymir/generator_TemplateSyntaxList.o \
 	ymir/generator_Throw.o \
+	ymir/generator_Panic.o \
 	ymir/generator_ThrowBlock.o \
 	ymir/generator_Tuple.o \
 	ymir/generator_TupleClosure.o \

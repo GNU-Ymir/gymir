@@ -47,6 +47,7 @@ namespace global {
 			    OBJECT_TYPE		     = "Object",
 			    OUT_OF_ARRAY	     = "outOfArray",
 			    OUT_OF_ARRAY_TYPE	     = "OutOfArray",
+			    PANIC                    = "_yrt_exc_panic",
 			    RETHROW		     = "_yrt_exc_rethrow",
 			    RUN_MAIN		     = "_yrt_run_main", 
 			    RUN_MAIN_DEBUG	     = "_yrt_run_main_debug", 

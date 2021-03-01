@@ -53,6 +53,7 @@ namespace global {
 			 OBJECT_TYPE,
 			 OUT_OF_ARRAY,
 			 OUT_OF_ARRAY_TYPE,
+			 PANIC,
 			 RETHROW,
 			 RUN_MAIN,
 			 RUN_MAIN_DEBUG,

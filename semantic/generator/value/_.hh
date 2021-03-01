@@ -79,3 +79,4 @@
 #include <ymir/semantic/generator/value/VarDecl.hh>
 #include <ymir/semantic/generator/value/VarRef.hh>
 #include <ymir/semantic/generator/value/VtableAccess.hh>
+#include <ymir/semantic/generator/value/Panic.hh>
