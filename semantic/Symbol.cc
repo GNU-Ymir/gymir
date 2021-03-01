@@ -70,6 +70,16 @@ namespace semantic {
     bool ISymbol::isWeak () const {
 	return this-> _isWeak;
     }
+
+    void ISymbol::setTrusted () {
+	this-> _isTrusted = true;
+    }
+    
+    bool ISymbol::isTrusted () const {
+	if (this-> _isTrusted) return true;
+	if (this-> getReferent ().isEmpty ()) return false;
+	return this-> getReferent ().isTrusted ();
+    }
     
     void ISymbol::setProtected () {
 	this-> _isPublic = false;
@@ -262,6 +272,26 @@ namespace semantic {
 	    return false;
 	}
     }
+
+    void Symbol::setTrusted () {
+	if (this-> _value != nullptr)
+	    this-> _value-> setTrusted ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	}
+    }
+
+    bool Symbol::isTrusted () const {
+	if (this-> _value != nullptr)
+	    return this-> _value-> isTrusted ();
+	else {
+	    // We cannot use a symbol outside of any scope
+	    Ymir::Error::halt (Ymir::ExternalError::get (Ymir::NULL_PTR));
+	    return false;
+	}
+    }
+
     
     void Symbol::setProtected () {
 	if (this-> _value != nullptr)
@@ -315,10 +345,10 @@ namespace semantic {
     void Symbol::getPrivate (const std::string & name, std::vector <Symbol>& ret) const {
 	if (this-> _value == nullptr) return;
 
-	static std::set <std::string> current;
+	static std::set <std::shared_ptr<ISymbol> > current;
 	
-	if (current.find (this-> _value-> getRealName ()) == current.end ()) {	    
-	    current.emplace (this-> _value-> getRealName ());
+	if (current.find (this-> _value) == current.end ()) {	    
+	    current.emplace (this-> _value);
 	    this-> _value-> getPrivate (name, ret);
 	    for (auto & it : this-> _value-> getUsedSymbols ()) {
 		auto mod = it.second;
@@ -330,7 +360,7 @@ namespace semantic {
 		    mod.getLocal (name, ret);
 		} 
 	    }
-	    current.erase (this-> _value-> getRealName ());
+	    current.erase (this-> _value);
 	}
 	
 	Symbol::mergeEqSymbols (ret);
@@ -344,10 +374,10 @@ namespace semantic {
 
     void Symbol::getPublic (const std::string & name, std::vector <Symbol> & ret) const {
 	if (this-> _value == nullptr) return;
-	static std::set <std::string> current;
+	static std::set <std::shared_ptr <ISymbol> > current;
 	
-	if (current.find (this-> _value-> getRealName ()) == current.end ()) {	    
-	    current.emplace (this-> _value-> getRealName ());
+	if (current.find (this-> _value) == current.end ()) {	    
+	    current.emplace (this-> _value);
 	    this-> _value-> getPublic (name, ret);
 	    for (auto & it : this-> _value-> getUsedSymbols ()) {
 		auto mod = it.second;
@@ -359,7 +389,7 @@ namespace semantic {
 		    mod.getPublic (name, ret);
 		}
 	    }
-	    current.erase (this-> _value-> getRealName ());
+	    current.erase (this-> _value);
 	}
 	
 	Symbol::mergeEqSymbols (ret);
@@ -375,9 +405,9 @@ namespace semantic {
     void Symbol::getUsed (const std::string & name, std::vector <Symbol> & ret) const {
 	if (this-> _value == nullptr) return;
 
-	static std::set <std::string> current;
-	if (current.find (this-> _value-> getRealName ()) == current.end ()) {
-	    current.emplace (this-> _value-> getRealName ());
+	static std::set <std::shared_ptr <ISymbol> > current;
+	if (current.find (this-> _value) == current.end ()) {
+	    current.emplace (this-> _value);
 	    this-> _value-> getPublic (name, ret);
 	    for (auto & it : this-> _value-> getUsedSymbols ()) {
 		auto mod = it.second;
@@ -390,7 +420,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    current.erase (this-> _value-> getRealName ());
+	    current.erase (this-> _value);
 	}
 	
 	Symbol::mergeEqSymbols (ret);

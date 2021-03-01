@@ -915,7 +915,11 @@ namespace semantic {
 	     * \return does the current context include context
 	     */
 	    bool isInContext (const std::string & context);
-	    
+
+	    /**
+	     * Tell if the current context allows trusted declarations
+	     */
+	    bool isInTrusted () const;	    
 	    
 	    /**
 	     * \brief Get the current context for class access

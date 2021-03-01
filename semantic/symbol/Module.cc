@@ -6,12 +6,15 @@ namespace semantic {
 	ISymbol (lexing::Word::eof (), "", false)
     {}
     
-    Module::Module (const lexing::Word & name, const std::string & comments, bool isWeak) :
+    Module::Module (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted) :
 	ISymbol (name, comments, isWeak)	
-    {}
+    {
+	if (isTrusted)
+	    this-> setTrusted ();
+    }
     
-    Symbol Module::init (const lexing::Word & name, const std::string & comments, bool isWeak) {
-	auto ret = Symbol {new (NO_GC) Module (name, comments, isWeak)};
+    Symbol Module::init (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted) {
+	auto ret = Symbol {new (NO_GC) Module (name, comments, isWeak, isTrusted)};
 	ret.to <Module> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }

@@ -36,6 +36,8 @@ namespace semantic {
 	bool _isProtected = false;
 
 	bool _isWeak = false;
+
+	bool _isTrusted = false;
 	
     private :
 		
@@ -132,6 +134,17 @@ namespace semantic {
 	 * \return Does this sym has been validated by template resolution
 	 */
 	bool isWeak () const;
+
+
+	/**
+	 * \brief Can declare trusted declarations
+	 */
+	void setTrusted ();
+
+	/**
+	 * \return true if the symbol can contain trusted declaration without problem
+	 */
+	bool isTrusted () const;
 	
 	/**
 	 * \brief Find a symbol named name, in the scope hierarchy
@@ -328,6 +341,17 @@ namespace semantic {
 	 * Proxy function for symbol
 	 */
 	bool isWeak () const;
+
+
+	/**
+	 * Proxy function for symbol
+	 */
+	void setTrusted ();
+
+	/**
+	 * Proxy function for symbol
+	 */
+	bool isTrusted () const;
 	
 	/**
 	 * Proxy function for symbol

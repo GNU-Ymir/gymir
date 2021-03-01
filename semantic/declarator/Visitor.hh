@@ -39,6 +39,8 @@ namespace semantic {
 	    static std::set <std::string> __imported__;	    
 
 	    bool _isWeak = false;
+
+	    bool _isTrusted = false;
 	    
 	private : 
 
@@ -47,14 +49,14 @@ namespace semantic {
 	     * It is private for homogeneity reason
 	     * We wan't all class to be initialized the same way
 	     */
-	    Visitor (); 
+	    Visitor (bool isTrusted); 
 
 	public :
 	    
 	    /**
 	     * \brief Create an empty visitor
 	     */
-	    static Visitor init ();
+	    static Visitor init (bool isTrusted = false);
 
 	    /**
 	     * \brief Transform a AST into a semantic tree

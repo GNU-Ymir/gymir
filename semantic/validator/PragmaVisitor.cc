@@ -26,16 +26,18 @@ namespace semantic {
 	
 	const std::string PragmaVisitor::TUPLEOF = "tupleof";
 	const std::string PragmaVisitor::LOCAL_TUPLEOF = "local_tupleof";
+	const std::string PragmaVisitor::TRUSTED = "trusted";
+
 	
 	PragmaVisitor::PragmaVisitor (Visitor & context) :
 	    _context (context)
 	{}
 
-	PragmaVisitor PragmaVisitor::init (Visitor & context) {
+	PragmaVisitor PragmaVisitor::init (Visitor & context) {	    
 	    return PragmaVisitor (context);
 	}
 
-	Generator PragmaVisitor::validate (const syntax::Pragma & prg) {	    
+	Generator PragmaVisitor::validate (const syntax::Pragma & prg) {	   	    
 	    if (prg.getLocation ().getStr () == PragmaVisitor::COMPILE) {
 		return this-> validateCompile (prg);	       		
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::MANGLE) {
@@ -56,6 +58,8 @@ namespace semantic {
 		return this-> validateFieldOffsets (prg);
 	    } else if (prg.getLocation ().getStr () == PragmaVisitor::FIELD_TYPE) {
 		return this-> validateFieldType (prg);
+	    } else if (prg.getLocation ().getStr () == PragmaVisitor::TRUSTED) {
+		return this-> validateTrusted (prg);
 	    } else {
 		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNKOWN_PRAGMA), prg.getLocation ().getStr ());
 	    }
@@ -82,6 +86,29 @@ namespace semantic {
 	    }
 	}
 
+	
+	/**
+	 * ========================================================
+	 *                       TRUSTED
+	 * ========================================================
+	 */
+
+	Generator PragmaVisitor::validateTrusted (const syntax::Pragma & prg) {
+	    if (prg.getContent ().size () != 1) {
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
+	    }
+	    
+	    if (this-> _context.isInTrusted ()) {
+		auto bl = this-> _context.validateValue (prg.getContent ()[0]);
+		bl.setThrowers ({});
+		return bl;
+	    } else {
+		Ymir::Error::occur (prg.getLocation (), ExternalError::get (UNTRUSTED_CONTEXT));
+	    }
+	    
+	    return Generator::empty ();
+	}	
+	
 	/**
 	 * ========================================================
 	 *                       MANGLE
@@ -623,7 +650,9 @@ namespace semantic {
 	    );
 	    
 	    return Generator::empty ();
-	}	
+	}
+
+	
 
 	
     }

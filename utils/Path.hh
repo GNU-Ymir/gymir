@@ -43,6 +43,11 @@ namespace Ymir {
 	bool isRelativeFrom (const Path & absolute) const;
 
 	/**
+	 * \return true if path has the same start as begin
+	 */
+	bool startWith (const Path & begin) const;
+	
+	/**
 	 * \return the path without the file 
 	 */
 	Path baseName () const;

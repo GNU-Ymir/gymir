@@ -20,7 +20,7 @@ namespace global {
 
 	std::set <std::string> _includeDir;
 
-	std::string __includeInPrefix__ = "include/ymir/";	
+	std::string __includeInPrefix__ = "include/ymir/";
 	
 	std::string _corePath;
 	
@@ -35,6 +35,8 @@ namespace global {
 	bool _isStandalone = false;
 
 	bool _isDumpDoc = false;
+
+	bool _isTrusted = true;
 	
     private :
 
@@ -88,6 +90,11 @@ namespace global {
 	 * \brief If act, dump the documentation
 	 */
 	void activateDocDumping (bool act);
+
+	/**
+	 * \brief If act, the compiler while compile trusted blocks
+	 */
+	void activeTrusted (bool act);
 	
 	/**
 	 * \brief tell if the debug mode is active (option -g or -ggdb)
@@ -108,6 +115,12 @@ namespace global {
 	 * \return tell if we need to dump the doc
 	 */
 	bool isDocDumpingActive () const;
+
+
+	/**
+	 * \brief False, if the option --no-trusted is activated, true otherwise
+	 */
+	bool isTrustedActive () const;
 	
 	/**
 	 * \brief Set the prefix path dir

@@ -26,13 +26,13 @@ namespace semantic {
 
 	Module ();
 	
-	Module (const lexing::Word & name, const std::string & comments, bool isWeak);
+	Module (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted);
 
 	Module (const Module & mod);
 	
     public :
 
-	static Symbol init (const lexing::Word & name, const std::string & comments, bool isWeak);
+	static Symbol init (const lexing::Word & name, const std::string & comments, bool isWeak, bool isTrusted);
 	
 	void insert (const Symbol & sym) override;
 

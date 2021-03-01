@@ -63,6 +63,17 @@ namespace Ymir {
 	return true;
     }
 
+    bool Path::startWith (const Path & path) const {
+	if (this-> _files.size () < path._files.size ())
+	    return false;
+
+	for (int i = 0 ; i < (int) path._files.size () ; i++) {
+	    if (this-> _files [i] != path._files [i]) return false;
+	}
+	
+	return true;	
+    }
+    
     Path Path::baseName () const {
 	if (this-> _files.size () == 0) return Path (std::vector <std::string> ());
 	else {

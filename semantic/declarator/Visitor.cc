@@ -10,6 +10,7 @@
 
 
 using namespace Ymir;
+using namespace global;
 
 namespace semantic {
 
@@ -17,10 +18,12 @@ namespace semantic {
 
 	std::set <std::string> Visitor::__imported__;
 	
-	Visitor::Visitor () {}
+	Visitor::Visitor (bool isTrusted) :
+	    _isTrusted (false)
+	{}
     
-	Visitor Visitor::init () {
-	    return Visitor ();
+	Visitor Visitor::init (bool isTrusted) {
+	    return Visitor (isTrusted);
 	}
 
 	semantic::Symbol Visitor::visit (const syntax::Declaration ast) {
@@ -103,6 +106,7 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visitModule (const syntax::Module mod) {
 	    auto path = Path {mod.getLocation ().getStr (), "::"};
+	    bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
 	    if (mod.isGlobal ()) {
 		auto file_location = Path {mod.getLocation ().getFilename ()}.stripExtension ();
 		if (path.getFiles ().size () == 0) {
@@ -115,10 +119,10 @@ namespace semantic {
 	    }
 
 
-	    pushReferent (Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak));	    
-	    getReferent ().insert (ModRef::init (mod.getLocation (), mod.getComments (), path.getFiles (), this-> _isWeak));
+	    pushReferent (Module::init (lexing::Word::init (mod.getLocation (), path.fileName ().toString ()), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted));	    
+	    getReferent ().insert (ModRef::init (mod.getLocation (), mod.getComments (), path.getFiles (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone () || isTrusted));
 
-	    if (mod.isGlobal () && !global::State::instance ().isStandalone ()) {
+	    if (mod.isGlobal () && !State::instance ().isStandalone ()) {
 		importAllCoreFiles ();
 	    }
 	    
@@ -127,12 +131,12 @@ namespace semantic {
 	    }
 
 	    auto ret = popReferent ();
-	    auto modules = path.getFiles ();
+	    auto modules = path.getFiles ();	    
 	    
 	    if (mod.isGlobal () && modules.size () > 1) {
 		auto glob = Symbol::getModule (modules [0]);
 		if (glob.isEmpty ()) {
-		    glob = Module::init (lexing::Word::init (mod.getLocation (), modules [0]), mod.getComments (), this-> _isWeak);
+		    glob = Module::init (lexing::Word::init (mod.getLocation (), modules [0]), mod.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone ());
 		    pushReferent (glob);
 		} else pushReferent (glob);
 
@@ -140,7 +144,7 @@ namespace semantic {
 		createSubModules (mod.getLocation (), std::vector <std::string> (modules.begin () + 1, modules.end ()), ret);
 		
 		glob = popReferent ();
-		Symbol::registerModule (modules [0], glob);
+		Symbol::registerModule (modules [0], glob);		
 		return ret;
 	    } else if (mod.isGlobal ()) {
 		if (modules.size () == 1) 
@@ -165,7 +169,7 @@ namespace semantic {
 			return;
 		    }
 		}
-		pushReferent (Module::init (lexing::Word::init (loc, names [0]), "", this-> _isWeak));
+		pushReferent (Module::init (lexing::Word::init (loc, names [0]), "", this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone ()));
 		std::vector<std::string> modules (names.begin () + 1, names.end ());
 		createSubModules (loc, modules, last);
 		auto mod = popReferent ();
@@ -256,7 +260,7 @@ namespace semantic {
 	}    
 
 	semantic::Symbol Visitor::visitBlock (const syntax::DeclBlock block) {
-	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak));
+	    pushReferent (Module::init (block.getLocation (), block.getComments (), this-> _isWeak, this-> _isTrusted || State::instance ().isStandalone ()));
 	    // A declaration block is just a list of declaration, we do not enter a new referent
 	    for (syntax::Declaration decl : block.getDeclarations ()) {
 		if (block.getDeclarations ().size () == 1)
@@ -583,7 +587,7 @@ namespace semantic {
 	}	
 	
 	void Visitor::importAllCoreFiles () {
-	    auto dir = global::State::instance ().getCorePath ();
+	    auto dir = State::instance ().getCorePath ();
 	    auto entries = dirEntries (dir, "core");
 	    for (auto & it : entries) {
 		if (__imported__.find (it.first) == __imported__.end ()) {
@@ -623,7 +627,8 @@ namespace semantic {
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		    try {
 			auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
-			declarator::Visitor::init ().visit (synt_module);
+			bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
+			declarator::Visitor::init (isTrusted).visit (synt_module);
 		    } catch (Error::ErrorList list) {
 			
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -638,7 +643,8 @@ namespace semantic {
 	    } else success = true;
 	    
 	    if (!success) {
-		for (auto & it : global::State::instance ().getIncludeDirs ()) {
+		int j = 0;
+		for (auto & it : State::instance ().getIncludeDirs ()) {
 		    path = Path::build (it, Path {imp.getModule ().getStr (), "::"}.toString ());
 		    if (__imported__.find (path.toString ()) == __imported__.end ()) {
 			auto file_path = path.toString () + ".yr";
@@ -650,7 +656,8 @@ namespace semantic {
 			    std::list <Ymir::Error::ErrorMsg> errors;
 			    try {
 				auto synt_module = syntax::Visitor::init (file_path).visitModGlobal ();
-				declarator::Visitor::init ().visit (synt_module);
+				bool isTrusted = path.startWith (Path {CoreNames::get (STD_MODULE), "::"}) || path.startWith (Path {CoreNames::get (CORE_MODULE), "::"}) || path.startWith ({CoreNames::get (ETC_MODULE), "::"});
+				declarator::Visitor::init (isTrusted).visit (synt_module);
 			    } catch (Error::ErrorList list) {				
 				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 			    } 
@@ -663,6 +670,7 @@ namespace semantic {
 			    break;			    
 			}
 		    } else success = true;
+		    j += 1;
 		}
 
 		if (!success) {

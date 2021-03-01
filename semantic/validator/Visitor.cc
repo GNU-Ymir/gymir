@@ -5349,6 +5349,10 @@ namespace semantic {
 	    }
 	    return false;
 	}
+
+	bool Visitor::isInTrusted () const {
+	    return this-> _referent.back ().isTrusted ();
+	}
 	
 	void Visitor::enterLoop () {
 	    this-> _loopBreakTypes.push_back (Generator::empty ());	    

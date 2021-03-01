@@ -26,6 +26,7 @@ namespace semantic {
 	    static const std::string LOCAL_TUPLEOF;
 	    static const std::string HAS_DEFAULT;
 	    static const std::string DEFAULT_VALUE;
+	    static const std::string TRUSTED;
 
 	    Visitor & _context;
 
@@ -49,6 +50,8 @@ namespace semantic {
 	    
 	    generator::Generator validateCompile (const syntax::Pragma & prg);
 
+	    generator::Generator validateTrusted (const syntax::Pragma & prg);
+	    
 	    generator::Generator validateMangle (const syntax::Pragma & prg);
 
 	    generator::Generator validateOperator (const syntax::Pragma & prg);

@@ -170,6 +170,7 @@ namespace Ymir {
 			    UNREACHBLE_STATEMENT	    = "unreachable statement",
 			    UNRESOLVED_TEMPLATE             = "unresolved template",
 			    UNTERMINATED_SEQUENCE	    = "unterminated escape sequence",
+			    UNTRUSTED_CONTEXT               = "trusted can only be used in std/core/etc modules",
 			    UNUSED_MATCH_CALL_OP            = "unused patterns {%(y)} in struct destructuring",
 			    USELESS_CATCH                   = "useless catch of %(y), that cannot be thrown",  
 			    USELESS_DECORATOR		    = "useless decorator",
@@ -184,6 +185,6 @@ namespace Ymir {
 			    VOID_VALUE                      = "value cannot be void",
 			    VOID_VAR			    = "cannot declare a var of type void",
 			    WRONG_IMPLEMENT                 = "the method %(y) was declared by trait %(y), not %(y)",
-			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)", 
+			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)",
     );    
 }
