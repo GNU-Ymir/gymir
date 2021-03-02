@@ -263,7 +263,7 @@ namespace syntax {
 	 class_constructor := 'self' function_proto function_body
 	 \endverbatim
 	 */
-	Declaration visitClassConstructor ();
+	Declaration visitClassConstructor (bool fromTrait = false);
 	
 	/**
 	 * \brief Visit a class destructor
