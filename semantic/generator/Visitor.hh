@@ -243,6 +243,12 @@ namespace semantic {
 	     * \brief Transform an option value into gimple
 	     */
 	    generic::Tree generateOptionValue (const OptionValue & opt);
+
+	    /**
+	     * \brief Transform a fake value into gimple
+	     */
+	    generic::Tree generateFakeValue (const FakeValue & fv);
+
 	    
 	    /**
 	     * \brief Transform an exit scope into gimple

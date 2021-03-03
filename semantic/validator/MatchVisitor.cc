@@ -218,16 +218,10 @@ namespace semantic {
 		return BinaryBool::init (bin.getLocation (), Binary::Operator::OR, Bool::init (bin.getLocation ()), testLeft, testRight);					 
 	    } else if (bin.getLocation () == Token::DDOT || bin.getLocation () == Token::TDOT) {
 		auto loc = lexing::Word::init (bin.getLocation (), Keys::IN);		
-		auto  templ = syntax::TemplateCall::init (
-		    loc,
-		    {syntax::String::init (loc, loc, loc, lexing::Word::eof ())},
-		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (BINARY_OP_OVERRIDE)))
-		);
-		
 		auto call = syntax::MultOperator::init (
 		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-		    templ,
-		    {TemplateSyntaxWrapper::init (value.getLocation (), value), syntax::Binary::init (bin)}
+		    syntax::Var::init (lexing::Word::init (loc, CoreNames::get (CONTAIN_OP_OVERRIDE))),
+		    {syntax::Binary::init (bin), TemplateSyntaxWrapper::init (value.getLocation (), value)}
 		);
 		
 		return this-> _context.validateValue (call);
@@ -592,9 +586,9 @@ namespace semantic {
 	    			
 	    } 
 	    
-	    if (!retValue.isEmpty ()) {
+	    if (!retValue.isEmpty () && retValue.is <BoolValue> ()) {
 		isMandatory = retValue.is <BoolValue> () && retValue.to <BoolValue> ().getValue ();
-		return value;
+		return retValue;
 	    } else return ret;
 	}	    
 
@@ -625,8 +619,8 @@ namespace semantic {
 		    bool once = false;
 		    for (auto &lt : local_types) {
 			bool found = false;
-			for (auto &it : usedTypes) {
-			    if (it.second.to<Type> ().isCompatible (lt)) {
+			for (auto &it : usedTypes) {			    
+			    if (it.second.to<Type> ().isCompatible (lt)) {				
 				found = true;
 				founds.push_back ({it.first, it.second});
 				break;   

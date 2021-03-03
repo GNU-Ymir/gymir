@@ -974,7 +974,11 @@ namespace semantic {
 	        of (OptionValue, vl,
 		    return generateOptionValue (vl);
 		    );
-	    }
+
+		of (FakeValue, fv,
+		    return generateFakeValue (fv);
+		    );
+	    }	    
 	    
 	    println (gen.prettyString ());
 	    Ymir::Error::halt ("%(r) - reaching impossible point %(y)", "Critical", identify (gen));
@@ -1884,6 +1888,11 @@ namespace semantic {
 	    return Tree::compound (val.getLocation (),
 				   Tree::constructField (val.getLocation (), type, names, results),
 				   list.toTree ());
+	}
+
+	generic::Tree Visitor::generateFakeValue (const FakeValue &) {
+	    TreeStmtList lst (TreeStmtList::init ());
+	    return lst.toTree ();
 	}
 	
 	generic::Tree Visitor::generateExitScope (const ExitScope & scope) {

@@ -4,6 +4,7 @@
 #include <map>
 #include <ymir/errors/Error.hh>
 #include <ymir/errors/ListError.hh>
+#include <unordered_map>
 
 namespace semantic {
 
@@ -25,8 +26,13 @@ namespace semantic {
 	 * When inserting b : 9, the result will be  
 	 *  - [d : 1, b : 9, c : 8]
 	 */
-	std::vector <Symbol> _syms;
+	std::unordered_map <std::string, std::vector <Symbol> > _syms;
+	
 
+	std::unordered_map <std::string, std::vector <Symbol> > _public_syms;
+
+	std::vector <Symbol> _all;
+	
 	/**
 	 * All the template symbol declared inside the current table
 	 *
@@ -45,10 +51,10 @@ namespace semantic {
 
 	static std::shared_ptr<Table> init (const Symbol & attach);
 	
-	/**
-	 * \brief make a copy of the table, and all symbols
-	 */
-	std::shared_ptr<Table> clone (const Symbol & attached) const;
+	// /**
+	//  * \brief make a copy of the table, and all symbols
+	//  */
+	// std::shared_ptr<Table> clone (const Symbol & attached) const;
 
 	/**
 	 * \return the symbol in which the table is attached
@@ -73,12 +79,12 @@ namespace semantic {
 	 */
 	const std::vector<Symbol> & getTemplates () const;
 	
-	/**
-	 * \brief Insert a new symbol in the table
-	 * \brief if the symbol already exists, it will replace it
-	 * \param sym the symbol to insert
-	 */
-	void replace (const Symbol & sym);
+	// /**
+	//  * \brief Insert a new symbol in the table
+	//  * \brief if the symbol already exists, it will replace it
+	//  * \param sym the symbol to insert
+	//  */
+	// void replace (const Symbol & sym);
 	
 	/**
 	 * \brief Get a symbol from this table
@@ -105,6 +111,11 @@ namespace semantic {
 	 * \return the list of all declared symbol inside the table
 	 */
 	const std::vector <Symbol> & getAll () const;
+
+
+    private :
+
+	void recomputeAll ();
 	
     };    
     

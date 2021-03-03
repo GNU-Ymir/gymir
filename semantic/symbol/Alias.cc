@@ -6,7 +6,7 @@ namespace semantic {
 	ISymbol (lexing::Word::eof (), "", false),
 	_value (syntax::Expression::empty ()),
 	_gen (generator::Generator::empty ())
-    {}
+    {}    
 
     Alias::Alias (const lexing::Word & name, const std::string & comments, const syntax::Expression & value, bool isWeak) :
 	ISymbol (name, comments, isWeak),

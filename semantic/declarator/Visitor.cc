@@ -424,7 +424,7 @@ namespace semantic {
 	    pushReferent (tr);
 	    visitInnerTrait (tr, sttrait.getDeclarations (), false, true, false);
 	    auto ret = popReferent ();
-	    getReferent ().replace (ret);
+	    getReferent ().insert (ret);
 	    return tr;
 	}
 

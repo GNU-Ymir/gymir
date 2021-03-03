@@ -40,7 +40,7 @@ namespace semantic {
 
 	void insert (const Symbol & sym) override;
 
-	void replace (const Symbol & sym) override;
+	// void replace (const Symbol & sym) override;
 
 	void get (const std::string & name, std::vector <Symbol> & ret) const override;
 

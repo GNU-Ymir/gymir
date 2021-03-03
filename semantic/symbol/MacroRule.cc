@@ -32,9 +32,9 @@ namespace semantic {
 	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
     }    
     
-    void MacroRule::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void MacroRule::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void MacroRule::get (const std::string & name, std::vector <Symbol> & rets) const {
 	getReferent ().get (name, rets);

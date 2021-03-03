@@ -23,9 +23,9 @@ namespace semantic {
     }
    
 
-    void Impl::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void Impl::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void Impl::get (const std::string & name, std::vector <Symbol> & rets) const {
 	getReferent ().get (name, rets);

@@ -8,6 +8,9 @@
 #include <ymir/global/State.hh>
 #include <ymir/utils/string.hh>
 
+
+#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
+
 using namespace Ymir;
 
 namespace syntax {
@@ -120,7 +123,7 @@ namespace syntax {
 	return visit;
     }
 
-    Declaration Visitor::visitModGlobal () {
+    Declaration Visitor::visitModGlobal () {	
 	std::vector <Declaration> decls;
 	lexing::Word space = lexing::Word::eof ();
 	lexing::Word token = lexing::Word::eof ();
@@ -157,7 +160,7 @@ namespace syntax {
 	if (space.isEof ())
 	    space = this-> _lex.fileLocus ();
 
-	auto ret = Module::init (space, comments, decls, true);
+	auto ret = Module::init (space, comments, decls, true);  
 	return ret;
     }
     
@@ -1040,8 +1043,10 @@ namespace syntax {
 			    }
 			} else if (token == Token::EQUAL) {
 			    list.push_back (VarDecl::init (name, {}, Expression::empty (), visitExpression ()));
+			} else if (token == Keys::OVER) {
+			    list.push_back (OfVar::init (name, visitExpression (), true));
 			} else if (token == Keys::OF)
-			    list.push_back (OfVar::init (name, visitExpression ()));
+			    list.push_back (OfVar::init (name, visitExpression (), false));
 			else if (token == Keys::IMPL)
 			    list.push_back (ImplVar::init (name, visitExpression ()));
 			else if (token == Token::TDOT) {

@@ -32,9 +32,9 @@ namespace semantic {
 	rets.insert (rets.begin (), tmpls.begin (), tmpls.end ());
     }    
     
-    void Constructor::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void Constructor::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void Constructor::get (const std::string & name, std::vector<Symbol> & rets) const {
 	getReferent ().get (name, rets);

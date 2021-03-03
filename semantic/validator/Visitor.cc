@@ -180,7 +180,7 @@ namespace semantic {
 
 		of (semantic::Class, cl ATTRIBUTE_UNUSED, {
 			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::class");			
+			pushReferent (sym, "validate::class");
 			try {
 			    validateClass (sym, true);
 			} catch (Error::ErrorList list) {
@@ -751,7 +751,7 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {		
+	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {
 		auto sym = cls;
 		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 		// To avoid recursive validation 
@@ -863,29 +863,30 @@ namespace semantic {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    } 
 		}
-		
+
 		if (errors.size () != 0) {
 		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
 		    throw Error::ErrorList {errors};
 		}
-	    }
 
-	    if (inModule) {
-		std::list <Ymir::Error::ErrorMsg> errors;
-		try {
-		    validateInnerClass (cls);		    
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
+		if (inModule) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    try {
+			validateInnerClass (cls);		    
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
 		
-		if (errors.size () != 0) {
-		    auto sym = cls;
-		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+		    if (errors.size () != 0) {
+			auto sym = cls;
+			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+			Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
+		    }
+		
+		    insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
 		}
-		
-		insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
 	    }
+	    
 	    
 	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ()) {		
 		return ClassRef::init (cls.getName (), ancestor, cls);
@@ -2584,7 +2585,7 @@ namespace semantic {
 	}
 	
 	Generator Visitor::validateVar (const syntax::Var & var) {
-	    auto gen = getLocal (var.getName ().getStr ());
+	    auto gen = getLocal (var.getName ().getStr ());	    
 	    
 	    if (gen.isEmpty ()) {
 		auto sym = getGlobal (var.getName ().getStr ());
@@ -2596,10 +2597,10 @@ namespace semantic {
 		    }
 		    Error::occurAndNote (var.getLocation (), notes, ExternalError::get (UNDEF_VAR), var.getName ().getStr ());
 		}
-		
+
 		return validateMultSym (var.getLocation (), sym);
 	    }
-	    
+	    	    
 	    // The gen that we got can be either a param decl or a var decl, or inside a closure
 	    if (gen.is <ParamVar> ()) {
 		return VarRef::init (var.getLocation (), var.getName ().getStr (), gen.to<Value> ().getType (), gen.getUniqId (), gen.to<ParamVar> ().isMutable (), Generator::empty (), gen.to <ParamVar> ().isSelf ());
@@ -4944,10 +4945,15 @@ namespace semantic {
 		    for (auto it : Ymir::r (0, syms.size ())) {
 			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), syms [it].getName (), syms [it].getRealName ()));
 		    }
+		    if (var.getName ().getStr () == "U")
+			Ymir::Error::halt ("", "");
+		    
 		    Error::occurAndNote (var.getName (), notes, ExternalError::get (UNDEF_TYPE), var.getName ().getStr ());
 		}
 	    }
-	    
+
+	    if (var.getName ().getStr () == "U")
+		Ymir::Error::halt ("", "");
 	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().getStr ());
 	    return Generator::empty ();
 	}

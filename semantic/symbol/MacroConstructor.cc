@@ -31,9 +31,9 @@ namespace semantic {
 	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
     }    
     
-    void MacroConstructor::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void MacroConstructor::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void MacroConstructor::get (const std::string & name, std::vector <Symbol> & rets) const {
 	getReferent ().get (name, rets);

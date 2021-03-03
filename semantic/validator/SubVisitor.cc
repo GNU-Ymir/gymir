@@ -680,12 +680,12 @@ namespace semantic {
 		    );
 		
 		    return this-> _context.validateValue (stringLit);   
-		} else if (aux_name == __TYPEINFO__) {
-		    Generator cl = this-> _context.validateClass (t.to <generator::Class> ().getRef ());
+		} else if (aux_name == __TYPEINFO__) {		    
+		    Generator cl = t.to <generator::Class> ().getClassRef ();
 		    return this-> _context.validateTypeInfo (
 			expression.getRight ().getLocation (),
 			cl
-			);
+			);		    
 		} else if (name == ClassRef::SUPER) {
 		    auto ancestor = t.to<generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
 		    if (!ancestor.isEmpty ()) {

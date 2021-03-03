@@ -29,9 +29,9 @@ namespace semantic {
 	this-> _table-> insert (sym);
     }
 
-    void TemplateSolution::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void TemplateSolution::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void TemplateSolution::get (const std::string & name, std::vector <Symbol> & rets) const {
 	getReferent ().get (name, rets);

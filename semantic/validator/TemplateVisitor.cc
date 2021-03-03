@@ -107,13 +107,15 @@ namespace semantic {
 		    static int __tmpTemplate__ = 0;
 		    __tmpTemplate__ += 1;
 		    score = merge.score;
+		    auto decl = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.getTemplateRef ().getReferent ());
 
+		    auto tmpl = sym.to <semantic::Template> ();
 		    auto sym2 = Template::init (ref.getLocation (),
 						"",
 						syntaxTempl,						
-						sym.to <semantic::Template> ().getDeclaration (),
-						sym.to <semantic::Template> ().getTest (),
-						sym.to <semantic::Template> ().getParams ()
+						replaceAll (tmpl.getDeclaration (), merge.mapping, ref.getTemplateRef ().getReferent ()),
+						replaceAll (tmpl.getTest (), merge.mapping),
+						tmpl.getParams ()
 						, true
 			);
 		    
@@ -127,7 +129,7 @@ namespace semantic {
 		    score = merge.score;
 		    finalValidation (ref.getTemplateRef ().getReferent (), sym.to <Template> ().getPreviousParams (), merge, sym.to <semantic::Template> ().getTest ());
 		    auto final_syntax = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.getTemplateRef ().getReferent ());
-
+		    
 		    auto visit = declarator::Visitor::init ();
 		    visit.setWeak ();
 		    visit.pushReferent (ref.getTemplateRef ().getReferent ());
@@ -587,9 +589,9 @@ namespace semantic {
 			auto type = types [0];
 			if (type.is <Option> ()) {
 			    std::vector <Generator> vec = {type.to <Type> ().getInners ()[0]};
-			    int consumed = 0;
-			    auto mapper = this-> validateTypeFromImplicit (params, tr.getContent (), array_view<Generator> (vec), consumed);
-			    
+			    int loc_consumed = 0;
+			    auto mapper = this-> validateTypeFromImplicit (params, tr.getContent (), array_view<Generator> (vec), loc_consumed);
+
 			    if (mapper.succeed) {
 				Expression realType = this-> replaceAll (leftT, mapper.mapping);
 				auto genType = this-> _context.validateType (realType, true);
@@ -974,6 +976,11 @@ namespace semantic {
 			    if (!type.is <ClassRef> ()) { // we skip the validation ?
 				auto realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 				auto genType = this-> _context.validateType (realType, true);
+				if (ofv.isOver () && !this-> _context.isAncestor (genType, type)) {
+				    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+							genType.prettyString (),
+							type.prettyString ());
+				}
 				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
 			    } else {
 				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), type));
@@ -994,9 +1001,18 @@ namespace semantic {
 			    if (mapper.succeed) {
 				Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 				auto genType = this-> _context.validateType (realType, true);
-				this-> _context.verifySameType (genType, type);
+				if (ofv.isOver ()) {
+				    if (!this-> _context.isAncestor (genType, type)) {
+					Ymir::Error::occur (un.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+							    genType.prettyString (),
+							    type.prettyString ());
+				    }				    
+				} else {				
+				    this-> _context.verifySameType (genType, type);
+				}
+				
 				this-> _context.verifyNotIsType (ofv.getLocation ());
-			    
+			       				
 				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxValue (ofv.getLocation (), type));				
 				mapper.nameOrder.push_back (ofv.getLocation ().getStr ());
 				
@@ -1018,7 +1034,16 @@ namespace semantic {
 			    if (mapper.succeed) {
 				Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 				auto genType = this-> _context.validateType (realType, true);
-				this-> _context.verifySameType (genType, type);
+				if (ofv.isOver ()) {
+				    if (!this-> _context.isAncestor (genType, type)) {
+					Ymir::Error::occur (tr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+							    genType.prettyString (),
+							    type.prettyString ());
+				    }				    
+				} else {				
+				    this-> _context.verifySameType (genType, type);
+				}
+
 				this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
 				mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxValue (ofv.getLocation (), type));				
@@ -1053,7 +1078,7 @@ namespace semantic {
 				
 				mapper = mergeMappers (mapper, mp);
 			    }
-
+			    
 			    if (current_consumed < (int) types.size ()) {
 				Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 						    lst.prettyString (),
@@ -1065,7 +1090,16 @@ namespace semantic {
 
 			    Expression realType  = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType, true);
-			    this-> _context.verifySameType (genType, type);
+			    if (ofv.isOver ()) {
+				if (!this-> _context.isAncestor (genType, type)) {
+				    Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+							genType.prettyString (),
+							type.prettyString ());
+				}				    
+			    } else {				
+				this-> _context.verifySameType (genType, type);
+			    }
+
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
 			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
@@ -1081,6 +1115,12 @@ namespace semantic {
 			}
 		    }
 		) else of (syntax::FuncPtr, fPtr, {
+			if (ofv.isOver ()) {
+			    Ymir::Error::occur (fPtr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						fPtr.prettyString (),
+						type.prettyString ());
+			}
+			 
 			auto ftype = type;
 			if (type.is <Delegate> ()) ftype = type.to <Type> ().getInners ()[0];
 			if (ftype.to <Type> ().isComplex () && ftype.to<Type> ().getInners ().size () >= fPtr.getParameters ().size () + 1) {
@@ -1142,7 +1182,16 @@ namespace semantic {
 			    
 			    Expression realType  = this-> replaceAll (ofv.getType (), mapper.mapping);
 			    auto genType = this-> _context.validateType (realType, true);
-			    this-> _context.verifySameType (genType, type);
+			    if (ofv.isOver ()) {
+				if (!this-> _context.isAncestor (genType, type)) {
+				    Ymir::Error::occur (arr.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+							genType.prettyString (),
+							type.prettyString ());
+				}				    
+			    } else {				
+				this-> _context.verifySameType (genType, type);
+			    }
+
 			    this-> _context.verifyNotIsType (ofv.getLocation ());
 			    
 			    mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
@@ -1186,7 +1235,16 @@ namespace semantic {
 			auto mapper = validateTypeFromTemplCall (params, cl, type, current_consumed);
 			Expression realType = this-> replaceAll (ofv.getType (), mapper.mapping);
 			auto genType = this-> _context.validateType (realType, true);
-			this-> _context.verifySameType (genType, type);
+			if (ofv.isOver ()) {
+			    if (!this-> _context.isAncestor (genType, type)) {
+				Ymir::Error::occur (cl.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						    genType.prettyString (),
+						    type.prettyString ());
+			    }				    
+			} else {				
+			    this-> _context.verifySameType (genType, type);
+			}
+
 			this-> _context.verifyNotIsType (ofv.getLocation ());
 			
 			mapper.mapping.emplace (ofv.getLocation ().getStr (), createSyntaxType (ofv.getLocation (), genType));
@@ -1201,7 +1259,16 @@ namespace semantic {
 	    auto left = this-> _context.validateType (ofv.getType (), true);
 	    auto score = Scores::SCORE_TYPE;
 	    if (type.is <ClassPtr> ()) {
-		this-> _context.verifyCompatibleType (ofv.getLocation (), type.getLocation (), left, type);
+		if (ofv.isOver ()) {
+		    if (!this-> _context.isAncestor (left, type)) {
+			Ymir::Error::occur (ofv.getType ().getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+					    left.prettyString (),
+					    type.prettyString ());
+		    }				    
+		} else {
+		    this-> _context.verifyCompatibleType (ofv.getLocation (), type.getLocation (), left, type);
+		}
+
 		if (left.equals (type))
 		    score = Scores::SCORE_TYPE;
 		else score = Scores::SCORE_VAR;
@@ -1534,7 +1601,8 @@ namespace semantic {
 		) else of (syntax::OfVar, of,
 			   return syntax::OfVar::init (
 			       element.getLocation (),
-			       replaceAll (of.getType (), mapping)
+			       replaceAll (of.getType (), mapping),
+			       of.isOver ()
 			   );
 		) else of (syntax::ImplVar, im,
 			   return syntax::ImplVar::init (

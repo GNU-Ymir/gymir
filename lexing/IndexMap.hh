@@ -1,7 +1,7 @@
 #pragma once
 
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 #include <string>
@@ -18,7 +18,7 @@ namespace lexing {
 
 	bool _isToken;
 	
-	std::map <char, std::shared_ptr<Node> > _heads;
+	std::unordered_map <char, std::shared_ptr<Node> > _heads;
 
     public : 
 
@@ -54,7 +54,7 @@ namespace lexing {
     class IndexMap {
     private :
 	
-	std::map <char, std::shared_ptr<Node> > _heads;
+	std::unordered_map <char, std::shared_ptr<Node> > _heads;
 
     public :
 

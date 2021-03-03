@@ -619,8 +619,9 @@ namespace semantic {
 			auto rlevel = type.to <Type> ().mutabilityLevel () + 1;
 			score += rlevel - llevel;
 		    }
-		    
-		    if (proto.to <FrameProto> ().getParameters ().size () != rights.size ()) return Generator::empty ();		    
+
+		    // Why??
+		    // if (proto.to <FrameProto> ().getParameters ().size () != rights.size ()) return Generator::empty ();		    
 		    for (auto it : Ymir::r (0, proto.to <FrameProto> ().getParameters ().size ())) {
 			auto param = findParameter (list, proto.to <FrameProto> ().getParameters () [it].to<ProtoVar> ());
 			if (param.isEmpty ()) return Generator::empty ();

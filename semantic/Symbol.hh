@@ -4,6 +4,8 @@
 #include <ymir/lexing/Word.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/errors/ListError.hh>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace semantic {
 
@@ -30,6 +32,7 @@ namespace semantic {
 	/** The list of usable symbols for symbol search */
 	/** This list is intended to be used only in the proxy symbol */
 	std::map <std::string, Symbol> _used;
+
 
 	bool _isPublic = false;
 
@@ -84,12 +87,12 @@ namespace semantic {
 	 */
 	virtual void getTemplates (std::vector <Symbol> & ret) const;
 	
-	/**
-	 * \brief Insert a new symbol in the current one
-	 * \brief It will work like insert, but ensure that there is only one occurence of the symbol
-	 * \brief sym the symbol to insert 
-	 */
-	virtual void replace (const Symbol & sym);
+	// /**
+	//  * \brief Insert a new symbol in the current one
+	//  * \brief It will work like insert, but ensure that there is only one occurence of the symbol
+	//  * \brief sym the symbol to insert 
+	//  */
+	// virtual void replace (const Symbol & sym);
 	
 
 	/**
@@ -297,10 +300,10 @@ namespace semantic {
 	 */
 	std::vector <Symbol> getTemplates () const;
 	
-	/**
-	 * Proxy function for symbol
-	 */
-	void replace (const Symbol & sym);
+	// /**
+	//  * Proxy function for symbol
+	//  */
+	// void replace (const Symbol & sym);
 
 	/**
 	 * Proxy function for symbol
@@ -356,44 +359,44 @@ namespace semantic {
 	/**
 	 * Proxy function for symbol
 	 */
-	void get (const std::string & name, std::vector <Symbol>  & ret) const;
+	void get (const std::string & name, std::vector <Symbol>  & ret);
 
 	/**
 	 * Proxy function for symbol
 	 */
-	std::vector <Symbol> get (const std::string & name) const;
+	std::vector <Symbol> get (const std::string & name);
 	
 	/**
 	 * Proxy function for symbol
 	 */
-	void getPrivate (const std::string & name, std::vector <Symbol> & ret) const;
+	void getPrivate (const std::string & name, std::vector <Symbol> & ret);
 
 	/**
 	 * Proxy function for symbol
 	 */
-	std::vector<Symbol> getPrivate (const std::string & name) const;
+	std::vector<Symbol> getPrivate (const std::string & name);
 
 	/**
 	 * Proxy function for symbol
 	 */
-	void getPublic (const std::string & name, std::vector <Symbol> & ret) const;
+	void getPublic (const std::string & name, std::vector <Symbol> & ret);
 
 	/**
 	 * Proxy function for symbol
 	 */
-	std::vector<Symbol> getPublic (const std::string & name) const;
+	std::vector<Symbol> getPublic (const std::string & name);
 	
 	/**
 	 * \warning not a proxy function
 	 * \brief search a symbol from a used symbol (*this* is currently in a list used in another symbol)
 	 */
-	void getUsed (const std::string & name, std::vector <Symbol> & ret) const;
+	void getUsed (const std::string & name, std::vector <Symbol> & ret);
 
 	/**
 	 * \warning not a proxy function
 	 * \brief search a symbol from a used symbol (*this* is currently in a list used in another symbol)
 	 */
-	std::vector <Symbol> getUsed (const std::string & name) const;
+	std::vector <Symbol> getUsed (const std::string & name);
 
 	/**
 	 * Proxy function for symbol

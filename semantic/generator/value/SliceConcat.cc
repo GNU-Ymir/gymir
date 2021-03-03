@@ -17,7 +17,7 @@ namespace semantic {
 	    _right (right)
 	{
 	    auto vth = this-> _left.getThrowers ();
-	    auto & ith = this-> _left.getThrowers ();
+	    auto & ith = this-> _right.getThrowers ();
 	    vth.insert (vth.end (), ith.begin (), ith.end ());
 	    
 	    this-> setThrowers (vth);

@@ -40,9 +40,9 @@ namespace semantic {
 	ret.insert (ret.begin (), tmpls.begin (), tmpls.end ());
     }    
     
-    void Class::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void Class::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void Class::get (const std::string & name, std::vector <Symbol> & ret) const {
 	getReferent ().get (name, ret);

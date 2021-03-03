@@ -286,7 +286,6 @@ namespace semantic {
 		else retType = rgen.to <Value> ().getType ();
 		
 		return SliceConcat::init (expression.getLocation (), retType, lgen, rgen);
-
 	    }
 	    
 	    return Generator::empty ();

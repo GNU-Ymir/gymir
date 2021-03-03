@@ -36,9 +36,9 @@ namespace semantic {
 	rets.insert (rets.end (), tmpls.begin (), tmpls.end ());
     }    
     
-    void Enum::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void Enum::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void Enum::get (const std::string & name, std::vector <Symbol> & rets) const {
 	getReferent ().get (name, rets);

@@ -15,6 +15,7 @@
 #include <ymir/global/State.hh>
 #include <ymir/global/Core.hh>
 #include <ymir/utils/string.hh>
+#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
 using namespace Ymir;
 
 
@@ -24,7 +25,7 @@ void ymir_parse_file (const char * filename) {
 	parser.run ();
     }
     
-    control_memory_leakage ();
+    //control_memory_leakage ();
 }
 
 void ymir_parse_files (int nb_files, const char ** files) {
@@ -34,7 +35,7 @@ void ymir_parse_files (int nb_files, const char ** files) {
 	}
     }
     
-    control_memory_leakage ();
+    //control_memory_leakage ();
 }
 
 namespace Ymir {
@@ -48,7 +49,7 @@ namespace Ymir {
     
     void Parser::run () {
 	std::vector <std::string> errors;
-	try {
+	try {	    
 	    syntaxicTime ();
 	    semanticTime ();
 	} catch (Error::ErrorList list) {
@@ -67,13 +68,13 @@ namespace Ymir {
 	this-> _module = visitor.visitModGlobal ();
     }
 
-    void Parser::semanticTime () {
+    void Parser::semanticTime () {	
 	auto declarator = semantic::declarator::Visitor::init ();
 	auto module = declarator.visit (this-> _module);	
-	
 	auto validator = semantic::validator::Visitor::init ();	
 	validator.validate (module);
 
+	
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
 	    auto res = doc_visit.dump (module).toString ();
@@ -82,11 +83,12 @@ namespace Ymir {
 	    fwrite (res.c_str (), sizeof (char), res.length (), file);
 	    fclose (file);
 	}
-	
+
 	auto generator = semantic::generator::Visitor::init ();
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
+	
 	
 	generator.finalize ();
 	semantic::Symbol::purge ();

@@ -34,9 +34,9 @@ namespace semantic {
     }    
 
 
-    void Module::replace (const Symbol & sym) {
-	this-> _table-> replace (sym);
-    }
+    // void Module::replace (const Symbol & sym) {
+    // 	this-> _table-> replace (sym);
+    // }
 
     void Module::get (const std::string & name, std::vector <Symbol>& rets) const {
 	getReferent ().get (name, rets);

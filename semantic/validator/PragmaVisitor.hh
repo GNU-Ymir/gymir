@@ -26,8 +26,12 @@ namespace semantic {
 	    static const std::string LOCAL_TUPLEOF;
 	    static const std::string HAS_DEFAULT;
 	    static const std::string DEFAULT_VALUE;
-	    static const std::string TRUSTED;
+	    static const std::string HAS_FIELD;
 
+	    static const std::string TRUSTED;
+	    static const std::string PANIC;
+	    static const std::string FAKE_THROW;
+	    
 	    Visitor & _context;
 
 	private :
@@ -51,6 +55,10 @@ namespace semantic {
 	    generator::Generator validateCompile (const syntax::Pragma & prg);
 
 	    generator::Generator validateTrusted (const syntax::Pragma & prg);
+
+	    generator::Generator validatePanic (const syntax::Pragma & prg);
+
+	    generator::Generator validateFakeThrow (const syntax::Pragma & prg);
 	    
 	    generator::Generator validateMangle (const syntax::Pragma & prg);
 
@@ -83,9 +91,15 @@ namespace semantic {
 	    
 	    generator::Generator validateClassLocalTupleOf (const syntax::Pragma & prg, const generator::Generator & cl);
 
+	    generator::Generator validateHasField (const syntax::Pragma & prg);
+
+	    generator::Generator validateStructHasField (const syntax::Pragma & prg, const generator::Struct & str, const generator::Generator & name);
+	    
 	    generator::Generator validateHasDefault (const syntax::Pragma & prg);
 
 	    generator::Generator validateStructHasDefault (const syntax::Pragma & prg, const generator::Struct & str);
+
+	    generator::Generator validateStructHasDefaultNamed (const syntax::Pragma & prg, const generator::Struct & str, const generator::Generator & name);
 
 	    generator::Generator validateDefaultValue (const syntax::Pragma & prg);
 

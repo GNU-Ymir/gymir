@@ -11,7 +11,7 @@ namespace semantic {
         
     std::map <std::string, Symbol> Symbol::__imported__;
     std::map <std::string, Symbol> Symbol::__fast_mod_access__;
-
+      
     ISymbol::ISymbol (const lexing::Word & name, const std::string & comments, bool isWeak)
 	: _name (name),
 	  _comments (comments),
@@ -38,9 +38,9 @@ namespace semantic {
 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
     }
 
-    void ISymbol::replace (const Symbol &) {
-	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
-    }
+    // void ISymbol::replace (const Symbol &) {
+    // 	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::INSERT_NO_TABLE));
+    // }
 
     void ISymbol::use (const std::string & name, const Symbol & sym) {
 	auto ptr = this-> _used.find (name);
@@ -180,15 +180,16 @@ namespace semantic {
     
 
     void Symbol::insert (const Symbol & sym) {
-	if (this-> _value != nullptr)
+	if (this-> _value != nullptr) {	    
 	    this-> _value-> insert (sym);
-	else {
+	} else {
 	    // We don't do anything, it is more convinient for global modules
 	}
     }
 
     void Symbol::insertTemplate (const Symbol & sym) {
-	if (this-> _value != nullptr) {	    
+	if (this-> _value != nullptr) {
+	    
 	    this-> _value-> insertTemplate (sym);
 	} else {
 	    // We don't do anything, it is more convinient for global modules
@@ -209,13 +210,13 @@ namespace semantic {
 	return rets;
     }    
     
-    void Symbol::replace (const Symbol & sym) {
-	if (this-> _value != nullptr)
-	    this-> _value-> replace (sym);
-	else {
-	    // We don't do anything, it is more convinient for global modules
-	}
-    }
+    // void Symbol::replace (const Symbol & sym) {
+    // 	if (this-> _value != nullptr)
+    // 	    this-> _value-> replace (sym);
+    // 	else {
+    // 	    // We don't do anything, it is more convinient for global modules
+    // 	}
+    // }
     
     void Symbol::use (const std::string & name, const Symbol & sym) {
 	if (this-> _value != nullptr)
@@ -312,37 +313,38 @@ namespace semantic {
 	}
     }
        
-    std::vector <Symbol> Symbol::get (const std::string & name) const {
+    std::vector <Symbol> Symbol::get (const std::string & name) {
 	std::vector <Symbol> rets;
 	this-> get (name, rets);
 	return rets;
     }
 
-    void Symbol::get (const std::string & name, std::vector <Symbol> & ret) const {
+    void Symbol::get (const std::string & name, std::vector <Symbol> & ret) {
 	if (this-> _value == nullptr) return;
 
 	this-> _value-> get (name, ret);
 	for (auto & it : this-> _value-> getUsedSymbols ()) {
 	    auto mod = it.second;
-	    if (it.second.isEmpty ()) {		
+	    if (it.second.isEmpty ()) {
 		mod = getModuleByPath (it.first);
+		this-> _value-> use (it.first, mod);
 	    }
-		    
+
 	    if (!mod.isEmpty ()) {
-		mod.getUsed (name, ret);
-	    } 
-	}
+		mod.getUsed (name, ret);		
+	    }
+	}	           
 	
 	Symbol::mergeEqSymbols (ret);
     }
 
-    std::vector <Symbol> Symbol::getPrivate (const std::string & name) const {
+    std::vector <Symbol> Symbol::getPrivate (const std::string & name) {
 	std::vector <Symbol> rets;
 	this-> getPrivate (name, rets);
 	return rets;
     }
     
-    void Symbol::getPrivate (const std::string & name, std::vector <Symbol>& ret) const {
+    void Symbol::getPrivate (const std::string & name, std::vector <Symbol>& ret) {
 	if (this-> _value == nullptr) return;
 
 	static std::set <std::shared_ptr<ISymbol> > current;
@@ -354,55 +356,59 @@ namespace semantic {
 		auto mod = it.second;
 		if (it.second.isEmpty ()) {
 		    mod = getModuleByPath (it.first);
+		    this-> _value-> use (it.first, mod);
 		}
-	    
+		
 		if (!mod.isEmpty ()) {
-		    mod.getLocal (name, ret);
-		} 
+		    mod.getLocal (name, ret);				
+		}
 	    }
+	    
 	    current.erase (this-> _value);
 	}
 	
 	Symbol::mergeEqSymbols (ret);
     }
 
-    std::vector <Symbol> Symbol::getPublic (const std::string & name) const {
+    std::vector <Symbol> Symbol::getPublic (const std::string & name) {
 	std::vector <Symbol> rets;
 	this-> getPublic (name, rets);
 	return rets;
     }
 
-    void Symbol::getPublic (const std::string & name, std::vector <Symbol> & ret) const {
+    void Symbol::getPublic (const std::string & name, std::vector <Symbol> & ret) {
 	if (this-> _value == nullptr) return;
 	static std::set <std::shared_ptr <ISymbol> > current;
 	
 	if (current.find (this-> _value) == current.end ()) {	    
 	    current.emplace (this-> _value);
-	    this-> _value-> getPublic (name, ret);
+	    this-> _value-> getPublic (name, ret);	    
 	    for (auto & it : this-> _value-> getUsedSymbols ()) {
 		auto mod = it.second;
 		if (it.second.isEmpty ()) {
 		    mod = getModuleByPath (it.first);
+		    this-> _value-> use (it.first, mod);
 		}
-	    
+		
 		if (!mod.isEmpty () && mod.isPublic ()) {
-		    mod.getPublic (name, ret);
+		    mod.getPublic (name, ret);		
 		}
 	    }
+	
 	    current.erase (this-> _value);
 	}
 	
 	Symbol::mergeEqSymbols (ret);
     }
 
-    std::vector <Symbol> Symbol::getUsed (const std::string & name) const {
+	std::vector <Symbol> Symbol::getUsed (const std::string & name) {
 	std::vector <Symbol> rets;
 	this-> getUsed (name, rets);
 	return rets;
     }
 
     
-    void Symbol::getUsed (const std::string & name, std::vector <Symbol> & ret) const {
+    void Symbol::getUsed (const std::string & name, std::vector <Symbol> & ret) {
 	if (this-> _value == nullptr) return;
 
 	static std::set <std::shared_ptr <ISymbol> > current;
@@ -413,13 +419,13 @@ namespace semantic {
 		auto mod = it.second;
 		if (it.second.isEmpty ()) {
 		    mod = getModuleByPath (it.first);
+		    this-> _value-> use (it.first, mod);
 		}
-	    
+
 		if (!mod.isEmpty () && mod.isPublic ()) {
-		    mod.getUsed (name, ret);
+		    mod.getUsed (name, ret);		    
 		}
 	    }
-	    
 	    current.erase (this-> _value);
 	}
 	
@@ -539,8 +545,9 @@ namespace semantic {
 	    if (!succeed) return Symbol::__empty__;
 	}
 	
-	if (!mod.isEmpty ())
-	    __fast_mod_access__.emplace (path_, mod);
+	if (!mod.isEmpty ()) {
+	    __fast_mod_access__.emplace (path_, mod);	    
+	}
 	
 	return mod;
     }
@@ -556,7 +563,7 @@ namespace semantic {
 
     void Symbol::purge () {
 	__imported__.clear ();
-	__fast_mod_access__.clear ();	
+	__fast_mod_access__.clear ();
     }
     
     void Symbol::mergeEqSymbols (std::vector <Symbol> & multSym) {

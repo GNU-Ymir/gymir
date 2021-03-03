@@ -23,7 +23,7 @@ namespace lexing {
 	
 	this-> _heads.emplace (token [0], node);       
     }
-
+    
     ulong IndexMap::next (const std::string & content) const {
 	return this-> next (0, content);
     }
@@ -46,7 +46,7 @@ namespace lexing {
 	std::list <std::string> result;	
 	ulong start = 0;
 	while (start < str.length ()) {
-	    auto len = this-> next (start, str);
+	    auto len = this-> next (start, str);	
 	    result.push_back (str.substr (start, len));
 	    start += len;
 	}

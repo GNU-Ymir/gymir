@@ -43,7 +43,7 @@ namespace semantic {
 	
 	void insertTemplate (const Symbol & sym) override;
 
-	void replace (const Symbol & sym) override;	
+	// void replace (const Symbol & sym) override;	
 
 	void getLocal (const std::string & name, std::vector <Symbol> & ret) const override;
 	
