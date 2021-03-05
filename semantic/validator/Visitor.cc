@@ -761,7 +761,6 @@ namespace semantic {
 		}
 	    }
 	    
-	    inModule = inModule && !this-> inFastValidation ();
 	    // We already try a validation, but failed 
 	    if (semCls.getGenerator ().is<NoneType> ()) {
 		Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), cls.getRealName ());
@@ -773,7 +772,7 @@ namespace semantic {
 		// To avoid recursive validation 
 		semCls.setGenerator (gen);
 
-		if (!this-> inFastValidation ()) {
+		if (!this-> inFastValidation () || inModule) {
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		
 		    if (semCls.getAssertions ().size () != 0) {
@@ -832,7 +831,7 @@ namespace semantic {
 				    if (!canBeFast) {
 					this-> validateVarDeclValue (field, false);
 				    } else { // it is useless to validate private fields type, we can't access them, we just need to have their size
-					this-> pushFastValidation ();
+					//this-> pushFastValidation ();
 				    
 					try {
 					    this-> validateVarDeclValue (field, false);
@@ -840,7 +839,7 @@ namespace semantic {
 					    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 					}
 
-					this-> popFastValidation ();
+					//this-> popFastValidation ();
 				    }
 				}
 		 
