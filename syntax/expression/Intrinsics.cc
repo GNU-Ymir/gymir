@@ -59,4 +59,9 @@ namespace syntax {
 	return Ymir::format ("% (%)", this-> getLocation ().getStr (), this-> _value.prettyString ());
     }    
 
+    const std::set <std::string> & Intrinsics::computeSubVarNames () {
+	this-> setSubVarNames (this-> _value.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
+    
 }

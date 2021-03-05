@@ -1,6 +1,8 @@
 #include <ymir/syntax/Declaration.hh>
 
 namespace syntax {
+
+    std::set <std::string> Declaration::__empty_sub_names__;
     
     IDeclaration::IDeclaration (const lexing::Word & location, const std::string & comment) :
 	_location (location),
@@ -23,6 +25,15 @@ namespace syntax {
 	stream.writefln ("%*<TODO>", i, '\t');
     }
 
+    const std::set <std::string> & IDeclaration::getSubVarNames () const {
+	return this-> _sub_var_names;
+    }
+
+    void IDeclaration::setSubVarNames (const std::set <std::string> & s) {
+	this-> _set_sub_var_names = true;
+	this-> _sub_var_names = s;
+    }
+    
     Declaration::Declaration (IDeclaration * decl) : RefProxy<IDeclaration, Declaration> (decl) 
     {}
 
@@ -62,7 +73,27 @@ namespace syntax {
 	    stream.writeln ("<null>");
 	} else this-> _value-> treePrint (stream, i);	
     }
+
+    const std::set <std::string> & Declaration::getSubVarNames () const {
+	if (this-> _value == nullptr) {
+	    return __empty_sub_names__;
+	}
+	if (this-> _value-> _set_sub_var_names) 
+	    return this-> _value-> getSubVarNames ();
+	else {
+	    auto aux = *this;
+	    std::set <std::string> names;
+	    return aux._value-> computeSubVarNames ();
+	}
+    }
     
+    const std::set <std::string> & Declaration::computeSubVarNames () {
+	if (this-> _value != nullptr)
+	    return this-> _value-> computeSubVarNames ();
+	else
+	    return __empty_sub_names__;
+    }
+
     IDeclaration::~IDeclaration () {}
     
 }

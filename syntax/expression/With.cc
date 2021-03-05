@@ -46,4 +46,14 @@ namespace syntax {
 	return buf.str ();
     }
 
+    const std::set <std::string> & With::computeSubVarNames () {
+	auto cSet = this-> _content.getSubVarNames ();
+	for (auto & it : this-> _decls) {
+	    auto & iSet = it.getSubVarNames ();
+	    cSet.insert (iSet.begin (), iSet.end ());
+	}
+	this-> setSubVarNames (cSet);
+	return this-> getSubVarNames ();
+    }
+    
 }

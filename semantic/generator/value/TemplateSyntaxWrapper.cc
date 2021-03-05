@@ -30,6 +30,11 @@ namespace semantic {
 	std::string TemplateSyntaxWrapper::prettyString () const {
 	    return this-> _content.prettyString ();
 	}
+
+	const std::set <std::string> & TemplateSyntaxWrapper::computeSubVarNames () {
+	    this-> setSubVarNames ({});
+	    return this-> getSubVarNames ();
+	}
 	
     }
 

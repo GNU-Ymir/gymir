@@ -21,5 +21,15 @@ namespace syntax {
 	return "";
     }
     
+    const std::set <std::string> & Is::computeSubVarNames () {
+	auto eSet = this-> _element.getSubVarNames ();
+	for (auto & it : this-> _params) {
+	    auto & iSet = it.getSubVarNames ();
+	    eSet.insert (iSet.begin (), iSet.end ());
+	}
+	
+	this-> setSubVarNames (eSet);
+	return this-> getSubVarNames ();
+    }
     
 }

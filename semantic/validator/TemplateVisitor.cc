@@ -107,7 +107,6 @@ namespace semantic {
 		    static int __tmpTemplate__ = 0;
 		    __tmpTemplate__ += 1;
 		    score = merge.score;
-		    auto decl = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.getTemplateRef ().getReferent ());
 
 		    auto tmpl = sym.to <semantic::Template> ();
 		    auto sym2 = Template::init (ref.getLocation (),
@@ -1445,6 +1444,9 @@ namespace semantic {
 	
 	Expression TemplateVisitor::replaceAll (const Expression & element, const std::map <std::string, Expression> & mapping) const {
 	    if (mapping.size () == 0) return element;
+	    auto & set = element.getSubVarNames ();
+	    if (!intersect (set, mapping)) return element;
+	    
 	    match (element) {
 		of (syntax::ArrayAlloc, arr,
 		    return syntax::ArrayAlloc::init (
@@ -1811,6 +1813,9 @@ namespace semantic {
 
 
 	Declaration TemplateVisitor::replaceAll (const Declaration & decl, const std::map <std::string, Expression> & mapping, const Symbol & _ref) const {
+	    auto & s = decl.getSubVarNames ();
+	    if (!intersect (s, mapping)) return decl;
+	    
 	    match (decl) {
 		of (syntax::Alias, al, return syntax::Alias::init (al.getLocation (), "", replaceAll (al.getValue (), mapping)))
 		else of (syntax::CondBlock, cd, {
@@ -1974,7 +1979,7 @@ namespace semantic {
 	    return Declaration::empty ();
 	}
 
-	syntax::Function::Prototype TemplateVisitor::replaceAll (const syntax::Function::Prototype & proto, const std::map <std::string, Expression> & mapping) const {
+	syntax::Function::Prototype TemplateVisitor::replaceAll (const syntax::Function::Prototype & proto, const std::map <std::string, Expression> & mapping) const {	    
 	    std::vector <Expression> vars;
 	    for (auto & it : proto.getParameters ()) {
 		vars.push_back (replaceAll (it, mapping));
@@ -2369,6 +2374,13 @@ namespace semantic {
 	    return Symbol::__empty__;
 	}
 
+	bool TemplateVisitor::intersect (const std::set <std::string> & left, const std::map <std::string, Expression> & right) const {
+	    for (auto & it : right) {
+		if (left.find (it.first) != left.end ()) return true;
+	    }
+	    return false;
+	}
+
 	Ymir::Error::ErrorMsg TemplateVisitor::partialResolutionNote (const lexing::Word & location, const Mapper & mapper) const {
 	    if (mapper.nameOrder.size () != 0) {
 		Ymir::OutBuffer buf;
@@ -2384,6 +2396,7 @@ namespace semantic {
 		return Ymir::Error::createNoteOneLine ("for : % with %", location, buf.str ());
 	    } else return Ymir::Error::ErrorMsg ("");
 	}	
+
 	
     }
     

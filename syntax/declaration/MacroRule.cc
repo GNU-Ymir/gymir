@@ -40,5 +40,16 @@ namespace syntax {
     const std::vector<Expression> & MacroRule::getSkips () const {
 	return this-> _skips;
     }
+
+
+    const std::set <std::string> & MacroRule::computeSubVarNames () {
+	auto rSet = this-> _rule.getSubVarNames ();
+	for (auto & it : this-> _skips) {
+	    auto & iSet = it.getSubVarNames ();
+	    rSet.insert (iSet.begin (), iSet.end ());
+	}
+	this-> setSubVarNames (rSet);
+	return this-> getSubVarNames ();
+    }
     
 }

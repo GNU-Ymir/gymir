@@ -30,5 +30,13 @@ namespace syntax {
 	stream.writeln ("<Alias> : ", this-> getLocation ());
 	this-> _value.treePrint (stream, i + 1);
     }
+
+
+    const std::set <std::string> & Alias::computeSubVarNames () {
+	auto vSet = this-> _value.getSubVarNames ();
+	vSet.insert (this-> getLocation ().getStr ());
+	this-> setSubVarNames (vSet);
+	return this-> getSubVarNames ();
+    }
     
 }

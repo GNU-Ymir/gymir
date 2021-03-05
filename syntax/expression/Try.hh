@@ -27,6 +27,10 @@ namespace syntax {
 	std::string prettyString () const override;	
 
 	const syntax::Expression & getContent () const;
+
+    protected :
+	
+	const std::set <std::string> & computeSubVarNames () override;
 	
     };
     

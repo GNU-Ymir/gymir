@@ -23,4 +23,9 @@ namespace syntax {
     std::string ClassVar::prettyString () const {
 	return "class " + this-> getLocation ().getStr ();
     }
+
+    const std::set <std::string> & ClassVar::computeSubVarNames () {
+	this-> setSubVarNames ({this-> getLocation ().getStr ()});
+	return this-> getSubVarNames ();
+    }
 }

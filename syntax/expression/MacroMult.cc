@@ -50,4 +50,15 @@ namespace syntax {
     const lexing::Word & MacroMult::getEnd () const {
 	return this-> _end;
     }
+
+    const std::set <std::string> & MacroMult::computeSubVarNames () {
+	std::set <std::string> names;
+	for (auto & it : this-> _content) {
+	    auto &iSet = it.getSubVarNames ();
+	    names.insert (iSet.begin (), iSet.end ());
+	}
+	
+	this-> setSubVarNames (names);
+	return this-> getSubVarNames ();
+    }
 }

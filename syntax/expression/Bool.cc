@@ -23,4 +23,10 @@ namespace syntax {
     std::string Bool::prettyString () const {
 	return this-> getLocation ().getStr ();
     }
+
+    const std::set <std::string> & Bool::computeSubVarNames () {
+	this-> setSubVarNames ({});
+	return this-> getSubVarNames ();
+    }
+ 
 }

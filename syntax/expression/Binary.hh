@@ -50,6 +50,10 @@ namespace syntax {
 	const Expression & getType () const;
 
 	std::string prettyString () const;
+
+    protected :
+
+	const std::set <std::string> & computeSubVarNames () override;
     };    
 
 }

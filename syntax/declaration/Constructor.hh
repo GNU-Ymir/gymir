@@ -110,6 +110,10 @@ namespace syntax {
 	 */
 	const lexing::Word & getRename () const;
 
+    protected :
+
+	const std::set <std::string> & computeSubVarNames () override;
+	
     };
 
     

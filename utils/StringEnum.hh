@@ -25,19 +25,19 @@ std::string strip (const std::string & elem);
 	__VA_ARGS__				\
 	    };					\
     namespace E {				\
-	T get (E##Value code);			\
+	const T & get (E##Value code);			\
     }						
 
 #define DECLARE_ENUM_WITH_TYPE(E, T, ...)				\
     namespace E								\
     {									\
-	T get (E##Value code) {						\
+	const T & get (E##Value code) {						\
 	    static std::map <int, T> MapName;				\
 	    if (MapName.empty ()) {					\
-		auto splits = splitString (#__VA_ARGS__);		\
+		auto splits = std::move (splitString (#__VA_ARGS__));	\
 		int i = 0;						\
 		for (auto it : splits) {				\
-		    std::vector <std::string> value = splitString (it, '='); \
+		    std::vector <std::string> value = std::move (splitString (it, '=')); \
 		    MapName [i] = strip ((T) value [1]);		\
 		    i ++;						\
 		}							\

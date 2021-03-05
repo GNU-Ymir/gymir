@@ -42,6 +42,10 @@ namespace syntax {
 
 	
 	void treePrint (Ymir::OutBuffer & stream, int i) const override;
+
+    protected :
+	
+	const std::set <std::string> & computeSubVarNames () override;
 	
     };
     

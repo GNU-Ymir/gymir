@@ -25,5 +25,10 @@ namespace syntax {
     const Expression & Use::getModule () const {
 	return this-> _module;
     }
+
+    const std::set <std::string> & Use::computeSubVarNames () {
+	this-> setSubVarNames (this-> _module.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
     
 }

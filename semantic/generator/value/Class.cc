@@ -14,16 +14,17 @@ namespace semantic {
 	{
 	}
 
-	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) :
+	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef, bool isFast) :
 	    Value (loc, loc.getStr (), NoneType::init (loc, "class " + ref.getRealName ())),
-	    _classRef (clRef)
+	    _classRef (clRef),
+	    _isFast (isFast)
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();
 	}
 
-	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) {
-	    return Generator {new (NO_GC) Class (loc, ref, clRef)};
+	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef, bool isFast) {
+	    return Generator {new (NO_GC) Class (loc, ref, clRef, isFast)};
 	}
 
 	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields) {
@@ -160,6 +161,10 @@ namespace semantic {
 
 	const Generator & Class::getClassRef () const {
 	    return this-> _classRef;
+	}
+
+	bool Class::isFast  () const {
+	    return this-> _isFast;
 	}
 	
     }

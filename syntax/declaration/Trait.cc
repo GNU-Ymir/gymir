@@ -26,5 +26,16 @@ namespace syntax {
     const std::vector<Declaration> & Trait::getDeclarations () const {
 	return this-> _inner;
     }
+
+
+    const std::set <std::string> & Trait::computeSubVarNames () {
+	std::set <std::string> s;
+	for (auto & it : this-> _inner) {
+	    auto & iSet = it.getSubVarNames ();
+	    s.insert (iSet.begin (), iSet.end ());
+	}
+	this-> setSubVarNames (s);
+	return this-> getSubVarNames ();
+    }
     
 }

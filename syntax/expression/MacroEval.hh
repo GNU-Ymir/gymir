@@ -32,6 +32,10 @@ namespace syntax {
 	const lexing::Word & getEnd () const;
 	
 	const Expression & getContent () const;
+
+    protected :
+	
+	const std::set <std::string> & computeSubVarNames () override;
 	
     };    
 

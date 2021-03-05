@@ -35,4 +35,13 @@ namespace syntax {
     std::string Cast::prettyString () const {
 	return Ymir::format ("cast!(%) (%)", this-> _type.prettyString(), this-> _content.prettyString ());
     }
+
+    const std::set <std::string> & Cast::computeSubVarNames () {
+	auto tSet = this-> _type.getSubVarNames ();
+	auto & cSet = this-> _content.getSubVarNames ();
+	tSet.insert (cSet.begin (), cSet.end ());
+	this-> setSubVarNames (tSet);
+	return this-> getSubVarNames ();
+    }
+    
 }

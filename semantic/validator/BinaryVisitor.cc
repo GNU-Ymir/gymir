@@ -12,6 +12,48 @@ namespace semantic {
 
 	using namespace Ymir;
 	using namespace generator;
+
+	std::vector <Binary::Operator> BinaryVisitor::__MATH_CHAR_OP__ = {
+	    Binary::Operator::ADD, Binary::Operator::SUB
+	};
+	
+	std::vector <Binary::Operator> BinaryVisitor::__MATH_PTR_OP__ = {
+	    Binary::Operator::ADD, Binary::Operator::SUB
+	};
+
+	std::vector <Binary::Operator> BinaryVisitor::__MATH_FLOAT_OP__ = {
+	    Binary::Operator::ADD, Binary::Operator::SUB, Binary::Operator::MUL, Binary::Operator::DIV,
+	};
+
+	std::vector <Binary::Operator> BinaryVisitor::__LOGIC_INT_OP__ = {
+	    Binary::Operator::SUP, Binary::Operator::INF,
+	    Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
+	    Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL
+	};
+
+	std::vector <Binary::Operator> BinaryVisitor::__LOGIC_CHAR_OP__ = {
+	    Binary::Operator::SUP, Binary::Operator::INF,
+	    Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
+	    Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL
+	};
+
+	std::vector <Binary::Operator> BinaryVisitor::__LOGIC_FLOAT_OP__ = {
+	    Binary::Operator::SUP, Binary::Operator::INF,
+	    Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
+	    Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL
+	};
+	
+	std::vector <Binary::Operator> BinaryVisitor::__LOGIC_BOOL_OP__ = {
+	    Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL,
+	    Binary::Operator::AND, Binary::Operator::OR
+	};
+
+	std::vector <Binary::Operator> BinaryVisitor::__LOGIC_CLASS_OP__ = {
+	    Binary::Operator::SUP, Binary::Operator::INF,
+	    Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
+	    Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL
+	};
+
 	
 	
 	BinaryVisitor::BinaryVisitor (Visitor & context) :
@@ -123,137 +165,141 @@ namespace semantic {
 	}
 
 	Generator BinaryVisitor::validateMathIntLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    if (right.to <Value> ().getType ().is <Integer> () && op != Binary::Operator::CONCAT) {
-		const Integer & leftType = left.to <Value> ().getType ().to <Integer> ();
-		const Integer & rightType = right.to <Value> ().getType ().to <Integer> ();
-		
-		if (leftType.isSigned () == rightType.isSigned ()) {
-		    auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();
-		    return BinaryInt::init (expression.getLocation (),
-					    op,
-					    Integer::init (expression.getLocation (), max, leftType.isSigned ()),
-					    left, right
-		    );
+	    auto & lval = left.to <Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (op != Binary::Operator::CONCAT) {
+		if (rval.getType ().is <Integer> ()) {
+		    const Integer & leftType = lval.getType ().to <Integer> ();
+		    const Integer & rightType = rval.getType ().to <Integer> ();
 		    
+		    if (leftType.isSigned () == rightType.isSigned ()) {
+			auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();
+			return BinaryInt::init (expression.getLocation (),
+						op,
+						Integer::init (expression.getLocation (), max, leftType.isSigned ()),
+						left, right
+			    );
+		    }
 		}		
 	    }
 	    
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
 	}
 	
 	Generator BinaryVisitor::validateMathCharLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    std::vector <Binary::Operator> possible = {
-		Binary::Operator::ADD, Binary::Operator::SUB
-	    };
-	    
-	    if (right.to <Value> ().getType ().is <Char> () && std::find (possible.begin (), possible.end (), op) != possible.end ()) {
-		const Char & leftType = left.to <Value> ().getType ().to <Char> ();
-		const Char & rightType = right.to <Value> ().getType ().to <Char> ();
-		
-		auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();
-		return BinaryChar::init (expression.getLocation (),
-					op,
-					Char::init (expression.getLocation (), max),
-					left, right
-		);			    		
-	    }	    
+	    auto & lval = left.to <Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (std::find (__MATH_CHAR_OP__.begin (), __MATH_CHAR_OP__.end (), op) != __MATH_CHAR_OP__.end ()) {
+		if (rval.getType ().is <Char> ()) {
+		    const Char & leftType = lval.getType ().to <Char> ();
+		    const Char & rightType = rval.getType ().to <Char> ();
+		    
+		    auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();
+		    return BinaryChar::init (expression.getLocation (),
+					     op,
+					     Char::init (expression.getLocation (), max),
+					     left, right
+			);			    		
+		}
+	    }
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
 	}
 
 	Generator BinaryVisitor::validateMathPtrLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    std::vector <Binary::Operator> possible = {
-		Binary::Operator::ADD, Binary::Operator::SUB
-	    };
-	    	    
-	    if (right.to <Value> ().getType ().is <Integer> () &&
-		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
-		const Integer & rightType = right.to <Value> ().getType ().to <Integer> ();
+	    auto & lval = left.to <Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (std::find (__MATH_PTR_OP__.begin (), __MATH_PTR_OP__.end (), op) != __MATH_PTR_OP__.end ()) {
+		if (rval.getType ().is <Integer> ()) {
+		    const Integer & rightType = rval.getType ().to <Integer> ();
 		
-		if (!rightType.isSigned ()) {
-		    return BinaryPtr::init (
-			expression.getLocation (),
-			op,
-			left.to <Value> ().getType (),
-			left, right
-		    );
-		    
-		}		
+		    if (!rightType.isSigned ()) {
+			return BinaryPtr::init (
+			    expression.getLocation (),
+			    op,
+			    lval.getType (),
+			    left, right
+			    );
+			
+		    }		
+		}
 	    }
 	    	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
 	}	
 
 	Generator BinaryVisitor::validateMathFloatLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    std::vector <Binary::Operator> possible = {
-		Binary::Operator::ADD, Binary::Operator::SUB, Binary::Operator::MUL, Binary::Operator::DIV,
-	    };
-	    
-	    if (right.to <Value> ().getType ().is <Float> () &&
-		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
-		const Float & leftType = left.to <Value> ().getType ().to <Float> ();
-		const Float & rightType = right.to <Value> ().getType ().to <Float> ();
-		
-		auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();		
-		return BinaryFloat::init (expression.getLocation (),
-					  op,
-					  Float::init (expression.getLocation (), max),
-					  left, right
-		);
-		
+	    auto & lval = left.to <Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (std::find (__MATH_FLOAT_OP__.begin (), __MATH_FLOAT_OP__.end (), op) != __MATH_FLOAT_OP__.end ()) {	    
+		if (rval.getType ().is <Float> ()) {
+		    const Float & leftType = lval.getType ().to <Float> ();
+		    const Float & rightType = rval.getType ().to <Float> ();
+		    
+		    auto max = leftType.getSize () > rightType.getSize () ? leftType.getSize () : rightType.getSize ();		
+		    return BinaryFloat::init (expression.getLocation (),
+					      op,
+					      Float::init (expression.getLocation (), max),
+					      left, right
+			);		    
+		}
 	    }
 	    
 	    
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
 	}
 
-	Generator BinaryVisitor::validateMathArray (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
+	Generator BinaryVisitor::validateMathArray (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {	    
 	    if (op == Binary::Operator::CONCAT) {
+		auto & rval = right.to <Value> ();
+		
 		auto loc = expression.getLocation ();
 		auto leftSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, left));
 		syntax::Expression rightSynt (syntax::Expression::empty ()); 
-		if (right.to <Value> ().getType ().is <Array> ()) {
+		if (rval.getType ().is <Array> ()) {
 		    rightSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, right));
-		} else if (right.to <Value> ().getType ().is <Slice> ()) {
+		} else if (rval.getType ().is <Slice> ()) {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
 
 		auto lgen = this-> _context.validateValue (leftSynt);
 		auto rgen = this-> _context.validateValue (rightSynt);
+		auto & lgenVal = lgen.to <Value> ();
+		auto & rgenVal = rgen.to <Value> ();
 		
-		auto llevel = lgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
-		auto rlevel = rgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+		auto llevel = lgenVal.getType ().to <Type> ().mutabilityLevel ();
+		auto rlevel = rgenVal.getType ().to <Type> ().mutabilityLevel ();
 
-		this-> _context.verifySameType (lgen.to <Value> ().getType (), rgen.to <Value> ().getType ());
+		this-> _context.verifySameType (lgenVal.getType (), rgenVal.getType ());
 		
 		Generator retType (Generator::empty ());
-		if (llevel < rlevel) retType = lgen.to <Value> ().getType ();
-		else retType = rgen.to <Value> ().getType ();
+		if (llevel < rlevel) retType = lgenVal.getType ();
+		else retType = rgenVal.getType ();
 		
 		return SliceConcat::init (expression.getLocation (), retType, lgen, rgen);
 	    }
@@ -263,27 +309,31 @@ namespace semantic {
 	
 	Generator BinaryVisitor::validateMathSlice (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
 	    if (op == Binary::Operator::CONCAT) {
+		auto & rval = right.to <Value> ();
+		
 		auto loc = expression.getLocation ();
 		
 		auto leftSynt = TemplateSyntaxWrapper::init (loc, left);
 		syntax::Expression rightSynt (syntax::Expression::empty ()); 
-		if (right.to <Value> ().getType ().is <Array> ()) {
+		if (rval.getType ().is <Array> ()) {
 		    rightSynt = syntax::Intrinsics::init (lexing::Word::init (loc, Keys::ALIAS), TemplateSyntaxWrapper::init (loc, right));
-		} else if (right.to <Value> ().getType ().is <Slice> ()) {
+		} else if (rval.getType ().is <Slice> ()) {
 		    rightSynt = TemplateSyntaxWrapper::init (loc, right);
 		} else return Generator::empty ();
 
 		auto lgen = this-> _context.validateValue (leftSynt);
 		auto rgen = this-> _context.validateValue (rightSynt);
+		auto & lgenVal = lgen.to <Value> ();
+		auto & rgenVal = rgen.to <Value> ();
 		
-		auto llevel = lgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
-		auto rlevel = rgen.to <Value> ().getType ().to <Type> ().mutabilityLevel ();
+		auto llevel = lgenVal.getType ().to <Type> ().mutabilityLevel ();
+		auto rlevel = rgenVal.getType ().to <Type> ().mutabilityLevel ();
 
-		this-> _context.verifySameType (lgen.to <Value> ().getType (), rgen.to <Value> ().getType ());
+		this-> _context.verifySameType (lgenVal.getType (), rgenVal.getType ());
 		
 		Generator retType (Generator::empty ());
-		if (llevel < rlevel) retType = lgen.to <Value> ().getType ();
-		else retType = rgen.to <Value> ().getType ();
+		if (llevel < rlevel) retType = lgenVal.getType ();
+		else retType = rgenVal.getType ();
 		
 		return SliceConcat::init (expression.getLocation (), retType, lgen, rgen);
 	    }
@@ -429,99 +479,93 @@ namespace semantic {
 	}
 
 	Generator BinaryVisitor::validateLogicalIntLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
-			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
-			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
-	    
-	    if (right.to<Value> ().getType ().is <Integer> () &&		
-		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
-		const Integer & leftType = left.to <Value> ().getType ().to <Integer> ();
-		const Integer & rightType = right.to <Value> ().getType ().to <Integer> ();
-		
-		if (leftType.isSigned () == rightType.isSigned ()) {
-		    return BinaryInt::init (expression.getLocation (),
-					    op,
-					    Bool::init (expression.getLocation ()),
-					    left, right
-		    );
+	    auto & lval = left.to<Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (std::find (__LOGIC_INT_OP__.begin (), __LOGIC_INT_OP__.end (), op) != __LOGIC_INT_OP__.end ()) {
+		if (rval.getType ().is <Integer> ()) {
+		    const Integer & leftType = lval.getType ().to <Integer> ();
+		    const Integer & rightType = rval.getType ().to <Integer> ();
+		    
+		    if (leftType.isSigned () == rightType.isSigned ()) {
+			return BinaryInt::init (expression.getLocation (),
+						op,
+						Bool::init (expression.getLocation ()),
+						left, right
+			    );
+		    }
 		}
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
 	}	
 
 	Generator BinaryVisitor::validateLogicalCharLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
-			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
-			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
-
-	    if (right.to<Value> ().getType ().to <Type> ().isCompatible (left.to<Value> ().getType ()) &&		
-		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
-		
-		return BinaryChar::init (expression.getLocation (),
-					 op,
-					 Bool::init (expression.getLocation ()),
-					 left, right
-		);	    
+	    auto & lval = left.to<Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (std::find (__LOGIC_CHAR_OP__.begin (), __LOGIC_CHAR_OP__.end (), op) != __LOGIC_CHAR_OP__.end ()) {
+		if (rval.getType ().to <Type> ().isCompatible (lval.getType ())) {		 		
+		    return BinaryChar::init (expression.getLocation (),
+					     op,
+					     Bool::init (expression.getLocation ()),
+					     left, right
+			);
+		}
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
 	}	
 	
 	Generator BinaryVisitor::validateLogicalFloatLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
-			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
-			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
-	    
-	    if (right.to<Value> ().getType ().is <Float> () &&		
-		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
-
-		return BinaryFloat::init (expression.getLocation (),
-					op,
-					Bool::init (expression.getLocation ()),
-					left, right
-		);	    
+	    auto & lval = left.to <Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (std::find (__LOGIC_FLOAT_OP__.begin (), __LOGIC_FLOAT_OP__.end (), op) != __LOGIC_FLOAT_OP__.end ()) {
+		
+		if (rval.getType ().is <Float> ()) {		
+		    return BinaryFloat::init (expression.getLocation (),
+					      op,
+					      Bool::init (expression.getLocation ()),
+					      left, right
+			);	    
+		}
 	    }
-
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
 	}	
 	
 	Generator BinaryVisitor::validateLogicalBoolLeft (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    auto possible = {Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL,
-			     Binary::Operator::AND, Binary::Operator::OR};
-	    
-	    if (right.to<Value> ().getType ().is <Bool> () &&		
-		std::find (possible.begin (), possible.end (), op) != possible.end ()) {
-		
-		return BinaryBool::init (expression.getLocation (),
-					op,
-					Bool::init (expression.getLocation ()),
-					left, right
-		);		
+	    auto & lval = left.to <Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (std::find (__LOGIC_BOOL_OP__.begin (), __LOGIC_BOOL_OP__.end (), op) != __LOGIC_BOOL_OP__.end ()) {
+		if (right.to<Value> ().getType ().is <Bool> ()) {		
+		    return BinaryBool::init (expression.getLocation (),
+					     op,
+					     Bool::init (expression.getLocation ()),
+					     left, right
+			);		
+		}
 	    }
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 	    );
 	    
 	    return Generator::empty ();
@@ -537,12 +581,12 @@ namespace semantic {
 		rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    } else return Generator::empty ();
 
-	    auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});		
+	    auto var = this-> _context.createValueFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});		
 	    	    
 	    auto call = this-> _context.validateValue (
 		syntax::MultOperator::init (
 		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-		    var,
+		    TemplateSyntaxWrapper::init (loc, var),
 		    {leftSynt, rightSynt}
 		    )
 		);
@@ -569,11 +613,11 @@ namespace semantic {
 		rightSynt = TemplateSyntaxWrapper::init (loc, right);
 	    } else return Generator::empty ();
 
-	    auto var = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});			    	    
+	    auto var = this-> _context.createValueFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (LOGICAL_OP_OVERRIDE)});			    	    
 	    auto call = this-> _context.validateValue (
 		syntax::MultOperator::init (
 		    lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-		    var,
+		    TemplateSyntaxWrapper::init (loc, var),
 		    {leftSynt, rightSynt}
 		    )
 		);
@@ -590,12 +634,8 @@ namespace semantic {
 	    return this-> _context.validateValue (test);
 	}
 
-	Generator BinaryVisitor::validateLogicalClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
-			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
-			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
-	    
-	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
+	Generator BinaryVisitor::validateLogicalClass (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {	    
+	    if (std::find (__LOGIC_CLASS_OP__.begin (), __LOGIC_CLASS_OP__.end (), op) == __LOGIC_CLASS_OP__.end ()) return Generator::empty ();
 
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
@@ -652,12 +692,8 @@ namespace semantic {
 	    return this-> _context.validateValue (final_test);
 	}
 
-	Generator BinaryVisitor::validateLogicalClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {
-	    auto possible = {Binary::Operator::SUP, Binary::Operator::INF,
-			     Binary::Operator::INF_EQUAL, Binary::Operator::SUP_EQUAL,
-			     Binary::Operator::EQUAL, Binary::Operator::NOT_EQUAL};
-	    
-	    if (std::find (possible.begin (), possible.end (), op) == possible.end ()) return Generator::empty ();
+	Generator BinaryVisitor::validateLogicalClassRight (Binary::Operator op, const syntax::Binary & expression, const Generator & left, const Generator & right) {	    
+	    if (std::find (__LOGIC_CLASS_OP__.begin (), __LOGIC_CLASS_OP__.end (), op) == __LOGIC_CLASS_OP__.end ()) return Generator::empty ();
 
 	    std::list <Ymir::Error::ErrorMsg> errors;	    
 	    if (op == Binary::Operator::EQUAL || op == Binary::Operator::NOT_EQUAL) {
@@ -792,19 +828,21 @@ namespace semantic {
 	    
 	    auto left = this-> _context.validateValue (expression.getLeft ());
 	    auto right = this-> _context.validateValue (expression.getRight ());
-
+	    	    
 	    if (op != Binary::Operator::LAST_OP) {
 		right = validateMathOperation (op, expression, left, right);
 	    }
 
-	    if (!left.to <Value> ().isLvalue () || (left.is <VarRef> () && left.to <VarRef> ().isSelf ())) // We cannot change the reference of the self paramvar even if it is mutable
+	    auto & lval = left.to <Value> ();
+
+	    if (!lval.isLvalue () || (left.is <VarRef> () && left.to <VarRef> ().isSelf ())) // We cannot change the reference of the self paramvar even if it is mutable
 		Ymir::Error::occur (left.getLocation (), ExternalError::get (NOT_A_LVALUE));
+	    
+	    if (!lval.getType ().to <Type> ().isMutable ()) 
+		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE), lval.getType ().to <Type> ().getTypeName ());	    
 
-	    if (!left.to <Value> ().getType ().to <Type> ().isMutable ()) 
-		Ymir::Error::occur (left.getLocation (), ExternalError::get (IMMUTABLE_LVALUE), left.to <Value> ().getType ().to <Type> ().getTypeName ());	    
-
-	    this-> _context.verifyMemoryOwner (expression.getLocation (), left.to <Value> ().getType (), right, false);	    
-	    return Affect::init (expression.getLocation (), left.to <Value> ().getType (), left, right);	    
+	    this-> _context.verifyMemoryOwner (expression.getLocation (), lval.getType (), right, false);	    
+	    return Affect::init (expression.getLocation (), lval.getType (), left, right);	    
 	}
 
 	Generator BinaryVisitor::validateIndexAssign (Binary::Operator op, const syntax::Binary & expression) {
@@ -1032,9 +1070,11 @@ namespace semantic {
 	    auto left = this-> _context.validateValue (leftExp);
 	    auto right = this-> _context.validateValue (rightExp);
 
-	    if (left.to <Value> ().getType ().is <Pointer> ()) {		
-		auto lptr = left.to <Value> ().getType ();
-		auto rptr = right.to <Value> ().getType ();
+	    auto & lval = left.to <Value> ();
+	    auto & rval = right.to <Value> ();
+	    if (lval.getType ().is <Pointer> ()) {		
+		auto lptr = lval.getType ();
+		auto rptr = rval.getType ();
 		if (lptr.to <Type> ().isCompatible (rptr)) 
 		    return BinaryPtr::init (expression.getLocation (),
 					    op,
@@ -1049,8 +1089,8 @@ namespace semantic {
 
 	    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
 				expression.getLocation ().getStr (),
-				left.to <Value> ().getType ().to <Type> ().getTypeName (),
-				right.to <Value> ().getType ().to <Type> ().getTypeName ()
+				lval.getType ().prettyString (),
+				rval.getType ().prettyString ()
 		);
 		    
 	    return Generator::empty ();

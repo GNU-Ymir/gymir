@@ -40,6 +40,11 @@ namespace syntax {
 	 * \return the content of the wrapper
 	 */
 	const Expression & getContent () const;
+
+
+    protected :
+
+	const std::set <std::string> & computeSubVarNames () override;
 	
     };
     

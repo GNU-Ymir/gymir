@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ymir/utils/macros.hh>
 #include <ymir/utils/OutBuffer.hh>
 #include <ymir/utils/Ref.hh>
 #include <ymir/errors/Error.hh>
@@ -13,6 +14,10 @@ namespace syntax {
 	lexing::Word _location;
 
 	std::string _comments;
+
+	std::set <std::string> _sub_var_names;
+
+	bool _set_sub_var_names = false;
 	
     protected : 
 	
@@ -20,7 +25,8 @@ namespace syntax {
 	
     public:
 	
-
+	friend Declaration;
+	
 	/**
 	 * \brief Print the declaration into the buffer 
 	 * \brief Debugging purpose only
@@ -38,11 +44,22 @@ namespace syntax {
 	const std::string& getComments () const;
 
 	/**
+	 * @return the names of the variable that are contained in the declaration
+	 */
+	const std::set <std::string> & getSubVarNames () const ;
+
+	/**
 	 * Change the comments of the declaration
 	 */
 	void setComments (const std::string & comments);
 	
 	virtual ~IDeclaration ();
+
+    protected :
+	
+	virtual const std::set <std::string> & computeSubVarNames () = 0;
+	
+	void setSubVarNames (const std::set <std::string> & subVarNames);
 	
     };
 
@@ -50,7 +67,10 @@ namespace syntax {
      * \struct Declaration Proxy of all declaration
      * 
      */
-    class Declaration : public RefProxy <IDeclaration, Declaration> {	
+    class Declaration : public RefProxy <IDeclaration, Declaration> {
+
+	static std::set <std::string> __empty_sub_names__;
+	
     public:
 	
 	Declaration (IDeclaration * decl); 
@@ -87,8 +107,10 @@ namespace syntax {
 	 */
 	template <typename T>
 	T& to () {
+#ifdef TO_DEBUG
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr) 
-		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+	    	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 	    return *((T*) this-> _value.get ());	    
 	}
 
@@ -98,8 +120,10 @@ namespace syntax {
 	 */
 	template <typename T>
 	const T& to () const {
+#ifdef TO_DEBUG
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr) 
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 	    return * ((const T*) this-> _value.get ());	    
 	}
 	
@@ -110,9 +134,15 @@ namespace syntax {
 	bool is () const {	    
 	    return dynamic_cast <T*> (this-> _value.get ()) != nullptr; 
 	}
+
+
+	const std::set <std::string> & getSubVarNames () const ;
 	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
-
+	
+    private :
+	
+	const std::set <std::string> & computeSubVarNames ();
 	
     };    
 

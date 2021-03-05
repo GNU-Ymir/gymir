@@ -31,5 +31,10 @@ namespace syntax {
     const lexing::Word & ExternBlock::getFrom () const {
 	return this-> _from;
     }
+
+    const std::set <std::string> & ExternBlock::computeSubVarNames () {
+	this-> setSubVarNames (this-> _content.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
     
 }

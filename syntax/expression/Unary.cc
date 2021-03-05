@@ -35,5 +35,10 @@ namespace syntax {
 	buf.write (this-> getLocation ().getStr (), '(', this-> _content.prettyString (), ')');
 	return buf.str ();
     }
+
+    const std::set <std::string> & Unary::computeSubVarNames () {
+	this-> setSubVarNames (this-> _content.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
     
 }

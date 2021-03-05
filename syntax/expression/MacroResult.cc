@@ -28,4 +28,9 @@ namespace syntax {
     const std::string & MacroResult::getContent () const {
 	return this-> _content;
     }
+	
+    const std::set <std::string> & MacroResult::computeSubVarNames () {
+	this-> setSubVarNames ({});
+	return this-> getSubVarNames ();
+    }
 }

@@ -22,4 +22,8 @@ namespace syntax {
 	return "_";
     }
     
+    const std::set <std::string> & Ignore::computeSubVarNames () {
+	this-> setSubVarNames ({});
+	return this-> getSubVarNames ();
+    }
 }

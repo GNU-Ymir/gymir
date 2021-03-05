@@ -40,5 +40,16 @@ namespace syntax {
 	}
 	return false;
     }
+
+    const std::set <std::string> & Class::computeSubVarNames () {
+	auto oSet = this-> _over.getSubVarNames ();
+	for (auto & it : this-> _innerDeclaration) {
+	    auto & iSet = it.getSubVarNames ();
+	    oSet.insert (iSet.begin (), iSet.end ());
+	}
+	
+	this-> setSubVarNames (oSet);	
+	return this-> getSubVarNames ();
+    }
     
 }

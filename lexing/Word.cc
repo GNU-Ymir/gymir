@@ -5,8 +5,11 @@
 #include <ymir/utils/Memory.hh>
 #include <ymir/utils/Colors.hh>
 #include <ymir/errors/Error.hh>
+#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
 
 namespace lexing {
+    
+    ulong all = 0;
     
     std::map <std::string, char*> Word::__filenames__;
 
@@ -23,6 +26,7 @@ namespace lexing {
 	file (file),
 	start (start)
     {}
+    
 
     Word::Word (IWord * elem) : RefProxy<IWord, Word> (elem)
     {}

@@ -38,5 +38,15 @@ namespace syntax {
 	buf.write (")");
 	return buf.str ();
     }
+
+    const std::set <std::string> & Pragma::computeSubVarNames () {
+	std::set <std::string> s;
+	for (auto & it : this-> _params) {
+	    auto & iSet = it.getSubVarNames ();
+	    s.insert (iSet.begin (), iSet.end ());
+	}
+	this-> setSubVarNames (s);
+	return this-> getSubVarNames ();
+    }
     
 }

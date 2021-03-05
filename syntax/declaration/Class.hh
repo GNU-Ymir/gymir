@@ -74,6 +74,11 @@ namespace syntax {
 	 * I this class abstract
 	 */
 	bool isAbstract () const;
+
+    protected :
+
+	const std::set <std::string> & computeSubVarNames () override;
+	
     };
     
 

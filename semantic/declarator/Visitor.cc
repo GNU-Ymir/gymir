@@ -179,7 +179,8 @@ namespace semantic {
 	
 	semantic::Symbol Visitor::visitFunction (const syntax::Function func, bool isExtern, bool insert) {
 	    auto function = Function::init (func.getLocation (), func.getComments (), func, this-> _isWeak);
-	
+	    auto & innerFunc = function.to <Function> ();
+	    
 	    auto symbols = getReferent ().getLocal (func.getLocation ().getStr ());	    
 	    for (auto symbol : symbols) {
 		if (!symbol.is <Function> () && !symbol.is <Module> () && !symbol.is <ModRef> () && func.getLocation () != Keys::SELF_TILDE && !symbol.is <Template> ()) {
@@ -190,15 +191,15 @@ namespace semantic {
 
 	    lexing::Word gotSafeOrThrow (lexing::Word::eof ());
 	    for (auto & ca : func.getCustomAttributes ()) {
-		if (ca == Keys::FINAL_ && function.to<Function> ().isMethod ()) function.to <Function> ().isFinal (true);
+		if (ca == Keys::FINAL_ && innerFunc.isMethod ()) innerFunc.isFinal (true);
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.getStr ());
 		}
 	    }
 
 	    
-	    if (func.isOver ()) function.to <Function> ().isOver (true);	    
-	    function.to <Function> ().setThrowers (func.getThrowers ()); 
+	    if (func.isOver ()) innerFunc.isOver (true);	    
+	    innerFunc.setThrowers (func.getThrowers ()); 
 		
 	    if (!isExtern || !func.getBody ().isEmpty ()) {
 		if (func.getPrototype ().isVariadic ()) Ymir::Error::occur (func.getLocation (), ExternalError::get (DECL_VARIADIC_FUNC));
@@ -227,16 +228,17 @@ namespace semantic {
 	    for (auto symbol : symbols) {
 		auto note = Ymir::Error::createNote (symbol.getName ());
 		Ymir::Error::occurAndNote (str.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), str.getLocation ().getStr ());		
-	    } 
+	    }
+	    auto & innerStruct = structure.to <Struct> ();
 	
 	    for (auto & ca : str.getCustomAttributes ()) {
 		if (ca == Keys::PACKED) {
-		    structure.to<Struct> ().isPacked (true);
+		    innerStruct.isPacked (true);
 		} else if (ca == Keys::UNION) {
-		    structure.to<Struct> ().isUnion (true);
+		    innerStruct.isUnion (true);
 		} else Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.getStr ());
 
-		if (structure.to <Struct> ().isUnion () && structure.to <Struct> ().isPacked ()) {
+		if (innerStruct.isUnion () && innerStruct.isPacked ()) {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::PACKED_AND_UNION));
 		}
 	    }
@@ -333,33 +335,34 @@ namespace semantic {
 	}
 	
 	void Visitor::visitInnerClass (Symbol cls, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
+	    auto & semCls = cls.to <semantic::Class> ();
 	    for (auto jt : decls) {
 		match (jt) {
 		    of (syntax::ExpressionWrapper, wrap, {
 			    match (wrap.getContent ()) {
 				of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
-					cls.to <semantic::Class> ().addField (wrap.getContent ());					
-					cls.to <semantic::Class> ().setFieldComment (de.getLocation ().getStr (), wrap.getComments ());
+					semCls.addField (wrap.getContent ());					
+					semCls.setFieldComment (de.getLocation ().getStr (), wrap.getComments ());
 					if (prv)
-					    cls.to <semantic::Class> ().setPrivate (de.getLocation ().getStr ());
+					    semCls.setPrivate (de.getLocation ().getStr ());
 					else if (prot) {
-					    cls.to <semantic::Class> ().setProtected (de.getLocation ().getStr ());
+					    semCls.setProtected (de.getLocation ().getStr ());
 					}
 				    } 
 				) else of (syntax::Set, se, {
 					for (auto it : se.getContent ()) {
-					    cls.to <semantic::Class> ().addField (it);
-					    cls.to <semantic::Class> ().setFieldComment (it.to <syntax::VarDecl> ().getLocation ().getStr (), wrap.getComments ());
+					    semCls.addField (it);
+					    semCls.setFieldComment (it.to <syntax::VarDecl> ().getLocation ().getStr (), wrap.getComments ());
 					    if (prv)						
-						cls.to <semantic::Class> ().setPrivate (it.to <syntax::VarDecl> ().getLocation ().getStr ());
+						semCls.setPrivate (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 					    else if (prot) {
-						cls.to <semantic::Class> ().setProtected (it.to <syntax::VarDecl> ().getLocation ().getStr ());
+						semCls.setProtected (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 					    }
 					}
 				    }
 				 ) else of (syntax::Assert, de ATTRIBUTE_UNUSED, {
-					 cls.to <semantic::Class> ().addAssertion (wrap.getContent ());
-					 cls.to <semantic::Class> ().addAssertionComments (wrap.getComments ());
+					 semCls.addAssertion (wrap.getContent ());
+					 semCls.addAssertionComments (wrap.getComments ());
 				     }
 				 ) else 
 				      Error::halt ("%(r) - reaching impossible point", "Critical");			
@@ -385,6 +388,24 @@ namespace semantic {
 		}
 	    }
 	}
+
+	void Visitor::visitInnerImpl (Symbol cls, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
+	    for (auto jt : decls) {
+		match (jt) {
+		    of (syntax::DeclBlock, dc, {			    
+			    visitInnerImpl (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+			}
+		    ) else of (syntax::CondBlock, cb, {
+			    Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_CLASS));
+			}
+		    ) else {
+			    auto sym = visit (jt);
+			    if (!sym.isEmpty () && pub)  sym.setPublic ();
+			    if (!sym.isEmpty () && prot) sym.setProtected ();
+		    }
+		}
+	    }
+	}
 	
 	semantic::Symbol Visitor::visitClass (const syntax::Declaration & stdecl) {
 	    auto & stcls = stdecl.to <syntax::Class> ();
@@ -396,9 +417,10 @@ namespace semantic {
 		Ymir::Error::occurAndNote (stcls.getLocation (), note, Ymir::ExternalError::get (Ymir::SHADOWING_DECL), stcls.getLocation ().getStr ());		
 	    }
 
+	    auto & semCls = cls.to <Class> ();
 	    for (auto & ca : stcls.getAttributes ()) {
-		if (ca == Keys::ABSTRACT) cls.to <Class> ().isAbs (true);
-		else if (ca == Keys::FINAL_) cls.to <Class> ().isFinal (true);
+		if (ca == Keys::ABSTRACT) semCls.isAbs (true);
+		else if (ca == Keys::FINAL_) semCls.isFinal (true);
 		else {
 		    Ymir::Error::occur (ca, Ymir::ExternalError::get (Ymir::UNDEFINED_CA), ca.getStr ());
 		}
@@ -429,6 +451,7 @@ namespace semantic {
 	}
 
 	void Visitor::visitInnerTrait (Symbol tr, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
+	    auto & semTrait = tr.to <semantic::Trait> ();
 	    for (auto it : decls) {
 	    	match (it) {
 	    	    of (syntax::DeclBlock, dc, {
@@ -439,8 +462,8 @@ namespace semantic {
 			}
 		     ) else of (syntax::ExpressionWrapper, wrap, {
 			     if (wrap.getContent ().is <syntax::Assert> ()) {
-				 tr.to <semantic::Trait> ().addAssertion (wrap.getContent ());
-				 tr.to <semantic::Trait> ().addAssertionComments (wrap.getComments ());
+				 semTrait.addAssertion (wrap.getContent ());
+				 semTrait.addAssertionComments (wrap.getComments ());
 			     } else {
 				 auto sym = visit (it);
 				 if (!sym.isEmpty () && prot) sym.setProtected ();
@@ -460,7 +483,7 @@ namespace semantic {
 	    auto stimpl = decl.to <syntax::Mixin> ();
 	    auto im = Impl::init (stimpl.getLocation (), stimpl.getComments (), stimpl.getMixin (), this-> _isWeak);
 	    pushReferent (im);
-	    visitInnerClass (im, stimpl.getDeclarations (), false, true, false);	    
+	    visitInnerImpl (im, stimpl.getDeclarations (), false, true, false);	    
 	    auto ret = popReferent ();
 	    getReferent ().insert (ret);
 	    return ret;	    

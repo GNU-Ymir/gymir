@@ -26,5 +26,15 @@ namespace syntax {
     const std::vector <Declaration> & Macro::getContent () const {
 	return this-> _content;
     }
+	
+    const std::set <std::string> & Macro::computeSubVarNames () {
+	std::set <std::string> s;
+	for (auto & it : this-> _content) {
+	    auto & iSet = it.getSubVarNames ();
+	    s.insert (iSet.begin (), iSet.end ());
+	}
+	this-> setSubVarNames (s);
+	return this-> getSubVarNames ();
+    }
     
 }

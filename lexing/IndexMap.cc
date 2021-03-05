@@ -50,7 +50,7 @@ namespace lexing {
 	    result.push_back (str.substr (start, len));
 	    start += len;
 	}
-		
+	
 	return result;
     }
 

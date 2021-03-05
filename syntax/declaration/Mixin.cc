@@ -31,5 +31,15 @@ namespace syntax {
 	this-> _mixin.treePrint (stream, i + 1);
     }
     
+    const std::set <std::string> & Mixin::computeSubVarNames () {
+	auto mSet = this-> _mixin.getSubVarNames ();
+	for (auto & it : this-> _declarations) {
+	    auto & iSet = it.getSubVarNames ();
+	    mSet.insert (iSet.begin (), iSet.end ());
+	}
 
+	this-> setSubVarNames (mSet);
+	return this-> getSubVarNames ();
+    }
+    
 }

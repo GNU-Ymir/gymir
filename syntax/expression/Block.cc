@@ -69,5 +69,23 @@ namespace syntax {
 	}
 	return buf.str ();
     }
+
+    const std::set <std::string> & Block::computeSubVarNames () {
+	auto cSet = this-> _catcher.getSubVarNames ();
+	for (auto & it : this-> _content) {
+	    auto & iSet = it.getSubVarNames ();
+	    cSet.insert (iSet.begin (), iSet.end ());
+	}
+
+	for (auto & it : this-> _scopes) {
+	    auto & iSet = it.getSubVarNames ();
+	    cSet.insert (iSet.begin (), iSet.end ());
+	}
+
+	auto & dSet = this-> _declModule.getSubVarNames ();
+	cSet.insert (dSet.begin (), dSet.end ());
+	this-> setSubVarNames (cSet);
+	return this-> getSubVarNames ();
+    }
     
 }

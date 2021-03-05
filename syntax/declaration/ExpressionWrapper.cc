@@ -24,5 +24,10 @@ namespace syntax {
 	stream.writef ("%*", i, '\t');
 	stream.writeln ("<Expression> : ");	
     }
+
+    const std::set <std::string> & ExpressionWrapper::computeSubVarNames () {
+	this-> setSubVarNames (this-> _content.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
     
 }

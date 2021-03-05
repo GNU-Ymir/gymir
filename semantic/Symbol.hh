@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ymir/utils/macros.hh>
 #include <ymir/utils/Ref.hh>
 #include <ymir/lexing/Word.hh>
 #include <ymir/errors/Error.hh>
@@ -495,8 +496,10 @@ namespace semantic {
 	 */
 	template <typename T>
 	T& to ()  {
+#ifdef TO_DEBUG
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 	    return *((T*) this-> _value.get ());	    
 	}
 
@@ -506,8 +509,10 @@ namespace semantic {
 	 */
 	template <typename T>
 	const T& to () const  {
+#ifdef TO_DEBUG
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
 		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
+#endif
 	    return *((const T*) this-> _value.get ());	    
 	}
 

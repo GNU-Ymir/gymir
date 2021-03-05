@@ -46,5 +46,16 @@ namespace syntax {
 	if (!this-> _else.isEmpty ()) buf.writef ("\nelse %", this-> _else.prettyString ());
 	return buf.str ();
     }
+
+    const std::set <std::string> & If::computeSubVarNames () {
+	auto tSet = this-> _test.getSubVarNames ();
+	auto & cSet = this-> _content.getSubVarNames ();
+	auto & eSet = this-> _else.getSubVarNames ();
+	tSet.insert (cSet.begin (), cSet.end ());
+	tSet.insert (eSet.begin (), eSet.end ());
+	this-> setSubVarNames (tSet);
+	return this-> getSubVarNames ();
+    }
+	
     
 }

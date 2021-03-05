@@ -63,21 +63,25 @@ namespace semantic {
 		auto _it = ot._params.find (it.first);
 		if (_it == ot._params.end ()) return false;
 		else if (_it-> second.is <generator::TemplateSyntaxWrapper> () && it.second.is <generator::TemplateSyntaxWrapper> ()) {
-		    if (_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().is <generator::Type> ()) {
-			if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().to <generator::Type> ().completeEquals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
+		    auto & l_it = _it-> second.to <generator::TemplateSyntaxWrapper> ();
+		    auto & r_it = it.second.to <generator::TemplateSyntaxWrapper> ();
+		    if (l_it.getContent ().is <generator::Type> ()) {
+			if (!l_it.getContent ().to <generator::Type> ().completeEquals (r_it.getContent ())) {
 			    return false;
 			}
-		    } else if (!_it-> second.to <generator::TemplateSyntaxWrapper> ().getContent ().equals (it.second.to <generator::TemplateSyntaxWrapper> ().getContent ())) {
+		    } else if (!l_it.getContent ().equals (r_it.getContent ())) {
 			return false;
 		    }
 		} else if (_it-> second.is <generator::TemplateSyntaxList> () && it.second.is <generator::TemplateSyntaxList> ()) {
-		    if (_it-> second.to <generator::TemplateSyntaxList> ().getContents ().size () != it.second.to <generator::TemplateSyntaxList> ().getContents ().size ())
+		    auto & l_it = _it-> second.to <generator::TemplateSyntaxList> ();
+		    auto & r_it = it.second.to <generator::TemplateSyntaxList> ();
+		    if (l_it.getContents ().size () != r_it.getContents ().size ())
 			return false;
-		    for (auto j : Ymir::r (0, _it-> second.to <generator::TemplateSyntaxList> ().getContents ().size ())) {
-			if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].is <generator::Type> ()) {
-			    if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].to <generator::Type> ().completeEquals (it.second.to <generator::TemplateSyntaxList> ().getContents () [j]))
+		    for (auto j : Ymir::r (0, l_it.getContents ().size ())) {
+			if (!l_it.getContents ()[j].is <generator::Type> ()) {
+			    if (!l_it.getContents ()[j].to <generator::Type> ().completeEquals (r_it.getContents () [j]))
 				return false;
-			} else if (!_it-> second.to <generator::TemplateSyntaxList> ().getContents ()[j].equals (it.second.to <generator::TemplateSyntaxList> ().getContents () [j])) 
+			} else if (!l_it.getContents ()[j].equals (r_it.getContents () [j])) 
 			    return false;
 		    }
 		} else if (_it-> second.prettyString () != it.second.prettyString ()) // Single value

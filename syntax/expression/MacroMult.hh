@@ -36,6 +36,10 @@ namespace syntax {
 	const std::vector <Expression> & getContent () const;
 
 	const lexing::Word & getMult () const;
+
+    protected :
+	
+	const std::set <std::string> & computeSubVarNames () override;
 	
     };    
 

@@ -51,6 +51,10 @@ namespace syntax {
 	 */
 	const Expression & getValue () const ;
 	
+    protected :
+
+	const std::set <std::string> & computeSubVarNames () override;
+
     };    
 
 }

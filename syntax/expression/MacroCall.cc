@@ -41,4 +41,8 @@ namespace syntax {
 	return this-> _content;
     }
     
+    const std::set <std::string> & MacroCall::computeSubVarNames () {
+	this-> setSubVarNames (this-> _left.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
 }

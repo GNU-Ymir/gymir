@@ -37,5 +37,15 @@ namespace syntax {
     const std::vector <std::string> & Struct::getDeclComments () const {
 	return this-> _field_comments;
     }
+
+    const std::set <std::string> & Struct::computeSubVarNames () {
+	std::set <std::string> s;
+	for (auto & it : this-> _decls) {
+	    auto & iSet = it.getSubVarNames ();
+	    s.insert (iSet.begin (), iSet.end ());
+	}
+	this-> setSubVarNames (s);
+	return this-> getSubVarNames ();
+    }
     
 }

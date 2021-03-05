@@ -53,5 +53,17 @@ namespace syntax {
 	buf.write (this-> _value.prettyString ());
 	return buf.str ();
     }
+
+
+    const std::set <std::string> & DestructDecl::computeSubVarNames () {
+	auto vSet = this-> _value.getSubVarNames ();
+	for (auto &it : this-> _params) {
+	    auto & iSet = it.getSubVarNames ();
+	    vSet.insert (iSet.begin (), iSet.end ());
+	}
+	
+	this-> setSubVarNames (vSet);
+	return this-> getSubVarNames ();
+    }
     
 }

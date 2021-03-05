@@ -219,7 +219,7 @@ namespace semantic {
 		    }
 		}
 
-		if (!type.isEmpty ()) {			     
+		if (!type.isEmpty ()) {		    
 		    if (
 			classValue.to <Value> ().isLvalue () &&
 			classValue.to <Value> ().getType ().to <Type> ().isMutable () &&

@@ -46,6 +46,10 @@ namespace syntax {
 	 * \return the relative path of the module to import
 	 */
 	std::string getPath () const;
+
+    protected :
+	
+	const std::set <std::string> & computeSubVarNames () override;
 	
     };
     

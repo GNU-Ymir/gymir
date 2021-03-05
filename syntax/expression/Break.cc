@@ -31,5 +31,10 @@ namespace syntax {
 	else 
 	return Ymir::format ("break %", this-> _value.prettyString ());
     }
+
+    const std::set <std::string> & Break::computeSubVarNames () {
+	this-> setSubVarNames (this-> _value.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
     
 }

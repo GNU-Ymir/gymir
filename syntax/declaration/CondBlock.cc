@@ -46,5 +46,19 @@ namespace syntax {
     const Declaration & CondBlock::getElse () const {
 	return this-> _else;
     }
+
+
+    const std::set <std::string> & CondBlock::computeSubVarNames () {
+	auto eSet = this-> _else.getSubVarNames ();
+	auto & tSet = this-> _test.getSubVarNames ();
+	eSet.insert (tSet.begin (), tSet.end ());
+	for (auto & it : this-> _inner) {
+	    auto & iSet = it.getSubVarNames ();
+	    eSet.insert (iSet.begin (), iSet.end ());
+	}
+	
+	this-> setSubVarNames (eSet);
+	return this-> getSubVarNames ();
+    }
     
 }

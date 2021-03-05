@@ -26,5 +26,10 @@ namespace syntax {
 	stream.writeln (" ", this-> getLocation ());       
 	this-> _decl.treePrint (stream, i + 2);
     }
-        
+
+    const std::set <std::string> & Global::computeSubVarNames () {
+	this-> setSubVarNames (this-> _decl.getSubVarNames ());
+	return this-> getSubVarNames ();
+    }
+    
 }

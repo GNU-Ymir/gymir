@@ -39,5 +39,10 @@ namespace syntax {
 	    return Ymir::format ("%.%%", this-> _prePart.getStr (), this-> _decPart.getStr (), this-> _suffix.getStr ());
 	}
     }
+
+    const std::set <std::string> & Float::computeSubVarNames () {
+	this-> setSubVarNames ({});
+	return this-> getSubVarNames ();
+    }
     
 }

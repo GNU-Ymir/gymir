@@ -17,6 +17,22 @@ namespace semantic {
 	class BinaryVisitor {
 
 	    Visitor & _context;
+
+	    static std::vector <generator::Binary::Operator> __MATH_CHAR_OP__;
+
+	    static std::vector <generator::Binary::Operator> __MATH_PTR_OP__;
+
+	    static std::vector <generator::Binary::Operator> __MATH_FLOAT_OP__;
+
+	    static std::vector <generator::Binary::Operator> __LOGIC_INT_OP__;
+
+	    static std::vector <generator::Binary::Operator> __LOGIC_CHAR_OP__;
+
+	    static std::vector <generator::Binary::Operator> __LOGIC_FLOAT_OP__;
+	    
+	    static std::vector <generator::Binary::Operator> __LOGIC_BOOL_OP__;
+
+	    static std::vector <generator::Binary::Operator> __LOGIC_CLASS_OP__;
 	    
 	private :
 

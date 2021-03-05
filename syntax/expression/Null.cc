@@ -21,5 +21,9 @@ namespace syntax {
     std::string Null::prettyString () const {
 	return "null";
     }
-    
+
+    const std::set <std::string> & Null::computeSubVarNames () {
+	this-> setSubVarNames ({});
+	return this-> getSubVarNames ();
+    }
 }

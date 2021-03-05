@@ -45,4 +45,12 @@ namespace syntax {
 	}
     }
     
+    const std::set <std::string> & While::computeSubVarNames () {
+	auto tSet = this-> _test.getSubVarNames ();
+	auto & cSet = this-> _content.getSubVarNames ();
+	tSet.insert (cSet.begin (), cSet.end ());
+	this-> setSubVarNames (tSet);
+	return this-> getSubVarNames ();
+    }
+    
 }

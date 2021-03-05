@@ -82,5 +82,13 @@ namespace syntax {
     const std::vector <DecoratorWord> & VarDecl::getDecorators () const {
 	return this-> _decos;
     }
+	
+    const std::set <std::string> & VarDecl::computeSubVarNames () {
+	auto tSet = this-> _type.getSubVarNames ();
+	auto & vSet = this-> _value.getSubVarNames ();
+	tSet.insert (vSet.begin (), vSet.end ());
+	this-> setSubVarNames (tSet);
+	return this-> getSubVarNames ();
+    }
     
 }

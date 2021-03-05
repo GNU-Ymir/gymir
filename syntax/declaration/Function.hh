@@ -32,6 +32,10 @@ namespace syntax {
 
 	    /** Some C function can be variadic, a Ymir function cannot */
 	    bool _isVariadic;
+
+	    std::set <std::string> _sub_var_names;
+
+	    bool _set_sub_var_names = false;
 	    
 	private:
 	    
@@ -70,6 +74,13 @@ namespace syntax {
 	     * \return is this prototype variadic ?
 	     */
 	    bool isVariadic () const;
+
+	    const std::set <std::string> & getSubVarNames ();
+
+	protected:
+	    
+	    const std::set <std::string> & computeSubVarNames ();
+	   
 	};
 
 
@@ -138,6 +149,11 @@ namespace syntax {
 	bool isOver () const;
 
 	const std::vector <syntax::Expression> & getThrowers () const;
+	
+    protected :
+	
+	const std::set <std::string> & computeSubVarNames () override;
+	
     };
     
 }

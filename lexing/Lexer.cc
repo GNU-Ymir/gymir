@@ -282,9 +282,9 @@ namespace lexing {
 
     bool Lexer::getWord (Word& word) {
 	if (this-> _cache.empty ()) {
-	    this-> _cache = this-> readLine ();
+	    this-> _cache = std::move (this-> readLine ());
 	}
-
+	
 	if (this-> _cache.empty ()) {
 	    return false;	    
 	} else {	    
@@ -299,18 +299,20 @@ namespace lexing {
 	auto where = this-> file.tell ();
 	auto line  = this-> file.readln ();
 	if (line == "") return {};	
-	auto lst = this-> _tokenizer.tokenize (line);
-	
+
+	ulong start = 0;
 	std::list <Word> result;
-	for (auto & it : lst) {
-	    result.push_back (Word::init (it, this-> file, this-> filename, this-> line, this-> column, where, this-> isFromString, this-> start));
-	    where = where + it.length ();
-	    if (it  == "\n") {
+	while (start < line.length ()) {
+	    auto len = this-> _tokenizer.next (start, line);
+	    result.push_back (Word::init (line.substr (start, len), this-> file, this-> filename, this-> line, this-> column, where + start, this-> isFromString, this-> start));
+	    if (line [start]  == '\n') {
 		this-> line ++;
 		this-> column = 1;
 	    } else {
-		this-> column += it.length ();
-	    }	    
+		this-> column += len;
+	    }
+	    
+	    start += len;
 	}
 	
 	return result;

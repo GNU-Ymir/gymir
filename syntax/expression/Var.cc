@@ -26,5 +26,10 @@ namespace syntax {
     std::string Var::prettyString () const {
 	return this-> getLocation ().getStr ();
     }
+
+    const std::set <std::string> & Var::computeSubVarNames () {
+	this-> setSubVarNames ({this-> getLocation ().getStr ()});
+	return this-> getSubVarNames ();
+    }
     
 }

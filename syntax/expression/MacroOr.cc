@@ -35,4 +35,12 @@ namespace syntax {
     std::string MacroOr::prettyString () const {
 	return this-> _left.prettyString () + " | " + this-> _right.prettyString ();
     }
+
+    const std::set <std::string> & MacroOr::computeSubVarNames () {
+	auto lSet = this-> _left.getSubVarNames ();
+	auto & rSet = this-> _right.getSubVarNames ();
+	lSet.insert (rSet.begin (), rSet.end ());
+	this-> setSubVarNames (lSet);
+	return this-> getSubVarNames ();
+    }
 }

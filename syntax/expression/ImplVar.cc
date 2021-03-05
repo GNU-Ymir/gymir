@@ -29,4 +29,11 @@ namespace syntax {
     std::string ImplVar::prettyString () const {
 	return this-> getLocation ().getStr () + " impl " + this-> _right.prettyString ();
     }
+
+    const std::set <std::string> & ImplVar::computeSubVarNames () {
+	auto i = this-> _right.getSubVarNames ();
+	i.insert (this-> getLocation ().getStr ());
+	this-> setSubVarNames (i);
+	return this-> getSubVarNames ();
+    }
 }
