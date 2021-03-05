@@ -3,8 +3,6 @@
 namespace semantic {
     namespace generator {
 	
-	ulong nb = 0, nb_clone = 0;
-	
 	Generator Generator::__empty__ (Generator::empty ());
 	uint IGenerator::__lastId__ = 0;
 	std::vector <Generator> Generator::__nothrowers__;
@@ -30,8 +28,7 @@ namespace semantic {
 	    _name (other._name),
 	    _throwers (other._throwers),
 	    _uniqId (other._uniqId)
-	{
-	}
+	{}
 
 	const std::string & IGenerator::getName () const {
 	    return this-> _name;

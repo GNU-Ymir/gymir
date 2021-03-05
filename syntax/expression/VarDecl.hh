@@ -80,10 +80,6 @@ namespace syntax {
 	 * \return the decorators of the declaration
 	 */
 	const std::vector <DecoratorWord> & getDecorators () const;
-
-    protected :
-	
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };
     

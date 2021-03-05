@@ -42,17 +42,5 @@ namespace syntax {
     const Expression & Template::getTest () const {
 	return this-> _test;
     }    
-
-    const std::set <std::string> & Template::computeSubVarNames () {
-	auto cSet = this-> _content.getSubVarNames ();
-	auto & tSet = this-> _test.getSubVarNames ();
-	cSet.insert (tSet.begin (), tSet.end ());
-	for (auto & it : this-> _parameters) {
-	    auto & iSet = it.getSubVarNames ();
-	    cSet.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (cSet);
-	return this-> getSubVarNames ();
-    }
     
 }

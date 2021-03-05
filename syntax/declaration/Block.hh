@@ -44,10 +44,6 @@ namespace syntax {
 	bool isPublic () const;
 	
 	const std::vector <Declaration> & getDeclarations () const;
-
-    protected :
-
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };
 

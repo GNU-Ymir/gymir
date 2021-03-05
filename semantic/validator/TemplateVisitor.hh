@@ -272,11 +272,6 @@ namespace semantic {
 	     */
 	    syntax::Declaration replaceAll (const syntax::Declaration & element, const std::map <std::string, syntax::Expression> & mapping, const semantic::Symbol & ref) const;
 
-	    /**
-	     * \brief Transform a function prototype using a template mapper
-	     * \param element the prototype to transform
-	     * \param mapping the mapper computed by template specialization
-	     */
 	    syntax::Function::Prototype replaceAll (const syntax::Function::Prototype & element, const std::map <std::string, syntax::Expression> & mapping) const;
 
 	    /**
@@ -316,8 +311,6 @@ namespace semantic {
 	    
 	    Ymir::Error::ErrorMsg partialResolutionNote (const lexing::Word & loc, const Mapper & mapper) const;
 
-	    bool intersect (const std::set <std::string> & left, const std::map <std::string, syntax::Expression> & right) const;
-	    
 	};
 	
     }

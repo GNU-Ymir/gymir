@@ -40,10 +40,6 @@ namespace syntax {
 	const Expression & getTest () const;
 
 	const Declaration & getElse () const;
-
-    protected :
-
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };
 

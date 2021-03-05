@@ -26,15 +26,5 @@ namespace syntax {
 	    it.treePrint (stream, i + 2);
 	this-> _value.treePrint (stream, i + 1);
     }
-
-    const std::set <std::string> & TupleDest::computeSubVarNames () {
-	auto vSet = this-> _value.getSubVarNames ();
-	for (auto & it : this-> _vars) {
-	    auto & iSet = it.getSubVarNames ();
-	    vSet.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (vSet);
-	return this-> getSubVarNames ();
-    }
     
 }

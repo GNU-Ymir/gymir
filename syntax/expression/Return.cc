@@ -32,10 +32,5 @@ namespace syntax {
 	    return Ymir::format ("return %", this-> _value.prettyString ());
 	}
     }
-
-    const std::set <std::string> & Return::computeSubVarNames () {
-	this-> setSubVarNames (this-> _value.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
     
 }

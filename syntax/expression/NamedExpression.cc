@@ -29,10 +29,5 @@ namespace syntax {
     std::string NamedExpression::prettyString () const {
 	return Ymir::format ("% -> %", this-> getLocation ().getStr (), this-> _content.prettyString ());
     }
-
-    const std::set <std::string> & NamedExpression::computeSubVarNames () {
-	this-> setSubVarNames (this-> _content.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
     
 }

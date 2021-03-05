@@ -38,13 +38,6 @@ namespace syntax {
 	else 
 	    return Ymir::format ("assert (%, %)", this-> _test.prettyString (), this-> _msg.prettyString ());
     }
-
-    const std::set <std::string> & Assert::computeSubVarNames () {
-	auto lSet = this-> _test.getSubVarNames ();
-	auto & rSet = this-> _msg.getSubVarNames ();
-	lSet.insert (rSet.begin (), rSet.end ());
-	this-> setSubVarNames (lSet);
-	return this-> getSubVarNames ();
-    }
+	
     
 }

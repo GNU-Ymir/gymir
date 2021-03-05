@@ -22,10 +22,4 @@ namespace syntax {
     std::string AliasVar::prettyString () const {
 	return "alias " + this-> getLocation ().getStr ();
     }
-
-    const std::set <std::string> & AliasVar::computeSubVarNames () {
-	this-> setSubVarNames ({this-> getLocation ().getStr ()});
-	return this-> getSubVarNames ();
-    }
-
 }

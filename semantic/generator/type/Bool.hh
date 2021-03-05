@@ -6,7 +6,6 @@ namespace semantic {
     namespace generator {
 
 	class Bool : public Type {
-	    
 	public :
 	    
 	    static std::string NAME;

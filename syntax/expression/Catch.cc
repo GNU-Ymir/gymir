@@ -54,22 +54,5 @@ namespace syntax {
 	buf.write ("}");
 	return buf.str ();
     }
-
-
-    
-    const std::set <std::string> & Catch::computeSubVarNames () {
-	std::set <std::string> s;
-	for (auto & it : this-> _matchs) {
-	    auto & iSet = it.getSubVarNames ();
-	    s.insert (iSet.begin (), iSet.end ());
-	}
-	
-	for (auto & it : this-> _actions) {
-	    auto & iSet = it.getSubVarNames ();
-	    s.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (s);
-	return this-> getSubVarNames ();
-    }
     
 }

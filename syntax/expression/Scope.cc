@@ -43,10 +43,5 @@ namespace syntax {
     std::string Scope::prettyString () const {
 	return Ymir::format ("% %", this-> getLocation ().getStr (), this-> _content.prettyString ());
     }
-	
-    const std::set <std::string> & Scope::computeSubVarNames () {
-	this-> setSubVarNames (this-> _content.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
-    
+
 }

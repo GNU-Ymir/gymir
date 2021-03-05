@@ -35,10 +35,6 @@ namespace syntax {
 	static Expression init (const lexing::Word & location, const Expression & element, const std::vector <Expression> & params);
 	
 	std::string prettyString () const override;
-
-    protected :
-
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };
 

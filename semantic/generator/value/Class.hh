@@ -31,8 +31,6 @@ namespace semantic {
 	    std::vector <MethodProtection> _prots;
 
 	    Generator _classRef;
-
-	    bool _isFast;
 	    
 	private :
 
@@ -42,11 +40,11 @@ namespace semantic {
 	    
 	    Class ();
 
-	    Class (const lexing::Word & loc, const Symbol & ref, const Generator & classRef, bool isFast);
+	    Class (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
 
 	public : 
 	    
-	    static Generator init (const lexing::Word & loc, const Symbol & ref, const Generator & classRef, bool isFast = false);
+	    static Generator init (const lexing::Word & loc, const Symbol & ref, const Generator & classRef);
 
 	    static Generator initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields);
 
@@ -126,8 +124,6 @@ namespace semantic {
 	     * \return a classRef, containing the information about this class and ancestor
 	     */
 	    const Generator & getClassRef () const;
-
-	    bool isFast () const;
 	    
 	};
     }

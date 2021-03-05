@@ -1544,17 +1544,16 @@ namespace syntax {
 	    this-> _lex.next ({Token::RPAR});
 	
 	auto block = visitBlock (true);
-	auto & s_bl = block.to <syntax::Block> ();
-	if (!s_bl.getCatcher ().isEmpty () ||
-	    s_bl.getScopes ().size () != 0) {
-	    auto scopes = s_bl.getScopes ();
-	    auto catcher = s_bl.getCatcher ();
-	    block = Block::init (block.getLocation (), s_bl.getEnd (),
-				 s_bl.getDeclModule (),
-				 s_bl.getContent (),
+	if (!block.to <syntax::Block> ().getCatcher ().isEmpty () ||
+	    block.to <syntax::Block> ().getScopes ().size () != 0) {
+	    auto scopes = block.to <syntax::Block> ().getScopes ();
+	    auto catcher = block.to <syntax::Block> ().getCatcher ();
+	    block = Block::init (block.getLocation (), block.to <syntax::Block> ().getEnd (),
+				 block.to <syntax::Block> ().getDeclModule (),
+				 block.to <syntax::Block> ().getContent (),
 				 Expression::empty (), {}
 		);
-	    return Block::init (location, s_bl.getEnd (),
+	    return Block::init (location, block.to <syntax::Block> ().getEnd (),
 				Declaration::empty (),
 				{With::init (location, decls, block)},
 				catcher, scopes);

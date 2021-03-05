@@ -50,11 +50,6 @@ namespace syntax {
 	 * \return the language of the external item
 	 */
 	const lexing::Word & getFrom () const;
-	
-    protected :
-
-	const std::set <std::string> & computeSubVarNames () override;
-	
     };
 
 }

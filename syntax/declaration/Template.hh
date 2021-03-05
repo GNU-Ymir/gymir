@@ -60,10 +60,6 @@ namespace syntax {
 	 */
 	const Expression & getTest () const;
 	
-    protected :
-	
-	const std::set <std::string> & computeSubVarNames () override;
-
     };    
 
 }

@@ -54,10 +54,6 @@ namespace syntax {
 	const std::vector <Expression> & getVars () const;
 
 	std::string prettyString () const override;
-
-    protected :
-
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };
     

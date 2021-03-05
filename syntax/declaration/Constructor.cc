@@ -71,27 +71,4 @@ namespace syntax {
     const lexing::Word & Constructor::getRename () const {
 	return this-> _rename;
     }
-
-    const std::set <std::string> & Constructor::computeSubVarNames () {
-	auto pSet = this-> _proto.getSubVarNames ();
-	for (auto & it : this-> _superParams) {
-	    auto & iSet = it.getSubVarNames ();
-	    pSet.insert (iSet.begin (), iSet.end ());
-	}
-
-	for (auto & it : this-> _throwers) {
-	    auto & iSet = it.getSubVarNames ();
-	    pSet.insert (iSet.begin (), iSet.end ());
-	}
-
-	for (auto & it : this-> _construction) {
-	    auto & iSet = it.second.getSubVarNames ();
-	    pSet.insert (iSet.begin (), iSet.end ());
-	}
-
-	auto & iSet = this-> _body.getSubVarNames ();
-	pSet.insert (iSet.begin (), iSet.end ());
-	this-> setSubVarNames (pSet);
-	return this-> getSubVarNames ();	
-    }
 }

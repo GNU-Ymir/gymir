@@ -35,12 +35,4 @@ namespace syntax {
     std::string Atomic::prettyString () const {
 	return Ymir::format ("atomic (%) %", this-> _who.prettyString(), this-> _content.prettyString ());
     }
-
-    const std::set <std::string> & Atomic::computeSubVarNames () {
-	auto lSet = this-> _who.getSubVarNames ();
-	auto & rSet = this-> _content.getSubVarNames ();
-	lSet.insert (rSet.begin (), rSet.end ());
-	this-> setSubVarNames (lSet);
-	return this-> getSubVarNames ();
-    }
 }

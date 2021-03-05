@@ -28,10 +28,9 @@ namespace semantic {
 	    return gen.is<Bool> ();
 	}
 
-	std::string  Bool::typeName () const {
+	std::string Bool::typeName () const {
 	    return Bool::NAME;
 	}	
-	
-	
+    	
     }
 }

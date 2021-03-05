@@ -26,9 +26,4 @@ namespace syntax {
 	return path.toString ();
     }
 
-    const std::set <std::string> & Import::computeSubVarNames () {
-	this-> setSubVarNames ({});
-	return this-> getSubVarNames ();
-    }
-    
 }

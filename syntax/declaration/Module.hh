@@ -55,10 +55,6 @@ namespace syntax {
 	 * \return the list of declaration of the module
 	 */
 	const std::vector <Declaration> & getDeclarations () const;
-
-    protected :
-	
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };    
 

@@ -29,10 +29,4 @@ namespace syntax {
     const syntax::Expression & Try::getContent () const {
 	return this-> _inner;
     }
-
-    const std::set <std::string> & Try::computeSubVarNames () {
-	this-> setSubVarNames (this-> _inner.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
-    
 }

@@ -29,9 +29,5 @@ namespace syntax {
     const Expression & MacroVar::getContent () const {
 	return this-> _content;
     }
-
-    const std::set <std::string> & MacroVar::computeSubVarNames () {
-	this-> setSubVarNames (this-> _content.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
+    
 }

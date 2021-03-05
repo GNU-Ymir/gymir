@@ -49,11 +49,4 @@ namespace syntax {
 
     }
     
-    const std::set <std::string> & ArrayAlloc::computeSubVarNames () {
-	auto lSet = this-> _left.getSubVarNames ();
-	auto & rSet = this-> _size.getSubVarNames ();
-	lSet.insert (rSet.begin (), rSet.end ());
-	this-> setSubVarNames (lSet);
-	return this-> getSubVarNames ();
-    }
 }

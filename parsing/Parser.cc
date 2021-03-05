@@ -69,20 +69,11 @@ namespace Ymir {
     }
 
     void Parser::semanticTime () {	
-	auto t = clock ();
 	auto declarator = semantic::declarator::Visitor::init ();
 	auto module = declarator.visit (this-> _module);	
-
-	t = clock() - t;
-	printf ("All took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
-	
-	println ("Starting validation");
-	t = clock ();
 	auto validator = semantic::validator::Visitor::init ();	
 	validator.validate (module);
 
-	t = clock() - t;
-	printf ("All took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
 	
 	if (global::State::instance ().isDocDumpingActive ()) {
 	    auto doc_visit = documentation::Visitor::init (validator);
@@ -93,25 +84,15 @@ namespace Ymir {
 	    fclose (file);
 	}
 
-	println ("Starting generation");
-	t = clock ();
 	auto generator = semantic::generator::Visitor::init ();
 	for (auto & gen : validator.getGenerators ()) {
 	    generator.generate (gen);
 	}
 	
-	t = clock() - t;
-	printf ("All took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
-
-	println ("Starting finalization");
-	t = clock ();
 	
 	generator.finalize ();
 	semantic::Symbol::purge ();
 	semantic::declarator::Visitor::purge ();
-
-	t = clock() - t;
-	printf ("All took me %ld clicks (%f seconds).\n",t,((float)t)/CLOCKS_PER_SEC);
     }
     
 }

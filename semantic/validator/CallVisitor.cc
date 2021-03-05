@@ -3,7 +3,6 @@
 #include <ymir/global/State.hh>
 #include <ymir/syntax/visitor/Keys.hh>
 #include <chrono>
-#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
 
 namespace semantic {
 
@@ -35,9 +34,8 @@ namespace semantic {
 	    std::vector <Generator> rights;
 	    if (left.isEmpty () && expression.canBeDotCall ()) {
 		left = this-> validateDotCall (expression.getLeft (), rights, errors);		
-	    } else if (left.isEmpty ()) {
+	    } else if (left.isEmpty ())
 		throw Error::ErrorList {errors};
-	    }
 
 	    for (auto & it : expression.getRights ()) {
 		auto val = this-> _context.validateValue (it);
@@ -52,6 +50,7 @@ namespace semantic {
 	    errors = {};
 	    
 	    auto ret = validate (expression.getLocation (), left, rights, score, errors);
+	    
 	    if (ret.isEmpty ()) {
 		this-> error (expression.getLocation (), expression.getEnd (), left, rights, errors);
 		return Generator::empty ();
@@ -200,7 +199,7 @@ namespace semantic {
 		    } 
 		}
 	    }
-
+	    
 	    if (errors.size () != 0) return Generator::empty ();	   
 	    return Call::init (location, proto.getReturnType (), proto.clone (), types, params, addParams);
 	}

@@ -29,11 +29,5 @@ namespace syntax {
     std::string String::prettyString () const {
 	return this-> _sequence.getStr ();
     }
-
-
-    const std::set <std::string> & String::computeSubVarNames () {
-	this-> setSubVarNames ({});
-	return this-> getSubVarNames ();
-    }
     
 }

@@ -48,17 +48,5 @@ namespace syntax {
     const std::vector <Declaration> & DeclBlock::getDeclarations () const {
 	return this-> _inner;
     }
-
-
-    const std::set <std::string> & DeclBlock::computeSubVarNames () {
-	std::set <std::string> name;
-	for (auto & it : this-> _inner) {
-	    auto & iSet = it.getSubVarNames ();
-	    name.insert (iSet.begin (), iSet.end ());	    
-	}
-
-	this-> setSubVarNames (name);
-	return this-> getSubVarNames ();
-    }
     
 }

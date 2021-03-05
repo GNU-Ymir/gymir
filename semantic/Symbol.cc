@@ -6,8 +6,6 @@
 #include <ymir/semantic/generator/Mangler.hh>
 
 namespace semantic {
-
-    ulong __GLOBAL_TIME__ = 0;
     
     Symbol Symbol::__empty__ (Symbol::empty ());
         

@@ -167,10 +167,9 @@ namespace semantic {
 						     syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
 						     syntax::Expression::empty ()
 		    );
-
-		    auto val = this-> _context.createValueFromPath (loc, {global::CoreNames::get (global::CORE_MODULE), global::CoreNames::get (global::TYPE_INFO_MODULE), global::CoreNames::get (global::TYPE_INFO_EQUAL)});
+		    
 		    auto call = syntax::MultOperator::init (lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-							    TemplateSyntaxWrapper::init (loc, val),
+							    syntax::Var::init (lexing::Word::init (loc, global::CoreNames::get (global::TYPE_INFO_EQUAL))),
 							    {bin, TemplateSyntaxWrapper::init (loc, this-> _context.validateTypeInfo (var.getLocation (), varType))}							    
 		    );
 		    type_test = this-> _context.validateValue (call);

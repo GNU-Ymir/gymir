@@ -96,10 +96,5 @@ namespace syntax {
 	buf.write (this-> _content.prettyString ());
 	return buf.str ();	
     }
-
-    const std::set <std::string> & DecoratedExpression::computeSubVarNames () {
-	this-> setSubVarNames (this-> _content.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
     
 }

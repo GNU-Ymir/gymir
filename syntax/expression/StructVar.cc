@@ -23,10 +23,4 @@ namespace syntax {
     std::string StructVar::prettyString () const {
 	return "struct " + this-> getLocation ().getStr ();
     }
-
-
-    const std::set <std::string> & StructVar::computeSubVarNames () {
-	this-> setSubVarNames ({this-> getLocation ().getStr ()});
-	return this-> getSubVarNames ();
-    }
 }

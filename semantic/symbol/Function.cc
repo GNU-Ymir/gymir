@@ -103,11 +103,10 @@ namespace semantic {
     bool Function::isMethod () const {
 	auto & proto = this-> _content.to <syntax::Function> ().getPrototype ();
 	if (proto.getParameters ().size () >= 1) {
-	    if (proto.getParameters ()[0].is <syntax::VarDecl> ()) {
-		auto & vdecl = proto.getParameters ()[0].to <syntax::VarDecl> ();
-		if (vdecl.getType ().isEmpty () && vdecl.getName () == Keys::SELF)
-		    return true;
-	    }
+	    if (proto.getParameters ()[0].is <syntax::VarDecl> () &&
+		proto.getParameters ()[0].to <syntax::VarDecl> ().getType ().isEmpty () &&
+		proto.getParameters ()[0].to <syntax::VarDecl> ().getName () == Keys::SELF)
+		return true;
 	}
 	return false;
     }

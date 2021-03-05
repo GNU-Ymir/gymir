@@ -41,15 +41,5 @@ namespace syntax {
 	    it.treePrint (stream, i + 2);
 	}
     }
-
-    const std::set <std::string> & Enum::computeSubVarNames () {
-	auto tSet = this-> _type.getSubVarNames ();
-	for (auto & it : this-> _values) {
-	    auto & iSet = it.getSubVarNames ();
-	    tSet.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (tSet);
-	return this-> getSubVarNames ();
-    }
     
 }

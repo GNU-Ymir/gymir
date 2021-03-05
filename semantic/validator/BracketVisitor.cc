@@ -54,7 +54,7 @@ namespace semantic {
 	    auto loc = expression.getLocation ();
 	    
 	    if (right.size () == 1 && right [0].to <Value> ().getType ().is <Integer> ()) {
-		auto func = this-> _context.createValueFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
 		auto len = ufixed (left.to <Value> ().getType ().to <Array> ().getSize ());
 		auto innerType = left.to <Value> ().getType ().to <Array> ().getInners () [0];
 		
@@ -85,7 +85,7 @@ namespace semantic {
 		auto call = this-> _context.validateValue (
 		    syntax::MultOperator::init (
 			lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-			TemplateSyntaxWrapper::init (loc, func),
+			func,
 			{}
 			)
 		    );
@@ -129,7 +129,7 @@ namespace semantic {
 					     right [0]//)
 		    );
 
-		auto func = this-> _context.createValueFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
 		auto len = StructAccess::init (expression.getLocation (),
 					       Integer::init (expression.getLocation (), 64, false),
 					       lRef, Slice::LEN_NAME);
@@ -148,7 +148,7 @@ namespace semantic {
 		auto call = this-> _context.validateValue (
 		    syntax::MultOperator::init (
 			lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-			TemplateSyntaxWrapper::init (loc, func),
+			func,
 			{}
 			)
 		    );
@@ -187,7 +187,7 @@ namespace semantic {
 					     right [0]//)
 		);
 		
-		auto func = this-> _context.createValueFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
+		auto func = this-> _context.createVarFromPath (loc, {CoreNames::get (CORE_MODULE), CoreNames::get (ARRAY_MODULE), CoreNames::get (OUT_OF_ARRAY)});
 		auto len = StructAccess::init (expression.getLocation (),
 					       Integer::init (expression.getLocation (), 64, false),
 					       lRef, Slice::LEN_NAME);
@@ -244,7 +244,7 @@ namespace semantic {
 		auto call = this-> _context.validateValue (
 		    syntax::MultOperator::init (
 			lexing::Word::init (loc, Token::LPAR), lexing::Word::init (loc, Token::RPAR),
-			TemplateSyntaxWrapper::init (loc, func),
+			func,
 			{}
 			)
 		    );

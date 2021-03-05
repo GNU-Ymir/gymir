@@ -28,9 +28,4 @@ namespace syntax {
 	    return Ymir::format ("%_%", this-> getLocation ().getStr (), this-> _suffix.getStr ());
     }
 
-    const std::set <std::string> & Fixed::computeSubVarNames () {
-	this-> setSubVarNames ({});
-	return this-> getSubVarNames ();
-    }
-    
 }

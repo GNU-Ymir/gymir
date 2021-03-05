@@ -32,16 +32,5 @@ namespace syntax {
     const std::vector <Declaration> & Module::getDeclarations () const {
 	return this-> _decls;
     }
-
-
-    const std::set <std::string> & Module::computeSubVarNames () {
-	std::set <std::string> s;
-	for (auto & it : this-> _decls) {
-	    auto & iSet = it.getSubVarNames ();
-	    s.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (s);
-	return this-> getSubVarNames ();
-    }
     
 }

@@ -1,6 +1,4 @@
-
 #include <ymir/utils/Memory.hh>
-#include <ymir/utils/macros.hh>
 #include <string.h>
 #include <cstdlib>
 #include <gc/gc.h>
@@ -43,6 +41,7 @@ const no_garbage_collection_t NO_GC;
 
 void* operator new (size_t cbSize, const no_garbage_collection_t&) {
     void *mem = ::operator new (cbSize);
+    memset(mem,0,cbSize);
     
 #ifdef MEM_DEBUG
     __allocs__.emplace (mem, getStackTrace ());

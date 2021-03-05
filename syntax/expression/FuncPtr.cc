@@ -43,16 +43,5 @@ namespace syntax {
 	buf.writef (")-> %", this-> _ret.prettyString ());
 	return buf.str ();
     }
-
-    const std::set <std::string> & FuncPtr::computeSubVarNames () {
-	auto rSet = this-> _ret.getSubVarNames ();
-	for (auto & it : this-> _params) {
-	    auto & iSet = it.getSubVarNames ();
-	    rSet.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (rSet);
-	return this-> getSubVarNames ();
-    }
-
     
 }

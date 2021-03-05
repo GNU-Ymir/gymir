@@ -39,12 +39,7 @@ namespace semantic {
 	    buf.write ("}");
 	    return buf.str ();
 	}
-
-
-	const std::set <std::string> & TemplateSyntaxList::computeSubVarNames () {
-	    this-> setSubVarNames ({});
-	    return this-> getSubVarNames ();
-	}
+	
     }
 
 }

@@ -21,10 +21,5 @@ namespace syntax {
     std::string Dollar::prettyString () const {
 	return "$";
     }
-
-    const std::set <std::string> & Dollar::computeSubVarNames () {
-	this-> setSubVarNames ({});
-	return this-> getSubVarNames ();
-    }
     
 }

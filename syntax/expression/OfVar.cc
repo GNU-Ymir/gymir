@@ -38,11 +38,4 @@ namespace syntax {
 	else
 	    return this-> getLocation ().getStr () + " of " + this-> _right.prettyString ();
     }
-
-    const std::set <std::string> & OfVar::computeSubVarNames () {
-	auto set = this-> _right.getSubVarNames ();
-	set.insert (this-> getLocation ().getStr ());
-	this-> setSubVarNames (set);
-	return this-> getSubVarNames ();
-    }
 }

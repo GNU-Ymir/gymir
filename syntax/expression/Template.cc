@@ -45,15 +45,4 @@ namespace syntax {
 	stream.writef ("%!(%)", this-> _content.prettyString (), inner.str ());
 	return stream.str ();
     }
-	
-    const std::set <std::string> & TemplateCall::computeSubVarNames () {
-	auto cSet = this-> _content.getSubVarNames ();
-	for (auto & it : this-> _parameters) {
-	    auto & iSet = it.getSubVarNames ();
-	    cSet.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (cSet);
-	return this-> getSubVarNames ();
-    }
-    
 }

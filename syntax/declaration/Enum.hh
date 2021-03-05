@@ -61,10 +61,6 @@ namespace syntax {
 	 */
 	const std::vector <std::string> & getFieldComments () const;
 	
-    protected :
-
-	const std::set <std::string> & computeSubVarNames () override;
-
     };
     
 }

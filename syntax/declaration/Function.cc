@@ -42,24 +42,7 @@ namespace syntax {
     bool Function::Prototype::isVariadic () const {
 	return this-> _isVariadic;
     }
-
-    const std::set <std::string> & Function::Prototype::getSubVarNames () {
-	if (!this-> _set_sub_var_names)
-	    return this-> computeSubVarNames ();
-	return this-> _sub_var_names;
-    }
-   
-    const std::set <std::string> & Function::Prototype::computeSubVarNames () {
-	this-> _set_sub_var_names = true;
-	auto rSet = this-> _retType.getSubVarNames ();
-	for (auto & it : this-> _parameters) {
-	    auto & iSet = it.getSubVarNames ();
-	    rSet.insert (iSet.begin (), iSet.end ());
-	}
-
-	this-> _sub_var_names = rSet;
-	return this-> _sub_var_names;
-    }        
+    
     
     Function::Function () :
 	IDeclaration (lexing::Word::eof (), ""),
@@ -113,18 +96,6 @@ namespace syntax {
 
     const std::vector <syntax::Expression> & Function::getThrowers () const {
 	return this-> _throwers;
-    }
-
-    const std::set <std::string> & Function::computeSubVarNames () {
-	auto pSet = this-> _proto.getSubVarNames ();
-	auto & bSet = this-> _body.getSubVarNames ();
-	pSet.insert (bSet.begin (), bSet.end ());
-	for (auto & it : this-> _throwers) {
-	    auto & iSet = it.getSubVarNames ();
-	    pSet.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (pSet);
-	return this-> getSubVarNames ();
     }
     
 }

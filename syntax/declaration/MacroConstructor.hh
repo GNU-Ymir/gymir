@@ -40,10 +40,6 @@ namespace syntax {
 	const lexing::Word & getContentLoc () const;
 	
 	const std::vector <Expression> & getSkips () const;
-
-    protected :
-	
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };
 

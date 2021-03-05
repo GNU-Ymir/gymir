@@ -116,11 +116,6 @@ namespace semantic {
 	    void visitInnerClass (Symbol cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
 
 	    /**
-	     * \brief Visit the internal part of a trait impl
-	     */
-	    void visitInnerImpl (Symbol cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);
-
-	    /**
 	     * \brief Visit the internal part of a macro
 	     */
 	    void visitInnerMacro (Symbol cl, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub);

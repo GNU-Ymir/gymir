@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ymir/utils/macros.hh>
 #include <ymir/utils/Ref.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/lexing/Word.hh>
@@ -13,18 +12,12 @@ namespace syntax {
     class IExpression {
 
 	lexing::Word _location;
-
-	std::set <std::string> _sub_var_names;
-
-	bool _set_sub_var_names = false;
 	
     protected :
 
 	IExpression (const lexing::Word & location);
 	
-    public:
-
-	friend Expression;
+    public:	
        
 	/**
 	 * \brief Print the expression into the buffer 
@@ -41,19 +34,8 @@ namespace syntax {
 	 * \return the location of the expression
 	 */
 	const lexing::Word & getLocation () const;
-
-	/**
-	 * @return the names of the variable that are contained in the expression
-	 */
-	const std::set <std::string> & getSubVarNames () const ;
 	
 	virtual ~IExpression ();
-
-    protected :
-	
-	virtual const std::set <std::string> & computeSubVarNames () = 0;
-	
-	void setSubVarNames (const std::set <std::string> & subVarNames);
 	
     };
 
@@ -62,9 +44,6 @@ namespace syntax {
      * \struct Expression Proxy of all Expression
      */
     class Expression : public RefProxy <IExpression, Expression> {
-
-	static std::set <std::string> __empty_sub_names__;
-	
     public:
 
 	Expression (IExpression * expr);
@@ -89,10 +68,8 @@ namespace syntax {
 	 */
 	template <typename T>
 	T& to () {
-#ifdef TO_DEBUG
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
-	    	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-#endif
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");	    
 	    return *((T*) this-> _value.get ());	    
 	}
 	
@@ -102,10 +79,8 @@ namespace syntax {
 	 */
 	template <typename T>
 	const T& to () const {
-#ifdef TO_DEBUG
 	    if (dynamic_cast <T*> (this-> _value.get ()) == nullptr)
-	    	Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");
-#endif
+		Ymir::Error::halt (Ymir::ExternalError::get (Ymir::DYNAMIC_CAST_FAILED), "type differ");	    
 	    return *((const T*) this-> _value.get ());	    
 	}
 	
@@ -119,13 +94,7 @@ namespace syntax {
 	
 	void treePrint (Ymir::OutBuffer & stream, int i = 0) const;
 
-	const std::set <std::string> & getSubVarNames () const ;
-	
 	std::string prettyString () const;
-
-    private :
-	
-	const std::set <std::string> & computeSubVarNames ();
 	
     };       
 

@@ -28,10 +28,5 @@ namespace syntax {
     std::string Throw::prettyString () const {
 	return Ymir::format ("throw %", this-> _value.prettyString ());
     }
-
-    const std::set <std::string> & Throw::computeSubVarNames () {
-	this-> setSubVarNames (this-> _value.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
     
 }

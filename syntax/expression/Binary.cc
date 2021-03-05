@@ -41,15 +41,5 @@ namespace syntax {
     std::string Binary::prettyString () const {
 	return Ymir::format ("(% % %)", this-> _left.prettyString (), this-> getLocation ().getStr (), this-> _right.prettyString ());
     }
-
-    const std::set <std::string> & Binary::computeSubVarNames () {
-	auto lSet = this-> _left.getSubVarNames ();
-	auto & rSet = this-> _right.getSubVarNames ();
-	auto & tSet = this-> _type.getSubVarNames ();
-	lSet.insert (rSet.begin (), rSet.end ());
-	lSet.insert (tSet.begin (), tSet.end ());
-	this-> setSubVarNames (lSet);
-	return this-> getSubVarNames ();
-    }
     
 }

@@ -21,10 +21,5 @@ namespace syntax {
     std::string Unit::prettyString () const {
 	return ";";
     }
-
-    const std::set <std::string> & Unit::computeSubVarNames () {
-	this-> setSubVarNames ({});
-	return this-> getSubVarNames ();
-    }
     
 }

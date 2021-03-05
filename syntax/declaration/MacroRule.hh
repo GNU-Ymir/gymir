@@ -41,10 +41,6 @@ namespace syntax {
 	const Expression & getRule () const;	
 	
 	const std::vector<Expression> & getSkips () const;
-
-    protected :
-	
-	const std::set <std::string> & computeSubVarNames () override;
 	
     };
 

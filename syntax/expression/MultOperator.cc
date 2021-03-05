@@ -53,15 +53,5 @@ namespace syntax {
 	stream.writef ("%", this-> _end.getStr ());
 	return stream.str ();
     }
-
-    const std::set <std::string> & MultOperator::computeSubVarNames () {
-	auto eSet = this-> _element.getSubVarNames ();
-	for (auto & it : this-> _params) {
-	    auto & iSet = it.getSubVarNames ();
-	    eSet.insert (iSet.begin (), iSet.end ());
-	}
-	this-> setSubVarNames (eSet);
-	return this-> getSubVarNames ();
-    }
     
 }

@@ -62,11 +62,6 @@ namespace syntax {
 	 * \return the comments on the fields
 	 */
 	const std::vector <std::string> & getDeclComments () const;
-
-    protected :
-	
-	const std::set <std::string> & computeSubVarNames () override;
-	
     };
 
 }

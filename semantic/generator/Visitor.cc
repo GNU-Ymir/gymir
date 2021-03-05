@@ -56,10 +56,9 @@ namespace semantic {
 		    return;
 		);
 
-		of (Frame, frame, {
-			generateFrame (frame);
-			return;
-		    }
+		of (Frame, frame,
+		    generateFrame (frame);
+		    return;
 		);
 
 		of (Class, cl,
@@ -626,7 +625,7 @@ namespace semantic {
 	}
 	
 	void Visitor::generateFrame (const Frame & frame) {	    
-	    std::vector <Tree> args;	    
+	    std::vector <Tree> args;
 	    for (auto i : Ymir::r (0, args.size ())) {
 		args.push_back (generateType (frame.getParams () [i].to<ParamVar> ().getType ()));
 	    }
@@ -636,7 +635,6 @@ namespace semantic {
 	    Tree fn_decl = Tree::functionDecl (frame.getLocation (), frame.getName (), fntype);
 	    auto asmName = Mangler::init ().mangleFrame (frame);
 	    fn_decl.asmName (asmName);
-	    
 	    if (!frame.isWeak () || __definedFrame__.find (asmName) == __definedFrame__.end ())	{
 		if (frame.getName () == Keys::MAIN) 
 		    generateMainCall (frame.getLocation (), frame.getType ().is <Void> (), asmName);

@@ -38,10 +38,5 @@ namespace syntax {
     const Expression & MacroEval::getContent () const {
 	return this-> _content;
     }
-	
-    const std::set <std::string> & MacroEval::computeSubVarNames () {
-	this-> setSubVarNames (this-> _content.getSubVarNames ());
-	return this-> getSubVarNames ();
-    }
-    
+
 }

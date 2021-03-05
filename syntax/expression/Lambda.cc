@@ -68,13 +68,5 @@ namespace syntax {
     std::string Lambda::prettyString () const {
 	return "lambda";
     }
-
-    const std::set <std::string> & Lambda::computeSubVarNames () {
-	auto pSet = this-> _proto.getSubVarNames ();
-	auto & cSet = this-> _content.getSubVarNames ();
-	pSet.insert (cSet.begin (), cSet.end ());
-	this-> setSubVarNames (pSet);
-	return this-> getSubVarNames ();
-    }
     
 }

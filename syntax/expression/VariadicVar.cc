@@ -26,10 +26,4 @@ namespace syntax {
 	else
 	    return Ymir::format ("%...", this-> getLocation ().getStr ());
     }
-	
-    const std::set <std::string> & VariadicVar::computeSubVarNames () {
-	this-> setSubVarNames ({this-> getLocation ().getStr ()});
-	return this-> getSubVarNames ();
-    }
-    
 }
