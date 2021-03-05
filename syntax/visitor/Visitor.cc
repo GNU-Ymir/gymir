@@ -529,7 +529,7 @@ namespace syntax {
 	do {
 	    token = this-> _lex.consumeIf ({Keys::PRIVATE, Keys::PUBLIC, Keys::PROTECTED, Keys::VERSION, Token::RACC, Token::SEMI_COLON, Keys::IMMUTABLE});
 	    if (token == Keys::PRIVATE || token == Keys::PUBLIC || token == Keys::PROTECTED) {
-		decls.push_back (visitProtectionClassBlock (token == Keys::PRIVATE, token == Keys::PROTECTED, fromTrait));
+		decls.push_back (visitProtectionClassBlock (token == Keys::PRIVATE, token == Keys::PROTECTED));
 	    } else if (token == Keys::VERSION) {
 		decls.push_back (visitVersionClass (fromTrait));
 	    } else if (token == Keys::IMMUTABLE) {
@@ -639,7 +639,7 @@ namespace syntax {
 	    token = this-> _lex.nextWithDocs (docs, {Keys::DEF, Keys::OVER, Keys::LET, Keys::SELF, Keys::IMPL, Keys::IMPORT});
 
 	if (token == Keys::SELF) {
-	    return visitClassConstructor (fromTrait);
+	    return visitClassConstructor ();
 	} else if (token == Keys::DEF) {
 	    return visitFunction (true);	    
 	} else if (token == Keys::OVER) {
@@ -679,7 +679,7 @@ namespace syntax {
 	    return Mixin::init (location, comments, content, {});
     }
 
-    Declaration Visitor::visitClassConstructor (bool fromTrait) {
+    Declaration Visitor::visitClassConstructor () {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
 	auto cas = visitAttributes ();
@@ -698,39 +698,37 @@ namespace syntax {
 	} else this-> _lex.rewind ();
 
 	auto proto = visitFunctionPrototype ();
+	token = this-> _lex.consumeIf ({Keys::WITH});
 	std::vector <std::pair <lexing::Word, Expression> > constructions;
 	std::vector <Expression> supers;
 	lexing::Word getSuper = lexing::Word::eof ();
 	lexing::Word getSelf = lexing::Word::eof ();
-	if (!fromTrait) {
-	    token = this-> _lex.consumeIf ({Keys::WITH});
-	    if (token == Keys::WITH) {
-		while (token != Token::LACC && token != Keys::THROWS) {
-		    auto ident = this-> visitIdentifier ();
-		    if (ident == Keys::SUPER) {
-			getSuper = ident;
-			if (supers.size () != 0)
-			    Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
-			this-> _lex.next ({Token::LPAR});
-			supers = visitParamList (true);
-			this-> _lex.next ({Token::RPAR});
-		    } else if (ident == Keys::SELF) {
-			getSelf = ident;
-			if (supers.size () != 0)
-			    Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
-			this-> _lex.next ({Token::LPAR});
-			supers = visitParamList (true);
-			this-> _lex.next ({Token::RPAR});
-		    } else {
-			this-> _lex.next ({Token::EQUAL});
-			auto expr = this-> visitExpression ();
-			constructions.push_back ({ident, expr});
-		    }
-
-		    token = this-> _lex.next ({Token::LACC, Token::COMA, Keys::THROWS});
+	if (token == Keys::WITH) {
+	    while (token != Token::LACC && token != Keys::THROWS) {
+		auto ident = this-> visitIdentifier ();
+		if (ident == Keys::SUPER) {
+		    getSuper = ident;
+		    if (supers.size () != 0)
+			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
+		    this-> _lex.next ({Token::LPAR});
+		    supers = visitParamList (true);
+		    this-> _lex.next ({Token::RPAR});
+		} else if (ident == Keys::SELF) {
+		    getSelf = ident;
+		    if (supers.size () != 0)
+			Error::occur (ident, ExternalError::get (SYNTAX_ERROR_AT_SIMPLE), ident.getStr ());
+		    this-> _lex.next ({Token::LPAR});
+		    supers = visitParamList (true);
+		    this-> _lex.next ({Token::RPAR});
+		} else {
+		    this-> _lex.next ({Token::EQUAL});
+		    auto expr = this-> visitExpression ();
+		    constructions.push_back ({ident, expr});
 		}
-		this-> _lex.rewind (); // We rewind the LACC or THROWS, since it is part of the following expression
+
+		token = this-> _lex.next ({Token::LACC, Token::COMA, Keys::THROWS});
 	    }
+	    this-> _lex.rewind (); // We rewind the LACC or THROWS, since it is part of the following expression
 	}
 	
 	auto throws = this-> _lex.consumeIf ({Keys::THROWS});
@@ -739,10 +737,7 @@ namespace syntax {
 	    throwers = visitThrowers ();
 	}
 
-	Expression body (Expression::empty ());
-	if (!fromTrait) {
-	    body = visitExpression ();
-	} else this-> _lex.next ({Token::SEMI_COLON});
+	auto body = visitExpression ();
 	
 	if (templates.size () != 0) {
 	    return Template::init (location, comments, templates, Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), Expression::empty ());
@@ -995,7 +990,7 @@ namespace syntax {
 	auto name = visitIdentifier ();
 	auto templates = visitTemplateParameters ();
 
-	std::vector <Declaration> decls = visitClassBlock (true);
+	std::vector <Declaration> decls = visitClassBlock (false);
 	
 	if (!templates.empty ()) {
 	    return Template::init (name, comments, templates, Trait::init (name, comments, decls), Expression::empty ());
