@@ -606,7 +606,7 @@ namespace semantic {
 			} 
 			
 			if (errors.size () != 0) 
-			    throw Error::ErrorList {std::move (errors)};
+			    throw Error::ErrorList {errors};
 		    }
 		}
 		
@@ -637,7 +637,7 @@ namespace semantic {
 		    if (errors.size () != 0) {
 			auto note = Ymir::Error::createNote (imp.getModule (), ExternalError::get (IN_IMPORT));
 			errors.back ().addNote (note);
-			throw Error::ErrorList {std::move (errors)};
+			throw Error::ErrorList {errors};
 		    }
 		}
 	    } else success = true;
@@ -665,7 +665,7 @@ namespace semantic {
 			    if (errors.size () != 0) {
 				auto note = Ymir::Error::createNote (imp.getModule (), ExternalError::get (IN_IMPORT));
 				errors.back ().addNote (note);
-				throw Error::ErrorList {std::move (errors)};
+				throw Error::ErrorList {errors};
 			    }
 			    break;			    
 			}

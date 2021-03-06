@@ -8,7 +8,6 @@
 using namespace lexing;
 
 namespace Ymir {
-
     namespace Error {
 
 	

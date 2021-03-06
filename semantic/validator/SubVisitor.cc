@@ -52,7 +52,7 @@ namespace semantic {
 	    }
 
 	    if (failed) {
-		throw Error::ErrorList {std::move (errors)};
+		throw Error::ErrorList {errors};
 	    } else errors = {};		   
 	    
 	    Generator gen (Generator::empty ());
@@ -914,7 +914,7 @@ namespace semantic {
 		leftName
 	    );
 	    
-	    //throw Error::ErrorList {std::move (errors)};
+	    //throw Error::ErrorList {errors};
 	}
 
 	std::string SubVisitor::removeUnders (const std::string & name) const {

@@ -142,12 +142,12 @@ namespace semantic {
 			) else Ymir::Error::halt ("%(r) reaching impossible point", "Critical");	
 		}
 	    }  catch (Error::ErrorList list) {
-		errors = std::move (list.errors);
+		errors = list.errors;
 	    }
 	    	    
 	    this-> _context.exitForeign ();
 	    this-> _context.popReferent ("validateMacroExpression");
-	    if (errors.size () != 0) throw Error::ErrorList {std::move (errors)};
+	    if (errors.size () != 0) throw Error::ErrorList {errors};
 	    
 	    if (mapper.succeed) {
 		if (current != content.length ()) {
@@ -293,7 +293,7 @@ namespace semantic {
 		    ) else of (MacroToken, tok, mapper = validateMacroToken (tok, content, current_left, skips)
 		    ) else mapper = validateRule (mult.getLeft (), content, current_left, skips);
 		} catch (Error::ErrorList list) {
-		    errors = std::move (list.errors);
+		    errors = list.errors;
 		}
 	    }
 
@@ -310,11 +310,11 @@ namespace semantic {
 			) else mapper = validateRule (mult.getRight (), content, current, skips);		    
 		    }
 		} catch (Error::ErrorList list) {
-		    errors = std::move (list.errors);		    
+		    errors = list.errors;		    
 		}
 		
 		if (!mapper.succeed)
-		    throw Error::ErrorList {std::move (errors)};
+		    throw Error::ErrorList {errors};
 		return mapper;		
 	    }
 	    
@@ -414,11 +414,11 @@ namespace semantic {
 				    return result;
 				}
 			    } catch (Error::ErrorList err) {
-				errors = std::move (err.errors);
+				errors = err.errors;
 			    }
 
 			    this-> _context.exitClassDef (ruleRef.getMacroRuleRef ().getReferent ());
-			    if (errors.size () != 0) throw Error::ErrorList {std::move (errors)};
+			    if (errors.size () != 0) throw Error::ErrorList {errors};
 			}
 		    ) else {
 			Ymir::Error::occur (
@@ -439,11 +439,11 @@ namespace semantic {
 		    Visitor::__LAST__ = false;
 		}
 		
-		errors = std::move (list.errors);
+		errors = list.errors;
 	    }
 	    
 	    Visitor::__CALL_NB_RECURS__ -= 1;
-	    if (errors.size () != 0) throw Error::ErrorList {std::move (errors)};
+	    if (errors.size () != 0) throw Error::ErrorList {errors};
 	   
 	    return mapper;
 	}
@@ -541,10 +541,10 @@ namespace semantic {
 		    Visitor::__LAST__ = false;
 		}
 		
-		errors = std::move (list.errors);
+		errors = list.errors;
 	    }
 	    
-	    if (errors.size () != 0) throw Error::ErrorList {std::move (errors)};	    
+	    if (errors.size () != 0) throw Error::ErrorList {errors};	    
 	    return Mapper (false);
 	}
 	
@@ -736,11 +736,11 @@ namespace semantic {
 		lex.skipEnable (Token::RETURN,  false);
 		lex.skipEnable (Token::RRETURN, false);
 	    } catch (Error::ErrorList list) {
-		errors = std::move (list.errors);
+		errors = list.errors;
 	    }
 	    
 	    if (errors.size () != 0) {
-		throw Error::ErrorList {std::move (errors)};		
+		throw Error::ErrorList {errors};		
 	    }
 	    
 	    return inner;
@@ -810,11 +810,11 @@ namespace semantic {
 			} else break;		
 		    }
 		} catch (Error::ErrorList list) {
-		    errors = std::move (list.errors);
+		    errors = list.errors;
 		}
 	    	    
 		if (errors.size () != 0) {
-		    throw Error::ErrorList {std::move (errors)};
+		    throw Error::ErrorList {errors};
 		} else total.write (buf.str ());
 	    }
 	    return total.str ();
@@ -908,7 +908,7 @@ namespace semantic {
 		    );
 		}
 	    } catch (Error::ErrorList list) {	
-		errors = std::move (list.errors);		
+		errors = list.errors;		
 	    }
 	    	    
 	    Ymir::Error::occurAndNote (
