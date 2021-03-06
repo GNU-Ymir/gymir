@@ -35,7 +35,7 @@ namespace semantic {
 	    if (left.isEmpty () && expression.canBeDotCall ()) {
 		left = this-> validateDotCall (expression.getLeft (), rights, errors);		
 	    } else if (left.isEmpty ())
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 
 	    for (auto & it : expression.getRights ()) {
 		auto val = this-> _context.validateValue (it);
@@ -126,7 +126,7 @@ namespace semantic {
 				list.errors = __last_error__;
 			}
 			
-			errors = list.errors;			
+			errors = std::move (list.errors);			
 			gen = Generator::empty ();
 		    } 
 		    Visitor::__CALL_NB_RECURS__ -= 1;
@@ -152,7 +152,7 @@ namespace semantic {
 		    params.push_back (param);
 		}
 	    } catch (Error::ErrorList list) {
-		errors = list.errors;
+		errors = std::move (list.errors);
 	    } 
 	    
 	    if (errors.size () != 0) return Generator::empty ();	    
@@ -217,7 +217,7 @@ namespace semantic {
 		    params.push_back (param);
 		}
 	    } catch (Error::ErrorList list) {		
-		errors = list.errors;
+		errors = std::move (list.errors);
 	    } 
 
 	    if (errors.size () != 0) return Generator::empty ();	    
@@ -629,7 +629,7 @@ namespace semantic {
 			paramTypes.push_back (proto.to <FrameProto> ().getParameters ()[it].to <ProtoVar> ().getType ());
 		    }
 		} catch (Error::ErrorList list) {		    
-		    errors = list.errors;
+		    errors = std::move (list.errors);
 		} 
 		
 		retType = proto.to <FrameProto> ().getReturnType ();
@@ -806,7 +806,7 @@ namespace semantic {
 			    list.errors = __last_error__;
 		    }
 
-		    errors = list.errors;		    
+		    errors = std::move (list.errors);		    
 		    final_gen = Generator::empty ();
 		} 
 		Visitor::__CALL_NB_RECURS__ -= 1;
@@ -1060,7 +1060,7 @@ namespace semantic {
 		
 	    } else if  (exp.is <syntax::Binary> () && exp.to <syntax::Binary> ().getLocation () == Token::DOT) {
 		synthBin = exp;
-	    } else throw Error::ErrorList {errors};
+	    } else throw Error::ErrorList {std::move (errors)};
 
 	    auto bin = synthBin.to <syntax::Binary> ();
 
@@ -1069,7 +1069,7 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {}       
 	    
 	    if (left.isEmpty ())  
-		throw Error::ErrorList {errors};	    
+		throw Error::ErrorList {std::move (errors)};	    
 	    else if (left.to <Value> ().getType ().is<ClassPtr> ()) {
 		bool succ = false;
 		std::list <Ymir::Error::ErrorMsg> localErrors;
@@ -1095,7 +1095,7 @@ namespace semantic {
 		    }
 		} catch (Error::ErrorList list) {		    
 		    if (succ) { // If we failed, we failed after the DotOp, so the failure is due to template call
-			localErrors = list.errors;
+			localErrors = std::move (list.errors);
 		    }
 		} 
 		
@@ -1109,16 +1109,16 @@ namespace semantic {
 		    right = this-> _context.validateValue (bin.getRight ());		    
 		    params.push_back (left);
 		} catch (Error::ErrorList list) {
-		    std::list <Ymir::Error::ErrorMsg> copyErrors = errors;
+		    std::list <Ymir::Error::ErrorMsg> copyErrors = std::move (errors);
 		    copyErrors.back ().addNote (Ymir::Error::createNoteOneLine (ExternalError::get (UFC_REWRITING)));
 		    for (auto & it : list.errors)
 			copyErrors.back ().addNote (it);
 
-		    throw Error::ErrorList {copyErrors};
+		    throw Error::ErrorList {std::move (copyErrors)};
 		}	    		    		
 
 		if (right.isEmpty ())
-		    throw Error::ErrorList {errors};
+		    throw Error::ErrorList {std::move (errors)};
 	    }
 	    
 	    return right;
@@ -1148,7 +1148,7 @@ namespace semantic {
 		names
 		);	    
 	    
-	    // throw Error::ErrorList {errors};
+	    // throw Error::ErrorList {std::move (errors)};
 	}
 
 	void CallVisitor::error (const lexing::Word & location, const lexing::Word & end, const Generator & left, const std::vector <Generator> & rights, std::list <Ymir::Error::ErrorMsg> & errors) {	    
@@ -1178,7 +1178,7 @@ namespace semantic {
 		names
 		);
 	    	    
-	    //throw Error::ErrorList {errors};
+	    //throw Error::ErrorList {std::move (errors)};
 	}
 
 	std::string CallVisitor::prettyName (const Generator & gen) {	    

@@ -277,7 +277,7 @@ namespace semantic {
 	    } 	    
 
 	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    }
 
 	    return Block::init (expression.getLocation (), loop_type, values);
@@ -477,7 +477,7 @@ namespace semantic {
 	    
 
 	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    }
 	    
 	    return Block::init (lexing::Word::init (expression.getLocation (), "#_for_block"), loop_type, value);
@@ -574,7 +574,7 @@ namespace semantic {
 		
 
 		    if (errors.size () != 0) {
-			throw Error::ErrorList {errors};
+			throw Error::ErrorList {std::move (errors)};
 		    }
 		}
 	    } else {
@@ -633,7 +633,7 @@ namespace semantic {
 		
 
 		    if (errors.size () != 0) {
-			throw Error::ErrorList {errors};
+			throw Error::ErrorList {std::move (errors)};
 		    }
 		}
 	    }
@@ -646,7 +646,7 @@ namespace semantic {
 		
 	    
 	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    }
 	    if (loopType.isEmpty ())
 		loopType = Void::init (expression.getLocation ());
@@ -766,7 +766,7 @@ namespace semantic {
 		
 
 		if (errors.size () != 0) {
-		    throw Error::ErrorList {errors};
+		    throw Error::ErrorList {std::move (errors)};
 		}
 	    }
 
@@ -779,7 +779,7 @@ namespace semantic {
 		
 	    
 	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    }
 	    if (loopType.isEmpty ())
 		loopType = Void::init (expression.getLocation ());
@@ -965,7 +965,7 @@ namespace semantic {
 		values.push_back (Loop::init (lexing::Word::init (loc, "#_for"), loop_type, test, Block::init (loc, loop_type, innerValues), false));
 		
 	    } catch (Error::ErrorList list) {
-		errors = list.errors;
+		errors = std::move (list.errors);
 		// We discard local to avoid useless error message when quitting the block
 		this-> _context.discardAllLocals ();
 	    }
@@ -977,7 +977,7 @@ namespace semantic {
 	    }
 	    
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    return Block::init (lexing::Word::init (expr.getLocation (), "#_for_block"), loop_type, values);
 	}

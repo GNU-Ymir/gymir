@@ -58,7 +58,7 @@ namespace semantic {
 		try {
 		    mapper = validateParamTemplFromExplicit (rest, syntaxTempl [0], currentElems, current_consumed);
 		} catch (Error::ErrorList list) {		    		    
-		    errors = list.errors;
+		    errors = std::move (list.errors);
 		    succeed = false;
 		} 
 		
@@ -66,7 +66,7 @@ namespace semantic {
 		    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		    auto merge = mergeMappers (prevMapper, globalMapper);
 		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		    throw Error::ErrorList {errors};
+		    throw Error::ErrorList {std::move (errors)};
 		}		
 		
 		if (!mapper.succeed) return Symbol::empty ();
@@ -390,7 +390,7 @@ namespace semantic {
 		try {		    
 		    mapper = validateVarDeclFromImplicit (syntaxTempl, param, current_types, current_consumed);
 		} catch (Error::ErrorList list) {		    
-		    errors = list.errors;
+		    errors = std::move (list.errors);
 		    succeed = false;
 		} 
 	    
@@ -429,7 +429,7 @@ namespace semantic {
 	    }
 
 	    if (errors.size () != 0) 
-		throw Error::ErrorList {errors};	    
+		throw Error::ErrorList {std::move (errors)};	    
 	    
 	    if (globalMapper.succeed) {
 		auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to <Template> ().getSpecNameOrder ());
@@ -453,7 +453,7 @@ namespace semantic {
 			));					  
 		    }
 		    errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		    throw Error::ErrorList {errors};
+		    throw Error::ErrorList {std::move (errors)};
 		}
 
 		
@@ -515,13 +515,13 @@ namespace semantic {
 		this-> _context.popReferent ("TemplateVisitor::validateFromImplicit");
 		symbol = glob;
 		if (errors.size () != 0) 
-		    throw Error::ErrorList {errors};
+		    throw Error::ErrorList {std::move (errors)};
 		return proto;		
 	    } else {
 		auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ());
 		auto merge = mergeMappers (prevMapper, globalMapper);
 		errors.push_back (this-> partialResolutionNote (ref.getLocation (), merge));
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    }
 	    
 	    return Generator::empty ();
@@ -1334,7 +1334,7 @@ namespace semantic {
 			    Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), type.prettyString (), implv.getType ().prettyString ());
 			}
 			
-			throw Error::ErrorList {errors};
+			throw Error::ErrorList {std::move (errors)};
 		    }
 		) else of (syntax::List, lst, {
 			Ymir::Error::occur (lst.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),

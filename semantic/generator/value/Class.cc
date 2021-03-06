@@ -14,22 +14,24 @@ namespace semantic {
 	{
 	}
 
-	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) :
+	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef, bool wasFast) :
 	    Value (loc, loc.getStr (), NoneType::init (loc, "class " + ref.getRealName ())),
-	    _classRef (clRef)
+	    _classRef (clRef),
+	    _wasFast (wasFast)
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();
 	}
 
-	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) {
-	    return Generator {new (NO_GC) Class (loc, ref, clRef)};
+	Generator Class::init (const lexing::Word & loc, const Symbol & ref, const Generator & clRef, bool wasFast) {
+	    return Generator {new (NO_GC) Class (loc, ref, clRef, wasFast)};
 	}
 
 	Generator Class::initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields) {
 	    auto ret = other.clone ();
 	    ret.to <Class> ()._fields = fields;
 	    ret.to <Class> ()._localFields = localFields;
+	    ret.to <Class> ()._wasFast = false;
 	    return ret;
 	}
 
@@ -37,6 +39,7 @@ namespace semantic {
 	    auto ret = other.clone ();
 	    ret.to <Class> ()._vtable = vtable;
 	    ret.to <Class> ()._prots = prots;
+	    ret.to <Class> ()._wasFast = false;
 	    return ret;
 	}
 	
@@ -160,6 +163,10 @@ namespace semantic {
 
 	const Generator & Class::getClassRef () const {
 	    return this-> _classRef;
+	}
+
+	bool Class::wasFastValidated () const {
+	    return this-> _wasFast;
 	}
 	
     }

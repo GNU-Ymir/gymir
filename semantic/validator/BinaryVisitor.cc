@@ -94,7 +94,7 @@ namespace semantic {
 		}
 		
 	    } catch (Error::ErrorList list) {		
-		errors = list.errors;
+		errors = std::move (list.errors);
 	    }  
 	    	    	    
 	    if (!ret.isEmpty ()) return ret;	    
@@ -108,7 +108,7 @@ namespace semantic {
 		
 		if (ret.isEmpty ()) {
 		    if (errors.size () != 0) {
-			throw Error::ErrorList {errors};
+			throw Error::ErrorList {std::move (errors)};
 		    }
 		    
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
@@ -400,7 +400,7 @@ namespace semantic {
 		}		
 		
 	    } catch (Error::ErrorList list) {		
-		errors = list.errors;
+		errors = std::move (list.errors);
 	    } 
 	    
 	    if (!ret.isEmpty  ()) return ret;
@@ -414,7 +414,7 @@ namespace semantic {
 		
 		if (ret.isEmpty ()) {
 		    if (errors.size () != 0) {
-			throw Error::ErrorList {errors};
+			throw Error::ErrorList {std::move (errors)};
 		    }
 		    
 		    Ymir::Error::occur (expression.getLocation (), ExternalError::get (UNDEFINED_BIN_OP),
@@ -604,7 +604,7 @@ namespace semantic {
 		    try {
 			result = validateEqualClass (op, expression, left, right);
 		    } catch (Error::ErrorList list) {
-			errors = list.errors;		    
+			errors = std::move (list.errors);		    
 		    } 
 		}
 			       		
@@ -637,7 +637,7 @@ namespace semantic {
 	    }
 	    
 	    if (cl.isEmpty ())
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    auto final_test = syntax::Binary::init (
 		loc,
@@ -701,7 +701,7 @@ namespace semantic {
 	    }
 
 	    if (cl.isEmpty ())
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    auto final_test = syntax::Binary::init (
 		lexing::Word::init (loc, inverseOperator (op)),

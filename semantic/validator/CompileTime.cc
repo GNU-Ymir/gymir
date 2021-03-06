@@ -157,7 +157,7 @@ namespace semantic {
 	    nb_recurs -= 1;
 	    
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    else {
 		Ymir::Error::occur (
 		    gen.getLocation (),

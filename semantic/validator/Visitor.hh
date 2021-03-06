@@ -89,7 +89,8 @@ namespace semantic {
 	    std::vector <generator::Generator> _lockedAlias;
 	    
 	    std::vector <lexing::Word> _lockedAliasLoc;
-	    
+
+	    std::list <bool> _fastValidation;	    
 	    
 	private :
 
@@ -222,7 +223,7 @@ namespace semantic {
 	     * \param ancestor the ancestor of the class (might be empty)
 	     * \return the vtable of the class
 	     */
-	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Class::MethodProtection> & protections, std::vector <Symbol> & addMethods);
+	    std::vector <generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Class::MethodProtection> & protections, std::vector <Symbol> & addMethods, bool inModule);
 	    
 	    /**
 	     * \brief validate an expression, that produce a type
@@ -1134,6 +1135,21 @@ namespace semantic {
 	     * \brief this-> _referent.pop_back ()
 	     */
 	    void popReferent (const std::string & msg);	    
+
+	    /**
+	     * \brief Push a boolean to tell that it is no necessary to fully validate the content of a class
+	     */
+	    void pushFastValidation ();
+
+	    /**
+	     * \brief Exit pushFastValidation
+	     */
+	    void popFastValidation ();
+
+	    /**
+	     * \brief If return true, there is no need to validate the vtable of the field
+	     */
+	    bool isInFastValidation () const;
 	    
 	    syntax::Expression createVarFromPath (const lexing::Word & loc, const std::vector <std::string> & path);
 

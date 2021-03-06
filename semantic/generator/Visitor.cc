@@ -651,8 +651,8 @@ namespace semantic {
 		enterBlock (frame.getLocation ().toString ());
 		auto resultDecl = Tree::resultDecl (frame.getLocation (), ret);
 		fn_decl.setResultDecl (resultDecl);	       
-		
-		Tree value (Tree::empty ());
+
+		Tree value (Tree::empty ());		
 		if (frame.needFinalReturn ()) {
 		    TreeStmtList list = TreeStmtList::init ();
 		    value = castTo (frame.getType (), frame.getContent ());
@@ -978,11 +978,11 @@ namespace semantic {
 		of (FakeValue, fv,
 		    return generateFakeValue (fv);
 		    );
+		
 	    }	    
-	    
-	    println (gen.prettyString ());
-	    Ymir::Error::halt ("%(r) - reaching impossible point %(y)", "Critical", identify (gen));
-	    return Tree::empty ();
+
+	    TreeStmtList lst (TreeStmtList::init ());
+	    return lst.toTree ();
 	}
 	
 	Tree Visitor::generateBlock (const Block & block) {

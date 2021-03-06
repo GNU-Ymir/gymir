@@ -31,7 +31,7 @@ namespace Ymir {
 	std::vector<char> current;
 	ulong len = 0;
 	ulong capacity = 0;
-	std::vector <std::string> _currentColor;
+	std::list <std::string> _currentColor;
 	
     public:
 

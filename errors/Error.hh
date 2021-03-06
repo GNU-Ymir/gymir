@@ -11,10 +11,9 @@
 #include <list>
 #include <ymir/errors/Exception.hh>
 #include <ymir/lexing/Word.hh>
+#include <time.h>
 
 namespace Ymir {
-
-
     
     /**
        \brief format a string with simple system
@@ -42,7 +41,7 @@ namespace Ymir {
 
     namespace Error {
 
-	struct ErrorMsg {
+	struct ErrorMsg {    
 	private :
 	    
 	    lexing::Word begin;

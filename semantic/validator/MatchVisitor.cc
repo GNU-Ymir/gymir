@@ -89,7 +89,7 @@ namespace semantic {
 	    }
 
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    if (!isMandatory && (!type.is<Void> () || expression.isFinal ())) {
 		if (!type.is<Void> ()) {
@@ -200,12 +200,12 @@ namespace semantic {
 		}
 				
 	    } catch (Error::ErrorList list) {
-		errors = list.errors;
+		errors = std::move (list.errors);
 		errors.back ().addNote (Ymir::Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    return Set::init (var.getLocation (), Bool::init (value_.getLocation ()), {varDecl, test});
 	}
@@ -328,7 +328,7 @@ namespace semantic {
 	    } 
 
 	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    }
 
 	    if (type.isEmpty ()) type = value.to <Value> ().getType ();
@@ -377,7 +377,7 @@ namespace semantic {
 	    } 
 	    
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    auto & str = value.to <Value> ().getType ().to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ();
 	    	    
@@ -465,7 +465,7 @@ namespace semantic {
 	    } 
 	    
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 
 
 	    std::vector <Expression> rights = call.getRights ();
@@ -706,7 +706,7 @@ namespace semantic {
 	    } 
 
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    return result;
 	}
@@ -828,12 +828,12 @@ namespace semantic {
 		}
 		
 	    } catch (Error::ErrorList list) {		
-		errors = list.errors;
+		errors = std::move (list.errors);
 		errors.back ().addNote (Error::createNote (var.getLocation (), ExternalError::get (IN_MATCH_DEF)));
 	    } 
 
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 
 	    
 	    return Set::init (var.getLocation (), Bool::init (value_.getLocation ()), {varDecl, test});	    
@@ -871,7 +871,7 @@ namespace semantic {
 	    } 
 	    
 	    if (errors.size () != 0) {
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    }
 	    
 	    type = Type::init (type.to <Type> (), false, false);

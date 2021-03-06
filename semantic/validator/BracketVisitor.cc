@@ -29,13 +29,13 @@ namespace semantic {
 		    rights.push_back (this-> _context.validateValue (it));
 		}
 	    } catch (Error::ErrorList list) {
-		errors = list.errors;
+		errors = std::move (list.errors);
 	    }
 	    
 	    this-> _context.quitDollar ();
 	    
 	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
+		throw Error::ErrorList {std::move (errors)};
 	    
 	    if (left.to <Value> ().getType ().is <Array> ())
 	    	return validateArray (expression, left, rights);
