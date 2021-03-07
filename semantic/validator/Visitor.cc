@@ -3649,6 +3649,9 @@ namespace semantic {
 	Generator Visitor::validateThrow (const syntax::Throw & thr) {
 	    auto inner = this-> validateValue (thr.getValue ());
 	    auto type = inner.to <Value> ().getType ();
+	    
+	    auto uniq = UniqValue::init (thr.getLocation (), type, inner);
+	    
 	    auto syntaxType = createClassTypeFromPath (thr.getLocation (), {CoreNames::get (CORE_MODULE), CoreNames::get (EXCEPTION_MODULE), CoreNames::get (EXCEPTION_TYPE)});
 	    auto ancType = validateType (syntaxType);
 
@@ -3656,13 +3659,13 @@ namespace semantic {
 	    
 	    auto loc = thr.getLocation ();
 	    auto bin = syntax::Binary::init (lexing::Word::init (loc, Token::DCOLON),
-					     TemplateSyntaxWrapper::init (loc, inner),
+					     TemplateSyntaxWrapper::init (loc, uniq),
 					     syntax::Var::init (lexing::Word::init (loc, SubVisitor::__TYPEINFO__)),
 					     syntax::Expression::empty ()
 	    );
 	    auto info = validateValue (bin);
 	    
-	    return Throw::init (thr.getLocation (), info, inner);
+	    return Throw::init (thr.getLocation (), info, uniq);
 	}
 
 	Generator Visitor::validateMatch (const syntax::Match & matcher) {

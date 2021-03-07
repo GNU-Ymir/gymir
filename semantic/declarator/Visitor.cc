@@ -619,7 +619,7 @@ namespace semantic {
 	    bool success = false;
 
 	    if (__imported__ .find (path.toString ()) == __imported__.end ()) {
-		auto file_path = imp.getPath () + ".yr";
+		auto file_path = imp.getPath () + ".yr";		
 		if (Ymir::file_exists (file_path)) {
 		    success = true;
 		    // We add a fake module, to prevent infinite import loops
@@ -639,7 +639,7 @@ namespace semantic {
 			errors.back ().addNote (note);
 			throw Error::ErrorList {errors};
 		    }
-		}
+		} 
 	    } else success = true;
 	    
 	    if (!success) {

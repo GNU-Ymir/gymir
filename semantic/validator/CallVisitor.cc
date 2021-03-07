@@ -753,8 +753,7 @@ namespace semantic {
 			for (auto & it : local_errors)
 			    note.addNote (it);
 			insertCandidate (nbCand, errors, {note});
-		    }
-   
+		    }   
 		}
 	    }
 	    	    

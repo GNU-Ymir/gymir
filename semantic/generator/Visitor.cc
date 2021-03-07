@@ -1805,6 +1805,10 @@ namespace semantic {
 
 	generic::Tree Visitor::generateThrow (const Throw & thr) {
 	    auto value = castTo (thr.getValue ().to <Value> ().getType (), thr.getValue ());
+	    TreeStmtList list = TreeStmtList::init ();
+	    list.append (value.getList ());
+	    value = value.getValue ();
+	    
 	    auto info = generateValue (thr.getTypeInfo ());
 	    auto file = thr.getLocation ().getFilename ();
 	    auto lit = Tree::buildStringLiteral (thr.getLocation (), file.c_str (), file.length () + 1, 8);
@@ -1813,12 +1817,15 @@ namespace semantic {
 	    
 	    auto line = Tree::buildIntCst (thr.getLocation (), (ulong) thr.getLocation ().getLine (), Tree::intType (32, false));
 
-	    return Tree::buildCall (
-		thr.getLocation (),
-		Tree::voidType (),
-		global::CoreNames::get (THROW),
-		{lit, func, line, info, value}
-	    );
+	    list.append (Tree::buildCall (
+			     thr.getLocation (),
+			     Tree::voidType (),
+			     global::CoreNames::get (THROW),
+			     {lit, func, line, info, value}
+			     )
+		);
+	    
+	    return list.toTree ();
 	}
 
 	generic::Tree Visitor::generatePanic (const Panic & pc) {
