@@ -135,7 +135,7 @@ namespace Ymir {
 			    SYNTAX_ERROR_MISSING_TEMPL_PAR  = "multiple ! arguments are not allowed",
 			    TEMPLATE_IN_TRAIT               = "cannot declare template inside a trait",
 			    TEMPLATE_RECURSION              = "limit of template recursion reached %(y)",
-			    TEMPLATE_REST                   = "template validation incomplete, rest : [%(y)]",
+			    TEMPLATE_REST                   = "template validation incomplete, rest : {%(y)}",
 			    TEMPLATE_TEST_FAILED            = "the test of the template failed with {%(y)} specialization",
 			    TEMPLATE_VALUE_TRY              = "when trying template value resolution",
 			    THROWS                          = "throws %(y)",

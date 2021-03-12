@@ -516,22 +516,32 @@ namespace syntax {
     Declaration Visitor::visitClass () {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
+	Expression test (Expression::empty ());
+	auto token = this-> _lex.consumeIf ({Keys::IF});
+	lexing::Word ifLoc = lexing::Word::eof ();
+	if (token == Keys::IF) {
+	    ifLoc = token;
+	    test = visitExpression ();
+	}
+
 	auto attribs = visitAttributes ();
-	
-	auto name = this-> _lex.next ();	
+	auto name = this-> visitIdentifier ();	
 	auto templates = visitTemplateParameters ();
 	Expression ancestor (Expression::empty ());
 	
-	auto token = this-> _lex.consumeIf ({Keys::OVER});	
+	token = this-> _lex.consumeIf ({Keys::OVER});	
 	if (token == Keys::OVER) 
 	    ancestor = visitExpression ();
 	
 	auto decls = visitClassBlock ();
 
 	if (!templates.empty ()) {
-	    return Template::init (name, comments, templates, Class::init (name, comments, ancestor, decls, attribs), Expression::empty ());
-	} else
+	    return Template::init (name, comments, templates, Class::init (name, comments, ancestor, decls, attribs), test);
+	} else {
+	    if (!test.isEmpty ()) 
+		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
 	    return Class::init (name, comments, ancestor, decls, attribs);
+	}
     }
 
     std::vector <Declaration> Visitor::visitClassBlock (bool fromTrait) {
@@ -694,6 +704,14 @@ namespace syntax {
     Declaration Visitor::visitClassConstructor (bool fromTrait) {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments);
+	Expression test (Expression::empty ());
+	auto token = this-> _lex.consumeIf ({Keys::IF});
+	lexing::Word ifLoc = lexing::Word::eof ();
+	if (token == Keys::IF) {
+	    ifLoc = token;
+	    test = visitExpression ();
+	}
+	
 	auto cas = visitAttributes ();
 	lexing::Word name (lexing::Word::eof ());
 	if (canVisitIdentifier ()) {
@@ -749,9 +767,13 @@ namespace syntax {
 	} else this-> _lex.next ({Token::SEMI_COLON});
 	
 	if (templates.size () != 0) {
-	    return Template::init (location, comments, templates, Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), Expression::empty ());
-	} else 
+	    return Template::init (location, comments, templates, Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers), test);
+	} else {
+	    if (!test.isEmpty ()) {
+		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+	    }
 	    return Constructor::init (location, comments, name, proto, supers, constructions, body, getSuper, getSelf, cas, throwers);
+	}
     }
 
     std::vector <syntax::Expression> Visitor::visitThrowers () {
@@ -769,6 +791,14 @@ namespace syntax {
     Declaration Visitor::visitEnum () {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::ENUM});
+	Expression test (Expression::empty ());
+	auto token = this-> _lex.consumeIf ({Keys::IF});
+	lexing::Word ifLoc = lexing::Word::eof ();
+	if (token == Keys::IF) {
+	    ifLoc = token;
+	    test = visitExpression ();
+	}
+
 	Expression type (Expression::empty ());
 	if (this-> _lex.consumeIf ({Token::COLON}) == Token::COLON)
 	    type = visitExpression (10);
@@ -794,8 +824,13 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (name, comments, templates, Enum::init (name, comments, type, values, comms), Expression::empty ());
-	} else return Enum::init (name, comments, type, values, comms);
+	    return Template::init (name, comments, templates, Enum::init (name, comments, type, values, comms), test);
+	} else {
+	    if (!test.isEmpty ()) {
+		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+	    }
+	    return Enum::init (name, comments, type, values, comms);
+	}
     }    
     
     Declaration Visitor::visitFunction (bool isClass, bool isOver) {
@@ -930,9 +965,17 @@ namespace syntax {
     Declaration Visitor::visitLocalMod () {
 	std::string comments;
 	this-> _lex.rewind ().nextWithDocs (comments, {Keys::MOD});
+	Expression test (Expression::empty ());
+	auto token = this-> _lex.consumeIf ({Keys::IF});
+	lexing::Word ifLoc = lexing::Word::eof ();
+	if (token == Keys::IF) {
+	    ifLoc = token;
+	    test = visitExpression ();
+	}
+	
 	auto name = visitIdentifier ();
 	auto templates = visitTemplateParameters ();
-	auto token = this-> _lex.next ({Token::LACC});
+	token = this-> _lex.next ({Token::LACC});
 	std::vector <Declaration> decls;
 	
 	do {
@@ -947,13 +990,26 @@ namespace syntax {
 	} while (token != Token::RACC);
 
 	if (templates.size () != 0) {
-	    return Template::init (name, comments, templates, Module::init (name, comments, decls, false), Expression::empty ());
-	} else return Module::init (name, comments, decls, false);
+	    return Template::init (name, comments, templates, Module::init (name, comments, decls, false), test);
+	} else {
+	    if (!test.isEmpty ()) {
+		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+	    }
+	    return Module::init (name, comments, decls, false);	    
+	}
     }
 
     Declaration Visitor::visitStruct () {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::STRUCT});
+	Expression test (Expression::empty ());
+	auto token = this-> _lex.consumeIf ({Keys::IF});
+	lexing::Word ifLoc = lexing::Word::eof ();
+	if (token == Keys::IF) {
+	    ifLoc = token;
+	    test = visitExpression ();
+	}
+	
 	lexing::Word end = lexing::Word::eof ();
 	std::vector <Expression> vars;
 	std::vector <std::string> comms;
@@ -978,21 +1034,38 @@ namespace syntax {
 	auto templates = visitTemplateParameters ();
 	this-> _lex.consumeIf ({Token::SEMI_COLON});
 	if (templates.size () != 0) {
-	    return Template::init (name, comments, templates, Struct::init (name, comments, attrs, vars, comms), Expression::empty ());
-	} else return Struct::init (name, comments, attrs, vars, comms);
+	    return Template::init (name, comments, templates, Struct::init (name, comments, attrs, vars, comms), test);
+	} else {
+	    if (!test.isEmpty ()) {
+		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+	    }
+	    return Struct::init (name, comments, attrs, vars, comms);
+	}
     }
 
     Declaration Visitor::visitTrait () {
 	std::string comments;
 	auto location = this-> _lex.rewind ().nextWithDocs (comments, {Keys::TRAIT});
+	Expression test (Expression::empty ());
+	auto token = this-> _lex.consumeIf ({Keys::IF});
+	lexing::Word ifLoc = lexing::Word::eof ();
+	if (token == Keys::IF) {
+	    ifLoc = token;
+	    test = visitExpression ();
+	}
+
 	auto name = visitIdentifier ();
 	auto templates = visitTemplateParameters ();
 
 	std::vector <Declaration> decls = visitClassBlock (true);
 	
 	if (!templates.empty ()) {
-	    return Template::init (name, comments, templates, Trait::init (name, comments, decls), Expression::empty ());
-	} else return Trait::init (name, comments, decls);	
+	    return Template::init (name, comments, templates, Trait::init (name, comments, decls), test);
+	} else {
+	    if (!test.isEmpty ())
+		Error::occur (ifLoc, ExternalError::get (SYNTAX_ERROR_IF_ON_NON_TEMPLATE));
+	    return Trait::init (name, comments, decls);
+	}
     }
 
     Declaration Visitor::visitUse () {
