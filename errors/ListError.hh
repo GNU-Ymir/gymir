@@ -205,6 +205,7 @@ namespace Ymir {
 			 VOID_VAR,
 			 WRONG_IMPLEMENT,
 			 WRONG_MODULE_NAME,
+			 BRANCHING_VALUE,
     );
     
     // 	    SYNTAX_ERROR_FOR = "%%% unexpected when analysing statement %%%",

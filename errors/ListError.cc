@@ -186,5 +186,6 @@ namespace Ymir {
 			    VOID_VAR			    = "cannot declare a var of type void",
 			    WRONG_IMPLEMENT                 = "the method %(y) was declared by trait %(y), not %(y)",
 			    WRONG_MODULE_NAME		    = "the module named %(y) must be placed in a file named %(y)",
+			    BRANCHING_VALUE                 = "for branching value",
     );    
 }

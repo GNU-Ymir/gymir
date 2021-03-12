@@ -3233,7 +3233,12 @@ namespace semantic {
 			if (!anc.isEmpty ())
 			    type = anc;
 		    }
-		    verifyCompatibleTypeWithValue (_if.getLocation (), type, _else);
+
+		    try {
+			type = this-> deduceTypeBranching (content.getLocation (), _else.getLocation (), type, _else.to<Value> ().getType ());
+		    } catch (Error::ErrorList list) {
+			Ymir::Error::occurAndNote (_if.getLocation (), list.errors, ExternalError::get (BRANCHING_VALUE));
+		    }
 		}
 
 		if (content.to <Value> ().isReturner () || content.to <Value> ().isBreaker ()) type = _else.to <Value> ().getType ();
@@ -3489,22 +3494,36 @@ namespace semantic {
 	
 	Generator Visitor::validateArray (const syntax::List & list) {
 	    std::vector <Generator> params;
+	    Generator innerType (Generator::empty ());
 	    for (auto it : list.getParameters ()) {		
 		auto val = validateValueNonVoid (it);
 		if (val.is<List> ()) {
 		    for (auto & g_it : val.to <List> ().getParameters ()) {
 			params.push_back (g_it);
-			verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
+			if (innerType.isEmpty ()) {
+			    innerType = params [0].to <Value> ().getType ();
+			} else {
+			    innerType = this-> deduceTypeBranching (params [0].getLocation (), params.back ().getLocation (), innerType, params.back ().to <Value> ().getType ());
+			}
+			//verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
 		    }
 		} else {
 		    params.push_back (val);
-		    verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
+		    if (innerType.isEmpty ()) {
+			innerType = params [0].to <Value> ().getType ();
+		    } else {
+			innerType = this-> deduceTypeBranching (params [0].getLocation (), params.back ().getLocation (), innerType, params.back ().to <Value> ().getType ());
+		    }
+		    //verifyMemoryOwner (params.back ().getLocation (), params [0].to <Value> ().getType (), params.back (), false);
 		}
 	    }
 
-	    Generator innerType (Void::init (list.getLocation ()));
-	    if (params.size () != 0)
-		innerType = params [0].to <Value> ().getType ();	    
+	    if (innerType.isEmpty ()) {
+		innerType = Void::init (list.getLocation ());
+	    }
+	    
+	    println ("RES : ", innerType.prettyString (), " ", list.getLocation ());
+	    
 	    innerType = Type::init (innerType.to <Type> (), innerType.to <Type> ().isMutable (), false);
 	    
 	    // An array literal is always static
@@ -5816,7 +5835,7 @@ namespace semantic {
 	
 	void Visitor::verifyCompatibleType (const lexing::Word & loc, const lexing::Word & rightLoc, const Generator & left, const Generator & right, bool fromObject) {
 	    bool error = false;
-	    std::string leftName;
+	    std::string leftName;	    
 	    if (!left.to<Type> ().isCompatible (right)) {
 		// It can be compatible with an ancestor of right
 		error = !isAncestor (left, right);
@@ -5850,9 +5869,142 @@ namespace semantic {
 		    );
 		}
 	    }
-
 	}
 
+	void Visitor::throwIncompatibleTypes (const lexing::Word & loc, const lexing::Word & rightLoc, const Generator & left, const Generator & right, const std::list <Error::ErrorMsg> & notes) {
+	    std::string leftName = left.prettyString ();	    
+	    if (!left.to <Type> ().getProxy ().isEmpty () && !left.to <Type> ().getProxy ().to <Type> ().isCompatible (right.to <Type> ().getProxy ())) {
+		leftName = left.to<Type> ().getProxy ().to <Type> ().getTypeName ();
+	    }
+
+	    if (loc.getLine () == rightLoc.getLine ()) {
+		Ymir::Error::occurAndNote (loc, notes, ExternalError::get (INCOMPATIBLE_TYPES),
+				    leftName, 
+				    right.to <Type> ().getTypeName ()
+		    );
+	    } else {
+		std::list <Error::ErrorMsg> auxNotes = {Ymir::Error::createNote (rightLoc)};
+		auxNotes.insert (auxNotes.end (), notes.begin (), notes.end ());
+		
+		Ymir::Error::occurAndNote (loc, auxNotes, ExternalError::get (INCOMPATIBLE_TYPES),
+					   leftName,
+					   right.to <Type> ().getTypeName ()
+		    );
+	    }
+	}
+
+	Generator Visitor::deduceTypeBranching (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & left, const generator::Generator & right) {
+	    /**
+	     * Proxy verification 
+	     */
+	    if (!left.to <Type> ().getProxy ().isEmpty () || !right.to <Type> ().getProxy ().isEmpty ()) {
+		if (left.to <Type> ().isCompatible (right)) {
+		    if (left.to <Type> ().getProxy ().isEmpty () || right.to <Type> ().getProxy ().isEmpty ()) {
+			if (left.to <Type> ().mutabilityLevel () < right.to <Type> ().mutabilityLevel ()) {
+			    return Type::init (Type::init (left.to <Type> (), left.to <Type> ().isMutable ()).to<Type> (), Generator::empty ());
+			} else {
+			    return Type::init (Type::init (right.to <Type> (), right.to <Type> ().isMutable ()).to<Type> (), Generator::empty ());
+			}
+		    }
+		    else {		    
+			if (!left.to<Type> ().getProxy ().to <Type> ().isCompatible (right.to<Type> ().getProxy ())) {
+			    if (left.to <Type> ().mutabilityLevel () < right.to <Type> ().mutabilityLevel ()) {
+				return Type::init (Type::init (left.to <Type> (), left.to <Type> ().isMutable ()).to <Type> (), Generator::empty ()); // remove the proxy
+			    } else {
+				return Type::init (Type::init (right.to <Type> (), right.to <Type> ().isMutable ()).to <Type> (), Generator::empty ()); // remove the proxy
+			    }
+			} else {
+			    if (left.to <Type> ().mutabilityLevel () < right.to <Type> ().mutabilityLevel ()) {
+				return Type::init (Type::init (left.to<Type> (), left.to <Type> ().isMutable ()).to <Type> (), left.to<Type> ().getProxy ());
+			    } else {
+				return Type::init (Type::init (right.to <Type> (), right.to <Type> ().isMutable ()).to <Type> (), left.to <Type> ().getProxy ()); // remove the proxy
+			    }
+			}
+		    }
+		} else { // the type are incompatible, the proxy has no impact, we just remove it 
+		    auto ltype = Type::init (left.to <Type> (), Generator::empty ());
+		    auto rtype = Type::init (right.to <Type> (), Generator::empty ());
+		    return deduceTypeBranching (lloc, rloc, ltype, rtype); // and retry
+		}
+	    }
+
+	    if (left.to <Type> ().isCompatible (right)) {
+		if (left.to <Type> ().mutabilityLevel () < right.to <Type> ().mutabilityLevel ()) return left;
+		else return right;
+	    } else {
+		match (left) {
+		    of (Slice, ls) {
+			if (right.is<Slice> ()) {
+			    auto & rs = right.to <Slice> ();
+			    if (ls.getInners ()[0].is <Void> ()) return right;
+			    if (rs.getInners ()[0].is <Void> ()) return left;
+			    else {
+				try {
+				    auto slc = Slice::init (lloc, this-> deduceTypeBranching (lloc, rloc, ls.getInners ()[0], rs.getInners ()[0]));
+				    if (ls.mutabilityLevel () < rs.mutabilityLevel ()) {
+					slc = Type::init (slc.to<Type> (), ls.isMutable ());
+				    } else {
+					slc = Type::init (slc.to<Type> (), rs.isMutable ());
+				    }
+				    return slc;
+				} catch (Error::ErrorList list) {
+				    throwIncompatibleTypes (lloc, rloc, left, right, list.errors);
+				}
+			    }
+			} 
+		    } elof (ClassPtr, lp) {
+			if (right.is <ClassPtr> ()) {			    
+			    auto & rp = right.to <ClassPtr> ();
+			    Generator ancestor = Generator::empty ();
+			    if (isAncestor (left, right)) { // right over left
+				ancestor = left;
+			    } else if (isAncestor (right, left)) {
+				ancestor = right;
+			    } else {
+				ancestor = this-> getCommonAncestor (left, right);
+			    }
+			    			
+			    if (ancestor.isEmpty ()) {
+				this-> verifyCompatibleType (lloc, rloc, left, right);
+			    } else {
+				if (lp.mutabilityLevel () < rp.mutabilityLevel ()) {
+				    auto inner = Type::init (ancestor.to <Type> ().getInners ()[0].to <Type> (), lp.getInners ()[0].to <Type> ().isMutable ());
+				    return Type::init (ClassPtr::init (ancestor.getLocation (), inner).to <Type> (), lp.isMutable ());
+				} else  {
+				    auto inner = Type::init (ancestor.to <Type> ().getInners ()[0].to <Type> (), rp.getInners ()[0].to <Type> ().isMutable ());
+				    return Type::init (ClassPtr::init (ancestor.getLocation (), inner).to<Type> (), rp.isMutable ());
+				}			    
+			    }
+			}
+		    } elof (Tuple, lt) {
+			if (right.is <Tuple> ()) {
+			    auto & rt = right.to <Tuple> ();
+			    if (lt.getInners ().size () != rt.getInners ().size ()) {
+				this-> verifyCompatibleType (lloc, rloc, left, right);
+			    }
+			    
+			    try {
+				std::vector <Generator> innerParams;
+				for (auto it : Ymir::r (0, rt.getInners ().size ())) {
+				    innerParams.push_back (this-> deduceTypeBranching (
+							       lt.getInners ()[it].getLocation (),
+							       rt.getInners ()[it].getLocation (),
+							       lt.getInners ()[it], rt.getInners ()[it]));
+				}
+				bool isMutable = lt.isMutable () && rt.isMutable ();
+				return Type::init (Tuple::init (lloc, innerParams).to <Type> (), isMutable);
+			    } catch (Error::ErrorList list) {
+				throwIncompatibleTypes (lloc, rloc, left, right, list.errors);
+			    }
+			}
+		    } fo;
+		}
+	    }
+
+	    // To throw the error only
+	    throwIncompatibleTypes (lloc, rloc, left, right, {});
+	    return Generator::empty ();
+	}	
 
 	bool Visitor::isIntConstant (const Generator & value) {
 	    if (!value.to <Value> ().getType ().is <Integer> ()) return false;

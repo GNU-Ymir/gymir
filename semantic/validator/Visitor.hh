@@ -832,6 +832,17 @@ namespace semantic {
 
 
 	    /**
+	     * \brief Deduce the type that can be used as a common ancestor type for left and right
+	     * \brief Might no throw anything even if left and right are incompatible, must verify the compatibility afterwards, between type, left and right
+	     */
+	    generator::Generator deduceTypeBranching (const lexing::Word & lloc, const lexing::Word & rloc, const generator::Generator & left, const generator::Generator & right);
+
+	    /**
+	     * \throw the error saying that left and right are incompatible types
+	     */
+	    void throwIncompatibleTypes (const lexing::Word & loc, const lexing::Word & rightLoc, const generator::Generator & left, const generator::Generator & right, const std::list <Ymir::Error::ErrorMsg> & notes);
+	    
+	    /**
 	     * Is the value known at compile time and is a fixed constant
 	     */
 	    bool isIntConstant (const generator::Generator & val);
