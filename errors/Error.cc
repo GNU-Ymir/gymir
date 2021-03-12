@@ -117,14 +117,11 @@ namespace Ymir {
 		auto wordLength = word.length ();
 		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
+		buf.write (format ("\n% --> %:(%,%)%\n",
 				   Colors::get (BOLD),
 				   word.getFilename ().c_str (),
 				   word.getLine (),
 				   word.getColumn (),
-				   Colors::get (RESET),
-				   Colors::get (BOLD),
-				   padd,
 				   Colors::get (RESET)));
 
 		auto column = word.getColumn ();
@@ -200,14 +197,11 @@ namespace Ymir {
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
+		buf.write (format ("\n% --> %:(%,%)%\n",
 				   Colors::get (BOLD),
 				   word.getFilename ().c_str (),
 				   word.getLine (),
 				   word.getColumn (),
-				   Colors::get (RESET),
-				   Colors::get (BOLD),
-				   padd,
 				   Colors::get (RESET)));
 
 		auto column = word.getColumn ();
@@ -256,14 +250,11 @@ namespace Ymir {
 	    if (line.length () > 0) {
 		auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		buf.write (format ("\n% --> %:(%,%)%\n%% ┃ %\n",
+		buf.write (format ("\n% --> %:(%,%)%\n",
 				   Colors::get (BOLD),
 				   word.getFilename ().c_str (),
 				   word.getLine (),
 				   word.getColumn (),
-				   Colors::get (RESET),
-				   Colors::get (BOLD),
-				   padd,
 				   Colors::get (RESET)));
 
 

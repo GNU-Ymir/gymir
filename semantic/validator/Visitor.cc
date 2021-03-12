@@ -1908,28 +1908,36 @@ namespace semantic {
 	    return ret;
 	}
 	
-	Generator Visitor::validateValue (const syntax::Expression & expr, bool canBeType, bool fromCall) {
+	Generator Visitor::validateValue (const syntax::Expression & expr, bool canBeType, bool fromCall, bool checkReach, bool fromValidateType) {
 	    Generator value (Generator::empty ());
-	    
-	    if (canBeType) 
-		value = validateValueNoReachable (expr, true);
-	    else
-		value = validateValueNoReachable (expr, fromCall);
-	    // If it can be a type, that means we are looking for a type, and that implicit call is not an option
-	    
-	    if (value.isEmpty ()) {
-		println (expr.prettyString ());
-		Ymir::Error::halt ("", ""); // It can't be null without throwing exception!
+	    try {
+		if (canBeType) 
+		    value = validateValueNoReachable (expr, true);
+		else
+		    value = validateValueNoReachable (expr, fromCall);
+		// If it can be a type, that means we are looking for a type, and that implicit call is not an option
+	    } catch (Error::ErrorList & list) {
+		if (!canBeType) throw list;
 	    }
 	    
+	    if (value.isEmpty () && !fromValidateType)
+		value = validateType (expr);
+	    
+	    else if (value.isEmpty ()) {
+		auto note = Ymir::Error::createNote (expr.getLocation ());
+		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
+	    }
+		
 	    if (!value.is <Value> () && !canBeType) {
 		auto note = Ymir::Error::createNote (expr.getLocation ());
 		Ymir::Error::occurAndNote (expr.getLocation (), note, ExternalError::get (USE_AS_VALUE));
 	    }
-	    
-	    if (value.is <Value> () && value.to <Value> ().isBreaker () && !value.to <Value> ().getType ().is <Void> ()) {
-		auto note = Ymir::Error::createNote (value.getLocation ());
-		Ymir::Error::occurAndNote (value.to<Value> ().getBreakerLocation (), note, ExternalError::get (BREAK_INSIDE_EXPR));
+
+	    if (checkReach) {
+		if (value.is <Value> () && value.to <Value> ().isBreaker () && !value.to <Value> ().getType ().is <Void> ()) {
+		    auto note = Ymir::Error::createNote (value.getLocation ());
+		    Ymir::Error::occurAndNote (value.to<Value> ().getBreakerLocation (), note, ExternalError::get (BREAK_INSIDE_EXPR));
+		}
 	    }
 	    
 	    return value;
@@ -1977,14 +1985,7 @@ namespace semantic {
 		);
 		
 		of (syntax::Var, var,
-		    try {
-			return validateVar (var);
-		    } catch (Error::ErrorList lst) {
-			try {
-			    return validateTypeVar (var);
-			} catch (Error::ErrorList) {}
-			throw lst;
-		    }
+		    return validateVar (var);
 		);
 
 		of (syntax::VarDecl, var,
@@ -2199,7 +2200,7 @@ namespace semantic {
 			Error::occur (block.getContent () [i].getLocation (), ExternalError::get (UNREACHBLE_STATEMENT));
 		    }
 
-		    auto value = validateValueNoReachable (block.getContent () [i]);
+		    auto value = validateValue (block.getContent () [i], false, false, false);
 		    bool isMutable = value.to <Value> ().getType ().to <Type> ().isMutable ();
 		    if (value.to <Value> ().isReturner ()) { returner = true; rtLoc = value.to<Value> ().getReturnerLocation (); }
 		    if (value.to <Value> ().isBreaker ()) { breaker = true; brLoc = value.to<Value> ().getBreakerLocation (); }
@@ -2537,12 +2538,22 @@ namespace semantic {
 
 	Generator Visitor::validateFloat (const syntax::Float & f) {
 	    Generator type (Generator::empty ());
+	    struct Anonymous {
+		
+		static std::string removeUnder (const std::string & value) {
+		    auto aux = value;
+		    aux.erase (std::remove (aux.begin (), aux.end (), '_'), aux.end ());
+		    return aux;
+		}
+		
+	    };
+	    
 	    if (f.getSuffix () == Keys::FLOAT_S) type = Float::init (f.getLocation (), 32);
 	    else {
 		type = Float::init (f.getLocation (), 64);
 	    }
 	    
-	    return FloatValue::init (f.getLocation (), type, f.getValue ());
+	    return FloatValue::init (f.getLocation (), type, Anonymous::removeUnder (f.getValue ()));
 	}
 
 	Generator Visitor::validateChar (const syntax::Char & c) {	  	    
@@ -2567,7 +2578,7 @@ namespace semantic {
 		try {
 		    auto intr = syntax::Intrinsics::init (lexing::Word::init (bin.getLocation (), Keys::ALIAS), bin.getLeft ());
 		    auto n_bin = syntax::Binary::init (lexing::Word::init (bin.getLocation (), Token::DOT), intr, bin.getRight (), bin.getType ());
-		    return this-> validateBinary (n_bin.to <syntax::Binary> (), isFromCall);
+		    return this-> validateBinary (n_bin.to <syntax::Binary> (), isFromCall);		    
 		} catch (Error::ErrorList list) {
 		    auto note = Ymir::Error::createNote (bin.getLocation ());
 		    list.errors.back ().addNote (note);
@@ -2597,8 +2608,11 @@ namespace semantic {
 		    }
 		    Error::occurAndNote (var.getLocation (), notes, ExternalError::get (UNDEF_VAR), var.getName ().getStr ());
 		}
-
-		return validateMultSym (var.getLocation (), sym);
+		
+		auto ret = validateMultSym (var.getLocation (), sym);
+		if (ret.is <MultSym> () && ret.to <MultSym> ().getGenerators ().size () == 0) {
+		    Error::occur (var.getLocation (), ExternalError::get (UNDEF_VAR), var.getName ().getStr ());
+		} else return ret;		
 	    }
 	    	    
 	    // The gen that we got can be either a param decl or a var decl, or inside a closure
@@ -2621,7 +2635,6 @@ namespace semantic {
 	
 	Generator Visitor::validateMultSym (const lexing::Word & loc, const std::vector <Symbol> & multSym) {	    
 	    std::vector <Generator> gens;
-
 	    for (auto & sym : multSym) {
 		pushReferent (sym, "validateMultSym");
 		bool succ = false;
@@ -2682,11 +2695,12 @@ namespace semantic {
 				match (loc_gens) {
 				    of (MultSym, mlt_sym, {
 					    gens.insert (gens.end (), mlt_sym.getGenerators ().begin (), mlt_sym.getGenerators ().end ());
+					    succ = true;
 					}) else {
 					gens.push_back (loc_gens);
+					succ = true;
 				    }
 				}
-				succ = true;
 			    }
 			 ) else of (semantic::VarDecl, decl, {
 				validateVarDecl (sym);
@@ -2717,7 +2731,7 @@ namespace semantic {
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		}
 	    }
-
+	    
 	    if (gens.size () == 1) return gens [0];
 	    else return MultSym::init (loc, gens);
 	}
@@ -2756,7 +2770,8 @@ namespace semantic {
 				locGen = validateAlias (multSym [0]);
 			    }
 			) else of (semantic::Function, func, {
-				locGen = validateFunctionProto (func);
+				if (!func.isMethod ())
+				    locGen = validateFunctionProto (func);
 			    }
 			) else {
 							    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
@@ -3262,11 +3277,11 @@ namespace semantic {
 		}
 	    }
 
-	    auto content = validateValueNoReachable (_if.getContent ());
+	    auto content = validateValue (_if.getContent (), false, false, false);
 	    auto type = content.to <Value> ().getType ();
 
 	    if (!_if.getElsePart ().isEmpty ()) {
-		auto _else = validateValueNoReachable (_if.getElsePart ());
+		auto _else = validateValue (_if.getElsePart (), false, false, false);
 		if (!_else.to <Value> ().isReturner () && !_else.to <Value> ().isBreaker ()) {
 		    if (!_else.to <Value> ().getType ().to <Type> ().isCompatible (type)) {
 			auto anc = getCommonAncestor (_else.to <Value> ().getType (), type);
@@ -3300,11 +3315,11 @@ namespace semantic {
 		    return Generator::empty ();
 		}
 		if (value.to <BoolValue> ().getValue ()) {
-		    return validateValueNoReachable (_if.getContent ());
+		    return validateValue (_if.getContent (), false, false, false);
 		} else if (!_if.getElsePart ().isEmpty ()) {
 		    return validateValue (_if.getElsePart ());
 		} else return Block::init (_if.getLocation (), Void::init (_if.getLocation ()), {});
-	    } else return validateValueNoReachable (_if.getContent ());
+	    } else return validateValue (_if.getContent (), false, false, false);
 	}	
 	
 	Generator Visitor::validateWhileExpression (const syntax::While & _wh) {
@@ -3323,7 +3338,7 @@ namespace semantic {
 	    enterLoop ();
 	    Generator content (Generator::empty ());
 	    try {
-		content = validateValueNoReachable (_wh.getContent ());
+		content = validateValue (_wh.getContent (), false, false, false);
 	    } catch (Error::ErrorList list) {
 		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 	    } 	    
@@ -4901,7 +4916,7 @@ namespace semantic {
 	    }
 
 	    if (val.isEmpty ()) {		
-		val = validateValue (type, true, true); // Can't make a implicit call validation if we are looking for a type
+		val = validateValue (type, true, true, false, true); // Can't make a implicit call validation if we are looking for a type
 	    }
 
 	    if (val.is <ClassRef> () || val.is <generator::Class> ()) {

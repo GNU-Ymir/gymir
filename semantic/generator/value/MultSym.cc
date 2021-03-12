@@ -1,5 +1,6 @@
 #include <ymir/semantic/generator/value/MultSym.hh>
 #include <ymir/semantic/generator/type/NoneType.hh>
+#include <ymir/errors/Error.hh>
 
 namespace semantic {
 

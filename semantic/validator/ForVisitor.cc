@@ -237,7 +237,7 @@ namespace semantic {
 		auto level = value.to <Value> ().getType ().to<Type> ().mutabilityLevel ();
 		    
 		innerValues.push_back (validateArrayByValueIterator (expression, array, val, indexVal, canBeRef ? level : 0));
-		auto content = this-> _context.validateValueNoReachable (expression.getBlock ());
+		auto content = this-> _context.validateValue (expression.getBlock (), false, false, false);
 		if (!content.to <Value> ().getType ().is <Void> ()) {
 		    loop_type = content.to <Value> ().getType ();
 		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
@@ -429,7 +429,7 @@ namespace semantic {
 					       isFull, rTest, lTest);
 
 		std::vector <Generator> innerValues;
-		auto content = this->_context.validateValueNoReachable (expression.getBlock ());
+		auto content = this->_context.validateValue (expression.getBlock (), false, false, false);
 		if (!content.to <Value> ().getType ().is <Void> ()) {
 		    loop_type = content.to <Value> ().getType ();
 		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);
@@ -940,7 +940,7 @@ namespace semantic {
 
 		auto right = this-> _context.validateValue (call);
 
-		auto content = this->_context.validateValueNoReachable (expr.getBlock ());
+		auto content = this->_context.validateValue (expr.getBlock (), false, false, false);
 		if (!content.to <Value> ().getType ().is <Void> ()) {
 		    loop_type = content.to <Value> ().getType ();
 		    valVar = generator::VarDecl::init (loc, "#_for", loop_type, Generator::empty (), true);

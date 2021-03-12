@@ -84,6 +84,13 @@ namespace semantic {
 		);
 	    }
 
+	    if (!value.to <Value> ().getType ().to <Type> ().getProxy ().isEmpty ()) { // cast enum to direct type 
+		if (type.to <Type> ().equals (value.to <Value> ().getType ())) {
+		    auto inner = Type::init (type.to <Type> (), value.to <Value> ().getType ().to <Type> ().isMutable ());
+		    return Value::init (value.to <Value> (), inner);
+		}
+	    }
+	    
 	    error (expression, type, value);
 	    return Generator::empty ();
 	}

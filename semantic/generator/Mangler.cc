@@ -44,7 +44,7 @@ namespace semantic {
 		of (StringValue, s, return mangleStringV (s));
 		of (Aliaser, a, return mangle (a.getWho ()));
 	    }
-	    
+
 	    return mangleType (gen, true);
 	}
 
@@ -68,6 +68,7 @@ namespace semantic {
 		else of (FuncPtr, f, result = mangleFuncPtrT (f))
 		else of (Delegate, d, result = mangleDelegateT (d))
 		else of (Option, o, result = mangleOptionT (o))
+		else of (NoneType, n ATTRIBUTE_UNUSED, return "";)
 		else of (Closure, c ATTRIBUTE_UNUSED, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
 	    }
 

@@ -338,7 +338,7 @@ namespace syntax {
 	 * \brief Visit a set of template parameter, used in declaration
 	 * \brief This function is not a cosuming one
 	 * \verbatim
-	 params := '(' template_element+ ')'
+	 params := ('!' if fst) '{' template_element+ '}'
 	 template_element := Identifier                 |
 	                     Identifier ':' expression  |
 	                     Identifier 'of' expression | 
@@ -347,12 +347,6 @@ namespace syntax {
 	 \endverbatim
 	 */
 	std::vector <Expression> visitTemplateParameters ();
-
-	/**
-	 * \brief Tell if the parameters acquired by visitTemplateParameters can be used a function runtime params
-	 * \brief Basically, Is each element of params a VarDecl?
-	 */
-	bool canBeParameters (const std::vector <Expression> & params);
 
 	/**
 	 * \brief Visit a global var declaration 
@@ -415,8 +409,9 @@ namespace syntax {
 	 param := expression:(0) | '?' Identifier '=' expression:(0)
 	 \endverbatim
 	 * \param withNamed set to true if we can have named expression 
+	 * \param onlyOperands set to true if only operand0 will be read instead of expression:0
 	 */
-	std::vector <Expression> visitParamList (bool withNamed = false);	
+	std::vector <Expression> visitParamList (const std::vector <std::string> & closing, bool withNamed = false, bool onlyOperands = false);	
 	
 	/**
 	 * \brief Visit the Custom attributes associated to declarations

@@ -27,6 +27,8 @@ namespace semantic {
 		auto & fptrT = this-> _funcptr.getThrowers ();
 		thrs.insert (thrs.end (), fptrT.begin (), fptrT.end ());
 	    }
+	    auto & cthrs = this-> _closure.getThrowers ();
+	    thrs.insert (thrs.end (), cthrs.begin (), cthrs.end ());
 	    
 	    this-> setThrowers (thrs);
 	}

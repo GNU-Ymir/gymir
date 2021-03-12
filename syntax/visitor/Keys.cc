@@ -1,5 +1,6 @@
 #include <ymir/syntax/visitor/Keys.hh>
 
+const std::string       Keys::AKA          = "aka";
 const std::string       Keys::ATOMIC       = "atomic";
 const std::string	Keys::IMPORT	   = "import";
 const std::string	Keys::STRUCT	   = "struct";

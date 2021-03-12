@@ -396,7 +396,7 @@ namespace semantic {
 	     * \brief If the value is a breaker or a returner throw an error
 	     * \return a tree containing the result of the value
 	     */
-	    generator::Generator validateValue (const syntax::Expression & value, bool canBeType = false, bool fromCall = false);
+	    generator::Generator validateValue (const syntax::Expression & value, bool canBeType = false, bool fromCall = false, bool checkReach = false, bool fromValidateType = false);
 
 	    /**
 	     * \brief Validate an compile time expression , that produce a value
