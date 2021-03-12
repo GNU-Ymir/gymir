@@ -3,6 +3,7 @@
 #include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/utils/Match.hh>
+#include <algorithm>
 
 namespace semantic {
 
@@ -45,8 +46,9 @@ namespace semantic {
 	    if (this-> _gens.size () != 1) {
 		Ymir::OutBuffer buf;
 		buf.write ("Multiple Symbols : {");
-		for (auto it : Ymir::r (0, this-> _gens.size ())) {
+		for (auto it : Ymir::r (0, std::min (this-> _gens.size (), (unsigned long int) 3))) {
 		    if (it != 0) buf.write (", ");
+		    if (it == 2 && this-> _gens.size () > 3) buf.write (", ..., ");
 		    buf.write (validator::CallVisitor::prettyName (this-> _gens [it]));		    
 		}
 		

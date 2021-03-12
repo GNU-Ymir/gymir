@@ -82,6 +82,17 @@ namespace Ymir {
 	    return buf.str ();
 	}
 
+	std::string center (const std::string &toCenter, ulong nb, const char * concat) {
+	    OutBuffer buf;
+	    nb = nb - toCenter.length ();
+	    
+	    for (int i = 0 ; i < (int) nb / 2 ; i++) buf.write (concat);	    
+	    buf.write (toCenter);	    
+	    for (int i = 0 ; i < (int) (nb - nb / 2) ; i++) buf.write (concat);
+	    
+	    return buf.str ();
+	}
+
 	std::string rightJustify (const std::string &toJustify, ulong nb, char concat) {
 	    nb = nb - toJustify.length ();
 	    OutBuffer buf;
@@ -143,7 +154,7 @@ namespace Ymir {
 			       ));
 
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
-		buf.write (format ("%% ┃ %", Colors::get (BOLD), padd, Colors::get (RESET)));
+		buf.write (format ("%% ╋ %", Colors::get (BOLD), padd, Colors::get (RESET)));
 		for (ulong it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
@@ -172,16 +183,14 @@ namespace Ymir {
 	    return cont;
 	}
 	
-	void addNote (Ymir::OutBuffer & buf, const Word & word, const std::string & note, bool fst, bool oneLine) {
+	void addNote (Ymir::OutBuffer & buf, const Word & word, const std::string & note) {
 	    auto leftLine = center (format ("%", word.getLine ()), 3, ' ');
 	    auto padd = center ("", leftLine.length (), ' ');
 	    auto padd2 = center ("", leftLine.length (), '-');
 	    
 	    auto lines = splitString (note, "\n");
-	    if (!fst && !oneLine) {
-		auto l = format ("%% ┃ %\n", Colors::get (BOLD), padd, Colors::get (RESET));
-		buf.write (l);
-	    }
+	    // auto l = format ("%% ┃ %\n", Colors::get (BOLD), padd, Colors::get (RESET));
+	    // buf.write (l);	
 	    
 	    for (auto it : Ymir::r (0, lines.size ())) {
 		if (lines [it].length() != 0) {
@@ -277,7 +286,7 @@ namespace Ymir {
 		));
 		
 		if (line [line.length () - 1] != '\n') buf.write ('\n');
-		buf.write (format ("%% ┃ %", Colors::get (BOLD), padd, Colors::get (RESET)));
+		buf.write (format ("%% ╋ %", Colors::get (BOLD), padd, Colors::get (RESET)));
 		for (ulong it = 0 ; it < column - 1 ; it++) {
 		    if (line [it] == '\t') buf.write ('\t');
 		    else buf.write (' ');
@@ -339,23 +348,33 @@ namespace Ymir {
 		addLine (buf, this-> msg, this-> begin, this-> end);
 	    }
 
-	    int z = 0;
-	    bool oneLine = false;
+	    bool notOneLine = false;
+	    unsigned long int max_padd = 0;
 	    for (auto & it : this-> notes) {
 		if (!it.isEmpty ()) {
 		    Ymir::OutBuffer note;
 		    it.computeMessage (note);
-		    Ymir::Error::addNote (buf, this-> begin, note.str (), z == 0, oneLine);
-		    z += 1;
-		    oneLine = it.one_line;
-		}		
+		    Ymir::Error::addNote (buf, this-> begin, note.str ());
+		    notOneLine = !it.one_line || it.notes.size () != 0;
+		    max_padd = it.begin.getLine ();
+		    if (it.end.getLine () > max_padd) {
+			max_padd = it.end.getLine ();
+		    }
+		}
 	    }
 	    
-	    if (z != 0) { // Added some notes
+	    if (this-> notes.size () != 0) { // Added some notes
 		auto leftLine = center (format ("%", this-> begin.getLine ()), 3, ' ');
 		auto padd = center ("", leftLine.length (), ' ');
-		buf.write (format ("%% ┗%* %\n", Colors::get (BOLD), padd, 30, "━", Colors::get (RESET)));
-	    }	    	    		   
+		auto leftLine2 = center (format ("%", max_padd), 3, ' ');
+		auto padd2 = center ("", leftLine2.length (), "━");
+		
+		if (notOneLine) {
+		    buf.write (format ("%% ┗━%━┻━ %", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
+		} else {
+		    buf.write (format ("%% ┗━%━━ %", Colors::get (BOLD), padd, padd2, Colors::get (RESET)));
+		}
+	    }
 	}
 	
 	bool ErrorMsg::isEmpty () const {

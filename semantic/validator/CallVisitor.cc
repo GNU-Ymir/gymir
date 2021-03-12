@@ -134,8 +134,13 @@ namespace semantic {
 		}
 	    }
 	    
-	    if (!left.is<MultSym> () && checked) 
-		errors.insert (errors.begin (), Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (left), prettyName (left)));	    
+	    if (!left.is<MultSym> () && checked) {
+		auto note = Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), realLocation (left), prettyName (left));
+		for (auto & it : errors) {
+		    note.addNote (it);
+		}
+		errors = {note};
+	    }
 	    return Generator::empty ();
 	}
 	
@@ -171,7 +176,9 @@ namespace semantic {
 			    );
 		    } catch (Error::ErrorList list) {
 			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ()));
+			errors.push_back (
+			    Ymir::Error::createNoteOneLine (ExternalError::get (PARAMETER_NAME), proto.getParameters () [it].to <Value> ().getLocation (), proto.prettyString ())
+			    );
 			succeed = false;
 		    } 
 		    

@@ -327,6 +327,22 @@ namespace Ymir {
 	    std::string aux = format ("%(b) : " + format_, "Note", args...);
 	    return ErrorMsg (aux);
 	}
+
+	/**
+	   \brief Print a note error on the error stream
+	   \param word the location of the note
+	   \param format_ the content of the note
+	   \param args the parameter of the format
+	 */
+	template <typename ... TArgs>
+	ErrorMsg createNoteOneLineAndNote (const std::list <ErrorMsg> & notes, const std::string& format_, TArgs ... args) {
+	    std::string aux = format ("%(b) : " + format_, "Note", args...);
+	    auto ret = ErrorMsg (aux);
+	    for (auto & it : notes) {
+		ret.addNote (it);
+	    }
+	    return ret;
+	}
 	
 	/**
 	   \brief Create a note message

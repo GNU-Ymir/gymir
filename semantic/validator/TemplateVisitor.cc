@@ -181,7 +181,7 @@ namespace semantic {
 			return applyTypeFromExplicitImplVar (syntaxTempl, var, values [0]);
 		    } else if (values [0].is <Type> ()) {
 			auto note = Ymir::Error::createNote (param.getLocation ());
-			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
 			Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (USE_AS_TYPE));
@@ -197,7 +197,7 @@ namespace semantic {
 			    return mapper;
 			} else {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
-			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_STRUCT), values [0].prettyString ());
+			    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_STRUCT), values [0].prettyString ());
 			}
 		    } else {
 			auto note = Ymir::Error::createNote (param.getLocation ());
@@ -214,7 +214,7 @@ namespace semantic {
 			    return mapper;
 			} else if (!values [0].isEmpty ()) {
 			    auto note = Ymir::Error::createNote (param.getLocation ());
-			    Ymir::Error::occurAndNote (values[0].getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
+			    Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS), values [0].prettyString ());
 			} else {
 			    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 						var.prettyString (),						    
@@ -865,8 +865,8 @@ namespace semantic {
 		}
 		elof (ImplVar, var) {
 		    if (!types [0].is <ClassPtr> () && !types [0].is <ClassRef> ()) {
-			auto note = Ymir::Error::createNote (var.getLocation ());
-			Ymir::Error::occurAndNote (types [0].getLocation (), note, ExternalError::get (NOT_A_CLASS), types [0].prettyString ());
+			auto note = Ymir::Error::createNote (types [0].getLocation ());
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS), types [0].prettyString ());
 		    }
 			
 		    consumed += 1;
@@ -880,8 +880,9 @@ namespace semantic {
 			consumed += 1;
 			return mapper;
 		    } else if (!types [0].isEmpty ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (NOT_A_STRUCT),
-					    types [0].to<Type> ().getTypeName ());
+			auto note = Ymir::Error::createNote (types [0].getLocation ());
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_STRUCT),
+						   types [0].to<Type> ().getTypeName ());
 		    } else
 		    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
 					var.prettyString (),
@@ -896,7 +897,8 @@ namespace semantic {
 			consumed += 1;
 			return mapper;
 		    } else if (!types [0].isEmpty ()) {
-			Ymir::Error::occur (var.getLocation (), ExternalError::get (NOT_A_CLASS),
+			auto note = Ymir::Error::createNote (types [0].getLocation ());
+			Ymir::Error::occurAndNote (var.getLocation (), note, ExternalError::get (NOT_A_CLASS),
 					    types [0].to<Type> ().getTypeName ());
 		    } else
 		    Ymir::Error::occur (var.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
@@ -1295,7 +1297,7 @@ namespace semantic {
 			auto vec = {type};
 			Mapper mapper = applyTypeFromExplicit (params, expr, array_view <Generator> (vec), consumed);
 			auto realType = this-> replaceAll (implv.getType (), mapper.mapping);			    
-			this-> _context.verifyClassImpl (implv.getLocation (), type, realType);
+			this-> _context.verifyClassImpl (implv.getType ().getLocation (), type, realType);
 			    
 			mapper.mapping.emplace (implv.getLocation ().getStr (), createSyntaxType (implv.getLocation (), type));
 			mapper.nameOrder.push_back (implv.getLocation ().getStr ());
@@ -1311,7 +1313,7 @@ namespace semantic {
 			    int current_consumed = 0;
 			    auto loc_mapper = validateTypeFromTemplCall (params, cl, trait, current_consumed);		
 			    Expression realType = this-> replaceAll (implv.getType (), loc_mapper.mapping);				
-			    this-> _context.verifyClassImpl (implv.getLocation (), type, realType);
+			    this-> _context.verifyClassImpl (implv.getType ().getLocation (), type, realType);
 			    mapper = mergeMappers (loc_mapper, mapper);
 			} catch (Error::ErrorList list) {				
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -1327,7 +1329,7 @@ namespace semantic {
 		    }
 			
 		    if (errors.size () == 0) {
-			auto note = Ymir::Error::createNote (implv.getLocation ());
+			auto note = Ymir::Error::createNote (implv.getType ().getLocation ());
 			Ymir::Error::occurAndNote (type.getLocation (), note, ExternalError::get (NOT_IMPL_TRAIT), type.prettyString (), implv.getType ().prettyString ());
 		    }
 			
@@ -1355,7 +1357,7 @@ namespace semantic {
 		} fo;		
 	    }
 	    
-	    this-> _context.verifyClassImpl (implv.getLocation (), type, implv.getType ());
+	    this-> _context.verifyClassImpl (implv.getType ().getLocation (), type, implv.getType ());
 	    Mapper mapper (true, Scores::SCORE_TYPE);
 	    this-> _context.verifyNotIsType (implv.getLocation ());
 			    

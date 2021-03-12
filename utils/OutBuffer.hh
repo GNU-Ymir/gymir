@@ -32,6 +32,8 @@ namespace Ymir {
 	ulong len = 0;
 	ulong capacity = 0;
 	std::vector <std::string> _currentColor;
+	std::vector <std::string> _entabing;
+	bool _willEntab = false;
 	
     public:
 
@@ -42,7 +44,7 @@ namespace Ymir {
 
 	~OutBuffer ();
 	
-	void writef (const char* s) {
+	void writef (const char* s) {	    
 	    write (s);
 	}
 	

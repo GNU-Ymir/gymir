@@ -113,7 +113,7 @@ namespace Ymir {
 			    OVERRIDE_MISMATCH_PROTECTION    = "the protection %(y) of the overriden method %(y) does not match with the definition of the ancestor class",
 			    OVERRIDE_PRIVATE                = "cannot override private method %(y)",
 			    PACKED_AND_UNION		    = "structures could not be packed and union at the same time",
-			    PARAMETER_NAME                  = "parameter % : %",
+			    PARAMETER_NAME                  = "for parameter % of %",
 			    PRIVATE_IN_THIS_CONTEXT         = "%(B) : % is private within this context",
 			    REF_NO_EFFECT		    = "the creation of ref has no effect on the left operand",
 			    REF_NO_VALUE		    = "%(y) declared as a reference but not initialized",
