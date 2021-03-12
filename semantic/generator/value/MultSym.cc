@@ -1,6 +1,6 @@
 #include <ymir/semantic/generator/value/MultSym.hh>
 #include <ymir/semantic/generator/type/NoneType.hh>
-#include <ymir/semantic/generator/value/_.hh>
+#include <ymir/semantic/validator/CallVisitor.hh>
 #include <ymir/errors/Error.hh>
 #include <ymir/utils/Match.hh>
 
@@ -45,10 +45,11 @@ namespace semantic {
 	    if (this-> _gens.size () != 1) {
 		Ymir::OutBuffer buf;
 		buf.write ("Multiple Symbols : {");
-		for (auto it : Ymir::r (0, 1)) {
-		    // match (this-> _gens [it]) {
-		    // }
-		}		    
+		for (auto it : Ymir::r (0, this-> _gens.size ())) {
+		    if (it != 0) buf.write (", ");
+		    buf.write (validator::CallVisitor::prettyName (this-> _gens [it]));		    
+		}
+		
 		buf.writef ("} x %", this-> _gens.size ());
 		return buf.str ();
 	    } else {
