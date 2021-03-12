@@ -3302,16 +3302,7 @@ namespace semantic {
 		type = content.to <Value> ().getType ();
 
 		if (!breakType.isEmpty () && !content.to <Value> ().isBreaker () && !type.equals (breakType)) {
-		    auto anc = getCommonAncestor (content.to <Value> ().getType (), type);
-		    if (!anc.isEmpty ()) {
-			type = anc;
-		    } else {
-			auto note = Ymir::Error::createNote (breakType.getLocation ());
-			Ymir::Error::occurAndNote (content.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-						   type.to <Type> ().getTypeName (),
-						   breakType.to <Type> ().getTypeName ()
-			);
-		    }
+		    type = this-> deduceTypeBranching (content.getLocation (), breakType.getLocation (), content.to <Value> ().getType (), breakType);
 		} else if (content.to <Value> ().isBreaker ()) {
 		    type = breakType;
 		}
@@ -3343,14 +3334,10 @@ namespace semantic {
 	    
 	    auto type = content.to <Value> ().getType ();
 	    if (!breakType.isEmpty () && !content.to <Value> ().isBreaker () && !type.equals (breakType)) {
-		auto note = Ymir::Error::createNote (breakType.getLocation ());
-		Ymir::Error::occurAndNote (content.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-					   type.to <Type> ().getTypeName (),
-					   breakType.to <Type> ().getTypeName ()
-		);				    
+		type = this-> deduceTypeBranching (content.getLocation (), breakType.getLocation (), content.to <Value> ().getType (), breakType);			    
 	    }
 	    
-	    return content;
+	    return Value::init (content.to <Value> (), type);
 	}
 	
 	Generator Visitor::validateBreak (const syntax::Break & _break) {
@@ -3361,7 +3348,7 @@ namespace semantic {
 	    Generator type = Generator::empty ();
 	    if (!_break.getValue ().isEmpty ()) {
 		value = validateValue (_break.getValue ());
-		type = value.to <Value> ().getType ();
+		type = Type::init (_break.getLocation (), value.to <Value> ().getType ().to <Type> ());
 	    } else type = Void::init (_break.getLocation ());
 
 	    bool set = false;
@@ -3387,14 +3374,15 @@ namespace semantic {
 	    if (!loop_type.is<Void> ()) {
 		if (set) {
 		    try {
-			verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
+		    	verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
 		    } catch (Error::ErrorList err) { // Maybe implicit alias problem, we set the type to non mutable, to check
-			loop_type = Type::init (loop_type.to <Type> (), false, loop_type.to <Type> ().isRef ());
-			setCurrentLoopType (loop_type);
-			verifyMemoryOwner (_break.getLocation (), loop_type, value, false); // if this pass, the loop type is const, and it is ok
+		    	loop_type = Type::init (loop_type.to <Type> (), false, loop_type.to <Type> ().isRef ());
+		    	setCurrentLoopType (loop_type);
+		    	verifyMemoryOwner (_break.getLocation (), loop_type, value, false); // if this pass, the loop type is const, and it is ok
 		    }		    
 		} else {
-		    verifyMemoryOwner (_break.getLocation (), loop_type, value, false);
+		    loop_type = this-> deduceTypeBranching (_break.getLocation (), loop_type.getLocation (), value.to <Value> ().getType (), loop_type);
+		    setCurrentLoopType (loop_type);
 		}
 	    }
 	    
@@ -3561,8 +3549,14 @@ namespace semantic {
 			
 			params.push_back (g_it);
 			auto type = params.back ().to <Value> ().getType ();
-			types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
-			verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+			try {
+			    verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+			    types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
+			} catch (Error::ErrorList ATTRIBUTE_UNUSED lst) { // maybe there was an implicit alias, that is not a problem
+			    type = Type::init (type.to <Type> (), false); // we just put it as a const one
+			    verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+			    types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
+			}
 		    }
 		} else {
 		    if (val.to <Value> ().getType ().is<NoneType> () || val.to <Value> ().getType ().is <Void> ()) {
@@ -3570,8 +3564,14 @@ namespace semantic {
 		    }
 		    params.push_back (val);
 		    auto type = params.back ().to <Value> ().getType ();
-		    types.push_back (Type::init (type.to<Type> (), type.to <Type> ().isMutable (), false));
-		    verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+		    try {
+			verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+			types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
+		    } catch (Error::ErrorList ATTRIBUTE_UNUSED lst) { // maybe there was an implicit alias, that is not a problem
+			type = Type::init (type.to <Type> (), false); // we just put it as a const one
+			verifyMemoryOwner (params.back ().getLocation (), type, params.back (), false);
+			types.push_back (Type::init (type.to <Type> (), type.to <Type> ().isMutable (), false));
+		    }
 		}
 	    }
 	    
