@@ -3509,9 +3509,7 @@ namespace semantic {
 	    if (innerType.isEmpty ()) {
 		innerType = Void::init (list.getLocation ());
 	    }
-	    
-	    println ("RES : ", innerType.prettyString (), " ", list.getLocation ());
-	    
+	    	    
 	    innerType = Type::init (innerType.to <Type> (), innerType.to <Type> ().isMutable (), false);
 	    
 	    // An array literal is always static

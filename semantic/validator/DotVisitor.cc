@@ -65,11 +65,13 @@ namespace semantic {
 	    auto index = CompileTime::init (this-> _context).execute (right);
 
 	    if (!index.to <Value> ().getType ().is<Integer> ()) {
-		auto note = Ymir::Error::createNote (expression.getLocation ());
-		Ymir::Error::occurAndNote (index.getLocation (), note, ExternalError::get (INCOMPATIBLE_TYPES),
-				    index.to <Value> ().getType ().to <Type> ().getTypeName (),
-				    Integer::init (index.getLocation (), 64, false). to <Type> ().getTypeName ()
-		);
+		auto note = Ymir::Error::createNote (index.getLocation (), ExternalError::get (INCOMPATIBLE_TYPES),
+						     index.to <Value> ().getType ().to <Type> ().getTypeName (),
+						     Integer::init (index.getLocation (), 64, false). to <Type> ().getTypeName ()
+		    );
+		
+		Ymir::Error::occurAndNote (expression.getLocation (), note, ExternalError::get (UNDEFINED_BIN_OP), expression.getLocation ().getStr (),
+					   left.to <Value> ().getType ().prettyString (), index.to <Value> ().getType ().prettyString ());		
 	    }
 	    
 	    if (!index.is <Fixed> ()) {

@@ -1234,7 +1234,7 @@ namespace syntax {
 	} else if (location == Token::MACRO_ACC || location == Token::MACRO_CRO || location == Token::MACRO_PAR) {
 	    return visitMacroCall (value);
 	} else if (location == Token::DOT || location == Token::DOT_AND) {
-	    auto right = visitOperand3 (false);
+	    auto right = visitOperand3 (false, false);
 	    return visitOperand1 (visitTemplateCall (Binary::init (location, value, right, Expression::empty ())));
 	} this-> _lex.rewind ();
 	return value;	
@@ -1254,7 +1254,7 @@ namespace syntax {
 	return value;
     }
     
-    Expression Visitor::visitOperand3 (bool canBeTemplateCall) {	
+    Expression Visitor::visitOperand3 (bool canBeTemplateCall, bool canBeFloat) {	
 	auto begin = this-> _lex.next ();
 	this-> _lex.rewind ();
 	
@@ -1282,7 +1282,7 @@ namespace syntax {
 	    return visitDecoratedExpression ();
 	}
 	
-	if (can (&Visitor::visitLiteral))  return visitLiteral ();
+	if (canVisitLiteral (canBeFloat))  return visitLiteral (canBeFloat);
 	return visitVar (canBeTemplateCall);
     }    
 
@@ -1958,12 +1958,12 @@ namespace syntax {
 	return FuncPtr::init (begin, visitExpression (), vars);
     }
     
-    Expression Visitor::visitLiteral () {
+    Expression Visitor::visitLiteral (bool canBeFloat) {
 	auto tok = this-> _lex.next ();
 	this-> _lex.rewind ();
 	if ((tok.getStr () [0] >= '0' && tok.getStr () [0] <= '9') || (tok.getStr () [0] == '_' && tok.getStr ().length () != 1))
-	                                               return visitNumeric ();
-	if (tok == Token::DOT)                         return visitFloat (lexing::Word::eof ());
+	                                               return visitNumeric (canBeFloat);
+	if (tok == Token::DOT && canBeFloat)           return visitFloat (lexing::Word::eof ());
 	if (tok == Token::APOS)                        return visitChar ();
 	if (tok == Token::GUILL)                       return visitString ();
 	if (tok == Keys::TRUE_ || tok == Keys::FALSE_) return Bool::init (this-> _lex.next ());
@@ -1974,7 +1974,7 @@ namespace syntax {
 	return Expression::empty ();
     }
 
-    Expression Visitor::visitNumeric () {
+    Expression Visitor::visitNumeric (bool canBeFloat) {
 	auto begin = this-> _lex.next ();
 	if (begin.getStr ().length () >= 4) {
 	    auto suffix = lexing::Word::init (begin.getStr ().substr (begin.getStr ().length () - 3),
@@ -2009,7 +2009,7 @@ namespace syntax {
 	}
 	
 	auto value = begin.getStr ();
-	if (!verifNumeric (begin, value)) {
+	if (!verifNumeric (begin, value) && canBeFloat) {
 	    auto next = this-> _lex.consumeIf ({Token::DOT});
 	    if (next == Token::DOT) {
 		this-> _lex.rewind ();
@@ -2428,6 +2428,18 @@ namespace syntax {
 	auto begin = this-> _lex.tell ();
 	try {
 	    (*this.*func) ();
+	} catch (Error::ErrorList ATTRIBUTE_UNUSED list) {
+	    this-> _lex.seek (begin);
+	    return false;
+	}
+	this-> _lex.seek (begin);
+	return true;
+    }
+
+    bool Visitor::canVisitLiteral (bool canBeFloat) {
+	auto begin = this-> _lex.tell ();
+	try {
+	    this-> visitLiteral (canBeFloat);
 	} catch (Error::ErrorList ATTRIBUTE_UNUSED list) {
 	    this-> _lex.seek (begin);
 	    return false;

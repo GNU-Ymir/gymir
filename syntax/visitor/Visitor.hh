@@ -559,7 +559,7 @@ namespace syntax {
 	/**
 	 * \brief Used to factorize visitOperand
 	 */
-	Expression visitOperand3 (bool canBeTemplateCall = true);
+	Expression visitOperand3 (bool canBeTemplateCall = true, bool canBeFloat = true);
 	
 	/**
 	 * \brief Visit a literal expression 
@@ -572,13 +572,13 @@ namespace syntax {
 	 Bool := 'true' | 'false'
 	 \endverbatim
 	 */
-	Expression visitLiteral ();
+	Expression visitLiteral (bool canBeFloat = true);
 
 
 	/**
 	 * \brief Visit a numeric literal
 	 */
-	Expression visitNumeric ();
+	Expression visitNumeric (bool canBeFloat = true);
 
 	/**
 	 * \brief Verif that content is well formed for a numeric value
@@ -882,6 +882,11 @@ namespace syntax {
 	bool can (Expression (Visitor::*func)());
 
 
+	/**
+	 * \return true if the next part to read is a valid literal
+	 */
+	bool canVisitLiteral (bool canBeFloat);
+	
 	/**
 	 * \brief Ignore a block of content (skip all token between '{' and '}')	 
 	 */
