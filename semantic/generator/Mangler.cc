@@ -31,18 +31,18 @@ namespace semantic {
 	
 	std::string Mangler::mangle (const generator::Generator & gen) const {
 	    match (gen) {
-		of (Frame, fr, return mangleFrame (fr));
-		of (FrameProto, proto, return mangleFrameProto (proto));
-		of (ConstructorProto, proto, return mangleConstructorProto (proto));
-		of (GlobalVar, v, return mangleGlobalVar (v));
-		of (BoolValue, bl, return mangleBoolV (bl));
-		of (CharValue, c, return mangleCharV (c));
-		of (Fixed, f, return mangleFixed (f));
-		of (FloatValue, fl, return mangleFloatV (fl));
-		of (TupleValue, tl, return mangleTupleV (tl));
-		of (Addresser, addr, return mangleAddrV (addr));
-		of (StringValue, s, return mangleStringV (s));
-		of (Aliaser, a, return mangle (a.getWho ()));
+		s_of (Frame, fr) return mangleFrame (fr);
+		s_of (FrameProto, proto) return mangleFrameProto (proto);
+		s_of (ConstructorProto, proto) return mangleConstructorProto (proto);
+		s_of (GlobalVar, v) return mangleGlobalVar (v);
+		s_of (BoolValue, bl) return mangleBoolV (bl);
+		s_of (CharValue, c) return mangleCharV (c);
+		s_of (Fixed, f) return mangleFixed (f);
+		s_of (FloatValue, fl) return mangleFloatV (fl);
+		s_of (TupleValue, tl) return mangleTupleV (tl);
+		s_of (Addresser, addr) return mangleAddrV (addr);
+		s_of (StringValue, s) return mangleStringV (s);
+		s_of (Aliaser, a) return mangle (a.getWho ());
 	    }
 
 	    return mangleType (gen, true);
@@ -51,32 +51,32 @@ namespace semantic {
 	std::string Mangler::mangleType (const Generator & gen, bool fatherMut) const {
 	    std::string result = "";
 	    match (gen) {
-		of (Array, ar, result = mangleArrayT (ar))
-		else of (Bool, b, result = mangleBoolT (b))
-		else of (Char, c, result = mangleCharT (c))
-		else of (Float, f, result = mangleFloatT (f))
-		else of (Integer, i, result = mangleIntegerT (i))
-		else of (Slice, sl, result = mangleSliceT (sl))
-		else of (Tuple, tl, result = mangleTupleT (tl))
-		else of (Void, v, result = mangleVoidT (v))
-		else of (StructRef, r, result = mangleStructRef (r))
-		else of (ClassRef, r, result = mangleClassRef (r))
-		else of (EnumRef, r, result = mangleEnumRef (r))
-		else of (Range, r, result = mangleRangeT (r))
-		else of (Pointer, p, result = manglePointerT (p))
-		else of (ClassPtr, p, result = mangleClassPointerT (p))
-		else of (FuncPtr, f, result = mangleFuncPtrT (f))
-		else of (Delegate, d, result = mangleDelegateT (d))
-		else of (Option, o, result = mangleOptionT (o))
-		else of (NoneType, n ATTRIBUTE_UNUSED, return "";)
-		else of (Closure, c ATTRIBUTE_UNUSED, return ""); // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
+		of (Array, ar) result = mangleArrayT (ar);
+		elof (Bool, b) result = mangleBoolT (b);
+		elof (Char, c) result = mangleCharT (c);
+		elof (Float, f) result = mangleFloatT (f);
+		elof (Integer, i) result = mangleIntegerT (i);
+		elof (Slice, sl) result = mangleSliceT (sl);
+		elof (Tuple, tl) result = mangleTupleT (tl);
+		elof (Void, v) result = mangleVoidT (v);
+		elof (StructRef, r) result = mangleStructRef (r);
+		elof (ClassRef, r) result = mangleClassRef (r);
+		elof (EnumRef, r) result = mangleEnumRef (r);
+		elof (Range, r) result = mangleRangeT (r);
+		elof (Pointer, p) result = manglePointerT (p);
+		elof (ClassPtr, p) result = mangleClassPointerT (p);
+		elof (FuncPtr, f) result = mangleFuncPtrT (f);
+		elof (Delegate, d) result = mangleDelegateT (d);
+		elof (Option, o) result = mangleOptionT (o);
+		elof_u (NoneType) return "";
+		elof_u (Closure) return ""; // Closure does not impact the name of the func, as it is only a lambda, and its name is already uniq
+		fo;
 	    }
 
 	    if (result == "" && this-> _fail) {
 		println (gen.prettyString ());
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-	    }
-	    
+	    }	    
 	    else if (result != "") {
 		if (fatherMut && gen.to <Type> ().isMutable ()) 
 		    result = "x" + result;

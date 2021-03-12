@@ -423,11 +423,11 @@ namespace semantic {
 	    try {
 		auto gen = this-> _context.validateLambdaProto (proto, types);
 		match (gen) {
-		    of (Addresser, addr, // Simple proto, no closure
+		    of (Addresser, addr) { // Simple proto, no closure
 			return Call::init (location, addr.getWho ().to<FrameProto> ().getReturnType (), addr.getWho (), types, rights, {});
-		    ) else of (DelegateValue, dl,
-			       return Call::init (location, dl.getFuncPtr ().to <Addresser> ().getWho ().to <FrameProto> ().getReturnType (), gen, types, rights, {});
-		    );
+		    } elof (DelegateValue, dl) {
+			return Call::init (location, dl.getFuncPtr ().to <Addresser> ().getWho ().to <FrameProto> ().getReturnType (), gen, types, rights, {});
+		    } fo;
 		}
 		Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		return Generator::empty ();
@@ -1074,23 +1074,22 @@ namespace semantic {
 		std::list <Ymir::Error::ErrorMsg> localErrors;
 		try {
 		    match (bin.getRight ()) {		    
-			of (syntax::TemplateCall, cl, {
-				auto loc = left.getLocation ();
-				auto inner_bin = syntax::Binary::init (
-				    lexing::Word::init (loc, Token::DOT),  TemplateSyntaxWrapper::init (loc, left),
-				    cl.getContent (), Expression::empty ()
-				    );
-				auto inner_value = this-> _context.validateValue (inner_bin);
-				succ = true; // If we are here, then the class has field named cl.getContent ()
-				
-				auto n_bin = TemplateCall::init (				    
-				    cl.getLocation (), cl.getParameters (),
-				    TemplateSyntaxWrapper::init (inner_value.getLocation (), inner_value)
+			of (syntax::TemplateCall, cl) {
+			    auto loc = left.getLocation ();
+			    auto inner_bin = syntax::Binary::init (
+				lexing::Word::init (loc, Token::DOT),  TemplateSyntaxWrapper::init (loc, left),
+				cl.getContent (), Expression::empty ()
 				);
-				
-				right = this-> _context.validateValue (n_bin);
-			    }
-			) else succ = true;
+			    auto inner_value = this-> _context.validateValue (inner_bin);
+			    succ = true; // If we are here, then the class has field named cl.getContent ()
+			    
+			    auto n_bin = TemplateCall::init (				    
+				cl.getLocation (), cl.getParameters (),
+				TemplateSyntaxWrapper::init (inner_value.getLocation (), inner_value)
+				);
+			    
+			    right = this-> _context.validateValue (n_bin);			
+			} elfo { succ = true; }
 		    }
 		} catch (Error::ErrorList list) {		    
 		    if (succ) { // If we failed, we failed after the DotOp, so the failure is due to template call
@@ -1130,13 +1129,14 @@ namespace semantic {
 
 	    std::string leftName;
 	    match (left) {
-		of (FrameProto, proto, leftName = proto.getName ())
-		else of (generator::Struct, str, leftName = str.getName ())
-		else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
-		else of (TemplateRef, cl, leftName = cl.prettyString ())
-		else of (TemplateClassCst, cl, leftName = cl.prettyString ())
-		else of (ModuleAccess, acc, leftName = acc.prettyString ())
-		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
+		of (FrameProto,          proto) leftName = proto.getName ();
+		elof (generator::Struct, str)   leftName = str.getName ();
+		elof (MultSym,           sym)   leftName = sym.getLocation ().getStr ();
+		elof (TemplateRef,       cl)    leftName = cl.prettyString ();
+		elof (TemplateClassCst,  cl)    leftName = cl.prettyString ();
+		elof (ModuleAccess,      acc)   leftName = acc.prettyString ();
+		elof (Value,             val)   leftName = val.getType ().to <Type> ().getTypeName ();
+		fo;
 	    }
 	    
 	    Ymir::Error::occurAndNote (
@@ -1157,15 +1157,15 @@ namespace semantic {
 
 	    std::string leftName;
 	    match (left) {
-		of (FrameProto, proto, leftName = proto.getName ())
-		else of (ConstructorProto, proto, leftName = proto.getName ())
-		else of (generator::Struct, str, leftName = str.getName ())			 
-		else of (MultSym,    sym,   leftName = sym.prettyString ())
-		else of (ModuleAccess, acc, leftName = acc.prettyString ())
-		else of (TemplateRef, cl, leftName = cl.prettyString ())
-		else of (TemplateClassCst, cl, leftName = cl.prettyString ())
-		else of (Value,      val,  leftName = val.getType ().to <Type> ().getTypeName ()
-		);
+		of (FrameProto, proto) leftName = proto.getName ();
+		elof (ConstructorProto, proto) leftName = proto.getName ();
+		elof (generator::Struct, str) leftName = str.getName ();			
+		elof (MultSym,    sym)  leftName = sym.prettyString ();
+		elof (ModuleAccess, acc) leftName = acc.prettyString ();
+		elof (TemplateRef, cl) leftName = cl.prettyString ();
+		elof (TemplateClassCst, cl) leftName = cl.prettyString ();
+		elof (Value,      val)  leftName = val.getType ().to <Type> ().getTypeName ();
+		fo;
 	    }
 	    
 	    Ymir::Error::occurAndNote (
@@ -1182,37 +1182,37 @@ namespace semantic {
 
 	std::string CallVisitor::prettyName (const Generator & gen) {	    
 	    match (gen) {
-		of (DelegateValue, dg, {
-			return dg.getType ().to <Type> ().getInners ()[0].prettyString ();		    
-		    }
-		) else of (Call, cl, {
-			return prettyName (cl.getFrame ());
-		    }
-		) else of (FrameProto, p, return p.prettyString ();
-		) else of (ConstructorProto, c, return c.prettyString ();
-		) else of (generator::Struct, str, return str.getName ()			 
-		) else of (MultSym,    sym,   return sym.prettyString ();
-		) else of (ModuleAccess, acc, return acc.prettyString ()
-		) else of (TemplateRef, cl, return cl.prettyString ();
-		) else of (TemplateClassCst, cl, return cl.prettyString ();
-		) else of (ClassCst, cs, return prettyName (cs.getFrame ()); 
-		) else of (Value,      val,  return val.getType ().to <Type> ().getTypeName ());
+		of (DelegateValue, dg) {
+		    return dg.getType ().to <Type> ().getInners ()[0].prettyString ();		    
+		}
+		elof (Call, cl) {
+		    return prettyName (cl.getFrame ());
+		}
+		elof (FrameProto, p) return p.prettyString ();
+		elof (ConstructorProto, c) return c.prettyString ();
+		elof (generator::Struct, str) return str.getName ();			 
+		elof (MultSym,    sym)   return sym.prettyString ();
+		elof (ModuleAccess, acc) return acc.prettyString ();
+		elof (TemplateRef, cl) return cl.prettyString ();
+		elof (TemplateClassCst, cl) return cl.prettyString ();
+		elof (ClassCst, cs) return prettyName (cs.getFrame ()); 
+		elof (Value,      val)  return val.getType ().to <Type> ().getTypeName ();
+		fo;
 	    }
 	    return gen.getLocation().getStr ();
 	}
 
 	lexing::Word CallVisitor::realLocation (const Generator & gen) {
 	    match (gen) {
-		of (DelegateValue, dg, {
-			return dg.getType ().getLocation ();
-		    }
-		) else of (Call, cl, {
-			return realLocation (cl.getFrame ());
-		    }
-		) else of (ClassCst, cl, {
-			return realLocation (cl.getFrame ());
-		    }
-		);
+		of (DelegateValue, dg) {
+		    return dg.getType ().getLocation ();
+		}
+		elof (Call, cl) {
+		    return realLocation (cl.getFrame ());
+		}
+		elof (ClassCst, cl) {
+		    return realLocation (cl.getFrame ());
+		} fo;		
 	    }
 	    return gen.getLocation ();
 	}

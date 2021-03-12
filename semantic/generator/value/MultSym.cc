@@ -1,6 +1,8 @@
 #include <ymir/semantic/generator/value/MultSym.hh>
 #include <ymir/semantic/generator/type/NoneType.hh>
+#include <ymir/semantic/generator/value/_.hh>
 #include <ymir/errors/Error.hh>
+#include <ymir/utils/Match.hh>
 
 namespace semantic {
 
@@ -38,14 +40,15 @@ namespace semantic {
 	const std::vector <Generator> & MultSym::getGenerators () const {
 	    return this-> _gens;
 	}
-
+	
 	std::string MultSym::prettyString () const {
 	    if (this-> _gens.size () != 1) {
 		Ymir::OutBuffer buf;
 		buf.write ("Multiple Symbols : {");
 		for (auto it : Ymir::r (0, 1)) {
-		    buf.write (this-> _gens [it].prettyString ());
-		}
+		    // match (this-> _gens [it]) {
+		    // }
+		}		    
 		buf.writef ("} x %", this-> _gens.size ());
 		return buf.str ();
 	    } else {

@@ -48,178 +48,173 @@ namespace semantic {
 
 	void Visitor::validate (const semantic::Symbol & sym) {	    
 	    match (sym) {
-		of (semantic::Module, mod, {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::module");			
-			try {
-			    validateModule (mod);
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			}
+		s_of (semantic::Module, mod) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::module");			
+		    try {
+			validateModule (mod);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    }
 		       			
-			popReferent ("validate::module");
+		    popReferent ("validate::module");
 			
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-			return;
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
 		    }
-		);
+		    return;
+		}
 
-		of (semantic::Function, func, {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::function");			
-			try {
-			    validateFunction (func);
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			}
-			
-			popReferent ("validate::function");
-			
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-			return;
+		s_of (semantic::Function, func) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::function");			
+		    try {
+			validateFunction (func);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
-		);
-
-		of (semantic::VarDecl, decl ATTRIBUTE_UNUSED, {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::vdecl");			
-			try {
-			    validateVarDecl (sym);
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			}
 			
-			popReferent ("validate::vdecl");
+		    popReferent ("validate::function");
 			
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-
-			return;
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
 		    }
-		);
-
-		of (semantic::Alias, alias ATTRIBUTE_UNUSED, {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::alias");
-			try {
-			    validateAlias (sym);
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());			    
-			}
-
-			popReferent ("validate::alias");
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-			return;
-		    }
-		);
+		    return;
+		}
 		
-		of (semantic::Struct, str ATTRIBUTE_UNUSED, {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::struct");			
-			try {
-			    validateStruct (sym);
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			} 
-			
-			popReferent ("validate::struct");
-			
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
 
-			return;			
+		s_of_u (semantic::VarDecl) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::vdecl");			
+		    try {
+			validateVarDecl (sym);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		    }
-		);
+			
+		    popReferent ("validate::vdecl");
+			
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
+		    }
+		    return;
+		}
+
+
+		s_of_u (semantic::Alias) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::alias");
+		    try {
+			validateAlias (sym);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());			    
+		    }
+
+		    popReferent ("validate::alias");
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
+		    }
+		    return;
+		}
 		
-		of (semantic::TemplateSolution, sol, {
-			if (insertTemplateSolution (sym)) {
-			    //println ("No template solution : ", sol.getSolutionName ());
-			    std::list <Ymir::Error::ErrorMsg> errors;			
-			    pushReferent (sym, "validate::tmpl");
-			    try {
-				validateTemplateSolution (sol);
-			    } catch (Error::ErrorList list) {
-				errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-				removeTemplateSolution (sym); // If there is an error, we don't wan't to store the template solution anymore
-			    } 
+		
+		s_of_u (semantic::Struct) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::struct");			
+		    try {
+			validateStruct (sym);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
 			
-			    popReferent ("validate::tmpl");
-			    if (errors.size () != 0) {
-				throw Error::ErrorList {errors};
-			    }
-			}
-			return;			
+		    popReferent ("validate::struct");
+			
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
 		    }
-		);
 
-		of (semantic::Enum, en ATTRIBUTE_UNUSED, {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::enum");
+		    return;			
+		}
+		
+		
+		s_of (semantic::TemplateSolution, sol) {
+		    if (insertTemplateSolution (sym)) {
+			//println ("No template solution : ", sol.getSolutionName ());
+			std::list <Ymir::Error::ErrorMsg> errors;			
+			pushReferent (sym, "validate::tmpl");
 			try {
-			    validateEnum (sym);
+			    validateTemplateSolution (sol);
 			} catch (Error::ErrorList list) {
 			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+			    removeTemplateSolution (sym); // If there is an error, we don't wan't to store the template solution anymore
 			} 
 			
-			popReferent ("validate::enum");
+			popReferent ("validate::tmpl");
 			if (errors.size () != 0) {
 			    throw Error::ErrorList {errors};
 			}
-
-			return;
 		    }
-		);
+		    return;			
+		}
+		
+		s_of_u (semantic::Enum) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::enum");
+		    try {
+			validateEnum (sym);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
+			
+		    popReferent ("validate::enum");
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
+		    }
 
-		of (semantic::Class, cl ATTRIBUTE_UNUSED, {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::class");
-			try {
-			    validateClass (sym, true);
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			} 
-			
-			popReferent ("validate::class");
-			
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-			
-			return;			
-		    }		    
-		);
+		    return;
+		}
 
-		of (semantic::Trait, tr ATTRIBUTE_UNUSED, {			
-			std::list <Ymir::Error::ErrorMsg> errors;
-			pushReferent (sym, "validate::trait");			
-			try {
-			    validateTrait (sym);
-			} catch (Error::ErrorList list) {
-			    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-			} 
+		s_of_u (semantic::Class) {
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::class");
+		    try {
+			validateClass (sym, true);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
 			
-			popReferent ("validate::trait");
+		    popReferent ("validate::class");
 			
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
+		    }
+		    
+		    return;			
+		}		    
+	    
+		s_of_u (semantic::Trait) {			
+		    std::list <Ymir::Error::ErrorMsg> errors;
+		    pushReferent (sym, "validate::trait");			
+		    try {
+			validateTrait (sym);
+		    } catch (Error::ErrorList list) {
+			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+		    } 
+			
+		    popReferent ("validate::trait");
+			
+		    if (errors.size () != 0) {
+			throw Error::ErrorList {errors};
+		    }
 
-			return;			
-		    }		    
-		);
+		    return;			
+		}		    
+
 		
 		/** Nothing to do for those kind of symbols */
-		of (semantic::ModRef, x ATTRIBUTE_UNUSED, return);		
-		of (semantic::Template, x ATTRIBUTE_UNUSED, return);
-		of (semantic::Macro, x ATTRIBUTE_UNUSED, return);
+		s_of_u (semantic::ModRef) return;		
+		s_of_u (semantic::Template) return;
+		s_of_u (semantic::Macro) return;
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -708,16 +703,15 @@ namespace semantic {
 		pushReferent (it, "validate::innerClass");
 		try {
 		    match (it) {
-			of (semantic::Function, func ATTRIBUTE_UNUSED, {
-				if (!func.getContent ().getBody ().isEmpty ()) {
-				    validateMethod (func, clRef, cls.isWeak ()); // We need to pass weak here
-				    // The method could have been imported from a trait that is not weak
-				}
+			of (semantic::Function, func) {
+			    if (!func.getContent ().getBody ().isEmpty ()) {
+				validateMethod (func, clRef, cls.isWeak ()); // We need to pass weak here
+				// The method could have been imported from a trait that is not weak
 			    }
-			) else of (semantic::Constructor, cs ATTRIBUTE_UNUSED, {
-				validateConstructor (it, clRef, ancestor, ancestorFields);
-			    }
-			);
+			}
+			elof_u (semantic::Constructor) {
+			    validateConstructor (it, clRef, ancestor, ancestorFields);
+			} fo;			
 		    }
 		} catch (Error::ErrorList list) {
 		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), it.getRealName ()));
@@ -922,11 +916,10 @@ namespace semantic {
 	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
 		try {
 		    match (it) {
-			of (semantic::Impl, im ATTRIBUTE_UNUSED, {
-				validateVtableImplement (im, classType, ancestor, vtable, protection, ancVtable, addMethods);
-				implemented.push_back (it);
-			    }
-			    );
+			of (semantic::Impl, im) {
+			    validateVtableImplement (im, classType, ancestor, vtable, protection, ancVtable, addMethods);
+			    implemented.push_back (it);
+			} fo;
 		    }		    		
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -937,13 +930,12 @@ namespace semantic {
 	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
 		try {
 		    match (it) {
-			of (semantic::Function, func ATTRIBUTE_UNUSED, {				
-				auto index = validateVtableMethod (func, classType, ancestor, vtable, protection, implVtable, Generator::empty ());
-				if (func.getContent ().getBody ().isEmpty () && !cls.to <semantic::Class> ().isAbs ()) {
-				    Ymir::Error::occur (vtable [index].getLocation (), ExternalError::get (NO_BODY_METHOD), vtable [index].prettyString ());
-				}
+			of (semantic::Function, func) {				
+			    auto index = validateVtableMethod (func, classType, ancestor, vtable, protection, implVtable, Generator::empty ());
+			    if (func.getContent ().getBody ().isEmpty () && !cls.to <semantic::Class> ().isAbs ()) {
+				Ymir::Error::occur (vtable [index].getLocation (), ExternalError::get (NO_BODY_METHOD), vtable [index].prettyString ());
 			    }
-			);
+			} fo;
 		    }		    		
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
@@ -1411,16 +1403,16 @@ namespace semantic {
 	    std::vector <Symbol> syms;
 	    for (auto & gen : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 		match (gen) {
-		    of (semantic::Constructor, cst ATTRIBUTE_UNUSED, {
-			    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) {
-				if (cst.getRename () == name || name.isEof ())
-				    syms.push_back (gen);
-			    } else {
-				errors.push_back (
-				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), validateConstructorProto (gen).prettyString ())					    
+		    of (semantic::Constructor, cst) {
+			if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) {
+			    if (cst.getRename () == name || name.isEof ())
+			    syms.push_back (gen);
+			} else {
+			    errors.push_back (
+				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), validateConstructorProto (gen).prettyString ())					    
 				);
-			    }
-			});
+			}
+		    } fo;
 		}
 	    }
 	    
@@ -1436,20 +1428,21 @@ namespace semantic {
 	    std::vector <syntax::Declaration> results;
 	    for (auto & it : decls) {
 		match (it) {
-		    of (syntax::Constructor, cs ATTRIBUTE_UNUSED, if (cs.getRename () == name || name.isEof ()) results.push_back (it))
-		    else of (syntax::DeclBlock, dc, {
-			    auto inner = getAllConstructors (dc.getDeclarations (), name);
+		    of (syntax::Constructor, cs) {
+			if (cs.getRename () == name || name.isEof ()) results.push_back (it);
+		    }
+		    elof (syntax::DeclBlock, dc) {
+			auto inner = getAllConstructors (dc.getDeclarations (), name);
+			results.insert (results.end (), inner.begin (), inner.end ());
+		    }
+		    elof (syntax::CondBlock, cd) {
+			auto inner = getAllConstructors (cd.getDeclarations (), name);
+			results.insert (results.end (), inner.begin (), inner.end ());
+			if (!cd.getElse ().isEmpty ()) {
+			    auto inner = getAllConstructors ({cd.getElse ()}, name);
 			    results.insert (results.end (), inner.begin (), inner.end ());
 			}
-		    ) else of (syntax::CondBlock, cd, {
-			    auto inner = getAllConstructors (cd.getDeclarations (), name);
-			    results.insert (results.end (), inner.begin (), inner.end ());
-			    if (!cd.getElse ().isEmpty ()) {
-				auto inner = getAllConstructors ({cd.getElse ()}, name);
-				results.insert (results.end (), inner.begin (), inner.end ());
-			    }
-			}
-		    );
+		    } fo;		    
 		}
 	    }
 	    return results;
@@ -1463,15 +1456,15 @@ namespace semantic {
 
 	    for (auto & gen : mref.getMacroRef ().to <semantic::Macro> ().getAllInner ()) {
 		match (gen) {
-		    of (semantic::MacroConstructor, cst ATTRIBUTE_UNUSED , {
-			    if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) 
-				syms.push_back (gen);
-			    else {
-				errors.push_back (
-				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().getStr ())					    
+		    of_u (semantic::MacroConstructor) {
+			if (prv || (prot && gen.isProtected ()) || gen.isPublic ()) 
+			syms.push_back (gen);
+			else {
+			    errors.push_back (
+				Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().getStr ())					    
 				);
-			    }
-			});
+			}
+		    } fo;
 		}
 	    }
 	    
@@ -1491,18 +1484,17 @@ namespace semantic {
 
 	    for (auto & gen : mref.getMacroRef ().to <semantic::Macro> ().getAllInner ()) {
 		match (gen) {
-		    of (semantic::MacroRule, rule, {
-			    if (rule.getName ().getStr () == name) {
-				if (prv || gen.isPublic ()) {
-				    syms.push_back (gen);
-				} else {
-				    errors.push_back (
-					Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().getStr ())
+		    of (semantic::MacroRule, rule) {
+			if (rule.getName ().getStr () == name) {
+			    if (prv || gen.isPublic ()) {
+				syms.push_back (gen);
+			    } else {
+				errors.push_back (
+				    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), gen.getName (), gen.getName ().getStr ())
 				    );
-				}
 			    }
 			}
-		    );
+		    } fo;		    
 		}
 	    }
 
@@ -1519,12 +1511,11 @@ namespace semantic {
 	    // 	Ymir::Error::halt ("", "");
 	    for (auto & gen : this-> _classContext.back ().to <semantic::Macro> ().getAllInner ()) {
 		match (gen) {
-		    of (semantic::MacroRule, rule, {
-			    if (rule.getName ().getStr () == name) {
-				return gen;
-			    }
+		    of (semantic::MacroRule, rule) {
+			if (rule.getName ().getStr () == name) {
+			    return gen;
 			}
-			);
+		    } fo;		    
 		}
 	    }
 	    return Symbol::empty ();
@@ -1811,12 +1802,11 @@ namespace semantic {
 		    for (auto & it : sym.to <semantic::Enum> ().getFields ()) {
 			try {
 			    match (it) {
-				of (syntax::VarDecl, decl, {
-					if (decl.getValue ().isEmpty ()) {
-					    Ymir::Error::occur (decl.getName (), ExternalError::get (EN_NO_VALUE), decl.getName ().getStr ());
-					}
+				of (syntax::VarDecl, decl) {
+				    if (decl.getValue ().isEmpty ()) {
+					Ymir::Error::occur (decl.getName (), ExternalError::get (EN_NO_VALUE), decl.getName ().getStr ());
 				    }
-				    );
+				} fo;
 			    }
 			    
 			    auto val = this-> validateValue (it);			    
@@ -1878,25 +1868,24 @@ namespace semantic {
 
 	void Visitor::verifyRecursivity (const lexing::Word & loc, const generator::Generator & gen, const semantic::Symbol & sym) const {
 	    match (gen) {
-		of (StructRef, str_ref, {
-			if (str_ref.isRefOf (sym)) {
-			    auto note = Ymir::Error::createNote (sym.getName ());
-			    Ymir::Error::occurAndNote (loc, note, ExternalError::get (NO_SIZE_FORWARD_REF));
-			} else {
-			    auto & str = str_ref.getRef ().to <semantic::Struct> ().getGenerator ();
-			    for (auto & it : str.to<generator::Struct> ().getFields ()) {
-				verifyRecursivity (loc, it.to <generator::VarDecl> ().getVarType (), sym);
-			    }
+		of (StructRef, str_ref) {
+		    if (str_ref.isRefOf (sym)) {
+			auto note = Ymir::Error::createNote (sym.getName ());
+			Ymir::Error::occurAndNote (loc, note, ExternalError::get (NO_SIZE_FORWARD_REF));
+		    } else {
+			auto & str = str_ref.getRef ().to <semantic::Struct> ().getGenerator ();
+			for (auto & it : str.to<generator::Struct> ().getFields ()) {
+			    verifyRecursivity (loc, it.to <generator::VarDecl> ().getVarType (), sym);
 			}
-		    })
-		else of (Pointer, p ATTRIBUTE_UNUSED, // No forward problem on pointer types
-		)
-		    else of (Slice, s ATTRIBUTE_UNUSED, ) // No problem for slice, their size can be 0			 
-			else of (Type, t, {
-				if (t.isComplex ()) {
-				    for (auto & it : t.getInners ()) verifyRecursivity (loc, it, sym);
-				}
-			    });
+		    }
+		}
+		elof_u (Pointer) {} // No forward problem on pointer types		    
+		elof_u (Slice) {} // No problem for slice, their size can be 0			 
+		elof (Type, t) {
+		    if (t.isComplex ()) {
+			for (auto & it : t.getInners ()) verifyRecursivity (loc, it, sym);
+		    }
+		} fo;
 	    }
 	}
 
@@ -1945,10 +1934,11 @@ namespace semantic {
 
 	Generator Visitor::validateCteValue (const syntax::Expression & value) {
 	    match (value) {
-		of (syntax::If, fi, return validateCteIfExpression (fi));
-		of (syntax::Assert, as, return validateCteAssert (as));
-		of (syntax::Block, bl ATTRIBUTE_UNUSED, return validateValue (value));
-		of (syntax::For, fo, return validateForExpression (fo, true));
+		of (syntax::If, fi) return validateCteIfExpression (fi);
+		elof (syntax::Assert, as) return validateCteAssert (as);
+		elof_u (syntax::Block) return validateValue (value);
+		elof (syntax::For, fo_) return validateForExpression (fo_, true);
+		fo;
 	    }
 	    
 	    return retreiveValue (validateValue (value));
@@ -1956,212 +1946,170 @@ namespace semantic {
 	
 	Generator Visitor::validateValueNoReachable (const syntax::Expression & value, bool fromCall) {
 	    match (value) {
-		of (syntax::Block, block,
-		    return validateBlock (block);
-		);
+		s_of (syntax::Block, block)
+		    return validateBlock (block);		
 		
-		of (syntax::Fixed, fixed,
-		    return validateFixed (fixed);
-		);
+		s_of (syntax::Fixed, fixed)
+		    return validateFixed (fixed);		
 
-		of (syntax::Bool, b,
-		    return validateBool (b);
-		);
+		s_of (syntax::Bool, b)
+		    return validateBool (b);		
 		
-		of (syntax::Float, f,
-		    return validateFloat (f);
-		);
+		s_of (syntax::Float, f)
+		    return validateFloat (f);		
 
-		of (syntax::Char, c,
-		    return validateChar (c);
-		);
+		s_of (syntax::Char, c)
+		    return validateChar (c);		
 
-		of (syntax::String, s,
+		s_of (syntax::String, s)
 		    return validateString (s);
-		);
 		
-		of (syntax::Binary, binary,
-		    return validateBinary (binary, fromCall);
-		);
+		s_of (syntax::Binary, binary)
+		    return validateBinary (binary, fromCall);		
 		
-		of (syntax::Var, var,
-		    return validateVar (var);
-		);
+		s_of (syntax::Var, var)
+		    return validateVar (var);		
 
-		of (syntax::VarDecl, var,
-		    return validateVarDeclValue (var);
-		);
+		s_of (syntax::VarDecl, var)
+		    return validateVarDeclValue (var);		
 
-		of (syntax::Set, set,
-		    return validateSet (set);
-		);
+		s_of (syntax::Set, set)
+		    return validateSet (set);		
 		
-		of (syntax::DecoratedExpression, dec_expr,
-		    return validateDecoratedExpression (dec_expr);
-		);
+		s_of (syntax::DecoratedExpression, dec_expr)
+		    return validateDecoratedExpression (dec_expr);		
 
-		of (syntax::If, _if,
-		    return validateIfExpression (_if);
-		);
+		s_of (syntax::If, _if)
+		    return validateIfExpression (_if);		
 
-		of (syntax::While, _while,
-		    return validateWhileExpression (_while);
-		);
+		s_of (syntax::While, _while)
+		    return validateWhileExpression (_while);		
 
-		of (syntax::For, _for,
-		    return validateForExpression (_for);
-		);
+		s_of (syntax::For, _for)
+		    return validateForExpression (_for);		
 		
-		of (syntax::Break, _break,
-		    return validateBreak (_break);
-		);
+		s_of (syntax::Break, _break)
+		    return validateBreak (_break);		
 
 		// of (syntax::Return, _return,
 		//     return validateReturn (_return);
 		// );
 		
-		of (syntax::List, list,
-		    return validateList (list);
-		);
+		s_of (syntax::List, list)
+		    return validateList (list);		
 
-		of (syntax::Intrinsics, intr,
-		    return validateIntrinsics (intr);
-		);
+		s_of (syntax::Intrinsics, intr)
+		    return validateIntrinsics (intr);		
 
-		of (syntax::Unit, u,
-		    return None::init (u.getLocation ());
-		);
+		s_of (syntax::Unit, u)
+		    return None::init (u.getLocation ());		
 
-		of (syntax::MultOperator, mult,
-		    return validateMultOperator (mult);
-		);
+		s_of (syntax::MultOperator, mult)
+		    return validateMultOperator (mult);		
 
-		of (syntax::Unary, un,
-		    return validateUnary (un);
-		);
+		s_of (syntax::Unary, un)
+		    return validateUnary (un);		
 
-		of (syntax::NamedExpression, named,
+		s_of (syntax::NamedExpression, named) {
 		    auto inner = validateValue (named.getContent ());
 		    return NamedGenerator::init (named.getLocation (), inner);
-		);
+		}
 
-		of (syntax::TemplateCall, cl, {
-			auto ret = validateTemplateCall (cl);
-			if (!fromCall && ret.is <FrameProto> ()) {
-			    std::list <Ymir::Error::ErrorMsg> errors;
-			    int score;
-			    auto visit = CallVisitor::init (*this);			    
-			    auto sec_ret = visit.validateFrameProto (cl.getLocation (), ret.to <FrameProto> (), {}, score, errors);
-			    if (errors.size () != 0) {
-				throw Error::ErrorList {errors};
-			    }
-			    if (!sec_ret.isEmpty ()) ret = sec_ret;
-			} else if (!fromCall && ret.is <DelegateValue> () && ret.to <DelegateValue> ().getType ().to<Type> ().getInners ()[0].is <FrameProto> ()) { // Template method proto, and dot template calls
-			    std::list <Ymir::Error::ErrorMsg> errors;
-			    int score;
-			    auto visit = CallVisitor::init (*this);			    
-			    auto sec_ret = visit.validateDelegate (cl.getLocation (), ret, {}, score, errors);
-			    if (errors.size () != 0) {
-				throw Error::ErrorList {errors};
-			    }
-			    if (!sec_ret.isEmpty ()) ret = sec_ret;
-			} else if (!fromCall && ret.is <generator::Struct> ()) {
-			    std::list <Ymir::Error::ErrorMsg> errors;
-			    int score;
-			    auto visit = CallVisitor::init (*this);			    
-			    auto sec_ret = visit.validateStructCst (cl.getLocation (), ret.to <generator::Struct> (), {}, score, errors);
-			    if (errors.size () != 0) {
-				throw Error::ErrorList {errors};
-			    }
-			    if (!sec_ret.isEmpty ()) ret = sec_ret;
+		s_of (syntax::TemplateCall, cl) {
+		    auto ret = validateTemplateCall (cl);
+		    if (!fromCall && ret.is <FrameProto> ()) {
+			std::list <Ymir::Error::ErrorMsg> errors;
+			int score;
+			auto visit = CallVisitor::init (*this);			    
+			auto sec_ret = visit.validateFrameProto (cl.getLocation (), ret.to <FrameProto> (), {}, score, errors);
+			if (errors.size () != 0) {
+			    throw Error::ErrorList {errors};
 			}
-			return ret;
+			if (!sec_ret.isEmpty ()) ret = sec_ret;
+		    } else if (!fromCall && ret.is <DelegateValue> () && ret.to <DelegateValue> ().getType ().to<Type> ().getInners ()[0].is <FrameProto> ()) { // Template method proto, and dot template calls
+			std::list <Ymir::Error::ErrorMsg> errors;
+			int score;
+			auto visit = CallVisitor::init (*this);			    
+			auto sec_ret = visit.validateDelegate (cl.getLocation (), ret, {}, score, errors);
+			if (errors.size () != 0) {
+			    throw Error::ErrorList {errors};
+			}
+			if (!sec_ret.isEmpty ()) ret = sec_ret;
+		    } else if (!fromCall && ret.is <generator::Struct> ()) {
+			std::list <Ymir::Error::ErrorMsg> errors;
+			int score;
+			auto visit = CallVisitor::init (*this);			    
+			auto sec_ret = visit.validateStructCst (cl.getLocation (), ret.to <generator::Struct> (), {}, score, errors);
+			if (errors.size () != 0) {
+			    throw Error::ErrorList {errors};
+			}
+			if (!sec_ret.isEmpty ()) ret = sec_ret;
 		    }
-		);
+		    return ret;
+		}		
 
-		of (syntax::Return, rt,
-		    return validateReturn (rt);
-		);
+		s_of (syntax::Return, rt)
+		    return validateReturn (rt);		
 
-		of (TemplateSyntaxList, lst,
-		    return validateListTemplate (lst);
-		);
+		s_of (TemplateSyntaxList, lst)
+		    return validateListTemplate (lst);		
 		
-		of (TemplateSyntaxWrapper, st,
-		    return st.getContent ()
-		);
+		s_of (TemplateSyntaxWrapper, st)
+		    return st.getContent ();		
 
-		of (syntax::Cast, cst,
-		    return validateCast (cst);
-		);
+		s_of (syntax::Cast, cst)
+		    return validateCast (cst);		
 
-		of (syntax::ArrayAlloc, alloc,
-		    return validateArrayAlloc (alloc);
-		);
+		s_of (syntax::ArrayAlloc, alloc)
+		    return validateArrayAlloc (alloc);		
 
-		of (syntax::DestructDecl, destr,
-		    return validateDestructDecl (destr);
-		);
+		s_of (syntax::DestructDecl, destr)
+		    return validateDestructDecl (destr);		
 
-		of (syntax::Lambda, lmbd,
-		    return validateLambda (lmbd);
-		);
+		s_of (syntax::Lambda, lmbd)
+		    return validateLambda (lmbd);		
 
-		of (syntax::FuncPtr, ptr,
-		    return validateFuncPtr (ptr);
-		);
+		s_of (syntax::FuncPtr, ptr)
+		    return validateFuncPtr (ptr);		
 
-		of (syntax::Null, nl,
-		    return validateNullValue (nl);
-		);
+		s_of (syntax::Null, nl)
+		    return validateNullValue (nl);		
 
-		of (syntax::TemplateChecker, ch,
-		    return validateTemplateChecker (ch);
-		);
+		s_of (syntax::TemplateChecker, ch)
+		    return validateTemplateChecker (ch);		
 
-		of (syntax::Throw, thr,
-		    return validateThrow (thr);
-		);
+		s_of (syntax::Throw, thr)
+		    return validateThrow (thr);		
 		
-		of (syntax::Match, match,
-		    return validateMatch (match);
-		);
+		s_of (syntax::Match, match)
+		    return validateMatch (match);		
 
-		of (syntax::Catch, cat,
-		    return validateCatchOutOfScope (cat); // Out of scope is useless
-		);
+		s_of (syntax::Catch, cat)
+		    return validateCatchOutOfScope (cat); // Out of scope is useless		
 
-		of (syntax::Scope, scope, 
-		    return validateScopeOutOfScope (scope); // Out of scope is useless
-		);
+		s_of (syntax::Scope, scope)
+		    return validateScopeOutOfScope (scope); // Out of scope is useless		
 
-		of (syntax::Assert, assert,
-		    return validateAssert (assert);
-		);
+		s_of (syntax::Assert, assert)
+		    return validateAssert (assert);		
 
-		of (syntax::MacroCall, call,
-		    return validateMacroCall (call);
-		);
+		s_of (syntax::MacroCall, call)
+		    return validateMacroCall (call);		
 
-		of (syntax::Pragma, prg,
-		    return validatePragma (prg);
-		);
+		s_of (syntax::Pragma, prg)
+		    return validatePragma (prg);		
 
-		of (syntax::Dollar, dl,
-		    return validateDollar (dl);
-		);
+		s_of (syntax::Dollar, dl)
+		    return validateDollar (dl);		
 
-		of (syntax::Try, tr,
-		    return validateTry (tr);
-		);
+		s_of (syntax::Try, tr)
+		    return validateTry (tr);		
 
-		of (syntax::With, wh,
-		    return validateWith (wh);
-		);
+		s_of (syntax::With, wh)
+		    return validateWith (wh);		
 
-		of (syntax::Atomic, at,
-		    return validateAtomic (at);
-		);
+		s_of (syntax::Atomic, at)
+		    return validateAtomic (at);		
 	    }	    
 
 	    OutBuffer buf;
@@ -2642,81 +2590,79 @@ namespace semantic {
 		
 		try {
 		    match (sym) {
-			of (semantic::Function, func, {
-				if (!func.isMethod ()) {
-				    gens.push_back (validateFunctionProto (func));			    
-				}
-				succ = true;
+			of (semantic::Function, func) {
+			    if (!func.isMethod ()) {
+				gens.push_back (validateFunctionProto (func));			    
 			    }
-			) else of (semantic::Constructor, func ATTRIBUTE_UNUSED, {
-				gens.push_back (validateConstructorProto (sym));		    
-				succ = true;
+			    succ = true;
+			}
+			elof_u (semantic::Constructor) {
+			    gens.push_back (validateConstructorProto (sym));		    
+			    succ = true;
+			}
+			elof_u (semantic::ModRef) {
+			    gens.push_back (ModuleAccess::init (loc, sym));
+			    succ = true;
+			}		    		    
+			elof_u (semantic::Module) {
+			    gens.push_back (ModuleAccess::init (loc, sym));
+			    succ = true;
+			}
+			elof_u (semantic::Struct) {
+			    auto str_ref = validateStruct (sym);
+			    gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
+			    succ = true;
+			}
+			elof_u (semantic::Class) {
+			    auto cl_ref = validateClass (sym);
+			    if (cl_ref.is<ClassRef> ())
+			    gens.push_back (cl_ref.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
+			    else gens.push_back (cl_ref);
+			    succ = true;
 			    }
-			) else of (semantic::ModRef, r ATTRIBUTE_UNUSED, {
-				gens.push_back (ModuleAccess::init (loc, sym));
-				succ = true;
-			    }		    		    
-			) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
-				gens.push_back (ModuleAccess::init (loc, sym));
-				succ = true;
-			    }
-			) else of (semantic::Struct, st ATTRIBUTE_UNUSED, {
-				auto str_ref = validateStruct (sym);
-				gens.push_back (str_ref.to <StructRef> ().getRef ().to <semantic::Struct> ().getGenerator ());
-				succ = true;
-			    }
-
-			) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
-				auto cl_ref = validateClass (sym);
-				if (cl_ref.is<ClassRef> ())
-				    gens.push_back (cl_ref.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ());
-				else gens.push_back (cl_ref);
-				succ = true;
-			    }
-			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-				gens.push_back (TraitRef::init (lexing::Word::init (loc, tr.getName ().getStr ()), sym));
-				succ = true;
-			    }
-			) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
-				auto en_ref = validateEnum (sym);
-				gens.push_back (en_ref.to <Type> ().getProxy ().to <EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ());
-				succ = true;
-			    }
-			) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
-				gens.push_back (TemplateRef::init (sym.getName (), sym));
-				succ = true;
-			    }
-			) else of (semantic::Macro, mc ATTRIBUTE_UNUSED, {
-				gens.push_back (MacroRef::init (mc.getName (), sym));
-				succ = true;
-			    } 
-			) else of (semantic::TemplateSolution, sol, {			    
-				auto loc_gens = validateMultSym (loc, sol.getAllLocal ());
-				match (loc_gens) {
-				    of (MultSym, mlt_sym, {
-					    gens.insert (gens.end (), mlt_sym.getGenerators ().begin (), mlt_sym.getGenerators ().end ());
-					    succ = true;
-					}) else {
-					gens.push_back (loc_gens);
-					succ = true;
-				    }
+			elof (semantic::Trait, tr) {
+			    gens.push_back (TraitRef::init (lexing::Word::init (loc, tr.getName ().getStr ()), sym));
+			    succ = true;
+			}
+			elof_u (semantic::Enum) {
+			    auto en_ref = validateEnum (sym);
+			    gens.push_back (en_ref.to <Type> ().getProxy ().to <EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ());
+			    succ = true;
+			}
+			elof_u (semantic::Template) {
+			    gens.push_back (TemplateRef::init (sym.getName (), sym));
+			    succ = true;
+			}
+			elof (semantic::Macro, mc) {
+			    gens.push_back (MacroRef::init (mc.getName (), sym));
+			    succ = true;
+			} 
+			elof (semantic::TemplateSolution, sol) {			    
+			    auto loc_gens = validateMultSym (loc, sol.getAllLocal ());
+			    match (loc_gens) {
+				of (MultSym, mlt_sym) {
+				    gens.insert (gens.end (), mlt_sym.getGenerators ().begin (), mlt_sym.getGenerators ().end ());
+				    succ = true;
+				} elfo {
+				    gens.push_back (loc_gens);
+				    succ = true;
 				}
 			    }
-			 ) else of (semantic::VarDecl, decl, {
-				validateVarDecl (sym);
-				auto gen = decl.getGenerator ().to <GlobalVar> ();
-				Generator value (Generator::empty ());
-				if (!gen.isMutable ())
-				    value = gen.getValue ();
-				gens.push_back (VarRef::init (decl.getName (), decl.getName ().getStr (), gen.getType (), gen.getUniqId (), gen.isMutable (), value));
-				succ = true;
-			    }
-			) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
-				auto al_ref = validateAlias (sym);
-				gens.push_back (al_ref);
-				succ = true;
-			    }
-			);
+			}
+			elof (semantic::VarDecl, decl) {
+			    validateVarDecl (sym);
+			    auto gen = decl.getGenerator ().to <GlobalVar> ();
+			    Generator value (Generator::empty ());
+			    if (!gen.isMutable ())
+			    value = gen.getValue ();
+			    gens.push_back (VarRef::init (decl.getName (), decl.getName ().getStr (), gen.getType (), gen.getUniqId (), gen.isMutable (), value));
+			    succ = true;
+			}
+			elof_u (semantic::Alias) {
+			    auto al_ref = validateAlias (sym);
+			    gens.push_back (al_ref);
+			    succ = true;
+			} fo;			
 		    }
 		} catch (Error::ErrorList list) {
 		    errors = list.errors;
@@ -2745,37 +2691,36 @@ namespace semantic {
 		Generator locGen (Generator::empty ());
 		try {
 		    match (multSym [it]) {		    
-			of (semantic::Struct, st ATTRIBUTE_UNUSED, {
-				locGen = validateStruct (multSym [it]);
-			    }
-			) else of (semantic::Enum, en ATTRIBUTE_UNUSED, {
-				locGen = validateEnum (multSym [it]);
-			    }
-		        ) else of (semantic::Class, cl ATTRIBUTE_UNUSED, {
-				locGen = validateClass (multSym [it]);
-			    }		
-			) else of (semantic::Trait, tr ATTRIBUTE_UNUSED, {
-				locGen = TraitRef::init (lexing::Word::init (loc, tr.getName ().getStr ()), multSym [it]);
-			    }			
-			) else of (semantic::Template, tmp ATTRIBUTE_UNUSED, {
-				Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			    }							     
-			) else of (semantic::Module, mod ATTRIBUTE_UNUSED, {
-				Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			    }
-			) else of (semantic::ModRef, mod ATTRIBUTE_UNUSED, {
-				Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
-			    }
-			) else of (semantic::Alias, al ATTRIBUTE_UNUSED, {
-				locGen = validateAlias (multSym [0]);
-			    }
-			) else of (semantic::Function, func, {
-				if (!func.isMethod ())
-				    locGen = validateFunctionProto (func);
-			    }
-			) else {
-							    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
-							}
+			of_u (semantic::Struct) {
+			    locGen = validateStruct (multSym [it]);
+			}
+			elof_u (semantic::Enum) {
+			    locGen = validateEnum (multSym [it]);
+			}
+		        elof_u (semantic::Class) {
+			    locGen = validateClass (multSym [it]);
+			}		
+			elof (semantic::Trait, tr) {
+			    locGen = TraitRef::init (lexing::Word::init (loc, tr.getName ().getStr ()), multSym [it]);
+			}			
+			elof_u (semantic::Template) {
+			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			}							     
+			elof_u (semantic::Module) {
+			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			}
+			elof_u (semantic::ModRef) {
+			    Ymir::Error::occur (loc, ExternalError::get (USE_AS_TYPE));
+			}
+			elof_u (semantic::Alias) {
+			    locGen = validateAlias (multSym [0]);
+			}
+			elof (semantic::Function, func) {
+			    if (!func.isMethod ())
+			    locGen = validateFunctionProto (func);
+			} elfo {			    
+			    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");				
+			}
 		    }
 		} catch (Error::ErrorList list) {
 		    errors = list.errors;
@@ -4043,19 +3988,23 @@ namespace semantic {
 	std::string Visitor::typeInfoName (const Generator & type) {
 	    // Maybe that's enhanceable
 	    match (type) {
-		of (Void, bo ATTRIBUTE_UNUSED, return "VOID";);
-		of (Array, ar ATTRIBUTE_UNUSED, return "ARRAY";);
-		of (Bool,  bo ATTRIBUTE_UNUSED, return "BOOL";);
-		of (Char,  ca ATTRIBUTE_UNUSED, return "CHAR";);
-		of (Closure,  cl ATTRIBUTE_UNUSED, return "CLOSURE";);
-		of (Float,  fl ATTRIBUTE_UNUSED, return "FLOAT";);
-		of (FuncPtr,  ptr ATTRIBUTE_UNUSED, return "FUNC_PTR";);
-		of (Integer,  i, if (i.isSigned ()) return "SIGNED_INT"; return "UNSIGNED_INT";);
-		of (Pointer,  ptr ATTRIBUTE_UNUSED, return "POINTER";);
-		of (Slice,  sl ATTRIBUTE_UNUSED, return "SLICE";);
-		of (StructRef,  sl ATTRIBUTE_UNUSED, return "STRUCT";);
-		of (Tuple,  tu ATTRIBUTE_UNUSED, return "TUPLE";);
-		of (ClassRef, cl ATTRIBUTE_UNUSED, return "OBJECT";);
+		of_u (Void) return "VOID";
+		elof_u (Array) return "ARRAY";
+		elof_u (Bool) return "BOOL";
+		elof_u (Char) return "CHAR";
+		elof_u (Closure) return "CLOSURE";
+		elof_u (Float) return "FLOAT";
+		elof_u (FuncPtr) return "FUNC_PTR";
+		elof (Integer,  i) {
+		    if (i.isSigned ()) return "SIGNED_INT";
+		    return "UNSIGNED_INT";
+		}
+		elof_u (Pointer) return "POINTER";
+		elof_u (Slice) return "SLICE";
+		elof_u (StructRef) return "STRUCT";
+		elof_u (Tuple) return "TUPLE";
+		elof_u (ClassRef) return "OBJECT";
+		fo;
 	    }
 	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -4329,49 +4278,49 @@ namespace semantic {
 	Generator Visitor::validateDestructDecl (const syntax::DestructDecl & decl) {
 	    auto value = validateValue (syntax::Intrinsics::init (lexing::Word::init (decl.getLocation (), Keys::EXPAND), decl.getValue ()));
 	    match (value) {
-		of (List, lst, {
-			if ((decl.isVariadic () && lst.getParameters ().size () < decl.getParameters ().size ())
-			    || (!decl.isVariadic () && lst.getParameters ().size () != decl.getParameters ().size ())) {
-			    Ymir::Error::occur (decl.getLocation (),
-						ExternalError::get (MISMATCH_ARITY),
-						decl.getParameters ().size (),
-						lst.getParameters ().size ());			    
-			}
+		of (List, lst) {
+		    if ((decl.isVariadic () && lst.getParameters ().size () < decl.getParameters ().size ())
+			|| (!decl.isVariadic () && lst.getParameters ().size () != decl.getParameters ().size ())) {
+			Ymir::Error::occur (decl.getLocation (),
+					    ExternalError::get (MISMATCH_ARITY),
+					    decl.getParameters ().size (),
+					    lst.getParameters ().size ());			    
+		    }
 
-			std::vector <Generator> values;
-			Generator type (Void::init (decl.getLocation ()));
-			for (int i = 0 ; i < (int) decl.getParameters ().size () ; i++) {
-			    if (i != (int) decl.getParameters ().size () - 1 || lst.getParameters ().size () == decl.getParameters ().size ()) {
-				auto varDecl = decl.getParameters ()[i].to <syntax::VarDecl> ();
-				auto auxDecl = syntax::VarDecl::init (varDecl.getName (), varDecl.getDecorators (), varDecl.getType (), TemplateSyntaxWrapper::init (lst.getLocation (), lst.getParameters ()[i]));
-				values.push_back (validateValue (auxDecl));
+		    std::vector <Generator> values;
+		    Generator type (Void::init (decl.getLocation ()));
+		    for (int i = 0 ; i < (int) decl.getParameters ().size () ; i++) {
+			if (i != (int) decl.getParameters ().size () - 1 || lst.getParameters ().size () == decl.getParameters ().size ()) {
+			    auto varDecl = decl.getParameters ()[i].to <syntax::VarDecl> ();
+			    auto auxDecl = syntax::VarDecl::init (varDecl.getName (), varDecl.getDecorators (), varDecl.getType (), TemplateSyntaxWrapper::init (lst.getLocation (), lst.getParameters ()[i]));
+			    values.push_back (validateValue (auxDecl));
 				
-			    } else {
-				std::vector <Generator> rest (lst.getParameters ().begin () + i, lst.getParameters ().end ());
-				std::vector <Generator> types;
-				for (auto & it : rest) {
-				    types.push_back (it.to<Value> ().getType ());
-				}
-				auto tupleType = Tuple::init (lst.getLocation (), types);
-				tupleType = Type::init (tupleType.to <Type> (), true);
+			} else {
+			    std::vector <Generator> rest (lst.getParameters ().begin () + i, lst.getParameters ().end ());
+			    std::vector <Generator> types;
+			    for (auto & it : rest) {
+				types.push_back (it.to<Value> ().getType ());
+			    }
+			    auto tupleType = Tuple::init (lst.getLocation (), types);
+			    tupleType = Type::init (tupleType.to <Type> (), true);
 				
-				auto varDecl = decl.getParameters ()[i].to <syntax::VarDecl> ();
-				auto auxDecl = syntax::VarDecl::init (varDecl.getName (), varDecl.getDecorators (), varDecl.getType (), 
-								      TemplateSyntaxWrapper::init (
+			    auto varDecl = decl.getParameters ()[i].to <syntax::VarDecl> ();
+			    auto auxDecl = syntax::VarDecl::init (varDecl.getName (), varDecl.getDecorators (), varDecl.getType (), 
+								  TemplateSyntaxWrapper::init (
+								      lst.getLocation (),
+								      TupleValue::init (
 									  lst.getLocation (),
-									  TupleValue::init (
-									      lst.getLocation (),
-									      tupleType,
-									      rest
+									  tupleType,
+									  rest
 									  ))
 				);
 				
-				values.push_back (validateValue (auxDecl));				
-			    }			    
-			}
-			return Set::init (decl.getLocation (), type, values);
-		    })
-		else {
+			    values.push_back (validateValue (auxDecl));				
+			}			    
+		    }
+		    return Set::init (decl.getLocation (), type, values);
+		}
+		elfo {
 		    if (decl.getParameters ().size () != 1) {
 			Ymir::Error::occur (decl.getLocation (),
 					    ExternalError::get (OVERFLOW_ARITY),
@@ -4381,7 +4330,7 @@ namespace semantic {
 		    auto varDecl = decl.getParameters () [0].to<syntax::VarDecl> ();
 		    auto auxDecl = syntax::VarDecl::init (varDecl.getName (), varDecl.getDecorators (), varDecl.getType (), 
 							  TemplateSyntaxWrapper::init (value.getLocation (), value)
-		    );
+			);
 		    return validateValue (auxDecl);
 		}
 	    }
@@ -4844,18 +4793,16 @@ namespace semantic {
 	Generator Visitor::validateTypeClassRef (const syntax::Expression & type) {
 	    Generator val (Generator::empty ());
 	    match (type) {
-		of (syntax::Var, var,
+		of (syntax::Var, var) 
 		    val = validateTypeVar (var);
-		);
-
-		of (syntax::DecoratedExpression, dec_expr,
+		
+		elof (syntax::DecoratedExpression, dec_expr)
 		    val = validateTypeDecorated (dec_expr, true);
-		);
-		
-		of (TemplateSyntaxWrapper, tmplSynt,
+				
+		elof (TemplateSyntaxWrapper, tmplSynt)
 		    val =  tmplSynt.getContent ();
-		);
 		
+		fo;		
 	    }
 
 	    if (val.isEmpty ()) {		
@@ -4874,45 +4821,38 @@ namespace semantic {
 	Generator Visitor::validateType (const syntax::Expression & type) {
 	    Generator val (Generator::empty ());
 	    match (type) {
-		of (syntax::ArrayAlloc, array,
+		of (syntax::ArrayAlloc, array)
 		    val = validateTypeArrayAlloc (array);
-		);
-
-		of (syntax::Var, var,
-		    val = validateTypeVar (var);
-		);
-
-		of (syntax::DecoratedExpression, dec_expr,
-		    val = validateTypeDecorated (dec_expr);
-		);
-
-		of (syntax::Unary, un,
-		    val = validateTypeUnary (un);
-		);
-
-		of (syntax::Try, tr,
-		    val = validateTypeTry (tr);
-		);
 		
-		of (syntax::List, list,
+		elof (syntax::Var, var)
+		    val = validateTypeVar (var);		
+
+		elof (syntax::DecoratedExpression, dec_expr)
+		    val = validateTypeDecorated (dec_expr);		
+
+		elof (syntax::Unary, un)
+		    val = validateTypeUnary (un);		
+
+		elof (syntax::Try, tr)
+		    val = validateTypeTry (tr);		
+		
+		elof (syntax::List, list) {
 		    if (list.isArray ())
 			val = validateTypeSlice (list);
 		    if (list.isTuple ())
 			val = validateTypeTuple (list);
-		);
+		}
 
-		of (TemplateSyntaxList, tmplSynt,
-		    val = validateTypeTupleTemplate (tmplSynt);
-		);
+		elof (TemplateSyntaxList, tmplSynt)
+		    val = validateTypeTupleTemplate (tmplSynt);		
 		
-		of (TemplateSyntaxWrapper, tmplSynt,
+		elof (TemplateSyntaxWrapper, tmplSynt)
 		    val =  tmplSynt.getContent ();
-		);
-
-		of (syntax::TemplateCall, tmpCall,
-		    val = validateTypeTemplateCall (tmpCall);		   
-		);
 		
+		elof (syntax::TemplateCall, tmpCall) 
+		    val = validateTypeTemplateCall (tmpCall);
+		
+		fo;		
 	    }
 
 	    if (val.isEmpty ()) {		
@@ -5100,17 +5040,16 @@ namespace semantic {
 	Generator Visitor::validateTypeTemplateCall (const syntax::TemplateCall & call) {	    
 	    auto left = call.getContent ();
 	    match (left) {
-		of (syntax::Var, var, {
-			Generator innerType (Generator::empty ());
-			if (call.getParameters ().size () == 1) {
-			    innerType = validateType (call.getParameters ()[0], true);
-			}
-			
-			if (var.getName ().getStr () == Range::NAME) {
-			    return Range::init (var.getName (), innerType);
-			}		       
+		of (syntax::Var, var) {
+		    Generator innerType (Generator::empty ());
+		    if (call.getParameters ().size () == 1) {
+			innerType = validateType (call.getParameters ()[0], true);
 		    }
-		);
+		    
+		    if (var.getName ().getStr () == Range::NAME) {
+			return Range::init (var.getName (), innerType);
+		    }		       
+		} fo;		
 	    }
 	    
 	    return Generator::empty ();
@@ -5619,11 +5558,11 @@ namespace semantic {
 	    {
 		// Totally ok for implicit alias 
 		match (value) {
-		    of (ArrayValue, arr ATTRIBUTE_UNUSED, return true);
-		    of (StructCst, arr ATTRIBUTE_UNUSED, return true);
-		    of (ClassCst, arr ATTRIBUTE_UNUSED, return true);
-		    of (ArrayAlloc, arr ATTRIBUTE_UNUSED, return true);
-		    of (NullValue, arr ATTRIBUTE_UNUSED, return true);
+		    s_of_u (ArrayValue) return true;
+		    s_of_u (StructCst) return true;
+		    s_of_u (ClassCst) return true;
+		    s_of_u (ArrayAlloc) return true;
+		    s_of_u (NullValue) return true;
 		}
 	    }
 	    
@@ -5640,26 +5579,25 @@ namespace semantic {
 	    {
 		// Totally ok for implicit alias 
 		match (gen) {
-		    of (ArrayValue, arr ATTRIBUTE_UNUSED, return);
-		    of (StructCst, arr ATTRIBUTE_UNUSED, return);
-		    of (ClassCst, arr ATTRIBUTE_UNUSED, return);
-		    of (ArrayAlloc, arr ATTRIBUTE_UNUSED, return);
-		    of (NullValue, arr ATTRIBUTE_UNUSED, return);
+		    s_of_u (ArrayValue) return;
+		    s_of_u (StructCst) return;
+		    s_of_u (ClassCst) return;
+		    s_of_u (ArrayAlloc) return;
+		    s_of_u (NullValue) return;
 		}
 	    }
 	    {
 		// Ok for implicit alias, but the mutability must be checked
 		match (gen) {
-		    of (Block,             arr,
-			{
-			    if (!arr.isLvalue ()) // Implicit alias of LBlock is not allowed
-				max_level = arr.getType ().to <Type> ().mutabilityLevel ();
-			}
-		    )	       
-		    else of (Conditional,  arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
-		    else of (ExitScope,    arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
-		    else of (SuccessScope, arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ())
-		    else of (Call,         arr, max_level = arr.getType ().to <Type> ().mutabilityLevel ());
+		    of (Block, arr) {			
+			if (!arr.isLvalue ()) // Implicit alias of LBlock is not allowed
+			max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+		    }		    	       
+		    elof (Conditional,  arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+		    elof (ExitScope,    arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+		    elof (SuccessScope, arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+		    elof (Call,         arr) max_level = arr.getType ().to <Type> ().mutabilityLevel ();
+		    fo;
 		}
 	    }
 	    
@@ -5797,25 +5735,24 @@ namespace semantic {
 		    bool succeed = false;
 		    std::list <Ymir::Error::ErrorMsg> errors;
 		    match (it) {
-			of (semantic::Impl, im, {
-				pushReferent (sym, "verifyClassImpl");
-				enterForeign ();
-				
-				try {
-				    auto sec_trait = this-> validateType (im.getTrait ());
-				    if (trait.equals (sec_trait)) succeed = true;
-				} catch (Error::ErrorList list) {
-				    errors = list.errors;
-				}
-				
-				exitForeign ();
-				popReferent ("verifyClassImpl");
-				
-				if (errors.size () != 0)
-				    throw Error::ErrorList {errors};
-				if (succeed) return;
+			of (semantic::Impl, im) {
+			    pushReferent (sym, "verifyClassImpl");
+			    enterForeign ();
+			    
+			    try {
+				auto sec_trait = this-> validateType (im.getTrait ());
+				if (trait.equals (sec_trait)) succeed = true;
+			    } catch (Error::ErrorList list) {
+				errors = list.errors;
 			    }
-			);
+			    
+			    exitForeign ();
+			    popReferent ("verifyClassImpl");
+			    
+			    if (errors.size () != 0)
+			    throw Error::ErrorList {errors};
+			    if (succeed) return;
+			} fo;
 		    }		
 		}
 		
@@ -5847,22 +5784,21 @@ namespace semantic {
 	    for (auto & it : sym.to <semantic::Class> ().getAllInner ()) {
 		std::list <Ymir::Error::ErrorMsg> errors;
 		match (it) {
-		    of (semantic::Impl, im, {
-			    pushReferent (sym, "getAllImplClass");
-			    enterForeign ();
-			    try {
-				auto sec_trait = this-> validateType (im.getTrait ());
-				traits.push_back (sec_trait);
-			    } catch (Error::ErrorList list) {
-				errors = list.errors;
-			    }
-			    
-			    exitForeign ();
-			    popReferent ("getAllImplClass");
-			    if (errors.size () != 0)
-				throw Error::ErrorList {errors};
+		    of (semantic::Impl, im) {
+			pushReferent (sym, "getAllImplClass");
+			enterForeign ();
+			try {
+			    auto sec_trait = this-> validateType (im.getTrait ());
+			    traits.push_back (sec_trait);
+			} catch (Error::ErrorList list) {
+			    errors = list.errors;
 			}
-		    );
+			    
+			exitForeign ();
+			popReferent ("getAllImplClass");
+			if (errors.size () != 0)
+			throw Error::ErrorList {errors};
+		    } fo;
 		}
 	    }
 	    return traits;
@@ -6102,15 +6038,15 @@ namespace semantic {
 
 	Generator Visitor::addElseToConditional (const Generator & gen, const Generator & _else) {
 	    match (gen) {
-		of (Conditional, cd, {
-			if (cd.getElse ().isEmpty ()) {
-			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), _else, cd.isComplete ());
-			} else {
-			    auto addElse_ = addElseToConditional (cd.getElse (), _else);
-			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), addElse_, cd.isComplete ());
-			}
+		of (Conditional, cd) {
+		    if (cd.getElse ().isEmpty ()) {
+			return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), _else, cd.isComplete ());
+		    } else {
+			auto addElse_ = addElseToConditional (cd.getElse (), _else);
+			return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), addElse_, cd.isComplete ());
 		    }
-		) else {
+		}
+		elfo {
 		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");   
 		}
 	    }
@@ -6119,15 +6055,14 @@ namespace semantic {
 
 	Generator Visitor::setCompleteConditional (const Generator & gen) {
 	    match (gen) {
-		of (Conditional, cd, {
-			if (cd.getElse ().isEmpty ()) {
-			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), Generator::empty (), true);
-			} else {
-			    auto _else = setCompleteConditional (cd.getElse ());
-			    return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), _else, cd.isComplete ());
-			}
+		of (Conditional, cd) {
+		    if (cd.getElse ().isEmpty ()) {
+			return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), Generator::empty (), true);
+		    } else {
+			auto _else = setCompleteConditional (cd.getElse ());
+			return Conditional::init (cd.getLocation (), cd.getType (), cd.getTest (), cd.getContent (), _else, cd.isComplete ());
 		    }
-		);
+		} fo;		
 	    }	    
 	    return gen;
 	}
@@ -6155,17 +6090,17 @@ namespace semantic {
 	
 	bool Visitor::isUseless (const Generator & value) {
 	    match (value) {
-		of (Affect, af ATTRIBUTE_UNUSED,  return false;);
-		of (Block,  bl ATTRIBUTE_UNUSED,  return false;);
-		of (Break,  br ATTRIBUTE_UNUSED,  return false;);
-		of (Call,   cl ATTRIBUTE_UNUSED,  return false;);
-		of (Conditional, c ATTRIBUTE_UNUSED, return false;);
-		of (Loop,   lp ATTRIBUTE_UNUSED,  return false;);
-		of (generator::VarDecl, vd ATTRIBUTE_UNUSED, return false;);
-		of (Return, rt ATTRIBUTE_UNUSED, return false;);
-		of (Set, set ATTRIBUTE_UNUSED, return false;);
-		of (Throw, th ATTRIBUTE_UNUSED, return false;);
-		of (ExitScope, ex ATTRIBUTE_UNUSED, return false;);
+		s_of_u (Affect)  return false;
+		s_of_u (Block)  return false;
+		s_of_u (Break)  return false;
+		s_of_u (Call)  return false;
+		s_of_u (Conditional) return false;
+		s_of_u (Loop)  return false;
+		s_of_u (generator::VarDecl) return false;
+		s_of_u (Return) return false;
+		s_of_u (Set) return false;
+		s_of_u (Throw) return false;
+		s_of_u (ExitScope) return false;
 	    }
 	    return true;
 	}	

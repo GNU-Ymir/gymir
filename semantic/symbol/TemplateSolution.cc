@@ -158,11 +158,10 @@ namespace semantic {
 	    auto second = this-> _params.find (it)-> second;
 	    if (second.is <generator::TemplateSyntaxWrapper> ()) {
 		match (second.to <generator::TemplateSyntaxWrapper> ().getContent ()) {
-		    of (generator::Type, t, {
-			    auto aux = generator::Type::init (t, false, t.isRef ());
-			    buf.write (Ymir::format ("N%", mangler.mangle (aux))); // [] on map discard const qualifier ?!!	    
-			}
-		    ) else {
+		    of (generator::Type, t) {
+			auto aux = generator::Type::init (t, false, t.isRef ());
+			buf.write (Ymir::format ("N%", mangler.mangle (aux))); // [] on map discard const qualifier ?!!	    
+		    } elfo {
 			buf.write (Ymir::format ("N%", mangler.mangle (second.to <generator::TemplateSyntaxWrapper> ().getContent ()))); // [] on map discard const qualifier ?!!
 		    }
 		}
@@ -170,11 +169,12 @@ namespace semantic {
 		Ymir::OutBuffer innerBuf;
 		for (auto & it : second.to <generator::TemplateSyntaxList> ().getContents ()) {
 		    match (it) {
-			of (generator::Type, t, {
-				auto aux = generator::Type::init (t, false, t.isRef ());
-				innerBuf.writef ("N%", mangler.mangle (aux));
-			    }
-			) else innerBuf.writef ("N%", mangler.mangle (it));
+			of (generator::Type, t) {
+			    auto aux = generator::Type::init (t, false, t.isRef ());
+			    innerBuf.writef ("N%", mangler.mangle (aux));
+			} elfo {
+			    innerBuf.writef ("N%", mangler.mangle (it));
+			}
 		    }
 		}
 		buf.writef ("V%", innerBuf.str ());

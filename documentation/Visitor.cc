@@ -27,69 +27,49 @@ namespace documentation {
 	JsonValue val (JsonValue::empty ());
 	if (!sym.isWeak ()) {
 	    match (sym) {
-		of (semantic::Module, mod, {
-			this-> _context.pushReferent (sym, "dump::module");
-			val = this-> dumpModule (mod);
-			this-> _context.popReferent ("dump::module");
-		    }
-		    )
-		else of (semantic::Function, func, {
-			this-> _context.pushReferent (sym, "dump::function");
-			val = this-> dumpFunction (func);
-			this-> _context.popReferent ("dump::function");
-		    }
-		    )
-		else of (semantic::VarDecl, decl, {
-			this-> _context.pushReferent (sym, "dump::vardecl");
-			val = this-> dumpVarDecl (decl);
-			this-> _context.popReferent ("dump::vardecl");			    
-		    }
-		    )
-	        else of (semantic::Alias, al, {
-		       this-> _context.pushReferent (sym, "dump::alias");
-		       val = this-> dumpAlias (al);
-		       this-> _context.popReferent ("dump::alias");
-		   }
-		   )
-		else of (semantic::Struct, str, {
-			this-> _context.pushReferent (sym, "dump::struct");
-			val = this-> dumpStruct (str);
-			this-> _context.popReferent ("dump::struct");
-		    }
-		    )
-		else of (semantic::TemplateSolution, sol ATTRIBUTE_UNUSED, {})
-		else of (semantic::Enum, en, {
-			this-> _context.pushReferent (sym, "dump::enum");
-			val = this-> dumpEnum (en);
-			this-> _context.popReferent ("dump::enum");
-		    }
-		    )
-		else of (semantic::Class, cl, {
-			this-> _context.pushReferent (sym, "dump::class");
-			val = this-> dumpClass (cl);
-			this-> _context.popReferent ("dump::class");
-		    }
-		    )
-	        else of (semantic::Trait, tr, {
-			this-> _context.pushReferent (sym, "dump::trait");
-			val = this-> dumpTrait (tr);
-			this-> _context.popReferent ("dump::trait");
-		    }
-		    )
-		else of (semantic::Template, tm, {
-			this-> _context.pushReferent (sym, "dump::template");
-			val = this-> dumpTemplate (tm);
-			this-> _context.popReferent ("dump::template");
-		    }
-		    )
-		else of (semantic::Macro, x, {
-			this-> _context.pushReferent (sym, "dump::macro");
-			val = this-> dumpMacro (x);
-			this-> _context.popReferent ("dump::macro");
-		    }
-		    )
-		else of (semantic::ModRef, x ATTRIBUTE_UNUSED, {})
-		else {
+		of (semantic::Module, mod) {
+		    this-> _context.pushReferent (sym, "dump::module");
+		    val = this-> dumpModule (mod);
+		    this-> _context.popReferent ("dump::module");
+		} elof (semantic::Function, func) {
+		    this-> _context.pushReferent (sym, "dump::function");
+		    val = this-> dumpFunction (func);
+		    this-> _context.popReferent ("dump::function");
+		} elof (semantic::VarDecl, decl) {
+		    this-> _context.pushReferent (sym, "dump::vardecl");
+		    val = this-> dumpVarDecl (decl);
+		    this-> _context.popReferent ("dump::vardecl");			    
+		} elof (semantic::Alias, al) {
+		    this-> _context.pushReferent (sym, "dump::alias");
+		    val = this-> dumpAlias (al);
+		    this-> _context.popReferent ("dump::alias");
+		} elof (semantic::Struct, str) {
+		    this-> _context.pushReferent (sym, "dump::struct");
+		    val = this-> dumpStruct (str);
+		    this-> _context.popReferent ("dump::struct");
+		} elof_u (semantic::TemplateSolution) {
+		} elof (semantic::Enum, en) {
+		    this-> _context.pushReferent (sym, "dump::enum");
+		    val = this-> dumpEnum (en);
+		    this-> _context.popReferent ("dump::enum");
+		} elof (semantic::Class, cl) {
+		    this-> _context.pushReferent (sym, "dump::class");
+		    val = this-> dumpClass (cl);
+		    this-> _context.popReferent ("dump::class");
+		} elof (semantic::Trait, tr) {
+		    this-> _context.pushReferent (sym, "dump::trait");
+		    val = this-> dumpTrait (tr);
+		    this-> _context.popReferent ("dump::trait");
+		} elof (semantic::Template, tm) {
+		    this-> _context.pushReferent (sym, "dump::template");
+		    val = this-> dumpTemplate (tm);
+		    this-> _context.popReferent ("dump::template");
+		} elof (semantic::Macro, x) {
+		    this-> _context.pushReferent (sym, "dump::macro");
+		    val = this-> dumpMacro (x);
+		    this-> _context.popReferent ("dump::macro");
+		} elof_u (semantic::ModRef) {
+		} elfo {
 		    // Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 		}
 	    }
@@ -99,10 +79,9 @@ namespace documentation {
 
     JsonValue Visitor::dumpUnvalidated (const semantic::Symbol & sym) {
 	match (sym) {
-	    of (semantic::Function, fn, {
-		    return this-> dumpFunctionUnvalidated (fn.getContent (), sym.isPublic (), false);
-		}
-		);	    
+	    of (semantic::Function, fn) {
+		return this-> dumpFunctionUnvalidated (fn.getContent (), sym.isPublic (), false);
+	    } fo;
 	}
 	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	return JsonValue::empty ();
@@ -110,64 +89,44 @@ namespace documentation {
 
     JsonValue Visitor::dumpUnvalidated (const syntax::Declaration & decl, bool pub, bool prot) {
 	match (decl) {
-	    of (syntax::DeclBlock, bl, {
-		    return this-> dumpDeclBlockUnvalidated (bl, pub, prot);
-		}
-		);
-	    of (syntax::CondBlock, cd, {
-		    return this-> dumpCondBlockUnvalidated (cd, pub, prot);
-		}
-		);
-	    of (syntax::Class, cl, {
-		    return this-> dumpClassUnvalidated (cl, pub, prot);
-		}
-		);
-	    of (syntax::Enum, en, {
-		    return this-> dumpEnumUnvalidated (en, pub, prot);
-		}
-		);
-	    of (syntax::ExternBlock, ex, {
-		    return this-> dumpExternBlockUnvalidated (ex, pub, prot);
-		}
-		);
-	    of (syntax::Constructor, cst ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
-	    of (syntax::Function, fn, {
-		    return this-> dumpFunctionUnvalidated (fn, pub, prot);
-		}
-		);
-	    of (syntax::Global, gl, {
-		    return this-> dumpGlobalUnvalidated (gl, pub, prot);
-		}
-		);
-	    of (syntax::Import, imp ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
-	    of (syntax::Mixin, mx ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
-	    of (syntax::Module, mod, {
-		    return this-> dumpModuleUnvalidated (mod, pub, prot);
-		}
-		);
-	    of (syntax::Struct, str, {
-		    return this-> dumpStructUnvalidated (str, pub, prot);
-		}
-		);
-	    of (syntax::Template, tmp, {
-		    return this-> dumpTemplateUnvalidated (tmp, pub, prot);
-		}
-		);
-	    of (syntax::Trait, tr, {
-		    return this-> dumpTraitUnvalidated (tr, pub, prot);
-		}
-		);
-	    of (syntax::Use, u ATTRIBUTE_UNUSED, {return JsonValue::empty ();});
-	    of (syntax::Macro, m, {
-		    return this-> dumpMacroUnvalidated (m, pub, prot);		
-		}
-		);
+	    of (syntax::DeclBlock, bl) {
+		return this-> dumpDeclBlockUnvalidated (bl, pub, prot);
+	    } elof (syntax::CondBlock, cd) {
+		return this-> dumpCondBlockUnvalidated (cd, pub, prot);
+	    } elof (syntax::Class, cl) {
+		return this-> dumpClassUnvalidated (cl, pub, prot);
+	    } elof (syntax::Enum, en) {
+		return this-> dumpEnumUnvalidated (en, pub, prot);
+	    } elof (syntax::ExternBlock, ex) {
+		return this-> dumpExternBlockUnvalidated (ex, pub, prot);
+	    } elof_u (syntax::Constructor) {
+		return JsonValue::empty ();
+	    } elof (syntax::Function, fn) {
+		return this-> dumpFunctionUnvalidated (fn, pub, prot);
+	    } elof (syntax::Global, gl) {
+		return this-> dumpGlobalUnvalidated (gl, pub, prot);
+	    } elof_u (syntax::Import) {
+		return JsonValue::empty ();
+	    } elof_u (syntax::Mixin) {
+		return JsonValue::empty ();
+	    } elof (syntax::Module, mod) {
+		return this-> dumpModuleUnvalidated (mod, pub, prot);
+	    } elof (syntax::Struct, str) {
+		return this-> dumpStructUnvalidated (str, pub, prot);
+	    } elof (syntax::Template, tmp) {
+		return this-> dumpTemplateUnvalidated (tmp, pub, prot);
+	    } elof (syntax::Trait, tr) {
+		return this-> dumpTraitUnvalidated (tr, pub, prot);
+	    } elof_u (syntax::Use) {
+		return JsonValue::empty ();
+	    } elof (syntax::Macro, m) {
+		return this-> dumpMacroUnvalidated (m, pub, prot);		
+	    } fo;
 	}
-
 	Ymir::OutBuffer buf;
 	decl.treePrint (buf, 0);
 	println (buf.str ());
-	
+    
 	Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
 	return JsonValue::empty ();
     }

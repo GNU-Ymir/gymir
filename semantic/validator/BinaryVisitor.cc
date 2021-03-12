@@ -64,33 +64,27 @@ namespace semantic {
 	    try {
 
 		match (left.to<Value> ().getType ()) {
-		    of (Integer, integer ATTRIBUTE_UNUSED,
+		    of_u (Integer) {
 			ret = validateMathIntLeft (op, expression, left, right);
-		    );
-
-		    of (Char, chr ATTRIBUTE_UNUSED,
+		    } 
+		    elof_u (Char) {
 			ret = validateMathCharLeft (op, expression, left, right);
-		    );
-		    
-		    of (Float, f ATTRIBUTE_UNUSED,
+		    }		    
+		    elof_u (Float) {
 			ret = validateMathFloatLeft (op, expression, left, right);
-		    );
-
-		    of (Pointer, p ATTRIBUTE_UNUSED, 
+		    }
+		    elof_u (Pointer) {
 			ret = validateMathPtrLeft (op, expression, left, right);
-		    );
-
-		    of (Array, a ATTRIBUTE_UNUSED,
+		    }
+		    elof_u (Array) {
 			ret = validateMathArray (op, expression, left, right);
-		    );
-
-		    of (Slice, s ATTRIBUTE_UNUSED,
+		    }
+		    elof_u (Slice) {
 			ret = validateMathSlice (op, expression, left, right);
-		    );
-
-		    of (ClassPtr, p ATTRIBUTE_UNUSED,
+		    }
+		    elof_u (ClassPtr) {
 			ret = validateMathClass (op, expression, left, right);		    
-		    );
+		    } fo;
 		}
 		
 	    } catch (Error::ErrorList list) {		
@@ -370,33 +364,27 @@ namespace semantic {
 	    try {
 
 		match (left.to<Value> ().getType ()) {
-		    of (Integer, integer ATTRIBUTE_UNUSED,
+		    of_u (Integer) {
 			ret = validateLogicalIntLeft (op, expression, left, right);
-		    );
-
-		    of (Bool, b ATTRIBUTE_UNUSED,
+		    }
+		    elof_u (Bool) {
 			ret = validateLogicalBoolLeft (op, expression, left, right);
-		    );
-
-		    of (Float, f ATTRIBUTE_UNUSED,
+		    }
+		    elof_u (Float) {
 			ret = validateLogicalFloatLeft (op, expression, left, right);
-		    );
-
-		    of (Char, c ATTRIBUTE_UNUSED,
+		    }		
+		    elof_u (Char) {
 			ret = validateLogicalCharLeft (op, expression, left, right);
-		    );
-
-		    of (Array, a ATTRIBUTE_UNUSED,
+		    }		    
+		    elof_u (Array) {
 			ret = validateLogicalArrayLeft (op, expression, left, right);
-		    );
-
-		    of (Slice, s ATTRIBUTE_UNUSED,
+		    }
+		    elof_u (Slice) {
 			ret = validateLogicalSliceLeft (op, expression, left, right);
-		    );
-
-		    of (ClassPtr, p ATTRIBUTE_UNUSED, 
+		    }
+		    elof_u (ClassPtr) {
 			ret = validateLogicalClass (op, expression, left, right);
-		    );
+		    } fo;
 		}		
 		
 	    } catch (Error::ErrorList list) {		
@@ -907,7 +895,7 @@ namespace semantic {
 
 	    if (left.to <Value> ().getType ().to <Type> ().isCompatible (right.to <Value> ().getType ())) {
 		match (left.to <Value> ().getType ()) {
-		    of (Char, c_,
+		    of (Char, c_) {
 			auto c = left.to <Value> ().getType ();
 			auto rangeType = Range::init (expression.getLocation (), c);
 			auto lName = lexing::Word::init (expression.getLocation (), "#1");
@@ -943,72 +931,72 @@ namespace semantic {
 			actions.push_back (rangeValue);
 			
 			return Block::init (expression.getLocation (), rangeType, actions);
-		    ) else of (Float, f_ ATTRIBUTE_UNUSED,
-			       auto f = left.to <Value> ().getType ();
-			       auto rangeType = Range::init (expression.getLocation (), f);
-			       auto lName = lexing::Word::init (expression.getLocation (), "#1");
-			       auto rName = lexing::Word::init (expression.getLocation (), "#2");
+		    } elof_u (Float) {
+			auto f = left.to <Value> ().getType ();
+			auto rangeType = Range::init (expression.getLocation (), f);
+			auto lName = lexing::Word::init (expression.getLocation (), "#1");
+			auto rName = lexing::Word::init (expression.getLocation (), "#2");
 
-			       auto lVar = generator::VarDecl::init (lName, "#1", f, left, false);
-			       auto rVar = generator::VarDecl::init (rName, "#2", f, right, false);
+			auto lVar = generator::VarDecl::init (lName, "#1", f, left, false);
+			auto rVar = generator::VarDecl::init (rName, "#2", f, right, false);
 			
-			       auto lVref = VarRef::init (lName, "#1", f, lVar.getUniqId (), false, left);
-			       auto rVref = VarRef::init (rName, "#2", f, rVar.getUniqId (), false, right);
+			auto lVref = VarRef::init (lName, "#1", f, lVar.getUniqId (), false, left);
+			auto rVref = VarRef::init (rName, "#2", f, rVar.getUniqId (), false, right);
 
-			       auto hVal = FloatValue::init (expression.getLocation (), f, 1.0f);
-			       auto lVal = FloatValue::init (expression.getLocation (), f, -1.0f);
+			auto hVal = FloatValue::init (expression.getLocation (), f, 1.0f);
+			auto lVal = FloatValue::init (expression.getLocation (), f, -1.0f);
 
-			       auto bin = BinaryFloat::init (expression.getLocation (),
-							     Binary::Operator::INF,
-							     Bool::init (expression.getLocation ()),
-							     lVref, rVref);
+			auto bin = BinaryFloat::init (expression.getLocation (),
+						      Binary::Operator::INF,
+						      Bool::init (expression.getLocation ()),
+						      lVref, rVref);
 			       
-			       auto step = Conditional::init (expression.getLocation (), f, bin, hVal, lVal); 
+			auto step = Conditional::init (expression.getLocation (), f, bin, hVal, lVal); 
 
-			       auto isFull = BoolValue::init (expression.getLocation (), Bool::init (expression.getLocation ()), op == Binary::Operator::TRANGE);
-			       auto rangeValue = RangeValue::init (expression.getLocation (), rangeType, lVref, rVref, step, isFull);
+			auto isFull = BoolValue::init (expression.getLocation (), Bool::init (expression.getLocation ()), op == Binary::Operator::TRANGE);
+			auto rangeValue = RangeValue::init (expression.getLocation (), rangeType, lVref, rVref, step, isFull);
 
-			       std::vector <Generator> actions;
-			       actions.push_back (lVar);
-			       actions.push_back (rVar);
-			       actions.push_back (rangeValue);
-			       return Block::init (expression.getLocation (), rangeType, actions);
-		    ) else of (Integer, i_,
-			       auto i = left.to <Value> ().getType ();
-			       auto rangeType = Range::init (expression.getLocation (), i);
-			       auto lName = lexing::Word::init (expression.getLocation (), "#1");
-			       auto rName = lexing::Word::init (expression.getLocation (), "#2");
+			std::vector <Generator> actions;
+			actions.push_back (lVar);
+			actions.push_back (rVar);
+			actions.push_back (rangeValue);
+			return Block::init (expression.getLocation (), rangeType, actions);
+		    } elof (Integer, i_) {
+			auto i = left.to <Value> ().getType ();
+			auto rangeType = Range::init (expression.getLocation (), i);
+			auto lName = lexing::Word::init (expression.getLocation (), "#1");
+			auto rName = lexing::Word::init (expression.getLocation (), "#2");
 
-			       auto lVar = generator::VarDecl::init (lName, "#1", i, left, false);
-			       auto rVar = generator::VarDecl::init (rName, "#2", i, right, false);
+			auto lVar = generator::VarDecl::init (lName, "#1", i, left, false);
+			auto rVar = generator::VarDecl::init (rName, "#2", i, right, false);
 			
-			       auto lVref = VarRef::init (lName, "#1", i, lVar.getUniqId (), false, left);
-			       auto rVref = VarRef::init (rName, "#2", i, rVar.getUniqId (), false, right);
+			auto lVref = VarRef::init (lName, "#1", i, lVar.getUniqId (), false, left);
+			auto rVref = VarRef::init (rName, "#2", i, rVar.getUniqId (), false, right);
 
 
-			       Fixed::UI hui;
-			       Fixed::UI lui;
-			       hui.i = 1; lui.i = -1;
-			       auto itype = Integer::init (expression.getLocation (), i_.getSize (), true);
-			       auto hVal = Fixed::init (expression.getLocation (), itype, hui);
-			       auto lVal = Fixed::init (expression.getLocation (), itype, lui);
+			Fixed::UI hui;
+			Fixed::UI lui;
+			hui.i = 1; lui.i = -1;
+			auto itype = Integer::init (expression.getLocation (), i_.getSize (), true);
+			auto hVal = Fixed::init (expression.getLocation (), itype, hui);
+			auto lVal = Fixed::init (expression.getLocation (), itype, lui);
 
-			       auto bin = BinaryInt::init (expression.getLocation (),
-							   Binary::Operator::INF,
-							   Bool::init (expression.getLocation ()),
-							   lVref, rVref);
+			auto bin = BinaryInt::init (expression.getLocation (),
+						    Binary::Operator::INF,
+						    Bool::init (expression.getLocation ()),
+						    lVref, rVref);
 			       
-			       auto step = Conditional::init (expression.getLocation (), itype, bin, hVal, lVal); 
+			auto step = Conditional::init (expression.getLocation (), itype, bin, hVal, lVal); 
 
-			       auto isFull = BoolValue::init (expression.getLocation (), Bool::init (expression.getLocation ()), op == Binary::Operator::TRANGE);
-			       auto rangeValue = RangeValue::init (expression.getLocation (), rangeType, lVref, rVref, step, isFull);
+			auto isFull = BoolValue::init (expression.getLocation (), Bool::init (expression.getLocation ()), op == Binary::Operator::TRANGE);
+			auto rangeValue = RangeValue::init (expression.getLocation (), rangeType, lVref, rVref, step, isFull);
 
-			       std::vector <Generator> actions;
-			       actions.push_back (lVar);
-			       actions.push_back (rVar);
-			       actions.push_back (rangeValue);
-			       return Block::init (expression.getLocation (), rangeType, actions);
-		    );
+			std::vector <Generator> actions;
+			actions.push_back (lVar);
+			actions.push_back (rVar);
+			actions.push_back (rangeValue);
+			return Block::init (expression.getLocation (), rangeType, actions);
+		    } fo;
 		}
 	    }
 
@@ -1102,41 +1090,41 @@ namespace semantic {
 	Binary::Operator BinaryVisitor::toOperator (const lexing::Word & loc, bool & isAff) {
 	    isAff = false;
 	    string_match (loc.getStr ()) {
-		eq (Token::EQUAL, { isAff = true; return Binary::Operator::LAST_OP; });
-		eq (Token::DIV_AFF, { isAff = true; return Binary::Operator::DIV; });
-		eq (Token::MINUS_AFF, { isAff = true; return Binary::Operator::SUB; });
-		eq (Token::PLUS_AFF, { isAff = true; return Binary::Operator::ADD; });
-		eq (Token::STAR_AFF, { isAff = true; return Binary::Operator::MUL; });
-		eq (Token::TILDE_AFF, { isAff = true; return Binary::Operator::CONCAT; });		
-		eq (Token::LEFTD_AFF, { isAff = true; return Binary::Operator::LEFT_SHIFT; });
-		eq (Token::RIGHTD_AFF, { isAff = true; return Binary::Operator::RIGHT_SHIFT; });
+		eq (Token::EQUAL) { isAff = true; return Binary::Operator::LAST_OP; }
+		eq (Token::DIV_AFF) { isAff = true; return Binary::Operator::DIV; }
+		eq (Token::MINUS_AFF) { isAff = true; return Binary::Operator::SUB; }
+		eq (Token::PLUS_AFF) { isAff = true; return Binary::Operator::ADD; }
+		eq (Token::STAR_AFF) { isAff = true; return Binary::Operator::MUL; }
+		eq (Token::TILDE_AFF) { isAff = true; return Binary::Operator::CONCAT; }	     
+		eq (Token::LEFTD_AFF) { isAff = true; return Binary::Operator::LEFT_SHIFT; }
+		eq (Token::RIGHTD_AFF) { isAff = true; return Binary::Operator::RIGHT_SHIFT; }
 		
-		eq (Token::DPIPE, return Binary::Operator::OR;);
-		eq (Token::DAND, return Binary::Operator::AND;);
-		eq (Token::INF, return Binary::Operator::INF;);
-		eq (Token::SUP, return Binary::Operator::SUP;);
-		eq (Token::INF_EQUAL, return Binary::Operator::INF_EQUAL;);
-		eq (Token::SUP_EQUAL, return Binary::Operator::SUP_EQUAL;);
-		eq (Token::DEQUAL, return Binary::Operator::EQUAL;);
-		eq (Token::NOT_EQUAL, return Binary::Operator::NOT_EQUAL;);
-		eq (Token::LEFTD, return Binary::Operator::LEFT_SHIFT;);
-		eq (Token::RIGHTD, return Binary::Operator::RIGHT_SHIFT;);
-		eq (Token::PIPE, return Binary::Operator::BIT_OR;);
-		eq (Token::AND, return Binary::Operator::BIT_AND;);
-		eq (Token::XOR, return Binary::Operator::BIT_XOR;);
-		eq (Token::TILDE, return Binary::Operator::CONCAT;);
-		eq (Token::PLUS, return Binary::Operator::ADD;);
-		eq (Token::MINUS, return Binary::Operator::SUB;);
-		eq (Token::STAR, return Binary::Operator::MUL;);
-		eq (Token::DIV, return Binary::Operator::DIV;);
-		eq (Token::PERCENT, return Binary::Operator::MODULO;);
-		eq (Token::DXOR, return Binary::Operator::EXP;);
-		eq (Token::DDOT, return Binary::Operator::RANGE;);
-		eq (Token::TDOT, return Binary::Operator::TRANGE;);
-		eq (Keys::IS, return Binary::Operator::IS;);
-		eq (Keys::NOT_IS, return Binary::Operator::NOT_IS;);
-		eq (Keys::IN, return Binary::Operator::IN);
-		eq (Keys::NOT_IN, return Binary::Operator::NOT_IN);		
+		eq (Token::DPIPE) return Binary::Operator::OR;
+		eq (Token::DAND) return Binary::Operator::AND;
+		eq (Token::INF) return Binary::Operator::INF;
+		eq (Token::SUP) return Binary::Operator::SUP;
+		eq (Token::INF_EQUAL) return Binary::Operator::INF_EQUAL;
+		eq (Token::SUP_EQUAL) return Binary::Operator::SUP_EQUAL;
+		eq (Token::DEQUAL) return Binary::Operator::EQUAL;
+		eq (Token::NOT_EQUAL) return Binary::Operator::NOT_EQUAL;
+		eq (Token::LEFTD) return Binary::Operator::LEFT_SHIFT;
+		eq (Token::RIGHTD) return Binary::Operator::RIGHT_SHIFT;
+		eq (Token::PIPE) return Binary::Operator::BIT_OR;
+		eq (Token::AND) return Binary::Operator::BIT_AND;
+		eq (Token::XOR) return Binary::Operator::BIT_XOR;
+		eq (Token::TILDE) return Binary::Operator::CONCAT;
+		eq (Token::PLUS) return Binary::Operator::ADD;
+		eq (Token::MINUS) return Binary::Operator::SUB;
+		eq (Token::STAR) return Binary::Operator::MUL;
+		eq (Token::DIV) return Binary::Operator::DIV;
+		eq (Token::PERCENT) return Binary::Operator::MODULO;
+		eq (Token::DXOR) return Binary::Operator::EXP;
+		eq (Token::DDOT) return Binary::Operator::RANGE;
+		eq (Token::TDOT) return Binary::Operator::TRANGE;
+		eq (Keys::IS) return Binary::Operator::IS;
+		eq (Keys::NOT_IS) return Binary::Operator::NOT_IS;
+		eq (Keys::IN) return Binary::Operator::IN;
+		eq (Keys::NOT_IN) return Binary::Operator::NOT_IN;		
 	    }
 
 	    return Binary::Operator::LAST_OP;

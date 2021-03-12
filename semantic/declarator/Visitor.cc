@@ -28,73 +28,57 @@ namespace semantic {
 
 	semantic::Symbol Visitor::visit (const syntax::Declaration ast) {
 	    match (ast) {
-		of (syntax::Module, mod, 
+		s_of (syntax::Module, mod) 
 		    return visitModule (mod);		
-		);
-	    
-		of (syntax::Function, func,
-		    return visitFunction (func);
-		);
-
-		of (syntax::Struct, str,
-		    return visitStruct (str);
-		);
-
-		of (syntax::Alias, al,
-		    return visitAlias (al);
-		);
-
-		of (syntax::DeclBlock, bl,
-		    return visitBlock (bl);
-		);
-
-		of (syntax::ExternBlock, ex_bl,
-		    return visitExtern (ex_bl);
-		);
 		
-		of (syntax::Class, cls ATTRIBUTE_UNUSED,
-		    return visitClass (ast);
-		);
+		s_of (syntax::Function, func)
+		    return visitFunction (func);		
+		
+		s_of (syntax::Struct, str)
+		    return visitStruct (str);		
 
-		of (syntax::Trait, trait,
+		s_of (syntax::Alias, al)
+		    return visitAlias (al);		
+
+		s_of (syntax::DeclBlock, bl)
+		    return visitBlock (bl);		
+
+		s_of (syntax::ExternBlock, ex_bl)
+		    return visitExtern (ex_bl);		
+		
+		s_of_u (syntax::Class)
+		    return visitClass (ast);		
+
+		s_of (syntax::Trait, trait)
 		    return visitTrait (trait);
-		);
 
-		of (syntax::Mixin, impl ATTRIBUTE_UNUSED,
+		s_of_u (syntax::Mixin)
 		    return visitImpl (ast);
-		);
 		
-		of (syntax::Global, glb,
+		s_of (syntax::Global, glb)
 		    return visitGlobal (glb);
-		);
 
-		of (syntax::Import, im,
+		s_of (syntax::Import, im)
 		    return visitImport (im);
-		);
 
-		of (syntax::Template, tep,
+		s_of (syntax::Template, tep)
 		    return visitTemplate (tep);
-		);
 
-		of (syntax::Enum, en,
+		s_of (syntax::Enum, en)
 		    return visitEnum (en);
-		);
 
-		of (syntax::Macro, mc,
+		s_of (syntax::Macro, mc)
 		    return visitMacro (mc);
-		);
 		
-		of (syntax::ExpressionWrapper, wrap, {
-			match (wrap.getContent ()) {
-			    of (syntax::VarDecl, decl,
-				return visitVarDecl (decl, wrap.getComments ());
-			    );		    
-			}
-		
-			Error::halt ("%(r) - reaching impossible point", "Critical");
-			return Symbol::empty ();
+		s_of (syntax::ExpressionWrapper, wrap) {
+		    match (wrap.getContent ()) {
+			s_of (syntax::VarDecl, decl) 
+			    return visitVarDecl (decl, wrap.getComments ());		    
 		    }
-		);
+		    
+		    Error::halt ("%(r) - reaching impossible point", "Critical");
+		    return Symbol::empty ();
+		}		
 	    }
 	    
 	    Ymir::OutBuffer buf;
@@ -297,37 +281,34 @@ namespace semantic {
 		    Ymir::Error::occur (ex_block.getSpace (), ExternalError::get (SPACE_EXTERN_C));
 		for (const syntax::Declaration ex_decl : ex_block.getDeclaration ().to <syntax::DeclBlock> ().getDeclarations ()) {
 		    match (ex_decl) {
-			of (syntax::Function, func,
+			of (syntax::Function, func) {
 			    auto decl = visitFunction (func, true);
 			    decl.to <semantic::Function> ().setExternalLanguage (ex_block.getFrom ().getStr ());
-			) 
-
-			else of (syntax::ExpressionWrapper, wrap, {
-				match (wrap.getContent ()) {
-				    of (syntax::VarDecl, decl,
-					auto dl = visitVarDecl (decl, wrap.getComments ());
-					dl.to <semantic::VarDecl> ().setExternalLanguage (ex_block.getFrom ().getStr ());
-					continue;
-				    );		    
-				}
-			    		
-				Error::halt ("%(r) - reaching impossible point", "Critical");
-				return Symbol::empty ();
+			} elof (syntax::ExpressionWrapper, wrap) {
+			    match (wrap.getContent ()) {
+				of (syntax::VarDecl, decl) {
+				    auto dl = visitVarDecl (decl, wrap.getComments ());
+				    dl.to <semantic::VarDecl> ().setExternalLanguage (ex_block.getFrom ().getStr ());
+				    continue;
+				} fo;		    
 			    }
-		        ) else of (syntax::Global, glb, {
-				auto decl = visitGlobal (glb);
-				decl.to <semantic::VarDecl> ().setExternalLanguage (ex_block.getFrom ().getStr ());
-			    }
-			) else {
-				Ymir::OutBuffer buf;
-				ex_decl.treePrint (buf);
-				println (buf.str ());
-				Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
-			    }
+			    
+			    Error::halt ("%(r) - reaching impossible point", "Critical");
+			    return Symbol::empty ();
+			} elof (syntax::Global, glb) {
+			    auto decl = visitGlobal (glb);
+			    decl.to <semantic::VarDecl> ().setExternalLanguage (ex_block.getFrom ().getStr ());
+			} elfo {
+			    Ymir::OutBuffer buf;
+			    ex_decl.treePrint (buf);
+			    println (buf.str ());
+			    Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
+			}
 		    }
 		}
-	    } else
+	    } else {
 		Ymir::Error::occur (ex_block.getLocation (), ExternalError::get (IMPOSSIBLE_EXTERN));
+	    }
 	    
 	    return Symbol::empty ();
 	}
@@ -335,53 +316,47 @@ namespace semantic {
 	void Visitor::visitInnerClass (Symbol cls, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
 	    for (auto jt : decls) {
 		match (jt) {
-		    of (syntax::ExpressionWrapper, wrap, {
-			    match (wrap.getContent ()) {
-				of (syntax::VarDecl, de ATTRIBUTE_UNUSED, {
-					cls.to <semantic::Class> ().addField (wrap.getContent ());					
-					cls.to <semantic::Class> ().setFieldComment (de.getLocation ().getStr (), wrap.getComments ());
-					if (prv)
-					    cls.to <semantic::Class> ().setPrivate (de.getLocation ().getStr ());
-					else if (prot) {
-					    cls.to <semantic::Class> ().setProtected (de.getLocation ().getStr ());
-					}
-				    } 
-				) else of (syntax::Set, se, {
-					for (auto it : se.getContent ()) {
-					    cls.to <semantic::Class> ().addField (it);
-					    cls.to <semantic::Class> ().setFieldComment (it.to <syntax::VarDecl> ().getLocation ().getStr (), wrap.getComments ());
-					    if (prv)						
-						cls.to <semantic::Class> ().setPrivate (it.to <syntax::VarDecl> ().getLocation ().getStr ());
-					    else if (prot) {
-						cls.to <semantic::Class> ().setProtected (it.to <syntax::VarDecl> ().getLocation ().getStr ());
-					    }
-					}
+		    of (syntax::ExpressionWrapper, wrap) {
+			match (wrap.getContent ()) {
+			    of (syntax::VarDecl, de) {
+				cls.to <semantic::Class> ().addField (wrap.getContent ());					
+				cls.to <semantic::Class> ().setFieldComment (de.getLocation ().getStr (), wrap.getComments ());
+				if (prv)
+				cls.to <semantic::Class> ().setPrivate (de.getLocation ().getStr ());
+				else if (prot) {
+				    cls.to <semantic::Class> ().setProtected (de.getLocation ().getStr ());
+				}
+			    } elof (syntax::Set, se) {
+				for (auto it : se.getContent ()) {
+				    cls.to <semantic::Class> ().addField (it);
+				    cls.to <semantic::Class> ().setFieldComment (it.to <syntax::VarDecl> ().getLocation ().getStr (), wrap.getComments ());
+				    if (prv) {					
+					cls.to <semantic::Class> ().setPrivate (it.to <syntax::VarDecl> ().getLocation ().getStr ());
+				    } else if (prot) {
+					cls.to <semantic::Class> ().setProtected (it.to <syntax::VarDecl> ().getLocation ().getStr ());
 				    }
-				 ) else of (syntax::Assert, de ATTRIBUTE_UNUSED, {
-					 cls.to <semantic::Class> ().addAssertion (wrap.getContent ());
-					 cls.to <semantic::Class> ().addAssertionComments (wrap.getComments ());
-				     }
-				 ) else 
-				      Error::halt ("%(r) - reaching impossible point", "Critical");			
+				}
+			    } elof_u (syntax::Assert) {
+				cls.to <semantic::Class> ().addAssertion (wrap.getContent ());
+				cls.to <semantic::Class> ().addAssertionComments (wrap.getComments ());
+			    } elfo {
+				Error::halt ("%(r) - reaching impossible point", "Critical");
 			    }
 			}
-		    ) else of (syntax::DeclBlock, dc, {			    
-			    visitInnerClass (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
-			}
-		    ) else of (syntax::Constructor, cs, {
-			    auto sym = visitConstructor (cs);
-			    if (!sym.isEmpty ()) sym.to <Constructor> ().setClass (cls);
-			    if (!sym.isEmpty () && pub)  sym.setPublic ();
-			    if (!sym.isEmpty () && prot) sym.setProtected ();					    
-			}
-		    ) else of (syntax::CondBlock, cb, {
-			    Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_CLASS));
-			}
-		    ) else {
-			    auto sym = visit (jt);
-			    if (!sym.isEmpty () && pub)  sym.setPublic ();
-			    if (!sym.isEmpty () && prot) sym.setProtected ();
-			}
+		    } elof (syntax::DeclBlock, dc) {			    
+			visitInnerClass (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+		    } elof (syntax::Constructor, cs) {
+			auto sym = visitConstructor (cs);
+			if (!sym.isEmpty ()) sym.to <Constructor> ().setClass (cls);
+			if (!sym.isEmpty () && pub)  sym.setPublic ();
+			if (!sym.isEmpty () && prot) sym.setProtected ();					    
+		    } elof (syntax::CondBlock, cb) {
+			Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_CLASS));
+		    } elfo {
+			auto sym = visit (jt);
+			if (!sym.isEmpty () && pub)  sym.setPublic ();
+			if (!sym.isEmpty () && prot) sym.setProtected ();
+		    }
 		}
 	    }
 	}
@@ -431,23 +406,22 @@ namespace semantic {
 	void Visitor::visitInnerTrait (Symbol tr, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
 	    for (auto it : decls) {
 	    	match (it) {
-	    	    of (syntax::DeclBlock, dc, {
-			    visitInnerTrait (tr, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
-	    		}
-		    ) else of (syntax::CondBlock, cb, {
-			    Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_TRAIT));
+	    	    of (syntax::DeclBlock, dc) {
+			visitInnerTrait (tr, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+		    }
+		    elof (syntax::CondBlock, cb) {
+			Ymir::Error::occur (cb.getLocation (), ExternalError::get (CONDITIONAL_NON_TEMPLATE_TRAIT));
+		    }
+		    elof(syntax::ExpressionWrapper, wrap) {
+			if (wrap.getContent ().is <syntax::Assert> ()) {
+			    tr.to <semantic::Trait> ().addAssertion (wrap.getContent ());
+			    tr.to <semantic::Trait> ().addAssertionComments (wrap.getComments ());
+			} else {
+			    auto sym = visit (it);
+			    if (!sym.isEmpty () && prot) sym.setProtected ();
+			    if (!sym.isEmpty () && pub) sym.setPublic ();
 			}
-		     ) else of (syntax::ExpressionWrapper, wrap, {
-			     if (wrap.getContent ().is <syntax::Assert> ()) {
-				 tr.to <semantic::Trait> ().addAssertion (wrap.getContent ());
-				 tr.to <semantic::Trait> ().addAssertionComments (wrap.getComments ());
-			     } else {
-				 auto sym = visit (it);
-				 if (!sym.isEmpty () && prot) sym.setProtected ();
-				 if (!sym.isEmpty () && pub) sym.setPublic ();
-			     }
-			 }
-		     ) else {			
+		    } elfo {			
 	    		auto sym = visit (it);
 			if (!sym.isEmpty () && prot) sym.setProtected ();
 			if (!sym.isEmpty () && pub) sym.setPublic ();
@@ -489,20 +463,17 @@ namespace semantic {
 	void Visitor::visitInnerMacro (Symbol cls, const std::vector <syntax::Declaration> & decls, bool prv, bool prot, bool pub) {
 	    for (auto jt : decls) {
 		match (jt) {
-		    of (syntax::MacroConstructor, constr, {
-			    auto sym = visitMacroConstructor (constr);
-			    if (!sym.isEmpty () && pub) sym.setPublic ();
-			    if (!sym.isEmpty () && prot) sym.setProtected ();
-			}
-		    ) else of (syntax::MacroRule, rule, {
-			    auto sym = visitMacroRule (rule);
-			    if (!sym.isEmpty () && pub) sym.setPublic ();
-			    if (!sym.isEmpty () && prot) sym.setProtected ();
-			}
-		    ) else of (syntax::DeclBlock, dc, {
-			    visitInnerMacro (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
-			}			
-		    );			       
+		    of (syntax::MacroConstructor, constr) {
+			auto sym = visitMacroConstructor (constr);
+			if (!sym.isEmpty () && pub) sym.setPublic ();
+			if (!sym.isEmpty () && prot) sym.setProtected ();
+		    } elof (syntax::MacroRule, rule) {
+			auto sym = visitMacroRule (rule);
+			if (!sym.isEmpty () && pub) sym.setPublic ();
+			if (!sym.isEmpty () && prot) sym.setProtected ();
+		    } elof (syntax::DeclBlock, dc) {
+			visitInnerMacro (cls, dc.getDeclarations (), dc.isPrivate (), dc.isProt (), dc.isPublic ());
+		    } fo;		       
 		}		
 	    }	    
 	}
@@ -688,35 +659,35 @@ namespace semantic {
 	    std::vector <lexing::Word> used;
 	    for (auto par : tep.getParams ()) {
 		match (par) {
-		    of (syntax::VariadicVar, vr, 
+		    of (syntax::VariadicVar, vr) {
 			for (auto & use : used) {
 			    if (use.getStr () == vr.getLocation ().getStr ()) {
 				Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.getStr ());
 			    }
 			}
 			used.push_back (vr.getLocation ());
-		    ) else of (syntax::OfVar, vr,
-			       for (auto & use : used) {
-				   if (use.getStr () == vr.getLocation ().getStr ()) {
+		    } elof (syntax::OfVar, vr) {
+			for (auto & use : used) {
+			    if (use.getStr () == vr.getLocation ().getStr ()) {
+				Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.getStr ());
+			    }
+			}
+			used.push_back (vr.getLocation ());
+		    } elof (syntax::VarDecl, vr) {
+			for (auto & use : used) {
+			    if (use.getStr () == vr.getLocation ().getStr ()) {
 				       Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.getStr ());
-				   }
-			       }
-			       used.push_back (vr.getLocation ());
-		    ) else of (syntax::VarDecl, vr,
-			       for (auto & use : used) {
-				   if (use.getStr () == vr.getLocation ().getStr ()) {
-				       Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.getStr ());
-				   }
-			       }
-			       used.push_back (vr.getLocation ());
-		    ) else of (syntax::Var, vr, 
-			       for (auto & use : used) {
-				   if (use.getStr () == vr.getLocation ().getStr ()) {
-				       Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.getStr ());
-				   }
-			       }
-			       used.push_back (vr.getLocation ());
-		    );			       
+			    }
+			}
+			used.push_back (vr.getLocation ());
+		    } elof(syntax::Var, vr) {
+			for (auto & use : used) {
+			    if (use.getStr () == vr.getLocation ().getStr ()) {
+				Error::occur (vr.getLocation (), ExternalError::get (SHADOWING_DECL), use.getStr ());
+			    }
+			}
+			used.push_back (vr.getLocation ());
+		    } fo;	       
 		}		
 	    }
 	    

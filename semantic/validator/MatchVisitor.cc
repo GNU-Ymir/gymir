@@ -106,30 +106,27 @@ namespace semantic {
 
 	Generator MatchVisitor::validateMatch (const Generator & value, const Expression & matcher, bool & isMandatory) {
 	    match (matcher) {
-		of (syntax::Var, var,		    
+		of (syntax::Var, var) {		  
 		    if (var.getName () == Keys::UNDER) {
 			isMandatory = true;
 			return BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		    }
-		);
-				
-		of (syntax::Binary, bin,
+		} 				
+		elof (syntax::Binary, bin) 
 		    return validateMatchBinary (value, bin, isMandatory);
-		);
-		
-		of (syntax::VarDecl, decl,
-		    return validateMatchVarDecl (value, decl, isMandatory);
-		);
-
-		of (syntax::List, lst,
-		    return validateMatchList (value, lst, isMandatory);
-		);
 				
-		of (syntax::MultOperator, call, {
-			if (call.getEnd () == Token::RPAR) 
-			    return validateMatchCall (value, call, isMandatory);
+		elof (syntax::VarDecl, decl)
+		    return validateMatchVarDecl (value, decl, isMandatory);		
+
+		elof (syntax::List, lst)
+		    return validateMatchList (value, lst, isMandatory);		
+				
+		elof (syntax::MultOperator, call) {
+		    if (call.getEnd () == Token::RPAR) {
+			return validateMatchCall (value, call, isMandatory);
 		    }
-		);
+		} fo;
+		
 	    }
 	    return validateMatchAnything (value, matcher, isMandatory);
 	}
@@ -714,31 +711,28 @@ namespace semantic {
 	Generator MatchVisitor::validateMatchForCatcher (const Generator & value, const Expression & matcher, const std::vector <Generator> & possibleTypes, std::vector<Generator> & catchingTypes, bool & all) {
 	    bool isMandatory = false;
 	    match (matcher) {
-		of (syntax::Var, var,
+		of (syntax::Var, var) {
 		    if (var.getName () == Keys::UNDER) {
 			all = true;
 			return BoolValue::init (value.getLocation (), Bool::init (value.getLocation ()), true);
 		    }
-		);
-
-		of (syntax::VarDecl, decl,
+		}
+		elof (syntax::VarDecl, decl) 
 		    return validateMatchVarDeclForCatcher (value, decl, possibleTypes, catchingTypes, all);
-		);
-
-		of (syntax::MultOperator, call, {
+		
+		elof (syntax::MultOperator, call) {
 			if (call.getEnd () == Token::RPAR)
-			    return validateMatchCallForCatcher (value, call, possibleTypes, catchingTypes, all);
-		    }
-		);
+			return validateMatchCallForCatcher (value, call, possibleTypes, catchingTypes, all);
+		}	       
 
 		// All the following won't pass but we wan't to get a valid error
-		of (syntax::Binary, bin,
-		    return validateMatchBinary (value, bin, isMandatory); // Normal test
-		);
+		elof (syntax::Binary, bin) 
+		    return validateMatchBinary (value, bin, isMandatory); // Normal test		
 
-		of (syntax::List, lst,
+		elof (syntax::List, lst) 
 		    return validateMatchList (value, lst, isMandatory); // Normal test
-		);
+		
+		fo;
 	    }
 	    
 	    // Idem for that

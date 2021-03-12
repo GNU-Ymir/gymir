@@ -51,20 +51,20 @@ namespace semantic {
 	
 	void Visitor::generate (const Generator & gen) {
 	    match (gen) {
-		of (GlobalVar, var,
+		s_of (GlobalVar, var) {
 		    generateGlobalVar (var);
 		    return;
-		);
+		}
 
-		of (Frame, frame,
+		s_of (Frame, frame) {
 		    generateFrame (frame);
 		    return;
-		);
+		}
 
-		of (Class, cl,
+		s_of (Class, cl) {
 		    generateVtable (cl.getClassRef ());
 		    return;
-		);
+		}
 	    }
 	   	    
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -73,160 +73,143 @@ namespace semantic {
 	Tree Visitor::generateType (const Generator & gen) {
 	    Tree type = Tree::empty ();
 	    match (gen) {
-		of (Integer, i,
+		of (Integer, i) {
 		    type = Tree::intType (i.getSize (), i.isSigned ());
-		)		
-
-		else of (Void, v ATTRIBUTE_UNUSED,
+		}
+		elof_u (Void) {
 		    type = Tree::voidType ();
-		)
-
-		else of (Bool, b ATTRIBUTE_UNUSED,
+		}
+		elof_u (Bool) {
 		    type = Tree::boolType ();
-		)
-		
-		else of (Float, f,
+		}
+		elof (Float, f) {
 		    type = Tree::floatType (f.getSize ());
-		)
-
-		else of (Char, c,
+		}
+		elof (Char, c) {
 		    type = Tree::charType (c.getSize ());
-		)
-
-		else of (Array, array,
+		}
+		elof (Array, array) {
 		    type = Tree::staticArray (generateType (array.getInners () [0]), array.getSize ());
-		)
-
-		else of (Slice, slice,
+		}
+		elof (Slice, slice) {
 		    type = Tree::sliceType (generateType (slice.getInners () [0]));
-		)
-
-		else of (Tuple, tu, {
+		}
+		elof (Tuple, tu) {
+		    std::vector <Tree> inner;
+		    for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
+		    type = Tree::tupleType ({}, inner);
+		}
+		elof (TupleClosure, tu) {
+		    std::vector <Tree> inner;
+		    for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
+		    type = Tree::tupleType ({}, inner);
+		}	       	 
+		elof (StructRef, st) {
+		    static std::set <std::string> current;
+		    if (current.find (st.prettyString ()) == current.end ()) { // To prevent infinite loop for inner type validation
+			current.emplace (st.prettyString ());
+			auto gen = st.getRef ().to <semantic::Struct> ().getGenerator ();
 			std::vector <Tree> inner;
-			for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
-			type = Tree::tupleType ({}, inner);
-		    }
-		)
+			std::vector <std::string> fields;
+			for (auto & it : gen.to <generator::Struct> ().getFields ()) {
+			    inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
+			    fields.push_back (it.to <generator::VarDecl> ().getName ());
+			}
 
-		else of (TupleClosure, tu, {
-			std::vector <Tree> inner;
-			for (auto & it : tu.getInners ()) inner.push_back (generateType (it));
-			type = Tree::tupleType ({}, inner);
-		    }
-		)
-			 
-		else of (StructRef, st, {
-			static std::set <std::string> current;
-			if (current.find (st.prettyString ()) == current.end ()) { // To prevent infinite loop for inner type validation
-			    current.emplace (st.prettyString ());
-			    auto gen = st.getRef ().to <semantic::Struct> ().getGenerator ();
-			    std::vector <Tree> inner;
-			    std::vector <std::string> fields;
-			    for (auto & it : gen.to <generator::Struct> ().getFields ()) {
-				inner.push_back (generateType (it.to <generator::VarDecl> ().getVarType ()));
-				fields.push_back (it.to <generator::VarDecl> ().getName ());
-			    }
-
-			    if (inner.size () == 0) {
-				inner.push_back (Tree::charType (8));
-				fields.push_back ("_");
-			    }
+			if (inner.size () == 0) {
+			    inner.push_back (Tree::charType (8));
+			    fields.push_back ("_");
+			}
 			    
-			    type = Tree::tupleType (st.getRef ().getRealName (), fields, inner, st.getRef ().to <semantic::Struct> ().isUnion (), st.getRef ().to <semantic::Struct> ().isPacked ());
-			    current.erase (st.prettyString ());
-			} else return Tree::voidType ();
-		    }
-		)
-			 
-		else of (ClassRef, cl, {
-			type = generateClassType (cl);
-		    }
-		)
-			 
-		else of (EnumRef, en, {
-			auto _type = en.getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ().getType ();
-			type = generateType (_type);			
-		    })
-
-		else of (Pointer, pt, {
-			auto inner = generateType (pt.getInners ()[0]);
-			type = Tree::pointerType (inner);			    
-		    })
-		else of (ClassPtr, pt, {
-			auto inner = generateType (pt.getInners ()[0]);
-			type = Tree::pointerType (inner);
-		    })
-		else of (Range, rg, {
-		       std::vector <Tree> inner;
-		       inner.push_back (generateType (rg.getInners ()[0]));
-		       inner.push_back (generateType (rg.getInners ()[0]));
-		       if (rg.getInners () [0].is <Float> ())
-			   inner.push_back (generateType (rg.getInners ()[0]));
-		       else if (rg.getInners ()[0].is <Integer> ()) {
-			   inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Integer> ().getSize (), true)));
-		       } else if (rg.getInners ()[0].is <Char> ()) {
-			   inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Char> ().getSize (), true)));
-		       } else
-			   Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
-
-		       inner.push_back (generateType (Bool::init (rg.getLocation ())));
-		       type = Tree::tupleType ({Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, inner);
-		   }
-	       ) else of (FuncPtr, fn, {
-		       auto retType = generateType (fn.getReturnType ());
-		       std::vector <Tree> params;
-		       for (auto & it : fn.getParamTypes ())
-			   params.push_back (generateType (it));
-		       type = Tree::pointerType (
-			   Tree::functionType (retType, params)
-		       );
-		   }
-	       ) else of (Closure, c, {
-		       std::vector <Tree> inner;
-		       std::vector <std::string> fields = c.getNames ();
-		       for (auto & it : c.getInners ()) {
-			   inner.push_back (generateType (it));
+			type = Tree::tupleType (st.getRef ().getRealName (), fields, inner, st.getRef ().to <semantic::Struct> ().isUnion (), st.getRef ().to <semantic::Struct> ().isPacked ());
+			current.erase (st.prettyString ());
+		    } else return Tree::voidType ();
+		}	    			 
+		elof (ClassRef, cl) {
+		    type = generateClassType (cl);
+		}					 
+		elof (EnumRef, en) {
+		    auto _type = en.getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ().getType ();
+		    type = generateType (_type);			
+		}
+		elof (Pointer, pt) {
+		    auto inner = generateType (pt.getInners ()[0]);
+		    type = Tree::pointerType (inner);			    
+		}
+		elof (ClassPtr, pt) {
+		    auto inner = generateType (pt.getInners ()[0]);
+		    type = Tree::pointerType (inner);
+		}
+		elof (Range, rg) {
+		    std::vector <Tree> inner;
+		    inner.push_back (generateType (rg.getInners ()[0]));
+		    inner.push_back (generateType (rg.getInners ()[0]));
+		    if (rg.getInners () [0].is <Float> ())
+		    inner.push_back (generateType (rg.getInners ()[0]));
+		    else if (rg.getInners ()[0].is <Integer> ()) {
+			inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Integer> ().getSize (), true)));
+		    } else if (rg.getInners ()[0].is <Char> ()) {
+			inner.push_back (generateType (Integer::init (rg.getInners ()[0].getLocation (), rg.getInners () [0].to <Char> ().getSize (), true)));
+		    } else
+		    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
+		    
+		    inner.push_back (generateType (Bool::init (rg.getLocation ())));
+		    type = Tree::tupleType ({Range::FST_NAME, Range::SCD_NAME, Range::STEP_NAME, Range::FULL_NAME}, inner);
+		}
+		elof (FuncPtr, fn) {
+		    auto retType = generateType (fn.getReturnType ());
+		    std::vector <Tree> params;
+		    for (auto & it : fn.getParamTypes ())
+		    params.push_back (generateType (it));
+		    type = Tree::pointerType (
+			Tree::functionType (retType, params)
+			);
+		}
+		elof (Closure, c) {
+		    std::vector <Tree> inner;
+		    std::vector <std::string> fields = c.getNames ();
+		    for (auto & it : c.getInners ()) {
+			inner.push_back (generateType (it));
 		       }
-		       type = Tree::tupleType (fields, inner);
-		   }
-	       ) else of (Delegate, d, {
-		       std::vector <Tree> inner;
-		       inner.push_back (Tree::pointerType (Tree::voidType ()));
-		       if (d.getInners ()[0].is <FrameProto> ()) {
-			   auto & proto = d.getInners ()[0];
-			   auto params = proto.to <FrameProto> ().getParameters ();
-			   auto ret = proto.to <FrameProto> ().getReturnType ();
-			   std::vector <Generator> paramTypes;
-			   for (auto & it : params) {
-			       paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
-			   }
+		    type = Tree::tupleType (fields, inner);
+		}
+		elof (Delegate, d) {
+		    std::vector <Tree> inner;
+		    inner.push_back (Tree::pointerType (Tree::voidType ()));
+		    if (d.getInners ()[0].is <FrameProto> ()) {
+			auto & proto = d.getInners ()[0];
+			auto params = proto.to <FrameProto> ().getParameters ();
+			auto ret = proto.to <FrameProto> ().getReturnType ();
+			std::vector <Generator> paramTypes;
+			for (auto & it : params) {
+			    paramTypes.push_back (it.to <generator::ProtoVar> ().getType ());
+			}
 	    
-			   inner.push_back (generateType (FuncPtr::init (proto.getLocation (), ret, paramTypes)));
-		       } else {
-			   inner.push_back (generateType (d.getInners () [0]));
-		       }
-		       type = Tree::tupleType ({}, inner); // delegate are unnamed tuple .0 closure, .1 funcptr
-		   }
-	       ) else of (Option, o, {
-		       auto inner = generateType (o.getInners ()[0]);
-		       auto errorType = generateType (o.getInners ()[1]);
-		       auto boolType = Tree::boolType ();
-		       std::vector <std::string> names;
-		       names.push_back (Option::TYPE_FIELD);
-		       if (!o.getInners ()[0].is<Void> ())
-			   names.push_back (Option::VALUE_FIELD);
+			inner.push_back (generateType (FuncPtr::init (proto.getLocation (), ret, paramTypes)));
+		    } else {
+			inner.push_back (generateType (d.getInners () [0]));
+		    }
+		    type = Tree::tupleType ({}, inner); // delegate are unnamed tuple .0 closure, .1 funcptr
+		}
+		elof (Option, o) {
+		    auto inner = generateType (o.getInners ()[0]);
+		    auto errorType = generateType (o.getInners ()[1]);
+		    auto boolType = Tree::boolType ();
+		    std::vector <std::string> names;
+		    names.push_back (Option::TYPE_FIELD);
+		    if (!o.getInners ()[0].is<Void> ())
+		    names.push_back (Option::VALUE_FIELD);
 		       
-		       names.push_back (Option::ERROR_FIELD);
+		    names.push_back (Option::ERROR_FIELD);
 		       
-		       std::vector <Tree> unions;
-		       if (!o.getInners ()[0].is <Void> ())
-			   unions.push_back (inner);
+		    std::vector <Tree> unions;
+		    if (!o.getInners ()[0].is <Void> ())
+		    unions.push_back (inner);
 		       
-		       unions.push_back (errorType);
+		    unions.push_back (errorType);
 		       
-		       type = Tree::optionType (names, {boolType}, unions);
-		   }
-	       );
+		    type = Tree::optionType (names, {boolType}, unions);
+		} fo;	       
 	    }
 
 	    if (type.isEmpty ())
@@ -267,37 +250,30 @@ namespace semantic {
 		
 	Tree Visitor::generateInitValueForType (const Generator & type) {
 	    match (type) {
-
-		of (Integer, i,
+		of (Integer, i) {
 		    return Tree::buildIntCst (i.getLocation (), Integer::INIT, generateType (type));
-		);
-
-		of (Void, v ATTRIBUTE_UNUSED,
+		} 
+		elof_u (Void) {
 		    Ymir::Error::halt ("%(r) - reaching impossible point - value for a void", "Critical");
-		);
-
-		of (Bool, b,
+		}
+		elof (Bool, b) {
 		    return Tree::buildBoolCst (b.getLocation (), Bool::INIT);
-		);
-
-		of (Float, f,
+		}
+		elof (Float, f) {
 		    return Tree::buildFloatCst (f.getLocation (), Float::INIT, generateType (type));
-		);
-
-		of (Char, c,
+		}
+		elof (Char, c) {
 		    return Tree::buildCharCst (c.getLocation (), Char::INIT, generateType (type));
-		);
-
-		of (Array, a,
+		}
+		elof (Array, a) {
 		    return Tree::constructIndexed0 (
 			a.getLocation (),
 			generateType (type),
 			generateInitValueForType (a.getInners () [0]),
 			a.getSize ()
-		    );
-		);
-
-		of (Slice, s,
+			);
+		}		
+		elof (Slice, s) {
 		    return Tree::constructField (
 			s.getLocation (),
 			generateType (type),
@@ -307,7 +283,7 @@ namespace semantic {
 			    Tree::buildIntCst (s.getLocation (), Integer::INIT, Tree::pointerType (generateType (s.getInners () [0])))
 			}
 		    );
-		);
+		} fo;
 	    }	    
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");
@@ -731,253 +707,191 @@ namespace semantic {
 	
 	Tree Visitor::generateValueInner (const Generator & gen) {
 	    match (gen) {
-		of (Block, block,
-		    return generateBlock (block);
-		    );
+		s_of (Block, block) 
+		    return generateBlock (block);		    
 
-		of (Set, set,
-		    return generateSet (set);
-		    );
+		s_of (Set, set) 
+		    return generateSet (set);		    
 		
-		of (Fixed, fixed,
+		s_of (Fixed, fixed)
 		    return generateFixed (fixed);
-		    );
 
-		of (BoolValue, b,
-		    return generateBool (b);
-		    );
+		s_of (BoolValue, b) 
+		    return generateBool (b);		
 
-		of (FloatValue, f,
-		    return generateFloat (f);
-		    );
+		s_of (FloatValue, f)
+		    return generateFloat (f);		
 
-		of (CharValue, c,
-		    return generateChar (c);
-		    );
+		s_of (CharValue, c)
+		    return generateChar (c);		    
 		
-		of (Affect, aff,
-		    return generateAffect (aff);
-		    );
+		s_of (Affect, aff)
+		    return generateAffect (aff);		
 		
-		of (BinaryInt, i,
-		    return generateBinaryInt (i);
-		    );
+		s_of (BinaryInt, i)
+		    return generateBinaryInt (i);		    
 
-		of (BinaryBool, b,
-		    return generateBinaryBool (b);
-		    );
+		s_of (BinaryBool, b)
+		    return generateBinaryBool (b);		    
 
-		of (BinaryFloat, f,
-		    return generateBinaryFloat (f);
-		    );
+		s_of (BinaryFloat, f)
+		    return generateBinaryFloat (f);		    
 			 
-		of (BinaryChar, ch,
-		    return generateBinaryChar (ch);
-		    );
+		s_of (BinaryChar, ch)
+		    return generateBinaryChar (ch);		    
 			 
-		of (BinaryPtr, ptr,
-		    return generateBinaryPtr (ptr);
-		    );
+		s_of (BinaryPtr, ptr)
+		    return generateBinaryPtr (ptr);		    
 			 
-		of (VarRef, var,
-		    return generateVarRef (var);
-		    );
+		s_of (VarRef, var)
+		    return generateVarRef (var);		    
 
-		of (VarDecl, decl,
-		    return generateVarDecl (decl);
-		    );
+		s_of (VarDecl, decl)
+		    return generateVarDecl (decl);		    
 
-		of (Referencer, _ref,
-		    return generateReferencer (_ref);
-		    );
+		s_of (Referencer, _ref)
+		    return generateReferencer (_ref);		    
 
-		of (Addresser, addr,
-		    return generateAddresser (addr);
-		    );
+		s_of (Addresser, addr)
+		    return generateAddresser (addr);		    
 
-		of (Conditional, cond,
-		    return generateConditional (cond);
-		    );
+		s_of (Conditional, cond)
+		    return generateConditional (cond);		    
 
-		of (Loop, loop,
-		    return generateLoop (loop);
-		    );
+		s_of (Loop, loop)
+		    return generateLoop (loop);		    
 
-		of (Break, br,
-		    return generateBreak (br);
-		    );
+		s_of (Break, br)
+		    return generateBreak (br);		    
 		
-		of (ArrayValue, val,
-		    return generateArrayValue (val);
-		    );
+		s_of (ArrayValue, val)
+		    return generateArrayValue (val);	    
+		
+		s_of (Copier, copy)
+		    return generateCopier (copy);		    
 
-		of (Copier, copy,
-		    return generateCopier (copy);
-		    );
-
-		of (SizeOf, size,
-		    return generateSizeOf (size);
-		    );
+		s_of (SizeOf, size)
+		    return generateSizeOf (size);		    
 			 
-		of (Aliaser, al,
-		    return generateAliaser (al);
-		    );
+		s_of (Aliaser, al)
+		    return generateAliaser (al);		    
 
-		of (None, none ATTRIBUTE_UNUSED,
+		s_of_u (None)
 		    return Tree::empty ();
-		    );
 
-		of (ArrayAccess, access,
-		    return generateArrayAccess (access);
-		    );
+		s_of (ArrayAccess, access)
+		    return generateArrayAccess (access);		    
 
-		of (SliceAccess, access,
-		    return generateSliceAccess (access);
-		    );
+		s_of (SliceAccess, access)
+		    return generateSliceAccess (access);		    
 		
-                of (SliceConcat, sc,
-		    return generateSliceConcat (sc);
-		    );
+                s_of (SliceConcat, sc)
+		    return generateSliceConcat (sc);		    
 			     
-		of (UnaryBool, ub,
+		s_of (UnaryBool, ub)
 		    return generateUnaryBool (ub);
-		    );
 
-		of (UnaryInt, ui,
+		s_of (UnaryInt, ui)
 		    return generateUnaryInt (ui);
-		    );
 
-		of (UnaryFloat, uf,
+		s_of (UnaryFloat, uf)
 		    return generateUnaryFloat (uf);
-		    );
 
-		of (UnaryPointer, uf,
+		s_of (UnaryPointer, uf)
 		    return generateUnaryPointer (uf);
-		    );
 
-		of (TupleValue, tu,
+		s_of (TupleValue, tu)
 		    return generateTupleValue (tu);
-		    );
 
-		of (StringValue, str,
+		s_of (StringValue, str)
 		    return generateStringValue (str);
-		    );
 			 
-		of (Call, cl,
+		s_of (Call, cl)
 		    return generateCall (cl);		
-		    );
 			 
-		of (ClassCst, cs,
+		s_of (ClassCst, cs)
 		    return generateClassCst (cs);
-		    );
 			 
-		of (FrameProto, pr,
+		s_of (FrameProto, pr)
 		    return generateFrameProto (pr);		
-		    );
 
-		of (ConstructorProto, pr,
+		s_of (ConstructorProto, pr)
 		    return generateConstructorProto (pr);
-		    );
 
-		of (TupleAccess, acc,
+		s_of (TupleAccess, acc)
 		    return generateTupleAccess (acc);		
-		    );
 
-		of (StructAccess, acc,
+		s_of (StructAccess, acc)
 		    return generateStructAccess (acc);					 
-		    );
 
-		of (FieldOffset, off,
+		s_of (FieldOffset, off)
 		    return generateFieldOffset (off);
-		    );
 
-		of (StructCst, cst,
+		s_of (StructCst, cst)
 		    return generateStructCst (cst);	       
-		    );
 
-		of (UnionCst, cst,
+		s_of (UnionCst, cst)
 		    return generateUnionCst (cst);	       
-		    );
 
-		of (StructRef, rf ATTRIBUTE_UNUSED,
+		s_of_u (StructRef)
 		    return Tree::empty ();
-		    );
 
-		of (Return, rt,
+		s_of (Return, rt)
 		    return generateReturn (rt);
-		    );
 
-		of (RangeValue, rg,
+		s_of (RangeValue, rg)
 		    return generateRangeValue (rg);
-		    );
 
-		of (SliceValue, sl,
+		s_of (SliceValue, sl)
 		    return generateSliceValue (sl);
-		    );
 			 
-		of (DelegateValue, dg,
+		s_of (DelegateValue, dg)
 		    return generateDelegateValue (dg);
-		    );
 			 
-		of (Cast, cast,
+		s_of (Cast, cast)
 		    return generateCast (cast);
-		    );
 
-		of (AtomicLocker, lock,
+		s_of (AtomicLocker, lock)
 		    return generateAtomicLocker (lock);
-		    );
 
-		of (AtomicUnlocker, lock,
+		s_of (AtomicUnlocker, lock)
 		    return generateAtomicUnlocker (lock);
-		    );
 			 
-		of (ArrayAlloc, alloc,
+		s_of (ArrayAlloc, alloc)
 		    return generateArrayAlloc (alloc);
-		    );
 
-		of (NullValue, nl,
+		s_of (NullValue, nl)
 		    return generateNullValue (nl);
-		    );
 
-		of (UniqValue, uv,
+		s_of (UniqValue, uv)
 		    return generateUniqValue (uv);
-		    );
 
-		of (Throw, th,
+		s_of (Throw, th)
 		    return generateThrow (th);
-		    );
 
-		of (Panic, pc,
+		s_of (Panic, pc)
 		    return generatePanic (pc);
-		    );
 		
-		of (ExitScope, ex,
+		s_of (ExitScope, ex)
 		    return generateExitScope (ex);
-		    );
 
-		of (SuccessScope, succ,
+		s_of (SuccessScope, succ)
 		    return generateSuccessScope (succ);
-		    );
 			 
-		of (GlobalConstant, cst,
+		s_of (GlobalConstant, cst)
 		    return generateGlobalConstant (cst);
-		    );
 
-		of (VtableAccess, acc,
+		s_of (VtableAccess, acc)
 		    return generateVtableAccess (acc);
-		    );
 
-		of (ThrowBlock, bl,
+		s_of (ThrowBlock, bl)
 		    return generateThrowBlock (bl);
-		    );
 
-	        of (OptionValue, vl,
+	        s_of (OptionValue, vl)
 		    return generateOptionValue (vl);
-		    );
 
-		of (FakeValue, fv,
+		s_of (FakeValue, fv)
 		    return generateFakeValue (fv);
-		    );
 	    }	    
 	    
 	    println (gen.prettyString ());
@@ -2693,39 +2607,39 @@ namespace semantic {
 
 	std::string Visitor::identify (const Generator & gen) {
 	    match (gen) {
-		of_u (Array, return "Array";);
-		of_u (Bool, return "Bool";);
-		of_u (Char, return "Char";);
-		of_u (Float, return "Float";);
-		of_u (Integer, return "Integer";);
-		of_u (Slice, return "Slice";);
-		of_u (Void, return "Void";);
-		of_u (Affect, return "Affect";);
-		of_u (Aliaser, return "Aliaser";);
-		of_u (ArrayAccess, return "ArrayAccess";);
-		of_u (ArrayValue, return "ArrayValue";);
-		of_u (BinaryBool, return "BinaryBool";);
-		of_u (BinaryFloat, return "BinaryFloat";);
-		of_u (BinaryInt, return "BinaryInt";);
-		of_u (Binary, return "Binary";);
-		of_u (Block, return "Block";);
-		of_u (BoolValue, return "BoolValue";);
-		of_u (CharValue, return "CharValue";);
-		of_u (Conditional, return "Conditional";);
-		of_u (Copier, return "Copier";);
-		of_u (Fixed, return "Fixed";);
-		of_u (FloatValue, return "FloatValue";);
-		of_u (None, return "None";);
-		of_u (ParamVar, return "ParamVar";);
-		of_u (Referencer, return "Referencer";);
-		of_u (Set, return "Set";);
-		of_u (SliceAccess, return "SliceAccess";);
-		of_u (UnaryBool, return "UnaryBool";);
-		of_u (UnaryFloat, return "UnaryFloat";);
-		of_u (UnaryInt, return "UnaryInt";);
-		of_u (Unary, return "Unary";);
-		of_u (VarDecl, return "VarDecl";);
-		of_u (VarRef, return "VarRef";);
+		s_of_u (Array) return "Array";
+		s_of_u (Bool) return "Bool";
+		s_of_u (Char) return "Char";
+		s_of_u (Float) return "Float";
+		s_of_u (Integer) return "Integer";
+		s_of_u (Slice) return "Slice";
+		s_of_u (Void) return "Void";
+		s_of_u (Affect) return "Affect";
+		s_of_u (Aliaser) return "Aliaser";
+		s_of_u (ArrayAccess) return "ArrayAccess";
+		s_of_u (ArrayValue) return "ArrayValue";
+		s_of_u (BinaryBool) return "BinaryBool";
+		s_of_u (BinaryFloat) return "BinaryFloat";
+		s_of_u (BinaryInt) return "BinaryInt";
+		s_of_u (Binary) return "Binary";
+		s_of_u (Block) return "Block";
+		s_of_u (BoolValue) return "BoolValue";
+		s_of_u (CharValue) return "CharValue";
+		s_of_u (Conditional) return "Conditional";
+		s_of_u (Copier) return "Copier";
+		s_of_u (Fixed) return "Fixed";
+		s_of_u (FloatValue) return "FloatValue";
+		s_of_u (None) return "None";
+		s_of_u (ParamVar) return "ParamVar";
+		s_of_u (Referencer) return "Referencer";
+		s_of_u (Set) return "Set";
+		s_of_u (SliceAccess) return "SliceAccess";
+		s_of_u (UnaryBool) return "UnaryBool";
+		s_of_u (UnaryFloat) return "UnaryFloat";
+		s_of_u (UnaryInt) return "UnaryInt";
+		s_of_u (Unary) return "Unary";
+		s_of_u (VarDecl) return "VarDecl";
+		s_of_u (VarRef) return "VarRef";
 	    }
 	    return "empty";
 	}

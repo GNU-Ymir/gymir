@@ -269,18 +269,17 @@ namespace semantic {
 
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
 	    match (type) {
-		of (generator::Enum, en, return validateEnumFieldNames (prg, en));
-		of (generator::Struct, str, return validateStructFieldNames (prg, str));
-		of (generator::Class, cl, return validateClassFieldNames (prg, cl));
-		of (generator::EnumRef, eref, return validateEnumFieldNames (prg, eref.getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ()));
-		of (generator::StructRef, sref, return validateStructFieldNames (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ()));
-		of (generator::ClassRef, cref, return validateClassFieldNames (prg, cref.getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ()));
-		of (generator::ClassPtr, cptr, return validateClassFieldNames (prg, cptr.getClassRef ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ()));
-		of (generator::Type, t, {
-			if (t.getProxy ().is <generator::Enum> ()) return validateEnumFieldNames (prg, t.getProxy ().to <generator::Enum> ());
-			if (t.getProxy ().is <generator::EnumRef> ()) return validateEnumFieldNames (prg, t.getProxy ().to <generator::EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ());
-		    }
-		);
+		s_of (generator::Enum, en) return validateEnumFieldNames (prg, en);
+		s_of (generator::Struct, str) return validateStructFieldNames (prg, str);
+		s_of (generator::Class, cl) return validateClassFieldNames (prg, cl);
+		s_of (generator::EnumRef, eref) return validateEnumFieldNames (prg, eref.getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ());
+		s_of (generator::StructRef, sref) return validateStructFieldNames (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ());
+		s_of (generator::ClassRef, cref) return validateClassFieldNames (prg, cref.getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ());
+		s_of (generator::ClassPtr, cptr) return validateClassFieldNames (prg, cptr.getClassRef ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ());
+		s_of (generator::Type, t) {
+		    if (t.getProxy ().is <generator::Enum> ()) return validateEnumFieldNames (prg, t.getProxy ().to <generator::Enum> ());
+		    if (t.getProxy ().is <generator::EnumRef> ()) return validateEnumFieldNames (prg, t.getProxy ().to <generator::EnumRef> ().getRef ().to <semantic::Enum> ().getGenerator ().to <generator::Enum> ());
+		}		
 	    }
 	    
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (TYPE_NO_FIELD), type.prettyString ());
@@ -364,8 +363,8 @@ namespace semantic {
 
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
 	    match (type) {
-		of (generator::Struct, str, return validateStructFieldOffsets (prg, str));
-		of (generator::StructRef, sref, return validateStructFieldOffsets (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ()));
+		s_of (generator::Struct, str) return validateStructFieldOffsets (prg, str);
+		s_of (generator::StructRef, sref) return validateStructFieldOffsets (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ());
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
@@ -404,10 +403,10 @@ namespace semantic {
 
 	    auto value = this-> _context.validateValue (prg.getContent ()[0]);
 	    match (value.to <Value> ().getType ()) {
-		of (StructRef, str ATTRIBUTE_UNUSED, return validateStructTupleOf (prg, value));
-		of (ClassPtr, cptr ATTRIBUTE_UNUSED, return validateClassTupleOf (prg, value));
-		of (ClassRef, cref ATTRIBUTE_UNUSED, return validateClassTupleOf (prg, value));
-		of (Array, arr ATTRIBUTE_UNUSED, return validateArrayTupleOf (prg, value));
+		s_of_u (StructRef) return validateStructTupleOf (prg, value);
+		s_of_u (ClassPtr) return validateClassTupleOf (prg, value);
+		s_of_u (ClassRef) return validateClassTupleOf (prg, value);
+		s_of_u (Array) return validateArrayTupleOf (prg, value);
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
@@ -496,8 +495,8 @@ namespace semantic {
 
 	    auto value = this-> _context.validateValue (prg.getContent ()[0]);
 	    match (value.to <Value> ().getType ()) {
-		of (ClassPtr, cptr ATTRIBUTE_UNUSED, return validateClassLocalTupleOf (prg, value));
-		of (ClassRef, cref ATTRIBUTE_UNUSED, return validateClassLocalTupleOf (prg, value));
+		s_of_u (ClassPtr) return validateClassLocalTupleOf (prg, value);
+		s_of_u (ClassRef) return validateClassLocalTupleOf (prg, value);
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
@@ -553,15 +552,15 @@ namespace semantic {
 	    if (prg.getContent ().size () == 1) {
 		auto type = this-> _context.validateType (prg.getContent ()[0]);
 		match (type) {
-		    of (generator::Struct, str, return validateStructHasDefault (prg, str));
-		    of (generator::StructRef, sref, return validateStructHasDefault (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ()));
+		    s_of (generator::Struct, str) return validateStructHasDefault (prg, str);
+		    s_of (generator::StructRef, sref) return validateStructHasDefault (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> ());
 		}
 	    } else {
 		auto type = this-> _context.validateType (prg.getContent ()[0]);
 		auto name = this-> _context.retreiveValue (this-> _context.validateValue (prg.getContent ()[1]));
 		match (type) {
-		    of (generator::Struct, str, return validateStructHasDefaultNamed (prg, str, name));
-		    of (generator::StructRef, sref, return validateStructHasDefaultNamed (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name));
+		    s_of (generator::Struct, str) return validateStructHasDefaultNamed (prg, str, name);
+		    s_of (generator::StructRef, sref) return validateStructHasDefaultNamed (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
 		}
 	    }
 
@@ -647,8 +646,8 @@ namespace semantic {
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
 	    auto name = this-> _context.retreiveValue (this-> _context.validateValue (prg.getContent ()[1]));
 	    match (type) {
-		of (generator::Struct, str, return validateStructDefaultValue (prg, str, name));
-		of (generator::StructRef, sref, return validateStructDefaultValue (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name));
+		s_of (generator::Struct, str) return validateStructDefaultValue (prg, str, name);
+		s_of (generator::StructRef, sref) return validateStructDefaultValue (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
@@ -717,8 +716,8 @@ namespace semantic {
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
 	    auto name = this-> _context.retreiveValue (this-> _context.validateValue (prg.getContent ()[1]));
 	    match (type) {
-		of (generator::Struct, str, return validateStructFieldType (prg, str, name));
-		of (generator::StructRef, sref, return validateStructFieldType (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name));
+		s_of (generator::Struct, str) return validateStructFieldType (prg, str, name);
+		s_of (generator::StructRef, sref) return validateStructFieldType (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());
@@ -782,8 +781,8 @@ namespace semantic {
 	    auto type = this-> _context.validateType (prg.getContent ()[0]);
 	    auto name = this-> _context.retreiveValue (this-> _context.validateValue (prg.getContent ()[1]));
 	    match (type) {
-		of (generator::Struct, str, return validateStructHasField (prg, str, name));
-		of (generator::StructRef, sref, return validateStructHasField (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name));
+		s_of (generator::Struct, str) return validateStructHasField (prg, str, name);
+		s_of (generator::StructRef, sref) return validateStructHasField (prg, sref.getRef ().to <semantic::Struct> ().getGenerator ().to <generator::Struct> (), name);
 	    }
 
 	    Ymir::Error::occur (prg.getLocation (), ExternalError::get (MALFORMED_PRAGMA), prg.getLocation ().getStr ());

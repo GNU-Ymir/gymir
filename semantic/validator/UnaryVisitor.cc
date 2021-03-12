@@ -27,9 +27,9 @@ namespace semantic {
 
 	    if (op == Unary::Operator::ADDR) { // Pointer
 		match (operand) {
-		    of (FrameProto, proto ATTRIBUTE_UNUSED,
+		    of_u (FrameProto)
 			return validateFunctionPointer (expression, operand);
-		    ) else {
+		    elfo {
 			if (operand.is <MultSym> ()) {
 			    auto gen = validateDelegatePointer (expression, operand);
 			    if (!gen.isEmpty ()) return gen;
@@ -51,25 +51,21 @@ namespace semantic {
 		}
 	    } else {	    	
 		match (operand.to <Value> ().getType ()) {
-		    of (Bool, b ATTRIBUTE_UNUSED,
-			return validateBool (expression, operand);
-		    );
+		    s_of_u (Bool)
+			return validateBool (expression, operand);		    
+		    
+		    s_of_u (Float)
+			return validateFloat (expression, operand);		    
 
-		    of (Float, f ATTRIBUTE_UNUSED,
-			return validateFloat (expression, operand);
-		    );
-
-		    of (Integer, i ATTRIBUTE_UNUSED,
+		    s_of_u (Integer)
 			return validateInt (expression, operand);
-		    );
-
-		    of (Pointer, p ATTRIBUTE_UNUSED,			
+		    
+		    s_of_u (Pointer)
 			return validatePointer (expression, operand);
-		    );
-
-		    of (ClassPtr, p ATTRIBUTE_UNUSED,
+		    		    
+		    s_of_u (ClassPtr)
 			return validateClass (expression, operand);
-		    );
+		    
 		}
 	    }
 	    
@@ -257,10 +253,11 @@ namespace semantic {
 	void UnaryVisitor::error (const syntax::Unary & un, const generator::Generator & left) {
 	    std::string leftName;
 	    match (left) {
-		of (FrameProto, proto, leftName = proto.getName ())
-		else of (generator::Struct, str, leftName = str.getName ())
-		else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
-		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
+		of (FrameProto, proto) leftName = proto.getName ();
+		elof (generator::Struct, str) leftName = str.getName ();
+		elof (MultSym,    sym)   leftName = sym.getLocation ().getStr ();
+		elof (Value,      val)   leftName = val.getType ().to <Type> ().getTypeName ();
+		fo;
 	    }
 	    
 	    Ymir::Error::occur (un.getLocation (),
@@ -273,10 +270,11 @@ namespace semantic {
 	void UnaryVisitor::error (const syntax::Unary & un, const generator::Generator & left, const std::list <Error::ErrorMsg> & errors) {
 	    std::string leftName;
 	    match (left) {
-		of (FrameProto, proto, leftName = proto.getName ())
-		else of (generator::Struct, str, leftName = str.getName ())
-		else of (MultSym,    sym,   leftName = sym.getType ().prettyString ())
-		else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
+		of (FrameProto, proto) leftName = proto.getName ();
+		elof (generator::Struct, str) leftName = str.getName ();
+		elof (MultSym,    sym)   leftName = sym.getType ().prettyString ();
+		elof (Value,      val)   leftName = val.getType ().to <Type> ().getTypeName ();
+		fo;
 	    }
 	    
 	    Ymir::Error::occurAndNote (un.getLocation (),
@@ -290,10 +288,10 @@ namespace semantic {
 	
 	Unary::Operator UnaryVisitor::toOperator (const lexing::Word & loc) {
 	    string_match (loc.getStr ()) {
-		eq (Token::NOT, return Unary::Operator::NOT;);
-		eq (Token::MINUS, return Unary::Operator::MINUS;);
-		eq (Token::STAR, return Unary::Operator::UNREF;);
-		eq (Token::AND, return Unary::Operator::ADDR;);
+		eq (Token::NOT) return Unary::Operator::NOT;
+		eq (Token::MINUS) return Unary::Operator::MINUS;
+		eq (Token::STAR) return Unary::Operator::UNREF;
+		eq (Token::AND) return Unary::Operator::ADDR;
 	    }	    
 
 	    Ymir::Error::halt ("%(r) - reaching impossible point", "Critical");

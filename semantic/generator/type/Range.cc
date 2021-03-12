@@ -42,13 +42,11 @@ namespace semantic {
 
 	Generator Range::getStepType () const {
 	    match (this-> getInners ()[0]) {
-		of (Integer, in, {
-			return Integer::init (in.getLocation (), in.getSize (), true);
-		    }
-		) else of (Char, ch, {
-			return Integer::init (ch.getLocation (), ch.getSize (), true);		    
-		    }
-		);
+		of (Integer, in) {
+		    return Integer::init (in.getLocation (), in.getSize (), true);
+		} elof (Char, ch) {
+		    return Integer::init (ch.getLocation (), ch.getSize (), true);		    
+		} fo;
 	    }
 	    return this-> getInners ()[0];
 	}

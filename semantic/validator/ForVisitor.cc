@@ -26,28 +26,26 @@ namespace semantic {
 	    auto value = this-> _context.validateValue (expression.getIter ());
 
 	    match (value.to <Value> ().getType ()) {
-		of (Array, a,
+		of (Array, a) {
 		    auto type = Slice::init (expression.getLocation (), a.getInners ()[0]);
 		    type = Type::init (type.to<Type> (), a.isMutable ());
 		    
 		    return validateSlice (expression, Aliaser::init (expression.getLocation (), type, value));
-		    );
+		}
 		
-		of (Slice, s ATTRIBUTE_UNUSED,
-		    return validateSlice (expression, value);
-		    );
+		elof_u (Slice) 
+		    return validateSlice (expression, value);		    
 		
-		of (Range, r ATTRIBUTE_UNUSED,
-		    return validateRange (expression, value);
-		    );
+		elof_u (Range)
+		    return validateRange (expression, value);		    
 
-		of (Tuple, t ATTRIBUTE_UNUSED,
-		    return validateTuple (expression, value);
-		    );
+		elof_u (Tuple)
+		    return validateTuple (expression, value);		    
 		
-		of (ClassPtr, p ATTRIBUTE_UNUSED,
+		elof_u (ClassPtr)
 		    return validateClass (expression, value);
-		    );
+		
+		fo;
 		
 	    }	    
 	    
@@ -58,9 +56,9 @@ namespace semantic {
 	Generator ForVisitor::validateCte (const syntax::For & expression) {
 	    auto value = this-> _context.validateValue (expression.getIter ());
 	    match (value.to <Value> ().getType ()) {		
-		of (Range, r ATTRIBUTE_UNUSED,
+		of_u (Range)
 		    return validateRange (expression, value, true);
-		    );
+		fo;
 	    }
 	    
 	    error (expression, value, true);

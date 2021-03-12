@@ -23,124 +23,94 @@ namespace semantic {
 	    
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
-	    match (gen) {
-		of (Fixed, f ATTRIBUTE_UNUSED,
-		    return gen;
-		);
-		    
-		of (ArrayValue, v ATTRIBUTE_UNUSED,
-		    return gen;
-		);
-			 
-		of (CharValue, c ATTRIBUTE_UNUSED,
-		    return gen;
-		);
-			     
-		of (FloatValue, f ATTRIBUTE_UNUSED,
-		    return gen;
-		);
-
-		of (BoolValue, f ATTRIBUTE_UNUSED,
-		    return gen;
-		);
-			 
-		of (None, n ATTRIBUTE_UNUSED,
-		    return gen;
-		);
-
-		of (StringValue, s ATTRIBUTE_UNUSED,
-		    return gen;
-		);
-
-		of (RangeValue, rng,
-		    return executeRangeValue (rng);
-		);
-
-		of (SliceConcat, slc,
-		    return executeSliceConcat (slc);
-		);
+		match (gen) {
+		    s_of_u (Fixed)
+			return gen;
 		
-		of (Affect, aff,
-		    return executeAffect (aff);
-		);
+		    s_of_u (ArrayValue)
+			return gen;
+		
+		    s_of_u (CharValue)
+			return gen;
+					     
+		    s_of_u (FloatValue)
+			return gen;
+		
+		    s_of_u (BoolValue)
+			return gen;
+		
+		    s_of_u (None)
+			return gen;
+		
+		    s_of_u (StringValue)
+			return gen;
+		
+		    s_of (RangeValue, rng)
+			return executeRangeValue (rng);
 
-		of (ArrayAccess, arr,
-		    return executeArrayAccess (arr);
-		);
+		    s_of (SliceConcat, slc)
+			return executeSliceConcat (slc);
+		
+		    s_of (Affect, aff)
+			return executeAffect (aff);
+		
+		    s_of (ArrayAccess, arr)
+			return executeArrayAccess (arr);		
 
-		of (BinaryInt, bin,
-		    return executeBinaryInt (bin);
-		);
+		    s_of (BinaryInt, bin)
+			return executeBinaryInt (bin);		
 
-		of (BinaryBool, bin,
-		    return executeBinaryBool (bin);
-		);
+		    s_of (BinaryBool, bin)
+			return executeBinaryBool (bin);		
 
-		of (UnaryInt, una,
-		    return executeUnaryInt (una);
-		);
+		    s_of (UnaryInt, una)
+			return executeUnaryInt (una);		
 
-		of (UnaryBool, ub,
-		    return executeUnaryBool (ub);
-		);
+		    s_of (UnaryBool, ub)
+			return executeUnaryBool (ub);		
 			 
-		of (BinaryFloat, fl,
-		    return executeBinaryFloat (fl);
-		);
+		    s_of (BinaryFloat, fl)
+			return executeBinaryFloat (fl);		
 
-		of (Conditional, cd,
-		    return executeConditional (cd);
-		);
+		    s_of (Conditional, cd)
+			return executeConditional (cd);		
 
-		of (Set, st,
-		    return executeSet (st);
-		);
+		    s_of (Set, st)
+			return executeSet (st);		
 
-		of (Block, bl,
-		    return executeBlock (bl);
-		);
+		    s_of (Block, bl)
+			return executeBlock (bl);		
 			 
-		of (generator::VarDecl, vdecl,
-		    return executeVarDecl (vdecl);
-		);
+		    s_of (generator::VarDecl, vdecl)
+			return executeVarDecl (vdecl);		
 
-		of (VarRef, vref,
-		    return executeVarRef (vref);
-		);
+		    s_of (VarRef, vref)
+			return executeVarRef (vref);		
 		
-		of (Addresser, addr ATTRIBUTE_UNUSED,
-		    return executeAddresser (gen);
-		);
+		    s_of_u (Addresser)
+			return executeAddresser (gen);		
 
-		of (Aliaser, al ATTRIBUTE_UNUSED,
-		    return executeAlias (gen);
-		);
+		    s_of_u (Aliaser)
+			return executeAlias (gen);		
 		
-		of (Call, cll,
-		    return executeCall (cll);
-		);
+		    s_of (Call, cll)
+			return executeCall (cll);	       
 
-		of (LambdaProto, proto ATTRIBUTE_UNUSED,
-		    return executeLamdaProto (gen);
-		);
+		    s_of_u (LambdaProto)
+			return executeLamdaProto (gen);		
 
-		of (TemplateRef, _ref ATTRIBUTE_UNUSED,
-		    return executeTemplateRef (gen);
-		);
+		    s_of_u (TemplateRef)
+			return executeTemplateRef (gen);		
 
-		of (FrameProto, proto ATTRIBUTE_UNUSED,
-		    return executeFrameProto (gen);
-		);
+		    s_of_u (FrameProto)
+			return executeFrameProto (gen);		
 		
-		of (MultSym, mult ATTRIBUTE_UNUSED,
-		    return executeMultSym (gen);
-		);
+		    s_of_u (MultSym)
+			return executeMultSym (gen);		
 
-		of (UniqValue, val,
-		    return execute (val.getValue ());
-		);
-	    }
-	    
+		    s_of (UniqValue, val)
+			return execute (val.getValue ());		
+		}	    
 	    } catch (Error::ErrorList list) {
 		
 		errors.insert (errors.begin (), list.errors.begin (), list.errors.end ());

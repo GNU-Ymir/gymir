@@ -25,29 +25,24 @@ namespace semantic {
 	    
 	    Generator ret (Generator::empty ());
 	    match (left.to <Value> ().getType ()) {
-		of (Tuple, tu ATTRIBUTE_UNUSED,
+		of_u (Tuple) {
 		    ret = validateTuple (expression, left);
-		)
-		    
-		else of (StructRef, st ATTRIBUTE_UNUSED,
+		}		    
+		elof_u (StructRef) {
 		    ret = validateStruct (expression, left);
-		)
-			 
-		else of (Array, arr ATTRIBUTE_UNUSED,
-		     ret = validateArray (expression, left);
-		)
-
-		else of (Slice, sl ATTRIBUTE_UNUSED,
-		     ret = validateSlice (expression, left);
-		)
-			 
-		else of (Range, rng ATTRIBUTE_UNUSED,
+		}			 
+		elof_u (Array) {
+		    ret = validateArray (expression, left);
+		}
+		elof_u (Slice) {
+		    ret = validateSlice (expression, left);
+		}			 
+		elof_u (Range) {
 		    ret = validateRange (expression, left);
-	        )
-
-		else of (ClassPtr, p ATTRIBUTE_UNUSED,			     
+	        }
+		elof_u (ClassPtr) {			    
 		    ret = validateClass (expression, left, errors);
-		);		
+		} fo;
 	    }
 	    
 	    if (!ret.isEmpty ()) return ret;
@@ -320,33 +315,32 @@ namespace semantic {
 		
 		for (auto & it : cl.to <generator::Class> ().getRef ().to <semantic::Class> ().getAllInner ()) {
 		    match (it) {
-			of (Template, tl, {
-				if (tl.getName () == name) {
-				    if ((i == 0 && prv) || (prot && it.isProtected ()) || it.isPublic ()) {
-					auto realRef = left.to <Value> ().getType ();
-					auto innerRealRef = realRef.to <ClassPtr> ().getInners ()[0];
+			of (Template, tl) {
+			    if (tl.getName () == name) {
+				if ((i == 0 && prv) || (prot && it.isProtected ()) || it.isPublic ()) {
+				    auto realRef = left.to <Value> ().getType ();
+				    auto innerRealRef = realRef.to <ClassPtr> ().getInners ()[0];
 					
-					auto parentClRef = cl.to <generator::Class> ().getClassRef ();
-					auto parentRef = ClassPtr::init (cl.getLocation (), Type::init (parentClRef.to <Type> (), innerRealRef.to <Type> ().isMutable (), false));
-					parentRef = Type::init (parentRef.to <Type> (), realRef.to <Type> ().isMutable (), false);
+				    auto parentClRef = cl.to <generator::Class> ().getClassRef ();
+				    auto parentRef = ClassPtr::init (cl.getLocation (), Type::init (parentClRef.to <Type> (), innerRealRef.to <Type> ().isMutable (), false));
+				    parentRef = Type::init (parentRef.to <Type> (), realRef.to <Type> ().isMutable (), false);
 					
-					// We cast it, because the parent method must be validated with parent class ref					    
-					auto castedRef = Cast::init (left.getLocation (), parentRef, left);
-					if (left.is <Aliaser> ()) {
-					    castedRef = Aliaser::init (castedRef.getLocation (), parentRef, castedRef);
-					}
-					
-					syms.push_back (
-					    MethodTemplateRef::init (lexing::Word::init (expression.getLocation (), tl.getName ().getStr ()), it, castedRef)
-					);					
-				    } else {
-					errors.push_back (
-					    Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), tl.prettyString ())
-					);			    
+				    // We cast it, because the parent method must be validated with parent class ref					    
+				    auto castedRef = Cast::init (left.getLocation (), parentRef, left);
+				    if (left.is <Aliaser> ()) {
+					castedRef = Aliaser::init (castedRef.getLocation (), parentRef, castedRef);
 				    }
+					
+				    syms.push_back (
+					MethodTemplateRef::init (lexing::Word::init (expression.getLocation (), tl.getName ().getStr ()), it, castedRef)
+					);					
+				} else {
+				    errors.push_back (
+					Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), tl.prettyString ())
+					);			    
 				}
-
-			    });			
+			    }			    
+			} fo;			
 		    }
 		}
 		auto ancestor = cl.to <generator::Class> ().getClassRef ().to <ClassRef> ().getAncestor ();
@@ -382,10 +376,11 @@ namespace semantic {
 	void DotVisitor::error (const syntax::Binary & expression, const generator::Generator & left, const std::string & right, std::list <Ymir::Error::ErrorMsg> & errors) {
 	    std::string leftName;
 	    match (left) {
-		of (FrameProto, proto, leftName = proto.getName ())
-		else of (generator::Struct, str, leftName = str.getName ())
-		    else of (MultSym,    sym,   leftName = sym.getLocation ().getStr ())
-			else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ());
+		of (FrameProto, proto) leftName = proto.getName ();
+		elof (generator::Struct, str) leftName = str.getName ();
+		elof (MultSym,    sym) leftName = sym.getLocation ().getStr ();
+		elof (Value,      val)  leftName = val.getType ().to <Type> ().getTypeName ();
+		fo;
 	    }
 	    
 	    Ymir::Error::occurAndNote (

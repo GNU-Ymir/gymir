@@ -57,26 +57,28 @@ namespace semantic {
 	    
 	    Generator gen (Generator::empty ());
 	    match (left) {
-		of (MultSym, mult, gen = validateMultSym (expression, mult))		    
-		else of (ModuleAccess, acc, gen = validateModuleAccess (expression, acc))
-		else of (generator::Enum, en, gen = validateEnum (expression, en))	     
-		else of (generator::Struct, str ATTRIBUTE_UNUSED, gen = validateStruct(expression, left))
-		else of (generator::Class, cl ATTRIBUTE_UNUSED, gen = validateClass (expression, left, errors))
-		else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
-		else of (MacroRef, rf ATTRIBUTE_UNUSED, gen = validateMacro (expression, left, errors))
-		else of (generator::StructRef, str_ ATTRIBUTE_UNUSED, gen = validateStruct (expression, left))
-		else of (ClassRef,  cl, gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors))
-		else of (Pointer, ptr ATTRIBUTE_UNUSED, gen = validateType (expression, left))
-		else of (ClassPtr, ptr, gen = validateClass (expression, ptr.getClassRef ().getRef ().to <semantic::Class> ().getGenerator (), errors))
-		else of (Option, o ATTRIBUTE_UNUSED, gen = validateOption (expression, left, errors))
-		else of (Type, te ATTRIBUTE_UNUSED, gen = validateType (expression, left));			 
+		of (MultSym, mult) gen = validateMultSym (expression, mult);		    
+		elof (ModuleAccess, acc) gen = validateModuleAccess (expression, acc);
+		elof (generator::Enum, en) gen = validateEnum (expression, en);
+		elof (ClassPtr, ptr) gen = validateClass (expression, ptr.getClassRef ().getRef ().to <semantic::Class> ().getGenerator (), errors);
+		elof (ClassRef,  cl) gen = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors);		
+		elof_u (generator::Struct) gen = validateStruct(expression, left);
+		elof_u (generator::Class) gen = validateClass (expression, left, errors);
+		elof_u (TemplateRef) gen = validateTemplate (expression, left, errors);
+		elof_u (MacroRef) gen = validateMacro (expression, left, errors);
+		elof_u (generator::StructRef) gen = validateStruct (expression, left);
+		elof_u (Pointer) gen = validateType (expression, left);
+		elof_u (Option) gen = validateOption (expression, left, errors);
+		elof_u (Type) gen = validateType (expression, left);
+		fo;
 	    }
 	    	    
 	    if (left.is<Value> () && gen.isEmpty ()) {
 		match (left.to <Value> ().getType ()) {		    
-		    of (ClassRef, cl ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left))
-		    else of (TemplateRef, rf ATTRIBUTE_UNUSED, gen = validateTemplate (expression, left, errors))
-		    else of (ClassPtr, ptr ATTRIBUTE_UNUSED, gen = validateClassValue (expression, left));
+		    of_u (ClassRef) gen = validateClassValue (expression, left);
+		    elof_u (TemplateRef) gen = validateTemplate (expression, left, errors);
+		    elof_u (ClassPtr) gen = validateClassValue (expression, left);
+		    fo;
 		}
 	    }
 	    
@@ -97,63 +99,62 @@ namespace semantic {
 
 	    for (auto gen : mult.getGenerators ()) {
 		match (gen) {
-		    of (ModuleAccess, md ATTRIBUTE_UNUSED, {
-			    if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
-				auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
-				syms.insert (syms.end (), elems.begin (), elems.end ());
-			    } else {
-				auto elems = gen.to <ModuleAccess> ().getLocalPublic (right);		    
-				if (elems.size () == 0) {
-				    elems = gen.to <ModuleAccess> ().getLocal (right);
-				    for (auto & it : elems)
-					errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
-				}
-				syms.insert (syms.end (), elems.begin (), elems.end ());
+		    of (ModuleAccess, md ATTRIBUTE_UNUSED) {
+			if (this-> _context.getModuleContext (gen.to <ModuleAccess> ().getModRef ())) {
+			    auto elems = gen.to <ModuleAccess> ().getLocal (right);		    
+			    syms.insert (syms.end (), elems.begin (), elems.end ());
+			} else {
+			    auto elems = gen.to <ModuleAccess> ().getLocalPublic (right);		    
+			    if (elems.size () == 0) {
+				elems = gen.to <ModuleAccess> ().getLocal (right);
+				for (auto & it : elems)
+				errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), it.getName (), right));
 			    }
+			    syms.insert (syms.end (), elems.begin (), elems.end ());
 			}
-		    ) else of (generator::Enum, en,  {
-			    auto res = validateEnum (expression, en);
-			    if (!res.isEmpty ())
-				gens.push_back (res);
-			}
-		    ) else of (generator::Struct, str ATTRIBUTE_UNUSED, {
-			    auto res = validateStruct (expression, gen);
-			    if (!res.isEmpty ())
-				gens.push_back (res);
-			}
-		    ) else of (generator::Class, cl ATTRIBUTE_UNUSED, {
-			    auto res = validateClass (expression, gen, errors);
-			    if (!res.isEmpty ())
-				gens.push_back (res);
-			}
-		    ) else of (ClassRef, cl, {
-			    auto res = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors);
-			    if (!res.isEmpty ())
-				gens.push_back (res);
-			}
-		    ) else of (Type, te ATTRIBUTE_UNUSED, {
-			    auto res = validateType (expression, gen);
-			    if (!res.isEmpty ())
-				gens.push_back (res);
-			}
-		    ) else of (TemplateRef, te ATTRIBUTE_UNUSED, {
-			    auto res = validateTemplate (expression, gen, errors);
-			    if (res.is <MultSym> ()) {
-				if (!res.isEmpty ()) {
-				    gens.insert (gens.end (), res.to <MultSym> ().getGenerators ().begin (),
-						 res.to <MultSym> ().getGenerators ().end ());
-				}
-			    } else {
-				gens.push_back (res);
+		    }
+		    elof (generator::Enum, en)  {
+			auto res = validateEnum (expression, en);
+			if (!res.isEmpty ())
+			gens.push_back (res);
+		    }
+		    elof_u (generator::Struct) {
+			auto res = validateStruct (expression, gen);
+			if (!res.isEmpty ())
+			gens.push_back (res);
+		    }
+		    elof_u (generator::Class) {
+			auto res = validateClass (expression, gen, errors);
+			if (!res.isEmpty ())
+			gens.push_back (res);
+		    }
+		    elof (ClassRef, cl) {
+			auto res = validateClass (expression, cl.getRef ().to <semantic::Class> ().getGenerator (), errors);
+			if (!res.isEmpty ())
+			gens.push_back (res);
+		    }
+		    elof_u (Type) {
+			auto res = validateType (expression, gen);
+			if (!res.isEmpty ())
+			gens.push_back (res);
+		    }
+		    elof_u (TemplateRef) {
+			auto res = validateTemplate (expression, gen, errors);
+			if (res.is <MultSym> ()) {
+			    if (!res.isEmpty ()) {
+				gens.insert (gens.end (), res.to <MultSym> ().getGenerators ().begin (),
+					     res.to <MultSym> ().getGenerators ().end ());
 			    }
+			} else {
+			    gens.push_back (res);
 			}
-		    ) else of (Value, v, {
-			    if (v.getType ().is <ClassPtr> ()) {
-				auto res = validateClassValue (expression, gen);
-				if (!res.isEmpty ()) gens.push_back (res);
-			    }			       
-			}
-		    )
+		    }
+		    elof (Value, v) {
+			if (v.getType ().is <ClassPtr> ()) {
+			    auto res = validateClassValue (expression, gen);
+			    if (!res.isEmpty ()) gens.push_back (res);
+			}			       
+		    } fo;
 		}
 	    }
 
@@ -258,15 +259,16 @@ namespace semantic {
 	Generator SubVisitor::validateType (const syntax::Binary & expression, const Generator & type) {
 	    Generator ret (Generator::empty ());
 	    match (type) {
-		of (Array, ar ATTRIBUTE_UNUSED, ret = validateArray (expression, type))
-		else of (Bool, bl ATTRIBUTE_UNUSED, ret = validateBool (expression, type))
-		else of (Char, ch ATTRIBUTE_UNUSED, ret = validateChar (expression, type))
-		else of (Float, fl ATTRIBUTE_UNUSED, ret = validateFloat (expression, type))
-		else of (Integer, it ATTRIBUTE_UNUSED, ret = validateInteger (expression, type))
-		else of (Pointer, pt ATTRIBUTE_UNUSED, ret = validatePointer (expression, type))
-		else of (Slice, sl ATTRIBUTE_UNUSED, ret = validateSlice (expression, type))
-		else of (Tuple, tl ATTRIBUTE_UNUSED, ret = validateTuple (expression, type))
-		else of (StructRef, st ATTRIBUTE_UNUSED, ret = validateStruct (expression, type));
+		of_u (Array) ret = validateArray (expression, type);
+		elof_u (Bool) ret = validateBool (expression, type);
+		elof_u (Char) ret = validateChar (expression, type);
+		elof_u (Float) ret = validateFloat (expression, type);
+		elof_u (Integer) ret = validateInteger (expression, type);
+		elof_u (Pointer) ret = validatePointer (expression, type);
+		elof_u (Slice) ret = validateSlice (expression, type);
+		elof_u (Tuple) ret = validateTuple (expression, type);
+		elof_u (StructRef) ret = validateStruct (expression, type);
+		fo;
 	    }
 	    
 	    if (ret.isEmpty ()) {
@@ -844,22 +846,24 @@ namespace semantic {
 	    std::string rightName = "";
 	    {
 		match (left) {
-		    of (FrameProto, proto, leftName = proto.getName ())
-		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
-		    else of (generator::Struct, str, leftName = str.getName ())
-		    else of  (generator::Enum, en, leftName = en.getName ())
-		    else of (MultSym,    sym,   leftName = sym.prettyString ())
-		    else of (generator::Class, cl, leftName = cl.getName ())
-		    else of (ClassRef, cl, leftName = cl.getName ())
-		    else of (TemplateRef, rf, leftName = rf.prettyString ())
-		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ())
-		    else of (MacroRef,   rf,    leftName = rf.prettyString ());
+		    of (FrameProto, proto)   leftName = proto.getName ();
+		    elof (ModuleAccess, acc) leftName = acc.prettyString ();
+		    elof (generator::Struct, str) leftName = str.getName ();
+		    elof  (generator::Enum, en) leftName = en.getName ();
+		    elof (MultSym,    sym)   leftName = sym.prettyString ();
+		    elof (generator::Class, cl) leftName = cl.getName ();
+		    elof (ClassRef, cl) leftName = cl.getName ();
+		    elof (TemplateRef, rf) leftName = rf.prettyString ();
+		    elof (Value,      val)   leftName = val.getType ().to <Type> ().getTypeName ();
+		    elof (Type,       type)  leftName = type.getTypeName ();
+		    elof (MacroRef,   rf)    leftName = rf.prettyString ();
+		    fo;
 		}
 	    }
 	    {		
 		match (right) {
-		    of (syntax::Var, var, rightName = var.getName ().getStr ());
+		    s_of (syntax::Var, var)
+			rightName = var.getName ().getStr ();
 		}
 	    }
 	    
@@ -881,22 +885,24 @@ namespace semantic {
 	    std::string rightName = "";
 	    {
 		match (left) {
-		    of (FrameProto, proto, leftName = proto.getName ())
-		    else of (generator::Struct, str, leftName = str.getName ())
-		    else of (generator::Enum, en, leftName = en.getName ())
-		    else of (MultSym,    sym,   leftName = sym.prettyString ())
-		    else of (generator::Class, cl, leftName = cl.getName ())
-		    else of (ClassRef, cl, leftName = cl.getName ())
-		    else of (ModuleAccess, acc, leftName = acc.prettyString ())
-		    else of (TemplateRef, rf, leftName = rf.prettyString ())
-		    else of (Value,      val,   leftName = val.getType ().to <Type> ().getTypeName ())
-		    else of (Type,       type,  leftName = type.getTypeName ())
-		    else of (MacroRef,   rf,    leftName = rf.prettyString ());
+		    of (FrameProto, proto) leftName = proto.getName ();
+		    elof (generator::Struct, str) leftName = str.getName ();
+		    elof (generator::Enum, en) leftName = en.getName ();
+		    elof (MultSym,    sym)   leftName = sym.prettyString ();
+		    elof (generator::Class, cl) leftName = cl.getName ();
+		    elof (ClassRef, cl) leftName = cl.getName ();
+		    elof (ModuleAccess, acc) leftName = acc.prettyString ();
+		    elof (TemplateRef, rf) leftName = rf.prettyString ();
+		    elof (Value,      val)  leftName = val.getType ().to <Type> ().getTypeName ();
+		    elof (Type,       type)  leftName = type.getTypeName ();
+		    elof (MacroRef,   rf)    leftName = rf.prettyString ();
+		    fo;
 		}
 	    }
 	    {
 		match (right) {
-		    of (syntax::Var, var, rightName = var.getName ().getStr ());
+		    s_of (syntax::Var, var)
+			rightName = var.getName ().getStr ();
 		}
 	    }
 	    
