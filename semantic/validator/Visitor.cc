@@ -728,23 +728,7 @@ namespace semantic {
 	}
 	
 	generator::Generator Visitor::validateClass (const semantic::Symbol & cls, bool inModule) {	    
-	    Generator ancestor (Generator::empty ());
-	    if (!cls.to <semantic::Class> ().getAncestor ().isEmpty ()) {
-		ancestor = this-> validateValue (cls.to <semantic::Class> ().getAncestor (), true, false);
-		if (ancestor.is <generator::Class> ()) ancestor = ancestor.to <generator::Class> ().getClassRef ();
-		if (!ancestor.is <ClassRef> ()) {
-		    Ymir::Error::occur (cls.to <semantic::Class> ().getAncestor ().getLocation (),
-					ExternalError::get (INHERIT_NO_CLASS),
-					ancestor.prettyString ()
-		    );
-		} else if (ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().isFinal ()) {
-		    Ymir::Error::occur (cls.to <semantic::Class> ().getAncestor ().getLocation (),
-					ExternalError::get (INHERIT_FINAL_CLASS),
-					ancestor.prettyString ()
-		    );
-		}
-	    }
-	    
+	    Generator ancestor (Generator::empty ());	    
 	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {
 		auto sym = cls;
 		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));

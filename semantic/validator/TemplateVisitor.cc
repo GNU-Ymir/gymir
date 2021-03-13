@@ -2178,6 +2178,7 @@ namespace semantic {
 		of_u (syntax::FuncPtr) return elem;
 		elof (syntax::Var, var) {
 		    auto F = this-> findExpression (var.getName ().getStr (), syntaxTempl);
+		    if (F.is <syntax::Var> ()) return F;
 		    return retreiveFuncPtr (F, syntaxTempl);
 		}
 		elof (syntax::OfVar, var) {
@@ -2246,9 +2247,9 @@ namespace semantic {
 				} else {
 				    types.insert (types.end (), type.begin (), type.end ());
 				}
-			    }			    
-			}
-			if (successful) retType = F.to <syntax::FuncPtr> ().getRetType ();
+			    }
+			    if (successful) retType = F.to <syntax::FuncPtr> ().getRetType ();
+			}			
 		    }
 		    
 		    if (!successful) {
