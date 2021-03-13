@@ -17,10 +17,7 @@ namespace semantic {
 	    return CompileTime (context);
 	}
 
-	Generator CompileTime::execute (const Generator & gen) {
-	    static int nb_recurs = 0;
-	    nb_recurs += 1;
-	    
+	Generator CompileTime::execute (const Generator & gen) {	    
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    try {
 		match (gen) {
@@ -112,28 +109,27 @@ namespace semantic {
 			return execute (val.getValue ());		
 		}	    
 	    } catch (Error::ErrorList list) {
-		
-		errors.insert (errors.begin (), list.errors.begin (), list.errors.end ());
-		if (nb_recurs <= 3 || global::State::instance ().isVerboseActive ()) {
-		    errors.insert (errors.begin (), Ymir::Error::createNote (gen.getLocation (), ExternalError::get (IN_COMPILE_TIME_EXEC)));		    
+		if (global::State::instance ().isVerboseActive ()) {
+		    Ymir::Error::occurAndNote (
+			gen.getLocation (),
+			list.errors, 
+			ExternalError::get (COMPILE_TIME_UNKNOWN)
+			);	
 		} else {
-		    if (nb_recurs == 4) {
-			errors.push_back (Ymir::Error::createNoteOneLine ("    : %(B) ", "..."));
-			errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));		    	
-		    }
+		    errors.push_back (format ("     : %(B)", "..."));
+		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (OTHER_CALL)));
+		    Ymir::Error::occurAndNote (
+			gen.getLocation (),
+			errors,
+			ExternalError::get (COMPILE_TIME_UNKNOWN)
+			);	
 		}
-	    } 
-
-	    nb_recurs -= 1;
-	    
-	    if (errors.size () != 0)
-		throw Error::ErrorList {errors};
-	    else {
-		Ymir::Error::occur (
-		    gen.getLocation (),
-		    ExternalError::get (COMPILE_TIME_UNKNOWN)
-		);
 	    }
+	    
+	    Ymir::Error::occur (
+		gen.getLocation (),
+		ExternalError::get (COMPILE_TIME_UNKNOWN)
+		);	
 
 	    return gen;
 	}
@@ -477,7 +473,7 @@ namespace semantic {
 	}
 
 	generator::Generator CompileTime::executeBinaryBool (const generator::BinaryBool & binBool) {
-	    auto leftEx = this-> execute (binBool.getLeft ());
+	    auto leftEx = this-> execute (binBool.getLeft ());	    
 	    if (!leftEx.is <BoolValue> ())
 		Ymir::Error::occur (
 		    leftEx.getLocation (),
