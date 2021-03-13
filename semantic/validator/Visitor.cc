@@ -1990,10 +1990,6 @@ namespace semantic {
 		
 		s_of (syntax::Break, _break)
 		    return validateBreak (_break);		
-
-		// of (syntax::Return, _return,
-		//     return validateReturn (_return);
-		// );
 		
 		s_of (syntax::List, list)
 		    return validateList (list);		
@@ -2015,38 +2011,8 @@ namespace semantic {
 		    return NamedGenerator::init (named.getLocation (), inner);
 		}
 
-		s_of (syntax::TemplateCall, cl) {
-		    auto ret = validateTemplateCall (cl);
-		    if (!fromCall && ret.is <FrameProto> ()) {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			int score;
-			auto visit = CallVisitor::init (*this);			    
-			auto sec_ret = visit.validateFrameProto (cl.getLocation (), ret.to <FrameProto> (), {}, score, errors);
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-			if (!sec_ret.isEmpty ()) ret = sec_ret;
-		    } else if (!fromCall && ret.is <DelegateValue> () && ret.to <DelegateValue> ().getType ().to<Type> ().getInners ()[0].is <FrameProto> ()) { // Template method proto, and dot template calls
-			std::list <Ymir::Error::ErrorMsg> errors;
-			int score;
-			auto visit = CallVisitor::init (*this);			    
-			auto sec_ret = visit.validateDelegate (cl.getLocation (), ret, {}, score, errors);
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-			if (!sec_ret.isEmpty ()) ret = sec_ret;
-		    } else if (!fromCall && ret.is <generator::Struct> ()) {
-			std::list <Ymir::Error::ErrorMsg> errors;
-			int score;
-			auto visit = CallVisitor::init (*this);			    
-			auto sec_ret = visit.validateStructCst (cl.getLocation (), ret.to <generator::Struct> (), {}, score, errors);
-			if (errors.size () != 0) {
-			    throw Error::ErrorList {errors};
-			}
-			if (!sec_ret.isEmpty ()) ret = sec_ret;
-		    }
-		    return ret;
-		}		
+		s_of (syntax::TemplateCall, cl) 
+		    return validateTemplateCall (cl);
 
 		s_of (syntax::Return, rt)
 		    return validateReturn (rt);		
