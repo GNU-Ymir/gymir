@@ -291,7 +291,7 @@ namespace semantic {
 											vtable [i].to <FrameProto> ().getReturnType (),
 											types),
 									 left,
-									 i + 1, // + 1 to ignore the typeinfo,
+									 i + 2, // + 2 to ignore the typeinfo, and dtor
 									 name
 							 )
 				    )

@@ -31,6 +31,8 @@ namespace semantic {
 	    std::vector <MethodProtection> _prots;
 
 	    Generator _classRef;
+
+	    generator::Generator _destructor;
 	    
 	private :
 
@@ -48,7 +50,7 @@ namespace semantic {
 
 	    static Generator initFields (const Class & other, const std::vector <generator::Generator> & fields, const std::vector <generator::Generator> & localFields);
 
-	    static Generator initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots);
+	    static Generator initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots, const generator::Generator & destructor);
 	    
 	    
 	    Generator clone () const override;
@@ -110,6 +112,11 @@ namespace semantic {
 	     */
 	    const std::vector <MethodProtection> & getProtectionVtable () const;
 
+	    /**
+	     * \return the destructor of the class 
+	     */
+	    const generator::Generator & getDestructor () const;
+	    
 	    /**
 	     * 
 	     */

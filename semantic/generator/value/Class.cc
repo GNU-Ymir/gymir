@@ -10,13 +10,15 @@ namespace semantic {
 	
 	Class::Class () :
 	    Value (),
-	    _classRef (Generator::empty ())
+	    _classRef (Generator::empty ()),
+	    _destructor (Generator::empty ())
 	{
 	}
 
 	Class::Class (const lexing::Word & loc, const Symbol & ref, const Generator & clRef) :
 	    Value (loc, loc.getStr (), NoneType::init (loc, "class " + ref.getRealName ())),
-	    _classRef (clRef)
+	    _classRef (clRef),
+	    _destructor (Generator::empty ())
 	{
 	    auto aux = ref;
 	    this-> _ref = aux.getPtr ();
@@ -33,10 +35,11 @@ namespace semantic {
 	    return ret;
 	}
 
-	Generator Class::initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots) {
+	Generator Class::initVtable (const Class & other, const std::vector <generator::Generator> & vtable, const std::vector <MethodProtection> & prots, const Generator & destructor) {
 	    auto ret = other.clone ();
 	    ret.to <Class> ()._vtable = vtable;
 	    ret.to <Class> ()._prots = prots;
+	    ret.to <Class> ()._destructor = destructor;
 	    return ret;
 	}
 	
@@ -144,6 +147,10 @@ namespace semantic {
 
 	const std::vector <generator::Class::MethodProtection> & Class::getProtectionVtable () const {
 	    return this-> _prots;
+	}
+
+	const generator::Generator & Class::getDestructor () const {
+	    return this-> _destructor;
 	}
 	
 	std::string Class::getName () const {

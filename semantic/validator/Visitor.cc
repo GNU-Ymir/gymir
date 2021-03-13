@@ -775,8 +775,8 @@ namespace semantic {
 			std::vector <Symbol> addMethods;
 			std::vector <generator::Class::MethodProtection> protections;
 			auto vtable = validateClassDeclarations (cls, ClassRef::init (cls.getName (), ancestor, sym), ancestor, protections, addMethods);
-			
-			gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections);
+			auto nulltype = Pointer::init (gen.getLocation (), Void::init (gen.getLocation ()));
+			gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections, NullValue::init (gen.getLocation (), nulltype));
 			
 			sym.to <semantic::Class> ().setGenerator (gen);
 			sym.to <semantic::Class> ().setTypeInfo (validateTypeInfo (gen.getLocation (), ClassRef::init (cls.getName (), ancestor, sym)));

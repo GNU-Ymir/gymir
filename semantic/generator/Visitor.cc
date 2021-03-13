@@ -455,6 +455,7 @@ namespace semantic {
 	    std::vector<Tree> params;
 	    auto & classGen = classType.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ();
 	    params.push_back (Tree::buildAddress (classType.getLocation (), generateTypeInfoClass (classType), Tree::pointerType (Tree::voidType ())));
+	    params.push_back (generateValue (classGen.to <generator::Class> ().getDestructor ()));
 	    
 	    for (auto & it : classGen.to <generator::Class> ().getVtable ()) {
 		if (it.to <MethodProto> ().isEmptyFrame ()) {
