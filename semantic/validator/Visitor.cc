@@ -4870,15 +4870,11 @@ namespace semantic {
 		    for (auto it : Ymir::r (0, syms.size ())) {
 			notes.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (PRIVATE_IN_THIS_CONTEXT), syms [it].getName (), syms [it].getRealName ()));
 		    }
-		    if (var.getName ().getStr () == "U")
-			Ymir::Error::halt ("", "");
 		    
 		    Error::occurAndNote (var.getName (), notes, ExternalError::get (UNDEF_TYPE), var.getName ().getStr ());
 		}
 	    }
 
-	    if (var.getName ().getStr () == "U")
-		Ymir::Error::halt ("", "");
 	    Error::occur (var.getName (), ExternalError::get (UNDEF_TYPE), var.getName ().getStr ());
 	    return Generator::empty ();
 	}
