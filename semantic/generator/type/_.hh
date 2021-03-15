@@ -14,6 +14,7 @@
 #include <ymir/semantic/generator/type/Integer.hh>
 #include <ymir/semantic/generator/type/LambdaType.hh>
 #include <ymir/semantic/generator/type/NoneType.hh>
+#include <ymir/semantic/generator/type/ErrorType.hh>
 #include <ymir/semantic/generator/type/Option.hh>
 #include <ymir/semantic/generator/type/Pointer.hh>
 #include <ymir/semantic/generator/type/Range.hh>

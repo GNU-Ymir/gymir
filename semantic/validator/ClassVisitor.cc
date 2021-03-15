@@ -3,6 +3,7 @@
 #include <ymir/errors/_.hh>
 #include <ymir/utils/Path.hh>
 #include <ymir/syntax/visitor/Keys.hh>
+#include <ymir/semantic/validator/PragmaVisitor.hh>
 
 namespace semantic {
 
@@ -20,11 +21,12 @@ namespace semantic {
 	}
 	
 	generator::Generator ClassVisitor::validate (const semantic::Symbol & cls, bool inModule) {
+	    auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
+	    // and avoid validating multiple times the same class
+	    
 	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {
 		std::list <Error::ErrorMsg> errors;
 		auto ancestor = this-> validateAncestor (cls);
-		auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
-		// and avoid validating multiple times the same class
 		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
 		// To avoid recursive validation 
 		sym.to <semantic::Class> ().setGenerator (gen);
@@ -39,7 +41,11 @@ namespace semantic {
 		this-> validateFields (cls, ancestor, errors);
 
 		if (errors.size () != 0) { // we caught the errors, to display the fields and vtable errors at the same time
-		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  // in pragma compile the errors are not printed, so we need to keep them in case of retry
+			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    } else {
+			sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
+		    }
 		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
 		}
 
@@ -47,7 +53,11 @@ namespace semantic {
 		    this-> validateInnerClass (cls, errors);
 		
 		    if (errors.size () != 0) { // caught the error to add a note
-			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+			if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) { 
+			    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+			} else {
+			    sym.to <semantic::Class> ().setGenerator (ErrorType::init (cls.getName (), cls.getRealName (), errors));
+			}
 			Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
 		    }
 		    
@@ -55,12 +65,21 @@ namespace semantic {
 		    
 		}
 	    }
-	    
-	    if (cls.to <semantic::Class> ().getGenerator ().is <generator::Class> ()) {		
-		return cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ();
-	    } else { // there was an error last time
-		Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), cls.getRealName ());
-		return Generator::empty ();
+
+	    match (cls.to <semantic::Class> ().getGenerator ()) {
+		of (generator::Class, cl) {
+		    return cl.getClassRef ();
+		} elof (ErrorType, err) {
+		    // if we are still in a pragma compile, we don't wan't to lose the errors
+		    if (!this-> _context.isInContext ({PragmaVisitor::PRAGMA_COMPILE_CONTEXT})) {  
+			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    }
+		    Ymir::Error::occurAndNote (cls.getName (), err.getErrors (), ExternalError::get (VALIDATING), cls.getRealName ());
+		    return Generator::empty (); 
+		} elfo {
+		    Ymir::Error::occur (cls.getName (), ExternalError::get (INCOMPLETE_TYPE_CLASS), cls.getRealName ());
+		    return Generator::empty ();
+		}
 	    }
 	}
 

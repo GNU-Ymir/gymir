@@ -33,6 +33,8 @@ namespace semantic {
 	const std::string PragmaVisitor::PANIC = "panic";
 	const std::string PragmaVisitor::FAKE_THROW = "fake_throw";
 	
+	const std::string PragmaVisitor::PRAGMA_COMPILE_CONTEXT = "#PRAGMA_COMPILE";
+	
 	
 	PragmaVisitor::PragmaVisitor (Visitor & context) :
 	    _context (context)
@@ -86,7 +88,8 @@ namespace semantic {
 	 * ========================================================
 	 */
 
-	Generator PragmaVisitor::validateCompile (const syntax::Pragma & prg) {
+	Generator PragmaVisitor::validateCompile (const syntax::Pragma & prg) {	    
+	    this-> _context.enterContext ({lexing::Word::init (prg.getLocation (), PragmaVisitor::PRAGMA_COMPILE_CONTEXT)});
 	    try {
 		for (auto & it : prg.getContent ()) {
 		    this-> _context.validateValue (it);
@@ -96,6 +99,8 @@ namespace semantic {
 	    } catch (Error::ErrorList list) {
 		return BoolValue::init (prg.getLocation (), Bool::init (prg.getLocation ()), false);
 	    }
+	    
+	    this-> _context.exitContext();
 	}
 
 	

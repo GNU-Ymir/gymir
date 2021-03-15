@@ -1,13 +1,16 @@
 #pragma once
 
 #include <ymir/semantic/generator/Type.hh>
+#include <ymir/errors/_.hh>
 
 namespace semantic {
     namespace generator {
 
-	class NoneType : public Type {
+	class ErrorType : public Type {
 
 	    std::string _name;
+
+	    std::list <Ymir::Error::ErrorMsg> _errors;
 	    
 	public :
 
@@ -17,13 +20,13 @@ namespace semantic {
 
 	    friend Generator;
 
-	    NoneType ();	    
+	    ErrorType ();	    
 
-	    NoneType (const lexing::Word & loc, const std::string & name);
+	    ErrorType (const lexing::Word & loc, const std::string & name, const std::list <Ymir::Error::ErrorMsg> & errors);
 	    
 	public :
 
-	    static Generator init (const lexing::Word & loc, const std::string & name = "none");
+	    static Generator init (const lexing::Word & loc, const std::string & name = "none", const std::list <Ymir::Error::ErrorMsg> & errors = {});
 
 	    Generator clone () const override;
 
@@ -36,6 +39,8 @@ namespace semantic {
 	     * \return the name of the type
 	     */
 	    std::string typeName () const override;
+
+	    const std::list <Ymir::Error::ErrorMsg> & getErrors () const;
 	    
 	};
        

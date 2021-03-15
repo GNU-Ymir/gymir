@@ -31,6 +31,8 @@ namespace semantic {
 	    static const std::string TRUSTED;
 	    static const std::string PANIC;
 	    static const std::string FAKE_THROW;
+
+	    static const std::string PRAGMA_COMPILE_CONTEXT;
 	    
 	    Visitor & _context;
 
