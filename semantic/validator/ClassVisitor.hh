@@ -35,9 +35,22 @@ namespace semantic {
 	     * ================================================================================
 	     * ================================================================================
 	     */
-	    
+
+	    /**
+	     * Validate the fields of the class
+	     */
 	    void validateFields (const semantic::Symbol & cls, const generator::Generator & ancestor, std::list <Ymir::Error::ErrorMsg> & errors);
 
+	    /**
+	     * Validate the fields directly declared inside the class (not the ancestor fields)
+	     */
+	    std::vector <generator::Generator> validateLocalFields (const semantic::Symbol & cls, std::list <Ymir::Error::ErrorMsg> & errors);
+
+	    /**
+	     * Verify that there is no collisions with the fields of the ancestors
+	     */
+	    void verifyCollisions (const semantic::Symbol & cls, const std::vector <generator::Generator> & locals, const std::vector <generator::Generator> & ancetors);
+	    
 	    /**
 	     * ================================================================================
 	     * ================================================================================
@@ -68,23 +81,34 @@ namespace semantic {
 	    void validateVtable (const semantic::Symbol & cls, const generator::Generator & ancestor, std::list <Ymir::Error::ErrorMsg> & errors);
 
 	    /**
+	     * Verify that there are no collision inside the vtable (two function with the same prototype)
+	    */
+	    void verifyCollisionVtable (const semantic::Symbol & cls, const generator::Generator & classType, const std::vector <generator::Generator> & vtable);
+	    
+	    /**
 	     * Validate the inner class declaration of the class (for vtable only)
 	     * @returns: the list of function prototypes of the vtable (without __dtor)
 	     */
 	    std::vector<generator::Generator> validateClassDeclarations (const semantic::Symbol & cls, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Class::MethodProtection>  & protection, std::vector <Symbol> & addMethods);
 
+
 	    /**
-	     * Validate the inner declaration of an implements (for vtable only)
+	     * Validate the inner declaration of an impl (for vtable only)
+	     */
+	    void validateVtableImpl (const semantic::Impl & impl, const generator::Generator & trait, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <generator::Generator> & implVtable, std::vector<Symbol> & addMethods);
+
+	    /**
+	     * Validate the inner declaration of a trait (for vtable only)
 	     * @returns: 
 	     *    - addMethods: the list of methods to add to the vtable, and to validated
 	     */
-	    void validateVtableImplement (const semantic::Impl & impl, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <generator::Generator> & ancVtable, std::vector<Symbol> & addMethods);
+	    generator::Generator validateVtableTrait (const semantic::Impl & impl, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <generator::Generator> & ancVtable, std::vector<Symbol> & addMethods);
 
 	    /**
-	     * Validate the methods of a trait for impl (for vtable only)
+	     * Validate the methods of a trait (for vtable only)
 	     * @returns: the index in the vtable of the method
 	     */
-	    int validateVtableMethodImplement (const semantic::Function & func, const generator::Generator & classType, const generator::Generator &, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <generator::Generator> & ancVtable, const generator::Generator & trait);
+	    int validateVtableTraitMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator &, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <generator::Generator> & ancVtable, const generator::Generator & trait);
 
 	    /**
 	     * Validate the methods (for vtable only)

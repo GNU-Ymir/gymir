@@ -231,7 +231,7 @@ namespace Ymir {
 		err.addNote (it);	    
 	    throw ErrorList {std::list <ErrorMsg> {err}};
 	}
-
+       
 	
 	template <typename ... TArgs>
 	void occurAndNote (const lexing::Word & loc, const lexing::Word & loc2, const ErrorMsg & note, const std::string &content, TArgs ... args) {
@@ -261,6 +261,15 @@ namespace Ymir {
 	void warn (const std::string & content, TArgs ... args) {
 	    auto msg = format ("%(y) : " + content, "Warning", args...);
 	    throw ErrorList {std::list <ErrorMsg> {ErrorMsg (lexing::Word::eof (), msg)}};
+	}
+	
+	template <typename ... TArgs>
+	void noteAndNote (const lexing::Word & loc, const std::list <ErrorMsg> & notes, const std::string &content, TArgs ... args) {
+	    auto msg = format ("%(b) : " + content, "Note", args...);
+	    auto err = ErrorMsg (loc, msg);
+	    for (auto & it : notes)
+		err.addNote (it);	    
+	    throw ErrorList {std::list <ErrorMsg> {err}};
 	}
 	
 	/**

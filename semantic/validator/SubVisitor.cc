@@ -52,7 +52,7 @@ namespace semantic {
 	    }
 
 	    if (failed) {
-		throw Error::ErrorList {errors};
+		Ymir::Error::noteAndNote (expression.getLeft ().getLocation (), errors, "");
 	    } else errors = {};		   
 	    
 	    Generator gen (Generator::empty ());

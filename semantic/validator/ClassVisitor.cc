@@ -39,7 +39,8 @@ namespace semantic {
 		this-> validateFields (cls, ancestor, errors);
 
 		if (errors.size () != 0) { // we caught the errors, to display the fields and vtable errors at the same time
-		    throw Error::ErrorList {errors};
+		    sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
+		    Ymir::Error::occurAndNote (cls.getName (), errors, ExternalError::get (VALIDATING), cls.getRealName ());
 		}
 
 		if (inModule) { // if we are in the module that declared the class, then we have to validate the inner symbols
@@ -75,74 +76,73 @@ namespace semantic {
 	void ClassVisitor::validateFields (const semantic::Symbol & cls, const Generator & ancestor, std::list <Error::ErrorMsg> & errors) {
 	    auto sym = cls;
 	    auto gen = cls.to <semantic::Class> ().getGenerator ();
-	    {
+	    try {
 		// Validate the local fields 
-		std::map <std::string, generator::Generator> syms;
-		{
-		    this-> _context.enterForeign ();
-		    this-> _context.pushReferent (sym, "validateClass");
-		    try {
-			this-> _context.enterBlock ();			
-			std::vector <std::string> fields;
-			std::vector <generator::Generator> types;
-			for (auto & it : sym.to<semantic::Class> ().getFields ()) {
-			    this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false);
-			}
-		 
-			syms = this-> _context.discardAllLocals ();
+		auto localFields = std::move (this-> validateLocalFields (cls, errors));
+		
+		std::vector <Generator> allFields;
+		if (!ancestor.isEmpty ()) {
+		    auto ancestorFields = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getFields ();
+		    this-> verifyCollisions (cls, localFields, ancestorFields);
+
+		    allFields = ancestorFields;
+		    allFields.insert (allFields.end (), localFields.begin (), localFields.end ());		    
+		} else allFields = localFields;
+		
+
+		gen = generator::Class::initFields (gen.to <generator::Class> (), allFields, localFields);
+		sym.to <semantic::Class> ().setGenerator (gen);
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
+	}    
+
+
+	std::vector <generator::Generator> ClassVisitor::validateLocalFields (const semantic::Symbol & cls, std::list <Error::ErrorMsg> & errors) {
+	    std::vector <generator::Generator> syms;
+	    		
+	    this-> _context.pushReferent (cls, "validateClass");
+	    this-> _context.enterForeign ();
+		
+	    try {
+		this-> _context.enterBlock (); // we enter a block, to avoid a crash of the visitor
+		// It needs a block (context) to validate vardecls
 		    
-			this-> _context.quitBlock ();
-		    } catch (Error::ErrorList list) {
-			errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		    } 
-		    
-		    this-> _context.popReferent ("validateClass");
-		    this-> _context.exitForeign ();
-			
-		    if (errors.size () != 0) {
-			sym.to <semantic::Class> ().setGenerator (NoneType::init (cls.getName ()));
-			throw Error::ErrorList {errors};
-		    }
+		std::vector <std::string> fields;
+		std::vector <generator::Generator> types;
+		for (auto & it : cls.to<semantic::Class> ().getFields ()) {
+		    syms.push_back (this-> _context.validateVarDeclValue (it.to <syntax::VarDecl> (), false));
 		}
 
-		// Check if there is a collision with ancestor fields
-		try {
-		    std::vector <Generator> fieldsDecl;
-		    std::vector <Generator> ancestorFields;
-			
-		    if (!ancestor.isEmpty ()) {
-			fieldsDecl = ancestor.to <ClassRef> ().getRef ().to <semantic::Class> ().getGenerator ().to <generator::Class> ().getFields ();
-			ancestorFields = fieldsDecl;
-			for (auto & it : fieldsDecl) { // Verify shadowing 
-			    auto gen = syms.find (it.to <generator::VarDecl> ().getName ());
-			    if (gen != syms.end ()) {
-				auto note = Ymir::Error::createNote (it.getLocation ());
-				auto note2 = Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), cls.getRealName ());
-				Error::occurAndNote (gen-> second.getLocation (), {note, note2}, ExternalError::get (SHADOWING_DECL), it.to <generator::VarDecl> ().getName ());
-			    }
-			}
-		    }
+		// we don't want an error when quitting the block
+		// it is normal, that none of the declarations are unused
+		this-> _context.discardAllLocals (); 
+		    
+		this-> _context.quitBlock ();
+	    } catch (Error::ErrorList list) {
+		errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
+	    } 
 
-		    std::vector <generator::Generator> localFields;
-		    for (auto & it : sym.to <semantic::Class> ().getFields ()) {
-			auto gen = syms.find (it.to <syntax::VarDecl> ().getName ().getStr ());
-			if (gen != syms.end ()) {
-			    fieldsDecl.push_back (gen-> second);
-			    localFields.push_back (gen-> second);
-			} else {
-			    Ymir::Error::halt ("", "");
-			}
-		    }
+	    this-> _context.exitForeign ();			
+	    this-> _context.popReferent ("validateClass");
+	    
+	    if (errors.size () != 0) {
+		return {};
+	    } else return  syms;
+	}	
 
-		    gen = generator::Class::initFields (gen.to <generator::Class> (), fieldsDecl, localFields);
-		    sym.to <semantic::Class> ().setGenerator (gen);
-		} catch (Error::ErrorList list) {
-		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
-		} 
+
+	void ClassVisitor::verifyCollisions (const semantic::Symbol & cls, const std::vector <Generator> & locals, const std::vector <Generator> & ancetors) {
+	    for (auto & it : locals) { // Verify shadowing
+		for (auto & jt : ancetors) {
+		    if (it.to <generator::VarDecl> ().getName () == jt.to <generator::VarDecl> ().getName ()) {
+			auto note = Ymir::Error::createNote (it.getLocation ());
+			Error::occurAndNote (jt.getLocation (), note, ExternalError::get (SHADOWING_DECL), it.to <generator::VarDecl> ().getName ());
+		    }
+		}
 	    }
 	}
-	
-	
+
 	/**
 	 * ================================================================================
 	 * ================================================================================
@@ -189,8 +189,14 @@ namespace semantic {
 	    try {
 		std::vector <Symbol> addMethods;
 		std::vector <generator::Class::MethodProtection> protections;
+		
+		// Create the vtable from the class declarations, and ancestor
 		auto vtable = this-> validateClassDeclarations (sym, ClassRef::init (cls.getName (), ancestor, sym), ancestor, protections, addMethods);
+		
+		// for the moment the __dtor is never set, but everything is prepared for it to appear
 		auto nulltype = Pointer::init (gen.getLocation (), Void::init (gen.getLocation ()));
+
+		// Create a generator with a vtable from the template of the generator without vtable
 		gen = generator::Class::initVtable (gen.to <generator::Class> (), vtable, protections, NullValue::init (gen.getLocation (), nulltype));
 			
 		sym.to <semantic::Class> ().setGenerator (gen);
@@ -222,25 +228,27 @@ namespace semantic {
 		    if (it == generator::Class::MethodProtection::PRV)
 			it = generator::Class::MethodProtection::PRV_PARENT;
 		    
-		    addMethods.push_back (Symbol::empty ());
+		    addMethods.push_back (Symbol::empty ()); // we add empty symbol, for the addMethods vec to be the right size
 		}
 	    }
 
-	    std::vector <semantic::Symbol> implemented;
-	    // We verify the vtable for implementation that have already been made in ancestor class
+	    // Create a vector with all implementations
+	    std::vector <std::pair<semantic::Symbol, generator::Generator> > implemented;	    
 	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
 		try {
 		    match (it) {
 			of (semantic::Impl, im) {
-			    this-> validateVtableImplement (im, classType, ancestor, vtable, protection, ancVtable, addMethods);
-			    implemented.push_back (it);
+			    // Add the method defined in the traits inside the vtable
+			    auto ret = this-> validateVtableTrait (im, classType, ancestor, vtable, protection, ancVtable, addMethods);			    
+			    implemented.push_back (std::pair<semantic::Symbol, generator::Generator> (it, ret));
 			} fo;
 		    }		    		
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 	    }
-	    
+
+	    // Validate the vtable of all the methods declared immediately inside the class (not inside an impl)
 	    auto implVtable = vtable; 
 	    for (auto it : cls.to <semantic::Class> ().getAllInner ()) {
 		try {
@@ -257,38 +265,33 @@ namespace semantic {
 		} 
 	    }
 
+	    // For all the implementations
 	    for (auto it : implemented) {
-		try {		    
-		    auto trait = this-> _context.validateType (it.to <semantic::Impl> ().getTrait ());
-		    for (auto jt : it.to <semantic::Impl> ().getAllInner ()) {
-			if (jt.is <semantic::Function> ()) {
-			    auto & func = jt.to <semantic::Function> ();
-			    auto index = this-> validateVtableMethod (func, classType, ancestor, vtable, protection, implVtable, trait);
-			    if (func.getContent ().getBody ().isEmpty ()) {
-				Ymir::Error::occur (vtable [index].getLocation (), ExternalError::get (NO_BODY_METHOD), vtable [index].prettyString ());
-			    }
-					
-			    // Definition of a new method in implement is forbidden
-			    if (index >= (int) addMethods.size ()) {
-				std::list <Ymir::Error::ErrorMsg> names;
-				for (auto & ft : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) { // It is necessarily a trait, we verified that earlier
-				    if (ft.getName ().getStr () == func.getName ().getStr () && ft.is <semantic::Function> ()) {
-					auto proto = this-> _context.validateMethodProto (ft.to <semantic::Function> (), classType, trait);
-					names.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), proto.getLocation (), proto.prettyString ()));
-				    }
-				}
-				Ymir::Error::occurAndNote (func.getName (), names, ExternalError::get (TRAIT_NO_METHOD), trait.prettyString (), vtable [index].prettyString ());
-			    }
-			    addMethods [index] = jt;
-			} else {
-			    Ymir::Error::halt ("", ""); 
-			}
-		    }			    
+		try {
+		    this-> validateVtableImpl (it.first.to <semantic::Impl> (), it.second, classType, ancestor, vtable, protection, implVtable, addMethods);
 		} catch (Error::ErrorList list) {
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 	
+		
 	    }
+
+	    if (errors.size () != 0) {
+		throw Error::ErrorList {errors};
+	    }
+
+	    this-> verifyCollisionVtable (cls, classType, vtable);
 	    
+
+	    /** Save only the symbol that are not empty */
+	    auto aux = std::move (addMethods);
+	    addMethods = {};
+	    for (auto & it : aux)
+		if (!it.isEmpty ()) addMethods.push_back (it);
+		
+	    return vtable;
+	}
+
+	void ClassVisitor::verifyCollisionVtable (const semantic::Symbol & cls, const generator::Generator & classType, const std::vector <Generator> & vtable) {
 	    for (auto i : Ymir::r (0, vtable.size ())) {
 		for (auto j : Ymir::r (0, vtable.size ())) {
 		    // Verification of the collision (since all reimplemented function are marked override)
@@ -298,16 +301,13 @@ namespace semantic {
 			auto protoFptr = this-> _context.validateFunctionType  (vtable [j]);
 			if (protoFptr.equals (fptr) && vtable [i].to<MethodProto> ().isMutable () == vtable [j].to<MethodProto> ().isMutable ()) {
 			    auto note = Ymir::Error::createNote (vtable [i].getLocation ());
-			    auto note2 = Ymir::Error::createNote (cls.getName (), ExternalError::get (VALIDATING), cls.getRealName ());
-			    Ymir::Error::occurAndNote (vtable [j].getLocation (), {note, note2}, ExternalError::get (CONFLICTING_DECLARATIONS), vtable [i].prettyString ());
+			    Ymir::Error::occurAndNote (vtable [j].getLocation (), note, ExternalError::get (CONFLICTING_DECLARATIONS), vtable [i].prettyString ());
 			}
 		    }
 		}
 	    }
 	    
-	    if (errors.size () != 0) 
-		throw Error::ErrorList {errors};		
-
+	       
 	    if (!cls.to <semantic::Class> ().isAbs ()) {
 		for (auto & it : vtable) {
 		    if (it.to <MethodProto> ().isEmptyFrame ()) {
@@ -317,17 +317,37 @@ namespace semantic {
 		    }
 		}
 	    }
-
-	    /** Save only the symbol that are not empty */
-	    auto aux = addMethods;
-	    addMethods = {};
-	    for (auto & it : aux)
-		if (!it.isEmpty ()) addMethods.push_back (it);
-		
-	    return vtable;
 	}
 
-	void ClassVisitor::validateVtableImplement (const semantic::Impl & impl, const Generator & classType, const Generator & ancestor, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, std::vector<Symbol> & addMethods) {
+	void ClassVisitor::validateVtableImpl (const semantic::Impl & impl, const generator::Generator & trait, const Generator & classType, const Generator & ancestor, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & implVtable, std::vector<Symbol> & addMethods) {
+	    for (auto jt : impl.getAllInner ()) { // For all the overriden method of the impl
+		if (jt.is <semantic::Function> ()) {
+		    auto & func = jt.to <semantic::Function> ();
+		    auto index = this-> validateVtableMethod (func, classType, ancestor, vtable, protection, implVtable, trait);
+		    if (func.getContent ().getBody ().isEmpty ()) {
+			Ymir::Error::occur (vtable [index].getLocation (), ExternalError::get (NO_BODY_METHOD), vtable [index].prettyString ());
+		    }
+					
+		    // Definition of a new method in implement is forbidden
+		    if (index >= (int) addMethods.size ()) { // the index is returned by vtablemethod, if the index is > as addMethods, then is must mean that the symbol is not in the vtable
+			std::list <Ymir::Error::ErrorMsg> names;
+			for (auto & ft : trait.to <TraitRef> ().getRef ().to <semantic::Trait> ().getAllInner ()) { // It is necessarily a trait, we verified that earlier
+			    if (ft.getName ().getStr () == func.getName ().getStr () && ft.is <semantic::Function> ()) {
+				auto proto = this-> _context.validateMethodProto (ft.to <semantic::Function> (), classType, trait);
+				names.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (CANDIDATE_ARE), proto.getLocation (), proto.prettyString ()));
+			    }
+			}
+			Ymir::Error::occurAndNote (func.getName (), names, ExternalError::get (TRAIT_NO_METHOD), trait.prettyString (), vtable [index].prettyString ());
+		    }
+		    addMethods [index] = jt;
+		} else {
+		    Ymir::Error::halt ("", ""); 
+		}
+	    }
+	}
+
+    
+	generator::Generator ClassVisitor::validateVtableTrait (const semantic::Impl & impl, const Generator & classType, const Generator & ancestor, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, std::vector<Symbol> & addMethods) {
 	    auto trait = this-> _context.validateType (impl.getTrait ());
 	    if (!trait.is <TraitRef> ()) {
 		Ymir::Error::occur (impl.getTrait ().getLocation (), ExternalError::get (IMPL_NO_TRAIT), trait.prettyString ());
@@ -343,7 +363,7 @@ namespace semantic {
 			Ymir::Error::occur (it.getName (), ExternalError::get (VAR_DECL_IN_TRAIT));
 		    } else if (it.is <semantic::Function> ()) {
 			auto & func = it.to <semantic::Function> ();
-			int index = validateVtableMethodImplement (func, classType, ancestor, vtable, protection, ancVtable, trait);
+			int index = this-> validateVtableTraitMethod (func, classType, ancestor, vtable, protection, ancVtable, trait);
 			if (index < (int) ancVtable.size ())
 			    addMethods [index] = it;
 			else 
@@ -360,9 +380,11 @@ namespace semantic {
 	    
 	    if (errors.size () != 0)
 		throw Error::ErrorList {errors};
+	    
+	    return trait;
 	}
 
-	int ClassVisitor::validateVtableMethodImplement (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, const generator::Generator & trait) {
+	int ClassVisitor::validateVtableTraitMethod (const semantic::Function & func, const Generator & classType, const Generator &, std::vector <Generator> & vtable, std::vector <generator::Class::MethodProtection> & protection, const std::vector <Generator> & ancVtable, const generator::Generator & trait) {
 	    auto proto = this-> _context.validateMethodProto (func, classType, trait);
 	    auto protoFptr = this-> _context.validateFunctionType  (proto);
 	    for (auto i : Ymir::r (0, ancVtable.size ())) {
@@ -531,7 +553,6 @@ namespace semantic {
 			} fo;			
 		    }
 		} catch (Error::ErrorList list) {
-		    errors.push_back (Ymir::Error::createNoteOneLine (ExternalError::get (VALIDATING), it.getRealName ()));
 		    errors.insert (errors.end (), list.errors.begin (), list.errors.end ());
 		} 
 

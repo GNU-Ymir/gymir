@@ -2133,7 +2133,7 @@ namespace semantic {
 
 	    Generator value (Generator::empty ());
 	    if (!var.getValue ().isEmpty ()) {
-		value = validateValue (var.getValue ());
+		value = validateValue (var.getValue ());		
 	    }
 
 	    if (var.getValue ().isEmpty () && var.getType ().isEmpty ()) {
@@ -2142,7 +2142,11 @@ namespace semantic {
 
 	    Generator type (Generator::empty ());
 	    if (!var.getType ().isEmpty ()) {
-		type = validateType (var.getType ());
+		try {
+		    type = validateType (var.getType ());
+		} catch (Ymir::Error::ErrorList list) {
+		    Ymir::Error::noteAndNote (var.getType ().getLocation (), list.errors, "");
+		}
 	    } else {
 		type = Type::init (value.to <Value> ().getType ().to <Type> (), false, false);
 	    }
