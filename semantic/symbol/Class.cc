@@ -26,7 +26,7 @@ namespace semantic {
 	ret.to <Class> ()._table = Table::init (ret.getPtr ());
 	return ret;
     }
-        
+    
     void Class::insert (const Symbol & sym) {
 	this-> _table-> insert (sym);
     }

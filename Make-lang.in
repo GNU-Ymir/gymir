@@ -278,6 +278,7 @@ ymir_OBJS = \
 	ymir/validator_UtfVisitor.o \
 	ymir/validator_MatchVisitor.o \
 	ymir/validator_MacroVisitor.o \
+	ymir/validator_ClassVisitor.o \
 	ymir/validator_Visitor.o \
 	ymir/ymir1.o \
 	$(END)	

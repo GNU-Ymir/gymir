@@ -139,36 +139,6 @@ namespace semantic {
 	     * \brief Validate a function
 	     */
 	    void validateFunction (const semantic::Function & func);
-
-	    /**
-	     * \brief Validate a method
-	     */
-	    void validateMethod (const semantic::Function & func, const generator::Generator & cl, bool isWeak = false);
-
-	    /**
-	     * \brief Validate an implementation of a trait
-	     */
-	    void validateVtableImplement (const semantic::Impl & impl, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, std::vector <semantic::Symbol> & addMethods);
-
-	    /**
-	     * \brief Validate a method prototype and put it in the vtable at the right place
-	     * \warning This does not validate the body of the method, see validateMethod 
-	     * \param i by return, is the index where the prototype has been put in the vtable
-	     */
-	    int validateVtableMethod (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, const generator::Generator & trait);
-
-	    int validateVtableMethodImplement (const semantic::Function & func, const generator::Generator & classType, const generator::Generator & ancestor, std::vector <generator::Generator> & vtable, std::vector <generator::Class::MethodProtection> & prots, const std::vector <generator::Generator> & ancVtable, const generator::Generator & trait);
-	    
-	    /**
-	     * \brief Validate a class constructor
-	     */
-	    void validateConstructor (const semantic::Symbol & sym, const generator::Generator & classType, const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
-	    
-	    /**
-	     * \brief Validate the pre construction instruction in a constructor
-	     * \return the list of instruction (a Block), to construct the super and attributes
-	     */
-	    generator::Generator validatePreConstructor (const semantic::Constructor & cs, const generator::Generator & classType,  const generator::Generator & gen, const std::vector <generator::Generator> & ancestorFields);
 	    
 	    /**
 	     * \brief Validate a global var declaration 
@@ -851,17 +821,7 @@ namespace semantic {
 	     * Is the value known at compile time and is a float const
 	     */
 	    bool isFloatConstant (const generator::Generator & val);
-
-	    
-	    /**
-	     * \brief Verify the construction loop
-	     * \brief This verification is not complete, it is only able to check if there is a loop when using only direct constructor
-	     * \brief It is the more common construction, so I think, it is important to check it
-	     * \brief And other construction like using function that return an instance of the object are much more difficult to check and sometimes not even calculable i think
-	     */
-	    void verifyConstructionLoop (const lexing::Word & loc, const generator::Generator & call);
-
-	    
+	    	    
 	    /**
 	     * \brief Throw an exception if there is already some var named name
 	     * \param name the forbidden name

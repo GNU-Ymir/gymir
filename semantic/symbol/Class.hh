@@ -77,7 +77,12 @@ namespace semantic {
 	
 	static Symbol init (const lexing::Word & name, const std::string & comments, const syntax::Expression & ancestor, bool isWeak);
 
+	/**
+	 * Create a symbol copy of the class
+	 */
+	Symbol move () const;
 
+	
 	void insert (const Symbol & sym) override;
 
 	void insertTemplate (const Symbol & sym) override;
