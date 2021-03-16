@@ -268,7 +268,7 @@ namespace semantic {
 		}
 		const std::vector <Symbol> & syms = sol.to <TemplateSolution> ().getAllLocal ();
 		for (auto & it : syms) {
-		    validate (it);
+		    validate (it);		    
 		}
 	    } catch (Error::ErrorList lst) {
 		errors = lst.errors;
@@ -4628,7 +4628,7 @@ namespace semantic {
 	    for (auto & it : this-> _templateSolutions) {
 		if (it.equals (sol)) return false;		
 	    }
-
+	    
 	    for (auto & it : this-> _errorTemplateSolutions) {
 		if (it.first.equals (sol)) {
 		    errors = it.second;

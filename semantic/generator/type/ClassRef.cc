@@ -66,6 +66,10 @@ namespace semantic {
 	const Generator & ClassRef::getAncestor () const {
 	    return this-> _parent;
 	}
+
+	bool ClassRef::isFast () const {
+	    return this-> _isFast;
+	}
 	
     }
 }

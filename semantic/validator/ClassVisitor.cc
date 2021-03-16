@@ -26,14 +26,16 @@ namespace semantic {
 	generator::Generator ClassVisitor::validate (const semantic::Symbol & cls, bool inModule) {
 	    auto sym = cls; // some cheating on c++ const, to store the generator inside the class symbol
 	    // and avoid validating multiple times the same class
-	    
-	    if (cls.to <semantic::Class> ().getGenerator ().isEmpty () || inModule) {
+
+	    auto validated = !cls.to <semantic::Class> ().getGenerator ().isEmpty ();
+	    if (validated) validated = !cls.to <semantic::Class> ().getGenerator ().to <generator::Class> ().getClassRef ().to <generator::ClassRef> ().isFast ();
+	    if (!validated || inModule) {
 		std::list <Error::ErrorMsg> errors;
-		auto ancestor = this-> validateAncestor (cls);
-		auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
-		// To avoid recursive validation 
-		sym.to <semantic::Class> ().setGenerator (gen);
-		if (__fast_validation__.empty () || !__fast_validation__.back ()|| inModule ) { // if inModule but __fast_validation__, then the class must be a template
+		if (__fast_validation__.empty () || !__fast_validation__.back () || inModule) { // if inModule but __fast_validation__, then the class must be a template
+		    auto ancestor = this-> validateAncestor (cls);
+		    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), ancestor, sym));
+		    // To avoid recursive validation 
+		    sym.to <semantic::Class> ().setGenerator (gen);
 		    __fast_validation__.push_back (false);
 		    
 		    this-> validateCtes (cls); // this throws if an error occur anyway,
@@ -71,6 +73,10 @@ namespace semantic {
 			this-> _context.insertNewGenerator (cls.to <semantic::Class> ().getGenerator ());
 		    
 		    }
+		} else {
+		    auto gen = generator::Class::init (cls.getName (), sym, ClassRef::init (cls.getName (), Generator::empty (), sym, true));
+		    // To avoid recursive validation 
+		    sym.to <semantic::Class> ().setGenerator (gen);
 		}
 	    }
 

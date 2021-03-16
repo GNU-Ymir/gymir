@@ -57,6 +57,8 @@ namespace semantic {
 	    std::string typeName () const override;
 
 	    std::string getMangledName () const;
+
+	    bool isFast () const;
 	    
 	};	
 	

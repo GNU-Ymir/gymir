@@ -49,7 +49,7 @@ namespace semantic {
 	    std::list <Ymir::Error::ErrorMsg> errors;
 	    int consumed = 0;
 
-	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) { 
+	    while (consumed < (int) values.size () && syntaxTempl.size () != 0) {
 		auto currentElems = array_view <Generator> (values.begin () + consumed, values.end ());
 		
 		int current_consumed = 0;
@@ -62,7 +62,7 @@ namespace semantic {
 		    errors = list.errors;
 		    succeed = false;
 		} 
-		
+
 		if (!succeed) {
 		    auto prevMapper = Mapper {true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ()};
 		    auto merge = mergeMappers (prevMapper, globalMapper);
@@ -108,8 +108,6 @@ namespace semantic {
 		    static int __tmpTemplate__ = 0;
 		    __tmpTemplate__ += 1;
 		    score = merge.score;
-		    auto decl = replaceAll (sym.to <semantic::Template> ().getDeclaration (), merge.mapping, ref.getTemplateRef ().getReferent ());
-
 		    auto tmpl = sym.to <semantic::Template> ();
 		    auto sym2 = Template::init (ref.getLocation (),
 						"",
@@ -394,7 +392,8 @@ namespace semantic {
 		    errors = list.errors;
 		    succeed = false;
 		} 
-	    
+
+		
 		if (!succeed) {
 		    auto prevMapper = Mapper (true, 0, sym.to<Template> ().getPreviousSpecialization (), sym.to<Template> ().getSpecNameOrder ());
 		    auto merge = mergeMappers (prevMapper, globalMapper);
@@ -1442,7 +1441,7 @@ namespace semantic {
 	}
 
 	
-	Expression TemplateVisitor::replaceAll (const Expression & element, const std::map <std::string, Expression> & mapping) const {
+	Expression TemplateVisitor::replaceAll (const Expression & element, const std::map <std::string, Expression> & mapping) const {	    
 	    if (mapping.size () == 0) return element;
 	    match (element) {
 		of (syntax::ArrayAlloc, arr) {
